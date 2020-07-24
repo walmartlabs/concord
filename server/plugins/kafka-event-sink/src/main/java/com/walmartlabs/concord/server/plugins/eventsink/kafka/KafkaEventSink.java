@@ -9,9 +9,9 @@ package com.walmartlabs.concord.server.plugins.eventsink.kafka;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -21,11 +21,11 @@ package com.walmartlabs.concord.server.plugins.eventsink.kafka;
  */
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.walmartlabs.concord.server.sdk.ProcessKey;
 import com.walmartlabs.concord.server.sdk.audit.AuditEvent;
 import com.walmartlabs.concord.server.sdk.audit.AuditLogListener;
 import com.walmartlabs.concord.server.sdk.events.ProcessEvent;
 import com.walmartlabs.concord.server.sdk.events.ProcessEventListener;
+import com.walmartlabs.concord.server.sdk.log.ProcessLogEntry;
 import com.walmartlabs.concord.server.sdk.log.ProcessLogListener;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -34,7 +34,6 @@ import javax.inject.Inject;
 import javax.inject.Named;
 import java.util.Collections;
 import java.util.List;
-import java.util.UUID;
 
 @Named
 public class KafkaEventSink implements ProcessEventListener, ProcessLogListener, AuditLogListener {
@@ -54,7 +53,7 @@ public class KafkaEventSink implements ProcessEventListener, ProcessLogListener,
 
     @Override
     public void onEvent(AuditEvent event) {
-        UUID k = event.getUserId();
+        String k = Long.toString(event.entrySeq());
         try {
             String v = objectMapper.writeValueAsString(event);
             connector.send(cfg.getAuditLogTopic(), k, v);
@@ -66,10 +65,10 @@ public class KafkaEventSink implements ProcessEventListener, ProcessLogListener,
     @Override
     public void onEvents(List<ProcessEvent> events) {
         for (ProcessEvent ev : events) {
-            ProcessKey k = ev.getProcessKey();
+            String k = Long.toString(ev.eventSeq());
             try {
                 String v = objectMapper.writeValueAsString(ev);
-                connector.send(cfg.getProcessEventsTopic(), k.getInstanceId(), v);
+                connector.send(cfg.getProcessEventsTopic(), k, v);
             } catch (Exception e) {
                 log.warn("onEvents [{}] -> error while sending an event: {}", k, e.getMessage());
             }
@@ -77,10 +76,10 @@ public class KafkaEventSink implements ProcessEventListener, ProcessLogListener,
     }
 
     @Override
-    public void onAppend(ProcessKey processKey, byte[] msg) {
-        UUID k = processKey.getInstanceId();
+    public void onAppend(ProcessLogEntry entry) {
+        String k = entry.processKey().getInstanceId().toString();
         try {
-            String v = objectMapper.writeValueAsString(Collections.singletonMap("msg", new String(msg)));
+            String v = objectMapper.writeValueAsString(Collections.singletonMap("msg", new String(entry.msg())));
             connector.send(cfg.getProcessLogsTopic(), k, v);
         } catch (Exception e) {
             log.warn("onAppend [{}] -> error while sending a log entry: {}", k, e.getMessage());

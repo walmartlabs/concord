@@ -9,9 +9,9 @@ package com.walmartlabs.concord.server;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -20,11 +20,11 @@ package com.walmartlabs.concord.server;
  * =====
  */
 
-import com.walmartlabs.concord.server.sdk.ProcessKey;
 import com.walmartlabs.concord.server.sdk.audit.AuditEvent;
 import com.walmartlabs.concord.server.sdk.audit.AuditLogListener;
 import com.walmartlabs.concord.server.sdk.events.ProcessEvent;
 import com.walmartlabs.concord.server.sdk.events.ProcessEventListener;
+import com.walmartlabs.concord.server.sdk.log.ProcessLogEntry;
 import com.walmartlabs.concord.server.sdk.log.ProcessLogListener;
 import com.walmartlabs.concord.server.sdk.metrics.WithTimer;
 import org.slf4j.Logger;
@@ -81,8 +81,8 @@ public class Listeners {
     }
 
     @WithTimer
-    public void onProcessLogAppend(ProcessKey processKey, byte[] msg) {
-        logListeners.forEach(l -> logListenerExecutor.submit(() -> l.onAppend(processKey, msg)));
+    public void onProcessLogAppend(ProcessLogEntry entry) {
+        logListeners.forEach(l -> logListenerExecutor.submit(() -> l.onAppend(entry)));
     }
 
     @WithTimer

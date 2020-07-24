@@ -9,9 +9,9 @@ package com.walmartlabs.concord.server.process.logs;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -22,10 +22,11 @@ package com.walmartlabs.concord.server.process.logs;
 
 import com.codahale.metrics.Counter;
 import com.walmartlabs.concord.common.LogUtils;
-import com.walmartlabs.concord.db.PgIntRange;
 import com.walmartlabs.concord.server.Listeners;
 import com.walmartlabs.concord.server.process.LogSegment;
 import com.walmartlabs.concord.server.process.ProcessKey;
+import com.walmartlabs.concord.server.sdk.Range;
+import com.walmartlabs.concord.server.sdk.log.ProcessLogEntry;
 import com.walmartlabs.concord.server.sdk.metrics.InjectCounter;
 import org.jooq.DSLContext;
 
@@ -109,10 +110,18 @@ public class ProcessLogManager {
     }
 
     public int log(ProcessKey processKey, long segmentId, byte[] msg) {
-        PgIntRange range = logsDao.append(processKey, segmentId, msg);
+        Range range = logsDao.append(processKey, segmentId, msg);
         logBytesAppended.inc(msg.length);
-        listeners.onProcessLogAppend(processKey, msg);
-        return range.getUpper();
+
+        ProcessLogEntry entry = ProcessLogEntry.builder()
+                .processKey(processKey)
+                .range(range)
+                .msg(msg)
+                .build();
+
+        listeners.onProcessLogAppend(entry);
+
+        return range.upper();
     }
 
     private void log(ProcessKey processKey, LogLevel level, String msg, Object... args) {

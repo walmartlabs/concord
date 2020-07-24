@@ -15,9 +15,9 @@
     <packaging>pom</packaging>
 
     <modules>
+        <module>sdk</module>
         <module>liquibase-ext</module>
         <module>db</module>
-        <module>sdk</module>
         <module>impl</module>
         <module>queue-client</module>
         <module>plugins</module>

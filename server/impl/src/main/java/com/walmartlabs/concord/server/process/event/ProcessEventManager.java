@@ -75,7 +75,12 @@ public class ProcessEventManager {
         payload.put("status", status.name());
         payload.putAll(statusPayload);
 
-        ProcessEvent e = new ProcessEvent(processKey, EventType.PROCESS_STATUS.name(), null, objectMapper.convertToMap(payload));
+        NewProcessEvent e = NewProcessEvent.builder()
+                .processKey(processKey)
+                .eventType(EventType.PROCESS_STATUS.name())
+                .data(objectMapper.convertToMap(payload))
+                .build();
+
         event(tx, Collections.singletonList(e));
     }
 
@@ -83,28 +88,40 @@ public class ProcessEventManager {
         Map<String, Object> payload = new HashMap<>();
         payload.put("status", status.name());
 
-        List<ProcessEvent> events = processKeys.stream()
-                .map(k -> new ProcessEvent(k, EventType.PROCESS_STATUS.name(), null, objectMapper.convertToMap(payload)))
+        List<NewProcessEvent> events = processKeys.stream()
+                .map(k -> NewProcessEvent.builder()
+                        .processKey(k)
+                        .eventType(EventType.PROCESS_STATUS.name())
+                        .data(objectMapper.convertToMap(payload))
+                        .build())
                 .collect(Collectors.toList());
 
         event(tx, events);
     }
 
-    public void event(List<ProcessEvent> events) {
-        eventDao.tx(tx -> event(tx, events));
+    @WithTimer
+    public void event(List<NewProcessEvent> events) {
+        List<ProcessEvent> insertedEvents = eventDao.txResult(tx -> doEvent(tx, events));
+        listeners.onProcessEvent(insertedEvents);
     }
 
     @WithTimer
-    public void event(DSLContext tx, List<ProcessEvent> events) {
+    public void event(DSLContext tx, List<NewProcessEvent> events) {
+        // TODO consider returning a callback that can be called outside of the transaction
+        List<ProcessEvent> insertedEvents = doEvent(tx, events);
+        listeners.onProcessEvent(insertedEvents);
+    }
+
+    private List<ProcessEvent> doEvent(DSLContext tx, List<NewProcessEvent> events) {
         if (events.isEmpty()) {
-            return;
+            return Collections.emptyList();
         }
 
-        eventDao.insert(tx, events);
+        List<ProcessEvent> insertedEvents = eventDao.insert(tx, events);
 
         eventsReceived.mark(events.size());
         batchInsertHistogram.update(events.size());
 
-        listeners.onProcessEvent(events);
+        return insertedEvents;
     }
 }
