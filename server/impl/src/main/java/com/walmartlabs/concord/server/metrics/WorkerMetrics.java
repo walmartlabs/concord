@@ -29,6 +29,8 @@ import io.prometheus.client.Collector;
 import io.prometheus.client.CollectorRegistry;
 import io.prometheus.client.GaugeMetricFamily;
 import org.eclipse.sisu.EagerSingleton;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -37,6 +39,8 @@ import java.util.*;
 @Named
 @EagerSingleton
 public class WorkerMetrics implements BackgroundTask {
+
+    private static final Logger log = LoggerFactory.getLogger(WorkerMetrics.class);
 
     private final Collector collector;
 
@@ -79,6 +83,10 @@ public class WorkerMetrics implements BackgroundTask {
 
     @Override
     public void stop() {
-        CollectorRegistry.defaultRegistry.unregister(collector);
+        try {
+            CollectorRegistry.defaultRegistry.unregister(collector);
+        } catch (Exception e) {
+            log.warn("stop -> error while unregistering the collector: {}", e.getMessage());
+        }
     }
 }
