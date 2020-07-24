@@ -29,6 +29,7 @@ import com.walmartlabs.concord.runtime.v2.sdk.WorkingDirectory;
 import org.eclipse.sisu.Priority;
 
 import javax.inject.Inject;
+import java.util.Set;
 
 @Priority(100)
 public class TaskV1Provider implements TaskProvider {
@@ -61,5 +62,10 @@ public class TaskV1Provider implements TaskProvider {
     @Override
     public boolean hasTask(String key) {
         return holder.get(key) != null;
+    }
+
+    @Override
+    public Set<String> names() {
+        return holder.keys();
     }
 }

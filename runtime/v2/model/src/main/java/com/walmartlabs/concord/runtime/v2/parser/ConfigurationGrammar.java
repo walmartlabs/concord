@@ -59,6 +59,7 @@ public final class ConfigurationGrammar {
     private static final Parser<Atom, EventConfiguration> eventsVal =
             orError(events, YamlValueType.EVENTS_CFG);
 
+
     private static final Parser<Atom, ProcessConfiguration> cfg =
             betweenTokens(JsonToken.START_OBJECT, JsonToken.END_OBJECT,
                     with(ImmutableProcessConfiguration::builder,
@@ -73,6 +74,7 @@ public final class ConfigurationGrammar {
                                     optional("events", eventsVal.map(o::events)),
                                     optional("out", stringArrayVal.map(o::addAllOut)),
                                     optional("arguments", mapVal.map(o::arguments)),
+                                    optional("debug", booleanVal.map(o::debug)),
                                     optional("template", stringVal.map(o::template))))
                             .map(ImmutableProcessConfiguration.Builder::build));
 

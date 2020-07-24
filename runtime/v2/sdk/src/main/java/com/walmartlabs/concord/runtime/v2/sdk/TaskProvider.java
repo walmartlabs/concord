@@ -22,7 +22,7 @@ package com.walmartlabs.concord.runtime.v2.sdk;
 
 import org.eclipse.sisu.Priority;
 
-import java.util.Collection;
+import java.util.Set;
 
 /**
  * Provider for tasks. Responsible for creating task instances using
@@ -38,4 +38,6 @@ public interface TaskProvider {
     Task createTask(Context ctx, String key);
 
     boolean hasTask(String key);
+
+    Set<String> names();
 }

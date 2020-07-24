@@ -27,6 +27,7 @@ import com.walmartlabs.concord.runtime.v2.sdk.Task;
 import com.walmartlabs.concord.runtime.v2.sdk.TaskProvider;
 
 import javax.inject.Inject;
+import java.util.Set;
 
 public class TaskV2Provider implements TaskProvider {
 
@@ -58,5 +59,10 @@ public class TaskV2Provider implements TaskProvider {
     @Override
     public boolean hasTask(String key) {
         return holder.get(key) != null;
+    }
+
+    @Override
+    public Set<String> names() {
+        return holder.keys();
     }
 }

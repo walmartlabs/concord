@@ -23,8 +23,10 @@ package com.walmartlabs.concord.runtime.common.injector;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 
 public class TaskHolder<T> {
 
@@ -42,5 +44,9 @@ public class TaskHolder<T> {
 
     public Class<T> get(String key) {
         return classes.get(key);
+    }
+
+    public Set<String> keys() {
+        return Collections.unmodifiableSet(classes.keySet());
     }
 }

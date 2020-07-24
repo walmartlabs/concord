@@ -34,9 +34,12 @@ import com.walmartlabs.concord.runtime.v2.model.ProcessConfiguration;
 import com.walmartlabs.concord.runtime.v2.model.ProcessDefinition;
 import com.walmartlabs.concord.runtime.v2.runner.guice.ObjectMapperProvider;
 import com.walmartlabs.concord.runtime.v2.runner.logging.LoggingConfigurator;
+import com.walmartlabs.concord.runtime.v2.runner.tasks.TaskProviders;
 import com.walmartlabs.concord.runtime.v2.sdk.WorkingDirectory;
 import com.walmartlabs.concord.sdk.Constants;
 import com.walmartlabs.concord.svm.ThreadStatus;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -47,21 +50,27 @@ import java.util.*;
 
 public class Main {
 
+    private static final Logger log = LoggerFactory.getLogger(Main.class);
+
     private final Runner runner;
     private final RunnerConfiguration runnerCfg;
     private final ProcessConfiguration processCfg;
     private final WorkingDirectory workDir;
 
+    private final TaskProviders taskProviders;
+
     @Inject
     public Main(Runner runner,
                 RunnerConfiguration runnerCfg,
                 ProcessConfiguration processCfg,
-                WorkingDirectory workDir) {
+                WorkingDirectory workDir,
+                TaskProviders taskProviders) {
 
         this.runner = runner;
         this.runnerCfg = runnerCfg;
         this.processCfg = processCfg;
         this.workDir = workDir;
+        this.taskProviders = taskProviders;
     }
 
     public static void main(String[] args) throws Exception {
@@ -108,6 +117,10 @@ public class Main {
         String segmentedLogDir = runnerCfg.logging().segmentedLogDir();
         if (segmentedLogDir != null) {
             LoggingConfigurator.configure(processCfg.instanceId(), segmentedLogDir);
+        }
+
+        if (processCfg.debug()) {
+            log.info("Available tasks: {}", taskProviders.names());
         }
 
         Map<String, Object> processArgs = prepareProcessArgs(processCfg);
