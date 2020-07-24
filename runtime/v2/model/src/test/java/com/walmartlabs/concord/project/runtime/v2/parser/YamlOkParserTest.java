@@ -356,7 +356,7 @@ public class YamlOkParserTest extends AbstractParserTest {
 
         assertTrue(main.get(0) instanceof ScriptCall);
         ScriptCall t = (ScriptCall) main.get(0);
-        assertEquals("groovy", t.getName());
+        assertEquals("groovy", t.getLanguageOrRef());
 
         // withItems
         assertEquals(1, t.getOptions().withItems().value());

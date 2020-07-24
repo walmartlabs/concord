@@ -27,11 +27,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
-import javax.script.Bindings;
-import javax.script.ScriptEngine;
-import javax.script.ScriptEngineManager;
-import javax.script.ScriptException;
+import javax.script.*;
 import java.io.Reader;
+import java.util.List;
 import java.util.Map;
 
 public class DefaultScriptEvaluator implements ScriptEvaluator {
@@ -73,6 +71,22 @@ public class DefaultScriptEvaluator implements ScriptEvaluator {
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
+    }
+
+    @Override
+    public boolean hasLanguage(String language) {
+        for (ScriptEngineFactory factory : scriptEngineManager.getEngineFactories()) {
+            List<String> names = null;
+            try {
+                names = factory.getNames();
+            } catch (Exception exp) {
+                // ignore
+            }
+            if (names != null && names.contains(language)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private ScriptEngine getEngine(String language) {

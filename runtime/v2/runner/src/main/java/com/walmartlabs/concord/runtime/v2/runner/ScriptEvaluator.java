@@ -28,4 +28,6 @@ import java.util.Map;
 public interface ScriptEvaluator {
 
     void eval(Context context, String language, Reader input, Map<String, Object> variables);
+
+    boolean hasLanguage(String language);
 }
