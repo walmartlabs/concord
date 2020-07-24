@@ -1,5 +1,36 @@
 # Change log
 
+## [Unreleased]
+
+### Added
+
+- concord-console: host status filter to the Ansible host list
+page;
+- runtime-v2: support for the `debug` mode.
+
+### Changed
+
+- runtime-v2: improved validation of the `script` step;
+- concord-tasks: log the child process' URL;
+- concord-cli: by default do not remove the `target` directory
+after the process finishes;
+- concord-cli: trim whitespace when reading single-value (string)
+secrets;
+- concord-server: fixed an issue preventing JSON store creation
+requests from being correctly validated (i.e. disallow invalid
+store names).
+
+### Breaking
+
+- concord-server: `java.util.Date` and `java.sql.Timestamp` used
+in internal and external Java APIs are replaced with
+`java.time.OffsetDateTime`;
+- concord-server-db: `timestamp` columns are migrated to
+`timestamptz`. The migration procedure requires the DB user to
+have `SUPERUSER` privileges for the duration of the migration.
+
+
+
 ## [1.57.0] - 2020-07-22
 
 ### Added
