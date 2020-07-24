@@ -147,7 +147,7 @@ class NewSecretForm extends React.Component<InjectedFormikProps<Props, FormValue
                 )}
 
                 {values.type === SecretTypeExt.VALUE_STRING && (
-                    <FormikInput name="valueString" label="Value" required={true} />
+                    <FormikInput name="valueString" label="Value" required={true} autoComplete="off" />
                 )}
 
                 {values.type === SecretTypeExt.VALUE_FILE && (
