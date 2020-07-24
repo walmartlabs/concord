@@ -96,7 +96,7 @@ public class EventRecordingExecutionListener implements ExecutionListener {
         } else if (step instanceof Expression) {
             return "Expression: " + ((Expression) step).getExpr();
         } else if (step instanceof ScriptCall) {
-            return "Script: " + ((ScriptCall) step).getName();
+            return "Script: " + ((ScriptCall) step).getLanguageOrRef();
         } else if (step instanceof IfStep) {
             return "Check: " + ((IfStep) step).getExpression();
         } else if (step instanceof SwitchStep) {

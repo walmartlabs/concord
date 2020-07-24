@@ -65,7 +65,7 @@ public class ScriptCallCommand extends StepCommand<ScriptCall> {
         ScriptCallOptions opts = call.getOptions();
         Map<String, Object> input = VMUtils.prepareInput(expressionEvaluator, ctx, opts.input());
 
-        String language = getLanguage(call);
+        String language = getLanguage(expressionEvaluator, scriptEvaluator, ctx, call);
         Reader content = getContent(expressionEvaluator, resourceResolver, ctx, call);
 
         try {
@@ -87,24 +87,42 @@ public class ScriptCallCommand extends StepCommand<ScriptCall> {
         if (segmentName != null) {
             segmentName = ctx.eval(segmentName, String.class);
         } else {
-            segmentName = "script: " + step.getName();
+            segmentName = "script: " + step.getLanguageOrRef();
         }
 
         return segmentName;
     }
 
-    private static String getLanguage(ScriptCall call) {
+    private static String getLanguage(ExpressionEvaluator expressionEvaluator, ScriptEvaluator scriptEvaluator, Context ctx, ScriptCall call) {
+        String languageOrRef = expressionEvaluator.eval(EvalContextFactory.global(ctx), call.getLanguageOrRef(), String.class);
+
+        // if we have body then languageOrRef is language
         if (call.getOptions().body() != null) {
-            return call.getName();
+            return assertLanguage(scriptEvaluator, languageOrRef);
         }
-        return getExtension(call.getName());
+
+        String maybeLanguage = getExtension(languageOrRef);
+        if (maybeLanguage != null) {
+            return assertLanguage(scriptEvaluator, maybeLanguage);
+        }
+
+        if (scriptEvaluator.hasLanguage(languageOrRef)) {
+            throw new RuntimeException("Invalid step definition: 'body' parameter not found.");
+        }
+
+        throw new RuntimeException("Can't determine the script language: " + call.getLanguageOrRef() + " (" + languageOrRef + "). " +
+                "Check if the script's name is correct and the required dependencies are declared.");
+    }
+
+    private static String assertLanguage(ScriptEvaluator scriptEvaluator, String language) {
+        if (scriptEvaluator.hasLanguage(language)) {
+            return language;
+        }
+
+        throw new RuntimeException("Unknown language '" + language + "'. Check process dependencies.");
     }
 
     private static String getExtension(String s) {
-        if (s == null) {
-            return null;
-        }
-
         int i = s.lastIndexOf(".");
         if (i < 0 || i + 1 >= s.length()) {
             return null;
@@ -118,7 +136,7 @@ public class ScriptCallCommand extends StepCommand<ScriptCall> {
             return new StringReader(Objects.requireNonNull(call.getOptions().body()));
         }
 
-        String ref = expressionEvaluator.eval(EvalContextFactory.global(ctx), call.getName(), String.class);
+        String ref = expressionEvaluator.eval(EvalContextFactory.global(ctx), call.getLanguageOrRef(), String.class);
         try {
             InputStream in = resourceResolver.resolve(ref);
             if (in == null) {

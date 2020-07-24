@@ -24,22 +24,22 @@ public class ScriptCall extends AbstractStep<ScriptCallOptions> {
 
     private static final long serialVersionUID = 1L;
 
-    private final String name;
+    private final String languageOrRef;
 
-    public ScriptCall(Location location, String name, ScriptCallOptions options) {
+    public ScriptCall(Location location, String languageOrRef, ScriptCallOptions options) {
         super(location, options);
 
-        this.name = name;
+        this.languageOrRef = languageOrRef;
     }
 
-    public String getName() {
-        return name;
+    public String getLanguageOrRef() {
+        return languageOrRef;
     }
 
     @Override
     public String toString() {
         return "ScriptCall{" +
-                "name='" + name + '\'' +
+                "languageOrRef='" + languageOrRef + '\'' +
                 '}';
     }
 }
