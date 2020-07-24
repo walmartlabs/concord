@@ -27,10 +27,10 @@ import com.walmartlabs.concord.sdk.EventType;
 import com.walmartlabs.concord.server.ConcordObjectMapper;
 import com.walmartlabs.concord.server.RequestUtils;
 import com.walmartlabs.concord.server.process.*;
+import com.walmartlabs.concord.server.process.event.NewProcessEvent;
 import com.walmartlabs.concord.server.process.event.ProcessEventManager;
 import com.walmartlabs.concord.server.process.logs.ProcessLogManager;
 import com.walmartlabs.concord.server.sdk.ProcessStatus;
-import com.walmartlabs.concord.server.sdk.events.ProcessEvent;
 import org.jooq.DSLContext;
 
 import javax.inject.Inject;
@@ -200,7 +200,11 @@ public class ProcessQueueManager {
         queueDao.updateWait(tx, processKey, wait);
 
         Map<String, Object> eventData = objectMapper.convertToMap(wait != null ? wait : new NoneCondition());
-        ProcessEvent e = new ProcessEvent(processKey, EventType.PROCESS_WAIT.name(), null, eventData);
+        NewProcessEvent e = NewProcessEvent.builder()
+                .processKey(processKey)
+                .eventType(EventType.PROCESS_WAIT.name())
+                .data(eventData)
+                .build();
         eventManager.event(tx, Collections.singletonList(e));
     }
 

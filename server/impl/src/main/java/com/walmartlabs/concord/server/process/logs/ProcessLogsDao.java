@@ -27,6 +27,7 @@ import com.walmartlabs.concord.server.jooq.tables.records.ProcessLogDataRecord;
 import com.walmartlabs.concord.server.jooq.tables.records.ProcessLogSegmentsRecord;
 import com.walmartlabs.concord.server.process.LogSegment;
 import com.walmartlabs.concord.server.process.ProcessKey;
+import com.walmartlabs.concord.server.sdk.Range;
 import org.jooq.*;
 import org.jooq.impl.DSL;
 
@@ -56,7 +57,7 @@ public class ProcessLogsDao extends AbstractDao {
      *
      * @return the new chunk range.
      */
-    public PgIntRange append(ProcessKey processKey, long segmentId, byte[] data) {
+    public Range append(ProcessKey processKey, long segmentId, byte[] data) {
         UUID instanceId = processKey.getInstanceId();
         OffsetDateTime createdAt = processKey.getCreatedAt();
 

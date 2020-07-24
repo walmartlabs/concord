@@ -1,10 +1,10 @@
-package com.walmartlabs.concord.db;
+package com.walmartlabs.concord.server.process.event;
 
 /*-
  * *****
  * Concord
  * -----
- * Copyright (C) 2017 - 2019 Walmart Inc.
+ * Copyright (C) 2017 - 2020 Walmart Inc.
  * -----
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,20 +20,28 @@ package com.walmartlabs.concord.db;
  * =====
  */
 
-import com.walmartlabs.concord.server.sdk.Range;
-import org.junit.Test;
+import com.walmartlabs.concord.server.process.ProcessKey;
+import org.immutables.value.Value;
 
-import static org.junit.Assert.assertEquals;
+import javax.annotation.Nullable;
+import java.time.OffsetDateTime;
+import java.util.Map;
 
-public class PgIntRangeTest {
+@Value.Immutable
+@Value.Style(jdkOnly = true)
+public interface NewProcessEvent {
 
-    @Test
-    public void test() throws Exception {
-        String s = "[123,234)";
-        Range r = PgIntRange.parse(s);
-        assertEquals(Range.Mode.INCLUSIVE, r.lowerMode());
-        assertEquals(123, r.lower());
-        assertEquals(234, r.upper());
-        assertEquals(Range.Mode.EXCLUSIVE, r.upperMode());
+    ProcessKey processKey();
+
+    String eventType();
+
+    @Nullable
+    OffsetDateTime eventDate();
+
+    @Nullable
+    Map<String, Object> data();
+
+    static ImmutableNewProcessEvent.Builder builder() {
+        return ImmutableNewProcessEvent.builder();
     }
 }

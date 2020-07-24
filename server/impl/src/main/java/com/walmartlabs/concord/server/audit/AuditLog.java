@@ -170,9 +170,8 @@ public class AuditLog {
                 details.put("changes", changes);
             }
 
-            auditDao.insert(userId, object, action, details);
-
-            listeners.onAuditEvent(new AuditEvent(userId, object.name(), action.name(), details));
+            AuditEvent ev = auditDao.insert(userId, object, action, details);
+            listeners.onAuditEvent(ev);
         }
     }
 

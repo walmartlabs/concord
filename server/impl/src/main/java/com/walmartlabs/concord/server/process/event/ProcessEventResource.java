@@ -29,7 +29,6 @@ import com.walmartlabs.concord.server.process.queue.ProcessKeyCache;
 import com.walmartlabs.concord.server.process.queue.ProcessQueueDao;
 import com.walmartlabs.concord.server.process.queue.ProcessQueueDao.ProjectIdAndInitiator;
 import com.walmartlabs.concord.server.sdk.ConcordApplicationException;
-import com.walmartlabs.concord.server.sdk.events.ProcessEvent;
 import com.walmartlabs.concord.server.sdk.metrics.WithTimer;
 import com.walmartlabs.concord.server.security.Roles;
 import com.walmartlabs.concord.server.security.UserPrincipal;
@@ -92,7 +91,12 @@ public class ProcessEventResource implements Resource {
                       @ApiParam ProcessEventRequest req) {
 
         ProcessKey processKey = assertProcessKey(processInstanceId);
-        ProcessEvent e = new ProcessEvent(processKey, req.getEventType(), req.getEventDate(), req.getData());
+        NewProcessEvent e = NewProcessEvent.builder()
+                .processKey(processKey)
+                .eventType(req.getEventType())
+                .eventDate(req.getEventDate())
+                .data(req.getData())
+                .build();
         eventManager.event(Collections.singletonList(e));
     }
 
@@ -109,8 +113,13 @@ public class ProcessEventResource implements Resource {
 
         ProcessKey processKey = assertProcessKey(processInstanceId);
 
-        List<ProcessEvent> events = data.stream()
-                .map(req -> new ProcessEvent(processKey, req.getEventType(), req.getEventDate(), req.getData()))
+        List<NewProcessEvent> events = data.stream()
+                .map(req -> NewProcessEvent.builder()
+                        .processKey(processKey)
+                        .eventType(req.getEventType())
+                        .eventDate(req.getEventDate())
+                        .data(req.getData())
+                        .build())
                 .collect(Collectors.toList());
 
         eventManager.event(events);

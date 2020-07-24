@@ -44,7 +44,7 @@ public class KafkaConnector implements BackgroundTask {
     private final KafkaEventSinkConfiguration cfg;
     private final boolean enabled;
 
-    private KafkaProducer<UUID, String> producer;
+    private KafkaProducer<String, String> producer;
 
     @Inject
     public KafkaConnector(KafkaEventSinkConfiguration cfg) {
@@ -76,7 +76,7 @@ public class KafkaConnector implements BackgroundTask {
             Properties props = new Properties();
             props.put(ProducerConfig.CLIENT_ID_CONFIG, clientId);
             props.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
-            props.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, "org.apache.kafka.common.serialization.UUIDSerializer");
+            props.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, "org.apache.kafka.common.serialization.StringSerializer");
             props.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, "org.apache.kafka.common.serialization.StringSerializer");
             producer = new KafkaProducer<>(props);
         } catch (Exception e) {
@@ -98,7 +98,7 @@ public class KafkaConnector implements BackgroundTask {
         }
     }
 
-    public void send(String topic, UUID key, String value) {
+    public void send(String topic, String key, String value) {
         if (!enabled || producer == null || topic == null) {
             return;
         }

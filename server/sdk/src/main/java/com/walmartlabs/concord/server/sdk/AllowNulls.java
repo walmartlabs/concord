@@ -1,4 +1,4 @@
-package com.walmartlabs.concord.server.sdk.log;
+package com.walmartlabs.concord.server.sdk;
 
 /*-
  * *****
@@ -20,9 +20,8 @@ package com.walmartlabs.concord.server.sdk.log;
  * =====
  */
 
-import com.walmartlabs.concord.server.sdk.ProcessKey;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Target;
 
-public interface ProcessLogListener {
-
-    void onAppend(ProcessLogEntry entry);
-}
+@Target({ElementType.METHOD, ElementType.PARAMETER, ElementType.FIELD, ElementType.TYPE_USE})
+public @interface AllowNulls {}
