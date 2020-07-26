@@ -79,27 +79,31 @@ class RepositoryList extends React.PureComponent<Props> {
         }
 
         return (
-            <Table striped>
-                <Table.Header>
-                    <Table.Row>
-                        <Table.HeaderCell collapsing={true} />
-                        <Table.HeaderCell collapsing={true}>Name</Table.HeaderCell>
-                        <Table.HeaderCell>Repository URL</Table.HeaderCell>
-                        <Table.HeaderCell collapsing={true}>Branch/Commit ID</Table.HeaderCell>
-                        <Table.HeaderCell singleLine={true}>Path</Table.HeaderCell>
-                        <Table.HeaderCell collapsing={true} style={{ width: '8%' }}>
-                            Secret
-                        </Table.HeaderCell>
-                        <Table.HeaderCell
-                            collapsing={true}
-                            colSpan={2}
-                            style={{ width: '1%', textAlign: 'center' }}>
-                            Execute
-                        </Table.HeaderCell>
-                    </Table.Row>
-                </Table.Header>
-                <Table.Body>{data.map((r) => renderTableRow(orgName, projectName, r))}</Table.Body>
-            </Table>
+            <div style={{ overflowX: 'auto' }}>
+                <Table striped>
+                    <Table.Header>
+                        <Table.Row>
+                            <Table.HeaderCell collapsing={true} />
+                            <Table.HeaderCell collapsing={true}>Name</Table.HeaderCell>
+                            <Table.HeaderCell>Repository URL</Table.HeaderCell>
+                            <Table.HeaderCell collapsing={true}>Branch/Commit ID</Table.HeaderCell>
+                            <Table.HeaderCell singleLine={true}>Path</Table.HeaderCell>
+                            <Table.HeaderCell collapsing={true} style={{ width: '8%' }}>
+                                Secret
+                            </Table.HeaderCell>
+                            <Table.HeaderCell
+                                collapsing={true}
+                                colSpan={2}
+                                style={{ width: '1%', textAlign: 'center' }}>
+                                Execute
+                            </Table.HeaderCell>
+                        </Table.Row>
+                    </Table.Header>
+                    <Table.Body>
+                        {data.map((r) => renderTableRow(orgName, projectName, r))}
+                    </Table.Body>
+                </Table>
+            </div>
         );
     }
 }
