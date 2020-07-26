@@ -426,7 +426,7 @@ public class GitClient {
             }
 
             env.put("GIT_HTTP_LOW_SPEED_LIMIT", String.valueOf(cfg.httpLowSpeedLimit()));
-            env.put("GIT_HTTP_LOW_SPEED_TIME", String.valueOf(cfg.httpLowSpeedTime()));
+            env.put("GIT_HTTP_LOW_SPEED_TIME", String.valueOf(cfg.httpLowSpeedTime().getSeconds()));
 
             return launchCommand(workDir, env, timeout, args);
         } catch (IOException e) {
@@ -547,7 +547,7 @@ public class GitClient {
             w.println("  export DISPLAY");
             w.println("fi");
             w.println("ssh -i \"" + key.toAbsolutePath().toString() + "\" -o ServerAliveCountMax=" + cfg.sshTimeoutRetryCount() +
-                    " -o ServerAliveInterval=" + cfg.sshTimeout() +
+                    " -o ServerAliveInterval=" + cfg.sshTimeout().getSeconds() +
                     " -o StrictHostKeyChecking=no \"$@\"");
         }
         Files.setPosixFilePermissions(ssh, ImmutableSet.of(OWNER_READ, OWNER_EXECUTE));

@@ -26,6 +26,7 @@ import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
 import java.io.Serializable;
+import java.time.Duration;
 import java.util.List;
 
 @Named
@@ -34,7 +35,7 @@ public class ApiKeyConfiguration implements Serializable {
 
     @Inject
     @Config("apiKey.expirationPeriod")
-    private int expirationPeriodDays;
+    private Duration expirationPeriod;
 
     @Inject
     @Config("apiKey.expirationEnabled")
@@ -44,8 +45,8 @@ public class ApiKeyConfiguration implements Serializable {
     @Config("apiKey.notifyBeforeDays")
     private List<Integer> notifyBeforeDays;
 
-    public int getExpirationPeriodDays() {
-        return expirationPeriodDays;
+    public Duration getExpirationPeriod() {
+        return expirationPeriod;
     }
 
     public boolean isExpirationEnabled() {

@@ -61,7 +61,7 @@ public final class DataSourceUtils {
         ds.setUsername(username);
         ds.setPassword(password);
         ds.setAutoCommit(false);
-        ds.setMaxLifetime(cfg.maxLifetime());
+        ds.setMaxLifetime(cfg.maxLifetime().toMillis());
         ds.setMinimumIdle(1);
         ds.setMaximumPoolSize(cfg.maxPoolSize());
         ds.setLeakDetectionThreshold(30000);

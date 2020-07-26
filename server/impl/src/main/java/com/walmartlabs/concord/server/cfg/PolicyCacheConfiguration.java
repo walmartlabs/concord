@@ -26,6 +26,7 @@ import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
 import java.io.Serializable;
+import java.time.Duration;
 
 @Named
 @Singleton
@@ -33,9 +34,9 @@ public class PolicyCacheConfiguration implements Serializable {
 
     @Inject
     @Config("policyCache.reloadInterval")
-    private long reloadInterval;
+    private Duration reloadInterval;
 
-    public long getReloadInterval() {
+    public Duration getReloadInterval() {
         return reloadInterval;
     }
 }

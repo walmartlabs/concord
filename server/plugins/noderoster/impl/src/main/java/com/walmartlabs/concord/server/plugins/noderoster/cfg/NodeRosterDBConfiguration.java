@@ -27,6 +27,7 @@ import com.walmartlabs.ollie.config.Config;
 import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
+import java.time.Duration;
 
 @Named
 @NodeRosterDB
@@ -70,7 +71,7 @@ public class NodeRosterDBConfiguration implements DatabaseConfiguration {
     }
 
     @Override
-    public long maxLifetime() {
-        return 0;
+    public Duration maxLifetime() {
+        return Duration.ofSeconds(0);
     }
 }

@@ -26,6 +26,7 @@ import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
 import java.io.Serializable;
+import java.time.Duration;
 
 @Named
 @Singleton
@@ -33,13 +34,13 @@ public class ProcessWaitWatchdogConfiguration implements Serializable {
 
     @Inject
     @Config("process.waitCheckPeriod")
-    private long period;
+    private Duration period;
 
     @Inject
     @Config("process.waitCheckPollLimit")
     private int pollLimit;
 
-    public long getPeriod() {
+    public Duration getPeriod() {
         return period;
     }
 

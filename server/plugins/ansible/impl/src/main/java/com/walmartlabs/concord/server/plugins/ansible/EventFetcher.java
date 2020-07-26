@@ -59,7 +59,7 @@ public class EventFetcher extends AbstractEventProcessor<EventProcessor.Event> {
 
     @Override
     public long getIntervalInSec() {
-        return cfg.getPeriod();
+        return cfg.getPeriod().getSeconds();
     }
 
     @Override

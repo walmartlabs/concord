@@ -74,8 +74,8 @@ public class QoSFilter implements Filter {
     @Inject
     public QoSFilter(QosConfiguration qosConfiguration) {
         this.maxRequests = qosConfiguration.getMaxRequests();
-        this.waitMs = qosConfiguration.getMaxWaitMs();
-        this.suspendMs = qosConfiguration.getSuspendMs();
+        this.waitMs = qosConfiguration.getMaxWait().toMillis();
+        this.suspendMs = qosConfiguration.getSuspend().toMillis();
 
         this.queues = new AsyncContextQueue[DEFAULT_MAX_PRIORITY + 1];
         this.listeners = new AsyncListener[this.queues.length];

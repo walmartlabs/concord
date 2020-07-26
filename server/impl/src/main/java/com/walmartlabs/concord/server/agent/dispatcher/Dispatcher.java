@@ -72,7 +72,7 @@ public class Dispatcher extends PeriodicTask {
                       DispatcherDao dao,
                       WebSocketChannelManager channelManager) {
 
-        super(cfg.getCommandPollDelay(), ERROR_DELAY);
+        super(cfg.getCommandPollDelay().toMillis(), ERROR_DELAY);
         this.dao = dao;
         this.channelManager = channelManager;
     }

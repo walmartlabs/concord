@@ -29,6 +29,7 @@ import javax.inject.Singleton;
 import java.io.Serializable;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.time.Duration;
 import java.util.List;
 
 @Named
@@ -37,7 +38,7 @@ public class ProcessConfiguration implements Serializable {
 
     @Inject
     @Config("process.cleanupInterval")
-    private long cleanupInterval;
+    private Duration cleanupInterval;
 
     @Inject
     @Config("process.queueCleanup")
@@ -61,7 +62,7 @@ public class ProcessConfiguration implements Serializable {
 
     @Inject
     @Config("process.maxStateAge")
-    private long maxStateAge;
+    private Duration maxStateAge;
     @Inject
     @Config("process.secureFiles")
     private List<String> secureFiles;
@@ -91,12 +92,12 @@ public class ProcessConfiguration implements Serializable {
         this.signingKeyPath = signingKeyPath != null ? Paths.get(signingKeyPath) : null;
     }
 
-    public ProcessConfiguration(long maxStateAge, List<String> secureFiles) {
+    public ProcessConfiguration(Duration maxStateAge, List<String> secureFiles) {
         this.maxStateAge = maxStateAge;
         this.secureFiles = secureFiles;
     }
 
-    public long getCleanupInterval() {
+    public Duration getCleanupInterval() {
         return cleanupInterval;
     }
 
@@ -120,7 +121,7 @@ public class ProcessConfiguration implements Serializable {
         return checkpointCleanup;
     }
 
-    public long getMaxStateAge() {
+    public Duration getMaxStateAge() {
         return maxStateAge;
     }
 

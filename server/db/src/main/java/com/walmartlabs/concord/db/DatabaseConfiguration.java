@@ -20,6 +20,7 @@ package com.walmartlabs.concord.db;
  * =====
  */
 
+import java.time.Duration;
 import java.util.Collections;
 import java.util.Map;
 
@@ -37,7 +38,7 @@ public interface DatabaseConfiguration {
 
     int maxPoolSize();
 
-    long maxLifetime();
+    Duration maxLifetime();
 
     default Map<String, Object> changeLogParameters() {
         return Collections.emptyMap();

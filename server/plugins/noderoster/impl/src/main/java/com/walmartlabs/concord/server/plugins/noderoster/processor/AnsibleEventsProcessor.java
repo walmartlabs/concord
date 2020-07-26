@@ -67,7 +67,7 @@ public class AnsibleEventsProcessor extends AbstractEventProcessor<AnsibleEvent>
         this.eventsDao = eventsDao;
         this.processors = new ArrayList<>(processors.values());
 
-        this.interval = eventsCfg.getPeriod();
+        this.interval = eventsCfg.getPeriod().getSeconds();
 
         Instant startTimestamp = eventsCfg.getStartTimestamp();
         this.startTimestamp = startTimestamp != null ? OffsetDateTime.ofInstant(startTimestamp, ZoneId.systemDefault()) : null;

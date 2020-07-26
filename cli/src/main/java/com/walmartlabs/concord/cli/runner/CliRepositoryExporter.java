@@ -37,8 +37,8 @@ public class CliRepositoryExporter implements RepositoryExporter {
     private static final Duration DEFAULT_OPERATION_TIMEOUT = Duration.parse("PT10M");
     private static final Duration FETCH_TIMEOUT = Duration.parse("PT10M");
     private static final int HTTP_LOW_SPEED_LIMIT = 0;
-    private static final int HTTP_LOW_SPEED_TIME = 600;
-    private static final int SSH_TIMEOUT = 600;
+    private static final Duration HTTP_LOW_SPEED_TIME = Duration.ofMinutes(10);
+    private static final Duration SSH_TIMEOUT = Duration.ofMinutes(10);
     private static final int SSH_TIMEOUT_RETRY_COUNT = 1;
 
     private final Path repoCacheDir;

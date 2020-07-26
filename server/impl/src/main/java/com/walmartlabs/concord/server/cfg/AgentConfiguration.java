@@ -26,6 +26,7 @@ import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
 import java.io.Serializable;
+import java.time.Duration;
 
 @Named
 @Singleton
@@ -33,9 +34,9 @@ public class AgentConfiguration implements Serializable {
 
     @Inject
     @Config("agent.commandPollDelay")
-    private long commandPollDelay;
+    private Duration commandPollDelay;
 
-    public long getCommandPollDelay() {
+    public Duration getCommandPollDelay() {
         return commandPollDelay;
     }
 }

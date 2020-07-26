@@ -28,6 +28,7 @@ import org.immutables.value.Value;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import javax.naming.NamingException;
+import java.time.Duration;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -40,12 +41,12 @@ public class CachingLdapManager implements LdapManager {
     private final LoadingCache<CacheKey, Optional<LdapPrincipal>> principalByName;
     private final LoadingCache<String, Optional<LdapPrincipal>> principalByDn;
 
-    public CachingLdapManager(long cacheDuration,
+    public CachingLdapManager(Duration cacheDuration,
                               LdapManager delegate) {
 
         this.delegate = delegate;
         this.principalByName = CacheBuilder.newBuilder()
-                .expireAfterWrite(cacheDuration, TimeUnit.MILLISECONDS)
+                .expireAfterWrite(cacheDuration.toMillis(), TimeUnit.MILLISECONDS)
                 .concurrencyLevel(32)
                 .recordStats()
                 .build(new CacheLoader<CacheKey, Optional<LdapPrincipal>>() {
@@ -56,7 +57,7 @@ public class CachingLdapManager implements LdapManager {
                 });
 
         this.principalByDn = CacheBuilder.newBuilder()
-                .expireAfterWrite(cacheDuration, TimeUnit.MILLISECONDS)
+                .expireAfterWrite(cacheDuration.toMillis(), TimeUnit.MILLISECONDS)
                 .concurrencyLevel(32)
                 .recordStats()
                 .build(new CacheLoader<String, Optional<LdapPrincipal>>() {

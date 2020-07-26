@@ -30,6 +30,7 @@ import javax.inject.Named;
 import javax.inject.Singleton;
 import java.io.IOException;
 import java.nio.file.Path;
+import java.time.Duration;
 
 import static com.walmartlabs.concord.server.cfg.Utils.getPath;
 
@@ -49,11 +50,11 @@ public class RepositoryConfiguration {
 
     @Inject
     @Config("repositoryCache.lockTimeout")
-    private long lockTimeout;
+    private Duration lockTimeout;
 
     @Inject
     @Config("repositoryCache.maxAge")
-    private long maxAge;
+    private Duration maxAge;
 
     @Inject
     @Config("repositoryCache.lockCount")
@@ -73,7 +74,7 @@ public class RepositoryConfiguration {
         return cacheDir;
     }
 
-    public long getLockTimeout() {
+    public Duration getLockTimeout() {
         return lockTimeout;
     }
 
@@ -85,7 +86,7 @@ public class RepositoryConfiguration {
         return concordFileValidationEnabled;
     }
 
-    public long getMaxAge() {
+    public Duration getMaxAge() {
         return maxAge;
     }
 

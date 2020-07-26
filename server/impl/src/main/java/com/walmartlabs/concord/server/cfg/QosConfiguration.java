@@ -24,6 +24,7 @@ import com.walmartlabs.ollie.config.Config;
 
 import javax.inject.Inject;
 import java.io.Serializable;
+import java.time.Duration;
 
 public class QosConfiguration implements Serializable {
 
@@ -32,22 +33,22 @@ public class QosConfiguration implements Serializable {
     public int maxRequests;
 
     @Inject
-    @Config("qos.maxWaitMs")
-    public int maxWaitMs;
+    @Config("qos.maxWait")
+    public Duration maxWait;
 
     @Inject
-    @Config("qos.suspendMs")
-    public int suspendMs;
+    @Config("qos.suspend")
+    public Duration suspend;
 
     public int getMaxRequests() {
         return maxRequests;
     }
 
-    public int getMaxWaitMs() {
-        return maxWaitMs;
+    public Duration getMaxWait() {
+        return maxWait;
     }
 
-    public int getSuspendMs() {
-        return suspendMs;
+    public Duration getSuspend() {
+        return suspend;
     }
 }

@@ -27,6 +27,7 @@ import com.walmartlabs.ollie.config.Config;
 import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
+import java.time.Duration;
 import java.util.Map;
 
 @Named
@@ -52,7 +53,7 @@ public class MainDBConfiguration implements DatabaseConfiguration {
 
     @Inject
     @Config("db.maxLifetime")
-    private long maxLifetime;
+    private Duration maxLifetime;
 
     @Inject
     @Config("db.changeLogParameters")
@@ -79,7 +80,7 @@ public class MainDBConfiguration implements DatabaseConfiguration {
     }
 
     @Override
-    public long maxLifetime() {
+    public Duration maxLifetime() {
         return maxLifetime;
     }
 

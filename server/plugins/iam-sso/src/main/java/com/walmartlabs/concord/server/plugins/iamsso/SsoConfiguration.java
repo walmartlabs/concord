@@ -27,6 +27,7 @@ import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
 import java.io.Serializable;
+import java.time.Duration;
 import java.util.Map;
 
 @Named
@@ -73,11 +74,11 @@ public class SsoConfiguration implements Serializable {
 
     @Inject
     @Config("sso.tokenServiceReadTimeout")
-    private int tokenServiceReadTimeout;
+    private Duration tokenServiceReadTimeout;
 
     @Inject
     @Config("sso.tokenServiceConnectTimeout")
-    private int tokenServiceConnectTimeout;
+    private Duration tokenServiceConnectTimeout;
 
     @Inject
     @Config("sso.validateNonce")
@@ -127,11 +128,11 @@ public class SsoConfiguration implements Serializable {
         return tokenSigningKey;
     }
 
-    public int getTokenServiceReadTimeout() {
+    public Duration getTokenServiceReadTimeout() {
         return tokenServiceReadTimeout;
     }
 
-    public int getTokenServiceConnectTimeout() {
+    public Duration getTokenServiceConnectTimeout() {
         return tokenServiceConnectTimeout;
     }
 

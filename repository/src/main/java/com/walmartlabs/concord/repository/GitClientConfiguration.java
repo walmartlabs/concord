@@ -52,13 +52,13 @@ public interface GitClientConfiguration {
     }
 
     @Value.Default
-    default int httpLowSpeedTime() {
-        return 0;
+    default Duration httpLowSpeedTime() {
+        return Duration.ofMinutes(0L);
     }
 
     @Value.Default
-    default int sshTimeout() {
-        return 600;
+    default Duration sshTimeout() {
+        return Duration.ofMinutes(10);
     }
 
     @Value.Default

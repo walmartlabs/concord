@@ -27,6 +27,7 @@ import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
 import java.io.Serializable;
+import java.time.Duration;
 import java.time.Instant;
 
 @Named
@@ -35,7 +36,7 @@ public class NodeRosterEventsConfiguration implements Serializable {
 
     @Inject
     @Config("noderoster.events.period")
-    private int period;
+    private Duration period;
 
     @Inject
     @Config("noderoster.events.fetchLimit")
@@ -48,7 +49,7 @@ public class NodeRosterEventsConfiguration implements Serializable {
         this.startTimestamp = startTimestamp != null ? Instant.parse(startTimestamp) : null;
     }
 
-    public int getPeriod() {
+    public Duration getPeriod() {
         return period;
     }
 

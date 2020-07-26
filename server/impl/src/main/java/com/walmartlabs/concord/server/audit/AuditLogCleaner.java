@@ -55,13 +55,13 @@ public class AuditLogCleaner implements ScheduledTask {
 
     @Override
     public long getIntervalInSec() {
-        return cfg.getPeriod();
+        return cfg.getPeriod().getSeconds();
     }
 
     @Override
     public void performTask() {
         // TODO use PG's intervals
-        Field<OffsetDateTime> cutoff = currentOffsetDateTime().minus(interval(cfg.getMaxLogAge() + " ms"));
+        Field<OffsetDateTime> cutoff = currentOffsetDateTime().minus(interval(cfg.getMaxLogAge().toMillis() + " ms"));
         cleanerDao.deleteOldLogs(cutoff);
     }
 

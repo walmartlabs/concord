@@ -32,6 +32,7 @@ import org.junit.Test;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.time.Duration;
 
 import static org.junit.Assert.assertEquals;
 
@@ -64,10 +65,10 @@ public class GitClientTest {
         client = new GitClient(GitClientConfiguration.builder()
                 .shallowClone(true)
                 .oauthToken(System.getenv("GIT_TEST_OAUTH_TOKEN"))
-                .sshTimeout(600)
+                .sshTimeout(Duration.ofMinutes(10))
                 .sshTimeoutRetryCount(1)
                 .httpLowSpeedLimit(1)
-                .httpLowSpeedTime(600)
+                .httpLowSpeedTime(Duration.ofMinutes(10))
                 .build());
     }
 

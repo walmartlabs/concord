@@ -422,7 +422,6 @@
                         </executions>
                         <configuration>
                             <skipRun>${skip.it.tests}</skipRun>
-                            <showLogs>false</showLogs>
                             <autoCreateCustomNetworks>true</autoCreateCustomNetworks>
                             <images>
                                 <image>

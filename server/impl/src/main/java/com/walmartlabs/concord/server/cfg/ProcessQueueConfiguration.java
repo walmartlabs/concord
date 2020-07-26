@@ -26,6 +26,7 @@ import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
 import java.io.Serializable;
+import java.time.Duration;
 
 @Named
 @Singleton
@@ -33,13 +34,13 @@ public class ProcessQueueConfiguration implements Serializable {
 
     @Inject
     @Config("queue.dispatcher.pollDelay")
-    private long dispatcherPollDelay;
+    private Duration dispatcherPollDelay;
 
     @Inject
     @Config("queue.dispatcher.batchSize")
     private int dispatcherBatchSize;
 
-    public long getDispatcherPollDelay() {
+    public Duration getDispatcherPollDelay() {
         return dispatcherPollDelay;
     }
 

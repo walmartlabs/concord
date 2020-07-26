@@ -137,7 +137,7 @@ public class ProcessQueueWatchdog implements ScheduledTask {
 
     @Override
     public long getIntervalInSec() {
-        return cfg.getPeriod();
+        return cfg.getPeriod().getSeconds();
     }
 
     @Override

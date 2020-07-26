@@ -57,8 +57,8 @@ public class EmailNotifier {
         Properties result = new Properties();
         result.setProperty("mail.smtp.host", cfg.getHost());
         result.setProperty("mail.smtp.port", Integer.toString(cfg.getPort()));
-        result.setProperty("mail.smtp.timeout", Integer.toString(cfg.getReadTimeout()));
-        result.setProperty("mail.smtp.connectiontimeout", Integer.toString(cfg.getConnectTimeout()));
+        result.setProperty("mail.smtp.timeout", Long.toString(cfg.getReadTimeout().toMillis()));
+        result.setProperty("mail.smtp.connectiontimeout", Long.toString(cfg.getConnectTimeout().toMillis()));
         return result;
     }
 

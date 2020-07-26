@@ -27,6 +27,7 @@ import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
 import java.io.Serializable;
+import java.time.Duration;
 
 @Named
 @Singleton
@@ -34,14 +35,14 @@ public class RememberMeConfiguration implements Serializable {
 
     @Inject
     @Config("rememberMe.maxAge")
-    private int rememberMeMaxAge;
+    private Duration rememberMeMaxAge;
 
     @Inject
     @Config("rememberMe.cipherKey")
     @Nullable
     private byte[] cipherKey;
 
-    public int getRememberMeMaxAge() {
+    public Duration getRememberMeMaxAge() {
         return rememberMeMaxAge;
     }
 

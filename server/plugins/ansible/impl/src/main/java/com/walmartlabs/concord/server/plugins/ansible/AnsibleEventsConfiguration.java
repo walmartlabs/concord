@@ -26,6 +26,7 @@ import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
 import java.io.Serializable;
+import java.time.Duration;
 
 @Named
 @Singleton
@@ -33,7 +34,7 @@ public class AnsibleEventsConfiguration implements Serializable {
 
     @Inject
     @Config("ansibleEvents.period")
-    private int period;
+    private Duration period;
 
     @Inject
     @Config("ansibleEvents.fetchLimit")
@@ -42,12 +43,12 @@ public class AnsibleEventsConfiguration implements Serializable {
     public AnsibleEventsConfiguration() {
     }
 
-    public AnsibleEventsConfiguration(int period, int fetchLimit) {
+    public AnsibleEventsConfiguration(Duration period, int fetchLimit) {
         this.period = period;
         this.fetchLimit = fetchLimit;
     }
 
-    public int getPeriod() {
+    public Duration getPeriod() {
         return period;
     }
 
