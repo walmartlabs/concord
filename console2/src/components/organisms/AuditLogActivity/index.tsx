@@ -262,37 +262,43 @@ export default memo(({ filter: initialFilter, forceRefresh, showRefreshButton = 
             {data && data.items.length === 0 && <h3>No audit log entries found.</h3>}
 
             {data && data.items.length > 0 && (
-                <Table>
-                    <Table.Header>
-                        <Table.Row>
-                            <Table.HeaderCell collapsing={true}>Date</Table.HeaderCell>
-                            <Table.HeaderCell collapsing={true}>Action</Table.HeaderCell>
-                            <Table.HeaderCell collapsing={true}>Object</Table.HeaderCell>
-                            <Table.HeaderCell collapsing={true}>User</Table.HeaderCell>
-                            <Table.HeaderCell>Details</Table.HeaderCell>
-                        </Table.Row>
-                    </Table.Header>
+                <div style={{ overflowX: 'auto' }}>
+                    <Table>
+                        <Table.Header>
+                            <Table.Row>
+                                <Table.HeaderCell collapsing={true}>Date</Table.HeaderCell>
+                                <Table.HeaderCell collapsing={true}>Action</Table.HeaderCell>
+                                <Table.HeaderCell collapsing={true}>Object</Table.HeaderCell>
+                                <Table.HeaderCell collapsing={true}>User</Table.HeaderCell>
+                                <Table.HeaderCell>Details</Table.HeaderCell>
+                            </Table.Row>
+                        </Table.Header>
 
-                    <Table.Body>
-                        {data &&
-                            data.items &&
-                            data.items.map((e, idx) => (
-                                <Table.Row key={idx} verticalAlign="top">
-                                    <Table.Cell collapsing={true}>
-                                        <LocalTimestamp value={e.entryDate} />
-                                    </Table.Cell>
-                                    <Table.Cell collapsing={true}>{e.action}</Table.Cell>
-                                    <Table.Cell collapsing={true}>{e.object}</Table.Cell>
-                                    <Table.Cell collapsing={true}>
-                                        {e.user ? <EntityOwnerPopup data={e.user} /> : '-'}
-                                    </Table.Cell>
-                                    <Table.Cell>
-                                        <ReactJson src={e.details} name={null} collapsed={true} />
-                                    </Table.Cell>
-                                </Table.Row>
-                            ))}
-                    </Table.Body>
-                </Table>
+                        <Table.Body>
+                            {data &&
+                                data.items &&
+                                data.items.map((e, idx) => (
+                                    <Table.Row key={idx} verticalAlign="top">
+                                        <Table.Cell collapsing={true}>
+                                            <LocalTimestamp value={e.entryDate} />
+                                        </Table.Cell>
+                                        <Table.Cell collapsing={true}>{e.action}</Table.Cell>
+                                        <Table.Cell collapsing={true}>{e.object}</Table.Cell>
+                                        <Table.Cell collapsing={true}>
+                                            {e.user ? <EntityOwnerPopup data={e.user} /> : '-'}
+                                        </Table.Cell>
+                                        <Table.Cell>
+                                            <ReactJson
+                                                src={e.details}
+                                                name={null}
+                                                collapsed={true}
+                                            />
+                                        </Table.Cell>
+                                    </Table.Row>
+                                ))}
+                        </Table.Body>
+                    </Table>
+                </div>
             )}
         </>
     );
