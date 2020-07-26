@@ -122,7 +122,7 @@ public class ApiKeyResource implements Resource {
 
         OffsetDateTime expiredAt = null;
         if (cfg.isExpirationEnabled()) {
-            expiredAt = OffsetDateTime.now().plus(cfg.getExpirationPeriodDays(), ChronoUnit.DAYS);
+            expiredAt = OffsetDateTime.now().plus(cfg.getExpirationPeriod().toDays(), ChronoUnit.DAYS);
         }
 
         UUID id;

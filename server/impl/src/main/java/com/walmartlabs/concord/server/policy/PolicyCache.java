@@ -173,7 +173,7 @@ public class PolicyCache implements BackgroundTask {
                     if (lastRefreshRequestAt > now) {
                         lastRefreshRequestAt = now;
                     } else {
-                        refreshMutex.wait(cacheCfg.getReloadInterval());
+                        refreshMutex.wait(cacheCfg.getReloadInterval().toMillis());
                     }
                 }
             } catch (InterruptedException e) {

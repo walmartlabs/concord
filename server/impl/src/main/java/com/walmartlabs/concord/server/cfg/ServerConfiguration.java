@@ -28,6 +28,7 @@ import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
 import java.io.Serializable;
+import java.time.Duration;
 
 @Named
 @Singleton
@@ -45,7 +46,7 @@ public class ServerConfiguration implements Serializable {
 
     @Inject
     @Config("server.sessionTimeout")
-    private int sessionTimeout;
+    private Duration sessionTimeout;
 
     @Inject
     @Nullable
@@ -76,7 +77,7 @@ public class ServerConfiguration implements Serializable {
         return secureCookies;
     }
 
-    public int getSessionTimeout() {
+    public Duration getSessionTimeout() {
         return sessionTimeout;
     }
 

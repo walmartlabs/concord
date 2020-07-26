@@ -25,6 +25,7 @@ import com.walmartlabs.ollie.config.Config;
 import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
+import java.time.Duration;
 
 @Named
 @Singleton
@@ -44,13 +45,13 @@ public class EnqueueWorkersConfiguration {
 
     @Inject
     @Config("queue.enqueuePollInterval")
-    private long interval;
+    private Duration interval;
 
     public int getWorkersCount() {
         return workersCount;
     }
 
-    public long getInterval() {
+    public Duration getInterval() {
         return interval;
     }
 

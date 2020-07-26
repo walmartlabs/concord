@@ -67,13 +67,13 @@ public class ProcessCleaner implements ScheduledTask {
 
     @Override
     public long getIntervalInSec() {
-        return cfg.getCleanupInterval();
+        return cfg.getCleanupInterval().getSeconds();
     }
 
     @Override
     public void performTask() {
         // TODO use PG's intervals
-        Field<OffsetDateTime> cutoff = currentOffsetDateTime().minus(interval(cfg.getMaxStateAge() + " ms"));
+        Field<OffsetDateTime> cutoff = currentOffsetDateTime().minus(interval(cfg.getMaxStateAge().toMillis() + " ms"));
         cleanerDao.deleteOldState(cutoff, cfg);
         cleanerDao.deleteOrphans(cfg);
     }

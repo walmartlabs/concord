@@ -27,6 +27,7 @@ import com.walmartlabs.ollie.config.Config;
 import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
+import java.time.Duration;
 
 @Named
 @Singleton
@@ -51,7 +52,7 @@ public class JsonStorageDBConfiguration implements DatabaseConfiguration {
 
     @Inject
     @Config("db.maxLifetime")
-    private long maxLifetime;
+    private Duration maxLifetime;
 
     @Override
     public String url() {
@@ -74,7 +75,7 @@ public class JsonStorageDBConfiguration implements DatabaseConfiguration {
     }
 
     @Override
-    public long maxLifetime() {
+    public Duration maxLifetime() {
         return maxLifetime;
     }
 }

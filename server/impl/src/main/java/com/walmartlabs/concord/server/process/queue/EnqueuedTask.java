@@ -64,7 +64,7 @@ public class EnqueuedTask extends PeriodicTask {
 
     @Inject
     public EnqueuedTask(EnqueueWorkersConfiguration cfg, Dao dao, EnqueueProcessPipeline pipeline, MetricRegistry metricRegistry) {
-        super(cfg.getInterval(), ERROR_RETRY_INTERVAL);
+        super(cfg.getInterval().toMillis(), ERROR_RETRY_INTERVAL);
 
         this.cfg = cfg;
         this.dao = dao;

@@ -51,7 +51,7 @@ public class ConcordRememberMeManager extends CookieRememberMeManager {
             setCipherKey(cipherKey);
         }
 
-        int maxAge = cfg.getRememberMeMaxAge();
+        int maxAge = (int)cfg.getRememberMeMaxAge().getSeconds();
         getCookie().setMaxAge(maxAge);
 
         setSerializer(new PrincipalCollectionSerializer());

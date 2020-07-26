@@ -31,6 +31,7 @@ import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.time.Duration;
 import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
@@ -51,15 +52,15 @@ public class RepositoryCache {
 
     public RepositoryCache(Path cacheDir,
                            Path repoJournalPath,
-                           long lockTimeout,
-                           long maxCacheAge,
+                           Duration lockTimeout,
+                           Duration maxCacheAge,
                            int lockCount,
                            ObjectMapper objectMapper) throws IOException {
 
         this.cacheDir = cacheDir;
-        this.lockTimeout = lockTimeout;
-        this.accessJournal = maxCacheAge > 0 ? new RepositoryAccessJournal(objectMapper, repoJournalPath) : null;
-        this.maxCacheAge = maxCacheAge;
+        this.lockTimeout = lockTimeout.toMillis();
+        this.accessJournal = maxCacheAge.toMillis() > 0 ? new RepositoryAccessJournal(objectMapper, repoJournalPath) : null;
+        this.maxCacheAge = maxCacheAge.toMillis();
         this.locks = Striped.lock(lockCount);
     }
 

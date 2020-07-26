@@ -56,11 +56,11 @@ public class GitConfiguration implements Serializable {
 
     @Inject
     @Config("git.httpLowSpeedTime")
-    private int httpLowSpeedTime;
+    private Duration httpLowSpeedTime;
 
     @Inject
     @Config("git.sshTimeout")
-    private int sshTimeout;
+    private Duration sshTimeout;
 
     @Inject
     @Config("git.sshTimeoutRetryCount")
@@ -86,11 +86,11 @@ public class GitConfiguration implements Serializable {
         return httpLowSpeedLimit;
     }
 
-    public int getHttpLowSpeedTime() {
+    public Duration getHttpLowSpeedTime() {
         return httpLowSpeedTime;
     }
 
-    public int getSshTimeout() {
+    public Duration getSshTimeout() {
         return sshTimeout;
     }
 

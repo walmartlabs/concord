@@ -33,6 +33,7 @@ import org.junit.Before;
 
 import javax.sql.DataSource;
 import java.lang.reflect.Method;
+import java.time.Duration;
 import java.util.Collections;
 
 public abstract class AbstractDaoTest {
@@ -114,8 +115,8 @@ public abstract class AbstractDaoTest {
         }
 
         @Override
-        public long maxLifetime() {
-            return 30000;
+        public Duration maxLifetime() {
+            return Duration.ofSeconds(30);
         }
     }
 }

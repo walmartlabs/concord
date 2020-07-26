@@ -26,6 +26,7 @@ import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
 import java.io.Serializable;
+import java.time.Duration;
 
 @Named
 @Singleton
@@ -33,7 +34,7 @@ public class ProcessWatchdogConfiguration implements Serializable {
 
     @Inject
     @Config("process.watchdogPeriod")
-    private long period;
+    private Duration period;
 
     @Inject
     @Config("process.maxFailureHandlingAge")
@@ -47,7 +48,7 @@ public class ProcessWatchdogConfiguration implements Serializable {
     @Config("process.maxStartFailureAge")
     private String maxStartFailureAge;
 
-    public long getPeriod() {
+    public Duration getPeriod() {
         return period;
     }
 

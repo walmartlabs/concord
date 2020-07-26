@@ -38,8 +38,8 @@ public class GitConfiguration {
     private final Duration defaultOperationTimeout;
     private final Duration fetchTimeout;
     private final int httpLowSpeedLimit;
-    private final int httpLowSpeedTime;
-    private final int sshTimeout;
+    private final Duration httpLowSpeedTime;
+    private final Duration sshTimeout;
     private final int sshTimeoutRetryCount;
 
     @Inject
@@ -49,8 +49,8 @@ public class GitConfiguration {
         this.defaultOperationTimeout = cfg.getDuration("git.defaultOperationTimeout");
         this.fetchTimeout = cfg.getDuration("git.fetchTimeout");
         this.httpLowSpeedLimit = cfg.getInt("git.httpLowSpeedLimit");
-        this.httpLowSpeedTime = cfg.getInt("git.httpLowSpeedTime");
-        this.sshTimeout = cfg.getInt("git.sshTimeout");
+        this.httpLowSpeedTime = cfg.getDuration("git.httpLowSpeedTime");
+        this.sshTimeout = cfg.getDuration("git.sshTimeout");
         this.sshTimeoutRetryCount = cfg.getInt("git.sshTimeoutRetryCount");
     }
 
@@ -74,11 +74,11 @@ public class GitConfiguration {
         return httpLowSpeedLimit;
     }
 
-    public int getHttpLowSpeedTime() {
+    public Duration getHttpLowSpeedTime() {
         return httpLowSpeedTime;
     }
 
-    public int getSshTimeout() {
+    public Duration getSshTimeout() {
         return sshTimeout;
     }
 

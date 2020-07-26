@@ -26,6 +26,7 @@ import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
 import java.io.Serializable;
+import java.time.Duration;
 
 @Named
 @Singleton
@@ -37,21 +38,21 @@ public class AuditConfiguration implements Serializable {
 
     @Inject
     @Config("audit.cleanupPeriod")
-    private long period;
+    private Duration period;
 
     @Inject
     @Config("audit.maxLogAge")
-    private long maxLogAge;
+    private Duration maxLogAge;
 
     public boolean isEnabled() {
         return enabled;
     }
 
-    public long getPeriod() {
+    public Duration getPeriod() {
         return period;
     }
 
-    public long getMaxLogAge() {
+    public Duration getMaxLogAge() {
         return maxLogAge;
     }
 }

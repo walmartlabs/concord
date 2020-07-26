@@ -104,8 +104,8 @@ public class SsoClient {
             con.setRequestProperty(HttpHeaders.ACCEPT_LANGUAGE, ACCEPT_LANG_HEADER);
 
             con.setRequestMethod("POST");
-            con.setConnectTimeout(cfg.getTokenServiceConnectTimeout());
-            con.setReadTimeout(cfg.getTokenServiceReadTimeout());
+            con.setConnectTimeout((int)cfg.getTokenServiceConnectTimeout().toMillis());
+            con.setReadTimeout((int)cfg.getTokenServiceReadTimeout().toMillis());
             con.setDoOutput(true);
 
             String request = String.format(TOKEN_REQUEST, authCode, clientRedirectURI);

@@ -94,7 +94,7 @@ public class LdapConfiguration implements Serializable {
     @Inject
     @Nullable
     @Config("ldap.cacheDuration")
-    private Long cacheDuration;
+    private Duration cacheDuration;
 
     @Inject
     @Config("ldap.connectTimeout")
@@ -176,7 +176,7 @@ public class LdapConfiguration implements Serializable {
         return autoCreateUsers;
     }
 
-    public Long getCacheDuration() {
+    public Duration getCacheDuration() {
         return cacheDuration;
     }
 

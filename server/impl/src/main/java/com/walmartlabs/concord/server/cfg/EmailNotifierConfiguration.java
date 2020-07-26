@@ -26,6 +26,7 @@ import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
 import java.io.Serializable;
+import java.time.Duration;
 
 @Named
 @Singleton
@@ -49,11 +50,11 @@ public class EmailNotifierConfiguration implements Serializable {
 
     @Inject
     @Config("email.readTimeout")
-    private int readTimeout;
+    private Duration readTimeout;
 
     @Inject
     @Config("email.connectTimeout")
-    private int connectTimeout;
+    private Duration connectTimeout;
 
     public String getHost() {
         return host;
@@ -71,11 +72,11 @@ public class EmailNotifierConfiguration implements Serializable {
         return from;
     }
 
-    public int getReadTimeout() {
+    public Duration getReadTimeout() {
         return readTimeout;
     }
 
-    public int getConnectTimeout() {
+    public Duration getConnectTimeout() {
         return connectTimeout;
     }
 }

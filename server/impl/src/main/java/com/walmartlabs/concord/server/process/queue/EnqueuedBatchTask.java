@@ -76,7 +76,7 @@ public class EnqueuedBatchTask extends PeriodicTask {
                              RepositoryManager repositoryManager,
                              MetricRegistry metricRegistry) {
 
-        super(cfg.getInterval(), ERROR_RETRY_INTERVAL);
+        super(cfg.getInterval().toMillis(), ERROR_RETRY_INTERVAL);
 
         this.cfg = cfg;
         this.dao = dao;

@@ -26,6 +26,7 @@ import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
 import java.nio.file.Path;
+import java.time.Duration;
 import java.util.concurrent.TimeUnit;
 
 import static com.walmartlabs.concord.agent.cfg.Utils.getDir;
@@ -35,17 +36,17 @@ import static com.walmartlabs.concord.agent.cfg.Utils.getDir;
 public class RepositoryCacheConfiguration {
 
     private final Path cacheDir;
-    private final long lockTimeout;
+    private final Duration lockTimeout;
     private final int lockCount;
-    private final long maxAge;
+    private final Duration maxAge;
     private final Path infoDir;
 
     @Inject
     public RepositoryCacheConfiguration(Config cfg) {
         this.cacheDir = getDir(cfg, "repositoryCache.cacheDir");
-        this.lockTimeout = cfg.getDuration("repositoryCache.lockTimeout", TimeUnit.MILLISECONDS);
+        this.lockTimeout = cfg.getDuration("repositoryCache.lockTimeout");
         this.lockCount = cfg.getInt("repositoryCache.lockCount");
-        this.maxAge = cfg.getDuration("repositoryCache.maxAge", TimeUnit.MILLISECONDS);
+        this.maxAge = cfg.getDuration("repositoryCache.maxAge");
         this.infoDir = getDir(cfg, "repositoryCache.cacheInfoDir");
     }
 
@@ -53,7 +54,7 @@ public class RepositoryCacheConfiguration {
         return cacheDir;
     }
 
-    public long getLockTimeout() {
+    public Duration getLockTimeout() {
         return lockTimeout;
     }
 
@@ -61,7 +62,7 @@ public class RepositoryCacheConfiguration {
         return lockCount;
     }
 
-    public long getMaxAge() {
+    public Duration getMaxAge() {
         return maxAge;
     }
 

@@ -101,7 +101,7 @@ public class Dispatcher extends PeriodicTask {
                       ProcessQueueConfiguration cfg,
                       MetricRegistry metricRegistry) {
 
-        super(cfg.getDispatcherPollDelay(), ERROR_DELAY);
+        super(cfg.getDispatcherPollDelay().toMillis(), ERROR_DELAY);
 
         this.locks = locks;
         this.dao = dao;

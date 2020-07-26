@@ -25,6 +25,7 @@ import com.walmartlabs.concord.server.cfg.LdapConfiguration;
 import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Provider;
+import java.time.Duration;
 
 @Named
 public class LdapManagerProvider implements Provider<LdapManager> {
@@ -37,7 +38,7 @@ public class LdapManagerProvider implements Provider<LdapManager> {
 
         LdapManager manager = new LdapManagerImpl(cfg, ctxFactory);
 
-        Long cacheDuration = cfg.getCacheDuration();
+        Duration cacheDuration = cfg.getCacheDuration();
         if (cacheDuration != null) {
             this.ldapManager = new CachingLdapManager(cacheDuration, manager);
         } else {
