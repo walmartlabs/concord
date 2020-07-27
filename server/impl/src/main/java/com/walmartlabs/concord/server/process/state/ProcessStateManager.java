@@ -37,6 +37,7 @@ import com.walmartlabs.concord.server.policy.PolicyManager;
 import com.walmartlabs.concord.server.process.PartialProcessKey;
 import com.walmartlabs.concord.server.process.ProcessKey;
 import com.walmartlabs.concord.server.process.logs.ProcessLogManager;
+import com.walmartlabs.concord.server.process.queue.ProcessKeyCache;
 import com.walmartlabs.concord.server.sdk.metrics.WithTimer;
 import org.apache.commons.compress.archivers.zip.ZipArchiveEntry;
 import org.apache.commons.compress.archivers.zip.ZipArchiveOutputStream;
@@ -81,22 +82,26 @@ public class ProcessStateManager extends AbstractDao {
     private static final int INSERT_BATCH_SIZE = 10;
 
     private final SecretStoreConfiguration secretCfg;
-    private final Set<String> secureFiles = new HashSet<>();
     private final PolicyManager policyManager;
     private final ProcessLogManager logManager;
+    private final ProcessKeyCache processKeyCache;
+
+    private final Set<String> secureFiles;
 
     @Inject
     protected ProcessStateManager(@MainDB Configuration cfg,
                                   SecretStoreConfiguration secretCfg,
                                   ProcessConfiguration stateCfg,
                                   PolicyManager policyManager,
-                                  ProcessLogManager logManager) {
+                                  ProcessLogManager logManager,
+                                  ProcessKeyCache processKeyCache) {
         super(cfg);
         this.secretCfg = secretCfg;
         this.policyManager = policyManager;
         this.logManager = logManager;
+        this.processKeyCache = processKeyCache;
 
-        this.secureFiles.addAll(stateCfg.getSecureFiles());
+        this.secureFiles = Collections.unmodifiableSet(new HashSet<>(stateCfg.getSecureFiles()));
     }
 
     @Override
@@ -105,7 +110,7 @@ public class ProcessStateManager extends AbstractDao {
     }
 
     public <T> Optional<T> get(PartialProcessKey partialProcessKey, String path, Function<InputStream, Optional<T>> converter) {
-        ProcessKey processKey = assertKey(partialProcessKey);
+        ProcessKey processKey = processKeyCache.assertKey(partialProcessKey.getInstanceId());
         return get(processKey, path, converter);
     }
 
@@ -187,14 +192,14 @@ public class ProcessStateManager extends AbstractDao {
     /**
      * Retrieves a list of resources whose path begins with the specified value.
      */
-    public List<String> list(PartialProcessKey processKey, String path) {
-        OffsetDateTime createdAt = assertCreatedAt(processKey);
+    public List<String> list(PartialProcessKey partialProcessKey, String path) {
+        ProcessKey processKey = processKeyCache.assertKey(partialProcessKey.getInstanceId());
 
         try (DSLContext tx = DSL.using(cfg)) {
             return tx.select(PROCESS_STATE.ITEM_PATH)
                     .from(PROCESS_STATE)
                     .where(PROCESS_STATE.INSTANCE_ID.eq(processKey.getInstanceId())
-                            .and(PROCESS_STATE.INSTANCE_CREATED_AT.eq(createdAt))
+                            .and(PROCESS_STATE.INSTANCE_CREATED_AT.eq(processKey.getCreatedAt()))
                             .and(PROCESS_STATE.ITEM_PATH.startsWith(path)))
                     .fetch(PROCESS_STATE.ITEM_PATH);
         }
@@ -217,9 +222,9 @@ public class ProcessStateManager extends AbstractDao {
         }
     }
 
-    public boolean exists(PartialProcessKey processKey, String path) {
-        OffsetDateTime instanceCreatedAt = assertCreatedAt(processKey);
-        return exists(new ProcessKey(processKey, instanceCreatedAt), path);
+    public boolean exists(PartialProcessKey partialProcessKey, String path) {
+        ProcessKey processKey = processKeyCache.assertKey(partialProcessKey.getInstanceId());
+        return exists(processKey, path);
     }
 
     /**
@@ -487,22 +492,11 @@ public class ProcessStateManager extends AbstractDao {
         return String.join(PATH_SEPARATOR, elements);
     }
 
-    public OffsetDateTime assertCreatedAt(PartialProcessKey processKey) {
-        return assertCreatedAt(processKey.getInstanceId());
-    }
-
     private void delete(DSLContext tx, UUID instanceId, OffsetDateTime instanceCreatedAt) {
         tx.deleteFrom(PROCESS_STATE)
                 .where(PROCESS_STATE.INSTANCE_ID.eq(instanceId)
                         .and(PROCESS_STATE.INSTANCE_CREATED_AT.eq(instanceCreatedAt)))
                 .execute();
-    }
-
-    private ProcessKey assertKey(PartialProcessKey processKey) {
-        try (DSLContext tx = DSL.using(cfg)) {
-            OffsetDateTime createdAt = assertCreatedAt(tx, processKey.getInstanceId());
-            return new ProcessKey(processKey, createdAt);
-        }
     }
 
     private void insert(DSLContext tx, UUID instanceId, OffsetDateTime instanceCreatedAt, Collection<BatchItem> batch) {
@@ -584,24 +578,6 @@ public class ProcessStateManager extends AbstractDao {
             throw new IllegalArgumentException("Can't relativize '" + child + "' from '" + parent + "'");
         }
         return child.substring(parent.length());
-    }
-
-    private OffsetDateTime assertCreatedAt(UUID instanceId) {
-        try (DSLContext tx = DSL.using(cfg)) {
-            return assertCreatedAt(tx, instanceId);
-        }
-    }
-
-    private OffsetDateTime assertCreatedAt(DSLContext tx, UUID instanceId) {
-        OffsetDateTime t = tx.select(PROCESS_QUEUE.CREATED_AT).from(PROCESS_QUEUE)
-                .where(PROCESS_QUEUE.INSTANCE_ID.eq(instanceId))
-                .fetchOne(PROCESS_QUEUE.CREATED_AT);
-
-        if (t == null) {
-            throw new IllegalStateException("Process not found: " + instanceId);
-        }
-
-        return t;
     }
 
     private PolicyEngine assertPolicy(DSLContext tx, ProcessKey processKey, Path src, BiFunction<Path, BasicFileAttributes, Boolean> filter) {

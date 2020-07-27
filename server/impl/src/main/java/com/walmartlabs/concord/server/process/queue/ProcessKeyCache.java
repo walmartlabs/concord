@@ -68,6 +68,14 @@ public class ProcessKeyCache implements com.walmartlabs.concord.server.sdk.Proce
         }
     }
 
+    public ProcessKey assertKey(UUID instanceId) {
+        ProcessKey processKey = get(instanceId);
+        if (processKey == null) {
+            throw new IllegalStateException("Can't determine the process key of " + instanceId);
+        }
+        return processKey;
+    }
+
     public Optional<ProcessKey> getUncached(UUID instanceId) {
         return Optional.ofNullable(queueDao.getKey(instanceId));
     }

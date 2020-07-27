@@ -20,14 +20,18 @@ package com.walmartlabs.concord.server.process.state;
  * =====
  */
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Charsets;
 import com.walmartlabs.concord.sdk.Constants;
 import com.walmartlabs.concord.server.AbstractDaoTest;
+import com.walmartlabs.concord.server.ConcordObjectMapper;
 import com.walmartlabs.concord.server.cfg.ProcessConfiguration;
 import com.walmartlabs.concord.server.cfg.SecretStoreConfiguration;
 import com.walmartlabs.concord.server.policy.PolicyManager;
 import com.walmartlabs.concord.server.process.ProcessKey;
 import com.walmartlabs.concord.server.process.logs.ProcessLogManager;
+import com.walmartlabs.concord.server.process.queue.ProcessKeyCache;
+import com.walmartlabs.concord.server.process.queue.ProcessQueueDao;
 import org.junit.Ignore;
 import org.junit.Test;
 
@@ -60,8 +64,9 @@ public class ProcessStateManagerTest extends AbstractDaoTest {
         writeTempFile(baseDir.resolve("file-2"), "456".getBytes());
 
         //
+        ProcessKeyCache processKeyCache = new ProcessKeyCache(new ProcessQueueDao(getConfiguration(), new ConcordObjectMapper(new ObjectMapper())));
         ProcessConfiguration stateCfg = new ProcessConfiguration(Duration.ofMillis(24 * 60 * 60 * 1000), Collections.singletonList(Constants.Files.CONFIGURATION_FILE_NAME));
-        ProcessStateManager stateManager = new ProcessStateManager(getConfiguration(), mock(SecretStoreConfiguration.class), stateCfg, mock(PolicyManager.class), mock(ProcessLogManager.class));
+        ProcessStateManager stateManager = new ProcessStateManager(getConfiguration(), mock(SecretStoreConfiguration.class), stateCfg, mock(PolicyManager.class), mock(ProcessLogManager.class), processKeyCache);
         stateManager.importPath(processKey, null, baseDir, (p, attrs) -> true);
 
         Path tmpDir = Files.createTempDirectory("testExport");
@@ -105,8 +110,9 @@ public class ProcessStateManagerTest extends AbstractDaoTest {
             }
         }
 
+        ProcessKeyCache processKeyCache = new ProcessKeyCache(new ProcessQueueDao(getConfiguration(), new ConcordObjectMapper(new ObjectMapper())));
         ProcessConfiguration stateCfg = new ProcessConfiguration(Duration.ofMillis(24 * 60 * 60 * 1000), Collections.singletonList(Constants.Files.CONFIGURATION_FILE_NAME));
-        ProcessStateManager stateManager = new ProcessStateManager(getConfiguration(), mock(SecretStoreConfiguration.class), stateCfg, mock(PolicyManager.class), mock(ProcessLogManager.class));
+        ProcessStateManager stateManager = new ProcessStateManager(getConfiguration(), mock(SecretStoreConfiguration.class), stateCfg, mock(PolicyManager.class), mock(ProcessLogManager.class), processKeyCache);
         stateManager.importPath(processKey, "/", baseDir, (p, attrs) -> true);
     }
 
