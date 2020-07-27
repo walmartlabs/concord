@@ -13,10 +13,6 @@
     <artifactId>kafka-event-sink</artifactId>
     <packaging>takari-jar</packaging>
 
-    <properties>
-
-    </properties>
-
     <dependencies>
         <dependency>
             <groupId>com.walmartlabs.concord.server</groupId>
@@ -60,6 +56,10 @@
                 <configuration>
                     <proc>proc</proc>
                 </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.eclipse.sisu</groupId>
+                <artifactId>sisu-maven-plugin</artifactId>
             </plugin>
         </plugins>
     </build>

@@ -40,6 +40,10 @@
             <groupId>com.walmartlabs.concord.server.plugins</groupId>
             <artifactId>oidc</artifactId>
         </dependency>
+        <dependency>
+            <groupId>com.walmartlabs.concord.server.plugins</groupId>
+            <artifactId>kafka-event-sink</artifactId>
+        </dependency>
 
         <dependency>
             <groupId>org.slf4j</groupId>
