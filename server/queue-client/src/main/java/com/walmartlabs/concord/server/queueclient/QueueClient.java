@@ -323,6 +323,8 @@ public class QueueClient {
             try {
                 this.client.stop();
                 this.client.destroy();
+            } catch (InterruptedException e) {
+                // ignore, we're stopping anyway
             } catch (Exception e) {
                 log.error("stop -> error", e);
             }

@@ -27,6 +27,7 @@ import com.walmartlabs.concord.server.MultipartUtils;
 import com.walmartlabs.concord.server.org.OrganizationDao;
 import com.walmartlabs.concord.server.org.project.ProjectDao;
 import com.walmartlabs.concord.server.org.project.RepositoryDao;
+import com.walmartlabs.concord.server.process.queue.ProcessKeyCache;
 import com.walmartlabs.concord.server.process.state.ProcessStateManager;
 import com.walmartlabs.concord.server.sdk.metrics.WithTimer;
 import com.walmartlabs.concord.server.security.UserPrincipal;
@@ -40,7 +41,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.Serializable;
 import java.nio.file.Path;
-import java.time.OffsetDateTime;
 import java.util.Collections;
 import java.util.Map;
 import java.util.Set;
@@ -60,17 +60,20 @@ public class PayloadManager {
     private final OrganizationDao orgDao;
     private final ProjectDao projectDao;
     private final RepositoryDao repositoryDao;
+    private final ProcessKeyCache processKeyCache;
 
     @Inject
     public PayloadManager(ProcessStateManager stateManager,
                           OrganizationDao orgDao,
                           ProjectDao projectDao,
-                          RepositoryDao repositoryDao) {
+                          RepositoryDao repositoryDao,
+                          ProcessKeyCache processKeyCache) {
 
         this.stateManager = stateManager;
         this.orgDao = orgDao;
         this.projectDao = projectDao;
         this.repositoryDao = repositoryDao;
+        this.processKeyCache = processKeyCache;
     }
 
     @WithTimer
@@ -187,8 +190,7 @@ public class PayloadManager {
 
     public Payload createResumePayload(PartialProcessKey partialKey, String eventName, Map<String, Object> req) throws IOException {
         // TODO use ProcessKeyCache
-        OffsetDateTime createdAt = stateManager.assertCreatedAt(partialKey);
-        ProcessKey pk = new ProcessKey(partialKey, createdAt);
+        ProcessKey pk = processKeyCache.assertKey(partialKey.getInstanceId());
         return createResumePayload(pk, eventName, req);
     }
 

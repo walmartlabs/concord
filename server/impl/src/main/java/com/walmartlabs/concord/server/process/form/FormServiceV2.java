@@ -26,6 +26,7 @@ import com.walmartlabs.concord.sdk.Constants;
 import com.walmartlabs.concord.server.process.*;
 import com.walmartlabs.concord.server.process.pipelines.ResumePipeline;
 import com.walmartlabs.concord.server.process.pipelines.processors.Chain;
+import com.walmartlabs.concord.server.process.queue.ProcessKeyCache;
 import com.walmartlabs.concord.server.process.state.ProcessStateManager;
 import com.walmartlabs.concord.server.user.UserInfoProvider.UserInfo;
 import com.walmartlabs.concord.server.user.UserManager;
@@ -34,7 +35,6 @@ import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
 import java.io.IOException;
-import java.time.OffsetDateTime;
 import java.util.*;
 
 @Named
@@ -50,14 +50,15 @@ public class FormServiceV2 {
     private final FormAccessManager formAccessManager;
     private final Chain resumePipeline;
     private final FormManager formManager;
+    private final ProcessKeyCache processKeyCache;
 
     @Inject
-    public FormServiceV2(
-            PayloadManager payloadManager,
-            ProcessStateManager stateManager,
-            UserManager userManager, FormAccessManager formAccessManager,
-            ResumePipeline resumePipeline,
-            FormManager formManager) {
+    public FormServiceV2(PayloadManager payloadManager,
+                         ProcessStateManager stateManager,
+                         UserManager userManager, FormAccessManager formAccessManager,
+                         ResumePipeline resumePipeline,
+                         FormManager formManager,
+                         ProcessKeyCache processKeyCache) {
 
         this.payloadManager = payloadManager;
         this.stateManager = stateManager;
@@ -65,12 +66,12 @@ public class FormServiceV2 {
         this.formAccessManager = formAccessManager;
         this.resumePipeline = resumePipeline;
         this.formManager = formManager;
+        this.processKeyCache = processKeyCache;
     }
 
-    public Form get(PartialProcessKey processKey, String formName) {
-        // TODO use ProcessKeyCache
-        OffsetDateTime createdAt = stateManager.assertCreatedAt(processKey);
-        return get(new ProcessKey(processKey, createdAt), formName);
+    public Form get(PartialProcessKey partialProcessKey, String formName) {
+        ProcessKey processKey = processKeyCache.assertKey(partialProcessKey.getInstanceId());
+        return get(processKey, formName);
     }
 
     public Form get(ProcessKey processKey, String formName) {
@@ -84,9 +85,9 @@ public class FormServiceV2 {
         return form;
     }
 
-    public List<FormListEntry> list(PartialProcessKey processKey) {
-        OffsetDateTime createdAt = stateManager.assertCreatedAt(processKey);
-        return list(new ProcessKey(processKey, createdAt));
+    public List<FormListEntry> list(PartialProcessKey partialProcessKey) {
+        ProcessKey processKey = processKeyCache.assertKey(partialProcessKey.getInstanceId());
+        return list(processKey);
     }
 
     @SuppressWarnings({"unchecked", "rawtypes"})
@@ -104,9 +105,9 @@ public class FormServiceV2 {
         return result;
     }
 
-    public FormSubmitResult submit(PartialProcessKey processKey, String formName, Map<String, Object> data) throws FormUtils.ValidationException {
-        OffsetDateTime createdAt = stateManager.assertCreatedAt(processKey);
-        return submit(new ProcessKey(processKey, createdAt), formName, data);
+    public FormSubmitResult submit(PartialProcessKey partialProcessKey, String formName, Map<String, Object> data) throws FormUtils.ValidationException {
+        ProcessKey processKey = processKeyCache.assertKey(partialProcessKey.getInstanceId());
+        return submit(processKey, formName, data);
     }
 
     public FormSubmitResult submit(ProcessKey processKey, String formName, Map<String, Object> data) throws FormUtils.ValidationException {

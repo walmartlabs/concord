@@ -24,7 +24,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.guava.GuavaModule;
 import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
 import com.google.inject.*;
-import com.google.inject.Module;
 import com.google.inject.matcher.AbstractMatcher;
 import com.google.inject.spi.TypeEncounter;
 import com.google.inject.spi.TypeListener;
@@ -108,7 +107,7 @@ public class Main {
             log.info("Spent {}ms waiting for the payload", (t2 - t1));
         }
 
-        UUID instanceId = UUID.fromString(new String(Files.readAllBytes(idPath)));
+        UUID instanceId = readInstanceId(idPath);
 
         Map<String, Object> policy = readPolicyRules(baseDir);
         if (policy.isEmpty()) {
@@ -222,6 +221,21 @@ public class Main {
             return objectMapper.readValue(policyFile.toFile(), Map.class);
         } catch (IOException e) {
             throw new ExecutionException("Error while reading policy rules");
+        }
+    }
+
+    private static UUID readInstanceId(Path src) {
+        String s;
+        try {
+            s = new String(Files.readAllBytes(src));
+        } catch (Exception e) {
+            throw new IllegalArgumentException("Error while reading " + src.toAbsolutePath() + ": " + e.getMessage());
+        }
+
+        try {
+            return UUID.fromString(s);
+        } catch (IllegalArgumentException e) {
+            throw new IllegalArgumentException("Can't parse " + src.toAbsolutePath() + ": " + e.getMessage());
         }
     }
 
