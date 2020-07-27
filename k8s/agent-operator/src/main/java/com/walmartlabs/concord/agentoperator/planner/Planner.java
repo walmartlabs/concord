@@ -58,8 +58,8 @@ public class Planner {
         List<Pod> pods = AgentPod.list(client, resourceName);
         int currentSize = pods.size();
 
-        // hash of the configuration, will be used to determine which resources should be updated
-        String newHash = HashUtils.hashAsHexString(poolInstance.getResource().getSpec());
+        // hash of the Agent Pod configuration, will be used to determine which resources should be updated
+        String newHash = HashUtils.hashAsHexString(poolInstance.getResource().getSpec().getPod());
 
         // calculate the configmap changes
 
@@ -74,6 +74,13 @@ public class Planner {
         if (poolStatus == AgentPoolInstance.Status.DELETED) {
             targetSize = 0;
         }
+
+        /*
+        Set the flag to recreate all pods to true, when there is a change to
+        Config Map in the AgentPool definition, or when a new ConfigMap is added.
+
+        Delete the Config Map if there are no pods present in the pool.
+         */
 
         if (m == null) {
             if (targetSize > 0) {
@@ -90,7 +97,18 @@ public class Planner {
             }
         }
 
-        // check all pods for cfg changes
+        /*
+        check all pods for cfg changes.
+
+        Delete the pod only if there is a change in the Hash of Agent Pod,
+        that is change to Pod definition in the AgentPool resource definition.
+
+        Changes include change to the image, mem requirements, env variable changes,
+        docker changes, or anything that requires the Agent Pod to be restarted.
+
+        Do not delete and recreate all pods when there is a change to the
+        agentpool sizes - min, max and current size.
+         */
 
         for (Pod p : pods) {
             String currentHash = p.getMetadata().getLabels().get(AgentPod.CONFIG_HASH_LABEL);
