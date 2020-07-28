@@ -1,5 +1,27 @@
 # Change log
 
+## [Unreleased]
+
+### Changed
+
+- concord-server: count child processes towards the concurrency
+limit;
+- agent-operator: now correctly calculates the pod's
+configuration hash, fixes an issue when pods where incorrectly
+scheduled for replacement due to the pool's size changes;
+- concord-server: perform all process key lookups via
+`ProcessKeyCache`;
+- concord-console: disable autocomplete for password fields on
+the new secret page and when encrypting a string.
+
+### Breaking
+
+- concord-agent, concord-server, concord-cli: the configuration
+parameters that previously used integers for duration values
+(e.g. `repositoryCache.maxAge`) now use literal duration values.
+
+
+
 ## [1.58.0] - 2020-07-24
 
 ### Added
