@@ -21,8 +21,8 @@ package com.walmartlabs.concord.server.process.form;
  */
 
 import com.walmartlabs.concord.sdk.Constants;
-import com.walmartlabs.concord.server.process.PartialProcessKey;
 import com.walmartlabs.concord.server.process.state.ProcessStateManager;
+import com.walmartlabs.concord.server.sdk.PartialProcessKey;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;

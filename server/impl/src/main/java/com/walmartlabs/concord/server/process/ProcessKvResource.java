@@ -23,6 +23,7 @@ package com.walmartlabs.concord.server.process;
 import com.walmartlabs.concord.server.org.project.KvDao;
 import com.walmartlabs.concord.server.process.queue.ProcessQueueManager;
 import com.walmartlabs.concord.server.sdk.ConcordApplicationException;
+import com.walmartlabs.concord.server.sdk.PartialProcessKey;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;

@@ -25,11 +25,11 @@ import com.walmartlabs.concord.common.TemporaryPath;
 import com.walmartlabs.concord.server.MultipartUtils;
 import com.walmartlabs.concord.server.process.ProcessEntry;
 import com.walmartlabs.concord.server.process.ProcessEntry.ProcessCheckpointEntry;
-import com.walmartlabs.concord.server.process.ProcessKey;
 import com.walmartlabs.concord.server.process.ProcessManager;
 import com.walmartlabs.concord.server.process.ResumeProcessResponse;
 import com.walmartlabs.concord.server.process.state.ProcessCheckpointManager;
 import com.walmartlabs.concord.server.sdk.ConcordApplicationException;
+import com.walmartlabs.concord.server.sdk.ProcessKey;
 import com.walmartlabs.concord.server.sdk.metrics.WithTimer;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -80,7 +80,7 @@ public class ProcessCheckpointResource implements Resource {
     @WithTimer
     public List<ProcessCheckpointEntry> list(@ApiParam @PathParam("id") UUID instanceId) {
         ProcessEntry entry = processManager.assertProcess(instanceId);
-        ProcessKey processKey = ProcessKey.from(entry);
+        ProcessKey processKey = new ProcessKey(entry.instanceId(), entry.createdAt());
 
         checkpointManager.assertProcessAccess(entry);
 
@@ -99,8 +99,9 @@ public class ProcessCheckpointResource implements Resource {
 
         UUID checkpointId = request.getId();
 
+        // TODO replace with ProcessKeyCache
         ProcessEntry entry = processManager.assertProcess(instanceId);
-        ProcessKey processKey = ProcessKey.from(entry);
+        ProcessKey processKey = new ProcessKey(entry.instanceId(), entry.createdAt());
 
         processManager.restoreFromCheckpoint(processKey, checkpointId);
 
@@ -113,8 +114,9 @@ public class ProcessCheckpointResource implements Resource {
     public void uploadCheckpoint(@PathParam("id") UUID instanceId,
                                  @ApiParam MultipartInput input) {
 
+        // TODO replace with ProcessKeyCache
         ProcessEntry entry = processManager.assertProcess(instanceId);
-        ProcessKey processKey = ProcessKey.from(entry);
+        ProcessKey processKey = new ProcessKey(entry.instanceId(), entry.createdAt());
 
         UUID checkpointId = MultipartUtils.getUuid(input, "id");
         String checkpointName = MultipartUtils.getString(input, "name");

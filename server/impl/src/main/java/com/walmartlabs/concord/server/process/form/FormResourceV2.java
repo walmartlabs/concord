@@ -24,8 +24,8 @@ import com.walmartlabs.concord.forms.Form;
 import com.walmartlabs.concord.forms.FormField;
 import com.walmartlabs.concord.forms.FormUtils;
 import com.walmartlabs.concord.server.MultipartUtils;
-import com.walmartlabs.concord.server.process.PartialProcessKey;
 import com.walmartlabs.concord.server.sdk.ConcordApplicationException;
+import com.walmartlabs.concord.server.sdk.PartialProcessKey;
 import org.jboss.resteasy.plugins.providers.multipart.MultipartInput;
 
 import javax.inject.Inject;

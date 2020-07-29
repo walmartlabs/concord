@@ -24,7 +24,7 @@ import com.walmartlabs.concord.server.Listeners;
 import com.walmartlabs.concord.server.RequestUtils;
 import com.walmartlabs.concord.server.cfg.AuditConfiguration;
 import com.walmartlabs.concord.server.org.project.DiffUtils;
-import com.walmartlabs.concord.server.process.PartialProcessKey;
+import com.walmartlabs.concord.server.sdk.PartialProcessKey;
 import com.walmartlabs.concord.server.sdk.audit.AuditEvent;
 import com.walmartlabs.concord.server.security.UserPrincipal;
 import com.walmartlabs.concord.server.security.sessionkey.SessionKeyPrincipal;

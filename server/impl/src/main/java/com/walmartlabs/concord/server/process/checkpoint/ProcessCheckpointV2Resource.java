@@ -21,10 +21,10 @@ package com.walmartlabs.concord.server.process.checkpoint;
  */
 
 import com.walmartlabs.concord.server.process.ProcessEntry;
-import com.walmartlabs.concord.server.process.ProcessKey;
 import com.walmartlabs.concord.server.process.ProcessManager;
 import com.walmartlabs.concord.server.process.state.ProcessCheckpointManager;
 import com.walmartlabs.concord.server.sdk.ConcordApplicationException;
+import com.walmartlabs.concord.server.sdk.ProcessKey;
 import com.walmartlabs.concord.server.sdk.metrics.WithTimer;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -72,7 +72,7 @@ public class ProcessCheckpointV2Resource implements Resource {
                                                        @ApiParam @QueryParam("action") String action) {
 
         ProcessEntry entry = processManager.assertProcess(instanceId);
-        ProcessKey processKey = ProcessKey.from(entry);
+        ProcessKey processKey = new ProcessKey(entry.instanceId(), entry.createdAt());
 
         switch (action) {
             case RESTORE_PROCESS_ACTION: {

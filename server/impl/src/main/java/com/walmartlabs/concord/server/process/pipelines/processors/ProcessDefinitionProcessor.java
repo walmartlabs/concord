@@ -28,7 +28,7 @@ import com.walmartlabs.concord.sdk.MapUtils;
 import com.walmartlabs.concord.server.process.ImportsNormalizerFactory;
 import com.walmartlabs.concord.server.process.Payload;
 import com.walmartlabs.concord.server.process.ProcessException;
-import com.walmartlabs.concord.server.process.ProcessKey;
+import com.walmartlabs.concord.server.sdk.ProcessKey;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

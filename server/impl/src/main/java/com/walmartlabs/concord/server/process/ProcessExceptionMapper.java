@@ -20,6 +20,7 @@ package com.walmartlabs.concord.server.process;
  * =====
  */
 
+import com.walmartlabs.concord.server.sdk.PartialProcessKey;
 import org.sonatype.siesta.ExceptionMapperSupport;
 
 import javax.inject.Named;

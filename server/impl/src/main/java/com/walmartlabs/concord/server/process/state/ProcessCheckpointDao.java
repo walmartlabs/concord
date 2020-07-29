@@ -24,7 +24,7 @@ import com.walmartlabs.concord.db.AbstractDao;
 import com.walmartlabs.concord.db.MainDB;
 import com.walmartlabs.concord.server.process.ImmutableProcessCheckpointEntry;
 import com.walmartlabs.concord.server.process.ProcessEntry.ProcessCheckpointEntry;
-import com.walmartlabs.concord.server.process.ProcessKey;
+import com.walmartlabs.concord.server.sdk.ProcessKey;
 import org.jooq.Configuration;
 import org.jooq.Record;
 

@@ -22,11 +22,11 @@ package com.walmartlabs.concord.server.process.queue;
 
 import com.walmartlabs.concord.db.AbstractDao;
 import com.walmartlabs.concord.db.MainDB;
-import com.walmartlabs.concord.server.process.PartialProcessKey;
 import com.walmartlabs.concord.server.process.Payload;
 import com.walmartlabs.concord.server.process.PayloadManager;
 import com.walmartlabs.concord.server.process.ProcessManager;
 import com.walmartlabs.concord.server.sdk.ConcordApplicationException;
+import com.walmartlabs.concord.server.sdk.PartialProcessKey;
 import com.walmartlabs.concord.server.sdk.ProcessStatus;
 import org.jooq.Configuration;
 import org.jooq.Field;

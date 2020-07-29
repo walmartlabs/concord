@@ -25,7 +25,7 @@ import com.walmartlabs.concord.db.MainDB;
 import com.walmartlabs.concord.server.ConcordObjectMapper;
 import com.walmartlabs.concord.server.cfg.ProcessWaitWatchdogConfiguration;
 import com.walmartlabs.concord.server.jooq.tables.ProcessQueue;
-import com.walmartlabs.concord.server.process.ProcessKey;
+import com.walmartlabs.concord.server.sdk.ProcessKey;
 import com.walmartlabs.concord.server.sdk.ProcessStatus;
 import com.walmartlabs.concord.server.sdk.ScheduledTask;
 import org.immutables.value.Value;

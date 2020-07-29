@@ -28,8 +28,8 @@ import com.walmartlabs.concord.policyengine.PolicyEngine;
 import com.walmartlabs.concord.sdk.Constants;
 import com.walmartlabs.concord.server.process.Payload;
 import com.walmartlabs.concord.server.process.ProcessException;
-import com.walmartlabs.concord.server.process.ProcessKey;
 import com.walmartlabs.concord.server.process.logs.ProcessLogManager;
+import com.walmartlabs.concord.server.sdk.ProcessKey;
 import com.walmartlabs.concord.server.sdk.metrics.InjectCounter;
 
 import javax.inject.Inject;

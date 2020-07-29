@@ -28,7 +28,7 @@ import com.walmartlabs.concord.server.ConcordObjectMapper;
 import com.walmartlabs.concord.server.cfg.ProcessConfiguration;
 import com.walmartlabs.concord.server.cfg.SecretStoreConfiguration;
 import com.walmartlabs.concord.server.policy.PolicyManager;
-import com.walmartlabs.concord.server.process.ProcessKey;
+import com.walmartlabs.concord.server.sdk.ProcessKey;
 import com.walmartlabs.concord.server.process.logs.ProcessLogManager;
 import com.walmartlabs.concord.server.process.queue.ProcessKeyCache;
 import com.walmartlabs.concord.server.process.queue.ProcessQueueDao;

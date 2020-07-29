@@ -20,7 +20,7 @@ package com.walmartlabs.concord.server.security.sessionkey;
  * =====
  */
 
-import com.walmartlabs.concord.server.process.PartialProcessKey;
+import com.walmartlabs.concord.server.sdk.PartialProcessKey;
 import com.walmartlabs.concord.server.security.PrincipalUtils;
 
 public class SessionKeyPrincipal {

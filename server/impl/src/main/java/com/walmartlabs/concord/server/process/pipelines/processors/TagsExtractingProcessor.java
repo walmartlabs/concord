@@ -23,7 +23,7 @@ package com.walmartlabs.concord.server.process.pipelines.processors;
 import com.walmartlabs.concord.sdk.Constants;
 import com.walmartlabs.concord.server.process.Payload;
 import com.walmartlabs.concord.server.process.ProcessException;
-import com.walmartlabs.concord.server.process.ProcessKey;
+import com.walmartlabs.concord.server.sdk.ProcessKey;
 
 import javax.inject.Named;
 import java.util.*;

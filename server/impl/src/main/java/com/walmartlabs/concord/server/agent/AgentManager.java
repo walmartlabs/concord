@@ -20,13 +20,13 @@ package com.walmartlabs.concord.server.agent;
  * =====
  */
 
-import com.walmartlabs.concord.server.process.PartialProcessKey;
 import com.walmartlabs.concord.server.process.ProcessEntry;
-import com.walmartlabs.concord.server.process.ProcessKey;
 import com.walmartlabs.concord.server.process.queue.ProcessQueueDao;
 import com.walmartlabs.concord.server.process.queue.ProcessQueueManager;
 import com.walmartlabs.concord.server.queueclient.message.MessageType;
 import com.walmartlabs.concord.server.queueclient.message.ProcessRequest;
+import com.walmartlabs.concord.server.sdk.PartialProcessKey;
+import com.walmartlabs.concord.server.sdk.ProcessKey;
 import com.walmartlabs.concord.server.sdk.ProcessStatus;
 import com.walmartlabs.concord.server.websocket.WebSocketChannel;
 import com.walmartlabs.concord.server.websocket.WebSocketChannelManager;

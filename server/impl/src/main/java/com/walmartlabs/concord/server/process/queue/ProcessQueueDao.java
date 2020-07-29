@@ -35,6 +35,8 @@ import com.walmartlabs.concord.server.jooq.tables.records.ProcessQueueRecord;
 import com.walmartlabs.concord.server.process.*;
 import com.walmartlabs.concord.server.process.ProcessEntry.ProcessCheckpointEntry;
 import com.walmartlabs.concord.server.process.ProcessEntry.ProcessStatusHistoryEntry;
+import com.walmartlabs.concord.server.sdk.PartialProcessKey;
+import com.walmartlabs.concord.server.sdk.ProcessKey;
 import com.walmartlabs.concord.server.sdk.ProcessStatus;
 import org.jooq.*;
 import org.jooq.exception.DataAccessException;

@@ -26,12 +26,12 @@ import com.walmartlabs.concord.server.org.project.ProjectDao;
 import com.walmartlabs.concord.server.org.secret.SecretManager;
 import com.walmartlabs.concord.server.process.Payload;
 import com.walmartlabs.concord.server.process.ProcessException;
-import com.walmartlabs.concord.server.process.ProcessKey;
 import com.walmartlabs.concord.server.process.logs.ProcessLogManager;
 import com.walmartlabs.concord.server.process.pipelines.processors.Chain;
 import com.walmartlabs.concord.server.process.pipelines.processors.PayloadProcessor;
 import com.walmartlabs.concord.server.process.pipelines.processors.RepositoryProcessor;
 import com.walmartlabs.concord.server.process.pipelines.processors.RepositoryProcessor.RepositoryInfo;
+import com.walmartlabs.concord.server.sdk.ProcessKey;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

@@ -28,7 +28,7 @@ import com.walmartlabs.concord.server.org.OrganizationDao;
 import com.walmartlabs.concord.server.org.project.ProjectDao;
 import com.walmartlabs.concord.server.org.project.ProjectEntry;
 import com.walmartlabs.concord.server.process.Payload;
-import com.walmartlabs.concord.server.process.ProcessKey;
+import com.walmartlabs.concord.server.sdk.ProcessKey;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.stubbing.Answer;
