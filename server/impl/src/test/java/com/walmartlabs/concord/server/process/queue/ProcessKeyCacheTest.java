@@ -23,7 +23,7 @@ package com.walmartlabs.concord.server.process.queue;
 import com.walmartlabs.concord.server.AbstractDaoTest;
 import com.walmartlabs.concord.server.ConcordObjectMapper;
 import com.walmartlabs.concord.server.TestObjectMapper;
-import com.walmartlabs.concord.server.process.ProcessKey;
+import com.walmartlabs.concord.server.sdk.ProcessKey;
 import org.junit.Ignore;
 import org.junit.Test;
 

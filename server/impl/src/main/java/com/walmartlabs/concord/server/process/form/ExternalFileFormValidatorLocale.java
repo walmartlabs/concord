@@ -23,8 +23,8 @@ package com.walmartlabs.concord.server.process.form;
 import com.walmartlabs.concord.common.form.ConcordFormValidatorLocale;
 import com.walmartlabs.concord.common.form.DefaultConcordFormValidatorLocale;
 import com.walmartlabs.concord.sdk.Constants;
-import com.walmartlabs.concord.server.process.ProcessKey;
 import com.walmartlabs.concord.server.process.state.ProcessStateManager;
+import com.walmartlabs.concord.server.sdk.ProcessKey;
 import io.takari.bpm.model.form.FormField;
 
 import java.io.InputStream;

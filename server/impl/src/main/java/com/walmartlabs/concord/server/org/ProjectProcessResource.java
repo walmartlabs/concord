@@ -32,6 +32,8 @@ import com.walmartlabs.concord.server.process.queue.ProcessFilter;
 import com.walmartlabs.concord.server.process.queue.ProcessQueueDao;
 import com.walmartlabs.concord.server.process.queue.ProcessQueueManager;
 import com.walmartlabs.concord.server.sdk.ConcordApplicationException;
+import com.walmartlabs.concord.server.sdk.PartialProcessKey;
+import com.walmartlabs.concord.server.sdk.ProcessKey;
 import com.walmartlabs.concord.server.sdk.ProcessStatus;
 import com.walmartlabs.concord.server.sdk.metrics.WithTimer;
 import com.walmartlabs.concord.server.security.UserPrincipal;
@@ -261,7 +263,7 @@ public class ProjectProcessResource implements Resource {
             throw new ConcordApplicationException("Process not found: " + processKey, Status.NOT_FOUND);
         }
 
-        ProcessKey pk = ProcessKey.from(entry);
+        ProcessKey pk = new ProcessKey(entry.instanceId(), entry.createdAt());
 
         ProcessStatus s = entry.status();
         if (s == ProcessStatus.FAILED || s == ProcessStatus.CANCELLED || s == ProcessStatus.TIMED_OUT) {

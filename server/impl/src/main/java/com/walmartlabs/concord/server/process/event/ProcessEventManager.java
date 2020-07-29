@@ -26,7 +26,7 @@ import com.codahale.metrics.MetricRegistry;
 import com.walmartlabs.concord.sdk.EventType;
 import com.walmartlabs.concord.server.ConcordObjectMapper;
 import com.walmartlabs.concord.server.Listeners;
-import com.walmartlabs.concord.server.process.ProcessKey;
+import com.walmartlabs.concord.server.sdk.ProcessKey;
 import com.walmartlabs.concord.server.sdk.ProcessStatus;
 import com.walmartlabs.concord.server.sdk.events.ProcessEvent;
 import com.walmartlabs.concord.server.sdk.metrics.InjectMeter;

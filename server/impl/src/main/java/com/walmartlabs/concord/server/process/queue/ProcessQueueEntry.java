@@ -21,7 +21,7 @@ package com.walmartlabs.concord.server.process.queue;
  */
 
 import com.walmartlabs.concord.imports.Imports;
-import com.walmartlabs.concord.server.process.ProcessKey;
+import com.walmartlabs.concord.server.sdk.ProcessKey;
 import org.immutables.value.Value;
 
 import javax.annotation.Nullable;

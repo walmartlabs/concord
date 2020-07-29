@@ -21,7 +21,7 @@ package com.walmartlabs.concord.server.events;
  */
 
 import com.walmartlabs.concord.server.events.externalevent.ExternalEventTriggerProcessor;
-import com.walmartlabs.concord.server.process.PartialProcessKey;
+import com.walmartlabs.concord.server.sdk.PartialProcessKey;
 import com.walmartlabs.concord.server.sdk.metrics.WithTimer;
 import com.walmartlabs.concord.server.user.UserManager;
 import io.swagger.annotations.Api;

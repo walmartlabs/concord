@@ -24,8 +24,8 @@ import com.walmartlabs.concord.common.ConfigurationUtils;
 import com.walmartlabs.concord.common.CycleChecker;
 import com.walmartlabs.concord.server.process.Payload;
 import com.walmartlabs.concord.server.process.ProcessException;
-import com.walmartlabs.concord.server.process.ProcessKey;
 import com.walmartlabs.concord.server.process.logs.ProcessLogManager;
+import com.walmartlabs.concord.server.sdk.ProcessKey;
 
 import javax.inject.Inject;
 import javax.inject.Named;

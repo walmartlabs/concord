@@ -24,8 +24,8 @@ import com.walmartlabs.concord.server.cfg.ProcessConfiguration;
 import com.walmartlabs.concord.server.org.ResourceAccessLevel;
 import com.walmartlabs.concord.server.org.project.ProjectAccessManager;
 import com.walmartlabs.concord.server.process.ProcessEntry;
-import com.walmartlabs.concord.server.process.ProcessKey;
 import com.walmartlabs.concord.server.process.ProcessManager;
+import com.walmartlabs.concord.server.sdk.ProcessKey;
 import com.walmartlabs.concord.server.security.Roles;
 import com.walmartlabs.concord.server.security.UserPrincipal;
 import org.apache.shiro.authz.UnauthorizedException;
@@ -55,7 +55,7 @@ public class ProcessLogAccessManager {
 
     public ProcessKey assertLogAccess(UUID instanceId) {
         ProcessEntry pe = processManager.assertProcess(instanceId);
-        ProcessKey pk = ProcessKey.from(pe);
+        ProcessKey pk = new ProcessKey(pe.instanceId(), pe.createdAt());
 
         if (!processCfg.isCheckLogPermissions()) {
             return pk;

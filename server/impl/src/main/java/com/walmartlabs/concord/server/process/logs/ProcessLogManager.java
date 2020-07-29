@@ -24,7 +24,7 @@ import com.codahale.metrics.Counter;
 import com.walmartlabs.concord.common.LogUtils;
 import com.walmartlabs.concord.server.Listeners;
 import com.walmartlabs.concord.server.process.LogSegment;
-import com.walmartlabs.concord.server.process.ProcessKey;
+import com.walmartlabs.concord.server.sdk.ProcessKey;
 import com.walmartlabs.concord.server.sdk.Range;
 import com.walmartlabs.concord.server.sdk.log.ProcessLogEntry;
 import com.walmartlabs.concord.server.sdk.metrics.InjectCounter;

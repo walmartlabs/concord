@@ -30,6 +30,8 @@ import com.walmartlabs.concord.server.process.*;
 import com.walmartlabs.concord.server.process.event.NewProcessEvent;
 import com.walmartlabs.concord.server.process.event.ProcessEventManager;
 import com.walmartlabs.concord.server.process.logs.ProcessLogManager;
+import com.walmartlabs.concord.server.sdk.PartialProcessKey;
+import com.walmartlabs.concord.server.sdk.ProcessKey;
 import com.walmartlabs.concord.server.sdk.ProcessStatus;
 import org.jooq.DSLContext;
 

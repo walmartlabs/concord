@@ -26,7 +26,7 @@ import com.walmartlabs.concord.db.PgIntRange;
 import com.walmartlabs.concord.server.jooq.tables.records.ProcessLogDataRecord;
 import com.walmartlabs.concord.server.jooq.tables.records.ProcessLogSegmentsRecord;
 import com.walmartlabs.concord.server.process.LogSegment;
-import com.walmartlabs.concord.server.process.ProcessKey;
+import com.walmartlabs.concord.server.sdk.ProcessKey;
 import com.walmartlabs.concord.server.sdk.Range;
 import org.jooq.*;
 import org.jooq.impl.DSL;

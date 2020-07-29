@@ -22,8 +22,8 @@ package com.walmartlabs.concord.server.process.form;
 
 import com.walmartlabs.concord.forms.Form;
 import com.walmartlabs.concord.sdk.Constants;
-import com.walmartlabs.concord.server.process.ProcessKey;
 import com.walmartlabs.concord.server.process.state.ProcessStateManager;
+import com.walmartlabs.concord.server.sdk.ProcessKey;
 
 import javax.inject.Inject;
 import javax.inject.Named;

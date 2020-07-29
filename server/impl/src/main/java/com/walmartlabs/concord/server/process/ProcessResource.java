@@ -51,6 +51,8 @@ import com.walmartlabs.concord.server.process.logs.ProcessLogsDao.ProcessLog;
 import com.walmartlabs.concord.server.process.queue.*;
 import com.walmartlabs.concord.server.process.state.ProcessStateManager;
 import com.walmartlabs.concord.server.sdk.ConcordApplicationException;
+import com.walmartlabs.concord.server.sdk.PartialProcessKey;
+import com.walmartlabs.concord.server.sdk.ProcessKey;
 import com.walmartlabs.concord.server.sdk.ProcessStatus;
 import com.walmartlabs.concord.server.sdk.metrics.WithTimer;
 import com.walmartlabs.concord.server.security.Roles;
@@ -462,7 +464,7 @@ public class ProcessResource implements Resource {
         }
 
         PartialProcessKey processKey = PartialProcessKey.from(UUID.randomUUID());
-        ProcessKey parentProcessKey = ProcessKey.from(parent);
+        ProcessKey parentProcessKey = new ProcessKey(parent.instanceId(), parent.createdAt());
 
         UUID projectId = parent.projectId();
         UserPrincipal userPrincipal = UserPrincipal.assertCurrent();
@@ -660,7 +662,7 @@ public class ProcessResource implements Resource {
 
         ProcessEntry processEntry = processManager.assertProcess(instanceId);
         assertProcessAccess(processEntry, "attachment");
-        PartialProcessKey processKey = ProcessKey.from(processEntry);
+        PartialProcessKey processKey = new ProcessKey(processEntry.instanceId(), processEntry.createdAt());
 
         // TODO replace with javax.validation
         if (attachmentName.endsWith("/")) {
@@ -711,7 +713,7 @@ public class ProcessResource implements Resource {
         ProcessEntry processEntry = processManager.assertProcess(instanceId);
         assertProcessAccess(processEntry, "attachments");
 
-        PartialProcessKey processKey = ProcessKey.from(processEntry);
+        PartialProcessKey processKey = new ProcessKey(processEntry.instanceId(), processEntry.createdAt());
 
         String resource = Constants.Files.JOB_ATTACHMENTS_DIR_NAME + "/";
         List<String> l = stateManager.list(processKey, resource);
@@ -864,7 +866,7 @@ public class ProcessResource implements Resource {
     @Produces("application/zip")
     public Response downloadState(@ApiParam @PathParam("id") UUID instanceId) {
         ProcessEntry entry = assertProcess(PartialProcessKey.from(instanceId));
-        ProcessKey processKey = ProcessKey.from(entry);
+        ProcessKey processKey = new ProcessKey(entry.instanceId(), entry.createdAt());
 
         assertProcessAccess(entry, "attachments");
 
@@ -891,7 +893,7 @@ public class ProcessResource implements Resource {
                                       @ApiParam @PathParam("name") @NotNull @Size(min = 1) String fileName) {
 
         ProcessEntry p = assertProcess(PartialProcessKey.from(instanceId));
-        ProcessKey processKey = ProcessKey.from(p);
+        ProcessKey processKey = new ProcessKey(p.instanceId(), p.createdAt());
 
         assertProcessAccess(p, "state");
 
@@ -921,7 +923,7 @@ public class ProcessResource implements Resource {
     @Consumes(MediaType.APPLICATION_OCTET_STREAM)
     public void uploadAttachments(@PathParam("id") UUID instanceId, InputStream data) {
         ProcessEntry entry = assertProcess(PartialProcessKey.from(instanceId));
-        ProcessKey processKey = ProcessKey.from(entry);
+        ProcessKey processKey = new ProcessKey(entry.instanceId(), entry.createdAt());
 
         Path tmpIn = null;
         Path tmpDir = null;
@@ -1152,7 +1154,7 @@ public class ProcessResource implements Resource {
         CheckResult<AttachmentsRule, Long> checkResult = policy.getAttachmentsPolicy().check(tmpDir);
         if (!checkResult.getDeny().isEmpty()) {
             String errorMessage = buildErrorMessage(checkResult.getDeny());
-            processLogManager.error(ProcessKey.from(entry), errorMessage);
+            processLogManager.error(new ProcessKey(entry.instanceId(), entry.createdAt()), errorMessage);
             throw new PolicyException("Found forbidden policy: " + errorMessage);
         }
     }
