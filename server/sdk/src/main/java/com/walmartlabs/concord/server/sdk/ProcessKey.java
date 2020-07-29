@@ -20,9 +20,14 @@ package com.walmartlabs.concord.server.sdk;
  * =====
  */
 
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+
 import java.time.OffsetDateTime;
 import java.util.UUID;
 
+@JsonSerialize(as = ProcessKeyImpl.class)
+@JsonDeserialize(as = ProcessKeyImpl.class)
 public interface ProcessKey {
 
     UUID getInstanceId();
