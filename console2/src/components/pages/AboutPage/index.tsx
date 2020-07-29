@@ -24,7 +24,7 @@ import { Breadcrumb } from 'semantic-ui-react';
 import { BreadcrumbSegment } from '../../molecules';
 import { ServerVersion } from '../../organisms';
 
-class ProcessPage extends React.PureComponent {
+class AboutPage extends React.PureComponent {
     render() {
         return (
             <>
@@ -44,4 +44,4 @@ class ProcessPage extends React.PureComponent {
     }
 }
 
-export default ProcessPage;
+export default AboutPage;

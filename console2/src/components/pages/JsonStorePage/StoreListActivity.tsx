@@ -19,33 +19,33 @@
  */
 
 import * as React from 'react';
-import { useCallback, useContext, useEffect, useState } from 'react';
-import { Input, List, Loader, Menu } from 'semantic-ui-react';
+import { useCallback, useContext, useState } from 'react';
+import { Input, List, Menu } from 'semantic-ui-react';
 import { Link } from 'react-router-dom';
 
 import { ConcordKey } from '../../../api/common';
 import { CreateNewEntityButton, PaginationToolBar } from '../../molecules';
-import { Organizations } from '../../../state/data/orgs';
+import { Organizations } from '../../../state/data/orgs/types';
 import {
     list as apiList,
     PaginatedStorageEntries,
-    StorageEntry,
     StorageVisibility
 } from '../../../api/org/jsonstore';
 import { usePagination } from '../../molecules/PaginationToolBar/usePagination';
 import { useApi } from '../../../hooks/useApi';
 import RequestErrorActivity from '../../organisms/RequestErrorActivity';
 import { UserSessionContext } from '../../../session';
+import { LoadingDispatch } from '../../../App';
 
 interface Props {
     orgName: ConcordKey;
+    forceRefresh: any;
 }
 
-export default ({ orgName }: Props) => {
-    const [entries, setEntries] = useState<StorageEntry[]>([]);
-    const [filter, setFilter] = useState<string>();
-    const [next, setNext] = useState<boolean>(false);
+export default ({ orgName, forceRefresh }: Props) => {
+    const dispatch = React.useContext(LoadingDispatch);
 
+    const [filter, setFilter] = useState<string>();
     const {
         paginationFilter,
         handleLimitChange,
@@ -58,20 +58,13 @@ export default ({ orgName }: Props) => {
         return apiList(orgName, paginationFilter.offset, paginationFilter.limit, filter);
     }, [orgName, paginationFilter.offset, paginationFilter.limit, filter]);
 
-    const { data, error, isLoading } = useApi<PaginatedStorageEntries>(fetchData, {
-        fetchOnMount: true
+    const { data, error } = useApi<PaginatedStorageEntries>(fetchData, {
+        fetchOnMount: true,
+        forceRequest: forceRefresh,
+        dispatch: dispatch
     });
 
     const { userInfo } = useContext(UserSessionContext);
-
-    useEffect(() => {
-        if (!data) {
-            return;
-        }
-
-        setEntries(data.items);
-        setNext(data.next);
-    }, [data]);
 
     return (
         <>
@@ -102,7 +95,7 @@ export default ({ orgName }: Props) => {
                             handlePrev={handlePrev}
                             handleFirst={handleFirst}
                             disablePrevious={paginationFilter.offset <= 0}
-                            disableNext={!next}
+                            disableNext={!data?.next}
                             disableFirst={paginationFilter.offset <= 0}
                         />
                     </Menu.Item>
@@ -110,11 +103,10 @@ export default ({ orgName }: Props) => {
             </Menu>
 
             {error && <RequestErrorActivity error={error} />}
-            {isLoading && <Loader active={true} />}
-            {entries.length === 0 && <h3>No JSON stores defined</h3>}
+            {data?.items.length === 0 && <h3>No JSON stores defined</h3>}
 
             <List divided={true} relaxed={true} size="large">
-                {entries.map((s, idx) => (
+                {data?.items.map((s, idx) => (
                     <List.Item key={idx}>
                         <List.Icon
                             name={s.visibility === StorageVisibility.PRIVATE ? 'lock' : 'unlock'}

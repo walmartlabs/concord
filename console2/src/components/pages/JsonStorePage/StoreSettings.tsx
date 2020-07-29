@@ -21,7 +21,7 @@ import * as React from 'react';
 import { useCallback } from 'react';
 import { Divider, Header, Icon, Menu, Progress, Segment } from 'semantic-ui-react';
 
-import { ConcordId, ConcordKey } from '../../../api/common';
+import { ConcordKey } from '../../../api/common';
 import {
     get as apiGet,
     getCapacity as apiGetCapacity,
@@ -30,12 +30,12 @@ import {
 } from '../../../api/org/jsonstore';
 import { useApi } from '../../../hooks/useApi';
 import RequestErrorActivity from '../../organisms/RequestErrorActivity';
-import { WithCopyToClipboard } from '../../molecules';
 import StoreOwnerChangeActivity from './StoreOwnerChangeActivity';
 import StoreDeleteActivity from './StoreDeleteActivity';
 import StoreVisibilityActivity from './StoreVisibilityActivity';
 import { formatFileSize } from '../../../utils';
 import { LoadingDispatch } from '../../../App';
+import EntityId from '../../molecules/EntityId';
 
 export interface ExternalProps {
     orgName: ConcordKey;
@@ -114,18 +114,6 @@ const StoreSettings = ({ orgName, storeName, forceRefresh }: ExternalProps) => {
             </Segment>
         </>
     );
-};
-
-interface EntityIdProps {
-    id?: ConcordId;
-}
-
-const EntityId = ({ id }: EntityIdProps) => {
-    if (!id) {
-        return <WithCopyToClipboard value={'...'}>ID: ...</WithCopyToClipboard>;
-    }
-
-    return <WithCopyToClipboard value={id}>ID: {id}</WithCopyToClipboard>;
 };
 
 interface CapacityProps {

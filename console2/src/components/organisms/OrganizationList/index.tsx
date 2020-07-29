@@ -19,20 +19,25 @@
  */
 
 import * as React from 'react';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Input, List, Loader, Menu, Radio } from 'semantic-ui-react';
+import { Input, List, Menu, Radio } from 'semantic-ui-react';
 
-import { RequestError } from '../../../api/common';
-import { OrganizationEntry, OrganizationVisibility } from '../../../api/org';
+import { OrganizationVisibility, PaginatedOrganizationEntries } from '../../../api/org';
 import { list as getPaginatedOrgList } from '../../../api/org/index';
-import { PaginationToolBar, RequestErrorMessage } from '../../molecules';
+import { PaginationToolBar } from '../../molecules';
 import { usePagination } from '../../molecules/PaginationToolBar/usePagination';
+import { RequestErrorActivity } from '../index';
+import { useApi } from '../../../hooks/useApi';
+import { LoadingDispatch } from '../../../App';
 
-const OrganizationList = () => {
-    const [data, setData] = useState<OrganizationEntry[]>([]);
-    const [loading, setLoading] = useState<boolean>(false);
-    const [error, setError] = useState<RequestError>();
+interface ExternalProps {
+    forceRefresh: any;
+}
+
+const OrganizationList = ({ forceRefresh }: ExternalProps) => {
+    const dispatch = React.useContext(LoadingDispatch);
+
     const {
         paginationFilter,
         handleLimitChange,
@@ -41,49 +46,40 @@ const OrganizationList = () => {
         handleFirst,
         resetOffset
     } = usePagination();
-    const [next, setNext] = useState<boolean>(false);
     const oldFilter = useRef<string>();
     const oldOnlyCurrent = useRef<boolean>(true);
 
     const [filter, setFilter] = useState<string>();
     const [onlyCurrent, setOnlyCurrent] = useState(true);
 
-    const fetchData = useCallback(async () => {
-        try {
-            setLoading(true);
-
-            if (filter && oldFilter.current !== filter) {
-                oldFilter.current = filter;
-                resetOffset(0);
-            }
-
-            if (oldOnlyCurrent.current !== onlyCurrent) {
-                oldOnlyCurrent.current = onlyCurrent;
-                resetOffset(0);
-            }
-
-            const paginatedOrgList = await getPaginatedOrgList(
-                onlyCurrent,
-                paginationFilter.offset,
-                paginationFilter.limit,
-                filter
-            );
-            setData(paginatedOrgList.items);
-            setNext(paginatedOrgList.next);
-        } catch (e) {
-            setError(e);
-        } finally {
-            setLoading(false);
+    const fetchData = useCallback(() => {
+        if (filter && oldFilter.current !== filter) {
+            oldFilter.current = filter;
+            resetOffset(0);
         }
+
+        if (oldOnlyCurrent.current !== onlyCurrent) {
+            oldOnlyCurrent.current = onlyCurrent;
+            resetOffset(0);
+        }
+
+        return getPaginatedOrgList(
+            onlyCurrent,
+            paginationFilter.offset,
+            paginationFilter.limit,
+            filter
+        );
     }, [onlyCurrent, filter, paginationFilter.offset, paginationFilter.limit, resetOffset]);
 
-    useEffect(() => {
-        fetchData();
-    }, [fetchData]);
+    const { data, error, isLoading } = useApi<PaginatedOrganizationEntries>(fetchData, {
+        fetchOnMount: true,
+        forceRequest: forceRefresh,
+        dispatch: dispatch
+    });
 
     return (
         <>
-            <Menu secondary={true}>
+            <Menu secondary={true} style={{ marginTop: 0 }}>
                 <Menu.Item>
                     <Input
                         icon="search"
@@ -101,24 +97,25 @@ const OrganizationList = () => {
                     />
                 </Menu.Item>
 
-                <PaginationToolBar
-                    limit={paginationFilter.limit}
-                    handleLimitChange={(limit) => handleLimitChange(limit)}
-                    handleNext={handleNext}
-                    handlePrev={handlePrev}
-                    handleFirst={handleFirst}
-                    disablePrevious={paginationFilter.offset === 0}
-                    disableNext={!next}
-                    disableFirst={paginationFilter.offset === 0}
-                />
+                <Menu.Item style={{ padding: 0 }}>
+                    <PaginationToolBar
+                        limit={paginationFilter.limit}
+                        handleLimitChange={(limit) => handleLimitChange(limit)}
+                        handleNext={handleNext}
+                        handlePrev={handlePrev}
+                        handleFirst={handleFirst}
+                        disablePrevious={paginationFilter.offset === 0}
+                        disableNext={!data?.next}
+                        disableFirst={paginationFilter.offset === 0}
+                    />
+                </Menu.Item>
             </Menu>
 
-            {error && <RequestErrorMessage error={error} />}
-            {loading && <Loader active={true} />}
-            {data.length === 0 && <h3>No organizations found</h3>}
+            {error && <RequestErrorActivity error={error} />}
+            {!isLoading && data?.items.length === 0 && <h3>No organizations found</h3>}
 
             <List divided={true} relaxed={true} size="large">
-                {data.map((org, idx) => (
+                {data?.items.map((org, idx) => (
                     <List.Item key={idx}>
                         <List.Icon
                             name={

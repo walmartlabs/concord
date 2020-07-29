@@ -84,6 +84,7 @@ export interface UpdateProjectEntry {
     id?: ConcordId;
     name?: ConcordKey;
     orgId?: ConcordId;
+    orgName?: ConcordKey;
     description?: string;
     visibility?: ProjectVisibility;
     rawPayloadMode?: RawPayloadMode;
@@ -171,7 +172,7 @@ export const rename = (
 // TODO should we just use createOrUpdate instead?
 export const changeOwner = (
     orgName: ConcordKey,
-    projectId: ConcordId,
+    projectName: ConcordKey,
     ownerId: ConcordId
 ): Promise<ProjectOperationResult> => {
     const opts = {
@@ -180,7 +181,7 @@ export const changeOwner = (
             'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-            id: projectId,
+            name: projectName,
             owner: { id: ownerId }
         })
     };
@@ -233,7 +234,7 @@ export const updateProjectAccess = (
 export const getProjectConfiguration = (
     orgName: ConcordKey,
     projectName: ConcordKey
-): Promise<GenericOperationResult> => {
+): Promise<Object> => {
     return fetchJson(`/api/v1/org/${orgName}/project/${projectName}/cfg`);
 };
 

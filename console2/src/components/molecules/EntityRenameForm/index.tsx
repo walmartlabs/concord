@@ -31,7 +31,7 @@ interface State {
     showConfirm: boolean;
 }
 
-interface FormValues {
+export interface FormValues {
     name: ConcordKey;
 }
 
@@ -44,6 +44,7 @@ interface Props {
     onSubmit: (values: FormValues) => void;
     isExists: (name: string) => Promise<boolean>;
     alreadyExistsTemplate: (name: string) => string;
+    disabled?: boolean;
 }
 
 class EntityRenameForm extends React.Component<InjectedFormikProps<Props, FormValues>, State> {
@@ -73,20 +74,26 @@ class EntityRenameForm extends React.Component<InjectedFormikProps<Props, FormVa
             handleSubmit,
             submitting,
             confirmationHeader,
-            confirmationContent
+            confirmationContent,
+            disabled
         } = this.props;
         const hasErrors = notEmpty(this.props.errors);
 
         return (
             <Form onSubmit={handleSubmit} loading={submitting}>
                 <Form.Group widths={3}>
-                    <FormikInput fluid={true} name="name" placeholder={inputPlaceholder} />
+                    <FormikInput
+                        fluid={true}
+                        name="name"
+                        placeholder={inputPlaceholder}
+                        disabled={disabled}
+                    />
 
                     <Form.Button
                         primary={true}
                         negative={true}
                         content="Rename"
-                        disabled={hasErrors || !dirty}
+                        disabled={hasErrors || !dirty || disabled}
                         onClick={(ev) => this.handleShowConfirm(ev)}
                     />
                 </Form.Group>

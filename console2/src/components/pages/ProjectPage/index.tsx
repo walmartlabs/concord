@@ -19,14 +19,16 @@
  */
 
 import * as React from 'react';
-import { RouteComponentProps, withRouter } from 'react-router';
+import { RouteComponentProps } from 'react-router';
 import { Link } from 'react-router-dom';
 import { Breadcrumb } from 'semantic-ui-react';
 
 import { ConcordId } from '../../../api/common';
-import { BreadcrumbSegment } from '../../molecules';
 import { ProjectActivity } from '../../organisms';
 import { TabLink } from '../../organisms/ProjectActivity';
+import { LoadingState } from '../../../App';
+import { useCallback, useState } from 'react';
+import { BreadcrumbsToolbar } from '../../organisms';
 
 interface RouteProps {
     orgName: ConcordId;
@@ -53,30 +55,37 @@ const pathToTab = (s: string): TabLink => {
     return null;
 };
 
-class ProjectPage extends React.PureComponent<RouteComponentProps<RouteProps>> {
-    render() {
-        const { orgName, projectName } = this.props.match.params;
+const ProjectPage = (props: RouteComponentProps<RouteProps>) => {
+    const loading = React.useContext(LoadingState);
 
-        const activeTab = pathToTab(this.props.location.pathname);
+    const { orgName, projectName } = props.match.params;
 
-        return (
-            <>
-                <BreadcrumbSegment>
-                    <Breadcrumb.Section>
-                        <Link to={`/org/${orgName}`}>{orgName}</Link>
-                    </Breadcrumb.Section>
-                    <Breadcrumb.Divider />
-                    <Breadcrumb.Section active={true}>{projectName}</Breadcrumb.Section>
-                </BreadcrumbSegment>
+    const activeTab = pathToTab(props.location.pathname);
 
-                <ProjectActivity
-                    activeTab={activeTab}
-                    orgName={orgName}
-                    projectName={projectName}
-                />
-            </>
-        );
-    }
-}
+    const [refresh, toggleRefresh] = useState<boolean>(false);
 
-export default withRouter(ProjectPage);
+    const refreshHandler = useCallback(() => {
+        toggleRefresh((prevState) => !prevState);
+    }, []);
+
+    return (
+        <>
+            <BreadcrumbsToolbar loading={loading} refreshHandler={refreshHandler}>
+                <Breadcrumb.Section>
+                    <Link to={`/org/${orgName}`}>{orgName}</Link>
+                </Breadcrumb.Section>
+                <Breadcrumb.Divider />
+                <Breadcrumb.Section active={true}>{projectName}</Breadcrumb.Section>
+            </BreadcrumbsToolbar>
+
+            <ProjectActivity
+                activeTab={activeTab}
+                orgName={orgName}
+                projectName={projectName}
+                forceRefresh={refresh}
+            />
+        </>
+    );
+};
+
+export default ProjectPage;

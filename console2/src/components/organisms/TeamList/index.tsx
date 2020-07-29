@@ -19,17 +19,20 @@
  */
 
 import * as React from 'react';
-import { useEffect, useState } from 'react';
+import { useCallback } from 'react';
 import { Link } from 'react-router-dom';
-import { List, Loader } from 'semantic-ui-react';
+import { List } from 'semantic-ui-react';
 
-import { ConcordKey, RequestError } from '../../../api/common';
+import { ConcordKey } from '../../../api/common';
 import { list as apiList, TeamEntry } from '../../../api/org/team';
 import { comparators } from '../../../utils';
-import { RequestErrorMessage } from '../../molecules';
+import { useApi } from '../../../hooks/useApi';
+import { LoadingDispatch } from '../../../App';
+import { RequestErrorActivity } from '../index';
 
 interface Props {
     orgName: ConcordKey;
+    forceRefresh: any;
     filter?: string;
 }
 
@@ -38,50 +41,42 @@ const makeTeamList = (data: TeamEntry[], filter?: string): TeamEntry[] =>
         .filter((e) => (filter ? e.name.toLowerCase().indexOf(filter.toLowerCase()) >= 0 : true))
         .sort(comparators.byName);
 
-export default ({ orgName, filter }: Props) => {
-    const [data, setData] = useState<TeamEntry[]>([]);
-    const [loading, setLoading] = useState(false);
-    const [error, setError] = useState<RequestError | undefined>();
+export default ({ orgName, forceRefresh, filter }: Props) => {
+    const dispatch = React.useContext(LoadingDispatch);
+
+    const fetchData = useCallback(() => {
+        return apiList(orgName);
+    }, [orgName]);
+
+    const { data, error } = useApi<TeamEntry[]>(fetchData, {
+        fetchOnMount: true,
+        forceRequest: forceRefresh,
+        dispatch: dispatch
+    });
 
     if (error) {
-        return <RequestErrorMessage error={error} />;
+        return <RequestErrorActivity error={error} />;
     }
-
-    useEffect(() => {
-        const load = async () => {
-            setLoading(true);
-            setError(undefined);
-            try {
-                setData(await apiList(orgName));
-            } catch (e) {
-                setError(e);
-            } finally {
-                setLoading(false);
-            }
-        };
-
-        load();
-    }, [orgName]);
 
     return (
         <>
-            {loading && <Loader active={true} />}
-
             <List divided={true} relaxed={true} size="large">
-                {makeTeamList(data, filter).map((team: TeamEntry, index: number) => (
-                    <List.Item key={index}>
-                        <List.Content>
-                            <List.Header>
-                                <Link to={`/org/${team.orgName}/team/${team.name}`}>
-                                    {team.name}
-                                </Link>
-                            </List.Header>
-                            {team.description && (
-                                <List.Description>{team.description}</List.Description>
-                            )}
-                        </List.Content>
-                    </List.Item>
-                ))}
+                {data?.length === 0 && <h3>No teams found</h3>}
+                {data &&
+                    makeTeamList(data, filter).map((team: TeamEntry, index: number) => (
+                        <List.Item key={index}>
+                            <List.Content>
+                                <List.Header>
+                                    <Link to={`/org/${team.orgName}/team/${team.name}`}>
+                                        {team.name}
+                                    </Link>
+                                </List.Header>
+                                {team.description && (
+                                    <List.Description>{team.description}</List.Description>
+                                )}
+                            </List.Content>
+                        </List.Item>
+                    ))}
             </List>
         </>
     );

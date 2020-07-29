@@ -23,21 +23,15 @@ import { combineReducers } from 'redux';
 import { History } from 'history';
 
 import { reducers as formsReducers, State as FormsState } from '../state/data/forms';
-import { reducers as orgsReducer, State as OrgsState } from '../state/data/orgs';
 import { reducers as processesReducers, State as ProcessesState } from '../state/data/processes';
 import { reducers as projectsReducer, State as ProjectsState } from '../state/data/projects';
 import { reducers as searchReducers, State as SearchState } from '../state/data/search';
 import { reducers as secretsReducer, State as SecretsState } from '../state/data/secrets';
 import { reducers as teamReducers, State as TeamsState } from '../state/data/teams';
 import { reducers as triggersReducer, State as TriggersState } from '../state/data/triggers';
-import {
-    reducers as userActivityReducer,
-    State as UserActivityState
-} from '../state/data/userActivity';
 
 export interface State {
     forms: FormsState;
-    orgs: OrgsState;
     processes: ProcessesState;
     projects: ProjectsState;
     router: RouterState;
@@ -45,21 +39,18 @@ export interface State {
     secrets: SecretsState;
     teams: TeamsState;
     triggers: TriggersState;
-    userActivity: UserActivityState;
 }
 
 const reducers = (history: History) =>
     combineReducers({
         forms: formsReducers,
-        orgs: orgsReducer,
         processes: processesReducers,
         projects: projectsReducer,
         router: connectRouter(history),
         search: searchReducers,
         secrets: secretsReducer,
         teams: teamReducers,
-        triggers: triggersReducer,
-        userActivity: userActivityReducer
+        triggers: triggersReducer
     });
 
 export default reducers;

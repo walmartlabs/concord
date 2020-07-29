@@ -27,11 +27,44 @@ import { RepositoryEntry } from '../../../api/org/project/repository';
 import { GitHubLink } from '../../molecules';
 import { RepositoryActionDropdown } from '../../organisms';
 
-interface Props {
+interface ExternalProps {
     orgName: ConcordKey;
     projectName: ConcordKey;
-    data: RepositoryEntry[];
+    data?: RepositoryEntry[];
+    loading: boolean;
 }
+
+const RepositoryList = ({ orgName, projectName, data, loading }: ExternalProps) => {
+    if (!loading && data?.length === 0) {
+        return <h3>No repositories found.</h3>;
+    }
+
+    return (
+        <div style={{ overflowX: 'auto' }}>
+            <Table striped>
+                <Table.Header>
+                    <Table.Row>
+                        <Table.HeaderCell collapsing={true} />
+                        <Table.HeaderCell collapsing={true}>Name</Table.HeaderCell>
+                        <Table.HeaderCell>Repository URL</Table.HeaderCell>
+                        <Table.HeaderCell collapsing={true}>Branch/Commit ID</Table.HeaderCell>
+                        <Table.HeaderCell singleLine={true}>Path</Table.HeaderCell>
+                        <Table.HeaderCell collapsing={true} style={{ width: '8%' }}>
+                            Secret
+                        </Table.HeaderCell>
+                        <Table.HeaderCell
+                            collapsing={true}
+                            colSpan={2}
+                            style={{ width: '1%', textAlign: 'center' }}>
+                            Execute
+                        </Table.HeaderCell>
+                    </Table.Row>
+                </Table.Header>
+                <Table.Body>{data?.map((r) => renderTableRow(orgName, projectName, r))}</Table.Body>
+            </Table>
+        </div>
+    );
+};
 
 const getSource = (r: RepositoryEntry) => {
     if (r.commitId) {
@@ -69,43 +102,5 @@ const renderTableRow = (orgName: ConcordKey, projectName: ConcordKey, row: Repos
         </Table.Row>
     );
 };
-
-class RepositoryList extends React.PureComponent<Props> {
-    render() {
-        const { data, orgName, projectName } = this.props;
-
-        if (data.length === 0) {
-            return <h3>No repositories found.</h3>;
-        }
-
-        return (
-            <div style={{ overflowX: 'auto' }}>
-                <Table striped>
-                    <Table.Header>
-                        <Table.Row>
-                            <Table.HeaderCell collapsing={true} />
-                            <Table.HeaderCell collapsing={true}>Name</Table.HeaderCell>
-                            <Table.HeaderCell>Repository URL</Table.HeaderCell>
-                            <Table.HeaderCell collapsing={true}>Branch/Commit ID</Table.HeaderCell>
-                            <Table.HeaderCell singleLine={true}>Path</Table.HeaderCell>
-                            <Table.HeaderCell collapsing={true} style={{ width: '8%' }}>
-                                Secret
-                            </Table.HeaderCell>
-                            <Table.HeaderCell
-                                collapsing={true}
-                                colSpan={2}
-                                style={{ width: '1%', textAlign: 'center' }}>
-                                Execute
-                            </Table.HeaderCell>
-                        </Table.Row>
-                    </Table.Header>
-                    <Table.Body>
-                        {data.map((r) => renderTableRow(orgName, projectName, r))}
-                    </Table.Body>
-                </Table>
-            </div>
-        );
-    }
-}
 
 export default RepositoryList;

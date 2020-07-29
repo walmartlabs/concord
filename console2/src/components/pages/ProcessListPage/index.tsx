@@ -19,18 +19,18 @@
  */
 
 import * as React from 'react';
-import { Breadcrumb } from 'semantic-ui-react';
 
-import { BreadcrumbSegment } from '../../molecules';
 import { ProcessListActivity } from '../../organisms';
+import { BreadcrumbsToolbar } from '../../organisms';
+import { Breadcrumb } from 'semantic-ui-react';
 
 export default class extends React.PureComponent {
     render() {
         return (
             <>
-                <BreadcrumbSegment>
+                <BreadcrumbsToolbar loading={false} refreshHandler={() => console.log('refresh')}>
                     <Breadcrumb.Section active={true}>Processes</Breadcrumb.Section>
-                </BreadcrumbSegment>
+                </BreadcrumbsToolbar>
 
                 <ProcessListActivity showInitiatorFilter={true} usePagination={true} />
             </>

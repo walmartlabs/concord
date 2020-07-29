@@ -110,6 +110,7 @@ interface ExternalProps {
     // TODO remove when we migrate to the common process search endpoint
     showInitiatorFilter?: boolean;
     usePagination?: boolean;
+    showRefreshButton?: boolean;
 
     columns?: ColumnDefinition[];
 }
@@ -173,7 +174,8 @@ class ProcessListActivity extends React.Component<Props> {
             load,
             history,
             next,
-            prev
+            prev,
+            showRefreshButton
         } = this.props;
 
         if (loadError) {
@@ -204,6 +206,7 @@ class ProcessListActivity extends React.Component<Props> {
                     }
                     showInitiatorFilter={showInitiatorFilter}
                     usePagination={usePagination}
+                    showRefreshButton={showRefreshButton}
                 />
             </>
         );

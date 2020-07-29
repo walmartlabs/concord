@@ -2,7 +2,7 @@
  * *****
  * Concord
  * -----
- * Copyright (C) 2017 - 2018 Walmart Inc.
+ * Copyright (C) 2017 - 2020 Walmart Inc.
  * -----
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,9 +17,18 @@
  * limitations under the License.
  * =====
  */
+import * as React from 'react';
+import { ConcordId } from '../../../api/common';
+import { WithCopyToClipboard } from '../index';
 
-import { OrganizationEntry } from '../../../api/org';
-
-export interface Organizations {
-    [id: string]: OrganizationEntry;
+interface EntityIdProps {
+    id?: ConcordId;
 }
+
+export default ({ id }: EntityIdProps) => {
+    if (!id) {
+        return <WithCopyToClipboard value={'...'}>ID: ...</WithCopyToClipboard>;
+    }
+
+    return <WithCopyToClipboard value={id}>ID: {id}</WithCopyToClipboard>;
+};

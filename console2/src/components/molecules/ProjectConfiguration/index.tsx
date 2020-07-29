@@ -19,12 +19,13 @@
  */
 
 import React, { useRef, useState } from 'react';
-import { Button } from 'semantic-ui-react';
+import { Button, Loader } from 'semantic-ui-react';
 import Editor from '@monaco-editor/react';
 import _ from 'lodash';
+import './styles.css';
 
 interface Props {
-    config: Object;
+    config?: Object;
     submitting: boolean;
     submit: (config: Object) => void;
 }
@@ -56,14 +57,13 @@ const ProjectConfiguration: React.FunctionComponent<Props> = ({ config, submitti
         }
     };
 
+    const loading = submitting || !isEditorReady;
     return (
-        <div style={{ display: 'flex', height: '75vh', minHeight: '500px' }}>
-            <Editor
-                height="100%"
-                language="json"
-                value={JSON.stringify(config, null, 4)}
-                editorDidMount={handleEditorDidMount}
-                options={{ minimap: { enabled: false } }}
+        <div className={'editorContainer'}>
+            <LoadingEditor
+                initValue={JSON.stringify(config, null, 4)}
+                handleEditorDidMount={handleEditorDidMount}
+                disabled={loading}
             />
             <div style={{ width: '130px', marginLeft: '20px' }}>
                 <Button
@@ -77,6 +77,27 @@ const ProjectConfiguration: React.FunctionComponent<Props> = ({ config, submitti
                 {jsonError && <p style={{ color: 'red', marginTop: '15px' }}>{jsonError}</p>}
             </div>
         </div>
+    );
+};
+
+interface LoadingEditorProps {
+    handleEditorDidMount: (getEditorValue: () => string) => void;
+    initValue?: string;
+    disabled: boolean;
+}
+
+const LoadingEditor = ({ handleEditorDidMount, initValue, disabled }: LoadingEditorProps) => {
+    if (!initValue) {
+        return <Loader active={true} />;
+    }
+
+    return (
+        <Editor
+            language="json"
+            value={initValue}
+            editorDidMount={handleEditorDidMount}
+            options={{ lineNumbers: 'on', minimap: { enabled: false }, readOnly: disabled }}
+        />
     );
 };
 

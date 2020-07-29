@@ -19,62 +19,79 @@
  */
 
 import * as React from 'react';
-import { connect } from 'react-redux';
-import { AnyAction, Dispatch } from 'redux';
 
-import { ConcordId, ConcordKey, RequestError } from '../../../api/common';
+import { ConcordId, ConcordKey } from '../../../api/common';
 import { isProjectExists } from '../../../api/service/console';
-import { actions, State } from '../../../state/data/projects';
 import { projectAlreadyExistsError } from '../../../validation';
-import { EntityRenameForm, RequestErrorMessage } from '../../molecules';
+import { EntityRenameForm } from '../../molecules';
+import { RequestErrorActivity } from '../index';
+import { memo, useCallback, useState } from 'react';
+import { rename as apiRename } from '../../../api/org/project';
+import { useApi } from '../../../hooks/useApi';
+import { FormValues } from '../../molecules/EntityRenameForm';
+import { Redirect } from 'react-router';
 
 interface ExternalProps {
     orgName: ConcordKey;
-    projectId: ConcordId;
+    projectId?: ConcordId;
     projectName: ConcordKey;
+    disabled: boolean;
 }
 
-interface StateProps {
-    renaming: boolean;
-    error: RequestError;
-}
+const areEqual = (prev: ExternalProps, next: ExternalProps): boolean => {
+    return (
+        prev.orgName === next.orgName &&
+        prev.projectId === next.projectId &&
+        prev.projectName === next.projectName &&
+        prev.disabled === next.disabled
+    );
+};
 
-interface DispatchProps {
-    rename: (orgName: ConcordKey, projectId: ConcordId, projectName: ConcordKey) => void;
-}
+const ProjectRenameActivity = memo(
+    ({ orgName, projectId, projectName, disabled }: ExternalProps) => {
+        const [value, setValue] = useState(projectName);
 
-type Props = ExternalProps & StateProps & DispatchProps;
+        const postData = useCallback(async () => {
+            await apiRename(orgName, projectId!, value!);
+            return value;
+        }, [orgName, projectId, value]);
 
-class ProjectRenameActivity extends React.PureComponent<Props> {
-    render() {
-        const { error, renaming, orgName, projectId, projectName, rename } = this.props;
+        const { data, error, isLoading, fetch, clearState } = useApi<string>(postData, {
+            fetchOnMount: false,
+            requestByFetch: true
+        });
+
+        const renameHandler = useCallback(
+            (values: FormValues) => {
+                setValue(values.name);
+                clearState();
+                fetch();
+            },
+            [clearState, fetch]
+        );
+
+        if (data && data !== projectName) {
+            return <Redirect to={`/org/${orgName}/project/${value}/settings`} />;
+        }
 
         return (
             <>
-                {error && <RequestErrorMessage error={error} />}
+                {error && <RequestErrorActivity error={error} />}
                 <EntityRenameForm
                     originalName={projectName}
-                    submitting={renaming}
-                    onSubmit={(values) => rename(orgName, projectId, values.name)}
+                    submitting={isLoading}
+                    onSubmit={renameHandler}
                     inputPlaceholder="Project name"
                     confirmationHeader="Rename the project?"
                     confirmationContent="Are you sure you want to rename the project?"
                     isExists={(name) => isProjectExists(orgName, name)}
                     alreadyExistsTemplate={projectAlreadyExistsError}
+                    disabled={disabled}
                 />
             </>
         );
-    }
-}
+    },
+    areEqual
+);
 
-const mapStateToProps = ({ projects }: { projects: State }): StateProps => ({
-    renaming: projects.rename.running,
-    error: projects.rename.error
-});
-
-const mapDispatchToProps = (dispatch: Dispatch<AnyAction>): DispatchProps => ({
-    rename: (orgName, projectId, projectName) =>
-        dispatch(actions.renameProject(orgName, projectId, projectName))
-});
-
-export default connect(mapStateToProps, mapDispatchToProps)(ProjectRenameActivity);
+export default ProjectRenameActivity;

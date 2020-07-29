@@ -19,62 +19,54 @@
  */
 
 import * as React from 'react';
-import { connect } from 'react-redux';
-import { AnyAction, Dispatch } from 'redux';
 
-import { ConcordId, ConcordKey, EntityOwner, RequestError } from '../../../api/common';
-import { actions, State } from '../../../state/data/orgs';
-import { RequestErrorMessage } from '../../molecules';
+import { ConcordId, GenericOperationResult } from '../../../api/common';
 import EntityOwnerChangeForm from '../../molecules/EntityOwnerChangeForm';
+import { useCallback, useState } from 'react';
+import { changeOwner as apiChangeOwner } from '../../../api/org';
+import { useApi } from '../../../hooks/useApi';
+import { RequestErrorActivity } from '../index';
 
 interface ExternalProps {
-    orgId: ConcordId;
-    orgName: ConcordKey;
-    owner?: EntityOwner;
+    orgId?: ConcordId;
+    initialOwnerId?: ConcordId;
+    disabled: boolean;
 }
 
-interface StateProps {
-    changing: boolean;
-    error: RequestError;
-}
+const OrganizationOwnerChangeActivity = ({ orgId, initialOwnerId, disabled }: ExternalProps) => {
+    const [value, setValue] = useState(initialOwnerId);
 
-interface DispatchProps {
-    change: (orgId: ConcordId, orgName: ConcordKey, ownerId: ConcordId) => void;
-}
+    const postData = useCallback(() => {
+        return apiChangeOwner(orgId!, value!);
+    }, [orgId, value]);
 
-type Props = ExternalProps & StateProps & DispatchProps;
+    const { error, isLoading, fetch, clearState } = useApi<GenericOperationResult>(postData, {
+        fetchOnMount: false,
+        requestByFetch: true
+    });
 
-class OrganizationOwnerChangeActivity extends React.PureComponent<Props> {
-    constructor(props: Props) {
-        super(props);
+    const ownerChangeHandler = useCallback(
+        (value: ConcordId) => {
+            setValue(value);
+            clearState();
+            fetch();
+        },
+        [clearState, fetch]
+    );
 
-        this.state = { dirty: false, showConfirm: false, value: props.owner };
-    }
+    return (
+        <>
+            {error && <RequestErrorActivity error={error} />}
+            <EntityOwnerChangeForm
+                originalOwnerId={initialOwnerId}
+                confirmationHeader="Change organization owner?"
+                confirmationContent="Are you sure you want to change the organization's owner?"
+                onSubmit={ownerChangeHandler}
+                submitting={isLoading}
+                disabled={disabled}
+            />
+        </>
+    );
+};
 
-    render() {
-        const { error, owner, changing, change, orgId, orgName } = this.props;
-
-        return (
-            <>
-                {error && <RequestErrorMessage error={error} />}
-                <EntityOwnerChangeForm
-                    originalOwnerId={owner?.id}
-                    confirmationHeader="Change organization owner?"
-                    confirmationContent="Are you sure you want to change the organization's owner?"
-                    onSubmit={(value) => change(orgId, orgName, value)}
-                    submitting={changing}
-                />
-            </>
-        );
-    }
-}
-
-const mapStateToProps = ({ orgs }: { orgs: State }): StateProps => ({
-    changing: orgs && orgs.changeOwner.running,
-    error: orgs && orgs.changeOwner.error
-});
-
-const mapDispatchToProps = (dispatch: Dispatch<AnyAction>): DispatchProps => ({
-    change: (orgId, orgName, ownerId) => dispatch(actions.changeOwner(orgId, orgName, ownerId))
-});
-export default connect(mapStateToProps, mapDispatchToProps)(OrganizationOwnerChangeActivity);
+export default OrganizationOwnerChangeActivity;

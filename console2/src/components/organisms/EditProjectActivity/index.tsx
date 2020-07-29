@@ -23,19 +23,20 @@ import { connect } from 'react-redux';
 import { AnyAction, Dispatch } from 'redux';
 
 import { ConcordKey, RequestError } from '../../../api/common';
-import { actions, State, selectors } from '../../../state/data/projects';
-import { EditProjectForm, RequestErrorMessage } from '../../molecules';
+import { actions, State } from '../../../state/data/projects';
+import { EditProjectForm } from '../../molecules';
 import { UpdateProjectEntry, ProjectEntry } from '../../../api/org/project';
+import { RequestErrorActivity } from '../index';
 
 interface ExternalProps {
     orgName: ConcordKey;
     projectName: ConcordKey;
+    initial?: ProjectEntry;
 }
 
 interface StateProps {
     submitting: boolean;
     error: RequestError;
-    initial?: ProjectEntry;
 }
 
 interface DispatchProps {
@@ -46,10 +47,10 @@ type Props = ExternalProps & StateProps & DispatchProps;
 
 const toUpdateProjectEntry = (p?: ProjectEntry): UpdateProjectEntry => {
     return {
-        id: p!.id,
-        name: p!.name,
-        visibility: p!.visibility,
-        description: p!.description
+        id: p?.id,
+        name: p?.name,
+        visibility: p?.visibility,
+        description: p?.description
     };
 };
 
@@ -57,9 +58,13 @@ class EditProjectActivity extends React.PureComponent<Props> {
     render() {
         const { error, submitting, update, orgName, initial } = this.props;
 
+        if (!initial) {
+            return <></>;
+        }
+
         return (
             <>
-                {error && <RequestErrorMessage error={error} />}
+                {error && <RequestErrorActivity error={error} />}
 
                 <EditProjectForm
                     submitting={submitting}
@@ -76,8 +81,7 @@ const mapStateToProps = (
     { orgName, projectName }: ExternalProps
 ): StateProps => ({
     submitting: projects.updateProject.running,
-    error: projects.error,
-    initial: selectors.projectByName(projects, orgName, projectName)
+    error: projects.error
 });
 
 const mapDispatchToProps = (dispatch: Dispatch<AnyAction>): DispatchProps => ({

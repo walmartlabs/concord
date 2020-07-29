@@ -36,8 +36,10 @@ interface Props {
 
 const renderItem = (initiator: string, status: ProcessStatus, count: number) => {
     return (
-        <div className={'statistic ' + getStatusSemanticColor(status)} key={status}>
-            <div className="value">{count}</div>
+        <div
+            className={'statistic ' + (count > 0 ? getStatusSemanticColor(status) : 'grey')}
+            key={status}>
+            <div className="value">{count > 0 ? count : 0}</div>
             <div className="label">
                 {count > 0 ? (
                     <Link to={`/process?${queryParams({ status, initiator })}`}>{status}</Link>

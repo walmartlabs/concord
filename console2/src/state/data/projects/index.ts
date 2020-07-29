@@ -22,17 +22,15 @@ import { push as pushHistory } from 'connected-react-router';
 import { Action, combineReducers, Reducer } from 'redux';
 import { all, call, put, takeLatest } from 'redux-saga/effects';
 
-import { ConcordId, ConcordKey } from '../../../api/common';
+import { ConcordKey } from '../../../api/common';
 import { ResourceAccessEntry } from '../../../api/org';
 import {
-    changeOwner as apiChangeOwner,
     createOrUpdate as apiCreateOrUpdate,
     deleteProject as apiDeleteProject,
     get as apiGet,
     getProjectAccess,
     list as apiList,
     NewProjectEntry,
-    rename as apiRename,
     updateProjectAccess,
     UpdateProjectEntry
 } from '../../../api/org/project';
@@ -52,8 +50,6 @@ import {
 } from '../common';
 import {
     AddRepositoryRequest,
-    ChangeProjectOwnerRequest,
-    ChangeProjectOwnerState,
     CreateProjectRequest,
     CreateRepositoryState,
     DeleteProjectRequest,
@@ -69,8 +65,6 @@ import {
     ProjectTeamAccessState,
     RefreshRepositoryRequest,
     RefreshRepositoryState,
-    RenameProjectRequest,
-    RenameProjectState,
     State,
     UpdateProjectRequest,
     updateProjectState,
@@ -93,12 +87,6 @@ const actionTypes = {
     PROJECT_DATA_RESPONSE: `${NAMESPACE}/data/response`,
 
     CREATE_PROJECT_REQUEST: `${NAMESPACE}/create/request`,
-
-    RENAME_PROJECT_REQUEST: `${NAMESPACE}/rename/request`,
-    RENAME_PROJECT_RESPONSE: `${NAMESPACE}/rename/response`,
-
-    CHANGE_PROJECT_OWNER_REQUEST: `${NAMESPACE}/changeOwner/request`,
-    CHANGE_PROJECT_OWNER_RESPONSE: `${NAMESPACE}/changeOwner/response`,
 
     DELETE_PROJECT_REQUEST: `${NAMESPACE}/delete/request`,
     DELETE_PROJECT_RESPONSE: `${NAMESPACE}/delete/response`,
@@ -159,30 +147,6 @@ export const actions = {
         type: actionTypes.UPDATE_PROJECT_REQUEST,
         orgName,
         entry
-    }),
-
-    renameProject: (
-        orgName: ConcordKey,
-        projectId: ConcordId,
-        projectName: ConcordKey
-    ): RenameProjectRequest => ({
-        type: actionTypes.RENAME_PROJECT_REQUEST,
-        orgName,
-        projectId,
-        projectName
-    }),
-
-    changeProjectOwner: (
-        orgName: ConcordKey,
-        projectId: ConcordId,
-        projectName: ConcordKey,
-        ownerId: ConcordId
-    ): ChangeProjectOwnerRequest => ({
-        type: actionTypes.CHANGE_PROJECT_OWNER_REQUEST,
-        orgName,
-        projectId,
-        projectName,
-        ownerId
     }),
 
     deleteProject: (orgName: ConcordKey, projectName: ConcordKey): DeleteProjectRequest => ({
@@ -325,36 +289,6 @@ const updateProjectReducers = combineReducers<updateProjectState>({
     )
 });
 
-const renameReducers = combineReducers<RenameProjectState>({
-    running: makeLoadingReducer(
-        [actionTypes.RENAME_PROJECT_REQUEST],
-        [actionTypes.RENAME_PROJECT_RESPONSE]
-    ),
-    error: makeErrorReducer(
-        [actionTypes.RENAME_PROJECT_REQUEST],
-        [actionTypes.RENAME_PROJECT_RESPONSE]
-    ),
-    response: makeResponseReducer(
-        actionTypes.RENAME_PROJECT_RESPONSE,
-        actionTypes.RENAME_PROJECT_RESPONSE
-    )
-});
-
-const changeOwnerReducers = combineReducers<ChangeProjectOwnerState>({
-    running: makeLoadingReducer(
-        [actionTypes.CHANGE_PROJECT_OWNER_REQUEST],
-        [actionTypes.CHANGE_PROJECT_OWNER_RESPONSE]
-    ),
-    error: makeErrorReducer(
-        [actionTypes.CHANGE_PROJECT_OWNER_REQUEST],
-        [actionTypes.CHANGE_PROJECT_OWNER_RESPONSE]
-    ),
-    response: makeResponseReducer(
-        actionTypes.CHANGE_PROJECT_OWNER_RESPONSE,
-        actionTypes.CHANGE_PROJECT_OWNER_REQUEST
-    )
-});
-
 const deleteProjectReducers = combineReducers<DeleteProjectState>({
     running: makeLoadingReducer(
         [actionTypes.DELETE_PROJECT_REQUEST],
@@ -472,8 +406,6 @@ export const reducers = combineReducers<State>({
     loading,
     error: errorMsg,
 
-    rename: renameReducers,
-    changeOwner: changeOwnerReducers,
     deleteProject: deleteProjectReducers,
     updateProject: updateProjectReducers,
     projectTeamAccess: getTeamAccessReducers,
@@ -558,32 +490,6 @@ function* onCreate({ orgName, entry }: CreateProjectRequest) {
         yield put(pushHistory(`/org/${orgName}/project/${entry.name}`));
     } catch (e) {
         yield handleErrors(actionTypes.PROJECT_DATA_RESPONSE, e);
-    }
-}
-
-function* onRename({ orgName, projectId, projectName }: RenameProjectRequest) {
-    try {
-        yield call(apiRename, orgName, projectId, projectName);
-        yield put({
-            type: actionTypes.RENAME_PROJECT_RESPONSE
-        });
-
-        yield put(pushHistory(`/org/${orgName}/project/${projectName}`));
-    } catch (e) {
-        yield handleErrors(actionTypes.RENAME_PROJECT_RESPONSE, e);
-    }
-}
-
-function* onChangeOwner({ orgName, projectId, projectName, ownerId }: ChangeProjectOwnerRequest) {
-    try {
-        yield call(apiChangeOwner, orgName, projectId, ownerId);
-        yield put({
-            type: actionTypes.CHANGE_PROJECT_OWNER_RESPONSE
-        });
-
-        yield put(actions.getProject(orgName, projectName));
-    } catch (e) {
-        yield handleErrors(actionTypes.CHANGE_PROJECT_OWNER_RESPONSE, e);
     }
 }
 
@@ -689,8 +595,6 @@ export const sagas = function*() {
         takeLatest(actionTypes.GET_PROJECT_REQUEST, onGet),
         takeLatest(actionTypes.LIST_PROJECTS_REQUEST, onList),
         takeLatest(actionTypes.CREATE_PROJECT_REQUEST, onCreate),
-        takeLatest(actionTypes.RENAME_PROJECT_REQUEST, onRename),
-        takeLatest(actionTypes.CHANGE_PROJECT_OWNER_REQUEST, onChangeOwner),
         takeLatest(actionTypes.DELETE_PROJECT_REQUEST, onDelete),
         takeLatest(actionTypes.UPDATE_PROJECT_REQUEST, onUpdateProject),
         takeLatest(actionTypes.ADD_REPOSITORY_REQUEST, onAddRepository),

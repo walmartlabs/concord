@@ -51,7 +51,7 @@ interface DispatchProps {
 
 type Props = ExternalProps & StateProps & DispatchProps;
 
-class ProjectRenameActivity extends React.PureComponent<Props> {
+class SecretRenameActivity extends React.PureComponent<Props> {
     render() {
         const { error, renaming, orgName, secretId, secretName, projectId, rename } = this.props;
 
@@ -83,4 +83,4 @@ const mapDispatchToProps = (dispatch: Dispatch<AnyAction>): DispatchProps => ({
         dispatch(actions.renameSecret(orgName, secretId, secretName, projectId))
 });
 
-export default connect(mapStateToProps, mapDispatchToProps)(ProjectRenameActivity);
+export default connect(mapStateToProps, mapDispatchToProps)(SecretRenameActivity);

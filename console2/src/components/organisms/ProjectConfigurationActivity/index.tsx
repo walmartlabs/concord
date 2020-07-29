@@ -19,52 +19,48 @@
  */
 
 import * as React from 'react';
-import { useCallback, useEffect, useState } from 'react';
-import { Loader } from 'semantic-ui-react';
+import { useCallback, useState } from 'react';
 
 import { ConcordKey, RequestError } from '../../../api/common';
 import {
     getProjectConfiguration as apiGetProjectConfiguration,
     updateProjectConfiguration as apiUpdateProjectConfiguration
 } from '../../../api/org/project';
-import { RequestErrorMessage } from '../../molecules';
 import ProjectConfiguration from '../../molecules/ProjectConfiguration';
+import { RequestErrorActivity } from '../index';
+import { LoadingDispatch } from '../../../App';
+import { useApi } from '../../../hooks/useApi';
 
 interface Props {
     orgName: ConcordKey;
     projectName: ConcordKey;
+    forceRefresh: any;
 }
 
-export default ({ orgName, projectName }: Props) => {
-    const [config, setConfig] = useState<Object>({});
-    const [loading, setLoading] = useState(false);
+export default ({ orgName, projectName, forceRefresh }: Props) => {
+    const dispatch = React.useContext(LoadingDispatch);
+
     const [updating, setUpdating] = useState(false);
-    const [error, setError] = useState<RequestError>();
+    const [updateError, setUpdateError] = useState<RequestError>();
 
-    useEffect(() => {
-        const load = async () => {
-            try {
-                setLoading(true);
-                const v = await apiGetProjectConfiguration(orgName, projectName);
-                setConfig(v);
-            } catch (e) {
-                setError(e);
-            } finally {
-                setLoading(false);
-            }
-        };
-
-        load();
+    const fetchData = useCallback(() => {
+        return apiGetProjectConfiguration(orgName, projectName);
     }, [orgName, projectName]);
+
+    const { data, error } = useApi<Object>(fetchData, {
+        fetchOnMount: true,
+        forceRequest: forceRefresh,
+        dispatch: dispatch
+    });
 
     const update = useCallback((orgName: ConcordKey, projectName: ConcordKey, config: Object) => {
         const update = async () => {
             try {
                 setUpdating(true);
                 await apiUpdateProjectConfiguration(orgName, projectName, config);
-                setConfig(config);
+                setUpdateError(undefined);
             } catch (e) {
-                setError(e);
+                setUpdateError(e);
             } finally {
                 setUpdating(false);
             }
@@ -73,18 +69,17 @@ export default ({ orgName, projectName }: Props) => {
         update();
     }, []);
 
-    if (loading || updating) {
-        return <Loader active={true} />;
-    }
-
     if (error) {
-        return <RequestErrorMessage error={error} />;
+        return <RequestErrorActivity error={error} />;
+    }
+    if (updateError) {
+        return <RequestErrorActivity error={updateError} />;
     }
 
     return (
         <div>
             <ProjectConfiguration
-                config={config}
+                config={data}
                 submitting={updating}
                 submit={(config) => update(orgName, projectName, config)}
             />

@@ -22,13 +22,12 @@ import { useEffect, useRef, useState } from 'react';
 import { Form } from 'semantic-ui-react';
 import { ConcordId, ConcordKey, RequestError } from '../../../api/common';
 import { createOrUpdate as apiCreateOrUpdate, RawPayloadMode } from '../../../api/org/project';
-import { RequestErrorMessage } from '../../molecules';
+import { RequestErrorActivity } from '../index';
 
 export interface Props {
     orgName: ConcordKey;
     projectId: ConcordId;
     initialValue?: RawPayloadMode;
-    refresh: () => void; // TODO replace with Context?
 }
 
 const getDescription = (m: RawPayloadMode): string => {
@@ -48,7 +47,7 @@ const getDescription = (m: RawPayloadMode): string => {
     }
 };
 
-export default ({ orgName, projectId, initialValue = RawPayloadMode.DISABLED, refresh }: Props) => {
+export default ({ orgName, projectId, initialValue = RawPayloadMode.DISABLED }: Props) => {
     const [value, setValue] = useState(initialValue);
     const [updating, setUpdating] = useState(false);
     const [error, setError] = useState<RequestError>();
@@ -68,8 +67,6 @@ export default ({ orgName, projectId, initialValue = RawPayloadMode.DISABLED, re
                     id: projectId,
                     rawPayloadMode: value
                 });
-
-                refresh();
             } catch (e) {
                 setError(e);
             } finally {
@@ -82,7 +79,7 @@ export default ({ orgName, projectId, initialValue = RawPayloadMode.DISABLED, re
 
     return (
         <>
-            {error && <RequestErrorMessage error={error} />}
+            {error && <RequestErrorActivity error={error} />}
             <Form loading={updating}>
                 <Form.Group>
                     <Form.Dropdown
