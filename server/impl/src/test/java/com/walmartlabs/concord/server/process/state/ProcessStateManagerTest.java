@@ -40,7 +40,6 @@ import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
-import java.time.Duration;
 import java.time.OffsetDateTime;
 import java.util.Arrays;
 import java.util.Collections;
@@ -65,7 +64,7 @@ public class ProcessStateManagerTest extends AbstractDaoTest {
 
         //
         ProcessKeyCache processKeyCache = new ProcessKeyCache(new ProcessQueueDao(getConfiguration(), new ConcordObjectMapper(new ObjectMapper())));
-        ProcessConfiguration stateCfg = new ProcessConfiguration(Duration.ofMillis(24 * 60 * 60 * 1000), Collections.singletonList(Constants.Files.CONFIGURATION_FILE_NAME));
+        ProcessConfiguration stateCfg = new ProcessConfiguration("24 hours", Collections.singletonList(Constants.Files.CONFIGURATION_FILE_NAME));
         ProcessStateManager stateManager = new ProcessStateManager(getConfiguration(), mock(SecretStoreConfiguration.class), stateCfg, mock(PolicyManager.class), mock(ProcessLogManager.class), processKeyCache);
         stateManager.importPath(processKey, null, baseDir, (p, attrs) -> true);
 
@@ -111,7 +110,7 @@ public class ProcessStateManagerTest extends AbstractDaoTest {
         }
 
         ProcessKeyCache processKeyCache = new ProcessKeyCache(new ProcessQueueDao(getConfiguration(), new ConcordObjectMapper(new ObjectMapper())));
-        ProcessConfiguration stateCfg = new ProcessConfiguration(Duration.ofMillis(24 * 60 * 60 * 1000), Collections.singletonList(Constants.Files.CONFIGURATION_FILE_NAME));
+        ProcessConfiguration stateCfg = new ProcessConfiguration("24 hours", Collections.singletonList(Constants.Files.CONFIGURATION_FILE_NAME));
         ProcessStateManager stateManager = new ProcessStateManager(getConfiguration(), mock(SecretStoreConfiguration.class), stateCfg, mock(PolicyManager.class), mock(ProcessLogManager.class), processKeyCache);
         stateManager.importPath(processKey, "/", baseDir, (p, attrs) -> true);
     }

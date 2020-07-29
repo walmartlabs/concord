@@ -62,7 +62,7 @@ public class ProcessConfiguration implements Serializable {
 
     @Inject
     @Config("process.maxStateAge")
-    private Duration maxStateAge;
+    private String maxStateAge;
     @Inject
     @Config("process.secureFiles")
     private List<String> secureFiles;
@@ -92,7 +92,7 @@ public class ProcessConfiguration implements Serializable {
         this.signingKeyPath = signingKeyPath != null ? Paths.get(signingKeyPath) : null;
     }
 
-    public ProcessConfiguration(Duration maxStateAge, List<String> secureFiles) {
+    public ProcessConfiguration(String maxStateAge, List<String> secureFiles) {
         this.maxStateAge = maxStateAge;
         this.secureFiles = secureFiles;
     }
@@ -121,7 +121,7 @@ public class ProcessConfiguration implements Serializable {
         return checkpointCleanup;
     }
 
-    public Duration getMaxStateAge() {
+    public String getMaxStateAge() {
         return maxStateAge;
     }
 
