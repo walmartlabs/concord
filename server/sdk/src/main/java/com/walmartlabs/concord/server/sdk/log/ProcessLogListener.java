@@ -20,8 +20,6 @@ package com.walmartlabs.concord.server.sdk.log;
  * =====
  */
 
-import com.walmartlabs.concord.server.sdk.ProcessKey;
-
 public interface ProcessLogListener {
 
     void onAppend(ProcessLogEntry entry);
