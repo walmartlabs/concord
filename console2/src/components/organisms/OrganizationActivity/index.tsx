@@ -19,20 +19,12 @@
  */
 
 import * as React from 'react';
-import { connect } from 'react-redux';
-import { AnyAction, Dispatch } from 'redux';
 import { Redirect, Route, Switch } from 'react-router';
 import { Link } from 'react-router-dom';
-import { Divider, Header, Icon, Loader, Menu, Segment } from 'semantic-ui-react';
-
-import { ConcordKey, RequestError } from '../../../api/common';
-import { OrganizationEntry } from '../../../api/org';
-import { actions, selectors, State } from '../../../state/data/orgs';
-import { RequestErrorMessage, WithCopyToClipboard } from '../../molecules';
+import { Icon, Menu } from 'semantic-ui-react';
+import { ConcordKey } from '../../../api/common';
 import {
     AuditLogActivity,
-    OrganizationOwnerChangeActivity,
-    ProcessListActivity,
     ProjectListActivity,
     SecretListActivity,
     TeamListActivity
@@ -40,6 +32,8 @@ import {
 
 import { NotFoundPage } from '../../pages';
 import StorageListActivity from '../../pages/JsonStorePage/StoreListActivity';
+import OrganizationSettings from './OrganizationSettings';
+import OrganizationProcesses from './OrganizationProcesses';
 
 export type TabLink =
     | 'process'
@@ -54,187 +48,79 @@ export type TabLink =
 interface ExternalProps {
     activeTab: TabLink;
     orgName: ConcordKey;
+    forceRefresh: any;
 }
 
-interface StateProps {
-    data?: OrganizationEntry;
-    loading: boolean;
-    error: RequestError;
-}
+const OrganizationActivity = ({ activeTab, orgName, forceRefresh }: ExternalProps) => {
+    const baseUrl = `/org/${orgName}`;
 
-interface DispatchProps {
-    load: (orgName: ConcordKey) => void;
-}
+    return (
+        <>
+            <Menu tabular={true} style={{ marginTop: 0 }}>
+                <Menu.Item active={activeTab === 'project'}>
+                    <Icon name="sitemap" />
+                    <Link to={`${baseUrl}/project`}>Projects</Link>
+                </Menu.Item>
+                <Menu.Item active={activeTab === 'process'}>
+                    <Icon name="tasks" />
+                    <Link to={`${baseUrl}/process`}>Processes</Link>
+                </Menu.Item>
+                <Menu.Item active={activeTab === 'secret'}>
+                    <Icon name="lock" />
+                    <Link to={`${baseUrl}/secret`}>Secrets</Link>
+                </Menu.Item>
+                <Menu.Item active={activeTab === 'team'}>
+                    <Icon name="users" />
+                    <Link to={`${baseUrl}/team`}>Teams</Link>
+                </Menu.Item>
+                <Menu.Item active={activeTab === 'jsonstore'}>
+                    <Icon name="database" />
+                    <Link to={`${baseUrl}/jsonstore`}>JSON Stores</Link>
+                </Menu.Item>
+                <Menu.Item active={activeTab === 'settings'}>
+                    <Icon name="setting" />
+                    <Link to={`${baseUrl}/settings`}>Settings</Link>
+                </Menu.Item>
+                <Menu.Item active={activeTab === 'audit'}>
+                    <Icon name="history" />
+                    <Link to={`${baseUrl}/audit`}>Audit Log</Link>
+                </Menu.Item>
+            </Menu>
 
-type Props = ExternalProps & StateProps & DispatchProps;
-
-class OrganizationActivity extends React.PureComponent<Props> {
-    static renderProcesses(e: OrganizationEntry) {
-        if (
-            e.meta !== undefined &&
-            e.meta.ui !== undefined &&
-            e.meta.ui.processList !== undefined
-        ) {
-            return (
-                <ProcessListActivity
-                    orgName={e.name}
-                    columns={e.meta.ui.processList}
-                    usePagination={true}
-                />
-            );
-        } else {
-            return <ProcessListActivity orgName={e.name} usePagination={true} />;
-        }
-    }
-
-    static renderProjects(orgName: string) {
-        return <ProjectListActivity orgName={orgName} />;
-    }
-
-    static renderSecrets(orgName: string) {
-        return <SecretListActivity orgName={orgName} />;
-    }
-
-    static renderTeams(orgName: string) {
-        return <TeamListActivity orgName={orgName} />;
-    }
-
-    static renderStorage(orgName: string) {
-        return <StorageListActivity orgName={orgName} />;
-    }
-
-    static renderSettings(e: OrganizationEntry) {
-        return (
-            <>
-                <Header as="h5" disabled={true}>
-                    <WithCopyToClipboard value={e.id}>ID: {e.id}</WithCopyToClipboard>
-                </Header>
-
-                <Divider horizontal={true} content="Danger Zone" />
-
-                <Segment color="red">
-                    <Header as="h4">Organization owner</Header>
-                    <OrganizationOwnerChangeActivity
-                        orgId={e.id}
-                        orgName={e.name}
-                        owner={e.owner}
+            <Switch>
+                <Route path={baseUrl} exact={true}>
+                    <Redirect to={`${baseUrl}/project`} />
+                </Route>
+                <Route path={`${baseUrl}/project`}>
+                    <ProjectListActivity orgName={orgName} forceRefresh={forceRefresh} />
+                </Route>
+                <Route path={`${baseUrl}/process`}>
+                    <OrganizationProcesses orgName={orgName} forceRefresh={forceRefresh} />
+                </Route>
+                <Route path={`${baseUrl}/secret`} exact={true}>
+                    <SecretListActivity orgName={orgName} forceRefresh={forceRefresh} />
+                </Route>
+                <Route path={`${baseUrl}/team`} exact={true}>
+                    <TeamListActivity orgName={orgName} forceRefresh={forceRefresh} />
+                </Route>
+                <Route path={`${baseUrl}/jsonstore`} exact={true}>
+                    <StorageListActivity orgName={orgName} forceRefresh={forceRefresh} />
+                </Route>
+                <Route path={`${baseUrl}/settings`} exact={true}>
+                    <OrganizationSettings orgName={orgName} forceRefresh={forceRefresh} />
+                </Route>
+                <Route path={`${baseUrl}/audit`} exact={true}>
+                    <AuditLogActivity
+                        showRefreshButton={false}
+                        filter={{ details: { orgName: orgName } }}
+                        forceRefresh={forceRefresh}
                     />
-                </Segment>
-            </>
-        );
-    }
+                </Route>
 
-    static renderAuditLog(e: OrganizationEntry) {
-        return <AuditLogActivity filter={{ details: { orgName: e.name } }} />;
-    }
+                <Route component={NotFoundPage} />
+            </Switch>
+        </>
+    );
+};
 
-    componentDidMount() {
-        this.init();
-    }
-
-    componentDidUpdate(prevProps: Props) {
-        const { orgName: newOrgName } = this.props;
-        const { orgName: oldOrgName } = prevProps;
-
-        if (oldOrgName !== newOrgName) {
-            this.init();
-        }
-    }
-
-    init() {
-        const { orgName, load } = this.props;
-        load(orgName);
-    }
-
-    render() {
-        const { loading, error, data } = this.props;
-
-        if (error) {
-            return <RequestErrorMessage error={error} />;
-        }
-
-        if (loading || !data) {
-            return <Loader active={true} />;
-        }
-
-        const { activeTab, orgName } = this.props;
-
-        const baseUrl = `/org/${orgName}`;
-
-        return (
-            <>
-                <Menu tabular={true}>
-                    <Menu.Item active={activeTab === 'project'}>
-                        <Icon name="sitemap" />
-                        <Link to={`${baseUrl}/project`}>Projects</Link>
-                    </Menu.Item>
-                    <Menu.Item active={activeTab === 'process'}>
-                        <Icon name="tasks" />
-                        <Link to={`${baseUrl}/process`}>Processes</Link>
-                    </Menu.Item>
-                    <Menu.Item active={activeTab === 'secret'}>
-                        <Icon name="lock" />
-                        <Link to={`${baseUrl}/secret`}>Secrets</Link>
-                    </Menu.Item>
-                    <Menu.Item active={activeTab === 'team'}>
-                        <Icon name="users" />
-                        <Link to={`${baseUrl}/team`}>Teams</Link>
-                    </Menu.Item>
-                    <Menu.Item active={activeTab === 'jsonstore'}>
-                        <Icon name="database" />
-                        <Link to={`${baseUrl}/jsonstore`}>JSON Stores</Link>
-                    </Menu.Item>
-                    <Menu.Item active={activeTab === 'settings'}>
-                        <Icon name="setting" />
-                        <Link to={`${baseUrl}/settings`}>Settings</Link>
-                    </Menu.Item>
-                    <Menu.Item active={activeTab === 'audit'}>
-                        <Icon name="history" />
-                        <Link to={`${baseUrl}/audit`}>Audit Log</Link>
-                    </Menu.Item>
-                </Menu>
-
-                <Switch>
-                    <Route path={baseUrl} exact={true}>
-                        <Redirect to={`${baseUrl}/project`} />
-                    </Route>
-                    <Route path={`${baseUrl}/project`}>
-                        {OrganizationActivity.renderProjects(data.name)}
-                    </Route>
-                    <Route path={`${baseUrl}/process`}>
-                        {OrganizationActivity.renderProcesses(data)}
-                    </Route>
-                    <Route path={`${baseUrl}/secret`} exact={true}>
-                        {OrganizationActivity.renderSecrets(data.name)}
-                    </Route>
-                    <Route path={`${baseUrl}/team`} exact={true}>
-                        {OrganizationActivity.renderTeams(data.name)}
-                    </Route>
-                    <Route path={`${baseUrl}/jsonstore`} exact={true}>
-                        {OrganizationActivity.renderStorage(data.name)}
-                    </Route>
-                    <Route path={`${baseUrl}/settings`} exact={true}>
-                        {OrganizationActivity.renderSettings(data)}
-                    </Route>
-                    <Route path={`${baseUrl}/audit`} exact={true}>
-                        {OrganizationActivity.renderAuditLog(data)}
-                    </Route>
-
-                    <Route component={NotFoundPage} />
-                </Switch>
-            </>
-        );
-    }
-}
-
-const mapStateToProps = ({ orgs }: { orgs: State }, { orgName }: ExternalProps): StateProps => ({
-    data: selectors.orgByName(orgs, orgName),
-    loading: orgs.loading,
-    error: orgs.error
-});
-
-const mapDispatchToProps = (dispatch: Dispatch<AnyAction>): DispatchProps => ({
-    load: (orgName) => dispatch(actions.getOrg(orgName))
-});
-
-export default connect(mapStateToProps, mapDispatchToProps)(OrganizationActivity);
+export default OrganizationActivity;

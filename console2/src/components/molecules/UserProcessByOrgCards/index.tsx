@@ -33,7 +33,7 @@ export interface OrgProjects {
 }
 
 interface Props {
-    items: OrgProjects[];
+    items?: OrgProjects[];
 }
 
 const renderProject = (orgName: ConcordKey, project: ProjectProcesses) => {
@@ -87,6 +87,10 @@ const renderCard = (orgName: ConcordKey, projects: ProjectProcesses[]) => {
 class UserProcessByOrgCards extends React.PureComponent<Props> {
     render() {
         const { items } = this.props;
+        if (items === undefined) {
+            return 'Loading';
+        }
+
         if (items.length === 0) {
             return 'No processes found.';
         }

@@ -23,12 +23,7 @@ import { all, call, fork, put, takeLatest, throttle } from 'redux-saga/effects';
 
 import { ConcordId, ConcordKey } from '../../../api/common';
 import { list as apiProcessList, ProcessListQuery } from '../../../api/process';
-import {
-    get as apiGet,
-    start as apiStart,
-    killBulk as apiKillBulk,
-    ProcessDataInclude
-} from '../../../api/process';
+import { start as apiStart, killBulk as apiKillBulk } from '../../../api/process';
 import { restoreProcess as apiRestore } from '../../../api/process/checkpoint';
 import { handleErrors, makeErrorReducer, makeLoadingReducer, makeResponseReducer } from '../common';
 import { reducers as eventsReducers, sagas as eventsSagas } from './events';
@@ -36,12 +31,9 @@ import { reducers as eventsReducers, sagas as eventsSagas } from './events';
 import {
     CancelBulkProcessRequest,
     CancelBullkProcessState,
-    GetProcessRequest,
     ListProcessesRequest,
     PaginatedProcessDataResponse,
     PaginatedProcesses,
-    ProcessDataResponse,
-    Processes,
     RestoreProcessRequest,
     RestoreProcessState,
     StartProcessRequest,
@@ -55,7 +47,6 @@ export * from './types';
 const NAMESPACE = 'processes';
 
 const actionTypes = {
-    GET_PROCESS_REQUEST: `${NAMESPACE}/get/request`,
     LIST_PROJECT_PROCESSES_REQUEST: `${NAMESPACE}/project/list/request`,
     PROCESS_DATA_RESPONSE: `${NAMESPACE}/data/response`,
     PROCESSES_DATA_RESPONSE: `${NAMESPACE}/processes/data/response`,
@@ -74,12 +65,6 @@ const actionTypes = {
 };
 
 export const actions = {
-    getProcess: (instanceId: ConcordId, includes: ProcessDataInclude[]): GetProcessRequest => ({
-        type: actionTypes.GET_PROCESS_REQUEST,
-        instanceId,
-        includes
-    }),
-
     listProcesses: (query: ProcessListQuery): ListProcessesRequest => ({
         type: actionTypes.LIST_PROJECT_PROCESSES_REQUEST,
         query
@@ -121,26 +106,6 @@ export const actions = {
     })
 };
 
-const processesById: Reducer<Processes> = (
-    state = {},
-    { type, error, items }: ProcessDataResponse
-) => {
-    switch (type) {
-        case actionTypes.PROCESS_DATA_RESPONSE:
-            if (error || !items) {
-                return {};
-            }
-
-            const result = {};
-            items.forEach((o) => {
-                result[o.instanceId] = o;
-            });
-            return result;
-        default:
-            return state;
-    }
-};
-
 const paginatedProcessesById: Reducer<PaginatedProcesses> = (
     state = { processes: {} },
     { type, error, items, next, prev }: PaginatedProcessDataResponse
@@ -164,12 +129,12 @@ const paginatedProcessesById: Reducer<PaginatedProcesses> = (
 };
 
 const loading = makeLoadingReducer(
-    [actionTypes.GET_PROCESS_REQUEST, actionTypes.LIST_PROJECT_PROCESSES_REQUEST],
+    [actionTypes.LIST_PROJECT_PROCESSES_REQUEST],
     [actionTypes.PROCESS_DATA_RESPONSE, actionTypes, actionTypes.PROCESSES_DATA_RESPONSE]
 );
 
 const errorMsg = makeErrorReducer(
-    [actionTypes.GET_PROCESS_REQUEST, actionTypes.LIST_PROJECT_PROCESSES_REQUEST],
+    [actionTypes.LIST_PROJECT_PROCESSES_REQUEST],
     [actionTypes.PROCESS_DATA_RESPONSE, actionTypes.PROCESSES_DATA_RESPONSE]
 );
 
@@ -219,8 +184,6 @@ const cancelBulkProcessReducers = combineReducers<CancelBullkProcessState>({
 });
 
 export const reducers = combineReducers<State>({
-    // TODO use RequestState<?>
-    processesById, // TODO makeEntityByIdReducer
     paginatedProcessesById,
 
     loading,
@@ -232,18 +195,6 @@ export const reducers = combineReducers<State>({
 
     events: eventsReducers
 });
-
-function* onGetProcess({ instanceId, includes }: GetProcessRequest) {
-    try {
-        const response = yield call(apiGet, instanceId, includes);
-        yield put({
-            type: actionTypes.PROCESS_DATA_RESPONSE,
-            items: [response]
-        });
-    } catch (e) {
-        yield handleErrors(actionTypes.PROCESS_DATA_RESPONSE, e);
-    }
-}
 
 function* onProcessList({ query }: ListProcessesRequest) {
     try {
@@ -311,7 +262,6 @@ function* onRestoreProcess({ instanceId, checkpointId }: RestoreProcessRequest) 
 
 export const sagas = function*() {
     yield all([
-        takeLatest(actionTypes.GET_PROCESS_REQUEST, onGetProcess),
         throttle(1000, actionTypes.LIST_PROJECT_PROCESSES_REQUEST, onProcessList),
         takeLatest(actionTypes.START_PROCESS_REQUEST, onStartProcess),
         takeLatest(actionTypes.CANCEL_BULK_PROCESS_REQUEST, onCancelBulkProcess),

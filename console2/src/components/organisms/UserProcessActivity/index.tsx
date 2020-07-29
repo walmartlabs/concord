@@ -19,18 +19,19 @@
  */
 
 import * as React from 'react';
-import { connect } from 'react-redux';
-import { AnyAction, Dispatch } from 'redux';
 
-import { ConcordKey, RequestError } from '../../../api/common';
-import { actions, State } from '../../../state/data/userActivity';
-import { RequestErrorMessage, UserProcessStats, UserProcessByOrgCards } from '../../molecules';
-import { ProjectProcesses, UserActivity } from '../../../api/service/console/user';
-import { Header, Loader } from 'semantic-ui-react';
+import { ConcordKey } from '../../../api/common';
+import { UserProcessStats, UserProcessByOrgCards } from '../../molecules';
+import {
+    getActivity as apiGetActivity,
+    ProjectProcesses,
+    UserActivity
+} from '../../../api/service/console/user';
+import { Header } from 'semantic-ui-react';
 import { MAX_CARD_ITEMS, OrgProjects } from '../../molecules/UserProcessByOrgCards';
 import { ProcessList } from '../../molecules/index';
 import { StatusCount } from '../../molecules/UserProcessStats';
-import { ProcessStatus } from '../../../api/process';
+import { ProcessEntry, ProcessStatus } from '../../../api/process';
 import { comparators } from '../../../utils';
 import {
     CREATED_AT_COLUMN,
@@ -40,22 +41,90 @@ import {
     PROJECT_COLUMN,
     STATUS_COLUMN
 } from '../../molecules/ProcessList';
+import { useCallback, useEffect, useState } from 'react';
+import { useApi } from '../../../hooks/useApi';
+import { LoadingDispatch } from '../../../App';
+import RequestErrorActivity from '../RequestErrorActivity';
+
+export interface ExternalProps {
+    forceRefresh: any;
+}
 
 const MAX_OWN_PROCESSES = 10;
 
-interface SessionProps {
-    userName?: string;
-}
+const DEFAULT_STATS: StatusCount[] = [
+    { status: ProcessStatus.ENQUEUED, count: -1 },
+    { status: ProcessStatus.RUNNING, count: -1 },
+    { status: ProcessStatus.SUSPENDED, count: -1 },
+    { status: ProcessStatus.FINISHED, count: -1 },
+    { status: ProcessStatus.FAILED, count: -1 }
+];
 
-interface StateProps {
-    userActivity?: UserActivity;
-    loading: boolean;
-    error: RequestError;
-}
+const statusOrder = [
+    ProcessStatus.RUNNING,
+    ProcessStatus.SUSPENDED,
+    ProcessStatus.FINISHED,
+    ProcessStatus.FAILED
+];
 
-interface DispatchProps {
-    load: (orgName?: string, projectName?: string) => void;
-}
+const UserProcesses = ({ forceRefresh }: ExternalProps) => {
+    const dispatch = React.useContext(LoadingDispatch);
+
+    const [processStats, setProcessStats] = useState<StatusCount[]>(DEFAULT_STATS);
+    const [processByOrg, setProcessByOrg] = useState<OrgProjects[]>();
+    const [processes, setProcesses] = useState<ProcessEntry[]>();
+
+    const fetchData = useCallback(() => {
+        return apiGetActivity(MAX_CARD_ITEMS + 1, MAX_OWN_PROCESSES);
+    }, []);
+
+    const { data, error } = useApi<UserActivity>(fetchData, {
+        fetchOnMount: true,
+        forceRequest: forceRefresh,
+        dispatch: dispatch
+    });
+
+    useEffect(() => {
+        if (!data) {
+            return;
+        }
+
+        setProcessStats(makeProcessStatsList(data?.processStats));
+        setProcessByOrg(makeProcessByOrgList(data?.orgProcesses));
+        setProcesses(data?.processes);
+    }, [data]);
+
+    return (
+        <>
+            {error && <RequestErrorActivity error={error} />}
+
+            <Header dividing={true} as="h3" style={{ marginTop: 0 }}>
+                Your processes:
+            </Header>
+            <UserProcessStats items={processStats} />
+
+            <Header dividing={true} as="h3">
+                Running projects:
+            </Header>
+            <UserProcessByOrgCards items={processByOrg} />
+
+            <Header dividing={true} as="h3">
+                Your last {MAX_OWN_PROCESSES} processes:
+            </Header>
+            <ProcessList
+                data={processes}
+                columns={[
+                    STATUS_COLUMN,
+                    INSTANCE_ID_COLUMN,
+                    PROJECT_COLUMN,
+                    REPO_COLUMN,
+                    INITIATOR_COLUMN,
+                    CREATED_AT_COLUMN
+                ]}
+            />
+        </>
+    );
+};
 
 const sort = (orgProcess: ProjectProcesses[]): ProjectProcesses[] =>
     orgProcess.sort(comparators.byProperty((i) => i.projectName));
@@ -73,85 +142,35 @@ const makeProcessByOrgList = (orgProcesses?: {
     }
 };
 
-const statusOrder = [
-    ProcessStatus.RUNNING,
-    ProcessStatus.SUSPENDED,
-    ProcessStatus.FINISHED,
-    ProcessStatus.FAILED
-];
-
-const makeProcessStatsList = (processStats: {
+const makeProcessStatsList = (processStats?: {
     status: ProcessStatus;
     count: number;
-}): StatusCount[] =>
-    Object.keys(processStats)
+}): StatusCount[] => {
+    if (processStats === undefined) {
+        return DEFAULT_STATS;
+    }
+
+    return Object.keys(processStats)
         .map((k) => ({ status: k as ProcessStatus, count: processStats[k] }))
         .sort((a, b) => {
             const i1 = statusOrder.indexOf(a.status);
             const i2 = statusOrder.indexOf(b.status);
             return i1 - i2;
         });
+};
 
-class UserProcesses extends React.PureComponent<SessionProps & StateProps & DispatchProps> {
-    componentDidMount() {
-        this.props.load();
-    }
-
-    render() {
-        const { userActivity, loading, error } = this.props;
-        if (error) {
-            return <RequestErrorMessage error={error} />;
-        }
-
-        if (loading || !userActivity) {
-            return <Loader active={true} />;
-        }
-
-        const { processStats, orgProcesses, processes } = userActivity;
-
-        return (
-            <>
-                <Header dividing={true} as="h3">
-                    Your processes:
-                </Header>
-                <UserProcessStats items={makeProcessStatsList(processStats)} />
-
-                <Header dividing={true} as="h3">
-                    Running projects:
-                </Header>
-                <UserProcessByOrgCards items={makeProcessByOrgList(orgProcesses)} />
-
-                <Header dividing={true} as="h3">
-                    Your last {MAX_OWN_PROCESSES} processes:
-                </Header>
-                <ProcessList
-                    data={processes}
-                    columns={[
-                        STATUS_COLUMN,
-                        INSTANCE_ID_COLUMN,
-                        PROJECT_COLUMN,
-                        REPO_COLUMN,
-                        INITIATOR_COLUMN,
-                        CREATED_AT_COLUMN
-                    ]}
-                />
-            </>
-        );
-    }
-}
-
-const mapStateToProps = ({ userActivity }: { userActivity: State }): StateProps => ({
-    loading: userActivity.loading,
-    error: userActivity.error,
-    userActivity: userActivity.getUserActivity.response
-        ? userActivity.getUserActivity.response.activity
-            ? userActivity.getUserActivity.response.activity
-            : undefined
-        : undefined
-});
-
-const mapDispatchToProps = (dispatch: Dispatch<AnyAction>): DispatchProps => ({
-    load: () => dispatch(actions.getUserActivity(MAX_CARD_ITEMS + 1, MAX_OWN_PROCESSES))
-});
-
-export default connect(mapStateToProps, mapDispatchToProps)(UserProcesses);
+export default UserProcesses;
+//
+// const mapStateToProps = ({ userActivity }: { userActivity: State }): StateProps => ({
+//     loading: userActivity.loading,
+//     error: userActivity.error,
+//     userActivity: userActivity.getUserActivity.response
+//         ? userActivity.getUserActivity.response.activity
+//             ? userActivity.getUserActivity.response.activity
+//             : undefined
+//         : undefined
+// });
+//
+// const mapDispatchToProps = (dispatch: Dispatch<AnyAction>): DispatchProps => ({
+//     load: () => dispatch(actions.getUserActivity(MAX_CARD_ITEMS + 1, MAX_OWN_PROCESSES))
+// });

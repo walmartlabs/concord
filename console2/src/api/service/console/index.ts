@@ -19,8 +19,8 @@
  */
 
 import { throttle } from 'lodash';
-import { Organizations } from '../../../state/data/orgs';
 import { ConcordKey, fetchJson, managedFetch, queryParams } from '../../common';
+import { Organizations } from '../../../state/data/orgs/types';
 
 export interface UserResponse {
     username: string;

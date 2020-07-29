@@ -19,13 +19,15 @@
  */
 
 import * as React from 'react';
-import { RouteComponentProps, withRouter } from 'react-router';
-import { Link } from 'react-router-dom';
-import { Breadcrumb } from 'semantic-ui-react';
+import { RouteComponentProps } from 'react-router';
 
-import { BreadcrumbSegment } from '../../molecules';
 import { TabLink } from '../../organisms/OrganizationActivity';
 import { OrganizationActivity } from '../../organisms';
+import { LoadingState } from '../../../App';
+import { useCallback, useState } from 'react';
+import { BreadcrumbsToolbar } from '../../organisms';
+import { Breadcrumb } from 'semantic-ui-react';
+import { Link } from 'react-router-dom';
 
 interface RouteProps {
     orgName: string;
@@ -51,26 +53,32 @@ const pathToTab = (s: string): TabLink => {
     return null;
 };
 
-class OrganizationPage extends React.PureComponent<RouteComponentProps<RouteProps>> {
-    render() {
-        const { orgName } = this.props.match.params;
+const OrganizationPage = (props: RouteComponentProps<RouteProps>) => {
+    const activeTab = pathToTab(props.location.pathname);
 
-        const activeTab = pathToTab(this.props.location.pathname);
+    const { orgName } = props.match.params;
 
-        return (
-            <>
-                <BreadcrumbSegment>
-                    <Breadcrumb.Section>
-                        <Link to="/org">Organizations</Link>
-                    </Breadcrumb.Section>
-                    <Breadcrumb.Divider />
-                    <Breadcrumb.Section active={true}>{orgName}</Breadcrumb.Section>
-                </BreadcrumbSegment>
+    const loading = React.useContext(LoadingState);
 
-                <OrganizationActivity activeTab={activeTab} orgName={orgName} />
-            </>
-        );
-    }
-}
+    const [refresh, toggleRefresh] = useState<boolean>(false);
 
-export default withRouter(OrganizationPage);
+    const refreshHandler = useCallback(() => {
+        toggleRefresh((prevState) => !prevState);
+    }, []);
+
+    return (
+        <>
+            <BreadcrumbsToolbar loading={loading} refreshHandler={refreshHandler}>
+                <Breadcrumb.Section>
+                    <Link to="/org">Organizations</Link>
+                </Breadcrumb.Section>
+                <Breadcrumb.Divider />
+                <Breadcrumb.Section active={true}>{orgName}</Breadcrumb.Section>
+            </BreadcrumbsToolbar>
+
+            <OrganizationActivity activeTab={activeTab} orgName={orgName} forceRefresh={refresh} />
+        </>
+    );
+};
+
+export default OrganizationPage;

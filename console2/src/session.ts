@@ -20,7 +20,7 @@
 import * as React from 'react';
 import { History } from 'history';
 
-import { Organizations } from './state/data/orgs';
+import { Organizations } from './state/data/orgs/types';
 import { logout as apiLogout, whoami as apiWhoami } from './api/service/console';
 
 export interface UserInfo {

@@ -23,52 +23,39 @@ import { Input, Menu } from 'semantic-ui-react';
 
 import { ConcordKey } from '../../../api/common';
 import { RedirectButton, TeamList } from '../../organisms';
+import { useState } from 'react';
 
-interface State {
-    filter?: string;
-}
-
-interface Props {
+interface ExternalProps {
     orgName: ConcordKey;
+    forceRefresh: any;
 }
 
-class TeamListActivity extends React.Component<Props, State> {
-    constructor(props: Props) {
-        super(props);
-        this.state = {};
-    }
+export default ({ orgName, forceRefresh }: ExternalProps) => {
+    const [filter, setFilter] = useState<string>();
 
-    render() {
-        const { orgName } = this.props;
+    return (
+        <>
+            <Menu secondary={true}>
+                <Menu.Item>
+                    <Input
+                        icon="search"
+                        placeholder="Filter..."
+                        onChange={(ev, data) => setFilter(data.value)}
+                    />
+                </Menu.Item>
 
-        return (
-            <>
-                <Menu secondary={true}>
-                    <Menu.Item>
-                        <Input
-                            icon="search"
-                            placeholder="Filter..."
-                            onChange={(ev, data) => this.setState({ filter: data.value })}
-                        />
-                    </Menu.Item>
+                <Menu.Item position={'right'}>
+                    <RedirectButton
+                        icon="plus"
+                        positive={true}
+                        labelPosition="left"
+                        content="New team"
+                        location={`/org/${orgName}/team/_new`}
+                    />
+                </Menu.Item>
+            </Menu>
 
-                    <Menu.Item position={'right'}>
-                        <Menu.Item position={'right'}>
-                            <RedirectButton
-                                icon="plus"
-                                positive={true}
-                                labelPosition="left"
-                                content="New team"
-                                location={`/org/${orgName}/team/_new`}
-                            />
-                        </Menu.Item>
-                    </Menu.Item>
-                </Menu>
-
-                <TeamList orgName={orgName} filter={this.state.filter} />
-            </>
-        );
-    }
-}
-
-export default TeamListActivity;
+            <TeamList orgName={orgName} filter={filter} forceRefresh={forceRefresh} />
+        </>
+    );
+};

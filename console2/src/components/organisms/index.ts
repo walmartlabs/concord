@@ -22,6 +22,7 @@ export { default as AnsibleTaskListActivity } from './ansible/AnsibleTaskActivit
 export { default as APITokenDeleteActivity } from './APITokenDeleteActivity';
 export { default as APITokenList } from './APITokenList';
 export { default as AuditLogActivity } from './AuditLogActivity';
+export { default as BreadcrumbsToolbar } from './BreadcrumbsToolbar';
 export { default as BulkCancelProcessPopup } from './BulkCancelProcessPopup';
 export { default as CancelProcessPopup } from './CancelProcessPopup';
 export { default as DeleteRepositoryPopup } from './DeleteRepositoryPopup';
@@ -77,7 +78,6 @@ export { default as RequestErrorActivity } from './RequestErrorActivity';
 export { default as SecretActivity } from './SecretActivity';
 export { default as SecretDeleteActivity } from './SecretDeleteActivity';
 export { default as SecretDropdown } from './SecretDropdown';
-export { default as SecretList } from './SecretList';
 export { default as SecretListActivity } from './SecretListActivity';
 export { default as SecretOrganizationChangeActivity } from './SecretOrganizationChangeActivity';
 export { default as SecretProjectActivity } from './SecretProjectActivity';

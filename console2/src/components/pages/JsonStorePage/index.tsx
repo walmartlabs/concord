@@ -19,22 +19,19 @@
  */
 
 import * as React from 'react';
+import { useCallback, useState } from 'react';
 import { Redirect, Route, RouteComponentProps, Switch } from 'react-router';
 import { Link } from 'react-router-dom';
 import { Breadcrumb, Icon, Menu } from 'semantic-ui-react';
 
 import { ConcordId } from '../../../api/common';
-import { MainToolbar } from '../../molecules';
-import { useRef } from 'react';
-import { useCallback } from 'react';
-import { useState } from 'react';
 import { NotFoundPage } from '../index';
 import StoreSettings from './StoreSettings';
 import StoreTeamAccessActivity from './StoreTeamAccessActivity';
 import StoreDataList from './StoreDataList';
 import StoreQueryList from './StoreQueryList';
 import { LoadingState } from '../../../App';
-import { AuditLogActivity } from '../../organisms';
+import { AuditLogActivity, BreadcrumbsToolbar } from '../../organisms';
 
 interface RouteProps {
     orgName: ConcordId;
@@ -60,8 +57,6 @@ const pathToTab = (s: string): TabLink => {
 };
 
 const StoragePage = (props: RouteComponentProps<RouteProps>) => {
-    const stickyRef = useRef(null);
-
     const loading = React.useContext(LoadingState);
     const [refresh, toggleRefresh] = useState<boolean>(false);
 
@@ -75,13 +70,14 @@ const StoragePage = (props: RouteComponentProps<RouteProps>) => {
     const baseUrl = `/org/${orgName}/jsonstore/${storeName}`;
 
     return (
-        <div ref={stickyRef}>
-            <MainToolbar
-                loading={loading}
-                refresh={refreshHandler}
-                stickyRef={stickyRef}
-                breadcrumbs={renderBreadcrumbs(orgName, storeName)}
-            />
+        <>
+            <BreadcrumbsToolbar loading={loading} refreshHandler={refreshHandler}>
+                <Breadcrumb.Section>
+                    <Link to={`/org/${orgName}/jsonstore`}>{orgName}</Link>
+                </Breadcrumb.Section>
+                <Breadcrumb.Divider />
+                <Breadcrumb.Section active={true}>{storeName}</Breadcrumb.Section>
+            </BreadcrumbsToolbar>
 
             <Menu tabular={true} style={{ marginTop: 0 }}>
                 <Menu.Item active={activeTab === 'data'}>
@@ -141,19 +137,7 @@ const StoragePage = (props: RouteComponentProps<RouteProps>) => {
 
                 <Route component={NotFoundPage} />
             </Switch>
-        </div>
-    );
-};
-
-const renderBreadcrumbs = (orgName: string, storeName: string) => {
-    return (
-        <Breadcrumb size="big">
-            <Breadcrumb.Section>
-                <Link to={`/org/${orgName}/jsonstore`}>{orgName}</Link>
-            </Breadcrumb.Section>
-            <Breadcrumb.Divider />
-            <Breadcrumb.Section active={true}>{storeName}</Breadcrumb.Section>
-        </Breadcrumb>
+        </>
     );
 };
 

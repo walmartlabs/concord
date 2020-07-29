@@ -19,21 +19,31 @@
  */
 
 import * as React from 'react';
-import { Breadcrumb } from 'semantic-ui-react';
 
-import { BreadcrumbSegment } from '../../molecules';
 import { UserProcessActivity } from '../../organisms';
+import { BreadcrumbsToolbar } from '../../organisms';
+import { Breadcrumb } from 'semantic-ui-react';
+import { useCallback, useState } from 'react';
+import { LoadingState } from '../../../App';
 
-export default class extends React.PureComponent {
-    render() {
-        return (
-            <>
-                <BreadcrumbSegment>
-                    <Breadcrumb.Section active={true}>Activity today</Breadcrumb.Section>
-                </BreadcrumbSegment>
+const UserActivityPage = () => {
+    const loading = React.useContext(LoadingState);
 
-                <UserProcessActivity />
-            </>
-        );
-    }
-}
+    const [refresh, toggleRefresh] = useState<boolean>(false);
+
+    const refreshHandler = useCallback(() => {
+        toggleRefresh((prevState) => !prevState);
+    }, []);
+
+    return (
+        <>
+            <BreadcrumbsToolbar loading={loading} refreshHandler={refreshHandler}>
+                <Breadcrumb.Section active={true}>Activity today</Breadcrumb.Section>
+            </BreadcrumbsToolbar>
+
+            <UserProcessActivity forceRefresh={refresh} />
+        </>
+    );
+};
+
+export default UserActivityPage;

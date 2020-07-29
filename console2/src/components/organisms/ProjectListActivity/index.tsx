@@ -21,26 +21,31 @@
 import * as React from 'react';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Icon, Input, List, Loader, Menu } from 'semantic-ui-react';
+import { Icon, Input, List, Menu } from 'semantic-ui-react';
 
-import { ConcordKey, EntityType, RequestError } from '../../../api/common';
+import { ConcordKey, EntityType } from '../../../api/common';
 import { checkResult as apiCheckResult } from '../../../../src/api/org';
 import {
     list as getPaginatedProjectList,
+    PaginatedProjectEntries,
     ProjectEntry,
     ProjectVisibility
 } from '../../../api/org/project';
-import { CreateNewEntityButton, PaginationToolBar, RequestErrorMessage } from '../../molecules';
+import { CreateNewEntityButton, PaginationToolBar } from '../../molecules';
 import { usePagination } from '../../molecules/PaginationToolBar/usePagination';
+import { RequestErrorActivity } from '../index';
+import { useApi } from '../../../hooks/useApi';
+import { LoadingDispatch } from '../../../App';
+import './styles.css';
 
-interface Props {
+interface ExternalProps {
     orgName: ConcordKey;
+    forceRefresh: any;
 }
 
-export default ({ orgName }: Props) => {
-    const [data, setData] = useState<ProjectEntry[]>([]);
-    const [loading, setLoading] = useState<boolean>(false);
-    const [error, setError] = useState<RequestError>();
+export default ({ orgName, forceRefresh }: ExternalProps) => {
+    const dispatch = React.useContext(LoadingDispatch);
+
     const [canCreate, setCanCreate] = useState<boolean>(false);
     const {
         paginationFilter,
@@ -50,43 +55,37 @@ export default ({ orgName }: Props) => {
         handleFirst,
         resetOffset
     } = usePagination();
-    const [next, setNext] = useState<boolean>(false);
     const oldFilter = useRef<string>();
 
     const [filter, setFilter] = useState<string>();
 
-    const fetchData = useCallback(async () => {
-        try {
-            setLoading(true);
-
-            if (filter && oldFilter.current !== filter) {
-                oldFilter.current = filter;
-                resetOffset(0);
-            }
-
-            const paginatedProjectList = await getPaginatedProjectList(
-                orgName,
-                paginationFilter.offset,
-                paginationFilter.limit,
-                filter
-            );
-
-            setData(paginatedProjectList.items);
-            setNext(paginatedProjectList.next);
-        } catch (e) {
-            setError(e);
-        } finally {
-            setLoading(false);
+    const fetchData = useCallback(() => {
+        if (filter && oldFilter.current !== filter) {
+            oldFilter.current = filter;
+            resetOffset(0);
         }
+
+        return getPaginatedProjectList(
+            orgName,
+            paginationFilter.offset,
+            paginationFilter.limit,
+            filter
+        );
     }, [orgName, filter, paginationFilter.offset, paginationFilter.limit, resetOffset]);
 
-    useEffect(() => {
-        fetchData();
-    }, [fetchData]);
+    const { data, error } = useApi<PaginatedProjectEntries>(fetchData, {
+        fetchOnMount: true,
+        forceRequest: forceRefresh,
+        dispatch: dispatch
+    });
 
     const fetchCanCreateStatus = useCallback(async () => {
-        const response = await apiCheckResult(EntityType.PROJECT, orgName);
-        setCanCreate(!!response);
+        try {
+            const response = await apiCheckResult(EntityType.PROJECT, orgName);
+            setCanCreate(!!response);
+        } catch (e) {
+            // ignore
+        }
     }, [orgName]);
 
     useEffect(() => {
@@ -129,19 +128,18 @@ export default ({ orgName }: Props) => {
                             handlePrev={handlePrev}
                             handleFirst={handleFirst}
                             disablePrevious={paginationFilter.offset <= 0}
-                            disableNext={!next}
+                            disableNext={!data?.next}
                             disableFirst={paginationFilter.offset <= 0}
                         />
                     </Menu.Item>
                 </Menu.Menu>
             </Menu>
 
-            {error && <RequestErrorMessage error={error} />}
-            {loading && <Loader active={true} />}
-            {data.length === 0 && <h3>No projects found</h3>}
+            {error && <RequestErrorActivity error={error} />}
+            {data?.items.length === 0 && <h3>No projects found</h3>}
 
             <List divided={true} relaxed={true} size="large">
-                {data.map((project, index) => (
+                {data?.items.map((project, index) => (
                     <List.Item key={index}>
                         <ProjectVisibilityIcon project={project} />
                         <List.Content>

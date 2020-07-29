@@ -26,26 +26,22 @@ import {
     UpdateProjectEntry
 } from '../../../api/org/project';
 
-import { ConcordId, RequestError } from '../../../api/common';
-import { RequestErrorMessage, SingleOperationPopup } from '../../molecules';
-import { OrganizationEntry, OrganizationVisibility } from '../../../api/org';
+import { ConcordKey, RequestError } from '../../../api/common';
+import { SingleOperationPopup } from '../../molecules';
+import { OrganizationEntry } from '../../../api/org';
 import { Form, Input } from 'semantic-ui-react';
-import { FindOrganizationsField } from '../index';
+import { FindOrganizationsField, RequestErrorActivity } from '../index';
 import { Redirect } from 'react-router';
 
 interface Props {
-    orgName: string;
-    projectName: string;
-    orgId: ConcordId;
+    orgName: ConcordKey;
+    projectName: ConcordKey;
+    disabled: boolean;
 }
 
-export default ({ orgName, orgId, projectName }: Props) => {
+export default ({ orgName, projectName, disabled }: Props) => {
     const [dirty, setDirty] = useState<boolean>(false);
-    const [state, setState] = useState<OrganizationEntry>({
-        id: orgId,
-        name: orgName,
-        visibility: OrganizationVisibility.PRIVATE
-    });
+    const [state, setState] = useState<ConcordKey>(orgName);
     const [confirmation, setConfirmation] = useState('');
     const [error, setError] = useState<RequestError>();
     const [changing, setChanging] = useState<boolean>(false);
@@ -53,14 +49,14 @@ export default ({ orgName, orgId, projectName }: Props) => {
     const [redirect, setRedirect] = useState<boolean>(false);
 
     const onSelect = (o: OrganizationEntry) => {
-        setState(o);
+        setState(o.name);
         setDirty(orgName !== o.name);
     };
 
-    const toUpdateProjectEntry = (orgId: string, projectName: string): UpdateProjectEntry => {
+    const toUpdateProjectEntry = (orgName: string, projectName: string): UpdateProjectEntry => {
         return {
             name: projectName,
-            orgId: orgId
+            orgName
         };
     };
 
@@ -70,7 +66,7 @@ export default ({ orgName, orgId, projectName }: Props) => {
         try {
             const result = await apiChangeOrganization(
                 orgName,
-                toUpdateProjectEntry(state.id, projectName)
+                toUpdateProjectEntry(state, projectName)
             );
             setSuccess(result.ok);
         } catch (e) {
@@ -85,15 +81,15 @@ export default ({ orgName, orgId, projectName }: Props) => {
     }, []);
 
     if (redirect) {
-        return <Redirect to={`/org/${state.name}/project/${projectName}`} />;
+        return <Redirect to={`/org/${state}/project/${projectName}`} />;
     }
 
     return (
         <>
-            {error && <RequestErrorMessage error={error} />}
+            {error && <RequestErrorActivity error={error} />}
             <Form loading={changing}>
                 <Form.Group widths={3}>
-                    <Form.Field>
+                    <Form.Field disabled={disabled}>
                         <FindOrganizationsField
                             placeholder="Search for an organization..."
                             defaultValue={orgName || ''}
@@ -106,7 +102,7 @@ export default ({ orgName, orgId, projectName }: Props) => {
                                 primary={true}
                                 negative={true}
                                 content="Move"
-                                disabled={!dirty}
+                                disabled={!dirty || disabled}
                                 onClick={onClick}
                             />
                         )}
@@ -115,7 +111,7 @@ export default ({ orgName, orgId, projectName }: Props) => {
                             <>
                                 <p>
                                     Are you sure you want to move the project to{' '}
-                                    <strong>{state.name}</strong> organization?
+                                    <strong>{state}</strong> organization?
                                     <ul>
                                         <li>
                                             Any secret used by repositories in this project will not
@@ -154,14 +150,14 @@ export default ({ orgName, orgId, projectName }: Props) => {
                         runningMsg={
                             <p>
                                 Moving the project <strong>{projectName}</strong> to{' '}
-                                <strong>{state.name}</strong> organization...
+                                <strong>{state}</strong> organization...
                             </p>
                         }
                         success={success}
                         successMsg={
                             <p>
                                 The project <strong>{projectName}</strong> was moved successfully to{' '}
-                                <strong>{state.name}</strong> organization.
+                                <strong>{state}</strong> organization.
                             </p>
                         }
                         error={error}

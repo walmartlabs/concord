@@ -19,14 +19,16 @@
  */
 
 import * as React from 'react';
-import { RouteComponentProps, withRouter } from 'react-router';
+import { RouteComponentProps } from 'react-router';
 import { Link } from 'react-router-dom';
 import { Breadcrumb } from 'semantic-ui-react';
 
 import { ConcordKey } from '../../../api/common';
-import { BreadcrumbSegment } from '../../molecules';
 import { SecretActivity } from '../../organisms';
 import { TabLink } from '../../organisms/SecretActivity';
+import { BreadcrumbsToolbar } from '../../organisms';
+import { LoadingState } from '../../../App';
+import { useCallback, useState } from 'react';
 
 interface RouteProps {
     orgName: ConcordKey;
@@ -47,26 +49,36 @@ const pathToTab = (s: string): TabLink => {
     return null;
 };
 
-class SecretPage extends React.PureComponent<RouteComponentProps<RouteProps>> {
-    render() {
-        const { orgName, secretName } = this.props.match.params;
+const SecretPage = (props: RouteComponentProps<RouteProps>) => {
+    const loading = React.useContext(LoadingState);
 
-        const activeTab = pathToTab(this.props.location.pathname);
+    const { orgName, secretName } = props.match.params;
+    const activeTab = pathToTab(props.location.pathname);
 
-        return (
-            <>
-                <BreadcrumbSegment>
-                    <Breadcrumb.Section>
-                        <Link to={`/org/${orgName}/secret`}>{orgName}</Link>
-                    </Breadcrumb.Section>
-                    <Breadcrumb.Divider />
-                    <Breadcrumb.Section active={true}>{secretName}</Breadcrumb.Section>
-                </BreadcrumbSegment>
+    const [refresh, toggleRefresh] = useState<boolean>(false);
 
-                <SecretActivity orgName={orgName} secretName={secretName} activeTab={activeTab} />
-            </>
-        );
-    }
-}
+    const refreshHandler = useCallback(() => {
+        toggleRefresh((prevState) => !prevState);
+    }, []);
 
-export default withRouter(SecretPage);
+    return (
+        <>
+            <BreadcrumbsToolbar loading={loading} refreshHandler={refreshHandler}>
+                <Breadcrumb.Section>
+                    <Link to={`/org/${orgName}/secret`}>{orgName}</Link>
+                </Breadcrumb.Section>
+                <Breadcrumb.Divider />
+                <Breadcrumb.Section active={true}>{secretName}</Breadcrumb.Section>
+            </BreadcrumbsToolbar>
+
+            <SecretActivity
+                orgName={orgName}
+                secretName={secretName}
+                activeTab={activeTab}
+                forceRefresh={refresh}
+            />
+        </>
+    );
+};
+
+export default SecretPage;

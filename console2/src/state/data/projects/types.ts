@@ -20,7 +20,7 @@
 
 import { Action } from 'redux';
 
-import { ConcordId, ConcordKey, GenericOperationResult, RequestError } from '../../../api/common';
+import { ConcordKey, GenericOperationResult, RequestError } from '../../../api/common';
 import { ResourceAccessEntry } from '../../../api/org';
 import {
     NewProjectEntry,
@@ -66,19 +66,6 @@ export interface CreateProjectRequest extends Action {
 export interface UpdateProjectRequest extends Action {
     orgName: ConcordKey;
     entry: UpdateProjectEntry;
-}
-
-export interface RenameProjectRequest extends Action {
-    orgName: ConcordKey;
-    projectId: ConcordId;
-    projectName: ConcordKey;
-}
-
-export interface ChangeProjectOwnerRequest extends Action {
-    orgName: ConcordKey;
-    projectId: ConcordId;
-    projectName: ConcordKey;
-    ownerId: ConcordId;
 }
 
 export interface DeleteProjectRequest extends Action {
@@ -141,8 +128,6 @@ export interface PaginatedProjects {
     next?: boolean;
 }
 
-export type ChangeProjectOwnerState = RequestState<ProjectOperationResult>;
-export type RenameProjectState = RequestState<ProjectOperationResult>;
 export type DeleteProjectState = RequestState<GenericOperationResult>;
 export type CreateRepositoryState = RequestState<GenericOperationResult>;
 export type UpdateRepositoryState = RequestState<GenericOperationResult>;
@@ -160,8 +145,6 @@ export interface State {
     loading: boolean;
     error: RequestError;
 
-    rename: RenameProjectState;
-    changeOwner: ChangeProjectOwnerState;
     deleteProject: DeleteProjectState;
     updateProject: updateProjectState;
     projectTeamAccess: ProjectTeamAccessState;

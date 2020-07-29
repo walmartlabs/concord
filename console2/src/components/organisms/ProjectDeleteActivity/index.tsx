@@ -23,11 +23,13 @@ import { connect } from 'react-redux';
 import { AnyAction, Dispatch } from 'redux';
 import { ConcordKey, RequestError } from '../../../api/common';
 import { actions, State } from '../../../state/data/projects';
-import { ButtonWithConfirmation, RequestErrorMessage } from '../../molecules';
+import { ButtonWithConfirmation } from '../../molecules';
+import { RequestErrorActivity } from '../index';
 
 interface ExternalProps {
     orgName: ConcordKey;
     projectName: ConcordKey;
+    disabled?: boolean;
 }
 
 interface StateProps {
@@ -43,16 +45,17 @@ type Props = ExternalProps & StateProps & DispatchProps;
 
 class ProjectDeleteActivity extends React.PureComponent<Props> {
     render() {
-        const { error, deleting, orgName, projectName, deleteProject } = this.props;
+        const { error, deleting, orgName, projectName, deleteProject, disabled } = this.props;
 
         return (
             <>
-                {error && <RequestErrorMessage error={error} />}
+                {error && <RequestErrorActivity error={error} />}
                 <ButtonWithConfirmation
                     primary={true}
                     negative={true}
                     content="Delete"
                     loading={deleting}
+                    disabled={disabled}
                     confirmationHeader="Delete the project?"
                     confirmationContent="Are you sure you want to delete the project?"
                     onConfirm={() => deleteProject(orgName, projectName)}

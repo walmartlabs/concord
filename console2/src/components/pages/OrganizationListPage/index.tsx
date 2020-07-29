@@ -19,21 +19,29 @@
  */
 
 import * as React from 'react';
+
+import { OrganizationList } from '../../organisms';
+import { LoadingState } from '../../../App';
+import { useCallback, useState } from 'react';
+import { BreadcrumbsToolbar } from '../../organisms';
 import { Breadcrumb } from 'semantic-ui-react';
 
-import { BreadcrumbSegment } from '../../molecules';
-import { OrganizationList } from '../../organisms';
+export default () => {
+    const loading = React.useContext(LoadingState);
 
-export default class extends React.PureComponent {
-    render() {
-        return (
-            <>
-                <BreadcrumbSegment>
-                    <Breadcrumb.Section active={true}>Organizations</Breadcrumb.Section>
-                </BreadcrumbSegment>
+    const [refresh, toggleRefresh] = useState<boolean>(false);
 
-                <OrganizationList />
-            </>
-        );
-    }
-}
+    const refreshHandler = useCallback(() => {
+        toggleRefresh((prevState) => !prevState);
+    }, []);
+
+    return (
+        <>
+            <BreadcrumbsToolbar loading={loading} refreshHandler={refreshHandler}>
+                <Breadcrumb.Section active={true}>Organizations</Breadcrumb.Section>
+            </BreadcrumbsToolbar>
+
+            <OrganizationList forceRefresh={refresh} />
+        </>
+    );
+};

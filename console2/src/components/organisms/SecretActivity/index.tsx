@@ -52,6 +52,7 @@ interface ExternalProps {
     activeTab: TabLink;
     orgName: ConcordKey;
     secretName: ConcordKey;
+    forceRefresh: any;
 }
 
 interface StateProps {
@@ -200,7 +201,10 @@ class SecretActivity extends React.PureComponent<Props> {
 
     static renderAuditLog(e: SecretEntry) {
         return (
-            <AuditLogActivity filter={{ details: { orgName: e.orgName, secretName: e.name } }} />
+            <AuditLogActivity
+                showRefreshButton={false}
+                filter={{ details: { orgName: e.orgName, secretName: e.name } }}
+            />
         );
     }
 
@@ -237,7 +241,7 @@ class SecretActivity extends React.PureComponent<Props> {
 
         return (
             <>
-                <Menu tabular={true}>
+                <Menu tabular={true} style={{ marginTop: 0 }}>
                     <Menu.Item active={activeTab === 'info'}>
                         <Icon name="file" />
                         <Link to={`${baseUrl}/info`}>Info</Link>

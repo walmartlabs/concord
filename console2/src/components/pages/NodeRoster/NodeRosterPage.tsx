@@ -19,18 +19,16 @@
  */
 
 import * as React from 'react';
+import { useCallback, useRef, useState } from 'react';
 import { Breadcrumb, Icon, Menu } from 'semantic-ui-react';
 
-import { MainToolbar } from '../../molecules';
-import { useRef } from 'react';
-import { useCallback } from 'react';
-import { useState } from 'react';
 import { LoadingState } from '../../../App';
 import { Link } from 'react-router-dom';
 import { Redirect, Route, RouteComponentProps, Switch } from 'react-router';
 import { NotFoundPage } from '../index';
 import NodeRosterHostsList from './NodeRosterHostsList';
 import NodeRosterArtifactsList from './NodeRosterArtifactsList';
+import { BreadcrumbsToolbar } from '../../organisms';
 
 type TabLink = 'hosts' | 'artifacts' | null;
 
@@ -60,12 +58,9 @@ const NodeRosterPage = (props: RouteComponentProps) => {
 
     return (
         <div ref={stickyRef}>
-            <MainToolbar
-                loading={loading}
-                refresh={refreshHandler}
-                stickyRef={stickyRef}
-                breadcrumbs={renderBreadcrumbs()}
-            />
+            <BreadcrumbsToolbar loading={loading} refreshHandler={refreshHandler}>
+                <Breadcrumb.Section active={true}>Node Roster</Breadcrumb.Section>
+            </BreadcrumbsToolbar>
 
             <Menu tabular={true} style={{ marginTop: 0 }}>
                 <Menu.Item active={activeTab === 'hosts'}>
@@ -93,14 +88,6 @@ const NodeRosterPage = (props: RouteComponentProps) => {
                 <Route component={NotFoundPage} />
             </Switch>
         </div>
-    );
-};
-
-const renderBreadcrumbs = () => {
-    return (
-        <Breadcrumb size="big">
-            <Breadcrumb.Section active={true}>Node Roster</Breadcrumb.Section>
-        </Breadcrumb>
     );
 };
 
