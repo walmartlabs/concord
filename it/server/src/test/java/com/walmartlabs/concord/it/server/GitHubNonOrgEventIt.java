@@ -1,4 +1,4 @@
-package com.walmartlabs.concord.it.server.v2;
+package com.walmartlabs.concord.it.server;
 
 /*-
  * *****
@@ -24,8 +24,6 @@ import com.walmartlabs.concord.ApiClient;
 import com.walmartlabs.concord.client.*;
 import com.walmartlabs.concord.common.IOUtils;
 import com.walmartlabs.concord.it.common.GitHubUtils;
-import com.walmartlabs.concord.it.server.AbstractServerIT;
-import com.walmartlabs.concord.it.server.TriggersRefreshIT;
 import org.eclipse.jgit.api.Git;
 import org.junit.Test;
 
@@ -45,7 +43,7 @@ public class GitHubNonOrgEventIt extends AbstractServerIT {
     public void test() throws Exception {
         Path tmpDir = createTempDir();
 
-        File src = new File(TriggersRefreshIT.class.getResource("githubNonRepoEvent").toURI());
+        File src = new File(GitHubNonOrgEventIt.class.getResource("githubNonRepoEvent").toURI());
         IOUtils.copy(src.toPath(), tmpDir);
 
         Git repo = Git.init().setDirectory(tmpDir.toFile()).call();

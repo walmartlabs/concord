@@ -22,28 +22,38 @@ package com.walmartlabs.concord.it.common;
 
 import com.walmartlabs.concord.common.IOUtils;
 import org.eclipse.jgit.api.Git;
+import org.eclipse.jgit.transport.RefSpec;
 
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
 import java.nio.file.attribute.PosixFilePermissions;
 
 public final class GitUtils {
 
     public static Path createBareRepository(Path data) throws Exception {
-        return createBareRepository(data, "initial message");
+        return createBareRepository(data, (Path)null);
+    }
+
+    public static Path createBareRepository(Path data, Path baseTmpDir) throws Exception {
+        return createBareRepository(data, "initial message", baseTmpDir);
     }
 
     public static Path createBareRepository(Path data, String commitMessage) throws Exception {
+        return createBareRepository(data, commitMessage, null);
+    }
+
+    public static Path createBareRepository(Path data, String commitMessage, Path baseTmpDir) throws Exception {
         // init bare repository
-        Path tmp = createTempDir();
+        Path tmp = createTempDir(baseTmpDir);
         Path repo = tmp.resolve("test");
         Files.createDirectories(repo);
 
         Git.init().setBare(true).setDirectory(repo.toFile()).call();
 
         // clone the repository into a new directory
-        Path workdir = createTempDir();
+        Path workdir = createTempDir(baseTmpDir);
         Git git = Git.cloneRepository()
                 .setDirectory(workdir.toFile())
                 .setURI("file://" + repo.toString())
@@ -60,8 +70,45 @@ public final class GitUtils {
         return repo;
     }
 
-    protected static Path createTempDir() throws IOException {
-        Path tmpDir = Files.createTempDirectory("test");
+    public static void createNewBranch(Path bareRepo, String branch, Path src) throws Exception {
+        createNewBranch(bareRepo, branch, src, null);
+    }
+
+    public static void createNewBranch(Path bareRepo, String branch, Path src, Path baseTmpDir) throws Exception {
+        Path dir = createTempDir(baseTmpDir);
+
+        Git git = Git.cloneRepository()
+                .setDirectory(dir.toFile())
+                .setURI(bareRepo.toAbsolutePath().toString())
+                .call();
+
+        git.checkout()
+                .setCreateBranch(true)
+                .setName(branch)
+                .call();
+
+        IOUtils.copy(src, dir, StandardCopyOption.REPLACE_EXISTING);
+
+        git.add()
+                .addFilepattern(".")
+                .call();
+
+        git.commit()
+                .setMessage("adding files from " + src.getFileName())
+                .call();
+
+        git.push()
+                .setRefSpecs(new RefSpec(branch + ":" + branch))
+                .call();
+    }
+
+    protected static Path createTempDir(Path base) throws IOException {
+        Path tmpDir ;
+        if (base != null) {
+            tmpDir = Files.createTempDirectory(base, "test");
+        } else {
+            tmpDir = Files.createTempDirectory("test");
+        }
         Files.setPosixFilePermissions(tmpDir, PosixFilePermissions.fromString("rwxr-xr-x"));
         return tmpDir;
     }

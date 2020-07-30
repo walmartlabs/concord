@@ -23,7 +23,24 @@ package com.walmartlabs.concord.it.runtime.v2;
 import ca.ibodrov.concord.testcontainers.junit4.ConcordRule;
 import org.testcontainers.images.PullPolicy;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+
 public final class ConcordConfiguration {
+
+    private static final Path sharedDir = Paths.get(System.getProperty("java.io.tmpdir")).resolve("concord-it");
+
+    static {
+        if (Files.notExists(sharedDir)) {
+            try {
+                Files.createDirectories(sharedDir);
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        }
+    }
 
     public static ConcordRule configure() {
         ConcordRule concord = new ConcordRule()
@@ -35,6 +52,7 @@ public final class ConcordConfiguration {
                 .pullPolicy(PullPolicy.defaultPolicy())
                 .streamServerLogs(true)
                 .streamAgentLogs(true)
+                .sharedContainerDir(sharedDir)
                 .useLocalMavenRepository(true);
 
         boolean localMode = Boolean.parseBoolean(System.getProperty("it.local.mode"));

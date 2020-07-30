@@ -28,12 +28,16 @@ import org.eclipse.jgit.api.errors.GitAPIException;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.attribute.PosixFilePermissions;
+import java.time.format.DateTimeFormatter;
+import java.util.Locale;
 import java.util.Random;
 import java.util.concurrent.ThreadLocalRandom;
 
@@ -54,6 +58,17 @@ public final class ITUtils {
             }
         }
         return out.toByteArray();
+    }
+
+    public static String resourceToString(Class<?> klass, String resource) throws Exception {
+        URL url = klass.getResource(resource);
+
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+        try (InputStream in = url.openStream()) {
+            IOUtils.copy(in, out);
+        }
+
+        return new String(out.toByteArray());
     }
 
     public static Path createTempDir() throws IOException {
