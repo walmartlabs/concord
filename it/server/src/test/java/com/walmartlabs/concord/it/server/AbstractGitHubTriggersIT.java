@@ -27,6 +27,7 @@ import com.walmartlabs.concord.client.ProcessEntry.StatusEnum;
 import com.walmartlabs.concord.common.IOUtils;
 import com.walmartlabs.concord.it.common.GitHubUtils;
 import com.walmartlabs.concord.it.common.GitUtils;
+import com.walmartlabs.concord.it.common.ITUtils;
 import com.walmartlabs.concord.it.common.ServerClient;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.transport.RefSpec;
@@ -71,32 +72,8 @@ public class AbstractGitHubTriggersIT extends AbstractServerIT {
     }
 
     protected void createNewBranch(Path bareRepo, String branch, String resource) throws Exception {
-        Path dir = IOUtils.createTempDir("git");
-
-        Git git = Git.cloneRepository()
-                .setDirectory(dir.toFile())
-                .setURI(bareRepo.toAbsolutePath().toString())
-                .call();
-
-        git.checkout()
-                .setCreateBranch(true)
-                .setName(branch)
-                .call();
-
         Path src = Paths.get(AbstractGitHubTriggersIT.class.getResource(resource).toURI());
-        IOUtils.copy(src, dir, StandardCopyOption.REPLACE_EXISTING);
-
-        git.add()
-                .addFilepattern(".")
-                .call();
-
-        git.commit()
-                .setMessage("adding files from " + resource)
-                .call();
-
-        git.push()
-                .setRefSpecs(new RefSpec(branch + ":" + branch))
-                .call();
+        GitUtils.createNewBranch(bareRepo, branch, src);
     }
 
     protected void updateConcordYml(Path bareRepo, Map<String, String> values) throws Exception {
@@ -212,14 +189,7 @@ public class AbstractGitHubTriggersIT extends AbstractServerIT {
     }
 
     protected static String resourceToString(String resource) throws Exception {
-        URL url = AbstractGitHubTriggersIT.class.getResource(resource);
-
-        ByteArrayOutputStream out = new ByteArrayOutputStream();
-        try (InputStream in = url.openStream()) {
-            IOUtils.copy(in, out);
-        }
-
-        return new String(out.toByteArray());
+        return ITUtils.resourceToString(AbstractGitHubTriggersIT.class, resource);
     }
 
     protected boolean isFinished(StatusEnum status) {
