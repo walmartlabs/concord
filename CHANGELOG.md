@@ -1,5 +1,23 @@
 # Change log
 
+## [Unreleased]
+
+### Changed
+
+- concord-console: improved error handling, standartize refresh
+indicators/buttons;
+- concord-server: fixed the parsing of `process.maxStateAge`
+configuration parameter.
+
+### Breaking
+
+- concord-server, concord-server-sdk: the `ProcessKey` interface
+was replaced with a concrete type, moved from the server's `impl`
+module;
+- concord-server: remove the support for GitHub triggers v1.
+The v1 triggers are deprecared since 1.32.0+.
+
+
 ## [1.58.1] - 2020-07-28
 
 ### Changed
