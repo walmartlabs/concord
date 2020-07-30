@@ -1,6 +1,6 @@
 # Change log
 
-## [Unreleased]
+## [1.59.0] - 2020-07-30
 
 ### Changed
 
