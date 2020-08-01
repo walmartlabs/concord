@@ -20,30 +20,14 @@
 
 import { Action } from 'redux';
 
-import { ConcordId, ConcordKey, RequestError } from '../../../api/common';
-import {
-    ProcessEntry,
-    ProcessListQuery,
-    RestoreProcessResponse,
-    StartProcessResponse
-} from '../../../api/process';
+import { ConcordId, ConcordKey } from '../../../api/common';
+import { ProcessEntry, RestoreProcessResponse, StartProcessResponse } from '../../../api/process';
 import { RequestState } from '../common';
 import { State as EventsState } from './events/types';
 
 export interface Pagination {
     limit?: number;
     offset?: number;
-}
-
-export interface ListProcessesRequest extends Action {
-    query: ProcessListQuery;
-}
-
-export interface PaginatedProcessDataResponse extends Action {
-    error?: RequestError;
-    items?: ProcessEntry[];
-    prev?: number;
-    next?: number;
 }
 
 export interface StartProcessRequest extends Action {
@@ -79,15 +63,8 @@ export type RestoreProcessState = RequestState<RestoreProcessResponse>;
 export type CancelBullkProcessState = RequestState<boolean>;
 
 export interface State {
-    paginatedProcessesById: PaginatedProcesses;
-
-    // TODO use RequestState
-    loading: boolean;
-    error: RequestError;
-
     startProcess: StartProcessState;
     cancelBulkProcess: CancelBullkProcessState;
     restoreProcess: RestoreProcessState;
-
     events: EventsState;
 }

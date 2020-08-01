@@ -86,7 +86,7 @@ const HostProcesses = ({ hostId, forceRefresh }: ExternalProps) => {
                 </Menu.Item>
             </Menu>
 
-            <ProcessList data={data?.items} columns={COLUMNS} showHeader={true} />
+            <ProcessList data={data?.items} columns={COLUMNS} />
         </>
     );
 };
