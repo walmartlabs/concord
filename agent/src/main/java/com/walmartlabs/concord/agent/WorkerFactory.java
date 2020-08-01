@@ -21,41 +21,41 @@ package com.walmartlabs.concord.agent;
  */
 
 import com.walmartlabs.concord.agent.executors.JobExecutor;
+import com.walmartlabs.concord.agent.executors.JobExecutorFactory;
+import com.walmartlabs.concord.agent.logging.ProcessLog;
+import com.walmartlabs.concord.agent.remote.ProcessStatusUpdater;
 import com.walmartlabs.concord.imports.ImportManager;
 
 import javax.inject.Inject;
-import javax.inject.Named;
-import java.util.Collection;
-import java.util.Map;
-import java.util.function.Function;
-import java.util.stream.Collectors;
 
-@Named
 public class WorkerFactory {
 
     private final RepositoryManager repositoryManager;
     private final ImportManager importManager;
-    private final Map<JobRequest.Type, JobExecutor> executors;
+    private final JobExecutorFactory jobExecutorFactory;
     private final StateFetcher stateFetcher;
+    private final ProcessStatusUpdater statusUpdater;
+    private final ProcessLog processLog;
 
     @Inject
     public WorkerFactory(RepositoryManager repositoryManager,
                          ImportManager importManager,
-                         Collection<JobExecutor> executors,
-                         StateFetcher stateFetcher) {
+                         JobExecutorFactory jobExecutorFactory,
+                         StateFetcher stateFetcher,
+                         ProcessStatusUpdater statusUpdater,
+                         ProcessLog processLog) {
 
         this.repositoryManager = repositoryManager;
         this.importManager = importManager;
-        this.executors = executors.stream().collect(Collectors.toMap(JobExecutor::acceptsType, Function.identity()));
+        this.jobExecutorFactory = jobExecutorFactory;
         this.stateFetcher = stateFetcher;
+        this.statusUpdater = statusUpdater;
+        this.processLog = processLog;
     }
 
-    public Worker create(JobRequest jobRequest, Worker.CompletionCallback completionCallback) throws ExecutionException {
-        JobExecutor executor = executors.get(jobRequest.getType());
-        if (executor == null) {
-            throw new ExecutionException("Unsupported job type: " + jobRequest.getType());
-        }
+    public Worker create(JobRequest jobRequest, Worker.CompletionCallback completionCallback) {
+        JobExecutor executor = jobExecutorFactory.create(jobRequest.getType());
 
-        return new Worker(repositoryManager, importManager, executor, completionCallback, stateFetcher, jobRequest);
+        return new Worker(repositoryManager, importManager, executor, completionCallback, stateFetcher, statusUpdater, processLog, jobRequest);
     }
 }

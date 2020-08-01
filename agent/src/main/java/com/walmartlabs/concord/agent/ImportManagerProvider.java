@@ -30,7 +30,6 @@ import javax.inject.Provider;
 import javax.inject.Singleton;
 import java.nio.file.Path;
 
-@Named
 @Singleton
 public class ImportManagerProvider implements Provider<ImportManager> {
 

@@ -33,6 +33,7 @@ import com.walmartlabs.concord.server.PeriodicTask;
 import com.walmartlabs.concord.server.cfg.ProcessQueueConfiguration;
 import com.walmartlabs.concord.server.jooq.tables.ProcessQueue;
 import com.walmartlabs.concord.server.process.ImportsNormalizerFactory;
+import com.walmartlabs.concord.server.process.SessionTokenCreator;
 import com.walmartlabs.concord.server.process.logs.ProcessLogManager;
 import com.walmartlabs.concord.server.process.queue.ProcessQueueEntry;
 import com.walmartlabs.concord.server.process.queue.ProcessQueueManager;
@@ -90,6 +91,8 @@ public class Dispatcher extends PeriodicTask {
     private final Histogram dispatchedCountHistogram;
     private final Timer responseTimer;
 
+    private final SessionTokenCreator sessionTokenCreator;
+
     @Inject
     public Dispatcher(Locks locks,
                       DispatcherDao dao,
@@ -99,7 +102,8 @@ public class Dispatcher extends PeriodicTask {
                       Set<Filter> filters,
                       ImportsNormalizerFactory importsNormalizerFactory,
                       ProcessQueueConfiguration cfg,
-                      MetricRegistry metricRegistry) {
+                      MetricRegistry metricRegistry,
+                      SessionTokenCreator sessionTokenCreator) {
 
         super(cfg.getDispatcherPollDelay().toMillis(), ERROR_DELAY);
 
@@ -112,6 +116,7 @@ public class Dispatcher extends PeriodicTask {
         this.importsNormalizerFactory = importsNormalizerFactory;
 
         this.batchSize = cfg.getDispatcherBatchSize();
+        this.sessionTokenCreator = sessionTokenCreator;
 
         this.dispatchedCountHistogram = metricRegistry.histogram("process-queue-dispatcher-dispatched-count");
         this.responseTimer = metricRegistry.timer("process-queue-dispatcher-response-timer");
@@ -263,6 +268,7 @@ public class Dispatcher extends PeriodicTask {
                     .normalize(item.imports());
 
             ProcessResponse resp = new ProcessResponse(correlationId,
+                    sessionTokenCreator.create(item.key()),
                     item.key().getInstanceId(),
                     secret != null ? secret.orgName : null,
                     item.repoUrl(),
