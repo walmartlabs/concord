@@ -1,0 +1,30 @@
+version: "3.7"
+services:
+  concord-db:
+    image: "library/postgres:10.4-alpine"
+    environment:
+      POSTGRES_PASSWORD: "q1q1q1q1"
+  concord-server:
+    image: "walmartlabs/concord-server"
+    depends_on:
+      - "concord-db"
+    ports:
+      - "8001:8001"
+    volumes:
+      - "./concord.conf:/concord.conf:ro"
+    environment:
+      CONCORD_CFG_FILE: "/concord.conf"
+  concord-dind:
+    image: "docker:stable-dind"
+    privileged: true
+    command: "dockerd -H tcp://0.0.0.0:6666 --bip=10.11.13.1/24"
+  concord-agent:
+    image: "walmartlabs/concord-agent"
+    depends_on:
+      - "concord-server"
+      - "concord-dind"
+    environment:
+      CONCORD_CFG_FILE: "/concord.conf"
+      CONCORD_DOCKER_LOCAL_MODE: "false"
+    volumes:
+      - "./concord.conf:/concord.conf:ro"
