@@ -47,6 +47,7 @@ import RequestErrorActivity from '../RequestErrorActivity';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useApi } from '../../../hooks/useApi';
 import { LoadingDispatch } from '../../../App';
+import _ from 'lodash';
 
 // list of "built-in" columns, i.e. columns that can be referenced using "builtin" parameter
 // of the custom column configuration
@@ -151,7 +152,8 @@ const ProcessListActivity = ({
         if (isInitialMount.current) {
             isInitialMount.current = false;
         } else {
-            setSearchFilter(parseSearchFilter(location.search));
+            const filter = parseSearchFilter(location.search);
+            setSearchFilter((prev) => _.isEqual(filter, prev) ? prev : filter);
         }
     }, [location]);
 
@@ -186,6 +188,7 @@ const ProcessListActivity = ({
                         .forEach((key) => (f[key] = paginationFilters[key]));
                 }
             }
+            setSearchFilter(parseSearchFilter(queryParams(f)));
             // will update location
             history.push({ search: queryParams(f) });
         },
