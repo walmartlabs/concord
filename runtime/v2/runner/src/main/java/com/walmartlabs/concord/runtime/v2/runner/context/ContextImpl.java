@@ -56,6 +56,7 @@ public class ContextImpl implements Context {
     private final FileService fileService;
     private final DockerService dockerService;
     private final SecretService secretService;
+    private final LockService lockService;
     private final ApiConfiguration apiConfiguration;
     private final ProcessConfiguration processConfiguration;
 
@@ -72,6 +73,7 @@ public class ContextImpl implements Context {
                        FileService fileService,
                        DockerService dockerService,
                        SecretService secretService,
+                       LockService lockService,
                        ApiConfiguration apiConfiguration,
                        ProcessConfiguration processConfiguration) {
 
@@ -90,6 +92,7 @@ public class ContextImpl implements Context {
         this.fileService = fileService;
         this.dockerService = dockerService;
         this.secretService = secretService;
+        this.lockService = lockService;
         this.apiConfiguration = apiConfiguration;
         this.processConfiguration = processConfiguration;
     }
@@ -136,6 +139,11 @@ public class ContextImpl implements Context {
     @Override
     public SecretService secretService() {
         return secretService;
+    }
+
+    @Override
+    public LockService lockService() {
+        return lockService;
     }
 
     @Override

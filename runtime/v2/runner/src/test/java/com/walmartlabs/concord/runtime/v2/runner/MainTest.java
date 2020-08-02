@@ -113,6 +113,7 @@ public class MainTest {
                 bind(DockerService.class).to(DefaultDockerService.class);
                 bind(FileService.class).to(DefaultFileService.class);
                 bind(SecretService.class).to(DefaultSecretService.class);
+                bind(LockService.class).to(DefaultLockService.class);
 
                 Multibinder<TaskProvider> taskProviders = Multibinder.newSetBinder(binder(), TaskProvider.class);
                 taskProviders.addBinding().to(TaskV2Provider.class);
