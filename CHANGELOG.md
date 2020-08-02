@@ -1,5 +1,14 @@
 # Change log
 
+## [Unreleased]
+
+### Changed
+
+- concord-console: fixed scrolling on the repository list page
+in the presense of a modal dialog.
+
+
+
 ## [1.59.0] - 2020-07-30
 
 ### Changed
