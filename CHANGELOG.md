@@ -4,6 +4,7 @@
 
 ### Added
 
+- runtime-v2: `LockService` implementation;
 - concord-server: expose the current number of processes with
 "wait conditions" as a new metric - `process_queue_enqueued_wait`.
 
