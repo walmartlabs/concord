@@ -63,6 +63,7 @@ import static org.jooq.impl.DSL.*;
 public class ProcessQueueDao extends AbstractDao {
 
     public static final String ENQUEUED_NOW_METRIC = "ENQUEUED_NOW";
+    public static final String ENQUEUED_WAIT_METRIC = "ENQUEUED_WAIT";
 
     private static final Set<ProcessDataInclude> DEFAULT_INCLUDES = Collections.singleton(ProcessDataInclude.CHILDREN_IDS);
 
@@ -483,6 +484,10 @@ public class ProcessQueueDao extends AbstractDao {
                     .union(select(value(ENQUEUED_NOW_METRIC), DSL.count(asterisk())).from(PROCESS_QUEUE)
                             .where(PROCESS_QUEUE.CURRENT_STATUS.eq(ProcessStatus.ENQUEUED.name()))
                             .and(or(PROCESS_QUEUE.START_AT.isNull(), PROCESS_QUEUE.START_AT.lessOrEqual(currentOffsetDateTime()))))
+                    .union(select(value(ENQUEUED_WAIT_METRIC), DSL.count(asterisk())).from(PROCESS_QUEUE)
+                            .where(PROCESS_QUEUE.CURRENT_STATUS.eq(ProcessStatus.ENQUEUED.name()))
+                            .and(or(PROCESS_QUEUE.START_AT.isNull(), PROCESS_QUEUE.START_AT.lessOrEqual(currentOffsetDateTime())))
+                            .and(PROCESS_QUEUE.WAIT_CONDITIONS.isNotNull()))
                     .fetchMap(Record2::value1, Record2::value2);
         }
     }
