@@ -80,8 +80,9 @@ public class ProcessDefinitionProcessor implements PayloadProcessor {
             }
 
             ProcessDefinition pd = result.projectDefinition();
-            payload = payload.putHeader(Payload.PROJECT_DEFINITION, pd);
-            payload = payload.putHeader(Payload.IMPORTS, pd.imports());
+            payload = payload.putHeader(Payload.PROJECT_DEFINITION, pd)
+                    .putHeader(Payload.IMPORTS, pd.imports())
+                    .putHeader(Payload.DEPENDENCIES, pd.configuration().dependencies());
 
             // save the runtime type in the process configuration
             Map<String, Object> cfg = payload.getHeader(Payload.CONFIGURATION, Collections.emptyMap());

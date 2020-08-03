@@ -27,6 +27,7 @@ import com.walmartlabs.concord.db.PgUtils;
 import com.walmartlabs.concord.imports.Imports;
 import com.walmartlabs.concord.sdk.EventType;
 import com.walmartlabs.concord.server.ConcordObjectMapper;
+import com.walmartlabs.concord.server.Utils;
 import com.walmartlabs.concord.server.jooq.Tables;
 import com.walmartlabs.concord.server.jooq.tables.ProcessCheckpoints;
 import com.walmartlabs.concord.server.jooq.tables.ProcessEvents;
@@ -146,7 +147,7 @@ public class ProcessQueueDao extends AbstractDao {
     public void enqueue(DSLContext tx, ProcessKey processKey, Set<String> tags, OffsetDateTime startAt,
                         Map<String, Object> requirements, Long processTimeout, Set<String> handlers,
                         Map<String, Object> meta, Imports imports, Map<String, Object> exclusive,
-                        String runtime) {
+                        String runtime, List<String> dependencies) {
 
         UpdateSetMoreStep<ProcessQueueRecord> q = tx.update(PROCESS_QUEUE)
                 .set(PROCESS_QUEUE.CURRENT_STATUS, ProcessStatus.ENQUEUED.toString())
@@ -186,6 +187,10 @@ public class ProcessQueueDao extends AbstractDao {
 
         if (runtime != null) {
             q.set(PROCESS_QUEUE.RUNTIME, runtime);
+        }
+
+        if (dependencies != null && !dependencies.isEmpty()) {
+            q.set(PROCESS_QUEUE.DEPENDENCIES, Utils.toArray(dependencies));
         }
 
         int i = q

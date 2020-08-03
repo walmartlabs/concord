@@ -57,6 +57,7 @@ public class Payload {
     public static final HeaderKey<UUID> PARENT_INSTANCE_ID = HeaderKey.register("_parentInstanceId", UUID.class);
     public static final HeaderKey<UUID> PROJECT_ID = HeaderKey.register("_projectId", UUID.class);
     public static final HeaderKey<UUID> REPOSITORY_ID = HeaderKey.register("_repoId", UUID.class);
+    public static final HeaderKey<List<String>> DEPENDENCIES = HeaderKey.registerList("_dependencies");
 
     public static final AttachmentKey WORKSPACE_ARCHIVE = AttachmentKey.register("archive");
 

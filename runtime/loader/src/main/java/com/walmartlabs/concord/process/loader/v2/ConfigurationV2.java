@@ -27,20 +27,29 @@ import com.walmartlabs.concord.process.loader.model.Configuration;
 import com.walmartlabs.concord.runtime.v2.model.ProcessConfiguration;
 
 import java.io.Serializable;
+import java.util.List;
 import java.util.Map;
 
 public class ConfigurationV2 implements Configuration, Serializable {
 
     private static final long serialVersionUID = 1L;
 
+    private final ProcessConfiguration cfg;
     private final Map<String, Object> values;
 
     @SuppressWarnings("unchecked")
     public ConfigurationV2(ProcessConfiguration cfg) {
+        this.cfg = cfg;
+
         ObjectMapper om = new ObjectMapper();
         om.registerModule(new Jdk8Module());
         om.registerModule(new JavaTimeModule());
         this.values = om.convertValue(cfg, Map.class);
+    }
+
+    @Override
+    public List<String> dependencies() {
+        return cfg.dependencies();
     }
 
     @Override

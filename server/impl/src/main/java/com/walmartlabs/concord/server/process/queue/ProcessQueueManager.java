@@ -110,9 +110,10 @@ public class ProcessQueueManager {
         Imports imports = payload.getHeader(Payload.IMPORTS);
         Map<String, Object> exclusive = PayloadUtils.getExclusive(payload);
         String runtime = getRuntime(payload);
+        List<String> dependencies = payload.getHeader(Payload.DEPENDENCIES);
 
         queueDao.tx(tx -> {
-            queueDao.enqueue(tx, processKey, tags, startAt, requirements, processTimeout, handlers, meta, imports, exclusive, runtime);
+            queueDao.enqueue(tx, processKey, tags, startAt, requirements, processTimeout, handlers, meta, imports, exclusive, runtime, dependencies);
             eventManager.insertStatusHistory(tx, processKey, ProcessStatus.ENQUEUED, Collections.emptyMap());
         });
     }
