@@ -48,6 +48,8 @@ public class ProcessDefinitionProcessor implements PayloadProcessor {
 
     private static final Logger log = LoggerFactory.getLogger(ProcessDefinitionProcessor.class);
 
+    private static final int MAX_DEPENDENCIES_COUNT = 100;
+
     private final ProjectLoader projectLoader;
     private final ImportsNormalizerFactory importsNormalizer;
 
@@ -80,6 +82,10 @@ public class ProcessDefinitionProcessor implements PayloadProcessor {
             }
 
             ProcessDefinition pd = result.projectDefinition();
+            if (pd.configuration().dependencies().size() > MAX_DEPENDENCIES_COUNT) {
+                throw new RuntimeException("Max dependencies " + MAX_DEPENDENCIES_COUNT + ") count reached");
+            }
+
             payload = payload.putHeader(Payload.PROJECT_DEFINITION, pd)
                     .putHeader(Payload.IMPORTS, pd.imports())
                     .putHeader(Payload.DEPENDENCIES, pd.configuration().dependencies());

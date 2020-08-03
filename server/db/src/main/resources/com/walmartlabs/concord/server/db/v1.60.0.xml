@@ -6,7 +6,7 @@
 
     <changeSet id="1600000" author="ybrigo@gmail.com">
         <addColumn tableName="PROCESS_QUEUE">
-            <column name="DEPENDENCIES" type="varchar[]">
+            <column name="DEPENDENCIES" type="text[]">
                 <constraints nullable="true"/>
             </column>
         </addColumn>
