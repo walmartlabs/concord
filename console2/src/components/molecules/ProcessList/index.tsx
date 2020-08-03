@@ -123,17 +123,15 @@ interface Props {
 
     filterProps?: ProcessFilters;
     onFilterChange?: (column: ColumnDefinition, filterValue?: string) => void;
-
-    showHeader?: boolean;
 }
 
 interface State {
-    data: Entry[];
+    data: Entry[] | undefined;
     active: boolean;
 }
 
-const toState = (data?: ProcessEntry[]): Entry[] => {
-    return data ? data.map((e) => ({ ...e, checked: false })) : [];
+const toState = (data?: ProcessEntry[]): Entry[] | undefined => {
+    return data ? data.map((e) => ({ ...e, checked: false })) : undefined;
 };
 
 const getValueByPath = (path: string, e: ProcessEntry) => {
@@ -314,7 +312,7 @@ class ProcessList extends React.Component<Props, State> {
         this.setState({ data: processes });
     }
 
-    onAllRowsSelect(rows: Entry[], isChecked: any) {
+    onAllRowsSelect(isChecked: any) {
         const processes = [...this.state.data];
 
         processes.forEach((p) => {
@@ -341,17 +339,17 @@ class ProcessList extends React.Component<Props, State> {
         }
     }
 
-    renderTableHeader(rows: Entry[], columns: ColumnDefinition[]) {
+    renderTableHeader(rows: Entry[] | undefined, columns: ColumnDefinition[]) {
         const { onSelectProcess, onFilterChange, filterProps } = this.props;
         const selectedProcessIds: ConcordId[] = [];
-        rows.forEach((p) => {
+        rows?.forEach((p) => {
             if (p.checked) {
                 selectedProcessIds.push(p.instanceId);
             }
         });
 
         const cancellableProcessIds: ConcordId[] = [];
-        rows.forEach((p) => {
+        rows?.forEach((p) => {
             if (canBeCancelled(p.status)) {
                 cancellableProcessIds.push(p.instanceId);
             }
@@ -367,7 +365,7 @@ class ProcessList extends React.Component<Props, State> {
                 {onSelectProcess !== undefined && (
                     <Table.HeaderCell collapsing={true}>
                         <Checkbox
-                            onClick={(e, data) => this.onAllRowsSelect(rows, data.checked)}
+                            onClick={(e, data) => this.onAllRowsSelect(data.checked)}
                             checked={isTopCheckboxSelected}
                             disabled={isTopCheckboxDisabled}
                         />
@@ -397,51 +395,28 @@ class ProcessList extends React.Component<Props, State> {
     }
 
     render() {
-        const { columns, onFilterChange, showHeader } = this.props;
+        const { columns, onFilterChange } = this.props;
         const { data } = this.state;
 
         const canBeFiltered = onFilterChange !== undefined;
 
         if (!data || data.length === 0) {
-            if (showHeader) {
-                return (
-                    <div className={'container'}>
-                        <Table
-                            celled={true}
-                            attached="bottom"
-                            selectable={true}
-                            style={{ borderBottom: 'none' }}>
-                            <Table.Header>{this.renderTableHeader(data, columns)}</Table.Header>
-                            <Table.Body>
-                                <Table.Row style={{ fontWeight: 'bold' }}>
-                                    <Table.Cell colSpan={columns.length}>
-                                        No data available
-                                    </Table.Cell>
-                                </Table.Row>
-                            </Table.Body>
-                        </Table>
-                    </div>
-                );
-            } else {
-                return (
-                    <>
-                        {canBeFiltered && (
-                            <div className={'container'}>
-                                <Table
-                                    celled={true}
-                                    attached="bottom"
-                                    selectable={true}
-                                    style={{ borderBottom: 'none' }}>
-                                    <Table.Header>
-                                        {this.renderTableHeader(data, columns)}
-                                    </Table.Header>
-                                </Table>
-                            </div>
-                        )}
-                        <h3>No processes found.</h3>
-                    </>
-                );
-            }
+            return (
+                <>
+                    {canBeFiltered && (
+                        <div className={'container'}>
+                            <Table
+                                celled={true}
+                                attached="bottom"
+                                selectable={true}
+                                style={{ borderBottom: 'none' }}>
+                                <Table.Header>{this.renderTableHeader(data, columns)}</Table.Header>
+                            </Table>
+                        </div>
+                    )}
+                    {data && <h3>No processes found.</h3>}
+                </>
+            );
         }
 
         return (

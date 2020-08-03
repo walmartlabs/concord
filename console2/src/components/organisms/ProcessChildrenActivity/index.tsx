@@ -127,7 +127,6 @@ const ProcessChildrenActivity = ({
                 processes={data?.items}
                 columns={COLUMNS}
                 loading={false}
-                showRefreshButton={false}
                 refresh={onRefresh}
                 next={data?.next}
                 prev={data?.prev}

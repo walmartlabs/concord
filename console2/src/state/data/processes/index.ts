@@ -18,11 +18,10 @@
  * =====
  */
 
-import { Action, combineReducers, Reducer } from 'redux';
-import { all, call, fork, put, takeLatest, throttle } from 'redux-saga/effects';
+import { Action, combineReducers } from 'redux';
+import { all, call, fork, put, takeLatest } from 'redux-saga/effects';
 
 import { ConcordId, ConcordKey } from '../../../api/common';
-import { list as apiProcessList, ProcessListQuery } from '../../../api/process';
 import { start as apiStart, killBulk as apiKillBulk } from '../../../api/process';
 import { restoreProcess as apiRestore } from '../../../api/process/checkpoint';
 import { handleErrors, makeErrorReducer, makeLoadingReducer, makeResponseReducer } from '../common';
@@ -31,9 +30,6 @@ import { reducers as eventsReducers, sagas as eventsSagas } from './events';
 import {
     CancelBulkProcessRequest,
     CancelBullkProcessState,
-    ListProcessesRequest,
-    PaginatedProcessDataResponse,
-    PaginatedProcesses,
     RestoreProcessRequest,
     RestoreProcessState,
     StartProcessRequest,
@@ -47,7 +43,6 @@ export * from './types';
 const NAMESPACE = 'processes';
 
 const actionTypes = {
-    LIST_PROJECT_PROCESSES_REQUEST: `${NAMESPACE}/project/list/request`,
     PROCESS_DATA_RESPONSE: `${NAMESPACE}/data/response`,
     PROCESSES_DATA_RESPONSE: `${NAMESPACE}/processes/data/response`,
 
@@ -65,11 +60,6 @@ const actionTypes = {
 };
 
 export const actions = {
-    listProcesses: (query: ProcessListQuery): ListProcessesRequest => ({
-        type: actionTypes.LIST_PROJECT_PROCESSES_REQUEST,
-        query
-    }),
-
     startProcess: (
         orgName: ConcordKey,
         projectName: ConcordKey,
@@ -105,38 +95,6 @@ export const actions = {
         type: actionTypes.RESET_PROCESS
     })
 };
-
-const paginatedProcessesById: Reducer<PaginatedProcesses> = (
-    state = { processes: {} },
-    { type, error, items, next, prev }: PaginatedProcessDataResponse
-) => {
-    switch (type) {
-        case actionTypes.PROCESSES_DATA_RESPONSE:
-            if (error || !items) {
-                return state;
-            }
-
-            const result = {};
-
-            items.forEach((o) => {
-                result[o.instanceId] = o;
-            });
-
-            return { processes: result, next, prev };
-        default:
-            return state;
-    }
-};
-
-const loading = makeLoadingReducer(
-    [actionTypes.LIST_PROJECT_PROCESSES_REQUEST],
-    [actionTypes.PROCESS_DATA_RESPONSE, actionTypes, actionTypes.PROCESSES_DATA_RESPONSE]
-);
-
-const errorMsg = makeErrorReducer(
-    [actionTypes.LIST_PROJECT_PROCESSES_REQUEST],
-    [actionTypes.PROCESS_DATA_RESPONSE, actionTypes.PROCESSES_DATA_RESPONSE]
-);
 
 const startProcessReducers = combineReducers<StartProcessState>({
     running: makeLoadingReducer(
@@ -184,31 +142,11 @@ const cancelBulkProcessReducers = combineReducers<CancelBullkProcessState>({
 });
 
 export const reducers = combineReducers<State>({
-    paginatedProcessesById,
-
-    loading,
-    error: errorMsg,
-
     startProcess: startProcessReducers,
     restoreProcess: restoreProcessReducers,
     cancelBulkProcess: cancelBulkProcessReducers,
-
     events: eventsReducers
 });
-
-function* onProcessList({ query }: ListProcessesRequest) {
-    try {
-        const response = yield call(apiProcessList, query);
-        yield put({
-            type: actionTypes.PROCESSES_DATA_RESPONSE,
-            items: response.items,
-            next: response.next,
-            prev: response.prev
-        });
-    } catch (e) {
-        yield handleErrors(actionTypes.PROCESSES_DATA_RESPONSE, e);
-    }
-}
 
 function* onStartProcess({
     orgName,
@@ -262,7 +200,6 @@ function* onRestoreProcess({ instanceId, checkpointId }: RestoreProcessRequest) 
 
 export const sagas = function*() {
     yield all([
-        throttle(1000, actionTypes.LIST_PROJECT_PROCESSES_REQUEST, onProcessList),
         takeLatest(actionTypes.START_PROCESS_REQUEST, onStartProcess),
         takeLatest(actionTypes.CANCEL_BULK_PROCESS_REQUEST, onCancelBulkProcess),
         takeLatest(actionTypes.RESTORE_PROCESS_REQUEST, onRestoreProcess),

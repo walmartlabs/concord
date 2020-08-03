@@ -61,12 +61,14 @@ export function useApi<S>(dataFetcher: () => Promise<S>, props: Props<S>) {
 
     useEffect(() => {
         let cancelled = false;
+        let loading = false;
 
         const fetchData = async () => {
             setIsLoading(true);
             setError(undefined);
 
             if (dispatch) {
+                loading = true;
                 dispatch(LoadingAction.START);
             }
             try {
@@ -79,6 +81,7 @@ export function useApi<S>(dataFetcher: () => Promise<S>, props: Props<S>) {
                     setError(e);
                 }
             } finally {
+                loading = false;
                 if (!cancelled) {
                     setIsLoading(false);
                     if (dispatch) {
@@ -103,7 +106,7 @@ export function useApi<S>(dataFetcher: () => Promise<S>, props: Props<S>) {
 
         return () => {
             cancelled = true;
-            if (dispatch) {
+            if (dispatch && loading) {
                 dispatch(LoadingAction.STOP);
             }
         };

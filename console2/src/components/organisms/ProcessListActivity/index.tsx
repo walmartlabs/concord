@@ -20,14 +20,16 @@
 
 import { parse as parseQueryString } from 'query-string';
 import * as React from 'react';
-import { connect } from 'react-redux';
-import { AnyAction, Dispatch } from 'redux';
-import { RouteComponentProps, withRouter } from 'react-router';
-import { replace as pushHistory } from 'connected-react-router';
+import { useHistory, useLocation } from 'react-router';
 
-import { queryParams, RequestError } from '../../../api/common';
-import { ProcessEntry, ProcessFilters, ProcessListQuery } from '../../../api/process';
-import { actions, PaginatedProcesses, Pagination, State } from '../../../state/data/processes';
+import { queryParams } from '../../../api/common';
+import {
+    list as apiProcessList,
+    PaginatedProcessEntries,
+    ProcessFilters,
+    ProcessListQuery
+} from '../../../api/process';
+import { Pagination } from '../../../state/data/processes';
 import {
     CREATED_AT_COLUMN,
     DURATION_COLUMN,
@@ -42,6 +44,10 @@ import {
 import { ColumnDefinition } from '../../../api/org';
 import ProcessListWithSearch from '../../molecules/ProcessListWithSearch';
 import RequestErrorActivity from '../RequestErrorActivity';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { useApi } from '../../../hooks/useApi';
+import { LoadingDispatch } from '../../../App';
+import _ from 'lodash';
 
 // list of "built-in" columns, i.e. columns that can be referenced using "builtin" parameter
 // of the custom column configuration
@@ -79,43 +85,14 @@ export interface ProcessSearchFilter {
     pagination?: Pagination;
 }
 
-interface RouteProps {
-    status?: string;
-    initiator?: string;
-    orgName?: string;
-    projectName?: string;
-}
-
-interface StateProps {
-    processes: ProcessEntry[];
-    loading: boolean;
-    loadError: RequestError;
-    next?: number;
-    prev?: number;
-}
-
-interface DispatchProps {
-    load: (
-        orgName?: string,
-        projectName?: string,
-        filters?: ProcessFilters,
-        pagination?: Pagination
-    ) => void;
-}
-
 interface ExternalProps {
     orgName?: string;
     projectName?: string;
-
-    // TODO remove when we migrate to the common process search endpoint
     showInitiatorFilter?: boolean;
     usePagination?: boolean;
-    showRefreshButton?: boolean;
-
     columns?: ColumnDefinition[];
+    forceRefresh?: any;
 }
-
-type Props = StateProps & DispatchProps & ExternalProps & RouteComponentProps<RouteProps>;
 
 export const parseSearchFilter = (s: string): ProcessSearchFilter => {
     const v: any = parseQueryString(s);
@@ -154,102 +131,94 @@ const addBuiltInColumns = (columns?: ColumnDefinition[]): ColumnDefinition[] | u
     });
 };
 
-class ProcessListActivity extends React.Component<Props> {
-    UNSAFE_componentWillMount() {
-        const { orgName, projectName, load, location } = this.props;
-        const f = parseSearchFilter(location.search);
-        load(orgName, projectName, f.filters, f.pagination);
-    }
+const ProcessListActivity = ({
+    showInitiatorFilter = false,
+    usePagination = false,
+    columns,
+    orgName,
+    projectName,
+    forceRefresh
+}: ExternalProps) => {
+    const dispatch = React.useContext(LoadingDispatch);
 
-    render() {
-        const {
-            processes,
-            showInitiatorFilter = false,
-            usePagination = false,
-            columns,
+    const isInitialMount = useRef(true);
+    const location = useLocation();
+    const history = useHistory();
+    const [searchFilter, setSearchFilter] = useState<ProcessSearchFilter>(
+        parseSearchFilter(location.search)
+    );
+
+    useEffect(() => {
+        if (isInitialMount.current) {
+            isInitialMount.current = false;
+        } else {
+            const filter = parseSearchFilter(location.search);
+            setSearchFilter((prev) => _.isEqual(filter, prev) ? prev : filter);
+        }
+    }, [location]);
+
+    const fetchData = useCallback(() => {
+        const query = {
             orgName,
             projectName,
-            loadError,
-            loading,
-            load,
-            history,
-            next,
-            prev,
-            showRefreshButton
-        } = this.props;
+            ...searchFilter.pagination
+        } as ProcessListQuery;
 
-        if (loadError) {
-            return <RequestErrorActivity error={loadError} />;
-        }
+        return apiProcessList(filtersToQuery(query, searchFilter.filters));
+    }, [orgName, projectName, searchFilter]);
 
-        if (!processes) {
-            return <h3>No processes found.</h3>;
-        }
+    const { error, isLoading, data } = useApi<PaginatedProcessEntries>(fetchData, {
+        fetchOnMount: true,
+        dispatch: dispatch,
+        forceRequest: forceRefresh
+    });
 
-        const showProjectColumn = !projectName;
-        const cols =
-            addBuiltInColumns(columns) ||
-            (showProjectColumn ? defaultColumns : withoutProjectColumns);
-        const f = parseSearchFilter(history.location.search);
-        return (
-            <>
-                <ProcessListWithSearch
-                    paginationFilter={f.pagination}
-                    processFilters={f.filters}
-                    processes={processes}
-                    next={next}
-                    prev={prev}
-                    columns={cols}
-                    loading={loading}
-                    refresh={(processFilters, paginationFilters) =>
-                        load(orgName, projectName, processFilters, paginationFilters)
-                    }
-                    showInitiatorFilter={showInitiatorFilter}
-                    usePagination={usePagination}
-                    showRefreshButton={showRefreshButton}
-                />
-            </>
-        );
-    }
-}
-
-// TODO move to selectors
-const makeProcessList = (data: PaginatedProcesses): ProcessEntry[] => {
-    return Object.keys(data.processes)
-        .map((k) => data.processes[k])
-        .sort((a, b) => (a.createdAt < b.createdAt ? 1 : a.createdAt > b.createdAt ? -1 : 0));
-};
-
-const mapStateToProps = ({ processes }: { processes: State }): StateProps => ({
-    loading: processes.loading,
-    loadError: processes.error,
-    processes: makeProcessList(processes.paginatedProcessesById),
-    next: processes.paginatedProcessesById.next,
-    prev: processes.paginatedProcessesById.prev
-});
-
-const mapDispatchToProps = (dispatch: Dispatch<AnyAction>): DispatchProps => ({
-    load: (orgName?, projectName?, filters?, paginationFilters?) => {
-        if (filters || paginationFilters) {
+    const onRefresh = useCallback(
+        (processFilters?: ProcessFilters, paginationFilters?: Pagination) => {
             const f = {};
-            if (filters !== undefined) {
-                Object.keys(filters)
-                    .filter((k) => k !== undefined)
-                    .forEach((key) => (f[key] = filters[key]));
+            if (processFilters || paginationFilters) {
+                if (processFilters !== undefined) {
+                    Object.keys(processFilters)
+                        .filter((k) => k !== undefined)
+                        .forEach((key) => (f[key] = processFilters[key]));
+                }
+                if (paginationFilters !== undefined) {
+                    Object.keys(paginationFilters)
+                        .filter((k) => k !== undefined)
+                        .forEach((key) => (f[key] = paginationFilters[key]));
+                }
             }
-            if (paginationFilters !== undefined) {
-                Object.keys(paginationFilters)
-                    .filter((k) => k !== undefined)
-                    .forEach((key) => (f[key] = paginationFilters[key]));
-            }
-            dispatch(pushHistory({ search: queryParams(f) }));
-        }
+            setSearchFilter(parseSearchFilter(queryParams(f)));
+            // will update location
+            history.push({ search: queryParams(f) });
+        },
+        [history]
+    );
 
-        const query = { orgName, projectName, ...paginationFilters } as ProcessListQuery;
+    const showProjectColumn = !projectName;
+    const cols =
+        addBuiltInColumns(columns) || (showProjectColumn ? defaultColumns : withoutProjectColumns);
+    const f = parseSearchFilter(history.location.search);
 
-        dispatch(actions.listProcesses(filtersToQuery(query, filters)));
-    }
-});
+    return (
+        <>
+            {error && <RequestErrorActivity error={error} />}
+
+            <ProcessListWithSearch
+                paginationFilter={f.pagination}
+                processFilters={f.filters}
+                processes={data?.items}
+                next={data?.next}
+                prev={data?.prev}
+                columns={cols}
+                loading={isLoading}
+                refresh={onRefresh}
+                showInitiatorFilter={showInitiatorFilter}
+                usePagination={usePagination}
+            />
+        </>
+    );
+};
 
 export const filtersToQuery = (
     query: ProcessListQuery,
@@ -274,4 +243,4 @@ export const filtersToQuery = (
     return query;
 };
 
-export default connect(mapStateToProps, mapDispatchToProps)(withRouter(ProcessListActivity));
+export default ProcessListActivity;
