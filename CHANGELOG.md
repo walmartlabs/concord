@@ -2,6 +2,11 @@
 
 ## [Unreleased]
 
+### Added
+
+- concord-server: expose the current number of processes with
+"wait conditions" as a new metric `process_queue_enqueued_wait`.
+
 ### Changed
 
 - concord-console: the refresh action of the process list page
