@@ -5,14 +5,14 @@
 ### Added
 
 - concord-server: expose the current number of processes with
-"wait conditions" as a new metric `process_queue_enqueued_wait`.
+"wait conditions" as a new metric - `process_queue_enqueued_wait`.
 
 ### Changed
 
-- concord-console: the refresh action of the process list page
-was rewritten using React Hooks;
-- concord-console: fixed scrolling on the repository list page
-in the presense of a modal dialog.
+- concord-console: the refresh action of the process list page was
+rewritten to use React Hooks;
+- concord-console: fixed scrolling on the repository list page in
+the presence of a modal dialog.
 
 
 
