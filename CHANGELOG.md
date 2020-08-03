@@ -4,6 +4,8 @@
 
 ### Changed
 
+- concord-console: the refresh action of the process list page
+was rewritten using React Hooks;
 - concord-console: fixed scrolling on the repository list page
 in the presense of a modal dialog.
 
