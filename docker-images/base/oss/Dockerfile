@@ -15,6 +15,6 @@ RUN yum -y --enablerepo=extras install epel-release && \
 RUN alternatives --set python /usr/bin/python2
 RUN alternatives --install /usr/bin/pip pip /usr/bin/pip2 0
 
-RUN pip install --upgrade --ignore-installed pip setuptools && pip install dumb-init
+RUN pip install --upgrade --ignore-installed pip==19.3.1 setuptools && pip install dumb-init
 
 RUN groupadd -g 456 concord && useradd --no-log-init -u 456 -g concord -m -s /sbin/nologin concord
