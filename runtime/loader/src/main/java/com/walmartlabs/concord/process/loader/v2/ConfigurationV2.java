@@ -25,8 +25,12 @@ import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.walmartlabs.concord.process.loader.model.Configuration;
 import com.walmartlabs.concord.runtime.v2.model.ProcessConfiguration;
+import com.walmartlabs.concord.sdk.Constants;
+import com.walmartlabs.concord.sdk.MapUtils;
 
 import java.io.Serializable;
+import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 
 public class ConfigurationV2 implements Configuration, Serializable {
@@ -41,6 +45,11 @@ public class ConfigurationV2 implements Configuration, Serializable {
         om.registerModule(new Jdk8Module());
         om.registerModule(new JavaTimeModule());
         this.values = om.convertValue(cfg, Map.class);
+    }
+
+    @Override
+    public List<String> dependencies() {
+        return MapUtils.getList(values, Constants.Request.DEPENDENCIES_KEY, Collections.emptyList());
     }
 
     @Override
