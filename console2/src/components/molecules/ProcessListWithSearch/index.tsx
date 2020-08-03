@@ -76,8 +76,6 @@ interface Props {
     usePagination?: boolean;
 
     refresh: (processFilters?: ProcessFilters, paginationFilters?: Pagination) => void;
-
-    showRefreshButton?: boolean;
 }
 
 interface State {
@@ -261,8 +259,7 @@ class ProcessListWithSearch extends React.Component<Props, State> {
             projectName,
             loading,
             prev,
-            next,
-            showRefreshButton = true
+            next
         } = this.props;
 
         const { processFilters } = this.state;
@@ -277,18 +274,6 @@ class ProcessListWithSearch extends React.Component<Props, State> {
                     <Table attached="top" basic={true} style={{ borderBottom: 'none' }}>
                         <Table.Header>
                             <Table.Row>
-                                {showRefreshButton && (
-                                    <Table.HeaderCell
-                                        collapsing={true}
-                                        style={{ borderBottom: 'none' }}>
-                                        <Button
-                                            basic={true}
-                                            icon="refresh"
-                                            loading={loading}
-                                            onClick={this.onRefresh}
-                                        />
-                                    </Table.HeaderCell>
-                                )}
                                 <Table.HeaderCell
                                     collapsing={true}
                                     style={{ borderBottom: 'none' }}>

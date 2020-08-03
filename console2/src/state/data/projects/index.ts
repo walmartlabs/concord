@@ -513,7 +513,7 @@ function* onDelete({ orgName, projectName }: DeleteProjectRequest) {
             type: actionTypes.DELETE_PROJECT_RESPONSE
         });
 
-        yield put(pushHistory(`/org/${orgName}/project/`));
+        yield put(pushHistory(`/org/${orgName}/project`));
     } catch (e) {
         yield handleErrors(actionTypes.DELETE_PROJECT_RESPONSE, e);
     }
