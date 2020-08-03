@@ -33,6 +33,7 @@ import com.walmartlabs.concord.runtime.v2.runner.remote.TaskCallEventRecordingLi
 import com.walmartlabs.concord.runtime.v2.runner.tasks.TaskCallListener;
 import com.walmartlabs.concord.runtime.v2.sdk.DockerService;
 import com.walmartlabs.concord.runtime.v2.sdk.FileService;
+import com.walmartlabs.concord.runtime.v2.sdk.LockService;
 import com.walmartlabs.concord.runtime.v2.sdk.SecretService;
 import com.walmartlabs.concord.svm.ExecutionListener;
 
@@ -53,6 +54,7 @@ public class DefaultRunnerModule extends AbstractModule {
         bind(PersistenceService.class).to(DefaultPersistenceService.class);
         bind(ProcessStatusCallback.class).to(DefaultProcessStatusCallback.class);
         bind(SecretService.class).to(DefaultSecretService.class);
+        bind(LockService.class).to(DefaultLockService.class);
 
         Multibinder<TaskCallListener> taskCallListeners = Multibinder.newSetBinder(binder(), TaskCallListener.class);
         taskCallListeners.addBinding().to(TaskCallEventRecordingListener.class);

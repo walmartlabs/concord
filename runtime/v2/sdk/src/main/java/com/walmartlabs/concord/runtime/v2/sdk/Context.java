@@ -55,6 +55,8 @@ public interface Context {
 
     SecretService secretService();
 
+    LockService lockService();
+
     ApiConfiguration apiConfiguration();
 
     ProcessConfiguration processConfiguration();
