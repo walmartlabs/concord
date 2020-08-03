@@ -1,10 +1,10 @@
-package com.walmartlabs.concord.runner;
+package com.walmartlabs.concord.runtime.v2.runner;
 
 /*-
  * *****
  * Concord
  * -----
- * Copyright (C) 2017 - 2019 Walmart Inc.
+ * Copyright (C) 2017 - 2020 Walmart Inc.
  * -----
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,50 +20,43 @@ package com.walmartlabs.concord.runner;
  * =====
  */
 
+import com.walmartlabs.concord.ApiClient;
 import com.walmartlabs.concord.ApiException;
-import com.walmartlabs.concord.client.ApiClientFactory;
 import com.walmartlabs.concord.client.ClientUtils;
 import com.walmartlabs.concord.client.LockResult;
 import com.walmartlabs.concord.client.ProcessLocksApi;
-import com.walmartlabs.concord.sdk.Context;
-import com.walmartlabs.concord.sdk.ContextUtils;
-import com.walmartlabs.concord.sdk.LockService;
+import com.walmartlabs.concord.runtime.common.injector.InstanceId;
+import com.walmartlabs.concord.runtime.v2.sdk.LockService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
-import javax.inject.Named;
-import java.util.UUID;
 import java.util.concurrent.Callable;
 
-@Named
-public class LockServiceImpl implements LockService {
+public class DefaultLockService implements LockService {
 
-    private static final Logger log = LoggerFactory.getLogger(LockServiceImpl.class);
+    private static final Logger log = LoggerFactory.getLogger(DefaultLockService.class);
 
     private static final int RETRY_COUNT = 3;
     private static final long RETRY_INTERVAL = 5000;
-    private static final long LOCK_RETRY_INTERVAL = 10000; // TODO custom intervals?
+    private static final long LOCK_RETRY_INTERVAL = 10000;
 
-    private final ApiClientFactory apiClientFactory;
-
-    private enum LockScope {
-        ORG, PROJECT
-    }
+    private final InstanceId instanceId;
+    private final ApiClient apiClient;
 
     @Inject
-    public LockServiceImpl(ApiClientFactory apiClientFactory) {
-        this.apiClientFactory = apiClientFactory;
+    public DefaultLockService(InstanceId instanceId, ApiClient apiClient) {
+        this.instanceId = instanceId;
+        this.apiClient = apiClient;
     }
 
     @Override
-    public void projectLock(Context ctx, String lockName) throws Exception {
-        UUID instanceId = ContextUtils.getTxId(ctx);
-        ProcessLocksApi api = new ProcessLocksApi(apiClientFactory.create(ctx));
+    public void projectLock(String lockName) throws Exception {
+        ProcessLocksApi api = new ProcessLocksApi(apiClient);
 
         // TODO: timeout
         while (!Thread.currentThread().isInterrupted()) {
-            LockResult lock = withRetry(() -> api.tryLock(instanceId, lockName, LockScope.PROJECT.name()));
+            LockResult lock = withRetry(() -> api.tryLock(instanceId.getValue(), lockName, LockScope.PROJECT.name()));
             if (lock.isAcquired()) {
                 log.info("successfully acquired lock '{}' in '{}' scope...", lockName, LockScope.PROJECT);
                 return;
@@ -75,11 +68,10 @@ public class LockServiceImpl implements LockService {
     }
 
     @Override
-    public void projectUnlock(Context ctx, String lockName) throws Exception {
-        UUID instanceId = ContextUtils.getTxId(ctx);
-        ProcessLocksApi api = new ProcessLocksApi(apiClientFactory.create(ctx));
+    public void projectUnlock(String lockName) throws Exception {
+        ProcessLocksApi api = new ProcessLocksApi(apiClient);
         withRetry(() -> {
-            api.unlock(instanceId, lockName, LockScope.PROJECT.name());
+            api.unlock(instanceId.getValue(), lockName, LockScope.PROJECT.name());
             return null;
         });
         log.info("unlocking '{}' with scope '{}' -> done", lockName, LockScope.PROJECT);
@@ -91,6 +83,10 @@ public class LockServiceImpl implements LockService {
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
         }
+    }
+
+    private enum LockScope {
+        ORG, PROJECT
     }
 
     private static <T> T withRetry(Callable<T> c) throws ApiException {
