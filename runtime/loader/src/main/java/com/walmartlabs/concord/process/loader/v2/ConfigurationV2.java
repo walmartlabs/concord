@@ -25,8 +25,11 @@ import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.walmartlabs.concord.process.loader.model.Configuration;
 import com.walmartlabs.concord.runtime.v2.model.ProcessConfiguration;
+import com.walmartlabs.concord.sdk.Constants;
+import com.walmartlabs.concord.sdk.MapUtils;
 
 import java.io.Serializable;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -34,13 +37,10 @@ public class ConfigurationV2 implements Configuration, Serializable {
 
     private static final long serialVersionUID = 1L;
 
-    private final ProcessConfiguration cfg;
     private final Map<String, Object> values;
 
     @SuppressWarnings("unchecked")
     public ConfigurationV2(ProcessConfiguration cfg) {
-        this.cfg = cfg;
-
         ObjectMapper om = new ObjectMapper();
         om.registerModule(new Jdk8Module());
         om.registerModule(new JavaTimeModule());
@@ -49,7 +49,7 @@ public class ConfigurationV2 implements Configuration, Serializable {
 
     @Override
     public List<String> dependencies() {
-        return cfg.dependencies();
+        return MapUtils.getList(values, Constants.Request.DEPENDENCIES_KEY, Collections.emptyList());
     }
 
     @Override
