@@ -25,7 +25,7 @@ RUN yum -y install \
 RUN umask 0022
 
 RUN pip install --upgrade --ignore-installed \
-    pip \
+    pip==19.3.1 \
     setuptools
 
 RUN pip install --upgrade --ignore-installed \
