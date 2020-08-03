@@ -4,6 +4,8 @@
 
 ### Added
 
+- concord-server: store process `dependencies` in
+the `process_queue.dependencies` column;
 - runtime-v2: `LockService` implementation;
 - concord-server: expose the current number of processes with
 "wait conditions" as a new metric - `process_queue_enqueued_wait`.
