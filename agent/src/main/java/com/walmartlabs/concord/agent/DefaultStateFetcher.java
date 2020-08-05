@@ -27,14 +27,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
 import java.io.File;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 
-@Named
-@Singleton
 public class DefaultStateFetcher implements StateFetcher {
 
     private static final Logger log = LoggerFactory.getLogger(DefaultStateFetcher.class);

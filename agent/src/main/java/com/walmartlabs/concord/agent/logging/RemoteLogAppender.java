@@ -20,6 +20,7 @@ package com.walmartlabs.concord.agent.logging;
  * =====
  */
 
+import com.walmartlabs.concord.ApiClient;
 import com.walmartlabs.concord.ApiException;
 import com.walmartlabs.concord.agent.AgentConstants;
 import com.walmartlabs.concord.client.*;
@@ -27,12 +28,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
-import javax.inject.Named;
 import java.time.ZoneOffset;
 import java.util.Date;
 import java.util.UUID;
 
-@Named
 public class RemoteLogAppender implements LogAppender {
 
     private static final Logger log = LoggerFactory.getLogger(RemoteLogAppender.class);
@@ -41,9 +40,9 @@ public class RemoteLogAppender implements LogAppender {
     private final ProcessLogV2Api processLogV2Api;
 
     @Inject
-    public RemoteLogAppender(ProcessApi processApi) {
-        this.processApi = processApi;
-        this.processLogV2Api = new ProcessLogV2Api(processApi.getApiClient());
+    public RemoteLogAppender(ApiClient apiClient) {
+        this.processApi = new ProcessApi(apiClient);
+        this.processLogV2Api = new ProcessLogV2Api(apiClient);
     }
 
     @Override

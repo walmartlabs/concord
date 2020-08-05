@@ -29,15 +29,11 @@ import com.walmartlabs.concord.repository.*;
 import com.walmartlabs.concord.sdk.Secret;
 
 import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Collections;
 import java.util.List;
 
-@Named
-@Singleton
 public class RepositoryManager {
 
     private final SecretClient secretClient;

@@ -28,6 +28,7 @@ import java.util.UUID;
 
 public class ProcessResponse extends Message {
 
+    private final String sessionToken;
     private final UUID processId;
     private final String orgName; // TODO rename to secretOrgName
     private final String repoUrl;
@@ -39,6 +40,7 @@ public class ProcessResponse extends Message {
     @JsonCreator
     public ProcessResponse(
             @JsonProperty("correlationId") long correlationId,
+            @JsonProperty("sessionToken") String sessionToken,
             @JsonProperty("processId") UUID processId,
             @JsonProperty("orgName") String orgName,
             @JsonProperty("repoUrl") String repoUrl,
@@ -50,6 +52,7 @@ public class ProcessResponse extends Message {
         super(MessageType.PROCESS_RESPONSE);
 
         setCorrelationId(correlationId);
+        this.sessionToken = sessionToken;
         this.processId = processId;
         this.orgName = orgName;
         this.repoUrl = repoUrl;
@@ -57,6 +60,10 @@ public class ProcessResponse extends Message {
         this.commitId = commitId;
         this.secretName = secretName;
         this.imports = imports;
+    }
+
+    public String getSessionToken() {
+        return sessionToken;
     }
 
     public UUID getProcessId() {
@@ -90,12 +97,14 @@ public class ProcessResponse extends Message {
     @Override
     public String toString() {
         return "ProcessResponse{" +
-                "processId=" + processId +
+                "sessionToken='" + sessionToken + '\'' +
+                ", processId=" + processId +
                 ", orgName='" + orgName + '\'' +
                 ", repoUrl='" + repoUrl + '\'' +
                 ", repoPath='" + repoPath + '\'' +
                 ", commitId='" + commitId + '\'' +
                 ", secretName='" + secretName + '\'' +
+                ", imports=" + imports +
                 '}';
     }
 }

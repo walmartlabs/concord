@@ -23,15 +23,11 @@ package com.walmartlabs.concord.agent.logging;
 import com.walmartlabs.concord.agent.cfg.AgentConfiguration;
 
 import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.UUID;
 
-@Named
-@Singleton
 public class ProcessLogFactory {
 
     private final Path logDir;

@@ -25,12 +25,10 @@ import com.walmartlabs.concord.imports.ImportManager;
 import com.walmartlabs.concord.imports.ImportManagerFactory;
 
 import javax.inject.Inject;
-import javax.inject.Named;
 import javax.inject.Provider;
 import javax.inject.Singleton;
 import java.nio.file.Path;
 
-@Named
 @Singleton
 public class ImportManagerProvider implements Provider<ImportManager> {
 

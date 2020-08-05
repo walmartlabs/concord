@@ -27,12 +27,15 @@ import com.google.common.hash.HashCode;
 import com.google.common.hash.HashFunction;
 import com.google.common.hash.Hasher;
 import com.google.common.hash.Hashing;
-import com.walmartlabs.concord.agent.*;
+import com.walmartlabs.concord.agent.ConfiguredJobRequest;
+import com.walmartlabs.concord.agent.ExecutionException;
+import com.walmartlabs.concord.agent.JobInstance;
+import com.walmartlabs.concord.agent.Utils;
 import com.walmartlabs.concord.agent.executors.JobExecutor;
 import com.walmartlabs.concord.agent.executors.runner.ProcessPool.ProcessEntry;
 import com.walmartlabs.concord.agent.logging.ProcessLog;
 import com.walmartlabs.concord.agent.logging.ProcessLogFactory;
-import com.walmartlabs.concord.agent.postprocessing.JobPostProcessor;
+import com.walmartlabs.concord.agent.remote.AttachmentsUploader;
 import com.walmartlabs.concord.common.IOUtils;
 import com.walmartlabs.concord.dependencymanager.DependencyEntity;
 import com.walmartlabs.concord.dependencymanager.DependencyManager;
@@ -61,7 +64,6 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static com.walmartlabs.concord.common.DockerProcessBuilder.CONCORD_DOCKER_LOCAL_MODE_KEY;
-import static com.walmartlabs.concord.agent.postprocessing.JobPostProcessor.*;
 /**
  * Executes jobs using concord-runner runtime.
  */
@@ -73,7 +75,7 @@ public class RunnerJobExecutor implements JobExecutor {
 
     private final RunnerJobExecutorConfiguration cfg;
     private final DefaultDependencies defaultDependencies;
-    private final List<JobPostProcessor> postProcessors;
+    private final AttachmentsUploader attachmentsUploader;
     private final ProcessPool processPool;
     private final ProcessLogFactory logFactory;
     private final ExecutorService executor;
@@ -83,7 +85,7 @@ public class RunnerJobExecutor implements JobExecutor {
     public RunnerJobExecutor(RunnerJobExecutorConfiguration cfg,
                              DependencyManager dependencyManager,
                              DefaultDependencies defaultDependencies,
-                             List<JobPostProcessor> postProcessors,
+                             AttachmentsUploader attachmentsUploader,
                              ProcessPool processPool,
                              ProcessLogFactory processLogFactory,
                              ExecutorService executor) {
@@ -91,7 +93,7 @@ public class RunnerJobExecutor implements JobExecutor {
         this.cfg = cfg;
         this.dependencyManager = dependencyManager;
         this.defaultDependencies = defaultDependencies;
-        this.postProcessors = postProcessors;
+        this.attachmentsUploader = attachmentsUploader;
         this.processPool = processPool;
         this.logFactory = processLogFactory;
         this.executor = executor;
@@ -99,11 +101,6 @@ public class RunnerJobExecutor implements JobExecutor {
         // sort JSON keys for consistency
         this.objectMapper = new ObjectMapper()
                 .configure(SerializationFeature.ORDER_MAP_ENTRIES_BY_KEYS, true);
-    }
-
-    @Override
-    public JobRequest.Type acceptsType() {
-        return JobRequest.Type.RUNNER;
     }
 
     @Override
@@ -134,16 +131,20 @@ public class RunnerJobExecutor implements JobExecutor {
         // continue the execution in a separate thread to make the process cancellable
         RunnerJob _job = job;
         Future<?> f = executor.submit(() -> {
+            boolean uploadAttachmentsOnError = true;
+
             try {
                 exec(_job, pe);
-                executePostProcessors(_job.getInstanceId(), pe);
-            } catch (JobPostProcessorException e) {
-                throw new RuntimeException(e);
+
+                uploadAttachmentsOnError = false;
+                uploadAttachments(_job.getInstanceId(), pe);
             } catch (Throwable t) {
-                try {
-                    executePostProcessors(_job.getInstanceId(), pe);
-                } catch (JobPostProcessorException e) {
-                    // ignore
+                if (uploadAttachmentsOnError) {
+                    try {
+                        uploadAttachments(_job.getInstanceId(), pe);
+                    } catch (Exception e) {
+                        // ignore
+                    }
                 }
 
                 throw new RuntimeException(t);
@@ -157,17 +158,14 @@ public class RunnerJobExecutor implements JobExecutor {
         return new JobInstanceImpl(f, pe.getProcess());
     }
 
-    private void executePostProcessors(UUID instanceId, ProcessEntry pe) throws JobPostProcessorException {
+    private void uploadAttachments(UUID instanceId, ProcessEntry pe) {
         Path payloadDir = pe.getProcDir().resolve(Constants.Files.PAYLOAD_DIR_NAME);
 
-        // run all job post processors, e.g. the attachment uploader
         try {
-            for (JobPostProcessor p : postProcessors) {
-                p.process(instanceId, payloadDir);
-            }
-        } catch (Throwable e) {
-            log.error("exec ['{}'] -> postprocessing error: {}", instanceId, e.getMessage());
-            throw new JobPostProcessorException("Postprocessing error: " + e.getMessage());
+            attachmentsUploader.upload(instanceId, payloadDir);
+        } catch (Exception e) {
+            log.error("uploadAttachments ['{}'] -> error: {}", instanceId, e.getMessage());
+            throw new RuntimeException("Error while uploading attachments: " + e.getMessage());
         }
     }
 
