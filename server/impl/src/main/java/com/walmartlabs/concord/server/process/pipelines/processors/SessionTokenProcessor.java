@@ -20,16 +20,11 @@ package com.walmartlabs.concord.server.process.pipelines.processors;
  * =====
  */
 
-import com.walmartlabs.concord.server.cfg.SecretStoreConfiguration;
-import com.walmartlabs.concord.server.org.secret.SecretUtils;
 import com.walmartlabs.concord.server.process.Payload;
 import com.walmartlabs.concord.server.process.SessionTokenCreator;
-import com.walmartlabs.concord.server.sdk.PartialProcessKey;
 
 import javax.inject.Inject;
 import javax.inject.Named;
-import java.util.Base64;
-import java.util.UUID;
 
 /**
  * Generates and saves the process' session token (key).

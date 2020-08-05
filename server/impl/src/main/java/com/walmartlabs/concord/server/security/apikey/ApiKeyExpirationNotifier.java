@@ -47,7 +47,6 @@ import java.util.stream.Collectors;
 
 import static com.walmartlabs.concord.server.jooq.Tables.API_KEYS;
 import static org.jooq.impl.DSL.currentOffsetDateTime;
-import static org.jooq.impl.DSL.trunc;
 
 @Named("api-key-expiration-notifier")
 @Singleton

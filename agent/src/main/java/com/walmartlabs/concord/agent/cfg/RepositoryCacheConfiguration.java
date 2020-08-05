@@ -27,7 +27,6 @@ import javax.inject.Named;
 import javax.inject.Singleton;
 import java.nio.file.Path;
 import java.time.Duration;
-import java.util.concurrent.TimeUnit;
 
 import static com.walmartlabs.concord.agent.cfg.Utils.getDir;
 
