@@ -24,13 +24,16 @@ import com.fasterxml.jackson.core.JsonToken;
 import com.walmartlabs.concord.runtime.v2.exception.InvalidFieldDefinitionException;
 import com.walmartlabs.concord.runtime.v2.exception.InvalidValueTypeException;
 import com.walmartlabs.concord.runtime.v2.exception.YamlProcessingException;
+import io.takari.parc.Input;
 import io.takari.parc.Parser;
 import io.takari.parc.Result;
 
+import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 
+import static com.walmartlabs.concord.runtime.v2.parser.GrammarV2.stringVal;
 import static com.walmartlabs.concord.runtime.v2.parser.GrammarV2.value;
 import static io.takari.parc.Combinators.*;
 
@@ -142,6 +145,30 @@ public final class GrammarMisc {
                 throw new InvalidFieldDefinitionException(a.name, a.location, e);
             }
         });
+    }
+
+    public static <O> Parser<Atom, O> namedStep(String name, YamlValueType<O> valueType, BiFunction<String, Atom, Parser<Atom, O>> f) {
+        return in -> {
+            if (in.end()) {
+                return fail(in, "EOF");
+            }
+
+            Input<Atom> rest = in;
+            String stepName = null;
+            Atom val = in.first();
+            if ("name".equals(val.name)) {
+                Result<Atom, String> stepNameResult = stringVal.apply(in.rest());
+                if (stepNameResult.isFailure()) {
+                    return invalidValueTypeError(YamlValueType.STRING).apply(in.rest()).cast();
+                }
+
+                rest = stepNameResult.getRest();
+                stepName = stepNameResult.toSuccess().getResult();
+            }
+
+            final String finalStepName = stepName;
+            return satisfyField(name, valueType, atom -> f.apply(finalStepName, atom)).apply(rest);
+        };
     }
 
     private GrammarMisc() {

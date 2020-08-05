@@ -21,6 +21,7 @@ package com.walmartlabs.concord.runtime.v2.parser;
  */
 
 import com.fasterxml.jackson.core.JsonToken;
+import com.walmartlabs.concord.runtime.v2.Constants;
 import com.walmartlabs.concord.runtime.v2.model.Expression;
 import com.walmartlabs.concord.runtime.v2.model.ExpressionOptions;
 import com.walmartlabs.concord.runtime.v2.model.ImmutableExpressionOptions;
@@ -48,19 +49,28 @@ public final class ExpressionGrammar {
     public static final Parser<Atom, String> expression = expressionParser.map(expr -> (String)expr.value);
     public static final Parser<Atom, String> expressionVal = orError(expressionParser.map(expr -> (String)expr.value), YamlValueType.EXPRESSION_VAL);
 
-    private static final Parser<Atom, ExpressionOptions> expressionOptions =
-            with(ExpressionOptions::builder,
-                    o -> options(
-                            optional("error", stepsVal.map(o::errorSteps)),
-                            optional("out", stringVal.map(o::out)),
-                            optional("meta", mapVal.map(o::meta))
-                    ))
-                    .map(ImmutableExpressionOptions.Builder::build);
+    private static Parser<Atom, ExpressionOptions> expressionOptions(String stepName) {
+        return with(() -> optionsBuilder(stepName),
+                o -> options(
+                        optional("error", stepsVal.map(o::errorSteps)),
+                        optional("out", stringVal.map(o::out)),
+                        optional("meta", mapVal.map(o::putAllMeta))
+                ))
+                .map(ImmutableExpressionOptions.Builder::build);
+    }
+
+    private static ImmutableExpressionOptions.Builder optionsBuilder(String stepName) {
+        ImmutableExpressionOptions.Builder result = ImmutableExpressionOptions.builder();
+        if (stepName != null) {
+            result.putMeta(Constants.SEGMENT_NAME, stepName);
+        }
+        return result;
+    }
 
     public static final Parser<Atom, Expression> exprFull =
-            satisfyField("expr", YamlValueType.EXPRESSION, a ->
+            namedStep("expr", YamlValueType.EXPRESSION, (stepName, a) ->
                     expression.bind(expr ->
-                            expressionOptions.map(options -> new Expression(a.location, expr, options))));
+                            expressionOptions(stepName).map(options -> new Expression(a.location, expr, options))));
 
     // exprShort := expression
     public static final Parser<Atom, Step> exprShort =

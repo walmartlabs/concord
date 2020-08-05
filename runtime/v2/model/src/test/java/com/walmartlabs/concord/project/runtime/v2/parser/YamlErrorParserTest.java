@@ -776,6 +776,17 @@ public class YamlErrorParserTest extends AbstractParserTest {
     }
 
     @Test
+    public void test219() throws Exception {
+        String msg =
+                "(019.yml): Error @ line: 3, col: 13. Invalid value type, expected: STRING, got: INT\n" +
+                        "\twhile processing steps:\n" +
+                        "\t'main' @ line: 2, col: 3\n" +
+                        "\t\t'flows' @ line: 1, col: 1";
+
+        assertErrorMessage("errors/tasks/019.yml", msg);
+    }
+
+    @Test
     public void test300() throws Exception {
         String msg =
                 "(000.yml): Error @ line: 3, col: 12. Invalid value type, expected: STRING, got: NULL. Remove attribute or complete the definition\n" +
