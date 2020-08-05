@@ -25,6 +25,7 @@ import ca.ibodrov.concord.testcontainers.ConcordProcess;
 import ca.ibodrov.concord.testcontainers.Payload;
 import ca.ibodrov.concord.testcontainers.junit4.ConcordRule;
 import com.walmartlabs.concord.client.ProcessEntry;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -32,7 +33,10 @@ import static com.walmartlabs.concord.it.compat.ITConstants.DEFAULT_TEST_TIMEOUT
 
 /**
  * Runs the current versions of the Server and the Agent in testcontainer-concord's LOCAL mode.
+ *
+ * Currently, the test is ignored due to some port conflicts.
  */
+@Ignore
 public class LocalModeIT {
 
     @Rule
