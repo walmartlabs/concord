@@ -1,6 +1,7 @@
 flows:
   main:
-    - expr: "${boo}"
+    - name: "expression-call"
+      expr: "${boo}"
       out: "result"
       meta:
         m1: "v1"
