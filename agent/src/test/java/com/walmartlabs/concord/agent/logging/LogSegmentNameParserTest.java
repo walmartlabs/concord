@@ -20,7 +20,6 @@ package com.walmartlabs.concord.agent.logging;
  * =====
  */
 
-import com.walmartlabs.concord.agent.logging.LogSegmentNameParser;
 import org.junit.Test;
 
 import java.nio.file.Paths;

@@ -43,7 +43,6 @@ import static com.walmartlabs.concord.server.jooq.tables.Teams.TEAMS;
 import static com.walmartlabs.concord.server.jooq.tables.UserTeams.USER_TEAMS;
 import static com.walmartlabs.concord.server.jooq.tables.Users.USERS;
 import static org.jooq.impl.DSL.select;
-import static org.jooq.impl.DSL.selectFrom;
 
 @Named
 public class TeamDao extends AbstractDao {

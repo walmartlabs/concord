@@ -4,7 +4,7 @@ package com.walmartlabs.concord.agent.remote;
  * *****
  * Concord
  * -----
- * Copyright (C) 2017 - 2019 Walmart Inc.
+ * Copyright (C) 2017 - 2020 Walmart Inc.
  * -----
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -31,7 +31,6 @@ import com.walmartlabs.concord.common.IOUtils;
 
 import javax.inject.Inject;
 import javax.inject.Named;
-import javax.inject.Provider;
 import javax.inject.Singleton;
 import java.io.IOException;
 import java.util.HashMap;
@@ -41,27 +40,18 @@ import java.util.concurrent.TimeUnit;
 
 @Named
 @Singleton
-public class ApiClientProvider implements Provider<ApiClient> {
+public class ApiClientFactory {
 
     private static final String SESSION_COOKIE_NAME = "JSESSIONID";
 
     private final ServerConfiguration cfg;
 
     @Inject
-    public ApiClientProvider(ServerConfiguration cfg) {
+    public ApiClientFactory(ServerConfiguration cfg) {
         this.cfg = cfg;
     }
 
-    @Override
-    public ApiClient get() {
-        try {
-            return create(cfg);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    private static ApiClient create(ServerConfiguration cfg) throws IOException {
+    public ApiClient create(String sessionToken) throws IOException {
         OkHttpClient ok = new OkHttpClient();
         ok.setReadTimeout(cfg.getReadTimeout(), TimeUnit.MILLISECONDS);
         ok.setConnectTimeout(cfg.getConnectTimeout(), TimeUnit.MILLISECONDS);
@@ -70,9 +60,13 @@ public class ApiClientProvider implements Provider<ApiClient> {
         ok.interceptors().add(new AddCookiesInterceptor(cookieJar));
         ok.interceptors().add(new ReceivedCookiesInterceptor(cookieJar));
 
-        ApiClient client = new ConcordApiClient(cfg.getApiBaseUrl(), ok);
+        ConcordApiClient client = new ConcordApiClient(cfg.getApiBaseUrl(), ok);
         client.setTempFolderPath(IOUtils.createTempDir("agent-client").toString());
-        client.setApiKey(cfg.getApiKey());
+        if (sessionToken != null) {
+            client.setSessionToken(sessionToken);
+        } else {
+            client.setApiKey(cfg.getApiKey());
+        }
         client.setUserAgent(cfg.getUserAgent());
         client.setVerifyingSsl(cfg.isVerifySsl());
         return client;

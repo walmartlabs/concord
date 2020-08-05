@@ -20,15 +20,11 @@ package com.walmartlabs.concord.server.process.pipelines.processors;
  * =====
  */
 
-import com.walmartlabs.concord.server.cfg.SecretStoreConfiguration;
-import com.walmartlabs.concord.server.org.secret.SecretUtils;
 import com.walmartlabs.concord.server.process.Payload;
-import com.walmartlabs.concord.server.sdk.PartialProcessKey;
+import com.walmartlabs.concord.server.process.SessionTokenCreator;
 
 import javax.inject.Inject;
 import javax.inject.Named;
-import java.util.Base64;
-import java.util.UUID;
 
 /**
  * Generates and saves the process' session token (key).
@@ -36,27 +32,17 @@ import java.util.UUID;
 @Named
 public class SessionTokenProcessor implements PayloadProcessor {
 
-    private final SecretStoreConfiguration secretCfg;
+    private final SessionTokenCreator sessionTokenCreator;
 
     @Inject
-    public SessionTokenProcessor(SecretStoreConfiguration secretCfg) {
-        this.secretCfg = secretCfg;
+    public SessionTokenProcessor(SessionTokenCreator sessionTokenCreator) {
+        this.sessionTokenCreator = sessionTokenCreator;
     }
 
     @Override
     public Payload process(Chain chain, Payload payload) {
-        String token = createSessionToken(payload.getProcessKey());
+        String token = sessionTokenCreator.create(payload.getProcessKey());
         payload = payload.putHeader(Payload.SESSION_TOKEN, token);
         return chain.process(payload);
-    }
-
-    private String createSessionToken(PartialProcessKey processKey) {
-        byte[] salt = secretCfg.getSecretStoreSalt();
-        byte[] pwd = secretCfg.getServerPwd();
-
-        UUID instanceId = processKey.getInstanceId();
-
-        byte[] ab = SecretUtils.encrypt(instanceId.toString().getBytes(), pwd, salt);
-        return Base64.getEncoder().encodeToString(ab);
     }
 }

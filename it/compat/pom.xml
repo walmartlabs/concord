@@ -16,7 +16,7 @@
     <properties>
         <!-- version of Agent to use in tests -->
         <!-- should be one or more release versions behind the current version -->
-        <prev.concord.version>1.48.1</prev.concord.version>
+        <prev.concord.version>1.55.0</prev.concord.version>
 
         <server.image>walmartlabs/concord-server</server.image>
         <prev.agent.image>walmartlabs/concord-agent:${prev.concord.version}</prev.agent.image>

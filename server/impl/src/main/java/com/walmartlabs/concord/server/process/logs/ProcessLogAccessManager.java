@@ -28,6 +28,7 @@ import com.walmartlabs.concord.server.process.ProcessManager;
 import com.walmartlabs.concord.server.sdk.ProcessKey;
 import com.walmartlabs.concord.server.security.Roles;
 import com.walmartlabs.concord.server.security.UserPrincipal;
+import com.walmartlabs.concord.server.security.sessionkey.SessionKeyPrincipal;
 import org.apache.shiro.authz.UnauthorizedException;
 
 import javax.inject.Inject;
@@ -70,6 +71,12 @@ public class ProcessLogAccessManager {
         UUID initiatorId = pe.initiatorId();
         if (principal.getId().equals(initiatorId)) {
             // process owners should be able to view the process' logs
+            return pk;
+        }
+
+        SessionKeyPrincipal s = SessionKeyPrincipal.getCurrent();
+        if (s != null && pk.partOf(s.getProcessKey())) {
+            // processes can access their own logs
             return pk;
         }
 

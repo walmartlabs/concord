@@ -69,7 +69,6 @@ import java.util.stream.Stream;
 import static com.walmartlabs.concord.server.jooq.tables.ProcessQueue.PROCESS_QUEUE;
 import static com.walmartlabs.concord.server.jooq.tables.ProcessState.PROCESS_STATE;
 import static com.walmartlabs.concord.server.jooq.tables.Projects.PROJECTS;
-import static org.jooq.impl.DSL.count;
 import static org.jooq.impl.DSL.select;
 
 @Named
