@@ -33,12 +33,10 @@ import org.slf4j.LoggerFactory;
 import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
+import java.time.Duration;
 import java.util.Collection;
 import java.util.List;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.SynchronousQueue;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
 
 @Named
 @Singleton
@@ -48,13 +46,15 @@ public class Listeners {
 
     private static final int MAX_LISTENER_THREADS = 16;
 
+    private static final Duration MAX_LISTENER_TIME = Duration.ofSeconds(3);
+
     private final Collection<ProcessEventListener> eventListeners;
     private final Collection<ProcessLogListener> logListeners;
     private final Collection<AuditLogListener> auditLogListeners;
 
-    private final ExecutorService eventListenerExecutor;
-    private final ExecutorService logListenerExecutor;
-    private final ExecutorService auditLogListenerExecutor;
+    private final ForkJoinPool eventListenerPool;
+    private final ForkJoinPool logListenerPool;
+    private final ForkJoinPool auditLogListenerPool;
 
     @Inject
     public Listeners(Collection<ProcessEventListener> eventListeners,
@@ -70,29 +70,43 @@ public class Listeners {
         this.auditLogListeners = auditLogListeners;
         auditLogListeners.forEach(l -> log.info("Using audit log listener: {}", l));
 
-        this.eventListenerExecutor = createExecutor();
-        this.logListenerExecutor = createExecutor();
-        this.auditLogListenerExecutor = createExecutor();
+        this.eventListenerPool = new ForkJoinPool(MAX_LISTENER_THREADS);
+        this.logListenerPool = new ForkJoinPool(MAX_LISTENER_THREADS);
+        this.auditLogListenerPool = new ForkJoinPool(MAX_LISTENER_THREADS);
     }
 
     @WithTimer
     public void onProcessEvent(List<ProcessEvent> events) {
-        eventListeners.forEach(l -> eventListenerExecutor.submit(() -> l.onEvents(events)));
+        ForkJoinTask<?> task = eventListenerPool.submit(() -> {
+            eventListeners.parallelStream().forEach(l -> l.onEvents(events));
+        });
+
+        waitFor(task);
     }
 
     @WithTimer
     public void onProcessLogAppend(ProcessLogEntry entry) {
-        logListeners.forEach(l -> logListenerExecutor.submit(() -> l.onAppend(entry)));
+        ForkJoinTask<?> task = logListenerPool.submit(() -> {
+            logListeners.parallelStream().forEach(l -> l.onAppend(entry));
+        });
+
+        waitFor(task);
     }
 
     @WithTimer
     public void onAuditEvent(AuditEvent event) {
-        auditLogListeners.forEach(l -> auditLogListenerExecutor.submit(() -> l.onEvent(event)));
+        ForkJoinTask<?> task = auditLogListenerPool.submit(() -> {
+            auditLogListeners.parallelStream().forEach(l -> l.onEvent(event));
+        });
+
+        waitFor(task);
     }
 
-    private static ExecutorService createExecutor() {
-        ThreadPoolExecutor tpe = new ThreadPoolExecutor(1, MAX_LISTENER_THREADS, 30, TimeUnit.SECONDS, new SynchronousQueue<>());
-        tpe.setRejectedExecutionHandler(new ThreadPoolExecutor.CallerRunsPolicy());
-        return tpe;
+    private static void waitFor(ForkJoinTask<?> task) {
+        try {
+            task.get(MAX_LISTENER_TIME.toMillis(), TimeUnit.MILLISECONDS);
+        } catch (InterruptedException | ExecutionException | TimeoutException e) {
+            throw new RuntimeException(e);
+        }
     }
 }
