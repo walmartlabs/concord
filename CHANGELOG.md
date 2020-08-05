@@ -1,5 +1,14 @@
 # Change log
 
+## [Unreleased]
+
+### Changed
+
+- concord-agent: fixed an issue preventing the Agent from working
+in the `LOCAL` mode of [testcontainers-concord](https://github.com/concord-workflow/testcontainers-concord).
+
+
+
 ## [1.60.0] - 2020-08-05
 
 ### Added
