@@ -4,6 +4,8 @@
 
 ### Added
 
+- runtime-v2: support for `name` attributes in task, flow call and
+expresion steps;
 - concord-server: store process `dependencies` in
 the `process_queue.dependencies` column;
 - runtime-v2: `LockService` implementation;
