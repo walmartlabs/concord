@@ -21,7 +21,6 @@ package com.walmartlabs.concord.agent.guice;
  */
 
 import com.walmartlabs.concord.agent.RepositoryManager;
-import com.walmartlabs.concord.dependencymanager.DependencyManager;
 import com.walmartlabs.concord.imports.ImportManagerFactory;
 
 import javax.inject.Inject;
@@ -35,7 +34,7 @@ public class AgentImportManagerProvider implements Provider<AgentImportManager> 
     private final ImportManagerFactory factory;
 
     @Inject
-    public AgentImportManagerProvider(RepositoryManager repositoryManager, DependencyManager dependencyManager) {
+    public AgentImportManagerProvider(RepositoryManager repositoryManager, AgentDependencyManager dependencyManager) {
         this.factory = new ImportManagerFactory(dependencyManager, (entry, workDir) -> {
             Path dst = workDir;
             if (entry.dest() != null) {
