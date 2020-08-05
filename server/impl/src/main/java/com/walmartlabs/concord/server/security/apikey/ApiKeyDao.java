@@ -40,6 +40,7 @@ import java.util.UUID;
 
 import static com.walmartlabs.concord.server.jooq.tables.ApiKeys.API_KEYS;
 import static org.jooq.impl.DSL.currentOffsetDateTime;
+import static org.jooq.impl.DSL.selectFrom;
 
 @Named
 public class ApiKeyDao extends AbstractDao {
