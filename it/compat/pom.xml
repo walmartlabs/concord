@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 
     <modelVersion>4.0.0</modelVersion>
 
@@ -50,6 +51,23 @@
             <artifactId>concord-client</artifactId>
             <scope>test</scope>
         </dependency>
+
+        <!-- LOCAL mode support -->
+        <dependency>
+            <groupId>com.walmartlabs.concord.server</groupId>
+            <artifactId>concord-server-impl</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.walmartlabs.concord.server</groupId>
+            <artifactId>concord-server</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.walmartlabs.concord</groupId>
+            <artifactId>concord-agent</artifactId>
+            <scope>test</scope>
+        </dependency>
     </dependencies>
 
     <build>
@@ -88,6 +106,33 @@
                         <agent.image>${prev.agent.image}</agent.image>
                     </systemProperties>
                 </configuration>
+            </plugin>
+
+            <!-- LOCAL mode support -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-dependency-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>copy-runner-jar</id>
+                        <phase>process-test-resources</phase>
+                        <goals>
+                            <goal>copy</goal>
+                        </goals>
+                        <configuration>
+                            <overWriteIfNewer>true</overWriteIfNewer>
+                            <artifactItems>
+                                <artifactItem>
+                                    <groupId>com.walmartlabs.concord.runtime.v1</groupId>
+                                    <artifactId>concord-runtime-impl-v1</artifactId>
+                                    <classifier>jar-with-dependencies</classifier>
+                                    <destFileName>runner-v1.jar</destFileName>
+                                </artifactItem>
+                            </artifactItems>
+                            <outputDirectory>${project.build.directory}</outputDirectory>
+                        </configuration>
+                    </execution>
+                </executions>
             </plugin>
         </plugins>
     </build>
