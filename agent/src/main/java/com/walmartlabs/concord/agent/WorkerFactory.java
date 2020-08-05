@@ -22,16 +22,16 @@ package com.walmartlabs.concord.agent;
 
 import com.walmartlabs.concord.agent.executors.JobExecutor;
 import com.walmartlabs.concord.agent.executors.JobExecutorFactory;
+import com.walmartlabs.concord.agent.guice.AgentImportManager;
 import com.walmartlabs.concord.agent.logging.ProcessLog;
 import com.walmartlabs.concord.agent.remote.ProcessStatusUpdater;
-import com.walmartlabs.concord.imports.ImportManager;
 
 import javax.inject.Inject;
 
 public class WorkerFactory {
 
     private final RepositoryManager repositoryManager;
-    private final ImportManager importManager;
+    private final AgentImportManager importManager;
     private final JobExecutorFactory jobExecutorFactory;
     private final StateFetcher stateFetcher;
     private final ProcessStatusUpdater statusUpdater;
@@ -39,7 +39,7 @@ public class WorkerFactory {
 
     @Inject
     public WorkerFactory(RepositoryManager repositoryManager,
-                         ImportManager importManager,
+                         AgentImportManager importManager,
                          JobExecutorFactory jobExecutorFactory,
                          StateFetcher stateFetcher,
                          ProcessStatusUpdater statusUpdater,

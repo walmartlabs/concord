@@ -1,1 +1,1 @@
-# Integration Tests for Ensuring Backward Compatibility
+# Integration Tests to Ensure Backward Compatibility

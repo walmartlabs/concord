@@ -28,9 +28,12 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.testcontainers.images.PullPolicy;
 
-public class CompatIT {
+import static com.walmartlabs.concord.it.compat.ITConstants.DEFAULT_TEST_TIMEOUT;
 
-    private static final long DEFAULT_TEST_TIMEOUT = 120000;
+/**
+ * Runs an older version of the Agent with the current version of the Server.
+ */
+public class OldAgentIT {
 
     @Rule
     public final ConcordRule concord = new ConcordRule()

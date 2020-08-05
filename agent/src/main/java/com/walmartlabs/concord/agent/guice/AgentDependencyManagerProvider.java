@@ -1,4 +1,4 @@
-package com.walmartlabs.concord.agent;
+package com.walmartlabs.concord.agent.guice;
 
 /*-
  * *****
@@ -21,29 +21,26 @@ package com.walmartlabs.concord.agent;
  */
 
 import com.walmartlabs.concord.agent.cfg.AgentConfiguration;
-import com.walmartlabs.concord.dependencymanager.DependencyManager;
 
 import javax.inject.Inject;
-import javax.inject.Named;
 import javax.inject.Provider;
 import javax.inject.Singleton;
 import java.io.IOException;
 
-@Named
 @Singleton
-public class DependencyManagerProvider implements Provider<DependencyManager> {
+public class AgentDependencyManagerProvider implements Provider<AgentDependencyManager> {
 
     private final AgentConfiguration cfg;
 
     @Inject
-    public DependencyManagerProvider(AgentConfiguration cfg) {
+    public AgentDependencyManagerProvider(AgentConfiguration cfg) {
         this.cfg = cfg;
     }
 
     @Override
-    public DependencyManager get() {
+    public AgentDependencyManager get() {
         try {
-            return new DependencyManager(cfg.getDependencyCacheDir());
+            return new AgentDependencyManager(cfg.getDependencyCacheDir());
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
