@@ -14,6 +14,9 @@ the `process_queue.dependencies` column;
 
 ### Changed
 
+- concord-agent: use process session token to append logs, download
+state, update status, etc. Previously, agents used an API token from
+the configuration file for such operations;
 - concord-console: the refresh action of the process list page was
 rewritten to use React Hooks;
 - concord-console: fixed scrolling on the repository list page in
