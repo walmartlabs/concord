@@ -153,7 +153,7 @@ const ProcessListActivity = ({
             isInitialMount.current = false;
         } else {
             const filter = parseSearchFilter(location.search);
-            setSearchFilter((prev) => _.isEqual(filter, prev) ? prev : filter);
+            setSearchFilter((prev) => (_.isEqual(filter, prev) ? prev : filter));
         }
     }, [location]);
 

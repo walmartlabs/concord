@@ -147,7 +147,6 @@ public final class GrammarMisc {
         });
     }
 
-
     public static <O> Parser<Atom, O> namedStep(String name, YamlValueType<O> valueType, BiFunction<String, Atom, Parser<Atom, O>> f) {
         return in -> {
             if (in.end()) {
