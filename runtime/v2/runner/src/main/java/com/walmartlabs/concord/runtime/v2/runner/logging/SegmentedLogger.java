@@ -20,8 +20,10 @@ package com.walmartlabs.concord.runtime.v2.runner.logging;
  * =====
  */
 
+import com.walmartlabs.concord.runtime.v2.Constants;
 import com.walmartlabs.concord.runtime.v2.model.AbstractStep;
 import com.walmartlabs.concord.runtime.v2.parser.StepOptions;
+import com.walmartlabs.concord.sdk.MapUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import uk.org.lidalia.sysoutslf4j.context.LogLevel;
@@ -81,8 +83,7 @@ public class SegmentedLogger {
             return null;
         }
 
-        // TODO constants
-        return (String) meta.get("segmentName");
+        return (String)meta.get(Constants.SEGMENT_NAME);
     }
 
     /**
