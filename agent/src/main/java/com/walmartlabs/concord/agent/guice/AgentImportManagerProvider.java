@@ -1,4 +1,4 @@
-package com.walmartlabs.concord.agent;
+package com.walmartlabs.concord.agent.guice;
 
 /*-
  * *****
@@ -20,8 +20,8 @@ package com.walmartlabs.concord.agent;
  * =====
  */
 
+import com.walmartlabs.concord.agent.RepositoryManager;
 import com.walmartlabs.concord.dependencymanager.DependencyManager;
-import com.walmartlabs.concord.imports.ImportManager;
 import com.walmartlabs.concord.imports.ImportManagerFactory;
 
 import javax.inject.Inject;
@@ -30,12 +30,12 @@ import javax.inject.Singleton;
 import java.nio.file.Path;
 
 @Singleton
-public class ImportManagerProvider implements Provider<ImportManager> {
+public class AgentImportManagerProvider implements Provider<AgentImportManager> {
 
     private final ImportManagerFactory factory;
 
     @Inject
-    public ImportManagerProvider(RepositoryManager repositoryManager, DependencyManager dependencyManager) {
+    public AgentImportManagerProvider(RepositoryManager repositoryManager, DependencyManager dependencyManager) {
         this.factory = new ImportManagerFactory(dependencyManager, (entry, workDir) -> {
             Path dst = workDir;
             if (entry.dest() != null) {
@@ -47,7 +47,7 @@ public class ImportManagerProvider implements Provider<ImportManager> {
     }
 
     @Override
-    public ImportManager get() {
-        return factory.create();
+    public AgentImportManager get() {
+        return new AgentImportManager(factory.create());
     }
 }

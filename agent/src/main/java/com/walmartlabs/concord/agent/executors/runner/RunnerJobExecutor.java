@@ -33,6 +33,7 @@ import com.walmartlabs.concord.agent.JobInstance;
 import com.walmartlabs.concord.agent.Utils;
 import com.walmartlabs.concord.agent.executors.JobExecutor;
 import com.walmartlabs.concord.agent.executors.runner.ProcessPool.ProcessEntry;
+import com.walmartlabs.concord.agent.guice.AgentDependencyManager;
 import com.walmartlabs.concord.agent.logging.ProcessLog;
 import com.walmartlabs.concord.agent.logging.ProcessLogFactory;
 import com.walmartlabs.concord.agent.remote.AttachmentsUploader;
@@ -71,7 +72,7 @@ public class RunnerJobExecutor implements JobExecutor {
 
     private static final Logger log = LoggerFactory.getLogger(RunnerJobExecutor.class);
 
-    protected final DependencyManager dependencyManager;
+    protected final AgentDependencyManager dependencyManager;
 
     private final RunnerJobExecutorConfiguration cfg;
     private final DefaultDependencies defaultDependencies;
@@ -83,7 +84,7 @@ public class RunnerJobExecutor implements JobExecutor {
     private final ObjectMapper objectMapper;
 
     public RunnerJobExecutor(RunnerJobExecutorConfiguration cfg,
-                             DependencyManager dependencyManager,
+                             AgentDependencyManager dependencyManager,
                              DefaultDependencies defaultDependencies,
                              AttachmentsUploader attachmentsUploader,
                              ProcessPool processPool,

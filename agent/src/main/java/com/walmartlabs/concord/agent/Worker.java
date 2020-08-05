@@ -21,12 +21,12 @@ package com.walmartlabs.concord.agent;
  */
 
 import com.walmartlabs.concord.agent.executors.JobExecutor;
+import com.walmartlabs.concord.agent.guice.AgentImportManager;
 import com.walmartlabs.concord.agent.logging.ProcessLog;
 import com.walmartlabs.concord.agent.remote.ProcessStatusUpdater;
 import com.walmartlabs.concord.client.ProcessEntry.StatusEnum;
 import com.walmartlabs.concord.common.IOUtils;
 import com.walmartlabs.concord.imports.Import.SecretDefinition;
-import com.walmartlabs.concord.imports.ImportManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -40,7 +40,7 @@ public class Worker implements Runnable {
     private static final Logger log = LoggerFactory.getLogger(Worker.class);
 
     private final RepositoryManager repositoryManager;
-    private final ImportManager importManager;
+    private final AgentImportManager importManager;
     private final JobExecutor executor;
     private final CompletionCallback completionCallback;
     private final StateFetcher stateFetcher;
@@ -52,7 +52,7 @@ public class Worker implements Runnable {
 
     @Inject
     public Worker(RepositoryManager repositoryManager,
-                  ImportManager importManager,
+                  AgentImportManager importManager,
                   JobExecutor executor,
                   CompletionCallback completionCallback,
                   StateFetcher stateFetcher,

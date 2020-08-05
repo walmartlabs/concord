@@ -25,8 +25,6 @@ import com.google.inject.Provides;
 import com.google.inject.Singleton;
 import com.walmartlabs.concord.ApiClient;
 import com.walmartlabs.concord.agent.DefaultStateFetcher;
-import com.walmartlabs.concord.agent.DependencyManagerProvider;
-import com.walmartlabs.concord.agent.ImportManagerProvider;
 import com.walmartlabs.concord.agent.StateFetcher;
 import com.walmartlabs.concord.agent.logging.LogAppender;
 import com.walmartlabs.concord.agent.logging.ProcessLog;
@@ -37,7 +35,6 @@ import com.walmartlabs.concord.agent.remote.ProcessStatusUpdater;
 import com.walmartlabs.concord.client.ProcessApi;
 import com.walmartlabs.concord.client.SecretClient;
 import com.walmartlabs.concord.dependencymanager.DependencyManager;
-import com.walmartlabs.concord.imports.ImportManager;
 
 import java.io.IOException;
 import java.util.UUID;
@@ -89,7 +86,7 @@ public class WorkerModule extends AbstractModule {
         bind(StateFetcher.class).to(DefaultStateFetcher.class);
         bind(LogAppender.class).to(RemoteLogAppender.class);
 
-        bind(ImportManager.class).toProvider(ImportManagerProvider.class);
-        bind(DependencyManager.class).toProvider(DependencyManagerProvider.class);
+        bind(AgentImportManager.class).toProvider(AgentImportManagerProvider.class);
+        bind(AgentDependencyManager.class).toProvider(AgentDependencyManagerProvider.class);
     }
 }
