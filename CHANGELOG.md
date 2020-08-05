@@ -1,5 +1,29 @@
 # Change log
 
+## [Unreleased]
+
+### Added
+
+- runtime-v2: support for `name` attributes in task, flow call and
+expresion steps;
+- concord-server: store process `dependencies` in
+the `process_queue.dependencies` column;
+- runtime-v2: `LockService` implementation;
+- concord-server: expose the current number of processes with
+"wait conditions" as a new metric - `process_queue_enqueued_wait`.
+
+### Changed
+
+- concord-agent: use process session token to append logs, download
+state, update status, etc. Previously, agents used an API token from
+the configuration file for such operations;
+- concord-console: the refresh action of the process list page was
+rewritten to use React Hooks;
+- concord-console: fixed scrolling on the repository list page in
+the presence of a modal dialog.
+
+
+
 ## [1.59.0] - 2020-07-30
 
 ### Changed
