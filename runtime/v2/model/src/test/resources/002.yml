@@ -1,6 +1,7 @@
 flows:
   main:
-    - call: "boo"
+    - name: "boo-call"
+      call: "boo"
       out: "result"
       in:
         k: "v"

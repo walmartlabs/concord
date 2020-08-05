@@ -20,6 +20,7 @@ package com.walmartlabs.concord.runtime.v2.parser;
  * =====
  */
 
+import com.walmartlabs.concord.runtime.v2.Constants;
 import com.walmartlabs.concord.runtime.v2.model.ImmutableTaskCallOptions;
 import com.walmartlabs.concord.runtime.v2.model.TaskCall;
 import com.walmartlabs.concord.runtime.v2.model.TaskCallOptions;
@@ -27,7 +28,7 @@ import com.walmartlabs.concord.runtime.v2.model.WithItems;
 import io.takari.parc.Parser;
 
 import static com.walmartlabs.concord.runtime.v2.parser.CommonGrammar.retryVal;
-import static com.walmartlabs.concord.runtime.v2.parser.GrammarMisc.satisfyField;
+import static com.walmartlabs.concord.runtime.v2.parser.GrammarMisc.namedStep;
 import static com.walmartlabs.concord.runtime.v2.parser.GrammarMisc.with;
 import static com.walmartlabs.concord.runtime.v2.parser.GrammarOptions.optional;
 import static com.walmartlabs.concord.runtime.v2.parser.GrammarOptions.options;
@@ -35,22 +36,31 @@ import static com.walmartlabs.concord.runtime.v2.parser.GrammarV2.*;
 
 public final class TaskGrammar {
 
-    private static final Parser<Atom, TaskCallOptions> taskOptions =
-            with(TaskCallOptions::builder,
-                    o -> options(
-                            optional("in", mapVal.map(o::input)),
-                            optional("out", stringVal.map(o::out)),
-                            optional("meta", mapVal.map(o::meta)),
-                            optional("withItems", nonNullVal.map(v -> o.withItems(WithItems.of(v)))),
-                            optional("retry", retryVal.map(o::retry)),
-                            optional("error", stepsVal.map(o::errorSteps))
-                    ))
-                    .map(ImmutableTaskCallOptions.Builder::build);
+    private static ImmutableTaskCallOptions.Builder optionsBuilder(String stepName) {
+        ImmutableTaskCallOptions.Builder result = ImmutableTaskCallOptions.builder();
+        if (stepName != null) {
+            result.putMeta(Constants.SEGMENT_NAME, stepName);
+        }
+        return result;
+    }
+
+    private static Parser<Atom, TaskCallOptions> taskOptions(String stepName) {
+        return with(() -> optionsBuilder(stepName),
+                o -> options(
+                        optional("in", mapVal.map(o::input)),
+                        optional("out", stringVal.map(o::out)),
+                        optional("meta", mapVal.map(o::putAllMeta)),
+                        optional("withItems", nonNullVal.map(v -> o.withItems(WithItems.of(v)))),
+                        optional("retry", retryVal.map(o::retry)),
+                        optional("error", stepsVal.map(o::errorSteps))
+                ))
+                .map(ImmutableTaskCallOptions.Builder::build);
+    }
 
     public static final Parser<Atom, TaskCall> taskFull =
-            satisfyField("task", YamlValueType.TASK, a ->
+            namedStep("task", YamlValueType.TASK, (stepName, a) ->
                     stringVal.bind(taskName ->
-                            taskOptions.map(options -> new TaskCall(a.location, taskName, options))));
+                            taskOptions(stepName).map(options -> new TaskCall(a.location, taskName, options))));
 
     private TaskGrammar() {
     }

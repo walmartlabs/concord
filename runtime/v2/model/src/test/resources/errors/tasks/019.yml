@@ -1,0 +1,12 @@
+flows:
+  main:
+    - name: 123123
+      task: "boo"
+      out: "result"
+      in:
+        k: "v"
+        k2: 2
+        k3: false
+      withItems: 1
+      retry:
+        times: "eeee"
