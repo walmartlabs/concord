@@ -16,7 +16,7 @@ different systems together using scenarios and plugins created by users.
 
 Dependencies:
 - [Git](https://git-scm.com/) 2.18+
-- [Java 8](http://www.oracle.com/technetwork/java/javase/downloads/jdk8-downloads-2133151.html)
+- [Java 8](https://adoptopenjdk.net/)
 - [Docker Community Edition](https://www.docker.com/community-edition)
 - (Optional) [NodeJS and NPM](https://nodejs.org/en/download/) (Node 10 or greater)
 
@@ -49,6 +49,16 @@ Start the console in dev mode by running:
 npm run start
 ```
 
+### Java 11
+
+Use the `jdk11` profile:
+
+```
+./mvnw clean install -DskipTests -Pdocker -Pjdk11
+```
+
+This command builds binaries and Docker images using JDK 11.
+
 ### Integration tests
 
 #### Prerequisites
@@ -59,8 +69,8 @@ Prerequisites:
 - Docker, listening on `tcp://127.0.0.1:2375`;
 - Ansible 2.6.0+ must be installed and available in `$PATH`.
   See [the official documentation](http://docs.ansible.com/ansible/intro_installation.html);
-- `requests` python module is required. It can be installed using `pip install requests`
-or a system package manager;
+- `requests` python module is required. It can be installed by using `pip install requests`
+  or the system package manager;
 - Java must be available in `$PATH` as `java`;
 - [Chrome WebDriver](http://chromedriver.chromium.org/) available in `$PATH`.
 
