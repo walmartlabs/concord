@@ -25,6 +25,9 @@ if [[ -z "${CONCORD_TMP_DIR}" ]]; then
     export CONCORD_TMP_DIR="/tmp"
 fi
 
+echo "Using $(which java)"
+java -version
+
 exec java \
 ${CONCORD_JAVA_OPTS} \
 -Dfile.encoding=UTF-8 \

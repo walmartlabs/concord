@@ -14,6 +14,9 @@ if [[ -z "${CONCORD_CFG_FILE}" ]]; then
 fi
 echo "CONCORD_CFG_FILE: ${CONCORD_CFG_FILE}"
 
+echo "Using $(which java)"
+java -version
+
 exec java \
 -Xmx256m \
 -server \
