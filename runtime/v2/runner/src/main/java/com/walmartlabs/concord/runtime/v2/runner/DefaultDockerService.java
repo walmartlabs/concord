@@ -20,13 +20,12 @@ package com.walmartlabs.concord.runtime.v2.runner;
  * =====
  */
 
-import com.walmartlabs.concord.common.DockerProcessBuilder;
 import com.walmartlabs.concord.common.TruncBufferedReader;
 import com.walmartlabs.concord.runtime.common.cfg.RunnerConfiguration;
 import com.walmartlabs.concord.runtime.common.injector.InstanceId;
+import com.walmartlabs.concord.runtime.v2.sdk.DockerContainerSpec;
 import com.walmartlabs.concord.runtime.v2.sdk.DockerService;
 import com.walmartlabs.concord.runtime.v2.sdk.WorkingDirectory;
-import com.walmartlabs.concord.sdk.DockerContainerSpec;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -104,7 +103,7 @@ public class DefaultDockerService implements DockerService {
         // add the default volume - mount the process' workDir as /workspace
         b.volume(workingDirectory.getValue().toString(), WORKSPACE_TARGET_DIR);
         // add extra volumes from the runner's arguments
-        extraVolumes.forEach(volume ->  b.volume(volume));
+        extraVolumes.forEach(volume -> b.volume(volume));
 
         return b.build();
     }

@@ -54,11 +54,6 @@
             <groupId>com.walmartlabs.concord</groupId>
             <artifactId>concord-policy-engine</artifactId>
         </dependency>
-        <dependency>
-            <groupId>com.walmartlabs.concord.runtime.v2</groupId>
-            <artifactId>concord-runner-v2-v1-compat</artifactId>
-            <version>${project.version}</version>
-        </dependency>
 
         <dependency>
             <groupId>javax.inject</groupId>

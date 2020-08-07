@@ -65,7 +65,9 @@ public class DockerServiceV1Impl implements DockerService {
 
     @Override
     public int start(Context ctx, DockerContainerSpec spec, LogCallback outCallback, LogCallback errCallback) throws IOException, InterruptedException {
-        return delegate.start(spec, outCallback::onLog, errCallback::onLog);
+        // TODO sdk-refactor
+        //return delegate.start(spec, outCallback::onLog, errCallback::onLog);
+        return 0;
     }
 
     private static Map<String, String> createEffectiveEnv(Map<String, String> env) {
@@ -83,4 +85,21 @@ public class DockerServiceV1Impl implements DockerService {
 
         return m;
     }
+
+//    private static com.walmartlabs.concord.runtime.v2.sdk.DockerContainerSpec toV2Spec(DockerContainerSpec spec) {
+//        return com.walmartlabs.concord.runtime.v2.sdk.DockerContainerSpec.builder()
+//                .args(spec.args())
+//                .cpu(spec.cpu())
+//                .debug(spec.debug())
+//                .entryPoint(spec.entryPoint())
+//                .env(spec.env())
+//                .envFile(spec.envFile())
+//                .forcePull(spec.forcePull())
+//                .image(spec.image())
+//                .labels(spec.labels())
+//                .memory(spec.memory())
+//                .options(spec.options())
+//                .
+//                .build();
+//    }
 }
