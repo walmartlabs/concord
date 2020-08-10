@@ -26,7 +26,6 @@ import com.walmartlabs.concord.ApiException;
 import com.walmartlabs.concord.common.IOUtils;
 import com.walmartlabs.concord.sdk.Constants;
 import com.walmartlabs.concord.sdk.MapUtils;
-import com.walmartlabs.concord.sdk.ProjectInfo;
 import org.apache.commons.compress.archivers.zip.ZipArchiveOutputStream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -44,7 +43,7 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import static com.walmartlabs.concord.client.ConcordTaskParams.*;
-import static com.walmartlabs.concord.client.ConcordTaskSuspender.*;
+import static com.walmartlabs.concord.client.ConcordTaskSuspender.ResumePayload;
 
 @Named("concord")
 public class ConcordTaskCommon {
@@ -71,16 +70,16 @@ public class ConcordTaskCommon {
     private final ApiClientFactory apiClientFactory;
     private final String processLinkTemplate;
     private final UUID currentProcessId;
-    private final ProjectInfo currentProcessProjectInfo;
+    private final String currentOrgName;
     private final Path workDir;
     private final ConcordTaskSuspender suspender;
 
-    public ConcordTaskCommon(String sessionToken, ApiClientFactory apiClientFactory, String processLinkTemplate, UUID currentProcessId, ProjectInfo currentProcessProjectInfo, Path workDir, ConcordTaskSuspender suspender) {
+    public ConcordTaskCommon(String sessionToken, ApiClientFactory apiClientFactory, String processLinkTemplate, UUID currentProcessId, String currentOrgName, Path workDir, ConcordTaskSuspender suspender) {
         this.sessionToken = sessionToken;
         this.apiClientFactory = apiClientFactory;
         this.processLinkTemplate = processLinkTemplate;
         this.currentProcessId = currentProcessId;
-        this.currentProcessProjectInfo = currentProcessProjectInfo;
+        this.currentOrgName = currentOrgName;
         this.workDir = workDir;
         this.suspender = suspender;
     }
@@ -89,10 +88,10 @@ public class ConcordTaskCommon {
         Action action = in.action();
         switch (action) {
             case START: {
-                return new HashMap<>(startChildProcess((StartParams)in));
+                return new HashMap<>(startChildProcess((StartParams) in));
             }
             case STARTEXTERNAL: {
-                return new HashMap<>(startExternalProcess((StartExternalParams)in));
+                return new HashMap<>(startExternalProcess((StartExternalParams) in));
             }
             case FORK: {
                 return fork((ForkParams) in).stream()
@@ -100,7 +99,7 @@ public class ConcordTaskCommon {
                         .collect(Collectors.toCollection(ArrayList::new));
             }
             case KILL: {
-                kill((KillParams)in);
+                kill((KillParams) in);
                 return null;
             }
             default:
@@ -135,9 +134,9 @@ public class ConcordTaskCommon {
                 try {
                     ProcessEntry e = ClientUtils.withRetry(3, 1000,
                             () -> withClient(client -> {
-                        ProcessApi api = new ProcessApi(client);
-                        return api.get(id);
-                    }));
+                                ProcessApi api = new ProcessApi(client);
+                                return api.get(id);
+                            }));
 
                     ProcessEntry.StatusEnum s = e.getStatus();
 
@@ -326,9 +325,9 @@ public class ConcordTaskCommon {
     private Result continueAfterSuspend(String baseUrl, String apiKey, UUID processId, boolean collectOutVars) throws Exception {
         ProcessEntry e = ClientUtils.withRetry(3, 1000,
                 () -> withClient(baseUrl, apiKey, client -> {
-            ProcessApi api = new ProcessApi(client);
-            return api.get(processId);
-        }));
+                    ProcessApi api = new ProcessApi(client);
+                    return api.get(processId);
+                }));
 
         ProcessEntry.StatusEnum s = e.getStatus();
         if (!isFinalStatus(s)) {
@@ -451,7 +450,7 @@ public class ConcordTaskCommon {
             if (suspend) {
                 log.info("Suspending the process until the fork processes ({}) are completed...", ids);
                 ResumePayload resume = new ResumePayload(
-                    null, null, !in.outVars().isEmpty(), ids, in.ignoreFailures());
+                        null, null, !in.outVars().isEmpty(), ids, in.ignoreFailures());
 
                 suspend(resume, true);
                 return ids;
@@ -621,10 +620,7 @@ public class ConcordTaskCommon {
             return org;
         }
 
-        if (currentProcessProjectInfo != null) {
-            return currentProcessProjectInfo.orgName();
-        }
-        return null;
+        return currentOrgName;
     }
 
     private static boolean isFinalStatus(ProcessEntry.StatusEnum s) {

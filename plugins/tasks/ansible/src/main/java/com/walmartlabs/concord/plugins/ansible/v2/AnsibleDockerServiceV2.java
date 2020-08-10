@@ -21,7 +21,6 @@ package com.walmartlabs.concord.plugins.ansible.v2;
  */
 
 import com.walmartlabs.concord.plugins.ansible.docker.AnsibleDockerService;
-import com.walmartlabs.concord.runtime.v2.sdk.DockerContainerSpec;
 import com.walmartlabs.concord.runtime.v2.sdk.DockerContainerSpec.Options;
 import com.walmartlabs.concord.runtime.v2.sdk.DockerService;
 import org.slf4j.Logger;

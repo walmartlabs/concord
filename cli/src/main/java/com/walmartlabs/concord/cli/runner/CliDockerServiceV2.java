@@ -20,9 +20,11 @@ package com.walmartlabs.concord.cli.runner;
  * =====
  */
 
-import com.walmartlabs.concord.sdk.DockerContainerSpec;
 
-public class CliDockerServiceV2 implements com.walmartlabs.concord.runtime.v2.sdk.DockerService {
+import com.walmartlabs.concord.runtime.v2.sdk.DockerContainerSpec;
+import com.walmartlabs.concord.runtime.v2.sdk.DockerService;
+
+public class CliDockerServiceV2 implements DockerService {
 
     @Override
     public int start(DockerContainerSpec spec, LogCallback outCallback, LogCallback errCallback) {
