@@ -20,6 +20,9 @@ package com.walmartlabs.concord.sdk;
  * =====
  */
 
+/**
+ * Doesn't produce a stack trace in process logs.
+ */
 public class UserDefinedException extends RuntimeException {
 
     public UserDefinedException(String message) {
