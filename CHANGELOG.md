@@ -1,5 +1,25 @@
 # Change log
 
+## [Unreleased]
+
+### Added
+
+- concord-agent: `CONCORD_JAVA_OPTS` environment variable can now be
+used to specify additional JVM options.
+
+### Changed
+
+- project: JDK 11 compatibility.
+
+### Breaking
+
+- runtime-v2: the SDK module no longer shares interfaces/types with
+the v1 SDK:
+  - `ApiConfiguration`
+  - `DockerContainerSpec`
+
+
+
 ## [1.60.1] - 2020-08-05
 
 ### Changed
