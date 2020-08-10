@@ -9,6 +9,8 @@ used to specify additional JVM options.
 
 ### Changed
 
+- runtime-v1, runtime-v2: `throw` with a string value doesn't
+produce a stacktrace anymore;
 - project: JDK 11 compatibility.
 
 ### Breaking
