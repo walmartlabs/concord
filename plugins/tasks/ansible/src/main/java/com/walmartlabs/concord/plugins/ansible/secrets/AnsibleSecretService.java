@@ -1,4 +1,4 @@
-package com.walmartlabs.concord.plugins.ansible;
+package com.walmartlabs.concord.plugins.ansible.secrets;
 
 /*-
  * *****
@@ -20,12 +20,13 @@ package com.walmartlabs.concord.plugins.ansible;
  * =====
  */
 
-import com.walmartlabs.concord.runtime.v2.sdk.DockerService;
-import com.walmartlabs.concord.sdk.DockerContainerSpec;
+import java.nio.file.Path;
 
-public interface AnsibleDockerService {
+public interface AnsibleSecretService {
 
-    int start(DockerContainerSpec spec,
-              DockerService.LogCallback outCallback,
-              DockerService.LogCallback errCallback) throws Exception;
+    Path exportAsFile(String orgName, String secretName, String password) throws Exception;
+
+    UsernamePassword exportCredentials(String orgName, String secretName, String password) throws Exception;
+
+    KeyPair exportKeyAsFile(String orgName, String secretName, String password) throws Exception;
 }

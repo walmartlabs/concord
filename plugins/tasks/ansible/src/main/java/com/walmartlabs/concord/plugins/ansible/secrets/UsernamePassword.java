@@ -1,4 +1,4 @@
-package com.walmartlabs.concord.plugins.ansible.v2;
+package com.walmartlabs.concord.plugins.ansible.secrets;
 
 /*-
  * *****
@@ -20,20 +20,24 @@ package com.walmartlabs.concord.plugins.ansible.v2;
  * =====
  */
 
-import com.walmartlabs.concord.plugins.ansible.AnsibleDockerService;
-import com.walmartlabs.concord.runtime.v2.sdk.DockerService;
-import com.walmartlabs.concord.sdk.DockerContainerSpec;
+/**
+ * A type to use instead of v1 or v2 specific types.
+ */
+public class UsernamePassword {
 
-public class DockerServiceV2 implements AnsibleDockerService {
+    private final String username;
+    private final String password;
 
-    private final DockerService delegate;
-
-    public DockerServiceV2(DockerService delegate) {
-        this.delegate = delegate;
+    public UsernamePassword(String username, String password) {
+        this.username = username;
+        this.password = password;
     }
 
-    @Override
-    public int start(DockerContainerSpec spec, DockerService.LogCallback outCallback, DockerService.LogCallback errCallback) throws Exception {
-        return delegate.start(spec, outCallback, errCallback);
+    public String username() {
+        return username;
+    }
+
+    public String password() {
+        return password;
     }
 }

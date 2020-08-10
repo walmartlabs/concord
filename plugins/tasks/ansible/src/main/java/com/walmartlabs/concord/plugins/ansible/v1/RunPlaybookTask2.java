@@ -98,11 +98,11 @@ public class RunPlaybookTask2 implements Task {
                 .context(context)
                 .build());
 
-        AnsibleSecretService ansibleSecretService = new SecretServiceV1(secretService, context, txId, workDir.toString());
+        AnsibleSecretServiceV1 ansibleSecretService = new AnsibleSecretServiceV1(context, secretService);
 
         AnsibleTask task = new AnsibleTask(apiClient,
                 new AnsibleAuthFactory(ansibleSecretService),
-                ansibleSecretService, apiCfg);
+                ansibleSecretService);
 
         Map<String, Object> projectInfo = getMap(context, Constants.Request.PROJECT_INFO_KEY, null);
         String orgName = projectInfo != null ? (String) projectInfo.get("orgName") : null;
@@ -119,7 +119,7 @@ public class RunPlaybookTask2 implements Task {
                 .retryCount((Integer) ctx.getVariable(Constants.Context.CURRENT_RETRY_COUNTER))
                 .build();
 
-        PlaybookProcessRunner runner = new PlaybookProcessRunnerFactory(new DockerServiceV1(dockerService, ctx), workDir)
+        PlaybookProcessRunner runner = new PlaybookProcessRunnerFactory(new AnsibleDockerServiceV1(ctx, dockerService), workDir)
                 .create(args);
 
         TaskResult result = task.run(context, runner);

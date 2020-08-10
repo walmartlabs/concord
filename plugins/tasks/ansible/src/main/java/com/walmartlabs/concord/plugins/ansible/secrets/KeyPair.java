@@ -1,4 +1,4 @@
-package com.walmartlabs.concord.plugins.ansible;
+package com.walmartlabs.concord.plugins.ansible.secrets;
 
 /*-
  * *****
@@ -9,9 +9,9 @@ package com.walmartlabs.concord.plugins.ansible;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -20,15 +20,26 @@ package com.walmartlabs.concord.plugins.ansible;
  * =====
  */
 
-import com.walmartlabs.concord.runtime.v2.sdk.SecretService;
-
 import java.nio.file.Path;
 
-public interface AnsibleSecretService {
+/**
+ * A type to use instead of v1 or v2 specific types.
+ */
+public class KeyPair {
 
-    Path exportAsFile(String orgName, String secretName, String password) throws Exception;
+    private final Path privateKey;
+    private final Path publicKey;
 
-    SecretService.UsernamePassword exportCredentials(String org, String name, String password) throws Exception;
+    public KeyPair(Path privateKey, Path publicKey) {
+        this.privateKey = privateKey;
+        this.publicKey = publicKey;
+    }
 
-    SecretService.KeyPair exportKeyAsFile(String org, String name, String password) throws Exception;
+    public Path privateKey() {
+        return privateKey;
+    }
+
+    public Path publicKey() {
+        return publicKey;
+    }
 }
