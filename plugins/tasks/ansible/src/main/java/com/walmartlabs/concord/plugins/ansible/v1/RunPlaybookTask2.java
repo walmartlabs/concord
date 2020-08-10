@@ -108,6 +108,7 @@ public class RunPlaybookTask2 implements Task {
         String orgName = projectInfo != null ? (String) projectInfo.get("orgName") : null;
 
         AnsibleContext context = AnsibleContext.builder()
+                .apiBaseUrl(apiClient.getBasePath())
                 .instanceId(UUID.fromString(txId))
                 .workDir(workDir)
                 .tmpDir(createTmpDir(workDir))

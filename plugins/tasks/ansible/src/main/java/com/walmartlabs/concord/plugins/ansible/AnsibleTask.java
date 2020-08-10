@@ -68,7 +68,7 @@ public class AnsibleTask {
         String playbook = assertString(context.args(), TaskParams.PLAYBOOK_KEY.getKey());
         log.info("Using a playbook: {}", playbook);
 
-        AnsibleEnv env = new AnsibleEnv(apiClient.getBasePath(), context)
+        AnsibleEnv env = new AnsibleEnv(context)
                 .parse(context.args());
 
         AnsibleConfig cfg = new AnsibleConfig(context)

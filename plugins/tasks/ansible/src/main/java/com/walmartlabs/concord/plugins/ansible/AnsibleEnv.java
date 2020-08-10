@@ -31,8 +31,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
-public class AnsibleEnv
-{
+public class AnsibleEnv {
 
     private static final Logger log = LoggerFactory.getLogger(AnsibleEnv.class);
 
@@ -46,9 +45,8 @@ public class AnsibleEnv
 
     private Map<String, String> env = Collections.emptyMap();
 
-    public AnsibleEnv(String apiBaseUrl, AnsibleContext context)
-    {
-        this.apiBaseUrl = apiBaseUrl;
+    public AnsibleEnv(AnsibleContext context) {
+        this.apiBaseUrl = context.apiBaseUrl();
         this.instanceId = context.instanceId();
         this.sessionToken = context.sessionToken();
         this.eventCorrelationId = context.eventCorrelationId();
@@ -57,8 +55,7 @@ public class AnsibleEnv
         this.debug = context.debug();
     }
 
-    public AnsibleEnv parse(Map<String, Object> args)
-    {
+    public AnsibleEnv parse(Map<String, Object> args) {
         env = mergeEnv(defaultEnv(), concordEnv(), args);
 
         if (eventCorrelationId != null) {
@@ -72,8 +69,7 @@ public class AnsibleEnv
         return this;
     }
 
-    public void write()
-    {
+    public void write() {
         if (debug) {
             StringBuilder b = new StringBuilder();
             env.forEach((k, v) -> b.append(k).append("=").append(v).append('\n'));
@@ -81,13 +77,11 @@ public class AnsibleEnv
         }
     }
 
-    public Map<String, String> get()
-    {
+    public Map<String, String> get() {
         return env;
     }
 
-    public AnsibleEnv put(String key, String value)
-    {
+    public AnsibleEnv put(String key, String value) {
         env.put(key, value);
         return this;
     }
@@ -95,8 +89,7 @@ public class AnsibleEnv
     /**
      * Overridable environment variables.
      */
-    private Map<String, String> defaultEnv()
-    {
+    private Map<String, String> defaultEnv() {
         Map<String, String> env = new HashMap<>();
         env.put("ANSIBLE_FORCE_COLOR", "true");
         return env;
@@ -105,8 +98,7 @@ public class AnsibleEnv
     /**
      * Non-overridable environment variables.
      */
-    private Map<String, String> concordEnv()
-    {
+    private Map<String, String> concordEnv() {
         Map<String, String> env = new HashMap<>();
         env.put("CONCORD_INSTANCE_ID", instanceId.toString());
         env.put("CONCORD_BASE_URL", apiBaseUrl);
@@ -124,8 +116,7 @@ public class AnsibleEnv
         return env;
     }
 
-    private static Map<String, String> mergeEnv(Map<String, String> defaultEnv, Map<String, String> concordEnv, Map<String, Object> args)
-    {
+    private static Map<String, String> mergeEnv(Map<String, String> defaultEnv, Map<String, String> concordEnv, Map<String, Object> args) {
         Map<String, Object> extraEnv = MapUtils.getMap(args, TaskParams.EXTRA_ENV_KEY, Collections.emptyMap());
 
         Map<String, String> result = new HashMap<>(defaultEnv.size() + concordEnv.size() + extraEnv.size());

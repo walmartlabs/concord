@@ -50,6 +50,8 @@ public class AnsibleRetryIT extends AbstractServerIT {
         ProcessEntry pir = waitForCompletion(processApi, spr.getInstanceId());
         assertEquals(ProcessEntry.StatusEnum.FAILED, pir.getStatus());
 
+        System.out.println(new String(getLog(pir.getLogFileName())));
+
         // retrieve the retry file
 
         File r = processApi.downloadAttachment(pir.getInstanceId(), "ansible.retry");
