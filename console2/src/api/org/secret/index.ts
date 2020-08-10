@@ -25,7 +25,7 @@ import {
     fetchJson,
     GenericOperationResult,
     EntityOwner,
-    queryParams
+    queryParams, OperationResult
 } from '../../common';
 import { ResourceAccessEntry } from '../';
 
@@ -91,6 +91,12 @@ export interface NewSecretEntry {
     generatePassword?: boolean;
     storePassword?: string;
     storeType?: SecretStoreType;
+}
+
+export interface SecretOperationResult {
+    ok: boolean;
+    id: ConcordId;
+    result: OperationResult;
 }
 
 export interface PaginatedSecretEntries {
@@ -319,6 +325,26 @@ export const updateSecretAccess = (
     };
 
     return fetchJson(`/api/v1/org/${orgName}/secret/${secretName}/access/bulk`, opts);
+};
+
+export const changeOwner = (
+    orgName: ConcordKey,
+    secretName: ConcordKey,
+    ownerId: ConcordId
+): Promise<SecretOperationResult> => {
+    const opts = {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+            org: orgName,
+            secret: secretName,
+            owner: { id: ownerId }
+        })
+    };
+
+    return fetchJson(`/api/v1/org/${orgName}/secret/${secretName}`, opts);
 };
 
 export const typeToText = (t: SecretType) => {
