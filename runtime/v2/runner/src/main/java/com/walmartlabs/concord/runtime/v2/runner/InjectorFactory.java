@@ -21,7 +21,6 @@ package com.walmartlabs.concord.runtime.v2.runner;
  */
 
 import com.google.inject.*;
-import com.google.inject.Module;
 import com.walmartlabs.concord.runtime.common.cfg.RunnerConfiguration;
 import com.walmartlabs.concord.runtime.common.injector.InjectorUtils;
 import com.walmartlabs.concord.runtime.common.injector.InstanceId;

@@ -2,7 +2,7 @@
     <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
         <encoder>
             <!-- the UI expects log timestamps in a specific format to be able to convert it to the local time -->
-            <pattern>%date{YYYY-MM-dd'T'HH:mm:ss.SSSZ, UTC} [%-5level] %logger{36} - %msg%n%rEx{full, com.sun, sun}</pattern>
+            <pattern>%date{YYYY-MM-dd'T'HH:mm:ss.SSSZ, UTC} [%-5level] %msg%n%rEx{full, com.sun, sun}</pattern>
         </encoder>
     </appender>
 

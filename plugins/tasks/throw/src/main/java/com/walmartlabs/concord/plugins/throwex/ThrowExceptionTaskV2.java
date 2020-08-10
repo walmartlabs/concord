@@ -21,6 +21,7 @@ package com.walmartlabs.concord.plugins.throwex;
  */
 
 import com.walmartlabs.concord.runtime.v2.sdk.Task;
+import com.walmartlabs.concord.runtime.v2.sdk.UserDefinedException;
 import com.walmartlabs.concord.runtime.v2.sdk.Variables;
 
 import javax.inject.Named;
@@ -36,11 +37,11 @@ public class ThrowExceptionTaskV2 implements Task {
         if (exception instanceof Exception) {
             throw (Exception) exception;
         } else if (exception instanceof String) {
-            throw new ConcordException(exception.toString());
+            throw new UserDefinedException(exception.toString());
         } else if (exception instanceof Serializable) {
             throw new ConcordException("Process Error", (Serializable) exception);
         } else {
-            throw new ConcordException(exception != null ? exception.toString() : "n/a");
+            throw new UserDefinedException(exception != null ? exception.toString() : "n/a");
         }
     }
 }

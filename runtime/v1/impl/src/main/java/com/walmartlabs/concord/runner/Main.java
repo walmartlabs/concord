@@ -24,7 +24,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.guava.GuavaModule;
 import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
 import com.google.inject.*;
-import com.google.inject.Module;
 import com.google.inject.matcher.AbstractMatcher;
 import com.google.inject.spi.TypeEncounter;
 import com.google.inject.spi.TypeListener;
@@ -48,6 +47,7 @@ import com.walmartlabs.concord.runtime.common.cfg.RunnerConfiguration;
 import com.walmartlabs.concord.sdk.Constants;
 import com.walmartlabs.concord.sdk.MapUtils;
 import com.walmartlabs.concord.sdk.Task;
+import com.walmartlabs.concord.sdk.UserDefinedException;
 import io.takari.bpm.api.*;
 import org.eclipse.sisu.space.BeanScanning;
 import org.eclipse.sisu.space.SpaceModule;
@@ -489,7 +489,12 @@ public class Main {
         } catch (Throwable e) { // catch both errors and exceptions
             // try to unroll nested exceptions to get a meaningful one
             Throwable t = unroll(e);
-            log.error("main -> unhandled exception", t);
+
+            if (t instanceof UserDefinedException) {
+                log.error("{}", t.getMessage());
+            } else {
+                log.error("main -> unhandled exception", t);
+            }
             saveLastError(baseDir, t);
             System.exit(1);
         }
@@ -551,6 +556,12 @@ public class Main {
         }
 
         if (e instanceof BpmnError) {
+            if (e.getCause() != null) {
+                e = e.getCause();
+            }
+        }
+
+        if (e instanceof javax.el.ELException) {
             if (e.getCause() != null) {
                 e = e.getCause();
             }
