@@ -36,6 +36,7 @@ import java.util.Map;
 public class DefaultPlaybookProcessRunner implements PlaybookProcessRunner {
 
     private static final Logger log = LoggerFactory.getLogger(DefaultPlaybookProcessRunner.class);
+    private static final Logger processLog = LoggerFactory.getLogger("processLog");
 
     private final Path workDir;
 
@@ -51,7 +52,7 @@ public class DefaultPlaybookProcessRunner implements PlaybookProcessRunner {
     }
 
     @Override
-    public int run(List<String> args, Map<String, String> extraEnv, LogCallback logCallback) throws IOException, InterruptedException {
+    public int run(List<String> args, Map<String, String> extraEnv) throws IOException, InterruptedException {
         File pwd = workDir.toFile();
         if (!pwd.exists()) {
             throw new IOException("Working directory not found: " + pwd);
@@ -84,7 +85,7 @@ public class DefaultPlaybookProcessRunner implements PlaybookProcessRunner {
         BufferedReader reader = new TruncBufferedReader(new InputStreamReader(p.getInputStream()));
         String line;
         while ((line = reader.readLine()) != null) {
-            logCallback.onLog(line);
+            processLog.info("ANSIBLE: {}", line);
         }
 
         return p.waitFor();

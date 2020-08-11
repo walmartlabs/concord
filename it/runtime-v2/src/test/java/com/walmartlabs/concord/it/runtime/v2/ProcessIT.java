@@ -179,6 +179,6 @@ public class ProcessIT {
         proc.expectStatus(ProcessEntry.StatusEnum.FINISHED);
 
         proc.assertLog(".*orgName=" + orgName + ".*");
-        proc.assertLog(".*name=" + projectName + ".*");
+        proc.assertLog(".*projectName=" + projectName + ".*");
     }
 }

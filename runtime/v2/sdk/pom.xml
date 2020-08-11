@@ -22,15 +22,6 @@
             <groupId>com.walmartlabs.concord.runtime.v2</groupId>
             <artifactId>concord-runtime-vm-v2</artifactId>
         </dependency>
-        <dependency>
-            <groupId>com.walmartlabs.concord</groupId>
-            <artifactId>concord-sdk</artifactId>
-        </dependency>
-
-        <dependency>
-            <groupId>org.eclipse.sisu</groupId>
-            <artifactId>org.eclipse.sisu.inject</artifactId>
-        </dependency>
 
         <dependency>
             <groupId>org.immutables</groupId>

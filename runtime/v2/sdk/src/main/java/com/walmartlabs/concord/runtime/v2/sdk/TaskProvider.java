@@ -20,8 +20,6 @@ package com.walmartlabs.concord.runtime.v2.sdk;
  * =====
  */
 
-import org.eclipse.sisu.Priority;
-
 import java.util.Set;
 
 /**
@@ -29,7 +27,7 @@ import java.util.Set;
  * the supplied {@link Context} and the key.
  * <p/>
  * Multiple task providers can exist in the same injector.
- * The {@link Priority} annotation can be used to specify the order
+ * The {@code @Priority} annotation can be used to specify the order
  * in which each provider is called. Providers with lowest numbers are
  * called first.
  */

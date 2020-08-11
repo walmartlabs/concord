@@ -36,6 +36,7 @@ public class AnsibleConfigTest extends AbstractTest {
         Files.createDirectories(tmpDir);
 
         AnsibleContext context = AnsibleContext.builder()
+                .apiBaseUrl("http://localhost:8001")
                 .instanceId(UUID.randomUUID())
                 .workDir(workDir)
                 .tmpDir(tmpDir)

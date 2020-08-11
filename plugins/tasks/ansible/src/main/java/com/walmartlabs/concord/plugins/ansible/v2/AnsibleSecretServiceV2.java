@@ -20,31 +20,35 @@ package com.walmartlabs.concord.plugins.ansible.v2;
  * =====
  */
 
-import com.walmartlabs.concord.plugins.ansible.AnsibleSecretService;
+import com.walmartlabs.concord.plugins.ansible.secrets.AnsibleSecretService;
+import com.walmartlabs.concord.plugins.ansible.secrets.KeyPair;
+import com.walmartlabs.concord.plugins.ansible.secrets.UsernamePassword;
 import com.walmartlabs.concord.runtime.v2.sdk.SecretService;
 
 import java.nio.file.Path;
 
-public class SecretServiceV2 implements AnsibleSecretService {
+public class AnsibleSecretServiceV2 implements AnsibleSecretService {
 
     private final SecretService delegate;
 
-    public SecretServiceV2(SecretService delegate) {
+    public AnsibleSecretServiceV2(SecretService delegate) {
         this.delegate = delegate;
     }
 
     @Override
-    public Path exportAsFile(String orgName, String secretName, String password)  throws Exception {
+    public Path exportAsFile(String orgName, String secretName, String password) throws Exception {
         return delegate.exportAsFile(orgName, secretName, password);
     }
 
     @Override
-    public SecretService.UsernamePassword exportCredentials(String org, String name, String password) throws Exception {
-        return delegate.exportCredentials(org, name, password);
+    public UsernamePassword exportCredentials(String orgName, String secretName, String password) throws Exception {
+        SecretService.UsernamePassword result = delegate.exportCredentials(orgName, secretName, password);
+        return new UsernamePassword(result.username(), result.password());
     }
 
     @Override
-    public SecretService.KeyPair exportKeyAsFile(String org, String name, String password) throws Exception {
-        return delegate.exportKeyAsFile(org, name, password);
+    public KeyPair exportKeyAsFile(String orgName, String secretName, String password) throws Exception {
+        SecretService.KeyPair result = delegate.exportKeyAsFile(orgName, secretName, password);
+        return new KeyPair(result.privateKey(), result.publicKey());
     }
 }

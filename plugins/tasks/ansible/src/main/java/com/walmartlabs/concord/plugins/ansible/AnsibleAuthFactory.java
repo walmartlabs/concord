@@ -20,7 +20,9 @@ package com.walmartlabs.concord.plugins.ansible;
  * =====
  */
 
-import com.walmartlabs.concord.runtime.v2.sdk.SecretService;
+import com.walmartlabs.concord.plugins.ansible.secrets.AnsibleSecretService;
+import com.walmartlabs.concord.plugins.ansible.secrets.KeyPair;
+import com.walmartlabs.concord.plugins.ansible.secrets.UsernamePassword;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -55,7 +57,7 @@ public class AnsibleAuthFactory {
         switch (auth.getKey().toLowerCase()) {
             case "krb5":
                 try {
-                    SecretService.UsernamePassword cred = parseKerberosAuth(secretService, auth.getValue());
+                    UsernamePassword cred = parseKerberosAuth(secretService, auth.getValue());
                     log.info("Using the kerberos username: {}", cred.username());
                     return new KerberosAuth(cred.username(), cred.password(), context.tmpDir(), context.debug());
                 } catch (Exception e) {
@@ -78,15 +80,15 @@ public class AnsibleAuthFactory {
         }
     }
 
-    private static SecretService.UsernamePassword parseKerberosAuth(AnsibleSecretService secretService,
-                                                                    Map<String, Object> auth) throws Exception {
+    private static UsernamePassword parseKerberosAuth(AnsibleSecretService secretService,
+                                                      Map<String, Object> auth) throws Exception {
         Map<String, Object> secretParams = getMap(auth, "secret", Collections.emptyMap());
         if (!secretParams.isEmpty()) {
             Secret secret = Secret.from(secretParams);
             return secretService.exportCredentials(secret.getOrg(), secret.getName(), secret.getPassword());
         }
 
-        return SecretService.UsernamePassword.of(assertString(auth, "user"), assertString(auth, "password"));
+        return new UsernamePassword(assertString(auth, "user"), assertString(auth, "password"));
     }
 
     private static Map<String, Object> parsePrivateKeyAuth(AnsibleSecretService secretService,
@@ -97,7 +99,7 @@ public class AnsibleAuthFactory {
         Map<String, Object> secretParams = getMap(auth, "secret", Collections.emptyMap());
         if (!secretParams.isEmpty()) {
             Secret secret = Secret.from(secretParams);
-            SecretService.KeyPair keyPair = secretService.exportKeyAsFile(secret.getOrg(), secret.getName(), secret.getPassword());
+            KeyPair keyPair = secretService.exportKeyAsFile(secret.getOrg(), secret.getName(), secret.getPassword());
             p = keyPair.privateKey();
         } else {
             p = ArgUtils.getPath(auth, "path", workDir);

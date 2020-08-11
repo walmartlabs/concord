@@ -1,4 +1,4 @@
-package com.walmartlabs.concord.runtime.v2.v1.compat;
+package com.walmartlabs.concord.plugins.ansible.secrets;
 
 /*-
  * *****
@@ -20,14 +20,13 @@ package com.walmartlabs.concord.runtime.v2.v1.compat;
  * =====
  */
 
-import com.google.inject.BindingAnnotation;
+import java.nio.file.Path;
 
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
+public interface AnsibleSecretService {
 
-// TODO we might not need it if we instantiate TaskProvider directly
-@Retention(RetentionPolicy.RUNTIME)
-@BindingAnnotation
-public @interface V1 {
+    Path exportAsFile(String orgName, String secretName, String password) throws Exception;
+
+    UsernamePassword exportCredentials(String orgName, String secretName, String password) throws Exception;
+
+    KeyPair exportKeyAsFile(String orgName, String secretName, String password) throws Exception;
 }
-

@@ -43,9 +43,7 @@ import com.walmartlabs.concord.runtime.v2.runner.tasks.TaskCallPolicyChecker;
 import com.walmartlabs.concord.runtime.v2.runner.tasks.TaskResultListener;
 import com.walmartlabs.concord.runtime.v2.runner.tasks.TaskV2Provider;
 import com.walmartlabs.concord.runtime.v2.sdk.*;
-import com.walmartlabs.concord.runtime.v2.v1.compat.V1CompatModule;
 import com.walmartlabs.concord.sdk.Constants;
-import com.walmartlabs.concord.sdk.InjectVariable;
 import com.walmartlabs.concord.svm.ExecutionListener;
 import org.immutables.value.Value;
 import org.junit.After;
@@ -592,17 +590,6 @@ public class MainTest {
     }
 
     @Test
-    public void testV1Compat() throws Exception {
-        deploy("v1Compat");
-
-        save(ProcessConfiguration.builder().build());
-
-        byte[] log = run();
-        assertLog(log, ".*execute: p1=ABC.*");
-        assertLog(log, ".*" + Pattern.quote("result: {result=abc}") + ".*");
-    }
-
-    @Test
     public void testVarScoping() throws Exception {
         deploy("varScoping");
 
@@ -719,8 +706,7 @@ public class MainTest {
                     runnerCfg.build(),
                     () -> processConfiguration,
                     testServices,
-                    runtimeModule,
-                    new V1CompatModule()) // allow runtime v1 tasks
+                    runtimeModule) // allow runtime v1 tasks
                     .create();
             injector.getInstance(Main.class).execute();
         } finally {
@@ -853,33 +839,6 @@ public class MainTest {
 
         public String sayHello() {
             return "Hello!";
-        }
-    }
-
-    @Named("v1")
-    @SuppressWarnings("unused")
-    static class V1Task implements com.walmartlabs.concord.sdk.Task {
-
-        @InjectVariable("context")
-        com.walmartlabs.concord.sdk.Context ctx;
-
-        @Override
-        public void execute(com.walmartlabs.concord.sdk.Context ctx) {
-            assertEquals(ctx, this.ctx);
-
-            ctx.setVariable("result", "abc");
-            System.out.println("execute: p1=" + ctx.getVariable("p1"));
-        }
-
-        // can't use in v2
-        public String callWithoutContext() {
-            return "without-context";
-        }
-
-        // can't use in v2
-        public String callWithContext(@InjectVariable("context") com.walmartlabs.concord.sdk.Context ctx) {
-            ctx.setVariable("result2", "xyz");
-            return "with-context";
         }
     }
 

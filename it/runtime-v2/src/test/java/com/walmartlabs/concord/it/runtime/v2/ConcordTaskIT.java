@@ -49,7 +49,6 @@ public class ConcordTaskIT {
                 .arg("newProjectName", projectName);
 
         ConcordProcess proc = concord.processes().start(payload);
-
         proc.expectStatus(ProcessEntry.StatusEnum.FINISHED);
 
         // ---

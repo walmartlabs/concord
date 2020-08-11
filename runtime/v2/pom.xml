@@ -18,7 +18,6 @@
         <module>vm</module>
         <module>sdk</module>
         <module>model</module>
-        <module>v1-compat</module>
         <module>runner</module>
     </modules>
 </project>

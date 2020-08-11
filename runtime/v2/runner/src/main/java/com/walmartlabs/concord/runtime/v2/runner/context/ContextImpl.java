@@ -27,8 +27,6 @@ import com.walmartlabs.concord.runtime.v2.runner.vm.SuspendCommand;
 import com.walmartlabs.concord.runtime.v2.runner.vm.TaskSuspendCommand;
 import com.walmartlabs.concord.runtime.v2.sdk.Compiler;
 import com.walmartlabs.concord.runtime.v2.sdk.*;
-import com.walmartlabs.concord.sdk.ApiConfiguration;
-import com.walmartlabs.concord.sdk.ImmutableProjectInfo;
 import com.walmartlabs.concord.svm.Runtime;
 import com.walmartlabs.concord.svm.State;
 import com.walmartlabs.concord.svm.ThreadId;
@@ -113,7 +111,7 @@ public class ContextImpl implements Context {
     }
 
     @Override
-    public com.walmartlabs.concord.sdk.ProjectInfo projectInfo() {
+    public ProjectInfo projectInfo() {
         if (projectInfo.projectId() == null) {
             return null;
         }
@@ -121,8 +119,8 @@ public class ContextImpl implements Context {
         return ImmutableProjectInfo.builder()
                 .orgId(Objects.requireNonNull(projectInfo.orgId()))
                 .orgName(Objects.requireNonNull(projectInfo.orgName()))
-                .id(Objects.requireNonNull(projectInfo.projectId()))
-                .name(Objects.requireNonNull(projectInfo.projectName()))
+                .projectId(Objects.requireNonNull(projectInfo.projectId()))
+                .projectName(Objects.requireNonNull(projectInfo.projectName()))
                 .build();
     }
 

@@ -51,6 +51,8 @@ public interface AnsibleContext {
     @AllowNulls
     Map<String, Object> args();
 
+    String apiBaseUrl();
+
     @Nullable
     String sessionToken();
 

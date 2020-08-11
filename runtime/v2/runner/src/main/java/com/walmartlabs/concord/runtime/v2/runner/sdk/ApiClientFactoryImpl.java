@@ -1,4 +1,4 @@
-package com.walmartlabs.concord.runtime.common.client;
+package com.walmartlabs.concord.runtime.v2.runner.sdk;
 
 /*-
  * *****
@@ -26,10 +26,12 @@ import com.walmartlabs.concord.client.ApiClientConfiguration;
 import com.walmartlabs.concord.client.ApiClientFactory;
 import com.walmartlabs.concord.client.ConcordApiClient;
 import com.walmartlabs.concord.common.IOUtils;
-import com.walmartlabs.concord.sdk.ApiConfiguration;
-import com.walmartlabs.concord.sdk.Context;
-import com.walmartlabs.concord.sdk.ContextUtils;
+import com.walmartlabs.concord.runtime.common.injector.InstanceId;
+import com.walmartlabs.concord.runtime.v2.sdk.ApiConfiguration;
 
+import javax.inject.Inject;
+import javax.inject.Named;
+import javax.inject.Singleton;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLSocketFactory;
 import java.nio.file.Path;
@@ -38,26 +40,22 @@ import java.security.NoSuchAlgorithmException;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
-/**
- * @deprecated Runtime v2 uses it's own ApiClientFactoryImpl.
- */
-// TODO move into runtime-v1?
-@Deprecated
+@Named
+@Singleton
 public class ApiClientFactoryImpl implements ApiClientFactory {
 
     private final ApiConfiguration cfg;
+    private final InstanceId instanceId;
+
     private final Path tmpDir;
     private final OkHttpClient httpClient;
-    private final UUID instanceId;
 
-    @Deprecated
-    public ApiClientFactoryImpl(ApiConfiguration cfg) throws Exception {
-        this(cfg, null);
-    }
-
-    public ApiClientFactoryImpl(ApiConfiguration cfg, UUID instanceId) throws Exception {
+    @Inject
+    public ApiClientFactoryImpl(ApiConfiguration cfg, InstanceId instanceId) throws Exception {
         this.cfg = cfg;
         this.instanceId = instanceId;
+
+        // TODO replace with FileService#createTempDirectory?
         this.tmpDir = IOUtils.createTempDir("api-client");
 
         OkHttpClient client = new OkHttpClient();
@@ -74,16 +72,11 @@ public class ApiClientFactoryImpl implements ApiClientFactory {
 
     @Override
     public ApiClient create(ApiClientConfiguration overrides) {
-        String baseUrl = overrides.baseUrl() != null ? overrides.baseUrl() : cfg.getBaseUrl();
+        String baseUrl = overrides.baseUrl() != null ? overrides.baseUrl() : cfg.baseUrl();
 
         String sessionToken = null;
         if (overrides.apiKey() == null) {
             sessionToken = overrides.sessionToken();
-
-            Context ctx = overrides.context();
-            if (sessionToken == null && ctx != null) {
-                sessionToken = cfg.getSessionToken(ctx);
-            }
         }
 
         String apiKey = overrides.apiKey();
@@ -101,29 +94,12 @@ public class ApiClientFactoryImpl implements ApiClientFactory {
                 .addDefaultHeader("Accept", "*/*")
                 .setTempFolderPath(tmpDir.toString());
 
-        UUID txId = instanceId;
-        if (txId == null) {
-            txId = getTxId(overrides);
-        }
-
+        UUID txId = instanceId.getValue();
         if (txId != null) {
-            client = client.setUserAgent("Concord-Runner: txId=" + txId);
+            client = client.setUserAgent("Concord-Runner-v2: txId=" + txId);
         }
 
         return client;
-    }
-
-    @Deprecated
-    private static UUID getTxId(ApiClientConfiguration cfg) {
-        if (cfg.txId() != null) {
-            return cfg.txId();
-        }
-
-        if (cfg.context() != null) {
-            return ContextUtils.getTxId(cfg.context());
-        }
-
-        return null;
     }
 
     private static OkHttpClient withSslSocketFactory(OkHttpClient client) throws NoSuchAlgorithmException, KeyManagementException {
