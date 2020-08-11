@@ -177,7 +177,7 @@ class SecretActivity extends React.PureComponent<Props> {
                         projectName={data.projectName}
                     />
 
-                    <Header as="h4">Secret Name</Header>
+                    <Header as="h4">Secret name</Header>
                     <SecretRenameActivity
                         orgName={data.orgName}
                         secretId={data.id}
@@ -185,11 +185,10 @@ class SecretActivity extends React.PureComponent<Props> {
                         projectId={data.projectId}
                     />
 
-                    <Header as="h4">Secret Owner</Header>
+                    <Header as="h4">Secret owner</Header>
                     <SecretOwnerChangeActivity
                         orgName={data.orgName}
                         secretName={data.name}
-                        // projectId={data.projectId}
                         initialOwnerId={data?.owner?.id}
                         disabled={disabled}
                     />
