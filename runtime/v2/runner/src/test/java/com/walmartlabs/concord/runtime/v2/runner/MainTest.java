@@ -152,7 +152,6 @@ public class MainTest {
         byte[] log = run();
         assertLog(log, ".*Hello, Concord!.*");
         assertLog(log, ".*" + Pattern.quote("defaultsMap:{a=a-value}") + ".*");
-        assertLog(log, ".*" + Pattern.quote("defaultsTyped:Defaults{a=a-value}") + ".*");
 
         verify(processStatusCallback, times(1)).onRunning(instanceId);
     }
@@ -758,16 +757,16 @@ public class MainTest {
     @Named("testDefaults")
     static class TestDefaults implements Task {
 
-        @DefaultVariables("testDefaults")
-        Map<String, Object> defaultsMap;
+        private final Variables defaults;
 
-        @DefaultVariables
-        Defaults defaultsTyped;
+        @Inject
+        public TestDefaults(Context ctx) {
+            this.defaults = ctx.defaultVariables();
+        }
 
         @Override
         public Serializable execute(Variables input) {
-            System.out.println("defaultsMap:" + defaultsMap);
-            System.out.println("defaultsTyped:" + defaultsTyped);
+            System.out.println("defaultsMap:" + defaults.toMap());
             return null;
         }
 
