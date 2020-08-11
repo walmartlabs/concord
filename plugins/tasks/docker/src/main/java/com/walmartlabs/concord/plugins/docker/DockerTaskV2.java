@@ -4,7 +4,7 @@ package com.walmartlabs.concord.plugins.docker;
  * *****
  * Concord
  * -----
- * Copyright (C) 2017 - 2018 Walmart Inc.
+ * Copyright (C) 2017 - 2020 Walmart Inc.
  * -----
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,63 +20,50 @@ package com.walmartlabs.concord.plugins.docker;
  * =====
  */
 
-import com.walmartlabs.concord.sdk.*;
+
+import com.walmartlabs.concord.runtime.v2.sdk.DockerService;
+import com.walmartlabs.concord.runtime.v2.sdk.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 import javax.inject.Named;
 import java.io.InputStream;
+import java.io.Serializable;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.HashMap;
-import java.util.Map;
 
-import static com.walmartlabs.concord.plugins.docker.DockerConstants.*;
+import static com.walmartlabs.concord.plugins.docker.DockerConstants.SUCCESS_EXIT_CODE;
 
 @Named("docker")
-public class DockerTask implements Task {
+public class DockerTaskV2 implements Task {
 
     private static final Logger log = LoggerFactory.getLogger(DockerTask.class);
     private static final Logger processLog = LoggerFactory.getLogger("processLog");
 
-    private static final String STDOUT_KEY = "stdout";
-    private static final String STDERR_KEY = "stderr";
+    private static final String LOG_OUTPUT_KEY = "logOutput";
 
-    private static final String[] ALL_KEYS = {
-            CMD_KEY, IMAGE_KEY, ENV_KEY, ENV_FILE_KEY, HOSTS_KEY, FORCE_PULL_KEY,
-            DEBUG_KEY, PULL_RETRY_COUNT_KEY, PULL_RETRY_INTERVAL_KEY, STDOUT_KEY, STDERR_KEY
-    };
+    private final WorkingDirectory workDir;
+    private final DockerService dockerService;
 
     @Inject
-    private DockerService dockerService;
+    public DockerTaskV2(WorkingDirectory workDir, DockerService dockerService) {
+        this.workDir = workDir;
+        this.dockerService = dockerService;
+    }
 
     @Override
-    public void execute(Context ctx) throws Exception {
-        Path workDir = ContextUtils.getWorkDir(ctx);
-        TaskParams params = new TaskParams(createInput(ctx));
-
-        String stdOutVar = ContextUtils.getString(ctx, STDOUT_KEY);
-        String stdErrVar = ContextUtils.getString(ctx, STDERR_KEY);
+    public Serializable execute(Variables input) throws Exception {
+        Path workDir = this.workDir.getValue();
+        TaskParams params = new TaskParams(input);
 
         // redirect stderr to stdout
-        boolean redirectErrorStream = stdErrVar == null && stdOutVar == null;
+        boolean logOutput = input.getBoolean(LOG_OUTPUT_KEY, true);
 
-        // redirect stdout to log
-        boolean logStdOut = redirectErrorStream || stdOutVar == null;
-
-        // redirect stderr to log
-        boolean logStdErr = !logStdOut || stdErrVar != null;
-
-        // save stderr to a variable
-        boolean storeStdErr = stdErrVar != null;
-
-        String stdOutFilePath = null;
-        if (stdOutVar != null) {
-            Path logFile = DockerTaskCommon.createTmpFile(workDir, "stdout", ".log");
-            stdOutFilePath = workDir.relativize(logFile).toString();
-        }
+        Path logFile = DockerTaskCommon.createTmpFile(workDir, "stdout", ".log");
+        String stdOutFilePath = workDir.relativize(logFile).toString();
 
         DockerContainerSpec spec = DockerContainerSpec.builder()
                 .image(params.image())
@@ -86,20 +73,17 @@ public class DockerTask implements Task {
                 .forcePull(params.forcePull())
                 .options(DockerContainerSpec.Options.builder().hosts(params.hosts()).build())
                 .debug(params.debug())
-                .redirectErrorStream(redirectErrorStream)
+                .redirectErrorStream(logOutput)
                 .stdOutFilePath(stdOutFilePath)
                 .pullRetryCount(params.pullRetryCount())
                 .pullRetryInterval(params.pullRetryInterval())
                 .build();
 
         StringBuilder stdErr = new StringBuilder();
-        int code = dockerService.start(ctx, spec,
-                logStdOut ? line -> processLog.info("DOCKER: {}", line) : null,
-                logStdErr ? line -> {
-                    if (storeStdErr) {
-                        stdErr.append(line).append("\n");
-                    }
-
+        int code = dockerService.start(spec,
+                logOutput ? line -> processLog.info("DOCKER: {}", line) : null,
+                logOutput ? line -> {
+                    stdErr.append(line).append("\n");
                     processLog.info("DOCKER: {}", line);
                 } : null);
 
@@ -115,21 +99,14 @@ public class DockerTask implements Task {
         }
 
         log.info("call ['{}', '{}', '{}', '{}'] -> done", params.image(), params.cmd(), workDir, params.hosts());
-
-        if (stdOutVar != null) {
-            ctx.setVariable(stdOutVar, stdOut);
-        }
-
-        if (stdErrVar != null) {
-            ctx.setVariable(stdErrVar, stdErr.toString());
-        }
+        return toMap(stdOut, stdErr.toString());
     }
 
-    private static Map<String, Object> createInput(Context ctx) {
-        Map<String, Object> result = new HashMap<>();
-        for (String k : ALL_KEYS) {
-            result.put(k, ctx.getVariable(k));
-        }
-        return result;
+    private static HashMap<String, String> toMap(String stdOut, String stdErr) {
+        HashMap<String, String> output = new HashMap<>();
+        output.put("stdout", stdOut);
+        output.put("stderr", stdErr);
+        return output;
     }
 }
+

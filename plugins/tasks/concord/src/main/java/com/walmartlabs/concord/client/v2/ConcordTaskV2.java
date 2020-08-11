@@ -21,8 +21,8 @@ package com.walmartlabs.concord.client.v2;
  */
 
 import com.walmartlabs.concord.client.*;
+import com.walmartlabs.concord.runtime.v2.model.ProjectInfo;
 import com.walmartlabs.concord.runtime.v2.sdk.*;
-import com.walmartlabs.concord.sdk.ProjectInfo;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -56,7 +56,13 @@ public class ConcordTaskV2 implements ReentrantTask {
         this.sessionToken = context.processConfiguration().processInfo().sessionToken();
         this.instanceId = context.processInstanceId();
         this.apiClientFactory = apiClientFactory;
-        this.projectInfo = context.projectInfo();
+
+        ProjectInfo projectInfo = context.projectInfo();
+        if (projectInfo == null) {
+            projectInfo = ProjectInfo.builder().build();
+        }
+        this.projectInfo = projectInfo;
+
         this.workDir = context.workingDirectory();
         this.suspender = (resumeFromSameStep, payload) -> {
             if (resumeFromSameStep) {
@@ -122,7 +128,7 @@ public class ConcordTaskV2 implements ReentrantTask {
     }
 
     private ConcordTaskCommon delegate() {
-        return new ConcordTaskCommon(sessionToken, apiClientFactory, (String)defaults.get("processLinkTemplate"), instanceId, projectInfo, workDir, suspender);
+        return new ConcordTaskCommon(sessionToken, apiClientFactory, (String) defaults.get("processLinkTemplate"), instanceId, projectInfo.orgName(), workDir, suspender);
     }
 
     private static List<UUID> toUUIDs(List<String> ids) {

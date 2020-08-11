@@ -27,7 +27,7 @@ public interface PlaybookProcessRunner {
 
     PlaybookProcessRunner withDebug(boolean debug);
 
-    int run(List<String> args, Map<String, String> env, LogCallback callback) throws Exception;
+    int run(List<String> args, Map<String, String> env) throws Exception;
 
     interface LogCallback {
 

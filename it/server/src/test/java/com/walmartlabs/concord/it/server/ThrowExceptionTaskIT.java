@@ -71,6 +71,6 @@ public class ThrowExceptionTaskIT extends AbstractServerIT {
 
         // check logs
         byte[] ab = getLog(pir.getLogFileName());
-        assertLog(".*Kaboom!! Error occurred.*", 3, ab);
+        assertLog(".*Kaboom!! Error occurred.*", 2, ab);
     }
 }

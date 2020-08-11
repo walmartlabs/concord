@@ -20,7 +20,8 @@ package com.walmartlabs.concord.plugins.ansible;
  * =====
  */
 
-import com.walmartlabs.concord.sdk.DockerContainerSpec;
+import com.walmartlabs.concord.plugins.ansible.docker.AnsibleDockerService;
+import com.walmartlabs.concord.plugins.ansible.docker.AnsibleDockerService.DockerContainerSpec;
 
 import java.util.Collection;
 import java.util.List;
@@ -69,17 +70,15 @@ public class DockerPlaybookProcessRunner implements PlaybookProcessRunner {
     }
 
     @Override
-    public int run(List<String> args, Map<String, String> extraEnv, LogCallback logCallback) throws Exception {
-        return dockerService.start(DockerContainerSpec.builder()
+    public int run(List<String> args, Map<String, String> extraEnv) throws Exception {
+        return dockerService.start(new DockerContainerSpec()
                 .image(image)
                 .args(args)
                 .env(extraEnv)
                 .debug(debug)
                 .forcePull(forcePull)
-                .options(DockerContainerSpec.Options.builder().hosts(hosts).build())
-                .workdir("/workspace") // TODO constants? move into the docker service as a default workdir value?
+                .extraDockerHosts(hosts)
                 .pullRetryCount(pullRetryCount)
-                .pullRetryInterval(pullRetryInterval)
-                .build(), logCallback::onLog, null);
+                .pullRetryInterval(pullRetryInterval));
     }
 }

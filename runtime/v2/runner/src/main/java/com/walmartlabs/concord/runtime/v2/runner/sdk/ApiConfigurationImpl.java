@@ -21,9 +21,7 @@ package com.walmartlabs.concord.runtime.v2.runner.sdk;
  */
 
 import com.walmartlabs.concord.runtime.common.cfg.RunnerConfiguration;
-import com.walmartlabs.concord.runtime.v2.model.ProcessConfiguration;
-import com.walmartlabs.concord.sdk.ApiConfiguration;
-import com.walmartlabs.concord.sdk.Context;
+import com.walmartlabs.concord.runtime.v2.sdk.ApiConfiguration;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -32,16 +30,14 @@ import javax.inject.Named;
 public class ApiConfigurationImpl implements ApiConfiguration {
 
     private final RunnerConfiguration runnerCfg;
-    private final ProcessConfiguration processCfg;
 
     @Inject
-    public ApiConfigurationImpl(RunnerConfiguration runnerCfg, ProcessConfiguration processCfg) {
+    public ApiConfigurationImpl(RunnerConfiguration runnerCfg) {
         this.runnerCfg = runnerCfg;
-        this.processCfg = processCfg;
     }
 
     @Override
-    public String getBaseUrl() {
+    public String baseUrl() {
         return runnerCfg.api().baseUrl();
     }
 
@@ -53,10 +49,5 @@ public class ApiConfigurationImpl implements ApiConfiguration {
     @Override
     public int readTimeout() {
         return runnerCfg.api().readTimeout();
-    }
-
-    @Override
-    public String getSessionToken(Context ctx) {
-        return processCfg.processInfo().sessionToken();
     }
 }

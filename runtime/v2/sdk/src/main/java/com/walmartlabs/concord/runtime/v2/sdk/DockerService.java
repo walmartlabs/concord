@@ -20,15 +20,14 @@ package com.walmartlabs.concord.runtime.v2.sdk;
  * =====
  */
 
-import com.walmartlabs.concord.sdk.DockerContainerSpec;
-
 import java.io.IOException;
 
 public interface DockerService {
 
     /**
      * Starts a new Docker container using the provided {@code spec}.
-     * @param spec the container's specification
+     *
+     * @param spec        the container's specification
      * @param outCallback callback for stdout
      * @param errCallback callback for stderr
      * @return exit code of the `docker run` command
