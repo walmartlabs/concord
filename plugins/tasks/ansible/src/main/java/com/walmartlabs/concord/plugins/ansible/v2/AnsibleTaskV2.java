@@ -67,6 +67,7 @@ public class AnsibleTaskV2 implements Task {
         Path tmpDir = context.fileService().createTempDirectory("ansible");
 
         AnsibleContext ctx = AnsibleContext.builder()
+                .apiBaseUrl(apiClient.getBasePath())
                 .instanceId(instanceId)
                 .workDir(workDir)
                 .tmpDir(tmpDir)

@@ -43,7 +43,6 @@ public class CryptoTaskV2 implements Task {
 
     @Inject
     public CryptoTaskV2(Context context) {
-
         this.secretService = context.secretService();
         this.workDir = context.workingDirectory();
         this.processCfg = context.processConfiguration();

@@ -56,7 +56,13 @@ public class ConcordTaskV2 implements ReentrantTask {
         this.sessionToken = context.processConfiguration().processInfo().sessionToken();
         this.instanceId = context.processInstanceId();
         this.apiClientFactory = apiClientFactory;
-        this.projectInfo = context.projectInfo();
+
+        ProjectInfo projectInfo = context.projectInfo();
+        if (projectInfo == null) {
+            projectInfo = ProjectInfo.builder().build();
+        }
+        this.projectInfo = projectInfo;
+
         this.workDir = context.workingDirectory();
         this.suspender = (resumeFromSameStep, payload) -> {
             if (resumeFromSameStep) {
