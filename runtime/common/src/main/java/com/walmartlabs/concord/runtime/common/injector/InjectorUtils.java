@@ -24,10 +24,12 @@ import com.google.inject.TypeLiteral;
 import com.google.inject.matcher.AbstractMatcher;
 import com.google.inject.spi.TypeEncounter;
 import com.google.inject.spi.TypeListener;
+import com.walmartlabs.concord.common.ReflectionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.inject.Named;
+import javax.inject.Singleton;
 
 public final class InjectorUtils {
 
@@ -56,7 +58,12 @@ public final class InjectorUtils {
 
             Named n = klass.getAnnotation(Named.class);
             if (n == null) {
-                log.warn("Task class without @Named: {}", klass);
+                log.warn("Ignoring task class without @Named: {}", klass);
+                return;
+            }
+
+            if (ReflectionUtils.findAnnotation(klass, Singleton.class) != null) {
+                log.warn("Ignoring task class with @Singleton: {}", klass);
                 return;
             }
 
