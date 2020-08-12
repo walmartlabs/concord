@@ -22,27 +22,31 @@ package com.walmartlabs.concord.runtime.v2.runner.tasks;
 
 import com.google.inject.Injector;
 import com.walmartlabs.concord.runtime.common.injector.TaskHolder;
+import com.walmartlabs.concord.runtime.v2.runner.DefaultTaskVariablesService;
+import com.walmartlabs.concord.runtime.v2.runner.context.TaskContext;
 import com.walmartlabs.concord.runtime.v2.sdk.Context;
+import com.walmartlabs.concord.runtime.v2.sdk.MapBackedVariables;
 import com.walmartlabs.concord.runtime.v2.sdk.Task;
 import com.walmartlabs.concord.runtime.v2.sdk.TaskProvider;
 
 import javax.inject.Inject;
+import java.util.Map;
 import java.util.Set;
 
 public class TaskV2Provider implements TaskProvider {
 
     private final Injector injector;
     private final TaskHolder<Task> holder;
-    private final DefaultVariableInjector defaultVariableInjector;
+    private final DefaultTaskVariablesService defaultTaskVariables;
 
     @Inject
     public TaskV2Provider(Injector injector,
                           TaskHolder<Task> holder,
-                          DefaultVariableInjector defaultVariableInjector) {
+                          DefaultTaskVariablesService defaultTaskVariables) {
 
         this.injector = injector;
         this.holder = holder;
-        this.defaultVariableInjector = defaultVariableInjector;
+        this.defaultTaskVariables = defaultTaskVariables;
     }
 
     @Override
@@ -52,8 +56,9 @@ public class TaskV2Provider implements TaskProvider {
             return null;
         }
 
-        return defaultVariableInjector.inject(key,
-                ContextProvider.withContext(ctx, () -> injector.getInstance(klass)));
+        Map<String, Object> defaultVariables = defaultTaskVariables.get(key);
+        TaskContext taskContext = new TaskContext(ctx, new MapBackedVariables(defaultVariables));
+        return ContextProvider.withContext(taskContext, () -> injector.getInstance(klass));
     }
 
     @Override

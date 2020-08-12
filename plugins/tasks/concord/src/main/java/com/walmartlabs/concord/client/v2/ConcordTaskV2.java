@@ -38,12 +38,9 @@ import static com.walmartlabs.concord.client.ConcordTaskParams.KillParams;
 import static com.walmartlabs.concord.client.ConcordTaskParams.ListSubProcesses;
 
 @Named("concord")
-@SuppressWarnings("unused")
 public class ConcordTaskV2 implements ReentrantTask {
 
-    @DefaultVariables
-    Map<String, Object> defaults;
-
+    private final Variables defaults;
     private final String sessionToken;
     private final UUID instanceId;
     private final ApiClientFactory apiClientFactory;
@@ -53,6 +50,7 @@ public class ConcordTaskV2 implements ReentrantTask {
 
     @Inject
     public ConcordTaskV2(ApiClientFactory apiClientFactory, Context context) {
+        this.defaults = context.defaultVariables();
         this.sessionToken = context.processConfiguration().processInfo().sessionToken();
         this.instanceId = context.processInstanceId();
         this.apiClientFactory = apiClientFactory;
@@ -128,7 +126,7 @@ public class ConcordTaskV2 implements ReentrantTask {
     }
 
     private ConcordTaskCommon delegate() {
-        return new ConcordTaskCommon(sessionToken, apiClientFactory, (String) defaults.get("processLinkTemplate"), instanceId, projectInfo.orgName(), workDir, suspender);
+        return new ConcordTaskCommon(sessionToken, apiClientFactory, defaults.getString("processLinkTemplate"), instanceId, projectInfo.orgName(), workDir, suspender);
     }
 
     private static List<UUID> toUUIDs(List<String> ids) {
