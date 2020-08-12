@@ -69,7 +69,7 @@ public final class InjectorUtils {
 
             String key = n.value();
             if ("".equals(key)) {
-                log.warn("Task class without a @Named value: {}", klass);
+                log.warn("Task class with an empty @Named value: {}", klass);
                 return;
             }
 
