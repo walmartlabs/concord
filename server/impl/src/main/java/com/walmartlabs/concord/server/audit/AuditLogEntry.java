@@ -24,8 +24,8 @@ import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
-import com.walmartlabs.concord.server.AllowNulls;
 import com.walmartlabs.concord.server.org.EntityOwner;
+import com.walmartlabs.concord.server.sdk.AllowNulls;
 import org.immutables.value.Value;
 
 import javax.annotation.Nullable;
