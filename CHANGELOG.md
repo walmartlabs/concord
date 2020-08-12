@@ -16,6 +16,8 @@ produce a stacktrace anymore;
 
 ### Breaking
 
+- runtime-v2: `ReentrantTask` now accepts `ResumeEvent` instead of
+`Map<String, Object>`;
 - runtime-v2: `@DefaultVariables` annotation was replaced with
 `Context#defaultVariables()` method;
 - runtime-v2: the SDK module no longer shares interfaces/types with
