@@ -81,8 +81,8 @@ public class ConcordTaskV2 implements ReentrantTask {
     }
 
     @Override
-    public Serializable resume(Map<String, Serializable> payload) throws Exception {
-        return delegate().continueAfterSuspend(new ConcordTaskSuspender.ResumePayload(payload));
+    public Serializable resume(ResumeEvent event) throws Exception {
+        return delegate().continueAfterSuspend(new ConcordTaskSuspender.ResumePayload(event.state()));
     }
 
     public List<String> listSubprocesses(String instanceId, String... tags) throws Exception {

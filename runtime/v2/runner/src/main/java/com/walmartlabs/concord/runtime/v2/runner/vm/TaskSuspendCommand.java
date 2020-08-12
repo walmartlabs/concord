@@ -21,6 +21,7 @@ package com.walmartlabs.concord.runtime.v2.runner.vm;
  */
 
 import com.walmartlabs.concord.runtime.v2.model.TaskCall;
+import com.walmartlabs.concord.runtime.v2.runner.context.ResumeEventImpl;
 import com.walmartlabs.concord.svm.Runtime;
 import com.walmartlabs.concord.svm.*;
 
@@ -35,13 +36,13 @@ public class TaskSuspendCommand implements Command {
     private final UUID correlationId;
     private final String eventName;
     private final TaskCall step;
-    private final Map<String, Serializable> payload;
+    private final Map<String, Serializable> taskState;
 
-    public TaskSuspendCommand(UUID correlationId, String eventName, TaskCall step, Map<String, Serializable> payload) {
+    public TaskSuspendCommand(UUID correlationId, String eventName, TaskCall step, Map<String, Serializable> taskState) {
         this.correlationId = correlationId;
         this.eventName = eventName;
         this.step = step;
-        this.payload = payload;
+        this.taskState = taskState;
     }
 
     @Override
@@ -49,7 +50,7 @@ public class TaskSuspendCommand implements Command {
         Frame frame = state.peekFrame(threadId);
         frame.pop();
 
-        frame.push(new TaskResumeCommand(correlationId, step, payload));
+        frame.push(new TaskResumeCommand(correlationId, step, new ResumeEventImpl(eventName, taskState)));
         frame.push(new SuspendCommand(eventName));
     }
 }
