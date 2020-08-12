@@ -880,9 +880,9 @@ public class MainTest {
         }
 
         @Override
-        public Serializable resume(Map<String, Serializable> payload) {
-            log.info("RESUME: {}", payload);
-            return "k=" + payload.get("k") + ", a=b";
+        public Serializable resume(ResumeEvent event) {
+            log.info("RESUME: {}", event);
+            return "k=" + event.state().get("k") + ", a=b";
         }
     }
 }
