@@ -173,4 +173,9 @@ public class SingleFrameContext extends DummyContext {
     public Variables variables() {
         return new ContextVariables(this);
     }
+
+    @Override
+    public Variables defaultVariables() {
+        throw new IllegalStateException("Not implemented");
+    }
 }

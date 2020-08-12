@@ -24,7 +24,6 @@ import com.walmartlabs.concord.ApiClient;
 import com.walmartlabs.concord.plugins.ansible.*;
 import com.walmartlabs.concord.plugins.ansible.secrets.AnsibleSecretService;
 import com.walmartlabs.concord.runtime.v2.sdk.Context;
-import com.walmartlabs.concord.runtime.v2.sdk.DefaultVariables;
 import com.walmartlabs.concord.runtime.v2.sdk.Task;
 import com.walmartlabs.concord.runtime.v2.sdk.Variables;
 
@@ -42,14 +41,13 @@ public class AnsibleTaskV2 implements Task {
 
     private final Context context;
     private final ApiClient apiClient;
-
-    @DefaultVariables
-    Map<String, Object> defaults;
+    private final Map<String, Object> defaults;
 
     @Inject
     public AnsibleTaskV2(ApiClient apiClient, Context context) {
         this.context = context;
         this.apiClient = apiClient;
+        this.defaults = context.defaultVariables().toMap();
     }
 
     @Override

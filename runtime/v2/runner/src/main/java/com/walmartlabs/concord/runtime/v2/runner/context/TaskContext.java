@@ -1,17 +1,17 @@
-package com.walmartlabs.concord.runtime.v2.runner.el;
+package com.walmartlabs.concord.runtime.v2.runner.context;
 
 /*-
  * *****
  * Concord
  * -----
- * Copyright (C) 2017 - 2019 Walmart Inc.
+ * Copyright (C) 2017 - 2020 Walmart Inc.
  * -----
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- *
+ * 
  *      http://www.apache.org/licenses/LICENSE-2.0
- *
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -22,93 +22,101 @@ package com.walmartlabs.concord.runtime.v2.runner.el;
 
 import com.walmartlabs.concord.runtime.v2.model.ProcessConfiguration;
 import com.walmartlabs.concord.runtime.v2.model.ProjectInfo;
-import com.walmartlabs.concord.runtime.v2.sdk.Compiler;
 import com.walmartlabs.concord.runtime.v2.sdk.*;
+import com.walmartlabs.concord.runtime.v2.sdk.Compiler;
 
 import java.io.Serializable;
 import java.nio.file.Path;
 import java.util.Map;
 import java.util.UUID;
 
-public class DummyContext implements Context {
+public class TaskContext implements Context {
+
+    private final Context delegate;
+    private final Variables defaultVariables;
+
+    public TaskContext(Context delegate, Variables defaultVariables) {
+        this.delegate = delegate;
+        this.defaultVariables = defaultVariables;
+    }
 
     @Override
     public Path workingDirectory() {
-        throw new IllegalStateException("Not implemented");
+        return delegate.workingDirectory();
     }
 
     @Override
     public UUID processInstanceId() {
-        throw new IllegalStateException("Not implemented");
+        return delegate.processInstanceId();
     }
 
     @Override
     public Variables variables() {
-        throw new IllegalStateException("Not implemented");
+        return delegate.variables();
     }
 
     @Override
     public Variables defaultVariables() {
-        throw new IllegalStateException("Not implemented");
+        return defaultVariables;
     }
 
     @Override
     public ProjectInfo projectInfo() {
-        throw new IllegalStateException("Not implemented");
+        return delegate.projectInfo();
     }
 
     @Override
     public FileService fileService() {
-        throw new IllegalStateException("Not implemented");
+        return delegate.fileService();
     }
 
     @Override
     public DockerService dockerService() {
-        throw new IllegalStateException("Not implemented");
+        return delegate.dockerService();
     }
 
     @Override
     public SecretService secretService() {
-        throw new IllegalStateException("Not implemented");
+        return delegate.secretService();
     }
 
     @Override
     public LockService lockService() {
-        throw new IllegalStateException("Not implemented");
+        return delegate.lockService();
     }
 
     @Override
     public ApiConfiguration apiConfiguration() {
-        throw new IllegalStateException("Not implemented");
+        return delegate.apiConfiguration();
     }
 
     @Override
     public ProcessConfiguration processConfiguration() {
-        throw new IllegalStateException("Not implemented");
+        return delegate.processConfiguration();
     }
 
     @Override
     public Execution execution() {
-        throw new IllegalStateException("Not implemented");
+        return delegate.execution();
     }
 
     @Override
     public Compiler compiler() {
-        throw new IllegalStateException("Not implemented");
+        return delegate.compiler();
     }
 
     @Override
     public <T> T eval(Object v, Class<T> type) {
-        throw new IllegalStateException("Not implemented");
+        return delegate.eval(v, type);
     }
 
     @Override
     public void suspend(String eventName) {
-        throw new IllegalStateException("Not implemented");
+        delegate.suspend(eventName);
     }
 
     @Override
     public String suspendResume(Map<String, Serializable> payload) {
-        throw new IllegalStateException("Not implemented");
+        return delegate.suspendResume(payload);
     }
 }

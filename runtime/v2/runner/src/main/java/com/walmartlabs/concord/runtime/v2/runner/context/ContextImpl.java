@@ -33,6 +33,7 @@ import com.walmartlabs.concord.svm.ThreadId;
 
 import java.io.Serializable;
 import java.nio.file.Path;
+import java.util.Collections;
 import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
@@ -108,6 +109,11 @@ public class ContextImpl implements Context {
     @Override
     public Variables variables() {
         return variables;
+    }
+
+    @Override
+    public Variables defaultVariables() {
+        return new MapBackedVariables(Collections.emptyMap());
     }
 
     @Override
