@@ -45,6 +45,11 @@ public interface Context {
 
     Variables variables();
 
+    /**
+     * Default task variables
+     */
+    Variables defaultVariables();
+
     @Nullable
     ProjectInfo projectInfo();
 
