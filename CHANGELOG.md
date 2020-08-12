@@ -9,6 +9,8 @@ used to specify additional JVM options.
 
 ### Changed
 
+- concord-server: allow `null` values in process event data to
+improve backward compatibility with older plugins;
 - runtime-v2: warn about `@Singleton` tasks;
 - runtime-v1, runtime-v2: `throw` with a string value doesn't
 produce a stacktrace anymore;
