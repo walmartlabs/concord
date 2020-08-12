@@ -20,6 +20,7 @@ package com.walmartlabs.concord.server.process.event;
  * =====
  */
 
+import com.walmartlabs.concord.common.AllowNulls;
 import com.walmartlabs.concord.server.sdk.ProcessKey;
 import org.immutables.value.Value;
 
@@ -39,6 +40,7 @@ public interface NewProcessEvent {
     OffsetDateTime eventDate();
 
     @Nullable
+    @AllowNulls
     Map<String, Object> data();
 
     static ImmutableNewProcessEvent.Builder builder() {
