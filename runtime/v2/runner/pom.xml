@@ -54,6 +54,10 @@
             <groupId>com.walmartlabs.concord</groupId>
             <artifactId>concord-policy-engine</artifactId>
         </dependency>
+        <dependency>
+            <groupId>com.walmartlabs.concord</groupId>
+            <artifactId>concord-dependency-manager</artifactId>
+        </dependency>
 
         <dependency>
             <groupId>com.squareup.okhttp</groupId>
