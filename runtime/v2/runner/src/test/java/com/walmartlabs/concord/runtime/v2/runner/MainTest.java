@@ -106,12 +106,13 @@ public class MainTest {
                 install(new BaseRunnerModule());
 
                 bind(CheckpointService.class).toInstance(checkpointService);
-                bind(PersistenceService.class).toInstance(mock(PersistenceService.class));
-                bind(ProcessStatusCallback.class).toInstance(processStatusCallback);
+                bind(DependencyManager.class).to(DefaultDependencyManager.class);
                 bind(DockerService.class).to(DefaultDockerService.class);
                 bind(FileService.class).to(DefaultFileService.class);
-                bind(SecretService.class).to(DefaultSecretService.class);
                 bind(LockService.class).to(DefaultLockService.class);
+                bind(PersistenceService.class).toInstance(mock(PersistenceService.class));
+                bind(ProcessStatusCallback.class).toInstance(processStatusCallback);
+                bind(SecretService.class).to(DefaultSecretService.class);
 
                 Multibinder<TaskProvider> taskProviders = Multibinder.newSetBinder(binder(), TaskProvider.class);
                 taskProviders.addBinding().to(TaskV2Provider.class);
