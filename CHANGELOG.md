@@ -1,5 +1,14 @@
 # Change log
 
+## [Unreleased]
+
+### Added
+
+- runtime-v2: the v2 SDK now provides the `DependencyManager`
+interface.
+
+
+
 ## [1.61.0] - 2020-08-13
 
 ### Added
