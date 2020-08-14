@@ -20,22 +20,20 @@ package com.walmartlabs.concord.runtime.v2.runner.vm;
  * =====
  */
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.walmartlabs.concord.runtime.v2.model.TaskCall;
 import com.walmartlabs.concord.runtime.v2.model.TaskCallOptions;
 import com.walmartlabs.concord.runtime.v2.runner.el.ExpressionEvaluator;
 import com.walmartlabs.concord.runtime.v2.runner.logging.SegmentedLogger;
 import com.walmartlabs.concord.runtime.v2.runner.tasks.TaskCallInterceptor;
 import com.walmartlabs.concord.runtime.v2.runner.tasks.TaskProviders;
-import com.walmartlabs.concord.runtime.v2.sdk.Context;
-import com.walmartlabs.concord.runtime.v2.sdk.MapBackedVariables;
-import com.walmartlabs.concord.runtime.v2.sdk.Task;
-import com.walmartlabs.concord.runtime.v2.sdk.Variables;
+import com.walmartlabs.concord.runtime.v2.sdk.*;
 import com.walmartlabs.concord.svm.Frame;
 import com.walmartlabs.concord.svm.Runtime;
 import com.walmartlabs.concord.svm.State;
 import com.walmartlabs.concord.svm.ThreadId;
 
-import java.io.Serializable;
+import java.util.Map;
 
 import static com.walmartlabs.concord.runtime.v2.runner.tasks.TaskCallInterceptor.CallContext;
 import static com.walmartlabs.concord.runtime.v2.runner.tasks.TaskCallInterceptor.Method;
@@ -81,7 +79,7 @@ public class TaskCallCommand extends StepCommand<TaskCall> {
         TaskCallOptions opts = call.getOptions();
         Variables input = new MapBackedVariables(VMUtils.prepareInput(expressionEvaluator, ctx, opts.input()));
 
-        Serializable result;
+        TaskResult result;
         try {
             result = interceptor.invoke(callContext, Method.of("execute", input),
                     () -> t.execute(input));
@@ -93,7 +91,8 @@ public class TaskCallCommand extends StepCommand<TaskCall> {
 
         String out = opts.out();
         if (out != null) {
-            ctx.variables().set(out, result); // TODO a custom result structure
+            // TODO: better exception messages
+            ctx.variables().set(out, runtime.getService(ObjectMapper.class).convertValue(result, Map.class));
         }
     }
 

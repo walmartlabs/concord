@@ -493,7 +493,7 @@ public class SimpleHttpClient {
      * without executing the request.
      */
     public class ClientResponse {
-        private Map<String, Object> response;
+        private final Map<String, Object> response;
 
         private ClientResponse(Map<String, Object> response) {
             this.response = response;

@@ -23,16 +23,15 @@ package com.walmartlabs.concord.plugins.noderoster;
 import com.walmartlabs.concord.ApiClient;
 import com.walmartlabs.concord.client.*;
 import com.walmartlabs.concord.runtime.v2.sdk.Task;
+import com.walmartlabs.concord.runtime.v2.sdk.TaskResult;
 import com.walmartlabs.concord.runtime.v2.sdk.Variables;
 
 import javax.inject.Inject;
 import javax.inject.Named;
-import java.io.Serializable;
 import java.util.List;
 import java.util.Map;
 
 import static com.walmartlabs.concord.plugins.noderoster.NodeRosterTaskUtils.getAction;
-import static com.walmartlabs.concord.plugins.noderoster.Result.createResponse;
 
 @Named("nodeRoster")
 public class NodeRosterTaskV2 implements Task {
@@ -45,7 +44,7 @@ public class NodeRosterTaskV2 implements Task {
     }
 
     @Override
-    public Serializable execute(Variables input) throws Exception {
+    public TaskResult execute(Variables input) throws Exception {
         Map<String, Object> paramsCfg = input.toMap();
         NodeRosterTaskUtils.Action action = getAction(paramsCfg);
 
@@ -67,27 +66,32 @@ public class NodeRosterTaskV2 implements Task {
     /**
      * Find facts for a given host name or host id
      */
-    public Result findFacts(Map<String, Object> paramsCfg) throws Exception {
+    public TaskResult findFacts(Map<String, Object> paramsCfg) throws Exception {
         NodeRosterFactsApi api = new NodeRosterFactsApi(apiClient);
         Object facts = NodeRosterTaskUtils.findFacts(api, paramsCfg);
-        return createResponse(facts);
+        return result("facts", facts);
     }
 
     /**
      * Find hosts with a deployed artifact
      */
-    public Result findHostsWithArtifacts(Map<String, Object> paramsCfg) throws Exception {
+    public TaskResult findHostsWithArtifacts(Map<String, Object> paramsCfg) throws Exception {
         NodeRosterHostsApi api = new NodeRosterHostsApi(apiClient);
         List<HostEntry> hosts = NodeRosterTaskUtils.findHostsWithArtifacts(api, paramsCfg);
-        return createResponse(hosts);
+        return result("hosts", hosts);
     }
 
     /**
      * Find artifacts deployed on a given host
      */
-    public Result findDeployedArtifacts(Map<String, Object> paramsCfg) throws Exception {
+    public TaskResult findDeployedArtifacts(Map<String, Object> paramsCfg) throws Exception {
         NodeRosterArtifactsApi api = new NodeRosterArtifactsApi(apiClient);
         List<ArtifactEntry> deployedArtifacts = NodeRosterTaskUtils.findDeployedArtifacts(api, paramsCfg);
-        return createResponse(deployedArtifacts);
+        return result("artifacts", deployedArtifacts);
+    }
+
+    private static TaskResult result(String key, Object data) {
+        return new TaskResult(data != null, null, null)
+                .value(key, data);
     }
 }

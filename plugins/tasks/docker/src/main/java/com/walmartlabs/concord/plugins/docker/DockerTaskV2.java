@@ -21,7 +21,6 @@ package com.walmartlabs.concord.plugins.docker;
  */
 
 
-import com.walmartlabs.concord.runtime.v2.sdk.DockerService;
 import com.walmartlabs.concord.runtime.v2.sdk.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -29,11 +28,9 @@ import org.slf4j.LoggerFactory;
 import javax.inject.Inject;
 import javax.inject.Named;
 import java.io.InputStream;
-import java.io.Serializable;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.HashMap;
 
 import static com.walmartlabs.concord.plugins.docker.DockerConstants.SUCCESS_EXIT_CODE;
 
@@ -55,7 +52,7 @@ public class DockerTaskV2 implements Task {
     }
 
     @Override
-    public Serializable execute(Variables input) throws Exception {
+    public TaskResult execute(Variables input) throws Exception {
         Path workDir = this.workDir.getValue();
         TaskParams params = new TaskParams(input);
 
@@ -99,14 +96,9 @@ public class DockerTaskV2 implements Task {
         }
 
         log.info("call ['{}', '{}', '{}', '{}'] -> done", params.image(), params.cmd(), workDir, params.hosts());
-        return toMap(stdOut, stdErr.toString());
-    }
-
-    private static HashMap<String, String> toMap(String stdOut, String stdErr) {
-        HashMap<String, String> output = new HashMap<>();
-        output.put("stdout", stdOut);
-        output.put("stderr", stdErr);
-        return output;
+        return TaskResult.success()
+                .value("stdout", stdOut)
+                .value("stderr", stdErr.toString());
     }
 }
 

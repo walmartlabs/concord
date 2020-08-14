@@ -28,7 +28,6 @@ import com.walmartlabs.concord.runtime.v2.sdk.SecretService.UsernamePassword;
 
 import javax.inject.Inject;
 import javax.inject.Named;
-import java.io.Serializable;
 import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.Map;
@@ -94,7 +93,7 @@ public class CryptoTaskV2 implements Task {
     }
 
     @Override
-    public Serializable execute(Variables input) {
+    public TaskResult execute(Variables input) {
         throw new IllegalStateException("The task doesn't support full task syntax yet. " +
                 "Please call the task using expressions.");
     }

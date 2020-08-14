@@ -26,11 +26,11 @@ import com.walmartlabs.concord.client.ProjectTaskParams;
 import com.walmartlabs.concord.runtime.v2.model.ProjectInfo;
 import com.walmartlabs.concord.runtime.v2.sdk.Context;
 import com.walmartlabs.concord.runtime.v2.sdk.Task;
+import com.walmartlabs.concord.runtime.v2.sdk.TaskResult;
 import com.walmartlabs.concord.runtime.v2.sdk.Variables;
 
 import javax.inject.Inject;
 import javax.inject.Named;
-import java.io.Serializable;
 
 @Named("project")
 public class ProjectTaskV2 implements Task {
@@ -45,8 +45,8 @@ public class ProjectTaskV2 implements Task {
     }
 
     @Override
-    public Serializable execute(Variables input) throws Exception {
+    public TaskResult execute(Variables input) throws Exception {
         delegate.execute(new ProjectTaskParams(input));
-        return null;
+        return TaskResult.success();
     }
 }
