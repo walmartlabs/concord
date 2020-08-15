@@ -20,7 +20,6 @@ package com.walmartlabs.concord.runtime.v2.runner.vm;
  * =====
  */
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.walmartlabs.concord.runtime.v2.model.TaskCall;
 import com.walmartlabs.concord.runtime.v2.model.TaskCallOptions;
 import com.walmartlabs.concord.runtime.v2.runner.el.ExpressionEvaluator;
@@ -32,8 +31,6 @@ import com.walmartlabs.concord.svm.Frame;
 import com.walmartlabs.concord.svm.Runtime;
 import com.walmartlabs.concord.svm.State;
 import com.walmartlabs.concord.svm.ThreadId;
-
-import java.util.Map;
 
 import static com.walmartlabs.concord.runtime.v2.runner.tasks.TaskCallInterceptor.CallContext;
 import static com.walmartlabs.concord.runtime.v2.runner.tasks.TaskCallInterceptor.Method;
@@ -91,8 +88,8 @@ public class TaskCallCommand extends StepCommand<TaskCall> {
 
         String out = opts.out();
         if (out != null) {
-            // TODO: better exception messages
-            ctx.variables().set(out, runtime.getService(ObjectMapper.class).convertValue(result, Map.class));
+            // TODO: check serializable
+            ctx.variables().set(out, result.toMap());
         }
     }
 

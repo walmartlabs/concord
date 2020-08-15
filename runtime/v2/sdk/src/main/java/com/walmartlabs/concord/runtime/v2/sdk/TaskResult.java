@@ -20,15 +20,12 @@ package com.walmartlabs.concord.runtime.v2.sdk;
  * =====
  */
 
-import com.fasterxml.jackson.annotation.*;
-
 import javax.annotation.Nullable;
 import java.io.Serializable;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
-@JsonInclude(JsonInclude.Include.NON_EMPTY)
 public class TaskResult implements Serializable {
 
     public static TaskResult success() {
@@ -39,17 +36,14 @@ public class TaskResult implements Serializable {
         return new TaskResult(false, message, null);
     }
 
-    @JsonProperty
     private final boolean ok;
-    @JsonProperty
     private final String error;
-    private Map<String, Serializable> values;
+    private Map<String, Object> values;
 
     public TaskResult(boolean ok, String error, Map<String, Object> values) {
         this.ok = ok;
         this.error = error;
-        // TODO: check serializable
-        this.values = (Map)values;
+        this.values = values;
     }
 
     public boolean ok() {
@@ -61,13 +55,11 @@ public class TaskResult implements Serializable {
         return error;
     }
 
-    @JsonIgnore
     public TaskResult value(String key, Object value) {
         if (values == null) {
             values = new HashMap<>();
         }
-        // TODO: check serializable
-        values.put(key, (Serializable)value);
+        values.put(key, value);
         return this;
     }
 
@@ -75,13 +67,11 @@ public class TaskResult implements Serializable {
         if (values == null) {
             values = new HashMap<>();
         }
-        // TODO: check serializable
-        values.putAll((Map)items);
+        values.putAll(items);
         return this;
     }
 
-    @JsonAnyGetter
-    public Map<String, Serializable> values() {
+    public Map<String, Object> values() {
         if (values == null) {
             return Collections.emptyMap();
         }
