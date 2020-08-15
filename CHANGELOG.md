@@ -7,6 +7,11 @@
 - runtime-v2: the v2 SDK now provides the `DependencyManager`
 interface.
 
+### Changed
+
+- ansible: when using `auth.privateKey.path` don't remove the file
+after the play's end.
+
 
 
 ## [1.61.0] - 2020-08-13
