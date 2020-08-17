@@ -52,6 +52,8 @@ import com.walmartlabs.concord.server.security.UserPrincipal;
 import com.walmartlabs.concord.server.security.sessionkey.SessionKeyPrincipal;
 import com.walmartlabs.concord.server.user.UserDao;
 import com.walmartlabs.concord.server.user.UserEntry;
+import com.walmartlabs.concord.server.user.UserManager;
+import com.walmartlabs.concord.server.user.UserType;
 import org.apache.shiro.authz.UnauthorizedException;
 import org.sonatype.siesta.ValidationErrorsException;
 
@@ -82,6 +84,7 @@ public class SecretManager {
     private final UserDao userDao;
     private final ProjectAccessManager projectAccessManager;
     private final RepositoryDao repositoryDao;
+    private final UserManager userManager;
 
     @Inject
     public SecretManager(PolicyManager policyManager,
@@ -93,7 +96,8 @@ public class SecretManager {
                          SecretStoreProvider secretStoreProvider,
                          UserDao userDao,
                          ProjectAccessManager projectAccessManager,
-                         RepositoryDao repositoryDao) {
+                         RepositoryDao repositoryDao,
+                         UserManager userManager) {
 
         this.policyManager = policyManager;
         this.processQueueManager = processQueueManager;
@@ -105,6 +109,7 @@ public class SecretManager {
         this.auditLog = auditLog;
         this.projectAccessManager = projectAccessManager;
         this.repositoryDao = repositoryDao;
+        this.userManager = userManager;
     }
 
     @WithTimer
@@ -351,13 +356,15 @@ public class SecretManager {
 
         UUID finalProjectId = projectId;
 
+        UUID ownerId = req.ownerId();
+
         secretDao.tx(tx -> {
             if (!orgIdUpdate.equals(e.getOrgId())) {
                 // update repository mapping to null when org is changing
                 repositoryDao.clearSecretMappingBySecretId(tx, e.getId());
             }
 
-            secretDao.update(tx, e.getId(), req.name(), newEncryptedData, req.visibility(), finalProjectId, orgIdUpdate);
+            secretDao.update(tx, e.getId(), req.name(), ownerId, newEncryptedData, req.visibility(), finalProjectId, orgIdUpdate);
         });
 
         Map<String, Object> changes = DiffUtils.compare(e, secretDao.get(e.getId()));
@@ -713,6 +720,24 @@ public class SecretManager {
         public UUID getId() {
             return id;
         }
+    }
+
+    public UserEntry getOwner(EntityOwner owner, UserEntry defaultOwner) {
+        if (owner == null) {
+            return defaultOwner;
+        }
+
+        if (owner.id() != null) {
+            return userManager.get(owner.id())
+                    .orElseThrow(() -> new ValidationErrorsException("User not found: " + owner.id()));
+        }
+
+        if (owner.username() != null) {
+            return userManager.get(owner.username(), owner.userDomain(), UserType.LDAP)
+                    .orElseThrow(() -> new ConcordApplicationException("User not found: " + owner.username()));
+        }
+
+        return defaultOwner;
     }
 
     /**

@@ -185,15 +185,19 @@ public class SecretDao extends AbstractDao {
         }
     }
 
-    public void update(UUID id, String newName, byte[] data, SecretVisibility visibility, UUID projectId, UUID orgId) {
-        tx(tx -> update(tx, id, newName, data, visibility, projectId, orgId));
+    public void update(UUID id, String newName, UUID ownerId, byte[] data, SecretVisibility visibility, UUID projectId, UUID orgId) {
+        tx(tx -> update(tx, id, newName, ownerId, data, visibility, projectId, orgId));
     }
 
-    public void update(DSLContext tx, UUID id, String newName, byte[] data, SecretVisibility visibility, UUID projectId, UUID orgId) {
+    public void update(DSLContext tx, UUID id, String newName, UUID ownerId, byte[] data, SecretVisibility visibility, UUID projectId, UUID orgId) {
         UpdateSetMoreStep<SecretsRecord> u = tx.update(SECRETS).set(SECRETS.PROJECT_ID, projectId);
 
         if (newName != null) {
             u.set(SECRETS.SECRET_NAME, newName);
+        }
+
+        if (ownerId != null) {
+            u.set(SECRETS.OWNER_ID, ownerId);
         }
 
         if (visibility != null) {

@@ -45,6 +45,9 @@ public interface SecretUpdateRequest extends Serializable {
     String name();
 
     @Nullable
+    UUID ownerId();
+
+    @Nullable
     SecretVisibility visibility();
 
     @Nullable

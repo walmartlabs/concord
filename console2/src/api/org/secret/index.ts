@@ -331,15 +331,13 @@ export const changeOwner = (
     orgName: ConcordKey,
     secretName: ConcordKey,
     ownerId: ConcordId
-): Promise<SecretOperationResult> => {
+): Promise<GenericOperationResult> => {
     const opts = {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-            org: orgName,
-            secret: secretName,
             owner: { id: ownerId }
         })
     };
