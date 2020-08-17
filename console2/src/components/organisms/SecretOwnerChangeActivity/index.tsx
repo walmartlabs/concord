@@ -30,16 +30,17 @@ import { RequestErrorActivity } from '../index';
 interface ExternalProps {
     orgName: ConcordKey;
     secretName: ConcordId;
+    projectName?: ConcordKey;
     initialOwnerId?: ConcordId;
     disabled: boolean;
 }
 
-const SecretOwnerChangeActivity = ({ orgName, secretName, initialOwnerId, disabled }: ExternalProps) => {
+const SecretOwnerChangeActivity = ({ orgName, secretName, projectName, initialOwnerId, disabled }: ExternalProps) => {
     const [value, setValue] = useState(initialOwnerId);
 
     const postData = useCallback(() => {
-        return apiChangeOwner(orgName, secretName, value!);
-    }, [orgName, secretName, value]);
+        return apiChangeOwner(orgName, secretName, value!, projectName || '');
+    }, [orgName, secretName, value, projectName]);
 
     const { error, isLoading, fetch, clearState } = useApi<GenericOperationResult>(postData, {
         fetchOnMount: false,

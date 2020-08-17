@@ -189,6 +189,7 @@ class SecretActivity extends React.PureComponent<Props> {
                     <SecretOwnerChangeActivity
                         orgName={data.orgName}
                         secretName={data.name}
+                        projectName={data.projectName}
                         initialOwnerId={data?.owner?.id}
                         disabled={disabled}
                     />
