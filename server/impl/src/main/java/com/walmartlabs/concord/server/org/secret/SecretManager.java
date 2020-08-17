@@ -52,8 +52,6 @@ import com.walmartlabs.concord.server.security.UserPrincipal;
 import com.walmartlabs.concord.server.security.sessionkey.SessionKeyPrincipal;
 import com.walmartlabs.concord.server.user.UserDao;
 import com.walmartlabs.concord.server.user.UserEntry;
-import com.walmartlabs.concord.server.user.UserManager;
-import com.walmartlabs.concord.server.user.UserType;
 import org.apache.shiro.authz.UnauthorizedException;
 import org.sonatype.siesta.ValidationErrorsException;
 
@@ -95,8 +93,7 @@ public class SecretManager {
                          SecretStoreProvider secretStoreProvider,
                          UserDao userDao,
                          ProjectAccessManager projectAccessManager,
-                         RepositoryDao repositoryDao,
-                         UserManager userManager) {
+                         RepositoryDao repositoryDao) {
 
         this.policyManager = policyManager;
         this.processQueueManager = processQueueManager;
@@ -108,7 +105,6 @@ public class SecretManager {
         this.auditLog = auditLog;
         this.projectAccessManager = projectAccessManager;
         this.repositoryDao = repositoryDao;
-        this.userManager = userManager;
     }
 
     @WithTimer
