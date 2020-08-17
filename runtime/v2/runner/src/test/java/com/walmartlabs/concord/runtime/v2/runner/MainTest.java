@@ -475,6 +475,28 @@ public class MainTest {
     }
 
     @Test
+    public void testWithItemsOut() throws Exception {
+        deploy("withItemsOut");
+
+        save(ProcessConfiguration.builder()
+                .build());
+
+        byte[] log = run();
+        assertLog(log, ".*result: \\[10, 20, 30\\].*");
+    }
+
+    @Test
+    public void testWithItemsTaskOut() throws Exception {
+        deploy("withItemsTaskOut");
+
+        save(ProcessConfiguration.builder()
+                .build());
+
+        byte[] log = run();
+        assertLog(log, ".*result: \\[10, 20, 30\\].*");
+    }
+
+    @Test
     public void testUnknownMethod() throws Exception {
         deploy("unknownMethod");
 

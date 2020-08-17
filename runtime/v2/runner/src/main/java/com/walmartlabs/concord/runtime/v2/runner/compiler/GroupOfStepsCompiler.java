@@ -30,6 +30,7 @@ import com.walmartlabs.concord.runtime.v2.runner.vm.WithItemsWrapper;
 import com.walmartlabs.concord.svm.Command;
 
 import javax.inject.Named;
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -57,7 +58,7 @@ public final class GroupOfStepsCompiler implements StepCompiler<GroupOfSteps> {
         // add "withItems" if needed
         WithItems withItems = options != null ? options.withItems() : null;
         if (withItems != null) {
-            return new WithItemsWrapper(cmd, withItems);
+            return new WithItemsWrapper(cmd, withItems, Collections.emptyList());
         }
 
         return cmd;
