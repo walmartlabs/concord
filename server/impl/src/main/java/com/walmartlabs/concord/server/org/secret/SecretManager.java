@@ -84,7 +84,6 @@ public class SecretManager {
     private final UserDao userDao;
     private final ProjectAccessManager projectAccessManager;
     private final RepositoryDao repositoryDao;
-    private final UserManager userManager;
 
     @Inject
     public SecretManager(PolicyManager policyManager,
