@@ -33,7 +33,6 @@ import java.time.OffsetDateTime;
 import java.util.Map;
 
 @Value.Immutable
-@Value.Style(jdkOnly = true)
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
 @JsonSerialize(as = ImmutableAuditLogEntry.class)
 @JsonDeserialize(as = ImmutableAuditLogEntry.class)

@@ -29,7 +29,6 @@ import java.time.OffsetDateTime;
 import java.util.Map;
 
 @Value.Immutable
-@Value.Style(jdkOnly = true)
 public interface NewProcessEvent {
 
     ProcessKey processKey();
