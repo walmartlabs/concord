@@ -9,6 +9,8 @@ interface.
 
 ### Changed
 
+- concord-server: `OrganizationManager#create` and `#update`
+replaced with a single `createOrUpdate` method;
 - ansible: when using `auth.privateKey.path` don't remove the file
 after the play's end.
 
