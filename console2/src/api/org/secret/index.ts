@@ -18,14 +18,14 @@
  * =====
  */
 
-import { CreateSecretResponse } from '../../../state/data/secrets/types';
+import { CreateSecretResponse } from '../../../state/data/secrets';
 import {
     ConcordId,
     ConcordKey,
     fetchJson,
     GenericOperationResult,
     EntityOwner,
-    queryParams, OperationResult
+    queryParams
 } from '../../common';
 import { ResourceAccessEntry } from '../';
 
@@ -91,12 +91,6 @@ export interface NewSecretEntry {
     generatePassword?: boolean;
     storePassword?: string;
     storeType?: SecretStoreType;
-}
-
-export interface SecretOperationResult {
-    ok: boolean;
-    id: ConcordId;
-    result: OperationResult;
 }
 
 export interface PaginatedSecretEntries {
