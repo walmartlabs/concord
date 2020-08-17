@@ -48,7 +48,9 @@ public class TaskResult implements Serializable {
     public TaskResult(boolean ok, String error, Map<String, Object> values) {
         this.ok = ok;
         this.error = error;
-        this.values = values;
+
+        // make sure the map is serializable and mutable
+        this.values = new HashMap<>(values != null ? values : Collections.emptyMap());
     }
 
     public boolean ok() {
