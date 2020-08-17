@@ -33,7 +33,6 @@ import java.util.Map;
 import java.util.UUID;
 
 @Value.Immutable
-@Value.Style(jdkOnly = true)
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonSerialize(as = ImmutableProcessEventEntry.class)
 @JsonDeserialize(as = ImmutableProcessEventEntry.class)

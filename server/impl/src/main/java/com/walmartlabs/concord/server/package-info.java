@@ -1,4 +1,5 @@
-package com.walmartlabs.concord.server.events;
+@Value.Style(jdkOnly = true)
+package com.walmartlabs.concord.server;
 
 /*-
  * *****
@@ -20,33 +21,4 @@ package com.walmartlabs.concord.server.events;
  * =====
  */
 
-import com.walmartlabs.concord.common.AllowNulls;
-import com.walmartlabs.concord.server.user.UserEntry;
 import org.immutables.value.Value;
-
-import java.util.Collections;
-import java.util.Map;
-import java.util.function.Supplier;
-
-@Value.Immutable
-public interface Event {
-
-    String id();
-
-    String name();
-
-    @Value.Default
-    default Supplier<UserEntry> initiator() {
-        return () -> null;
-    }
-
-    @AllowNulls
-    @Value.Default
-    default Map<String, Object> attributes() {
-        return Collections.emptyMap();
-    }
-
-    static ImmutableEvent.Builder builder() {
-        return ImmutableEvent.builder();
-    }
-}
