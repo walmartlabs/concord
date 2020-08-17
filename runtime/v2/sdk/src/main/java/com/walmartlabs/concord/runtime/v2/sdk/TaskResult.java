@@ -21,6 +21,9 @@ package com.walmartlabs.concord.runtime.v2.sdk;
  */
 
 import javax.annotation.Nullable;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.ObjectOutputStream;
 import java.io.Serializable;
 import java.util.Collections;
 import java.util.HashMap;
@@ -39,6 +42,10 @@ public class TaskResult implements Serializable {
     private final boolean ok;
     private final String error;
     private Map<String, Object> values;
+
+    public TaskResult(boolean ok) {
+        this(ok, null);
+    }
 
     public TaskResult(boolean ok, String error) {
         this.ok = ok;
@@ -66,15 +73,23 @@ public class TaskResult implements Serializable {
         if (values == null) {
             values = new HashMap<>();
         }
+
+        assertKey(key);
+        assertValue(value);
+
         values.put(key, value);
         return this;
     }
 
     public TaskResult values(Map<String, Object> items) {
-        if (values == null) {
-            values = new HashMap<>();
+        if (items == null) {
+            return this;
         }
-        values.putAll(items);
+
+        for (Map.Entry<String, Object> e : items.entrySet()) {
+            value(e.getKey(), e.getValue());
+        }
+
         return this;
     }
 
@@ -95,5 +110,19 @@ public class TaskResult implements Serializable {
             result.putAll(values);
         }
         return result;
+    }
+
+    private static void assertKey(String key) {
+        if ("ok".equals(key) || "error".equals(key)) {
+            throw new IllegalArgumentException("Key '" + key + "' overrides system key");
+        }
+    }
+
+    private static void assertValue(Object value) {
+        try (ObjectOutputStream oos = new ObjectOutputStream(new ByteArrayOutputStream())) {
+            oos.writeObject(value);
+        } catch (IOException e) {
+            throw new IllegalArgumentException("Not serializable value: " + value);
+        }
     }
 }

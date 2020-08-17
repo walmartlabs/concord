@@ -43,7 +43,7 @@ public class SlackTaskV2 implements Task {
         Collection<Object> attachments = input.getCollection(TaskParams.ATTACHMENTS.getKey(), null);
 
         SlackClient.Response r = Slack.sendMessage(slackCfg, channelId, ts, replyBroadcast, text, iconEmoji, username, attachments);
-        return new TaskResult(r.isOk(), r.getError(), null)
+        return new TaskResult(r.isOk(), r.getError())
                 .value("id", Utils.extractString(r, "channel"))
                 .value("ts", r.getTs());
     }

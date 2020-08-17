@@ -41,7 +41,7 @@ public class SerializationUtils {
         }
     }
 
-    @SuppressWarnings("unchecked")
+    @SuppressWarnings({"unchecked", "rawtypes"})
     private static void reportNotSerializableItems(NotSerializableException err, Object o) throws IOException {
         if (o instanceof Variables) {
             Variables v = (Variables) o;

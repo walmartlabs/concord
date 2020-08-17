@@ -301,7 +301,7 @@ public class SecretsTaskCommon {
         }
 
         private static TaskResult result(boolean ok, Status status, String data) {
-            return new TaskResult(ok, null, null)
+            return new TaskResult(ok)
                     .value("status", status.toString())
                     .value("data", data);
         }
