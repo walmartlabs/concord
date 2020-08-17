@@ -722,24 +722,6 @@ public class SecretManager {
         }
     }
 
-    public UserEntry getOwner(EntityOwner owner, UserEntry defaultOwner) {
-        if (owner == null) {
-            return defaultOwner;
-        }
-
-        if (owner.id() != null) {
-            return userManager.get(owner.id())
-                    .orElseThrow(() -> new ValidationErrorsException("User not found: " + owner.id()));
-        }
-
-        if (owner.username() != null) {
-            return userManager.get(owner.username(), owner.userDomain(), UserType.LDAP)
-                    .orElseThrow(() -> new ConcordApplicationException("User not found: " + owner.username()));
-        }
-
-        return defaultOwner;
-    }
-
     /**
      * Scope in which access to secrets is performed. Some scopes require additional security checks.
      */
