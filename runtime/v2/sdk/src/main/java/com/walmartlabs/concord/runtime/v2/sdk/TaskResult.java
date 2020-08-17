@@ -40,6 +40,11 @@ public class TaskResult implements Serializable {
     private final String error;
     private Map<String, Object> values;
 
+    public TaskResult(boolean ok, String error) {
+        this.ok = ok;
+        this.error = error;
+    }
+
     public TaskResult(boolean ok, String error, Map<String, Object> values) {
         this.ok = ok;
         this.error = error;
