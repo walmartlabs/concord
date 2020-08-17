@@ -127,10 +127,11 @@ public class WithItemsWrapper implements Command {
 
         Frame cmdFrame = Frame.builder()
                 .commands(cmd)
-                .nonRoot()
+                .root()
                 .build();
 
-        loop.push(new ProcessOutVariablesCommand(outVariables, cmdFrame));
+        Frame targetFrame = VMUtils.assertNearestRoot(state, threadId);
+        loop.push(new AppendVariablesCommand(outVariables, cmdFrame, targetFrame));
         loop.push(new PrepareOutVariables(outVariables));
 
         state.pushFrame(threadId, loop);
@@ -171,10 +172,11 @@ public class WithItemsWrapper implements Command {
             // frame wrapped command
             Frame cmdFrame = Frame.builder()
                     .commands(cmd)
-                    .nonRoot()
+                    .root()
                     .build();
 
-            loop.push(new ProcessOutVariablesCommand(outVariables, cmdFrame));
+            Frame targetFrame = VMUtils.assertNearestRoot(state, threadId);
+            loop.push(new AppendVariablesCommand(outVariables, cmdFrame, targetFrame));
 
             state.pushFrame(threadId, loop);
             state.pushFrame(threadId, cmdFrame);
@@ -204,34 +206,35 @@ public class WithItemsWrapper implements Command {
         }
     }
 
-    private static class ProcessOutVariablesCommand implements Command {
+    private static class AppendVariablesCommand implements Command {
 
         private static final long serialVersionUID = 1L;
 
-        private final List<String> outVars;
-        private final Frame cmdFrame;
+        private final List<String> variables;
+        private final Frame sourceFrame;
+        private final Frame targetFrame;
 
-        public ProcessOutVariablesCommand(List<String> outVars, Frame cmdFrame) {
-            this.outVars = outVars;
-            this.cmdFrame = cmdFrame;
+        public AppendVariablesCommand(List<String> variables, Frame sourceFrame, Frame targetFrame) {
+            this.variables = variables;
+            this.sourceFrame = sourceFrame;
+            this.targetFrame = targetFrame;
         }
 
         @Override
         @SuppressWarnings("unchecked")
         public void eval(Runtime runtime, State state, ThreadId threadId) {
-            Frame outerFrame = state.peekFrame(threadId);
-            outerFrame.pop();
+            Frame frame = state.peekFrame(threadId);
+            frame.pop();
 
-            if (outVars.isEmpty()) {
+            if (variables.isEmpty()) {
                 return;
             }
 
-            Frame targetFrame = VMUtils.assertNearestRoot(state, threadId);
-            for (String outVar : outVars) {
-                ArrayList<Object> results = (ArrayList<Object>) targetFrame.getLocal(outVar);
-                Object result = null;
-                if (cmdFrame.hasLocal(outVar)) {
-                    result = cmdFrame.getLocal(outVar);
+            for (String v : variables) {
+                ArrayList<Serializable> results = (ArrayList<Serializable>) targetFrame.getLocal(v);
+                Serializable result = null;
+                if (sourceFrame.hasLocal(v)) {
+                    result = sourceFrame.getLocal(v);
                 }
                 results.add(result);
             }

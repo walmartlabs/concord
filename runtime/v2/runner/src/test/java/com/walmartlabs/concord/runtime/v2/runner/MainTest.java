@@ -825,6 +825,16 @@ public class MainTest {
         }
     }
 
+    @Named("resultTask")
+    @SuppressWarnings("unused")
+    static class ResultTask implements Task {
+
+        @Override
+        public Serializable execute(Variables input) {
+            return (Serializable) input.get("result");
+        }
+    }
+
     @Named("loggingExample")
     @SuppressWarnings("unused")
     static class LoggingExampleTask implements Task {

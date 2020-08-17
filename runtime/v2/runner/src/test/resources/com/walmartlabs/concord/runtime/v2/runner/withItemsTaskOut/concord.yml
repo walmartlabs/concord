@@ -1,8 +1,8 @@
 flows:
   default:
-    - task: testTask
+    - task: resultTask
       in:
-        x: "${item}"
+        result: "${item * 10}"
       out: x
       withItems:
         - 1

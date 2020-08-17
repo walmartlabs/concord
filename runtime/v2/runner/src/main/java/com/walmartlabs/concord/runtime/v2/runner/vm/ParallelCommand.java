@@ -21,10 +21,10 @@ package com.walmartlabs.concord.runtime.v2.runner.vm;
  */
 
 import com.walmartlabs.concord.runtime.v2.model.ParallelBlock;
+import com.walmartlabs.concord.runtime.v2.runner.CopyVariablesCommand;
 import com.walmartlabs.concord.svm.Runtime;
 import com.walmartlabs.concord.svm.*;
 
-import java.io.Serializable;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -59,41 +59,8 @@ public class ParallelCommand extends StepCommand<ParallelBlock> {
         Collections.reverse(forks);
         forks.forEach(f -> {
             // each new frame executes it's own copy of ProcessOutVariablesCommand after the user's command is completed
-            Command cmd = new ForkCommand(f.getKey(), new ProcessOutVariablesCommand(frame, outVars), f.getValue());
+            Command cmd = new ForkCommand(f.getKey(), new CopyVariablesCommand(outVars, null, frame), f.getValue());
             frame.push(cmd);
         });
-    }
-
-    /**
-     * Copies specified variables from the current thread into the specified target thread.
-     */
-    public static class ProcessOutVariablesCommand implements Command {
-
-        private static final long serialVersionUID = 1L;
-
-        private final Frame targetFrame;
-        private final List<String> outVars;
-
-        public ProcessOutVariablesCommand(Frame targetFrame, List<String> outVars) {
-            this.targetFrame = targetFrame;
-            this.outVars = outVars;
-        }
-
-        @Override
-        public void eval(Runtime runtime, State state, ThreadId threadId) {
-            Frame frame = state.peekFrame(threadId);
-            frame.pop();
-
-            for (String k : outVars) {
-                // we assume that the current frame is the root frame of the thread
-                // if it wasn't the case we'd need to call VMUtils#getCombinedLocal
-                if (!frame.hasLocal(k)) {
-                    continue;
-                }
-
-                Serializable v = frame.getLocal(k);
-                VMUtils.putLocal(targetFrame, k, v);
-            }
-        }
     }
 }
