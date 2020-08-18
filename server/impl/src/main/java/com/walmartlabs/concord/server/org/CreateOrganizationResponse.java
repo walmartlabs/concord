@@ -32,6 +32,8 @@ import java.util.UUID;
 @JsonInclude(Include.NON_NULL)
 public class CreateOrganizationResponse implements Serializable {
 
+    private static final long serialVersionUID = 1L;
+
     private final boolean ok = true;
     private final UUID id;
     private final OperationResult result;
