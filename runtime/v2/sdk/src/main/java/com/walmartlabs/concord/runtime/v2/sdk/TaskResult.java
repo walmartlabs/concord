@@ -9,9 +9,9 @@ package com.walmartlabs.concord.runtime.v2.sdk;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -29,12 +29,28 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
+/**
+ * Result of a task call. Provides some common fields such as {@link #ok()}
+ * and {@link #error()}, allows arbitrary data in {@link #values()}.
+ * <p/>
+ * All values must be {@link Serializable}, including collection types.
+ * Avoid using custom types/classes as values.
+ */
 public class TaskResult implements Serializable {
 
+    private static final long serialVersionUID = 1L;
+
+    /**
+     * Creates a new instance of {@link TaskResult} with {@link #ok()} set to {@code true}.
+     */
     public static TaskResult success() {
         return new TaskResult(true, null, null);
     }
 
+    /**
+     * Creates a new instance of {@link TaskResult} with {@link #ok()} set to {@code false}
+     * and with the provided error message.
+     */
     public static TaskResult error(String message) {
         return new TaskResult(false, message, null);
     }
@@ -48,8 +64,7 @@ public class TaskResult implements Serializable {
     }
 
     public TaskResult(boolean ok, String error) {
-        this.ok = ok;
-        this.error = error;
+        this(ok, error, null);
     }
 
     public TaskResult(boolean ok, String error, Map<String, Object> values) {
@@ -57,7 +72,7 @@ public class TaskResult implements Serializable {
         this.error = error;
 
         // make sure the map is serializable and mutable
-        this.values = new HashMap<>(values != null ? values : Collections.emptyMap());
+        this.values = values != null ? new HashMap<>(values) : null;
     }
 
     public boolean ok() {
@@ -74,7 +89,6 @@ public class TaskResult implements Serializable {
             values = new HashMap<>();
         }
 
-        assertKey(key);
         assertValue(value);
 
         values.put(key, value);
@@ -100,29 +114,33 @@ public class TaskResult implements Serializable {
         return values;
     }
 
+    /**
+     * Returns a combined map of all values plus additional fields:
+     * <ul>
+     *     <li>{@code ok} - a boolean value, same as {@link #ok()}</li>
+     *     <li>{@code error} - a string value, same as {@link #error()}</li>
+     * </ul>
+     * <p>
+     * Those fields will override any values with the same keys.
+     */
     public Map<String, Object> toMap() {
-        Map<String, Object> result = new HashMap<>();
+        Map<String, Object> result = new HashMap<>(values != null ? values : Collections.emptyMap());
         result.put("ok", ok);
         if (error != null) {
             result.put("error", error);
         }
-        if (values != null) {
-            result.putAll(values);
-        }
         return result;
     }
 
-    private static void assertKey(String key) {
-        if ("ok".equals(key) || "error".equals(key)) {
-            throw new IllegalArgumentException("Key '" + key + "' overrides system key");
-        }
-    }
-
     private static void assertValue(Object value) {
+        if (value == null) {
+            return;
+        }
+
         try (ObjectOutputStream oos = new ObjectOutputStream(new ByteArrayOutputStream())) {
             oos.writeObject(value);
         } catch (IOException e) {
-            throw new IllegalArgumentException("Not serializable value: " + value);
+            throw new IllegalArgumentException("Not a serializable value: " + value + "(class: " + value + ")");
         }
     }
 }
