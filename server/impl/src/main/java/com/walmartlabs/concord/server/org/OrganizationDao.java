@@ -56,6 +56,11 @@ public class OrganizationDao extends AbstractDao {
     }
 
     @Override
+    protected void tx(Tx t) {
+        super.tx(t);
+    }
+
+    @Override
     public <T> T txResult(TxResult<T> t) {
         return super.txResult(t);
     }

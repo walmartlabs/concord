@@ -62,18 +62,8 @@ public class OrganizationResource implements Resource {
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     public CreateOrganizationResponse createOrUpdate(@ApiParam @Valid OrganizationEntry entry) {
-        UUID orgId = entry.getId();
-        if (orgId == null) {
-            orgId = orgDao.getId(entry.getName());
-        }
-
-        if (orgId == null) {
-            orgId = orgManager.create(entry);
-            return new CreateOrganizationResponse(orgId, OperationResult.CREATED);
-        } else {
-            orgManager.update(orgId, entry);
-            return new CreateOrganizationResponse(orgId, OperationResult.UPDATED);
-        }
+        OrganizationOperationResult result = orgManager.createOrUpdate(entry);
+        return new CreateOrganizationResponse(result.orgId(), result.result());
     }
 
     @GET
