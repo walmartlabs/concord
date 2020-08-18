@@ -267,42 +267,122 @@
 
     <!-- ANSIBLE_HOSTS -->
     <changeSet id="ansible-1580100" author="ibodrov@gmail.com">
+        <preConditions onFail="MARK_RAN">
+            <changeLogPropertyDefined property="superuserAvailable" value="true"/>
+        </preConditions>
+
         <sql>
             select ts_to_tstz('ansible_hosts%')
         </sql>
     </changeSet>
 
+    <changeSet id="ansible-1580100-a" author="ibodrov@gmail.com">
+        <preConditions onFail="MARK_RAN">
+            <changeLogPropertyDefined property="superuserAvailable" value="false"/>
+        </preConditions>
+
+        <sql>
+            alter table ANSIBLE_HOSTS
+                alter column INSTANCE_CREATED_AT type timestamptz using INSTANCE_CREATED_AT at time zone 'UTC'
+        </sql>
+    </changeSet>
+
     <!-- ANSIBLE_PLAY_STATS -->
     <changeSet id="ansible-1580110" author="ibodrov@gmail.com">
+        <preConditions onFail="MARK_RAN">
+            <changeLogPropertyDefined property="superuserAvailable" value="true"/>
+        </preConditions>
+
         <sql>
             select ts_to_tstz('ansible_play_stats%')
         </sql>
     </changeSet>
 
+    <changeSet id="ansible-1580110-a" author="ibodrov@gmail.com">
+        <preConditions onFail="MARK_RAN">
+            <changeLogPropertyDefined property="superuserAvailable" value="false"/>
+        </preConditions>
+
+        <sql>
+            alter table ANSIBLE_PLAY_STATS
+                alter column INSTANCE_CREATED_AT type timestamptz using INSTANCE_CREATED_AT at time zone 'UTC'
+        </sql>
+    </changeSet>
+
     <!-- ANSIBLE_PLAYBOOK_RESULT -->
     <changeSet id="ansible-1580120" author="ibodrov@gmail.com">
+        <preConditions onFail="MARK_RAN">
+            <changeLogPropertyDefined property="superuserAvailable" value="true"/>
+        </preConditions>
+
         <sql>
             select ts_to_tstz('ansible_playbook_result%')
         </sql>
     </changeSet>
 
+    <changeSet id="ansible-1580120-a" author="ibodrov@gmail.com">
+        <preConditions onFail="MARK_RAN">
+            <changeLogPropertyDefined property="superuserAvailable" value="false"/>
+        </preConditions>
+
+        <sql>
+            alter table ANSIBLE_PLAYBOOK_RESULT
+                alter column INSTANCE_CREATED_AT type timestamptz using INSTANCE_CREATED_AT at time zone 'UTC'
+        </sql>
+    </changeSet>
+
     <!-- ANSIBLE_PLAYBOOK_STATS -->
     <changeSet id="ansible-1580130" author="ibodrov@gmail.com">
+        <preConditions onFail="MARK_RAN">
+            <changeLogPropertyDefined property="superuserAvailable" value="true"/>
+        </preConditions>
+
         <sql>
             select ts_to_tstz('ansible_playbook_stats%')
         </sql>
     </changeSet>
 
+    <changeSet id="ansible-1580130-a" author="ibodrov@gmail.com">
+        <preConditions onFail="MARK_RAN">
+            <changeLogPropertyDefined property="superuserAvailable" value="false"/>
+        </preConditions>
+
+        <sql>
+            alter table ANSIBLE_PLAYBOOK_STATS
+                alter column INSTANCE_CREATED_AT type timestamptz using INSTANCE_CREATED_AT at time zone 'UTC',
+                alter column STARTED_AT type timestamptz using STARTED_AT at time zone 'UTC'
+        </sql>
+    </changeSet>
+
     <!-- ANSIBLE_TASK_STATS -->
     <changeSet id="ansible-1580140" author="ibodrov@gmail.com">
+        <preConditions onFail="MARK_RAN">
+            <changeLogPropertyDefined property="superuserAvailable" value="true"/>
+        </preConditions>
+
         <sql>
             select ts_to_tstz('ansible_task_stats%')
+        </sql>
+    </changeSet>
+
+    <changeSet id="ansible-1580140-a" author="ibodrov@gmail.com">
+        <preConditions onFail="MARK_RAN">
+            <changeLogPropertyDefined property="superuserAvailable" value="false"/>
+        </preConditions>
+
+        <sql>
+            alter table ANSIBLE_TASK_STATS
+                alter column INSTANCE_CREATED_AT type timestamptz using INSTANCE_CREATED_AT at time zone 'UTC'
         </sql>
     </changeSet>
 
     <!-- indices -->
 
     <changeSet id="ansible-1580200" author="ibodrov@gmail.com">
+        <preConditions onFail="MARK_RAN">
+            <changeLogPropertyDefined property="superuserAvailable" value="true"/>
+        </preConditions>
+
         <sql>
             select ts_to_tstz('idx_a_playbook_stats')
         </sql>

@@ -155,8 +155,23 @@
 
     <!-- NODE_ROSTER_HOSTS -->
     <changeSet id="noderoster-1580100" author="ibodrov@gmail.com">
+        <preConditions onFail="MARK_RAN">
+            <changeLogPropertyDefined property="superuserAvailable" value="true"/>
+        </preConditions>
+
         <sql>
             select ts_to_tstz('node_roster_hosts')
+        </sql>
+    </changeSet>
+
+    <changeSet id="noderoster-1580100-a" author="ibodrov@gmail.com">
+        <preConditions onFail="MARK_RAN">
+            <changeLogPropertyDefined property="superuserAvailable" value="false"/>
+        </preConditions>
+
+        <sql>
+            alter table NODE_ROSTER_HOSTS
+                alter column CREATED_AT type timestamptz using CREATED_AT at time zone 'UTC'
         </sql>
     </changeSet>
 
@@ -164,28 +179,77 @@
 
     <!-- NODE_ROSTER_HOST_ARTIFACTS -->
     <changeSet id="noderoster-1580110" author="ibodrov@gmail.com">
+        <preConditions onFail="MARK_RAN">
+            <changeLogPropertyDefined property="superuserAvailable" value="true"/>
+        </preConditions>
+
         <sql>
             select ts_to_tstz('node_roster_host_artifacts%')
         </sql>
     </changeSet>
 
+    <changeSet id="noderoster-1580110-a" author="ibodrov@gmail.com">
+        <preConditions onFail="MARK_RAN">
+            <changeLogPropertyDefined property="superuserAvailable" value="false"/>
+        </preConditions>
+
+        <sql>
+            alter table NODE_ROSTER_HOST_ARTIFACTS
+                alter column INSTANCE_CREATED_AT type timestamptz using INSTANCE_CREATED_AT at time zone 'UTC'
+        </sql>
+    </changeSet>
+
     <!-- NODE_ROSTER_HOST_FACTS -->
     <changeSet id="noderoster-1580120" author="ibodrov@gmail.com">
+        <preConditions onFail="MARK_RAN">
+            <changeLogPropertyDefined property="superuserAvailable" value="true"/>
+        </preConditions>
+
         <sql>
             select ts_to_tstz('node_roster_host_facts%')
         </sql>
     </changeSet>
 
+    <changeSet id="noderoster-1580120-a" author="ibodrov@gmail.com">
+        <preConditions onFail="MARK_RAN">
+            <changeLogPropertyDefined property="superuserAvailable" value="false"/>
+        </preConditions>
+
+        <sql>
+            alter table NODE_ROSTER_HOST_FACTS
+                alter column INSTANCE_CREATED_AT type timestamptz using INSTANCE_CREATED_AT at time zone 'UTC'
+        </sql>
+    </changeSet>
+
     <!-- NODE_ROSTER_PROCESS_HOSTS -->
     <changeSet id="noderoster-1580130" author="ibodrov@gmail.com">
+        <preConditions onFail="MARK_RAN">
+            <changeLogPropertyDefined property="superuserAvailable" value="true"/>
+        </preConditions>
+
         <sql>
             select ts_to_tstz('node_roster_process_hosts%')
+        </sql>
+    </changeSet>
+
+    <changeSet id="noderoster-1580130-a" author="ibodrov@gmail.com">
+        <preConditions onFail="MARK_RAN">
+            <changeLogPropertyDefined property="superuserAvailable" value="false"/>
+        </preConditions>
+
+        <sql>
+            alter table NODE_ROSTER_PROCESS_HOSTS
+                alter column INSTANCE_CREATED_AT type timestamptz using INSTANCE_CREATED_AT at time zone 'UTC'
         </sql>
     </changeSet>
 
     <!-- indices -->
 
     <changeSet id="noderoster-1580200" author="ibodrov@gmail.com">
+        <preConditions onFail="MARK_RAN">
+            <changeLogPropertyDefined property="superuserAvailable" value="true"/>
+        </preConditions>
+
         <sql>
             select ts_to_tstz('pk_node_roster_process_hosts')
         </sql>
