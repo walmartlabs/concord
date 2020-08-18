@@ -32,6 +32,7 @@ import './styles.css';
 
 interface State {
     scrollAnchorRef: boolean;
+    anchorTagRefScrolled: boolean;
     opts: LogProcessorOptions;
     expandedItems: ConcordId[];
 }
@@ -43,6 +44,7 @@ interface Props {
     data: LogSegment[];
     completed: boolean;
     opts: LogProcessorOptions;
+    selectedCorrelationId?: string;
 
     optsHandler: (opts: LogProcessorOptions) => void;
 
@@ -54,27 +56,43 @@ interface LogContainerProps {
     data: LogSegment[];
     onClick: (correlationId: ConcordId) => void;
     expandedItems: ConcordId[];
+    tagRefs: any[];
 }
 
 const renderTagHeader = (
     taskName: string,
+    tagRefs: any[],
     idx: number,
     expanded?: boolean,
-    onClick?: () => void
+    onClick?: () => void,
+    correlationId?: ConcordId
 ) => (
-    <Divider
-        horizontal={true}
-        key={idx}
-        className={onClick ? 'clickableTagHeader' : undefined}
-        onClick={onClick}>
-        {taskName}
-        {onClick && <Icon name={expanded ? 'chevron up' : 'chevron down'} />}
-    </Divider>
+    <>
+        <div
+            ref={
+                correlationId
+                    ? (element) => {
+                          tagRefs[correlationId] = element;
+                      }
+                    : undefined
+            }
+        />
+
+        <Divider
+            horizontal={true}
+            key={idx}
+            className={onClick ? 'clickableTagHeader' : undefined}
+            onClick={onClick}>
+            {taskName}
+            {onClick && <Icon name={expanded ? 'chevron up' : 'chevron down'} />}
+        </Divider>
+    </>
 );
 
 const renderTag = (
     instanceId: ConcordId,
     tag: TagData,
+    tagRefs: any[],
     onClick: () => void,
     expanded: boolean,
     idx: number
@@ -84,12 +102,12 @@ const renderTag = (
     }
 
     if (!tag.correlationId) {
-        return renderTagHeader(tag.taskName, idx);
+        return renderTagHeader(tag.taskName, tagRefs, idx);
     }
 
     return (
         <div key={idx} className="logTagDetails">
-            {renderTagHeader(tag.taskName, idx, expanded, onClick)}
+            {renderTagHeader(tag.taskName, tagRefs, idx, expanded, onClick, tag.correlationId)}
             {expanded && (
                 <TaskCallDetails instanceId={instanceId} correlationId={tag.correlationId} />
             )}
@@ -97,7 +115,7 @@ const renderTag = (
     );
 };
 
-const LogContainer = ({ instanceId, data, onClick, expandedItems }: LogContainerProps) => (
+const LogContainer = ({ instanceId, data, tagRefs, onClick, expandedItems }: LogContainerProps) => (
     <>
         {data.map(({ data, type }, idx) => {
             switch (type) {
@@ -114,6 +132,7 @@ const LogContainer = ({ instanceId, data, onClick, expandedItems }: LogContainer
                     return renderTag(
                         instanceId,
                         tag,
+                        tagRefs,
                         () => onClick(tag.correlationId),
                         expanded,
                         idx
@@ -129,12 +148,16 @@ const LogContainer = ({ instanceId, data, onClick, expandedItems }: LogContainer
 
 class ProcessLogViewer extends React.Component<Props, State> {
     private scrollAnchorRef: any;
+    private tagRefs: any[];
 
     constructor(props: Props) {
         super(props);
 
+        this.tagRefs = [];
+
         this.state = {
             scrollAnchorRef: false,
+            anchorTagRefScrolled: false,
             opts: props.opts,
             expandedItems: []
         };
@@ -142,14 +165,23 @@ class ProcessLogViewer extends React.Component<Props, State> {
         this.handleScroll = this.handleScroll.bind(this);
         this.scrollToBottom = this.scrollToBottom.bind(this);
         this.handleTagClick = this.handleTagClick.bind(this);
+        this.scrollToTag = this.scrollToTag.bind(this);
     }
 
     componentDidUpdate(prevProps: Props) {
-        const { data } = this.props;
+        const { data, selectedCorrelationId } = this.props;
         const { scrollAnchorRef } = this.state;
 
-        if (prevProps.data !== data && scrollAnchorRef) {
-            this.scrollToBottom();
+        if (prevProps.data !== data) {
+            if (scrollAnchorRef) {
+                this.scrollToBottom();
+            }
+
+            if (prevProps.selectedCorrelationId !== selectedCorrelationId) {
+                this.setState({ anchorTagRefScrolled: selectedCorrelationId === '' });
+            }
+
+            this.scrollToTag();
         }
     }
 
@@ -189,6 +221,16 @@ class ProcessLogViewer extends React.Component<Props, State> {
 
     scrollToBottom() {
         this.scrollAnchorRef.scrollIntoView({ behavior: 'instant' });
+    }
+
+    scrollToTag() {
+        const { selectedCorrelationId } = this.props;
+        const { anchorTagRefScrolled } = this.state;
+
+        if (!anchorTagRefScrolled && selectedCorrelationId && this.tagRefs[selectedCorrelationId]) {
+            this.tagRefs[selectedCorrelationId].scrollIntoView({ behavior: 'instant' });
+            this.setState({ anchorTagRefScrolled: true });
+        }
     }
 
     renderSettingsMenu(opts: LogProcessorOptions) {
@@ -280,6 +322,7 @@ class ProcessLogViewer extends React.Component<Props, State> {
                     instanceId={instanceId}
                     data={data}
                     expandedItems={expandedItems}
+                    tagRefs={this.tagRefs}
                     onClick={this.handleTagClick}
                 />
 
