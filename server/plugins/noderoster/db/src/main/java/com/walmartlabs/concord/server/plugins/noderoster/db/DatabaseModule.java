@@ -26,9 +26,8 @@ import com.google.inject.Provides;
 import com.walmartlabs.concord.db.DataSourceUtils;
 import com.walmartlabs.concord.db.DatabaseChangeLogProvider;
 import com.walmartlabs.concord.db.DatabaseConfiguration;
+import com.walmartlabs.concord.db.MainDB;
 import org.jooq.Configuration;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import javax.inject.Named;
 import javax.inject.Singleton;
@@ -37,17 +36,16 @@ import javax.sql.DataSource;
 @Named
 public class DatabaseModule extends AbstractModule {
 
-    private static final Logger log = LoggerFactory.getLogger(DatabaseModule.class);
-
     @Provides
     @NodeRosterDB
     @Singleton
     public DataSource dataSource(@NodeRosterDB DatabaseConfiguration cfg,
                                  MetricRegistry metricRegistry,
-                                 @NodeRosterDB DatabaseChangeLogProvider changeLogProvider) {
+                                 @NodeRosterDB DatabaseChangeLogProvider changeLogProvider,
+                                 @MainDB DatabaseConfiguration mainCfg) {
 
         DataSource ds = DataSourceUtils.createDataSource(cfg, "noderoster", cfg.username(), cfg.password(), metricRegistry);
-        DataSourceUtils.migrateDb(ds, changeLogProvider);
+        DataSourceUtils.migrateDb(ds, changeLogProvider, mainCfg.changeLogParameters());
         return ds;
     }
 

@@ -158,6 +158,9 @@
                     <username>${db.username}</username>
                     <password>${db.password}</password>
                     <promptOnNonLocalDatabase>false</promptOnNonLocalDatabase>
+                    <expressionVariables>
+                        <superuserAvailable>true</superuserAvailable>
+                    </expressionVariables>
                 </configuration>
             </plugin>
             <plugin>
