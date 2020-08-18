@@ -22,6 +22,7 @@ package com.walmartlabs.concord.plugins.smtp;
 
 import com.walmartlabs.concord.runtime.v2.sdk.Context;
 import com.walmartlabs.concord.runtime.v2.sdk.Task;
+import com.walmartlabs.concord.runtime.v2.sdk.TaskResult;
 import com.walmartlabs.concord.runtime.v2.sdk.Variables;
 
 import javax.inject.Inject;
@@ -42,7 +43,7 @@ public class SmtpTaskV2 implements Task {
     }
 
     @Override
-    public Serializable execute(Variables input) throws Exception {
+    public TaskResult execute(Variables input) throws Exception {
         Map<String, Object> smtp = getCfg(ctx, input, Constants.SMTP_PARAMS_KEY, Constants.SMTP_KEY);
         Map<String, Object> mail = getCfg(ctx, input, Constants.MAIL_PARAMS_KEY, Constants.MAIL_KEY);
         Path baseDir = ctx.workingDirectory();
@@ -50,7 +51,7 @@ public class SmtpTaskV2 implements Task {
         boolean debug = input.getBoolean(Constants.DEBUG_KEY, false);
 
         SmtpTaskUtils.send(smtp, mail, baseDir, scope, debug);
-        return null;
+        return TaskResult.success();
     }
 
     private static Object getScope(Context ctx, Map<String, Object> mailParams) {
