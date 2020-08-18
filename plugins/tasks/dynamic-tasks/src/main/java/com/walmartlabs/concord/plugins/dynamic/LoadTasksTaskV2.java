@@ -23,11 +23,11 @@ package com.walmartlabs.concord.plugins.dynamic;
 import com.google.inject.Injector;
 import com.walmartlabs.concord.runtime.v2.sdk.Context;
 import com.walmartlabs.concord.runtime.v2.sdk.Task;
+import com.walmartlabs.concord.runtime.v2.sdk.TaskResult;
 import com.walmartlabs.concord.runtime.v2.sdk.Variables;
 
 import javax.inject.Inject;
 import javax.inject.Named;
-import java.io.Serializable;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
@@ -52,7 +52,7 @@ public class LoadTasksTaskV2 implements Task {
     }
 
     @Override
-    public Serializable execute(Variables input) throws Exception {
+    public TaskResult execute(Variables input) throws Exception {
         String path = input.assertString("path");
 
         Path src = context.workingDirectory().resolve(path);
@@ -61,6 +61,6 @@ public class LoadTasksTaskV2 implements Task {
         }
 
         new TaskLoader(taskRegistry).load(src);
-        return null;
+        return TaskResult.success();
     }
 }

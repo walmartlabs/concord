@@ -25,13 +25,12 @@ import com.walmartlabs.concord.plugins.ansible.*;
 import com.walmartlabs.concord.plugins.ansible.secrets.AnsibleSecretService;
 import com.walmartlabs.concord.runtime.v2.sdk.Context;
 import com.walmartlabs.concord.runtime.v2.sdk.Task;
+import com.walmartlabs.concord.runtime.v2.sdk.TaskResult;
 import com.walmartlabs.concord.runtime.v2.sdk.Variables;
 
 import javax.inject.Inject;
 import javax.inject.Named;
-import java.io.Serializable;
 import java.nio.file.Path;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
@@ -51,7 +50,7 @@ public class AnsibleTaskV2 implements Task {
     }
 
     @Override
-    public Serializable execute(Variables input) throws Exception {
+    public TaskResult execute(Variables input) throws Exception {
         Map<String, Object> in = input.toMap();
         Path workDir = context.workingDirectory();
 
@@ -78,10 +77,10 @@ public class AnsibleTaskV2 implements Task {
                 .build();
 
         TaskResult result = task.run(ctx, runner);
-        if (!result.isSuccess()) {
-            throw new IllegalStateException("Process finished with exit code " + result.getExitCode());
+        if (!result.ok()) {
+            throw new IllegalStateException("Process finished with exit code " + result.values().get("exitCode"));
         }
 
-        return new HashMap<>(result.getResult());
+        return result;
     }
 }

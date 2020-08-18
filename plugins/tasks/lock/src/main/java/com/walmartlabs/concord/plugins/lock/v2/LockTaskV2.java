@@ -25,11 +25,11 @@ import com.walmartlabs.concord.plugins.lock.LockTaskCommon;
 import com.walmartlabs.concord.plugins.lock.TaskParams;
 import com.walmartlabs.concord.runtime.v2.sdk.Context;
 import com.walmartlabs.concord.runtime.v2.sdk.Task;
+import com.walmartlabs.concord.runtime.v2.sdk.TaskResult;
 import com.walmartlabs.concord.runtime.v2.sdk.Variables;
 
 import javax.inject.Inject;
 import javax.inject.Named;
-import java.io.Serializable;
 
 @Named("lock")
 public class LockTaskV2 implements Task {
@@ -44,12 +44,12 @@ public class LockTaskV2 implements Task {
     }
 
     @Override
-    public Serializable execute(Variables input) throws Exception {
+    public TaskResult execute(Variables input) throws Exception {
         TaskParams params = new TaskParams(input);
 
         delegate.lock(params.lockName(), params.scope(), context::suspend);
 
-        return null;
+        return TaskResult.success();
     }
 
     public void lock(String lockName, String scope) throws Exception {

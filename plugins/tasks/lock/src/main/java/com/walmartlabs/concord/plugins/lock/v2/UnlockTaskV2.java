@@ -25,11 +25,11 @@ import com.walmartlabs.concord.plugins.lock.LockTaskCommon;
 import com.walmartlabs.concord.plugins.lock.TaskParams;
 import com.walmartlabs.concord.runtime.v2.sdk.Context;
 import com.walmartlabs.concord.runtime.v2.sdk.Task;
+import com.walmartlabs.concord.runtime.v2.sdk.TaskResult;
 import com.walmartlabs.concord.runtime.v2.sdk.Variables;
 
 import javax.inject.Inject;
 import javax.inject.Named;
-import java.io.Serializable;
 
 @Named("unlock")
 public class UnlockTaskV2 implements Task {
@@ -41,11 +41,11 @@ public class UnlockTaskV2 implements Task {
         this.delegate = new LockTaskCommon(apiClient, context.processInstanceId());
     }
 
-    public Serializable execute(Variables input) throws Exception {
+    public TaskResult execute(Variables input) throws Exception {
         TaskParams params = new TaskParams(input);
 
         delegate.unlock(params.lockName(), params.scope());
 
-        return null;
+        return TaskResult.success();
     }
 }
