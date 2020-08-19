@@ -12,7 +12,7 @@
 
     <groupId>com.walmartlabs.concord</groupId>
     <artifactId>concord-targetplatform</artifactId>
-    <version>1.61.1-SNAPSHOT</version>
+    <version>1.62.0</version>
 
     <packaging>pom</packaging>
 
@@ -1145,4 +1145,8 @@
             </distributionManagement>
         </profile>
     </profiles>
+
+  <scm>
+    <tag>1.62.0</tag>
+  </scm>
 </project>
