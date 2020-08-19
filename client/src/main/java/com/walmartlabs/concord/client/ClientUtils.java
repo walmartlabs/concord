@@ -83,8 +83,32 @@ public final class ClientUtils {
         throw new ApiException(exception);
     }
 
+    /**
+     * Returns a value of the specified header.
+     * Only the first value is returned.
+     * The header's {@code name} is case-insensitive.
+     */
     public static String getHeader(String name, ApiResponse<?> resp) {
-        return resp.getHeaders().get(name).get(0);
+        Map<String, List<String>> headers = resp.getHeaders();
+        if (headers == null) {
+            return null;
+        }
+
+        for (Map.Entry<String, List<String>> e : headers.entrySet()) {
+            if (!e.getKey().equalsIgnoreCase(name)) {
+                continue;
+            }
+
+            List<String> values = e.getValue();
+
+            if (values == null || values.isEmpty()) {
+                return null;
+            }
+
+            return values.get(0);
+        }
+
+        return null;
     }
 
     public static <T> ApiResponse<T> postData(ApiClient client, String path, Object data) throws ApiException {
