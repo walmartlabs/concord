@@ -5,6 +5,10 @@
         xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.3.xsd">
 
     <changeSet id="noderoster-10000" author="ibodrov@gmail.com">
+        <preConditions onFail="MARK_RAN">
+            <changeLogPropertyDefined property="createExtensionAvailable" value="true"/>
+        </preConditions>
+
         <sql>
             CREATE EXTENSION IF NOT EXISTS "uuid-ossp"
         </sql>
