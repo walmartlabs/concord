@@ -1,4 +1,4 @@
-package com.walmartlabs.concord.server.events;
+package com.walmartlabs.concord.server.org;
 
 /*-
  * *****
@@ -20,33 +20,28 @@ package com.walmartlabs.concord.server.events;
  * =====
  */
 
-import com.walmartlabs.concord.common.AllowNulls;
-import com.walmartlabs.concord.server.user.UserEntry;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.walmartlabs.concord.server.OperationResult;
 import org.immutables.value.Value;
 
-import java.util.Collections;
-import java.util.Map;
-import java.util.function.Supplier;
+import java.util.UUID;
 
 @Value.Immutable
-public interface Event {
-
-    String id();
-
-    String name();
+@JsonSerialize(as = ImmutableOrganizationOperationResult.class)
+@JsonDeserialize(as = ImmutableOrganizationOperationResult.class)
+public interface OrganizationOperationResult {
 
     @Value.Default
-    default Supplier<UserEntry> initiator() {
-        return () -> null;
+    default boolean ok() {
+        return true;
     }
 
-    @AllowNulls
-    @Value.Default
-    default Map<String, Object> attributes() {
-        return Collections.emptyMap();
-    }
+    OperationResult result();
 
-    static ImmutableEvent.Builder builder() {
-        return ImmutableEvent.builder();
+    UUID orgId();
+
+    static ImmutableOrganizationOperationResult.Builder builder() {
+        return ImmutableOrganizationOperationResult.builder();
     }
 }

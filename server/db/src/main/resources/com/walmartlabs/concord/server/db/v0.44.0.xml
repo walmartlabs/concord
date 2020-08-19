@@ -6,6 +6,10 @@
 
     <!-- enable UUID generation -->
     <changeSet id="44000-init" author="ibodrov@gmail.com">
+        <preConditions onFail="MARK_RAN">
+            <changeLogPropertyDefined property="superuserAvailable" value="true"/>
+        </preConditions>
+
         <sql>
             CREATE EXTENSION IF NOT EXISTS "uuid-ossp"
         </sql>

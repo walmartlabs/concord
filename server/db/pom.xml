@@ -164,6 +164,9 @@
                     <password>${db.password}</password>
                     <promptOnNonLocalDatabase>false</promptOnNonLocalDatabase>
                     <contexts>codegen</contexts>
+                    <expressionVariables>
+                        <superuserAvailable>true</superuserAvailable>
+                    </expressionVariables>
                 </configuration>
             </plugin>
             <plugin>

@@ -25,6 +25,7 @@ import com.walmartlabs.concord.client.SecretsTaskCommon;
 import com.walmartlabs.concord.client.SecretsTaskParams;
 import com.walmartlabs.concord.runtime.v2.sdk.Context;
 import com.walmartlabs.concord.runtime.v2.sdk.Task;
+import com.walmartlabs.concord.runtime.v2.sdk.TaskResult;
 import com.walmartlabs.concord.runtime.v2.sdk.Variables;
 
 import javax.inject.Inject;
@@ -45,8 +46,7 @@ public class SecretsTaskV2 implements Task {
     }
 
     @Override
-    public Serializable execute(Variables input) throws Exception {
-        Map<String, Object> result = delegate.execute(SecretsTaskParams.of(input));
-        return new HashMap<>(result);
+    public TaskResult execute(Variables input) throws Exception {
+        return delegate.execute(SecretsTaskParams.of(input));
     }
 }

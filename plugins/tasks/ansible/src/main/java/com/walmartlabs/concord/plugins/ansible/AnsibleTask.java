@@ -25,6 +25,7 @@ import com.fasterxml.jackson.databind.SerializationFeature;
 import com.walmartlabs.concord.ApiClient;
 import com.walmartlabs.concord.client.ProcessEventsApi;
 import com.walmartlabs.concord.plugins.ansible.secrets.AnsibleSecretService;
+import com.walmartlabs.concord.runtime.v2.sdk.TaskResult;
 import com.walmartlabs.concord.sdk.Constants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -45,7 +46,6 @@ import static com.walmartlabs.concord.sdk.MapUtils.*;
 public class AnsibleTask {
 
     private static final Logger log = LoggerFactory.getLogger(AnsibleTask.class);
-    private static final Logger processLog = LoggerFactory.getLogger("processLog");
 
     private static final int SUCCESS_EXIT_CODE = 0;
 
@@ -150,7 +150,8 @@ public class AnsibleTask {
                 log.warn("Playbook is finished with code {}", code);
             }
 
-            return new TaskResult(success, result, code);
+            return new TaskResult(success, null, result)
+                    .value("exitCode", code);
         } finally {
             callbacks.stopEventSender();
 

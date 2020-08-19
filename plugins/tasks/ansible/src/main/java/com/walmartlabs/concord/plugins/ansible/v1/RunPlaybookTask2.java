@@ -24,6 +24,7 @@ import com.walmartlabs.concord.ApiClient;
 import com.walmartlabs.concord.client.ApiClientConfiguration;
 import com.walmartlabs.concord.client.ApiClientFactory;
 import com.walmartlabs.concord.plugins.ansible.*;
+import com.walmartlabs.concord.runtime.v2.sdk.TaskResult;
 import com.walmartlabs.concord.sdk.*;
 
 import javax.inject.Inject;
@@ -124,9 +125,9 @@ public class RunPlaybookTask2 implements Task {
                 .create(args);
 
         TaskResult result = task.run(context, runner);
-        result.getResult().forEach(ctx::setVariable);
-        if (!result.isSuccess()) {
-            throw new IllegalStateException("Process finished with exit code " + result.getExitCode());
+        result.values().forEach(ctx::setVariable);
+        if (!result.ok()) {
+            throw new IllegalStateException("Process finished with exit code " + result.values().get("exitCode"));
         }
     }
 

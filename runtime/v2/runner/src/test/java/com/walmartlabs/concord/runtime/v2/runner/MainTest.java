@@ -788,9 +788,9 @@ public class MainTest {
         }
 
         @Override
-        public Serializable execute(Variables input) {
+        public TaskResult execute(Variables input) {
             System.out.println("defaultsMap:" + defaults.toMap());
-            return null;
+            return TaskResult.success();
         }
 
         @Value.Immutable
@@ -810,8 +810,9 @@ public class MainTest {
     static class WrapExpressionTask implements Task {
 
         @Override
-        public Serializable execute(Variables input) {
-            return "${" + input.get("expression") + "}";
+        public TaskResult execute(Variables input) {
+            return TaskResult.success()
+                    .value("expression", "${" + input.get("expression") + "}");
         }
     }
 
@@ -820,8 +821,9 @@ public class MainTest {
     static class TestTask implements Task {
 
         @Override
-        public Serializable execute(Variables input) {
-            return new HashMap<>(input.toMap());
+        public TaskResult execute(Variables input) {
+            return TaskResult.success()
+                    .values(input.toMap());
         }
     }
 
@@ -843,7 +845,7 @@ public class MainTest {
         private static final Logger processLog = LoggerFactory.getLogger("processLog");
 
         @Override
-        public Serializable execute(Variables input) throws Exception {
+        public TaskResult execute(Variables input) throws Exception {
             log.info("This goes into a regular log");
             processLog.info("This is a processLog entry");
             System.out.println("This goes directly into the stdout");
@@ -879,7 +881,7 @@ public class MainTest {
     static class FaultyTask implements Task {
 
         @Override
-        public Serializable execute(Variables input) {
+        public TaskResult execute(Variables input) {
             throw new RuntimeException("boom!");
         }
     }
@@ -900,7 +902,7 @@ public class MainTest {
         }
 
         @Override
-        public Serializable execute(Variables input) {
+        public TaskResult execute(Variables input) {
             log.info("execute {}", input.toMap());
 
             HashMap<String, Serializable> payload = new HashMap<>();
@@ -909,7 +911,7 @@ public class MainTest {
 
             EVENT_NAME = context.suspendResume(payload);
 
-            return null;
+            return TaskResult.success();
         }
 
         @Override

@@ -24,6 +24,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.walmartlabs.concord.ApiClient;
 import com.walmartlabs.concord.ApiException;
 import com.walmartlabs.concord.common.IOUtils;
+import com.walmartlabs.concord.runtime.v2.sdk.TaskResult;
 import com.walmartlabs.concord.sdk.Constants;
 import com.walmartlabs.concord.sdk.MapUtils;
 import org.apache.commons.compress.archivers.zip.ZipArchiveOutputStream;
@@ -84,19 +85,21 @@ public class ConcordTaskCommon {
         this.suspender = suspender;
     }
 
-    public Serializable execute(ConcordTaskParams in) throws Exception {
+    public TaskResult execute(ConcordTaskParams in) throws Exception {
         Action action = in.action();
         switch (action) {
             case START: {
-                return new HashMap<>(startChildProcess((StartParams) in));
+                return startChildProcess((StartParams) in);
             }
             case STARTEXTERNAL: {
-                return new HashMap<>(startExternalProcess((StartExternalParams) in));
+                return startExternalProcess((StartExternalParams) in);
             }
             case FORK: {
-                return fork((ForkParams) in).stream()
+                List<String> forks = fork((ForkParams) in).stream()
                         .map(UUID::toString)
-                        .collect(Collectors.toCollection(ArrayList::new));
+                        .collect(Collectors.toList());
+                return TaskResult.success()
+                        .value("forks", forks);
             }
             case KILL: {
                 kill((KillParams) in);
@@ -192,18 +195,18 @@ public class ConcordTaskCommon {
         });
     }
 
-    private Map<String, Object> startExternalProcess(StartExternalParams in) throws Exception {
+    private TaskResult startExternalProcess(StartExternalParams in) throws Exception {
         // just the validation
         in.apiKey();
 
         return start(in, null);
     }
 
-    private Map<String, Object> startChildProcess(StartParams in) throws Exception {
+    private TaskResult startChildProcess(StartParams in) throws Exception {
         return start(in, currentProcessId);
     }
 
-    private Map<String, Object> start(StartParams in, UUID parentInstanceId) throws Exception {
+    private TaskResult start(StartParams in, UUID parentInstanceId) throws Exception {
         Path archive = archivePayload(workDir, in);
         String project = in.project();
         if (project == null && archive == null) {
@@ -270,7 +273,7 @@ public class ConcordTaskCommon {
                         Collections.singletonList(processId), in.ignoreFailures());
 
                 suspend(resume, true);
-                return Collections.emptyMap();
+                return TaskResult.success();
             }
 
             Map<String, ProcessEntry> result = waitForCompletion(Collections.singletonList(processId), -1, Function.identity());
@@ -280,10 +283,11 @@ public class ConcordTaskCommon {
             if (!in.outVars().isEmpty()) {
                 out = getOutVars(in.baseUrl(), in.apiKey(), processId);
             }
-            return out;
+            return TaskResult.success()
+                    .values(out);
         }
 
-        return Collections.emptyMap();
+        return TaskResult.success();
     }
 
     public Serializable continueAfterSuspend(ResumePayload payload) throws Exception {

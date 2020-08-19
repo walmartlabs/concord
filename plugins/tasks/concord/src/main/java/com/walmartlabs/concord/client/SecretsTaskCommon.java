@@ -23,11 +23,11 @@ package com.walmartlabs.concord.client;
 import com.walmartlabs.concord.ApiClient;
 import com.walmartlabs.concord.ApiException;
 import com.walmartlabs.concord.ApiResponse;
+import com.walmartlabs.concord.runtime.v2.sdk.TaskResult;
 import com.walmartlabs.concord.sdk.Constants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.Serializable;
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
 import java.util.HashMap;
@@ -50,10 +50,10 @@ public class SecretsTaskCommon {
         this.defaultOrg = defaultOrg;
     }
 
-    public Map<String, Object> execute(SecretsTaskParams in) throws Exception {
+    public TaskResult execute(SecretsTaskParams in) throws Exception {
         Action action = in.action();
 
-        Result result;
+        TaskResult result;
         switch (action) {
             case GETASSTRING: {
                 result = getAsString((AsStringParams)in);
@@ -76,10 +76,10 @@ public class SecretsTaskCommon {
             }
         }
 
-        return result.toMap();
+        return result;
     }
 
-    private Result getAsString(AsStringParams in) {
+    private TaskResult getAsString(AsStringParams in) {
         String orgName = in.orgName(defaultOrg);
         String secretName = in.secretName();
 
@@ -137,12 +137,12 @@ public class SecretsTaskCommon {
         return m;
     }
 
-    private Result create(CreateParams in) throws Exception {
+    private TaskResult create(CreateParams in) throws Exception {
         Map<String, Object> params = makeCreateParams(in);
         return create(in, params);
     }
 
-    private Result create(CreateParams in, Map<String, Object> params) throws Exception {
+    private TaskResult create(CreateParams in, Map<String, Object> params) throws Exception {
         String orgName = in.orgName(defaultOrg);
         String secretName = in.secretName();
 
@@ -155,7 +155,7 @@ public class SecretsTaskCommon {
         return Result.ok();
     }
 
-    private Result update(UpdateParams in) throws Exception {
+    private TaskResult update(UpdateParams in) throws Exception {
 
         String newData = null;
         Object data = in.data();
@@ -205,7 +205,7 @@ public class SecretsTaskCommon {
         }
     }
 
-    private Result delete(SecretsTaskParams in) {
+    private TaskResult delete(SecretsTaskParams in) {
         String secretName = in.secretName();
 
         try {
@@ -244,11 +244,11 @@ public class SecretsTaskCommon {
         }
     }
 
-    private static Result handleErrors(SecretsTaskParams in, String secretName, ApiException e) {
+    private static TaskResult handleErrors(SecretsTaskParams in, String secretName, ApiException e) {
         return handleErrors(in, secretName, e.getCode(), e.getResponseBody());
     }
 
-    private static Result handleErrors(SecretsTaskParams in, String secretName, int code, String responseBody) {
+    private static TaskResult handleErrors(SecretsTaskParams in, String secretName, int code, String responseBody) {
         boolean ignoreErrors = in.ignoreErrors();
 
         if (code == 401) {
@@ -278,56 +278,32 @@ public class SecretsTaskCommon {
         ACCESS_DENIED
     }
 
-    static class Result implements Serializable {
+    static class Result {
 
-        private static Result ok() {
-            return new Result(true, Status.OK, null);
+        private static TaskResult ok() {
+            return result(true, Status.OK, null);
         }
 
-        private static Result ok(String data) {
-            return new Result(true, Status.OK, data);
+        private static TaskResult ok(String data) {
+            return result(true, Status.OK, data);
         }
 
-        private static Result notFound() {
-            return new Result(false, Status.NOT_FOUND, null);
+        private static TaskResult notFound() {
+            return result(false, Status.NOT_FOUND, null);
         }
 
-        private static Result invalidRequest() {
-            return new Result(false, Status.INVALID_REQUEST, null);
+        private static TaskResult invalidRequest() {
+            return result(false, Status.INVALID_REQUEST, null);
         }
 
-        private static Result accessDenied() {
-            return new Result(false, Status.ACCESS_DENIED, null);
+        private static TaskResult accessDenied() {
+            return result(false, Status.ACCESS_DENIED, null);
         }
 
-        private final boolean ok;
-        private final Status status;
-        private final String data;
-
-        private Result(boolean ok, Status status, String data) {
-            this.ok = ok;
-            this.status = status;
-            this.data = data;
-        }
-
-        public boolean isOk() {
-            return ok;
-        }
-
-        public Status getStatus() {
-            return status;
-        }
-
-        public String getData() {
-            return data;
-        }
-
-        public Map<String, Object> toMap() {
-            Map<String, Object> m = new HashMap<>();
-            m.put("ok", this.ok);
-            m.put("status", this.status.toString());
-            m.put("data", this.data);
-            return m;
+        private static TaskResult result(boolean ok, Status status, String data) {
+            return new TaskResult(ok)
+                    .value("status", status.toString())
+                    .value("data", data);
         }
     }
 }

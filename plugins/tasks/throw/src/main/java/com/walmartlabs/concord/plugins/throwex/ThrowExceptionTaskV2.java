@@ -21,6 +21,7 @@ package com.walmartlabs.concord.plugins.throwex;
  */
 
 import com.walmartlabs.concord.runtime.v2.sdk.Task;
+import com.walmartlabs.concord.runtime.v2.sdk.TaskResult;
 import com.walmartlabs.concord.runtime.v2.sdk.UserDefinedException;
 import com.walmartlabs.concord.runtime.v2.sdk.Variables;
 
@@ -31,7 +32,7 @@ import java.io.Serializable;
 public class ThrowExceptionTaskV2 implements Task {
 
     @Override
-    public Serializable execute(Variables input) throws Exception {
+    public TaskResult execute(Variables input) throws Exception {
         Object exception = input.get("exception");
 
         if (exception instanceof Exception) {

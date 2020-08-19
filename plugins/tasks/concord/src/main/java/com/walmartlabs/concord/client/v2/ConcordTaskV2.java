@@ -74,7 +74,7 @@ public class ConcordTaskV2 implements ReentrantTask {
     }
 
     @Override
-    public Serializable execute(Variables in) throws Exception {
+    public TaskResult execute(Variables in) throws Exception {
         return delegate().execute(ConcordTaskParams.of(in));
     }
 
