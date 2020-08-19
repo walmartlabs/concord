@@ -57,7 +57,7 @@ public class SecretClient {
         this.retryInterval = retryInterval;
     }
 
-    public <T extends Secret> T getData(String orgName, String secretName, String password, SecretEntry.TypeEnum type) throws Exception {
+    public <T extends Secret> T getData(String orgName, String secretName, String password, SecretEntry.TypeEnum expectedType) throws Exception {
         String path = "/api/v1/org/" + orgName + "/secret/" + secretName + "/data";
 
         ApiResponse<File> r = null;
@@ -77,13 +77,18 @@ public class SecretClient {
                 throw new IllegalArgumentException("Secret not found: " + orgName + "/" + secretName);
             }
 
-            SecretEntry.TypeEnum actualSecretType = SecretEntry.TypeEnum.valueOf(ClientUtils.getHeader(Constants.Headers.SECRET_TYPE, r));
+            String secretType = ClientUtils.getHeader(Constants.Headers.SECRET_TYPE, r);
+            if (secretType == null) {
+                throw new IllegalStateException("Can't determine the secret's expectedType. Server response: code=" + r.getStatusCode() + ", path=" + path);
+            }
 
-            if (type != null && type != actualSecretType) {
-                String msg = "Unexpected type of %s/%s. Expected %s, got %s. " +
-                        "Check the secret's type and its usage - some secrets can only be used for specific purposes " +
+            SecretEntry.TypeEnum actualSecretType = SecretEntry.TypeEnum.valueOf(secretType);
+
+            if (expectedType != null && expectedType != actualSecretType) {
+                String msg = "Unexpected expectedType of %s/%s. Expected %s, got %s. " +
+                        "Check the secret's expectedType and its usage - some secrets can only be used for specific purposes " +
                         "(e.g. %s is typically used for key-based authentication).";
-                throw new IllegalArgumentException(String.format(msg, orgName, secretName, type, actualSecretType, SecretEntry.TypeEnum.KEY_PAIR));
+                throw new IllegalArgumentException(String.format(msg, orgName, secretName, expectedType, actualSecretType, SecretEntry.TypeEnum.KEY_PAIR));
             }
 
             return readSecret(actualSecretType, Files.readAllBytes(r.getData().toPath()));
