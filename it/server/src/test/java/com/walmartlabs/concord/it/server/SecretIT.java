@@ -23,6 +23,8 @@ package com.walmartlabs.concord.it.server;
 import com.walmartlabs.concord.client.*;
 import org.junit.Test;
 
+import java.util.UUID;
+
 import static org.junit.Assert.assertNotNull;
 
 public class SecretIT extends AbstractServerIT {
@@ -50,6 +52,10 @@ public class SecretIT extends AbstractServerIT {
         // ---
 
         SecretsApi secretsApi = new SecretsApi(getApiClient());
+        SecretUpdateRequest req = new SecretUpdateRequest();
+        req.setOwnerId(UUID.fromString("4b9d496a-c3a0-4e1b-804c-ac3fccddcb27"));
+        secretsApi.update(orgName, secretName, req);
+
         PublicKeyResponse pkr = secretsApi.getPublicKey(orgName, secretName);
 
         assertNotNull(pkr);

@@ -56,6 +56,7 @@ public class SecretDaoTest extends AbstractDaoTest {
         SecretDao secretDao = new SecretDao(getConfiguration());
         UUID secretId = secretDao.insert(orgId, null, secretName, null, SecretType.KEY_PAIR, SecretEncryptedByType.SERVER_KEY, "concord", SecretVisibility.PUBLIC, INSERT);
         secretDao.updateData(secretId, new byte[]{0, 1, 2});
+        secretDao.update(secretId, secretName, UUID.fromString("4b9d496a-c3a0-4e1b-804c-ac3fccddcb27"), new byte[0], null, projectId, orgId);
 
         String repoName = "repo#" + System.currentTimeMillis();
         RepositoryDao repositoryDao = new RepositoryDao(getConfiguration(), new ConcordObjectMapper(TestObjectMapper.INSTANCE));

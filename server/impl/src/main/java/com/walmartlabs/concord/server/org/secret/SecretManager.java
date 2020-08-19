@@ -52,6 +52,8 @@ import com.walmartlabs.concord.server.security.UserPrincipal;
 import com.walmartlabs.concord.server.security.sessionkey.SessionKeyPrincipal;
 import com.walmartlabs.concord.server.user.UserDao;
 import com.walmartlabs.concord.server.user.UserEntry;
+import com.walmartlabs.concord.server.user.UserManager;
+import com.walmartlabs.concord.server.user.UserType;
 import org.apache.shiro.authz.UnauthorizedException;
 import org.sonatype.siesta.ValidationErrorsException;
 
@@ -82,6 +84,7 @@ public class SecretManager {
     private final UserDao userDao;
     private final ProjectAccessManager projectAccessManager;
     private final RepositoryDao repositoryDao;
+    private final UserManager userManager;
 
     @Inject
     public SecretManager(PolicyManager policyManager,
@@ -93,7 +96,8 @@ public class SecretManager {
                          SecretStoreProvider secretStoreProvider,
                          UserDao userDao,
                          ProjectAccessManager projectAccessManager,
-                         RepositoryDao repositoryDao) {
+                         RepositoryDao repositoryDao,
+                         UserManager userManager) {
 
         this.policyManager = policyManager;
         this.processQueueManager = processQueueManager;
@@ -105,6 +109,7 @@ public class SecretManager {
         this.auditLog = auditLog;
         this.projectAccessManager = projectAccessManager;
         this.repositoryDao = repositoryDao;
+        this.userManager = userManager;
     }
 
     @WithTimer
@@ -263,11 +268,25 @@ public class SecretManager {
      */
     public void update(String orgName, String secretName, SecretUpdateRequest req) {
         SecretEntry e;
-        if (req.id() == null) {
+
+        if(req.id() == null) {
             OrganizationEntry org = orgManager.assertAccess(null, orgName, false);
             e = assertAccess(org.getId(), null, secretName, ResourceAccessLevel.WRITER, true);
         } else {
             e = assertAccess(null, req.id(), null, ResourceAccessLevel.WRITER, true);
+        }
+
+        UserEntry owner = getOwner(req, null);
+
+        policyManager.checkEntity(e.getOrgId(), req.projectId(), EntityType.SECRET, EntityAction.UPDATE, owner,
+                PolicyUtils.toMap(e.getOrgId(), e.getName(), e.getType(), e.getVisibility(), e.getStoreType()));
+
+        UUID currentOwnerId = e.getOwner() != null ? e.getOwner().id() : null;
+        UUID updatedOwnerId = owner != null ? owner.getId() : null;
+
+        if (updatedOwnerId != null && !updatedOwnerId.equals(currentOwnerId)) {
+            OrganizationEntry org = orgManager.assertAccess(null, orgName, false);
+            assertAccess(org.getId(), null, secretName, ResourceAccessLevel.WRITER, true);
         }
 
         String currentPassword = req.storePassword();
@@ -351,15 +370,13 @@ public class SecretManager {
 
         UUID finalProjectId = projectId;
 
-        UUID ownerId = req.ownerId();
-
         secretDao.tx(tx -> {
             if (!orgIdUpdate.equals(e.getOrgId())) {
                 // update repository mapping to null when org is changing
                 repositoryDao.clearSecretMappingBySecretId(tx, e.getId());
             }
 
-            secretDao.update(tx, e.getId(), req.name(), ownerId, newEncryptedData, req.visibility(), finalProjectId, orgIdUpdate);
+            secretDao.update(tx, e.getId(), req.name(), updatedOwnerId, newEncryptedData, req.visibility(), finalProjectId, orgIdUpdate);
         });
 
         Map<String, Object> changes = DiffUtils.compare(e, secretDao.get(e.getId()));
@@ -377,7 +394,7 @@ public class SecretManager {
      * Removes an existing secret.
      */
     public void delete(UUID orgId, String secretName) {
-        SecretEntry e = assertAccess(orgId, null, secretName, ResourceAccessLevel.WRITER, true);
+        SecretEntry e = assertAccess(orgId, null, secretName, ResourceAccessLevel.OWNER, true);
 
         // delete the content first
         getSecretStore(e.getStoreType()).delete(e.getId());
@@ -715,6 +732,19 @@ public class SecretManager {
         public UUID getId() {
             return id;
         }
+    }
+
+    public UserEntry getOwner(SecretUpdateRequest request, UserEntry defaultOwner) {
+        if (request.ownerId() == null) {
+            return defaultOwner;
+        }
+
+        if (request.ownerId() != null) {
+            return userManager.get(request.ownerId())
+                    .orElseThrow(() -> new ValidationErrorsException("User not found: " + request.ownerId()));
+        }
+
+        return defaultOwner;
     }
 
     /**
