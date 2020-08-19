@@ -507,6 +507,23 @@ public class MainTest {
     }
 
     @Test
+    public void testSuspendResume() throws Exception {
+        deploy("suspendResume");
+
+        save(ProcessConfiguration.builder()
+                .putArguments("actionName", "boo")
+                .build());
+
+        byte[] log = run();
+        assertLog(log, ".*execute \\{action=boo\\}.*");
+
+        log = resume(ReentrantTaskExample.EVENT_NAME, ProcessConfiguration.builder().build());
+        assertLog(log, ".*result.ok: true.*");
+        assertLog(log, ".*result.action: boo.*");
+        assertLog(log, ".*result.k: v.*");
+    }
+
+    @Test
     public void testDefaultProcessVariables() throws Exception {
         deploy("defaultVariables");
 
@@ -883,9 +900,10 @@ public class MainTest {
         }
 
         @Override
-        public Serializable resume(ResumeEvent event) {
+        public TaskResult resume(ResumeEvent event) {
             log.info("RESUME: {}", event);
-            return "k=" + event.state().get("k") + ", a=b";
+            return TaskResult.success()
+                    .values((Map)event.state());
         }
     }
 }

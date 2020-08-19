@@ -79,7 +79,7 @@ public class ConcordTaskV2 implements ReentrantTask {
     }
 
     @Override
-    public Serializable resume(ResumeEvent event) throws Exception {
+    public TaskResult resume(ResumeEvent event) throws Exception {
         return delegate().continueAfterSuspend(new ConcordTaskSuspender.ResumePayload(event.state()));
     }
 
