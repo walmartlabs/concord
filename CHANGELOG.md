@@ -22,8 +22,8 @@ after the play's end.
 
 ### Breaking
 
-- runtime-v2: `Task#execute` now returns a new common result
-type - `com.walmartlabs.concord.runtime.v2.sdk.TaskResult`.
+- runtime-v2: `Task#execute` and `ReentrantTask#resume` now return
+a new common result type - `com.walmartlabs.concord.runtime.v2.sdk.TaskResult`.
 
 
 
