@@ -166,6 +166,7 @@
                     <contexts>codegen</contexts>
                     <expressionVariables>
                         <superuserAvailable>true</superuserAvailable>
+                        <createExtensionAvailable>true</createExtensionAvailable>
                     </expressionVariables>
                 </configuration>
             </plugin>

@@ -6,7 +6,7 @@
 
     <changeSet id="1344000" author="ibodrov@gmail.com">
         <preConditions onFail="MARK_RAN">
-            <changeLogPropertyDefined property="superuserAvailable" value="true"/>
+            <changeLogPropertyDefined property="createExtensionAvailable" value="true"/>
         </preConditions>
 
         <sql>
