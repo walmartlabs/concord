@@ -47,7 +47,6 @@ public class SecretClientTest {
                         .withHeader(Constants.Headers.SECRET_TYPE, SecretEntry.TypeEnum.DATA.name())
                         .withBody("Hello!")));
 
-
         ApiClient apiClient = new ConcordApiClient("http://localhost:" + wireMock.port());
         SecretClient secretClient = new SecretClient(apiClient);
 
