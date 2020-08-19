@@ -21,7 +21,6 @@ package com.walmartlabs.concord.runtime.v2.runner.vm;
  */
 
 import com.walmartlabs.concord.runtime.v2.model.ParallelBlock;
-import com.walmartlabs.concord.runtime.v2.runner.CopyVariablesCommand;
 import com.walmartlabs.concord.svm.Runtime;
 import com.walmartlabs.concord.svm.*;
 

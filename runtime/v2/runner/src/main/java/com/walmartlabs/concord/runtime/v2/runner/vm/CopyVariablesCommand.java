@@ -1,4 +1,4 @@
-package com.walmartlabs.concord.runtime.v2.runner;
+package com.walmartlabs.concord.runtime.v2.runner.vm;
 
 /*-
  * *****
@@ -27,6 +27,9 @@ import com.walmartlabs.concord.svm.*;
 import java.io.Serializable;
 import java.util.List;
 
+/**
+ * Copies the specified list of variables from the source frame to the target frame.
+ */
 public class CopyVariablesCommand implements Command {
 
     private static final long serialVersionUID = 1L;

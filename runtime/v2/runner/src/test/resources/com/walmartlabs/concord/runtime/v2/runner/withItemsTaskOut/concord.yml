@@ -9,4 +9,4 @@ flows:
         - 2
         - 3
 
-    - log: "result: ${x}"
+    - log: "result: ${x.stream().map(v -> v.result).toList()}"

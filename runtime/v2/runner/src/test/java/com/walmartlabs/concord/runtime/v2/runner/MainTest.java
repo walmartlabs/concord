@@ -832,8 +832,8 @@ public class MainTest {
     static class ResultTask implements Task {
 
         @Override
-        public Serializable execute(Variables input) {
-            return (Serializable) input.get("result");
+        public TaskResult execute(Variables input) {
+            return TaskResult.success().value("result", input.get("result"));
         }
     }
 

@@ -23,7 +23,6 @@ package com.walmartlabs.concord.runtime.v2.runner.vm;
 import com.walmartlabs.concord.runtime.v2.model.FlowCall;
 import com.walmartlabs.concord.runtime.v2.model.FlowCallOptions;
 import com.walmartlabs.concord.runtime.v2.model.ProcessDefinition;
-import com.walmartlabs.concord.runtime.v2.runner.CopyVariablesCommand;
 import com.walmartlabs.concord.runtime.v2.runner.compiler.CompilerUtils;
 import com.walmartlabs.concord.runtime.v2.runner.el.EvalContext;
 import com.walmartlabs.concord.runtime.v2.runner.el.EvalContextFactory;

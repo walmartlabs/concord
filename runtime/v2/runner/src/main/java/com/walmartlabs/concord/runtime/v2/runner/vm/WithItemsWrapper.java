@@ -185,6 +185,8 @@ public class WithItemsWrapper implements Command {
 
     private static class PrepareOutVariables implements Command {
 
+        private static final long serialVersionUID = 1L;
+
         private final List<String> outVars;
 
         private PrepareOutVariables(List<String> outVars) {
@@ -206,6 +208,10 @@ public class WithItemsWrapper implements Command {
         }
     }
 
+    /**
+     * Appends values of the specified variables from the source frame into
+     * list variables in the target frame.
+     */
     private static class AppendVariablesCommand implements Command {
 
         private static final long serialVersionUID = 1L;
