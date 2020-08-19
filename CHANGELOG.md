@@ -4,6 +4,8 @@
 
 ### Added
 
+- concord-server: a way to deploy the DB schema without
+`SUPERUSER` role and/or `CREATE EXTENSION` privileges;
 - concord-console: a way to open a process log at a specific
 checkpoint by using `#/process/{id}/log#{eventCorrelationId}`;
 - runtime-v2: the v2 SDK now provides the `DependencyManager`
