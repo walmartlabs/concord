@@ -23,17 +23,12 @@ package com.walmartlabs.concord.runtime.v2.runner.vm;
 import com.walmartlabs.concord.runtime.v2.model.TaskCall;
 import com.walmartlabs.concord.runtime.v2.runner.tasks.TaskCallInterceptor;
 import com.walmartlabs.concord.runtime.v2.runner.tasks.TaskProviders;
-import com.walmartlabs.concord.runtime.v2.sdk.Context;
-import com.walmartlabs.concord.runtime.v2.sdk.ReentrantTask;
-import com.walmartlabs.concord.runtime.v2.sdk.ResumeEvent;
-import com.walmartlabs.concord.runtime.v2.sdk.Task;
+import com.walmartlabs.concord.runtime.v2.sdk.*;
 import com.walmartlabs.concord.svm.Frame;
 import com.walmartlabs.concord.svm.Runtime;
 import com.walmartlabs.concord.svm.State;
 import com.walmartlabs.concord.svm.ThreadId;
 
-import java.io.Serializable;
-import java.util.Map;
 import java.util.UUID;
 
 public class TaskResumeCommand extends StepCommand<TaskCall> {
@@ -79,7 +74,7 @@ public class TaskResumeCommand extends StepCommand<TaskCall> {
 
         TaskCallInterceptor interceptor = runtime.getService(TaskCallInterceptor.class);
 
-        Serializable result;
+        TaskResult result;
         try {
             result = interceptor.invoke(callContext, TaskCallInterceptor.Method.of("resume", event),
                     () -> rt.resume(event));
@@ -91,7 +86,7 @@ public class TaskResumeCommand extends StepCommand<TaskCall> {
 
         String out = getStep().getOptions().out();
         if (out != null) {
-            frame.setLocal(out, result); // TODO a custom result structure
+            ctx.variables().set(out, result.toMap());
         }
     }
 

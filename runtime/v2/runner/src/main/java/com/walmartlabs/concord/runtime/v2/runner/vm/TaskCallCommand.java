@@ -88,7 +88,6 @@ public class TaskCallCommand extends StepCommand<TaskCall> {
 
         String out = opts.out();
         if (out != null) {
-            // TODO: check serializable
             ctx.variables().set(out, result.toMap());
         }
     }

@@ -34,7 +34,6 @@ import org.slf4j.LoggerFactory;
 import javax.inject.Named;
 import java.io.File;
 import java.io.IOException;
-import java.io.Serializable;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -290,7 +289,7 @@ public class ConcordTaskCommon {
         return TaskResult.success();
     }
 
-    public Serializable continueAfterSuspend(ResumePayload payload) throws Exception {
+    public TaskResult continueAfterSuspend(ResumePayload payload) throws Exception {
         List<Result> results = new ArrayList<>();
         for (UUID processId : payload.jobs()) {
             Result r = continueAfterSuspend(payload.baseUrl(), payload.apiKey(), processId, payload.collectOutVars());
@@ -311,7 +310,8 @@ public class ConcordTaskCommon {
             // if only one job was started put all variables at the top level of the jobOut object
             // e.g. jobOut.someVar
             Map<String, Object> out = results.get(0).out;
-            return new HashMap<>(out != null ? out : Collections.emptyMap());
+            return TaskResult.success()
+                    .values(out);
         } else {
             // for multiple jobs save their variable into a nested map
             // e.g. jobOut['PROCESSID'].someVar
@@ -322,7 +322,8 @@ public class ConcordTaskCommon {
                     vars.put(id, r.out);
                 }
             }
-            return vars;
+            return TaskResult.success()
+                    .values(vars);
         }
     }
 
