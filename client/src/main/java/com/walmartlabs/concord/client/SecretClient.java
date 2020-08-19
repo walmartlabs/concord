@@ -85,7 +85,7 @@ public class SecretClient {
             SecretEntry.TypeEnum actualSecretType = SecretEntry.TypeEnum.valueOf(secretType);
 
             if (expectedType != null && expectedType != actualSecretType) {
-                String msg = "Unexpected expectedType of %s/%s. Expected %s, got %s. " +
+                String msg = "Unexpected type of %s/%s. Expected %s, got %s. " +
                         "Check the secret's expectedType and its usage - some secrets can only be used for specific purposes " +
                         "(e.g. %s is typically used for key-based authentication).";
                 throw new IllegalArgumentException(String.format(msg, orgName, secretName, expectedType, actualSecretType, SecretEntry.TypeEnum.KEY_PAIR));
