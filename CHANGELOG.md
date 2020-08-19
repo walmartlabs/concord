@@ -1,5 +1,32 @@
 # Change log
 
+## [Unreleased]
+
+### Added
+
+- concord-server: a way to deploy the DB schema without
+`SUPERUSER` role and/or `CREATE EXTENSION` privileges;
+- concord-console: a way to open a process log at a specific
+checkpoint by using `#/process/{id}/log#{eventCorrelationId}`;
+- runtime-v2: the v2 SDK now provides the `DependencyManager`
+interface.
+
+### Changed
+
+- concord-client: `ClientUtils#getHeaders` now correctly assumes
+case-insensitivity of header names;
+- concord-server: `OrganizationManager#create` and `#update`
+replaced with a single `createOrUpdate` method;
+- ansible: when using `auth.privateKey.path` don't remove the file
+after the play's end.
+
+### Breaking
+
+- runtime-v2: `Task#execute` now returns a new common result
+type - `com.walmartlabs.concord.runtime.v2.sdk.TaskResult`.
+
+
+
 ## [1.61.0] - 2020-08-13
 
 ### Added
