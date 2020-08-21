@@ -661,17 +661,17 @@ public class MainTest {
     @Test
     public void testReentrant() throws Exception {
         deploy("reentrantTask");
-        String actionName = "BOO";
-
         save(ProcessConfiguration.builder()
-                .putArguments("actionName", actionName)
+                .putArguments("actionName", "boo")
                 .build());
 
         byte[] log = run();
-        assertLog(log, ".*Before.*");
+        assertLog(log, ".*execute \\{action=boo\\}.*");
 
         log = resume(ReentrantTaskExample.EVENT_NAME, ProcessConfiguration.builder().build());
-        assertLog(log, ".*After: " + Pattern.quote("k=v, a=b") + ".*");
+        assertLog(log, ".*result.ok: true.*");
+        assertLog(log, ".*result.action: boo.*");
+        assertLog(log, ".*result.k: v.*");
     }
 
     private void deploy(String resource) throws URISyntaxException, IOException {
@@ -915,9 +915,10 @@ public class MainTest {
         }
 
         @Override
-        public Serializable resume(ResumeEvent event) {
+        public TaskResult resume(ResumeEvent event) {
             log.info("RESUME: {}", event);
-            return "k=" + event.state().get("k") + ", a=b";
+            return TaskResult.success()
+                    .values((Map)event.state());
         }
     }
 }
