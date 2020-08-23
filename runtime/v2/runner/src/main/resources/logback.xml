@@ -20,6 +20,7 @@
         <appender-ref ref="PROCESS_STDOUT"/>
     </logger>
 
+    <logger name="uk.org.lidalia" level="ERROR"/>
     <logger name="com.walmartlabs.concord.plugins.log" level="${logLevel:-INFO}"/>
 
     <root level="INFO">
