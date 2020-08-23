@@ -1,5 +1,17 @@
 # Change log
 
+## [Unreleased]
+
+### Changed
+
+- concord-console: fix manual refreshing of the process list;
+- concord-server: allow nested metadata filters in
+`GET /api/v2/process` and `GET /api/v2/process/count` endpoints;
+- concord-server: runtime-v2 compatibility for processes started via
+the browser link (aka "the process portal").
+
+
+
 ## [1.62.0] - 2020-08-19
 
 ### Added
