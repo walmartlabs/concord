@@ -63,6 +63,7 @@ const ProjectProcesses = ({ orgName, projectName, forceRefresh }: ExternalProps)
             projectName={projectName}
             columns={columns}
             usePagination={true}
+            forceRefresh={forceRefresh}
         />
     );
 };
