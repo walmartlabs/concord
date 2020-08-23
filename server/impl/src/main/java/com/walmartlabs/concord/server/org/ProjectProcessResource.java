@@ -28,9 +28,11 @@ import com.walmartlabs.concord.server.org.project.ProjectDao;
 import com.walmartlabs.concord.server.org.project.RepositoryDao;
 import com.walmartlabs.concord.server.process.*;
 import com.walmartlabs.concord.server.process.form.FormServiceV1;
+import com.walmartlabs.concord.server.process.form.FormServiceV2;
 import com.walmartlabs.concord.server.process.queue.ProcessFilter;
 import com.walmartlabs.concord.server.process.queue.ProcessQueueDao;
 import com.walmartlabs.concord.server.process.queue.ProcessQueueManager;
+import com.walmartlabs.concord.server.process.state.ProcessStateManager;
 import com.walmartlabs.concord.server.sdk.ConcordApplicationException;
 import com.walmartlabs.concord.server.sdk.PartialProcessKey;
 import com.walmartlabs.concord.server.sdk.ProcessKey;
@@ -61,6 +63,7 @@ import java.io.StringWriter;
 import java.util.*;
 
 import static com.walmartlabs.concord.server.Utils.unwrap;
+import static com.walmartlabs.concord.server.process.state.ProcessStateManager.path;
 import static javax.ws.rs.core.Response.Status;
 
 @Named
@@ -78,31 +81,37 @@ public class ProjectProcessResource implements Resource {
     private final OrganizationDao orgDao;
     private final ProcessQueueDao queueDao;
     private final ProcessQueueManager processQueueManager;
-    private final FormServiceV1 formService;
+    private final FormServiceV1 formServiceV1;
+    private final FormServiceV2 formServiceV2;
     private final ResponseTemplates responseTemplates;
     private final ProjectDao projectDao;
     private final RepositoryDao repositoryDao;
+    private final ProcessStateManager stateManager;
 
     @Inject
     public ProjectProcessResource(ProcessManager processManager,
                                   OrganizationDao orgDao,
                                   ProcessQueueDao queueDao,
                                   ProcessQueueManager processQueueManager,
-                                  FormServiceV1 formService,
+                                  FormServiceV1 formServiceV1,
+                                  FormServiceV2 formServiceV2,
                                   ResponseTemplates responseTemplates,
                                   OrganizationManager orgManager,
                                   ProjectDao projectDao,
-                                  RepositoryDao repositoryDao) {
+                                  RepositoryDao repositoryDao,
+                                  ProcessStateManager stateManager) {
 
         this.processManager = processManager;
         this.orgDao = orgDao;
         this.queueDao = queueDao;
         this.processQueueManager = processQueueManager;
-        this.formService = formService;
+        this.formServiceV1 = formServiceV1;
+        this.formServiceV2 = formServiceV2;
         this.responseTemplates = responseTemplates;
         this.orgManager = orgManager;
         this.projectDao = projectDao;
         this.repositoryDao = repositoryDao;
+        this.stateManager = stateManager;
     }
 
     @GET
@@ -167,13 +176,6 @@ public class ProjectProcessResource implements Resource {
 
     /**
      * Starts a new process instance.
-     *
-     * @param orgName
-     * @param projectName
-     * @param repoName
-     * @param entryPoint
-     * @param activeProfiles
-     * @return
      */
     @GET
     @ApiOperation("Start a new process")
@@ -271,7 +273,7 @@ public class ProjectProcessResource implements Resource {
         } else if (s == ProcessStatus.FINISHED) {
             return processFinished(processKey);
         } else if (s == ProcessStatus.SUSPENDED) {
-            String nextFormId = formService.nextFormId(pk);
+            String nextFormId = nextFormId(pk);
             if (nextFormId == null) {
                 return processError(processKey, "Invalid process state: no forms found", null);
             }
@@ -283,6 +285,14 @@ public class ProjectProcessResource implements Resource {
         } else {
             Map<String, Object> args = prepareArgumentsForInProgressTemplate(entry);
             return responseTemplates.inProgressWait(Response.ok(), args).build();
+        }
+    }
+
+    private String nextFormId(ProcessKey processKey) {
+        if (isV2(processKey)) {
+            return formServiceV2.nextFormId(processKey);
+        } else {
+            return formServiceV1.nextFormId(processKey);
         }
     }
 
@@ -378,5 +388,12 @@ public class ProjectProcessResource implements Resource {
         StringWriter w = new StringWriter();
         t.printStackTrace(new PrintWriter(w));
         return w.toString();
+    }
+
+    private boolean isV2(ProcessKey processKey) {
+        String resource = path(Constants.Files.JOB_ATTACHMENTS_DIR_NAME,
+                Constants.Files.JOB_STATE_DIR_NAME,
+                Constants.Files.JOB_FORMS_V2_DIR_NAME);
+        return stateManager.exists(processKey, resource);
     }
 }
