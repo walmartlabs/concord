@@ -28,6 +28,15 @@
             <artifactId>concord-runtime-model-v2</artifactId>
             <scope>provided</scope>
         </dependency>
+        <dependency>
+            <groupId>com.walmartlabs.concord</groupId>
+            <artifactId>concord-client</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
+            <scope>provided</scope>
+        </dependency>
 
         <dependency>
             <groupId>javax.inject</groupId>

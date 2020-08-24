@@ -122,4 +122,25 @@ public class CryptoIT {
         proc.assertLog(".*File: .*");
         proc.assertLog(".*Encrypted string: " + myRawString + ".*");
     }
+
+    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    public void testCreate() throws Exception {
+        String orgName = "org_" + randomString();
+        OrganizationsApi orgApi = new OrganizationsApi(concord.apiClient());
+        orgApi.createOrUpdate(new OrganizationEntry().setName(orgName));
+
+        Payload payload = new Payload()
+                .arg("org", orgName)
+                .arg("secretName", "secret_" + randomString())
+                .archive(CryptoIT.class.getResource("cryptoCreate").toURI());
+
+        ConcordProcess proc = concord.processes().start(payload);
+
+        ProcessEntry pe = proc.waitForStatus(ProcessEntry.StatusEnum.FINISHED);
+        assertEquals(ProcessEntry.StatusEnum.FINISHED, pe.getStatus());
+
+        proc.assertLog(".*result.ok: true.*");
+        proc.assertLog(".*result.password: pAss123qweasd.*");
+        proc.assertLog(".*credentials: .*password=123.*");
+    }
 }
