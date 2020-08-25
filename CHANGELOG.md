@@ -4,6 +4,8 @@
 
 ### Changed
 
+- concord-agent: do not print out the process' `sessionToken` in
+logs;
 - concord-console: fix manual refreshing of the process list;
 - concord-server: allow nested metadata filters in
 `GET /api/v2/process` and `GET /api/v2/process/count` endpoints;
