@@ -140,7 +140,6 @@ public class JobRequest {
                 ", commitId='" + commitId + '\'' +
                 ", secretName='" + secretName + '\'' +
                 ", imports='" + imports + '\'' +
-                ", sessionToken=" + sessionToken +
                 '}';
     }
 
