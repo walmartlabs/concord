@@ -54,6 +54,10 @@ public interface Variables {
         return get(key, defaultValue, Number.class);
     }
 
+    default Number assertNumber(String key) {
+        return assertVariable(key, Number.class);
+    }
+
     default boolean getBoolean(String key, boolean defaultValue) {
         Boolean result = get(key, defaultValue, Boolean.class);
         if (result == null) {
@@ -62,12 +66,24 @@ public interface Variables {
         return result;
     }
 
+    default boolean assertBoolean(String key) {
+        return assertVariable(key, Boolean.class);
+    }
+
     default int getInt(String key, int defaultValue) {
         return getNumber(key, defaultValue).intValue();
     }
 
+    default int assertInt(String key) {
+        return assertNumber(key).intValue();
+    }
+
     default long getLong(String key, long defaultValue) {
         return getNumber(key, defaultValue).longValue();
+    }
+
+    default long assertLong(String key) {
+        return assertNumber(key).longValue();
     }
 
     default UUID getUUID(String key) {
@@ -96,8 +112,13 @@ public interface Variables {
     }
 
     @SuppressWarnings("unchecked")
-    default  <E> Collection<E> getCollection(String key, Collection<E> defaultValue) {
+    default <E> Collection<E> getCollection(String key, Collection<E> defaultValue) {
         return get(key, defaultValue, Collection.class);
+    }
+
+    @SuppressWarnings("unchecked")
+    default <E> Collection<E> assertCollection(String key) {
+        return assertVariable(key, Collection.class);
     }
 
     @SuppressWarnings("unchecked")
@@ -105,11 +126,16 @@ public interface Variables {
         return get(key, defaultValue, Map.class);
     }
 
-    default  <T> T assertVariable(String key, Class<T> type) {
+    @SuppressWarnings("unchecked")
+    default <K, V> Map<K, V> assertMap(String name) {
+        return assertVariable(null, name, Map.class);
+    }
+
+    default <T> T assertVariable(String key, Class<T> type) {
         return assertVariable(null, key, type);
     }
 
-    default  <T> T assertVariable(String message, String key, Class<T> type) {
+    default <T> T assertVariable(String message, String key, Class<T> type) {
         T result = get(key, null, type);
 
         if (result != null) {
