@@ -30,8 +30,9 @@ import org.eclipse.sisu.wire.WireModule;
 
 public class Main {
 
-    public static void main(String[] args) throws Exception {
+    public static void main(String[] args) {
         ClassLoader cl = Main.class.getClassLoader();
+
         Injector injector = Guice.createInjector(new WireModule(new SpaceModule(new URLClassSpace(cl), BeanScanning.GLOBAL_INDEX)));
 
         Agent a = injector.getInstance(Agent.class);

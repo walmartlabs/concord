@@ -9,14 +9,21 @@ if [[ -z "${CONCORD_TMP_DIR}" ]]; then
     export CONCORD_TMP_DIR="/tmp"
 fi
 
+if [[ -z "${CONCORD_JAVA_OPTS}" ]]; then
+    CONCORD_JAVA_OPTS="-Xmx256m"
+fi
+echo "CONCORD_JAVA_OPTS: ${CONCORD_JAVA_OPTS}"
+
 if [[ -z "${CONCORD_CFG_FILE}" ]]; then
     CONCORD_CFG_FILE="${BASE_DIR}/default.conf"
 fi
 echo "CONCORD_CFG_FILE: ${CONCORD_CFG_FILE}"
 
+echo "Using $(which java)"
+java -version
+
 exec java \
--Xmx256m \
--server \
+${CONCORD_JAVA_OPTS} \
 -Dfile.encoding=UTF-8 \
 -Djava.net.preferIPv4Stack=true \
 -Djava.security.egd=file:/dev/./urandom \

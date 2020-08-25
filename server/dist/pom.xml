@@ -6,7 +6,7 @@
     <parent>
         <groupId>com.walmartlabs.concord.server</groupId>
         <artifactId>parent</artifactId>
-        <version>1.59.1-SNAPSHOT</version>
+        <version>1.62.1-SNAPSHOT</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
 
@@ -39,10 +39,6 @@
         <dependency>
             <groupId>com.walmartlabs.concord.server.plugins</groupId>
             <artifactId>oidc</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.walmartlabs.concord.server.plugins</groupId>
-            <artifactId>kafka-event-sink</artifactId>
         </dependency>
 
         <dependency>

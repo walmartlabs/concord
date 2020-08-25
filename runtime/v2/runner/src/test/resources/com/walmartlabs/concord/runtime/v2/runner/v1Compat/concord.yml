@@ -1,8 +1,0 @@
-flows:
-  default:
-    # when calling v1 tasks only the full form is supported
-    - task: v1
-      in:
-        p1: "ABC"
-      out: r
-    - log: "result: ${r}"

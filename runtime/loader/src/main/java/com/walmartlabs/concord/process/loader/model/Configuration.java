@@ -20,9 +20,12 @@ package com.walmartlabs.concord.process.loader.model;
  * =====
  */
 
+import java.util.List;
 import java.util.Map;
 
 public interface Configuration {
 
     Map<String, Object> asMap();
+
+    List<String> dependencies();
 }

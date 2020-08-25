@@ -6,7 +6,7 @@
     <parent>
         <groupId>com.walmartlabs.concord.server.plugins.ansible</groupId>
         <artifactId>parent</artifactId>
-        <version>1.59.1-SNAPSHOT</version>
+        <version>1.62.1-SNAPSHOT</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
 
@@ -158,6 +158,10 @@
                     <username>${db.username}</username>
                     <password>${db.password}</password>
                     <promptOnNonLocalDatabase>false</promptOnNonLocalDatabase>
+                    <expressionVariables>
+                        <superuserAvailable>true</superuserAvailable>
+                        <createExtensionAvailable>true</createExtensionAvailable>
+                    </expressionVariables>
                 </configuration>
             </plugin>
             <plugin>

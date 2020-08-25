@@ -29,7 +29,6 @@ import java.util.Map;
 import java.util.function.Supplier;
 
 @Value.Immutable
-@Value.Style(jdkOnly = true)
 public interface Event {
 
     String id();

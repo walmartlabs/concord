@@ -21,10 +21,12 @@ package com.walmartlabs.concord.plugins.docker;
  */
 
 import com.walmartlabs.concord.sdk.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 import javax.inject.Named;
-import java.io.IOException;
+import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -36,6 +38,9 @@ import static com.walmartlabs.concord.plugins.docker.DockerConstants.*;
 @Named("docker")
 public class DockerTask implements Task {
 
+    private static final Logger log = LoggerFactory.getLogger(DockerTask.class);
+    private static final Logger processLog = LoggerFactory.getLogger("processLog");
+
     private static final String STDOUT_KEY = "stdout";
     private static final String STDERR_KEY = "stderr";
 
@@ -45,40 +50,78 @@ public class DockerTask implements Task {
     };
 
     @Inject
-    private com.walmartlabs.concord.sdk.DockerService dockerService;
-
-    @InjectVariable(Constants.Context.WORK_DIR_KEY)
-    private String workDir;
+    private DockerService dockerService;
 
     @Override
     public void execute(Context ctx) throws Exception {
+        Path workDir = ContextUtils.getWorkDir(ctx);
         TaskParams params = new TaskParams(createInput(ctx));
 
         String stdOutVar = ContextUtils.getString(ctx, STDOUT_KEY);
         String stdErrVar = ContextUtils.getString(ctx, STDERR_KEY);
 
-        boolean isRedirectErrorStream = stdErrVar == null && stdOutVar == null;
-        boolean withInputStream = isRedirectErrorStream || stdOutVar == null;
-        boolean withErrorStream = !withInputStream || stdErrVar != null;
+        // redirect stderr to stdout
+        boolean redirectErrorStream = stdErrVar == null && stdOutVar == null;
 
-        Result result = new DockerTaskCommon(Paths.get(workDir), this::createTmpFile,
-                (spec, outCallback, errCallback) ->
-                        dockerService.start(ctx, spec,
-                                outCallback != null ? outCallback::onLog : null,
-                                errCallback != null ? errCallback::onLog : null))
-                .storeStdOut(stdOutVar != null)
-                .logStdOut(withInputStream)
-                .storeStdErr(stdErrVar != null)
-                .logStdErr(withErrorStream)
-                .redirectErrorStream(isRedirectErrorStream)
-                .execute(params);
+        // redirect stdout to log
+        boolean logStdOut = redirectErrorStream || stdOutVar == null;
+
+        // redirect stderr to log
+        boolean logStdErr = !logStdOut || stdErrVar != null;
+
+        // save stderr to a variable
+        boolean storeStdErr = stdErrVar != null;
+
+        String stdOutFilePath = null;
+        if (stdOutVar != null) {
+            Path logFile = DockerTaskCommon.createTmpFile(workDir, "stdout", ".log");
+            stdOutFilePath = workDir.relativize(logFile).toString();
+        }
+
+        DockerContainerSpec spec = DockerContainerSpec.builder()
+                .image(params.image())
+                .env(DockerTaskCommon.stringify(params.env()))
+                .envFile(DockerTaskCommon.getEnvFile(workDir, params))
+                .entryPoint(DockerTaskCommon.prepareEntryPoint(workDir, params))
+                .forcePull(params.forcePull())
+                .options(DockerContainerSpec.Options.builder().hosts(params.hosts()).build())
+                .debug(params.debug())
+                .redirectErrorStream(redirectErrorStream)
+                .stdOutFilePath(stdOutFilePath)
+                .pullRetryCount(params.pullRetryCount())
+                .pullRetryInterval(params.pullRetryInterval())
+                .build();
+
+        StringBuilder stdErr = new StringBuilder();
+        int code = dockerService.start(ctx, spec,
+                logStdOut ? line -> processLog.info("DOCKER: {}", line) : null,
+                logStdErr ? line -> {
+                    if (storeStdErr) {
+                        stdErr.append(line).append("\n");
+                    }
+
+                    processLog.info("DOCKER: {}", line);
+                } : null);
+
+        if (code != SUCCESS_EXIT_CODE) {
+            log.warn("call ['{}', '{}', '{}'] -> finished with code {}", params.image(), params.cmd(), workDir, code);
+            throw new RuntimeException("Docker process finished with with exit code " + code);
+        }
+
+        String stdOut = null;
+        if (stdOutFilePath != null) {
+            InputStream inputStream = Files.newInputStream(Paths.get(stdOutFilePath));
+            stdOut = DockerTaskCommon.toString(inputStream);
+        }
+
+        log.info("call ['{}', '{}', '{}', '{}'] -> done", params.image(), params.cmd(), workDir, params.hosts());
 
         if (stdOutVar != null) {
-            ctx.setVariable(stdOutVar, result.getStdOut());
+            ctx.setVariable(stdOutVar, stdOut);
         }
 
         if (stdErrVar != null) {
-            ctx.setVariable(stdErrVar, result.getStdErr());
+            ctx.setVariable(stdErrVar, stdErr.toString());
         }
     }
 
@@ -88,14 +131,5 @@ public class DockerTask implements Task {
             result.put(k, ctx.getVariable(k));
         }
         return result;
-    }
-
-    private Path createTmpFile(String prefix, String suffix) throws IOException {
-        Path tmpDir = Paths.get(workDir).resolve(Constants.Files.CONCORD_SYSTEM_DIR_NAME);
-        if (!Files.exists(tmpDir)) {
-            Files.createDirectories(tmpDir);
-        }
-
-        return Files.createTempFile(tmpDir, prefix, suffix);
     }
 }

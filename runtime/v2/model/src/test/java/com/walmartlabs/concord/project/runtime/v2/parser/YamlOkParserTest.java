@@ -73,7 +73,7 @@ public class YamlOkParserTest extends AbstractParserTest {
         assertEquals(retryInput, t.getOptions().retry().input());
 
         // meta
-        assertMeta(t.getOptions());
+        assertMeta("Boo", t.getOptions());
     }
 
     // Full Call Flow Definition Test
@@ -114,7 +114,7 @@ public class YamlOkParserTest extends AbstractParserTest {
         assertEquals(retryInput, t.getOptions().retry().input());
 
         // meta
-        assertMeta(t.getOptions());
+        assertMeta("boo-call", t.getOptions());
     }
 
     // Snapshot Definition Test
@@ -160,7 +160,7 @@ public class YamlOkParserTest extends AbstractParserTest {
         assertNull(errorStep.getOptions());
 
         // meta
-        assertMeta(t.getOptions());
+        assertMeta("expression-call", t.getOptions());
     }
 
     // Group of Steps Definition Test
@@ -437,7 +437,16 @@ public class YamlOkParserTest extends AbstractParserTest {
     }
 
     private static void assertMeta(StepOptions o) {
+        assertMeta(null, o);
+    }
+
+    private static void assertMeta(String stepName, StepOptions o) {
         assertNotNull(o.meta());
-        assertEquals(Collections.singletonMap("m1", (Serializable)"v1"), o.meta());
+        Map<String, Serializable> expected = new HashMap<>();
+        if (stepName != null) {
+            expected.put("segmentName", stepName);
+        }
+        expected.put("m1", "v1");
+        assertEquals(expected, o.meta());
     }
 }

@@ -22,16 +22,15 @@ package com.walmartlabs.concord.plugins.ansible.v2;
 
 import com.walmartlabs.concord.ApiClient;
 import com.walmartlabs.concord.plugins.ansible.*;
+import com.walmartlabs.concord.plugins.ansible.secrets.AnsibleSecretService;
 import com.walmartlabs.concord.runtime.v2.sdk.Context;
-import com.walmartlabs.concord.runtime.v2.sdk.DefaultVariables;
 import com.walmartlabs.concord.runtime.v2.sdk.Task;
+import com.walmartlabs.concord.runtime.v2.sdk.TaskResult;
 import com.walmartlabs.concord.runtime.v2.sdk.Variables;
 
 import javax.inject.Inject;
 import javax.inject.Named;
-import java.io.Serializable;
 import java.nio.file.Path;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
@@ -41,36 +40,31 @@ public class AnsibleTaskV2 implements Task {
 
     private final Context context;
     private final ApiClient apiClient;
-    private final AnsibleDockerService dockerService;
-    private final AnsibleSecretService secretService;
-
-    @DefaultVariables
-    Map<String, Object> defaults;
+    private final Map<String, Object> defaults;
 
     @Inject
     public AnsibleTaskV2(ApiClient apiClient, Context context) {
         this.context = context;
         this.apiClient = apiClient;
-        this.dockerService = new DockerServiceV2(context.dockerService());
-        this.secretService = new SecretServiceV2(context.secretService());
+        this.defaults = context.defaultVariables().toMap();
     }
 
     @Override
-    public Serializable execute(Variables input) throws Exception {
+    public TaskResult execute(Variables input) throws Exception {
         Map<String, Object> in = input.toMap();
         Path workDir = context.workingDirectory();
 
-        PlaybookProcessRunner runner = new PlaybookProcessRunnerFactory(dockerService, workDir)
+        PlaybookProcessRunner runner = new PlaybookProcessRunnerFactory(new AnsibleDockerServiceV2(context.dockerService()), workDir)
                 .create(in);
 
-        AnsibleTask task = new AnsibleTask(apiClient,
-                new AnsibleAuthFactory(secretService),
-                secretService, context.apiConfiguration());
+        AnsibleSecretService secretService = new AnsibleSecretServiceV2(context.secretService());
+        AnsibleTask task = new AnsibleTask(apiClient, new AnsibleAuthFactory(secretService), secretService);
 
         UUID instanceId = Objects.requireNonNull(context.processInstanceId());
         Path tmpDir = context.fileService().createTempDirectory("ansible");
 
         AnsibleContext ctx = AnsibleContext.builder()
+                .apiBaseUrl(apiClient.getBasePath())
                 .instanceId(instanceId)
                 .workDir(workDir)
                 .tmpDir(tmpDir)
@@ -83,10 +77,10 @@ public class AnsibleTaskV2 implements Task {
                 .build();
 
         TaskResult result = task.run(ctx, runner);
-        if (!result.isSuccess()) {
-            throw new IllegalStateException("Process finished with exit code " + result.getExitCode());
+        if (!result.ok()) {
+            throw new IllegalStateException("Process finished with exit code " + result.values().get("exitCode"));
         }
 
-        return new HashMap<>(result.getResult());
+        return result;
     }
 }

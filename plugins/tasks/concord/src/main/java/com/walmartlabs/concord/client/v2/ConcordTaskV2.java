@@ -21,8 +21,8 @@ package com.walmartlabs.concord.client.v2;
  */
 
 import com.walmartlabs.concord.client.*;
+import com.walmartlabs.concord.runtime.v2.model.ProjectInfo;
 import com.walmartlabs.concord.runtime.v2.sdk.*;
-import com.walmartlabs.concord.sdk.ProjectInfo;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -38,12 +38,9 @@ import static com.walmartlabs.concord.client.ConcordTaskParams.KillParams;
 import static com.walmartlabs.concord.client.ConcordTaskParams.ListSubProcesses;
 
 @Named("concord")
-@SuppressWarnings("unused")
 public class ConcordTaskV2 implements ReentrantTask {
 
-    @DefaultVariables
-    Map<String, Object> defaults;
-
+    private final Variables defaults;
     private final String sessionToken;
     private final UUID instanceId;
     private final ApiClientFactory apiClientFactory;
@@ -53,10 +50,17 @@ public class ConcordTaskV2 implements ReentrantTask {
 
     @Inject
     public ConcordTaskV2(ApiClientFactory apiClientFactory, Context context) {
+        this.defaults = context.defaultVariables();
         this.sessionToken = context.processConfiguration().processInfo().sessionToken();
         this.instanceId = context.processInstanceId();
         this.apiClientFactory = apiClientFactory;
-        this.projectInfo = context.projectInfo();
+
+        ProjectInfo projectInfo = context.projectInfo();
+        if (projectInfo == null) {
+            projectInfo = ProjectInfo.builder().build();
+        }
+        this.projectInfo = projectInfo;
+
         this.workDir = context.workingDirectory();
         this.suspender = (resumeFromSameStep, payload) -> {
             if (resumeFromSameStep) {
@@ -70,13 +74,13 @@ public class ConcordTaskV2 implements ReentrantTask {
     }
 
     @Override
-    public Serializable execute(Variables in) throws Exception {
+    public TaskResult execute(Variables in) throws Exception {
         return delegate().execute(ConcordTaskParams.of(in));
     }
 
     @Override
-    public Serializable resume(Map<String, Serializable> payload) throws Exception {
-        return delegate().continueAfterSuspend(new ConcordTaskSuspender.ResumePayload(payload));
+    public TaskResult resume(ResumeEvent event) throws Exception {
+        return delegate().continueAfterSuspend(new ConcordTaskSuspender.ResumePayload(event.state()));
     }
 
     public List<String> listSubprocesses(String instanceId, String... tags) throws Exception {
@@ -122,7 +126,7 @@ public class ConcordTaskV2 implements ReentrantTask {
     }
 
     private ConcordTaskCommon delegate() {
-        return new ConcordTaskCommon(sessionToken, apiClientFactory, (String)defaults.get("processLinkTemplate"), instanceId, projectInfo, workDir, suspender);
+        return new ConcordTaskCommon(sessionToken, apiClientFactory, defaults.getString("processLinkTemplate"), instanceId, projectInfo.orgName(), workDir, suspender);
     }
 
     private static List<UUID> toUUIDs(List<String> ids) {

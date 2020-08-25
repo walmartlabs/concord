@@ -21,6 +21,7 @@ package com.walmartlabs.concord.runtime.v2.runner;
  */
 
 import com.google.inject.*;
+import com.google.inject.Module;
 import com.walmartlabs.concord.runtime.common.cfg.RunnerConfiguration;
 import com.walmartlabs.concord.runtime.common.injector.InjectorUtils;
 import com.walmartlabs.concord.runtime.common.injector.InstanceId;
@@ -32,7 +33,6 @@ import com.walmartlabs.concord.runtime.v2.runner.guice.ProcessDependenciesModule
 import com.walmartlabs.concord.runtime.v2.runner.tasks.V2;
 import com.walmartlabs.concord.runtime.v2.sdk.Task;
 import com.walmartlabs.concord.runtime.v2.sdk.WorkingDirectory;
-import com.walmartlabs.concord.runtime.v2.v1.compat.V1CompatModule;
 import org.eclipse.sisu.wire.WireModule;
 
 import javax.inject.Inject;
@@ -57,8 +57,7 @@ public class InjectorFactory {
                 runnerCfg,
                 processCfgProvider,
                 new DefaultRunnerModule(), // bind default services
-                new ProcessDependenciesModule(workDir.getValue(), runnerCfg.dependencies()), // grab process dependencies
-                new V1CompatModule()) // allow runtime v1 tasks
+                new ProcessDependenciesModule(workDir.getValue(), runnerCfg.dependencies())) // grab process dependencies
                 .create();
     }
 

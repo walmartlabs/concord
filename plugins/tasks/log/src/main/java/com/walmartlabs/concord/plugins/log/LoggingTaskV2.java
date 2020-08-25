@@ -21,6 +21,7 @@ package com.walmartlabs.concord.plugins.log;
  */
 
 import com.walmartlabs.concord.runtime.v2.sdk.Task;
+import com.walmartlabs.concord.runtime.v2.sdk.TaskResult;
 import com.walmartlabs.concord.runtime.v2.sdk.Variables;
 
 import javax.inject.Named;
@@ -30,7 +31,7 @@ import java.io.Serializable;
 public class LoggingTaskV2 implements Task {
 
     @Override
-    public Serializable execute(Variables variables) {
+    public TaskResult execute(Variables variables) {
         Object msg = variables.get("msg");
 
         String logLevel = variables.getString("level", "INFO");

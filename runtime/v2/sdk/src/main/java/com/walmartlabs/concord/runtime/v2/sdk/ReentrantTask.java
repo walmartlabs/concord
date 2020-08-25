@@ -20,10 +20,7 @@ package com.walmartlabs.concord.runtime.v2.sdk;
  * =====
  */
 
-import java.io.Serializable;
-import java.util.Map;
-
 public interface ReentrantTask extends Task {
 
-    Serializable resume(Map<String, Serializable> payload) throws Exception;
+    TaskResult resume(ResumeEvent event) throws Exception;
 }

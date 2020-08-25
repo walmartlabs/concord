@@ -23,17 +23,29 @@ import * as React from 'react';
 import { ProcessListActivity } from '../../organisms';
 import { BreadcrumbsToolbar } from '../../organisms';
 import { Breadcrumb } from 'semantic-ui-react';
+import { LoadingState } from '../../../App';
+import { useCallback, useState } from 'react';
 
-export default class extends React.PureComponent {
-    render() {
-        return (
-            <>
-                <BreadcrumbsToolbar loading={false} refreshHandler={() => console.log('refresh')}>
-                    <Breadcrumb.Section active={true}>Processes</Breadcrumb.Section>
-                </BreadcrumbsToolbar>
+export default () => {
+    const loading = React.useContext(LoadingState);
 
-                <ProcessListActivity showInitiatorFilter={true} usePagination={true} />
-            </>
-        );
-    }
-}
+    const [refresh, toggleRefresh] = useState<boolean>(false);
+
+    const refreshHandler = useCallback(() => {
+        toggleRefresh((prevState) => !prevState);
+    }, []);
+
+    return (
+        <>
+            <BreadcrumbsToolbar loading={loading} refreshHandler={refreshHandler}>
+                <Breadcrumb.Section active={true}>Processes</Breadcrumb.Section>
+            </BreadcrumbsToolbar>
+
+            <ProcessListActivity
+                showInitiatorFilter={true}
+                usePagination={true}
+                forceRefresh={refresh}
+            />
+        </>
+    );
+};

@@ -20,14 +20,19 @@ package com.walmartlabs.concord.plugins.ansible;
  * =====
  */
 
-import com.walmartlabs.concord.runtime.v2.sdk.SecretService;
+import com.walmartlabs.concord.plugins.ansible.secrets.AnsibleSecretService;
+import com.walmartlabs.concord.plugins.ansible.secrets.KeyPair;
+import com.walmartlabs.concord.plugins.ansible.secrets.UsernamePassword;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.attribute.PosixFilePermission;
-import java.util.*;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
 
 import static com.walmartlabs.concord.sdk.MapUtils.*;
 
@@ -55,7 +60,7 @@ public class AnsibleAuthFactory {
         switch (auth.getKey().toLowerCase()) {
             case "krb5":
                 try {
-                    SecretService.UsernamePassword cred = parseKerberosAuth(secretService, auth.getValue());
+                    UsernamePassword cred = parseKerberosAuth(secretService, auth.getValue());
                     log.info("Using the kerberos username: {}", cred.username());
                     return new KerberosAuth(cred.username(), cred.password(), context.tmpDir(), context.debug());
                 } catch (Exception e) {
@@ -64,11 +69,9 @@ public class AnsibleAuthFactory {
                 }
             case "privatekey":
                 try {
-                    Map<String, Object> cred = parsePrivateKeyAuth(secretService, context.workDir(), auth.getValue());
-                    String username = getString(cred, "user");
-                    Path privateKeyPath = assertPath(cred, "keyPath");
-                    log.info("Using the private key: {}", privateKeyPath);
-                    return new PrivateKeyAuth(context.workDir(), username, privateKeyPath);
+                    PrivateKeyAuth privateKeyAuth = parsePrivateKeyAuth(secretService, context.workDir(), auth.getValue());
+                    log.info("Using the private key: {}", privateKeyAuth.getKeyPath());
+                    return privateKeyAuth;
                 } catch (Exception e) {
                     log.error("Error while fetching the private key: {}", e.getMessage(), e);
                     throw new RuntimeException("Error while fetching the private key: " + e.getMessage());
@@ -78,29 +81,32 @@ public class AnsibleAuthFactory {
         }
     }
 
-    private static SecretService.UsernamePassword parseKerberosAuth(AnsibleSecretService secretService,
-                                                                    Map<String, Object> auth) throws Exception {
+    private static UsernamePassword parseKerberosAuth(AnsibleSecretService secretService,
+                                                      Map<String, Object> auth) throws Exception {
         Map<String, Object> secretParams = getMap(auth, "secret", Collections.emptyMap());
         if (!secretParams.isEmpty()) {
             Secret secret = Secret.from(secretParams);
             return secretService.exportCredentials(secret.getOrg(), secret.getName(), secret.getPassword());
         }
 
-        return SecretService.UsernamePassword.of(assertString(auth, "user"), assertString(auth, "password"));
+        return new UsernamePassword(assertString(auth, "user"), assertString(auth, "password"));
     }
 
-    private static Map<String, Object> parsePrivateKeyAuth(AnsibleSecretService secretService,
-                                                           Path workDir,
-                                                           Map<String, Object> auth) throws Exception {
+    private static PrivateKeyAuth parsePrivateKeyAuth(AnsibleSecretService secretService,
+                                                      Path workDir,
+                                                      Map<String, Object> auth) throws Exception {
+
+        boolean removeAfter = true;
 
         Path p;
         Map<String, Object> secretParams = getMap(auth, "secret", Collections.emptyMap());
         if (!secretParams.isEmpty()) {
             Secret secret = Secret.from(secretParams);
-            SecretService.KeyPair keyPair = secretService.exportKeyAsFile(secret.getOrg(), secret.getName(), secret.getPassword());
+            KeyPair keyPair = secretService.exportKeyAsFile(secret.getOrg(), secret.getName(), secret.getPassword());
             p = keyPair.privateKey();
         } else {
             p = ArgUtils.getPath(auth, "path", workDir);
+            removeAfter = false;
         }
 
         if (!Files.exists(p)) {
@@ -113,20 +119,8 @@ public class AnsibleAuthFactory {
         perms.add(PosixFilePermission.OWNER_WRITE);
         Files.setPosixFilePermissions(p, perms);
 
-        Map<String, Object> result = new HashMap<>();
-        result.put("user", getString(auth, "user"));
-        result.put("keyPath", p.toAbsolutePath());
-        return result;
-    }
-
-    private static Path assertPath(Map<String, Object> m, String key) {
-        Object p = m.get(key);
-        if (p == null) {
-            throw new IllegalArgumentException("Mandatory variable '" + key + "' is required");
-        }
-        if (p instanceof Path) {
-            return (Path) p;
-        }
-        throw new IllegalArgumentException("Invalid variable '" + key + "' type, expected: path, got: " + p.getClass());
+        String user = getString(auth, "user");
+        Path keyPath = p.toAbsolutePath();
+        return new PrivateKeyAuth(workDir, user, keyPath, removeAfter);
     }
 }

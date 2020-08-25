@@ -10,6 +10,8 @@
 
             Assuming the current data is in UTC, we can change all "timestamp" columns
             and indices to "timestamp with time zone" just by updating the column's "atttypid".
+
+            Requires SUPERUSER privileges.
         -->
         <createProcedure dbms="postgresql">
             create or replace function ts_to_tstz(t text)
@@ -50,50 +52,160 @@
 
     <!-- AGENT_COMMANDS -->
     <changeSet id="1580100" author="ibodrov@gmail.com">
+        <preConditions onFail="MARK_RAN">
+            <changeLogPropertyDefined property="superuserAvailable" value="true"/>
+        </preConditions>
+
         <sql>
             select ts_to_tstz('agent_commands')
         </sql>
     </changeSet>
 
+    <changeSet id="1580100-a" author="ibodrov@gmail.com">
+        <preConditions onFail="MARK_RAN">
+            <changeLogPropertyDefined property="superuserAvailable" value="false"/>
+        </preConditions>
+
+        <sql>
+            alter table AGENT_COMMANDS alter column CREATED_AT type timestamptz using CREATED_AT at time zone 'UTC'
+        </sql>
+    </changeSet>
+
     <!-- API_KEYS -->
     <changeSet id="1580110" author="ibodrov@gmail.com">
+        <preConditions onFail="MARK_RAN">
+            <changeLogPropertyDefined property="superuserAvailable" value="true"/>
+        </preConditions>
+
         <sql>
             select ts_to_tstz('api_keys')
         </sql>
     </changeSet>
 
+    <changeSet id="1580110-a" author="ibodrov@gmail.com">
+        <preConditions onFail="MARK_RAN">
+            <changeLogPropertyDefined property="superuserAvailable" value="false"/>
+        </preConditions>
+
+        <sql>
+            alter table API_KEYS
+                alter column EXPIRED_AT type timestamptz using EXPIRED_AT at time zone 'UTC',
+                alter column LAST_NOTIFIED_AT type timestamptz using LAST_NOTIFIED_AT at time zone 'UTC'
+        </sql>
+    </changeSet>
+
     <!-- PROCESS_QUEUE -->
     <changeSet id="1580120" author="ibodrov@gmail.com">
+        <preConditions onFail="MARK_RAN">
+            <changeLogPropertyDefined property="superuserAvailable" value="true"/>
+        </preConditions>
+
         <sql>
             select ts_to_tstz('process_queue')
         </sql>
     </changeSet>
 
+    <changeSet id="1580120-a" author="ibodrov@gmail.com">
+        <preConditions onFail="MARK_RAN">
+            <changeLogPropertyDefined property="superuserAvailable" value="false"/>
+        </preConditions>
+
+        <sql>
+            alter table PROCESS_QUEUE
+                alter column CREATED_AT type timestamptz using CREATED_AT at time zone 'UTC',
+                alter column LAST_UPDATED_AT type timestamptz using LAST_UPDATED_AT at time zone 'UTC',
+                alter column START_AT type timestamptz using START_AT at time zone 'UTC',
+                alter column LAST_RUN_AT type timestamptz using LAST_RUN_AT at time zone 'UTC'
+        </sql>
+    </changeSet>
+
     <!-- TASKS -->
     <changeSet id="1580130" author="ibodrov@gmail.com">
+        <preConditions onFail="MARK_RAN">
+            <changeLogPropertyDefined property="superuserAvailable" value="true"/>
+        </preConditions>
+
         <sql>
             select ts_to_tstz('tasks')
         </sql>
     </changeSet>
 
+    <changeSet id="1580130-a" author="ibodrov@gmail.com">
+        <preConditions onFail="MARK_RAN">
+            <changeLogPropertyDefined property="superuserAvailable" value="false"/>
+        </preConditions>
+
+        <sql>
+            alter table TASKS
+                alter column STARTED_AT type timestamptz using STARTED_AT at time zone 'UTC',
+                alter column FINISHED_AT type timestamptz using FINISHED_AT at time zone 'UTC',
+                alter column LAST_UPDATED_AT type timestamptz using LAST_UPDATED_AT at time zone 'UTC'
+        </sql>
+    </changeSet>
+
     <!-- TASK_LOCKS -->
     <changeSet id="1580140" author="ibodrov@gmail.com">
+        <preConditions onFail="MARK_RAN">
+            <changeLogPropertyDefined property="superuserAvailable" value="true"/>
+        </preConditions>
+
         <sql>
             select ts_to_tstz('task_locks')
         </sql>
     </changeSet>
 
+    <changeSet id="1580140-a" author="ibodrov@gmail.com">
+        <preConditions onFail="MARK_RAN">
+            <changeLogPropertyDefined property="superuserAvailable" value="false"/>
+        </preConditions>
+
+        <sql>
+            alter table TASK_LOCKS
+                alter column LOCKED_AT type timestamptz using LOCKED_AT at time zone 'UTC'
+        </sql>
+    </changeSet>
+
     <!-- TRIGGER_SCHEDULE -->
     <changeSet id="1580150" author="ibodrov@gmail.com">
+        <preConditions onFail="MARK_RAN">
+            <changeLogPropertyDefined property="superuserAvailable" value="true"/>
+        </preConditions>
+
         <sql>
             select ts_to_tstz('trigger_schedule')
         </sql>
     </changeSet>
 
+    <changeSet id="1580150-a" author="ibodrov@gmail.com">
+        <preConditions onFail="MARK_RAN">
+            <changeLogPropertyDefined property="superuserAvailable" value="false"/>
+        </preConditions>
+
+        <sql>
+            alter table TRIGGER_SCHEDULE
+                alter column FIRE_AT type timestamptz using FIRE_AT at time zone 'UTC'
+        </sql>
+    </changeSet>
+
     <!-- USERS -->
     <changeSet id="1580160" author="ibodrov@gmail.com">
+        <preConditions onFail="MARK_RAN">
+            <changeLogPropertyDefined property="superuserAvailable" value="true"/>
+        </preConditions>
+
         <sql>
             select ts_to_tstz('users')
+        </sql>
+    </changeSet>
+
+    <changeSet id="1580160-a" author="ibodrov@gmail.com">
+        <preConditions onFail="MARK_RAN">
+            <changeLogPropertyDefined property="superuserAvailable" value="false"/>
+        </preConditions>
+
+        <sql>
+            alter table USERS
+                alter column LAST_GROUP_SYNC_DT type timestamptz using LAST_GROUP_SYNC_DT at time zone 'UTC'
         </sql>
     </changeSet>
 
@@ -101,8 +213,25 @@
 
     <!-- AUDIT_LOG -->
     <changeSet id="1580200" author="ibodrov@gmail.com">
+        <preConditions onFail="MARK_RAN">
+            <changeLogPropertyDefined property="superuserAvailable" value="true"/>
+        </preConditions>
+
         <sql>
             select ts_to_tstz('audit_log%')
+        </sql>
+    </changeSet>
+
+    <changeSet id="1580200-a" author="ibodrov@gmail.com">
+        <preConditions onFail="MARK_RAN">
+            <changeLogPropertyDefined property="superuserAvailable" value="false"/>
+        </preConditions>
+
+        <dropView viewName="V_AUDIT_LOG"/>
+
+        <sql>
+            alter table AUDIT_LOG
+                alter column ENTRY_DATE type timestamptz using ENTRY_DATE at time zone 'UTC'
         </sql>
     </changeSet>
 
@@ -123,41 +252,123 @@
 
     <!-- PROCESS_CHECKPOINTS -->
     <changeSet id="1580210" author="ibodrov@gmail.com">
+        <preConditions onFail="MARK_RAN">
+            <changeLogPropertyDefined property="superuserAvailable" value="true"/>
+        </preConditions>
+
         <sql>
             select ts_to_tstz('process_checkpoints%')
         </sql>
     </changeSet>
 
+    <changeSet id="1580210-a" author="ibodrov@gmail.com">
+        <preConditions onFail="MARK_RAN">
+            <changeLogPropertyDefined property="superuserAvailable" value="false"/>
+        </preConditions>
+
+        <sql>
+            alter table PROCESS_CHECKPOINTS
+                alter column INSTANCE_CREATED_AT type timestamptz using INSTANCE_CREATED_AT at time zone 'UTC',
+                alter column CHECKPOINT_DATE type timestamptz using CHECKPOINT_DATE at time zone 'UTC'
+        </sql>
+    </changeSet>
+
     <!-- PROCESS_EVENTS -->
     <changeSet id="1580220" author="ibodrov@gmail.com">
+        <preConditions onFail="MARK_RAN">
+            <changeLogPropertyDefined property="superuserAvailable" value="true"/>
+        </preConditions>
+
         <sql>
             select ts_to_tstz('process_events%')
         </sql>
     </changeSet>
 
+    <changeSet id="1580220-a" author="ibodrov@gmail.com">
+        <preConditions onFail="MARK_RAN">
+            <changeLogPropertyDefined property="superuserAvailable" value="false"/>
+        </preConditions>
+
+        <sql>
+            alter table PROCESS_EVENTS
+                alter column INSTANCE_CREATED_AT type timestamptz using INSTANCE_CREATED_AT at time zone 'UTC',
+                alter column EVENT_DATE type timestamptz using EVENT_DATE at time zone 'UTC'
+        </sql>
+    </changeSet>
+
     <!-- PROCESS_LOG_DATA -->
     <changeSet id="1580230" author="ibodrov@gmail.com">
+        <preConditions onFail="MARK_RAN">
+            <changeLogPropertyDefined property="superuserAvailable" value="true"/>
+        </preConditions>
+
         <sql>
             select ts_to_tstz('process_log_data%')
         </sql>
     </changeSet>
 
+    <changeSet id="1580230-a" author="ibodrov@gmail.com">
+        <preConditions onFail="MARK_RAN">
+            <changeLogPropertyDefined property="superuserAvailable" value="false"/>
+        </preConditions>
+
+        <sql>
+            alter table PROCESS_LOG_DATA
+                alter column INSTANCE_CREATED_AT type timestamptz using INSTANCE_CREATED_AT at time zone 'UTC'
+        </sql>
+    </changeSet>
+
     <!-- PROCESS_LOG_SEGMENTS -->
     <changeSet id="1580240" author="ibodrov@gmail.com">
+        <preConditions onFail="MARK_RAN">
+            <changeLogPropertyDefined property="superuserAvailable" value="true"/>
+        </preConditions>
+
         <sql>
             select ts_to_tstz('process_log_segments%')
         </sql>
     </changeSet>
 
+    <changeSet id="1580240-a" author="ibodrov@gmail.com">
+        <preConditions onFail="MARK_RAN">
+            <changeLogPropertyDefined property="superuserAvailable" value="false"/>
+        </preConditions>
+
+        <sql>
+            alter table PROCESS_LOG_SEGMENTS
+                alter column INSTANCE_CREATED_AT type timestamptz using INSTANCE_CREATED_AT at time zone 'UTC',
+                alter column SEGMENT_TS type timestamptz using SEGMENT_TS at time zone 'UTC'
+        </sql>
+    </changeSet>
+
     <!-- PROCESS_STATE -->
     <changeSet id="1580250" author="ibodrov@gmail.com">
+        <preConditions onFail="MARK_RAN">
+            <changeLogPropertyDefined property="superuserAvailable" value="true"/>
+        </preConditions>
+
         <sql>
             select ts_to_tstz('process_state%')
         </sql>
     </changeSet>
 
+    <changeSet id="1580250-a" author="ibodrov@gmail.com">
+        <preConditions onFail="MARK_RAN">
+            <changeLogPropertyDefined property="superuserAvailable" value="false"/>
+        </preConditions>
+
+        <sql>
+            alter table PROCESS_STATE
+                alter column INSTANCE_CREATED_AT type timestamptz using INSTANCE_CREATED_AT at time zone 'UTC'
+        </sql>
+    </changeSet>
+
     <!-- the rest of it -->
     <changeSet id="1580300" author="ibodrov@gmail.com">
+        <preConditions onFail="MARK_RAN">
+            <changeLogPropertyDefined property="superuserAvailable" value="true"/>
+        </preConditions>
+
         <sql>
             update pg_attribute
                 set atttypid = 'timestamp with time zone'::regtype

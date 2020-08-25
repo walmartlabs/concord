@@ -6,7 +6,7 @@
     <parent>
         <groupId>com.walmartlabs.concord.server</groupId>
         <artifactId>parent</artifactId>
-        <version>1.59.1-SNAPSHOT</version>
+        <version>1.62.1-SNAPSHOT</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
 
@@ -164,6 +164,10 @@
                     <password>${db.password}</password>
                     <promptOnNonLocalDatabase>false</promptOnNonLocalDatabase>
                     <contexts>codegen</contexts>
+                    <expressionVariables>
+                        <superuserAvailable>true</superuserAvailable>
+                        <createExtensionAvailable>true</createExtensionAvailable>
+                    </expressionVariables>
                 </configuration>
             </plugin>
             <plugin>

@@ -21,18 +21,17 @@ package com.walmartlabs.concord.plugins.slack;
  */
 
 import com.walmartlabs.concord.runtime.v2.sdk.Task;
+import com.walmartlabs.concord.runtime.v2.sdk.TaskResult;
 import com.walmartlabs.concord.runtime.v2.sdk.Variables;
 
 import javax.inject.Named;
-import java.io.Serializable;
 import java.util.Collection;
-import java.util.HashMap;
 
 @Named("slack")
 public class SlackTaskV2 implements Task {
 
     @Override
-    public Serializable execute(Variables input) throws Exception {
+    public TaskResult execute(Variables input) throws Exception {
         SlackConfiguration slackCfg = SlackConfiguration.from(input.toMap());
 
         String channelId = input.assertString(TaskParams.CHANNEL_ID.getKey());
@@ -44,16 +43,8 @@ public class SlackTaskV2 implements Task {
         Collection<Object> attachments = input.getCollection(TaskParams.ATTACHMENTS.getKey(), null);
 
         SlackClient.Response r = Slack.sendMessage(slackCfg, channelId, ts, replyBroadcast, text, iconEmoji, username, attachments);
-        return result(r);
-    }
-
-    // TODO common result-handling code
-    private static HashMap<String, Object> result(SlackClient.Response r) {
-        HashMap<String, Object> m = new HashMap<>();
-        m.put("ok", r.isOk());
-        m.put("error", r.getError());
-        m.put("id", Utils.extractString(r, "channel"));
-        m.put("ts", r.getTs());
-        return m;
+        return new TaskResult(r.isOk(), r.getError())
+                .value("id", Utils.extractString(r, "channel"))
+                .value("ts", r.getTs());
     }
 }

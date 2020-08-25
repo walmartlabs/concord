@@ -31,9 +31,7 @@ import com.walmartlabs.concord.runtime.v2.runner.remote.DefaultProcessStatusCall
 import com.walmartlabs.concord.runtime.v2.runner.remote.EventRecordingExecutionListener;
 import com.walmartlabs.concord.runtime.v2.runner.remote.TaskCallEventRecordingListener;
 import com.walmartlabs.concord.runtime.v2.runner.tasks.TaskCallListener;
-import com.walmartlabs.concord.runtime.v2.sdk.DockerService;
-import com.walmartlabs.concord.runtime.v2.sdk.FileService;
-import com.walmartlabs.concord.runtime.v2.sdk.SecretService;
+import com.walmartlabs.concord.runtime.v2.sdk.*;
 import com.walmartlabs.concord.svm.ExecutionListener;
 
 /**
@@ -48,8 +46,10 @@ public class DefaultRunnerModule extends AbstractModule {
         bind(ApiClient.class).toProvider(ApiClientProvider.class);
         bind(CheckpointService.class).to(DefaultCheckpointService.class);
         bind(DefaultTaskVariablesService.class).toProvider(DefaultTaskVariablesProvider.class);
+        bind(DependencyManager.class).to(DefaultDependencyManager.class);
         bind(DockerService.class).to(DefaultDockerService.class);
         bind(FileService.class).to(DefaultFileService.class);
+        bind(LockService.class).to(DefaultLockService.class);
         bind(PersistenceService.class).to(DefaultPersistenceService.class);
         bind(ProcessStatusCallback.class).to(DefaultProcessStatusCallback.class);
         bind(SecretService.class).to(DefaultSecretService.class);

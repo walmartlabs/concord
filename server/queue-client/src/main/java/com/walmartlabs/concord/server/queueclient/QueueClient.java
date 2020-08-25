@@ -134,7 +134,7 @@ public class QueueClient {
         private long lastRequestTimestamp;
         private long lastResponseTimestamp;
 
-        private AtomicReference<State> state;
+        private final AtomicReference<State> state;
 
         public Worker(QueueClientConfiguration cfg, List<RequestEntry> requests) throws URISyntaxException {
             this.agentId = cfg.getAgentId();
@@ -326,7 +326,7 @@ public class QueueClient {
             } catch (InterruptedException e) {
                 // ignore, we're stopping anyway
             } catch (Exception e) {
-                log.error("stop -> error", e);
+                log.warn("stop -> error: {}", e.getMessage());
             }
 
             synchronized (this.requests) {

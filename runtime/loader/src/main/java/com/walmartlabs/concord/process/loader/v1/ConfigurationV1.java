@@ -21,8 +21,12 @@ package com.walmartlabs.concord.process.loader.v1;
  */
 
 import com.walmartlabs.concord.process.loader.model.Configuration;
+import com.walmartlabs.concord.sdk.Constants;
+import com.walmartlabs.concord.sdk.MapUtils;
 
 import java.io.Serializable;
+import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 
 public class ConfigurationV1 implements Configuration, Serializable {
@@ -33,6 +37,11 @@ public class ConfigurationV1 implements Configuration, Serializable {
 
     public ConfigurationV1(Map<String, Object> values) {
         this.values = values;
+    }
+
+    @Override
+    public List<String> dependencies() {
+        return MapUtils.getList(values, Constants.Request.DEPENDENCIES_KEY, Collections.emptyList());
     }
 
     @Override

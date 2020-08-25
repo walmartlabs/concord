@@ -26,6 +26,8 @@ import com.google.inject.multibindings.Multibinder;
 import com.walmartlabs.concord.runtime.v2.runner.*;
 import com.walmartlabs.concord.runtime.v2.runner.checkpoints.CheckpointService;
 import com.walmartlabs.concord.runtime.v2.runner.guice.BaseRunnerModule;
+import com.walmartlabs.concord.runtime.v2.sdk.DependencyManager;
+import com.walmartlabs.concord.runtime.v2.sdk.LockService;
 import com.walmartlabs.concord.svm.ExecutionListener;
 
 import java.nio.file.Path;
@@ -57,9 +59,14 @@ public class CliServicesModule extends AbstractModule {
 
         bind(CheckpointService.class).to(CliCheckpointService.class);
         bind(PersistenceService.class).to(DefaultPersistenceService.class);
-        bind(ProcessStatusCallback.class).toInstance(instanceId -> {});
+        bind(ProcessStatusCallback.class).toInstance(instanceId -> {
+        });
 
         bind(DefaultTaskVariablesService.class).toInstance(new MapBackedDefaultTaskVariablesService(readDefaultVars()));
+
+        bind(LockService.class).to(CliLockService.class);
+
+        bind(DependencyManager.class).to(DefaultDependencyManager.class);
 
         Multibinder.newSetBinder(binder(), ExecutionListener.class);
     }

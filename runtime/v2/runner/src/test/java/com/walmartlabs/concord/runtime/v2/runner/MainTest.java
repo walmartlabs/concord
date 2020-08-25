@@ -43,9 +43,7 @@ import com.walmartlabs.concord.runtime.v2.runner.tasks.TaskCallPolicyChecker;
 import com.walmartlabs.concord.runtime.v2.runner.tasks.TaskResultListener;
 import com.walmartlabs.concord.runtime.v2.runner.tasks.TaskV2Provider;
 import com.walmartlabs.concord.runtime.v2.sdk.*;
-import com.walmartlabs.concord.runtime.v2.v1.compat.V1CompatModule;
 import com.walmartlabs.concord.sdk.Constants;
-import com.walmartlabs.concord.sdk.InjectVariable;
 import com.walmartlabs.concord.svm.ExecutionListener;
 import org.immutables.value.Value;
 import org.junit.After;
@@ -108,10 +106,12 @@ public class MainTest {
                 install(new BaseRunnerModule());
 
                 bind(CheckpointService.class).toInstance(checkpointService);
-                bind(PersistenceService.class).toInstance(mock(PersistenceService.class));
-                bind(ProcessStatusCallback.class).toInstance(processStatusCallback);
+                bind(DependencyManager.class).to(DefaultDependencyManager.class);
                 bind(DockerService.class).to(DefaultDockerService.class);
                 bind(FileService.class).to(DefaultFileService.class);
+                bind(LockService.class).to(DefaultLockService.class);
+                bind(PersistenceService.class).toInstance(mock(PersistenceService.class));
+                bind(ProcessStatusCallback.class).toInstance(processStatusCallback);
                 bind(SecretService.class).to(DefaultSecretService.class);
 
                 Multibinder<TaskProvider> taskProviders = Multibinder.newSetBinder(binder(), TaskProvider.class);
@@ -153,7 +153,6 @@ public class MainTest {
         byte[] log = run();
         assertLog(log, ".*Hello, Concord!.*");
         assertLog(log, ".*" + Pattern.quote("defaultsMap:{a=a-value}") + ".*");
-        assertLog(log, ".*" + Pattern.quote("defaultsTyped:Defaults{a=a-value}") + ".*");
 
         verify(processStatusCallback, times(1)).onRunning(instanceId);
     }
@@ -591,17 +590,6 @@ public class MainTest {
     }
 
     @Test
-    public void testV1Compat() throws Exception {
-        deploy("v1Compat");
-
-        save(ProcessConfiguration.builder().build());
-
-        byte[] log = run();
-        assertLog(log, ".*execute: p1=ABC.*");
-        assertLog(log, ".*" + Pattern.quote("result: {result=abc}") + ".*");
-    }
-
-    @Test
     public void testVarScoping() throws Exception {
         deploy("varScoping");
 
@@ -651,17 +639,17 @@ public class MainTest {
     @Test
     public void testReentrant() throws Exception {
         deploy("reentrantTask");
-        String actionName = "BOO";
-
         save(ProcessConfiguration.builder()
-                .putArguments("actionName", actionName)
+                .putArguments("actionName", "boo")
                 .build());
 
         byte[] log = run();
-        assertLog(log, ".*Before.*");
+        assertLog(log, ".*execute \\{action=boo\\}.*");
 
         log = resume(ReentrantTaskExample.EVENT_NAME, ProcessConfiguration.builder().build());
-        assertLog(log, ".*After: " + Pattern.quote("k=v, a=b") + ".*");
+        assertLog(log, ".*result.ok: true.*");
+        assertLog(log, ".*result.action: boo.*");
+        assertLog(log, ".*result.k: v.*");
     }
 
     private void deploy(String resource) throws URISyntaxException, IOException {
@@ -718,8 +706,7 @@ public class MainTest {
                     runnerCfg.build(),
                     () -> processConfiguration,
                     testServices,
-                    runtimeModule,
-                    new V1CompatModule()) // allow runtime v1 tasks
+                    runtimeModule) // allow runtime v1 tasks
                     .create();
             injector.getInstance(Main.class).execute();
         } finally {
@@ -771,17 +758,17 @@ public class MainTest {
     @Named("testDefaults")
     static class TestDefaults implements Task {
 
-        @DefaultVariables("testDefaults")
-        Map<String, Object> defaultsMap;
+        private final Variables defaults;
 
-        @DefaultVariables
-        Defaults defaultsTyped;
+        @Inject
+        public TestDefaults(Context ctx) {
+            this.defaults = ctx.defaultVariables();
+        }
 
         @Override
-        public Serializable execute(Variables input) {
-            System.out.println("defaultsMap:" + defaultsMap);
-            System.out.println("defaultsTyped:" + defaultsTyped);
-            return null;
+        public TaskResult execute(Variables input) {
+            System.out.println("defaultsMap:" + defaults.toMap());
+            return TaskResult.success();
         }
 
         @Value.Immutable
@@ -801,8 +788,9 @@ public class MainTest {
     static class WrapExpressionTask implements Task {
 
         @Override
-        public Serializable execute(Variables input) {
-            return "${" + input.get("expression") + "}";
+        public TaskResult execute(Variables input) {
+            return TaskResult.success()
+                    .value("expression", "${" + input.get("expression") + "}");
         }
     }
 
@@ -811,8 +799,9 @@ public class MainTest {
     static class TestTask implements Task {
 
         @Override
-        public Serializable execute(Variables input) {
-            return new HashMap<>(input.toMap());
+        public TaskResult execute(Variables input) {
+            return TaskResult.success()
+                    .values(input.toMap());
         }
     }
 
@@ -824,7 +813,7 @@ public class MainTest {
         private static final Logger processLog = LoggerFactory.getLogger("processLog");
 
         @Override
-        public Serializable execute(Variables input) throws Exception {
+        public TaskResult execute(Variables input) throws Exception {
             log.info("This goes into a regular log");
             processLog.info("This is a processLog entry");
             System.out.println("This goes directly into the stdout");
@@ -855,39 +844,12 @@ public class MainTest {
         }
     }
 
-    @Named("v1")
-    @SuppressWarnings("unused")
-    static class V1Task implements com.walmartlabs.concord.sdk.Task {
-
-        @InjectVariable("context")
-        com.walmartlabs.concord.sdk.Context ctx;
-
-        @Override
-        public void execute(com.walmartlabs.concord.sdk.Context ctx) {
-            assertEquals(ctx, this.ctx);
-
-            ctx.setVariable("result", "abc");
-            System.out.println("execute: p1=" + ctx.getVariable("p1"));
-        }
-
-        // can't use in v2
-        public String callWithoutContext() {
-            return "without-context";
-        }
-
-        // can't use in v2
-        public String callWithContext(@InjectVariable("context") com.walmartlabs.concord.sdk.Context ctx) {
-            ctx.setVariable("result2", "xyz");
-            return "with-context";
-        }
-    }
-
     @Named("faultyTask")
     @SuppressWarnings("unused")
     static class FaultyTask implements Task {
 
         @Override
-        public Serializable execute(Variables input) {
+        public TaskResult execute(Variables input) {
             throw new RuntimeException("boom!");
         }
     }
@@ -908,7 +870,7 @@ public class MainTest {
         }
 
         @Override
-        public Serializable execute(Variables input) {
+        public TaskResult execute(Variables input) {
             log.info("execute {}", input.toMap());
 
             HashMap<String, Serializable> payload = new HashMap<>();
@@ -917,13 +879,14 @@ public class MainTest {
 
             EVENT_NAME = context.suspendResume(payload);
 
-            return null;
+            return TaskResult.success();
         }
 
         @Override
-        public Serializable resume(Map<String, Serializable> payload) {
-            log.info("RESUME: {}", payload);
-            return "k=" + payload.get("k") + ", a=b";
+        public TaskResult resume(ResumeEvent event) {
+            log.info("RESUME: {}", event);
+            return TaskResult.success()
+                    .values((Map)event.state());
         }
     }
 }

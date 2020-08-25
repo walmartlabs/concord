@@ -5,7 +5,7 @@
     <parent>
         <groupId>com.walmartlabs.concord</groupId>
         <artifactId>parent</artifactId>
-        <version>1.59.1-SNAPSHOT</version>
+        <version>1.62.1-SNAPSHOT</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
 
@@ -83,6 +83,15 @@
             </activation>
             <properties>
                 <docker.skip>false</docker.skip>
+            </properties>
+        </profile>
+        <profile>
+            <id>jdk11</id>
+            <activation>
+                <activeByDefault>false</activeByDefault>
+            </activation>
+            <properties>
+                <jdk.version>11</jdk.version>
             </properties>
         </profile>
     </profiles>

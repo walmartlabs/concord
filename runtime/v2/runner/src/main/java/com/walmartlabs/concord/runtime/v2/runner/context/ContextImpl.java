@@ -27,14 +27,13 @@ import com.walmartlabs.concord.runtime.v2.runner.vm.SuspendCommand;
 import com.walmartlabs.concord.runtime.v2.runner.vm.TaskSuspendCommand;
 import com.walmartlabs.concord.runtime.v2.sdk.Compiler;
 import com.walmartlabs.concord.runtime.v2.sdk.*;
-import com.walmartlabs.concord.sdk.ApiConfiguration;
-import com.walmartlabs.concord.sdk.ImmutableProjectInfo;
 import com.walmartlabs.concord.svm.Runtime;
 import com.walmartlabs.concord.svm.State;
 import com.walmartlabs.concord.svm.ThreadId;
 
 import java.io.Serializable;
 import java.nio.file.Path;
+import java.util.Collections;
 import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
@@ -56,6 +55,7 @@ public class ContextImpl implements Context {
     private final FileService fileService;
     private final DockerService dockerService;
     private final SecretService secretService;
+    private final LockService lockService;
     private final ApiConfiguration apiConfiguration;
     private final ProcessConfiguration processConfiguration;
 
@@ -72,6 +72,7 @@ public class ContextImpl implements Context {
                        FileService fileService,
                        DockerService dockerService,
                        SecretService secretService,
+                       LockService lockService,
                        ApiConfiguration apiConfiguration,
                        ProcessConfiguration processConfiguration) {
 
@@ -90,6 +91,7 @@ public class ContextImpl implements Context {
         this.fileService = fileService;
         this.dockerService = dockerService;
         this.secretService = secretService;
+        this.lockService = lockService;
         this.apiConfiguration = apiConfiguration;
         this.processConfiguration = processConfiguration;
     }
@@ -110,7 +112,12 @@ public class ContextImpl implements Context {
     }
 
     @Override
-    public com.walmartlabs.concord.sdk.ProjectInfo projectInfo() {
+    public Variables defaultVariables() {
+        return new MapBackedVariables(Collections.emptyMap());
+    }
+
+    @Override
+    public ProjectInfo projectInfo() {
         if (projectInfo.projectId() == null) {
             return null;
         }
@@ -118,8 +125,8 @@ public class ContextImpl implements Context {
         return ImmutableProjectInfo.builder()
                 .orgId(Objects.requireNonNull(projectInfo.orgId()))
                 .orgName(Objects.requireNonNull(projectInfo.orgName()))
-                .id(Objects.requireNonNull(projectInfo.projectId()))
-                .name(Objects.requireNonNull(projectInfo.projectName()))
+                .projectId(Objects.requireNonNull(projectInfo.projectId()))
+                .projectName(Objects.requireNonNull(projectInfo.projectName()))
                 .build();
     }
 
@@ -136,6 +143,11 @@ public class ContextImpl implements Context {
     @Override
     public SecretService secretService() {
         return secretService;
+    }
+
+    @Override
+    public LockService lockService() {
+        return lockService;
     }
 
     @Override
@@ -199,14 +211,14 @@ public class ContextImpl implements Context {
     }
 
     @Override
-    public String suspendResume(Map<String, Serializable> payload) {
+    public String suspendResume(Map<String, Serializable> taskState) {
         Step step = execution().currentStep();
         if (!(step instanceof TaskCall)) {
             throw new IllegalStateException("Calling 'suspendResume' is allowed only in task calls. Current step: " + (step != null ? step.getClass() : "n/a"));
         }
 
         String eventName = UUID.randomUUID().toString();
-        state.peekFrame(currentThreadId).push(new TaskSuspendCommand(correlationId, eventName, (TaskCall) step, payload));
+        state.peekFrame(currentThreadId).push(new TaskSuspendCommand(correlationId, eventName, (TaskCall) step, taskState));
         return eventName;
     }
 }

@@ -168,7 +168,7 @@ public class ProcessLogResourceV2 implements Resource {
                        @ApiParam @PathParam("segmentId") long segmentId,
                        InputStream data) {
 
-        ProcessKey processKey = assertProcessKey(instanceId);
+        ProcessKey processKey = logAccessManager.assertLogAccess(instanceId);
 
         try {
             byte[] ab = IOUtils.toByteArray(data);

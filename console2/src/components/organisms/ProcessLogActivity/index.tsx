@@ -37,6 +37,7 @@ import {
 } from 'react';
 import RequestErrorActivity from '../RequestErrorActivity';
 import { getLog as apiGetLog, LogRange } from '../../../api/process/log';
+import { useLocation } from 'react-router';
 
 interface ExternalProps {
     instanceId: ConcordId;
@@ -59,13 +60,33 @@ const ProcessLogActivity = ({
     loadingHandler,
     forceRefresh
 }: ExternalProps) => {
+    const location = useLocation();
     const didMountRef = useRef(false);
     const range = useRef<LogRange>(DEFAULT_RANGE);
     const [data, setData] = useState<LogSegment[]>([]);
     const [opts, setOpts] = useState<LogProcessorOptions>(getStoredOpts());
     const [refresh, setRefresh] = useState<boolean>(false);
     const [stopPolling, setStopPolling] = useState<boolean>(isFinal(processStatus));
-    const [wholeLogLoading, setWholeLogLoading] = useState<boolean>(false);
+    const [wholeLogLoading, setWholeLogLoading] = useState<boolean>(location.hash !== '');
+    const [selectedCorrelationId, setSelectedCorrelationId] = useState<string>(
+        location.hash.substring(1)
+    );
+
+    useEffect(() => {
+        if (didMountRef.current) {
+            const hasHash = location.hash !== '';
+            setSelectedCorrelationId(location.hash.substring(1));
+
+            setData([]);
+            setWholeLogLoading(hasHash);
+            if (hasHash) {
+                range.current = { low: 0 };
+            } else {
+                range.current = DEFAULT_RANGE;
+            }
+            setRefresh((prevState) => !prevState);
+        }
+    }, [location]);
 
     const optsHandler = useCallback((o: LogProcessorOptions) => {
         setData([]);
@@ -74,7 +95,7 @@ const ProcessLogActivity = ({
         setRefresh((prevState) => !prevState);
     }, []);
 
-    const loadWholeLog = useCallback(async () => {
+    const loadWholeLog = useCallback(() => {
         setData([]);
         setWholeLogLoading(true);
         setRefresh((prevState) => !prevState);
@@ -134,6 +155,7 @@ const ProcessLogActivity = ({
             completed={wholeLogLoading}
             optsHandler={optsHandler}
             loadWholeLog={loadWholeLog}
+            selectedCorrelationId={selectedCorrelationId}
         />
     );
 };

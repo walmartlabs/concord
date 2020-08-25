@@ -1,5 +1,94 @@
 # Change log
 
+## [1.62.0] - 2020-08-19
+
+### Added
+
+- concord-server: a way to deploy the DB schema without
+`SUPERUSER` role and/or `CREATE EXTENSION` privileges;
+- concord-console: a way to open a process log at a specific
+checkpoint by using `#/process/{id}/log#{eventCorrelationId}`;
+- runtime-v2: the v2 SDK now provides the `DependencyManager`
+interface.
+
+### Changed
+
+- concord-client: `ClientUtils#getHeaders` now correctly assumes
+case-insensitivity of header names;
+- concord-server: `OrganizationManager#create` and `#update`
+replaced with a single `createOrUpdate` method;
+- ansible: when using `auth.privateKey.path` don't remove the file
+after the play's end.
+
+### Breaking
+
+- runtime-v2: `Task#execute` and `ReentrantTask#resume` now return
+a new common result type - `com.walmartlabs.concord.runtime.v2.sdk.TaskResult`.
+
+
+
+## [1.61.0] - 2020-08-13
+
+### Added
+
+- concord-agent: `CONCORD_JAVA_OPTS` environment variable can now be
+used to specify additional JVM options.
+
+### Changed
+
+- concord-server: allow `null` values in process event data to
+improve backward compatibility with older plugins;
+- runtime-v2: warn about `@Singleton` tasks;
+- runtime-v1, runtime-v2: `throw` with a string value doesn't
+produce a stacktrace anymore;
+- project: JDK 11 compatibility.
+
+### Breaking
+
+- runtime-v2: `ReentrantTask` now accepts `ResumeEvent` instead of
+`Map<String, Object>`;
+- runtime-v2: `@DefaultVariables` annotation was replaced with
+`Context#defaultVariables()` method;
+- runtime-v2: the SDK module no longer shares interfaces/types with
+the v1 SDK:
+  - `ApiConfiguration`
+  - `DockerContainerSpec`
+
+
+
+## [1.60.1] - 2020-08-05
+
+### Changed
+
+- concord-agent: fixed an issue preventing the Agent from working
+in the `LOCAL` mode of [testcontainers-concord](https://github.com/concord-workflow/testcontainers-concord).
+
+
+
+## [1.60.0] - 2020-08-05
+
+### Added
+
+- runtime-v2: support for `name` attributes in task, flow call and
+expresion steps;
+- concord-server: store process `dependencies` in
+the `process_queue.dependencies` column;
+- runtime-v2: `LockService` implementation;
+- concord-server: expose the current number of processes with
+"wait conditions" as a new metric - `process_queue_enqueued_wait`.
+
+### Changed
+
+- concord-agent: use process session token to append logs, download
+state, update status, etc. Previously, agents used an API token from
+the configuration file for such operations;
+- concord-console: the refresh action of the process list page was
+rewritten to use React Hooks;
+- concord-console: fixed scrolling on the repository list page in
+the presence of a modal dialog.
+
+
+
 ## [1.59.0] - 2020-07-30
 
 ### Changed

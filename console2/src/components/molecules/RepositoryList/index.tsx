@@ -40,7 +40,7 @@ const RepositoryList = ({ orgName, projectName, data, loading }: ExternalProps) 
     }
 
     return (
-        <div style={{ overflowX: 'auto' }}>
+        <div style={{ overflowX: 'auto', width: '100%', height: '100%' }}>
             <Table striped>
                 <Table.Header>
                     <Table.Row>

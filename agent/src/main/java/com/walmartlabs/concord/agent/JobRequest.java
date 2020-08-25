@@ -20,9 +20,6 @@ package com.walmartlabs.concord.agent;
  * =====
  */
 
-import com.walmartlabs.concord.agent.logging.ProcessLog;
-import com.walmartlabs.concord.agent.logging.ProcessLogFactory;
-import com.walmartlabs.concord.agent.logging.RemoteProcessLog;
 import com.walmartlabs.concord.imports.Imports;
 import com.walmartlabs.concord.server.queueclient.message.ProcessResponse;
 
@@ -31,10 +28,9 @@ import java.util.UUID;
 
 public class JobRequest {
 
-    public static JobRequest from(ProcessResponse resp, Path workDir, ProcessLogFactory logFactory) {
-        RemoteProcessLog log = logFactory.createRemoteLog(resp.getProcessId());
-
-        return new JobRequest(Type.RUNNER, resp.getProcessId(),
+    public static JobRequest from(ProcessResponse resp, Path workDir) {
+        return new JobRequest(Type.RUNNER,
+                resp.getProcessId(),
                 workDir,
                 resp.getOrgName(),
                 resp.getRepoUrl(),
@@ -42,7 +38,7 @@ public class JobRequest {
                 resp.getCommitId(),
                 resp.getSecretName(),
                 resp.getImports(),
-                log);
+                resp.getSessionToken());
     }
 
     private final Type type;
@@ -54,7 +50,7 @@ public class JobRequest {
     private final String commitId;
     private final String secretName;
     private final Imports imports;
-    private final ProcessLog log;
+    private final String sessionToken;
 
     protected JobRequest(JobRequest src) {
         this(src.type,
@@ -66,7 +62,7 @@ public class JobRequest {
                 src.commitId,
                 src.secretName,
                 src.imports,
-                src.log);
+                src.sessionToken);
     }
 
     protected JobRequest(Type type,
@@ -78,7 +74,7 @@ public class JobRequest {
                          String commitId,
                          String secretName,
                          Imports imports,
-                         ProcessLog log) {
+                         String sessionToken) {
 
         this.type = type;
         this.instanceId = instanceId;
@@ -89,8 +85,7 @@ public class JobRequest {
         this.commitId = commitId;
         this.secretName = secretName;
         this.imports = imports != null ? imports : Imports.builder().build();
-
-        this.log = log;
+        this.sessionToken = sessionToken;
     }
 
     public Type getType() {
@@ -129,8 +124,8 @@ public class JobRequest {
         return imports;
     }
 
-    public ProcessLog getLog() {
-        return log;
+    public String getSessionToken() {
+        return sessionToken;
     }
 
     @Override
@@ -144,8 +139,8 @@ public class JobRequest {
                 ", repoPath='" + repoPath + '\'' +
                 ", commitId='" + commitId + '\'' +
                 ", secretName='" + secretName + '\'' +
-                ", log=" + log +
-                ", imports=" + imports +
+                ", imports='" + imports + '\'' +
+                ", sessionToken=" + sessionToken +
                 '}';
     }
 

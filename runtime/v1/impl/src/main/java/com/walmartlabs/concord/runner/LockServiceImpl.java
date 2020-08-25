@@ -65,7 +65,7 @@ public class LockServiceImpl implements LockService {
         while (!Thread.currentThread().isInterrupted()) {
             LockResult lock = withRetry(() -> api.tryLock(instanceId, lockName, LockScope.PROJECT.name()));
             if (lock.isAcquired()) {
-                log.info("sucessfully aquired lock '{}' in '{}' scope...", lockName, LockScope.PROJECT);
+                log.info("successfully acquired lock '{}' in '{}' scope...", lockName, LockScope.PROJECT);
                 return;
             }
 

@@ -38,6 +38,11 @@ import java.security.NoSuchAlgorithmException;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
+/**
+ * @deprecated Runtime v2 uses it's own ApiClientFactoryImpl.
+ */
+// TODO move into runtime-v1?
+@Deprecated
 public class ApiClientFactoryImpl implements ApiClientFactory {
 
     private final ApiConfiguration cfg;

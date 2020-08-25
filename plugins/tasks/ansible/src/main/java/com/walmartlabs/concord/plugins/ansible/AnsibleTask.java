@@ -9,9 +9,9 @@ package com.walmartlabs.concord.plugins.ansible;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -24,7 +24,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.walmartlabs.concord.ApiClient;
 import com.walmartlabs.concord.client.ProcessEventsApi;
-import com.walmartlabs.concord.sdk.ApiConfiguration;
+import com.walmartlabs.concord.plugins.ansible.secrets.AnsibleSecretService;
+import com.walmartlabs.concord.runtime.v2.sdk.TaskResult;
 import com.walmartlabs.concord.sdk.Constants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -45,20 +46,20 @@ import static com.walmartlabs.concord.sdk.MapUtils.*;
 public class AnsibleTask {
 
     private static final Logger log = LoggerFactory.getLogger(AnsibleTask.class);
-    private static final Logger processLog = LoggerFactory.getLogger("processLog");
 
     private static final int SUCCESS_EXIT_CODE = 0;
 
     private final ApiClient apiClient;
     private final AnsibleAuthFactory ansibleAuthFactory;
     private final AnsibleSecretService secretService;
-    private final ApiConfiguration apiCfg;
 
-    public AnsibleTask(ApiClient apiClient, AnsibleAuthFactory ansibleAuthFactory, AnsibleSecretService secretService, ApiConfiguration apiCfg) {
+    public AnsibleTask(ApiClient apiClient,
+                       AnsibleAuthFactory ansibleAuthFactory,
+                       AnsibleSecretService secretService) {
+
         this.apiClient = apiClient;
         this.ansibleAuthFactory = ansibleAuthFactory;
         this.secretService = secretService;
-        this.apiCfg = apiCfg;
     }
 
     public TaskResult run(AnsibleContext context,
@@ -67,7 +68,7 @@ public class AnsibleTask {
         String playbook = assertString(context.args(), TaskParams.PLAYBOOK_KEY.getKey());
         log.info("Using a playbook: {}", playbook);
 
-        AnsibleEnv env = new AnsibleEnv(context, apiCfg)
+        AnsibleEnv env = new AnsibleEnv(context)
                 .parse(context.args());
 
         AnsibleConfig cfg = new AnsibleConfig(context)
@@ -135,7 +136,7 @@ public class AnsibleTask {
 
             int code = playbookProcessRunner
                     .withDebug(context.debug())
-                    .run(b.buildArgs(), b.buildEnv(), line -> processLog.info("ANSIBLE: {}", line));
+                    .run(b.buildArgs(), b.buildEnv());
 
             log.debug("execution -> done, code {}", code);
 
@@ -149,7 +150,8 @@ public class AnsibleTask {
                 log.warn("Playbook is finished with code {}", code);
             }
 
-            return new TaskResult(success, result, code);
+            return new TaskResult(success, null, result)
+                    .value("exitCode", code);
         } finally {
             callbacks.stopEventSender();
 

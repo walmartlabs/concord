@@ -33,11 +33,17 @@ public class PrivateKeyAuth implements AnsibleAuth {
     private final Path workDir;
     private final String username;
     private final Path keyPath;
+    private final boolean removeAfter;
 
-    public PrivateKeyAuth(Path workDir, String username, Path keyPath) {
+    public PrivateKeyAuth(Path workDir, String username, Path keyPath, boolean removeAfter) {
         this.workDir = workDir;
         this.username = username;
         this.keyPath = keyPath;
+        this.removeAfter = removeAfter;
+    }
+
+    public Path getKeyPath() {
+        return keyPath;
     }
 
     @Override
@@ -60,6 +66,10 @@ public class PrivateKeyAuth implements AnsibleAuth {
 
     @Override
     public void postProcess() {
+        if (!removeAfter) {
+            return;
+        }
+
         try {
             Files.deleteIfExists(keyPath);
         } catch (Exception e) {

@@ -24,9 +24,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.walmartlabs.concord.ApiClient;
 import com.walmartlabs.concord.ApiException;
 import com.walmartlabs.concord.common.IOUtils;
+import com.walmartlabs.concord.runtime.v2.sdk.TaskResult;
 import com.walmartlabs.concord.sdk.Constants;
 import com.walmartlabs.concord.sdk.MapUtils;
-import com.walmartlabs.concord.sdk.ProjectInfo;
 import org.apache.commons.compress.archivers.zip.ZipArchiveOutputStream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -34,7 +34,6 @@ import org.slf4j.LoggerFactory;
 import javax.inject.Named;
 import java.io.File;
 import java.io.IOException;
-import java.io.Serializable;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -44,7 +43,7 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import static com.walmartlabs.concord.client.ConcordTaskParams.*;
-import static com.walmartlabs.concord.client.ConcordTaskSuspender.*;
+import static com.walmartlabs.concord.client.ConcordTaskSuspender.ResumePayload;
 
 @Named("concord")
 public class ConcordTaskCommon {
@@ -71,36 +70,38 @@ public class ConcordTaskCommon {
     private final ApiClientFactory apiClientFactory;
     private final String processLinkTemplate;
     private final UUID currentProcessId;
-    private final ProjectInfo currentProcessProjectInfo;
+    private final String currentOrgName;
     private final Path workDir;
     private final ConcordTaskSuspender suspender;
 
-    public ConcordTaskCommon(String sessionToken, ApiClientFactory apiClientFactory, String processLinkTemplate, UUID currentProcessId, ProjectInfo currentProcessProjectInfo, Path workDir, ConcordTaskSuspender suspender) {
+    public ConcordTaskCommon(String sessionToken, ApiClientFactory apiClientFactory, String processLinkTemplate, UUID currentProcessId, String currentOrgName, Path workDir, ConcordTaskSuspender suspender) {
         this.sessionToken = sessionToken;
         this.apiClientFactory = apiClientFactory;
         this.processLinkTemplate = processLinkTemplate;
         this.currentProcessId = currentProcessId;
-        this.currentProcessProjectInfo = currentProcessProjectInfo;
+        this.currentOrgName = currentOrgName;
         this.workDir = workDir;
         this.suspender = suspender;
     }
 
-    public Serializable execute(ConcordTaskParams in) throws Exception {
+    public TaskResult execute(ConcordTaskParams in) throws Exception {
         Action action = in.action();
         switch (action) {
             case START: {
-                return new HashMap<>(startChildProcess((StartParams)in));
+                return startChildProcess((StartParams) in);
             }
             case STARTEXTERNAL: {
-                return new HashMap<>(startExternalProcess((StartExternalParams)in));
+                return startExternalProcess((StartExternalParams) in);
             }
             case FORK: {
-                return fork((ForkParams) in).stream()
+                List<String> forks = fork((ForkParams) in).stream()
                         .map(UUID::toString)
-                        .collect(Collectors.toCollection(ArrayList::new));
+                        .collect(Collectors.toList());
+                return TaskResult.success()
+                        .value("forks", forks);
             }
             case KILL: {
-                kill((KillParams)in);
+                kill((KillParams) in);
                 return null;
             }
             default:
@@ -135,9 +136,9 @@ public class ConcordTaskCommon {
                 try {
                     ProcessEntry e = ClientUtils.withRetry(3, 1000,
                             () -> withClient(client -> {
-                        ProcessApi api = new ProcessApi(client);
-                        return api.get(id);
-                    }));
+                                ProcessApi api = new ProcessApi(client);
+                                return api.get(id);
+                            }));
 
                     ProcessEntry.StatusEnum s = e.getStatus();
 
@@ -193,18 +194,18 @@ public class ConcordTaskCommon {
         });
     }
 
-    private Map<String, Object> startExternalProcess(StartExternalParams in) throws Exception {
+    private TaskResult startExternalProcess(StartExternalParams in) throws Exception {
         // just the validation
         in.apiKey();
 
         return start(in, null);
     }
 
-    private Map<String, Object> startChildProcess(StartParams in) throws Exception {
+    private TaskResult startChildProcess(StartParams in) throws Exception {
         return start(in, currentProcessId);
     }
 
-    private Map<String, Object> start(StartParams in, UUID parentInstanceId) throws Exception {
+    private TaskResult start(StartParams in, UUID parentInstanceId) throws Exception {
         Path archive = archivePayload(workDir, in);
         String project = in.project();
         if (project == null && archive == null) {
@@ -271,7 +272,7 @@ public class ConcordTaskCommon {
                         Collections.singletonList(processId), in.ignoreFailures());
 
                 suspend(resume, true);
-                return Collections.emptyMap();
+                return TaskResult.success();
             }
 
             Map<String, ProcessEntry> result = waitForCompletion(Collections.singletonList(processId), -1, Function.identity());
@@ -281,13 +282,14 @@ public class ConcordTaskCommon {
             if (!in.outVars().isEmpty()) {
                 out = getOutVars(in.baseUrl(), in.apiKey(), processId);
             }
-            return out;
+            return TaskResult.success()
+                    .values(out);
         }
 
-        return Collections.emptyMap();
+        return TaskResult.success();
     }
 
-    public Serializable continueAfterSuspend(ResumePayload payload) throws Exception {
+    public TaskResult continueAfterSuspend(ResumePayload payload) throws Exception {
         List<Result> results = new ArrayList<>();
         for (UUID processId : payload.jobs()) {
             Result r = continueAfterSuspend(payload.baseUrl(), payload.apiKey(), processId, payload.collectOutVars());
@@ -308,7 +310,8 @@ public class ConcordTaskCommon {
             // if only one job was started put all variables at the top level of the jobOut object
             // e.g. jobOut.someVar
             Map<String, Object> out = results.get(0).out;
-            return new HashMap<>(out != null ? out : Collections.emptyMap());
+            return TaskResult.success()
+                    .values(out);
         } else {
             // for multiple jobs save their variable into a nested map
             // e.g. jobOut['PROCESSID'].someVar
@@ -319,16 +322,17 @@ public class ConcordTaskCommon {
                     vars.put(id, r.out);
                 }
             }
-            return vars;
+            return TaskResult.success()
+                    .values(vars);
         }
     }
 
     private Result continueAfterSuspend(String baseUrl, String apiKey, UUID processId, boolean collectOutVars) throws Exception {
         ProcessEntry e = ClientUtils.withRetry(3, 1000,
                 () -> withClient(baseUrl, apiKey, client -> {
-            ProcessApi api = new ProcessApi(client);
-            return api.get(processId);
-        }));
+                    ProcessApi api = new ProcessApi(client);
+                    return api.get(processId);
+                }));
 
         ProcessEntry.StatusEnum s = e.getStatus();
         if (!isFinalStatus(s)) {
@@ -451,7 +455,7 @@ public class ConcordTaskCommon {
             if (suspend) {
                 log.info("Suspending the process until the fork processes ({}) are completed...", ids);
                 ResumePayload resume = new ResumePayload(
-                    null, null, !in.outVars().isEmpty(), ids, in.ignoreFailures());
+                        null, null, !in.outVars().isEmpty(), ids, in.ignoreFailures());
 
                 suspend(resume, true);
                 return ids;
@@ -621,10 +625,7 @@ public class ConcordTaskCommon {
             return org;
         }
 
-        if (currentProcessProjectInfo != null) {
-            return currentProcessProjectInfo.orgName();
-        }
-        return null;
+        return currentOrgName;
     }
 
     private static boolean isFinalStatus(ProcessEntry.StatusEnum s) {

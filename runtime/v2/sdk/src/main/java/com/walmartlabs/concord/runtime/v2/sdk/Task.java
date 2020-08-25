@@ -20,8 +20,6 @@ package com.walmartlabs.concord.runtime.v2.sdk;
  * =====
  */
 
-import java.io.Serializable;
-
 /**
  * Task interface. All implementations should be annotated with {@code @Named}
  * using process-wide unique names.
@@ -31,7 +29,7 @@ public interface Task {
     /**
      * This method is called when the task is invoked using the {@code task} syntax.
      */
-    default Serializable execute(Variables input) throws Exception {
+    default TaskResult execute(Variables input) throws Exception {
         throw new IllegalStateException("The task doesn't support full task syntax yet. " +
                 "Please call the task using expressions.");
     }

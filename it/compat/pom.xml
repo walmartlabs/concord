@@ -6,7 +6,7 @@
     <parent>
         <groupId>com.walmartlabs.concord.it</groupId>
         <artifactId>parent</artifactId>
-        <version>1.59.1-SNAPSHOT</version>
+        <version>1.62.1-SNAPSHOT</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
 
@@ -16,7 +16,7 @@
     <properties>
         <!-- version of Agent to use in tests -->
         <!-- should be one or more release versions behind the current version -->
-        <prev.concord.version>1.48.1</prev.concord.version>
+        <prev.concord.version>1.55.0</prev.concord.version>
 
         <server.image>walmartlabs/concord-server</server.image>
         <prev.agent.image>walmartlabs/concord-agent:${prev.concord.version}</prev.agent.image>
@@ -48,6 +48,23 @@
         <dependency>
             <groupId>com.walmartlabs.concord</groupId>
             <artifactId>concord-client</artifactId>
+            <scope>test</scope>
+        </dependency>
+
+        <!-- LOCAL mode support -->
+        <dependency>
+            <groupId>com.walmartlabs.concord.server</groupId>
+            <artifactId>concord-server-impl</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.walmartlabs.concord.server</groupId>
+            <artifactId>concord-server</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.walmartlabs.concord</groupId>
+            <artifactId>concord-agent</artifactId>
             <scope>test</scope>
         </dependency>
     </dependencies>
@@ -88,6 +105,33 @@
                         <agent.image>${prev.agent.image}</agent.image>
                     </systemProperties>
                 </configuration>
+            </plugin>
+
+            <!-- LOCAL mode support -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-dependency-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>copy-runner-jar</id>
+                        <phase>process-test-resources</phase>
+                        <goals>
+                            <goal>copy</goal>
+                        </goals>
+                        <configuration>
+                            <overWriteIfNewer>true</overWriteIfNewer>
+                            <artifactItems>
+                                <artifactItem>
+                                    <groupId>com.walmartlabs.concord.runtime.v1</groupId>
+                                    <artifactId>concord-runtime-impl-v1</artifactId>
+                                    <classifier>jar-with-dependencies</classifier>
+                                    <destFileName>runner-v1.jar</destFileName>
+                                </artifactItem>
+                            </artifactItems>
+                            <outputDirectory>${project.build.directory}</outputDirectory>
+                        </configuration>
+                    </execution>
+                </executions>
             </plugin>
         </plugins>
     </build>

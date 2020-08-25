@@ -27,7 +27,6 @@ import com.walmartlabs.concord.runtime.v2.model.Step;
 import com.walmartlabs.concord.runtime.v2.runner.el.ExpressionEvaluator;
 import com.walmartlabs.concord.runtime.v2.sdk.Compiler;
 import com.walmartlabs.concord.runtime.v2.sdk.*;
-import com.walmartlabs.concord.sdk.ApiConfiguration;
 import com.walmartlabs.concord.svm.Runtime;
 import com.walmartlabs.concord.svm.State;
 import com.walmartlabs.concord.svm.ThreadId;
@@ -43,6 +42,7 @@ public class DefaultContextFactory implements ContextFactory {
     private final FileService fileService;
     private final DockerService dockerService;
     private final SecretService secretService;
+    private final LockService lockService;
     private final ApiConfiguration apiConfiguration;
 
     @Inject
@@ -52,13 +52,16 @@ public class DefaultContextFactory implements ContextFactory {
                                  FileService fileService,
                                  DockerService dockerService,
                                  SecretService secretService,
+                                 LockService lockService,
                                  ApiConfiguration apiConfiguration) {
+
         this.workingDirectory = workingDirectory;
         this.processInstanceId = processInstanceId;
         this.processConfiguration = processConfiguration;
         this.fileService = fileService;
         this.dockerService = dockerService;
         this.secretService = secretService;
+        this.lockService = lockService;
         this.apiConfiguration = apiConfiguration;
     }
 
@@ -75,6 +78,7 @@ public class DefaultContextFactory implements ContextFactory {
         ExpressionEvaluator ee = runtime.getService(ExpressionEvaluator.class);
 
         return new ContextImpl(compiler, ee, currentThreadId, runtime, state, pd, currentStep, correlationId, workingDirectory.getValue(),
-                processInstanceId.getValue(), fileService, dockerService, secretService, apiConfiguration, processConfiguration);
+                processInstanceId.getValue(), fileService, dockerService, secretService, lockService,
+                apiConfiguration, processConfiguration);
     }
 }

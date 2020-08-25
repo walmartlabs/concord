@@ -21,13 +21,16 @@ package com.walmartlabs.concord.agent;
  */
 
 import com.walmartlabs.concord.agent.executors.JobExecutor;
+import com.walmartlabs.concord.agent.guice.AgentImportManager;
+import com.walmartlabs.concord.agent.logging.ProcessLog;
+import com.walmartlabs.concord.agent.remote.ProcessStatusUpdater;
 import com.walmartlabs.concord.client.ProcessEntry.StatusEnum;
 import com.walmartlabs.concord.common.IOUtils;
 import com.walmartlabs.concord.imports.Import.SecretDefinition;
-import com.walmartlabs.concord.imports.ImportManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.inject.Inject;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.UUID;
@@ -37,27 +40,34 @@ public class Worker implements Runnable {
     private static final Logger log = LoggerFactory.getLogger(Worker.class);
 
     private final RepositoryManager repositoryManager;
-    private final ImportManager importManager;
+    private final AgentImportManager importManager;
     private final JobExecutor executor;
     private final CompletionCallback completionCallback;
     private final StateFetcher stateFetcher;
+    private final ProcessStatusUpdater processStatusUpdater;
+    private final ProcessLog processLog;
     private final JobRequest jobRequest;
 
     private JobInstance jobInstance;
 
+    @Inject
     public Worker(RepositoryManager repositoryManager,
-                  ImportManager importManager,
+                  AgentImportManager importManager,
                   JobExecutor executor,
                   CompletionCallback completionCallback,
                   StateFetcher stateFetcher,
+                  ProcessStatusUpdater processStatusUpdater,
+                  ProcessLog processLog,
                   JobRequest jobRequest) {
 
         this.repositoryManager = repositoryManager;
         this.importManager = importManager;
         this.executor = executor;
-        this.jobRequest = jobRequest;
         this.completionCallback = completionCallback;
         this.stateFetcher = stateFetcher;
+        this.processStatusUpdater = processStatusUpdater;
+        this.processLog = processLog;
+        this.jobRequest = jobRequest;
     }
 
     @Override
@@ -82,7 +92,7 @@ public class Worker implements Runnable {
 
             // successful completion
             log.info("run -> done with {}", configuredJobRequest);
-            completionCallback.onStatusChange(StatusEnum.FINISHED);
+            onStatusChange(instanceId, StatusEnum.FINISHED);
         } catch (Exception e) {
             // unwrap the exception if needed
             Throwable t = unwrap(e);
@@ -118,8 +128,16 @@ public class Worker implements Runnable {
             log.error("handleError ['{}'] -> job failed", instanceId, error);
         }
 
-        completionCallback.onStatusChange(status);
+        onStatusChange(instanceId, status);
         log.info("handleError ['{}'] -> done", instanceId);
+    }
+
+    private void onStatusChange(UUID instanceId, StatusEnum status) {
+        try {
+            processStatusUpdater.update(instanceId, status);
+        } finally {
+            completionCallback.onStatusChange(status);
+        }
     }
 
     private void fetchRepo(JobRequest r) throws Exception {
@@ -127,7 +145,7 @@ public class Worker implements Runnable {
             return;
         }
 
-        r.getLog().info("Exporting the repository data: {} @ {}, {}", r.getRepoUrl(), r.getCommitId(), r.getRepoPath());
+        processLog.info("Exporting the repository data: {} @ {}, {}", r.getRepoUrl(), r.getCommitId(), r.getRepoPath());
 
         long dt;
         try {
@@ -138,11 +156,11 @@ public class Worker implements Runnable {
                     r.getPayloadDir(),
                     getSecret(r)));
         } catch (Exception e) {
-            r.getLog().error("Repository export error: {}", e.getMessage(), e);
+            processLog.error("Repository export error: {}", e.getMessage(), e);
             throw e;
         }
 
-        r.getLog().info("Repository data export took {}ms", dt);
+        processLog.info("Repository data export took {}ms", dt);
     }
 
     private static SecretDefinition getSecret(JobRequest r) {
@@ -157,17 +175,17 @@ public class Worker implements Runnable {
     }
 
     private void downloadState(JobRequest r) throws Exception {
-        r.getLog().info("Downloading the process state...");
+        processLog.info("Downloading the process state...");
 
         long dt;
         try {
             dt = withTimer(() -> stateFetcher.downloadState(r));
         } catch (Exception e) {
-            r.getLog().error("State download error: {}", e.getMessage());
+            processLog.error("State download error: {}", e.getMessage());
             throw e;
         }
 
-        r.getLog().info("Process state download took {}ms", dt);
+        processLog.info("Process state download took {}ms", dt);
     }
 
     private void processImports(JobRequest r) throws ExecutionException {
@@ -179,11 +197,11 @@ public class Worker implements Runnable {
         try {
             dt = withTimer(() -> importManager.process(r.getImports(), r.getPayloadDir()));
         } catch (Exception e) {
-            r.getLog().error("Error while reading the process' imports: " + e.getMessage());
+            processLog.error("Error while reading the process' imports: " + e.getMessage());
             throw new ExecutionException("Error while reading the process' imports", e);
         }
 
-        r.getLog().info("Import of external resources took {}ms", dt);
+        processLog.info("Import of external resources took {}ms", dt);
     }
 
     private static Throwable unwrap(Throwable t) {

@@ -20,7 +20,6 @@ package com.walmartlabs.concord.plugins.ansible;
  * =====
  */
 
-import com.walmartlabs.concord.sdk.ApiConfiguration;
 import com.walmartlabs.concord.sdk.Constants;
 import com.walmartlabs.concord.sdk.MapUtils;
 import org.slf4j.Logger;
@@ -36,6 +35,7 @@ public class AnsibleEnv {
 
     private static final Logger log = LoggerFactory.getLogger(AnsibleEnv.class);
 
+    private final String apiBaseUrl;
     private final UUID instanceId;
     private final String sessionToken;
     private final UUID eventCorrelationId;
@@ -43,18 +43,16 @@ public class AnsibleEnv {
     private final Integer retryCount;
     private final boolean debug;
 
-    private final ApiConfiguration apiCfg;
-
     private Map<String, String> env = Collections.emptyMap();
 
-    public AnsibleEnv(AnsibleContext context, ApiConfiguration apiCfg) {
+    public AnsibleEnv(AnsibleContext context) {
+        this.apiBaseUrl = context.apiBaseUrl();
         this.instanceId = context.instanceId();
         this.sessionToken = context.sessionToken();
         this.eventCorrelationId = context.eventCorrelationId();
         this.orgName = context.orgName();
         this.retryCount = context.retryCount();
         this.debug = context.debug();
-        this.apiCfg = apiCfg;
     }
 
     public AnsibleEnv parse(Map<String, Object> args) {
@@ -103,7 +101,7 @@ public class AnsibleEnv {
     private Map<String, String> concordEnv() {
         Map<String, String> env = new HashMap<>();
         env.put("CONCORD_INSTANCE_ID", instanceId.toString());
-        env.put("CONCORD_BASE_URL", apiCfg.getBaseUrl());
+        env.put("CONCORD_BASE_URL", apiBaseUrl);
 
         if (sessionToken != null) {
             env.put("CONCORD_SESSION_TOKEN", sessionToken);
@@ -129,5 +127,4 @@ public class AnsibleEnv {
         result.putAll(concordEnv);
         return result;
     }
-
 }
