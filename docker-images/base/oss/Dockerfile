@@ -6,6 +6,9 @@ ENTRYPOINT ["/usr/bin/dumb-init", "--"]
 ARG jdk_version=1.8.0
 ENV JAVA_HOME /usr/lib/jvm/java-${jdk_version}
 
+ENV LC_CTYPE en_US.UTF-8
+ENV LANG en_US.UTF-8
+
 # requires Git >= 2.3
 RUN yum -y --enablerepo=extras install epel-release && \
     yum -y update && \
