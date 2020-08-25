@@ -20,23 +20,17 @@ package com.walmartlabs.concord.plugins.crypto;
  * =====
  */
 
-import com.walmartlabs.concord.ApiClient;
-import com.walmartlabs.concord.ApiException;
-import com.walmartlabs.concord.ApiResponse;
-import com.walmartlabs.concord.client.ClientUtils;
-import com.walmartlabs.concord.client.SecretOperationResponse;
 import com.walmartlabs.concord.runtime.v2.model.ProcessConfiguration;
 import com.walmartlabs.concord.runtime.v2.model.ProjectInfo;
 import com.walmartlabs.concord.runtime.v2.sdk.*;
 import com.walmartlabs.concord.runtime.v2.sdk.SecretService.KeyPair;
+import com.walmartlabs.concord.runtime.v2.sdk.SecretService.SecretOperationResult;
 import com.walmartlabs.concord.runtime.v2.sdk.SecretService.UsernamePassword;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 import javax.inject.Named;
-import java.io.IOException;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.Map;
@@ -53,15 +47,13 @@ public class CryptoTaskV2 implements Task {
     private final SecretService secretService;
     private final Path workDir;
     private final ProcessConfiguration processCfg;
-    private final ApiClient apiClient;
     private final String processOrg;
 
     @Inject
-    public CryptoTaskV2(ApiClient apiClient, Context context) {
+    public CryptoTaskV2(Context context) {
         this.secretService = context.secretService();
         this.workDir = context.workingDirectory();
         this.processCfg = context.processConfiguration();
-        this.apiClient = apiClient;
         this.processOrg = context.projectInfo() != null ? context.projectInfo().orgName() : null;
     }
 
@@ -116,63 +108,43 @@ public class CryptoTaskV2 implements Task {
         TaskParams.Action action = params.action();
         switch (action) {
             case CREATE: {
-                SecretOperationResponse result = createSecret(params);
+                SecretOperationResult result = createSecret(params);
                 log.info("The secret '{}/{}' was created", params.org(processOrg), params.name());
-                return new TaskResult(result.isOk(), null)
-                        .value("password", result.getPassword());
+                return TaskResult.success()
+                        .value("password", result.password());
             }
             default:
                 throw new IllegalArgumentException("Unsupported action type: " + action);
         }
     }
 
-    private SecretOperationResponse createSecret(TaskParams in) throws IOException {
-        String path = "/api/v1/org/" + in.org(processOrg) + "/secret";
-
-        Map<String, Object> params = new HashMap<>();
-        params.put("name", in.name());
-        params.put("generatePassword", in.generatePassword());
-        if (in.storePassword() != null) {
-            params.put("storePassword", in.storePassword());
-        }
-        if (in.visibility() != null) {
-            params.put("visibility", in.visibility());
-        }
-        if (in.project() != null) {
-            params.put("project", in.project());
-        }
+    private SecretOperationResult createSecret(TaskParams in) throws Exception {
+        SecretService.SecretParams secret = SecretService.SecretParams.builder()
+                .orgName(in.org(processOrg))
+                .name(in.name())
+                .generatePassword(in.generatePassword())
+                .storePassword(in.storePassword())
+                .visibility(in.visibility() != null ? SecretService.SecretParams.Visibility.valueOf(in.visibility()) : null)
+                .project(in.project())
+                .build();
 
         if (in.data() != null) {
-            params.put("type", "DATA");
-            params.put("data", readFile(in.data()));
+            return secretService.createData(secret, toPath(in.data()));
         } else if (in.keyPair() != null) {
-            params.put("type", "KEY_PAIR");
             TaskParams.KeyPair kp = in.keyPair();
-            params.put("public", readFile(kp.publicKey()));
-            params.put("private", readFile(kp.privateKey()));
-        } else if (in.usernamePassword() != null){
-            params.put("type", "USERNAME_PASSWORD");
+            return secretService.createKeyPair(secret, KeyPair.builder()
+                    .publicKey(toPath(kp.publicKey()))
+                    .privateKey(toPath(kp.privateKey()))
+                    .build());
+        } else if (in.usernamePassword() != null) {
             TaskParams.UsernamePassword up = in.usernamePassword();
-            params.put("username", up.username());
-            params.put("password", up.password());
+            return secretService.createUsernamePassword(secret, UsernamePassword.of(up.username(), up.password()));
         } else {
             throw new IllegalArgumentException("No secret data defined");
         }
-
-        try {
-            ApiResponse<SecretOperationResponse> response = ClientUtils.withRetry(RETRY_COUNT, RETRY_INTERVAL,
-                    () -> ClientUtils.postData(apiClient, path, params, SecretOperationResponse.class));
-            return response.getData();
-        } catch (ApiException e) {
-            throw new RuntimeException(e.getMessage());
-        }
     }
 
-    private byte[] readFile(String fileName) throws IOException {
-        Path p = workDir.resolve(fileName);
-        if (Files.notExists(p)) {
-            throw new RuntimeException("File '" + fileName + "' not found");
-        }
-        return Files.readAllBytes(p);
+    private Path toPath(String value) {
+        return workDir.resolve(value);
     }
 }

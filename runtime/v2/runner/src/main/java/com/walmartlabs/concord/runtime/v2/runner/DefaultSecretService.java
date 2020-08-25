@@ -21,8 +21,7 @@ package com.walmartlabs.concord.runtime.v2.runner;
  */
 
 import com.walmartlabs.concord.ApiClient;
-import com.walmartlabs.concord.client.SecretClient;
-import com.walmartlabs.concord.client.SecretEntry;
+import com.walmartlabs.concord.client.*;
 import com.walmartlabs.concord.common.secret.BinaryDataSecret;
 import com.walmartlabs.concord.runtime.common.cfg.RunnerConfiguration;
 import com.walmartlabs.concord.runtime.common.injector.InstanceId;
@@ -106,7 +105,53 @@ public class DefaultSecretService implements SecretService {
         return secretClient.encryptString(instanceId.getValue(), orgName, projectName, value);
     }
 
+    @Override
+    public SecretOperationResult createKeyPair(SecretParams secret, KeyPair keyPair) throws Exception {
+        return toResult(secretClient.createSecret(secretRequest(secret)
+                .keyPair(SecretRequest.KeyPair.builder()
+                        .publicKey(keyPair.publicKey())
+                        .privateKey(keyPair.privateKey())
+                        .build())
+                .build()));
+    }
+
+    @Override
+    public SecretOperationResult createUsernamePassword(SecretParams secret, UsernamePassword usernamePassword) throws Exception {
+        return toResult(secretClient.createSecret(secretRequest(secret)
+                .usernamePassword(SecretRequest.UsernamePassword.of(usernamePassword.username(), usernamePassword.password()))
+                .build()));
+    }
+
+    @Override
+    public SecretOperationResult createData(SecretParams secret, Path data) throws Exception {
+        return toResult(secretClient.createSecret(secretRequest(secret)
+                .data(data)
+                .build()));
+    }
+
+    private static SecretOperationResult toResult(SecretOperationResponse response) {
+        return SecretOperationResult.builder()
+                .id(response.getId())
+                .password(response.getPassword())
+                .build();
+    }
+
+    @SuppressWarnings("unchecked")
     private <T extends Secret> T get(String orgName, String secretName, String password, SecretEntry.TypeEnum type) throws Exception {
         return secretClient.getData(orgName, secretName, password, type);
+    }
+
+    private ImmutableSecretRequest.Builder secretRequest(SecretParams secret) {
+        SecretEntry.VisibilityEnum visibility = null;
+        if (secret.visibility() != null) {
+            visibility = SecretEntry.VisibilityEnum.fromValue(secret.visibility().name());
+        }
+        return SecretRequest.builder()
+                .org(secret.orgName())
+                .name(secret.name())
+                .generatePassword(secret.generatePassword())
+                .storePassword(secret.storePassword())
+                .visibility(visibility)
+                .project(secret.project());
     }
 }

@@ -63,4 +63,19 @@ public class CliSecretServiceV2 implements SecretService {
     public String encryptString(String orgName, String projectName, String value) {
         throw new UnsupportedOperationException("not implemented");
     }
+
+    @Override
+    public SecretOperationResult createKeyPair(SecretParams secret, KeyPair keyPair) throws Exception {
+        throw new RuntimeException("not implemented");
+    }
+
+    @Override
+    public SecretOperationResult createUsernamePassword(SecretParams secret, UsernamePassword usernamePassword) throws Exception {
+        throw new RuntimeException("not implemented");
+    }
+
+    @Override
+    public SecretOperationResult createData(SecretParams secret, Path data) throws Exception {
+        throw new RuntimeException("not implemented");
+    }
 }

@@ -31,8 +31,10 @@ import com.walmartlabs.concord.sdk.Constants;
 import com.walmartlabs.concord.sdk.Secret;
 
 import java.io.File;
+import java.io.IOException;
 import java.lang.reflect.Type;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.Base64;
 import java.util.HashMap;
 import java.util.Map;
@@ -134,6 +136,55 @@ public class SecretClient {
         }
 
         throw new ApiException("Error encrypting string. Status code:" + r.getStatusCode() + " Data: " + r.getData());
+    }
+
+    public SecretOperationResponse createSecret(SecretRequest secretRequest) throws IOException {
+        String path = "/api/v1/org/" + secretRequest.org() + "/secret";
+
+        Map<String, Object> params = new HashMap<>();
+        params.put("name", secretRequest.name());
+        params.put("generatePassword", secretRequest.generatePassword());
+        if (secretRequest.storePassword() != null) {
+            params.put("storePassword", secretRequest.storePassword());
+        }
+        if (secretRequest.visibility() != null) {
+            params.put("visibility", secretRequest.visibility().getValue());
+        }
+        if (secretRequest.project() != null) {
+            params.put("project", secretRequest.project());
+        }
+
+        if (secretRequest.data() != null) {
+            params.put("type", SecretEntry.TypeEnum.DATA.getValue());
+            params.put("data", readFile(secretRequest.data()));
+        } else if (secretRequest.keyPair() != null) {
+            params.put("type", SecretEntry.TypeEnum.KEY_PAIR.getValue());
+            SecretRequest.KeyPair kp = secretRequest.keyPair();
+            params.put("public", readFile(kp.publicKey()));
+            params.put("private", readFile(kp.privateKey()));
+        } else if (secretRequest.usernamePassword() != null){
+            params.put("type", SecretEntry.TypeEnum.USERNAME_PASSWORD.getValue());
+            SecretRequest.UsernamePassword up = secretRequest.usernamePassword();
+            params.put("username", up.username());
+            params.put("password", up.password());
+        } else {
+            throw new IllegalArgumentException("No secret data defined");
+        }
+
+        try {
+            ApiResponse<SecretOperationResponse> response = ClientUtils.withRetry(retryCount, retryInterval,
+                    () -> ClientUtils.postData(apiClient, path, params, SecretOperationResponse.class));
+            return response.getData();
+        } catch (ApiException e) {
+            throw new RuntimeException(e.getMessage());
+        }
+    }
+
+    private byte[] readFile(Path file) throws IOException {
+        if (Files.notExists(file)) {
+            throw new RuntimeException("File '" + file + "' not found");
+        }
+        return Files.readAllBytes(file);
     }
 
     @SuppressWarnings("unchecked")
