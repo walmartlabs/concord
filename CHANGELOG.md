@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+### Added
+
+- runtime-v2: additional `Variables#assert*` methods.
+
 ### Changed
 
 - concord-agent: do not print out the process' `sessionToken` in
