@@ -333,7 +333,7 @@ export const changeOwner = (
             'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-            ownerId,
+            owner: { id: ownerId },
             projectName
         })
     };

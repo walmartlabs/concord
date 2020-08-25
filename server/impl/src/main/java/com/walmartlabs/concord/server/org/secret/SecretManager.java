@@ -53,6 +53,7 @@ import com.walmartlabs.concord.server.security.sessionkey.SessionKeyPrincipal;
 import com.walmartlabs.concord.server.user.UserDao;
 import com.walmartlabs.concord.server.user.UserEntry;
 import com.walmartlabs.concord.server.user.UserManager;
+import com.walmartlabs.concord.server.user.UserType;
 import org.apache.shiro.authz.UnauthorizedException;
 import org.sonatype.siesta.ValidationErrorsException;
 
@@ -270,12 +271,12 @@ public class SecretManager {
 
         if(req.id() == null) {
             OrganizationEntry org = orgManager.assertAccess(null, orgName, false);
-            e = assertAccess(org.getId(), null, secretName, ResourceAccessLevel.WRITER, true);
+            e = assertAccess(org.getId(), null, secretName, ResourceAccessLevel.OWNER, true);
         } else {
             e = assertAccess(null, req.id(), null, ResourceAccessLevel.WRITER, true);
         }
 
-        UserEntry owner = getOwner(req, null);
+        UserEntry owner = getOwner(req.owner(), null);
 
         policyManager.checkEntity(e.getOrgId(), req.projectId(), EntityType.SECRET, EntityAction.UPDATE, owner,
                 PolicyUtils.toMap(e.getOrgId(), e.getName(), e.getType(), e.getVisibility(), e.getStoreType()));
@@ -285,7 +286,7 @@ public class SecretManager {
 
         if (updatedOwnerId != null && !updatedOwnerId.equals(currentOwnerId)) {
             OrganizationEntry org = orgManager.assertAccess(null, orgName, false);
-            assertAccess(org.getId(), null, secretName, ResourceAccessLevel.WRITER, true);
+            assertAccess(org.getId(), null, secretName, ResourceAccessLevel.OWNER, true);
         }
 
         String currentPassword = req.storePassword();
@@ -733,14 +734,19 @@ public class SecretManager {
         }
     }
 
-    public UserEntry getOwner(SecretUpdateRequest request, UserEntry defaultOwner) {
-        if (request.ownerId() == null) {
+    public UserEntry getOwner(EntityOwner owner, UserEntry defaultOwner) {
+        if (owner == null) {
             return defaultOwner;
         }
 
-        if (request.ownerId() != null) {
-            return userManager.get(request.ownerId())
-                    .orElseThrow(() -> new ValidationErrorsException("User not found: " + request.ownerId()));
+        if (owner.id() != null) {
+            return userManager.get(owner.id())
+                    .orElseThrow(() -> new ValidationErrorsException("User not found: " + owner.id()));
+        }
+
+        if (owner.username() != null) {
+            return userManager.get(owner.username(), owner.userDomain(), UserType.LDAP)
+                    .orElseThrow(() -> new ConcordApplicationException("User not found: " + owner.username()));
         }
 
         return defaultOwner;

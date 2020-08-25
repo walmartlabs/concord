@@ -52,8 +52,10 @@ public class SecretIT extends AbstractServerIT {
         // ---
 
         SecretsApi secretsApi = new SecretsApi(getApiClient());
+        EntityOwner o = new EntityOwner();
+        o.setId(UUID.fromString("4b9d496a-c3a0-4e1b-804c-ac3fccddcb27"));
         SecretUpdateRequest req = new SecretUpdateRequest();
-        req.setOwnerId(UUID.fromString("4b9d496a-c3a0-4e1b-804c-ac3fccddcb27"));
+        req.setOwner(o);
         secretsApi.update(orgName, secretName, req);
 
         PublicKeyResponse pkr = secretsApi.getPublicKey(orgName, secretName);
