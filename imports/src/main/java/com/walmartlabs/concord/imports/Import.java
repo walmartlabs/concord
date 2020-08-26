@@ -42,6 +42,8 @@ import java.util.List;
         @Type(value = ImmutableGitDefinition.class, name = Import.GitDefinition.TYPE),
         @Type(value = Import.MvnDefinition.class, name = Import.MvnDefinition.TYPE),
         @Type(value = ImmutableMvnDefinition.class, name = Import.MvnDefinition.TYPE),
+        @Type(value = Import.DirectoryDefinition.class, name = Import.DirectoryDefinition.TYPE),
+        @Type(value = ImmutableDirectoryDefinition.class, name = Import.DirectoryDefinition.TYPE),
 })
 public interface Import extends Serializable {
 
@@ -82,7 +84,7 @@ public interface Import extends Serializable {
 
         @Override
         default String type() {
-            return "git";
+            return TYPE;
         }
 
         static ImmutableGitDefinition.Builder builder() {
@@ -105,11 +107,34 @@ public interface Import extends Serializable {
 
         @Override
         default String type() {
-            return "mvn";
+            return TYPE;
         }
 
         static ImmutableMvnDefinition.Builder builder() {
             return ImmutableMvnDefinition.builder();
+        }
+    }
+
+    @Value.Immutable
+    @JsonInclude(JsonInclude.Include.NON_EMPTY)
+    @JsonSerialize(as = ImmutableDirectoryDefinition.class)
+    @JsonDeserialize(as = ImmutableDirectoryDefinition.class)
+    interface DirectoryDefinition extends Import {
+
+        String TYPE = "dir";
+
+        String src();
+
+        @Nullable
+        String dest();
+
+        @Override
+        default String type() {
+            return TYPE;
+        }
+
+        static ImmutableDirectoryDefinition.Builder builder() {
+            return ImmutableDirectoryDefinition.builder();
         }
     }
 

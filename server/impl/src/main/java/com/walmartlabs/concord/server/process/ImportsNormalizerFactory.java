@@ -79,6 +79,9 @@ public class ImportsNormalizerFactory {
                 Import.GitDefinition src = (Import.GitDefinition) i;
                 return normalize(ctx, src);
             }
+            case Import.DirectoryDefinition.TYPE: {
+                return i;
+            }
             default: {
                 throw new IllegalArgumentException("Unsupported import type: '" + i.type() + "'");
             }

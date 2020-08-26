@@ -1,10 +1,10 @@
-package com.walmartlabs.concord.server.cfg;
+package com.walmartlabs.concord.agent.cfg;
 
 /*-
  * *****
  * Concord
  * -----
- * Copyright (C) 2017 - 2018 Walmart Inc.
+ * Copyright (C) 2017 - 2020 Walmart Inc.
  * -----
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,33 +20,24 @@ package com.walmartlabs.concord.server.cfg;
  * =====
  */
 
-import com.walmartlabs.ollie.config.Config;
+import com.typesafe.config.Config;
 
 import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
 import java.util.Collections;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 
 @Named
 @Singleton
 public class ImportConfiguration {
 
-    @Inject
-    @Config("imports.src")
-    private String src;
-
     private final Set<String> disabledProcessors;
 
     @Inject
-    public ImportConfiguration(@Config("imports.disabledProcessors") List<String> disabledProcessors) {
-        this.disabledProcessors = Collections.unmodifiableSet(new HashSet<>(disabledProcessors));
-    }
-
-    public String getSrc() {
-        return src;
+    public ImportConfiguration(Config cfg) {
+        this.disabledProcessors = Collections.unmodifiableSet(new HashSet<>(cfg.getStringList("imports.disabledProcessors")));
     }
 
     public Set<String> getDisabledProcessors() {

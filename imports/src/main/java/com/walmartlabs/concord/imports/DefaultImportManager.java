@@ -26,18 +26,21 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 public class DefaultImportManager implements ImportManager {
 
     private final Map<String, ImportProcessor<Import>> processors;
+    private final Set<String> disabledProcessors;
     private final ImportsListener listener;
 
-
     @SuppressWarnings({"unchecked", "rawtypes"})
-    public DefaultImportManager(List<ImportProcessor> processors, ImportsListener listener) {
+    public DefaultImportManager(List<ImportProcessor> processors, Set<String> disabledProcessors, ImportsListener listener) {
         this.processors = processors.stream().collect(Collectors.toMap(ImportProcessor::type, o -> o));
-        this.listener = listener != null ? listener : new ImportsListener() {};
+        this.disabledProcessors = disabledProcessors;
+        this.listener = listener != null ? listener : new ImportsListener() {
+        };
     }
 
     @Override
@@ -64,10 +67,14 @@ public class DefaultImportManager implements ImportManager {
     }
 
     private ImportProcessor<Import> assertProcessor(String type) {
+        if (disabledProcessors.contains(type)) {
+            throw new RuntimeException("Disabled import type: " + type);
+        }
+
         ImportProcessor<Import> p = processors.get(type);
         if (p != null) {
             return p;
         }
-        throw new RuntimeException("Unknown import type: '" + type + "'");
+        throw new RuntimeException("Unknown import type: " + type);
     }
 }
