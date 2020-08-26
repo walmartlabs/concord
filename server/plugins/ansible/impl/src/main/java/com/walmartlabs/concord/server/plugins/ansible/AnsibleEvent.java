@@ -79,6 +79,10 @@ public class AnsibleEvent extends AbstractAnsibleEvent {
     }
 
     public boolean ignoreErrors() {
-        return MapUtils.getBoolean(e.payload(), "ignore_errors", false);
+        Object value = e.payload().get("ignore_errors");
+        if (value instanceof Boolean) {
+            return (boolean) value;
+        }
+        return false;
     }
 }
