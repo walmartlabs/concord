@@ -284,7 +284,7 @@ class CallbackModule(CallbackBase):
             'phase': "post",
             'duration': self._task_duration(task_correlation_id),
             'result': self.cleanup_results(result._result),
-            'ignore_errors': ignore_errors
+            'ignore_errors': isinstance(ignore_errors, bool) and ignore_errors
         }
 
         self.handle_event(data)
