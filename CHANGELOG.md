@@ -4,6 +4,7 @@
 
 ### Added
 
+- runtime-v2: support for naming of `log`, `throw` and `expr` steps;
 - runtime-v2: additional `Variables#assert*` methods.
 
 ### Changed
