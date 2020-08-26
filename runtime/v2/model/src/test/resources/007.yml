@@ -16,3 +16,6 @@ imports:
   - mvn:
       url: "mvn://groupId:artifactId:version"
       dest: "/dest"
+  - dir:
+      src: "/some/path"
+      dest: "/dest"
