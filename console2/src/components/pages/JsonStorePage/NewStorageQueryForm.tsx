@@ -114,7 +114,6 @@ const NewStorageQueryForm = ({
         }
     }, [handleValidate, onExecute]);
 
-    console.log('>>>1>>');
     const loading = submitting || executing || isValidating || !isEditorReady;
 
     return (

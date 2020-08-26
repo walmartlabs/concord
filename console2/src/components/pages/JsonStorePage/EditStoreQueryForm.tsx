@@ -80,8 +80,6 @@ const EditStoreQueryForm = (props: Props) => {
         }
     }, [handleValidate, onExecute]);
 
-    console.log('>>>>>');
-
     const loading = submitting || executing || isValidating || !isEditorReady;
     return (
         <>
