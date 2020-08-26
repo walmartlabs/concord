@@ -53,7 +53,8 @@ public final class SsoCookies {
         cookie.setMaxAge(expiresIn);
         cookie.setPath("/");
         cookie.setHttpOnly(true);
-
+        cookie.setSecure(true);
+        
         response.addCookie(cookie);
     }
 
