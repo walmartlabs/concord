@@ -8,6 +8,7 @@
 
 ### Changed
 
+- iam-sso: mark the SSO cookie as "secure";
 - ansible: fixed an issue when `ignore_error` values were saved
 "as is" in Ansible events (e.g. unevaluated expressions);
 - concord-agent: do not print out the process' `sessionToken` in
