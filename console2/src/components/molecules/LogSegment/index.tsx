@@ -118,7 +118,8 @@ const LogSegment = ({
                 fluid={true}
                 size="medium"
                 className="Segment"
-                onClick={() => setOpen((prevState) => !prevState)}>
+                onClick={() => setOpen((prevState) => !prevState)}
+            >
                 <Icon name={isOpen ? 'caret down' : 'caret right'} className="State" />
 
                 <StatusIcon status={status} warnings={warnings} errors={errors} />
@@ -139,30 +140,33 @@ const LogSegment = ({
                     onClick={(event) => event.stopPropagation()}
                     rel="noopener noreferrer"
                     target="_blank"
-                    title="Pop out"
-                    className="AdditionalAction Last">
-                    <Icon name="external alternate" />
+                    className="AdditionalAction Last"
+                    data-tooltip="Download Log File" data-inverted="">
+                    <Icon name="download" />
                 </a>
 
                 {onSegmentInfo !== undefined && (
-                    <div className={'AdditionalAction'}>
-                        <Icon name={'info'} title={'Show info'} onClick={segmentInfoClickHandler} />
+                    <div className={'AdditionalAction'} data-tooltip="Show Info" data-inverted="">
+                        <Icon name={'info circle'} title={'Show info'} onClick={segmentInfoClickHandler} />
                     </div>
                 )}
 
                 {isOpen && (
                     <>
                         <div className="AdditionalAction">
-                            <div
-                                className={isAutoScroll ? 'on' : 'off'}
-                                onClick={autoscrollClickHandler}>
-                                Auto Scroll
+                            <div className={isAutoScroll ? 'on' : 'off'} data-tooltip="Auto Scroll" data-inverted="">
+                                <Icon
+                                    name={'angle double down'}
+                                    onClick={autoscrollClickHandler}
+                                />
                             </div>
                         </div>
-
                         <div className="AdditionalAction">
-                            <div className={isLoadAll ? 'on' : 'off'} onClick={loadAllClickHandler}>
-                                Load All
+                            <div className={isLoadAll ? 'on' : 'off'} data-tooltip="Show Full Log" data-inverted="">
+                                <Icon
+                                    name={'expand arrows alternate'}
+                                    onClick={loadAllClickHandler}
+                                />
                             </div>
                         </div>
                     </>
