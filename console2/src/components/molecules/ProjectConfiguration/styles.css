@@ -17,18 +17,13 @@
  * limitations under the License.
  * =====
  */
-.editorContainer {
-    /*margin: 0 0 1em;*/
+.projectEditorContainer {
     display: flex;
     height: 75vh;
     min-height: 500px;
 }
 
-.editorContainer.loading {
-    opacity: 0.45;
-}
-
-.editorContainer .loader {
+.projectEditorContainer .loader {
     display: flex;
     position: relative;
     text-align: initial;
