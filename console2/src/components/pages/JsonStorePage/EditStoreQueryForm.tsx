@@ -19,19 +19,13 @@
  */
 
 import * as React from 'react';
-import { Button, Form, Label, Loader } from 'semantic-ui-react';
+import { Button, Form, Label } from 'semantic-ui-react';
 import { ValidateResult } from 'react-hook-form/dist/types';
-import Editor from '@monaco-editor/react';
 
-import { ConcordKey } from '../../../api/common';
 import { storageQuery } from '../../../validation';
 import { useCallback, useRef, useState } from 'react';
 import './styles.css';
-
-interface FormValues {
-    name: ConcordKey;
-    query: string;
-}
+import LoadingEditor from '../../molecules/LoadingEditor';
 
 export interface Props {
     initialQuery?: string;
@@ -86,6 +80,8 @@ const EditStoreQueryForm = (props: Props) => {
         }
     }, [handleValidate, onExecute]);
 
+    console.log('>>>>>');
+
     const loading = submitting || executing || isValidating || !isEditorReady;
     return (
         <>
@@ -98,6 +94,7 @@ const EditStoreQueryForm = (props: Props) => {
             <div className={loading ? 'editorContainer loading' : 'editorContainer'}>
                 <div className={'editor'}>
                     <LoadingEditor
+                        language="sql"
                         handleEditorDidMount={handleEditorDidMount}
                         initValue={initialQuery}
                         disabled={loading}
@@ -132,27 +129,6 @@ const validateQuery = (query?: string): Promise<ValidateResult> => {
         return Promise.resolve(error);
     }
     return Promise.resolve(undefined);
-};
-
-interface LoadingEditorProps {
-    handleEditorDidMount: (getEditorValue: () => string) => void;
-    initValue?: string;
-    disabled: boolean;
-}
-
-const LoadingEditor = ({ handleEditorDidMount, initValue, disabled }: LoadingEditorProps) => {
-    if (!initValue) {
-        return <Loader active={true} />;
-    }
-
-    return (
-        <Editor
-            language="sql"
-            editorDidMount={handleEditorDidMount}
-            value={initValue}
-            options={{ lineNumbers: 'on', minimap: { enabled: false }, readOnly: disabled }}
-        />
-    );
 };
 
 export default EditStoreQueryForm;
