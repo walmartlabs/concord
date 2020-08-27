@@ -26,6 +26,11 @@ logs;
 - concord-server: runtime-v2 compatibility for processes started via
 the browser link (aka "the process portal").
 
+### Breaking
+
+- concord-server: the process list entries
+(`GET /api/v2/process` endpoint) no longer include `imports`.
+
 
 
 ## [1.62.0] - 2020-08-19
