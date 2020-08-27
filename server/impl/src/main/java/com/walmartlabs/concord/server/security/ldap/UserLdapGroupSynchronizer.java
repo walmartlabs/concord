@@ -98,8 +98,9 @@ public class UserLdapGroupSynchronizer implements ScheduledTask {
         try {
             Set<String> groups = ldapManager.getGroups(u.username, u.domain);
             if (groups == null) {
-                disableUser(u);
+                ldapGroupsDao.update(u.userId, Collections.emptySet());
                 ldapGroupsDao.updateLastSyncTimestamp(u.userId);
+                disableUser(u);
             } else {
                 enableUser(u);
                 ldapGroupsDao.update(u.userId, groups);

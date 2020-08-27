@@ -4,13 +4,15 @@ flows:
 
 triggers:
   - github:
-      repository: "abc"
-      branch: "foo"
       entryPoint: onPush
+      conditions:
+        type: "push"
+        branch: "foo"
   - github:
-      repository: "abc2"
-      branch: "foo2"
       entryPoint: onPush
+      conditions:
+        type: "push"
+        branch: "foo2"
   - oneops:
       org: "myOrg"
       entryPoint: onPush
