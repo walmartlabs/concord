@@ -30,29 +30,30 @@ import static com.walmartlabs.concord.runtime.v2.parser.GrammarOptions.options;
 import static com.walmartlabs.concord.runtime.v2.parser.GrammarV2.*;
 import static io.takari.parc.Combinators.choice;
 
-public final class GroupGrammar {
+public final class GroupOfStepsGrammar {
 
-    private static final Parser<Atom, GroupOptions> groupOptions =
-            with(GroupOptions::builder,
+    private static final Parser<Atom, GroupOfStepsOptions> groupOptions =
+            with(GroupOfStepsOptions::builder,
                     o -> options(
+                            optional("out", stringOrArrayVal.map(o::out)),
                             optional("error", stepsVal.map(o::errorSteps)),
                             optional("withItems", nonNullVal.map(v -> o.withItems(WithItems.of(v)))),
                             optional("meta", mapVal.map(o::meta))
                     ))
-                    .map(ImmutableGroupOptions.Builder::build);
+                    .map(ImmutableGroupOfStepsOptions.Builder::build);
 
     private static Parser<Atom, GroupOfSteps> groupDef(Atom a) {
         return stepsVal.bind(steps -> groupOptions.map(options -> new GroupOfSteps(a.location, steps, options)));
     }
 
     public static final Parser<Atom, GroupOfSteps> groupAsTry =
-            satisfyField("try", YamlValueType.TRY, GroupGrammar::groupDef);
+            satisfyField("try", YamlValueType.TRY, GroupOfStepsGrammar::groupDef);
 
     public static final Parser<Atom, GroupOfSteps> groupAsBlock =
-            satisfyField("block", YamlValueType.BLOCK, GroupGrammar::groupDef);
+            satisfyField("block", YamlValueType.BLOCK, GroupOfStepsGrammar::groupDef);
 
     public static final Parser<Atom, Step> group = choice(groupAsTry, groupAsBlock);
 
-    private GroupGrammar() {
+    private GroupOfStepsGrammar() {
     }
 }

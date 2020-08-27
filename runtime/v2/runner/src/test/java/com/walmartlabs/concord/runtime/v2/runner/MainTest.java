@@ -475,6 +475,39 @@ public class MainTest {
     }
 
     @Test
+    public void testWithItemsOut() throws Exception {
+        deploy("withItemsOut");
+
+        save(ProcessConfiguration.builder()
+                .build());
+
+        byte[] log = run();
+        assertLog(log, ".*result: \\[10, 20, 30\\].*");
+    }
+
+    @Test
+    public void testWithItemsTaskOut() throws Exception {
+        deploy("withItemsTaskOut");
+
+        save(ProcessConfiguration.builder()
+                .build());
+
+        byte[] log = run();
+        assertLog(log, ".*result: \\[10, 20, 30\\].*");
+    }
+
+    @Test
+    public void testWithItemsBlock() throws Exception {
+        deploy("withItemsBlock");
+
+        save(ProcessConfiguration.builder()
+                .build());
+
+        byte[] log = run();
+        assertLog(log, ".*result: \\[10, 20, 30\\].*");
+    }
+
+    @Test
     public void testUnknownMethod() throws Exception {
         deploy("unknownMethod");
 
@@ -802,6 +835,16 @@ public class MainTest {
         public TaskResult execute(Variables input) {
             return TaskResult.success()
                     .values(input.toMap());
+        }
+    }
+
+    @Named("resultTask")
+    @SuppressWarnings("unused")
+    static class ResultTask implements Task {
+
+        @Override
+        public TaskResult execute(Variables input) {
+            return TaskResult.success().value("result", input.get("result"));
         }
     }
 
