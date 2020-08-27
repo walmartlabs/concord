@@ -32,13 +32,27 @@ import java.util.*;
 
 public final class YamlTriggersConverter {
 
+    private static final String[] MANUAL_TRIGGER_CONFIG_KEYS = {
+            "name",
+            Constants.Request.ENTRY_POINT_KEY,
+            Constants.Request.EXCLUSIVE
+    };
+
+    protected static final String[] TRIGGER_CONFIG_KEYS = {
+            Constants.Trigger.USE_INITIATOR,
+            Constants.Trigger.USE_EVENT_COMMIT_ID,
+            Constants.Trigger.IGNORE_EMPTY_PUSH,
+            Constants.Request.ENTRY_POINT_KEY,
+            Constants.Request.EXCLUSIVE,
+    };
+
     private static final Map<String, TriggerConverter> converters = createConverters();
     private static final TriggerConverter defaultConverter = new DefaultTriggerConverter();
 
     private static Map<String, TriggerConverter> createConverters() {
         Map<String, TriggerConverter> converters = new HashMap<>();
-        converters.put("manual", new ManualTriggerConverter());
-        converters.put("github", new DefaultTriggerConverter());
+        converters.put("manual", new TriggerV1Converter(MANUAL_TRIGGER_CONFIG_KEYS));
+        converters.put("github", new TriggerV2Converter(TRIGGER_CONFIG_KEYS));
         converters.put("oneops", new DefaultTriggerConverter());
         return converters;
     }
@@ -57,38 +71,42 @@ public final class YamlTriggersConverter {
         return result;
     }
 
-    private static class ManualTriggerConverter extends AbstractTriggerConverter {
+    private static class DefaultTriggerConverter implements TriggerConverter {
 
-        private static final String[] TRIGGER_CONFIG_KEYS = {
-                "name",
-                Constants.Request.ENTRY_POINT_KEY,
-                Constants.Request.EXCLUSIVE
-        };
+        private final TriggerConverter v1Converter;
+        private final TriggerConverter v2Converter;
 
-        protected ManualTriggerConverter() {
-            super(TRIGGER_CONFIG_KEYS);
+        public DefaultTriggerConverter() {
+            this.v1Converter = new TriggerV1Converter(TRIGGER_CONFIG_KEYS);
+            this.v2Converter = new TriggerV2Converter(TRIGGER_CONFIG_KEYS);
+        }
+
+        @SuppressWarnings("unchecked")
+        @Override
+        public Trigger convert(YamlTrigger trigger) {
+            Map<String, Object> opts = (Map<String, Object>) StepConverter.deepConvert(trigger.getOptions());
+            int version = MapUtils.getInt(opts, Constants.Trigger.VERSION, 1);
+            if (version == 1) {
+                return v1Converter.convert(trigger);
+            }
+            return v2Converter.convert(trigger);
         }
     }
 
-    private static class DefaultTriggerConverter extends AbstractTriggerConverter {
+    private static class TriggerV2Converter implements TriggerConverter {
 
-        protected static final String[] TRIGGER_CONFIG_KEYS = {
-                Constants.Trigger.USE_INITIATOR,
-                Constants.Trigger.USE_EVENT_COMMIT_ID,
-                Constants.Trigger.IGNORE_EMPTY_PUSH,
-                Constants.Request.ENTRY_POINT_KEY,
-                Constants.Request.EXCLUSIVE,
-        };
+        private final String[] cfgKeys;
 
-        public DefaultTriggerConverter() {
-            super(TRIGGER_CONFIG_KEYS);
+        public TriggerV2Converter(String[] cfgKeys) {
+            this.cfgKeys = cfgKeys;
         }
 
+        @Override
         @SuppressWarnings("unchecked")
         public Trigger convert(YamlTrigger trigger) {
             Map<String, Object> opts = (Map<String, Object>) StepConverter.deepConvert(trigger.getOptions());
             Map<String, Object> cfg = new HashMap<>();
-            for (String key : TRIGGER_CONFIG_KEYS) {
+            for (String key : cfgKeys) {
                 Object v = opts.remove(key);
                 if (v != null) {
                     cfg.put(key, v);
@@ -103,14 +121,13 @@ public final class YamlTriggersConverter {
 
             return new Trigger(trigger.getEventSource(), activeProfiles, arguments, params, cfg, convertSourceMap(trigger));
         }
-
     }
 
-    private static abstract class AbstractTriggerConverter implements TriggerConverter {
+    private static class TriggerV1Converter implements TriggerConverter {
 
         private final String[] cfgKeys;
 
-        protected AbstractTriggerConverter(String[] cfgKeys) {
+        public TriggerV1Converter(String[] cfgKeys) {
             this.cfgKeys = cfgKeys;
         }
 
