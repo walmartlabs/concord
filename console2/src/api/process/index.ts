@@ -18,7 +18,7 @@
  * =====
  */
 
-import { SemanticCOLORS } from 'semantic-ui-react';
+import {SemanticCOLORS, SemanticICONS} from 'semantic-ui-react';
 import { ConcordId, ConcordKey, fetchJson, managedFetch, queryParams } from '../common';
 import { ColumnDefinition } from '../org';
 import 'url-search-params-polyfill';
@@ -55,6 +55,27 @@ export const getStatusSemanticColor = (status: ProcessStatus): SemanticCOLORS =>
         case ProcessStatus.RESUMING:
         default:
             return 'grey';
+    }
+};
+
+export const getStatusSemanticIcon = (status: ProcessStatus): SemanticICONS => {
+    switch (status) {
+        case ProcessStatus.NEW:
+        case ProcessStatus.PREPARING:
+        case ProcessStatus.RUNNING:
+        case ProcessStatus.STARTING:
+        case ProcessStatus.SUSPENDED:
+            return 'spinner';
+        case ProcessStatus.FINISHED:
+            return 'circle';
+        case ProcessStatus.CANCELLED:
+        case ProcessStatus.FAILED:
+        case ProcessStatus.TIMED_OUT:
+            return 'exclamation circle';
+        case ProcessStatus.ENQUEUED:
+        case ProcessStatus.RESUMING:
+        default:
+            return 'circle notch';
     }
 };
 

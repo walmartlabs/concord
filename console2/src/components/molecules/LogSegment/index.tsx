@@ -19,15 +19,15 @@
  */
 
 import * as React from 'react';
-import { useCallback, useEffect, useRef, useState } from 'react';
-import { Button, Icon, SemanticCOLORS, SemanticICONS } from 'semantic-ui-react';
+import {useCallback, useEffect, useRef, useState} from 'react';
+import {Button, Icon, SemanticCOLORS, SemanticICONS} from 'semantic-ui-react';
 
-import { SegmentStatus } from '../../../api/process/log';
-import { ConcordId } from '../../../api/common';
+import {SegmentStatus} from '../../../api/process/log';
+import {ConcordId} from '../../../api/common';
 
 import './styles.css';
-import { formatDistance, parseISO } from 'date-fns';
-import {ProcessStatus} from "../../../api/process";
+import {formatDistance, parseISO} from 'date-fns';
+import {getStatusSemanticColor, getStatusSemanticIcon, ProcessStatus} from "../../../api/process";
 
 interface Props {
     instanceId: ConcordId;
@@ -52,6 +52,7 @@ const LogSegment = ({
     segmentId,
     name,
     createdAt,
+    processStatus,
     status,
     lowRange,
     warnings,
@@ -124,7 +125,7 @@ const LogSegment = ({
             >
                 <Icon name={isOpen ? 'caret down' : 'caret right'} className="State" />
 
-                <StatusIcon status={status} warnings={warnings} errors={errors} />
+                <StatusIcon status={status} processStatus={processStatus} warnings={warnings} errors={errors} />
 
                 <span className="Caption">{name}</span>
 
@@ -212,11 +213,11 @@ interface StatusIconProps {
 
 const StatusIcon = ({ status, processStatus, warnings = 0, errors = 0 }: StatusIconProps) => {
     if (!status) {
-        if (processStatus === ProcessStatus.RUNNING){
-            return <Icon loading={true} name={'spinner'} color={'grey'} className="Status" />;
-        } else {
-            return <span className="EmptyStatus"/>;
-        }
+        return <Icon
+                    loading={(processStatus !== (ProcessStatus.FAILED || ProcessStatus.FINISHED || ProcessStatus.CANCELLED || ProcessStatus.TIMED_OUT))}
+                    name={(processStatus) ? getStatusSemanticIcon(processStatus) : 'circle'}
+                    color={(processStatus) ? getStatusSemanticColor(processStatus) : 'grey'}
+                    className="Status" />;
     }
 
     let color: SemanticCOLORS = 'green';
@@ -237,7 +238,6 @@ const StatusIcon = ({ status, processStatus, warnings = 0, errors = 0 }: StatusI
         color = 'red';
         icon = 'exclamation circle';
     }
-
     return <Icon loading={spinning} name={icon} color={color} className="Status" />;
 };
 
