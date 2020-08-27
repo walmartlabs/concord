@@ -26,6 +26,7 @@ import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.walmartlabs.concord.server.sdk.AllowNulls;
 import org.immutables.value.Value;
 
+import javax.annotation.Nullable;
 import java.io.Serializable;
 import java.time.OffsetDateTime;
 import java.util.Map;
@@ -44,6 +45,7 @@ public interface AuditEvent extends Serializable {
 
     OffsetDateTime entryDate();
 
+    @Nullable
     UUID userId();
 
     String object();
