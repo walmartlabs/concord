@@ -9,6 +9,9 @@
 
 ### Changed
 
+- runtime-v2: when using `withItems`, `out` variables are now
+collected into lists;
+- runtime-v2: support for `out` variables in `block` steps;
 - concord-server: remove user's LDAP groups from the DB when
 the account is disabled;
 - runtime-v1: fixed an issue when GitHub triggers without `version`
