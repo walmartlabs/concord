@@ -44,13 +44,11 @@ public class FlowCallCompiler implements StepCompiler<FlowCall> {
 
         FlowCallOptions options = step.getOptions();
 
-        // add "retry" if needed
         Retry retry = options.retry();
         if (retry != null) {
             cmd = new RetryWrapper(cmd, retry);
         }
 
-        // add "withItems" if needed
         WithItems withItems = options.withItems();
         if (withItems != null) {
             cmd = new WithItemsWrapper(cmd, withItems, options.out());

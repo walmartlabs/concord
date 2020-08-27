@@ -32,14 +32,14 @@ import static io.takari.parc.Combinators.choice;
 
 public final class GroupGrammar {
 
-    private static final Parser<Atom, GroupOptions> groupOptions =
-            with(GroupOptions::builder,
+    private static final Parser<Atom, GroupOfStepsOptions> groupOptions =
+            with(GroupOfStepsOptions::builder,
                     o -> options(
                             optional("error", stepsVal.map(o::errorSteps)),
                             optional("withItems", nonNullVal.map(v -> o.withItems(WithItems.of(v)))),
                             optional("meta", mapVal.map(o::meta))
                     ))
-                    .map(ImmutableGroupOptions.Builder::build);
+                    .map(ImmutableGroupOfStepsOptions.Builder::build);
 
     private static Parser<Atom, GroupOfSteps> groupDef(Atom a) {
         return stepsVal.bind(steps -> groupOptions.map(options -> new GroupOfSteps(a.location, steps, options)));
