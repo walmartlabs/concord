@@ -29,7 +29,14 @@
     background-color: rgb(244, 244, 244);
     position: sticky;
     top: 57px;
-    border-radius: 0 !important;
+    border-radius: 5px 5px 0 0;
+    border-style: solid;
+    border-width: thin;
+    border-color: rgb(214, 214, 214);
+}
+
+.LogSegment .Segment:hover {
+    background-color: rgb(230, 230, 230);
 }
 
 .LogSegment .Loader {
@@ -47,7 +54,7 @@
     padding-left: 10px;
     font-family: monospace;
     font-weight: normal;
-    color: black;
+    color: rgba(43, 43, 43, 0.9);
 }
 
 .LogSegment .Segment .State {
@@ -66,17 +73,18 @@
 }
 
 .LogSegment .Segment .AdditionalAction {
-    margin: 0 !important;
+    margin-top: 0 !important;
     float: right;
     padding-right: 10px;
 }
 
 .LogSegment .Segment .AdditionalAction.Last {
     padding-right: 0;
+    color: #4183c4;
 }
 
 .LogSegment .Segment .AdditionalAction .on {
-    color: #21ba45;
+    color: #4183c4;
 }
 
 .LogSegment .Segment .AdditionalAction .off {
@@ -88,12 +96,16 @@
 }
 
 .LogSegment .Segment .AdditionalAction i:hover{
-    color: red !important;
+    color: rgb(43, 43, 43) !important;
 }
 
 .LogSegment .ContentContainer {
-    padding: 8px 0 0 8px;
+    padding: 0 0 0 0;
     margin-bottom: 8px;
+    border-style: solid;
+    border-width: thin;
+    border-color: rgb(214, 214, 214);
+    border-top: none;
 }
 
 .LogSegment .InnerContentContainer {
@@ -110,10 +122,10 @@
 }
 
 .LogSegment .Content {
-    color: rgb(241, 241, 241);
+    color: rgb(43, 43, 43);
     font-family: monospace;
     line-height: 18px;
-    background: rgb(43, 43, 43);
+    background: rgb(255, 255, 255);
     margin: 0;
     padding: 10px 0 10px 10px;
     display: inline-block;
