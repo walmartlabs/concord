@@ -19,15 +19,15 @@
  */
 
 import * as React from 'react';
-import {useCallback, useEffect, useRef, useState} from 'react';
-import {Button, Icon, SemanticCOLORS, SemanticICONS} from 'semantic-ui-react';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { Button, Icon, SemanticCOLORS, SemanticICONS } from 'semantic-ui-react';
 
-import {SegmentStatus} from '../../../api/process/log';
-import {ConcordId} from '../../../api/common';
+import { SegmentStatus } from '../../../api/process/log';
+import { ConcordId } from '../../../api/common';
 
 import './styles.css';
-import {formatDistance, parseISO} from 'date-fns';
-import {getStatusSemanticColor, getStatusSemanticIcon, ProcessStatus} from "../../../api/process";
+import { formatDistance, parseISO } from 'date-fns';
+import { getStatusSemanticColor, getStatusSemanticIcon, ProcessStatus } from '../../../api/process';
 
 interface Props {
     instanceId: ConcordId;
@@ -121,11 +121,15 @@ const LogSegment = ({
                 fluid={true}
                 size="medium"
                 className="Segment"
-                onClick={() => setOpen((prevState) => !prevState)}
-            >
+                onClick={() => setOpen((prevState) => !prevState)}>
                 <Icon name={isOpen ? 'caret down' : 'caret right'} className="State" />
 
-                <StatusIcon status={status} processStatus={processStatus} warnings={warnings} errors={errors} />
+                <StatusIcon
+                    status={status}
+                    processStatus={processStatus}
+                    warnings={warnings}
+                    errors={errors}
+                />
 
                 <span className="Caption">{name}</span>
 
@@ -144,28 +148,36 @@ const LogSegment = ({
                     rel="noopener noreferrer"
                     target="_blank"
                     className="AdditionalAction Last"
-                    data-tooltip="Download Log File" data-inverted="">
+                    data-tooltip="Download Log File"
+                    data-inverted="">
                     <Icon name="download" />
                 </a>
 
                 {onSegmentInfo !== undefined && (
                     <div className={'AdditionalAction'} data-tooltip="Show Info" data-inverted="">
-                        <Icon name={'info circle'} title={'Show info'} onClick={segmentInfoClickHandler} />
+                        <Icon
+                            name={'info circle'}
+                            title={'Show info'}
+                            onClick={segmentInfoClickHandler}
+                        />
                     </div>
                 )}
 
                 {isOpen && (
                     <>
                         <div className="AdditionalAction">
-                            <div className={isAutoScroll ? 'on' : 'off'} data-tooltip="Auto Scroll" data-inverted="">
-                                <Icon
-                                    name={'angle double down'}
-                                    onClick={autoscrollClickHandler}
-                                />
+                            <div
+                                className={isAutoScroll ? 'on' : 'off'}
+                                data-tooltip="Auto Scroll"
+                                data-inverted="">
+                                <Icon name={'angle double down'} onClick={autoscrollClickHandler} />
                             </div>
                         </div>
                         <div className="AdditionalAction">
-                            <div className={isLoadAll ? 'on' : 'off'} data-tooltip="Show Full Log" data-inverted="">
+                            <div
+                                className={isLoadAll ? 'on' : 'off'}
+                                data-tooltip="Show Full Log"
+                                data-inverted="">
                                 <Icon
                                     name={'arrows alternate vertical'}
                                     onClick={loadAllClickHandler}
@@ -213,14 +225,19 @@ interface StatusIconProps {
 
 const StatusIcon = ({ status, processStatus, warnings = 0, errors = 0 }: StatusIconProps) => {
     if (!status) {
-        return <Icon
-                    loading={(processStatus !== ProcessStatus.FAILED &&
-                              processStatus !== ProcessStatus.FINISHED &&
-                              processStatus !== ProcessStatus.CANCELLED &&
-                              processStatus !== ProcessStatus.TIMED_OUT)}
-                    name={(processStatus) ? getStatusSemanticIcon(processStatus) : 'circle'}
-                    color={(processStatus) ? getStatusSemanticColor(processStatus) : 'grey'}
-                    className="Status" />;
+        return (
+            <Icon
+                loading={
+                    processStatus !== ProcessStatus.FAILED &&
+                    processStatus !== ProcessStatus.FINISHED &&
+                    processStatus !== ProcessStatus.CANCELLED &&
+                    processStatus !== ProcessStatus.TIMED_OUT
+                }
+                name={processStatus ? getStatusSemanticIcon(processStatus) : 'circle'}
+                color={processStatus ? getStatusSemanticColor(processStatus) : 'grey'}
+                className="Status"
+            />
+        );
     }
 
     let color: SemanticCOLORS = 'green';
