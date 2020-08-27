@@ -497,6 +497,17 @@ public class MainTest {
     }
 
     @Test
+    public void testWithItemsBlock() throws Exception {
+        deploy("withItemsBlock");
+
+        save(ProcessConfiguration.builder()
+                .build());
+
+        byte[] log = run();
+        assertLog(log, ".*result: \\[10, 20, 30\\].*");
+    }
+
+    @Test
     public void testUnknownMethod() throws Exception {
         deploy("unknownMethod");
 

@@ -34,6 +34,11 @@ public interface GroupOfStepsOptions extends StepOptions {
     long serialVersionUID = 1L;
 
     @Value.Default
+    default List<String> out() {
+        return Collections.emptyList();
+    }
+
+    @Value.Default
     default List<Step> errorSteps() {
         return Collections.emptyList();
     }
