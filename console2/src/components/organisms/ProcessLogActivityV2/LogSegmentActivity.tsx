@@ -45,12 +45,12 @@ const DEFAULT_RANGE: LogRange = { low: undefined, high: 2048 };
 
 interface ExternalProps {
     instanceId: ConcordId;
-    processStatus?: ProcessStatus;
     segmentId: number;
     correlationId?: string;
     name: string;
     createdAt: string;
     open?: boolean;
+    processStatus?: ProcessStatus;
     status?: SegmentStatus;
     warnings?: number;
     errors?: number;
@@ -169,6 +169,7 @@ const LogSegmentActivity = ({
             <LogSegment
                 instanceId={instanceId}
                 segmentId={segmentId}
+                processStatus={processStatus}
                 name={name}
                 open={open}
                 createdAt={createdAt}
