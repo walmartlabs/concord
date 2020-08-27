@@ -87,14 +87,6 @@ public final class YamlTriggersConverter {
         @SuppressWarnings("unchecked")
         public Trigger convert(YamlTrigger trigger) {
             Map<String, Object> opts = (Map<String, Object>) StepConverter.deepConvert(trigger.getOptions());
-            int version = MapUtils.getInt(opts, Constants.Trigger.VERSION, 1);
-            if (version == 1) {
-                return super.convert(trigger);
-            }
-            return getV2Trigger(trigger, opts);
-        }
-
-        private Trigger getV2Trigger(YamlTrigger trigger, Map<String, Object> opts) {
             Map<String, Object> cfg = new HashMap<>();
             for (String key : TRIGGER_CONFIG_KEYS) {
                 Object v = opts.remove(key);
