@@ -1287,7 +1287,7 @@ public class YamlErrorParserTest extends AbstractParserTest {
     @Test
     public void test703() throws Exception {
         String msg =
-                "(003.yml): Error @ line: 5, col: 13. Unknown options: ['trash' [NULL] @ line: 5, col: 13], expected: [error, withItems, meta]. Remove invalid options and/or fix indentation\n" +
+                "(003.yml): Error @ line: 5, col: 13. Unknown options: ['trash' [NULL] @ line: 5, col: 13], expected: [out, error, withItems, meta]. Remove invalid options and/or fix indentation\n" +
                         "\twhile processing steps:\n" +
                         "\t'try' @ line: 3, col: 7\n" +
                         "\t\t'main' @ line: 2, col: 3\n" +
@@ -1338,7 +1338,7 @@ public class YamlErrorParserTest extends AbstractParserTest {
     @Test
     public void test707() throws Exception {
         String msg =
-                "(007.yml): Error @ line: 11, col: 13. Unknown options: ['trash' [NULL] @ line: 11, col: 13], expected: [error, withItems, meta]. Remove invalid options and/or fix indentation\n" +
+                "(007.yml): Error @ line: 11, col: 13. Unknown options: ['trash' [NULL] @ line: 11, col: 13], expected: [out, error, withItems, meta]. Remove invalid options and/or fix indentation\n" +
                         "\twhile processing steps:\n" +
                         "\t'try' @ line: 3, col: 7\n" +
                         "\t\t'main' @ line: 2, col: 3\n" +
