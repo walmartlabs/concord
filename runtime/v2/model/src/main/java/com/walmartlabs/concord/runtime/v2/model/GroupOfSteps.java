@@ -22,13 +22,13 @@ package com.walmartlabs.concord.runtime.v2.model;
 
 import java.util.List;
 
-public class GroupOfSteps extends AbstractStep<GroupOptions> {
+public class GroupOfSteps extends AbstractStep<GroupOfStepsOptions> {
 
     private static final long serialVersionUID = 1L;
 
     private final List<Step> steps;
 
-    public GroupOfSteps(Location location, List<Step> steps, GroupOptions options) {
+    public GroupOfSteps(Location location, List<Step> steps, GroupOfStepsOptions options) {
         super(location, options);
 
         this.steps = steps;

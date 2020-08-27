@@ -32,7 +32,6 @@ import com.walmartlabs.concord.runtime.v2.sdk.Context;
 import com.walmartlabs.concord.svm.Runtime;
 import com.walmartlabs.concord.svm.*;
 
-import java.util.List;
 import java.util.Map;
 
 public class FlowCallCommand extends StepCommand<FlowCall> {
@@ -74,43 +73,13 @@ public class FlowCallCommand extends StepCommand<FlowCall> {
                 .locals(input)
                 .build();
 
-        // an "out" handler
-        Command processOutVars = new ProcessOutVariablesCommand(opts.out(), innerFrame);
+        // an "out" handler:
+        // grab the out variable from the called flow's frame
+        // and put it into the callee's frame
+        Command processOutVars = new CopyVariablesCommand(opts.out(), innerFrame, null);
 
         // push the out handler first so it executes after the called flow's frame is done
         state.peekFrame(threadId).push(processOutVars);
         state.pushFrame(threadId, innerFrame);
-    }
-
-    public static class ProcessOutVariablesCommand implements Command {
-
-        private static final long serialVersionUID = 1L;
-
-        private final List<String> outVars;
-        private final Frame innerFrame;
-
-        public ProcessOutVariablesCommand(List<String> outVars, Frame innerFrame) {
-            this.outVars = outVars;
-            this.innerFrame = innerFrame;
-        }  // TODO refactor
-
-        @Override
-        public void eval(Runtime runtime, State state, ThreadId threadId) {
-            Frame outerFrame = state.peekFrame(threadId);
-            outerFrame.pop();
-
-            if (outVars.isEmpty()) {
-                return;
-            }
-
-            for (String outVar : outVars) {
-                // grab the out variable from the called flow's frame
-                if (innerFrame.hasLocal(outVar)) {
-                    Object v = innerFrame.getLocal(outVar);
-                    // and put it into the callee's frame
-                    VMUtils.putLocal(outerFrame, outVar, v);
-                }
-            }
-        }
     }
 }

@@ -21,7 +21,7 @@ package com.walmartlabs.concord.runtime.v2.runner.compiler;
  */
 
 import com.walmartlabs.concord.runtime.v2.model.GroupOfSteps;
-import com.walmartlabs.concord.runtime.v2.model.GroupOptions;
+import com.walmartlabs.concord.runtime.v2.model.GroupOfStepsOptions;
 import com.walmartlabs.concord.runtime.v2.model.Step;
 import com.walmartlabs.concord.runtime.v2.model.WithItems;
 import com.walmartlabs.concord.runtime.v2.runner.vm.BlockCommand;
@@ -43,21 +43,18 @@ public final class GroupOfStepsCompiler implements StepCompiler<GroupOfSteps> {
 
     @Override
     public Command compile(CompilerContext context, GroupOfSteps step) {
-        GroupOptions options = step.getOptions();
+        GroupOfStepsOptions options = step.getOptions();
 
-        // steps in the group
         Command cmd = compile(context, step.getSteps());
 
-        // steps in the optional "error" block
+        WithItems withItems = options != null ? options.withItems() : null;
+        if (withItems != null) {
+            return new WithItemsWrapper(cmd, withItems, options.out());
+        }
+
         List<Step> errorSteps = options != null ? options.errorSteps() : null;
         if (errorSteps != null) {
             cmd = new ErrorWrapper(cmd, compile(context, errorSteps));
-        }
-
-        // add "withItems" if needed
-        WithItems withItems = options != null ? options.withItems() : null;
-        if (withItems != null) {
-            return new WithItemsWrapper(cmd, withItems);
         }
 
         return cmd;
