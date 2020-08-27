@@ -214,7 +214,10 @@ interface StatusIconProps {
 const StatusIcon = ({ status, processStatus, warnings = 0, errors = 0 }: StatusIconProps) => {
     if (!status) {
         return <Icon
-                    loading={(processStatus !== (ProcessStatus.FAILED || ProcessStatus.FINISHED || ProcessStatus.CANCELLED || ProcessStatus.TIMED_OUT))}
+                    loading={(processStatus !== ProcessStatus.FAILED &&
+                              processStatus !== ProcessStatus.FINISHED &&
+                              processStatus !== ProcessStatus.CANCELLED &&
+                              processStatus !== ProcessStatus.TIMED_OUT)}
                     name={(processStatus) ? getStatusSemanticIcon(processStatus) : 'circle'}
                     color={(processStatus) ? getStatusSemanticColor(processStatus) : 'grey'}
                     className="Status" />;
