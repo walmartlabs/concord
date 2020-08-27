@@ -21,23 +21,22 @@ package com.walmartlabs.concord.runtime.v2.parser;
  */
 
 import com.walmartlabs.concord.runtime.v2.model.TaskCall;
-import com.walmartlabs.concord.runtime.v2.model.TaskCallOptions;
 import io.takari.parc.Parser;
 
-import static com.walmartlabs.concord.runtime.v2.parser.GrammarMisc.satisfyField;
+import static com.walmartlabs.concord.runtime.v2.parser.GrammarMisc.namedStep;
 import static com.walmartlabs.concord.runtime.v2.parser.GrammarOptions.simpleOptions;
 import static com.walmartlabs.concord.runtime.v2.parser.GrammarV2.anyVal;
+import static com.walmartlabs.concord.runtime.v2.parser.TaskGrammar.optionsWithStepName;
 
 public final class LogGrammar {
 
     public static final Parser<Atom, TaskCall> logStep =
-            satisfyField("log", YamlValueType.TASK, a -> anyVal.bind(msg ->
-                    simpleOptions.map(options ->
-                            new TaskCall(a.location, "log", TaskCallOptions.builder()
+            namedStep("log", YamlValueType.TASK, (stepName, a) ->
+                    anyVal.bind(msg ->
+                            simpleOptions.map(options -> new TaskCall(a.location, "log", optionsWithStepName(stepName)
                                     .putInput("msg", msg)
-                                    .meta(options.meta())
+                                    .putAllMeta(options.meta())
                                     .build()))));
-
 
     private LogGrammar() {
     }

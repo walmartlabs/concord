@@ -21,7 +21,6 @@
 import * as React from 'react';
 import { Button, Form, Input, Label } from 'semantic-ui-react';
 import { ValidateResult } from 'react-hook-form/dist/types';
-import Editor from '@monaco-editor/react';
 
 import { ConcordKey } from '../../../api/common';
 import { isStorageQueryExists } from '../../../api/service/console';
@@ -29,6 +28,7 @@ import { storageQuery, jsonStoreQueryAlreadyExistsError } from '../../../validat
 import { useCallback, useRef, useState } from 'react';
 
 import './styles.css';
+import LoadingEditor from '../../molecules/LoadingEditor';
 
 interface FormValues {
     name: ConcordKey;
@@ -136,16 +136,11 @@ const NewStorageQueryForm = ({
 
             <div className={loading ? 'editorContainer loading' : 'editorContainer'}>
                 <div className={'editor'}>
-                    <Editor
-                        height="40vh"
+                    <LoadingEditor
                         language="sql"
-                        editorDidMount={handleEditorDidMount}
-                        value={initial.query}
-                        options={{
-                            lineNumbers: 'on',
-                            minimap: { enabled: false },
-                            readOnly: loading
-                        }}
+                        handleEditorDidMount={handleEditorDidMount}
+                        initValue={initial.query}
+                        disabled={loading}
                     />
                 </div>
                 {queryError && (
