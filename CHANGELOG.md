@@ -9,6 +9,8 @@
 
 ### Changed
 
+- concord-server: remove user's LDAP groups from the DB when
+the account is disabled;
 - runtime-v1: fixed an issue when GitHub triggers without `version`
 were treated as v1 triggers;
 - concord-console: new look for the runtime v2 log viewer;
