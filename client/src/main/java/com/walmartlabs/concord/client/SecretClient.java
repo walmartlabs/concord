@@ -138,35 +138,35 @@ public class SecretClient {
         throw new ApiException("Error encrypting string. Status code:" + r.getStatusCode() + " Data: " + r.getData());
     }
 
-    public SecretOperationResponse createSecret(SecretRequest secretRequest) throws IOException {
+    public SecretOperationResponse createSecret(CreateSecretRequest secretRequest) throws IOException {
         String path = "/api/v1/org/" + secretRequest.org() + "/secret";
 
         Map<String, Object> params = new HashMap<>();
-        params.put("name", secretRequest.name());
-        params.put("generatePassword", secretRequest.generatePassword());
+        params.put(Constants.Multipart.NAME, secretRequest.name());
+        params.put(Constants.Multipart.GENERATE_PASSWORD, secretRequest.generatePassword());
         if (secretRequest.storePassword() != null) {
-            params.put("storePassword", secretRequest.storePassword());
+            params.put(Constants.Multipart.STORE_PASSWORD, secretRequest.storePassword());
         }
         if (secretRequest.visibility() != null) {
-            params.put("visibility", secretRequest.visibility().getValue());
+            params.put(Constants.Multipart.VISIBILITY, secretRequest.visibility().getValue());
         }
         if (secretRequest.project() != null) {
-            params.put("project", secretRequest.project());
+            params.put(Constants.Multipart.PROJECT_NAME, secretRequest.project());
         }
 
         if (secretRequest.data() != null) {
-            params.put("type", SecretEntry.TypeEnum.DATA.getValue());
-            params.put("data", readFile(secretRequest.data()));
+            params.put(Constants.Multipart.TYPE, SecretEntry.TypeEnum.DATA.getValue());
+            params.put(Constants.Multipart.DATA, secretRequest.data());
         } else if (secretRequest.keyPair() != null) {
-            params.put("type", SecretEntry.TypeEnum.KEY_PAIR.getValue());
-            SecretRequest.KeyPair kp = secretRequest.keyPair();
-            params.put("public", readFile(kp.publicKey()));
-            params.put("private", readFile(kp.privateKey()));
+            params.put(Constants.Multipart.TYPE, SecretEntry.TypeEnum.KEY_PAIR.getValue());
+            CreateSecretRequest.KeyPair kp = secretRequest.keyPair();
+            params.put(Constants.Multipart.PUBLIC, readFile(kp.publicKey()));
+            params.put(Constants.Multipart.PRIVATE, readFile(kp.privateKey()));
         } else if (secretRequest.usernamePassword() != null){
-            params.put("type", SecretEntry.TypeEnum.USERNAME_PASSWORD.getValue());
-            SecretRequest.UsernamePassword up = secretRequest.usernamePassword();
-            params.put("username", up.username());
-            params.put("password", up.password());
+            params.put(Constants.Multipart.TYPE, SecretEntry.TypeEnum.USERNAME_PASSWORD.getValue());
+            CreateSecretRequest.UsernamePassword up = secretRequest.usernamePassword();
+            params.put(Constants.Multipart.USERNAME, up.username());
+            params.put(Constants.Multipart.PASSWORD, up.password());
         } else {
             throw new IllegalArgumentException("No secret data defined");
         }
@@ -180,7 +180,7 @@ public class SecretClient {
         }
     }
 
-    private byte[] readFile(Path file) throws IOException {
+    private static byte[] readFile(Path file) throws IOException {
         if (Files.notExists(file)) {
             throw new RuntimeException("File '" + file + "' not found");
         }

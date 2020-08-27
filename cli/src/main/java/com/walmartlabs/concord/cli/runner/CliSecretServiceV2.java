@@ -65,17 +65,17 @@ public class CliSecretServiceV2 implements SecretService {
     }
 
     @Override
-    public SecretOperationResult createKeyPair(SecretParams secret, KeyPair keyPair) throws Exception {
+    public SecretCreationResult createKeyPair(SecretParams secret, KeyPair keyPair) throws Exception {
         throw new RuntimeException("not implemented");
     }
 
     @Override
-    public SecretOperationResult createUsernamePassword(SecretParams secret, UsernamePassword usernamePassword) throws Exception {
+    public SecretCreationResult createUsernamePassword(SecretParams secret, UsernamePassword usernamePassword) throws Exception {
         throw new RuntimeException("not implemented");
     }
 
     @Override
-    public SecretOperationResult createData(SecretParams secret, Path data) throws Exception {
+    public SecretCreationResult createData(SecretParams secret, byte[] data) throws Exception {
         throw new RuntimeException("not implemented");
     }
 }

@@ -24,13 +24,15 @@ import com.walmartlabs.concord.runtime.v2.model.ProcessConfiguration;
 import com.walmartlabs.concord.runtime.v2.model.ProjectInfo;
 import com.walmartlabs.concord.runtime.v2.sdk.*;
 import com.walmartlabs.concord.runtime.v2.sdk.SecretService.KeyPair;
-import com.walmartlabs.concord.runtime.v2.sdk.SecretService.SecretOperationResult;
+import com.walmartlabs.concord.runtime.v2.sdk.SecretService.SecretCreationResult;
 import com.walmartlabs.concord.runtime.v2.sdk.SecretService.UsernamePassword;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 import javax.inject.Named;
+import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.Map;
@@ -108,8 +110,8 @@ public class CryptoTaskV2 implements Task {
         TaskParams.Action action = params.action();
         switch (action) {
             case CREATE: {
-                SecretOperationResult result = createSecret(params);
-                log.info("The secret '{}/{}' was created", params.org(processOrg), params.name());
+                SecretCreationResult result = createSecret(params);
+                log.info("The secret '{}/{}' was created", params.org(processOrg), params.secretName());
                 return TaskResult.success()
                         .value("password", result.password());
             }
@@ -118,10 +120,10 @@ public class CryptoTaskV2 implements Task {
         }
     }
 
-    private SecretOperationResult createSecret(TaskParams in) throws Exception {
+    private SecretCreationResult createSecret(TaskParams in) throws Exception {
         SecretService.SecretParams secret = SecretService.SecretParams.builder()
                 .orgName(in.org(processOrg))
-                .name(in.name())
+                .name(in.secretName())
                 .generatePassword(in.generatePassword())
                 .storePassword(in.storePassword())
                 .visibility(in.visibility() != null ? SecretService.SecretParams.Visibility.valueOf(in.visibility()) : null)
@@ -129,7 +131,7 @@ public class CryptoTaskV2 implements Task {
                 .build();
 
         if (in.data() != null) {
-            return secretService.createData(secret, toPath(in.data()));
+            return secretService.createData(secret, readFile(toPath(in.data())));
         } else if (in.keyPair() != null) {
             TaskParams.KeyPair kp = in.keyPair();
             return secretService.createKeyPair(secret, KeyPair.builder()
@@ -146,5 +148,12 @@ public class CryptoTaskV2 implements Task {
 
     private Path toPath(String value) {
         return workDir.resolve(value);
+    }
+
+    private static byte[] readFile(Path file) throws IOException {
+        if (Files.notExists(file)) {
+            throw new RuntimeException("File '" + file + "' not found");
+        }
+        return Files.readAllBytes(file);
     }
 }

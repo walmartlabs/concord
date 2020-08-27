@@ -29,11 +29,11 @@ import java.util.UUID;
 
 public interface SecretService {
 
-    SecretOperationResult createKeyPair(SecretParams secret, KeyPair keyPair) throws Exception;
+    SecretCreationResult createKeyPair(SecretParams secret, KeyPair keyPair) throws Exception;
 
-    SecretOperationResult createUsernamePassword(SecretParams secret, UsernamePassword usernamePassword) throws Exception;
+    SecretCreationResult createUsernamePassword(SecretParams secret, UsernamePassword usernamePassword) throws Exception;
 
-    SecretOperationResult createData(SecretParams secret, Path data) throws Exception;
+    SecretCreationResult createData(SecretParams secret, byte[] data) throws Exception;
 
     String exportAsString(String orgName, String name, String password) throws Exception;
 
@@ -49,15 +49,15 @@ public interface SecretService {
 
     @Value.Immutable
     @Value.Style(jdkOnly = true)
-    interface SecretOperationResult {
+    interface SecretCreationResult {
 
         UUID id();
 
         @Nullable
         String password();
 
-        static ImmutableSecretOperationResult.Builder builder() {
-            return ImmutableSecretOperationResult.builder();
+        static ImmutableSecretCreationResult.Builder builder() {
+            return ImmutableSecretCreationResult.builder();
         }
     }
 

@@ -30,7 +30,7 @@ import java.util.Map;
 public class TaskParams {
 
     private static final String ACTION_KEY = "action";
-    private static final String NAME_KEY = "name";
+    private static final String SECRET_NAME_KEY = "secretName";
     private static final String GENERATE_PASSWORD_KEY = "generatePassword";
     private static final String STORE_PASSWORD_KEY = "storePassword";
     private static final String VISIBILITY_KEY = "visibility";
@@ -55,8 +55,8 @@ public class TaskParams {
         }
     }
 
-    public String name() {
-        return variables.assertString(NAME_KEY);
+    public String secretName() {
+        return variables.assertString(SECRET_NAME_KEY);
     }
 
     public boolean generatePassword() {

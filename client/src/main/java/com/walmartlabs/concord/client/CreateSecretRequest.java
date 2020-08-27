@@ -28,7 +28,7 @@ import java.nio.file.Path;
 
 @Value.Immutable
 @Value.Style(jdkOnly = true)
-public interface SecretRequest {
+public interface CreateSecretRequest {
 
     String org();
 
@@ -49,7 +49,7 @@ public interface SecretRequest {
     String project();
 
     @Nullable
-    Path data();
+    byte[] data();
 
     @Nullable
     KeyPair keyPair();
@@ -57,8 +57,8 @@ public interface SecretRequest {
     @Nullable
     UsernamePassword usernamePassword();
 
-    static ImmutableSecretRequest.Builder builder() {
-        return ImmutableSecretRequest.builder();
+    static ImmutableCreateSecretRequest.Builder builder() {
+        return ImmutableCreateSecretRequest.builder();
     }
 
     @Value.Immutable
@@ -86,7 +86,7 @@ public interface SecretRequest {
 
         String password();
 
-        static SecretRequest.UsernamePassword of(String username, String password) {
+        static CreateSecretRequest.UsernamePassword of(String username, String password) {
             return ImmutableUsernamePassword.builder()
                     .username(username)
                     .password(password)

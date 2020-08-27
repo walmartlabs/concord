@@ -4,7 +4,7 @@ flows:
       in:
         action: create
         org: ${org}
-        name: "${secretName}"
+        secretName: "${secretName}"
         generatePwd: "false"
         storePassword: "pAss123qweasd"
         usernamePassword:
