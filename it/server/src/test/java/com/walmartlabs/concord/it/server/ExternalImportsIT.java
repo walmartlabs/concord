@@ -249,7 +249,6 @@ public class ExternalImportsIT extends AbstractServerIT {
         ProcessEntry pir = waitForCompletion(processApi, spr.getInstanceId());
         ProcessEntry child = waitForChild(processApi, pir.getInstanceId(), ProcessEntry.KindEnum.DEFAULT, ProcessEntry.StatusEnum.FINISHED);
 
-
         // check the logs
 
         byte[] ab = getLog(pir.getLogFileName());

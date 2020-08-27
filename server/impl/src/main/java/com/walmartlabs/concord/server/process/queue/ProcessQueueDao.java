@@ -75,7 +75,7 @@ public class ProcessQueueDao extends AbstractDao {
     private static final TypeReference<List<ProcessStatusHistoryEntry>> LIST_OF_STATUS_HISTORY = new TypeReference<List<ProcessStatusHistoryEntry>>() {
     };
 
-    private static final Field<?>[] PROCESS_QUEUE_FIELDS = allFieldsWithFixedMeta();
+    private static final Field<?>[] PROCESS_QUEUE_FIELDS = processEntryFields();
 
     private final ConcordObjectMapper objectMapper;
 
@@ -435,6 +435,14 @@ public class ProcessQueueDao extends AbstractDao {
                     .from(PROCESS_QUEUE)
                     .where(PROCESS_QUEUE.INSTANCE_ID.eq(instanceId))
                     .fetchOne(orgId);
+        }
+    }
+
+    public Imports getImports(PartialProcessKey processKey) {
+        try (DSLContext tx = DSL.using(cfg)) {
+            return tx.select(PROCESS_QUEUE.IMPORTS).from(PROCESS_QUEUE)
+                    .where(PROCESS_QUEUE.INSTANCE_ID.eq(processKey.getInstanceId()))
+                    .fetchOne(r -> objectMapper.fromJSONB(r.get(PROCESS_QUEUE.IMPORTS), Imports.class));
         }
     }
 
@@ -799,7 +807,6 @@ public class ProcessQueueDao extends AbstractDao {
                 .statusHistory(objectMapper.fromJSONB(getOrNull(r, "status_history"), LIST_OF_STATUS_HISTORY))
                 .triggeredBy(objectMapper.fromJSONB(r.get(PROCESS_QUEUE.TRIGGERED_BY), TriggeredByEntry.class))
                 .timeout(r.get(PROCESS_QUEUE.TIMEOUT))
-                .imports(objectMapper.fromJSONB(r.get(PROCESS_QUEUE.IMPORTS), Imports.class))
                 .runtime(r.get(PROCESS_QUEUE.RUNTIME))
                 .build();
     }
@@ -833,11 +840,15 @@ public class ProcessQueueDao extends AbstractDao {
      * Returns an array of all fields of {@link ProcessQueue#PROCESS_QUEUE}, but
      * replaces the meta field with a version with all null values stripped out.
      */
-    private static Field<?>[] allFieldsWithFixedMeta() {
+    private static Field<?>[] processEntryFields() {
         Field<?>[] fields = PROCESS_QUEUE.fields();
 
         List<Field<?>> l = new ArrayList<>(fields.length);
         for (Field<?> f : fields) {
+            if (f == PROCESS_QUEUE.IMPORTS) {
+                continue;
+            }
+
             if (f == PROCESS_QUEUE.META) {
                 l.add(function("jsonb_strip_nulls", JSONB.class, f).as(f));
             } else {
