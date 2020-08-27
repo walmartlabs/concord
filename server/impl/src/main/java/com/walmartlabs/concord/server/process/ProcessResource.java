@@ -469,7 +469,7 @@ public class ProcessResource implements Resource {
         UUID projectId = parent.projectId();
         UserPrincipal userPrincipal = UserPrincipal.assertCurrent();
         Set<String> handlers = parent.handlers();
-        Imports imports = queueDao.getImports(processKey);
+        Imports imports = queueDao.getImports(parentProcessKey);
 
         Payload payload;
         try {
