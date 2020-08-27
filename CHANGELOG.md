@@ -9,6 +9,7 @@
 
 ### Changed
 
+- concord-console: new look for the runtime v2 log viewer;
 - concord-console: fix layout of the JSON store query editor;
 - iam-sso: mark the SSO cookie as "secure";
 - ansible: fixed an issue when `ignore_error` values were saved
