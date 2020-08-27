@@ -16,6 +16,7 @@ RUN yum -y install \
     libffi-devel \
     libxml2-devel \
     libxslt-devel \
+    make \
     openssh-clients \
     openssl-devel \
     python2-devel \
