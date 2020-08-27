@@ -14,6 +14,8 @@ RUN yum -y install \
     krb5-libs \
     krb5-workstation \
     libffi-devel \
+    libxml2-devel \
+    libxslt-devel \
     openssh-clients \
     openssl-devel \
     python2-devel \
