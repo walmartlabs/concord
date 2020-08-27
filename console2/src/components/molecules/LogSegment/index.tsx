@@ -27,12 +27,14 @@ import { ConcordId } from '../../../api/common';
 
 import './styles.css';
 import { formatDistance, parseISO } from 'date-fns';
+import {ProcessStatus} from "../../../api/process";
 
 interface Props {
     instanceId: ConcordId;
     segmentId: number;
     name: string;
     createdAt: string;
+    processStatus?: ProcessStatus;
     status?: SegmentStatus;
     lowRange?: number;
     warnings?: number;
@@ -164,7 +166,7 @@ const LogSegment = ({
                         <div className="AdditionalAction">
                             <div className={isLoadAll ? 'on' : 'off'} data-tooltip="Show Full Log" data-inverted="">
                                 <Icon
-                                    name={'expand arrows alternate'}
+                                    name={'arrows alternate vertical'}
                                     onClick={loadAllClickHandler}
                                 />
                             </div>
@@ -202,14 +204,19 @@ const LogSegment = ({
 
 interface StatusIconProps {
     status?: SegmentStatus;
+    processStatus?: ProcessStatus;
     loading?: boolean;
     warnings?: number;
     errors?: number;
 }
 
-const StatusIcon = ({ status, warnings = 0, errors = 0 }: StatusIconProps) => {
+const StatusIcon = ({ status, processStatus, warnings = 0, errors = 0 }: StatusIconProps) => {
     if (!status) {
-        return <span className="EmptyStatus" />;
+        if (processStatus === ProcessStatus.RUNNING){
+            return <Icon loading={true} name={'spinner'} color={'grey'} className="Status" />;
+        } else {
+            return <span className="EmptyStatus"/>;
+        }
     }
 
     let color: SemanticCOLORS = 'green';
@@ -217,6 +224,7 @@ const StatusIcon = ({ status, warnings = 0, errors = 0 }: StatusIconProps) => {
     let spinning = false;
 
     if (status === SegmentStatus.RUNNING) {
+        color = 'teal';
         icon = 'spinner';
         spinning = true;
     } else if (status === SegmentStatus.FAILED) {
