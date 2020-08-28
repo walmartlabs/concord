@@ -26,7 +26,6 @@ import com.walmartlabs.concord.runtime.v2.sdk.*;
 
 import javax.inject.Inject;
 import javax.inject.Named;
-import java.io.Serializable;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
@@ -54,12 +53,7 @@ public class ConcordTaskV2 implements ReentrantTask {
         this.sessionToken = context.processConfiguration().processInfo().sessionToken();
         this.instanceId = context.processInstanceId();
         this.apiClientFactory = apiClientFactory;
-
-        ProjectInfo projectInfo = context.projectInfo();
-        if (projectInfo == null) {
-            projectInfo = ProjectInfo.builder().build();
-        }
-        this.projectInfo = projectInfo;
+        this.projectInfo = context.processConfiguration().projectInfo();
 
         this.workDir = context.workingDirectory();
         this.suspender = (resumeFromSameStep, payload) -> {
