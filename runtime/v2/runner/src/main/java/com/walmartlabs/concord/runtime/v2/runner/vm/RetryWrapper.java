@@ -46,7 +46,7 @@ public class RetryWrapper implements Command {
 
     private static final Logger log = LoggerFactory.getLogger(RetryWrapper.class);
 
-    private static final String RETRY_ATTEMPT_NUMBER = "__retry_attempNo";
+    private static final String RETRY_ATTEMPT_NUMBER = "__retry_attemptNo";
     private static final String RETRY_CFG = "__retry_cfg";
 
     private final Command cmd;
@@ -62,9 +62,11 @@ public class RetryWrapper implements Command {
         Frame frame = state.peekFrame(threadId);
         frame.pop();
 
+        // wrap the command into a frame with an exception handler
         Frame inner = Frame.builder()
                 .nonRoot()
-                .commands(cmd, new NextRetry(cmd))
+                .exceptionHandler(new NextRetry(cmd))
+                .commands(cmd)
                 .build();
 
         // create the context explicitly
@@ -83,11 +85,11 @@ public class RetryWrapper implements Command {
             delay = ee.eval(EvalContextFactory.global(ctx), retry.delayExpression(), Long.class);
         }
 
+        inner.setLocal(RETRY_ATTEMPT_NUMBER, 0);
         inner.setLocal(RETRY_CFG, Retry.builder().from(retry)
                 .times(times)
                 .delay(delay)
                 .build());
-        inner.setLocal(RETRY_ATTEMPT_NUMBER, 0);
 
         state.pushFrame(threadId, inner);
     }
@@ -140,6 +142,7 @@ public class RetryWrapper implements Command {
             frame.setExceptionHandler(this);
             // update the attempt number
             frame.setLocal(RETRY_ATTEMPT_NUMBER, attemptNo + 1);
+
             // override the task's "in" if needed
             if (retry.input() != null) {
                 Map<String, Object> m = Collections.unmodifiableMap(Objects.requireNonNull(retry.input()));
