@@ -21,9 +21,7 @@ package com.walmartlabs.concord.runtime.v2.sdk;
  */
 
 import com.walmartlabs.concord.runtime.v2.model.ProcessConfiguration;
-import com.walmartlabs.concord.runtime.v2.model.ProjectInfo;
 
-import javax.annotation.Nullable;
 import java.io.Serializable;
 import java.nio.file.Path;
 import java.util.Map;
@@ -49,9 +47,6 @@ public interface Context {
      * Default task variables
      */
     Variables defaultVariables();
-
-    @Nullable
-    ProjectInfo projectInfo();
 
     FileService fileService();
 

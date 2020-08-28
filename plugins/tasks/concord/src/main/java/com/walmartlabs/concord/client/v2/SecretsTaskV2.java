@@ -30,9 +30,6 @@ import com.walmartlabs.concord.runtime.v2.sdk.Variables;
 
 import javax.inject.Inject;
 import javax.inject.Named;
-import java.io.Serializable;
-import java.util.HashMap;
-import java.util.Map;
 
 @Named("concordSecrets")
 public class SecretsTaskV2 implements Task {
@@ -41,8 +38,7 @@ public class SecretsTaskV2 implements Task {
 
     @Inject
     public SecretsTaskV2(ApiClient apiClient, Context context) {
-        String processOrg = context.projectInfo() != null ? context.projectInfo().orgName() : null;
-        this.delegate = new SecretsTaskCommon(apiClient, processOrg);
+        this.delegate = new SecretsTaskCommon(apiClient, context.processConfiguration().projectInfo().orgName());
     }
 
     @Override

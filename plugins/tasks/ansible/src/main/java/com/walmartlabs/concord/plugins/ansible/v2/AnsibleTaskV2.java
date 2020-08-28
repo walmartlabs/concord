@@ -72,7 +72,7 @@ public class AnsibleTaskV2 implements Task {
                 .args(in)
                 .sessionToken(context.processConfiguration().processInfo().sessionToken())
                 .eventCorrelationId(context.execution().correlationId())
-                .orgName(context.projectInfo() != null ? context.projectInfo().orgName() : null)
+                .orgName(context.processConfiguration().projectInfo().orgName())
                 .retryCount((Integer) context.execution().state().peekFrame(context.execution().currentThreadId()).getLocal("__retry_attempNo")) // TODO provide a SDK method for this
                 .build();
 
