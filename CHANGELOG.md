@@ -11,6 +11,8 @@ steps;
 
 ### Changed
 
+- docker-images: remove `dumb-init` as Docker ships its own init
+implementation;
 - runtime-v2: when using `withItems`, `out` variables are now
 collected into lists;
 - concord-server: remove user's LDAP groups from the DB when
