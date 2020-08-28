@@ -128,7 +128,8 @@ public class RetryWrapper implements Command {
             }
 
             long delay = retry.delay();
-            log.warn("Last error: {}. Waiting for {}ms before retry (attempt #{})", lastError.getMessage(), delay, attemptNo);
+            log.warn("Last error: {}. Waiting for {}ms before retry (attempt #{})", lastError, delay, attemptNo);
+
             try {
                 Thread.sleep(delay);
             } catch (InterruptedException e) {
