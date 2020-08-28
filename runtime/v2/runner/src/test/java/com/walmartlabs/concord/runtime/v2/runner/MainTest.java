@@ -685,6 +685,25 @@ public class MainTest {
         assertLog(log, ".*result.k: v.*");
     }
 
+    @Test
+    public void testNestedSet() throws Exception {
+        Map<String, Object> x = new HashMap<>();
+        x.put("z", 234);
+
+        deploy("nestedSet");
+        save(ProcessConfiguration.builder()
+                .putArguments("x", x)
+                .build());
+
+        byte[] log = run();
+        assertLog(log, ".*x: .*y=123.*");
+        assertLog(log, ".*x: .*z=234.*");
+        assertLog(log, ".*x: .*taskOut=42.*");
+
+        // TODO support for partial eval results?
+        assertLog(log, ".*x: .*taskOut2=42.*");
+    }
+
     private void deploy(String resource) throws URISyntaxException, IOException {
         Path src = Paths.get(MainTest.class.getResource(resource).toURI());
         IOUtils.copy(src, workDir);
@@ -929,7 +948,20 @@ public class MainTest {
         public TaskResult resume(ResumeEvent event) {
             log.info("RESUME: {}", event);
             return TaskResult.success()
-                    .values((Map)event.state());
+                    .values((Map) event.state());
+        }
+    }
+
+    @Named("simpleMethodTask")
+    @SuppressWarnings("unused")
+    public static class SimpleMethodTask implements Task {
+
+        public int getValue() {
+            return 42;
+        }
+
+        public int getDerivedValue(int value) {
+            return value + 42;
         }
     }
 }
