@@ -4,6 +4,7 @@
 
 ### Added
 
+- runtime-v2: support for nested `set`;
 - runtime-v2: support for `out` variables in `try` and `block`
 steps;
 - runtime-v2: support for naming of `log`, `throw` and `expr` steps;
