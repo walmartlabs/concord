@@ -23,10 +23,7 @@ package com.walmartlabs.concord.plugins.ansible.v2;
 import com.walmartlabs.concord.ApiClient;
 import com.walmartlabs.concord.plugins.ansible.*;
 import com.walmartlabs.concord.plugins.ansible.secrets.AnsibleSecretService;
-import com.walmartlabs.concord.runtime.v2.sdk.Context;
-import com.walmartlabs.concord.runtime.v2.sdk.Task;
-import com.walmartlabs.concord.runtime.v2.sdk.TaskResult;
-import com.walmartlabs.concord.runtime.v2.sdk.Variables;
+import com.walmartlabs.concord.runtime.v2.sdk.*;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -73,7 +70,7 @@ public class AnsibleTaskV2 implements Task {
                 .sessionToken(context.processConfiguration().processInfo().sessionToken())
                 .eventCorrelationId(context.execution().correlationId())
                 .orgName(context.projectInfo() != null ? context.projectInfo().orgName() : null)
-                .retryCount((Integer) context.execution().state().peekFrame(context.execution().currentThreadId()).getLocal("__retry_attempNo")) // TODO provide a SDK method for this
+                .retryCount(ContextUtils.getCurrentRetryAttemptNumber(context))
                 .build();
 
         TaskResult result = task.run(ctx, runner);
