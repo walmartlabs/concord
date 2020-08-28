@@ -1,0 +1,6 @@
+flows:
+  default:
+    - task: faultyOnceTask
+      retry:
+        times: 3
+        delay: 1

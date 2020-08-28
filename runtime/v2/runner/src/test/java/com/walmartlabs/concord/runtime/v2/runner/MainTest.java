@@ -64,6 +64,7 @@ import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
@@ -685,6 +686,36 @@ public class MainTest {
         assertLog(log, ".*result.k: v.*");
     }
 
+    @Test
+    public void testNestedSet() throws Exception {
+        Map<String, Object> x = new HashMap<>();
+        x.put("z", 234);
+
+        deploy("nestedSet");
+        save(ProcessConfiguration.builder()
+                .putArguments("x", x)
+                .build());
+
+        byte[] log = run();
+        assertLog(log, ".*x: .*y=123.*");
+        assertLog(log, ".*x: .*z=234.*");
+        assertLog(log, ".*x: .*taskOut=42.*");
+
+        // TODO support for partial eval results?
+        assertLog(log, ".*x: .*taskOut2=42.*");
+    }
+
+    @Test
+    public void testRetry() throws Exception {
+        deploy("retry");
+
+        save(ProcessConfiguration.builder().build());
+
+        byte[] log = run();
+        assertLog(log, ".*faultyOnceTask: fail.*");
+        assertLog(log, ".*faultyOnceTask: ok.*");
+    }
+
     private void deploy(String resource) throws URISyntaxException, IOException {
         Path src = Paths.get(MainTest.class.getResource(resource).toURI());
         IOUtils.copy(src, workDir);
@@ -709,6 +740,8 @@ public class MainTest {
     }
 
     private byte[] run(RunnerConfiguration baseCfg) throws Exception {
+        assertNotNull("save() the process configuration first", processConfiguration);
+
         ImmutableRunnerConfiguration.Builder runnerCfg = RunnerConfiguration.builder();
 
         if (baseCfg != null) {
@@ -897,6 +930,26 @@ public class MainTest {
         }
     }
 
+    @Named("faultyOnceTask")
+    @SuppressWarnings("unused")
+    static class FaultyOnceTask implements Task {
+
+        private static final Logger log = LoggerFactory.getLogger(FaultyOnceTask.class);
+
+        private static final AtomicBoolean toggle = new AtomicBoolean(false);
+
+        @Override
+        public TaskResult execute(Variables input) {
+            if (!toggle.getAndSet(true)) {
+                log.info("faultyOnceTask: fail");
+                throw new RuntimeException("boom!");
+            }
+
+            log.info("faultyOnceTask: ok");
+            return TaskResult.success();
+        }
+    }
+
     @Named("reentrantTask")
     @SuppressWarnings("unused")
     static class ReentrantTaskExample implements ReentrantTask {
@@ -929,7 +982,20 @@ public class MainTest {
         public TaskResult resume(ResumeEvent event) {
             log.info("RESUME: {}", event);
             return TaskResult.success()
-                    .values((Map)event.state());
+                    .values((Map) event.state());
+        }
+    }
+
+    @Named("simpleMethodTask")
+    @SuppressWarnings("unused")
+    public static class SimpleMethodTask implements Task {
+
+        public int getValue() {
+            return 42;
+        }
+
+        public int getDerivedValue(int value) {
+            return value + 42;
         }
     }
 }
