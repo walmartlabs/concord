@@ -4,6 +4,8 @@
 
 ### Added
 
+- concord-server: JSON store data can now be updated by either `POST`
+or `PUT` method;
 - runtime-v2: support for nested `set`;
 - runtime-v2: support for `out` variables in `try` and `block`
 steps;
