@@ -112,6 +112,21 @@ public class JsonStoreDataResource implements Resource {
     }
 
     /**
+     * Same as {@link #data(String, String, String, Object)}.
+     */
+    @POST
+    @Path("/{orgName}/jsonstore/{storeName}/item/{itemPath:.*}")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    public GenericOperationResult update(@ApiParam @PathParam("orgName") String orgName,
+                                         @ApiParam @PathParam("storeName") String storeName,
+                                         @ApiParam @PathParam("itemPath") String itemPath,
+                                         @ApiParam Object data) {
+
+        return data(orgName, storeName, itemPath, data);
+    }
+
+    /**
      * Remove an item from a store.
      *
      * @param orgName   organization's name
