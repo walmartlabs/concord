@@ -50,6 +50,16 @@ public class SetVariablesCommand extends StepCommand<SetVariablesStep> {
         ExpressionEvaluator ee = runtime.getService(ExpressionEvaluator.class);
         Map<String, Object> vars = ee.evalAsMap(EvalContextFactory.scope(ctx), step.getVars());
 
-        vars.forEach((k, v) -> ctx.variables().set(k, v));
+        vars.forEach((k, v) -> {
+            if (isNestedVariable(k)) {
+                ee.setValue(EvalContextFactory.scope(ctx), "${" + k + "}", v);
+            } else {
+                ctx.variables().set(k, v);
+            }
+        });
+    }
+
+    private static boolean isNestedVariable(String str) {
+        return str.contains(".");
     }
 }
