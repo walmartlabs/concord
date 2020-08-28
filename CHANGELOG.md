@@ -12,6 +12,8 @@ steps;
 
 ### Changed
 
+- runtime-v2: fixed a potential NPE in the `retry` code when handling
+exceptions w/o message;
 - docker-images: remove `dumb-init` as Docker ships its own init
 implementation;
 - runtime-v2: when using `withItems`, `out` variables are now
