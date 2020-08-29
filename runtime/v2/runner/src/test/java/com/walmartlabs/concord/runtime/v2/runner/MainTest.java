@@ -714,6 +714,7 @@ public class MainTest {
         byte[] log = run();
         assertLog(log, ".*faultyOnceTask: fail.*");
         assertLog(log, ".*faultyOnceTask: ok.*");
+        assertLog(log, ".*neverFailTask: ok.*");
     }
 
     private void deploy(String resource) throws URISyntaxException, IOException {
@@ -946,6 +947,19 @@ public class MainTest {
             }
 
             log.info("faultyOnceTask: ok");
+            return TaskResult.success();
+        }
+    }
+
+    @Named("neverFailTask")
+    @SuppressWarnings("unused")
+    static class NeverFailTask implements Task {
+
+        private static final Logger log = LoggerFactory.getLogger(NeverFailTask.class);
+
+        @Override
+        public TaskResult execute(Variables input) {
+            log.info("neverFailTask: ok");
             return TaskResult.success();
         }
     }
