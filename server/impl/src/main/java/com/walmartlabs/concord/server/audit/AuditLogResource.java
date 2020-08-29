@@ -101,7 +101,8 @@ public class AuditLogResource implements Resource {
                             JsonStoreAccessManager jsonStoreAccessManager,
                             UserDao userDao,
                             TeamDao teamDao,
-                            AuditDao auditDao, AuditConfiguration cfg) {
+                            AuditDao auditDao,
+                            AuditConfiguration cfg) {
 
         this.orgManager = orgManager;
         this.projectAccessManager = projectAccessManager;
