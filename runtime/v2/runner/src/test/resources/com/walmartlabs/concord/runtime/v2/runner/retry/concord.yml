@@ -1,6 +1,13 @@
 flows:
   default:
+    # should trigger twice
     - task: faultyOnceTask
+      retry:
+        times: 3
+        delay: 1
+
+    # should trigger once
+    - task: neverFailTask
       retry:
         times: 3
         delay: 1
