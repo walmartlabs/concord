@@ -1,0 +1,20 @@
+flows:
+  default:
+    - task: crypto
+      in:
+        action: create
+        org: ${org}
+        secretName: "${secretName}"
+        generatePwd: "false"
+        storePassword: "pAss123qweasd"
+        usernamePassword:
+          username: superuser
+          password: "123"
+      out: result
+
+    - log: "result.ok: ${result.ok}"
+    - log: "result.password: ${result.password}"
+    - log: "credentials: ${crypto.exportCredentials(org, secretName, 'pAss123qweasd')}"
+
+configuration:
+  runtime: concord-v2
