@@ -36,7 +36,7 @@ import static com.walmartlabs.concord.runtime.v2.parser.GrammarV2.*;
 
 public final class TaskGrammar {
 
-    private static ImmutableTaskCallOptions.Builder optionsBuilder(String stepName) {
+    public static ImmutableTaskCallOptions.Builder optionsWithStepName(String stepName) {
         ImmutableTaskCallOptions.Builder result = ImmutableTaskCallOptions.builder();
         if (stepName != null) {
             result.putMeta(Constants.SEGMENT_NAME, stepName);
@@ -45,7 +45,7 @@ public final class TaskGrammar {
     }
 
     private static Parser<Atom, TaskCallOptions> taskOptions(String stepName) {
-        return with(() -> optionsBuilder(stepName),
+        return with(() -> optionsWithStepName(stepName),
                 o -> options(
                         optional("in", mapVal.map(o::input)),
                         optional("out", stringVal.map(o::out)),

@@ -1,0 +1,12 @@
+flows:
+  default:
+    - block:
+        - set:
+            x: "${item * 10}"
+      out: x
+      withItems:
+        - 1
+        - 2
+        - 3
+
+    - log: "result: ${x}"

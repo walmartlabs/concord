@@ -1,0 +1,8 @@
+flows:
+  default:
+    - set:
+        x.y: 123
+        x.taskOut: "${simpleMethodTask.getValue()}"
+        x.taskOut2: "${simpleMethodTask.getDerivedValue(x.y)}"
+
+    - log: "x: ${x}"

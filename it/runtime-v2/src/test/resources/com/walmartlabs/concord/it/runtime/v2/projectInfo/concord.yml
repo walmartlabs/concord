@@ -5,4 +5,4 @@ flows:
   default:
     - script: js
       body: |
-        log.info(context.projectInfo());
+        log.info(context.processConfiguration().projectInfo());

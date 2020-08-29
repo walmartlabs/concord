@@ -23,7 +23,6 @@ package com.walmartlabs.concord.client.v2;
 import com.walmartlabs.concord.ApiClient;
 import com.walmartlabs.concord.client.ProjectTaskCommon;
 import com.walmartlabs.concord.client.ProjectTaskParams;
-import com.walmartlabs.concord.runtime.v2.model.ProjectInfo;
 import com.walmartlabs.concord.runtime.v2.sdk.Context;
 import com.walmartlabs.concord.runtime.v2.sdk.Task;
 import com.walmartlabs.concord.runtime.v2.sdk.TaskResult;
@@ -39,9 +38,7 @@ public class ProjectTaskV2 implements Task {
 
     @Inject
     public ProjectTaskV2(ApiClient apiClient, Context context) {
-        ProjectInfo projectInfo = context.projectInfo();
-        String processOrg = projectInfo != null ? projectInfo.orgName() : null;
-        this.delegate = new ProjectTaskCommon(apiClient, processOrg);
+        this.delegate = new ProjectTaskCommon(apiClient, context.processConfiguration().projectInfo().orgName());
     }
 
     @Override

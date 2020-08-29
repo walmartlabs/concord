@@ -21,22 +21,21 @@ package com.walmartlabs.concord.runtime.v2.parser;
  */
 
 import com.walmartlabs.concord.runtime.v2.model.TaskCall;
-import com.walmartlabs.concord.runtime.v2.model.TaskCallOptions;
 import io.takari.parc.Parser;
 
-import static com.walmartlabs.concord.runtime.v2.parser.GrammarMisc.satisfyField;
+import static com.walmartlabs.concord.runtime.v2.parser.GrammarMisc.namedStep;
 import static com.walmartlabs.concord.runtime.v2.parser.GrammarOptions.simpleOptions;
 import static com.walmartlabs.concord.runtime.v2.parser.GrammarV2.anyVal;
+import static com.walmartlabs.concord.runtime.v2.parser.TaskGrammar.optionsWithStepName;
 
 public final class ThrowGrammar {
 
     public static final Parser<Atom, TaskCall> throwStep =
-            satisfyField("throw", YamlValueType.TASK, a -> anyVal.bind(e ->
+            namedStep("throw", YamlValueType.TASK, (stepName, a) -> anyVal.bind(e ->
                     simpleOptions.map(options ->
-                            new TaskCall(a.location, "throw", TaskCallOptions.builder()
+                            new TaskCall(a.location, "throw", optionsWithStepName(stepName)
                                     .putInput("exception", e)
                                     .build()))));
-
 
     private ThrowGrammar() {
     }

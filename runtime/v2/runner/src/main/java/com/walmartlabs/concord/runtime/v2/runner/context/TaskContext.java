@@ -21,9 +21,8 @@ package com.walmartlabs.concord.runtime.v2.runner.context;
  */
 
 import com.walmartlabs.concord.runtime.v2.model.ProcessConfiguration;
-import com.walmartlabs.concord.runtime.v2.model.ProjectInfo;
-import com.walmartlabs.concord.runtime.v2.sdk.*;
 import com.walmartlabs.concord.runtime.v2.sdk.Compiler;
+import com.walmartlabs.concord.runtime.v2.sdk.*;
 
 import java.io.Serializable;
 import java.nio.file.Path;
@@ -58,11 +57,6 @@ public class TaskContext implements Context {
     @Override
     public Variables defaultVariables() {
         return defaultVariables;
-    }
-
-    @Override
-    public ProjectInfo projectInfo() {
-        return delegate.projectInfo();
     }
 
     @Override

@@ -29,9 +29,14 @@ import java.util.List;
 
 @Value.Immutable
 @Value.Style(jdkOnly = true)
-public interface GroupOptions extends StepOptions {
+public interface GroupOfStepsOptions extends StepOptions {
 
     long serialVersionUID = 1L;
+
+    @Value.Default
+    default List<String> out() {
+        return Collections.emptyList();
+    }
 
     @Value.Default
     default List<Step> errorSteps() {
@@ -41,7 +46,7 @@ public interface GroupOptions extends StepOptions {
     @Nullable
     WithItems withItems();
 
-    static ImmutableGroupOptions.Builder builder() {
-        return ImmutableGroupOptions.builder();
+    static ImmutableGroupOfStepsOptions.Builder builder() {
+        return ImmutableGroupOfStepsOptions.builder();
     }
 }

@@ -38,7 +38,7 @@ public class JsonStoreTaskV2 implements Task {
 
     public JsonStoreTaskV2(ApiClient apiClient, Context context) {
         this.delegate = new JsonStoreTaskCommon(apiClient);
-        this.processOrg = context.projectInfo() != null ? context.projectInfo().orgName() : null;
+        this.processOrg = context.processConfiguration().projectInfo().orgName();
     }
 
     public void put(String storeName, String itemPath, Object data) throws Exception {
