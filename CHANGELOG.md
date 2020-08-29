@@ -4,6 +4,7 @@
 
 ### Added
 
+- crypto-tasks: an action to create new secrets (runtime-v2 only);
 - concord-server: JSON store data can now be updated by either `POST`
 or `PUT` method;
 - runtime-v2: support for nested `set`;
