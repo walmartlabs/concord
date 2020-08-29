@@ -4,6 +4,8 @@
 
 ### Added
 
+- concord-imports: support for `dir` imports (external directories),
+disabled by default;
 - crypto-tasks: an action to create new secrets (runtime-v2 only);
 - concord-server: JSON store data can now be updated by either `POST`
 or `PUT` method;
