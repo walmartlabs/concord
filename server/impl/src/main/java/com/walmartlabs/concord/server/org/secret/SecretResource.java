@@ -357,7 +357,7 @@ public class SecretResource implements Resource {
             try {
                 PasswordChecker.check(password);
             } catch (PasswordChecker.CheckerException e) {
-                throw new ConcordApplicationException("Invalid password: " + e.getMessage());
+                throw new ConcordApplicationException("Invalid password: " + e.getMessage(), Status.BAD_REQUEST);
             }
         }
 
