@@ -49,10 +49,12 @@ public class WithItemsWrapper implements Command {
 
     private final Command cmd;
     private final WithItems withItems;
+    private final List<String> outVariables;
 
-    public WithItemsWrapper(Command cmd, WithItems withItems) {
+    public WithItemsWrapper(Command cmd, WithItems withItems, List<String> outVariables) {
         this.cmd = cmd;
         this.withItems = withItems;
+        this.outVariables = outVariables;
     }
 
     @Override
@@ -121,26 +123,37 @@ public class WithItemsWrapper implements Command {
         loop.setLocal(CURRENT_INDEX, 0);
         loop.setLocal(CURRENT_ITEM, (Serializable) items.get(0));
 
-        loop.push(new WithItemsNext(cmd)); // next iteration
-        loop.push(cmd); // the wrapped command
+        loop.push(new WithItemsNext(outVariables, cmd)); // next iteration
+
+        Frame cmdFrame = Frame.builder()
+                .commands(cmd)
+                .root()
+                .build();
+
+        Frame targetFrame = VMUtils.assertNearestRoot(state, threadId);
+        loop.push(new AppendVariablesCommand(outVariables, cmdFrame, targetFrame));
+        loop.push(new PrepareOutVariables(outVariables));
 
         state.pushFrame(threadId, loop);
+        state.pushFrame(threadId, cmdFrame);
     }
 
     public static class WithItemsNext implements Command {
 
         private static final long serialVersionUID = 1L;
 
+        private final List<String> outVariables;
         private final Command cmd;
 
-        public WithItemsNext(Command cmd) {
+        public WithItemsNext(List<String> outVariables, Command cmd) {
+            this.outVariables = outVariables;
             this.cmd = cmd;
         }
 
         @Override
         public void eval(Runtime runtime, State state, ThreadId threadId) {
-            Frame frame = state.peekFrame(threadId);
-            frame.pop();
+            Frame loop = state.peekFrame(threadId);
+            loop.pop();
 
             List<Serializable> items = VMUtils.assertLocal(state, threadId, CURRENT_ITEMS);
 
@@ -151,15 +164,90 @@ public class WithItemsWrapper implements Command {
             }
 
             int newIndex = index + 1;
-            frame.setLocal(CURRENT_INDEX, newIndex);
-            frame.setLocal(CURRENT_ITEM, items.get(newIndex));
+            loop.setLocal(CURRENT_INDEX, newIndex);
+            loop.setLocal(CURRENT_ITEM, items.get(newIndex));
 
-            frame.push(new WithItemsNext(cmd)); // next iteration
-            frame.push(cmd); // the wrapped command
+            loop.push(new WithItemsNext(outVariables, cmd)); // next iteration
+
+            // frame wrapped command
+            Frame cmdFrame = Frame.builder()
+                    .commands(cmd)
+                    .root()
+                    .build();
+
+            Frame targetFrame = VMUtils.assertNearestRoot(state, threadId);
+            loop.push(new AppendVariablesCommand(outVariables, cmdFrame, targetFrame));
+
+            state.pushFrame(threadId, loop);
+            state.pushFrame(threadId, cmdFrame);
         }
     }
 
-    public static class SerializableEntry implements Map.Entry<Serializable, Serializable>, Serializable {
+    private static class PrepareOutVariables implements Command {
+
+        private static final long serialVersionUID = 1L;
+
+        private final List<String> outVars;
+
+        private PrepareOutVariables(List<String> outVars) {
+            this.outVars = outVars;
+        }
+
+        @Override
+        public void eval(Runtime runtime, State state, ThreadId threadId) {
+            Frame outerFrame = state.peekFrame(threadId);
+            outerFrame.pop();
+
+            if (outVars.isEmpty()) {
+                return;
+            }
+
+            for (String outVar : outVars) {
+                VMUtils.putLocal(state, threadId, outVar, new ArrayList<>());
+            }
+        }
+    }
+
+    /**
+     * Appends values of the specified variables from the source frame into
+     * list variables in the target frame.
+     */
+    private static class AppendVariablesCommand implements Command {
+
+        private static final long serialVersionUID = 1L;
+
+        private final List<String> variables;
+        private final Frame sourceFrame;
+        private final Frame targetFrame;
+
+        public AppendVariablesCommand(List<String> variables, Frame sourceFrame, Frame targetFrame) {
+            this.variables = variables;
+            this.sourceFrame = sourceFrame;
+            this.targetFrame = targetFrame;
+        }
+
+        @Override
+        @SuppressWarnings("unchecked")
+        public void eval(Runtime runtime, State state, ThreadId threadId) {
+            Frame frame = state.peekFrame(threadId);
+            frame.pop();
+
+            if (variables.isEmpty()) {
+                return;
+            }
+
+            for (String v : variables) {
+                ArrayList<Serializable> results = (ArrayList<Serializable>) targetFrame.getLocal(v);
+                Serializable result = null;
+                if (sourceFrame.hasLocal(v)) {
+                    result = sourceFrame.getLocal(v);
+                }
+                results.add(result);
+            }
+        }
+    }
+
+    private static class SerializableEntry implements Map.Entry<Serializable, Serializable>, Serializable {
 
         private static final long serialVersionUID = 1L;
 

@@ -20,7 +20,10 @@ package com.walmartlabs.concord.runtime.v2.runner.context;
  * =====
  */
 
-import com.walmartlabs.concord.runtime.v2.model.*;
+import com.walmartlabs.concord.runtime.v2.model.ProcessConfiguration;
+import com.walmartlabs.concord.runtime.v2.model.ProcessDefinition;
+import com.walmartlabs.concord.runtime.v2.model.Step;
+import com.walmartlabs.concord.runtime.v2.model.TaskCall;
 import com.walmartlabs.concord.runtime.v2.runner.el.EvalContextFactory;
 import com.walmartlabs.concord.runtime.v2.runner.el.ExpressionEvaluator;
 import com.walmartlabs.concord.runtime.v2.runner.vm.SuspendCommand;
@@ -35,7 +38,6 @@ import java.io.Serializable;
 import java.nio.file.Path;
 import java.util.Collections;
 import java.util.Map;
-import java.util.Objects;
 import java.util.UUID;
 
 public class ContextImpl implements Context {
@@ -51,7 +53,6 @@ public class ContextImpl implements Context {
     private final Path workingDir;
     private final UUID processInstanceId;
     private final Variables variables;
-    private final ProjectInfo projectInfo;
     private final FileService fileService;
     private final DockerService dockerService;
     private final SecretService secretService;
@@ -86,7 +87,6 @@ public class ContextImpl implements Context {
         this.correlationId = correlationId;
         this.workingDir = workingDir;
         this.processInstanceId = processInstanceId;
-        this.projectInfo = processConfiguration.projectInfo();
         this.variables = new ContextVariables(this);
         this.fileService = fileService;
         this.dockerService = dockerService;
@@ -114,20 +114,6 @@ public class ContextImpl implements Context {
     @Override
     public Variables defaultVariables() {
         return new MapBackedVariables(Collections.emptyMap());
-    }
-
-    @Override
-    public ProjectInfo projectInfo() {
-        if (projectInfo.projectId() == null) {
-            return null;
-        }
-
-        return ImmutableProjectInfo.builder()
-                .orgId(Objects.requireNonNull(projectInfo.orgId()))
-                .orgName(Objects.requireNonNull(projectInfo.orgName()))
-                .projectId(Objects.requireNonNull(projectInfo.projectId()))
-                .projectName(Objects.requireNonNull(projectInfo.projectName()))
-                .build();
     }
 
     @Override

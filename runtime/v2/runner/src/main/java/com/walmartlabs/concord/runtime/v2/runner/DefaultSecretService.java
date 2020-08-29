@@ -9,9 +9,9 @@ package com.walmartlabs.concord.runtime.v2.runner;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -21,8 +21,7 @@ package com.walmartlabs.concord.runtime.v2.runner;
  */
 
 import com.walmartlabs.concord.ApiClient;
-import com.walmartlabs.concord.client.SecretClient;
-import com.walmartlabs.concord.client.SecretEntry;
+import com.walmartlabs.concord.client.*;
 import com.walmartlabs.concord.common.secret.BinaryDataSecret;
 import com.walmartlabs.concord.runtime.common.cfg.RunnerConfiguration;
 import com.walmartlabs.concord.runtime.common.injector.InstanceId;
@@ -103,10 +102,52 @@ public class DefaultSecretService implements SecretService {
 
     @Override
     public String encryptString(String orgName, String projectName, String value) throws Exception {
-        return secretClient.encryptString(instanceId.getValue(), orgName, projectName, value);
+        return secretClient.encryptString(orgName, projectName, value);
+    }
+
+    @Override
+    public SecretCreationResult createKeyPair(SecretParams secret, KeyPair keyPair) throws Exception {
+        return toResult(secretClient.createSecret(secretRequest(secret)
+                .keyPair(CreateSecretRequest.KeyPair.builder()
+                        .publicKey(keyPair.publicKey())
+                        .privateKey(keyPair.privateKey())
+                        .build())
+                .build()));
+    }
+
+    @Override
+    public SecretCreationResult createUsernamePassword(SecretParams secret, UsernamePassword usernamePassword) throws Exception {
+        return toResult(secretClient.createSecret(secretRequest(secret)
+                .usernamePassword(CreateSecretRequest.UsernamePassword.of(usernamePassword.username(), usernamePassword.password()))
+                .build()));
+    }
+
+    @Override
+    public SecretCreationResult createData(SecretParams secret, byte[] data) throws Exception {
+        return toResult(secretClient.createSecret(secretRequest(secret)
+                .data(data)
+                .build()));
+    }
+
+    private static SecretCreationResult toResult(SecretOperationResponse response) {
+        return SecretCreationResult.builder()
+                .id(response.getId())
+                .password(response.getPassword())
+                .build();
     }
 
     private <T extends Secret> T get(String orgName, String secretName, String password, SecretEntry.TypeEnum type) throws Exception {
         return secretClient.getData(orgName, secretName, password, type);
+    }
+
+    private ImmutableCreateSecretRequest.Builder secretRequest(SecretParams secret) {
+        SecretParams.Visibility visibility = secret.visibility();
+        return CreateSecretRequest.builder()
+                .org(secret.orgName())
+                .name(secret.name())
+                .generatePassword(secret.generatePassword())
+                .storePassword(secret.storePassword())
+                .visibility(visibility != null ? SecretEntry.VisibilityEnum.fromValue(visibility.name()) : null)
+                .project(secret.project());
     }
 }

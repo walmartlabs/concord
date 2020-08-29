@@ -44,7 +44,7 @@ import static com.walmartlabs.concord.runtime.v2.parser.ExpressionGrammar.exprSh
 import static com.walmartlabs.concord.runtime.v2.parser.FlowCallGrammar.callFull;
 import static com.walmartlabs.concord.runtime.v2.parser.FormsGrammar.callForm;
 import static com.walmartlabs.concord.runtime.v2.parser.GrammarMisc.*;
-import static com.walmartlabs.concord.runtime.v2.parser.GroupGrammar.group;
+import static com.walmartlabs.concord.runtime.v2.parser.GroupOfStepsGrammar.group;
 import static com.walmartlabs.concord.runtime.v2.parser.LogGrammar.logStep;
 import static com.walmartlabs.concord.runtime.v2.parser.ParallelGrammar.parallelBlock;
 import static com.walmartlabs.concord.runtime.v2.parser.ReturnGrammar.returnStep;

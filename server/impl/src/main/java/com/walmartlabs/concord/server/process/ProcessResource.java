@@ -469,7 +469,7 @@ public class ProcessResource implements Resource {
         UUID projectId = parent.projectId();
         UserPrincipal userPrincipal = UserPrincipal.assertCurrent();
         Set<String> handlers = parent.handlers();
-        Imports imports = parent.imports();
+        Imports imports = queueDao.getImports(parentProcessKey);
 
         Payload payload;
         try {
@@ -732,7 +732,7 @@ public class ProcessResource implements Resource {
      * @param initiator
      * @param limit
      * @return
-     * @deprecated use {@link ProcessResourceV2#list(UUID, String, UUID, String, IsoDateParam, IsoDateParam, Set, ProcessStatus, String, UUID, Set, int, int, UriInfo)}
+     * @deprecated use {@link ProcessResourceV2#list(UUID, String, UUID, String, UUID, String, OffsetDateTimeParam, OffsetDateTimeParam, Set, ProcessStatus, String, UUID, Set, int, int, UriInfo)}
      */
     @GET
     @ApiOperation(value = "List processes for all user's organizations", responseContainer = "list", response = ProcessEntry.class)
@@ -802,7 +802,7 @@ public class ProcessResource implements Resource {
      * Retrieves a process' log.
      *
      * @param instanceId
-     * @param range
+     * @param rangeHeader
      * @return
      * @see ProcessLogResourceV2
      * @deprecated in favor of the /api/v2/process/{id}/log* endpoints
