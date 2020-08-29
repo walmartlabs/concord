@@ -59,6 +59,9 @@ public class SecretClient {
         this.retryInterval = retryInterval;
     }
 
+    /**
+     * Fetches a decrypted Concord secret from the server.
+     */
     public <T extends Secret> T getData(String orgName, String secretName, String password, SecretEntry.TypeEnum expectedType) throws Exception {
         String path = "/api/v1/org/" + orgName + "/secret/" + secretName + "/data";
 
@@ -106,6 +109,9 @@ public class SecretClient {
         }
     }
 
+    /**
+     * Decrypt the provided string using the project's key.
+     */
     public byte[] decryptString(UUID instanceId, byte[] input) throws Exception {
         String path = "/api/v1/process/" + instanceId + "/decrypt";
 
@@ -124,6 +130,21 @@ public class SecretClient {
         }
     }
 
+    /**
+     * Encrypts the provided string using the project's key.
+     */
+    public String encryptString(String orgName, String projectName, String input) throws Exception {
+        return encryptString(null, orgName, projectName, input);
+    }
+
+    /**
+     * Encrypts the provided string using the project's key.
+     *
+     * @deprecated use {@link #encryptString(String, String, String)}.
+     * We don't need {@code instanceId} to encrypt strings anymore, but
+     * we keep this method for backward compatibility.
+     */
+    @Deprecated
     public String encryptString(UUID instanceId, String orgName, String projectName, String input) throws Exception {
         String path = "/api/v1/org/" + orgName + "/project/" + projectName + "/encrypt";
         Map<String, String> headerParams = new HashMap<>();
@@ -138,6 +159,9 @@ public class SecretClient {
         throw new ApiException("Error encrypting string. Status code:" + r.getStatusCode() + " Data: " + r.getData());
     }
 
+    /**
+     * Creates a new Concord secret.
+     */
     public SecretOperationResponse createSecret(CreateSecretRequest secretRequest) throws IOException {
         String path = "/api/v1/org/" + secretRequest.org() + "/secret";
 
@@ -147,28 +171,33 @@ public class SecretClient {
         if (secretRequest.storePassword() != null) {
             params.put(Constants.Multipart.STORE_PASSWORD, secretRequest.storePassword());
         }
-        if (secretRequest.visibility() != null) {
-            params.put(Constants.Multipart.VISIBILITY, secretRequest.visibility().getValue());
+
+        SecretEntry.VisibilityEnum visibility = secretRequest.visibility();
+        if (visibility != null) {
+            params.put(Constants.Multipart.VISIBILITY, visibility.getValue());
         }
+
         if (secretRequest.project() != null) {
             params.put(Constants.Multipart.PROJECT_NAME, secretRequest.project());
         }
 
-        if (secretRequest.data() != null) {
+        byte[] data = secretRequest.data();
+        CreateSecretRequest.KeyPair keyPair = secretRequest.keyPair();
+        CreateSecretRequest.UsernamePassword usernamePassword = secretRequest.usernamePassword();
+
+        if (data != null) {
             params.put(Constants.Multipart.TYPE, SecretEntry.TypeEnum.DATA.getValue());
-            params.put(Constants.Multipart.DATA, secretRequest.data());
-        } else if (secretRequest.keyPair() != null) {
+            params.put(Constants.Multipart.DATA, data);
+        } else if (keyPair != null) {
             params.put(Constants.Multipart.TYPE, SecretEntry.TypeEnum.KEY_PAIR.getValue());
-            CreateSecretRequest.KeyPair kp = secretRequest.keyPair();
-            params.put(Constants.Multipart.PUBLIC, readFile(kp.publicKey()));
-            params.put(Constants.Multipart.PRIVATE, readFile(kp.privateKey()));
-        } else if (secretRequest.usernamePassword() != null){
+            params.put(Constants.Multipart.PUBLIC, readFile(keyPair.publicKey()));
+            params.put(Constants.Multipart.PRIVATE, readFile(keyPair.privateKey()));
+        } else if (usernamePassword != null) {
             params.put(Constants.Multipart.TYPE, SecretEntry.TypeEnum.USERNAME_PASSWORD.getValue());
-            CreateSecretRequest.UsernamePassword up = secretRequest.usernamePassword();
-            params.put(Constants.Multipart.USERNAME, up.username());
-            params.put(Constants.Multipart.PASSWORD, up.password());
+            params.put(Constants.Multipart.USERNAME, usernamePassword.username());
+            params.put(Constants.Multipart.PASSWORD, usernamePassword.password());
         } else {
-            throw new IllegalArgumentException("No secret data defined");
+            throw new IllegalArgumentException("Secret data, a key pair or username/password must be specified.");
         }
 
         try {
@@ -181,9 +210,14 @@ public class SecretClient {
     }
 
     private static byte[] readFile(Path file) throws IOException {
+        if (file == null) {
+            return null;
+        }
+
         if (Files.notExists(file)) {
             throw new RuntimeException("File '" + file + "' not found");
         }
+
         return Files.readAllBytes(file);
     }
 

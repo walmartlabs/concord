@@ -56,7 +56,9 @@ public class CryptoTaskV2 implements Task {
         this.secretService = context.secretService();
         this.workDir = context.workingDirectory();
         this.processCfg = context.processConfiguration();
-        this.processOrg = context.projectInfo() != null ? context.projectInfo().orgName() : null;
+
+        ProjectInfo projectInfo = processCfg.projectInfo();
+        this.processOrg = projectInfo != null ? projectInfo.orgName() : null;
     }
 
     public String exportAsString(String orgName, String name, String password) throws Exception {
@@ -111,7 +113,7 @@ public class CryptoTaskV2 implements Task {
         switch (action) {
             case CREATE: {
                 SecretCreationResult result = createSecret(params);
-                log.info("The secret '{}/{}' was created", params.org(processOrg), params.secretName());
+                log.info("The secret '{}/{}' was created successfully", params.orgOrDefault(processOrg), params.secretName());
                 return TaskResult.success()
                         .value("password", result.password());
             }
@@ -122,7 +124,7 @@ public class CryptoTaskV2 implements Task {
 
     private SecretCreationResult createSecret(TaskParams in) throws Exception {
         SecretService.SecretParams secret = SecretService.SecretParams.builder()
-                .orgName(in.org(processOrg))
+                .orgName(in.orgOrDefault(processOrg))
                 .name(in.secretName())
                 .generatePassword(in.generatePassword())
                 .storePassword(in.storePassword())
@@ -130,30 +132,40 @@ public class CryptoTaskV2 implements Task {
                 .project(in.project())
                 .build();
 
-        if (in.data() != null) {
-            return secretService.createData(secret, readFile(toPath(in.data())));
-        } else if (in.keyPair() != null) {
-            TaskParams.KeyPair kp = in.keyPair();
+        String data = in.data();
+        TaskParams.KeyPair kp = in.keyPair();
+        TaskParams.UsernamePassword up = in.usernamePassword();
+
+        if (data != null) {
+            return secretService.createData(secret, readFile(toPath(data)));
+        } else if (kp != null) {
             return secretService.createKeyPair(secret, KeyPair.builder()
                     .publicKey(toPath(kp.publicKey()))
                     .privateKey(toPath(kp.privateKey()))
                     .build());
-        } else if (in.usernamePassword() != null) {
-            TaskParams.UsernamePassword up = in.usernamePassword();
+        } else if (up != null) {
             return secretService.createUsernamePassword(secret, UsernamePassword.of(up.username(), up.password()));
         } else {
-            throw new IllegalArgumentException("No secret data defined");
+            throw new IllegalArgumentException("A path to the secret's data, a key pair or a username/password pair must be specified.");
         }
+
     }
 
     private Path toPath(String value) {
-        return workDir.resolve(value);
+        Path p = workDir.resolve(value).normalize();
+
+        if (!p.startsWith(workDir)) {
+            throw new IllegalArgumentException("Can't use paths outside of the working directory: " + p.toAbsolutePath());
+        }
+
+        return p;
     }
 
     private static byte[] readFile(Path file) throws IOException {
         if (Files.notExists(file)) {
             throw new RuntimeException("File '" + file + "' not found");
         }
+
         return Files.readAllBytes(file);
     }
 }

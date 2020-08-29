@@ -9,9 +9,9 @@ package com.walmartlabs.concord.runtime.v2.runner;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -102,7 +102,7 @@ public class DefaultSecretService implements SecretService {
 
     @Override
     public String encryptString(String orgName, String projectName, String value) throws Exception {
-        return secretClient.encryptString(instanceId.getValue(), orgName, projectName, value);
+        return secretClient.encryptString(orgName, projectName, value);
     }
 
     @Override
@@ -141,16 +141,13 @@ public class DefaultSecretService implements SecretService {
     }
 
     private ImmutableCreateSecretRequest.Builder secretRequest(SecretParams secret) {
-        SecretEntry.VisibilityEnum visibility = null;
-        if (secret.visibility() != null) {
-            visibility = SecretEntry.VisibilityEnum.fromValue(secret.visibility().name());
-        }
+        SecretParams.Visibility visibility = secret.visibility();
         return CreateSecretRequest.builder()
                 .org(secret.orgName())
                 .name(secret.name())
                 .generatePassword(secret.generatePassword())
                 .storePassword(secret.storePassword())
-                .visibility(visibility)
+                .visibility(visibility != null ? SecretEntry.VisibilityEnum.fromValue(visibility.name()) : null)
                 .project(secret.project());
     }
 }
