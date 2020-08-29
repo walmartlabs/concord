@@ -21,6 +21,7 @@ package com.walmartlabs.concord.server.audit;
  */
 
 import com.walmartlabs.concord.server.OffsetDateTimeParam;
+import com.walmartlabs.concord.server.cfg.AuditConfiguration;
 import com.walmartlabs.concord.server.org.OrganizationEntry;
 import com.walmartlabs.concord.server.org.OrganizationManager;
 import com.walmartlabs.concord.server.org.ResourceAccessLevel;
@@ -31,6 +32,7 @@ import com.walmartlabs.concord.server.org.project.ProjectEntry;
 import com.walmartlabs.concord.server.org.secret.SecretEntry;
 import com.walmartlabs.concord.server.org.secret.SecretManager;
 import com.walmartlabs.concord.server.org.team.TeamDao;
+import com.walmartlabs.concord.server.sdk.ConcordApplicationException;
 import com.walmartlabs.concord.server.sdk.metrics.WithTimer;
 import com.walmartlabs.concord.server.security.Roles;
 import com.walmartlabs.concord.server.user.UserDao;
@@ -46,10 +48,9 @@ import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
 import javax.ws.rs.*;
-import javax.ws.rs.core.Context;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.MultivaluedMap;
-import javax.ws.rs.core.UriInfo;
+import javax.ws.rs.core.*;
+import java.time.Duration;
+import java.time.OffsetDateTime;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -91,6 +92,7 @@ public class AuditLogResource implements Resource {
     private final UserDao userDao;
     private final TeamDao teamDao;
     private final AuditDao auditDao;
+    private final AuditConfiguration cfg;
 
     @Inject
     public AuditLogResource(OrganizationManager orgManager,
@@ -99,7 +101,7 @@ public class AuditLogResource implements Resource {
                             JsonStoreAccessManager jsonStoreAccessManager,
                             UserDao userDao,
                             TeamDao teamDao,
-                            AuditDao auditDao) {
+                            AuditDao auditDao, AuditConfiguration cfg) {
 
         this.orgManager = orgManager;
         this.projectAccessManager = projectAccessManager;
@@ -108,6 +110,7 @@ public class AuditLogResource implements Resource {
         this.userDao = userDao;
         this.teamDao = teamDao;
         this.auditDao = auditDao;
+        this.cfg = cfg;
     }
 
     /**
@@ -204,6 +207,8 @@ public class AuditLogResource implements Resource {
                     Collections.singletonMap("repository",
                             Collections.singletonMap("full_name", details.get("fullRepoName"))));
         }
+
+        assertTimeInterval(unwrap(afterTimestamp), unwrap(beforeTimestamp));
 
         return auditDao.list(filterBuilder
                 .userId(effectiveUserId)
@@ -320,6 +325,28 @@ public class AuditLogResource implements Resource {
             return UUID.fromString(s);
         } catch (IllegalArgumentException e) {
             throw new ValidationErrorsException("Invalid request parameters. Expected a UUID in '" + k + "'");
+        }
+    }
+
+    private void assertTimeInterval(OffsetDateTime after, OffsetDateTime before) {
+        if (cfg.getMaxSearchInterval() == null) {
+            return;
+        }
+
+        if (before == null && after == null) {
+            return;
+        }
+
+        if (after != null && before != null) {
+            if (Duration.between(after, before).compareTo(cfg.getMaxSearchInterval()) > 0) {
+                throw new ConcordApplicationException("Max search interval exceeded. Current: " + Duration.between(after, before) + ", max: " + cfg.getMaxSearchInterval(), Response.Status.BAD_REQUEST);
+            }
+        } else if (after != null) {
+            if (Duration.between(after, OffsetDateTime.now()).compareTo(cfg.getMaxSearchInterval()) > 0) {
+                throw new ConcordApplicationException("Max search interval exceeded", Response.Status.BAD_REQUEST);
+            }
+        } else {
+            throw new ConcordApplicationException("Specify after parameter", Response.Status.BAD_REQUEST);
         }
     }
 }
