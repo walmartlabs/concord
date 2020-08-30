@@ -29,7 +29,6 @@ import com.walmartlabs.concord.imports.ImportManager;
 import com.walmartlabs.concord.imports.ImportManagerFactory;
 import com.walmartlabs.concord.process.loader.model.ProcessDefinitionUtils;
 import com.walmartlabs.concord.process.loader.v2.ProcessDefinitionV2;
-import com.walmartlabs.concord.runtime.common.StateManager;
 import com.walmartlabs.concord.runtime.common.cfg.RunnerConfiguration;
 import com.walmartlabs.concord.runtime.v2.ProjectLoaderV2;
 import com.walmartlabs.concord.runtime.v2.model.ProcessConfiguration;
@@ -128,7 +127,9 @@ public class Run implements Callable<Integer> {
         }
 
         DependencyManager dependencyManager = initDependencyManager();
-        ImportManager importManager = new ImportManagerFactory(dependencyManager, new CliRepositoryExporter(repoCacheDir), verbose ? new CliImportsListener() : null)
+        ImportManager importManager = new ImportManagerFactory(dependencyManager,
+                new CliRepositoryExporter(repoCacheDir), Collections.emptySet(),
+                verbose ? new CliImportsListener() : null)
                 .create();
 
         ProjectLoaderV2.Result loadResult;

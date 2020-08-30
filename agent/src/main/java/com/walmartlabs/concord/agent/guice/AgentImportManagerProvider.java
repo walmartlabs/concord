@@ -21,7 +21,9 @@ package com.walmartlabs.concord.agent.guice;
  */
 
 import com.walmartlabs.concord.agent.RepositoryManager;
+import com.walmartlabs.concord.agent.cfg.ImportConfiguration;
 import com.walmartlabs.concord.imports.ImportManagerFactory;
+import com.walmartlabs.concord.imports.RepositoryExporter;
 
 import javax.inject.Inject;
 import javax.inject.Provider;
@@ -34,15 +36,20 @@ public class AgentImportManagerProvider implements Provider<AgentImportManager> 
     private final ImportManagerFactory factory;
 
     @Inject
-    public AgentImportManagerProvider(RepositoryManager repositoryManager, AgentDependencyManager dependencyManager) {
-        this.factory = new ImportManagerFactory(dependencyManager, (entry, workDir) -> {
+    public AgentImportManagerProvider(ImportConfiguration cfg, RepositoryManager repositoryManager, AgentDependencyManager dependencyManager) {
+        RepositoryExporter exporter = (entry, workDir) -> {
             Path dst = workDir;
+
+            String entryDest = entry.dest();
             if (entry.dest() != null) {
-                dst = dst.resolve(entry.dest());
+                dst = dst.resolve(entryDest);
             }
+
             repositoryManager.export(entry.url(), entry.version(), null, entry.path(), dst, entry.secret(), entry.exclude());
             return null;
-        });
+        };
+
+        this.factory = new ImportManagerFactory(dependencyManager, exporter, cfg.getDisabledProcessors(), null);
     }
 
     @Override

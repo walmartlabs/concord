@@ -24,28 +24,27 @@ import com.walmartlabs.concord.dependencymanager.DependencyManager;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 public class ImportManagerFactory {
 
     private final DependencyManager dependencyManager;
     private final RepositoryExporter repositoryExporter;
+    private final Set<String> disabledProcessors;
     private final ImportsListener listener;
 
-    public ImportManagerFactory(DependencyManager dependencyManager, RepositoryExporter repositoryExporter) {
-        this(dependencyManager, repositoryExporter, null);
-    }
-
-    public ImportManagerFactory(DependencyManager dependencyManager, RepositoryExporter repositoryExporter, ImportsListener listener) {
+    public ImportManagerFactory(DependencyManager dependencyManager, RepositoryExporter repositoryExporter, Set<String> disabledProcessors, ImportsListener listener) {
         this.dependencyManager = dependencyManager;
         this.repositoryExporter = repositoryExporter;
+        this.disabledProcessors = disabledProcessors;
         this.listener = listener;
     }
 
-    @SuppressWarnings("rawtypes")
     public ImportManager create() {
         List<ImportProcessor> processors = new ArrayList<>();
         processors.add(new RepositoryProcessor(repositoryExporter));
         processors.add(new MvnProcessor(dependencyManager));
-        return new DefaultImportManager(processors, listener);
+        processors.add(new DirectoryProcessor());
+        return new DefaultImportManager(processors, disabledProcessors, listener);
     }
 }

@@ -21,6 +21,7 @@ package com.walmartlabs.concord.it.runtime.v2;
  */
 
 import ca.ibodrov.concord.testcontainers.ConcordProcess;
+import ca.ibodrov.concord.testcontainers.ContainerListener;
 import ca.ibodrov.concord.testcontainers.ContainerType;
 import ca.ibodrov.concord.testcontainers.Payload;
 import ca.ibodrov.concord.testcontainers.junit4.ConcordRule;
@@ -43,10 +44,13 @@ public class SmtpIT {
 
     @Rule
     public final ConcordRule concord = ConcordConfiguration.configure()
-            .containerListener(name -> {
-                // use container listener to expose the SMTP server's port right before the container starts
-                if (name == ContainerType.AGENT) {
-                    Testcontainers.exposeHostPorts(mailServer.getSmtp().getPort());
+            .containerListener(new ContainerListener() {
+                @Override
+                public void beforeStart(ContainerType type) {
+                    // use container listener to expose the SMTP server's port right before the container starts
+                    if (type == ContainerType.AGENT) {
+                        Testcontainers.exposeHostPorts(mailServer.getSmtp().getPort());
+                    }
                 }
             });
 
