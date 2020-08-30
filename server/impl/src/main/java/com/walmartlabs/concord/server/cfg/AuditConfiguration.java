@@ -22,6 +22,7 @@ package com.walmartlabs.concord.server.cfg;
 
 import com.walmartlabs.ollie.config.Config;
 
+import javax.annotation.Nullable;
 import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
@@ -44,6 +45,11 @@ public class AuditConfiguration implements Serializable {
     @Config("audit.maxLogAge")
     private Duration maxLogAge;
 
+    @Nullable
+    @Inject
+    @Config("audit.maxSearchInterval")
+    private Duration maxSearchInterval;
+
     public boolean isEnabled() {
         return enabled;
     }
@@ -54,5 +60,9 @@ public class AuditConfiguration implements Serializable {
 
     public Duration getMaxLogAge() {
         return maxLogAge;
+    }
+
+    public Duration getMaxSearchInterval() {
+        return maxSearchInterval;
     }
 }
