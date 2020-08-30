@@ -75,6 +75,7 @@ public final class YamlValueType<T> {
     public static final YamlValueType<Import> IMPORT = type("IMPORT");
     public static final YamlValueType<Import.GitDefinition> GIT_IMPORT = type("GIT_IMPORT");
     public static final YamlValueType<Import.MvnDefinition> MVN_IMPORT = type("MVN_IMPORT");
+    public static final YamlValueType<Import.DirectoryDefinition> DIR_IMPORT = type("DIR_IMPORT");
     public static final YamlValueType<Import.SecretDefinition> IMPORT_SECRET = type("IMPORT_SECRET");
     public static final YamlValueType<Map<String, List<Step>>> FLOWS = type("FLOWS");
     public static final YamlValueType<KV<String, List<Step>>> FLOW = type("FLOW");

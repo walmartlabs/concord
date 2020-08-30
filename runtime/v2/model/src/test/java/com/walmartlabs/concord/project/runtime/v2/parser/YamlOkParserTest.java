@@ -185,7 +185,7 @@ public class YamlOkParserTest extends AbstractParserTest {
         assertNull(errorStep.getOptions());
 
         // withItems
-        assertEquals("a", ((List<String>)t.getOptions().withItems().value()).get(0));
+        assertEquals("a", ((List<String>) t.getOptions().withItems().value()).get(0));
 
         // meta
         assertMeta(t.getOptions());
@@ -235,11 +235,11 @@ public class YamlOkParserTest extends AbstractParserTest {
         Imports imports = pd.imports();
         assertNotNull(imports);
 
-        assertEquals(3, imports.items().size());
+        assertEquals(4, imports.items().size());
 
         Import i = imports.items().get(0);
         assertEquals("git", i.type());
-        Import.GitDefinition g = (Import.GitDefinition)i;
+        Import.GitDefinition g = (Import.GitDefinition) i;
         assertEquals("https://github.com/me/my_private_repo.git", g.url());
         assertEquals("test", g.name());
         assertEquals("1.2.3", g.version());
@@ -250,6 +250,7 @@ public class YamlOkParserTest extends AbstractParserTest {
 
         assertEquals("git", imports.items().get(1).type());
         assertEquals("mvn", imports.items().get(2).type());
+        assertEquals("dir", imports.items().get(3).type());
     }
 
     // Configuration Definition Test

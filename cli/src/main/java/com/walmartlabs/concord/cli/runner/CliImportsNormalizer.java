@@ -73,6 +73,9 @@ public class CliImportsNormalizer implements ImportsNormalizer {
                 Import.GitDefinition src = (Import.GitDefinition) i;
                 return normalize(src);
             }
+            case Import.DirectoryDefinition.TYPE: {
+                return i;
+            }
             default: {
                 throw new IllegalArgumentException("Unsupported import type: '" + i.type() + "'");
             }

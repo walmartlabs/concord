@@ -29,6 +29,7 @@ import com.walmartlabs.concord.imports.RepositoryExporter;
 import com.walmartlabs.concord.repository.Repository;
 import com.walmartlabs.concord.repository.Snapshot;
 import com.walmartlabs.concord.sdk.Secret;
+import com.walmartlabs.concord.server.cfg.ImportConfiguration;
 import com.walmartlabs.concord.server.org.OrganizationDao;
 import com.walmartlabs.concord.server.org.secret.SecretManager;
 import com.walmartlabs.concord.server.repository.RepositoryManager;
@@ -48,10 +49,11 @@ public class ImportManagerProvider implements Provider<ImportManager> {
     public ImportManagerProvider(DependencyManager dependencyManager,
                                  OrganizationDao organizationDao,
                                  SecretManager secretManager,
-                                 RepositoryManager repositoryManager) {
+                                 RepositoryManager repositoryManager,
+                                 ImportConfiguration cfg) {
 
-        this.factory = new ImportManagerFactory(dependencyManager,
-                new RepositoryExporterImpl(organizationDao, secretManager, repositoryManager));
+        RepositoryExporterImpl exporter = new RepositoryExporterImpl(organizationDao, secretManager, repositoryManager);
+        this.factory = new ImportManagerFactory(dependencyManager, exporter, cfg.getDisabledProcessors(), null);
     }
 
     @Override
