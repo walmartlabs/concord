@@ -133,10 +133,11 @@ public interface ProcessConfiguration extends Serializable {
     }
 
     static ProcessConfiguration merge(ProcessConfiguration a, ProcessConfiguration b) {
-        return ProcessConfiguration.builder().from(a)
+        return builder().from(a)
                 // TODO entryPoint has default value, it shouldn't override a non-default value
                 .entryPoint(b.entryPoint())
                 .addAllDependencies(b.dependencies())
+                .events(EventConfiguration.merge(a.events(), b.events()))
                 .template(b.template() != null ? b.template() : a.template())
                 .arguments(ConfigurationUtils.deepMerge(a.arguments(), b.arguments()))
                 .initiator(b.initiator() != null ? b.initiator() : a.initiator())

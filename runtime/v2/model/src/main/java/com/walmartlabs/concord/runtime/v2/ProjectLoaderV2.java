@@ -45,7 +45,10 @@ public class ProjectLoaderV2 {
     public Result load(Path baseDir, ImportsNormalizer importsNormalizer) throws Exception {
         YamlParserV2 parser = new YamlParserV2();
 
+        // load the initial ProcessDefinition from the root concord.yml file
+        // it will be used to determine whether we need to load other resources (e.g. imports)
         ProcessDefinition root = loadRoot(parser, baseDir);
+
         List<Snapshot> snapshots = Collections.emptyList();
         if (root != null) {
             Imports imports = importsNormalizer.normalize(root.imports());
@@ -76,7 +79,7 @@ public class ProjectLoaderV2 {
 
         ProcessDefinition root = loadRoot(parser, baseDir);
 
-        Resources resources = root != null ? root.resources(): Resources.builder().build();
+        Resources resources = root != null ? root.resources() : Resources.builder().build();
         boolean hasImports = root != null && root.imports() != null && !root.imports().isEmpty();
         if (!hasImports) {
             copyResources(baseDir, resources, destDir, options);
@@ -166,6 +169,7 @@ public class ProjectLoaderV2 {
 
             result = ProcessDefinition.merge(result, pd);
         }
+
         return result;
     }
 
