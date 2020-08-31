@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+### Added
+
+- runtime-v2: support expresions in checkpoint names.
+
 ### Changed
 
 - concord-server: fixed the maximum number of dependencies error
