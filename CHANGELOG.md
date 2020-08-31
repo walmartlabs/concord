@@ -1,5 +1,14 @@
 # Change log
 
+## [Unreleased]
+
+### Changed
+
+- runtime-v2: create a single merged `event` configuration from
+`event` sections of all loaded Concord YAML files.
+
+
+
 ## [1.63.0] - 2020-08-30
 
 ### Added
