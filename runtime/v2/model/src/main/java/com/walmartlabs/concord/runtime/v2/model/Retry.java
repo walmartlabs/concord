@@ -25,17 +25,18 @@ import org.immutables.value.Value;
 
 import javax.annotation.Nullable;
 import java.io.Serializable;
+import java.time.Duration;
 import java.util.Map;
 
 @Value.Immutable
 @Value.Style(jdkOnly = true)
 public interface Retry extends Serializable {
 
+    long serialVersionUID = 1L;
+
     int DEFAULT_RETRY_TIMES = 1;
 
-    long DEFAULT_RETRY_DELAY = 5000;
-
-    long serialVersionUID = 1L;
+    Duration DEFAULT_RETRY_DELAY = Duration.ofSeconds(5);
 
     @Value.Default
     default int times() {
@@ -43,7 +44,7 @@ public interface Retry extends Serializable {
     }
 
     @Value.Default
-    default long delay() {
+    default Duration delay() {
         return DEFAULT_RETRY_DELAY;
     }
 

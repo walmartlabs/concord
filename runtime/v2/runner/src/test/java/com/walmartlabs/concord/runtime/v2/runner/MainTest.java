@@ -713,6 +713,7 @@ public class MainTest {
 
         byte[] log = run();
         assertLog(log, ".*faultyOnceTask: fail.*");
+        assertLog(log, ".*Waiting for 1000ms.*");
         assertLog(log, ".*faultyOnceTask: ok.*");
         assertLog(log, ".*neverFailTask: ok.*");
     }

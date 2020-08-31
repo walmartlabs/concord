@@ -27,7 +27,7 @@ import com.walmartlabs.concord.runtime.v2.model.TaskCallOptions;
 import com.walmartlabs.concord.runtime.v2.model.WithItems;
 import io.takari.parc.Parser;
 
-import static com.walmartlabs.concord.runtime.v2.parser.CommonGrammar.retryVal;
+import static com.walmartlabs.concord.runtime.v2.parser.RetryGrammar.retryVal;
 import static com.walmartlabs.concord.runtime.v2.parser.GrammarMisc.namedStep;
 import static com.walmartlabs.concord.runtime.v2.parser.GrammarMisc.with;
 import static com.walmartlabs.concord.runtime.v2.parser.GrammarOptions.optional;

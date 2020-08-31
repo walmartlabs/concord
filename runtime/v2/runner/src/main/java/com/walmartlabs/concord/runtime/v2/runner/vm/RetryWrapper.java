@@ -32,6 +32,7 @@ import com.walmartlabs.concord.svm.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.time.Duration;
 import java.util.Collections;
 import java.util.Map;
 import java.util.Objects;
@@ -80,9 +81,9 @@ public class RetryWrapper implements Command {
             times = ee.eval(EvalContextFactory.global(ctx), retry.timesExpression(), Integer.class);
         }
 
-        long delay = retry.delay();
+        Duration delay = retry.delay();
         if (retry.delayExpression() != null) {
-            delay = ee.eval(EvalContextFactory.global(ctx), retry.delayExpression(), Long.class);
+            delay = Duration.ofSeconds(ee.eval(EvalContextFactory.global(ctx), retry.delayExpression(), Long.class));
         }
 
         inner.setLocal(Constants.Runtime.RETRY_ATTEMPT_NUMBER, 0);
@@ -129,11 +130,11 @@ public class RetryWrapper implements Command {
                 }
             }
 
-            long delay = retry.delay();
-            log.warn("Last error: {}. Waiting for {}ms before retry (attempt #{})", lastError, delay, attemptNo);
+            Duration delay = retry.delay();
+            log.warn("Last error: {}. Waiting for {}ms before retry (attempt #{})", lastError, delay.toMillis(), attemptNo);
 
             try {
-                Thread.sleep(delay);
+                Thread.sleep(delay.toMillis());
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
             }
