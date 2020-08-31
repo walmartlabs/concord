@@ -4,6 +4,8 @@
 
 ### Changed
 
+- concord-server: fixed the maximum number of dependencies error
+message;
 - runtime-v2: create a single merged `event` configuration from
 `event` sections of all loaded Concord YAML files.
 
