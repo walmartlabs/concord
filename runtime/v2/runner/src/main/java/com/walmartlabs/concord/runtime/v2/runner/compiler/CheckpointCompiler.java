@@ -37,6 +37,6 @@ public class CheckpointCompiler implements StepCompiler<Checkpoint> {
 
     @Override
     public Command compile(CompilerContext context, Checkpoint step) {
-        return new CheckpointCommand(step.getName());
+        return new CheckpointCommand(step);
     }
 }
