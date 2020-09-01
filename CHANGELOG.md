@@ -8,6 +8,9 @@
 
 ### Changed
 
+- runtime-v2: merge EventConfiguration when loading multiple
+resources. Allows users to specify the `events` configuration in
+any Concord YAML file available for the process;
 - concord-server: fixed the maximum number of dependencies error
 message;
 - runtime-v2: create a single merged `event` configuration from
