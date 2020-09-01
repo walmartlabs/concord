@@ -54,8 +54,8 @@ public class DefaultSecretService implements SecretService {
     }
 
     @Override
-    public KeyPair exportKeyAsFile(String orgName, String name, String password) throws Exception {
-        com.walmartlabs.concord.common.secret.KeyPair kp = get(orgName, name, password, SecretEntry.TypeEnum.KEY_PAIR);
+    public KeyPair exportKeyAsFile(String orgName, String secretName, String password) throws Exception {
+        com.walmartlabs.concord.common.secret.KeyPair kp = get(orgName, secretName, password, SecretEntry.TypeEnum.KEY_PAIR);
 
         Path tmpDir = fileService.createTempDirectory("secret-service");
 

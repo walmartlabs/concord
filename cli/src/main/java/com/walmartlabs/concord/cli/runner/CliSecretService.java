@@ -28,19 +28,22 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 
-public class CliSecretService {
+public class CliSecretService implements SecretService {
 
+    private final Path workDir;
     private final Path secretStoreDir;
     private final VaultProvider vaultProvider;
 
-    public CliSecretService(Path secretStoreDir, VaultProvider vaultProvider) {
+    public CliSecretService(Path workDir, Path secretStoreDir, VaultProvider vaultProvider) {
+        this.workDir = workDir;
         this.secretStoreDir = secretStoreDir;
         this.vaultProvider = vaultProvider;
     }
 
-    public SecretService.KeyPair exportKeyAsFile(Path workDir, String orgName, String name) throws Exception {
-        Path publicKey = toSecretPath(orgName, name + ".pub");
-        Path privateKey = toSecretPath(orgName, name);
+    @Override
+    public SecretService.KeyPair exportKeyAsFile(String orgName, String secretName, String password) throws Exception {
+        Path publicKey = toSecretPath(orgName, secretName + ".pub");
+        Path privateKey = toSecretPath(orgName, secretName);
 
         if (Files.notExists(publicKey)) {
             throw new RuntimeException("Public key '" + publicKey + "' not found");
@@ -51,8 +54,8 @@ public class CliSecretService {
         }
 
         Path tmpDir = assertTmpDir(workDir);
-        Path tmpPublicKey = tmpDir.resolve(name + ".pub");
-        Path tmpPrivateKey = tmpDir.resolve(name);
+        Path tmpPublicKey = tmpDir.resolve(secretName + ".pub");
+        Path tmpPrivateKey = tmpDir.resolve(secretName);
         Files.copy(publicKey, tmpPublicKey, StandardCopyOption.REPLACE_EXISTING);
         Files.copy(privateKey, tmpPrivateKey, StandardCopyOption.REPLACE_EXISTING);
 
@@ -62,19 +65,17 @@ public class CliSecretService {
                 .build();
     }
 
-    public String decryptString(String encryptedString) {
-        return vaultProvider.getValue(encryptedString);
-    }
-
-    public String exportAsString(String orgName, String name) throws IOException {
-        Path secretPath = toSecretPath(orgName, name);
+    @Override
+    public String exportAsString(String orgName, String secretName, String password) throws IOException {
+        Path secretPath = toSecretPath(orgName, secretName);
         if (Files.notExists(secretPath)) {
             throw new RuntimeException("Secret '" + secretPath + "' not found");
         }
         return new String(Files.readAllBytes(secretPath)).trim();
     }
 
-    public Path exportAsFile(Path workDir, String orgName, String name) throws IOException {
+    @Override
+    public Path exportAsFile(String orgName, String name, String password) throws IOException {
         Path secretPath = toSecretPath(orgName, name);
         if (Files.notExists(secretPath)) {
             throw new RuntimeException("Secret '" + secretPath + "' not found");
@@ -84,6 +85,36 @@ public class CliSecretService {
         Path dest = Files.createTempFile(tmpDir, "file", ".bin");
         Files.copy(secretPath, dest, StandardCopyOption.REPLACE_EXISTING);
         return dest;
+    }
+
+    @Override
+    public String decryptString(String encryptedString) {
+        return vaultProvider.getValue(encryptedString);
+    }
+
+    @Override
+    public UsernamePassword exportCredentials(String orgName, String name, String password) {
+        throw new UnsupportedOperationException("Not supported yet");
+    }
+
+    @Override
+    public String encryptString(String orgName, String projectName, String value) {
+        throw new UnsupportedOperationException("Not supported yet");
+    }
+
+    @Override
+    public SecretCreationResult createKeyPair(SecretParams secret, KeyPair keyPair) throws Exception {
+        throw new UnsupportedOperationException("Not supported yet");
+    }
+
+    @Override
+    public SecretCreationResult createUsernamePassword(SecretParams secret, UsernamePassword usernamePassword) throws Exception {
+        throw new UnsupportedOperationException("Not supported yet");
+    }
+
+    @Override
+    public SecretCreationResult createData(SecretParams secret, byte[] data) throws Exception {
+        throw new UnsupportedOperationException("Not supported yet");
     }
 
     private Path toSecretPath(String orgName, String name) {

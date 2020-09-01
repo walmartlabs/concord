@@ -37,7 +37,7 @@ public interface SecretService {
 
     String exportAsString(String orgName, String name, String password) throws Exception;
 
-    KeyPair exportKeyAsFile(String orgName, String name, String password) throws Exception;
+    KeyPair exportKeyAsFile(String orgName, String secretName, String password) throws Exception;
 
     UsernamePassword exportCredentials(String orgName, String name, String password) throws Exception;
 
