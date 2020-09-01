@@ -65,7 +65,7 @@ public class YamlOkParserTest extends AbstractParserTest {
         // retry
         assertNotNull(t.getOptions().retry());
         assertEquals(1, t.getOptions().retry().times());
-        assertEquals(2, t.getOptions().retry().delay());
+        assertEquals(Duration.ofSeconds(2), t.getOptions().retry().delay());
         Map<String, Object> retryInput = new HashMap<>();
         retryInput.put("k", "retry-1");
         retryInput.put("k2", "retry-2");
@@ -106,7 +106,7 @@ public class YamlOkParserTest extends AbstractParserTest {
         // retry
         assertNotNull(t.getOptions().retry());
         assertEquals(1, t.getOptions().retry().times());
-        assertEquals(2, t.getOptions().retry().delay());
+        assertEquals(Duration.ofSeconds(2), t.getOptions().retry().delay());
         Map<String, Object> retryInput = new HashMap<>();
         retryInput.put("k", "retry-1");
         retryInput.put("k2", "retry-2");
@@ -371,7 +371,7 @@ public class YamlOkParserTest extends AbstractParserTest {
         // retry
         assertNotNull(t.getOptions().retry());
         assertEquals(1, t.getOptions().retry().times());
-        assertEquals(2, t.getOptions().retry().delay());
+        assertEquals(Duration.ofSeconds(2), t.getOptions().retry().delay());
         Map<String, Object> retryInput = new HashMap<>();
         retryInput.put("k", "v");
         assertEquals(retryInput, t.getOptions().retry().input());
