@@ -18,6 +18,10 @@ message;
 - runtime-v2: create a single merged `event` configuration from
 `event` sections of all loaded Concord YAML files.
 
+### Breaking
+
+- runtime-v2: assume `retry.delay` is in seconds (like in v1).
+
 
 
 ## [1.63.0] - 2020-08-30
