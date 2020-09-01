@@ -34,6 +34,8 @@ import com.walmartlabs.concord.runtime.v2.runner.tasks.TaskCallListener;
 import com.walmartlabs.concord.runtime.v2.sdk.*;
 import com.walmartlabs.concord.svm.ExecutionListener;
 
+import javax.inject.Singleton;
+
 /**
  * Default set of services.
  */
@@ -43,16 +45,18 @@ public class DefaultRunnerModule extends AbstractModule {
     protected void configure() {
         install(new BaseRunnerModule());
 
+        // singletons
+        bind(CheckpointService.class).to(DefaultCheckpointService.class).in(Singleton.class);
+        bind(DependencyManager.class).to(DefaultDependencyManager.class).in(Singleton.class);
+        bind(DockerService.class).to(DefaultDockerService.class).in(Singleton.class);
+        bind(FileService.class).to(DefaultFileService.class).in(Singleton.class);
+        bind(LockService.class).to(DefaultLockService.class).in(Singleton.class);
+        bind(PersistenceService.class).to(DefaultPersistenceService.class).in(Singleton.class);
+        bind(ProcessStatusCallback.class).to(DefaultProcessStatusCallback.class).in(Singleton.class);
+        bind(SecretService.class).to(DefaultSecretService.class).in(Singleton.class);
+
         bind(ApiClient.class).toProvider(ApiClientProvider.class);
-        bind(CheckpointService.class).to(DefaultCheckpointService.class);
         bind(DefaultTaskVariablesService.class).toProvider(DefaultTaskVariablesProvider.class);
-        bind(DependencyManager.class).to(DefaultDependencyManager.class);
-        bind(DockerService.class).to(DefaultDockerService.class);
-        bind(FileService.class).to(DefaultFileService.class);
-        bind(LockService.class).to(DefaultLockService.class);
-        bind(PersistenceService.class).to(DefaultPersistenceService.class);
-        bind(ProcessStatusCallback.class).to(DefaultProcessStatusCallback.class);
-        bind(SecretService.class).to(DefaultSecretService.class);
 
         Multibinder<TaskCallListener> taskCallListeners = Multibinder.newSetBinder(binder(), TaskCallListener.class);
         taskCallListeners.addBinding().to(TaskCallEventRecordingListener.class);

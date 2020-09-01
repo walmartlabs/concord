@@ -75,8 +75,8 @@ public class CliSecretService implements SecretService {
     }
 
     @Override
-    public Path exportAsFile(String orgName, String name, String password) throws IOException {
-        Path secretPath = toSecretPath(orgName, name);
+    public Path exportAsFile(String orgName, String secretName, String password) throws IOException {
+        Path secretPath = toSecretPath(orgName, secretName);
         if (Files.notExists(secretPath)) {
             throw new RuntimeException("Secret '" + secretPath + "' not found");
         }
@@ -88,12 +88,12 @@ public class CliSecretService implements SecretService {
     }
 
     @Override
-    public String decryptString(String encryptedString) {
-        return vaultProvider.getValue(encryptedString);
+    public String decryptString(String encryptedValue) {
+        return vaultProvider.getValue(encryptedValue);
     }
 
     @Override
-    public UsernamePassword exportCredentials(String orgName, String name, String password) {
+    public UsernamePassword exportCredentials(String orgName, String secretName, String password) {
         throw new UnsupportedOperationException("Not supported yet");
     }
 

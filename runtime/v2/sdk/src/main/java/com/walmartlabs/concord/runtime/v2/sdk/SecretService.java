@@ -35,15 +35,15 @@ public interface SecretService {
 
     SecretCreationResult createData(SecretParams secret, byte[] data) throws Exception;
 
-    String exportAsString(String orgName, String name, String password) throws Exception;
+    String exportAsString(String orgName, String secretName, String password) throws Exception;
 
     KeyPair exportKeyAsFile(String orgName, String secretName, String password) throws Exception;
 
-    UsernamePassword exportCredentials(String orgName, String name, String password) throws Exception;
+    UsernamePassword exportCredentials(String orgName, String secretName, String password) throws Exception;
 
-    Path exportAsFile(String orgName, String name, String password) throws Exception;
+    Path exportAsFile(String orgName, String secretName, String password) throws Exception;
 
-    String decryptString(String s) throws Exception;
+    String decryptString(String encryptedValue) throws Exception;
 
     String encryptString(String orgName, String projectName, String value) throws Exception;
 
