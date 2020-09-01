@@ -8,6 +8,8 @@
 
 ### Changed
 
+- concord-console: increase the number of visible log segments
+to 100 (was 30);
 - concord-server: change the wording of the maximum number of
 dependencies error message;
 - runtime-v2: merge EventConfiguration when loading multiple
