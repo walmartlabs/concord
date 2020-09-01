@@ -8,6 +8,8 @@
 
 ### Changed
 
+- concord-server: change the wording of the maximum number of
+dependencies error message;
 - runtime-v2: merge EventConfiguration when loading multiple
 resources. Allows users to specify the `events` configuration in
 any Concord YAML file available for the process;
