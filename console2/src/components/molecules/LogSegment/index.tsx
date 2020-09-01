@@ -44,7 +44,7 @@ interface Props {
     onStopLoading: () => void;
     onSegmentInfo?: () => void;
     loading: boolean;
-    open?: boolean;
+    open: boolean;
 }
 
 const LogSegment = ({

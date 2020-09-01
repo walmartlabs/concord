@@ -49,7 +49,7 @@ interface ExternalProps {
     correlationId?: string;
     name: string;
     createdAt: string;
-    open?: boolean;
+    open: boolean;
     processStatus?: ProcessStatus;
     status?: SegmentStatus;
     warnings?: number;

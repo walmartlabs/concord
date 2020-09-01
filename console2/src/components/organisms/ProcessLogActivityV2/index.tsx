@@ -65,12 +65,21 @@ const ProcessLogActivityV2 = ({
 }: ExternalProps) => {
     const [segments, setSegments] = useState<LogSegmentEntry[]>([]);
     const [logOpts, setLogOptions] = useState<LogOptions>(getStoredOpts());
+    const [openAllSegments, setOpenAllSegments] = useState<boolean>(false);
 
     const segmentOptsHandler = useCallback((o: LogProcessorOptions) => {
         setLogOptions((prev) => {
             return { ...prev, segmentOptions: o };
         });
     }, []);
+
+    const showAllSegments = useCallback(() => {
+        setOpenAllSegments(true);
+    }, []);
+
+    // useEffect(() => {
+    //     setRefresh((prevState) => !prevState);
+    // }, [forceRefresh]);
 
     const logOptsHandler = useCallback((o: LogOptions) => {
         setLogOptions(o);
@@ -148,6 +157,9 @@ const ProcessLogActivityV2 = ({
                 </Popup>
 
                 <Button.Group>
+                    {!openAllSegments && (
+                        <Button onClick={() => showAllSegments()}>Show all segments</Button>
+                    )}
                     <Button
                         disabled={process === undefined}
                         onClick={() => window.open(`/api/v1/process/${instanceId}/log`, '_blank')}>
@@ -168,6 +180,8 @@ const ProcessLogActivityV2 = ({
                         correlationId={s.correlationId}
                         name={s.name}
                         createdAt={s.createdAt}
+                        // open={s.id === 0}
+                        open={openAllSegments}
                         status={s.status}
                         warnings={s.warnings}
                         errors={s.errors}
@@ -180,6 +194,8 @@ const ProcessLogActivityV2 = ({
         </>
     );
 };
+
+
 
 const getStoredOpts = (): LogOptions => {
     const data = localStorage.getItem('logOptsV2');
