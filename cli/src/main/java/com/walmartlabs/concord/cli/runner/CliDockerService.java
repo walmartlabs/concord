@@ -20,19 +20,14 @@ package com.walmartlabs.concord.cli.runner;
  * =====
  */
 
-import com.walmartlabs.concord.sdk.Context;
-import com.walmartlabs.concord.sdk.DockerContainerSpec;
-import com.walmartlabs.concord.sdk.DockerService;
 
-public class CliDockerServiceV1 implements DockerService {
+import com.walmartlabs.concord.runtime.v2.sdk.DockerContainerSpec;
+import com.walmartlabs.concord.runtime.v2.sdk.DockerService;
 
-    @Override
-    public Process start(Context ctx, DockerContainerSpec spec) {
-        throw new UnsupportedOperationException("not implemented yet");
-    }
+public class CliDockerService implements DockerService {
 
     @Override
-    public int start(Context ctx, DockerContainerSpec spec, LogCallback outCallback, LogCallback errCallback) {
-        throw new UnsupportedOperationException("not implemented yet");
+    public int start(DockerContainerSpec spec, LogCallback outCallback, LogCallback errCallback) {
+        throw new UnsupportedOperationException("Not supported yet");
     }
 }
