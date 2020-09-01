@@ -1,2 +1,2 @@
 apt-get update
-apt-get install docker
+apt-get install -y docker
