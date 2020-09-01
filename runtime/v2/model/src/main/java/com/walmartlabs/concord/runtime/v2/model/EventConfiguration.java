@@ -23,6 +23,7 @@ package com.walmartlabs.concord.runtime.v2.model;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.walmartlabs.concord.common.ConfigurationUtils;
 import org.immutables.value.Value;
 
 import java.io.Serializable;
@@ -114,5 +115,19 @@ public interface EventConfiguration extends Serializable {
 
     static ImmutableEventConfiguration.Builder builder() {
         return ImmutableEventConfiguration.builder();
+    }
+
+    static EventConfiguration merge(EventConfiguration a, EventConfiguration b) {
+        return builder().from(a)
+                .recordTaskInVars(a.recordTaskInVars() || b.recordTaskInVars())
+                .truncateInVars(a.truncateInVars() || b.truncateInVars())
+                .truncateMaxStringLength(Math.max(a.truncateMaxArrayLength(), b.truncateMaxArrayLength()))
+                .truncateMaxArrayLength(Math.max(a.truncateMaxArrayLength(), b.truncateMaxArrayLength()))
+                .truncateMaxDepth(Math.max(a.truncateMaxDepth(), b.truncateMaxDepth()))
+                .recordTaskOutVars(a.recordTaskOutVars() || b.recordTaskInVars())
+                .truncateOutVars(a.truncateOutVars() || b.truncateOutVars())
+                .inVarsBlacklist(ConfigurationUtils.distinct(a.inVarsBlacklist(), b.inVarsBlacklist()))
+                .outVarsBlacklist(ConfigurationUtils.distinct(a.outVarsBlacklist(), b.outVarsBlacklist()))
+                .build();
     }
 }

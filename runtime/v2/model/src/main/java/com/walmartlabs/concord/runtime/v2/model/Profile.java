@@ -60,7 +60,7 @@ public interface Profile extends Serializable {
     }
 
     static Profile merge(Profile a, Profile b) {
-        return Profile.builder().from(a)
+        return builder().from(a)
                 .configuration(ProcessConfiguration.merge(a.configuration(), b.configuration()))
                 .putAllFlows(b.flows())
                 .build();
