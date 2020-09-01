@@ -45,6 +45,7 @@ import com.walmartlabs.concord.runtime.v2.runner.tasks.TaskV2Provider;
 import com.walmartlabs.concord.runtime.v2.sdk.*;
 import com.walmartlabs.concord.sdk.Constants;
 import com.walmartlabs.concord.svm.ExecutionListener;
+import com.walmartlabs.concord.svm.Runtime;
 import org.immutables.value.Value;
 import org.junit.After;
 import org.junit.Before;
@@ -715,6 +716,18 @@ public class MainTest {
         assertLog(log, ".*faultyOnceTask: fail.*");
         assertLog(log, ".*faultyOnceTask: ok.*");
         assertLog(log, ".*neverFailTask: ok.*");
+    }
+
+    @Test
+    public void testCheckpointExpr() throws Exception {
+        deploy("checkpointExpr");
+
+        save(ProcessConfiguration.builder()
+                .putArguments("x", 123)
+                .build());
+
+        run();
+        verify(checkpointService, times(1)).create(eq("test_123"), any(Runtime.class), any(ProcessSnapshot.class));
     }
 
     private void deploy(String resource) throws URISyntaxException, IOException {
