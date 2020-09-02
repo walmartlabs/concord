@@ -22,6 +22,8 @@ message;
 
 ### Breaking
 
+- runtime-v2: rename `SecretParams#name` to `secretName`. Affects
+the secret creation methods in `SecretService`);
 - runtime-v2: assume `retry.delay` is in seconds (like in v1).
 
 
