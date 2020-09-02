@@ -140,7 +140,7 @@ public class TaskResult implements Serializable {
         try (ObjectOutputStream oos = new ObjectOutputStream(new ByteArrayOutputStream())) {
             oos.writeObject(value);
         } catch (IOException e) {
-            throw new IllegalArgumentException("Not a serializable value: " + value + "(class: " + value + ")");
+            throw new IllegalArgumentException("Not a serializable value: " + value + " (class: " + value.getClass() + "). Error: " + e.getMessage());
         }
     }
 }
