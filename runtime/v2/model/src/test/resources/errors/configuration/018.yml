@@ -20,4 +20,7 @@ configuration:
     recordTaskOutVars: true
     outVarsBlacklist:
       - "FOO"
+    truncateMaxStringLength: 128
+    truncateMaxArrayLength: 8
+    truncateMaxDepth: 5
     trash:

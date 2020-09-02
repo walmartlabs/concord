@@ -42,7 +42,7 @@ public final class ConfigurationGrammar {
                             .map(ImmutableExclusiveModeConfiguration.Builder::build));
 
     public static final Parser<Atom, ExclusiveModeConfiguration> exclusiveVal =
-        orError(exclusive, YamlValueType.EXCLUSIVE_MODE);
+            orError(exclusive, YamlValueType.EXCLUSIVE_MODE);
 
     private static final Parser<Atom, EventConfiguration> events =
             betweenTokens(JsonToken.START_OBJECT, JsonToken.END_OBJECT,
@@ -50,9 +50,12 @@ public final class ConfigurationGrammar {
                             o -> options(
                                     optional("recordTaskInVars", booleanVal.map(o::recordTaskInVars)),
                                     optional("truncateInVars", booleanVal.map(o::truncateInVars)),
-                                    optional("inVarsBlacklist", stringArrayVal.map(o::inVarsBlacklist)),
+                                    optional("truncateMaxStringLength", intVal.map(o::truncateMaxStringLength)),
+                                    optional("truncateMaxArrayLength", intVal.map(o::truncateMaxArrayLength)),
+                                    optional("truncateMaxDepth", intVal.map(o::truncateMaxDepth)),
                                     optional("recordTaskOutVars", booleanVal.map(o::recordTaskOutVars)),
                                     optional("truncateOutVars", booleanVal.map(o::truncateOutVars)),
+                                    optional("inVarsBlacklist", stringArrayVal.map(o::inVarsBlacklist)),
                                     optional("outVarsBlacklist", stringArrayVal.map(o::outVarsBlacklist))))
                             .map(ImmutableEventConfiguration.Builder::build));
 
