@@ -186,6 +186,12 @@
                             <item>
                                 <code>java.method.removed</code>
                             </item>
+                            <item>
+                                <code>java.method.exception.checkedAdded</code>
+                            </item>
+                            <item>
+                                <code>java.method.exception.checkedRemoved</code>
+                            </item>
                         </revapi.ignore>
                     </analysisConfiguration>
                 </configuration>

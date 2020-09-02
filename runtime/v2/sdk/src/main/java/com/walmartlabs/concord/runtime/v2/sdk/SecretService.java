@@ -72,7 +72,7 @@ public interface SecretService {
         @Nullable
         String project();
 
-        String name();
+        String secretName();
 
         @Nullable
         String storePassword();
