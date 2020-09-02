@@ -162,7 +162,7 @@ public class SecretClient {
     /**
      * Creates a new Concord secret.
      */
-    public SecretOperationResponse createSecret(CreateSecretRequest secretRequest) throws IOException {
+    public SecretOperationResponse createSecret(CreateSecretRequest secretRequest) throws ApiException {
         String path = "/api/v1/org/" + secretRequest.org() + "/secret";
 
         Map<String, Object> params = new HashMap<>();
@@ -200,25 +200,25 @@ public class SecretClient {
             throw new IllegalArgumentException("Secret data, a key pair or username/password must be specified.");
         }
 
-        try {
-            ApiResponse<SecretOperationResponse> response = ClientUtils.withRetry(retryCount, retryInterval,
-                    () -> ClientUtils.postData(apiClient, path, params, SecretOperationResponse.class));
-            return response.getData();
-        } catch (ApiException e) {
-            throw new RuntimeException(e.getMessage());
-        }
+        ApiResponse<SecretOperationResponse> response = ClientUtils.withRetry(retryCount, retryInterval,
+                () -> ClientUtils.postData(apiClient, path, params, SecretOperationResponse.class));
+        return response.getData();
     }
 
-    private static byte[] readFile(Path file) throws IOException {
+    private static byte[] readFile(Path file) {
         if (file == null) {
             return null;
         }
 
         if (Files.notExists(file)) {
-            throw new RuntimeException("File '" + file + "' not found");
+            throw new IllegalArgumentException("File '" + file + "' not found");
         }
 
-        return Files.readAllBytes(file);
+        try {
+            return Files.readAllBytes(file);
+        } catch (IOException e) {
+            throw new RuntimeException("Error while reading " + file + ": " + e.getMessage());
+        }
     }
 
     @SuppressWarnings("unchecked")

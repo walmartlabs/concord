@@ -144,7 +144,7 @@ public class DefaultSecretService implements SecretService {
         SecretParams.Visibility visibility = secret.visibility();
         return CreateSecretRequest.builder()
                 .org(secret.orgName())
-                .name(secret.name())
+                .name(secret.secretName())
                 .generatePassword(secret.generatePassword())
                 .storePassword(secret.storePassword())
                 .visibility(visibility != null ? SecretEntry.VisibilityEnum.fromValue(visibility.name()) : null)
