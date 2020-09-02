@@ -89,7 +89,7 @@ public class TaskResult implements Serializable {
             values = new HashMap<>();
         }
 
-        assertValue(value);
+        assertValue(key, value);
 
         values.put(key, value);
         return this;
@@ -132,7 +132,7 @@ public class TaskResult implements Serializable {
         return result;
     }
 
-    private static void assertValue(Object value) {
+    private static void assertValue(String key, Object value) {
         if (value == null) {
             return;
         }
@@ -140,7 +140,9 @@ public class TaskResult implements Serializable {
         try (ObjectOutputStream oos = new ObjectOutputStream(new ByteArrayOutputStream())) {
             oos.writeObject(value);
         } catch (IOException e) {
-            throw new IllegalArgumentException("Not a serializable value: " + value + " (class: " + value.getClass() + "). Error: " + e.getMessage());
+            throw new IllegalArgumentException(String.format("Can't set the '%s' key: " +
+                    "not a serializable value: %s (class: %s). " +
+                    "Error: %s", key, value, value.getClass(), e.getMessage()));
         }
     }
 }
