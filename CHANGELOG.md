@@ -1,10 +1,10 @@
 # Change log
 
-## [Unreleased]
+## [1.64.0] - 2020-09-02
 
 ### Added
 
-- runtime-v2: support expresions in checkpoint names.
+- runtime-v2: support for expressions in checkpoint names.
 
 ### Changed
 
