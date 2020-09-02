@@ -125,7 +125,7 @@ public class CryptoTaskV2 implements Task {
     private SecretCreationResult createSecret(TaskParams in) throws Exception {
         SecretService.SecretParams secret = SecretService.SecretParams.builder()
                 .orgName(in.orgOrDefault(processOrg))
-                .name(in.secretName())
+                .secretName(in.secretName())
                 .generatePassword(in.generatePassword())
                 .storePassword(in.storePassword())
                 .visibility(in.visibility() != null ? SecretService.SecretParams.Visibility.valueOf(in.visibility()) : null)
