@@ -8,6 +8,8 @@
 
 ### Changed
 
+- runtime-v2: improved error message when trying to assign a
+non-serializable value into a `TaskResult`;
 - concord-console: increase the number of visible log segments
 to 100 (was 30);
 - concord-server: change the wording of the maximum number of
