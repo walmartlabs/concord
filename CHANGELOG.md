@@ -1,5 +1,35 @@
 # Change log
 
+## [Unreleased]
+
+### Added
+
+- runtime-v2: support expresions in checkpoint names.
+
+### Changed
+
+- runtime-v2: improved error message when trying to assign a
+non-serializable value into a `TaskResult`;
+- concord-console: increase the number of visible log segments
+to 100 (was 30);
+- concord-server: change the wording of the maximum number of
+dependencies error message;
+- runtime-v2: merge EventConfiguration when loading multiple
+resources. Allows users to specify the `events` configuration in
+any Concord YAML file available for the process;
+- concord-server: fixed the maximum number of dependencies error
+message;
+- runtime-v2: create a single merged `event` configuration from
+`event` sections of all loaded Concord YAML files.
+
+### Breaking
+
+- runtime-v2: rename `SecretParams#name` to `secretName`. Affects
+the secret creation methods in `SecretService`);
+- runtime-v2: assume `retry.delay` is in seconds (like in v1).
+
+
+
 ## [1.63.0] - 2020-08-30
 
 ### Added
