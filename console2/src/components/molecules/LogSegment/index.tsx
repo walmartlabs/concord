@@ -28,6 +28,7 @@ import { ConcordId } from '../../../api/common';
 import './styles.css';
 import { formatDistance, parseISO } from 'date-fns';
 import { getStatusSemanticColor, getStatusSemanticIcon, ProcessStatus } from '../../../api/process';
+import { Link } from "react-router-dom";
 
 interface Props {
     instanceId: ConcordId;
@@ -44,31 +45,47 @@ interface Props {
     onStopLoading: () => void;
     onSegmentInfo?: () => void;
     loading: boolean;
-    open: boolean;
+    open?: boolean;
 }
 
 const LogSegment = ({
-    instanceId,
-    segmentId,
-    name,
-    createdAt,
-    processStatus,
-    status,
-    lowRange,
-    warnings,
-    errors,
-    data,
-    onStartLoading,
-    onStopLoading,
-    onSegmentInfo,
-    loading,
-    open
-}: Props) => {
+                        instanceId,
+                        segmentId,
+                        name,
+                        createdAt,
+                        processStatus,
+                        status,
+                        lowRange,
+                        warnings,
+                        errors,
+                        data,
+                        onStartLoading,
+                        onStopLoading,
+                        onSegmentInfo,
+                        loading,
+                        open
+                    }: Props) => {
     const scrollAnchorRef = useRef<HTMLDivElement>(null);
 
     const [isOpen, setOpen] = useState<boolean>(!!open);
     const [isLoadAll, setLoadAll] = useState<boolean>(false);
     const [isAutoScroll, setAutoScroll] = useState<boolean>(false);
+
+    const baseUrl = `/process/${instanceId}/log`;
+
+    const myRef = useRef<null | HTMLDivElement>(null);
+
+    useEffect(() => {
+        if (myRef && window.location.hash.includes(`#segmentId=${segmentId}`)) {
+            myRef?.current?.scrollIntoView({
+                behavior: 'smooth',
+                block: 'end',
+                inline: 'nearest'
+            });
+            setOpen(true);
+
+        }
+    }, [myRef, segmentId]);
 
     const loadAllClickHandler = useCallback((ev: React.MouseEvent<any>) => {
         ev.preventDefault();
@@ -116,7 +133,7 @@ const LogSegment = ({
     }
 
     return (
-        <div className="LogSegment">
+        <div className="LogSegment" id={`segmentId=${segmentId}`} ref={myRef}>
             <Button
                 fluid={true}
                 size="medium"
@@ -152,6 +169,8 @@ const LogSegment = ({
                     data-inverted="">
                     <Icon name="download" />
                 </a>
+
+                <Link to={`${baseUrl}#segmentId=${segmentId}`}><Icon name="linkify" /></Link>
 
                 {onSegmentInfo !== undefined && (
                     <div className={'AdditionalAction'} data-tooltip="Show Info" data-inverted="">
