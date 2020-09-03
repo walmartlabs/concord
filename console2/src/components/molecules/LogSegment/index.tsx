@@ -49,22 +49,22 @@ interface Props {
 }
 
 const LogSegment = ({
-                        instanceId,
-                        segmentId,
-                        name,
-                        createdAt,
-                        processStatus,
-                        status,
-                        lowRange,
-                        warnings,
-                        errors,
-                        data,
-                        onStartLoading,
-                        onStopLoading,
-                        onSegmentInfo,
-                        loading,
-                        open
-                    }: Props) => {
+    instanceId,
+    segmentId,
+    name,
+    createdAt,
+    processStatus,
+    status,
+    lowRange,
+    warnings,
+    errors,
+    data,
+    onStartLoading,
+    onStopLoading,
+    onSegmentInfo,
+    loading,
+    open
+}: Props) => {
     const scrollAnchorRef = useRef<HTMLDivElement>(null);
 
     const [isOpen, setOpen] = useState<boolean>(!!open);
@@ -159,6 +159,14 @@ const LogSegment = ({
 
                 {beenRunningFor && <span className="RunningFor">running for {beenRunningFor}</span>}
 
+                <Link
+                    to={`${baseUrl}#segmentId=${segmentId}`}
+                    className="AdditionalAction Anchor"
+                    data-tooltip="Hyperlink"
+                    data-inverted="">
+                        <Icon name="linkify" />
+                </Link>
+
                 <a
                     href={`/api/v2/process/${instanceId}/log/segment/${segmentId}/data`}
                     onClick={(event) => event.stopPropagation()}
@@ -169,8 +177,6 @@ const LogSegment = ({
                     data-inverted="">
                     <Icon name="download" />
                 </a>
-
-                <Link to={`${baseUrl}#segmentId=${segmentId}`}><Icon name="linkify" /></Link>
 
                 {onSegmentInfo !== undefined && (
                     <div className={'AdditionalAction'} data-tooltip="Show Info" data-inverted="">
