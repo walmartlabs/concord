@@ -20,7 +20,7 @@
 
 import * as React from 'react';
 
-import {ConcordId, ConcordKey, GenericOperationResult} from '../../../api/common';
+import { ConcordId, ConcordKey, GenericOperationResult } from '../../../api/common';
 import EntityOwnerChangeForm from '../../molecules/EntityOwnerChangeForm';
 import { useCallback, useState } from 'react';
 import { changeOwner as apiChangeOwner } from '../../../api/org/secret';
@@ -30,17 +30,21 @@ import { RequestErrorActivity } from '../index';
 interface ExternalProps {
     orgName: ConcordKey;
     secretName: ConcordId;
-    projectName?: ConcordKey;
     initialOwnerId?: ConcordId;
     disabled: boolean;
 }
 
-const SecretOwnerChangeActivity = ({ orgName, secretName, projectName, initialOwnerId, disabled }: ExternalProps) => {
+const SecretOwnerChangeActivity = ({
+    orgName,
+    secretName,
+    initialOwnerId,
+    disabled
+}: ExternalProps) => {
     const [value, setValue] = useState(initialOwnerId);
 
     const postData = useCallback(() => {
-        return apiChangeOwner(orgName, secretName, value!, projectName || '');
-    }, [orgName, secretName, value, projectName]);
+        return apiChangeOwner(orgName, secretName, value!);
+    }, [orgName, secretName, value]);
 
     const { error, isLoading, fetch, clearState } = useApi<GenericOperationResult>(postData, {
         fetchOnMount: false,

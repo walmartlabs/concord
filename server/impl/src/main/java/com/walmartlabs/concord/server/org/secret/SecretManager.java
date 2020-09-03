@@ -345,31 +345,34 @@ public class SecretManager {
 
         UUID orgIdUpdate = organizationEntry != null ? organizationEntry.getId() : e.getOrgId();
 
-        UUID projectId = req.projectId();
+        UUID effectiveProjectId = e.getProjectId();
+        if (req.projectId() != null) {
+            effectiveProjectId = req.projectId();
+        }
+
         String projectName = req.projectName();
 
         if (!orgIdUpdate.equals(e.getOrgId())) {
             // set the project ID and project name as null when the updated org ID is not same as the current org ID
             // when a secret is changing orgs, the project link must be set to null
-            projectId = null;
+            effectiveProjectId = null;
             projectName = null;
         }
 
         if (projectName != null && projectName.trim().isEmpty()) {
             // empty project name is same as null project
-            projectName = null;
+            effectiveProjectId = null;
         }
 
-        if (projectId != null || projectName != null) {
-            ProjectEntry entry = projectAccessManager.assertAccess(e.getOrgId(), projectId, projectName, ResourceAccessLevel.READER, true);
-            projectId = entry.getId();
+        if (effectiveProjectId != null || projectName != null) {
+            ProjectEntry entry = projectAccessManager.assertAccess(e.getOrgId(), effectiveProjectId, projectName, ResourceAccessLevel.READER, true);
+            effectiveProjectId = entry.getId();
             if (!entry.getOrgId().equals(e.getOrgId())) {
-                throw new ValidationErrorsException("Project -> " + entry.getName() + " does not belong to organization -> " + orgName);
+                throw new ValidationErrorsException("Project '" + entry.getName() + "' does not belong to organization '" + orgName + "'");
             }
         }
 
-        UUID finalProjectId = projectId;
-
+        UUID finalProjectId = effectiveProjectId;
         secretDao.tx(tx -> {
             if (!orgIdUpdate.equals(e.getOrgId())) {
                 // update repository mapping to null when org is changing

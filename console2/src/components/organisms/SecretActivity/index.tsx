@@ -148,7 +148,6 @@ class SecretActivity extends React.PureComponent<Props> {
     }
 
     static renderSettings(data: SecretEntry) {
-
         const disabled = !data;
 
         return (
@@ -189,7 +188,6 @@ class SecretActivity extends React.PureComponent<Props> {
                     <SecretOwnerChangeActivity
                         orgName={data.orgName}
                         secretName={data.name}
-                        projectName={data.projectName}
                         initialOwnerId={data?.owner?.id}
                         disabled={disabled}
                     />
