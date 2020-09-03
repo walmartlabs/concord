@@ -23,11 +23,11 @@ package com.walmartlabs.concord.it.server;
 import com.walmartlabs.concord.client.*;
 import org.junit.Test;
 
-import java.util.UUID;
-
 import static org.junit.Assert.assertNotNull;
 
 public class SecretIT extends AbstractServerIT {
+
+    private final String userOwner = "ownerUser_" + randomString();
 
     @Test(timeout = DEFAULT_TEST_TIMEOUT)
     public void testPublicKey() throws Exception {
@@ -53,7 +53,7 @@ public class SecretIT extends AbstractServerIT {
 
         SecretsApi secretsApi = new SecretsApi(getApiClient());
         EntityOwner o = new EntityOwner();
-        o.setId(UUID.fromString("4b9d496a-c3a0-4e1b-804c-ac3fccddcb27"));
+        o.setUsername(userOwner);
         SecretUpdateRequest req = new SecretUpdateRequest();
         req.setOwner(o);
         secretsApi.update(orgName, secretName, req);
