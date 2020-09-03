@@ -1,0 +1,25 @@
+configuration:
+  runtime: "concord-v2"
+  arguments:
+    aVar:
+      x: 123
+
+flows:
+  default:
+    - log: "#1 ${aVar}"
+
+    - parallel:
+        - block:
+            - set:
+                aVar.y: 234
+            - log: "#2 ${aVar}"
+            - checkpoint: "first"
+        - block:
+            - set:
+                aVar.y: 345
+            - log: "#3 ${aVar}"
+            - checkpoint: "second"
+
+    - checkpoint: "third"
+
+    - log: "#4 ${aVar}"

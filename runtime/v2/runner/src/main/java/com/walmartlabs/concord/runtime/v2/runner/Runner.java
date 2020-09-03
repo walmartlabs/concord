@@ -105,6 +105,23 @@ public class Runner {
                 .build();
     }
 
+    public ProcessSnapshot resume(ProcessSnapshot snapshot) throws Exception {
+        statusCallback.onRunning(instanceId.getValue());
+        log.debug("resume -> running...");
+
+        State state = snapshot.vmState();
+
+        VM vm = createVM(snapshot.processDefinition());
+        vm.start(state);
+
+        log.debug("resume -> done");
+
+        return ProcessSnapshot.builder()
+                .from(snapshot)
+                .vmState(state)
+                .build();
+    }
+
     private VM createVM(ProcessDefinition processDefinition) {
         Collection<ExecutionListener> listeners = new ArrayList<>();
         listeners.add(new SynchronizationServiceListener(synchronizationService));

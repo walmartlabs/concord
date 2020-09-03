@@ -25,10 +25,12 @@ import ca.ibodrov.concord.testcontainers.Payload;
 import ca.ibodrov.concord.testcontainers.junit4.ConcordRule;
 import com.walmartlabs.concord.client.FormListEntry;
 import com.walmartlabs.concord.client.FormSubmitResponse;
+import com.walmartlabs.concord.client.ProcessCheckpointEntry;
 import com.walmartlabs.concord.client.ProcessEntry;
 import org.junit.ClassRule;
 import org.junit.Test;
 
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -180,5 +182,76 @@ public class ProcessIT {
 
         proc.assertLog(".*orgName=" + orgName + ".*");
         proc.assertLog(".*projectName=" + projectName + ".*");
+    }
+
+    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    public void testCheckpoints() throws Exception {
+        Payload payload = new Payload()
+                .archive(ProcessIT.class.getResource("checkpoints").toURI());
+
+        ConcordProcess proc = concord.processes().start(payload);
+        proc.expectStatus(ProcessEntry.StatusEnum.FINISHED);
+
+        proc.assertLog(".*#1.*x=123.*");
+        proc.assertLog(".*#2.*y=234.*");
+        proc.assertLog(".*#3.*y=345.*");
+
+        // ---
+
+        List<ProcessCheckpointEntry> checkpoints = proc.checkpoints();
+        assertEquals(2, checkpoints.size());
+
+        checkpoints.sort(Comparator.comparing(ProcessCheckpointEntry::getCreatedAt));
+
+        ProcessCheckpointEntry firstCheckpoint = checkpoints.get(0);
+        assertEquals("first", firstCheckpoint.getName());
+
+        ProcessCheckpointEntry secondCheckpoint = checkpoints.get(1);
+        assertEquals("second", secondCheckpoint.getName());
+
+        // ---
+
+        // restore from the first checkpoint
+
+        proc.restoreCheckpoint(firstCheckpoint.getId());
+        proc.expectStatus(ProcessEntry.StatusEnum.FINISHED);
+
+        // we should see the second checkpoint being saved the second time
+
+        checkpoints = proc.checkpoints();
+        assertEquals(3, checkpoints.size());
+
+        checkpoints.sort(Comparator.comparing(ProcessCheckpointEntry::getCreatedAt));
+
+        assertEquals("second", checkpoints.get(1).getName());
+        assertEquals("second", checkpoints.get(2).getName());
+
+        proc.assertLog(".*#1.*x=123.*");
+        proc.assertLogAtLeast(".*#3.*y=345.*", 2);
+    }
+
+    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    public void testCheckpointsParallel() throws Exception {
+        Payload payload = new Payload()
+                .archive(ProcessIT.class.getResource("checkpointsParallel").toURI());
+
+        ConcordProcess proc = concord.processes().start(payload);
+        proc.expectStatus(ProcessEntry.StatusEnum.FINISHED);
+
+        // ---
+
+        List<ProcessCheckpointEntry> checkpoints = proc.checkpoints();
+        assertEquals(3, checkpoints.size());
+
+        checkpoints.sort(Comparator.comparing(ProcessCheckpointEntry::getCreatedAt));
+
+        assertEquals("third", checkpoints.get(2).getName());
+
+        // ---
+
+        proc.restoreCheckpoint(checkpoints.get(1).getId());
+        proc.expectStatus(ProcessEntry.StatusEnum.FINISHED);
+
+        proc.assertLogAtLeast(".*#4.*y=345.*", 2);
     }
 }

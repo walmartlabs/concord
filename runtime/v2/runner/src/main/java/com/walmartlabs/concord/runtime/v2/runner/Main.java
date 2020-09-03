@@ -116,27 +116,43 @@ public class Main {
 
         String segmentedLogDir = runnerCfg.logging().segmentedLogDir();
         if (segmentedLogDir != null) {
-            LoggingConfigurator.configure(processCfg.instanceId(), segmentedLogDir);
+            LoggingConfigurator.configure(assertNotNull(processCfg.instanceId()), segmentedLogDir);
         }
 
         if (processCfg.debug()) {
             log.info("Available tasks: {}", taskProviders.names());
         }
 
+        Path workDir = this.workDir.getValue();
         Map<String, Object> processArgs = prepareProcessArgs(processCfg);
 
-        ProcessSnapshot snapshot;
-        Set<String> events = StateManager.readResumeEvents(workDir.getValue()); // TODO make it an interface
-        if (events == null || events.isEmpty()) {
-            snapshot = start(runner, workDir.getValue(), processCfg, processArgs);
-        } else {
-            snapshot = resume(runner, workDir.getValue(), processCfg, processArgs, events);
+        // three modes:
+        //  - regular start "from scratch"
+        //  - continuing from a checkpoint
+        //  - resuming after suspend
+
+        ProcessSnapshot snapshot = StateManager.readProcessState(workDir);
+        Set<String> events = StateManager.readResumeEvents(workDir); // TODO make it an interface?
+
+        switch (currentMode(snapshot, events)) {
+            case START: {
+                snapshot = start(runner, workDir, processCfg, processArgs);
+                break;
+            }
+            case RESUME: {
+                snapshot = resume(runner, processCfg, snapshot, processArgs, events);
+                break;
+            }
+            case RESTART_FROM_A_CHECKPOINT: {
+                snapshot = restart(runner, snapshot);
+                break;
+            }
         }
 
         if (isSuspended(snapshot)) {
-            StateManager.finalizeSuspendedState(workDir.getValue(), snapshot, getEvents(snapshot)); // TODO make it an interface
+            StateManager.finalizeSuspendedState(workDir, snapshot, getEvents(snapshot)); // TODO make it an interface?
         } else {
-            StateManager.cleanupState(workDir.getValue()); // TODO make it an interface
+            StateManager.cleanupState(workDir); // TODO make it an interface
         }
     }
 
@@ -151,7 +167,7 @@ public class Main {
         Map<String, Object> m = new LinkedHashMap<>(cfg.arguments());
 
         // save the current process ID as an argument, flows and plugins expect it to be a string value
-        m.put(Constants.Context.TX_ID_KEY, cfg.instanceId().toString());
+        m.put(Constants.Context.TX_ID_KEY, assertNotNull(cfg.instanceId()).toString());
 
         m.put(Constants.Context.WORK_DIR_KEY, workDir.getValue().toAbsolutePath().toString());
 
@@ -178,7 +194,14 @@ public class Main {
         return runner.start(processDefinition, cfg.entryPoint(), args);
     }
 
-    private static ProcessSnapshot resume(Runner runner, Path workDir, ProcessConfiguration cfg, Map<String, Object> args, Set<String> events) throws Exception {
+    private static ProcessSnapshot restart(Runner runner, ProcessSnapshot snapshot) throws Exception {
+        return runner.resume(snapshot);
+    }
+
+    private static ProcessSnapshot resume(Runner runner, ProcessConfiguration cfg,
+                                          ProcessSnapshot snapshot, Map<String, Object> args,
+                                          Set<String> events) throws Exception {
+
         Map<String, Object> initiator = cfg.initiator();
         if (initiator != null) {
             args.put(Constants.Request.INITIATOR_KEY, initiator);
@@ -189,12 +212,11 @@ public class Main {
             args.put(Constants.Request.CURRENT_USER_KEY, currentUser);
         }
 
-        ProcessSnapshot state = StateManager.readState(workDir, ProcessSnapshot.class); // TODO make it an interface
         for (String event : events) {
-            state = runner.resume(state, event, args);
+            snapshot = runner.resume(snapshot, event, args);
         }
 
-        return state;
+        return snapshot;
     }
 
     private static boolean isSuspended(ProcessSnapshot snapshot) {
@@ -211,5 +233,23 @@ public class Main {
         }
 
         return events;
+    }
+
+    private static <T> T assertNotNull(T object) {
+        assert object != null;
+        return object;
+    }
+
+    private static Mode currentMode(ProcessSnapshot snapshot, Set<String> events) {
+        if (events == null || events.isEmpty()) {
+            return snapshot != null ? Mode.RESTART_FROM_A_CHECKPOINT : Mode.START;
+        }
+        return Mode.RESUME;
+    }
+
+    private enum Mode {
+        START,
+        RESUME,
+        RESTART_FROM_A_CHECKPOINT
     }
 }
