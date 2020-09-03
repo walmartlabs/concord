@@ -144,7 +144,7 @@ public class Main {
                 break;
             }
             case RESTART_FROM_A_CHECKPOINT: {
-                snapshot = restart(runner, snapshot);
+                snapshot = restart(runner, snapshot, processArgs);
                 break;
             }
         }
@@ -194,8 +194,9 @@ public class Main {
         return runner.start(processDefinition, cfg.entryPoint(), args);
     }
 
-    private static ProcessSnapshot restart(Runner runner, ProcessSnapshot snapshot) throws Exception {
-        return runner.resume(snapshot);
+    private static ProcessSnapshot restart(Runner runner, ProcessSnapshot snapshot, Map<String, Object> args) throws Exception {
+
+        return runner.resume(snapshot, args);
     }
 
     private static ProcessSnapshot resume(Runner runner, ProcessConfiguration cfg,

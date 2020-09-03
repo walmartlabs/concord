@@ -105,13 +105,16 @@ public class Runner {
                 .build();
     }
 
-    public ProcessSnapshot resume(ProcessSnapshot snapshot) throws Exception {
+    public ProcessSnapshot resume(ProcessSnapshot snapshot, Map<String, Object> input) throws Exception {
         statusCallback.onRunning(instanceId.getValue());
         log.debug("resume -> running...");
 
         State state = snapshot.vmState();
 
         VM vm = createVM(snapshot.processDefinition());
+        // update the global variables using the input map by running a special command
+        vm.run(state, new UpdateLocalsCommand(input));
+        // continue as usual
         vm.start(state);
 
         log.debug("resume -> done");
