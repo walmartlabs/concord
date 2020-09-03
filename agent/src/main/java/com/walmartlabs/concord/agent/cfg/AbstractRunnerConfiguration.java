@@ -53,7 +53,7 @@ public abstract class AbstractRunnerConfiguration {
 
         this.path = Paths.get(path);
         this.cfgDir = getDir(cfg, prefix + ".cfgDir");
-        this.javaCmd = cfg.getString(prefix + ".javaCmd");
+        this.javaCmd = getJavaCmd(cfg, prefix);
         this.jvmParams = cfg.getStringList(prefix + ".jvmParams");
         this.mainClass = cfg.getString(prefix + ".mainClass");
         this.securityManagerEnabled = cfg.getBoolean(prefix + ".securityManagerEnabled");
@@ -84,4 +84,22 @@ public abstract class AbstractRunnerConfiguration {
     }
 
     public abstract String getRuntimeName();
+
+    private static String getJavaCmd(Config cfg, String prefix) {
+        String path = prefix + ".javaCmd";
+
+        if (cfg.hasPath(path)) {
+            String s = cfg.getString(path);
+            if (s != null) {
+                return s;
+            }
+        }
+
+        String javaHome = System.getProperty("java.home");
+        if (javaHome != null) {
+            return javaHome + "/bin/java";
+        }
+
+        return "java";
+    }
 }
