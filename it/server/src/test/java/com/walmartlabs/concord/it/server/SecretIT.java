@@ -27,8 +27,6 @@ import static org.junit.Assert.assertNotNull;
 
 public class SecretIT extends AbstractServerIT {
 
-    private final String userOwner = "ownerUser_" + randomString();
-
     @Test(timeout = DEFAULT_TEST_TIMEOUT)
     public void testPublicKey() throws Exception {
         String orgName = "org_" + randomString();
@@ -51,11 +49,13 @@ public class SecretIT extends AbstractServerIT {
 
         // ---
 
+        String userName = "myUser_" + randomString();
+
         SecretsApi secretsApi = new SecretsApi(getApiClient());
-        EntityOwner o = new EntityOwner();
-        o.setUsername(userOwner);
         SecretUpdateRequest req = new SecretUpdateRequest();
-        req.setOwner(o);
+        req.setOwner(new EntityOwner()
+                .setUsername(userName)
+                .setUserType(EntityOwner.UserTypeEnum.LOCAL));
         secretsApi.update(orgName, secretName, req);
 
         PublicKeyResponse pkr = secretsApi.getPublicKey(orgName, secretName);
