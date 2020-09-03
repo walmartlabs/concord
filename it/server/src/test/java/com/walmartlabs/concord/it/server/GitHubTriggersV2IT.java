@@ -325,7 +325,7 @@ public class GitHubTriggersV2IT extends AbstractGitHubTriggersIT {
         return username;
     }
 
-    private static void createLdapUser(DirContext ldapCtx, String username) throws Exception {
+    static void createLdapUser(DirContext ldapCtx, String username) throws Exception {
         String dn = "cn=" + username + ",dc=example,dc=org";
         Attributes attributes = new BasicAttributes();
 

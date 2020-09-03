@@ -23,6 +23,9 @@ package com.walmartlabs.concord.it.server;
 import com.walmartlabs.concord.client.*;
 import org.junit.Test;
 
+import javax.naming.directory.DirContext;
+
+import static com.walmartlabs.concord.it.server.GitHubTriggersV2IT.createLdapUser;
 import static org.junit.Assert.assertNotNull;
 
 public class SecretIT extends AbstractServerIT {
@@ -50,16 +53,19 @@ public class SecretIT extends AbstractServerIT {
         // ---
 
         String userName = "myUser_" + randomString();
+        DirContext ldapCtx = LdapIT.createContext();
+        createLdapUser(ldapCtx, userName);
 
         UsersApi usersApi = new UsersApi(getApiClient());
         usersApi.createOrUpdate(new CreateUserRequest()
                 .setUsername(userName)
-                .setType(CreateUserRequest.TypeEnum.LOCAL));
+                .setType(CreateUserRequest.TypeEnum.LDAP));
 
         SecretsApi secretsApi = new SecretsApi(getApiClient());
         SecretUpdateRequest req = new SecretUpdateRequest();
         req.setOwner(new EntityOwner()
-                .setUsername(userName));
+                .setUsername(userName)
+        );
         secretsApi.update(orgName, secretName, req);
 
         PublicKeyResponse pkr = secretsApi.getPublicKey(orgName, secretName);
