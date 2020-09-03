@@ -39,6 +39,7 @@ import {
     PublicKeyPopup,
     SecretDeleteActivity,
     SecretOrganizationChangeActivity,
+    SecretOwnerChangeActivity,
     SecretProjectActivity,
     SecretRenameActivity,
     SecretTeamAccessActivity,
@@ -147,6 +148,8 @@ class SecretActivity extends React.PureComponent<Props> {
     }
 
     static renderSettings(data: SecretEntry) {
+        const disabled = !data;
+
         return (
             <>
                 <Header as="h5" disabled={true}>
@@ -179,6 +182,14 @@ class SecretActivity extends React.PureComponent<Props> {
                         secretId={data.id}
                         secretName={data.name}
                         projectId={data.projectId}
+                    />
+
+                    <Header as="h4">Secret owner</Header>
+                    <SecretOwnerChangeActivity
+                        orgName={data.orgName}
+                        secretName={data.name}
+                        initialOwnerId={data?.owner?.id}
+                        disabled={disabled}
                     />
 
                     <Header as="h4">Organization</Header>
