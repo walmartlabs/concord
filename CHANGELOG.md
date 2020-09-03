@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+### Added
+
+- concord-console: allow changing owners of secrets;
+
 ### Changed
 
 - runtime-v2: working process checkpoints support.
