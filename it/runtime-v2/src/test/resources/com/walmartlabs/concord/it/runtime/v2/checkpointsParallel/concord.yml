@@ -16,7 +16,7 @@ flows:
             - checkpoint: "first"
         - block:
             - set:
-                aVar.y: 345
+                aVar.z: 345
             - log: "#3 ${aVar}"
             - checkpoint: "second"
 

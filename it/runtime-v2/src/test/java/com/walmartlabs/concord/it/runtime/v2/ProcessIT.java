@@ -252,6 +252,6 @@ public class ProcessIT {
         proc.restoreCheckpoint(checkpoints.get(1).getId());
         proc.expectStatus(ProcessEntry.StatusEnum.FINISHED);
 
-        proc.assertLogAtLeast(".*#4.*y=345.*", 2);
+        proc.assertLogAtLeast(".*#4.*z=345.*", 2);
     }
 }
