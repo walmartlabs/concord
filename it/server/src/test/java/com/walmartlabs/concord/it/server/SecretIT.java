@@ -51,11 +51,15 @@ public class SecretIT extends AbstractServerIT {
 
         String userName = "myUser_" + randomString();
 
+        UsersApi usersApi = new UsersApi(getApiClient());
+        usersApi.createOrUpdate(new CreateUserRequest()
+                .setUsername(userName)
+                .setType(CreateUserRequest.TypeEnum.LOCAL));
+
         SecretsApi secretsApi = new SecretsApi(getApiClient());
         SecretUpdateRequest req = new SecretUpdateRequest();
         req.setOwner(new EntityOwner()
-                .setUsername(userName)
-                .setUserType(EntityOwner.UserTypeEnum.LOCAL));
+                .setUsername(userName));
         secretsApi.update(orgName, secretName, req);
 
         PublicKeyResponse pkr = secretsApi.getPublicKey(orgName, secretName);
