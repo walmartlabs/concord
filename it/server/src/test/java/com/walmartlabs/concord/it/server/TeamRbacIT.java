@@ -719,7 +719,7 @@ public class TeamRbacIT extends AbstractServerIT {
 
         secretResource.updateAccessLevel(orgName, secretName, new ResourceAccessEntry()
                 .setTeamName(teamName)
-                .setLevel(ResourceAccessEntry.LevelEnum.WRITER));
+                .setLevel(ResourceAccessEntry.LevelEnum.OWNER));
 
         // ---
 

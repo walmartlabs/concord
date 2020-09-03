@@ -18,7 +18,7 @@
  * =====
  */
 
-import { CreateSecretResponse } from '../../../state/data/secrets/types';
+import { CreateSecretResponse } from '../../../state/data/secrets';
 import {
     ConcordId,
     ConcordKey,
@@ -319,6 +319,24 @@ export const updateSecretAccess = (
     };
 
     return fetchJson(`/api/v1/org/${orgName}/secret/${secretName}/access/bulk`, opts);
+};
+
+export const changeOwner = (
+    orgName: ConcordKey,
+    secretName: ConcordKey,
+    ownerId: ConcordId
+): Promise<GenericOperationResult> => {
+    const opts = {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+            owner: { id: ownerId }
+        })
+    };
+
+    return fetchJson(`/api/v1/org/${orgName}/secret/${secretName}`, opts);
 };
 
 export const typeToText = (t: SecretType) => {
