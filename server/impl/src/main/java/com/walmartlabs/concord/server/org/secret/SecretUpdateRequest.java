@@ -24,6 +24,7 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.walmartlabs.concord.common.validation.ConcordKey;
+import com.walmartlabs.concord.server.org.EntityOwner;
 import io.swagger.annotations.ApiModelProperty;
 import org.immutables.value.Value;
 
@@ -43,6 +44,9 @@ public interface SecretUpdateRequest extends Serializable {
     @Nullable
     @ConcordKey
     String name();
+
+    @Nullable
+    EntityOwner owner();
 
     @Nullable
     SecretVisibility visibility();

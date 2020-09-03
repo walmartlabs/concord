@@ -52,6 +52,8 @@ import com.walmartlabs.concord.server.security.UserPrincipal;
 import com.walmartlabs.concord.server.security.sessionkey.SessionKeyPrincipal;
 import com.walmartlabs.concord.server.user.UserDao;
 import com.walmartlabs.concord.server.user.UserEntry;
+import com.walmartlabs.concord.server.user.UserManager;
+import com.walmartlabs.concord.server.user.UserType;
 import org.apache.shiro.authz.UnauthorizedException;
 import org.sonatype.siesta.ValidationErrorsException;
 
@@ -82,6 +84,7 @@ public class SecretManager {
     private final UserDao userDao;
     private final ProjectAccessManager projectAccessManager;
     private final RepositoryDao repositoryDao;
+    private final UserManager userManager;
 
     @Inject
     public SecretManager(PolicyManager policyManager,
@@ -93,7 +96,8 @@ public class SecretManager {
                          SecretStoreProvider secretStoreProvider,
                          UserDao userDao,
                          ProjectAccessManager projectAccessManager,
-                         RepositoryDao repositoryDao) {
+                         RepositoryDao repositoryDao,
+                         UserManager userManager) {
 
         this.policyManager = policyManager;
         this.processQueueManager = processQueueManager;
@@ -105,6 +109,7 @@ public class SecretManager {
         this.auditLog = auditLog;
         this.projectAccessManager = projectAccessManager;
         this.repositoryDao = repositoryDao;
+        this.userManager = userManager;
     }
 
     @WithTimer
@@ -263,11 +268,25 @@ public class SecretManager {
      */
     public void update(String orgName, String secretName, SecretUpdateRequest req) {
         SecretEntry e;
-        if (req.id() == null) {
+
+        if(req.id() == null) {
             OrganizationEntry org = orgManager.assertAccess(null, orgName, false);
-            e = assertAccess(org.getId(), null, secretName, ResourceAccessLevel.WRITER, true);
+            e = assertAccess(org.getId(), null, secretName, ResourceAccessLevel.OWNER, true);
         } else {
             e = assertAccess(null, req.id(), null, ResourceAccessLevel.WRITER, true);
+        }
+
+        UserEntry owner = getOwner(req.owner(), null);
+
+        policyManager.checkEntity(e.getOrgId(), req.projectId(), EntityType.SECRET, EntityAction.UPDATE, owner,
+                PolicyUtils.toMap(e.getOrgId(), e.getName(), e.getType(), e.getVisibility(), e.getStoreType()));
+
+        UUID currentOwnerId = e.getOwner() != null ? e.getOwner().id() : null;
+        UUID updatedOwnerId = owner != null ? owner.getId() : null;
+
+        if (updatedOwnerId != null && !updatedOwnerId.equals(currentOwnerId)) {
+            OrganizationEntry org = orgManager.assertAccess(null, orgName, false);
+            assertAccess(org.getId(), null, secretName, ResourceAccessLevel.OWNER, true);
         }
 
         String currentPassword = req.storePassword();
@@ -326,38 +345,41 @@ public class SecretManager {
 
         UUID orgIdUpdate = organizationEntry != null ? organizationEntry.getId() : e.getOrgId();
 
-        UUID projectId = req.projectId();
+        UUID effectiveProjectId = e.getProjectId();
+        if (req.projectId() != null) {
+            effectiveProjectId = req.projectId();
+        }
+
         String projectName = req.projectName();
 
         if (!orgIdUpdate.equals(e.getOrgId())) {
             // set the project ID and project name as null when the updated org ID is not same as the current org ID
             // when a secret is changing orgs, the project link must be set to null
-            projectId = null;
+            effectiveProjectId = null;
             projectName = null;
         }
 
         if (projectName != null && projectName.trim().isEmpty()) {
             // empty project name is same as null project
-            projectName = null;
+            effectiveProjectId = null;
         }
 
-        if (projectId != null || projectName != null) {
-            ProjectEntry entry = projectAccessManager.assertAccess(e.getOrgId(), projectId, projectName, ResourceAccessLevel.READER, true);
-            projectId = entry.getId();
+        if (effectiveProjectId != null || projectName != null) {
+            ProjectEntry entry = projectAccessManager.assertAccess(e.getOrgId(), effectiveProjectId, projectName, ResourceAccessLevel.READER, true);
+            effectiveProjectId = entry.getId();
             if (!entry.getOrgId().equals(e.getOrgId())) {
-                throw new ValidationErrorsException("Project -> " + entry.getName() + " does not belong to organization -> " + orgName);
+                throw new ValidationErrorsException("Project '" + entry.getName() + "' does not belong to organization '" + orgName + "'");
             }
         }
 
-        UUID finalProjectId = projectId;
-
+        UUID finalProjectId = effectiveProjectId;
         secretDao.tx(tx -> {
             if (!orgIdUpdate.equals(e.getOrgId())) {
                 // update repository mapping to null when org is changing
                 repositoryDao.clearSecretMappingBySecretId(tx, e.getId());
             }
 
-            secretDao.update(tx, e.getId(), req.name(), newEncryptedData, req.visibility(), finalProjectId, orgIdUpdate);
+            secretDao.update(tx, e.getId(), req.name(), updatedOwnerId, newEncryptedData, req.visibility(), finalProjectId, orgIdUpdate);
         });
 
         Map<String, Object> changes = DiffUtils.compare(e, secretDao.get(e.getId()));
@@ -375,7 +397,7 @@ public class SecretManager {
      * Removes an existing secret.
      */
     public void delete(UUID orgId, String secretName) {
-        SecretEntry e = assertAccess(orgId, null, secretName, ResourceAccessLevel.WRITER, true);
+        SecretEntry e = assertAccess(orgId, null, secretName, ResourceAccessLevel.OWNER, true);
 
         // delete the content first
         getSecretStore(e.getStoreType()).delete(e.getId());
@@ -713,6 +735,24 @@ public class SecretManager {
         public UUID getId() {
             return id;
         }
+    }
+
+    public UserEntry getOwner(EntityOwner owner, UserEntry defaultOwner) {
+        if (owner == null) {
+            return defaultOwner;
+        }
+
+        if (owner.id() != null) {
+            return userManager.get(owner.id())
+                    .orElseThrow(() -> new ValidationErrorsException("User not found: " + owner.id()));
+        }
+
+        if (owner.username() != null) {
+            return userManager.get(owner.username(), owner.userDomain(), UserType.LDAP)
+                    .orElseThrow(() -> new ConcordApplicationException("User not found: " + owner.username()));
+        }
+
+        return defaultOwner;
     }
 
     /**
