@@ -21,6 +21,7 @@ package com.walmartlabs.concord.it.runtime.v2;
  */
 
 import ca.ibodrov.concord.testcontainers.ConcordProcess;
+import ca.ibodrov.concord.testcontainers.ContainerListener;
 import ca.ibodrov.concord.testcontainers.ContainerType;
 import ca.ibodrov.concord.testcontainers.junit4.ConcordRule;
 import com.github.tomakehurst.wiremock.client.WireMock;
@@ -62,9 +63,12 @@ public class TemplateIT {
     @ClassRule
     public static final ConcordRule concord = ConcordConfiguration
             .configure()
-            .containerListener(name -> {
-                if (name == ContainerType.SERVER) {
-                    Testcontainers.exposeHostPorts(rule.port());
+            .containerListener(new ContainerListener() {
+                @Override
+                public void beforeStart(ContainerType type) {
+                    if (type == ContainerType.SERVER) {
+                        Testcontainers.exposeHostPorts(rule.port());
+                    }
                 }
             });
 

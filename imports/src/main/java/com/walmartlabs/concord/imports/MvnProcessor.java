@@ -41,7 +41,7 @@ public class MvnProcessor implements ImportProcessor<MvnDefinition> {
 
     @Override
     public String type() {
-        return "mvn";
+        return MvnDefinition.TYPE;
     }
 
     @Override

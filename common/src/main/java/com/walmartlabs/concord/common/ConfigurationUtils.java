@@ -158,6 +158,7 @@ public final class ConfigurationUtils {
         return root;
     }
 
+    @SuppressWarnings("rawtypes")
     public static boolean deepEquals(Object a, Object b) {
         if (!Objects.deepEquals(a, b)) {
             return false;
@@ -170,6 +171,21 @@ public final class ConfigurationUtils {
         }
 
         return true;
+    }
+
+    @SafeVarargs
+    public static <T> Set<T> distinct(Collection<T>... collections) {
+        Set<T> result = new HashSet<>();
+
+        if (collections != null) {
+            for (Collection<T> coll : collections) {
+                if (coll != null) {
+                    result.addAll(coll);
+                }
+            }
+        }
+
+        return result;
     }
 
     private static boolean equals(Map<?, ?> a, Map<?, ?> b) {

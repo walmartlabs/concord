@@ -1,5 +1,82 @@
 # Change log
 
+## [1.64.0] - 2020-09-02
+
+### Added
+
+- runtime-v2: support for expressions in checkpoint names.
+
+### Changed
+
+- runtime-v2: improved error message when trying to assign a
+non-serializable value into a `TaskResult`;
+- concord-console: increase the number of visible log segments
+to 100 (was 30);
+- concord-server: change the wording of the maximum number of
+dependencies error message;
+- runtime-v2: merge EventConfiguration when loading multiple
+resources. Allows users to specify the `events` configuration in
+any Concord YAML file available for the process;
+- concord-server: fixed the maximum number of dependencies error
+message;
+- runtime-v2: create a single merged `event` configuration from
+`event` sections of all loaded Concord YAML files.
+
+### Breaking
+
+- runtime-v2: rename `SecretParams#name` to `secretName`. Affects
+the secret creation methods in `SecretService`);
+- runtime-v2: assume `retry.delay` is in seconds (like in v1).
+
+
+
+## [1.63.0] - 2020-08-30
+
+### Added
+
+- concord-imports: support for `dir` imports (external directories),
+disabled by default;
+- crypto-tasks: an action to create new secrets (runtime-v2 only);
+- concord-server: JSON store data can now be updated by either `POST`
+or `PUT` method;
+- runtime-v2: support for nested `set`;
+- runtime-v2: support for `out` variables in `try` and `block`
+steps;
+- runtime-v2: support for naming of `log`, `throw` and `expr` steps;
+- runtime-v2: additional `Variables#assert*` methods.
+
+### Changed
+
+- runtime-v2: fixed a potential NPE in the `retry` code when handling
+exceptions w/o message;
+- docker-images: remove `dumb-init` as Docker ships its own init
+implementation;
+- runtime-v2: when using `withItems`, `out` variables are now
+collected into lists;
+- concord-server: remove user's LDAP groups from the DB when
+the account is disabled;
+- runtime-v1: fixed an issue when GitHub triggers without `version`
+were treated as v1 triggers;
+- concord-console: new look for the runtime v2 log viewer;
+- concord-console: fix layout of the JSON store query editor;
+- iam-sso: mark the SSO cookie as "secure";
+- ansible: fixed an issue when `ignore_error` values were saved
+"as is" in Ansible events (e.g. unevaluated expressions);
+- concord-agent: do not print out the process' `sessionToken` in
+logs;
+- concord-console: fix manual refreshing of the process list;
+- concord-server: allow nested metadata filters in
+`GET /api/v2/process` and `GET /api/v2/process/count` endpoints;
+- concord-server: runtime-v2 compatibility for processes started via
+the browser link (aka "the process portal").
+
+### Breaking
+
+- concord-server: the process list entries
+(`GET /api/v2/process` endpoint) no longer include `imports`.
+
+
+
 ## [1.62.0] - 2020-08-19
 
 ### Added

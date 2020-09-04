@@ -22,21 +22,77 @@ package com.walmartlabs.concord.runtime.v2.sdk;
 
 import org.immutables.value.Value;
 
+import javax.annotation.Nullable;
+import java.io.Serializable;
 import java.nio.file.Path;
+import java.util.UUID;
 
 public interface SecretService {
 
-    String exportAsString(String orgName, String name, String password) throws Exception;
+    SecretCreationResult createKeyPair(SecretParams secret, KeyPair keyPair) throws Exception;
 
-    KeyPair exportKeyAsFile(String orgName, String name, String password) throws Exception;
+    SecretCreationResult createUsernamePassword(SecretParams secret, UsernamePassword usernamePassword) throws Exception;
 
-    UsernamePassword exportCredentials(String orgName, String name, String password) throws Exception;
+    SecretCreationResult createData(SecretParams secret, byte[] data) throws Exception;
 
-    Path exportAsFile(String orgName, String name, String password) throws Exception;
+    String exportAsString(String orgName, String secretName, String password) throws Exception;
 
-    String decryptString(String s) throws Exception;
+    KeyPair exportKeyAsFile(String orgName, String secretName, String password) throws Exception;
+
+    UsernamePassword exportCredentials(String orgName, String secretName, String password) throws Exception;
+
+    Path exportAsFile(String orgName, String secretName, String password) throws Exception;
+
+    String decryptString(String encryptedValue) throws Exception;
 
     String encryptString(String orgName, String projectName, String value) throws Exception;
+
+    @Value.Immutable
+    @Value.Style(jdkOnly = true)
+    interface SecretCreationResult {
+
+        UUID id();
+
+        @Nullable
+        String password();
+
+        static ImmutableSecretCreationResult.Builder builder() {
+            return ImmutableSecretCreationResult.builder();
+        }
+    }
+
+    @Value.Immutable
+    @Value.Style(jdkOnly = true)
+    interface SecretParams extends Serializable {
+
+        long serialVersionUID = 1L;
+
+        String orgName();
+
+        @Nullable
+        String project();
+
+        String secretName();
+
+        @Nullable
+        String storePassword();
+
+        @Value.Default
+        default boolean generatePassword() {
+            return false;
+        }
+
+        enum Visibility {
+            PUBLIC, PRIVATE
+        }
+
+        @Nullable
+        Visibility visibility();
+
+        static ImmutableSecretParams.Builder builder() {
+            return ImmutableSecretParams.builder();
+        }
+    }
 
     @Value.Immutable
     @Value.Style(jdkOnly = true)

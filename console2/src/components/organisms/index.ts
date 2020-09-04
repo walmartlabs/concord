@@ -80,6 +80,7 @@ export { default as SecretDeleteActivity } from './SecretDeleteActivity';
 export { default as SecretDropdown } from './SecretDropdown';
 export { default as SecretListActivity } from './SecretListActivity';
 export { default as SecretOrganizationChangeActivity } from './SecretOrganizationChangeActivity';
+export { default as SecretOwnerChangeActivity } from './SecretOwnerChangeActivity';
 export { default as SecretProjectActivity } from './SecretProjectActivity';
 export { default as SecretRenameActivity } from './SecretRenameActivity';
 export { default as SecretStoreDropdown } from './SecretStoreDropdown';

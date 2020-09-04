@@ -50,21 +50,21 @@ public class LazyExpressionEvaluator implements ExpressionEvaluator {
 
     @Override
     @SuppressWarnings("unchecked")
-    public <T> T eval(EvalContext context, Object value, Class<T> expectedType) {
+    public <T> T eval(EvalContext ctx, Object value, Class<T> expectedType) {
         if (value == null) {
             return null;
         }
 
-        if (context.useIntermediateResults() && value instanceof Map) {
+        if (ctx.useIntermediateResults() && value instanceof Map) {
             Map<String, Object> m = (Map<String, Object>) value;
             if (m.isEmpty()) {
                 return expectedType.cast(m);
             }
 
-            return expectedType.cast(new LazyEvalMap(this, m, context));
+            return expectedType.cast(new LazyEvalMap(this, m, ctx));
         }
 
-        return evalValue(LazyEvalContext.of(context, null), value, expectedType);
+        return evalValue(LazyEvalContext.of(ctx, null), value, expectedType);
     }
 
     @SuppressWarnings("unchecked")
@@ -119,6 +119,18 @@ public class LazyExpressionEvaluator implements ExpressionEvaluator {
         }
 
         return expectedType.cast(value);
+    }
+
+    @Override
+    public void setValue(EvalContext ctx, String expr, Object value) {
+        ELResolver resolver = createResolver(LazyEvalContext.of(ctx, null), expressionFactory);
+
+        StandardELContext sc = new StandardELContext(expressionFactory);
+        sc.putContext(ExpressionFactory.class, expressionFactory);
+        sc.addELResolver(resolver);
+
+        ValueExpression x = expressionFactory.createValueExpression(sc, expr, Object.class);
+        x.setValue(sc, value);
     }
 
     private <T> T evalExpr(LazyEvalContext ctx, String expr, Class<T> type) {

@@ -20,28 +20,34 @@ package com.walmartlabs.concord.runtime.v2.runner.vm;
  * =====
  */
 
+import com.walmartlabs.concord.runtime.v2.model.Checkpoint;
 import com.walmartlabs.concord.runtime.v2.model.ProcessDefinition;
 import com.walmartlabs.concord.runtime.v2.runner.ProcessSnapshot;
 import com.walmartlabs.concord.runtime.v2.runner.SynchronizationService;
 import com.walmartlabs.concord.runtime.v2.runner.checkpoints.CheckpointService;
-import com.walmartlabs.concord.svm.Command;
+import com.walmartlabs.concord.runtime.v2.runner.el.EvalContextFactory;
+import com.walmartlabs.concord.runtime.v2.runner.el.ExpressionEvaluator;
+import com.walmartlabs.concord.runtime.v2.sdk.Context;
 import com.walmartlabs.concord.svm.Runtime;
 import com.walmartlabs.concord.svm.State;
 import com.walmartlabs.concord.svm.ThreadId;
 
-public class CheckpointCommand implements Command {
+public class CheckpointCommand extends StepCommand<Checkpoint> {
 
     private static final long serialVersionUID = 1L;
 
-    private final String name;
-
-    public CheckpointCommand(String name) {
-        this.name = name;
+    public CheckpointCommand(Checkpoint step) {
+        super(step);
     }
 
     @Override
-    public void eval(Runtime runtime, State state, ThreadId threadId) {
+    protected void execute(Runtime runtime, State state, ThreadId threadId) {
         state.peekFrame(threadId).pop();
+
+        // eval the name in case it contains an expression
+        Context ctx = runtime.getService(Context.class);
+        ExpressionEvaluator ee = runtime.getService(ExpressionEvaluator.class);
+        String name = ee.eval(EvalContextFactory.global(ctx), getStep().getName(), String.class);
 
         runtime.getService(SynchronizationService.class).point(() -> {
             CheckpointService checkpointService = runtime.getService(CheckpointService.class);
@@ -49,6 +55,8 @@ public class CheckpointCommand implements Command {
 
             // cleanup the internal state to reduce the serialized data size
             state.gc();
+
+            // TODO validate checkpoint name
 
             checkpointService.create(name, runtime, ProcessSnapshot.builder()
                     .vmState(state)

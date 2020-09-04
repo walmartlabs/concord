@@ -25,12 +25,14 @@ import com.walmartlabs.concord.runtime.v2.model.Step;
 import com.walmartlabs.concord.runtime.v2.runner.context.ContextFactory;
 import com.walmartlabs.concord.runtime.v2.runner.el.EvalContextFactory;
 import com.walmartlabs.concord.runtime.v2.runner.el.ExpressionEvaluator;
+import com.walmartlabs.concord.runtime.v2.sdk.Constants;
 import com.walmartlabs.concord.runtime.v2.sdk.Context;
 import com.walmartlabs.concord.svm.Runtime;
 import com.walmartlabs.concord.svm.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.time.Duration;
 import java.util.Collections;
 import java.util.Map;
 import java.util.Objects;
@@ -46,7 +48,6 @@ public class RetryWrapper implements Command {
 
     private static final Logger log = LoggerFactory.getLogger(RetryWrapper.class);
 
-    private static final String RETRY_ATTEMPT_NUMBER = "__retry_attempNo";
     private static final String RETRY_CFG = "__retry_cfg";
 
     private final Command cmd;
@@ -62,9 +63,11 @@ public class RetryWrapper implements Command {
         Frame frame = state.peekFrame(threadId);
         frame.pop();
 
+        // wrap the command into a frame with an exception handler
         Frame inner = Frame.builder()
                 .nonRoot()
-                .commands(cmd, new NextRetry(cmd))
+                .exceptionHandler(new NextRetry(cmd))
+                .commands(cmd)
                 .build();
 
         // create the context explicitly
@@ -78,16 +81,16 @@ public class RetryWrapper implements Command {
             times = ee.eval(EvalContextFactory.global(ctx), retry.timesExpression(), Integer.class);
         }
 
-        long delay = retry.delay();
+        Duration delay = retry.delay();
         if (retry.delayExpression() != null) {
-            delay = ee.eval(EvalContextFactory.global(ctx), retry.delayExpression(), Long.class);
+            delay = Duration.ofSeconds(ee.eval(EvalContextFactory.global(ctx), retry.delayExpression(), Long.class));
         }
 
+        inner.setLocal(Constants.Runtime.RETRY_ATTEMPT_NUMBER, 0);
         inner.setLocal(RETRY_CFG, Retry.builder().from(retry)
                 .times(times)
                 .delay(delay)
                 .build());
-        inner.setLocal(RETRY_ATTEMPT_NUMBER, 0);
 
         state.pushFrame(threadId, inner);
     }
@@ -115,7 +118,7 @@ public class RetryWrapper implements Command {
             frame.pop();
 
             Retry retry = (Retry) frame.getLocal(RETRY_CFG);
-            int attemptNo = (int) frame.getLocal(RETRY_ATTEMPT_NUMBER);
+            int attemptNo = (int) frame.getLocal(Constants.Runtime.RETRY_ATTEMPT_NUMBER);
             Throwable lastError = (Throwable) frame.getLocal(Frame.LAST_EXCEPTION_KEY);
 
             if (attemptNo >= retry.times()) {
@@ -127,10 +130,11 @@ public class RetryWrapper implements Command {
                 }
             }
 
-            long delay = retry.delay();
-            log.warn("Last error: {}. Waiting for {}ms before retry (attempt #{})", lastError.getMessage(), delay, attemptNo);
+            Duration delay = retry.delay();
+            log.warn("Last error: {}. Waiting for {}ms before retry (attempt #{})", lastError, delay.toMillis(), attemptNo);
+
             try {
-                Thread.sleep(delay);
+                Thread.sleep(delay.toMillis());
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
             }
@@ -138,7 +142,8 @@ public class RetryWrapper implements Command {
             // set the same exception handler for the next attempt
             frame.setExceptionHandler(this);
             // update the attempt number
-            frame.setLocal(RETRY_ATTEMPT_NUMBER, attemptNo + 1);
+            frame.setLocal(Constants.Runtime.RETRY_ATTEMPT_NUMBER, attemptNo + 1);
+
             // override the task's "in" if needed
             if (retry.input() != null) {
                 Map<String, Object> m = Collections.unmodifiableMap(Objects.requireNonNull(retry.input()));

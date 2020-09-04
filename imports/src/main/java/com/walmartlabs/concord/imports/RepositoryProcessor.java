@@ -35,7 +35,7 @@ public class RepositoryProcessor implements ImportProcessor<GitDefinition> {
 
     @Override
     public String type() {
-        return "git";
+        return GitDefinition.TYPE;
     }
 
     @Override

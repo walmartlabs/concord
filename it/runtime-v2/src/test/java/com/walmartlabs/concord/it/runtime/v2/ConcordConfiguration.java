@@ -32,6 +32,10 @@ public final class ConcordConfiguration {
 
     private static final Path sharedDir = Paths.get(System.getProperty("java.io.tmpdir")).resolve("concord-it");
 
+    public static Path sharedDir() {
+        return sharedDir;
+    }
+
     static {
         if (Files.notExists(sharedDir)) {
             try {

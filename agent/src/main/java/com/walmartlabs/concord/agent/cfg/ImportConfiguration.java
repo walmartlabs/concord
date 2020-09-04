@@ -1,4 +1,4 @@
-package com.walmartlabs.concord.cli.runner;
+package com.walmartlabs.concord.agent.cfg;
 
 /*-
  * *****
@@ -20,19 +20,27 @@ package com.walmartlabs.concord.cli.runner;
  * =====
  */
 
-import com.walmartlabs.concord.sdk.Context;
-import com.walmartlabs.concord.sdk.DockerContainerSpec;
-import com.walmartlabs.concord.sdk.DockerService;
+import com.typesafe.config.Config;
 
-public class CliDockerServiceV1 implements DockerService {
+import javax.inject.Inject;
+import javax.inject.Named;
+import javax.inject.Singleton;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Set;
 
-    @Override
-    public Process start(Context ctx, DockerContainerSpec spec) {
-        throw new UnsupportedOperationException("not implemented yet");
+@Named
+@Singleton
+public class ImportConfiguration {
+
+    private final Set<String> disabledProcessors;
+
+    @Inject
+    public ImportConfiguration(Config cfg) {
+        this.disabledProcessors = Collections.unmodifiableSet(new HashSet<>(cfg.getStringList("imports.disabledProcessors")));
     }
 
-    @Override
-    public int start(Context ctx, DockerContainerSpec spec, LogCallback outCallback, LogCallback errCallback) {
-        throw new UnsupportedOperationException("not implemented yet");
+    public Set<String> getDisabledProcessors() {
+        return disabledProcessors;
     }
 }

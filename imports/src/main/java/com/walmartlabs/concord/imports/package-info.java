@@ -1,4 +1,5 @@
-package com.walmartlabs.concord.cli.runner;
+@Value.Style(jdkOnly = true)
+package com.walmartlabs.concord.imports;
 
 /*-
  * *****
@@ -20,14 +21,4 @@ package com.walmartlabs.concord.cli.runner;
  * =====
  */
 
-
-import com.walmartlabs.concord.runtime.v2.sdk.DockerContainerSpec;
-import com.walmartlabs.concord.runtime.v2.sdk.DockerService;
-
-public class CliDockerServiceV2 implements DockerService {
-
-    @Override
-    public int start(DockerContainerSpec spec, LogCallback outCallback, LogCallback errCallback) {
-        throw new UnsupportedOperationException("not implemented yet");
-    }
-}
+import org.immutables.value.Value;

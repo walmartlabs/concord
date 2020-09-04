@@ -25,6 +25,10 @@ import com.walmartlabs.ollie.config.Config;
 import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 @Named
 @Singleton
@@ -34,7 +38,18 @@ public class ImportConfiguration {
     @Config("imports.src")
     private String src;
 
+    private final Set<String> disabledProcessors;
+
+    @Inject
+    public ImportConfiguration(@Config("imports.disabledProcessors") List<String> disabledProcessors) {
+        this.disabledProcessors = Collections.unmodifiableSet(new HashSet<>(disabledProcessors));
+    }
+
     public String getSrc() {
         return src;
+    }
+
+    public Set<String> getDisabledProcessors() {
+        return disabledProcessors;
     }
 }

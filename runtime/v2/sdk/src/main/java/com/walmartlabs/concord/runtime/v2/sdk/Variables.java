@@ -21,6 +21,7 @@ package com.walmartlabs.concord.runtime.v2.sdk;
  */
 
 import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -129,6 +130,16 @@ public interface Variables {
     @SuppressWarnings("unchecked")
     default <K, V> Map<K, V> assertMap(String name) {
         return assertVariable(null, name, Map.class);
+    }
+
+    @SuppressWarnings("unchecked")
+    default <T> List<T> getList(String key, List<T> defaultValue) {
+        return get(key, defaultValue, List.class);
+    }
+
+    @SuppressWarnings("unchecked")
+    default <T> List<T> assertList(String key) {
+        return assertVariable(key, List.class);
     }
 
     default <T> T assertVariable(String key, Class<T> type) {

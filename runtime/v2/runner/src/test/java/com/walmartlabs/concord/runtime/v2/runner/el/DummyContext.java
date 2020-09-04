@@ -21,7 +21,6 @@ package com.walmartlabs.concord.runtime.v2.runner.el;
  */
 
 import com.walmartlabs.concord.runtime.v2.model.ProcessConfiguration;
-import com.walmartlabs.concord.runtime.v2.model.ProjectInfo;
 import com.walmartlabs.concord.runtime.v2.sdk.Compiler;
 import com.walmartlabs.concord.runtime.v2.sdk.*;
 
@@ -49,11 +48,6 @@ public class DummyContext implements Context {
 
     @Override
     public Variables defaultVariables() {
-        throw new IllegalStateException("Not implemented");
-    }
-
-    @Override
-    public ProjectInfo projectInfo() {
         throw new IllegalStateException("Not implemented");
     }
 

@@ -71,16 +71,28 @@ public final class ImportsGrammar {
                                     optional("dest", stringVal.map(o::dest))))
                             .map(ImmutableMvnDefinition.Builder::build));
 
+    private static final Parser<Atom, Import.DirectoryDefinition> dirImport =
+            betweenTokens(JsonToken.START_OBJECT, JsonToken.END_OBJECT,
+                    with(ImmutableDirectoryDefinition::builder,
+                            o -> options(
+                                    mandatory("src", stringVal.map(o::src)),
+                                    optional("dest", stringVal.map(o::dest))))
+                            .map(ImmutableDirectoryDefinition.Builder::build));
+
     private static final Parser<Atom, Import.GitDefinition> gitImportVal =
             orError(gitImport, YamlValueType.GIT_IMPORT);
 
     private static final Parser<Atom, Import.MvnDefinition> mvnImportVal =
             orError(mvnImport, YamlValueType.MVN_IMPORT);
 
+    private static final Parser<Atom, Import.DirectoryDefinition> dirImportVal =
+            orError(dirImport, YamlValueType.DIR_IMPORT);
+
     private static final Parser<Atom, Import> importDef =
             betweenTokens(JsonToken.START_OBJECT, JsonToken.END_OBJECT,
                     choice(
                             satisfyField("git", atom -> gitImportVal),
+                            satisfyField("dir", atom -> dirImportVal),
                             choice(satisfyField("mvn", atom -> mvnImportVal),
                                     satisfyToken(JsonToken.FIELD_NAME).bind(a -> {
                                         throw UnknownOptionException.builder()
