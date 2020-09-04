@@ -360,8 +360,9 @@ public class SecretManager {
         }
 
         if (projectName != null && projectName.trim().isEmpty()) {
-            // empty project name is same as null project
+            // empty project name means "remove the project link"
             effectiveProjectId = null;
+            projectName = null;
         }
 
         if (effectiveProjectId != null || projectName != null) {
