@@ -32,6 +32,7 @@ import LogSegmentActivity from './LogSegmentActivity';
 import { ProcessToolbar } from '../../molecules';
 import { Button, Divider, Popup, Radio } from 'semantic-ui-react';
 import { LogProcessorOptions } from '../../../state/data/processes/logs/processors';
+import { useLocation } from "react-router";
 
 const SEGMENT_FETCH_INTERVAL = 5000;
 
@@ -65,6 +66,7 @@ const ProcessLogActivityV2 = ({
 }: ExternalProps) => {
     const [segments, setSegments] = useState<LogSegmentEntry[]>([]);
     const [logOpts, setLogOptions] = useState<LogOptions>(getStoredOpts());
+    const location = useLocation();
 
     const segmentOptsHandler = useCallback((o: LogProcessorOptions) => {
         setLogOptions((prev) => {
@@ -85,9 +87,16 @@ const ProcessLogActivityV2 = ({
         const limit = 30;
         const offset = 0;
         const segments = await apiListLogSegments(instanceId, offset, limit);
+
         setSegments(segments.items);
+
         return !isFinal(processStatus) && processStatus !== ProcessStatus.SUSPENDED;
     }, [instanceId, processStatus]);
+
+    const handleOpen = useCallback((id: number) => {
+        const hashFragment = location.hash.split("#");
+        return !(hashFragment.length > 1 || id !== 0);
+    }, [location]);
 
     const error = usePolling(fetchSegments, SEGMENT_FETCH_INTERVAL, loadingHandler, forceRefresh);
     if (error) {
@@ -169,7 +178,7 @@ const ProcessLogActivityV2 = ({
                             correlationId={s.correlationId}
                             name={s.name}
                             createdAt={s.createdAt}
-                            open={s.id === 0}
+                            open={handleOpen(s.id)}
                             status={s.status}
                             warnings={s.warnings}
                             errors={s.errors}
