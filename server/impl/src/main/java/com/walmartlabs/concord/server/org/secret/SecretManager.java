@@ -269,7 +269,7 @@ public class SecretManager {
     public void update(String orgName, String secretName, SecretUpdateRequest req) {
         SecretEntry e;
 
-        if(req.id() == null) {
+        if (req.id() == null) {
             OrganizationEntry org = orgManager.assertAccess(null, orgName, false);
             e = assertAccess(org.getId(), null, secretName, ResourceAccessLevel.OWNER, true);
         } else {
@@ -748,6 +748,7 @@ public class SecretManager {
         }
 
         if (owner.username() != null) {
+            // TODO don't assume LDAP here
             return userManager.get(owner.username(), owner.userDomain(), UserType.LDAP)
                     .orElseThrow(() -> new ConcordApplicationException("User not found: " + owner.username()));
         }
