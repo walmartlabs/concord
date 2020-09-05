@@ -231,6 +231,8 @@
     </changeSet>
     -->
 
+    <!-- deprecated in 1.64.1+ -->
+    <!--
     <changeSet id="48200" author="ibodrov@gmail.com">
         <addColumn tableName="USERS">
             <column name="IS_ADMIN" type="bool" defaultValueBoolean="false">
@@ -247,6 +249,7 @@
 
         <dropTable tableName="ADMINS"/>
     </changeSet>
+    -->
 
     <changeSet id="48300" author="ybrigo@gmail.com">
         <update tableName="REPOSITORIES">

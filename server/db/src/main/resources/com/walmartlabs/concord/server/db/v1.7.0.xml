@@ -5,10 +5,13 @@
         xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.3.xsd">
 
     <changeSet id="170000" author="ibodrov@gmail.com">
+        <validCheckSum>7:69fe67fac24c2c9585b559c8f7121f31</validCheckSum>
         <insert tableName="ROLES">
             <column name="ROLE_NAME">concordAdmin</column>
         </insert>
 
+        <!-- deprecated in 1.64.1+ -->
+        <!--
         <sql>
             insert into USER_ROLES
                 select
@@ -16,6 +19,7 @@
                     (select ROLE_ID from ROLES where ROLE_NAME = 'concordAdmin')
                 from USERS where is_admin = true
         </sql>
+        -->
     </changeSet>
 
     <!-- disabled to keep the schema backward compatible
