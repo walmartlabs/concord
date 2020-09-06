@@ -28,7 +28,7 @@ import { ConcordId } from '../../../api/common';
 import './styles.css';
 import { formatDistance, parseISO } from 'date-fns';
 import { getStatusSemanticColor, getStatusSemanticIcon, ProcessStatus } from '../../../api/process';
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation } from 'react-router-dom';
 
 interface Props {
     instanceId: ConcordId;
@@ -76,8 +76,8 @@ const LogSegment = ({
     const myRef = useRef<null | HTMLDivElement>(null);
 
     useEffect(() => {
-        if (myRef && location.hash.includes(`#segmentId=${segmentId}`)) {
-            myRef?.current?.scrollIntoView({
+        if (myRef.current && location.hash.includes(`#segmentId=${segmentId}`)) {
+            myRef.current.scrollIntoView({
                 behavior: 'smooth',
                 block: 'end',
                 inline: 'nearest'
@@ -163,7 +163,7 @@ const LogSegment = ({
                     className="AdditionalAction Anchor"
                     data-tooltip="Hyperlink"
                     data-inverted="">
-                        <Icon name="linkify" />
+                    <Icon name="linkify" />
                 </Link>
 
                 <a
