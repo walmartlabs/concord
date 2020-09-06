@@ -24,6 +24,7 @@ import com.walmartlabs.concord.ApiClient;
 import com.walmartlabs.concord.ApiException;
 import com.walmartlabs.concord.client.ProcessEventRequest;
 import com.walmartlabs.concord.client.ProcessEventsApi;
+import com.walmartlabs.concord.common.ConfigurationUtils;
 import com.walmartlabs.concord.runtime.common.ObjectTruncater;
 import com.walmartlabs.concord.runtime.common.injector.InstanceId;
 import com.walmartlabs.concord.runtime.v2.ProcessDefinitionUtils;
@@ -135,18 +136,44 @@ public class TaskCallEventRecordingListener implements TaskCallListener {
         return (Map<String, Object>) v;
     }
 
-    private static Map<String, Object> maskVars(Map<String, Object> vars, Collection<String> blackList) {
+    static Map<String, Object> maskVars(Map<String, Object> vars, Collection<String> blackList) {
         if (blackList.isEmpty()) {
             return vars;
         }
 
         Map<String, Object> result = new HashMap<>(vars);
         for (String b : blackList) {
-            if (result.containsKey(b)) {
-                result.put(b, "***");
+            String[] path = b.split("\\.");
+            if (ConfigurationUtils.has(result, path)) {
+                Map<String, Object> m = ensureModifiable(result, path.length - 1, path);
+                m.put(path[path.length - 1], "***");
             }
         }
         return result;
+    }
+
+    @SuppressWarnings("unchecked")
+    private static Map<String, Object> ensureModifiable(Map<String, Object> m, int depth, String[] path) {
+        if (depth == 0) {
+            return m;
+        }
+
+        for (int i = 0; i < depth; i++) {
+            Object v = m.get(path[i]);
+            if (v == null) {
+                throw new IllegalStateException("Can't find variable at " + path[i]);
+            }
+
+            if (!(v instanceof Map)) {
+                throw new IllegalStateException("Not a map variable at " + path[i]);
+            }
+
+            Map<String, Object> modifiable = new HashMap<>((Map<String, Object>) v);
+            m.put(path[i], modifiable);
+            m = modifiable;
+        }
+
+        return m;
     }
 
     private static Map<String, Object> convertInput(List<Object> input) {
