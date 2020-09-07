@@ -38,8 +38,8 @@ import com.walmartlabs.concord.agent.logging.ProcessLog;
 import com.walmartlabs.concord.agent.logging.ProcessLogFactory;
 import com.walmartlabs.concord.agent.remote.AttachmentsUploader;
 import com.walmartlabs.concord.common.IOUtils;
+import com.walmartlabs.concord.common.Posix;
 import com.walmartlabs.concord.dependencymanager.DependencyEntity;
-import com.walmartlabs.concord.dependencymanager.DependencyManager;
 import com.walmartlabs.concord.policyengine.CheckResult;
 import com.walmartlabs.concord.policyengine.DependencyRule;
 import com.walmartlabs.concord.policyengine.PolicyEngine;
@@ -50,6 +50,7 @@ import org.immutables.value.Value;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.annotation.Nullable;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
@@ -65,6 +66,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static com.walmartlabs.concord.common.DockerProcessBuilder.CONCORD_DOCKER_LOCAL_MODE_KEY;
+
 /**
  * Executes jobs using concord-runner runtime.
  */
@@ -150,6 +152,7 @@ public class RunnerJobExecutor implements JobExecutor {
 
                 throw new RuntimeException(t);
             } finally {
+                persistWorkDir(_job.getInstanceId(), pe.getProcDir());
                 cleanup(_job.getInstanceId(), pe);
                 cleanup(_job);
             }
@@ -158,6 +161,47 @@ public class RunnerJobExecutor implements JobExecutor {
         // return a handle that can be used to cancel the process or wait for its completion
         return new JobInstanceImpl(f, pe.getProcess());
     }
+
+    private void persistWorkDir(UUID instanceId, Path src) {
+        Path persistentWorkDir = cfg.persistentWorkDir();
+
+        if (persistentWorkDir == null) {
+            return;
+        }
+
+        Path dst = persistentWorkDir.resolve(instanceId.toString());
+
+        try {
+            if (!Files.exists(dst)) {
+                Files.createDirectories(dst);
+            }
+
+            log.info("exec ['{}'] -> persisting the payload directory into {}...", instanceId, dst);
+            IOUtils.copy(src, dst);
+
+            // persistentWorkDir is mostly useful when the Agent is running in a container
+            // typically it is running as PID 456 - all files created by the process
+            // are created using PID 456 and won't be readable by the host user
+
+            // therefore, we need to make all files readable by all users
+            // and that's why runner.persistentWorkDir shouldn't be used in prod
+
+            Files.walk(dst).forEach(f -> {
+                try {
+                    if (Files.isDirectory(f)) {
+                        Files.setPosixFilePermissions(f, Posix.posix(0755));
+                    } else if (Files.isRegularFile(f)) {
+                        Files.setPosixFilePermissions(f, Posix.posix(0644));
+                    }
+                } catch (IOException e) {
+                    log.warn("persistWorkDir -> can't update permissions for {}: {}", f, e.getMessage());
+                }
+            });
+        } catch (IOException e) {
+            log.warn("persistWorkDir -> failed to copy {} into {}: {}", src, dst, e.getMessage());
+        }
+    }
+
 
     private void uploadAttachments(UUID instanceId, ProcessEntry pe) {
         Path payloadDir = pe.getProcDir().resolve(Constants.Files.PAYLOAD_DIR_NAME);
@@ -615,6 +659,9 @@ public class RunnerJobExecutor implements JobExecutor {
         }
 
         long maxHeartbeatInterval();
+
+        @Nullable
+        Path persistentWorkDir();
 
         static ImmutableRunnerJobExecutorConfiguration.Builder builder() {
             return ImmutableRunnerJobExecutorConfiguration.builder();
