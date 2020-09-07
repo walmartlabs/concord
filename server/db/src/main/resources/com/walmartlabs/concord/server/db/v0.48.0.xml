@@ -231,7 +231,7 @@
     </changeSet>
     -->
 
-    <!-- deprecated in 1.64.1+ -->
+    <!-- deprecated in 1.65.0+ -->
     <!--
     <changeSet id="48200" author="ibodrov@gmail.com">
         <addColumn tableName="USERS">

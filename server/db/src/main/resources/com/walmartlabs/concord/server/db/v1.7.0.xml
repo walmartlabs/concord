@@ -10,7 +10,7 @@
             <column name="ROLE_NAME">concordAdmin</column>
         </insert>
 
-        <!-- deprecated in 1.64.1+ -->
+        <!-- deprecated in 1.65.0+ -->
         <!--
         <sql>
             insert into USER_ROLES
