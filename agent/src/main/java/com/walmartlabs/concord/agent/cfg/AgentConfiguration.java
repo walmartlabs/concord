@@ -32,7 +32,7 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
-import static com.walmartlabs.concord.agent.cfg.Utils.getDir;
+import static com.walmartlabs.concord.agent.cfg.Utils.getOrCreatePath;
 import static com.walmartlabs.concord.agent.cfg.Utils.getStringOrDefault;
 
 @Named
@@ -63,11 +63,11 @@ public class AgentConfiguration {
         this.capabilities = cfg.hasPath("capabilities") ? cfg.getObject("capabilities").unwrapped() : null;
         log.info("Using the capabilities: {}", this.capabilities);
 
-        this.dependencyCacheDir = getDir(cfg, "dependencyCacheDir");
-        this.dependencyListsDir = getDir(cfg, "dependencyListsDir");
-        this.payloadDir = getDir(cfg, "payloadDir");
+        this.dependencyCacheDir = getOrCreatePath(cfg, "dependencyCacheDir");
+        this.dependencyListsDir = getOrCreatePath(cfg, "dependencyListsDir");
+        this.payloadDir = getOrCreatePath(cfg, "payloadDir");
 
-        this.logDir = getDir(cfg, "logDir");
+        this.logDir = getOrCreatePath(cfg, "logDir");
         this.logMaxDelay = cfg.getDuration("logMaxDelay", TimeUnit.MILLISECONDS);
 
         this.workersCount = cfg.getInt("workersCount");
