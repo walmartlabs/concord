@@ -269,7 +269,7 @@ public class SecretManager {
     public void update(String orgName, String secretName, SecretUpdateRequest req) {
         SecretEntry e;
 
-        if(req.id() == null) {
+        if (req.id() == null) {
             OrganizationEntry org = orgManager.assertAccess(null, orgName, false);
             e = assertAccess(org.getId(), null, secretName, ResourceAccessLevel.OWNER, true);
         } else {
@@ -362,6 +362,7 @@ public class SecretManager {
         if (projectName != null && projectName.trim().isEmpty()) {
             // empty project name is same as null project
             effectiveProjectId = null;
+            projectName = null;
         }
 
         if (effectiveProjectId != null || projectName != null) {
