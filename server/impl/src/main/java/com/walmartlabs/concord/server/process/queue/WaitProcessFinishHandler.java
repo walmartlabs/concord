@@ -30,6 +30,8 @@ import com.walmartlabs.concord.server.sdk.ConcordApplicationException;
 import com.walmartlabs.concord.server.sdk.PartialProcessKey;
 import com.walmartlabs.concord.server.sdk.ProcessStatus;
 import org.jooq.Configuration;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -46,6 +48,8 @@ import static com.walmartlabs.concord.server.process.queue.ProcessCompletionCond
 @Named
 @Singleton
 public class WaitProcessFinishHandler implements ProcessWaitHandler<ProcessCompletionCondition> {
+
+    private static final Logger log = LoggerFactory.getLogger(WaitProcessFinishHandler.class);
 
     private final Set<ProcessStatus> STATUSES = new HashSet<>(Arrays.asList(ProcessStatus.ENQUEUED, ProcessStatus.SUSPENDED));
 
@@ -106,6 +110,7 @@ public class WaitProcessFinishHandler implements ProcessWaitHandler<ProcessCompl
         }
 
         processManager.resume(payload);
+        log.info("resumeProcess ['{}', '{}'] -> done", instanceId, eventName);
     }
 
     private static boolean isCompleted(CompleteCondition condition, Set<UUID> awaitProcesses, Set<UUID> finishedProcesses) {

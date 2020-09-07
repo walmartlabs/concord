@@ -26,8 +26,7 @@ import com.walmartlabs.concord.sdk.Constants;
 import com.walmartlabs.concord.server.process.Payload;
 import com.walmartlabs.concord.server.process.PayloadManager;
 import com.walmartlabs.concord.server.process.ProcessException;
-import com.walmartlabs.concord.server.process.pipelines.ResumePipeline;
-import com.walmartlabs.concord.server.process.pipelines.processors.Chain;
+import com.walmartlabs.concord.server.process.ProcessManager;
 import com.walmartlabs.concord.server.process.queue.ProcessKeyCache;
 import com.walmartlabs.concord.server.process.state.ProcessStateManager;
 import com.walmartlabs.concord.server.sdk.PartialProcessKey;
@@ -52,15 +51,16 @@ public class FormServiceV2 {
     private final ProcessStateManager stateManager;
     private final UserManager userManager;
     private final FormAccessManager formAccessManager;
-    private final Chain resumePipeline;
+    private final ProcessManager processManager;
     private final FormManager formManager;
     private final ProcessKeyCache processKeyCache;
 
     @Inject
     public FormServiceV2(PayloadManager payloadManager,
                          ProcessStateManager stateManager,
-                         UserManager userManager, FormAccessManager formAccessManager,
-                         ResumePipeline resumePipeline,
+                         UserManager userManager,
+                         FormAccessManager formAccessManager,
+                         ProcessManager processManager,
                          FormManager formManager,
                          ProcessKeyCache processKeyCache) {
 
@@ -68,7 +68,7 @@ public class FormServiceV2 {
         this.stateManager = stateManager;
         this.userManager = userManager;
         this.formAccessManager = formAccessManager;
-        this.resumePipeline = resumePipeline;
+        this.processManager = processManager;
         this.formManager = formManager;
         this.processKeyCache = processKeyCache;
     }
@@ -178,6 +178,6 @@ public class FormServiceV2 {
             throw new RuntimeException("Error while creating a payload for: " + processKey, e);
         }
 
-        resumePipeline.process(payload);
+        processManager.resume(payload);
     }
 }
