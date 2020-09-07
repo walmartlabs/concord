@@ -126,6 +126,9 @@ public class GithubTriggerV2Processor implements GithubTriggerProcessor {
         result.put(STATUS_KEY, payload.getAction());
         result.put(PAYLOAD_KEY, payload.raw());
 
+        // files
+        result.put(FILES_KEY, payload.getFiles());
+
         // match only with v2 triggers
         result.put(VERSION_KEY, VERSION_ID);
 
