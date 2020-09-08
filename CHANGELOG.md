@@ -12,6 +12,8 @@ directory after the process ends;
 
 ### Changed
 
+- concord-server: `USERS.IS_ADMIN` column is deprecated and
+its usage has been removed from the code;
 - runtime-v2: working process checkpoints support.
 
 
