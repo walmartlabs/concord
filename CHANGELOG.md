@@ -4,6 +4,8 @@
 
 ### Added
 
+- runtime-v2: support nested variables in
+`configuration.events.inVarsBlacklist`/`outVarsBlacklist`;
 - concord-agent: option to keep the workDir in a configured
 directory after the process ends;
 - concord-console: allow changing owners of secrets;
