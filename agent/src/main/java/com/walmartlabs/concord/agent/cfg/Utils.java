@@ -38,7 +38,24 @@ public final class Utils {
         return defaultValueSupplier.get();
     }
 
-    public static Path getDir(Config cfg, String key) {
+    public static Path getOptionalAbsolutePath(Config cfg, String key) {
+        if (!cfg.hasPath(key)) {
+            return null;
+        }
+
+        String s = cfg.getString(key).trim();
+        if (s.isEmpty()) {
+            return null;
+        }
+
+        if (!s.startsWith("/")) {
+            throw new IllegalArgumentException(key + " must be an absolute path, got: " + s);
+        }
+
+        return Paths.get(s);
+    }
+
+    public static Path getOrCreatePath(Config cfg, String key) {
         try {
             if (!cfg.hasPath(key)) {
                 return IOUtils.createTempDir(key);

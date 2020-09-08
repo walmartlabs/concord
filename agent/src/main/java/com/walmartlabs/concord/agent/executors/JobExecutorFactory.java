@@ -120,6 +120,7 @@ public class JobExecutorFactory {
                     .maxHeartbeatInterval(serverCfg.getMaxNoHeartbeatInterval())
                     .segmentedLogs(segmentedLogs)
                     .logDir(agentCfg.getLogDir())
+                    .persistentWorkDir(runnerCfg.getPersistentWorkDir())
                     .build();
 
             JobExecutor delegate = new RunnerJobExecutor(runnerExecutorCfg, dependencyManager, defaultDependencies, attachmentsUploader, processPool, processLogFactory, executor);

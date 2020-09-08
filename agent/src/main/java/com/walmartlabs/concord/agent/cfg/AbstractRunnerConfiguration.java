@@ -28,8 +28,7 @@ import java.nio.file.Paths;
 import java.util.List;
 import java.util.Properties;
 
-import static com.walmartlabs.concord.agent.cfg.Utils.getDir;
-import static com.walmartlabs.concord.agent.cfg.Utils.getStringOrDefault;
+import static com.walmartlabs.concord.agent.cfg.Utils.*;
 
 public abstract class AbstractRunnerConfiguration {
 
@@ -39,6 +38,7 @@ public abstract class AbstractRunnerConfiguration {
     private final List<String> jvmParams;
     private final String mainClass;
     private final boolean securityManagerEnabled;
+    private final Path persistentWorkDir;
 
     public AbstractRunnerConfiguration(String prefix, Config cfg) {
         String path = getStringOrDefault(cfg, prefix + ".path", () -> {
@@ -52,11 +52,12 @@ public abstract class AbstractRunnerConfiguration {
         });
 
         this.path = Paths.get(path);
-        this.cfgDir = getDir(cfg, prefix + ".cfgDir");
+        this.cfgDir = getOrCreatePath(cfg, prefix + ".cfgDir");
         this.javaCmd = getJavaCmd(cfg, prefix);
         this.jvmParams = cfg.getStringList(prefix + ".jvmParams");
         this.mainClass = cfg.getString(prefix + ".mainClass");
         this.securityManagerEnabled = cfg.getBoolean(prefix + ".securityManagerEnabled");
+        this.persistentWorkDir = getOptionalAbsolutePath(cfg, prefix + ".persistentWorkDir");
     }
 
     public Path getPath() {
@@ -84,6 +85,10 @@ public abstract class AbstractRunnerConfiguration {
     }
 
     public abstract String getRuntimeName();
+
+    public Path getPersistentWorkDir() {
+        return persistentWorkDir;
+    }
 
     private static String getJavaCmd(Config cfg, String prefix) {
         String path = prefix + ".javaCmd";
