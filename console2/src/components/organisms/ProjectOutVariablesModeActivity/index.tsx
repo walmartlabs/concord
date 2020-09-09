@@ -33,7 +33,7 @@ export interface Props {
 const getDescription = (m: OutVariablesMode): string => {
     switch (m) {
         case OutVariablesMode.DISABLED:
-            return 'Sending custom out variable names is disabled. Only variables defined in concord.yml can be used to get out variables.';
+            return 'Sending custom out variable names is disabled. Only out variables defined in concord.yml can be used.';
         case OutVariablesMode.OWNERS:
             return "Only the project's owner and team members with OWNER privileges can specify custom out variable names.";
         case OutVariablesMode.TEAM_MEMBERS:
