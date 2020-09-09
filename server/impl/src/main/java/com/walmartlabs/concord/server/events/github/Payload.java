@@ -25,6 +25,8 @@ import com.walmartlabs.concord.sdk.MapUtils;
 
 import java.net.URI;
 import java.util.*;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static com.walmartlabs.concord.server.events.github.Constants.*;
 
@@ -142,6 +144,26 @@ public class Payload {
             default:
                 return null;
         }
+    }
+
+    public Map<String, List<String>> getFiles() {
+        if (!eventName.toLowerCase().equals(PUSH_EVENT)) {
+            return Collections.emptyMap();
+        }
+
+        List<Map<String, Object>> commits = MapUtils.getList(data, "commits", Collections.emptyList());
+        Map<String, List<String>> files = new HashMap<>();
+        for (Map<String, Object> c : commits) {
+            appendList(c, "added", files);
+            appendList(c, "removed", files);
+            appendList(c, "modified", files);
+        }
+        return files;
+    }
+
+    private static void appendList(Map<String, Object> c, String name, Map<String, List<String>> result) {
+        List<String> value = MapUtils.getList(c, name, Collections.emptyList());
+        result.compute(name, (k, v) -> (v == null) ? value : Stream.concat(v.stream(), value.stream()).collect(Collectors.toList()));
     }
 
     public String getSender() {
