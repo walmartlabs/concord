@@ -35,6 +35,7 @@ import com.walmartlabs.concord.runtime.v2.model.Step;
 import com.walmartlabs.concord.runtime.v2.runner.tasks.TaskCallEvent;
 import com.walmartlabs.concord.runtime.v2.runner.tasks.TaskCallListener;
 import com.walmartlabs.concord.runtime.v2.sdk.Context;
+import com.walmartlabs.concord.runtime.v2.sdk.TaskResult;
 import com.walmartlabs.concord.runtime.v2.sdk.Variables;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -65,8 +66,9 @@ public class TaskCallEventRecordingListener implements TaskCallListener {
 
         m.put("phase", event.phase().name().toLowerCase());
 
-        if (event.input() != null && eventConfiguration.recordTaskInVars()) {
-            Map<String, Object> vars = maskVars(convertInput(event.input()), eventConfiguration.inVarsBlacklist());
+        List<Object> inVars = event.input();
+        if (inVars != null && eventConfiguration.recordTaskInVars()) {
+            Map<String, Object> vars = maskVars(convertInput(inVars), eventConfiguration.inVarsBlacklist());
             if (eventConfiguration.truncateInVars()) {
                 vars = ObjectTruncater.truncateMap(vars, eventConfiguration.truncateMaxStringLength(), eventConfiguration.truncateMaxArrayLength(), eventConfiguration.truncateMaxDepth());
             }
@@ -75,9 +77,9 @@ public class TaskCallEventRecordingListener implements TaskCallListener {
             }
         }
 
-        Map<String, Object> outVars = asMapOrNull(event.out());
+        Object outVars = event.result();
         if (outVars != null && eventConfiguration.recordTaskOutVars()) {
-            Map<String, Object> vars = maskVars(outVars, eventConfiguration.outVarsBlacklist());
+            Map<String, Object> vars = maskVars(asMapOrNull(outVars), eventConfiguration.outVarsBlacklist());
             if (eventConfiguration.truncateOutVars()) {
                 vars = ObjectTruncater.truncateMap(vars, eventConfiguration.truncateMaxStringLength(), eventConfiguration.truncateMaxArrayLength(), eventConfiguration.truncateMaxDepth());
             }
@@ -128,12 +130,16 @@ public class TaskCallEventRecordingListener implements TaskCallListener {
     }
 
     @SuppressWarnings("unchecked")
-    private static Map<String, Object> asMapOrNull(Object v) {
-        if (!(v instanceof Map)) {
-            return null;
+    private Map<String, Object> asMapOrNull(Object v) {
+        if (v instanceof TaskResult) {
+            return ((TaskResult) v).toMap();
         }
 
-        return (Map<String, Object>) v;
+        if (v instanceof Map) {
+            return (Map<String, Object>) v;
+        }
+
+        return null;
     }
 
     static Map<String, Object> maskVars(Map<String, Object> vars, Collection<String> blackList) {
