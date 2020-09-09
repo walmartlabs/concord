@@ -360,7 +360,7 @@ public class SecretManager {
         }
 
         if (projectName != null && projectName.trim().isEmpty()) {
-            // empty project name is same as null project
+            // empty project name means "remove the project link"
             effectiveProjectId = null;
             projectName = null;
         }
@@ -749,6 +749,7 @@ public class SecretManager {
         }
 
         if (owner.username() != null) {
+            // TODO don't assume LDAP here
             return userManager.get(owner.username(), owner.userDomain(), UserType.LDAP)
                     .orElseThrow(() -> new ConcordApplicationException("User not found: " + owner.username()));
         }

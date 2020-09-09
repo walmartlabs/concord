@@ -23,15 +23,12 @@ package com.walmartlabs.concord.it.server;
 import com.walmartlabs.concord.client.*;
 import org.junit.Test;
 
-import javax.naming.directory.DirContext;
-
-import static com.walmartlabs.concord.it.server.GitHubTriggersV2IT.createLdapUser;
 import static org.junit.Assert.assertNotNull;
 
 public class SecretIT extends AbstractServerIT {
 
     @Test(timeout = DEFAULT_TEST_TIMEOUT)
-    public void testPublicKey() throws Exception {
+    public void testOwnerChange() throws Exception {
         String orgName = "org_" + randomString();
 
         OrganizationsApi orgApi = new OrganizationsApi(getApiClient());
@@ -53,19 +50,15 @@ public class SecretIT extends AbstractServerIT {
         // ---
 
         String userName = "myUser_" + randomString();
-        DirContext ldapCtx = LdapIT.createContext();
-        createLdapUser(ldapCtx, userName);
 
         UsersApi usersApi = new UsersApi(getApiClient());
-        usersApi.createOrUpdate(new CreateUserRequest()
+        CreateUserResponse cur = usersApi.createOrUpdate(new CreateUserRequest()
                 .setUsername(userName)
-                .setType(CreateUserRequest.TypeEnum.LDAP));
+                .setType(CreateUserRequest.TypeEnum.LOCAL));
 
         SecretsApi secretsApi = new SecretsApi(getApiClient());
         SecretUpdateRequest req = new SecretUpdateRequest();
-        req.setOwner(new EntityOwner()
-                .setUsername(userName)
-        );
+        req.setOwner(new EntityOwner().setId(cur.getId()));
         secretsApi.update(orgName, secretName, req);
 
         PublicKeyResponse pkr = secretsApi.getPublicKey(orgName, secretName);
@@ -78,6 +71,5 @@ public class SecretIT extends AbstractServerIT {
         secretsApi.delete(orgName, secretName);
         projectsApi.delete(orgName, projectName);
         orgApi.delete(orgName, "yes");
-
     }
 }
