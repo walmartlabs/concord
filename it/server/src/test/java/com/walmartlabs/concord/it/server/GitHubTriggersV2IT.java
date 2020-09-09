@@ -181,6 +181,35 @@ public class GitHubTriggersV2IT extends AbstractGitHubTriggersIT {
         deleteOrg(orgXName);
     }
 
+    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    public void testOnPushWithFiles() throws Exception {
+        OrganizationsApi orgApi = new OrganizationsApi(getApiClient());
+
+        String orgXName = "orgX_" + randomString();
+        orgApi.createOrUpdate(new OrganizationEntry().setName(orgXName));
+
+        // Project A
+        // master branch + a default trigger
+        String projectAName = "projectA_" + randomString();
+        String repoAName = "repoA_" + randomString();
+        initProjectAndRepo(orgXName, projectAName, repoAName, null, initRepo("githubTests/repos/v2/files"));
+        refreshRepo(orgXName, projectAName, repoAName);
+
+        // ---
+
+        sendEvent("githubTests/events/direct_branch_push.json", "push",
+                "_FULL_REPO_NAME", "devtools/concord",
+                "_REF", "refs/heads/master",
+                "_USER_LDAP_DN", "");
+
+        // A's trigger should be activated
+        waitForAProcess(orgXName, projectAName, "github", null);
+
+        // ---
+
+        deleteOrg(orgXName);
+    }
+
     /**
      * Verify that the "requestInfo" variable is available for GitHub processes
      * (should be empty).
