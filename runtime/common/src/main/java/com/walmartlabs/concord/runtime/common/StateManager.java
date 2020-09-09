@@ -60,7 +60,7 @@ public final class StateManager {
         Path marker = stateDir.resolve(SUSPEND_MARKER);
         Files.write(marker, eventNames);
 
-        saveState(baseDir, state);
+        saveProcessState(baseDir, state);
     }
 
     public static void cleanupState(Path baseDir) throws IOException {
@@ -104,24 +104,50 @@ public final class StateManager {
         }
     }
 
-    public static <T> T readState(Path baseDir, Class<T> type) {
+    /**
+     * Reads a serialized process state object from
+     * the standard location inside the provided {@code baseDir}.
+     */
+    @SuppressWarnings("unchecked")
+    public static <T extends Serializable> T readProcessState(Path baseDir) {
         Path stateDir = baseDir.resolve(Constants.Files.JOB_ATTACHMENTS_DIR_NAME)
                 .resolve(Constants.Files.JOB_STATE_DIR_NAME);
 
         Path p = stateDir.resolve("instance");
         if (Files.notExists(p)) {
-            throw new IllegalStateException("Can't read the state file. File not found: " + p);
+            return null;
         }
 
         try (ObjectInputStream in = new ObjectInputStream(Files.newInputStream(p))) {
-            return type.cast(in.readObject());
+            return (T) in.readObject();
         } catch (ClassNotFoundException | IOException e) {
             throw new RuntimeException(e);
         }
     }
 
+    /**
+     * Serializes the specified process state object into a file
+     * in the standard location inside the provided {@code baseDir}.
+     */
+    public static void saveProcessState(Path baseDir, Serializable state) throws IOException {
+        Path stateDir = baseDir.resolve(Constants.Files.JOB_ATTACHMENTS_DIR_NAME)
+                .resolve(Constants.Files.JOB_STATE_DIR_NAME);
+
+        if (Files.notExists(stateDir)) {
+            Files.createDirectories(stateDir);
+        }
+
+        Path dst = stateDir.resolve("instance");
+
+        Path tmp = IOUtils.createTempFile("instance", "state");
+        try (OutputStream out = Files.newOutputStream(tmp)) {
+            SerializationUtils.serialize(out, state);
+        }
+        Files.move(tmp, dst, REPLACE_EXISTING);
+    }
+
     public static void archive(Path baseDir, Serializable state, Path result) throws IOException {
-        saveState(baseDir, state);
+        saveProcessState(baseDir, state);
 
         try (ZipArchiveOutputStream zip = new ZipArchiveOutputStream(Files.newOutputStream(result))) {
             zip(zip, Constants.Files.JOB_ATTACHMENTS_DIR_NAME + "/", baseDir.resolve(Constants.Files.JOB_ATTACHMENTS_DIR_NAME));
@@ -164,23 +190,6 @@ public final class StateManager {
             return;
         }
         IOUtils.zip(zip, name, src);
-    }
-
-    private static void saveState(Path baseDir, Serializable state) throws IOException {
-        Path stateDir = baseDir.resolve(Constants.Files.JOB_ATTACHMENTS_DIR_NAME)
-                .resolve(Constants.Files.JOB_STATE_DIR_NAME);
-
-        if (Files.notExists(stateDir)) {
-            Files.createDirectories(stateDir);
-        }
-
-        Path dst = stateDir.resolve("instance");
-
-        Path tmp = IOUtils.createTempFile("instance", "state");
-        try (OutputStream out = Files.newOutputStream(tmp)) {
-            SerializationUtils.serialize(out, state);
-        }
-        Files.move(tmp, dst, REPLACE_EXISTING);
     }
 
     private StateManager() {

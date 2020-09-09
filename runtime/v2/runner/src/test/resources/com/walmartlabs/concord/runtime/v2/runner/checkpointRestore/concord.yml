@@ -1,0 +1,19 @@
+flows:
+  default:
+    - log: "#1 ${aVar}" # {x=123}
+
+    - checkpoint: "first"
+
+    - set:
+        aVar.y: 234
+
+    - log: "#2 ${aVar}" # {x=123, y=234}
+
+    - checkpoint: "second"
+
+    - set:
+        aVar.y: 345
+
+    - expr: "${aVar.x = aVar.x + 1}"
+
+    - log: "#3 ${aVar}" # {x=123, y=345}
