@@ -1,5 +1,14 @@
 # Change log
 
+## [Unreleased]
+
+## Added
+
+- runtime-v2, concord-console: record and display task
+results (as in `configuration.events.recordTaskOutVars`).
+
+
+
 ## [1.65.0] - 2020-09-09
 
 ### Added
