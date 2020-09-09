@@ -116,7 +116,7 @@ public class Main {
 
         String segmentedLogDir = runnerCfg.logging().segmentedLogDir();
         if (segmentedLogDir != null) {
-            LoggingConfigurator.configure(assertNotNull(processCfg.instanceId()), segmentedLogDir);
+            LoggingConfigurator.configure(Objects.requireNonNull(processCfg.instanceId()), segmentedLogDir);
         }
 
         if (processCfg.debug()) {
@@ -167,7 +167,7 @@ public class Main {
         Map<String, Object> m = new LinkedHashMap<>(cfg.arguments());
 
         // save the current process ID as an argument, flows and plugins expect it to be a string value
-        m.put(Constants.Context.TX_ID_KEY, assertNotNull(cfg.instanceId()).toString());
+        m.put(Constants.Context.TX_ID_KEY, Objects.requireNonNull(cfg.instanceId()).toString());
 
         m.put(Constants.Context.WORK_DIR_KEY, workDir.getValue().toAbsolutePath().toString());
 
@@ -234,11 +234,6 @@ public class Main {
         }
 
         return events;
-    }
-
-    private static <T> T assertNotNull(T object) {
-        assert object != null;
-        return object;
     }
 
     private static Mode currentMode(ProcessSnapshot snapshot, Set<String> events) {
