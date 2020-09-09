@@ -112,7 +112,7 @@ public class ProjectManager {
             }
 
             UUID pId = projectDao.insert(tx, orgId, entry.getName(), entry.getDescription(), owner.getId(), entry.getCfg(),
-                    entry.getVisibility(), rawPayloadMode, encryptedKey, entry.getMeta());
+                    entry.getVisibility(), rawPayloadMode, encryptedKey, entry.getMeta(), entry.getOutVariablesMode());
 
             if (repos != null) {
                 repos.forEach((k, v) -> projectRepositoryManager.insert(tx, orgId, orgName, pId, entry.getName(), v, false));
@@ -178,7 +178,7 @@ public class ProjectManager {
              }
 
             projectDao.update(tx, orgIdUpdate, projectId, entry.getVisibility(), entry.getName(),
-                    entry.getDescription(), entry.getCfg(), rawPayloadMode, updatedOwnerId, entry.getMeta());
+                    entry.getDescription(), entry.getCfg(), rawPayloadMode, updatedOwnerId, entry.getMeta(), entry.getOutVariablesMode());
 
             if (repos != null) {
                 repositoryDao.deleteAll(tx, projectId);

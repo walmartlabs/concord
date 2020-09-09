@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.3.xsd">
+
+    <changeSet id="1650000" author="ybrigo@gmail.com">
+        <sql>
+            create type out_variables_mode as enum ('DISABLED', 'OWNERS', 'TEAM_MEMBERS', 'ORG_MEMBERS', 'EVERYONE')
+        </sql>
+
+        <addColumn tableName="PROJECTS">
+            <column name="OUT_VARIABLES_MODE" type="out_variables_mode" defaultValue="DISABLED">
+                <constraints nullable="false"/>
+            </column>
+        </addColumn>
+    </changeSet>
+</databaseChangeLog>
