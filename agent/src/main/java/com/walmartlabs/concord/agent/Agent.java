@@ -40,6 +40,7 @@ import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Map;
 import java.util.UUID;
@@ -124,7 +125,7 @@ public class Agent {
             try {
                 jobRequest = take(queueClient);
             } catch (Exception e) {
-                log.warn("run -> error while fetching a job: {}", e.getMessage());
+                log.error("run -> error while fetching a job: {}", e.getMessage(), e);
 
                 workersAvailable.release();
 

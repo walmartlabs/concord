@@ -142,7 +142,9 @@ public class ProcessManager {
     }
 
     public void resume(Payload payload) {
+        log.info("resume ['{}']", payload.getProcessKey());
         resumePipeline.process(payload);
+        log.info("resume ['{}'] -> done", payload.getProcessKey());
     }
 
     public void disable(ProcessKey processKey, boolean disabled) {
@@ -295,7 +297,7 @@ public class ProcessManager {
         ProcessKey processKey = payload.getProcessKey();
 
         try {
-            payload = pipeline.process(payload);
+            pipeline.process(payload);
         } catch (ProcessException e) {
             throw e;
         } catch (Exception e) {

@@ -80,10 +80,12 @@ public class MainTest {
     private ProcessConfiguration processConfiguration;
 
     private ProcessStatusCallback processStatusCallback;
-    private CheckpointService checkpointService;
     private Module testServices;
 
+    private TestCheckpointService checkpointService;
+
     private byte[] lastLog;
+    private byte[] allLogs;
 
     private Path segmentedLogDir;
 
@@ -100,7 +102,8 @@ public class MainTest {
         formService = new FormService(formsDir);
 
         processStatusCallback = mock(ProcessStatusCallback.class);
-        checkpointService = mock(CheckpointService.class);
+
+        checkpointService = spy(new TestCheckpointService());
 
         testServices = new AbstractModule() {
             @Override
@@ -128,6 +131,8 @@ public class MainTest {
         };
 
         segmentedLogDir = Files.createTempDirectory("segmentedLog");
+
+        allLogs = null;
     }
 
     @After
@@ -731,6 +736,30 @@ public class MainTest {
         verify(checkpointService, times(1)).create(eq("test_123"), any(Runtime.class), any(ProcessSnapshot.class));
     }
 
+    @Test
+    public void testCheckpointRestore() throws Exception {
+        deploy("checkpointRestore");
+
+        save(ProcessConfiguration.builder()
+                .putArguments("aVar", Collections.singletonMap("x", 123))
+                .build());
+
+        run();
+
+        verify(checkpointService, times(1)).create(eq("first"), any(Runtime.class), any(ProcessSnapshot.class));
+        verify(checkpointService, times(1)).create(eq("second"), any(Runtime.class), any(ProcessSnapshot.class));
+
+        Serializable firstCheckpoint = checkpointService.getCheckpoints().get("first");
+        assertNotNull(firstCheckpoint);
+
+        StateManager.saveProcessState(workDir, firstCheckpoint);
+
+        run();
+
+        assertLogAtLeast(allLogs, 2, ".*#3.*x=124.*");
+        assertLogAtLeast(allLogs, 2, ".*#3.*y=345.*");
+    }
+
     private void deploy(String resource) throws URISyntaxException, IOException {
         Path src = Paths.get(MainTest.class.getResource(resource).toURI());
         IOUtils.copy(src, workDir);
@@ -770,8 +799,8 @@ public class MainTest {
 
         PrintStream oldOut = System.out;
 
-        ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        PrintStream out = new PrintStream(baos);
+        ByteArrayOutputStream logStream = new ByteArrayOutputStream();
+        PrintStream out = new PrintStream(logStream);
         System.setOut(out);
 
         AbstractModule runtimeModule = new AbstractModule() {
@@ -794,13 +823,33 @@ public class MainTest {
             out.flush();
             System.setOut(oldOut);
 
-            log = baos.toByteArray();
+            log = logStream.toByteArray();
             System.out.write(log, 0, log.length);
 
             lastLog = log;
         }
 
+        if (allLogs == null) {
+            allLogs = log;
+        } else {
+            // append the current log to allLogs
+            ByteArrayOutputStream baos = new ByteArrayOutputStream(allLogs.length + log.length);
+            baos.write(allLogs);
+            baos.write(log);
+            allLogs = baos.toByteArray();
+        }
+
         return log;
+    }
+
+    private static void assertLogAtLeast(byte[] ab, int n, String pattern) throws IOException {
+        if (ab == null) {
+            fail("Log is empty");
+        }
+
+        if (grep(ab, pattern) < n) {
+            fail("Expected at least " + n + " log line(s): " + pattern + ", got: \n" + new String(ab));
+        }
     }
 
     private static void assertLog(byte[] ab, String pattern) throws IOException {
@@ -809,13 +858,13 @@ public class MainTest {
         }
 
         if (grep(ab, pattern) != 1) {
-            fail("Expected a single log entry: " + pattern + ", got: \n" + new String(ab));
+            fail("Expected a single log line: " + pattern + ", got: \n" + new String(ab));
         }
     }
 
     private static void assertNoLog(byte[] ab, String pattern) throws IOException {
         if (grep(ab, pattern) > 0) {
-            fail("Expected no log entries like this: " + pattern + ", got: \n" + new String(ab));
+            fail("Expected no log lines like this: " + pattern + ", got: \n" + new String(ab));
         }
     }
 
