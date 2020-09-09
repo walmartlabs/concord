@@ -4,6 +4,8 @@
 
 ### Added
 
+- concord-server: support for added/removed/modified `files`
+in GitHub push trigger conditions;
 - runtime-v2: support nested variables in
 `configuration.events.inVarsBlacklist`/`outVarsBlacklist`;
 - concord-agent: option to keep the workDir in a configured
