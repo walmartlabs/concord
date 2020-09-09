@@ -4,6 +4,8 @@
 
 ### Added
 
+- concord-console: hyperlinks to individual log segments so
+users can share/access a segment instead of scrolling;
 - concord-server: support for added/removed/modified `files`
 in GitHub push trigger conditions;
 - runtime-v2: support nested variables in
@@ -14,6 +16,8 @@ directory after the process ends;
 
 ### Changed
 
+- concord-console: keep the "system" segment open by default
+so users can see overall progress;
 - concord-server: `USERS.IS_ADMIN` column is deprecated and
 its usage has been removed from the code;
 - runtime-v2: working process checkpoints support.
