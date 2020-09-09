@@ -28,6 +28,7 @@ import { ConcordId } from '../../../api/common';
 import './styles.css';
 import { formatDistance, parseISO } from 'date-fns';
 import { getStatusSemanticColor, getStatusSemanticIcon, ProcessStatus } from '../../../api/process';
+import { Link, useLocation } from 'react-router-dom';
 
 interface Props {
     instanceId: ConcordId;
@@ -65,10 +66,25 @@ const LogSegment = ({
     open
 }: Props) => {
     const scrollAnchorRef = useRef<HTMLDivElement>(null);
-
+    const location = useLocation();
     const [isOpen, setOpen] = useState<boolean>(!!open);
     const [isLoadAll, setLoadAll] = useState<boolean>(false);
     const [isAutoScroll, setAutoScroll] = useState<boolean>(false);
+
+    const baseUrl = `/process/${instanceId}/log`;
+
+    const myRef = useRef<null | HTMLDivElement>(null);
+
+    useEffect(() => {
+        if (myRef.current && location.hash.includes(`#segmentId=${segmentId}`)) {
+            myRef.current.scrollIntoView({
+                behavior: 'smooth',
+                block: 'end',
+                inline: 'nearest'
+            });
+            setOpen(true);
+        }
+    }, [myRef, segmentId, location]);
 
     const loadAllClickHandler = useCallback((ev: React.MouseEvent<any>) => {
         ev.preventDefault();
@@ -116,7 +132,7 @@ const LogSegment = ({
     }
 
     return (
-        <div className="LogSegment">
+        <div className="LogSegment" id={`segmentId=${segmentId}`} ref={myRef}>
             <Button
                 fluid={true}
                 size="medium"
@@ -141,6 +157,14 @@ const LogSegment = ({
                 )}
 
                 {beenRunningFor && <span className="RunningFor">running for {beenRunningFor}</span>}
+
+                <Link
+                    to={`${baseUrl}#segmentId=${segmentId}`}
+                    className="AdditionalAction Anchor"
+                    data-tooltip="Hyperlink"
+                    data-inverted="">
+                    <Icon name="linkify" />
+                </Link>
 
                 <a
                     href={`/api/v2/process/${instanceId}/log/segment/${segmentId}/data`}
