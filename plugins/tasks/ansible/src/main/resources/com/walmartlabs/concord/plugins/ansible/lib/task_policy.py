@@ -7,11 +7,6 @@ except ImportError:
     from ansible.utils.display import Display
     display = Display()
 
-try:
-    basestring
-except NameError:
-    basestring = str
-
 import json
 import re
 import os
@@ -103,7 +98,7 @@ class TaskPolicy:
     def _match_values(self, patterns, value):
         display.vv("match_values: {} on {}".format(patterns, value))
 
-        if isinstance(value, basestring):
+        if isinstance(value, str):
             for p in patterns:
                 if self._match(p, value):
                     return True
