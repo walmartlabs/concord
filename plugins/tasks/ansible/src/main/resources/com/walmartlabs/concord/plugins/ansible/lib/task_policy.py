@@ -64,7 +64,7 @@ class TaskPolicy:
             return ''
 
         args_dict = rule.copy()
-        for ta_name, ta_value in args.iteritems():
+        for ta_name, ta_value in args.items():
             args_dict[ta_name] = ta_value
 
         return string.Formatter().vformat(rule['msg'], (), SafeDict(args_dict))
@@ -85,7 +85,7 @@ class TaskPolicy:
 
         matched = False
         for a in rule_args:
-            for ta_name, ta_value in task_args.iteritems():
+            for ta_name, ta_value in task_args.items():
                 if self._match(a['name'], ta_name):
                     if self._match_values(a['values'], ta_value):
                         matched = True
