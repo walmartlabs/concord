@@ -20,30 +20,16 @@ package com.walmartlabs.concord.plugins.slack;
  * =====
  */
 
-import com.walmartlabs.concord.sdk.MapUtils;
-
-import java.util.Map;
-
 public class SlackConfiguration {
 
-    public static SlackConfiguration from(Map<String, Object> args) {
-        String apiToken = MapUtils.getString(args, TaskParams.API_TOKEN.getKey());
-
-        if (apiToken == null) {
-            // fallback to the old "authToken" parameter
-            apiToken = MapUtils.getString(args, TaskParams.AUTH_TOKEN.getKey());
-        }
-
-        if (apiToken == null) {
-            throw new IllegalStateException("'" + TaskParams.API_TOKEN.getKey() + "' or '" + TaskParams.AUTH_TOKEN.getKey() + "' is required.");
-        }
+    public static SlackConfiguration from(SlackConfigurationParams in) {
+        String apiToken = in.apiToken();
 
         SlackConfiguration cfg = new SlackConfiguration(apiToken);
-        cfg.setProxy(MapUtils.getString(args, TaskParams.PROXY_ADDRESS.getKey()), MapUtils.getInt(args, TaskParams.PROXY_PORT.getKey(), -1));
-        cfg.setConnectTimeout(MapUtils.getInt(args, TaskParams.CONNECT_TIMEOUT.getKey(), DEFAULT_CONNECT_TIMEOUT));
-        cfg.setSoTimeout(MapUtils.getInt(args, TaskParams.SO_TIMEOUT.getKey(), DEFAULT_SO_TIMEOUT));
-        cfg.setRetryCount(MapUtils.getInt(args, TaskParams.RETRY_COUNT.getKey(), DEFAULT_RETRY_COUNT));
-
+        cfg.setProxy(in.proxyAddress(), in.proxyPort(-1));
+        cfg.setConnectTimeout(in.connectTimeout(DEFAULT_CONNECT_TIMEOUT));
+        cfg.setSoTimeout(in.soTimeout(DEFAULT_SO_TIMEOUT));
+        cfg.setRetryCount(in.retryCount(DEFAULT_RETRY_COUNT));
         return cfg;
     }
 
