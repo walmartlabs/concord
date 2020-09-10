@@ -66,10 +66,6 @@ public class SlackTaskV2 implements Task {
     }
 
     private static TaskResult toResult(Map<String, Object> result) {
-        boolean success = MapUtils.getBoolean(result, "ok", false);
-        if (!success) {
-            throw new RuntimeException("Slack call error");
-        }
         return new TaskResult(MapUtils.getBoolean(result, "ok", false), MapUtils.getString(result, "error"))
                 .values(result);
     }
