@@ -286,13 +286,13 @@ public abstract class AbstractHttpTaskTest {
 
     protected void stubForFollowRedirect() {
         rule.stubFor(get(urlEqualTo("/followRedirects"))
-                .willReturn(permanentRedirect("http://www.google.com"))
+                .willReturn(permanentRedirect("http://localhost:" + rule.port() + "/string"))
         );
     }
 
     protected void stubForFollowRedirectPost() {
         rule.stubFor(post(urlEqualTo("/followRedirectsPost"))
-                .willReturn(permanentRedirect("http://www.google.com"))
+                .willReturn(permanentRedirect("http://localhost:" + rule.port() + "/string"))
         );
     }
 }
