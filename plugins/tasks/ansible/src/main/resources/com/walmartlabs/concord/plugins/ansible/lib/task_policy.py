@@ -7,6 +7,11 @@ except ImportError:
     from ansible.utils.display import Display
     display = Display()
 
+try:
+    basestring
+except NameError:
+    basestring = str
+
 import json
 import re
 import os
