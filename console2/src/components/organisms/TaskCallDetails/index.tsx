@@ -102,7 +102,7 @@ const renderValueV2 = (v: any) => {
     return <pre>{JSON.stringify(v)}</pre>;
 };
 
-const renderInputVariablesV2 = (key: string, value: any, index: number) => {
+const renderVariablesV2 = (key: string, value: any, index: number) => {
     return (
         <Table.Row key={index}>
             <Table.Cell collapsing={true}>
@@ -113,9 +113,9 @@ const renderInputVariablesV2 = (key: string, value: any, index: number) => {
     );
 };
 
-const renderInputV2 = (data: {}) => (
+const renderDetailsV2 = (label: string, data: {}) => (
     <>
-        <h4>Input</h4>
+        <h4>{label}</h4>
         <div style={{ overflowX: 'auto' }}>
             <Table celled={true} compact={true}>
                 <Table.Header>
@@ -126,7 +126,7 @@ const renderInputV2 = (data: {}) => (
                 </Table.Header>
                 <Table.Body>
                     {Object.keys(data).map((key, index) =>
-                        renderInputVariablesV2(key, data[key], index)
+                        renderVariablesV2(key, data[key], index)
                     )}
                 </Table.Body>
             </Table>
@@ -134,10 +134,35 @@ const renderInputV2 = (data: {}) => (
     </>
 );
 
+/**
+ * Return a POST event if it's present in the array or PRE if it's not.
+ */
+const pickEvent = (
+    data?: ProcessEventEntry<ProcessElementEvent>[]
+): ProcessEventEntry<ProcessElementEvent> | undefined => {
+    if (!data) {
+        return;
+    }
+
+    if (data.length === 1) {
+        return data[0];
+    }
+
+    if (data.length !== 2) {
+        return;
+    }
+
+    if (data[0].data.phase === 'pre') {
+        return data[1];
+    } else {
+        return data[0];
+    }
+};
+
 const TaskCallDetails = (props: Props) => {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<RequestError>();
-    const [data, setData] = useState<ProcessEventEntry<{}>[]>();
+    const [data, setData] = useState<ProcessEventEntry<ProcessElementEvent>[]>();
 
     useEffect(() => {
         const fetchData = async () => {
@@ -149,12 +174,11 @@ const TaskCallDetails = (props: Props) => {
                     instanceId: props.instanceId,
                     type: 'ELEMENT',
                     eventCorrelationId: props.correlationId,
-                    eventPhase: 'PRE',
                     includeAll: true,
-                    limit: 1
+                    limit: 2
                 });
 
-                setData(result);
+                setData(result as ProcessEventEntry<ProcessElementEvent>[]);
             } catch (e) {
                 setError(e);
             } finally {
@@ -173,11 +197,12 @@ const TaskCallDetails = (props: Props) => {
         return <RequestErrorMessage error={error} />;
     }
 
-    if (!data || data.length < 1) {
+    const details = pickEvent(data)?.data;
+
+    if (!details) {
         return <p>No data found.</p>;
     }
 
-    const details = data[0].data as ProcessElementEvent;
     return (
         <>
             <Grid columns={2}>
@@ -211,10 +236,16 @@ const TaskCallDetails = (props: Props) => {
                 details.in instanceof Array &&
                 details.in.length > 0 &&
                 renderInput(details.in)}
+
             {details.in &&
                 !(details.in instanceof Array) &&
                 isObject(details.in) &&
-                renderInputV2(details.in)}
+                renderDetailsV2('Input', details.in)}
+
+            {details.out &&
+                !(details.out instanceof Array) &&
+                isObject(details.out) &&
+                renderDetailsV2('Output', details.out)}
         </>
     );
 };

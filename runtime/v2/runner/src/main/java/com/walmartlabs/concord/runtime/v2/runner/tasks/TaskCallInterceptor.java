@@ -47,17 +47,21 @@ public class TaskCallInterceptor {
     }
 
     public <T> T invoke(CallContext ctx, Method method, Callable<T> callable) throws Exception {
+        // record the PRE event
+        TaskCallEvent preEvent = eventBuilder(Phase.PRE, method, ctx).build();
+        listeners.forEach(l -> l.onEvent(preEvent));
+
+        // call the callable and measure the duration
         long startedAt = System.currentTimeMillis();
-        listeners.forEach(l -> l.onEvent(eventBuilder(Phase.PRE, method, ctx)
-                .build()));
-
         T result = callable.call();
-
         long duration = System.currentTimeMillis() - startedAt;
-        listeners.forEach(l -> l.onEvent(eventBuilder(Phase.POST, method, ctx)
+
+        // record the POST event
+        TaskCallEvent postEvent = eventBuilder(Phase.POST, method, ctx)
                 .duration(duration)
-                .result(result instanceof Serializable ? (Serializable)result : null)
-                .build()));
+                .result(result instanceof Serializable ? (Serializable) result : null)
+                .build();
+        listeners.forEach(l -> l.onEvent(postEvent));
 
         return result;
     }
