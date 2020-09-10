@@ -74,6 +74,8 @@ public abstract class AbstractHttpTaskTest {
         stubForFault();
         stubForRequestTimeout();
         stubForInvalidJsonResponse();
+        stubForFollowRedirect();
+        stubForFollowRedirectPost();
     }
 
     @After
@@ -82,13 +84,13 @@ public abstract class AbstractHttpTaskTest {
     }
 
     protected void initCxtForRequest(Context ctx, Object requestMethod, Object requestType, Object responseType,
-                                     Object url, Object ignoreErrors, Object requestTimeout) {
-        initCxtForRequest(ctx, requestMethod, null, requestType, responseType, url, ignoreErrors, requestTimeout);
+                                     Object url, Object ignoreErrors, Object requestTimeout, Object followRedirects) {
+        initCxtForRequest(ctx, requestMethod, null, requestType, responseType, url, ignoreErrors, requestTimeout, followRedirects);
     }
 
     @SuppressWarnings("unchecked")
     protected void initCxtForRequest(Context ctx, Object requestMethod, Object query, Object requestType, Object responseType,
-                                     Object url, Object ignoreErrors, Object requestTimeout) {
+                                     Object url, Object ignoreErrors, Object requestTimeout, Object followRedirects) {
         when(ctx.getVariable("url")).thenReturn(url);
         when(ctx.getVariable("method")).thenReturn(requestMethod);
         when(ctx.getVariable("query")).thenReturn(query);
@@ -97,6 +99,7 @@ public abstract class AbstractHttpTaskTest {
         when(ctx.getVariable("out")).thenReturn("rsp");
         when(ctx.getVariable("ignoreErrors")).thenReturn(ignoreErrors);
         when(ctx.getVariable("requestTimeout")).thenReturn(requestTimeout);
+        when(ctx.getVariable("followRedirects")).thenReturn(followRedirects);
 
         doAnswer((Answer<Void>) invocation -> {
             response = (Map<String, Object>) invocation.getArguments()[1];
@@ -278,6 +281,18 @@ public abstract class AbstractHttpTaskTest {
                         .withHeader("Accept", "text/plain")
                         .withBody("Request timeout")
                         .withFixedDelay(8000))
+        );
+    }
+
+    protected void stubForFollowRedirect() {
+        rule.stubFor(get(urlEqualTo("/followRedirects"))
+                .willReturn(permanentRedirect("http://localhost:8001"))
+        );
+    }
+
+    protected void stubForFollowRedirectPost() {
+        rule.stubFor(post(urlEqualTo("/followRedirectsPost"))
+                .willReturn(permanentRedirect("http://localhost:8001"))
         );
     }
 }
