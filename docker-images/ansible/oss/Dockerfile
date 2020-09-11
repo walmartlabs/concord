@@ -26,19 +26,19 @@ ENV VIRTUAL_ENV=/usr/local/bin/concord_venv
 
 RUN umask 0022 && \
     pip3 install --no-cache-dir --upgrade --ignore-installed \
-    "ansible>=2.8.0,<2.9.0" \
-    "Appium-Python-Client<1.0" \
-    boto3 \
-    botocore \
-    bzt \
-    docker \
-    kerberos \
-    openshift \
-    pbr \
-    pyvmomi \
-    pywinrm>=0.4.1 \
-    requests_kerberos \
-    urllib3 \
-    ujson 
+        "ansible>=2.8.0,<2.9.0" \
+        "Appium-Python-Client<1.0" \
+        boto3 \
+        botocore \
+        bzt \
+        docker \
+        kerberos \
+        openshift \
+        pbr \
+        pyvmomi \
+        pywinrm>=0.4.1 \
+        requests_kerberos \
+        urllib3 \
+        ujson 
 
 USER concord
