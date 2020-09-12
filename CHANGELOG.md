@@ -4,6 +4,9 @@
 
 ### Added
 
+- concord-server: configurable out variables mode for
+projects. Now project owners can restrict who can specify
+`out` variables in the process request;
 - slack: full support for runtime-v2. All v1 actions should
 now be available in the v2 version too;
 - runtime-v2, concord-console: record and display task
