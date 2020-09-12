@@ -2,12 +2,17 @@
 
 ## [Unreleased]
 
-## Added
+### Added
 
 - slack: full support for runtime-v2. All v1 actions should
 now be available in the v2 version too;
 - runtime-v2, concord-console: record and display task
 results (as in `configuration.events.recordTaskOutVars`).
+
+### Changed
+
+- concord-server: fixed an issue of the `runtime` parameter
+not being passed correctly to the process' forks.
 
 
 
