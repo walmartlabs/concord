@@ -25,6 +25,7 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.walmartlabs.concord.common.validation.ConcordKey;
+import com.walmartlabs.concord.server.jooq.enums.OutVariablesMode;
 import com.walmartlabs.concord.server.jooq.enums.RawPayloadMode;
 import com.walmartlabs.concord.server.org.EntityOwner;
 
@@ -41,7 +42,7 @@ public class ProjectEntry implements Serializable {
 
     public static ProjectEntry replace(ProjectEntry e, Map<String, RepositoryEntry> repos) {
         return new ProjectEntry(e.id, e.name, e.description, e.orgId, e.orgName, repos,
-                e.cfg, e.visibility, e.owner, e.acceptsRawPayload, e.rawPayloadMode, e.meta);
+                e.cfg, e.visibility, e.owner, e.acceptsRawPayload, e.rawPayloadMode, e.meta, e.outVariablesMode);
     }
 
     private final UUID id;
@@ -75,22 +76,24 @@ public class ProjectEntry implements Serializable {
 
     private final RawPayloadMode rawPayloadMode;
 
+    private final OutVariablesMode outVariablesMode;
+
     private final Map<String, Object> meta;
 
     public ProjectEntry(String name) {
-        this(null, name, null, null, null, null, null, null, null, false, RawPayloadMode.DISABLED, null);
+        this(null, name, null, null, null, null, null, null, null, false, RawPayloadMode.DISABLED, null, OutVariablesMode.DISABLED);
     }
 
     public ProjectEntry(String name, ProjectVisibility visibility) {
-        this(null, name, null, null, null, null, null, visibility, null, false, RawPayloadMode.DISABLED, null);
+        this(null, name, null, null, null, null, null, visibility, null, false, RawPayloadMode.DISABLED, null, OutVariablesMode.DISABLED);
     }
 
     public ProjectEntry(String name, Map<String, RepositoryEntry> repositories) {
-        this(null, name, null, null, null, repositories, null, null, null, false, RawPayloadMode.DISABLED, null);
+        this(null, name, null, null, null, repositories, null, null, null, false, RawPayloadMode.DISABLED, null, OutVariablesMode.DISABLED);
     }
 
     public ProjectEntry(String name, UUID id) {
-        this(id, name, null, null, null, null, null, null, null, false, RawPayloadMode.DISABLED, null);
+        this(id, name, null, null, null, null, null, null, null, false, RawPayloadMode.DISABLED, null, OutVariablesMode.DISABLED);
     }
 
     @JsonCreator
@@ -105,7 +108,8 @@ public class ProjectEntry implements Serializable {
                         @JsonProperty("owner") EntityOwner owner,
                         @JsonProperty("acceptsRawPayload") Boolean acceptsRawPayload,
                         @JsonProperty("rawPayloadMode") RawPayloadMode rawPayloadMode,
-                        @JsonProperty("meta") Map<String, Object> meta) {
+                        @JsonProperty("meta") Map<String, Object> meta,
+                        @JsonProperty("outVariablesMode") OutVariablesMode outVariablesMode) {
 
         this.id = id;
         this.name = name;
@@ -119,6 +123,7 @@ public class ProjectEntry implements Serializable {
         this.acceptsRawPayload = acceptsRawPayload;
         this.rawPayloadMode = rawPayloadMode;
         this.meta = meta;
+        this.outVariablesMode = outVariablesMode;
     }
 
     public UUID getId() {
@@ -170,6 +175,10 @@ public class ProjectEntry implements Serializable {
         return rawPayloadMode;
     }
 
+    public OutVariablesMode getOutVariablesMode() {
+        return outVariablesMode;
+    }
+
     public Map<String, Object> getMeta() {
         return meta;
     }
@@ -189,6 +198,7 @@ public class ProjectEntry implements Serializable {
                 ", acceptsRawPayload=" + acceptsRawPayload +
                 ", rawPayloadMode=" + rawPayloadMode +
                 ", meta=" + meta +
+                ", outVariablesMode=" + outVariablesMode +
                 '}';
     }
 }
