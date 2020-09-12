@@ -55,6 +55,14 @@ export enum RawPayloadMode {
     EVERYONE = 'EVERYONE'
 }
 
+export enum OutVariablesMode {
+    DISABLED = 'DISABLED',
+    OWNERS = 'OWNERS',
+    TEAM_MEMBERS = 'TEAM_MEMBERS',
+    ORG_MEMBERS = 'ORG_MEMBERS',
+    EVERYONE = 'EVERYONE'
+}
+
 export interface ProjectEntry {
     id: ConcordId;
     name: ConcordKey;
@@ -72,6 +80,8 @@ export interface ProjectEntry {
     rawPayloadMode: RawPayloadMode;
 
     meta?: ProjectEntryMeta;
+
+    outVariablesMode: OutVariablesMode;
 }
 
 export interface NewProjectEntry {
@@ -88,6 +98,7 @@ export interface UpdateProjectEntry {
     description?: string;
     visibility?: ProjectVisibility;
     rawPayloadMode?: RawPayloadMode;
+    outVariablesMode?: OutVariablesMode;
 }
 
 export interface PaginatedProjectEntries {
