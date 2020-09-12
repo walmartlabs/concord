@@ -29,7 +29,7 @@ import javax.inject.Named;
 import java.util.UUID;
 
 /**
- * Get runtime from parent process.
+ * Get the runtime value from the parent process.
  */
 @Named
 public class ForkRuntimeProcessor implements PayloadProcessor {
