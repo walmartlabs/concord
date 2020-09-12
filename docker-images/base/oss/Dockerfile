@@ -21,7 +21,7 @@ RUN rpm --import /etc/pki/rpm-gpg/RPM-GPG-KEY-centosofficial && \
            glibc-all-langpacks && \
     dnf clean all && \
     alternatives --set python /usr/bin/python3 && \
-    alternatives --set pip /usr/bin/pip3
+    alternatives --install /usr/bin/pip pip /usr/bin/pip2 0
 
 ENV JAVA_HOME /usr/lib/jvm/java-${jdk_version}
 ENV LC_CTYPE en_US.UTF-8
