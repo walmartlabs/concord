@@ -27,6 +27,7 @@ import {
     ProjectOrganizationChangeActivity,
     ProjectOwnerChangeActivity,
     ProjectRawPayloadModeActivity,
+    ProjectOutVariablesModeActivity,
     ProjectRenameActivity,
     RequestErrorActivity
 } from '../index';
@@ -73,6 +74,17 @@ const ProjectSettings = ({ orgName, projectName, forceRefresh }: ExternalProps) 
                         orgName={orgName}
                         projectId={data.id}
                         initialValue={data.rawPayloadMode}
+                    />
+                )}
+            </Segment>
+
+            <Segment disabled={isLoading}>
+                <Header as="h4">Allow out variable names in request</Header>
+                {data && (
+                    <ProjectOutVariablesModeActivity
+                        orgName={orgName}
+                        projectId={data.id}
+                        initialValue={data.outVariablesMode}
                     />
                 )}
             </Segment>
