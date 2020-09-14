@@ -5,7 +5,7 @@
         xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.3.xsd">
 
     <changeSet id="170000" author="ibodrov@gmail.com">
-        <validCheckSum>7:69fe67fac24c2c9585b559c8f7121f31</validCheckSum>
+        <validCheckSum>7:986edd322fffcdedbd5a76762c4cb1f3</validCheckSum>
         <insert tableName="ROLES">
             <column name="ROLE_NAME">concordAdmin</column>
         </insert>
