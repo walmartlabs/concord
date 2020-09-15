@@ -4,6 +4,8 @@
 
 ### Added
 
+- concord-cli: support for creating new secrets using
+SecretManager's `create*` methods;
 - http-tasks: `followRedirects` now works for `POST`
 requests too;
 - concord-server: access changes for projects, secrets and
