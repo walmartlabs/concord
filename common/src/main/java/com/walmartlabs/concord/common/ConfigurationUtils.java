@@ -24,6 +24,28 @@ import java.util.*;
 
 public final class ConfigurationUtils {
 
+    @SuppressWarnings("unchecked")
+    public static boolean has(Map<String, Object> m, String[] path) {
+        if (m == null) {
+            return false;
+        }
+
+        if (path.length == 0) {
+            return false;
+        }
+
+        for (int i = 0; i < path.length - 1; i++) {
+            Object v = m.get(path[i]);
+            if (!(v instanceof Map)) {
+                return false;
+            }
+
+            m = (Map<String, Object>) v;
+        }
+
+        return m.containsKey(path[path.length - 1]);
+    }
+
     public static Object get(Map<String, Object> m, String... path) {
         int depth = path != null ? path.length : 0;
         return get(m, depth, path);
@@ -52,7 +74,7 @@ public final class ConfigurationUtils {
             m = (Map<String, Object>) v;
         }
 
-        return m.get(path[path.length - 1]);
+        return m.get(path[depth - 1]);
     }
 
     @SuppressWarnings("unchecked")

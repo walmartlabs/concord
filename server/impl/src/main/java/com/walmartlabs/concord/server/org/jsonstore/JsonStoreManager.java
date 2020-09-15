@@ -20,6 +20,7 @@ package com.walmartlabs.concord.server.org.jsonstore;
  * =====
  */
 
+import com.google.common.collect.ImmutableMap;
 import com.walmartlabs.concord.policyengine.CheckResult;
 import com.walmartlabs.concord.policyengine.JsonStoreRule;
 import com.walmartlabs.concord.policyengine.PolicyEngine;
@@ -43,10 +44,13 @@ import org.sonatype.siesta.ValidationErrorsException;
 
 import javax.inject.Inject;
 import javax.inject.Named;
+import java.io.Serializable;
 import java.text.MessageFormat;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Named
 public class JsonStoreManager {
@@ -215,6 +219,8 @@ public class JsonStoreManager {
                 storeDao.upsertAccessLevel(tx, store.id(), e.getTeamId(), e.getLevel());
             }
         });
+
+        addAuditLog(store.id(), entries, isReplace);
     }
 
     public void updateAccessLevel(String orgName, String storeName, ResourceAccessEntry entry) {
@@ -224,6 +230,8 @@ public class JsonStoreManager {
 
         UUID teamId = ResourceAccessUtils.getTeamId(orgDao, teamDao, org.getId(), entry);
         storeDao.upsertAccessLevel(store.id(), teamId, entry.getLevel());
+
+        addAuditLog(store.id(), Collections.singleton(new ResourceAccessEntry(teamId, null, null, entry.getLevel())), false);
     }
 
     private UserEntry getOwner(EntityOwner owner, UserEntry defaultOwner) {
@@ -288,4 +296,18 @@ public class JsonStoreManager {
                 .field("name", name)
                 .log();
     }
+
+    private void addAuditLog(UUID storeId, Collection<ResourceAccessEntry> entries, boolean isReplace) {
+        List<ImmutableMap<String, ? extends Serializable>> teams = entries.stream()
+                .map(e -> ImmutableMap.of("id", e.getTeamId(), "level", e.getLevel()))
+                .collect(Collectors.toList());
+
+        auditLog.add(AuditObject.JSON_STORE, AuditAction.UPDATE)
+                .field("storeId", storeId)
+                .field("access", ImmutableMap.of(
+                        "replace", isReplace,
+                        "teams", teams))
+                .log();
+    }
+
 }

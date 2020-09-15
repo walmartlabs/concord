@@ -20,6 +20,7 @@ package com.walmartlabs.concord.server.org.secret;
  * =====
  */
 
+import com.google.common.collect.ImmutableMap;
 import com.google.common.io.ByteStreams;
 import com.walmartlabs.concord.common.secret.BinaryDataSecret;
 import com.walmartlabs.concord.common.secret.KeyPair;
@@ -67,6 +68,7 @@ import java.io.Serializable;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 
 import static com.walmartlabs.concord.server.jooq.Tables.SECRETS;
 import static com.walmartlabs.concord.server.org.secret.SecretDao.InsertMode.INSERT;
@@ -269,7 +271,7 @@ public class SecretManager {
     public void update(String orgName, String secretName, SecretUpdateRequest req) {
         SecretEntry e;
 
-        if(req.id() == null) {
+        if (req.id() == null) {
             OrganizationEntry org = orgManager.assertAccess(null, orgName, false);
             e = assertAccess(org.getId(), null, secretName, ResourceAccessLevel.OWNER, true);
         } else {
@@ -360,8 +362,9 @@ public class SecretManager {
         }
 
         if (projectName != null && projectName.trim().isEmpty()) {
-            // empty project name is same as null project
+            // empty project name means "remove the project link"
             effectiveProjectId = null;
+            projectName = null;
         }
 
         if (effectiveProjectId != null || projectName != null) {
@@ -570,6 +573,8 @@ public class SecretManager {
                 secretDao.upsertAccessLevel(tx, secretId, e.getTeamId(), e.getLevel());
             }
         });
+
+        addAuditLog(secretId, entries, isReplace);
     }
 
     private byte[] getPwd(String pwd) {
@@ -748,11 +753,25 @@ public class SecretManager {
         }
 
         if (owner.username() != null) {
+            // TODO don't assume LDAP here
             return userManager.get(owner.username(), owner.userDomain(), UserType.LDAP)
                     .orElseThrow(() -> new ConcordApplicationException("User not found: " + owner.username()));
         }
 
         return defaultOwner;
+    }
+
+    private void addAuditLog(UUID secretId, Collection<ResourceAccessEntry> entries, boolean isReplace) {
+        List<ImmutableMap<String, ? extends Serializable>> teams = entries.stream()
+                .map(e -> ImmutableMap.of("id", e.getTeamId(), "level", e.getLevel()))
+                .collect(Collectors.toList());
+
+        auditLog.add(AuditObject.SECRET, AuditAction.UPDATE)
+                .field("secretId", secretId)
+                .field("access", ImmutableMap.of(
+                        "replace", isReplace,
+                        "teams", teams))
+                .log();
     }
 
     /**

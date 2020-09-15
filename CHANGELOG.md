@@ -1,5 +1,29 @@
 # Change log
 
+## [1.65.0] - 2020-09-09
+
+### Added
+
+- concord-console: hyperlinks to individual log segments so
+users can share/access a segment instead of scrolling;
+- concord-server: support for added/removed/modified `files`
+in GitHub push trigger conditions;
+- runtime-v2: support nested variables in
+`configuration.events.inVarsBlacklist`/`outVarsBlacklist`;
+- concord-agent: option to keep the workDir in a configured
+directory after the process ends;
+- concord-console: allow changing owners of secrets;
+
+### Changed
+
+- concord-console: keep the "system" segment open by default
+so users can see overall progress;
+- concord-server: `USERS.IS_ADMIN` column is deprecated and
+its usage has been removed from the code;
+- runtime-v2: working process checkpoints support.
+
+
+
 ## [1.64.0] - 2020-09-02
 
 ### Added

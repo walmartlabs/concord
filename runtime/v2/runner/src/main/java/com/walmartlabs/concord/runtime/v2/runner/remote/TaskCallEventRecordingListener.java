@@ -24,6 +24,7 @@ import com.walmartlabs.concord.ApiClient;
 import com.walmartlabs.concord.ApiException;
 import com.walmartlabs.concord.client.ProcessEventRequest;
 import com.walmartlabs.concord.client.ProcessEventsApi;
+import com.walmartlabs.concord.common.ConfigurationUtils;
 import com.walmartlabs.concord.runtime.common.ObjectTruncater;
 import com.walmartlabs.concord.runtime.common.injector.InstanceId;
 import com.walmartlabs.concord.runtime.v2.ProcessDefinitionUtils;
@@ -34,6 +35,7 @@ import com.walmartlabs.concord.runtime.v2.model.Step;
 import com.walmartlabs.concord.runtime.v2.runner.tasks.TaskCallEvent;
 import com.walmartlabs.concord.runtime.v2.runner.tasks.TaskCallListener;
 import com.walmartlabs.concord.runtime.v2.sdk.Context;
+import com.walmartlabs.concord.runtime.v2.sdk.TaskResult;
 import com.walmartlabs.concord.runtime.v2.sdk.Variables;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -64,8 +66,9 @@ public class TaskCallEventRecordingListener implements TaskCallListener {
 
         m.put("phase", event.phase().name().toLowerCase());
 
-        if (event.input() != null && eventConfiguration.recordTaskInVars()) {
-            Map<String, Object> vars = maskVars(convertInput(event.input()), eventConfiguration.inVarsBlacklist());
+        List<Object> inVars = event.input();
+        if (inVars != null && eventConfiguration.recordTaskInVars()) {
+            Map<String, Object> vars = maskVars(convertInput(inVars), eventConfiguration.inVarsBlacklist());
             if (eventConfiguration.truncateInVars()) {
                 vars = ObjectTruncater.truncateMap(vars, eventConfiguration.truncateMaxStringLength(), eventConfiguration.truncateMaxArrayLength(), eventConfiguration.truncateMaxDepth());
             }
@@ -74,9 +77,9 @@ public class TaskCallEventRecordingListener implements TaskCallListener {
             }
         }
 
-        Map<String, Object> outVars = asMapOrNull(event.out());
+        Object outVars = event.result();
         if (outVars != null && eventConfiguration.recordTaskOutVars()) {
-            Map<String, Object> vars = maskVars(outVars, eventConfiguration.outVarsBlacklist());
+            Map<String, Object> vars = maskVars(asMapOrNull(outVars), eventConfiguration.outVarsBlacklist());
             if (eventConfiguration.truncateOutVars()) {
                 vars = ObjectTruncater.truncateMap(vars, eventConfiguration.truncateMaxStringLength(), eventConfiguration.truncateMaxArrayLength(), eventConfiguration.truncateMaxDepth());
             }
@@ -127,26 +130,56 @@ public class TaskCallEventRecordingListener implements TaskCallListener {
     }
 
     @SuppressWarnings("unchecked")
-    private static Map<String, Object> asMapOrNull(Object v) {
-        if (!(v instanceof Map)) {
-            return null;
+    private Map<String, Object> asMapOrNull(Object v) {
+        if (v instanceof TaskResult) {
+            return ((TaskResult) v).toMap();
         }
 
-        return (Map<String, Object>) v;
+        if (v instanceof Map) {
+            return (Map<String, Object>) v;
+        }
+
+        return null;
     }
 
-    private static Map<String, Object> maskVars(Map<String, Object> vars, Collection<String> blackList) {
+    static Map<String, Object> maskVars(Map<String, Object> vars, Collection<String> blackList) {
         if (blackList.isEmpty()) {
             return vars;
         }
 
         Map<String, Object> result = new HashMap<>(vars);
         for (String b : blackList) {
-            if (result.containsKey(b)) {
-                result.put(b, "***");
+            String[] path = b.split("\\.");
+            if (ConfigurationUtils.has(result, path)) {
+                Map<String, Object> m = ensureModifiable(result, path.length - 1, path);
+                m.put(path[path.length - 1], "***");
             }
         }
         return result;
+    }
+
+    @SuppressWarnings("unchecked")
+    private static Map<String, Object> ensureModifiable(Map<String, Object> m, int depth, String[] path) {
+        if (depth == 0) {
+            return m;
+        }
+
+        for (int i = 0; i < depth; i++) {
+            Object v = m.get(path[i]);
+            if (v == null) {
+                throw new IllegalStateException("Can't find variable at " + path[i]);
+            }
+
+            if (!(v instanceof Map)) {
+                throw new IllegalStateException("Not a map variable at " + path[i]);
+            }
+
+            Map<String, Object> modifiable = new HashMap<>((Map<String, Object>) v);
+            m.put(path[i], modifiable);
+            m = modifiable;
+        }
+
+        return m;
     }
 
     private static Map<String, Object> convertInput(List<Object> input) {

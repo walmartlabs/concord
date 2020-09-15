@@ -5,16 +5,26 @@
         xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.3.xsd">
 
     <changeSet id="170000" author="ibodrov@gmail.com">
+        <validCheckSum>7:986edd322fffcdedbd5a76762c4cb1f3</validCheckSum>
         <insert tableName="ROLES">
             <column name="ROLE_NAME">concordAdmin</column>
         </insert>
 
+        <!-- deprecated in 1.65.0+ -->
+        <!--
         <sql>
             insert into USER_ROLES
                 select
                     USER_ID,
                     (select ROLE_ID from ROLES where ROLE_NAME = 'concordAdmin')
                 from USERS where is_admin = true
+        </sql>
+        -->
+
+        <!-- default admin user ID -->
+        <sql>
+            insert into USER_ROLES (USER_ID, ROLE_ID)
+                values ('230c5c9c-d9a7-11e6-bcfd-bb681c07b26c', (select ROLE_ID from ROLES where ROLE_NAME = 'concordAdmin'))
         </sql>
     </changeSet>
 

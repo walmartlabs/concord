@@ -24,16 +24,11 @@ public final class Constants {
 
     public static final String EVENT_SOURCE = "github";
 
-    public static final String DEFAULT_EVENT_TYPE = "push";
-
-    public static final String AUTHOR_KEY = "author";
     public static final String COMMIT_ID_KEY = "commitId";
     public static final String IGNORE_EMPTY_PUSH_KEY = "ignoreEmptyPush";
-    public static final String ORG_NAME_KEY = "org";
     public static final String ORGANIZATION_KEY = "organization";
     public static final String PAYLOAD_KEY = "payload";
     public static final String PROJECT_ID_KEY = "projectId";
-    public static final String PROJECT_NAME_KEY = "project";
     public static final String PULL_REQUEST_EVENT = "pull_request";
     public static final String PUSH_EVENT = "push";
     public static final String REPO_BRANCH_KEY = "branch";
@@ -44,6 +39,7 @@ public final class Constants {
     public static final String TYPE_KEY = "type";
     public static final String UNKNOWN_REPO_KEY = "unknownRepo";
     public static final String VERSION_KEY = "version";
+    public static final String FILES_KEY = "files";
 
     public static final String GITHUB_ORG_KEY = "githubOrg";
     public static final String GITHUB_REPO_KEY = "githubRepo";

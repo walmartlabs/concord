@@ -83,6 +83,12 @@
     color: #4183c4;
 }
 
+.LogSegment .Segment .AdditionalAction.Anchor {
+    padding-right: 0;
+    padding-left: 10px;
+    color: #4183c4;
+}
+
 .LogSegment .Segment .AdditionalAction .on {
     color: #4183c4;
 }

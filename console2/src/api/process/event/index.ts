@@ -44,7 +44,7 @@ export interface ProcessElementEvent {
     description?: string;
     phase?: 'pre' | 'post';
     in?: VariableMapping[] | {};
-    out?: VariableMapping[];
+    out?: VariableMapping[] | {};
     correlationId?: string;
     duration?: number;
 }
