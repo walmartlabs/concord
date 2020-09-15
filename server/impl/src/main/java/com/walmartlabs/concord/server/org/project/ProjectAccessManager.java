@@ -20,6 +20,10 @@ package com.walmartlabs.concord.server.org.project;
  * =====
  */
 
+import com.google.common.collect.ImmutableMap;
+import com.walmartlabs.concord.server.audit.AuditAction;
+import com.walmartlabs.concord.server.audit.AuditLog;
+import com.walmartlabs.concord.server.audit.AuditObject;
 import com.walmartlabs.concord.server.org.*;
 import com.walmartlabs.concord.server.sdk.metrics.WithTimer;
 import com.walmartlabs.concord.server.security.Roles;
@@ -30,9 +34,12 @@ import org.sonatype.siesta.ValidationErrorsException;
 
 import javax.inject.Inject;
 import javax.inject.Named;
+import java.io.Serializable;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Named
 public class ProjectAccessManager {
@@ -40,17 +47,21 @@ public class ProjectAccessManager {
     private final OrganizationManager orgManager;
     private final ProjectDao projectDao;
     private final UserDao userDao;
+    private final AuditLog auditLog;
 
     @Inject
-    public ProjectAccessManager(OrganizationManager orgManager, ProjectDao projectDao, UserDao userDao) {
+    public ProjectAccessManager(OrganizationManager orgManager, ProjectDao projectDao, UserDao userDao, AuditLog auditLog) {
         this.orgManager = orgManager;
         this.projectDao = projectDao;
         this.userDao = userDao;
+        this.auditLog = auditLog;
     }
 
     public void updateAccessLevel(UUID projectId, UUID teamId, ResourceAccessLevel level) {
         assertAccess(projectId, ResourceAccessLevel.OWNER, true);
         projectDao.upsertAccessLevel(projectId, teamId, level);
+
+        addAuditLog(projectId, Collections.singletonList(new ResourceAccessEntry(teamId, null, null, level)), false);
     }
 
     public ProjectEntry assertAccess(UUID orgId, UUID projectId, String projectName, ResourceAccessLevel level, boolean orgMembersOnly) {
@@ -146,6 +157,8 @@ public class ProjectAccessManager {
                 projectDao.upsertAccessLevel(tx, projectId, e.getTeamId(), e.getLevel());
             }
         });
+
+        addAuditLog(projectId, entries, isReplace);
     }
 
     /**
@@ -155,5 +168,18 @@ public class ProjectAccessManager {
     public boolean isTeamMember(UUID projectId) {
         UserPrincipal principal = UserPrincipal.assertCurrent();
         return projectDao.hasAccessLevel(projectId, principal.getId(), ResourceAccessLevel.atLeast(ResourceAccessLevel.READER));
+    }
+
+    private void addAuditLog(UUID projectId, Collection<ResourceAccessEntry> entries, boolean isReplace) {
+        List<ImmutableMap<String, ? extends Serializable>> teams = entries.stream()
+                .map(e -> ImmutableMap.of("id", e.getTeamId(), "level", e.getLevel()))
+                .collect(Collectors.toList());
+
+        auditLog.add(AuditObject.PROJECT, AuditAction.UPDATE)
+                .field("projectId", projectId)
+                .field("access", ImmutableMap.of(
+                        "replace", isReplace,
+                        "teams", teams))
+                .log();
     }
 }

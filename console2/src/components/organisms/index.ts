@@ -64,6 +64,7 @@ export { default as ProjectActivity } from './ProjectActivity';
 export { default as ProjectDeleteActivity } from './ProjectDeleteActivity';
 export { default as ProjectDropdown } from './ProjectDropdown';
 export { default as ProjectListActivity } from './ProjectListActivity';
+export { default as ProjectOutVariablesModeActivity } from './ProjectOutVariablesModeActivity';
 export { default as ProjectOrganizationChangeActivity } from './ProjectOrganizationChangeActivity';
 export { default as ProjectOwnerChangeActivity } from './ProjectOwnerChangeActivity';
 export { default as ProjectRawPayloadModeActivity } from './ProjectRawPayloadModeActivity';

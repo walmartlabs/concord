@@ -20,6 +20,7 @@ package com.walmartlabs.concord.server.org.secret;
  * =====
  */
 
+import com.google.common.collect.ImmutableMap;
 import com.google.common.io.ByteStreams;
 import com.walmartlabs.concord.common.secret.BinaryDataSecret;
 import com.walmartlabs.concord.common.secret.KeyPair;
@@ -67,6 +68,7 @@ import java.io.Serializable;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 
 import static com.walmartlabs.concord.server.jooq.Tables.SECRETS;
 import static com.walmartlabs.concord.server.org.secret.SecretDao.InsertMode.INSERT;
@@ -571,6 +573,8 @@ public class SecretManager {
                 secretDao.upsertAccessLevel(tx, secretId, e.getTeamId(), e.getLevel());
             }
         });
+
+        addAuditLog(secretId, entries, isReplace);
     }
 
     private byte[] getPwd(String pwd) {
@@ -755,6 +759,19 @@ public class SecretManager {
         }
 
         return defaultOwner;
+    }
+
+    private void addAuditLog(UUID secretId, Collection<ResourceAccessEntry> entries, boolean isReplace) {
+        List<ImmutableMap<String, ? extends Serializable>> teams = entries.stream()
+                .map(e -> ImmutableMap.of("id", e.getTeamId(), "level", e.getLevel()))
+                .collect(Collectors.toList());
+
+        auditLog.add(AuditObject.SECRET, AuditAction.UPDATE)
+                .field("secretId", secretId)
+                .field("access", ImmutableMap.of(
+                        "replace", isReplace,
+                        "teams", teams))
+                .log();
     }
 
     /**

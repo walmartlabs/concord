@@ -48,18 +48,18 @@ public class ProjectDaoTest extends AbstractDaoTest {
     private RepositoryDao repositoryDao;
 
     @Before
-    public void setUp() throws Exception {
+    public void setUp() {
         repositoryDao = new RepositoryDao(getConfiguration(), new ConcordObjectMapper(TestObjectMapper.INSTANCE));
         projectDao = new ProjectDao(getConfiguration(), new ConcordObjectMapper(TestObjectMapper.INSTANCE));
     }
 
     @Test
-    public void testInsertDelete() throws Exception {
+    public void testInsertDelete() {
         UUID orgId = OrganizationManager.DEFAULT_ORG_ID;
 
         Map<String, Object> cfg = ImmutableMap.of("a", "a-v");
         String projectName = "project#" + System.currentTimeMillis();
-        UUID projectId = projectDao.insert(orgId, projectName, "test", null, cfg, null, null, new byte[0], null);
+        UUID projectId = projectDao.insert(orgId, projectName, "test", null, cfg, null, null, new byte[0], null, null);
 
         // ---
         Map<String, Object> actualCfg = projectDao.getConfiguration(projectId);
@@ -80,7 +80,7 @@ public class ProjectDaoTest extends AbstractDaoTest {
 
         // ---
         Map<String, Object> newCfg2 = ImmutableMap.of("a2", "a2-v");
-        tx(tx -> projectDao.update(tx, orgId, projectId, ProjectVisibility.PRIVATE, projectName, "new-description", newCfg2, null, null,null));
+        tx(tx -> projectDao.update(tx, orgId, projectId, ProjectVisibility.PRIVATE, projectName, "new-description", newCfg2, null, null,null, null));
 
         actualCfg = projectDao.getConfiguration(projectId);
         assertEquals(newCfg2, actualCfg);
@@ -99,7 +99,7 @@ public class ProjectDaoTest extends AbstractDaoTest {
     }
 
     @Test
-    public void testList() throws Exception {
+    public void testList() {
         UUID orgId = OrganizationManager.DEFAULT_ORG_ID;
 
         assertEquals(0, projectDao.list(null, null, PROJECTS.PROJECT_NAME, true, 0, -1, null).size());
@@ -110,9 +110,9 @@ public class ProjectDaoTest extends AbstractDaoTest {
         String bName = "bProject#" + System.currentTimeMillis();
         String cName = "cProject#" + System.currentTimeMillis();
 
-        projectDao.insert(orgId, aName, "test", null, null, null, null, new byte[0], null);
-        projectDao.insert(orgId, bName, "test", null, null, null, null, new byte[0], null);
-        projectDao.insert(orgId, cName, "test", null, null, null, null, new byte[0], null);
+        projectDao.insert(orgId, aName, "test", null, null, null, null, new byte[0], null, null);
+        projectDao.insert(orgId, bName, "test", null, null, null, null, new byte[0], null, null);
+        projectDao.insert(orgId, cName, "test", null, null, null, null, new byte[0], null, null);
 
         // ---
 
