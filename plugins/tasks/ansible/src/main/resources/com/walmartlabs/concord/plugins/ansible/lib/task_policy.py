@@ -12,6 +12,7 @@ import re
 import os
 import os.path
 import string
+import ansible
 
 class SafeDict(dict):
     def __missing__(self, key):
@@ -64,7 +65,7 @@ class TaskPolicy:
             return ''
 
         args_dict = rule.copy()
-        for ta_name, ta_value in args.iteritems():
+        for ta_name, ta_value in args.items():
             args_dict[ta_name] = ta_value
 
         return string.Formatter().vformat(rule['msg'], (), SafeDict(args_dict))
@@ -85,7 +86,7 @@ class TaskPolicy:
 
         matched = False
         for a in rule_args:
-            for ta_name, ta_value in task_args.iteritems():
+            for ta_name, ta_value in task_args.items():
                 if self._match(a['name'], ta_name):
                     if self._match_values(a['values'], ta_value):
                         matched = True
@@ -98,7 +99,10 @@ class TaskPolicy:
     def _match_values(self, patterns, value):
         display.vv("match_values: {} on {}".format(patterns, value))
 
-        if isinstance(value, basestring):
+        if isinstance(value, ansible.parsing.yaml.objects.AnsibleUnicode):
+            value = str(value)
+
+        if isinstance(value, str):
             for p in patterns:
                 if self._match(p, value):
                     return True

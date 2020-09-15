@@ -20,6 +20,7 @@ package com.walmartlabs.concord.plugins.slack;
  * =====
  */
 
+import com.walmartlabs.concord.runtime.v2.sdk.MapBackedVariables;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -41,9 +42,9 @@ public class SlackClientTest {
     @Test
     public void validateSlackClientPostingMessageWithJson() throws Exception {
 
-        Map<String, Object> cfgMap = new HashMap();
+        Map<String, Object> cfgMap = new HashMap<>();
         cfgMap.put("apiToken", TestParams.TEST_API_TOKEN);
-        SlackClient client = new SlackClient(SlackConfiguration.from(cfgMap));
+        SlackClient client = new SlackClient(SlackConfiguration.from(new SlackConfigurationParams(new MapBackedVariables(cfgMap))));
 
         String postJson = "{\n" +
                 "  \"channel\": \"@SLACK_CHANNEL@\",\n" +
@@ -118,9 +119,9 @@ public class SlackClientTest {
     @Test
     public void validateSlackClientPostingMessageWithParameters() throws Exception {
 
-        Map<String, Object> cfgMap = new HashMap();
+        Map<String, Object> cfgMap = new HashMap<>();
         cfgMap.put("apiToken", TestParams.TEST_API_TOKEN);
-        SlackClient client = new SlackClient(SlackConfiguration.from(cfgMap));
+        SlackClient client = new SlackClient(SlackConfiguration.from(new SlackConfigurationParams(new MapBackedVariables(cfgMap))));
 
         String channelId = TestParams.TEST_CHANNEL;
         SlackClient.Response response = client.message(channelId, null, false, "Hello from Concord!", null, null, null);
