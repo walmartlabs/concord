@@ -17,6 +17,7 @@ results (as in `configuration.events.recordTaskOutVars`).
 
 ### Changed
 
+- ansible: python 2 to 3 compatibility fixes;
 - concord-server: fixed the checksum of the `170000`
 changeset;
 - concord-server: fixed an issue of the `runtime` parameter
