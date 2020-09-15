@@ -4,6 +4,8 @@
 
 ### Added
 
+- http-tasks: `followRedirects` now works for `POST`
+requests too;
 - concord-server: access changes for projects, secrets and
 JSON stores are now recorded in the audit log (e.g.
 assigning a team to a project);
