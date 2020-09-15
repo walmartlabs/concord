@@ -2,7 +2,7 @@ ARG docker_namespace=walmartlabs
 ARG concord_version=latest
 
 FROM $docker_namespace/concord-base:$concord_version
-MAINTAINER "Ivan Bodrov" <ibodrov@walmartlabs.com>
+LABEL maintainer="ibodrov@gmail.com"
 
 EXPOSE 8001
 
