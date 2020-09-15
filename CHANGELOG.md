@@ -4,6 +4,9 @@
 
 ### Added
 
+- concord-server: access changes for projects, secrets and
+JSON stores are now recorded in the audit log (e.g.
+assigning a team to a project);
 - concord-server: configurable out variables mode for
 projects. Now project owners can restrict who can specify
 `out` variables in the process request;
