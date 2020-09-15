@@ -17,6 +17,8 @@ results (as in `configuration.events.recordTaskOutVars`).
 
 ### Changed
 
+- docker-images: python 2 to 3 migration, ansible 2.8 by
+default;
 - ansible: python 2 to 3 compatibility fixes;
 - concord-server: fixed the checksum of the `170000`
 changeset;
