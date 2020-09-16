@@ -467,18 +467,23 @@ public class ProcessQueueDao extends AbstractDao {
         }
     }
 
-    public List<ProcessRequirementsEntry> listRequirements(ProcessStatus processStatus, int limit, int offset) {
+    public List<ProcessRequirementsEntry> listRequirements(ProcessStatus processStatus, List<ProcessFilter.DateFilter> startAt, int limit, int offset) {
         try (DSLContext tx = DSL.using(cfg)) {
-            return tx.select(PROCESS_QUEUE.INSTANCE_ID, PROCESS_QUEUE.CREATED_AT, PROCESS_QUEUE.REQUIREMENTS)
-                    .from(PROCESS_QUEUE)
-                    .where(PROCESS_QUEUE.CURRENT_STATUS.eq(processStatus.name()))
-                    .limit(limit)
-                    .offset(offset)
-                    .fetch(r -> ProcessRequirementsEntry.builder()
-                            .instanceId(r.get(PROCESS_QUEUE.INSTANCE_ID))
-                            .createdAt(r.get(PROCESS_QUEUE.CREATED_AT))
-                            .requirements(objectMapper.fromJSONB(r.get(PROCESS_QUEUE.REQUIREMENTS)))
-                            .build());
+            SelectQuery<Record> query = tx.selectQuery();
+
+            query.addSelect(PROCESS_QUEUE.INSTANCE_ID, PROCESS_QUEUE.CREATED_AT, PROCESS_QUEUE.REQUIREMENTS);
+            query.addFrom(PROCESS_QUEUE);
+            query.addConditions(PROCESS_QUEUE.CURRENT_STATUS.eq(processStatus.name()));
+            FilterUtils.applyDate(query, PROCESS_QUEUE.START_AT, startAt);
+
+            query.addLimit(limit);
+            query.addOffset(offset);
+
+            return query.fetch(r -> ProcessRequirementsEntry.builder()
+                    .instanceId(r.get(PROCESS_QUEUE.INSTANCE_ID))
+                    .createdAt(r.get(PROCESS_QUEUE.CREATED_AT))
+                    .requirements(objectMapper.fromJSONB(r.get(PROCESS_QUEUE.REQUIREMENTS)))
+                    .build());
         }
     }
 
