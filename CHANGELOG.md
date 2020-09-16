@@ -4,6 +4,8 @@
 
 ### Added
 
+- concord-server: optional date filter in
+the `/api/v2/process/requirements` endpoint;
 - concord-cli: support for creating new secrets using
 SecretManager's `create*` methods;
 - http-tasks: `followRedirects` now works for `POST`
@@ -21,6 +23,8 @@ results (as in `configuration.events.recordTaskOutVars`).
 
 ### Changed
 
+- agent-operator: when checking the queue's status, filter
+out processes with `startAt` in the future;
 - docker-images: python 2 to 3 migration, ansible 2.8 by
 default;
 - ansible: python 2 to 3 compatibility fixes;
