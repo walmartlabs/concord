@@ -22,7 +22,6 @@ package com.walmartlabs.concord.it.server;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.squareup.okhttp.HttpUrl;
 import com.squareup.okhttp.OkHttpClient;
 import com.squareup.okhttp.Request;
@@ -30,6 +29,7 @@ import com.squareup.okhttp.Response;
 import com.walmartlabs.concord.ApiClient;
 import com.walmartlabs.concord.client.*;
 import com.walmartlabs.concord.it.common.ServerClient;
+import com.walmartlabs.concord.it.common.ServerCompatModule;
 import org.junit.Test;
 
 import java.util.HashMap;
@@ -137,7 +137,7 @@ public class ProcessMetadataIT extends AbstractServerIT {
             }
 
             ObjectMapper om = new ObjectMapper();
-            om.registerModule(new JavaTimeModule());
+            om.registerModule(new ServerCompatModule()); // to parse timestamps
             return om.readValue(resp.body().byteStream(), LIST_OF_PROCESS_ENTRIES);
         } finally {
             if (resp != null && resp.body() != null) {
