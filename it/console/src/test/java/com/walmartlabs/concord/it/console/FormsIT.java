@@ -91,10 +91,6 @@ public class FormsIT {
 
         byte[] ab = serverRule.getLog(pir.getLogFileName());
         assertLog(".*dateField=2019-09-04.*", ab);
-
-        // because the value is converted to java.util.Date it loses all TZ info
-        // so our input "01:05:00.000-04:00" is converted to "05:05:00.000" in the default server's TZ
-        // which is usually UTC
-        assertLog(".*dateTimeField=2019-09-04T05:05:00.000.*", ab);
+        assertLog(".*dateTimeField=2019-09-04T01:05:00.000-0400.*", ab);
     }
 }
