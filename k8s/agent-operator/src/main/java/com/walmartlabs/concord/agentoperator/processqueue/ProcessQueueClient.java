@@ -52,7 +52,7 @@ public class ProcessQueueClient {
 
     public List<ProcessQueueEntry> query(String processStatus, int limit) throws IOException {
         Request req = new Request.Builder()
-                .url(baseUrl + "/api/v2/process/requirements?status=" + processStatus + "&limit=" + limit)
+                .url(baseUrl + "/api/v2/process/requirements?status=" + processStatus + "&limit=" + limit + "&startAt.len=")
                 .header("Authorization", apiToken)
                 .addHeader("User-Agent", "k8s-agent-operator")
                 .build();
