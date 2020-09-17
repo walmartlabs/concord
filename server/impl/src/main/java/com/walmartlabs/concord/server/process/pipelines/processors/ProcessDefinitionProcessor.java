@@ -91,6 +91,7 @@ public class ProcessDefinitionProcessor implements PayloadProcessor {
             }
 
             payload = payload.putHeader(Payload.PROJECT_DEFINITION, pd)
+                    .putHeader(Payload.RUNTIME, pd.runtime())
                     .putHeader(Payload.IMPORTS, pd.imports())
                     .putHeader(Payload.DEPENDENCIES, pd.configuration().dependencies());
 
