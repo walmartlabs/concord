@@ -1,10 +1,10 @@
 # Change log
 
-## [Unreleased]
+## [1.66.0] - 2020-09-17
 
 ### Added
 
-- concord-server: optional date filter in
+- concord-server: optional `startAt` filter in
 the `/api/v2/process/requirements` endpoint;
 - concord-cli: support for creating new secrets using SecretManager's
 `create*` methods;
