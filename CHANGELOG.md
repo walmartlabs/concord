@@ -23,6 +23,8 @@ results (as in `configuration.events.recordTaskOutVars`).
 
 ### Changed
 
+- concord-server: `dateTime` form fields are now converted
+into UTC on submit;
 - agent-operator: when checking the queue's status, filter
 out processes with `startAt` in the future;
 - docker-images: python 2 to 3 migration, ansible 2.8 by
