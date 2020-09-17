@@ -44,6 +44,7 @@ public class Payload {
     public static final HeaderKey<ProcessDefinition> PROJECT_DEFINITION = HeaderKey.register("_projectDef", ProcessDefinition.class);
     public static final HeaderKey<ProcessKind> PROCESS_KIND = HeaderKey.register("_processKind", ProcessKind.class);
     public static final HeaderKey<Repository> REPOSITORY = HeaderKey.register("_repository", Repository.class);
+    public static final HeaderKey<String> RUNTIME = HeaderKey.register("_runtime", String.class);
     public static final HeaderKey<Set<String>> OUT_EXPRESSIONS = HeaderKey.registerSet("_outExpr");
     public static final HeaderKey<Set<String>> PROCESS_HANDLERS = HeaderKey.registerSet("_processHandlers");
     public static final HeaderKey<Set<String>> PROCESS_TAGS = HeaderKey.registerSet("_processTags");

@@ -364,6 +364,14 @@ public class ProcessQueueDao extends AbstractDao {
         }
     }
 
+    public String getRuntime(PartialProcessKey processKey) {
+        try (DSLContext tx = DSL.using(cfg)) {
+            return tx.select(PROCESS_QUEUE.RUNTIME).from(PROCESS_QUEUE)
+                    .where(PROCESS_QUEUE.INSTANCE_ID.eq(processKey.getInstanceId()))
+                    .fetchOne(PROCESS_QUEUE.RUNTIME);
+        }
+    }
+
     public ProcessStatus getStatus(PartialProcessKey processKey) {
         try (DSLContext tx = DSL.using(cfg)) {
             String status = tx.select(PROCESS_QUEUE.CURRENT_STATUS)
