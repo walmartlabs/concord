@@ -23,6 +23,9 @@ results (as in `configuration.events.recordTaskOutVars`).
 
 ### Changed
 
+- concord-server, concord-console: don't send
+`WWW-Authenticate` for unauthorized UI requests to prevent
+the basic auth popup from showing;
 - concord-server: the `runtime` value is now correctly
 passed from parent processes to their forks;
 - concord-server: `dateTime` form fields are now converted
