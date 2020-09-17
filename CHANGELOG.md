@@ -1,5 +1,12 @@
 # Change log
 
+## [1.63.1] - 2020-09-17
+
+### Changed
+
+- docker-images: update python 2 to 3, ansible 2.8, centos8 cleanup;
+- ansible: fix iteritems to items for py2-py3 compatibility;
+
 ## [1.63.0] - 2020-08-30
 
 ### Added
