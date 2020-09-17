@@ -47,7 +47,15 @@ import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
 
 public final class FormUtils {
 
-    private static final DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern("YYYY-MM-dd'T'HH:mm:ss.SSSZ", Locale.US);
+    /**
+     * Date/time format used to pass date and dateTime fields between the Server and the process.
+     */
+    private static final DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSSX", Locale.US);
+
+    /**
+     * All date/time values are converted into the default time zone.
+     */
+    private static final ZoneId DEFAULT_TIME_ZONE = ZoneId.of("UTC");
 
     public static Map<String, String> mergeErrors(List<ValidationError> errors) {
         if (errors == null || errors.isEmpty()) {
@@ -188,7 +196,7 @@ public final class FormUtils {
                     // on the process level those values are represented as java.util.Date (i.e. no TZ info retained)
                     // so we assume all Date values are in the default system TZ (which is typically UTC)
                     return ZonedDateTime.parse(s)
-                            .withZoneSameInstant(ZoneId.systemDefault())
+                            .withZoneSameInstant(DEFAULT_TIME_ZONE)
                             .format(DATE_TIME_FORMATTER);
                 }
             }
@@ -225,6 +233,8 @@ public final class FormUtils {
     }
 
     public static class ValidationException extends Exception {
+
+        private static final long serialVersionUID = 1L;
 
         private final FormField field;
         private final String input;
