@@ -20,8 +20,8 @@ package com.walmartlabs.concord.plugins.slack;
  * =====
  */
 
-import com.walmartlabs.concord.sdk.Context;
-import com.walmartlabs.concord.sdk.ContextUtils;
+import com.walmartlabs.concord.runtime.v2.sdk.MapBackedVariables;
+import com.walmartlabs.concord.runtime.v2.sdk.Variables;
 
 import java.util.Arrays;
 import java.util.Collections;
@@ -29,21 +29,6 @@ import java.util.HashMap;
 import java.util.Map;
 
 public final class Utils {
-
-    public static Map<String, Object> collectAgs(Context ctx) {
-        Map<String, Object> defaults = ContextUtils.getMap(ctx, "slackCfg", Collections.emptyMap());
-
-        Map<String, Object> m = new HashMap<>(defaults);
-        for (TaskParams p : TaskParams.values()) {
-            String k = p.getKey();
-            Object v = ctx.getVariable(k);
-            if (v != null) {
-                m.put(k, v);
-            }
-        }
-
-        return m;
-    }
 
     @SuppressWarnings("unchecked")
     public static String extractString(SlackClient.Response r, String... path) {
@@ -76,6 +61,12 @@ public final class Utils {
 
             idx += 1;
         }
+    }
+
+    public static Variables merge(Variables variables, Map<String, Object> defaults) {
+        Map<String, Object> variablesMap = new HashMap<>(defaults != null ? defaults : Collections.emptyMap());
+        variablesMap.putAll(variables.toMap());
+        return new MapBackedVariables(variablesMap);
     }
 
     private Utils() {

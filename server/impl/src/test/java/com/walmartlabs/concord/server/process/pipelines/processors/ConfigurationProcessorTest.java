@@ -82,7 +82,7 @@ public class ConfigurationProcessorTest {
         prjCfg.put("a", "a-prj");
         prjCfg.put("project", "prj-value");
 
-        ProjectEntry projectEntry = new ProjectEntry(prjId, null, null, null, null, null, prjCfg, null, null, null, null, null);
+        ProjectEntry projectEntry = new ProjectEntry(prjId, null, null, null, null, null, prjCfg, null, null, null, null, null, null);
 
         Map<String, Object> processCfgPolicy = new HashMap<>();
         processCfgPolicy.put("a", "a-process-cfg-policy");
@@ -144,7 +144,7 @@ public class ConfigurationProcessorTest {
         prjCfg.put("a", "a-prj");
         prjCfg.put("project", "prj-value");
 
-        ProjectEntry projectEntry = new ProjectEntry(prjId, null, null, null, null, null, prjCfg, null, null, null, null, null);
+        ProjectEntry projectEntry = new ProjectEntry(prjId, null, null, null, null, null, prjCfg, null, null, null, null, null, null);
 
         // ---
         when(orgDao.getConfiguration(eq(orgId))).thenReturn(orgCfg);

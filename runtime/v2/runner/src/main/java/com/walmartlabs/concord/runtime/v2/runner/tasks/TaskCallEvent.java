@@ -54,9 +54,6 @@ public interface TaskCallEvent {
     UUID correlationId();
 
     @Nullable
-    Object out();
-
-    @Nullable
     Long duration();
 
     @Nullable
