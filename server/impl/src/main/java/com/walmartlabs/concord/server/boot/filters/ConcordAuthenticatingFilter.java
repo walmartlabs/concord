@@ -22,6 +22,7 @@ package com.walmartlabs.concord.server.boot.filters;
 
 import com.codahale.metrics.Meter;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.walmartlabs.concord.server.RequestUtils;
 import com.walmartlabs.concord.server.sdk.metrics.InjectMeter;
 import com.walmartlabs.concord.server.security.apikey.ApiKey;
 import org.apache.shiro.SecurityUtils;
@@ -183,10 +184,10 @@ public class ConcordAuthenticatingFilter extends AuthenticatingFilter {
             }
         }
 
-        String uiRequest = req.getHeader("X-Concord-UI-Request");
+        String uiRequest = req.getHeader(RequestUtils.UI_REQUEST_HEADER);
         if ("true".equalsIgnoreCase(uiRequest)) {
-            // do not send `WWW_AUTHENTICATE` headers to UI
-            // to prevent browser auth popup.
+            // do not send the "WWW-Authenticate" header if the request originates from the UI
+            // we don't want the basic auth popup there
             return;
         }
 
