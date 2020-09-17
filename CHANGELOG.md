@@ -1,5 +1,42 @@
 # Change log
 
+## [Unreleased]
+
+### Added
+
+- concord-server: optional date filter in
+the `/api/v2/process/requirements` endpoint;
+- concord-cli: support for creating new secrets using SecretManager's
+`create*` methods;
+- http-tasks: `followRedirects` now works for `POST` requests too;
+- concord-server: access changes for projects, secrets and JSON
+stores are now recorded in the audit log (e.g. assigning a team to a
+project);
+- concord-server: configurable out variables mode for projects. Now
+project owners can restrict who can specify `out` variables in the
+process request;
+- slack: full support for runtime-v2. All v1 actions should now be
+available in the v2 version too;
+- runtime-v2, concord-console: record and display task results (as in
+`configuration.events.recordTaskOutVars`).
+
+### Changed
+
+- concord-server, concord-console: don't send `WWW-Authenticate` for
+unauthorized UI requests to prevent the basic auth popup from
+showing;
+- concord-server: `dateTime` form fields are now converted into UTC
+on submit;
+- agent-operator: when checking the queue's status, filter out
+processes with `startAt` in the future;
+- docker-images: python 2 to 3 migration, ansible 2.8 by default;
+- ansible: python 2 to 3 compatibility fixes;
+- concord-server: fixed the checksum of the `170000` changeset;
+- concord-server: fixed an issue of the `runtime` parameter not being
+passed correctly to the process' forks.
+
+
+
 ## [1.65.0] - 2020-09-09
 
 ### Added
