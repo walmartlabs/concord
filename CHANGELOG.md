@@ -23,6 +23,8 @@ results (as in `configuration.events.recordTaskOutVars`).
 
 ### Changed
 
+- concord-server: the `runtime` value is now correctly
+passed from parent processes to their forks;
 - concord-server: `dateTime` form fields are now converted
 into UTC on submit;
 - agent-operator: when checking the queue's status, filter
