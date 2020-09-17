@@ -183,6 +183,13 @@ public class ConcordAuthenticatingFilter extends AuthenticatingFilter {
             }
         }
 
+        String uiRequest = req.getHeader("X-Concord-UI-Request");
+        if ("true".equalsIgnoreCase(uiRequest)) {
+            // do not send `WWW_AUTHENTICATE` headers to UI
+            // to prevent browser auth popup.
+            return;
+        }
+
         HttpServletResponse resp = WebUtils.toHttp(response);
 
         String authHeader = req.getHeader(HttpHeaders.AUTHORIZATION);
