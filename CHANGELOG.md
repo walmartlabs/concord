@@ -1,5 +1,16 @@
 # Change log
 
+## [Unreleased]
+
+### Changed
+
+- concord-server: fixed a potential race when registering internal
+metrics. Fixes a `ConcurrentModificationException` when Server is
+running in an embedded environment, e.g. testcontainer-concord's
+LOCAL mode.
+
+
+
 ## [1.66.0] - 2020-09-17
 
 ### Added
