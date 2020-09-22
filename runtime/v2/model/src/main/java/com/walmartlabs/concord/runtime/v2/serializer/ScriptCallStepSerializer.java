@@ -28,6 +28,8 @@ import com.walmartlabs.concord.runtime.v2.model.ScriptCallOptions;
 
 import java.io.IOException;
 
+import static com.walmartlabs.concord.runtime.v2.serializer.SerializerUtils.writeNotEmptyObjectField;
+
 public class ScriptCallStepSerializer extends StdSerializer<ScriptCall> {
 
     public ScriptCallStepSerializer() {
@@ -41,27 +43,22 @@ public class ScriptCallStepSerializer extends StdSerializer<ScriptCall> {
     @Override
     public void serialize(ScriptCall value, JsonGenerator gen, SerializerProvider provider) throws IOException {
         gen.writeStartObject();
+
         gen.writeObjectField("script", value.getLanguageOrRef());
 
         ScriptCallOptions o = value.getOptions();
         if (o.body() != null) {
             gen.writeObjectField("body", o.body());
         }
-        if (!o.input().isEmpty()) {
-            gen.writeObjectField("in", o.input());
-        }
+        writeNotEmptyObjectField("in", o.input(), gen);
         if (o.withItems() != null) {
             gen.writeObjectField("withItems", o.withItems());
         }
         if (o.retry() != null) {
             gen.writeObjectField("retry", o.retry());
         }
-        if (!o.errorSteps().isEmpty()) {
-            gen.writeObjectField("error", o.errorSteps());
-        }
-        if (!o.meta().isEmpty()) {
-            gen.writeObjectField("meta", o.meta());
-        }
+        writeNotEmptyObjectField("error", o.errorSteps(), gen);
+        writeNotEmptyObjectField("meta", o.meta(), gen);
 
         gen.writeEndObject();
     }

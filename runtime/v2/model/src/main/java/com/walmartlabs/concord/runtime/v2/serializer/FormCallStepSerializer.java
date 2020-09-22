@@ -28,6 +28,8 @@ import com.walmartlabs.concord.runtime.v2.model.FormCallOptions;
 
 import java.io.IOException;
 
+import static com.walmartlabs.concord.runtime.v2.serializer.SerializerUtils.writeNotEmptyObjectField;
+
 public class FormCallStepSerializer extends StdSerializer<FormCall> {
 
     public FormCallStepSerializer() {
@@ -46,16 +48,11 @@ public class FormCallStepSerializer extends StdSerializer<FormCall> {
         FormCallOptions o = value.getOptions();
         gen.writeObjectField("yield", o.yield());
         gen.writeObjectField("saveSubmittedBy", o.saveSubmittedBy());
-        if (!o.runAs().isEmpty()) {
-            gen.writeObjectField("runAs", o.runAs());
-        }
-
-        if (!o.values().isEmpty()) {
-            gen.writeObjectField("values", o.values());
-        }
+        writeNotEmptyObjectField("runAs", o.runAs(), gen);
+        writeNotEmptyObjectField("values", o.values(), gen);
 
         if (!o.fields().isEmpty()) {
-            gen.writeObjectField("fields", o.fields());
+            writeNotEmptyObjectField("fields", o.fields(), gen);
         } else if (o.fieldsExpression() != null) {
             gen.writeObjectField("fields", o.fieldsExpression());
         }

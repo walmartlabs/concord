@@ -27,6 +27,8 @@ import com.walmartlabs.concord.runtime.v2.model.Retry;
 
 import java.io.IOException;
 
+import static com.walmartlabs.concord.runtime.v2.serializer.SerializerUtils.writeNotEmptyObjectField;
+
 public class RetryOptionsSerializer extends StdSerializer<Retry> {
 
     public RetryOptionsSerializer() {
@@ -53,9 +55,7 @@ public class RetryOptionsSerializer extends StdSerializer<Retry> {
             gen.writeObjectField("delay", value.delay());
         }
 
-        if (value.input() != null && !value.input().isEmpty()) {
-            gen.writeObjectField("in", value.input());
-        }
+        writeNotEmptyObjectField("in", value.input(), gen);
 
         gen.writeEndObject();
     }

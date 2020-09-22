@@ -28,6 +28,8 @@ import com.walmartlabs.concord.runtime.v2.model.ParallelBlockOptions;
 
 import java.io.IOException;
 
+import static com.walmartlabs.concord.runtime.v2.serializer.SerializerUtils.writeNotEmptyObjectField;
+
 public class ParallelBlockSerializer extends StdSerializer<ParallelBlock> {
 
     public ParallelBlockSerializer() {
@@ -45,28 +47,9 @@ public class ParallelBlockSerializer extends StdSerializer<ParallelBlock> {
         gen.writeObjectField("parallel", value.getSteps());
 
         ParallelBlockOptions o = value.getOptions();
-        if (!o.out().isEmpty()) {
-            gen.writeObjectField("out", o.out());
-        }
-        if (!o.meta().isEmpty()) {
-            gen.writeObjectField("meta", o.meta());
-        }
+        writeNotEmptyObjectField("out", o.out(), gen);
+        writeNotEmptyObjectField("meta", o.meta(), gen);
 
         gen.writeEndObject();
-    }
-
-    private String toType(String type, com.walmartlabs.concord.forms.FormField.Cardinality cardinality) {
-        switch (cardinality) {
-            case ONE_AND_ONLY_ONE:
-                return type;
-            case ONE_OR_NONE:
-                return type + "?";
-            case AT_LEAST_ONE:
-                return type + "+";
-            case ANY:
-                return type + "*";
-            default:
-                throw new IllegalArgumentException("Unknown cardinality: '" + cardinality + "'");
-        }
     }
 }

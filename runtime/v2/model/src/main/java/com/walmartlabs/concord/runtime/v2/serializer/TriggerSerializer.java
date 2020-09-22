@@ -23,18 +23,12 @@ package com.walmartlabs.concord.runtime.v2.serializer;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.databind.ser.std.StdSerializer;
-import com.walmartlabs.concord.imports.Import;
-import com.walmartlabs.concord.runtime.v2.model.ProcessConfiguration;
 import com.walmartlabs.concord.runtime.v2.model.Trigger;
 
 import java.io.IOException;
 import java.util.Map;
 
-import static com.walmartlabs.concord.runtime.v2.parser.ConfigurationGrammar.exclusiveVal;
-import static com.walmartlabs.concord.runtime.v2.parser.GrammarOptions.mandatory;
-import static com.walmartlabs.concord.runtime.v2.parser.GrammarOptions.optional;
-import static com.walmartlabs.concord.runtime.v2.parser.GrammarV2.*;
-import static com.walmartlabs.concord.runtime.v2.parser.GrammarV2.intVal;
+import static com.walmartlabs.concord.runtime.v2.serializer.SerializerUtils.writeNotEmptyObjectField;
 
 public class TriggerSerializer extends StdSerializer<Trigger> {
 
@@ -53,26 +47,20 @@ public class TriggerSerializer extends StdSerializer<Trigger> {
         gen.writeFieldName(value.name());
 
         gen.writeStartObject();
-        if (!value.activeProfiles().isEmpty()) {
-            gen.writeObjectField("activeProfiles", value.activeProfiles());
-        }
+        writeNotEmptyObjectField("activeProfiles", value.activeProfiles(), gen);
         if (!value.configuration().isEmpty()) {
             for (Map.Entry<String, Object> e : value.configuration().entrySet()) {
                 gen.writeObjectField(e.getKey(), e.getValue());
             }
         }
-        if (!value.arguments().isEmpty()) {
-            gen.writeObjectField("arguments", value.arguments());
-        }
+        writeNotEmptyObjectField("arguments", value.arguments(), gen);
 
         if ("cron".equalsIgnoreCase(value.name())) {
             for (Map.Entry<String, Object> e : value.conditions().entrySet()) {
                 gen.writeObjectField(e.getKey(), e.getValue());
             }
         } else {
-            if (!value.conditions().isEmpty()) {
-                gen.writeObjectField("conditions", value.conditions());
-            }
+            writeNotEmptyObjectField("conditions", value.conditions(), gen);
         }
 
         gen.writeEndObject();

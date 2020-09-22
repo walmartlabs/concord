@@ -27,6 +27,8 @@ import com.walmartlabs.concord.runtime.v2.model.IfStep;
 
 import java.io.IOException;
 
+import static com.walmartlabs.concord.runtime.v2.serializer.SerializerUtils.writeNotEmptyObjectField;
+
 public class IfStepSerializer extends StdSerializer<IfStep> {
 
     public IfStepSerializer() {
@@ -43,26 +45,9 @@ public class IfStepSerializer extends StdSerializer<IfStep> {
 
         gen.writeObjectField("if", value.getExpression());
         gen.writeObjectField("then", value.getThenSteps());
-        if (value.getElseSteps() != null && !value.getElseSteps().isEmpty()) {
-            gen.writeObjectField("else", value.getElseSteps());
-        }
+        writeNotEmptyObjectField("else", value.getElseSteps(), gen);
         gen.writeObject(value.getOptions());
 
         gen.writeEndObject();
-    }
-
-    private String toType(String type, com.walmartlabs.concord.forms.FormField.Cardinality cardinality) {
-        switch (cardinality) {
-            case ONE_AND_ONLY_ONE:
-                return type;
-            case ONE_OR_NONE:
-                return type + "?";
-            case AT_LEAST_ONE:
-                return type + "+";
-            case ANY:
-                return type + "*";
-            default:
-                throw new IllegalArgumentException("Unknown cardinality: '" + cardinality + "'");
-        }
     }
 }

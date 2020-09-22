@@ -42,8 +42,6 @@ forms:
   form1:
   - field1:
       type: "string*"
-      value: null
-      allow: null
 resources:
   concord:
   - "glob:concord/{**/,}{*.,}concord.yml"

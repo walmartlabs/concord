@@ -28,6 +28,8 @@ import com.walmartlabs.concord.runtime.v2.model.TaskCallOptions;
 
 import java.io.IOException;
 
+import static com.walmartlabs.concord.runtime.v2.serializer.SerializerUtils.writeNotEmptyObjectField;
+
 public class TaskCallStepSerializer extends StdSerializer<TaskCall> {
 
     public TaskCallStepSerializer() {
@@ -50,9 +52,7 @@ public class TaskCallStepSerializer extends StdSerializer<TaskCall> {
         } else {
             gen.writeObjectField("task", value.getName());
 
-            if (!o.input().isEmpty()) {
-                gen.writeObjectField("in", o.input());
-            }
+            writeNotEmptyObjectField("in", o.input(), gen);
         }
         if (o.out() != null) {
             gen.writeObjectField("out", o.out());
@@ -63,12 +63,8 @@ public class TaskCallStepSerializer extends StdSerializer<TaskCall> {
         if (o.retry() != null) {
             gen.writeObjectField("retry", o.retry());
         }
-        if (!o.errorSteps().isEmpty()) {
-            gen.writeObjectField("error", o.errorSteps());
-        }
-        if (!o.meta().isEmpty()) {
-            gen.writeObjectField("meta", o.meta());
-        }
+        writeNotEmptyObjectField("error", o.errorSteps(), gen);
+        writeNotEmptyObjectField("meta", o.meta(), gen);
 
         gen.writeEndObject();
     }

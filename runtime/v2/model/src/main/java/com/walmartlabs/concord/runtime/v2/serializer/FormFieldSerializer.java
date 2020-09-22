@@ -49,8 +49,12 @@ public class FormFieldSerializer extends StdSerializer<FormField> {
             gen.writeObjectField("label", value.label());
         }
         gen.writeObjectField("type", toType(value.type(), value.cardinality()));
-        gen.writeObjectField("value", value.defaultValue());
-        gen.writeObjectField("allow", value.allowedValue());
+        if (value.defaultValue() != null) {
+            gen.writeObjectField("value", value.defaultValue());
+        }
+        if (value.allowedValue() != null) {
+            gen.writeObjectField("allow", value.allowedValue());
+        }
         if (!value.options().isEmpty()) {
             for (Map.Entry<String, Serializable> e : value.options().entrySet()) {
                 gen.writeObjectField(e.getKey(), e.getValue());

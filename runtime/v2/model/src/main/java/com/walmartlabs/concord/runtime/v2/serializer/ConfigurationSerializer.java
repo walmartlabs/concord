@@ -24,10 +24,10 @@ import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.databind.ser.std.StdSerializer;
 import com.walmartlabs.concord.runtime.v2.model.ProcessConfiguration;
-import com.walmartlabs.concord.runtime.v2.model.TaskCall;
-import com.walmartlabs.concord.runtime.v2.model.TaskCallOptions;
 
 import java.io.IOException;
+
+import static com.walmartlabs.concord.runtime.v2.serializer.SerializerUtils.writeNotEmptyObjectField;
 
 public class ConfigurationSerializer extends StdSerializer<ProcessConfiguration> {
 
@@ -45,28 +45,18 @@ public class ConfigurationSerializer extends StdSerializer<ProcessConfiguration>
         gen.writeObjectField("runtime", value.runtime());
         gen.writeObjectField("debug", value.debug());
         gen.writeObjectField("entryPoint", value.entryPoint());
-        if (!value.dependencies().isEmpty()) {
-            gen.writeObjectField("dependencies", value.dependencies());
-        }
-        if (!value.arguments().isEmpty()) {
-            gen.writeObjectField("arguments", value.arguments());
-        }
-        if (!value.meta().isEmpty()) {
-            gen.writeObjectField("meta", value.meta());
-        }
+        writeNotEmptyObjectField("dependencies", value.dependencies(), gen);
+        writeNotEmptyObjectField("arguments", value.arguments(), gen);
+        writeNotEmptyObjectField("meta", value.meta(), gen);
         gen.writeObjectField("events", value.events());
-        if (!value.requirements().isEmpty()) {
-            gen.writeObjectField("requirements", value.requirements());
-        }
+        writeNotEmptyObjectField("requirements", value.requirements(), gen);
         if (value.processTimeout() != null) {
             gen.writeObjectField("processTimeout", value.processTimeout());
         }
         if (value.exclusive() != null) {
             gen.writeObjectField("exclusive", value.exclusive());
         }
-        if (!value.out().isEmpty()) {
-            gen.writeObjectField("out", value.out());
-        }
+        writeNotEmptyObjectField("out", value.out(), gen);
         gen.writeEndObject();
     }
 }

@@ -30,6 +30,8 @@ import java.io.IOException;
 import java.util.Collections;
 import java.util.stream.Collectors;
 
+import static com.walmartlabs.concord.runtime.v2.serializer.SerializerUtils.writeNotEmptyObjectField;
+
 public class ProcessDefinitionSerializer extends StdSerializer<ProcessDefinition> {
 
     public ProcessDefinitionSerializer() {
@@ -45,18 +47,10 @@ public class ProcessDefinitionSerializer extends StdSerializer<ProcessDefinition
         gen.writeStartObject();
 
         gen.writeObjectField("configuration", value.configuration());
-        if (!value.flows().isEmpty()) {
-            gen.writeObjectField("flows", value.flows());
-        }
-        if (!value.publicFlows().isEmpty()) {
-            gen.writeObjectField("publicFlows", value.publicFlows());
-        }
-        if (!value.profiles().isEmpty()) {
-            gen.writeObjectField("profiles", value.profiles());
-        }
-        if (!value.triggers().isEmpty()) {
-            gen.writeObjectField("triggers", value.triggers());
-        }
+        writeNotEmptyObjectField("flows", value.flows(), gen);
+        writeNotEmptyObjectField("publicFlows", value.publicFlows(), gen);
+        writeNotEmptyObjectField("profiles", value.profiles(), gen);
+        writeNotEmptyObjectField("triggers", value.triggers(), gen);
         if (!value.imports().isEmpty()) {
             gen.writeObjectField("imports", value.imports().items().stream().map(o -> Collections.singletonMap(o.type(), o)).collect(Collectors.toList()));
         }

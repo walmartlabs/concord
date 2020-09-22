@@ -24,8 +24,11 @@ import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.databind.ser.std.StdSerializer;
 import com.walmartlabs.concord.runtime.v2.model.Expression;
+import com.walmartlabs.concord.runtime.v2.model.ExpressionOptions;
 
 import java.io.IOException;
+
+import static com.walmartlabs.concord.runtime.v2.serializer.SerializerUtils.writeNotEmptyObjectField;
 
 public class ExpressionStepSerializer extends StdSerializer<Expression> {
 
@@ -43,16 +46,20 @@ public class ExpressionStepSerializer extends StdSerializer<Expression> {
 
         gen.writeObjectField("expr", value.getExpr());
 
-        if (value.getOptions().out() != null) {
-            gen.writeObjectField("out", value.getOptions().out());
-        }
-        if (!value.getOptions().meta().isEmpty()) {
-            gen.writeObjectField("meta", value.getOptions().meta());
-        }
-        if (!value.getOptions().errorSteps().isEmpty()) {
-            gen.writeObjectField("error", value.getOptions().errorSteps());
-        }
+        serializeOptions(value.getOptions(), gen);
 
         gen.writeEndObject();
+    }
+
+    private static void serializeOptions(ExpressionOptions options, JsonGenerator gen) throws IOException {
+        if (options == null) {
+            return;
+        }
+
+        if (options.out() != null) {
+            gen.writeObjectField("out", options.out());
+        }
+        writeNotEmptyObjectField("meta", options.meta(), gen);
+        writeNotEmptyObjectField("error", options.errorSteps(), gen);
     }
 }

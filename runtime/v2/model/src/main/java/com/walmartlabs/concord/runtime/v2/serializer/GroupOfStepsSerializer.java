@@ -28,6 +28,8 @@ import com.walmartlabs.concord.runtime.v2.model.GroupOfStepsOptions;
 
 import java.io.IOException;
 
+import static com.walmartlabs.concord.runtime.v2.serializer.SerializerUtils.writeNotEmptyObjectField;
+
 public class GroupOfStepsSerializer extends StdSerializer<GroupOfSteps> {
 
     public GroupOfStepsSerializer() {
@@ -46,31 +48,10 @@ public class GroupOfStepsSerializer extends StdSerializer<GroupOfSteps> {
         gen.writeObject(value.getSteps());
 
         GroupOfStepsOptions o = value.getOptions();
-        if (!o.out().isEmpty()) {
-            gen.writeObjectField("out", o.out());
-        }
-        if (!o.errorSteps().isEmpty()) {
-            gen.writeObjectField("error", o.errorSteps());
-        }
-        if (!o.meta().isEmpty()) {
-            gen.writeObjectField("meta", o.meta());
-        }
+        writeNotEmptyObjectField("out", o.out(), gen);
+        writeNotEmptyObjectField("error", o.errorSteps(), gen);
+        writeNotEmptyObjectField("meta", o.meta(), gen);
 
         gen.writeEndObject();
-    }
-
-    private String toType(String type, com.walmartlabs.concord.forms.FormField.Cardinality cardinality) {
-        switch (cardinality) {
-            case ONE_AND_ONLY_ONE:
-                return type;
-            case ONE_OR_NONE:
-                return type + "?";
-            case AT_LEAST_ONE:
-                return type + "+";
-            case ANY:
-                return type + "*";
-            default:
-                throw new IllegalArgumentException("Unknown cardinality: '" + cardinality + "'");
-        }
     }
 }

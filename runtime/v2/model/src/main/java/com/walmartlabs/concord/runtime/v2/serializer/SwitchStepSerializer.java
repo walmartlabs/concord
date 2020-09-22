@@ -30,6 +30,8 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 
+import static com.walmartlabs.concord.runtime.v2.serializer.SerializerUtils.writeNotEmptyObjectField;
+
 public class SwitchStepSerializer extends StdSerializer<SwitchStep> {
 
     public SwitchStepSerializer() {
@@ -51,9 +53,7 @@ public class SwitchStepSerializer extends StdSerializer<SwitchStep> {
                 gen.writeObjectField(e.getKey(), e.getValue());
             }
         }
-        if (value.getDefaultSteps() != null && !value.getDefaultSteps().isEmpty()) {
-            gen.writeObjectField("default", value.getDefaultSteps());
-        }
+        writeNotEmptyObjectField("default", value.getDefaultSteps(), gen);
 
         gen.writeObject(value.getOptions());
 

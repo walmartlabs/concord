@@ -27,6 +27,8 @@ import com.walmartlabs.concord.runtime.v2.model.FlowCallOptions;
 
 import java.io.IOException;
 
+import static com.walmartlabs.concord.runtime.v2.serializer.SerializerUtils.writeNotEmptyObjectField;
+
 public class FlowCallOptionsSerializer extends StdSerializer<FlowCallOptions> {
 
     public FlowCallOptionsSerializer() {
@@ -39,23 +41,15 @@ public class FlowCallOptionsSerializer extends StdSerializer<FlowCallOptions> {
 
     @Override
     public void serialize(FlowCallOptions value, JsonGenerator gen, SerializerProvider provider) throws IOException {
-        if (!value.input().isEmpty()) {
-            gen.writeObjectField("in", value.input());
-        }
-        if (!value.out().isEmpty()) {
-            gen.writeObjectField("out", value.out());
-        }
+        writeNotEmptyObjectField("in", value.input(), gen);
+        writeNotEmptyObjectField("out", value.out(), gen);
         if (value.withItems() != null) {
             gen.writeObjectField("withItems", value.withItems());
         }
         if (value.retry() != null) {
             gen.writeObjectField("retry", value.retry());
         }
-        if (!value.errorSteps().isEmpty()) {
-            gen.writeObjectField("error", value.errorSteps());
-        }
-        if (!value.meta().isEmpty()) {
-            gen.writeObjectField("meta", value.meta());
-        }
+        writeNotEmptyObjectField("error", value.errorSteps(), gen);
+        writeNotEmptyObjectField("meta", value.meta(), gen);
     }
 }
