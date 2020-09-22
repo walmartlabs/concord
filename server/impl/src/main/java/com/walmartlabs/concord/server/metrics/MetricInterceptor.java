@@ -32,17 +32,18 @@ import javax.inject.Provider;
 import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Supplier;
 
 public class MetricInterceptor implements MethodInterceptor {
 
-    private final Map<Method, String> timerNameCache = new HashMap<>();
+    private final Map<Method, String> timerNameCache = new ConcurrentHashMap<>();
 
     @Inject
     private Provider<MetricRegistry> registryProvider;
 
     // because we had to use very late binding for MetricRegistry, let's cache the result
-    private Supplier<MetricRegistry> registrySupplier = Suppliers.memoize(() -> this.registryProvider.get());
+    private final Supplier<MetricRegistry> registrySupplier = Suppliers.memoize(() -> this.registryProvider.get());
 
     @Override
     public Object invoke(MethodInvocation invocation) throws Throwable {
