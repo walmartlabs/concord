@@ -54,7 +54,7 @@ public class DefaultFormValidatorLocale implements FormValidatorLocale {
 
     @Override
     public String doesntMatchPattern(String formId, FormField field, Integer idx, String pattern, Object value) {
-        return String.format("%s: value '%s' doesn't match pattern '%s'", fieldName(field, idx), pattern, value);
+        return String.format("%s: value '%s' doesn't match pattern '%s'", fieldName(field, idx), value, pattern);
     }
 
     @Override
