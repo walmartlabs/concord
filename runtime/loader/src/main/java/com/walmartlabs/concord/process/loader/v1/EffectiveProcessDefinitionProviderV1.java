@@ -1,10 +1,10 @@
-package com.walmartlabs.concord.process.loader.model;
+package com.walmartlabs.concord.process.loader.v1;
 
 /*-
  * *****
  * Concord
  * -----
- * Copyright (C) 2017 - 2019 Walmart Inc.
+ * Copyright (C) 2017 - 2020 Walmart Inc.
  * -----
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,30 +20,15 @@ package com.walmartlabs.concord.process.loader.model;
  * =====
  */
 
-import com.walmartlabs.concord.imports.Imports;
+import com.walmartlabs.concord.process.loader.model.EffectiveProcessDefinitionProvider;
+import com.walmartlabs.concord.process.loader.model.Options;
 
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.io.OutputStream;
 
-/**
- * Common interface for v1 and v2 process definitions.
- */
-public interface ProcessDefinition extends EffectiveProcessDefinitionProvider {
+public class EffectiveProcessDefinitionProviderV1 implements EffectiveProcessDefinitionProvider {
 
-    String runtime();
-
-    Configuration configuration();
-
-    Map<String, FlowDefinition> flows();
-
-    Set<String> publicFlows();
-
-    Map<String, Profile> profiles();
-
-    List<Trigger> triggers();
-
-    Imports imports();
-
-    List<Form> forms();
+    @Override
+    public void serialize(Options options, OutputStream out) throws Exception {
+        // TODO
+    }
 }

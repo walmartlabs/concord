@@ -1,0 +1,49 @@
+configuration:
+  runtime: "concord-v2"
+  debug: false
+  entryPoint: "default"
+  events:
+    recordTaskInVars: false
+    truncateInVars: true
+    truncateMaxStringLength: 1024
+    truncateMaxArrayLength: 32
+    truncateMaxDepth: 10
+    recordTaskOutVars: false
+    truncateOutVars: true
+    inVarsBlacklist:
+    - "apiKey"
+    - "apiToken"
+    - "password"
+    - "privateKey"
+    - "vaultPassword"
+flows:
+  flow1:
+  - checkpoint: "chp1"
+    meta:
+      meta-1: "v1"
+      meta-2: "v2"
+publicFlows:
+- "flow1"
+triggers:
+- github:
+    activeProfiles:
+    - "p1"
+    entryPoint: "www"
+    useInitiator: true
+    arguments:
+      arg: "arg-value"
+    conditions:
+      type: "push"
+imports:
+- mvn:
+    url: "http://url"
+    dest: "dest"
+forms:
+  form1:
+  - field1:
+      type: "string*"
+      value: null
+      allow: null
+resources:
+  concord:
+  - "glob:concord/{**/,}{*.,}concord.yml"

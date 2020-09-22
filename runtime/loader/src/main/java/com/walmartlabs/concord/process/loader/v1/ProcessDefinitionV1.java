@@ -31,7 +31,7 @@ import java.util.*;
  * Adapter class for v1 ProjectDefinition.
  * {@see com.walmartlabs.concord.project.model.ProjectDefinition}
  */
-public class ProcessDefinitionV1 implements ProcessDefinition, Serializable {
+public class ProcessDefinitionV1 extends EffectiveProcessDefinitionProviderV1 implements ProcessDefinition, Serializable {
 
     private static final long serialVersionUID = 1;
 

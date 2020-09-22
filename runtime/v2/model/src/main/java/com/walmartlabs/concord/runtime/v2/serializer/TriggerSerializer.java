@@ -1,0 +1,82 @@
+package com.walmartlabs.concord.runtime.v2.serializer;
+
+/*-
+ * *****
+ * Concord
+ * -----
+ * Copyright (C) 2017 - 2020 Walmart Inc.
+ * -----
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ * 
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ * =====
+ */
+
+import com.fasterxml.jackson.core.JsonGenerator;
+import com.fasterxml.jackson.databind.SerializerProvider;
+import com.fasterxml.jackson.databind.ser.std.StdSerializer;
+import com.walmartlabs.concord.imports.Import;
+import com.walmartlabs.concord.runtime.v2.model.ProcessConfiguration;
+import com.walmartlabs.concord.runtime.v2.model.Trigger;
+
+import java.io.IOException;
+import java.util.Map;
+
+import static com.walmartlabs.concord.runtime.v2.parser.ConfigurationGrammar.exclusiveVal;
+import static com.walmartlabs.concord.runtime.v2.parser.GrammarOptions.mandatory;
+import static com.walmartlabs.concord.runtime.v2.parser.GrammarOptions.optional;
+import static com.walmartlabs.concord.runtime.v2.parser.GrammarV2.*;
+import static com.walmartlabs.concord.runtime.v2.parser.GrammarV2.intVal;
+
+public class TriggerSerializer extends StdSerializer<Trigger> {
+
+    public TriggerSerializer() {
+        this(null);
+    }
+
+    public TriggerSerializer(Class<Trigger> t) {
+        super(t);
+    }
+
+    @Override
+    public void serialize(Trigger value, JsonGenerator gen, SerializerProvider provider) throws IOException {
+        gen.writeStartObject();
+
+        gen.writeFieldName(value.name());
+
+        gen.writeStartObject();
+        if (!value.activeProfiles().isEmpty()) {
+            gen.writeObjectField("activeProfiles", value.activeProfiles());
+        }
+        if (!value.configuration().isEmpty()) {
+            for (Map.Entry<String, Object> e : value.configuration().entrySet()) {
+                gen.writeObjectField(e.getKey(), e.getValue());
+            }
+        }
+        if (!value.arguments().isEmpty()) {
+            gen.writeObjectField("arguments", value.arguments());
+        }
+
+        if ("cron".equalsIgnoreCase(value.name())) {
+            for (Map.Entry<String, Object> e : value.conditions().entrySet()) {
+                gen.writeObjectField(e.getKey(), e.getValue());
+            }
+        } else {
+            if (!value.conditions().isEmpty()) {
+                gen.writeObjectField("conditions", value.conditions());
+            }
+        }
+
+        gen.writeEndObject();
+
+        gen.writeEndObject();
+    }
+}

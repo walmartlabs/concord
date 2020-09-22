@@ -66,7 +66,7 @@ public final class FormsGrammar {
     private static final Parser<Atom, Forms> forms =
             betweenTokens(JsonToken.START_OBJECT, JsonToken.END_OBJECT,
                     many(form).map(Seq::toList)
-                            .map(forms -> Forms.of(forms, null)));
+                            .map(Forms::of));
 
     private static Parser<Atom, ImmutableFormCallOptions.Builder> formCallFieldsOption(ImmutableFormCallOptions.Builder o) {
         return orError(or(formFieldsArray.map(o::fields), expression.map(o::fieldsExpression)), YamlValueType.FORM_CALL_FIELDS);
