@@ -4,6 +4,8 @@
 
 ### Changed
 
+- concord-server: fixed the error message template when validating
+forms;
 - concord-server: fixed a potential race when registering internal
 metrics. Fixes a `ConcurrentModificationException` when Server is
 running in an embedded environment, e.g. testcontainer-concord's
