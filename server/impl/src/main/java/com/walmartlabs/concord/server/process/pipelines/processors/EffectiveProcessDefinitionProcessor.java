@@ -22,6 +22,8 @@ package com.walmartlabs.concord.server.process.pipelines.processors;
 
 import com.walmartlabs.concord.process.loader.model.Options;
 import com.walmartlabs.concord.process.loader.model.ProcessDefinition;
+import com.walmartlabs.concord.sdk.Constants;
+import com.walmartlabs.concord.sdk.MapUtils;
 import com.walmartlabs.concord.server.process.Payload;
 import com.walmartlabs.concord.server.process.ProcessException;
 import com.walmartlabs.concord.server.process.state.ProcessStateManager;
@@ -33,13 +35,16 @@ import javax.inject.Named;
 import javax.inject.Singleton;
 import java.io.ByteArrayOutputStream;
 import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
 
 @Named
 @Singleton
 public class EffectiveProcessDefinitionProcessor implements PayloadProcessor {
 
     private static final Logger log = LoggerFactory.getLogger(EffectiveProcessDefinitionProcessor.class);
-    private static final String EFFECTIVE_FLOW_PATH = ".concord/effective.concord.yml";
+
+    private static final String EFFECTIVE_YAML_PATH = ".concord/effective.concord.yml";
 
     private final ProcessStateManager stateManager;
 
@@ -58,24 +63,46 @@ public class EffectiveProcessDefinitionProcessor implements PayloadProcessor {
         Options opts = Options.builder()
                 .instanceId(payload.getProcessKey().getInstanceId())
                 .parentInstanceId(payload.getHeader(Payload.PARENT_INSTANCE_ID))
-                .configuration(payload.getHeader(Payload.CONFIGURATION, Collections.emptyMap()))
+                .configuration(sanitizeConfiguration(payload.getHeader(Payload.CONFIGURATION, Collections.emptyMap())))
                 .activeProfiles(payload.getHeader(Payload.ACTIVE_PROFILES, Collections.emptyList()))
                 .build();
 
         try (ByteArrayOutputStream out = new ByteArrayOutputStream()) {
             pd.serialize(opts, out);
+
             byte[] bytes = out.toByteArray();
             if (bytes.length == 0) {
                 return chain.process(payload);
             }
+
             stateManager.tx(tx -> {
-                stateManager.deleteFile(tx, payload.getProcessKey(), EFFECTIVE_FLOW_PATH);
-                stateManager.insert(tx, payload.getProcessKey(), EFFECTIVE_FLOW_PATH, bytes);
+                stateManager.deleteFile(tx, payload.getProcessKey(), EFFECTIVE_YAML_PATH);
+                stateManager.insert(tx, payload.getProcessKey(), EFFECTIVE_YAML_PATH, bytes);
             });
         } catch (Exception e) {
             log.warn("process ['{}'] -> error: {}", payload.getProcessKey(), e.getMessage());
             throw new ProcessException(payload.getProcessKey(), "Error while processing effective concord.yml: " + e.getMessage(), e);
         }
         return chain.process(payload);
+    }
+
+    private Map<String, Object> sanitizeConfiguration(Map<String, Object> cfg) {
+        Map<String, Object> m = new HashMap<>(cfg);
+
+        Map<String, Object> pi = MapUtils.getMap(m, Constants.Request.PROCESS_INFO_KEY, null);
+        if (pi != null) {
+            pi = new HashMap<>(pi);
+            sanitize(pi, "sessionKey");
+            sanitize(pi, Constants.Request.SESSION_TOKEN_KEY);
+            m.put(Constants.Request.PROCESS_INFO_KEY, pi);
+        }
+
+        return m;
+    }
+
+    private void sanitize(Map<String, Object> m, String key) {
+        if (m.containsKey(key)) {
+            m.put(key, "***");
+        }
     }
 }

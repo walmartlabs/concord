@@ -262,7 +262,7 @@ const renderProcessSecondaryActions = (refresh: () => void, process?: ProcessEnt
                     href={`/api/v1/process/${process.instanceId}/state/snapshot/.concord/effective.concord.yml`}
                     download={`${instanceId}.concord.yml`}>
                     <Icon name="download" color={'green'} />
-                    <span className="text">Effective Flow</span>
+                    <span className="text">Effective YAML</span>
                 </Dropdown.Item>
 
                 {extraProcessMenuLinks &&

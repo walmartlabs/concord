@@ -27,8 +27,11 @@ import java.io.OutputStream;
 
 public class EffectiveProcessDefinitionProviderV1 implements EffectiveProcessDefinitionProvider {
 
+    private static final byte[] BANNER = "# the effective Concord YAML feature is currently supported only for the 'concord-v2' runtime".getBytes();
+
     @Override
     public void serialize(Options options, OutputStream out) throws Exception {
-        // TODO
+        out.write(BANNER);
+        out.flush();
     }
 }

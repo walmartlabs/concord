@@ -31,7 +31,6 @@ import static com.walmartlabs.concord.runtime.v2.parser.GrammarMisc.betweenToken
 import static com.walmartlabs.concord.runtime.v2.parser.GrammarMisc.with;
 import static com.walmartlabs.concord.runtime.v2.parser.GrammarOptions.optional;
 import static com.walmartlabs.concord.runtime.v2.parser.GrammarOptions.options;
-import static com.walmartlabs.concord.runtime.v2.parser.GrammarV2.stringVal;
 import static com.walmartlabs.concord.runtime.v2.parser.ProfilesGrammar.profilesVal;
 import static com.walmartlabs.concord.runtime.v2.parser.PublicFlowsGrammar.publicFlowsVal;
 import static com.walmartlabs.concord.runtime.v2.parser.TriggersGrammar.triggersVal;
@@ -42,7 +41,6 @@ public final class ProcessDefinitionGrammar {
             betweenTokens(JsonToken.START_OBJECT, JsonToken.END_OBJECT,
                     with(ImmutableProcessDefinition::builder,
                             o -> options(
-                                    optional("runtime", stringVal.map(o::runtime)),
                                     optional("configuration", processCfgVal.map(o::configuration)),
                                     optional("flows", flowsVal.map(o::flows)),
                                     optional("publicFlows", publicFlowsVal.map(o::publicFlows)),
