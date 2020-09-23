@@ -40,8 +40,10 @@ public class CheckpointStepSerializer extends StdSerializer<Checkpoint> {
     @Override
     public void serialize(Checkpoint value, JsonGenerator gen, SerializerProvider provider) throws IOException {
         gen.writeStartObject();
+
         gen.writeObjectField("checkpoint", value.getName());
         gen.writeObject(value.getOptions());
+
         gen.writeEndObject();
     }
 }

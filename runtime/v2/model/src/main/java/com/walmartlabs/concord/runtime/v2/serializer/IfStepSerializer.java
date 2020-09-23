@@ -46,7 +46,10 @@ public class IfStepSerializer extends StdSerializer<IfStep> {
         gen.writeObjectField("if", value.getExpression());
         gen.writeObjectField("then", value.getThenSteps());
         writeNotEmptyObjectField("else", value.getElseSteps(), gen);
-        gen.writeObject(value.getOptions());
+
+        if (value.getOptions() != null) {
+            gen.writeObject(value.getOptions());
+        }
 
         gen.writeEndObject();
     }

@@ -55,7 +55,9 @@ public class SwitchStepSerializer extends StdSerializer<SwitchStep> {
         }
         writeNotEmptyObjectField("default", value.getDefaultSteps(), gen);
 
-        gen.writeObject(value.getOptions());
+        if (value.getOptions() != null) {
+            gen.writeObject(value.getOptions());
+        }
 
         gen.writeEndObject();
     }

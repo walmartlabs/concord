@@ -45,7 +45,6 @@ public class ExpressionStepSerializer extends StdSerializer<Expression> {
         gen.writeStartObject();
 
         gen.writeObjectField("expr", value.getExpr());
-
         serializeOptions(value.getOptions(), gen);
 
         gen.writeEndObject();
@@ -59,6 +58,7 @@ public class ExpressionStepSerializer extends StdSerializer<Expression> {
         if (options.out() != null) {
             gen.writeObjectField("out", options.out());
         }
+
         writeNotEmptyObjectField("meta", options.meta(), gen);
         writeNotEmptyObjectField("error", options.errorSteps(), gen);
     }

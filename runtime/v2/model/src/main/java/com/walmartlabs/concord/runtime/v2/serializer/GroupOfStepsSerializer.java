@@ -46,12 +46,18 @@ public class GroupOfStepsSerializer extends StdSerializer<GroupOfSteps> {
 
         gen.writeFieldName("block");
         gen.writeObject(value.getSteps());
-
-        GroupOfStepsOptions o = value.getOptions();
-        writeNotEmptyObjectField("out", o.out(), gen);
-        writeNotEmptyObjectField("error", o.errorSteps(), gen);
-        writeNotEmptyObjectField("meta", o.meta(), gen);
+        serializeOptions(value.getOptions(), gen);
 
         gen.writeEndObject();
+    }
+
+    private static void serializeOptions(GroupOfStepsOptions options, JsonGenerator gen) throws IOException {
+        if (options == null) {
+            return;
+        }
+
+        writeNotEmptyObjectField("out", options.out(), gen);
+        writeNotEmptyObjectField("error", options.errorSteps(), gen);
+        writeNotEmptyObjectField("meta", options.meta(), gen);
     }
 }

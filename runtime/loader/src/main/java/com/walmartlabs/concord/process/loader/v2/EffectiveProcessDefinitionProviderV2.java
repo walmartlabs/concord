@@ -28,13 +28,11 @@ import com.walmartlabs.concord.runtime.v2.model.ProcessConfiguration;
 import com.walmartlabs.concord.runtime.v2.model.ProcessDefinition;
 import com.walmartlabs.concord.runtime.v2.model.Profile;
 import com.walmartlabs.concord.runtime.v2.model.Step;
+import com.walmartlabs.concord.sdk.Constants;
 import com.walmartlabs.concord.sdk.MapUtils;
 
 import java.io.OutputStream;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public class EffectiveProcessDefinitionProviderV2 implements EffectiveProcessDefinitionProvider {
 
@@ -47,8 +45,6 @@ public class EffectiveProcessDefinitionProviderV2 implements EffectiveProcessDef
 
     @Override
     public void serialize(Options options, OutputStream out) throws Exception {
-        Map<String, Object> arguments = MapUtils.getMap(options.configuration(), "arguments", Collections.emptyMap());
-
         Map<String, List<Step>> flows = new HashMap<>(delegate.flows());
         for (String ap : options.activeProfiles()) {
             Profile p = delegate.profiles().get(ap);
@@ -56,6 +52,16 @@ public class EffectiveProcessDefinitionProviderV2 implements EffectiveProcessDef
                 flows.putAll(p.flows());
             }
         }
+
+        Map<String, Object> arguments = new LinkedHashMap<>(MapUtils.getMap(options.configuration(), "arguments", Collections.emptyMap()));
+        arguments.put(Constants.Context.TX_ID_KEY, options.instanceId());
+        if (options.parentInstanceId() != null) {
+            arguments.put(Constants.Request.PARENT_INSTANCE_ID_KEY, options.parentInstanceId());
+        }
+        arguments.put(Constants.Request.INITIATOR_KEY, options.configuration().get(Constants.Request.INITIATOR_KEY));
+        arguments.put(Constants.Request.PROJECT_INFO_KEY, MapUtils.getMap(options.configuration(), Constants.Request.PROJECT_INFO_KEY, Collections.emptyMap()));
+        arguments.put(Constants.Request.PROCESS_INFO_KEY, MapUtils.getMap(options.configuration(), Constants.Request.PROCESS_INFO_KEY, Collections.emptyMap()));
+
         ProcessDefinition pd = ProcessDefinition.builder().from(delegate)
                 .configuration(ProcessConfiguration.builder().from(delegate.configuration())
                         .arguments(arguments)

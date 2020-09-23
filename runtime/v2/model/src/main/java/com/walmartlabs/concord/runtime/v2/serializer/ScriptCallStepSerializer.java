@@ -23,6 +23,7 @@ package com.walmartlabs.concord.runtime.v2.serializer;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.databind.ser.std.StdSerializer;
+import com.walmartlabs.concord.runtime.v2.model.ParallelBlockOptions;
 import com.walmartlabs.concord.runtime.v2.model.ScriptCall;
 import com.walmartlabs.concord.runtime.v2.model.ScriptCallOptions;
 
@@ -45,21 +46,31 @@ public class ScriptCallStepSerializer extends StdSerializer<ScriptCall> {
         gen.writeStartObject();
 
         gen.writeObjectField("script", value.getLanguageOrRef());
-
-        ScriptCallOptions o = value.getOptions();
-        if (o.body() != null) {
-            gen.writeObjectField("body", o.body());
-        }
-        writeNotEmptyObjectField("in", o.input(), gen);
-        if (o.withItems() != null) {
-            gen.writeObjectField("withItems", o.withItems());
-        }
-        if (o.retry() != null) {
-            gen.writeObjectField("retry", o.retry());
-        }
-        writeNotEmptyObjectField("error", o.errorSteps(), gen);
-        writeNotEmptyObjectField("meta", o.meta(), gen);
+        serializeOptions(value.getOptions(), gen);
 
         gen.writeEndObject();
+    }
+
+    private static void serializeOptions(ScriptCallOptions options, JsonGenerator gen) throws IOException {
+        if (options == null) {
+            return;
+        }
+
+        if (options.body() != null) {
+            gen.writeObjectField("body", options.body());
+        }
+
+        writeNotEmptyObjectField("in", options.input(), gen);
+
+        if (options.withItems() != null) {
+            gen.writeObjectField("withItems", options.withItems());
+        }
+
+        if (options.retry() != null) {
+            gen.writeObjectField("retry", options.retry());
+        }
+
+        writeNotEmptyObjectField("error", options.errorSteps(), gen);
+        writeNotEmptyObjectField("meta", options.meta(), gen);
     }
 }

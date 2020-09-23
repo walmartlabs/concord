@@ -44,19 +44,24 @@ public class FormCallStepSerializer extends StdSerializer<FormCall> {
     public void serialize(FormCall value, JsonGenerator gen, SerializerProvider provider) throws IOException {
         gen.writeStartObject();
         gen.writeObjectField("form", value.getName());
+        serializeOptions(value.getOptions(), gen);
+        gen.writeEndObject();
+    }
 
-        FormCallOptions o = value.getOptions();
-        gen.writeObjectField("yield", o.yield());
-        gen.writeObjectField("saveSubmittedBy", o.saveSubmittedBy());
-        writeNotEmptyObjectField("runAs", o.runAs(), gen);
-        writeNotEmptyObjectField("values", o.values(), gen);
-
-        if (!o.fields().isEmpty()) {
-            writeNotEmptyObjectField("fields", o.fields(), gen);
-        } else if (o.fieldsExpression() != null) {
-            gen.writeObjectField("fields", o.fieldsExpression());
+    private static void serializeOptions(FormCallOptions options, JsonGenerator gen) throws IOException {
+        if (options == null) {
+            return;
         }
 
-        gen.writeEndObject();
+        gen.writeObjectField("yield", options.yield());
+        gen.writeObjectField("saveSubmittedBy", options.saveSubmittedBy());
+        writeNotEmptyObjectField("runAs", options.runAs(), gen);
+        writeNotEmptyObjectField("values", options.values(), gen);
+
+        if (!options.fields().isEmpty()) {
+            writeNotEmptyObjectField("fields", options.fields(), gen);
+        } else if (options.fieldsExpression() != null) {
+            gen.writeObjectField("fields", options.fieldsExpression());
+        }
     }
 }

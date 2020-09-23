@@ -22,6 +22,8 @@ package com.walmartlabs.concord.runtime.v2.model;
 
 import com.walmartlabs.concord.runtime.v2.parser.StepOptions;
 
+import javax.annotation.Nullable;
+
 public abstract class AbstractStep<O extends StepOptions> implements Step {
 
     private static final long serialVersionUID = 1L;
@@ -39,6 +41,7 @@ public abstract class AbstractStep<O extends StepOptions> implements Step {
         return location;
     }
 
+    @Nullable
     public O getOptions() {
         return options;
     }

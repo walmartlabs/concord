@@ -23,13 +23,16 @@ package com.walmartlabs.concord.process.loader.model;
 import com.walmartlabs.concord.common.AllowNulls;
 import org.immutables.value.Value;
 
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
+import javax.annotation.Nullable;
+import java.util.*;
 
 @Value.Immutable
 public interface Options {
+
+    UUID instanceId();
+
+    @Nullable
+    UUID parentInstanceId();
 
     @Value.Default
     @AllowNulls

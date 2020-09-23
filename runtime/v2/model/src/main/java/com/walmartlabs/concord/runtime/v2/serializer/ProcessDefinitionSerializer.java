@@ -51,12 +51,15 @@ public class ProcessDefinitionSerializer extends StdSerializer<ProcessDefinition
         writeNotEmptyObjectField("publicFlows", value.publicFlows(), gen);
         writeNotEmptyObjectField("profiles", value.profiles(), gen);
         writeNotEmptyObjectField("triggers", value.triggers(), gen);
+
         if (!value.imports().isEmpty()) {
             gen.writeObjectField("imports", value.imports().items().stream().map(o -> Collections.singletonMap(o.type(), o)).collect(Collectors.toList()));
         }
+
         if (!value.forms().isEmpty()) {
             gen.writeObjectField("forms", value.forms().items().stream().collect(Collectors.toMap(Form::name, o -> o)));
         }
+
         gen.writeObjectField("resources", value.resources());
 
         gen.writeEndObject();

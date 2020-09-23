@@ -24,8 +24,11 @@ import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.databind.ser.std.StdSerializer;
 import com.walmartlabs.concord.runtime.v2.model.FlowCall;
+import com.walmartlabs.concord.runtime.v2.model.FlowCallOptions;
 
 import java.io.IOException;
+
+import static com.walmartlabs.concord.runtime.v2.serializer.SerializerUtils.writeNotEmptyObjectField;
 
 public class FlowCallStepSerializer extends StdSerializer<FlowCall> {
 
@@ -40,8 +43,30 @@ public class FlowCallStepSerializer extends StdSerializer<FlowCall> {
     @Override
     public void serialize(FlowCall value, JsonGenerator gen, SerializerProvider provider) throws IOException {
         gen.writeStartObject();
+
         gen.writeObjectField("call", value.getFlowName());
-        gen.writeObject(value.getOptions());
+        serializeOptions(value.getOptions(), gen);
+
         gen.writeEndObject();
+    }
+
+    private static void serializeOptions(FlowCallOptions options, JsonGenerator gen) throws IOException {
+        if (options == null) {
+            return;
+        }
+
+        writeNotEmptyObjectField("in", options.input(), gen);
+        writeNotEmptyObjectField("out", options.out(), gen);
+
+        if (options.withItems() != null) {
+            gen.writeObjectField("withItems", options.withItems());
+        }
+
+        if (options.retry() != null) {
+            gen.writeObjectField("retry", options.retry());
+        }
+
+        writeNotEmptyObjectField("error", options.errorSteps(), gen);
+        writeNotEmptyObjectField("meta", options.meta(), gen);
     }
 }

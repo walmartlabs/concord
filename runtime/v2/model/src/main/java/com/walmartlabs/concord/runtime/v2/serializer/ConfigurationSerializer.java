@@ -42,6 +42,7 @@ public class ConfigurationSerializer extends StdSerializer<ProcessConfiguration>
     @Override
     public void serialize(ProcessConfiguration value, JsonGenerator gen, SerializerProvider provider) throws IOException {
         gen.writeStartObject();
+
         gen.writeObjectField("runtime", value.runtime());
         gen.writeObjectField("debug", value.debug());
         gen.writeObjectField("entryPoint", value.entryPoint());
@@ -50,13 +51,16 @@ public class ConfigurationSerializer extends StdSerializer<ProcessConfiguration>
         writeNotEmptyObjectField("meta", value.meta(), gen);
         gen.writeObjectField("events", value.events());
         writeNotEmptyObjectField("requirements", value.requirements(), gen);
+
         if (value.processTimeout() != null) {
             gen.writeObjectField("processTimeout", value.processTimeout());
         }
+
         if (value.exclusive() != null) {
             gen.writeObjectField("exclusive", value.exclusive());
         }
         writeNotEmptyObjectField("out", value.out(), gen);
+
         gen.writeEndObject();
     }
 }

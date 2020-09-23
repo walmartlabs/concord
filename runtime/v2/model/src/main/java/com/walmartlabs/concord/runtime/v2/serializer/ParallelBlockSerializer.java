@@ -45,11 +45,17 @@ public class ParallelBlockSerializer extends StdSerializer<ParallelBlock> {
         gen.writeStartObject();
 
         gen.writeObjectField("parallel", value.getSteps());
-
-        ParallelBlockOptions o = value.getOptions();
-        writeNotEmptyObjectField("out", o.out(), gen);
-        writeNotEmptyObjectField("meta", o.meta(), gen);
+        serializeOptions(value.getOptions(), gen);
 
         gen.writeEndObject();
+    }
+
+    private static void serializeOptions(ParallelBlockOptions options, JsonGenerator gen) throws IOException {
+        if (options == null) {
+            return;
+        }
+
+        writeNotEmptyObjectField("out", options.out(), gen);
+        writeNotEmptyObjectField("meta", options.meta(), gen);
     }
 }
