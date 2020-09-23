@@ -2,6 +2,12 @@
 
 ## [Unreleased]
 
+### Added
+
+- concord-server, concord-console: option to download "the
+effective YAML" - a single YAML document with all Concord resources
+for a given process.
+
 ### Changed
 
 - concord-server: fixed the error message template when validating
