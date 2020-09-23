@@ -63,7 +63,6 @@ public class ProjectSerializerV2 {
         module.addSerializer(Expression.class, new ExpressionStepSerializer());
 
         module.addSerializer(FlowCall.class, new FlowCallStepSerializer());
-        module.addSerializer(FlowCallOptions.class, new FlowCallOptionsSerializer());
 
         module.addSerializer(FormCall.class, new FormCallStepSerializer());
         module.addSerializer(FormField.class, new FormFieldSerializer());
