@@ -243,11 +243,15 @@ public class ProcessStateManager extends AbstractDao {
      * Removes a single value.
      */
     public void deleteFile(ProcessKey processKey, String path) {
-        tx(tx -> tx.deleteFrom(PROCESS_STATE)
+        tx(tx -> deleteFile(tx, processKey, path));
+    }
+
+    public void deleteFile(DSLContext tx, ProcessKey processKey, String path) {
+        tx.deleteFrom(PROCESS_STATE)
                 .where(PROCESS_STATE.INSTANCE_ID.eq(processKey.getInstanceId())
                         .and(PROCESS_STATE.INSTANCE_CREATED_AT.eq(processKey.getCreatedAt()))
                         .and(PROCESS_STATE.ITEM_PATH.eq(path)))
-                .execute());
+                .execute();
     }
 
     public void delete(ProcessKey processKey) {

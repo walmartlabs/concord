@@ -33,11 +33,6 @@ public interface ProcessDefinition extends Serializable {
     long serialVersionUID = 1L;
 
     @Value.Default
-    default String runtime() {
-        return "concord-v2"; // TODO constants
-    }
-
-    @Value.Default
     default ProcessConfiguration configuration() {
         return ProcessConfiguration.builder().build();
     }

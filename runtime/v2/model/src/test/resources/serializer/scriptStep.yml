@@ -1,0 +1,20 @@
+script: "js"
+body: "print(\"Hello, \", myVar)"
+in:
+  in: "v"
+withItems:
+- "item1"
+- "item2"
+retry:
+  times: "${times}"
+  delay: "${delay}"
+  in:
+    retry-input: "v1"
+error:
+- checkpoint: "chp1"
+  meta:
+    meta-1: "v1"
+    meta-2: "v2"
+meta:
+  meta-1: "v1"
+  meta-2: "v2"

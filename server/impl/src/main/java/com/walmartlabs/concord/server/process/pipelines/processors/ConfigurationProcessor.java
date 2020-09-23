@@ -69,7 +69,10 @@ public class ConfigurationProcessor implements PayloadProcessor {
     @Override
     public Payload process(Chain chain, Payload payload) {
         // system-level default configuration
-        Map<String, Object> defCfg = defaultCfg.getCfg();
+        Map<String, Object> defCfg = Collections.emptyMap();
+        if (!"concord-v2".equalsIgnoreCase(payload.getHeader(Payload.RUNTIME))) {
+            defCfg = defaultCfg.getCfg();
+        }
 
         // default configuration from policy
         Map<String, Object> policyDefCfg = getDefaultCfgFromPolicy(payload);

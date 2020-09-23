@@ -20,10 +20,8 @@ package com.walmartlabs.concord.runtime.v2.model;
  * =====
  */
 
-import com.fasterxml.jackson.core.JsonLocation;
 import org.immutables.value.Value;
 
-import javax.annotation.Nullable;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -38,9 +36,6 @@ public interface Forms extends Serializable  {
     default List<Form> items() {
         return Collections.emptyList();
     }
-
-    @Nullable
-    JsonLocation location();
 
     default boolean isEmpty() {
         return items().isEmpty();
@@ -57,8 +52,8 @@ public interface Forms extends Serializable  {
                 .orElse(null);
     }
 
-    static Forms of(List<Form> items, JsonLocation location) {
-        return builder().addAllItems(items).location(location).build();
+    static Forms of(List<Form> items) {
+        return builder().addAllItems(items).build();
     }
 
     static ImmutableForms.Builder builder() {
@@ -69,6 +64,6 @@ public interface Forms extends Serializable  {
         List<Form> result = new ArrayList<>();
         result.addAll(a.items());
         result.addAll(b.items());
-        return Forms.of(result, null);
+        return Forms.of(result);
     }
 }

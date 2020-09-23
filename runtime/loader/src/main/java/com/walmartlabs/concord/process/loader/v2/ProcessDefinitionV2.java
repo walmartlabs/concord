@@ -22,11 +22,12 @@ package com.walmartlabs.concord.process.loader.v2;
 
 import com.walmartlabs.concord.imports.Imports;
 import com.walmartlabs.concord.process.loader.model.*;
+import com.walmartlabs.concord.runtime.v2.ProjectSerializerV2;
 
 import java.io.Serializable;
 import java.util.*;
 
-public class ProcessDefinitionV2 implements ProcessDefinition, Serializable {
+public class ProcessDefinitionV2 extends EffectiveProcessDefinitionProviderV2 implements ProcessDefinition, Serializable {
 
     private static final long serialVersionUID = 1L;
 
@@ -39,6 +40,8 @@ public class ProcessDefinitionV2 implements ProcessDefinition, Serializable {
     private final List<Form> forms;
 
     public ProcessDefinitionV2(com.walmartlabs.concord.runtime.v2.model.ProcessDefinition delegate) {
+        super(delegate);
+
         this.cfg = new ConfigurationV2(delegate.configuration());
 
         this.flows = new HashMap<>();
