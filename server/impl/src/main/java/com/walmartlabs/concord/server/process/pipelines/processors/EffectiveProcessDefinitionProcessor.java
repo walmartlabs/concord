@@ -39,6 +39,7 @@ import java.util.Collections;
 public class EffectiveProcessDefinitionProcessor implements PayloadProcessor {
 
     private static final Logger log = LoggerFactory.getLogger(EffectiveProcessDefinitionProcessor.class);
+    private static final String EFFECTIVE_FLOW_PATH = ".concord/effective.concord.yml";
 
     private final ProcessStateManager stateManager;
 
@@ -63,7 +64,14 @@ public class EffectiveProcessDefinitionProcessor implements PayloadProcessor {
 
         try (ByteArrayOutputStream out = new ByteArrayOutputStream()) {
             pd.serialize(opts, out);
-            stateManager.tx(tx -> stateManager.insert(tx, payload.getProcessKey(), ".concord/effective.concord.yml", out.toByteArray()));
+            byte[] bytes = out.toByteArray();
+            if (bytes.length == 0) {
+                return chain.process(payload);
+            }
+            stateManager.tx(tx -> {
+                stateManager.deleteFile(tx, payload.getProcessKey(), EFFECTIVE_FLOW_PATH);
+                stateManager.insert(tx, payload.getProcessKey(), EFFECTIVE_FLOW_PATH, bytes);
+            });
         } catch (Exception e) {
             log.warn("process ['{}'] -> error: {}", payload.getProcessKey(), e.getMessage());
             throw new ProcessException(payload.getProcessKey(), "Error while processing effective concord.yml: " + e.getMessage(), e);
