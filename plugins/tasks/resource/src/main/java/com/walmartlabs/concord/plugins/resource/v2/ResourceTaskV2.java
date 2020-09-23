@@ -74,4 +74,12 @@ public class ResourceTaskV2 implements Task {
     public String prettyPrintJson(Object json) throws IOException {
         return ResourceTaskCommon.prettyPrintJson(json);
     }
+
+    public String prettyPrintYaml(Object value) throws IOException {
+        return ResourceTaskCommon.prettyPrintYaml(value);
+    }
+
+    public String prettyPrintYaml(Object value, int indent) throws IOException {
+        return ResourceTaskCommon.prettyPrintYaml(value, indent);
+    }
 }
