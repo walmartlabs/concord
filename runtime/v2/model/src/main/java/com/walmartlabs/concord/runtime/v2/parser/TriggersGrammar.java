@@ -41,6 +41,7 @@ import static io.takari.parc.Combinators.many1;
 
 public final class TriggersGrammar {
 
+    @SuppressWarnings("unchecked")
     private static final Parser<Atom, Map<String, Object>> githubTriggerConditionsV2 =
             betweenTokens(JsonToken.START_OBJECT, JsonToken.END_OBJECT,
                 with(ImmutableMap::<String, Object>builder,

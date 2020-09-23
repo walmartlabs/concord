@@ -67,6 +67,7 @@ public class EnqueueProcessPipeline extends Pipeline {
                 DependencyVersionsExportProcessor.class,
                 StateImportingProcessor.class,
                 ProcessHandlersProcessor.class,
+                EffectiveProcessDefinitionProcessor.class,
                 SecuritySubjectProcessor.class,
                 EnqueueingProcessor.class);
 

@@ -1,0 +1,11 @@
+if: "${ifExpression}"
+then:
+- expr: "${exprForThen}"
+else:
+- checkpoint: "chp1"
+  meta:
+    meta-1: "v1"
+    meta-2: "v2"
+meta:
+  meta-1: "v1"
+  meta-2: "v2"

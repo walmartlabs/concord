@@ -1,0 +1,5 @@
+set:
+  k1: "v1"
+meta:
+  meta-1: "v1"
+  meta-2: "v2"

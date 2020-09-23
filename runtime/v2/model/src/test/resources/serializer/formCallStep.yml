@@ -1,0 +1,14 @@
+form: "form"
+yield: true
+saveSubmittedBy: true
+runAs:
+  user: "u1"
+values:
+  k: "v"
+fields:
+- field-name:
+    label: "field-label"
+    type: "field-type*"
+    value: "default-value"
+    allow: "allowed-value"
+    o1: "v1"
