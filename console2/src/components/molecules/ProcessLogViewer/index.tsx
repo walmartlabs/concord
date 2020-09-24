@@ -29,6 +29,7 @@ import { ProcessToolbar } from '../../molecules';
 import { TaskCallDetails } from '../../organisms';
 
 import './styles.css';
+import {Link} from "react-router-dom";
 
 interface State {
     scrollAnchorRef: boolean;
@@ -57,12 +58,15 @@ interface LogContainerProps {
     onClick: (correlationId: ConcordId) => void;
     expandedItems: ConcordId[];
     tagRefs: any[];
+    segmentRef: any;
 }
 
 const renderTagHeader = (
     taskName: string,
     tagRefs: any[],
     idx: number,
+    segmentRef: any,
+    instanceId: ConcordId,
     expanded?: boolean,
     onClick?: () => void,
     correlationId?: ConcordId
@@ -83,6 +87,15 @@ const renderTagHeader = (
             key={idx}
             className={onClick ? 'clickableTagHeader' : undefined}
             onClick={onClick}>
+            <Link
+                to={`/process/${instanceId}/log#segmentId=${idx}`}
+                className="Anchor"
+                id={`segmentId=${idx}`}
+                ref={segmentRef}
+                data-tooltip="Anchor URL"
+                data-inverted="">
+                <Icon name="linkify" />
+            </Link>
             {taskName}
             {onClick && <Icon name={expanded ? 'chevron up' : 'chevron down'} />}
         </Divider>
@@ -95,19 +108,20 @@ const renderTag = (
     tagRefs: any[],
     onClick: () => void,
     expanded: boolean,
-    idx: number
+    idx: number,
+    segmentRef: any
 ) => {
     if (tag.phase === 'post') {
         return <Divider key={idx} />;
     }
 
     if (!tag.correlationId) {
-        return renderTagHeader(tag.taskName, tagRefs, idx);
+        return renderTagHeader(tag.taskName, tagRefs, idx, segmentRef, instanceId);
     }
 
     return (
         <div key={idx} className="logTagDetails">
-            {renderTagHeader(tag.taskName, tagRefs, idx, expanded, onClick, tag.correlationId)}
+            {renderTagHeader(tag.taskName, tagRefs, idx, segmentRef, instanceId, expanded, onClick, tag.correlationId)}
             {expanded && (
                 <TaskCallDetails instanceId={instanceId} correlationId={tag.correlationId} />
             )}
@@ -115,7 +129,7 @@ const renderTag = (
     );
 };
 
-const LogContainer = ({ instanceId, data, tagRefs, onClick, expandedItems }: LogContainerProps) => (
+const LogContainer = ({ instanceId, data, tagRefs, onClick, expandedItems, segmentRef }: LogContainerProps) => (
     <>
         {data.map(({ data, type }, idx) => {
             switch (type) {
@@ -135,7 +149,8 @@ const LogContainer = ({ instanceId, data, tagRefs, onClick, expandedItems }: Log
                         tagRefs,
                         () => onClick(tag.correlationId),
                         expanded,
-                        idx
+                        idx,
+                        segmentRef
                     );
                 }
                 default: {
@@ -149,11 +164,14 @@ const LogContainer = ({ instanceId, data, tagRefs, onClick, expandedItems }: Log
 class ProcessLogViewer extends React.Component<Props, State> {
     private scrollAnchorRef: any;
     private tagRefs: any[];
+    private segmentRef: any;
 
     constructor(props: Props) {
         super(props);
 
         this.tagRefs = [];
+
+        this.segmentRef = React.createRef();
 
         this.state = {
             scrollAnchorRef: false,
@@ -182,6 +200,19 @@ class ProcessLogViewer extends React.Component<Props, State> {
             }
 
             this.scrollToTag();
+
+            this.segmentScroll(this.segmentRef);
+
+        }
+    }
+
+    segmentScroll(segmentRef: any) {
+        if (segmentRef.current && window.location.hash.includes(`#segmentId=`)) {
+            segmentRef.current.scrollIntoView({
+                behavior: 'smooth',
+                block: 'end',
+                inline: 'nearest'
+            });
         }
     }
 
@@ -324,6 +355,7 @@ class ProcessLogViewer extends React.Component<Props, State> {
                     expandedItems={expandedItems}
                     tagRefs={this.tagRefs}
                     onClick={this.handleTagClick}
+                    segmentRef={this.segmentRef}
                 />
 
                 <div
