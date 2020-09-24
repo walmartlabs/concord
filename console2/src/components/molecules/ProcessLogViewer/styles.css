@@ -41,3 +41,13 @@
 .logTagDetails {
     margin-bottom: 20px;
 }
+
+.Anchor {
+    padding-left: 0;
+    padding-right: 5px;
+    color: #e5e2e2;
+}
+
+.Anchor:hover {
+    color: #4183c4;
+}
