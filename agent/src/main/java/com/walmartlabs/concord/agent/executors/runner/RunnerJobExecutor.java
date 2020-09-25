@@ -121,7 +121,7 @@ public class RunnerJobExecutor implements JobExecutor {
             job = job.withDependencies(resolvedDeps);
 
             pe = buildProcessEntry(job);
-        } catch (Exception e) {
+        } catch (Throwable e) {
             log.warn("exec ['{}'] -> process error: {}", job.getInstanceId(), e.getMessage());
 
             job.getLog().error("Process startup error: {}", e.getMessage());
