@@ -214,7 +214,7 @@ public class AnsibleInventory {
                 continue;
             }
 
-            if (!(vv instanceof List)) {
+            if (!(vv instanceof Collection)) {
                 throw new IllegalArgumentException("Invalid '" + TaskParams.INVENTORY_KEY.getKey() + "' value. " +
                         "The '" + hostGroup + ".hosts' parameter must be a list of strings (host names or IP addresses), got: " + vv + ". " +
                         "Check the task's input parameters.");
