@@ -20,21 +20,23 @@ package com.walmartlabs.concord.client;
  * =====
  */
 
-import com.walmartlabs.concord.client.v1.ContextBackedVariables;
-import com.walmartlabs.concord.sdk.Context;
+import com.walmartlabs.concord.ApiClient;
+import com.walmartlabs.concord.ApiException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import javax.inject.Named;
+public class RepositoryRefreshTaskCommon {
 
-@Named("repositoryRefresh")
-public class RepositoryRefreshTask extends AbstractConcordTask {
+    private final RepositoriesV2Api api;
 
-    @Override
-    public void execute(Context ctx) throws Exception {
-        RepositoryRefreshTaskParams in = new RepositoryRefreshTaskParams(new ContextBackedVariables(ctx));
+    private static final Logger log = LoggerFactory.getLogger(RepositoryRefreshTaskCommon.class);
 
-        withClient(ctx, client -> {
-            new RepositoryRefreshTaskCommon(client).execute(in);
-            return null;
-        });
+    public RepositoryRefreshTaskCommon(ApiClient client) {
+        this.api = new RepositoriesV2Api(client);
     }
+
+    public void execute(RepositoryRefreshTaskParams in) throws ApiException {
+        api.refreshRepository(in.repositories());
+    }
+
 }
