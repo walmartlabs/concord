@@ -93,7 +93,7 @@ public class Worker implements Runnable {
             // successful completion
             log.info("run -> done with {}", configuredJobRequest);
             onStatusChange(instanceId, StatusEnum.FINISHED);
-        } catch (Exception e) {
+        } catch (Throwable e) {
             // unwrap the exception if needed
             Throwable t = unwrap(e);
 
