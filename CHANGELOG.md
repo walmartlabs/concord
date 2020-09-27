@@ -10,6 +10,8 @@ for a given process.
 
 ### Changed
 
+- ansible: allow any Java `Collection` types (list, set, etc) as
+inventory host lists;
 - concord-agent: improved error handling in workers;
 - concord-server: fixed the error message template when validating
 forms;
