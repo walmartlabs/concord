@@ -10,6 +10,7 @@ for a given process.
 
 ### Changed
 
+- concord-agent: improved error handling in workers;
 - concord-server: fixed the error message template when validating
 forms;
 - concord-server: fixed a potential race when registering internal
