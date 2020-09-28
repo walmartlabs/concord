@@ -124,6 +124,9 @@ public class Agent {
             JobRequest jobRequest;
             try {
                 jobRequest = take(queueClient);
+            } catch (InterruptedException e) {
+                log.info("run -> interrupted, exiting...");
+                return;
             } catch (Exception e) {
                 log.error("run -> error while fetching a job: {}", e.getMessage(), e);
 
