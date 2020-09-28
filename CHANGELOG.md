@@ -4,6 +4,8 @@
 
 ### Added
 
+- resource-tasks: `prettyPrintYaml` method to output data as
+formatted YAML;
 - concord-server, concord-console: option to download "the
 effective YAML" - a single YAML document with all Concord resources
 for a given process.
