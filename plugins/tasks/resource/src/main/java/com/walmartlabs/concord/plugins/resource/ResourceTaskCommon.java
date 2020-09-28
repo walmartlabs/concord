@@ -22,6 +22,7 @@ package com.walmartlabs.concord.plugins.resource;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
+import com.fasterxml.jackson.dataformat.yaml.YAMLGenerator;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -29,6 +30,7 @@ import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Arrays;
 
 public class ResourceTaskCommon {
 
@@ -109,14 +111,39 @@ public class ResourceTaskCommon {
         return workDir.relativize(tmpFile.toAbsolutePath()).toString();
     }
 
-    public static String prettyPrintJson(Object json) throws IOException {
+    public static String prettyPrintJson(Object value) throws IOException {
         ObjectMapper mapper = new ObjectMapper();
-        if (json instanceof String) {
-            // To add line feeds
-            json = mapper.readValue((String) json, Object.class);
+        if (value instanceof String) {
+            // to add line feeds
+            value = mapper.readValue((String) value, Object.class);
         }
 
-        return mapper.writerWithDefaultPrettyPrinter().writeValueAsString(json);
+        return mapper.writerWithDefaultPrettyPrinter().writeValueAsString(value);
+    }
+
+    public static String prettyPrintYaml(Object value) throws IOException {
+        return prettyPrintYaml(value, 0);
+    }
+
+    public static String prettyPrintYaml(Object value, int indent) throws IOException {
+        ObjectMapper mapper = new ObjectMapper(new YAMLFactory().disable(YAMLGenerator.Feature.WRITE_DOC_START_MARKER));
+        if (value instanceof String) {
+            value = mapper.readValue((String) value, Object.class);
+        }
+
+        String prefix = null;
+        if (indent > 0) {
+            char[] ch = new char[indent + 1];
+            ch[0] = '\n';
+            Arrays.fill(ch, 1, ch.length, ' ');
+            prefix = new String(ch);
+        }
+
+        String s = mapper.writerWithDefaultPrettyPrinter().writeValueAsString(value);
+        if (prefix != null) {
+            s = prefix + s.replace("\n", prefix);
+        }
+        return s;
     }
 
     static void writeToFile(Path file, PathHandler h) throws IOException {
