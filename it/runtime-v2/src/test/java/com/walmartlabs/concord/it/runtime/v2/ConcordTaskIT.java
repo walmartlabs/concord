@@ -185,4 +185,22 @@ public class ConcordTaskIT {
         // ---
         proc.assertLog(".*Done!.*");
     }
+
+    /**
+     * Test for concord/repositoryRefresh-task
+     */
+    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    public void testRepositoryRefresh() throws Exception {
+        //String projectName = "project_" + randomString();
+
+        Payload payload = new Payload()
+                .archive(ConcordTaskIT.class.getResource("concord/repositoryRefreshTask").toURI());
+                //.arg("newProjectName", projectName);
+
+        ConcordProcess proc = concord.processes().start(payload);
+        proc.expectStatus(ProcessEntry.StatusEnum.FINISHED);
+
+        // ---
+        proc.assertLog(".*Done!.*");
+    }
 }
