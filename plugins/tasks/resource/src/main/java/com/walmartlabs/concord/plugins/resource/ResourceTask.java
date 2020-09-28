@@ -36,7 +36,7 @@ import java.nio.file.Paths;
 public class ResourceTask implements Task {
 
     public String asString(String path) throws IOException {
-       return ResourceTaskCommon.asString(path);
+        return ResourceTaskCommon.asString(path);
     }
 
     public Object asJson(String path) throws IOException {
@@ -67,8 +67,16 @@ public class ResourceTask implements Task {
         return delegate(workDir).writeAsYaml(content);
     }
 
-    public String prettyPrintJson(Object json) throws IOException {
-        return ResourceTaskCommon.prettyPrintJson(json);
+    public String prettyPrintJson(Object value) throws IOException {
+        return ResourceTaskCommon.prettyPrintJson(value);
+    }
+
+    public String prettyPrintYaml(Object value) throws IOException {
+        return ResourceTaskCommon.prettyPrintYaml(value);
+    }
+
+    public String prettyPrintYaml(Object value, int indent) throws IOException {
+        return ResourceTaskCommon.prettyPrintYaml(value, indent);
     }
 
     private static ResourceTaskCommon delegate(Context ctx) {
