@@ -25,6 +25,9 @@ import com.walmartlabs.concord.ApiException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.List;
+import java.util.UUID;
+
 public class RepositoryRefreshTaskCommon {
 
     private final RepositoriesV2Api api;
@@ -36,7 +39,9 @@ public class RepositoryRefreshTaskCommon {
     }
 
     public void execute(RepositoryRefreshTaskParams in) throws ApiException {
-        api.refreshRepository(in.repositories());
+        List<UUID> repositoriesUUIDs = in.repositories();
+        log.info("Repository ids to refresh: {}",repositoriesUUIDs);
+        api.refreshRepository(repositoriesUUIDs);
+        log.info("Repository refresh completed");
     }
-
 }
