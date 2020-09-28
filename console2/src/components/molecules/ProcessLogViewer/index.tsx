@@ -29,7 +29,7 @@ import { ProcessToolbar } from '../../molecules';
 import { TaskCallDetails } from '../../organisms';
 
 import './styles.css';
-import {Link} from "react-router-dom";
+import { Link } from "react-router-dom";
 
 interface State {
     scrollAnchorRef: boolean;
@@ -72,6 +72,7 @@ const renderTagHeader = (
     correlationId?: ConcordId
 ) => (
     <>
+        <div id={`segmentId=${idx}`} ref={segmentRef}>
         <div
             ref={
                 correlationId
@@ -90,8 +91,6 @@ const renderTagHeader = (
             <Link
                 to={`/process/${instanceId}/log#segmentId=${idx}`}
                 className="Anchor"
-                id={`segmentId=${idx}`}
-                ref={segmentRef}
                 data-tooltip="Anchor URL"
                 data-inverted="">
                 <Icon name="linkify" />
@@ -99,6 +98,7 @@ const renderTagHeader = (
             {taskName}
             {onClick && <Icon name={expanded ? 'chevron up' : 'chevron down'} />}
         </Divider>
+        </div>
     </>
 );
 
@@ -184,6 +184,7 @@ class ProcessLogViewer extends React.Component<Props, State> {
         this.scrollToBottom = this.scrollToBottom.bind(this);
         this.handleTagClick = this.handleTagClick.bind(this);
         this.scrollToTag = this.scrollToTag.bind(this);
+        this.segmentScroll = this.segmentScroll.bind(this);
     }
 
     componentDidUpdate(prevProps: Props) {
