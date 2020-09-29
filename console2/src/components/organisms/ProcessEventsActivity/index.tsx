@@ -39,12 +39,13 @@ interface ExternalProps {
     loadingHandler: (inc: number) => void;
     forceRefresh: boolean;
     processStatus?: ProcessStatus;
+    definitionLinkBase?: string;
 }
 
 const DATA_FETCH_INTERVAL = 5000;
 
 const ProcessEventsActivity = (props: ExternalProps) => {
-    const { instanceId, processStatus, loadingHandler, forceRefresh } = props;
+    const { instanceId, processStatus, loadingHandler, forceRefresh, definitionLinkBase } = props;
 
     const lastEventId = useRef<number>();
 
@@ -77,7 +78,12 @@ const ProcessEventsActivity = (props: ExternalProps) => {
     }
 
     return (
-        <ProcessElementList instanceId={instanceId} events={events} processStatus={processStatus} />
+        <ProcessElementList
+            instanceId={instanceId}
+            events={events}
+            processStatus={processStatus}
+            definitionLinkBase={definitionLinkBase}
+        />
     );
 };
 

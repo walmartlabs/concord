@@ -42,6 +42,7 @@ import ProcessToolbar from './Toolbar';
 import { usePolling } from '../../../api/usePolling';
 import RequestErrorActivity from '../RequestErrorActivity';
 import { useStatusFavicon } from './favicon';
+import { gitUrlParse } from '../../molecules/GitHubLink';
 
 export type TabLink =
     | 'status'
@@ -60,6 +61,47 @@ interface ExternalProps {
 }
 
 const DATA_FETCH_INTERVAL = 5000;
+
+const normalizePath = (p: string) => {
+    let result = p;
+    if (result.endsWith('/')) {
+        result = result.substring(0, result.length - 1);
+    }
+    if (!result.startsWith('/')) {
+        result = '/' + result;
+    }
+    return result;
+};
+
+const buildDefinitionLinkBase = (process?: ProcessEntry) => {
+    if (!process) {
+        return undefined;
+    }
+
+    if (process.runtime !== 'concord-v2') {
+        return undefined;
+    }
+
+    if (process.repoUrl !== undefined) {
+        let link = gitUrlParse(process.repoUrl);
+        if (!link) {
+            return undefined;
+        }
+
+        if (link.endsWith('.git')) {
+            link = link.substr(0, link.length - 4);
+        }
+
+        link += '/blob/' + process.commitId;
+        if (process.repoPath) {
+            link += normalizePath(process.repoPath);
+        }
+
+        return link;
+    } else {
+        return '/api/v1/process/' + process.instanceId + '/state/snapshot';
+    }
+};
 
 const ProcessActivity = (props: ExternalProps) => {
     const stickyRef = useRef(null);
@@ -161,6 +203,7 @@ const ProcessActivity = (props: ExternalProps) => {
                         processStatus={process ? process.status : undefined}
                         loadingHandler={loadingHandler}
                         forceRefresh={refresh}
+                        definitionLinkBase={buildDefinitionLinkBase(process)}
                     />
                 </Route>
                 <Route path={`${baseUrl}/ansible`}>

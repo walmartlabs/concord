@@ -31,6 +31,7 @@ interface Props {
     instanceId: ConcordId;
     processStatus?: ProcessStatus;
     events?: ProcessEventEntry<ProcessElementEvent>[];
+    definitionLinkBase?: string;
 }
 
 const renderDefinitionId = (
@@ -100,12 +101,41 @@ const renderRestoreCheckpoint = (
     );
 };
 
+const definitionFileName = (data: ProcessElementEvent): string => {
+    const { processDefinitionId, fileName } = data;
+    if (fileName === undefined) {
+        return processDefinitionId;
+    }
+    return fileName;
+};
+
+const definitionLink = (data: ProcessElementEvent, definitionLinkBase?: string) => {
+    if (!definitionLinkBase) {
+        return data.line;
+    }
+
+    const { processDefinitionId, fileName } = data;
+    if (!processDefinitionId && !fileName) {
+        return data.line;
+    }
+
+    return (
+        <a
+            href={definitionLinkBase + '/' + definitionFileName(data) + '#L' + data.line}
+            target="_blank"
+            rel="noopener noreferrer">
+            {data.line}
+        </a>
+    );
+};
+
 const renderElementRow = (
     instanceId: ConcordId,
     processStatus: ProcessStatus,
     ev: ProcessEventEntry<ProcessElementEvent>,
     idx: number,
-    arr: Array<ProcessEventEntry<ProcessElementEvent>>
+    arr: Array<ProcessEventEntry<ProcessElementEvent>>,
+    definitionLinkBase?: string
 ) => {
     return (
         <Table.Row key={idx}>
@@ -118,7 +148,7 @@ const renderElementRow = (
             <Table.Cell singleLine={true}>
                 <HumanizedDuration value={ev.data.duration} />
             </Table.Cell>
-            <Table.Cell>{ev.data.line}</Table.Cell>
+            <Table.Cell>{definitionLink(ev.data, definitionLinkBase)}</Table.Cell>
             <Table.Cell>{ev.data.column}</Table.Cell>
         </Table.Row>
     );
@@ -127,7 +157,8 @@ const renderElementRow = (
 const renderElements = (
     instanceId: ConcordId,
     processStatus?: ProcessStatus,
-    events?: ProcessEventEntry<ProcessElementEvent>[]
+    events?: ProcessEventEntry<ProcessElementEvent>[],
+    definitionLinkBase?: string
 ) => {
     if (!events || !processStatus) {
         return (
@@ -147,12 +178,14 @@ const renderElements = (
         );
     }
 
-    return events.map((e, idx, arr) => renderElementRow(instanceId, processStatus, e, idx, arr));
+    return events.map((e, idx, arr) =>
+        renderElementRow(instanceId, processStatus, e, idx, arr, definitionLinkBase)
+    );
 };
 
 class ProcessElementList extends React.PureComponent<Props> {
     render() {
-        const { instanceId, processStatus, events } = this.props;
+        const { instanceId, processStatus, events, definitionLinkBase } = this.props;
         return (
             <Table celled={true} definition={true} className={events ? '' : 'loading'}>
                 <Table.Header>
@@ -171,7 +204,9 @@ class ProcessElementList extends React.PureComponent<Props> {
                     </Table.Row>
                 </Table.Header>
 
-                <Table.Body>{renderElements(instanceId, processStatus, events)}</Table.Body>
+                <Table.Body>
+                    {renderElements(instanceId, processStatus, events, definitionLinkBase)}
+                </Table.Body>
             </Table>
         );
     }
