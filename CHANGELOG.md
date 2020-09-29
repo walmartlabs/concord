@@ -4,6 +4,8 @@
 
 ### Added
 
+- concord-console, runtime-v2: the process events list now includes
+links to the source code of steps;
 - resource-tasks: `prettyPrintYaml` method to output data as
 formatted YAML;
 - concord-server, concord-console: option to download "the
