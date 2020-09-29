@@ -94,29 +94,54 @@ public class OrganizationManager {
      * @apiNote the method uses DB advisory locks, it is thread-safe across the cluster.
      */
     public OrganizationOperationResult createOrUpdate(OrganizationEntry entry) {
-        return orgDao.txResult(tx -> {
-            // use advisory locks to avoid races
-            locks.lock(tx, "OrganizationManager#createOrUpdate");
+        return orgDao.txResult(tx -> createOrUpdate(tx, entry));
+    }
 
-            UUID orgId = entry.getId();
-            if (orgId == null) {
-                orgId = orgDao.getId(entry.getName());
-            }
+    /**
+     * @see #createOrUpdate(OrganizationEntry)
+     */
+    public OrganizationOperationResult createOrUpdate(DSLContext tx, OrganizationEntry entry) {
+        // use advisory locks to avoid races
+        locks.lock(tx, "OrganizationManager#createOrX");
 
-            if (orgId == null) {
-                orgId = create(tx, entry);
-                return OrganizationOperationResult.builder()
-                        .orgId(orgId)
-                        .result(OperationResult.CREATED)
-                        .build();
-            } else {
-                update(tx, orgId, entry);
-                return OrganizationOperationResult.builder()
-                        .orgId(orgId)
-                        .result(OperationResult.UPDATED)
-                        .build();
-            }
-        });
+        UUID orgId = entry.getId();
+        if (orgId == null) {
+            orgId = orgDao.getId(tx, entry.getName());
+        }
+
+        if (orgId == null) {
+            orgId = create(tx, entry);
+            return OrganizationOperationResult.builder()
+                    .orgId(orgId)
+                    .result(OperationResult.CREATED)
+                    .build();
+        } else {
+            update(tx, orgId, entry);
+            return OrganizationOperationResult.builder()
+                    .orgId(orgId)
+                    .result(OperationResult.UPDATED)
+                    .build();
+        }
+    }
+
+    public OrganizationOperationResult createOrGet(DSLContext tx, String orgName) {
+        // use advisory locks to avoid races
+        // TODO optimistic locking as a possible optimization
+        locks.lock(tx, "OrganizationManager#createOrX");
+
+        UUID orgId = orgDao.getId(tx, orgName);
+        if (orgId != null) {
+            return OrganizationOperationResult.builder()
+                    .orgId(orgId)
+                    .result(OperationResult.ALREADY_EXISTS)
+                    .build();
+        }
+
+        orgId = create(tx, new OrganizationEntry(orgName));
+        return OrganizationOperationResult.builder()
+                .orgId(orgId)
+                .result(OperationResult.CREATED)
+                .build();
     }
 
     private UUID create(DSLContext tx, OrganizationEntry entry) {

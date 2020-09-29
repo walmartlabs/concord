@@ -89,9 +89,12 @@ public class NodeRosterIT extends AbstractServerIT {
         // check if the artifact was deployed to our hosts
 
         NodeRosterArtifactsApi artifactsApi = new NodeRosterArtifactsApi(getApiClient());
-        List<ArtifactEntry> artifactHostsA = artifactsApi.list(hostAId, null,  artifactUrl, 1000, 0); // TODO might require paging
-        assertNotNull(artifactHostsA);
-        assertEquals(1, artifactHostsA.size());
+        while (true) {
+            List<ArtifactEntry> artifactHostsA = artifactsApi.list(hostAId, null, artifactUrl, 1000, 0); // TODO might require paging
+            if (artifactHostsA != null && artifactHostsA.size() == 1) {
+                break;
+            }
+        }
 
         // check if we know who deployed to our hosts
 
