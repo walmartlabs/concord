@@ -157,7 +157,7 @@ public class ProjectManager {
     public ProjectOperationResult createOrGet(DSLContext tx, UUID orgId, ProjectEntry entry) {
         entry = normalize(entry);
 
-        OrganizationEntry org = orgManager.assertAccess(orgId, true);
+        OrganizationEntry org = orgManager.assertAccess(tx, orgId, true);
 
         UUID projectId = projectDao.getId(tx, org.getId(), entry.getName());
         if (projectId == null) {

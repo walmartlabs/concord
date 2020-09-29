@@ -48,6 +48,11 @@ public class UserDao extends AbstractDao {
         super(cfg);
     }
 
+    @Override
+    protected <T> T txResult(TxResult<T> t) {
+        return super.txResult(t);
+    }
+
     /**
      * Inserts a new record or updates an existing one.
      * Note that {@code username} and {@code domain} are case-insensitive and forced to lower case.
@@ -186,14 +191,18 @@ public class UserDao extends AbstractDao {
 
     public boolean isInOrganization(UUID userId, UUID orgId) {
         try (DSLContext tx = DSL.using(cfg)) {
-            SelectConditionStep<Record1<UUID>> teamIds = select(TEAMS.TEAM_ID)
-                    .from(TEAMS)
-                    .where(TEAMS.ORG_ID.eq(orgId));
-
-            return tx.fetchExists(selectFrom(V_USER_TEAMS)
-                    .where(V_USER_TEAMS.USER_ID.eq(userId)
-                            .and(V_USER_TEAMS.TEAM_ID.in(teamIds))));
+            return isInOrganization(tx, userId, orgId);
         }
+    }
+
+    public boolean isInOrganization(DSLContext tx, UUID userId, UUID orgId) {
+        SelectConditionStep<Record1<UUID>> teamIds = select(TEAMS.TEAM_ID)
+                .from(TEAMS)
+                .where(TEAMS.ORG_ID.eq(orgId));
+
+        return tx.fetchExists(selectFrom(V_USER_TEAMS)
+                .where(V_USER_TEAMS.USER_ID.eq(userId)
+                        .and(V_USER_TEAMS.TEAM_ID.in(teamIds))));
     }
 
     public Set<UUID> getOrgIds(UUID userId) {
