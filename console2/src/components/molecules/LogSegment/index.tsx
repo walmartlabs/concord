@@ -73,18 +73,18 @@ const LogSegment = ({
 
     const baseUrl = `/process/${instanceId}/log`;
 
-    const myRef = useRef<null | HTMLDivElement>(null);
+    const segmentRef = useRef<null | HTMLDivElement>(null);
 
     useEffect(() => {
-        if (myRef.current && location.hash.includes(`#segmentId=${segmentId}`)) {
-            myRef.current.scrollIntoView({
+        if (segmentRef.current && location.hash.includes(`#segmentId=${segmentId}`)) {
+            segmentRef.current.scrollIntoView({
                 behavior: 'smooth',
                 block: 'end',
                 inline: 'nearest'
             });
             setOpen(true);
         }
-    }, [myRef, segmentId, location]);
+    }, [segmentRef, segmentId, location]);
 
     const loadAllClickHandler = useCallback((ev: React.MouseEvent<any>) => {
         ev.preventDefault();
@@ -132,7 +132,7 @@ const LogSegment = ({
     }
 
     return (
-        <div className="LogSegment" id={`segmentId=${segmentId}`} ref={myRef}>
+        <div className="LogSegment" id={`segmentId=${segmentId}`} ref={segmentRef}>
             <Button
                 fluid={true}
                 size="medium"
