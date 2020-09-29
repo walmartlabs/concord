@@ -125,7 +125,7 @@ public class OrganizationManager {
     }
 
     public OrganizationOperationResult createOrGet(String orgName) {
-        return orgDao.txResult(tx -> createOrGet(orgName));
+        return orgDao.txResult(tx -> createOrGet(tx, orgName));
     }
 
     public OrganizationOperationResult createOrGet(DSLContext tx, String orgName) {
