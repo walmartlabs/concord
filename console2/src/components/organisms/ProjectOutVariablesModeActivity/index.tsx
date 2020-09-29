@@ -21,7 +21,7 @@ import * as React from 'react';
 import { useEffect, useRef, useState } from 'react';
 import { Form } from 'semantic-ui-react';
 import { ConcordId, ConcordKey, RequestError } from '../../../api/common';
-import {createOrUpdate as apiCreateOrUpdate, OutVariablesMode} from '../../../api/org/project';
+import { createOrUpdate as apiCreateOrUpdate, OutVariablesMode } from '../../../api/org/project';
 import { RequestErrorActivity } from '../index';
 
 export interface Props {
@@ -94,7 +94,11 @@ export default ({ orgName, projectId, initialValue = OutVariablesMode.DISABLED }
                                 value: OutVariablesMode.ORG_MEMBERS,
                                 text: 'Only organization members'
                             },
-                            { value: OutVariablesMode.EVERYONE, text: 'Everyone', icon: 'lock open' }
+                            {
+                                value: OutVariablesMode.EVERYONE,
+                                text: 'Everyone',
+                                icon: 'lock open'
+                            }
                         ]}
                     />
 
