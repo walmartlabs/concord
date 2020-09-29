@@ -24,6 +24,7 @@ import com.google.inject.AbstractModule;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
 import com.walmartlabs.concord.runtime.common.injector.InstanceId;
+import com.walmartlabs.concord.runtime.v2.model.ProcessConfiguration;
 import com.walmartlabs.concord.runtime.v2.model.ProcessDefinition;
 import com.walmartlabs.concord.runtime.v2.runner.compiler.CompilerUtils;
 import com.walmartlabs.concord.runtime.v2.runner.vm.UpdateLocalsCommand;
@@ -64,11 +65,11 @@ public class Runner {
         this.statusCallback = statusCallback;
     }
 
-    public ProcessSnapshot start(ProcessDefinition processDefinition, String entryPoint, Map<String, Object> input) throws Exception {
+    public ProcessSnapshot start(ProcessConfiguration processConfiguration, ProcessDefinition processDefinition, Map<String, Object> input) throws Exception {
         statusCallback.onRunning(instanceId.getValue());
-        log.debug("start ['{}'] -> running...", entryPoint);
+        log.debug("start ['{}'] -> running...", processConfiguration.entryPoint());
 
-        Command cmd = CompilerUtils.compile(compiler, processDefinition, entryPoint);
+        Command cmd = CompilerUtils.compile(compiler, processConfiguration, processDefinition, processConfiguration.entryPoint());
         State state = new InMemoryState(cmd);
 
         VM vm = createVM(processDefinition);
@@ -77,7 +78,7 @@ public class Runner {
         // start the normal execution
         vm.start(state);
 
-        log.debug("start ['{}'] -> done", entryPoint);
+        log.debug("start ['{}'] -> done", processConfiguration.entryPoint());
 
         return ProcessSnapshot.builder()
                 .vmState(state)
