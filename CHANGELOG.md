@@ -4,6 +4,8 @@
 
 ### Added
 
+- concord-server: tx aware OrganizationManager's `createOrUpdate`
+and `createOrGet` methods, useful for server-side plugins;
 - concord-console, runtime-v2: the process events list now includes
 links to the source code of steps;
 - resource-tasks: `prettyPrintYaml` method to output data as
