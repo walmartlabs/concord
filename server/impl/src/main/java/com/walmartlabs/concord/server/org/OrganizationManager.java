@@ -124,6 +124,10 @@ public class OrganizationManager {
         }
     }
 
+    public OrganizationOperationResult createOrGet(String orgName) {
+        return orgDao.txResult(tx -> createOrGet(orgName));
+    }
+
     public OrganizationOperationResult createOrGet(DSLContext tx, String orgName) {
         // use advisory locks to avoid races
         // TODO optimistic locking as a possible optimization
