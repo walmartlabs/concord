@@ -22,6 +22,7 @@ package com.walmartlabs.concord.runtime.v2.runner.vm;
 
 import com.walmartlabs.concord.runtime.v2.model.FlowCall;
 import com.walmartlabs.concord.runtime.v2.model.FlowCallOptions;
+import com.walmartlabs.concord.runtime.v2.model.ProcessConfiguration;
 import com.walmartlabs.concord.runtime.v2.model.ProcessDefinition;
 import com.walmartlabs.concord.runtime.v2.runner.compiler.CompilerUtils;
 import com.walmartlabs.concord.runtime.v2.runner.el.EvalContext;
@@ -33,6 +34,7 @@ import com.walmartlabs.concord.svm.Runtime;
 import com.walmartlabs.concord.svm.*;
 
 import java.util.Map;
+import java.util.Objects;
 
 public class FlowCallCommand extends StepCommand<FlowCall> {
 
@@ -60,10 +62,11 @@ public class FlowCallCommand extends StepCommand<FlowCall> {
         // the called flow's steps
         Compiler compiler = runtime.getService(Compiler.class);
         ProcessDefinition pd = runtime.getService(ProcessDefinition.class);
+        ProcessConfiguration pc = runtime.getService(ProcessConfiguration.class);
 
-        Command steps = CompilerUtils.compile(compiler, pd, flowName);
+        Command steps = CompilerUtils.compile(compiler, pc, pd, flowName);
 
-        Map<String, Object> input = VMUtils.prepareInput(ee, ctx, opts.input());
+        Map<String, Object> input = VMUtils.prepareInput(ee, ctx, Objects.requireNonNull(opts).input());
 
         // the call's frame should be a "root" frame
         // all local variables will have this frame as their base
