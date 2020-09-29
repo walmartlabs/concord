@@ -80,11 +80,15 @@ public class OrganizationDao extends AbstractDao {
 
     public UUID getId(String name) {
         try (DSLContext tx = DSL.using(cfg)) {
-            return tx.select(ORGANIZATIONS.ORG_ID)
-                    .from(ORGANIZATIONS)
-                    .where(ORGANIZATIONS.ORG_NAME.eq(name))
-                    .fetchOne(ORGANIZATIONS.ORG_ID);
+            return getId(tx, name);
         }
+    }
+
+    public UUID getId(DSLContext tx, String name) {
+        return tx.select(ORGANIZATIONS.ORG_ID)
+                .from(ORGANIZATIONS)
+                .where(ORGANIZATIONS.ORG_NAME.eq(name))
+                .fetchOne(ORGANIZATIONS.ORG_ID);
     }
 
     public OrganizationEntry getByName(String name) {
