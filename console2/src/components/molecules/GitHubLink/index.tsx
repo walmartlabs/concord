@@ -28,7 +28,7 @@ interface Props {
     text?: string;
 }
 
-const gitUrlParse = (s: string): string | undefined => {
+export const gitUrlParse = (s: string): string | undefined => {
     const url = s.endsWith('.git') ? s : s + '.git';
 
     const match = REPOSITORY_SSH_URL_PATTERN.exec(url);
