@@ -103,6 +103,10 @@ public class ProjectManager {
             throw new ConcordApplicationException("Project not found: " + projectName, Response.Status.NOT_FOUND);
         }
 
+        return get(projectId);
+    }
+
+    public ProjectEntry get(UUID projectId) {
         return accessManager.assertAccess(projectId, ResourceAccessLevel.READER, false);
     }
 
