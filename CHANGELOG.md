@@ -4,6 +4,7 @@
 
 ### Added
 
+- runtime-v2: allow profiles to override flows;
 - concord-server: tx aware OrganizationManager's `createOrUpdate`
 and `createOrGet` methods, useful for server-side plugins;
 - concord-console, runtime-v2: the process events list now includes
