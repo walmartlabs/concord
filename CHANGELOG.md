@@ -12,6 +12,7 @@ for a given process.
 
 ### Changed
 
+- concord-agent: tone down logging when the main thread is intrerrupted;
 - ansible: allow any Java `Collection` types (list, set, etc) as
 inventory host lists;
 - concord-agent: improved error handling in workers;
