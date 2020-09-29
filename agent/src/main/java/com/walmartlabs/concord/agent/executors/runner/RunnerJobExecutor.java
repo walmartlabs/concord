@@ -373,7 +373,8 @@ public class RunnerJobExecutor implements JobExecutor {
                 .runnerPath(cfg.runnerPath().toAbsolutePath())
                 .runnerCfgPath(runnerCfgFile.toAbsolutePath())
                 .mainClass(cfg.runnerMainClass())
-                .jvmParams(jvmParams).build();
+                .jvmParams(jvmParams)
+                .build();
     }
 
     private ProcessEntry fork(RunnerJob job, String[] cmd) throws ExecutionException, IOException {

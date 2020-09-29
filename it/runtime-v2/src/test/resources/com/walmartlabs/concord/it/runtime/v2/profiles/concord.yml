@@ -1,0 +1,17 @@
+configuration:
+  runtime: "concord-v2"
+  arguments:
+    name: "Concord"
+
+profiles:
+  stranger:
+    configuration:
+      arguments:
+        name: "stranger"
+    flows:
+      default:
+        - log: "From profile: Hello, ${name}"
+
+flows:
+  default:
+    - log: "Hello, ${name}"

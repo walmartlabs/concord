@@ -52,35 +52,29 @@ public class ProjectSerializerV2 {
     }
 
     private static ObjectMapper createObjectMapper() {
-        SimpleModule module = new SimpleModule();
-        module.addSerializer(SimpleOptions.class, new SimpleOptionsSerializer());
-        module.addSerializer(Retry.class, new RetryOptionsSerializer());
-        module.addSerializer(WithItems.class, new WithItemsSerializer());
-
-        module.addSerializer(Checkpoint.class, new CheckpointStepSerializer());
-        module.addSerializer(ExitStep.class, new ExitStepSerializer());
-
-        module.addSerializer(Expression.class, new ExpressionStepSerializer());
-
-        module.addSerializer(FlowCall.class, new FlowCallStepSerializer());
-
-        module.addSerializer(FormCall.class, new FormCallStepSerializer());
-        module.addSerializer(FormField.class, new FormFieldSerializer());
-
-        module.addSerializer(GroupOfSteps.class, new GroupOfStepsSerializer());
-        module.addSerializer(IfStep.class, new IfStepSerializer());
-        module.addSerializer(ParallelBlock.class, new ParallelBlockSerializer());
-        module.addSerializer(ReturnStep.class, new ReturnStepSerializer());
-        module.addSerializer(ScriptCall.class, new ScriptCallStepSerializer());
-        module.addSerializer(SetVariablesStep.class, new SetVariablesStepSerializer());
-        module.addSerializer(SuspendStep.class, new SuspendStepSerializer());
-        module.addSerializer(SwitchStep.class, new SwitchStepSerializer());
-        module.addSerializer(TaskCall.class, new TaskCallStepSerializer());
-
-        module.addSerializer(Form.class, new FormDefinitionSerializer());
-        module.addSerializer(ProcessConfiguration.class, new ConfigurationSerializer());
-        module.addSerializer(Trigger.class, new TriggerSerializer());
-        module.addSerializer(ProcessDefinition.class, new ProcessDefinitionSerializer());
+        SimpleModule module = new SimpleModule()
+                .addSerializer(SimpleOptions.class, new SimpleOptionsSerializer())
+                .addSerializer(Retry.class, new RetryOptionsSerializer())
+                .addSerializer(WithItems.class, new WithItemsSerializer())
+                .addSerializer(Checkpoint.class, new CheckpointStepSerializer())
+                .addSerializer(ExitStep.class, new ExitStepSerializer())
+                .addSerializer(Expression.class, new ExpressionStepSerializer())
+                .addSerializer(FlowCall.class, new FlowCallStepSerializer())
+                .addSerializer(FormCall.class, new FormCallStepSerializer())
+                .addSerializer(FormField.class, new FormFieldSerializer())
+                .addSerializer(GroupOfSteps.class, new GroupOfStepsSerializer())
+                .addSerializer(IfStep.class, new IfStepSerializer())
+                .addSerializer(ParallelBlock.class, new ParallelBlockSerializer())
+                .addSerializer(ReturnStep.class, new ReturnStepSerializer())
+                .addSerializer(ScriptCall.class, new ScriptCallStepSerializer())
+                .addSerializer(SetVariablesStep.class, new SetVariablesStepSerializer())
+                .addSerializer(SuspendStep.class, new SuspendStepSerializer())
+                .addSerializer(SwitchStep.class, new SwitchStepSerializer())
+                .addSerializer(TaskCall.class, new TaskCallStepSerializer())
+                .addSerializer(Form.class, new FormDefinitionSerializer())
+                .addSerializer(ProcessConfiguration.class, new ConfigurationSerializer())
+                .addSerializer(Trigger.class, new TriggerSerializer())
+                .addSerializer(ProcessDefinition.class, new ProcessDefinitionSerializer());
 
         return new ObjectMapper(new YAMLFactory()
                 .disable(YAMLGenerator.Feature.WRITE_DOC_START_MARKER))

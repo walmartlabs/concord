@@ -191,7 +191,7 @@ public class Main {
             args.put(Constants.Request.CURRENT_USER_KEY, initiator);
         }
 
-        return runner.start(processDefinition, cfg.entryPoint(), args);
+        return runner.start(cfg, processDefinition, args);
     }
 
     private static ProcessSnapshot restart(Runner runner, ProcessSnapshot snapshot, Map<String, Object> args) throws Exception {

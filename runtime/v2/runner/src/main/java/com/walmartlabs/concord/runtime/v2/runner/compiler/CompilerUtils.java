@@ -20,7 +20,9 @@ package com.walmartlabs.concord.runtime.v2.runner.compiler;
  * =====
  */
 
+import com.walmartlabs.concord.runtime.v2.model.ProcessConfiguration;
 import com.walmartlabs.concord.runtime.v2.model.ProcessDefinition;
+import com.walmartlabs.concord.runtime.v2.model.Profile;
 import com.walmartlabs.concord.runtime.v2.model.Step;
 import com.walmartlabs.concord.runtime.v2.runner.vm.BlockCommand;
 import com.walmartlabs.concord.runtime.v2.sdk.Compiler;
@@ -31,8 +33,14 @@ import java.util.stream.Collectors;
 
 public final class CompilerUtils {
 
-    public static Command compile(Compiler compiler, ProcessDefinition pd, String flowName) {
+    public static Command compile(Compiler compiler, ProcessConfiguration processConfiguration, ProcessDefinition pd, String flowName) {
         List<Step> steps = pd.flows().get(flowName);
+        for (String activeProfile : processConfiguration.processInfo().activeProfiles()) {
+            List<Step> maybeSteps = pd.profiles().getOrDefault(activeProfile, Profile.builder().build()).flows().get(flowName);
+            if (maybeSteps != null) {
+                steps = maybeSteps;
+            }
+        }
         if (steps == null) {
             throw new IllegalArgumentException("Flow not found: " + flowName);
         }
