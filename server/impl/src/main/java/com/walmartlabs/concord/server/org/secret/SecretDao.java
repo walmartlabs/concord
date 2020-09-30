@@ -71,6 +71,11 @@ public class SecretDao extends AbstractDao {
         super.tx(t);
     }
 
+    @Override
+    protected <T> T txResult(TxResult<T> t) {
+        return super.txResult(t);
+    }
+
     public UUID getId(UUID orgId, String name) {
         try (DSLContext tx = DSL.using(cfg)) {
             return tx.select(SECRETS.SECRET_ID)
@@ -120,6 +125,7 @@ public class SecretDao extends AbstractDao {
                         SECRETS.STORE_TYPE,
                         SECRETS.VISIBILITY)
                 .values(name, type.toString(), orgId, projectId, ownerId, encryptedBy.toString(), storeType, visibility.toString());
+
         if (insertMode == InsertMode.UPSERT) {
             Optional<SecretsRecord> secretsRecord = builder.onDuplicateKeyIgnore()
                     .returning(SECRETS.SECRET_ID)
@@ -130,6 +136,7 @@ public class SecretDao extends AbstractDao {
                     .fetchOne()
                     .value1());
         }
+
         return builder
                 .returning(SECRETS.SECRET_ID)
                 .fetchOne()
@@ -174,7 +181,7 @@ public class SecretDao extends AbstractDao {
         tx(tx -> updateData(tx, id, data));
     }
 
-    private void updateData(DSLContext tx, UUID id, byte[] data) {
+    public void updateData(DSLContext tx, UUID id, byte[] data) {
         int i = tx.update(SECRETS)
                 .set(SECRETS.SECRET_DATA, data)
                 .where(SECRETS.SECRET_ID.eq(id))
@@ -297,9 +304,13 @@ public class SecretDao extends AbstractDao {
     }
 
     public void delete(UUID id) {
-        tx(tx -> tx.deleteFrom(SECRETS)
+        tx(tx -> delete(tx, id));
+    }
+
+    public void delete(DSLContext tx, UUID id) {
+        tx.deleteFrom(SECRETS)
                 .where(SECRETS.SECRET_ID.eq(id))
-                .execute());
+                .execute();
     }
 
     public List<ResourceAccessEntry> getAccessLevel(UUID orgId, String name) {
@@ -422,6 +433,8 @@ public class SecretDao extends AbstractDao {
     }
 
     public static class SecretDataEntry extends SecretEntry {
+
+        private static final long serialVersionUID = 1L;
 
         private final byte[] data;
 
