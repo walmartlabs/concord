@@ -18,6 +18,7 @@ for a given process.
 
 ### Changed
 
+- concord-tasks: `repositoryRefresh` task was converted to v2;
 - concord-agent: tone down logging when the main thread is intrerrupted;
 - ansible: allow any Java `Collection` types (list, set, etc) as
 inventory host lists;
