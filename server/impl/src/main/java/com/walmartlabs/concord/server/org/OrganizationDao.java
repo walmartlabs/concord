@@ -67,15 +67,19 @@ public class OrganizationDao extends AbstractDao {
 
     public OrganizationEntry get(UUID id) {
         try (DSLContext tx = DSL.using(cfg)) {
-            Organizations o = ORGANIZATIONS.as("o");
-            Users u = USERS.as("u");
-
-            return tx.select(o.ORG_ID, o.ORG_NAME, o.OWNER_ID, u.USERNAME, u.DOMAIN, u.DISPLAY_NAME, u.USER_TYPE, o.VISIBILITY, o.META, o.ORG_CFG)
-                    .from(o)
-                    .leftJoin(u).on(u.USER_ID.eq(o.OWNER_ID))
-                    .where(o.ORG_ID.eq(id))
-                    .fetchOne(this::toEntry);
+            return get(tx, id);
         }
+    }
+
+    public OrganizationEntry get(DSLContext tx, UUID id) {
+        Organizations o = ORGANIZATIONS.as("o");
+        Users u = USERS.as("u");
+
+        return tx.select(o.ORG_ID, o.ORG_NAME, o.OWNER_ID, u.USERNAME, u.DOMAIN, u.DISPLAY_NAME, u.USER_TYPE, o.VISIBILITY, o.META, o.ORG_CFG)
+                .from(o)
+                .leftJoin(u).on(u.USER_ID.eq(o.OWNER_ID))
+                .where(o.ORG_ID.eq(id))
+                .fetchOne(this::toEntry);
     }
 
     public UUID getId(String name) {
@@ -93,15 +97,19 @@ public class OrganizationDao extends AbstractDao {
 
     public OrganizationEntry getByName(String name) {
         try (DSLContext tx = DSL.using(cfg)) {
-            Organizations o = ORGANIZATIONS.as("o");
-            Users u = USERS.as("u");
-
-            return tx.select(o.ORG_ID, o.ORG_NAME, o.OWNER_ID, u.USERNAME, u.DOMAIN, u.DISPLAY_NAME, u.USER_TYPE, o.VISIBILITY, o.META, o.ORG_CFG)
-                    .from(o)
-                    .leftJoin(u).on(u.USER_ID.eq(o.OWNER_ID))
-                    .where(o.ORG_NAME.eq(name))
-                    .fetchOne(this::toEntry);
+            return getByName(tx, name);
         }
+    }
+
+    public OrganizationEntry getByName(DSLContext tx, String name) {
+        Organizations o = ORGANIZATIONS.as("o");
+        Users u = USERS.as("u");
+
+        return tx.select(o.ORG_ID, o.ORG_NAME, o.OWNER_ID, u.USERNAME, u.DOMAIN, u.DISPLAY_NAME, u.USER_TYPE, o.VISIBILITY, o.META, o.ORG_CFG)
+                .from(o)
+                .leftJoin(u).on(u.USER_ID.eq(o.OWNER_ID))
+                .where(o.ORG_NAME.eq(name))
+                .fetchOne(this::toEntry);
     }
 
     public Map<String, Object> getConfiguration(UUID orgId) {

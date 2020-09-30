@@ -87,12 +87,16 @@ public class ProjectDao extends AbstractDao {
 
     public UUID getId(UUID orgId, String projectName) {
         try (DSLContext tx = DSL.using(cfg)) {
-            return tx.select(PROJECTS.PROJECT_ID)
-                    .from(PROJECTS)
-                    .where(PROJECTS.ORG_ID.eq(orgId)
-                            .and(PROJECTS.PROJECT_NAME.eq(projectName)))
-                    .fetchOne(PROJECTS.PROJECT_ID);
+            return getId(tx, orgId, projectName);
         }
+    }
+
+    public UUID getId(DSLContext tx, UUID orgId, String projectName) {
+        return tx.select(PROJECTS.PROJECT_ID)
+                .from(PROJECTS)
+                .where(PROJECTS.ORG_ID.eq(orgId)
+                        .and(PROJECTS.PROJECT_NAME.eq(projectName)))
+                .fetchOne(PROJECTS.PROJECT_ID);
     }
 
     public UUID getOrgId(UUID projectId) {
@@ -115,89 +119,93 @@ public class ProjectDao extends AbstractDao {
     }
 
     public ProjectEntry get(UUID projectId) {
+        try (DSLContext tx = DSL.using(cfg)) {
+            return get(tx, projectId);
+        }
+    }
+
+    public ProjectEntry get(DSLContext tx, UUID projectId) {
         Projects p = PROJECTS.as("p");
         Users u = USERS.as("u");
 
         Field<String> orgNameField = select(ORGANIZATIONS.ORG_NAME).from(ORGANIZATIONS).where(ORGANIZATIONS.ORG_ID.eq(p.ORG_ID)).asField();
 
-        try (DSLContext tx = DSL.using(cfg)) {
-            Record15<UUID, String, String, UUID, String, JSONB, String, UUID, String, String, String, String, RawPayloadMode, JSONB, OutVariablesMode> r = tx.select(
-                    p.PROJECT_ID,
-                    p.PROJECT_NAME,
-                    p.DESCRIPTION,
-                    p.ORG_ID,
-                    orgNameField,
-                    p.PROJECT_CFG,
-                    p.VISIBILITY,
-                    p.OWNER_ID,
-                    u.USERNAME,
-                    u.DOMAIN,
-                    u.USER_TYPE,
-                    u.DISPLAY_NAME,
-                    p.RAW_PAYLOAD_MODE,
-                    p.META,
-                    p.OUT_VARIABLES_MODE)
-                    .from(p)
-                    .leftJoin(u).on(u.USER_ID.eq(p.OWNER_ID))
-                    .where(p.PROJECT_ID.eq(projectId))
-                    .fetchOne();
+        Record15<UUID, String, String, UUID, String, JSONB, String, UUID, String, String, String, String, RawPayloadMode, JSONB, OutVariablesMode> r = tx.select(
+                p.PROJECT_ID,
+                p.PROJECT_NAME,
+                p.DESCRIPTION,
+                p.ORG_ID,
+                orgNameField,
+                p.PROJECT_CFG,
+                p.VISIBILITY,
+                p.OWNER_ID,
+                u.USERNAME,
+                u.DOMAIN,
+                u.USER_TYPE,
+                u.DISPLAY_NAME,
+                p.RAW_PAYLOAD_MODE,
+                p.META,
+                p.OUT_VARIABLES_MODE)
+                .from(p)
+                .leftJoin(u).on(u.USER_ID.eq(p.OWNER_ID))
+                .where(p.PROJECT_ID.eq(projectId))
+                .fetchOne();
 
-            if (r == null) {
-                return null;
-            }
-
-            Result<Record12<UUID, UUID, String, String, String, String, String, Boolean, JSONB, UUID, String, String>> repos = tx.select(
-                    REPOSITORIES.REPO_ID,
-                    REPOSITORIES.PROJECT_ID,
-                    REPOSITORIES.REPO_NAME,
-                    REPOSITORIES.REPO_URL,
-                    REPOSITORIES.REPO_BRANCH,
-                    REPOSITORIES.REPO_COMMIT_ID,
-                    REPOSITORIES.REPO_PATH,
-                    REPOSITORIES.IS_DISABLED,
-                    REPOSITORIES.META,
-                    SECRETS.SECRET_ID,
-                    SECRETS.SECRET_NAME,
-                    SECRETS.STORE_TYPE)
-                    .from(REPOSITORIES)
-                    .leftOuterJoin(SECRETS).on(SECRETS.SECRET_ID.eq(REPOSITORIES.SECRET_ID))
-                    .where(REPOSITORIES.PROJECT_ID.eq(projectId))
-                    .fetch();
-
-            Map<String, RepositoryEntry> m = new HashMap<>();
-            for (Record12<UUID, UUID, String, String, String, String, String, Boolean, JSONB, UUID, String, String> repo : repos) {
-                m.put(repo.get(REPOSITORIES.REPO_NAME),
-                        new RepositoryEntry(
-                                repo.get(REPOSITORIES.REPO_ID),
-                                repo.get(REPOSITORIES.PROJECT_ID),
-                                repo.get(REPOSITORIES.REPO_NAME),
-                                repo.get(REPOSITORIES.REPO_URL),
-                                repo.get(REPOSITORIES.REPO_BRANCH),
-                                repo.get(REPOSITORIES.REPO_COMMIT_ID),
-                                repo.get(REPOSITORIES.REPO_PATH),
-                                repo.get(REPOSITORIES.IS_DISABLED),
-                                repo.get(SECRETS.SECRET_ID),
-                                repo.get(SECRETS.SECRET_NAME),
-                                repo.get(SECRETS.STORE_TYPE),
-                                objectMapper.fromJSONB(repo.get(REPOSITORIES.META))));
-            }
-
-            Map<String, Object> cfg = objectMapper.fromJSONB(r.get(p.PROJECT_CFG));
-
-            return new ProjectEntry(projectId,
-                    r.get(p.PROJECT_NAME),
-                    r.get(p.DESCRIPTION),
-                    r.get(p.ORG_ID),
-                    r.get(orgNameField),
-                    m,
-                    cfg,
-                    ProjectVisibility.valueOf(r.get(p.VISIBILITY)),
-                    toOwner(r.get(p.OWNER_ID), r.get(u.USERNAME), r.get(u.DOMAIN), r.get(u.DISPLAY_NAME), r.get(u.USER_TYPE)),
-                    r.get(p.RAW_PAYLOAD_MODE) != RawPayloadMode.DISABLED,
-                    r.get(p.RAW_PAYLOAD_MODE),
-                    objectMapper.fromJSONB(r.get(p.META)),
-                    r.get(p.OUT_VARIABLES_MODE));
+        if (r == null) {
+            return null;
         }
+
+        Result<Record12<UUID, UUID, String, String, String, String, String, Boolean, JSONB, UUID, String, String>> repos = tx.select(
+                REPOSITORIES.REPO_ID,
+                REPOSITORIES.PROJECT_ID,
+                REPOSITORIES.REPO_NAME,
+                REPOSITORIES.REPO_URL,
+                REPOSITORIES.REPO_BRANCH,
+                REPOSITORIES.REPO_COMMIT_ID,
+                REPOSITORIES.REPO_PATH,
+                REPOSITORIES.IS_DISABLED,
+                REPOSITORIES.META,
+                SECRETS.SECRET_ID,
+                SECRETS.SECRET_NAME,
+                SECRETS.STORE_TYPE)
+                .from(REPOSITORIES)
+                .leftOuterJoin(SECRETS).on(SECRETS.SECRET_ID.eq(REPOSITORIES.SECRET_ID))
+                .where(REPOSITORIES.PROJECT_ID.eq(projectId))
+                .fetch();
+
+        Map<String, RepositoryEntry> m = new HashMap<>();
+        for (Record12<UUID, UUID, String, String, String, String, String, Boolean, JSONB, UUID, String, String> repo : repos) {
+            m.put(repo.get(REPOSITORIES.REPO_NAME),
+                    new RepositoryEntry(
+                            repo.get(REPOSITORIES.REPO_ID),
+                            repo.get(REPOSITORIES.PROJECT_ID),
+                            repo.get(REPOSITORIES.REPO_NAME),
+                            repo.get(REPOSITORIES.REPO_URL),
+                            repo.get(REPOSITORIES.REPO_BRANCH),
+                            repo.get(REPOSITORIES.REPO_COMMIT_ID),
+                            repo.get(REPOSITORIES.REPO_PATH),
+                            repo.get(REPOSITORIES.IS_DISABLED),
+                            repo.get(SECRETS.SECRET_ID),
+                            repo.get(SECRETS.SECRET_NAME),
+                            repo.get(SECRETS.STORE_TYPE),
+                            objectMapper.fromJSONB(repo.get(REPOSITORIES.META))));
+        }
+
+        Map<String, Object> cfg = objectMapper.fromJSONB(r.get(p.PROJECT_CFG));
+
+        return new ProjectEntry(projectId,
+                r.get(p.PROJECT_NAME),
+                r.get(p.DESCRIPTION),
+                r.get(p.ORG_ID),
+                r.get(orgNameField),
+                m,
+                cfg,
+                ProjectVisibility.valueOf(r.get(p.VISIBILITY)),
+                toOwner(r.get(p.OWNER_ID), r.get(u.USERNAME), r.get(u.DOMAIN), r.get(u.DISPLAY_NAME), r.get(u.USER_TYPE)),
+                r.get(p.RAW_PAYLOAD_MODE) != RawPayloadMode.DISABLED,
+                r.get(p.RAW_PAYLOAD_MODE),
+                objectMapper.fromJSONB(r.get(p.META)),
+                r.get(p.OUT_VARIABLES_MODE));
     }
 
     public UUID insert(UUID orgId, String name, String description, UUID ownerId, Map<String, Object> cfg,

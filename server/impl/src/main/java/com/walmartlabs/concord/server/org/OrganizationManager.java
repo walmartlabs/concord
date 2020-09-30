@@ -124,6 +124,10 @@ public class OrganizationManager {
         }
     }
 
+    public OrganizationOperationResult createOrGet(String orgName) {
+        return orgDao.txResult(tx -> createOrGet(tx, orgName));
+    }
+
     public OrganizationOperationResult createOrGet(DSLContext tx, String orgName) {
         // use advisory locks to avoid races
         // TODO optimistic locking as a possible optimization
@@ -201,8 +205,12 @@ public class OrganizationManager {
     }
 
     public OrganizationEntry assertExisting(UUID orgId, String orgName) {
+        return orgDao.txResult(tx -> assertExisting(tx, orgId, orgName));
+    }
+
+    public OrganizationEntry assertExisting(DSLContext tx, UUID orgId, String orgName) {
         if (orgId != null) {
-            OrganizationEntry e = orgDao.get(orgId);
+            OrganizationEntry e = orgDao.get(tx, orgId);
             if (e == null) {
                 throw new ValidationErrorsException("Organization not found: " + orgId);
             }
@@ -210,7 +218,7 @@ public class OrganizationManager {
         }
 
         if (orgName != null) {
-            OrganizationEntry e = orgDao.getByName(orgName);
+            OrganizationEntry e = orgDao.getByName(tx, orgName);
             if (e == null) {
                 throw new ValidationErrorsException("Organization not found: " + orgName);
             }
@@ -224,13 +232,22 @@ public class OrganizationManager {
         return assertAccess(orgId, null, orgMembersOnly);
     }
 
+    public OrganizationEntry assertAccess(DSLContext tx, UUID orgId, boolean orgMembersOnly) {
+        return assertAccess(tx, orgId, null, orgMembersOnly);
+    }
+
     public OrganizationEntry assertAccess(String orgName, boolean orgMembersOnly) {
         return assertAccess(null, orgName, orgMembersOnly);
     }
 
     @WithTimer
-    public OrganizationEntry assertAccess(UUID orgId, String name, boolean orgMembersOnly) {
-        OrganizationEntry e = assertExisting(orgId, name);
+    public OrganizationEntry assertAccess(UUID orgId, String orgName, boolean orgMembersOnly) {
+        return orgDao.txResult(tx -> assertAccess(tx, orgId, orgName, orgMembersOnly));
+    }
+
+    @WithTimer
+    public OrganizationEntry assertAccess(DSLContext tx, UUID orgId, String orgName, boolean orgMembersOnly) {
+        OrganizationEntry e = assertExisting(tx, orgId, orgName);
 
         if (Roles.isAdmin()) {
             // an admin can access any organization
@@ -250,7 +267,7 @@ public class OrganizationManager {
         }
 
         if (orgMembersOnly) {
-            if (!userManager.isInOrganization(e.getId())) {
+            if (!userManager.isInOrganization(tx, e.getId())) {
                 throw new UnauthorizedException("The current user (" + p.getUsername() + ") doesn't belong to the specified organization: " + e.getName());
             }
         }
