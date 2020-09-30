@@ -21,6 +21,7 @@ package com.walmartlabs.concord.it.server;
  */
 
 import com.walmartlabs.concord.client.*;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import java.util.Collections;
@@ -34,7 +35,11 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 
 public class RepositoryRefreshIT extends AbstractServerIT {
-
+    /**
+     * Test case is ignored as repository refresh task is enabled only for concord runtime-v2
+     * @throws Exception
+     */
+    @Ignore
     @Test(timeout = DEFAULT_TEST_TIMEOUT)
     public void test() throws Exception {
         String orgName = "ConcordSystem";
