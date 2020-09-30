@@ -5,7 +5,7 @@
 ### Added
 
 - variables-tasks: runtime-v2 support for the `vars` task;
-- runtime-v2: allow profiles to override flows;
+- runtime-v2: allow profiles to override flows, forms;
 - concord-server: tx aware OrganizationManager's `createOrUpdate`
 and `createOrGet` methods, useful for server-side plugins;
 - concord-console, runtime-v2: the process events list now includes
