@@ -35,10 +35,7 @@ import com.walmartlabs.concord.svm.ThreadId;
 import com.walmartlabs.concord.svm.ThreadStatus;
 
 import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 
 public class FormCallCommand extends StepCommand<FormCall> {
 
@@ -61,12 +58,14 @@ public class FormCallCommand extends StepCommand<FormCall> {
         String formName = expressionEvaluator.eval(evalContext, call.getName(), String.class);
 
         ProcessDefinition processDefinition = runtime.getService(ProcessDefinition.class);
-        List<FormField> fields = assertFormFields(expressionEvaluator, evalContext, processDefinition, formName, call);
+        ProcessConfiguration processConfiguration = runtime.getService(ProcessConfiguration.class);
+
+        List<FormField> fields = assertFormFields(expressionEvaluator, evalContext, processConfiguration, processDefinition, formName, call);
         Form form = Form.builder()
                 .name(formName)
                 .eventName(eventRef)
                 .options(buildFormOptions(expressionEvaluator, evalContext, call))
-                .fields(buildFormFields(expressionEvaluator, evalContext, fields, call.getOptions().values()))
+                .fields(buildFormFields(expressionEvaluator, evalContext, fields, Objects.requireNonNull(call.getOptions()).values()))
                 .build();
 
         FormService formService = runtime.getService(FormService.class);
@@ -78,7 +77,7 @@ public class FormCallCommand extends StepCommand<FormCall> {
     }
 
     private static FormOptions buildFormOptions(ExpressionEvaluator expressionEvaluator, EvalContext ctx, FormCall formCall) {
-        FormCallOptions options = formCall.getOptions();
+        FormCallOptions options = Objects.requireNonNull(formCall.getOptions());
 
         Map<String, Serializable> runAs = expressionEvaluator.evalAsMap(ctx, options.runAs());
 
@@ -124,8 +123,12 @@ public class FormCallCommand extends StepCommand<FormCall> {
         return result;
     }
 
-    private static List<FormField> assertFormFields(ExpressionEvaluator expressionEvaluator, EvalContext ctx, ProcessDefinition pd, String formName, FormCall formCall) {
-        FormCallOptions options = formCall.getOptions();
+    private static List<FormField> assertFormFields(ExpressionEvaluator expressionEvaluator, EvalContext ctx,
+                                                    ProcessConfiguration processConfiguration,
+                                                    ProcessDefinition pd,
+                                                    String formName,
+                                                    FormCall formCall) {
+        FormCallOptions options = Objects.requireNonNull(formCall.getOptions());
         if (!options.fields().isEmpty()) {
             return options.fields();
         }
@@ -135,8 +138,14 @@ public class FormCallCommand extends StepCommand<FormCall> {
             return FormFieldParser.parse(formCall.getLocation(), rawFields);
         }
 
-        Forms forms = pd.forms();
-        com.walmartlabs.concord.runtime.v2.model.Form fd = forms.get(formName);
+        com.walmartlabs.concord.runtime.v2.model.Form fd = pd.forms().get(formName);
+        for (String activeProfile : processConfiguration.processInfo().activeProfiles()) {
+            com.walmartlabs.concord.runtime.v2.model.Form maybeForm = pd.profiles().getOrDefault(activeProfile, Profile.builder().build()).forms().get(formName);
+            if (maybeForm != null) {
+                fd = maybeForm;
+            }
+        }
+
         if (fd != null) {
             return fd.fields();
         }

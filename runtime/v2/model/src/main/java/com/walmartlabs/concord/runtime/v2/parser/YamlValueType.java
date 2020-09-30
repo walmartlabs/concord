@@ -63,7 +63,7 @@ public final class YamlValueType<T> {
     public static final YamlValueType<GroupOfSteps> TRY = type("TRY");
     public static final YamlValueType<GroupOfSteps> BLOCK = type("BLOCK");
     public static final YamlValueType<ParallelBlock> PARALLEL = type("PARALLEL");
-    public static final YamlValueType<Forms> FORMS = type("FORMS");
+    public static final YamlValueType<Map<String, Form>> FORMS = type("FORMS");
     public static final YamlValueType<Form> FORM = type("FORM");
     public static final YamlValueType<FormField> FORM_FIELD = type("FORM_FIELD");
     public static final YamlValueType<List<FormField>> ARRAY_OF_FORM_FIELD = array("ARRAY_OF_FORM_FIELD", FORM_FIELD);

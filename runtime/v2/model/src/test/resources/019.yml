@@ -1,0 +1,13 @@
+profiles:
+  p1:
+    configuration:
+      debug: true
+
+    flows:
+      default:
+        - return
+
+    forms:
+      myForm:
+        - fullName: { label: "Name", type: "string", pattern: ".* .*", readonly: true, placeholder: "Place name here" }
+        - age: { label: "Age", type: "int", min: 21, max: 100 }

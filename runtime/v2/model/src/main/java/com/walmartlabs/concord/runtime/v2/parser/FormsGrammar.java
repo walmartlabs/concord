@@ -26,6 +26,9 @@ import io.takari.parc.Parser;
 import io.takari.parc.Seq;
 
 import java.util.List;
+import java.util.Map;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 import static com.walmartlabs.concord.runtime.v2.parser.ExpressionGrammar.expression;
 import static com.walmartlabs.concord.runtime.v2.parser.GrammarMisc.*;
@@ -63,10 +66,10 @@ public final class FormsGrammar {
                             .location(f.location)
                             .build()));
 
-    private static final Parser<Atom, Forms> forms =
+    private static final Parser<Atom, Map<String, Form>> forms =
             betweenTokens(JsonToken.START_OBJECT, JsonToken.END_OBJECT,
                     many(form).map(Seq::toList)
-                            .map(Forms::of));
+                            .map(f -> f.stream().collect(Collectors.toMap(Form::name, Function.identity()))));
 
     private static Parser<Atom, ImmutableFormCallOptions.Builder> formCallFieldsOption(ImmutableFormCallOptions.Builder o) {
         return orError(or(formFieldsArray.map(o::fields), expression.map(o::fieldsExpression)), YamlValueType.FORM_CALL_FIELDS);
@@ -88,7 +91,7 @@ public final class FormsGrammar {
                     stringVal.bind(formName ->
                             formCallOptions.map(options -> new FormCall(a.location, formName, options))));
 
-    public static final Parser<Atom, Forms> formsVal =
+    public static final Parser<Atom, Map<String, Form>> formsVal =
             orError(forms, YamlValueType.FORMS);
 
     private FormsGrammar() {
