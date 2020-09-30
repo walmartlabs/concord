@@ -27,6 +27,7 @@ import javax.annotation.Nullable;
 import java.util.*;
 
 @Value.Immutable
+@Value.Style(jdkOnly = true)
 public interface Options {
 
     UUID instanceId();

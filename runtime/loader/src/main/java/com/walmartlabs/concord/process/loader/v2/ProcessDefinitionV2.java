@@ -22,7 +22,6 @@ package com.walmartlabs.concord.process.loader.v2;
 
 import com.walmartlabs.concord.imports.Imports;
 import com.walmartlabs.concord.process.loader.model.*;
-import com.walmartlabs.concord.runtime.v2.ProjectSerializerV2;
 
 import java.io.Serializable;
 import java.util.*;
@@ -67,7 +66,7 @@ public class ProcessDefinitionV2 extends EffectiveProcessDefinitionProviderV2 im
         this.imports = delegate.imports();
         this.forms = new ArrayList<>();
         if (delegate.forms() != null) {
-            delegate.forms().items().forEach(f -> forms.add(Form.builder()
+            delegate.forms().values().forEach(f -> forms.add(Form.builder()
                     .name(f.name())
                     .fields(toFields(f))
                     .location(SourceMap.from(f.location()))
