@@ -21,29 +21,44 @@ package com.walmartlabs.concord.common;
  */
 
 import java.util.*;
+import java.util.function.BiFunction;
 
 public final class ConfigurationUtils {
 
-    @SuppressWarnings("unchecked")
-    public static boolean has(Map<String, Object> m, String[] path) {
-        if (m == null) {
-            return false;
-        }
+    public static Optional<Map.Entry<String, Object>> hasRegex(Map<String, Object> m, String[] path) {
+        return has(m, path, (mm, p) -> {
+            for (Map.Entry<String, Object> e : mm.entrySet()) {
+                if (e.getKey().matches(p)) {
+                    return Optional.of(e);
+                }
+            }
+            return Optional.empty();
+        });
+    }
 
+    @SuppressWarnings("unchecked")
+    public static Optional<Map.Entry<String, Object>> has(Map<String, Object> m,
+                                                          String[] path,
+                                                          BiFunction<Map<String, Object>, String, Optional<Map.Entry<String, Object>>> valueSupplier) {
         if (path.length == 0) {
-            return false;
+            return Optional.empty();
         }
 
         for (int i = 0; i < path.length - 1; i++) {
-            Object v = m.get(path[i]);
-            if (!(v instanceof Map)) {
-                return false;
+            Optional<Map.Entry<String, Object>> v = valueSupplier.apply(m, path[i]);
+            if (!v.isPresent()) {
+                return Optional.empty();
             }
 
-            m = (Map<String, Object>) v;
+            Object o = v.get().getValue();
+            if (!(o instanceof Map)) {
+                return Optional.empty();
+            }
+
+            m = (Map<String, Object>) o;
         }
 
-        return m.containsKey(path[path.length - 1]);
+        return valueSupplier.apply(m, path[path.length - 1]);
     }
 
     public static Object get(Map<String, Object> m, String... path) {

@@ -149,13 +149,21 @@ public class TaskCallEventRecordingListener implements TaskCallListener {
 
         Map<String, Object> result = new HashMap<>(vars);
         for (String b : blackList) {
-            String[] path = b.split("\\.");
-            if (ConfigurationUtils.has(result, path)) {
+            String[] path = normalize(b.split("(?<!\\\\)\\."));
+            Optional<Map.Entry<String, Object>> o = ConfigurationUtils.hasRegex(result, path);
+            if (o.isPresent()) {
                 Map<String, Object> m = ensureModifiable(result, path.length - 1, path);
-                m.put(path[path.length - 1], "***");
+                m.put(o.get().getKey(), "***");
             }
         }
         return result;
+    }
+
+    private static String[] normalize(String[] paths) {
+        for (int i = 0; i < paths.length; i++) {
+            paths[i] = paths[i].replace("\\.", ".");
+        }
+        return paths;
     }
 
     @SuppressWarnings("unchecked")

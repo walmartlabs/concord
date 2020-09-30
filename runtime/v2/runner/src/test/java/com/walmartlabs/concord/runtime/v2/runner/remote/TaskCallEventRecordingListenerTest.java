@@ -20,11 +20,14 @@ package com.walmartlabs.concord.runtime.v2.runner.remote;
  * =====
  */
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.Test;
 
-import java.util.*;
+import java.io.IOException;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
 
 import static org.junit.Assert.assertEquals;
 
@@ -66,7 +69,7 @@ public class TaskCallEventRecordingListenerTest {
     }
 
     @Test
-    public void testMaskVarsUnmodifiable() throws Exception {
+    public void testMaskVarsUnmodifiable() {
         Map<String, Object> vars =
                 Collections.singletonMap("x",
                         Collections.singletonMap("y",
@@ -77,8 +80,20 @@ public class TaskCallEventRecordingListenerTest {
         assertEquals("{x={y={z=***}}}", result.toString());
     }
 
+    @Test
+    public void testMaskVarsRegex() {
+        Map<String, Object> vars =
+                Collections.singletonMap("x",
+                        Collections.singletonMap("y",
+                                Collections.singletonMap("aSecret", 123)));
+
+        List<String> blackList = Collections.singletonList("x.y.\\.*Secret");
+        Map<String, Object> result = TaskCallEventRecordingListener.maskVars(vars, blackList);
+        assertEquals("{x={y={aSecret=***}}}", result.toString());
+    }
+
     @SuppressWarnings("unchecked")
-    private static Map<String, Object> vars(String in) throws JsonProcessingException {
+    private static Map<String, Object> vars(String in) throws IOException {
         return om.readValue(in, Map.class);
     }
 }

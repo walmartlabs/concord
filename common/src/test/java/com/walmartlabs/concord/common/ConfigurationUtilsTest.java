@@ -56,4 +56,19 @@ public class ConfigurationUtilsTest {
         b = Collections.singletonMap("x", Collections.singletonList("test"));
         assertTrue(ConfigurationUtils.deepEquals(a, b));
     }
+
+    @Test
+    public void hasRegexTest() {
+        Map<String, Object> input = new HashMap<>();
+        input.put("mySecret", "abc");
+        input.put("anotherSecret", "xyz");
+        input.put("plainValue", 123);
+        input.put("nested", Collections.singletonMap("xyz", 234));
+
+        assertTrue(ConfigurationUtils.hasRegex(input, new String[]{".*Secret"}).isPresent());
+        assertTrue(ConfigurationUtils.hasRegex(input, new String[]{".*plain.*"}).isPresent());
+        assertTrue(ConfigurationUtils.hasRegex(input, new String[]{"nested", "x.z"}).isPresent());
+        assertFalse(ConfigurationUtils.hasRegex(input, new String[]{"nested", "xzz"}).isPresent());
+        assertFalse(ConfigurationUtils.hasRegex(input, new String[]{".*abc"}).isPresent());
+    }
 }
