@@ -1,4 +1,4 @@
-package com.walmartlabs.concord.plugins.variables;
+package com.walmartlabs.concord.plugins.variables.v2;
 
 /*-
  * *****
@@ -20,48 +20,53 @@ package com.walmartlabs.concord.plugins.variables;
  * =====
  */
 
+import com.walmartlabs.concord.plugins.variables.VariablesTaskCommon;
+import com.walmartlabs.concord.plugins.variables.VariablesTaskCommon.Variables;
+import com.walmartlabs.concord.runtime.v2.sdk.Context;
+import com.walmartlabs.concord.runtime.v2.sdk.Task;
 import com.walmartlabs.concord.sdk.Constants;
-import com.walmartlabs.concord.sdk.Context;
-import com.walmartlabs.concord.sdk.InjectVariable;
-import com.walmartlabs.concord.sdk.Task;
 
+import javax.inject.Inject;
 import javax.inject.Named;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
-import static com.walmartlabs.concord.plugins.variables.VariablesTaskCommon.EvalVariable;
-
 @Named("vars")
 @SuppressWarnings("unused")
-public class VariablesTask implements Task {
+public class VariablesTaskV2 implements Task {
 
-    public Object get(@InjectVariable("context") Context ctx, String key, Object defaultValue) {
-        return delegate(ctx).get(key, defaultValue);
+    private final Context context;
+    private final VariablesTaskCommon delegate;
+
+    @Inject
+    public VariablesTaskV2(Context context) {
+        this.context = context;
+        this.delegate = new VariablesTaskCommon(new VariablesAdapter(context), Collections.singletonList(new VariablesTaskCommon.EvalVariable(Constants.Context.CONTEXT_KEY, context, Context.class)));
     }
 
-    public void set(@InjectVariable("context") Context ctx, String targetKey, String sourceKey, String defaultKey) {
-        delegate(ctx).set(targetKey, sourceKey, defaultKey);
+    public Object get(String key, Object defaultValue) {
+        return delegate.get(key, defaultValue);
     }
 
-    public void set(@InjectVariable("context") Context ctx, Map<String, Object> vars) {
-        delegate(ctx).set(vars);
+    public void set(String targetKey, String sourceKey, String defaultKey) {
+       delegate.set(targetKey, sourceKey, defaultKey);
     }
 
-    public Object eval(@InjectVariable("context") Context ctx, Object v) {
-        return ctx.interpolate(v);
+    public void set(Map<String, Object> vars) {
+        delegate.set(vars);
+    }
+
+    public Object eval(Object v) {
+        return context.eval(v, Object.class);
     }
 
     public List<Object> concat(Collection<Object> a, Collection<Object> b) {
         return VariablesTaskCommon.concat(a, b);
     }
 
-    private static VariablesTaskCommon delegate(Context ctx) {
-        return new VariablesTaskCommon(new VariablesAdapter(ctx), Collections.singletonList(new EvalVariable(Constants.Context.CONTEXT_KEY, ctx, Context.class)));
-    }
-
-    private static class VariablesAdapter implements VariablesTaskCommon.Variables {
+    private static class VariablesAdapter implements Variables {
 
         private final Context context;
 
@@ -71,17 +76,17 @@ public class VariablesTask implements Task {
 
         @Override
         public Object get(String name) {
-            return context.getVariable(name);
+            return context.variables().get(name);
         }
 
         @Override
         public void set(String name, Object value) {
-            context.setVariable(name, value);
+            context.variables().set(name, value);
         }
 
         @Override
         public Object interpolate(Object v) {
-            return context.interpolate(v);
+            return context.eval(v, Object.class);
         }
     }
 }
