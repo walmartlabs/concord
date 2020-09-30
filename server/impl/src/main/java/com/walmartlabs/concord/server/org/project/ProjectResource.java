@@ -86,23 +86,8 @@ public class ProjectResource implements Resource {
     public ProjectOperationResponse createOrUpdate(@ApiParam @PathParam("orgName") @ConcordKey String orgName,
                                                    @ApiParam @Valid ProjectEntry entry) {
 
-        entry = normalize(entry);
-
-        OrganizationEntry org = orgManager.assertAccess(orgName, true);
-
-        UUID projectId = entry.getId();
-        if (projectId == null) {
-            assertName(entry);
-            projectId = projectDao.getId(org.getId(), entry.getName());
-        }
-
-        if (projectId == null) {
-            projectId = projectManager.insert(org.getId(), org.getName(), entry);
-            return new ProjectOperationResponse(projectId, OperationResult.CREATED);
-        } else {
-            projectManager.update(projectId, entry);
-            return new ProjectOperationResponse(projectId, OperationResult.UPDATED);
-        }
+        ProjectOperationResult result = projectManager.createOrUpdate(orgName, entry);
+        return new ProjectOperationResponse(result.projectId(), result.result());
     }
 
     @GET
@@ -113,14 +98,7 @@ public class ProjectResource implements Resource {
     public ProjectEntry get(@ApiParam @PathParam("orgName") @ConcordKey String orgName,
                             @ApiParam @PathParam("projectName") @ConcordKey String projectName) {
 
-        OrganizationEntry org = orgManager.assertAccess(orgName, false);
-
-        UUID projectId = projectDao.getId(org.getId(), projectName);
-        if (projectId == null) {
-            throw new ConcordApplicationException("Project not found: " + projectName, Status.NOT_FOUND);
-        }
-
-        return projectManager.get(projectId);
+        return projectManager.get(orgName, projectName);
     }
 
     @GET
@@ -377,32 +355,5 @@ public class ProjectResource implements Resource {
 
         List<String> l = Splitter.on("/").omitEmptyStrings().splitToList(s);
         return l.toArray(new String[0]);
-    }
-
-    public static ProjectEntry normalize(ProjectEntry e) {
-        Map<String, RepositoryEntry> repos = e.getRepositories();
-        if (repos != null) {
-            Map<String, RepositoryEntry> m = new HashMap<>(repos);
-
-            repos.forEach((k, v) -> {
-                if (v.getName() == null) {
-                    RepositoryEntry r = new RepositoryEntry(k, v);
-                    m.put(k, r);
-                }
-            });
-
-            e = ProjectEntry.replace(e, m);
-        }
-
-        return e;
-    }
-
-    private String assertName(ProjectEntry p) {
-        String s = p.getName();
-        if (s == null || s.trim().isEmpty()) {
-            throw new ValidationErrorsException("'name' is required");
-        }
-
-        return s;
     }
 }

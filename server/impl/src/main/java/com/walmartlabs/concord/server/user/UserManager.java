@@ -30,6 +30,7 @@ import com.walmartlabs.concord.server.org.team.TeamRole;
 import com.walmartlabs.concord.server.sdk.ConcordApplicationException;
 import com.walmartlabs.concord.server.security.UserPrincipal;
 import com.walmartlabs.concord.server.security.ldap.LdapGroupSearchResult;
+import org.jooq.DSLContext;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -147,9 +148,13 @@ public class UserManager {
     }
 
     public boolean isInOrganization(UUID orgId) {
+        return userDao.txResult(tx -> isInOrganization(tx, orgId));
+    }
+
+    public boolean isInOrganization(DSLContext tx, UUID orgId) {
         UserPrincipal p = UserPrincipal.assertCurrent();
         UUID userId = p.getId();
-        return userDao.isInOrganization(userId, orgId);
+        return userDao.isInOrganization(tx, userId, orgId);
     }
 
     public UserInfo getCurrentUserInfo() {

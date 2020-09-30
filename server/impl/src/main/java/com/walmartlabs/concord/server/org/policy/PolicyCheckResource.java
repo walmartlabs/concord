@@ -84,7 +84,6 @@ public class PolicyCheckResource implements Resource {
                 case PROJECT: {
                     ProjectEntry entry = new ProjectEntry(entity.toString());
                     UserEntry owner = projectManager.getOwner(entry.getOwner(), UserPrincipal.assertCurrent().getUser());
-                    entry = ProjectResource.normalize(entry);
                     policyManager.checkEntity(orgId, null, EntityType.PROJECT, EntityAction.CREATE, owner, PolicyUtils.toMap(orgId, orgName, entry));
                     break;
                 }
