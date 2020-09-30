@@ -82,7 +82,7 @@ public final class YamlValueType<T> {
     public static final YamlValueType<Set<String>> PUBLIC_FLOWS = type("PUBLIC_FLOWS");
     public static final YamlValueType<Map<String, Profile>> PROFILES = type("PROFILES");
     public static final YamlValueType<KV<String, Profile>> PROFILE = type("PROFILE");
-    public static final YamlValueType<ProcessConfiguration> PROCESS_CFG = type("CONFIGURATION");
+    public static final YamlValueType<ProcessDefinitionConfiguration> PROCESS_CFG = type("CONFIGURATION");
     public static final YamlValueType<Trigger> TRIGGER = type("TRIGGER");
     public static final YamlValueType<List<Trigger>> TRIGGERS = array("TRIGGER", TRIGGER);
     public static final YamlValueType<Trigger> GITHUB_TRIGGER = type("GITHUB_TRIGGER");

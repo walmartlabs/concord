@@ -22,7 +22,6 @@ package com.walmartlabs.concord.process.loader.v2;
 
 import com.walmartlabs.concord.imports.Imports;
 import com.walmartlabs.concord.process.loader.model.*;
-import com.walmartlabs.concord.runtime.v2.ProjectSerializerV2;
 
 import java.io.Serializable;
 import java.util.*;

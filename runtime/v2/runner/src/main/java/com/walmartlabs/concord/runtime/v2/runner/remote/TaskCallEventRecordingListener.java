@@ -30,7 +30,7 @@ import com.walmartlabs.concord.runtime.common.injector.InstanceId;
 import com.walmartlabs.concord.runtime.v2.ProcessDefinitionUtils;
 import com.walmartlabs.concord.runtime.v2.model.EventConfiguration;
 import com.walmartlabs.concord.runtime.v2.model.Location;
-import com.walmartlabs.concord.runtime.v2.model.ProcessConfiguration;
+import com.walmartlabs.concord.runtime.v2.sdk.ProcessConfiguration;
 import com.walmartlabs.concord.runtime.v2.model.Step;
 import com.walmartlabs.concord.runtime.v2.runner.tasks.TaskCallEvent;
 import com.walmartlabs.concord.runtime.v2.runner.tasks.TaskCallListener;

@@ -63,9 +63,9 @@ public final class ConfigurationGrammar {
             orError(events, YamlValueType.EVENTS_CFG);
 
 
-    private static final Parser<Atom, ProcessConfiguration> cfg =
+    private static final Parser<Atom, ProcessDefinitionConfiguration> cfg =
             betweenTokens(JsonToken.START_OBJECT, JsonToken.END_OBJECT,
-                    with(ImmutableProcessConfiguration::builder,
+                    with(ImmutableProcessDefinitionConfiguration::builder,
                             o -> options(
                                     optional("runtime", stringVal.map(o::runtime)),
                                     optional("entryPoint", stringVal.map(o::entryPoint)),
@@ -73,15 +73,16 @@ public final class ConfigurationGrammar {
                                     optional("meta", mapVal.map(o::meta)),
                                     optional("requirements", mapVal.map(o::requirements)),
                                     optional("processTimeout", durationVal.map(o::processTimeout)),
+                                    optional("activeProfiles", stringArrayVal.map(o::activeProfiles)),
                                     optional("exclusive", exclusiveVal.map(o::exclusive)),
                                     optional("events", eventsVal.map(o::events)),
                                     optional("out", stringArrayVal.map(o::addAllOut)),
                                     optional("arguments", mapVal.map(o::arguments)),
                                     optional("debug", booleanVal.map(o::debug)),
                                     optional("template", stringVal.map(o::template))))
-                            .map(ImmutableProcessConfiguration.Builder::build));
+                            .map(ImmutableProcessDefinitionConfiguration.Builder::build));
 
-    public static final Parser<Atom, ProcessConfiguration> processCfgVal =
+    public static final Parser<Atom, ProcessDefinitionConfiguration> processCfgVal =
             orError(cfg, YamlValueType.PROCESS_CFG);
 
     private ConfigurationGrammar() {

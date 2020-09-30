@@ -23,7 +23,7 @@ package com.walmartlabs.concord.plugins.ansible.v2;
 import com.walmartlabs.concord.ApiClient;
 import com.walmartlabs.concord.plugins.ansible.*;
 import com.walmartlabs.concord.plugins.ansible.secrets.AnsibleSecretService;
-import com.walmartlabs.concord.runtime.v2.model.ProjectInfo;
+import com.walmartlabs.concord.runtime.v2.sdk.ProjectInfo;
 import com.walmartlabs.concord.runtime.v2.sdk.*;
 
 import javax.inject.Inject;

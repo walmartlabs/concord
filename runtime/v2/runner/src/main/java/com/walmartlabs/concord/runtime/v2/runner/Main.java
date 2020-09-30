@@ -30,7 +30,7 @@ import com.walmartlabs.concord.runtime.common.StateManager;
 import com.walmartlabs.concord.runtime.common.cfg.RunnerConfiguration;
 import com.walmartlabs.concord.runtime.v2.NoopImportsNormalizer;
 import com.walmartlabs.concord.runtime.v2.ProjectLoaderV2;
-import com.walmartlabs.concord.runtime.v2.model.ProcessConfiguration;
+import com.walmartlabs.concord.runtime.v2.sdk.ProcessConfiguration;
 import com.walmartlabs.concord.runtime.v2.model.ProcessDefinition;
 import com.walmartlabs.concord.runtime.v2.runner.guice.ObjectMapperProvider;
 import com.walmartlabs.concord.runtime.v2.runner.logging.LoggingConfigurator;

@@ -33,8 +33,8 @@ public interface ProcessDefinition extends Serializable {
     long serialVersionUID = 1L;
 
     @Value.Default
-    default ProcessConfiguration configuration() {
-        return ProcessConfiguration.builder().build();
+    default ProcessDefinitionConfiguration configuration() {
+        return ProcessDefinitionConfiguration.builder().build();
     }
 
     @Value.Default
@@ -84,7 +84,7 @@ public interface ProcessDefinition extends Serializable {
         }
 
         return ProcessDefinition.builder().from(a)
-                .configuration(ProcessConfiguration.merge(a.configuration(), b.configuration()))
+                .configuration(ProcessDefinitionConfiguration.merge(a.configuration(), b.configuration()))
                 .putAllFlows(b.flows())
                 .profiles(profiles)
                 .addAllTriggers(b.triggers())
