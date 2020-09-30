@@ -1,0 +1,11 @@
+configuration:
+  runtime: "concord-v2"
+
+flows:
+  default:
+  - task: repositoryRefresh
+    in:
+      repositoryInfo:
+        - repositoryId: "b31b0b06-c33c-11e7-b0e9-8702fc03629f"
+          repository: "triggers"
+  - log: "Done!"
