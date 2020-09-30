@@ -1,0 +1,22 @@
+configuration:
+  runtime: "concord-v2"
+
+profiles:
+  stranger:
+    configuration:
+      arguments:
+        name: "stranger"
+    forms:
+      myForm:
+        - firstName: { type: "string" }
+        - lastName: { type: "string" }
+
+flows:
+  default:
+    - form: myForm
+
+    - log: "myForm: ${myForm}"
+
+forms:
+  myForm:
+    - firstName: { type: "string" }

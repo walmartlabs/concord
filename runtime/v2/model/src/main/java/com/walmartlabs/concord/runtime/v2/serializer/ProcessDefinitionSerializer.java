@@ -23,7 +23,6 @@ package com.walmartlabs.concord.runtime.v2.serializer;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.databind.ser.std.StdSerializer;
-import com.walmartlabs.concord.runtime.v2.model.Form;
 import com.walmartlabs.concord.runtime.v2.model.ProcessDefinition;
 
 import java.io.IOException;
@@ -57,7 +56,7 @@ public class ProcessDefinitionSerializer extends StdSerializer<ProcessDefinition
         }
 
         if (!value.forms().isEmpty()) {
-            gen.writeObjectField("forms", value.forms().items().stream().collect(Collectors.toMap(Form::name, o -> o)));
+            gen.writeObjectField("forms", value.forms());
         }
 
         gen.writeObjectField("resources", value.resources());

@@ -29,6 +29,7 @@ import java.util.Map;
 
 import static com.walmartlabs.concord.runtime.v2.parser.ConfigurationGrammar.processCfgVal;
 import static com.walmartlabs.concord.runtime.v2.parser.FlowsGrammar.flowsVal;
+import static com.walmartlabs.concord.runtime.v2.parser.FormsGrammar.formsVal;
 import static com.walmartlabs.concord.runtime.v2.parser.GrammarMisc.*;
 import static com.walmartlabs.concord.runtime.v2.parser.GrammarOptions.optional;
 import static com.walmartlabs.concord.runtime.v2.parser.GrammarOptions.options;
@@ -41,7 +42,8 @@ public final class ProfilesGrammar {
                     with(ImmutableProfile::builder,
                             o -> options(
                                     optional("configuration", processCfgVal.map(o::configuration)),
-                                    optional("flows", flowsVal.map(o::flows))))
+                                    optional("flows", flowsVal.map(o::flows)),
+                                    optional("forms", formsVal.map(o::forms))))
                             .map(ImmutableProfile.Builder::build));
 
     private static final Parser<Atom, KV<String, Profile>> profile =
