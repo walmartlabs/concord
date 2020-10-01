@@ -1,13 +1,13 @@
 # Change log
 
-## [Unreleased]
+## [1.67.0] - 2020-10-01
 
 ### Added
 
 - variables-tasks: runtime-v2 support for the `vars` task;
 - runtime-v2: allow profiles to override flows, forms;
-- concord-server: tx aware OrganizationManager's `createOrUpdate`
-and `createOrGet` methods, useful for server-side plugins;
+- concord-server: tx aware OrganizationManager's `createOrUpdate` and
+`createOrGet` methods, useful for server-side plugins;
 - concord-server: tx aware SecretManager's `createBinaryData` method;
 - concord-console, runtime-v2: the process events list now includes
 links to the source code of steps;
@@ -24,7 +24,8 @@ for a given process.
 - runtime-v2: fixed a typo in code that prevented default form field
 values from working correctly;
 - concord-tasks: `repositoryRefresh` task was converted to v2;
-- concord-agent: tone down logging when the main thread is intrerrupted;
+- concord-agent: tone down logging when the main thread is
+interrupted;
 - ansible: allow any Java `Collection` types (list, set, etc) as
 inventory host lists;
 - concord-agent: improved error handling in workers;
