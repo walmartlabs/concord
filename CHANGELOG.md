@@ -1,5 +1,47 @@
 # Change log
 
+## [Unreleased]
+
+### Added
+
+- variables-tasks: runtime-v2 support for the `vars` task;
+- runtime-v2: allow profiles to override flows, forms;
+- concord-server: tx aware OrganizationManager's `createOrUpdate`
+and `createOrGet` methods, useful for server-side plugins;
+- concord-server: tx aware SecretManager's `createBinaryData` method;
+- concord-console, runtime-v2: the process events list now includes
+links to the source code of steps;
+- resource-tasks: `prettyPrintYaml` method to output data as
+formatted YAML;
+- concord-server, concord-console: option to download "the
+effective YAML" - a single YAML document with all Concord resources
+for a given process.
+
+### Changed
+
+- concord-server: fixed the handling of the `values` field when
+`readonly` form fields are used;
+- runtime-v2: fixed a typo in code that prevented default form field
+values from working correctly;
+- concord-tasks: `repositoryRefresh` task was converted to v2;
+- concord-agent: tone down logging when the main thread is intrerrupted;
+- ansible: allow any Java `Collection` types (list, set, etc) as
+inventory host lists;
+- concord-agent: improved error handling in workers;
+- concord-server: fixed the error message template when validating
+forms;
+- concord-server: fixed a potential race when registering internal
+metrics. Fixes a `ConcurrentModificationException` when Server is
+running in an embedded environment, e.g. testcontainer-concord's
+LOCAL mode.
+
+### Breaking
+
+- runtime-v2: `ProcessDefinition#configuration()` is a separate type
+now;
+- runtime-v2: move `ProjectInfo` classes to the SDK.
+
+
 ## [1.66.0] - 2020-09-17
 
 ### Added
