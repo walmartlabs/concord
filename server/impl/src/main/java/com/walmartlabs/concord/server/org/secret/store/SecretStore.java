@@ -20,15 +20,17 @@ package com.walmartlabs.concord.server.org.secret.store;
  * =====
  */
 
+import org.jooq.DSLContext;
+
 import java.util.UUID;
 
 public interface SecretStore {
 
     boolean isEnabled();
 
-    void store(UUID id, byte[] data);
+    void store(DSLContext tx, UUID id, byte[] data);
 
-    void delete(UUID id);
+    void delete(DSLContext tx, UUID id);
 
     byte[] get(UUID id);
 

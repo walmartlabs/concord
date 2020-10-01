@@ -56,6 +56,7 @@ import com.walmartlabs.concord.server.user.UserEntry;
 import com.walmartlabs.concord.server.user.UserManager;
 import com.walmartlabs.concord.server.user.UserType;
 import org.apache.shiro.authz.UnauthorizedException;
+import org.jooq.DSLContext;
 import org.sonatype.siesta.ValidationErrorsException;
 
 import javax.inject.Inject;
@@ -229,17 +230,39 @@ public class SecretManager {
     public DecryptedBinaryData createBinaryData(UUID orgId, UUID projectId, String name, String storePassword,
                                                 InputStream data, SecretVisibility visibility,
                                                 String storeType) throws IOException {
+
         return createBinaryData(orgId, projectId, name, storePassword, data, visibility, storeType, INSERT);
     }
 
     /**
      * Stores a new single value secret.
      */
-    public DecryptedBinaryData createBinaryData(UUID orgId, UUID projectId, String name, String storePassword,
-                                                InputStream data, SecretVisibility visibility,
-                                                String storeType, SecretDao.InsertMode insertMode) throws IOException {
+    public DecryptedBinaryData createBinaryData(UUID orgId,
+                                                UUID projectId,
+                                                String name,
+                                                String storePassword,
+                                                InputStream data,
+                                                SecretVisibility visibility,
+                                                String storeType,
+                                                SecretDao.InsertMode insertMode) throws IOException {
 
-        orgManager.assertAccess(orgId, true);
+        return secretDao.txResult(tx -> createBinaryData(tx, orgId, projectId, name, storePassword, data, visibility, storeType, insertMode));
+    }
+
+    /**
+     * Stores a new single value secret.
+     */
+    public DecryptedBinaryData createBinaryData(DSLContext tx,
+                                                UUID orgId,
+                                                UUID projectId,
+                                                String name,
+                                                String storePassword,
+                                                InputStream data,
+                                                SecretVisibility visibility,
+                                                String storeType,
+                                                SecretDao.InsertMode insertMode) throws IOException {
+
+        orgManager.assertAccess(tx, orgId, true);
 
         int maxSecretDataSize = secretStoreProvider.getMaxSecretDataSize();
         InputStream limitedDataInputStream = ByteStreams.limit(data, maxSecretDataSize + 1L);
@@ -247,7 +270,7 @@ public class SecretManager {
         if (d.getData().length > maxSecretDataSize) {
             throw new IllegalArgumentException("File size exceeds limit of " + maxSecretDataSize + " bytes");
         }
-        UUID id = create(name, orgId, projectId, d, storePassword, visibility, storeType, insertMode);
+        UUID id = create(tx, name, orgId, projectId, d, storePassword, visibility, storeType, insertMode);
         return new DecryptedBinaryData(id);
     }
 
@@ -402,10 +425,12 @@ public class SecretManager {
     public void delete(UUID orgId, String secretName) {
         SecretEntry e = assertAccess(orgId, null, secretName, ResourceAccessLevel.OWNER, true);
 
-        // delete the content first
-        getSecretStore(e.getStoreType()).delete(e.getId());
-        // now delete secret information from secret table
-        secretDao.delete(e.getId());
+        secretDao.tx(tx -> {
+            // delete the content first
+            getSecretStore(e.getStoreType()).delete(tx, e.getId());
+            // now delete secret information from secret table
+            secretDao.delete(tx, e.getId());
+        });
 
         auditLog.add(AuditObject.SECRET, AuditAction.DELETE)
                 .field("orgId", e.getOrgId())
@@ -502,7 +527,27 @@ public class SecretManager {
         secretDao.upsertAccessLevel(secretId, teamId, level);
     }
 
-    private UUID create(String name, UUID orgId, UUID projectId, Secret s, String password, SecretVisibility visibility, String storeType, SecretDao.InsertMode insertMode) {
+    private UUID create(String name,
+                        UUID orgId,
+                        UUID projectId,
+                        Secret s,
+                        String password,
+                        SecretVisibility visibility,
+                        String storeType,
+                        SecretDao.InsertMode insertMode) {
+        return secretDao.txResult(tx -> create(tx, name, orgId, projectId, s, password, visibility, storeType, insertMode));
+    }
+
+    private UUID create(DSLContext tx,
+                        String name,
+                        UUID orgId,
+                        UUID projectId,
+                        Secret s,
+                        String password,
+                        SecretVisibility visibility,
+                        String storeType,
+                        SecretDao.InsertMode insertMode) {
+
         byte[] data;
 
         SecretType type;
@@ -531,13 +576,13 @@ public class SecretManager {
         policyManager.checkEntity(orgId, projectId, EntityType.SECRET, EntityAction.CREATE, owner,
                 PolicyUtils.toMap(orgId, name, type, visibility, storeType));
 
-        UUID id = secretDao.insert(orgId, projectId, name, owner.getId(), type, encryptedByType, storeType, visibility, insertMode);
+        UUID id = secretDao.insert(tx, orgId, projectId, name, owner.getId(), type, encryptedByType, storeType, visibility, insertMode);
         try {
-            getSecretStore(storeType).store(id, ab);
+            getSecretStore(storeType).store(tx, id, ab);
         } catch (Exception e) {
             // we can't use the transaction here because the store may update the record in the database independently,
             // as our transaction has not yet finalized so we may end up having exception in that case
-            secretDao.delete(id);
+            secretDao.delete(tx, id);
             throw new RuntimeException(e);
         }
 
