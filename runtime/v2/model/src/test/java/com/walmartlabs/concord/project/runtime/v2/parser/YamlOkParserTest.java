@@ -259,7 +259,7 @@ public class YamlOkParserTest extends AbstractParserTest {
     public void test008() throws Exception {
         ProcessDefinition pd = load("008.yml");
 
-        ProcessConfiguration cfg = pd.configuration();
+        ProcessDefinitionConfiguration cfg = pd.configuration();
         assertNotNull(cfg);
 
         assertTrue(cfg.debug());

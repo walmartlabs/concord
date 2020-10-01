@@ -20,8 +20,8 @@ package com.walmartlabs.concord.plugins.crypto;
  * =====
  */
 
-import com.walmartlabs.concord.runtime.v2.model.ProcessConfiguration;
-import com.walmartlabs.concord.runtime.v2.model.ProjectInfo;
+import com.walmartlabs.concord.runtime.v2.sdk.ProcessConfiguration;
+import com.walmartlabs.concord.runtime.v2.sdk.ProjectInfo;
 import com.walmartlabs.concord.runtime.v2.sdk.*;
 import com.walmartlabs.concord.runtime.v2.sdk.SecretService.KeyPair;
 import com.walmartlabs.concord.runtime.v2.sdk.SecretService.SecretCreationResult;

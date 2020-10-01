@@ -1,4 +1,4 @@
-package com.walmartlabs.concord.runtime.v2.model;
+package com.walmartlabs.concord.runtime.v2.sdk;
 
 /*-
  * *****
@@ -20,7 +20,6 @@ package com.walmartlabs.concord.runtime.v2.model;
  * =====
  */
 
-import com.fasterxml.jackson.annotation.JsonAlias;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
@@ -29,29 +28,55 @@ import org.immutables.value.Value;
 
 import javax.annotation.Nullable;
 import java.io.Serializable;
-import java.util.Collections;
-import java.util.List;
+import java.util.UUID;
 
 @Value.Immutable
 @Value.Style(jdkOnly = true)
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
 @JsonIgnoreProperties(ignoreUnknown = true)
-@JsonSerialize(as = ImmutableProcessInfo.class)
-@JsonDeserialize(as = ImmutableProcessInfo.class)
-public interface ProcessInfo extends Serializable {
+@JsonSerialize(as = ImmutableProjectInfo.class)
+@JsonDeserialize(as = ImmutableProjectInfo.class)
+public interface ProjectInfo extends Serializable {
 
     long serialVersionUID = 1L;
 
     @Nullable
-    @JsonAlias("sessionKey")
-    String sessionToken();
+    UUID orgId();
 
-    @Value.Default
-    default List<String> activeProfiles() {
-        return Collections.singletonList("default");
-    }
+    @Nullable
+    String orgName();
 
-    static ImmutableProcessInfo.Builder builder() {
-        return ImmutableProcessInfo.builder();
+    @Nullable
+    UUID projectId();
+
+    @Nullable
+    String projectName();
+
+    @Nullable
+    UUID repoId();
+
+    @Nullable
+    String repoName();
+
+    @Nullable
+    String repoUrl();
+
+    @Nullable
+    String repoBranch();
+
+    @Nullable
+    String repoPath();
+
+    @Nullable
+    String repoCommitId();
+
+    @Nullable
+    String repoCommitAuthor();
+
+    @Nullable
+    String repoCommitMessage();
+
+    static ImmutableProjectInfo.Builder builder() {
+        return ImmutableProjectInfo.builder();
     }
 }

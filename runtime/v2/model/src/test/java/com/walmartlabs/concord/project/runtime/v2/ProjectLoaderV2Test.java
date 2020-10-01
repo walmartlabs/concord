@@ -23,8 +23,8 @@ package com.walmartlabs.concord.project.runtime.v2;
 import com.walmartlabs.concord.imports.ImportManager;
 import com.walmartlabs.concord.runtime.v2.NoopImportsNormalizer;
 import com.walmartlabs.concord.runtime.v2.ProjectLoaderV2;
-import com.walmartlabs.concord.runtime.v2.model.ProcessConfiguration;
 import com.walmartlabs.concord.runtime.v2.model.ProcessDefinition;
+import com.walmartlabs.concord.runtime.v2.model.ProcessDefinitionConfiguration;
 import org.junit.Test;
 
 import java.net.URI;
@@ -52,7 +52,7 @@ public class ProjectLoaderV2Test {
         assertNotNull(pd.forms().get("myForm"));
         assertNotNull(pd.publicFlows().iterator().next());
 
-        ProcessConfiguration cfg = pd.configuration();
+        ProcessDefinitionConfiguration cfg = pd.configuration();
         assertNotNull(cfg);
         assertEquals("ttt", cfg.arguments().get("abc"));
         assertEquals("234", ((Map<String, Object>) cfg.arguments().get("nested")).get("value"));

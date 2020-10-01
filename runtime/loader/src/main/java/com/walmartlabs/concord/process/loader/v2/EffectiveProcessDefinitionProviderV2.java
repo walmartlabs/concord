@@ -24,10 +24,7 @@ import com.walmartlabs.concord.imports.Imports;
 import com.walmartlabs.concord.process.loader.model.EffectiveProcessDefinitionProvider;
 import com.walmartlabs.concord.process.loader.model.Options;
 import com.walmartlabs.concord.runtime.v2.ProjectSerializerV2;
-import com.walmartlabs.concord.runtime.v2.model.ProcessConfiguration;
-import com.walmartlabs.concord.runtime.v2.model.ProcessDefinition;
-import com.walmartlabs.concord.runtime.v2.model.Profile;
-import com.walmartlabs.concord.runtime.v2.model.Step;
+import com.walmartlabs.concord.runtime.v2.model.*;
 import com.walmartlabs.concord.sdk.Constants;
 import com.walmartlabs.concord.sdk.MapUtils;
 
@@ -63,7 +60,7 @@ public class EffectiveProcessDefinitionProviderV2 implements EffectiveProcessDef
         arguments.put(Constants.Request.PROCESS_INFO_KEY, MapUtils.getMap(options.configuration(), Constants.Request.PROCESS_INFO_KEY, Collections.emptyMap()));
 
         ProcessDefinition pd = ProcessDefinition.builder().from(delegate)
-                .configuration(ProcessConfiguration.builder().from(delegate.configuration())
+                .configuration(ProcessDefinitionConfiguration.builder().from(delegate.configuration())
                         .arguments(arguments)
                         .build())
                 .flows(flows)
