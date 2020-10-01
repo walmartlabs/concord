@@ -20,11 +20,13 @@ package com.walmartlabs.concord.server.process.form;
  * =====
  */
 
+import com.walmartlabs.concord.common.ConfigurationUtils;
 import com.walmartlabs.concord.common.IOUtils;
 import com.walmartlabs.concord.common.form.ConcordFormFields;
 import com.walmartlabs.concord.common.form.ConcordFormValidatorLocale;
 import com.walmartlabs.concord.forms.ValidationError;
 import com.walmartlabs.concord.sdk.Constants;
+import com.walmartlabs.concord.sdk.MapUtils;
 import com.walmartlabs.concord.server.sdk.ConcordApplicationException;
 import io.takari.bpm.form.Form;
 import io.takari.bpm.model.form.DefaultFormFields;
@@ -94,7 +96,6 @@ public final class FormUtils {
     }
 
     // TODO this probably should be a part of the bpm engine's FormService
-    @SuppressWarnings("unchecked")
     public static Map<String, Object> convert(ConcordFormValidatorLocale locale, Form form, Map<String, Object> m) throws ValidationException {
         FormDefinition fd = form.getFormDefinition();
 
@@ -102,9 +103,7 @@ public final class FormUtils {
         Map<String, Object> m2 = new HashMap<>();
         m2.put(Constants.Files.FORM_FILES, tmpFiles);
 
-        Map<String, Object> env = form.getEnv();
-
-        Map<String, Object> defaultData = env != null ? (Map<String, Object>) env.get(fd.getName()) : Collections.emptyMap();
+        Map<String, Object> defaultData = FormUtils.values(form);
 
         for (FormField f : fd.getFields()) {
             String k = f.getName();
@@ -135,6 +134,29 @@ public final class FormUtils {
             }
         }
         return m2;
+    }
+
+    public static Map<String, Object> values(Form form) {
+        String formName = form.getFormDefinition().getName();
+
+        Map<String, Object> env = form.getEnv();
+        if (env == null) {
+            env = Collections.emptyMap();
+        }
+
+        Map<String, Object> formState = MapUtils.getMap(env, formName, Collections.emptyMap());
+        Map<String, Object> extraValues = extraValues(form);
+
+        // merge the initial form values and the "extra" values, provided
+        // in the "values" option of the form
+        Map<String, Object> a = new HashMap<>(formState);
+        Map<String, Object> b = new HashMap<>(extraValues);
+        ConfigurationUtils.merge(a, b);
+        return a;
+    }
+
+    public static Map<String, Object> extraValues(Form form) {
+        return MapUtils.getMap(form.getOptions(), "values", Collections.emptyMap());
     }
 
     private static Object convert(ConcordFormValidatorLocale locale, String formName, FormField f, Integer idx, Object v) throws ValidationException {

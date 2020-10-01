@@ -20,9 +20,9 @@ package com.walmartlabs.concord.server.process.form;
  * =====
  */
 
-import com.walmartlabs.concord.common.ConfigurationUtils;
 import com.walmartlabs.concord.common.form.ConcordFormValidatorLocale;
 import com.walmartlabs.concord.common.form.DefaultConcordFormValidatorLocale;
+import com.walmartlabs.concord.sdk.MapUtils;
 import com.walmartlabs.concord.server.MultipartUtils;
 import com.walmartlabs.concord.server.process.form.FormUtils.ValidationException;
 import com.walmartlabs.concord.server.sdk.ConcordApplicationException;
@@ -78,7 +78,6 @@ public class FormResourceV1 {
     @ApiOperation("Get the current state of a form")
     @Path("/{processInstanceId}/form/{formName}")
     @Produces(MediaType.APPLICATION_JSON)
-    @SuppressWarnings("unchecked")
     public FormInstanceEntry get(@ApiParam @PathParam("processInstanceId") UUID processInstanceId,
                                  @ApiParam @PathParam("formName") String formName) {
 
@@ -89,26 +88,8 @@ public class FormResourceV1 {
             throw new ConcordApplicationException("Form " + formName + " not found. Process ID: " + processKey, Status.NOT_FOUND);
         }
 
-        FormDefinition fd = form.getFormDefinition();
-
-        Map<String, Object> env = form.getEnv();
-
-        Map<String, Object> data = env != null ? (Map<String, Object>) env.get(fd.getName()) : Collections.emptyMap();
-        if (data == null) {
-            data = new HashMap<>();
-        }
-
-        Map<String, Object> extra = null;
-        boolean yield = false;
-        Map<String, Object> opts = form.getOptions();
-        if (opts != null) {
-            extra = (Map<String, Object>) opts.get("values");
-            yield = (boolean) opts.getOrDefault("yield", false);
-        }
-
-        if (extra != null) {
-            data = ConfigurationUtils.deepMerge(data, extra);
-        }
+        Map<String, Object> data = FormUtils.values(form);
+        boolean yield = MapUtils.getBoolean(form.getOptions(), "yield", false);
 
         Map<String, Object> allowedValues = form.getAllowedValues();
         if (allowedValues == null) {
@@ -116,6 +97,7 @@ public class FormResourceV1 {
         }
 
         List<FormInstanceEntry.Field> fields = new ArrayList<>();
+        FormDefinition fd = form.getFormDefinition();
         for (FormField f : fd.getFields()) {
             String fieldName = f.getName();
 

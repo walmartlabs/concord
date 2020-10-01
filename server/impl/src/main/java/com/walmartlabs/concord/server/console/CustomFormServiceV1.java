@@ -24,7 +24,6 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
-import com.walmartlabs.concord.common.ConfigurationUtils;
 import com.walmartlabs.concord.forms.ValidationError;
 import com.walmartlabs.concord.server.MultipartUtils;
 import com.walmartlabs.concord.server.cfg.CustomFormConfiguration;
@@ -283,7 +282,6 @@ public class CustomFormServiceV1 {
     }
 
 
-    @SuppressWarnings("unchecked")
     private FormData prepareData(boolean success, boolean processFailed, Form form,
                                  Map<String, Object> overrides, boolean skipMissingOverrides,
                                  List<ValidationError> errors) {
@@ -298,33 +296,17 @@ public class CustomFormServiceV1 {
 
         // the order of precedence should be:
         //   submitted value > form call value > field's default value > environment value
-        Map<String, Object> _values = new HashMap<>();
         Map<String, String> _errors = new HashMap<>();
-
-        FormDefinition fd = form.getFormDefinition();
-
-        Map<String, Object> env = form.getEnv();
-        Map<String, Object> data = env != null ? (Map<String, Object>) env.get(fd.getName()) : Collections.emptyMap();
-        if (data == null) {
-            data = new HashMap<>();
-        }
-
-        Map<String, Object> extra = null;
-        Map<String, Object> opts = form.getOptions();
-        if (opts != null) {
-            extra = (Map<String, Object>) opts.get("values");
-        }
-
-        if (extra != null) {
-            data = ConfigurationUtils.deepMerge(data, extra);
-            _values.putAll(extra);
-        }
+        Map<String, Object> data = FormUtils.values(form);
+        Map<String, Object> extra = FormUtils.extraValues(form);
+        Map<String, Object> _values = new HashMap<>(extra);
 
         Map<String, Object> allowedValues = form.getAllowedValues();
         if (allowedValues == null) {
             allowedValues = Collections.emptyMap();
         }
 
+        FormDefinition fd = form.getFormDefinition();
         List<String> fields = fd.getFields().stream()
                 .map(FormField::getName)
                 .collect(Collectors.toList());
