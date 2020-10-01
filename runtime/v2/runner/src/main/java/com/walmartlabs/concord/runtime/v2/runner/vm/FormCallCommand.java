@@ -96,7 +96,7 @@ public class FormCallCommand extends StepCommand<FormCall> {
             Serializable defaultValue = null;
             Serializable value = values.get(f.name());
             if (value != null) {
-                defaultValue = expressionEvaluator.eval(ctx, f.defaultValue(), Serializable.class);
+                defaultValue = expressionEvaluator.eval(ctx, value, Serializable.class);
             } else {
                 if (f.defaultValue() != null) {
                     defaultValue = expressionEvaluator.eval(ctx, f.defaultValue(), Serializable.class);
