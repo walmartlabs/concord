@@ -20,8 +20,6 @@ package com.walmartlabs.concord.runtime.v2.sdk;
  * =====
  */
 
-import com.walmartlabs.concord.runtime.v2.model.ProcessConfiguration;
-
 import java.io.Serializable;
 import java.nio.file.Path;
 import java.util.Map;

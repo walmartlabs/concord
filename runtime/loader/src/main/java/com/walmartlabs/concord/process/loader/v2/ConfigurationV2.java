@@ -24,7 +24,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.walmartlabs.concord.process.loader.model.Configuration;
-import com.walmartlabs.concord.runtime.v2.model.ProcessConfiguration;
+import com.walmartlabs.concord.runtime.v2.model.ProcessDefinitionConfiguration;
 import com.walmartlabs.concord.sdk.Constants;
 import com.walmartlabs.concord.sdk.MapUtils;
 
@@ -40,7 +40,7 @@ public class ConfigurationV2 implements Configuration, Serializable {
     private final Map<String, Object> values;
 
     @SuppressWarnings("unchecked")
-    public ConfigurationV2(ProcessConfiguration cfg) {
+    public ConfigurationV2(ProcessDefinitionConfiguration cfg) {
         ObjectMapper om = new ObjectMapper();
         om.registerModule(new Jdk8Module());
         om.registerModule(new JavaTimeModule());

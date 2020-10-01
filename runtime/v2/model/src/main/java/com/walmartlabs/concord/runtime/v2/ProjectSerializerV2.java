@@ -72,7 +72,6 @@ public class ProjectSerializerV2 {
                 .addSerializer(SwitchStep.class, new SwitchStepSerializer())
                 .addSerializer(TaskCall.class, new TaskCallStepSerializer())
                 .addSerializer(Form.class, new FormDefinitionSerializer())
-                .addSerializer(ProcessConfiguration.class, new ConfigurationSerializer())
                 .addSerializer(Trigger.class, new TriggerSerializer())
                 .addSerializer(ProcessDefinition.class, new ProcessDefinitionSerializer());
 

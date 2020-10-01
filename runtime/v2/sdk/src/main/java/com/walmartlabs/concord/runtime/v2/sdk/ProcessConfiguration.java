@@ -1,4 +1,4 @@
-package com.walmartlabs.concord.runtime.v2.model;
+package com.walmartlabs.concord.runtime.v2.sdk;
 
 /*-
  * *****
@@ -24,13 +24,11 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
-import com.walmartlabs.concord.common.ConfigurationUtils;
-import com.walmartlabs.concord.sdk.Constants;
+import com.walmartlabs.concord.runtime.v2.model.EventConfiguration;
 import org.immutables.value.Value;
 
 import javax.annotation.Nullable;
 import java.io.Serializable;
-import java.time.Duration;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -50,25 +48,13 @@ public interface ProcessConfiguration extends Serializable {
     UUID instanceId();
 
     @Value.Default
-    default String runtime() {
-        return "concord-v2";
-    }
-
-    @Value.Default
     default boolean debug() {
         return false;
     }
 
-    // TODO activeProfiles
-
     @Value.Default
     default String entryPoint() {
-        return Constants.Request.DEFAULT_ENTRY_POINT_NAME;
-    }
-
-    @Value.Default
-    default List<String> dependencies() {
-        return Collections.emptyList();
+        return "default";
     }
 
     @Value.Default
@@ -88,9 +74,6 @@ public interface ProcessConfiguration extends Serializable {
     // TODO types
     @Nullable
     Map<String, Object> currentUser();
-
-    @Nullable
-    String template();
 
     @Value.Default
     default ProcessInfo processInfo() {
@@ -113,35 +96,11 @@ public interface ProcessConfiguration extends Serializable {
     }
 
     @Value.Default
-    default Map<String, Object> requirements() {
-        return Collections.emptyMap();
-    }
-
-    @Nullable
-    Duration processTimeout();
-
-    @Nullable
-    ExclusiveModeConfiguration exclusive();
-
-    @Value.Default
     default List<String> out() {
         return Collections.emptyList();
     }
 
     static ImmutableProcessConfiguration.Builder builder() {
         return ImmutableProcessConfiguration.builder();
-    }
-
-    static ProcessConfiguration merge(ProcessConfiguration a, ProcessConfiguration b) {
-        return builder().from(a)
-                // TODO entryPoint has default value, it shouldn't override a non-default value
-                .entryPoint(b.entryPoint())
-                .addAllDependencies(b.dependencies())
-                .events(EventConfiguration.merge(a.events(), b.events()))
-                .template(b.template() != null ? b.template() : a.template())
-                .arguments(ConfigurationUtils.deepMerge(a.arguments(), b.arguments()))
-                .initiator(b.initiator() != null ? b.initiator() : a.initiator())
-                .currentUser(b.currentUser() != null ? b.currentUser() : a.currentUser())
-                .build();
     }
 }
