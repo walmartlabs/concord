@@ -19,8 +19,8 @@ for a given process.
 
 ### Changed
 
-- concord-server: fixed handling of the `values` field when `readonly`
-form fields are used;
+- concord-server: fixed the handling of the `values` field when
+`readonly` form fields are used;
 - runtime-v2: fixed a typo in code that prevented default form field
 values from working correctly;
 - concord-tasks: `repositoryRefresh` task was converted to v2;
