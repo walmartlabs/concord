@@ -30,6 +30,11 @@ metrics. Fixes a `ConcurrentModificationException` when Server is
 running in an embedded environment, e.g. testcontainer-concord's
 LOCAL mode.
 
+### Breaking
+
+- runtime-v2: `ProcessDefinition#configuration()` is a separate type
+now;
+- runtime-v2: move `ProjectInfo` classes to the SDK.
 
 
 ## [1.66.0] - 2020-09-17
