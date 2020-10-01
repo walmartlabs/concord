@@ -23,6 +23,7 @@ package com.walmartlabs.concord.server.org.secret.store.concord;
 import com.walmartlabs.concord.server.cfg.ConcordSecretStoreConfiguration;
 import com.walmartlabs.concord.server.org.secret.SecretDao;
 import com.walmartlabs.concord.server.org.secret.store.SecretStore;
+import org.jooq.DSLContext;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -61,12 +62,12 @@ public class ConcordSecretStore implements SecretStore {
     }
 
     @Override
-    public void store(UUID id, byte[] data) {
-        secretDao.updateData(id, data);
+    public void store(DSLContext tx, UUID id, byte[] data) {
+        secretDao.updateData(tx, id, data);
     }
 
     @Override
-    public void delete(UUID id) {
+    public void delete(DSLContext tx, UUID id) {
         // do nothing, the data will be deleted when the secret's entry is removed from the DB table
     }
 
