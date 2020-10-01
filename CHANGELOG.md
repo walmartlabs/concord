@@ -19,6 +19,8 @@ for a given process.
 
 ### Changed
 
+- runtime-v2: fixed a typo in code that prevented default form field
+values from working correctly;
 - concord-tasks: `repositoryRefresh` task was converted to v2;
 - concord-agent: tone down logging when the main thread is intrerrupted;
 - ansible: allow any Java `Collection` types (list, set, etc) as
