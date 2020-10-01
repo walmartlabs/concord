@@ -8,6 +8,7 @@
 - runtime-v2: allow profiles to override flows, forms;
 - concord-server: tx aware OrganizationManager's `createOrUpdate`
 and `createOrGet` methods, useful for server-side plugins;
+- concord-server: tx aware SecretManager's `createBinaryData` method;
 - concord-console, runtime-v2: the process events list now includes
 links to the source code of steps;
 - resource-tasks: `prettyPrintYaml` method to output data as
