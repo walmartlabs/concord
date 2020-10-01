@@ -63,8 +63,8 @@ public interface ProcessDefinition extends Serializable {
     }
 
     @Value.Default
-    default Forms forms() {
-        return Forms.builder().build();
+    default Map<String, Form> forms() {
+        return Collections.emptyMap();
     }
 
     @Value.Default
@@ -89,7 +89,7 @@ public interface ProcessDefinition extends Serializable {
                 .profiles(profiles)
                 .addAllTriggers(b.triggers())
                 .imports(Imports.merge(a.imports(), b.imports()))
-                .forms(Forms.merge(a.forms(), b.forms()))
+                .putAllForms(b.forms())
                 .build();
     }
 }

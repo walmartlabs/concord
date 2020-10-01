@@ -55,6 +55,11 @@ public interface Profile extends Serializable {
         return Collections.emptyMap();
     }
 
+    @Value.Default
+    default Map<String, Form> forms() {
+        return Collections.emptyMap();
+    }
+
     static ImmutableProfile.Builder builder() {
         return ImmutableProfile.builder();
     }

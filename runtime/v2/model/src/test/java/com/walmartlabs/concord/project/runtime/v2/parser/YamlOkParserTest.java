@@ -220,7 +220,8 @@ public class YamlOkParserTest extends AbstractParserTest {
 
         assertNotNull(pd.forms());
         assertEquals(1, pd.forms().size());
-        Form fd = pd.forms().items().get(0);
+        Form fd = pd.forms().get("myForm");
+        assertNotNull(fd);
         assertEquals("myForm", fd.name());
         assertNotNull(fd.location());
         assertNotNull(fd.fields());
@@ -435,6 +436,28 @@ public class YamlOkParserTest extends AbstractParserTest {
         assertTrue(main.get(0) instanceof ReturnStep);
         ReturnStep t = (ReturnStep) main.get(0);
         assertNotNull(t.getLocation());
+    }
+
+    // Profiles
+    @Test
+    public void test019() throws Exception {
+        ProcessDefinition pd = load("019.yml");
+
+        assertTrue(pd.flows().isEmpty());
+        assertEquals(1, pd.profiles().size());
+
+        Profile p1 = pd.profiles().get("p1");
+        assertNotNull(p1);
+
+        // flows
+        assertEquals(1, p1.flows().size());
+        assertTrue(p1.flows().get("default").get(0) instanceof ReturnStep);
+
+        assertEquals(1, p1.forms().size());
+        assertNotNull(p1.forms().get("myForm"));
+        assertEquals(2, p1.forms().get("myForm").fields().size());
+
+        assertTrue(p1.configuration().debug());
     }
 
     private static void assertMeta(StepOptions o) {

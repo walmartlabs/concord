@@ -66,7 +66,7 @@ public class ProcessDefinitionV2 extends EffectiveProcessDefinitionProviderV2 im
         this.imports = delegate.imports();
         this.forms = new ArrayList<>();
         if (delegate.forms() != null) {
-            delegate.forms().items().forEach(f -> forms.add(Form.builder()
+            delegate.forms().values().forEach(f -> forms.add(Form.builder()
                     .name(f.name())
                     .fields(toFields(f))
                     .location(SourceMap.from(f.location()))

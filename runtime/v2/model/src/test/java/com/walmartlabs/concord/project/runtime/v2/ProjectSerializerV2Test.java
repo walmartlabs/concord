@@ -204,7 +204,7 @@ public class ProjectSerializerV2Test extends AbstractParserTest {
 
     @Test
     public void testProcessDefinition() throws Exception{
-        List<Form> forms = Collections.singletonList(Form.builder()
+        Map<String, Form> forms = Collections.singletonMap("form1", Form.builder()
                 .name("form1")
                 .addFields(FormField.builder()
                         .name("field1")
@@ -230,7 +230,7 @@ public class ProjectSerializerV2Test extends AbstractParserTest {
                 .build()));
 
         ProcessDefinition pd = ProcessDefinition.builder()
-                .forms(Forms.of(forms))
+                .forms(forms)
                 .putFlows("flow1", steps())
                 .addPublicFlows("flow1")
                 .addTriggers(trigger)
