@@ -92,4 +92,47 @@ public class FormIT {
         proc.assertLog(".*lastName=" + lastName + ".*");
         proc.assertLog(".*age=" + age + ".*");
     }
+
+    /**
+     * Start a process with a form and a sleep task. Cancel the process while sleeping
+     * and check the onCancel process for variables. We expect the submitted values
+     * to be available in the onCancel flow.
+     */
+    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    public void testFormOnCancel() throws Exception {
+        Payload payload = new Payload()
+                .archive(FormIT.class.getResource("formOnCancel").toURI());
+
+        // ---
+
+        ConcordProcess proc = concord.processes().start(payload);
+
+        ProcessEntry pe = proc.waitForStatus(ProcessEntry.StatusEnum.SUSPENDED);
+        assertEquals(ProcessEntry.StatusEnum.SUSPENDED, pe.getStatus());
+
+        List<FormListEntry> forms = proc.forms();
+        assertEquals(1, forms.size());
+
+        FormListEntry myForm = forms.get(0);
+
+        String firstName = "john_" + randomString();
+        int age = ThreadLocalRandom.current().nextInt(100);
+
+        Map<String, Object> data = new HashMap<>();
+        data.put("firstName", firstName);
+        data.put("age", age);
+
+        FormSubmitResponse fsr = proc.submitForm(myForm.getName(), data);
+        assertTrue(fsr.isOk());
+
+        // ---
+
+        proc.waitForStatus(ProcessEntry.StatusEnum.RUNNING);
+        proc.kill();
+        proc.waitForStatus(ProcessEntry.StatusEnum.CANCELLED);
+
+        ConcordProcess child = concord.processes().get(proc.waitForChildStatus(ProcessEntry.StatusEnum.FINISHED).getInstanceId());
+        child.assertLog(".*myForm.firstName: " + firstName + ".*");
+        child.assertLog(".*myForm.age: " + age + ".*");
+    }
 }

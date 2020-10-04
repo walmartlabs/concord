@@ -50,7 +50,7 @@ public class FilesTaskV2 implements Task {
     private static Path assertPath(Path workDir, String path) {
         Path result = workDir.resolve(path).normalize().toAbsolutePath();
         if (!result.startsWith(workDir)) {
-            throw new IllegalArgumentException("path not related to working directory: '" + path + "'");
+            throw new IllegalArgumentException("The path must be within the working directory: " + path);
         }
         return result;
     }

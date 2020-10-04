@@ -52,10 +52,12 @@ public interface ProcessConfiguration extends Serializable {
         return false;
     }
 
-    @Value.Default
-    default String entryPoint() {
-        return "default";
-    }
+    /**
+     * The process' "entry point" (the name of the starting flow).
+     * Can be {@code null} for processes resumed
+     */
+    @Nullable
+    String entryPoint();
 
     @Value.Default
     default Map<String, Object> arguments() {
