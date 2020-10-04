@@ -52,7 +52,7 @@ public class StateImportingProcessor implements PayloadProcessor {
     public Payload process(Chain chain, Payload payload) {
         ProcessKey processKey = payload.getProcessKey();
         Path workspace = payload.getHeader(Payload.WORKSPACE_DIR);
-        List<Snapshot> snapshots = payload.getHeader(RepositoryProcessor.REPOSITORY_SNAPSHOT);
+        List<Snapshot> snapshots = payload.getHeader(Payload.REPOSITORY_SNAPSHOT);
         stateManager.replacePath(processKey, workspace, (p, attrs) -> filter(p, attrs, snapshots, workspace));
 
         return chain.process(payload);

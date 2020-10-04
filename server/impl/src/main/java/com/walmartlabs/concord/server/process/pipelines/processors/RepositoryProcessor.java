@@ -57,7 +57,6 @@ public class RepositoryProcessor implements PayloadProcessor {
      * Repository effective parameters.
      */
     public static final HeaderKey<RepositoryInfo> REPOSITORY_INFO_KEY = HeaderKey.register("_repositoryInfo", RepositoryInfo.class);
-    public static final HeaderKey<List<Snapshot>> REPOSITORY_SNAPSHOT = HeaderKey.registerList("_repositorySnapshot");
 
     private final RepositoryDao repositoryDao;
     private final RepositoryManager repositoryManager;
@@ -111,7 +110,7 @@ public class RepositoryProcessor implements PayloadProcessor {
                 return payload
                         .putHeader(REPOSITORY_INFO_KEY, i)
                         .putHeader(Payload.REPOSITORY, repository)
-                        .putHeader(REPOSITORY_SNAPSHOT, Collections.singletonList(snapshot));
+                        .putHeader(Payload.REPOSITORY_SNAPSHOT, Collections.singletonList(snapshot));
             } catch (Exception e) {
                 log.error("process -> repository error", e);
                 logManager.error(processKey, "Error while processing a repository: " + repo.getUrl(), e);
