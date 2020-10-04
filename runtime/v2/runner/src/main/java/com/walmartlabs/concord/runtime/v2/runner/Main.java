@@ -35,7 +35,6 @@ import com.walmartlabs.concord.runtime.v2.model.ProcessDefinition;
 import com.walmartlabs.concord.runtime.v2.runner.guice.ObjectMapperProvider;
 import com.walmartlabs.concord.runtime.v2.runner.logging.LoggingConfigurator;
 import com.walmartlabs.concord.runtime.v2.runner.tasks.TaskProviders;
-import com.walmartlabs.concord.runtime.v2.sdk.Variables;
 import com.walmartlabs.concord.runtime.v2.sdk.WorkingDirectory;
 import com.walmartlabs.concord.sdk.Constants;
 import com.walmartlabs.concord.svm.Frame;
@@ -138,7 +137,7 @@ public class Main {
         ProcessSnapshot snapshot = StateManager.readProcessState(workDir);
         Set<String> events = StateManager.readResumeEvents(workDir); // TODO make it an interface?
 
-        switch (currentMode(processCfg, events)) {
+        switch (currentAction(snapshot, events)) {
             case START: {
                 if (snapshot != null) {
                     // grab top-level variables from the snapshot and use them as process arguments
@@ -257,20 +256,20 @@ public class Main {
         return events;
     }
 
-    private static Mode currentMode(ProcessConfiguration processCfg, Set<String> events) {
-        if (processCfg.entryPoint() == null) {
+    private static Action currentAction(ProcessSnapshot snapshot, Set<String> events) {
+        if (snapshot != null && snapshot.executionMode() == ExecutionMode.CHECKPOINT_RESTORE) {
             // restoring from a checkpoint, see ProcessManager#restoreFromCheckpoint
-            return Mode.RESTART_FROM_A_CHECKPOINT;
+            return Action.RESTART_FROM_A_CHECKPOINT;
         }
 
         if (events != null && !events.isEmpty()) {
-            return Mode.RESUME;
+            return Action.RESUME;
         }
 
-        return Mode.START;
+        return Action.START;
     }
 
-    private enum Mode {
+    private enum Action {
         /**
          * Regular start. If there's a process snapshot (e.g. a handler process like "onCancel"),
          * its variables from the root frame are passed as process arguments.

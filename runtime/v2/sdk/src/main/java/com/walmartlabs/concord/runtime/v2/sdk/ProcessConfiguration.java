@@ -25,6 +25,7 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.walmartlabs.concord.runtime.v2.model.EventConfiguration;
+import com.walmartlabs.concord.sdk.Constants;
 import org.immutables.value.Value;
 
 import javax.annotation.Nullable;
@@ -52,12 +53,10 @@ public interface ProcessConfiguration extends Serializable {
         return false;
     }
 
-    /**
-     * The process' "entry point" (the name of the starting flow).
-     * Can be {@code null} for processes resumed
-     */
-    @Nullable
-    String entryPoint();
+    @Value.Default
+    default String entryPoint() {
+        return Constants.Request.DEFAULT_ENTRY_POINT_NAME;
+    }
 
     @Value.Default
     default Map<String, Object> arguments() {
