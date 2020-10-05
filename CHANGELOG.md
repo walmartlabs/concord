@@ -4,6 +4,7 @@
 
 ### Added
 
+- concord-server: a PayloadBuilder method to add files;
 - file-tasks: initial version.
 
 ### Changed
