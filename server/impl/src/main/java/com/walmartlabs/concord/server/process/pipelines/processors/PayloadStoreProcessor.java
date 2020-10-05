@@ -24,7 +24,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.guava.GuavaModule;
 import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import com.walmartlabs.concord.repository.Snapshot;
 import com.walmartlabs.concord.server.process.Payload;
+import com.walmartlabs.concord.server.process.keys.HeaderKey;
 import com.walmartlabs.concord.server.process.state.ProcessStateManager;
 import com.walmartlabs.concord.server.sdk.ProcessKey;
 import com.walmartlabs.concord.server.sdk.metrics.WithTimer;
@@ -32,7 +34,7 @@ import com.walmartlabs.concord.server.sdk.metrics.WithTimer;
 import javax.inject.Inject;
 import javax.inject.Named;
 import java.nio.file.Path;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -43,6 +45,8 @@ import java.util.stream.Collectors;
  */
 @Named
 public class PayloadStoreProcessor implements PayloadProcessor {
+
+    private static final Set<String> EXCLUDED_HEADERS = new HashSet<>(Arrays.asList(Payload.POLICY.name(), Payload.REPOSITORY_SNAPSHOT.name()));
 
     private final ObjectMapper objectMapper;
     private final ProcessStateManager stateManager;
@@ -66,7 +70,7 @@ public class PayloadStoreProcessor implements PayloadProcessor {
         // remove things that shouldn't be in the serialized payload
         Map<String, Object> headers = payload.getHeaders().entrySet().stream()
                 .filter(e -> !(e.getValue() instanceof Path))
-                .filter(e -> !(e.getKey().equals(Payload.POLICY.name())))
+                .filter(e -> !EXCLUDED_HEADERS.contains(e.getKey()))
                 .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
 
         String serializedHeaders = serialize(headers);

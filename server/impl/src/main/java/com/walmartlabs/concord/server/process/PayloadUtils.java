@@ -9,9 +9,9 @@ package com.walmartlabs.concord.server.process;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -21,15 +21,14 @@ package com.walmartlabs.concord.server.process;
  */
 
 import com.walmartlabs.concord.common.DateTimeUtils;
+import com.walmartlabs.concord.repository.Snapshot;
 import com.walmartlabs.concord.sdk.Constants;
 import com.walmartlabs.concord.sdk.MapUtils;
 
 import javax.xml.bind.DatatypeConverter;
 import java.time.OffsetDateTime;
 import java.time.format.DateTimeParseException;
-import java.util.Calendar;
-import java.util.Collections;
-import java.util.Map;
+import java.util.*;
 
 public final class PayloadUtils {
 
@@ -73,6 +72,34 @@ public final class PayloadUtils {
         }
 
         throw new ProcessException(p.getProcessKey(), "Invalid '" + k + "' value, expected an ISO-8601 value, got: " + v);
+    }
+
+    public static Payload addSnapshot(Payload payload, Snapshot snapshot) {
+        List<Snapshot> result = new ArrayList<>();
+
+        List<Snapshot> snapshots = payload.getHeader(Payload.REPOSITORY_SNAPSHOT);
+        if (snapshots != null) {
+            result.addAll(snapshots);
+        }
+        result.add(snapshot);
+
+        return payload.putHeader(Payload.REPOSITORY_SNAPSHOT, result);
+    }
+
+    public static Payload addSnapshots(Payload payload, List<Snapshot> l) {
+        if (l == null || l.isEmpty()) {
+            return payload;
+        }
+
+        List<Snapshot> result = new ArrayList<>();
+
+        List<Snapshot> snapshots = payload.getHeader(Payload.REPOSITORY_SNAPSHOT);
+        if (snapshots != null) {
+            result.addAll(snapshots);
+        }
+        result.addAll(l);
+
+        return payload.putHeader(Payload.REPOSITORY_SNAPSHOT, result);
     }
 
     private PayloadUtils() {

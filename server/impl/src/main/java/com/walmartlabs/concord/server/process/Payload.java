@@ -24,6 +24,7 @@ import com.walmartlabs.concord.imports.Imports;
 import com.walmartlabs.concord.policyengine.PolicyEngine;
 import com.walmartlabs.concord.process.loader.model.ProcessDefinition;
 import com.walmartlabs.concord.repository.Repository;
+import com.walmartlabs.concord.repository.Snapshot;
 import com.walmartlabs.concord.server.process.keys.AttachmentKey;
 import com.walmartlabs.concord.server.process.keys.HeaderKey;
 import com.walmartlabs.concord.server.sdk.ProcessKey;
@@ -36,7 +37,9 @@ public class Payload {
 
     public static final HeaderKey<HttpServletRequest> SERVLET_REQUEST = HeaderKey.register("_servletRequest", HttpServletRequest.class);
     public static final HeaderKey<Imports> IMPORTS = HeaderKey.register("_imports", Imports.class);
+    public static final HeaderKey<List<Snapshot>> REPOSITORY_SNAPSHOT = HeaderKey.registerList("_repositorySnapshot");
     public static final HeaderKey<List<String>> ACTIVE_PROFILES = HeaderKey.registerList("_activeProfiles");
+    public static final HeaderKey<List<String>> DEPENDENCIES = HeaderKey.registerList("_dependencies");
     public static final HeaderKey<Map<String, Object>> CONFIGURATION = HeaderKey.registerMap("_cfg");
     public static final HeaderKey<Path> BASE_DIR = HeaderKey.register("_baseDir", Path.class);
     public static final HeaderKey<Path> WORKSPACE_DIR = HeaderKey.register("_workspace", Path.class);
@@ -44,13 +47,13 @@ public class Payload {
     public static final HeaderKey<ProcessDefinition> PROJECT_DEFINITION = HeaderKey.register("_projectDef", ProcessDefinition.class);
     public static final HeaderKey<ProcessKind> PROCESS_KIND = HeaderKey.register("_processKind", ProcessKind.class);
     public static final HeaderKey<Repository> REPOSITORY = HeaderKey.register("_repository", Repository.class);
-    public static final HeaderKey<String> RUNTIME = HeaderKey.register("_runtime", String.class);
     public static final HeaderKey<Set<String>> OUT_EXPRESSIONS = HeaderKey.registerSet("_outExpr");
     public static final HeaderKey<Set<String>> PROCESS_HANDLERS = HeaderKey.registerSet("_processHandlers");
     public static final HeaderKey<Set<String>> PROCESS_TAGS = HeaderKey.registerSet("_processTags");
     public static final HeaderKey<String> ENTRY_POINT = HeaderKey.register("_entryPoint", String.class);
     public static final HeaderKey<String> EVENT_NAME = HeaderKey.register("_eventName", String.class);
     public static final HeaderKey<String> INITIATOR = HeaderKey.register("_initiator", String.class);
+    public static final HeaderKey<String> RUNTIME = HeaderKey.register("_runtime", String.class);
     public static final HeaderKey<String> SESSION_TOKEN = HeaderKey.register("_sessionToken", String.class);
     public static final HeaderKey<TriggeredByEntry> TRIGGERED_BY = HeaderKey.register("_triggeredBy", TriggeredByEntry.class);
     public static final HeaderKey<UUID> INITIATOR_ID = HeaderKey.register("_initiatorId", UUID.class);
@@ -58,7 +61,6 @@ public class Payload {
     public static final HeaderKey<UUID> PARENT_INSTANCE_ID = HeaderKey.register("_parentInstanceId", UUID.class);
     public static final HeaderKey<UUID> PROJECT_ID = HeaderKey.register("_projectId", UUID.class);
     public static final HeaderKey<UUID> REPOSITORY_ID = HeaderKey.register("_repoId", UUID.class);
-    public static final HeaderKey<List<String>> DEPENDENCIES = HeaderKey.registerList("_dependencies");
 
     public static final AttachmentKey WORKSPACE_ARCHIVE = AttachmentKey.register("archive");
 

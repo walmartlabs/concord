@@ -34,9 +34,11 @@ import org.sonatype.siesta.ValidationErrorsException;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.OffsetDateTime;
@@ -63,6 +65,7 @@ public final class PayloadBuilder {
     }
 
     private Payload payload;
+    private final Map<String, Path> attachments = new HashMap<>();
 
     private PayloadBuilder(Payload payload) {
         this.payload = payload;
@@ -70,6 +73,10 @@ public final class PayloadBuilder {
 
     private PayloadBuilder(ProcessKey processKey) {
         this.payload = new Payload(processKey);
+    }
+
+    public ProcessKey processKey() {
+        return payload.getProcessKey();
     }
 
     public PayloadBuilder parentInstanceId(UUID parentInstanceId) {
@@ -90,15 +97,22 @@ public final class PayloadBuilder {
         return f.apply(this);
     }
 
+    /**
+     * Parses the provided {@code input} using the following logic:
+     * <ul>
+     *     <li>part names should not start with '/' or contain '..'</li>
+     *     <li>any {@code text/plain} is converted into the process' configuration value.
+     *     Dots '.' in the part's name are used as the property's path. E.g. {@code x.y.z} is
+     *     converted into a nested Map object {@code {"x": {"y": {"z": ...}}}}</li>
+     *     <li>parts of other types are saved as files in the payload's {@code ${workDir}}.
+     *     The part's name will be used as the file's path.</li>
+     * </ul>
+     */
     public PayloadBuilder with(MultipartInput input) throws IOException {
-        Map<String, Path> attachments = payload.getAttachments();
-        attachments = new HashMap<>(attachments != null ? attachments : Collections.emptyMap());
-
         Map<String, Object> cfg = payload.getHeader(Payload.CONFIGURATION);
         cfg = new HashMap<>(cfg != null ? cfg : Collections.emptyMap());
 
         ProcessKey pk = payload.getProcessKey();
-        Path baseDir = ensureBaseDir();
 
         for (InputPart p : input.getParts()) {
             String name = MultipartUtils.extractName(p);
@@ -111,14 +125,9 @@ public final class PayloadBuilder {
                 Map<String, Object> m = ConfigurationUtils.toNested(name, v);
                 cfg = ConfigurationUtils.deepMerge(cfg, m);
             } else {
-                Path dst = baseDir.resolve(name);
-                Files.createDirectories(dst.getParent());
-                try (InputStream in = p.getBody(InputStream.class, null);
-                     OutputStream out = Files.newOutputStream(dst)) {
-                    IOUtils.copy(in, out);
+                try (InputStream in = p.getBody(InputStream.class, null)) {
+                    addAttachment(name, in);
                 }
-
-                attachments.put(name, dst);
             }
         }
 
@@ -298,17 +307,55 @@ public final class PayloadBuilder {
         return this;
     }
 
+    /**
+     * Add a file to the payload's directory.
+     * If the destination file already exists, it will be overwritten.
+     * <p/>
+     * Example:
+     * <pre>{@code
+     * Payload p = PayloadBuilder.start(...)
+     *      .file("concord.yml", "flows:\n  default:\n    - log: 'Hello!'\n")
+     *      .build();
+     * }</pre>
+     * <p>
+     * The file is stored as an "attachment" first and moved into
+     * the process' workDir when the process transitions into ENQUEUED status.
+     *
+     * @param name    the file's destination name
+     * @param content the file's content
+     */
+    public PayloadBuilder file(String name, String content) throws IOException {
+        try (InputStream in = new ByteArrayInputStream(content.getBytes(StandardCharsets.UTF_8))) {
+            addAttachment(name, in);
+        }
+
+        return this;
+    }
+
+    private void addAttachment(String name, InputStream in) throws IOException {
+        Path dst = ensureBaseDir().resolve(name);
+        Files.createDirectories(dst.getParent());
+        try (OutputStream out = Files.newOutputStream(dst)) {
+            IOUtils.copy(in, out);
+        }
+
+        attachments.put(name, dst);
+    }
+
     private Path ensureBaseDir() throws IOException {
         Path baseDir = payload.getHeader(Payload.BASE_DIR);
+
         if (baseDir == null) {
             baseDir = IOUtils.createTempDir("payload");
             payload = payload.putHeader(Payload.BASE_DIR, baseDir);
         }
+
         return baseDir;
     }
 
-    private void ensureWorkDir() throws IOException {
+    private Path ensureWorkDir() throws IOException {
         Path workDir = payload.getHeader(Payload.WORKSPACE_DIR);
+
         if (workDir == null) {
             Path baseDir = ensureBaseDir();
 
@@ -319,10 +366,12 @@ public final class PayloadBuilder {
 
             payload = payload.putHeader(Payload.WORKSPACE_DIR, workDir);
         }
+
+        return workDir;
     }
 
     public Payload build() throws IOException {
         ensureWorkDir();
-        return payload;
+        return payload.putAttachments(attachments);
     }
 }

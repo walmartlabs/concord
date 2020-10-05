@@ -27,6 +27,7 @@ import com.walmartlabs.concord.sdk.Constants;
 import com.walmartlabs.concord.sdk.MapUtils;
 import com.walmartlabs.concord.server.process.ImportsNormalizerFactory;
 import com.walmartlabs.concord.server.process.Payload;
+import com.walmartlabs.concord.server.process.PayloadUtils;
 import com.walmartlabs.concord.server.process.ProcessException;
 import com.walmartlabs.concord.server.sdk.ConcordApplicationException;
 import com.walmartlabs.concord.server.sdk.ProcessKey;
@@ -79,9 +80,7 @@ public class ProcessDefinitionProcessor implements PayloadProcessor {
             ProjectLoader.Result result = projectLoader.loadProject(workDir, runtime, importsNormalizer.forProject(projectId));
 
             List<Snapshot> snapshots = result.snapshots();
-            for (Snapshot s : snapshots) {
-                payload = addSnapshot(payload, s);
-            }
+            payload = PayloadUtils.addSnapshots(payload, snapshots);
 
             ProcessDefinition pd = result.projectDefinition();
             int depsCount = pd.configuration().dependencies().size();
@@ -105,18 +104,6 @@ public class ProcessDefinitionProcessor implements PayloadProcessor {
             throw new ProcessException(processKey, "Error while loading the project, check the syntax. " + e.getMessage(), e);
         }
         return chain.process(payload);
-    }
-
-    private static Payload addSnapshot(Payload payload, Snapshot s) {
-        List<Snapshot> result = new ArrayList<>();
-
-        List<Snapshot> snapshots = payload.getHeader(RepositoryProcessor.REPOSITORY_SNAPSHOT);
-        if (snapshots != null) {
-            result.addAll(snapshots);
-        }
-        result.add(s);
-
-        return payload.putHeader(RepositoryProcessor.REPOSITORY_SNAPSHOT, result);
     }
 
     /**
