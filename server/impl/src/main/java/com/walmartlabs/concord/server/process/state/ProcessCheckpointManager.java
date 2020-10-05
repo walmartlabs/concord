@@ -156,6 +156,9 @@ public class ProcessCheckpointManager {
 
         String name();
 
+        /**
+         * {@code null} in the "concord-v2" runtime.
+         */
         @Nullable
         String eventName();
 

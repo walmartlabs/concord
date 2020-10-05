@@ -37,12 +37,15 @@ import com.walmartlabs.concord.runtime.v2.runner.logging.LoggingConfigurator;
 import com.walmartlabs.concord.runtime.v2.runner.tasks.TaskProviders;
 import com.walmartlabs.concord.runtime.v2.sdk.WorkingDirectory;
 import com.walmartlabs.concord.sdk.Constants;
+import com.walmartlabs.concord.svm.Frame;
+import com.walmartlabs.concord.svm.State;
 import com.walmartlabs.concord.svm.ThreadStatus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.Serializable;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -127,15 +130,20 @@ public class Main {
         Map<String, Object> processArgs = prepareProcessArgs(processCfg);
 
         // three modes:
-        //  - regular start "from scratch"
+        //  - regular start "from scratch" (or running a "handler" process)
         //  - continuing from a checkpoint
         //  - resuming after suspend
 
         ProcessSnapshot snapshot = StateManager.readProcessState(workDir);
         Set<String> events = StateManager.readResumeEvents(workDir); // TODO make it an interface?
 
-        switch (currentMode(snapshot, events)) {
+        switch (currentAction(snapshot, events)) {
             case START: {
+                if (snapshot != null) {
+                    // grab top-level variables from the snapshot and use them as process arguments
+                    processArgs.putAll(getTopLevelVariables(snapshot));
+                }
+
                 snapshot = start(runner, workDir, processCfg, processArgs);
                 break;
             }
@@ -144,6 +152,11 @@ public class Main {
                 break;
             }
             case RESTART_FROM_A_CHECKPOINT: {
+                if (snapshot == null) {
+                    throw new IllegalStateException("Can't restart from a checkpoint without a ProcessSnapshot. " +
+                            "This is most likely a bug.");
+                }
+
                 snapshot = restart(runner, snapshot, processArgs);
                 break;
             }
@@ -153,12 +166,6 @@ public class Main {
             StateManager.finalizeSuspendedState(workDir, snapshot, getEvents(snapshot)); // TODO make it an interface?
         } else {
             StateManager.cleanupState(workDir); // TODO make it an interface
-        }
-    }
-
-    private static void validate(ProcessConfiguration cfg) {
-        if (cfg.instanceId() == null) {
-            throw new IllegalStateException("ProcessConfiguration -> instanceId cannot be null");
         }
     }
 
@@ -177,6 +184,19 @@ public class Main {
         m.put(Constants.Request.PROJECT_INFO_KEY, om.convertValue(cfg.projectInfo(), Map.class));
 
         return m;
+    }
+
+    private static Map<String, Serializable> getTopLevelVariables(ProcessSnapshot snapshot) {
+        State state = snapshot.vmState();
+        List<Frame> frames = state.getFrames(state.getRootThreadId());
+        Frame rootFrame = frames.get(frames.size() - 1);
+        return rootFrame.getLocals();
+    }
+
+    private static void validate(ProcessConfiguration cfg) {
+        if (cfg.instanceId() == null) {
+            throw new IllegalStateException("ProcessConfiguration -> instanceId cannot be null");
+        }
     }
 
     private static ProcessSnapshot start(Runner runner, Path workDir, ProcessConfiguration cfg, Map<String, Object> args) throws Exception {
@@ -236,16 +256,36 @@ public class Main {
         return events;
     }
 
-    private static Mode currentMode(ProcessSnapshot snapshot, Set<String> events) {
-        if (events == null || events.isEmpty()) {
-            return snapshot != null ? Mode.RESTART_FROM_A_CHECKPOINT : Mode.START;
+    private static Action currentAction(ProcessSnapshot snapshot, Set<String> events) {
+        if (snapshot != null && snapshot.executionMode() == ExecutionMode.CHECKPOINT_RESTORE) {
+            // restoring from a checkpoint, see ProcessManager#restoreFromCheckpoint
+            return Action.RESTART_FROM_A_CHECKPOINT;
         }
-        return Mode.RESUME;
+
+        if (events != null && !events.isEmpty()) {
+            return Action.RESUME;
+        }
+
+        return Action.START;
     }
 
-    private enum Mode {
+    private enum Action {
+        /**
+         * Regular start. If there's a process snapshot (e.g. a handler process like "onCancel"),
+         * its variables from the root frame are passed as process arguments.
+         */
         START,
+
+        /**
+         * Resuming with an event (e.g. a form event).
+         * Previous state + an event ref.
+         */
         RESUME,
+
+        /**
+         * Restarting from a previously created checkpoint.
+         * Previous state, no events.
+         */
         RESTART_FROM_A_CHECKPOINT
     }
 }

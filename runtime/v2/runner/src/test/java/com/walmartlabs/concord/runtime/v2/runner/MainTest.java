@@ -766,9 +766,14 @@ public class MainTest {
     }
 
     private void save(ProcessConfiguration cfg) {
-        this.processConfiguration = ProcessConfiguration.builder().from(cfg)
-                .instanceId(instanceId)
-                .build();
+        ImmutableProcessConfiguration.Builder b = ProcessConfiguration.builder().from(cfg)
+                .instanceId(instanceId);
+
+        if (cfg.entryPoint() == null) {
+            b.entryPoint(Constants.Request.DEFAULT_ENTRY_POINT_NAME);
+        }
+
+        this.processConfiguration = b.build();
     }
 
     private byte[] resume(String eventName, ProcessConfiguration cfg) throws Exception {

@@ -1,0 +1,19 @@
+configuration:
+  runtime: "concord-v2"
+
+flows:
+  default:
+    - log: "before form"
+    - form: "myForm"
+      fields:
+        - firstName: { type: "string" }
+        - age: { type: "int" }
+      yield: true
+    - log: "after form"
+    - "${sleep.ms(30000)}"
+    - log: "after sleep"
+
+  onCancel:
+    - log: |
+        myForm.firstName: ${myForm.firstName}
+        myForm.age: ${myForm.age}
