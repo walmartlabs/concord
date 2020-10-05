@@ -1,0 +1,12 @@
+configuration:
+  runtime: "concord-v2"
+  dependencies:
+    - "mvn://com.walmartlabs.concord.plugins.basic:file-tasks:PROJECT_VERSION"
+
+flows:
+  default:
+    - log: "#1 BEFORE: ${files.exists('_attachments')}"
+
+    - checkpoint: "first"
+
+    - log: "#2 AFTER: ${files.exists('_attachments')}"

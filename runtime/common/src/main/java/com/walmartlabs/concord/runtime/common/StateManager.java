@@ -21,6 +21,7 @@ package com.walmartlabs.concord.runtime.common;
  */
 
 import com.walmartlabs.concord.common.IOUtils;
+import com.walmartlabs.concord.common.TemporaryPath;
 import com.walmartlabs.concord.sdk.Constants;
 import org.apache.commons.compress.archivers.zip.ZipArchiveOutputStream;
 
@@ -139,19 +140,22 @@ public final class StateManager {
 
         Path dst = stateDir.resolve("instance");
 
-        Path tmp = IOUtils.createTempFile("instance", "state");
-        try (OutputStream out = Files.newOutputStream(tmp)) {
+        try (TemporaryPath tmp = IOUtils.tempFile("instance", "state");
+             OutputStream out = Files.newOutputStream(tmp.path())) {
+
             SerializationUtils.serialize(out, state);
+            Files.move(tmp.path(), dst, REPLACE_EXISTING);
         }
-        Files.move(tmp, dst, REPLACE_EXISTING);
     }
 
     public static void archive(Path baseDir, Serializable state, Path result) throws IOException {
-        saveProcessState(baseDir, state);
+        try (TemporaryPath tmp = IOUtils.tempDir("state-archive")) {
+            saveProcessState(tmp.path(), state);
 
-        try (ZipArchiveOutputStream zip = new ZipArchiveOutputStream(Files.newOutputStream(result))) {
-            zip(zip, Constants.Files.JOB_ATTACHMENTS_DIR_NAME + "/", baseDir.resolve(Constants.Files.JOB_ATTACHMENTS_DIR_NAME));
-            zip(zip, Constants.Files.CONCORD_SYSTEM_DIR_NAME + "/", baseDir.resolve(Constants.Files.CONCORD_SYSTEM_DIR_NAME));
+            try (ZipArchiveOutputStream zip = new ZipArchiveOutputStream(Files.newOutputStream(result))) {
+                zip(zip, Constants.Files.JOB_ATTACHMENTS_DIR_NAME + "/", tmp.path().resolve(Constants.Files.JOB_ATTACHMENTS_DIR_NAME));
+                zip(zip, Constants.Files.CONCORD_SYSTEM_DIR_NAME + "/", baseDir.resolve(Constants.Files.CONCORD_SYSTEM_DIR_NAME));
+            }
         }
     }
 

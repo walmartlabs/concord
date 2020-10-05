@@ -25,6 +25,7 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.walmartlabs.concord.runtime.v2.model.EventConfiguration;
+import com.walmartlabs.concord.sdk.Constants;
 import org.immutables.value.Value;
 
 import javax.annotation.Nullable;
@@ -54,7 +55,7 @@ public interface ProcessConfiguration extends Serializable {
 
     @Value.Default
     default String entryPoint() {
-        return "default";
+        return Constants.Request.DEFAULT_ENTRY_POINT_NAME;
     }
 
     @Value.Default
