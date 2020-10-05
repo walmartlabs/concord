@@ -36,6 +36,13 @@ public class ProcessKey extends PartialProcessKey {
 
     private final OffsetDateTime createdAt;
 
+    /**
+     * Creates a new process key using a random UUID and the current timestamp.
+     */
+    public ProcessKey() {
+        this(UUID.randomUUID(), OffsetDateTime.now());
+    }
+
     public ProcessKey(PartialProcessKey part, OffsetDateTime createdAt) {
         this(part.getInstanceId(), createdAt);
     }
