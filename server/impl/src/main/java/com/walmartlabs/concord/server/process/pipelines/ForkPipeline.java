@@ -27,7 +27,8 @@ import javax.inject.Inject;
 import javax.inject.Named;
 
 /**
- * Handles processes forked from a parent.
+ * Handles processes forked from a parent (including "handler"
+ * processes such as "onCancel", "onFailure", etc).
  */
 @Named
 public class ForkPipeline extends Pipeline {
