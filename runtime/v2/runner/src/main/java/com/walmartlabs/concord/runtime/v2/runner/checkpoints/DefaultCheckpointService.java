@@ -9,9 +9,9 @@ package com.walmartlabs.concord.runtime.v2.runner.checkpoints;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -27,6 +27,7 @@ import com.walmartlabs.concord.runtime.common.StateManager;
 import com.walmartlabs.concord.runtime.common.cfg.ApiConfiguration;
 import com.walmartlabs.concord.runtime.common.cfg.RunnerConfiguration;
 import com.walmartlabs.concord.runtime.common.injector.InstanceId;
+import com.walmartlabs.concord.runtime.v2.runner.ExecutionMode;
 import com.walmartlabs.concord.runtime.v2.runner.ProcessSnapshot;
 import com.walmartlabs.concord.runtime.v2.sdk.WorkingDirectory;
 import com.walmartlabs.concord.sdk.Constants;
@@ -89,6 +90,13 @@ public class DefaultCheckpointService implements CheckpointService {
     }
 
     private Path archiveState(UUID checkpointId, String checkpointName, ProcessSnapshot snapshot) throws IOException {
+        // mark the snapshot as a "checkpoint" snapshot
+        // see Main#currentAction
+        snapshot = ProcessSnapshot.builder()
+                .from(snapshot)
+                .executionMode(ExecutionMode.CHECKPOINT_RESTORE)
+                .build();
+
         Path checkpointDir = workingDirectory.getValue().resolve(Constants.Files.JOB_CHECKPOINTS_DIR_NAME);
         if (!Files.exists(checkpointDir)) {
             Files.createDirectories(checkpointDir);
