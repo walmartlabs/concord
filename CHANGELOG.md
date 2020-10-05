@@ -1,5 +1,23 @@
 # Change log
 
+## [Unreleased]
+
+### Added
+
+- concord-server: a PayloadBuilder method to add files to the process'
+`workDir`;
+- file-tasks: initial version.
+
+### Changed
+
+- slack-tasks: read default variables from context instead of
+`@InjectVariables`. This fixes an issue of calling `slack` using
+expressions;
+- runtime-v2: fixed handling of process state snapshots. Now
+the runtime correcly resumes from state snapshots and forks.
+
+
+
 ## [1.67.0] - 2020-10-01
 
 ### Added
