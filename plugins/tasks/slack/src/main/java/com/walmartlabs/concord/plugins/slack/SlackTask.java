@@ -20,12 +20,11 @@ package com.walmartlabs.concord.plugins.slack;
  * =====
  */
 
-import com.walmartlabs.concord.sdk.Context;
-import com.walmartlabs.concord.sdk.InjectVariable;
-import com.walmartlabs.concord.sdk.Task;
+import com.walmartlabs.concord.sdk.*;
 
 import javax.inject.Named;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Map;
 
 @Named("slack")
@@ -34,12 +33,9 @@ public class SlackTask implements Task {
 
     private final SlackTaskCommon delegate = new SlackTaskCommon();
 
-    @InjectVariable("slackCfg")
-    private Map<String, Object> defaults;
-
     @Override
     public void execute(Context ctx) {
-        Map<String, Object> result = delegate.execute(SlackTaskParams.of(new ContextVariables(ctx), defaults));
+        Map<String, Object> result = delegate.execute(SlackTaskParams.of(new ContextVariables(ctx), defaults(ctx)));
         ctx.setVariable("result", result);
     }
 
@@ -59,7 +55,7 @@ public class SlackTask implements Task {
                      String iconEmoji, String username, Collection<Object> attachments,
                      boolean ignoreErrors) {
 
-        SlackConfiguration slackCfg = SlackConfiguration.from(SlackConfigurationParams.of(new ContextVariables(ctx), defaults));
+        SlackConfiguration slackCfg = SlackConfiguration.from(SlackConfigurationParams.of(new ContextVariables(ctx), defaults(ctx)));
         delegate.sendMessage(slackCfg, channelId, ts, false, text, iconEmoji, username, attachments, ignoreErrors);
     }
 
@@ -68,7 +64,7 @@ public class SlackTask implements Task {
                      String iconEmoji, String username, Collection<Object> attachments,
                      boolean ignoreErrors) {
 
-        SlackConfiguration slackCfg = SlackConfiguration.from(SlackConfigurationParams.of(new ContextVariables(ctx), defaults));
+        SlackConfiguration slackCfg = SlackConfiguration.from(SlackConfigurationParams.of(new ContextVariables(ctx), defaults(ctx)));
         delegate.sendMessage(slackCfg, channelId, ts, replyBroadcast, text, iconEmoji, username, attachments, ignoreErrors);
     }
 
@@ -94,5 +90,9 @@ public class SlackTask implements Task {
 
         Map<String, Object> result = delegate.sendMessage(slackCfg, channelId, ts, replyBroadcast, text, iconEmoji, username, attachments, ignoreErrors);
         ctx.setVariable("result", result);
+    }
+
+    private static Map<String, Object> defaults(Context ctx) {
+        return ContextUtils.getMap(ctx, "slackCfg", Collections.emptyMap());
     }
 }
