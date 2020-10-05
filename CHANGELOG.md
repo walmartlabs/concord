@@ -1,5 +1,18 @@
 # Change log
 
+## [Unreleased]
+
+### Added
+
+- file-tasks: initial version.
+
+### Changed
+
+- runtime-v2: fixed handling of process state snapshots. Now
+the runtime correcly resumes from state snapshots and forks.
+
+
+
 ## [1.67.0] - 2020-10-01
 
 ### Added
