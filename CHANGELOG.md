@@ -8,6 +8,9 @@
 
 ### Changed
 
+- slack-tasks: read default variables from context instead of
+`@InjectVariables`. This fixes an issue of calling `slack` using
+expressions;
 - runtime-v2: fixed handling of process state snapshots. Now
 the runtime correcly resumes from state snapshots and forks.
 
