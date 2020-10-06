@@ -1,5 +1,14 @@
 # Change log
 
+## [Unreleased]
+
+### Changed
+
+- concord-server: allow teams with no members (i.e. teams with LDAP
+groups only).
+
+
+
 ## [1.68.0] - 2020-10-05
 
 ### Added
