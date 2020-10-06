@@ -9,9 +9,9 @@ package com.walmartlabs.concord.plugins.ansible;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -36,6 +36,7 @@ import java.nio.file.Path;
 import java.util.Date;
 import java.util.concurrent.TimeUnit;
 
+import static com.walmartlabs.concord.sdk.MapUtils.getString;
 import static java.nio.file.StandardCopyOption.ATOMIC_MOVE;
 import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
 
@@ -66,8 +67,14 @@ public class KerberosAuth implements AnsibleAuth {
     }
 
     @Override
-    public KerberosAuth enrich(AnsibleEnv env) {
-        env.put("KRB5CCNAME", tgtCacheFile.toString());
+    public KerberosAuth enrich(AnsibleEnv env, AnsibleContext context) {
+        String dockerImage = getString(context.args(), TaskParams.DOCKER_IMAGE_KEY.getKey());
+        if (dockerImage != null) {
+            env.put("KRB5CCNAME", tgtCacheFile.toString().replace(context.workDir().toString(), "/workspace"));
+        }
+        else {
+            env.put("KRB5CCNAME", tgtCacheFile.toString());
+        }
         return this;
     }
 
