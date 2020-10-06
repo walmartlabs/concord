@@ -190,7 +190,8 @@ public class TeamResource implements Resource {
                                          @ApiParam @QueryParam("replace") @DefaultValue("false") boolean replace,
                                          @ApiParam @Valid Collection<TeamUserEntry> users) {
 
-        if (users == null || users.isEmpty()) {
+        boolean isEmptyUsers = users == null || users.isEmpty();
+        if (isEmptyUsers && !replace) {
             throw new ValidationErrorsException("Empty user list");
         }
 

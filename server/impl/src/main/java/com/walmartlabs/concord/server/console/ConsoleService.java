@@ -75,7 +75,6 @@ public class ConsoleService implements Resource {
     private final OrganizationManager orgManager;
     private final RepositoryDao repositoryDao;
     private final TeamDao teamDao;
-    private final LdapManager ldapManager;
     private final ApiKeyDao apiKeyDao;
     private final ProjectAccessManager projectAccessManager;
     private final JsonStoreDao storageDao;
@@ -90,7 +89,6 @@ public class ConsoleService implements Resource {
                           OrganizationManager orgManager,
                           RepositoryDao repositoryDao,
                           TeamDao teamDao,
-                          LdapManager ldapManager,
                           ApiKeyDao apiKeyDao,
                           ProjectAccessManager projectAccessManager,
                           JsonStoreDao storageDao,
@@ -104,7 +102,6 @@ public class ConsoleService implements Resource {
         this.secretDao = secretDao;
         this.orgManager = orgManager;
         this.teamDao = teamDao;
-        this.ldapManager = ldapManager;
         this.apiKeyDao = apiKeyDao;
         this.projectAccessManager = projectAccessManager;
         this.storageDao = storageDao;
