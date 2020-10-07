@@ -53,8 +53,8 @@ public class IfCommand extends StepCommand<IfStep> {
         EvalContext evalContext = EvalContextFactory.global(ctx);
 
         ExpressionEvaluator ee = runtime.getService(ExpressionEvaluator.class);
-        boolean ifResult = ee.eval(evalContext, expr, Boolean.class);
-        if (ifResult) {
+        Boolean ifResult = ee.eval(evalContext, expr, Boolean.class);
+        if (ifResult != null && ifResult) {
             frame.push(thenCommand);
         } else if (elseCommand != null) {
             frame.push(elseCommand);

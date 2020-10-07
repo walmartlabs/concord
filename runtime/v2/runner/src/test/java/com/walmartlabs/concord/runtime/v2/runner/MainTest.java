@@ -760,6 +760,18 @@ public class MainTest {
         assertLogAtLeast(allLogs, 2, ".*#3.*y=345.*");
     }
 
+    @Test
+    public void testNullIfExpression() throws Exception {
+        deploy("ifExpressionAsNull");
+
+        save(ProcessConfiguration.builder()
+                .putArguments("myVar", Collections.singletonMap("x", 123))
+                .build());
+
+        byte[] log = run();
+        assertLog(log, ".*it's null.*");
+    }
+
     private void deploy(String resource) throws URISyntaxException, IOException {
         Path src = Paths.get(MainTest.class.getResource(resource).toURI());
         IOUtils.copy(src, workDir);
