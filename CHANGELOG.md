@@ -4,6 +4,7 @@
 
 ### Changed
 
+- concord-console: fix widths of columns on the secret list page;
 - runtime-v2: `if` steps now treat `null` values as `false`;
 - concord-server: allow teams with no members (i.e. teams with LDAP
 groups only).
