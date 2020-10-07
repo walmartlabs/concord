@@ -33,6 +33,7 @@ import sun.security.krb5.internal.ccache.CredentialsCache;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Date;
 import java.util.concurrent.TimeUnit;
 
@@ -70,7 +71,7 @@ public class KerberosAuth implements AnsibleAuth {
     public KerberosAuth enrich(AnsibleEnv env, AnsibleContext context) {
         String dockerImage = getString(context.args(), TaskParams.DOCKER_IMAGE_KEY.getKey());
         if (dockerImage != null) {
-            env.put("KRB5CCNAME", tgtCacheFile.toString().replace(context.workDir().toString(), "/workspace"));
+            env.put("KRB5CCNAME", Paths.get("/workspace").resolve(context.workDir().relativize(tgtCacheFile)).toString());
         }
         else {
             env.put("KRB5CCNAME", tgtCacheFile.toString());
