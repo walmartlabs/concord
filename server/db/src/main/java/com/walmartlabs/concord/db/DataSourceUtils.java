@@ -69,10 +69,6 @@ public final class DataSourceUtils {
         return ds;
     }
 
-    public static void migrateDb(DataSource ds, DatabaseChangeLogProvider p) {
-        migrateDb(ds, p, null);
-    }
-
     /**
      * Migrate a database using the provided changelog and Liquibase parameters.
      *
@@ -87,20 +83,19 @@ public final class DataSourceUtils {
         int retries = MIGRATION_MAX_RETRIES;
         for (int i = 0; i < retries; i++) {
             try (Connection c = dataSource.getConnection()) {
-                log.info("get -> performing '{}' migration...", changeLogProvider);
+                log.info("migrateDb -> performing '{}' migration...", changeLogProvider);
                 String logPath = changeLogProvider.getChangeLogPath();
                 String logTable = changeLogProvider.getChangeLogTable();
                 String lockTable = changeLogProvider.getLockTable();
                 migrateDb(c, logPath, logTable, lockTable, changeLogParams);
-                log.info("get -> done");
                 break;
             } catch (Exception e) {
                 if (i + 1 >= retries) {
-                    log.error("get -> db migration error, giving up", e);
+                    log.error("migrateDb -> db migration error, giving up", e);
                     throw new RuntimeException(e);
                 }
 
-                log.warn("get -> db migration error, retrying in {}ms: {}", MIGRATION_RETRY_DELAY, e.getMessage());
+                log.warn("migrateDb -> db migration error, retrying in {}ms: {}", MIGRATION_RETRY_DELAY, e.getMessage());
                 try {
                     Thread.sleep(MIGRATION_RETRY_DELAY);
                 } catch (InterruptedException ee) {
