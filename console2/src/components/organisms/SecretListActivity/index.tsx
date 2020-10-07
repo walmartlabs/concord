@@ -131,9 +131,9 @@ const SecretListActivity = ({ orgName, forceRefresh }: Props) => {
                 <Table.Header>
                     <Table.Row>
                         <Table.HeaderCell collapsing={true} />
-                        <Table.HeaderCell collapsing={true}>Name</Table.HeaderCell>
-                        <Table.HeaderCell>Type</Table.HeaderCell>
-                        <Table.HeaderCell collapsing={true}>Project</Table.HeaderCell>
+                        <Table.HeaderCell>Name</Table.HeaderCell>
+                        <Table.HeaderCell collapsing={true}>Type</Table.HeaderCell>
+                        <Table.HeaderCell>Project</Table.HeaderCell>
                     </Table.Row>
                 </Table.Header>
                 <Table.Body>
@@ -145,7 +145,7 @@ const SecretListActivity = ({ orgName, forceRefresh }: Props) => {
                     )}
                     {data?.items.map((secret, index) => (
                         <Table.Row key={index}>
-                            <Table.Cell>
+                            <Table.Cell singleLine={true}>
                                 <SecretVisibilityIcon secret={secret} />
                             </Table.Cell>
                             <Table.Cell singleLine={true}>
@@ -153,8 +153,8 @@ const SecretListActivity = ({ orgName, forceRefresh }: Props) => {
                                     {secret.name}
                                 </Link>
                             </Table.Cell>
-                            <Table.Cell>{typeToText(secret.type)}</Table.Cell>
-                            <Table.Cell>{secret.projectName}</Table.Cell>
+                            <Table.Cell singleLine={true}>{typeToText(secret.type)}</Table.Cell>
+                            <Table.Cell singleLine={true}>{secret.projectName}</Table.Cell>
                         </Table.Row>
                     ))}
                 </Table.Body>
