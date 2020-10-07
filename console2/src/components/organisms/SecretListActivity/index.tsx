@@ -131,7 +131,7 @@ const SecretListActivity = ({ orgName, forceRefresh }: Props) => {
                 <Table.Header>
                     <Table.Row>
                         <Table.HeaderCell collapsing={true} />
-                        <Table.HeaderCell collapsing={true}>Name</Table.HeaderCell>
+                        <Table.HeaderCell>Name</Table.HeaderCell>
                         <Table.HeaderCell collapsing={true}>Type</Table.HeaderCell>
                         <Table.HeaderCell>Project</Table.HeaderCell>
                     </Table.Row>
