@@ -42,7 +42,7 @@ interface Props {
     confirmationHeader: string;
     confirmationContent: string;
     onSubmit: (values: FormValues) => void;
-    isExists: (name: string) => Promise<boolean>;
+    isExists: (name: string) => Promise<boolean> | undefined;
     alreadyExistsTemplate: (name: string) => string;
     disabled?: boolean;
 }
