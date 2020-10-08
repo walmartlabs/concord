@@ -4,6 +4,9 @@
 
 ### Changed
 
+- ansible: fixed an issue preventing Kerberos authentication from
+working in nested Docker containers (i.e. when `dockerImage` is
+used);
 - concord-server: allow non-admins to search audit logs by `eventId`
 (`/api/v1/audit?eventId=...`);
 - concord-console: fix widths of columns on the secret list page;
