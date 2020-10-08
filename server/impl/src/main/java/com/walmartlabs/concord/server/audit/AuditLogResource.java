@@ -155,6 +155,7 @@ public class AuditLogResource implements Resource {
         UUID effectiveJsonStoreId = getEffectiveJsonStoreId(effectiveOrgId, details);
         UUID effectiveTeamId = getEffectiveTeamId(effectiveOrgId, details);
         String source = details.get("source");
+        Object eventId = details.get("eventId");
 
         // only admins are allowed to proceed without any entity filters
         if (effectiveOrgId == null
@@ -162,7 +163,8 @@ public class AuditLogResource implements Resource {
                 && effectiveSecretId == null
                 && effectiveJsonStoreId == null
                 && effectiveTeamId == null
-                && source == null) {
+                && source == null
+                && eventId == null) {
 
             if (!Roles.isAdmin()) {
                 throw new UnauthorizedException("Only admins can retrieve audit events without filtering by entity.");
@@ -195,8 +197,8 @@ public class AuditLogResource implements Resource {
             filterBuilder.putDetails("source", source);
         }
 
-        if (details.get("eventId") != null) {
-            filterBuilder.putDetails("eventId", details.get("eventId"));
+        if (eventId != null) {
+            filterBuilder.putDetails("eventId", eventId);
         }
 
         if (details.get("githubEvent") != null) {
