@@ -4,6 +4,8 @@
 
 ### Changed
 
+- concord-server: allow non-admins to search audit logs by `eventId`
+(`/api/v1/audit?eventId=...`);
 - concord-console: fix widths of columns on the secret list page;
 - runtime-v2: `if` steps now treat `null` values as `false`;
 - concord-server: allow teams with no members (i.e. teams with LDAP
