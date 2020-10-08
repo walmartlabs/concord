@@ -97,7 +97,7 @@ public class AnsibleTask {
         outVarsProcessor.prepare(context, env.get());
 
         AnsibleAuth auth = ansibleAuthFactory.create(context)
-                .enrich(env)
+                .enrich(env, context)
                 .enrich(b);
 
         cfg.write();
