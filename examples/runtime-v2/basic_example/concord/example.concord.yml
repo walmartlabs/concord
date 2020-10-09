@@ -9,6 +9,9 @@ flows:
       in:
         url: "${url}" # required to be passed. in v1, this was implicit
         method: "GET"
+      out: response
+
+    - log: "Response Code: ${response.statusCode}"
 
 # Task inputs are explicit in v2 – all required parameters must be specified in the `in` block
 
@@ -19,9 +22,11 @@ flows:
         msg: "Hello! I'm being logged in a separate (and named!) segment!"
         level: "WARN"
 
-# separate log segments allow cleaner readability and log management
+# separate and customizable log segments allow cleaner readability and log management
 
     - log: "Just a regular log statement"
+
+    - call: flow-v2
 
   flow-v2:
     - try:
