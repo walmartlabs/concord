@@ -13,7 +13,9 @@ flows:
           method: "GET"
           meta:
             segmentName: "HTTP Google Segment"
-        out: responseGoogle
+        out: response
+
+      - log: "Response Code: ${response.statusCode}"
 
       - task: http
         in:
@@ -23,9 +25,7 @@ flows:
             segmentName: "HTTP FB Segment"
         out: responseFacebook
 
-      - log: |
-          Google: ${responseGoogle.statusCode}
-          FB: ${responseFacebook.statusCode}
+      - log: "Response Code: ${responseFacebook.statusCode}"
 
 # The v1 runtime provides no satisfactory ways to run flow steps in parallel in one single process.
 # The v2 runtime was designed with parallel execution in mind. It adds a new step - parallel.
