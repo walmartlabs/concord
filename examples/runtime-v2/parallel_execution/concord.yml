@@ -1,0 +1,28 @@
+flows:
+  default:
+    - set:
+        url_g: https://www.google.com
+        url_f: https://www.facebook.com
+    - parallel:
+      - task: http
+        in:
+          url: "${url_g}"
+          method: "GET"
+          meta:
+            segmentName: "HTTP Google Segment"
+        out: responseGoogle
+
+      - task: http
+        in:
+          url: "${url_f}"
+          method: "GET"
+          meta:
+            segmentName: "HTTP FB Segment"
+        out: responseFacebook
+
+      - log: |
+          Google: ${responseGoogle.statusCode}
+          FB: ${responseFacebook.statusCode}
+
+# The v1 runtime provides no satisfactory ways to run flow steps in parallel in one single process.
+# The v2 runtime was designed with parallel execution in mind. It adds a new step - parallel.

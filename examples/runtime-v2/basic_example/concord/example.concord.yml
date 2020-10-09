@@ -24,8 +24,6 @@ flows:
 
 # separate and customizable log segments allow cleaner readability and log management
 
-    - log: "Just a regular log statement"
-
     - call: flow-v2
 
   flow-v2:
