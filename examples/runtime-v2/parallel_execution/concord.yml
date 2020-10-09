@@ -1,23 +1,25 @@
 configuration:
   runtime: "concord-v2"
 
-  - parallel:
-      - task: http
-        in:
-          url: https://google.com/
-        out: googleResponse
+flows:
+  default:
+    - parallel:
+        - task: http
+          in:
+            url: https://google.com/
+          out: googleResponse
 
-      - task: http
-        in:
-          url: https://bing.com/
-        out: bingResponse
-    out:
-      - googleResponse
-      - bingResponse
+        - task: http
+          in:
+            url: https://bing.com/
+          out: bingResponse
+      out:
+        - googleResponse
+        - bingResponse
 
-  - log: |
-      Google: ${googleResponse.statusCode}
-      Bing: ${bingResponse.statusCode}
+    - log: |
+        Google: ${googleResponse.statusCode}
+        Bing: ${bingResponse.statusCode}
 
 #flows:
 #  default:
