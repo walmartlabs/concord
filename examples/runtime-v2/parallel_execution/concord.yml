@@ -8,12 +8,16 @@ flows:
           in:
             url: https://google.com/
             method: "GET"
+            meta:
+              segmentName: "HTTP Google Segment"
           out: googleResponse
 
         - task: http
           in:
             url: https://bing.com/
             method: "GET"
+            meta:
+              segmentName: "HTTP Bing Segment"
           out: bingResponse
       out:
         - googleResponse
