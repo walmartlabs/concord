@@ -30,6 +30,6 @@ flows:
     - try:
         - log: "${invalid expression}"
       error:
-        - log: "${lastError}"
+        - log: "${lastError}" # will print error log
 
 # In v2 all ${lastError} values are the original exceptions thrown by tasks or expressions
