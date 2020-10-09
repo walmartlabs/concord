@@ -3,3 +3,7 @@ configuration:
 
 publicFlows:
   - default
+
+# In v2, flows listed in the `publicFlows` section are the only flows allowed as entry point values.
+# This also limits the flows listed in the repository run dialog.
+# When the `publicFlows` section is omitted, Concord considers all flows as public.
