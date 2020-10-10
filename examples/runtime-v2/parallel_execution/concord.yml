@@ -1,0 +1,32 @@
+configuration:
+  runtime: "concord-v2"
+
+flows:
+  default:
+    - parallel:
+        - task: http
+          in:
+            url: https://google.com/
+            method: "GET"
+          meta:
+            segmentName: "HTTP Google Segment"
+          out: googleResponse
+
+        - task: http
+          in:
+            url: https://bing.com/
+            method: "GET"
+          meta:
+            segmentName: "HTTP Bing Segment"
+          out: bingResponse
+      out:
+        - googleResponse
+        - bingResponse
+
+    - log: |
+        Printing status...
+        Google: ${googleResponse.statusCode}
+        Bing: ${bingResponse.statusCode}
+
+# The v1 runtime provides no satisfactory way to run flow steps in parallel in one single process.
+# The v2 runtime was designed with parallel execution in mind. It adds a new step - parallel.
