@@ -66,16 +66,34 @@ public interface EventConfiguration extends Serializable {
         return true;
     }
 
+    /**
+     * Maximum allowed length of string values.
+     * The runtime truncates strings larger than {@link #truncateMaxStringLength()}.
+     *
+     * @return
+     */
     @Value.Default
     default int truncateMaxStringLength() {
         return 1024;
     }
 
+    /**
+     * Maximum allowed length of array (list) values.
+     * The runtime truncates arrays larger than {@link #truncateMaxArrayLength()}.
+     *
+     * @return
+     */
     @Value.Default
     default int truncateMaxArrayLength() {
         return 32;
     }
 
+    /**
+     * Maximum allowed depth of nested values.
+     * The runtime truncates references deeper than {@link #truncateMaxDepth()}.
+     *
+     * @return
+     */
     @Value.Default
     default int truncateMaxDepth() {
         return 10;
