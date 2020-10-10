@@ -1,4 +1,4 @@
-# HTT Task
+# HTTP Task
 
-A simple example of interacting with a REST endpoint with the  HTTP task.
+A simple example of interacting with a REST endpoint with the HTTP task.
 

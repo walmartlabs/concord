@@ -1,0 +1,35 @@
+flows:
+  default:
+    - set:
+        url: https://concord.prod.walmart.com
+
+# in v2, variables are scoped to a flow, unlike global variables in v1
+
+    - task: http
+      in:
+        url: "${url}" # required to be passed. in v1, this was implicit
+        method: "GET"
+      out: response
+
+    - log: "Response Code: ${response.statusCode}"
+
+# Task inputs are explicit in v2 – all required parameters must be specified in the `in` block
+
+    - task: log
+      meta:
+        segmentName: "Log me!"
+      in:
+        msg: "Hello! I'm being logged in a separate (and named!) segment!"
+        level: "WARN"
+
+# separate and customizable log segments allow cleaner readability and log management
+
+    - call: flow-v2
+
+  flow-v2:
+    - try:
+        - log: "${invalid expression}"
+      error:
+        - log: "${lastError}" # will print error log
+
+# In v2 all ${lastError} values are the original exceptions thrown by tasks or expressions
