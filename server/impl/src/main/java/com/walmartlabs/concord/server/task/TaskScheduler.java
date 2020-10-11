@@ -24,6 +24,7 @@ import com.walmartlabs.concord.db.AbstractDao;
 import com.walmartlabs.concord.db.MainDB;
 import com.walmartlabs.concord.db.PgUtils;
 import com.walmartlabs.concord.server.PeriodicTask;
+import com.walmartlabs.concord.server.jooq.enums.TaskStatusType;
 import com.walmartlabs.concord.server.sdk.ScheduledTask;
 import org.jooq.Configuration;
 import org.jooq.DSLContext;
@@ -34,6 +35,9 @@ import org.slf4j.LoggerFactory;
 import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.time.OffsetDateTime;
 import java.util.*;
 import java.util.concurrent.ExecutorService;
@@ -42,8 +46,7 @@ import java.util.concurrent.TimeUnit;
 
 import static com.walmartlabs.concord.db.PgUtils.interval;
 import static com.walmartlabs.concord.server.jooq.Tables.TASKS;
-import static org.jooq.impl.DSL.currentOffsetDateTime;
-import static org.jooq.impl.DSL.value;
+import static org.jooq.impl.DSL.*;
 
 @Named
 @Singleton
@@ -54,11 +57,16 @@ public class TaskScheduler extends PeriodicTask {
     private static final long POLL_INTERVAL = TimeUnit.SECONDS.toMillis(1);
     private static final long ERROR_DELAY = TimeUnit.SECONDS.toMillis(10);
     private static final String MAX_STALLED_AGE = "1 minute";
+    private static final long STALLED_CHECK_INTERVAL = TimeUnit.SECONDS.toMillis(20);
+    private static final long RUNNING_UPDATE_INTERVAL = TimeUnit.SECONDS.toMillis(20);
 
     private final ExecutorService executor;
     private final SchedulerDao dao;
     private final Map<String, ScheduledTask> tasks;
     private final Set<String> runningTasks = Collections.synchronizedSet(new HashSet<>());
+
+    private long lastUpdateDate;
+    private long lasStalledCheckDate;
 
     @Inject
     public TaskScheduler(Map<String, ScheduledTask> tasks, SchedulerDao dao) {
@@ -73,16 +81,18 @@ public class TaskScheduler extends PeriodicTask {
 
     @Override
     protected boolean performTask() {
-        List<String> ids = dao.poll();
-        if (ids.isEmpty()) {
-            return false;
+        if (lastUpdateDate + RUNNING_UPDATE_INTERVAL <= System.currentTimeMillis()) {
+            updateRunningTasks();
+            lastUpdateDate = System.currentTimeMillis();
         }
 
+        if (lasStalledCheckDate + STALLED_CHECK_INTERVAL <= System.currentTimeMillis()) {
+            failStalled();
+            lasStalledCheckDate = System.currentTimeMillis();
+        }
+
+        List<String> ids = dao.poll();
         ids.forEach(this::startTask);
-
-        updateRunningTasks();
-
-        failStalled();
 
         return false;
     }
@@ -123,7 +133,7 @@ public class TaskScheduler extends PeriodicTask {
             } catch (Exception e) {
                 log.error("startTask ['{}'] -> error", id, e);
 
-                dao.fail(id);
+                dao.error(id, e);
             } finally {
                 runningTasks.remove(id);
             }
@@ -131,21 +141,36 @@ public class TaskScheduler extends PeriodicTask {
     }
 
     private void updateRunningTasks() {
+        Set<String> forUpdate;
         synchronized (runningTasks) {
-            dao.updateRunning(runningTasks);
+            forUpdate = new HashSet<>(runningTasks);
+        }
+
+        if (forUpdate.isEmpty()) {
+            return;
+        }
+
+        try {
+            dao.updateRunning(forUpdate);
+        } catch (Exception e) {
+            log.error("updateRunningTasks -> error: {}", e.getMessage());
         }
     }
 
     private void failStalled() {
         Field<OffsetDateTime> cutOff = currentOffsetDateTime().minus(interval(MAX_STALLED_AGE));
 
-        dao.transaction(tx -> {
-            List<String> ids = dao.pollStalled(tx, cutOff);
-            for (String id : ids) {
-                dao.fail(tx, id);
-                log.info("failStalled -> marked as failed: {}", id);
-            }
-        });
+        try {
+            dao.transaction(tx -> {
+                List<String> ids = dao.pollStalled(tx, cutOff);
+                for (String id : ids) {
+                    dao.stalled(tx, id);
+                    log.info("failStalled -> marked as failed: {}", id);
+                }
+            });
+        } catch (Exception e) {
+            log.error("failStalled -> error: {}", e.getMessage());
+        }
     }
 
     @Named
@@ -163,9 +188,10 @@ public class TaskScheduler extends PeriodicTask {
             return txResult(tx -> {
                 List<String> ids = tx.select(TASKS.TASK_ID)
                         .from(TASKS)
-                        .where(TASKS.TASK_INTERVAL.greaterThan(0L).and(TASKS.STARTED_AT.isNull()
-                                .or(TASKS.FINISHED_AT.isNotNull()
-                                        .and(TASKS.FINISHED_AT.plus(TASKS.TASK_INTERVAL.mul(i)).lessOrEqual(currentOffsetDateTime())))))
+                        .where(TASKS.TASK_INTERVAL.greaterThan(0L)
+                                .and(TASKS.TASK_STATUS.notEqual(TaskStatusType.RUNNING))
+                                .and(TASKS.FINISHED_AT.isNull()
+                                        .or(TASKS.FINISHED_AT.plus(TASKS.TASK_INTERVAL.mul(i)).lessOrEqual(currentOffsetDateTime()))))
                         .forUpdate()
                         .skipLocked()
                         .fetch(TASKS.TASK_ID);
@@ -176,7 +202,7 @@ public class TaskScheduler extends PeriodicTask {
 
                 tx.update(TASKS)
                         .set(TASKS.STARTED_AT, currentOffsetDateTime())
-                        .set(TASKS.TASK_STATUS, value("RUNNING"))
+                        .set(TASKS.TASK_STATUS, value(TaskStatusType.RUNNING))
                         .set(TASKS.FINISHED_AT, (OffsetDateTime) null)
                         .set(TASKS.LAST_UPDATED_AT, currentOffsetDateTime())
                         .where(TASKS.TASK_ID.in(ids))
@@ -190,7 +216,7 @@ public class TaskScheduler extends PeriodicTask {
             return tx.select(TASKS.TASK_ID)
                     .from(TASKS)
                     .where(TASKS.LAST_UPDATED_AT.lessThan(cutOff)
-                            .and(TASKS.FINISHED_AT.isNull())
+                            .and(TASKS.TASK_STATUS.eq(TaskStatusType.RUNNING))
                             .and(TASKS.TASK_INTERVAL.greaterThan(0L)))
                     .forUpdate()
                     .skipLocked()
@@ -198,15 +224,15 @@ public class TaskScheduler extends PeriodicTask {
         }
 
         public void success(String taskId) {
-            tx(tx -> taskFinished(tx, taskId, "OK"));
+            tx(tx -> taskFinished(tx, taskId, TaskStatusType.OK, null));
         }
 
-        public void fail(String taskId) {
-            tx(tx -> fail(tx, taskId));
+        public void error(String taskId, Exception e) {
+            tx(tx -> taskFinished(tx, taskId, TaskStatusType.ERROR, e));
         }
 
-        public void fail(DSLContext tx, String taskId) {
-            taskFinished(tx, taskId, "ERROR");
+        public void stalled(DSLContext tx, String taskId) {
+            taskFinished(tx, taskId, TaskStatusType.STALLED, null);
         }
 
         public void updateTaskIntervals(Map<String, ScheduledTask> tasks) {
@@ -227,25 +253,36 @@ public class TaskScheduler extends PeriodicTask {
         }
 
         public void updateRunning(Set<String> runningTasks) {
-            tx(tx -> {
-                tx.update(TASKS)
-                        .set(TASKS.LAST_UPDATED_AT, currentOffsetDateTime())
-                        .where(TASKS.TASK_ID.in(runningTasks))
-                        .execute();
-            });
+            tx(tx -> tx.update(TASKS)
+                    .set(TASKS.LAST_UPDATED_AT, currentOffsetDateTime())
+                    .where(TASKS.TASK_ID.in(runningTasks))
+                    .execute());
         }
 
         private void transaction(Tx t) {
             tx(t);
         }
 
-        private void taskFinished(DSLContext tx, String taskId, String status) {
+        private void taskFinished(DSLContext tx, String taskId, TaskStatusType status, Exception e) {
             tx.update(TASKS)
                     .set(TASKS.FINISHED_AT, currentOffsetDateTime())
                     .set(TASKS.LAST_UPDATED_AT, currentOffsetDateTime())
                     .set(TASKS.TASK_STATUS, value(status))
+                    .set(TASKS.LAST_ERROR_AT, e != null ? currentOffsetDateTime() : null)
+                    .set(TASKS.LAST_ERROR, e != null ? value(toString(e)) : TASKS.LAST_ERROR)
                     .where(TASKS.TASK_ID.eq(taskId))
                     .execute();
+        }
+
+        private static String toString(Exception exception) {
+            try (StringWriter sw = new StringWriter();
+                 PrintWriter pw = new PrintWriter(sw)) {
+                exception.printStackTrace(pw);
+                return sw.toString();
+            } catch (IOException e) {
+                log.error("toString [{}]-> error: {}", exception, e.getMessage());
+                return null;
+            }
         }
     }
 }
