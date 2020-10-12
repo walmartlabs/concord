@@ -4,6 +4,9 @@
 
 ### Changed
 
+- concord-server: escape expressions (`${...}`) in the input data
+when resuming processes using
+`/api/v1/process/{id}/resume/{eventName}` endpoint;
 - ansible: fixed an issue preventing Kerberos authentication from
 working in nested Docker containers (i.e. when `dockerImage` is
 used);
