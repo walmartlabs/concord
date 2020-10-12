@@ -189,7 +189,7 @@ public class TaskScheduler extends PeriodicTask {
                 List<String> ids = tx.select(TASKS.TASK_ID)
                         .from(TASKS)
                         .where(TASKS.TASK_INTERVAL.greaterThan(0L)
-                                .and(TASKS.TASK_STATUS.notEqual(TaskStatusType.RUNNING))
+                                .and(TASKS.TASK_STATUS.notEqual(TaskStatusType.RUNNING).or(TASKS.TASK_STATUS.isNull()))
                                 .and(TASKS.FINISHED_AT.isNull()
                                         .or(TASKS.FINISHED_AT.plus(TASKS.TASK_INTERVAL.mul(i)).lessOrEqual(currentOffsetDateTime()))))
                         .forUpdate()
