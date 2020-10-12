@@ -4,6 +4,8 @@
 
 ### Changed
 
+- concord-server: task scheduler improvements - save the last error
+into the DB, simplify polling, improved task heartbeat/stall checks;
 - concord-server: escape expressions (`${...}`) in the input data
 when resuming processes using
 `/api/v1/process/{id}/resume/{eventName}` endpoint;
