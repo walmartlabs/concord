@@ -26,6 +26,8 @@ import javax.ws.rs.core.Response;
 
 public class ConcordApplicationException extends WebApplicationException {
 
+    private static final long serialVersionUID = 1L;
+
     public ConcordApplicationException(Response resp) {
         super(resp);
     }
