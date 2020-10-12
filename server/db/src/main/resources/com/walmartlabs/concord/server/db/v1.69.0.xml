@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.3.xsd">
+
+    <changeSet id="1690000" author="ybrigo@gmail.com">
+        <addColumn tableName="TASKS">
+            <column name="LAST_ERROR_AT" type="timestamptz">
+                <constraints nullable="true"/>
+            </column>
+        </addColumn>
+        <addColumn tableName="TASKS">
+            <column name="LAST_ERROR" type="text">
+                <constraints nullable="true"/>
+            </column>
+        </addColumn>
+
+        <sql>
+            create type task_status_type as enum ('OK', 'ERROR', 'RUNNING', 'STALLED')
+        </sql>
+
+        <sql>
+            ALTER TABLE TASKS
+            ALTER COLUMN TASK_STATUS TYPE task_status_type
+            USING TASK_STATUS::task_status_type
+        </sql>
+    </changeSet>
+</databaseChangeLog>
