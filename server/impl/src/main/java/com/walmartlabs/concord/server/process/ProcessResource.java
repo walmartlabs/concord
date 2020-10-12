@@ -34,6 +34,7 @@ import com.walmartlabs.concord.server.MultipartUtils;
 import com.walmartlabs.concord.server.OffsetDateTimeParam;
 import com.walmartlabs.concord.server.cfg.ProcessConfiguration;
 import com.walmartlabs.concord.server.cfg.SecretStoreConfiguration;
+import com.walmartlabs.concord.server.events.ExpressionUtils;
 import com.walmartlabs.concord.server.org.OrganizationManager;
 import com.walmartlabs.concord.server.org.ResourceAccessLevel;
 import com.walmartlabs.concord.server.org.project.EncryptedProjectValueManager;
@@ -422,6 +423,8 @@ public class ProcessResource implements Resource {
         if (saveAs != null && !saveAs.isEmpty() && req != null) {
             req = ConfigurationUtils.toNested(saveAs, req);
         }
+
+        req = ExpressionUtils.escapeMap(req);
 
         Payload payload;
         try {
