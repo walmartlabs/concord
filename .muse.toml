@@ -1,2 +1,0 @@
-build = "mvn package -DskipTests -Pdocker"
-setup = ".muse/setup.sh"
