@@ -56,7 +56,7 @@ interface LogContainerProps {
     instanceId: ConcordId;
     data: LogSegment[];
     onClick: (correlationId: ConcordId) => void;
-    segmentClick: (ref: any, idx: number) => void;
+    segmentClick: (ref: any) => void;
     expandedItems: ConcordId[];
     tagRefs: any[];
 }
@@ -153,7 +153,7 @@ const LogContainer = ({ instanceId, data, tagRefs, onClick, segmentClick, expand
                         tag,
                         tagRefs,
                         () => onClick(tag.correlationId),
-                        () => segmentClick(ref, idx),
+                        () => segmentClick(ref),
                         expanded,
                         idx,
                         ref
@@ -191,7 +191,7 @@ class ProcessLogViewer extends React.Component<Props, State> {
     }
 
     componentDidUpdate(prevProps: Props) {
-        const { data, selectedCorrelationId,  } = this.props;
+        const { data, selectedCorrelationId } = this.props;
         const { scrollAnchorRef } = this.state;
 
         if (prevProps.data !== data) {
@@ -242,8 +242,8 @@ class ProcessLogViewer extends React.Component<Props, State> {
         this.setState({ expandedItems });
     }
 
-    handleSegmentClick(ref: any, idx: number) {
-        if (ref.current && window.location.hash.includes(`#segmentId=${idx}`)) {
+    handleSegmentClick(ref: any) {
+        if (ref.current && window.location.hash.substring(1).length) {
             ref.current.scrollIntoView({
                 behavior: 'smooth',
                 block: 'start',
