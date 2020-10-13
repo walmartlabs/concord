@@ -56,9 +56,9 @@ interface LogContainerProps {
     instanceId: ConcordId;
     data: LogSegment[];
     onClick: (correlationId: ConcordId) => void;
+    segmentClick: (ref: any, idx: number) => void;
     expandedItems: ConcordId[];
     tagRefs: any[];
-    segmentRef: any;
 }
 
 const renderTagHeader = (
@@ -69,10 +69,11 @@ const renderTagHeader = (
     instanceId: ConcordId,
     expanded?: boolean,
     onClick?: () => void,
+    segmentClick?: () => void,
     correlationId?: ConcordId
 ) => (
     <>
-        <div id={`segmentId=${idx}`} ref={segmentRef}>
+        <div id={`segmentId=${idx}`} ref={segmentRef} onClick={segmentClick}>
         <div
             ref={
                 correlationId
@@ -107,6 +108,7 @@ const renderTag = (
     tag: TagData,
     tagRefs: any[],
     onClick: () => void,
+    segmentClick: () => void,
     expanded: boolean,
     idx: number,
     segmentRef: any
@@ -121,7 +123,7 @@ const renderTag = (
 
     return (
         <div key={idx} className="logTagDetails">
-            {renderTagHeader(tag.taskName, tagRefs, idx, segmentRef, instanceId, expanded, onClick, tag.correlationId)}
+            {renderTagHeader(tag.taskName, tagRefs, idx, segmentRef, instanceId, expanded, onClick, segmentClick, tag.correlationId)}
             {expanded && (
                 <TaskCallDetails instanceId={instanceId} correlationId={tag.correlationId} />
             )}
@@ -129,9 +131,12 @@ const renderTag = (
     );
 };
 
-const LogContainer = ({ instanceId, data, tagRefs, onClick, expandedItems, segmentRef }: LogContainerProps) => (
+const LogContainer = ({ instanceId, data, tagRefs, onClick, segmentClick, expandedItems }: LogContainerProps) => (
     <>
         {data.map(({ data, type }, idx) => {
+
+            const ref = React.createRef();
+
             switch (type) {
                 case LogSegmentType.DATA: {
                     return (
@@ -148,9 +153,10 @@ const LogContainer = ({ instanceId, data, tagRefs, onClick, expandedItems, segme
                         tag,
                         tagRefs,
                         () => onClick(tag.correlationId),
+                        () => segmentClick(ref, idx),
                         expanded,
                         idx,
-                        segmentRef
+                        ref
                     );
                 }
                 default: {
@@ -164,14 +170,11 @@ const LogContainer = ({ instanceId, data, tagRefs, onClick, expandedItems, segme
 class ProcessLogViewer extends React.Component<Props, State> {
     private scrollAnchorRef: any;
     private tagRefs: any[];
-    private segmentRef: any;
 
     constructor(props: Props) {
         super(props);
 
         this.tagRefs = [];
-
-        this.segmentRef = React.createRef();
 
         this.state = {
             scrollAnchorRef: false,
@@ -184,11 +187,11 @@ class ProcessLogViewer extends React.Component<Props, State> {
         this.scrollToBottom = this.scrollToBottom.bind(this);
         this.handleTagClick = this.handleTagClick.bind(this);
         this.scrollToTag = this.scrollToTag.bind(this);
-        this.segmentScroll = this.segmentScroll.bind(this);
+        this.handleSegmentClick = this.handleSegmentClick.bind(this);
     }
 
     componentDidUpdate(prevProps: Props) {
-        const { data, selectedCorrelationId } = this.props;
+        const { data, selectedCorrelationId,  } = this.props;
         const { scrollAnchorRef } = this.state;
 
         if (prevProps.data !== data) {
@@ -202,18 +205,6 @@ class ProcessLogViewer extends React.Component<Props, State> {
 
             this.scrollToTag();
 
-            this.segmentScroll(this.segmentRef);
-
-        }
-    }
-
-    segmentScroll(segmentRef: any) {
-        if (segmentRef.current && window.location.hash.includes(`#segmentId=`)) {
-            segmentRef.current.scrollIntoView({
-                behavior: 'smooth',
-                block: 'end',
-                inline: 'nearest'
-            });
         }
     }
 
@@ -250,6 +241,16 @@ class ProcessLogViewer extends React.Component<Props, State> {
 
         this.setState({ expandedItems });
     }
+
+    handleSegmentClick(ref: any, idx: number) {
+        if (ref.current && window.location.hash.includes(`#segmentId=${idx}`)) {
+            ref.current.scrollIntoView({
+                behavior: 'smooth',
+                block: 'start',
+                inline: 'nearest'
+            });
+        }
+    };
 
     scrollToBottom() {
         this.scrollAnchorRef.scrollIntoView({ behavior: 'instant' });
@@ -356,7 +357,7 @@ class ProcessLogViewer extends React.Component<Props, State> {
                     expandedItems={expandedItems}
                     tagRefs={this.tagRefs}
                     onClick={this.handleTagClick}
-                    segmentRef={this.segmentRef}
+                    segmentClick={this.handleSegmentClick}
                 />
 
                 <div
