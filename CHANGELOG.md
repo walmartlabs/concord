@@ -4,6 +4,8 @@
 
 ### Changed
 
+- runtime-v2: `SLF4JPrintStreams` messages should no longer appear
+in log segments;
 - concord-server: task scheduler improvements - save the last error
 into the DB, simplify polling, improved task heartbeat/stall checks;
 - concord-server: escape expressions (`${...}`) in the input data
