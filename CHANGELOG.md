@@ -2,6 +2,11 @@
 
 ## [Unreleased]
 
+### Added
+
+- runtime-v2: steps can now specify `slf4j` logging level using
+the `meta.logLevel` property.
+
 ### Changed
 
 - concord-server: throw an exception if the resuming process wasn't
