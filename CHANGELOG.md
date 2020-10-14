@@ -1,6 +1,13 @@
 # Change log
 
-## [Unreleased]
+## [1.68.1] - 2020-10-13
+
+### Changed
+
+- ansible: fixed kerberos auth in nested containers
+
+
+## [1.68.0] - 2020-10-05
 
 ### Added
 
@@ -15,7 +22,6 @@
 expressions;
 - runtime-v2: fixed handling of process state snapshots. Now
 the runtime correcly resumes from state snapshots and forks.
-
 
 
 ## [1.67.0] - 2020-10-01
