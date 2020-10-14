@@ -97,6 +97,7 @@ public class LoggingConfigurator {
             fa.setContext(context);
             fa.setAppend(true);
             fa.setFile(String.format("%s/%s.log", dst.toAbsolutePath(), logFileName));
+            fa.addFilter(new LogLevelFilter());
 
             PatternLayoutEncoderBase<ILoggingEvent> encoder = new PatternLayoutEncoderBase<ILoggingEvent>() {
                 @Override
