@@ -21,27 +21,27 @@ package com.walmartlabs.concord.runtime.v2.runner.logging;
  */
 
 import ch.qos.logback.classic.spi.ILoggingEvent;
-import ch.qos.logback.core.sift.AbstractDiscriminator;
+import ch.qos.logback.core.filter.Filter;
+import ch.qos.logback.core.spi.FilterReply;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-/**
- * Returns a Logback's discriminator value based on the current log "segment".
- */
-public class SegmentDiscriminator extends AbstractDiscriminator<ILoggingEvent> {
+public class LogLevelFilter extends Filter<ILoggingEvent> {
 
-    public static final String UNSEGMENTED_LOG = "system";
+    private static final Logger log = LoggerFactory.getLogger(LogLevelFilter.class);
 
     @Override
-    public String getDiscriminatingValue(ILoggingEvent iLoggingEvent) {
-        LogContext ctx = LogUtils.getContext();
-        if (ctx == null) {
-            return UNSEGMENTED_LOG;
+    public FilterReply decide(ILoggingEvent event) {
+        if (event.getMarker() == ch.qos.logback.classic.ClassicConstants.FINALIZE_SESSION_MARKER) {
+            return FilterReply.NEUTRAL;
         }
 
-        return ctx.segmentId() + "-" + ctx.segmentName();
-    }
+        LogContext logContext = LogUtils.getContext();
 
-    @Override
-    public String getKey() {
-        return "_concord_segment";
+        if (logContext != null && !event.getLevel().isGreaterOrEqual(logContext.logLevel())) {
+            return FilterReply.DENY;
+        }
+
+        return FilterReply.NEUTRAL;
     }
 }

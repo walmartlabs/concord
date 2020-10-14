@@ -21,8 +21,8 @@ package com.walmartlabs.concord.runtime.v2.runner;
  */
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.walmartlabs.concord.runtime.v2.sdk.ProcessConfiguration;
 import com.walmartlabs.concord.runtime.v2.runner.guice.ObjectMapperProvider;
+import com.walmartlabs.concord.runtime.v2.sdk.ProcessConfiguration;
 import com.walmartlabs.concord.sdk.Constants;
 
 import javax.inject.Provider;
