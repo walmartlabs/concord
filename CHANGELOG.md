@@ -4,6 +4,8 @@
 
 ### Changed
 
+- concord-server: throw an exception if the resuming process wasn't
+actually `SUSPENDED`;
 - runtime-v2: `SLF4JPrintStreams` messages should no longer appear
 in log segments;
 - concord-server: task scheduler improvements - save the last error
