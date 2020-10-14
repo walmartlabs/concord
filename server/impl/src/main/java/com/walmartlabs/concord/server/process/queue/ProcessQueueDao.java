@@ -764,7 +764,7 @@ public class ProcessQueueDao extends AbstractDao {
     }
 
     private static Field<String> toJsonDate(Field<OffsetDateTime> date) {
-        return toChar(date, "YYYY-MM-DD\"T\"HH24:MI:SS.MS\"Z\"");
+        return toChar(date, "YYYY-MM-DD\"T\"HH24:MI:SS.MSOF");
     }
 
     private ProcessEntry toEntry(Record r) {
