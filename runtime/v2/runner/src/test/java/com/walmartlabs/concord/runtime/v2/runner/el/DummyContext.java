@@ -20,7 +20,6 @@ package com.walmartlabs.concord.runtime.v2.runner.el;
  * =====
  */
 
-import com.walmartlabs.concord.runtime.v2.sdk.ProcessConfiguration;
 import com.walmartlabs.concord.runtime.v2.sdk.Compiler;
 import com.walmartlabs.concord.runtime.v2.sdk.*;
 

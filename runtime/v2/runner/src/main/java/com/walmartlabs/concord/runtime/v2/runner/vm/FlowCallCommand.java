@@ -22,7 +22,6 @@ package com.walmartlabs.concord.runtime.v2.runner.vm;
 
 import com.walmartlabs.concord.runtime.v2.model.FlowCall;
 import com.walmartlabs.concord.runtime.v2.model.FlowCallOptions;
-import com.walmartlabs.concord.runtime.v2.sdk.ProcessConfiguration;
 import com.walmartlabs.concord.runtime.v2.model.ProcessDefinition;
 import com.walmartlabs.concord.runtime.v2.runner.compiler.CompilerUtils;
 import com.walmartlabs.concord.runtime.v2.runner.el.EvalContext;
@@ -30,6 +29,7 @@ import com.walmartlabs.concord.runtime.v2.runner.el.EvalContextFactory;
 import com.walmartlabs.concord.runtime.v2.runner.el.ExpressionEvaluator;
 import com.walmartlabs.concord.runtime.v2.sdk.Compiler;
 import com.walmartlabs.concord.runtime.v2.sdk.Context;
+import com.walmartlabs.concord.runtime.v2.sdk.ProcessConfiguration;
 import com.walmartlabs.concord.svm.Runtime;
 import com.walmartlabs.concord.svm.*;
 

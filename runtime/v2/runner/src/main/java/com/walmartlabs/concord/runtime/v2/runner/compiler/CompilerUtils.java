@@ -20,12 +20,12 @@ package com.walmartlabs.concord.runtime.v2.runner.compiler;
  * =====
  */
 
-import com.walmartlabs.concord.runtime.v2.sdk.ProcessConfiguration;
 import com.walmartlabs.concord.runtime.v2.model.ProcessDefinition;
 import com.walmartlabs.concord.runtime.v2.model.Profile;
 import com.walmartlabs.concord.runtime.v2.model.Step;
 import com.walmartlabs.concord.runtime.v2.runner.vm.BlockCommand;
 import com.walmartlabs.concord.runtime.v2.sdk.Compiler;
+import com.walmartlabs.concord.runtime.v2.sdk.ProcessConfiguration;
 import com.walmartlabs.concord.svm.Command;
 
 import java.util.List;

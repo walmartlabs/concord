@@ -20,16 +20,24 @@ package com.walmartlabs.concord.runtime.v2.runner.logging;
  * =====
  */
 
-public class SegmentThreadGroup extends ThreadGroup {
+import ch.qos.logback.classic.Level;
+import org.immutables.value.Value;
 
-    private final String segmentId;
+@Value.Immutable
+public interface LogContext {
 
-    public SegmentThreadGroup(String name, String segmentId) {
-        super(name);
-        this.segmentId = segmentId;
+    String segmentName();
+
+    String segmentId();
+
+    boolean redirectSystemOutAndErr();
+
+    @Value.Default
+    default Level logLevel() {
+        return Level.INFO;
     }
 
-    public String getSegmentId() {
-        return segmentId;
+    static ImmutableLogContext.Builder builder() {
+        return ImmutableLogContext.builder();
     }
 }
