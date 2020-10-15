@@ -60,7 +60,6 @@ public class UsernamePassword implements Secret {
             in.readFully(ab);
 
             char[] password = StandardCharsets.UTF_8.decode(ByteBuffer.wrap(ab)).array();
-            in.close();
 
             return new UsernamePassword(username, password);
         } catch (IOException e) {
