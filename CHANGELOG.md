@@ -9,6 +9,8 @@ the `meta.logLevel` property.
 
 ### Changed
 
+- concord-server: timestamp values in process status history are now
+returned with a correct time zone;
 - concord-server: throw an exception if the resuming process wasn't
 actually `SUSPENDED`;
 - runtime-v2: `SLF4JPrintStreams` messages should no longer appear
