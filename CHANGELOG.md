@@ -1,5 +1,37 @@
 # Change log
 
+## [Unreleased]
+
+### Added
+
+- runtime-v2: steps can now specify `slf4j` logging level using
+the `meta.logLevel` property.
+
+### Changed
+
+- concord-server: timestamp values in process status history are now
+returned with a correct time zone;
+- concord-server: throw an exception if the resuming process wasn't
+actually `SUSPENDED`;
+- runtime-v2: `SLF4JPrintStreams` messages should no longer appear
+in log segments;
+- concord-server: task scheduler improvements - save the last error
+into the DB, simplify polling, improved task heartbeat/stall checks;
+- concord-server: escape expressions (`${...}`) in the input data
+when resuming processes using
+`/api/v1/process/{id}/resume/{eventName}` endpoint;
+- ansible: fixed an issue preventing Kerberos authentication from
+working in nested Docker containers (i.e. when `dockerImage` is
+used);
+- concord-server: allow non-admins to search audit logs by `eventId`
+(`/api/v1/audit?eventId=...`);
+- concord-console: fix widths of columns on the secret list page;
+- runtime-v2: `if` steps now treat `null` values as `false`;
+- concord-server: allow teams with no members (i.e. teams with LDAP
+groups only).
+
+
+
 ## [1.68.0] - 2020-10-05
 
 ### Added
