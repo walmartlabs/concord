@@ -224,7 +224,7 @@ public final class FormUtils {
                 m2.put(k, v);
             }
         }
-        return m2;
+        return Collections.unmodifiableMap(m2);
     }
 
     private static Object convert(FormValidatorLocale locale, String formName, FormField f, Integer idx, Object v) throws ValidationException {
