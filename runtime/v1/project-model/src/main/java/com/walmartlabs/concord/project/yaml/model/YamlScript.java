@@ -46,7 +46,7 @@ public class YamlScript extends YamlStep {
     }
 
     @Override
-    public final String toString() {
+    public String toString() {
         return "YamlScript{" +
                 "name='" + name + '\'' +
                 ", options=" + options +

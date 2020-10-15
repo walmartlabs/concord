@@ -49,7 +49,7 @@ public class PolicyOperationResponse implements Serializable {
     }
 
     @Override
-    public final String toString() {
+    public String toString() {
         return "PolicyOperationResponse{" +
                 "ok=" + ok +
                 ", id=" + id +

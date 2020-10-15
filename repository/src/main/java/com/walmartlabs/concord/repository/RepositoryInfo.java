@@ -45,7 +45,7 @@ public class RepositoryInfo {
     }
 
     @Override
-    public final String toString() {
+    public String toString() {
         return "RepositoryInfo{" +
                 "commitId='" + commitId + '\'' +
                 ", message='" + message + '\'' +

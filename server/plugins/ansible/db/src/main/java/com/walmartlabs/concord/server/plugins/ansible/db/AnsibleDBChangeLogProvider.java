@@ -35,7 +35,7 @@ public class AnsibleDBChangeLogProvider implements DatabaseChangeLogProvider {
     }
 
     @Override
-    public final String toString() {
+    public String toString() {
         return "ansible-db";
     }
 }

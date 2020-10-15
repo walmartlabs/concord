@@ -31,7 +31,7 @@ public class RemoveTeamUsersResponse implements Serializable {
     }
 
     @Override
-    public final String toString() {
+    public String toString() {
         return "RemoveTeamUsersResponse{" +
                 "ok=" + ok +
                 '}';

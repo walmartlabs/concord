@@ -58,7 +58,7 @@ public class CreateOrganizationResponse implements Serializable {
     }
 
     @Override
-    public final String toString() {
+    public String toString() {
         return "CreateOrganizationResponse{" +
                 "ok=" + ok +
                 ", id=" + id +

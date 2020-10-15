@@ -87,7 +87,7 @@ public class KafkaEventSink implements ProcessEventListener, ProcessLogListener,
     }
 
     @Override
-    public final String toString() {
+    public String toString() {
         return "KafkaEventSink -> " + cfg.getBootstrapServers();
     }
 }

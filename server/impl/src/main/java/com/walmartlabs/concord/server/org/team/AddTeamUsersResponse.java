@@ -31,7 +31,7 @@ public class AddTeamUsersResponse implements Serializable {
     }
 
     @Override
-    public final String toString() {
+    public String toString() {
         return "AddTeamUsersResponse{" +
                 "ok=" + ok +
                 '}';

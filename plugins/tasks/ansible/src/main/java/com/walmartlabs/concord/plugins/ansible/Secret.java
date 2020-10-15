@@ -58,7 +58,7 @@ public class Secret {
     }
 
     @Override
-    public final String toString() {
+    public String toString() {
         return "Secret{" +
                 "org='" + org + '\'' +
                 ", name='" + name + '\'' +

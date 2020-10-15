@@ -78,7 +78,7 @@ public class FormInstanceEntry implements Serializable {
     }
 
     @Override
-    public final String toString() {
+    public String toString() {
         return "FormInstanceEntry{" +
                 "processInstanceId='" + processInstanceId + '\'' +
                 ", name='" + name + '\'' +

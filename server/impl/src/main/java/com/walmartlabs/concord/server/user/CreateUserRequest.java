@@ -98,7 +98,7 @@ public class CreateUserRequest implements Serializable {
     }
 
     @Override
-    public final String toString() {
+    public String toString() {
         return "CreateUserRequest{" +
                 "username='" + username + '\'' +
                 ", userDomain='" + userDomain + '\'' +

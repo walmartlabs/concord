@@ -41,7 +41,7 @@ public class SetVariablesStep extends AbstractStep<SimpleOptions> {
     }
 
     @Override
-    public final String toString() {
+    public String toString() {
         return "SetVariablesStep{" +
                 "vars=" + vars +
                 '}';

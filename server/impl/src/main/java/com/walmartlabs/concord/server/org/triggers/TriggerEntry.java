@@ -146,7 +146,7 @@ public class TriggerEntry implements Serializable {
     }
 
     @Override
-    public final String toString() {
+    public String toString() {
         return "TriggerEntry{" +
                 "id=" + id +
                 ", orgId=" + orgId +

@@ -70,7 +70,7 @@ public class YamlValue implements Serializable {
     }
 
     @Override
-    public final String toString() {
+    public String toString() {
         return "YamlValue{" +
                 "value=" + value +
                 ", type=" + type +

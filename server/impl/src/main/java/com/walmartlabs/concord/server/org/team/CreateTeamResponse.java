@@ -57,7 +57,7 @@ public class CreateTeamResponse implements Serializable {
     }
 
     @Override
-    public final String toString() {
+    public String toString() {
         return "CreateTeamResponse{" +
                 "ok=" + ok +
                 ", result=" + result +

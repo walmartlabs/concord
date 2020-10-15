@@ -48,7 +48,7 @@ public class YamlFormDefinition implements YamlDefinition {
     }
 
     @Override
-    public final String toString() {
+    public String toString() {
         return "YamlFormDefinition{" +
                 "name='" + name + '\'' +
                 ", fields=" + fields +

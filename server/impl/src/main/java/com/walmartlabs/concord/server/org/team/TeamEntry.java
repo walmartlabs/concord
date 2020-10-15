@@ -90,7 +90,7 @@ public class TeamEntry implements Serializable {
     }
 
     @Override
-    public final String toString() {
+    public String toString() {
         return "TeamEntry{" +
                 "id=" + id +
                 ", orgId=" + orgId +

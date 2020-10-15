@@ -61,7 +61,7 @@ public class ProcessTimeoutRule implements Serializable {
     }
 
     @Override
-    public final String toString() {
+    public String toString() {
         return "ProcessTimeoutRule{" +
                 "msg='" + msg + '\'' +
                 ", max='" + max + '\'' +

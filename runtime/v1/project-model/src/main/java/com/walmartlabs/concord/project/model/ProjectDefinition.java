@@ -84,7 +84,7 @@ public class ProjectDefinition extends Profile {
     }
 
     @Override
-    public final String toString() {
+    public String toString() {
         return "ProjectDefinition{" +
                 "profiles=" + profiles +
                 ", triggers=" + triggers +

@@ -63,7 +63,7 @@ public class CreateUserResponse implements Serializable {
     }
 
     @Override
-    public final String toString() {
+    public String toString() {
         return "CreateUserResponse{" +
                 "ok=" + ok +
                 ", id=" + id +

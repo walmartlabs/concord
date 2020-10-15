@@ -95,7 +95,7 @@ public class ProcessResponse extends Message {
     }
 
     @Override
-    public final String toString() {
+    public String toString() {
         return "ProcessResponse{" +
                 "sessionToken='" + sessionToken + '\'' +
                 ", processId=" + processId +

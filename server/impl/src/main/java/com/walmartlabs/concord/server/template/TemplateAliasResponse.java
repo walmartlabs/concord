@@ -31,7 +31,7 @@ public class TemplateAliasResponse implements Serializable {
     }
 
     @Override
-    public final String toString() {
+    public String toString() {
         return "TemplateAliasResponse{" +
                 "ok=" + ok +
                 '}';

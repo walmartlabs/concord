@@ -122,7 +122,7 @@ public class UserEntry implements Serializable {
     }
 
     @Override
-    public final String toString() {
+    public String toString() {
         return "UserEntry{" +
                 "id=" + id +
                 ", name='" + name + '\'' +

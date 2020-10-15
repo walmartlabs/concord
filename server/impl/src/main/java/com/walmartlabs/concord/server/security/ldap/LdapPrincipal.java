@@ -99,7 +99,7 @@ public class LdapPrincipal implements Serializable {
     }
 
     @Override
-    public final String toString() {
+    public String toString() {
         return "LdapPrincipal{" +
                 "username='" + username + '\'' +
                 ", domain='" + domain + '\'' +

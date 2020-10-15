@@ -37,7 +37,7 @@ public class TaskCall extends AbstractStep<TaskCallOptions> {
     }
 
     @Override
-    public final String toString() {
+    public String toString() {
         return "TaskCall{" +
                 "name='" + name + '\'' +
                 "}";

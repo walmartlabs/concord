@@ -48,7 +48,7 @@ public class Result implements Serializable {
     }
 
     @Override
-    public final String toString() {
+    public String toString() {
         return "Response{" +
                 "ok=" + ok +
                 ", data='" + data + '\'' +

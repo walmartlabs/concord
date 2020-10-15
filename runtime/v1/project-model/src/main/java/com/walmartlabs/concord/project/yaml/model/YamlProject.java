@@ -71,7 +71,7 @@ public class YamlProject extends YamlProfile {
     }
 
     @Override
-    public final String toString() {
+    public String toString() {
         return "YamlProject{" +
                 "profiles=" + profiles +
                 ", triggers=" + triggers +

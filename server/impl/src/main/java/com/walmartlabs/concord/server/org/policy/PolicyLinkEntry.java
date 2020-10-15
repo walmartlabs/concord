@@ -81,7 +81,7 @@ public class PolicyLinkEntry implements Serializable {
     }
 
     @Override
-    public final String toString() {
+    public String toString() {
         return "PolicyLinkEntry{" +
                 "orgName='" + orgName + '\'' +
                 ", projectName='" + projectName + '\'' +

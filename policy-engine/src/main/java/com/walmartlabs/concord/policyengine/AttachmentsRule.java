@@ -62,7 +62,7 @@ public class AttachmentsRule implements Serializable {
     }
 
     @Override
-    public final String toString() {
+    public String toString() {
         return "AttachmentsRule{" +
                 "msg='" + msg + '\'' +
                 ", maxSizeInBytes=" + maxSizeInBytes +

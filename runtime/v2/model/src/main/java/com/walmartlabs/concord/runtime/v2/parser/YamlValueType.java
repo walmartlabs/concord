@@ -104,7 +104,7 @@ public final class YamlValueType<T> {
     }
 
     @Override
-    public final String toString() {
+    public String toString() {
         return name;
     }
 

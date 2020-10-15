@@ -38,7 +38,7 @@ public class MainDBChangeLogProvider implements DatabaseChangeLogProvider {
     }
 
     @Override
-    public final String toString() {
+    public String toString() {
         return "server-db";
     }
 }

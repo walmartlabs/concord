@@ -31,7 +31,7 @@ public class AddTeamLdapGroupsResponse implements Serializable {
     }
 
     @Override
-    public final String toString() {
+    public String toString() {
         return "AddTeamLdapGroupsResponse{" +
                 "ok=" + ok +
                 '}';

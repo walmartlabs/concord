@@ -37,7 +37,7 @@ public class FormCall extends AbstractStep<FormCallOptions> {
     }
 
     @Override
-    public final String toString() {
+    public String toString() {
         return "TaskCall{" +
                 "name='" + name + '\'' +
                 "}";

@@ -35,7 +35,7 @@ public class ExampleBean implements Serializable {
     }
 
     @Override
-    public final String toString() {
+    public String toString() {
         return "ExampleBean{" +
                 "value='" + value + '\'' +
                 '}';

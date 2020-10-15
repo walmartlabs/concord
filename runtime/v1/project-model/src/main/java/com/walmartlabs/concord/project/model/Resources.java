@@ -65,7 +65,7 @@ public class Resources implements Serializable {
     }
 
     @Override
-    public final String toString() {
+    public String toString() {
         return "Resources{" +
                 "profilesPaths=" + profilesPaths +
                 ", projectFilePaths=" + projectFilePaths +

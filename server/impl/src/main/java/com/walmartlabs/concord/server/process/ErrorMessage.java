@@ -65,7 +65,7 @@ public class ErrorMessage implements Serializable {
     }
 
     @Override
-    public final String toString() {
+    public String toString() {
         return "ErrorMessage{" +
                 "instanceId=" + instanceId +
                 ", message='" + message + '\'' +

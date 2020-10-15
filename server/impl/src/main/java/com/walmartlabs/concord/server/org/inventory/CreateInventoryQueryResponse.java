@@ -56,7 +56,7 @@ public class CreateInventoryQueryResponse implements Serializable {
     }
 
     @Override
-    public final String toString() {
+    public String toString() {
         return "CreateInventoryQueryResponse{" +
                 "ok=" + ok +
                 ", result=" + result +

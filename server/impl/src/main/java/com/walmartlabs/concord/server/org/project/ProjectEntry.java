@@ -184,7 +184,7 @@ public class ProjectEntry implements Serializable {
     }
 
     @Override
-    public final String toString() {
+    public String toString() {
         return "ProjectEntry{" +
                 "id=" + id +
                 ", name='" + name + '\'' +

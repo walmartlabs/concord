@@ -39,7 +39,7 @@ public class SuspendStep extends AbstractStep<SimpleOptions> {
     }
 
     @Override
-    public final String toString() {
+    public String toString() {
         return "SuspendStep{" +
                 "event='" + event + '\'' +
                 '}';

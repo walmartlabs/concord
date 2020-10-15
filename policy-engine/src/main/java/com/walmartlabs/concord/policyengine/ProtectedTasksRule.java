@@ -54,7 +54,7 @@ public class ProtectedTasksRule implements Serializable {
     }
 
     @Override
-    public final String toString() {
+    public String toString() {
         return "ProtectedTasksRule{" +
                 "names=" + names +
                 '}';

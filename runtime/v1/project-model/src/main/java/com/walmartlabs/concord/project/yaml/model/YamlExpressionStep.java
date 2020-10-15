@@ -51,7 +51,7 @@ public class YamlExpressionStep extends YamlStep {
     }
 
     @Override
-    public final String toString() {
+    public String toString() {
         return "YamlExpressionStep{" +
                 "expr='" + expr + '\'' +
                 ", options=" + options +

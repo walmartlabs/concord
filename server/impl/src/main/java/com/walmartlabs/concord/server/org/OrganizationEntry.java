@@ -103,7 +103,7 @@ public class OrganizationEntry implements Serializable {
     }
 
     @Override
-    public final String toString() {
+    public String toString() {
         return "OrganizationEntry{" +
                 "id=" + id +
                 ", name='" + name + '\'' +

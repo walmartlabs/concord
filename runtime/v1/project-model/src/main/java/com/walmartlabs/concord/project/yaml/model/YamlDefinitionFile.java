@@ -42,7 +42,7 @@ public class YamlDefinitionFile implements Serializable {
     }
 
     @Override
-    public final String toString() {
+    public String toString() {
         return "YamlDefinitionFile{" +
                 "definitions=" + definitions +
                 '}';

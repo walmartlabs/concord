@@ -83,7 +83,7 @@ public class EntityRule implements Serializable {
     }
 
     @Override
-    public final String toString() {
+    public String toString() {
         return "EntityRule{" +
                 "msg='" + msg + '\'' +
                 ", entity='" + entity + '\'' +

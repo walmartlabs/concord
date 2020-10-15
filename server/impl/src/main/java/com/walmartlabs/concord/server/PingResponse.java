@@ -40,7 +40,7 @@ public class PingResponse implements Serializable {
     }
 
     @Override
-    public final String toString() {
+    public String toString() {
         return "PingResponse{" +
                 "ok=" + ok +
                 '}';

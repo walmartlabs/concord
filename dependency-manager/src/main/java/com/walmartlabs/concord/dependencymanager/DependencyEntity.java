@@ -68,7 +68,7 @@ public class DependencyEntity {
     }
 
     @Override
-    public final String toString() {
+    public String toString() {
         if (artifact != null) {
             return artifact.toString();
         } else {

@@ -136,7 +136,7 @@ public class SecretEntry implements Serializable {
     }
 
     @Override
-    public final String toString() {
+    public String toString() {
         return "SecretEntry{" +
                 "id=" + id +
                 ", name='" + name + '\'' +

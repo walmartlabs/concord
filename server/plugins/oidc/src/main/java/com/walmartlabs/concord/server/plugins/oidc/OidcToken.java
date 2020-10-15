@@ -50,7 +50,7 @@ public class OidcToken implements AuthenticationToken, Serializable {
     }
 
     @Override
-    public final String toString() {
+    public String toString() {
         return "OidcToken{" +
                 "profile=" + profile +
                 '}';

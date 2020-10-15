@@ -52,7 +52,7 @@ public class LogSegmentOperationResponse implements Serializable {
     }
 
     @Override
-    public final String toString() {
+    public String toString() {
         return "LogSegmentOperationResponse{" +
                 "ok=" + ok +
                 ", id=" + id +

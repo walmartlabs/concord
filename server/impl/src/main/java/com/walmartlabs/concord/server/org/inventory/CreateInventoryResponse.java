@@ -58,7 +58,7 @@ public class CreateInventoryResponse implements Serializable {
     }
 
     @Override
-    public final String toString() {
+    public String toString() {
         return "CreateInventoryResponse{" +
                 "result=" + result +
                 ", id=" + id +

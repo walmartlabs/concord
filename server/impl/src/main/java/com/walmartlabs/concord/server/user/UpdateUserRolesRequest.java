@@ -40,7 +40,7 @@ public class UpdateUserRolesRequest implements Serializable {
     }
 
     @Override
-    public final String toString() {
+    public String toString() {
         return "UpdateUserRolesRequest{" +
                 "roles=" + roles +
                 '}';

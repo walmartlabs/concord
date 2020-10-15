@@ -67,7 +67,7 @@ public class FormListEntry implements Serializable {
     }
 
     @Override
-    public final String toString() {
+    public String toString() {
         return "FormListEntry{" +
                 "name='" + name + '\'' +
                 ", custom=" + custom +

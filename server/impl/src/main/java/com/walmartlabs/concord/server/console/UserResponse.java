@@ -73,7 +73,7 @@ public class UserResponse implements Serializable {
     }
 
     @Override
-    public final String toString() {
+    public String toString() {
         return "UserResponse{" +
                 "realm='" + realm + '\'' +
                 ", username='" + username + '\'' +

@@ -169,7 +169,7 @@ public class LazyEvalMap implements Map<String, Object> {
     }
 
     @Override
-    public final String toString() {
+    public String toString() {
         return "LazyEvalMap{" +
                 "orderedKeys=" + orderedKeys +
                 ", inflightKeys=" + inflightKeys +

@@ -49,7 +49,7 @@ public class RoleOperationResponse implements Serializable {
     }
 
     @Override
-    public final String toString() {
+    public String toString() {
         return "RoleOperationResponse{" +
                 "id=" + id +
                 ", result=" + result +

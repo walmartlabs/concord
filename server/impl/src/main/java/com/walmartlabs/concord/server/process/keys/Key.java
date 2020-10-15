@@ -65,7 +65,7 @@ public abstract class Key<T> implements Serializable {
     }
 
     @Override
-    public final String toString() {
+    public String toString() {
         return getClass().getName() + " [" + name + "]";
     }
 }

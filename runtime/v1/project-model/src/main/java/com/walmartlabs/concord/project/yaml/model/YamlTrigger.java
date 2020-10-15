@@ -52,7 +52,7 @@ public class YamlTrigger implements Serializable {
     }
 
     @Override
-    public final String toString() {
+    public String toString() {
         return "YamlTrigger{" +
                 "location=" + location +
                 ", eventSource='" + eventSource + '\'' +

@@ -70,7 +70,7 @@ public class LazyEvalList extends AbstractList<Object> {
     }
 
     @Override
-    public final String toString() {
+    public String toString() {
         return "LazyEvalList{" +
                 "inflightKeys=" + inflightKeys +
                 ", originalValues=" + originalValues +

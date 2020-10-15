@@ -74,7 +74,7 @@ public class QueueRule implements Serializable {
     }
 
     @Override
-    public final String toString() {
+    public String toString() {
         return "QueueRule{" +
                 "concurrent=" + concurrent +
                 ", forkDepthRule=" + forkDepthRule +

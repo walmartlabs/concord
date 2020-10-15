@@ -68,7 +68,7 @@ public class ApiKey implements RememberMeAuthenticationToken {
     }
 
     @Override
-    public final String toString() {
+    public String toString() {
         return "ApiKey{" +
                 "keyId=" + keyId +
                 ", userId=" + userId +

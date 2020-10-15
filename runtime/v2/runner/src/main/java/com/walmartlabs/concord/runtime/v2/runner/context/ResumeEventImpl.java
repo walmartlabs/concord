@@ -47,7 +47,7 @@ public class ResumeEventImpl implements ResumeEvent {
     }
 
     @Override
-    public final String toString() {
+    public String toString() {
         return "ResumeEventImpl{" +
                 "eventName='" + eventName + '\'' +
                 ", state=" + state +

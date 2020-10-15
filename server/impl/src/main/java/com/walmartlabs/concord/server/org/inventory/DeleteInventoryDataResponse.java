@@ -32,7 +32,7 @@ public class DeleteInventoryDataResponse implements Serializable {
     }
 
     @Override
-    public final String toString() {
+    public String toString() {
         return "DeleteInventoryDataResponse{" +
                 "ok=" + ok +
                 '}';

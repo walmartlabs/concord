@@ -100,7 +100,7 @@ public class YamlDockerStep extends YamlStep {
     }
 
     @Override
-    public final String toString() {
+    public String toString() {
         return "YamlDockerStep{" +
                 "image='" + image + '\'' +
                 ", cmd='" + cmd + '\'' +

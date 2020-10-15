@@ -465,7 +465,7 @@ public class RunnerJobExecutor implements JobExecutor {
     }
 
     @Override
-    public final String toString() {
+    public String toString() {
         return "RunnerJobExecutor";
     }
 

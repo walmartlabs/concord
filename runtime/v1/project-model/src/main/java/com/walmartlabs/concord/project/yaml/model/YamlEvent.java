@@ -38,7 +38,7 @@ public class YamlEvent extends YamlStep {
     }
 
     @Override
-    public final String toString() {
+    public String toString() {
         return "YamlEvent{" +
                 "name='" + name + '\'' +
                 '}';

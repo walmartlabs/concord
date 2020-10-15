@@ -64,7 +64,7 @@ public class RoleEntry implements Serializable {
     }
 
     @Override
-    public final String toString() {
+    public String toString() {
         return "RoleEntry{" +
                 "id=" + id +
                 ", name='" + name + '\'' +

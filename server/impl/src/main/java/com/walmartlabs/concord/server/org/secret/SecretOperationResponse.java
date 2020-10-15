@@ -65,7 +65,7 @@ public class SecretOperationResponse implements Serializable {
     }
 
     @Override
-    public final String toString() {
+    public String toString() {
         return "SecretOperationResponse{" +
                 "ok=" + ok +
                 ", id=" + id +

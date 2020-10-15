@@ -64,7 +64,7 @@ public class Profile implements Serializable {
     }
 
     @Override
-    public final String toString() {
+    public String toString() {
         return "Profile{" +
                 "flows=" + flows +
                 ", publicFlows=" + publicFlows +

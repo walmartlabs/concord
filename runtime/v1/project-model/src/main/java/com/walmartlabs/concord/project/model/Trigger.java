@@ -82,7 +82,7 @@ public class Trigger implements Serializable {
     }
 
     @Override
-    public final String toString() {
+    public String toString() {
         return "Trigger{" +
                 "name='" + name + '\'' +
                 ", activeProfiles=" + activeProfiles +

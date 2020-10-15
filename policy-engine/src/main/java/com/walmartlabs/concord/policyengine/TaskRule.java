@@ -90,7 +90,7 @@ public class TaskRule implements Serializable {
     }
 
     @Override
-    public final String toString() {
+    public String toString() {
         return "TaskRule{" +
                 "msg='" + msg + '\'' +
                 ", taskName='" + taskName + '\'' +

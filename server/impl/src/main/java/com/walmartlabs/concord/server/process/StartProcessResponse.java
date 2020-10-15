@@ -49,7 +49,7 @@ public class StartProcessResponse implements Serializable {
     }
 
     @Override
-    public final String toString() {
+    public String toString() {
         return "StartProcessResponse{" +
                 "ok=" + ok +
                 ", instanceId=" + instanceId +

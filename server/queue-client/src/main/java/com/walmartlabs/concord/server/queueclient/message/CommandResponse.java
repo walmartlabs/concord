@@ -59,7 +59,7 @@ public class CommandResponse extends Message {
     }
 
     @Override
-    public final String toString() {
+    public String toString() {
         return "CommandRequest{" +
                 "correlationId='" + getCorrelationId() + "', " +
                 "type='" + type + "', " +

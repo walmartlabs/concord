@@ -53,7 +53,7 @@ public class ProjectOperationResponse implements Serializable {
     }
 
     @Override
-    public final String toString() {
+    public String toString() {
         return "ProjectOperationResponse{" +
                 "ok=" + ok +
                 ", id=" + id +

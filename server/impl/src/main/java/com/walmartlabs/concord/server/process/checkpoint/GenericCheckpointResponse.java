@@ -31,7 +31,7 @@ public class GenericCheckpointResponse implements Serializable {
     }
 
     @Override
-    public final String toString() {
+    public String toString() {
         return "GenericCheckpointResponse{" +
                 "ok=" + ok +
                 '}';
