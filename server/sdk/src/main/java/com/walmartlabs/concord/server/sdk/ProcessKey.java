@@ -58,7 +58,7 @@ public class ProcessKey extends PartialProcessKey {
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+        if (!(o instanceof ProcessKey)) return false;
         if (!super.equals(o)) return false;
         ProcessKey that = (ProcessKey) o;
         return Objects.equals(createdAt, that.createdAt);
@@ -73,6 +73,7 @@ public class ProcessKey extends PartialProcessKey {
         return createdAt;
     }
 
+    @Override
     public String toString() {
         return getInstanceId().toString();
     }

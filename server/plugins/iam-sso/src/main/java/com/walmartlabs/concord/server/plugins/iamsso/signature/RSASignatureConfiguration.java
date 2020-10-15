@@ -31,11 +31,9 @@ import java.security.interfaces.RSAPublicKey;
 
 public class RSASignatureConfiguration implements SignatureConfiguration {
 
-    private final RSAPrivateKey privateKey;
     private final RSAPublicKey publicKey;
 
     public RSASignatureConfiguration(KeyPair keyPair) {
-        this.privateKey = (RSAPrivateKey) keyPair.getPrivate();
         this.publicKey = (RSAPublicKey) keyPair.getPublic();
     }
 

@@ -252,7 +252,7 @@ public class DependencyManager {
 
     private static String hash(String s) {
         try {
-            MessageDigest md = MessageDigest.getInstance("MD5");
+            MessageDigest md = MessageDigest.getInstance("SHA-256");
             md.update(s.getBytes());
             return DatatypeConverter.printHexBinary(md.digest()).toUpperCase();
         } catch (Exception e) {
@@ -424,7 +424,7 @@ public class DependencyManager {
         }
 
         Map<String, String> m = new LinkedHashMap<>();
-        String[] pairs = query.split("&");
+        String[] pairs = query.split("&",-1);
         for (String pair : pairs) {
             int idx = pair.indexOf("=");
             String k = pair.substring(0, idx);

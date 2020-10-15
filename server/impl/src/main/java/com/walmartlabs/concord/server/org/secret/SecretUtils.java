@@ -77,7 +77,7 @@ public final class SecretUtils {
     }
 
     public static byte[] hash(byte[] in, byte[] salt) throws NoSuchAlgorithmException {
-        MessageDigest digest = MessageDigest.getInstance("MD5");
+        MessageDigest digest = MessageDigest.getInstance("SHA-256");
         digest.update(salt);
         return in != null ? digest.digest(in) : digest.digest();
     }

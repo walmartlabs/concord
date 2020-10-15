@@ -78,13 +78,13 @@ public class ProcessPortalService implements Resource {
             EntryPoint ep = parseEntryPoint(entryPoint);
             return processPortalResource.start(OrganizationManager.DEFAULT_ORG_NAME, ep.projectName, ep.repoName, null, null, ep.flow, activeProfiles, request);
         } catch (Exception e) {
-            log.error("startProcess ['{}', '{}'] -> error", entryPoint, activeProfiles, e);
+            log.error("startProcess ['{}', '{}'] -> error", entryPoint.replaceAll("[\n\r]",""), activeProfiles.replaceAll("[\n\r]",""), e);
             return processError("Process error: " + e.getMessage());
         }
     }
 
     private EntryPoint parseEntryPoint(String entryPoint) {
-        String[] as = entryPoint.split(":");
+        String[] as = entryPoint.split(":", -1);
         if (as.length < 1 || as.length > 3) {
             throw new ValidationErrorsException("Invalid entry point format: " + entryPoint);
         }

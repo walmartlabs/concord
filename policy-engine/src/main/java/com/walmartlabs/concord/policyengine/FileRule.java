@@ -77,7 +77,7 @@ public class FileRule implements Serializable {
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+        if (!(o instanceof FileRule)) return false;
         FileRule fileRule = (FileRule) o;
         return Objects.equals(msg, fileRule.msg) &&
                 Objects.equals(maxSizeInBytes, fileRule.maxSizeInBytes) &&

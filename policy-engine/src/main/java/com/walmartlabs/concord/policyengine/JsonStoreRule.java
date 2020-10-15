@@ -50,7 +50,7 @@ public class JsonStoreRule implements Serializable {
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+        if (!(o instanceof JsonStoreRule)) return false;
         JsonStoreRule that = (JsonStoreRule) o;
         return Objects.equals(store, that.store) &&
                 Objects.equals(data, that.data);
@@ -85,7 +85,7 @@ public class JsonStoreRule implements Serializable {
         @Override
         public boolean equals(Object o) {
             if (this == o) return true;
-            if (o == null || getClass() != o.getClass()) return false;
+            if (!(o instanceof StoreRule)) return false;
             StoreRule that = (StoreRule) o;
             return maxNumberPerOrg == that.maxNumberPerOrg &&
                     Objects.equals(msg, that.msg);
@@ -121,7 +121,7 @@ public class JsonStoreRule implements Serializable {
         @Override
         public boolean equals(Object o) {
             if (this == o) return true;
-            if (o == null || getClass() != o.getClass()) return false;
+            if (!(o instanceof StoreDataRule)) return false;
             StoreDataRule that = (StoreDataRule) o;
             return Objects.equals(maxSizeInBytes, that.maxSizeInBytes) &&
                     Objects.equals(msg, that.msg);

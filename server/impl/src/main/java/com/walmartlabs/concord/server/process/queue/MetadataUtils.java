@@ -82,6 +82,9 @@ public final class MetadataUtils {
                     q.addConditions(jsonbText(column, f.key()).endsWith(f.value()).not());
                     break;
                 }
+                //TODO: Define Default Behaviour
+                default:
+                    break;
             }
         }
     }

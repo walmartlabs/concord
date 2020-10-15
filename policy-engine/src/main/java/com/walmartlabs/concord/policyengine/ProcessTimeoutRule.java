@@ -49,7 +49,7 @@ public class ProcessTimeoutRule implements Serializable {
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+        if (!(o instanceof ProcessTimeoutRule)) return false;
         ProcessTimeoutRule that = (ProcessTimeoutRule) o;
         return Objects.equals(msg, that.msg) &&
                 Objects.equals(max, that.max);

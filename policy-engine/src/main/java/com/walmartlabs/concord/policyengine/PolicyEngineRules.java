@@ -151,7 +151,7 @@ public class PolicyEngineRules {
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+        if (!(o instanceof PolicyEngineRules)) return false;
         PolicyEngineRules that = (PolicyEngineRules) o;
         return Objects.equals(dependencyRules, that.dependencyRules) &&
                 Objects.equals(fileRules, that.fileRules) &&

@@ -24,6 +24,7 @@ import com.walmartlabs.concord.project.yaml.model.YamlCheckpoint;
 
 public class YamlCheckpointValidator implements StepValidator<YamlCheckpoint> {
 
+    @Override
     public void validate(ValidatorContext ctx, YamlCheckpoint s) {
         ctx.assertUnique("checkpoint", s.getName(), s.getLocation());
     }

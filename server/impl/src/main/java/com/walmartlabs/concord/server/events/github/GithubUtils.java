@@ -77,7 +77,7 @@ public final class GithubUtils {
     public static GithubRepoInfo getRepositoryInfo(String repoUrl) {
         String repoPath = getRepoPath(repoUrl);
 
-        String[] u = repoPath.split("/");
+        String[] u = repoPath.split("/", -1);
         if (u.length < 2) {
             // a file path perhaps?
             return null;
@@ -111,7 +111,7 @@ public final class GithubUtils {
     private static String getRepoPath(String repoUrl) {
         // tests support
         if (repoUrl.startsWith("/")) {
-            String[] folders = repoUrl.split("/");
+            String[] folders = repoUrl.split("/", -1);
             if (folders.length < 2) {
                 return repoUrl;
             }

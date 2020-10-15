@@ -150,7 +150,7 @@ public class CustomFormServiceV1 {
             // copy shared resources (if present)
             copySharedResources(processKey, dst);
         } catch (IOException e) {
-            log.warn("startSession ['{}', '{}'] -> error while preparing a custom form: {}", processKey, formName, e);
+            log.warn("startSession ['{}', '{}'] -> error while preparing a custom form: {}", processKey.toString().replaceAll("[\n\r]",""), formName.replaceAll("[\n\r]",""), e);
             throw new ConcordApplicationException("Error while preparing a custom form", e);
         }
 
@@ -259,7 +259,7 @@ public class CustomFormServiceV1 {
     private Form assertForm(ProcessKey processKey, String formName) {
         Form form = formService.get(processKey, formName);
         if (form == null) {
-            log.warn("assertForm ['{}', '{}'] -> not found", processKey, formName);
+            log.warn("assertForm ['{}', '{}'] -> not found", processKey.toString().replaceAll("[\n\r]",""), formName.replaceAll("[\n\r]",""));
             throw new ConcordApplicationException("Form not found", Status.NOT_FOUND);
         }
         return form;

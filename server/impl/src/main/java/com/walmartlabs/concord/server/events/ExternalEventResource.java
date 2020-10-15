@@ -104,7 +104,7 @@ public class ExternalEventResource implements Resource {
                     .build();
 
             List<PartialProcessKey> processKeys = executor.execute(e, initiatorResolver, r.triggers());
-            log.info("event ['{}', '{}', '{}'] -> done, {} processes started", eventId, eventName, event, processKeys.size());
+            log.info("event ['{}', '{}', '{}'] -> done, {} processes started", eventId.replaceAll("[\n\r]",""), eventName.replaceAll("[\n\r]",""), event.toString().replaceAll("[\n\r]",""), processKeys.size());
         }
 
         return Response.ok().build();

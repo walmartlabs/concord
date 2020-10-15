@@ -41,6 +41,7 @@ public interface EventProcessor {
 
         String eventType();
 
+        @Override
         long eventSeq();
 
         Map<String, Object> payload();

@@ -72,8 +72,8 @@ public class Atom implements Serializable {
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-
+        if (!(o instanceof Atom)) return false;
+        
         Atom atom = (Atom) o;
 
         if (!location.equals(atom.location)) return false;

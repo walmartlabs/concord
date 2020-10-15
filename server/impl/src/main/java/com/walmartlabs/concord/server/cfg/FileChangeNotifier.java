@@ -96,7 +96,7 @@ public class FileChangeNotifier {
     }
 
     private static byte[] getMD5(Path file) throws NoSuchAlgorithmException, IOException {
-        MessageDigest digest = MessageDigest.getInstance("MD5");
+        MessageDigest digest = MessageDigest.getInstance("SHA-256");
 
         byte[] buffer = new byte[8192];
         int read;

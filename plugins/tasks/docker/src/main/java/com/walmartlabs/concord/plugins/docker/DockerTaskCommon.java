@@ -86,7 +86,7 @@ public final class DockerTaskCommon {
             result.put(e.getKey(), v.toString());
         }
 
-        return result;
+        return Collections.unmodifiableMap(result);
     }
 
     public static Path createRunScript(Path file, String cmd) throws IOException {

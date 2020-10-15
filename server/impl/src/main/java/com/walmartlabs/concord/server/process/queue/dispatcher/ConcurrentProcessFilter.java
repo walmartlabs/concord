@@ -43,7 +43,7 @@ import java.util.*;
 @Named
 public class ConcurrentProcessFilter extends WaitProcessFinishFilter {
 
-    private static final Set<ProcessStatus> FINAL_STATUSES = ImmutableSet.of(
+    private static final ImmutableSet<ProcessStatus> FINAL_STATUSES = ImmutableSet.of(
             ProcessStatus.SUSPENDED,
             ProcessStatus.FINISHED,
             ProcessStatus.FAILED,

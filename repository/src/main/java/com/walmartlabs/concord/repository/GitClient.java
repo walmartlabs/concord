@@ -66,7 +66,7 @@ public class GitClient {
 
     public RepositoryInfo getInfo(Path path) {
         String result = launchCommand(path, defaultTimeout, "log", "-1", "--format=%H%n%an (%ae)%n%s%n%b");
-        String[] info = result.split("\n");
+        String[] info = result.split("\n", -1);
         if (info.length < 2) {
             return null;
         }

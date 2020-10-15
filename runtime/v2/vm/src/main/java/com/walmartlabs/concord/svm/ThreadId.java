@@ -34,7 +34,7 @@ public class ThreadId implements Serializable {
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+        if (!(o instanceof ThreadId)) return false;
         ThreadId threadId = (ThreadId) o;
         return id == threadId.id;
     }

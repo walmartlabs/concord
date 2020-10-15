@@ -126,9 +126,9 @@ public final class ConfigurationUtils {
     public static Map<String, Object> deepMerge(Map<String, Object> a, Map<String, Object> b) {
         Map<String, Object> result = new LinkedHashMap<>(a != null ? a : Collections.emptyMap());
 
-        for (String k : b.keySet()) {
-            Object av = result.get(k);
-            Object bv = b.get(k);
+        for (Map.Entry<String, Object> bEntry : b.entrySet()) {
+            Object av = result.get(bEntry.getKey());
+            Object bv = bEntry.getValue();
 
             Object o = bv;
             if (av instanceof Map && bv instanceof Map) {
@@ -136,10 +136,10 @@ public final class ConfigurationUtils {
             }
 
             // preserve the order of the keys
-            if (result.containsKey(k)) {
-                result.replace(k, o);
+            if (result.containsKey(bEntry.getKey())) {
+                result.replace(bEntry.getKey(), o);
             } else {
-                result.put(k, o);
+                result.put(bEntry.getKey(), o);
             }
         }
         return result;
@@ -155,11 +155,11 @@ public final class ConfigurationUtils {
         for (int i = 1; i < maps.length; i++) {
             result = deepMerge(result, maps[i]);
         }
-        return result;
+        return Collections.unmodifiableMap(result);
     }
 
     public static Map<String, Object> toNested(String k, Object v) {
-        String[] as = k.split("\\.");
+        String[] as = k.split("\\.", -1);
         if (as.length == 1) {
             return Collections.singletonMap(k, v);
         }

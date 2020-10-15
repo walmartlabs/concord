@@ -52,7 +52,7 @@ public final class HttpUtils {
         }
 
         ImmutableRange.Builder builder = Range.builder();
-        String[] as = range.substring("bytes=".length()).split("-");
+        String[] as = range.substring("bytes=".length()).split("-",-1);
         if (as.length > 0) {
             try {
                 builder.start(Integer.parseInt(as[0]));

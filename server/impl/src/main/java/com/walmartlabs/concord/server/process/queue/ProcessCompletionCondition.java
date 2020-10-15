@@ -29,6 +29,7 @@ import org.immutables.value.Value;
 import javax.annotation.Nullable;
 import java.util.Set;
 import java.util.UUID;
+import java.util.Collections;
 
 @Value.Immutable
 @JsonSerialize(as = ImmutableProcessCompletionCondition.class)
@@ -48,7 +49,7 @@ public abstract class ProcessCompletionCondition extends AbstractWaitCondition {
 
     @Value.Default
     public Set<ProcessStatus> finalStatuses() {
-        return DEFAULT_FINISHED_STATUSES;
+        return Collections.unmodifiableSet(DEFAULT_FINISHED_STATUSES);
     }
 
     @Value.Default

@@ -46,7 +46,7 @@ public final class FormUtils {
             Constants.RUN_AS_LDAP_KEY + "." +
             Constants.RUN_AS_GROUP_KEY;
 
-    private static final DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern("YYYY-MM-dd'T'HH:mm:ss.SSSZ", Locale.US);
+    private static final DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSSZ", Locale.US);
 
     @SuppressWarnings("unchecked")
     public static Set<String> getRunAsUsers(String formName, Map<String, Serializable> runAsParams) {

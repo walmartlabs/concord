@@ -55,7 +55,7 @@ public class PartialProcessKey implements Serializable {
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+        if (!(o instanceof PartialProcessKey)) return false;
         PartialProcessKey that = (PartialProcessKey) o;
         return Objects.equals(instanceId, that.instanceId);
     }

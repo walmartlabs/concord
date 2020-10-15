@@ -29,13 +29,10 @@ import java.security.interfaces.RSAPublicKey;
 
 public class RSAEncryptionConfiguration extends AbstractEncryptionConfiguration {
 
-    private final RSAPublicKey publicKey;
-
     private final RSAPrivateKey privateKey;
 
     public RSAEncryptionConfiguration(final KeyPair keyPair) {
         this.privateKey = (RSAPrivateKey) keyPair.getPrivate();
-        this.publicKey = (RSAPublicKey) keyPair.getPublic();
     }
 
     @Override

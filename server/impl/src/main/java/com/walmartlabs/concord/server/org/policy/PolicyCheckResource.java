@@ -90,6 +90,7 @@ public class PolicyCheckResource implements Resource {
                 case SECRET: {
                     UserEntry owner = UserPrincipal.assertCurrent().getUser();
                     policyManager.checkEntity(orgId, null, EntityType.SECRET, EntityAction.CREATE, owner, PolicyUtils.toMap(orgId, null, null, null, null));
+                    break;
                 }
                 default: {
                     // nothing to do, the implementation supports only projects and secrets
