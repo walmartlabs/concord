@@ -71,27 +71,6 @@ public class YamlProfile implements Serializable {
         return configuration;
     }
 
-    private static <K, V> Map<K, List<V>> removeNullElements(Map<K, List<V>> items) {
-        if (items == null) {
-            return null;
-        }
-
-        Map<K, List<V>> result = new HashMap<>();
-        items.forEach((k, v) -> {
-            if (v == null) {
-                return;
-            }
-
-            List<V> l = v.stream()
-                    .filter(Objects::nonNull)
-                    .collect(Collectors.toList());
-
-            result.put(k, l);
-        });
-
-        return result;
-    }
-
     @Override
     public String toString() {
         return "YamlProfile{" +
