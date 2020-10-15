@@ -46,7 +46,7 @@ public class YamlFormCall extends YamlStep {
     }
 
     @Override
-    public String toString() {
+    public final String toString() {
         return "YamlFormCall{" +
                 "key='" + key + '\'' +
                 ", options=" + options +

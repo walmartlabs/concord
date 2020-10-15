@@ -90,7 +90,7 @@ public class TaskRule implements Serializable {
     }
 
     @Override
-    public String toString() {
+    public final String toString() {
         return "TaskRule{" +
                 "msg='" + msg + '\'' +
                 ", taskName='" + taskName + '\'' +
@@ -155,7 +155,7 @@ public class TaskRule implements Serializable {
         }
 
         @Override
-        public String toString() {
+        public final String toString() {
             return "Param{" +
                     "index=" + index +
                     ", name='" + name + '\'' +

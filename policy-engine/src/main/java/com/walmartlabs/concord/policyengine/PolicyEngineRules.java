@@ -176,7 +176,7 @@ public class PolicyEngineRules {
     }
 
     @Override
-    public String toString() {
+    public final String toString() {
         return "PolicyEngineRules{" +
                 "dependencyRules=" + dependencyRules +
                 ", fileRules=" + fileRules +

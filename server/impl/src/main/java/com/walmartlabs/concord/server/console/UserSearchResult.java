@@ -54,7 +54,7 @@ public class UserSearchResult implements Serializable {
     }
 
     @Override
-    public String toString() {
+    public final String toString() {
         return "UserSearchResult{" +
                 "username='" + username + '\'' +
                 ", userDomain='" + userDomain + '\'' +

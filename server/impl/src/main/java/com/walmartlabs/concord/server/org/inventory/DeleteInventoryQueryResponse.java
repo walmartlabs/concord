@@ -32,7 +32,7 @@ public class DeleteInventoryQueryResponse implements Serializable {
     }
 
     @Override
-    public String toString() {
+    public final String toString() {
         return "DeleteInventoryQueryResponse{" +
                 "ok=" + ok +
                 '}';

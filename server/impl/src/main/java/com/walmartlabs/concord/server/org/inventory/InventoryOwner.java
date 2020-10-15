@@ -54,7 +54,7 @@ public class InventoryOwner implements Serializable {
     }
 
     @Override
-    public String toString() {
+    public final String toString() {
         return "InventoryOwner{" +
                 "id=" + id +
                 ", username='" + username + '\'' +

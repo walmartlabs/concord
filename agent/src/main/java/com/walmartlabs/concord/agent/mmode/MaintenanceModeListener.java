@@ -46,7 +46,7 @@ public interface MaintenanceModeListener {
         }
 
         @Override
-        public String toString() {
+        public final String toString() {
             return "Status{" +
                     "maintenanceMode=" + maintenanceMode +
                     ", workersAlive=" + workersAlive +

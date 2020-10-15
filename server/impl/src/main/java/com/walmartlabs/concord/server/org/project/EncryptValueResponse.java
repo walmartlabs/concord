@@ -48,7 +48,7 @@ public class EncryptValueResponse implements Serializable {
     }
 
     @Override
-    public String toString() {
+    public final String toString() {
         return "EncryptValueResponse{" +
                 "ok=" + ok +
                 ", data=" + Arrays.toString(data) +

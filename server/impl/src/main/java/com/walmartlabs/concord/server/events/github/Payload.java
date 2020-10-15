@@ -211,7 +211,7 @@ public class Payload {
     }
 
     @Override
-    public String toString() {
+    public final String toString() {
         return "Payload{" +
                 "eventName='" + eventName + '\'' +
                 ", data=" + data +

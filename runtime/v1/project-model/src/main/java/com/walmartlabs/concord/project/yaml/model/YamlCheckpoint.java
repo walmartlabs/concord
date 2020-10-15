@@ -38,7 +38,7 @@ public class YamlCheckpoint extends YamlStep {
     }
 
     @Override
-    public String toString() {
+    public final String toString() {
         return "YamlCheckpoint{" +
                 "name='" + name + '\'' +
                 '}';

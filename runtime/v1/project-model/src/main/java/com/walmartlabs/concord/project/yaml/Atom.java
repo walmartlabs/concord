@@ -91,7 +91,7 @@ public class Atom implements Serializable {
     }
 
     @Override
-    public String toString() {
+    public final String toString() {
         return "Atom{" +
                 "location=" + location +
                 ", token=" + token +

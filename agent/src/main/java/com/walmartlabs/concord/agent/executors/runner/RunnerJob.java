@@ -152,7 +152,7 @@ public class RunnerJob {
     }
 
     @Override
-    public String toString() {
+    public final String toString() {
         return "RunnerJob{" +
                 "instanceId=" + instanceId +
                 ", debugMode=" + debugMode +

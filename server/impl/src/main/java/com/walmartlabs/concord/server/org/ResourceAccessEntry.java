@@ -84,7 +84,7 @@ public class ResourceAccessEntry implements Serializable {
     }
 
     @Override
-    public String toString() {
+    public final String toString() {
         return "ResourceAccessEntry{" +
                 "teamId=" + teamId +
                 ", orgName='" + orgName + '\'' +

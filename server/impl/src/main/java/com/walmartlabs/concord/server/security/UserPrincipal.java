@@ -75,7 +75,7 @@ public class UserPrincipal implements Serializable {
     }
 
     @Override
-    public String toString() {
+    public final String toString() {
         return "UserPrincipal{" +
                 "realm='" + realm + '\'' +
                 ", user=" + user +

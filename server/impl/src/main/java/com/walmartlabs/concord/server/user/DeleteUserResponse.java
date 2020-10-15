@@ -31,7 +31,7 @@ public class DeleteUserResponse implements Serializable {
     }
 
     @Override
-    public String toString() {
+    public final String toString() {
         return "DeleteUserResponse{" +
                 "ok=" + ok +
                 '}';

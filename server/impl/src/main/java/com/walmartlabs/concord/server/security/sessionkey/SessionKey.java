@@ -49,7 +49,7 @@ public class SessionKey implements AuthenticationToken {
     }
 
     @Override
-    public String toString() {
+    public final String toString() {
         return "SessionKey{" +
                 "instanceId=" + instanceId +
                 '}';

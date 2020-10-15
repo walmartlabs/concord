@@ -92,7 +92,7 @@ public class FileRule implements Serializable {
     }
 
     @Override
-    public String toString() {
+    public final String toString() {
         return "FileRule{" +
                 "msg='" + msg + '\'' +
                 ", maxSizeInBytes=" + maxSizeInBytes +

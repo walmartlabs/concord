@@ -41,6 +41,7 @@ public class UnlockTaskV2 implements Task {
         this.delegate = new LockTaskCommon(apiClient, context.processInstanceId());
     }
 
+    @Override
     public TaskResult execute(Variables input) throws Exception {
         TaskParams params = new TaskParams(input);
 

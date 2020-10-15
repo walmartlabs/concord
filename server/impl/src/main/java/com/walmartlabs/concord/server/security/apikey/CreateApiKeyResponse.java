@@ -53,7 +53,7 @@ public class CreateApiKeyResponse implements Serializable {
     }
 
     @Override
-    public String toString() {
+    public final String toString() {
         return "CreateApiKeyResponse{" +
                 "ok=" + ok +
                 ", id=" + id +

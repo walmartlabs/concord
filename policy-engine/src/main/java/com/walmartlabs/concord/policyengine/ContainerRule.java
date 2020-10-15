@@ -70,7 +70,7 @@ public class ContainerRule implements Serializable {
     }
 
     @Override
-    public String toString() {
+    public final String toString() {
         return "ContainerRule{" +
                 "msg='" + msg + '\'' +
                 ", maxRam='" + maxRam + '\'' +

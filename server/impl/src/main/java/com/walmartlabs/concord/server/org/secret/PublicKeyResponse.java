@@ -48,7 +48,7 @@ public class PublicKeyResponse extends SecretOperationResponse {
     }
 
     @Override
-    public String toString() {
+    public final String toString() {
         return "PublicKeyResponse{" +
                 "publicKey='" + publicKey + '\'' +
                 "} " + super.toString();

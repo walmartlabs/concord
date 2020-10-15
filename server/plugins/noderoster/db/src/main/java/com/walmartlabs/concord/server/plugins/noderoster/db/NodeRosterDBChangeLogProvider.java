@@ -36,7 +36,7 @@ public class NodeRosterDBChangeLogProvider implements DatabaseChangeLogProvider 
     }
 
     @Override
-    public String toString() {
+    public final String toString() {
         return "noderoster-db";
     }
 }

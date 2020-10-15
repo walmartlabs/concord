@@ -76,7 +76,7 @@ public class YamlObject extends YamlValue {
     }
 
     @Override
-    public String toString() {
+    public final String toString() {
         return "YamlObject{" +
                 "values=" + values +
                 '}';

@@ -73,7 +73,7 @@ public class ProcessKey extends PartialProcessKey {
         return createdAt;
     }
 
-    public String toString() {
+    public final String toString() {
         return getInstanceId().toString();
     }
 }

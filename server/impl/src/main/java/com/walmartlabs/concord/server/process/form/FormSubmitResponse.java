@@ -58,7 +58,7 @@ public class FormSubmitResponse implements Serializable {
     }
 
     @Override
-    public String toString() {
+    public final String toString() {
         return "FormSubmitResponse{" +
                 "ok=" + ok +
                 ", processInstanceId=" + processInstanceId +

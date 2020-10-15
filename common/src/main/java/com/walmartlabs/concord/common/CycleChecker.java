@@ -56,7 +56,7 @@ public final class CycleChecker {
         }
 
         @Override
-        public String toString() {
+        public final String toString() {
             return hasCycle ? getNode1() + " <-> " + getNode2() : "no cycle";
         }
     }
@@ -156,7 +156,7 @@ public final class CycleChecker {
         }
 
         @Override
-        public String toString() {
+        public final String toString() {
             return getPath();
         }
     }

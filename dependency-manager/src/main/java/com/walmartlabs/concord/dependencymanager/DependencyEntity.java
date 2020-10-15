@@ -68,7 +68,7 @@ public class DependencyEntity {
     }
 
     @Override
-    public String toString() {
+    public final String toString() {
         if (artifact != null) {
             return artifact.toString();
         } else {
@@ -101,7 +101,7 @@ public class DependencyEntity {
         }
 
         @Override
-        public String toString() {
+        public final String toString() {
             return "Artifact{" +
                     "groupId='" + groupId + '\'' +
                     ", artifactId='" + artifactId + '\'' +

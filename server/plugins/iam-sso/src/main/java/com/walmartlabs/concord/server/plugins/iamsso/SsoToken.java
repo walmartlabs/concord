@@ -51,7 +51,7 @@ public class SsoToken implements AuthenticationToken {
     }
 
     @Override
-    public String toString() {
+    public final String toString() {
         return "SsoToken{" +
                 "username='" + username + '\'' +
                 ", domain='" + domain + '\'' +

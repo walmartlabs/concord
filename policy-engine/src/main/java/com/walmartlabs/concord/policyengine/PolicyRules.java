@@ -80,7 +80,7 @@ public class PolicyRules<E extends Serializable> implements Serializable {
     }
 
     @Override
-    public String toString() {
+    public final String toString() {
         return "{" +
                 "allow=" + allow +
                 ", warn=" + warn +

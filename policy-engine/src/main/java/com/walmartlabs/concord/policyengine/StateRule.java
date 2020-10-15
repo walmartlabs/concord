@@ -82,7 +82,7 @@ public class StateRule implements Serializable {
     }
 
     @Override
-    public String toString() {
+    public final String toString() {
         return "StateRule{" +
                 "msg='" + msg + '\'' +
                 ", maxSizeInBytes=" + maxSizeInBytes +

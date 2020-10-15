@@ -2626,7 +2626,7 @@ public class YamlParserTest extends AbstractYamlParserTest {
         public void hello() {
         }
 
-        public String toString(Object s) {
+        public final String toString(Object s) {
             if (s == null) {
                 return null;
             }

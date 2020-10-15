@@ -71,7 +71,7 @@ public class ConcurrentProcessRule implements Serializable {
     }
 
     @Override
-    public String toString() {
+    public final String toString() {
         return "ConcurrentProcessRule{" +
                 "msg='" + msg + '\'' +
                 ", maxPerOrg=" + maxPerOrg +

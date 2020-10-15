@@ -42,7 +42,7 @@ public class ProcessQueueEntry implements Serializable {
     }
 
     @Override
-    public String toString() {
+    public final String toString() {
         return "ProcessQueueEntry{" +
                 "requirements=" + requirements +
                 '}';

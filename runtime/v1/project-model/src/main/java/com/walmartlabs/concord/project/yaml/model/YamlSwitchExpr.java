@@ -46,7 +46,7 @@ public class YamlSwitchExpr extends YamlStep {
     }
 
     @Override
-    public String toString() {
+    public final String toString() {
         return "YamlSwitchExpr{" +
                 "expr='" + expr + '\'' +
                 ", caseSteps=" + caseSteps +

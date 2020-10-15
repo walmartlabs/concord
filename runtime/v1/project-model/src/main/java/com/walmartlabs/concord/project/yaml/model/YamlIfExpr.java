@@ -51,7 +51,7 @@ public class YamlIfExpr extends YamlStep {
     }
 
     @Override
-    public String toString() {
+    public final String toString() {
         return "YamlIfExpr{" +
                 "expr='" + expr + '\'' +
                 ", thenSteps=" + thenSteps +

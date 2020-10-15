@@ -95,7 +95,7 @@ public class DependencyRule implements Serializable {
     }
 
     @Override
-    public String toString() {
+    public final String toString() {
         return "DependencyRule{" +
                 "msg='" + msg + '\'' +
                 ", scheme='" + scheme + '\'' +

@@ -41,7 +41,7 @@ public class ProcessRequest extends Message {
     }
 
     @Override
-    public String toString() {
+    public final String toString() {
         return "ProcessRequest{" +
                 "correlationId='" + getCorrelationId() + "', " +
                 "capabilities='" + capabilities + "'" +

@@ -93,7 +93,7 @@ public class YamlProfile implements Serializable {
     }
 
     @Override
-    public String toString() {
+    public final String toString() {
         return "YamlProfile{" +
                 "flows=" + flows +
                 ", publicFlows=" + publicFlows +

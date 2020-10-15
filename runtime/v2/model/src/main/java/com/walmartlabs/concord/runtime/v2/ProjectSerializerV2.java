@@ -43,7 +43,7 @@ public class ProjectSerializerV2 {
         this.objectMapper.writeValue(out, processDefinition);
     }
 
-    public String toString(ProcessDefinition processDefinition) throws Exception {
+    public final String toString(ProcessDefinition processDefinition) throws Exception {
         return objectMapper.writeValueAsString(processDefinition);
     }
 

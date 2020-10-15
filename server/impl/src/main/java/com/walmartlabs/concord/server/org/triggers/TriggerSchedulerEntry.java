@@ -63,7 +63,7 @@ public class TriggerSchedulerEntry extends TriggerEntry {
     }
 
     @Override
-    public String toString() {
+    public final String toString() {
         return "TriggerSchedulerEntry{" +
                 "fireAt=" + fireAt +
                 ", triggerId=" + triggerId +

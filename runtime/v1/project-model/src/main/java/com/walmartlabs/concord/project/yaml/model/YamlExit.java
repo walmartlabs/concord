@@ -31,7 +31,7 @@ public class YamlExit extends YamlStep {
     }
 
     @Override
-    public String toString() {
+    public final String toString() {
         return "YamlExit{}";
     }
 }

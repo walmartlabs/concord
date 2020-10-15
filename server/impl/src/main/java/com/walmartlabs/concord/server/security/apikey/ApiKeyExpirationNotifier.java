@@ -199,7 +199,7 @@ public class ApiKeyExpirationNotifier implements ScheduledTask {
         }
 
         @Override
-        public String toString() {
+        public final String toString() {
             return "ApiKeyEntry{" +
                     "id=" + id +
                     ", name='" + name + '\'' +

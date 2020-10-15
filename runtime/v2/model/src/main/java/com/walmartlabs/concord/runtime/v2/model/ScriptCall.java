@@ -37,7 +37,7 @@ public class ScriptCall extends AbstractStep<ScriptCallOptions> {
     }
 
     @Override
-    public String toString() {
+    public final String toString() {
         return "ScriptCall{" +
                 "languageOrRef='" + languageOrRef + '\'' +
                 '}';

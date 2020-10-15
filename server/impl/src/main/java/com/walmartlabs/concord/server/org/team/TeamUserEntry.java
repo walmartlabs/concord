@@ -107,7 +107,7 @@ public class TeamUserEntry implements Serializable {
     }
 
     @Override
-    public String toString() {
+    public final String toString() {
         return "TeamUserEntry{" +
                 "userId=" + userId +
                 ", username='" + username + '\'' +

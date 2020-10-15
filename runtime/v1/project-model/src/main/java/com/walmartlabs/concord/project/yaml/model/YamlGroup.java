@@ -47,7 +47,7 @@ public class YamlGroup extends YamlStep {
     }
 
     @Override
-    public String toString() {
+    public final String toString() {
         return "YamlGroup{" +
                 "steps=" + steps +
                 ", options=" + options +

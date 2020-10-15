@@ -54,7 +54,7 @@ public class YamlImport implements Serializable {
     }
 
     @Override
-    public String toString() {
+    public final String toString() {
         return "YamlImport{" +
                 "type='" + type + '\'' +
                 ", options=" + options +

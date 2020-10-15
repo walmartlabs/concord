@@ -71,7 +71,7 @@ public class WorkspaceRule implements Serializable {
     }
 
     @Override
-    public String toString() {
+    public final String toString() {
         return "WorkspaceRule{" +
                 "msg='" + msg + '\'' +
                 ", maxSizeInBytes=" + maxSizeInBytes +

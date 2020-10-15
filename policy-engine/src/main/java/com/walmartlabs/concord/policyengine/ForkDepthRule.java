@@ -61,7 +61,7 @@ public class ForkDepthRule implements Serializable {
     }
 
     @Override
-    public String toString() {
+    public final String toString() {
         return "ForkDepthRule{" +
                 "msg='" + msg + '\'' +
                 ", max=" + max +

@@ -59,7 +59,7 @@ public class VersionResponse implements Serializable {
     }
 
     @Override
-    public String toString() {
+    public final String toString() {
         return "VersionResponse{" +
                 "ok=" + ok +
                 ", version='" + version + '\'' +

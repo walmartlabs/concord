@@ -45,7 +45,7 @@ public class ThreadId implements Serializable {
     }
 
     @Override
-    public String toString() {
+    public final String toString() {
         return "ThreadId{" +
                 "id=" + id +
                 '}';

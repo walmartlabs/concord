@@ -42,7 +42,7 @@ public class YamlReturn extends YamlStep {
     }
 
     @Override
-    public String toString() {
+    public final String toString() {
         return "YamlReturn{" +
                 "errorCode='" + errorCode + '\'' +
                 '}';

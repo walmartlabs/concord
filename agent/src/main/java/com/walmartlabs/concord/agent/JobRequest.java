@@ -129,7 +129,7 @@ public class JobRequest {
     }
 
     @Override
-    public String toString() {
+    public final String toString() {
         return "JobRequest{" +
                 "type=" + type +
                 ", instanceId=" + instanceId +

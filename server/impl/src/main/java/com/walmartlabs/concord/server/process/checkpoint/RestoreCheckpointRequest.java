@@ -45,7 +45,7 @@ public class RestoreCheckpointRequest implements Serializable {
     }
 
     @Override
-    public String toString() {
+    public final String toString() {
         return "RestoreCheckpointRequest{" +
                 "id=" + id +
                 '}';

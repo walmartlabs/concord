@@ -165,7 +165,7 @@ public class Payload {
     }
 
     @Override
-    public String toString() {
+    public final String toString() {
         return "Payload{" +
                 "processKey=" + processKey +
                 ", headers=" + headers +

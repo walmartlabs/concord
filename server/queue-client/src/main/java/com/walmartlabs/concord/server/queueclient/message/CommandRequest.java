@@ -41,7 +41,7 @@ public class CommandRequest extends Message {
     }
 
     @Override
-    public String toString() {
+    public final String toString() {
         return "CommandRequest{" +
                 "correlationId='" + getCorrelationId() + "', " +
                 "agentId='" + agentId + "'" +

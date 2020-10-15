@@ -46,7 +46,7 @@ public class YamlTaskStep extends YamlStep {
     }
 
     @Override
-    public String toString() {
+    public final String toString() {
         return "YamlTaskStep{" +
                 "key='" + key + '\'' +
                 ", options=" + options +

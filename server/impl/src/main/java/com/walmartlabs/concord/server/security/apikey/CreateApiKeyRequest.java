@@ -73,7 +73,7 @@ public class CreateApiKeyRequest implements Serializable {
     }
 
     @Override
-    public String toString() {
+    public final String toString() {
         return "CreateApiKeyRequest{" +
                 "userId=" + userId +
                 ", username='" + username + '\'' +

@@ -61,7 +61,7 @@ public class YamlFormField implements Serializable {
     }
 
     @Override
-    public String toString() {
+    public final String toString() {
         return "YamlFormField{" +
                 "name='" + name + '\'' +
                 ", options=" + options +

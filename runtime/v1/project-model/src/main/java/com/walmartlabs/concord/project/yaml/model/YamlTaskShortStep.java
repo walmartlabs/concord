@@ -44,7 +44,7 @@ public class YamlTaskShortStep extends YamlStep {
     }
 
     @Override
-    public String toString() {
+    public final String toString() {
         return "YamlTaskShortStep{" +
                 "key='" + key + '\'' +
                 ", arg=" + arg +

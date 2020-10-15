@@ -116,7 +116,7 @@ public class InventoryEntry implements Serializable {
     }
 
     @Override
-    public String toString() {
+    public final String toString() {
         return "InventoryEntry{" +
                 "id=" + id +
                 ", name='" + name + '\'' +

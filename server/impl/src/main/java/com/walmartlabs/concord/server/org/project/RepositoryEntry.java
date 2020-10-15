@@ -167,7 +167,7 @@ public class RepositoryEntry implements Serializable {
     }
 
     @Override
-    public String toString() {
+    public final String toString() {
         return "RepositoryEntry{" +
                 "id=" + id +
                 ", projectId=" + projectId +

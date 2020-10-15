@@ -150,7 +150,7 @@ public class PolicyEngine {
     }
 
     @Override
-    public String toString() {
+    public final String toString() {
         if (ruleNames == null) {
             return "no rules defined";
         }

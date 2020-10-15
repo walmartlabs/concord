@@ -48,7 +48,7 @@ public class KV<K, V> implements Map.Entry<K, V> {
     }
 
     @Override
-    public String toString() {
+    public final String toString() {
         return "KV{" +
                 "k=" + k +
                 ", v=" + v +

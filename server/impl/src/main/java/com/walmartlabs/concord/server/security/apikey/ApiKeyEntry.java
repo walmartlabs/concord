@@ -74,7 +74,7 @@ public class ApiKeyEntry implements Serializable {
     }
 
     @Override
-    public String toString() {
+    public final String toString() {
         return "ApiKeyEntry{" +
                 "id=" + id +
                 ", userId=" + userId +

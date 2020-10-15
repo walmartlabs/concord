@@ -60,7 +60,7 @@ public class ConcordObjectMapper {
         return JSONB.valueOf(removeUnsupportedEscape(json));
     }
 
-    public String toString(Object m) {
+    public final String toString(Object m) {
         if (m == null) {
             return null;
         }

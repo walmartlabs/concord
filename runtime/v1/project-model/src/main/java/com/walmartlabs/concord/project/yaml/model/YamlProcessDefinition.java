@@ -48,7 +48,7 @@ public class YamlProcessDefinition implements YamlDefinition {
     }
 
     @Override
-    public String toString() {
+    public final String toString() {
         return "YamlProcessDefinition{" +
                 "name='" + name + '\'' +
                 ", steps=" + steps +

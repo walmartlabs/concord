@@ -67,7 +67,7 @@ public class RepositoryValidationResponse implements Serializable {
     }
 
     @Override
-    public String toString() {
+    public final String toString() {
         return "RepositoryValidationResponse{" +
                 "ok=" + ok +
                 ", result=" + result +

@@ -44,7 +44,7 @@ public class GenericOperationResult implements Serializable {
     }
 
     @Override
-    public String toString() {
+    public final String toString() {
         return "GenericOperationResult{" +
                 "ok=" + ok +
                 ", result=" + result +

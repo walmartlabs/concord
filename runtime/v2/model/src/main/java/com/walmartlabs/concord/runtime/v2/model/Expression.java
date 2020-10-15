@@ -40,7 +40,7 @@ public class Expression extends AbstractStep<ExpressionOptions> {
     }
 
     @Override
-    public String toString() {
+    public final String toString() {
         return "Expression{" +
                 "expr='" + expr + '\'' +
                 "}";

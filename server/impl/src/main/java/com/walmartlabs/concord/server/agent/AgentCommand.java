@@ -64,7 +64,7 @@ public class AgentCommand implements Serializable {
     }
 
     @Override
-    public String toString() {
+    public final String toString() {
         return "AgentCommand{" +
                 "commandId=" + commandId +
                 ", agentId='" + agentId + '\'' +
