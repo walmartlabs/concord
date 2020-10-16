@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.3.xsd">
+
+    <changeSet id="1680004" author="amith.k.b@walmartlabs.com">
+        <createTable tableName="TASK_ERRORS" remarks="Task_errors">
+            <column name="FAILED_AT" type="timestamp">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="TASK_ID" type="varchar(36)" remarks="Task ID">
+                <constraints nullable="true"/>
+            </column>
+            <column name="FAIL_MESSAGE" type="blob">
+                <constraints nullable="true"/>
+            </column>
+        </createTable>
+    </changeSet>
+</databaseChangeLog>

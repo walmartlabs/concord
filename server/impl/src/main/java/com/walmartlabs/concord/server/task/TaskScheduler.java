@@ -34,6 +34,8 @@ import org.slf4j.LoggerFactory;
 import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.time.OffsetDateTime;
 import java.util.*;
 import java.util.concurrent.ExecutorService;
@@ -41,7 +43,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
 import static com.walmartlabs.concord.db.PgUtils.interval;
-import static com.walmartlabs.concord.server.jooq.Tables.TASKS;
+import static com.walmartlabs.concord.server.jooq.Tables.*;
 import static org.jooq.impl.DSL.currentOffsetDateTime;
 import static org.jooq.impl.DSL.value;
 
@@ -123,7 +125,7 @@ public class TaskScheduler extends PeriodicTask {
             } catch (Exception e) {
                 log.error("startTask ['{}'] -> error", id, e);
 
-                dao.fail(id);
+                dao.fail(id, e);
             } finally {
                 runningTasks.remove(id);
             }
@@ -142,7 +144,7 @@ public class TaskScheduler extends PeriodicTask {
         dao.transaction(tx -> {
             List<String> ids = dao.pollStalled(tx, cutOff);
             for (String id : ids) {
-                dao.fail(tx, id);
+                dao.fail(tx, id, "Stalled task");
                 log.info("failStalled -> marked as failed: {}", id);
             }
         });
@@ -201,12 +203,13 @@ public class TaskScheduler extends PeriodicTask {
             tx(tx -> taskFinished(tx, taskId, "OK"));
         }
 
-        public void fail(String taskId) {
-            tx(tx -> fail(tx, taskId));
+        public void fail(String taskId, Exception exception) {
+            tx(tx -> fail(tx, taskId, stacktraceToString(exception)));
         }
 
-        public void fail(DSLContext tx, String taskId) {
+        public void fail(DSLContext tx, String taskId, String failMsg)  {
             taskFinished(tx, taskId, "ERROR");
+            UpdateFailedTask(tx, taskId, failMsg.getBytes());
         }
 
         public void updateTaskIntervals(Map<String, ScheduledTask> tasks) {
@@ -246,6 +249,19 @@ public class TaskScheduler extends PeriodicTask {
                     .set(TASKS.TASK_STATUS, value(status))
                     .where(TASKS.TASK_ID.eq(taskId))
                     .execute();
+        }
+
+        private void UpdateFailedTask(DSLContext tx, String taskId, byte[] failMsg) {
+            tx.insertInto(TASK_ERRORS)
+                    .values(currentOffsetDateTime(), taskId, failMsg)
+                    .onDuplicateKeyUpdate().set(TASK_ERRORS.FAIL_MESSAGE, failMsg)
+                    .execute();
+        }
+
+        private static String stacktraceToString(Throwable t) {
+            StringWriter w = new StringWriter();
+            t.printStackTrace(new PrintWriter(w));
+            return w.toString();
         }
     }
 }
