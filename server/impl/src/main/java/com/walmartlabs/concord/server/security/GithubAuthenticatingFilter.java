@@ -118,7 +118,7 @@ public class GithubAuthenticatingFilter extends AuthenticatingFilter {
             String digestHex = String.valueOf(Hex.encode(digest));
 
             if (!algDigest[1].equals(digestHex)) {
-                log.error("createToken -> invalid auth digest. Expected: '{}', request: '{}'", digestHex, algDigest[1]);
+                log.error("createToken -> invalid auth digest. Expected: '{}', request: '{}'", digestHex.replaceAll("[\r\n]",""), algDigest[1].replaceAll("[\r\n]",""));
                 return new UsernamePasswordToken();
             }
 

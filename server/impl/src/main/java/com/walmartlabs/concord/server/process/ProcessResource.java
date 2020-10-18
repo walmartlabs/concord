@@ -961,14 +961,14 @@ public class ProcessResource implements Resource {
                 try {
                     IOUtils.deleteRecursively(tmpDir);
                 } catch (IOException e) {
-                    log.warn("uploadAttachments -> cleanup error: {}", e.getMessage());
+                    log.warn("uploadAttachments -> cleanup error: {}", e.getMessage().replaceAll("[\r\n]",""));
                 }
             }
             if (tmpIn != null) {
                 try {
                     Files.delete(tmpIn);
                 } catch (IOException e) {
-                    log.warn("uploadAttachments -> cleanup error: {}", e.getMessage());
+                    log.warn("uploadAttachments -> cleanup error: {}", e.getMessage().replaceAll("[\r\n]",""));
                 }
             }
         }
