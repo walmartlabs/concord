@@ -48,6 +48,6 @@ public class MapBackedVariables implements Variables {
 
     @Override
     public Map<String, Object> toMap() {
-        return delegate;
+        return Collections.unmodifiableMap(delegate);
     }
 }

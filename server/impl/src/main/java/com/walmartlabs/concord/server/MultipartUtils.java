@@ -62,7 +62,7 @@ public final class MultipartUtils {
                     result.put(name, p.getBody(InputStream.class, null));
                 }
             }
-            return result;
+            return Collections.unmodifiableMap(result);
         } catch (IOException e) {
             throw new ConcordApplicationException("Error parsing the request", e);
         }

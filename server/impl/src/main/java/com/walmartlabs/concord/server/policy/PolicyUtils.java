@@ -45,7 +45,7 @@ public final class PolicyUtils {
         if (entry.getCfg() != null) {
             m.put("cfg", entry.getCfg());
         }
-        return m;
+        return Collections.unmodifiableMap(m);
     }
 
     public static Map<String, Object> toMap(UUID orgId, String orgName, ProjectEntry entry) {
@@ -63,7 +63,7 @@ public final class PolicyUtils {
         if (entry.getCfg() != null) {
             m.put("cfg", entry.getCfg());
         }
-        return m;
+        return Collections.unmodifiableMap(m);
     }
 
     public static Map<String, Object> toMap(UUID orgId, String secretName, SecretType type,
@@ -79,7 +79,7 @@ public final class PolicyUtils {
         if (storeType != null) {
             m.put("storeType", storeType);
         }
-        return m;
+        return Collections.unmodifiableMap(m);
     }
 
     public static Map<String, Object> toMap(UUID orgId, UUID projectId, Trigger trigger) {
@@ -90,7 +90,7 @@ public final class PolicyUtils {
         m.put("arguments", trigger.arguments() != null ? trigger.arguments() : Collections.emptyMap());
         m.put("params", trigger.conditions() != null ? trigger.conditions() : Collections.emptyMap());
         m.put("cfg", trigger.configuration() != null ? trigger.configuration() : Collections.emptyList());
-        return m;
+        return Collections.unmodifiableMap(m);
     }
 
     public static Map<String, Object> toMap(UUID orgId, String storageName,
@@ -103,7 +103,7 @@ public final class PolicyUtils {
             m.put("visibility", visibility.name());
         }
         m.putAll(toMap(owner));
-        return m;
+        return Collections.unmodifiableMap(m);
     }
 
     private static Map<String, Object> toMap(UserEntry owner) {
