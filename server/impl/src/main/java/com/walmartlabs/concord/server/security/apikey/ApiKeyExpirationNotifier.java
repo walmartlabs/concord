@@ -39,6 +39,7 @@ import javax.inject.Singleton;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.StringWriter;
+import java.nio.charset.StandardCharsets;
 import java.text.SimpleDateFormat;
 import java.time.OffsetDateTime;
 import java.util.*;
@@ -112,7 +113,7 @@ public class ApiKeyExpirationNotifier implements ScheduledTask {
     }
 
     private String getMessage(int days, List<ApiKeyEntry> keys) {
-        try (InputStreamReader in = new InputStreamReader(this.getClass().getResourceAsStream("/com/walmartlabs/concord/server/email/api-key-expiration.mustache"))) {
+        try (InputStreamReader in = new InputStreamReader(this.getClass().getResourceAsStream("/com/walmartlabs/concord/server/email/api-key-expiration.mustache"), StandardCharsets.UTF_8)) {
             MustacheFactory mf = new DefaultMustacheFactory();
             Mustache mustache = mf.compile(in, "api-key-notifier");
 
