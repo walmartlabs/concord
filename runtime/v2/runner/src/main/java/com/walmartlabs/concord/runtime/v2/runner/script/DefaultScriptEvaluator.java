@@ -1,4 +1,4 @@
-package com.walmartlabs.concord.runtime.v2.runner;
+package com.walmartlabs.concord.runtime.v2.runner.script;
 
 /*-
  * *****
@@ -20,6 +20,7 @@ package com.walmartlabs.concord.runtime.v2.runner;
  * =====
  */
 
+import com.walmartlabs.concord.runtime.v2.runner.MetadataProcessor;
 import com.walmartlabs.concord.runtime.v2.runner.tasks.TaskProviders;
 import com.walmartlabs.concord.runtime.v2.sdk.Context;
 import com.walmartlabs.concord.sdk.Constants;
@@ -56,11 +57,12 @@ public class DefaultScriptEvaluator implements ScriptEvaluator {
         }
 
         // expose all available variables plus the context
+        ScriptContext ctx = new ScriptContext(context);
         Bindings b = engine.createBindings();
         for (String ctxVar: CONTEXT_VARIABLE_NAMES) {
-            b.put(ctxVar, context);
+            b.put(ctxVar, ctx);
         }
-        b.put("tasks", new TaskAccessor(taskProviders, context));
+        b.put("tasks", new TaskAccessor(taskProviders, ctx));
         b.put("log", log);
         b.putAll(variables);
 
