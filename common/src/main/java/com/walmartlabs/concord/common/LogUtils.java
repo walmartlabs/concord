@@ -34,7 +34,7 @@ public final class LogUtils {
 
     // the UI expects log timestamps in a specific format to be able to convert it to the local time
     // see also runner/src/main/resources/logback.xml and console2/src/components/molecules/ProcessLogViewer/datetime.tsx
-    private static final DateTimeFormatter TIMESTAMP_FORMAT = DateTimeFormatter.ofPattern("YYYY-MM-dd'T'HH:mm:ss.SSSZ", Locale.US);
+    private static final DateTimeFormatter TIMESTAMP_FORMAT = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSSZ", Locale.US);
     private static final ZoneId DEFAULT_TIMESTAMP_TZ = ZoneId.of("UTC");
 
     public enum LogLevel {
