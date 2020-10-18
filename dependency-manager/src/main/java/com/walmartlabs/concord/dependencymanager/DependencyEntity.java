@@ -57,7 +57,7 @@ public class DependencyEntity {
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+        if (o == null || !(o instanceof DependencyEntity)) return false;
         DependencyEntity that = (DependencyEntity) o;
         return Objects.equals(path, that.path);
     }

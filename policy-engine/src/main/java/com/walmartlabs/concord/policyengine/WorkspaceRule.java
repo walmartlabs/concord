@@ -58,7 +58,7 @@ public class WorkspaceRule implements Serializable {
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+        if (o == null || !(o instanceof WorkspaceRule)) return false;
         WorkspaceRule that = (WorkspaceRule) o;
         return Objects.equals(msg, that.msg) &&
                 Objects.equals(maxSizeInBytes, that.maxSizeInBytes) &&
