@@ -117,7 +117,7 @@ public final class PolicyUtils {
             result.put("ownerDomain", owner.getDomain());
         }
         result.put("ownerType", owner.getType().name());
-        return Collections.unmodifiableMap() result;
+        return Collections.unmodifiableMap(result);
     }
 
     private PolicyUtils() {
