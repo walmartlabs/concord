@@ -145,7 +145,7 @@ public final class CycleChecker {
         @Override
         public boolean equals(Object o) {
             if (this == o) return true;
-            if (o == null || !(o instanceof CycleChecker)) return false;
+            if (o == null || !(o instanceof N)) return false;
             N n = (N) o;
             return object == n.object;
         }
