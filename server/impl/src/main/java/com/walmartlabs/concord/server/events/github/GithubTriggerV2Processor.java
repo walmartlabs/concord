@@ -130,7 +130,8 @@ public class GithubTriggerV2Processor implements GithubTriggerProcessor {
         // files
         Map<String, Set<String>> files = payload.getFiles();
         // alias for all files (changed/modified/deleted)
-        files.put("any", files.values().stream().flatMap(Set::stream)
+        files.put("any", files.values().stream()
+                .flatMap(Set::stream)
                 .collect(Collectors.toSet()));
         result.put(FILES_KEY, files);
 
