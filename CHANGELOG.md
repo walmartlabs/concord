@@ -2,6 +2,12 @@
 
 ## [Unreleased]
 
+### Added
+
+- concord-server: new GitHub trigger `condition` - `files.any`.
+Contains all `added`, `deleted` or `modified` files in a `push`
+event.
+
 ### Changed
 
 - runtime-v2: fixed a NPE when tasks return `null` instead of
