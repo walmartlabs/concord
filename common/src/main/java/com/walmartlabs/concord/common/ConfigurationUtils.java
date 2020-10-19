@@ -155,7 +155,7 @@ public final class ConfigurationUtils {
         for (int i = 1; i < maps.length; i++) {
             result = deepMerge(result, maps[i]);
         }
-        return Collections.unmodifiableMap(result);
+        return result;
     }
 
     public static Map<String, Object> toNested(String k, Object v) {

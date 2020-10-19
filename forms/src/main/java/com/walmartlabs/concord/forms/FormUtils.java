@@ -28,6 +28,7 @@ import java.io.Serializable;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
+import java.nio.charset.StandardCharsets;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
@@ -270,7 +271,7 @@ public final class FormUtils {
                 case FormFields.FileField.TYPE: {
                     try {
                         Path tmp = IOUtils.createTempFile(f.name(), ".tmp");
-                        Files.write(tmp, s.getBytes(), StandardOpenOption.TRUNCATE_EXISTING);
+                        Files.write(tmp, s.getBytes(StandardCharsets.UTF_8), StandardOpenOption.TRUNCATE_EXISTING);
                         return tmp.toString();
                     } catch (IOException e) {
                         throw new RuntimeException("Error reading file for form field '" + f.name() + "'", e);

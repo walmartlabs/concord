@@ -29,6 +29,7 @@ import javax.inject.Inject;
 import javax.inject.Named;
 import java.security.SecureRandom;
 import java.util.UUID;
+import java.nio.charset.StandardCharsets;
 
 @Named
 public class EncryptedProjectValueManager {
@@ -88,7 +89,7 @@ public class EncryptedProjectValueManager {
             // use the old name-based key for the existing projects
             // new projects must be created with a more secure key
             String name = projectDao.getName(projectId);
-            byte[] key = name.getBytes();
+            byte[] key = name.getBytes(StandardCharsets.UTF_8);
             return SecretUtils.encrypt(key, null, secretCfg.getSecretStoreSalt());
         });
 

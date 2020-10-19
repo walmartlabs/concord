@@ -31,6 +31,7 @@ import java.nio.ByteBuffer;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
+import java.nio.charset.StandardCharsets;
 
 public class WebSocketChannel {
 
@@ -96,7 +97,7 @@ public class WebSocketChannel {
 
     public boolean pong() {
         try {
-            session.getRemote().sendPong(ByteBuffer.wrap("pong".getBytes()));
+            session.getRemote().sendPong(ByteBuffer.wrap("pong".getBytes(StandardCharsets.UTF_8)));
             return true;
         } catch (Exception e) {
             log.error("pong ['{}'] -> error", channelId, e);

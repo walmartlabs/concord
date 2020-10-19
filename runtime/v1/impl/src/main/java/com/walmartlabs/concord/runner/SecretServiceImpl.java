@@ -41,6 +41,7 @@ import java.lang.reflect.Type;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
@@ -67,7 +68,7 @@ public class SecretServiceImpl implements SecretService {
     @Override
     public String exportAsString(Context ctx, String instanceId, String orgName, String name, String password) throws Exception {
         BinaryDataSecret s = get(ctx, orgName, name, password, SecretEntry.TypeEnum.DATA);
-        return new String(s.getData());
+        return new String(s.getData(), StandardCharsets.UTF_8);
     }
 
     @Override
@@ -168,7 +169,7 @@ public class SecretServiceImpl implements SecretService {
             return ClientUtils.postData(c, path, input, returnType);
         });
 
-        return new String(r.getData());
+        return new String(r.getData(), StandardCharsets.UTF_8);
     }
 
     private <T extends Secret> T get(Context ctx, String orgName, String secretName, String password, SecretEntry.TypeEnum type) throws Exception {

@@ -29,6 +29,7 @@ import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
+import java.nio.charset.StandardCharsets;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -83,7 +84,7 @@ public final class StateManager {
                 Files.createDirectories(parent);
             }
 
-            Files.write(dst, eventName.getBytes());
+            Files.write(dst, eventName.getBytes(StandardCharsets.UTF_8));
         } catch (IOException e) {
             throw new RuntimeException("Error while saving a resume event: " + e.getMessage(), e);
         }

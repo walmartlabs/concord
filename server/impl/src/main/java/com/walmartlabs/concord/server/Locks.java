@@ -30,6 +30,7 @@ import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
 import java.sql.CallableStatement;
+import java.nio.charset.StandardCharsets;
 
 /**
  * Locking mechanism based on DB (advisory) locks
@@ -63,7 +64,7 @@ public class Locks {
 
     @SuppressWarnings("UnstableApiUsage")
     private long hash(String key) {
-        HashCode hc = HashCode.fromBytes(key.getBytes());
+        HashCode hc = HashCode.fromBytes(key.getBytes(StandardCharsets.UTF_8));
         return Hashing.consistentHash(hc, cfg.getMaxAdvisoryLocks());
     }
 }

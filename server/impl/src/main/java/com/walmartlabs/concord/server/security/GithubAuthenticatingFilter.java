@@ -52,6 +52,7 @@ import java.util.Base64;
 import java.util.Collections;
 import java.util.Map;
 import java.util.UUID;
+import java.nio.charset.StandardCharsets;
 
 public class GithubAuthenticatingFilter extends AuthenticatingFilter {
 
@@ -110,7 +111,7 @@ public class GithubAuthenticatingFilter extends AuthenticatingFilter {
             return new UsernamePasswordToken();
         }
 
-        SecretKeySpec signingKey = new SecretKeySpec(cfg.getSecret().getBytes(), HMAC_SHA1_ALGORITHM);
+        SecretKeySpec signingKey = new SecretKeySpec(cfg.getSecret().getBytes(StandardCharsets.UTF_8), HMAC_SHA1_ALGORITHM);
         try {
             Mac mac = Mac.getInstance(HMAC_SHA1_ALGORITHM);
             mac.init(signingKey);

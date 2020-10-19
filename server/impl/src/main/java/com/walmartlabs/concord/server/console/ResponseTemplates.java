@@ -33,6 +33,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.util.Map;
+import java.nio.charset.StandardCharsets;
 
 @Named
 @Singleton
@@ -79,7 +80,7 @@ public class ResponseTemplates {
     }
 
     public void formNotFound(OutputStream out, Map<String, Object> args) throws IOException {
-        try (OutputStreamWriter w = new OutputStreamWriter(out)) {
+        try (OutputStreamWriter w = new OutputStreamWriter(out, StandardCharsets.UTF_8)) {
             formNotFound.execute(w, args);
         }
     }

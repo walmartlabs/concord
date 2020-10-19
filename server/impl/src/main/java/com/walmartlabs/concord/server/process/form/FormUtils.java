@@ -39,6 +39,7 @@ import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
+import java.nio.charset.StandardCharsets;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
@@ -202,7 +203,7 @@ public final class FormUtils {
                 case ConcordFormFields.FileField.TYPE: {
                     try {
                         Path tmp = IOUtils.createTempFile(f.getName(), ".tmp");
-                        Files.write(tmp, s.getBytes(), StandardOpenOption.TRUNCATE_EXISTING);
+                        Files.write(tmp, s.getBytes(StandardCharsets.UTF_8), StandardOpenOption.TRUNCATE_EXISTING);
                         return tmp.toString();
                     } catch (IOException e) {
                         throw new ConcordApplicationException("Error reading file for form field '" + f.getName() + "'", e);

@@ -30,6 +30,7 @@ import java.io.*;
 import java.nio.file.*;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.nio.file.attribute.PosixFilePermission;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 
 public final class IOUtils {
@@ -281,7 +282,7 @@ public final class IOUtils {
 
     public static List<String> grep(String pattern, InputStream in) throws IOException {
         List<String> result = new ArrayList<>();
-        try (BufferedReader reader = new BufferedReader(new InputStreamReader(in))) {
+        try (BufferedReader reader = new BufferedReader(new InputStreamReader(in, StandardCharsets.UTF_8))) {
             String line;
             while ((line = reader.readLine()) != null) {
                 if (line.matches(pattern)) {

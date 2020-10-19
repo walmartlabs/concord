@@ -36,6 +36,7 @@ import javax.inject.Singleton;
 import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.UUID;
+import java.nio.charset.StandardCharsets;
 
 import static com.walmartlabs.concord.common.LogUtils.LogLevel;
 import static com.walmartlabs.concord.server.process.logs.ProcessLogsDao.ProcessLog;
@@ -75,7 +76,7 @@ public class ProcessLogManager {
     }
 
     public void log(ProcessKey processKey, String msg) {
-        log(processKey, msg.getBytes());
+        log(processKey, msg.getBytes(StandardCharsets.UTF_8));
     }
 
     public int log(ProcessKey processKey, byte[] msg) {

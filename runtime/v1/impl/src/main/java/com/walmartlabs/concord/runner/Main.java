@@ -71,6 +71,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -229,7 +230,7 @@ public class Main {
     private static UUID readInstanceId(Path src) {
         String s;
         try {
-            s = new String(Files.readAllBytes(src));
+            s = new String(Files.readAllBytes(src), StandardCharsets.UTF_8);
         } catch (Exception e) {
             throw new IllegalArgumentException("Error while reading " + src.toAbsolutePath() + ": " + e.getMessage());
         }

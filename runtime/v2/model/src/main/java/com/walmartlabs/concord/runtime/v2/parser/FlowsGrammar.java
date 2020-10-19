@@ -46,7 +46,7 @@ public final class FlowsGrammar {
     private static Map<String, List<Step>> toMap(Seq<KV<String, List<Step>>> values) {
         Map<String, List<Step>> m = new LinkedHashMap<>();
         values.stream().forEach(kv -> m.put(kv.getKey(), kv.getValue()));
-        return Collections.unmodifiableMap(m);
+        return m;
     }
 
     private static final Parser<Atom, Map<String, List<Step>>> flows =

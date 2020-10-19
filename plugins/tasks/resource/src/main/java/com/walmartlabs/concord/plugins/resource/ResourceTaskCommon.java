@@ -30,6 +30,7 @@ import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 
 public class ResourceTaskCommon {
@@ -51,7 +52,7 @@ public class ResourceTaskCommon {
 
     public static String asString(String path) throws IOException {
         byte[] ab = Files.readAllBytes(Paths.get(path));
-        return new String(ab);
+        return new String(ab, StandardCharsets.UTF_8);
     }
 
     public Object asJson(String path) throws IOException {
@@ -96,7 +97,7 @@ public class ResourceTaskCommon {
 
     public String writeAsString(String content) throws IOException {
         Path tmpFile = fileService.createTempFile(RESOURCE_PREFIX, TEXT_FILE_SUFFIX);
-        writeToFile(tmpFile, p -> Files.write(p, content.getBytes()));
+        writeToFile(tmpFile, p -> Files.write(p, content.getBytes(StandardCharsets.UTF_8)));
         return workDir.relativize(tmpFile.toAbsolutePath()).toString();
     }
 

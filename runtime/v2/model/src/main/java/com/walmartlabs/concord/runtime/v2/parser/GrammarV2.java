@@ -179,7 +179,7 @@ public final class GrammarV2 {
     public static <K, V> Map<K, V> toMap(Seq<KV<K, V>> values) {
         Map<K, V> m = new LinkedHashMap<>();
         values.stream().forEach(kv -> m.put(kv.getKey(), kv.getValue()));
-        return Collections.unmodifiableMap(m);
+        return m;
     }
 
     private static Map<String, YamlValue> valueToMap(Seq<KV<String, YamlValue>> values) {

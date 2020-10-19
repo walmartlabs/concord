@@ -60,6 +60,7 @@ import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 import java.util.*;
 import java.util.stream.Collectors;
+import java.nio.charset.StandardCharsets;
 
 import static com.walmartlabs.concord.server.console.CustomFormServiceV1.FormData;
 import static com.walmartlabs.concord.server.console.CustomFormServiceV1.FormDataDefinition;
@@ -351,7 +352,7 @@ public class CustomFormServiceV2 {
         }
 
         String s = String.format(DATA_FILE_TEMPLATE, objectMapper.writeValueAsString(data));
-        Files.write(dst, s.getBytes(), StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
+        Files.write(dst, s.getBytes(StandardCharsets.UTF_8), StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
     }
 
     private void copySharedResources(ProcessKey processKey, Path dst) throws IOException {
