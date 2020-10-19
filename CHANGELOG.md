@@ -1,5 +1,16 @@
 # Change log
 
+## [Unreleased]
+
+### Changed
+
+- runtime-v2: fixed a NPE when tasks return `null` instead of
+`TaskResult`;
+- concord-cli: print out the error's stacktrace if `verbose` is
+enabled.
+
+
+
 ## [1.69.0] - 2020-10-15
 
 ### Added
