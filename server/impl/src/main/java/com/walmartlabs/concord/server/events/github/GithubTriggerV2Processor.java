@@ -35,6 +35,7 @@ import javax.inject.Named;
 import javax.inject.Singleton;
 import javax.ws.rs.core.UriInfo;
 import java.util.*;
+import java.util.stream.Collectors;
 
 import static com.walmartlabs.concord.server.events.github.Constants.*;
 
@@ -127,7 +128,11 @@ public class GithubTriggerV2Processor implements GithubTriggerProcessor {
         result.put(PAYLOAD_KEY, payload.raw());
 
         // files
-        result.put(FILES_KEY, payload.getFiles());
+        Map<String, Set<String>> files = payload.getFiles();
+        // alias for all files (changed/modified/deleted)
+        files.put("any", files.values().stream().flatMap(Set::stream)
+                .collect(Collectors.toSet()));
+        result.put(FILES_KEY, files);
 
         // match only with v2 triggers
         result.put(VERSION_KEY, VERSION_ID);
