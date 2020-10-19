@@ -65,7 +65,6 @@ import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 import java.util.*;
 import java.util.stream.Collectors;
-import java.nio.charset.StandardCharsets;
 
 import static com.walmartlabs.concord.server.process.state.ProcessStateManager.copyTo;
 
@@ -74,7 +73,7 @@ import static com.walmartlabs.concord.server.process.state.ProcessStateManager.c
 public class CustomFormServiceV1 {
 
     private static final Logger log = LoggerFactory.getLogger(CustomFormServiceV1.class);
-    
+
     private static final String FORMS_PATH_PREFIX = "/forms/";
     private static final String FORM_DIR_NAME = "form";
     private static final String SHARED_DIR_NAME = "shared";
@@ -351,7 +350,7 @@ public class CustomFormServiceV1 {
         }
 
         String s = String.format(DATA_FILE_TEMPLATE, objectMapper.writeValueAsString(data));
-        Files.write(dst, s.getBytes(StandardCharsets.UTF_8), StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
+        Files.write(dst, s.getBytes(), StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
     }
 
     private void copySharedResources(ProcessKey processKey, Path dst) throws IOException {

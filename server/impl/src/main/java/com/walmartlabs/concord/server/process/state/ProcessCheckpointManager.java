@@ -41,7 +41,6 @@ import javax.inject.Named;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -176,7 +175,7 @@ public class ProcessCheckpointManager {
         if (!Files.exists(checkpoint)) {
             return null;
         }
-        String checkpointName = new String(Files.readAllBytes(checkpoint), StandardCharsets.UTF_8);
+        String checkpointName = new String(Files.readAllBytes(checkpoint));
         Files.delete(checkpoint);
         return checkpointName;
     }

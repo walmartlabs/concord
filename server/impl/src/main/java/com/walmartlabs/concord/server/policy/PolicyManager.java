@@ -141,6 +141,6 @@ public class PolicyManager {
             attrs.putAll(userInfo.attributes());
         }
 
-        return Collections.unmodifiableMap(attrs);
+        return attrs;
     }
 }

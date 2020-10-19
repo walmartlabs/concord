@@ -28,7 +28,6 @@ import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.StandardOpenOption;
 import java.nio.file.attribute.PosixFilePermission;
 import java.util.*;
@@ -87,7 +86,7 @@ public final class DockerTaskCommon {
             result.put(e.getKey(), v.toString());
         }
 
-        return result;
+        return Collections.unmodifiableMap(result);
     }
 
     public static Path createRunScript(Path file, String cmd) throws IOException {
@@ -95,7 +94,7 @@ public final class DockerTaskCommon {
                 "cd " + VOLUME_CONTAINER_DEST + "\n" +
                 cmd;
 
-        Files.write(file, script.getBytes(StandardCharsets.UTF_8), StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
+        Files.write(file, script.getBytes(), StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
         updateScriptPermissions(file);
 
         return file;
@@ -118,7 +117,7 @@ public final class DockerTaskCommon {
             out.write(ab, 0, read);
         }
 
-        return new String(out.toByteArray(), StandardCharsets.UTF_8);
+        return new String(out.toByteArray());
     }
 
     private DockerTaskCommon() {

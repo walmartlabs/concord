@@ -36,7 +36,7 @@ import java.util.UUID;
  */
 public abstract class WaitProcessFinishFilter implements Filter {
 
-    private static final ImmutableSet<ProcessStatus> FINAL_STATUSES = ImmutableSet.of(
+    private static final Set<ProcessStatus> FINAL_STATUSES = ImmutableSet.of(
             ProcessStatus.FINISHED,
             ProcessStatus.FAILED,
             ProcessStatus.CANCELLED,

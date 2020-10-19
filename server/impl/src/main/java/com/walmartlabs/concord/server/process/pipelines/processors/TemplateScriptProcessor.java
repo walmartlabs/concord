@@ -41,7 +41,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Collections;
 import java.util.Map;
-import java.nio.charset.StandardCharsets;
 
 @Named
 @Singleton
@@ -90,7 +89,7 @@ public class TemplateScriptProcessor implements PayloadProcessor {
     @SuppressWarnings("unchecked")
     private Map<String, Object> processScript(ProcessKey processKey, Map meta, Path templateMeta) {
         Object result;
-        try (Reader r = new FileReader(templateMeta.toFile(), StandardCharsets.UTF_8)) {
+        try (Reader r = new FileReader(templateMeta.toFile())) {
             Bindings b = scriptEngine.createBindings();
             b.put(INPUT_REQUEST_DATA_KEY, meta != null ? meta : Collections.emptyMap());
 

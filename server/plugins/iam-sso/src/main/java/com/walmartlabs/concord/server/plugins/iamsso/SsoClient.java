@@ -99,7 +99,7 @@ public class SsoClient {
         try {
             con = (HttpURLConnection) url.openConnection();
             String clientIdAndSecret = String.format("%s:%s", cfg.getClientId(), cfg.getClientSecret());
-            String authzHeaderValue = String.format("Basic %s", Base64.getEncoder().encodeToString(clientIdAndSecret.getBytes(StandardCharsets.UTF_8)));
+            String authzHeaderValue = String.format("Basic %s", Base64.getEncoder().encodeToString(clientIdAndSecret.getBytes()));
 
             con.setRequestProperty(HttpHeaders.AUTHORIZATION, authzHeaderValue);
             con.setRequestProperty(HttpHeaders.USER_AGENT, USER_AGENT_HEADER);

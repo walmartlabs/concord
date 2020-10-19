@@ -101,10 +101,10 @@ public class PolicyDao extends AbstractDao {
                         .leftOuterJoin(POLICIES).on(POLICY_LINKS.POLICY_ID.eq(POLICIES.POLICY_ID));
 
         // system policy
-        Condition c = (POLICY_LINKS.ORG_ID.isNull().and(POLICY_LINKS.PROJECT_ID.isNull()).and(POLICY_LINKS.USER_ID.isNull()));
+        Condition c = ((POLICY_LINKS.ORG_ID.isNull().and(POLICY_LINKS.PROJECT_ID.isNull()).and(POLICY_LINKS.USER_ID.isNull())));
 
         if (projectId != null) {
-            c = c.or(POLICY_LINKS.PROJECT_ID.eq(projectId).and(POLICY_LINKS.USER_ID.isNull()));
+            c = c.or((POLICY_LINKS.PROJECT_ID.eq(projectId).and(POLICY_LINKS.USER_ID.isNull())));
         }
 
         if (orgId != null) {
@@ -113,14 +113,14 @@ public class PolicyDao extends AbstractDao {
 
         if (userId != null) {
             if (projectId != null) {
-                c = c.or(POLICY_LINKS.USER_ID.eq(userId)).and(POLICY_LINKS.PROJECT_ID.eq(projectId));
+                c = c.or((POLICY_LINKS.USER_ID.eq(userId)).and(POLICY_LINKS.PROJECT_ID.eq(projectId)));
             }
 
             if (orgId != null) {
-                c = c.or(POLICY_LINKS.USER_ID.eq(userId)).and(POLICY_LINKS.ORG_ID.eq(orgId)).and(POLICY_LINKS.PROJECT_ID.isNull());
+                c = c.or((POLICY_LINKS.USER_ID.eq(userId)).and(POLICY_LINKS.ORG_ID.eq(orgId)).and(POLICY_LINKS.PROJECT_ID.isNull()));
             }
 
-            c = c.or(POLICY_LINKS.USER_ID.eq(userId)).and(POLICY_LINKS.ORG_ID.isNull()).and(POLICY_LINKS.PROJECT_ID.isNull());
+            c = c.or((POLICY_LINKS.USER_ID.eq(userId)).and(POLICY_LINKS.ORG_ID.isNull()).and(POLICY_LINKS.PROJECT_ID.isNull()));
         }
 
         q.where(c);
@@ -269,7 +269,7 @@ public class PolicyDao extends AbstractDao {
                 objectMapper.fromJSONB(r.value4()));
     }
 
-    private static class PolicyRule {
+    private class PolicyRule {
 
         private final UUID orgId;
         private final UUID prjId;

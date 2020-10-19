@@ -28,7 +28,6 @@ import javax.inject.Inject;
 import javax.inject.Named;
 import java.util.Base64;
 import java.util.UUID;
-import java.nio.charset.StandardCharsets;
 
 @Named
 public class SessionTokenCreator {
@@ -46,7 +45,7 @@ public class SessionTokenCreator {
 
         UUID instanceId = processKey.getInstanceId();
 
-        byte[] ab = SecretUtils.encrypt(instanceId.toString().getBytes(StandardCharsets.UTF_8), pwd, salt);
+        byte[] ab = SecretUtils.encrypt(instanceId.toString().getBytes(), pwd, salt);
         return Base64.getEncoder().encodeToString(ab);
     }
 }

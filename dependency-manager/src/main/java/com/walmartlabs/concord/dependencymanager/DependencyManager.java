@@ -55,7 +55,6 @@ import java.io.UnsupportedEncodingException;
 import java.net.URI;
 import java.net.URLDecoder;
 import java.nio.file.*;
-import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.util.*;
 import java.util.concurrent.Callable;
@@ -253,8 +252,8 @@ public class DependencyManager {
 
     private static String hash(String s) {
         try {
-            MessageDigest md = MessageDigest.getInstance("SHA-256");
-            md.update(s.getBytes(StandardCharsets.UTF_8));
+            MessageDigest md = MessageDigest.getInstance("MD5");
+            md.update(s.getBytes());
             return DatatypeConverter.printHexBinary(md.digest()).toUpperCase();
         } catch (Exception e) {
             throw new RuntimeException("Hash error", e);

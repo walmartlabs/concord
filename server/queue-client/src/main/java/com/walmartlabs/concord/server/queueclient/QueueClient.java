@@ -37,7 +37,6 @@ import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.ByteBuffer;
-import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Future;
@@ -302,7 +301,7 @@ public class QueueClient {
             long now = System.currentTimeMillis();
 
             if (now - lastRequestTimestamp >= pingInterval) {
-                session.getRemote().sendPing(ByteBuffer.wrap("ping".getBytes(StandardCharsets.UTF_8)));
+                session.getRemote().sendPing(ByteBuffer.wrap("ping".getBytes()));
             }
 
             if (now - lastResponseTimestamp >= maxNoActivityPeriod) {

@@ -33,7 +33,6 @@ import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
-import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
@@ -59,7 +58,7 @@ public class CheckpointManager {
             }
 
             Path checkpointMeta = baseDir.resolve(Constants.Files.CHECKPOINT_META_FILE_NAME);
-            Files.write(checkpointMeta, checkpointName.getBytes(StandardCharsets.UTF_8), StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
+            Files.write(checkpointMeta, checkpointName.getBytes(), StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
 
             try (TemporaryPath checkpointFile = new TemporaryPath(checkpointDir.resolve(checkpointId + "_" + checkpointName + ".zip"))) {
                 try (ZipArchiveOutputStream zip = new ZipArchiveOutputStream(Files.newOutputStream(checkpointFile.path()))) {
@@ -85,7 +84,7 @@ public class CheckpointManager {
                     .resolve(InternalConstants.Files.JOB_STATE_DIR_NAME)
                     .resolve(InternalConstants.Files.RESUME_MARKER_FILE_NAME);
 
-            Files.write(resumeEventFile, checkpointName.getBytes(StandardCharsets.UTF_8));
+            Files.write(resumeEventFile, checkpointName.getBytes());
 
             log.info("checkpoint {} ('{}')", checkpointName, checkpointId);
         } catch (Exception e) {
