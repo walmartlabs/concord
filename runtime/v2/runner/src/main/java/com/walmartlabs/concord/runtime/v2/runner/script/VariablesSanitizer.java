@@ -44,6 +44,10 @@ public final class VariablesSanitizer {
                 }
                 return result;
             }
+        } else if (scriptObj instanceof Set) {
+            Set<Object> c = (Set<Object>) scriptObj;
+            return c.stream().map(VariablesSanitizer::sanitize)
+                    .collect(Collectors.toSet());
         } else if (scriptObj instanceof Collection) {
             Collection<Object> c = (Collection<Object>) scriptObj;
             return c.stream().map(VariablesSanitizer::sanitize)
