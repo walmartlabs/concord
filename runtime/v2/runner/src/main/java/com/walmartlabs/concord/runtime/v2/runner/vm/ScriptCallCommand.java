@@ -23,7 +23,7 @@ package com.walmartlabs.concord.runtime.v2.runner.vm;
 import com.walmartlabs.concord.runtime.v2.model.ScriptCall;
 import com.walmartlabs.concord.runtime.v2.model.ScriptCallOptions;
 import com.walmartlabs.concord.runtime.v2.runner.ResourceResolver;
-import com.walmartlabs.concord.runtime.v2.runner.ScriptEvaluator;
+import com.walmartlabs.concord.runtime.v2.runner.script.ScriptEvaluator;
 import com.walmartlabs.concord.runtime.v2.runner.el.EvalContextFactory;
 import com.walmartlabs.concord.runtime.v2.runner.el.ExpressionEvaluator;
 import com.walmartlabs.concord.runtime.v2.runner.logging.SegmentedLogger;
