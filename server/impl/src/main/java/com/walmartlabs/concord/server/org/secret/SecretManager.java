@@ -422,21 +422,26 @@ public class SecretManager {
     /**
      * Removes an existing secret.
      */
-    public void delete(UUID orgId, String secretName) {
+    public void delete(DSLContext tx, UUID orgId, String secretName) {
         SecretEntry e = assertAccess(orgId, null, secretName, ResourceAccessLevel.OWNER, true);
 
-        secretDao.tx(tx -> {
-            // delete the content first
-            getSecretStore(e.getStoreType()).delete(tx, e.getId());
-            // now delete secret information from secret table
-            secretDao.delete(tx, e.getId());
-        });
+        // delete the content first
+        getSecretStore(e.getStoreType()).delete(tx, e.getId());
+        // now delete secret information from secret table
+        secretDao.delete(tx, e.getId());
 
         auditLog.add(AuditObject.SECRET, AuditAction.DELETE)
                 .field("orgId", e.getOrgId())
                 .field("secretId", e.getId())
                 .field("name", e.getName())
                 .log();
+    }
+
+    /**
+     * Removes an existing secret.
+     */
+    public void delete(UUID orgId, String secretName) {
+        secretDao.tx(tx -> delete(tx, orgId, secretName));
     }
 
     /**

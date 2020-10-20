@@ -76,13 +76,17 @@ public class SecretDao extends AbstractDao {
         return super.txResult(t);
     }
 
+    public UUID getId(DSLContext tx, UUID orgId, String name) {
+        return tx.select(SECRETS.SECRET_ID)
+                .from(SECRETS)
+                .where(SECRETS.ORG_ID.eq(orgId)
+                        .and(SECRETS.SECRET_NAME.eq(name)))
+                .fetchOne(SECRETS.SECRET_ID);
+    }
+
     public UUID getId(UUID orgId, String name) {
         try (DSLContext tx = DSL.using(cfg)) {
-            return tx.select(SECRETS.SECRET_ID)
-                    .from(SECRETS)
-                    .where(SECRETS.ORG_ID.eq(orgId)
-                            .and(SECRETS.SECRET_NAME.eq(name)))
-                    .fetchOne(SECRETS.SECRET_ID);
+            return getId(tx, orgId, name);
         }
     }
 
