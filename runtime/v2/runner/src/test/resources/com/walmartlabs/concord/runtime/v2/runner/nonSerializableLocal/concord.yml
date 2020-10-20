@@ -2,6 +2,7 @@ flows:
   default:
     - script: js
       body: |
-        execution.variables().set('x', [1, 2, 3])
+        var z = new java.util.zip.ZipEntry('123');
+        execution.variables().set('x', z)
       error:
         - log: "error occurred: ${lastError}"
