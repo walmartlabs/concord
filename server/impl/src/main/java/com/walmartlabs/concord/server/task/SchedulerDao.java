@@ -48,7 +48,7 @@ import static org.jooq.impl.DSL.value;
 @Named
 public final class SchedulerDao extends AbstractDao {
 
-    private static final Logger log = LoggerFactory.getLogger(TaskScheduler.class);
+    private static final Logger log = LoggerFactory.getLogger(SchedulerDao.class);
 
     @Inject
     public SchedulerDao(@MainDB Configuration cfg) {
