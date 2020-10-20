@@ -193,7 +193,12 @@ public class Run implements Callable<Integer> {
         try {
             runner.start(cfg, processDefinition, args);
         } catch (Exception e) {
-            System.err.println("Error: " + e.getMessage());
+            if (verbose) {
+                System.err.print("Error: ");
+                e.printStackTrace(System.err);
+            } else {
+                System.err.println("Error: " + e.getMessage());
+            }
             return 1;
         }
 
