@@ -112,8 +112,11 @@ public abstract class StepCommand<T extends Step> implements Command {
 
     protected String getSegmentName(Context ctx, T step) {
         if (step instanceof AbstractStep) {
-            String segmentName = SegmentedLogger.getSegmentName((AbstractStep<?>) step);
-            return ctx.eval(segmentName, String.class);
+            String rawSegmentName = SegmentedLogger.getSegmentName((AbstractStep<?>) step);
+            String segmentName = ctx.eval(rawSegmentName, String.class);
+            if (segmentName != null) {
+                return segmentName;
+            }
         }
 
         return getDefaultSegmentName();
