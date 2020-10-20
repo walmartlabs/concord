@@ -478,7 +478,7 @@ public class GitClient {
                 try (BufferedReader reader = new BufferedReader(new InputStreamReader(p.getInputStream(), StandardCharsets.UTF_8))) {
                     String line;
                     while ((line = reader.readLine()) != null) {
-                        log.info("GIT: {}", hideSensitiveData(line));
+                        log.info("GIT: {}", hideSensitiveData(line).toString().replaceAll("[\n\r]",""));
                         sb.append(line).append("\n");
                     }
                 }
@@ -579,7 +579,8 @@ public class GitClient {
         }
 
         for (String p : sensitiveData) {
-            s = s.replaceAll(p, "***");
+            s = s.replaceAll(p, "***")
+            s = s.replaceAll("[\n\r]","");
         }
         return s;
     }
