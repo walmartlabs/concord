@@ -86,9 +86,11 @@ public class TaskCallCommand extends StepCommand<TaskCall> {
             throw new RuntimeException(e);
         }
 
-        String out = opts.out();
-        if (out != null) {
-            ctx.variables().set(out, result.toMap());
+        if (result != null) {
+            String out = opts.out();
+            if (out != null) {
+                ctx.variables().set(out, result.toMap());
+            }
         }
     }
 
