@@ -101,12 +101,12 @@ public class GithubAuthenticatingFilter extends AuthenticatingFilter {
 
         String[] algDigest = h.split("=");
         if (algDigest.length != 2) {
-            log.warn("createToken -> invalid format of the authorization header. URI: '{}'", req.getRequestURI());
+            log.warn("createToken -> invalid format of the authorization header. URI: '{}'", req.getRequestURI().toString().replaceAll("[\n\r]",""));
             return new UsernamePasswordToken();
         }
 
         if (!"sha1".equals(algDigest[0])) {
-            log.warn("createToken -> invalid algorithm of the authorization header '{}'. URI: '{}'", algDigest[0], req.getRequestURI());
+            log.warn("createToken -> invalid algorithm of the authorization header '{}'. URI: '{}'", algDigest[0].toString().replaceAll("[\n\r]",""), req.getRequestURI().toString().replaceAll("[\n\r]",""));
             return new UsernamePasswordToken();
         }
 
