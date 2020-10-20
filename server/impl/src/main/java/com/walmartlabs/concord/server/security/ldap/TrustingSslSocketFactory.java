@@ -81,9 +81,11 @@ public class TrustingSslSocketFactory extends SocketFactory {
     }
 
     private static class DummyTrustManager implements X509TrustManager {
+        @Override
         public void checkClientTrusted(X509Certificate[] xcs, String string) throws CertificateException {  // NOSONAR
         }
 
+        @Override
         public void checkServerTrusted(X509Certificate[] xcs, String string) throws CertificateException { // NOSONAR
         }
 

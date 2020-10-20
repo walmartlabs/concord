@@ -53,6 +53,7 @@ public class ValidationInterceptor implements MethodInterceptor {
     @Inject
     private ExecutableValidator methodValidator;
 
+    @Override
     public Object invoke(final MethodInvocation mi) throws Throwable {
         checkNotNull(methodValidator);
 

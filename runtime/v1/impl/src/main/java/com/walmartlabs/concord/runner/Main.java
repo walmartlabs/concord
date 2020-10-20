@@ -700,6 +700,7 @@ public class Main {
         }
 
         @SuppressWarnings("unchecked")
+        @Override
         public <T> void hear(TypeLiteral<T> typeLiteral, TypeEncounter<T> typeEncounter) {
             Class<Task> clazz = (Class<Task>) typeLiteral.getRawType();
 
