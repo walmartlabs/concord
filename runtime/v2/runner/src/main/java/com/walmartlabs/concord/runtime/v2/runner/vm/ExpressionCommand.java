@@ -24,7 +24,6 @@ import com.walmartlabs.concord.runtime.v2.model.Expression;
 import com.walmartlabs.concord.runtime.v2.model.ExpressionOptions;
 import com.walmartlabs.concord.runtime.v2.runner.el.EvalContextFactory;
 import com.walmartlabs.concord.runtime.v2.runner.el.ExpressionEvaluator;
-import com.walmartlabs.concord.runtime.v2.runner.logging.SegmentedLogger;
 import com.walmartlabs.concord.runtime.v2.sdk.Context;
 import com.walmartlabs.concord.svm.Frame;
 import com.walmartlabs.concord.svm.Runtime;
@@ -74,12 +73,7 @@ public class ExpressionCommand extends StepCommand<Expression> {
     }
 
     @Override
-    protected String getSegmentName(Context ctx, Expression step) {
-        String segmentName = SegmentedLogger.getSegmentName(step);
-        if (segmentName != null) {
-            return ctx.eval(segmentName, String.class);
-        }
-
+    protected String getDefaultSegmentName() {
         return "expression";
     }
 }

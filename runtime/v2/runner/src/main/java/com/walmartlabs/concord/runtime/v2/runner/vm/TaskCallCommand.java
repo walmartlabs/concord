@@ -24,7 +24,6 @@ import com.walmartlabs.concord.runtime.v2.model.TaskCall;
 import com.walmartlabs.concord.runtime.v2.model.TaskCallOptions;
 import com.walmartlabs.concord.runtime.v2.runner.el.EvalContextFactory;
 import com.walmartlabs.concord.runtime.v2.runner.el.ExpressionEvaluator;
-import com.walmartlabs.concord.runtime.v2.runner.logging.SegmentedLogger;
 import com.walmartlabs.concord.runtime.v2.runner.tasks.TaskCallInterceptor;
 import com.walmartlabs.concord.runtime.v2.runner.tasks.TaskProviders;
 import com.walmartlabs.concord.runtime.v2.sdk.*;
@@ -36,6 +35,7 @@ import com.walmartlabs.concord.svm.ThreadId;
 import java.io.Serializable;
 import java.util.Collections;
 import java.util.Map;
+import java.util.Objects;
 
 import static com.walmartlabs.concord.runtime.v2.runner.tasks.TaskCallInterceptor.CallContext;
 import static com.walmartlabs.concord.runtime.v2.runner.tasks.TaskCallInterceptor.Method;
@@ -78,7 +78,7 @@ public class TaskCallCommand extends StepCommand<TaskCall> {
                 .processDefinition(ctx.execution().processDefinition())
                 .build();
 
-        TaskCallOptions opts = call.getOptions();
+        TaskCallOptions opts = Objects.requireNonNull(call.getOptions());
         Variables input = new MapBackedVariables(VMUtils.prepareInput(expressionEvaluator, ctx, opts.input()));
 
         TaskResult result;
@@ -103,15 +103,7 @@ public class TaskCallCommand extends StepCommand<TaskCall> {
     }
 
     @Override
-    public String getSegmentName(Context ctx, TaskCall step) {
-        String segmentName = SegmentedLogger.getSegmentName(step);
-
-        if (segmentName != null) {
-            segmentName = ctx.eval(segmentName, String.class);
-        } else {
-            segmentName = "task: " + step.getName();
-        }
-
-        return segmentName;
+    public String getDefaultSegmentName() {
+        return "task: " + getStep().getName();
     }
 }
