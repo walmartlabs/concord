@@ -10,6 +10,8 @@ event.
 
 ### Changed
 
+- runtime-v2: add support for expressions in `name` blocks for all
+types of steps;
 - concord-server: fixed some edge cases when converting timezones
 in process status history;
 - runtime-v2: automatically convert values of out variables in
