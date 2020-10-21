@@ -771,6 +771,17 @@ public class MainTest {
         assertLog(log, ".*it's null.*");
     }
 
+    @Test
+    public void testTaskOutExpression() throws Exception {
+        deploy("taskOutExpr");
+
+        save(ProcessConfiguration.builder()
+                .build());
+
+        byte[] log = run();
+        assertLog(log, ".*result: some-value.*");
+    }
+
     private void deploy(String resource) throws URISyntaxException, IOException {
         Path src = Paths.get(MainTest.class.getResource(resource).toURI());
         IOUtils.copy(src, workDir);
