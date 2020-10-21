@@ -128,7 +128,7 @@ public class UserDao extends AbstractDao {
 
     // TODO add "include" option
     public UserEntry get(UUID id) {
-        DSLContext tx = DSL.using(cfg);
+        DSLContext tx = dsl();
 
         Record7<UUID, String, String, String, String, String, Boolean> r =
                 tx.select(USERS.USER_ID, USERS.USER_TYPE, USERS.USERNAME, USERS.DOMAIN, USERS.DISPLAY_NAME, USERS.USER_EMAIL, USERS.IS_DISABLED)

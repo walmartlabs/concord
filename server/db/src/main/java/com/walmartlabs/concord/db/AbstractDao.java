@@ -45,21 +45,21 @@ public abstract class AbstractDao {
     }
 
     protected void tx(Tx t) {
-        DSL.using(cfg).transaction(cfg -> {
+        dsl().transaction(cfg -> {
             DSLContext tx = DSL.using(cfg);
             t.run(tx);
         });
     }
 
     protected <T> T txResult(TxResult<T> t) {
-        return DSL.using(cfg).transactionResult(cfg -> {
+        return dsl().transactionResult(cfg -> {
             DSLContext tx = DSL.using(cfg);
             return t.run(tx);
         });
     }
 
     protected InputStream getData(Function<DSLContext, String> sqlFn, PreparedStatementHandler h, int columnIndex) {
-        String sql = sqlFn.apply(DSL.using(cfg));
+        String sql = sqlFn.apply(dsl());
 
         Connection conn = cfg.connectionProvider().acquire(); // NOSONAR
         PreparedStatement ps = null;
