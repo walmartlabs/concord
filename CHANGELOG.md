@@ -10,6 +10,8 @@ event.
 
 ### Changed
 
+- concord-server: fixed some edge cases when converting timezones
+in process status history;
 - runtime-v2: automatically convert values of out variables in
 scripts to their Java counterparts - Maps, Lists, etc;
 - runtime-v2: fixed a NPE when tasks return `null` instead of
