@@ -44,7 +44,7 @@ public abstract class AbstractHttpTaskTest {
     @Rule
     public WireMockRule rule = new WireMockRule(wireMockConfig()
             .dynamicPort()
-            .notifier(new ConsoleNotifier(true)));
+            .notifier(new ConsoleNotifier(Boolean.parseBoolean(System.getProperty("concord.test.verbose")))));
 
     @Rule
     public TemporaryFolder folder = new TemporaryFolder(new File(System.getProperty("user.dir") + "/src/test/resources/__files"));

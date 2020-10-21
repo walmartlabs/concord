@@ -96,12 +96,10 @@ public class ProcessQueueDao extends AbstractDao {
     }
 
     public ProcessKey getKey(UUID instanceId) {
-        try (DSLContext tx = DSL.using(cfg)) {
-            return tx.select(PROCESS_QUEUE.CREATED_AT)
-                    .from(PROCESS_QUEUE)
-                    .where(PROCESS_QUEUE.INSTANCE_ID.eq(instanceId))
-                    .fetchOne(r -> new ProcessKey(instanceId, r.value1()));
-        }
+        return dsl().select(PROCESS_QUEUE.CREATED_AT)
+                .from(PROCESS_QUEUE)
+                .where(PROCESS_QUEUE.INSTANCE_ID.eq(instanceId))
+                .fetchOne(r -> new ProcessKey(instanceId, r.value1()));
     }
 
     public void insert(DSLContext tx, ProcessKey processKey, ProcessStatus status, ProcessKind kind,
@@ -357,187 +355,161 @@ public class ProcessQueueDao extends AbstractDao {
     }
 
     public String getLastAgentId(PartialProcessKey processKey) {
-        try (DSLContext tx = DSL.using(cfg)) {
-            return tx.select(PROCESS_QUEUE.LAST_AGENT_ID).from(PROCESS_QUEUE)
-                    .where(PROCESS_QUEUE.INSTANCE_ID.eq(processKey.getInstanceId()))
-                    .fetchOne(PROCESS_QUEUE.LAST_AGENT_ID);
-        }
+        return dsl().select(PROCESS_QUEUE.LAST_AGENT_ID).from(PROCESS_QUEUE)
+                .where(PROCESS_QUEUE.INSTANCE_ID.eq(processKey.getInstanceId()))
+                .fetchOne(PROCESS_QUEUE.LAST_AGENT_ID);
     }
 
     public String getRuntime(PartialProcessKey processKey) {
-        try (DSLContext tx = DSL.using(cfg)) {
-            return tx.select(PROCESS_QUEUE.RUNTIME).from(PROCESS_QUEUE)
-                    .where(PROCESS_QUEUE.INSTANCE_ID.eq(processKey.getInstanceId()))
-                    .fetchOne(PROCESS_QUEUE.RUNTIME);
-        }
+        return dsl().select(PROCESS_QUEUE.RUNTIME).from(PROCESS_QUEUE)
+                .where(PROCESS_QUEUE.INSTANCE_ID.eq(processKey.getInstanceId()))
+                .fetchOne(PROCESS_QUEUE.RUNTIME);
     }
 
     public ProcessStatus getStatus(PartialProcessKey processKey) {
-        try (DSLContext tx = DSL.using(cfg)) {
-            String status = tx.select(PROCESS_QUEUE.CURRENT_STATUS)
-                    .from(PROCESS_QUEUE)
-                    .where(PROCESS_QUEUE.INSTANCE_ID.eq(processKey.getInstanceId()))
-                    .fetchOne(PROCESS_QUEUE.CURRENT_STATUS);
-            if (status == null) {
-                return null;
-            }
-            return ProcessStatus.valueOf(status);
+        String status = dsl().select(PROCESS_QUEUE.CURRENT_STATUS)
+                .from(PROCESS_QUEUE)
+                .where(PROCESS_QUEUE.INSTANCE_ID.eq(processKey.getInstanceId()))
+                .fetchOne(PROCESS_QUEUE.CURRENT_STATUS);
+
+        if (status == null) {
+            return null;
         }
+
+        return ProcessStatus.valueOf(status);
     }
 
     public List<ProcessEntry> get(List<PartialProcessKey> processKeys) {
-        try (DSLContext tx = DSL.using(cfg)) {
-            List<UUID> instanceIds = processKeys.stream()
-                    .map(PartialProcessKey::getInstanceId)
-                    .collect(Collectors.toList());
+        List<UUID> instanceIds = processKeys.stream()
+                .map(PartialProcessKey::getInstanceId)
+                .collect(Collectors.toList());
 
-            SelectQuery<Record> query = buildSelect(tx, ProcessFilter.builder().build());
+        SelectQuery<Record> query = buildSelect(dsl(), ProcessFilter.builder().build());
 
-            query.addConditions(PROCESS_QUEUE.INSTANCE_ID.in(instanceIds));
-            return query.fetch(this::toEntry);
-        }
+        query.addConditions(PROCESS_QUEUE.INSTANCE_ID.in(instanceIds));
+        return query.fetch(this::toEntry);
     }
 
     public List<IdAndStatus> getCascade(PartialProcessKey parentKey) {
         UUID parentInstanceId = parentKey.getInstanceId();
-
-        try (DSLContext tx = DSL.using(cfg)) {
-            return tx.withRecursive("children").as(
-                    select(PROCESS_QUEUE.INSTANCE_ID, PROCESS_QUEUE.CREATED_AT, PROCESS_QUEUE.CURRENT_STATUS).from(PROCESS_QUEUE)
-                            .where(PROCESS_QUEUE.INSTANCE_ID.eq(parentInstanceId))
-                            .unionAll(
-                                    select(PROCESS_QUEUE.INSTANCE_ID, PROCESS_QUEUE.CREATED_AT, PROCESS_QUEUE.CURRENT_STATUS).from(PROCESS_QUEUE)
-                                            .join(name("children"))
-                                            .on(PROCESS_QUEUE.PARENT_INSTANCE_ID.eq(
-                                                    field(name("children", "INSTANCE_ID"), UUID.class)))))
-                    .select()
-                    .from(name("children"))
-                    .fetch(r -> new IdAndStatus(new ProcessKey(r.get(0, UUID.class),
-                            r.get(1, OffsetDateTime.class)),
-                            ProcessStatus.valueOf(r.get(2, String.class))));
-        }
+        return dsl().withRecursive("children").as(
+                select(PROCESS_QUEUE.INSTANCE_ID, PROCESS_QUEUE.CREATED_AT, PROCESS_QUEUE.CURRENT_STATUS).from(PROCESS_QUEUE)
+                        .where(PROCESS_QUEUE.INSTANCE_ID.eq(parentInstanceId))
+                        .unionAll(
+                                select(PROCESS_QUEUE.INSTANCE_ID, PROCESS_QUEUE.CREATED_AT, PROCESS_QUEUE.CURRENT_STATUS).from(PROCESS_QUEUE)
+                                        .join(name("children"))
+                                        .on(PROCESS_QUEUE.PARENT_INSTANCE_ID.eq(
+                                                field(name("children", "INSTANCE_ID"), UUID.class)))))
+                .select()
+                .from(name("children"))
+                .fetch(r -> new IdAndStatus(new ProcessKey(r.get(0, UUID.class),
+                        r.get(1, OffsetDateTime.class)),
+                        ProcessStatus.valueOf(r.get(2, String.class))));
     }
 
     public ProcessInitiatorEntry getInitiator(PartialProcessKey processKey) {
-        try (DSLContext tx = DSL.using(cfg)) {
-            return tx.select(PROCESS_QUEUE.INSTANCE_ID, PROCESS_QUEUE.CREATED_AT, PROCESS_QUEUE.CURRENT_STATUS, PROCESS_QUEUE.INITIATOR_ID)
-                    .from(PROCESS_QUEUE)
-                    .where(PROCESS_QUEUE.INSTANCE_ID.eq(processKey.getInstanceId()))
-                    .fetchOne(r -> ProcessInitiatorEntry.builder()
-                            .instanceId(r.get(PROCESS_QUEUE.INSTANCE_ID))
-                            .createdAt(r.get(PROCESS_QUEUE.CREATED_AT))
-                            .status(ProcessStatus.valueOf(r.get(PROCESS_QUEUE.CURRENT_STATUS)))
-                            .initiatorId(r.get(PROCESS_QUEUE.INITIATOR_ID))
-                            .build());
-        }
+        return dsl().select(PROCESS_QUEUE.INSTANCE_ID, PROCESS_QUEUE.CREATED_AT, PROCESS_QUEUE.CURRENT_STATUS, PROCESS_QUEUE.INITIATOR_ID)
+                .from(PROCESS_QUEUE)
+                .where(PROCESS_QUEUE.INSTANCE_ID.eq(processKey.getInstanceId()))
+                .fetchOne(r -> ProcessInitiatorEntry.builder()
+                        .instanceId(r.get(PROCESS_QUEUE.INSTANCE_ID))
+                        .createdAt(r.get(PROCESS_QUEUE.CREATED_AT))
+                        .status(ProcessStatus.valueOf(r.get(PROCESS_QUEUE.CURRENT_STATUS)))
+                        .initiatorId(r.get(PROCESS_QUEUE.INITIATOR_ID))
+                        .build());
     }
 
     public UUID getOrgId(UUID instanceId) {
-        try (DSLContext tx = DSL.using(cfg)) {
-            Field<UUID> orgId = select(PROJECTS.ORG_ID)
-                    .from(PROJECTS)
-                    .where(PROJECTS.PROJECT_ID.eq(PROCESS_QUEUE.PROJECT_ID))
-                    .asField();
+        Field<UUID> orgId = select(PROJECTS.ORG_ID)
+                .from(PROJECTS)
+                .where(PROJECTS.PROJECT_ID.eq(PROCESS_QUEUE.PROJECT_ID))
+                .asField();
 
-            return tx.select(orgId)
-                    .from(PROCESS_QUEUE)
-                    .where(PROCESS_QUEUE.INSTANCE_ID.eq(instanceId))
-                    .fetchOne(orgId);
-        }
+        return dsl().select(orgId)
+                .from(PROCESS_QUEUE)
+                .where(PROCESS_QUEUE.INSTANCE_ID.eq(instanceId))
+                .fetchOne(orgId);
     }
 
     public Imports getImports(PartialProcessKey processKey) {
-        try (DSLContext tx = DSL.using(cfg)) {
-            return tx.select(PROCESS_QUEUE.IMPORTS).from(PROCESS_QUEUE)
-                    .where(PROCESS_QUEUE.INSTANCE_ID.eq(processKey.getInstanceId()))
-                    .fetchOne(r -> objectMapper.fromJSONB(r.get(PROCESS_QUEUE.IMPORTS), Imports.class));
-        }
+        return dsl().select(PROCESS_QUEUE.IMPORTS).from(PROCESS_QUEUE)
+                .where(PROCESS_QUEUE.INSTANCE_ID.eq(processKey.getInstanceId()))
+                .fetchOne(r -> objectMapper.fromJSONB(r.get(PROCESS_QUEUE.IMPORTS), Imports.class));
     }
 
     public List<ProcessEntry> list(ProcessFilter filter) {
-        try (DSLContext tx = DSL.using(cfg)) {
-            SelectQuery<Record> query = buildSelect(tx, filter);
+        SelectQuery<Record> query = buildSelect(dsl(), filter);
 
-            boolean findAdjacentToDateRows = filter.beforeCreatedAt() == null && filter.beforeCreatedAt() != null;
-            if (findAdjacentToDateRows) {
-                query.addOrderBy(PROCESS_QUEUE.CREATED_AT.asc());
-            } else {
-                query.addOrderBy(PROCESS_QUEUE.CREATED_AT.desc());
-            }
-
-            List<ProcessEntry> processEntries = query.fetch(this::toEntry);
-
-            if (findAdjacentToDateRows) {
-                Collections.reverse(processEntries);
-            }
-
-            return processEntries;
+        boolean findAdjacentToDateRows = filter.beforeCreatedAt() == null && filter.beforeCreatedAt() != null;
+        if (findAdjacentToDateRows) {
+            query.addOrderBy(PROCESS_QUEUE.CREATED_AT.asc());
+        } else {
+            query.addOrderBy(PROCESS_QUEUE.CREATED_AT.desc());
         }
+
+        List<ProcessEntry> processEntries = query.fetch(this::toEntry);
+
+        if (findAdjacentToDateRows) {
+            Collections.reverse(processEntries);
+        }
+
+        return processEntries;
     }
 
     public List<ProcessRequirementsEntry> listRequirements(ProcessStatus processStatus, List<ProcessFilter.DateFilter> startAt, int limit, int offset) {
-        try (DSLContext tx = DSL.using(cfg)) {
-            SelectQuery<Record> query = tx.selectQuery();
+        SelectQuery<Record> query = dsl().selectQuery();
 
-            query.addSelect(PROCESS_QUEUE.INSTANCE_ID, PROCESS_QUEUE.CREATED_AT, PROCESS_QUEUE.REQUIREMENTS);
-            query.addFrom(PROCESS_QUEUE);
-            query.addConditions(PROCESS_QUEUE.CURRENT_STATUS.eq(processStatus.name()));
-            FilterUtils.applyDate(query, PROCESS_QUEUE.START_AT, startAt);
+        query.addSelect(PROCESS_QUEUE.INSTANCE_ID, PROCESS_QUEUE.CREATED_AT, PROCESS_QUEUE.REQUIREMENTS);
+        query.addFrom(PROCESS_QUEUE);
+        query.addConditions(PROCESS_QUEUE.CURRENT_STATUS.eq(processStatus.name()));
+        FilterUtils.applyDate(query, PROCESS_QUEUE.START_AT, startAt);
 
-            query.addLimit(limit);
-            query.addOffset(offset);
+        query.addLimit(limit);
+        query.addOffset(offset);
 
-            return query.fetch(r -> ProcessRequirementsEntry.builder()
-                    .instanceId(r.get(PROCESS_QUEUE.INSTANCE_ID))
-                    .createdAt(r.get(PROCESS_QUEUE.CREATED_AT))
-                    .requirements(objectMapper.fromJSONB(r.get(PROCESS_QUEUE.REQUIREMENTS)))
-                    .build());
-        }
+        return query.fetch(r -> ProcessRequirementsEntry.builder()
+                .instanceId(r.get(PROCESS_QUEUE.INSTANCE_ID))
+                .createdAt(r.get(PROCESS_QUEUE.CREATED_AT))
+                .requirements(objectMapper.fromJSONB(r.get(PROCESS_QUEUE.REQUIREMENTS)))
+                .build());
     }
 
     public int count(ProcessFilter filter) {
-        try (DSLContext tx = DSL.using(cfg)) {
-            SelectQuery<Record> query = buildSelect(tx, filter);
-            return tx.selectCount().from(query)
-                    .fetchOne().value1();
-        }
+        DSLContext tx = dsl();
+        SelectQuery<Record> query = buildSelect(tx, filter);
+        return tx.selectCount().from(query)
+                .fetchOne()
+                .value1();
     }
 
     public Map<String, Integer> getStatistics() {
-        try (DSLContext tx = DSL.using(cfg)) {
-            return tx.select(PROCESS_QUEUE.CURRENT_STATUS, DSL.count(asterisk())).from(PROCESS_QUEUE)
-                    .groupBy(PROCESS_QUEUE.CURRENT_STATUS)
-                    .union(select(value(ENQUEUED_NOW_METRIC), DSL.count(asterisk())).from(PROCESS_QUEUE)
-                            .where(PROCESS_QUEUE.CURRENT_STATUS.eq(ProcessStatus.ENQUEUED.name()))
-                            .and(or(PROCESS_QUEUE.START_AT.isNull(), PROCESS_QUEUE.START_AT.lessOrEqual(currentOffsetDateTime()))))
-                    .union(select(value(ENQUEUED_WAIT_METRIC), DSL.count(asterisk())).from(PROCESS_QUEUE)
-                            .where(PROCESS_QUEUE.CURRENT_STATUS.eq(ProcessStatus.ENQUEUED.name()))
-                            .and(or(PROCESS_QUEUE.START_AT.isNull(), PROCESS_QUEUE.START_AT.lessOrEqual(currentOffsetDateTime())))
-                            .and(PROCESS_QUEUE.WAIT_CONDITIONS.isNotNull()))
-                    .fetchMap(Record2::value1, Record2::value2);
-        }
+        return dsl().select(PROCESS_QUEUE.CURRENT_STATUS, DSL.count(asterisk())).from(PROCESS_QUEUE)
+                .groupBy(PROCESS_QUEUE.CURRENT_STATUS)
+                .union(select(value(ENQUEUED_NOW_METRIC), DSL.count(asterisk())).from(PROCESS_QUEUE)
+                        .where(PROCESS_QUEUE.CURRENT_STATUS.eq(ProcessStatus.ENQUEUED.name()))
+                        .and(or(PROCESS_QUEUE.START_AT.isNull(), PROCESS_QUEUE.START_AT.lessOrEqual(currentOffsetDateTime()))))
+                .union(select(value(ENQUEUED_WAIT_METRIC), DSL.count(asterisk())).from(PROCESS_QUEUE)
+                        .where(PROCESS_QUEUE.CURRENT_STATUS.eq(ProcessStatus.ENQUEUED.name()))
+                        .and(or(PROCESS_QUEUE.START_AT.isNull(), PROCESS_QUEUE.START_AT.lessOrEqual(currentOffsetDateTime())))
+                        .and(PROCESS_QUEUE.WAIT_CONDITIONS.isNotNull()))
+                .fetchMap(Record2::value1, Record2::value2);
     }
 
     // TODO move to EventDao?
     public List<ProcessStatusHistoryEntry> getHistory(ProcessKey processKey) {
-        try (DSLContext tx = DSL.using(cfg)) {
-            ProcessEvents pe = PROCESS_EVENTS.as("pe");
-            return tx.select(historyEntryToJsonb(pe))
-                    .from(pe)
-                    .where(pe.INSTANCE_ID.eq(processKey.getInstanceId())
-                            .and(pe.INSTANCE_CREATED_AT.eq(processKey.getCreatedAt()))
-                            .and(pe.EVENT_TYPE.eq(EventType.PROCESS_STATUS.name())))
-                    .fetch(r -> objectMapper.fromJSONB(r.value1(), STATUS_HISTORY_ENTRY));
-
-        }
+        ProcessEvents pe = PROCESS_EVENTS.as("pe");
+        return dsl().select(historyEntryToJsonb(pe))
+                .from(pe)
+                .where(pe.INSTANCE_ID.eq(processKey.getInstanceId())
+                        .and(pe.INSTANCE_CREATED_AT.eq(processKey.getCreatedAt()))
+                        .and(pe.EVENT_TYPE.eq(EventType.PROCESS_STATUS.name())))
+                .fetch(r -> objectMapper.fromJSONB(r.value1(), STATUS_HISTORY_ENTRY));
     }
 
     public ProjectIdAndInitiator getProjectIdAndInitiator(PartialProcessKey processKey) {
-        try (DSLContext tx = DSL.using(cfg)) {
-            return tx.select(PROCESS_QUEUE.PROJECT_ID, PROCESS_QUEUE.INITIATOR_ID).from(PROCESS_QUEUE)
-                    .where(PROCESS_QUEUE.INSTANCE_ID.eq(processKey.getInstanceId()))
-                    .fetchOne(r -> new ProjectIdAndInitiator(r.get(PROCESS_QUEUE.PROJECT_ID), r.get(PROCESS_QUEUE.INITIATOR_ID)));
-        }
+        return dsl().select(PROCESS_QUEUE.PROJECT_ID, PROCESS_QUEUE.INITIATOR_ID).from(PROCESS_QUEUE)
+                .where(PROCESS_QUEUE.INSTANCE_ID.eq(processKey.getInstanceId()))
+                .fetchOne(r -> new ProjectIdAndInitiator(r.get(PROCESS_QUEUE.PROJECT_ID), r.get(PROCESS_QUEUE.INITIATOR_ID)));
     }
 
     public void clearStartAt(PartialProcessKey processKey) {
@@ -568,11 +540,11 @@ public class ProcessQueueDao extends AbstractDao {
     }
 
     public boolean exists(PartialProcessKey processKey) {
+        DSLContext tx = dsl();
+
         UUID instanceId = processKey.getInstanceId();
-        try (DSLContext tx = DSL.using(cfg)) {
-            return tx.fetchExists(tx.selectFrom(PROCESS_QUEUE)
-                    .where(PROCESS_QUEUE.INSTANCE_ID.eq(instanceId)));
-        }
+        return tx.fetchExists(tx.selectFrom(PROCESS_QUEUE)
+                .where(PROCESS_QUEUE.INSTANCE_ID.eq(instanceId)));
     }
 
     public void updateWait(DSLContext tx, ProcessKey key, AbstractWaitCondition waits) {

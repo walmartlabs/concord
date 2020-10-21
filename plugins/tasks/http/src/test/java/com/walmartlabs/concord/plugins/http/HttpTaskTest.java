@@ -28,6 +28,7 @@ import java.io.File;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ThreadLocalRandom;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
 import static org.junit.Assert.*;
@@ -36,7 +37,7 @@ import static org.mockito.Mockito.when;
 
 public class HttpTaskTest extends AbstractHttpTaskTest {
 
-    private Context mockContext = mock(Context.class);
+    private final Context mockContext = mock(Context.class);
 
     @Test
     public void testForAsStringMethod() throws Exception {
@@ -127,15 +128,17 @@ public class HttpTaskTest extends AbstractHttpTaskTest {
 
     @Test(expected = Exception.class)
     public void testExecuteForException() throws Exception {
+        int randomPort = ThreadLocalRandom.current().nextInt(65536);
         initCxtForRequest(mockContext, "GET", "string", "string",
-                "http://localhost:" + rule.port() + "/fault", false, 0, true);
+                "http://localhost:" + randomPort + "/fault", false, 0, true);
         task.execute(mockContext);
     }
 
     @Test
     public void testExecuteWithIgnoreError() throws Exception {
+        int randomPort = ThreadLocalRandom.current().nextInt(65536);
         initCxtForRequest(mockContext, "GET", "string", "string",
-                "http://localhost:" + rule.port() + "/fault", true, 0, true);
+                "http://localhost:" + randomPort + "/fault", true, 0, true);
         task.execute(mockContext);
     }
 

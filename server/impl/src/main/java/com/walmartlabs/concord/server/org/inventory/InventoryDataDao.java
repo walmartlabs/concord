@@ -9,9 +9,9 @@ package com.walmartlabs.concord.server.org.inventory;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -26,7 +26,6 @@ import com.walmartlabs.concord.server.ConcordObjectMapper;
 import com.walmartlabs.concord.server.jooq.tables.JsonStoreData;
 import com.walmartlabs.concord.server.jooq.tables.JsonStores;
 import org.jooq.*;
-import org.jooq.impl.DSL;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -64,9 +63,7 @@ public class InventoryDataDao extends AbstractDao {
     }
 
     public List<InventoryDataItem> get(UUID inventoryId, String path) {
-        try (DSLContext tx = DSL.using(cfg)) {
-            return get(tx, inventoryId, path);
-        }
+        return get(dsl(), inventoryId, path);
     }
 
     public void merge(UUID inventoryId, String itemPath, Object data) {
@@ -77,13 +74,11 @@ public class InventoryDataDao extends AbstractDao {
         tx(tx -> delete(tx, inventoryId, itemPath));
     }
 
-    public List<Map<String,Object>> list(UUID inventoryId) {
-        try (DSLContext tx = DSL.using(cfg)) {
-            return tx.select(JSON_STORE_DATA.ITEM_PATH, JSON_STORE_DATA.ITEM_DATA)
-                    .from(JSON_STORE_DATA)
-                    .where(JSON_STORE_DATA.JSON_STORE_ID.eq(inventoryId))
-                    .fetch(this::toListItem);
-        }
+    public List<Map<String, Object>> list(UUID inventoryId) {
+        return dsl().select(JSON_STORE_DATA.ITEM_PATH, JSON_STORE_DATA.ITEM_DATA)
+                .from(JSON_STORE_DATA)
+                .where(JSON_STORE_DATA.JSON_STORE_ID.eq(inventoryId))
+                .fetch(this::toListItem);
     }
 
     private Map<String, Object> toListItem(Record2<String, JSONB> r) {
@@ -104,13 +99,13 @@ public class InventoryDataDao extends AbstractDao {
                         .where(i1.JSON_STORE_ID.eq(inventoryId));
 
         SelectConditionStep<Record3<UUID, UUID, Integer>> s2 =
-                select(i2.JSON_STORE_ID, i2.PARENT_INVENTORY_ID, level().add(1))
+                select(i2.JSON_STORE_ID, i2.PARENT_INVENTORY_ID, val(1)) // TODO(ib) level().add(1)
                         .from(i2, nodes)
                         .where(i2.JSON_STORE_ID.eq(JSON_STORES.as("nodes").PARENT_INVENTORY_ID));
 
         SelectConditionStep<Record3<String, JSONB, Integer>> s = tx.withRecursive("nodes", JSON_STORES.JSON_STORE_ID.getName(), JSON_STORES.PARENT_INVENTORY_ID.getName(), "level")
                 .as(s1.unionAll(s2))
-                .select(JSON_STORE_DATA.ITEM_PATH, JSON_STORE_DATA.ITEM_DATA, level())
+                .select(JSON_STORE_DATA.ITEM_PATH, JSON_STORE_DATA.ITEM_DATA, val(1)) // TODO(ib) level()
                 .from(JSON_STORE_DATA, nodes)
                 .where(JSON_STORE_DATA.JSON_STORE_ID.eq(JSON_STORES.as("nodes").JSON_STORE_ID)
                         .and(JSON_STORE_DATA.ITEM_PATH.startsWith(path)));

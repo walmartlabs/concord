@@ -28,7 +28,6 @@ import com.walmartlabs.concord.server.jooq.tables.records.TeamsRecord;
 import com.walmartlabs.concord.server.jooq.tables.records.VUserTeamsRecord;
 import com.walmartlabs.concord.server.user.UserType;
 import org.jooq.*;
-import org.jooq.impl.DSL;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -64,21 +63,17 @@ public class TeamDao extends AbstractDao {
     }
 
     public UUID getId(UUID orgId, String name) {
-        try (DSLContext tx = DSL.using(cfg)) {
-            return tx.select(TEAMS.TEAM_ID)
-                    .from(TEAMS)
-                    .where(TEAMS.ORG_ID.eq(orgId).and(TEAMS.TEAM_NAME.eq(name)))
-                    .fetchOne(TEAMS.TEAM_ID);
-        }
+        return dsl().select(TEAMS.TEAM_ID)
+                .from(TEAMS)
+                .where(TEAMS.ORG_ID.eq(orgId).and(TEAMS.TEAM_NAME.eq(name)))
+                .fetchOne(TEAMS.TEAM_ID);
     }
 
     public UUID getOrgId(UUID teamId) {
-        try (DSLContext tx = DSL.using(cfg)) {
-            return tx.select(TEAMS.ORG_ID)
-                    .from(TEAMS)
-                    .where(TEAMS.TEAM_ID.eq(teamId))
-                    .fetchOne(TEAMS.ORG_ID);
-        }
+        return dsl().select(TEAMS.ORG_ID)
+                .from(TEAMS)
+                .where(TEAMS.TEAM_ID.eq(teamId))
+                .fetchOne(TEAMS.ORG_ID);
     }
 
     public UUID insert(UUID orgId, String name, String description) {
@@ -121,9 +116,7 @@ public class TeamDao extends AbstractDao {
     }
 
     public TeamEntry get(UUID id) {
-        try (DSLContext tx = DSL.using(cfg)) {
-            return get(tx, id);
-        }
+        return get(dsl(), id);
     }
 
     private static SelectJoinStep<Record5<UUID, UUID, String, String, String>> selectTeams(DSLContext tx) {
@@ -146,9 +139,7 @@ public class TeamDao extends AbstractDao {
     }
 
     public TeamEntry getByName(UUID orgId, String name) {
-        try (DSLContext tx = DSL.using(cfg)) {
-            return getByName(tx, orgId, name);
-        }
+        return getByName(dsl(), orgId, name);
     }
 
     public TeamEntry getByName(DSLContext tx, UUID orgId, String name) {
@@ -158,9 +149,7 @@ public class TeamDao extends AbstractDao {
     }
 
     public List<TeamEntry> list(UUID orgId) {
-        try (DSLContext tx = DSL.using(cfg)) {
-            return list(tx, orgId);
-        }
+        return list(dsl(), orgId);
     }
 
     public List<TeamEntry> list(DSLContext tx, UUID orgId) {
@@ -171,12 +160,13 @@ public class TeamDao extends AbstractDao {
     }
 
     public List<TeamUserEntry> listUsers(UUID teamId) {
-        try (DSLContext tx = DSL.using(cfg)) {
-            List<TeamUserEntry> l = new LinkedList<>();
-            l.addAll(listMembers(tx, teamId));
-            l.addAll(listLdapGroupMembers(tx, teamId));
-            return l;
-        }
+        DSLContext tx = dsl();
+
+        List<TeamUserEntry> l = new LinkedList<>();
+        l.addAll(listMembers(tx, teamId));
+        l.addAll(listLdapGroupMembers(tx, teamId));
+
+        return l;
     }
 
     public List<TeamUserEntry> listMembers(DSLContext tx, UUID teamId) {
@@ -277,9 +267,7 @@ public class TeamDao extends AbstractDao {
     }
 
     public boolean isInAnyTeam(UUID orgId, UUID userId, TeamRole... roles) {
-        try (DSLContext tx = DSL.using(cfg)) {
-            return isInAnyTeam(tx, orgId, userId, roles);
-        }
+        return isInAnyTeam(dsl(), orgId, userId, roles);
     }
 
     public boolean isInAnyTeam(DSLContext tx, UUID orgId, UUID userId, TeamRole... roles) {
@@ -291,9 +279,7 @@ public class TeamDao extends AbstractDao {
     }
 
     public boolean hasUser(UUID teamId, UUID userId, TeamRole... roles) {
-        try (DSLContext tx = DSL.using(cfg)) {
-            return hasUser(tx, teamId, userId, roles);
-        }
+        return hasUser(dsl(), teamId, userId, roles);
     }
 
     public boolean hasUser(DSLContext tx, UUID teamId, UUID userId, TeamRole... roles) {
