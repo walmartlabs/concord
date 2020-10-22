@@ -98,14 +98,16 @@ public class InventoryDataDao extends AbstractDao {
                         .from(i1)
                         .where(i1.JSON_STORE_ID.eq(inventoryId));
 
+        Field<Integer> levelField = field("level", Integer.class);
+
         SelectConditionStep<Record3<UUID, UUID, Integer>> s2 =
-                select(i2.JSON_STORE_ID, i2.PARENT_INVENTORY_ID, val(1)) // TODO(ib) level().add(1)
+                select(i2.JSON_STORE_ID, i2.PARENT_INVENTORY_ID, levelField.add(1))
                         .from(i2, nodes)
                         .where(i2.JSON_STORE_ID.eq(JSON_STORES.as("nodes").PARENT_INVENTORY_ID));
 
-        SelectConditionStep<Record3<String, JSONB, Integer>> s = tx.withRecursive("nodes", JSON_STORES.JSON_STORE_ID.getName(), JSON_STORES.PARENT_INVENTORY_ID.getName(), "level")
+        SelectConditionStep<Record3<String, JSONB, Integer>> s = tx.withRecursive("nodes", JSON_STORES.JSON_STORE_ID.getName(), JSON_STORES.PARENT_INVENTORY_ID.getName(), levelField.getName())
                 .as(s1.unionAll(s2))
-                .select(JSON_STORE_DATA.ITEM_PATH, JSON_STORE_DATA.ITEM_DATA, val(1)) // TODO(ib) level()
+                .select(JSON_STORE_DATA.ITEM_PATH, JSON_STORE_DATA.ITEM_DATA, levelField.add(1))
                 .from(JSON_STORE_DATA, nodes)
                 .where(JSON_STORE_DATA.JSON_STORE_ID.eq(JSON_STORES.as("nodes").JSON_STORE_ID)
                         .and(JSON_STORE_DATA.ITEM_PATH.startsWith(path)));
