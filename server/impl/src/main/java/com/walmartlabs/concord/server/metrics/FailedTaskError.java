@@ -24,11 +24,11 @@ import java.time.OffsetDateTime;
 
 public class FailedTaskError {
 
-    private String taskId;
+    private final String taskId;
 
-    private String taskError;
+    private final String taskError;
 
-    private OffsetDateTime taskErrorAt;
+    private final OffsetDateTime taskErrorAt;
 
     public FailedTaskError(String taskId, String taskError, OffsetDateTime taskErrorAt) {
         this.taskId = taskId;
@@ -40,24 +40,12 @@ public class FailedTaskError {
         return taskId;
     }
 
-    public void setTaskId(String taskId) {
-        this.taskId = taskId;
-    }
-
     public String getTaskError() {
         return taskError;
     }
 
-    public void setTaskError(String taskError) {
-        this.taskError = taskError;
-    }
-
     public OffsetDateTime getTaskErrorAt() {
         return taskErrorAt;
-    }
-
-    public void setTaskErrorAt(OffsetDateTime taskErrorAt) {
-        this.taskErrorAt = taskErrorAt;
     }
 
     @Override
