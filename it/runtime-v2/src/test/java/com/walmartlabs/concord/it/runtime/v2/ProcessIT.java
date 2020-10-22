@@ -248,8 +248,9 @@ public class ProcessIT {
         assertEquals(3, checkpoints.size());
 
         checkpoints.sort(Comparator.comparing(ProcessCheckpointEntry::getName));
-        assertEquals("aaa", checkpoints.get(2).getName());
-
+        assertEquals("aaa", checkpoints.get(0).getName());
+        assertEquals("bbb", checkpoints.get(1).getName());
+        assertEquals("ccc", checkpoints.get(2).getName());
 
         // ---
 
