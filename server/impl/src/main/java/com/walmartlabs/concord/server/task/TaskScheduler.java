@@ -20,13 +20,8 @@ package com.walmartlabs.concord.server.task;
  * =====
  */
 
-import com.walmartlabs.concord.db.AbstractDao;
-import com.walmartlabs.concord.db.MainDB;
 import com.walmartlabs.concord.server.PeriodicTask;
-import com.walmartlabs.concord.server.jooq.enums.TaskStatusType;
 import com.walmartlabs.concord.server.sdk.ScheduledTask;
-import org.jooq.Configuration;
-import org.jooq.DSLContext;
 import org.jooq.Field;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -34,9 +29,6 @@ import org.slf4j.LoggerFactory;
 import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
-import java.io.IOException;
-import java.io.PrintWriter;
-import java.io.StringWriter;
 import java.time.OffsetDateTime;
 import java.util.*;
 import java.util.concurrent.ExecutorService;
@@ -44,9 +36,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
 import static com.walmartlabs.concord.db.PgUtils.interval;
-import static com.walmartlabs.concord.server.jooq.Tables.TASKS;
 import static org.jooq.impl.DSL.currentOffsetDateTime;
-import static org.jooq.impl.DSL.value;
 
 @Named
 @Singleton
@@ -173,115 +163,4 @@ public class TaskScheduler extends PeriodicTask {
         }
     }
 
-    @Named
-    private static final class SchedulerDao extends AbstractDao {
-
-        @Inject
-        public SchedulerDao(@MainDB Configuration cfg) {
-            super(cfg);
-        }
-
-        public List<String> poll() {
-            Field<?> maxAge = interval("1 second").mul(TASKS.TASK_INTERVAL);
-
-            return txResult(tx -> {
-                List<String> ids = tx.select(TASKS.TASK_ID)
-                        .from(TASKS)
-                        .where(TASKS.TASK_INTERVAL.greaterThan(0L)
-                                .and(TASKS.TASK_STATUS.notEqual(TaskStatusType.RUNNING).or(TASKS.TASK_STATUS.isNull()))
-                                .and(TASKS.FINISHED_AT.isNull()
-                                        .or(TASKS.FINISHED_AT.plus(maxAge).lessOrEqual(currentOffsetDateTime()))))
-                        .forUpdate()
-                        .skipLocked()
-                        .fetch(TASKS.TASK_ID);
-
-                if (ids.isEmpty()) {
-                    return ids;
-                }
-
-                tx.update(TASKS)
-                        .set(TASKS.STARTED_AT, currentOffsetDateTime())
-                        .set(TASKS.TASK_STATUS, value(TaskStatusType.RUNNING))
-                        .set(TASKS.FINISHED_AT, (OffsetDateTime) null)
-                        .set(TASKS.LAST_UPDATED_AT, currentOffsetDateTime())
-                        .where(TASKS.TASK_ID.in(ids))
-                        .execute();
-
-                return ids;
-            });
-        }
-
-        public List<String> pollStalled(DSLContext tx, Field<OffsetDateTime> cutOff) {
-            return tx.select(TASKS.TASK_ID)
-                    .from(TASKS)
-                    .where(TASKS.LAST_UPDATED_AT.lessThan(cutOff)
-                            .and(TASKS.TASK_STATUS.eq(TaskStatusType.RUNNING))
-                            .and(TASKS.TASK_INTERVAL.greaterThan(0L)))
-                    .forUpdate()
-                    .skipLocked()
-                    .fetch(TASKS.TASK_ID);
-        }
-
-        public void success(String taskId) {
-            tx(tx -> taskFinished(tx, taskId, TaskStatusType.OK, null));
-        }
-
-        public void error(String taskId, Exception e) {
-            tx(tx -> taskFinished(tx, taskId, TaskStatusType.ERROR, e));
-        }
-
-        public void stalled(DSLContext tx, String taskId) {
-            taskFinished(tx, taskId, TaskStatusType.STALLED, null);
-        }
-
-        public void updateTaskIntervals(Map<String, ScheduledTask> tasks) {
-            tx(tx -> {
-                for (Map.Entry<String, ScheduledTask> e : tasks.entrySet()) {
-                    ScheduledTask task = e.getValue();
-
-                    if (task.getIntervalInSec() <= 0) {
-                        log.warn("{} has period <= 0, the task will be disabled", e.getKey());
-                    }
-
-                    tx.insertInto(TASKS, TASKS.TASK_ID, TASKS.TASK_INTERVAL)
-                            .values(e.getKey(), task.getIntervalInSec())
-                            .onDuplicateKeyUpdate().set(TASKS.TASK_INTERVAL, task.getIntervalInSec())
-                            .execute();
-                }
-            });
-        }
-
-        public void updateRunning(Set<String> runningTasks) {
-            tx(tx -> tx.update(TASKS)
-                    .set(TASKS.LAST_UPDATED_AT, currentOffsetDateTime())
-                    .where(TASKS.TASK_ID.in(runningTasks))
-                    .execute());
-        }
-
-        private void transaction(Tx t) {
-            tx(t);
-        }
-
-        private void taskFinished(DSLContext tx, String taskId, TaskStatusType status, Exception e) {
-            tx.update(TASKS)
-                    .set(TASKS.FINISHED_AT, currentOffsetDateTime())
-                    .set(TASKS.LAST_UPDATED_AT, currentOffsetDateTime())
-                    .set(TASKS.TASK_STATUS, value(status))
-                    .set(TASKS.LAST_ERROR_AT, e != null ? currentOffsetDateTime() : null)
-                    .set(TASKS.LAST_ERROR, e != null ? value(toString(e)) : TASKS.LAST_ERROR)
-                    .where(TASKS.TASK_ID.eq(taskId))
-                    .execute();
-        }
-
-        private static String toString(Exception exception) {
-            try (StringWriter sw = new StringWriter();
-                 PrintWriter pw = new PrintWriter(sw)) {
-                exception.printStackTrace(pw);
-                return sw.toString();
-            } catch (IOException e) {
-                log.error("toString [{}]-> error: {}", exception, e.getMessage());
-                return null;
-            }
-        }
-    }
 }
