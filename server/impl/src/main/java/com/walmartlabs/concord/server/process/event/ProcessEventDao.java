@@ -32,7 +32,6 @@ import com.walmartlabs.concord.server.process.ProcessEntry;
 import com.walmartlabs.concord.server.sdk.ProcessKey;
 import com.walmartlabs.concord.server.sdk.events.ProcessEvent;
 import org.jooq.*;
-import org.jooq.impl.DSL;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -69,53 +68,50 @@ public class ProcessEventDao extends AbstractDao {
     }
 
     public List<ProcessEventEntry> list(ProcessEventFilter filter) {
-        try (DSLContext tx = DSL.using(cfg)) {
+        ProcessKey processKey = filter.processKey();
 
-            ProcessKey processKey = filter.processKey();
+        SelectConditionStep<Record5<Long, UUID, String, OffsetDateTime, JSONB>> q = dsl()
+                .select(PROCESS_EVENTS.EVENT_SEQ,
+                        PROCESS_EVENTS.EVENT_ID,
+                        PROCESS_EVENTS.EVENT_TYPE,
+                        PROCESS_EVENTS.EVENT_DATE,
+                        function("jsonb_strip_nulls", JSONB.class, PROCESS_EVENTS.EVENT_DATA))
+                .from(PROCESS_EVENTS)
+                .where(PROCESS_EVENTS.INSTANCE_ID.eq(processKey.getInstanceId())
+                        .and(PROCESS_EVENTS.INSTANCE_CREATED_AT.eq(processKey.getCreatedAt())));
 
-            SelectConditionStep<Record5<Long, UUID, String, OffsetDateTime, JSONB>> q = tx
-                    .select(PROCESS_EVENTS.EVENT_SEQ,
-                            PROCESS_EVENTS.EVENT_ID,
-                            PROCESS_EVENTS.EVENT_TYPE,
-                            PROCESS_EVENTS.EVENT_DATE,
-                            function("jsonb_strip_nulls", JSONB.class, PROCESS_EVENTS.EVENT_DATA))
-                    .from(PROCESS_EVENTS)
-                    .where(PROCESS_EVENTS.INSTANCE_ID.eq(processKey.getInstanceId())
-                            .and(PROCESS_EVENTS.INSTANCE_CREATED_AT.eq(processKey.getCreatedAt())));
-
-            OffsetDateTime after = filter.after();
-            if (after != null) {
-                q.and(PROCESS_EVENTS.EVENT_DATE.ge(after));
-            }
-
-            Long fromId = filter.fromId();
-            if (fromId != null) {
-                q.and(PROCESS_EVENTS.EVENT_SEQ.greaterThan(fromId));
-            }
-
-            String eventType = filter.eventType();
-            if (eventType != null) {
-                q.and(PROCESS_EVENTS.EVENT_TYPE.eq(eventType));
-            }
-
-            UUID eventCorrelationId = filter.eventCorrelationId();
-            if (eventCorrelationId != null) {
-                q.and(PgUtils.jsonbText(PROCESS_EVENTS.EVENT_DATA, "correlationId").eq(eventCorrelationId.toString()));
-            }
-
-            EventPhase eventPhase = filter.eventPhase();
-            if (eventPhase != null) {
-                q.and(PgUtils.jsonbText(PROCESS_EVENTS.EVENT_DATA, "phase").eq(eventPhase.getKey()));
-            }
-
-            int limit = filter.limit();
-            if (limit > 0) {
-                q.limit(limit);
-            }
-
-            return q.orderBy(PROCESS_EVENTS.EVENT_SEQ)
-                    .fetch(this::toEntry);
+        OffsetDateTime after = filter.after();
+        if (after != null) {
+            q.and(PROCESS_EVENTS.EVENT_DATE.ge(after));
         }
+
+        Long fromId = filter.fromId();
+        if (fromId != null) {
+            q.and(PROCESS_EVENTS.EVENT_SEQ.greaterThan(fromId));
+        }
+
+        String eventType = filter.eventType();
+        if (eventType != null) {
+            q.and(PROCESS_EVENTS.EVENT_TYPE.eq(eventType));
+        }
+
+        UUID eventCorrelationId = filter.eventCorrelationId();
+        if (eventCorrelationId != null) {
+            q.and(PgUtils.jsonbText(PROCESS_EVENTS.EVENT_DATA, "correlationId").eq(eventCorrelationId.toString()));
+        }
+
+        EventPhase eventPhase = filter.eventPhase();
+        if (eventPhase != null) {
+            q.and(PgUtils.jsonbText(PROCESS_EVENTS.EVENT_DATA, "phase").eq(eventPhase.getKey()));
+        }
+
+        int limit = filter.limit();
+        if (limit > 0) {
+            q.limit(limit);
+        }
+
+        return q.orderBy(PROCESS_EVENTS.EVENT_SEQ)
+                .fetch(this::toEntry);
     }
 
     public void insert(DSLContext tx, List<ProcessKey> processKeys, String eventType, Map<String, Object> data) {
@@ -215,13 +211,14 @@ public class ProcessEventDao extends AbstractDao {
         for (int i = 0; i < events.size(); i++) {
             ProcessEventsRecord r = records.get(i);
             NewProcessEvent ev = events.get(i);
+            Map<String, Object> data = ev.data();
 
             result.add(ProcessEvent.builder()
                     .eventDate(r.getEventDate())
                     .eventSeq(r.getEventSeq())
                     .eventType(ev.eventType())
                     .processKey(ev.processKey())
-                    .data(ev.data() != null ? ev.data() : Collections.emptyMap())
+                    .data(data != null ? data : Collections.emptyMap())
                     .build());
         }
 
@@ -229,18 +226,16 @@ public class ProcessEventDao extends AbstractDao {
     }
 
     public List<ProcessEntry.ProcessWaitHistoryEntry> getWaitHistory(ProcessKey processKey, int limit, int offset) {
-        try (DSLContext tx = DSL.using(cfg)) {
-            ProcessEvents pe = ProcessEvents.PROCESS_EVENTS.as("pe");
-            return tx.select(waitEntryToJsonb(pe))
-                    .from(pe)
-                    .where(pe.INSTANCE_ID.eq(processKey.getInstanceId())
-                            .and(pe.INSTANCE_CREATED_AT.eq(processKey.getCreatedAt()))
-                            .and(pe.EVENT_TYPE.eq(EventType.PROCESS_WAIT.name())))
-                    .orderBy(pe.EVENT_DATE.desc())
-                    .limit(limit)
-                    .offset(offset)
-                    .fetch(r -> objectMapper.fromJSONB(r.value1(), WAIT_HISTORY_ENTRY));
-        }
+        ProcessEvents pe = ProcessEvents.PROCESS_EVENTS.as("pe");
+        return dsl().select(waitEntryToJsonb(pe))
+                .from(pe)
+                .where(pe.INSTANCE_ID.eq(processKey.getInstanceId())
+                        .and(pe.INSTANCE_CREATED_AT.eq(processKey.getCreatedAt()))
+                        .and(pe.EVENT_TYPE.eq(EventType.PROCESS_WAIT.name())))
+                .orderBy(pe.EVENT_DATE.desc())
+                .limit(limit)
+                .offset(offset)
+                .fetch(r -> objectMapper.fromJSONB(r.value1(), WAIT_HISTORY_ENTRY));
     }
 
     private Field<JSONB> waitEntryToJsonb(ProcessEvents pe) {

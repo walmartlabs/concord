@@ -67,7 +67,8 @@ public class UserDao extends AbstractDao {
                     .set(USERS.DISPLAY_NAME, displayName)
                     .set(USERS.USER_EMAIL, email)
                     .returning(USERS.USER_ID)
-                    .fetchOne().getUserId();
+                    .fetchOne()
+                    .getUserId();
 
             if (roles != null) {
                 updateRoles(tx, userId, roles);
@@ -127,19 +128,19 @@ public class UserDao extends AbstractDao {
 
     // TODO add "include" option
     public UserEntry get(UUID id) {
-        try (DSLContext tx = DSL.using(cfg)) {
-            Record7<UUID, String, String, String, String, String, Boolean> r =
-                    tx.select(USERS.USER_ID, USERS.USER_TYPE, USERS.USERNAME, USERS.DOMAIN, USERS.DISPLAY_NAME, USERS.USER_EMAIL, USERS.IS_DISABLED)
-                            .from(USERS)
-                            .where(USERS.USER_ID.eq(id))
-                            .fetchOne();
+        DSLContext tx = dsl();
 
-            if (r == null) {
-                return null;
-            }
+        Record7<UUID, String, String, String, String, String, Boolean> r =
+                tx.select(USERS.USER_ID, USERS.USER_TYPE, USERS.USERNAME, USERS.DOMAIN, USERS.DISPLAY_NAME, USERS.USER_EMAIL, USERS.IS_DISABLED)
+                        .from(USERS)
+                        .where(USERS.USER_ID.eq(id))
+                        .fetchOne();
 
-            return getUserInfo(tx, r);
+        if (r == null) {
+            return null;
         }
+
+        return getUserInfo(tx, r);
     }
 
     /**
@@ -147,52 +148,44 @@ public class UserDao extends AbstractDao {
      * Note that {@code username} and {@code domain} are case-insensitive and forced to lower case.
      */
     public UUID getId(String username, String domain, UserType type) {
-        try (DSLContext tx = DSL.using(cfg)) {
-            SelectConditionStep<Record1<UUID>> q = tx.select(USERS.USER_ID)
-                    .from(USERS)
-                    .where(USERS.USERNAME.eq(toLowerCase(username)));
+        SelectConditionStep<Record1<UUID>> q = dsl().select(USERS.USER_ID)
+                .from(USERS)
+                .where(USERS.USERNAME.eq(toLowerCase(username)));
 
-            if (domain != null) {
-                q.and(USERS.DOMAIN.eq(toLowerCase(domain)));
-            }
-
-            if (type != null) {
-                q.and(USERS.USER_TYPE.eq(type.toString()));
-            }
-
-            List<UUID> result = q.fetch(USERS.USER_ID);
-            if (result.isEmpty()) {
-                return null;
-            } else if (result.size() > 1) {
-                throw new IllegalArgumentException("Non unique results found for username: '" + username + "', domain: '" + domain + "', type: " + type +
-                        ". Note that user and domain names are case-insensitive.");
-            }
-
-            return result.get(0);
+        if (domain != null) {
+            q.and(USERS.DOMAIN.eq(toLowerCase(domain)));
         }
+
+        if (type != null) {
+            q.and(USERS.USER_TYPE.eq(type.toString()));
+        }
+
+        List<UUID> result = q.fetch(USERS.USER_ID);
+        if (result.isEmpty()) {
+            return null;
+        } else if (result.size() > 1) {
+            throw new IllegalArgumentException("Non unique results found for username: '" + username + "', domain: '" + domain + "', type: " + type +
+                    ". Note that user and domain names are case-insensitive.");
+        }
+
+        return result.get(0);
     }
 
     public String getUsername(UUID id) {
-        try (DSLContext tx = DSL.using(cfg)) {
-            return tx.select(USERS.USERNAME).from(USERS)
-                    .where(USERS.USER_ID.eq(id))
-                    .fetchOne(USERS.USERNAME);
-        }
+        return dsl().select(USERS.USERNAME).from(USERS)
+                .where(USERS.USER_ID.eq(id))
+                .fetchOne(USERS.USERNAME);
     }
 
     public boolean existsById(UUID id) {
-        try (DSLContext tx = DSL.using(cfg)) {
-            int cnt = tx.fetchCount(tx.selectFrom(USERS)
-                    .where(USERS.USER_ID.eq(id)));
+        int cnt = dsl().fetchCount(selectFrom(USERS)
+                .where(USERS.USER_ID.eq(id)));
 
-            return cnt > 0;
-        }
+        return cnt > 0;
     }
 
     public boolean isInOrganization(UUID userId, UUID orgId) {
-        try (DSLContext tx = DSL.using(cfg)) {
-            return isInOrganization(tx, userId, orgId);
-        }
+        return isInOrganization(dsl(), userId, orgId);
     }
 
     public boolean isInOrganization(DSLContext tx, UUID userId, UUID orgId) {
@@ -206,25 +199,21 @@ public class UserDao extends AbstractDao {
     }
 
     public Set<UUID> getOrgIds(UUID userId) {
-        try (DSLContext tx = DSL.using(cfg)) {
-            SelectConditionStep<Record1<UUID>> teamIds = select(V_USER_TEAMS.TEAM_ID)
-                    .from(V_USER_TEAMS)
-                    .where(V_USER_TEAMS.USER_ID.eq(userId));
+        SelectConditionStep<Record1<UUID>> teamIds = select(V_USER_TEAMS.TEAM_ID)
+                .from(V_USER_TEAMS)
+                .where(V_USER_TEAMS.USER_ID.eq(userId));
 
-            return tx.selectDistinct(TEAMS.ORG_ID)
-                    .from(TEAMS)
-                    .where(TEAMS.TEAM_ID.in(teamIds))
-                    .fetchSet(TEAMS.ORG_ID);
-        }
+        return dsl().selectDistinct(TEAMS.ORG_ID)
+                .from(TEAMS)
+                .where(TEAMS.TEAM_ID.in(teamIds))
+                .fetchSet(TEAMS.ORG_ID);
     }
 
     public String getEmail(UUID id) {
-        try (DSLContext tx = DSL.using(cfg)) {
-            return tx.select(USERS.USER_EMAIL)
-                    .from(USERS)
-                    .where(USERS.USER_ID.eq(id))
-                    .fetchOne(USERS.USER_EMAIL);
-        }
+        return dsl().select(USERS.USER_EMAIL)
+                .from(USERS)
+                .where(USERS.USER_ID.eq(id))
+                .fetchOne(USERS.USER_EMAIL);
     }
 
     public void updateRoles(UUID id, Set<String> roles) {
@@ -243,51 +232,45 @@ public class UserDao extends AbstractDao {
     }
 
     public Optional<Boolean> isDisabled(UUID userId) {
-        try (DSLContext tx = DSL.using(cfg)) {
-            return tx.select(USERS.IS_DISABLED)
-                    .from(USERS)
-                    .where(USERS.USER_ID.eq(userId))
-                    .fetchOne(r -> Optional.ofNullable(r.get(USERS.IS_DISABLED)));
-        }
+        return dsl().select(USERS.IS_DISABLED)
+                .from(USERS)
+                .where(USERS.USER_ID.eq(userId))
+                .fetchOne(r -> Optional.ofNullable(r.get(USERS.IS_DISABLED)));
     }
 
     // TODO add "include" option
     public List<UserEntry> list(String filter, int offset, int limit) {
-        try (DSLContext tx = DSL.using(cfg)) {
-            return tx.select(USERS.USER_ID, USERS.USERNAME, USERS.DOMAIN, USERS.USER_TYPE, USERS.DISPLAY_NAME, USERS.USER_EMAIL, USERS.IS_DISABLED)
-                    .from(USERS)
-                    .where(USERS.IS_DISABLED.isFalse())
-                    .and(value(filter).isNotNull()
-                            .and(USERS.USERNAME.containsIgnoreCase(filter)
-                                    .or(USERS.DISPLAY_NAME.containsIgnoreCase(filter))
-                                    .or(USERS.USER_EMAIL.containsIgnoreCase(filter))))
-                    .orderBy(USERS.DISPLAY_NAME, USERS.USERNAME)
-                    .offset(offset)
-                    .limit(limit)
-                    .fetch(r -> new UserEntry(r.get(USERS.USER_ID),
-                            r.get(USERS.USERNAME),
-                            r.get(USERS.DOMAIN),
-                            r.get(USERS.DISPLAY_NAME),
-                            null,
-                            UserType.valueOf(r.get(USERS.USER_TYPE)),
-                            r.get(USERS.USER_EMAIL),
-                            null,
-                            r.get(USERS.IS_DISABLED)));
-        }
+        return dsl().select(USERS.USER_ID, USERS.USERNAME, USERS.DOMAIN, USERS.USER_TYPE, USERS.DISPLAY_NAME, USERS.USER_EMAIL, USERS.IS_DISABLED)
+                .from(USERS)
+                .where(USERS.IS_DISABLED.isFalse())
+                .and(value(filter).isNotNull()
+                        .and(USERS.USERNAME.containsIgnoreCase(filter)
+                                .or(USERS.DISPLAY_NAME.containsIgnoreCase(filter))
+                                .or(USERS.USER_EMAIL.containsIgnoreCase(filter))))
+                .orderBy(USERS.DISPLAY_NAME, USERS.USERNAME)
+                .offset(offset)
+                .limit(limit)
+                .fetch(r -> new UserEntry(r.get(USERS.USER_ID),
+                        r.get(USERS.USERNAME),
+                        r.get(USERS.DOMAIN),
+                        r.get(USERS.DISPLAY_NAME),
+                        null,
+                        UserType.valueOf(r.get(USERS.USER_TYPE)),
+                        r.get(USERS.USER_EMAIL),
+                        null,
+                        r.get(USERS.IS_DISABLED)));
     }
 
     public List<LdapGroupSearchResult> searchLdapGroups(String filter) {
-        try (DSLContext tx = DSL.using(cfg)) {
-            return tx.selectDistinct(USER_LDAP_GROUPS.LDAP_GROUP)
-                    .from(USER_LDAP_GROUPS)
-                    .where(USER_LDAP_GROUPS.LDAP_GROUP.likeIgnoreCase(String.format("%%%s%%", filter)))
-                    .orderBy(USER_LDAP_GROUPS.LDAP_GROUP)
-                    .limit(10)
-                    .fetch(r -> LdapGroupSearchResult.builder()
-                            .displayName(r.get(USER_LDAP_GROUPS.LDAP_GROUP))
-                            .groupName(r.get(USER_LDAP_GROUPS.LDAP_GROUP))
-                            .build());
-        }
+        return dsl().selectDistinct(USER_LDAP_GROUPS.LDAP_GROUP)
+                .from(USER_LDAP_GROUPS)
+                .where(USER_LDAP_GROUPS.LDAP_GROUP.likeIgnoreCase(String.format("%%%s%%", filter)))
+                .orderBy(USER_LDAP_GROUPS.LDAP_GROUP)
+                .limit(10)
+                .fetch(r -> LdapGroupSearchResult.builder()
+                        .displayName(r.get(USER_LDAP_GROUPS.LDAP_GROUP))
+                        .groupName(r.get(USER_LDAP_GROUPS.LDAP_GROUP))
+                        .build());
     }
 
     private UserEntry getUserInfo(DSLContext tx, Record7<UUID, String, String, String, String, String, Boolean> r) {

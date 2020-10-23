@@ -36,7 +36,6 @@ import com.walmartlabs.concord.server.org.ResourceAccessEntry;
 import com.walmartlabs.concord.server.org.ResourceAccessLevel;
 import com.walmartlabs.concord.server.user.UserType;
 import org.jooq.*;
-import org.jooq.impl.DSL;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -77,18 +76,14 @@ public class ProjectDao extends AbstractDao {
     }
 
     public String getName(UUID projectId) {
-        try (DSLContext tx = DSL.using(cfg)) {
-            return tx.select(PROJECTS.PROJECT_NAME)
-                    .from(PROJECTS)
-                    .where(PROJECTS.PROJECT_ID.eq(projectId))
-                    .fetchOne(PROJECTS.PROJECT_NAME);
-        }
+        return dsl().select(PROJECTS.PROJECT_NAME)
+                .from(PROJECTS)
+                .where(PROJECTS.PROJECT_ID.eq(projectId))
+                .fetchOne(PROJECTS.PROJECT_NAME);
     }
 
     public UUID getId(UUID orgId, String projectName) {
-        try (DSLContext tx = DSL.using(cfg)) {
-            return getId(tx, orgId, projectName);
-        }
+        return getId(dsl(), orgId, projectName);
     }
 
     public UUID getId(DSLContext tx, UUID orgId, String projectName) {
@@ -100,28 +95,22 @@ public class ProjectDao extends AbstractDao {
     }
 
     public UUID getOrgId(UUID projectId) {
-        try (DSLContext tx = DSL.using(cfg)) {
-            return tx.select(PROJECTS.ORG_ID)
-                    .from(PROJECTS)
-                    .where(PROJECTS.PROJECT_ID.eq(projectId))
-                    .fetchOne(PROJECTS.ORG_ID);
-        }
+        return dsl().select(PROJECTS.ORG_ID)
+                .from(PROJECTS)
+                .where(PROJECTS.PROJECT_ID.eq(projectId))
+                .fetchOne(PROJECTS.ORG_ID);
     }
 
     public String getOrgName(UUID projectId) {
-        try (DSLContext tx = DSL.using(cfg)) {
-            return tx.select(ORGANIZATIONS.ORG_ID)
-                    .from(PROJECTS, ORGANIZATIONS)
-                    .where(ORGANIZATIONS.ORG_ID.eq(PROJECTS.ORG_ID)
-                            .and(PROJECTS.PROJECT_ID.eq(projectId)))
-                    .fetchOne(ORGANIZATIONS.ORG_NAME);
-        }
+        return dsl().select(ORGANIZATIONS.ORG_ID)
+                .from(PROJECTS, ORGANIZATIONS)
+                .where(ORGANIZATIONS.ORG_ID.eq(PROJECTS.ORG_ID)
+                        .and(PROJECTS.PROJECT_ID.eq(projectId)))
+                .fetchOne(ORGANIZATIONS.ORG_NAME);
     }
 
     public ProjectEntry get(UUID projectId) {
-        try (DSLContext tx = DSL.using(cfg)) {
-            return get(tx, projectId);
-        }
+        return get(dsl(), projectId);
     }
 
     public ProjectEntry get(DSLContext tx, UUID projectId) {
@@ -326,79 +315,76 @@ public class ProjectDao extends AbstractDao {
 
         sortField = p.field(sortField);
 
-        try (DSLContext tx = DSL.using(cfg)) {
-            SelectOnConditionStep<Record13<UUID, String, String, UUID, String, String, UUID, String, String, String, String, RawPayloadMode, OutVariablesMode>> q = tx.select(
-                    p.PROJECT_ID,
-                    p.PROJECT_NAME,
-                    p.DESCRIPTION,
-                    p.ORG_ID,
-                    o.ORG_NAME,
-                    p.VISIBILITY,
-                    p.OWNER_ID,
-                    u.USERNAME,
-                    u.DOMAIN,
-                    u.DISPLAY_NAME,
-                    u.USER_TYPE,
-                    p.RAW_PAYLOAD_MODE,
-                    p.OUT_VARIABLES_MODE)
-                    .from(p)
-                    .leftJoin(u).on(u.USER_ID.eq(p.OWNER_ID))
-                    .leftJoin(o).on(o.ORG_ID.eq(p.ORG_ID));
 
-            if (currentUserId != null) {
-                // public projects are visible for anyone
-                Condition isPublic = p.VISIBILITY.eq(ProjectVisibility.PUBLIC.toString());
+        SelectOnConditionStep<Record13<UUID, String, String, UUID, String, String, UUID, String, String, String, String, RawPayloadMode, OutVariablesMode>> q = dsl().select(
+                p.PROJECT_ID,
+                p.PROJECT_NAME,
+                p.DESCRIPTION,
+                p.ORG_ID,
+                o.ORG_NAME,
+                p.VISIBILITY,
+                p.OWNER_ID,
+                u.USERNAME,
+                u.DOMAIN,
+                u.DISPLAY_NAME,
+                u.USER_TYPE,
+                p.RAW_PAYLOAD_MODE,
+                p.OUT_VARIABLES_MODE)
+                .from(p)
+                .leftJoin(u).on(u.USER_ID.eq(p.OWNER_ID))
+                .leftJoin(o).on(o.ORG_ID.eq(p.ORG_ID));
 
-                // check if the user belongs to a team in the org
-                SelectConditionStep<Record1<UUID>> teamIds = select(TEAMS.TEAM_ID)
-                        .from(TEAMS)
-                        .where(TEAMS.ORG_ID.eq(orgId));
+        if (currentUserId != null) {
+            // public projects are visible for anyone
+            Condition isPublic = p.VISIBILITY.eq(ProjectVisibility.PUBLIC.toString());
 
-                Condition isInATeam = exists(selectOne().from(V_USER_TEAMS)
-                        .where(V_USER_TEAMS.USER_ID.eq(currentUserId)
-                                .and(V_USER_TEAMS.TEAM_ID.in(teamIds))));
+            // check if the user belongs to a team in the org
+            SelectConditionStep<Record1<UUID>> teamIds = select(TEAMS.TEAM_ID)
+                    .from(TEAMS)
+                    .where(TEAMS.ORG_ID.eq(orgId));
 
-                // check if the user owns projects in the org
-                Condition ownsProjects = p.OWNER_ID.eq(currentUserId);
+            Condition isInATeam = exists(selectOne().from(V_USER_TEAMS)
+                    .where(V_USER_TEAMS.USER_ID.eq(currentUserId)
+                            .and(V_USER_TEAMS.TEAM_ID.in(teamIds))));
 
-                // check if the user owns the org
-                Condition ownsOrg = o.OWNER_ID.eq(currentUserId);
+            // check if the user owns projects in the org
+            Condition ownsProjects = p.OWNER_ID.eq(currentUserId);
 
-                // if any of those conditions true then the project must be visible
-                q.where(or(isPublic, isInATeam, ownsProjects, ownsOrg));
-            }
+            // check if the user owns the org
+            Condition ownsOrg = o.OWNER_ID.eq(currentUserId);
 
-            if (orgId != null) {
-                q.where(p.ORG_ID.eq(orgId));
-            }
-
-            if (sortField != null) {
-                q.orderBy(asc ? sortField.asc() : sortField.desc());
-            }
-
-            if (filter != null) {
-                q.where(p.PROJECT_NAME.containsIgnoreCase(filter));
-            }
-
-            if (offset > 0) {
-                q.offset(offset);
-            }
-
-            if (limit > 0) {
-                q.limit(limit);
-            }
-
-            return q.fetch(ProjectDao::toEntry);
+            // if any of those conditions true then the project must be visible
+            q.where(or(isPublic, isInATeam, ownsProjects, ownsOrg));
         }
+
+        if (orgId != null) {
+            q.where(p.ORG_ID.eq(orgId));
+        }
+
+        if (sortField != null) {
+            q.orderBy(asc ? sortField.asc() : sortField.desc());
+        }
+
+        if (filter != null) {
+            q.where(p.PROJECT_NAME.containsIgnoreCase(filter));
+        }
+
+        if (offset > 0) {
+            q.offset(offset);
+        }
+
+        if (limit > 0) {
+            q.limit(limit);
+        }
+
+        return q.fetch(ProjectDao::toEntry);
     }
 
     public Map<String, Object> getConfiguration(UUID projectId) {
-        try (DSLContext tx = DSL.using(cfg)) {
-            return tx.select(PROJECTS.PROJECT_CFG)
-                    .from(PROJECTS)
-                    .where(PROJECTS.PROJECT_ID.eq(projectId))
-                    .fetchOne(e -> objectMapper.fromJSONB(e.value1()));
-        }
+        return dsl().select(PROJECTS.PROJECT_CFG)
+                .from(PROJECTS)
+                .where(PROJECTS.PROJECT_ID.eq(projectId))
+                .fetchOne(e -> objectMapper.fromJSONB(e.value1()));
     }
 
     public Object getConfigurationValue(UUID projectId, String... path) {
@@ -407,9 +393,7 @@ public class ProjectDao extends AbstractDao {
     }
 
     public boolean hasAccessLevel(UUID projectId, UUID userId, ResourceAccessLevel... levels) {
-        try (DSLContext tx = DSL.using(cfg)) {
-            return hasAccessLevel(tx, projectId, userId, levels);
-        }
+        return hasAccessLevel(dsl(), projectId, userId, levels);
     }
 
     public boolean hasAccessLevel(DSLContext tx, UUID projectId, UUID userId, ResourceAccessLevel... levels) {
@@ -468,27 +452,27 @@ public class ProjectDao extends AbstractDao {
 
     public List<ResourceAccessEntry> getAccessLevel(UUID projectId) {
         List<ResourceAccessEntry> resourceAccessList = new ArrayList<>();
-        try (DSLContext tx = DSL.using(cfg)) {
-            Result<Record5<UUID, UUID, String, String, String>> teamsAccess = tx.select(
-                    PROJECT_TEAM_ACCESS.TEAM_ID,
-                    PROJECT_TEAM_ACCESS.PROJECT_ID,
-                    TEAMS.TEAM_NAME,
-                    ORGANIZATIONS.ORG_NAME,
-                    PROJECT_TEAM_ACCESS.ACCESS_LEVEL)
-                    .from(PROJECT_TEAM_ACCESS)
-                    .leftOuterJoin(TEAMS).on(TEAMS.TEAM_ID.eq(PROJECT_TEAM_ACCESS.TEAM_ID))
-                    .leftOuterJoin(PROJECTS).on(PROJECTS.PROJECT_ID.eq(projectId))
-                    .leftOuterJoin(ORGANIZATIONS).on(ORGANIZATIONS.ORG_ID.eq(PROJECTS.ORG_ID))
-                    .where(PROJECT_TEAM_ACCESS.PROJECT_ID.eq(projectId))
-                    .fetch();
 
-            for (Record5<UUID, UUID, String, String, String> t : teamsAccess) {
-                resourceAccessList.add(new ResourceAccessEntry(t.get(PROJECT_TEAM_ACCESS.TEAM_ID),
-                        t.get(ORGANIZATIONS.ORG_NAME),
-                        t.get(TEAMS.TEAM_NAME),
-                        ResourceAccessLevel.valueOf(t.get(PROJECT_TEAM_ACCESS.ACCESS_LEVEL))));
-            }
+        Result<Record5<UUID, UUID, String, String, String>> teamsAccess = dsl().select(
+                PROJECT_TEAM_ACCESS.TEAM_ID,
+                PROJECT_TEAM_ACCESS.PROJECT_ID,
+                TEAMS.TEAM_NAME,
+                ORGANIZATIONS.ORG_NAME,
+                PROJECT_TEAM_ACCESS.ACCESS_LEVEL)
+                .from(PROJECT_TEAM_ACCESS)
+                .leftOuterJoin(TEAMS).on(TEAMS.TEAM_ID.eq(PROJECT_TEAM_ACCESS.TEAM_ID))
+                .leftOuterJoin(PROJECTS).on(PROJECTS.PROJECT_ID.eq(projectId))
+                .leftOuterJoin(ORGANIZATIONS).on(ORGANIZATIONS.ORG_ID.eq(PROJECTS.ORG_ID))
+                .where(PROJECT_TEAM_ACCESS.PROJECT_ID.eq(projectId))
+                .fetch();
+
+        for (Record5<UUID, UUID, String, String, String> t : teamsAccess) {
+            resourceAccessList.add(new ResourceAccessEntry(t.get(PROJECT_TEAM_ACCESS.TEAM_ID),
+                    t.get(ORGANIZATIONS.ORG_NAME),
+                    t.get(TEAMS.TEAM_NAME),
+                    ResourceAccessLevel.valueOf(t.get(PROJECT_TEAM_ACCESS.ACCESS_LEVEL))));
         }
+
         return resourceAccessList;
     }
 

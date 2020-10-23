@@ -69,8 +69,7 @@ import java.util.stream.Stream;
 import static com.walmartlabs.concord.server.jooq.tables.ProcessQueue.PROCESS_QUEUE;
 import static com.walmartlabs.concord.server.jooq.tables.ProcessState.PROCESS_STATE;
 import static com.walmartlabs.concord.server.jooq.tables.Projects.PROJECTS;
-import static org.jooq.impl.DSL.count;
-import static org.jooq.impl.DSL.select;
+import static org.jooq.impl.DSL.*;
 
 @Named
 @Singleton
@@ -118,9 +117,7 @@ public class ProcessStateManager extends AbstractDao {
      * Fetches a single value specified by its path and applies a converter function.
      */
     public <T> Optional<T> get(ProcessKey processKey, String path, Function<InputStream, Optional<T>> converter) {
-        try (DSLContext tx = DSL.using(cfg)) {
-            return get(tx, processKey, path, converter);
-        }
+        return get(dsl(), processKey, path, converter);
     }
 
     private <T> Optional<T> get(DSLContext tx, ProcessKey processKey, String path, Function<InputStream, Optional<T>> converter) {
@@ -156,37 +153,37 @@ public class ProcessStateManager extends AbstractDao {
      * to each value.
      */
     public <T> List<T> forEach(ProcessKey processKey, String path, Function<InputStream, Optional<T>> converter) {
-        try (DSLContext tx = DSL.using(cfg)) {
-            String sql = tx.select(PROCESS_STATE.IS_ENCRYPTED, PROCESS_STATE.ITEM_DATA)
-                    .from(PROCESS_STATE)
-                    .where(PROCESS_STATE.INSTANCE_ID.eq((UUID) null)
-                            .and(PROCESS_STATE.INSTANCE_CREATED_AT.eq((OffsetDateTime) null))
-                            .and(PROCESS_STATE.ITEM_PATH.startsWith((String) null)))
-                    .getSQL();
+        DSLContext tx = dsl();
 
-            return tx.connectionResult(conn -> {
-                try (PreparedStatement ps = conn.prepareStatement(sql)) {
-                    ps.setObject(1, processKey.getInstanceId());
-                    ps.setObject(2, processKey.getCreatedAt());
-                    ps.setString(3, path);
+        String sql = tx.select(PROCESS_STATE.IS_ENCRYPTED, PROCESS_STATE.ITEM_DATA)
+                .from(PROCESS_STATE)
+                .where(PROCESS_STATE.INSTANCE_ID.eq((UUID) null)
+                        .and(PROCESS_STATE.INSTANCE_CREATED_AT.eq((OffsetDateTime) null))
+                        .and(PROCESS_STATE.ITEM_PATH.startsWith((String) null)))
+                .getSQL();
 
-                    List<T> result = new ArrayList<>();
+        return tx.connectionResult(conn -> {
+            try (PreparedStatement ps = conn.prepareStatement(sql)) {
+                ps.setObject(1, processKey.getInstanceId());
+                ps.setObject(2, processKey.getCreatedAt());
+                ps.setString(3, path);
 
-                    try (ResultSet rs = ps.executeQuery()) {
-                        while (rs.next()) {
-                            boolean encrypted = rs.getBoolean(1);
-                            try (InputStream in = rs.getBinaryStream(2);
-                                 InputStream processed = encrypted ? decrypt(in) : in) {
-                                Optional<T> o = converter.apply(processed);
-                                o.ifPresent(result::add);
-                            }
+                List<T> result = new ArrayList<>();
+
+                try (ResultSet rs = ps.executeQuery()) {
+                    while (rs.next()) {
+                        boolean encrypted = rs.getBoolean(1);
+                        try (InputStream in = rs.getBinaryStream(2);
+                             InputStream processed = encrypted ? decrypt(in) : in) {
+                            Optional<T> o = converter.apply(processed);
+                            o.ifPresent(result::add);
                         }
                     }
-
-                    return result;
                 }
-            });
-        }
+
+                return result;
+            }
+        });
     }
 
     /**
@@ -194,32 +191,27 @@ public class ProcessStateManager extends AbstractDao {
      */
     public List<String> list(PartialProcessKey partialProcessKey, String path) {
         ProcessKey processKey = processKeyCache.assertKey(partialProcessKey.getInstanceId());
-
-        try (DSLContext tx = DSL.using(cfg)) {
-            return tx.select(PROCESS_STATE.ITEM_PATH)
-                    .from(PROCESS_STATE)
-                    .where(PROCESS_STATE.INSTANCE_ID.eq(processKey.getInstanceId())
-                            .and(PROCESS_STATE.INSTANCE_CREATED_AT.eq(processKey.getCreatedAt()))
-                            .and(PROCESS_STATE.ITEM_PATH.startsWith(path)))
-                    .fetch(PROCESS_STATE.ITEM_PATH);
-        }
+        return dsl().select(PROCESS_STATE.ITEM_PATH)
+                .from(PROCESS_STATE)
+                .where(PROCESS_STATE.INSTANCE_ID.eq(processKey.getInstanceId())
+                        .and(PROCESS_STATE.INSTANCE_CREATED_AT.eq(processKey.getCreatedAt()))
+                        .and(PROCESS_STATE.ITEM_PATH.startsWith(path)))
+                .fetch(PROCESS_STATE.ITEM_PATH);
     }
 
     /**
      * Finds all item paths that starts with the specified value.
      */
     public <T> Optional<T> findPath(ProcessKey processKey, String path, Function<Stream<String>, Optional<T>> converter) {
-        try (DSLContext tx = DSL.using(cfg)) {
-            Stream<String> s = tx.select(PROCESS_STATE.ITEM_PATH)
-                    .from(PROCESS_STATE)
-                    .where(PROCESS_STATE.INSTANCE_ID.eq(processKey.getInstanceId())
-                            .and(PROCESS_STATE.INSTANCE_CREATED_AT.eq(processKey.getCreatedAt()))
-                            .and(PROCESS_STATE.ITEM_PATH.startsWith(path)))
-                    .fetch(PROCESS_STATE.ITEM_PATH)
-                    .stream();
+        Stream<String> s = dsl().select(PROCESS_STATE.ITEM_PATH)
+                .from(PROCESS_STATE)
+                .where(PROCESS_STATE.INSTANCE_ID.eq(processKey.getInstanceId())
+                        .and(PROCESS_STATE.INSTANCE_CREATED_AT.eq(processKey.getCreatedAt()))
+                        .and(PROCESS_STATE.ITEM_PATH.startsWith(path)))
+                .fetch(PROCESS_STATE.ITEM_PATH)
+                .stream();
 
-            return converter.apply(s);
-        }
+        return converter.apply(s);
     }
 
     public boolean exists(PartialProcessKey partialProcessKey, String path) {
@@ -231,12 +223,10 @@ public class ProcessStateManager extends AbstractDao {
      * Checks if a value exists.
      */
     public boolean exists(ProcessKey processKey, String path) {
-        try (DSLContext tx = DSL.using(cfg)) {
-            return tx.fetchExists(tx.selectFrom(PROCESS_STATE)
-                    .where(PROCESS_STATE.INSTANCE_ID.eq(processKey.getInstanceId())
-                            .and(PROCESS_STATE.INSTANCE_CREATED_AT.eq(processKey.getCreatedAt()))
-                            .and(PROCESS_STATE.ITEM_PATH.startsWith(path))));
-        }
+        return dsl().fetchExists(selectFrom(PROCESS_STATE)
+                .where(PROCESS_STATE.INSTANCE_ID.eq(processKey.getInstanceId())
+                        .and(PROCESS_STATE.INSTANCE_CREATED_AT.eq(processKey.getCreatedAt()))
+                        .and(PROCESS_STATE.ITEM_PATH.startsWith(path))));
     }
 
     /**
@@ -380,37 +370,37 @@ public class ProcessStateManager extends AbstractDao {
      * Exports all data of a process instance.
      */
     public boolean export(ProcessKey processKey, ItemConsumer consumer) {
-        try (DSLContext tx = DSL.using(cfg)) {
-            String sql = tx
-                    .select(PROCESS_STATE.ITEM_PATH, PROCESS_STATE.UNIX_MODE, PROCESS_STATE.IS_ENCRYPTED, PROCESS_STATE.ITEM_DATA)
-                    .from(PROCESS_STATE)
-                    .where(PROCESS_STATE.INSTANCE_ID.eq((UUID) null).and(PROCESS_STATE.INSTANCE_CREATED_AT.eq((OffsetDateTime) null)))
-                    .getSQL();
+        DSLContext tx = dsl();
 
-            return tx.connectionResult(conn -> {
-                try (PreparedStatement ps = conn.prepareStatement(sql)) {
-                    ps.setObject(1, processKey.getInstanceId());
-                    ps.setObject(2, processKey.getCreatedAt());
+        String sql = tx
+                .select(PROCESS_STATE.ITEM_PATH, PROCESS_STATE.UNIX_MODE, PROCESS_STATE.IS_ENCRYPTED, PROCESS_STATE.ITEM_DATA)
+                .from(PROCESS_STATE)
+                .where(PROCESS_STATE.INSTANCE_ID.eq((UUID) null).and(PROCESS_STATE.INSTANCE_CREATED_AT.eq((OffsetDateTime) null)))
+                .getSQL();
 
-                    boolean found = false;
-                    try (ResultSet rs = ps.executeQuery()) {
-                        while (rs.next()) {
-                            found = true;
+        return tx.connectionResult(conn -> {
+            try (PreparedStatement ps = conn.prepareStatement(sql)) {
+                ps.setObject(1, processKey.getInstanceId());
+                ps.setObject(2, processKey.getCreatedAt());
 
-                            String n = rs.getString(1);
-                            int unixMode = rs.getInt(2);
-                            boolean encrypted = rs.getBoolean(3);
-                            try (InputStream in = rs.getBinaryStream(4);
-                                 InputStream processed = encrypted ? decrypt(in) : in) {
-                                consumer.accept(n, unixMode, processed);
-                            }
+                boolean found = false;
+                try (ResultSet rs = ps.executeQuery()) {
+                    while (rs.next()) {
+                        found = true;
+
+                        String n = rs.getString(1);
+                        int unixMode = rs.getInt(2);
+                        boolean encrypted = rs.getBoolean(3);
+                        try (InputStream in = rs.getBinaryStream(4);
+                             InputStream processed = encrypted ? decrypt(in) : in) {
+                            consumer.accept(n, unixMode, processed);
                         }
                     }
-
-                    return found;
                 }
-            });
-        }
+
+                return found;
+            }
+        });
     }
 
     /**
@@ -419,40 +409,40 @@ public class ProcessStateManager extends AbstractDao {
     public boolean exportDirectory(ProcessKey processKey, String path, ItemConsumer consumer) {
         String dir = fixPath(path);
 
-        try (DSLContext tx = DSL.using(cfg)) {
-            String sql = tx
-                    .select(PROCESS_STATE.ITEM_PATH, PROCESS_STATE.UNIX_MODE, PROCESS_STATE.IS_ENCRYPTED, PROCESS_STATE.ITEM_DATA)
-                    .from(PROCESS_STATE)
-                    .where(PROCESS_STATE.INSTANCE_ID.eq((UUID) null)
-                            .and(PROCESS_STATE.INSTANCE_CREATED_AT.eq((OffsetDateTime) null))
-                            .and(PROCESS_STATE.ITEM_PATH.startsWith((String) null)))
-                    .getSQL();
+        DSLContext tx = dsl();
 
-            return tx.connectionResult(conn -> {
-                try (PreparedStatement ps = conn.prepareStatement(sql)) {
-                    ps.setObject(1, processKey.getInstanceId());
-                    ps.setObject(2, processKey.getCreatedAt());
-                    ps.setString(3, dir);
+        String sql = tx
+                .select(PROCESS_STATE.ITEM_PATH, PROCESS_STATE.UNIX_MODE, PROCESS_STATE.IS_ENCRYPTED, PROCESS_STATE.ITEM_DATA)
+                .from(PROCESS_STATE)
+                .where(PROCESS_STATE.INSTANCE_ID.eq((UUID) null)
+                        .and(PROCESS_STATE.INSTANCE_CREATED_AT.eq((OffsetDateTime) null))
+                        .and(PROCESS_STATE.ITEM_PATH.startsWith((String) null)))
+                .getSQL();
 
-                    boolean found = false;
-                    try (ResultSet rs = ps.executeQuery()) {
-                        while (rs.next()) {
-                            found = true;
+        return tx.connectionResult(conn -> {
+            try (PreparedStatement ps = conn.prepareStatement(sql)) {
+                ps.setObject(1, processKey.getInstanceId());
+                ps.setObject(2, processKey.getCreatedAt());
+                ps.setString(3, dir);
 
-                            String n = relativize(dir, rs.getString(1));
-                            int unixMode = rs.getInt(2);
-                            boolean encrypted = rs.getBoolean(3);
-                            try (InputStream in = rs.getBinaryStream(4);
-                                 InputStream processed = encrypted ? decrypt(in) : in) {
-                                consumer.accept(n, unixMode, processed);
-                            }
+                boolean found = false;
+                try (ResultSet rs = ps.executeQuery()) {
+                    while (rs.next()) {
+                        found = true;
+
+                        String n = relativize(dir, rs.getString(1));
+                        int unixMode = rs.getInt(2);
+                        boolean encrypted = rs.getBoolean(3);
+                        try (InputStream in = rs.getBinaryStream(4);
+                             InputStream processed = encrypted ? decrypt(in) : in) {
+                            consumer.accept(n, unixMode, processed);
                         }
                     }
-
-                    return found;
                 }
-            });
-        }
+
+                return found;
+            }
+        });
     }
 
     /**

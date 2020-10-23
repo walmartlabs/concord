@@ -25,7 +25,6 @@ import com.walmartlabs.concord.db.MainDB;
 import com.walmartlabs.concord.server.ConcordObjectMapper;
 import com.walmartlabs.concord.server.jooq.tables.JsonStoreData;
 import org.jooq.*;
-import org.jooq.impl.DSL;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -51,13 +50,11 @@ public class JsonStoreDataDao extends AbstractDao {
     }
 
     public Long getItemSize(UUID storeId, String itemPath) {
-        try (DSLContext tx = DSL.using(cfg)) {
-            return tx.select(JSON_STORE_DATA.ITEM_DATA_SIZE)
-                    .from(JSON_STORE_DATA)
-                    .where(JSON_STORE_DATA.JSON_STORE_ID.eq(storeId)
-                            .and(JSON_STORE_DATA.ITEM_PATH.eq(itemPath)))
-                    .fetchOne(JSON_STORE_DATA.ITEM_DATA_SIZE);
-        }
+        return dsl().select(JSON_STORE_DATA.ITEM_DATA_SIZE)
+                .from(JSON_STORE_DATA)
+                .where(JSON_STORE_DATA.JSON_STORE_ID.eq(storeId)
+                        .and(JSON_STORE_DATA.ITEM_PATH.eq(itemPath)))
+                .fetchOne(JSON_STORE_DATA.ITEM_DATA_SIZE);
     }
 
     public Object get(UUID storeId, String itemPath) {
@@ -71,52 +68,48 @@ public class JsonStoreDataDao extends AbstractDao {
     }
 
     public List<JsonStoreDataEntry> list(UUID storeId) {
-        try (DSLContext tx = DSL.using(cfg)) {
-            return tx.select(JSON_STORE_DATA.ITEM_PATH, JSON_STORE_DATA.ITEM_DATA)
-                    .from(JSON_STORE_DATA)
-                    .where(JSON_STORE_DATA.JSON_STORE_ID.eq(storeId))
-                    .fetch(this::toDataEntry);
-        }
+        return dsl().select(JSON_STORE_DATA.ITEM_PATH, JSON_STORE_DATA.ITEM_DATA)
+                .from(JSON_STORE_DATA)
+                .where(JSON_STORE_DATA.JSON_STORE_ID.eq(storeId))
+                .fetch(this::toDataEntry);
     }
 
     public List<String> listPath(UUID storeId, int offset, int limit, String filter) {
-        try (DSLContext tx = DSL.using(cfg)) {
-            SelectJoinStep<Record1<String>> q = tx.select(JSON_STORE_DATA.ITEM_PATH)
-                    .from(JSON_STORE_DATA);
+        SelectJoinStep<Record1<String>> q = dsl().select(JSON_STORE_DATA.ITEM_PATH)
+                .from(JSON_STORE_DATA);
 
-            if (filter != null) {
-                q.where(JSON_STORE_DATA.ITEM_PATH.containsIgnoreCase(filter));
-            }
-
-            if (offset >= 0) {
-                q.offset(offset);
-            }
-
-            if (limit > 0) {
-                q.limit(limit);
-            }
-
-            return q.where(JSON_STORE_DATA.JSON_STORE_ID.eq(storeId))
-                    .orderBy(JSON_STORE_DATA.ITEM_PATH)
-                    .fetch(Record1::value1);
+        if (filter != null) {
+            q.where(JSON_STORE_DATA.ITEM_PATH.containsIgnoreCase(filter));
         }
+
+        if (offset >= 0) {
+            q.offset(offset);
+        }
+
+        if (limit > 0) {
+            q.limit(limit);
+        }
+
+        return q.where(JSON_STORE_DATA.JSON_STORE_ID.eq(storeId))
+                .orderBy(JSON_STORE_DATA.ITEM_PATH)
+                .fetch(Record1::value1);
     }
 
     public void upsert(UUID storeId, String itemPath, String data) {
         tx(tx -> tx.insertInto(JSON_STORE_DATA)
-                        .columns(JSON_STORE_DATA.JSON_STORE_ID, JSON_STORE_DATA.ITEM_PATH, JSON_STORE_DATA.ITEM_DATA, JSON_STORE_DATA.ITEM_DATA_SIZE)
-                        .values(storeId, itemPath, objectMapper.jsonStringToJSONB(data), (long) data.length())
-                        .onDuplicateKeyUpdate()
-                        .set(JSON_STORE_DATA.ITEM_DATA, objectMapper.jsonStringToJSONB(data))
-                        .set(JSON_STORE_DATA.ITEM_DATA_SIZE, (long) data.length())
-                        .execute());
+                .columns(JSON_STORE_DATA.JSON_STORE_ID, JSON_STORE_DATA.ITEM_PATH, JSON_STORE_DATA.ITEM_DATA, JSON_STORE_DATA.ITEM_DATA_SIZE)
+                .values(storeId, itemPath, objectMapper.jsonStringToJSONB(data), (long) data.length())
+                .onDuplicateKeyUpdate()
+                .set(JSON_STORE_DATA.ITEM_DATA, objectMapper.jsonStringToJSONB(data))
+                .set(JSON_STORE_DATA.ITEM_DATA_SIZE, (long) data.length())
+                .execute());
     }
 
     public Long getSize(UUID storeId) {
         return txResult(tx -> tx.select(coalesce(sum(JSON_STORE_DATA.ITEM_DATA_SIZE), BigDecimal.ZERO))
-                        .from(JSON_STORE_DATA)
-                        .where(JSON_STORE_DATA.JSON_STORE_ID.eq(storeId))
-                        .fetchOne(r -> r.value1().longValue()));
+                .from(JSON_STORE_DATA)
+                .where(JSON_STORE_DATA.JSON_STORE_ID.eq(storeId))
+                .fetchOne(r -> r.value1().longValue()));
     }
 
     public boolean delete(UUID storeId, String itemPath) {

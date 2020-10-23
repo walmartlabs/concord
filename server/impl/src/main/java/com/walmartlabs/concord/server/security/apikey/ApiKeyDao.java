@@ -23,9 +23,7 @@ package com.walmartlabs.concord.server.security.apikey;
 import com.walmartlabs.concord.db.AbstractDao;
 import com.walmartlabs.concord.db.MainDB;
 import org.jooq.Configuration;
-import org.jooq.DSLContext;
 import org.jooq.Record4;
-import org.jooq.impl.DSL;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -62,27 +60,23 @@ public class ApiKeyDao extends AbstractDao {
     }
 
     public UUID getId(UUID userId, String keyName) {
-        try (DSLContext tx = DSL.using(cfg)) {
-            return tx.select(API_KEYS.KEY_ID)
-                    .from(API_KEYS)
-                    .where(API_KEYS.USER_ID.eq(userId)
-                            .and(API_KEYS.KEY_NAME.eq(keyName)))
-                    .fetchOne(API_KEYS.KEY_ID);
-        }
+        return dsl().select(API_KEYS.KEY_ID)
+                .from(API_KEYS)
+                .where(API_KEYS.USER_ID.eq(userId)
+                        .and(API_KEYS.KEY_NAME.eq(keyName)))
+                .fetchOne(API_KEYS.KEY_ID);
     }
 
     public List<ApiKeyEntry> list(UUID userId) {
-        try (DSLContext tx = DSL.using(cfg)) {
-            return tx.select(
-                    API_KEYS.KEY_ID,
-                    API_KEYS.USER_ID,
-                    API_KEYS.KEY_NAME,
-                    API_KEYS.EXPIRED_AT)
-                    .from(API_KEYS)
-                    .where(API_KEYS.USER_ID.eq(userId))
-                    .orderBy(API_KEYS.KEY_NAME)
-                    .fetch(ApiKeyDao::toEntry);
-        }
+        return dsl().select(
+                API_KEYS.KEY_ID,
+                API_KEYS.USER_ID,
+                API_KEYS.KEY_NAME,
+                API_KEYS.EXPIRED_AT)
+                .from(API_KEYS)
+                .where(API_KEYS.USER_ID.eq(userId))
+                .orderBy(API_KEYS.KEY_NAME)
+                .fetch(ApiKeyDao::toEntry);
     }
 
     public UUID insert(UUID userId, String key, String name, OffsetDateTime expiredAt) {
@@ -101,29 +95,23 @@ public class ApiKeyDao extends AbstractDao {
     }
 
     public UUID getUserId(UUID id) {
-        try (DSLContext tx = DSL.using(cfg)) {
-            return tx.select(API_KEYS.USER_ID)
-                    .from(API_KEYS)
-                    .where(API_KEYS.KEY_ID.eq(id))
-                    .fetchOne(API_KEYS.USER_ID);
-        }
+        return dsl().select(API_KEYS.USER_ID)
+                .from(API_KEYS)
+                .where(API_KEYS.KEY_ID.eq(id))
+                .fetchOne(API_KEYS.USER_ID);
     }
 
     public ApiKeyEntry find(String key) {
-        try (DSLContext tx = DSL.using(cfg)) {
-            return tx.select(API_KEYS.KEY_ID, API_KEYS.USER_ID, API_KEYS.KEY_NAME, API_KEYS.EXPIRED_AT)
-                    .from(API_KEYS)
-                    .where(API_KEYS.API_KEY.eq(hash(key))
-                            .and(API_KEYS.EXPIRED_AT.isNull()
-                                    .or(API_KEYS.EXPIRED_AT.greaterThan(currentOffsetDateTime()))))
-                    .fetchOne(ApiKeyDao::toEntry);
-        }
+        return dsl().select(API_KEYS.KEY_ID, API_KEYS.USER_ID, API_KEYS.KEY_NAME, API_KEYS.EXPIRED_AT)
+                .from(API_KEYS)
+                .where(API_KEYS.API_KEY.eq(hash(key))
+                        .and(API_KEYS.EXPIRED_AT.isNull()
+                                .or(API_KEYS.EXPIRED_AT.greaterThan(currentOffsetDateTime()))))
+                .fetchOne(ApiKeyDao::toEntry);
     }
 
     public int count(UUID userId) {
-        try (DSLContext tx = DSL.using(cfg)) {
-            return tx.fetchCount(selectFrom(API_KEYS).where(API_KEYS.USER_ID.eq(userId)));
-        }
+        return dsl().fetchCount(selectFrom(API_KEYS).where(API_KEYS.USER_ID.eq(userId)));
     }
 
     private static String hash(String s) {
