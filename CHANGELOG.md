@@ -4,6 +4,8 @@
 
 ### Added
 
+- concord-server: expose task failures  in metrics (including error
+messages);
 - concord-server: new GitHub trigger `condition` - `files.any`.
 Contains all `added`, `deleted` or `modified` files in a `push`
 event.
