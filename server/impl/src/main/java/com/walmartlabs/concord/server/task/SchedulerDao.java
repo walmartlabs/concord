@@ -65,7 +65,7 @@ public final class SchedulerDao extends AbstractDao {
                     .where(TASKS.TASK_INTERVAL.greaterThan(0L)
                             .and(TASKS.TASK_STATUS.notEqual(TaskStatusType.RUNNING).or(TASKS.TASK_STATUS.isNull()))
                             .and(TASKS.FINISHED_AT.isNull()
-                                    .or(TASKS.FINISHED_AT.plus(TASKS.TASK_INTERVAL.mul(i)).lessOrEqual(currentOffsetDateTime()))))
+                                    .or(TASKS.FINISHED_AT.plus(i.mul(TASKS.TASK_INTERVAL)).lessOrEqual(currentOffsetDateTime()))))
                     .forUpdate()
                     .skipLocked()
                     .fetch(TASKS.TASK_ID);
@@ -150,7 +150,7 @@ public final class SchedulerDao extends AbstractDao {
 
     public List<FailedTaskError> pollErrored() {
         return txResult(tx -> {
-            Result<Record3<String,String,OffsetDateTime>> result =  tx.select(TASKS.TASK_ID, TASKS.LAST_ERROR, TASKS.LAST_ERROR_AT)
+            Result<Record3<String, String, OffsetDateTime>> result = tx.select(TASKS.TASK_ID, TASKS.LAST_ERROR, TASKS.LAST_ERROR_AT)
                     .from(TASKS)
                     .where(TASKS.LAST_ERROR_AT.isNotNull()
                             .and(TASKS.LAST_ERROR.isNotNull()))
