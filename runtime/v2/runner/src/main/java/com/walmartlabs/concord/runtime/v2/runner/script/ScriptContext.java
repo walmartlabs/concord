@@ -110,7 +110,7 @@ public class ScriptContext implements Context {
     }
 
     @Override
-    public String suspendResume(Map<String, Serializable> state) {
-        return delegate.suspendResume(state);
+    public void suspendResume(String eventName, Map<String, Serializable> state) {
+        delegate.suspendResume(eventName, state);
     }
 }

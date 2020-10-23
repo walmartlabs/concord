@@ -55,9 +55,21 @@ public class TaskResult implements Serializable {
         return new TaskResult(false, message, null);
     }
 
+    public static TaskResult suspend(String eventName) {
+        return new TaskResult(true, null, null, SuspendAction.SUSPEND, eventName, null);
+    }
+
+    public static TaskResult suspendResume(String eventName, Map<String, Serializable> suspendState) {
+        return new TaskResult(true, null, null, SuspendAction.SUSPEND_RESUME, eventName, suspendState);
+    }
+
     private final boolean ok;
     private final String error;
     private Map<String, Object> values;
+
+    private final SuspendAction suspendAction;
+    private final String eventName;
+    private final Map<String, Serializable> suspendState;
 
     public TaskResult(boolean ok) {
         this(ok, null);
@@ -68,11 +80,19 @@ public class TaskResult implements Serializable {
     }
 
     public TaskResult(boolean ok, String error, Map<String, Object> values) {
+        this(ok, error, values, null, null, null);
+    }
+
+    private TaskResult(boolean ok, String error, Map<String, Object> values, SuspendAction suspendAction, String eventName, Map<String, Serializable> suspendState) {
         this.ok = ok;
         this.error = error;
 
         // make sure the map is serializable and mutable
         this.values = values != null ? new HashMap<>(values) : null;
+
+        this.suspendAction = suspendAction;
+        this.eventName = eventName;
+        this.suspendState = suspendState != null ? new HashMap<>(suspendState) : null;
     }
 
     public boolean ok() {
@@ -82,6 +102,19 @@ public class TaskResult implements Serializable {
     @Nullable
     public String error() {
         return error;
+    }
+
+    public SuspendAction suspendAction() {
+        return suspendAction;
+    }
+
+    @Nullable
+    public String suspendEvent() {
+        return eventName;
+    }
+
+    public Map<String, Serializable> suspendState() {
+        return suspendState;
     }
 
     public TaskResult value(String key, Object value) {
@@ -144,5 +177,9 @@ public class TaskResult implements Serializable {
                     "not a serializable value: %s (class: %s). " +
                     "Error: %s", key, value, value.getClass(), e.getMessage()));
         }
+    }
+
+    public enum SuspendAction {
+        SUSPEND, SUSPEND_RESUME
     }
 }

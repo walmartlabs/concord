@@ -43,7 +43,6 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import static com.walmartlabs.concord.client.ConcordTaskParams.*;
-import static com.walmartlabs.concord.client.ConcordTaskSuspender.ResumePayload;
 
 @Named("concord")
 public class ConcordTaskCommon {
@@ -72,16 +71,14 @@ public class ConcordTaskCommon {
     private final UUID currentProcessId;
     private final String currentOrgName;
     private final Path workDir;
-    private final ConcordTaskSuspender suspender;
 
-    public ConcordTaskCommon(String sessionToken, ApiClientFactory apiClientFactory, String processLinkTemplate, UUID currentProcessId, String currentOrgName, Path workDir, ConcordTaskSuspender suspender) {
+    public ConcordTaskCommon(String sessionToken, ApiClientFactory apiClientFactory, String processLinkTemplate, UUID currentProcessId, String currentOrgName, Path workDir) {
         this.sessionToken = sessionToken;
         this.apiClientFactory = apiClientFactory;
         this.processLinkTemplate = processLinkTemplate;
         this.currentProcessId = currentProcessId;
         this.currentOrgName = currentOrgName;
         this.workDir = workDir;
-        this.suspender = suspender;
     }
 
     public TaskResult execute(ConcordTaskParams in) throws Exception {
@@ -102,7 +99,7 @@ public class ConcordTaskCommon {
             }
             case KILL: {
                 kill((KillParams) in);
-                return null;
+                return TaskResult.success();
             }
             default:
                 throw new IllegalArgumentException("Unsupported action type: " + action);
@@ -271,8 +268,7 @@ public class ConcordTaskCommon {
                         in.baseUrl(), in.apiKey(), !in.outVars().isEmpty(),
                         Collections.singletonList(processId), in.ignoreFailures());
 
-                suspend(resume, true);
-                return TaskResult.success();
+                return suspend(resume, true);
             }
 
             Map<String, ProcessEntry> result = waitForCompletion(Collections.singletonList(processId), -1, Function.identity());
@@ -357,8 +353,8 @@ public class ConcordTaskCommon {
         }
     }
 
-    private void suspend(ResumePayload payload, boolean resumeFromSameStep) throws ApiException {
-        String eventName = suspender.suspend(resumeFromSameStep, payload);
+    private TaskResult suspend(ResumePayload payload, boolean resumeFromSameStep) throws ApiException {
+        String eventName = UUID.randomUUID().toString();
 
         Map<String, Object> condition = new HashMap<>();
         condition.put("type", "PROCESS_COMPLETION");
@@ -371,6 +367,12 @@ public class ConcordTaskCommon {
             api.setWaitCondition(currentProcessId, condition);
             return null;
         }));
+
+        if (resumeFromSameStep) {
+            return TaskResult.suspendResume(eventName, payload.asMap());
+        } else {
+            return TaskResult.suspend(eventName);
+        }
     }
 
     private static void handleResults(Map<String, ProcessEntry> m, boolean ignoreFailures) {
