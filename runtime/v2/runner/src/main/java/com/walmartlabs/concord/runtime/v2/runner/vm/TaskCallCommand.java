@@ -22,7 +22,6 @@ package com.walmartlabs.concord.runtime.v2.runner.vm;
 
 import com.walmartlabs.concord.runtime.v2.model.TaskCall;
 import com.walmartlabs.concord.runtime.v2.model.TaskCallOptions;
-import com.walmartlabs.concord.runtime.v2.runner.el.EvalContextFactory;
 import com.walmartlabs.concord.runtime.v2.runner.el.ExpressionEvaluator;
 import com.walmartlabs.concord.runtime.v2.runner.logging.SegmentedLogger;
 import com.walmartlabs.concord.runtime.v2.runner.tasks.TaskCallInterceptor;
@@ -32,10 +31,6 @@ import com.walmartlabs.concord.svm.Frame;
 import com.walmartlabs.concord.svm.Runtime;
 import com.walmartlabs.concord.svm.State;
 import com.walmartlabs.concord.svm.ThreadId;
-
-import java.io.Serializable;
-import java.util.Collections;
-import java.util.Map;
 
 import static com.walmartlabs.concord.runtime.v2.runner.tasks.TaskCallInterceptor.CallContext;
 import static com.walmartlabs.concord.runtime.v2.runner.tasks.TaskCallInterceptor.Method;
@@ -91,15 +86,7 @@ public class TaskCallCommand extends StepCommand<TaskCall> {
             throw new RuntimeException(e);
         }
 
-        if (result != null) {
-            if (opts.out() != null) {
-                ctx.variables().set(opts.out(), result.toMap());
-            } else if (opts.outExpr() != null) {
-                Map<String, Object> vars = Collections.singletonMap("result", result.toMap());
-                Map<String, Serializable> out = expressionEvaluator.evalAsMap(EvalContextFactory.strict(vars), opts.outExpr());
-                out.forEach((k, v) -> ctx.variables().set(k, v));
-            }
-        }
+        TaskCallUtils.processOut(result, opts, ctx, runtime);
     }
 
     @Override

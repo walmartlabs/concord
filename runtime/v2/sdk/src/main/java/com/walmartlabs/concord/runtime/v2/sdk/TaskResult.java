@@ -55,8 +55,13 @@ public class TaskResult implements Serializable {
         return new TaskResult(false, message, null);
     }
 
+    public static TaskResult suspend() {
+        return new TaskResult(true, null, true, null);
+    }
+
     private final boolean ok;
     private final String error;
+    private final boolean suspend;
     private Map<String, Object> values;
 
     public TaskResult(boolean ok) {
@@ -68,8 +73,13 @@ public class TaskResult implements Serializable {
     }
 
     public TaskResult(boolean ok, String error, Map<String, Object> values) {
+        this(ok, error, false, values);
+    }
+
+    public TaskResult(boolean ok, String error, boolean suspend, Map<String, Object> values) {
         this.ok = ok;
         this.error = error;
+        this.suspend = suspend;
 
         // make sure the map is serializable and mutable
         this.values = values != null ? new HashMap<>(values) : null;
@@ -77,6 +87,10 @@ public class TaskResult implements Serializable {
 
     public boolean ok() {
         return ok;
+    }
+
+    public boolean suspended() {
+        return suspend;
     }
 
     @Nullable

@@ -689,6 +689,7 @@ public class MainTest {
         assertLog(log, ".*result.ok: true.*");
         assertLog(log, ".*result.action: boo.*");
         assertLog(log, ".*result.k: v.*");
+        assertLog(log, ".*resultAction: boo.*");
     }
 
     @Test
@@ -1079,7 +1080,7 @@ public class MainTest {
 
             EVENT_NAME = context.suspendResume(payload);
 
-            return TaskResult.success();
+            return TaskResult.suspend();
         }
 
         @Override
