@@ -94,6 +94,7 @@ public interface Context {
      * Suspends the current task execution and resumes a {@link ReentrantTask}
      * with the provided payload.
      *
+     * @param eventName the name of the event on which the process is suspended on.
      * @param state passed to the {@link ReentrantTask#resume(Map)} method
      *              once the process is resumed.
      * @apiNote unstable API, subject to change
