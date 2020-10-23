@@ -240,15 +240,17 @@ public class ProcessIT {
 
         ConcordProcess proc = concord.processes().start(payload);
         proc.expectStatus(ProcessEntry.StatusEnum.FINISHED);
+        proc.assertLogAtLeast(".*#4.*z=345.*", 1);
 
         // ---
 
         List<ProcessCheckpointEntry> checkpoints = proc.checkpoints();
         assertEquals(3, checkpoints.size());
 
-        checkpoints.sort(Comparator.comparing(ProcessCheckpointEntry::getCreatedAt));
-
-        assertEquals("third", checkpoints.get(2).getName());
+        checkpoints.sort(Comparator.comparing(ProcessCheckpointEntry::getName));
+        assertEquals("aaa", checkpoints.get(0).getName());
+        assertEquals("bbb", checkpoints.get(1).getName());
+        assertEquals("ccc", checkpoints.get(2).getName());
 
         // ---
 

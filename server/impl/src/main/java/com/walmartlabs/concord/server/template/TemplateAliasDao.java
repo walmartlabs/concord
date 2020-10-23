@@ -25,7 +25,6 @@ import com.walmartlabs.concord.db.MainDB;
 import org.jooq.Configuration;
 import org.jooq.DSLContext;
 import org.jooq.Record2;
-import org.jooq.impl.DSL;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -43,19 +42,16 @@ public class TemplateAliasDao extends AbstractDao {
     }
 
     public boolean exists(String alias) {
-        try (DSLContext tx = DSL.using(cfg)) {
-            return tx.fetchExists(tx.selectFrom(TEMPLATE_ALIASES)
-                    .where(TEMPLATE_ALIASES.TEMPLATE_ALIAS.eq(alias)));
-        }
+        DSLContext tx = dsl();
+        return tx.fetchExists(tx.selectFrom(TEMPLATE_ALIASES)
+                .where(TEMPLATE_ALIASES.TEMPLATE_ALIAS.eq(alias)));
     }
 
     public Optional<String> get(String alias) {
-        try (DSLContext tx = DSL.using(cfg)) {
-            return tx.select(TEMPLATE_ALIASES.TEMPLATE_URL)
-                    .from(TEMPLATE_ALIASES)
-                    .where(TEMPLATE_ALIASES.TEMPLATE_ALIAS.eq(alias))
-                    .fetchOptional(TEMPLATE_ALIASES.TEMPLATE_URL);
-        }
+        return dsl().select(TEMPLATE_ALIASES.TEMPLATE_URL)
+                .from(TEMPLATE_ALIASES)
+                .where(TEMPLATE_ALIASES.TEMPLATE_ALIAS.eq(alias))
+                .fetchOptional(TEMPLATE_ALIASES.TEMPLATE_URL);
     }
 
     public void insert(String alias, String url) {
@@ -70,11 +66,9 @@ public class TemplateAliasDao extends AbstractDao {
     }
 
     public List<TemplateAliasEntry> list() {
-        try (DSLContext tx = DSL.using(cfg)) {
-            return tx.select(TEMPLATE_ALIASES.TEMPLATE_ALIAS, TEMPLATE_ALIASES.TEMPLATE_URL)
-                    .from(TEMPLATE_ALIASES)
-                    .fetch(TemplateAliasDao::toEntry);
-        }
+        return dsl().select(TEMPLATE_ALIASES.TEMPLATE_ALIAS, TEMPLATE_ALIASES.TEMPLATE_URL)
+                .from(TEMPLATE_ALIASES)
+                .fetch(TemplateAliasDao::toEntry);
     }
 
     public void delete(String alias) {

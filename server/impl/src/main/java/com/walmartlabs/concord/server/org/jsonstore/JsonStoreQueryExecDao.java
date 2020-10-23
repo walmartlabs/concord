@@ -37,10 +37,8 @@ import net.sf.jsqlparser.statement.StatementVisitorAdapter;
 import net.sf.jsqlparser.statement.create.table.ColDataType;
 import net.sf.jsqlparser.statement.select.*;
 import org.jooq.Configuration;
-import org.jooq.DSLContext;
 import org.jooq.QueryPart;
 import org.jooq.Record;
-import org.jooq.impl.DSL;
 import org.sonatype.siesta.ValidationErrorsException;
 
 import javax.inject.Inject;
@@ -81,19 +79,17 @@ public class JsonStoreQueryExecDao extends AbstractDao {
     public List<Object> execSql(UUID storeId, String query, Map<String, Object> params, Integer maxLimit) {
         String sql = createQuery(query, maxLimit);
 
-        try (DSLContext tx = DSL.using(cfg)) {
-            // TODO we should probably inspect the query to determine whether we need to bind the params or not
+        // TODO we should probably inspect the query to determine whether we need to bind the params or not
 
-            QueryPart[] args;
-            if (params == null) {
-                args = new QueryPart[]{val(storeId)};
-            } else {
-                args = new QueryPart[]{val(objectMapper.toString(params)), val(storeId)};
-            }
-
-            return tx.resultQuery(sql, args)
-                    .fetch(this::toExecResult);
+        QueryPart[] args;
+        if (params == null) {
+            args = new QueryPart[]{val(storeId)};
+        } else {
+            args = new QueryPart[]{val(objectMapper.toString(params)), val(storeId)};
         }
+
+        return dsl().resultQuery(sql, args)
+                .fetch(this::toExecResult);
     }
 
     private Object toExecResult(Record record) {

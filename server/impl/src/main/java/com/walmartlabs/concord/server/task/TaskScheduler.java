@@ -22,7 +22,6 @@ package com.walmartlabs.concord.server.task;
 
 import com.walmartlabs.concord.db.AbstractDao;
 import com.walmartlabs.concord.db.MainDB;
-import com.walmartlabs.concord.db.PgUtils;
 import com.walmartlabs.concord.server.PeriodicTask;
 import com.walmartlabs.concord.server.jooq.enums.TaskStatusType;
 import com.walmartlabs.concord.server.sdk.ScheduledTask;
@@ -46,7 +45,8 @@ import java.util.concurrent.TimeUnit;
 
 import static com.walmartlabs.concord.db.PgUtils.interval;
 import static com.walmartlabs.concord.server.jooq.Tables.TASKS;
-import static org.jooq.impl.DSL.*;
+import static org.jooq.impl.DSL.currentOffsetDateTime;
+import static org.jooq.impl.DSL.value;
 
 @Named
 @Singleton
@@ -182,8 +182,7 @@ public class TaskScheduler extends PeriodicTask {
         }
 
         public List<String> poll() {
-            @SuppressWarnings("unchecked")
-            Field<? extends Number> i = (Field<? extends Number>) PgUtils.interval("1 second");
+            Field<?> maxAge = interval("1 second").mul(TASKS.TASK_INTERVAL);
 
             return txResult(tx -> {
                 List<String> ids = tx.select(TASKS.TASK_ID)
@@ -191,7 +190,7 @@ public class TaskScheduler extends PeriodicTask {
                         .where(TASKS.TASK_INTERVAL.greaterThan(0L)
                                 .and(TASKS.TASK_STATUS.notEqual(TaskStatusType.RUNNING).or(TASKS.TASK_STATUS.isNull()))
                                 .and(TASKS.FINISHED_AT.isNull()
-                                        .or(TASKS.FINISHED_AT.plus(TASKS.TASK_INTERVAL.mul(i)).lessOrEqual(currentOffsetDateTime()))))
+                                        .or(TASKS.FINISHED_AT.plus(maxAge).lessOrEqual(currentOffsetDateTime()))))
                         .forUpdate()
                         .skipLocked()
                         .fetch(TASKS.TASK_ID);

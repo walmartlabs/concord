@@ -29,7 +29,6 @@ import com.walmartlabs.concord.server.process.LogSegment;
 import com.walmartlabs.concord.server.sdk.ProcessKey;
 import com.walmartlabs.concord.server.sdk.Range;
 import org.jooq.*;
-import org.jooq.impl.DSL;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -135,60 +134,58 @@ public class ProcessLogsDao extends AbstractDao {
         UUID instanceId = processKey.getInstanceId();
         OffsetDateTime createdAt = processKey.getCreatedAt();
 
-        try (DSLContext tx = DSL.using(cfg)) {
-            return tx.select(PROCESS_LOG_SEGMENTS.SEGMENT_ID, PROCESS_LOG_SEGMENTS.CORRELATION_ID,
-                    PROCESS_LOG_SEGMENTS.SEGMENT_NAME,
-                    PROCESS_LOG_SEGMENTS.SEGMENT_TS,
-                    PROCESS_LOG_SEGMENTS.SEGMENT_STATUS,
-                    PROCESS_LOG_SEGMENTS.SEGMENT_WARN,
-                    PROCESS_LOG_SEGMENTS.SEGMENT_ERRORS)
-                    .from(PROCESS_LOG_SEGMENTS)
-                    .where(PROCESS_LOG_SEGMENTS.INSTANCE_ID.eq(instanceId)
-                            .and(PROCESS_LOG_SEGMENTS.INSTANCE_CREATED_AT.eq(createdAt)))
-                    .orderBy(PROCESS_LOG_SEGMENTS.SEGMENT_TS)
-                    .limit(limit)
-                    .offset(offset)
-                    .fetch(ProcessLogsDao::toSegment);
-        }
+        return dsl().select(PROCESS_LOG_SEGMENTS.SEGMENT_ID, PROCESS_LOG_SEGMENTS.CORRELATION_ID,
+                PROCESS_LOG_SEGMENTS.SEGMENT_NAME,
+                PROCESS_LOG_SEGMENTS.SEGMENT_TS,
+                PROCESS_LOG_SEGMENTS.SEGMENT_STATUS,
+                PROCESS_LOG_SEGMENTS.SEGMENT_WARN,
+                PROCESS_LOG_SEGMENTS.SEGMENT_ERRORS)
+                .from(PROCESS_LOG_SEGMENTS)
+                .where(PROCESS_LOG_SEGMENTS.INSTANCE_ID.eq(instanceId)
+                        .and(PROCESS_LOG_SEGMENTS.INSTANCE_CREATED_AT.eq(createdAt)))
+                .orderBy(PROCESS_LOG_SEGMENTS.SEGMENT_TS)
+                .limit(limit)
+                .offset(offset)
+                .fetch(ProcessLogsDao::toSegment);
     }
 
     public ProcessLog segmentData(ProcessKey processKey, long segmentId, Integer start, Integer end) {
         UUID instanceId = processKey.getInstanceId();
         OffsetDateTime createdAt = processKey.getCreatedAt();
 
-        try (DSLContext tx = DSL.using(cfg)) {
-            List<ProcessLogChunk> chunks = getSegmentChunks(tx, processKey, segmentId, start, end);
+        DSLContext tx = dsl();
 
-            Field<Integer> upperRange = max(upperRange(PROCESS_LOG_DATA.SEGMENT_RANGE));
-            int size = tx.select(upperRange)
-                    .from(PROCESS_LOG_DATA)
-                    .where(PROCESS_LOG_DATA.INSTANCE_ID.eq(instanceId)
-                            .and(PROCESS_LOG_DATA.INSTANCE_CREATED_AT.eq(createdAt))
-                            .and(PROCESS_LOG_DATA.SEGMENT_ID.eq(segmentId)))
-                    .fetchOptional(upperRange)
-                    .orElse(0);
+        List<ProcessLogChunk> chunks = getSegmentChunks(tx, processKey, segmentId, start, end);
 
-            return new ProcessLogsDao.ProcessLog(size, chunks);
-        }
+        Field<Integer> upperRange = max(upperRange(PROCESS_LOG_DATA.SEGMENT_RANGE));
+        int size = tx.select(upperRange)
+                .from(PROCESS_LOG_DATA)
+                .where(PROCESS_LOG_DATA.INSTANCE_ID.eq(instanceId)
+                        .and(PROCESS_LOG_DATA.INSTANCE_CREATED_AT.eq(createdAt))
+                        .and(PROCESS_LOG_DATA.SEGMENT_ID.eq(segmentId)))
+                .fetchOptional(upperRange)
+                .orElse(0);
+
+        return new ProcessLogsDao.ProcessLog(size, chunks);
     }
 
     public ProcessLog data(ProcessKey processKey, Integer start, Integer end) {
         UUID instanceId = processKey.getInstanceId();
         OffsetDateTime createdAt = processKey.getCreatedAt();
 
-        try (DSLContext tx = DSL.using(cfg)) {
-            List<ProcessLogChunk> chunks = getDataChunks(tx, processKey, start, end);
+        DSLContext tx = dsl();
 
-            Field<Integer> upperRange = max(upperRange(PROCESS_LOG_DATA.LOG_RANGE));
-            int size = tx.select(upperRange)
-                    .from(PROCESS_LOG_DATA)
-                    .where(PROCESS_LOG_DATA.INSTANCE_ID.eq(instanceId)
-                            .and(PROCESS_LOG_DATA.INSTANCE_CREATED_AT.eq(createdAt)))
-                    .fetchOptional(upperRange)
-                    .orElse(0);
+        List<ProcessLogChunk> chunks = getDataChunks(tx, processKey, start, end);
 
-            return new ProcessLog(size, chunks);
-        }
+        Field<Integer> upperRange = max(upperRange(PROCESS_LOG_DATA.LOG_RANGE));
+        int size = tx.select(upperRange)
+                .from(PROCESS_LOG_DATA)
+                .where(PROCESS_LOG_DATA.INSTANCE_ID.eq(instanceId)
+                        .and(PROCESS_LOG_DATA.INSTANCE_CREATED_AT.eq(createdAt)))
+                .fetchOptional(upperRange)
+                .orElse(0);
+
+        return new ProcessLog(size, chunks);
     }
 
     private List<ProcessLogChunk> getSegmentChunks(DSLContext tx, ProcessKey processKey, long segmentId, Integer start, Integer end) {
