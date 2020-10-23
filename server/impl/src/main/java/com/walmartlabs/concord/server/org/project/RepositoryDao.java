@@ -25,7 +25,6 @@ import com.walmartlabs.concord.db.MainDB;
 import com.walmartlabs.concord.server.ConcordObjectMapper;
 import org.jooq.*;
 import org.jooq.exception.DataAccessException;
-import org.jooq.impl.DSL;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -55,22 +54,19 @@ public class RepositoryDao extends AbstractDao {
     }
 
     public UUID getId(UUID projectId, String repoName) {
-        try (DSLContext tx = DSL.using(cfg)) {
-            return tx.select(REPOSITORIES.REPO_ID)
-                    .from(REPOSITORIES)
-                    .where(REPOSITORIES.PROJECT_ID.eq(projectId)
-                            .and(REPOSITORIES.REPO_NAME.eq(repoName)))
-                    .fetchOne(REPOSITORIES.REPO_ID);
-        }
+        return dsl().select(REPOSITORIES.REPO_ID)
+                .from(REPOSITORIES)
+                .where(REPOSITORIES.PROJECT_ID.eq(projectId)
+                        .and(REPOSITORIES.REPO_NAME.eq(repoName)))
+                .fetchOne(REPOSITORIES.REPO_ID);
     }
 
     public UUID getProjectId(UUID repoId) {
-        try (DSLContext tx = DSL.using(cfg)) {
-            return tx.select(REPOSITORIES.PROJECT_ID)
-                    .from(REPOSITORIES)
-                    .where(REPOSITORIES.REPO_ID.eq(repoId))
-                    .fetchOne(REPOSITORIES.PROJECT_ID);
-        }
+
+        return dsl().select(REPOSITORIES.PROJECT_ID)
+                .from(REPOSITORIES)
+                .where(REPOSITORIES.REPO_ID.eq(repoId))
+                .fetchOne(REPOSITORIES.PROJECT_ID);
     }
 
     public RepositoryEntry get(UUID projectId, UUID repoId) {
@@ -159,10 +155,8 @@ public class RepositoryDao extends AbstractDao {
     }
 
     public List<RepositoryEntry> list() {
-        try (DSLContext tx = DSL.using(cfg)) {
-            return selectRepositoryEntry(tx)
-                    .fetch(this::toEntry);
-        }
+        return selectRepositoryEntry(dsl())
+                .fetch(this::toEntry);
     }
 
     public List<RepositoryEntry> list(UUID projectId) {
@@ -174,9 +168,7 @@ public class RepositoryDao extends AbstractDao {
     }
 
     public List<RepositoryEntry> list(UUID projectId, Field<?> sortField, boolean asc) {
-        try (DSLContext tx = DSL.using(cfg)) {
-            return list(tx, projectId, sortField, asc);
-        }
+        return list(dsl(), projectId, sortField, asc);
     }
 
     public List<RepositoryEntry> list(DSLContext tx, UUID projectId, Field<?> sortField, boolean asc) {
@@ -195,16 +187,14 @@ public class RepositoryDao extends AbstractDao {
     }
 
     public List<RepositoryEntry> find(UUID projectId, String repoUrl) {
-        try (DSLContext tx = DSL.using(cfg)) {
-            SelectConditionStep<Record12<UUID, UUID, String, String, String, String, String, Boolean, JSONB, UUID, String, String>> select = selectRepositoryEntry(tx)
-                    .where(REPOSITORIES.REPO_URL.contains(repoUrl));
+        SelectConditionStep<Record12<UUID, UUID, String, String, String, String, String, Boolean, JSONB, UUID, String, String>> select = selectRepositoryEntry(dsl())
+                .where(REPOSITORIES.REPO_URL.contains(repoUrl));
 
-            if (projectId != null) {
-                select.and(REPOSITORIES.PROJECT_ID.eq(projectId));
-            }
-
-            return select.fetch(this::toEntry);
+        if (projectId != null) {
+            select.and(REPOSITORIES.PROJECT_ID.eq(projectId));
         }
+
+        return select.fetch(this::toEntry);
     }
 
     public List<RepositoryEntry> findBySecretId(DSLContext tx, UUID secretId) {

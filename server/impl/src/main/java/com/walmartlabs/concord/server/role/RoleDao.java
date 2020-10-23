@@ -24,7 +24,6 @@ import com.walmartlabs.concord.db.AbstractDao;
 import com.walmartlabs.concord.db.MainDB;
 import com.walmartlabs.concord.server.user.RoleEntry;
 import org.jooq.*;
-import org.jooq.impl.DSL;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -44,27 +43,23 @@ public class RoleDao extends AbstractDao {
     }
 
     public RoleEntry get(UUID id) {
-        try (DSLContext tx = DSL.using(cfg)) {
-            SelectConditionStep<Record1<String[]>> permissions = select(arrayAgg(PERMISSIONS.PERMISSION_NAME)).from(PERMISSIONS)
-                    .where(PERMISSIONS.PERMISSION_ID.in(
-                            select(ROLE_PERMISSIONS.PERMISSION_ID).from(ROLE_PERMISSIONS)
-                                    .where(ROLE_PERMISSIONS.ROLE_ID.in(ROLES.ROLE_ID))));
+        SelectConditionStep<Record1<String[]>> permissions = select(arrayAgg(PERMISSIONS.PERMISSION_NAME)).from(PERMISSIONS)
+                .where(PERMISSIONS.PERMISSION_ID.in(
+                        select(ROLE_PERMISSIONS.PERMISSION_ID).from(ROLE_PERMISSIONS)
+                                .where(ROLE_PERMISSIONS.ROLE_ID.in(ROLES.ROLE_ID))));
 
-            return tx.select(ROLES.ROLE_ID, ROLES.ROLE_NAME, isnull(permissions.asField(), new String[]{}))
-                    .from(ROLES)
-                    .where(ROLES.ROLE_ID.in(id))
-                    .fetchOne(e -> new RoleEntry(e.value1(), e.value2(), new HashSet<>(Arrays.asList(e.value3()))));
-        }
+        return dsl().select(ROLES.ROLE_ID, ROLES.ROLE_NAME, isnull(permissions.asField(), new String[]{}))
+                .from(ROLES)
+                .where(ROLES.ROLE_ID.in(id))
+                .fetchOne(e -> new RoleEntry(e.value1(), e.value2(), new HashSet<>(Arrays.asList(e.value3()))));
     }
 
     public UUID getId(String roleName) {
-        try (DSLContext tx = DSL.using(cfg)) {
-            SelectConditionStep<Record1<UUID>> q = tx.select(ROLES.ROLE_ID)
-                    .from(ROLES)
-                    .where(ROLES.ROLE_NAME.eq(roleName));
+        SelectConditionStep<Record1<UUID>> q = dsl().select(ROLES.ROLE_ID)
+                .from(ROLES)
+                .where(ROLES.ROLE_NAME.eq(roleName));
 
-            return q.fetchOne(ROLES.ROLE_ID);
-        }
+        return q.fetchOne(ROLES.ROLE_ID);
     }
 
     public UUID insert(String roleName, Set<String> permissions) {
@@ -118,19 +113,15 @@ public class RoleDao extends AbstractDao {
     }
 
     public List<RoleEntry> list() {
-        try (DSLContext tx = DSL.using(cfg)) {
-            SelectConditionStep<Record1<String[]>> permissions = select(arrayAgg(PERMISSIONS.PERMISSION_NAME)).from(PERMISSIONS)
-                    .where(PERMISSIONS.PERMISSION_ID.in(
-                            select(ROLE_PERMISSIONS.PERMISSION_ID).from(ROLE_PERMISSIONS)
-                                    .where(ROLE_PERMISSIONS.ROLE_ID.eq(ROLES.ROLE_ID))));
+        SelectConditionStep<Record1<String[]>> permissions = select(arrayAgg(PERMISSIONS.PERMISSION_NAME)).from(PERMISSIONS)
+                .where(PERMISSIONS.PERMISSION_ID.in(
+                        select(ROLE_PERMISSIONS.PERMISSION_ID).from(ROLE_PERMISSIONS)
+                                .where(ROLE_PERMISSIONS.ROLE_ID.eq(ROLES.ROLE_ID))));
 
 
-            return tx.select(ROLES.ROLE_ID, ROLES.ROLE_NAME, isnull(permissions.asField(), new String[]{}))
-                    .from(ROLES)
-                    .fetch(RoleDao::toEntry);
-
-
-        }
+        return dsl().select(ROLES.ROLE_ID, ROLES.ROLE_NAME, isnull(permissions.asField(), new String[]{}))
+                .from(ROLES)
+                .fetch(RoleDao::toEntry);
     }
 
     private static RoleEntry toEntry(Record3<UUID, String, String[]> e) {

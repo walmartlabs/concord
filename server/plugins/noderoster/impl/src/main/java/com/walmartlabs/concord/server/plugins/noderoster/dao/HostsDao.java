@@ -32,7 +32,6 @@ import com.walmartlabs.concord.server.plugins.noderoster.jooq.tables.NodeRosterP
 import com.walmartlabs.concord.server.sdk.ProcessKey;
 import com.walmartlabs.concord.server.sdk.ProcessKeyCache;
 import org.jooq.*;
-import org.jooq.impl.DSL;
 
 import javax.inject.Inject;
 import java.time.OffsetDateTime;
@@ -66,77 +65,73 @@ public class HostsDao extends AbstractDao {
     }
 
     public List<HostEntry> list(HostFilter filter, Set<HostsDataInclude> includes, int limit, int offset) {
-        try (DSLContext tx = DSL.using(cfg)) {
-            NodeRosterHosts nrh = NODE_ROSTER_HOSTS.as("nrh");
-            NodeRosterProcessHosts nrph = NODE_ROSTER_PROCESS_HOSTS.as("nrph");
-            NodeRosterHostArtifacts nrha = NODE_ROSTER_HOST_ARTIFACTS.as("nrha");
+        NodeRosterHosts nrh = NODE_ROSTER_HOSTS.as("nrh");
+        NodeRosterProcessHosts nrph = NODE_ROSTER_PROCESS_HOSTS.as("nrph");
+        NodeRosterHostArtifacts nrha = NODE_ROSTER_HOST_ARTIFACTS.as("nrha");
 
-            SelectQuery<Record> query = tx.selectQuery();
-            query.addSelect(nrh.HOST_ID, nrh.NORMALIZED_HOSTNAME, nrh.CREATED_AT);
-            query.addFrom(nrh);
+        SelectQuery<Record> query = dsl().selectQuery();
+        query.addSelect(nrh.HOST_ID, nrh.NORMALIZED_HOSTNAME, nrh.CREATED_AT);
+        query.addFrom(nrh);
 
-            if (filter.host() != null) {
-                query.addConditions(nrh.NORMALIZED_HOSTNAME.containsIgnoreCase(filter.host()));
-            }
-
-            ProcessKey key = null;
-            if (filter.processInstanceId() != null) {
-                key = processKeyCache.get(filter.processInstanceId());
-                if (key == null) {
-                    return Collections.emptyList();
-                }
-
-                query.addFrom(nrph);
-
-                query.addConditions(nrh.HOST_ID.eq(nrph.HOST_ID)
-                        .and(nrph.INSTANCE_ID.eq(key.getInstanceId())
-                                .and(nrph.INSTANCE_CREATED_AT.eq(key.getCreatedAt()))));
-            }
-
-            if ((includes != null && includes.contains(HostsDataInclude.ARTIFACTS))
-                    || filter.artifact() != null) {
-                query.addSelect(nrha.ARTIFACT_URL);
-                query.addFrom(nrha);
-                query.addConditions(nrh.HOST_ID.eq(nrha.HOST_ID));
-            }
-
-            if (filter.artifact() != null) {
-                query.addConditions(nrha.ARTIFACT_URL.likeRegex(filter.artifact()));
-
-                if (key != null) {
-                    query.addConditions(nrha.INSTANCE_ID.eq(key.getInstanceId())
-                            .and(nrha.INSTANCE_CREATED_AT.eq(key.getCreatedAt())));
-                }
-            }
-
-            query.addOrderBy(nrh.CREATED_AT.desc());
-            query.addLimit(limit);
-            query.addOffset(offset);
-
-            return query.fetch(HostsDao::toHostEntry);
+        if (filter.host() != null) {
+            query.addConditions(nrh.NORMALIZED_HOSTNAME.containsIgnoreCase(filter.host()));
         }
+
+        ProcessKey key = null;
+        if (filter.processInstanceId() != null) {
+            key = processKeyCache.get(filter.processInstanceId());
+            if (key == null) {
+                return Collections.emptyList();
+            }
+
+            query.addFrom(nrph);
+
+            query.addConditions(nrh.HOST_ID.eq(nrph.HOST_ID)
+                    .and(nrph.INSTANCE_ID.eq(key.getInstanceId())
+                            .and(nrph.INSTANCE_CREATED_AT.eq(key.getCreatedAt()))));
+        }
+
+        if ((includes != null && includes.contains(HostsDataInclude.ARTIFACTS))
+                || filter.artifact() != null) {
+            query.addSelect(nrha.ARTIFACT_URL);
+            query.addFrom(nrha);
+            query.addConditions(nrh.HOST_ID.eq(nrha.HOST_ID));
+        }
+
+        if (filter.artifact() != null) {
+            query.addConditions(nrha.ARTIFACT_URL.likeRegex(filter.artifact()));
+
+            if (key != null) {
+                query.addConditions(nrha.INSTANCE_ID.eq(key.getInstanceId())
+                        .and(nrha.INSTANCE_CREATED_AT.eq(key.getCreatedAt())));
+            }
+        }
+
+        query.addOrderBy(nrh.CREATED_AT.desc());
+        query.addLimit(limit);
+        query.addOffset(offset);
+
+        return query.fetch(HostsDao::toHostEntry);
     }
 
     public List<ProcessEntry> listProcesses(UUID hostId, int limit, int offset) {
-        try (DSLContext tx = DSL.using(cfg)) {
-            NodeRosterProcessHosts h = NODE_ROSTER_PROCESS_HOSTS.as("h");
+        NodeRosterProcessHosts h = NODE_ROSTER_PROCESS_HOSTS.as("h");
 
-            Field<String> projectNameField = select(PROJECTS.PROJECT_NAME)
-                    .from(PROJECTS)
-                    .where(PROJECTS.PROJECT_ID.eq(h.PROJECT_ID)).asField();
+        Field<String> projectNameField = select(PROJECTS.PROJECT_NAME)
+                .from(PROJECTS)
+                .where(PROJECTS.PROJECT_ID.eq(h.PROJECT_ID)).asField();
 
-            SelectJoinStep<Record6<UUID, OffsetDateTime, UUID, String, UUID, String>> q = tx.select(
-                    h.INSTANCE_ID, h.INSTANCE_CREATED_AT,
-                    h.INITIATOR_ID, h.INITIATOR,
-                    h.PROJECT_ID, projectNameField)
-                    .from(h);
+        SelectJoinStep<Record6<UUID, OffsetDateTime, UUID, String, UUID, String>> q = dsl().select(
+                h.INSTANCE_ID, h.INSTANCE_CREATED_AT,
+                h.INITIATOR_ID, h.INITIATOR,
+                h.PROJECT_ID, projectNameField)
+                .from(h);
 
-            return q.where(h.HOST_ID.eq(hostId))
-                    .orderBy(h.INSTANCE_CREATED_AT.desc())
-                    .limit(limit)
-                    .offset(offset)
-                    .fetch(HostsDao::toProcessEntry);
-        }
+        return q.where(h.HOST_ID.eq(hostId))
+                .orderBy(h.INSTANCE_CREATED_AT.desc())
+                .limit(limit)
+                .offset(offset)
+                .fetch(HostsDao::toProcessEntry);
     }
 
     public UUID getId(String host) {
