@@ -26,7 +26,6 @@ import org.jooq.Configuration;
 import org.jooq.DSLContext;
 import org.jooq.Record4;
 import org.jooq.SelectJoinStep;
-import org.jooq.impl.DSL;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -45,59 +44,51 @@ public class JsonStoreQueryDao extends AbstractDao {
     }
 
     public UUID getId(UUID storeId, String queryName) {
-        try (DSLContext tx = DSL.using(cfg)) {
-            return tx.select(JSON_STORE_QUERIES.QUERY_ID)
-                    .from(JSON_STORE_QUERIES)
-                    .where(JSON_STORE_QUERIES.JSON_STORE_ID.eq(storeId)
-                            .and(JSON_STORE_QUERIES.QUERY_NAME.eq(queryName)))
-                    .fetchOne(JSON_STORE_QUERIES.QUERY_ID);
-        }
+        return dsl().select(JSON_STORE_QUERIES.QUERY_ID)
+                .from(JSON_STORE_QUERIES)
+                .where(JSON_STORE_QUERIES.JSON_STORE_ID.eq(storeId)
+                        .and(JSON_STORE_QUERIES.QUERY_NAME.eq(queryName)))
+                .fetchOne(JSON_STORE_QUERIES.QUERY_ID);
     }
 
     public JsonStoreQueryEntry get(UUID storeId, String queryName) {
-        try (DSLContext tx = DSL.using(cfg)) {
-            Record4<UUID, String, UUID, String> r = createSelect(tx)
-                    .where(JSON_STORE_QUERIES.JSON_STORE_ID.eq(storeId)
-                            .and(JSON_STORE_QUERIES.QUERY_NAME.eq(queryName)))
-                    .fetchOne();
+        Record4<UUID, String, UUID, String> r = createSelect(dsl())
+                .where(JSON_STORE_QUERIES.JSON_STORE_ID.eq(storeId)
+                        .and(JSON_STORE_QUERIES.QUERY_NAME.eq(queryName)))
+                .fetchOne();
 
-            if (r == null) {
-                return null;
-            }
-
-            return toEntry(r);
+        if (r == null) {
+            return null;
         }
+
+        return toEntry(r);
     }
 
     public JsonStoreQueryEntry get(UUID queryId) {
-        try (DSLContext tx = DSL.using(cfg)) {
-            return createSelect(tx)
-                    .where(JSON_STORE_QUERIES.QUERY_ID.eq(queryId))
-                    .fetchOne(JsonStoreQueryDao::toEntry);
-        }
+        return createSelect(dsl())
+                .where(JSON_STORE_QUERIES.QUERY_ID.eq(queryId))
+                .fetchOne(JsonStoreQueryDao::toEntry);
     }
 
     public List<JsonStoreQueryEntry> list(UUID storeId, int offset, int limit, String filter) {
-        try (DSLContext tx = DSL.using(cfg)) {
-            SelectJoinStep<Record4<UUID, String, UUID, String>> q = createSelect(tx);
+        SelectJoinStep<Record4<UUID, String, UUID, String>> q = createSelect(dsl());
 
-            if (filter != null) {
-                q.where(JSON_STORE_QUERIES.QUERY_NAME.containsIgnoreCase(filter));
-            }
-
-            if (offset >= 0) {
-                q.offset(offset);
-            }
-
-            if (limit > 0) {
-                q.limit(limit);
-            }
-
-            return q
-                    .where(JSON_STORE_QUERIES.JSON_STORE_ID.eq(storeId))
-                    .orderBy(JSON_STORE_QUERIES.QUERY_NAME)
-                    .fetch(JsonStoreQueryDao::toEntry);
+        if (filter != null) {
+            q.where(JSON_STORE_QUERIES.QUERY_NAME.containsIgnoreCase(filter));
         }
+
+        if (offset >= 0) {
+            q.offset(offset);
+        }
+
+        if (limit > 0) {
+            q.limit(limit);
+        }
+
+        return q
+                .where(JSON_STORE_QUERIES.JSON_STORE_ID.eq(storeId))
+                .orderBy(JSON_STORE_QUERIES.QUERY_NAME)
+                .fetch(JsonStoreQueryDao::toEntry);
     }
 
     public UUID insert(UUID storeId, String queryName, String text) {

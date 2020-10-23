@@ -25,9 +25,7 @@ import java.time.OffsetDateTime;
 public class FailedTaskError {
 
     private final String taskId;
-
     private final String taskError;
-
     private final OffsetDateTime taskErrorAt;
 
     public FailedTaskError(String taskId, String taskError, OffsetDateTime taskErrorAt) {
