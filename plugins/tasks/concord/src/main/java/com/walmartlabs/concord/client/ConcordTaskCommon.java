@@ -91,11 +91,7 @@ public class ConcordTaskCommon {
                 return startExternalProcess((StartExternalParams) in);
             }
             case FORK: {
-                List<String> forks = fork((ForkParams) in).stream()
-                        .map(UUID::toString)
-                        .collect(Collectors.toList());
-                return TaskResult.success()
-                        .value("forks", forks);
+                return fork((ForkParams) in);
             }
             case KILL: {
                 kill((KillParams) in);
@@ -436,7 +432,7 @@ public class ConcordTaskCommon {
         });
     }
 
-    private List<UUID> fork(ForkParams in) throws Exception {
+    private TaskResult fork(ForkParams in) throws Exception {
         List<Future<UUID>> futures = new ArrayList<>();
         for (ForkStartParams fork : in.forks()) {
             int n = fork.getInstances();
@@ -459,15 +455,20 @@ public class ConcordTaskCommon {
                 ResumePayload resume = new ResumePayload(
                         null, null, !in.outVars().isEmpty(), ids, in.ignoreFailures());
 
-                suspend(resume, true);
-                return ids;
+                return suspend(resume, true)
+                        .value("forks", ids.stream()
+                                .map(UUID::toString)
+                                .collect(Collectors.toList()));
             }
 
             Map<String, ProcessEntry> result = waitForCompletion(ids, -1, Function.identity());
             handleResults(result, in.ignoreFailures());
         }
 
-        return ids;
+        return TaskResult.success()
+                .value("forks", ids.stream()
+                        .map(UUID::toString)
+                        .collect(Collectors.toList()));
     }
 
     private Future<UUID> forkOne(ForkStartParams in) {

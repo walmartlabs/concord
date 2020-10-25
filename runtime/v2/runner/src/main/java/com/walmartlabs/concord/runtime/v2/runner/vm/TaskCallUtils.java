@@ -36,6 +36,7 @@ public final class TaskCallUtils {
                     break;
                 case SUSPEND_RESUME:
                     ctx.suspendResume(result.suspendEvent(), result.suspendState());
+                    break;
                 default:
                     throw new IllegalArgumentException("Unknown suspend action: '" + result.suspendAction() + "'");
             }
