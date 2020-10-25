@@ -36,6 +36,7 @@ import { whoami as apiWhoami } from '../../../api/service/console';
 import { UserSessionContext } from '../../../session';
 
 import './styles.css';
+import { Link } from 'react-router-dom';
 
 const nonEmpty = (s?: string) => {
     if (!s) {
@@ -166,6 +167,10 @@ const Login = (props: RouteComponentProps<{}>) => {
                         Login
                     </Form.Button>
                 </Form>
+            </CardContent>
+            <CardContent extra={true} textAlign={'center'}>
+                {useApiKey && <Link to="/login">Login with Username nad password</Link>}
+                {!useApiKey && <Link to="/login?useApiKey=true">Login with API Key</Link>}
             </CardContent>
         </Card>
     );
