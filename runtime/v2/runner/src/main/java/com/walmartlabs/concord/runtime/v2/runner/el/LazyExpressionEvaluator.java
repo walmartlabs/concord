@@ -32,6 +32,7 @@ import javax.el.*;
 import java.lang.reflect.Method;
 import java.util.*;
 
+import static com.walmartlabs.concord.common.ConfigurationUtils.*;
 import static com.walmartlabs.concord.runtime.v2.runner.el.ThreadLocalEvalContext.withEvalContext;
 
 /**
@@ -55,6 +56,10 @@ public class LazyExpressionEvaluator implements ExpressionEvaluator {
             return null;
         }
 
+        if (value instanceof Map) {
+            value = nestedToMap((Map<String, Object>)value);
+        }
+
         if (ctx.useIntermediateResults() && value instanceof Map) {
             Map<String, Object> m = (Map<String, Object>) value;
             if (m.isEmpty()) {
@@ -68,7 +73,7 @@ public class LazyExpressionEvaluator implements ExpressionEvaluator {
     }
 
     @SuppressWarnings("unchecked")
-    public <T> T evalValue(LazyEvalContext ctx, Object value, Class<T> expectedType) {
+    <T> T evalValue(LazyEvalContext ctx, Object value, Class<T> expectedType) {
         if (value == null) {
             return null;
         }
@@ -119,18 +124,6 @@ public class LazyExpressionEvaluator implements ExpressionEvaluator {
         }
 
         return expectedType.cast(value);
-    }
-
-    @Override
-    public void setValue(EvalContext ctx, String expr, Object value) {
-        ELResolver resolver = createResolver(LazyEvalContext.of(ctx, null), expressionFactory);
-
-        StandardELContext sc = new StandardELContext(expressionFactory);
-        sc.putContext(ExpressionFactory.class, expressionFactory);
-        sc.addELResolver(resolver);
-
-        ValueExpression x = expressionFactory.createValueExpression(sc, expr, Object.class);
-        x.setValue(sc, value);
     }
 
     private <T> T evalExpr(LazyEvalContext ctx, String expr, Class<T> type) {
@@ -199,5 +192,18 @@ public class LazyExpressionEvaluator implements ExpressionEvaluator {
 
     private static boolean hasExpression(String s) {
         return s.contains("${");
+    }
+
+    private static Map<String, Object> nestedToMap(Map<String, Object> value) {
+        Map<String, Object> result = new LinkedHashMap<>();
+        for (Map.Entry<String, Object> e : value.entrySet()) {
+            if (isNestedKey(e.getKey())) {
+                Map<String, Object> m = toNested(e.getKey(), e.getValue());
+                result = deepMerge(result, m);
+            } else {
+                result.put(e.getKey(), e.getValue());
+            }
+        }
+        return result;
     }
 }

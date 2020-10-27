@@ -705,9 +705,8 @@ public class MainTest {
         assertLog(log, ".*x: .*y=123.*");
         assertLog(log, ".*x: .*z=234.*");
         assertLog(log, ".*x: .*taskOut=42.*");
-
-        // TODO support for partial eval results?
-        assertLog(log, ".*x: .*taskOut2=42.*");
+        assertLog(log, ".*x: .*taskOut2=165.*");
+        assertLog(log, ".*a: 42.*");
     }
 
     @Test
