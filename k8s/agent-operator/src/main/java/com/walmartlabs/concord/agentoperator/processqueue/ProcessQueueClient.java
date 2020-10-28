@@ -50,9 +50,9 @@ public class ProcessQueueClient {
         this.objectMapper = new ObjectMapper();
     }
 
-    public List<ProcessQueueEntry> query(String processStatus, int limit) throws IOException {
+    public List<ProcessQueueEntry> query(String processStatus, int limit, String flavor) throws IOException {
         Request req = new Request.Builder()
-                .url(baseUrl + "/api/v2/process/requirements?status=" + processStatus + "&limit=" + limit + "&startAt.len=")
+                .url(baseUrl + "/api/v2/process/requirements?status=" + processStatus + "&limit=" + limit + "&startAt.len=" + "&requirements.agent.flavor.eq=" + flavor)
                 .header("Authorization", apiToken)
                 .addHeader("User-Agent", "k8s-agent-operator")
                 .build();

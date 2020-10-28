@@ -154,7 +154,10 @@ public class Scheduler {
         }
 
         int queueQueryLimit = i.getResource().getSpec().getQueueQueryLimit();
-        List<ProcessQueueEntry> queueEntries = processQueueClient.query("ENQUEUED", queueQueryLimit);
+        Map<String, Object> queueSelector = i.getResource().getSpec().getQueueSelector();
+        String flavor = mapHasKey(queueSelector,"agent") ? mapHasKey(queueSelector.get("agent"),"flavor") ?
+                (String)((Map<String,Object>)queueSelector.get("agent")).get("flavor") : "" : "";
+        List<ProcessQueueEntry> queueEntries = processQueueClient.query("ENQUEUED", queueQueryLimit, flavor);
 
         AgentPoolConfiguration spec = i.getResource().getSpec();
         if (!spec.isAutoScale()) {
@@ -228,5 +231,11 @@ public class Scheduler {
             this.concordBaseUrl = concordBaseUrl;
             this.concordApiToken = concordApiToken;
         }
+    }
+
+    private static boolean mapHasKey(Object map, String key){
+        if( map instanceof Map )
+            return ((Map<?, ?>) map).containsKey(key);
+        return false;
     }
 }
