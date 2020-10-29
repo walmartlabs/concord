@@ -76,7 +76,7 @@ public final class FilterUtils {
 
     public static List<ProcessFilter.JsonFilter> parseJson(String paramName, UriInfo uriInfo) {
         return uriInfo.getQueryParameters().entrySet().stream()
-                .filter(e -> (isParam(e.getKey(), paramName) && isExist(getValue(e))))
+                .filter(e -> (isParam(e.getKey(), paramName)))
                 .map(e -> {
                     ImmutableJsonFilter.Builder filter = ProcessFilter.JsonFilter.builder()
                             .value(getValue(e));
@@ -221,11 +221,5 @@ public final class FilterUtils {
             return e.getValue().get(0);
         }
         return null;
-    }
-
-    private static boolean isExist(String value){
-        if(value != null && !value.isEmpty())
-            return true;
-        return false;
     }
 }

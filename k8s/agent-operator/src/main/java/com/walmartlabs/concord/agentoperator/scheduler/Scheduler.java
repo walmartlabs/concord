@@ -27,6 +27,7 @@ import com.walmartlabs.concord.agentoperator.planner.Planner;
 import com.walmartlabs.concord.agentoperator.processqueue.ProcessQueueClient;
 import com.walmartlabs.concord.agentoperator.processqueue.ProcessQueueEntry;
 import com.walmartlabs.concord.agentoperator.resources.AgentPod;
+import com.walmartlabs.concord.common.ConfigurationUtils;
 import io.fabric8.kubernetes.api.model.Pod;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import org.slf4j.Logger;
@@ -155,8 +156,7 @@ public class Scheduler {
 
         int queueQueryLimit = i.getResource().getSpec().getQueueQueryLimit();
         Map<String, Object> queueSelector = i.getResource().getSpec().getQueueSelector();
-        String flavor = mapHasKey(queueSelector,"agent") ? mapHasKey(queueSelector.get("agent"),"flavor") ?
-                (String)((Map<String,Object>)queueSelector.get("agent")).get("flavor") : "" : "";
+        String flavor = (String)ConfigurationUtils.get(queueSelector, "agent", "flavor");
         List<ProcessQueueEntry> queueEntries = processQueueClient.query("ENQUEUED", queueQueryLimit, flavor);
 
         AgentPoolConfiguration spec = i.getResource().getSpec();
@@ -231,11 +231,5 @@ public class Scheduler {
             this.concordBaseUrl = concordBaseUrl;
             this.concordApiToken = concordApiToken;
         }
-    }
-
-    private static boolean mapHasKey(Object map, String key){
-        if( map instanceof Map )
-            return ((Map<?, ?>) map).containsKey(key);
-        return false;
     }
 }
