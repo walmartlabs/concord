@@ -30,7 +30,6 @@ import com.walmartlabs.concord.server.sdk.metrics.WithTimer;
 import com.walmartlabs.concord.server.security.UserPrincipal;
 import com.walmartlabs.concord.server.user.UserDao;
 import org.jooq.*;
-import org.jooq.impl.DSL;
 import org.sonatype.siesta.Resource;
 
 import javax.inject.Inject;
@@ -111,39 +110,39 @@ public class UserActivityResource implements Resource {
         }
 
         public Map<String, Integer> getCountByStatuses(Set<UUID> orgIds, OffsetDateTime fromUpdatedAt, UUID initiatorId) {
-            try (DSLContext tx = DSL.using(cfg)) {
-                SelectConditionStep<Record1<UUID>> projectIds = select(PROJECTS.PROJECT_ID)
-                        .from(PROJECTS)
-                        .where(PROJECTS.ORG_ID.in(orgIds));
+            DSLContext tx = dsl();
 
-                SelectConditionStep<Record5<Integer, Integer, Integer, Integer, Integer>> q = tx.select(
-                        when(PROCESS_QUEUE.CURRENT_STATUS.eq(RUNNING.name()), 1).otherwise(0).as(RUNNING.name()),
-                        when(PROCESS_QUEUE.CURRENT_STATUS.eq(SUSPENDED.name()), 1).otherwise(0).as(SUSPENDED.name()),
-                        when(PROCESS_QUEUE.CURRENT_STATUS.eq(FINISHED.name()), 1).otherwise(0).as(FINISHED.name()),
-                        when(PROCESS_QUEUE.CURRENT_STATUS.eq(FAILED.name()), 1).otherwise(0).as(FAILED.name()),
-                        when(PROCESS_QUEUE.CURRENT_STATUS.eq(ENQUEUED.name()), 1).otherwise(0).as(ENQUEUED.name()))
-                        .from(PROCESS_QUEUE)
-                        .where(PROCESS_QUEUE.INITIATOR_ID.eq(initiatorId)
-                                .and(PROCESS_QUEUE.LAST_UPDATED_AT.greaterOrEqual(fromUpdatedAt))
-                                .and(or(PROCESS_QUEUE.PROJECT_ID.in(projectIds), PROCESS_QUEUE.PROJECT_ID.isNull())));
+            SelectConditionStep<Record1<UUID>> projectIds = select(PROJECTS.PROJECT_ID)
+                    .from(PROJECTS)
+                    .where(PROJECTS.ORG_ID.in(orgIds));
 
-                Record5<BigDecimal, BigDecimal, BigDecimal, BigDecimal, BigDecimal> r = tx.select(
-                        sum(q.field(RUNNING.name(), Integer.class)),
-                        sum(q.field(SUSPENDED.name(), Integer.class)),
-                        sum(q.field(FINISHED.name(), Integer.class)),
-                        sum(q.field(FAILED.name(), Integer.class)),
-                        sum(q.field(ENQUEUED.name(), Integer.class)))
-                        .from(q)
-                        .fetchOne();
+            SelectConditionStep<Record5<Integer, Integer, Integer, Integer, Integer>> q = tx.select(
+                    when(PROCESS_QUEUE.CURRENT_STATUS.eq(RUNNING.name()), 1).otherwise(0).as(RUNNING.name()),
+                    when(PROCESS_QUEUE.CURRENT_STATUS.eq(SUSPENDED.name()), 1).otherwise(0).as(SUSPENDED.name()),
+                    when(PROCESS_QUEUE.CURRENT_STATUS.eq(FINISHED.name()), 1).otherwise(0).as(FINISHED.name()),
+                    when(PROCESS_QUEUE.CURRENT_STATUS.eq(FAILED.name()), 1).otherwise(0).as(FAILED.name()),
+                    when(PROCESS_QUEUE.CURRENT_STATUS.eq(ENQUEUED.name()), 1).otherwise(0).as(ENQUEUED.name()))
+                    .from(PROCESS_QUEUE)
+                    .where(PROCESS_QUEUE.INITIATOR_ID.eq(initiatorId)
+                            .and(PROCESS_QUEUE.LAST_UPDATED_AT.greaterOrEqual(fromUpdatedAt))
+                            .and(or(PROCESS_QUEUE.PROJECT_ID.in(projectIds), PROCESS_QUEUE.PROJECT_ID.isNull())));
 
-                Map<String, Integer> result = new HashMap<>();
-                result.put(RUNNING.name(), r.value1() != null ? r.value1().intValue() : 0);
-                result.put(SUSPENDED.name(), r.value2() != null ? r.value2().intValue() : 0);
-                result.put(FINISHED.name(), r.value3() != null ? r.value3().intValue() : 0);
-                result.put(FAILED.name(), r.value4() != null ? r.value4().intValue() : 0);
-                result.put(ENQUEUED.name(), r.value5() != null ? r.value5().intValue() : 0);
-                return result;
-            }
+            Record5<BigDecimal, BigDecimal, BigDecimal, BigDecimal, BigDecimal> r = tx.select(
+                    sum(q.field(RUNNING.name(), Integer.class)),
+                    sum(q.field(SUSPENDED.name(), Integer.class)),
+                    sum(q.field(FINISHED.name(), Integer.class)),
+                    sum(q.field(FAILED.name(), Integer.class)),
+                    sum(q.field(ENQUEUED.name(), Integer.class)))
+                    .from(q)
+                    .fetchOne();
+
+            Map<String, Integer> result = new HashMap<>();
+            result.put(RUNNING.name(), r.value1() != null ? r.value1().intValue() : 0);
+            result.put(SUSPENDED.name(), r.value2() != null ? r.value2().intValue() : 0);
+            result.put(FINISHED.name(), r.value3() != null ? r.value3().intValue() : 0);
+            result.put(FAILED.name(), r.value4() != null ? r.value4().intValue() : 0);
+            result.put(ENQUEUED.name(), r.value5() != null ? r.value5().intValue() : 0);
+            return result;
         }
 
         public Map<String, List<ProjectProcesses>> processByOrgs(int maxProjectRows,
@@ -151,38 +150,37 @@ public class UserActivityResource implements Resource {
                                                                  Set<ProcessStatus> processStatuses,
                                                                  OffsetDateTime fromUpdatedAt) {
 
+            DSLContext tx = dsl();
+
             Set<String> statuses = processStatuses.stream().map(Enum::name).collect(Collectors.toSet());
+            WindowRowsStep<Integer> rnField = rowNumber().over().partitionBy(ORGANIZATIONS.ORG_NAME).orderBy(ORGANIZATIONS.ORG_NAME);
 
-            try (DSLContext tx = DSL.using(cfg)) {
-                WindowRowsStep<Integer> rnField = rowNumber().over().partitionBy(ORGANIZATIONS.ORG_NAME).orderBy(ORGANIZATIONS.ORG_NAME);
+            SelectHavingStep<Record4<String, String, Integer, Integer>> a =
+                    tx.select(ORGANIZATIONS.ORG_NAME, PROJECTS.PROJECT_NAME, count(), rnField)
+                            .from(PROCESS_QUEUE)
+                            .innerJoin(PROJECTS)
+                            .on(PROCESS_QUEUE.PROJECT_ID.eq(PROJECTS.PROJECT_ID)
+                                    .and(PROCESS_QUEUE.CURRENT_STATUS.in(statuses))
+                                    .and(PROCESS_QUEUE.LAST_UPDATED_AT.greaterOrEqual(fromUpdatedAt))
+                                    .and(PROJECTS.ORG_ID.in(orgIds))
+                            )
+                            .innerJoin(ORGANIZATIONS)
+                            .on(ORGANIZATIONS.ORG_ID.eq(PROJECTS.ORG_ID))
+                            .groupBy(ORGANIZATIONS.ORG_NAME, PROJECTS.PROJECT_NAME);
 
-                SelectHavingStep<Record4<String, String, Integer, Integer>> a =
-                        tx.select(ORGANIZATIONS.ORG_NAME, PROJECTS.PROJECT_NAME, count(), rnField)
-                                .from(PROCESS_QUEUE)
-                                .innerJoin(PROJECTS)
-                                .on(PROCESS_QUEUE.PROJECT_ID.eq(PROJECTS.PROJECT_ID)
-                                        .and(PROCESS_QUEUE.CURRENT_STATUS.in(statuses))
-                                        .and(PROCESS_QUEUE.LAST_UPDATED_AT.greaterOrEqual(fromUpdatedAt))
-                                        .and(PROJECTS.ORG_ID.in(orgIds))
-                                )
-                                .innerJoin(ORGANIZATIONS)
-                                .on(ORGANIZATIONS.ORG_ID.eq(PROJECTS.ORG_ID))
-                                .groupBy(ORGANIZATIONS.ORG_NAME, PROJECTS.PROJECT_NAME);
+            Result<Record3<String, String, Integer>> r = tx.select(a.field(0, String.class), a.field(1, String.class), a.field(2, Integer.class))
+                    .from(a)
+                    .where(a.field(rnField).lessOrEqual(maxProjectRows))
+                    .fetch();
 
-                Result<Record3<String, String, Integer>> r = tx.select(a.field(0, String.class), a.field(1, String.class), a.field(2, Integer.class))
-                        .from(a)
-                        .where(a.field(rnField).lessOrEqual(maxProjectRows))
-                        .fetch();
-
-                Map<String, List<ProjectProcesses>> result = new HashMap<>();
-                r.forEach(i -> {
-                    String orgName = i.value1();
-                    String projectName = i.value2();
-                    int count = i.value3();
-                    result.computeIfAbsent(orgName, (k) -> new ArrayList<>()).add(new ProjectProcesses(projectName, count));
-                });
-                return result;
-            }
+            Map<String, List<ProjectProcesses>> result = new HashMap<>();
+            r.forEach(i -> {
+                String orgName = i.value1();
+                String projectName = i.value2();
+                int count = i.value3();
+                result.computeIfAbsent(orgName, (k) -> new ArrayList<>()).add(new ProjectProcesses(projectName, count));
+            });
+            return result;
         }
     }
 }

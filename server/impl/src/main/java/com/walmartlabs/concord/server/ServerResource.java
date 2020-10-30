@@ -26,8 +26,6 @@ import com.walmartlabs.concord.server.boot.BackgroundTasks;
 import com.walmartlabs.concord.server.task.TaskScheduler;
 import com.walmartlabs.concord.server.websocket.WebSocketChannelManager;
 import org.jooq.Configuration;
-import org.jooq.DSLContext;
-import org.jooq.impl.DSL;
 import org.sonatype.siesta.Resource;
 
 import javax.inject.Inject;
@@ -95,9 +93,7 @@ public class ServerResource implements Resource {
         }
 
         public void ping() {
-            try (DSLContext tx = DSL.using(cfg)) {
-                tx.selectOne().execute();
-            }
+            dsl().selectOne().execute();
         }
     }
 }

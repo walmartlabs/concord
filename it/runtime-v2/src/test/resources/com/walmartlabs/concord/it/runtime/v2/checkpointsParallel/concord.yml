@@ -13,13 +13,13 @@ flows:
             - set:
                 aVar.y: 234
             - log: "#2 ${aVar}"
-            - checkpoint: "first"
+            - checkpoint: "aaa"
         - block:
             - set:
                 aVar.z: 345
             - log: "#3 ${aVar}"
-            - checkpoint: "second"
+            - checkpoint: "bbb"
 
-    - checkpoint: "third"
+    - checkpoint: "ccc"
 
     - log: "#4 ${aVar}"

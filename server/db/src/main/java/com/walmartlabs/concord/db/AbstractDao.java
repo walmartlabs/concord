@@ -40,29 +40,26 @@ public abstract class AbstractDao {
         this.cfg = cfg;
     }
 
+    protected DSLContext dsl() {
+        return DSL.using(cfg);
+    }
+
     protected void tx(Tx t) {
-        try (DSLContext ctx = DSL.using(cfg)) {
-            ctx.transaction(cfg -> {
-                DSLContext tx = DSL.using(cfg);
-                t.run(tx);
-            });
-        }
+        dsl().transaction(cfg -> {
+            DSLContext tx = DSL.using(cfg);
+            t.run(tx);
+        });
     }
 
     protected <T> T txResult(TxResult<T> t) {
-        try (DSLContext ctx = DSL.using(cfg)) {
-            return ctx.transactionResult(cfg -> {
-                DSLContext tx = DSL.using(cfg);
-                return t.run(tx);
-            });
-        }
+        return dsl().transactionResult(cfg -> {
+            DSLContext tx = DSL.using(cfg);
+            return t.run(tx);
+        });
     }
 
     protected InputStream getData(Function<DSLContext, String> sqlFn, PreparedStatementHandler h, int columnIndex) {
-        String sql;
-        try (DSLContext create = DSL.using(cfg)) {
-            sql = sqlFn.apply(create);
-        }
+        String sql = sqlFn.apply(dsl());
 
         Connection conn = cfg.connectionProvider().acquire(); // NOSONAR
         PreparedStatement ps = null;
