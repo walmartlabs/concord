@@ -95,11 +95,11 @@ public interface Context {
      * with the provided payload.
      *
      * @param eventName the name of the event on which the process is suspended on.
-     * @param state passed to the {@link ReentrantTask#resume(Map)} method
+     * @param payload passed to the {@link ReentrantTask#resume(ResumeEvent)} method
      *              once the process is resumed.
      * @apiNote unstable API, subject to change
      */
-    void suspendResume(String eventName, Map<String, Serializable> state);
+    void reentrantSuspend(String eventName, Map<String, Serializable> payload);
 
     // TODO FormService
 }

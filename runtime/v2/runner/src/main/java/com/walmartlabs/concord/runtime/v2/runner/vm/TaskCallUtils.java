@@ -26,27 +26,10 @@ import com.walmartlabs.concord.runtime.v2.sdk.TaskResult;
 
 public final class TaskCallUtils {
 
-    public static void processTaskResult(String taskName, TaskResult result, TaskCallOptions opts, Context ctx) {
+    public static void processTaskResult(String taskName, TaskResult result, Context ctx) {
         assertTaskResult(taskName, result);
 
-        if (result.suspendAction() != null) {
-            switch (result.suspendAction()) {
-                case SUSPEND:
-                    ctx.suspend(result.suspendEvent());
-                    break;
-                case SUSPEND_RESUME:
-                    ctx.suspendResume(result.suspendEvent(), result.suspendState());
-                    break;
-                default:
-                    throw new IllegalArgumentException("Unknown suspend action: '" + result.suspendAction() + "'");
-            }
-            return;
-        }
-
-        String out = opts.out();
-        if (out != null) {
-            ctx.variables().set(out, result.toMap());
-        }
+        result.handle(ctx);
     }
 
     private static void assertTaskResult(String taskName, TaskResult taskResult) {

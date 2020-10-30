@@ -1051,13 +1051,6 @@ public class MainTest {
 
         public static String EVENT_NAME = UUID.randomUUID().toString();
 
-        private final Context context;
-
-        @Inject
-        public ReentrantTaskExample(Context context) {
-            this.context = context;
-        }
-
         @Override
         public TaskResult execute(Variables input) {
             log.info("execute {}", input.toMap());
@@ -1066,9 +1059,7 @@ public class MainTest {
             payload.put("k", "v");
             payload.put("action", input.assertString("action"));
 
-            context.suspendResume(EVENT_NAME, payload);
-
-            return TaskResult.success();
+            return TaskResult.reentrantSuspend(EVENT_NAME, payload);
         }
 
         @Override

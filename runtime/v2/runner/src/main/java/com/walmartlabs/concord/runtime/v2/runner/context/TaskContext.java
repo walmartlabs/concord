@@ -109,7 +109,7 @@ public class TaskContext implements Context {
     }
 
     @Override
-    public void suspendResume(String eventName, Map<String, Serializable> payload) {
-        delegate.suspendResume(eventName, payload);
+    public void reentrantSuspend(String eventName, Map<String, Serializable> payload) {
+        delegate.reentrantSuspend(eventName, payload);
     }
 }

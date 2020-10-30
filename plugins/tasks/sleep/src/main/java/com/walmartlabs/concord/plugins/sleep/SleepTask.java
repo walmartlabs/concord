@@ -63,8 +63,8 @@ public class SleepTask implements Task {
 
         TaskResult taskResult = new SleepTaskCommon(suspender)
                 .execute(new TaskParams(cfg));
-        if (taskResult.suspendAction() != null) {
-            ctx.suspend(taskResult.suspendEvent());
+        if (taskResult instanceof TaskResult.SuspendResult) {
+            ctx.suspend(((TaskResult.SuspendResult) taskResult).eventName());
         }
     }
 

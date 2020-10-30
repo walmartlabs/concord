@@ -51,8 +51,8 @@ public class LockTask implements Task {
 
         TaskResult taskResult = new LockTaskCommon(apiClient, UUID.fromString(instanceId))
                 .lock(lockName, scope);
-        if (taskResult.suspendAction() != null) {
-            context.suspend(taskResult.suspendEvent());
+        if (taskResult instanceof TaskResult.SuspendResult) {
+            context.suspend(((TaskResult.SuspendResult) taskResult).eventName());
         }
     }
 

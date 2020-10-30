@@ -365,7 +365,7 @@ public class ConcordTaskCommon {
         }));
 
         if (resumeFromSameStep) {
-            return TaskResult.suspendResume(eventName, payload.asMap());
+            return TaskResult.reentrantSuspend(eventName, payload.asMap());
         } else {
             return TaskResult.suspend(eventName);
         }
@@ -455,10 +455,7 @@ public class ConcordTaskCommon {
                 ResumePayload resume = new ResumePayload(
                         null, null, !in.outVars().isEmpty(), ids, in.ignoreFailures());
 
-                return suspend(resume, true)
-                        .value("forks", ids.stream()
-                                .map(UUID::toString)
-                                .collect(Collectors.toList()));
+                return suspend(resume, true);
             }
 
             Map<String, ProcessEntry> result = waitForCompletion(ids, -1, Function.identity());

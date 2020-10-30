@@ -101,7 +101,7 @@ public class DummyContext implements Context {
     }
 
     @Override
-    public void suspendResume(String eventName, Map<String, Serializable> payload) {
+    public void reentrantSuspend(String eventName, Map<String, Serializable> payload) {
         throw new IllegalStateException("Not implemented");
     }
 }

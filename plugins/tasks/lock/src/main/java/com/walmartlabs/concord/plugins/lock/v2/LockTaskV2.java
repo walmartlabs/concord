@@ -53,8 +53,8 @@ public class LockTaskV2 implements Task {
 
     public void lock(String lockName, String scope) throws Exception {
         TaskResult taskResult = delegate.lock(lockName, scope);
-        if (taskResult.suspendAction() != null) {
-            context.suspend(taskResult.suspendEvent());
+        if (taskResult instanceof TaskResult.SuspendResult) {
+            context.suspend(((TaskResult.SuspendResult) taskResult).eventName());
         }
     }
 

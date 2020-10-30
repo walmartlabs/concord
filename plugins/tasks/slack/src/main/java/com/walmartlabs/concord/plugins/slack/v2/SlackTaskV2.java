@@ -66,7 +66,7 @@ public class SlackTaskV2 implements Task {
     }
 
     private static TaskResult toResult(Map<String, Object> result) {
-        return new TaskResult(MapUtils.getBoolean(result, "ok", false), MapUtils.getString(result, "error"))
+        return TaskResult.of(MapUtils.getBoolean(result, "ok", false), MapUtils.getString(result, "error"))
                 .values(result);
     }
 }

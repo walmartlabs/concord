@@ -196,7 +196,7 @@ public class ContextImpl implements Context {
     }
 
     @Override
-    public void suspendResume(String eventName, Map<String, Serializable> taskState) {
+    public void reentrantSuspend(String eventName, Map<String, Serializable> taskState) {
         Step step = execution().currentStep();
         if (!(step instanceof TaskCall)) {
             throw new IllegalStateException("Calling 'suspendResume' is allowed only in task calls. Current step: " + (step != null ? step.getClass() : "n/a"));
