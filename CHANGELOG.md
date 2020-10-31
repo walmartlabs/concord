@@ -4,6 +4,7 @@
 
 ### Added
 
+- agent-operator: add `requirements` filter;
 - concord-console: the login form now provides a link to the API
 key login form.
 
