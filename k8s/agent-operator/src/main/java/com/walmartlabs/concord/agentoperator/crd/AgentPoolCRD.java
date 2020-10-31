@@ -38,7 +38,7 @@ public class AgentPoolCRD {
     public static final CustomResourceDefinition SERVICE_DEFINITION = new CustomResourceDefinitionBuilder()
             .withApiVersion("apiextensions.k8s.io/v1beta1")
             .withNewMetadata()
-            .withName(SERVICE_FULL_NAME)
+                .withName(SERVICE_FULL_NAME)
             .endMetadata()
             .withNewSpec()
                 .withGroup(CONCORD_GROUP)
