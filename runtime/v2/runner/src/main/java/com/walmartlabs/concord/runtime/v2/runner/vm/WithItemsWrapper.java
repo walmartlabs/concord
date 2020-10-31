@@ -33,11 +33,6 @@ import java.io.Serializable;
 import java.util.*;
 import java.util.stream.Collectors;
 
-/**
- * Wraps a command into a loop specified by {@code withItems} option.
- * Creates a new call frame and keeps the item list, the current item
- * and the index as frame-local variables.
- */
 public abstract class WithItemsWrapper implements Command {
 
     public static WithItemsWrapper of(Command cmd, WithItems withItems, List<String> outVariables) {
@@ -179,6 +174,11 @@ public abstract class WithItemsWrapper implements Command {
         }
     }
 
+    /**
+     * Wraps a command into a loop specified by {@code withItems} option.
+     * Creates a new call frame and keeps the item list, the current item
+     * and the index as frame-local variables.
+     */
     static class LoopWithItems extends WithItemsWrapper {
 
         protected LoopWithItems(Command cmd, WithItems withItems, List<String> outVariables) {
