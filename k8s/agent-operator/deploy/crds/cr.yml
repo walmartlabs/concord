@@ -74,7 +74,7 @@ spec:
       containers:
         - name: dind
           image: "docker:dind"
-          args: ["-H tcp://0.0.0.0:6666"]
+          args: [ "-H tcp://0.0.0.0:6666" ]
           resources:
             requests:
               cpu: 1
@@ -157,4 +157,4 @@ spec:
           configMap:
             name: "%%configMapName%%"
         - name: process-tmp
-          emptyDir: {}
+          emptyDir: { }

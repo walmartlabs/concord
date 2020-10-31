@@ -52,7 +52,9 @@ public class ProcessQueueClient {
 
     public List<ProcessQueueEntry> query(String processStatus, int limit, String flavor) throws IOException {
         String queryUrl = baseUrl + "/api/v2/process/requirements?status=" + processStatus + "&limit=" + limit + "&startAt.len=";
-        queryUrl = (flavor != null) ? queryUrl.concat("&requirements.agent.flavor.eq=" + flavor) : queryUrl;
+        if (flavor != null) {
+            queryUrl = queryUrl + "&requirements.agent.flavor.eq=" + flavor;
+        }
         Request req = new Request.Builder()
                 .url(queryUrl)
                 .header("Authorization", apiToken)

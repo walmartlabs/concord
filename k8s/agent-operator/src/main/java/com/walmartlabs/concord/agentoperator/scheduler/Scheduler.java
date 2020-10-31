@@ -156,7 +156,7 @@ public class Scheduler {
 
         int queueQueryLimit = i.getResource().getSpec().getQueueQueryLimit();
         Map<String, Object> queueSelector = i.getResource().getSpec().getQueueSelector();
-        String flavor = (String)ConfigurationUtils.get(queueSelector, "agent", "flavor");
+        String flavor = (String) ConfigurationUtils.get(queueSelector, "agent", "flavor");
         List<ProcessQueueEntry> queueEntries = processQueueClient.query("ENQUEUED", queueQueryLimit, flavor);
 
         AgentPoolConfiguration spec = i.getResource().getSpec();
