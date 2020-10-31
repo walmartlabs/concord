@@ -137,7 +137,9 @@ public interface TaskResult extends Serializable {
             TaskCall taskCall = (TaskCall) step;
             String out = Objects.requireNonNull(taskCall.getOptions()).out();
             if (out != null) {
-                ctx.variables().set(out, toMap());
+                Map<String, Object> m = toMap();
+                m.put("threadId", ctx.execution().currentThreadId().id());
+                ctx.variables().set(out, m);
             }
         }
 
