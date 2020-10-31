@@ -8,6 +8,11 @@
 - concord-console: the login form now provides a link to the API
 key login form.
 
+### Changed
+
+- concord-server: fixed handling of `any` conditions in
+the `github` trigger's `files` filter.
+
 ### Breaking
 
 - runtime-v2: new version the `TaskResult` structure, now itcan be
