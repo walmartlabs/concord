@@ -44,6 +44,10 @@ public class ThreadId implements Serializable {
         return Objects.hash(id);
     }
 
+    public long id() {
+        return id;
+    }
+
     @Override
     public String toString() {
         return "ThreadId{" +
