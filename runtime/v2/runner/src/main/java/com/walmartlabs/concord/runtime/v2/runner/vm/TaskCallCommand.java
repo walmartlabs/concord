@@ -23,7 +23,6 @@ package com.walmartlabs.concord.runtime.v2.runner.vm;
 import com.walmartlabs.concord.runtime.v2.model.TaskCall;
 import com.walmartlabs.concord.runtime.v2.model.TaskCallOptions;
 import com.walmartlabs.concord.runtime.v2.runner.el.ExpressionEvaluator;
-import com.walmartlabs.concord.runtime.v2.runner.logging.SegmentedLogger;
 import com.walmartlabs.concord.runtime.v2.runner.tasks.TaskCallInterceptor;
 import com.walmartlabs.concord.runtime.v2.runner.tasks.TaskProviders;
 import com.walmartlabs.concord.runtime.v2.sdk.*;
@@ -31,6 +30,8 @@ import com.walmartlabs.concord.svm.Frame;
 import com.walmartlabs.concord.svm.Runtime;
 import com.walmartlabs.concord.svm.State;
 import com.walmartlabs.concord.svm.ThreadId;
+
+import java.util.Objects;
 
 import static com.walmartlabs.concord.runtime.v2.runner.tasks.TaskCallInterceptor.CallContext;
 import static com.walmartlabs.concord.runtime.v2.runner.tasks.TaskCallInterceptor.Method;
@@ -61,7 +62,7 @@ public class TaskCallCommand extends StepCommand<TaskCall> {
         String taskName = call.getName();
         Task t = taskProviders.createTask(ctx, taskName);
         if (t == null) {
-            throw new IllegalStateException("Task not found: " + taskName);
+            throw new IllegalStateException("Task not found: '" + taskName + "'");
         }
 
         TaskCallInterceptor interceptor = runtime.getService(TaskCallInterceptor.class);
@@ -73,7 +74,7 @@ public class TaskCallCommand extends StepCommand<TaskCall> {
                 .processDefinition(ctx.execution().processDefinition())
                 .build();
 
-        TaskCallOptions opts = call.getOptions();
+        TaskCallOptions opts = Objects.requireNonNull(call.getOptions());
         Variables input = new MapBackedVariables(VMUtils.prepareInput(expressionEvaluator, ctx, opts.input()));
 
         TaskResult result;
@@ -86,19 +87,11 @@ public class TaskCallCommand extends StepCommand<TaskCall> {
             throw new RuntimeException(e);
         }
 
-        TaskCallUtils.processOut(result, opts, ctx, runtime);
+        TaskCallUtils.processTaskResult(taskName, result, ctx);
     }
 
     @Override
-    public String getSegmentName(Context ctx, TaskCall step) {
-        String segmentName = SegmentedLogger.getSegmentName(step);
-
-        if (segmentName != null) {
-            segmentName = ctx.eval(segmentName, String.class);
-        } else {
-            segmentName = "task: " + step.getName();
-        }
-
-        return segmentName;
+    public String getDefaultSegmentName() {
+        return "task: " + getStep().getName();
     }
 }

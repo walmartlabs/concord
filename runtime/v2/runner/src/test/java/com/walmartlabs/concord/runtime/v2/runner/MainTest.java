@@ -198,7 +198,7 @@ public class MainTest {
             run();
             fail("must fail");
         } catch (Exception e) {
-            assertTrue(e.getMessage().contains("not found: unknown"));
+            assertTrue(e.getMessage().contains("not found: 'unknown'"));
         }
     }
 
@@ -999,7 +999,7 @@ public class MainTest {
             executor.shutdown();
             executor.awaitTermination(100, TimeUnit.SECONDS);
 
-            return null;
+            return TaskResult.success();
         }
     }
 
@@ -1061,14 +1061,7 @@ public class MainTest {
 
         private static final Logger log = LoggerFactory.getLogger(ReentrantTaskExample.class);
 
-        public static String EVENT_NAME;
-
-        private final Context context;
-
-        @Inject
-        public ReentrantTaskExample(Context context) {
-            this.context = context;
-        }
+        public static String EVENT_NAME = UUID.randomUUID().toString();
 
         @Override
         public TaskResult execute(Variables input) {
@@ -1078,9 +1071,7 @@ public class MainTest {
             payload.put("k", "v");
             payload.put("action", input.assertString("action"));
 
-            EVENT_NAME = context.suspendResume(payload);
-
-            return TaskResult.suspend();
+            return TaskResult.reentrantSuspend(EVENT_NAME, payload);
         }
 
         @Override

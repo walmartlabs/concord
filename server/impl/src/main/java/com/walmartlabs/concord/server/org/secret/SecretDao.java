@@ -35,7 +35,6 @@ import com.walmartlabs.concord.server.org.ResourceAccessLevel;
 import com.walmartlabs.concord.server.user.UserType;
 import org.jooq.*;
 import org.jooq.exception.DataAccessException;
-import org.jooq.impl.DSL;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -76,32 +75,30 @@ public class SecretDao extends AbstractDao {
         return super.txResult(t);
     }
 
+    public UUID getId(DSLContext tx, UUID orgId, String name) {
+        return tx.select(SECRETS.SECRET_ID)
+                .from(SECRETS)
+                .where(SECRETS.ORG_ID.eq(orgId)
+                        .and(SECRETS.SECRET_NAME.eq(name)))
+                .fetchOne(SECRETS.SECRET_ID);
+    }
+
     public UUID getId(UUID orgId, String name) {
-        try (DSLContext tx = DSL.using(cfg)) {
-            return tx.select(SECRETS.SECRET_ID)
-                    .from(SECRETS)
-                    .where(SECRETS.ORG_ID.eq(orgId)
-                            .and(SECRETS.SECRET_NAME.eq(name)))
-                    .fetchOne(SECRETS.SECRET_ID);
-        }
+        return getId(dsl(), orgId, name);
     }
 
     public String getName(UUID id) {
-        try (DSLContext tx = DSL.using(cfg)) {
-            return tx.select(SECRETS.SECRET_NAME)
-                    .from(SECRETS)
-                    .where(SECRETS.SECRET_ID.eq(id))
-                    .fetchOne(SECRETS.SECRET_NAME);
-        }
+        return dsl().select(SECRETS.SECRET_NAME)
+                .from(SECRETS)
+                .where(SECRETS.SECRET_ID.eq(id))
+                .fetchOne(SECRETS.SECRET_NAME);
     }
 
     public UUID getOrgId(UUID id) {
-        try (DSLContext tx = DSL.using(cfg)) {
-            return tx.select(SECRETS.ORG_ID)
-                    .from(SECRETS)
-                    .where(SECRETS.SECRET_ID.eq(id))
-                    .fetchOne(SECRETS.ORG_ID);
-        }
+        return dsl().select(SECRETS.ORG_ID)
+                .from(SECRETS)
+                .where(SECRETS.SECRET_ID.eq(id))
+                .fetchOne(SECRETS.ORG_ID);
     }
 
     public UUID insert(UUID orgId, UUID projectId, String name, UUID ownerId, SecretType type,
@@ -144,29 +141,23 @@ public class SecretDao extends AbstractDao {
     }
 
     public SecretEntry get(UUID id) {
-        try (DSLContext tx = DSL.using(cfg)) {
-            return selectEntry(tx)
-                    .where(SECRETS.SECRET_ID.eq(id))
-                    .fetchOne(SecretDao::toEntry);
-        }
+        return selectEntry(dsl())
+                .where(SECRETS.SECRET_ID.eq(id))
+                .fetchOne(SecretDao::toEntry);
     }
 
     public byte[] getData(UUID id) {
-        try (DSLContext tx = DSL.using(cfg)) {
-            return tx.select(SECRETS.SECRET_DATA)
-                    .from(SECRETS)
-                    .where(SECRETS.SECRET_ID.eq(id))
-                    .fetchOne(SECRETS.SECRET_DATA);
-        }
+        return dsl().select(SECRETS.SECRET_DATA)
+                .from(SECRETS)
+                .where(SECRETS.SECRET_ID.eq(id))
+                .fetchOne(SECRETS.SECRET_DATA);
     }
 
     public SecretEntry getByName(UUID orgId, String name) {
-        try (DSLContext tx = DSL.using(cfg)) {
-            return selectEntry(tx)
-                    .where(SECRETS.ORG_ID.eq(orgId)
-                            .and(SECRETS.SECRET_NAME.eq(name)))
-                    .fetchOne(SecretDao::toEntry);
-        }
+        return selectEntry(dsl())
+                .where(SECRETS.ORG_ID.eq(orgId)
+                        .and(SECRETS.SECRET_NAME.eq(name)))
+                .fetchOne(SecretDao::toEntry);
     }
 
     public void updateProjectScopeByProjectId(DSLContext tx, UUID orgId, UUID projectId, UUID newProjectId) {
@@ -253,54 +244,52 @@ public class SecretDao extends AbstractDao {
 
         sortField = s.field(sortField);
 
-        try (DSLContext tx = DSL.using(cfg)) {
-            SelectOnConditionStep<Record15<UUID, String, UUID, String, UUID, String, String, String, String, String, UUID, String, String, String, String>> q = selectEntry(tx, o, s, p, u);
+        SelectOnConditionStep<Record15<UUID, String, UUID, String, UUID, String, String, String, String, String, UUID, String, String, String, String>> q = selectEntry(dsl(), o, s, p, u);
 
-            if (currentUserId != null) {
-                // public secrets are visible for anyone
-                Condition isPublic = s.VISIBILITY.eq(SecretVisibility.PUBLIC.toString());
+        if (currentUserId != null) {
+            // public secrets are visible for anyone
+            Condition isPublic = s.VISIBILITY.eq(SecretVisibility.PUBLIC.toString());
 
-                // check if the user belongs to a team in the org
-                SelectConditionStep<Record1<UUID>> teamIds = select(TEAMS.TEAM_ID)
-                        .from(TEAMS)
-                        .where(TEAMS.ORG_ID.eq(orgId));
+            // check if the user belongs to a team in the org
+            SelectConditionStep<Record1<UUID>> teamIds = select(TEAMS.TEAM_ID)
+                    .from(TEAMS)
+                    .where(TEAMS.ORG_ID.eq(orgId));
 
-                Condition isInATeam = exists(selectOne().from(V_USER_TEAMS)
-                        .where(V_USER_TEAMS.USER_ID.eq(currentUserId)
-                                .and(V_USER_TEAMS.TEAM_ID.in(teamIds))));
+            Condition isInATeam = exists(selectOne().from(V_USER_TEAMS)
+                    .where(V_USER_TEAMS.USER_ID.eq(currentUserId)
+                            .and(V_USER_TEAMS.TEAM_ID.in(teamIds))));
 
-                // check if the user owns secrets in the org
-                Condition ownsSecrets = s.OWNER_ID.eq(currentUserId);
+            // check if the user owns secrets in the org
+            Condition ownsSecrets = s.OWNER_ID.eq(currentUserId);
 
-                // check if the user owns the org
-                Condition ownsOrg = o.OWNER_ID.eq(currentUserId);
+            // check if the user owns the org
+            Condition ownsOrg = o.OWNER_ID.eq(currentUserId);
 
-                // if any of those conditions true then the secret must be visible
-                q.where(or(isPublic, isInATeam, ownsSecrets, ownsOrg));
-            }
-
-            if (orgId != null) {
-                q.where(s.ORG_ID.eq(orgId));
-            }
-
-            if (filter != null) {
-                q.where(s.SECRET_NAME.containsIgnoreCase(filter));
-            }
-
-            if (sortField != null) {
-                q.orderBy(asc ? sortField.asc() : sortField.desc());
-            }
-
-            if (offset >= 0) {
-                q.offset(offset);
-            }
-
-            if (limit > 0) {
-                q.limit(limit);
-            }
-
-            return q.fetch(SecretDao::toEntry);
+            // if any of those conditions true then the secret must be visible
+            q.where(or(isPublic, isInATeam, ownsSecrets, ownsOrg));
         }
+
+        if (orgId != null) {
+            q.where(s.ORG_ID.eq(orgId));
+        }
+
+        if (filter != null) {
+            q.where(s.SECRET_NAME.containsIgnoreCase(filter));
+        }
+
+        if (sortField != null) {
+            q.orderBy(asc ? sortField.asc() : sortField.desc());
+        }
+
+        if (offset >= 0) {
+            q.offset(offset);
+        }
+
+        if (limit > 0) {
+            q.limit(limit);
+        }
+
+        return q.fetch(SecretDao::toEntry);
     }
 
     public void delete(UUID id) {
@@ -315,25 +304,24 @@ public class SecretDao extends AbstractDao {
 
     public List<ResourceAccessEntry> getAccessLevel(UUID orgId, String name) {
         List<ResourceAccessEntry> resourceAccessList = new ArrayList<>();
-        try (DSLContext tx = DSL.using(cfg)) {
-            Result<Record4<UUID, UUID, String, String>> teamAccess = tx.select(
-                    SECRET_TEAM_ACCESS.TEAM_ID,
-                    SECRET_TEAM_ACCESS.SECRET_ID,
-                    TEAMS.TEAM_NAME,
-                    SECRET_TEAM_ACCESS.ACCESS_LEVEL)
-                    .from(SECRET_TEAM_ACCESS)
-                    .leftOuterJoin(TEAMS).on(TEAMS.TEAM_ID.eq(SECRET_TEAM_ACCESS.TEAM_ID))
-                    .where(SECRET_TEAM_ACCESS.SECRET_ID.eq(getByName(orgId, name).getId()))
-                    .fetch();
 
-            for (Record4<UUID, UUID, String, String> t : teamAccess) {
-                resourceAccessList.add(new ResourceAccessEntry(t.get(SECRET_TEAM_ACCESS.TEAM_ID),
-                        null,
-                        t.get(TEAMS.TEAM_NAME),
-                        ResourceAccessLevel.valueOf(t.get(SECRET_TEAM_ACCESS.ACCESS_LEVEL))));
-            }
+        Result<Record4<UUID, UUID, String, String>> teamAccess = dsl().select(
+                SECRET_TEAM_ACCESS.TEAM_ID,
+                SECRET_TEAM_ACCESS.SECRET_ID,
+                TEAMS.TEAM_NAME,
+                SECRET_TEAM_ACCESS.ACCESS_LEVEL)
+                .from(SECRET_TEAM_ACCESS)
+                .leftOuterJoin(TEAMS).on(TEAMS.TEAM_ID.eq(SECRET_TEAM_ACCESS.TEAM_ID))
+                .where(SECRET_TEAM_ACCESS.SECRET_ID.eq(getByName(orgId, name).getId()))
+                .fetch();
 
+        for (Record4<UUID, UUID, String, String> t : teamAccess) {
+            resourceAccessList.add(new ResourceAccessEntry(t.get(SECRET_TEAM_ACCESS.TEAM_ID),
+                    null,
+                    t.get(TEAMS.TEAM_NAME),
+                    ResourceAccessLevel.valueOf(t.get(SECRET_TEAM_ACCESS.ACCESS_LEVEL))));
         }
+
         return resourceAccessList;
     }
 
@@ -344,9 +332,7 @@ public class SecretDao extends AbstractDao {
     }
 
     public boolean hasAccessLevel(UUID secretId, UUID userId, ResourceAccessLevel... levels) {
-        try (DSLContext tx = DSL.using(cfg)) {
-            return hasAccessLevel(tx, secretId, userId, levels);
-        }
+        return hasAccessLevel(dsl(), secretId, userId, levels);
     }
 
     private boolean hasAccessLevel(DSLContext tx, UUID secretId, UUID userId, ResourceAccessLevel... levels) {

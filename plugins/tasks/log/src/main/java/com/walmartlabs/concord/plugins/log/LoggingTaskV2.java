@@ -56,7 +56,7 @@ public class LoggingTaskV2 implements Task {
                 LogUtils.info(msg);
         }
 
-        return null;
+        return TaskResult.success();
     }
 
     public static void info(String s) {

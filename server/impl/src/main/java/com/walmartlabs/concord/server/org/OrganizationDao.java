@@ -29,7 +29,6 @@ import com.walmartlabs.concord.server.jooq.tables.records.OrganizationsRecord;
 import com.walmartlabs.concord.server.org.team.TeamRole;
 import com.walmartlabs.concord.server.user.UserType;
 import org.jooq.*;
-import org.jooq.impl.DSL;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -66,9 +65,7 @@ public class OrganizationDao extends AbstractDao {
     }
 
     public OrganizationEntry get(UUID id) {
-        try (DSLContext tx = DSL.using(cfg)) {
-            return get(tx, id);
-        }
+        return get(dsl(), id);
     }
 
     public OrganizationEntry get(DSLContext tx, UUID id) {
@@ -83,9 +80,7 @@ public class OrganizationDao extends AbstractDao {
     }
 
     public UUID getId(String name) {
-        try (DSLContext tx = DSL.using(cfg)) {
-            return getId(tx, name);
-        }
+        return getId(dsl(), name);
     }
 
     public UUID getId(DSLContext tx, String name) {
@@ -96,9 +91,7 @@ public class OrganizationDao extends AbstractDao {
     }
 
     public OrganizationEntry getByName(String name) {
-        try (DSLContext tx = DSL.using(cfg)) {
-            return getByName(tx, name);
-        }
+        return getByName(dsl(), name);
     }
 
     public OrganizationEntry getByName(DSLContext tx, String name) {
@@ -113,12 +106,10 @@ public class OrganizationDao extends AbstractDao {
     }
 
     public Map<String, Object> getConfiguration(UUID orgId) {
-        try (DSLContext tx = DSL.using(cfg)) {
-            return tx.select(ORGANIZATIONS.ORG_CFG)
-                    .from(ORGANIZATIONS)
-                    .where(ORGANIZATIONS.ORG_ID.eq(orgId))
-                    .fetchOne(e -> objectMapper.fromJSONB(e.value1()));
-        }
+        return dsl().select(ORGANIZATIONS.ORG_CFG)
+                .from(ORGANIZATIONS)
+                .where(ORGANIZATIONS.ORG_ID.eq(orgId))
+                .fetchOne(e -> objectMapper.fromJSONB(e.value1()));
     }
 
     public UUID insert(String name, UUID ownerId, OrganizationVisibility visibility, Map<String, Object> meta, Map<String, Object> cfg) {
@@ -178,61 +169,59 @@ public class OrganizationDao extends AbstractDao {
     }
 
     public List<OrganizationEntry> list(UUID currentUserId, boolean onlyCurrent, int offset, int limit, String filter) {
-        try (DSLContext tx = DSL.using(cfg)) {
-            Organizations o = ORGANIZATIONS.as("o");
-            Users u = USERS.as("u");
+        Organizations o = ORGANIZATIONS.as("o");
+        Users u = USERS.as("u");
 
-            SelectOnConditionStep<Record10<UUID, String, UUID, String, String, String, String, String, JSONB, JSONB>> q = tx.select(o.ORG_ID,
-                    o.ORG_NAME,
-                    o.OWNER_ID,
-                    u.USERNAME,
-                    u.DOMAIN,
-                    u.DISPLAY_NAME,
-                    u.USER_TYPE,
-                    o.VISIBILITY,
-                    o.META,
-                    o.ORG_CFG)
-                    .from(o)
-                    .leftJoin(u).on(u.USER_ID.eq(o.OWNER_ID));
+        SelectOnConditionStep<Record10<UUID, String, UUID, String, String, String, String, String, JSONB, JSONB>> q = dsl().select(o.ORG_ID,
+                o.ORG_NAME,
+                o.OWNER_ID,
+                u.USERNAME,
+                u.DOMAIN,
+                u.DISPLAY_NAME,
+                u.USER_TYPE,
+                o.VISIBILITY,
+                o.META,
+                o.ORG_CFG)
+                .from(o)
+                .leftJoin(u).on(u.USER_ID.eq(o.OWNER_ID));
 
-            if (currentUserId != null) {
-                // public orgs are visible for anyone
-                // but show them only if onlyCurrent == false
-                // i.e. when the user specifically asked to show all available orgs
-                Condition isPublic = value(onlyCurrent).isFalse()
-                        .and(o.VISIBILITY.eq(OrganizationVisibility.PUBLIC.toString()));
+        if (currentUserId != null) {
+            // public orgs are visible for anyone
+            // but show them only if onlyCurrent == false
+            // i.e. when the user specifically asked to show all available orgs
+            Condition isPublic = value(onlyCurrent).isFalse()
+                    .and(o.VISIBILITY.eq(OrganizationVisibility.PUBLIC.toString()));
 
-                // check if the user belongs to a team in an org
-                SelectConditionStep<Record1<UUID>> teamIds = select(TEAMS.TEAM_ID)
-                        .from(TEAMS)
-                        .where(TEAMS.ORG_ID.eq(o.ORG_ID));
+            // check if the user belongs to a team in an org
+            SelectConditionStep<Record1<UUID>> teamIds = select(TEAMS.TEAM_ID)
+                    .from(TEAMS)
+                    .where(TEAMS.ORG_ID.eq(o.ORG_ID));
 
-                Condition isInATeam = exists(selectOne().from(V_USER_TEAMS)
-                        .where(V_USER_TEAMS.USER_ID.eq(currentUserId)
-                                .and(V_USER_TEAMS.TEAM_ID.in(teamIds))));
+            Condition isInATeam = exists(selectOne().from(V_USER_TEAMS)
+                    .where(V_USER_TEAMS.USER_ID.eq(currentUserId)
+                            .and(V_USER_TEAMS.TEAM_ID.in(teamIds))));
 
-                // check if the user owns orgs
-                Condition ownsOrgs = o.OWNER_ID.eq(currentUserId);
+            // check if the user owns orgs
+            Condition ownsOrgs = o.OWNER_ID.eq(currentUserId);
 
-                // if any of those conditions true then the org must be visible
-                q.where(or(isPublic, isInATeam, ownsOrgs));
-            }
-
-            if (filter != null) {
-                q.where(o.ORG_NAME.containsIgnoreCase(filter));
-            }
-
-            if (offset >= 0) {
-                q.offset(offset);
-            }
-
-            if (limit > 0) {
-                q.limit(limit);
-            }
-
-            return q.orderBy(o.ORG_NAME)
-                    .fetch(this::toEntry);
+            // if any of those conditions true then the org must be visible
+            q.where(or(isPublic, isInATeam, ownsOrgs));
         }
+
+        if (filter != null) {
+            q.where(o.ORG_NAME.containsIgnoreCase(filter));
+        }
+
+        if (offset >= 0) {
+            q.offset(offset);
+        }
+
+        if (limit > 0) {
+            q.limit(limit);
+        }
+
+        return q.orderBy(o.ORG_NAME)
+                .fetch(this::toEntry);
     }
 
     public boolean hasOwner(DSLContext tx, UUID orgId) {

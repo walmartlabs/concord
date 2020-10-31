@@ -46,7 +46,6 @@ import com.walmartlabs.concord.server.sdk.metrics.WithTimer;
 import com.walmartlabs.concord.server.websocket.WebSocketChannel;
 import com.walmartlabs.concord.server.websocket.WebSocketChannelManager;
 import org.jooq.*;
-import org.jooq.impl.DSL;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -361,14 +360,12 @@ public class Dispatcher extends PeriodicTask {
         }
 
         public SecretReference getSecretReference(UUID repoId) {
-            try (DSLContext tx = DSL.using(cfg)) {
-                return tx.select(ORGANIZATIONS.ORG_NAME, SECRETS.SECRET_NAME)
-                        .from(REPOSITORIES)
-                        .leftOuterJoin(SECRETS).on(REPOSITORIES.SECRET_ID.eq(SECRETS.SECRET_ID))
-                        .leftOuterJoin(ORGANIZATIONS).on(SECRETS.ORG_ID.eq(ORGANIZATIONS.ORG_ID))
-                        .where(REPOSITORIES.REPO_ID.eq(repoId))
-                        .fetchOne(r -> new SecretReference(r.value1(), r.value2()));
-            }
+            return dsl().select(ORGANIZATIONS.ORG_NAME, SECRETS.SECRET_NAME)
+                    .from(REPOSITORIES)
+                    .leftOuterJoin(SECRETS).on(REPOSITORIES.SECRET_ID.eq(SECRETS.SECRET_ID))
+                    .leftOuterJoin(ORGANIZATIONS).on(SECRETS.ORG_ID.eq(ORGANIZATIONS.ORG_ID))
+                    .where(REPOSITORIES.REPO_ID.eq(repoId))
+                    .fetchOne(r -> new SecretReference(r.value1(), r.value2()));
         }
     }
 

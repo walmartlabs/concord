@@ -29,7 +29,6 @@ import com.walmartlabs.concord.server.jooq.tables.Organizations;
 import com.walmartlabs.concord.server.jooq.tables.Projects;
 import com.walmartlabs.concord.server.jooq.tables.Repositories;
 import org.jooq.*;
-import org.jooq.impl.DSL;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -58,12 +57,10 @@ public class TriggersDao extends AbstractDao {
     }
 
     public TriggerEntry get(UUID id) {
-        try (DSLContext tx = DSL.using(cfg)) {
-            SelectJoinStep<Record12<UUID, UUID, String, UUID, String, UUID, String, String, String[], JSONB, JSONB, JSONB>> query = selectTriggers(tx);
+        SelectJoinStep<Record12<UUID, UUID, String, UUID, String, UUID, String, String, String[], JSONB, JSONB, JSONB>> query = selectTriggers(dsl());
 
-            return query.where(TRIGGERS.TRIGGER_ID.eq(id))
-                    .fetchOne(this::toEntity);
-        }
+        return query.where(TRIGGERS.TRIGGER_ID.eq(id))
+                .fetchOne(this::toEntity);
     }
 
     public UUID insert(DSLContext tx, UUID projectId, UUID repositoryId, String eventSource, List<String> activeProfiles, Map<String, Object> args, Map<String, Object> conditions, Map<String, Object> config) {
@@ -88,9 +85,7 @@ public class TriggersDao extends AbstractDao {
     }
 
     public List<TriggerEntry> list(UUID projectId, UUID repositoryId) {
-        try (DSLContext tx = DSL.using(cfg)) {
-            return list(tx, projectId, repositoryId);
-        }
+        return list(dsl(), projectId, repositoryId);
     }
 
     public List<TriggerEntry> list(DSLContext tx, UUID projectId, UUID repositoryId) {
@@ -101,21 +96,15 @@ public class TriggersDao extends AbstractDao {
     }
 
     public List<TriggerEntry> list(String eventSource, Integer version) {
-        try (DSLContext tx = DSL.using(cfg)) {
-            return list(tx, null, eventSource, version, null);
-        }
+        return list(dsl(), null, eventSource, version, null);
     }
 
     public List<TriggerEntry> list(String eventSource, Integer version, Map<String, String> conditions) {
-        try (DSLContext tx = DSL.using(cfg)) {
-            return list(tx, null, eventSource, version, conditions);
-        }
+        return list(dsl(), null, eventSource, version, conditions);
     }
 
     public List<TriggerEntry> list(UUID projectId, String eventSource, Integer version, Map<String, String> conditions) {
-        try (DSLContext tx = DSL.using(cfg)) {
-            return list(tx, projectId, eventSource, version, conditions);
-        }
+        return list(dsl(), projectId, eventSource, version, conditions);
     }
 
     private List<TriggerEntry> list(DSLContext tx, UUID projectId, String eventSource, Integer version, Map<String, String> conditions) {
@@ -139,31 +128,29 @@ public class TriggersDao extends AbstractDao {
     }
 
     public List<TriggerEntry> list(UUID orgId, UUID projectId, UUID repositoryId, String type) {
-        try (DSLContext tx = DSL.using(cfg)) {
-            SelectJoinStep<Record12<UUID, UUID, String, UUID, String, UUID, String, String, String[], JSONB, JSONB, JSONB>> query = selectTriggers(tx);
+        SelectJoinStep<Record12<UUID, UUID, String, UUID, String, UUID, String, String, String[], JSONB, JSONB, JSONB>> query = selectTriggers(dsl());
 
-            if (orgId != null) {
-                SelectConditionStep<Record1<UUID>> projectIds = select(PROJECTS.PROJECT_ID)
-                        .from(PROJECTS)
-                        .where(PROJECTS.ORG_ID.eq(orgId));
+        if (orgId != null) {
+            SelectConditionStep<Record1<UUID>> projectIds = select(PROJECTS.PROJECT_ID)
+                    .from(PROJECTS)
+                    .where(PROJECTS.ORG_ID.eq(orgId));
 
-                query.where(TRIGGERS.PROJECT_ID.in(projectIds));
-            }
-
-            if (projectId != null) {
-                query.where(TRIGGERS.PROJECT_ID.eq(projectId));
-            }
-
-            if (repositoryId != null) {
-                query.where(TRIGGERS.REPO_ID.eq(repositoryId));
-            }
-
-            if (type != null) {
-                query.where(TRIGGERS.EVENT_SOURCE.eq(type));
-            }
-
-            return query.fetch(this::toEntity);
+            query.where(TRIGGERS.PROJECT_ID.in(projectIds));
         }
+
+        if (projectId != null) {
+            query.where(TRIGGERS.PROJECT_ID.eq(projectId));
+        }
+
+        if (repositoryId != null) {
+            query.where(TRIGGERS.REPO_ID.eq(repositoryId));
+        }
+
+        if (type != null) {
+            query.where(TRIGGERS.EVENT_SOURCE.eq(type));
+        }
+
+        return query.fetch(this::toEntity);
     }
 
     private SelectJoinStep<Record12<UUID, UUID, String, UUID, String, UUID, String, String, String[], JSONB, JSONB, JSONB>> selectTriggers(DSLContext tx) {

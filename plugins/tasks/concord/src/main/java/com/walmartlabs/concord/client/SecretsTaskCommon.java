@@ -50,10 +50,10 @@ public class SecretsTaskCommon {
         this.defaultOrg = defaultOrg;
     }
 
-    public TaskResult execute(SecretsTaskParams in) throws Exception {
+    public TaskResult.SimpleResult execute(SecretsTaskParams in) throws Exception {
         Action action = in.action();
 
-        TaskResult result;
+        TaskResult.SimpleResult result;
         switch (action) {
             case GETASSTRING: {
                 result = getAsString((AsStringParams)in);
@@ -79,7 +79,7 @@ public class SecretsTaskCommon {
         return result;
     }
 
-    private TaskResult getAsString(AsStringParams in) {
+    private TaskResult.SimpleResult getAsString(AsStringParams in) {
         String orgName = in.orgName(defaultOrg);
         String secretName = in.secretName();
 
@@ -137,12 +137,12 @@ public class SecretsTaskCommon {
         return m;
     }
 
-    private TaskResult create(CreateParams in) throws Exception {
+    private TaskResult.SimpleResult create(CreateParams in) throws Exception {
         Map<String, Object> params = makeCreateParams(in);
         return create(in, params);
     }
 
-    private TaskResult create(CreateParams in, Map<String, Object> params) throws Exception {
+    private TaskResult.SimpleResult create(CreateParams in, Map<String, Object> params) throws Exception {
         String orgName = in.orgName(defaultOrg);
         String secretName = in.secretName();
 
@@ -155,7 +155,7 @@ public class SecretsTaskCommon {
         return Result.ok();
     }
 
-    private TaskResult update(UpdateParams in) throws Exception {
+    private TaskResult.SimpleResult update(UpdateParams in) throws Exception {
 
         String newData = null;
         Object data = in.data();
@@ -205,7 +205,7 @@ public class SecretsTaskCommon {
         }
     }
 
-    private TaskResult delete(SecretsTaskParams in) {
+    private TaskResult.SimpleResult delete(SecretsTaskParams in) {
         String secretName = in.secretName();
 
         try {
@@ -244,11 +244,11 @@ public class SecretsTaskCommon {
         }
     }
 
-    private static TaskResult handleErrors(SecretsTaskParams in, String secretName, ApiException e) {
+    private static TaskResult.SimpleResult handleErrors(SecretsTaskParams in, String secretName, ApiException e) {
         return handleErrors(in, secretName, e.getCode(), e.getResponseBody());
     }
 
-    private static TaskResult handleErrors(SecretsTaskParams in, String secretName, int code, String responseBody) {
+    private static TaskResult.SimpleResult handleErrors(SecretsTaskParams in, String secretName, int code, String responseBody) {
         boolean ignoreErrors = in.ignoreErrors();
 
         if (code == 401) {
@@ -280,28 +280,28 @@ public class SecretsTaskCommon {
 
     static class Result {
 
-        private static TaskResult ok() {
+        private static TaskResult.SimpleResult ok() {
             return result(true, Status.OK, null);
         }
 
-        private static TaskResult ok(String data) {
+        private static TaskResult.SimpleResult ok(String data) {
             return result(true, Status.OK, data);
         }
 
-        private static TaskResult notFound() {
+        private static TaskResult.SimpleResult notFound() {
             return result(false, Status.NOT_FOUND, null);
         }
 
-        private static TaskResult invalidRequest() {
+        private static TaskResult.SimpleResult invalidRequest() {
             return result(false, Status.INVALID_REQUEST, null);
         }
 
-        private static TaskResult accessDenied() {
+        private static TaskResult.SimpleResult accessDenied() {
             return result(false, Status.ACCESS_DENIED, null);
         }
 
-        private static TaskResult result(boolean ok, Status status, String data) {
-            return new TaskResult(ok)
+        private static TaskResult.SimpleResult result(boolean ok, Status status, String data) {
+            return TaskResult.of(ok)
                     .value("status", status.toString())
                     .value("data", data);
         }
