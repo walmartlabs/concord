@@ -22,6 +22,7 @@ package com.walmartlabs.concord.plugins.lock;
 
 import com.walmartlabs.concord.ApiClient;
 import com.walmartlabs.concord.client.ApiClientFactory;
+import com.walmartlabs.concord.runtime.v2.sdk.TaskResult;
 import com.walmartlabs.concord.sdk.Constants;
 import com.walmartlabs.concord.sdk.Context;
 import com.walmartlabs.concord.sdk.InjectVariable;
@@ -32,6 +33,7 @@ import javax.inject.Named;
 import java.util.UUID;
 
 @Named("lock")
+@SuppressWarnings("unused")
 public class LockTask implements Task {
 
     private final ApiClientFactory apiClientFactory;
@@ -47,8 +49,11 @@ public class LockTask implements Task {
     public void lock(@InjectVariable("txId") String instanceId, String lockName, String scope) throws Exception {
         ApiClient apiClient = apiClientFactory.create(context);
 
-        new LockTaskCommon(apiClient, UUID.fromString(instanceId))
-                .lock(lockName, scope, context::suspend);
+        TaskResult taskResult = new LockTaskCommon(apiClient, UUID.fromString(instanceId))
+                .lock(lockName, scope);
+        if (taskResult instanceof TaskResult.SuspendResult) {
+            context.suspend(((TaskResult.SuspendResult) taskResult).eventName());
+        }
     }
 
     public void unlock(@InjectVariable("txId") String instanceId, String lockName, String scope) throws Exception {

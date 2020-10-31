@@ -39,7 +39,7 @@ public class SleepTaskV2 implements Task {
 
     @Inject
     public SleepTaskV2(ApiClient apiClient, Context context) {
-        this.delegate = new SleepTaskCommon(() -> new Suspender(apiClient, context.processInstanceId(), context::suspend));
+        this.delegate = new SleepTaskCommon(() -> new Suspender(apiClient, context.processInstanceId()));
     }
 
     @SuppressWarnings("unused")
@@ -49,7 +49,6 @@ public class SleepTaskV2 implements Task {
 
     @Override
     public TaskResult execute(Variables input) throws Exception {
-        delegate.execute(new TaskParams(input));
-        return TaskResult.success();
+        return delegate.execute(new TaskParams(input));
     }
 }
