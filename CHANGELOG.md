@@ -1,5 +1,14 @@
 # Change log
 
+## [Unreleased]
+
+### Breaking
+
+- runtime-v2: new version the `TaskResult` structure, now itcan be
+used to tell the runtime to suspend the process.
+
+
+
 ## [1.70.0] - 2020-10-23
 
 ### Added
