@@ -2,6 +2,11 @@
 
 ## [Unreleased]
 
+### Added
+
+- concord-console: the login form now provides a link to the API
+key login form.
+
 ### Breaking
 
 - runtime-v2: new version the `TaskResult` structure, now itcan be
