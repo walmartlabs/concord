@@ -138,7 +138,9 @@ public interface TaskResult extends Serializable {
             TaskCall taskCall = (TaskCall) step;
             TaskCallOptions opts = Objects.requireNonNull(taskCall.getOptions());
             if (opts.out() != null) {
-                ctx.variables().set(opts.out(), toMap());
+                Map<String, Object> m = toMap();
+                m.put("threadId", ctx.execution().currentThreadId().id());
+                ctx.variables().set(opts.out(), m);
             } else if (opts.outExpr() != null) {
                 ExpressionEvaluator expressionEvaluator = runtime.getService(ExpressionEvaluator.class);
 
