@@ -21,6 +21,7 @@ package com.walmartlabs.concord.runtime.v2.runner.vm;
  */
 
 import com.walmartlabs.concord.runtime.v2.model.TaskCall;
+import com.walmartlabs.concord.runtime.v2.model.TaskCallOptions;
 import com.walmartlabs.concord.runtime.v2.runner.tasks.TaskCallInterceptor;
 import com.walmartlabs.concord.runtime.v2.runner.tasks.TaskProviders;
 import com.walmartlabs.concord.runtime.v2.sdk.*;
@@ -29,6 +30,7 @@ import com.walmartlabs.concord.svm.Runtime;
 import com.walmartlabs.concord.svm.State;
 import com.walmartlabs.concord.svm.ThreadId;
 
+import java.util.Objects;
 import java.util.UUID;
 
 public class TaskResumeCommand extends StepCommand<TaskCall> {
@@ -84,10 +86,7 @@ public class TaskResumeCommand extends StepCommand<TaskCall> {
             throw new RuntimeException(e);
         }
 
-        String out = getStep().getOptions().out();
-        if (out != null) {
-            ctx.variables().set(out, result.toMap());
-        }
+        TaskCallUtils.processTaskResult(taskName, result, ctx);
     }
 
     @Override

@@ -131,8 +131,8 @@ public class TaskCallEventRecordingListener implements TaskCallListener {
 
     @SuppressWarnings("unchecked")
     private Map<String, Object> asMapOrNull(Object v) {
-        if (v instanceof TaskResult) {
-            return ((TaskResult) v).toMap();
+        if (v instanceof TaskResult.SimpleResult) {
+            return ((TaskResult.SimpleResult) v).toMap();
         }
 
         if (v instanceof Map) {

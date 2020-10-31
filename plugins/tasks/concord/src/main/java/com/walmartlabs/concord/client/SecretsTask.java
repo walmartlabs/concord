@@ -47,7 +47,7 @@ public class SecretsTask implements Task {
     @Override
     public void execute(Context ctx) throws Exception {
         SecretsTaskParams in = SecretsTaskParams.of(new ContextBackedVariables(ctx));
-        TaskResult result = new SecretsTaskCommon(clientFactory.create(ctx), getProcessOrgName(ctx))
+        TaskResult.SimpleResult result = new SecretsTaskCommon(clientFactory.create(ctx), getProcessOrgName(ctx))
                 .execute(in);
         ctx.setVariable(RESULT_KEY, result.toMap());
     }

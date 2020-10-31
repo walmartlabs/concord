@@ -76,7 +76,7 @@ public class AnsibleTaskV2 implements Task {
                 .retryCount(ContextUtils.getCurrentRetryAttemptNumber(context))
                 .build();
 
-        TaskResult result = task.run(ctx, runner);
+        TaskResult.SimpleResult result = task.run(ctx, runner);
         if (!result.ok()) {
             throw new IllegalStateException("Process finished with exit code " + result.values().get("exitCode"));
         }

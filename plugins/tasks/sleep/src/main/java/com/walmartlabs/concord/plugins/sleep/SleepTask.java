@@ -23,6 +23,7 @@ package com.walmartlabs.concord.plugins.sleep;
 import com.walmartlabs.concord.ApiClient;
 import com.walmartlabs.concord.client.ApiClientConfiguration;
 import com.walmartlabs.concord.client.ApiClientFactory;
+import com.walmartlabs.concord.runtime.v2.sdk.TaskResult;
 import com.walmartlabs.concord.sdk.Context;
 import com.walmartlabs.concord.sdk.ContextUtils;
 import com.walmartlabs.concord.sdk.Task;
@@ -55,13 +56,16 @@ public class SleepTask implements Task {
                     .context(ctx)
                     .build());
 
-            return new Suspender(apiClient, ContextUtils.getTxId(ctx), ctx::suspend);
+            return new Suspender(apiClient, ContextUtils.getTxId(ctx));
         };
 
         Map<String, Object> cfg = createCfg(ctx);
 
-        new SleepTaskCommon(suspender)
+        TaskResult taskResult = new SleepTaskCommon(suspender)
                 .execute(new TaskParams(cfg));
+        if (taskResult instanceof TaskResult.SuspendResult) {
+            ctx.suspend(((TaskResult.SuspendResult) taskResult).eventName());
+        }
     }
 
     private static Map<String, Object> createCfg(Context ctx) {
