@@ -1,0 +1,13 @@
+flows:
+  default:
+    - task: resultTask
+      in:
+        result: "${item * 10}"
+      out: x
+      parallelWithItems:
+        - 1
+        - 2
+        - 3
+
+    - log: "result: ${x.stream().map(v -> v.result).sorted().toList()}"
+    - log: "threadIds: ${x.stream().map(v -> v.threadId).sorted().toList()}"

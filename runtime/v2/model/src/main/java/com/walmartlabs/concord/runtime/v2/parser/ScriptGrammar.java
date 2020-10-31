@@ -41,7 +41,8 @@ public final class ScriptGrammar {
                             optional("body", stringVal.map(o::body)),
                             optional("in", mapVal.map(o::input)),
                             optional("meta", mapVal.map(o::meta)),
-                            optional("withItems", nonNullVal.map(v -> o.withItems(WithItems.of(v)))),
+                            optional("withItems", nonNullVal.map(v -> o.withItems(WithItems.of(v, false)))),
+                            optional("parallelWithItems", nonNullVal.map(v -> o.withItems(WithItems.of(v, true)))),
                             optional("retry", retryVal.map(o::retry)),
                             optional("error", stepsVal.map(o::errorSteps))
                     ))

@@ -23,7 +23,7 @@ package com.walmartlabs.concord.svm;
 import java.io.Serializable;
 import java.util.Objects;
 
-public class ThreadId implements Serializable {
+public class ThreadId implements Serializable, Comparable<ThreadId> {
 
     private final long id;
 
@@ -49,5 +49,10 @@ public class ThreadId implements Serializable {
         return "ThreadId{" +
                 "id=" + id +
                 '}';
+    }
+
+    @Override
+    public int compareTo(ThreadId o) {
+        return Long.compare(id, o.id);
     }
 }

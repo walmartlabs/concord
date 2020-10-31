@@ -25,8 +25,10 @@ import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.databind.ser.std.StdSerializer;
 import com.walmartlabs.concord.runtime.v2.model.FlowCall;
 import com.walmartlabs.concord.runtime.v2.model.FlowCallOptions;
+import com.walmartlabs.concord.runtime.v2.model.WithItems;
 
 import java.io.IOException;
+import java.util.Objects;
 
 import static com.walmartlabs.concord.runtime.v2.serializer.SerializerUtils.writeNotEmptyObjectField;
 
@@ -59,7 +61,12 @@ public class FlowCallStepSerializer extends StdSerializer<FlowCall> {
         writeNotEmptyObjectField("out", options.out(), gen);
 
         if (options.withItems() != null) {
-            gen.writeObjectField("withItems", options.withItems());
+            WithItems items = Objects.requireNonNull(options.withItems());
+            if (items.parallel()) {
+                gen.writeObjectField("parallelWithItems", items);
+            } else {
+                gen.writeObjectField("withItems", items);
+            }
         }
 
         if (options.retry() != null) {

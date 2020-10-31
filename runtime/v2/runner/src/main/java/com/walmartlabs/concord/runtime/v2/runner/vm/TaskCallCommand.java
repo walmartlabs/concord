@@ -31,6 +31,8 @@ import com.walmartlabs.concord.svm.Runtime;
 import com.walmartlabs.concord.svm.State;
 import com.walmartlabs.concord.svm.ThreadId;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Objects;
 
 import static com.walmartlabs.concord.runtime.v2.runner.tasks.TaskCallInterceptor.CallContext;
@@ -90,7 +92,9 @@ public class TaskCallCommand extends StepCommand<TaskCall> {
         if (result != null) {
             String out = opts.out();
             if (out != null) {
-                ctx.variables().set(out, result.toMap());
+                Map<String, Object> m = new HashMap<>(result.toMap());
+                m.put("threadId", threadId);
+                ctx.variables().set(out, m);
             }
         }
     }

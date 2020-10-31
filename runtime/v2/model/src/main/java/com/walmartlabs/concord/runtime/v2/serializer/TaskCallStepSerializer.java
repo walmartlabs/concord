@@ -25,6 +25,7 @@ import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.databind.ser.std.StdSerializer;
 import com.walmartlabs.concord.runtime.v2.model.TaskCall;
 import com.walmartlabs.concord.runtime.v2.model.TaskCallOptions;
+import com.walmartlabs.concord.runtime.v2.model.WithItems;
 
 import java.io.IOException;
 import java.util.Objects;
@@ -61,7 +62,12 @@ public class TaskCallStepSerializer extends StdSerializer<TaskCall> {
         }
 
         if (o.withItems() != null) {
-            gen.writeObjectField("withItems", o.withItems());
+            WithItems items = Objects.requireNonNull(o.withItems());
+            if (items.parallel()) {
+                gen.writeObjectField("parallelWithItems", items);
+            } else {
+                gen.writeObjectField("withItems", items);
+            }
         }
 
         if (o.retry() != null) {

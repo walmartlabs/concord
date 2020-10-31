@@ -26,8 +26,10 @@ import com.fasterxml.jackson.databind.ser.std.StdSerializer;
 import com.walmartlabs.concord.runtime.v2.model.ParallelBlockOptions;
 import com.walmartlabs.concord.runtime.v2.model.ScriptCall;
 import com.walmartlabs.concord.runtime.v2.model.ScriptCallOptions;
+import com.walmartlabs.concord.runtime.v2.model.WithItems;
 
 import java.io.IOException;
+import java.util.Objects;
 
 import static com.walmartlabs.concord.runtime.v2.serializer.SerializerUtils.writeNotEmptyObjectField;
 
@@ -63,7 +65,12 @@ public class ScriptCallStepSerializer extends StdSerializer<ScriptCall> {
         writeNotEmptyObjectField("in", options.input(), gen);
 
         if (options.withItems() != null) {
-            gen.writeObjectField("withItems", options.withItems());
+            WithItems items = Objects.requireNonNull(options.withItems());
+            if (items.parallel()) {
+                gen.writeObjectField("parallelWithItems", items);
+            } else {
+                gen.writeObjectField("withItems", items);
+            }
         }
 
         if (options.retry() != null) {

@@ -50,7 +50,8 @@ public final class TaskGrammar {
                         optional("in", mapVal.map(o::input)),
                         optional("out", stringVal.map(o::out)),
                         optional("meta", mapVal.map(o::putAllMeta)),
-                        optional("withItems", nonNullVal.map(v -> o.withItems(WithItems.of(v)))),
+                        optional("withItems", nonNullVal.map(v -> o.withItems(WithItems.of(v, false)))),
+                        optional("parallelWithItems", nonNullVal.map(v -> o.withItems(WithItems.of(v, true)))),
                         optional("retry", retryVal.map(o::retry)),
                         optional("error", stepsVal.map(o::errorSteps))
                 ))

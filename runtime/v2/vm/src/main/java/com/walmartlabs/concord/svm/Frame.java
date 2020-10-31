@@ -22,6 +22,8 @@ package com.walmartlabs.concord.svm;
 
 import java.io.Serializable;
 import java.util.*;
+import java.util.concurrent.Callable;
+import java.util.concurrent.locks.Lock;
 
 /**
  * Frame or "call frame" represents a scope with a list of commands, local
@@ -39,6 +41,8 @@ public class Frame implements Serializable {
     public static final String LAST_EXCEPTION_KEY = "__lastException";
 
     private static final long serialVersionUID = 1L;
+
+    private final Object mutex = new Object();
 
     private final FrameType type;
     private final List<Command> commandStack;
@@ -107,6 +111,16 @@ public class Frame implements Serializable {
 
     public Map<String, Serializable> getLocals() {
         return Collections.unmodifiableMap(locals);
+    }
+
+    public <T> T withLock(Callable<T> c) {
+        synchronized (mutex) {
+            try {
+                return c.call();
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+        }
     }
 
     public static class Builder {

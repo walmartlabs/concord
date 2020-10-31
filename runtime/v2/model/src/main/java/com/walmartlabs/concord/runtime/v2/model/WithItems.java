@@ -30,10 +30,13 @@ public interface WithItems extends Serializable {
 
     long serialVersionUID = 1L;
 
-    static WithItems of(Serializable items) {
-        return ImmutableWithItems.of(items);
+    static WithItems of(Serializable items, boolean parallel) {
+        return ImmutableWithItems.of(items, parallel);
     }
 
     @Value.Parameter
     Serializable value();
+
+    @Value.Parameter
+    boolean parallel();
 }

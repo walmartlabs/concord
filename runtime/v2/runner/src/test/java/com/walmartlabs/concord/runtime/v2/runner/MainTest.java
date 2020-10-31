@@ -503,6 +503,18 @@ public class MainTest {
     }
 
     @Test
+    public void testParallelWithItemsTask() throws Exception {
+        deploy("parallelWithItemsTask");
+
+        save(ProcessConfiguration.builder()
+                .build());
+
+        byte[] log = run();
+        assertLog(log, ".*result: \\[10, 20, 30\\].*");
+        assertLog(log, ".*threadIds: \\[ThreadId\\{id=1}, ThreadId\\{id=2}, ThreadId\\{id=3}\\].*");
+    }
+
+    @Test
     public void testWithItemsBlock() throws Exception {
         deploy("withItemsBlock");
 
@@ -957,7 +969,8 @@ public class MainTest {
 
         @Override
         public TaskResult execute(Variables input) {
-            return TaskResult.success().value("result", input.get("result"));
+            return TaskResult.success()
+                    .value("result", input.get("result"));
         }
     }
 
