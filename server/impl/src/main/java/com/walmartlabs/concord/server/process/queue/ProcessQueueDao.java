@@ -456,13 +456,14 @@ public class ProcessQueueDao extends AbstractDao {
         return processEntries;
     }
 
-    public List<ProcessRequirementsEntry> listRequirements(ProcessStatus processStatus, List<ProcessFilter.DateFilter> startAt, int limit, int offset) {
+    public List<ProcessRequirementsEntry> listRequirements(ProcessStatus processStatus, List<ProcessFilter.DateFilter> startAt, int limit, int offset, List<ProcessFilter.JsonFilter> requirements) {
         SelectQuery<Record> query = dsl().selectQuery();
 
         query.addSelect(PROCESS_QUEUE.INSTANCE_ID, PROCESS_QUEUE.CREATED_AT, PROCESS_QUEUE.REQUIREMENTS);
         query.addFrom(PROCESS_QUEUE);
         query.addConditions(PROCESS_QUEUE.CURRENT_STATUS.eq(processStatus.name()));
         FilterUtils.applyDate(query, PROCESS_QUEUE.START_AT, startAt);
+        FilterUtils.applyJson(query, PROCESS_QUEUE.REQUIREMENTS, requirements);
 
         query.addLimit(limit);
         query.addOffset(offset);
