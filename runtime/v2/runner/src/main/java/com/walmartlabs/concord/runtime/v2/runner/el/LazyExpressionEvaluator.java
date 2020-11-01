@@ -20,6 +20,7 @@ package com.walmartlabs.concord.runtime.v2.runner.el;
  * =====
  */
 
+import com.walmartlabs.concord.common.ConfigurationUtils;
 import com.walmartlabs.concord.runtime.v2.runner.el.functions.AllVariablesFunction;
 import com.walmartlabs.concord.runtime.v2.runner.el.functions.HasVariableFunction;
 import com.walmartlabs.concord.runtime.v2.runner.el.resolvers.BeanELResolver;
@@ -31,6 +32,7 @@ import com.walmartlabs.concord.runtime.v2.runner.tasks.TaskProviders;
 import javax.el.*;
 import java.lang.reflect.Method;
 import java.util.*;
+import java.util.stream.Collectors;
 
 import static com.walmartlabs.concord.common.ConfigurationUtils.*;
 import static com.walmartlabs.concord.runtime.v2.runner.el.ThreadLocalEvalContext.withEvalContext;
@@ -57,7 +59,8 @@ public class LazyExpressionEvaluator implements ExpressionEvaluator {
         }
 
         if (value instanceof Map) {
-            value = nestedToMap((Map<String, Object>)value, ctx);
+            Map<String, Object> m = nestedToMap((Map<String, Object>)value);
+            value = mergeWithContextVariables(ctx, m, ((Map<String, Object>) value).keySet().stream().filter(ConfigurationUtils::isNestedKey).collect(Collectors.toSet()));
         }
 
         if (ctx.useIntermediateResults() && value instanceof Map) {
@@ -194,24 +197,34 @@ public class LazyExpressionEvaluator implements ExpressionEvaluator {
         return s.contains("${");
     }
 
-    private static Map<String, Object> nestedToMap(Map<String, Object> value, EvalContext ctx) {
+    private static Map<String, Object> nestedToMap(Map<String, Object> value) {
         Map<String, Object> result = new LinkedHashMap<>();
         for (Map.Entry<String, Object> e : value.entrySet()) {
             if (isNestedKey(e.getKey())) {
                 Map<String, Object> m = toNested(e.getKey(), e.getValue());
-                assert(m.size() == 1);
-                String key = m.entrySet().iterator().next().getKey();
-                if (ctx.variables().has(key)) {
-                    Object o = ctx.variables().get(key);
-                    if (o instanceof Map) {
-                        Map<String, Object> valuesFromVars = Collections.singletonMap(key, o);
-                        m = deepMerge(valuesFromVars, m);
-                    }
-                }
                 result = deepMerge(result, m);
             } else {
                 result.put(e.getKey(), e.getValue());
             }
+        }
+        return result;
+    }
+
+    @SuppressWarnings("unchecked")
+    private static Map<String, Object> mergeWithContextVariables(EvalContext ctx, Map<String, Object> m, Set<String> nestedKeys) {
+        Map<String, Object> result = new LinkedHashMap<>();
+        for (Map.Entry<String, Object> e : m.entrySet()) {
+            String key = e.getKey();
+            Object value = e.getValue();
+            boolean isNested = nestedKeys.stream().anyMatch(s -> s.startsWith(key + "."));
+            if (isNested && ctx.variables().has(key)) {
+                Object o = ctx.variables().get(key);
+                if (o instanceof Map && e.getValue() instanceof Map) {
+                    Map<String, Object> valuesFromVars = (Map<String, Object>)o;
+                    value = deepMerge(valuesFromVars, (Map<String, Object>)value);
+                }
+            }
+            result.put(key, value);
         }
         return result;
     }
