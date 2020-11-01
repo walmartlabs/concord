@@ -60,7 +60,7 @@ public class LazyExpressionEvaluator implements ExpressionEvaluator {
 
         if (value instanceof Map) {
             Map<String, Object> m = nestedToMap((Map<String, Object>)value);
-            value = mergeWithContextVariables(ctx, m, ((Map<String, Object>) value).keySet().stream().filter(ConfigurationUtils::isNestedKey).collect(Collectors.toSet()));
+            value = mergeWithVariables(ctx, m, ((Map<String, Object>) value).keySet().stream().filter(ConfigurationUtils::isNestedKey).collect(Collectors.toSet()));
         }
 
         if (ctx.useIntermediateResults() && value instanceof Map) {
@@ -211,7 +211,7 @@ public class LazyExpressionEvaluator implements ExpressionEvaluator {
     }
 
     @SuppressWarnings("unchecked")
-    private static Map<String, Object> mergeWithContextVariables(EvalContext ctx, Map<String, Object> m, Set<String> nestedKeys) {
+    private static Map<String, Object> mergeWithVariables(EvalContext ctx, Map<String, Object> m, Set<String> nestedKeys) {
         Map<String, Object> result = new LinkedHashMap<>();
         for (Map.Entry<String, Object> e : m.entrySet()) {
             String key = e.getKey();
