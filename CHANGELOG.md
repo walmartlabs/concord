@@ -4,6 +4,8 @@
 
 ### Added
 
+- runtime-v2: support for expressions in `out` blocks of task
+calls;
 - runtime-v2: save the current thread ID in `TaskResult`;
 - agent-operator: add `requirements` filter;
 - concord-console: the login form now provides a link to the API
