@@ -124,7 +124,7 @@ public class RunPlaybookTask2 implements Task {
         PlaybookProcessRunner runner = new PlaybookProcessRunnerFactory(new AnsibleDockerServiceV1(ctx, dockerService), workDir)
                 .create(args);
 
-        TaskResult result = task.run(context, runner);
+        TaskResult.SimpleResult result = task.run(context, runner);
         result.values().forEach(ctx::setVariable);
         if (!result.ok()) {
             throw new IllegalStateException("Process finished with exit code " + result.values().get("exitCode"));

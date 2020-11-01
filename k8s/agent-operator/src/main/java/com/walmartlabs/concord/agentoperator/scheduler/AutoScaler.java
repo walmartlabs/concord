@@ -61,19 +61,19 @@ public class AutoScaler {
 
     /**
      * Scale up or Scale down the number of agent pods depending on various conditions
-     *
+     * <p>
      * If enqueued process count is greater than the threshold defined for incrementing to max
      * pool size, increase the pool size to the maximum size.
      * Otherwise, if the enqueued process count is greater than the threshold defined for incrementing
      * the pool size, increase the pool size by the increment percentage defined
-     *
+     * <p>
      * Decrease the pool size by the decrement percentage defined only if,
      * - enqueued process count is lesser than the minimum pool size threshold defined
      * - running process count is lesser than the threshold defined (which depends on current size of the pool
-     *   running the processes, and a constant factor specified - default to 1. Simplified to
-     *   runningCount < podsCount)
+     * running the processes, and a constant factor specified - default to 1. Simplified to
+     * runningCount < podsCount)
      *
-     * @param i Agent pool on which the scaling activity is to be performed
+     * @param i            Agent pool on which the scaling activity is to be performed
      * @param queueEntries List of process entries in ENQUEUED state
      */
     public AgentPoolInstance apply(AgentPoolInstance i, List<ProcessQueueEntry> queueEntries) {
@@ -190,7 +190,7 @@ public class AutoScaler {
 
                 log.info("['{}']: Scaling down - (enqueued count({}) < minimum threshold({})) for more than {} seconds...",
                         i.getName(), enqueuedCount, minPoolSizeThreshold,
-                        (i.getResource().getSpec().getScaleDownDelayMs()/1000));
+                        (i.getResource().getSpec().getScaleDownDelayMs() / 1000));
 
                 // Limit to minimum pool size if the computed target size is less than the min size
                 if (poolSize < cfg.getMinSize()) {

@@ -32,6 +32,7 @@ import javax.inject.Inject;
 import javax.inject.Named;
 
 @Named("lock")
+@SuppressWarnings("unused")
 public class LockTaskV2 implements Task {
 
     private final LockTaskCommon delegate;
@@ -47,13 +48,14 @@ public class LockTaskV2 implements Task {
     public TaskResult execute(Variables input) throws Exception {
         TaskParams params = new TaskParams(input);
 
-        delegate.lock(params.lockName(), params.scope(), context::suspend);
-
-        return TaskResult.success();
+        return delegate.lock(params.lockName(), params.scope());
     }
 
     public void lock(String lockName, String scope) throws Exception {
-        delegate.lock(lockName, scope, context::suspend);
+        TaskResult taskResult = delegate.lock(lockName, scope);
+        if (taskResult instanceof TaskResult.SuspendResult) {
+            context.suspend(((TaskResult.SuspendResult) taskResult).eventName());
+        }
     }
 
     public void unlock(String lockName, String scope) throws Exception {
