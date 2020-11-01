@@ -203,6 +203,22 @@ public class ProjectSerializerV2Test extends AbstractParserTest {
     }
 
     @Test
+    public void testTaskCallOutExpr() throws Exception {
+        TaskCallOptions opts = TaskCallOptions.builder()
+                .putInput("msg", "BOO")
+                .putOutExpr("result", "${result}")
+                .putOutExpr("v1", "${result.v1}")
+                .withItems(withItems())
+                .retry(retry())
+                .errorSteps(steps())
+                .meta(meta())
+                .build();
+
+        String result = toYaml(new TaskCall(location(), "log", opts));
+        assertResult("serializer/taskCallStepOutExpr.yml", result);
+    }
+
+    @Test
     public void testProcessDefinition() throws Exception{
         Map<String, Form> forms = Collections.singletonMap("form1", Form.builder()
                 .name("form1")
