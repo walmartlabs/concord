@@ -25,6 +25,7 @@ import com.walmartlabs.concord.ApiException;
 import com.walmartlabs.concord.client.ClientUtils;
 import com.walmartlabs.concord.client.LockResult;
 import com.walmartlabs.concord.client.ProcessLocksApi;
+import com.walmartlabs.concord.runtime.v2.sdk.TaskResult;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -36,11 +37,6 @@ import static com.walmartlabs.concord.plugins.lock.Constants.RETRY_INTERVAL;
 
 public class LockTaskCommon {
 
-    public interface Suspender {
-
-        void suspend(String eventName);
-    }
-
     private static final Logger log = LoggerFactory.getLogger(LockTaskCommon.class);
 
     private final ProcessLocksApi api;
@@ -51,7 +47,7 @@ public class LockTaskCommon {
         this.instanceId = instanceId;
     }
 
-    public boolean lock(String lockName, String lockScope, Suspender suspender) throws ApiException {
+    public TaskResult lock(String lockName, String lockScope) throws ApiException {
         log.info("Locking '{}' with scope '{}'...", lockName, lockScope);
 
         if (lockName == null) {
@@ -62,9 +58,9 @@ public class LockTaskCommon {
 
         boolean result = lock.isAcquired();
         if (!result) {
-            suspender.suspend(lockName);
+            return TaskResult.suspend(lockName);
         }
-        return result;
+        return TaskResult.success();
     }
 
     public void unlock(String lockName, String lockScope) throws ApiException {

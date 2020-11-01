@@ -31,8 +31,6 @@ import com.walmartlabs.concord.svm.Runtime;
 import com.walmartlabs.concord.svm.State;
 import com.walmartlabs.concord.svm.ThreadId;
 
-import java.util.HashMap;
-import java.util.Map;
 import java.util.Objects;
 
 import static com.walmartlabs.concord.runtime.v2.runner.tasks.TaskCallInterceptor.CallContext;
@@ -64,7 +62,7 @@ public class TaskCallCommand extends StepCommand<TaskCall> {
         String taskName = call.getName();
         Task t = taskProviders.createTask(ctx, taskName);
         if (t == null) {
-            throw new IllegalStateException("Task not found: " + taskName);
+            throw new IllegalStateException("Task not found: '" + taskName + "'");
         }
 
         TaskCallInterceptor interceptor = runtime.getService(TaskCallInterceptor.class);
@@ -89,14 +87,7 @@ public class TaskCallCommand extends StepCommand<TaskCall> {
             throw new RuntimeException(e);
         }
 
-        if (result != null) {
-            String out = opts.out();
-            if (out != null) {
-                Map<String, Object> m = new HashMap<>(result.toMap());
-                m.put("threadId", threadId);
-                ctx.variables().set(out, m);
-            }
-        }
+        TaskCallUtils.processTaskResult(taskName, result, ctx);
     }
 
     @Override

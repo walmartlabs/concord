@@ -30,13 +30,6 @@
             <column name="PERMISSION">*</column>
         </insert>
 
-        <insert tableName="LDAP_GROUP_MAPPINGS">
-            <column name="MAPPING_ID">8491c938-41a4-11e7-93cd-a3ce3ef913f9</column>
-            <column name="LDAP_DN">
-                <![CDATA[CN=DevTools - WalmartLabs-devtools,OU=Distribution,OU=Groups,DC=homeoffice,DC=Wal-Mart,DC=com]]>
-            </column>
-        </insert>
-
         <insert tableName="LDAP_GROUP_ROLES">
             <column name="MAPPING_ID">8491c938-41a4-11e7-93cd-a3ce3ef913f9</column>
             <column name="ROLE_NAME">devtools-admin</column>

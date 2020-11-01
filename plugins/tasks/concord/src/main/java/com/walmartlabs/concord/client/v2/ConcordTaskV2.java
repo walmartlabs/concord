@@ -37,6 +37,7 @@ import static com.walmartlabs.concord.client.ConcordTaskParams.KillParams;
 import static com.walmartlabs.concord.client.ConcordTaskParams.ListSubProcesses;
 
 @Named("concord")
+@SuppressWarnings("unused")
 public class ConcordTaskV2 implements ReentrantTask {
 
     private final Variables defaults;
@@ -45,7 +46,6 @@ public class ConcordTaskV2 implements ReentrantTask {
     private final ApiClientFactory apiClientFactory;
     private final ProjectInfo projectInfo;
     private final Path workDir;
-    private final ConcordTaskSuspender suspender;
 
     @Inject
     public ConcordTaskV2(ApiClientFactory apiClientFactory, Context context) {
@@ -56,15 +56,6 @@ public class ConcordTaskV2 implements ReentrantTask {
         this.projectInfo = context.processConfiguration().projectInfo();
 
         this.workDir = context.workingDirectory();
-        this.suspender = (resumeFromSameStep, payload) -> {
-            if (resumeFromSameStep) {
-                return context.suspendResume(payload.asMap());
-            } else {
-                String eventName = UUID.randomUUID().toString();
-                context.suspend(eventName);
-                return eventName;
-            }
-        };
     }
 
     @Override
@@ -74,7 +65,7 @@ public class ConcordTaskV2 implements ReentrantTask {
 
     @Override
     public TaskResult resume(ResumeEvent event) throws Exception {
-        return delegate().continueAfterSuspend(new ConcordTaskSuspender.ResumePayload(event.state()));
+        return delegate().continueAfterSuspend(new ResumePayload(event.state()));
     }
 
     public List<String> listSubprocesses(String instanceId, String... tags) throws Exception {
@@ -120,7 +111,7 @@ public class ConcordTaskV2 implements ReentrantTask {
     }
 
     private ConcordTaskCommon delegate() {
-        return new ConcordTaskCommon(sessionToken, apiClientFactory, defaults.getString("processLinkTemplate"), instanceId, projectInfo.orgName(), workDir, suspender);
+        return new ConcordTaskCommon(sessionToken, apiClientFactory, defaults.getString("processLinkTemplate"), instanceId, projectInfo.orgName(), workDir);
     }
 
     private static List<UUID> toUUIDs(List<String> ids) {

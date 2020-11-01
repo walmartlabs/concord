@@ -24,6 +24,7 @@ import com.walmartlabs.concord.ApiClient;
 import com.walmartlabs.concord.ApiException;
 import com.walmartlabs.concord.client.ClientUtils;
 import com.walmartlabs.concord.client.ProcessApi;
+import com.walmartlabs.concord.runtime.v2.sdk.TaskResult;
 
 import java.time.Instant;
 import java.time.ZoneOffset;
@@ -34,31 +35,24 @@ import java.util.UUID;
 
 public class Suspender {
 
-    public interface ProcessSuspender {
-
-        void suspend(String eventName);
-    }
-
     private static final DateTimeFormatter dateFormatter = DateTimeFormatter.
             ofPattern(Constants.DATETIME_PATTERN).withZone(ZoneOffset.UTC);
 
     private final ProcessApi api;
     private final UUID instanceId;
-    private final ProcessSuspender processSuspender;
 
-    public Suspender(ApiClient api, UUID instanceId, ProcessSuspender processSuspender) {
+    public Suspender(ApiClient api, UUID instanceId) {
         this.api = new ProcessApi(api);
         this.instanceId = instanceId;
-        this.processSuspender = processSuspender;
     }
 
-    public void suspend(Instant until) throws ApiException {
+    public TaskResult suspend(Instant until) throws ApiException {
         ClientUtils.withRetry(Constants.RETRY_COUNT, Constants.RETRY_INTERVAL, () -> {
             api.setWaitCondition(instanceId, createCondition(until));
             return null;
         });
 
-        processSuspender.suspend(Constants.RESUME_EVENT_NAME);
+        return TaskResult.suspend(Constants.RESUME_EVENT_NAME);
     }
 
     private static Map<String, Object> createCondition(Instant until) {

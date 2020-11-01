@@ -29,6 +29,9 @@ import com.walmartlabs.concord.runtime.v2.sdk.Context;
 import com.walmartlabs.concord.svm.Runtime;
 import com.walmartlabs.concord.svm.*;
 
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.ObjectOutputStream;
 import java.io.Serializable;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -39,7 +42,7 @@ public abstract class WithItemsWrapper implements Command {
         if (withItems.parallel()) {
             return new ParallelWithItems(cmd, withItems, outVariables);
         } else {
-            return new LoopWithItems(cmd, withItems, outVariables);
+            return new SerialWithItems(cmd, withItems, outVariables);
         }
     }
 
@@ -109,14 +112,7 @@ public abstract class WithItemsWrapper implements Command {
             throw new IllegalArgumentException("'withItems' accepts only Lists of items, Java Maps or arrays of values. Got: " + value.getClass());
         }
 
-        for (int i = 0; i < items.size(); i++) {
-            Object item = items.get(0);
-            if (item == null || item instanceof Serializable) {
-                continue;
-            }
-
-            throw new IllegalStateException("Can't use non-serializable values in 'withItems': " + item + " (" + item.getClass() + ")");
-        }
+        items.forEach(WithItemsWrapper::assertItem);
 
         if (items.isEmpty()) {
             return;
@@ -126,6 +122,18 @@ public abstract class WithItemsWrapper implements Command {
     }
 
     protected abstract void eval(State state, ThreadId threadId, ArrayList<Serializable> items);
+
+    static void assertItem(Object item) {
+        if (item == null) {
+            return;
+        }
+
+        try (ObjectOutputStream oos = new ObjectOutputStream(new ByteArrayOutputStream())) {
+            oos.writeObject(item);
+        } catch (IOException e) {
+            throw new IllegalArgumentException("Can't use non-serializable values in 'withItems': " + item + " (" + item.getClass() + ")");
+        }
+    }
 
     static class ParallelWithItems extends WithItemsWrapper {
 
@@ -179,9 +187,9 @@ public abstract class WithItemsWrapper implements Command {
      * Creates a new call frame and keeps the item list, the current item
      * and the index as frame-local variables.
      */
-    static class LoopWithItems extends WithItemsWrapper {
+    static class SerialWithItems extends WithItemsWrapper {
 
-        protected LoopWithItems(Command cmd, WithItems withItems, List<String> outVariables) {
+        protected SerialWithItems(Command cmd, WithItems withItems, List<String> outVariables) {
             super(cmd, withItems, outVariables);
         }
 
@@ -290,8 +298,6 @@ public abstract class WithItemsWrapper implements Command {
     private static class AppendVariablesCommand implements Command {
 
         private static final long serialVersionUID = 1L;
-
-        public static final Object mutex = new Object();
 
         private final List<String> variables;
         private final Frame sourceFrame;

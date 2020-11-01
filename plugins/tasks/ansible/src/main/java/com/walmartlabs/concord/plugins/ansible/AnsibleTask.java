@@ -62,8 +62,8 @@ public class AnsibleTask {
         this.secretService = secretService;
     }
 
-    public TaskResult run(AnsibleContext context,
-                          PlaybookProcessRunner playbookProcessRunner) throws Exception {
+    public TaskResult.SimpleResult run(AnsibleContext context,
+                                       PlaybookProcessRunner playbookProcessRunner) throws Exception {
 
         String playbook = assertString(context.args(), TaskParams.PLAYBOOK_KEY.getKey());
         log.info("Using a playbook: {}", playbook);
@@ -150,7 +150,8 @@ public class AnsibleTask {
                 log.warn("Playbook is finished with code {}", code);
             }
 
-            return new TaskResult(success, null, result)
+            return TaskResult.of(success)
+                    .values(result)
                     .value("exitCode", code);
         } finally {
             callbacks.stopEventSender();
