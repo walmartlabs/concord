@@ -59,6 +59,18 @@ public final class EvalContextFactory {
     }
 
     /**
+     * Includes all flow variables and additional variables.
+     * Allows access to tasks.
+     * Doesn't allow access to intermediate results.
+     */
+    public static EvalContext global(Context ctx, Map<String, Object> additionalVariables) {
+        return DefaultEvalContext.builder()
+                .context(ctx)
+                .variables(new ContextVariablesWithOverrides(ctx, additionalVariables))
+                .build();
+    }
+
+    /**
      * Includes only the specified variables.
      * No flow variables allowed.
      * Allows access to tasks.
@@ -82,7 +94,6 @@ public final class EvalContextFactory {
                 .variables(new MapBackedVariables(variables))
                 .build();
     }
-
 
     private EvalContextFactory() {
     }

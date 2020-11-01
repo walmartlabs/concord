@@ -21,18 +21,15 @@ package com.walmartlabs.concord.runtime.v2.parser;
  */
 
 import com.walmartlabs.concord.runtime.v2.Constants;
-import com.walmartlabs.concord.runtime.v2.model.ImmutableTaskCallOptions;
-import com.walmartlabs.concord.runtime.v2.model.TaskCall;
-import com.walmartlabs.concord.runtime.v2.model.TaskCallOptions;
-import com.walmartlabs.concord.runtime.v2.model.WithItems;
+import com.walmartlabs.concord.runtime.v2.model.*;
 import io.takari.parc.Parser;
 
+import static com.walmartlabs.concord.runtime.v2.parser.GrammarMisc.*;
 import static com.walmartlabs.concord.runtime.v2.parser.RetryGrammar.retryVal;
-import static com.walmartlabs.concord.runtime.v2.parser.GrammarMisc.namedStep;
-import static com.walmartlabs.concord.runtime.v2.parser.GrammarMisc.with;
 import static com.walmartlabs.concord.runtime.v2.parser.GrammarOptions.optional;
 import static com.walmartlabs.concord.runtime.v2.parser.GrammarOptions.options;
 import static com.walmartlabs.concord.runtime.v2.parser.GrammarV2.*;
+import static io.takari.parc.Combinators.or;
 
 public final class TaskGrammar {
 
@@ -44,11 +41,15 @@ public final class TaskGrammar {
         return result;
     }
 
+    private static Parser<Atom, ImmutableTaskCallOptions.Builder> taskCallOutOption(ImmutableTaskCallOptions.Builder o) {
+        return orError(or(maybeMap.map(o::outExpr), maybeString.map(o::out)), YamlValueType.TASK_CALL_OUT);
+    }
+
     private static Parser<Atom, TaskCallOptions> taskOptions(String stepName) {
         return with(() -> optionsWithStepName(stepName),
                 o -> options(
                         optional("in", mapVal.map(o::input)),
-                        optional("out", stringVal.map(o::out)),
+                        optional("out", taskCallOutOption(o)),
                         optional("meta", mapVal.map(o::putAllMeta)),
                         optional("withItems", nonNullVal.map(v -> o.withItems(WithItems.of(v)))),
                         optional("retry", retryVal.map(o::retry)),
