@@ -61,6 +61,8 @@ public class TaskCallStepSerializer extends StdSerializer<TaskCall> {
             gen.writeObjectField("out", o.out());
         }
 
+        writeNotEmptyObjectField("out", o.outExpr(), gen);
+
         if (o.withItems() != null) {
             WithItems items = Objects.requireNonNull(o.withItems());
             if (items.parallel()) {

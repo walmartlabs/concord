@@ -701,6 +701,7 @@ public class MainTest {
         assertLog(log, ".*result.ok: true.*");
         assertLog(log, ".*result.action: boo.*");
         assertLog(log, ".*result.k: v.*");
+        assertLog(log, ".*resultAction: boo.*");
     }
 
     @Test
@@ -781,6 +782,17 @@ public class MainTest {
 
         byte[] log = run();
         assertLog(log, ".*it's null.*");
+    }
+
+    @Test
+    public void testTaskOutExpression() throws Exception {
+        deploy("taskOutExpr");
+
+        save(ProcessConfiguration.builder()
+                .build());
+
+        byte[] log = run();
+        assertLog(log, ".*result: some-value.*");
     }
 
     private void deploy(String resource) throws URISyntaxException, IOException {

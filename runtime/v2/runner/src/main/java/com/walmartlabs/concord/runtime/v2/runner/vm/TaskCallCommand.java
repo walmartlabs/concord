@@ -87,7 +87,7 @@ public class TaskCallCommand extends StepCommand<TaskCall> {
             throw new RuntimeException(e);
         }
 
-        TaskCallUtils.processTaskResult(taskName, result, ctx);
+        TaskCallUtils.processTaskResult(runtime, ctx, taskName, opts, result);
     }
 
     @Override
