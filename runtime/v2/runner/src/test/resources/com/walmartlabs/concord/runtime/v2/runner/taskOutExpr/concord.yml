@@ -1,0 +1,9 @@
+flows:
+  default:
+    - task: testTask
+      in:
+        k: "some-value"
+      out:
+        theThingIActuallyWanted: "${result.ok ? result.k : 'oops'}"
+
+    - log: "result: ${theThingIActuallyWanted}"
