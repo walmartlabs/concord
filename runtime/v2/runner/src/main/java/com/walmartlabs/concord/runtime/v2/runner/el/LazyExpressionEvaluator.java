@@ -57,7 +57,7 @@ public class LazyExpressionEvaluator implements ExpressionEvaluator {
         }
 
         if (value instanceof Map) {
-            value = nestedToMap((Map<String, Object>)value);
+            value = nestedToMap((Map<String, Object>)value, ctx);
         }
 
         if (ctx.useIntermediateResults() && value instanceof Map) {
@@ -194,11 +194,20 @@ public class LazyExpressionEvaluator implements ExpressionEvaluator {
         return s.contains("${");
     }
 
-    private static Map<String, Object> nestedToMap(Map<String, Object> value) {
+    private static Map<String, Object> nestedToMap(Map<String, Object> value, EvalContext ctx) {
         Map<String, Object> result = new LinkedHashMap<>();
         for (Map.Entry<String, Object> e : value.entrySet()) {
             if (isNestedKey(e.getKey())) {
                 Map<String, Object> m = toNested(e.getKey(), e.getValue());
+                assert(m.size() == 1);
+                String key = m.entrySet().iterator().next().getKey();
+                if (ctx.variables().has(key)) {
+                    Object o = ctx.variables().get(key);
+                    if (o instanceof Map) {
+                        Map<String, Object> valuesFromVars = Collections.singletonMap(key, o);
+                        m = deepMerge(valuesFromVars, m);
+                    }
+                }
                 result = deepMerge(result, m);
             } else {
                 result.put(e.getKey(), e.getValue());

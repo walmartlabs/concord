@@ -5,6 +5,7 @@ flows:
         x.y: 123
         x.taskOut: "${simpleMethodTask.getValue()}"
         x.taskOut2: "${simpleMethodTask.getDerivedValue(x.y)}"
+        x.fromArgs: "${x.z}"
 
     - log: "x: ${x}"
     - log: "a: ${a}"

@@ -693,12 +693,9 @@ public class MainTest {
 
     @Test
     public void testNestedSet() throws Exception {
-        Map<String, Object> x = new HashMap<>();
-        x.put("z", 234);
-
         deploy("nestedSet");
         save(ProcessConfiguration.builder()
-                .putArguments("x", x)
+                .putArguments("x", Collections.singletonMap("z", 234))
                 .build());
 
         byte[] log = run();
@@ -706,6 +703,7 @@ public class MainTest {
         assertLog(log, ".*x: .*z=234.*");
         assertLog(log, ".*x: .*taskOut=42.*");
         assertLog(log, ".*x: .*taskOut2=165.*");
+        assertLog(log, ".*x: .*fromArgs=234.*");
         assertLog(log, ".*a: 42.*");
     }
 
