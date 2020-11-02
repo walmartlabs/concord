@@ -800,7 +800,7 @@ public class YamlErrorParserTest extends AbstractParserTest {
     @Test
     public void test302() throws Exception {
         String msg =
-                "(002.yml): Error @ line: 4, col: 11. Invalid value type, expected: STRING_OR_ARRAY, got: NULL. Remove attribute or complete the definition\n" +
+                "(002.yml): Error @ line: 4, col: 11. Invalid value type, expected: STRING or ARRAY_OF_STRING or OBJECT, got: NULL. Remove attribute or complete the definition\n" +
                         "\twhile processing steps:\n" +
                         "\t'out' @ line: 4, col: 7\n" +
                         "\t\t'call' @ line: 3, col: 7\n" +
@@ -813,7 +813,7 @@ public class YamlErrorParserTest extends AbstractParserTest {
     @Test
     public void test303() throws Exception {
         String msg =
-                "(003.yml): Error @ line: 4, col: 12. Invalid value type, expected: STRING_OR_ARRAY, got: INT\n" +
+                "(003.yml): Error @ line: 4, col: 12. Invalid value type, expected: STRING or ARRAY_OF_STRING or OBJECT, got: INT\n" +
                         "\twhile processing steps:\n" +
                         "\t'out' @ line: 4, col: 7\n" +
                         "\t\t'call' @ line: 3, col: 7\n" +

@@ -34,7 +34,7 @@ import static io.takari.parc.Combinators.or;
 public final class FlowCallGrammar {
 
     private static Parser<Atom, ImmutableFlowCallOptions.Builder> flowCallOutOption(ImmutableFlowCallOptions.Builder o) {
-        return orError(or(maybeMap.map(o::outExpr), stringOrArrayVal.map(o::out)), YamlValueType.FLOW_CALL_OUT);
+        return orError(or(maybeMap.map(o::outExpr), or(maybeString.map(o::addOut), maybeStringArray.map(o::out))), YamlValueType.FLOW_CALL_OUT);
     }
 
     private static Parser<Atom, FlowCallOptions> callOptions(String stepName) {
