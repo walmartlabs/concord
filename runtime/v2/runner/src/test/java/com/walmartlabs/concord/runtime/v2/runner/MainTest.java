@@ -676,6 +676,18 @@ public class MainTest {
     }
 
     @Test
+    public void testParallelOutExpr() throws Exception {
+        deploy("parallelOutExpr");
+
+        save(ProcessConfiguration.builder()
+                .build());
+
+        byte[] log = run();
+        assertLog(log, ".*x: 123.*");
+        assertLog(log, ".*y: \\{inner=234\\}.*");
+    }
+
+    @Test
     public void testReentrant() throws Exception {
         deploy("reentrantTask");
         save(ProcessConfiguration.builder()
