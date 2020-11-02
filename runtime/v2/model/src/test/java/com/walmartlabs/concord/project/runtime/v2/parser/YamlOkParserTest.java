@@ -157,7 +157,7 @@ public class YamlOkParserTest extends AbstractParserTest {
         assertTrue(t.getOptions().errorSteps().get(0) instanceof Expression);
         Expression errorStep = (Expression) t.getOptions().errorSteps().get(0);
         assertEquals("${booError}", errorStep.getExpr());
-        assertNull(errorStep.getOptions());
+        assertNotNull(errorStep.getOptions());
 
         // meta
         assertMeta("expression-call", t.getOptions());
@@ -182,7 +182,7 @@ public class YamlOkParserTest extends AbstractParserTest {
         assertTrue(t.getOptions().errorSteps().get(0) instanceof Expression);
         Expression errorStep = (Expression) t.getOptions().errorSteps().get(0);
         assertEquals("${exp}", errorStep.getExpr());
-        assertNull(errorStep.getOptions());
+        assertNotNull(errorStep.getOptions());
 
         // withItems
         assertEquals("a", ((List<String>) t.getOptions().withItems().value()).get(0));
