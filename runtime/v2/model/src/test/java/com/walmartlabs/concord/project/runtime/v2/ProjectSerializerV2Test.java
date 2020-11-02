@@ -83,6 +83,20 @@ public class ProjectSerializerV2Test extends AbstractParserTest {
     }
 
     @Test
+    public void testFlowCallOutExpr() throws Exception {
+        FlowCallOptions opts = FlowCallOptions.builder()
+                .putInput("in-1", "v1")
+                .putOutExpr("o1", "${o.one}")
+                .withItems(withItems())
+                .retry(retry())
+                .errorSteps(steps())
+                .build();
+
+        String result = toYaml(new FlowCall(location(), "flow", opts));
+        assertResult("serializer/flowCallStepOutExpr.yml", result);
+    }
+
+    @Test
     public void testFormCall() throws Exception {
         FormField f = FormField.builder()
                 .name("field-name")

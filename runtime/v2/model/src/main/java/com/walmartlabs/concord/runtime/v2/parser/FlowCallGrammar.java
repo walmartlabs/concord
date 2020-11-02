@@ -21,26 +21,27 @@ package com.walmartlabs.concord.runtime.v2.parser;
  */
 
 import com.walmartlabs.concord.runtime.v2.Constants;
-import com.walmartlabs.concord.runtime.v2.model.FlowCall;
-import com.walmartlabs.concord.runtime.v2.model.FlowCallOptions;
-import com.walmartlabs.concord.runtime.v2.model.ImmutableFlowCallOptions;
-import com.walmartlabs.concord.runtime.v2.model.WithItems;
+import com.walmartlabs.concord.runtime.v2.model.*;
 import io.takari.parc.Parser;
 
+import static com.walmartlabs.concord.runtime.v2.parser.GrammarMisc.*;
 import static com.walmartlabs.concord.runtime.v2.parser.RetryGrammar.retryVal;
-import static com.walmartlabs.concord.runtime.v2.parser.GrammarMisc.namedStep;
-import static com.walmartlabs.concord.runtime.v2.parser.GrammarMisc.with;
 import static com.walmartlabs.concord.runtime.v2.parser.GrammarOptions.optional;
 import static com.walmartlabs.concord.runtime.v2.parser.GrammarOptions.options;
 import static com.walmartlabs.concord.runtime.v2.parser.GrammarV2.*;
+import static io.takari.parc.Combinators.or;
 
 public final class FlowCallGrammar {
+
+    private static Parser<Atom, ImmutableFlowCallOptions.Builder> flowCallOutOption(ImmutableFlowCallOptions.Builder o) {
+        return orError(or(maybeMap.map(o::outExpr), stringOrArrayVal.map(o::out)), YamlValueType.FLOW_CALL_OUT);
+    }
 
     private static Parser<Atom, FlowCallOptions> callOptions(String stepName) {
         return with(() -> optionsBuilder(stepName),
                 o -> options(
                         optional("in", mapVal.map(o::input)),
-                        optional("out", stringOrArrayVal.map(o::out)),
+                        optional("out", flowCallOutOption(o)),
                         optional("meta", mapVal.map(o::putAllMeta)),
                         optional("withItems", nonNullVal.map(v -> o.withItems(WithItems.of(v)))),
                         optional("retry", retryVal.map(o::retry)),
