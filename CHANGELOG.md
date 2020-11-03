@@ -13,6 +13,8 @@ key login form.
 
 ### Changed
 
+- concord-tasks: fix the missing injection annotations in the v2
+version of the `jsonStore` task (makes it useable in v2 again);
 - concord-server: `ProcessKeyCache` no longer caches misses;
 - concord-server: fixed handling of `any` conditions in
 the `github` trigger's `files` filter.
