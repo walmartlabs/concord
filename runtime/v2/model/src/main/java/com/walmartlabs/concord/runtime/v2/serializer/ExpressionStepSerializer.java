@@ -32,6 +32,8 @@ import static com.walmartlabs.concord.runtime.v2.serializer.SerializerUtils.writ
 
 public class ExpressionStepSerializer extends StdSerializer<Expression> {
 
+    private static final long serialVersionUID = 1L;
+
     public ExpressionStepSerializer() {
         this(null);
     }

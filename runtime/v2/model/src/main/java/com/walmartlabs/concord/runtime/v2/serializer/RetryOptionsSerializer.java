@@ -31,6 +31,8 @@ import static com.walmartlabs.concord.runtime.v2.serializer.SerializerUtils.writ
 
 public class RetryOptionsSerializer extends StdSerializer<Retry> {
 
+    private static final long serialVersionUID = 1L;
+
     public RetryOptionsSerializer() {
         this(null);
     }
