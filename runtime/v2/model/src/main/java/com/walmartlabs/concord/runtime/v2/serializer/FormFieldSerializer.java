@@ -31,6 +31,8 @@ import java.util.Map;
 
 public class FormFieldSerializer extends StdSerializer<FormField> {
 
+    private static final long serialVersionUID = 1L;
+
     public FormFieldSerializer() {
         this(null);
     }

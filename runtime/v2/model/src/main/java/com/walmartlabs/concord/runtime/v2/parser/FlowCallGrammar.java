@@ -9,9 +9,9 @@ package com.walmartlabs.concord.runtime.v2.parser;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -21,14 +21,17 @@ package com.walmartlabs.concord.runtime.v2.parser;
  */
 
 import com.walmartlabs.concord.runtime.v2.Constants;
-import com.walmartlabs.concord.runtime.v2.model.*;
+import com.walmartlabs.concord.runtime.v2.model.FlowCall;
+import com.walmartlabs.concord.runtime.v2.model.FlowCallOptions;
+import com.walmartlabs.concord.runtime.v2.model.ImmutableFlowCallOptions;
+import com.walmartlabs.concord.runtime.v2.model.WithItems;
 import io.takari.parc.Parser;
 
 import static com.walmartlabs.concord.runtime.v2.parser.GrammarMisc.*;
-import static com.walmartlabs.concord.runtime.v2.parser.RetryGrammar.retryVal;
 import static com.walmartlabs.concord.runtime.v2.parser.GrammarOptions.optional;
 import static com.walmartlabs.concord.runtime.v2.parser.GrammarOptions.options;
 import static com.walmartlabs.concord.runtime.v2.parser.GrammarV2.*;
+import static com.walmartlabs.concord.runtime.v2.parser.RetryGrammar.retryVal;
 import static io.takari.parc.Combinators.or;
 
 public final class FlowCallGrammar {
@@ -43,7 +46,8 @@ public final class FlowCallGrammar {
                         optional("in", mapVal.map(o::input)),
                         optional("out", flowCallOutOption(o)),
                         optional("meta", mapVal.map(o::putAllMeta)),
-                        optional("withItems", nonNullVal.map(v -> o.withItems(WithItems.of(v)))),
+                        optional("withItems", nonNullVal.map(v -> o.withItems(WithItems.of(v, WithItems.Mode.SERIAL)))),
+                        optional("parallelWithItems", nonNullVal.map(v -> o.withItems(WithItems.of(v, WithItems.Mode.PARALLEL)))),
                         optional("retry", retryVal.map(o::retry)),
                         optional("error", stepsVal.map(o::errorSteps))
                 ))

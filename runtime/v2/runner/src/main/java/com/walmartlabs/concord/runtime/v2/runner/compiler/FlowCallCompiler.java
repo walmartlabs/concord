@@ -29,6 +29,7 @@ import com.walmartlabs.concord.svm.Command;
 
 import javax.inject.Named;
 import java.util.List;
+import java.util.Objects;
 
 @Named
 public class FlowCallCompiler implements StepCompiler<FlowCall> {
@@ -42,7 +43,7 @@ public class FlowCallCompiler implements StepCompiler<FlowCall> {
     public Command compile(CompilerContext context, FlowCall step) {
         Command cmd = new FlowCallCommand(step);
 
-        FlowCallOptions options = step.getOptions();
+        FlowCallOptions options = Objects.requireNonNull(step.getOptions());
 
         Retry retry = options.retry();
         if (retry != null) {
@@ -51,7 +52,7 @@ public class FlowCallCompiler implements StepCompiler<FlowCall> {
 
         WithItems withItems = options.withItems();
         if (withItems != null) {
-            cmd = new WithItemsWrapper(cmd, withItems, options.out());
+            cmd = WithItemsWrapper.of(cmd, withItems, options.out());
         }
 
         List<Step> errorSteps = options.errorSteps();

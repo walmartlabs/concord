@@ -29,6 +29,8 @@ import java.io.IOException;
 
 public class WithItemsSerializer extends StdSerializer<WithItems> {
 
+    private static final long serialVersionUID = 1L;
+
     public WithItemsSerializer() {
         this(null);
     }

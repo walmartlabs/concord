@@ -26,12 +26,12 @@ import com.walmartlabs.concord.runtime.v2.model.ScriptCallOptions;
 import com.walmartlabs.concord.runtime.v2.model.WithItems;
 import io.takari.parc.Parser;
 
-import static com.walmartlabs.concord.runtime.v2.parser.RetryGrammar.retryVal;
 import static com.walmartlabs.concord.runtime.v2.parser.GrammarMisc.satisfyField;
 import static com.walmartlabs.concord.runtime.v2.parser.GrammarMisc.with;
 import static com.walmartlabs.concord.runtime.v2.parser.GrammarOptions.optional;
 import static com.walmartlabs.concord.runtime.v2.parser.GrammarOptions.options;
 import static com.walmartlabs.concord.runtime.v2.parser.GrammarV2.*;
+import static com.walmartlabs.concord.runtime.v2.parser.RetryGrammar.retryVal;
 
 public final class ScriptGrammar {
 
@@ -41,7 +41,8 @@ public final class ScriptGrammar {
                             optional("body", stringVal.map(o::body)),
                             optional("in", mapVal.map(o::input)),
                             optional("meta", mapVal.map(o::meta)),
-                            optional("withItems", nonNullVal.map(v -> o.withItems(WithItems.of(v)))),
+                            optional("withItems", nonNullVal.map(v -> o.withItems(WithItems.of(v, WithItems.Mode.SERIAL)))),
+                            optional("parallelWithItems", nonNullVal.map(v -> o.withItems(WithItems.of(v, WithItems.Mode.PARALLEL)))),
                             optional("retry", retryVal.map(o::retry)),
                             optional("error", stepsVal.map(o::errorSteps))
                     ))
