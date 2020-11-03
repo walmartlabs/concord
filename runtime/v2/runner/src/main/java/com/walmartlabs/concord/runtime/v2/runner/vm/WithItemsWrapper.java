@@ -39,10 +39,14 @@ import java.util.stream.Collectors;
 public abstract class WithItemsWrapper implements Command {
 
     public static WithItemsWrapper of(Command cmd, WithItems withItems, List<String> outVariables) {
-        if (withItems.parallel()) {
-            return new ParallelWithItems(cmd, withItems, outVariables);
-        } else {
-            return new SerialWithItems(cmd, withItems, outVariables);
+        WithItems.Mode mode = withItems.mode();
+        switch (mode) {
+            case SERIAL:
+                return new SerialWithItems(cmd, withItems, outVariables);
+            case PARALLEL:
+                return new ParallelWithItems(cmd, withItems, outVariables);
+            default:
+                throw new IllegalArgumentException("Unknown withItems mode: " + mode);
         }
     }
 

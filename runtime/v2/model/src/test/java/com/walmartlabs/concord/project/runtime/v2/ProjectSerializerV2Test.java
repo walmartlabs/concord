@@ -297,14 +297,14 @@ public class ProjectSerializerV2Test extends AbstractParserTest {
         ArrayList<String> items = new ArrayList<>();
         items.add("item1");
         items.add("item2");
-        return WithItems.of(items, false);
+        return WithItems.of(items, WithItems.Mode.SERIAL);
     }
 
     private static WithItems parallelWithItems() {
         ArrayList<String> items = new ArrayList<>();
         items.add("item1");
         items.add("item2");
-        return WithItems.of(items, true);
+        return WithItems.of(items, WithItems.Mode.PARALLEL);
     }
 
     private static Retry retry() {

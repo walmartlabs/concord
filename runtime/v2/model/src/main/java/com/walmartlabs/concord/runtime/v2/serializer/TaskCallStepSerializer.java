@@ -31,8 +31,11 @@ import java.io.IOException;
 import java.util.Objects;
 
 import static com.walmartlabs.concord.runtime.v2.serializer.SerializerUtils.writeNotEmptyObjectField;
+import static com.walmartlabs.concord.runtime.v2.serializer.SerializerUtils.writeWithItems;
 
 public class TaskCallStepSerializer extends StdSerializer<TaskCall> {
+
+    private static final long serialVersionUID = 1L;
 
     public TaskCallStepSerializer() {
         this(null);
@@ -65,11 +68,7 @@ public class TaskCallStepSerializer extends StdSerializer<TaskCall> {
 
         if (o.withItems() != null) {
             WithItems items = Objects.requireNonNull(o.withItems());
-            if (items.parallel()) {
-                gen.writeObjectField("parallelWithItems", items);
-            } else {
-                gen.writeObjectField("withItems", items);
-            }
+            writeWithItems(items, gen);
         }
 
         if (o.retry() != null) {

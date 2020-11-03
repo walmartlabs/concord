@@ -9,9 +9,9 @@ package com.walmartlabs.concord.runtime.v2.serializer;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -23,7 +23,6 @@ package com.walmartlabs.concord.runtime.v2.serializer;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.databind.ser.std.StdSerializer;
-import com.walmartlabs.concord.runtime.v2.model.ParallelBlockOptions;
 import com.walmartlabs.concord.runtime.v2.model.ScriptCall;
 import com.walmartlabs.concord.runtime.v2.model.ScriptCallOptions;
 import com.walmartlabs.concord.runtime.v2.model.WithItems;
@@ -32,8 +31,11 @@ import java.io.IOException;
 import java.util.Objects;
 
 import static com.walmartlabs.concord.runtime.v2.serializer.SerializerUtils.writeNotEmptyObjectField;
+import static com.walmartlabs.concord.runtime.v2.serializer.SerializerUtils.writeWithItems;
 
 public class ScriptCallStepSerializer extends StdSerializer<ScriptCall> {
+
+    private static final long serialVersionUID = 1L;
 
     public ScriptCallStepSerializer() {
         this(null);
@@ -66,11 +68,7 @@ public class ScriptCallStepSerializer extends StdSerializer<ScriptCall> {
 
         if (options.withItems() != null) {
             WithItems items = Objects.requireNonNull(options.withItems());
-            if (items.parallel()) {
-                gen.writeObjectField("parallelWithItems", items);
-            } else {
-                gen.writeObjectField("withItems", items);
-            }
+            writeWithItems(items, gen);
         }
 
         if (options.retry() != null) {

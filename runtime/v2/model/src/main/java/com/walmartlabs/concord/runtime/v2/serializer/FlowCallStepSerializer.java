@@ -34,6 +34,8 @@ import static com.walmartlabs.concord.runtime.v2.serializer.SerializerUtils.writ
 
 public class FlowCallStepSerializer extends StdSerializer<FlowCall> {
 
+    private static final long serialVersionUID = 1L;
+
     public FlowCallStepSerializer() {
         this(null);
     }
@@ -62,11 +64,7 @@ public class FlowCallStepSerializer extends StdSerializer<FlowCall> {
 
         if (options.withItems() != null) {
             WithItems items = Objects.requireNonNull(options.withItems());
-            if (items.parallel()) {
-                gen.writeObjectField("parallelWithItems", items);
-            } else {
-                gen.writeObjectField("withItems", items);
-            }
+            SerializerUtils.writeWithItems(items, gen);
         }
 
         if (options.retry() != null) {
