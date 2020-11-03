@@ -248,7 +248,20 @@ public class ProjectSerializerV2Test extends AbstractParserTest {
     }
 
     @Test
-    public void testProcessDefinition() throws Exception{
+    public void testExprCallOutExpr() throws Exception {
+        ExpressionOptions opts = ExpressionOptions.builder()
+                .putOutExpr("out-result", "${result.first}")
+                .meta(meta())
+                .errorSteps(steps())
+                .build();
+
+        String result = toYaml(new Expression(location(), "${a}", opts));
+        assertResult("serializer/expressionStepOutExpr.yml", result);
+    }
+
+
+    @Test
+    public void testProcessDefinition() throws Exception {
         Map<String, Form> forms = Collections.singletonMap("form1", Form.builder()
                 .name("form1")
                 .addFields(FormField.builder()

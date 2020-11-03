@@ -1,0 +1,7 @@
+flows:
+  default:
+    - expr: "${ {'k': 'v'} }"
+      out:
+        theThingIActuallyWanted: "${result.k}"
+
+    - log: "result: ${theThingIActuallyWanted}"

@@ -1108,7 +1108,7 @@ public class YamlErrorParserTest extends AbstractParserTest {
     @Test
     public void test602() throws Exception {
         String msg =
-                "(002.yml): Error @ line: 4, col: 11. Invalid value type, expected: STRING, got: NULL. Remove attribute or complete the definition\n" +
+                "(002.yml): Error @ line: 4, col: 11. Invalid value type, expected: STRING or OBJECT, got: NULL. Remove attribute or complete the definition\n" +
                         "\twhile processing steps:\n" +
                         "\t'out' @ line: 4, col: 7\n" +
                         "\t\t'expr' @ line: 3, col: 7\n" +
@@ -1121,7 +1121,7 @@ public class YamlErrorParserTest extends AbstractParserTest {
     @Test
     public void test603() throws Exception {
         String msg =
-                "(003.yml): Error @ line: 4, col: 12. Invalid value type, expected: STRING, got: INT\n" +
+                "(003.yml): Error @ line: 4, col: 12. Invalid value type, expected: STRING or OBJECT, got: INT\n" +
                         "\twhile processing steps:\n" +
                         "\t'out' @ line: 4, col: 7\n" +
                         "\t\t'expr' @ line: 3, col: 7\n" +
@@ -1129,19 +1129,6 @@ public class YamlErrorParserTest extends AbstractParserTest {
                         "\t\t\t\t'flows' @ line: 1, col: 1";
 
         assertErrorMessage("errors/expression/003.yml", msg);
-    }
-
-    @Test
-    public void test604() throws Exception {
-        String msg =
-                "(004.yml): Error @ line: 5, col: 9. Invalid value type, expected: STRING, got: OBJECT\n" +
-                        "\twhile processing steps:\n" +
-                        "\t'out' @ line: 4, col: 7\n" +
-                        "\t\t'expr' @ line: 3, col: 7\n" +
-                        "\t\t\t'main' @ line: 2, col: 3\n" +
-                        "\t\t\t\t'flows' @ line: 1, col: 1";
-
-        assertErrorMessage("errors/expression/004.yml", msg);
     }
 
     @Test
