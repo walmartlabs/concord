@@ -22,16 +22,14 @@ package com.walmartlabs.concord.runtime.v2.parser;
 
 import com.fasterxml.jackson.core.JsonToken;
 import com.walmartlabs.concord.runtime.v2.Constants;
-import com.walmartlabs.concord.runtime.v2.model.Expression;
-import com.walmartlabs.concord.runtime.v2.model.ExpressionOptions;
-import com.walmartlabs.concord.runtime.v2.model.ImmutableExpressionOptions;
-import com.walmartlabs.concord.runtime.v2.model.Step;
+import com.walmartlabs.concord.runtime.v2.model.*;
 import io.takari.parc.Parser;
 
 import static com.walmartlabs.concord.runtime.v2.parser.GrammarMisc.*;
 import static com.walmartlabs.concord.runtime.v2.parser.GrammarOptions.optional;
 import static com.walmartlabs.concord.runtime.v2.parser.GrammarOptions.options;
 import static com.walmartlabs.concord.runtime.v2.parser.GrammarV2.*;
+import static io.takari.parc.Combinators.or;
 import static io.takari.parc.Combinators.satisfy;
 
 public final class ExpressionGrammar {
@@ -49,11 +47,15 @@ public final class ExpressionGrammar {
     public static final Parser<Atom, String> expression = expressionParser.map(expr -> (String)expr.value);
     public static final Parser<Atom, String> expressionVal = orError(expressionParser.map(expr -> (String)expr.value), YamlValueType.EXPRESSION_VAL);
 
+    private static Parser<Atom, ImmutableExpressionOptions.Builder> exprCallOutOption(ImmutableExpressionOptions.Builder o) {
+        return orError(or(maybeMap.map(o::outExpr), maybeString.map(o::out)), YamlValueType.EXPRESSION_CALL_OUT);
+    }
+
     private static Parser<Atom, ExpressionOptions> expressionOptions(String stepName) {
         return with(() -> optionsBuilder(stepName),
                 o -> options(
                         optional("error", stepsVal.map(o::errorSteps)),
-                        optional("out", stringVal.map(o::out)),
+                        optional("out", exprCallOutOption(o)),
                         optional("meta", mapVal.map(o::putAllMeta))
                 ))
                 .map(ImmutableExpressionOptions.Builder::build);
