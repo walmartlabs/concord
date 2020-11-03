@@ -76,6 +76,7 @@ public final class GrammarV2 {
     });
     public static final Parser<Atom, Integer> maybeInt = _val(JsonToken.VALUE_NUMBER_INT).map(v -> v.getValue(YamlValueType.INT));
     public static final Parser<Atom, String> maybeString = _val(JsonToken.VALUE_STRING).map(v -> v.getValue(YamlValueType.STRING));
+    public static final Parser<Atom, List<String>> maybeStringArray = arrayOfValues.map(v -> v.getListValue(YamlValueType.STRING));
     public static final Parser<Atom, Map<String, Serializable>> maybeMap = object.map(YamlObject::getValue);
     public static final Parser<Atom, Object> patternOrArrayVal = value.map(GrammarV2::patternOrArrayConverter);
     public static final Parser<Atom, Duration> durationVal = value.map(GrammarV2::durationConverter);

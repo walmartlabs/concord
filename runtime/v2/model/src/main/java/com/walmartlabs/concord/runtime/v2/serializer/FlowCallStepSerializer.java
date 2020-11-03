@@ -61,6 +61,7 @@ public class FlowCallStepSerializer extends StdSerializer<FlowCall> {
 
         writeNotEmptyObjectField("in", options.input(), gen);
         writeNotEmptyObjectField("out", options.out(), gen);
+        writeNotEmptyObjectField("out", options.outExpr(), gen);
 
         if (options.withItems() != null) {
             WithItems items = Objects.requireNonNull(options.withItems());

@@ -795,6 +795,17 @@ public class MainTest {
         assertLog(log, ".*result: some-value.*");
     }
 
+    @Test
+    public void testFlowOutExpression() throws Exception {
+        deploy("flowOutExpr");
+
+        save(ProcessConfiguration.builder()
+                .build());
+
+        byte[] log = run();
+        assertLog(log, ".*v: 123.*");
+    }
+
     private void deploy(String resource) throws URISyntaxException, IOException {
         Path src = Paths.get(MainTest.class.getResource(resource).toURI());
         IOUtils.copy(src, workDir);
