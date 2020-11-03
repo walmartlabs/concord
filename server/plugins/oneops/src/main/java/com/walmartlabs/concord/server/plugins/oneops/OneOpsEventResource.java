@@ -21,6 +21,9 @@ package com.walmartlabs.concord.server.plugins.oneops;
  */
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.walmartlabs.concord.server.audit.AuditAction;
+import com.walmartlabs.concord.server.audit.AuditLog;
+import com.walmartlabs.concord.server.audit.AuditObject;
 import com.walmartlabs.concord.server.events.Event;
 import com.walmartlabs.concord.server.events.EventInitiatorSupplier;
 import com.walmartlabs.concord.server.events.TriggerEventInitiatorResolver;
@@ -72,18 +75,23 @@ public class OneOpsEventResource implements Resource {
     private final UserManager userManager;
     private final TriggerEventInitiatorResolver initiatorResolver;
     private final List<OneOpsTriggerProcessor> processors;
-
+    private final AuditLog auditLog;
+    private final OneOpsConfiguration cfg;
     @Inject
     public OneOpsEventResource(ObjectMapper objectMapper,
                                TriggerProcessExecutor executor,
                                UserManager userManager,
                                TriggerEventInitiatorResolver initiatorResolver,
-                               List<OneOpsTriggerProcessor> processors) {
+                               List<OneOpsTriggerProcessor> processors,
+                               AuditLog auditLog,
+                               OneOpsConfiguration cfg) {
         this.objectMapper = objectMapper;
         this.executor = executor;
         this.userManager = userManager;
         this.initiatorResolver = initiatorResolver;
         this.processors = processors;
+        this.auditLog = auditLog;
+        this.cfg = cfg;
     }
 
     @POST
@@ -98,6 +106,14 @@ public class OneOpsEventResource implements Resource {
 
         if (event == null || event.isEmpty()) {
             return Response.status(Status.BAD_REQUEST).build();
+        }
+
+        if (cfg.isLogEvents()) {
+            auditLog.add(AuditObject.EXTERNAL_EVENT, AuditAction.ACCESS)
+                    .field("source", EVENT_SOURCE)
+                    .field("eventId", String.valueOf(event.get("cmsId")))
+                    .field("payload", event)
+                    .log();
         }
 
         List<OneOpsTriggerProcessor.Result> results = new ArrayList<>();
