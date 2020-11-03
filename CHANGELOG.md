@@ -4,6 +4,7 @@
 
 ### Added
 
+- runtime-v2: initial support for `parallelWithItems`;
 - runtime-v2: support for expressions in `out` blocks of task
 and flow calls;
 - runtime-v2: save the current thread ID in `TaskResult`;
