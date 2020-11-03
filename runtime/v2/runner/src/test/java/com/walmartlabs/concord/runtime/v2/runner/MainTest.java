@@ -503,6 +503,18 @@ public class MainTest {
     }
 
     @Test
+    public void testParallelWithItemsTask() throws Exception {
+        deploy("parallelWithItemsTask");
+
+        save(ProcessConfiguration.builder()
+                .build());
+
+        byte[] log = run();
+        assertLog(log, ".*result: \\[10, 20, 30\\].*");
+        assertLog(log, ".*threadIds: \\[1, 2, 3].*");
+    }
+
+    @Test
     public void testWithItemsBlock() throws Exception {
         deploy("withItemsBlock");
 
@@ -795,6 +807,28 @@ public class MainTest {
         assertLog(log, ".*result: some-value.*");
     }
 
+    @Test
+    public void testFlowOutExpression() throws Exception {
+        deploy("flowOutExpr");
+
+        save(ProcessConfiguration.builder()
+                .build());
+
+        byte[] log = run();
+        assertLog(log, ".*v: 123.*");
+    }
+
+    @Test
+    public void testExprOutExpression() throws Exception {
+        deploy("exprOutExpr");
+
+        save(ProcessConfiguration.builder()
+                .build());
+
+        byte[] log = run();
+        assertLog(log, ".*result: v.*");
+    }
+
     private void deploy(String resource) throws URISyntaxException, IOException {
         Path src = Paths.get(MainTest.class.getResource(resource).toURI());
         IOUtils.copy(src, workDir);
@@ -981,7 +1015,8 @@ public class MainTest {
 
         @Override
         public TaskResult execute(Variables input) {
-            return TaskResult.success().value("result", input.get("result"));
+            return TaskResult.success()
+                    .value("result", input.get("result"));
         }
     }
 

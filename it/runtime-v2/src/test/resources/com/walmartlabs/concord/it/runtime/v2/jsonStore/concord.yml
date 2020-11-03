@@ -1,0 +1,10 @@
+configuration:
+  runtime: "concord-v2"
+
+flows:
+  default:
+    - log: "empty: =${jsonStore.get(storeName, 'xxx')}="
+    - "${jsonStore.put(storeName, 'test', {'x': '1'})}"
+    - expr: "${jsonStore.get(storeName, 'test')}"
+      out: myVar
+    - log: "get: ${myVar}"

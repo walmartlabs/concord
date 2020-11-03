@@ -29,6 +29,8 @@ import java.io.IOException;
 
 public class SimpleOptionsSerializer extends StdSerializer<SimpleOptions> {
 
+    private static final long serialVersionUID = 1L;
+
     public SimpleOptionsSerializer() {
         this(null);
     }

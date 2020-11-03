@@ -30,6 +30,7 @@ import com.walmartlabs.concord.svm.Command;
 import javax.inject.Named;
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 
 @Named
 public final class TaskCallCompiler implements StepCompiler<TaskCall> {
@@ -43,7 +44,7 @@ public final class TaskCallCompiler implements StepCompiler<TaskCall> {
     public Command compile(CompilerContext context, TaskCall step) {
         Command cmd = new TaskCallCommand(step);
 
-        TaskCallOptions options = step.getOptions();
+        TaskCallOptions options = Objects.requireNonNull(step.getOptions());
 
         Retry retry = options.retry();
         if (retry != null) {
@@ -52,7 +53,7 @@ public final class TaskCallCompiler implements StepCompiler<TaskCall> {
 
         WithItems withItems = options.withItems();
         if (withItems != null) {
-            cmd = new WithItemsWrapper(cmd, withItems, Collections.singletonList(options.out()));
+            cmd = WithItemsWrapper.of(cmd, withItems, Collections.singletonList(options.out()));
         }
 
         List<Step> errorSteps = options.errorSteps();

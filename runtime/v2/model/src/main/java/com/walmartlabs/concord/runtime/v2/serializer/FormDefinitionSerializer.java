@@ -29,6 +29,8 @@ import java.io.IOException;
 
 public class FormDefinitionSerializer extends StdSerializer<Form> {
 
+    private static final long serialVersionUID = 1L;
+
     public FormDefinitionSerializer() {
         this(null);
     }
