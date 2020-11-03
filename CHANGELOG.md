@@ -7,7 +7,7 @@
 - oneops: record incoming events in the audit log;
 - runtime-v2: initial support for `parallelWithItems`;
 - runtime-v2: support for expressions in `out` blocks of task
-calls, flow calls and `expr` blocks;
+calls, flow calls, `parallel` and `expr` blocks;
 - runtime-v2: save the current thread ID in `TaskResult`;
 - agent-operator: add `requirements` filter;
 - concord-console: the login form now provides a link to the API
