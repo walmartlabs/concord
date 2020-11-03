@@ -141,6 +141,8 @@ public abstract class WithItemsWrapper implements Command {
 
     static class ParallelWithItems extends WithItemsWrapper {
 
+        private static final long serialVersionUID = 1L;
+
         protected ParallelWithItems(Command cmd, WithItems withItems, List<String> outVariables) {
             super(cmd, withItems, outVariables);
         }
@@ -193,6 +195,8 @@ public abstract class WithItemsWrapper implements Command {
      */
     static class SerialWithItems extends WithItemsWrapper {
 
+        private static final long serialVersionUID = 1L;
+
         protected SerialWithItems(Command cmd, WithItems withItems, List<String> outVariables) {
             super(cmd, withItems, outVariables);
         }
@@ -223,7 +227,7 @@ public abstract class WithItemsWrapper implements Command {
         }
     }
 
-    public static class WithItemsNext implements Command {
+    static class WithItemsNext implements Command {
 
         private static final long serialVersionUID = 1L;
 
@@ -268,7 +272,7 @@ public abstract class WithItemsWrapper implements Command {
         }
     }
 
-    private static class PrepareOutVariables implements Command {
+    static class PrepareOutVariables implements Command {
 
         private static final long serialVersionUID = 1L;
 
@@ -299,7 +303,7 @@ public abstract class WithItemsWrapper implements Command {
      * Appends values of the specified variables from the source frame into
      * list variables in the target frame.
      */
-    private static class AppendVariablesCommand implements Command {
+    static class AppendVariablesCommand implements Command {
 
         private static final long serialVersionUID = 1L;
 
@@ -325,8 +329,9 @@ public abstract class WithItemsWrapper implements Command {
 
             Frame effectiveSourceFrame = sourceFrame != null ? sourceFrame : VMUtils.assertNearestRoot(state, threadId);
 
-            targetFrame.withLock(() -> {
-                for (String v : variables) {
+            for (String v : variables) {
+                // make sure we're not modifying the same list concurrently
+                synchronized (targetFrame) {
                     ArrayList<Serializable> results = (ArrayList<Serializable>) targetFrame.getLocal(v);
                     Serializable result = null;
                     if (effectiveSourceFrame.hasLocal(v)) {
@@ -334,12 +339,11 @@ public abstract class WithItemsWrapper implements Command {
                     }
                     results.add(result);
                 }
-                return null;
-            });
+            }
         }
     }
 
-    private static class SerializableEntry implements Map.Entry<Serializable, Serializable>, Serializable {
+    static class SerializableEntry implements Map.Entry<Serializable, Serializable>, Serializable {
 
         private static final long serialVersionUID = 1L;
 

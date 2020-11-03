@@ -22,7 +22,6 @@ package com.walmartlabs.concord.svm;
 
 import java.io.Serializable;
 import java.util.*;
-import java.util.concurrent.Callable;
 
 /**
  * Frame or "call frame" represents a scope with a list of commands, local
@@ -108,14 +107,6 @@ public class Frame implements Serializable {
 
     public Map<String, Serializable> getLocals() {
         return Collections.unmodifiableMap(locals);
-    }
-
-    public synchronized <T> T withLock(Callable<T> c) {
-        try {
-            return c.call();
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
     }
 
     public static class Builder {
