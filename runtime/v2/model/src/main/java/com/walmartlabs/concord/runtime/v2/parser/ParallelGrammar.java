@@ -21,22 +21,27 @@ package com.walmartlabs.concord.runtime.v2.parser;
  */
 
 import com.walmartlabs.concord.runtime.v2.model.ImmutableParallelBlockOptions;
+import com.walmartlabs.concord.runtime.v2.model.ImmutableTaskCallOptions;
 import com.walmartlabs.concord.runtime.v2.model.ParallelBlock;
 import com.walmartlabs.concord.runtime.v2.model.ParallelBlockOptions;
 import io.takari.parc.Parser;
 
-import static com.walmartlabs.concord.runtime.v2.parser.GrammarMisc.satisfyField;
-import static com.walmartlabs.concord.runtime.v2.parser.GrammarMisc.with;
+import static com.walmartlabs.concord.runtime.v2.parser.GrammarMisc.*;
 import static com.walmartlabs.concord.runtime.v2.parser.GrammarOptions.optional;
 import static com.walmartlabs.concord.runtime.v2.parser.GrammarOptions.options;
 import static com.walmartlabs.concord.runtime.v2.parser.GrammarV2.*;
+import static io.takari.parc.Combinators.or;
 
 public final class ParallelGrammar {
+
+    private static Parser<Atom, ImmutableParallelBlockOptions.Builder> parallelOutOption(ImmutableParallelBlockOptions.Builder o) {
+        return orError(or(maybeMap.map(o::outExpr), or(maybeString.map(o::addOut), maybeStringArray.map(o::out))), YamlValueType.PARALLEL_BLOCK_OUT);
+    }
 
     private static final Parser<Atom, ParallelBlockOptions> parallelOptions =
             with(ParallelBlockOptions::builder,
                     o -> options(
-                            optional("out", stringOrArrayVal.map(o::out)),
+                            optional("out", parallelOutOption(o)),
                             optional("meta", mapVal.map(o::meta))
                     ))
                     .map(ImmutableParallelBlockOptions.Builder::build);

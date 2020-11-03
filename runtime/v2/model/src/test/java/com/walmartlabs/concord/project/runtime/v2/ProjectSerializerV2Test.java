@@ -160,6 +160,21 @@ public class ProjectSerializerV2Test extends AbstractParserTest {
     }
 
     @Test
+    public void testParallelBlockOutExpr() throws Exception {
+        ParallelBlockOptions opts = ParallelBlockOptions.builder()
+                .putOutExpr("out", "${expr}")
+                .meta(meta())
+                .build();
+
+        List<Step> steps = new ArrayList<>();
+        steps.add(new Checkpoint(location(), "ch1", simpleOptions()));
+        steps.add(new Checkpoint(location(), "ch2", simpleOptions()));
+
+        String result = toYaml(new ParallelBlock(location(), steps, opts));
+        assertResult("serializer/parallelBlockOutExpr.yml", result);
+    }
+
+    @Test
     public void testReturnStep() throws Exception {
         String result = toYaml(new ReturnStep(location()));
         assertResult("serializer/returnStep.yml", result);
