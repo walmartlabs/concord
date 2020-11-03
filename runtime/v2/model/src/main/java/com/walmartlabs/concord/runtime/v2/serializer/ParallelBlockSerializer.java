@@ -58,6 +58,7 @@ public class ParallelBlockSerializer extends StdSerializer<ParallelBlock> {
         }
 
         writeNotEmptyObjectField("out", options.out(), gen);
+        writeNotEmptyObjectField("out", options.outExpr(), gen);
         writeNotEmptyObjectField("meta", options.meta(), gen);
     }
 }

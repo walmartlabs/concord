@@ -20,11 +20,14 @@ package com.walmartlabs.concord.runtime.v2.model;
  * =====
  */
 
+import com.walmartlabs.concord.common.AllowNulls;
 import com.walmartlabs.concord.runtime.v2.parser.StepOptions;
 import org.immutables.value.Value;
 
+import java.io.Serializable;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
 @Value.Immutable
 @Value.Style(jdkOnly = true)
@@ -33,6 +36,12 @@ public interface ParallelBlockOptions extends StepOptions {
     @Value.Default
     default List<String> out() {
         return Collections.emptyList();
+    }
+
+    @Value.Default
+    @AllowNulls
+    default Map<String, Serializable> outExpr() {
+        return Collections.emptyMap();
     }
 
     static ImmutableParallelBlockOptions.Builder builder() {
