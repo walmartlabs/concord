@@ -261,7 +261,7 @@ public class ProjectSerializerV2Test extends AbstractParserTest {
 
 
     @Test
-    public void testProcessDefinition() throws Exception{
+    public void testProcessDefinition() throws Exception {
         Map<String, Form> forms = Collections.singletonMap("form1", Form.builder()
                 .name("form1")
                 .addFields(FormField.builder()
