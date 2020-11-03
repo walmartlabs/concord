@@ -1,5 +1,33 @@
 # Change log
 
+## [Unreleased]
+
+### Added
+
+- oneops: record incoming events in the audit log;
+- runtime-v2: initial support for `parallelWithItems`;
+- runtime-v2: support for expressions in `out` blocks of task
+calls, flow calls, `parallel` and `expr` blocks;
+- runtime-v2: save the current thread ID in `TaskResult`;
+- agent-operator: add `requirements` filter;
+- concord-console: the login form now provides a link to the API
+key login form.
+
+### Changed
+
+- concord-tasks: fix the missing injection annotations in the v2
+version of the `jsonStore` task (makes it useable in v2 again);
+- concord-server: `ProcessKeyCache` no longer caches misses;
+- concord-server: fixed handling of `any` conditions in
+the `github` trigger's `files` filter.
+
+### Breaking
+
+- runtime-v2: new version the `TaskResult` structure, now itcan be
+used to tell the runtime to suspend the process.
+
+
+
 ## [1.70.0] - 2020-10-23
 
 ### Added
