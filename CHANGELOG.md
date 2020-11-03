@@ -4,6 +4,7 @@
 
 ### Added
 
+- oneops: record incoming events in the audit log;
 - runtime-v2: initial support for `parallelWithItems`;
 - runtime-v2: support for expressions in `out` blocks of task
 and flow calls;
