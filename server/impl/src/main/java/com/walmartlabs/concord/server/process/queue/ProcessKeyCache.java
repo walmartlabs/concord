@@ -38,7 +38,7 @@ import java.util.concurrent.ExecutionException;
 public class ProcessKeyCache implements com.walmartlabs.concord.server.sdk.ProcessKeyCache {
 
     private final ProcessQueueDao queueDao;
-    private final LoadingCache<UUID, Optional<ProcessKey>> cache;
+    private final LoadingCache<UUID, ProcessKey> cache;
 
     @Inject
     public ProcessKeyCache(ProcessQueueDao queueDao) {
@@ -47,10 +47,14 @@ public class ProcessKeyCache implements com.walmartlabs.concord.server.sdk.Proce
                 .maximumSize(10 * 1024L)
                 .concurrencyLevel(32)
                 .recordStats()
-                .build(new CacheLoader<UUID, Optional<ProcessKey>>() {
+                .build(new CacheLoader<UUID, ProcessKey>() {
                     @Override
-                    public Optional<ProcessKey> load(UUID key) {
-                        return Optional.ofNullable(queueDao.getKey(key));
+                    public ProcessKey load(UUID key) throws ProcessNotFoundException {
+                        ProcessKey pk = queueDao.getKey(key);
+                        if (pk != null) {
+                            return pk;
+                        }
+                        throw new ProcessNotFoundException();
                     }
                 });
     }
@@ -62,8 +66,11 @@ public class ProcessKeyCache implements com.walmartlabs.concord.server.sdk.Proce
     @Override
     public ProcessKey get(UUID instanceId) {
         try {
-            return cache.get(instanceId).orElse(null);
+            return cache.get(instanceId);
         } catch (ExecutionException e) {
+            if (e.getCause() instanceof ProcessNotFoundException) {
+                return null;
+            }
             throw new RuntimeException(e);
         }
     }
@@ -78,5 +85,8 @@ public class ProcessKeyCache implements com.walmartlabs.concord.server.sdk.Proce
 
     public Optional<ProcessKey> getUncached(UUID instanceId) {
         return Optional.ofNullable(queueDao.getKey(instanceId));
+    }
+
+    private static class ProcessNotFoundException extends Exception {
     }
 }
