@@ -29,6 +29,8 @@ import java.io.IOException;
 
 public class SuspendStepSerializer extends StdSerializer<SuspendStep> {
 
+    private static final long serialVersionUID = 1L;
+
     public SuspendStepSerializer() {
         this(null);
     }

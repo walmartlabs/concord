@@ -233,6 +233,21 @@ public class ProjectSerializerV2Test extends AbstractParserTest {
     }
 
     @Test
+    public void testTaskCallParallelWithItems() throws Exception {
+        TaskCallOptions opts = TaskCallOptions.builder()
+                .putInput("msg", "BOO")
+                .out("out")
+                .withItems(parallelWithItems())
+                .retry(retry())
+                .errorSteps(steps())
+                .meta(meta())
+                .build();
+
+        String result = toYaml(new TaskCall(location(), "log", opts));
+        assertResult("serializer/taskCallStepParallel.yml", result);
+    }
+
+    @Test
     public void testExprCallOutExpr() throws Exception {
         ExpressionOptions opts = ExpressionOptions.builder()
                 .putOutExpr("out-result", "${result.first}")
@@ -309,7 +324,14 @@ public class ProjectSerializerV2Test extends AbstractParserTest {
         ArrayList<String> items = new ArrayList<>();
         items.add("item1");
         items.add("item2");
-        return WithItems.of(items);
+        return WithItems.of(items, WithItems.Mode.SERIAL);
+    }
+
+    private static WithItems parallelWithItems() {
+        ArrayList<String> items = new ArrayList<>();
+        items.add("item1");
+        items.add("item2");
+        return WithItems.of(items, WithItems.Mode.PARALLEL);
     }
 
     private static Retry retry() {

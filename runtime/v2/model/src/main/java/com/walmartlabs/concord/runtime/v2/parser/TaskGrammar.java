@@ -21,14 +21,17 @@ package com.walmartlabs.concord.runtime.v2.parser;
  */
 
 import com.walmartlabs.concord.runtime.v2.Constants;
-import com.walmartlabs.concord.runtime.v2.model.*;
+import com.walmartlabs.concord.runtime.v2.model.ImmutableTaskCallOptions;
+import com.walmartlabs.concord.runtime.v2.model.TaskCall;
+import com.walmartlabs.concord.runtime.v2.model.TaskCallOptions;
+import com.walmartlabs.concord.runtime.v2.model.WithItems;
 import io.takari.parc.Parser;
 
 import static com.walmartlabs.concord.runtime.v2.parser.GrammarMisc.*;
-import static com.walmartlabs.concord.runtime.v2.parser.RetryGrammar.retryVal;
 import static com.walmartlabs.concord.runtime.v2.parser.GrammarOptions.optional;
 import static com.walmartlabs.concord.runtime.v2.parser.GrammarOptions.options;
 import static com.walmartlabs.concord.runtime.v2.parser.GrammarV2.*;
+import static com.walmartlabs.concord.runtime.v2.parser.RetryGrammar.retryVal;
 import static io.takari.parc.Combinators.or;
 
 public final class TaskGrammar {
@@ -51,7 +54,8 @@ public final class TaskGrammar {
                         optional("in", mapVal.map(o::input)),
                         optional("out", taskCallOutOption(o)),
                         optional("meta", mapVal.map(o::putAllMeta)),
-                        optional("withItems", nonNullVal.map(v -> o.withItems(WithItems.of(v)))),
+                        optional("withItems", nonNullVal.map(v -> o.withItems(WithItems.of(v, WithItems.Mode.SERIAL)))),
+                        optional("parallelWithItems", nonNullVal.map(v -> o.withItems(WithItems.of(v, WithItems.Mode.PARALLEL)))),
                         optional("retry", retryVal.map(o::retry)),
                         optional("error", stepsVal.map(o::errorSteps))
                 ))

@@ -49,7 +49,7 @@ public final class GroupOfStepsCompiler implements StepCompiler<GroupOfSteps> {
 
         WithItems withItems = options != null ? options.withItems() : null;
         if (withItems != null) {
-            return new WithItemsWrapper(cmd, withItems, options.out());
+            return WithItemsWrapper.of(cmd, withItems, options.out());
         }
 
         List<Step> errorSteps = options != null ? options.errorSteps() : null;

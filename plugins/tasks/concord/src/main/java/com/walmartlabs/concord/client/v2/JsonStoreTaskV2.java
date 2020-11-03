@@ -25,6 +25,7 @@ import com.walmartlabs.concord.client.JsonStoreTaskCommon;
 import com.walmartlabs.concord.runtime.v2.sdk.Context;
 import com.walmartlabs.concord.runtime.v2.sdk.Task;
 
+import javax.inject.Inject;
 import javax.inject.Named;
 import java.util.List;
 import java.util.Map;
@@ -36,6 +37,7 @@ public class JsonStoreTaskV2 implements Task {
     private final JsonStoreTaskCommon delegate;
     private final String processOrg ;
 
+    @Inject
     public JsonStoreTaskV2(ApiClient apiClient, Context context) {
         this.delegate = new JsonStoreTaskCommon(apiClient);
         this.processOrg = context.processConfiguration().projectInfo().orgName();

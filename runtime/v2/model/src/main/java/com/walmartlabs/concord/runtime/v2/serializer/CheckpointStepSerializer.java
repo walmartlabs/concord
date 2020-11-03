@@ -29,6 +29,8 @@ import java.io.IOException;
 
 public class CheckpointStepSerializer extends StdSerializer<Checkpoint> {
 
+    private static final long serialVersionUID = 1L;
+
     public CheckpointStepSerializer() {
         this(null);
     }
