@@ -784,6 +784,17 @@ public class MainTest {
     }
 
     @Test
+    public void testFlowOutExpression() throws Exception {
+        deploy("flowOutExpr");
+
+        save(ProcessConfiguration.builder()
+                .build());
+
+        byte[] log = run();
+        assertLog(log, ".*v: 123.*");
+    }
+
+    @Test
     public void testExprOutExpression() throws Exception {
         deploy("exprOutExpr");
 

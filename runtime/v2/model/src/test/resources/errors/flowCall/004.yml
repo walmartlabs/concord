@@ -1,5 +1,0 @@
-flows:
-  main:
-    - call: "boo"
-      out:
-        k: "v"
