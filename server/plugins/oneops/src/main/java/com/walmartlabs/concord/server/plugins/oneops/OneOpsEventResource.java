@@ -54,7 +54,6 @@ import java.util.List;
 import java.util.Map;
 
 import static com.walmartlabs.concord.common.MemoSupplier.memo;
-import static com.walmartlabs.concord.server.events.github.Constants.EVENT_SOURCE;
 
 /**
  * Handles external OneOps events.
