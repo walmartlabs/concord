@@ -161,8 +161,8 @@ class RepositoryForm extends React.Component<InjectedFormikProps<Props, FormValu
                                 />
                             }>
                             <Popup.Content>
-                                Personal repositories require additional authentication - a SSH key
-                                or a username/password pair.
+                                Personal repositories require additional authentication - a SSH key,
+                                a username/password pair or OAuth token
                             </Popup.Content>
                         </Popup>
 
