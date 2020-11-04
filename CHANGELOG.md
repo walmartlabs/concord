@@ -1,6 +1,14 @@
 # Change log
 
-## [Unreleased]
+## [1.70.1] - 2020-11-04
+
+### Added
+
+- agent-operator: add `requirements` filter;
+- concord-server: fix "any" condition in the changed files filter
+
+
+## [1.70.0] - 2020-10-23
 
 ### Added
 
