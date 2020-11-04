@@ -433,7 +433,6 @@ public class GitClient {
                 askpass = createUnixStandardAskpass(new UsernamePassword(new String(token.getData()), "".toCharArray()));
 
                 env.put("GIT_ASKPASS", askpass.toAbsolutePath().toString());
-                env.put("SSH_ASKPASS", askpass.toAbsolutePath().toString());
 
                 log.info("using GIT_ASKPASS to set credentials ");
             }
