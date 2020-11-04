@@ -77,7 +77,7 @@ public class GitCliRepositoryProvider implements RepositoryProvider {
             }
         }
 
-        throw new RepositoryException("git fetch failed", lastException);
+        throw lastException;
     }
 
     @Override
