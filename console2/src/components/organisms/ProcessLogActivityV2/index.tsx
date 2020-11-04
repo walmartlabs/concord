@@ -59,8 +59,6 @@ interface ExternalProps {
     forceRefresh: boolean;
 }
 
-type SegmentList = Record<number, LogSegmentEntry>;
-
 const ProcessLogActivityV2 = ({
     instanceId,
     processStatus,
@@ -68,7 +66,7 @@ const ProcessLogActivityV2 = ({
     forceRefresh
 }: ExternalProps) => {
     const [segmentOffset, setSegmentOffset] = useState(0);
-    const [segments, setSegments] = useState<SegmentList>({});
+    const [segments, setSegments] = useState<LogSegmentEntry[]>([]);
     const [logOpts, setLogOptions] = useState<LogOptions>(getStoredOpts());
     const location = useLocation();
 
@@ -89,12 +87,17 @@ const ProcessLogActivityV2 = ({
     const fetchSegments = useCallback(async () => {
         const limit = 50;
         const newSegments = await apiListLogSegments(instanceId, segmentOffset, limit);
+        let newItems = newSegments.items;
 
-        setSegments((prev) => {
-            newSegments.items.forEach((s) => (prev[s.id] = s));
-            return prev;
-        });
-        setSegmentOffset((prev) => prev + newSegments.items.length);
+        if (newItems.length > 0) {
+            setSegments((prevItems) => {
+                const updated: Record<number, LogSegmentEntry> = {};
+                prevItems.forEach((s) => (updated[s.id] = s));
+                newItems.forEach((s) => (updated[s.id] = s));
+                return toSegmentList(updated);
+            });
+            setSegmentOffset((prev) => prev + newSegments.items.length);
+        }
 
         return !isFinal(processStatus) && processStatus !== ProcessStatus.SUSPENDED;
     }, [instanceId, processStatus, segmentOffset]);
@@ -178,7 +181,7 @@ const ProcessLogActivityV2 = ({
                 </Button.Group>
             </ProcessToolbar>
 
-            {toSegmentList(segments)
+            {segments
                 .filter(
                     (value) =>
                         logOpts.showSystemSegment || (!logOpts.showSystemSegment && value.id !== 0)
@@ -206,7 +209,7 @@ const ProcessLogActivityV2 = ({
     );
 };
 
-const toSegmentList = (segments: SegmentList): LogSegmentEntry[] => {
+const toSegmentList = (segments: Record<number, LogSegmentEntry>): LogSegmentEntry[] => {
     return Object.keys(segments)
         .map((k) => segments[k] as LogSegmentEntry)
         .sort((a, b) => (a.createdAt > b.createdAt ? 1 : -1));
