@@ -20,6 +20,9 @@ package com.walmartlabs.concord.server.process.pipelines.processors;
  * =====
  */
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.walmartlabs.concord.imports.Import;
+import com.walmartlabs.concord.imports.ImportProcessingException;
 import com.walmartlabs.concord.process.loader.ProjectLoader;
 import com.walmartlabs.concord.process.loader.model.ProcessDefinition;
 import com.walmartlabs.concord.repository.Snapshot;
@@ -55,13 +58,16 @@ public class ProcessDefinitionProcessor implements PayloadProcessor {
 
     private final ProjectLoader projectLoader;
     private final ImportsNormalizerFactory importsNormalizer;
+    private final ObjectMapper objectMapper;
 
     @Inject
     public ProcessDefinitionProcessor(ProjectLoader projectLoader,
-                                      ImportsNormalizerFactory importsNormalizer) {
+                                      ImportsNormalizerFactory importsNormalizer,
+                                      ObjectMapper objectMapper) {
 
         this.projectLoader = projectLoader;
         this.importsNormalizer = importsNormalizer;
+        this.objectMapper = objectMapper;
     }
 
     @Override
@@ -99,6 +105,8 @@ public class ProcessDefinitionProcessor implements PayloadProcessor {
             cfg = new HashMap<>(cfg); // make mutable
             cfg.put(Constants.Request.RUNTIME_KEY, runtime);
             payload = payload.putHeader(Payload.CONFIGURATION, cfg);
+        } catch (ImportProcessingException e) {
+            throw new ProcessException(processKey, "Error while processing import " + toString(e.getImport()) + ". Error: " + e.getMessage(), e);
         } catch (Exception e) {
             log.warn("process -> ({}) project loading error: {}", workDir, e.getMessage());
             throw new ProcessException(processKey, "Error while loading the project, check the syntax. " + e.getMessage(), e);
@@ -123,5 +131,13 @@ public class ProcessDefinitionProcessor implements PayloadProcessor {
 
         Path workDir = payload.getHeader(Payload.WORKSPACE_DIR);
         return ProjectLoader.getRuntimeType(workDir, "concord-v1"); // TODO constants or configuration
+    }
+
+    private String toString(Import i) {
+        try {
+            return objectMapper.writeValueAsString(i);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
     }
 }

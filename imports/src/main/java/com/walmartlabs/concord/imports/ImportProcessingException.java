@@ -20,19 +20,16 @@ package com.walmartlabs.concord.imports;
  * =====
  */
 
-import java.util.List;
+public class ImportProcessingException extends Exception {
 
-public interface ImportsListener {
+    private final Import value;
 
-    default void onStart(List<Import> items) {
+    public ImportProcessingException(Import value, Exception e) {
+        super(e.getMessage(), e);
+        this.value = value;
     }
 
-    default void onEnd(List<Import> items) {
-    }
-
-    default void beforeImport(Import i) {
-    }
-
-    default void afterImport(Import i) {
+    public Import getImport() {
+        return value;
     }
 }

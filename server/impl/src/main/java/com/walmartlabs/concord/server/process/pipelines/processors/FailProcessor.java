@@ -20,7 +20,6 @@ package com.walmartlabs.concord.server.process.pipelines.processors;
  * =====
  */
 
-import com.walmartlabs.concord.server.policy.PolicyException;
 import com.walmartlabs.concord.server.process.Payload;
 import com.walmartlabs.concord.server.process.logs.ProcessLogManager;
 import com.walmartlabs.concord.server.process.queue.ProcessQueueDao;
@@ -55,11 +54,8 @@ public class FailProcessor implements ExceptionProcessor {
             return;
         }
 
-        if (e instanceof PolicyException) {
-            logManager.error(processKey, "Process failed: {}", e.getMessage());
-        } else {
-            logManager.error(processKey, "Process failed: {}", e.getMessage(), e);
-        }
+        logManager.error(processKey, "Process failed: {}", e.getMessage());
+
         queueManager.updateStatus(processKey, ProcessStatus.FAILED);
     }
 }

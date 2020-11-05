@@ -56,7 +56,12 @@ public class DefaultImportManager implements ImportManager {
 
         for (Import i : items) {
             listener.beforeImport(i);
-            Snapshot s = assertProcessor(i.type()).process(i, dest);
+            Snapshot s;
+            try {
+                s = assertProcessor(i.type()).process(i, dest);
+            } catch (Exception e) {
+                throw new ImportProcessingException(i, e);
+            }
             listener.afterImport(i);
             result.add(s);
         }
