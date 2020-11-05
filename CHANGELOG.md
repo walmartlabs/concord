@@ -4,6 +4,8 @@
 
 ### Added
 
+- policy-engine, concord-server: the `entity` policy now supports
+repository objects;
 - concord-console, concord-repository: support for OAuth (personal)
 tokens for Git authentication.
 
