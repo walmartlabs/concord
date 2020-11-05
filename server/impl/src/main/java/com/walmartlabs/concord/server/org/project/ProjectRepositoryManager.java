@@ -29,8 +29,12 @@ import com.walmartlabs.concord.server.audit.AuditObject;
 import com.walmartlabs.concord.server.events.Events;
 import com.walmartlabs.concord.server.events.ExternalEventResource;
 import com.walmartlabs.concord.server.org.ResourceAccessLevel;
-import com.walmartlabs.concord.server.org.secret.SecretDao;
+import com.walmartlabs.concord.server.org.secret.SecretEntry;
 import com.walmartlabs.concord.server.org.secret.SecretManager;
+import com.walmartlabs.concord.server.policy.EntityAction;
+import com.walmartlabs.concord.server.policy.EntityType;
+import com.walmartlabs.concord.server.policy.PolicyManager;
+import com.walmartlabs.concord.server.policy.PolicyUtils;
 import com.walmartlabs.concord.server.process.ImportsNormalizerFactory;
 import com.walmartlabs.concord.server.repository.RepositoryManager;
 import org.jooq.DSLContext;
@@ -48,33 +52,33 @@ public class ProjectRepositoryManager {
     private final ProjectAccessManager projectAccessManager;
     private final SecretManager secretManager;
     private final RepositoryManager repositoryManager;
-    private final SecretDao secretDao;
     private final RepositoryDao repositoryDao;
     private final ExternalEventResource externalEventResource;
     private final AuditLog auditLog;
     private final ProjectLoader projectLoader;
     private final ImportsNormalizerFactory importsNormalizerFactory;
+    private final PolicyManager policyManager;
 
     @Inject
     public ProjectRepositoryManager(ProjectAccessManager projectAccessManager,
                                     SecretManager secretManager,
                                     RepositoryManager repositoryManager,
-                                    SecretDao secretDao,
                                     RepositoryDao repositoryDao,
                                     ExternalEventResource externalEventResource,
                                     AuditLog auditLog,
                                     ProjectLoader projectLoader,
-                                    ImportsNormalizerFactory importsNormalizerFactory) {
+                                    ImportsNormalizerFactory importsNormalizerFactory,
+                                    PolicyManager policyManager) {
 
         this.projectAccessManager = projectAccessManager;
         this.secretManager = secretManager;
         this.repositoryManager = repositoryManager;
-        this.secretDao = secretDao;
         this.repositoryDao = repositoryDao;
         this.externalEventResource = externalEventResource;
         this.auditLog = auditLog;
         this.projectLoader = projectLoader;
         this.importsNormalizerFactory = importsNormalizerFactory;
+        this.policyManager = policyManager;
     }
 
     public void createOrUpdate(UUID projectId, RepositoryEntry entry) {
@@ -84,11 +88,6 @@ public class ProjectRepositoryManager {
     public void createOrUpdate(DSLContext tx, UUID projectId, RepositoryEntry entry) {
         ProjectEntry project = projectAccessManager.assertAccess(projectId, ResourceAccessLevel.WRITER, true);
 
-        UUID secretId = entry.getSecretId();
-        if (secretId == null && entry.getSecretName() != null) {
-            secretManager.assertAccess(project.getOrgId(), null, entry.getSecretName(), ResourceAccessLevel.READER, false);
-        }
-
         UUID repoId = entry.getId();
         if (repoId == null) {
             repoId = repositoryDao.getId(projectId, entry.getName());
@@ -97,7 +96,7 @@ public class ProjectRepositoryManager {
         if (repoId == null) {
             insert(tx, project.getOrgId(), project.getOrgName(), projectId, project.getName(), entry, true);
         } else {
-            update(tx, project.getOrgId(), project.getOrgName(), projectId, project.getName(), repoId, entry, true);
+            update(tx, project.getOrgId(), project.getOrgName(), projectId, project.getName(), repoId, entry);
         }
     }
 
@@ -120,15 +119,19 @@ public class ProjectRepositoryManager {
     }
 
     public void insert(DSLContext tx, UUID orgId, String orgName, UUID projectId, String projectName, RepositoryEntry entry, boolean doAuditLog) {
-        UUID secretId = entry.getSecretId();
-        if (secretId == null && entry.getSecretName() != null) {
-            secretId = secretDao.getId(orgId, entry.getSecretName());
-        }
+        SecretEntry secret = assertSecret(orgId, entry);
+
+        policyManager.checkEntity(orgId, projectId, EntityType.REPOSITORY, EntityAction.CREATE, null,
+                PolicyUtils.toMap(orgId, orgName, projectId, projectName, entry, secret));
 
         UUID repoId = repositoryDao.insert(tx, projectId,
                 entry.getName(), entry.getUrl(),
-                trim(entry.getBranch()), trim(entry.getCommitId()),
-                trim(entry.getPath()), secretId, entry.isDisabled(), entry.getMeta());
+                trim(entry.getBranch()),
+                trim(entry.getCommitId()),
+                trim(entry.getPath()),
+                secret == null ? null : secret.getId(),
+                entry.isDisabled(),
+                entry.getMeta());
 
         Map<String, Object> ev = Events.Repository.repositoryCreated(projectId, repoId, entry.getName());
         externalEventResource.event(Events.CONCORD_EVENT, ev);
@@ -146,33 +149,34 @@ public class ProjectRepositoryManager {
         }
     }
 
-    private void update(DSLContext tx, UUID orgId, String orgName, UUID projectId, String projectName, UUID repoId, RepositoryEntry entry, boolean doAuditLog) {
+    private void update(DSLContext tx, UUID orgId, String orgName, UUID projectId, String projectName, UUID repoId, RepositoryEntry entry) {
         RepositoryEntry prevEntry = repositoryDao.get(tx, projectId, repoId);
 
-        UUID secretId = entry.getSecretId();
-        if (secretId == null && entry.getSecretName() != null) {
-            secretId = secretDao.getId(orgId, entry.getSecretName());
-        }
+        SecretEntry secret = assertSecret(orgId, entry);
+        policyManager.checkEntity(orgId, projectId, EntityType.REPOSITORY, EntityAction.UPDATE, null,
+                PolicyUtils.toMap(orgId, orgName, projectId, projectName, entry, secret));
 
         repositoryDao.update(tx, repoId,
-                entry.getName(), entry.getUrl(),
-                trim(entry.getBranch()), trim(entry.getCommitId()),
-                trim(entry.getPath()), secretId, entry.isDisabled());
+                entry.getName(),
+                entry.getUrl(),
+                trim(entry.getBranch()),
+                trim(entry.getCommitId()),
+                trim(entry.getPath()),
+                secret == null ? null : secret.getId(),
+                entry.isDisabled());
 
         Map<String, Object> ev = Events.Repository.repositoryUpdated(projectId, repoId, entry.getName());
         externalEventResource.event(Events.CONCORD_EVENT, ev);
 
-        if (doAuditLog) {
-            RepositoryEntry newEntry = repositoryDao.get(tx, projectId, repoId);
-            addAuditLog(
-                    orgId,
-                    orgName,
-                    projectId,
-                    projectName,
-                    prevEntry,
-                    newEntry
-            );
-        }
+        RepositoryEntry newEntry = repositoryDao.get(tx, projectId, repoId);
+        addAuditLog(
+                orgId,
+                orgName,
+                projectId,
+                projectName,
+                prevEntry,
+                newEntry
+        );
     }
 
     public ProjectValidator.Result validateRepository(UUID projectId, RepositoryEntry repo) {
@@ -187,6 +191,13 @@ public class ProjectRepositoryManager {
         } catch (Exception e) {
             throw new RepositoryValidationException("Validation failed: " + repo.getName(), e);
         }
+    }
+
+    private SecretEntry assertSecret(UUID orgId, RepositoryEntry entry) {
+        if (entry.getSecretId() == null && entry.getSecretName() == null) {
+            return null;
+        }
+        return secretManager.assertAccess(orgId, entry.getSecretId(), entry.getSecretName(), ResourceAccessLevel.READER, false);
     }
 
     private static String trim(String s) {

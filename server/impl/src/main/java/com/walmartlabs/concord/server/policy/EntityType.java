@@ -24,6 +24,7 @@ public enum EntityType {
 
     ORGANIZATION("org"),
     PROJECT("project"),
+    REPOSITORY("repository"),
     SECRET("secret"),
     STORAGE("storage"),
     STORAGE_ITEM("storageItem"),
