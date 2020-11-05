@@ -29,6 +29,7 @@ import javax.inject.Inject;
 import javax.inject.Provider;
 import javax.inject.Singleton;
 import java.nio.file.Path;
+import java.util.Objects;
 
 @Singleton
 public class AgentImportManagerProvider implements Provider<AgentImportManager> {
@@ -42,7 +43,7 @@ public class AgentImportManagerProvider implements Provider<AgentImportManager> 
 
             String entryDest = entry.dest();
             if (entry.dest() != null) {
-                dst = dst.resolve(entryDest);
+                dst = dst.resolve(Objects.requireNonNull(entryDest));
             }
 
             repositoryManager.export(entry.url(), entry.version(), null, entry.path(), dst, entry.secret(), entry.exclude());
