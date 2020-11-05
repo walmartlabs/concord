@@ -61,7 +61,7 @@ const saveLastLoginType = (type: string) => {
 
 const clearLastLoginType = () => {
     localStorage.removeItem('lastLoginType');
-}
+};
 
 const DEFAULT_DESTINATION = '/';
 
@@ -123,7 +123,8 @@ const Login = (props: RouteComponentProps<{}>) => {
     }, []);
 
     const lastLoginType = getLastLoginType();
-    const useApiKey = props.location.search.search('useApiKey=true') >= 0 || lastLoginType === 'apiKey';
+    const useApiKey =
+        props.location.search.search('useApiKey=true') >= 0 || lastLoginType === 'apiKey';
     const usernameHint = (window.concord?.login || {}).usernameHint || 'Username';
 
     return (
@@ -192,8 +193,16 @@ const Login = (props: RouteComponentProps<{}>) => {
                 </Form>
             </CardContent>
             <CardContent extra={true} textAlign={'center'}>
-                {useApiKey && <Link onClick={onChangeLoginType} to="/login">Login with Username and Password</Link>}
-                {!useApiKey && <Link onClick={onChangeLoginType} to="/login?useApiKey=true">Login with API Key</Link>}
+                {useApiKey && (
+                    <Link onClick={onChangeLoginType} to="/login">
+                        Login with Username and Password
+                    </Link>
+                )}
+                {!useApiKey && (
+                    <Link onClick={onChangeLoginType} to="/login?useApiKey=true">
+                        Login with API Key
+                    </Link>
+                )}
             </CardContent>
         </Card>
     );
