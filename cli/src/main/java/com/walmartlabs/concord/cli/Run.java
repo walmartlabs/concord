@@ -20,6 +20,7 @@ package com.walmartlabs.concord.cli;
  * =====
  */
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.inject.Injector;
 import com.walmartlabs.concord.cli.runner.*;
 import com.walmartlabs.concord.common.ConfigurationUtils;
@@ -27,6 +28,7 @@ import com.walmartlabs.concord.common.IOUtils;
 import com.walmartlabs.concord.dependencymanager.DependencyManager;
 import com.walmartlabs.concord.imports.ImportManager;
 import com.walmartlabs.concord.imports.ImportManagerFactory;
+import com.walmartlabs.concord.imports.ImportProcessingException;
 import com.walmartlabs.concord.process.loader.model.ProcessDefinitionUtils;
 import com.walmartlabs.concord.process.loader.v2.ProcessDefinitionV2;
 import com.walmartlabs.concord.runtime.common.cfg.RunnerConfiguration;
@@ -136,9 +138,12 @@ public class Run implements Callable<Integer> {
 
         ProjectLoaderV2.Result loadResult;
         try {
-
             loadResult = new ProjectLoaderV2(importManager)
                     .load(targetDir, new CliImportsNormalizer(importsSource, verbose));
+        } catch (ImportProcessingException e) {
+            ObjectMapper om = new ObjectMapper();
+            System.err.println("Error while processing import " + om.writeValueAsString(e.getImport()) + ": " + e.getMessage());
+            return -1;
         } catch (Exception e) {
             System.err.println("Error while loading " + targetDir);
             e.printStackTrace();
