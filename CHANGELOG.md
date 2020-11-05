@@ -1,5 +1,13 @@
 # Change log
 
+## [Unreleased]
+
+### Changed
+
+- concord-server: improved error messages when processing `imports`.
+
+
+
 ## [1.71.0] - 2020-11-03
 
 ### Added
