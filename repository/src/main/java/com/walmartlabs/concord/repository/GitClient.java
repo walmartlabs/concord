@@ -377,9 +377,11 @@ public class GitClient {
         if (secret == null && url.trim().startsWith("https://") && cfg.oauthToken() != null && !url.contains("@")) {
             return "https://" + cfg.oauthToken() + "@" + url.substring("https://".length());
         }
+
         if (secret instanceof BinaryDataSecret && !url.trim().startsWith("https://")) {
-            throw new RepositoryException("Tokens can only be used for HTTPS Git URLs");
+            throw new RepositoryException("Tokens can only be used for https:// Git URLs");
         }
+
         return url;
     }
 
