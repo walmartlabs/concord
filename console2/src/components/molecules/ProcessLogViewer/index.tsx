@@ -92,7 +92,7 @@ const renderTagHeader = (
             <Link
                 to={`/process/${instanceId}/log#segmentId=${idx}`}
                 className="Anchor"
-                data-tooltip="Anchor URL"
+                data-tooltip="checkpoint url"
                 data-inverted="">
                 <Icon name="linkify" />
             </Link>
@@ -205,8 +205,21 @@ class ProcessLogViewer extends React.Component<Props, State> {
 
             this.scrollToTag();
 
+            // if(prev.location hash != current.locationhash) {
+            //     this.handleSegmentClick(this.segmentRef);
+            // }
         }
     }
+
+    handleSegmentClick(ref: any) {
+        if (ref.current && window.location.hash.substring(1).length) {
+            ref.current.scrollIntoView({
+                behavior: 'smooth',
+                block: 'start',
+                inline: 'nearest'
+            });
+        }
+    };
 
     handleScroll(ev: any, { checked }: any) {
         this.setState({
@@ -241,16 +254,6 @@ class ProcessLogViewer extends React.Component<Props, State> {
 
         this.setState({ expandedItems });
     }
-
-    handleSegmentClick(ref: any) {
-        if (ref.current && window.location.hash.substring(1).length) {
-            ref.current.scrollIntoView({
-                behavior: 'smooth',
-                block: 'start',
-                inline: 'nearest'
-            });
-        }
-    };
 
     scrollToBottom() {
         this.scrollAnchorRef.scrollIntoView({ behavior: 'instant' });
