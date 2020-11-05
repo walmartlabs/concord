@@ -2,6 +2,11 @@
 
 ## [Unreleased]
 
+### Added
+
+- concord-console, concord-repository: support for OAuth (personal)
+tokens for Git authentication.
+
 ### Changed
 
 - concord-server: improved error messages when processing `imports`.
