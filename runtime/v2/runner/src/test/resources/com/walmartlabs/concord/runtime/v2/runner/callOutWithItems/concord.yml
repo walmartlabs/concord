@@ -1,0 +1,45 @@
+flows:
+  default:
+
+    # single out
+    - call: myFlow
+      out: x
+      withItems:
+        - 1
+        - 2
+        - 3
+
+    - log: "single out x=${x}"
+
+    # array out
+    - call: myFlow
+      in:
+        item: "${item}"
+      out:
+        - x
+      withItems:
+        - 1
+        - 2
+        - 3
+
+    - log: "array out: x=${x}"
+
+    # expression out
+    - call: myFlow
+      in:
+        item: ${item}
+      out:
+        x: ${x}
+        xx: ${x * 10}
+      withItems:
+        - 1
+        - 2
+        - 3
+
+    - log: "expression out: x=${x}"
+    - log: "expression out: xx=${xx}"
+
+  myFlow:
+    - log: "item: ${item}"
+    - set:
+        x: "${item * 10}"

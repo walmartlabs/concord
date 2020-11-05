@@ -28,6 +28,7 @@ import com.walmartlabs.concord.runtime.v2.runner.vm.WithItemsWrapper;
 import com.walmartlabs.concord.svm.Command;
 
 import javax.inject.Named;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
@@ -53,7 +54,13 @@ public final class TaskCallCompiler implements StepCompiler<TaskCall> {
 
         WithItems withItems = options.withItems();
         if (withItems != null) {
-            cmd = WithItemsWrapper.of(cmd, withItems, Collections.singletonList(options.out()));
+            Collection<String> out = Collections.emptyList();
+            if (!options.outExpr().isEmpty()) {
+                out = options.outExpr().keySet();
+            } else if (options.out() != null) {
+                out = Collections.singletonList(options.out());
+            }
+            cmd = WithItemsWrapper.of(cmd, withItems, out, options.outExpr());
         }
 
         List<Step> errorSteps = options.errorSteps();
