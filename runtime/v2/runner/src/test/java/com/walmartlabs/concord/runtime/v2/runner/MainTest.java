@@ -526,6 +526,20 @@ public class MainTest {
     }
 
     @Test
+    public void testWithItemsSet() throws Exception {
+        deploy("withItemsSet");
+
+        save(ProcessConfiguration.builder()
+                .build());
+
+        byte[] log = run();
+        assertLogAtLeast(log, 3,".*empty: \\[\\].*");
+        assertLog(log, ".*after add: \\[1\\].*");
+        assertLog(log, ".*after add: \\[2\\].*");
+        assertLog(log, ".*after add: \\[3\\].*");
+    }
+
+    @Test
     public void testUnknownMethod() throws Exception {
         deploy("unknownMethod");
 
