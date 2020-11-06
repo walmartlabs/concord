@@ -9,9 +9,9 @@ package com.walmartlabs.concord.runtime.v2.runner.vm;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -34,13 +34,16 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
+/**
+ * Saves the current unhandled exception as a process metadata variable.
+ */
 public class SaveLastErrorCommand implements Command {
 
     private static final TypeReference<Map<String, Object>> MAP_TYPE = new TypeReference<Map<String, Object>>() {
     };
 
     @Override
-    public void eval(Runtime runtime, State state, ThreadId threadId) {
+    public void eval(Runtime runtime, State state, ThreadId threadId) throws Exception {
         Frame frame = state.peekFrame(threadId);
         frame.pop();
 
@@ -56,11 +59,7 @@ public class SaveLastErrorCommand implements Command {
         persistenceService.persistFile(Constants.Files.OUT_VALUES_FILE_NAME,
                 out -> om.writeValue(out, outValues));
 
-        // TODO: allow `eval` throws Exception ?
-        if (e instanceof RuntimeException) {
-            throw (RuntimeException)e;
-        }
-        throw new RuntimeException(e);
+        throw e;
     }
 
     private static ObjectMapper createMapper() {
