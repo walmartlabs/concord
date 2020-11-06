@@ -11,6 +11,8 @@ tokens for Git authentication.
 
 ### Changed
 
+- runtime-v2: fixed evaluation of literals values for empty
+collections (e.g. `[]` used with `set` or in expressions);
 - concord-server: improved error messages when processing `imports`.
 
 
