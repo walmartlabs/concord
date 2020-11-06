@@ -26,10 +26,12 @@ import com.google.inject.Injector;
 import com.walmartlabs.concord.runtime.common.injector.InstanceId;
 import com.walmartlabs.concord.runtime.v2.model.ProcessDefinition;
 import com.walmartlabs.concord.runtime.v2.runner.compiler.CompilerUtils;
+import com.walmartlabs.concord.runtime.v2.runner.vm.SaveLastErrorCommand;
 import com.walmartlabs.concord.runtime.v2.runner.vm.UpdateLocalsCommand;
 import com.walmartlabs.concord.runtime.v2.sdk.Compiler;
 import com.walmartlabs.concord.runtime.v2.sdk.ProcessConfiguration;
 import com.walmartlabs.concord.svm.*;
+import com.walmartlabs.concord.svm.Runtime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -71,6 +73,7 @@ public class Runner {
 
         Command cmd = CompilerUtils.compile(compiler, processConfiguration, processDefinition, processConfiguration.entryPoint());
         State state = new InMemoryState(cmd);
+        state.peekFrame(state.getRootThreadId()).setExceptionHandler(new SaveLastErrorCommand());
 
         VM vm = createVM(processDefinition);
         // update the global variables using the input map by running a special command
@@ -91,6 +94,7 @@ public class Runner {
         log.debug("resume ['{}'] -> running...", eventRef);
 
         State state = snapshot.vmState();
+        state.peekFrame(state.getRootThreadId()).setExceptionHandler(new SaveLastErrorCommand());
 
         VM vm = createVM(snapshot.processDefinition());
         // update the global variables using the input map by running a special command
@@ -111,6 +115,7 @@ public class Runner {
         log.debug("resume -> running...");
 
         State state = snapshot.vmState();
+        state.peekFrame(state.getRootThreadId()).setExceptionHandler(new SaveLastErrorCommand());
 
         VM vm = createVM(snapshot.processDefinition());
         // update the global variables using the input map by running a special command

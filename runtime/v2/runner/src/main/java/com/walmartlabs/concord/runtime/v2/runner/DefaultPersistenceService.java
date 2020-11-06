@@ -26,6 +26,7 @@ import com.walmartlabs.concord.sdk.Constants;
 
 import javax.inject.Inject;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.Serializable;
 import java.nio.file.Files;
@@ -68,6 +69,24 @@ public class DefaultPersistenceService implements PersistenceService {
         } catch (IOException e) {
             throw new RuntimeException("Error persisting file '" + name + "': " + e.getMessage());
         }
+    }
 
+    @Override
+    public <T> T loadPersistedFile(String name, Converter<InputStream, T> converter) {
+        Path file = workingDirectory.getValue()
+                .resolve(Constants.Files.JOB_ATTACHMENTS_DIR_NAME)
+                .resolve(name);
+
+        try {
+            if (!Files.exists(file)) {
+                return null;
+            }
+
+            try (InputStream in = Files.newInputStream(file)) {
+                return converter.apply(in);
+            }
+        } catch (Exception e) {
+            throw new RuntimeException("Error loading persisted file '" + name + "': " + e.getMessage());
+        }
     }
 }
