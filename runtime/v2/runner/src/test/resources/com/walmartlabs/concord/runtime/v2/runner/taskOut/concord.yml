@@ -1,0 +1,19 @@
+flows:
+  default:
+    # single out
+    - task: testTask
+      in:
+        k: "some-value"
+      out: x
+
+    - log: "single out x.ok=${x.ok}"
+    - log: "single out x.k=${x.k}"
+
+    # expression out
+    - task: testTask
+      in:
+        k: "some-value"
+      out:
+        x: "${result.ok ? result.k : 'oops'}"
+
+    - log: "expression out x=${x}"
