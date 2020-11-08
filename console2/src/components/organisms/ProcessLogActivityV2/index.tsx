@@ -58,14 +58,12 @@ interface ExternalProps {
     loadingHandler: (inc: number) => void;
     forceRefresh: boolean;
 }
-
 const ProcessLogActivityV2 = ({
     instanceId,
     processStatus,
     loadingHandler,
     forceRefresh
 }: ExternalProps) => {
-    const [segmentOffset, setSegmentOffset] = useState(0);
     const [segments, setSegments] = useState<LogSegmentEntry[]>([]);
     const [logOpts, setLogOptions] = useState<LogOptions>(getStoredOpts());
     const location = useLocation();
@@ -85,26 +83,15 @@ const ProcessLogActivityV2 = ({
     }, [logOpts]);
 
     const fetchSegments = useCallback(async () => {
-        const limit = 50;
-        const newSegments = await apiListLogSegments(instanceId, segmentOffset, limit);
-        let newItems = newSegments.items;
+        // TODO: real limit/offset
+        const limit = -1;
+        const offset = 0;
+        const segments = await apiListLogSegments(instanceId, offset, limit);
 
-        if (newItems.length > 0) {
-            setSegments((prevItems) => {
-                const updated: Record<number, LogSegmentEntry> = {};
-                prevItems.forEach((s) => (updated[s.id] = s));
-                newItems.forEach((s) => (updated[s.id] = s));
-                return toSegmentList(updated);
-            });
-            setSegmentOffset((prev) => prev + newSegments.items.length);
-        }
+        setSegments(segments.items);
 
         return !isFinal(processStatus) && processStatus !== ProcessStatus.SUSPENDED;
-    }, [instanceId, processStatus, segmentOffset]);
-
-    useEffect(() => {
-        console.log('!', segments);
-    }, [segments]);
+    }, [instanceId, processStatus]);
 
     const handleOpen = useCallback(
         (id: number) => {
@@ -207,12 +194,6 @@ const ProcessLogActivityV2 = ({
                 })}
         </>
     );
-};
-
-const toSegmentList = (segments: Record<number, LogSegmentEntry>): LogSegmentEntry[] => {
-    return Object.keys(segments)
-        .map((k) => segments[k] as LogSegmentEntry)
-        .sort((a, b) => (a.createdAt > b.createdAt ? 1 : -1));
 };
 
 const getStoredOpts = (): LogOptions => {
