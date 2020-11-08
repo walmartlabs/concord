@@ -15,6 +15,8 @@ tokens for Git authentication.
 
 ### Changed
 
+- runtime-v2: fixed an issue preventing form `values` from being
+visible in `data.js` (custom forms);
 - project: update Maven Wrapper to 0.5.6;
 - runtime-v2: fixed evaluation of literals values for empty
 collections (e.g. `[]` used with `set` or in expressions);
