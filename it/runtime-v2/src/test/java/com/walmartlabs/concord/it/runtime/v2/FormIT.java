@@ -233,17 +233,4 @@ public class FormIT {
             return scriptObj;
         }
     }
-
-    public static void main(String[] args) throws Exception {
-        UUID instanceId = UUID.fromString("c4823c00-1893-423b-9143-1c06abad2a1a");
-        String formName = "myForm";
-        ConcordRule r = new ConcordRule()
-                .apiBaseUrl("http://localhost:8001")
-                .apiToken("bi5yFX0fxKlSH5vnkBm1Vw");
-
-        startCustomFormSession(r, instanceId, formName);
-
-        Map<String, Object> dataJs = getDataJs(r, instanceId, formName);
-        System.out.println(">>>>" + dataJs);
-    }
 }
