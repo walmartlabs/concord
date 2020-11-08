@@ -211,7 +211,11 @@ const renderColumnContent = (e: Entry, c: ColumnDefinition) => {
             }
         }
         default: {
-            return v;
+            if (c.searchValueType === 'boolean') {
+                return <Checkbox type="checkbox" checked={v} readOnly={true} disabled={true} />;
+            } else {
+                return v;
+            }
         }
     }
 };
