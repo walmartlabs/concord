@@ -4,6 +4,8 @@
 
 ### Added
 
+- concord-console: the process list now support boolean values in
+custom columns and filters;
 - runtime-v2: save `lastError` in process metadata (feature parity
 with the runtime v1);
 - policy-engine, concord-server: the `entity` policy now supports
