@@ -11,6 +11,7 @@ tokens for Git authentication.
 
 ### Changed
 
+- project: update Maven Wrapper to 0.5.6;
 - runtime-v2: fixed evaluation of literals values for empty
 collections (e.g. `[]` used with `set` or in expressions);
 - concord-server: improved error messages when processing `imports`.
