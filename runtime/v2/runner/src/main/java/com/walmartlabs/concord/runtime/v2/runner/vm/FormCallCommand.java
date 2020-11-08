@@ -86,6 +86,7 @@ public class FormCallCommand extends StepCommand<FormCall> {
                 .yield(options.yield())
                 .saveSubmittedBy(options.saveSubmittedBy())
                 .runAs(runAs)
+                .extraValues(expressionEvaluator.evalAsMap(ctx, options.values()))
                 .build();
     }
 
