@@ -287,10 +287,11 @@ public class CustomFormServiceV2 {
 
         // the order of precedence should be:
         //   submitted value > form call value > field's default value > environment value
-        Map<String, Object> _values = new HashMap<>();
+        Map<String, Object> _values = new HashMap<>(form.options().extraValues());
         Map<String, String> _errors = new HashMap<>();
 
-        form.fields().forEach(f -> _values.put(f.name(), f.defaultValue()));
+        form.fields().stream().filter(f -> f.defaultValue() != null)
+                .forEach(f -> _values.put(f.name(), f.defaultValue()));
 
         List<String> fields = form.fields().stream()
                 .map(FormField::name)
