@@ -35,7 +35,7 @@ export enum OrganizationVisibility {
 
 export type SearchType = 'substring' | 'equals';
 
-export type SearchValueType = 'string';
+export type SearchValueType = 'string' | 'boolean';
 
 export interface SearchOption {
     value: string;
