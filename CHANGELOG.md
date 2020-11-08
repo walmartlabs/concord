@@ -4,6 +4,8 @@
 
 ### Added
 
+- runtime-v2: save `lastError` in process metadata (feature parity
+with the runtime v1);
 - policy-engine, concord-server: the `entity` policy now supports
 repository objects;
 - concord-console, concord-repository: support for OAuth (personal)
