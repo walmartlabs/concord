@@ -274,7 +274,6 @@ public abstract class WithItemsWrapper implements Command {
             Frame targetFrame = VMUtils.assertNearestRoot(state, threadId);
             loop.push(new AppendVariablesCommand(outVariables, cmdFrame, targetFrame));
 
-            state.pushFrame(threadId, loop);
             state.pushFrame(threadId, cmdFrame);
         }
     }
