@@ -38,13 +38,20 @@ import java.util.stream.Collectors;
 
 public abstract class WithItemsWrapper implements Command {
 
-    public static WithItemsWrapper of(Command cmd, WithItems withItems, List<String> outVariables) {
+    public static WithItemsWrapper of(Command cmd, WithItems withItems, Collection<String> outVariables, Map<String, Serializable> outExpressions) {
+        Collection<String> out = Collections.emptyList();
+        if (!outExpressions.isEmpty()) {
+            out = outExpressions.keySet();
+        } else if (!outVariables.isEmpty()) {
+            out = outVariables;
+        }
+
         WithItems.Mode mode = withItems.mode();
         switch (mode) {
             case SERIAL:
-                return new SerialWithItems(cmd, withItems, outVariables);
+                return new SerialWithItems(cmd, withItems, out);
             case PARALLEL:
-                return new ParallelWithItems(cmd, withItems, outVariables);
+                return new ParallelWithItems(cmd, withItems, out);
             default:
                 throw new IllegalArgumentException("Unknown withItems mode: " + mode);
         }
@@ -59,9 +66,9 @@ public abstract class WithItemsWrapper implements Command {
 
     protected final Command cmd;
     protected final WithItems withItems;
-    protected final List<String> outVariables;
+    protected final Collection<String> outVariables;
 
-    protected WithItemsWrapper(Command cmd, WithItems withItems, List<String> outVariables) {
+    protected WithItemsWrapper(Command cmd, WithItems withItems, Collection<String> outVariables) {
         this.cmd = cmd;
         this.withItems = withItems;
         this.outVariables = outVariables;
@@ -143,7 +150,7 @@ public abstract class WithItemsWrapper implements Command {
 
         private static final long serialVersionUID = 1L;
 
-        protected ParallelWithItems(Command cmd, WithItems withItems, List<String> outVariables) {
+        protected ParallelWithItems(Command cmd, WithItems withItems, Collection<String> outVariables) {
             super(cmd, withItems, outVariables);
         }
 
@@ -197,7 +204,7 @@ public abstract class WithItemsWrapper implements Command {
 
         private static final long serialVersionUID = 1L;
 
-        protected SerialWithItems(Command cmd, WithItems withItems, List<String> outVariables) {
+        protected SerialWithItems(Command cmd, WithItems withItems, Collection<String> outVariables) {
             super(cmd, withItems, outVariables);
         }
 
@@ -231,10 +238,10 @@ public abstract class WithItemsWrapper implements Command {
 
         private static final long serialVersionUID = 1L;
 
-        private final List<String> outVariables;
+        private final Collection<String> outVariables;
         private final Command cmd;
 
-        public WithItemsNext(List<String> outVariables, Command cmd) {
+        public WithItemsNext(Collection<String> outVariables, Command cmd) {
             this.outVariables = outVariables;
             this.cmd = cmd;
         }
@@ -276,10 +283,10 @@ public abstract class WithItemsWrapper implements Command {
 
         private static final long serialVersionUID = 1L;
 
-        private final List<String> outVars;
+        private final Collection<String> outVars;
         private final Frame targetFrame;
 
-        private PrepareOutVariables(List<String> outVars, Frame targetFrame) {
+        private PrepareOutVariables(Collection<String> outVars, Frame targetFrame) {
             this.outVars = outVars;
             this.targetFrame = targetFrame;
         }
@@ -307,11 +314,11 @@ public abstract class WithItemsWrapper implements Command {
 
         private static final long serialVersionUID = 1L;
 
-        private final List<String> variables;
+        private final Collection<String> variables;
         private final Frame sourceFrame;
         private final Frame targetFrame;
 
-        public AppendVariablesCommand(List<String> variables, Frame sourceFrame, Frame targetFrame) {
+        public AppendVariablesCommand(Collection<String> variables, Frame sourceFrame, Frame targetFrame) {
             this.variables = variables;
             this.sourceFrame = sourceFrame;
             this.targetFrame = targetFrame;

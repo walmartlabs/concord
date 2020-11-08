@@ -30,10 +30,7 @@ import com.walmartlabs.concord.client.ProcessEntry;
 import org.junit.ClassRule;
 import org.junit.Test;
 
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import static com.walmartlabs.concord.it.common.ITUtils.randomString;
 import static com.walmartlabs.concord.it.runtime.v2.ITConstants.DEFAULT_TEST_TIMEOUT;
@@ -279,5 +276,21 @@ public class ProcessIT {
 
         proc.assertLog(".*#1 BEFORE: false.*");
         proc.assertLog(".*#2 AFTER: false.*");
+    }
+
+    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    public void testLastErrorSave() throws Exception {
+        Payload payload = new Payload()
+                .archive(ProcessIT.class.getResource("failProcess").toURI());
+
+        ConcordProcess proc = concord.processes().start(payload);
+
+        proc.expectStatus(ProcessEntry.StatusEnum.FAILED);
+
+        // ---
+
+        Map<String, Object> data = proc.getOutVariables();
+        assertNotNull(data);
+        assertEquals(Collections.singletonMap("message", "BOOM"), data.get("lastError"));
     }
 }

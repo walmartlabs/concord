@@ -38,6 +38,7 @@ import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Provider;
 import java.nio.file.Path;
+import java.util.Objects;
 import java.util.UUID;
 
 @Named
@@ -80,7 +81,7 @@ public class ImportManagerProvider implements Provider<ImportManager> {
                 Repository repository = repositoryManager.fetch(entry.url(), entry.version(), null, entry.path(), secret);
                 Path dst = workDir;
                 if (entry.dest() != null) {
-                    dst = dst.resolve(entry.dest());
+                    dst = dst.resolve(Objects.requireNonNull(entry.dest()));
                 }
                 return repository.export(dst, entry.exclude());
             });

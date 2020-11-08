@@ -70,6 +70,7 @@ import java.util.stream.Collectors;
 
 import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
+import static java.util.regex.Pattern.quote;
 
 public class MainTest {
 
@@ -481,28 +482,6 @@ public class MainTest {
     }
 
     @Test
-    public void testWithItemsOut() throws Exception {
-        deploy("withItemsOut");
-
-        save(ProcessConfiguration.builder()
-                .build());
-
-        byte[] log = run();
-        assertLog(log, ".*result: \\[10, 20, 30\\].*");
-    }
-
-    @Test
-    public void testWithItemsTaskOut() throws Exception {
-        deploy("withItemsTaskOut");
-
-        save(ProcessConfiguration.builder()
-                .build());
-
-        byte[] log = run();
-        assertLog(log, ".*result: \\[10, 20, 30\\].*");
-    }
-
-    @Test
     public void testParallelWithItemsTask() throws Exception {
         deploy("parallelWithItemsTask");
 
@@ -523,6 +502,20 @@ public class MainTest {
 
         byte[] log = run();
         assertLog(log, ".*result: \\[10, 20, 30\\].*");
+    }
+
+    @Test
+    public void testWithItemsSet() throws Exception {
+        deploy("withItemsSet");
+
+        save(ProcessConfiguration.builder()
+                .build());
+
+        byte[] log = run();
+        assertLogAtLeast(log, 3,".*empty: \\[\\].*");
+        assertLog(log, ".*after add: \\[1\\].*");
+        assertLog(log, ".*after add: \\[2\\].*");
+        assertLog(log, ".*after add: \\[3\\].*");
     }
 
     @Test
@@ -636,8 +629,23 @@ public class MainTest {
                 .build());
 
         byte[] log = run();
-        assertLog(log, ".*" + Pattern.quote("single out a=a-value") + ".*");
-        assertLog(log, ".*" + Pattern.quote("array out a=a-value, b=b-value") + ".*");
+        assertLog(log, ".*" + quote("single out a=a-value") + ".*");
+        assertLog(log, ".*" + quote("array out a=a-value, b=b-value") + ".*");
+        assertLog(log, ".*" + quote("expression out a=a-value, xx=123, zz=10000") + ".*");
+    }
+
+    @Test
+    public void testCallOutWithItems() throws Exception {
+        deploy("callOutWithItems");
+
+        save(ProcessConfiguration.builder()
+                .build());
+
+        byte[] log = run();
+        assertLog(log, ".*" + quote("single out x=[10, 20, 30]") + ".*");
+        assertLog(log, ".*" + quote("array out: x=[10, 20, 30]") + ".*");
+        assertLog(log, ".*" + quote("expression out: x=[10, 20, 30]") + ".*");
+        assertLog(log, ".*" + quote("expression out: xx=[100, 200, 300]") + ".*");
     }
 
     @Test
@@ -797,25 +805,27 @@ public class MainTest {
     }
 
     @Test
-    public void testTaskOutExpression() throws Exception {
-        deploy("taskOutExpr");
+    public void testTaskOut() throws Exception {
+        deploy("taskOut");
 
         save(ProcessConfiguration.builder()
                 .build());
 
         byte[] log = run();
-        assertLog(log, ".*result: some-value.*");
+        assertLog(log, ".*" + quote("single out x.ok=true") + ".*");
+        assertLog(log, ".*" + quote("single out x.k=some-value") + ".*");
+        assertLog(log, ".*" + quote("expression out x=some-value") + ".*");
     }
 
     @Test
-    public void testFlowOutExpression() throws Exception {
-        deploy("flowOutExpr");
+    public void testTaskOutWithItems() throws Exception {
+        deploy("taskOutWithItems");
 
         save(ProcessConfiguration.builder()
                 .build());
 
         byte[] log = run();
-        assertLog(log, ".*v: 123.*");
+        assertLog(log, ".*" + quote("single out x=[10, 20, 30]") + ".*");
     }
 
     @Test
