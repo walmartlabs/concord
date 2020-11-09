@@ -75,21 +75,4 @@ public interface ProcessDefinition extends Serializable {
     static ImmutableProcessDefinition.Builder builder() {
         return ImmutableProcessDefinition.builder();
     }
-
-    static ProcessDefinition merge(ProcessDefinition a, ProcessDefinition b) {
-        Map<String, Profile> profiles = new HashMap<>(a.profiles());
-        for (Map.Entry<String, Profile> p : b.profiles().entrySet()) {
-            Profile pa = profiles.getOrDefault(p.getKey(), Profile.builder().build());
-            profiles.put(p.getKey(), Profile.merge(pa, p.getValue()));
-        }
-
-        return ProcessDefinition.builder().from(a)
-                .configuration(ProcessDefinitionConfiguration.merge(a.configuration(), b.configuration()))
-                .putAllFlows(b.flows())
-                .profiles(profiles)
-                .addAllTriggers(b.triggers())
-                .imports(Imports.merge(a.imports(), b.imports()))
-                .putAllForms(b.forms())
-                .build();
-    }
 }

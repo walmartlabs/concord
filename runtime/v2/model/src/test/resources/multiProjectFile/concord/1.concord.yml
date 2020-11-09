@@ -1,21 +1,25 @@
 flows:
   default:
-  - log: "bye!"
+  - log: "hello from 1.concor.yml!"
 
 forms:
   myForm:
   - myName: {type: "string"}
 
-#triggers:
-#  - oneops:
-#      stuff: "yep"
-#      entryPoint: "default"
+triggers:
+  - github:
+      entryPoint: "1.concord.yml"
+      version: 2
+      conditions:
+        type: "push"
+        sender: ".*some.*dude.*"
 
 publicFlows:
-  - default
+  - test1
 
 configuration:
   arguments:
     abc: "xyz"
     nested:
       value: "123"
+  processTimeout: "PT2H"
