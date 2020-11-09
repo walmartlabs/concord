@@ -1,5 +1,33 @@
 # Change log
 
+## [Unreleased]
+
+### Added
+
+- concord-console: the process list now support boolean values in
+custom columns and filters;
+- runtime-v2: save `lastError` in process metadata (feature parity
+with the runtime v1);
+- policy-engine, concord-server: the `entity` policy now supports
+repository objects;
+- concord-console, concord-repository: support for OAuth (personal)
+tokens for Git authentication.
+
+### Changed
+
+- concord-console: load add log segments on every refresh (temporary
+workaround);
+- runtime-v2: fix the loop frame being added to the call stack on
+every step of `withItems`;
+- runtime-v2: fixed an issue preventing form `values` from being
+visible in `data.js` (custom forms);
+- project: update Maven Wrapper to 0.5.6;
+- runtime-v2: fixed evaluation of literals values for empty
+collections (e.g. `[]` used with `set` or in expressions);
+- concord-server: improved error messages when processing `imports`.
+
+
+
 ## [1.71.0] - 2020-11-03
 
 ### Added
