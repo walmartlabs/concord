@@ -134,18 +134,23 @@ public class ProcessLogsDao extends AbstractDao {
         UUID instanceId = processKey.getInstanceId();
         OffsetDateTime createdAt = processKey.getCreatedAt();
 
-        return dsl().select(PROCESS_LOG_SEGMENTS.SEGMENT_ID, PROCESS_LOG_SEGMENTS.CORRELATION_ID,
-                PROCESS_LOG_SEGMENTS.SEGMENT_NAME,
-                PROCESS_LOG_SEGMENTS.SEGMENT_TS,
-                PROCESS_LOG_SEGMENTS.SEGMENT_STATUS,
-                PROCESS_LOG_SEGMENTS.SEGMENT_WARN,
-                PROCESS_LOG_SEGMENTS.SEGMENT_ERRORS)
+        SelectSeekStep1<Record7<Long, UUID, String, OffsetDateTime, String, Integer, Integer>, OffsetDateTime> q = dsl()
+                .select(PROCESS_LOG_SEGMENTS.SEGMENT_ID, PROCESS_LOG_SEGMENTS.CORRELATION_ID,
+                        PROCESS_LOG_SEGMENTS.SEGMENT_NAME,
+                        PROCESS_LOG_SEGMENTS.SEGMENT_TS,
+                        PROCESS_LOG_SEGMENTS.SEGMENT_STATUS,
+                        PROCESS_LOG_SEGMENTS.SEGMENT_WARN,
+                        PROCESS_LOG_SEGMENTS.SEGMENT_ERRORS)
                 .from(PROCESS_LOG_SEGMENTS)
                 .where(PROCESS_LOG_SEGMENTS.INSTANCE_ID.eq(instanceId)
                         .and(PROCESS_LOG_SEGMENTS.INSTANCE_CREATED_AT.eq(createdAt)))
-                .orderBy(PROCESS_LOG_SEGMENTS.SEGMENT_TS)
-                .limit(limit)
-                .offset(offset)
+                .orderBy(PROCESS_LOG_SEGMENTS.SEGMENT_TS);
+
+        if (limit >= 0) {
+            q.limit(limit);
+        }
+
+        return q.offset(offset)
                 .fetch(ProcessLogsDao::toSegment);
     }
 

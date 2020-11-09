@@ -101,15 +101,14 @@ export interface PaginatedLogSegmentEntry {
 
 export const listLogSegments = async (
     instanceId: ConcordId,
-    page: number,
+    offset: number,
     limit: number
 ): Promise<PaginatedLogSegmentEntry> => {
-    const offsetParam = page > 0 && limit > 0 ? page * limit : page;
     const limitParam = limit > 0 ? limit + 1 : limit;
 
     const data: LogSegmentEntry[] = await fetchJson(
         `/api/v2/process/${instanceId}/log/segment?${queryParams({
-            offset: offsetParam,
+            offset,
             limit: limitParam
         })}`
     );
