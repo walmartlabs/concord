@@ -68,7 +68,7 @@ public class ProjectLoaderV2 {
             definitions.add(root);
         }
 
-        if (definitions.isEmpty() && root == null) {
+        if (definitions.isEmpty()) {
             throw new IllegalStateException("Can't find any Concord process definition files in '" + baseDir + "'");
         }
 
