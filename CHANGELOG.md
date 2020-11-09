@@ -15,6 +15,10 @@ tokens for Git authentication.
 
 ### Changed
 
+- concord-console: load add log segments on every refresh (temporary
+workaround);
+- runtime-v2: fix the loop frame being added to the call stack on
+every step of `withItems`;
 - runtime-v2: fixed an issue preventing form `values` from being
 visible in `data.js` (custom forms);
 - project: update Maven Wrapper to 0.5.6;
