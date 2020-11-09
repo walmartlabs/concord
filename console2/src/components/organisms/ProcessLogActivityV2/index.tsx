@@ -22,17 +22,18 @@ import * as React from 'react';
 import { useCallback, useEffect, useState } from 'react';
 
 import { ConcordId } from '../../../api/common';
-import { isFinal, ProcessStatus } from '../../../api/process';
+import { get as apiGet, isFinal, ProcessEntry, ProcessStatus } from '../../../api/process';
 
 import './styles.css';
 import { listLogSegments as apiListLogSegments, LogSegmentEntry } from '../../../api/process/log';
 import { usePolling } from '../../../api/usePolling';
 import { RequestErrorActivity } from '../../organisms';
 import LogSegmentActivity from './LogSegmentActivity';
-import { ProcessToolbar } from '../../molecules';
+import { FormWizardAction, ProcessToolbar } from '../../molecules';
 import { Button, Divider, Popup, Radio } from 'semantic-ui-react';
 import { LogProcessorOptions } from '../../../state/data/processes/logs/processors';
-import { useLocation } from 'react-router';
+import { Route, useLocation } from 'react-router';
+import { FormListEntry, list as apiListForms } from "../../../api/process/form";
 
 const SEGMENT_FETCH_INTERVAL = 5000;
 
@@ -58,6 +59,9 @@ interface ExternalProps {
     loadingHandler: (inc: number) => void;
     forceRefresh: boolean;
 }
+
+const FORM_FETCH_INTERVAL = 5000;
+
 const ProcessLogActivityV2 = ({
     instanceId,
     processStatus,
@@ -67,6 +71,8 @@ const ProcessLogActivityV2 = ({
     const [segments, setSegments] = useState<LogSegmentEntry[]>([]);
     const [logOpts, setLogOptions] = useState<LogOptions>(getStoredOpts());
     const location = useLocation();
+    const [process, setProcess] = useState<ProcessEntry>();
+    const [forms, setForms] = useState<FormListEntry[]>([]);
 
     const segmentOptsHandler = useCallback((o: LogProcessorOptions) => {
         setLogOptions((prev) => {
@@ -101,14 +107,46 @@ const ProcessLogActivityV2 = ({
         [location]
     );
 
+    const fetchProcessForm = useCallback(async () => {
+        const process = await apiGet(instanceId, ['checkpoints', 'history']);
+        setProcess(process);
+
+        const forms = await apiListForms(instanceId);
+        setForms(forms);
+
+        return !isFinal(process.status);
+    }, [instanceId]);
+
+    const formError = usePolling(fetchProcessForm, FORM_FETCH_INTERVAL, loadingHandler, forceRefresh);
+
     const error = usePolling(fetchSegments, SEGMENT_FETCH_INTERVAL, loadingHandler, forceRefresh);
+
     if (error) {
         return <RequestErrorActivity error={error} />;
+    }
+
+    if (formError) {
+        return <RequestErrorActivity error={formError} />;
     }
 
     return (
         <>
             <ProcessToolbar>
+
+                {process && forms.length > 0 && !isFinal(process.status) && (
+                    <div style={{ marginRight: 20 }}>
+                        <Route
+                            render={({ history }) => (
+                                <FormWizardAction
+                                    onOpenWizard={() =>
+                                        history.push(`/process/${instanceId}/wizard?fullScreen=true`)
+                                    }
+                                />
+                            )}
+                        />
+                    </div>
+                )}
+
                 <Popup
                     size="huge"
                     position="bottom left"
