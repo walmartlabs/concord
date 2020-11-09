@@ -34,6 +34,7 @@ class FormWizardAction extends React.PureComponent<Props> {
                         id="formWizardButton"
                         onClick={() => onOpenWizard()}
                         content="Form Wizard"
+                        color="blue"
                     />
         );
     }

@@ -84,27 +84,34 @@ class ProcessActionList extends React.PureComponent<Props> {
         const { instanceId, forms, onOpenWizard } = this.props;
 
         return (
+            <>
+            <Button
+                id="formWizardButton"
+                onClick={() => onOpenWizard()}
+                content=" Form Wizard"
+                color="blue"
+                compact={true}
+            />
             <Table>
                 <Table.Header>
                     <Table.Row>
-                        <Table.HeaderCell collapsing={true}>Action</Table.HeaderCell>
-                        <Table.HeaderCell collapsing={true}>Additional Action</Table.HeaderCell>
+                        <Table.HeaderCell collapsing={true}>Form Action</Table.HeaderCell>
                         <Table.HeaderCell>Description</Table.HeaderCell>
                     </Table.Row>
                 </Table.Header>
                 <Table.Body>
-                    {/* TODO there should be only one Wizard button */}
                     {forms.map(({ name, runAs }) => (
                         <Table.Row key={name}>
                             <Table.Cell singleLine={true}>
-                                <Link to={`/process/${instanceId}/form/${name}/step`}>{name}</Link>
-                            </Table.Cell>
-                            <Table.Cell singleLine={true}>
-                                <Button
-                                    id="formWizardButton"
-                                    onClick={() => onOpenWizard()}
-                                    content="Wizard"
-                                />
+                                <Link to={`/process/${instanceId}/form/${name}/step`}>
+                                    <Button
+                                        content={`${name}`}
+                                        compact={true}
+                                        basic={true}
+                                        color="red"
+                                        size="small"
+                                    />
+                                </Link>
                             </Table.Cell>
                             <Table.Cell>
                                 Form
@@ -114,6 +121,7 @@ class ProcessActionList extends React.PureComponent<Props> {
                     ))}
                 </Table.Body>
             </Table>
+            </>
         );
     }
 }
