@@ -84,7 +84,7 @@ const ProcessLogActivityV2 = ({
 
     const fetchSegments = useCallback(async () => {
         // TODO: real limit/offset
-        const limit = 100;
+        const limit = -1;
         const offset = 0;
         const segments = await apiListLogSegments(instanceId, offset, limit);
 

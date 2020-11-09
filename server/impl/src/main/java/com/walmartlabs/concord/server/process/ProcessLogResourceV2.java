@@ -92,10 +92,6 @@ public class ProcessLogResourceV2 implements Resource {
                                      @ApiParam @QueryParam("limit") @DefaultValue("30") int limit,
                                      @ApiParam @QueryParam("offset") @DefaultValue("0") int offset) {
 
-        if (limit <= 0) {
-            throw new ValidationErrorsException("'limit' must be a positive number");
-        }
-
         if (offset < 0) {
             throw new ValidationErrorsException("'offset' must be a positive number or zero");
         }
