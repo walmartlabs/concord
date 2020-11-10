@@ -65,7 +65,7 @@ public class DefaultProcessConfigurationProvider implements Provider<ProcessConf
     private static UUID waitForInstanceId(Path workDir) throws IOException {
         Path p = workDir.resolve(Constants.Files.INSTANCE_ID_FILE_NAME);
         while (true) {
-            if (Files.exists(p)) {
+            if (notEmpty(p)) {
                 String s = new String(Files.readAllBytes(p));
                 return UUID.fromString(s.trim());
             }
@@ -95,5 +95,13 @@ public class DefaultProcessConfigurationProvider implements Provider<ProcessConf
                     .instanceId(instanceId)
                     .build();
         }
+    }
+
+    private static boolean notEmpty(Path path) {
+        if (Files.notExists(path)) {
+            return false;
+        }
+
+        return path.toFile().length() > 0;
     }
 }

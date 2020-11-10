@@ -99,7 +99,7 @@ public class Main {
         long t1 = System.currentTimeMillis();
 
         Path idPath = baseDir.resolve(Constants.Files.INSTANCE_ID_FILE_NAME);
-        while (!Files.exists(idPath)) {
+        while (isEmpty(idPath)) {
             // TODO replace with WatchService
             Thread.sleep(100);
         }
@@ -142,6 +142,14 @@ public class Main {
         }
 
         executeProcess(instanceId.toString(), checkpointManager, baseDir, processCfg);
+    }
+
+    private static boolean isEmpty(Path path) {
+        if (Files.notExists(path)) {
+            return true;
+        }
+
+        return path.toFile().length() == 0;
     }
 
     private void executeProcess(String instanceId, CheckpointManager checkpointManager, Path baseDir, Map<String, Object> processCfg) throws ExecutionException {
@@ -652,9 +660,17 @@ public class Main {
 
     private static void saveLastError(Path baseDir, Throwable t) {
         Path attachmentsDir = baseDir.resolve(Constants.Files.JOB_ATTACHMENTS_DIR_NAME);
+        Path stateDir = attachmentsDir.resolve(Constants.Files.JOB_STATE_DIR_NAME);
+        try {
+            if (Files.notExists(stateDir)) {
+                Files.createDirectories(stateDir);
+            }
+        } catch (Throwable e) {
+            log.error("Can't create attachments dir: {}", e.getMessage());
+            return;
+        }
 
-        Path dst = attachmentsDir.resolve(Constants.Files.JOB_STATE_DIR_NAME)
-                .resolve(Constants.Files.LAST_ERROR_FILE_NAME);
+        Path dst = stateDir.resolve(Constants.Files.LAST_ERROR_FILE_NAME);
 
         try (OutputStream out = Files.newOutputStream(dst, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING)) {
             SerializationUtils.serialize(out, t);
