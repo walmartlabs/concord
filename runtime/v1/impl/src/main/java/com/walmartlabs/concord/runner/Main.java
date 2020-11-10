@@ -144,14 +144,6 @@ public class Main {
         executeProcess(instanceId.toString(), checkpointManager, baseDir, processCfg);
     }
 
-    private static boolean isEmpty(Path path) {
-        if (Files.notExists(path)) {
-            return true;
-        }
-
-        return path.toFile().length() == 0;
-    }
-
     private void executeProcess(String instanceId, CheckpointManager checkpointManager, Path baseDir, Map<String, Object> processCfg) throws ExecutionException {
         // get active profiles from the request data
         Collection<String> activeProfiles = getActiveProfiles(processCfg);
@@ -689,6 +681,14 @@ public class Main {
         } catch (Throwable e) {
             log.error("Can't write out variables: {}", e.getMessage());
         }
+    }
+
+    private static boolean isEmpty(Path path) {
+        if (Files.notExists(path)) {
+            return true;
+        }
+
+        return path.toFile().length() == 0;
     }
 
     private static class SubClassesOf extends AbstractMatcher<TypeLiteral<?>> {
