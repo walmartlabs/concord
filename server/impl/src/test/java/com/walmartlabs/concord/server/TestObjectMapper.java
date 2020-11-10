@@ -21,13 +21,14 @@ package com.walmartlabs.concord.server;
  */
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.sonatype.siesta.jackson2.ObjectMapperProvider;
 
 public final class TestObjectMapper {
 
     public static final ObjectMapper INSTANCE = createObjectMapper();
 
     private static ObjectMapper createObjectMapper() {
-        ObjectMapper om = new ObjectMapper();
+        ObjectMapper om = new ObjectMapperProvider().get();
         new ObjectMapperInitializer(() -> om);
         return om;
     }
