@@ -22,7 +22,7 @@ import * as React from 'react';
 import { useCallback, useEffect, useState } from 'react';
 
 import { ConcordId } from '../../../api/common';
-import { get as apiGet, isFinal, ProcessEntry, ProcessStatus } from '../../../api/process';
+import { isFinal, ProcessStatus } from '../../../api/process';
 
 import './styles.css';
 import { listLogSegments as apiListLogSegments, LogSegmentEntry } from '../../../api/process/log';
@@ -71,7 +71,6 @@ const ProcessLogActivityV2 = ({
     const [segments, setSegments] = useState<LogSegmentEntry[]>([]);
     const [logOpts, setLogOptions] = useState<LogOptions>(getStoredOpts());
     const location = useLocation();
-    const [process, setProcess] = useState<ProcessEntry>();
     const [forms, setForms] = useState<FormListEntry[]>([]);
 
     const segmentOptsHandler = useCallback((o: LogProcessorOptions) => {
@@ -107,17 +106,15 @@ const ProcessLogActivityV2 = ({
         [location]
     );
 
-    const fetchProcessForm = useCallback(async () => {
-        const process = await apiGet(instanceId, ['checkpoints', 'history']);
-        setProcess(process);
+    const fetchForm = useCallback(async () => {
 
         const forms = await apiListForms(instanceId);
         setForms(forms);
 
-        return !isFinal(process.status);
-    }, [instanceId]);
+        return !isFinal(processStatus);
+    }, [instanceId, processStatus]);
 
-    const formError = usePolling(fetchProcessForm, FORM_FETCH_INTERVAL, loadingHandler, forceRefresh);
+    const formError = usePolling(fetchForm, FORM_FETCH_INTERVAL, loadingHandler, forceRefresh);
 
     const error = usePolling(fetchSegments, SEGMENT_FETCH_INTERVAL, loadingHandler, forceRefresh);
 
@@ -133,7 +130,7 @@ const ProcessLogActivityV2 = ({
         <>
             <ProcessToolbar>
 
-                {process && forms.length > 0 && !isFinal(process.status) && (
+                {forms.length > 0 && !isFinal(processStatus) && (
                     <div style={{ marginRight: 20 }}>
                         <Route
                             render={({ history }) => (
