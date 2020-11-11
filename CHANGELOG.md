@@ -2,6 +2,11 @@
 
 ## [Unreleased]
 
+### Added
+
+- concord-console: `entryPoint` can now be used as a column in
+the process list.
+
 ### Changed
 
 - runtime-v2: fixed the merging of multiple Concord YAML files
