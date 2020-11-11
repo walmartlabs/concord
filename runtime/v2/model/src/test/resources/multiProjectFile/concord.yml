@@ -1,9 +1,52 @@
+imports:
+  - git:
+      url: "concord.yml"
+
 flows:
   default:
-  - log: "hello!"
+  - checkpoint: "root"
 
 configuration:
+  activeProfiles:
+    - "concord.yml"
   template: "mytemplate"
   arguments:
     nested:
       value: "234"
+  dependencies:
+    - "concord.yml"
+  meta:
+    k: "concord.yml"
+  debug: true
+  entryPoint: "root"
+  events:
+    recordTaskInVars: true
+    recordTaskOutVars: true
+    truncateInVars: true
+    truncateOutVars: true
+    truncateMaxStringLength: 1
+    truncateMaxArrayLength: 2
+    truncateMaxDepth: 3
+    inVarsBlacklist:
+      - "apiKey"
+      - "apiRootToken"
+  requirements:
+    req: "concord.yml"
+  processTimeout: "PT1H"
+  out:
+    - "from-root"
+
+publicFlows:
+  - root
+
+resources:
+  concord:
+    - "glob:concord/{**/,}{*.,}concord.yml"
+
+triggers:
+  - github:
+      entryPoint: "concord.yml"
+      version: 2
+      conditions:
+        type: "push"
+        sender: ".*some.*dude.*"
