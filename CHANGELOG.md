@@ -9,6 +9,7 @@ the process list.
 
 ### Changed
 
+- concord-server: allow null values when merging policies;
 - runtime-v2: fixed the merging of multiple Concord YAML files
 (e.g. `configuration.events` blocks and others).
 
