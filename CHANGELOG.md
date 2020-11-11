@@ -1,5 +1,14 @@
 # Change log
 
+## [Unreleased]
+
+### Changed
+
+- runtime-v2: fixed the merging of multiple Concord YAML files
+(e.g. `configuration.events` blocks and others).
+
+
+
 ## [1.72.0] - 2020-11-09
 
 ### Added
