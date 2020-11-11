@@ -20,6 +20,7 @@ package com.walmartlabs.concord.server.policy;
  * =====
  */
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.walmartlabs.concord.common.ConfigurationUtils;
 import com.walmartlabs.concord.db.AbstractDao;
@@ -72,7 +73,8 @@ public class PolicyCache implements BackgroundTask {
 
     @Inject
     public PolicyCache(ObjectMapper objectMapper, PolicyCacheConfiguration cacheCfg, Dao dao) {
-        this.objectMapper = objectMapper;
+        this.objectMapper = objectMapper.copy()
+                .setSerializationInclusion(JsonInclude.Include.ALWAYS);
         this.cacheCfg = cacheCfg;
         this.dao = dao;
     }
@@ -247,7 +249,7 @@ public class PolicyCache implements BackgroundTask {
         }
     }
 
-    private Map<UUID, Policy> mergePolicies(List<PolicyRules> policies) {
+    Map<UUID, Policy> mergePolicies(List<PolicyRules> policies) {
         Map<UUID, Policy> result = new HashMap<>();
         for (PolicyRules p : policies) {
             List<PolicyRules> rules = combinePolicies(p, policies);
@@ -292,7 +294,7 @@ public class PolicyCache implements BackgroundTask {
     }
 
     @Named
-    private static class Dao extends AbstractDao {
+    static class Dao extends AbstractDao {
 
         private final ConcordObjectMapper objectMapper;
 
@@ -351,6 +353,10 @@ public class PolicyCache implements BackgroundTask {
         String name();
 
         Map<String, Object> rules();
+
+        static ImmutablePolicyRules.Builder builder() {
+            return ImmutablePolicyRules.builder();
+        }
     }
 
     @Value.Immutable
