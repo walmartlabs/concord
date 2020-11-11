@@ -37,21 +37,6 @@ public class GithubUtilsTest {
     }
 
     @Test
-    public void testRepoUrlMatcher() {
-        assertRepoUrl("devtools/concord", "https://localhost/devtools/concord");
-        assertRepoUrl("devtools/concord", "https://localhost/devtools/concord.git");
-        assertRepoUrl("devtools/concord", "git@localhost:devtools/concord.git");
-        assertRepoUrl("devtools/concord", "git@localhost:devtools/concord");
-        assertRepoUrl("devtools/concord", "git@localhost:devtools/concord/");
-        assertRepoUrl("devtools/concord", "git@localhost:devtools/concord.git/");
-        assertRepoUrl("devtools/concord", "git@mydomain:devtools/concord.git/", "mydomain");
-
-        assertNotRepoUrl("devtools/concord_new", "git@localhost:devtools/concord.git");
-        assertNotRepoUrl("devtools/new_concord", "git@localhost:devtools/concord.git");
-        assertNotRepoUrl("devtools/con", "git@localhost:devtools/concord.git");
-    }
-
-    @Test
     public void testParse() {
         assertRepositoryName("git@github.example.com:h1sammo/Anisble-GLS-AppInstall.git", "h1sammo/Anisble-GLS-AppInstall");
         assertRepositoryName("git+https://github.com/owner/name.git", "owner/name");
@@ -82,21 +67,5 @@ public class GithubUtilsTest {
     private static void assertRefShortName(String ref, String expected) {
         String shortName = GithubUtils.getRefShortName(ref);
         assertEquals(expected, shortName);
-    }
-
-    private static void assertRepoUrl(String repoName, String url) {
-        assertRepoUrl(repoName, url, "localhost");
-    }
-
-    private static void assertRepoUrl(String repoName, String url, String domain) {
-        assertTrue(GithubUtils.isRepositoryUrl(repoName, url, domain));
-    }
-
-    private static void assertNotRepoUrl(String repoName, String url) {
-        assertNotRepoUrl(repoName, url, "localhost");
-    }
-
-    private static void assertNotRepoUrl(String repoName, String url, String domain) {
-        assertFalse(GithubUtils.isRepositoryUrl(repoName, url, domain));
     }
 }
