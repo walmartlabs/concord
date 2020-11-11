@@ -101,9 +101,10 @@ public class ProcessIT {
         proc.assertLog(".*Hello, Concord!.*");
 
         assertNotNull(pe.getMeta());
-        assertEquals(3, pe.getMeta().size()); // 2 + plus system meta
+        assertEquals(4, pe.getMeta().size()); // 2 + plus system meta + entryPoint
         assertEquals("init-value", pe.getMeta().get("test"));
         assertEquals("xxx", pe.getMeta().get("myForm.action"));
+        assertEquals("default", pe.getMeta().get("entryPoint"));
 
         // ---
 
@@ -123,9 +124,10 @@ public class ProcessIT {
         proc.assertLog(".*Action: Reject.*");
 
         assertNotNull(pe.getMeta());
-        assertEquals(3, pe.getMeta().size()); // 2 + plus system meta
+        assertEquals(4, pe.getMeta().size()); // 2 + plus system meta + entryPoint
         assertEquals("init-value", pe.getMeta().get("test"));
         assertEquals("Reject", pe.getMeta().get("myForm.action"));
+        assertEquals("default", pe.getMeta().get("entryPoint"));
     }
 
     @Test(timeout = DEFAULT_TEST_TIMEOUT)
