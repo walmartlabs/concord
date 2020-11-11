@@ -55,17 +55,6 @@ public final class GithubUtils {
         return result;
     }
 
-    // TODO: remove me when triggers v1 removed
-    public static boolean isRepositoryUrl(String repo, String url, String githubDomain) {
-        // TODO necessary for tests
-        if (repo.equals(url) || (url.startsWith("/") && url.endsWith(repo))) {
-            return true;
-        }
-
-        String pattern = ".*" + Pattern.quote(githubDomain) + "[:/]" + Pattern.quote(repo) + "(?:.git|.git/|/)?";
-        return Pattern.compile(pattern).matcher(url).matches();
-    }
-
     public static String getRepositoryName(String repoUrl) {
         GithubRepoInfo info = getRepositoryInfo(repoUrl);
         if (info == null) {
