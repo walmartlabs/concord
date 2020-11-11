@@ -63,11 +63,4 @@ public interface Profile extends Serializable {
     static ImmutableProfile.Builder builder() {
         return ImmutableProfile.builder();
     }
-
-    static Profile merge(Profile a, Profile b) {
-        return builder().from(a)
-                .configuration(ProcessDefinitionConfiguration.merge(a.configuration(), b.configuration()))
-                .putAllFlows(b.flows())
-                .build();
-    }
 }
