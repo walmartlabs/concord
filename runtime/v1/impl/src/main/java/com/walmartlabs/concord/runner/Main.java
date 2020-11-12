@@ -99,17 +99,11 @@ public class Main {
         long t1 = System.currentTimeMillis();
 
         Path idPath = baseDir.resolve(Constants.Files.INSTANCE_ID_FILE_NAME);
-        while (isEmpty(idPath)) {
-            // TODO replace with WatchService
-            Thread.sleep(100);
-        }
-
+        UUID instanceId = readInstanceId(idPath);
         long t2 = System.currentTimeMillis();
         if (runnerCfg.debug()) {
             log.info("Spent {}ms waiting for the payload", (t2 - t1));
         }
-
-        UUID instanceId = readInstanceId(idPath);
 
         Map<String, Object> policy = readPolicyRules(baseDir);
         if (policy.isEmpty()) {
@@ -226,18 +220,29 @@ public class Main {
         }
     }
 
+    @SuppressWarnings("BusyWait")
     private static UUID readInstanceId(Path src) {
-        String s;
-        try {
-            s = new String(Files.readAllBytes(src));
-        } catch (Exception e) {
-            throw new IllegalArgumentException("Error while reading " + src.toAbsolutePath() + ": " + e.getMessage());
-        }
+        long errorCount = 0;
+        while (true) {
+            byte[] id = readIfExists(src);
+            if (id != null && id.length > 0) {
+                String s = new String(id);
+                try {
+                    return UUID.fromString(s.trim());
+                } catch (IllegalArgumentException e) {
+                    errorCount++;
+                    if (errorCount % 10 == 0) {
+                        log.warn("waitForInstanceId ['{}'] -> value: '{}', error: {}", src, s, e.getMessage());
+                    }
+                }
+            }
 
-        try {
-            return UUID.fromString(s);
-        } catch (IllegalArgumentException e) {
-            throw new IllegalArgumentException("Can't parse " + src.toAbsolutePath() + ": " + e.getMessage());
+            // we are not using WatchService as it has issues when running in Docker
+            try {
+                Thread.sleep(100);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            }
         }
     }
 
@@ -683,12 +688,16 @@ public class Main {
         }
     }
 
-    private static boolean isEmpty(Path path) {
-        if (Files.notExists(path)) {
-            return true;
+    private static byte[] readIfExists(Path p) {
+        try {
+            if (Files.notExists(p)) {
+                return null;
+            }
+            return Files.readAllBytes(p);
+        } catch (Exception e) {
+            log.warn("readIfExists ['{}'] -> error: {}", p, e.getMessage());
+            return null;
         }
-
-        return path.toFile().length() == 0;
     }
 
     private static class SubClassesOf extends AbstractMatcher<TypeLiteral<?>> {
