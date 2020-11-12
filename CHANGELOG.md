@@ -9,6 +9,8 @@ the process list.
 
 ### Changed
 
+- runtime-v1, runtime-v2: avoid reading partially written
+`instanceId` files;
 - concord-server: allow null values when merging policies;
 - runtime-v2: fixed the merging of multiple Concord YAML files
 (e.g. `configuration.events` blocks and others).
