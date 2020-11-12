@@ -675,7 +675,7 @@ public class ConcordTask extends AbstractConcordTask {
 
     private String getProcessUrl(Context ctx, UUID processId) {
         String action = ContextUtils.getString(ctx, ACTION_KEY);
-        if (Action.STARTEXTERNAL.name().equalsIgnoreCase(action)  || uiLinks == null) {
+        if (Action.STARTEXTERNAL.name().equalsIgnoreCase(action) || uiLinks == null) {
             return "n/a";
         }
 
