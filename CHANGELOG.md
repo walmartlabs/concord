@@ -9,6 +9,8 @@ the process list.
 
 ### Changed
 
+- concord-tasks: fix common parameters not being inherited by
+`forks` in the runtime-v2 version of the `concord` task;
 - runtime-v1, runtime-v2: avoid reading partially written
 `instanceId` files;
 - concord-server: allow null values when merging policies;
