@@ -23,22 +23,24 @@ package com.walmartlabs.concord.runtime.v2.runner.checkpoints;
 import com.walmartlabs.concord.ApiClient;
 import com.walmartlabs.concord.ApiException;
 import com.walmartlabs.concord.client.ClientUtils;
-import com.walmartlabs.concord.runtime.common.StateManager;
+import com.walmartlabs.concord.common.TemporaryPath;
 import com.walmartlabs.concord.runtime.common.cfg.ApiConfiguration;
 import com.walmartlabs.concord.runtime.common.cfg.RunnerConfiguration;
 import com.walmartlabs.concord.runtime.common.injector.InstanceId;
-import com.walmartlabs.concord.runtime.v2.runner.ExecutionMode;
 import com.walmartlabs.concord.runtime.v2.runner.ProcessSnapshot;
 import com.walmartlabs.concord.runtime.v2.sdk.WorkingDirectory;
-import com.walmartlabs.concord.sdk.Constants;
 import com.walmartlabs.concord.svm.Runtime;
+import com.walmartlabs.concord.svm.State;
+import com.walmartlabs.concord.svm.ThreadId;
+import com.walmartlabs.concord.svm.ThreadStatus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
@@ -53,7 +55,11 @@ public class DefaultCheckpointService implements CheckpointService {
     private final ApiConfiguration apiConfiguration;
 
     @Inject
-    public DefaultCheckpointService(InstanceId instanceId, WorkingDirectory workingDirectory, RunnerConfiguration configuration, ApiClient apiClient) {
+    public DefaultCheckpointService(InstanceId instanceId,
+                                    WorkingDirectory workingDirectory,
+                                    RunnerConfiguration configuration,
+                                    ApiClient apiClient) {
+
         this.instanceId = instanceId;
         this.workingDirectory = workingDirectory;
         this.apiConfiguration = configuration.api();
@@ -61,50 +67,42 @@ public class DefaultCheckpointService implements CheckpointService {
     }
 
     @Override
-    public void create(String name, Runtime runtime, ProcessSnapshot snapshot) {
+    public void create(ThreadId threadId, String name, Runtime runtime, ProcessSnapshot snapshot) {
+        validate(threadId, snapshot);
+
         UUID checkpointId = UUID.randomUUID();
 
-        Path checkpointArchive = null;
-        try {
-            checkpointArchive = archiveState(checkpointId, name, snapshot);
+        try (StateArchive archive = new StateArchive()) {
+            // the goal here is to create a process state snapshot with
+            // a "synthetic" event that can be used to continue the process
+            // after the checkpoint step
 
-            Map<String, Object> data = new HashMap<>();
-            data.put("id", checkpointId);
-            data.put("name", name);
-            data.put("data", checkpointArchive);
+            String resumeEventRef = checkpointId.toString();
 
-            uploadCheckpoint(instanceId.getValue(), data);
+            State state = clone(snapshot.vmState());
+            state.setEventRef(threadId, resumeEventRef);
+            state.setStatus(threadId, ThreadStatus.SUSPENDED);
+
+            archive.withResumeEvent(resumeEventRef)
+                    .withProcessState(ProcessSnapshot.builder()
+                            .from(snapshot)
+                            .vmState(state)
+                            .build())
+                    .withSystemDirectory(workingDirectory.getValue());
+
+            try (TemporaryPath zip = archive.zip()) {
+                Map<String, Object> data = new HashMap<>();
+                data.put("id", checkpointId);
+                data.put("name", name);
+                data.put("data", zip.path());
+
+                uploadCheckpoint(instanceId.getValue(), data);
+            }
         } catch (Exception e) {
             throw new RuntimeException("Checkpoint upload error", e);
-        } finally {
-            if (checkpointArchive != null) {
-                try {
-                    Files.deleteIfExists(checkpointArchive);
-                } catch (IOException e) {
-                    log.warn("create ['{}'] -> cleanup error", name);
-                }
-            }
         }
 
         log.info("create ['{}'] -> done", name);
-    }
-
-    private Path archiveState(UUID checkpointId, String checkpointName, ProcessSnapshot snapshot) throws IOException {
-        // mark the snapshot as a "checkpoint" snapshot
-        // see Main#currentAction
-        snapshot = ProcessSnapshot.builder()
-                .from(snapshot)
-                .executionMode(ExecutionMode.CHECKPOINT_RESTORE)
-                .build();
-
-        Path checkpointDir = workingDirectory.getValue().resolve(Constants.Files.JOB_CHECKPOINTS_DIR_NAME);
-        if (!Files.exists(checkpointDir)) {
-            Files.createDirectories(checkpointDir);
-        }
-
-        Path result = checkpointDir.resolve(checkpointId + "_" + checkpointName + ".zip");
-        StateManager.archive(workingDirectory.getValue(), snapshot, result);
-        return result;
     }
 
     private void uploadCheckpoint(UUID instanceId, Map<String, Object> data) throws ApiException {
@@ -114,5 +112,26 @@ public class DefaultCheckpointService implements CheckpointService {
             ClientUtils.postData(apiClient, path, data, null);
             return null;
         });
+    }
+
+    private static void validate(ThreadId threadId, ProcessSnapshot snapshot) {
+        State state = snapshot.vmState();
+
+        String eventRef = state.getEventRefs().get(threadId);
+        if (eventRef != null) {
+            throw new IllegalStateException("Can't create a checkpoint, the current thread has an unprocessed eventRef: " + eventRef);
+        }
+    }
+
+    private static State clone(State state) throws Exception {
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        try (ObjectOutputStream oos = new ObjectOutputStream(baos)) {
+            oos.writeObject(state);
+        }
+
+        try (ByteArrayInputStream bais = new ByteArrayInputStream(baos.toByteArray());
+             ObjectInputStream ois = new ObjectInputStream(bais)) {
+            return (State) ois.readObject();
+        }
     }
 }

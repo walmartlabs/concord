@@ -32,11 +32,6 @@ public interface ProcessSnapshot extends Serializable {
 
     long serialVersionUID = 1L;
 
-    @Value.Default
-    default ExecutionMode executionMode() {
-        return ExecutionMode.REGULAR;
-    }
-
     State vmState();
 
     ProcessDefinition processDefinition();
