@@ -6,7 +6,7 @@
     <parent>
         <groupId>com.walmartlabs.concord.it</groupId>
         <artifactId>parent</artifactId>
-        <version>1.72.1-SNAPSHOT</version>
+        <version>1.73.0</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
 
