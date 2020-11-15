@@ -9,6 +9,8 @@ the process list.
 
 ### Changed
 
+- runtime-v2: fixed an issue when a parent process checkpoint
+was incorrectly applied to the process' forks;
 - concord-tasks: 'kill' shouldn't error on empty instanceId lists;
 - concord-tasks: fix common parameters not being inherited by
 `forks` in the runtime-v2 version of the `concord` task;
