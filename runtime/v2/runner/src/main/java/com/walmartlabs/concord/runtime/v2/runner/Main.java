@@ -137,28 +137,23 @@ public class Main {
         ProcessSnapshot snapshot = StateManager.readProcessState(workDir);
         Set<String> events = StateManager.readResumeEvents(workDir); // TODO make it an interface?
 
-        switch (currentAction(snapshot, events)) {
+        Action action = currentAction(snapshot, events);
+        switch (action) {
             case START: {
                 if (snapshot != null) {
                     // grab top-level variables from the snapshot and use them as process arguments
                     processArgs.putAll(getTopLevelVariables(snapshot));
                 }
 
-                snapshot = start(runner, workDir, processCfg, processArgs);
+                snapshot = start(runner, processCfg, workDir, processArgs);
                 break;
             }
             case RESUME: {
                 snapshot = resume(runner, processCfg, snapshot, processArgs, events);
                 break;
             }
-            case RESTART_FROM_A_CHECKPOINT: {
-                if (snapshot == null) {
-                    throw new IllegalStateException("Can't restart from a checkpoint without a ProcessSnapshot. " +
-                            "This is most likely a bug.");
-                }
-
-                snapshot = restart(runner, snapshot, processArgs);
-                break;
+            default: {
+                throw new IllegalStateException("Unsupported action: " + action);
             }
         }
 
@@ -199,7 +194,7 @@ public class Main {
         }
     }
 
-    private static ProcessSnapshot start(Runner runner, Path workDir, ProcessConfiguration cfg, Map<String, Object> args) throws Exception {
+    private static ProcessSnapshot start(Runner runner, ProcessConfiguration cfg, Path workDir, Map<String, Object> args) throws Exception {
         // assume all imports were processed by the agent
         ProjectLoaderV2 loader = new ProjectLoaderV2(new NoopImportManager());
         ProcessDefinition processDefinition = loader.load(workDir, new NoopImportsNormalizer()).getProjectDefinition();
@@ -212,11 +207,6 @@ public class Main {
         }
 
         return runner.start(cfg, processDefinition, args);
-    }
-
-    private static ProcessSnapshot restart(Runner runner, ProcessSnapshot snapshot, Map<String, Object> args) throws Exception {
-
-        return runner.resume(snapshot, args);
     }
 
     private static ProcessSnapshot resume(Runner runner, ProcessConfiguration cfg,
@@ -257,11 +247,6 @@ public class Main {
     }
 
     private static Action currentAction(ProcessSnapshot snapshot, Set<String> events) {
-        if (snapshot != null && snapshot.executionMode() == ExecutionMode.CHECKPOINT_RESTORE) {
-            // restoring from a checkpoint, see ProcessManager#restoreFromCheckpoint
-            return Action.RESTART_FROM_A_CHECKPOINT;
-        }
-
         if (events != null && !events.isEmpty()) {
             return Action.RESUME;
         }
@@ -281,11 +266,5 @@ public class Main {
          * Previous state + an event ref.
          */
         RESUME,
-
-        /**
-         * Restarting from a previously created checkpoint.
-         * Previous state, no events.
-         */
-        RESTART_FROM_A_CHECKPOINT
     }
 }

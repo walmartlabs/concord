@@ -45,6 +45,7 @@ import com.walmartlabs.concord.runtime.v2.sdk.*;
 import com.walmartlabs.concord.sdk.Constants;
 import com.walmartlabs.concord.svm.ExecutionListener;
 import com.walmartlabs.concord.svm.Runtime;
+import com.walmartlabs.concord.svm.ThreadId;
 import org.immutables.value.Value;
 import org.junit.After;
 import org.junit.Before;
@@ -251,7 +252,7 @@ public class MainTest {
         assertLog(log, ".*Hello, Concord!.*");
 
         verify(processStatusCallback, times(1)).onRunning(eq(instanceId));
-        verify(checkpointService, times(1)).create(eq("A"), any(), any());
+        verify(checkpointService, times(1)).create(any(), eq("A"), any(), any());
     }
 
     @Test
@@ -765,7 +766,7 @@ public class MainTest {
                 .build());
 
         run();
-        verify(checkpointService, times(1)).create(eq("test_123"), any(Runtime.class), any(ProcessSnapshot.class));
+        verify(checkpointService, times(1)).create(any(ThreadId.class), eq("test_123"), any(Runtime.class), any(ProcessSnapshot.class));
     }
 
     @Test
@@ -778,8 +779,8 @@ public class MainTest {
 
         run();
 
-        verify(checkpointService, times(1)).create(eq("first"), any(Runtime.class), any(ProcessSnapshot.class));
-        verify(checkpointService, times(1)).create(eq("second"), any(Runtime.class), any(ProcessSnapshot.class));
+        verify(checkpointService, times(1)).create(any(ThreadId.class), eq("first"), any(Runtime.class), any(ProcessSnapshot.class));
+        verify(checkpointService, times(1)).create(any(ThreadId.class), eq("second"), any(Runtime.class), any(ProcessSnapshot.class));
 
         Serializable firstCheckpoint = checkpointService.getCheckpoints().get("first");
         assertNotNull(firstCheckpoint);
