@@ -9,6 +9,7 @@ the process list.
 
 ### Changed
 
+- concord-tasks: 'kill' shouldn't error on empty instanceId lists;
 - concord-tasks: fix common parameters not being inherited by
 `forks` in the runtime-v2 version of the `concord` task;
 - runtime-v1, runtime-v2: avoid reading partially written
