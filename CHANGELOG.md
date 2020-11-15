@@ -1,5 +1,27 @@
 # Change log
 
+## [Unreleased]
+
+### Added
+
+- concord-console: `entryPoint` can now be used as a column in
+the process list.
+
+### Changed
+
+- runtime-v2: fixed an issue when a parent process checkpoint
+was incorrectly applied to the process' forks;
+- concord-tasks: 'kill' shouldn't error on empty instanceId lists;
+- concord-tasks: fix common parameters not being inherited by
+`forks` in the runtime-v2 version of the `concord` task;
+- runtime-v1, runtime-v2: avoid reading partially written
+`instanceId` files;
+- concord-server: allow null values when merging policies;
+- runtime-v2: fixed the merging of multiple Concord YAML files
+(e.g. `configuration.events` blocks and others).
+
+
+
 ## [1.72.0] - 2020-11-09
 
 ### Added
