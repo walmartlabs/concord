@@ -66,7 +66,7 @@ public class StateArchive implements AutoCloseable {
             Path src = workDir.resolve(Constants.Files.CONCORD_SYSTEM_DIR_NAME);
 
             Path dst = dir.path().resolve(Constants.Files.CONCORD_SYSTEM_DIR_NAME);
-            if (Files.exists(dst)) {
+            if (!Files.exists(dst)) {
                 Files.createDirectories(dst);
             }
 
