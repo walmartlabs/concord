@@ -409,10 +409,6 @@ public class ConcordTaskParams {
                 throw new IllegalArgumentException("'" + INSTANCE_ID_KEY + "' should be a single string, an UUID value or an array of strings or UUIDs: " + v);
             }
 
-            if (ids.isEmpty()) {
-                throw new IllegalArgumentException("'" + INSTANCE_ID_KEY + "' should be a single value or an array of values: " + ids);
-            }
-
             return ids;
         }
 
