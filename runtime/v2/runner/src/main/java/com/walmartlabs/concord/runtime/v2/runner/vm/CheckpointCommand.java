@@ -58,7 +58,7 @@ public class CheckpointCommand extends StepCommand<Checkpoint> {
 
             // TODO validate checkpoint name
 
-            checkpointService.create(name, runtime, ProcessSnapshot.builder()
+            checkpointService.create(threadId, name, runtime, ProcessSnapshot.builder()
                     .vmState(state)
                     .processDefinition(processDefinition)
                     .build());

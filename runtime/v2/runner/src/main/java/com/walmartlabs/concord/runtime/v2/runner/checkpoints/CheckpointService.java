@@ -22,8 +22,9 @@ package com.walmartlabs.concord.runtime.v2.runner.checkpoints;
 
 import com.walmartlabs.concord.runtime.v2.runner.ProcessSnapshot;
 import com.walmartlabs.concord.svm.Runtime;
+import com.walmartlabs.concord.svm.ThreadId;
 
 public interface CheckpointService {
 
-    void create(String name, Runtime runtime, ProcessSnapshot snapshot);
+    void create(ThreadId threadId, String name, Runtime runtime, ProcessSnapshot snapshot);
 }
