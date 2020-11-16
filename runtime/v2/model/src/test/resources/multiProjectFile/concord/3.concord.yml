@@ -1,0 +1,11 @@
+flows:
+  flowN3:
+    - log: "bye!"
+
+forms:
+  myForm:
+    - myName3: {type: "string"}
+
+resources:
+  concord:
+    - "glob:tmp/1.yml"

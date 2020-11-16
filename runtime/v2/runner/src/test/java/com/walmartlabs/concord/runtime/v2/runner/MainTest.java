@@ -45,6 +45,7 @@ import com.walmartlabs.concord.runtime.v2.sdk.*;
 import com.walmartlabs.concord.sdk.Constants;
 import com.walmartlabs.concord.svm.ExecutionListener;
 import com.walmartlabs.concord.svm.Runtime;
+import com.walmartlabs.concord.svm.ThreadId;
 import org.immutables.value.Value;
 import org.junit.After;
 import org.junit.Before;
@@ -70,6 +71,7 @@ import java.util.stream.Collectors;
 
 import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
+import static java.util.regex.Pattern.quote;
 
 public class MainTest {
 
@@ -250,7 +252,7 @@ public class MainTest {
         assertLog(log, ".*Hello, Concord!.*");
 
         verify(processStatusCallback, times(1)).onRunning(eq(instanceId));
-        verify(checkpointService, times(1)).create(eq("A"), any(), any());
+        verify(checkpointService, times(1)).create(any(), eq("A"), any(), any());
     }
 
     @Test
@@ -481,25 +483,15 @@ public class MainTest {
     }
 
     @Test
-    public void testWithItemsOut() throws Exception {
-        deploy("withItemsOut");
+    public void testParallelWithItemsTask() throws Exception {
+        deploy("parallelWithItemsTask");
 
         save(ProcessConfiguration.builder()
                 .build());
 
         byte[] log = run();
         assertLog(log, ".*result: \\[10, 20, 30\\].*");
-    }
-
-    @Test
-    public void testWithItemsTaskOut() throws Exception {
-        deploy("withItemsTaskOut");
-
-        save(ProcessConfiguration.builder()
-                .build());
-
-        byte[] log = run();
-        assertLog(log, ".*result: \\[10, 20, 30\\].*");
+        assertLog(log, ".*threadIds: \\[1, 2, 3].*");
     }
 
     @Test
@@ -511,6 +503,20 @@ public class MainTest {
 
         byte[] log = run();
         assertLog(log, ".*result: \\[10, 20, 30\\].*");
+    }
+
+    @Test
+    public void testWithItemsSet() throws Exception {
+        deploy("withItemsSet");
+
+        save(ProcessConfiguration.builder()
+                .build());
+
+        byte[] log = run();
+        assertLogAtLeast(log, 3,".*empty: \\[\\].*");
+        assertLog(log, ".*after add: \\[1\\].*");
+        assertLog(log, ".*after add: \\[2\\].*");
+        assertLog(log, ".*after add: \\[3\\].*");
     }
 
     @Test
@@ -624,8 +630,23 @@ public class MainTest {
                 .build());
 
         byte[] log = run();
-        assertLog(log, ".*" + Pattern.quote("single out a=a-value") + ".*");
-        assertLog(log, ".*" + Pattern.quote("array out a=a-value, b=b-value") + ".*");
+        assertLog(log, ".*" + quote("single out a=a-value") + ".*");
+        assertLog(log, ".*" + quote("array out a=a-value, b=b-value") + ".*");
+        assertLog(log, ".*" + quote("expression out a=a-value, xx=123, zz=10000") + ".*");
+    }
+
+    @Test
+    public void testCallOutWithItems() throws Exception {
+        deploy("callOutWithItems");
+
+        save(ProcessConfiguration.builder()
+                .build());
+
+        byte[] log = run();
+        assertLog(log, ".*" + quote("single out x=[10, 20, 30]") + ".*");
+        assertLog(log, ".*" + quote("array out: x=[10, 20, 30]") + ".*");
+        assertLog(log, ".*" + quote("expression out: x=[10, 20, 30]") + ".*");
+        assertLog(log, ".*" + quote("expression out: xx=[100, 200, 300]") + ".*");
     }
 
     @Test
@@ -676,6 +697,18 @@ public class MainTest {
     }
 
     @Test
+    public void testParallelOutExpr() throws Exception {
+        deploy("parallelOutExpr");
+
+        save(ProcessConfiguration.builder()
+                .build());
+
+        byte[] log = run();
+        assertLog(log, ".*x: 123.*");
+        assertLog(log, ".*y: \\{inner=234\\}.*");
+    }
+
+    @Test
     public void testReentrant() throws Exception {
         deploy("reentrantTask");
         save(ProcessConfiguration.builder()
@@ -689,6 +722,7 @@ public class MainTest {
         assertLog(log, ".*result.ok: true.*");
         assertLog(log, ".*result.action: boo.*");
         assertLog(log, ".*result.k: v.*");
+        assertLog(log, ".*resultAction: boo.*");
     }
 
     @Test
@@ -735,7 +769,7 @@ public class MainTest {
                 .build());
 
         run();
-        verify(checkpointService, times(1)).create(eq("test_123"), any(Runtime.class), any(ProcessSnapshot.class));
+        verify(checkpointService, times(1)).create(any(ThreadId.class), eq("test_123"), any(Runtime.class), any(ProcessSnapshot.class));
     }
 
     @Test
@@ -748,8 +782,8 @@ public class MainTest {
 
         run();
 
-        verify(checkpointService, times(1)).create(eq("first"), any(Runtime.class), any(ProcessSnapshot.class));
-        verify(checkpointService, times(1)).create(eq("second"), any(Runtime.class), any(ProcessSnapshot.class));
+        verify(checkpointService, times(1)).create(any(ThreadId.class), eq("first"), any(Runtime.class), any(ProcessSnapshot.class));
+        verify(checkpointService, times(1)).create(any(ThreadId.class), eq("second"), any(Runtime.class), any(ProcessSnapshot.class));
 
         Serializable firstCheckpoint = checkpointService.getCheckpoints().get("first");
         assertNotNull(firstCheckpoint);
@@ -772,6 +806,41 @@ public class MainTest {
 
         byte[] log = run();
         assertLog(log, ".*it's null.*");
+    }
+
+    @Test
+    public void testTaskOut() throws Exception {
+        deploy("taskOut");
+
+        save(ProcessConfiguration.builder()
+                .build());
+
+        byte[] log = run();
+        assertLog(log, ".*" + quote("single out x.ok=true") + ".*");
+        assertLog(log, ".*" + quote("single out x.k=some-value") + ".*");
+        assertLog(log, ".*" + quote("expression out x=some-value") + ".*");
+    }
+
+    @Test
+    public void testTaskOutWithItems() throws Exception {
+        deploy("taskOutWithItems");
+
+        save(ProcessConfiguration.builder()
+                .build());
+
+        byte[] log = run();
+        assertLog(log, ".*" + quote("single out x=[10, 20, 30]") + ".*");
+    }
+
+    @Test
+    public void testExprOutExpression() throws Exception {
+        deploy("exprOutExpr");
+
+        save(ProcessConfiguration.builder()
+                .build());
+
+        byte[] log = run();
+        assertLog(log, ".*result: v.*");
     }
 
     private void deploy(String resource) throws URISyntaxException, IOException {
@@ -960,7 +1029,8 @@ public class MainTest {
 
         @Override
         public TaskResult execute(Variables input) {
-            return TaskResult.success().value("result", input.get("result"));
+            return TaskResult.success()
+                    .value("result", input.get("result"));
         }
     }
 

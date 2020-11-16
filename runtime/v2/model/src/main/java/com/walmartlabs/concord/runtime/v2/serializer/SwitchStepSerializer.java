@@ -34,6 +34,8 @@ import static com.walmartlabs.concord.runtime.v2.serializer.SerializerUtils.writ
 
 public class SwitchStepSerializer extends StdSerializer<SwitchStep> {
 
+    private static final long serialVersionUID = 1L;
+
     public SwitchStepSerializer() {
         this(null);
     }

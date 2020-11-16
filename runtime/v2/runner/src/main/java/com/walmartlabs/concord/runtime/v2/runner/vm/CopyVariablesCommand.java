@@ -24,6 +24,7 @@ import com.walmartlabs.concord.svm.Runtime;
 import com.walmartlabs.concord.svm.*;
 
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -38,7 +39,7 @@ public class CopyVariablesCommand implements Command {
     private final Frame targetFrame;
 
     public CopyVariablesCommand(List<String> variables, Frame sourceFrame, Frame targetFrame) {
-        this.variables = variables;
+        this.variables = new ArrayList<>(variables);
         this.sourceFrame = sourceFrame;
         this.targetFrame = targetFrame;
     }

@@ -20,12 +20,13 @@ package com.walmartlabs.concord.runtime.v2;
  * =====
  */
 
+import com.walmartlabs.concord.common.ConfigurationUtils;
 import com.walmartlabs.concord.common.IOUtils;
+import com.walmartlabs.concord.imports.Import;
 import com.walmartlabs.concord.imports.ImportManager;
 import com.walmartlabs.concord.imports.Imports;
 import com.walmartlabs.concord.repository.Snapshot;
-import com.walmartlabs.concord.runtime.v2.model.ProcessDefinition;
-import com.walmartlabs.concord.runtime.v2.model.Resources;
+import com.walmartlabs.concord.runtime.v2.model.*;
 import com.walmartlabs.concord.runtime.v2.parser.YamlParserV2;
 import com.walmartlabs.concord.sdk.Constants;
 
@@ -163,14 +164,40 @@ public class ProjectLoaderV2 {
             throw new IllegalArgumentException("Definitions is empty");
         }
 
-        ProcessDefinition result = definitions.get(0);
-        for (int i = 1; i < definitions.size(); i++) {
-            ProcessDefinition pd = definitions.get(i);
+        Map<String, List<Step>> flows = new HashMap<>();
+        Map<String, Profile> profiles = new HashMap<>();
+        List<Trigger> triggers = new ArrayList<>();
+        List<Import> imports = new ArrayList<>();
+        Map<String, Form> forms = new HashMap<>();
+        Set<String> resources = new HashSet<>();
+        Set<String> dependencies = new HashSet<>();
+        Map<String, Object> arguments = new HashMap<>();
 
-            result = ProcessDefinition.merge(result, pd);
+        for (ProcessDefinition pd : definitions) {
+            flows.putAll(pd.flows());
+            profiles.putAll(pd.profiles());
+            triggers.addAll(pd.triggers());
+            imports.addAll(pd.imports().items());
+            forms.putAll(pd.forms());
+            resources.addAll(pd.resources().concord());
+            dependencies.addAll(pd.configuration().dependencies());
+            arguments = ConfigurationUtils.deepMerge(arguments, pd.configuration().arguments());
         }
 
-        return result;
+        ProcessDefinition root = definitions.get(definitions.size() - 1);
+
+        return ProcessDefinition.builder().from(root)
+                .configuration(ProcessDefinitionConfiguration.builder().from(root.configuration())
+                        .dependencies(dependencies)
+                        .arguments(arguments)
+                        .build())
+                .flows(flows)
+                .profiles(profiles)
+                .triggers(triggers)
+                .imports(Imports.of(imports))
+                .forms(forms)
+                .resources(Resources.builder().concord(resources).build())
+                .build();
     }
 
     private static String concat(Path path, String str) {

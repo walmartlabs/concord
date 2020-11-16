@@ -1,5 +1,38 @@
+imports:
+  - git:
+      url: "2.concord.yml"
+
 configuration:
+  debug: false
+  activeProfiles:
+    - "2.concord.yml"
   arguments:
     abc: "ttt"
     nested:
       value: "1232"
+  dependencies:
+    - "2.concord.yml"
+  meta:
+    k: "concord.yml"
+  events:
+    recordTaskInVars: false
+    recordTaskOutVars: false
+    truncateInVars: false
+    truncateOutVars: false
+    truncateMaxStringLength: 10
+    truncateMaxArrayLength: 20
+    truncateMaxDepth: 30
+    inVarsBlacklist:
+      - "2.concord.yml"
+  requirements:
+    k: "2.concord.yml"
+  out:
+    - "from-2.concord.yml"
+
+triggers:
+  - github:
+      entryPoint: "2.concord.yml"
+      version: 2
+      conditions:
+        sender: ".*some.*dude.*"
+        type: "push"

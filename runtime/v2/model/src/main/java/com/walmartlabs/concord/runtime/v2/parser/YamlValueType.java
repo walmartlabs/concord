@@ -96,6 +96,10 @@ public final class YamlValueType<T> {
     public static final YamlValueType<Resources> RESOURCES = type("RESOURCES");
     public static final YamlValueType<ExclusiveModeConfiguration> EXCLUSIVE_MODE = type("EXCLUSIVE_MODE");
     public static final YamlValueType<EventConfiguration> EVENTS_CFG = type("EVENTS_CONFIGURATION");
+    public static final YamlValueType<ImmutableTaskCallOptions.Builder> TASK_CALL_OUT = type("STRING or OBJECT");
+    public static final YamlValueType<ImmutableExpressionOptions.Builder> EXPRESSION_CALL_OUT = type("STRING or OBJECT");
+    public static final YamlValueType<ImmutableFlowCallOptions.Builder> FLOW_CALL_OUT = type("STRING or ARRAY_OF_STRING or OBJECT");
+    public static final YamlValueType<ImmutableParallelBlockOptions.Builder> PARALLEL_BLOCK_OUT = type("STRING or ARRAY_OF_STRING or OBJECT");
 
     private final String name;
 

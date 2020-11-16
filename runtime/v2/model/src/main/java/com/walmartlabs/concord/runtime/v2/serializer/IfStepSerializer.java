@@ -31,6 +31,8 @@ import static com.walmartlabs.concord.runtime.v2.serializer.SerializerUtils.writ
 
 public class IfStepSerializer extends StdSerializer<IfStep> {
 
+    private static final long serialVersionUID = 1L;
+
     public IfStepSerializer() {
         this(null);
     }

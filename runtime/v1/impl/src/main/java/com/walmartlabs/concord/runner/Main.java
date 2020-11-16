@@ -99,17 +99,11 @@ public class Main {
         long t1 = System.currentTimeMillis();
 
         Path idPath = baseDir.resolve(Constants.Files.INSTANCE_ID_FILE_NAME);
-        while (!Files.exists(idPath)) {
-            // TODO replace with WatchService
-            Thread.sleep(100);
-        }
-
+        UUID instanceId = readInstanceId(idPath);
         long t2 = System.currentTimeMillis();
         if (runnerCfg.debug()) {
             log.info("Spent {}ms waiting for the payload", (t2 - t1));
         }
-
-        UUID instanceId = readInstanceId(idPath);
 
         Map<String, Object> policy = readPolicyRules(baseDir);
         if (policy.isEmpty()) {
@@ -226,18 +220,29 @@ public class Main {
         }
     }
 
+    @SuppressWarnings("BusyWait")
     private static UUID readInstanceId(Path src) {
-        String s;
-        try {
-            s = new String(Files.readAllBytes(src));
-        } catch (Exception e) {
-            throw new IllegalArgumentException("Error while reading " + src.toAbsolutePath() + ": " + e.getMessage());
-        }
+        long errorCount = 0;
+        while (true) {
+            byte[] id = readIfExists(src);
+            if (id != null && id.length > 0) {
+                String s = new String(id);
+                try {
+                    return UUID.fromString(s.trim());
+                } catch (IllegalArgumentException e) {
+                    errorCount++;
+                    if (errorCount % 10 == 0) {
+                        log.warn("waitForInstanceId ['{}'] -> value: '{}', error: {}", src, s, e.getMessage());
+                    }
+                }
+            }
 
-        try {
-            return UUID.fromString(s);
-        } catch (IllegalArgumentException e) {
-            throw new IllegalArgumentException("Can't parse " + src.toAbsolutePath() + ": " + e.getMessage());
+            // we are not using WatchService as it has issues when running in Docker
+            try {
+                Thread.sleep(100);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            }
         }
     }
 
@@ -652,9 +657,17 @@ public class Main {
 
     private static void saveLastError(Path baseDir, Throwable t) {
         Path attachmentsDir = baseDir.resolve(Constants.Files.JOB_ATTACHMENTS_DIR_NAME);
+        Path stateDir = attachmentsDir.resolve(Constants.Files.JOB_STATE_DIR_NAME);
+        try {
+            if (Files.notExists(stateDir)) {
+                Files.createDirectories(stateDir);
+            }
+        } catch (Throwable e) {
+            log.error("Can't create attachments dir: {}", e.getMessage());
+            return;
+        }
 
-        Path dst = attachmentsDir.resolve(Constants.Files.JOB_STATE_DIR_NAME)
-                .resolve(Constants.Files.LAST_ERROR_FILE_NAME);
+        Path dst = stateDir.resolve(Constants.Files.LAST_ERROR_FILE_NAME);
 
         try (OutputStream out = Files.newOutputStream(dst, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING)) {
             SerializationUtils.serialize(out, t);
@@ -672,6 +685,18 @@ public class Main {
             OutVariablesParser.write(attachmentsDir, result);
         } catch (Throwable e) {
             log.error("Can't write out variables: {}", e.getMessage());
+        }
+    }
+
+    private static byte[] readIfExists(Path p) {
+        try {
+            if (Files.notExists(p)) {
+                return null;
+            }
+            return Files.readAllBytes(p);
+        } catch (Exception e) {
+            log.warn("readIfExists ['{}'] -> error: {}", p, e.getMessage());
+            return null;
         }
     }
 

@@ -111,6 +111,13 @@ export const TAGS_COLUMN: ColumnDefinition = {
     render: RenderType.STRING_ARRAY
 };
 
+export const ENTRY_POINT_COLUMN: ColumnDefinition = {
+    caption: 'Entry Point',
+    source: 'meta.entryPoint',
+    searchValueType: 'string',
+    searchType: 'substring'
+};
+
 interface Entry extends ProcessEntry {
     checked: boolean;
 }
@@ -211,7 +218,11 @@ const renderColumnContent = (e: Entry, c: ColumnDefinition) => {
             }
         }
         default: {
-            return v;
+            if (c.searchValueType === 'boolean') {
+                return <Checkbox type="checkbox" checked={v} readOnly={true} disabled={true} />;
+            } else {
+                return v;
+            }
         }
     }
 };

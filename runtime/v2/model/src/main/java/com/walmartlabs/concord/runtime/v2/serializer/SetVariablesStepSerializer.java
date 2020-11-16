@@ -29,6 +29,8 @@ import java.io.IOException;
 
 public class SetVariablesStepSerializer extends StdSerializer<SetVariablesStep> {
 
+    private static final long serialVersionUID = 1L;
+
     public SetVariablesStepSerializer() {
         this(null);
     }

@@ -15,7 +15,20 @@ flows:
 
     - log: "array out a=${a}, b=${b}"
 
+    # expression out
+    - call: myFlow
+      out:
+        a: ${a}
+        xx: ${x.y}
+        zz: ${z * 100}
+
+    - log: "expression out a=${a}, xx=${xx}, zz=${zz}"
+
   myFlow:
     - set:
         a: "a-value"
         b: "b-value"
+        x:
+          y: 123
+        z: 100
+

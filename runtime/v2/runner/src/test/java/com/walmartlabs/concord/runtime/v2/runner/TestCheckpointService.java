@@ -22,6 +22,7 @@ package com.walmartlabs.concord.runtime.v2.runner;
 
 import com.walmartlabs.concord.runtime.v2.runner.checkpoints.CheckpointService;
 import com.walmartlabs.concord.svm.Runtime;
+import com.walmartlabs.concord.svm.ThreadId;
 
 import java.io.*;
 import java.util.Collections;
@@ -33,7 +34,7 @@ public class TestCheckpointService implements CheckpointService {
     private final Map<String, Serializable> checkpoints = new ConcurrentHashMap<>();
 
     @Override
-    public void create(String name, Runtime runtime, ProcessSnapshot snapshot) {
+    public void create(ThreadId threadId, String name, Runtime runtime, ProcessSnapshot snapshot) {
         // roundtrip through the serialization to create a copy
         try {
             ByteArrayOutputStream baos = new ByteArrayOutputStream();

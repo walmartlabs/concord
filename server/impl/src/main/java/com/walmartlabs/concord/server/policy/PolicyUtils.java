@@ -24,6 +24,8 @@ import com.walmartlabs.concord.process.loader.model.Trigger;
 import com.walmartlabs.concord.server.org.OrganizationEntry;
 import com.walmartlabs.concord.server.org.jsonstore.JsonStoreVisibility;
 import com.walmartlabs.concord.server.org.project.ProjectEntry;
+import com.walmartlabs.concord.server.org.project.RepositoryEntry;
+import com.walmartlabs.concord.server.org.secret.SecretEntry;
 import com.walmartlabs.concord.server.org.secret.SecretType;
 import com.walmartlabs.concord.server.org.secret.SecretVisibility;
 import com.walmartlabs.concord.server.user.UserEntry;
@@ -66,13 +68,30 @@ public final class PolicyUtils {
         return m;
     }
 
+    public static Map<String, Object> toMap(UUID orgId, String orgName, UUID projectId, String projectName, RepositoryEntry repo, SecretEntry secret) {
+        Map<String, Object> m = new HashMap<>();
+        m.put("orgId", orgId);
+        m.put("orgName", orgName);
+        m.put("projectId", projectId);
+        m.put("projectName", projectName);
+        m.put("name", repo.getName());
+        m.put("url", repo.getUrl());
+        m.put("branch", repo.getBranch());
+        if (secret != null) {
+            m.put("secret", toMap(secret.getOrgId(), secret.getName(), secret.getType(), secret.getVisibility(), secret.getStoreType()));
+        }
+        return m;
+    }
+
     public static Map<String, Object> toMap(UUID orgId, String secretName, SecretType type,
                                             SecretVisibility visibility, String storeType) {
 
         Map<String, Object> m = new HashMap<>();
         m.put("name", secretName);
         m.put("orgId", orgId);
-        m.put("type", type);
+        if (type != null) {
+            m.put("type", type.name());
+        }
         if (visibility != null) {
             m.put("visibility", visibility.name());
         }

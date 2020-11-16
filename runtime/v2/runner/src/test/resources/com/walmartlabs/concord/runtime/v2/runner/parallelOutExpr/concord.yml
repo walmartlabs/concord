@@ -1,0 +1,17 @@
+flows:
+  default:
+    - parallel:
+        - set:
+            x:
+              inner: 123
+
+        - set:
+            y:
+              inner:
+                234
+      out:
+        x: ${x.inner}
+        y: ${y}
+
+    - log: "x: ${x}"
+    - log: "y: ${y}"

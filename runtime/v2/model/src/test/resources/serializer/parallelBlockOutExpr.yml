@@ -1,0 +1,14 @@
+parallel:
+- checkpoint: "ch1"
+  meta:
+    meta-1: "v1"
+    meta-2: "v2"
+- checkpoint: "ch2"
+  meta:
+    meta-1: "v1"
+    meta-2: "v2"
+out:
+  out: "${expr}"
+meta:
+  meta-1: "v1"
+  meta-2: "v2"

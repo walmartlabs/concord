@@ -22,6 +22,7 @@ package com.walmartlabs.concord.it.runtime.v2;
 
 import ca.ibodrov.concord.testcontainers.ConcordProcess;
 import ca.ibodrov.concord.testcontainers.Payload;
+import ca.ibodrov.concord.testcontainers.ProcessListQuery;
 import ca.ibodrov.concord.testcontainers.junit4.ConcordRule;
 import com.walmartlabs.concord.client.FormListEntry;
 import com.walmartlabs.concord.client.FormSubmitResponse;
@@ -30,10 +31,7 @@ import com.walmartlabs.concord.client.ProcessEntry;
 import org.junit.ClassRule;
 import org.junit.Test;
 
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import static com.walmartlabs.concord.it.common.ITUtils.randomString;
 import static com.walmartlabs.concord.it.runtime.v2.ITConstants.DEFAULT_TEST_TIMEOUT;
@@ -104,9 +102,10 @@ public class ProcessIT {
         proc.assertLog(".*Hello, Concord!.*");
 
         assertNotNull(pe.getMeta());
-        assertEquals(3, pe.getMeta().size()); // 2 + plus system meta
+        assertEquals(4, pe.getMeta().size()); // 2 + plus system meta + entryPoint
         assertEquals("init-value", pe.getMeta().get("test"));
         assertEquals("xxx", pe.getMeta().get("myForm.action"));
+        assertEquals("default", pe.getMeta().get("entryPoint"));
 
         // ---
 
@@ -126,9 +125,10 @@ public class ProcessIT {
         proc.assertLog(".*Action: Reject.*");
 
         assertNotNull(pe.getMeta());
-        assertEquals(3, pe.getMeta().size()); // 2 + plus system meta
+        assertEquals(4, pe.getMeta().size()); // 2 + plus system meta + entryPoint
         assertEquals("init-value", pe.getMeta().get("test"));
         assertEquals("Reject", pe.getMeta().get("myForm.action"));
+        assertEquals("default", pe.getMeta().get("entryPoint"));
     }
 
     @Test(timeout = DEFAULT_TEST_TIMEOUT)
@@ -282,5 +282,73 @@ public class ProcessIT {
 
         proc.assertLog(".*#1 BEFORE: false.*");
         proc.assertLog(".*#2 AFTER: false.*");
+    }
+
+    @Test
+    public void testForkCheckpoints() throws Exception {
+        String forkTag = "fork_" + randomString();
+
+        Payload payload = new Payload()
+                .arg("forkTag", forkTag)
+                .archive(ProcessIT.class.getResource("forkCheckpoints").toURI());
+
+        ConcordProcess parent = concord.processes().start(payload);
+        parent.expectStatus(ProcessEntry.StatusEnum.FINISHED);
+        parent.assertLog(".*#1.*");
+        parent.assertLog(".*#2.*");
+
+        // ---
+
+        List<ProcessEntry> children = concord.processes().list(ProcessListQuery.builder()
+                .parentInstanceId(parent.instanceId())
+                .limit(10)
+                .build());
+
+        assertEquals(1, children.size());
+
+        ProcessEntry fork = children.get(0);
+        assertEquals(fork.getTags().get(0), forkTag);
+
+        // ---
+
+        List<ProcessCheckpointEntry> checkpoints = parent.checkpoints();
+        assertEquals(1, checkpoints.size());
+
+        parent.restoreCheckpoint(checkpoints.get(0).getId());
+        parent.expectStatus(ProcessEntry.StatusEnum.FINISHED);
+
+        // ---
+
+        children = concord.processes().list(ProcessListQuery.builder()
+                .parentInstanceId(parent.instanceId())
+                .limit(10)
+                .build());
+
+        assertEquals(2, children.size());
+
+        // ---
+
+        for (ProcessEntry child : children) {
+            ConcordProcess proc = concord.processes().get(child.getInstanceId());
+            proc.assertNoLog(".*#1.*");
+            proc.assertNoLog(".*#2.*");
+            proc.assertLog(".*#3.*");
+        }
+    }
+
+    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    public void testLastErrorSave() throws Exception {
+        Payload payload = new Payload()
+                .archive(ProcessIT.class.getResource("failProcess").toURI());
+
+        ConcordProcess proc = concord.processes().start(payload);
+
+        proc.expectStatus(ProcessEntry.StatusEnum.FAILED);
+
+        // ---
+
+        Map<String, Object> data = proc.getOutVariables();
+        assertNotNull(data);
+        assertEquals(Collections.singletonMap("message", "BOOM"), data.get("lastError"));
     }
 }

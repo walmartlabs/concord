@@ -162,7 +162,13 @@ public class ConcordTaskCommon {
     }
 
     public void kill(KillParams in) throws Exception {
-        for (UUID id : in.ids()) {
+        List<UUID> instanceIds = in.ids();
+        if (instanceIds.isEmpty()) {
+            log.warn("kill: no process IDs specified, nothing to do.");
+            return;
+        }
+
+        for (UUID id : instanceIds) {
             withClient(client -> {
                 ProcessApi api = new ProcessApi(client);
                 api.kill(id);

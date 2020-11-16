@@ -20,9 +20,6 @@ package com.walmartlabs.concord.runtime.v2.sdk;
  * =====
  */
 
-import com.walmartlabs.concord.runtime.v2.model.Step;
-import com.walmartlabs.concord.runtime.v2.model.TaskCall;
-
 import javax.annotation.Nullable;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -31,7 +28,6 @@ import java.io.Serializable;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Objects;
 
 public interface TaskResult extends Serializable {
 
@@ -71,8 +67,6 @@ public interface TaskResult extends Serializable {
     static TaskResult reentrantSuspend(String eventName, Map<String, Serializable> payload) {
         return new ReentrantSuspendResult(eventName, payload);
     }
-
-    void handle(Context ctx);
 
     /**
      * Result of a task call. Provides some common fields such as {@link #ok()}
@@ -127,22 +121,6 @@ public interface TaskResult extends Serializable {
             return this;
         }
 
-        @Override
-        public void handle(Context ctx) {
-            Step step = ctx.execution().currentStep();
-            if (!(step instanceof TaskCall)) {
-                throw new IllegalStateException("Unexpected current step: " + step + ". This is most likely a bug.");
-            }
-
-            TaskCall taskCall = (TaskCall) step;
-            String out = Objects.requireNonNull(taskCall.getOptions()).out();
-            if (out != null) {
-                Map<String, Object> m = toMap();
-                m.put("threadId", ctx.execution().currentThreadId().id());
-                ctx.variables().set(out, m);
-            }
-        }
-
         /**
          * Returns a combined map of all values plus additional fields:
          * <ul>
@@ -173,11 +151,6 @@ public interface TaskResult extends Serializable {
         public String eventName() {
             return eventName;
         }
-
-        @Override
-        public void handle(Context ctx) {
-            ctx.suspend(eventName);
-        }
     }
 
     class ReentrantSuspendResult implements TaskResult {
@@ -196,11 +169,6 @@ public interface TaskResult extends Serializable {
 
         public Map<String, Serializable> payload() {
             return payload;
-        }
-
-        @Override
-        public void handle(Context ctx) {
-            ctx.reentrantSuspend(eventName, payload);
         }
     }
 

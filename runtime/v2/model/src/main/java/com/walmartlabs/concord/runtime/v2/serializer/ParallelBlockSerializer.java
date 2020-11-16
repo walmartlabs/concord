@@ -32,6 +32,8 @@ import static com.walmartlabs.concord.runtime.v2.serializer.SerializerUtils.writ
 
 public class ParallelBlockSerializer extends StdSerializer<ParallelBlock> {
 
+    private static final long serialVersionUID = 1L;
+
     public ParallelBlockSerializer() {
         this(null);
     }
@@ -56,6 +58,7 @@ public class ParallelBlockSerializer extends StdSerializer<ParallelBlock> {
         }
 
         writeNotEmptyObjectField("out", options.out(), gen);
+        writeNotEmptyObjectField("out", options.outExpr(), gen);
         writeNotEmptyObjectField("meta", options.meta(), gen);
     }
 }

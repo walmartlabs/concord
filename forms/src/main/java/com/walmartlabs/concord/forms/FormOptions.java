@@ -49,6 +49,11 @@ public interface FormOptions extends Serializable {
         return Collections.emptyMap();
     }
 
+    @Value.Default
+    default Map<String, Serializable> extraValues() {
+        return Collections.emptyMap();
+    }
+
     static ImmutableFormOptions.Builder builder() {
         return ImmutableFormOptions.builder();
     }

@@ -1,0 +1,23 @@
+flows:
+  default:
+    # single out
+    - task: resultTask
+      in:
+        result: "${item * 10}"
+      out: x
+      withItems:
+        - 1
+        - 2
+        - 3
+
+    - log: "single out x=${x.stream().map(v -> v.result).toList()}"
+
+    # expression out
+    - task: resultTask
+      in:
+        result: "${item * 10}"
+      out:
+        x: "${result.ok ? result.result : 'oops'}"
+      withItems: [1, 2, 3]
+
+    - log: "expression out x=${x}"

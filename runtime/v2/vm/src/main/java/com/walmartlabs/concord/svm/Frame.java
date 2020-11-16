@@ -56,7 +56,7 @@ public class Frame implements Serializable {
             }
         }
 
-        this.locals = new LinkedHashMap<>(b.locals != null ? b.locals : Collections.emptyMap());
+        this.locals = Collections.synchronizedMap(new LinkedHashMap<>(b.locals != null ? b.locals : Collections.emptyMap()));
 
         this.exceptionHandler = b.exceptionHandler;
     }
