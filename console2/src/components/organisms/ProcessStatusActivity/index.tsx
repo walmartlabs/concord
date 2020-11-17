@@ -23,7 +23,7 @@ import { useCallback, useState } from 'react';
 import { Route } from 'react-router';
 import { Divider } from 'semantic-ui-react';
 
-import { get as apiGet, isFinal, ProcessEntry } from '../../../api/process';
+import { get as apiGet, isFinal, ProcessEntry, ProcessStatus } from '../../../api/process';
 import { FormListEntry, list as apiListForms } from '../../../api/process/form';
 
 import { usePolling } from '../../../api/usePolling';
@@ -75,7 +75,7 @@ const ProcessStatusActivity = ({
         <>
             <ProcessStatusTable process={process} />
 
-            {process && forms.length > 0 && !isFinal(process.status) && (
+            {process && forms.length > 0 && (process.status === ProcessStatus.SUSPENDED) && (
                 <>
                     <Divider content="Required Actions" horizontal={true} />
                     <Route

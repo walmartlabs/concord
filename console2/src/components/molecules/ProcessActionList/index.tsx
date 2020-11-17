@@ -88,7 +88,7 @@ class ProcessActionList extends React.PureComponent<Props> {
             <Button
                 id="formWizardButton"
                 onClick={() => onOpenWizard()}
-                content=" Form Wizard"
+                content="Form Wizard"
                 color="blue"
                 compact={true}
             />

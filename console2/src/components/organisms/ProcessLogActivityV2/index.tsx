@@ -130,7 +130,7 @@ const ProcessLogActivityV2 = ({
         <>
             <ProcessToolbar>
 
-                {forms.length > 0 && !isFinal(processStatus) && (
+                {forms.length > 0 && (processStatus === ProcessStatus.SUSPENDED) && (
                     <div style={{ marginRight: 20 }}>
                         <Route
                             render={({ history }) => (
