@@ -26,6 +26,10 @@ import com.walmartlabs.concord.ApiClient;
 import com.walmartlabs.concord.runtime.v2.runner.*;
 import com.walmartlabs.concord.runtime.v2.runner.checkpoints.CheckpointService;
 import com.walmartlabs.concord.runtime.v2.runner.checkpoints.DefaultCheckpointService;
+import com.walmartlabs.concord.runtime.v2.runner.logging.DefaultLoggingClient;
+import com.walmartlabs.concord.runtime.v2.runner.logging.LoggerProvider;
+import com.walmartlabs.concord.runtime.v2.runner.logging.LoggingClient;
+import com.walmartlabs.concord.runtime.v2.runner.logging.RunnerLogger;
 import com.walmartlabs.concord.runtime.v2.runner.remote.ApiClientProvider;
 import com.walmartlabs.concord.runtime.v2.runner.remote.DefaultProcessStatusCallback;
 import com.walmartlabs.concord.runtime.v2.runner.remote.EventRecordingExecutionListener;
@@ -54,6 +58,8 @@ public class DefaultRunnerModule extends AbstractModule {
         bind(PersistenceService.class).to(DefaultPersistenceService.class).in(Singleton.class);
         bind(ProcessStatusCallback.class).to(DefaultProcessStatusCallback.class).in(Singleton.class);
         bind(SecretService.class).to(DefaultSecretService.class).in(Singleton.class);
+        bind(RunnerLogger.class).toProvider(LoggerProvider.class);
+        bind(LoggingClient.class).to(DefaultLoggingClient.class);
 
         bind(ApiClient.class).toProvider(ApiClientProvider.class);
         bind(DefaultTaskVariablesService.class).toProvider(DefaultTaskVariablesProvider.class);

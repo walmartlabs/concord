@@ -32,33 +32,26 @@ import uk.org.lidalia.sysoutslf4j.context.SysOutOverSLF4J;
 import java.io.Serializable;
 import java.util.Collections;
 import java.util.Map;
+import java.util.UUID;
 import java.util.concurrent.*;
 
 import static ch.qos.logback.classic.ClassicConstants.FINALIZE_SESSION_MARKER;
 
-public class SegmentedLogger {
+public class SegmentedLogger implements RunnerLogger {
 
     private static final Logger log = LoggerFactory.getLogger(SegmentedLogger.class);
 
-    private static volatile boolean ENABLED = false;
+    private final LoggingClient loggingClient;
 
-    public static void enable() {
-        ENABLED = true;
+    public SegmentedLogger(LoggingClient loggingClient) {
+        this.loggingClient = loggingClient;
     }
 
-    public static void withLogSegment(LogContext context, Runnable runnable) {
-        if (!ENABLED) {
-            try {
-                runnable.run();
-            } catch (RuntimeException e) {
-                throw e;
-            } catch (Exception e) {
-                throw new RuntimeException(e);
-            }
-            return;
-        }
+    @Override
+    public void withContext(LogContext context, Runnable runnable) {
+        long segmentId = loggingClient.createSegment(context.correlationId(), context.segmentName());
 
-        ThreadGroup threadGroup = new LogContextThreadGroup(context);
+        ThreadGroup threadGroup = new LogContextThreadGroup(LogContext.builder().from(context).segmentId(segmentId).build());
         executeInThreadGroup(threadGroup, "thread-" + context.segmentName(), () -> {
             // make sure the redirection is enabled in the current thread
             if (context.redirectSystemOutAndErr() && !SysOutOverSLF4J.systemOutputsAreSLF4JPrintStreams()) {

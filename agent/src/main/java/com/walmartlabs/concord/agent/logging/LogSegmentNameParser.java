@@ -24,56 +24,33 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.nio.file.Path;
-import java.util.Date;
-import java.util.UUID;
 
-public class LogSegmentNameParser implements FileWatcher.FileNameParser<LogSegment> {
+public class LogSegmentNameParser implements FileWatcher.FileNameParser<Long> {
 
     private static final Logger log = LoggerFactory.getLogger(LogSegmentNameParser.class);
 
-    public LogSegment parse(Path path) {
-        int UUID_LEN = 36;
+    private static final String LOG_EXT = ".log";
 
+    public Long parse(Path path) {
         String segmentFileName = path.getFileName().toString();
 
-        // move agent process logs and process logs into system segment
-        if ("system.log".equals(segmentFileName)
-                || "runner_system.log".equalsIgnoreCase(segmentFileName)) {
-            return LogSegment.builder()
-                    .name("system")
-                    .build();
+        // move agent process logs into system segment
+        if ("system.log".equals(segmentFileName)) {
+            return 0L;
         }
 
-        if (!segmentFileName.endsWith(".log")) {
+        if (!segmentFileName.endsWith(LOG_EXT)) {
             log.warn("createSegment ['{}'] -> invalid segment file name: invalid extension", segmentFileName);
             return null;
         }
 
-        if (segmentFileName.length() < UUID_LEN) {
-            log.warn("createSegment ['{}'] -> invalid segment file name: no uuid", segmentFileName);
+        if (segmentFileName.length() <= LOG_EXT.length()) {
+            log.warn("createSegment ['{}'] -> invalid segment file name", segmentFileName);
             return null;
         }
 
         try {
-            UUID correlationId = UUID.fromString(segmentFileName.substring(0, UUID_LEN));
-
-            int taskNameStartAt = UUID_LEN + 1;
-            int taskNameEndAt = segmentFileName.lastIndexOf('_');
-            if (taskNameEndAt < taskNameStartAt) {
-                log.warn("createSegment ['{}'] -> invalid segment file name: no created at", segmentFileName);
-                return null;
-            }
-            String segmentName = segmentFileName.substring(taskNameStartAt, taskNameEndAt);
-
-            int createdAtStart = taskNameEndAt + 1;
-            int createdAtEnd = segmentFileName.length() - ".log".length();
-            long createdAt = Long.parseLong(segmentFileName.substring(createdAtStart, createdAtEnd));
-
-            return LogSegment.builder()
-                    .correlationId(correlationId)
-                    .name(segmentName)
-                    .createdAt(new Date(createdAt))
-                    .build();
+            return Long.valueOf(segmentFileName.substring(0, segmentFileName.length() - LOG_EXT.length()));
         } catch (Exception e) {
             log.warn("createSegment ['{}'] -> error: {}", segmentFileName, e.getMessage());
         }

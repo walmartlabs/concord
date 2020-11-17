@@ -36,7 +36,7 @@ import com.walmartlabs.concord.runtime.common.cfg.LoggingConfiguration;
 import com.walmartlabs.concord.runtime.common.cfg.RunnerConfiguration;
 import com.walmartlabs.concord.runtime.v2.runner.checkpoints.CheckpointService;
 import com.walmartlabs.concord.runtime.v2.runner.guice.BaseRunnerModule;
-import com.walmartlabs.concord.runtime.v2.runner.logging.LoggingConfigurator;
+import com.walmartlabs.concord.runtime.v2.runner.logging.*;
 import com.walmartlabs.concord.runtime.v2.runner.tasks.TaskCallListener;
 import com.walmartlabs.concord.runtime.v2.runner.tasks.TaskCallPolicyChecker;
 import com.walmartlabs.concord.runtime.v2.runner.tasks.TaskResultListener;
@@ -56,6 +56,7 @@ import org.slf4j.LoggerFactory;
 import javax.annotation.Nullable;
 import javax.inject.Inject;
 import javax.inject.Named;
+import javax.inject.Singleton;
 import java.io.*;
 import java.net.URISyntaxException;
 import java.nio.file.Files;
@@ -66,6 +67,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
@@ -892,6 +894,8 @@ public class MainTest {
             @Override
             protected void configure() {
                 bind(DefaultTaskVariablesService.class).toProvider(new DefaultTaskVariablesProvider(processConfiguration));
+                bind(RunnerLogger.class).toProvider(LoggerProvider.class);
+                bind(LoggingClient.class).to(TestLoggingClient.class);
             }
         };
 
@@ -901,7 +905,7 @@ public class MainTest {
                     runnerCfg.build(),
                     () -> processConfiguration,
                     testServices,
-                    runtimeModule) // allow runtime v1 tasks
+                    runtimeModule)
                     .create();
             injector.getInstance(Main.class).execute();
         } finally {
@@ -1150,6 +1154,17 @@ public class MainTest {
 
         public int getDerivedValue(int value) {
             return value + 42;
+        }
+    }
+
+    @Singleton
+    static class TestLoggingClient implements LoggingClient {
+
+        private final AtomicLong id = new AtomicLong(1L);
+
+        @Override
+        public long createSegment(UUID correlationId, String name) {
+            return id.getAndIncrement();
         }
     }
 }
