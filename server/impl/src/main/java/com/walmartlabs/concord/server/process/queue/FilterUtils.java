@@ -145,11 +145,11 @@ public final class FilterUtils {
                     break;
                 }
                 case EQUALS: {
-                    q.addConditions(jsonbTextExistsByPath(column, f.path(),f.value()));
+                    q.addConditions(jsonbTextExistsByPath(column, f.path(), f.value()));
                     break;
                 }
                 case NOT_EQUALS: {
-                    q.addConditions(jsonbTextNotExistsByPath(column, f.path(),f.value()));
+                    q.addConditions(jsonbTextNotExistsByPath(column, f.path(), f.value()));
                     break;
                 }
                 case STARTS_WITH: {
