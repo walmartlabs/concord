@@ -36,7 +36,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import static com.walmartlabs.concord.db.PgUtils.jsonbTextByPath;
+import static com.walmartlabs.concord.db.PgUtils.*;
 import static org.jooq.impl.DSL.currentOffsetDateTime;
 
 public final class FilterUtils {
@@ -145,11 +145,11 @@ public final class FilterUtils {
                     break;
                 }
                 case EQUALS: {
-                    q.addConditions(jsonbTextByPath(column, f.path()).eq(f.value()));
+                    q.addConditions(jsonbTextExistsByPath(column, f.path(),f.value()));
                     break;
                 }
                 case NOT_EQUALS: {
-                    q.addConditions(jsonbTextByPath(column, f.path()).notEqual(f.value()));
+                    q.addConditions(jsonbTextNotExistsByPath(column, f.path(),f.value()));
                     break;
                 }
                 case STARTS_WITH: {
