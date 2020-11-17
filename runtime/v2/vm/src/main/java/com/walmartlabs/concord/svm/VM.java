@@ -85,7 +85,7 @@ public class VM {
      * Doesn't fire any {@link #listeners} and doesn't unwind the stack in
      * case or errors.
      */
-    public void run(State state, Command cmd) {
+    public void run(State state, Command cmd) throws Exception {
         log.debug("run ['{}'] -> start", cmd);
 
         Runtime rt = runtimeFactory.create(this);

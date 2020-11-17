@@ -1,4 +1,4 @@
-package com.walmartlabs.concord.runtime.v2.runner;
+package com.walmartlabs.concord.imports;
 
 /*-
  * *****
@@ -20,7 +20,16 @@ package com.walmartlabs.concord.runtime.v2.runner;
  * =====
  */
 
-public enum ExecutionMode {
-    REGULAR,
-    CHECKPOINT_RESTORE
+public class ImportProcessingException extends Exception {
+
+    private final Import value;
+
+    public ImportProcessingException(Import value, Exception e) {
+        super(e.getMessage(), e);
+        this.value = value;
+    }
+
+    public Import getImport() {
+        return value;
+    }
 }

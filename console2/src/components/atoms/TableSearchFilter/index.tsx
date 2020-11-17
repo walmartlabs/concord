@@ -19,7 +19,7 @@
  */
 
 import * as React from 'react';
-import { Button, Dropdown, Grid, Header, Input, Popup } from 'semantic-ui-react';
+import { Button, Checkbox, Dropdown, Grid, Header, Input, Popup } from 'semantic-ui-react';
 import { ColumnDefinition } from '../../../api/org';
 
 import './styles.css';
@@ -71,6 +71,19 @@ export default class extends React.Component<Props, State> {
         );
     }
 
+    renderCheckbox(c: ColumnDefinition) {
+        return (
+            <Checkbox
+                type="checkbox"
+                name={c.source}
+                checked={this.state.inputValue === 'true'}
+                onChange={(event, { checked }) =>
+                    this.setState({ inputValue: checked ? 'true' : 'false' })
+                }
+            />
+        );
+    }
+
     renderDropDown(c: ColumnDefinition) {
         return (
             <Dropdown
@@ -98,6 +111,9 @@ export default class extends React.Component<Props, State> {
         switch (c.searchValueType!) {
             case 'string': {
                 return this.renderStringField(c);
+            }
+            case 'boolean': {
+                return this.renderCheckbox(c);
             }
             default:
                 return (

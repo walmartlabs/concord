@@ -75,23 +75,12 @@ public class LazyExpressionEvaluator implements ExpressionEvaluator {
 
         if (value instanceof Map) {
             Map<String, Object> m = (Map<String, Object>) value;
-            if (m.isEmpty()) {
-                return expectedType.cast(m);
-            }
-
             return expectedType.cast(new LazyEvalMap(this, ctx, m));
         } else if (value instanceof List) {
             List<Object> src = (List<Object>) value;
-            if (src.isEmpty()) {
-                return expectedType.cast(src);
-            }
-
             return expectedType.cast(new LazyEvalList(this, ctx, src));
         } else if (value instanceof Set) {
             Set<Object> src = (Set<Object>) value;
-            if (src.isEmpty()) {
-                return expectedType.cast(src);
-            }
 
             // use LinkedHashSet to preserve the order of keys
             Set<Object> dst = new LinkedHashSet<>(src.size());

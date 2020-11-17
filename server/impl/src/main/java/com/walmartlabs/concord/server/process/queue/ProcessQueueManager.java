@@ -255,7 +255,7 @@ public class ProcessQueueManager {
 
         m = new HashMap<>(m);
         m.put(Constants.Meta.SYSTEM_GROUP, Collections.singletonMap(Constants.Meta.REQUEST_ID, RequestUtils.getRequestId()));
-
+        m.put(Constants.Request.ENTRY_POINT_KEY, cfg.get(Constants.Request.ENTRY_POINT_KEY));
         return m;
     }
 

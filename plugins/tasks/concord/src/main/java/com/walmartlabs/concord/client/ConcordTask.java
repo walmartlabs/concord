@@ -616,8 +616,13 @@ public class ConcordTask extends AbstractConcordTask {
     }
 
     private void killMany(Context ctx, Map<String, Object> cfg, List<String> instanceIds) throws Exception {
-        if (instanceIds == null || instanceIds.isEmpty()) {
+        if (instanceIds == null) {
             throw new IllegalArgumentException("'" + INSTANCE_ID_KEY + "' should be a single value or an array of values: " + instanceIds);
+        }
+
+        if (instanceIds.isEmpty()) {
+            log.warn("kill: no process IDs specified, nothing to do.");
+            return;
         }
 
         for (String id : instanceIds) {
@@ -675,7 +680,7 @@ public class ConcordTask extends AbstractConcordTask {
 
     private String getProcessUrl(Context ctx, UUID processId) {
         String action = ContextUtils.getString(ctx, ACTION_KEY);
-        if (Action.STARTEXTERNAL.name().equalsIgnoreCase(action)  || uiLinks == null) {
+        if (Action.STARTEXTERNAL.name().equalsIgnoreCase(action) || uiLinks == null) {
             return "n/a";
         }
 

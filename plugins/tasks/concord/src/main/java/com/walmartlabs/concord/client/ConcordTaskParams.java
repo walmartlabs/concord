@@ -271,7 +271,22 @@ public class ConcordTaskParams {
                 forks = Collections.singletonList(new ForkStartParams(variables));
             } else {
                 forks = forksValue.stream()
-                        .map(f -> new ForkStartParams(new MapBackedVariables(f), outVars()))
+                        .map(f -> {
+                            // some parameters (e.g. tags) can be defined for either an "forks" entry or "globally"
+                            // for example:
+                            // - task: concord
+                            //   in:
+                            //     tags: ["red"]
+                            //     forks:
+                            //       - entryPoint: "x" // inherits tags value
+                            //       - entryPoint: "y"
+                            //         tags: ["green"] // provides its own tags
+                            //
+                            // that's why here we're using DelegateVariables which looks for keys in
+                            // the "forks" entry first and then falls back to the "global" section.
+                            Variables vars = new DelegateVariables(new MapBackedVariables(f), variables);
+                            return new ForkStartParams(vars, outVars());
+                        })
                         .collect(Collectors.toList());
             }
 
@@ -394,10 +409,6 @@ public class ConcordTaskParams {
                 throw new IllegalArgumentException("'" + INSTANCE_ID_KEY + "' should be a single string, an UUID value or an array of strings or UUIDs: " + v);
             }
 
-            if (ids.isEmpty()) {
-                throw new IllegalArgumentException("'" + INSTANCE_ID_KEY + "' should be a single value or an array of values: " + ids);
-            }
-
             return ids;
         }
 
@@ -442,5 +453,44 @@ public class ConcordTaskParams {
         STARTEXTERNAL,
         FORK,
         KILL
+    }
+
+    private static class DelegateVariables implements Variables {
+
+        private final Variables[] delegates;
+
+        public DelegateVariables(Variables... delegates) {
+            this.delegates = delegates;
+        }
+
+        @Override
+        public Object get(String key) {
+            for (Variables delegate : delegates) {
+                if (delegate.has(key)) {
+                    return delegate.get(key);
+                }
+            }
+            return null;
+        }
+
+        @Override
+        public void set(String key, Object value) {
+            throw new IllegalStateException("Not supported");
+        }
+
+        @Override
+        public boolean has(String key) {
+            for (Variables delegate : delegates) {
+                if (delegate.has(key)) {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        @Override
+        public Map<String, Object> toMap() {
+            throw new IllegalStateException("Not supported");
+        }
     }
 }

@@ -96,7 +96,7 @@ public class RepositoryCache {
                 } catch (IllegalArgumentException e) {
                     throw e;
                 } catch (Exception e) {
-                    throw new RuntimeException(e);
+                    throw new RuntimeException(e.getMessage(), e);
                 } finally {
                     l.unlock();
                 }

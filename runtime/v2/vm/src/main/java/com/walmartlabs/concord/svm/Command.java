@@ -24,5 +24,5 @@ import java.io.Serializable;
 
 public interface Command extends Serializable {
 
-    void eval(Runtime runtime, State state, ThreadId threadId);
+    void eval(Runtime runtime, State state, ThreadId threadId) throws Exception;
 }
