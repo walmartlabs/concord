@@ -80,15 +80,6 @@ public class LoggingConfigurator {
         sa.setName("SEGMENTED_LOG");
         sa.setDiscriminator(discriminator);
         sa.setAppenderFactory((context, discriminatingValue) -> {
-//            String logFileName;
-//            if (UNSEGMENTED_LOG.equalsIgnoreCase(discriminatingValue)) {
-//                 all unsegmented logs (from system.out, scripts, task call from expressions)
-//                logFileName = "runner_system";
-//            } else {
-//                 segmented logs with created timestamp
-//                logFileName = String.format("%s_%d", discriminatingValue, System.currentTimeMillis());
-//            }
-
             FileAppender<ILoggingEvent> fa = new FileAppender<>();
             fa.setContext(context);
             fa.setAppend(true);
