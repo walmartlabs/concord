@@ -30,12 +30,12 @@ class FormWizardAction extends React.PureComponent<Props> {
         const { onOpenWizard } = this.props;
 
         return (
-                    <Button
-                        id="formWizardButton"
-                        onClick={() => onOpenWizard()}
-                        content="Form Wizard"
-                        color="blue"
-                    />
+            <Button
+                id="formWizardButton"
+                onClick={() => onOpenWizard()}
+                content="Form Wizard"
+                color="blue"
+            />
         );
     }
 }

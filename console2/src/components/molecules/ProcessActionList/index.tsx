@@ -85,42 +85,42 @@ class ProcessActionList extends React.PureComponent<Props> {
 
         return (
             <>
-            <Button
-                id="formWizardButton"
-                onClick={() => onOpenWizard()}
-                content="Form Wizard"
-                color="blue"
-                compact={true}
-            />
-            <Table>
-                <Table.Header>
-                    <Table.Row>
-                        <Table.HeaderCell collapsing={true}>Form Action</Table.HeaderCell>
-                        <Table.HeaderCell>Description</Table.HeaderCell>
-                    </Table.Row>
-                </Table.Header>
-                <Table.Body>
-                    {forms.map(({ name, runAs }) => (
-                        <Table.Row key={name}>
-                            <Table.Cell singleLine={true}>
-                                <Link to={`/process/${instanceId}/form/${name}/step`}>
-                                    <Button
-                                        content={`${name}`}
-                                        compact={true}
-                                        basic={true}
-                                        color="red"
-                                        size="small"
-                                    />
-                                </Link>
-                            </Table.Cell>
-                            <Table.Cell>
-                                Form
-                                {renderRunAs(runAs)}
-                            </Table.Cell>
+                <Button
+                    id="formWizardButton"
+                    onClick={() => onOpenWizard()}
+                    content="Form Wizard"
+                    color="blue"
+                    compact={true}
+                />
+                <Table>
+                    <Table.Header>
+                        <Table.Row>
+                            <Table.HeaderCell collapsing={true}>Form Action</Table.HeaderCell>
+                            <Table.HeaderCell>Description</Table.HeaderCell>
                         </Table.Row>
-                    ))}
-                </Table.Body>
-            </Table>
+                    </Table.Header>
+                    <Table.Body>
+                        {forms.map(({ name, runAs }) => (
+                            <Table.Row key={name}>
+                                <Table.Cell singleLine={true}>
+                                    <Link to={`/process/${instanceId}/form/${name}/step`}>
+                                        <Button
+                                            content={`${name}`}
+                                            compact={true}
+                                            basic={true}
+                                            color="red"
+                                            size="small"
+                                        />
+                                    </Link>
+                                </Table.Cell>
+                                <Table.Cell>
+                                    Form
+                                    {renderRunAs(runAs)}
+                                </Table.Cell>
+                            </Table.Row>
+                        ))}
+                    </Table.Body>
+                </Table>
             </>
         );
     }

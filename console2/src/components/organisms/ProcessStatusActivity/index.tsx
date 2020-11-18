@@ -75,7 +75,7 @@ const ProcessStatusActivity = ({
         <>
             <ProcessStatusTable process={process} />
 
-            {process && forms.length > 0 && (process.status === ProcessStatus.SUSPENDED) && (
+            {process && forms.length > 0 && process.status === ProcessStatus.SUSPENDED && (
                 <>
                     <Divider content="Required Actions" horizontal={true} />
                     <Route

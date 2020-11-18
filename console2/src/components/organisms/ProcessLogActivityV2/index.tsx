@@ -33,7 +33,7 @@ import { FormWizardAction, ProcessToolbar } from '../../molecules';
 import { Button, Divider, Popup, Radio } from 'semantic-ui-react';
 import { LogProcessorOptions } from '../../../state/data/processes/logs/processors';
 import { Route, useLocation } from 'react-router';
-import { FormListEntry, list as apiListForms } from "../../../api/process/form";
+import { FormListEntry, list as apiListForms } from '../../../api/process/form';
 
 const SEGMENT_FETCH_INTERVAL = 5000;
 
@@ -107,7 +107,6 @@ const ProcessLogActivityV2 = ({
     );
 
     const fetchForm = useCallback(async () => {
-
         const forms = await apiListForms(instanceId);
         setForms(forms);
 
@@ -129,14 +128,15 @@ const ProcessLogActivityV2 = ({
     return (
         <>
             <ProcessToolbar>
-
-                {forms.length > 0 && (processStatus === ProcessStatus.SUSPENDED) && (
+                {forms.length > 0 && processStatus === ProcessStatus.SUSPENDED && (
                     <div style={{ marginRight: 20 }}>
                         <Route
                             render={({ history }) => (
                                 <FormWizardAction
                                     onOpenWizard={() =>
-                                        history.push(`/process/${instanceId}/wizard?fullScreen=true`)
+                                        history.push(
+                                            `/process/${instanceId}/wizard?fullScreen=true`
+                                        )
                                     }
                                 />
                             )}
