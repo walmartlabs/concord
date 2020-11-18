@@ -1,5 +1,17 @@
 # Change log
 
+## [Unreleased]
+
+### Added
+
+- concord-console, runtime-v2: a button to launch the form wizard
+from the process log tab;
+- concord-console, runtime-v2: link to download individual log
+segments;
+- concord-console, runtime-v2: individual form links.
+
+
+
 ## [1.73.0] - 2020-11-15
 
 ### Added
