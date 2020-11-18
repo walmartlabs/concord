@@ -80,6 +80,14 @@ public final class PgUtils {
         return cause instanceof PSQLException && ((PSQLException) e.getCause()).getSQLState().equals("23505");
     }
 
+    public static Condition jsonbTextExistsByPath(Field<JSONB> field, List<String> path, String value) {
+        return DSL.condition("{0} #> {1} ?? {2}", field, inline(toPath(path)), DSL.value(value));
+    }
+
+    public static Condition jsonbTextNotExistsByPath(Field<JSONB> field, List<String> path, String value) {
+        return DSL.condition("not {0} #> {1} ?? {2}", field, inline(toPath(path)), DSL.value(value));
+    }
+
     private static String toPath(List<String> path) {
         return "{" + String.join(",", path) + "}";
     }
