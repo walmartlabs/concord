@@ -14,10 +14,8 @@ flows:
     - log: "Response Code: ${response.statusCode}"
 
 # Task inputs are explicit in v2 – all required parameters must be specified in the `in` block
-
-    - task: log
-      meta:
-        segmentName: "Log me!"
+    - name: Log Me!
+      task: log
       in:
         msg: "Hello! I'm being logged in a separate (and named!) segment!"
         level: "WARN"
