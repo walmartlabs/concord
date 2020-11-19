@@ -176,6 +176,7 @@ public class FormServiceV2 {
             throw new RuntimeException("Error while creating a payload for: " + processKey, e);
         }
 
+        // remove the form when the process resumes
         payload = payload.putHeader(Payload.RESUME_HOOKS, Collections.singletonList(() -> formManager.delete(processKey, formName)));
 
         processManager.resume(payload);

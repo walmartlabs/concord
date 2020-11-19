@@ -28,7 +28,12 @@ import java.util.Collections;
 import java.util.List;
 
 /**
- * Execute resuming hooks.
+ * Executes resume hooks.
+ * <p/>
+ * Resume hooks are used to execute additional logic when the process is resumed.
+ * Hooks are typically added during the creation of the {@link Payload}.
+ *
+ * @see Payload#RESUME_HOOKS
  */
 @Named
 public class ResumingHooksProcessor implements PayloadProcessor {
