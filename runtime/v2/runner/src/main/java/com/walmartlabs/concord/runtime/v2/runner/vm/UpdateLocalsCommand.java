@@ -34,6 +34,9 @@ import java.util.Map;
 /**
  * Takes the input, interpolates its values and sets the result
  * as the current frame's local variables.
+ * <p/>
+ * Optionally takes a list of threads which root frames should be
+ * updated with provided variables.
  */
 public class UpdateLocalsCommand implements Command {
 
