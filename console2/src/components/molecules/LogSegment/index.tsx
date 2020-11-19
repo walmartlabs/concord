@@ -172,7 +172,7 @@ const LogSegment = ({
                     rel="noopener noreferrer"
                     target="_blank"
                     className="AdditionalAction Last"
-                    data-tooltip="Download Log File"
+                    data-tooltip="Download: InstanceId_SegmentId.log"
                     data-inverted="">
                     <Icon name="download" />
                 </a>
