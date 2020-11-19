@@ -33,6 +33,7 @@ export { default as EditProjectForm } from './EditProjectForm';
 export { default as EntityOwnerChangeForm } from './EntityOwnerChangeForm';
 export { default as EntityOwnerPopup } from './EntityOwnerPopup';
 export { default as EntityRenameForm } from './EntityRenameForm';
+export { default as FormWizardAction } from './FormWizardAction';
 export { default as GitHubLink } from './GitHubLink';
 export { default as GlobalNavMenu } from './GlobalNavMenu';
 export { default as Highlighter } from './Highlighter';

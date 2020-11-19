@@ -32,6 +32,7 @@ import com.walmartlabs.concord.svm.Command;
 import javax.inject.Named;
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 @Named
@@ -44,17 +45,16 @@ public final class GroupOfStepsCompiler implements StepCompiler<GroupOfSteps> {
 
     @Override
     public Command compile(CompilerContext context, GroupOfSteps step) {
-        GroupOfStepsOptions options = step.getOptions();
-
         Command cmd = compile(context, step.getSteps());
 
-        WithItems withItems = options != null ? options.withItems() : null;
+        GroupOfStepsOptions options = Objects.requireNonNull(step.getOptions());
+        WithItems withItems = options.withItems();
         if (withItems != null) {
             return WithItemsWrapper.of(cmd, withItems, options.out(), Collections.emptyMap());
         }
 
-        List<Step> errorSteps = options != null ? options.errorSteps() : null;
-        if (errorSteps != null) {
+        List<Step> errorSteps = options.errorSteps();
+        if (!options.errorSteps().isEmpty()) {
             cmd = new ErrorWrapper(cmd, compile(context, errorSteps));
         }
 
