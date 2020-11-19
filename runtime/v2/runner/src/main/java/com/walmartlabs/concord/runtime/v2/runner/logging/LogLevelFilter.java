@@ -23,12 +23,8 @@ package com.walmartlabs.concord.runtime.v2.runner.logging;
 import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.core.filter.Filter;
 import ch.qos.logback.core.spi.FilterReply;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 public class LogLevelFilter extends Filter<ILoggingEvent> {
-
-    private static final Logger log = LoggerFactory.getLogger(LogLevelFilter.class);
 
     @Override
     public FilterReply decide(ILoggingEvent event) {
