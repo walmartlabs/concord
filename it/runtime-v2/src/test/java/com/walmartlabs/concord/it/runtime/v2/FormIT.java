@@ -26,6 +26,7 @@ import ca.ibodrov.concord.testcontainers.junit4.ConcordRule;
 import com.google.common.io.CharStreams;
 import com.walmartlabs.concord.client.FormListEntry;
 import com.walmartlabs.concord.client.FormSubmitResponse;
+import com.walmartlabs.concord.client.ProcessApi;
 import com.walmartlabs.concord.client.ProcessEntry;
 import com.walmartlabs.concord.sdk.MapUtils;
 import jdk.nashorn.api.scripting.ScriptObjectMirror;
@@ -178,6 +179,74 @@ public class FormIT {
         assertEquals("Xaa", values.get("lastName"));
         assertEquals(3, values.get("sum"));
         assertEquals(ImmutableMap.of("city", "Toronto", "province", "Ontario"), values.get("address"));
+    }
+
+    @Test
+    public void testSubmitInInvalidProcessState() throws Exception {
+        Payload payload = new Payload()
+                .archive(FormIT.class.getResource("form").toURI());
+
+        // ---
+
+        ConcordProcess proc = concord.processes().start(payload);
+
+        ProcessEntry pe = proc.waitForStatus(ProcessEntry.StatusEnum.SUSPENDED);
+        assertEquals(ProcessEntry.StatusEnum.SUSPENDED, pe.getStatus());
+
+        // ---
+
+        List<FormListEntry> forms = proc.forms();
+        assertEquals(1, forms.size());
+
+        // change process status to emulate resuming from another form
+        ProcessApi api = new ProcessApi(concord.apiClient());
+        api.updateStatus(proc.instanceId(), UUID.randomUUID().toString(), ProcessEntry.StatusEnum.RESUMING.getValue());
+
+        // form data
+        String firstName = "john_" + randomString();
+        String lastName = "smith_" + randomString();
+        int age = ThreadLocalRandom.current().nextInt(100);
+
+        Map<String, Object> data = new HashMap<>();
+        data.put("lastName", lastName);
+        data.put("firstName", firstName);
+        data.put("age", age);
+
+        try {
+            proc.submitForm(forms.get(0).getName(), data);
+            fail("exception expected");
+        } catch (Exception e) {
+            // ignore
+        }
+
+        // change process status back to emulate another form submitted
+        api.updateStatus(proc.instanceId(), UUID.randomUUID().toString(), ProcessEntry.StatusEnum.SUSPENDED.getValue());
+
+        forms = proc.forms();
+        assertEquals(1, forms.size());
+
+        FormListEntry myForm = forms.get(0);
+        assertFalse(myForm.isCustom());
+
+        String formName = myForm.getName();
+        assertEquals("myForm", formName);
+
+        FormSubmitResponse fsr = proc.submitForm(formName, data);
+        assertTrue(fsr.isOk());
+        assertTrue(fsr.getErrors() == null || fsr.getErrors().isEmpty());
+
+        pe = proc.waitForStatus(ProcessEntry.StatusEnum.FINISHED);
+        assertEquals(ProcessEntry.StatusEnum.FINISHED, pe.getStatus());
+
+        // ---
+
+        proc.assertLog(".*firstName=" + firstName + ".*");
+        proc.assertLog(".*lastName=" + lastName + ".*");
+        proc.assertLog(".*age=" + age + ".*");
+    }
+
+    private static void submitForm() {
+
     }
 
     private static void startCustomFormSession(ConcordRule concord, UUID instanceId, String formName) throws Exception {

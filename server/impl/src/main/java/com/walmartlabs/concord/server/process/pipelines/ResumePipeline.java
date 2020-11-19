@@ -41,6 +41,7 @@ public class ResumePipeline extends Pipeline {
                 LoggingMDCProcessor.class,
                 ChangeUserProcessor.class,
                 ResumingProcessor.class,
+                ResumingHooksProcessor.class,
                 ResumeStateStoringProcessor.class,
                 FormFilesStoringProcessor.class,
                 ResumeConfigurationProcessor.class,

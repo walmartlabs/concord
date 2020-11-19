@@ -142,8 +142,6 @@ public class FormServiceV2 {
             Map<String, Object> args = new LinkedHashMap<>();
             args.put(form.name(), new LinkedHashMap<>(data));
 
-            formManager.delete(processKey, form.name());
-
             // TODO refactor into the process manager
             Map<String, Object> m = new HashMap<>();
             m.put(Constants.Request.ARGUMENTS_KEY, args);
@@ -154,7 +152,7 @@ public class FormServiceV2 {
                 m.put(INTERNAL_RUN_AS_KEY, runAs);
             }
 
-            resume(processKey, form.eventName(), m);
+            resume(processKey, form.eventName(), formName, m);
 
             return new FormSubmitResult(processKey.getInstanceId(), form.name(), null);
         } catch (Exception e) {
@@ -170,13 +168,16 @@ public class FormServiceV2 {
         return formManager.nextFormId(processKey);
     }
 
-    private void resume(ProcessKey processKey, String eventName, Map<String, Object> req) {
+    private void resume(ProcessKey processKey, String eventName, String formName, Map<String, Object> req) {
         Payload payload;
         try {
             payload = payloadManager.createResumePayload(processKey, eventName, req);
         } catch (IOException e) {
             throw new RuntimeException("Error while creating a payload for: " + processKey, e);
         }
+
+        // remove the form when the process resumes
+        payload = payload.putHeader(Payload.RESUME_HOOKS, Collections.singletonList(() -> formManager.delete(processKey, formName)));
 
         processManager.resume(payload);
     }
