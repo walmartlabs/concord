@@ -14,6 +14,8 @@ segments;
 
 ### Changed
 
+- runtime-v2: fixed an issue when submitting a form can cause other
+unsubmitted forms to dissappear;
 - runtime-v2: fixed compilation of block steps when `error` is
 used.
 
