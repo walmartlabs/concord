@@ -840,6 +840,42 @@ public class MainTest {
         assertLog(log, ".*result: v.*");
     }
 
+    @Test
+    public void testFormsParallel() throws Exception {
+        deploy("parallelForm");
+
+        save(ProcessConfiguration.builder()
+                .build());
+
+        byte[] log = run();
+        assertLog(log, ".*Before parallel.*");
+
+        List<Form> forms = formService.list();
+        assertEquals(2, forms.size());
+
+        Form form1 = forms.stream()
+                .filter(f -> "form1".equals(f.name())).findFirst()
+                .orElseThrow(() -> new RuntimeException("form not found"));
+
+        // resume the process using the saved form
+
+        log = resume(form1.eventName(), ProcessConfiguration.builder()
+                .arguments(Collections.singletonMap("form1", Collections.singletonMap("firstName", "Vasia")))
+                .build());
+        assertLog(log, ".*form1 in block: Vasia.*");
+
+        // resume the process using the saved form
+
+        Form form2 = forms.stream()
+                .filter(f -> "form2".equals(f.name())).findFirst()
+                .orElseThrow(() -> new RuntimeException("form not found"));
+        log = resume(form2.eventName(), ProcessConfiguration.builder()
+                .arguments(Collections.singletonMap("form2", Collections.singletonMap("firstName", "Pupkin")))
+                .build());
+        assertLog(log, ".*form2: Pupkin.*");
+        assertLog(log, ".*form1: Vasia.*");
+    }
+
     private void deploy(String resource) throws URISyntaxException, IOException {
         Path src = Paths.get(MainTest.class.getResource(resource).toURI());
         IOUtils.copy(src, workDir);
