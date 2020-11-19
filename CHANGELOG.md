@@ -12,6 +12,11 @@ from the process log tab;
 segments;
 - concord-console, runtime-v2: individual form links.
 
+### Changed
+
+- runtime-v2: fixed compilation of block steps when `error` is
+used.
+
 
 
 ## [1.73.0] - 2020-11-15
