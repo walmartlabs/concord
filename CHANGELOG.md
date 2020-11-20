@@ -14,6 +14,9 @@ segments;
 
 ### Changed
 
+- runtime-v2: now only resuming threads receive the resume event's
+payload. This fixes the issue with multiple `parallel` forms missing
+submitted data;
 - concord-agent, runtime-v2: make the runner responsible for log
 segment creation;
 - runtime-v2: fixed an issue when submitting a form can cause other
