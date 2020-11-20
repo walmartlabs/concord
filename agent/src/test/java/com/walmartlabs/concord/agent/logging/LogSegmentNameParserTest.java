@@ -23,8 +23,6 @@ package com.walmartlabs.concord.agent.logging;
 import org.junit.Test;
 
 import java.nio.file.Paths;
-import java.util.Date;
-import java.util.UUID;
 
 import static org.junit.Assert.assertEquals;
 
@@ -34,14 +32,9 @@ public class LogSegmentNameParserTest {
     public void testSuccess() {
         LogSegmentNameParser parser = new LogSegmentNameParser();
 
-        UUID correlationId = UUID.randomUUID();
-        String taskName = "test-task_Oo";
-        Date createdAt = new Date();
-        String fileName = correlationId + "-" + taskName + "_" + createdAt.getTime() + ".log";
+        String fileName = "123.log";
 
-        LogSegment segment = parser.parse(Paths.get(fileName));
-        assertEquals(correlationId, segment.correlationId());
-        assertEquals(taskName, segment.name());
-        assertEquals(createdAt, segment.createdAt());
+        Long id = parser.parse(Paths.get(fileName));
+        assertEquals(123L, (long)id);
     }
 }

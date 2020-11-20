@@ -23,13 +23,14 @@ package com.walmartlabs.concord.agent.logging;
 import com.walmartlabs.concord.ApiClient;
 import com.walmartlabs.concord.ApiException;
 import com.walmartlabs.concord.agent.AgentConstants;
-import com.walmartlabs.concord.client.*;
+import com.walmartlabs.concord.client.ClientUtils;
+import com.walmartlabs.concord.client.LogSegmentUpdateRequest;
+import com.walmartlabs.concord.client.ProcessApi;
+import com.walmartlabs.concord.client.ProcessLogV2Api;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
-import java.time.ZoneOffset;
-import java.util.Date;
 import java.util.UUID;
 
 public class RemoteLogAppender implements LogAppender {
@@ -74,21 +75,6 @@ public class RemoteLogAppender implements LogAppender {
             log.warn("appendLog ['{}'] -> error: {}", instanceId, e.getMessage());
             return false;
         }
-    }
-
-    @Override
-    public Long createSegment(UUID instanceId, UUID correlationId, String segmentName, Date createdAt) {
-        LogSegmentRequest request = new LogSegmentRequest()
-                .setCorrelationId(correlationId).setName(segmentName)
-                .setCreatedAt(createdAt != null ? createdAt.toInstant().atOffset(ZoneOffset.UTC) : null);
-
-        try {
-            return ClientUtils.withRetry(AgentConstants.API_CALL_MAX_RETRIES, AgentConstants.API_CALL_RETRY_DELAY,
-                    () -> processLogV2Api.segment(instanceId, request)).getId();
-        } catch (Exception e) {
-            log.warn("createSegment ['{}', '{}', '{}'] -> error: {}", instanceId, correlationId, segmentName, e.getMessage());
-        }
-        return null;
     }
 
     @Override
