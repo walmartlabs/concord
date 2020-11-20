@@ -38,6 +38,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 public class Runner {
 
@@ -94,8 +95,15 @@ public class Runner {
         State state = withDefaultExceptionHandler(snapshot.vmState());
 
         VM vm = createVM(snapshot.processDefinition());
+
         // update the global variables using the input map by running a special command
-        vm.run(state, new UpdateLocalsCommand(input));
+        // only the threads with the specified eventRef will receive the input
+        Collection<ThreadId> resumingThreads = state.getEventRefs().entrySet().stream()
+                .filter(kv -> eventRef.equals(kv.getValue()))
+                .map(Map.Entry::getKey)
+                .collect(Collectors.toList());
+        vm.run(state, new UpdateLocalsCommand(input, resumingThreads));
+
         // resume normally
         vm.resume(state, eventRef);
 
