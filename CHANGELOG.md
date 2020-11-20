@@ -14,6 +14,8 @@ segments;
 
 ### Changed
 
+- concord-agent, runtime-v2: make the runner responsible for log
+segment creation;
 - runtime-v2: fixed an issue when submitting a form can cause other
 unsubmitted forms to dissappear;
 - runtime-v2: fixed compilation of block steps when `error` is
