@@ -27,6 +27,7 @@ import com.walmartlabs.concord.runtime.v2.model.Location;
 import com.walmartlabs.concord.runtime.v2.model.Step;
 import com.walmartlabs.concord.runtime.v2.runner.context.ContextFactory;
 import com.walmartlabs.concord.runtime.v2.runner.logging.LogContext;
+import com.walmartlabs.concord.runtime.v2.runner.logging.RunnerLogger;
 import com.walmartlabs.concord.runtime.v2.runner.logging.SegmentedLogger;
 import com.walmartlabs.concord.runtime.v2.runner.tasks.ContextProvider;
 import com.walmartlabs.concord.runtime.v2.sdk.Context;
@@ -80,11 +81,12 @@ public abstract class StepCommand<T extends Step> implements Command {
             boolean redirectSystemOutAndErr = runnerCfg.logging().sendSystemOutAndErrToSLF4J();
             LogContext logContext = LogContext.builder()
                     .segmentName(segmentName)
-                    .segmentId(correlationId.toString())
+                    .correlationId(correlationId)
                     .redirectSystemOutAndErr(redirectSystemOutAndErr)
                     .logLevel(getLogLevel(step))
                     .build();
-            SegmentedLogger.withLogSegment(logContext,
+
+            runtime.getService(RunnerLogger.class).withContext(logContext,
                     () -> executeWithContext(ctx, runtime, state, threadId));
         }
     }

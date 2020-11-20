@@ -28,16 +28,16 @@ import ch.qos.logback.core.sift.AbstractDiscriminator;
  */
 public class SegmentDiscriminator extends AbstractDiscriminator<ILoggingEvent> {
 
-    public static final String UNSEGMENTED_LOG = "system";
+    private static final String SYSTEM_SEGMENT_ID = "0";
 
     @Override
     public String getDiscriminatingValue(ILoggingEvent iLoggingEvent) {
-        LogContext ctx = LogUtils.getContext();
-        if (ctx == null) {
-            return UNSEGMENTED_LOG;
+        Long segmentId = LogUtils.getSegmentId();
+        if (segmentId == null) {
+            return SYSTEM_SEGMENT_ID;
         }
 
-        return ctx.segmentId() + "-" + ctx.segmentName();
+        return String.valueOf(segmentId);
     }
 
     @Override

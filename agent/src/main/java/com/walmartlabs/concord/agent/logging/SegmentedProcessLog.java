@@ -28,9 +28,7 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.nio.file.Path;
-import java.util.Map;
 import java.util.UUID;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Supplier;
 
 public class SegmentedProcessLog extends RedirectedProcessLog {
@@ -38,36 +36,25 @@ public class SegmentedProcessLog extends RedirectedProcessLog {
     private static final Logger log = LoggerFactory.getLogger(SegmentedProcessLog.class);
 
     private final Path logsDir;
-    private final Map<LogSegment, Long> segmentIds;
 
     public SegmentedProcessLog(Path logsDir, UUID instanceId, LogAppender appender, long logSteamMaxDelay) throws IOException {
         super(logsDir, instanceId, appender, logSteamMaxDelay);
         this.logsDir = logsDir;
-        this.segmentIds = new ConcurrentHashMap<>();
     }
 
     @Override
     public void run(Supplier<Boolean> stopCondition) throws Exception {
         FileWatcher.FileReader fileReader = new FileWatcher.ByteArrayFileReader();
 
-        FileWatcher.watch(logsDir, stopCondition, logSteamMaxDelay, new LogSegmentNameParser(), new FileWatcher.FileListener<LogSegment>() {
+        FileWatcher.watch(logsDir, stopCondition, logSteamMaxDelay, new LogSegmentNameParser(), new FileWatcher.FileListener<Long>() {
 
             @Override
-            public boolean onNewFile(LogSegment fileName) {
-                Long id = appender.createSegment(instanceId, fileName.correlationId(), fileName.name(), fileName.createdAt());
-                if (id != null) {
-                    segmentIds.put(fileName, id);
-                }
-                return id != null;
+            public boolean onNewFile(Long id) {
+                return true;
             }
 
             @Override
-            public long onChanged(LogSegment fileName, RandomAccessFile in) throws IOException {
-                Long id = segmentIds.get(fileName);
-                if (id == null) {
-                    return -1;
-                }
-
+            public long onChanged(Long id, RandomAccessFile in) throws IOException {
                 return fileReader.read(in, chunk -> {
                     LogStatsParser.Result result = LogStatsParser.parse(chunk.bytes(), chunk.len());
                     if (result.chunk() != null) {
@@ -80,7 +67,6 @@ public class SegmentedProcessLog extends RedirectedProcessLog {
                     if (stats != null) {
                         appender.updateSegment(instanceId, id, result.stats());
                         if (isFinal(stats.status())) {
-                            segmentIds.remove(fileName);
                             return -1;
                         }
                     }

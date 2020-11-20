@@ -27,6 +27,14 @@ public final class LogUtils {
      */
     private static final int MAX_DEPTH = 100;
 
+    public static Long getSegmentId() {
+        LogContext ctx = getContext();
+        if (ctx == null) {
+            return null;
+        }
+        return ctx.segmentId();
+    }
+
     public static LogContext getContext() {
         int depth = 0;
 
