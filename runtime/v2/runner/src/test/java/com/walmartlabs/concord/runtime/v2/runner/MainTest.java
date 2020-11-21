@@ -50,6 +50,7 @@ import org.immutables.value.Value;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.ArgumentCaptor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -71,9 +72,9 @@ import java.util.concurrent.atomic.AtomicLong;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
+import static java.util.regex.Pattern.quote;
 import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
-import static java.util.regex.Pattern.quote;
 
 public class MainTest {
 
@@ -91,6 +92,7 @@ public class MainTest {
     private byte[] allLogs;
 
     private Path segmentedLogDir;
+    private TestLoggingClient loggingClient;
 
     @Before
     public void setUp() throws IOException {
@@ -134,6 +136,7 @@ public class MainTest {
         };
 
         segmentedLogDir = Files.createTempDirectory("segmentedLog");
+        loggingClient = spy(new TestLoggingClient());
 
         allLogs = null;
     }
@@ -515,7 +518,7 @@ public class MainTest {
                 .build());
 
         byte[] log = run();
-        assertLogAtLeast(log, 3,".*empty: \\[\\].*");
+        assertLogAtLeast(log, 3, ".*empty: \\[\\].*");
         assertLog(log, ".*after add: \\[1\\].*");
         assertLog(log, ".*after add: \\[2\\].*");
         assertLog(log, ".*after add: \\[3\\].*");
@@ -878,6 +881,38 @@ public class MainTest {
         assertLog(log, ".*form1: Vasia.*");
     }
 
+    @Test
+    public void testNestedLogSegments() throws Exception {
+        deploy("nestedLogSegments");
+
+        save(ProcessConfiguration.builder()
+                .build());
+
+        RunnerConfiguration runnerCfg = RunnerConfiguration.builder()
+                .logging(LoggingConfiguration.builder()
+                        .segmentedLogDir(segmentedLogDir.toAbsolutePath().toString())
+                        .build())
+                .build();
+
+        run(runnerCfg);
+
+        ArgumentCaptor<LogSegment> args = ArgumentCaptor.forClass(LogSegment.class);
+        verify(loggingClient, times(7)).createSegment(args.capture());
+
+        List<LogSegment> segments = args.getAllValues();
+
+        // first top-level group
+        assertLogSegment(segments, 0, null, "groupA");
+        assertLogSegment(segments, 1, 1L, "A1");
+        assertLogSegment(segments, 2, 1L, "A2");
+
+        // second top-level group
+        assertLogSegment(segments, 3, null, "groupB");
+        assertLogSegment(segments, 4, 4L, "B1");
+        assertLogSegment(segments, 5, 4L, "groupC");
+        assertLogSegment(segments, 6, 6L, "C1");
+    }
+
     private void deploy(String resource) throws URISyntaxException, IOException {
         Path src = Paths.get(MainTest.class.getResource(resource).toURI());
         IOUtils.copy(src, workDir);
@@ -931,7 +966,7 @@ public class MainTest {
             protected void configure() {
                 bind(DefaultTaskVariablesService.class).toProvider(new DefaultTaskVariablesProvider(processConfiguration));
                 bind(RunnerLogger.class).toProvider(LoggerProvider.class);
-                bind(LoggingClient.class).to(TestLoggingClient.class);
+                bind(LoggingClient.class).toInstance(loggingClient);
             }
         };
 
@@ -1008,6 +1043,12 @@ public class MainTest {
         }
 
         return cnt;
+    }
+
+    private static void assertLogSegment(List<LogSegment> segments, int idx, Long parentSegmentId, String name) {
+        LogSegment s = segments.get(idx);
+        assertEquals(parentSegmentId, s.parentSegmentId());
+        assertEquals(name, s.name());
     }
 
     @Named("testDefaults")
@@ -1199,7 +1240,7 @@ public class MainTest {
         private final AtomicLong id = new AtomicLong(1L);
 
         @Override
-        public long createSegment(UUID correlationId, String name) {
+        public long createSegment(LogSegment logSegment) {
             return id.getAndIncrement();
         }
     }

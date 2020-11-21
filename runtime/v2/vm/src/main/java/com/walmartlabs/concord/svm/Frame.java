@@ -109,6 +109,10 @@ public class Frame implements Serializable {
         return Collections.unmodifiableMap(locals);
     }
 
+    public Serializable removeLocal(String k) {
+        return locals.remove(k);
+    }
+
     public static class Builder {
 
         private FrameType type = FrameType.ROOT;

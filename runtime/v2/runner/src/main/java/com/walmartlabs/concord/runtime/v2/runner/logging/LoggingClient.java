@@ -20,9 +20,13 @@ package com.walmartlabs.concord.runtime.v2.runner.logging;
  * =====
  */
 
-import java.util.UUID;
-
 public interface LoggingClient {
 
-    long createSegment(UUID correlationId, String name);
+    /**
+     * Creates a new log segment.
+     *
+     * @param segment
+     * @return the segment's ID
+     */
+    long createSegment(LogSegment segment);
 }

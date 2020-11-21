@@ -48,9 +48,17 @@ public class SegmentedLogger implements RunnerLogger {
 
     @Override
     public void withContext(LogContext context, Runnable runnable) {
-        long segmentId = loggingClient.createSegment(context.correlationId(), context.segmentName());
+        long segmentId = loggingClient.createSegment(LogSegment.builder()
+                .parentSegmentId(context.parentSegmentId())
+                .correlationId(context.correlationId())
+                .name(context.segmentName())
+                .build());
 
-        ThreadGroup threadGroup = new LogContextThreadGroup(LogContext.builder().from(context).segmentId(segmentId).build());
+        ThreadGroup threadGroup = new LogContextThreadGroup(LogContext.builder()
+                .from(context)
+                .segmentId(segmentId)
+                .build());
+
         executeInThreadGroup(threadGroup, "thread-" + context.segmentName(), () -> {
             // make sure the redirection is enabled in the current thread
             if (context.redirectSystemOutAndErr() && !SysOutOverSLF4J.systemOutputsAreSLF4JPrintStreams()) {
@@ -68,6 +76,11 @@ public class SegmentedLogger implements RunnerLogger {
     public static String getSegmentName(AbstractStep<?> step) {
         Map<String, Serializable> meta = meta(step);
         return (String) meta.get(Constants.SEGMENT_NAME);
+    }
+
+    public static String getSegmentGroup(AbstractStep<?> step) {
+        Map<String, Serializable> meta = meta(step);
+        return (String) meta.get(Constants.SEGMENT_GROUP);
     }
 
     public static Level getLogLevel(AbstractStep<?> step) {

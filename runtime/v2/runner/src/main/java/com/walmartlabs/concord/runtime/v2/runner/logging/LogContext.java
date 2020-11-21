@@ -32,6 +32,9 @@ public interface LogContext {
     String segmentName();
 
     @Nullable
+    Long parentSegmentId();
+
+    @Nullable
     Long segmentId();
 
     UUID correlationId();

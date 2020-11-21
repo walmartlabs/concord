@@ -49,14 +49,18 @@ public class DefaultLoggingClient implements LoggingClient {
         this.cfg = cfg;
     }
 
-    public long createSegment(UUID correlationId, String name) {
+    @Override
+    public long createSegment(LogSegment logSegment) {
         LogSegmentRequest request = new LogSegmentRequest()
-                .setCorrelationId(correlationId)
+                .setParentSegmentId(logSegment.parentSegmentId())
+                .setCorrelationId(logSegment.correlationId())
                 .setCreatedAt(OffsetDateTime.now(ZoneId.of("UTC")))
-                .setName(name);
+                .setName(logSegment.name());
 
         try {
-            LogSegmentOperationResponse result = ClientUtils.withRetry(cfg.api().retryCount(), cfg.api().retryInterval(), () -> api.segment(instanceId, request));
+            LogSegmentOperationResponse result = ClientUtils.withRetry(cfg.api().retryCount(), cfg.api().retryInterval(),
+                    () -> api.segment(instanceId, request));
+
             return result.getId();
         } catch (ApiException e) {
             throw new RuntimeException(e);

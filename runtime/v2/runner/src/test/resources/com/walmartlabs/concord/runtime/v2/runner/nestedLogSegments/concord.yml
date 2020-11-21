@@ -1,0 +1,26 @@
+flows:
+  default:
+    - call: flowA
+      meta:
+        segmentGroup: groupA
+
+    - call: flowB
+      meta:
+        segmentGroup: groupB
+
+  flowA:
+    - name: A1
+      log: "uno"
+    - name: A2
+      log: "dos"
+
+  flowB:
+    - name: B1
+      log: "tres"
+    - call: flowC
+      meta:
+        segmentGroup: groupC
+
+  flowC:
+    - name: C1
+      log: "quatro"

@@ -79,16 +79,24 @@ public class ProcessLogsDao extends AbstractDao {
         return PgIntRange.parse(r.getLogRange().toString());
     }
 
-    public long createSegment(ProcessKey processKey, UUID correlationId, String name, OffsetDateTime createdAt, String status) {
+    public long createSegment(ProcessKey processKey,
+                              Long parentSegmentId,
+                              UUID correlationId,
+                              String name,
+                              OffsetDateTime createdAt,
+                              String status) {
+
         return txResult(tx -> tx.insertInto(PROCESS_LOG_SEGMENTS)
                 .columns(PROCESS_LOG_SEGMENTS.INSTANCE_ID,
                         PROCESS_LOG_SEGMENTS.INSTANCE_CREATED_AT,
+                        PROCESS_LOG_SEGMENTS.PARENT_SEGMENT_ID,
                         PROCESS_LOG_SEGMENTS.CORRELATION_ID,
                         PROCESS_LOG_SEGMENTS.SEGMENT_NAME,
                         PROCESS_LOG_SEGMENTS.SEGMENT_TS,
                         PROCESS_LOG_SEGMENTS.SEGMENT_STATUS)
                 .values(value(processKey.getInstanceId()),
                         value(processKey.getCreatedAt()),
+                        parentSegmentId != null ? value(parentSegmentId) : null,
                         value(correlationId), value(name),
                         createdAt != null ? value(createdAt) : currentOffsetDateTime(),
                         value(status))

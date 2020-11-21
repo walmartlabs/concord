@@ -1,4 +1,4 @@
-package com.walmartlabs.concord.runtime.v2;
+package com.walmartlabs.concord.runtime.v2.runner.logging;
 
 /*-
  * *****
@@ -9,9 +9,9 @@ package com.walmartlabs.concord.runtime.v2;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- *
+ * 
  *      http://www.apache.org/licenses/LICENSE-2.0
- *
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -20,12 +20,23 @@ package com.walmartlabs.concord.runtime.v2;
  * =====
  */
 
-public final class Constants {
+import org.immutables.value.Value;
 
-    public static final String SEGMENT_NAME = "segmentName";
-    public static final String SEGMENT_GROUP = "segmentGroup";
-    public static final String LOG_LEVEL = "logLevel";
+import javax.annotation.Nullable;
+import java.util.UUID;
 
-    private Constants() {
+@Value.Immutable
+public interface LogSegment {
+
+    @Nullable
+    Long parentSegmentId();
+
+    @Nullable
+    UUID correlationId();
+
+    String name();
+
+    static ImmutableLogSegment.Builder builder() {
+        return ImmutableLogSegment.builder();
     }
 }

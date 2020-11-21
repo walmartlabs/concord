@@ -39,6 +39,9 @@ public interface LogSegmentRequest {
     @Nullable
     UUID correlationId();
 
+    @Nullable
+    Long parentSegmentId();
+
     String name();
 
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss.SSSX")

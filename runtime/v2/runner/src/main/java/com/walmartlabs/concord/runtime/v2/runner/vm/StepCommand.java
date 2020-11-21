@@ -27,14 +27,13 @@ import com.walmartlabs.concord.runtime.v2.model.Location;
 import com.walmartlabs.concord.runtime.v2.model.Step;
 import com.walmartlabs.concord.runtime.v2.runner.context.ContextFactory;
 import com.walmartlabs.concord.runtime.v2.runner.logging.LogContext;
+import com.walmartlabs.concord.runtime.v2.runner.logging.LogUtils;
 import com.walmartlabs.concord.runtime.v2.runner.logging.RunnerLogger;
 import com.walmartlabs.concord.runtime.v2.runner.logging.SegmentedLogger;
 import com.walmartlabs.concord.runtime.v2.runner.tasks.ContextProvider;
 import com.walmartlabs.concord.runtime.v2.sdk.Context;
-import com.walmartlabs.concord.svm.Command;
 import com.walmartlabs.concord.svm.Runtime;
-import com.walmartlabs.concord.svm.State;
-import com.walmartlabs.concord.svm.ThreadId;
+import com.walmartlabs.concord.svm.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -73,21 +72,42 @@ public abstract class StepCommand<T extends Step> implements Command {
         Context ctx = contextFactory.create(runtime, state, threadId, step, correlationId);
 
         String segmentName = getSegmentName(ctx, step);
+        String segmentGroup = getSegmentGroup(ctx, step);
 
-        if (segmentName == null) {
+        if (segmentGroup == null && segmentName == null) {
             executeWithContext(ctx, runtime, state, threadId);
         } else {
+            if (segmentName == null) {
+                segmentName = segmentGroup;
+            }
+
             RunnerConfiguration runnerCfg = runtime.getService(RunnerConfiguration.class);
             boolean redirectSystemOutAndErr = runnerCfg.logging().sendSystemOutAndErrToSLF4J();
+
+            Frame frame = state.peekFrame(threadId);
+
+            Long parentSegmentId = VMUtils.getCombinedLocal(state, threadId, "__parentSegmentId");
+
             LogContext logContext = LogContext.builder()
+                    .parentSegmentId(parentSegmentId)
                     .segmentName(segmentName)
                     .correlationId(correlationId)
                     .redirectSystemOutAndErr(redirectSystemOutAndErr)
                     .logLevel(getLogLevel(step))
                     .build();
 
-            runtime.getService(RunnerLogger.class).withContext(logContext,
-                    () -> executeWithContext(ctx, runtime, state, threadId));
+            RunnerLogger logger = runtime.getService(RunnerLogger.class);
+            logger.withContext(logContext,
+                    () -> {
+                        if (segmentGroup != null) {
+                            Long segmentId = LogUtils.getSegmentId();
+                            if (segmentId != null) {
+                                frame.setLocal("__parentSegmentId", segmentId);
+                            }
+                        }
+
+                        executeWithContext(ctx, runtime, state, threadId);
+                    });
         }
     }
 
@@ -122,6 +142,18 @@ public abstract class StepCommand<T extends Step> implements Command {
         }
 
         return getDefaultSegmentName();
+    }
+
+    protected String getSegmentGroup(Context ctx, T step) {
+        if (step instanceof AbstractStep) {
+            String rawSegmentGroup = SegmentedLogger.getSegmentGroup((AbstractStep<?>) step);
+            String segmentGroup = ctx.eval(rawSegmentGroup, String.class);
+            if (segmentGroup != null) {
+                return segmentGroup;
+            }
+        }
+
+        return null; // TODO
     }
 
     protected String getDefaultSegmentName() {
