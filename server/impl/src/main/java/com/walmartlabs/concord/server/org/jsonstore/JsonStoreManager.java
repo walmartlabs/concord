@@ -159,7 +159,7 @@ public class JsonStoreManager {
 
         UserEntry owner = getOwner(entityOwner, UserPrincipal.assertCurrent().getUser());
 
-        policyManager.checkEntity(org.getId(), null, EntityType.JSON_STORE, EntityAction.CREATE, owner, PolicyUtils.toMap(org.getId(), storeName, visibility, owner));
+        policyManager.checkEntity(org.getId(), null, EntityType.JSON_STORE, EntityAction.CREATE, owner, PolicyUtils.jsonStoreToMap(org.getId(), storeName, visibility, owner));
 
         assertStoragePolicy(org.getId());
 
@@ -177,7 +177,7 @@ public class JsonStoreManager {
         String prevStoreName = prevStorage.name();
 
         UserEntry owner = getOwner(entry.owner(), null);
-        policyManager.checkEntity(org.getId(), null, EntityType.JSON_STORE, EntityAction.UPDATE, owner, PolicyUtils.toMap(org.getId(), prevStoreName, entry.visibility(), owner));
+        policyManager.checkEntity(org.getId(), null, EntityType.JSON_STORE, EntityAction.UPDATE, owner, PolicyUtils.jsonStoreToMap(org.getId(), prevStoreName, entry.visibility(), owner));
 
         UUID currentOwnerId = entry.owner() != null ? entry.owner().id() : null;
         UUID updatedOwnerId = owner != null ? owner.getId() : null;
