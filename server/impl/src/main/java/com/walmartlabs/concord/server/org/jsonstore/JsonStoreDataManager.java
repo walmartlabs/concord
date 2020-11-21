@@ -102,7 +102,7 @@ public class JsonStoreDataManager {
         JsonStoreEntry store = jsonStoreAccessManager.assertAccess(org.getId(), null, storeName, ResourceAccessLevel.WRITER, true);
 
         String jsonData = objectMapper.toString(data);
-        policyManager.checkEntity(org.getId(), null, EntityType.STORAGE_ITEM, EntityAction.UPDATE, null, toMap(org, store, itemPath, jsonData));
+        policyManager.checkEntity(org.getId(), null, EntityType.JSON_STORE_ITEM, EntityAction.UPDATE, null, toMap(org, store, itemPath, jsonData));
 
         Long currentItemSize = storeDataDao.getItemSize(store.id(), itemPath);
         assertStorageDataPolicy(org.getId(), store.id(), currentItemSize == null ? 0 : currentItemSize, jsonData);

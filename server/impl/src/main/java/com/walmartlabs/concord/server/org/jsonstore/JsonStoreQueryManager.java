@@ -93,12 +93,12 @@ public class JsonStoreQueryManager {
         }
 
         if (queryId == null) {
-            policyManager.checkEntity(org.getId(), null, EntityType.STORAGE_QUERY, EntityAction.CREATE, null, toMap(org, store, queryName, text));
+            policyManager.checkEntity(org.getId(), null, EntityType.JSON_STORE_QUERY, EntityAction.CREATE, null, toMap(org, store, queryName, text));
             queryDao.insert(store.id(), queryName, text);
             addAuditLog(AuditAction.CREATE, org.getId(), store.id(), queryName, null, text);
             return OperationResult.CREATED;
         } else {
-            policyManager.checkEntity(org.getId(), null, EntityType.STORAGE_QUERY, EntityAction.UPDATE, null, toMap(org, store, queryName, text));
+            policyManager.checkEntity(org.getId(), null, EntityType.JSON_STORE_QUERY, EntityAction.UPDATE, null, toMap(org, store, queryName, text));
 
             JsonStoreQueryEntry prevEntry = queryDao.get(queryId);
 
