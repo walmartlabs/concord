@@ -153,7 +153,7 @@ public class OrganizationManager {
 
         UserEntry owner = getOwner(entry.getOwner(), UserPrincipal.assertCurrent().getUser());
 
-        policyManager.checkEntity(null, null, EntityType.ORGANIZATION, EntityAction.CREATE, owner, PolicyUtils.toMap(entry));
+        policyManager.checkEntity(null, null, EntityType.ORGANIZATION, EntityAction.CREATE, owner, PolicyUtils.orgToMap(entry));
 
         UUID orgId = orgDao.insert(tx, entry.getName(), owner.getId(), entry.getVisibility(), entry.getMeta(), entry.getCfg());
 
@@ -175,7 +175,7 @@ public class OrganizationManager {
 
         UserEntry owner = getOwner(entry.getOwner(), null);
 
-        policyManager.checkEntity(orgId, null, EntityType.ORGANIZATION, EntityAction.UPDATE, owner, PolicyUtils.toMap(entry));
+        policyManager.checkEntity(orgId, null, EntityType.ORGANIZATION, EntityAction.UPDATE, owner, PolicyUtils.orgToMap(entry));
 
         UUID ownerId = owner != null ? owner.getId() : null;
         orgDao.update(tx, orgId, entry.getName(), ownerId, entry.getVisibility(), entry.getMeta(), entry.getCfg());

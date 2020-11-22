@@ -122,7 +122,7 @@ public class ProjectRepositoryManager {
         SecretEntry secret = assertSecret(orgId, entry);
 
         policyManager.checkEntity(orgId, projectId, EntityType.REPOSITORY, EntityAction.CREATE, null,
-                PolicyUtils.toMap(orgId, orgName, projectId, projectName, entry, secret));
+                PolicyUtils.repositoryToMap(orgId, orgName, projectId, projectName, entry, secret));
 
         UUID repoId = repositoryDao.insert(tx, projectId,
                 entry.getName(), entry.getUrl(),
@@ -154,7 +154,7 @@ public class ProjectRepositoryManager {
 
         SecretEntry secret = assertSecret(orgId, entry);
         policyManager.checkEntity(orgId, projectId, EntityType.REPOSITORY, EntityAction.UPDATE, null,
-                PolicyUtils.toMap(orgId, orgName, projectId, projectName, entry, secret));
+                PolicyUtils.repositoryToMap(orgId, orgName, projectId, projectName, entry, secret));
 
         repositoryDao.update(tx, repoId,
                 entry.getName(),
