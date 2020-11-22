@@ -24,6 +24,11 @@ unsubmitted forms to dissappear;
 - runtime-v2: fixed compilation of block steps when `error` is
 used.
 
+### Breaking
+
+- policy-engine, concord-server: rename `entity` policy's types for
+consistency.
+
 
 
 ## [1.73.0] - 2020-11-15
