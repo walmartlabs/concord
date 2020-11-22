@@ -33,6 +33,7 @@ import com.walmartlabs.concord.server.org.project.ProjectDao;
 import com.walmartlabs.concord.server.policy.EntityAction;
 import com.walmartlabs.concord.server.policy.EntityType;
 import com.walmartlabs.concord.server.policy.PolicyManager;
+import com.walmartlabs.concord.server.policy.PolicyUtils;
 import org.jooq.Configuration;
 import org.jooq.DSLContext;
 import org.slf4j.Logger;
@@ -45,8 +46,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.stream.Collectors;
-
-import static com.walmartlabs.concord.server.policy.PolicyUtils.toMap;
 
 @Named
 public class TriggerManager extends AbstractDao {
@@ -84,7 +83,7 @@ public class TriggerManager extends AbstractDao {
     public void refresh(UUID projectId, UUID repoId, ProcessDefinition pd) {
         UUID orgId = projectDao.getOrgId(projectId);
         for (Trigger t : pd.triggers()) {
-            policyManager.checkEntity(orgId, projectId, EntityType.TRIGGER, EntityAction.CREATE, null, toMap(orgId, projectId, t));
+            policyManager.checkEntity(orgId, projectId, EntityType.TRIGGER, EntityAction.CREATE, null, PolicyUtils.triggerToMap(orgId, projectId, t));
         }
 
         tx(tx -> {

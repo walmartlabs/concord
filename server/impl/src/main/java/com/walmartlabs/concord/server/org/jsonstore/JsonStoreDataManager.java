@@ -34,6 +34,7 @@ import com.walmartlabs.concord.server.org.ResourceAccessLevel;
 import com.walmartlabs.concord.server.policy.EntityAction;
 import com.walmartlabs.concord.server.policy.EntityType;
 import com.walmartlabs.concord.server.policy.PolicyManager;
+import com.walmartlabs.concord.server.policy.PolicyUtils;
 import com.walmartlabs.concord.server.sdk.ConcordApplicationException;
 import com.walmartlabs.concord.server.security.UserPrincipal;
 import org.sonatype.siesta.ValidationErrorsException;
@@ -42,7 +43,6 @@ import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
 import java.text.MessageFormat;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -102,7 +102,7 @@ public class JsonStoreDataManager {
         JsonStoreEntry store = jsonStoreAccessManager.assertAccess(org.getId(), null, storeName, ResourceAccessLevel.WRITER, true);
 
         String jsonData = objectMapper.toString(data);
-        policyManager.checkEntity(org.getId(), null, EntityType.STORAGE_ITEM, EntityAction.UPDATE, null, toMap(org, store, itemPath, jsonData));
+        policyManager.checkEntity(org.getId(), null, EntityType.JSON_STORE_ITEM, EntityAction.UPDATE, null, PolicyUtils.jsonStoreItemToMap(org, store, itemPath, jsonData));
 
         Long currentItemSize = storeDataDao.getItemSize(store.id(), itemPath);
         assertStorageDataPolicy(org.getId(), store.id(), currentItemSize == null ? 0 : currentItemSize, jsonData);
@@ -155,17 +155,6 @@ public class JsonStoreDataManager {
             sb.append(MessageFormat.format(msg, actual, max)).append(';');
         }
         return sb.toString();
-    }
-
-    private static Map<String, Object> toMap(OrganizationEntry org, JsonStoreEntry store, String itemPath, Object data) {
-        Map<String, Object> attrs = new HashMap<>();
-        attrs.put("orgId", org.getId());
-        attrs.put("orgName", org.getName());
-        attrs.put("jsonStoreId", store.id());
-        attrs.put("jsonStoreName", store.name());
-        attrs.put("itemPath", itemPath);
-        attrs.put("itemData", data);
-        return attrs;
     }
 
     private void addAuditLog(AuditAction auditAction, UUID orgId, UUID storeId, String itemPath) {
