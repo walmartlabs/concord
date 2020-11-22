@@ -30,6 +30,7 @@ import com.walmartlabs.concord.server.security.Roles;
 import com.walmartlabs.concord.server.security.UserPrincipal;
 import com.walmartlabs.concord.server.user.UserDao;
 import org.apache.shiro.authz.UnauthorizedException;
+import org.jooq.DSLContext;
 import org.sonatype.siesta.ValidationErrorsException;
 
 import javax.inject.Inject;
@@ -80,7 +81,11 @@ public class ProjectAccessManager {
     }
 
     public ProjectEntry assertAccess(UUID projectId, ResourceAccessLevel level, boolean orgMembersOnly) {
-        ProjectEntry project = projectDao.get(projectId);
+        return projectDao.txResult(tx -> assertAccess(tx, projectId, level, orgMembersOnly));
+    }
+
+    public ProjectEntry assertAccess(DSLContext tx, UUID projectId, ResourceAccessLevel level, boolean orgMembersOnly) {
+        ProjectEntry project = projectDao.get(tx, projectId);
         if (project == null) {
             throw new ValidationErrorsException("Project not found: " + projectId);
         }
