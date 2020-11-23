@@ -95,7 +95,7 @@ public class GitClient2 {
 
             configure(req.destination());
             configureRemote(req.destination(), updateUrl(req.url(), req.secret()));
-            configureFetch(req.destination(), getRefSpec(req.destination(), req.branchOrTag()));
+            configureFetch(req.destination(), getRefSpec(req.destination(), req.branchOrTag(), req.secret()));
 
             // fetch
             boolean effectiveShallow = req.shallow() && req.commitId() == null;
@@ -209,12 +209,12 @@ public class GitClient2 {
         return ObjectId.fromString(line).name();
     }
 
-    private List<Ref> getRefs(Path workDir, String branchOrTag) {
-        String result = exec(Command.builder()
+    private List<Ref> getRefs(Path workDir, String branchOrTag, Secret secret) {
+        String result = execWithCredentials(Command.builder()
                 .workDir(workDir)
                 .timeout(cfg.defaultOperationTimeout())
                 .addArgs("ls-remote", "--symref", "origin", branchOrTag)
-                .build());
+                .build(), secret);
 
         List<Ref> refs = new ArrayList<>();
 
@@ -243,20 +243,20 @@ public class GitClient2 {
         return refs;
     }
 
-    private Ref getHeadRef(Path workDir, String branchOrTag) {
+    private Ref getHeadRef(Path workDir, String branchOrTag, Secret secret) {
         String branchHeadRef = "refs/heads/" + branchOrTag;
         String tagRef = "refs/tags/" + branchOrTag;
-        return getRefs(workDir, branchOrTag).stream()
+        return getRefs(workDir, branchOrTag, secret).stream()
                 .filter(r -> r.ref().equalsIgnoreCase(branchHeadRef) || r.ref().equalsIgnoreCase(tagRef))
                 .findFirst()
                 .orElseThrow(() -> new RepositoryException("Can't find head ref for '" + branchOrTag + "'"));
     }
 
-    private String getRefSpec(Path workDir, String branchOrTag) {
+    private String getRefSpec(Path workDir, String branchOrTag, Secret secret) {
         if (branchOrTag == null) {
             return "+refs/heads/*:refs/remotes/origin/*";
         }
-        Ref ref = getHeadRef(workDir, branchOrTag);
+        Ref ref = getHeadRef(workDir, branchOrTag, secret);
         if (ref.tag()) {
             return String.format("+refs/tags/%s:refs/remotes/origin/tags/%s", branchOrTag, branchOrTag);
         } else {
