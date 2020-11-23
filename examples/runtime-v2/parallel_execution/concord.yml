@@ -13,15 +13,18 @@ flows:
               out: googleResponse
             - log: "Google: ${googleResponse.statusCode}"
 
-        - name: "HTTP Bing Segment"
-          task: http
-          in:
-            url: https://bing.com/
-            method: "GET"
-          out: bingResponse
-      out:
-        - googleResponse
-        - bingResponse
+        - block:
+            - name: "HTTP Bing Segment"
+              task: http
+              in:
+                url: https://bing.com/
+                method: "GET"
+              out: bingResponse
+            - log: "Bing: ${bingResponse.statusCode}"
+
+          out:
+            - googleResponse
+            - bingResponse
 
     - log: |
         Printing status...
