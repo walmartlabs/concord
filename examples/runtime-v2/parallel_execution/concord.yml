@@ -4,19 +4,21 @@ configuration:
 flows:
   default:
     - parallel:
-        - name: "HTTP Google Segment"
-          task: http
-          in:
-            url: https://google.com/
-            method: "GET"
-#          out: googleResponse
+        - block:
+            - name: "HTTP Google Segment"
+              task: http
+              in:
+                url: https://google.com/
+                method: "GET"
+              out: googleResponse
+            - log: "Google: ${googleResponse.statusCode}"
 
         - name: "HTTP Bing Segment"
           task: http
           in:
             url: https://bing.com/
             method: "GET"
-#          out: bingResponse
+          out: bingResponse
       out:
         - googleResponse
         - bingResponse
