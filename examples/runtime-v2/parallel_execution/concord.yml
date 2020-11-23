@@ -17,9 +17,9 @@ flows:
             url: https://bing.com/
             method: "GET"
           out: bingResponse
-      out:
-        - googleResponse
-        - bingResponse
+#      out:
+#        - googleResponse
+#        - bingResponse
 
     - log: |
         Printing status...
