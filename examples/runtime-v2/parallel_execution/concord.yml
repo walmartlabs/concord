@@ -36,7 +36,6 @@ flows:
         - googleResponse
         - bingResponse
 
-    - name: Final Output
     - log: |
         Google: ${googleResponse}
         Bing: ${bingResponse}
