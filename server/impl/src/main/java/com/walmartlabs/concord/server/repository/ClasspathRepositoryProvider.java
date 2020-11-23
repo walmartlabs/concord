@@ -52,7 +52,7 @@ public class ClasspathRepositoryProvider implements RepositoryProvider {
     }
 
     @Override
-    public String fetch(String repoUrl, String branch, String commitId, Secret secret, boolean checkRemoteCommitId, Path dst) {
+    public String fetch(String repoUrl, String branch, String commitId, Secret secret, Path dst) {
         URL resUrl = Resources.getResource(normalizeUrl(repoUrl));
 
         try {

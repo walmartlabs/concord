@@ -26,11 +26,13 @@ import javax.annotation.Nullable;
 import java.time.Duration;
 
 @Value.Immutable
+@Value.Style(jdkOnly = true)
 public interface GitClientConfiguration {
 
     @Nullable
     String oauthToken();
 
+    @Deprecated
     @Value.Default
     default boolean shallowClone() {
         return true;

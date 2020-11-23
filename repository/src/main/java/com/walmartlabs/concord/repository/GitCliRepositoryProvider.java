@@ -36,12 +36,10 @@ public class GitCliRepositoryProvider implements RepositoryProvider {
     private static final Logger log = LoggerFactory.getLogger(GitCliRepositoryProvider.class);
     private static final String GIT_FILES = "^(\\.git|\\.gitmodules|\\.gitignore)$";
 
-    public static final String DEFAULT_BRANCH = "master";
-
-    private final GitClient client;
+    private final GitClient2 client;
 
     public GitCliRepositoryProvider(GitClientConfiguration cfg) {
-        this.client = new GitClient(cfg);
+        this.client = new GitClient2(cfg);
     }
 
     @Override
@@ -51,12 +49,15 @@ public class GitCliRepositoryProvider implements RepositoryProvider {
 
     @Override
     public String getBranchOrDefault(String branch) {
-        return branch != null ? branch : DEFAULT_BRANCH;
+        return branch != null ? branch : GitConstants.DEFAULT_BRANCH;
     }
 
     @Override
-    public String fetch(String uri, String branchOrNull, String commitId, Secret secret, boolean checkRemoteCommitId, Path dst) {
-        String branch = getBranchOrDefault(branchOrNull);
+    public String fetch(String uri, String branchOrNull, String commitId, Secret secret, Path dst) {
+        String branch = branchOrNull;
+        if (commitId == null && branch == null) {
+            branch = GitConstants.DEFAULT_BRANCH;
+        }
         RepositoryException lastException = null;
 
         // try twice
@@ -66,7 +67,15 @@ public class GitCliRepositoryProvider implements RepositoryProvider {
             }
 
             try {
-                return client.fetch(uri, branch, commitId, true, secret, checkRemoteCommitId, dst);
+                return client.fetch(
+                        FetchRequest.builder()
+                                .url(uri)
+                                .branchOrTag(branch)
+                                .commitId(commitId)
+                                .secret(secret)
+                                .destination(dst)
+                        .build())
+                        .head();
             } catch (RepositoryException e) {
                 lastException = e;
                 try {

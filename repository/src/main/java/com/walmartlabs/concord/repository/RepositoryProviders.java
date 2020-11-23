@@ -34,9 +34,9 @@ public class RepositoryProviders {
         this.providers = providers;
     }
 
-    public Repository fetch(String url, String branch, String commitId, String path, Secret secret, boolean checkRemoteCommitId, Path destDir) {
+    public Repository fetch(String url, String branch, String commitId, String path, Secret secret, Path destDir) {
         RepositoryProvider provider = getProvider(url);
-        String fetchedCommitId = provider.fetch(url, branch, commitId, secret, checkRemoteCommitId, destDir);
+        String fetchedCommitId = provider.fetch(url, branch, commitId, secret, destDir);
 
         Path repoPath = repoPath(destDir, path);
 

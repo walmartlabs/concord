@@ -46,6 +46,7 @@ import static org.eclipse.jgit.lib.Constants.OBJECT_ID_STRING_LENGTH;
 /**
  * A GIT CLI wrapper. Most of the code was lifted from Jenkins' git-plugin.
  */
+@Deprecated
 public class GitClient {
 
     private static final Logger log = LoggerFactory.getLogger(GitClient.class);
