@@ -12,6 +12,7 @@ flows:
                 method: "GET"
               out: googleResponse
             - log: "Google: ${googleResponse.statusCode}"
+            - log: "This was the G segment"
 
         - block:
             - name: "HTTP Bing Segment"
@@ -21,10 +22,11 @@ flows:
                 method: "GET"
               out: bingResponse
             - log: "Bing: ${bingResponse.statusCode}"
+            - log: "This was the B segment"
 
-          out:
-            - googleResponse
-            - bingResponse
+      out:
+        - googleResponse
+        - bingResponse
 
     - log: |
         Printing status...
