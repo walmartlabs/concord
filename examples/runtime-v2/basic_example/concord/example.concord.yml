@@ -7,14 +7,14 @@ flows:
 
     - task: http
       in:
-        url: "${url}" # required to be passed. in v1, this was implicit
+        url: "${url}"   # required to be passed. in v1, this was implicit
         method: "GET"
       out: response
 
     - log: "Response Code: ${response.statusCode}"
 
 # Task inputs are explicit in v2 – all required parameters must be specified in the `in` block
-    - name: Log Me!
+    - name: Log Me!    # log segments can be named
       task: log
       in:
         msg: "Hello! I'm being logged in a separate (and named!) segment!"
