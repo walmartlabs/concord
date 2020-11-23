@@ -33,6 +33,7 @@ import org.slf4j.LoggerFactory;
 import javax.inject.Inject;
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.Collections;
 import java.util.UUID;
 
 public class Worker implements Runnable {
@@ -145,16 +146,18 @@ public class Worker implements Runnable {
             return;
         }
 
-        processLog.info("Exporting the repository data: {} @ {}, {}", r.getRepoUrl(), r.getCommitId(), r.getRepoPath());
+        processLog.info("Exporting the repository data: {} @ {}:{}, {}", r.getRepoUrl(), r.getRepoBranch(), r.getCommitId(), r.getRepoPath());
 
         long dt;
         try {
             dt = withTimer(() -> repositoryManager.export(
                     r.getRepoUrl(),
+                    r.getRepoBranch(),
                     r.getCommitId(),
                     r.getRepoPath(),
                     r.getPayloadDir(),
-                    getSecret(r)));
+                    getSecret(r),
+                    Collections.emptyList()));
         } catch (Exception e) {
             processLog.error("Repository export error: {}", e.getMessage(), e);
             throw e;

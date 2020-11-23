@@ -27,7 +27,7 @@ import org.immutables.value.Value;
 public interface FetchResult {
 
     /**
-     * Current HEAD (i.e. the current commit ID)
+     * Current HEAD.
      */
     String head();
 

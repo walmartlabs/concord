@@ -105,7 +105,7 @@ public class GitClient2 {
 
             cleanup(req.destination());
 
-            if (hasSubmodules(req.destination())) {
+            if (req.includeSubmodules() && hasSubmodules(req.destination())) {
                 updateSubmodules(req.destination(), req.secret());
                 resetSubmodules(req.destination());
             }

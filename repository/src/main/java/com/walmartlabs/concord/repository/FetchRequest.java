@@ -54,7 +54,7 @@ public interface FetchRequest {
     String branchOrTag();
 
     /**
-     * Commit ID to checkout
+     * Commit ID to checkout.
      */
     @Nullable
     String commitId();
