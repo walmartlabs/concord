@@ -244,6 +244,10 @@ public final class ConfigurationUtils {
         return true;
     }
 
+    public static boolean isNestedKey(String key) {
+        return key.contains(".");
+    }
+
     private ConfigurationUtils() {
     }
 }

@@ -20,6 +20,7 @@ package com.walmartlabs.concord.runtime.v2.runner.el;
  * =====
  */
 
+import com.walmartlabs.concord.common.ConfigurationUtils;
 import com.walmartlabs.concord.runtime.v2.runner.el.functions.AllVariablesFunction;
 import com.walmartlabs.concord.runtime.v2.runner.el.functions.HasVariableFunction;
 import com.walmartlabs.concord.runtime.v2.runner.el.resolvers.BeanELResolver;
@@ -31,7 +32,9 @@ import com.walmartlabs.concord.runtime.v2.runner.tasks.TaskProviders;
 import javax.el.*;
 import java.lang.reflect.Method;
 import java.util.*;
+import java.util.stream.Collectors;
 
+import static com.walmartlabs.concord.common.ConfigurationUtils.*;
 import static com.walmartlabs.concord.runtime.v2.runner.el.ThreadLocalEvalContext.withEvalContext;
 
 /**
@@ -55,6 +58,11 @@ public class LazyExpressionEvaluator implements ExpressionEvaluator {
             return null;
         }
 
+        if (value instanceof Map) {
+            Map<String, Object> m = nestedToMap((Map<String, Object>)value);
+            value = mergeWithVariables(ctx, m, ((Map<String, Object>) value).keySet().stream().filter(ConfigurationUtils::isNestedKey).collect(Collectors.toSet()));
+        }
+
         if (ctx.useIntermediateResults() && value instanceof Map) {
             Map<String, Object> m = (Map<String, Object>) value;
             if (m.isEmpty()) {
@@ -68,7 +76,7 @@ public class LazyExpressionEvaluator implements ExpressionEvaluator {
     }
 
     @SuppressWarnings("unchecked")
-    public <T> T evalValue(LazyEvalContext ctx, Object value, Class<T> expectedType) {
+    <T> T evalValue(LazyEvalContext ctx, Object value, Class<T> expectedType) {
         if (value == null) {
             return null;
         }
@@ -108,18 +116,6 @@ public class LazyExpressionEvaluator implements ExpressionEvaluator {
         }
 
         return expectedType.cast(value);
-    }
-
-    @Override
-    public void setValue(EvalContext ctx, String expr, Object value) {
-        ELResolver resolver = createResolver(LazyEvalContext.of(ctx, null), expressionFactory);
-
-        StandardELContext sc = new StandardELContext(expressionFactory);
-        sc.putContext(ExpressionFactory.class, expressionFactory);
-        sc.addELResolver(resolver);
-
-        ValueExpression x = expressionFactory.createValueExpression(sc, expr, Object.class);
-        x.setValue(sc, value);
     }
 
     private <T> T evalExpr(LazyEvalContext ctx, String expr, Class<T> type) {
@@ -188,5 +184,37 @@ public class LazyExpressionEvaluator implements ExpressionEvaluator {
 
     private static boolean hasExpression(String s) {
         return s.contains("${");
+    }
+
+    private static Map<String, Object> nestedToMap(Map<String, Object> value) {
+        Map<String, Object> result = new LinkedHashMap<>();
+        for (Map.Entry<String, Object> e : value.entrySet()) {
+            if (isNestedKey(e.getKey())) {
+                Map<String, Object> m = toNested(e.getKey(), e.getValue());
+                result = deepMerge(result, m);
+            } else {
+                result.put(e.getKey(), e.getValue());
+            }
+        }
+        return result;
+    }
+
+    @SuppressWarnings("unchecked")
+    private static Map<String, Object> mergeWithVariables(EvalContext ctx, Map<String, Object> m, Set<String> nestedKeys) {
+        Map<String, Object> result = new LinkedHashMap<>();
+        for (Map.Entry<String, Object> e : m.entrySet()) {
+            String key = e.getKey();
+            Object value = e.getValue();
+            boolean isNested = nestedKeys.stream().anyMatch(s -> s.startsWith(key + "."));
+            if (isNested && ctx.variables().has(key)) {
+                Object o = ctx.variables().get(key);
+                if (o instanceof Map && e.getValue() instanceof Map) {
+                    Map<String, Object> valuesFromVars = (Map<String, Object>)o;
+                    value = deepMerge(valuesFromVars, (Map<String, Object>)value);
+                }
+            }
+            result.put(key, value);
+        }
+        return result;
     }
 }

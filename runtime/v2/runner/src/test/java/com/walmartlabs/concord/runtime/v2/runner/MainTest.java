@@ -729,21 +729,24 @@ public class MainTest {
 
     @Test
     public void testNestedSet() throws Exception {
-        Map<String, Object> x = new HashMap<>();
-        x.put("z", 234);
+        Map<String, Object> args = new HashMap<>();
+        args.put("deep", 3);
+        args.put("z", 234);
 
         deploy("nestedSet");
         save(ProcessConfiguration.builder()
-                .putArguments("x", x)
+                .putArguments("x", args)
                 .build());
 
         byte[] log = run();
         assertLog(log, ".*x: .*y=123.*");
         assertLog(log, ".*x: .*z=234.*");
         assertLog(log, ".*x: .*taskOut=42.*");
-
-        // TODO support for partial eval results?
-        assertLog(log, ".*x: .*taskOut2=42.*");
+        assertLog(log, ".*x: .*taskOut2=165.*");
+        assertLog(log, ".*x: .*fromArgs=234.*");
+        assertLog(log, ".*x: .*deep=\\{beep=1\\}.*");
+        assertLog(log, ".*a: 42.*");
+        assertLog(log, ".*a2: 1.*");
     }
 
     @Test
