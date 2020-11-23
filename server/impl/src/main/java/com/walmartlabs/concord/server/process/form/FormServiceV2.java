@@ -142,6 +142,8 @@ public class FormServiceV2 {
             Map<String, Object> args = new LinkedHashMap<>();
             args.put(form.name(), new LinkedHashMap<>(data));
 
+            formManager.delete(processKey, form.name());
+
             // TODO refactor into the process manager
             Map<String, Object> m = new HashMap<>();
             m.put(Constants.Request.ARGUMENTS_KEY, args);
