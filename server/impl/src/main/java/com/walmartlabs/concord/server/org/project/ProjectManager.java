@@ -103,7 +103,11 @@ public class ProjectManager {
     }
 
     public ProjectEntry get(UUID projectId) {
-        return accessManager.assertAccess(projectId, ResourceAccessLevel.READER, false);
+        return projectDao.txResult(tx -> get(tx, projectId));
+    }
+
+    public ProjectEntry get(DSLContext tx, UUID projectId) {
+        return accessManager.assertAccess(tx, projectId, ResourceAccessLevel.READER, false);
     }
 
     /**
@@ -173,7 +177,7 @@ public class ProjectManager {
     private UUID insert(DSLContext tx, UUID orgId, String orgName, ProjectEntry entry) {
         UserEntry owner = getOwner(entry.getOwner(), UserPrincipal.assertCurrent().getUser());
 
-        policyManager.checkEntity(orgId, null, EntityType.PROJECT, EntityAction.CREATE, owner, PolicyUtils.toMap(orgId, orgName, entry));
+        policyManager.checkEntity(orgId, null, EntityType.PROJECT, EntityAction.CREATE, owner, PolicyUtils.projectToMap(orgId, orgName, entry));
 
         byte[] encryptedKey = encryptedValueManager.createEncryptedSecretKey();
 
@@ -209,7 +213,7 @@ public class ProjectManager {
         }
 
         UserEntry owner = getOwner(entry.getOwner(), null);
-        policyManager.checkEntity(e.getOrgId(), projectId, EntityType.PROJECT, EntityAction.UPDATE, owner, PolicyUtils.toMap(e.getOrgId(), e.getOrgName(), entry));
+        policyManager.checkEntity(e.getOrgId(), projectId, EntityType.PROJECT, EntityAction.UPDATE, owner, PolicyUtils.projectToMap(e.getOrgId(), e.getOrgName(), entry));
 
         UUID currentOwnerId = e.getOwner() != null ? e.getOwner().id() : null;
         UUID updatedOwnerId = owner != null ? owner.getId() : null;

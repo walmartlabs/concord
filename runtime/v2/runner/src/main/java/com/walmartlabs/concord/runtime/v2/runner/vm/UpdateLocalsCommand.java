@@ -27,20 +27,31 @@ import com.walmartlabs.concord.runtime.v2.sdk.Context;
 import com.walmartlabs.concord.svm.Runtime;
 import com.walmartlabs.concord.svm.*;
 
+import java.util.Collection;
+import java.util.Collections;
 import java.util.Map;
 
 /**
  * Takes the input, interpolates its values and sets the result
  * as the current frame's local variables.
+ * <p/>
+ * Optionally takes a list of threads which root frames should be
+ * updated with provided variables.
  */
 public class UpdateLocalsCommand implements Command {
 
     private static final long serialVersionUID = 1L;
 
     private final Map<String, Object> input;
+    private final Collection<ThreadId> threadIds;
 
     public UpdateLocalsCommand(Map<String, Object> input) {
+        this(input, Collections.emptyList());
+    }
+
+    public UpdateLocalsCommand(Map<String, Object> input, Collection<ThreadId> threadIds) {
         this.input = input;
+        this.threadIds = threadIds;
     }
 
     @Override
@@ -55,7 +66,14 @@ public class UpdateLocalsCommand implements Command {
         ExpressionEvaluator ee = runtime.getService(ExpressionEvaluator.class);
         Map<String, Object> m = ee.evalAsMap(EvalContextFactory.scope(ctx), input);
 
-        Frame root = VMUtils.assertNearestRoot(state, threadId);
-        VMUtils.putLocals(root, m);
+        Collection<ThreadId> threads = threadIds;
+        if (threads.isEmpty()) {
+            threads = Collections.singletonList(threadId);
+        }
+
+        for (ThreadId tid : threads) {
+            Frame root = VMUtils.assertNearestRoot(state, tid);
+            VMUtils.putLocals(root, m);
+        }
     }
 }

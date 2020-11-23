@@ -20,30 +20,16 @@ package com.walmartlabs.concord.runtime.v2.runner.logging;
  * =====
  */
 
-import ch.qos.logback.classic.Level;
-import org.immutables.value.Value;
+public class SimpleLogger implements RunnerLogger {
 
-import javax.annotation.Nullable;
-import java.util.UUID;
-
-@Value.Immutable
-public interface LogContext {
-
-    String segmentName();
-
-    @Nullable
-    Long segmentId();
-
-    UUID correlationId();
-
-    boolean redirectSystemOutAndErr();
-
-    @Value.Default
-    default Level logLevel() {
-        return Level.INFO;
-    }
-
-    static ImmutableLogContext.Builder builder() {
-        return ImmutableLogContext.builder();
+    @Override
+    public void withContext(LogContext context, Runnable runnable) {
+        try {
+            runnable.run();
+        } catch (RuntimeException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
     }
 }

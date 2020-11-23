@@ -1,4 +1,4 @@
-package com.walmartlabs.concord.agent.logging;
+package com.walmartlabs.concord.runtime.v2.runner.logging;
 
 /*-
  * *****
@@ -20,24 +20,9 @@ package com.walmartlabs.concord.agent.logging;
  * =====
  */
 
-import org.immutables.value.Value;
-
-import javax.annotation.Nullable;
-import java.util.Date;
 import java.util.UUID;
 
-@Value.Immutable
-public interface LogSegment {
+public interface LoggingClient {
 
-    @Nullable
-    UUID correlationId();
-
-    String name();
-
-    @Nullable
-    Date createdAt();
-
-    static ImmutableLogSegment.Builder builder() {
-        return ImmutableLogSegment.builder();
-    }
+    long createSegment(UUID correlationId, String name);
 }

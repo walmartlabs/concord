@@ -24,8 +24,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.Serializable;
-import java.util.function.Consumer;
-import java.util.function.Function;
 
 public interface PersistenceService {
 

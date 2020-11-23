@@ -30,6 +30,7 @@ import com.walmartlabs.concord.server.org.ResourceAccessLevel;
 import com.walmartlabs.concord.server.policy.EntityAction;
 import com.walmartlabs.concord.server.policy.EntityType;
 import com.walmartlabs.concord.server.policy.PolicyManager;
+import com.walmartlabs.concord.server.policy.PolicyUtils;
 import net.sf.jsqlparser.JSQLParserException;
 import net.sf.jsqlparser.parser.CCJSqlParserUtil;
 import org.sonatype.siesta.ValidationErrorsException;
@@ -93,12 +94,12 @@ public class JsonStoreQueryManager {
         }
 
         if (queryId == null) {
-            policyManager.checkEntity(org.getId(), null, EntityType.STORAGE_QUERY, EntityAction.CREATE, null, toMap(org, store, queryName, text));
+            policyManager.checkEntity(org.getId(), null, EntityType.JSON_STORE_QUERY, EntityAction.CREATE, null, PolicyUtils.jsonStoreQueryToMap(org, store, queryName, text));
             queryDao.insert(store.id(), queryName, text);
             addAuditLog(AuditAction.CREATE, org.getId(), store.id(), queryName, null, text);
             return OperationResult.CREATED;
         } else {
-            policyManager.checkEntity(org.getId(), null, EntityType.STORAGE_QUERY, EntityAction.UPDATE, null, toMap(org, store, queryName, text));
+            policyManager.checkEntity(org.getId(), null, EntityType.JSON_STORE_QUERY, EntityAction.UPDATE, null, PolicyUtils.jsonStoreQueryToMap(org, store, queryName, text));
 
             JsonStoreQueryEntry prevEntry = queryDao.get(queryId);
 
@@ -152,17 +153,6 @@ public class JsonStoreQueryManager {
             String msg = e.getCause().getMessage();
             throw new ValidationErrorsException("Query parse error: " + msg);
         }
-    }
-
-    private static Map<String, Object> toMap(OrganizationEntry org, JsonStoreEntry store, String queryName, String query) {
-        Map<String, Object> attrs = new HashMap<>();
-        attrs.put("orgId", org.getId());
-        attrs.put("orgName", org.getName());
-        attrs.put("storeId", store.id());
-        attrs.put("storeName", store.name());
-        attrs.put("queryName", queryName);
-        attrs.put("query", query);
-        return attrs;
     }
 
     private void addAuditLog(AuditAction auditAction, UUID orgId, UUID storeId, String queryName) {

@@ -1,0 +1,21 @@
+flows:
+  default:
+    - log: "Before parallel..."
+    - parallel:
+        - block:
+            - form: form1
+            - log: "form1 in block: ${form1.firstName}"
+        - form: form2
+      out:
+        - form1
+        - form2
+
+    - log: "form1: ${form1.firstName}"
+    - log: "form2: ${form2.firstName}"
+
+forms:
+  form1:
+    - firstName: { type: "string" }
+
+  form2:
+    - firstName: { type: "string" }
