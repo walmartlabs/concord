@@ -14,6 +14,8 @@ segments;
 
 ### Changed
 
+- concord-server: add transaction-aware versions of
+`ProjectManager#get` and `ProjectAccessManager#assertAccess` methods;
 - runtime-v2: now only resuming threads receive the resume event's
 payload. This fixes the issue with multiple `parallel` forms missing
 submitted data;
