@@ -14,6 +14,9 @@ segments;
 
 ### Changed
 
+- runtime-v2: `set` now supports references to partially evaluated
+values (e.g. variables defined in the same `set` block), including
+nested keys;
 - concord-server: add transaction-aware versions of
 `ProjectManager#get` and `ProjectAccessManager#assertAccess` methods;
 - runtime-v2: now only resuming threads receive the resume event's
@@ -28,6 +31,9 @@ used.
 
 ### Breaking
 
+- runtime-v2: `set` with nested keys now replaces the top-level
+reference. If `set` is called in a flow, the changes to nested data
+won't be visible in the caller flow unless `out` is used;
 - policy-engine, concord-server: rename `entity` policy's types for
 consistency.
 
