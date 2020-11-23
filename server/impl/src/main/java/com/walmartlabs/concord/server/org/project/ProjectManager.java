@@ -103,7 +103,11 @@ public class ProjectManager {
     }
 
     public ProjectEntry get(UUID projectId) {
-        return accessManager.assertAccess(projectId, ResourceAccessLevel.READER, false);
+        return projectDao.txResult(tx -> get(tx, projectId));
+    }
+
+    public ProjectEntry get(DSLContext tx, UUID projectId) {
+        return accessManager.assertAccess(tx, projectId, ResourceAccessLevel.READER, false);
     }
 
     /**
