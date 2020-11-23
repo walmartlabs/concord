@@ -9,17 +9,17 @@ flows:
           in:
             url: https://google.com/
             method: "GET"
-          out: googleResponse
+#          out: googleResponse
 
         - name: "HTTP Bing Segment"
           task: http
           in:
             url: https://bing.com/
             method: "GET"
-          out: bingResponse
-#      out:
-#        - googleResponse
-#        - bingResponse
+#          out: bingResponse
+      out:
+        - googleResponse
+        - bingResponse
 
     - log: |
         Printing status...
