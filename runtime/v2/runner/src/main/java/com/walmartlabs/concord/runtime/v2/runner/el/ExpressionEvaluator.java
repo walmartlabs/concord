@@ -57,9 +57,4 @@ public interface ExpressionEvaluator {
     default <T> List<T> evalAsList(EvalContext ctx, Object value) {
         return eval(ctx, value, List.class);
     }
-
-    /**
-     * Evaluates the expression as a variable reference and sets its {@code value}.
-     */
-    void setValue(EvalContext ctx, String expr, Object value);
 }

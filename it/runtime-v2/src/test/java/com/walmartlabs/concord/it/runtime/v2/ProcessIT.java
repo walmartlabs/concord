@@ -240,7 +240,10 @@ public class ProcessIT {
 
         ConcordProcess proc = concord.processes().start(payload);
         proc.expectStatus(ProcessEntry.StatusEnum.FINISHED);
-        proc.assertLogAtLeast(".*#4.*z=345.*", 1);
+        proc.assertLogAtLeast(".*#1 \\{x=123}.*", 1);
+        proc.assertLogAtLeast(".*#2 \\{x=123, y=234}.*", 1);
+        proc.assertLogAtLeast(".*#3 \\{x=123, z=345}.*", 1);
+        proc.assertLogAtLeast(".*#4 \\{x=123}.*", 1);
 
         // ---
 
@@ -257,7 +260,7 @@ public class ProcessIT {
         proc.restoreCheckpoint(checkpoints.get(1).getId());
         proc.expectStatus(ProcessEntry.StatusEnum.FINISHED);
 
-        proc.assertLogAtLeast(".*#4.*z=345.*", 2);
+        proc.assertLogAtLeast(".*#4 \\{x=123}.*", 2);
     }
 
     @Test(timeout = DEFAULT_TEST_TIMEOUT)
