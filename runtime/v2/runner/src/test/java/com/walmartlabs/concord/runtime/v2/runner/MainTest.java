@@ -58,6 +58,7 @@ import javax.inject.Inject;
 import javax.inject.Named;
 import java.io.*;
 import java.net.URISyntaxException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -889,7 +890,7 @@ public class MainTest {
         int cnt = 0;
 
         try (ByteArrayInputStream bais = new ByteArrayInputStream(ab);
-             BufferedReader reader = new BufferedReader(new InputStreamReader(bais))) {
+             BufferedReader reader = new BufferedReader(new InputStreamReader(bais, StandardCharsets.UTF_8))) {
 
             String line;
             while ((line = reader.readLine()) != null) {

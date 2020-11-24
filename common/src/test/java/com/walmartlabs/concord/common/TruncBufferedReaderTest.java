@@ -26,6 +26,7 @@ import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -118,7 +119,7 @@ public class TruncBufferedReaderTest {
 
     private List<String> readLines(String str, int maxLineLength) throws IOException {
         List<String> result = new ArrayList<>();
-        BufferedReader reader = new TruncBufferedReader(new InputStreamReader(new ByteArrayInputStream(str.getBytes())), maxLineLength);
+        BufferedReader reader = new TruncBufferedReader(new InputStreamReader(new ByteArrayInputStream(str.getBytes(), StandardCharsets.UTF_8)), maxLineLength);
         String line;
         while ((line = reader. readLine()) != null) {
             result.add(line);

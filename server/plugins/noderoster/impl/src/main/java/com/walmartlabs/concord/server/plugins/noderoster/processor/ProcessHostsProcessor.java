@@ -161,7 +161,7 @@ public class ProcessHostsProcessor implements Processor {
         @Override
         public boolean equals(Object o) {
             if (this == o) return true;
-            if (o == null || getClass() != o.getClass()) return false;
+            if (o == null || !(o instanceof ProcessHostItem)) return false;
             ProcessHostItem that = (ProcessHostItem) o;
             return Objects.equals(instanceId(), that.instanceId()) &&
                     Objects.equals(instanceCreatedAt(), that.instanceCreatedAt()) &&

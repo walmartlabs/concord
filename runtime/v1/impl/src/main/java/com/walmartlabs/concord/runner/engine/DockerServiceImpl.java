@@ -36,6 +36,7 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.regex.Pattern;
 
@@ -127,7 +128,7 @@ public class DockerServiceImpl implements DockerService {
     }
 
     private static void streamToLog(InputStream in, LogCallback callback) throws IOException {
-        BufferedReader reader = new TruncBufferedReader(new InputStreamReader(in));
+        BufferedReader reader = new TruncBufferedReader(new InputStreamReader(in, StandardCharsets.UTF_8));
         String line;
         while ((line = reader.readLine()) != null) {
             callback.onLog(line);

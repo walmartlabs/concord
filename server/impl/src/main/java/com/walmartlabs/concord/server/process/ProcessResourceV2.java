@@ -111,7 +111,7 @@ public class ProcessResourceV2 implements Resource {
 
         ProcessEntry e = processQueueManager.get(processKey, includes);
         if (e == null) {
-            log.warn("get ['{}'] -> not found", instanceId);
+            log.warn("get ['{}'] -> not found", instanceId.toString().replaceAll("[\n\r]",""));
             throw new ConcordApplicationException("Process instance not found", Status.NOT_FOUND);
         }
 

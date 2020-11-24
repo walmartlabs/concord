@@ -27,6 +27,7 @@ import org.slf4j.LoggerFactory;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
@@ -136,7 +137,7 @@ public class OrphanSweeper implements Runnable {
             throw new IOException("Error while executing a command " + String.join(" ", cmd) + " : docker exit code " + code);
         }
 
-        try (BufferedReader reader = new BufferedReader(new InputStreamReader(b.getInputStream()))) {
+        try (BufferedReader reader = new BufferedReader(new InputStreamReader(b.getInputStream(), StandardCharsets.UTF_8))) {
             String line;
             while ((line = reader.readLine()) != null) {
                 if (line.trim().isEmpty()) {

@@ -71,20 +71,6 @@ public class ResumeConfigurationProcessor implements PayloadProcessor {
         return chain.process(payload);
     }
 
-    private ProjectEntry getProject(Payload payload) {
-        UUID projectId = payload.getHeader(Payload.PROJECT_ID);
-        if (projectId == null) {
-            return null;
-        }
-
-        ProjectEntry e = projectDao.get(projectId);
-        if (e == null) {
-            throw new ProcessException(payload.getProcessKey(), "Project not found: " + projectId, Status.BAD_REQUEST);
-        }
-
-        return e;
-    }
-
     @SuppressWarnings("unchecked")
     private static Map<String, Object> getWorkspaceCfg(Payload payload) {
         Path workspace = payload.getHeader(Payload.WORKSPACE_DIR);

@@ -67,7 +67,7 @@ public abstract class ValidationExceptionMapperSupport<E extends Throwable> exte
                         .entity(
                                 new GenericEntity<List<ValidationErrorXO>>(errors) {
                                     @Override
-                                    public String toString() {
+                                    public final String toString() {
                                         return getEntity().toString();
                                     }
                                 }

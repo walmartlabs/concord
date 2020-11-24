@@ -54,6 +54,7 @@ import javax.annotation.Nullable;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
@@ -564,7 +565,7 @@ public class RunnerJobExecutor implements JobExecutor {
         HashFunction f = Hashing.sha256();
         Hasher h = f.newHasher();
         for (String s : as) {
-            h.putString(s, Charsets.UTF_8);
+            h.putString(s, StandardCharsets.UTF_8);
         }
         return h.hash();
     }

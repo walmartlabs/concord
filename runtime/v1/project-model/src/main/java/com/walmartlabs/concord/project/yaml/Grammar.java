@@ -67,7 +67,7 @@ public class Grammar {
 
         Map<String, Object> m = new LinkedHashMap<>();
         values.stream().forEach(kv -> m.put(kv.getKey(), Grammar.toValue(kv)));
-        return m;
+        return Collections.unmodifiableMap(m);
     }
 
     // Grammar rules

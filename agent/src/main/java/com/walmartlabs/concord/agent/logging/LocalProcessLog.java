@@ -24,6 +24,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.*;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
@@ -59,7 +60,7 @@ public class LocalProcessLog extends AbstractProcessLog {
     public void log(InputStream src) throws IOException {
         Path f = logFile();
         try (OutputStream dst = Files.newOutputStream(f, StandardOpenOption.CREATE, StandardOpenOption.APPEND);
-             BufferedReader reader = new BufferedReader(new InputStreamReader(src))) {
+             BufferedReader reader = new BufferedReader(new InputStreamReader(src, StandardCharsets.UTF_8))) {
 
             String line;
             while ((line = reader.readLine()) != null) {

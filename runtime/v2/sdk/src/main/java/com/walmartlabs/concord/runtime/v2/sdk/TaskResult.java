@@ -129,7 +129,7 @@ public class TaskResult implements Serializable {
         if (error != null) {
             result.put("error", error);
         }
-        return result;
+        return Collections.unmodifiableMap(result);
     }
 
     private static void assertValue(String key, Object value) {

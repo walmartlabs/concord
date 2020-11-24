@@ -275,7 +275,7 @@ public class WithItemsWrapper implements Command {
         }
 
         @Override
-        public String toString() {
+        public final String toString() {
             return "[" + key + " -> " + value + "]";
         }
     }

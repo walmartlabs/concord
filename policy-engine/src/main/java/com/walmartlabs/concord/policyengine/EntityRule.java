@@ -69,7 +69,7 @@ public class EntityRule implements Serializable {
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+        if (o == null || !(o instanceof EntityRule)) return false;
         EntityRule that = (EntityRule) o;
         return Objects.equals(msg, that.msg) &&
                 Objects.equals(entity, that.entity) &&
