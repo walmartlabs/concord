@@ -33,6 +33,7 @@ import { Pagination } from '../../../state/data/processes';
 import {
     CREATED_AT_COLUMN,
     DURATION_COLUMN,
+    ENTRY_POINT_COLUMN,
     INITIATOR_COLUMN,
     INSTANCE_ID_COLUMN,
     PROJECT_COLUMN,
@@ -58,7 +59,8 @@ const builtInColumns = [
     PROJECT_COLUMN,
     INITIATOR_COLUMN,
     CREATED_AT_COLUMN,
-    UPDATED_AT_COLUMN
+    UPDATED_AT_COLUMN,
+    ENTRY_POINT_COLUMN
 ];
 
 // list of columns visible by default
@@ -118,7 +120,9 @@ const addBuiltInColumns = (columns?: ColumnDefinition[]): ColumnDefinition[] | u
 
     return columns.map((c) => {
         if (c.builtin) {
-            const b = builtInColumns.find((x) => x.source === c.builtin);
+            const b = builtInColumns.find(
+                (x) => x.source === c.builtin || x.source === 'meta.' + c.builtin
+            );
             if (!b) {
                 return {
                     caption: `Built-in column not found: ${c.builtin}`,

@@ -20,7 +20,6 @@ package com.walmartlabs.concord.runtime.v2.runner.context;
  * =====
  */
 
-import com.walmartlabs.concord.runtime.v2.sdk.ProcessConfiguration;
 import com.walmartlabs.concord.runtime.v2.model.ProcessDefinition;
 import com.walmartlabs.concord.runtime.v2.model.Step;
 import com.walmartlabs.concord.runtime.v2.model.TaskCall;
@@ -192,19 +191,22 @@ public class ContextImpl implements Context {
     }
 
     @Override
+    public <T> T eval(Object v, Map<String, Object> additionalVariables, Class<T> type) {
+        return expressionEvaluator.eval(EvalContextFactory.global(this, additionalVariables), v, type);
+    }
+
+    @Override
     public void suspend(String eventName) {
         state.peekFrame(currentThreadId).push(new SuspendCommand(eventName));
     }
 
     @Override
-    public String suspendResume(Map<String, Serializable> taskState) {
+    public void reentrantSuspend(String eventName, Map<String, Serializable> taskState) {
         Step step = execution().currentStep();
         if (!(step instanceof TaskCall)) {
             throw new IllegalStateException("Calling 'suspendResume' is allowed only in task calls. Current step: " + (step != null ? step.getClass() : "n/a"));
         }
 
-        String eventName = UUID.randomUUID().toString();
         state.peekFrame(currentThreadId).push(new TaskSuspendCommand(correlationId, eventName, (TaskCall) step, taskState));
-        return eventName;
     }
 }

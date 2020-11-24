@@ -33,6 +33,8 @@ import static com.walmartlabs.concord.runtime.v2.serializer.SerializerUtils.writ
 
 public class ProcessDefinitionSerializer extends StdSerializer<ProcessDefinition> {
 
+    private static final long serialVersionUID = 1L;
+
     public ProcessDefinitionSerializer() {
         this(null);
     }

@@ -29,110 +29,150 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
-/**
- * Result of a task call. Provides some common fields such as {@link #ok()}
- * and {@link #error()}, allows arbitrary data in {@link #values()}.
- * <p/>
- * All values must be {@link Serializable}, including collection types.
- * Avoid using custom types/classes as values.
- */
-public class TaskResult implements Serializable {
+public interface TaskResult extends Serializable {
 
-    private static final long serialVersionUID = 1L;
+    long serialVersionUID = 1L;
 
     /**
-     * Creates a new instance of {@link TaskResult} with {@link #ok()} set to {@code true}.
+     * Creates a new instance of {@link TaskResult} with {@link SimpleResult#ok()} set to {@code true}.
      */
-    public static TaskResult success() {
-        return new TaskResult(true, null, null);
+    static SimpleResult success() {
+        return new SimpleResult(true, null, null);
+    }
+
+    static SimpleResult of(boolean success) {
+        return new SimpleResult(success, null, null);
+    }
+
+    static SimpleResult of(boolean success, String error) {
+        return new SimpleResult(success, error, null);
+    }
+
+    static SimpleResult of(boolean success, String error, Map<String, Object> values) {
+        return new SimpleResult(success, error, values);
     }
 
     /**
-     * Creates a new instance of {@link TaskResult} with {@link #ok()} set to {@code false}
+     * Creates a new instance of {@link TaskResult} with {@link SimpleResult#ok()} set to {@code false}
      * and with the provided error message.
      */
-    public static TaskResult error(String message) {
-        return new TaskResult(false, message, null);
+    static SimpleResult error(String message) {
+        return new SimpleResult(false, message, null);
     }
 
-    private final boolean ok;
-    private final String error;
-    private Map<String, Object> values;
-
-    public TaskResult(boolean ok) {
-        this(ok, null);
+    static TaskResult suspend(String eventName) {
+        return new SuspendResult(eventName);
     }
 
-    public TaskResult(boolean ok, String error) {
-        this(ok, error, null);
+    static TaskResult reentrantSuspend(String eventName, Map<String, Serializable> payload) {
+        return new ReentrantSuspendResult(eventName, payload);
     }
 
-    public TaskResult(boolean ok, String error, Map<String, Object> values) {
-        this.ok = ok;
-        this.error = error;
+    /**
+     * Result of a task call. Provides some common fields such as {@link #ok()}
+     * and {@link #error()}, allows arbitrary data in {@link #values()}.
+     * <p/>
+     * All values must be {@link Serializable}, including collection types.
+     * Avoid using custom types/classes as values.
+     */
+    class SimpleResult implements TaskResult {
 
-        // make sure the map is serializable and mutable
-        this.values = values != null ? new HashMap<>(values) : null;
-    }
+        private final boolean ok;
+        private final String error;
+        private final Map<String, Object> values;
 
-    public boolean ok() {
-        return ok;
-    }
+        SimpleResult(boolean ok, String error, Map<String, Object> values) {
+            this.ok = ok;
+            this.error = error;
+            this.values = new HashMap<>();
 
-    @Nullable
-    public String error() {
-        return error;
-    }
-
-    public TaskResult value(String key, Object value) {
-        if (values == null) {
-            values = new HashMap<>();
+            values(values);
         }
 
-        assertValue(key, value);
+        public boolean ok() {
+            return ok;
+        }
 
-        values.put(key, value);
-        return this;
-    }
+        @Nullable
+        public String error() {
+            return error;
+        }
 
-    public TaskResult values(Map<String, Object> items) {
-        if (items == null) {
+        public Map<String, Object> values() {
+            return values;
+        }
+
+        public SimpleResult value(String key, Object value) {
+            assertValue(key, value);
+
+            values.put(key, value);
             return this;
         }
 
-        for (Map.Entry<String, Object> e : items.entrySet()) {
-            value(e.getKey(), e.getValue());
+        public SimpleResult values(Map<String, Object> items) {
+            if (items == null) {
+                return this;
+            }
+
+            for (Map.Entry<String, Object> e : items.entrySet()) {
+                value(e.getKey(), e.getValue());
+            }
+
+            return this;
         }
 
-        return this;
-    }
-
-    public Map<String, Object> values() {
-        if (values == null) {
-            return Collections.emptyMap();
+        /**
+         * Returns a combined map of all values plus additional fields:
+         * <ul>
+         *     <li>{@code ok} - a boolean value, same as {@link #ok()}</li>
+         *     <li>{@code error} - a string value, same as {@link #error()}</li>
+         * </ul>
+         * <p>
+         * Those fields will override any values with the same keys.
+         */
+        public Map<String, Object> toMap() {
+            Map<String, Object> result = new HashMap<>(values != null ? values : Collections.emptyMap());
+            result.put("ok", ok);
+            if (error != null) {
+                result.put("error", error);
+            }
+            return result;
         }
-        return values;
     }
 
-    /**
-     * Returns a combined map of all values plus additional fields:
-     * <ul>
-     *     <li>{@code ok} - a boolean value, same as {@link #ok()}</li>
-     *     <li>{@code error} - a string value, same as {@link #error()}</li>
-     * </ul>
-     * <p>
-     * Those fields will override any values with the same keys.
-     */
-    public Map<String, Object> toMap() {
-        Map<String, Object> result = new HashMap<>(values != null ? values : Collections.emptyMap());
-        result.put("ok", ok);
-        if (error != null) {
-            result.put("error", error);
+    class SuspendResult implements TaskResult {
+
+        private final String eventName;
+
+        SuspendResult(String eventName) {
+            this.eventName = eventName;
         }
-        return Collections.unmodifiableMap(result);
+
+        public String eventName() {
+            return eventName;
+        }
     }
 
-    private static void assertValue(String key, Object value) {
+    class ReentrantSuspendResult implements TaskResult {
+
+        private final String eventName;
+        private final Map<String, Serializable> payload;
+
+        ReentrantSuspendResult(String eventName, Map<String, Serializable> payload) {
+            this.eventName = eventName;
+            this.payload = payload;
+        }
+
+        public String eventName() {
+            return eventName;
+        }
+
+        public Map<String, Serializable> payload() {
+            return payload;
+        }
+    }
+
+    static void assertValue(String key, Object value) {
         if (value == null) {
             return;
         }

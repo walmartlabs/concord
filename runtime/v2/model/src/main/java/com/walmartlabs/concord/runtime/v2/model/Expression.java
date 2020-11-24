@@ -23,7 +23,7 @@ package com.walmartlabs.concord.runtime.v2.model;
 public class Expression extends AbstractStep<ExpressionOptions> {
 
     public static Expression shortForm(Location location, String expr) {
-        return new Expression(location, expr, null);
+        return new Expression(location, expr, ExpressionOptions.builder().build());
     }
 
     private static final long serialVersionUID = 1L;

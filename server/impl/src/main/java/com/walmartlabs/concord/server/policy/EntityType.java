@@ -24,10 +24,11 @@ public enum EntityType {
 
     ORGANIZATION("org"),
     PROJECT("project"),
+    REPOSITORY("repository"),
     SECRET("secret"),
-    STORAGE("storage"),
-    STORAGE_ITEM("storageItem"),
-    STORAGE_QUERY("storageQuery"),
+    JSON_STORE("jsonStore"),
+    JSON_STORE_ITEM("jsonStoreItem"),
+    JSON_STORE_QUERY("jsonStoreQuery"),
     TRIGGER("trigger");
 
     private final String id;

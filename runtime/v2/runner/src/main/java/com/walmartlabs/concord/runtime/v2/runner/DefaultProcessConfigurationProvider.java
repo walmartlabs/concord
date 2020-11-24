@@ -21,9 +21,11 @@ package com.walmartlabs.concord.runtime.v2.runner;
  */
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.walmartlabs.concord.runtime.v2.sdk.ProcessConfiguration;
 import com.walmartlabs.concord.runtime.v2.runner.guice.ObjectMapperProvider;
+import com.walmartlabs.concord.runtime.v2.sdk.ProcessConfiguration;
 import com.walmartlabs.concord.sdk.Constants;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.inject.Provider;
 import java.io.IOException;
@@ -37,6 +39,8 @@ import java.util.UUID;
  * load the process' configuration from it.
  */
 public class DefaultProcessConfigurationProvider implements Provider<ProcessConfiguration> {
+
+    private static final Logger log = LoggerFactory.getLogger(DefaultProcessConfigurationProvider.class);
 
     private final Path workDir;
 
@@ -62,12 +66,17 @@ public class DefaultProcessConfigurationProvider implements Provider<ProcessConf
      * then reads it and parses as UUID.
      */
     @SuppressWarnings("BusyWait")
-    private static UUID waitForInstanceId(Path workDir) throws IOException {
+    private static UUID waitForInstanceId(Path workDir) {
         Path p = workDir.resolve(Constants.Files.INSTANCE_ID_FILE_NAME);
         while (true) {
-            if (Files.exists(p)) {
-                String s = new String(Files.readAllBytes(p));
-                return UUID.fromString(s.trim());
+            byte[] id = readIfExists(p);
+            if (id != null && id.length > 0) {
+                String s = new String(id);
+                try {
+                    return UUID.fromString(s.trim());
+                } catch (IllegalArgumentException e) {
+                    log.warn("waitForInstanceId ['{}'] -> value: '{}', error: {}", workDir, s, e.getMessage());
+                }
             }
 
             // we are not using WatchService as it has issues when running in Docker
@@ -94,6 +103,18 @@ public class DefaultProcessConfigurationProvider implements Provider<ProcessConf
                     .from(om.readValue(in, ProcessConfiguration.class))
                     .instanceId(instanceId)
                     .build();
+        }
+    }
+
+    private static byte[] readIfExists(Path p) {
+        try {
+            if (Files.notExists(p)) {
+                return null;
+            }
+            return Files.readAllBytes(p);
+        } catch (Exception e) {
+            log.warn("readIfExists ['{}'] -> error: {}", p, e.getMessage());
+            return null;
         }
     }
 }

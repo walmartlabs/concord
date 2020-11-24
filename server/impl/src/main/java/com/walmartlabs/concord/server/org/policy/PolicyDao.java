@@ -25,7 +25,6 @@ import com.walmartlabs.concord.db.MainDB;
 import com.walmartlabs.concord.server.ConcordObjectMapper;
 import com.walmartlabs.concord.server.jooq.tables.records.PolicyLinksRecord;
 import org.jooq.*;
-import org.jooq.impl.DSL;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -50,42 +49,34 @@ public class PolicyDao extends AbstractDao {
     }
 
     public UUID getId(String name) {
-        try (DSLContext tx = DSL.using(cfg)) {
-            return tx.select(POLICIES.POLICY_ID)
-                    .from(POLICIES)
-                    .where(POLICIES.POLICY_NAME.eq(name))
-                    .fetchOne(POLICIES.POLICY_ID);
-        }
+        return dsl().select(POLICIES.POLICY_ID)
+                .from(POLICIES)
+                .where(POLICIES.POLICY_NAME.eq(name))
+                .fetchOne(POLICIES.POLICY_ID);
     }
 
     public PolicyEntry get(UUID policyId) {
-        try (DSLContext tx = DSL.using(cfg)) {
-            return tx.select(POLICIES.POLICY_ID,
-                    POLICIES.PARENT_POLICY_ID,
-                    POLICIES.POLICY_NAME,
-                    POLICIES.RULES)
-                    .from(POLICIES)
-                    .where(POLICIES.POLICY_ID.eq(policyId))
-                    .fetchOne(this::toEntry);
-        }
+        return dsl().select(POLICIES.POLICY_ID,
+                POLICIES.PARENT_POLICY_ID,
+                POLICIES.POLICY_NAME,
+                POLICIES.RULES)
+                .from(POLICIES)
+                .where(POLICIES.POLICY_ID.eq(policyId))
+                .fetchOne(this::toEntry);
     }
 
     public PolicyEntry get(String policyName) {
-        try (DSLContext tx = DSL.using(cfg)) {
-            return tx.select(POLICIES.POLICY_ID,
-                    POLICIES.PARENT_POLICY_ID,
-                    POLICIES.POLICY_NAME,
-                    POLICIES.RULES)
-                    .from(POLICIES)
-                    .where(POLICIES.POLICY_NAME.eq(policyName))
-                    .fetchOne(this::toEntry);
-        }
+        return dsl().select(POLICIES.POLICY_ID,
+                POLICIES.PARENT_POLICY_ID,
+                POLICIES.POLICY_NAME,
+                POLICIES.RULES)
+                .from(POLICIES)
+                .where(POLICIES.POLICY_NAME.eq(policyName))
+                .fetchOne(this::toEntry);
     }
 
     public PolicyEntry getLinked(UUID orgId, UUID projectId, UUID userId) {
-        try (DSLContext tx = DSL.using(cfg)) {
-            return getLinked(tx, orgId, projectId, userId);
-        }
+        return getLinked(dsl(), orgId, projectId, userId);
     }
 
     public PolicyEntry getLinked(DSLContext tx, UUID orgId, UUID projectId, UUID userId) {
@@ -187,14 +178,12 @@ public class PolicyDao extends AbstractDao {
     }
 
     public List<PolicyEntry> list() {
-        try (DSLContext tx = DSL.using(cfg)) {
-            return tx.select(POLICIES.POLICY_ID,
-                    POLICIES.PARENT_POLICY_ID,
-                    POLICIES.POLICY_NAME,
-                    POLICIES.RULES)
-                    .from(POLICIES)
-                    .fetch(this::toEntry);
-        }
+        return dsl().select(POLICIES.POLICY_ID,
+                POLICIES.PARENT_POLICY_ID,
+                POLICIES.POLICY_NAME,
+                POLICIES.RULES)
+                .from(POLICIES)
+                .fetch(this::toEntry);
     }
 
     private PolicyEntry findPolicyEntry(List<PolicyRule> rules) {
@@ -269,7 +258,7 @@ public class PolicyDao extends AbstractDao {
                 objectMapper.fromJSONB(r.value4()));
     }
 
-    private class PolicyRule {
+    private static class PolicyRule {
 
         private final UUID orgId;
         private final UUID prjId;

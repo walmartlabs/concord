@@ -3,30 +3,39 @@ configuration:
 
 flows:
   default:
-    - parallel:
-        - task: http
-          in:
-            url: https://google.com/
-            method: "GET"
-          meta:
-            segmentName: "HTTP Google Segment"
-          out: googleResponse
 
-        - task: http
-          in:
-            url: https://bing.com/
-            method: "GET"
-          meta:
-            segmentName: "HTTP Bing Segment"
-          out: bingResponse
+    # The v1 runtime provides no satisfactory way to run flow steps in parallel in one single process.
+    # The v2 runtime was designed with parallel execution in mind. It adds a new step - parallel.
+    - parallel:
+        - ${sleep.ms(5000)}
+        - ${sleep.ms(5000)}
+
+    - log: "Total sleeping duration should be 5 seconds!"
+
+    # sequence of tasks can be run inside the block statement of the parallel step
+    - parallel:
+        - block:
+            - name: "HTTP Google Segment"
+              task: http
+              in:
+                url: https://google.com/
+                method: "GET"
+              out: googleResponse
+            - log: "Google: ${googleResponse.statusCode}"
+
+        - block:
+            - name: "HTTP Bing Segment"
+              task: http
+              in:
+                url: https://bing.com/
+                method: "GET"
+              out: bingResponse
+            - log: "Bing: ${bingResponse.statusCode}"
+
       out:
         - googleResponse
         - bingResponse
 
     - log: |
-        Printing status...
-        Google: ${googleResponse.statusCode}
-        Bing: ${bingResponse.statusCode}
-
-# The v1 runtime provides no satisfactory way to run flow steps in parallel in one single process.
-# The v2 runtime was designed with parallel execution in mind. It adds a new step - parallel.
+        Google: ${googleResponse}
+        Bing: ${bingResponse}

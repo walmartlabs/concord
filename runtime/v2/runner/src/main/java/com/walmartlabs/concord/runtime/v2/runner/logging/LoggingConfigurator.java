@@ -44,8 +44,6 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
-import static com.walmartlabs.concord.runtime.v2.runner.logging.SegmentDiscriminator.UNSEGMENTED_LOG;
-
 public class LoggingConfigurator {
 
     private static final org.slf4j.Logger log = LoggerFactory.getLogger(LoggingConfigurator.class);
@@ -60,8 +58,6 @@ public class LoggingConfigurator {
 
     public static void configure(UUID instanceId, String baseDir) {
         log.debug("Redirecting logging output into the segment log: {}", baseDir);
-
-        SegmentedLogger.enable();
 
         Path dst = Paths.get(baseDir).resolve(instanceId.toString());
         if (!Files.exists(dst)) {
@@ -84,19 +80,11 @@ public class LoggingConfigurator {
         sa.setName("SEGMENTED_LOG");
         sa.setDiscriminator(discriminator);
         sa.setAppenderFactory((context, discriminatingValue) -> {
-            String logFileName;
-            if (UNSEGMENTED_LOG.equalsIgnoreCase(discriminatingValue)) {
-                // all unsegmented logs (from system.out, scripts, task call from expressions)
-                logFileName = "runner_system";
-            } else {
-                // segmented logs with created timestamp
-                logFileName = String.format("%s_%d", discriminatingValue, System.currentTimeMillis());
-            }
-
             FileAppender<ILoggingEvent> fa = new FileAppender<>();
             fa.setContext(context);
             fa.setAppend(true);
-            fa.setFile(String.format("%s/%s.log", dst.toAbsolutePath(), logFileName));
+            fa.setFile(String.format("%s/%s.log", dst.toAbsolutePath(), discriminatingValue));
+            fa.addFilter(new LogLevelFilter());
 
             PatternLayoutEncoderBase<ILoggingEvent> encoder = new PatternLayoutEncoderBase<ILoggingEvent>() {
                 @Override

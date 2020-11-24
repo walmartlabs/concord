@@ -34,10 +34,9 @@ import com.walmartlabs.concord.runtime.common.cfg.ApiConfiguration;
 import com.walmartlabs.concord.runtime.common.cfg.ImmutableRunnerConfiguration;
 import com.walmartlabs.concord.runtime.common.cfg.LoggingConfiguration;
 import com.walmartlabs.concord.runtime.common.cfg.RunnerConfiguration;
-import com.walmartlabs.concord.runtime.v2.sdk.ProcessConfiguration;
 import com.walmartlabs.concord.runtime.v2.runner.checkpoints.CheckpointService;
 import com.walmartlabs.concord.runtime.v2.runner.guice.BaseRunnerModule;
-import com.walmartlabs.concord.runtime.v2.runner.logging.LoggingConfigurator;
+import com.walmartlabs.concord.runtime.v2.runner.logging.*;
 import com.walmartlabs.concord.runtime.v2.runner.tasks.TaskCallListener;
 import com.walmartlabs.concord.runtime.v2.runner.tasks.TaskCallPolicyChecker;
 import com.walmartlabs.concord.runtime.v2.runner.tasks.TaskResultListener;
@@ -46,6 +45,7 @@ import com.walmartlabs.concord.runtime.v2.sdk.*;
 import com.walmartlabs.concord.sdk.Constants;
 import com.walmartlabs.concord.svm.ExecutionListener;
 import com.walmartlabs.concord.svm.Runtime;
+import com.walmartlabs.concord.svm.ThreadId;
 import org.immutables.value.Value;
 import org.junit.After;
 import org.junit.Before;
@@ -56,6 +56,7 @@ import org.slf4j.LoggerFactory;
 import javax.annotation.Nullable;
 import javax.inject.Inject;
 import javax.inject.Named;
+import javax.inject.Singleton;
 import java.io.*;
 import java.net.URISyntaxException;
 import java.nio.charset.StandardCharsets;
@@ -67,11 +68,13 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
+import static java.util.regex.Pattern.quote;
 
 public class MainTest {
 
@@ -200,7 +203,7 @@ public class MainTest {
             run();
             fail("must fail");
         } catch (Exception e) {
-            assertTrue(e.getMessage().contains("not found: unknown"));
+            assertTrue(e.getMessage().contains("not found: 'unknown'"));
         }
     }
 
@@ -252,7 +255,7 @@ public class MainTest {
         assertLog(log, ".*Hello, Concord!.*");
 
         verify(processStatusCallback, times(1)).onRunning(eq(instanceId));
-        verify(checkpointService, times(1)).create(eq("A"), any(), any());
+        verify(checkpointService, times(1)).create(any(), eq("A"), any(), any());
     }
 
     @Test
@@ -483,25 +486,15 @@ public class MainTest {
     }
 
     @Test
-    public void testWithItemsOut() throws Exception {
-        deploy("withItemsOut");
+    public void testParallelWithItemsTask() throws Exception {
+        deploy("parallelWithItemsTask");
 
         save(ProcessConfiguration.builder()
                 .build());
 
         byte[] log = run();
         assertLog(log, ".*result: \\[10, 20, 30\\].*");
-    }
-
-    @Test
-    public void testWithItemsTaskOut() throws Exception {
-        deploy("withItemsTaskOut");
-
-        save(ProcessConfiguration.builder()
-                .build());
-
-        byte[] log = run();
-        assertLog(log, ".*result: \\[10, 20, 30\\].*");
+        assertLog(log, ".*threadIds: \\[1, 2, 3].*");
     }
 
     @Test
@@ -513,6 +506,20 @@ public class MainTest {
 
         byte[] log = run();
         assertLog(log, ".*result: \\[10, 20, 30\\].*");
+    }
+
+    @Test
+    public void testWithItemsSet() throws Exception {
+        deploy("withItemsSet");
+
+        save(ProcessConfiguration.builder()
+                .build());
+
+        byte[] log = run();
+        assertLogAtLeast(log, 3,".*empty: \\[\\].*");
+        assertLog(log, ".*after add: \\[1\\].*");
+        assertLog(log, ".*after add: \\[2\\].*");
+        assertLog(log, ".*after add: \\[3\\].*");
     }
 
     @Test
@@ -626,8 +633,23 @@ public class MainTest {
                 .build());
 
         byte[] log = run();
-        assertLog(log, ".*" + Pattern.quote("single out a=a-value") + ".*");
-        assertLog(log, ".*" + Pattern.quote("array out a=a-value, b=b-value") + ".*");
+        assertLog(log, ".*" + quote("single out a=a-value") + ".*");
+        assertLog(log, ".*" + quote("array out a=a-value, b=b-value") + ".*");
+        assertLog(log, ".*" + quote("expression out a=a-value, xx=123, zz=10000") + ".*");
+    }
+
+    @Test
+    public void testCallOutWithItems() throws Exception {
+        deploy("callOutWithItems");
+
+        save(ProcessConfiguration.builder()
+                .build());
+
+        byte[] log = run();
+        assertLog(log, ".*" + quote("single out x=[10, 20, 30]") + ".*");
+        assertLog(log, ".*" + quote("array out: x=[10, 20, 30]") + ".*");
+        assertLog(log, ".*" + quote("expression out: x=[10, 20, 30]") + ".*");
+        assertLog(log, ".*" + quote("expression out: xx=[100, 200, 300]") + ".*");
     }
 
     @Test
@@ -678,6 +700,18 @@ public class MainTest {
     }
 
     @Test
+    public void testParallelOutExpr() throws Exception {
+        deploy("parallelOutExpr");
+
+        save(ProcessConfiguration.builder()
+                .build());
+
+        byte[] log = run();
+        assertLog(log, ".*x: 123.*");
+        assertLog(log, ".*y: \\{inner=234\\}.*");
+    }
+
+    @Test
     public void testReentrant() throws Exception {
         deploy("reentrantTask");
         save(ProcessConfiguration.builder()
@@ -691,25 +725,29 @@ public class MainTest {
         assertLog(log, ".*result.ok: true.*");
         assertLog(log, ".*result.action: boo.*");
         assertLog(log, ".*result.k: v.*");
+        assertLog(log, ".*resultAction: boo.*");
     }
 
     @Test
     public void testNestedSet() throws Exception {
-        Map<String, Object> x = new HashMap<>();
-        x.put("z", 234);
+        Map<String, Object> args = new HashMap<>();
+        args.put("deep", 3);
+        args.put("z", 234);
 
         deploy("nestedSet");
         save(ProcessConfiguration.builder()
-                .putArguments("x", x)
+                .putArguments("x", args)
                 .build());
 
         byte[] log = run();
         assertLog(log, ".*x: .*y=123.*");
         assertLog(log, ".*x: .*z=234.*");
         assertLog(log, ".*x: .*taskOut=42.*");
-
-        // TODO support for partial eval results?
-        assertLog(log, ".*x: .*taskOut2=42.*");
+        assertLog(log, ".*x: .*taskOut2=165.*");
+        assertLog(log, ".*x: .*fromArgs=234.*");
+        assertLog(log, ".*x: .*deep=\\{beep=1\\}.*");
+        assertLog(log, ".*a: 42.*");
+        assertLog(log, ".*a2: 1.*");
     }
 
     @Test
@@ -734,7 +772,7 @@ public class MainTest {
                 .build());
 
         run();
-        verify(checkpointService, times(1)).create(eq("test_123"), any(Runtime.class), any(ProcessSnapshot.class));
+        verify(checkpointService, times(1)).create(any(ThreadId.class), eq("test_123"), any(Runtime.class), any(ProcessSnapshot.class));
     }
 
     @Test
@@ -747,8 +785,8 @@ public class MainTest {
 
         run();
 
-        verify(checkpointService, times(1)).create(eq("first"), any(Runtime.class), any(ProcessSnapshot.class));
-        verify(checkpointService, times(1)).create(eq("second"), any(Runtime.class), any(ProcessSnapshot.class));
+        verify(checkpointService, times(1)).create(any(ThreadId.class), eq("first"), any(Runtime.class), any(ProcessSnapshot.class));
+        verify(checkpointService, times(1)).create(any(ThreadId.class), eq("second"), any(Runtime.class), any(ProcessSnapshot.class));
 
         Serializable firstCheckpoint = checkpointService.getCheckpoints().get("first");
         assertNotNull(firstCheckpoint);
@@ -771,6 +809,77 @@ public class MainTest {
 
         byte[] log = run();
         assertLog(log, ".*it's null.*");
+    }
+
+    @Test
+    public void testTaskOut() throws Exception {
+        deploy("taskOut");
+
+        save(ProcessConfiguration.builder()
+                .build());
+
+        byte[] log = run();
+        assertLog(log, ".*" + quote("single out x.ok=true") + ".*");
+        assertLog(log, ".*" + quote("single out x.k=some-value") + ".*");
+        assertLog(log, ".*" + quote("expression out x=some-value") + ".*");
+    }
+
+    @Test
+    public void testTaskOutWithItems() throws Exception {
+        deploy("taskOutWithItems");
+
+        save(ProcessConfiguration.builder()
+                .build());
+
+        byte[] log = run();
+        assertLog(log, ".*" + quote("single out x=[10, 20, 30]") + ".*");
+    }
+
+    @Test
+    public void testExprOutExpression() throws Exception {
+        deploy("exprOutExpr");
+
+        save(ProcessConfiguration.builder()
+                .build());
+
+        byte[] log = run();
+        assertLog(log, ".*result: v.*");
+    }
+
+    @Test
+    public void testFormsParallel() throws Exception {
+        deploy("parallelForm");
+
+        save(ProcessConfiguration.builder()
+                .build());
+
+        byte[] log = run();
+        assertLog(log, ".*Before parallel.*");
+
+        List<Form> forms = formService.list();
+        assertEquals(2, forms.size());
+
+        Form form1 = forms.stream()
+                .filter(f -> "form1".equals(f.name())).findFirst()
+                .orElseThrow(() -> new RuntimeException("form not found"));
+
+        // resume the process using the saved form
+
+        log = resume(form1.eventName(), ProcessConfiguration.builder()
+                .arguments(Collections.singletonMap("form1", Collections.singletonMap("firstName", "Vasia")))
+                .build());
+        assertLog(log, ".*form1 in block: Vasia.*");
+
+        // resume the process using the saved form
+
+        Form form2 = forms.stream()
+                .filter(f -> "form2".equals(f.name())).findFirst()
+                .orElseThrow(() -> new RuntimeException("form not found"));
+        log = resume(form2.eventName(), ProcessConfiguration.builder()
+                .arguments(Collections.singletonMap("form2", Collections.singletonMap("firstName", "Pupkin")))
+                .build());
+        assertLog(log, ".*form2: Pupkin.*");
+        assertLog(log, ".*form1: Vasia.*");
     }
 
     private void deploy(String resource) throws URISyntaxException, IOException {
@@ -825,6 +934,8 @@ public class MainTest {
             @Override
             protected void configure() {
                 bind(DefaultTaskVariablesService.class).toProvider(new DefaultTaskVariablesProvider(processConfiguration));
+                bind(RunnerLogger.class).toProvider(LoggerProvider.class);
+                bind(LoggingClient.class).to(TestLoggingClient.class);
             }
         };
 
@@ -834,7 +945,7 @@ public class MainTest {
                     runnerCfg.build(),
                     () -> processConfiguration,
                     testServices,
-                    runtimeModule) // allow runtime v1 tasks
+                    runtimeModule)
                     .create();
             injector.getInstance(Main.class).execute();
         } finally {
@@ -959,7 +1070,8 @@ public class MainTest {
 
         @Override
         public TaskResult execute(Variables input) {
-            return TaskResult.success().value("result", input.get("result"));
+            return TaskResult.success()
+                    .value("result", input.get("result"));
         }
     }
 
@@ -989,7 +1101,7 @@ public class MainTest {
             executor.shutdown();
             executor.awaitTermination(100, TimeUnit.SECONDS);
 
-            return null;
+            return TaskResult.success();
         }
     }
 
@@ -1051,14 +1163,7 @@ public class MainTest {
 
         private static final Logger log = LoggerFactory.getLogger(ReentrantTaskExample.class);
 
-        public static String EVENT_NAME;
-
-        private final Context context;
-
-        @Inject
-        public ReentrantTaskExample(Context context) {
-            this.context = context;
-        }
+        public static String EVENT_NAME = UUID.randomUUID().toString();
 
         @Override
         public TaskResult execute(Variables input) {
@@ -1068,9 +1173,7 @@ public class MainTest {
             payload.put("k", "v");
             payload.put("action", input.assertString("action"));
 
-            EVENT_NAME = context.suspendResume(payload);
-
-            return TaskResult.success();
+            return TaskResult.reentrantSuspend(EVENT_NAME, payload);
         }
 
         @Override
@@ -1091,6 +1194,17 @@ public class MainTest {
 
         public int getDerivedValue(int value) {
             return value + 42;
+        }
+    }
+
+    @Singleton
+    static class TestLoggingClient implements LoggingClient {
+
+        private final AtomicLong id = new AtomicLong(1L);
+
+        @Override
+        public long createSegment(UUID correlationId, String name) {
+            return id.getAndIncrement();
         }
     }
 }

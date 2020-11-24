@@ -146,24 +146,24 @@ public class Payload {
         }
     }
 
-    public Map<String, List<String>> getFiles() {
+    public Map<String, Set<String>> getFiles() {
         if (!eventName.toLowerCase().equals(PUSH_EVENT)) {
             return Collections.emptyMap();
         }
 
         List<Map<String, Object>> commits = MapUtils.getList(data, "commits", Collections.emptyList());
-        Map<String, List<String>> files = new HashMap<>();
+        Map<String, Set<String>> files = new HashMap<>();
         for (Map<String, Object> c : commits) {
-            appendList(c, "added", files);
-            appendList(c, "removed", files);
-            appendList(c, "modified", files);
+            append(c, "added", files);
+            append(c, "removed", files);
+            append(c, "modified", files);
         }
         return Collections.unmodifiableMap(files);
     }
 
-    private static void appendList(Map<String, Object> c, String name, Map<String, List<String>> result) {
+    private static void append(Map<String, Object> c, String name, Map<String, Set<String>> result) {
         List<String> value = MapUtils.getList(c, name, Collections.emptyList());
-        result.compute(name, (k, v) -> (v == null) ? value : Stream.concat(v.stream(), value.stream()).collect(Collectors.toList()));
+        result.compute(name, (k, v) -> (v == null) ? new HashSet<>(value) : Stream.concat(v.stream(), value.stream()).collect(Collectors.toSet()));
     }
 
     public String getSender() {

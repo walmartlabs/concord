@@ -26,7 +26,6 @@ import org.eclipse.sisu.Nullable;
 import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
-import java.util.Map;
 
 @Named
 @Singleton
@@ -38,14 +37,6 @@ public class GithubConfiguration {
     private String secret;
 
     @Inject
-    @Config("github.githubDomain")
-    private String githubDomain;
-
-    @Inject
-    @Config("github.defaultFilter")
-    private Map<String, Object> defaultFilter;
-
-    @Inject
     @Config("github.useSenderLdapDn")
     private boolean useSenderLdapDn;
 
@@ -55,15 +46,6 @@ public class GithubConfiguration {
 
     public String getSecret() {
         return secret;
-    }
-
-    // TODO: remove me when triggers v1 removed
-    public String getGithubDomain() {
-        return githubDomain;
-    }
-
-    public Map<String, Object> getDefaultFilter() {
-        return defaultFilter;
     }
 
     public boolean isUseSenderLdapDn() {

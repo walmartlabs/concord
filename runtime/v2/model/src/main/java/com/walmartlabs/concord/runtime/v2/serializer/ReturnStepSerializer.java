@@ -29,6 +29,8 @@ import java.io.IOException;
 
 public class ReturnStepSerializer extends StdSerializer<ReturnStep> {
 
+    private static final long serialVersionUID = 1L;
+
     public ReturnStepSerializer() {
         this(null);
     }

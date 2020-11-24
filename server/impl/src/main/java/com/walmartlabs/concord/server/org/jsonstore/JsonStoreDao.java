@@ -33,7 +33,6 @@ import com.walmartlabs.concord.server.org.ResourceAccessEntry;
 import com.walmartlabs.concord.server.org.ResourceAccessLevel;
 import com.walmartlabs.concord.server.user.UserType;
 import org.jooq.*;
-import org.jooq.impl.DSL;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -63,29 +62,23 @@ public class JsonStoreDao extends AbstractDao {
     }
 
     public JsonStoreEntry get(UUID storeId) {
-        try (DSLContext tx = DSL.using(cfg)) {
-            return buildSelect(tx)
-                    .where(JSON_STORES.JSON_STORE_ID.eq(storeId))
-                    .fetchOne(JsonStoreDao::toEntity);
-        }
+        return buildSelect(dsl())
+                .where(JSON_STORES.JSON_STORE_ID.eq(storeId))
+                .fetchOne(JsonStoreDao::toEntity);
     }
 
     public JsonStoreEntry get(UUID orgId, String storeName) {
-        try (DSLContext tx = DSL.using(cfg)) {
-            return buildSelect(tx)
-                    .where(JSON_STORES.JSON_STORE_NAME.eq(storeName)
-                            .and(JSON_STORES.ORG_ID.eq(orgId)))
-                    .fetchOne(JsonStoreDao::toEntity);
-        }
+        return buildSelect(dsl())
+                .where(JSON_STORES.JSON_STORE_NAME.eq(storeName)
+                        .and(JSON_STORES.ORG_ID.eq(orgId)))
+                .fetchOne(JsonStoreDao::toEntity);
     }
 
     public UUID getId(UUID orgId, String storeName) {
-        try (DSLContext tx = DSL.using(cfg)) {
-            return tx.select(JSON_STORES.JSON_STORE_ID)
-                    .from(JSON_STORES)
-                    .where(JSON_STORES.JSON_STORE_NAME.eq(storeName).and(JSON_STORES.ORG_ID.eq(orgId)))
-                    .fetchOne(JSON_STORES.JSON_STORE_ID);
-        }
+        return dsl().select(JSON_STORES.JSON_STORE_ID)
+                .from(JSON_STORES)
+                .where(JSON_STORES.JSON_STORE_NAME.eq(storeName).and(JSON_STORES.ORG_ID.eq(orgId)))
+                .fetchOne(JSON_STORES.JSON_STORE_ID);
     }
 
     public List<JsonStoreEntry> list(UUID orgId, UUID currentUserId, int offset, int limit, String filter) {
@@ -93,48 +86,46 @@ public class JsonStoreDao extends AbstractDao {
         JsonStores j = JSON_STORES.as("j");
         Users u = USERS.as("u");
 
-        try (DSLContext tx = DSL.using(cfg)) {
-            SelectJoinStep<Record10<UUID, String, UUID, String, String, UUID, String, String, String, String>> q = buildSelect(tx, o, j, u);
+        SelectJoinStep<Record10<UUID, String, UUID, String, String, UUID, String, String, String, String>> q = buildSelect(dsl(), o, j, u);
 
-            if (currentUserId != null) {
-                // public stores are visible for anyone
-                Condition isPublic = j.VISIBILITY.eq(JsonStoreVisibility.PUBLIC.toString());
+        if (currentUserId != null) {
+            // public stores are visible for anyone
+            Condition isPublic = j.VISIBILITY.eq(JsonStoreVisibility.PUBLIC.toString());
 
-                // check if the user belongs to a team in the org
-                SelectConditionStep<Record1<UUID>> teamIds = select(TEAMS.TEAM_ID)
-                        .from(TEAMS)
-                        .where(TEAMS.ORG_ID.eq(orgId));
+            // check if the user belongs to a team in the org
+            SelectConditionStep<Record1<UUID>> teamIds = select(TEAMS.TEAM_ID)
+                    .from(TEAMS)
+                    .where(TEAMS.ORG_ID.eq(orgId));
 
-                Condition isInATeam = exists(selectOne().from(Tables.V_USER_TEAMS)
-                        .where(Tables.V_USER_TEAMS.USER_ID.eq(currentUserId)
-                                .and(Tables.V_USER_TEAMS.TEAM_ID.in(teamIds))));
+            Condition isInATeam = exists(selectOne().from(Tables.V_USER_TEAMS)
+                    .where(Tables.V_USER_TEAMS.USER_ID.eq(currentUserId)
+                            .and(Tables.V_USER_TEAMS.TEAM_ID.in(teamIds))));
 
-                // check if the user owns stores in the org
-                Condition ownsStores = j.OWNER_ID.eq(currentUserId);
+            // check if the user owns stores in the org
+            Condition ownsStores = j.OWNER_ID.eq(currentUserId);
 
-                // check if the user owns the org
-                Condition ownsOrg = o.OWNER_ID.eq(currentUserId);
+            // check if the user owns the org
+            Condition ownsOrg = o.OWNER_ID.eq(currentUserId);
 
-                // if any of those conditions true then the store must be visible
-                q.where(or(isPublic, isInATeam, ownsStores, ownsOrg));
-            }
-
-            if (filter != null) {
-                q.where(j.JSON_STORE_NAME.containsIgnoreCase(filter));
-            }
-
-            if (offset >= 0) {
-                q.offset(offset);
-            }
-
-            if (limit > 0) {
-                q.limit(limit);
-            }
-
-            return q.where(j.ORG_ID.eq(orgId))
-                    .orderBy(j.JSON_STORE_NAME)
-                    .fetch(JsonStoreDao::toEntity);
+            // if any of those conditions true then the store must be visible
+            q.where(or(isPublic, isInATeam, ownsStores, ownsOrg));
         }
+
+        if (filter != null) {
+            q.where(j.JSON_STORE_NAME.containsIgnoreCase(filter));
+        }
+
+        if (offset >= 0) {
+            q.offset(offset);
+        }
+
+        if (limit > 0) {
+            q.limit(limit);
+        }
+
+        return q.where(j.ORG_ID.eq(orgId))
+                .orderBy(j.JSON_STORE_NAME)
+                .fetch(JsonStoreDao::toEntity);
     }
 
     public UUID insert(UUID orgId, String name, JsonStoreVisibility visibility, UUID ownerId) {
@@ -151,34 +142,32 @@ public class JsonStoreDao extends AbstractDao {
 
 
     public boolean hasAccessLevel(UUID storeId, UUID userId, ResourceAccessLevel[] levels) {
-        try (DSLContext tx = DSL.using(cfg)) {
-            return hasAccessLevel(tx, storeId, userId, levels);
-        }
+        return hasAccessLevel(dsl(), storeId, userId, levels);
     }
 
     public List<ResourceAccessEntry> getAccessLevel(UUID storeId) {
         List<ResourceAccessEntry> resourceAccessList = new ArrayList<>();
-        try (DSLContext tx = DSL.using(cfg)) {
-            Result<Record5<UUID, UUID, String, String, String>> teamsAccess = tx.select(
-                    JSON_STORE_TEAM_ACCESS.TEAM_ID,
-                    JSON_STORE_TEAM_ACCESS.JSON_STORE_ID,
-                    Tables.TEAMS.TEAM_NAME,
-                    ORGANIZATIONS.ORG_NAME,
-                    JSON_STORE_TEAM_ACCESS.ACCESS_LEVEL)
-                    .from(JSON_STORE_TEAM_ACCESS)
-                    .leftOuterJoin(Tables.TEAMS).on(Tables.TEAMS.TEAM_ID.eq(JSON_STORE_TEAM_ACCESS.TEAM_ID))
-                    .leftOuterJoin(JSON_STORES).on(JSON_STORES.JSON_STORE_ID.eq(storeId))
-                    .leftOuterJoin(ORGANIZATIONS).on(ORGANIZATIONS.ORG_ID.eq(JSON_STORES.ORG_ID))
-                    .where(JSON_STORE_TEAM_ACCESS.JSON_STORE_ID.eq(storeId))
-                    .fetch();
 
-            for (Record5<UUID, UUID, String, String, String> t : teamsAccess) {
-                resourceAccessList.add(new ResourceAccessEntry(t.get(JSON_STORE_TEAM_ACCESS.TEAM_ID),
-                        t.get(ORGANIZATIONS.ORG_NAME),
-                        t.get(Tables.TEAMS.TEAM_NAME),
-                        ResourceAccessLevel.valueOf(t.get(JSON_STORE_TEAM_ACCESS.ACCESS_LEVEL))));
-            }
+        Result<Record5<UUID, UUID, String, String, String>> teamsAccess = dsl().select(
+                JSON_STORE_TEAM_ACCESS.TEAM_ID,
+                JSON_STORE_TEAM_ACCESS.JSON_STORE_ID,
+                Tables.TEAMS.TEAM_NAME,
+                ORGANIZATIONS.ORG_NAME,
+                JSON_STORE_TEAM_ACCESS.ACCESS_LEVEL)
+                .from(JSON_STORE_TEAM_ACCESS)
+                .leftOuterJoin(Tables.TEAMS).on(Tables.TEAMS.TEAM_ID.eq(JSON_STORE_TEAM_ACCESS.TEAM_ID))
+                .leftOuterJoin(JSON_STORES).on(JSON_STORES.JSON_STORE_ID.eq(storeId))
+                .leftOuterJoin(ORGANIZATIONS).on(ORGANIZATIONS.ORG_ID.eq(JSON_STORES.ORG_ID))
+                .where(JSON_STORE_TEAM_ACCESS.JSON_STORE_ID.eq(storeId))
+                .fetch();
+
+        for (Record5<UUID, UUID, String, String, String> t : teamsAccess) {
+            resourceAccessList.add(new ResourceAccessEntry(t.get(JSON_STORE_TEAM_ACCESS.TEAM_ID),
+                    t.get(ORGANIZATIONS.ORG_NAME),
+                    t.get(Tables.TEAMS.TEAM_NAME),
+                    ResourceAccessLevel.valueOf(t.get(JSON_STORE_TEAM_ACCESS.ACCESS_LEVEL))));
         }
+
         return resourceAccessList;
     }
 

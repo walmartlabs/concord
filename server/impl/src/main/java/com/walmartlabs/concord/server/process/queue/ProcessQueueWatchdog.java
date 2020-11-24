@@ -310,13 +310,12 @@ public class ProcessQueueWatchdog implements ScheduledTask {
         public List<TimedOutEntry> pollExpired(DSLContext tx, int maxEntries) {
             ProcessQueue q = PROCESS_QUEUE.as("q");
 
-            @SuppressWarnings("unchecked")
-            Field<? extends Number> i = (Field<? extends Number>) interval("1 second");
+            Field<?> maxAge = interval("1 second").mul(q.TIMEOUT);
 
             return tx.select(q.INSTANCE_ID, q.CREATED_AT, q.LAST_AGENT_ID, q.TIMEOUT)
                     .from(q)
                     .where(q.CURRENT_STATUS.eq(ProcessStatus.RUNNING.toString())
-                            .and(q.LAST_RUN_AT.plus(q.TIMEOUT.mul(i)).lessOrEqual(currentOffsetDateTime())))
+                            .and(q.LAST_RUN_AT.plus(maxAge).lessOrEqual(currentOffsetDateTime())))
                     .limit(maxEntries)
                     .forUpdate()
                     .skipLocked()

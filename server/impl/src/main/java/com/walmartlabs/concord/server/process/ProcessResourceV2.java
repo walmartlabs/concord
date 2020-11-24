@@ -182,7 +182,8 @@ public class ProcessResourceV2 implements Resource {
             throw new ValidationErrorsException("'status' is required");
         }
 
-        return queueDao.listRequirements(processStatus, FilterUtils.parseDate("startAt", uriInfo), limit, offset);
+        return queueDao.listRequirements(processStatus, FilterUtils.parseDate("startAt", uriInfo), limit, offset,
+                FilterUtils.parseJson("requirements", uriInfo));
     }
 
     /**

@@ -9,9 +9,9 @@ package com.walmartlabs.concord.server.process.queue;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -36,7 +36,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import static com.walmartlabs.concord.db.PgUtils.jsonbTextByPath;
+import static com.walmartlabs.concord.db.PgUtils.*;
 import static org.jooq.impl.DSL.currentOffsetDateTime;
 
 public final class FilterUtils {
@@ -76,7 +76,7 @@ public final class FilterUtils {
 
     public static List<ProcessFilter.JsonFilter> parseJson(String paramName, UriInfo uriInfo) {
         return uriInfo.getQueryParameters().entrySet().stream()
-                .filter(e -> isParam(e.getKey(), paramName))
+                .filter(e -> (isParam(e.getKey(), paramName)))
                 .map(e -> {
                     ImmutableJsonFilter.Builder filter = ProcessFilter.JsonFilter.builder()
                             .value(getValue(e));
@@ -145,11 +145,11 @@ public final class FilterUtils {
                     break;
                 }
                 case EQUALS: {
-                    q.addConditions(jsonbTextByPath(column, f.path()).eq(f.value()));
+                    q.addConditions(jsonbTextExistsByPath(column, f.path(), f.value()));
                     break;
                 }
                 case NOT_EQUALS: {
-                    q.addConditions(jsonbTextByPath(column, f.path()).notEqual(f.value()));
+                    q.addConditions(jsonbTextNotExistsByPath(column, f.path(), f.value()));
                     break;
                 }
                 case STARTS_WITH: {

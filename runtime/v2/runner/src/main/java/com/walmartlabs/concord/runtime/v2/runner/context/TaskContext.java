@@ -20,7 +20,6 @@ package com.walmartlabs.concord.runtime.v2.runner.context;
  * =====
  */
 
-import com.walmartlabs.concord.runtime.v2.sdk.ProcessConfiguration;
 import com.walmartlabs.concord.runtime.v2.sdk.Compiler;
 import com.walmartlabs.concord.runtime.v2.sdk.*;
 
@@ -105,12 +104,17 @@ public class TaskContext implements Context {
     }
 
     @Override
+    public <T> T eval(Object v, Map<String, Object> additionalVariables, Class<T> type) {
+        return delegate.eval(v, additionalVariables, type);
+    }
+
+    @Override
     public void suspend(String eventName) {
         delegate.suspend(eventName);
     }
 
     @Override
-    public String suspendResume(Map<String, Serializable> payload) {
-        return delegate.suspendResume(payload);
+    public void reentrantSuspend(String eventName, Map<String, Serializable> payload) {
+        delegate.reentrantSuspend(eventName, payload);
     }
 }

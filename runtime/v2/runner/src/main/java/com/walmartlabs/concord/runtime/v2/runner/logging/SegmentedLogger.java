@@ -20,6 +20,7 @@ package com.walmartlabs.concord.runtime.v2.runner.logging;
  * =====
  */
 
+import ch.qos.logback.classic.Level;
 import com.walmartlabs.concord.runtime.v2.Constants;
 import com.walmartlabs.concord.runtime.v2.model.AbstractStep;
 import com.walmartlabs.concord.runtime.v2.parser.StepOptions;
@@ -29,37 +30,30 @@ import uk.org.lidalia.sysoutslf4j.context.LogLevel;
 import uk.org.lidalia.sysoutslf4j.context.SysOutOverSLF4J;
 
 import java.io.Serializable;
+import java.util.Collections;
 import java.util.Map;
 import java.util.concurrent.*;
 
 import static ch.qos.logback.classic.ClassicConstants.FINALIZE_SESSION_MARKER;
 
-public class SegmentedLogger {
+public class SegmentedLogger implements RunnerLogger {
 
     private static final Logger log = LoggerFactory.getLogger(SegmentedLogger.class);
 
-    private static volatile boolean ENABLED = false;
+    private final LoggingClient loggingClient;
 
-    public static void enable() {
-        ENABLED = true;
+    public SegmentedLogger(LoggingClient loggingClient) {
+        this.loggingClient = loggingClient;
     }
 
-    public static void withLogSegment(String name, String segmentId, boolean redirectSystemOutAndErr, Runnable runnable) {
-        if (!ENABLED) {
-            try {
-                runnable.run();
-            } catch (RuntimeException e) {
-                throw e;
-            } catch (Exception e) {
-                throw new RuntimeException(e);
-            }
-            return;
-        }
+    @Override
+    public void withContext(LogContext context, Runnable runnable) {
+        long segmentId = loggingClient.createSegment(context.correlationId(), context.segmentName());
 
-        ThreadGroup threadGroup = new SegmentThreadGroup(name, segmentId);
-        executeInThreadGroup(threadGroup, "thread-" + name, () -> {
+        ThreadGroup threadGroup = new LogContextThreadGroup(LogContext.builder().from(context).segmentId(segmentId).build());
+        executeInThreadGroup(threadGroup, "thread-" + context.segmentName(), () -> {
             // make sure the redirection is enabled in the current thread
-            if (redirectSystemOutAndErr && !SysOutOverSLF4J.systemOutputsAreSLF4JPrintStreams()) {
+            if (context.redirectSystemOutAndErr() && !SysOutOverSLF4J.systemOutputsAreSLF4JPrintStreams()) {
                 SysOutOverSLF4J.sendSystemOutAndErrToSLF4J(LogLevel.INFO, LogLevel.WARN);
             }
 
@@ -72,17 +66,23 @@ public class SegmentedLogger {
     }
 
     public static String getSegmentName(AbstractStep<?> step) {
+        Map<String, Serializable> meta = meta(step);
+        return (String) meta.get(Constants.SEGMENT_NAME);
+    }
+
+    public static Level getLogLevel(AbstractStep<?> step) {
+        Map<String, Serializable> meta = meta(step);
+        String logLevel = (String) meta.get(Constants.LOG_LEVEL);
+        return Level.toLevel(logLevel, Level.INFO);
+    }
+
+    private static Map<String, Serializable> meta(AbstractStep<?> step) {
         StepOptions opts = step.getOptions();
         if (opts == null) {
-            return null;
+            return Collections.emptyMap();
         }
 
-        Map<String, Serializable> meta = opts.meta();
-        if (meta == null) {
-            return null;
-        }
-
-        return (String) meta.get(Constants.SEGMENT_NAME);
+        return opts.meta();
     }
 
     /**

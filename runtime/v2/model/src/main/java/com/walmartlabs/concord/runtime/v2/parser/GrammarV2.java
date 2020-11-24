@@ -75,6 +75,9 @@ public final class GrammarV2 {
         return v.getValue();
     });
     public static final Parser<Atom, Integer> maybeInt = _val(JsonToken.VALUE_NUMBER_INT).map(v -> v.getValue(YamlValueType.INT));
+    public static final Parser<Atom, String> maybeString = _val(JsonToken.VALUE_STRING).map(v -> v.getValue(YamlValueType.STRING));
+    public static final Parser<Atom, List<String>> maybeStringArray = arrayOfValues.map(v -> v.getListValue(YamlValueType.STRING));
+    public static final Parser<Atom, Map<String, Serializable>> maybeMap = object.map(YamlObject::getValue);
     public static final Parser<Atom, Object> patternOrArrayVal = value.map(GrammarV2::patternOrArrayConverter);
     public static final Parser<Atom, Duration> durationVal = value.map(GrammarV2::durationConverter);
     public static final Parser<Atom, String> timezoneVal = value.map(GrammarV2::timezoneConverter);
@@ -136,12 +139,12 @@ public final class GrammarV2 {
 
     // object := START_OBJECT (FIELD_NAME value)* END_OBJECT
     static {
-        object.set(label("Object",
+        object.set(
                 testToken(JsonToken.START_OBJECT).bind(t ->
                         betweenTokens(JsonToken.START_OBJECT, JsonToken.END_OBJECT,
                                 many(satisfyToken(JsonToken.FIELD_NAME).bind(a ->
                                         value.map(v -> new KV<>(a.name, v)))))
-                                .map(a -> new YamlObject(valueToMap(a), t.location)))));
+                                .map(a -> new YamlObject(valueToMap(a), t.location))));
     }
 
     static {

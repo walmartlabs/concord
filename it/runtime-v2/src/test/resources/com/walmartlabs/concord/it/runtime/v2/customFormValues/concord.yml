@@ -1,0 +1,18 @@
+configuration:
+  runtime: "concord-v2"
+
+flows:
+  default:
+    - form: myForm
+      # form calls can override form values or provide additional data
+      values:
+        firstName: "Moo"
+        lastName: "Xaa"
+        sum: "${1 + 2}"
+        address:
+          city: Toronto
+          province: Ontario
+
+forms:
+  myForm:
+    - firstName: { label: "First name", type: "string", value: "John" }

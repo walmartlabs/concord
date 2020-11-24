@@ -21,16 +21,15 @@ package com.walmartlabs.concord.runtime.v2.runner;
  */
 
 import com.google.inject.*;
-import com.google.inject.Module;
 import com.walmartlabs.concord.runtime.common.cfg.RunnerConfiguration;
 import com.walmartlabs.concord.runtime.common.injector.InjectorUtils;
 import com.walmartlabs.concord.runtime.common.injector.InstanceId;
 import com.walmartlabs.concord.runtime.common.injector.TaskHolder;
-import com.walmartlabs.concord.runtime.v2.sdk.ProcessConfiguration;
 import com.walmartlabs.concord.runtime.v2.runner.guice.CurrentClasspathModule;
 import com.walmartlabs.concord.runtime.v2.runner.guice.DefaultRunnerModule;
 import com.walmartlabs.concord.runtime.v2.runner.guice.ProcessDependenciesModule;
 import com.walmartlabs.concord.runtime.v2.runner.tasks.V2;
+import com.walmartlabs.concord.runtime.v2.sdk.ProcessConfiguration;
 import com.walmartlabs.concord.runtime.v2.sdk.Task;
 import com.walmartlabs.concord.runtime.v2.sdk.WorkingDirectory;
 import org.eclipse.sisu.wire.WireModule;

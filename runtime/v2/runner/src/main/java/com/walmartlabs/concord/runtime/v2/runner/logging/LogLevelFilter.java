@@ -20,16 +20,24 @@ package com.walmartlabs.concord.runtime.v2.runner.logging;
  * =====
  */
 
-public class SegmentThreadGroup extends ThreadGroup {
+import ch.qos.logback.classic.spi.ILoggingEvent;
+import ch.qos.logback.core.filter.Filter;
+import ch.qos.logback.core.spi.FilterReply;
 
-    private final String segmentId;
+public class LogLevelFilter extends Filter<ILoggingEvent> {
 
-    public SegmentThreadGroup(String name, String segmentId) {
-        super(name);
-        this.segmentId = segmentId;
-    }
+    @Override
+    public FilterReply decide(ILoggingEvent event) {
+        if (event.getMarker() == ch.qos.logback.classic.ClassicConstants.FINALIZE_SESSION_MARKER) {
+            return FilterReply.NEUTRAL;
+        }
 
-    public String getSegmentId() {
-        return segmentId;
+        LogContext logContext = LogUtils.getContext();
+
+        if (logContext != null && !event.getLevel().isGreaterOrEqual(logContext.logLevel())) {
+            return FilterReply.DENY;
+        }
+
+        return FilterReply.NEUTRAL;
     }
 }

@@ -5,7 +5,9 @@ flows:
       in:
         action: ${actionName}
       out:
-        result
+        result: ${result}
+        resultAction: ${result.action}
     - log: "result.ok: ${result.ok}"
     - log: "result.action: ${result.action}"
+    - log: "resultAction: ${resultAction}"
     - log: "result.k: ${result.k}"

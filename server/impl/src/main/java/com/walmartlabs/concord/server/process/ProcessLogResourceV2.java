@@ -92,10 +92,6 @@ public class ProcessLogResourceV2 implements Resource {
                                      @ApiParam @QueryParam("limit") @DefaultValue("30") int limit,
                                      @ApiParam @QueryParam("offset") @DefaultValue("0") int offset) {
 
-        if (limit <= 0) {
-            throw new ValidationErrorsException("'limit' must be a positive number");
-        }
-
         if (offset < 0) {
             throw new ValidationErrorsException("'offset' must be a positive number or zero");
         }
@@ -154,7 +150,7 @@ public class ProcessLogResourceV2 implements Resource {
         ProcessKey processKey = logAccessManager.assertLogAccess(instanceId);
         HttpUtils.Range range = HttpUtils.parseRangeHeaderValue(rangeHeader);
         ProcessLog l = logManager.segmentData(processKey, segmentId, range.start(), range.end());
-        return toResponse(instanceId, l, range);
+        return toResponse(instanceId, segmentId, l, range);
     }
 
     /**
@@ -184,12 +180,12 @@ public class ProcessLogResourceV2 implements Resource {
         }
     }
 
-    public static Response toResponse(UUID instanceId, ProcessLog l, HttpUtils.Range range) {
+    public static Response toResponse(UUID instanceId, long segmentId, ProcessLog l, HttpUtils.Range range) {
         List<ProcessLogChunk> data = l.getChunks();
         if (data.isEmpty()) {
             int actualStart = range.start() != null ? range.start() : 0;
             int actualEnd = range.end() != null ? range.end() : actualStart;
-            return downloadableFile(instanceId, null, actualStart, actualEnd, l.getSize());
+            return downloadableFile(instanceId, segmentId, null, actualStart, actualEnd, l.getSize());
         }
 
         ProcessLogChunk firstChunk = data.get(0);
@@ -204,7 +200,7 @@ public class ProcessLogResourceV2 implements Resource {
             }
         };
 
-        return downloadableFile(instanceId, out, actualStart, actualEnd, l.getSize());
+        return downloadableFile(instanceId, segmentId, out, actualStart, actualEnd, l.getSize());
     }
 
     private ProcessKey assertProcessKey(UUID instanceId) {
@@ -215,11 +211,11 @@ public class ProcessLogResourceV2 implements Resource {
         return processKey;
     }
 
-    private static Response downloadableFile(UUID instanceId, StreamingOutput out, int start, int end, int size) {
+    private static Response downloadableFile(UUID instanceId, long segmentId, StreamingOutput out, int start, int end, int size) {
         return (out != null ? Response.ok(out) : Response.ok())
                 .header("Content-Range", "bytes " + start + "-" + end + "/" + size)
                 .header("Content-Type", MediaType.APPLICATION_OCTET_STREAM)
-                .header("Content-Disposition", "attachment; filename=\"" + instanceId + ".log\"")
+                .header("Content-Disposition", "attachment; filename=\"" + instanceId + "_" + segmentId + ".log\"")
                 .build();
     }
 }

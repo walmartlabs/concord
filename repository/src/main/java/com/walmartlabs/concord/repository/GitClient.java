@@ -23,6 +23,7 @@ package com.walmartlabs.concord.repository;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.walmartlabs.concord.common.IOUtils;
+import com.walmartlabs.concord.common.secret.BinaryDataSecret;
 import com.walmartlabs.concord.common.secret.KeyPair;
 import com.walmartlabs.concord.common.secret.UsernamePassword;
 import com.walmartlabs.concord.sdk.Secret;
@@ -377,6 +378,11 @@ public class GitClient {
         if (secret == null && url.trim().startsWith("https://") && cfg.oauthToken() != null && !url.contains("@")) {
             return "https://" + cfg.oauthToken() + "@" + url.substring("https://".length());
         }
+
+        if (secret instanceof BinaryDataSecret && !url.trim().startsWith("https://")) {
+            throw new RepositoryException("Tokens can only be used for https:// Git URLs");
+        }
+
         return url;
     }
 
@@ -422,6 +428,14 @@ public class GitClient {
 
                 env.put("GIT_ASKPASS", askpass.toAbsolutePath().toString());
                 env.put("SSH_ASKPASS", askpass.toAbsolutePath().toString());
+
+                log.info("using GIT_ASKPASS to set credentials ");
+            } else if (secret instanceof BinaryDataSecret) {
+                BinaryDataSecret token = (BinaryDataSecret) secret;
+
+                askpass = createUnixStandardAskpass(new UsernamePassword(new String(token.getData()), "".toCharArray()));
+
+                env.put("GIT_ASKPASS", askpass.toAbsolutePath().toString());
 
                 log.info("using GIT_ASKPASS to set credentials ");
             }

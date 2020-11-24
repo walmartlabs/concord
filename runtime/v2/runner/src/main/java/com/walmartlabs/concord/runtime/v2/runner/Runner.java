@@ -24,11 +24,12 @@ import com.google.inject.AbstractModule;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
 import com.walmartlabs.concord.runtime.common.injector.InstanceId;
-import com.walmartlabs.concord.runtime.v2.sdk.ProcessConfiguration;
 import com.walmartlabs.concord.runtime.v2.model.ProcessDefinition;
 import com.walmartlabs.concord.runtime.v2.runner.compiler.CompilerUtils;
+import com.walmartlabs.concord.runtime.v2.runner.vm.SaveLastErrorCommand;
 import com.walmartlabs.concord.runtime.v2.runner.vm.UpdateLocalsCommand;
 import com.walmartlabs.concord.runtime.v2.sdk.Compiler;
+import com.walmartlabs.concord.runtime.v2.sdk.ProcessConfiguration;
 import com.walmartlabs.concord.svm.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -37,6 +38,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 public class Runner {
 
@@ -70,7 +72,7 @@ public class Runner {
         log.debug("start ['{}'] -> running...", processConfiguration.entryPoint());
 
         Command cmd = CompilerUtils.compile(compiler, processConfiguration, processDefinition, processConfiguration.entryPoint());
-        State state = new InMemoryState(cmd);
+        State state = withDefaultExceptionHandler(new InMemoryState(cmd));
 
         VM vm = createVM(processDefinition);
         // update the global variables using the input map by running a special command
@@ -90,11 +92,18 @@ public class Runner {
         statusCallback.onRunning(instanceId.getValue());
         log.debug("resume ['{}'] -> running...", eventRef);
 
-        State state = snapshot.vmState();
+        State state = withDefaultExceptionHandler(snapshot.vmState());
 
         VM vm = createVM(snapshot.processDefinition());
+
         // update the global variables using the input map by running a special command
-        vm.run(state, new UpdateLocalsCommand(input));
+        // only the threads with the specified eventRef will receive the input
+        Collection<ThreadId> resumingThreads = state.getEventRefs().entrySet().stream()
+                .filter(kv -> eventRef.equals(kv.getValue()))
+                .map(Map.Entry::getKey)
+                .collect(Collectors.toList());
+        vm.run(state, new UpdateLocalsCommand(input, resumingThreads));
+
         // resume normally
         vm.resume(state, eventRef);
 
@@ -110,7 +119,7 @@ public class Runner {
         statusCallback.onRunning(instanceId.getValue());
         log.debug("resume -> running...");
 
-        State state = snapshot.vmState();
+        State state = withDefaultExceptionHandler(snapshot.vmState());
 
         VM vm = createVM(snapshot.processDefinition());
         // update the global variables using the input map by running a special command
@@ -134,6 +143,13 @@ public class Runner {
         RuntimeFactory runtimeFactory = vm -> new DefaultRuntime(vm, injectorWithProcessDefinition(injector, processDefinition));
 
         return new VM(runtimeFactory, listeners);
+    }
+
+    private static State withDefaultExceptionHandler(State state) {
+        // install the exception handler into the root frame
+        // takes care of all unhandled errors bubbling up
+        state.peekFrame(state.getRootThreadId()).setExceptionHandler(new SaveLastErrorCommand());
+        return state;
     }
 
     private static Injector injectorWithProcessDefinition(Injector injector, ProcessDefinition processDefinition) {

@@ -1,5 +1,180 @@
 # Change log
 
+## [1.74.0] - 2020-11-24
+
+### Added
+
+- concord-server: allow "any of [list]" conditions when matching
+process `requirements`;
+- concord-console, runtime-v2: a button to launch the form wizard
+from the process log tab;
+- concord-console, runtime-v2: link to download individual log
+segments;
+- concord-console, runtime-v2: individual form links.
+
+### Changed
+
+- concord-server, runtime-v2: correctly remove submitted forms;
+- runtime-v2: `set` now supports references to partially evaluated
+values (e.g. variables defined in the same `set` block), including
+nested keys;
+- concord-server: add transaction-aware versions of
+`ProjectManager#get` and `ProjectAccessManager#assertAccess` methods;
+- runtime-v2: now only resuming threads receive the resume event's
+payload. This fixes the issue with multiple `parallel` forms missing
+submitted data;
+- concord-agent, runtime-v2: make the runner responsible for log
+segment creation;
+- runtime-v2: fixed an issue when submitting a form can cause other
+unsubmitted forms to dissappear;
+- runtime-v2: fixed compilation of block steps when `error` is
+used.
+
+### Breaking
+
+- runtime-v2: `set` with nested keys now replaces the top-level
+reference. If `set` is called in a flow, the changes to nested data
+won't be visible in the caller flow unless `out` is used;
+- policy-engine, concord-server: rename `entity` policy's types for
+consistency.
+
+
+
+## [1.73.0] - 2020-11-15
+
+### Added
+
+- concord-console: `entryPoint` can now be used as a column in
+the process list.
+
+### Changed
+
+- runtime-v2: fixed an issue when a parent process checkpoint
+was incorrectly applied to the process' forks;
+- concord-tasks: 'kill' shouldn't error on empty instanceId lists;
+- concord-tasks: fix common parameters not being inherited by
+`forks` in the runtime-v2 version of the `concord` task;
+- runtime-v1, runtime-v2: avoid reading partially written
+`instanceId` files;
+- concord-server: allow null values when merging policies;
+- runtime-v2: fixed the merging of multiple Concord YAML files
+(e.g. `configuration.events` blocks and others).
+
+
+
+## [1.72.0] - 2020-11-09
+
+### Added
+
+- concord-console: the process list now support boolean values in
+custom columns and filters;
+- runtime-v2: save `lastError` in process metadata (feature parity
+with the runtime v1);
+- policy-engine, concord-server: the `entity` policy now supports
+repository objects;
+- concord-console, concord-repository: support for OAuth (personal)
+tokens for Git authentication.
+
+### Changed
+
+- concord-console: load add log segments on every refresh (temporary
+workaround);
+- runtime-v2: fix the loop frame being added to the call stack on
+every step of `withItems`;
+- runtime-v2: fixed an issue preventing form `values` from being
+visible in `data.js` (custom forms);
+- project: update Maven Wrapper to 0.5.6;
+- runtime-v2: fixed evaluation of literals values for empty
+collections (e.g. `[]` used with `set` or in expressions);
+- concord-server: improved error messages when processing `imports`.
+
+
+
+## [1.71.0] - 2020-11-03
+
+### Added
+
+- oneops: record incoming events in the audit log;
+- runtime-v2: initial support for `parallelWithItems`;
+- runtime-v2: support for expressions in `out` blocks of task
+calls, flow calls, `parallel` and `expr` blocks;
+- runtime-v2: save the current thread ID in `TaskResult`;
+- agent-operator: add `requirements` filter;
+- concord-console: the login form now provides a link to the API
+key login form.
+
+### Changed
+
+- concord-tasks: fix the missing injection annotations in the v2
+version of the `jsonStore` task (makes it useable in v2 again);
+- concord-server: `ProcessKeyCache` no longer caches misses;
+- concord-server: fixed handling of `any` conditions in
+the `github` trigger's `files` filter.
+
+### Breaking
+
+- runtime-v2: new version the `TaskResult` structure, now itcan be
+used to tell the runtime to suspend the process.
+
+
+
+## [1.70.0] - 2020-10-23
+
+### Added
+
+- concord-server: expose task failures  in metrics (including error
+messages);
+- concord-server: new GitHub trigger `condition` - `files.any`.
+Contains all `added`, `deleted` or `modified` files in a `push`
+event.
+
+### Changed
+
+- runtime-v2: add support for expressions in `name` blocks for all
+types of steps;
+- concord-server: fixed some edge cases when converting timezones
+in process status history;
+- runtime-v2: automatically convert values of out variables in
+scripts to their Java counterparts - Maps, Lists, etc;
+- runtime-v2: fixed a NPE when tasks return `null` instead of
+`TaskResult`;
+- concord-cli: print out the error's stacktrace if `verbose` is
+enabled.
+
+
+
+## [1.69.0] - 2020-10-15
+
+### Added
+
+- runtime-v2: steps can now specify `slf4j` logging level using
+the `meta.logLevel` property.
+
+### Changed
+
+- concord-server: timestamp values in process status history are now
+returned with a correct time zone;
+- concord-server: throw an exception if the resuming process wasn't
+actually `SUSPENDED`;
+- runtime-v2: `SLF4JPrintStreams` messages should no longer appear
+in log segments;
+- concord-server: task scheduler improvements - save the last error
+into the DB, simplify polling, improved task heartbeat/stall checks;
+- concord-server: escape expressions (`${...}`) in the input data
+when resuming processes using
+`/api/v1/process/{id}/resume/{eventName}` endpoint;
+- ansible: fixed an issue preventing Kerberos authentication from
+working in nested Docker containers (i.e. when `dockerImage` is
+used);
+- concord-server: allow non-admins to search audit logs by `eventId`
+(`/api/v1/audit?eventId=...`);
+- concord-console: fix widths of columns on the secret list page;
+- runtime-v2: `if` steps now treat `null` values as `false`;
+- concord-server: allow teams with no members (i.e. teams with LDAP
+groups only).
+
+
+
 ## [1.68.0] - 2020-10-05
 
 ### Added

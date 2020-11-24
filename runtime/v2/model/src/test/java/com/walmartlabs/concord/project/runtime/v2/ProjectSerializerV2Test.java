@@ -83,6 +83,20 @@ public class ProjectSerializerV2Test extends AbstractParserTest {
     }
 
     @Test
+    public void testFlowCallOutExpr() throws Exception {
+        FlowCallOptions opts = FlowCallOptions.builder()
+                .putInput("in-1", "v1")
+                .putOutExpr("o1", "${o.one}")
+                .withItems(withItems())
+                .retry(retry())
+                .errorSteps(steps())
+                .build();
+
+        String result = toYaml(new FlowCall(location(), "flow", opts));
+        assertResult("serializer/flowCallStepOutExpr.yml", result);
+    }
+
+    @Test
     public void testFormCall() throws Exception {
         FormField f = FormField.builder()
                 .name("field-name")
@@ -146,6 +160,21 @@ public class ProjectSerializerV2Test extends AbstractParserTest {
     }
 
     @Test
+    public void testParallelBlockOutExpr() throws Exception {
+        ParallelBlockOptions opts = ParallelBlockOptions.builder()
+                .putOutExpr("out", "${expr}")
+                .meta(meta())
+                .build();
+
+        List<Step> steps = new ArrayList<>();
+        steps.add(new Checkpoint(location(), "ch1", simpleOptions()));
+        steps.add(new Checkpoint(location(), "ch2", simpleOptions()));
+
+        String result = toYaml(new ParallelBlock(location(), steps, opts));
+        assertResult("serializer/parallelBlockOutExpr.yml", result);
+    }
+
+    @Test
     public void testReturnStep() throws Exception {
         String result = toYaml(new ReturnStep(location()));
         assertResult("serializer/returnStep.yml", result);
@@ -203,7 +232,51 @@ public class ProjectSerializerV2Test extends AbstractParserTest {
     }
 
     @Test
-    public void testProcessDefinition() throws Exception{
+    public void testTaskCallOutExpr() throws Exception {
+        TaskCallOptions opts = TaskCallOptions.builder()
+                .putInput("msg", "BOO")
+                .putOutExpr("result", "${result}")
+                .putOutExpr("v1", "${result.v1}")
+                .withItems(withItems())
+                .retry(retry())
+                .errorSteps(steps())
+                .meta(meta())
+                .build();
+
+        String result = toYaml(new TaskCall(location(), "log", opts));
+        assertResult("serializer/taskCallStepOutExpr.yml", result);
+    }
+
+    @Test
+    public void testTaskCallParallelWithItems() throws Exception {
+        TaskCallOptions opts = TaskCallOptions.builder()
+                .putInput("msg", "BOO")
+                .out("out")
+                .withItems(parallelWithItems())
+                .retry(retry())
+                .errorSteps(steps())
+                .meta(meta())
+                .build();
+
+        String result = toYaml(new TaskCall(location(), "log", opts));
+        assertResult("serializer/taskCallStepParallel.yml", result);
+    }
+
+    @Test
+    public void testExprCallOutExpr() throws Exception {
+        ExpressionOptions opts = ExpressionOptions.builder()
+                .putOutExpr("out-result", "${result.first}")
+                .meta(meta())
+                .errorSteps(steps())
+                .build();
+
+        String result = toYaml(new Expression(location(), "${a}", opts));
+        assertResult("serializer/expressionStepOutExpr.yml", result);
+    }
+
+
+    @Test
+    public void testProcessDefinition() throws Exception {
         Map<String, Form> forms = Collections.singletonMap("form1", Form.builder()
                 .name("form1")
                 .addFields(FormField.builder()
@@ -266,7 +339,14 @@ public class ProjectSerializerV2Test extends AbstractParserTest {
         ArrayList<String> items = new ArrayList<>();
         items.add("item1");
         items.add("item2");
-        return WithItems.of(items);
+        return WithItems.of(items, WithItems.Mode.SERIAL);
+    }
+
+    private static WithItems parallelWithItems() {
+        ArrayList<String> items = new ArrayList<>();
+        items.add("item1");
+        items.add("item2");
+        return WithItems.of(items, WithItems.Mode.PARALLEL);
     }
 
     private static Retry retry() {

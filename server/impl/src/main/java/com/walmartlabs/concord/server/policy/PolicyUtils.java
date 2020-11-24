@@ -22,8 +22,11 @@ package com.walmartlabs.concord.server.policy;
 
 import com.walmartlabs.concord.process.loader.model.Trigger;
 import com.walmartlabs.concord.server.org.OrganizationEntry;
+import com.walmartlabs.concord.server.org.jsonstore.JsonStoreEntry;
 import com.walmartlabs.concord.server.org.jsonstore.JsonStoreVisibility;
 import com.walmartlabs.concord.server.org.project.ProjectEntry;
+import com.walmartlabs.concord.server.org.project.RepositoryEntry;
+import com.walmartlabs.concord.server.org.secret.SecretEntry;
 import com.walmartlabs.concord.server.org.secret.SecretType;
 import com.walmartlabs.concord.server.org.secret.SecretVisibility;
 import com.walmartlabs.concord.server.user.UserEntry;
@@ -35,7 +38,7 @@ import java.util.UUID;
 
 public final class PolicyUtils {
 
-    public static Map<String, Object> toMap(OrganizationEntry entry) {
+    public static Map<String, Object> orgToMap(OrganizationEntry entry) {
         Map<String, Object> m = new HashMap<>();
         m.put("id", entry.getId());
         m.put("name", entry.getName());
@@ -48,7 +51,10 @@ public final class PolicyUtils {
         return Collections.unmodifiableMap(m);
     }
 
-    public static Map<String, Object> toMap(UUID orgId, String orgName, ProjectEntry entry) {
+    public static Map<String, Object> projectToMap(UUID orgId,
+                                                   String orgName,
+                                                   ProjectEntry entry) {
+
         Map<String, Object> m = new HashMap<>();
         m.put("id", entry.getId());
         m.put("name", entry.getName());
@@ -66,13 +72,39 @@ public final class PolicyUtils {
         return Collections.unmodifiableMap(m);
     }
 
-    public static Map<String, Object> toMap(UUID orgId, String secretName, SecretType type,
-                                            SecretVisibility visibility, String storeType) {
+    public static Map<String, Object> repositoryToMap(UUID orgId,
+                                                      String orgName,
+                                                      UUID projectId,
+                                                      String projectName,
+                                                      RepositoryEntry repo,
+                                                      SecretEntry secret) {
+
+        Map<String, Object> m = new HashMap<>();
+        m.put("orgId", orgId);
+        m.put("orgName", orgName);
+        m.put("projectId", projectId);
+        m.put("projectName", projectName);
+        m.put("name", repo.getName());
+        m.put("url", repo.getUrl());
+        m.put("branch", repo.getBranch());
+        if (secret != null) {
+            m.put("secret", secretToMap(secret.getOrgId(), secret.getName(), secret.getType(), secret.getVisibility(), secret.getStoreType()));
+        }
+        return m;
+    }
+
+    public static Map<String, Object> secretToMap(UUID orgId,
+                                                  String secretName,
+                                                  SecretType type,
+                                                  SecretVisibility visibility,
+                                                  String storeType) {
 
         Map<String, Object> m = new HashMap<>();
         m.put("name", secretName);
         m.put("orgId", orgId);
-        m.put("type", type);
+        if (type != null) {
+            m.put("type", type.name());
+        }
         if (visibility != null) {
             m.put("visibility", visibility.name());
         }
@@ -82,7 +114,10 @@ public final class PolicyUtils {
         return Collections.unmodifiableMap(m);
     }
 
-    public static Map<String, Object> toMap(UUID orgId, UUID projectId, Trigger trigger) {
+    public static Map<String, Object> triggerToMap(UUID orgId,
+                                                   UUID projectId,
+                                                   Trigger trigger) {
+
         Map<String, Object> m = new HashMap<>();
         m.put("eventSource", trigger.name());
         m.put("orgId", orgId);
@@ -93,20 +128,52 @@ public final class PolicyUtils {
         return Collections.unmodifiableMap(m);
     }
 
-    public static Map<String, Object> toMap(UUID orgId, String storageName,
-                                            JsonStoreVisibility visibility, UserEntry owner) {
+    public static Map<String, Object> jsonStoreToMap(UUID orgId,
+                                                     String storeName,
+                                                     JsonStoreVisibility visibility,
+                                                     UserEntry owner) {
 
         Map<String, Object> m = new HashMap<>();
         m.put("orgId", orgId);
-        m.put("name", storageName);
+        m.put("name", storeName);
         if (visibility != null) {
             m.put("visibility", visibility.name());
         }
-        m.putAll(toMap(owner));
-        return Collections.unmodifiableMap(m);
+        m.putAll(ownerToMap(owner));
+        return m;
     }
 
-    private static Map<String, Object> toMap(UserEntry owner) {
+    public static Map<String, Object> jsonStoreQueryToMap(OrganizationEntry org,
+                                                          JsonStoreEntry store,
+                                                          String queryName,
+                                                          String query) {
+
+        Map<String, Object> m = new HashMap<>();
+        m.put("name", queryName);
+        m.put("text", query);
+        m.put("orgId", org.getId());
+        m.put("orgName", org.getName());
+        m.put("jsonStoreId", store.id());
+        m.put("jsonStoreName", store.name());
+        return m;
+    }
+
+    public static Map<String, Object> jsonStoreItemToMap(OrganizationEntry org,
+                                                         JsonStoreEntry store,
+                                                         String itemPath,
+                                                         Object data) {
+
+        Map<String, Object> attrs = new HashMap<>();
+        attrs.put("orgId", org.getId());
+        attrs.put("orgName", org.getName());
+        attrs.put("jsonStoreId", store.id());
+        attrs.put("jsonStoreName", store.name());
+        attrs.put("path", itemPath);
+        attrs.put("data", data);
+        return attrs;
+    }
+
+    private static Map<String, Object> ownerToMap(UserEntry owner) {
         if (owner == null) {
             return Collections.emptyMap();
         }

@@ -40,6 +40,8 @@ public class ResumePipeline extends Pipeline {
         super(injector,
                 LoggingMDCProcessor.class,
                 ChangeUserProcessor.class,
+                ResumingProcessor.class,
+                ResumingHooksProcessor.class,
                 ResumeStateStoringProcessor.class,
                 FormFilesStoringProcessor.class,
                 ResumeConfigurationProcessor.class,

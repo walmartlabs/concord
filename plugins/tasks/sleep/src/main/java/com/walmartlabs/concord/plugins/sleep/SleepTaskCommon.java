@@ -20,6 +20,7 @@ package com.walmartlabs.concord.plugins.sleep;
  * =====
  */
 
+import com.walmartlabs.concord.runtime.v2.sdk.TaskResult;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -45,7 +46,7 @@ public class SleepTaskCommon {
         this.suspender = suspender;
     }
 
-    public void execute(TaskParams input) throws Exception {
+    public TaskResult execute(TaskParams input) throws Exception {
         Number duration = input.duration();
         Instant until = input.until();
 
@@ -56,19 +57,20 @@ public class SleepTaskCommon {
             if (sleepUntil.isBefore(Instant.now())) {
                 log.warn("Skipping the sleep, the specified datetime is in the " +
                         "past: {}", sleepUntil);
-                return;
+                return TaskResult.success();
             }
             log.info("Sleeping until {}...", sleepUntil);
-            suspender.get().suspend(sleepUntil);
+            return suspender.get().suspend(sleepUntil);
         } else {
             long sleepTime = toSleepDuration(duration, until);
             if (sleepTime <= 0) {
                 log.warn("Skipping the sleep, the specified datetime is either negative " +
                         "or is in the past: {}", sleepTime);
-                return;
+                return TaskResult.success();
             }
             log.info("Sleeping for {}ms", sleepTime);
             sleep(sleepTime);
+            return TaskResult.success();
         }
     }
 

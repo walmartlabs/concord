@@ -28,38 +28,16 @@ import ch.qos.logback.core.sift.AbstractDiscriminator;
  */
 public class SegmentDiscriminator extends AbstractDiscriminator<ILoggingEvent> {
 
-    public static final String UNSEGMENTED_LOG = "system";
-
-    /**
-     * The segment ID lookup's maximum depth (limits nesting of {@link ThreadGroup}s).
-     */
-    private static final int MAX_DEPTH = 100;
+    private static final String SYSTEM_SEGMENT_ID = "0";
 
     @Override
     public String getDiscriminatingValue(ILoggingEvent iLoggingEvent) {
-        int depth = 0;
-
-        ThreadGroup g = Thread.currentThread().getThreadGroup();
-        while (true) {
-            if (g instanceof SegmentThreadGroup) {
-                SegmentThreadGroup ttg = (SegmentThreadGroup) g;
-                return ttg.getSegmentId() + "-" + ttg.getName();
-            }
-
-            if (g.getParent() == null) {
-                break;
-            }
-
-            g = g.getParent();
-            depth++;
-
-            if (depth >= MAX_DEPTH) {
-                throw new IllegalStateException("Maximum ThreadGroup nesting limit is reached. " +
-                        "This is most likely a bug in the runtime and/or a plugin.");
-            }
+        Long segmentId = LogUtils.getSegmentId();
+        if (segmentId == null) {
+            return SYSTEM_SEGMENT_ID;
         }
 
-        return UNSEGMENTED_LOG;
+        return String.valueOf(segmentId);
     }
 
     @Override

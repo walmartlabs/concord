@@ -23,6 +23,7 @@ package com.walmartlabs.concord.runtime.v2;
 public final class Constants {
 
     public static final String SEGMENT_NAME = "segmentName";
+    public static final String LOG_LEVEL = "logLevel";
 
     private Constants() {
     }

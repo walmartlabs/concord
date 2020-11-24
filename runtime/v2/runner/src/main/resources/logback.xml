@@ -21,6 +21,7 @@
     </logger>
 
     <logger name="com.walmartlabs.concord.plugins.log" level="${logLevel:-INFO}"/>
+    <logger name="uk.org.lidalia.sysoutslf4j.context.SysOutOverSLF4J" level="WARN"/>
 
     <root level="INFO">
         <appender-ref ref="STDOUT"/>

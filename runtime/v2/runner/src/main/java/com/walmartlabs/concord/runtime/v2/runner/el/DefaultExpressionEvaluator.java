@@ -43,25 +43,12 @@ public class DefaultExpressionEvaluator implements ExpressionEvaluator {
         return initializeAll(result, expectedType);
     }
 
-    @Override
-    public void setValue(EvalContext ctx, String expr, Object value) {
-        delegate.setValue(ctx, expr, value);
-    }
-
     private static <T> T initializeAll(Object value, Class<T> expectedType) {
         if (value instanceof LazyEvalMap) {
             LazyEvalMap m = (LazyEvalMap) value;
-            if (m.isEmpty()) {
-                return expectedType.cast(m);
-            }
-
             return expectedType.cast(initializeMap(m));
         } else if (value instanceof LazyEvalList) {
             LazyEvalList l = (LazyEvalList) value;
-            if (l.isEmpty()) {
-                return expectedType.cast(l);
-            }
-
             return expectedType.cast(initializeList(l));
         }
         return expectedType.cast(value);

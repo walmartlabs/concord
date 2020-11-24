@@ -1,4 +1,4 @@
-package com.walmartlabs.concord.runtime.v2.runner;
+package com.walmartlabs.concord.runtime.v2.runner.logging;
 
 /*-
  * *****
@@ -20,7 +20,7 @@ package com.walmartlabs.concord.runtime.v2.runner;
  * =====
  */
 
-public enum ExecutionMode {
-    REGULAR,
-    CHECKPOINT_RESTORE
+public interface RunnerLogger {
+
+    void withContext(LogContext context, Runnable runnable);
 }

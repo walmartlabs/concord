@@ -36,6 +36,7 @@ import { whoami as apiWhoami } from '../../../api/service/console';
 import { UserSessionContext } from '../../../session';
 
 import './styles.css';
+import { Link } from 'react-router-dom';
 
 const nonEmpty = (s?: string) => {
     if (!s) {
@@ -48,6 +49,18 @@ const nonEmpty = (s?: string) => {
     }
 
     return v;
+};
+
+const getLastLoginType = (): string | null => {
+    return localStorage.getItem('lastLoginType');
+};
+
+const saveLastLoginType = (type: string) => {
+    localStorage.setItem('lastLoginType', type);
+};
+
+const clearLastLoginType = () => {
+    localStorage.removeItem('lastLoginType');
 };
 
 const DEFAULT_DESTINATION = '/';
@@ -86,6 +99,8 @@ const Login = (props: RouteComponentProps<{}>) => {
             );
             setUserInfo({ ...response });
 
+            saveLastLoginType(nonEmpty(apiKey) ? 'apiKey' : 'username');
+
             props.history.push(getDestination(props));
         } catch (e) {
             let msg = e.message || 'Log in error';
@@ -99,7 +114,17 @@ const Login = (props: RouteComponentProps<{}>) => {
         }
     }, [username, password, rememberMe, apiKey, setLoggingIn, setUserInfo, props]);
 
-    const useApiKey = props.location.search.search('useApiKey=true') >= 0;
+    const onChangeLoginType = useCallback(() => {
+        clearLastLoginType();
+        setApiKey('');
+        setUsername('');
+        setPassword('');
+        setRememberMe(false);
+    }, []);
+
+    const lastLoginType = getLastLoginType();
+    const useApiKey =
+        props.location.search.search('useApiKey=true') >= 0 || lastLoginType === 'apiKey';
     const usernameHint = (window.concord?.login || {}).usernameHint || 'Username';
 
     return (
@@ -166,6 +191,18 @@ const Login = (props: RouteComponentProps<{}>) => {
                         Login
                     </Form.Button>
                 </Form>
+            </CardContent>
+            <CardContent extra={true} textAlign={'center'}>
+                {useApiKey && (
+                    <Link onClick={onChangeLoginType} to="/login">
+                        Login with Username and Password
+                    </Link>
+                )}
+                {!useApiKey && (
+                    <Link onClick={onChangeLoginType} to="/login?useApiKey=true">
+                        Login with API Key
+                    </Link>
+                )}
             </CardContent>
         </Card>
     );

@@ -30,6 +30,7 @@ import com.walmartlabs.concord.svm.Command;
 import javax.inject.Named;
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 
 @Named
 public final class ScriptCallCompiler implements StepCompiler<ScriptCall> {
@@ -43,7 +44,7 @@ public final class ScriptCallCompiler implements StepCompiler<ScriptCall> {
     public Command compile(CompilerContext context, ScriptCall step) {
         Command cmd = new ScriptCallCommand(step);
 
-        ScriptCallOptions options = step.getOptions();
+        ScriptCallOptions options = Objects.requireNonNull(step.getOptions());
 
         Retry retry = options.retry();
         if (retry != null) {
@@ -52,7 +53,7 @@ public final class ScriptCallCompiler implements StepCompiler<ScriptCall> {
 
         WithItems withItems = options.withItems();
         if (withItems != null) {
-            cmd = new WithItemsWrapper(cmd, withItems, Collections.emptyList());
+            cmd = WithItemsWrapper.of(cmd, withItems, Collections.emptyList(), Collections.emptyMap());
         }
 
         List<Step> errorSteps = options.errorSteps();

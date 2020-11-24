@@ -91,7 +91,7 @@ public class NodeRosterTaskV2 implements Task {
     }
 
     private static TaskResult result(String key, Object data) {
-        return new TaskResult(data != null)
+        return TaskResult.of(data != null)
                 .value(key, data);
     }
 }

@@ -22,7 +22,7 @@ import { combineReducers } from 'redux';
 import { all, call, put, takeLatest, delay } from 'redux-saga/effects';
 
 import { ConcordId } from '../../../api/common';
-import { isFinal, get as apiGetProcess } from '../../../api/process';
+import { isFinal, get as apiGetProcess, ProcessStatus } from '../../../api/process';
 import { FormListEntry } from '../../../api/process/form';
 import {
     FormInstanceEntry,
@@ -204,12 +204,13 @@ function* onStartProcessWizard({ processInstanceId }: StartProcessWizard) {
                 return;
             }
 
+            const { status } = yield call(apiGetProcess, processInstanceId, []);
+
             forms = yield call(apiList, processInstanceId);
-            if (forms && forms.length > 0) {
+
+            if (forms && forms.length > 0 && status === ProcessStatus.SUSPENDED) {
                 break;
             }
-
-            const { status } = yield call(apiGetProcess, processInstanceId, []);
 
             const stopped = isFinal(status);
 

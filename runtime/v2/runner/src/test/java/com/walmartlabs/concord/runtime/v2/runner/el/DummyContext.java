@@ -20,7 +20,6 @@ package com.walmartlabs.concord.runtime.v2.runner.el;
  * =====
  */
 
-import com.walmartlabs.concord.runtime.v2.sdk.ProcessConfiguration;
 import com.walmartlabs.concord.runtime.v2.sdk.Compiler;
 import com.walmartlabs.concord.runtime.v2.sdk.*;
 
@@ -97,12 +96,17 @@ public class DummyContext implements Context {
     }
 
     @Override
+    public <T> T eval(Object v, Map<String, Object> additionalVariables, Class<T> type) {
+        throw new IllegalStateException("Not implemented");
+    }
+
+    @Override
     public void suspend(String eventName) {
         throw new IllegalStateException("Not implemented");
     }
 
     @Override
-    public String suspendResume(Map<String, Serializable> payload) {
+    public void reentrantSuspend(String eventName, Map<String, Serializable> payload) {
         throw new IllegalStateException("Not implemented");
     }
 }

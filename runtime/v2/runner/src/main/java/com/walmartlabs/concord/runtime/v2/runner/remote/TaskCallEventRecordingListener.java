@@ -30,11 +30,11 @@ import com.walmartlabs.concord.runtime.common.injector.InstanceId;
 import com.walmartlabs.concord.runtime.v2.ProcessDefinitionUtils;
 import com.walmartlabs.concord.runtime.v2.model.EventConfiguration;
 import com.walmartlabs.concord.runtime.v2.model.Location;
-import com.walmartlabs.concord.runtime.v2.sdk.ProcessConfiguration;
 import com.walmartlabs.concord.runtime.v2.model.Step;
 import com.walmartlabs.concord.runtime.v2.runner.tasks.TaskCallEvent;
 import com.walmartlabs.concord.runtime.v2.runner.tasks.TaskCallListener;
 import com.walmartlabs.concord.runtime.v2.sdk.Context;
+import com.walmartlabs.concord.runtime.v2.sdk.ProcessConfiguration;
 import com.walmartlabs.concord.runtime.v2.sdk.TaskResult;
 import com.walmartlabs.concord.runtime.v2.sdk.Variables;
 import org.slf4j.Logger;
@@ -131,8 +131,8 @@ public class TaskCallEventRecordingListener implements TaskCallListener {
 
     @SuppressWarnings("unchecked")
     private Map<String, Object> asMapOrNull(Object v) {
-        if (v instanceof TaskResult) {
-            return ((TaskResult) v).toMap();
+        if (v instanceof TaskResult.SimpleResult) {
+            return ((TaskResult.SimpleResult) v).toMap();
         }
 
         if (v instanceof Map) {

@@ -24,7 +24,6 @@ import com.walmartlabs.concord.server.org.OrganizationEntry;
 import com.walmartlabs.concord.server.org.OrganizationManager;
 import com.walmartlabs.concord.server.org.project.ProjectEntry;
 import com.walmartlabs.concord.server.org.project.ProjectManager;
-import com.walmartlabs.concord.server.org.project.ProjectResource;
 import com.walmartlabs.concord.server.policy.EntityAction;
 import com.walmartlabs.concord.server.policy.EntityType;
 import com.walmartlabs.concord.server.policy.PolicyManager;
@@ -84,12 +83,12 @@ public class PolicyCheckResource implements Resource {
                 case PROJECT: {
                     ProjectEntry entry = new ProjectEntry(entity.toString());
                     UserEntry owner = projectManager.getOwner(entry.getOwner(), UserPrincipal.assertCurrent().getUser());
-                    policyManager.checkEntity(orgId, null, EntityType.PROJECT, EntityAction.CREATE, owner, PolicyUtils.toMap(orgId, orgName, entry));
+                    policyManager.checkEntity(orgId, null, EntityType.PROJECT, EntityAction.CREATE, owner, PolicyUtils.projectToMap(orgId, orgName, entry));
                     break;
                 }
                 case SECRET: {
                     UserEntry owner = UserPrincipal.assertCurrent().getUser();
-                    policyManager.checkEntity(orgId, null, EntityType.SECRET, EntityAction.CREATE, owner, PolicyUtils.toMap(orgId, null, null, null, null));
+                    policyManager.checkEntity(orgId, null, EntityType.SECRET, EntityAction.CREATE, owner, PolicyUtils.secretToMap(orgId, null, null, null, null));
                     break;
                 }
                 default: {

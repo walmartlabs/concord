@@ -304,7 +304,7 @@ public class SecretManager {
         UserEntry owner = getOwner(req.owner(), null);
 
         policyManager.checkEntity(e.getOrgId(), req.projectId(), EntityType.SECRET, EntityAction.UPDATE, owner,
-                PolicyUtils.toMap(e.getOrgId(), e.getName(), e.getType(), e.getVisibility(), e.getStoreType()));
+                PolicyUtils.secretToMap(e.getOrgId(), e.getName(), e.getType(), e.getVisibility(), e.getStoreType()));
 
         UUID currentOwnerId = e.getOwner() != null ? e.getOwner().id() : null;
         UUID updatedOwnerId = owner != null ? owner.getId() : null;
@@ -422,21 +422,26 @@ public class SecretManager {
     /**
      * Removes an existing secret.
      */
-    public void delete(UUID orgId, String secretName) {
+    public void delete(DSLContext tx, UUID orgId, String secretName) {
         SecretEntry e = assertAccess(orgId, null, secretName, ResourceAccessLevel.OWNER, true);
 
-        secretDao.tx(tx -> {
-            // delete the content first
-            getSecretStore(e.getStoreType()).delete(tx, e.getId());
-            // now delete secret information from secret table
-            secretDao.delete(tx, e.getId());
-        });
+        // delete the content first
+        getSecretStore(e.getStoreType()).delete(tx, e.getId());
+        // now delete secret information from secret table
+        secretDao.delete(tx, e.getId());
 
         auditLog.add(AuditObject.SECRET, AuditAction.DELETE)
                 .field("orgId", e.getOrgId())
                 .field("secretId", e.getId())
                 .field("name", e.getName())
                 .log();
+    }
+
+    /**
+     * Removes an existing secret.
+     */
+    public void delete(UUID orgId, String secretName) {
+        secretDao.tx(tx -> delete(tx, orgId, secretName));
     }
 
     /**
@@ -574,7 +579,7 @@ public class SecretManager {
 
         UserEntry owner = UserPrincipal.assertCurrent().getUser();
         policyManager.checkEntity(orgId, projectId, EntityType.SECRET, EntityAction.CREATE, owner,
-                PolicyUtils.toMap(orgId, name, type, visibility, storeType));
+                PolicyUtils.secretToMap(orgId, name, type, visibility, storeType));
 
         UUID id = secretDao.insert(tx, orgId, projectId, name, owner.getId(), type, encryptedByType, storeType, visibility, insertMode);
         try {

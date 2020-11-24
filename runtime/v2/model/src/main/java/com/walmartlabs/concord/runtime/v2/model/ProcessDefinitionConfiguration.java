@@ -105,17 +105,4 @@ public interface ProcessDefinitionConfiguration extends Serializable {
     static ImmutableProcessDefinitionConfiguration.Builder builder() {
         return ImmutableProcessDefinitionConfiguration.builder();
     }
-
-    static ProcessDefinitionConfiguration merge(ProcessDefinitionConfiguration a, ProcessDefinitionConfiguration b) {
-        return builder().from(a)
-                // TODO entryPoint has default value, it shouldn't override a non-default value
-                .entryPoint(b.entryPoint())
-                .addAllActiveProfiles(b.activeProfiles())
-                .addAllDependencies(b.dependencies())
-                .events(EventConfiguration.merge(a.events(), b.events()))
-                .arguments(ConfigurationUtils.deepMerge(a.arguments(), b.arguments()))
-                .addAllOut(b.out())
-                .template(b.template() != null ? b.template() : a.template())
-                .build();
-    }
 }

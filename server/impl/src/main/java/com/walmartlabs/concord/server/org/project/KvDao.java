@@ -25,10 +25,8 @@ import com.walmartlabs.concord.db.MainDB;
 import com.walmartlabs.concord.server.Locks;
 import com.walmartlabs.concord.server.jooq.tables.ProjectKvStore;
 import org.jooq.Configuration;
-import org.jooq.DSLContext;
 import org.jooq.Record1;
 import org.jooq.exception.DataAccessException;
-import org.jooq.impl.DSL;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -89,30 +87,27 @@ public class KvDao extends AbstractDao {
 
     public String getString(UUID projectId, String key) {
         ProjectKvStore kv = PROJECT_KV_STORE.as("kv");
-        try (DSLContext tx = DSL.using(cfg)) {
-            return tx.select(kv.VALUE_STRING)
-                    .from(kv)
-                    .where(kv.PROJECT_ID.eq(projectId)
-                            .and(kv.VALUE_KEY.eq(key)))
-                    .fetchOne(kv.VALUE_STRING);
-        }
+        return dsl().select(kv.VALUE_STRING)
+                .from(kv)
+                .where(kv.PROJECT_ID.eq(projectId)
+                        .and(kv.VALUE_KEY.eq(key)))
+                .fetchOne(kv.VALUE_STRING);
     }
 
     public Long getLong(UUID projectId, String key) {
         ProjectKvStore kv = PROJECT_KV_STORE.as("kv");
-        try (DSLContext tx = DSL.using(cfg)) {
-            Record1<Long> r = tx.select(kv.VALUE_LONG)
-                    .from(kv)
-                    .where(kv.PROJECT_ID.eq(projectId)
-                            .and(kv.VALUE_KEY.eq(key)))
-                    .fetchOne();
 
-            if (r == null) {
-                return null;
-            }
+        Record1<Long> r = dsl().select(kv.VALUE_LONG)
+                .from(kv)
+                .where(kv.PROJECT_ID.eq(projectId)
+                        .and(kv.VALUE_KEY.eq(key)))
+                .fetchOne();
 
-            return r.value1();
+        if (r == null) {
+            return null;
         }
+
+        return r.value1();
     }
 
     public synchronized long inc(UUID projectId, String key) {

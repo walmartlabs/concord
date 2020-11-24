@@ -12,7 +12,7 @@
 
     <groupId>com.walmartlabs.concord</groupId>
     <artifactId>concord-targetplatform</artifactId>
-    <version>1.68.1-SNAPSHOT</version>
+    <version>1.74.1-SNAPSHOT</version>
 
     <packaging>pom</packaging>
 
@@ -59,7 +59,7 @@
         <jaxb.version>2.3.0.1</jaxb.version>
         <jetty.version>9.4.26.v20200117</jetty.version>
         <jgit.version>5.2.0.201812061821-r</jgit.version> <!-- updating requires some changes in how the auth is set up in ITs -->
-        <jooq.version>3.13.4</jooq.version>
+        <jooq.version>3.14.0</jooq.version>
         <jsch.version>0.1.55</jsch.version>
         <json.smart.version>2.3</json.smart.version>
         <jsqlparser.version>3.1</jsqlparser.version>

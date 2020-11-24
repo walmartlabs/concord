@@ -1,4 +1,4 @@
-package com.walmartlabs.concord.runtime.v2.runner;
+package com.walmartlabs.concord.runtime.v2.runner.logging;
 
 /*-
  * *****
@@ -20,14 +20,30 @@ package com.walmartlabs.concord.runtime.v2.runner;
  * =====
  */
 
-import com.walmartlabs.concord.runtime.v2.sdk.Context;
+import ch.qos.logback.classic.Level;
+import org.immutables.value.Value;
 
-import java.io.Reader;
-import java.util.Map;
+import javax.annotation.Nullable;
+import java.util.UUID;
 
-public interface ScriptEvaluator {
+@Value.Immutable
+public interface LogContext {
 
-    void eval(Context context, String language, Reader input, Map<String, Object> variables);
+    String segmentName();
 
-    boolean hasLanguage(String language);
+    @Nullable
+    Long segmentId();
+
+    UUID correlationId();
+
+    boolean redirectSystemOutAndErr();
+
+    @Value.Default
+    default Level logLevel() {
+        return Level.INFO;
+    }
+
+    static ImmutableLogContext.Builder builder() {
+        return ImmutableLogContext.builder();
+    }
 }

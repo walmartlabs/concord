@@ -30,7 +30,6 @@ import com.walmartlabs.concord.server.org.OrganizationEntry;
 import com.walmartlabs.concord.server.org.OrganizationManager;
 import com.walmartlabs.concord.server.org.ResourceAccessLevel;
 import com.walmartlabs.concord.server.org.secret.SecretDao;
-import com.walmartlabs.concord.server.org.secret.SecretManager;
 import com.walmartlabs.concord.server.policy.EntityAction;
 import com.walmartlabs.concord.server.policy.EntityType;
 import com.walmartlabs.concord.server.policy.PolicyManager;
@@ -64,7 +63,6 @@ public class ProjectManager {
     private final SecretDao secretDao;
     private final ProjectRepositoryManager projectRepositoryManager;
     private final ProjectAccessManager accessManager;
-    private final SecretManager secretManager;
     private final AuditLog auditLog;
     private final EncryptedProjectValueManager encryptedValueManager;
     private final UserManager userManager;
@@ -77,7 +75,6 @@ public class ProjectManager {
                           SecretDao secretDao,
                           ProjectRepositoryManager projectRepositoryManager,
                           ProjectAccessManager accessManager,
-                          SecretManager secretManager,
                           AuditLog auditLog,
                           EncryptedProjectValueManager encryptedValueManager,
                           UserManager userManager) {
@@ -88,7 +85,6 @@ public class ProjectManager {
         this.secretDao = secretDao;
         this.projectRepositoryManager = projectRepositoryManager;
         this.accessManager = accessManager;
-        this.secretManager = secretManager;
         this.auditLog = auditLog;
         this.encryptedValueManager = encryptedValueManager;
         this.userManager = userManager;
@@ -107,7 +103,11 @@ public class ProjectManager {
     }
 
     public ProjectEntry get(UUID projectId) {
-        return accessManager.assertAccess(projectId, ResourceAccessLevel.READER, false);
+        return projectDao.txResult(tx -> get(tx, projectId));
+    }
+
+    public ProjectEntry get(DSLContext tx, UUID projectId) {
+        return accessManager.assertAccess(tx, projectId, ResourceAccessLevel.READER, false);
     }
 
     /**
@@ -175,12 +175,9 @@ public class ProjectManager {
     }
 
     private UUID insert(DSLContext tx, UUID orgId, String orgName, ProjectEntry entry) {
-        Map<String, RepositoryEntry> repos = entry.getRepositories();
-        assertSecrets(orgId, repos);
-
         UserEntry owner = getOwner(entry.getOwner(), UserPrincipal.assertCurrent().getUser());
 
-        policyManager.checkEntity(orgId, null, EntityType.PROJECT, EntityAction.CREATE, owner, PolicyUtils.toMap(orgId, orgName, entry));
+        policyManager.checkEntity(orgId, null, EntityType.PROJECT, EntityAction.CREATE, owner, PolicyUtils.projectToMap(orgId, orgName, entry));
 
         byte[] encryptedKey = encryptedValueManager.createEncryptedSecretKey();
 
@@ -192,6 +189,7 @@ public class ProjectManager {
         UUID id = projectDao.insert(tx, orgId, entry.getName(), entry.getDescription(), owner.getId(), entry.getCfg(),
                 entry.getVisibility(), rawPayloadMode, encryptedKey, entry.getMeta(), entry.getOutVariablesMode());
 
+        Map<String, RepositoryEntry> repos = entry.getRepositories();
         if (repos != null) {
             repos.forEach((k, v) -> projectRepositoryManager.insert(tx, orgId, orgName, id, entry.getName(), v, false));
         }
@@ -215,7 +213,7 @@ public class ProjectManager {
         }
 
         UserEntry owner = getOwner(entry.getOwner(), null);
-        policyManager.checkEntity(e.getOrgId(), projectId, EntityType.PROJECT, EntityAction.UPDATE, owner, PolicyUtils.toMap(e.getOrgId(), e.getOrgName(), entry));
+        policyManager.checkEntity(e.getOrgId(), projectId, EntityType.PROJECT, EntityAction.UPDATE, owner, PolicyUtils.projectToMap(e.getOrgId(), e.getOrgName(), entry));
 
         UUID currentOwnerId = e.getOwner() != null ? e.getOwner().id() : null;
         UUID updatedOwnerId = owner != null ? owner.getId() : null;
@@ -227,9 +225,6 @@ public class ProjectManager {
 
         ProjectEntry prevEntry = accessManager.assertAccess(projectId, level, true);
         UUID orgId = prevEntry.getOrgId();
-
-        Map<String, RepositoryEntry> repos = entry.getRepositories();
-        assertSecrets(orgId, repos);
 
         OrganizationEntry organizationEntry = null;
 
@@ -254,6 +249,7 @@ public class ProjectManager {
         projectDao.update(tx, orgIdUpdate, projectId, entry.getVisibility(), entry.getName(),
                 entry.getDescription(), entry.getCfg(), rawPayloadMode, updatedOwnerId, entry.getMeta(), entry.getOutVariablesMode());
 
+        Map<String, RepositoryEntry> repos = entry.getRepositories();
         if (repos != null) {
             repositoryDao.deleteAll(tx, projectId);
             repos.forEach((k, v) -> projectRepositoryManager.insert(tx, orgId, prevEntry.getOrgName(), projectId, prevEntry.getName(), v, false));
@@ -312,20 +308,6 @@ public class ProjectManager {
         }
 
         return defaultOwner;
-    }
-
-    private void assertSecrets(UUID orgId, Map<String, RepositoryEntry> repos) {
-        if (repos == null) {
-            return;
-        }
-
-        for (Map.Entry<String, RepositoryEntry> r : repos.entrySet()) {
-            String n = r.getValue().getSecretName();
-            if (n == null) {
-                continue;
-            }
-            secretManager.assertAccess(orgId, null, n, ResourceAccessLevel.READER, false);
-        }
     }
 
     private void addAuditLog(AuditAction auditAction, UUID orgId, String orgName, UUID projectId, String projectName, Map<String, Object> changes) {

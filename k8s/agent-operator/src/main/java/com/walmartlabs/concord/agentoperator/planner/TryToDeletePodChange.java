@@ -43,18 +43,18 @@ public class TryToDeletePodChange implements Change {
      * When the agent pod is being deleted, Kubernetes calls the prestop hook configured.
      * The prestop hook script configured for agent container enables maintenance mode on the agent,
      * and waits for the number of workers in use to go to 0, before the pod gets terminated.
-     *
+     * <p>
      * Whenever the scheduler calls this `apply` method, the following conditions are checked, and
      * corresponding actions are executed.
-     *
+     * <p>
      * - If the pod has a label `preStopHookTermination: true`, do nothing and exit, as the pod is being
-     *   terminated, waiting for the prestop hook script to complete (that is, last running process on the agent
-     *   container to complete).
-     *
+     * terminated, waiting for the prestop hook script to complete (that is, last running process on the agent
+     * container to complete).
+     * <p>
      * - Otherwise if the pod is in `RUNNING` phase, call the kubernetes client `delete` method on the agent pod,
-     *   which will put the pod in `Terminating` state and start executing the prestop hook script on the
-     *   agent container. Add the label `preStopHookTermination: true` (this will be checked on
-     *   subsequent executions).
+     * which will put the pod in `Terminating` state and start executing the prestop hook script on the
+     * agent container. Add the label `preStopHookTermination: true` (this will be checked on
+     * subsequent executions).
      *
      * @param client instance of Kubernetes client
      */

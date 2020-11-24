@@ -21,7 +21,6 @@ package com.walmartlabs.concord.runtime.v2.runner;
  */
 
 import com.walmartlabs.concord.runtime.v2.model.ProcessDefinition;
-import com.walmartlabs.concord.runtime.v2.sdk.Execution;
 import com.walmartlabs.concord.svm.State;
 import org.immutables.value.Value;
 
@@ -32,11 +31,6 @@ import java.io.Serializable;
 public interface ProcessSnapshot extends Serializable {
 
     long serialVersionUID = 1L;
-
-    @Value.Default
-    default ExecutionMode executionMode() {
-        return ExecutionMode.REGULAR;
-    }
 
     State vmState();
 

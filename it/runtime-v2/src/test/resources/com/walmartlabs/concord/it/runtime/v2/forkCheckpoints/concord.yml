@@ -1,0 +1,19 @@
+configuration:
+  runtime: concord-v2
+
+flows:
+  default:
+    - log: "#1"
+    - checkpoint: "abc"
+    - task: concord
+      in:
+        action: fork
+        sync: true
+        forks:
+          - entryPoint: onFork
+            tags:
+              - ${forkTag}
+    - log: "#2"
+
+  onFork:
+    - log: "#3"

@@ -46,6 +46,6 @@ public class HttpTaskV2 implements Task {
         Configuration config = Configuration.custom().build(workDir.toString(), input.toMap());
 
         Map<String, Object> response = new HashMap<>(SimpleHttpClient.create(config).execute().getResponse());
-        return new TaskResult((boolean)response.remove("success"), (String)response.remove("errorString"), response);
+        return TaskResult.of((boolean)response.remove("success"), (String)response.remove("errorString"), response);
     }
 }

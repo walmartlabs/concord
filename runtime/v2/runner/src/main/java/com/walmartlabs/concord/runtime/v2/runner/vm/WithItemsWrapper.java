@@ -29,16 +29,33 @@ import com.walmartlabs.concord.runtime.v2.sdk.Context;
 import com.walmartlabs.concord.svm.Runtime;
 import com.walmartlabs.concord.svm.*;
 
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.ObjectOutputStream;
 import java.io.Serializable;
 import java.util.*;
 import java.util.stream.Collectors;
 
-/**
- * Wraps a command into a loop specified by {@code withItems} option.
- * Creates a new call frame and keeps the item list, the current item
- * and the index as frame-local variables.
- */
-public class WithItemsWrapper implements Command {
+public abstract class WithItemsWrapper implements Command {
+
+    public static WithItemsWrapper of(Command cmd, WithItems withItems, Collection<String> outVariables, Map<String, Serializable> outExpressions) {
+        Collection<String> out = Collections.emptyList();
+        if (!outExpressions.isEmpty()) {
+            out = outExpressions.keySet();
+        } else if (!outVariables.isEmpty()) {
+            out = outVariables;
+        }
+
+        WithItems.Mode mode = withItems.mode();
+        switch (mode) {
+            case SERIAL:
+                return new SerialWithItems(cmd, withItems, out);
+            case PARALLEL:
+                return new ParallelWithItems(cmd, withItems, out);
+            default:
+                throw new IllegalArgumentException("Unknown withItems mode: " + mode);
+        }
+    }
 
     private static final long serialVersionUID = 1L;
 
@@ -47,11 +64,11 @@ public class WithItemsWrapper implements Command {
     public static final String CURRENT_INDEX = "itemIndex";
     public static final String CURRENT_ITEM = "item";
 
-    private final Command cmd;
-    private final WithItems withItems;
-    private final List<String> outVariables;
+    protected final Command cmd;
+    protected final WithItems withItems;
+    protected final Collection<String> outVariables;
 
-    public WithItemsWrapper(Command cmd, WithItems withItems, List<String> outVariables) {
+    protected WithItemsWrapper(Command cmd, WithItems withItems, Collection<String> outVariables) {
         this.cmd = cmd;
         this.withItems = withItems;
         this.outVariables = outVariables;
@@ -83,7 +100,7 @@ public class WithItemsWrapper implements Command {
 
         // prepare items
         // store items in an ArrayList because it is Serializable
-        ArrayList<Object> items;
+        ArrayList<Serializable> items;
         if (value == null) {
             // value is null, not going to run the wrapped command at all
             return;
@@ -106,46 +123,125 @@ public class WithItemsWrapper implements Command {
             throw new IllegalArgumentException("'withItems' accepts only Lists of items, Java Maps or arrays of values. Got: " + value.getClass());
         }
 
-        for (int i = 0; i < items.size(); i++) {
-            Object item = items.get(0);
-            if (item == null || item instanceof Serializable) {
-                continue;
-            }
+        items.forEach(WithItemsWrapper::assertItem);
 
-            throw new IllegalStateException("Can't use non-serializable values in 'withItems': " + item + " (" + item.getClass() + ")");
+        if (items.isEmpty()) {
+            return;
         }
 
-        Frame loop = Frame.builder()
-                .nonRoot()
-                .build();
-
-        loop.setLocal(CURRENT_ITEMS, items);
-        loop.setLocal(CURRENT_INDEX, 0);
-        loop.setLocal(CURRENT_ITEM, (Serializable) items.get(0));
-
-        loop.push(new WithItemsNext(outVariables, cmd)); // next iteration
-
-        Frame cmdFrame = Frame.builder()
-                .commands(cmd)
-                .root()
-                .build();
-
-        Frame targetFrame = VMUtils.assertNearestRoot(state, threadId);
-        loop.push(new AppendVariablesCommand(outVariables, cmdFrame, targetFrame));
-        loop.push(new PrepareOutVariables(outVariables));
-
-        state.pushFrame(threadId, loop);
-        state.pushFrame(threadId, cmdFrame);
+        eval(state, threadId, items);
     }
 
-    public static class WithItemsNext implements Command {
+    protected abstract void eval(State state, ThreadId threadId, ArrayList<Serializable> items);
+
+    static void assertItem(Object item) {
+        if (item == null) {
+            return;
+        }
+
+        try (ObjectOutputStream oos = new ObjectOutputStream(new ByteArrayOutputStream())) {
+            oos.writeObject(item);
+        } catch (IOException e) {
+            throw new IllegalArgumentException("Can't use non-serializable values in 'withItems': " + item + " (" + item.getClass() + ")");
+        }
+    }
+
+    static class ParallelWithItems extends WithItemsWrapper {
 
         private static final long serialVersionUID = 1L;
 
-        private final List<String> outVariables;
+        protected ParallelWithItems(Command cmd, WithItems withItems, Collection<String> outVariables) {
+            super(cmd, withItems, outVariables);
+        }
+
+        @Override
+        protected void eval(State state, ThreadId threadId, ArrayList<Serializable> items) {
+            Frame frame = state.peekFrame(threadId);
+
+            // target frame for out variables
+            Frame targetFrame = VMUtils.assertNearestRoot(state, threadId);
+
+            List<Map.Entry<ThreadId, Serializable>> forks = items.stream()
+                    .map(e -> new AbstractMap.SimpleEntry<>(state.nextThreadId(), e))
+                    .collect(Collectors.toList());
+
+            for (int i = 0; i < forks.size(); i++) {
+                Map.Entry<ThreadId, Serializable> f = forks.get(i);
+
+                Frame cmdFrame = Frame.builder()
+                        .nonRoot()
+                        .commands()
+                        .build();
+
+                cmdFrame.setLocal(CURRENT_ITEMS, items);
+                cmdFrame.setLocal(CURRENT_INDEX, i);
+                cmdFrame.setLocal(CURRENT_ITEM, f.getValue());
+
+                // fork will create rootFrame for forked commands
+                Command itemCmd = new ForkCommand(f.getKey(),
+                        new AppendVariablesCommand(outVariables, null, targetFrame),
+                        cmd);
+                cmdFrame.push(itemCmd);
+
+                state.pushFrame(threadId, cmdFrame);
+            }
+
+            state.pushFrame(threadId, Frame.builder()
+                    .commands(new PrepareOutVariables(outVariables, targetFrame))
+                    .nonRoot()
+                    .build());
+
+            frame.push(new JoinCommand(forks.stream().map(Map.Entry::getKey).collect(Collectors.toSet())));
+        }
+    }
+
+    /**
+     * Wraps a command into a loop specified by {@code withItems} option.
+     * Creates a new call frame and keeps the item list, the current item
+     * and the index as frame-local variables.
+     */
+    static class SerialWithItems extends WithItemsWrapper {
+
+        private static final long serialVersionUID = 1L;
+
+        protected SerialWithItems(Command cmd, WithItems withItems, Collection<String> outVariables) {
+            super(cmd, withItems, outVariables);
+        }
+
+        @Override
+        protected void eval(State state, ThreadId threadId, ArrayList<Serializable> items) {
+            Frame loop = Frame.builder()
+                    .nonRoot()
+                    .build();
+
+            loop.setLocal(CURRENT_ITEMS, items);
+            loop.setLocal(CURRENT_INDEX, 0);
+            loop.setLocal(CURRENT_ITEM, items.get(0));
+
+            loop.push(new WithItemsNext(outVariables, cmd)); // next iteration
+
+            Frame cmdFrame = Frame.builder()
+                    .commands(cmd)
+                    .root()
+                    .build();
+
+            Frame targetFrame = VMUtils.assertNearestRoot(state, threadId);
+            loop.push(new AppendVariablesCommand(outVariables, cmdFrame, targetFrame));
+            loop.push(new PrepareOutVariables(outVariables, targetFrame));
+
+            state.pushFrame(threadId, loop);
+            state.pushFrame(threadId, cmdFrame);
+        }
+    }
+
+    static class WithItemsNext implements Command {
+
+        private static final long serialVersionUID = 1L;
+
+        private final Collection<String> outVariables;
         private final Command cmd;
 
-        public WithItemsNext(List<String> outVariables, Command cmd) {
+        public WithItemsNext(Collection<String> outVariables, Command cmd) {
             this.outVariables = outVariables;
             this.cmd = cmd;
         }
@@ -178,32 +274,33 @@ public class WithItemsWrapper implements Command {
             Frame targetFrame = VMUtils.assertNearestRoot(state, threadId);
             loop.push(new AppendVariablesCommand(outVariables, cmdFrame, targetFrame));
 
-            state.pushFrame(threadId, loop);
             state.pushFrame(threadId, cmdFrame);
         }
     }
 
-    private static class PrepareOutVariables implements Command {
+    static class PrepareOutVariables implements Command {
 
         private static final long serialVersionUID = 1L;
 
-        private final List<String> outVars;
+        private final Collection<String> outVars;
+        private final Frame targetFrame;
 
-        private PrepareOutVariables(List<String> outVars) {
+        private PrepareOutVariables(Collection<String> outVars, Frame targetFrame) {
             this.outVars = outVars;
+            this.targetFrame = targetFrame;
         }
 
         @Override
         public void eval(Runtime runtime, State state, ThreadId threadId) {
-            Frame outerFrame = state.peekFrame(threadId);
-            outerFrame.pop();
+            Frame frame = state.peekFrame(threadId);
+            frame.pop();
 
             if (outVars.isEmpty()) {
                 return;
             }
 
             for (String outVar : outVars) {
-                VMUtils.putLocal(state, threadId, outVar, new ArrayList<>());
+                VMUtils.putLocal(targetFrame, outVar, new ArrayList<>());
             }
         }
     }
@@ -212,15 +309,15 @@ public class WithItemsWrapper implements Command {
      * Appends values of the specified variables from the source frame into
      * list variables in the target frame.
      */
-    private static class AppendVariablesCommand implements Command {
+    static class AppendVariablesCommand implements Command {
 
         private static final long serialVersionUID = 1L;
 
-        private final List<String> variables;
+        private final Collection<String> variables;
         private final Frame sourceFrame;
         private final Frame targetFrame;
 
-        public AppendVariablesCommand(List<String> variables, Frame sourceFrame, Frame targetFrame) {
+        public AppendVariablesCommand(Collection<String> variables, Frame sourceFrame, Frame targetFrame) {
             this.variables = variables;
             this.sourceFrame = sourceFrame;
             this.targetFrame = targetFrame;
@@ -236,18 +333,23 @@ public class WithItemsWrapper implements Command {
                 return;
             }
 
+            Frame effectiveSourceFrame = sourceFrame != null ? sourceFrame : VMUtils.assertNearestRoot(state, threadId);
+
             for (String v : variables) {
-                ArrayList<Serializable> results = (ArrayList<Serializable>) targetFrame.getLocal(v);
-                Serializable result = null;
-                if (sourceFrame.hasLocal(v)) {
-                    result = sourceFrame.getLocal(v);
+                // make sure we're not modifying the same list concurrently
+                synchronized (targetFrame) {
+                    ArrayList<Serializable> results = (ArrayList<Serializable>) targetFrame.getLocal(v);
+                    Serializable result = null;
+                    if (effectiveSourceFrame.hasLocal(v)) {
+                        result = effectiveSourceFrame.getLocal(v);
+                    }
+                    results.add(result);
                 }
-                results.add(result);
             }
         }
     }
 
-    private static class SerializableEntry implements Map.Entry<Serializable, Serializable>, Serializable {
+    static class SerializableEntry implements Map.Entry<Serializable, Serializable>, Serializable {
 
         private static final long serialVersionUID = 1L;
 

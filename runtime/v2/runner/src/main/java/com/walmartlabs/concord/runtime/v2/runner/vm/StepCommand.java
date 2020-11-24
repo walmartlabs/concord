@@ -20,11 +20,14 @@ package com.walmartlabs.concord.runtime.v2.runner.vm;
  * =====
  */
 
+import ch.qos.logback.classic.Level;
 import com.walmartlabs.concord.runtime.common.cfg.RunnerConfiguration;
 import com.walmartlabs.concord.runtime.v2.model.AbstractStep;
 import com.walmartlabs.concord.runtime.v2.model.Location;
 import com.walmartlabs.concord.runtime.v2.model.Step;
 import com.walmartlabs.concord.runtime.v2.runner.context.ContextFactory;
+import com.walmartlabs.concord.runtime.v2.runner.logging.LogContext;
+import com.walmartlabs.concord.runtime.v2.runner.logging.RunnerLogger;
 import com.walmartlabs.concord.runtime.v2.runner.logging.SegmentedLogger;
 import com.walmartlabs.concord.runtime.v2.runner.tasks.ContextProvider;
 import com.walmartlabs.concord.runtime.v2.sdk.Context;
@@ -76,7 +79,14 @@ public abstract class StepCommand<T extends Step> implements Command {
         } else {
             RunnerConfiguration runnerCfg = runtime.getService(RunnerConfiguration.class);
             boolean redirectSystemOutAndErr = runnerCfg.logging().sendSystemOutAndErrToSLF4J();
-            SegmentedLogger.withLogSegment(segmentName, correlationId.toString(), redirectSystemOutAndErr,
+            LogContext logContext = LogContext.builder()
+                    .segmentName(segmentName)
+                    .correlationId(correlationId)
+                    .redirectSystemOutAndErr(redirectSystemOutAndErr)
+                    .logLevel(getLogLevel(step))
+                    .build();
+
+            runtime.getService(RunnerLogger.class).withContext(logContext,
                     () -> executeWithContext(ctx, runtime, state, threadId));
         }
     }
@@ -104,9 +114,25 @@ public abstract class StepCommand<T extends Step> implements Command {
 
     protected String getSegmentName(Context ctx, T step) {
         if (step instanceof AbstractStep) {
-            return SegmentedLogger.getSegmentName((AbstractStep<?>) step);
+            String rawSegmentName = SegmentedLogger.getSegmentName((AbstractStep<?>) step);
+            String segmentName = ctx.eval(rawSegmentName, String.class);
+            if (segmentName != null) {
+                return segmentName;
+            }
         }
 
+        return getDefaultSegmentName();
+    }
+
+    protected String getDefaultSegmentName() {
         return null;
+    }
+
+    protected Level getLogLevel(T step) {
+        if (step instanceof AbstractStep) {
+            return SegmentedLogger.getLogLevel((AbstractStep<?>) step);
+        }
+
+        return Level.INFO;
     }
 }

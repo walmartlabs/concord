@@ -25,13 +25,17 @@ import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.databind.ser.std.StdSerializer;
 import com.walmartlabs.concord.runtime.v2.model.TaskCall;
 import com.walmartlabs.concord.runtime.v2.model.TaskCallOptions;
+import com.walmartlabs.concord.runtime.v2.model.WithItems;
 
 import java.io.IOException;
 import java.util.Objects;
 
 import static com.walmartlabs.concord.runtime.v2.serializer.SerializerUtils.writeNotEmptyObjectField;
+import static com.walmartlabs.concord.runtime.v2.serializer.SerializerUtils.writeWithItems;
 
 public class TaskCallStepSerializer extends StdSerializer<TaskCall> {
+
+    private static final long serialVersionUID = 1L;
 
     public TaskCallStepSerializer() {
         this(null);
@@ -60,8 +64,11 @@ public class TaskCallStepSerializer extends StdSerializer<TaskCall> {
             gen.writeObjectField("out", o.out());
         }
 
+        writeNotEmptyObjectField("out", o.outExpr(), gen);
+
         if (o.withItems() != null) {
-            gen.writeObjectField("withItems", o.withItems());
+            WithItems items = Objects.requireNonNull(o.withItems());
+            writeWithItems(items, gen);
         }
 
         if (o.retry() != null) {

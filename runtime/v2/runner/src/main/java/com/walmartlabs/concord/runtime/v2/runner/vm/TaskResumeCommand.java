@@ -84,10 +84,7 @@ public class TaskResumeCommand extends StepCommand<TaskCall> {
             throw new RuntimeException(e);
         }
 
-        String out = getStep().getOptions().out();
-        if (out != null) {
-            ctx.variables().set(out, result.toMap());
-        }
+        TaskCallUtils.processTaskResult(runtime, ctx, taskName, getStep().getOptions(), result);
     }
 
     @Override
