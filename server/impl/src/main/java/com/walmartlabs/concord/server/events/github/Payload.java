@@ -158,7 +158,7 @@ public class Payload {
             appendList(c, "removed", files);
             appendList(c, "modified", files);
         }
-        return files;
+        return Collections.unmodifiableMap(files);
     }
 
     private static void appendList(Map<String, Object> c, String name, Map<String, List<String>> result) {
