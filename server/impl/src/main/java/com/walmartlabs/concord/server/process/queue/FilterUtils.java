@@ -168,6 +168,9 @@ public final class FilterUtils {
                     q.addConditions(jsonbTextByPath(column, f.path()).endsWith(f.value()).not());
                     break;
                 }
+                //TODO: Define Default behaviour
+                default:
+                    break;
             }
         }
     }

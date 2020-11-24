@@ -64,7 +64,7 @@ public final class YamlDeserializersV2 {
 
         if (result.isFailure()) {
             Result.Failure<Atom, ?> f = result.toFailure();
-            throw toException(f, json, atoms);
+            throw toException(f, atoms);
         }
 
         return result.toSuccess().getResult();
@@ -86,6 +86,8 @@ public final class YamlDeserializersV2 {
                 case END_ARRAY:
                     level -= 1;
                     break;
+                default:
+                    break;
             }
 
             if (level <= 0) {
@@ -98,7 +100,7 @@ public final class YamlDeserializersV2 {
         return l;
     }
 
-    private static YamlProcessingException toException(Result.Failure<Atom, ?> f, JsonParser p, List<Atom> atoms) {
+    private static YamlProcessingException toException(Result.Failure<Atom, ?> f, List<Atom> atoms) {
         Location loc = null;
         String got = "n/a";
 

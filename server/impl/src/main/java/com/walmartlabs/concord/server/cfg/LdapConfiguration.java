@@ -198,9 +198,9 @@ public class LdapConfiguration implements Serializable {
             return Collections.emptySet();
         }
 
-        String[] as = s.split(",");
+        String[] as = s.split(",", -1);
         Set<String> result = new HashSet<>(as.length);
-        Collections.addAll(result, s.split(","));
+        Collections.addAll(result, s.split(",", -1));
 
         return Collections.unmodifiableSet(result);
     }

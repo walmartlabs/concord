@@ -78,7 +78,7 @@ public final class SsoCookies {
         cookie.setMaxAge(Integer.MAX_VALUE);
         cookie.setPath("/");
         cookie.setHttpOnly(true);
-
+        cookie.setSecure(true);
         response.addCookie(cookie);
     }
 
@@ -125,6 +125,8 @@ public final class SsoCookies {
         Cookie cookie = new Cookie(name, "");
         cookie.setMaxAge(0);
         cookie.setPath("/");
+        cookie.setHttpOnly(true);
+        cookie.setSecure(true);
         return cookie;
     }
 

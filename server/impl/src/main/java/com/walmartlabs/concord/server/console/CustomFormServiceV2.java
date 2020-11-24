@@ -254,7 +254,7 @@ public class CustomFormServiceV2 {
     private Form assertForm(ProcessKey processKey, String formName) {
         Form form = formService.get(processKey, formName);
         if (form == null) {
-            log.warn("assertForm ['{}', '{}'] -> not found", processKey, formName);
+            log.warn("assertForm ['{}', '{}'] -> not found", processKey.toString().replaceAll("[\n\r]",""), formName.replaceAll("[\n\r]",""));
             throw new ConcordApplicationException("Form not found", Status.NOT_FOUND);
         }
         return form;

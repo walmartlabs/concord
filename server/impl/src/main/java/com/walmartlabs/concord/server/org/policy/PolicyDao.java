@@ -108,7 +108,7 @@ public class PolicyDao extends AbstractDao {
         }
 
         if (orgId != null) {
-            c = c.or((POLICY_LINKS.ORG_ID.eq(orgId).and(POLICY_LINKS.PROJECT_ID.isNull()).and(POLICY_LINKS.USER_ID.isNull())));
+            c = c.or(POLICY_LINKS.ORG_ID.eq(orgId).and(POLICY_LINKS.PROJECT_ID.isNull()).and(POLICY_LINKS.USER_ID.isNull()));
         }
 
         if (userId != null) {

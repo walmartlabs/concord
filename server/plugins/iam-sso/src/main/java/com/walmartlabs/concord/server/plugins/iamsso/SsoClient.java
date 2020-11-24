@@ -77,7 +77,7 @@ public class SsoClient {
                         public void checkClientTrusted(
                                 java.security.cert.X509Certificate[] certs, String authType) {
                         }
-                        @Overrride
+                        @Override
                         public void checkServerTrusted(
                                 java.security.cert.X509Certificate[] certs, String authType) {
                         }

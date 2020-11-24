@@ -77,7 +77,7 @@ public class Payload {
             fullRepoName = MapUtils.getString(m, "full_name");
 
             if (fullRepoName != null) {
-                String[] as = fullRepoName.split("/");
+                String[] as = fullRepoName.split("/",-1);
                 if (as.length < 2) {
                     return null;
                 }

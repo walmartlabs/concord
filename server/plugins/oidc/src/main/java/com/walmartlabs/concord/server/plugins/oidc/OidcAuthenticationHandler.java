@@ -71,7 +71,7 @@ public class OidcAuthenticationHandler implements AuthenticationHandler {
         // check the token first
         String header = req.getHeader(AUTHORIZATION_HEADER);
         if (header != null) {
-            String[] as = header.split(" ");
+            String[] as = header.split(" ", -1);
             if (as.length != 2 || !as[0].equals(HEADER_PREFIX)) {
                 return null;
             }

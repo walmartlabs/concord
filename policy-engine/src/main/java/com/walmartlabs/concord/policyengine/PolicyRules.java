@@ -67,7 +67,7 @@ public class PolicyRules<E extends Serializable> implements Serializable {
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+        if (!(o instanceof PolicyRules)) return false;
         PolicyRules<?> that = (PolicyRules<?>) o;
         return Objects.equals(allow, that.allow) &&
                 Objects.equals(warn, that.warn) &&

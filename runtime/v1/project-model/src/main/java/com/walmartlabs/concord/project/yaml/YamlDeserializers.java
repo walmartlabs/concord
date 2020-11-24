@@ -165,6 +165,8 @@ public final class YamlDeserializers {
                 case END_ARRAY:
                     level -= 1;
                     break;
+                default:
+                    break;
             }
 
             if (level <= 0) {

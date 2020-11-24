@@ -37,13 +37,15 @@ public class ProcessTimeoutPolicy {
         }
 
         Long processTimeout = parseTimeout(timeout);
-        Long maxTimeout = parseTimeout(rule.getMax());
         if (processTimeout == null) {
             return CheckResult.success();
         }
+
+        Long maxTimeout = parseTimeout(rule.getMax());
         if (maxTimeout == null) {
-            throw new IllegalArgumentException("Invalid process timeout rule: max timeout must be provided");
+            return CheckResult.success();
         }
+        
         if (processTimeout >= maxTimeout) {
             return CheckResult.error(new CheckResult.Item<>(rule, timeout));
         }

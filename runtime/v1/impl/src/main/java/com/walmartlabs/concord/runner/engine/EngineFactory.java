@@ -131,7 +131,7 @@ public class EngineFactory {
         EventStorage eventStorage = new FileEventStorage(eventsDir);
         PersistenceManager persistenceManager = new FilePersistenceManager(instancesDir);
 
-        ProjectDefinitionAdapter adapter = new ProjectDefinitionAdapter(project, activeProfiles, baseDir);
+        ProjectDefinitionAdapter adapter = new ProjectDefinitionAdapter(project, activeProfiles);
 
         UserTaskHandler uth = new FormTaskHandler(contextFactory, adapter.forms(), formService);
 
@@ -173,7 +173,7 @@ public class EngineFactory {
         private final ProjectDefinition project;
         private final Collection<String> activeProfiles;
 
-        private ProjectDefinitionAdapter(ProjectDefinition project, Collection<String> activeProfiles, Path baseDir) {
+        private ProjectDefinitionAdapter(ProjectDefinition project, Collection<String> activeProfiles) {
             this.project = project;
             this.activeProfiles = activeProfiles;
         }

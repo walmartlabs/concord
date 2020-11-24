@@ -28,6 +28,7 @@ import io.takari.parc.Seq;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Collections;
 
 import static com.walmartlabs.concord.runtime.v2.parser.GrammarMisc.*;
 import static io.takari.parc.Combinators.many;
