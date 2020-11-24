@@ -33,7 +33,6 @@ import java.util.*;
 
 public class PolicyPreprocessor implements TaskInterceptor {
 
-    private final ExpressionFactory expressionFactory = ExpressionFactory.newInstance();
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     private final Path workDir;

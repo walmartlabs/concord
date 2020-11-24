@@ -40,9 +40,9 @@ public final class YamlValueType<T> {
     public static final YamlValueType<String> STRING = type("STRING");
     public static final YamlValueType<String> PATTERN = type("PATTERN");
     public static final YamlValueType<Object> NULL = type("NULL");
-    public static final YamlValueType<List<Serializable>> ARRAY = array("ARRAY", null);
-    public static final YamlValueType<List<String>> ARRAY_OF_PATTERN = array("ARRAY_OF_PATTERN", PATTERN);
-    public static final YamlValueType<List<String>> ARRAY_OF_STRING = array("ARRAY_OF_STRING", STRING);
+    public static final YamlValueType<List<Serializable>> ARRAY = array("ARRAY");
+    public static final YamlValueType<List<String>> ARRAY_OF_PATTERN = array("ARRAY_OF_PATTERN");
+    public static final YamlValueType<List<String>> ARRAY_OF_STRING = array("ARRAY_OF_STRING");
     public static final YamlValueType<Map<String, Serializable>> OBJECT = map("OBJECT");
     public static final YamlValueType<Object> PATTERN_OR_ARRAY = type("PATTERN_OR_ARRAY");
     public static final YamlValueType<Duration> DURATION = type("ISO 8601 DURATION");
@@ -59,14 +59,14 @@ public final class YamlValueType<T> {
     public static final YamlValueType<Retry> RETRY = type("RETRY");
     public static final YamlValueType<Checkpoint> CHECKPOINT = type("CHECKPOINT");
     public static final YamlValueType<Step> STEP = type("STEP");
-    public static final YamlValueType<List<Step>> ARRAY_OF_STEP = array("ARRAY_OF_STEP", STEP);
+    public static final YamlValueType<List<Step>> ARRAY_OF_STEP = array("ARRAY_OF_STEP");
     public static final YamlValueType<GroupOfSteps> TRY = type("TRY");
     public static final YamlValueType<GroupOfSteps> BLOCK = type("BLOCK");
     public static final YamlValueType<ParallelBlock> PARALLEL = type("PARALLEL");
     public static final YamlValueType<Map<String, Form>> FORMS = type("FORMS");
     public static final YamlValueType<Form> FORM = type("FORM");
     public static final YamlValueType<FormField> FORM_FIELD = type("FORM_FIELD");
-    public static final YamlValueType<List<FormField>> ARRAY_OF_FORM_FIELD = array("ARRAY_OF_FORM_FIELD", FORM_FIELD);
+    public static final YamlValueType<List<FormField>> ARRAY_OF_FORM_FIELD = array("ARRAY_OF_FORM_FIELD");
     public static final YamlValueType<FormCall> FORM_CALL = type("FORM_CALL");
     public static final YamlValueType<ImmutableFormCallOptions.Builder> FORM_CALL_FIELDS = type("ARRAY_OF_FORM_FIELD or EXPRESSION");
     public static final YamlValueType<ImmutableRetry.Builder> RETRY_TIMES = type("INT or EXPRESSION");
@@ -84,7 +84,7 @@ public final class YamlValueType<T> {
     public static final YamlValueType<KV<String, Profile>> PROFILE = type("PROFILE");
     public static final YamlValueType<ProcessDefinitionConfiguration> PROCESS_CFG = type("CONFIGURATION");
     public static final YamlValueType<Trigger> TRIGGER = type("TRIGGER");
-    public static final YamlValueType<List<Trigger>> TRIGGERS = array("TRIGGER", TRIGGER);
+    public static final YamlValueType<List<Trigger>> TRIGGERS = array("TRIGGER");
     public static final YamlValueType<Trigger> GITHUB_TRIGGER = type("GITHUB_TRIGGER");
     public static final YamlValueType<Map<String, Object>> GITHUB_TRIGGER_CONDITIONS = type("GITHUB_TRIGGER_CONDITIONS");
     public static final YamlValueType<Trigger> CRON_TRIGGER = type("CRON_TRIGGER");
@@ -112,7 +112,7 @@ public final class YamlValueType<T> {
         return new YamlValueType<>(name);
     }
 
-    private static <T> YamlValueType<List<T>> array(String name, YamlValueType<T> arrayValueType) {
+    private static <T> YamlValueType<List<T>> array(String name) {
         return new YamlValueType<>(name);
     }
 

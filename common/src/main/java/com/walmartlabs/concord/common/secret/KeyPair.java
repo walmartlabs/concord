@@ -27,7 +27,7 @@ import java.io.*;
 public class KeyPair implements Secret {
 
     public static KeyPair deserialize(byte[] input) {
-        try (DataInput in = new DataInputStream(new ByteArrayInputStream(input))) {
+        try (DataInputStream in = new DataInputStream(new ByteArrayInputStream(input))) {
             int n1 = assertKeyLength(in.readInt());
             byte[] ab1 = new byte[n1];
             in.readFully(ab1);

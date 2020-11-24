@@ -74,7 +74,7 @@ public class ProcessKey extends PartialProcessKey {
     }
 
     @Override
-    public final String toString() {
+    public String toString() {
         return getInstanceId().toString();
     }
 }

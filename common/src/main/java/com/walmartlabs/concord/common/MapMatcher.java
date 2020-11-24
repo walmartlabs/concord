@@ -57,9 +57,9 @@ public final class MapMatcher {
     }
 
     private static boolean compareObjectNodes(Map<String, Object> data, Map<String, Object> conditions) {
-        for (String fieldName : conditions.keySet()) {
-            Object dataItem = data.get(fieldName);
-            Object conditionItem = conditions.get(fieldName);
+        for (Map.Entry< String, Object > fieldsNameEntry : conditions.entrySet()) {
+            Object dataItem = data.get(fieldsNameEntry.getKey());
+            Object conditionItem = fieldsNameEntry.getValue();
             if (!compareNodes(dataItem, conditionItem)) {
                 return false;
             }

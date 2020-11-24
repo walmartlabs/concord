@@ -500,7 +500,7 @@ public class ProcessResource implements Resource {
     public ProcessEntry waitForCompletion(@ApiParam @PathParam("id") UUID instanceId,
                                           @ApiParam @QueryParam("timeout") @DefaultValue("-1") long timeout) {
 
-        log.info("waitForCompletion ['{}', {}] -> waiting...", instanceId.toString().replaceAll("[\n\r]",""), timeout.toString().replaceAll("[\n\r]",""));
+        log.info("waitForCompletion ['{}', {}] -> waiting...", instanceId.toString().replaceAll("[\n\r]",""), Long.toString(timeout).replaceAll("[\n\r]",""));
 
         long t1 = System.currentTimeMillis();
 
@@ -519,7 +519,7 @@ public class ProcessResource implements Resource {
             if (timeout > 0) {
                 long t2 = System.currentTimeMillis();
                 if (t2 - t1 >= timeout) {
-                    log.warn("waitForCompletion ['{}', {}] -> timeout, last status: {}", instanceId.toString().replaceAll("[\n\r]",""), timeout.toString().replaceAll("[\n\r]",""), s.toString().replaceAll("[\n\r]",""));
+                    log.warn("waitForCompletion ['{}', {}] -> timeout, last status: {}", instanceId.toString().replaceAll("[\n\r]",""), Long.toString(timeout).replaceAll("[\n\r]",""), s.toString().replaceAll("[\n\r]",""));
                     throw new ConcordApplicationException(Response.status(Status.REQUEST_TIMEOUT).entity(r).build());
                 }
             }

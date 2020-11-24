@@ -424,7 +424,7 @@ public class DependencyManager {
         }
 
         Map<String, String> m = new LinkedHashMap<>();
-        String[] pairs = query.split("&");
+        String[] pairs = query.split("&",-1);
         for (String pair : pairs) {
             int idx = pair.indexOf("=");
             String k = pair.substring(0, idx);

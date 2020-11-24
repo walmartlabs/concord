@@ -249,7 +249,7 @@ public class PayloadManager {
             return null;
         }
 
-        String[] as = entryPoint.split(":");
+        String[] as = entryPoint.split(":",-1);
         if (as.length < 1 || as.length > 3) {
             throw new ValidationErrorsException("Invalid entry point format: " + entryPoint);
         }

@@ -75,7 +75,7 @@ public final class TriggerInternalIdCalculator {
                 .sorted(Map.Entry.comparingByKey())
                 .forEach(e -> result.put(e.getKey(), toSorted(e.getValue())));
 
-        return Collections.unmodifiableMap(result);
+        return result;
     }
 
     private static byte[] serialize(LinkedHashMap<String, Object> map) {

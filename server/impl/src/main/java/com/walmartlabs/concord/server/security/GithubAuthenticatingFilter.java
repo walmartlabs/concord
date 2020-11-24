@@ -99,7 +99,7 @@ public class GithubAuthenticatingFilter extends AuthenticatingFilter {
             return new UsernamePasswordToken();
         }
 
-        String[] algDigest = h.split("=");
+        String[] algDigest = h.split("=", -1);
         if (algDigest.length != 2) {
             log.warn("createToken -> invalid format of the authorization header. URI: '{}'", req.getRequestURI().toString().replaceAll("[\n\r]",""));
             return new UsernamePasswordToken();
@@ -140,7 +140,7 @@ public class GithubAuthenticatingFilter extends AuthenticatingFilter {
             return new UsernamePasswordToken();
         }
 
-        String[] orgRepo = repoFullName.split("/");
+        String[] orgRepo = repoFullName.split("/", -1);
         if (orgRepo.length != 2) {
             log.error("processSpecificRepo -> invalid repo name '{}', expected org/repo format", repoFullName);
             return new UsernamePasswordToken();
@@ -222,6 +222,11 @@ public class GithubAuthenticatingFilter extends AuthenticatingFilter {
                 @Override
                 public int read() {
                     return byteArrayInputStream.read();
+                }
+                
+                @Override
+                public int read(byte[] b, int buf, int len) {
+                    return byteArrayInputStream.read(b, buf, len);
                 }
 
                 @Override

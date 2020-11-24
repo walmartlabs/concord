@@ -33,10 +33,8 @@ public class ECSignatureConfiguration implements SignatureConfiguration {
 
     private final ECPublicKey publicKey;
 
-    private final ECPrivateKey privateKey;
 
     public ECSignatureConfiguration(KeyPair keyPair) {
-        this.privateKey = (ECPrivateKey) keyPair.getPrivate();
         this.publicKey = (ECPublicKey) keyPair.getPublic();
     }
 

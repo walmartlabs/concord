@@ -50,7 +50,7 @@ public class UsernamePassword implements Secret {
     }
 
     public static UsernamePassword deserialize(byte[] input) {
-        try (DataInput in = new DataInputStream(new ByteArrayInputStream(input))) {
+        try (DataInputStream in = new DataInputStream(new ByteArrayInputStream(input))) {
             String username = in.readUTF();
 
             int len = in.readInt();

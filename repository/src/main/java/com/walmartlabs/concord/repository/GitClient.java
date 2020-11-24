@@ -579,7 +579,7 @@ public class GitClient {
         }
 
         for (String p : sensitiveData) {
-            s = s.replaceAll(p, "***")
+            s = s.replaceAll(p, "***");
             s = s.replaceAll("[\n\r]","");
         }
         return s;

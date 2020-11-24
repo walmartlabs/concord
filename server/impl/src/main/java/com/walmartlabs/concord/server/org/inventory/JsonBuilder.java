@@ -43,7 +43,7 @@ public final class JsonBuilder {
         items.sort(Comparator.comparingInt(InventoryDataItem::getLevel).reversed());
 
         for(InventoryDataItem item : items) {
-            String[] paths = normalizePath(item.getPath()).split("/");
+            String[] paths = normalizePath(item.getPath()).split("/",-1);
             ObjectNode pathNode = root;
             for(int i = 0; i < paths.length - 1; i++) {
                 String p = paths[i];
