@@ -119,14 +119,13 @@ const RepositoryActionDropdown = (props: ExternalProps) => {
     const {
         name: repoName,
         url: repoURL,
-        branch: repoBranch,
         commitId: repoCommitId,
         path: repoPath,
         disabled: repoDisabled
     } = repo;
 
     // show the commit ID if defined, otherwise show the branch name or fallback to 'master'
-    const repoBranchOrCommitId = repoCommitId ? repoCommitId : repoBranch ? repoBranch : 'master';
+    const repoBranchOrCommitId = repoCommitId ? repoCommitId : repo.branch;
     const repoPathOrDefault = repoPath ? repoPath : '/';
 
     return (

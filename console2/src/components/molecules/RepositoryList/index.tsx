@@ -70,7 +70,7 @@ const getSource = (r: RepositoryEntry) => {
     if (r.commitId) {
         return r.commitId;
     }
-    return r.branch || 'master';
+    return r.branch;
 };
 
 const renderTableRow = (orgName: ConcordKey, projectName: ConcordKey, row: RepositoryEntry) => {

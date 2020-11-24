@@ -38,7 +38,7 @@ export interface RepositoryEntry {
     id: ConcordId;
     name: ConcordKey;
     url: string;
-    branch?: string;
+    branch: string;
     commitId?: string;
     path?: string;
     secretStoreType?: string;

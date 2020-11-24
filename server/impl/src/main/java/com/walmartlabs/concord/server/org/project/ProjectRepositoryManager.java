@@ -82,7 +82,11 @@ public class ProjectRepositoryManager {
     }
 
     public void createOrUpdate(UUID projectId, RepositoryEntry entry) {
-        repositoryDao.tx(tx -> createOrUpdate(tx, projectId, entry));
+        if(entry.getBranch() == null){
+            entry = new RepositoryEntry(entry, resolveDefaultBranch(entry), entry.getCommitId());
+        }
+        RepositoryEntry finalEntry = entry;
+        repositoryDao.tx(tx -> createOrUpdate(tx, projectId, finalEntry));
     }
 
     public void createOrUpdate(DSLContext tx, UUID projectId, RepositoryEntry entry) {
@@ -234,5 +238,10 @@ public class ProjectRepositoryManager {
                 .field("name", projectName)
                 .field("changes", changes)
                 .log();
+    }
+
+    private String resolveDefaultBranch(RepositoryEntry entry) {
+        //TODO: Make use of git api's/commands to get default branch
+        return "master";
     }
 }
