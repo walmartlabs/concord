@@ -38,6 +38,7 @@ import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
 import java.io.IOException;
+import java.nio.file.Path;
 import java.util.*;
 
 @Named
@@ -142,8 +143,6 @@ public class FormServiceV2 {
             Map<String, Object> args = new LinkedHashMap<>();
             args.put(form.name(), new LinkedHashMap<>(data));
 
-            formManager.delete(processKey, form.name());
-
             // TODO refactor into the process manager
             Map<String, Object> m = new HashMap<>();
             m.put(Constants.Request.ARGUMENTS_KEY, args);
@@ -179,7 +178,8 @@ public class FormServiceV2 {
         }
 
         // remove the form when the process resumes
-        payload = payload.putHeader(Payload.RESUME_HOOKS, Collections.singletonList(() -> formManager.delete(processKey, formName)));
+        Path workDir = payload.getHeader(Payload.WORKSPACE_DIR);
+        payload = payload.putHeader(Payload.RESUME_HOOKS, Collections.singletonList(() -> formManager.delete(workDir, formName)));
 
         processManager.resume(payload);
     }
