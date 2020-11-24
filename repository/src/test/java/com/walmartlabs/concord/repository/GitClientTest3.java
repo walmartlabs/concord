@@ -52,7 +52,7 @@ import static org.junit.Assert.assertTrue;
 /**
  * Require internet connection
   */
-@Ignore
+//@Ignore
 public class GitClientTest3 {
 
     private GitClient client;

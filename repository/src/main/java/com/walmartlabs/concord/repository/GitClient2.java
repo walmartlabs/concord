@@ -95,13 +95,17 @@ public class GitClient2 {
 
             configure(req.destination());
             configureRemote(req.destination(), updateUrl(req.url(), req.secret()));
-            configureFetch(req.destination(), getRefSpec(req.destination(), req.branchOrTag(), req.secret()));
+            Ref ref = getHeadRef(req.destination(), req.branchOrTag(), req.secret());
+            configureFetch(req.destination(), getRefSpec(ref));
 
             // fetch
             boolean effectiveShallow = req.shallow() && req.commitId() == null;
             fetch(req.destination(), effectiveShallow, req.secret());
 
             checkout(req.destination(), req.commitId() != null ? req.commitId() : req.branchOrTag());
+            if (req.commitId() == null && ref != null) {
+                reset(req.destination(), ref.tag() ? "origin/tags/" + ref.name() : "origin/" + ref.name());
+            }
 
             cleanup(req.destination());
 
@@ -188,6 +192,14 @@ public class GitClient2 {
                 .build());
     }
 
+    private void reset(Path workDir, String rev) {
+        exec(Command.builder()
+                .workDir(workDir)
+                .timeout(cfg.defaultOperationTimeout())
+                .addArgs("reset", "--hard", rev)
+                .build());
+    }
+
     private void cleanup(Path workDir) {
         exec(Command.builder()
                 .workDir(workDir)
@@ -244,6 +256,10 @@ public class GitClient2 {
     }
 
     private Ref getHeadRef(Path workDir, String branchOrTag, Secret secret) {
+        if (branchOrTag == null) {
+            return null;
+        }
+
         String branchHeadRef = "refs/heads/" + branchOrTag;
         String tagRef = "refs/tags/" + branchOrTag;
         return getRefs(workDir, branchOrTag, secret).stream()
@@ -252,15 +268,14 @@ public class GitClient2 {
                 .orElseThrow(() -> new RepositoryException("Can't find head ref for '" + branchOrTag + "'"));
     }
 
-    private String getRefSpec(Path workDir, String branchOrTag, Secret secret) {
-        if (branchOrTag == null) {
+    private String getRefSpec(Ref ref) {
+        if (ref == null) {
             return "+refs/heads/*:refs/remotes/origin/*";
         }
-        Ref ref = getHeadRef(workDir, branchOrTag, secret);
         if (ref.tag()) {
-            return String.format("+refs/tags/%s:refs/remotes/origin/tags/%s", branchOrTag, branchOrTag);
+            return String.format("+refs/tags/%s:refs/remotes/origin/tags/%s", ref.name(), ref.name());
         } else {
-            return String.format("+refs/heads/%s:refs/remotes/origin/%s", branchOrTag, branchOrTag);
+            return String.format("+refs/heads/%s:refs/remotes/origin/%s", ref.name(), ref.name());
         }
     }
 
