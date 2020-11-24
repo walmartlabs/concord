@@ -200,7 +200,7 @@ public class RepositoryProcessor implements PayloadProcessor {
         }
 
         @Override
-        public final String toString() {
+        public String toString() {
             return "RepositoryInfo{" +
                     "id=" + id +
                     ", name='" + name + '\'' +
@@ -238,7 +238,7 @@ public class RepositoryProcessor implements PayloadProcessor {
         }
 
         @Override
-        public final String toString() {
+        public String toString() {
             return "CommitInfo{" +
                     "id='" + id + '\'' +
                     ", author='" + author + '\'' +

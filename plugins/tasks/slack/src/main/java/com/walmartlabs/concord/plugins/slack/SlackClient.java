@@ -315,7 +315,7 @@ public class SlackClient implements AutoCloseable {
         }
 
         @Override
-        public final String toString() {
+        public String toString() {
             return "Response{" +
                     "ok=" + ok +
                     ", ts=" + ts +

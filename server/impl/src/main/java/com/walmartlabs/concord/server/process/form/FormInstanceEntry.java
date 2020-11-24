@@ -144,7 +144,7 @@ public class FormInstanceEntry implements Serializable {
         }
 
         @Override
-        public final String toString() {
+        public String toString() {
             return "Field{" +
                     "name='" + name + '\'' +
                     ", label='" + label + '\'' +

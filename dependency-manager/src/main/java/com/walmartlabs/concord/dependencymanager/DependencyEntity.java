@@ -101,7 +101,7 @@ public class DependencyEntity {
         }
 
         @Override
-        public final String toString() {
+        public String toString() {
             return "Artifact{" +
                     "groupId='" + groupId + '\'' +
                     ", artifactId='" + artifactId + '\'' +
