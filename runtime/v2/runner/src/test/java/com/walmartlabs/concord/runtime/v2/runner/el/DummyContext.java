@@ -96,6 +96,11 @@ public class DummyContext implements Context {
     }
 
     @Override
+    public <T> T eval(Object v, Map<String, Object> additionalVariables, Class<T> type) {
+        throw new IllegalStateException("Not implemented");
+    }
+
+    @Override
     public void suspend(String eventName) {
         throw new IllegalStateException("Not implemented");
     }
