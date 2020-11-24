@@ -31,6 +31,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.List;
@@ -59,7 +60,7 @@ public class DefaultDependencies {
             log.info("init -> using external default dependencies configuration: {}", path);
         } else {
             try (InputStream is = DefaultDependencies.class.getResourceAsStream("default-dependencies")) {
-                this.dependencies = new BufferedReader(new InputStreamReader(is)).lines()
+                this.dependencies = new BufferedReader(new InputStreamReader(is, StandardCharsets.UTF_8)).lines()
                         .map(DefaultDependencies::parseUri)
                         .collect(Collectors.toList());
             } catch (IOException e) {

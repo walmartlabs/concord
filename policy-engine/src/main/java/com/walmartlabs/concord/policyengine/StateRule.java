@@ -68,7 +68,7 @@ public class StateRule implements Serializable {
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+        if (o == null || !(o instanceof StateRule)) return false;
         StateRule stateRule = (StateRule) o;
         return Objects.equals(msg, stateRule.msg) &&
                 Objects.equals(maxSizeInBytes, stateRule.maxSizeInBytes) &&

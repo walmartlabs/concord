@@ -76,7 +76,7 @@ public class TaskRule implements Serializable {
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+        if (o == null || !(o instanceof TaskRule)) return false;
         TaskRule taskRule = (TaskRule) o;
         return Objects.equals(msg, taskRule.msg) &&
                 Objects.equals(taskName, taskRule.taskName) &&
@@ -141,7 +141,7 @@ public class TaskRule implements Serializable {
         @Override
         public boolean equals(Object o) {
             if (this == o) return true;
-            if (o == null || getClass() != o.getClass()) return false;
+            if (o == null || !(o instanceof Param)) return false;
             Param param = (Param) o;
             return index == param.index &&
                     protectedVariable == param.protectedVariable &&
@@ -155,7 +155,7 @@ public class TaskRule implements Serializable {
         }
 
         @Override
-        public String toString() {
+        public final String toString() {
             return "Param{" +
                     "index=" + index +
                     ", name='" + name + '\'' +
@@ -194,7 +194,7 @@ public class TaskRule implements Serializable {
         @Override
         public boolean equals(Object o) {
             if (this == o) return true;
-            if (o == null || getClass() != o.getClass()) return false;
+            if (o == null || !(o instanceof TaskResult)) return false;
             TaskResult that = (TaskResult) o;
             return Objects.equals(task, that.task) &&
                     Objects.equals(result, that.result) &&

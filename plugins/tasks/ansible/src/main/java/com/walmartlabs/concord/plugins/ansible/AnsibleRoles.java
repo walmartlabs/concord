@@ -27,6 +27,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -117,7 +118,7 @@ public class AnsibleRoles {
 
         Process p = PrivilegedAction.perform("task", b::start);
 
-        try (BufferedReader reader = new TruncBufferedReader(new InputStreamReader(p.getInputStream()))) {
+        try (BufferedReader reader = new TruncBufferedReader(new InputStreamReader(p.getInputStream(), StandardCharsets.UTF_8))) {
             String line;
             while ((line = reader.readLine()) != null) {
                 log.info("GIT: {}", hideSensitiveData(line));

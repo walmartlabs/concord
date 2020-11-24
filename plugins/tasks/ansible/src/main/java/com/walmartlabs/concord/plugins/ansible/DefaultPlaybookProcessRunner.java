@@ -29,6 +29,7 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
@@ -82,7 +83,7 @@ public class DefaultPlaybookProcessRunner implements PlaybookProcessRunner {
 
         Process p = PrivilegedAction.perform("task", b::start);
 
-        BufferedReader reader = new TruncBufferedReader(new InputStreamReader(p.getInputStream()));
+        BufferedReader reader = new TruncBufferedReader(new InputStreamReader(p.getInputStream(), StandardCharsets.UTF_8));
         String line;
         while ((line = reader.readLine()) != null) {
             processLog.info("ANSIBLE: {}", line);

@@ -63,7 +63,7 @@ public class SsoAuthFilter extends AbstractHttpFilter {
         if (token != null) {
             boolean isValid = jwtAuthenticator.isTokenValid(token);
             if (isValid) {
-                log.info("doFilter -> found valid token in cookies, redirect to '{}'", from);
+                log.info("doFilter -> found valid token in cookies, redirect to '{}'", from.replaceAll("[\n\r]",""));
                 redirectHelper.sendRedirect(response, from);
                 return;
             } else {

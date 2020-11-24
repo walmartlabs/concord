@@ -189,7 +189,7 @@ public final class GrammarV2 {
 
         Map<String, YamlValue> m = new LinkedHashMap<>();
         values.stream().forEach(kv -> m.put(kv.getKey(), kv.getValue()));
-        return m;
+        return Collections.unmodifiableMap(m);
     }
 
     private static void assertNotNull(YamlValue v) {

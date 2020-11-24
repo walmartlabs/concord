@@ -251,7 +251,7 @@ public class ProcessManager {
         }
 
         if (status == ProcessStatus.CANCELLED && isFinished(processKey)) {
-            log.info("updateStatus [{}, '{}', {}] -> ignored, process finished", processKey, agentId, status);
+            log.info("updateStatus [{}, '{}', {}] -> ignored, process finished", processKey.toString().replaceAll("[\n\r]",""), agentId.replaceAll("[\n\r]",""), status.toString().replaceAll("[\n\r]",""));
             return;
         }
 

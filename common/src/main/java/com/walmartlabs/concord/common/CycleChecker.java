@@ -56,7 +56,7 @@ public final class CycleChecker {
         }
 
         @Override
-        public String toString() {
+        public final String toString() {
             return hasCycle ? getNode1() + " <-> " + getNode2() : "no cycle";
         }
     }
@@ -145,7 +145,7 @@ public final class CycleChecker {
         @Override
         public boolean equals(Object o) {
             if (this == o) return true;
-            if (o == null || getClass() != o.getClass()) return false;
+            if (o == null || !(o instanceof N)) return false;
             N n = (N) o;
             return object == n.object;
         }
@@ -156,7 +156,7 @@ public final class CycleChecker {
         }
 
         @Override
-        public String toString() {
+        public final String toString() {
             return getPath();
         }
     }

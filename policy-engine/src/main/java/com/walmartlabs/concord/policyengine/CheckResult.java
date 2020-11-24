@@ -92,7 +92,7 @@ public class CheckResult<R, E> {
         }
 
         @Override
-        public String toString() {
+        public final String toString() {
             return msg;
         }
     }

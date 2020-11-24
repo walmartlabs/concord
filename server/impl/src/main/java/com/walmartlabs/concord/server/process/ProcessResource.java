@@ -430,7 +430,7 @@ public class ProcessResource implements Resource {
         try {
             payload = payloadManager.createResumePayload(processKey, eventName, req);
         } catch (IOException e) {
-            log.error("resume ['{}', '{}'] -> error creating a payload: {}", instanceId, eventName, e);
+            log.error("resume ['{}', '{}'] -> error creating a payload: {}", instanceId.toString().replaceAll("[\n\r]",""), eventName.toString().replaceAll("[\n\r]",""), e.toString().replaceAll("[\n\r]",""));
             throw new ConcordApplicationException("Error creating a payload", e);
         }
 
@@ -500,7 +500,7 @@ public class ProcessResource implements Resource {
     public ProcessEntry waitForCompletion(@ApiParam @PathParam("id") UUID instanceId,
                                           @ApiParam @QueryParam("timeout") @DefaultValue("-1") long timeout) {
 
-        log.info("waitForCompletion ['{}', {}] -> waiting...", instanceId, timeout);
+        log.info("waitForCompletion ['{}', {}] -> waiting...", instanceId.toString().replaceAll("[\n\r]",""), timeout.toString().replaceAll("[\n\r]",""));
 
         long t1 = System.currentTimeMillis();
 
@@ -519,7 +519,7 @@ public class ProcessResource implements Resource {
             if (timeout > 0) {
                 long t2 = System.currentTimeMillis();
                 if (t2 - t1 >= timeout) {
-                    log.warn("waitForCompletion ['{}', {}] -> timeout, last status: {}", instanceId, timeout, s);
+                    log.warn("waitForCompletion ['{}', {}] -> timeout, last status: {}", instanceId.toString().replaceAll("[\n\r]",""), timeout.toString().replaceAll("[\n\r]",""), s.toString().replaceAll("[\n\r]",""));
                     throw new ConcordApplicationException(Response.status(Status.REQUEST_TIMEOUT).entity(r).build());
                 }
             }
@@ -961,14 +961,14 @@ public class ProcessResource implements Resource {
                 try {
                     IOUtils.deleteRecursively(tmpDir);
                 } catch (IOException e) {
-                    log.warn("uploadAttachments -> cleanup error: {}", e.getMessage());
+                    log.warn("uploadAttachments -> cleanup error: {}", e.getMessage().replaceAll("[\r\n]",""));
                 }
             }
             if (tmpIn != null) {
                 try {
                     Files.delete(tmpIn);
                 } catch (IOException e) {
-                    log.warn("uploadAttachments -> cleanup error: {}", e.getMessage());
+                    log.warn("uploadAttachments -> cleanup error: {}", e.getMessage().replaceAll("[\r\n]",""));
                 }
             }
         }
