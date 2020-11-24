@@ -31,6 +31,8 @@ import javax.inject.Singleton;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.ObjectInputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.Function;
@@ -65,6 +67,19 @@ public class FormManager {
                 formName);
 
         stateManager.deleteFile(processKey, resource);
+    }
+
+    public void delete(Path workDir, String formName) {
+        String resource = path(Constants.Files.JOB_ATTACHMENTS_DIR_NAME,
+                Constants.Files.JOB_STATE_DIR_NAME,
+                Constants.Files.JOB_FORMS_V2_DIR_NAME,
+                formName);
+
+        try {
+            Files.deleteIfExists(workDir.resolve(resource));
+        } catch (Exception e) {
+            throw new RuntimeException("Form delete error: " + e.getMessage());
+        }
     }
 
     public List<Form> list(ProcessKey processKey) {
