@@ -14,6 +14,7 @@ segments;
 
 ### Changed
 
+- concord-server, runtime-v2: correctly remove submitted forms;
 - runtime-v2: `set` now supports references to partially evaluated
 values (e.g. variables defined in the same `set` block), including
 nested keys;
