@@ -191,6 +191,11 @@ public class ContextImpl implements Context {
     }
 
     @Override
+    public <T> T eval(Object v, Map<String, Object> additionalVariables, Class<T> type) {
+        return expressionEvaluator.eval(EvalContextFactory.global(this, additionalVariables), v, type);
+    }
+
+    @Override
     public void suspend(String eventName) {
         state.peekFrame(currentThreadId).push(new SuspendCommand(eventName));
     }
