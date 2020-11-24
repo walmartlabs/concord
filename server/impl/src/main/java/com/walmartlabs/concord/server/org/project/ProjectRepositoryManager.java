@@ -20,6 +20,7 @@ package com.walmartlabs.concord.server.org.project;
  * =====
  */
 
+import com.walmartlabs.concord.imports.ImportsListener;
 import com.walmartlabs.concord.process.loader.ProjectLoader;
 import com.walmartlabs.concord.process.loader.model.ProcessDefinition;
 import com.walmartlabs.concord.repository.Repository;
@@ -183,7 +184,7 @@ public class ProjectRepositoryManager {
         try {
             ProcessDefinition pd = repositoryManager.withLock(repo.getUrl(), () -> {
                 Repository repository = repositoryManager.fetch(projectId, repo);
-                ProjectLoader.Result result = projectLoader.loadProject(repository.path(), importsNormalizerFactory.forProject(repo.getProjectId()));
+                ProjectLoader.Result result = projectLoader.loadProject(repository.path(), importsNormalizerFactory.forProject(repo.getProjectId()), ImportsListener.NOP_LISTENER);
                 return result.projectDefinition();
             });
 

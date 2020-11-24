@@ -24,6 +24,9 @@ import java.util.List;
 
 public interface ImportsListener {
 
+    ImportsListener NOP_LISTENER = new ImportsListener() {
+    };
+
     default void onStart(List<Import> items) {
     }
 

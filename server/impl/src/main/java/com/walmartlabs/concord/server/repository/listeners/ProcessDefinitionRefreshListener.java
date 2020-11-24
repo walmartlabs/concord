@@ -20,6 +20,7 @@ package com.walmartlabs.concord.server.repository.listeners;
  * =====
  */
 
+import com.walmartlabs.concord.imports.ImportsListener;
 import com.walmartlabs.concord.process.loader.ProjectLoader;
 import com.walmartlabs.concord.process.loader.model.ProcessDefinition;
 import com.walmartlabs.concord.server.org.project.RepositoryDao;
@@ -56,7 +57,7 @@ public class ProcessDefinitionRefreshListener implements RepositoryRefreshListen
 
     @Override
     public void onRefresh(DSLContext ctx, RepositoryEntry repo, Path repoPath) throws Exception {
-        ProcessDefinition pd = projectLoader.loadProject(repoPath, importsNormalizer.forProject(repo.getProjectId()))
+        ProcessDefinition pd = projectLoader.loadProject(repoPath, importsNormalizer.forProject(repo.getProjectId()), ImportsListener.NOP_LISTENER)
                 .projectDefinition();
 
         Set<String> pf = pd.publicFlows();

@@ -23,6 +23,7 @@ package com.walmartlabs.concord.server.process.pipelines.processors;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.walmartlabs.concord.imports.Import;
 import com.walmartlabs.concord.imports.ImportProcessingException;
+import com.walmartlabs.concord.imports.ImportsListener;
 import com.walmartlabs.concord.process.loader.ProjectLoader;
 import com.walmartlabs.concord.process.loader.model.ProcessDefinition;
 import com.walmartlabs.concord.repository.Snapshot;
@@ -32,6 +33,8 @@ import com.walmartlabs.concord.server.process.ImportsNormalizerFactory;
 import com.walmartlabs.concord.server.process.Payload;
 import com.walmartlabs.concord.server.process.PayloadUtils;
 import com.walmartlabs.concord.server.process.ProcessException;
+import com.walmartlabs.concord.server.process.logs.ProcessLogManager;
+import com.walmartlabs.concord.server.process.logs.ProcessLogsDao;
 import com.walmartlabs.concord.server.sdk.ConcordApplicationException;
 import com.walmartlabs.concord.server.sdk.ProcessKey;
 import org.slf4j.Logger;
@@ -59,15 +62,17 @@ public class ProcessDefinitionProcessor implements PayloadProcessor {
     private final ProjectLoader projectLoader;
     private final ImportsNormalizerFactory importsNormalizer;
     private final ObjectMapper objectMapper;
+    private final ProcessLogManager logManager;
 
     @Inject
     public ProcessDefinitionProcessor(ProjectLoader projectLoader,
                                       ImportsNormalizerFactory importsNormalizer,
-                                      ObjectMapper objectMapper) {
+                                      ObjectMapper objectMapper, ProcessLogManager logManager) {
 
         this.projectLoader = projectLoader;
         this.importsNormalizer = importsNormalizer;
         this.objectMapper = objectMapper;
+        this.logManager = logManager;
     }
 
     @Override
@@ -83,7 +88,8 @@ public class ProcessDefinitionProcessor implements PayloadProcessor {
 
         try {
             String runtime = getRuntimeType(payload);
-            ProjectLoader.Result result = projectLoader.loadProject(workDir, runtime, importsNormalizer.forProject(projectId));
+            ProjectLoader.Result result = projectLoader.loadProject(workDir, runtime, importsNormalizer.forProject(projectId),
+                    new ProcessImportsListener(processKey));
 
             List<Snapshot> snapshots = result.snapshots();
             payload = PayloadUtils.addSnapshots(payload, snapshots);
@@ -138,6 +144,25 @@ public class ProcessDefinitionProcessor implements PayloadProcessor {
             return objectMapper.writeValueAsString(i);
         } catch (Exception e) {
             throw new RuntimeException(e);
+        }
+    }
+
+    class ProcessImportsListener implements ImportsListener {
+
+        private final ProcessKey processKey;
+
+        ProcessImportsListener(ProcessKey processKey) {
+            this.processKey = processKey;
+        }
+
+        @Override
+        public void beforeImport(Import i) {
+            logManager.info(processKey, "Processing import {}", ProcessDefinitionProcessor.this.toString(i));
+        }
+
+        @Override
+        public void onEnd(List<Import> items) {
+            logManager.info(processKey, "All imports processed");
         }
     }
 }
