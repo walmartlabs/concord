@@ -113,7 +113,11 @@ public class ProcessLogResourceV2 implements Resource {
                                                @ApiParam LogSegmentRequest request) {
 
         ProcessKey processKey = logAccessManager.assertLogAccess(instanceId);
-        long segmentId = logManager.createSegment(processKey, request.correlationId(), request.name(), request.createdAt());
+        long segmentId = logManager.createSegment(processKey,
+                request.parentSegmentId(),
+                request.correlationId(),
+                request.name(),
+                request.createdAt());
         return new LogSegmentOperationResponse(segmentId, OperationResult.CREATED);
     }
 

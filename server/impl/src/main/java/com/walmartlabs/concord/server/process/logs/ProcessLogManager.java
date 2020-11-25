@@ -90,11 +90,11 @@ public class ProcessLogManager {
         logsDao.createSegment(tx, SYSTEM_SEGMENT_ID, processKey, null, SYSTEM_SEGMENT_NAME, null);
     }
 
-    public long createSegment(ProcessKey processKey, UUID correlationId, String name, OffsetDateTime createdAt) {
+    public long createSegment(ProcessKey processKey, Long parentSegmentId, UUID correlationId, String name, OffsetDateTime createdAt) {
         if (SYSTEM_SEGMENT_NAME.equals(name)) {
             return SYSTEM_SEGMENT_ID;
         }
-        return logsDao.createSegment(processKey, correlationId, name, createdAt, LogSegment.Status.RUNNING.name());
+        return logsDao.createSegment(processKey, parentSegmentId, correlationId, name, createdAt, LogSegment.Status.RUNNING.name());
     }
 
     public void updateSegment(ProcessKey processKey, long segmentId, LogSegment.Status status, Integer warnings, Integer errors) {

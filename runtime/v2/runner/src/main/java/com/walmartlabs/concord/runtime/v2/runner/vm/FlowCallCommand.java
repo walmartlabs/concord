@@ -20,6 +20,7 @@ package com.walmartlabs.concord.runtime.v2.runner.vm;
  * =====
  */
 
+import com.sun.corba.se.impl.protocol.giopmsgheaders.FragmentMessage;
 import com.walmartlabs.concord.runtime.v2.model.FlowCall;
 import com.walmartlabs.concord.runtime.v2.model.FlowCallOptions;
 import com.walmartlabs.concord.runtime.v2.model.ProcessDefinition;
@@ -88,7 +89,17 @@ public class FlowCallCommand extends StepCommand<FlowCall> {
         }
 
         // push the out handler first so it executes after the called flow's frame is done
-        state.peekFrame(threadId).push(processOutVars);
+        Frame outerFrame = state.peekFrame(threadId);
+        outerFrame.push(processOutVars);
+        outerFrame.push(new Command() { // TODO
+            @Override
+            public void eval(Runtime runtime, State state, ThreadId threadId) throws Exception {
+                Frame f = state.peekFrame(threadId);
+                f.pop();
+                f.removeLocal("__parentSegmentId");
+            }
+        });
+
         state.pushFrame(threadId, innerFrame);
     }
 
