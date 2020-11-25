@@ -38,7 +38,8 @@ public class BrokenTest {
 
     @Test(expected = YamlParserException.class)
     public void testStream() throws Exception {
-        loadProject("brokenMain/concord.yml");
+        ProjectLoader l = new ProjectLoader(mock(ImportManager.class));
+        l.loadProject(ClassLoader.getSystemResourceAsStream("brokenMain/concord.yml"));
     }
 
     @Test(expected = YamlParserException.class)
