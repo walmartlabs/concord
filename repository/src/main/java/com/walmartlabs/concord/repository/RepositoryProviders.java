@@ -20,8 +20,6 @@ package com.walmartlabs.concord.repository;
  * =====
  */
 
-import com.walmartlabs.concord.sdk.Secret;
-
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
@@ -34,13 +32,13 @@ public class RepositoryProviders {
         this.providers = providers;
     }
 
-    public Repository fetch(String url, String branch, String commitId, String path, Secret secret, Path destDir) {
-        RepositoryProvider provider = getProvider(url);
-        String fetchedCommitId = provider.fetch(url, branch, commitId, secret, destDir);
+    public Repository fetch(FetchRequest request, String path) {
+        RepositoryProvider provider = getProvider(request.url());
+        FetchResult result = provider.fetch(request);
 
-        Path repoPath = repoPath(destDir, path);
+        Path repoPath = repoPath(request.destination(), path);
 
-        return new Repository(provider.getBranchOrDefault(branch), destDir, repoPath, fetchedCommitId, provider);
+        return new Repository(request.destination(), repoPath, result.head(), provider);
     }
 
     private RepositoryProvider getProvider(String url) {

@@ -21,7 +21,6 @@ package com.walmartlabs.concord.repository;
  */
 
 import com.walmartlabs.concord.common.IOUtils;
-import com.walmartlabs.concord.sdk.Secret;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -36,10 +35,10 @@ public class GitCliRepositoryProvider implements RepositoryProvider {
     private static final Logger log = LoggerFactory.getLogger(GitCliRepositoryProvider.class);
     private static final String GIT_FILES = "^(\\.git|\\.gitmodules|\\.gitignore)$";
 
-    private final GitClient2 client;
+    private final GitClient client;
 
     public GitCliRepositoryProvider(GitClientConfiguration cfg) {
-        this.client = new GitClient2(cfg);
+        this.client = new GitClient(cfg);
     }
 
     @Override
@@ -48,40 +47,25 @@ public class GitCliRepositoryProvider implements RepositoryProvider {
     }
 
     @Override
-    public String getBranchOrDefault(String branch) {
-        return branch != null ? branch : GitConstants.DEFAULT_BRANCH;
-    }
-
-    @Override
-    public String fetch(String uri, String branchOrNull, String commitId, Secret secret, Path dst) {
-        String branch = branchOrNull;
-        if (commitId == null && branch == null) {
-            branch = GitConstants.DEFAULT_BRANCH;
-        }
+    public FetchResult fetch(FetchRequest request) {
         RepositoryException lastException = null;
 
         // try twice
         for (int attemptNo = 0; attemptNo < 2; attemptNo++) {
             if (attemptNo > 0) {
-                log.warn("fetch ['{}', '{}', '{}', '{}'] -> error: {}, retrying...", uri, branch, commitId, dst, lastException.getMessage());
+                log.warn("fetch ['{}', '{}', '{}', '{}'] -> error: {}, retrying...",
+                        request.url(), request.branchOrTag(), request.commitId(), request.destination(), lastException.getMessage());
             }
 
             try {
-                return client.fetch(
-                        FetchRequest.builder()
-                                .url(uri)
-                                .branchOrTag(branch)
-                                .commitId(commitId)
-                                .secret(secret)
-                                .destination(dst)
-                        .build())
-                        .head();
+                return client.fetch(request);
             } catch (RepositoryException e) {
                 lastException = e;
                 try {
-                    IOUtils.deleteRecursively(dst);
+                    IOUtils.deleteRecursively(request.destination());
                 } catch (IOException ee) {
-                    log.warn("fetch ['{}', '{}', '{}', '{}'] -> cleanup error: {}", uri, branch, commitId, dst, e.getMessage());
+                    log.warn("fetch ['{}', '{}', '{}', '{}'] -> cleanup error: {}",
+                            request.url(), request.branchOrTag(), request.commitId(), request.destination(), e.getMessage());
                 }
             }
         }

@@ -32,12 +32,6 @@ public interface GitClientConfiguration {
     @Nullable
     String oauthToken();
 
-    @Deprecated
-    @Value.Default
-    default boolean shallowClone() {
-        return true;
-    }
-
     @Value.Default
     default Duration defaultOperationTimeout() {
         return Duration.ofMinutes(10L);

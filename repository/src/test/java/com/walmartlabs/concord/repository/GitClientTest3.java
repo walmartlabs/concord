@@ -52,24 +52,14 @@ import static org.junit.Assert.assertTrue;
 /**
  * Require internet connection
   */
-//@Ignore
+@Ignore
 public class GitClientTest3 {
 
     private GitClient client;
-    private GitClient2 client2;
 
     @Before
     public void init() {
         client = new GitClient(GitClientConfiguration.builder()
-                .shallowClone(true)
-                .sshTimeout(Duration.ofMinutes(10))
-                .sshTimeoutRetryCount(1)
-                .httpLowSpeedLimit(1)
-                .httpLowSpeedTime(Duration.ofMinutes(10))
-                .build());
-
-        client2 = new GitClient2(GitClientConfiguration.builder()
-                .shallowClone(true)
                 .sshTimeout(Duration.ofMinutes(10))
                 .sshTimeoutRetryCount(1)
                 .httpLowSpeedLimit(1)
@@ -166,8 +156,7 @@ public class GitClientTest3 {
     }
 
     private String fetch(String repoUri, String branch, String commitId, Secret secret, Path dest) {
-//        return client.fetch(repoUri, branch, commitId, secret, dest);
-        return client2.fetch(FetchRequest.builder()
+        return client.fetch(FetchRequest.builder()
                 .url(repoUri)
                 .branchOrTag(branch)
                 .commitId(commitId)

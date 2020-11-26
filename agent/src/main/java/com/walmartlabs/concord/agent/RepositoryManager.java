@@ -39,6 +39,7 @@ public class RepositoryManager {
     private final SecretClient secretClient;
     private final RepositoryProviders providers;
     private final RepositoryCache repositoryCache;
+    private final GitConfiguration gitCfg;
 
     @Inject
     public RepositoryManager(SecretClient secretClient,
@@ -47,10 +48,10 @@ public class RepositoryManager {
                              ObjectMapper objectMapper) throws IOException {
 
         this.secretClient = secretClient;
+        this.gitCfg = gitCfg;
 
         GitClientConfiguration clientCfg = GitClientConfiguration.builder()
                 .oauthToken(gitCfg.getToken())
-                .shallowClone(gitCfg.isShallowClone())
                 .defaultOperationTimeout(gitCfg.getDefaultOperationTimeout())
                 .fetchTimeout(gitCfg.getFetchTimeout())
                 .httpLowSpeedLimit(gitCfg.getHttpLowSpeedLimit())
@@ -70,17 +71,22 @@ public class RepositoryManager {
                 objectMapper);
     }
 
-    public void export(String repoUrl, String commitId, String repoPath, Path dest, SecretDefinition secretDefinition) throws ExecutionException {
-        export(repoUrl, null, commitId, repoPath, dest, secretDefinition, Collections.emptyList());
-    }
-
     public void export(String repoUrl, String branch, String commitId, String repoPath, Path dest, SecretDefinition secretDefinition, List<String> ignorePatterns) throws ExecutionException {
         Secret secret = getSecret(secretDefinition);
 
         Path cacheDir = repositoryCache.getPath(repoUrl);
 
         repositoryCache.withLock(repoUrl, () -> {
-            Repository repo = providers.fetch(repoUrl, branch, commitId, repoPath, secret, cacheDir);
+            Repository repo = providers.fetch(
+                    FetchRequest.builder()
+                            .url(repoUrl)
+                            .branchOrTag(branch)
+                            .commitId(commitId)
+                            .secret(secret)
+                            .destination(cacheDir)
+                            .shallow(gitCfg.isShallowClone())
+                            .build(),
+                    repoPath);
             repo.export(dest, ignorePatterns);
             return null;
         });

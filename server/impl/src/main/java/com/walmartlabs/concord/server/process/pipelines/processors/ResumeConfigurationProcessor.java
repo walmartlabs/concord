@@ -42,13 +42,6 @@ import java.util.UUID;
 @Named
 public class ResumeConfigurationProcessor implements PayloadProcessor {
 
-    private final ProjectDao projectDao;
-
-    @Inject
-    public ResumeConfigurationProcessor(ProjectDao projectDao) {
-        this.projectDao = projectDao;
-    }
-
     @Override
     public Payload process(Chain chain, Payload payload) {
         // configuration from the user's request
@@ -69,20 +62,6 @@ public class ResumeConfigurationProcessor implements PayloadProcessor {
         payload = payload.putHeader(Payload.CONFIGURATION, m);
 
         return chain.process(payload);
-    }
-
-    private ProjectEntry getProject(Payload payload) {
-        UUID projectId = payload.getHeader(Payload.PROJECT_ID);
-        if (projectId == null) {
-            return null;
-        }
-
-        ProjectEntry e = projectDao.get(projectId);
-        if (e == null) {
-            throw new ProcessException(payload.getProcessKey(), "Project not found: " + projectId, Status.BAD_REQUEST);
-        }
-
-        return e;
     }
 
     @SuppressWarnings("unchecked")

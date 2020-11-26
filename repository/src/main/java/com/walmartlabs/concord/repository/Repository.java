@@ -29,13 +29,11 @@ public class Repository {
 
     private final Path rootPath;
     private final Path repoPath;
-    private final String branch;
     private final String fetchedCommitId;
 
     private final RepositoryProvider provider;
 
-    public Repository(String branch, Path rootPath, Path repoPath, String fetchedCommitId, RepositoryProvider provider) {
-        this.branch = branch;
+    public Repository(Path rootPath, Path repoPath, String fetchedCommitId, RepositoryProvider provider) {
         this.rootPath = rootPath;
         this.repoPath = repoPath;
         this.provider = provider;
@@ -56,10 +54,6 @@ public class Repository {
 
     public Path path() {
         return repoPath;
-    }
-
-    public String branch() {
-        return branch;
     }
 
     public String fetchedCommitId() {

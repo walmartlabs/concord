@@ -95,11 +95,6 @@ public final class GitUtils {
                 .setURI(bareRepo.toAbsolutePath().toString())
                 .call();
 
-//        git.checkout()
-//                .setCreateBranch(true)
-//                .setName(branch)
-//                .call();
-
         IOUtils.copy(src, dir, StandardCopyOption.REPLACE_EXISTING);
 
         git.add()

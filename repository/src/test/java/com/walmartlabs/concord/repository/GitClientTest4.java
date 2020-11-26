@@ -24,17 +24,14 @@ import com.walmartlabs.concord.common.IOUtils;
 import com.walmartlabs.concord.common.TemporaryPath;
 import com.walmartlabs.concord.sdk.Secret;
 import org.eclipse.jgit.api.Git;
-import org.eclipse.jgit.dircache.DirCache;
 import org.eclipse.jgit.revwalk.RevCommit;
 import org.junit.Before;
-import org.junit.BeforeClass;
 import org.junit.Test;
 
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.time.Duration;
 
@@ -43,20 +40,10 @@ import static org.junit.Assert.assertEquals;
 public class GitClientTest4 {
 
     private GitClient client;
-    private GitClient2 client2;
 
     @Before
     public void init() {
         client = new GitClient(GitClientConfiguration.builder()
-                .shallowClone(true)
-                .sshTimeout(Duration.ofMinutes(10))
-                .sshTimeoutRetryCount(1)
-                .httpLowSpeedLimit(1)
-                .httpLowSpeedTime(Duration.ofMinutes(10))
-                .build());
-
-        client2 = new GitClient2(GitClientConfiguration.builder()
-                .shallowClone(true)
                 .sshTimeout(Duration.ofMinutes(10))
                 .sshTimeoutRetryCount(1)
                 .httpLowSpeedLimit(1)
@@ -71,12 +58,13 @@ public class GitClientTest4 {
         File src = new File(GitClientTest4.class.getResource("/test4").toURI());
         IOUtils.copy(src.toPath(), tmpDir);
 
+        // init repo
         Git repo = Git.init().setDirectory(tmpDir.toFile()).call();
-        DirCache add = repo.add().addFilepattern(".").call();
+        repo.add().addFilepattern(".").call();
         RevCommit commitId = repo.commit().setMessage("import").call();
 
         try (TemporaryPath repoPath = IOUtils.tempDir("git-client-test")) {
-            // fetch master
+            // --- fetch master
             String actualCommitId = fetch(tmpDir.toUri().toString(), "master", null, null, repoPath.path());
             assertContent(repoPath, "concord.yml", "concord-init");
             assertEquals(commitId.name(), actualCommitId);
@@ -86,7 +74,7 @@ public class GitClientTest4 {
             repo.add().addFilepattern(".").call();
             commitId = repo.commit().setMessage("update").call();
 
-            // fetch faster again
+            // --- fetch master again
             actualCommitId = fetch(tmpDir.toUri().toString(), "master", null, null, repoPath.path());
             assertContent(repoPath, "concord.yml", "new-concord-content");
             assertEquals(commitId.name(), actualCommitId);
@@ -94,8 +82,7 @@ public class GitClientTest4 {
     }
 
     private String fetch(String repoUri, String branch, String commitId, Secret secret, Path dest) {
-//        return client.fetch(repoUri, branch, commitId, secret, dest);
-        return client2.fetch(FetchRequest.builder()
+        return client.fetch(FetchRequest.builder()
                 .url(repoUri)
                 .branchOrTag(branch)
                 .commitId(commitId)
