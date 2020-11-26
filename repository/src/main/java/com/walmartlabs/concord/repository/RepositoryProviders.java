@@ -38,7 +38,7 @@ public class RepositoryProviders {
 
         Path repoPath = repoPath(request.destination(), path);
 
-        return new Repository(request.destination(), repoPath, result.head(), provider);
+        return new Repository(request.destination(), repoPath, result != null ? result.head() : null, provider);
     }
 
     private RepositoryProvider getProvider(String url) {
