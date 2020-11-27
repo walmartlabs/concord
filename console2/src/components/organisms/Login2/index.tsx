@@ -85,7 +85,7 @@ const Login = (props: RouteComponentProps<{}>) => {
     const [password, setPassword] = useState<string>('');
     const [apiKey, setApiKey] = useState<string>('');
     const [rememberMe, setRememberMe] = useState<boolean | undefined>();
-
+    const [destination] = useState(getDestination(props));
     const { loggingIn, setLoggingIn, setUserInfo } = useContext(UserSessionContext);
 
     const handleSubmit = useCallback(async () => {
@@ -101,7 +101,7 @@ const Login = (props: RouteComponentProps<{}>) => {
 
             saveLastLoginType(nonEmpty(apiKey) ? 'apiKey' : 'username');
 
-            props.history.push(getDestination(props));
+            props.history.push(destination);
         } catch (e) {
             let msg = e.message || 'Log in error';
             if (e.status === 401) {
@@ -112,7 +112,16 @@ const Login = (props: RouteComponentProps<{}>) => {
         } finally {
             setLoggingIn(false);
         }
-    }, [username, password, rememberMe, apiKey, setLoggingIn, setUserInfo, props]);
+    }, [
+        username,
+        password,
+        rememberMe,
+        apiKey,
+        setLoggingIn,
+        setUserInfo,
+        props.history,
+        destination
+    ]);
 
     const onChangeLoginType = useCallback(() => {
         clearLastLoginType();
