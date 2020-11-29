@@ -9,6 +9,8 @@ tasks, highlight failed tasks on the events tab.
 
 ### Changed
 
+- concord-client: tidy up the error logging - don't log a
+separate `WARN` message when the server responds with an error;
 - runtime-v2: save original stacktraces when throwing a
 `MultiException` (e.g. in `parallel` situations);
 - concord-console: now users should be correctly redirected to
