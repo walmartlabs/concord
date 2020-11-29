@@ -9,6 +9,8 @@ tasks, highlight failed tasks on the events tab.
 
 ### Changed
 
+- runtime-v2: save original stacktraces when throwing a
+`MultiException` (e.g. in `parallel` situations);
 - concord-console: now users should be correctly redirected to
 their destination page after login.
 
