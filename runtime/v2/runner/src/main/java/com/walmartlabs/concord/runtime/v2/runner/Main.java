@@ -38,6 +38,7 @@ import com.walmartlabs.concord.runtime.v2.sdk.ProcessConfiguration;
 import com.walmartlabs.concord.runtime.v2.sdk.WorkingDirectory;
 import com.walmartlabs.concord.sdk.Constants;
 import com.walmartlabs.concord.svm.Frame;
+import com.walmartlabs.concord.svm.MultiException;
 import com.walmartlabs.concord.svm.State;
 import com.walmartlabs.concord.svm.ThreadStatus;
 import org.slf4j.Logger;
@@ -94,6 +95,9 @@ public class Main {
             main.execute();
 
             System.exit(0);
+        } catch (MultiException e) {
+            System.err.println(e.getMessage());
+            System.exit(1);
         } catch (Throwable t) {
             t.printStackTrace(System.err);
             System.exit(1);
