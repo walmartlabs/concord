@@ -54,7 +54,7 @@ public class SegmentedLogger implements RunnerLogger {
         executeInThreadGroup(threadGroup, "thread-" + context.segmentName(), () -> {
             // make sure the redirection is enabled in the current thread
             if (context.redirectSystemOutAndErr() && !SysOutOverSLF4J.systemOutputsAreSLF4JPrintStreams()) {
-                SysOutOverSLF4J.sendSystemOutAndErrToSLF4J(LogLevel.INFO, LogLevel.WARN);
+                SysOutOverSLF4J.sendSystemOutAndErrToSLF4J(LogLevel.INFO, LogLevel.ERROR);
             }
 
             try {
