@@ -52,18 +52,41 @@ public class TaskCallInterceptor {
         listeners.forEach(l -> l.onEvent(preEvent));
 
         // call the callable and measure the duration
+        T result = null;
+        Exception error = null;
         long startedAt = System.currentTimeMillis();
-        T result = callable.call();
+        try {
+            result = callable.call();
+        } catch (Exception e) {
+            error = e;
+        }
         long duration = System.currentTimeMillis() - startedAt;
 
         // record the POST event
         TaskCallEvent postEvent = eventBuilder(Phase.POST, method, ctx)
+                .error(errorMessage(error))
                 .duration(duration)
                 .result(result instanceof Serializable ? (Serializable) result : null)
                 .build();
         listeners.forEach(l -> l.onEvent(postEvent));
 
+        if (error != null) {
+            throw error;
+        }
+
         return result;
+    }
+
+    private static String errorMessage(Exception e) {
+        if (e == null) {
+            return null;
+        }
+
+        if (e.getMessage() != null) {
+            return e.getMessage();
+        }
+
+        return "Error type: " + e.getClass().getName();
     }
 
     private static ImmutableTaskCallEvent.Builder eventBuilder(Phase phase, Method method, CallContext ctx) {

@@ -71,6 +71,8 @@ public class TaskMethodResolver extends javax.el.BeanELResolver {
                     () -> super.invoke(elContext, base, method, paramTypes, params));
         } catch (javax.el.MethodNotFoundException e) {
             throw new MethodNotFoundException(base, method, paramTypes);
+        } catch (RuntimeException e) {
+            throw e;
         } catch (Exception e) {
             throw new RuntimeException(e);
         }

@@ -59,6 +59,9 @@ public interface TaskCallEvent {
     @Nullable
     Serializable result();
 
+    @Nullable
+    String error();
+
     static ImmutableTaskCallEvent.Builder builder() {
         return ImmutableTaskCallEvent.builder();
     }
