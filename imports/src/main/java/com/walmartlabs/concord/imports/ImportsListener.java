@@ -24,6 +24,9 @@ import java.util.List;
 
 public interface ImportsListener {
 
+    /**
+     * Listener that does nothing.
+     */
     ImportsListener NOP_LISTENER = new ImportsListener() {
     };
 

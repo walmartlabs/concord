@@ -34,7 +34,6 @@ import com.walmartlabs.concord.server.process.Payload;
 import com.walmartlabs.concord.server.process.PayloadUtils;
 import com.walmartlabs.concord.server.process.ProcessException;
 import com.walmartlabs.concord.server.process.logs.ProcessLogManager;
-import com.walmartlabs.concord.server.process.logs.ProcessLogsDao;
 import com.walmartlabs.concord.server.sdk.ConcordApplicationException;
 import com.walmartlabs.concord.server.sdk.ProcessKey;
 import org.slf4j.Logger;
@@ -67,7 +66,8 @@ public class ProcessDefinitionProcessor implements PayloadProcessor {
     @Inject
     public ProcessDefinitionProcessor(ProjectLoader projectLoader,
                                       ImportsNormalizerFactory importsNormalizer,
-                                      ObjectMapper objectMapper, ProcessLogManager logManager) {
+                                      ObjectMapper objectMapper,
+                                      ProcessLogManager logManager) {
 
         this.projectLoader = projectLoader;
         this.importsNormalizer = importsNormalizer;
