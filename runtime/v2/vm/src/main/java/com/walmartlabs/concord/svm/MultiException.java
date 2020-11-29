@@ -20,6 +20,8 @@ package com.walmartlabs.concord.svm;
  * =====
  */
 
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.util.Collection;
 import java.util.stream.Collectors;
 
@@ -30,7 +32,7 @@ public class MultiException extends RuntimeException {
     private final Collection<Exception> causes;
 
     public MultiException(Collection<Exception> causes) {
-        super("Errors: " + toMessage(causes));
+        super("Errors: \n" + toMessage(causes));
         this.causes = causes;
     }
 
@@ -39,6 +41,14 @@ public class MultiException extends RuntimeException {
     }
 
     private static String toMessage(Collection<Exception> causes) {
-        return causes.stream().map(Throwable::getMessage).collect(Collectors.joining("\n"));
+        return causes.stream()
+                .map(MultiException::stacktraceToString)
+                .collect(Collectors.joining("\n"));
+    }
+
+    private static String stacktraceToString(Exception e) {
+        StringWriter sw = new StringWriter();
+        e.printStackTrace(new PrintWriter(sw));
+        return sw.toString();
     }
 }
