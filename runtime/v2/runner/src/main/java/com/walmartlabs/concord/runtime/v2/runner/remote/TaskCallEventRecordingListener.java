@@ -112,7 +112,9 @@ public class TaskCallEventRecordingListener implements TaskCallListener {
         m.put("name", taskName);
 
         m.put("correlationId", event.correlationId());
-
+        if (event.error() != null) {
+            m.put("error", event.error());
+        }
         return m;
     }
 
