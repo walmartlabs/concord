@@ -2,6 +2,11 @@
 
 ## [Unreleased]
 
+### Added
+
+- runtime-v2, concord-console: record `post` events for failed
+tasks, highlight failed tasks on the events tab.
+
 ### Changed
 
 - concord-console: now users should be correctly redirected to
