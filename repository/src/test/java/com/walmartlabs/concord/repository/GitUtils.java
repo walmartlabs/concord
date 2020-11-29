@@ -31,6 +31,10 @@ import java.nio.file.StandardCopyOption;
 
 public final class GitUtils {
 
+    /**
+     * Creates a new bare Git repository using data from the provided
+     * path.
+     */
     public static Path createBareRepository(Path data) throws Exception {
         // init bare repository
         Path tmp = Files.createTempDirectory("git-client-test");
@@ -57,6 +61,10 @@ public final class GitUtils {
         return repo;
     }
 
+    /**
+     * Creates a new branch in the specified bare Git repository and
+     * adds all files from the {@code src} directory.
+     */
     public static RevCommit createNewBranch(Path bareRepo, String branch, Path src) throws Exception {
         Path dir = Files.createTempDirectory("repo-tmp");
 
@@ -87,6 +95,10 @@ public final class GitUtils {
         return commit;
     }
 
+    /**
+     * Adds all files from the {@code src} directory, commits then to
+     * a bare Git repository and creates a new tag.
+     */
     public static RevCommit createNewTag(Path bareRepo, String tag, Path src) throws Exception {
         Path dir = Files.createTempDirectory("repo-tmp");
 
