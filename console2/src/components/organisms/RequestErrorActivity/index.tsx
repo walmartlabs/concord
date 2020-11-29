@@ -19,30 +19,31 @@
  */
 
 import * as React from 'react';
-import { useContext, useEffect } from 'react';
 import { Redirect } from 'react-router';
 
 import { RequestError } from '../../../api/common';
 import { RequestErrorMessage } from '../../molecules';
-import { logout, UserSessionContext } from '../../../session';
+import { useLocation } from 'react-router-dom';
 
 interface Props {
     error: RequestError;
 }
 
 export default ({ error }: Props) => {
-    const session = useContext(UserSessionContext);
+    const location = useLocation();
 
-    useEffect(() => {
-        const doIt = async () => {
-            if (error && error.status === 401) {
-                await logout(session, false);
-                return <Redirect to={'/unauthorized'} />;
-            }
-        };
-
-        doIt();
-    }, [error, session]);
+    if (error && error.status === 401) {
+        return (
+            <Redirect
+                to={{
+                    pathname: '/login',
+                    state: {
+                        from: location
+                    }
+                }}
+            />
+        );
+    }
 
     return <RequestErrorMessage error={error} />;
 };
