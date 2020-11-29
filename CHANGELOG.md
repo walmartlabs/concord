@@ -1,5 +1,14 @@
 # Change log
 
+## [Unreleased]
+
+### Changed
+
+- concord-console: now users should be correctly redirected to
+their destination page after login.
+
+
+
 ## [1.74.0] - 2020-11-24
 
 ### Added
