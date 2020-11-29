@@ -1,5 +1,45 @@
 # Change log
 
+## [1.74.0] - 2020-11-24
+
+### Added
+
+- concord-server: allow "any of [list]" conditions when matching
+process `requirements`;
+- concord-console, runtime-v2: a button to launch the form wizard
+from the process log tab;
+- concord-console, runtime-v2: link to download individual log
+segments;
+- concord-console, runtime-v2: individual form links.
+
+### Changed
+
+- concord-server, runtime-v2: correctly remove submitted forms;
+- runtime-v2: `set` now supports references to partially evaluated
+values (e.g. variables defined in the same `set` block), including
+nested keys;
+- concord-server: add transaction-aware versions of
+`ProjectManager#get` and `ProjectAccessManager#assertAccess` methods;
+- runtime-v2: now only resuming threads receive the resume event's
+payload. This fixes the issue with multiple `parallel` forms missing
+submitted data;
+- concord-agent, runtime-v2: make the runner responsible for log
+segment creation;
+- runtime-v2: fixed an issue when submitting a form can cause other
+unsubmitted forms to dissappear;
+- runtime-v2: fixed compilation of block steps when `error` is
+used.
+
+### Breaking
+
+- runtime-v2: `set` with nested keys now replaces the top-level
+reference. If `set` is called in a flow, the changes to nested data
+won't be visible in the caller flow unless `out` is used;
+- policy-engine, concord-server: rename `entity` policy's types for
+consistency.
+
+
+
 ## [1.73.0] - 2020-11-15
 
 ### Added

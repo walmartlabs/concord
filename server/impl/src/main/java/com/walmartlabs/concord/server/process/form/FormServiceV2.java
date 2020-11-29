@@ -38,6 +38,7 @@ import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
 import java.io.IOException;
+import java.nio.file.Path;
 import java.util.*;
 
 @Named
@@ -177,7 +178,8 @@ public class FormServiceV2 {
         }
 
         // remove the form when the process resumes
-        payload = payload.putHeader(Payload.RESUME_HOOKS, Collections.singletonList(() -> formManager.delete(processKey, formName)));
+        Path workDir = payload.getHeader(Payload.WORKSPACE_DIR);
+        payload = payload.putHeader(Payload.RESUME_HOOKS, Collections.singletonList(() -> formManager.delete(workDir, formName)));
 
         processManager.resume(payload);
     }

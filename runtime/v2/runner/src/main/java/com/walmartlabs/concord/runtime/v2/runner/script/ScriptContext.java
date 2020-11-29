@@ -105,6 +105,11 @@ public class ScriptContext implements Context {
     }
 
     @Override
+    public <T> T eval(Object v, Map<String, Object> additionalVariables, Class<T> type) {
+        return delegate.eval(v, additionalVariables, type);
+    }
+
+    @Override
     public void suspend(String eventName) {
         delegate.suspend(eventName);
     }

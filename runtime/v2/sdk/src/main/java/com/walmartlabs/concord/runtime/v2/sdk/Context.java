@@ -82,6 +82,11 @@ public interface Context {
     <T> T eval(Object v, Class<T> type);
 
     /**
+     * Same as {@link #eval(Object, Class)}, but allows providing additional variables.
+     */
+    <T> T eval(Object v, Map<String, Object> additionalVariables, Class<T> type);
+
+    /**
      * Suspends the current execution thread.
      * After the calling this method, the process will be stopped after
      * the current command's execution is complete.
@@ -95,8 +100,8 @@ public interface Context {
      * with the provided payload.
      *
      * @param eventName the name of the event on which the process is suspended on.
-     * @param payload passed to the {@link ReentrantTask#resume(ResumeEvent)} method
-     *              once the process is resumed.
+     * @param payload   passed to the {@link ReentrantTask#resume(ResumeEvent)} method
+     *                  once the process is resumed.
      * @apiNote unstable API, subject to change
      */
     void reentrantSuspend(String eventName, Map<String, Serializable> payload);

@@ -93,6 +93,8 @@ public class FormIT {
         assertTrue(fsr.isOk());
         assertTrue(fsr.getErrors() == null || fsr.getErrors().isEmpty());
 
+        assertEquals(0, proc.forms().size());
+
         pe = proc.waitForStatus(ProcessEntry.StatusEnum.FINISHED);
         assertEquals(ProcessEntry.StatusEnum.FINISHED, pe.getStatus());
 
