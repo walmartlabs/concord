@@ -62,11 +62,10 @@ public final class ClientUtils {
             } catch (ApiException e) {
                 exception = e;
 
-                log.warn("call error: '{}'", getErrorMessage(e));
-
                 if (e.getCode() >= 400 && e.getCode() < 500) {
                     break;
                 }
+                log.warn("call error: '{}'", getErrorMessage(e));
             } catch (Exception e) {
                 exception = e;
                 log.error("call error", e);
