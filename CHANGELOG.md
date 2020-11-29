@@ -9,6 +9,7 @@ tasks, highlight failed tasks on the events tab.
 
 ### Changed
 
+- runtime-v2: unwrap runtime exceptions produced by expressions;
 - concord-client: tidy up the error logging - don't log a
 separate `WARN` message when the server responds with an error;
 - runtime-v2: save original stacktraces when throwing a
