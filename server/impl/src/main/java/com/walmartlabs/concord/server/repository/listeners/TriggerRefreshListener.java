@@ -20,6 +20,7 @@ package com.walmartlabs.concord.server.repository.listeners;
  * =====
  */
 
+import com.walmartlabs.concord.imports.ImportsListener;
 import com.walmartlabs.concord.process.loader.ProjectLoader;
 import com.walmartlabs.concord.process.loader.model.ProcessDefinition;
 import com.walmartlabs.concord.server.org.project.ProjectValidator;
@@ -58,7 +59,7 @@ public class TriggerRefreshListener implements RepositoryRefreshListener {
     public void onRefresh(DSLContext ctx, RepositoryEntry repo, Path repoPath) throws Exception {
         log.info("refresh ['{}'] ->  triggers", repo.getId());
 
-        ProjectLoader.Result result = projectLoader.loadProject(repoPath, importsNormalizer.forProject(repo.getProjectId()));
+        ProjectLoader.Result result = projectLoader.loadProject(repoPath, importsNormalizer.forProject(repo.getProjectId()), ImportsListener.NOP_LISTENER);
 
         ProcessDefinition pd = result.projectDefinition();
         ProjectValidator.Result validationResult = ProjectValidator.validate(pd);

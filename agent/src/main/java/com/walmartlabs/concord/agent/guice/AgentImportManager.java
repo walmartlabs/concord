@@ -22,6 +22,7 @@ package com.walmartlabs.concord.agent.guice;
 
 import com.walmartlabs.concord.imports.ImportManager;
 import com.walmartlabs.concord.imports.Imports;
+import com.walmartlabs.concord.imports.ImportsListener;
 import com.walmartlabs.concord.repository.Snapshot;
 
 import java.nio.file.Path;
@@ -31,7 +32,7 @@ import java.util.List;
  * A wrapper type to avoid clashes with the Server's instance of a {@link ImportManager}.
  * TODO replace with a common Guice module
  */
-public class AgentImportManager implements ImportManager {
+public class AgentImportManager {
 
     private final ImportManager delegate;
 
@@ -39,8 +40,7 @@ public class AgentImportManager implements ImportManager {
         this.delegate = delegate;
     }
 
-    @Override
     public List<Snapshot> process(Imports imports, Path dest) throws Exception {
-        return delegate.process(imports, dest);
+        return delegate.process(imports, dest, ImportsListener.NOP_LISTENER);
     }
 }

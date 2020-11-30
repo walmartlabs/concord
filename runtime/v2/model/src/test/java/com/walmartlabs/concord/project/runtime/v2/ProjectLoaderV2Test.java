@@ -25,6 +25,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.walmartlabs.concord.imports.Import;
 import com.walmartlabs.concord.imports.ImportManager;
+import com.walmartlabs.concord.imports.ImportsListener;
 import com.walmartlabs.concord.runtime.v2.NoopImportsNormalizer;
 import com.walmartlabs.concord.runtime.v2.ProjectLoaderV2;
 import com.walmartlabs.concord.runtime.v2.model.Checkpoint;
@@ -49,7 +50,7 @@ public class ProjectLoaderV2Test {
         ProjectLoaderV2 loader = new ProjectLoaderV2(mock(ImportManager.class));
 
         URI uri = ClassLoader.getSystemResource("multiProjectFile").toURI();
-        ProjectLoaderV2.Result result = loader.load(Paths.get(uri), new NoopImportsNormalizer());
+        ProjectLoaderV2.Result result = loader.load(Paths.get(uri), new NoopImportsNormalizer(), ImportsListener.NOP_LISTENER);
         assertNotNull(result);
         assertNotNull(result.getProjectDefinition());
 
