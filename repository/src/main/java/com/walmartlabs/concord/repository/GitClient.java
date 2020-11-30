@@ -4,14 +4,14 @@ package com.walmartlabs.concord.repository;
  * *****
  * Concord
  * -----
- * Copyright (C) 2017 - 2018 Walmart Inc.
+ * Copyright (C) 2017 - 2020 Walmart Inc.
  * -----
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- *
+ * 
  *      http://www.apache.org/licenses/LICENSE-2.0
- *
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -20,7 +20,6 @@ package com.walmartlabs.concord.repository;
  * =====
  */
 
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.walmartlabs.concord.common.IOUtils;
 import com.walmartlabs.concord.common.secret.BinaryDataSecret;
@@ -28,7 +27,7 @@ import com.walmartlabs.concord.common.secret.KeyPair;
 import com.walmartlabs.concord.common.secret.UsernamePassword;
 import com.walmartlabs.concord.sdk.Secret;
 import org.eclipse.jgit.lib.ObjectId;
-import org.eclipse.jgit.transport.RefSpec;
+import org.immutables.value.Value;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -36,23 +35,19 @@ import java.io.*;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.time.Duration;
 import java.util.*;
 import java.util.concurrent.*;
 
 import static java.nio.file.attribute.PosixFilePermission.OWNER_EXECUTE;
 import static java.nio.file.attribute.PosixFilePermission.OWNER_READ;
-import static org.eclipse.jgit.lib.Constants.OBJECT_ID_STRING_LENGTH;
 
-/**
- * A GIT CLI wrapper. Most of the code was lifted from Jenkins' git-plugin.
- */
 public class GitClient {
 
     private static final Logger log = LoggerFactory.getLogger(GitClient.class);
 
     private static final int SUCCESS_EXIT_CODE = 0;
 
-    private final long defaultTimeout;
     private final GitClientConfiguration cfg;
 
     private final List<String> sensitiveData;
@@ -62,11 +57,14 @@ public class GitClient {
         this.cfg = cfg;
         this.sensitiveData = cfg.oauthToken() != null ? Collections.singletonList(cfg.oauthToken()) : Collections.emptyList();
         this.executor = Executors.newCachedThreadPool();
-        this.defaultTimeout = cfg.defaultOperationTimeout().toMillis();
     }
 
     public RepositoryInfo getInfo(Path path) {
-        String result = launchCommand(path, defaultTimeout, "log", "-1", "--format=%H%n%an (%ae)%n%s%n%b");
+        String result = exec(Command.builder()
+                .workDir(path)
+                .timeout(cfg.defaultOperationTimeout())
+                .addArgs("log", "-1", "--format=%H%n%an (%ae)%n%s%n%b")
+                .build());
         String[] info = result.split("\n");
         if (info.length < 2) {
             return null;
@@ -80,114 +78,243 @@ public class GitClient {
         return new RepositoryInfo(id, message.toString(), author);
     }
 
-    public String fetch(String uri, String branch, String commitId, Secret secret, Path dest) {
-        return fetch(uri, branch, commitId, true, secret, false, dest);
-    }
-
-    public String fetch(String uri, String branch, String commitId, boolean detached, Secret secret, boolean checkRemoteCommitId, Path dest) {
-        // can use shallow clone only with branch/tag
-        boolean shallow = commitId == null && cfg.shallowClone();
-        boolean hasRepo = hasGitRepo(dest);
-
-        if (!hasRepo) {
-            cloneCommand(uri, secret, shallow, dest);
+    public FetchResult fetch(FetchRequest req) {
+        if (req.commitId() == null && req.branchOrTag() == null) {
+            throw new IllegalArgumentException("Specify branch, tag or commit Id.");
         }
 
-        launchCommand(dest, defaultTimeout, "config", "remote.origin.url", uri);
-
-        boolean alreadyFetched = false;
-        if (hasRepo && (checkRemoteCommitId || commitId != null)) {
-            String currentCommitId = getCurrentCommitId(dest);
-            if (commitId != null) {
-                alreadyFetched = commitId.equalsIgnoreCase(currentCommitId);
-            } else {
-                String remoteCommitId = getRemoteCommitId(uri, branch, dest, secret);
-                alreadyFetched = currentCommitId != null && currentCommitId.equalsIgnoreCase(remoteCommitId);
-            }
-        }
-
-        if (!alreadyFetched) {
-            List<RefSpec> refspecs = Collections.singletonList(new RefSpec("+refs/heads/*:refs/remotes/origin/*"));
-            fetchCommand(uri, refspecs, secret, shallow, dest);
-        }
-
-        String rev;
-        if (commitId != null) {
-            rev = getCommitRevision(commitId, dest).name();
-        } else if (detached) {
-            rev = getBranchRevision(branch, dest).name();
-        } else {
-            rev = branch;
-        }
-
-        checkoutCommand(rev, dest);
-
-        launchCommand(dest, defaultTimeout, "clean", "-fdx");
-
-        if (hasGitModules(dest)) {
-            fetchSubmodules(secret, dest);
-
-            launchCommand(dest, defaultTimeout, "submodule", "foreach", "git", "reset", "--hard");
-        }
-        return rev;
-    }
-
-    private String getCurrentCommitId(Path dest) {
-        try {
-            return launchCommand(dest, defaultTimeout, "log", "-1", "--format=%H")
-                    .replace("\n", "");
-        } catch (Exception e) {
-            // ignore
-        }
-        return null;
-    }
-
-    private String getRemoteCommitId(String url, String branch, Path dest, Secret secret) {
-        List<String> args = new ArrayList<>();
-        args.add("ls-remote");
-        args.add("--refs");
-        args.add(processUrl(url, secret));
-        args.add(branch);
+        assertSecret(req.url(), req.secret());
 
         try {
-            String result = launchCommandWithCredentials(dest, defaultTimeout, args, secret);
-            if (result.length() < OBJECT_ID_STRING_LENGTH) {
-                return null;
+            boolean exists = Files.exists(req.destination().resolve(".git"));
+            if (!exists) {
+                Files.createDirectories(req.destination());
+
+                init(req.destination());
             }
-            return ObjectId.fromString(result.substring(0, OBJECT_ID_STRING_LENGTH)).name();
+
+            configure(req.destination());
+            configureRemote(req.destination(), updateUrl(req.url(), req.secret()));
+            Ref ref = getHeadRef(req.destination(), req.branchOrTag(), req.secret());
+            configureFetch(req.destination(), getRefSpec(ref));
+
+            // fetch
+            boolean effectiveShallow = req.shallow() && req.commitId() == null;
+            fetch(req.destination(), effectiveShallow, req.secret());
+
+            checkout(req.destination(), req.commitId() != null ? req.commitId() : req.branchOrTag());
+            if (req.commitId() == null && ref != null) {
+                reset(req.destination(), ref.tag() ? "origin/tags/" + ref.name() : "origin/" + ref.name());
+            }
+
+            cleanup(req.destination());
+
+            if (req.includeSubmodules() && hasSubmodules(req.destination())) {
+                updateSubmodules(req.destination(), req.secret());
+                resetSubmodules(req.destination());
+            }
+        } catch (RepositoryException e) {
+            throw e;
         } catch (Exception e) {
-            log.error("getRemoteCommitId ['{}'] -> error", branch, e);
+            log.error("fetch ['{}'] -> error", req, e);
+            throw new RepositoryException("Error while fetching a repository: " + e.getMessage());
         }
-        return null;
+
+        return FetchResult.builder()
+                .head(revParse(req.destination(), "HEAD"))
+                .build();
     }
 
-    private void fetchCommand(String url,
-                              List<RefSpec> refspecs,
-                              Secret secret,
-                              boolean shallow,
-                              Path dest) {
-        log.info("Fetching upstream changes from '{}'", hideSensitiveData(url));
+    private void init(Path workDir) {
+        exec(Command.builder()
+                .workDir(workDir)
+                .timeout(cfg.defaultOperationTimeout())
+                .addArgs("init")
+                .build());
+    }
 
+    private void configure(Path workDir) {
+        exec(Command.builder()
+                .workDir(workDir)
+                .timeout(cfg.defaultOperationTimeout())
+                .addArgs("config", "advice.detachedHead", "false")
+                .build());
+    }
+
+    private void configureRemote(Path workDir, String url) {
+        exec(Command.builder()
+                .workDir(workDir)
+                .timeout(cfg.defaultOperationTimeout())
+                .addArgs("config", "remote.origin.url", url)
+                .build());
+    }
+
+    private void configureFetch(Path workDir, String refSpec) {
+        exec(Command.builder()
+                .workDir(workDir)
+                .timeout(cfg.defaultOperationTimeout())
+                .addArgs("config", "--replace-all", "remote.origin.fetch", refSpec)
+                .build());
+    }
+
+    private void fetch(Path workDir, boolean shallow, Secret secret) {
         List<String> args = new ArrayList<>();
         args.add("fetch");
         if (shallow) {
             args.add("--depth=1");
+        } else if (isShallowRepo(workDir)){
+            args.add("--unshallow");
         }
+        args.add("origin");
 
-        args.add("--tags");
-
-        args.add(processUrl(url, secret));
-
-        for (RefSpec r : refspecs) {
-            args.add(r.toString());
-        }
-
-        launchCommandWithCredentials(dest, cfg.fetchTimeout().toMillis(), args, secret);
+        execWithCredentials(Command.builder()
+                .workDir(workDir)
+                .timeout(cfg.fetchTimeout())
+                .addAllArgs(args)
+                .build(), secret);
     }
 
-    private void fetchSubmodules(Secret secret, Path dest) {
-        launchCommand(dest, defaultTimeout, "submodule", "init");
-        launchCommand(dest, defaultTimeout, "submodule", "sync");
+    private boolean isShallowRepo(Path workDir) {
+        String result = exec(Command.builder()
+                .workDir(workDir)
+                .timeout(cfg.defaultOperationTimeout())
+                .addArgs("rev-parse", "--is-shallow-repository")
+                .build());
+
+        return Boolean.parseBoolean(result.trim());
+    }
+
+    private void checkout(Path workDir, String rev) {
+        exec(Command.builder()
+                .workDir(workDir)
+                .timeout(cfg.defaultOperationTimeout())
+                .addArgs("checkout", "-q", "-f", rev)
+                .build());
+    }
+
+    private void reset(Path workDir, String rev) {
+        exec(Command.builder()
+                .workDir(workDir)
+                .timeout(cfg.defaultOperationTimeout())
+                .addArgs("reset", "--hard", rev)
+                .build());
+    }
+
+    private void cleanup(Path workDir) {
+        exec(Command.builder()
+                .workDir(workDir)
+                .timeout(cfg.defaultOperationTimeout())
+                .addArgs("clean", "-fdx")
+                .build());
+    }
+
+    private String revParse(Path workDir, String rev) {
+        String result = exec(Command.builder()
+                .workDir(workDir)
+                .timeout(cfg.defaultOperationTimeout())
+                .addArgs("rev-parse", rev)
+                .build());
+        String line = result.trim();
+        if (line.isEmpty()) {
+            throw new RepositoryException("rev-parse no content returned for '" + rev + "'");
+        }
+        return ObjectId.fromString(line).name();
+    }
+
+    private List<Ref> getRefs(Path workDir, String branchOrTag, Secret secret) {
+        String result = execWithCredentials(Command.builder()
+                .workDir(workDir)
+                .timeout(cfg.defaultOperationTimeout())
+                .addArgs("ls-remote", "--symref", "origin", branchOrTag)
+                .build(), secret);
+
+        List<Ref> refs = new ArrayList<>();
+
+        try (BufferedReader reader = new BufferedReader(new StringReader(result))) {
+            while (true) {
+                String line = reader.readLine();
+                if (line == null) {
+                    break;
+                }
+
+                String[] commitRef = line.split("\t");
+                if (commitRef.length != 2) {
+                    throw new RepositoryException("invalid response: " + result);
+                }
+
+                refs.add(Ref.builder()
+                        .commitId(commitRef[0].trim())
+                        .ref(commitRef[1].trim())
+                        .name(branchOrTag)
+                        .build());
+            }
+        } catch (IOException e) {
+            throw new RepositoryException("Error parsing result: " + result, e);
+        }
+
+        return refs;
+    }
+
+    private Ref getHeadRef(Path workDir, String branchOrTag, Secret secret) {
+        if (branchOrTag == null) {
+            return null;
+        }
+
+        String branchHeadRef = "refs/heads/" + branchOrTag;
+        String tagRef = "refs/tags/" + branchOrTag;
+        return getRefs(workDir, branchOrTag, secret).stream()
+                .filter(r -> r.ref().equalsIgnoreCase(branchHeadRef) || r.ref().equalsIgnoreCase(tagRef))
+                .findFirst()
+                .orElseThrow(() -> new RepositoryException("Can't find head ref for '" + branchOrTag + "'"));
+    }
+
+    private String getRefSpec(Ref ref) {
+        if (ref == null) {
+            return "+refs/heads/*:refs/remotes/origin/*";
+        }
+        if (ref.tag()) {
+            return String.format("+refs/tags/%s:refs/remotes/origin/tags/%s", ref.name(), ref.name());
+        } else {
+            return String.format("+refs/heads/%s:refs/remotes/origin/%s", ref.name(), ref.name());
+        }
+    }
+
+    private String updateUrl(String url, Secret secret) {
+        url = url.trim();
+
+        if (secret != null || cfg.oauthToken() == null || url.contains("@") || !url.startsWith("https://")) {
+            return url;
+        }
+
+        return "https://" + cfg.oauthToken() + "@" + url.substring("https://".length());
+    }
+
+    private void updateSubmodules(Path workDir, Secret secret) {
+        exec(Command.builder()
+                .workDir(workDir)
+                .timeout(cfg.defaultOperationTimeout())
+                .addArgs("submodule", "init")
+                .build());
+        exec(Command.builder()
+                .workDir(workDir)
+                .timeout(cfg.defaultOperationTimeout())
+                .addArgs("submodule", "sync")
+                .build());
+
+        String[] modulePaths;
+
+        try {
+            modulePaths = exec(
+                    Command.builder()
+                            .workDir(workDir)
+                            .timeout(cfg.defaultOperationTimeout())
+                            .addArgs("config", "--file", ".gitmodules", "--name-only", "--get-regexp", "path")
+                    .build())
+                    .split("\\r?\\n");
+        } catch (RepositoryException e) {
+            log.warn("updateSubmodules ['{}'] -> error while retrieving the list of submodules: {}", workDir, e.getMessage());
+            return;
+        }
 
         List<String> args = new ArrayList<>();
         args.add("submodule");
@@ -196,16 +323,6 @@ public class GitClient {
         args.add("--init");
         args.add("--recursive");
 
-        String[] modulePaths;
-
-        try {
-            modulePaths = launchCommand(dest, defaultTimeout, "config", "--file", ".gitmodules", "--name-only", "--get-regexp", "path")
-                    .split("\\r?\\n");
-        } catch (RepositoryException e) {
-            log.warn("fetchSubmodules ['{}'] -> error while retrieving the list of submodules: {}", dest, e.getMessage());
-            return;
-        }
-
         for (String mp : modulePaths) {
             if (mp.trim().isEmpty()) {
                 continue;
@@ -213,195 +330,133 @@ public class GitClient {
 
             String moduleName = mp.substring("submodule.".length(), mp.length() - ".path".length());
 
-            // Find the URL for this submodule
-            String url = getSubmoduleUrl(dest, moduleName);
+            String url = getSubmoduleUrl(workDir, moduleName);
             if (url == null) {
                 throw new RepositoryException("Empty repository for " + moduleName);
             }
 
-            String pUrl = processUrl(url, secret);
+            String pUrl = updateUrl(url, secret);
             if (!pUrl.equals(url)) {
-                launchCommand(dest, defaultTimeout, "config", "submodule." + moduleName + ".url", pUrl);
+                exec(Command.builder()
+                        .workDir(workDir)
+                        .timeout(cfg.defaultOperationTimeout())
+                        .addArgs("config", "submodule." + moduleName + ".url", pUrl)
+                        .build());
             }
 
-            // Find the path for this submodule
-            String sModulePath = getSubmodulePath(dest, moduleName);
+            String sModulePath = getSubmodulePath(workDir, moduleName);
 
             List<String> perModuleArgs = new ArrayList<>(args);
             perModuleArgs.add(sModulePath);
-            launchCommandWithCredentials(dest, cfg.fetchTimeout().toMillis(), perModuleArgs, secret);
+            execWithCredentials(Command.builder()
+                            .workDir(workDir)
+                            .timeout(cfg.fetchTimeout())
+                            .addAllArgs(perModuleArgs)
+                            .build(),
+                    secret);
         }
     }
 
-    private String getSubmoduleUrl(Path dest, String name) {
-        String result = launchCommand(dest, defaultTimeout, "config", "--get", "submodule." + name + ".url");
+    private void resetSubmodules(Path workDir) {
+        exec(Command.builder()
+                .workDir(workDir)
+                .timeout(cfg.defaultOperationTimeout())
+                .addArgs("submodule", "foreach", "git", "reset", "--hard")
+                .build());
+    }
+
+    private String getSubmoduleUrl(Path workDir, String name) {
+        String result = exec(Command.builder()
+                .workDir(workDir)
+                .timeout(cfg.defaultOperationTimeout())
+                .addArgs("config", "--get", "submodule." + name + ".url")
+                .build());
         String s = firstLine(result);
         return s != null ? s.trim() : null;
     }
 
-    private String getSubmodulePath(Path dest, String name) {
-        String result = launchCommand(dest, defaultTimeout, "config", "-f", ".gitmodules", "--get", "submodule." + name + ".path");
+    private String getSubmodulePath(Path workDir, String name) {
+        String result = exec(Command.builder()
+                .workDir(workDir)
+                .timeout(cfg.defaultOperationTimeout())
+                .addArgs("config", "-f", ".gitmodules", "--get", "submodule." + name + ".path")
+                .build());
         String s = firstLine(result);
         return s != null ? s.trim() : null;
     }
 
-    private ObjectId getCommitRevision(String commitId, Path dest) {
-        try {
-            return revParse(commitId, dest);
-        } catch (RepositoryException e) {
-            throw new RepositoryException("Couldn't find any revision to build. Verify the repository and commitId configuration.");
-        }
-    }
+    private String exec(Command command) {
+        List<String> cmd = new ArrayList<>(command.args().size() + 1);
+        cmd.add("git");
+        cmd.addAll(command.args());
 
-    private ObjectId revParse(String revName, Path dest) {
-        String arg = revName + "^{commit}";
-        String result = launchCommand(dest, defaultTimeout, "rev-parse", arg);
-        String line = result.trim();
-        if (line.isEmpty()) {
-            throw new RepositoryException("rev-parse no content returned for " + revName);
-        }
-        return ObjectId.fromString(line);
-    }
+        ProcessBuilder pb = new ProcessBuilder(cmd)
+                .directory(command.workDir().toFile());
 
-    private ObjectId getBranchRevision(String branchSpec, Path dest) {
+        Map<String, String> env = pb.environment();
+        env.putAll(command.env());
 
-        // if it doesn't contain '/' then it could be an unqualified branch
-        if (!branchSpec.contains("/")) {
-
-            // <tt>BRANCH</tt> is recognized as a shorthand of <tt>*/BRANCH</tt>
-            // so check all remotes to fully qualify this branch spec
-            String fqbn = "origin/" + branchSpec;
-            ObjectId result = getHeadRevision(fqbn, dest);
-            if (result != null) {
-                return result;
-            }
-        } else {
-            // either the branch is qualified (first part should match a valid remote)
-            // or it is still unqualified, but the branch name contains a '/'
-            String repository = "origin";
-            String fqbn;
-            if (branchSpec.startsWith(repository + "/")) {
-                fqbn = "refs/remotes/" + branchSpec;
-            } else if (branchSpec.startsWith("remotes/" + repository + "/")) {
-                fqbn = "refs/" + branchSpec;
-            } else if (branchSpec.startsWith("refs/heads/")) {
-                fqbn = "refs/remotes/" + repository + "/" + branchSpec.substring("refs/heads/".length());
-            } else {
-                //Try branchSpec as it is - e.g. "refs/tags/mytag"
-                fqbn = branchSpec;
-            }
-
-            ObjectId result = getHeadRevision(fqbn, dest);
-            if (result != null) {
-                return result;
-            }
-
-            //Check if exact branch name <branchSpec> exists
-            fqbn = "refs/remotes/" + repository + "/" + branchSpec;
-            result = getHeadRevision(fqbn, dest);
-            if (result != null) {
-                return result;
-            }
+        // Prevent interactive credential input.
+        if (!env.containsKey("GIT_ASKPASS")) {
+            env.put("GIT_ASKPASS", "echo");
         }
 
-        ObjectId result = getHeadRevision(branchSpec, dest);
-        if (result != null) {
-            return result;
-        }
-
-        throw new RepositoryException("Couldn't find any revision to build. Verify the repository and branch configuration.");
-    }
-
-    private ObjectId getHeadRevision(String branchSpec, Path dest) {
-        try {
-            return revParse(branchSpec, dest);
-        } catch (RepositoryException e) {
-            // ignore
-            return null;
-        }
-    }
-
-    private String firstLine(String result) {
-        BufferedReader reader = new BufferedReader(new StringReader(result));
-        String line;
-        try {
-            line = reader.readLine();
-            if (line == null) {
-                return null;
-            }
-            if (reader.readLine() != null) { // NOSONAR
-                throw new RepositoryException("Unexpected multiple lines: " + result);
-            }
-        } catch (IOException e) {
-            throw new RepositoryException("Error parsing result", e);
-        }
-
-        return line;
-    }
-
-    private boolean hasGitRepo(Path dest) {
-        return Files.exists(dest.resolve(".git"));
-    }
-
-    private boolean hasGitModules(Path dest) {
-        return Files.exists(dest.resolve(".gitmodules"));
-    }
-
-    private void cloneCommand(String url, Secret secret, boolean shallow, Path dest) {
-        log.info("Cloning repository '{}' into '{}'", hideSensitiveData(url), dest.toString());
+        log.info("> {}", hideSensitiveData(String.join(" ", cmd)));
 
         try {
-            if (Files.notExists(dest)) {
-                Files.createDirectories(dest);
+            Process p = pb.start();
+
+            Future<StringBuilder> out = executor.submit(() -> {
+                StringBuilder sb = new StringBuilder();
+                try (BufferedReader reader = new BufferedReader(new InputStreamReader(p.getInputStream()))) {
+                    String line;
+                    while ((line = reader.readLine()) != null) {
+                        log.info("GIT (stdout): {}", hideSensitiveData(line));
+                        sb.append(line).append("\n");
+                    }
+                }
+                return sb;
+            });
+
+            Future<StringBuilder> error = executor.submit(() -> {
+                StringBuilder sb = new StringBuilder();
+                try (BufferedReader reader = new BufferedReader(new InputStreamReader(p.getErrorStream()))) {
+                    String line;
+                    while ((line = reader.readLine()) != null) {
+                        log.info("GIT (stderr): {}", hideSensitiveData(line));
+                        sb.append(line).append("\n");
+                    }
+                }
+                return sb;
+            });
+
+            if (!p.waitFor(command.timeout().toMillis(), TimeUnit.MILLISECONDS)) {
+                p.destroy();
+                throw new RepositoryException(String.format("git operation timed out after %sms", command.timeout()));
             }
 
-            // init
-            launchCommand(dest, defaultTimeout, "init");
-
-            // fetch
-            List<RefSpec> refspecs = Collections.singletonList(new RefSpec("+refs/heads/*:refs/remotes/origin/*"));
-            fetchCommand(url, refspecs, secret, shallow, dest);
-
-            launchCommand(dest, defaultTimeout, "config", "remote.origin.url", url);
-
-            for (RefSpec refSpec : refspecs) {
-                launchCommand(dest, defaultTimeout, "config", "--add", "remote.origin.fetch", refSpec.toString());
+            int code = p.exitValue();
+            if (code != SUCCESS_EXIT_CODE) {
+                String msg = String.format("code: %d, %s", code, hideSensitiveData(error.get().toString()));
+                log.warn("exec ['{}'] -> finished with code {}, error: '{}'",
+                        hideSensitiveData(String.join(" ", cmd)), code, msg);
+                throw new RepositoryException(msg);
             }
-        } catch (IOException e) {
-            log.error("cloneCommand ['{}'] -> error", dest, e);
-            throw new RepositoryException("clone repository error: " + e.getMessage());
+
+            return out.get().toString();
+        } catch (ExecutionException | IOException | InterruptedException e) { // NOSONAR
+            log.error("exec ['{}'] -> error", hideSensitiveData(String.join(" ", cmd)), e);
+            throw new RepositoryException("git operation error: " + e.getMessage());
         }
     }
 
-    private String processUrl(String url, Secret secret) {
-        if (secret == null && url.trim().startsWith("https://") && cfg.oauthToken() != null && !url.contains("@")) {
-            return "https://" + cfg.oauthToken() + "@" + url.substring("https://".length());
-        }
-
-        if (secret instanceof BinaryDataSecret && !url.trim().startsWith("https://")) {
-            throw new RepositoryException("Tokens can only be used for https:// Git URLs");
-        }
-
-        return url;
-    }
-
-    private void checkoutCommand(String ref, Path dest) {
-        log.info("Checking out revision '{}'", ref);
-
-        launchCommand(dest, defaultTimeout, "checkout", "-f", ref);
-    }
-
-    private String launchCommandWithCredentials(Path workDir,
-                                                long timeout,
-                                                List<String> args,
-                                                Secret secret) {
-
+    private String execWithCredentials(Command cmd, Secret secret) {
         Path key = null;
         Path ssh = null;
         Path askpass = null;
 
         Map<String, String> env = new HashMap<>();
-        env.put("GIT_TERMINAL_PROMPT", "0"); // Don't prompt for auth from command line git
+        env.put("GIT_TERMINAL_PROMPT", "0");
 
         try {
             if (secret instanceof KeyPair) {
@@ -413,8 +468,7 @@ public class GitClient {
                 env.put("GIT_SSH", ssh.toAbsolutePath().toString());
                 env.put("GIT_SSH_COMMAND", ssh.toAbsolutePath().toString());
 
-                // supply a dummy value for DISPLAY if not already present
-                // or else ssh will not invoke SSH_ASKPASS
+                // supply a dummy value for DISPLAY so ssh will invoke SSH_ASKPASS
                 if (!env.containsKey("DISPLAY")) {
                     env.put("DISPLAY", ":");
                 }
@@ -442,7 +496,9 @@ public class GitClient {
             env.put("GIT_HTTP_LOW_SPEED_LIMIT", String.valueOf(cfg.httpLowSpeedLimit()));
             env.put("GIT_HTTP_LOW_SPEED_TIME", String.valueOf(cfg.httpLowSpeedTime().getSeconds()));
 
-            return launchCommand(workDir, env, timeout, args);
+            return exec(Command.builder().from(cmd)
+                    .putAllEnv(env)
+                    .build());
         } catch (IOException e) {
             throw new RepositoryException("Failed to setup credentials", e);
         } finally {
@@ -452,102 +508,15 @@ public class GitClient {
         }
     }
 
-    private String launchCommand(Path workDir,
-                                 long timeout,
-                                 String... args) throws RepositoryException {
-        List<String> listArgs = Arrays.asList(args);
-        Map<String, String> env = new HashMap<>();
-        return launchCommand(workDir, env, timeout, listArgs);
-    }
-
-    private String launchCommand(Path workDir,
-                                 Map<String, String> envVars,
-                                 long timeout,
-                                 List<String> args) {
-
-        List<String> cmd = ImmutableList.<String>builder().add("git").addAll(args).build();
-
-        ProcessBuilder pb = new ProcessBuilder(cmd)
-                .directory(workDir.toFile());
-
-        Map<String, String> env = pb.environment();
-        env.putAll(envVars);
-
-        // If we don't have credentials, but the requested URL requires them,
-        // it is possible for Git to hang forever waiting for interactive
-        // credential input. Prevent this by setting GIT_ASKPASS to "echo"
-        // if we haven't already set it.
-        if (!env.containsKey("GIT_ASKPASS")) {
-            env.put("GIT_ASKPASS", "echo");
+    private String hideSensitiveData(String s) {
+        if (s == null) {
+            return null;
         }
 
-        log.info("> {}", hideSensitiveData(String.join(" ", cmd)));
-
-        try {
-            Process p = pb.start();
-
-            Future<StringBuilder> out = executor.submit(() -> {
-                StringBuilder sb = new StringBuilder();
-                try (BufferedReader reader = new BufferedReader(new InputStreamReader(p.getInputStream()))) {
-                    String line;
-                    while ((line = reader.readLine()) != null) {
-                        log.info("GIT: {}", hideSensitiveData(line));
-                        sb.append(line).append("\n");
-                    }
-                }
-                return sb;
-            });
-
-            Future<StringBuilder> error = executor.submit(() -> {
-                StringBuilder sb = new StringBuilder();
-                try (BufferedReader reader = new BufferedReader(new InputStreamReader(p.getErrorStream()))) {
-                    String line;
-                    while ((line = reader.readLine()) != null) {
-                        sb.append(line).append("\n");
-                    }
-                }
-                return sb;
-            });
-
-            if (!p.waitFor(timeout, TimeUnit.MILLISECONDS)) {
-                p.destroy();
-                throw new RepositoryException(String.format("Git operation timed out after %sms", timeout));
-            }
-
-            int code = p.exitValue();
-            if (code != SUCCESS_EXIT_CODE) {
-                String msg = "code: " + code + ", " + hideSensitiveData(error.get().toString());
-                log.warn("launchCommand ['{}'] -> finished with code {}, error: '{}'",
-                        hideSensitiveData(String.join(" ", cmd)), code, msg);
-                throw new RepositoryException(msg);
-            }
-
-            return out.get().toString();
-        } catch (ExecutionException | IOException | InterruptedException e) { // NOSONAR
-            log.error("launchCommand ['{}'] -> error", hideSensitiveData(String.join(" ", cmd)), e);
-            throw new RepositoryException("git operation error: " + e.getMessage());
+        for (String p : sensitiveData) {
+            s = s.replaceAll(p, "***");
         }
-    }
-
-    private Path createUnixStandardAskpass(UsernamePassword creds) throws IOException {
-        Path askpass = IOUtils.createTempFile("pass", ".sh");
-        try (PrintWriter w = new PrintWriter(askpass.toFile(), Charset.defaultCharset().toString())) {
-            w.println("#!/bin/sh");
-            w.println("case \"$1\" in");
-            w.println("Username*) echo '" + quoteUnixCredentials(creds.getUsername()) + "' ;;");
-            w.println("Password*) echo '" + quoteUnixCredentials(new String(creds.getPassword())) + "' ;;");
-            w.println("esac");
-        }
-        Files.setPosixFilePermissions(askpass, ImmutableSet.of(OWNER_READ, OWNER_EXECUTE));
-        return askpass;
-    }
-
-    private Path createSshKeyFile(KeyPair keyPair) throws IOException {
-        Path keyFile = IOUtils.createTempFile("ssh", ".key");
-
-        Files.write(keyFile, keyPair.getPrivateKey());
-
-        return keyFile;
+        return s;
     }
 
     private Path createUnixGitSSH(Path key) throws IOException {
@@ -568,13 +537,34 @@ public class GitClient {
         return ssh;
     }
 
-    private String quoteUnixCredentials(String str) {
-        // Assumes string will be used inside of single quotes, as it will
-        // only replace "'" substrings.
-        return str.replace("'", "'\\''");
+    private static void assertSecret(String url, Secret secret) {
+        if (secret instanceof BinaryDataSecret && !url.trim().startsWith("https://")) {
+            throw new RepositoryException("Tokens can only be used for https:// Git URLs");
+        }
     }
 
-    private void deleteTempFile(Path tempFile) {
+    private static Path createUnixStandardAskpass(UsernamePassword creds) throws IOException {
+        Path askpass = IOUtils.createTempFile("pass", ".sh");
+        try (PrintWriter w = new PrintWriter(askpass.toFile(), Charset.defaultCharset().toString())) {
+            w.println("#!/bin/sh");
+            w.println("case \"$1\" in");
+            w.println("Username*) echo '" + quoteUnixCredentials(creds.getUsername()) + "' ;;");
+            w.println("Password*) echo '" + quoteUnixCredentials(new String(creds.getPassword())) + "' ;;");
+            w.println("esac");
+        }
+        Files.setPosixFilePermissions(askpass, ImmutableSet.of(OWNER_READ, OWNER_EXECUTE));
+        return askpass;
+    }
+
+    private static Path createSshKeyFile(KeyPair keyPair) throws IOException {
+        Path keyFile = IOUtils.createTempFile("ssh", ".key");
+
+        Files.write(keyFile, keyPair.getPrivateKey());
+
+        return keyFile;
+    }
+
+    private static void deleteTempFile(Path tempFile) {
         if (tempFile == null) {
             return;
         }
@@ -586,14 +576,73 @@ public class GitClient {
         }
     }
 
-    private String hideSensitiveData(String s) {
-        if (s == null) {
-            return null;
+    private static String quoteUnixCredentials(String str) {
+        // Assumes string will be used inside of single quotes, as it will
+        // only replace "'" substrings.
+        return str.replace("'", "'\\''");
+    }
+
+    private static boolean hasSubmodules(Path workDir) {
+        return Files.exists(workDir.resolve(".gitmodules"));
+    }
+
+    private static String firstLine(String result) {
+        BufferedReader reader = new BufferedReader(new StringReader(result));
+        String line;
+        try {
+            line = reader.readLine();
+            if (line == null) {
+                return null;
+            }
+            if (reader.readLine() != null) { // NOSONAR
+                throw new RepositoryException("Unexpected multiple lines: " + result);
+            }
+        } catch (IOException e) {
+            throw new RepositoryException("Error parsing result", e);
         }
 
-        for (String p : sensitiveData) {
-            s = s.replaceAll(p, "***");
+        return line;
+    }
+
+    @Value.Immutable
+    @Value.Style(jdkOnly = true)
+    interface Command {
+
+        Path workDir();
+
+        @Value.Default
+        default List<String> args() {
+            return Collections.emptyList();
         }
-        return s;
+
+        @Value.Default
+        default Map<String, String> env() {
+            return Collections.emptyMap();
+        }
+
+        Duration timeout();
+
+        static ImmutableCommand.Builder builder() {
+            return ImmutableCommand.builder();
+        }
+    }
+
+    @Value.Immutable
+    @Value.Style(jdkOnly = true)
+    interface Ref {
+
+        String commitId();
+
+        String ref();
+
+        String name();
+
+        default boolean tag() {
+            return ref().equals("refs/tags/" + name());
+        }
+
+        static ImmutableRef.Builder builder() {
+            return ImmutableRef.builder();
+        }
     }
 }

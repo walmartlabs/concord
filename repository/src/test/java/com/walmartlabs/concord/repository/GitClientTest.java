@@ -31,6 +31,7 @@ import org.junit.Test;
 
 import java.io.IOException;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.Duration;
 
@@ -63,7 +64,6 @@ public class GitClientTest {
     @Before
     public void init() {
         client = new GitClient(GitClientConfiguration.builder()
-                .shallowClone(true)
                 .oauthToken(System.getenv("GIT_TEST_OAUTH_TOKEN"))
                 .sshTimeout(Duration.ofMinutes(10))
                 .sshTimeoutRetryCount(1)
@@ -104,7 +104,7 @@ public class GitClientTest {
         // with default oauth token
         Secret secret = null;
         try (TemporaryPath repoPath = IOUtils.tempDir("git-client-test")) {
-            client.fetch(HTTPS_SUBMODULE_REPO_URL, branch, commitId, secret, repoPath.path());
+            fetch(HTTPS_SUBMODULE_REPO_URL, branch, commitId, secret, repoPath.path());
 
             assertEquals("master", new String(Files.readAllBytes(repoPath.path().resolve("test"))).trim());
             assertEquals("master", new String(Files.readAllBytes(repoPath.path().resolve("concord_poc").resolve("test"))).trim());
@@ -127,9 +127,20 @@ public class GitClientTest {
 
     private void assertFetch(String url, String branch, String commitId, Secret secret, String expectedContent) throws IOException {
         try (TemporaryPath repoPath = IOUtils.tempDir("git-client-test")) {
-            client.fetch(url, branch, commitId, secret, repoPath.path());
+            fetch(url, branch, commitId, secret, repoPath.path());
 
             assertEquals(expectedContent, new String(Files.readAllBytes(repoPath.path().resolve("test"))).trim());
         }
+    }
+
+    private String fetch(String repoUri, String branch, String commitId, Secret secret, Path dest) {
+        return client.fetch(FetchRequest.builder()
+                .url(repoUri)
+                .branchOrTag(branch)
+                .commitId(commitId)
+                .secret(secret)
+                .destination(dest)
+                .shallow(true)
+                .build()).head();
     }
 }

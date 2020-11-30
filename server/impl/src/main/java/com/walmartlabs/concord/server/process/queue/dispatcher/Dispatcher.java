@@ -27,6 +27,7 @@ import com.walmartlabs.concord.common.MapMatcher;
 import com.walmartlabs.concord.db.AbstractDao;
 import com.walmartlabs.concord.db.MainDB;
 import com.walmartlabs.concord.imports.Imports;
+import com.walmartlabs.concord.repository.GitConstants;
 import com.walmartlabs.concord.server.ConcordObjectMapper;
 import com.walmartlabs.concord.server.Locks;
 import com.walmartlabs.concord.server.PeriodicTask;
@@ -258,8 +259,10 @@ public class Dispatcher extends PeriodicTask {
 
         try {
             SecretReference secret = null;
+            String repoBranch = null;
             if (item.repoId() != null) {
                 secret = dao.getSecretReference(item.repoId());
+                repoBranch = dao.getRepoBranch(item.repoId());
             }
 
             // backward compatibility with old process queue entries that are not normalized
@@ -273,6 +276,7 @@ public class Dispatcher extends PeriodicTask {
                     item.repoUrl(),
                     item.repoPath(),
                     item.commitId(),
+                    repoBranch,
                     secret != null ? secret.secretName : null,
                     imports);
 
@@ -366,6 +370,21 @@ public class Dispatcher extends PeriodicTask {
                     .leftOuterJoin(ORGANIZATIONS).on(SECRETS.ORG_ID.eq(ORGANIZATIONS.ORG_ID))
                     .where(REPOSITORIES.REPO_ID.eq(repoId))
                     .fetchOne(r -> new SecretReference(r.value1(), r.value2()));
+        }
+
+        public String getRepoBranch(UUID repoId) {
+            return dsl().select(REPOSITORIES.REPO_BRANCH, REPOSITORIES.REPO_COMMIT_ID)
+                    .from(REPOSITORIES)
+                    .where(REPOSITORIES.REPO_ID.eq(repoId))
+                    .fetchOne(r -> {
+                        if (r.value2() != null) {
+                            return null;
+                        }
+                        if (r.value1() == null) {
+                            return GitConstants.DEFAULT_BRANCH;
+                        }
+                        return r.value1();
+                    });
         }
     }
 

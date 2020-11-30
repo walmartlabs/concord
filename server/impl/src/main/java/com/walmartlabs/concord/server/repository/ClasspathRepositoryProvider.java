@@ -22,11 +22,7 @@ package com.walmartlabs.concord.server.repository;
 
 import com.google.common.io.Resources;
 import com.walmartlabs.concord.common.IOUtils;
-import com.walmartlabs.concord.repository.RepositoryException;
-import com.walmartlabs.concord.repository.RepositoryInfo;
-import com.walmartlabs.concord.repository.RepositoryProvider;
-import com.walmartlabs.concord.repository.Snapshot;
-import com.walmartlabs.concord.sdk.Secret;
+import com.walmartlabs.concord.repository.*;
 
 import java.io.IOException;
 import java.io.OutputStream;
@@ -47,12 +43,9 @@ public class ClasspathRepositoryProvider implements RepositoryProvider {
     }
 
     @Override
-    public String getBranchOrDefault(String branch) {
-        return branch;
-    }
-
-    @Override
-    public String fetch(String repoUrl, String branch, String commitId, Secret secret, boolean checkRemoteCommitId, Path dst) {
+    public FetchResult fetch(FetchRequest request) {
+        String repoUrl = request.url();
+        Path dst = request.destination();
         URL resUrl = Resources.getResource(normalizeUrl(repoUrl));
 
         try {

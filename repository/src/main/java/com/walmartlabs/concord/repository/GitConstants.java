@@ -4,7 +4,7 @@ package com.walmartlabs.concord.repository;
  * *****
  * Concord
  * -----
- * Copyright (C) 2017 - 2018 Walmart Inc.
+ * Copyright (C) 2017 - 2020 Walmart Inc.
  * -----
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,17 +20,10 @@ package com.walmartlabs.concord.repository;
  * =====
  */
 
-import java.io.IOException;
-import java.nio.file.Path;
-import java.util.List;
+public final class GitConstants {
 
-public interface RepositoryProvider {
+    public static final String DEFAULT_BRANCH = "master";
 
-    boolean canHandle(String url);
-
-    FetchResult fetch(FetchRequest request);
-
-    Snapshot export(Path src, Path dst, List<String> ignorePatterns) throws IOException;
-
-    RepositoryInfo getInfo(Path path);
+    private GitConstants() {
+    }
 }
