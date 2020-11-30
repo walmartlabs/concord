@@ -4,7 +4,7 @@ package com.walmartlabs.concord.repository;
  * *****
  * Concord
  * -----
- * Copyright (C) 2017 - 2018 Walmart Inc.
+ * Copyright (C) 2017 - 2020 Walmart Inc.
  * -----
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,17 +20,18 @@ package com.walmartlabs.concord.repository;
  * =====
  */
 
-import java.io.IOException;
-import java.nio.file.Path;
-import java.util.List;
+import org.immutables.value.Value;
 
-public interface RepositoryProvider {
+@Value.Immutable
+@Value.Style(jdkOnly = true)
+public interface FetchResult {
 
-    boolean canHandle(String url);
+    /**
+     * Current HEAD.
+     */
+    String head();
 
-    FetchResult fetch(FetchRequest request);
-
-    Snapshot export(Path src, Path dst, List<String> ignorePatterns) throws IOException;
-
-    RepositoryInfo getInfo(Path path);
+    static ImmutableFetchResult.Builder builder() {
+        return ImmutableFetchResult.builder();
+    }
 }

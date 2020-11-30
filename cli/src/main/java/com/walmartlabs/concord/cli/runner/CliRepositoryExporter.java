@@ -30,6 +30,7 @@ import java.net.URLEncoder;
 import java.nio.file.Path;
 import java.time.Duration;
 import java.util.Collections;
+import java.util.Objects;
 
 public class CliRepositoryExporter implements RepositoryExporter {
 
@@ -50,7 +51,6 @@ public class CliRepositoryExporter implements RepositoryExporter {
 
         GitClientConfiguration clientCfg = GitClientConfiguration.builder()
                 .oauthToken(null)
-                .shallowClone(true)
                 .defaultOperationTimeout(DEFAULT_OPERATION_TIMEOUT)
                 .fetchTimeout(FETCH_TIMEOUT)
                 .httpLowSpeedLimit(HTTP_LOW_SPEED_LIMIT)
@@ -66,14 +66,21 @@ public class CliRepositoryExporter implements RepositoryExporter {
     public Snapshot export(Import.GitDefinition entry, Path workDir) throws Exception {
         Path dest = workDir;
         if (entry.dest() != null) {
-            dest = dest.resolve(entry.dest());
+            dest = dest.resolve(Objects.requireNonNull(entry.dest()));
         }
 
-        String encodedUrl = encodeUrl(entry.url());
-        Path cacheDir = repoCacheDir.resolve(encodedUrl);
+        String url = Objects.requireNonNull(entry.url());
+        Path cacheDir = repoCacheDir.resolve(encodeUrl(url));
         Secret secret = null;
 
-        Repository repo = providers.fetch(entry.url(), entry.version(), null, entry.path(), secret, true, cacheDir);
+        Repository repo = providers.fetch(
+                FetchRequest.builder()
+                        .url(url)
+                        .branchOrTag(entry.version())
+                        .secret(secret)
+                        .destination(cacheDir)
+                .build(),
+                entry.path());
         return repo.export(dest, entry.exclude());
     }
 

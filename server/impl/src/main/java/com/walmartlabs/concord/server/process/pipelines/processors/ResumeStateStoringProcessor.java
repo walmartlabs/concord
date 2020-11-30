@@ -64,8 +64,8 @@ public class ResumeStateStoringProcessor implements PayloadProcessor {
             Path resumeMarker = stateDir.resolve(Constants.Files.RESUME_MARKER_FILE_NAME);
             Files.write(resumeMarker, eventName.getBytes());
         } catch (IOException e) {
-            logManager.error(processKey, "Error while saving resume state", e);
-            throw new ProcessException(processKey, "Error while saving resume state", e);
+            logManager.error(processKey, "Error while saving resume event", e);
+            throw new ProcessException(processKey, "Error while saving resume event", e);
         }
 
         return chain.process(payload);

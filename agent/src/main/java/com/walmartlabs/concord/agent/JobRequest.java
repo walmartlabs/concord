@@ -36,6 +36,7 @@ public class JobRequest {
                 resp.getRepoUrl(),
                 resp.getRepoPath(),
                 resp.getCommitId(),
+                resp.getRepoBranch(),
                 resp.getSecretName(),
                 resp.getImports(),
                 resp.getSessionToken());
@@ -48,6 +49,7 @@ public class JobRequest {
     private final String repoUrl;
     private final String repoPath;
     private final String commitId;
+    private final String repoBranch;
     private final String secretName;
     private final Imports imports;
     private final String sessionToken;
@@ -60,6 +62,7 @@ public class JobRequest {
                 src.repoUrl,
                 src.repoPath,
                 src.commitId,
+                src.repoBranch,
                 src.secretName,
                 src.imports,
                 src.sessionToken);
@@ -72,6 +75,7 @@ public class JobRequest {
                          String repoUrl,
                          String repoPath,
                          String commitId,
+                         String repoBranch,
                          String secretName,
                          Imports imports,
                          String sessionToken) {
@@ -83,6 +87,7 @@ public class JobRequest {
         this.repoUrl = repoUrl;
         this.repoPath = repoPath;
         this.commitId = commitId;
+        this.repoBranch = repoBranch;
         this.secretName = secretName;
         this.imports = imports != null ? imports : Imports.builder().build();
         this.sessionToken = sessionToken;
@@ -110,6 +115,10 @@ public class JobRequest {
 
     public String getRepoPath() {
         return repoPath;
+    }
+
+    public String getRepoBranch() {
+        return repoBranch;
     }
 
     public String getCommitId() {
