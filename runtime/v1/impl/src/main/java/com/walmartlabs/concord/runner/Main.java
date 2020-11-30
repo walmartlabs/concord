@@ -33,6 +33,7 @@ import com.walmartlabs.concord.client.ApiClientConfiguration;
 import com.walmartlabs.concord.client.ApiClientFactory;
 import com.walmartlabs.concord.client.ProcessEntry;
 import com.walmartlabs.concord.common.IOUtils;
+import com.walmartlabs.concord.imports.ImportsListener;
 import com.walmartlabs.concord.imports.NoopImportManager;
 import com.walmartlabs.concord.policyengine.PolicyEngine;
 import com.walmartlabs.concord.policyengine.PolicyEngineRules;
@@ -315,7 +316,7 @@ public class Main {
         try {
             // assume all imports were processed by the agent
             return new ProjectLoader(new NoopImportManager())
-                    .loadProject(baseDir, new NoopImportsNormalizer())
+                    .loadProject(baseDir, new NoopImportsNormalizer(), ImportsListener.NOP_LISTENER)
                     .getProjectDefinition();
         } catch (Exception e) {
             throw new ExecutionException("Error while loading a project", e);

@@ -50,7 +50,7 @@ public class AgentImportManagerProvider implements Provider<AgentImportManager> 
             return null;
         };
 
-        this.factory = new ImportManagerFactory(dependencyManager, exporter, cfg.getDisabledProcessors(), null);
+        this.factory = new ImportManagerFactory(dependencyManager, exporter, cfg.getDisabledProcessors());
     }
 
     @Override

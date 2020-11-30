@@ -23,6 +23,7 @@ package com.walmartlabs.concord.project;
 import com.walmartlabs.concord.common.ConfigurationUtils;
 import com.walmartlabs.concord.imports.ImportManager;
 import com.walmartlabs.concord.imports.Imports;
+import com.walmartlabs.concord.imports.ImportsListener;
 import com.walmartlabs.concord.project.model.Profile;
 import com.walmartlabs.concord.project.model.ProjectDefinition;
 import com.walmartlabs.concord.project.model.Resources;
@@ -73,14 +74,14 @@ public class ProjectLoader {
      *                      configured, the directory will be used as a target for repository
      *                      checkouts.
      */
-    public Result loadProject(Path workDir, ImportsNormalizer importsNormalizer) throws Exception {
+    public Result loadProject(Path workDir, ImportsNormalizer importsNormalizer, ImportsListener listener) throws Exception {
         workDir = workDir.normalize().toAbsolutePath();
 
         ProjectDefinition initial = initialLoad(workDir);
         Resources resources = initial.getResources();
 
         Imports imports = importsNormalizer.normalize(initial.getImports());
-        List<Snapshot> snapshots = importManager.process(imports, workDir);
+        List<Snapshot> snapshots = importManager.process(imports, workDir, listener);
 
         ProjectDefinitionBuilder b = new ProjectDefinitionBuilder(parser);
 

@@ -24,6 +24,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import com.walmartlabs.concord.imports.ImportManager;
+import com.walmartlabs.concord.imports.ImportsListener;
 import com.walmartlabs.concord.process.loader.model.ProcessDefinition;
 import com.walmartlabs.concord.process.loader.v1.ProcessDefinitionV1;
 import com.walmartlabs.concord.process.loader.v2.ProcessDefinitionV2;
@@ -57,17 +58,17 @@ public class ProjectLoader {
         this.v2 = new com.walmartlabs.concord.runtime.v2.ProjectLoaderV2(importManager);
     }
 
-    public Result loadProject(Path workDir, ImportsNormalizer importsNormalizer) throws Exception {
+    public Result loadProject(Path workDir, ImportsNormalizer importsNormalizer, ImportsListener listener) throws Exception {
         String runtime = getRuntimeType(workDir, "concord-v1"); // TODO constants
-        return loadProject(workDir, runtime, importsNormalizer);
+        return loadProject(workDir, runtime, importsNormalizer, listener);
     }
 
-    public Result loadProject(Path workDir, String runtime, ImportsNormalizer importsNormalizer) throws Exception {
+    public Result loadProject(Path workDir, String runtime, ImportsNormalizer importsNormalizer, ImportsListener listener) throws Exception {
         if ("concord-v2".equals(runtime)) { // TODO constants
-            return toResult(v2.load(workDir, importsNormalizer::normalize));
+            return toResult(v2.load(workDir, importsNormalizer::normalize, listener));
         }
 
-        return toResult(v1.loadProject(workDir, importsNormalizer::normalize));
+        return toResult(v1.loadProject(workDir, importsNormalizer::normalize, listener));
     }
 
     private static Result toResult(com.walmartlabs.concord.project.ProjectLoader.Result r) {

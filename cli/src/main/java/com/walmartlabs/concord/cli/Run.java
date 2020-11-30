@@ -132,14 +132,13 @@ public class Run implements Callable<Integer> {
 
         DependencyManager dependencyManager = initDependencyManager();
         ImportManager importManager = new ImportManagerFactory(dependencyManager,
-                new CliRepositoryExporter(repoCacheDir), Collections.emptySet(),
-                verbose ? new CliImportsListener() : null)
+                new CliRepositoryExporter(repoCacheDir), Collections.emptySet())
                 .create();
 
         ProjectLoaderV2.Result loadResult;
         try {
             loadResult = new ProjectLoaderV2(importManager)
-                    .load(targetDir, new CliImportsNormalizer(importsSource, verbose));
+                    .load(targetDir, new CliImportsNormalizer(importsSource, verbose), verbose ? new CliImportsListener() : null);
         } catch (ImportProcessingException e) {
             ObjectMapper om = new ObjectMapper();
             System.err.println("Error while processing import " + om.writeValueAsString(e.getImport()) + ": " + e.getMessage());

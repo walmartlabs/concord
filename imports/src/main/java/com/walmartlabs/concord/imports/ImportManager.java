@@ -31,5 +31,5 @@ public interface ImportManager {
      * Process the specified imports and save the result into {@code dest}.
      * Assumes all import definitions were normalized (i.e. contain valid URLs, secret/org names, etc).
      */
-    List<Snapshot> process(Imports imports, Path dest) throws Exception;
+    List<Snapshot> process(Imports imports, Path dest, ImportsListener listener) throws Exception;
 }
