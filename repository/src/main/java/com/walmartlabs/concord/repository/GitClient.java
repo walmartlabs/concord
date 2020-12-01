@@ -30,7 +30,6 @@ import org.eclipse.jgit.lib.ObjectId;
 import org.immutables.value.Value;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.slf4j.MDC;
 
 import java.io.*;
 import java.nio.charset.Charset;
