@@ -26,7 +26,8 @@ import { add, format, parseISO, sub } from 'date-fns';
 import { ProcessEntry } from '../../../api/process';
 import { AuditLogEntry, AuditObject, list as apiList } from '../../../api/audit';
 import { RequestError } from '../../../api/common';
-import { RequestErrorMessage, WithCopyToClipboard } from '../../molecules';
+import { WithCopyToClipboard } from '../../molecules';
+import { RequestErrorActivity } from "../index";
 
 // TODO move into common constants?
 const DATE_TIME_FORMAT = "yyyy-MM-dd'T'HH:mm:ss.SSSXXX";
@@ -139,8 +140,8 @@ export default ({ entry }: Props) => {
     return (
         <Modal dimmer="inverted" trigger={<Button icon={icon} basic={true} content={title} />}>
             <Header icon={icon} content={`${title} Trigger`} />
-            <Modal.Content>
-                {error && <RequestErrorMessage error={error} />}
+            <Modal.Content scrolling={true}>
+                {error && <RequestErrorActivity error={error} />}
 
                 {type === 'github' && (
                     <>
