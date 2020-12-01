@@ -20,6 +20,7 @@ package com.walmartlabs.concord.common;
  * =====
  */
 
+import org.slf4j.MDC;
 import org.slf4j.helpers.FormattingTuple;
 import org.slf4j.helpers.MessageFormatter;
 
@@ -29,12 +30,14 @@ import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Locale;
+import java.util.Map;
+import java.util.concurrent.Callable;
 
 public final class LogUtils {
 
     // the UI expects log timestamps in a specific format to be able to convert it to the local time
     // see also runner/src/main/resources/logback.xml and console2/src/components/molecules/ProcessLogViewer/datetime.tsx
-    private static final DateTimeFormatter TIMESTAMP_FORMAT = DateTimeFormatter.ofPattern("YYYY-MM-dd'T'HH:mm:ss.SSSZ", Locale.US);
+    private static final DateTimeFormatter TIMESTAMP_FORMAT = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSSZ", Locale.US);
     private static final ZoneId DEFAULT_TIMESTAMP_TZ = ZoneId.of("UTC");
 
     public enum LogLevel {
@@ -52,6 +55,30 @@ public final class LogUtils {
         }
 
         return String.format("%s [%-5s] %s%n", timestamp, level.name(), m.getMessage());
+    }
+
+    public static Runnable withMdc(Runnable runnable) {
+        Map<String, String> mdc = MDC.getCopyOfContextMap();
+        return () -> {
+            MDC.setContextMap(mdc);
+            try {
+                runnable.run();
+            } finally {
+                MDC.clear();
+            }
+        };
+    }
+
+    public static <T> Callable<T> withMdc(Callable<T> callable) {
+        Map<String, String> mdc = MDC.getCopyOfContextMap();
+        return () -> {
+            MDC.setContextMap(mdc);
+            try {
+                return callable.call();
+            } finally {
+                MDC.clear();
+            }
+        };
     }
 
     private static String formatException(Throwable t) {
