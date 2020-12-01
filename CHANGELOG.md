@@ -4,6 +4,9 @@
 
 ### Added
 
+- concord-server: new GitHub trigger condition
+`repository.enabled`. Allows filtering by the repository's
+enabled/disabled state;
 - runtime-v2, concord-console: record `post` events for failed
 tasks, highlight failed tasks on the events tab.
 
