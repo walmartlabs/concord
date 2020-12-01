@@ -168,6 +168,8 @@ public class GithubEventResource implements Resource {
         }
         startedProcessesPerEvent.update(startedProcesses);
 
+        log.info("onEvent ['{}', '{}'] -> done, started processes: {}", deliveryId, eventName, startedProcesses);
+
         return "ok";
     }
 
