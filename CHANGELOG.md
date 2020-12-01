@@ -12,6 +12,8 @@ tasks, highlight failed tasks on the events tab.
 
 ### Changed
 
+- concord-repository: preserve the logger's MDC when logging
+Git client operations;
 - concord-imports: additional logging when processing `imports`;
 - concord-repository: the git client was reworked to better
 support partial fetching of repositories;
