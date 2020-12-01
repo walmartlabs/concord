@@ -60,11 +60,15 @@ public final class LogUtils {
     public static Runnable withMdc(Runnable runnable) {
         Map<String, String> mdc = MDC.getCopyOfContextMap();
         return () -> {
-            MDC.setContextMap(mdc);
+            if (mdc != null) {
+                MDC.setContextMap(mdc);
+            }
             try {
                 runnable.run();
             } finally {
-                MDC.clear();
+                if (mdc != null) {
+                    MDC.clear();
+                }
             }
         };
     }
@@ -72,11 +76,15 @@ public final class LogUtils {
     public static <T> Callable<T> withMdc(Callable<T> callable) {
         Map<String, String> mdc = MDC.getCopyOfContextMap();
         return () -> {
-            MDC.setContextMap(mdc);
+            if (mdc != null) {
+                MDC.setContextMap(mdc);
+            }
             try {
                 return callable.call();
             } finally {
-                MDC.clear();
+                if (mdc != null) {
+                    MDC.clear();
+                }
             }
         };
     }
