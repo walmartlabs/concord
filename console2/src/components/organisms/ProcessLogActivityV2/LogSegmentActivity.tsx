@@ -190,7 +190,7 @@ const LogSegmentActivity = ({
                     onClose={() => setSegmentInfoOpen(false)}
                     size="small">
                     <Header icon="browser" content={name} />
-                    <Modal.Content>
+                    <Modal.Content scrolling={true}>
                         <TaskCallDetails instanceId={instanceId} correlationId={correlationId} />
                     </Modal.Content>
                 </Modal>
