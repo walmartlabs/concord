@@ -27,7 +27,7 @@ import { ProcessEntry } from '../../../api/process';
 import { AuditLogEntry, AuditObject, list as apiList } from '../../../api/audit';
 import { RequestError } from '../../../api/common';
 import { WithCopyToClipboard } from '../../molecules';
-import { RequestErrorActivity } from "../index";
+import { RequestErrorActivity } from '../index';
 
 // TODO move into common constants?
 const DATE_TIME_FORMAT = "yyyy-MM-dd'T'HH:mm:ss.SSSXXX";
