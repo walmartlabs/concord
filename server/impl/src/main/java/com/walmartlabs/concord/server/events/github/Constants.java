@@ -34,6 +34,7 @@ public final class Constants {
     public static final String REPO_BRANCH_KEY = "branch";
     public static final String REPO_ID_KEY = "repositoryId";
     public static final String REPO_NAME_KEY = "repository";
+    public static final String REPO_ENABLED_KEY = "enabled";
     public static final String SENDER_KEY = "sender";
     public static final String STATUS_KEY = "status";
     public static final String TYPE_KEY = "type";

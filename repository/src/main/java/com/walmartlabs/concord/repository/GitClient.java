@@ -39,6 +39,7 @@ import java.time.Duration;
 import java.util.*;
 import java.util.concurrent.*;
 
+import static com.walmartlabs.concord.common.LogUtils.withMdc;
 import static java.nio.file.attribute.PosixFilePermission.OWNER_EXECUTE;
 import static java.nio.file.attribute.PosixFilePermission.OWNER_READ;
 
@@ -268,7 +269,7 @@ public class GitClient {
                 .orElseThrow(() -> new RepositoryException("Can't find head ref for '" + branchOrTag + "'"));
     }
 
-    private String getRefSpec(Ref ref) {
+    private static String getRefSpec(Ref ref) {
         if (ref == null) {
             return "+refs/heads/*:refs/remotes/origin/*";
         }
@@ -406,7 +407,7 @@ public class GitClient {
         try {
             Process p = pb.start();
 
-            Future<StringBuilder> out = executor.submit(() -> {
+            Future<StringBuilder> out = executor.submit(withMdc(() -> {
                 StringBuilder sb = new StringBuilder();
                 try (BufferedReader reader = new BufferedReader(new InputStreamReader(p.getInputStream()))) {
                     String line;
@@ -416,9 +417,9 @@ public class GitClient {
                     }
                 }
                 return sb;
-            });
+            }));
 
-            Future<StringBuilder> error = executor.submit(() -> {
+            Future<StringBuilder> error = executor.submit(withMdc(() -> {
                 StringBuilder sb = new StringBuilder();
                 try (BufferedReader reader = new BufferedReader(new InputStreamReader(p.getErrorStream()))) {
                     String line;
@@ -428,7 +429,7 @@ public class GitClient {
                     }
                 }
                 return sb;
-            });
+            }));
 
             if (!p.waitFor(command.timeout().toMillis(), TimeUnit.MILLISECONDS)) {
                 p.destroy();
