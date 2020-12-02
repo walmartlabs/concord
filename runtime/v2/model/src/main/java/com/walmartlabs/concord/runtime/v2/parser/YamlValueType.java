@@ -100,6 +100,8 @@ public final class YamlValueType<T> {
     public static final YamlValueType<ImmutableExpressionOptions.Builder> EXPRESSION_CALL_OUT = type("STRING or OBJECT");
     public static final YamlValueType<ImmutableFlowCallOptions.Builder> FLOW_CALL_OUT = type("STRING or ARRAY_OF_STRING or OBJECT");
     public static final YamlValueType<ImmutableParallelBlockOptions.Builder> PARALLEL_BLOCK_OUT = type("STRING or ARRAY_OF_STRING or OBJECT");
+    public static final YamlValueType<Map<String, Object>> GITHUB_REPOSITORY_INFO = type("REPOSITORY_INFO");
+    public static final YamlValueType<List<Map<String, Object>>> ARRAY_OF_GITHUB_REPOSITORY_INFO = array("REPOSITORY_INFO", GITHUB_REPOSITORY_INFO);
 
     private final String name;
 
