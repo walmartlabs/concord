@@ -4,6 +4,8 @@
 
 ### Added
 
+- runtime-v2: add grammar for `repositoryInfo` conditions in
+GitHub triggers;
 - concord-server: new GitHub trigger condition
 `repository.enabled`. Allows filtering by the repository's
 enabled/disabled state;
