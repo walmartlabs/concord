@@ -88,7 +88,7 @@ public final class GrammarOptions {
                 return rp.cast();
             }
 
-            List<String> expectedOptions = options.stream().map(Option::name).filter(Objects::nonNull).collect(Collectors.toList());
+            List<String> expectedOptions = options.stream().map(Option::name).filter(Objects::nonNull).sorted().collect(Collectors.toList());
 
             List<KV<String, YamlValue>> unparsedOptions = rp2.toSuccess().getResult();
 
