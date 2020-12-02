@@ -14,6 +14,8 @@ tasks, highlight failed tasks on the events tab.
 
 ### Changed
 
+- concord-console: add scrolling to the last error popup, trigger
+information popup and the task call details popup;
 - concord-repository: preserve the logger's MDC when logging
 Git client operations;
 - concord-imports: additional logging when processing `imports`;
