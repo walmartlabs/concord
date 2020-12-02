@@ -24,7 +24,7 @@ import { LoadingAction } from '../reducers/loading';
 export interface Props<S> {
     fetchOnMount?: boolean;
     initialData?: S;
-    forceRequest?: boolean;
+    forceRequest?: any;
     dispatch?: (value: LoadingAction) => void;
     requestByFetch?: boolean;
 }

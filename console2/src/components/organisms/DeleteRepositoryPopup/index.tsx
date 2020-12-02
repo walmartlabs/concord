@@ -19,40 +19,39 @@
  */
 
 import * as React from 'react';
-import { useState } from 'react';
-import { connect } from 'react-redux';
-import { AnyAction, Dispatch } from 'redux';
+import { useCallback, useState } from 'react';
 import { Input } from 'semantic-ui-react';
 
-import { ConcordKey, RequestError } from '../../../api/common';
-import { actions, State } from '../../../state/data/projects';
+import { ConcordKey, GenericOperationResult } from '../../../api/common';
 import { SingleOperationPopup } from '../../molecules';
+import { deleteRepository as apiRepoDelete } from '../../../api/org/project/repository';
+import { useApi } from '../../../hooks/useApi';
 
 interface ExternalProps {
     orgName: ConcordKey;
     projectName: ConcordKey;
     repoName: ConcordKey;
     trigger: (onClick: () => void) => React.ReactNode;
-}
-
-interface DispatchProps {
-    reset: () => void;
-    onConfirm: () => void;
     onDone: () => void;
 }
 
-interface StateProps {
-    deleting: boolean;
-    success: boolean;
-    error: RequestError;
-}
-
-type Props = DispatchProps & ExternalProps & StateProps;
-
-const DeleteRepositoryPopup = (props: Props) => {
-    const { trigger, deleting, success, error, reset, onConfirm, onDone, repoName } = props;
+const DeleteRepositoryPopup = (props: ExternalProps) => {
+    const { orgName, projectName, repoName, trigger, onDone } = props;
 
     const [confirmation, setConfirmation] = useState('');
+
+    const deleteDataRequest = useCallback(() => {
+        return apiRepoDelete(orgName, projectName, repoName);
+    }, [orgName, projectName, repoName]);
+
+    const { data, isLoading, error, clearState, fetch } = useApi<GenericOperationResult>(
+        deleteDataRequest,
+        { fetchOnMount: false, requestByFetch: true }
+    );
+
+    const resetHandler = useCallback(() => {
+        clearState();
+    }, [clearState]);
 
     return (
         <SingleOperationPopup
@@ -78,32 +77,17 @@ const DeleteRepositoryPopup = (props: Props) => {
                     </div>
                 </>
             }
-            running={deleting}
+            running={isLoading}
             runningMsg={<p>Removing the repository...</p>}
-            success={success}
+            success={data !== undefined}
             successMsg={<p>The repository was removed successfully.</p>}
             error={error}
-            reset={reset}
-            onConfirm={onConfirm}
+            reset={resetHandler}
+            onConfirm={fetch}
             onDone={onDone}
             disableYes={confirmation !== repoName}
         />
     );
 };
 
-const mapStateToProps = ({ projects }: { projects: State }): StateProps => ({
-    deleting: projects.deleteRepository.running,
-    success: !!projects.deleteRepository.response && projects.deleteRepository.response.ok,
-    error: projects.deleteRepository.error
-});
-
-const mapDispatchToProps = (
-    dispatch: Dispatch<AnyAction>,
-    { orgName, projectName, repoName }: ExternalProps
-): DispatchProps => ({
-    reset: () => dispatch(actions.resetRepository()),
-    onConfirm: () => dispatch(actions.deleteRepository(orgName, projectName, repoName)),
-    onDone: () => dispatch(actions.getProject(orgName, projectName))
-});
-
-export default connect(mapStateToProps, mapDispatchToProps)(DeleteRepositoryPopup);
+export default DeleteRepositoryPopup;
