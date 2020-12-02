@@ -49,7 +49,7 @@ public final class TriggersGrammar {
                                     optional("repositoryId", regexpVal.map(v -> o.put("repositoryId", v))),
                                     optional("repository", regexpVal.map(v -> o.put("repository", v))),
                                     optional("projectId", regexpVal.map(v -> o.put("projectId", v))),
-                                    optional("branch", regexpVal.map(v -> o.put("githubHost", v))),
+                                    optional("branch", regexpVal.map(v -> o.put("branch", v))),
                                     optional("enabled", booleanVal.map(v -> o.put("enabled", v)))))
                             .map(ImmutableMap.Builder::build));
 
