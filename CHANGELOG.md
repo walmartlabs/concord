@@ -14,6 +14,9 @@ tasks, highlight failed tasks on the events tab.
 
 ### Changed
 
+- runtime-v1, runtime-v2: update the list of "retryable" errors
+for `docker pull` operations to support recent versions of 
+docker-client;
 - concord-console: add scrolling to the last error popup, trigger
 information popup and the task call details popup;
 - concord-repository: preserve the logger's MDC when logging
