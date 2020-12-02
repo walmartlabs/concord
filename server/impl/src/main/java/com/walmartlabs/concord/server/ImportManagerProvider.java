@@ -54,7 +54,7 @@ public class ImportManagerProvider implements Provider<ImportManager> {
                                  ImportConfiguration cfg) {
 
         RepositoryExporterImpl exporter = new RepositoryExporterImpl(organizationDao, secretManager, repositoryManager);
-        this.factory = new ImportManagerFactory(dependencyManager, exporter, cfg.getDisabledProcessors(), null);
+        this.factory = new ImportManagerFactory(dependencyManager, exporter, cfg.getDisabledProcessors());
     }
 
     @Override

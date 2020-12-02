@@ -24,7 +24,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.walmartlabs.concord.common.IOUtils;
 import com.walmartlabs.concord.process.loader.ProjectLoader;
 import com.walmartlabs.concord.repository.*;
-import com.walmartlabs.concord.sdk.MapUtils;
 import com.walmartlabs.concord.sdk.Secret;
 import com.walmartlabs.concord.server.cfg.GitConfiguration;
 import com.walmartlabs.concord.server.cfg.RepositoryConfiguration;
@@ -57,6 +56,7 @@ public class RepositoryManager {
     private final SecretManager secretManager;
     private final RepositoryCache repositoryCache;
     private final RepositoryConfiguration repoCfg;
+    private final GitConfiguration gitCfg;
 
     @Inject
     public RepositoryManager(ObjectMapper objectMapper,
@@ -67,7 +67,6 @@ public class RepositoryManager {
 
         GitClientConfiguration gitCliCfg = GitClientConfiguration.builder()
                 .oauthToken(gitCfg.getOauthToken())
-                .shallowClone(gitCfg.isShallowClone())
                 .defaultOperationTimeout(gitCfg.getDefaultOperationTimeout())
                 .fetchTimeout(gitCfg.getFetchTimeout())
                 .httpLowSpeedLimit(gitCfg.getHttpLowSpeedLimit())
@@ -78,6 +77,7 @@ public class RepositoryManager {
 
         List<RepositoryProvider> providers = Arrays.asList(new ClasspathRepositoryProvider(), new GitCliRepositoryProvider(gitCliCfg));
 
+        this.gitCfg = gitCfg;
         this.providers = new RepositoryProviders(providers);
         this.secretManager = secretManager;
         this.projectDao = projectDao;
@@ -98,7 +98,15 @@ public class RepositoryManager {
 
             Secret secret = getSecret(orgId, projectId, secretName);
 
-            Repository repo = providers.fetch(uri, branch, commitId, path, secret, false, tmpDir);
+            Repository repo = providers.fetch(
+                    FetchRequest.builder()
+                            .url(uri)
+                            .shallow(gitCfg.isShallowClone())
+                            .branchOrTag(getBranch(branch, commitId))
+                            .commitId(commitId)
+                            .secret(secret)
+                            .destination(tmpDir)
+                    .build(), path);
 
             if (repoCfg.isConcordFileValidationEnabled()) {
                 if (!ProjectLoader.isConcordFileExists(repo.path())) {
@@ -120,16 +128,20 @@ public class RepositoryManager {
     }
 
     public Repository fetch(String url, String branch, String commitId, String path, Secret secret) {
-        return fetch(url, branch, commitId, path, secret, false);
-    }
-
-    public Repository fetch(String url, String branch, String commitId, String path, Secret secret, boolean checkRemoteCommitId) {
         String fetchedCommitId = commitId;
         long start = System.currentTimeMillis();
 
         Path dest = repositoryCache.getPath(url);
         try {
-            Repository result = providers.fetch(url, branch, commitId, path, secret, checkRemoteCommitId, dest);
+            Repository result = providers.fetch(
+                    FetchRequest.builder()
+                            .url(url)
+                            .shallow(gitCfg.isShallowClone())
+                            .branchOrTag(getBranch(branch, commitId))
+                            .commitId(commitId)
+                            .secret(secret)
+                            .destination(dest)
+                    .build(), path);
             fetchedCommitId = result.fetchedCommitId();
             return result;
         } finally {
@@ -141,9 +153,7 @@ public class RepositoryManager {
     public Repository fetch(UUID projectId, RepositoryEntry repository) {
         UUID orgId = getOrgId(projectId);
         Secret secret = getSecret(orgId, projectId, repository.getSecretName());
-        boolean checkRemoteCommitId = MapUtils.getBoolean(repository.getMeta(), "checkRemoteCommitId", false);
-
-        return fetch(repository.getUrl(), repository.getBranch(), repository.getCommitId(), repository.getPath(), secret, checkRemoteCommitId);
+        return fetch(repository.getUrl(), repository.getBranch(), repository.getCommitId(), repository.getPath(), secret);
     }
 
     public <T> T withLock(String repoUrl, Callable<T> f) {
@@ -177,5 +187,15 @@ public class RepositoryManager {
         }
 
         return s.getSecret();
+    }
+
+    private static String getBranch(String branch, String commitId) {
+        if (commitId != null) {
+            return branch;
+        }
+        if (branch != null) {
+            return branch;
+        }
+        return GitConstants.DEFAULT_BRANCH;
     }
 }

@@ -191,7 +191,6 @@ public class PayloadManager {
     }
 
     public Payload createResumePayload(PartialProcessKey partialKey, String eventName, Map<String, Object> req) throws IOException {
-        // TODO use ProcessKeyCache
         ProcessKey pk = processKeyCache.assertKey(partialKey.getInstanceId());
         return createResumePayload(pk, eventName, req);
     }

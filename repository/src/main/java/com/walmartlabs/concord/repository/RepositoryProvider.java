@@ -20,19 +20,15 @@ package com.walmartlabs.concord.repository;
  * =====
  */
 
-import com.walmartlabs.concord.sdk.Secret;
-
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.List;
 
 public interface RepositoryProvider {
 
-    String getBranchOrDefault(String branch);
-
     boolean canHandle(String url);
 
-    String fetch(String uri, String branch, String commitId, Secret secret, boolean checkRemoteCommitId, Path dst);
+    FetchResult fetch(FetchRequest request);
 
     Snapshot export(Path src, Path dst, List<String> ignorePatterns) throws IOException;
 

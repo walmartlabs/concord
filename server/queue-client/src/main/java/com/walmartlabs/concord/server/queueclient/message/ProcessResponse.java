@@ -34,6 +34,7 @@ public class ProcessResponse extends Message {
     private final String repoUrl;
     private final String repoPath;
     private final String commitId;
+    private final String repoBranch;
     private final String secretName;
     private final Imports imports;
 
@@ -46,6 +47,7 @@ public class ProcessResponse extends Message {
             @JsonProperty("repoUrl") String repoUrl,
             @JsonProperty("repoPath") String repoPath,
             @JsonProperty("commitId") String commitId,
+            @JsonProperty("repoBranch") String repoBranch,
             @JsonProperty("secretName") String secretName,
             @JsonProperty("imports") Imports imports) {
 
@@ -58,6 +60,7 @@ public class ProcessResponse extends Message {
         this.repoUrl = repoUrl;
         this.repoPath = repoPath;
         this.commitId = commitId;
+        this.repoBranch = repoBranch;
         this.secretName = secretName;
         this.imports = imports;
     }
@@ -82,6 +85,10 @@ public class ProcessResponse extends Message {
         return repoPath;
     }
 
+    public String getRepoBranch() {
+        return repoBranch;
+    }
+
     public String getCommitId() {
         return commitId;
     }
@@ -103,6 +110,7 @@ public class ProcessResponse extends Message {
                 ", repoUrl='" + repoUrl + '\'' +
                 ", repoPath='" + repoPath + '\'' +
                 ", commitId='" + commitId + '\'' +
+                ", repoBranch='" + repoBranch + '\'' +
                 ", secretName='" + secretName + '\'' +
                 ", imports=" + imports +
                 '}';

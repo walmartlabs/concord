@@ -24,6 +24,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
 import com.walmartlabs.concord.ApiClient;
+import com.walmartlabs.concord.imports.ImportsListener;
 import com.walmartlabs.concord.imports.NoopImportManager;
 import com.walmartlabs.concord.runtime.common.ProcessHeartbeat;
 import com.walmartlabs.concord.runtime.common.StateManager;
@@ -38,6 +39,7 @@ import com.walmartlabs.concord.runtime.v2.sdk.ProcessConfiguration;
 import com.walmartlabs.concord.runtime.v2.sdk.WorkingDirectory;
 import com.walmartlabs.concord.sdk.Constants;
 import com.walmartlabs.concord.svm.Frame;
+import com.walmartlabs.concord.svm.MultiException;
 import com.walmartlabs.concord.svm.State;
 import com.walmartlabs.concord.svm.ThreadStatus;
 import org.slf4j.Logger;
@@ -94,6 +96,9 @@ public class Main {
             main.execute();
 
             System.exit(0);
+        } catch (MultiException e) {
+            System.err.println(e.getMessage());
+            System.exit(1);
         } catch (Throwable t) {
             t.printStackTrace(System.err);
             System.exit(1);
@@ -197,7 +202,7 @@ public class Main {
     private static ProcessSnapshot start(Runner runner, ProcessConfiguration cfg, Path workDir, Map<String, Object> args) throws Exception {
         // assume all imports were processed by the agent
         ProjectLoaderV2 loader = new ProjectLoaderV2(new NoopImportManager());
-        ProcessDefinition processDefinition = loader.load(workDir, new NoopImportsNormalizer()).getProjectDefinition();
+        ProcessDefinition processDefinition = loader.load(workDir, new NoopImportsNormalizer(), ImportsListener.NOP_LISTENER).getProjectDefinition();
 
         Map<String, Object> initiator = cfg.initiator();
         if (initiator != null) {

@@ -21,6 +21,7 @@ package com.walmartlabs.concord.project;
  */
 
 import com.walmartlabs.concord.imports.ImportManager;
+import com.walmartlabs.concord.imports.ImportsListener;
 import com.walmartlabs.concord.project.yaml.YamlParserException;
 import org.junit.Test;
 
@@ -32,8 +33,7 @@ public class BrokenTest {
 
     @Test(expected = YamlParserException.class)
     public void testDir() throws Exception {
-        ProjectLoader l = new ProjectLoader(mock(ImportManager.class));
-        l.loadProject(Paths.get(ClassLoader.getSystemResource("brokenMain").toURI()), new NoopImportsNormalizer());
+        loadProject("brokenMain");
     }
 
     @Test(expected = YamlParserException.class)
@@ -44,13 +44,16 @@ public class BrokenTest {
 
     @Test(expected = YamlParserException.class)
     public void testProfiles() throws Exception {
-        ProjectLoader l = new ProjectLoader(mock(ImportManager.class));
-        l.loadProject(Paths.get(ClassLoader.getSystemResource("brokenProfiles").toURI()), new NoopImportsNormalizer());
+        loadProject("brokenProfiles");
     }
 
     @Test(expected = YamlParserException.class)
     public void testFlows() throws Exception {
+        loadProject("brokenFlows");
+    }
+
+    private static void loadProject(String name) throws Exception {
         ProjectLoader l = new ProjectLoader(mock(ImportManager.class));
-        l.loadProject(Paths.get(ClassLoader.getSystemResource("brokenFlows").toURI()), new NoopImportsNormalizer());
+        l.loadProject(Paths.get(ClassLoader.getSystemResource(name).toURI()), new NoopImportsNormalizer(), ImportsListener.NOP_LISTENER);
     }
 }

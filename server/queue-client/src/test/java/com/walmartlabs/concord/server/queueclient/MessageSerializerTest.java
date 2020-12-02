@@ -104,7 +104,7 @@ public class MessageSerializerTest {
 
         Imports imports = Imports.of(Collections.singletonList(item));
 
-        ProcessResponse r = new ProcessResponse(123, "sesion-token", UUID.randomUUID(), "org-name", "repo-url", "repo-path", "commit-id", "secret-name", imports);
+        ProcessResponse r = new ProcessResponse(123, "sesion-token", UUID.randomUUID(), "org-name", "repo-url", "repo-path", "commit-id", "repo-branch", "secret-name", imports);
 
         // ---
         String rSerialized = MessageSerializer.serialize(r);
@@ -115,5 +115,6 @@ public class MessageSerializerTest {
         assertEquals(r.getSessionToken(), rDeserialized.getSessionToken());
         assertEquals(r.getProcessId(), rDeserialized.getProcessId());
         assertEquals(r.getCorrelationId(), rDeserialized.getCorrelationId());
+        assertEquals("repo-branch", rDeserialized.getRepoBranch());
     }
 }

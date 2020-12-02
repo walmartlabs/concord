@@ -21,6 +21,7 @@ package com.walmartlabs.concord.server.org.triggers;
  */
 
 import com.walmartlabs.concord.repository.GitCliRepositoryProvider;
+import com.walmartlabs.concord.repository.GitConstants;
 import com.walmartlabs.concord.sdk.MapUtils;
 import com.walmartlabs.concord.server.events.github.GithubRepoInfo;
 import com.walmartlabs.concord.server.events.github.GithubUtils;
@@ -83,7 +84,7 @@ public class GithubTriggerEnricher {
 
         Object eventType = conditions.get(TYPE_KEY);
         if (PULL_REQUEST_EVENT.equals(eventType) || PUSH_EVENT.equals(eventType)) {
-            String defaultBranch = repo.getBranch() != null ? repo.getBranch() : GitCliRepositoryProvider.DEFAULT_BRANCH;
+            String defaultBranch = repo.getBranch() != null ? repo.getBranch() : GitConstants.DEFAULT_BRANCH;
             newParams.putIfAbsent(REPO_BRANCH_KEY, defaultBranch);
         }
         return newParams;

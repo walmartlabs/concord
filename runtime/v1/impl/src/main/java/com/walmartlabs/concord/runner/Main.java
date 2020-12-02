@@ -23,8 +23,11 @@ package com.walmartlabs.concord.runner;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.guava.GuavaModule;
 import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
-import com.google.inject.*;
+import com.google.inject.AbstractModule;
+import com.google.inject.Guice;
+import com.google.inject.Injector;
 import com.google.inject.Module;
+import com.google.inject.TypeLiteral;
 import com.google.inject.matcher.AbstractMatcher;
 import com.google.inject.spi.TypeEncounter;
 import com.google.inject.spi.TypeListener;
@@ -33,6 +36,7 @@ import com.walmartlabs.concord.client.ApiClientConfiguration;
 import com.walmartlabs.concord.client.ApiClientFactory;
 import com.walmartlabs.concord.client.ProcessEntry;
 import com.walmartlabs.concord.common.IOUtils;
+import com.walmartlabs.concord.imports.ImportsListener;
 import com.walmartlabs.concord.imports.NoopImportManager;
 import com.walmartlabs.concord.policyengine.PolicyEngine;
 import com.walmartlabs.concord.policyengine.PolicyEngineRules;
@@ -315,7 +319,7 @@ public class Main {
         try {
             // assume all imports were processed by the agent
             return new ProjectLoader(new NoopImportManager())
-                    .loadProject(baseDir, new NoopImportsNormalizer())
+                    .loadProject(baseDir, new NoopImportsNormalizer(), ImportsListener.NOP_LISTENER)
                     .getProjectDefinition();
         } catch (Exception e) {
             throw new ExecutionException("Error while loading a project", e);

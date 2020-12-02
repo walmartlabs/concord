@@ -31,13 +31,11 @@ public class ImportManagerFactory {
     private final DependencyManager dependencyManager;
     private final RepositoryExporter repositoryExporter;
     private final Set<String> disabledProcessors;
-    private final ImportsListener listener;
 
-    public ImportManagerFactory(DependencyManager dependencyManager, RepositoryExporter repositoryExporter, Set<String> disabledProcessors, ImportsListener listener) {
+    public ImportManagerFactory(DependencyManager dependencyManager, RepositoryExporter repositoryExporter, Set<String> disabledProcessors) {
         this.dependencyManager = dependencyManager;
         this.repositoryExporter = repositoryExporter;
         this.disabledProcessors = disabledProcessors;
-        this.listener = listener;
     }
 
     public ImportManager create() {
@@ -45,6 +43,6 @@ public class ImportManagerFactory {
         processors.add(new RepositoryProcessor(repositoryExporter));
         processors.add(new MvnProcessor(dependencyManager));
         processors.add(new DirectoryProcessor());
-        return new DefaultImportManager(processors, disabledProcessors, listener);
+        return new DefaultImportManager(processors, disabledProcessors);
     }
 }

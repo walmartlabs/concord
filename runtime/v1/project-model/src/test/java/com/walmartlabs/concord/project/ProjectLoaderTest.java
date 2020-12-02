@@ -21,6 +21,7 @@ package com.walmartlabs.concord.project;
  */
 
 import com.walmartlabs.concord.imports.ImportManager;
+import com.walmartlabs.concord.imports.ImportsListener;
 import com.walmartlabs.concord.project.model.ProjectDefinition;
 import com.walmartlabs.concord.project.yaml.YamlConverterException;
 import com.walmartlabs.concord.project.yaml.YamlParserException;
@@ -40,7 +41,7 @@ public class ProjectLoaderTest {
         ProjectLoader loader = new ProjectLoader(mock(ImportManager.class));
 
         URI uri = ClassLoader.getSystemResource("simple").toURI();
-        ProjectDefinition pd = loader.loadProject(Paths.get(uri), new NoopImportsNormalizer())
+        ProjectDefinition pd = loader.loadProject(Paths.get(uri), new NoopImportsNormalizer(), ImportsListener.NOP_LISTENER)
                 .getProjectDefinition();
 
         assertNotNull(pd);
@@ -56,7 +57,7 @@ public class ProjectLoaderTest {
         ProjectLoader loader = new ProjectLoader(mock(ImportManager.class));
 
         URI uri = ClassLoader.getSystemResource("emptyField").toURI();
-        loader.loadProject(Paths.get(uri), new NoopImportsNormalizer());
+        loader.loadProject(Paths.get(uri), new NoopImportsNormalizer(), ImportsListener.NOP_LISTENER);
     }
 
     @Test
@@ -65,7 +66,7 @@ public class ProjectLoaderTest {
 
         URI uri = ClassLoader.getSystemResource("duplicateConfiguration").toURI();
         try {
-            loader.loadProject(Paths.get(uri), new NoopImportsNormalizer());
+            loader.loadProject(Paths.get(uri), new NoopImportsNormalizer(), ImportsListener.NOP_LISTENER);
             fail("exception expected");
         } catch (YamlParserException e) {
             assertTrue(e.getMessage().contains("Duplicate field 'configuration'"));
@@ -78,7 +79,7 @@ public class ProjectLoaderTest {
 
         URI uri = ClassLoader.getSystemResource("duplicateConfigurationVariable").toURI();
         try {
-            loader.loadProject(Paths.get(uri), new NoopImportsNormalizer());
+            loader.loadProject(Paths.get(uri), new NoopImportsNormalizer(), ImportsListener.NOP_LISTENER);
             fail("exception expected");
         } catch (YamlParserException e) {
             assertTrue(e.getMessage().contains("Duplicate field 'x'"));
@@ -90,7 +91,7 @@ public class ProjectLoaderTest {
         ProjectLoader loader = new ProjectLoader(mock(ImportManager.class));
 
         URI uri = ClassLoader.getSystemResource("complex").toURI();
-        ProjectDefinition pd = loader.loadProject(Paths.get(uri), new NoopImportsNormalizer()).getProjectDefinition();
+        ProjectDefinition pd = loader.loadProject(Paths.get(uri), new NoopImportsNormalizer(), ImportsListener.NOP_LISTENER).getProjectDefinition();
         assertNotNull(pd);
 
         //--- triggers
@@ -120,7 +121,7 @@ public class ProjectLoaderTest {
         ProjectLoader loader = new ProjectLoader(mock(ImportManager.class));
 
         URI uri = ClassLoader.getSystemResource("multiProjectFile").toURI();
-        ProjectDefinition pd = loader.loadProject(Paths.get(uri), new NoopImportsNormalizer()).getProjectDefinition();
+        ProjectDefinition pd = loader.loadProject(Paths.get(uri), new NoopImportsNormalizer(), ImportsListener.NOP_LISTENER).getProjectDefinition();
         assertNotNull(pd);
 
         assertNotNull(pd.getFlows().get("default"));

@@ -24,5 +24,6 @@ triggers:
         githubRepo: ".*"
         branch: ".*"
         repositoryInfo:
-          # trigger only for registered repos (i.e. added to Concord)
+          # trigger only for registered enabled repos (i.e. added to Concord)
           - repository: ".*"
+            enabled: true

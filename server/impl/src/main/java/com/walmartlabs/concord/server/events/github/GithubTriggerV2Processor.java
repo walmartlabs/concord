@@ -21,6 +21,7 @@ package com.walmartlabs.concord.server.events.github;
  */
 
 import com.walmartlabs.concord.repository.GitCliRepositoryProvider;
+import com.walmartlabs.concord.repository.GitConstants;
 import com.walmartlabs.concord.sdk.MapUtils;
 import com.walmartlabs.concord.server.events.DefaultEventFilter;
 import com.walmartlabs.concord.server.org.project.RepositoryDao;
@@ -175,7 +176,8 @@ public class GithubTriggerV2Processor implements GithubTriggerProcessor {
                 repositoryInfo.put(REPO_ID_KEY, r.getId());
                 repositoryInfo.put(REPO_NAME_KEY, r.getName());
                 repositoryInfo.put(PROJECT_ID_KEY, r.getProjectId());
-                repositoryInfo.put(REPO_BRANCH_KEY, r.getBranch() != null ? r.getBranch() : GitCliRepositoryProvider.DEFAULT_BRANCH);
+                repositoryInfo.put(REPO_BRANCH_KEY, r.getBranch() != null ? r.getBranch() : GitConstants.DEFAULT_BRANCH);
+                repositoryInfo.put(REPO_ENABLED_KEY, !r.isDisabled());
 
                 repositoryInfos.add(repositoryInfo);
             }

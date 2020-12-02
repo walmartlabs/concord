@@ -47,6 +47,7 @@ export interface ProcessElementEvent {
     out?: VariableMapping[] | {};
     correlationId?: string;
     duration?: number;
+    error?: string;
 }
 
 export type ProcessEventData = ProcessElementEvent | AnsibleEvent | {};

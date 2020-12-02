@@ -22,6 +22,7 @@ package com.walmartlabs.concord.cli;
 
 import com.walmartlabs.concord.cli.lint.*;
 import com.walmartlabs.concord.cli.lint.LintResult.Type;
+import com.walmartlabs.concord.cli.runner.CliImportsListener;
 import com.walmartlabs.concord.imports.NoopImportManager;
 import com.walmartlabs.concord.process.loader.ProjectLoader;
 import com.walmartlabs.concord.process.loader.model.ProcessDefinition;
@@ -63,7 +64,7 @@ public class Lint implements Callable<Integer> {
         }
 
         ProjectLoader loader = new ProjectLoader(new NoopImportManager());
-        ProcessDefinition pd = loader.loadProject(targetDir, new DummyImportsNormalizer()).projectDefinition();
+        ProcessDefinition pd = loader.loadProject(targetDir, new DummyImportsNormalizer(), verbose ? new CliImportsListener() : null).projectDefinition();
 
         List<LintResult> lintResults = new ArrayList<>();
         linters().forEach(l -> lintResults.addAll(l.apply(pd)));
