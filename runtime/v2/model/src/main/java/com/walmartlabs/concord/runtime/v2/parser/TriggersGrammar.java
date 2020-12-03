@@ -42,6 +42,27 @@ import static io.takari.parc.Combinators.many1;
 public final class TriggersGrammar {
 
     @SuppressWarnings("unchecked")
+    private static final Parser<Atom, Map<String, Object>> githubTriggerRepositoryInfoItem =
+            betweenTokens(JsonToken.START_OBJECT, JsonToken.END_OBJECT,
+                    with(ImmutableMap::<String, Object>builder,
+                            o -> options(
+                                    optional("repositoryId", regexpVal.map(v -> o.put("repositoryId", v))),
+                                    optional("repository", regexpVal.map(v -> o.put("repository", v))),
+                                    optional("projectId", regexpVal.map(v -> o.put("projectId", v))),
+                                    optional("branch", regexpVal.map(v -> o.put("branch", v))),
+                                    optional("enabled", booleanVal.map(v -> o.put("enabled", v)))))
+                            .map(ImmutableMap.Builder::build));
+
+    private static final Parser<Atom, Map<String, Object>> githubTriggerRepositoryInfoItemVal =
+            orError(githubTriggerRepositoryInfoItem, YamlValueType.GITHUB_REPOSITORY_INFO);
+
+    private static final Parser<Atom, List<Map<String, Object>>> githubTriggerRepositoryInfo =
+            betweenTokens(JsonToken.START_ARRAY, JsonToken.END_ARRAY, many1(githubTriggerRepositoryInfoItemVal).map(Seq::toList));
+
+    private static final Parser<Atom, List<Map<String, Object>>> githubTriggerRepositoryInfoVal =
+            orError(githubTriggerRepositoryInfo, YamlValueType.ARRAY_OF_GITHUB_REPOSITORY_INFO);
+
+    @SuppressWarnings("unchecked")
     private static final Parser<Atom, Map<String, Object>> githubTriggerConditionsV2 =
             betweenTokens(JsonToken.START_OBJECT, JsonToken.END_OBJECT,
                 with(ImmutableMap::<String, Object>builder,
@@ -53,7 +74,7 @@ public final class TriggersGrammar {
                                 optional("branch", regexpVal.map(v -> o.put("branch", v))),
                                 optional("sender", regexpVal.map(v -> o.put("sender", v))),
                                 optional("status", regexpVal.map(v -> o.put("status", v))),
-                                optional("repositoryInfo", arrayOfValues.map(v -> o.put("repositoryInfo", v.getValue()))),
+                                optional("repositoryInfo", githubTriggerRepositoryInfoVal.map(v -> o.put("repositoryInfo", v))),
                                 optional("payload", mapVal.map(v -> o.put("payload", v)))))
                         .map(ImmutableMap.Builder::build));
 

@@ -1,5 +1,36 @@
 # Change log
 
+## [Unreleased]
+
+### Added
+
+- runtime-v2: add grammar for `repositoryInfo` conditions in
+GitHub triggers;
+- concord-server: new GitHub trigger condition
+`repository.enabled`. Allows filtering by the repository's
+enabled/disabled state;
+- runtime-v2, concord-console: record `post` events for failed
+tasks, highlight failed tasks on the events tab.
+
+### Changed
+
+- concord-console: add scrolling to the last error popup, trigger
+information popup and the task call details popup;
+- concord-repository: preserve the logger's MDC when logging
+Git client operations;
+- concord-imports: additional logging when processing `imports`;
+- concord-repository: the git client was reworked to better
+support partial fetching of repositories;
+- runtime-v2: unwrap runtime exceptions produced by expressions;
+- concord-client: tidy up the error logging - don't log a
+separate `WARN` message when the server responds with an error;
+- runtime-v2: save original stacktraces when throwing a
+`MultiException` (e.g. in `parallel` situations);
+- concord-console: now users should be correctly redirected to
+their destination page after login.
+
+
+
 ## [1.74.0] - 2020-11-24
 
 ### Added
