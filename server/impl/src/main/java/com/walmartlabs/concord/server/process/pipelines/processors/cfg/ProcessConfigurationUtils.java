@@ -27,6 +27,7 @@ import com.walmartlabs.concord.server.process.Payload;
 import com.walmartlabs.concord.server.process.pipelines.processors.RepositoryProcessor;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 public final class ProcessConfigurationUtils {
 
@@ -72,7 +73,7 @@ public final class ProcessConfigurationUtils {
                 String[] as = s.trim().split(",");
                 return Arrays.asList(as);
             } else if (o instanceof List) {
-                return (List<String>) o;
+                return assertListType("activeProfiles", removeNulls((List<String>) o), String.class);
             } else {
                 throw new IllegalArgumentException("Invalid '" + Constants.Request.ACTIVE_PROFILES_KEY +
                         "' value. Expected a JSON array or a comma-delimited list of profiles, got: " + o);
@@ -142,6 +143,33 @@ public final class ProcessConfigurationUtils {
             return null;
         }
         return what.replaceAll("\\$\\{", "\\\\\\${");
+    }
+
+    private static <T> List<T> removeNulls(List<T> c) {
+        if (c == null) {
+            return Collections.emptyList();
+        }
+
+        return c.stream()
+                .filter(Objects::nonNull)
+                .collect(Collectors.toList());
+    }
+
+    private static <T> List<T> assertListType(String itemsName, List<T> items, Class<T> type) {
+        if (items == null) {
+            return Collections.emptyList();
+        }
+
+        for (T i : items) {
+            if (i == null) {
+                throw new IllegalArgumentException("Invalid " + itemsName + " values " + items + ": expected 'String' type, got 'null'");
+            }
+
+            if (!(type.isAssignableFrom(i.getClass()))) {
+                throw new IllegalArgumentException("Invalid " + itemsName + " values " + items + ": expected 'String' type, got '" + i.getClass() + "'");
+            }
+        }
+        return items;
     }
 
     private ProcessConfigurationUtils() {
