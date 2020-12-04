@@ -9,9 +9,9 @@ package com.walmartlabs.concord.server.org.triggers;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -20,9 +20,8 @@ package com.walmartlabs.concord.server.org.triggers;
  * =====
  */
 
-import com.walmartlabs.concord.repository.GitCliRepositoryProvider;
-import com.walmartlabs.concord.repository.GitConstants;
 import com.walmartlabs.concord.sdk.MapUtils;
+import com.walmartlabs.concord.server.cfg.GitConfiguration;
 import com.walmartlabs.concord.server.events.github.GithubRepoInfo;
 import com.walmartlabs.concord.server.events.github.GithubUtils;
 import com.walmartlabs.concord.server.org.project.RepositoryDao;
@@ -46,10 +45,12 @@ import static com.walmartlabs.concord.server.events.github.Constants.*;
 public class GithubTriggerEnricher {
 
     private final RepositoryDao repositoryDao;
+    private final GitConfiguration gitConfiguration;
 
     @Inject
-    public GithubTriggerEnricher(RepositoryDao repositoryDao) {
+    public GithubTriggerEnricher(RepositoryDao repositoryDao, GitConfiguration gitConfiguration) {
         this.repositoryDao = repositoryDao;
+        this.gitConfiguration = gitConfiguration;
     }
 
     public Map<String, Object> enrich(DSLContext tx, UUID repoId, Map<String, Object> conditions) {
@@ -84,7 +85,7 @@ public class GithubTriggerEnricher {
 
         Object eventType = conditions.get(TYPE_KEY);
         if (PULL_REQUEST_EVENT.equals(eventType) || PUSH_EVENT.equals(eventType)) {
-            String defaultBranch = repo.getBranch() != null ? repo.getBranch() : GitConstants.DEFAULT_BRANCH;
+            String defaultBranch = repo.getBranch() != null ? repo.getBranch() : gitConfiguration.getDefaultBranch();
             newParams.putIfAbsent(REPO_BRANCH_KEY, defaultBranch);
         }
         return newParams;

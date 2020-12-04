@@ -102,7 +102,7 @@ public class RepositoryManager {
                     FetchRequest.builder()
                             .url(uri)
                             .shallow(gitCfg.isShallowClone())
-                            .branchOrTag(getBranch(branch, commitId))
+                            .branchOrTag(getBranch(branch, commitId, gitCfg.getDefaultBranch()))
                             .commitId(commitId)
                             .secret(secret)
                             .destination(tmpDir)
@@ -137,7 +137,7 @@ public class RepositoryManager {
                     FetchRequest.builder()
                             .url(url)
                             .shallow(gitCfg.isShallowClone())
-                            .branchOrTag(getBranch(branch, commitId))
+                            .branchOrTag(getBranch(branch, commitId, gitCfg.getDefaultBranch()))
                             .commitId(commitId)
                             .secret(secret)
                             .destination(dest)
@@ -189,13 +189,7 @@ public class RepositoryManager {
         return s.getSecret();
     }
 
-    private static String getBranch(String branch, String commitId) {
-        if (commitId != null) {
-            return branch;
-        }
-        if (branch != null) {
-            return branch;
-        }
-        return GitConstants.DEFAULT_BRANCH;
+    private static String getBranch(String branch, String commitId, String defaultBranch) {
+       return commitId != null ? commitId : branch != null ? branch : defaultBranch;
     }
 }

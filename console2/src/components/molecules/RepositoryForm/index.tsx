@@ -189,7 +189,7 @@ class RepositoryForm extends React.Component<InjectedFormikProps<Props, FormValu
                         />
 
                         {values.sourceType === RepositorySourceType.BRANCH_OR_TAG && (
-                            <FormikInput name="branch" label="Branch/Tag" fluid={true} />
+                            <FormikInput name="branch" label="Branch/Tag" fluid={true} required={true} />
                         )}
 
                         {values.sourceType === RepositorySourceType.COMMIT_ID && (

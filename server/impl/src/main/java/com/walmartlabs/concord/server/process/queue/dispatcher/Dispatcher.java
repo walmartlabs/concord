@@ -27,10 +27,10 @@ import com.walmartlabs.concord.common.MapMatcher;
 import com.walmartlabs.concord.db.AbstractDao;
 import com.walmartlabs.concord.db.MainDB;
 import com.walmartlabs.concord.imports.Imports;
-import com.walmartlabs.concord.repository.GitConstants;
 import com.walmartlabs.concord.server.ConcordObjectMapper;
 import com.walmartlabs.concord.server.Locks;
 import com.walmartlabs.concord.server.PeriodicTask;
+import com.walmartlabs.concord.server.cfg.GitConfiguration;
 import com.walmartlabs.concord.server.cfg.ProcessQueueConfiguration;
 import com.walmartlabs.concord.server.jooq.tables.ProcessQueue;
 import com.walmartlabs.concord.server.process.ImportsNormalizerFactory;
@@ -93,6 +93,8 @@ public class Dispatcher extends PeriodicTask {
 
     private final SessionTokenCreator sessionTokenCreator;
 
+    private final GitConfiguration gitConfiguration;
+
     @Inject
     public Dispatcher(Locks locks,
                       DispatcherDao dao,
@@ -103,7 +105,8 @@ public class Dispatcher extends PeriodicTask {
                       ImportsNormalizerFactory importsNormalizerFactory,
                       ProcessQueueConfiguration cfg,
                       MetricRegistry metricRegistry,
-                      SessionTokenCreator sessionTokenCreator) {
+                      SessionTokenCreator sessionTokenCreator,
+                      GitConfiguration gitConfiguration) {
 
         super(cfg.getDispatcherPollDelay().toMillis(), ERROR_DELAY);
 
@@ -120,6 +123,7 @@ public class Dispatcher extends PeriodicTask {
 
         this.dispatchedCountHistogram = metricRegistry.histogram("process-queue-dispatcher-dispatched-count");
         this.responseTimer = metricRegistry.timer("process-queue-dispatcher-response-timer");
+        this.gitConfiguration = gitConfiguration;
     }
 
     @Override
@@ -262,7 +266,7 @@ public class Dispatcher extends PeriodicTask {
             String repoBranch = null;
             if (item.repoId() != null) {
                 secret = dao.getSecretReference(item.repoId());
-                repoBranch = dao.getRepoBranch(item.repoId());
+                repoBranch = dao.getRepoBranch(item.repoId(), gitConfiguration.getDefaultBranch());
             }
 
             // backward compatibility with old process queue entries that are not normalized
@@ -372,7 +376,7 @@ public class Dispatcher extends PeriodicTask {
                     .fetchOne(r -> new SecretReference(r.value1(), r.value2()));
         }
 
-        public String getRepoBranch(UUID repoId) {
+        public String getRepoBranch(UUID repoId, String defaultBranch) {
             return dsl().select(REPOSITORIES.REPO_BRANCH, REPOSITORIES.REPO_COMMIT_ID)
                     .from(REPOSITORIES)
                     .where(REPOSITORIES.REPO_ID.eq(repoId))
@@ -381,7 +385,7 @@ public class Dispatcher extends PeriodicTask {
                             return null;
                         }
                         if (r.value1() == null) {
-                            return GitConstants.DEFAULT_BRANCH;
+                            return defaultBranch;
                         }
                         return r.value1();
                     });

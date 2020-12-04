@@ -100,6 +100,9 @@ public class Run implements Callable<Integer> {
     @Option(names = {"-v", "--verbose"}, description = "verbose output")
     boolean verbose = false;
 
+    @Option(names = {"--imports-version/branch"}, description = "default imports version/branch")
+    String defaultVersion = "master";
+
     @Parameters(arity = "0..1", description = "Directory with Concord files or a path to a single Concord YAML file.")
     Path sourceDir = Paths.get(System.getProperty("user.dir"));
 
@@ -138,7 +141,7 @@ public class Run implements Callable<Integer> {
         ProjectLoaderV2.Result loadResult;
         try {
             loadResult = new ProjectLoaderV2(importManager)
-                    .load(targetDir, new CliImportsNormalizer(importsSource, verbose), verbose ? new CliImportsListener() : null);
+                    .load(targetDir, new CliImportsNormalizer(importsSource, verbose, defaultVersion), verbose ? new CliImportsListener() : null);
         } catch (ImportProcessingException e) {
             ObjectMapper om = new ObjectMapper();
             System.err.println("Error while processing import " + om.writeValueAsString(e.getImport()) + ": " + e.getMessage());

@@ -20,11 +20,11 @@ package com.walmartlabs.concord.server.process.pipelines.processors;
  * =====
  */
 
-import com.walmartlabs.concord.repository.GitConstants;
 import com.walmartlabs.concord.repository.Repository;
 import com.walmartlabs.concord.repository.Snapshot;
 import com.walmartlabs.concord.sdk.Constants;
 import com.walmartlabs.concord.sdk.MapUtils;
+import com.walmartlabs.concord.server.cfg.GitConfiguration;
 import com.walmartlabs.concord.server.org.project.RepositoryDao;
 import com.walmartlabs.concord.server.org.project.RepositoryEntry;
 import com.walmartlabs.concord.server.process.Payload;
@@ -61,15 +61,18 @@ public class RepositoryProcessor implements PayloadProcessor {
     private final RepositoryDao repositoryDao;
     private final RepositoryManager repositoryManager;
     private final ProcessLogManager logManager;
+    private final GitConfiguration gitConfiguration;
 
     @Inject
     public RepositoryProcessor(RepositoryDao repositoryDao,
                                RepositoryManager repositoryManager,
-                               ProcessLogManager logManager) {
+                               ProcessLogManager logManager,
+                               GitConfiguration gitConfiguration) {
 
         this.repositoryDao = repositoryDao;
         this.repositoryManager = repositoryManager;
         this.logManager = logManager;
+        this.gitConfiguration = gitConfiguration;
     }
 
     @Override
@@ -105,7 +108,7 @@ public class RepositoryProcessor implements PayloadProcessor {
                     ci = new CommitInfo(info.getCommitId(), info.getAuthor(), info.getMessage());
                 }
 
-                String branch = repo.getBranch() != null ? repo.getBranch() : GitConstants.DEFAULT_BRANCH;
+                String branch = repo.getBranch() != null ? repo.getBranch() : gitConfiguration.getDefaultBranch();
                 RepositoryInfo i = new RepositoryInfo(repo.getId(), repo.getName(), repo.getUrl(), repo.getPath(), branch, repo.getCommitId(), ci);
                 return payload
                         .putHeader(REPOSITORY_INFO_KEY, i)
