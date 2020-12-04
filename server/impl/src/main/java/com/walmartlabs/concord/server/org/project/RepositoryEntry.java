@@ -68,8 +68,8 @@ public class RepositoryEntry implements Serializable {
 
     private final Map<String, Object> meta;
 
-    public RepositoryEntry(String name, String url) {
-        this(null, null, name, url, null, null, null, false, null, null, null, null);
+    public RepositoryEntry(String name, String url, String branch) {
+        this(null, null, name, url, branch, null, null, false, null, null, null, null);
     }
 
     public RepositoryEntry(String name, RepositoryEntry e) {

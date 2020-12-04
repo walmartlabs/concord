@@ -192,6 +192,9 @@
                             <item>
                                 <code>java.method.exception.checkedRemoved</code>
                             </item>
+                            <item>
+                                <code>java.annotation.attributeAdded</code>
+                            </item>
                         </revapi.ignore>
                     </analysisConfiguration>
                 </configuration>
