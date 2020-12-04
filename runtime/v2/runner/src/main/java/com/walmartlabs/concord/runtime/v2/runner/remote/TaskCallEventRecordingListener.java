@@ -33,14 +33,12 @@ import com.walmartlabs.concord.runtime.v2.model.Location;
 import com.walmartlabs.concord.runtime.v2.model.Step;
 import com.walmartlabs.concord.runtime.v2.runner.tasks.TaskCallEvent;
 import com.walmartlabs.concord.runtime.v2.runner.tasks.TaskCallListener;
-import com.walmartlabs.concord.runtime.v2.sdk.Context;
-import com.walmartlabs.concord.runtime.v2.sdk.ProcessConfiguration;
-import com.walmartlabs.concord.runtime.v2.sdk.TaskResult;
-import com.walmartlabs.concord.runtime.v2.sdk.Variables;
+import com.walmartlabs.concord.runtime.v2.sdk.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
+import java.lang.annotation.Annotation;
 import java.time.Instant;
 import java.time.ZoneOffset;
 import java.util.*;
@@ -48,6 +46,8 @@ import java.util.*;
 public class TaskCallEventRecordingListener implements TaskCallListener {
 
     private static final Logger log = LoggerFactory.getLogger(TaskCallEventRecordingListener.class);
+
+    private static final String MASK = "***";
 
     private final ProcessEventsApi eventsApi;
     private final InstanceId processInstanceId;
@@ -68,7 +68,7 @@ public class TaskCallEventRecordingListener implements TaskCallListener {
 
         List<Object> inVars = event.input();
         if (inVars != null && eventConfiguration.recordTaskInVars()) {
-            Map<String, Object> vars = maskVars(convertInput(inVars), eventConfiguration.inVarsBlacklist());
+            Map<String, Object> vars = maskVars(convertInput(hideSensitiveData(inVars, event.inputAnnotations())), eventConfiguration.inVarsBlacklist());
             if (eventConfiguration.truncateInVars()) {
                 vars = ObjectTruncater.truncateMap(vars, eventConfiguration.truncateMaxStringLength(), eventConfiguration.truncateMaxArrayLength(), eventConfiguration.truncateMaxDepth());
             }
@@ -154,7 +154,7 @@ public class TaskCallEventRecordingListener implements TaskCallListener {
             String[] path = b.split("\\.");
             if (ConfigurationUtils.has(result, path)) {
                 Map<String, Object> m = ensureModifiable(result, path.length - 1, path);
-                m.put(path[path.length - 1], "***");
+                m.put(path[path.length - 1], MASK);
             }
         }
         return result;
@@ -204,6 +204,22 @@ public class TaskCallEventRecordingListener implements TaskCallListener {
             result.put(String.valueOf(i), arg);
         }
 
+        return result;
+    }
+
+    private static List<Object> hideSensitiveData(List<Object> input, List<List<Annotation>> annotations) {
+        if (annotations.isEmpty()) {
+            return input;
+        }
+
+        List<Object> result = new ArrayList<>(input);
+        for (int i = 0; i < result.size(); i++) {
+            List<Annotation> a = annotations.get(i);
+            boolean hasSensitiveData = a.stream().anyMatch(v -> v.annotationType() == SensitiveData.class);
+            if (hasSensitiveData) {
+                result.set(i, MASK);
+            }
+        }
         return result;
     }
 }

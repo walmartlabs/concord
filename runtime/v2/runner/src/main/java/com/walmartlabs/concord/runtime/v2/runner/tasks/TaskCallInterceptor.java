@@ -20,6 +20,7 @@ package com.walmartlabs.concord.runtime.v2.runner.tasks;
  * =====
  */
 
+import com.sun.el.util.ReflectionUtil;
 import com.walmartlabs.concord.common.AllowNulls;
 import com.walmartlabs.concord.runtime.v2.model.ProcessDefinition;
 import com.walmartlabs.concord.runtime.v2.model.Step;
@@ -28,11 +29,10 @@ import org.immutables.value.Value;
 
 import javax.inject.Inject;
 import java.io.Serializable;
-import java.util.Collections;
-import java.util.List;
-import java.util.Set;
-import java.util.UUID;
+import java.lang.annotation.Annotation;
+import java.util.*;
 import java.util.concurrent.Callable;
+import java.util.stream.Collectors;
 
 /**
  * Intercepts task calls and notifies {@link TaskCallListener}s.
@@ -95,6 +95,7 @@ public class TaskCallInterceptor {
                 .correlationId(ctx.correlationId())
                 .currentStep(ctx.currentStep())
                 .input(method.arguments())
+                .inputAnnotations(method.annotations())
                 .methodName(method.name())
                 .processDefinition(ctx.processDefinition())
                 .taskName(ctx.taskName());
@@ -112,12 +113,27 @@ public class TaskCallInterceptor {
             return Collections.emptyList();
         }
 
-        static Method of(String name, Object... arguments) {
+        @AllowNulls
+        @Value.Default
+        default List<List<Annotation>> annotations() {
+            return Collections.emptyList();
+        }
+
+        static Method of(Object base, String methodName, List<Object> params) {
+            List<List<Annotation>> annotations = Collections.emptyList();
+            java.lang.reflect.Method m = ReflectionUtil.findMethod(base.getClass(), methodName, null, params.toArray());
+            if (m != null) {
+                annotations = Arrays.stream(m.getParameterAnnotations())
+                        .map(Arrays::asList)
+                        .collect(Collectors.toList());
+            }
             return ImmutableMethod.builder()
-                    .name(name)
-                    .addArguments(arguments)
+                    .name(methodName)
+                    .arguments(params)
+                    .annotations(annotations)
                     .build();
         }
+
     }
 
     @Value.Immutable

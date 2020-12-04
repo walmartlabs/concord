@@ -61,11 +61,11 @@ public class CryptoTaskV2 implements Task {
         this.processOrg = projectInfo != null ? projectInfo.orgName() : null;
     }
 
-    public String exportAsString(String orgName, String name, String password) throws Exception {
+    public String exportAsString(String orgName, String name, @SensitiveData String password) throws Exception {
         return secretService.exportAsString(orgName, name, password);
     }
 
-    public Map<String, String> exportKeyAsFile(String orgName, String name, String password) throws Exception {
+    public Map<String, String> exportKeyAsFile(String orgName, String name, @SensitiveData String password) throws Exception {
         KeyPair keyPair = secretService.exportKeyAsFile(orgName, name, password);
 
         Path baseDir = workDir;
@@ -76,7 +76,7 @@ public class CryptoTaskV2 implements Task {
         return m;
     }
 
-    public Map<String, String> exportCredentials(String orgName, String name, String password) throws Exception {
+    public Map<String, String> exportCredentials(String orgName, String name, @SensitiveData String password) throws Exception {
         UsernamePassword credentials = secretService.exportCredentials(orgName, name, password);
 
         Map<String, String> m = new HashMap<>();
@@ -85,7 +85,7 @@ public class CryptoTaskV2 implements Task {
         return m;
     }
 
-    public String exportAsFile(String orgName, String name, String password) throws Exception {
+    public String exportAsFile(String orgName, String name, @SensitiveData String password) throws Exception {
         Path path = secretService.exportAsFile(orgName, name, password);
         return workDir.relativize(path).toString();
     }
