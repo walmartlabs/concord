@@ -4,6 +4,8 @@
 
 ### Changed
 
+- concord-server: assert type of the active profiles collections,
+trim values;
 - runtime-v1, runtime-v2: update the list of "retryable" errors
 for `docker pull` operations to support recent versions of 
 docker-client.
