@@ -23,7 +23,7 @@ import { ConcordKey } from '../../../api/common';
 import { RedirectButton, RequestErrorActivity } from '../index';
 import { LoadingDispatch } from '../../../App';
 import { useApi } from '../../../hooks/useApi';
-import { useCallback } from 'react';
+import { useCallback, useState } from 'react';
 import { get as apiGet } from '../../../api/org/project';
 import { Menu } from 'semantic-ui-react';
 import { RepositoryList } from '../../molecules';
@@ -38,6 +38,11 @@ interface ExternalProps {
 
 const ProjectRepositories = ({ orgName, projectName, forceRefresh }: ExternalProps) => {
     const dispatch = React.useContext(LoadingDispatch);
+    const [refresh, toggleRefresh] = useState<boolean>(false);
+
+    const refreshHandler = useCallback(() => {
+        toggleRefresh((prevState) => !prevState);
+    }, []);
 
     const fetchData: () => Promise<RepositoryEntry[]> = useCallback(async () => {
         const project = await apiGet(orgName, projectName);
@@ -53,7 +58,7 @@ const ProjectRepositories = ({ orgName, projectName, forceRefresh }: ExternalPro
 
     const { data, error, isLoading } = useApi<RepositoryEntry[]>(fetchData, {
         fetchOnMount: true,
-        forceRequest: forceRefresh,
+        forceRequest: (forceRefresh ? 1 : 0) + (refresh ? 10 : 0),
         dispatch: dispatch
     });
 
@@ -80,6 +85,7 @@ const ProjectRepositories = ({ orgName, projectName, forceRefresh }: ExternalPro
                 projectName={projectName}
                 data={data}
                 loading={isLoading}
+                refresh={refreshHandler}
             />
         </>
     );

@@ -1,6 +1,6 @@
 # Change log
 
-## [Unreleased]
+## [1.75.0] - 2020-12-05
 
 ### Added
 
@@ -14,6 +14,8 @@ tasks, highlight failed tasks on the events tab.
 
 ### Changed
 
+- concord-console: reload the repository list after removing a
+repository;
 - concord-console: add scrolling to the last error popup, trigger
 information popup and the task call details popup;
 - concord-repository: preserve the logger's MDC when logging

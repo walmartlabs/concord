@@ -22,11 +22,12 @@ package com.walmartlabs.concord.agentoperator.scheduler;
 
 import com.walmartlabs.concord.agentoperator.crd.AgentPoolConfiguration;
 import com.walmartlabs.concord.agentoperator.processqueue.ProcessQueueEntry;
-import com.walmartlabs.concord.common.MapMatcher;
+import com.walmartlabs.concord.common.Matcher;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.function.Function;
 
@@ -209,11 +210,15 @@ public class AutoScaler {
         return poolSize;
     }
 
-    private int getProcessCount(AgentPoolConfiguration cfg, List<ProcessQueueEntry> processQueueEntries) {
+    private static int getProcessCount(AgentPoolConfiguration cfg, List<ProcessQueueEntry> processQueueEntries) {
         return (int) processQueueEntries.stream()
                 .map(ProcessQueueEntry::getRequirements)
                 .filter(Objects::nonNull)
-                .filter(a -> MapMatcher.matches(a, cfg.getQueueSelector()))
+                .filter(a -> isEmpty(cfg.getQueueSelector()) || Matcher.matches(a, cfg.getQueueSelector()))
                 .count();
+    }
+
+    private static boolean isEmpty(Map<String, Object> m) {
+        return m == null || m.isEmpty();
     }
 }

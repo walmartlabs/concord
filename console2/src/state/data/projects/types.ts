@@ -152,7 +152,6 @@ export interface State {
 
     createRepository: CreateRepositoryState;
     updateRepository: UpdateRepositoryState;
-    deleteRepository: DeleteRepositoryState;
     refreshRepository: RefreshRepositoryState;
     validateRepository: ValidateRepositoryState;
 }

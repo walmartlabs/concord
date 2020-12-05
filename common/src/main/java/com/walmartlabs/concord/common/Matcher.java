@@ -22,45 +22,82 @@ package com.walmartlabs.concord.common;
 
 import java.util.Collection;
 import java.util.Map;
+import java.util.UUID;
+import java.util.regex.Pattern;
 
-public final class MapMatcher {
+public final class Matcher {
 
-    public static boolean matches(Map<String, Object> data, Map<String, Object> conditions) {
-        if (conditions == null || conditions.isEmpty()) {
-            return true;
+    public static boolean matches(Object data, Object conditions) {
+        return compareNodes(data, conditions);
+    }
+
+    public static boolean matchAny(Object condition, Collection<Object> nodes) {
+        for (Object n : nodes) {
+            boolean result = compareNodes(n, condition);
+            if (result) {
+                return true;
+            }
         }
 
-        return compareNodes(data, conditions);
+        return false;
+    }
+
+    public static <T> boolean matchAny(Collection<T> conditions, T data) {
+        for (T c : conditions) {
+            boolean result = compareNodes(data, c);
+            if (result) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     @SuppressWarnings({"unchecked", "rawtypes"})
     private static boolean compareNodes(Object data, Object conditions) {
+        data = normalizeNull(data, conditions);
+
         if (data == null && conditions == null) {
             return true;
-        } else if (data == null && conditions instanceof String) {
-            return compareStringValues("", (String) conditions);
-        } else if (data == null || conditions == null) {
+        } else if ((data == null && !(conditions instanceof Collection)) || conditions == null) {
             return false;
         }
 
         if (conditions instanceof Map && data instanceof Map) {
             return compareObjectNodes((Map<String, Object>) data, (Map<String, Object>) conditions);
+        } else if (conditions instanceof String && data instanceof UUID) {
+            return compareStringValues(data.toString(), (String)conditions);
         } else if (conditions instanceof String && data instanceof String) {
             return compareStringValues((String) data, (String) conditions);
         } else if (conditions instanceof Collection && data instanceof Collection) {
             return compareArrayNodes((Collection) data, (Collection) conditions);
         } else if (conditions instanceof Collection) {
-            return matchAny(data, (Collection) conditions);
+            return matchAny((Collection) conditions, data);
         } else {
             return compareValues(data, conditions);
         }
     }
 
+    private static Object normalizeNull(Object data, Object conditions) {
+        if (data != null) {
+            return data;
+        }
+
+        if (conditions instanceof String) {
+            return "";
+        }
+
+        return null;
+    }
+
     private static boolean compareObjectNodes(Map<String, Object> data, Map<String, Object> conditions) {
-        for (String fieldName : conditions.keySet()) {
-            Object dataItem = data.get(fieldName);
-            Object conditionItem = conditions.get(fieldName);
-            if (!compareNodes(dataItem, conditionItem)) {
+        if (conditions.isEmpty() && !data.isEmpty()) {
+            return false;
+        }
+
+        for (Map.Entry<String, Object> e : conditions.entrySet()) {
+            Object dataItem = data.get(e.getKey());
+            if (!compareNodes(dataItem, e.getValue())) {
                 return false;
             }
         }
@@ -68,8 +105,16 @@ public final class MapMatcher {
         return true;
     }
 
+    private static boolean compareStringValues(String value, String condition) {
+        return Pattern.compile(condition, Pattern.CASE_INSENSITIVE).matcher(value).matches();
+    }
+
     private static boolean compareArrayNodes(Collection<Object> dataElements, Collection<Object> conditionElements) {
         if (conditionElements.size() > dataElements.size()) {
+            return false;
+        }
+
+        if (conditionElements.isEmpty() && !dataElements.isEmpty()) {
             return false;
         }
 
@@ -83,25 +128,10 @@ public final class MapMatcher {
         return true;
     }
 
-    private static boolean matchAny(Object condition, Collection<Object> nodes) {
-        for (Object n : nodes) {
-            boolean result = compareNodes(n, condition);
-            if (result) {
-                return true;
-            }
-        }
-
-        return false;
-    }
-
-    private static boolean compareStringValues(String dataValue, String conditionValue) {
-        return dataValue.matches(conditionValue);
-    }
-
     private static boolean compareValues(Object dataValue, Object conditionValue) {
         return dataValue.equals(conditionValue);
     }
 
-    private MapMatcher() {
+    private Matcher() {
     }
 }

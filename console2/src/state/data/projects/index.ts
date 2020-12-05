@@ -36,7 +36,6 @@ import {
 } from '../../../api/org/project';
 import {
     createOrUpdate as apiRepoCreateOrUpdate,
-    deleteRepository as apiRepoDelete,
     EditRepositoryEntry,
     refreshRepository as apiRepoRefresh,
     validateRepository as apiRepoValidation
@@ -54,8 +53,6 @@ import {
     CreateRepositoryState,
     DeleteProjectRequest,
     DeleteProjectState,
-    DeleteRepositoryRequest,
-    DeleteRepositoryState,
     GetProjectRequest,
     ListProjectsRequest,
     PaginatedProjects,
@@ -96,9 +93,6 @@ const actionTypes = {
 
     UPDATE_REPOSITORY_REQUEST: `${NAMESPACE}/repo/update/request`,
     UPDATE_REPOSITORY_RESPONSE: `${NAMESPACE}/repo/update/response`,
-
-    DELETE_REPOSITORY_REQUEST: `${NAMESPACE}/repo/delete/request`,
-    DELETE_REPOSITORY_RESPONSE: `${NAMESPACE}/repo/delete/response`,
 
     REFRESH_REPOSITORY_REQUEST: `${NAMESPACE}/repo/refresh/request`,
     REFRESH_REPOSITORY_RESPONSE: `${NAMESPACE}/repo/refresh/response`,
@@ -175,17 +169,6 @@ export const actions = {
         orgName,
         projectName,
         entry
-    }),
-
-    deleteRepository: (
-        orgName: ConcordKey,
-        projectName: ConcordKey,
-        repoName: ConcordKey
-    ): DeleteRepositoryRequest => ({
-        type: actionTypes.DELETE_REPOSITORY_REQUEST,
-        orgName,
-        projectName,
-        repoName
     }),
 
     refreshRepository: (
@@ -331,21 +314,6 @@ const updateRepositoryReducers = combineReducers<UpdateRepositoryState>({
     )
 });
 
-const deleteRepositoryReducers = combineReducers<DeleteRepositoryState>({
-    running: makeLoadingReducer(
-        [actionTypes.DELETE_REPOSITORY_REQUEST],
-        [actionTypes.DELETE_REPOSITORY_RESPONSE]
-    ),
-    error: makeErrorReducer(
-        [actionTypes.DELETE_REPOSITORY_REQUEST],
-        [actionTypes.DELETE_REPOSITORY_RESPONSE]
-    ),
-    response: makeResponseReducer(
-        actionTypes.DELETE_REPOSITORY_RESPONSE,
-        actionTypes.RESET_REPOSITORY
-    )
-});
-
 const refreshRepositoryReducers = combineReducers<RefreshRepositoryState>({
     running: makeLoadingReducer(
         [actionTypes.REFRESH_REPOSITORY_REQUEST],
@@ -413,7 +381,6 @@ export const reducers = combineReducers<State>({
 
     createRepository: createRepositoryReducers,
     updateRepository: updateRepositoryReducers,
-    deleteRepository: deleteRepositoryReducers,
     refreshRepository: refreshRepositoryReducers,
     validateRepository: validateRepositoryReducers
 });
@@ -541,15 +508,6 @@ function* onUpdateRepository({ orgName, projectName, entry }: UpdateRepositoryRe
     }
 }
 
-function* onDeleteRepository({ orgName, projectName, repoName }: DeleteRepositoryRequest) {
-    try {
-        const response = yield call(apiRepoDelete, orgName, projectName, repoName);
-        yield put(genericResult(actionTypes.DELETE_REPOSITORY_RESPONSE, response));
-    } catch (e) {
-        yield handleErrors(actionTypes.DELETE_REPOSITORY_RESPONSE, e);
-    }
-}
-
 function* onRefreshRepository({ orgName, projectName, repoName }: RefreshRepositoryRequest) {
     try {
         const response = yield call(apiRepoRefresh, orgName, projectName, repoName, true);
@@ -599,7 +557,6 @@ export const sagas = function*() {
         takeLatest(actionTypes.UPDATE_PROJECT_REQUEST, onUpdateProject),
         takeLatest(actionTypes.ADD_REPOSITORY_REQUEST, onAddRepository),
         takeLatest(actionTypes.UPDATE_REPOSITORY_REQUEST, onUpdateRepository),
-        takeLatest(actionTypes.DELETE_REPOSITORY_REQUEST, onDeleteRepository),
         takeLatest(actionTypes.REFRESH_REPOSITORY_REQUEST, onRefreshRepository),
         takeLatest(actionTypes.VALIDATE_REPOSITORY_REQUEST, onValidateRepository),
         takeLatest(actionTypes.PROJECT_TEAM_ACCESS_REQUEST, onGetTeamAccess),
