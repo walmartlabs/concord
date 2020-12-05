@@ -87,14 +87,6 @@ public final class Matcher {
             return "";
         }
 
-//        if (conditions instanceof Collection) {
-//            return Collections.emptyList();
-//        }
-//
-//        if (conditions instanceof Map) {
-//            return Collections.emptyMap();
-//        }
-
         return null;
     }
 
