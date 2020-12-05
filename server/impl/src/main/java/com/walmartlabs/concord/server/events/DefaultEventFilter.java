@@ -20,7 +20,7 @@ package com.walmartlabs.concord.server.events;
  * =====
  */
 
-import com.walmartlabs.concord.common.MapMatcher;
+import com.walmartlabs.concord.common.Matcher;
 import com.walmartlabs.concord.server.org.triggers.TriggerEntry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -32,8 +32,12 @@ public final class DefaultEventFilter {
     private static final Logger log = LoggerFactory.getLogger(DefaultEventFilter.class);
 
     public static boolean filter(Map<String, Object> conditions, TriggerEntry t) {
+        if (t.getConditions() == null || t.getConditions().isEmpty()) {
+            return true;
+        }
+
         try {
-            return MapMatcher.matches(conditions, t.getConditions());
+            return Matcher.matches(conditions, t.getConditions());
         } catch (Exception e) {
             log.warn("filter [{}, {}] -> error while matching events: {}", conditions, t, e.getMessage());
             return false;
