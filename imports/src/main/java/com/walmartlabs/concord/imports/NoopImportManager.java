@@ -29,7 +29,7 @@ import java.util.List;
 public class NoopImportManager implements ImportManager {
 
     @Override
-    public List<Snapshot> process(Imports imports, Path dest) {
+    public List<Snapshot> process(Imports imports, Path dest, ImportsListener listener) {
         return Collections.emptyList();
     }
 }

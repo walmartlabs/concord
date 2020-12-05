@@ -33,18 +33,19 @@ public class DefaultImportManager implements ImportManager {
 
     private final Map<String, ImportProcessor<Import>> processors;
     private final Set<String> disabledProcessors;
-    private final ImportsListener listener;
 
     @SuppressWarnings({"unchecked", "rawtypes"})
-    public DefaultImportManager(List<ImportProcessor> processors, Set<String> disabledProcessors, ImportsListener listener) {
+    public DefaultImportManager(List<ImportProcessor> processors, Set<String> disabledProcessors) {
         this.processors = processors.stream().collect(Collectors.toMap(ImportProcessor::type, o -> o));
         this.disabledProcessors = disabledProcessors;
-        this.listener = listener != null ? listener : new ImportsListener() {
-        };
     }
 
     @Override
-    public List<Snapshot> process(Imports imports, Path dest) throws Exception {
+    public List<Snapshot> process(Imports imports, Path dest, ImportsListener listener) throws Exception {
+        if (listener == null) {
+            listener = ImportsListener.NOP_LISTENER;
+        }
+
         List<Snapshot> result = new ArrayList<>();
 
         List<Import> items = imports.items();

@@ -25,6 +25,7 @@ import com.walmartlabs.concord.common.IOUtils;
 import com.walmartlabs.concord.imports.Import;
 import com.walmartlabs.concord.imports.ImportManager;
 import com.walmartlabs.concord.imports.Imports;
+import com.walmartlabs.concord.imports.ImportsListener;
 import com.walmartlabs.concord.repository.Snapshot;
 import com.walmartlabs.concord.runtime.v2.model.*;
 import com.walmartlabs.concord.runtime.v2.parser.YamlParserV2;
@@ -43,7 +44,7 @@ public class ProjectLoaderV2 {
         this.importManager = importManager;
     }
 
-    public Result load(Path baseDir, ImportsNormalizer importsNormalizer) throws Exception {
+    public Result load(Path baseDir, ImportsNormalizer importsNormalizer, ImportsListener listener) throws Exception {
         YamlParserV2 parser = new YamlParserV2();
 
         // load the initial ProcessDefinition from the root concord.yml file
@@ -53,7 +54,7 @@ public class ProjectLoaderV2 {
         List<Snapshot> snapshots = Collections.emptyList();
         if (root != null) {
             Imports imports = importsNormalizer.normalize(root.imports());
-            snapshots = importManager.process(imports, baseDir);
+            snapshots = importManager.process(imports, baseDir, listener);
         }
 
         List<Path> files = loadResources(baseDir, root != null ? root.resources() : Resources.builder().build());
@@ -75,7 +76,7 @@ public class ProjectLoaderV2 {
         return new Result(snapshots, merge(definitions));
     }
 
-    public void export(Path baseDir, Path destDir, ImportsNormalizer importsNormalizer, CopyOption... options) throws Exception {
+    public void export(Path baseDir, Path destDir, ImportsNormalizer importsNormalizer, ImportsListener listener, CopyOption... options) throws Exception {
         YamlParserV2 parser = new YamlParserV2();
 
         ProcessDefinition root = loadRoot(parser, baseDir);
@@ -93,7 +94,7 @@ public class ProjectLoaderV2 {
             copyResources(baseDir, resources, tmpDir, options);
 
             Imports imports = importsNormalizer.normalize(root.imports());
-            importManager.process(imports, tmpDir);
+            importManager.process(imports, tmpDir, listener);
 
             copyResources(tmpDir, resources, destDir, options);
         } finally {

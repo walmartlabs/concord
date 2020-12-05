@@ -5,7 +5,13 @@ triggers:
       entryPoint: onPush
       ignoreEmptyPush: false
       conditions:
-        type: push
+        type: "push"
+        githubOrg: ".*"
+        githubRepo: ".*"
+        branch: ".*"
+        repositoryInfo:
+          - repository: ".*"
+            enabled: true
 
   - github:
       version: 2

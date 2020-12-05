@@ -48,7 +48,7 @@ export default ({ processMeta, title = 'Last error' }: Props) => {
                 />
             }>
             <Modal.Header>{title}</Modal.Header>
-            <Modal.Content>
+            <Modal.Content scrolling={true}>
                 <ReactJson
                     src={processMeta.out.lastError}
                     collapsed={false}
