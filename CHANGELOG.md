@@ -4,6 +4,8 @@
 
 ### Changed
 
+- policy-engine: rule matching code refactoring, use common map
+matcher, add more tests;
 - concord-server: assert type of the active profiles collections,
 trim values;
 - runtime-v1, runtime-v2: update the list of "retryable" errors
