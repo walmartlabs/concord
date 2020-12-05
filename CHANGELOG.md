@@ -1,5 +1,15 @@
 # Change log
 
+## [Unreleased]
+
+### Changed
+
+- runtime-v1, runtime-v2: update the list of "retryable" errors
+for `docker pull` operations to support recent versions of 
+docker-client.
+
+
+
 ## [1.75.0] - 2020-12-05
 
 ### Added
