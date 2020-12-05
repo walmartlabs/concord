@@ -22,11 +22,13 @@ package com.walmartlabs.concord.common;
 
 import org.junit.Test;
 
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
+import static java.util.Arrays.asList;
+import static java.util.Collections.emptyList;
+import static java.util.Collections.emptyMap;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
@@ -40,7 +42,7 @@ public class MatcherTest {
         event.put("c", 123);
         event.put("d", null);
         event.put("e", true);
-        event.put("f", Arrays.asList("3", "1", "4", "2"));
+        event.put("f", asList("3", "1", "4", "2"));
 
         Map<String, Object> conditions = new HashMap<>();
         conditions.put("a", "a-v.*");
@@ -48,7 +50,7 @@ public class MatcherTest {
         conditions.put("c", 123);
         conditions.put("d", null);
         conditions.put("e", true);
-        conditions.put("f", Arrays.asList("1", "2"));
+        conditions.put("f", asList("1", "2"));
 
         boolean result = Matcher.matches(event, conditions);
         assertTrue(result);
@@ -73,7 +75,7 @@ public class MatcherTest {
         event.put("c", 123);
         event.put("d", null);
         event.put("e", true);
-        event.put("f", Arrays.asList("3", "1", "4", "2"));
+        event.put("f", asList("3", "1", "4", "2"));
 
         Map<String, Object> conditions = new HashMap<>();
         conditions.put("b", "XXXX");
@@ -118,7 +120,7 @@ public class MatcherTest {
         event.put("unknownRepo", true);
 
         Map<String, Object> conditions = new HashMap<>();
-        conditions.put("unknownRepo", Arrays.asList(true, false));
+        conditions.put("unknownRepo", asList(true, false));
 
         boolean result = Matcher.matches(event, conditions);
         assertTrue(result);
@@ -139,12 +141,12 @@ public class MatcherTest {
     @Test
     public void testMatchEmptyCondition() {
         Map<String, Object> conditions = new HashMap<>();
-        conditions.put("params", Collections.emptyMap());
+        conditions.put("params", emptyMap());
 
         // --- empty param
         Map<String, Object> event1 = new HashMap<>();
         event1.put("k", "v");
-        event1.put("params", Collections.emptyMap());
+        event1.put("params", emptyMap());
 
         boolean result = Matcher.matches(event1, conditions);
         assertTrue(result);
@@ -154,7 +156,7 @@ public class MatcherTest {
         event2.put("k", "v");
 
         boolean result2 = Matcher.matches(event2, conditions);
-        assertTrue(result2);
+        assertFalse(result2);
 
         // --- param present
         Map<String, Object> event3 = new HashMap<>();
@@ -173,7 +175,7 @@ public class MatcherTest {
         // --- empty param
         Map<String, Object> event1 = new HashMap<>();
         event1.put("k", "v");
-        event1.put("params", Collections.emptyMap());
+        event1.put("params", emptyMap());
 
         boolean result = Matcher.matches(event1, conditions);
         assertFalse(result);
@@ -201,4 +203,56 @@ public class MatcherTest {
         boolean result4 = Matcher.matches(event4, conditions);
         assertFalse(result4);
     }
+
+    @Test
+    public void testNulls() {
+        // data   ?    condition
+        //  null == null
+        assertTrue(Matcher.matches(null, null));
+
+        //  null == ".*"
+        assertTrue(Matcher.matches(null, ".*"));
+        //  null == ""
+        assertTrue(Matcher.matches(null, ""));
+
+        //  null != {}
+        assertFalse(Matcher.matches(null, emptyMap()));
+
+        //  null != []
+        assertFalse(Matcher.matches(null, emptyList()));
+
+        //  {} == {}
+        assertTrue(Matcher.matches(emptyMap(), emptyMap()));
+
+        //  [] == []
+        assertTrue(Matcher.matches(emptyList(), emptyList()));
+
+        //  null != 1
+        assertFalse(Matcher.matches(null, 1));
+
+        //  "" != null
+        assertFalse(Matcher.matches("", null));
+
+        //  {} != null
+        assertFalse(Matcher.matches(emptyMap(), null));
+
+        //  [] != null
+        assertFalse(Matcher.matches(emptyList(), null));
+    }
+    
+    @Test
+    public void testOr() {
+        // null == [null, []]
+        assertTrue(Matcher.matches(null, asList(null, emptyList())));
+
+        // {} == [null, [], {}]
+        assertTrue(Matcher.matches(emptyMap(), asList(null, emptyList(), emptyMap())));
+
+        //! [] == [null, []]
+        assertFalse(Matcher.matches(emptyList(), asList(null, emptyList())));
+    }
+
+    // null == null, "", ".*", [null]
+    // []   == []
+    // {}   == {}, [{}]
 }

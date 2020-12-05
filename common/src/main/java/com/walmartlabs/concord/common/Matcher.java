@@ -21,7 +21,6 @@ package com.walmartlabs.concord.common;
  */
 
 import java.util.Collection;
-import java.util.Collections;
 import java.util.Map;
 import java.util.UUID;
 import java.util.regex.Pattern;
@@ -60,7 +59,7 @@ public final class Matcher {
 
         if (data == null && conditions == null) {
             return true;
-        } else if (data == null || conditions == null) {
+        } else if ((data == null && !(conditions instanceof Collection)) || conditions == null) {
             return false;
         }
 
@@ -88,13 +87,13 @@ public final class Matcher {
             return "";
         }
 
-        if (conditions instanceof Collection) {
-            return Collections.emptyList();
-        }
-
-        if (conditions instanceof Map) {
-            return Collections.emptyMap();
-        }
+//        if (conditions instanceof Collection) {
+//            return Collections.emptyList();
+//        }
+//
+//        if (conditions instanceof Map) {
+//            return Collections.emptyMap();
+//        }
 
         return null;
     }
