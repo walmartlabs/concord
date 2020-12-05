@@ -39,6 +39,7 @@ interface ExternalProps {
     orgName: ConcordKey;
     projectName: ConcordKey;
     repo: RepositoryEntry;
+    refresh: () => void;
 }
 
 const renderManualTrigger = ({
@@ -114,7 +115,7 @@ const RepositoryActionDropdown = (props: ExternalProps) => {
         fetchData();
     }, [props.orgName, props.projectName, props.repo.name]);
 
-    const { orgName, projectName, repo } = props;
+    const { orgName, projectName, repo, refresh } = props;
 
     const {
         name: repoName,
@@ -242,6 +243,7 @@ const RepositoryActionDropdown = (props: ExternalProps) => {
                                     <span className="text">Delete</span>
                                 </Dropdown.Item>
                             )}
+                            onDone={refresh}
                         />
                     </Dropdown.Menu>
                 </Dropdown>
