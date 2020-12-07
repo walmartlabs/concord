@@ -1,5 +1,12 @@
 # Change log
 
+## [1.70.2] - 2020-12-07
+
+### Changed
+
+- concord-server: ProcessKeyCache no longer caches misses;
+
+
 ## [1.70.1] - 2020-11-04
 
 ### Added
