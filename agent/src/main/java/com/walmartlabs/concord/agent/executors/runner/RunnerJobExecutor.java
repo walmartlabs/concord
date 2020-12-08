@@ -298,6 +298,8 @@ public class RunnerJobExecutor implements JobExecutor {
         Collection<URI> uris = Stream.concat(defaultDependencies.getDependencies().stream(), JobDependencies.get(job).stream())
                 .collect(Collectors.toList());
 
+        uris = rewriteDependencies(job, uris);
+
         Collection<DependencyEntity> deps = dependencyManager.resolve(uris, (retryCount, maxRetry, interval, cause) -> {
             job.getLog().warn("Error while downloading dependencies: {}", cause);
             job.getLog().info("Retrying in {}ms", interval);
@@ -323,6 +325,21 @@ public class RunnerJobExecutor implements JobExecutor {
         }
 
         return paths;
+    }
+
+    private Collection<URI> rewriteDependencies(RunnerJob job, Collection<URI> uris) {
+        PolicyEngine policyEngine = job.getPolicyEngine();
+        if (policyEngine == null) {
+            return uris;
+        }
+
+        return policyEngine.getDependencyRewritePolicy()
+                .rewrite(uris, (msg, from, to) -> {
+                    job.getLog().info("Updating dependency from '{}' to '{}'", from, to);
+                    if (msg != null) {
+                        job.getLog().warn(msg);
+                    }
+                });
     }
 
     private void validateDependencies(RunnerJob job, Collection<DependencyEntity> resolvedDepEntities) throws ExecutionException {
