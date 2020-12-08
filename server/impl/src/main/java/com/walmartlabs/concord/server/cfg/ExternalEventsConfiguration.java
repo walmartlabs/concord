@@ -42,11 +42,19 @@ public class ExternalEventsConfiguration implements Serializable {
     @Config("externalEvents.workerThreads")
     private int workerThreads;
 
+    @Inject
+    @Config("externalEvents.logEvents")
+    private boolean logEvents;
+
     public Map<String, String> getRequiredRoles() {
         return requiredRoles;
     }
 
     public int getWorkerThreads() {
         return workerThreads;
+    }
+
+    public boolean isLogEvents() {
+        return logEvents;
     }
 }
