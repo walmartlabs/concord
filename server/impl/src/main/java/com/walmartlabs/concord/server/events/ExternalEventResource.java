@@ -100,7 +100,7 @@ public class ExternalEventResource implements Resource {
 
         Map<String, Object> event = data != null ? data : new HashMap<>();
 
-        String eventId = (String) event.computeIfAbsent("id", s -> UUID.randomUUID().toString());
+        String eventId = event.computeIfAbsent("id", s -> UUID.randomUUID()).toString();
 
         if (cfg.isLogEvents()) {
             auditLog.add(AuditObject.EXTERNAL_EVENT, AuditAction.ACCESS)
