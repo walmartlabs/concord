@@ -32,6 +32,7 @@ import java.util.Objects;
 public class PolicyEngineRules {
 
     private final PolicyRules<DependencyRule> dependencyRules;
+    private final List<DependencyRewriteRule> dependencyRewriteRules;
     private final PolicyRules<FileRule> fileRules;
     private final PolicyRules<TaskRule> taskRules;
     private final WorkspaceRule workspaceRule;
@@ -60,7 +61,8 @@ public class PolicyEngineRules {
                              @JsonProperty("defaultProcessCfg") Map<String, Object> defaultProcessCfg,
                              @JsonProperty("dependencyVersions")List<DependencyVersionsPolicy.Dependency> dependencyVersions,
                              @JsonProperty("attachments") AttachmentsRule attachmentsRule,
-                             @JsonProperty("state") PolicyRules<StateRule> stateRules) {
+                             @JsonProperty("state") PolicyRules<StateRule> stateRules,
+                             @JsonProperty("dependencyRewrite") List<DependencyRewriteRule> dependencyRewriteRules) {
 
         this.dependencyRules = dependencyRules;
         this.fileRules = fileRules;
@@ -77,10 +79,15 @@ public class PolicyEngineRules {
         this.defaultProcessCfg = defaultProcessCfg;
         this.dependencyVersions = dependencyVersions;
         this.stateRules = stateRules;
+        this.dependencyRewriteRules = dependencyRewriteRules;
     }
 
     public PolicyRules<DependencyRule> getDependencyRules() {
         return dependencyRules;
+    }
+
+    public List<DependencyRewriteRule> getDependencyRewriteRules() {
+        return dependencyRewriteRules;
     }
 
     public PolicyRules<FileRule> getFileRules() {
