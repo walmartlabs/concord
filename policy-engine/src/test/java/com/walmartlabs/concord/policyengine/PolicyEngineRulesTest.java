@@ -23,6 +23,7 @@ package com.walmartlabs.concord.policyengine;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.Test;
 
+import java.net.URI;
 import java.util.*;
 
 import static org.junit.Assert.assertEquals;
@@ -82,9 +83,11 @@ public class PolicyEngineRulesTest {
         StateRule s2 = new StateRule("msg1", 321L, null, null);
         PolicyRules<StateRule> stateRules = new PolicyRules<>(null, Collections.singletonList(s1), Collections.singletonList(s2));
 
+        List<DependencyRewriteRule> depRewriteRules = Collections.singletonList(new DependencyRewriteRule("mmmsg", "grp", "artifact", "versionFrom", "versionTo", new URI("value")));
+
         PolicyEngineRules r = new PolicyEngineRules(dependencyRules, fileRules, taskRules, workspaceRule,
                 containerRules, queueRules, protectedTasksRules, entityRules, processCfg, new JsonStoreRule(storageRule, storageDataRule),
-                defaultProcessCfg, dependencies, attachmentsRule, stateRules);
+                defaultProcessCfg, dependencies, attachmentsRule, stateRules, depRewriteRules);
 
         r.addCustomRule("ansible", Collections.singletonMap("k", "v"));
 
