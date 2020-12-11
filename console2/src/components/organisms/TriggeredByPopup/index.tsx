@@ -43,7 +43,7 @@ const getIcon = (type?: string) => {
         case 'cron':
             return 'clock outline';
         default:
-            return 'question';
+            return 'bell';
     }
 };
 
@@ -60,6 +60,15 @@ const getTitle = (type?: string) => {
     }
 };
 
+const getEventIdTitle = (type?: string) => {
+    switch (type) {
+        case 'github':
+            return 'GitHub Delivery ID';
+        default:
+            return 'ID';
+    }
+};
+
 const getGitHubEvent = (e?: AuditLogEntry) => {
     if (!e) {
         return;
@@ -68,7 +77,7 @@ const getGitHubEvent = (e?: AuditLogEntry) => {
     return (e.details as any)?.githubEvent;
 };
 
-const getGitHubPayload = (e?: AuditLogEntry) => {
+const getEventPayload = (e?: AuditLogEntry) => {
     if (!e) {
         return;
     }
@@ -143,56 +152,53 @@ export default ({ entry }: Props) => {
             <Modal.Content scrolling={true}>
                 {error && <RequestErrorActivity error={error} />}
 
-                {type === 'github' && (
-                    <>
-                        <Table definition={true}>
-                            <Table.Body>
-                                <Table.Row>
-                                    <Table.Cell collapsing={true}>GitHub Delivery ID</Table.Cell>
-                                    <Table.Cell>
-                                        {triggeredBy.externalEventId ? (
-                                            <WithCopyToClipboard
-                                                value={triggeredBy.externalEventId}>
-                                                {triggeredBy.externalEventId}
-                                            </WithCopyToClipboard>
-                                        ) : (
-                                            ''
-                                        )}
-                                    </Table.Cell>
-                                </Table.Row>
-                                <Table.Row>
-                                    <Table.Cell collapsing={true}>Event</Table.Cell>
-                                    <Table.Cell>
-                                        <Popup
-                                            trigger={
-                                                <Button
-                                                    loading={loading}
-                                                    onClick={() =>
-                                                        loadGitHubEvent(triggeredBy.externalEventId)
-                                                    }>
-                                                    Load Data
-                                                </Button>
-                                            }
-                                            content="Click to load the GitHub event's data."
-                                        />
-                                    </Table.Cell>
-                                </Table.Row>
-                            </Table.Body>
-                        </Table>
-                    </>
-                )}
+                <Table definition={true}>
+                    <Table.Body>
+                        <Table.Row>
+                            <Table.Cell collapsing={true}>{getEventIdTitle(type)}</Table.Cell>
+                            <Table.Cell>
+                                {triggeredBy.externalEventId ? (
+                                    <WithCopyToClipboard value={triggeredBy.externalEventId}>
+                                        {triggeredBy.externalEventId}
+                                    </WithCopyToClipboard>
+                                ) : (
+                                    ''
+                                )}
+                            </Table.Cell>
+                        </Table.Row>
+                        <Table.Row>
+                            <Table.Cell collapsing={true}>Event</Table.Cell>
+                            <Table.Cell>
+                                <Popup
+                                    trigger={
+                                        <Button
+                                            loading={loading}
+                                            onClick={() =>
+                                                loadGitHubEvent(triggeredBy.externalEventId)
+                                            }>
+                                            Load Data
+                                        </Button>
+                                    }
+                                    content="Click to load the event's data."
+                                />
+                            </Table.Cell>
+                        </Table.Row>
+                    </Table.Body>
+                </Table>
 
-                {getGitHubPayload(auditEntry) && (
+                {getEventPayload(auditEntry) && (
                     <>
-                        <Divider horizontal={true}>GitHub Notification</Divider>
-                        <Table definition={true}>
-                            <Table.Row>
-                                <Table.Cell collapsing={true}>Event Type</Table.Cell>
-                                <Table.Cell>{getGitHubEvent(auditEntry)}</Table.Cell>
-                            </Table.Row>
-                        </Table>
+                        <Divider horizontal={true}>{title} Notification</Divider>
+                        {type === 'github' && (
+                            <Table definition={true}>
+                                <Table.Row>
+                                    <Table.Cell collapsing={true}>Event Type</Table.Cell>
+                                    <Table.Cell>{getGitHubEvent(auditEntry)}</Table.Cell>
+                                </Table.Row>
+                            </Table>
+                        )}
                         <ReactJson
-                            src={getGitHubPayload(auditEntry)}
+                            src={getEventPayload(auditEntry)}
                             name={null}
                             enableClipboard={true}
                             displayDataTypes={false}

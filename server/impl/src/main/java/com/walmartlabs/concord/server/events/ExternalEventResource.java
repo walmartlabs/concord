@@ -20,6 +20,10 @@ package com.walmartlabs.concord.server.events;
  * =====
  */
 
+import com.walmartlabs.concord.server.audit.AuditAction;
+import com.walmartlabs.concord.server.audit.AuditLog;
+import com.walmartlabs.concord.server.audit.AuditObject;
+import com.walmartlabs.concord.server.cfg.ExternalEventsConfiguration;
 import com.walmartlabs.concord.server.events.externalevent.ExternalEventTriggerProcessor;
 import com.walmartlabs.concord.server.sdk.PartialProcessKey;
 import com.walmartlabs.concord.server.sdk.metrics.WithTimer;
@@ -58,21 +62,27 @@ public class ExternalEventResource implements Resource {
 
     private static final Logger log = LoggerFactory.getLogger(ExternalEventResource.class);
 
+    private final ExternalEventsConfiguration cfg;
     private final TriggerProcessExecutor executor;
     private final UserManager userManager;
     private final TriggerEventInitiatorResolver initiatorResolver;
     private final List<ExternalEventTriggerProcessor> processors;
+    private final AuditLog auditLog;
 
     @Inject
-    public ExternalEventResource(TriggerProcessExecutor executor,
+    public ExternalEventResource(ExternalEventsConfiguration cfg,
+                                 TriggerProcessExecutor executor,
                                  UserManager userManager,
                                  TriggerEventInitiatorResolver initiatorResolver,
-                                 List<ExternalEventTriggerProcessor> processors) {
+                                 List<ExternalEventTriggerProcessor> processors,
+                                 AuditLog auditLog) {
 
+        this.cfg = cfg;
         this.executor = executor;
         this.userManager = userManager;
         this.initiatorResolver = initiatorResolver;
         this.processors = processors;
+        this.auditLog = auditLog;
     }
 
     @POST
@@ -88,9 +98,17 @@ public class ExternalEventResource implements Resource {
             return Response.ok().build();
         }
 
-        Map<String, Object> event = data != null ? data : Collections.emptyMap();
+        Map<String, Object> event = data != null ? data : new HashMap<>();
 
-        String eventId = (String) event.computeIfAbsent("id", s -> UUID.randomUUID().toString());
+        String eventId = event.computeIfAbsent("id", s -> UUID.randomUUID()).toString();
+
+        if (cfg.isLogEvents()) {
+            auditLog.add(AuditObject.EXTERNAL_EVENT, AuditAction.ACCESS)
+                    .field("source", eventName)
+                    .field("eventId", eventId)
+                    .field("payload", event)
+                    .log();
+        }
 
         List<ExternalEventTriggerProcessor.Result> results = new ArrayList<>();
         processors.forEach(p -> p.process(eventName, event, results));
