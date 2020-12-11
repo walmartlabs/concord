@@ -77,6 +77,7 @@ public class OneOpsEventResource implements Resource {
     private final List<OneOpsTriggerProcessor> processors;
     private final AuditLog auditLog;
     private final OneOpsConfiguration cfg;
+
     @Inject
     public OneOpsEventResource(ObjectMapper objectMapper,
                                TriggerProcessExecutor executor,
