@@ -4,6 +4,9 @@
 
 ### Added
 
+- concord-server, concord-console: audit log for external events,
+the process status page can now display external events that
+triggered the process;
 - policy-engine: new policy type `dependencyRewrite`. Can be used
 to override process dependencies (e.g. to force a specific
 version).
