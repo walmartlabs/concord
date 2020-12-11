@@ -2,6 +2,12 @@
 
 ## [Unreleased]
 
+### Added
+
+- policy-engine: new policy type `dependencyRewrite`. Can be used
+to override process dependencies (e.g. to force a specific
+version).
+
 ### Changed
 
 - policy-engine: rule matching code refactoring, use common map
