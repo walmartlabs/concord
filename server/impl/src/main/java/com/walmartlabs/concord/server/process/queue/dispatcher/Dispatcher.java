@@ -23,7 +23,7 @@ package com.walmartlabs.concord.server.process.queue.dispatcher;
 import com.codahale.metrics.Histogram;
 import com.codahale.metrics.MetricRegistry;
 import com.codahale.metrics.Timer;
-import com.walmartlabs.concord.common.MapMatcher;
+import com.walmartlabs.concord.common.Matcher;
 import com.walmartlabs.concord.db.AbstractDao;
 import com.walmartlabs.concord.db.MainDB;
 import com.walmartlabs.concord.imports.Imports;
@@ -223,7 +223,7 @@ public class Dispatcher extends PeriodicTask {
         for (Request req : requests) {
             Map<String, Object> capabilities = req.request.getCapabilities();
             Map<String, Object> m = getAgentRequirements(candidate);
-            if (MapMatcher.matches(capabilities, m)) {
+            if (m.isEmpty() || Matcher.matches(capabilities, m)) {
                 return req;
             }
         }

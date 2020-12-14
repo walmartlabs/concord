@@ -32,9 +32,10 @@ interface ExternalProps {
     projectName: ConcordKey;
     data?: RepositoryEntry[];
     loading: boolean;
+    refresh: () => void;
 }
 
-const RepositoryList = ({ orgName, projectName, data, loading }: ExternalProps) => {
+const RepositoryList = ({ orgName, projectName, data, loading, refresh }: ExternalProps) => {
     if (!loading && data?.length === 0) {
         return <h3>No repositories found.</h3>;
     }
@@ -60,7 +61,9 @@ const RepositoryList = ({ orgName, projectName, data, loading }: ExternalProps) 
                         </Table.HeaderCell>
                     </Table.Row>
                 </Table.Header>
-                <Table.Body>{data?.map((r) => renderTableRow(orgName, projectName, r))}</Table.Body>
+                <Table.Body>
+                    {data?.map((r) => renderTableRow(orgName, projectName, r, refresh))}
+                </Table.Body>
             </Table>
         </div>
     );
@@ -73,7 +76,12 @@ const getSource = (r: RepositoryEntry) => {
     return r.branch;
 };
 
-const renderTableRow = (orgName: ConcordKey, projectName: ConcordKey, row: RepositoryEntry) => {
+const renderTableRow = (
+    orgName: ConcordKey,
+    projectName: ConcordKey,
+    row: RepositoryEntry,
+    refresh: () => void
+) => {
     return (
         <Table.Row key={row.id}>
             <Table.Cell>
@@ -98,7 +106,12 @@ const renderTableRow = (orgName: ConcordKey, projectName: ConcordKey, row: Repos
             <Table.Cell>{getSource(row)}</Table.Cell>
             <Table.Cell>{row.path || '/'}</Table.Cell>
             <Table.Cell>{row.secretName}</Table.Cell>
-            <RepositoryActionDropdown orgName={orgName} projectName={projectName} repo={row} />
+            <RepositoryActionDropdown
+                orgName={orgName}
+                projectName={projectName}
+                repo={row}
+                refresh={refresh}
+            />
         </Table.Row>
     );
 };

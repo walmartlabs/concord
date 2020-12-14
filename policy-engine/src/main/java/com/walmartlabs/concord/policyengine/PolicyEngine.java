@@ -29,6 +29,7 @@ public class PolicyEngine {
     private final PolicyEngineRules rules;
 
     private final DependencyPolicy dependencyPolicy;
+    private final DependencyRewritePolicy dependencyRewritePolicy;
     private final FilePolicy filePolicy;
     private final TaskPolicy taskPolicy;
     private final WorkspacePolicy workspacePolicy;
@@ -57,6 +58,7 @@ public class PolicyEngine {
         this.ruleNames = ruleNames;
         this.rules = rules;
         this.dependencyPolicy = new DependencyPolicy(rules.getDependencyRules());
+        this.dependencyRewritePolicy = new DependencyRewritePolicy(rules.getDependencyRewriteRules());
         this.filePolicy = new FilePolicy(rules.getFileRules());
         this.taskPolicy = new TaskPolicy(rules.getTaskRules());
         this.workspacePolicy = new WorkspacePolicy(rules.getWorkspaceRule());
@@ -87,6 +89,10 @@ public class PolicyEngine {
 
     public DependencyPolicy getDependencyPolicy() {
         return dependencyPolicy;
+    }
+
+    public DependencyRewritePolicy getDependencyRewritePolicy() {
+        return dependencyRewritePolicy;
     }
 
     public FilePolicy getFilePolicy() {
