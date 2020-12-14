@@ -65,7 +65,8 @@ public class GeneralTriggerV2IT extends AbstractGeneralTriggerIT {
                 .setName(projectName)
                 .setVisibility(ProjectEntry.VisibilityEnum.PUBLIC)
                 .setRepositories(Collections.singletonMap(repoName, new RepositoryEntry()
-                        .setUrl(gitUrl))));
+                        .setUrl(gitUrl)
+                        .setBranch(DEFAULT_TEST_BRANCH_NAME))));
     }
 
     private void cleanup() throws ApiException {

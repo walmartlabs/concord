@@ -140,7 +140,7 @@ public class ProjectIT extends AbstractServerIT {
                 Collections.singletonMap("greeting", greeting));
 
         // ---
-        ProcessEntry psr = doTest(projectName, username, permissions, repoName, repoUrl, entryPoint, args, commitId, null, false);
+        ProcessEntry psr = doTest(projectName, username, permissions, repoName, repoUrl, entryPoint, args, commitId, DEFAULT_TEST_BRANCH_NAME, false);
 
         byte[] ab = getLog(psr.getLogFileName());
         assertLog(".*test-commit-1.*" + greeting + ".*", ab);
@@ -215,7 +215,7 @@ public class ProjectIT extends AbstractServerIT {
         String repoName = "myRepo_" + randomString();
         String repoUrl = gitUrl;
 
-        createProjectAndRepo(projectName, username, permissions, repoName, repoUrl, null, null);
+        createProjectAndRepo(projectName, username, permissions, repoName, repoUrl, null, DEFAULT_TEST_BRANCH_NAME);
 
         TriggersApi triggersApi = new TriggersApi(getApiClient());
         while (true) {
@@ -253,7 +253,7 @@ public class ProjectIT extends AbstractServerIT {
 
         // ---
 
-        createProjectAndRepo(projectName, username, permissions, repoName, repoUrl, null, null);
+        createProjectAndRepo(projectName, username, permissions, repoName, repoUrl, null, DEFAULT_TEST_BRANCH_NAME);
 
         // ---
 
@@ -424,7 +424,7 @@ public class ProjectIT extends AbstractServerIT {
                                   String entryPoint, Map<String, Object> args,
                                   boolean sync) throws Exception {
         return doTest(projectName, username, permissions, repoName, repoUrl,
-                entryPoint, args, null, null, sync);
+                entryPoint, args, null, DEFAULT_TEST_BRANCH_NAME, sync);
     }
 
     protected ProcessEntry doTest(String projectName,

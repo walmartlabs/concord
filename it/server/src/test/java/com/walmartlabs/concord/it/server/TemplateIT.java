@@ -168,7 +168,6 @@ public class TemplateIT extends AbstractServerIT {
         String orgName = "org_" + randomString();
         String projectName = "project_" + randomString();
         String repoName = "repo_" + randomString();
-
         // ---
 
         OrganizationsApi organizationsApi = new OrganizationsApi(getApiClient());
@@ -178,7 +177,8 @@ public class TemplateIT extends AbstractServerIT {
         projectsApi.createOrUpdate(orgName, new ProjectEntry()
                 .setName(projectName)
                 .setRepositories(Collections.singletonMap(repoName, new RepositoryEntry()
-                        .setUrl(gitUrl))));
+                        .setUrl(gitUrl)
+                        .setBranch(DEFAULT_TEST_BRANCH_NAME))));
 
         // ---
 
