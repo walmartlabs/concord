@@ -483,7 +483,7 @@ public class Main {
             Thread.currentThread().setContextClassLoader(depsClassLoader);
 
             // create the injector to wire up and initialize all dependencies
-            Injector injector = createInjector(runnerCfg, depsClassLoader);
+            Injector injector = createInjector(runnerCfg, depsClassLoader, baseDir);
 
             Main main = injector.getInstance(Main.class);
 
@@ -615,13 +615,14 @@ public class Main {
         return result;
     }
 
-    private static Injector createInjector(RunnerConfiguration runnerCfg, ClassLoader depsClassLoader) {
+    private static Injector createInjector(RunnerConfiguration runnerCfg, ClassLoader depsClassLoader, Path workDir) {
         ClassLoader cl = Main.class.getClassLoader();
 
         Module cfg = new AbstractModule() {
             @Override
             protected void configure() {
                 bind(RunnerConfiguration.class).toInstance(runnerCfg);
+                bind(WorkingDirectory.class).toInstance(new WorkingDirectory(workDir));
             }
         };
 
