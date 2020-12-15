@@ -168,6 +168,7 @@ public class TemplateIT extends AbstractServerIT {
         String orgName = "org_" + randomString();
         String projectName = "project_" + randomString();
         String repoName = "repo_" + randomString();
+
         // ---
 
         OrganizationsApi organizationsApi = new OrganizationsApi(getApiClient());

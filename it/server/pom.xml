@@ -243,7 +243,7 @@
                     <environmentVariables>
                         <CONCORD_TMP_DIR>${tmp.dir}</CONCORD_TMP_DIR>
                         <IT_CUSTOM_AGENTS>true</IT_CUSTOM_AGENTS>
-                        <IT_DEFAULT_API_KEY>cTFxMXExcTE=</IT_DEFAULT_API_KEY>
+                        <IT_DEFAULT_API_KEY>TUE82jk5cCfA7U0Z11djpQ</IT_DEFAULT_API_KEY>
                         <IT_DEPS_DIR>${deps.dir}</IT_DEPS_DIR>
                         <IT_DOCKER_ANSIBLE_IMAGE>${ansible.image}</IT_DOCKER_ANSIBLE_IMAGE>
                         <IT_DOCKER_HOST_ADDR>${docker.host.addr}</IT_DOCKER_HOST_ADDR>

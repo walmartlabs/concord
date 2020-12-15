@@ -60,7 +60,7 @@ class GitHubLink extends React.PureComponent<Props> {
     render() {
         const { url, commitId, path, text } = this.props;
 
-        const defaultBranch = window.concord?.defaultRepoBranch;
+        const defaultBranch = window.concord?.defaultRepoBranch || 'master';
 
         let s = gitUrlParse(url);
         if (!s) {
@@ -76,7 +76,7 @@ class GitHubLink extends React.PureComponent<Props> {
         } else if (commitId && path) {
             s += `/tree/${commitId}/${normalizePath(path)}`;
         } else if (!commitId && path) {
-            s += `/tree/${defaultBranch ? defaultBranch : 'master'}/${normalizePath(path)}`;
+            s += `/tree/${defaultBranch}/${normalizePath(path)}`;
         }
 
         return (

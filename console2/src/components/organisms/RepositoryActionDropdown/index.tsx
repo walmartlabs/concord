@@ -87,6 +87,7 @@ const renderManualTrigger = ({
 };
 
 const RepositoryActionDropdown = (props: ExternalProps) => {
+    const defaultBranch = window.concord?.defaultRepoBranch || 'master';
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<RequestError>();
     const [manualTriggers, setManualTriggers] = useState<TriggerEntry[]>();
@@ -126,8 +127,8 @@ const RepositoryActionDropdown = (props: ExternalProps) => {
         disabled: repoDisabled
     } = repo;
 
-    // show the commit ID if defined, otherwise show the branch name
-    const repoBranchOrCommitId = repoCommitId ? repoCommitId : repoBranch;
+    // show the commit ID if defined, otherwise show the branch name or fallback to defaultBranch
+    const repoBranchOrCommitId = repoCommitId ? repoCommitId : repoBranch ? repoBranch : defaultBranch;
     const repoPathOrDefault = repoPath ? repoPath : '/';
 
     return (
