@@ -165,6 +165,7 @@ public class AuditLog {
             }
 
             details.put("requestId", RequestUtils.getRequestId());
+            details.put("requestIp", RequestUtils.getRequestIp());
 
             if (changes != null && !changes.isEmpty()) {
                 details.put("changes", changes);
