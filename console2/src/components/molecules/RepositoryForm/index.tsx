@@ -193,7 +193,7 @@ class RepositoryForm extends React.Component<InjectedFormikProps<Props, FormValu
                         )}
 
                         {values.sourceType === RepositorySourceType.COMMIT_ID && (
-                            <FormikInput name="commitId" label="Commit ID" fluid={true} />
+                            <FormikInput name="commitId" label="Commit ID" fluid={true} required={true} />
                         )}
                     </Form.Group>
 

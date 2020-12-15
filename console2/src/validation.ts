@@ -124,6 +124,9 @@ export const repository = {
         return;
     },
     commitId: (v?: string) => {
+        if (!v) {
+            return requiredError();
+        }
         if (v && !v.match(COMMIT_ID_PATTERN)) {
             return invalidCommitIdError();
         }
