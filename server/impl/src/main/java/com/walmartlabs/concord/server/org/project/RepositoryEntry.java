@@ -46,7 +46,6 @@ public class RepositoryEntry implements Serializable {
     @Size(max = 2048)
     private final String url;
 
-    @NotNull
     @Size(max = 255)
     private final String branch;
 

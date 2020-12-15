@@ -66,8 +66,7 @@ public class ProcessCountIT extends AbstractServerIT {
         projectsApi.createOrUpdate(orgName, new ProjectEntry()
                 .setName(projectName)
                 .setRepositories(Collections.singletonMap(repoName, new RepositoryEntry()
-                        .setUrl(gitUrl)
-                        .setBranch(DEFAULT_TEST_BRANCH_NAME))));
+                        .setUrl(gitUrl))));
 
         // ---
 

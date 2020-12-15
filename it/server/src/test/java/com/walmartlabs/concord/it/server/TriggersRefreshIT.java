@@ -88,8 +88,7 @@ public class TriggersRefreshIT extends AbstractServerIT {
                 .setName(projectName)
                 .setVisibility(ProjectEntry.VisibilityEnum.PUBLIC)
                 .setRepositories(Collections.singletonMap(repoName, new RepositoryEntry()
-                        .setUrl(gitUrl)
-                        .setBranch(DEFAULT_TEST_BRANCH_NAME))));
+                        .setUrl(gitUrl))));
 
         // ---
 

@@ -115,6 +115,9 @@ export const repository = {
     name: concordKeyValidator,
     url: repositoryUrlValidator,
     branch: (v?: string) => {
+        if (!v) {
+            return requiredError();
+        }
         if (v && v.length > 255) {
             return tooLongError(255);
         }

@@ -40,8 +40,6 @@ public abstract class AbstractServerIT {
 
     protected static final long DEFAULT_TEST_TIMEOUT = 120000;
 
-    protected static final String DEFAULT_TEST_BRANCH_NAME = "master";
-
     private ServerClient serverClient;
 
     @Before

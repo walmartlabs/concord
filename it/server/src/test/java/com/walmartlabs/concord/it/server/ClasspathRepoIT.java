@@ -44,8 +44,7 @@ public class ClasspathRepoIT extends AbstractServerIT {
                 .setAcceptsRawPayload(false)
                 .setRepositories(Collections.singletonMap(repoName, new RepositoryEntry()
                         .setName(repoName)
-                        .setUrl(url)
-                        .setBranch(DEFAULT_TEST_BRANCH_NAME))));
+                        .setUrl(url))));
 
         // ---
 

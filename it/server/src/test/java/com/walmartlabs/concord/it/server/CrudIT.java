@@ -169,15 +169,13 @@ public class CrudIT extends AbstractServerIT {
                 .setName(projectName1)
                 .setRepositories(Collections.singletonMap(repoName, new RepositoryEntry()
                         .setName(repoName)
-                        .setUrl("n/a")
-                        .setBranch(DEFAULT_TEST_BRANCH_NAME))));
+                        .setUrl("n/a"))));
 
         projectsApi.createOrUpdate(orgName, new ProjectEntry()
                 .setName(projectName2)
                 .setRepositories(Collections.singletonMap(repoName, new RepositoryEntry()
                         .setName(repoName)
-                        .setUrl("n/a")
-                        .setBranch(DEFAULT_TEST_BRANCH_NAME))));
+                        .setUrl("n/a"))));
     }
 
     @Test(timeout = DEFAULT_TEST_TIMEOUT)
@@ -466,8 +464,7 @@ public class CrudIT extends AbstractServerIT {
                 .setRepositories(Collections.singletonMap(repoName, new RepositoryEntry()
                         .setName(repoName)
                         .setUrl("git@test:/test")
-                        .setSecretName(secretName)
-                        .setBranch(DEFAULT_TEST_BRANCH_NAME))));
+                        .setSecretName(secretName))));
         UUID projectId = projectResp.getId();
 
         // ---

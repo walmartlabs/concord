@@ -190,6 +190,12 @@ public class RepositoryManager {
     }
 
     private static String getBranch(String branch, String commitId, String defaultBranch) {
-       return commitId != null ? commitId : branch != null ? branch : defaultBranch;
+        if (commitId != null) {
+            return branch;
+        }
+        if (branch != null) {
+            return branch;
+        }
+        return defaultBranch;
     }
 }

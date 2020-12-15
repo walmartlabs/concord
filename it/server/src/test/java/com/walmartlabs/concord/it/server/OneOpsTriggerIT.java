@@ -49,7 +49,7 @@ public class OneOpsTriggerIT extends AbstractOneOpsTriggerIT {
         Path repo = initRepo("oneopsTests/trigger");
         projectName = "project_" + randomString();
         repoName = "repo_" + randomString();
-        initProjectAndRepo(orgName, projectName, repoName, DEFAULT_TEST_BRANCH_NAME, repo);
+        initProjectAndRepo(orgName, projectName, repoName, null, repo);
         refreshRepo(orgName, projectName, repoName);
     }
 

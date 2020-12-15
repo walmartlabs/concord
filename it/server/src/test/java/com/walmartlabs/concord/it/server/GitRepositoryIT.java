@@ -89,7 +89,6 @@ public class GitRepositoryIT extends AbstractServerIT {
                 .setRepositories(Collections.singletonMap(repoName, new RepositoryEntry()
                         .setUrl(repoUrl)
                         .setSecretId(sor.getId())
-                        .setBranch(DEFAULT_TEST_BRANCH_NAME)
                 )));
 
         // ---

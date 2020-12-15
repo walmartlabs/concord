@@ -279,8 +279,7 @@ public class ExternalImportsIT extends AbstractServerIT {
         projectsApi.createOrUpdate(orgName, new ProjectEntry()
                 .setName(projectName)
                 .setRepositories(Collections.singletonMap(repoName, new RepositoryEntry()
-                        .setUrl(userRepoUrl)
-                        .setBranch(DEFAULT_TEST_BRANCH_NAME))));
+                        .setUrl(userRepoUrl))));
 
         RepositoriesApi repositoriesApi = new RepositoriesApi(getApiClient());
         RepositoryValidationResponse resp = repositoriesApi.validateRepository(orgName, projectName, repoName);
@@ -393,8 +392,7 @@ public class ExternalImportsIT extends AbstractServerIT {
         projectsApi.createOrUpdate(orgName, new ProjectEntry()
                 .setName(projectName)
                 .setRepositories(Collections.singletonMap(repoName, new RepositoryEntry()
-                        .setUrl(clientRepoUrl)
-                        .setBranch(DEFAULT_TEST_BRANCH_NAME))));
+                        .setUrl(clientRepoUrl))));
 
         // ---
 
