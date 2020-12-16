@@ -8,7 +8,6 @@ export interface ConcordEnvironment {
     extraProcessMenuLinks?: ExtraProcessMenuLinks;
     lastUpdated?: string;
     customResources?: CustomResources;
-    defaultRepoBranch: string;
 }
 
 export interface TopBarMeta {

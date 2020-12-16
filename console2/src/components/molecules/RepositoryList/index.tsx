@@ -73,7 +73,7 @@ const getSource = (r: RepositoryEntry) => {
     if (r.commitId) {
         return r.commitId;
     }
-    return r.branch || getDefaultBranch();
+    return r.branch;
 };
 
 const renderTableRow = (
@@ -116,7 +116,4 @@ const renderTableRow = (
     );
 };
 
-const getDefaultBranch = () => {
-    return window.concord?.defaultRepoBranch || 'master';
-}
 export default RepositoryList;

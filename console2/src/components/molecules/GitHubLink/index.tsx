@@ -26,6 +26,7 @@ interface Props {
     path?: string;
     commitId?: string;
     text?: string;
+    branch?: string;
 }
 
 export const gitUrlParse = (s: string): string | undefined => {
@@ -58,10 +59,8 @@ const normalizePath = (s: string): string => {
 
 class GitHubLink extends React.PureComponent<Props> {
     render() {
-        const { url, commitId, path, text } = this.props;
-
-        const defaultBranch = window.concord?.defaultRepoBranch || 'master';
-
+        const { url, commitId, path, text, branch } = this.props;
+        
         let s = gitUrlParse(url);
         if (!s) {
             return url;
@@ -75,8 +74,8 @@ class GitHubLink extends React.PureComponent<Props> {
             s += `/commit/${commitId}`;
         } else if (commitId && path) {
             s += `/tree/${commitId}/${normalizePath(path)}`;
-        } else if (!commitId && path) {
-            s += `/tree/${defaultBranch}/${normalizePath(path)}`;
+        } else if (!commitId && path && branch) {
+            s += `/tree/${branch}/${normalizePath(path)}`;
         }
 
         return (

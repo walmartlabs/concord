@@ -9,7 +9,6 @@ window.concord = {
                 icon: 'github'
             }
         ]
-    },
-    defaultRepoBranch: 'master'
+    }
 };
 
