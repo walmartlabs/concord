@@ -100,7 +100,7 @@ public class Run implements Callable<Integer> {
     @Option(names = {"-v", "--verbose"}, description = "verbose output")
     boolean verbose = false;
 
-    @Option(names = {"--imports-version/branch"}, description = "default imports version/branch")
+    @Option(names = {"--default-import-version"}, description = "default import version or repo branch")
     String defaultVersion = "master";
 
     @Parameters(arity = "0..1", description = "Directory with Concord files or a path to a single Concord YAML file.")

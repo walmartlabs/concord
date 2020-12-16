@@ -6,7 +6,7 @@
 
     <changeSet id="1760000" author="amith.k.b@walmartlabs.com">
         <sql>
-            update REPOSITORIES set REPO_BRANCH = 'master' where REPO_BRANCH is NULL
+            update REPOSITORIES set REPO_BRANCH = 'master' where REPO_BRANCH is NULL and REPO_COMMIT_ID is NULL
         </sql>
     </changeSet>
 </databaseChangeLog>
