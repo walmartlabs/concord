@@ -91,7 +91,7 @@ public class Dispatcher extends PeriodicTask {
     private final Timer responseTimer;
 
     private final SessionTokenCreator sessionTokenCreator;
-    
+
     @Inject
     public Dispatcher(Locks locks,
                       DispatcherDao dao,

@@ -65,7 +65,7 @@ public class GitConfiguration implements Serializable {
     @Inject
     @Config("git.sshTimeoutRetryCount")
     private int sshTimeoutRetryCount;
-    
+
     public boolean isShallowClone() {
         return shallowClone;
     }
