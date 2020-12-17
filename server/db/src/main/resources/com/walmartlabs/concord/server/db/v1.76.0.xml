@@ -9,4 +9,10 @@
             update REPOSITORIES set REPO_BRANCH = 'master' where REPO_BRANCH is NULL and REPO_COMMIT_ID is NULL
         </sql>
     </changeSet>
+
+    <changeSet id="1760100" author="ybrigo@gmail.com">
+        <sql>
+            alter table REPOSITORIES add constraint REPO_BRANCH_COMMIT_CHECK check (REPO_BRANCH is not null or REPO_COMMIT_ID is not null)
+        </sql>
+    </changeSet>
 </databaseChangeLog>

@@ -89,10 +89,6 @@ public class RepositoryResource implements Resource {
             throw new ConcordApplicationException("Project not found: " + projectName, Status.NOT_FOUND);
         }
 
-        if(entry.getBranch() == null && entry.getCommitId() == null){
-            throw new ConcordApplicationException("Branch or CommitId not found: "+ entry, Status.BAD_REQUEST);
-        }
-
         projectRepositoryManager.createOrUpdate(projectId, entry);
         return new GenericOperationResult(entry.getId() == null ? OperationResult.CREATED : OperationResult.UPDATED);
     }
