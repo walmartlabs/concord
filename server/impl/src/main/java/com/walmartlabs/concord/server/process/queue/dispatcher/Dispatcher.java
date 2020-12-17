@@ -30,7 +30,6 @@ import com.walmartlabs.concord.imports.Imports;
 import com.walmartlabs.concord.server.ConcordObjectMapper;
 import com.walmartlabs.concord.server.Locks;
 import com.walmartlabs.concord.server.PeriodicTask;
-import com.walmartlabs.concord.server.cfg.GitConfiguration;
 import com.walmartlabs.concord.server.cfg.ProcessQueueConfiguration;
 import com.walmartlabs.concord.server.jooq.tables.ProcessQueue;
 import com.walmartlabs.concord.server.process.ImportsNormalizerFactory;
@@ -92,9 +91,7 @@ public class Dispatcher extends PeriodicTask {
     private final Timer responseTimer;
 
     private final SessionTokenCreator sessionTokenCreator;
-
-    private final GitConfiguration gitConfiguration;
-
+    
     @Inject
     public Dispatcher(Locks locks,
                       DispatcherDao dao,
@@ -105,8 +102,7 @@ public class Dispatcher extends PeriodicTask {
                       ImportsNormalizerFactory importsNormalizerFactory,
                       ProcessQueueConfiguration cfg,
                       MetricRegistry metricRegistry,
-                      SessionTokenCreator sessionTokenCreator,
-                      GitConfiguration gitConfiguration) {
+                      SessionTokenCreator sessionTokenCreator) {
 
         super(cfg.getDispatcherPollDelay().toMillis(), ERROR_DELAY);
 
@@ -123,7 +119,6 @@ public class Dispatcher extends PeriodicTask {
 
         this.dispatchedCountHistogram = metricRegistry.histogram("process-queue-dispatcher-dispatched-count");
         this.responseTimer = metricRegistry.timer("process-queue-dispatcher-response-timer");
-        this.gitConfiguration = gitConfiguration;
     }
 
     @Override
@@ -266,7 +261,7 @@ public class Dispatcher extends PeriodicTask {
             String repoBranch = null;
             if (item.repoId() != null) {
                 secret = dao.getSecretReference(item.repoId());
-                repoBranch = dao.getRepoBranch(item.repoId(), gitConfiguration.getDefaultBranch());
+                repoBranch = dao.getRepoBranch(item.repoId());
             }
 
             // backward compatibility with old process queue entries that are not normalized
@@ -376,16 +371,13 @@ public class Dispatcher extends PeriodicTask {
                     .fetchOne(r -> new SecretReference(r.value1(), r.value2()));
         }
 
-        public String getRepoBranch(UUID repoId, String defaultBranch) {
+        public String getRepoBranch(UUID repoId) {
             return dsl().select(REPOSITORIES.REPO_BRANCH, REPOSITORIES.REPO_COMMIT_ID)
                     .from(REPOSITORIES)
                     .where(REPOSITORIES.REPO_ID.eq(repoId))
                     .fetchOne(r -> {
                         if (r.value2() != null) {
                             return null;
-                        }
-                        if (r.value1() == null) {
-                            return defaultBranch;
                         }
                         return r.value1();
                     });

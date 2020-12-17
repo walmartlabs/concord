@@ -106,10 +106,14 @@ public class ImportsNormalizerFactory {
                     .org(secretOrgName)
                     .build();
         }
+       
+        if (e.version() == null){
+            throw new NullPointerException("Version or branch not found in one of the 'imports': " + e);
+        }
 
         return Import.GitDefinition.builder().from(e)
                 .url(url)
-                .version(e.version() != null ? e.version() : cfg.getDefaultBranch())
+                .version(e.version())
                 .dest(e.dest() != null ? e.dest() : DEFAULT_DEST)
                 .secret(secret)
                 .build();

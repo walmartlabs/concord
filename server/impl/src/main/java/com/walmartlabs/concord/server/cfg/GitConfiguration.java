@@ -65,11 +65,7 @@ public class GitConfiguration implements Serializable {
     @Inject
     @Config("git.sshTimeoutRetryCount")
     private int sshTimeoutRetryCount;
-
-    @Inject
-    @Config("git.defaultBranch")
-    private String defaultBranch;
-
+    
     public boolean isShallowClone() {
         return shallowClone;
     }
@@ -100,9 +96,5 @@ public class GitConfiguration implements Serializable {
 
     public int getSshTimeoutRetryCount() {
         return sshTimeoutRetryCount;
-    }
-
-    public String getDefaultBranch() {
-        return defaultBranch;
     }
 }

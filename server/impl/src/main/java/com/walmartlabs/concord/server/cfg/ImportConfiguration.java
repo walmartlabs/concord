@@ -41,10 +41,6 @@ public class ImportConfiguration {
     private final Set<String> disabledProcessors;
 
     @Inject
-    @Config("imports.defaultBranch")
-    private String defaultBranch;
-
-    @Inject
     public ImportConfiguration(@Config("imports.disabledProcessors") List<String> disabledProcessors) {
         this.disabledProcessors = Collections.unmodifiableSet(new HashSet<>(disabledProcessors));
     }
@@ -56,6 +52,4 @@ public class ImportConfiguration {
     public Set<String> getDisabledProcessors() {
         return disabledProcessors;
     }
-
-    public String getDefaultBranch() { return defaultBranch; }
 }

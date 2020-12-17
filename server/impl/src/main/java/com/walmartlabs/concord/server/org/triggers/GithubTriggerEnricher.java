@@ -21,7 +21,6 @@ package com.walmartlabs.concord.server.org.triggers;
  */
 
 import com.walmartlabs.concord.sdk.MapUtils;
-import com.walmartlabs.concord.server.cfg.GitConfiguration;
 import com.walmartlabs.concord.server.events.github.GithubRepoInfo;
 import com.walmartlabs.concord.server.events.github.GithubUtils;
 import com.walmartlabs.concord.server.org.project.RepositoryDao;
@@ -45,12 +44,10 @@ import static com.walmartlabs.concord.server.events.github.Constants.*;
 public class GithubTriggerEnricher {
 
     private final RepositoryDao repositoryDao;
-    private final GitConfiguration gitConfiguration;
 
     @Inject
-    public GithubTriggerEnricher(RepositoryDao repositoryDao, GitConfiguration gitConfiguration) {
+    public GithubTriggerEnricher(RepositoryDao repositoryDao) {
         this.repositoryDao = repositoryDao;
-        this.gitConfiguration = gitConfiguration;
     }
 
     public Map<String, Object> enrich(DSLContext tx, UUID repoId, Map<String, Object> conditions) {
@@ -84,9 +81,8 @@ public class GithubTriggerEnricher {
         newParams.putIfAbsent(GITHUB_REPO_KEY, githubRepoInfo.name());
 
         Object eventType = conditions.get(TYPE_KEY);
-        if (PULL_REQUEST_EVENT.equals(eventType) || PUSH_EVENT.equals(eventType)) {
-            String defaultBranch = repo.getBranch() != null ? repo.getBranch() : gitConfiguration.getDefaultBranch();
-            newParams.putIfAbsent(REPO_BRANCH_KEY, defaultBranch);
+        if ((PULL_REQUEST_EVENT.equals(eventType) || PUSH_EVENT.equals(eventType)) && (repo.getBranch() != null)) {
+            newParams.putIfAbsent(REPO_BRANCH_KEY, repo.getBranch());
         }
         return newParams;
     }

@@ -21,7 +21,6 @@ package com.walmartlabs.concord.server.events.github;
  */
 
 import com.walmartlabs.concord.sdk.MapUtils;
-import com.walmartlabs.concord.server.cfg.GitConfiguration;
 import com.walmartlabs.concord.server.events.DefaultEventFilter;
 import com.walmartlabs.concord.server.org.project.RepositoryDao;
 import com.walmartlabs.concord.server.org.project.RepositoryEntry;
@@ -47,13 +46,11 @@ public class GithubTriggerV2Processor implements GithubTriggerProcessor {
 
     private final TriggersDao dao;
     private final List<EventEnricher> eventEnrichers;
-    private final GitConfiguration gitConfiguration;
 
     @Inject
-    public GithubTriggerV2Processor(TriggersDao dao, List<EventEnricher> eventEnrichers, GitConfiguration gitConfiguration) {
+    public GithubTriggerV2Processor(TriggersDao dao, List<EventEnricher> eventEnrichers) {
         this.dao = dao;
         this.eventEnrichers = eventEnrichers;
-        this.gitConfiguration = gitConfiguration;
     }
 
     @Override
@@ -80,7 +77,7 @@ public class GithubTriggerV2Processor implements GithubTriggerProcessor {
 
     private void enrichEventConditions(Payload payload, TriggerEntry trigger, Map<String, Object> result) {
         for (EventEnricher e : eventEnrichers) {
-            e.enrich(payload, trigger, result, gitConfiguration.getDefaultBranch());
+            e.enrich(payload, trigger, result);
         }
     }
 
@@ -145,7 +142,7 @@ public class GithubTriggerV2Processor implements GithubTriggerProcessor {
 
     interface EventEnricher {
 
-        void enrich(Payload payload, TriggerEntry trigger, Map<String, Object> result, String defaultBranch);
+        void enrich(Payload payload, TriggerEntry trigger, Map<String, Object> result);
     }
 
     /**
@@ -164,7 +161,7 @@ public class GithubTriggerV2Processor implements GithubTriggerProcessor {
 
         @Override
         @WithTimer
-        public void enrich(Payload payload, TriggerEntry trigger, Map<String, Object> result, String defaultBranch) {
+        public void enrich(Payload payload, TriggerEntry trigger, Map<String, Object> result) {
             Object projectInfoConditions = trigger.getConditions().get(com.walmartlabs.concord.sdk.Constants.Trigger.REPOSITORY_INFO);
             if (projectInfoConditions == null || payload.getFullRepoName() == null) {
                 return;
@@ -177,7 +174,8 @@ public class GithubTriggerV2Processor implements GithubTriggerProcessor {
                 repositoryInfo.put(REPO_ID_KEY, r.getId());
                 repositoryInfo.put(REPO_NAME_KEY, r.getName());
                 repositoryInfo.put(PROJECT_ID_KEY, r.getProjectId());
-                repositoryInfo.put(REPO_BRANCH_KEY, r.getBranch() != null ? r.getBranch() : defaultBranch);
+                if(r.getBranch() != null)
+                    repositoryInfo.put(REPO_BRANCH_KEY, r.getBranch());
                 repositoryInfo.put(REPO_ENABLED_KEY, !r.isDisabled());
 
                 repositoryInfos.add(repositoryInfo);
