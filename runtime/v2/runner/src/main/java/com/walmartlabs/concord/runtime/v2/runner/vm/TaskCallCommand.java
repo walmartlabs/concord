@@ -31,6 +31,7 @@ import com.walmartlabs.concord.svm.Runtime;
 import com.walmartlabs.concord.svm.State;
 import com.walmartlabs.concord.svm.ThreadId;
 
+import java.util.Collections;
 import java.util.Objects;
 
 import static com.walmartlabs.concord.runtime.v2.runner.tasks.TaskCallInterceptor.CallContext;
@@ -79,7 +80,7 @@ public class TaskCallCommand extends StepCommand<TaskCall> {
 
         TaskResult result;
         try {
-            result = interceptor.invoke(callContext, Method.of("execute", input),
+            result = interceptor.invoke(callContext, Method.of(t, "execute", Collections.singletonList(input)),
                     () -> t.execute(input));
         } catch (RuntimeException e) {
             throw e;
