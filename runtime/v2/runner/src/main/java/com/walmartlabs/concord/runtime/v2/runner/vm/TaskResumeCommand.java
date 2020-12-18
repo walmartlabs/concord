@@ -29,6 +29,7 @@ import com.walmartlabs.concord.svm.Runtime;
 import com.walmartlabs.concord.svm.State;
 import com.walmartlabs.concord.svm.ThreadId;
 
+import java.util.Collections;
 import java.util.UUID;
 
 public class TaskResumeCommand extends StepCommand<TaskCall> {
@@ -76,7 +77,7 @@ public class TaskResumeCommand extends StepCommand<TaskCall> {
 
         TaskResult result;
         try {
-            result = interceptor.invoke(callContext, TaskCallInterceptor.Method.of("resume", event),
+            result = interceptor.invoke(callContext, TaskCallInterceptor.Method.of(rt, "resume", Collections.singletonList(event)),
                     () -> rt.resume(event));
         } catch (RuntimeException e) {
             throw e;
