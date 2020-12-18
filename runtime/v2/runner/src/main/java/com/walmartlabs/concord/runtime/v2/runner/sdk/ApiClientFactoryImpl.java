@@ -25,9 +25,9 @@ import com.walmartlabs.concord.ApiClient;
 import com.walmartlabs.concord.client.ApiClientConfiguration;
 import com.walmartlabs.concord.client.ApiClientFactory;
 import com.walmartlabs.concord.client.ConcordApiClient;
-import com.walmartlabs.concord.common.IOUtils;
 import com.walmartlabs.concord.runtime.common.injector.InstanceId;
 import com.walmartlabs.concord.runtime.v2.sdk.ApiConfiguration;
+import com.walmartlabs.concord.runtime.v2.sdk.FileService;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -51,12 +51,10 @@ public class ApiClientFactoryImpl implements ApiClientFactory {
     private final OkHttpClient httpClient;
 
     @Inject
-    public ApiClientFactoryImpl(ApiConfiguration cfg, InstanceId instanceId) throws Exception {
+    public ApiClientFactoryImpl(ApiConfiguration cfg, InstanceId instanceId, FileService fileService) throws Exception {
         this.cfg = cfg;
         this.instanceId = instanceId;
-
-        // TODO replace with FileService#createTempDirectory?
-        this.tmpDir = IOUtils.createTempDir("api-client");
+        this.tmpDir = fileService.createTempDirectory("api-client");
 
         OkHttpClient client = new OkHttpClient();
 
