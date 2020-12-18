@@ -4,6 +4,9 @@
 
 ### Added
 
+- runtime-v2: new annotation `@SensitiveData` can be used to
+prevent task method arguments from being recorded in process
+events;
 - concord-server, concord-console: audit log for external events,
 the process status page can now display external events that
 triggered the process;
