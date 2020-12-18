@@ -16,6 +16,8 @@ version).
 
 ### Changed
 
+- concord-agent, runtime-v1: make sure temporary directories are
+removed;
 - policy-engine: rule matching code refactoring, use common map
 matcher, add more tests;
 - concord-server: assert type of the active profiles collections,
