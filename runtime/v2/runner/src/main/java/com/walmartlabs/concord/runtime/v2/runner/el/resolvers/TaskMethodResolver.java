@@ -24,7 +24,6 @@ import com.walmartlabs.concord.common.ReflectionUtils;
 import com.walmartlabs.concord.runtime.v2.model.Expression;
 import com.walmartlabs.concord.runtime.v2.model.Step;
 import com.walmartlabs.concord.runtime.v2.runner.el.MethodNotFoundException;
-import com.walmartlabs.concord.runtime.v2.runner.tasks.ImmutableMethod;
 import com.walmartlabs.concord.runtime.v2.runner.tasks.TaskCallInterceptor;
 import com.walmartlabs.concord.runtime.v2.sdk.Context;
 import com.walmartlabs.concord.runtime.v2.sdk.Task;
@@ -67,7 +66,7 @@ public class TaskMethodResolver extends javax.el.BeanELResolver {
 
         TaskCallInterceptor interceptor = context.execution().runtime().getService(TaskCallInterceptor.class);
         try {
-            return interceptor.invoke(callContext, getMethod(method, params),
+            return interceptor.invoke(callContext, Method.of(base, (String)method, Arrays.asList(params)),
                     () -> super.invoke(elContext, base, method, paramTypes, params));
         } catch (javax.el.MethodNotFoundException e) {
             throw new MethodNotFoundException(base, method, paramTypes);
@@ -81,13 +80,6 @@ public class TaskMethodResolver extends javax.el.BeanELResolver {
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
-    }
-
-    private static Method getMethod(Object method, Object[] params) {
-        return ImmutableMethod.builder()
-                .name((String)method)
-                .arguments(Arrays.asList(params))
-                .build();
     }
 
     private static String getName(Object task) {
