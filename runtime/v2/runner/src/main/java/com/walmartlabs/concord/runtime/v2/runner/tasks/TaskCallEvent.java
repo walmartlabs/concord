@@ -27,6 +27,7 @@ import org.immutables.value.Value;
 
 import javax.annotation.Nullable;
 import java.io.Serializable;
+import java.lang.annotation.Annotation;
 import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
@@ -48,6 +49,12 @@ public interface TaskCallEvent {
     @AllowNulls
     @Value.Default
     default List<Object> input() {
+        return Collections.emptyList();
+    }
+
+    @AllowNulls
+    @Value.Default
+    default List<List<Annotation>> inputAnnotations() {
         return Collections.emptyList();
     }
 
