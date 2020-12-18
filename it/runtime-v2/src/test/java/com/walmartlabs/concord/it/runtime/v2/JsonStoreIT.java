@@ -24,13 +24,19 @@ import ca.ibodrov.concord.testcontainers.ConcordProcess;
 import ca.ibodrov.concord.testcontainers.Payload;
 import ca.ibodrov.concord.testcontainers.junit4.ConcordRule;
 import com.walmartlabs.concord.ApiClient;
-import com.walmartlabs.concord.client.*;
+import com.walmartlabs.concord.client.JsonStoreDataApi;
+import com.walmartlabs.concord.client.OrganizationEntry;
+import com.walmartlabs.concord.client.OrganizationsApi;
+import com.walmartlabs.concord.client.ProcessEntry;
+import com.walmartlabs.concord.client.ProjectEntry;
+import com.walmartlabs.concord.client.ProjectsApi;
 import org.junit.Rule;
 import org.junit.Test;
 
 import java.util.Map;
 
 import static com.walmartlabs.concord.it.common.ITUtils.randomString;
+import static com.walmartlabs.concord.it.common.ServerClient.assertLog;
 import static com.walmartlabs.concord.it.runtime.v2.ITConstants.DEFAULT_TEST_TIMEOUT;
 import static org.junit.Assert.*;
 
@@ -57,9 +63,6 @@ public class JsonStoreIT {
                 .setRawPayloadMode(ProjectEntry.RawPayloadModeEnum.OWNERS));
 
         String storeName = "store_" + randomString();
-        JsonStoreApi jsonStoreApi = new JsonStoreApi(apiClient);
-        jsonStoreApi.createOrUpdate(orgName, new JsonStoreRequest()
-                .setName(storeName));
 
         // ---
 
@@ -74,14 +77,19 @@ public class JsonStoreIT {
         ProcessEntry pe = proc.waitForStatus(ProcessEntry.StatusEnum.FINISHED);
         assertEquals(ProcessEntry.StatusEnum.FINISHED, pe.getStatus());
 
+        proc.assertLog(".*the store doesn't exist.*");
+        proc.assertLog(".*the item doesn't exist.*");
+        proc.assertLog(".*the store exists now.*");
+        proc.assertLog(".*the item exists now.*");
+
         proc.assertLog(".*empty: ==.*");
         proc.assertLog(".*get: \\{x=1}.*");
-        proc.assertLog(".*Updating item 'test'.*" + orgName + ".*" + storeName + ".*");
+        proc.assertLog(".*Updating item 'test2'.*" + orgName + ".*" + storeName + ".*");
 
         // ---
 
         JsonStoreDataApi jsonStoreDataApi = new JsonStoreDataApi(apiClient);
-        Object test = jsonStoreDataApi.get(orgName, storeName, "test");
+        Object test = jsonStoreDataApi.get(orgName, storeName, "test2");
         assertNotNull(test);
         assertTrue(test instanceof Map);
 

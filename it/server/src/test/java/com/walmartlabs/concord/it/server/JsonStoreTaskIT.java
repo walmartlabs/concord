@@ -33,10 +33,40 @@ import static com.walmartlabs.concord.it.common.ServerClient.waitForCompletion;
 public class JsonStoreTaskIT extends AbstractServerIT {
 
     @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    public void testStoreOperations() throws Exception {
+        withOrg(orgName -> {
+            withProject(orgName, projectName -> {
+                byte[] payload = archive(ProcessIT.class.getResource("jsonStoreTaskStoreTest").toURI());
+
+                Map<String, Object> input = new HashMap<>();
+                input.put("archive", payload);
+                input.put("org", orgName);
+                input.put("project", projectName);
+                input.put("arguments.storeName", "store_" + randomString());
+                input.put("arguments.itemPath", "item_" + randomString());
+
+                StartProcessResponse spr = start(input);
+
+                ProcessApi processApi = new ProcessApi(getApiClient());
+                ProcessEntry pir = waitForCompletion(processApi, spr.getInstanceId());
+
+                // ---
+
+                byte[] ab = getLog(pir.getLogFileName());
+                assertLog(".*the store doesn't exist.*", ab);
+                assertLog(".*the item doesn't exist.*", ab);
+                assertLog(".*the store exists now.*", ab);
+                assertLog(".*the item exists now.*", ab);
+                assertLog(".*item: \\{test=123}.*", ab);
+            });
+        });
+    }
+
+    @Test(timeout = DEFAULT_TEST_TIMEOUT)
     public void testPutGetData() throws Exception {
         withOrg(orgName -> {
             withProject(orgName, projectName -> {
-                withStorage(orgName, storageName -> {
+                withStore(orgName, storeName -> {
 
                     byte[] payload = archive(ProcessIT.class.getResource("jsonStoreTask").toURI());
 
@@ -44,7 +74,7 @@ public class JsonStoreTaskIT extends AbstractServerIT {
                     input.put("archive", payload);
                     input.put("org", orgName);
                     input.put("project", projectName);
-                    input.put("arguments.storageName", storageName);
+                    input.put("arguments.storeName", storeName);
 
                     StartProcessResponse spr = start(input);
 
@@ -86,7 +116,7 @@ public class JsonStoreTaskIT extends AbstractServerIT {
         }
     }
 
-    private void withStorage(String orgName, Consumer<String> consumer) throws Exception {
+    private void withStore(String orgName, Consumer<String> consumer) throws Exception {
         String storageName = "storage_" + randomString();
         JsonStoreApi storageApi = new JsonStoreApi(getApiClient());
         try {
