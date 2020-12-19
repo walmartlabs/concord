@@ -32,14 +32,40 @@ import java.util.Map;
 @Named("jsonStore")
 public class JsonStoreTask extends AbstractConcordTask {
 
+    public boolean isStoreExists(@InjectVariable("context") Context ctx, String storeName) throws Exception {
+        return isStoreExists(ctx, assertOrg(ctx), storeName);
+    }
+
+    public boolean isStoreExists(@InjectVariable("context") Context ctx, String orgName, String storeName) throws Exception {
+        return withClient(ctx, client -> new JsonStoreTaskCommon(client).isStoreExists(orgName, storeName));
+    }
+
+    public boolean isExists(@InjectVariable("context") Context ctx, String storeName, String itemPath) throws Exception {
+        return isExists(ctx, assertOrg(ctx), storeName, itemPath);
+    }
+
+    public boolean isExists(@InjectVariable("context") Context ctx, String orgName, String storeName, String itemPath) throws Exception {
+        return withClient(ctx, client -> new JsonStoreTaskCommon(client).isExists(orgName, storeName, itemPath));
+    }
+
+    public void upsert(@InjectVariable("context") Context ctx, String storeName, String itemPath, Object data) throws Exception {
+        upsert(ctx, assertOrg(ctx), storeName, itemPath, data);
+    }
+
+    public void upsert(@InjectVariable("context") Context ctx, String orgName, String storeName, String itemPath, Object data) throws Exception {
+        withClient(ctx, client -> {
+            new JsonStoreTaskCommon(client).put(orgName, storeName, itemPath, data, true);
+            return null;
+        });
+    }
+
     public void put(@InjectVariable("context") Context ctx, String storeName, String itemPath, Object data) throws Exception {
         put(ctx, assertOrg(ctx), storeName, itemPath, data);
     }
 
     public void put(@InjectVariable("context") Context ctx, String orgName, String storeName, String itemPath, Object data) throws Exception {
         withClient(ctx, client -> {
-            new JsonStoreTaskCommon(client)
-                    .put(orgName, storeName, itemPath, data);
+            new JsonStoreTaskCommon(client).put(orgName, storeName, itemPath, data, false);
             return null;
         });
     }

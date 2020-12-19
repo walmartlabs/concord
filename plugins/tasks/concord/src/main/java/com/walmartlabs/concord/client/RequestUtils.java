@@ -21,8 +21,13 @@ package com.walmartlabs.concord.client;
  */
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.squareup.okhttp.*;
+import com.squareup.okhttp.OkHttpClient;
+import com.squareup.okhttp.Request;
+import com.squareup.okhttp.RequestBody;
+import com.squareup.okhttp.Response;
+import com.squareup.okhttp.ResponseBody;
 import com.walmartlabs.concord.ApiClient;
+import com.walmartlabs.concord.ApiException;
 import com.walmartlabs.concord.auth.ApiKeyAuth;
 import com.walmartlabs.concord.sdk.Constants;
 
@@ -48,7 +53,7 @@ public final class RequestUtils {
 
         if (apiKeyAuth != null && apiKeyAuth.getApiKey() != null) {
             b.header("Authorization", apiKeyAuth.getApiKey());
-        } else if (sessionKeyAuth != null && sessionKeyAuth.getApiKey() != null){
+        } else if (sessionKeyAuth != null && sessionKeyAuth.getApiKey() != null) {
             b.header(Constants.Headers.SESSION_TOKEN, sessionKeyAuth.getApiKey());
         }
 
@@ -65,19 +70,19 @@ public final class RequestUtils {
         }
     }
 
-    public static void assertResponse(Response resp) throws IOException {
+    public static void assertResponse(Response resp) throws ApiException, IOException {
         int code = resp.code();
         if (code < 200 || code >= 400) {
             try (ResponseBody body = resp.body()) {
                 if (isJson(resp)) {
                     Object details = objectMapper.readValue(body.byteStream(), Object.class);
                     String msg = extractMessage(details);
-                    throw new IOException(msg);
+                    throw new ApiException(code, msg);
                 } else {
                     if (code == 401) {
-                        throw new IOException("Request error: " + code + ", please verify the credentials used");
+                        throw new ApiException(code, "Request error: " + code + ", please verify the credentials used");
                     } else {
-                        throw new IOException("Request error: " + code);
+                        throw new ApiException(code, "Request error: " + code);
                     }
                 }
             }
