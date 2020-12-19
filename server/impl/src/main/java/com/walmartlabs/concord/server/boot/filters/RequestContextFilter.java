@@ -69,7 +69,7 @@ public class RequestContextFilter implements Filter {
         }
 
         try {
-            RequestContext.set(id, extraHeaders);
+            RequestContext.set(id, request.getRemoteAddr(), extraHeaders);
             chain.doFilter(request, response);
         } finally {
             RequestContext.clear();
