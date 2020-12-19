@@ -35,7 +35,7 @@ import java.util.Map;
 public class JsonStoreTaskV2 implements Task {
 
     private final JsonStoreTaskCommon delegate;
-    private final String processOrg ;
+    private final String processOrg;
 
     @Inject
     public JsonStoreTaskV2(ApiClient apiClient, Context context) {
@@ -43,12 +43,36 @@ public class JsonStoreTaskV2 implements Task {
         this.processOrg = context.processConfiguration().projectInfo().orgName();
     }
 
+    public boolean isStoreExists(String storeName) throws Exception {
+        return isStoreExists(assertOrg(processOrg), storeName);
+    }
+
+    public boolean isStoreExists(String orgName, String storeName) throws Exception {
+        return delegate.isStoreExists(orgName, storeName);
+    }
+
+    public boolean isExists(String storeName, String itemPath) throws Exception {
+        return isExists(assertOrg(processOrg), storeName, itemPath);
+    }
+
+    public boolean isExists(String orgName, String storeName, String itemPath) throws Exception {
+        return delegate.isExists(orgName, storeName, itemPath);
+    }
+
+    public void upsert(String storeName, String itemPath, Object data) throws Exception {
+        upsert(assertOrg(processOrg), storeName, itemPath, data);
+    }
+
+    public void upsert(String orgName, String storeName, String itemPath, Object data) throws Exception {
+        delegate.put(orgName, storeName, itemPath, data, true);
+    }
+
     public void put(String storeName, String itemPath, Object data) throws Exception {
         put(assertOrg(processOrg), storeName, itemPath, data);
     }
 
     public void put(String orgName, String storeName, String itemPath, Object data) throws Exception {
-        delegate.put(orgName, storeName, itemPath, data);
+        delegate.put(orgName, storeName, itemPath, data, false);
     }
 
     public Object get(String storageName, String itemPath) throws Exception {
