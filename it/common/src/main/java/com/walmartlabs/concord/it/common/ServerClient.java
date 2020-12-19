@@ -239,7 +239,8 @@ public class ServerClient {
     }
 
     public static void assertLogAtLeast(@Language("RegExp") String pattern, int times, byte[] ab) throws IOException {
-        assertTrue(times <= grep(pattern, ab).size());
+        int matches = grep(pattern, ab).size();
+        assertTrue("Expected to find " + pattern + " at least " + times + " time(s), found only " + matches, times <= matches);
     }
 
     public void waitForLog(String logFileName, @Language("RegExp") String pattern) throws ApiException, IOException, InterruptedException {
