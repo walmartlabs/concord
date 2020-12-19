@@ -515,7 +515,7 @@ public class MainTest {
                 .build());
 
         byte[] log = run();
-        assertLogAtLeast(log, 3,".*empty: \\[\\].*");
+        assertLogAtLeast(log, 3, ".*empty: \\[\\].*");
         assertLog(log, ".*after add: \\[1\\].*");
         assertLog(log, ".*after add: \\[2\\].*");
         assertLog(log, ".*after add: \\[3\\].*");
@@ -881,6 +881,17 @@ public class MainTest {
         assertLog(log, ".*form1: Vasia.*");
     }
 
+    @Test
+    public void testContextInjector() throws Exception {
+        deploy("injectorTest");
+
+        save(ProcessConfiguration.builder()
+                .build());
+
+        byte[] log = run();
+        assertLog(log, ".*done!.*");
+    }
+
     private void deploy(String resource) throws URISyntaxException, IOException {
         Path src = Paths.get(MainTest.class.getResource(resource).toURI());
         IOUtils.copy(src, workDir);
@@ -1185,7 +1196,7 @@ public class MainTest {
 
     @Named("simpleMethodTask")
     @SuppressWarnings("unused")
-    public static class SimpleMethodTask implements Task {
+    static class SimpleMethodTask implements Task {
 
         public int getValue() {
             return 42;
@@ -1204,6 +1215,35 @@ public class MainTest {
         @Override
         public long createSegment(UUID correlationId, String name) {
             return id.getAndIncrement();
+        }
+    }
+
+    @Named("injectorTestBean")
+    static class InjectorTestBean {
+
+        private final Context ctx;
+
+        @Inject
+        public InjectorTestBean(Context ctx) {
+            this.ctx = ctx;
+        }
+    }
+
+    @Named("injectorTestTask")
+    static class InjectorTestTask implements Task {
+
+        private final Map<String, InjectorTestBean> testBeans;
+
+        @Inject
+        public InjectorTestTask(Map<String, InjectorTestBean> testBeans) {
+            this.testBeans = testBeans;
+        }
+
+        @Override
+        public TaskResult execute(Variables input) {
+            testBeans.forEach((k, v) -> v.ctx.workingDirectory());
+            return TaskResult.success()
+                    .value("x", testBeans.size());
         }
     }
 }
