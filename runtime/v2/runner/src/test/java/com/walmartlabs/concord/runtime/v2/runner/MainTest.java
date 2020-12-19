@@ -892,6 +892,32 @@ public class MainTest {
         assertLog(log, ".*done!.*");
     }
 
+    @Test
+    public void testContextInjectorWithSegmentedLogger() throws Exception {
+        deploy("injectorTest");
+
+        RunnerConfiguration runnerCfg = RunnerConfiguration.builder()
+                .logging(LoggingConfiguration.builder()
+                        .sendSystemOutAndErrToSLF4J(false)
+                        .segmentedLogDir(segmentedLogDir.toAbsolutePath().toString())
+                        .build())
+                .build();
+
+        save(ProcessConfiguration.builder()
+                .build());
+
+        run(runnerCfg);
+
+        List<Path> paths = Files.walk(segmentedLogDir)
+                .filter(p -> p.getFileName().toString().endsWith(".log"))
+                .sorted()
+                .collect(Collectors.toList());
+
+        assertEquals(2, paths.size());
+        byte[] log = Files.readAllBytes(paths.get(1));
+        assertLog(log, ".*done!.*");
+    }
+
     private void deploy(String resource) throws URISyntaxException, IOException {
         Path src = Paths.get(MainTest.class.getResource(resource).toURI());
         IOUtils.copy(src, workDir);
@@ -1196,7 +1222,7 @@ public class MainTest {
 
     @Named("simpleMethodTask")
     @SuppressWarnings("unused")
-    static class SimpleMethodTask implements Task {
+    public static class SimpleMethodTask implements Task {
 
         public int getValue() {
             return 42;
