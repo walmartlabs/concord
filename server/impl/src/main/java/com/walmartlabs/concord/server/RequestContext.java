@@ -28,8 +28,8 @@ public final class RequestContext {
 
     private static final ThreadLocal<RequestContext> holder = new ThreadLocal<>();
 
-    public static void set(UUID requestId, Map<String, String> extraHeaders) {
-        RequestContext ctx = new RequestContext(requestId, extraHeaders);
+    public static void set(UUID requestId, String remoteAddr, Map<String, String> extraHeaders) {
+        RequestContext ctx = new RequestContext(requestId, remoteAddr, extraHeaders);
         holder.set(ctx);
     }
 
@@ -42,10 +42,12 @@ public final class RequestContext {
     }
 
     private final UUID requestId;
+    private final String remoteAddr;
     private final Map<String, String> extraHeaders;
 
-    private RequestContext(UUID requestId, Map<String, String> extraHeaders) {
+    private RequestContext(UUID requestId, String remoteAddr, Map<String, String> extraHeaders) {
         this.requestId = requestId;
+        this.remoteAddr = remoteAddr;
         this.extraHeaders = Collections.unmodifiableMap(extraHeaders);
     }
 
@@ -55,5 +57,9 @@ public final class RequestContext {
 
     public Map<String, String> getExtraHeaders() {
         return extraHeaders;
+    }
+
+    public String getRemoteAddr() {
+        return remoteAddr;
     }
 }

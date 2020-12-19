@@ -58,6 +58,17 @@ public final class RequestUtils {
         return headers.containsKey(UI_REQUEST_HEADER);
     }
 
+    /**
+     * Returns request IP.
+     */
+    public static String getRequestIp() {
+        RequestContext ctx = RequestContext.get();
+        if (ctx == null) {
+            return null;
+        }
+        return ctx.getRemoteAddr();
+    }
+
     private RequestUtils() {
     }
 }
