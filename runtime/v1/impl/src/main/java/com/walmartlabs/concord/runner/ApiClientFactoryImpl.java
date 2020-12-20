@@ -1,4 +1,4 @@
-package com.walmartlabs.concord.runtime.common.client;
+package com.walmartlabs.concord.runner;
 
 /*-
  * *****
@@ -25,40 +25,31 @@ import com.walmartlabs.concord.ApiClient;
 import com.walmartlabs.concord.client.ApiClientConfiguration;
 import com.walmartlabs.concord.client.ApiClientFactory;
 import com.walmartlabs.concord.client.ConcordApiClient;
-import com.walmartlabs.concord.common.IOUtils;
 import com.walmartlabs.concord.sdk.ApiConfiguration;
+import com.walmartlabs.concord.sdk.Constants;
 import com.walmartlabs.concord.sdk.Context;
 import com.walmartlabs.concord.sdk.ContextUtils;
 
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLSocketFactory;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.security.KeyManagementException;
 import java.security.NoSuchAlgorithmException;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
-/**
- * @deprecated Runtime v2 uses it's own ApiClientFactoryImpl.
- */
-// TODO move into runtime-v1?
-@Deprecated
 public class ApiClientFactoryImpl implements ApiClientFactory {
 
     private final ApiConfiguration cfg;
     private final Path tmpDir;
     private final OkHttpClient httpClient;
-    private final UUID instanceId;
 
-    @Deprecated
-    public ApiClientFactoryImpl(ApiConfiguration cfg) throws Exception {
-        this(cfg, null);
-    }
-
-    public ApiClientFactoryImpl(ApiConfiguration cfg, UUID instanceId) throws Exception {
+    public ApiClientFactoryImpl(ApiConfiguration cfg, Path workDir) throws Exception {
         this.cfg = cfg;
-        this.instanceId = instanceId;
-        this.tmpDir = IOUtils.createTempDir("api-client");
+
+        Path tmpBase = Files.createDirectories(workDir.resolve(Constants.Files.CONCORD_TMP_DIR_NAME));
+        this.tmpDir = Files.createTempDirectory(tmpBase, "api-client");
 
         OkHttpClient client = new OkHttpClient();
 
@@ -101,10 +92,7 @@ public class ApiClientFactoryImpl implements ApiClientFactory {
                 .addDefaultHeader("Accept", "*/*")
                 .setTempFolderPath(tmpDir.toString());
 
-        UUID txId = instanceId;
-        if (txId == null) {
-            txId = getTxId(overrides);
-        }
+        UUID txId = getTxId(overrides);
 
         if (txId != null) {
             client = client.setUserAgent("Concord-Runner: txId=" + txId);

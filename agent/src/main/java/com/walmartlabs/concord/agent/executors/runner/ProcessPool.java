@@ -24,6 +24,7 @@ import com.google.common.hash.HashCode;
 import com.walmartlabs.concord.agent.ExecutionException;
 import com.walmartlabs.concord.agent.Utils;
 import com.walmartlabs.concord.agent.cfg.PreForkConfiguration;
+import com.walmartlabs.concord.common.IOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -134,7 +135,7 @@ public class ProcessPool {
 
     private void maintenance() {
         List<HashCode> queuesToRemove = new ArrayList<>();
-        List<Process> processesToKill = new ArrayList<>();
+        List<ProcessEntry> processesToKill = new ArrayList<>();
 
         long t = System.currentTimeMillis();
 
@@ -142,7 +143,7 @@ public class ProcessPool {
             pool.forEach((hc, q) -> {
                 q.removeIf(e -> {
                     if (e.remove || t - e.timestamp >= maxEntryAge) {
-                        processesToKill.add(e.process);
+                        processesToKill.add(e);
                         return true;
                     }
                     return false;
@@ -160,10 +161,20 @@ public class ProcessPool {
 
         log.info("maintenance -> removed {} queues", queuesToRemove.size());
 
-        for (Process p : processesToKill) {
-            Utils.kill(p);
+        for (ProcessEntry p : processesToKill) {
+            Utils.kill(p.process);
+            cleanup(p);
         }
         log.info("maintenance -> killed {} processes", processesToKill.size());
+    }
+
+    private static void cleanup(ProcessEntry process) {
+        try {
+            IOUtils.deleteRecursively(process.procDir);
+        } catch (IOException e) {
+            log.info("cleanup ['{}'] -> error: {}", process.procDir, e.getMessage());
+            // ignore
+        }
     }
 
     public interface ProcessLauncher {

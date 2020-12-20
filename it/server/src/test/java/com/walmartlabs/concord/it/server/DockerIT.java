@@ -150,6 +150,6 @@ public class DockerIT extends AbstractServerIT {
         ProcessEntry pir = waitForCompletion(processApi, spr.getInstanceId());
 
         byte[] ab = getLog(pir.getLogFileName());
-        assertLogAtLeast(".*Error pulling the image.*", 3, ab);
+        assertLogAtLeast(".*Error pulling the image.*", 2, ab);
     }
 }

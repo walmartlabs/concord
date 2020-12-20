@@ -28,6 +28,9 @@ import org.slf4j.LoggerFactory;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * Common code for both v1 and v2 versions of the JSON store task.
+ */
 public class JsonStoreTaskCommon {
 
     private static final Logger log = LoggerFactory.getLogger(JsonStoreTaskCommon.class);
@@ -41,7 +44,66 @@ public class JsonStoreTaskCommon {
         this.apiClient = apiClient;
     }
 
-    public void put(String orgName, String storeName, String itemPath, Object data) throws ApiException {
+    /**
+     * Returns {@code true} if the specified JSON store exists.
+     */
+    public boolean isStoreExists(String orgName, String storeName) throws ApiException {
+        assertNotEmpty("Organization name", orgName);
+        assertNotEmpty("Store name", storeName);
+
+        JsonStoreEntry entry = ClientUtils.withRetry(RETRY_COUNT, RETRY_INTERVAL, () -> {
+            try {
+                JsonStoreApi api = new JsonStoreApi(apiClient);
+                return api.get(orgName, storeName);
+            } catch (ApiException e) {
+                if (e.getCode() == 404) {
+                    return null;
+                }
+
+                throw e;
+            }
+        });
+
+        return entry != null;
+    }
+
+    /**
+     * Returns {@code true} if the specified item and JSON store exists.
+     * <p/>
+     * The difference between this method and {@code get(orgName, storeName, itemPath) != null}
+     * is that this method doesn't throw exceptions if the specified organization or the store
+     * don't exist.
+     */
+    public boolean isExists(String orgName, String storeName, String itemPath) throws ApiException {
+        try {
+            return get(orgName, storeName, itemPath) != null;
+        } catch (ApiException e) {
+            if (e.getCode() == 404) {
+                return false;
+            }
+
+            throw e;
+        }
+    }
+
+    /**
+     * Creates a new JSON store or updates an existing one.
+     */
+    public void createOrUpdateStore(String orgName, JsonStoreRequest request) throws ApiException {
+        ClientUtils.withRetry(RETRY_COUNT, RETRY_INTERVAL, () -> {
+            JsonStoreApi api = new JsonStoreApi(apiClient);
+            GenericOperationResult result = api.createOrUpdate(orgName, request);
+            log.info("The store '{}' has been successfully {}", request.getName(), result.getResult());
+            return null;
+        });
+    }
+
+    /**
+     * Inserts a new item or replaces an existing one.
+     * <p/>
+     * If {@code createStore} is {@code true} the store will be automatically created.
+     */
+    public void put(String orgName, String storeName, String itemPath, Object data, boolean createStore) throws ApiException {
         if (data == null) {
             throw new IllegalArgumentException("Data cannot be null.");
         }
@@ -54,6 +116,10 @@ public class JsonStoreTaskCommon {
         assertNotEmpty("Store name", storeName);
         assertNotEmpty("Item path", itemPath);
 
+        if (createStore && !isStoreExists(orgName, storeName)) {
+            createOrUpdateStore(orgName, new JsonStoreRequest().setName(storeName));
+        }
+
         log.info("Updating item '{}' (org={}, store={})", itemPath, orgName, storeName);
 
         ClientUtils.withRetry(RETRY_COUNT, RETRY_INTERVAL, () -> {
@@ -62,6 +128,9 @@ public class JsonStoreTaskCommon {
         });
     }
 
+    /**
+     * Returns an existing item or {@code null} if the specified path doesn't exist.
+     */
     public Object get(String orgName, String storeName, String itemPath) throws ApiException {
         assertNotEmpty("Organization name", orgName);
         assertNotEmpty("Store name", storeName);
@@ -71,10 +140,14 @@ public class JsonStoreTaskCommon {
 
         // we need to deserialize the response using Jackson instead of GSON to avoid
         // differences between two libraries (e.g. deserialization of integers/decimals)
+        // hence we're using custom "request" method instead of the standard swagger-codegen client
         return ClientUtils.withRetry(RETRY_COUNT, RETRY_INTERVAL, () ->
                 RequestUtils.request(apiClient, "/api/v1/org/" + orgName + "/jsonstore/" + storeName + "/item/" + itemPath, "GET", null, Map.class));
     }
 
+    /**
+     * Removes an existing item. Returns {@code true} if the item existed and was successfully removed.
+     */
     public boolean delete(String orgName, String storeName, String itemPath) throws ApiException {
         assertNotEmpty("Organization name", orgName);
         assertNotEmpty("Store name", storeName);
@@ -89,6 +162,9 @@ public class JsonStoreTaskCommon {
         });
     }
 
+    /**
+     * Executes a named query and returns the list of results.
+     */
     public List<Object> executeQuery(String orgName, String storeName, String queryName, Map<String, Object> params) throws ApiException {
         assertNotEmpty("Organization name", orgName);
         assertNotEmpty("Store name", storeName);

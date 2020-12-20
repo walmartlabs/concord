@@ -1,0 +1,26 @@
+flows:
+  default:
+    - if: ${jsonStore.isStoreExists(storeName)}
+      then:
+        - throw: "The store shouldn't exist at this point"
+      else:
+        - log: "OK: the store doesn't exist"
+
+    - if: ${jsonStore.isExists(storeName, itemPath)}
+      then:
+        - throw: "The store and the item shouldn't exist at this point"
+      else:
+        - log: "OK: the item doesn't exist"
+
+    - "${jsonStore.upsert(storeName, itemPath, {'test': 123})}"
+
+    - if: ${jsonStore.isStoreExists(storeName)}
+      then:
+        - log: "OK: the store exists now"
+
+    - if: ${jsonStore.isExists(storeName, itemPath)}
+      then:
+        - log: "OK: the item exists now"
+
+    - log: "item: ${jsonStore.get(storeName, itemPath)}"
+
