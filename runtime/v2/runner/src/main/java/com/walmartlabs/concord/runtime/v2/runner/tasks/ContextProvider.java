@@ -20,6 +20,7 @@ package com.walmartlabs.concord.runtime.v2.runner.tasks;
  * =====
  */
 
+import com.walmartlabs.concord.common.ThreadLocalStack;
 import com.walmartlabs.concord.runtime.v2.sdk.Context;
 
 import javax.inject.Provider;
@@ -27,7 +28,7 @@ import java.util.concurrent.Callable;
 
 public class ContextProvider implements Provider<Context> {
 
-    private static final ThreadLocal<Context> value = new ThreadLocal<>();
+    private static final ThreadLocalStack<Context> value = new ThreadLocalStack<>();
 
     public static <T, C extends Context> T withContext(C ctx, Callable<T> callable) {
         set(ctx);
@@ -53,7 +54,7 @@ public class ContextProvider implements Provider<Context> {
 
     @Override
     public Context get() {
-        Context ctx = value.get();
+        Context ctx = value.peek();
         if (ctx == null) {
             throw new IllegalStateException("No context available. This is most likely a bug.");
         }
@@ -62,10 +63,10 @@ public class ContextProvider implements Provider<Context> {
     }
 
     private static void set(Context ctx) {
-        value.set(ctx);
+        value.push(ctx);
     }
 
     private static void clear() {
-        value.remove();
+        value.pop();
     }
 }
