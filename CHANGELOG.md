@@ -4,6 +4,8 @@
 
 ### Added
 
+- concord-console: custom columns in the process list can now
+be rendered as links;
 - runtime-v2: new annotation `@SensitiveData` can be used to
 prevent task method arguments from being recorded in process
 events;
