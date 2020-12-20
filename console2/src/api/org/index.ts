@@ -76,7 +76,12 @@ export enum RenderType {
     /**
      * Render as a duration (current timestamp - value)
      */
-    DURATION = 'duration'
+    DURATION = 'duration',
+
+    /**
+     * Render as link
+     */
+    LINK = 'link'
 }
 
 export interface ColumnDefinition {
