@@ -64,13 +64,11 @@ public class SaveLastErrorCommand implements Command {
     }
 
     private static Map<String, Object> serialize(Exception e) {
-        ObjectMapper mapper = createMapper();
-
         try {
-            return mapper.convertValue(e, MAP_TYPE);
+            return createMapper().convertValue(e, MAP_TYPE);
         } catch (Exception ex) {
             // ignore ex
-            return mapper.convertValue(Collections.singletonMap("message", e.getMessage()), MAP_TYPE);
+            return Collections.singletonMap("message", e.getMessage());
         }
     }
 
