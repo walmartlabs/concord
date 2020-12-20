@@ -60,7 +60,7 @@ const normalizePath = (s: string): string => {
 class GitHubLink extends React.PureComponent<Props> {
     render() {
         const { url, commitId, path, text, branch } = this.props;
-        
+
         let s = gitUrlParse(url);
         if (!s) {
             return url;
