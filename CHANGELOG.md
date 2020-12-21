@@ -18,6 +18,8 @@ version).
 
 ### Changed
 
+- concord-server, concord-console: use `main` as the default Git
+branch;
 - concord-agent, runtime-v1: make sure temporary directories are
 removed;
 - policy-engine: rule matching code refactoring, use common map
