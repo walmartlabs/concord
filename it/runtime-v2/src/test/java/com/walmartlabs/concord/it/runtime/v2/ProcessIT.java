@@ -349,6 +349,9 @@ public class ProcessIT {
 
         Map<String, Object> data = proc.getOutVariables();
         assertNotNull(data);
-        assertEquals(Collections.singletonMap("message", "BOOM"), data.get("lastError"));
+        Map<String, Object> m = new HashMap<>();
+        m.put("@id", 1);
+        m.put("message", "BOOM");
+        assertEquals(m, data.get("lastError"));
     }
 }

@@ -20,8 +20,10 @@ package com.walmartlabs.concord.runtime.v2.runner.vm;
  * =====
  */
 
+import com.fasterxml.jackson.annotation.JsonIdentityInfo;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.ObjectIdGenerators;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
@@ -54,12 +56,20 @@ public class SaveLastErrorCommand implements Command {
         Map<String, Object> currentOut = persistenceService.loadPersistedFile(Constants.Files.OUT_VALUES_FILE_NAME, in -> om.readValue(in, MAP_TYPE));
 
         Map<String, Object> outValues = new HashMap<>(currentOut != null ? currentOut : Collections.emptyMap());
-        outValues.put(Constants.Context.LAST_ERROR_KEY, createMapper().convertValue(e, Map.class));
-
+        outValues.put(Constants.Context.LAST_ERROR_KEY, serialize(e));
         persistenceService.persistFile(Constants.Files.OUT_VALUES_FILE_NAME,
                 out -> om.writeValue(out, outValues));
 
         throw e;
+    }
+
+    private static Map<String, Object> serialize(Exception e) {
+        try {
+            return createMapper().convertValue(e, MAP_TYPE);
+        } catch (Exception ex) {
+            // ignore ex
+            return Collections.singletonMap("message", e.getMessage());
+        }
     }
 
     private static ObjectMapper createMapper() {
@@ -71,6 +81,7 @@ public class SaveLastErrorCommand implements Command {
 
     @SuppressWarnings("unused")
     @JsonInclude(JsonInclude.Include.NON_NULL)
+    @JsonIdentityInfo(generator= ObjectIdGenerators.IntSequenceGenerator.class)
     abstract static class ExceptionMixIn {
         @JsonIgnore
         abstract StackTraceElement[] getStackTrace();
