@@ -279,7 +279,8 @@ public class ExternalImportsIT extends AbstractServerIT {
         projectsApi.createOrUpdate(orgName, new ProjectEntry()
                 .setName(projectName)
                 .setRepositories(Collections.singletonMap(repoName, new RepositoryEntry()
-                        .setUrl(userRepoUrl))));
+                        .setUrl(userRepoUrl)
+                        .setBranch("master"))));
 
         RepositoriesApi repositoriesApi = new RepositoriesApi(getApiClient());
         RepositoryValidationResponse resp = repositoriesApi.validateRepository(orgName, projectName, repoName);
@@ -392,7 +393,8 @@ public class ExternalImportsIT extends AbstractServerIT {
         projectsApi.createOrUpdate(orgName, new ProjectEntry()
                 .setName(projectName)
                 .setRepositories(Collections.singletonMap(repoName, new RepositoryEntry()
-                        .setUrl(clientRepoUrl))));
+                        .setUrl(clientRepoUrl)
+                        .setBranch("master"))));
 
         // ---
 
@@ -502,6 +504,7 @@ public class ExternalImportsIT extends AbstractServerIT {
         Git repo = Git.init().setDirectory(tmpDir.toFile()).call();
         repo.add().addFilepattern(".").call();
         repo.commit().setMessage("import").call();
+        repo.branchCreate().setName("main").call();
         return tmpDir.toAbsolutePath().toString();
     }
 

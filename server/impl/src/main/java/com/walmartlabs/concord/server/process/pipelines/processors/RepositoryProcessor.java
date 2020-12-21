@@ -20,7 +20,6 @@ package com.walmartlabs.concord.server.process.pipelines.processors;
  * =====
  */
 
-import com.walmartlabs.concord.repository.GitConstants;
 import com.walmartlabs.concord.repository.Repository;
 import com.walmartlabs.concord.repository.Snapshot;
 import com.walmartlabs.concord.sdk.Constants;
@@ -104,9 +103,8 @@ public class RepositoryProcessor implements PayloadProcessor {
                 if (info != null) {
                     ci = new CommitInfo(info.getCommitId(), info.getAuthor(), info.getMessage());
                 }
-
-                String branch = repo.getBranch() != null ? repo.getBranch() : GitConstants.DEFAULT_BRANCH;
-                RepositoryInfo i = new RepositoryInfo(repo.getId(), repo.getName(), repo.getUrl(), repo.getPath(), branch, repo.getCommitId(), ci);
+                
+                RepositoryInfo i = new RepositoryInfo(repo.getId(), repo.getName(), repo.getUrl(), repo.getPath(), repo.getBranch(), repo.getCommitId(), ci);
                 return payload
                         .putHeader(REPOSITORY_INFO_KEY, i)
                         .putHeader(Payload.REPOSITORY, repository)

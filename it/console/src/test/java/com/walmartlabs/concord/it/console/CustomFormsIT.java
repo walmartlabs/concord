@@ -69,7 +69,8 @@ public class CustomFormsIT {
         projectsApi.createOrUpdate(orgName, new ProjectEntry()
                 .setName(projectName)
                 .setRepositories(Collections.singletonMap(repoName, new RepositoryEntry()
-                        .setUrl(gitUrl))));
+                        .setUrl(gitUrl)
+                        .setBranch("master"))));
 
         // ---
 
