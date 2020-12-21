@@ -504,6 +504,7 @@ public class ExternalImportsIT extends AbstractServerIT {
         Git repo = Git.init().setDirectory(tmpDir.toFile()).call();
         repo.add().addFilepattern(".").call();
         repo.commit().setMessage("import").call();
+        repo.branchCreate().setName("main").call();
         return tmpDir.toAbsolutePath().toString();
     }
 
