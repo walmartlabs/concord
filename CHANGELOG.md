@@ -18,6 +18,8 @@ version).
 
 ### Changed
 
+- runtime-v2: improved serialization of `lastError` objects that
+contain circular references (e.g. Guice exceptions);
 - concord-server, concord-console: use `main` as the default Git
 branch;
 - concord-agent, runtime-v1: make sure temporary directories are
