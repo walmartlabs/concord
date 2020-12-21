@@ -101,7 +101,7 @@ public class Run implements Callable<Integer> {
     boolean verbose = false;
 
     @Option(names = {"--default-import-version"}, description = "default import version or repo branch")
-    String defaultVersion = "master";
+    String defaultVersion = "main";
 
     @Parameters(arity = "0..1", description = "Directory with Concord files or a path to a single Concord YAML file.")
     Path sourceDir = Paths.get(System.getProperty("user.dir"));
