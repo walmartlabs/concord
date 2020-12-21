@@ -115,11 +115,11 @@ public class AbstractOneOpsTriggerIT extends AbstractServerIT {
         return GitUtils.createBareRepository(src);
     }
 
-    protected Path initProjectAndRepo(String orgName, String projectName, String repoName, String repoBranch, Path bareRepo) throws Exception {
+    protected Path initProjectAndRepo(String orgName, String projectName, String repoName, Path bareRepo) throws Exception {
         ProjectsApi projectsApi = new ProjectsApi(getApiClient());
 
         RepositoryEntry repo = new RepositoryEntry()
-                .setBranch(repoBranch)
+                .setBranch("master")
                 .setUrl(bareRepo.toAbsolutePath().toString());
 
         projectsApi.createOrUpdate(orgName, new ProjectEntry()

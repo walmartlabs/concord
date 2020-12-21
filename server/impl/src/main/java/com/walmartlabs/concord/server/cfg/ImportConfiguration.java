@@ -38,6 +38,10 @@ public class ImportConfiguration {
     @Config("imports.src")
     private String src;
 
+    @Inject
+    @Config("imports.defaultBranch")
+    private String defaultBranch;
+
     private final Set<String> disabledProcessors;
 
     @Inject
@@ -47,6 +51,10 @@ public class ImportConfiguration {
 
     public String getSrc() {
         return src;
+    }
+
+    public String getDefaultBranch() {
+        return defaultBranch;
     }
 
     public Set<String> getDisabledProcessors() {

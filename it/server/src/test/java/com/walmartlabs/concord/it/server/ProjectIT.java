@@ -383,8 +383,10 @@ public class ProjectIT extends AbstractServerIT {
     protected void createProjectAndRepo(String projectName,
                                         String username,
                                         Set<String> permissions,
-                                        String repoName, String repoUrl,
-                                        String commitId, String tag) throws Exception {
+                                        String repoName,
+                                        String repoUrl,
+                                        String commitId,
+                                        String tag) throws Exception {
 
         UsersApi usersApi = new UsersApi(getApiClient());
         CreateUserResponse cur = usersApi.createOrUpdate(new CreateUserRequest()
@@ -413,7 +415,7 @@ public class ProjectIT extends AbstractServerIT {
                         new RepositoryEntry()
                                 .setName(repoName)
                                 .setUrl(repoUrl)
-                                .setBranch(tag)
+                                .setBranch(tag != null ? tag : "master")
                                 .setCommitId(commitId))));
         assertTrue(cpr.isOk());
     }

@@ -67,7 +67,7 @@ const renderManualTrigger = ({
             projectName={projectName}
             repoName={repoName}
             repoURL={repoURL}
-            repoBranchOrCommitId={repoBranchOrCommitId}
+            repoBranchOrCommitId={repoBranchOrCommitId!}
             repoPath={repoPathOrDefault}
             allowEntryPoint={false}
             entryPoint={trigger.cfg.entryPoint}
@@ -120,14 +120,14 @@ const RepositoryActionDropdown = (props: ExternalProps) => {
     const {
         name: repoName,
         url: repoURL,
-        branch: repoBranch,
         commitId: repoCommitId,
+        branch: repoBranch,
         path: repoPath,
         disabled: repoDisabled
     } = repo;
 
-    // show the commit ID if defined, otherwise show the branch name or fallback to 'master'
-    const repoBranchOrCommitId = repoCommitId ? repoCommitId : repoBranch ? repoBranch : 'master';
+    // show the commit ID if defined, otherwise show the branch name
+    const repoBranchOrCommitId = repoCommitId ? repoCommitId : repoBranch;
     const repoPathOrDefault = repoPath ? repoPath : '/';
 
     return (
@@ -146,7 +146,7 @@ const RepositoryActionDropdown = (props: ExternalProps) => {
                                 projectName={projectName}
                                 repoName={repoName}
                                 repoURL={repoURL}
-                                repoBranchOrCommitId={repoBranchOrCommitId}
+                                repoBranchOrCommitId={repoBranchOrCommitId!}
                                 repoPath={repoPathOrDefault}
                                 allowEntryPoint={true}
                                 allowProfile={true}
@@ -165,7 +165,7 @@ const RepositoryActionDropdown = (props: ExternalProps) => {
                                     projectName,
                                     repoName,
                                     repoURL,
-                                    repoBranchOrCommitId,
+                                    repoBranchOrCommitId: repoBranchOrCommitId!,
                                     repoPathOrDefault,
                                     repoDisabled: repo.disabled
                                 })
@@ -178,7 +178,7 @@ const RepositoryActionDropdown = (props: ExternalProps) => {
                         projectName={projectName}
                         repoName={repoName}
                         repoURL={repoURL}
-                        repoBranchOrCommitId={repoBranchOrCommitId}
+                        repoBranchOrCommitId={repoBranchOrCommitId!}
                         repoPath={repoPathOrDefault}
                         allowEntryPoint={true}
                         allowProfile={true}

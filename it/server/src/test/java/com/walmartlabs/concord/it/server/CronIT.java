@@ -67,7 +67,8 @@ public class CronIT extends AbstractServerIT {
                 .setName(projectName)
                 .setVisibility(ProjectEntry.VisibilityEnum.PUBLIC)
                 .setRepositories(Collections.singletonMap(repoName, new RepositoryEntry()
-                        .setUrl(gitUrl))));
+                        .setUrl(gitUrl)
+                        .setBranch("master"))));
 
         // ---
 

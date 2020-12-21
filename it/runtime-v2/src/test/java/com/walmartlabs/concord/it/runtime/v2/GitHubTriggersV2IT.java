@@ -150,7 +150,7 @@ public class GitHubTriggersV2IT {
         ProjectsApi projectsApi = new ProjectsApi(apiClient());
 
         RepositoryEntry repo = new RepositoryEntry()
-                .setBranch(repoBranch)
+                .setBranch(repoBranch != null ? repoBranch : "master")
                 .setUrl(bareRepo.toAbsolutePath().toString());
 
         projectsApi.createOrUpdate(orgName, new ProjectEntry()

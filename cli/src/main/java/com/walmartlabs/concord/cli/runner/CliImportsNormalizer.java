@@ -28,15 +28,16 @@ import java.util.stream.Collectors;
 
 public class CliImportsNormalizer implements ImportsNormalizer {
 
-    private static final String DEFAULT_VERSION = "master";
     private static final String DEFAULT_DEST = "concord";
 
     private final String defaultSource;
     private final boolean verbose;
+    private final String defaultVersion;
 
-    public CliImportsNormalizer(String defaultSource, boolean verbose) {
+    public CliImportsNormalizer(String defaultSource, boolean verbose, String defaultVersion) {
         this.defaultSource = defaultSource;
         this.verbose = verbose;
+        this.defaultVersion = defaultVersion;
     }
 
     @Override
@@ -91,7 +92,7 @@ public class CliImportsNormalizer implements ImportsNormalizer {
 
         return Import.GitDefinition.builder().from(e)
                 .url(url)
-                .version(e.version() != null ? e.version() : DEFAULT_VERSION)
+                .version(e.version() != null ? e.version() : defaultVersion)
                 .dest(e.dest() != null ? e.dest() : DEFAULT_DEST)
                 .secret(e.secret())
                 .build();
