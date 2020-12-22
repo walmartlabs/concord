@@ -23,6 +23,7 @@ package com.walmartlabs.concord.runtime.v2.runner.checkpoints;
 import com.walmartlabs.concord.ApiClient;
 import com.walmartlabs.concord.ApiException;
 import com.walmartlabs.concord.client.ClientUtils;
+import com.walmartlabs.concord.common.ObjectInputStreamWithClassLoader;
 import com.walmartlabs.concord.common.TemporaryPath;
 import com.walmartlabs.concord.runtime.common.cfg.ApiConfiguration;
 import com.walmartlabs.concord.runtime.common.cfg.RunnerConfiguration;
@@ -37,6 +38,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
+import javax.inject.Named;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.ObjectInputStream;
@@ -53,17 +55,20 @@ public class DefaultCheckpointService implements CheckpointService {
     private final WorkingDirectory workingDirectory;
     private final ApiClient apiClient;
     private final ApiConfiguration apiConfiguration;
+    private final ClassLoader classLoader;
 
     @Inject
     public DefaultCheckpointService(InstanceId instanceId,
                                     WorkingDirectory workingDirectory,
                                     RunnerConfiguration configuration,
-                                    ApiClient apiClient) {
+                                    ApiClient apiClient,
+                                    @Named("runtime") ClassLoader classLoader) {
 
         this.instanceId = instanceId;
         this.workingDirectory = workingDirectory;
         this.apiConfiguration = configuration.api();
         this.apiClient = apiClient;
+        this.classLoader = classLoader;
     }
 
     @Override
@@ -79,7 +84,7 @@ public class DefaultCheckpointService implements CheckpointService {
 
             String resumeEventRef = checkpointId.toString();
 
-            State state = clone(snapshot.vmState());
+            State state = clone(snapshot.vmState(), classLoader);
             state.setEventRef(threadId, resumeEventRef);
             state.setStatus(threadId, ThreadStatus.SUSPENDED);
 
@@ -123,14 +128,14 @@ public class DefaultCheckpointService implements CheckpointService {
         }
     }
 
-    private static State clone(State state) throws Exception {
+    private static State clone(State state, ClassLoader cl) throws Exception {
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         try (ObjectOutputStream oos = new ObjectOutputStream(baos)) {
             oos.writeObject(state);
         }
 
         try (ByteArrayInputStream bais = new ByteArrayInputStream(baos.toByteArray());
-             ObjectInputStream ois = new ObjectInputStream(bais)) {
+             ObjectInputStream ois = new ObjectInputStreamWithClassLoader(bais, cl)) {
             return (State) ois.readObject();
         }
     }

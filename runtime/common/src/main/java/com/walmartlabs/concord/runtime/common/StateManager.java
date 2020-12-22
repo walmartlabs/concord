@@ -21,6 +21,7 @@ package com.walmartlabs.concord.runtime.common;
  */
 
 import com.walmartlabs.concord.common.IOUtils;
+import com.walmartlabs.concord.common.ObjectInputStreamWithClassLoader;
 import com.walmartlabs.concord.common.TemporaryPath;
 import com.walmartlabs.concord.sdk.Constants;
 import org.apache.commons.compress.archivers.zip.ZipArchiveOutputStream;
@@ -111,7 +112,7 @@ public final class StateManager {
      * the standard location inside the provided {@code baseDir}.
      */
     @SuppressWarnings("unchecked")
-    public static <T extends Serializable> T readProcessState(Path baseDir) {
+    public static <T extends Serializable> T readProcessState(Path baseDir, ClassLoader cl) {
         Path stateDir = baseDir.resolve(Constants.Files.JOB_ATTACHMENTS_DIR_NAME)
                 .resolve(Constants.Files.JOB_STATE_DIR_NAME);
 
@@ -120,7 +121,7 @@ public final class StateManager {
             return null;
         }
 
-        try (ObjectInputStream in = new ObjectInputStream(Files.newInputStream(p))) {
+        try (ObjectInputStream in = new ObjectInputStreamWithClassLoader(Files.newInputStream(p), cl)) {
             return (T) in.readObject();
         } catch (ClassNotFoundException | IOException e) {
             throw new RuntimeException(e);
