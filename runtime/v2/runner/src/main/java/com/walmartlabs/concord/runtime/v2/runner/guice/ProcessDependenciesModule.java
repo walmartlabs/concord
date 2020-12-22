@@ -21,7 +21,7 @@ package com.walmartlabs.concord.runtime.v2.runner.guice;
  */
 
 import com.google.inject.AbstractModule;
-import com.walmartlabs.concord.runtime.v2.runner.InjectorFactory;
+import com.google.inject.name.Names;
 import com.walmartlabs.concord.sdk.Constants;
 import org.eclipse.sisu.space.BeanScanning;
 import org.eclipse.sisu.space.SpaceModule;
@@ -55,8 +55,12 @@ public class ProcessDependenciesModule extends AbstractModule {
     protected void configure() {
         try {
             ClassLoader cl = loadDependencies(workDir, dependencies);
+
+            // required to support ScriptEngines from external dependencies
             Thread.currentThread().setContextClassLoader(cl);
+
             install(new SpaceModule(new URLClassSpace(cl), BeanScanning.GLOBAL_INDEX));
+            bind(ClassLoader.class).annotatedWith(Names.named("runtime")).toInstance(cl);
         } catch (IOException e) {
             addError(e);
         }
@@ -64,7 +68,7 @@ public class ProcessDependenciesModule extends AbstractModule {
 
     private static URLClassLoader loadDependencies(Path workDir, Collection<String> dependencies) throws IOException {
         List<URL> urls = toURLs(workDir, dependencies);
-        return new URLClassLoader(urls.toArray(new URL[0]), InjectorFactory.class.getClassLoader());
+        return new URLClassLoader(urls.toArray(new URL[0]), ProcessDependenciesModule.class.getClassLoader());
     }
 
     private static List<URL> toURLs(Path workDir, Collection<String> dependencies) throws IOException {

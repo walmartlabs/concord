@@ -26,6 +26,7 @@ import com.google.inject.AbstractModule;
 import com.google.inject.Injector;
 import com.google.inject.Module;
 import com.google.inject.multibindings.Multibinder;
+import com.google.inject.name.Names;
 import com.walmartlabs.concord.common.IOUtils;
 import com.walmartlabs.concord.forms.Form;
 import com.walmartlabs.concord.runtime.common.FormService;
@@ -112,6 +113,8 @@ public class MainTest {
             @Override
             protected void configure() {
                 install(new BaseRunnerModule());
+
+                bind(ClassLoader.class).annotatedWith(Names.named("runtime")).toInstance(MainTest.class.getClassLoader());
 
                 bind(CheckpointService.class).toInstance(checkpointService);
                 bind(DependencyManager.class).to(DefaultDependencyManager.class);

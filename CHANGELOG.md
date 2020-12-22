@@ -1,5 +1,14 @@
 # Change log
 
+## [Unreleased]
+
+### Changed
+
+- runtime-v2: fixed a checkpoint serialization issue when classes
+from `dependencies` are used as flow variables.
+
+
+
 ## [1.76.0] - 2020-12-22
 
 ### Added

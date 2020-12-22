@@ -45,6 +45,7 @@ import com.walmartlabs.concord.svm.ThreadStatus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.inject.Named;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.Serializable;
@@ -61,21 +62,23 @@ public class Main {
     private final RunnerConfiguration runnerCfg;
     private final ProcessConfiguration processCfg;
     private final WorkingDirectory workDir;
-
     private final TaskProviders taskProviders;
+    private final ClassLoader classLoader;
 
     @Inject
     public Main(Runner runner,
                 RunnerConfiguration runnerCfg,
                 ProcessConfiguration processCfg,
                 WorkingDirectory workDir,
-                TaskProviders taskProviders) {
+                TaskProviders taskProviders,
+                @Named("runtime") ClassLoader classLoader) {
 
         this.runner = runner;
         this.runnerCfg = runnerCfg;
         this.processCfg = processCfg;
         this.workDir = workDir;
         this.taskProviders = taskProviders;
+        this.classLoader = classLoader;
     }
 
     public static void main(String[] args) throws Exception {
@@ -139,7 +142,7 @@ public class Main {
         //  - continuing from a checkpoint
         //  - resuming after suspend
 
-        ProcessSnapshot snapshot = StateManager.readProcessState(workDir);
+        ProcessSnapshot snapshot = StateManager.readProcessState(workDir, classLoader);
         Set<String> events = StateManager.readResumeEvents(workDir); // TODO make it an interface?
 
         Action action = currentAction(snapshot, events);
