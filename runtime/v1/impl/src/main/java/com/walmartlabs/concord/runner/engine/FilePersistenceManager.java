@@ -21,6 +21,7 @@ package com.walmartlabs.concord.runner.engine;
  */
 
 import com.walmartlabs.concord.common.IOUtils;
+import com.walmartlabs.concord.common.ObjectInputStreamWithClassLoader;
 import com.walmartlabs.concord.runner.SerializationUtils;
 import io.takari.bpm.api.ExecutionException;
 import io.takari.bpm.persistence.PersistenceManager;
@@ -28,7 +29,9 @@ import io.takari.bpm.state.ProcessInstance;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.*;
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.UUID;
@@ -69,7 +72,9 @@ public class FilePersistenceManager implements PersistenceManager {
             return null;
         }
 
-        try (ObjectInputStream in = new ThreadLocalClassLoaderObjectInputStream(Files.newInputStream(p))) {
+        ClassLoader cl = Thread.currentThread().getContextClassLoader();
+
+        try (ObjectInputStream in = new ObjectInputStreamWithClassLoader(Files.newInputStream(p), cl)) {
             return (ProcessInstance) in.readObject();
         } catch (ClassNotFoundException | IOException e) {
             throw new RuntimeException(e);
@@ -90,26 +95,5 @@ public class FilePersistenceManager implements PersistenceManager {
         }
 
         log.debug("remove ['{}'] -> done, {}", id, p);
-    }
-
-    private static class ThreadLocalClassLoaderObjectInputStream extends ObjectInputStream {
-
-        private final ClassLoader classLoader;
-
-        public ThreadLocalClassLoaderObjectInputStream(InputStream inputStream) throws IOException {
-            super(inputStream);
-            this.classLoader = Thread.currentThread().getContextClassLoader();
-        }
-
-        @Override
-        protected Class<?> resolveClass(final ObjectStreamClass objectStreamClass)
-                throws IOException, ClassNotFoundException {
-
-            try {
-                return Class.forName(objectStreamClass.getName(), false, classLoader);
-            } catch (final ClassNotFoundException e) {
-                return super.resolveClass(objectStreamClass);
-            }
-        }
     }
 }

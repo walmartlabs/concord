@@ -31,7 +31,10 @@ import com.walmartlabs.concord.client.ProcessEntry;
 import org.junit.ClassRule;
 import org.junit.Test;
 
-import java.util.*;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 import static com.walmartlabs.concord.it.common.ITUtils.randomString;
 import static com.walmartlabs.concord.it.runtime.v2.ITConstants.DEFAULT_TEST_TIMEOUT;
@@ -334,6 +337,30 @@ public class ProcessIT {
             proc.assertNoLog(".*#2.*");
             proc.assertLog(".*#3.*");
         }
+    }
+
+    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    public void testCheckpointsWith3rdPartyClasses() throws Exception {
+        String concordYml = resourceToString(NodeRosterIT.class.getResource("checkpointClasses/concord.yml"))
+                .replaceAll("PROJECT_VERSION", ITConstants.PROJECT_VERSION);
+
+        ConcordProcess proc = concord.processes().start(new Payload()
+                .concordYml(concordYml));
+
+        proc.expectStatus(ProcessEntry.StatusEnum.FINISHED);
+
+        // ---
+
+        List<ProcessCheckpointEntry> checkpoints = proc.checkpoints();
+        assertEquals(1, checkpoints.size());
+
+        proc.restoreCheckpoint(checkpoints.get(0).getId());
+        proc.expectStatus(ProcessEntry.StatusEnum.FINISHED);
+
+        // ---
+
+        proc.assertLog(".*1: Hello!.*");
+        proc.assertLogAtLeast(".*2: Hello!.*", 2);
     }
 
     @Test(timeout = DEFAULT_TEST_TIMEOUT)
