@@ -78,12 +78,11 @@ public class ProcessIT {
         ConcordProcess proc = concord.processes().start(payload);
 
         ProcessEntry pe = proc.waitForStatus(ProcessEntry.StatusEnum.FINISHED);
-        assertEquals(ProcessEntry.StatusEnum.FINISHED, pe.getStatus());
-
-        // ---
 
         proc.assertLog(".*Runtime: concord-v2.*");
         proc.assertLog(".*log from script: 123.*");
+
+        assertEquals(ProcessEntry.StatusEnum.FINISHED, pe.getStatus());
     }
 
     /**

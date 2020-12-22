@@ -55,6 +55,10 @@ public class ProcessDependenciesModule extends AbstractModule {
     protected void configure() {
         try {
             ClassLoader cl = loadDependencies(workDir, dependencies);
+
+            // required to support ScriptEngines from external dependencies
+            Thread.currentThread().setContextClassLoader(cl);
+
             install(new SpaceModule(new URLClassSpace(cl), BeanScanning.GLOBAL_INDEX));
             bind(ClassLoader.class).annotatedWith(Names.named("runtime")).toInstance(cl);
         } catch (IOException e) {
