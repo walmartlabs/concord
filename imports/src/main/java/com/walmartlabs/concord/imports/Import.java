@@ -21,6 +21,7 @@ package com.walmartlabs.concord.imports;
  */
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonSubTypes.Type;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
@@ -100,6 +101,7 @@ public interface Import extends Serializable {
 
         String TYPE = "mvn";
 
+        @JsonProperty(value = "url", required = true)
         String url();
 
         @Nullable
@@ -123,6 +125,7 @@ public interface Import extends Serializable {
 
         String TYPE = "dir";
 
+        @JsonProperty(value = "src", required = true)
         String src();
 
         @Nullable
@@ -147,6 +150,7 @@ public interface Import extends Serializable {
         @Nullable
         String org();
 
+        @JsonProperty(value = "name", required = true)
         String name();
 
         @Nullable
