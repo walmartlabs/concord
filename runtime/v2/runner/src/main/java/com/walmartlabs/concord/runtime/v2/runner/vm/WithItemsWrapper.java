@@ -115,7 +115,7 @@ public abstract class WithItemsWrapper implements Command {
         } else if (value instanceof Map) {
             Map<Serializable, Serializable> m = (Map<Serializable, Serializable>) value;
             items = m.entrySet().stream()
-                    .map(e -> new SerializableEntry(e.getKey(), e.getValue()))
+                    .map(e -> new AbstractMap.SimpleImmutableEntry<>(e.getKey(), e.getValue()))
                     .collect(Collectors.toCollection(ArrayList::new));
         } else if (value.getClass().isArray()) {
             items = new ArrayList<>(Arrays.asList((Serializable[]) value));
@@ -346,39 +346,6 @@ public abstract class WithItemsWrapper implements Command {
                     results.add(result);
                 }
             }
-        }
-    }
-
-    static class SerializableEntry implements Map.Entry<Serializable, Serializable>, Serializable {
-
-        private static final long serialVersionUID = 1L;
-
-        private final Serializable key;
-        private final Serializable value;
-
-        public SerializableEntry(Serializable key, Serializable value) {
-            this.key = key;
-            this.value = value;
-        }
-
-        @Override
-        public Serializable getKey() {
-            return key;
-        }
-
-        @Override
-        public Serializable getValue() {
-            return value;
-        }
-
-        @Override
-        public Serializable setValue(Serializable value) {
-            throw new IllegalStateException("Can't modify an immutable entry. Tried to set '" + key + "' to '" + value + "'");
-        }
-
-        @Override
-        public String toString() {
-            return "[" + key + " -> " + value + "]";
         }
     }
 }
