@@ -17,7 +17,6 @@
  * limitations under the License.
  * =====
  */
-import * as React from 'react';
 import { styled } from 'reakit';
 
 export const ScrollableX = styled.div`
