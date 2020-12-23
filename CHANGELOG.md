@@ -1,5 +1,15 @@
 # Change log
 
+## [Unreleased]
+
+### Changed
+
+- runtime-v2: use the standard `AbstractMap.SimpleImmutableEntry`
+to iterate over `Map` elements in the `withItems` implementation.
+([#285](https://github.com/walmartlabs/concord/pull/285)).
+
+
+
 ## [1.76.1] - 2020-12-22
 
 ### Changed
