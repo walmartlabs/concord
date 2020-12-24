@@ -23,7 +23,6 @@ package com.walmartlabs.concord.runtime.v2.model;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
-import com.walmartlabs.concord.common.ConfigurationUtils;
 import com.walmartlabs.concord.sdk.Constants;
 import org.immutables.value.Value;
 

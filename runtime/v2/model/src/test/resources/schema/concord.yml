@@ -1,0 +1,162 @@
+configuration:
+  runtime: concord-v2
+  arguments:
+    k: "v"
+  entryPoint: "test"
+  dependencies:
+    - "mvn://"
+  activeProfiles:
+    - "profile-2"
+  processTimeout: "PT1H"
+  requirements:
+    key: "value"
+  out:
+    - "test"
+  meta:
+    k: "v"
+  events:
+    truncateInVars: false
+
+resources:
+  concord:
+    - "/"
+
+publicFlows:
+  - "f"
+
+profiles:
+  p1:
+    configuration:
+      arguments:
+        k: "v"
+
+flows:
+  default:
+    - return
+    - exit
+    - checkpoint: test
+    - ${oneops}
+    - expr: ${qweqweqwe}
+      meta:
+        k: "v"
+      error:
+        - log: "log"
+      out:
+        k: "v"
+    - call: "default1"
+    - form: "formName"
+    - throw: ${error}
+    - call: "default2"
+      in:
+        k: "v"
+      out:
+        k: "one"
+      meta:
+        k: "v"
+      retry:
+        times: 1
+        delay: "${delayExpr}"
+#    - try:
+#        - log: "ME"
+#    - if: "${test}"
+#      then:
+#        - log: "test"
+#      else:
+#        - log: "test"
+    - parallel:
+        - log: "test"
+      meta:
+        k: "v"
+      out:
+        - o
+    - script: groovy
+      body: "test"
+      withItems: "${test}"
+    - set:
+        k: "v"
+    - suspend: "event"
+#    - switch: "test"
+#      one:
+#        - "return"
+#        - return
+#      default:
+#        - suspend: "now"
+    - name: "Test task"
+      task: "test"
+      in:
+        k: v
+      out: "test"
+      withItems:
+        - "one"
+        - "two"
+forms:
+  myForm:
+    - firstName: { label: "First name", type: "string", placeholder: "Place first name here" }
+    - lastName: { label: "Last name", type: "string" }
+    - password:  { label: "Password", type: "string", inputType: 'password' }
+    - age: { label: "Age", type: "int?" }
+    - height: { label: "Height", type: "decimal?" }
+    - rememberMe: { label: "Remember me", type: "boolean", value: true }
+    - file: { label: "File", type: "file"}
+    - skills: { label: "Skills", type: "string*", allow: ["css", "design", "angular"], search: true }
+    - email: { label: "Email", type: "string", inputType: "email" }
+    - readOnlyField: { label: "Read only field", type: "string", value: "constant", readonly: true}
+
+imports:
+  - git:
+      url: "https://github.com/walmartlabs/concord.git"
+      path: "examples/hello_world"
+      version: "master"
+      name: "test"
+      dest: "/concord"
+      exclude:
+        - "/one"
+      secret:
+        name: "my-secret"
+        org: "secret-org"
+        password: "test"
+  - mvn:
+      url: "mvn://groupId:artifactId:version"
+      dest: "/"
+
+triggers:
+  - manual:
+      name: "test"
+      entryPoint: "main"
+      arguments:
+        k: "v"
+      activeProfiles:
+        - "profile-1"
+  - cron:
+      spec: "* 12 * * *"
+      entryPoint: eventOutput
+      activeProfiles:
+        - myProfile
+      arguments:
+        name: "Concord"
+  - github:
+      version: 2
+      entryPoint: "onPr"
+      conditions:
+        type: "pull_request"
+        status: "closed"
+        branch: ".*"
+        payload:
+          pull_request:
+            merged: true
+  - example:
+      version: 2
+      entryPoint: exampleFLow
+      conditions:
+        aField: "aValue"
+  - oneops:
+      version: 2
+      conditions:
+        org: "myOrganization"
+        asm: "myAssembly"
+        env: "myEnvironment"
+        platform: "myPlatform"
+        type: "deployment"
+        deploymentState: "complete"
+      useInitiator: true
+      entryPoint: onDeployment
