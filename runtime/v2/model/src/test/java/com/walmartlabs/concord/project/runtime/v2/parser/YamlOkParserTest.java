@@ -188,7 +188,7 @@ public class YamlOkParserTest extends AbstractParserTest {
         assertEquals("a", ((List<String>) t.getOptions().withItems().value()).get(0));
 
         // meta
-        assertMeta(t.getOptions());
+        assertMeta("Test try", t.getOptions());
     }
 
     // Forms Definition Test

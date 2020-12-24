@@ -20,11 +20,11 @@ package com.walmartlabs.concord.runtime.v2.parser;
  * =====
  */
 
+import com.walmartlabs.concord.runtime.v2.Constants;
 import com.walmartlabs.concord.runtime.v2.model.*;
 import io.takari.parc.Parser;
 
-import static com.walmartlabs.concord.runtime.v2.parser.GrammarMisc.satisfyField;
-import static com.walmartlabs.concord.runtime.v2.parser.GrammarMisc.with;
+import static com.walmartlabs.concord.runtime.v2.parser.GrammarMisc.*;
 import static com.walmartlabs.concord.runtime.v2.parser.GrammarOptions.optional;
 import static com.walmartlabs.concord.runtime.v2.parser.GrammarOptions.options;
 import static com.walmartlabs.concord.runtime.v2.parser.GrammarV2.*;
@@ -32,26 +32,35 @@ import static io.takari.parc.Combinators.choice;
 
 public final class GroupOfStepsGrammar {
 
-    private static final Parser<Atom, GroupOfStepsOptions> groupOptions =
-            with(GroupOfStepsOptions::builder,
-                    o -> options(
-                            optional("out", stringOrArrayVal.map(o::out)),
-                            optional("error", stepsVal.map(o::errorSteps)),
-                            optional("withItems", nonNullVal.map(v -> o.withItems(WithItems.of(v, WithItems.Mode.SERIAL)))),
-                            optional("parallelWithItems", nonNullVal.map(v -> o.withItems(WithItems.of(v, WithItems.Mode.PARALLEL)))),
-                            optional("meta", mapVal.map(o::meta))
-                    ))
-                    .map(ImmutableGroupOfStepsOptions.Builder::build);
+    private static ImmutableGroupOfStepsOptions.Builder optionsWithStepName(String stepName) {
+        ImmutableGroupOfStepsOptions.Builder result = GroupOfStepsOptions.builder();
+        if (stepName != null) {
+            result.putMeta(Constants.SEGMENT_NAME, stepName);
+        }
+        return result;
+    }
 
-    private static Parser<Atom, GroupOfSteps> groupDef(Atom a) {
-        return stepsVal.bind(steps -> groupOptions.map(options -> new GroupOfSteps(a.location, steps, options)));
+    private static Parser<Atom, GroupOfStepsOptions> groupOptions(String stepName) {
+        return with(() -> optionsWithStepName(stepName),
+                o -> options(
+                        optional("out", stringOrArrayVal.map(o::out)),
+                        optional("error", stepsVal.map(o::errorSteps)),
+                        optional("withItems", nonNullVal.map(v -> o.withItems(WithItems.of(v, WithItems.Mode.SERIAL)))),
+                        optional("parallelWithItems", nonNullVal.map(v -> o.withItems(WithItems.of(v, WithItems.Mode.PARALLEL)))),
+                        optional("meta", mapVal.map(o::putAllMeta))
+                ))
+                .map(ImmutableGroupOfStepsOptions.Builder::build);
+    }
+
+    private static Parser<Atom, GroupOfSteps> groupDef(String stepName, Atom a) {
+        return stepsVal.bind(steps -> groupOptions(stepName).map(options -> new GroupOfSteps(a.location, steps, options)));
     }
 
     public static final Parser<Atom, GroupOfSteps> groupAsTry =
-            satisfyField("try", YamlValueType.TRY, GroupOfStepsGrammar::groupDef);
+            namedStep("try", YamlValueType.TRY, GroupOfStepsGrammar::groupDef);
 
     public static final Parser<Atom, GroupOfSteps> groupAsBlock =
-            satisfyField("block", YamlValueType.BLOCK, GroupOfStepsGrammar::groupDef);
+            namedStep("block", YamlValueType.BLOCK, GroupOfStepsGrammar::groupDef);
 
     public static final Parser<Atom, Step> group = choice(groupAsTry, groupAsBlock);
 

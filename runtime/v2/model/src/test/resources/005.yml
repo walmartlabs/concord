@@ -1,6 +1,7 @@
 flows:
   main:
-    - try:
+    - name: "Test try"
+      try:
         - "${exp}"
       error:
         - "${exp}"
