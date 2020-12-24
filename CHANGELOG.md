@@ -2,6 +2,11 @@
 
 ## [Unreleased]
 
+### Added
+
+- concord-console, runtime-v2: show file name in the segment
+info popup ([#288](https://github.com/walmartlabs/concord/pull/288)).
+
 ### Changed
 
 - runtime-v2: use the standard `AbstractMap.SimpleImmutableEntry`
