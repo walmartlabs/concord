@@ -21,7 +21,11 @@ package com.walmartlabs.concord.runtime.v2;
  */
 
 import com.fasterxml.jackson.core.JsonGenerator;
-import com.fasterxml.jackson.databind.*;
+import com.fasterxml.jackson.databind.JavaType;
+import com.fasterxml.jackson.databind.JsonMappingException;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.databind.jsonFormatVisitors.JsonFormatVisitorWrapper;
 import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -32,8 +36,16 @@ import com.kjetland.jackson.jsonSchema.JsonSchemaGenerator;
 import com.kjetland.jackson.jsonSchema.SubclassesResolver;
 import com.kjetland.jackson.jsonSchema.SubclassesResolverImpl;
 import com.walmartlabs.concord.imports.Imports;
-import com.walmartlabs.concord.runtime.v2.model.*;
-import com.walmartlabs.concord.runtime.v2.schema.*;
+import com.walmartlabs.concord.runtime.v2.model.Form;
+import com.walmartlabs.concord.runtime.v2.model.ProcessDefinition;
+import com.walmartlabs.concord.runtime.v2.model.ProcessDefinitionConfiguration;
+import com.walmartlabs.concord.runtime.v2.model.Step;
+import com.walmartlabs.concord.runtime.v2.model.Trigger;
+import com.walmartlabs.concord.runtime.v2.schema.ImportsMixIn;
+import com.walmartlabs.concord.runtime.v2.schema.ProcessDefinitionConfigurationMixIn;
+import com.walmartlabs.concord.runtime.v2.schema.ProcessDefinitionMixIn;
+import com.walmartlabs.concord.runtime.v2.schema.StepMixIn;
+import com.walmartlabs.concord.runtime.v2.schema.TriggerMixIn;
 
 import java.io.IOException;
 import java.io.OutputStream;
@@ -114,11 +126,10 @@ public class ConcordJsonSchemaGenerator {
         boolean failOnUnknownProperties = true;
         List<Class<?>> javaxValidationGroups = null;
 
-        return
-                JsonSchemaConfig.create(autoGenerateTitleForProperties, defaultArrayFormat, useOneOfForOption, useOneOfForNullables,
-                        usePropertyOrdering, hidePolymorphismTypeProperty, disableWarnings, useMinLengthForNotNull, useTypeIdForDefinitionName,
-                        customType2FormatMapping, useMultipleEditorSelectViaProperty, uniqueItemClasses, classTypeReMapping, jsonSuppliers,
-                        subclassesResolver, failOnUnknownProperties, javaxValidationGroups);
+        return JsonSchemaConfig.create(autoGenerateTitleForProperties, defaultArrayFormat, useOneOfForOption, useOneOfForNullables,
+                usePropertyOrdering, hidePolymorphismTypeProperty, disableWarnings, useMinLengthForNotNull, useTypeIdForDefinitionName,
+                customType2FormatMapping, useMultipleEditorSelectViaProperty, uniqueItemClasses, classTypeReMapping, jsonSuppliers,
+                subclassesResolver, failOnUnknownProperties, javaxValidationGroups);
 
     }
 
@@ -137,13 +148,13 @@ public class ConcordJsonSchemaGenerator {
         }
     }
 
-    private static void removeRequired(JsonNode node, String ... fieldNames) {
+    private static void removeRequired(JsonNode node, String... fieldNames) {
         JsonNode requiredNode = node.path("required");
         if (requiredNode.isMissingNode()) {
             return;
         }
 
-        for (Iterator<JsonNode> it = requiredNode.elements(); it.hasNext();) {
+        for (Iterator<JsonNode> it = requiredNode.elements(); it.hasNext(); ) {
             JsonNode n = it.next();
             if (Arrays.stream(fieldNames).anyMatch(f -> f.equals(n.asText()))) {
                 it.remove();
@@ -160,7 +171,7 @@ public class ConcordJsonSchemaGenerator {
     }
 
     private static void clearAllProperty(JsonNode node, String propName) {
-        for (Iterator<JsonNode> it = node.elements(); it.hasNext();) {
+        for (Iterator<JsonNode> it = node.elements(); it.hasNext(); ) {
             JsonNode n = it.next();
             if (n instanceof ObjectNode) {
                 clearProperty(n, propName);
