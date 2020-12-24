@@ -38,7 +38,8 @@ public class TaskHolder<T> {
         log.debug("Registering {} as '{}'...", value, key);
         Class<T> old = classes.put(key, value);
         if (old != null) {
-            throw new IllegalStateException("Non-unique task name: " + key);
+            throw new IllegalStateException("Non-unique task name: " + key + ". " +
+                    "Another task with the same name: " + old.getName());
         }
     }
 

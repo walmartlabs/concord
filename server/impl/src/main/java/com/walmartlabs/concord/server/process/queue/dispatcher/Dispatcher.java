@@ -27,7 +27,6 @@ import com.walmartlabs.concord.common.Matcher;
 import com.walmartlabs.concord.db.AbstractDao;
 import com.walmartlabs.concord.db.MainDB;
 import com.walmartlabs.concord.imports.Imports;
-import com.walmartlabs.concord.repository.GitConstants;
 import com.walmartlabs.concord.server.ConcordObjectMapper;
 import com.walmartlabs.concord.server.Locks;
 import com.walmartlabs.concord.server.PeriodicTask;
@@ -379,9 +378,6 @@ public class Dispatcher extends PeriodicTask {
                     .fetchOne(r -> {
                         if (r.value2() != null) {
                             return null;
-                        }
-                        if (r.value1() == null) {
-                            return GitConstants.DEFAULT_BRANCH;
                         }
                         return r.value1();
                     });

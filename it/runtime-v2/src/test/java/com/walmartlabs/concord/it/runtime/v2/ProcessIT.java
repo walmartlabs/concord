@@ -31,7 +31,10 @@ import com.walmartlabs.concord.client.ProcessEntry;
 import org.junit.ClassRule;
 import org.junit.Test;
 
-import java.util.*;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 import static com.walmartlabs.concord.it.common.ITUtils.randomString;
 import static com.walmartlabs.concord.it.runtime.v2.ITConstants.DEFAULT_TEST_TIMEOUT;
@@ -75,12 +78,11 @@ public class ProcessIT {
         ConcordProcess proc = concord.processes().start(payload);
 
         ProcessEntry pe = proc.waitForStatus(ProcessEntry.StatusEnum.FINISHED);
-        assertEquals(ProcessEntry.StatusEnum.FINISHED, pe.getStatus());
-
-        // ---
 
         proc.assertLog(".*Runtime: concord-v2.*");
         proc.assertLog(".*log from script: 123.*");
+
+        assertEquals(ProcessEntry.StatusEnum.FINISHED, pe.getStatus());
     }
 
     /**
@@ -337,6 +339,30 @@ public class ProcessIT {
     }
 
     @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    public void testCheckpointsWith3rdPartyClasses() throws Exception {
+        String concordYml = resourceToString(NodeRosterIT.class.getResource("checkpointClasses/concord.yml"))
+                .replaceAll("PROJECT_VERSION", ITConstants.PROJECT_VERSION);
+
+        ConcordProcess proc = concord.processes().start(new Payload()
+                .concordYml(concordYml));
+
+        proc.expectStatus(ProcessEntry.StatusEnum.FINISHED);
+
+        // ---
+
+        List<ProcessCheckpointEntry> checkpoints = proc.checkpoints();
+        assertEquals(1, checkpoints.size());
+
+        proc.restoreCheckpoint(checkpoints.get(0).getId());
+        proc.expectStatus(ProcessEntry.StatusEnum.FINISHED);
+
+        // ---
+
+        proc.assertLog(".*1: Hello!.*");
+        proc.assertLogAtLeast(".*2: Hello!.*", 2);
+    }
+
+    @Test(timeout = DEFAULT_TEST_TIMEOUT)
     public void testLastErrorSave() throws Exception {
         Payload payload = new Payload()
                 .archive(ProcessIT.class.getResource("failProcess").toURI());
@@ -349,6 +375,9 @@ public class ProcessIT {
 
         Map<String, Object> data = proc.getOutVariables();
         assertNotNull(data);
-        assertEquals(Collections.singletonMap("message", "BOOM"), data.get("lastError"));
+        Map<String, Object> m = new HashMap<>();
+        m.put("@id", 1);
+        m.put("message", "BOOM");
+        assertEquals(m, data.get("lastError"));
     }
 }

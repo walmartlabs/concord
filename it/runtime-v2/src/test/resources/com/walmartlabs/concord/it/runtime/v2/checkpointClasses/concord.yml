@@ -1,0 +1,17 @@
+configuration:
+  runtime: "concord-v2"
+  dependencies:
+    - "mvn://com.walmartlabs.concord.it.tasks:serialization-test:PROJECT_VERSION"
+
+flows:
+  default:
+    - task: customBean
+      in:
+        msg: "Hello!"
+      out: myResult
+
+    - log: "1: ${myResult.value.value}"
+
+    - checkpoint: test
+
+    - log: "2: ${myResult.value.value}"

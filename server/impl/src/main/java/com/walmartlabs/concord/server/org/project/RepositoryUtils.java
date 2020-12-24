@@ -26,6 +26,14 @@ import java.util.Map;
 
 public final class RepositoryUtils {
 
+    public static RepositoryEntry assertRepository(RepositoryEntry entry) {
+        if (entry.getBranch() == null && entry.getCommitId() == null){
+            throw new ValidationErrorsException("Branch or CommitId required");
+        }
+
+        return entry;
+    }
+
     public static RepositoryEntry assertRepository(ProjectEntry p, String repositoryName) {
         if (repositoryName == null) {
             throw new ValidationErrorsException("Invalid repository name");

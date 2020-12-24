@@ -39,7 +39,6 @@ import java.util.stream.Collectors;
 @Named
 public class ImportsNormalizerFactory {
 
-    private static final String DEFAULT_VERSION = "master";
     private static final String DEFAULT_DEST = "concord";
 
     private final ImportConfiguration cfg;
@@ -107,10 +106,10 @@ public class ImportsNormalizerFactory {
                     .org(secretOrgName)
                     .build();
         }
-
+       
         return Import.GitDefinition.builder().from(e)
                 .url(url)
-                .version(e.version() != null ? e.version() : DEFAULT_VERSION)
+                .version(e.version() != null ? e.version() : cfg.getDefaultBranch())
                 .dest(e.dest() != null ? e.dest() : DEFAULT_DEST)
                 .secret(secret)
                 .build();

@@ -217,6 +217,17 @@ const renderColumnContent = (e: Entry, c: ColumnDefinition) => {
                 return `Invalid value: ${v}`;
             }
         }
+        case RenderType.LINK: {
+            if (!v || !v.link || !v.title) {
+                return '';
+            }
+
+            return (
+                <a href={v.link} target="_blank" rel="noopener noreferrer">
+                    {v.title}
+                </a>
+            );
+        }
         default: {
             if (c.searchValueType === 'boolean') {
                 return <Checkbox type="checkbox" checked={v} readOnly={true} disabled={true} />;

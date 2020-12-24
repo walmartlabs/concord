@@ -120,6 +120,8 @@ public class ProjectRepositoryManager {
     }
 
     public void insert(DSLContext tx, UUID orgId, String orgName, UUID projectId, String projectName, RepositoryEntry entry, boolean doAuditLog) {
+        RepositoryUtils.assertRepository(entry);
+
         SecretEntry secret = assertSecret(orgId, entry);
 
         policyManager.checkEntity(orgId, projectId, EntityType.REPOSITORY, EntityAction.CREATE, null,
@@ -151,6 +153,8 @@ public class ProjectRepositoryManager {
     }
 
     private void update(DSLContext tx, UUID orgId, String orgName, UUID projectId, String projectName, UUID repoId, RepositoryEntry entry) {
+        RepositoryUtils.assertRepository(entry);
+
         RepositoryEntry prevEntry = repositoryDao.get(tx, projectId, repoId);
 
         SecretEntry secret = assertSecret(orgId, entry);

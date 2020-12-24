@@ -1,5 +1,48 @@
 # Change log
 
+## [1.76.1] - 2020-12-22
+
+### Changed
+
+- runtime-v2: fixed a checkpoint serialization issue when classes
+from `dependencies` are used as flow variables.
+
+
+
+## [1.76.0] - 2020-12-22
+
+### Added
+
+- concord-console: custom columns in the process list can now
+be rendered as links;
+- runtime-v2: new annotation `@SensitiveData` can be used to
+prevent task method arguments from being recorded in process
+events;
+- concord-server, concord-console: audit log for external events,
+the process status page can now display external events that
+triggered the process;
+- policy-engine: new policy type `dependencyRewrite`. Can be used
+to override process dependencies (e.g. to force a specific
+version).
+
+### Changed
+
+- runtime-v2: improved serialization of `lastError` objects that
+contain circular references (e.g. Guice exceptions);
+- concord-server, concord-console: use `main` as the default Git
+branch;
+- concord-agent, runtime-v1: make sure temporary directories are
+removed;
+- policy-engine: rule matching code refactoring, use common map
+matcher, add more tests;
+- concord-server: assert type of the active profiles collections,
+trim values;
+- runtime-v1, runtime-v2: update the list of "retryable" errors
+for `docker pull` operations to support recent versions of 
+docker-client.
+
+
+
 ## [1.75.0] - 2020-12-05
 
 ### Added

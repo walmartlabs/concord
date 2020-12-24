@@ -26,6 +26,7 @@ import com.google.inject.AbstractModule;
 import com.google.inject.Injector;
 import com.google.inject.Module;
 import com.google.inject.multibindings.Multibinder;
+import com.google.inject.name.Names;
 import com.walmartlabs.concord.common.IOUtils;
 import com.walmartlabs.concord.forms.Form;
 import com.walmartlabs.concord.runtime.common.FormService;
@@ -112,6 +113,8 @@ public class MainTest {
             @Override
             protected void configure() {
                 install(new BaseRunnerModule());
+
+                bind(ClassLoader.class).annotatedWith(Names.named("runtime")).toInstance(MainTest.class.getClassLoader());
 
                 bind(CheckpointService.class).toInstance(checkpointService);
                 bind(DependencyManager.class).to(DefaultDependencyManager.class);
@@ -515,7 +518,7 @@ public class MainTest {
                 .build());
 
         byte[] log = run();
-        assertLogAtLeast(log, 3,".*empty: \\[\\].*");
+        assertLogAtLeast(log, 3, ".*empty: \\[\\].*");
         assertLog(log, ".*after add: \\[1\\].*");
         assertLog(log, ".*after add: \\[2\\].*");
         assertLog(log, ".*after add: \\[3\\].*");
@@ -881,6 +884,43 @@ public class MainTest {
         assertLog(log, ".*form1: Vasia.*");
     }
 
+    @Test
+    public void testContextInjector() throws Exception {
+        deploy("injectorTest");
+
+        save(ProcessConfiguration.builder()
+                .build());
+
+        byte[] log = run();
+        assertLog(log, ".*done!.*");
+    }
+
+    @Test
+    public void testContextInjectorWithSegmentedLogger() throws Exception {
+        deploy("injectorTest");
+
+        RunnerConfiguration runnerCfg = RunnerConfiguration.builder()
+                .logging(LoggingConfiguration.builder()
+                        .sendSystemOutAndErrToSLF4J(false)
+                        .segmentedLogDir(segmentedLogDir.toAbsolutePath().toString())
+                        .build())
+                .build();
+
+        save(ProcessConfiguration.builder()
+                .build());
+
+        run(runnerCfg);
+
+        List<Path> paths = Files.walk(segmentedLogDir)
+                .filter(p -> p.getFileName().toString().endsWith(".log"))
+                .sorted()
+                .collect(Collectors.toList());
+
+        assertEquals(2, paths.size());
+        byte[] log = Files.readAllBytes(paths.get(1));
+        assertLog(log, ".*done!.*");
+    }
+
     private void deploy(String resource) throws URISyntaxException, IOException {
         Path src = Paths.get(MainTest.class.getResource(resource).toURI());
         IOUtils.copy(src, workDir);
@@ -1204,6 +1244,35 @@ public class MainTest {
         @Override
         public long createSegment(UUID correlationId, String name) {
             return id.getAndIncrement();
+        }
+    }
+
+    @Named("injectorTestBean")
+    static class InjectorTestBean {
+
+        private final Context ctx;
+
+        @Inject
+        public InjectorTestBean(Context ctx) {
+            this.ctx = ctx;
+        }
+    }
+
+    @Named("injectorTestTask")
+    static class InjectorTestTask implements Task {
+
+        private final Map<String, InjectorTestBean> testBeans;
+
+        @Inject
+        public InjectorTestTask(Map<String, InjectorTestBean> testBeans) {
+            this.testBeans = testBeans;
+        }
+
+        @Override
+        public TaskResult execute(Variables input) {
+            testBeans.forEach((k, v) -> v.ctx.workingDirectory());
+            return TaskResult.success()
+                    .value("x", testBeans.size());
         }
     }
 }
