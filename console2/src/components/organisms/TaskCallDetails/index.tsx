@@ -32,6 +32,7 @@ import {
 } from '../../../api/process/event';
 import { comparators } from '../../../utils';
 import { RequestErrorMessage } from '../../molecules';
+import { ScrollableX } from '../../atoms/Scrollable';
 
 export interface Props {
     instanceId: ConcordId;
@@ -208,26 +209,31 @@ const TaskCallDetails = (props: Props) => {
             <Grid columns={2}>
                 <Grid.Row>
                     <Grid.Column>
-                        <Table definition={true}>
-                            <Table.Body>
-                                <Table.Row>
-                                    <Table.Cell collapsing={true}>Location</Table.Cell>
-                                    <Table.Cell>
-                                        line: {details.line}, column: {details.column}
-                                    </Table.Cell>
-                                </Table.Row>
-                            </Table.Body>
-                        </Table>
+                        <ScrollableX style={{ height: '100%' }}>
+                            <Table definition={true} style={{ height: '100%' }}>
+                                <Table.Body>
+                                    <Table.Row>
+                                        <Table.Cell collapsing={true}>Location</Table.Cell>
+                                        <Table.Cell>
+                                            {details.fileName ? details.fileName + ' @ ' : ''} line:{' '}
+                                            {details.line}, column: {details.column}
+                                        </Table.Cell>
+                                    </Table.Row>
+                                </Table.Body>
+                            </Table>
+                        </ScrollableX>
                     </Grid.Column>
                     <Grid.Column>
-                        <Table definition={true}>
-                            <Table.Body>
-                                <Table.Row>
-                                    <Table.Cell collapsing={true}>Flow</Table.Cell>
-                                    <Table.Cell>{details.processDefinitionId}</Table.Cell>
-                                </Table.Row>
-                            </Table.Body>
-                        </Table>
+                        <ScrollableX style={{ height: '100%' }}>
+                            <Table definition={true} style={{ height: '100%' }}>
+                                <Table.Body>
+                                    <Table.Row>
+                                        <Table.Cell collapsing={true}>Flow</Table.Cell>
+                                        <Table.Cell>{details.processDefinitionId}</Table.Cell>
+                                    </Table.Row>
+                                </Table.Body>
+                            </Table>
+                        </ScrollableX>
                     </Grid.Column>
                 </Grid.Row>
             </Grid>
