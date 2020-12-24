@@ -4,6 +4,8 @@
 
 ### Added
 
+- runtime-v2: automatically generate and publish the JSON schema for
+`runtime: concord-v2` syntax;
 - concord-console, runtime-v2: show file name in the segment
 info popup ([#288](https://github.com/walmartlabs/concord/pull/288)).
 
