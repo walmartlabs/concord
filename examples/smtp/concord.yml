@@ -1,6 +1,6 @@
 configuration:
   dependencies:
-  - "mvn://com.walmartlabs.concord.plugins.basic:smtp-tasks:1.42.0"
+  - "mvn://com.walmartlabs.concord.plugins.basic:smtp-tasks:1.76.1"
 
 flows:
   default:
