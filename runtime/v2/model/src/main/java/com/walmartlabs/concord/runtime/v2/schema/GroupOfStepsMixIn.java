@@ -26,7 +26,7 @@ import com.kjetland.jackson.jsonSchema.annotations.JsonSchemaInject;
 import java.util.List;
 import java.util.Map;
 
-public interface GroupOfStepsMixIn extends StepMixIn {
+public interface GroupOfStepsMixIn extends NamedStep {
 
     List<StepMixIn> steps();
 
