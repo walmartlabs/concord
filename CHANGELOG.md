@@ -4,6 +4,8 @@
 
 ### Added
 
+- runtime-v2: support for the `name` attribute in `try` and `block`
+elements; 
 - runtime-v2: automatically generate and publish the JSON schema for
 `runtime: concord-v2` syntax;
 - concord-console, runtime-v2: show file name in the segment
