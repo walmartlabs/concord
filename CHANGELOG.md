@@ -5,9 +5,10 @@
 ### Added
 
 - runtime-v2: support for the `name` attribute in `try` and `block`
-elements; 
+elements ([#289](https://github.com/walmartlabs/concord/pull/289)); 
 - runtime-v2: automatically generate and publish the JSON schema for
-`runtime: concord-v2` syntax;
+`runtime: concord-v2` syntax
+([#283](https://github.com/walmartlabs/concord/pull/283));
 - concord-console, runtime-v2: show file name in the segment
 info popup ([#288](https://github.com/walmartlabs/concord/pull/288)).
 
