@@ -1,5 +1,25 @@
 # Change log
 
+## [Unreleased]
+
+### Added
+
+- runtime-v2: support for the `name` attribute in `try` and `block`
+elements ([#289](https://github.com/walmartlabs/concord/pull/289)); 
+- runtime-v2: automatically generate and publish the JSON schema for
+`runtime: concord-v2` syntax
+([#283](https://github.com/walmartlabs/concord/pull/283));
+- concord-console, runtime-v2: show file name in the segment
+info popup ([#288](https://github.com/walmartlabs/concord/pull/288)).
+
+### Changed
+
+- runtime-v2: use the standard `AbstractMap.SimpleImmutableEntry`
+to iterate over `Map` elements in the `withItems` implementation.
+([#285](https://github.com/walmartlabs/concord/pull/285)).
+
+
+
 ## [1.76.1] - 2020-12-22
 
 ### Changed
