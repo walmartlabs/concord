@@ -43,7 +43,7 @@ import java.util.Map;
 
 import static org.junit.Assert.assertEquals;
 
-public class AbstractGitHubTriggersIT extends AbstractServerIT {
+public abstract class AbstractGitHubTriggersIT extends AbstractServerIT {
 
     private static final DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSSX", Locale.US);
 
@@ -71,9 +71,9 @@ public class AbstractGitHubTriggersIT extends AbstractServerIT {
         return bareRepo;
     }
 
-    protected void createNewBranch(Path bareRepo, String branch, String resource) throws Exception {
+    protected String createNewBranch(Path bareRepo, String branch, String resource) throws Exception {
         Path src = Paths.get(AbstractGitHubTriggersIT.class.getResource(resource).toURI());
-        GitUtils.createNewBranch(bareRepo, branch, src);
+        return GitUtils.createNewBranch(bareRepo, branch, src);
     }
 
     protected void updateConcordYml(Path bareRepo, Map<String, String> values) throws Exception {
