@@ -78,6 +78,7 @@
         <maven.prj.version>2.2.1</maven.prj.version>
         <maven.resolver.provider.version>3.6.3</maven.resolver.provider.version>
         <maven.resolver.version>1.4.1</maven.resolver.version>
+        <maven.resolver.version.concord>0.0.1</maven.resolver.version.concord>
         <metrics.version>4.1.3</metrics.version>
         <mockito.version>3.2.4</mockito.version>
         <mustache.version>0.9.6</mustache.version>
@@ -396,9 +397,9 @@
                 <version>${maven.resolver.version}</version>
             </dependency>
             <dependency>
-                <groupId>org.apache.maven.resolver</groupId>
-                <artifactId>maven-resolver-transport-http</artifactId>
-                <version>${maven.resolver.version}</version>
+                <groupId>ca.ibodrov.concord.maven</groupId>
+                <artifactId>concord-maven-resolver-transport-http</artifactId>
+                <version>${maven.resolver.version.concord}</version>
             </dependency>
             <dependency>
                 <groupId>org.apache.maven</groupId>
