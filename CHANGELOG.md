@@ -14,6 +14,9 @@ info popup ([#288](https://github.com/walmartlabs/concord/pull/288)).
 
 ### Changed
 
+- concord-repository: fix Git repository fetching when the request
+specifies the `branchOrTag` and the `commitId` parameters
+simultaneously;
 - runtime-v2: use the standard `AbstractMap.SimpleImmutableEntry`
 to iterate over `Map` elements in the `withItems` implementation.
 ([#285](https://github.com/walmartlabs/concord/pull/285)).
