@@ -5,6 +5,9 @@ ARG jdk_version=1.8.0
 
 ENTRYPOINT ["/usr/local/bin/concord_venv/bin/dumb-init", "--"]
 
+RUN echo 'fastestmirror=true' >> /etc/dnf/dnf.conf && \
+    echo 'max_parallel_downloads=10' >> /etc/dnf/dnf.conf
+
 # requires Git >= 2.3
 RUN rpm --import /etc/pki/rpm-gpg/RPM-GPG-KEY-centosofficial && \
     dnf -y upgrade && \
