@@ -20,6 +20,7 @@ package com.walmartlabs.concord.dependencymanager;
  * =====
  */
 
+import ca.ibodrov.concord.maven.http.ConcordHttpTransporterFactory;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.walmartlabs.concord.common.ExceptionUtils;
 import org.apache.maven.repository.internal.MavenRepositorySystemUtils;
@@ -41,7 +42,6 @@ import org.eclipse.aether.transfer.AbstractTransferListener;
 import org.eclipse.aether.transfer.ArtifactNotFoundException;
 import org.eclipse.aether.transfer.TransferEvent;
 import org.eclipse.aether.transport.file.FileTransporterFactory;
-import org.eclipse.aether.transport.http.HttpTransporterFactory;
 import org.eclipse.aether.util.artifact.JavaScopes;
 import org.eclipse.aether.util.repository.AuthenticationBuilder;
 import org.slf4j.Logger;
@@ -371,7 +371,7 @@ public class DependencyManager {
         DefaultServiceLocator locator = MavenRepositorySystemUtils.newServiceLocator();
         locator.addService(RepositoryConnectorFactory.class, BasicRepositoryConnectorFactory.class);
         locator.addService(TransporterFactory.class, FileTransporterFactory.class);
-        locator.addService(TransporterFactory.class, HttpTransporterFactory.class);
+        locator.addService(TransporterFactory.class, ConcordHttpTransporterFactory.class);
 
         locator.setErrorHandler(new DefaultServiceLocator.ErrorHandler() {
             @Override
