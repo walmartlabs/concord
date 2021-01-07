@@ -84,6 +84,14 @@ public class GitClient {
             throw new IllegalArgumentException("Specify branch, tag or commit Id.");
         }
 
+        // commitId has the precedence
+        if (req.commitId() != null && req.branchOrTag() != null) {
+            req = FetchRequest.builder()
+                    .from(req)
+                    .branchOrTag(null)
+                    .build();
+        }
+
         assertSecret(req.url(), req.secret());
 
         try {
@@ -163,7 +171,7 @@ public class GitClient {
         args.add("fetch");
         if (shallow) {
             args.add("--depth=1");
-        } else if (isShallowRepo(workDir)){
+        } else if (isShallowRepo(workDir)) {
             args.add("--unshallow");
         }
         args.add("origin");
@@ -310,7 +318,7 @@ public class GitClient {
                             .workDir(workDir)
                             .timeout(cfg.defaultOperationTimeout())
                             .addArgs("config", "--file", ".gitmodules", "--name-only", "--get-regexp", "path")
-                    .build())
+                            .build())
                     .split("\\r?\\n");
         } catch (RepositoryException e) {
             log.warn("updateSubmodules ['{}'] -> error while retrieving the list of submodules: {}", workDir, e.getMessage());
