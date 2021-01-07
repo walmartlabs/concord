@@ -1,0 +1,15 @@
+configuration:
+  runtime: "concord-v2"
+
+flows:
+  onPush:
+    - log: "onPush commitId: ${event.commitId}"
+
+triggers:
+  - github:
+      entryPoint: "onPush"
+      version: 2
+      useEventCommitId: true
+      conditions:
+        type: "push"
+        branch: ".*"

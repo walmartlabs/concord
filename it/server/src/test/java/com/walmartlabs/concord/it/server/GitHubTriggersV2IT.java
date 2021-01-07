@@ -29,6 +29,7 @@ import javax.naming.directory.*;
 import java.nio.file.Path;
 import java.util.List;
 
+import static com.walmartlabs.concord.it.common.ITUtils.randomString;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 

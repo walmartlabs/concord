@@ -261,7 +261,9 @@ public class Dispatcher extends PeriodicTask {
             String repoBranch = null;
             if (item.repoId() != null) {
                 secret = dao.getSecretReference(item.repoId());
-                repoBranch = dao.getRepoBranch(item.repoId());
+                if (item.commitId() == null) {
+                    repoBranch = dao.getRepoBranch(item.repoId());
+                }
             }
 
             // backward compatibility with old process queue entries that are not normalized

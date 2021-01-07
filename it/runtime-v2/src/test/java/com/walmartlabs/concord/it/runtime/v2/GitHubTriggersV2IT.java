@@ -20,6 +20,7 @@ package com.walmartlabs.concord.it.runtime.v2;
  * =====
  */
 
+import ca.ibodrov.concord.testcontainers.ConcordProcess;
 import ca.ibodrov.concord.testcontainers.ProcessListQuery;
 import ca.ibodrov.concord.testcontainers.junit4.ConcordRule;
 import com.google.common.collect.ImmutableMap;
@@ -135,14 +136,46 @@ public class GitHubTriggersV2IT {
         waitForAProcess(orgXName, projectAName, "github");
     }
 
+    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    public void testOnPushWithUseEventCommitId() throws Exception {
+        //
+        Path repo = initRepo("triggers/github/repos/v2/useEventCommitIdTrigger");
+        String branch = "branch_" + randomString();
+        String commitId = createNewBranch(repo, branch, "triggers/github/repos/v2/defaultTrigger");
+
+        //
+        String orgName = "orgX_" + randomString();
+        concord.organizations().create(orgName);
+
+        //
+        String projectName = "project_" + randomString();
+        String repoName = "repo_" + randomString();
+        initProjectAndRepo(orgName, projectName, repoName, null, repo);
+        refreshRepo(orgName, projectName, repoName);
+
+        // ---
+
+        sendEvent("triggers/github/events/direct_branch_push_commit_id.json", "push",
+                "_FULL_REPO_NAME", toRepoName(repo),
+                "_REF", "refs/heads/" + branch,
+                "_USER_NAME", "vasia",
+                "_USER_LDAP_DN", "",
+                "_COMMIT_ID", commitId);
+
+        //
+        ProcessEntry pe = waitForAProcess(orgName, projectName, "github");
+        ConcordProcess process = concord.processes().get(pe.getInstanceId());
+        process.assertLog(".*onPush: .*" + commitId + ".*");
+    }
+
     private static Path initRepo(String resource) throws Exception {
         Path src = Paths.get(GitHubTriggersV2IT.class.getResource(resource).toURI());
         return GitUtils.createBareRepository(src, concord.sharedContainerDir());
     }
 
-    private static void createNewBranch(Path bareRepo, String branch, String resource) throws Exception {
+    private static String createNewBranch(Path bareRepo, String branch, String resource) throws Exception {
         Path src = Paths.get(GitHubTriggersV2IT.class.getResource(resource).toURI());
-        GitUtils.createNewBranch(bareRepo, branch, src);
+        return GitUtils.createNewBranch(bareRepo, branch, src);
     }
 
     private static Path initProjectAndRepo(String orgName, String projectName, String repoName, String repoBranch, Path bareRepo) throws Exception {

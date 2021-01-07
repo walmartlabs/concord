@@ -24,6 +24,7 @@ import com.walmartlabs.concord.client.*;
 import com.walmartlabs.concord.common.IOUtils;
 import com.walmartlabs.concord.sdk.Constants;
 import org.eclipse.jgit.api.Git;
+import org.eclipse.jgit.lib.Ref;
 import org.eclipse.jgit.revwalk.RevCommit;
 import org.junit.Test;
 
@@ -33,7 +34,7 @@ import java.util.*;
 
 import static com.walmartlabs.concord.it.common.ServerClient.assertLog;
 import static com.walmartlabs.concord.it.common.ServerClient.waitForCompletion;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 public class ProjectIT extends AbstractServerIT {
 
@@ -114,14 +115,19 @@ public class ProjectIT extends AbstractServerIT {
         IOUtils.deleteRecursively(tmpDir.resolve("processes"));
         src = new File(ProjectIT.class.getResource("project-commit-id").toURI());
         IOUtils.copy(src.toPath().resolve("1"), tmpDir);
+        Ref result = repo.checkout().setName("test-branch").setCreateBranch(true).call();
+        assertNotNull(result);
+
         repo.add().addFilepattern(".").call();
         RevCommit cmt = repo.commit().setMessage("commit-1").call();
         String commitId = cmt.getId().getName();
 
         // commit-2
+        result = repo.checkout().setName("master").call();
         IOUtils.deleteRecursively(tmpDir.resolve("processes"));
         src = new File(ProjectIT.class.getResource("project-commit-id").toURI());
         IOUtils.copy(src.toPath().resolve("2"), tmpDir);
+        assertNotNull(result);
         repo.add().addFilepattern(".").call();
         repo.commit().setMessage("commit-2").call();
 
@@ -464,7 +470,7 @@ public class ProjectIT extends AbstractServerIT {
         // ---
 
         ProcessEntry psr = waitForCompletion(processApi, instanceId);
-        assertTrue(psr.getStatus() == ProcessEntry.StatusEnum.FINISHED);
+        assertEquals(ProcessEntry.StatusEnum.FINISHED, psr.getStatus());
 
         // ---
 

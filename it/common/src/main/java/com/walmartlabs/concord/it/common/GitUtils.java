@@ -22,6 +22,7 @@ package com.walmartlabs.concord.it.common;
 
 import com.walmartlabs.concord.common.IOUtils;
 import org.eclipse.jgit.api.Git;
+import org.eclipse.jgit.revwalk.RevCommit;
 import org.eclipse.jgit.transport.RefSpec;
 
 import java.io.IOException;
@@ -70,11 +71,11 @@ public final class GitUtils {
         return repo;
     }
 
-    public static void createNewBranch(Path bareRepo, String branch, Path src) throws Exception {
-        createNewBranch(bareRepo, branch, src, null);
+    public static String createNewBranch(Path bareRepo, String branch, Path src) throws Exception {
+        return createNewBranch(bareRepo, branch, src, null);
     }
 
-    public static void createNewBranch(Path bareRepo, String branch, Path src, Path baseTmpDir) throws Exception {
+    public static String createNewBranch(Path bareRepo, String branch, Path src, Path baseTmpDir) throws Exception {
         Path dir = createTempDir(baseTmpDir);
 
         Git git = Git.cloneRepository()
@@ -93,13 +94,15 @@ public final class GitUtils {
                 .addFilepattern(".")
                 .call();
 
-        git.commit()
+        RevCommit commit = git.commit()
                 .setMessage("adding files from " + src.getFileName())
                 .call();
 
         git.push()
                 .setRefSpecs(new RefSpec(branch + ":" + branch))
                 .call();
+
+        return commit.name();
     }
 
     protected static Path createTempDir(Path base) throws IOException {
