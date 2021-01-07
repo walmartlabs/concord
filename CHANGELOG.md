@@ -4,6 +4,8 @@
 
 ### Added
 
+- dependency-manager: support for pre-emptive basic authentication
+when talking to Maven repositories;
 - runtime-v2: support for the `name` attribute in `try` and `block`
 elements ([#289](https://github.com/walmartlabs/concord/pull/289)); 
 - runtime-v2: automatically generate and publish the JSON schema for
