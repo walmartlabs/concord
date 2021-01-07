@@ -130,7 +130,7 @@ public class JsonStoreQueryManager {
         addAuditLog(AuditAction.DELETE, org.getId(), store.id(), queryName);
     }
 
-    public List<Object> exec(String orgName, String storeName, String queryName, Map<String, Object> params) {
+    public List<Object> exec(String orgName, String storeName, String queryName, Object params) {
         OrganizationEntry org = orgManager.assertAccess(orgName, true);
         JsonStoreEntry store = jsonStoreAccessManager.assertAccess(org.getId(), null, storeName, ResourceAccessLevel.READER, true);
         return execDao.exec(store.id(), queryName, params);

@@ -21,6 +21,7 @@ package com.walmartlabs.concord.server.org.jsonstore;
  */
 
 import com.walmartlabs.concord.common.validation.ConcordKey;
+import com.walmartlabs.concord.sdk.MapUtils;
 import com.walmartlabs.concord.server.GenericOperationResult;
 import com.walmartlabs.concord.server.OperationResult;
 import com.walmartlabs.concord.server.sdk.ConcordApplicationException;
@@ -140,6 +141,7 @@ public class JsonStoreQueryResource implements Resource {
      * @param orgName   organization's name
      * @param storeName store's name
      * @param queryName query's name
+     * @param paramName param name from {@code params} to use
      * @param params    query params
      * @return query result
      */
@@ -152,10 +154,18 @@ public class JsonStoreQueryResource implements Resource {
     public List<Object> exec(@ApiParam @PathParam("orgName") @ConcordKey String orgName,
                              @ApiParam @PathParam("storeName") @ConcordKey String storeName,
                              @ApiParam @PathParam("queryName") @ConcordKey String queryName,
+                             @ApiParam @QueryParam("paramName") String paramName,
                              @ApiParam @Valid Map<String, Object> params) {
 
+        Object p;
+        if (paramName != null) {
+            p = MapUtils.assertVariable(params, paramName, Object.class);
+        } else {
+            p = params;
+        }
+
         try {
-            return storeQueryManager.exec(orgName, storeName, queryName, params);
+            return storeQueryManager.exec(orgName, storeName, queryName, p);
         } catch (ValidationErrorsException e) {
             throw e;
         } catch (Exception e) {

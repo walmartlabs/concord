@@ -43,9 +43,7 @@ import org.sonatype.siesta.ValidationErrorsException;
 
 import javax.inject.Inject;
 import javax.inject.Named;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 
 import static com.walmartlabs.concord.server.jooq.Tables.INVENTORY_DATA;
 import static com.walmartlabs.concord.server.jooq.Tables.JSON_STORE_DATA;
@@ -67,7 +65,7 @@ public class JsonStoreQueryExecDao extends AbstractDao {
         this.storeQueryDao = storeQueryDao;
     }
 
-    public List<Object> exec(UUID storeId, String queryName, Map<String, Object> params) {
+    public List<Object> exec(UUID storeId, String queryName, Object params) {
         JsonStoreQueryEntry q = storeQueryDao.get(storeId, queryName);
         if (q == null) {
             throw new ValidationErrorsException("Query not found: " + queryName);
@@ -76,7 +74,7 @@ public class JsonStoreQueryExecDao extends AbstractDao {
         return execSql(q.storeId(), q.text(), params, null);
     }
 
-    public List<Object> execSql(UUID storeId, String query, Map<String, Object> params, Integer maxLimit) {
+    public List<Object> execSql(UUID storeId, String query, Object params, Integer maxLimit) {
         String sql = createQuery(query, maxLimit);
 
         // TODO we should probably inspect the query to determine whether we need to bind the params or not

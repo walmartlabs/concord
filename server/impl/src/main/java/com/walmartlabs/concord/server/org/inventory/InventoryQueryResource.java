@@ -173,7 +173,7 @@ public class InventoryQueryResource implements Resource {
                              @ApiParam @PathParam("queryName") @ConcordKey String queryName,
                              @ApiParam @Valid Map<String, Object> params) {
 
-        return storageQueryResource.exec(orgName, inventoryName, queryName, params);
+        return storageQueryResource.exec(orgName, inventoryName, queryName, null, params);
     }
 
     private static InventoryQueryEntry convert(JsonStoreQueryEntry query) {
