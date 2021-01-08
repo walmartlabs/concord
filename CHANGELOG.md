@@ -5,7 +5,8 @@
 ### Added
 
 - dependency-manager: support for pre-emptive basic authentication
-when talking to Maven repositories ([#293](https://github.com/walmartlabs/concord/pull/293));
+when talking to Maven repositories
+([#293](https://github.com/walmartlabs/concord/pull/293));
 - runtime-v2: support for the `name` attribute in `try` and `block`
 elements ([#289](https://github.com/walmartlabs/concord/pull/289)); 
 - runtime-v2: automatically generate and publish the JSON schema for
@@ -16,8 +17,9 @@ info popup ([#288](https://github.com/walmartlabs/concord/pull/288)).
 
 ### Changed
 
-- runtime-v2: use the standard `AbstractMap.SimpleImmutableEntry`
-to iterate over `Map` elements in the `withItems` implementation.
+- runtime-v2: use JDK's `AbstractMap.SimpleImmutableEntry` to iterate
+over `Map` elements in the `withItems` implementation instead of a
+custom class.
 ([#285](https://github.com/walmartlabs/concord/pull/285)).
 
 
