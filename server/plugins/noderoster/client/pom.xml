@@ -6,7 +6,7 @@
     <parent>
         <groupId>com.walmartlabs.concord.server.plugins.noderoster</groupId>
         <artifactId>parent</artifactId>
-        <version>1.76.2-SNAPSHOT</version>
+        <version>1.77.0</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
 
