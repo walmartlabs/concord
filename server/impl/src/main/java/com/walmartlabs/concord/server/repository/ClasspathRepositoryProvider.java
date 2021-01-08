@@ -71,11 +71,6 @@ public class ClasspathRepositoryProvider implements RepositoryProvider {
         return Snapshot.includeAll();
     }
 
-    @Override
-    public RepositoryInfo getInfo(Path path) {
-        return null;
-    }
-
     private static String normalizeUrl(String url) {
         return url.substring(URL_PREFIX.length());
     }

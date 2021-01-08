@@ -61,6 +61,9 @@ public interface ProcessQueueEntry {
     String commitId();
 
     @Nullable
+    String commitBranch();
+
+    @Nullable
     Imports imports();
 
     @Nullable

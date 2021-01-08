@@ -82,9 +82,4 @@ public class GitCliRepositoryProvider implements RepositoryProvider {
         IOUtils.copy(src, dst, allIgnorePatterns, snapshot, StandardCopyOption.REPLACE_EXISTING);
         return snapshot;
     }
-
-    @Override
-    public RepositoryInfo getInfo(Path path) {
-        return client.getInfo(path);
-    }
 }

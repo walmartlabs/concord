@@ -78,7 +78,7 @@ public class ImportManagerProvider implements Provider<ImportManager> {
         public Snapshot export(GitDefinition entry, Path workDir) {
             Secret secret = getSecret(entry.secret());
             return repositoryManager.withLock(entry.url(), () -> {
-                Repository repository = repositoryManager.fetch(entry.url(), entry.version(), null, entry.path(), secret);
+                Repository repository = repositoryManager.fetch(entry.url(), entry.version(), null, entry.path(), secret, false);
                 Path dst = workDir;
                 if (entry.dest() != null) {
                     dst = dst.resolve(Objects.requireNonNull(entry.dest()));

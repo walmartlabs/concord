@@ -42,6 +42,7 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
 import java.util.concurrent.Callable;
 
@@ -127,7 +128,7 @@ public class RepositoryManager {
         }
     }
 
-    public Repository fetch(String url, String branch, String commitId, String path, Secret secret) {
+    public Repository fetch(String url, String branch, String commitId, String path, Secret secret, boolean withCommitInfo) {
         String fetchedCommitId = commitId;
         long start = System.currentTimeMillis();
 
@@ -141,8 +142,9 @@ public class RepositoryManager {
                             .commitId(commitId)
                             .secret(secret)
                             .destination(dest)
+                            .withCommitInfo(withCommitInfo)
                     .build(), path);
-            fetchedCommitId = result.fetchedCommitId();
+            fetchedCommitId = result.fetchResult() != null ? Objects.requireNonNull(result.fetchResult()).head() : null;
             return result;
         } finally {
             log.info("fetch ['{}', '{}', '{}', '{}'] -> current commitId {}, done in {}ms",
@@ -151,9 +153,13 @@ public class RepositoryManager {
     }
 
     public Repository fetch(UUID projectId, RepositoryEntry repository) {
+        return fetch(projectId, repository, false);
+    }
+
+    public Repository fetch(UUID projectId, RepositoryEntry repository, boolean withCommitInfo) {
         UUID orgId = getOrgId(projectId);
         Secret secret = getSecret(orgId, projectId, repository.getSecretName());
-        return fetch(repository.getUrl(), repository.getBranch(), repository.getCommitId(), repository.getPath(), secret);
+        return fetch(repository.getUrl(), repository.getBranch(), repository.getCommitId(), repository.getPath(), secret, withCommitInfo);
     }
 
     public <T> T withLock(String repoUrl, Callable<T> f) {
