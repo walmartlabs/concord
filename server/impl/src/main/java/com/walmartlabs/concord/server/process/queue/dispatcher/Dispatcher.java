@@ -258,12 +258,8 @@ public class Dispatcher extends PeriodicTask {
 
         try {
             SecretReference secret = null;
-            String repoBranch = null;
             if (item.repoId() != null) {
                 secret = dao.getSecretReference(item.repoId());
-                if (item.commitId() == null) {
-                    repoBranch = dao.getRepoBranch(item.repoId());
-                }
             }
 
             // backward compatibility with old process queue entries that are not normalized
@@ -277,7 +273,7 @@ public class Dispatcher extends PeriodicTask {
                     item.repoUrl(),
                     item.repoPath(),
                     item.commitId(),
-                    repoBranch,
+                    item.commitBranch(),
                     secret != null ? secret.secretName : null,
                     imports);
 
@@ -320,7 +316,7 @@ public class Dispatcher extends PeriodicTask {
 
             Field<UUID> orgIdField = select(PROJECTS.ORG_ID).from(PROJECTS).where(PROJECTS.PROJECT_ID.eq(q.PROJECT_ID)).asField();
 
-            SelectJoinStep<Record13<UUID, OffsetDateTime, UUID, UUID, UUID, UUID, String, String, String, UUID, JSONB, JSONB, JSONB>> s =
+            SelectJoinStep<Record14<UUID, OffsetDateTime, UUID, UUID, UUID, UUID, String, String, String, UUID, JSONB, JSONB, JSONB, String>> s =
                     tx.select(
                             q.INSTANCE_ID,
                             q.CREATED_AT,
@@ -334,7 +330,8 @@ public class Dispatcher extends PeriodicTask {
                             q.REPO_ID,
                             q.IMPORTS,
                             q.REQUIREMENTS,
-                            q.EXCLUSIVE)
+                            q.EXCLUSIVE,
+                            q.COMMIT_BRANCH)
                             .from(q);
 
             s.where(q.CURRENT_STATUS.eq(ProcessStatus.ENQUEUED.toString())
@@ -357,6 +354,7 @@ public class Dispatcher extends PeriodicTask {
                             .repoPath(r.value7())
                             .repoUrl(r.value8())
                             .commitId(r.value9())
+                            .commitBranch(r.value14())
                             .repoId(r.value10())
                             .imports(objectMapper.fromJSONB(r.value11(), Imports.class))
                             .requirements(objectMapper.fromJSONB(r.value12()))
@@ -371,18 +369,6 @@ public class Dispatcher extends PeriodicTask {
                     .leftOuterJoin(ORGANIZATIONS).on(SECRETS.ORG_ID.eq(ORGANIZATIONS.ORG_ID))
                     .where(REPOSITORIES.REPO_ID.eq(repoId))
                     .fetchOne(r -> new SecretReference(r.value1(), r.value2()));
-        }
-
-        public String getRepoBranch(UUID repoId) {
-            return dsl().select(REPOSITORIES.REPO_BRANCH, REPOSITORIES.REPO_COMMIT_ID)
-                    .from(REPOSITORIES)
-                    .where(REPOSITORIES.REPO_ID.eq(repoId))
-                    .fetchOne(r -> {
-                        if (r.value2() != null) {
-                            return null;
-                        }
-                        return r.value1();
-                    });
         }
     }
 

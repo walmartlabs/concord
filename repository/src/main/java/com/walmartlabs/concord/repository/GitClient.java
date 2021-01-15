@@ -31,6 +31,7 @@ import org.immutables.value.Value;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.annotation.Nullable;
 import java.io.*;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
@@ -60,25 +61,6 @@ public class GitClient {
         this.executor = Executors.newCachedThreadPool();
     }
 
-    public RepositoryInfo getInfo(Path path) {
-        String result = exec(Command.builder()
-                .workDir(path)
-                .timeout(cfg.defaultOperationTimeout())
-                .addArgs("log", "-1", "--format=%H%n%an (%ae)%n%s%n%b")
-                .build());
-        String[] info = result.split("\n");
-        if (info.length < 2) {
-            return null;
-        }
-        String id = info[0];
-        String author = info[1];
-        StringBuilder message = new StringBuilder();
-        for (int i = 2; i < info.length; i++) {
-            message.append(info[i]).append("\n");
-        }
-        return new RepositoryInfo(id, message.toString(), author);
-    }
-
     public FetchResult fetch(FetchRequest req) {
         if (req.commitId() == null && req.branchOrTag() == null) {
             throw new IllegalArgumentException("Specify branch, tag or commit Id.");
@@ -96,7 +78,11 @@ public class GitClient {
 
             configure(req.destination());
             configureRemote(req.destination(), updateUrl(req.url(), req.secret()));
+
             Ref ref = getHeadRef(req.destination(), req.branchOrTag(), req.secret());
+            if (ref == null && req.commitId() == null) {
+                throw new RepositoryException("Can't find head ref for '" + req.branchOrTag() + "'");
+            }
             configureFetch(req.destination(), getRefSpec(ref));
 
             // fetch
@@ -104,7 +90,7 @@ public class GitClient {
             fetch(req.destination(), effectiveShallow, req.secret());
 
             checkout(req.destination(), req.commitId() != null ? req.commitId() : req.branchOrTag());
-            if (req.commitId() == null && ref != null) {
+            if (ref != null && req.commitId() == null) {
                 reset(req.destination(), ref.tag() ? "origin/tags/" + ref.name() : "origin/" + ref.name());
             }
 
@@ -114,16 +100,24 @@ public class GitClient {
                 updateSubmodules(req.destination(), req.secret());
                 resetSubmodules(req.destination());
             }
+
+            ImmutableFetchResult.Builder result = FetchResult.builder()
+                    .head(revParse(req.destination(), "HEAD"))
+                    .branchOrTag(ref != null ? ref.name() : null);
+
+            if (req.withCommitInfo()) {
+                CommitInfo ci = getCommitInfo(req.destination());
+                result = result.message(ci.message())
+                        .author(ci.author());
+            }
+
+            return result.build();
         } catch (RepositoryException e) {
             throw e;
         } catch (Exception e) {
             log.error("fetch ['{}'] -> error", req, e);
             throw new RepositoryException("Error while fetching a repository: " + e.getMessage());
         }
-
-        return FetchResult.builder()
-                .head(revParse(req.destination(), "HEAD"))
-                .build();
     }
 
     private void init(Path workDir) {
@@ -266,7 +260,7 @@ public class GitClient {
         return getRefs(workDir, branchOrTag, secret).stream()
                 .filter(r -> r.ref().equalsIgnoreCase(branchHeadRef) || r.ref().equalsIgnoreCase(tagRef))
                 .findFirst()
-                .orElseThrow(() -> new RepositoryException("Can't find head ref for '" + branchOrTag + "'"));
+                .orElse(null);
     }
 
     private static String getRefSpec(Ref ref) {
@@ -605,6 +599,29 @@ public class GitClient {
         return line;
     }
 
+    private CommitInfo getCommitInfo(Path path) {
+        String result = exec(Command.builder()
+                .workDir(path)
+                .timeout(cfg.defaultOperationTimeout())
+                .addArgs("log", "-1", "--format=%n%an (%ae)%n%s%n%b")
+                .build());
+        String[] info = result.split("\n");
+        if (info.length < 1) {
+            return CommitInfo.builder().build();
+        }
+        String author = info[0];
+        StringBuilder message = new StringBuilder();
+        for (int i = 1; i < info.length; i++) {
+            message.append(info[i]).append("\n");
+        }
+
+        return CommitInfo.builder()
+                .message(message.toString())
+                .author(author)
+                .build();
+    }
+
+
     @Value.Immutable
     @Value.Style(jdkOnly = true)
     interface Command {
@@ -644,6 +661,21 @@ public class GitClient {
 
         static ImmutableRef.Builder builder() {
             return ImmutableRef.builder();
+        }
+    }
+
+    @Value.Immutable
+    @Value.Style(jdkOnly = true)
+    interface CommitInfo {
+
+        @Nullable
+        String message();
+
+        @Nullable
+        String author();
+
+        static ImmutableCommitInfo.Builder builder() {
+            return ImmutableCommitInfo.builder();
         }
     }
 }

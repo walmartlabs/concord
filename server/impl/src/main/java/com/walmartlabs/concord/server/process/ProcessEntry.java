@@ -79,6 +79,9 @@ public interface ProcessEntry extends Serializable {
     String commitId();
 
     @Nullable
+    String commitBranch();
+
+    @Nullable
     String commitMsg();
 
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss.SSSX")
