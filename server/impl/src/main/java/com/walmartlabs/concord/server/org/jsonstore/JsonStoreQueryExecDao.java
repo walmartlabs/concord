@@ -65,20 +65,36 @@ public class JsonStoreQueryExecDao extends AbstractDao {
     }
 
     public List<Object> execSql(UUID storeId, String query, Map<String, Object> params, Integer maxLimit) {
-        String sql = query.replace("json_store_data", "json_store_data_view_restricted");
+        String sql = query.replaceAll("(?i)json_store_data", "json_store_data_view_restricted");
         if (maxLimit != null) {
             sql = "select * from (" + trimEnd(sql, ';') + ") a limit " + maxLimit;
         }
 
         QueryPart[] args = params != null ? new QueryPart[]{val(objectMapper.toString(params))} : new QueryPart[0];
 
-        String resultSql = sql;
-        return dsl().transactionResult(cfg -> {
-            DSLContext tx = DSL.using(cfg);
-            tx.execute("set local jsonStoreQueryExec.json_store_id='" + storeId + "'");
-            return tx.resultQuery(resultSql, args)
-                    .fetch(this::toExecResult);
-        });
+        String finalSql = sql;
+        try {
+            return dsl().transactionResult(cfg -> {
+                DSLContext tx = DSL.using(cfg);
+                tx.execute("set local jsonStoreQueryExec.json_store_id='" + storeId + "'");
+                return tx.resultQuery(finalSql, args)
+                        .fetch(this::toExecResult);
+            });
+        } catch (Exception e) {
+            String message = restoreOriginalQuery(e.getMessage());
+            if (message == null) {
+                throw e;
+            }
+
+            throw new RuntimeException(message, e.getCause());
+        }
+    }
+
+    private static String restoreOriginalQuery(String msg) {
+        if (msg == null) {
+            return null;
+        }
+        return msg.replace("json_store_data_view_restricted", "json_store_data");
     }
 
     private Object toExecResult(Record record) {
