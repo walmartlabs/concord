@@ -22,6 +22,8 @@ package com.walmartlabs.concord.repository;
 
 import org.immutables.value.Value;
 
+import javax.annotation.Nullable;
+
 @Value.Immutable
 @Value.Style(jdkOnly = true)
 public interface FetchResult {
@@ -30,6 +32,24 @@ public interface FetchResult {
      * Current HEAD.
      */
     String head();
+
+    /**
+     * Current branch or tag.
+     */
+    @Nullable
+    String branchOrTag();
+
+    /**
+     * Current commit message.
+     */
+    @Nullable
+    String message();
+
+    /**
+     * Current commit author.
+     */
+    @Nullable
+    String author();
 
     static ImmutableFetchResult.Builder builder() {
         return ImmutableFetchResult.builder();

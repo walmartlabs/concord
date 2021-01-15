@@ -31,6 +31,4 @@ public interface RepositoryProvider {
     FetchResult fetch(FetchRequest request);
 
     Snapshot export(Path src, Path dst, List<String> ignorePatterns) throws IOException;
-
-    RepositoryInfo getInfo(Path path);
 }

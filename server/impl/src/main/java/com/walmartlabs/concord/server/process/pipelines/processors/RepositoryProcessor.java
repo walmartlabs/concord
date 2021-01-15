@@ -20,6 +20,7 @@ package com.walmartlabs.concord.server.process.pipelines.processors;
  * =====
  */
 
+import com.walmartlabs.concord.repository.FetchResult;
 import com.walmartlabs.concord.repository.Repository;
 import com.walmartlabs.concord.repository.Snapshot;
 import com.walmartlabs.concord.sdk.Constants;
@@ -42,6 +43,7 @@ import java.io.Serializable;
 import java.nio.file.Path;
 import java.util.Collections;
 import java.util.Map;
+import java.util.Objects;
 import java.util.UUID;
 
 /**
@@ -82,10 +84,11 @@ public class RepositoryProcessor implements PayloadProcessor {
             return chain.process(payload);
         }
 
-        logManager.info(processKey, "Copying the repository's data: {} @ {}, {}",
+        logManager.info(processKey, "Copying the repository's data: {} @ {}:{}, path: {}",
                 repo.getUrl(),
-                repo.getCommitId() != null ? repo.getCommitId() : repo.getBranch(),
-                repo.getPath());
+                repo.getBranch() != null ? repo.getBranch() : "*",
+                repo.getCommitId() != null ? repo.getCommitId() : "head",
+                repo.getPath() != null ? repo.getPath() : "/");
 
         Path dst = payload.getHeader(Payload.WORKSPACE_DIR);
 
@@ -93,15 +96,15 @@ public class RepositoryProcessor implements PayloadProcessor {
             try {
                 Repository repository = payload.getHeader(Payload.REPOSITORY);
                 if (repository == null) {
-                    repository = repositoryManager.fetch(projectId, repo);
+                    repository = repositoryManager.fetch(projectId, repo, true);
                 }
 
                 Snapshot snapshot = repository.export(dst);
-                com.walmartlabs.concord.repository.RepositoryInfo info = repository.info();
 
                 CommitInfo ci = null;
-                if (info != null) {
-                    ci = new CommitInfo(info.getCommitId(), info.getAuthor(), info.getMessage());
+                if (repository.fetchResult() != null) {
+                    FetchResult r = Objects.requireNonNull(repository.fetchResult());
+                    ci = new CommitInfo(r.head(), r.branchOrTag(), r.author(), r.message());
                 }
                 
                 RepositoryInfo i = new RepositoryInfo(repo.getId(), repo.getName(), repo.getUrl(), repo.getPath(), repo.getBranch(), repo.getCommitId(), ci);
@@ -214,17 +217,23 @@ public class RepositoryProcessor implements PayloadProcessor {
     public static final class CommitInfo implements Serializable {
 
         private final String id;
+        private final String branch;
         private final String author;
         private final String message;
 
-        public CommitInfo(String id, String author, String message) {
+        public CommitInfo(String id, String branch, String author, String message) {
             this.id = id;
+            this.branch = branch;
             this.author = author;
             this.message = message;
         }
 
         public String getId() {
             return id;
+        }
+
+        public String getBranch() {
+            return branch;
         }
 
         public String getAuthor() {
@@ -239,6 +248,7 @@ public class RepositoryProcessor implements PayloadProcessor {
         public String toString() {
             return "CommitInfo{" +
                     "id='" + id + '\'' +
+                    ", branch='" + branch + '\'' +
                     ", author='" + author + '\'' +
                     ", message='" + message + '\'' +
                     '}';
