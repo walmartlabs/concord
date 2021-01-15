@@ -75,6 +75,14 @@ public interface FetchRequest {
         return true;
     }
 
+    /**
+     * Get latest commit message and author if {@code true}.
+     */
+    @Value.Default
+    default boolean withCommitInfo() {
+        return false;
+    }
+
     static ImmutableFetchRequest.Builder builder() {
         return ImmutableFetchRequest.builder();
     }

@@ -146,7 +146,9 @@ public class Worker implements Runnable {
             return;
         }
 
-        processLog.info("Exporting the repository data: {} @ {}:{}, {}", r.getRepoUrl(), r.getRepoBranch(), r.getCommitId(), r.getRepoPath());
+        processLog.info("Exporting the repository data: {} @ {}:{}, path: {}",
+                r.getRepoUrl(), r.getRepoBranch() != null ? r.getRepoBranch() : "*",
+                r.getCommitId(), r.getRepoPath() != null ? r.getRepoPath() : "/");
 
         long dt;
         try {

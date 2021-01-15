@@ -20,6 +20,7 @@ package com.walmartlabs.concord.repository;
  * =====
  */
 
+import javax.annotation.Nullable;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Collections;
@@ -27,21 +28,14 @@ import java.util.List;
 
 public class Repository {
 
-    private final Path rootPath;
     private final Path repoPath;
-    private final String fetchedCommitId;
-
+    private final FetchResult fetchResult;
     private final RepositoryProvider provider;
 
-    public Repository(Path rootPath, Path repoPath, String fetchedCommitId, RepositoryProvider provider) {
-        this.rootPath = rootPath;
+    public Repository(Path repoPath, FetchResult fetchResult, RepositoryProvider provider) {
         this.repoPath = repoPath;
         this.provider = provider;
-        this.fetchedCommitId = fetchedCommitId;
-    }
-
-    public RepositoryInfo info() {
-        return provider.getInfo(rootPath);
+        this.fetchResult = fetchResult;
     }
 
     public Snapshot export(Path dst) throws IOException {
@@ -56,7 +50,8 @@ public class Repository {
         return repoPath;
     }
 
-    public String fetchedCommitId() {
-        return fetchedCommitId;
+    @Nullable
+    public FetchResult fetchResult() {
+        return fetchResult;
     }
 }
