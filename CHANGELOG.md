@@ -1,5 +1,15 @@
 # Change log
 
+## [Unreleased]
+
+### Added
+
+- concord-server: when starting a process using a Git repository,
+save the branch name in `process_queue` (in addition to `commit_id`)
+([#296](https://github.com/walmartlabs/concord/pull/296)).
+
+
+
 ## [1.77.0] - 2021-01-07
 
 ### Added
