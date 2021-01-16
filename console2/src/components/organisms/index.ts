@@ -78,12 +78,12 @@ export { default as RepositoryActionDropdown } from './RepositoryActionDropdown'
 export { default as RequestErrorActivity } from './RequestErrorActivity';
 export { default as SecretActivity } from './SecretActivity';
 export { default as SecretDeleteActivity } from './SecretDeleteActivity';
-export { default as SecretDropdown } from './SecretDropdown';
 export { default as SecretListActivity } from './SecretListActivity';
 export { default as SecretOrganizationChangeActivity } from './SecretOrganizationChangeActivity';
 export { default as SecretOwnerChangeActivity } from './SecretOwnerChangeActivity';
 export { default as SecretProjectActivity } from './SecretProjectActivity';
 export { default as SecretRenameActivity } from './SecretRenameActivity';
+export { default as SecretSearch } from './SecretSearch';
 export { default as SecretStoreDropdown } from './SecretStoreDropdown';
 export { default as SecretTeamAccessActivity } from './SecretTeamAccessActivity';
 export { default as SecretVisibilityActivity } from './SecretVisibilityActivity';
