@@ -17,7 +17,6 @@
  * limitations under the License.
  * =====
  */
-
 import * as React from 'react';
 import { useEffect, useState } from 'react';
 import { Search } from 'semantic-ui-react';
