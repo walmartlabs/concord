@@ -188,7 +188,7 @@ public class ExclusiveGroupProcessor implements PayloadProcessor {
 
                 ProcessKey newProcess = dao.anyNew(tx, processKey, projectId, exclusive.group());
                 if (newProcess != null) {
-                    agentManager.killProcess(processKey);
+                    queueManager.updateStatus(processKey, ProcessStatus.CANCELLED);
                 }
 
                 queueManager.updateExclusive(tx, processKey, exclusive);
