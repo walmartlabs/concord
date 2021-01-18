@@ -202,7 +202,7 @@ public class ExclusiveGroupProcessor implements PayloadProcessor {
                 logManager.warn(processKey, CANCELLED_MSG, result.newProcess(), exclusive.group());
             }
 
-            return result.newProcess() == null && result.oldProcesses().isEmpty();
+            return result.newProcess() == null;
         }
 
         @Override
