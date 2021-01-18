@@ -24,6 +24,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.inject.Injector;
 import com.walmartlabs.concord.cli.runner.*;
 import com.walmartlabs.concord.common.ConfigurationUtils;
+import com.walmartlabs.concord.common.FileVisitor;
 import com.walmartlabs.concord.common.IOUtils;
 import com.walmartlabs.concord.dependencymanager.DependencyManager;
 import com.walmartlabs.concord.imports.ImportManager;
@@ -57,6 +58,7 @@ import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.util.*;
 import java.util.concurrent.Callable;
+import java.util.concurrent.atomic.AtomicLong;
 
 @Command(name = "run", description = "Run the current directory as a Concord process")
 public class Run implements Callable<Integer> {
@@ -108,7 +110,7 @@ public class Run implements Callable<Integer> {
 
     @Override
     public Integer call() throws Exception {
-        sourceDir = sourceDir.normalize();
+        sourceDir = sourceDir.normalize().toAbsolutePath();
         Path targetDir;
 
         if (Files.isRegularFile(sourceDir)) {
@@ -128,7 +130,10 @@ public class Run implements Callable<Integer> {
             }
 
             // copy everything into target except target
-            IOUtils.copy(sourceDir, targetDir, "^target$", StandardCopyOption.REPLACE_EXISTING);
+            if (verbose) {
+                System.out.println("Copying files into the target directory...");
+            }
+            IOUtils.copy(sourceDir, targetDir, "^target$", new WorkspaceTooBigNotifier(), StandardCopyOption.REPLACE_EXISTING);
         } else {
             throw new IllegalArgumentException("Not a directory or single Concord YAML file: " + sourceDir);
         }
@@ -235,5 +240,22 @@ public class Run implements Callable<Integer> {
             return new DependencyManager(depsCacheDir);
         }
         return new DependencyManager(depsCacheDir, cfgFile);
+    }
+
+    private static class WorkspaceTooBigNotifier implements FileVisitor {
+
+        private static final long MAX = 100;
+
+        private long currentCount = 0;
+
+        @Override
+        public void visit(Path sourceFile, Path dstFile) {
+            if (currentCount > MAX) {
+                System.out.println("Copying files into the target directory...");
+                currentCount = 0;
+            } else {
+                currentCount++;
+            }
+        }
     }
 }
