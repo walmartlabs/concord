@@ -22,16 +22,16 @@ package com.walmartlabs.concord.runtime.v2.parser;
 
 import com.fasterxml.jackson.core.JsonToken;
 import com.google.common.collect.ImmutableMap;
+import com.walmartlabs.concord.runtime.v2.exception.MandatoryFieldNotFoundException;
+import com.walmartlabs.concord.runtime.v2.exception.OneOfMandatoryFieldNotFoundException;
 import com.walmartlabs.concord.runtime.v2.exception.UnsupportedException;
-import com.walmartlabs.concord.runtime.v2.model.ImmutableTrigger;
-import com.walmartlabs.concord.runtime.v2.model.Trigger;
+import com.walmartlabs.concord.runtime.v2.model.*;
 import io.takari.parc.Parser;
 import io.takari.parc.Seq;
 
 import java.util.List;
 import java.util.Map;
 
-import static com.walmartlabs.concord.runtime.v2.parser.ConfigurationGrammar.exclusiveVal;
 import static com.walmartlabs.concord.runtime.v2.parser.GrammarLookup.lookup;
 import static com.walmartlabs.concord.runtime.v2.parser.GrammarMisc.*;
 import static com.walmartlabs.concord.runtime.v2.parser.GrammarOptions.*;
@@ -61,6 +61,26 @@ public final class TriggersGrammar {
 
     private static final Parser<Atom, List<Map<String, Object>>> githubTriggerRepositoryInfoVal =
             orError(githubTriggerRepositoryInfo, YamlValueType.ARRAY_OF_GITHUB_REPOSITORY_INFO);
+
+    private static GithubTriggerExclusiveMode validateGithubExclusiveMode(GithubTriggerExclusiveMode e) {
+        if (e.groupFrom() == null && e.group() == null) {
+            throw new OneOfMandatoryFieldNotFoundException("group", "groupFrom");
+        }
+        return e;
+    }
+
+    private static final Parser<Atom, GithubTriggerExclusiveMode> githubTriggerExclusiveV2 =
+            betweenTokens(JsonToken.START_OBJECT, JsonToken.END_OBJECT,
+                    with(ImmutableGithubTriggerExclusiveMode::builder,
+                            o -> options(
+                                    optional("group", stringVal.map(o::group)),
+                                    optional("groupFrom", enumVal(GithubTriggerExclusiveMode.GroupFrom.class).map(o::groupFrom)),
+                                    optional("mode", enumVal(ExclusiveModeConfiguration.Mode.class).map(o::mode))))
+                            .map(ImmutableGithubTriggerExclusiveMode.Builder::build)
+                            .map(TriggersGrammar::validateGithubExclusiveMode));
+
+    private static final Parser<Atom, GithubTriggerExclusiveMode> githubTriggerExclusiveValV2 =
+            orError(githubTriggerExclusiveV2, YamlValueType.GITHUB_EXCLUSIVE_MODE);
 
     @SuppressWarnings("unchecked")
     private static final Parser<Atom, Map<String, Object>> githubTriggerConditionsV2 =
@@ -94,7 +114,7 @@ public final class TriggersGrammar {
                             optional("useEventCommitId", booleanVal.map(v -> o.putConfiguration("useEventCommitId", v))),
                             optional("ignoreEmptyPush", booleanVal.map(v -> o.putConfiguration("ignoreEmptyPush", v))),
                             optional("arguments", mapVal.map(o::arguments)),
-                            optional("exclusive", exclusiveVal.map(v -> o.putConfiguration("exclusive", v))),
+                            optional("exclusive", githubTriggerExclusiveValV2.map(v -> o.putConfiguration("exclusive", v))),
                             mandatory("conditions", githubTriggerConditionsValV2.map(o::putAllConditions)),
                             mandatory("version", intVal.map(v -> o.putConditions("version", v)))))
                     .map(t -> t.name("github"))
