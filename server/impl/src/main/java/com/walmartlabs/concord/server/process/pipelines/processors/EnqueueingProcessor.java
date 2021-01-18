@@ -50,7 +50,10 @@ public class EnqueueingProcessor implements PayloadProcessor {
     @Override
     @WithTimer
     public Payload process(Chain chain, Payload payload) {
-        queueManager.enqueue(payload);
+        boolean enqueued = queueManager.enqueue(payload);
+        if (!enqueued) {
+            return payload;
+        }
 
         ProcessKey processKey = payload.getProcessKey();
 

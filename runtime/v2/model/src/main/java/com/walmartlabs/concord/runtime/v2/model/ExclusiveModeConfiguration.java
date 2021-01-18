@@ -40,11 +40,12 @@ public interface ExclusiveModeConfiguration {
     @Value.Parameter
     @Value.Default
     default Mode mode() {
-        return Mode.wait;
+        return Mode.cancel;
     }
 
     enum Mode {
         cancel,
+        cancelOld,
         wait
     }
 

@@ -1,0 +1,9 @@
+flows:
+  default:
+    - log: "sleep for ${time} ms..."
+    - ${sleep.ms(time)}
+
+configuration:
+  exclusive:
+    group: "RED"
+    mode: "cancelOld"

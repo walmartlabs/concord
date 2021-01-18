@@ -25,6 +25,7 @@ import com.walmartlabs.concord.db.AbstractDao;
 import com.walmartlabs.concord.db.MainDB;
 import com.walmartlabs.concord.db.PgUtils;
 import com.walmartlabs.concord.imports.Imports;
+import com.walmartlabs.concord.runtime.v2.model.ExclusiveModeConfiguration;
 import com.walmartlabs.concord.sdk.EventType;
 import com.walmartlabs.concord.server.ConcordObjectMapper;
 import com.walmartlabs.concord.server.Utils;
@@ -145,7 +146,7 @@ public class ProcessQueueDao extends AbstractDao {
 
     public void enqueue(DSLContext tx, ProcessKey processKey, Set<String> tags, OffsetDateTime startAt,
                         Map<String, Object> requirements, Long processTimeout, Set<String> handlers,
-                        Map<String, Object> meta, Imports imports, Map<String, Object> exclusive,
+                        Map<String, Object> meta, Imports imports, ExclusiveModeConfiguration exclusive,
                         String runtime, List<String> dependencies) {
 
         UpdateSetMoreStep<ProcessQueueRecord> q = tx.update(PROCESS_QUEUE)
@@ -180,7 +181,7 @@ public class ProcessQueueDao extends AbstractDao {
             q.set(PROCESS_QUEUE.IMPORTS, objectMapper.toJSONB(imports));
         }
 
-        if (exclusive != null && !exclusive.isEmpty()) {
+        if (exclusive != null) {
             q.set(PROCESS_QUEUE.EXCLUSIVE, objectMapper.toJSONB(exclusive));
         }
 
@@ -385,6 +386,10 @@ public class ProcessQueueDao extends AbstractDao {
     }
 
     public List<ProcessEntry> get(List<PartialProcessKey> processKeys) {
+        if (processKeys.isEmpty()) {
+            return Collections.emptyList();
+        }
+
         List<UUID> instanceIds = processKeys.stream()
                 .map(PartialProcessKey::getInstanceId)
                 .collect(Collectors.toList());
@@ -561,7 +566,7 @@ public class ProcessQueueDao extends AbstractDao {
                 .execute();
     }
 
-    public void updateExclusive(DSLContext tx, ProcessKey key, Map<String, Object> exclusive) {
+    public void updateExclusive(DSLContext tx, ProcessKey key, ExclusiveModeConfiguration exclusive) {
         tx.update(PROCESS_QUEUE)
                 .set(PROCESS_QUEUE.EXCLUSIVE, objectMapper.toJSONB(exclusive))
                 .where(PROCESS_QUEUE.INSTANCE_ID.eq(key.getInstanceId()))
