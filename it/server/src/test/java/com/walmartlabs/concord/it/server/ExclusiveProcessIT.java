@@ -45,8 +45,6 @@ public class ExclusiveProcessIT extends AbstractServerIT {
                 .setName(projectName)
                 .setRawPayloadMode(ProjectEntry.RawPayloadModeEnum.EVERYONE));
 
-        System.out.println(">>" + orgName + "/" + projectName);
-
         byte[] payload = archive(ExclusiveProcessIT.class.getResource("exclusiveCancelOld").toURI());
 
         ProcessApi processApi = new ProcessApi(getApiClient());
