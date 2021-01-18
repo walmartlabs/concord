@@ -22,7 +22,6 @@ package com.walmartlabs.concord.runtime.v2.parser;
 
 import com.fasterxml.jackson.core.JsonToken;
 import com.google.common.collect.ImmutableMap;
-import com.walmartlabs.concord.runtime.v2.exception.MandatoryFieldNotFoundException;
 import com.walmartlabs.concord.runtime.v2.exception.OneOfMandatoryFieldNotFoundException;
 import com.walmartlabs.concord.runtime.v2.exception.UnsupportedException;
 import com.walmartlabs.concord.runtime.v2.model.*;
@@ -63,8 +62,8 @@ public final class TriggersGrammar {
             orError(githubTriggerRepositoryInfo, YamlValueType.ARRAY_OF_GITHUB_REPOSITORY_INFO);
 
     private static GithubTriggerExclusiveMode validateGithubExclusiveMode(GithubTriggerExclusiveMode e) {
-        if (e.groupFrom() == null && e.group() == null) {
-            throw new OneOfMandatoryFieldNotFoundException("group", "groupFrom");
+        if (e.groupBy() == null && e.group() == null) {
+            throw new OneOfMandatoryFieldNotFoundException("group", "groupBy");
         }
         return e;
     }
@@ -74,7 +73,7 @@ public final class TriggersGrammar {
                     with(ImmutableGithubTriggerExclusiveMode::builder,
                             o -> options(
                                     optional("group", stringVal.map(o::group)),
-                                    optional("groupFrom", enumVal(GithubTriggerExclusiveMode.GroupFrom.class).map(o::groupFrom)),
+                                    optional("groupBy", enumVal(GithubTriggerExclusiveMode.GroupBy.class).map(o::groupBy)),
                                     optional("mode", enumVal(ExclusiveModeConfiguration.Mode.class).map(o::mode))))
                             .map(ImmutableGithubTriggerExclusiveMode.Builder::build)
                             .map(TriggersGrammar::validateGithubExclusiveMode));

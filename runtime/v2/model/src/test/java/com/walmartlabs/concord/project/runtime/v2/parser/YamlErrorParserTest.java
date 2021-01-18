@@ -579,9 +579,9 @@ public class YamlErrorParserTest extends AbstractParserTest {
 
     @Test
     public void test136() throws Exception {
-        String msg = "(036.yml): Error @ line: 6, col: 20. Invalid value: test, expected: [branch]\n" +
+        String msg = "(036.yml): Error @ line: 6, col: 18. Invalid value: test, expected: [branch]\n" +
                 "\twhile processing steps:\n" +
-                "\t'groupFrom' @ line: 6, col: 9\n" +
+                "\t'groupBy' @ line: 6, col: 9\n" +
                 "\t\t'exclusive' @ line: 5, col: 7\n" +
                 "\t\t\t'github' @ line: 2, col: 5\n" +
                 "\t\t\t\t'triggers' @ line: 1, col: 1";
@@ -591,7 +591,7 @@ public class YamlErrorParserTest extends AbstractParserTest {
 
     @Test
     public void test137() throws Exception {
-        String msg = "(037.yml): Error @ n/a. One of mandatory parameters 'group, groupFrom' not found\n" +
+        String msg = "(037.yml): Error @ n/a. One of mandatory parameters 'group, groupBy' not found\n" +
                 "\twhile processing steps:\n" +
                 "\t'exclusive' @ line: 5, col: 7\n" +
                 "\t\t'github' @ line: 2, col: 5\n" +

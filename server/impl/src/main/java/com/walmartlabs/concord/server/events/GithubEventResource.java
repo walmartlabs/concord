@@ -193,18 +193,18 @@ public class GithubEventResource implements Resource {
             }
 
             GithubTriggerExclusiveMode e = objectMapper.convertValue(exclusive, GithubTriggerExclusiveMode.class);
-            if (e.groupFrom() == null) {
+            if (e.groupBy() == null) {
                 return exclusive;
             }
 
             String group;
-            switch (Objects.requireNonNull(e.groupFrom())) {
+            switch (Objects.requireNonNull(e.groupBy())) {
                 case branch: {
                     group = payload.getBranch();
                     break;
                 }
                 default:
-                    throw new IllegalArgumentException("Unknown groupFrom: '" + e.groupFrom() + "'");
+                    throw new IllegalArgumentException("Unknown groupBy: '" + e.groupBy() + "'");
             }
 
             if (group == null) {

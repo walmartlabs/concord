@@ -3,7 +3,7 @@ triggers:
       version: 2
       entryPoint: "onGithub"
       exclusive:
-        groupFrom: test
+        groupBy: test
         mode: cancel
       conditions:
         type: "push"
