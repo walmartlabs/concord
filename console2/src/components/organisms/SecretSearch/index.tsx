@@ -19,11 +19,17 @@
  */
 
 import * as React from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { Search } from 'semantic-ui-react';
 
 import { ConcordKey, RequestError } from '../../../api/common';
-import { get as apiGet, list as apiList, SecretEntry } from '../../../api/org/secret';
-import { useCallback, useEffect, useState } from 'react';
+import {
+    get as apiGet,
+    list as apiList,
+    SecretEntry,
+    SecretType,
+    SecretVisibility
+} from '../../../api/org/secret';
 import { SearchProps } from 'semantic-ui-react/dist/commonjs/modules/Search/Search';
 
 interface ExternalProps {
@@ -44,7 +50,32 @@ interface Result {
 }
 
 const renderTitle = (e: SecretEntry) => `${e.name}`;
-const renderDescription = (e: SecretEntry): string => `${e.type} - ${e.visibility}`;
+
+const renderType = (e: SecretEntry): string => {
+    switch (e.type) {
+        case SecretType.DATA:
+            return 'Single value';
+        case SecretType.KEY_PAIR:
+            return 'SSH key pair';
+        case SecretType.USERNAME_PASSWORD:
+            return 'Username/password';
+        default:
+            return `${e.type}`;
+    }
+};
+
+const renderVisibility = (e: SecretEntry): string => {
+    switch (e.visibility) {
+        case SecretVisibility.PRIVATE:
+            return 'private';
+        case SecretVisibility.PUBLIC:
+            return 'public';
+        default:
+            return `${e.visibility}`;
+    }
+};
+
+const renderDescription = (e: SecretEntry): string => `${renderType(e)} (${renderVisibility(e)})`;
 
 export default ({
     orgName,
