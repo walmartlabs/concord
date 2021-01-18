@@ -130,12 +130,7 @@ public class Run implements Callable<Integer> {
             }
 
             // copy everything into target except target
-            FileVisitor copyNotifier = new WorkspaceTooBigNotifier();
-            if (verbose) {
-                System.out.println("Copying files into the target directory...");
-                copyNotifier = (sourceFile, dstFile) -> {};
-            }
-            IOUtils.copy(sourceDir, targetDir, "^target$", copyNotifier, StandardCopyOption.REPLACE_EXISTING);
+            IOUtils.copy(sourceDir, targetDir, "^target$", new CopyNotifier(verbose ? 0 : 100), StandardCopyOption.REPLACE_EXISTING);
         } else {
             throw new IllegalArgumentException("Not a directory or single Concord YAML file: " + sourceDir);
         }
@@ -244,11 +239,15 @@ public class Run implements Callable<Integer> {
         return new DependencyManager(depsCacheDir, cfgFile);
     }
 
-    private static class WorkspaceTooBigNotifier implements FileVisitor {
+    private static class CopyNotifier implements FileVisitor {
 
-        private static final long MAX = 100;
+        private final long notifyOnCount;
 
         private long currentCount = 0;
+
+        public CopyNotifier(long notifyOnCount) {
+            this.notifyOnCount = notifyOnCount;
+        }
 
         @Override
         public void visit(Path sourceFile, Path dstFile) {
@@ -256,12 +255,13 @@ public class Run implements Callable<Integer> {
                 return;
             }
 
-            if (currentCount > MAX) {
+            if (currentCount == notifyOnCount) {
                 System.out.println("Copying files into the target directory...");
                 currentCount = -1;
-            } else {
-                currentCount++;
+                return;
             }
+
+            currentCount++;
         }
     }
 }
