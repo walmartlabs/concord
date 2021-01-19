@@ -67,6 +67,7 @@
         <jsr305.version>3.0.2</jsr305.version>
         <junit.version>4.13</junit.version>
         <kafka.client.version>2.4.0</kafka.client.version>
+        <kerby.version>2.0.1</kerby.version>
         <kubernetes.client.version>4.8.0</kubernetes.client.version>
         <launcher.version>0.128</launcher.version>
         <liquibase.version>3.5.1</liquibase.version> <!-- the newer versions (up to 3.5.3) have incorrect mappings for PG's blob/bytea -->
@@ -1080,6 +1081,32 @@
                 <groupId>com.networknt</groupId>
                 <artifactId>json-schema-validator</artifactId>
                 <version>${json.schema.validator.version}</version>
+            </dependency>
+            <!-- Apache kerby stuff -->
+            <dependency>
+                <groupId>org.apache.kerby</groupId>
+                <artifactId>kerb-client-api-all</artifactId>
+                <version>${kerby.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.kerby</groupId>
+                <artifactId>kerby-util</artifactId>
+                <version>${kerby.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.kerby</groupId>
+                <artifactId>kerb-core</artifactId>
+                <version>${kerby.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.kerby</groupId>
+                <artifactId>kerb-client</artifactId>
+                <version>${kerby.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.kerby</groupId>
+                <artifactId>kerb-util</artifactId>
+                <version>${kerby.version}</version>
             </dependency>
         </dependencies>
     </dependencyManagement>
