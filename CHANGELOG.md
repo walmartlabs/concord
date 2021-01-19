@@ -8,6 +8,12 @@
 save the branch name in `process_queue` (in addition to `commit_id`)
 ([#296](https://github.com/walmartlabs/concord/pull/296)).
 
+### Changed
+
+- concord-console: the secret dropdown list on the repository page
+is replaced with a search field
+([#299](https://github.com/walmartlabs/concord/pull/299)).
+
 
 
 ## [1.77.0] - 2021-01-07
