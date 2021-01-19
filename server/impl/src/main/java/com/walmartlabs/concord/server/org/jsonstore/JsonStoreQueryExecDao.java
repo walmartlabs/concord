@@ -39,6 +39,13 @@ import java.util.UUID;
 
 import static org.jooq.impl.DSL.val;
 
+/**
+ * Executes JSON Store queries.
+ * <p/>
+ * Uses a separate DB connection pool {@link @JsonStorageDB} to allow
+ * more fine-tuned security configuration.
+ * @see #execSql(UUID, String, Map, Integer)
+ */
 @Named
 public class JsonStoreQueryExecDao extends AbstractDao {
 
@@ -55,7 +62,8 @@ public class JsonStoreQueryExecDao extends AbstractDao {
         this.storeQueryDao = storeQueryDao;
     }
 
-    public List<Object> exec(UUID storeId, String queryName, Map<String, Object> params) {
+    public List<Object> exec(UUID storeId, String queryName, Map<String, Object> params)
+    {
         JsonStoreQueryEntry q = storeQueryDao.get(storeId, queryName);
         if (q == null) {
             throw new ValidationErrorsException("Query not found: " + queryName);
@@ -64,13 +72,33 @@ public class JsonStoreQueryExecDao extends AbstractDao {
         return execSql(q.storeId(), q.text(), params, null);
     }
 
-    public List<Object> execSql(UUID storeId, String query, Map<String, Object> params, Integer maxLimit) {
+    /**
+     * Executes the provided query. The method replaces any usage of {@code JSON_STORE_DATA}
+     * table with a restricted view {@code JSON_STORE_DATA_VIEW_RESTRICTED}. The view
+     * requires the store ID to be passed as a session parameter.
+     * <p/>
+     * This is similar to how row-level security works in PostgreSQL, but doesn't exclude
+     * the possibility of SQL injections. For production deployment it is recommended to
+     * perform additional steps:
+     * <ul>
+     * <li>configure a separate user (see {@code db.inventoryUsername} in the Server's
+     * configuration file)</li>
+     * <li>install a RLS policy similar to <pre>{@code
+     * CREATE POLICY json_store_data_restriction ON json_store_data
+     * FOR SELECT
+     * USING (json_store_id = current_setting('jsonStoreQueryExec.json_store_id'::text)::uuid);
+     * }</pre></li>
+     * <li>attach the policy to the new user {@code db.inventoryUsername}</li>
+     * </ul>
+     */
+    public List<Object> execSql(UUID storeId, String query, Map<String, Object> params, Integer maxLimit)
+    {
         String sql = query.replaceAll("(?i)json_store_data", "json_store_data_view_restricted");
         if (maxLimit != null) {
             sql = "select * from (" + trimEnd(sql, ';') + ") a limit " + maxLimit;
         }
 
-        QueryPart[] args = params != null ? new QueryPart[]{val(objectMapper.toString(params))} : new QueryPart[0];
+        QueryPart[] args = params != null ? new QueryPart[] {val(objectMapper.toString(params))} : new QueryPart[0];
 
         String finalSql = sql;
         try {
@@ -88,13 +116,6 @@ public class JsonStoreQueryExecDao extends AbstractDao {
 
             throw new RuntimeException(message, e.getCause());
         }
-    }
-
-    private static String restoreOriginalQuery(String msg) {
-        if (msg == null) {
-            return null;
-        }
-        return msg.replace("json_store_data_view_restricted", "json_store_data");
     }
 
     private Object toExecResult(Record record) {
@@ -117,6 +138,13 @@ public class JsonStoreQueryExecDao extends AbstractDao {
 
             throw e;
         }
+    }
+
+    private static String restoreOriginalQuery(String msg) {
+        if (msg == null) {
+            return null;
+        }
+        return msg.replace("json_store_data_view_restricted", "json_store_data");
     }
 
     private static String trimEnd(String value, char c) {
