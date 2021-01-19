@@ -24,21 +24,11 @@ import com.fasterxml.jackson.core.JsonParseException;
 import com.walmartlabs.concord.db.AbstractDao;
 import com.walmartlabs.concord.db.JsonStorageDB;
 import com.walmartlabs.concord.server.ConcordObjectMapper;
-import net.sf.jsqlparser.JSQLParserException;
-import net.sf.jsqlparser.expression.*;
-import net.sf.jsqlparser.expression.operators.conditional.AndExpression;
-import net.sf.jsqlparser.expression.operators.relational.EqualsTo;
-import net.sf.jsqlparser.parser.CCJSqlParserUtil;
-import net.sf.jsqlparser.parser.ParseException;
-import net.sf.jsqlparser.schema.Column;
-import net.sf.jsqlparser.schema.Table;
-import net.sf.jsqlparser.statement.Statement;
-import net.sf.jsqlparser.statement.StatementVisitorAdapter;
-import net.sf.jsqlparser.statement.create.table.ColDataType;
-import net.sf.jsqlparser.statement.select.*;
 import org.jooq.Configuration;
+import org.jooq.DSLContext;
 import org.jooq.QueryPart;
 import org.jooq.Record;
+import org.jooq.impl.DSL;
 import org.sonatype.siesta.ValidationErrorsException;
 
 import javax.inject.Inject;
@@ -47,10 +37,15 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
-import static com.walmartlabs.concord.server.jooq.Tables.INVENTORY_DATA;
-import static com.walmartlabs.concord.server.jooq.Tables.JSON_STORE_DATA;
 import static org.jooq.impl.DSL.val;
 
+/**
+ * Executes JSON Store queries.
+ * <p/>
+ * Uses a separate DB connection pool {@link @JsonStorageDB} to allow
+ * more fine-tuned security configuration.
+ * @see #execSql(UUID, String, Map, Integer)
+ */
 @Named
 public class JsonStoreQueryExecDao extends AbstractDao {
 
@@ -67,7 +62,8 @@ public class JsonStoreQueryExecDao extends AbstractDao {
         this.storeQueryDao = storeQueryDao;
     }
 
-    public List<Object> exec(UUID storeId, String queryName, Map<String, Object> params) {
+    public List<Object> exec(UUID storeId, String queryName, Map<String, Object> params)
+    {
         JsonStoreQueryEntry q = storeQueryDao.get(storeId, queryName);
         if (q == null) {
             throw new ValidationErrorsException("Query not found: " + queryName);
@@ -76,20 +72,50 @@ public class JsonStoreQueryExecDao extends AbstractDao {
         return execSql(q.storeId(), q.text(), params, null);
     }
 
-    public List<Object> execSql(UUID storeId, String query, Map<String, Object> params, Integer maxLimit) {
-        String sql = createQuery(query, maxLimit);
-
-        // TODO we should probably inspect the query to determine whether we need to bind the params or not
-
-        QueryPart[] args;
-        if (params == null) {
-            args = new QueryPart[]{val(storeId)};
-        } else {
-            args = new QueryPart[]{val(objectMapper.toString(params)), val(storeId)};
+    /**
+     * Executes the provided query. The method replaces any usage of {@code JSON_STORE_DATA}
+     * table with a restricted view {@code JSON_STORE_DATA_VIEW_RESTRICTED}. The view
+     * requires the store ID to be passed as a session parameter.
+     * <p/>
+     * This is similar to how row-level security works in PostgreSQL, but doesn't exclude
+     * the possibility of SQL injections. For production deployment it is recommended to
+     * perform additional steps:
+     * <ul>
+     * <li>configure a separate user (see {@code db.inventoryUsername} in the Server's
+     * configuration file)</li>
+     * <li>install a RLS policy similar to <pre>{@code
+     * CREATE POLICY json_store_data_restriction ON json_store_data
+     * FOR SELECT
+     * USING (json_store_id = current_setting('jsonStoreQueryExec.json_store_id'::text)::uuid);
+     * }</pre></li>
+     * <li>attach the policy to the new user {@code db.inventoryUsername}</li>
+     * </ul>
+     */
+    public List<Object> execSql(UUID storeId, String query, Map<String, Object> params, Integer maxLimit)
+    {
+        String sql = query.replaceAll("(?i)json_store_data", "json_store_data_view_restricted");
+        if (maxLimit != null) {
+            sql = "select * from (" + trimEnd(sql, ';') + ") a limit " + maxLimit;
         }
 
-        return dsl().resultQuery(sql, args)
-                .fetch(this::toExecResult);
+        QueryPart[] args = params != null ? new QueryPart[] {val(objectMapper.toString(params))} : new QueryPart[0];
+
+        String finalSql = sql;
+        try {
+            return dsl().transactionResult(cfg -> {
+                DSLContext tx = DSL.using(cfg);
+                tx.execute("set local jsonStoreQueryExec.json_store_id='" + storeId + "'");
+                return tx.resultQuery(finalSql, args)
+                        .fetch(this::toExecResult);
+            });
+        } catch (Exception e) {
+            String message = restoreOriginalQuery(e.getMessage());
+            if (message == null) {
+                throw e;
+            }
+
+            throw new RuntimeException(message, e.getCause());
+        }
     }
 
     private Object toExecResult(Record record) {
@@ -114,91 +140,19 @@ public class JsonStoreQueryExecDao extends AbstractDao {
         }
     }
 
-    private static String createQuery(String src, Integer maxLimit) {
-        try {
-            Statement st = CCJSqlParserUtil.parse(src);
-            st.accept(new StatementVisitorAdapter() {
-
-                @Override
-                public void visit(Select select) {
-                    select.getSelectBody().accept(new SelectVisitorAdapter() {
-                        @Override
-                        public void visit(PlainSelect plainSelect) {
-                            FromItem from = plainSelect.getFromItem();
-                            if (from == null) {
-                                return;
-                            }
-
-                            Alias fromAlias = from.getAlias();
-                            Column left = null;
-
-                            if (from instanceof Table) {
-                                String tableName = ((Table) from).getName();
-                                if (tableName.toLowerCase().contains("inventory_data")) {
-                                    Table inventoryDataTable = new Table(INVENTORY_DATA.getName());
-                                    inventoryDataTable.setAlias(fromAlias);
-                                    left = new Column(inventoryDataTable, INVENTORY_DATA.INVENTORY_ID.getName());
-                                }
-                            }
-
-                            if (left == null) {
-                                // json_store.json_store_id
-                                Table jsonStorageTable = new Table(JSON_STORE_DATA.getName());
-                                jsonStorageTable.setAlias(fromAlias);
-                                left = new Column(jsonStorageTable, JSON_STORE_DATA.JSON_STORE_ID.getName());
-                            }
-
-                            // cast(? as uuid)
-                            CastExpression right = new CastExpression();
-                            right.setLeftExpression(new JdbcParameter());
-                            ColDataType t = new ColDataType();
-                            t.setDataType("uuid");
-                            right.setType(t);
-
-                            // json_store_data.store_id = cast(? as uuid)
-                            EqualsTo eq = new EqualsTo();
-                            eq.setLeftExpression(left);
-                            eq.setRightExpression(right);
-
-                            Expression where = eq;
-                            if (plainSelect.getWhere() != null) {
-                                where = new AndExpression(plainSelect.getWhere(), eq);
-                            }
-
-                            if (maxLimit != null) {
-                                long limitValue = maxLimit;
-                                if (plainSelect.getLimit() != null) {
-                                    Limit limit = plainSelect.getLimit();
-                                    Expression rowCountExpr = limit.getRowCount();
-                                    if (rowCountExpr instanceof LongValue) {
-                                        LongValue v = (LongValue) rowCountExpr;
-                                        if (v.getValue() < maxLimit) {
-                                            limitValue = v.getValue();
-                                        }
-                                    }
-
-                                }
-
-                                Limit limit = new Limit();
-                                limit.setRowCount(new LongValue(limitValue));
-                                plainSelect.setLimit(limit);
-                            }
-
-                            plainSelect.setWhere(where);
-                        }
-                    });
-                }
-            });
-
-            return st.toString();
-        } catch (JSQLParserException e) {
-            Throwable t = e;
-
-            if (t.getCause() instanceof ParseException) {
-                t = t.getCause();
-            }
-
-            throw new IllegalArgumentException("Query parse error: " + t.getMessage(), t);
+    private static String restoreOriginalQuery(String msg) {
+        if (msg == null) {
+            return null;
         }
+        return msg.replace("json_store_data_view_restricted", "json_store_data");
+    }
+
+    private static String trimEnd(String value, char c) {
+        int len = value.length();
+        int i = 0;
+        while ((i < len) && (value.charAt(len - 1) == c || Character.isWhitespace(value.charAt(len - 1)))) {
+            len--;
+        }
+        return value.substring(0, len);
     }
 }

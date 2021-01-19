@@ -64,7 +64,6 @@
         <jsch.version>0.1.55</jsch.version>
         <json.schema.validator.version>1.0.45</json.schema.validator.version>
         <json.smart.version>2.3</json.smart.version>
-        <jsqlparser.version>3.1</jsqlparser.version>
         <jsr305.version>3.0.2</jsr305.version>
         <junit.version>4.13</junit.version>
         <kafka.client.version>2.4.0</kafka.client.version>
@@ -915,11 +914,6 @@
                 <groupId>com.squareup.okhttp3</groupId>
                 <artifactId>okhttp</artifactId>
                 <version>${okhttp3.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.github.jsqlparser</groupId>
-                <artifactId>jsqlparser</artifactId>
-                <version>${jsqlparser.version}</version>
             </dependency>
             <dependency>
                 <groupId>org.ini4j</groupId>
