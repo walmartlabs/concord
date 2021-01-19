@@ -27,8 +27,9 @@ import { ProjectEntry } from '../../../api/org/project';
 import { EditRepositoryEntry } from '../../../api/org/project/repository';
 import { testRepository } from '../../../api/service/console';
 import { actions, selectors, State } from '../../../state/data/projects';
-import { RepositoryForm, RepositoryFormValues, RequestErrorMessage } from '../../molecules';
-import { RepositorySourceType } from '../../molecules/RepositoryForm';
+import { RepositoryForm, RepositoryFormValues } from '../../molecules';
+import { RepositorySourceType } from '../../molecules';
+import { RequestErrorActivity } from '../index';
 
 interface ExternalProps {
     orgName: ConcordKey;
@@ -42,6 +43,7 @@ interface StateProps {
     submitting: boolean;
     error: RequestError;
     initial?: RepositoryFormValues;
+    secretName?: ConcordKey;
 }
 
 interface DispatchProps {
@@ -68,7 +70,7 @@ class EditRepositoryActivity extends React.PureComponent<Props> {
                     <Loader active={submitting} size="massive" content={'Saving'} />
                 </Dimmer>
 
-                {error && <RequestErrorMessage error={error} />}
+                {error && <RequestErrorActivity error={error} />}
                 <RepositoryForm
                     orgName={orgName}
                     projectName={projectName}
@@ -134,6 +136,7 @@ const toFormValues = (
         commitId: r.commitId,
         path: r.path,
         secretId: r.secretId,
+        secretName: r.secretName,
         enabled: !r.disabled
     };
 };
