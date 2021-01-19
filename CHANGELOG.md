@@ -10,6 +10,8 @@ save the branch name in `process_queue` (in addition to `commit_id`)
 
 ### Changed
 
+- concord-server: remove SQL parser, use restricted views for querying
+JSON stores ([#297](https://github.com/walmartlabs/concord/pull/297));
 - concord-console: the secret dropdown list on the repository page
 is replaced with a search field
 ([#299](https://github.com/walmartlabs/concord/pull/299)).
