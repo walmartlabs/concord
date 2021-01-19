@@ -12,6 +12,10 @@
     <artifactId>ansible-tasks</artifactId>
     <packaging>takari-jar</packaging>
 
+    <properties>
+        <kerby.version>2.0.1</kerby.version>
+    </properties>
+
     <dependencies>
         <dependency>
             <groupId>com.walmartlabs.concord</groupId>
@@ -84,6 +88,32 @@
             <groupId>com.google.errorprone</groupId>
             <artifactId>error_prone_annotations</artifactId>
             <scope>provided</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>org.apache.kerby</groupId>
+            <artifactId>kerb-client-api-all</artifactId>
+            <version>${kerby.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.kerby</groupId>
+            <artifactId>kerby-util</artifactId>
+            <version>${kerby.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.kerby</groupId>
+            <artifactId>kerb-core</artifactId>
+            <version>${kerby.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.kerby</groupId>
+            <artifactId>kerb-client</artifactId>
+            <version>${kerby.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.kerby</groupId>
+            <artifactId>kerb-util</artifactId>
+            <version>${kerby.version}</version>
         </dependency>
 
         <dependency>
