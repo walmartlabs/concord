@@ -77,7 +77,7 @@ const renderManualTrigger = ({
             args={trigger.arguments}
             title={`Start '${trigger.cfg.name}' from repository '${repoName}'`}
             trigger={(onClick: any) => (
-                <Dropdown.Item onClick={onClick} disabled={repoDisabled}>
+                <Dropdown.Item onClick={onClick} disabled={repoDisabled} key={trigger.id}>
                     <Icon name="play" color="green" />
                     <span className="text">{trigger.cfg.name}</span>
                 </Dropdown.Item>
@@ -151,7 +151,10 @@ const RepositoryActionDropdown = (props: ExternalProps) => {
                                 allowEntryPoint={true}
                                 allowProfile={true}
                                 trigger={(onClick: any) => (
-                                    <Dropdown.Item onClick={onClick} disabled={repoDisabled}>
+                                    <Dropdown.Item
+                                        onClick={onClick}
+                                        disabled={repoDisabled}
+                                        key={'run'}>
                                         <Icon name="play" color="blue" />
                                         <span className="text">Run</span>
                                     </Dropdown.Item>
