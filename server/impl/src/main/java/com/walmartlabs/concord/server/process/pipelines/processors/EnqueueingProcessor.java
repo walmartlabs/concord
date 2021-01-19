@@ -52,6 +52,8 @@ public class EnqueueingProcessor implements PayloadProcessor {
     public Payload process(Chain chain, Payload payload) {
         boolean enqueued = queueManager.enqueue(payload);
         if (!enqueued) {
+            // the process was rejected but it was not an error
+            // (e.g. "exclusive" processes can be rejected before reaching the ENQUEUED status)
             return payload;
         }
 

@@ -29,9 +29,9 @@ import org.immutables.value.Value;
 @Value.Immutable
 @Value.Style(jdkOnly = true)
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
-@JsonSerialize(as = ImmutableExclusiveModeConfiguration.class)
-@JsonDeserialize(as = ImmutableExclusiveModeConfiguration.class)
-public interface ExclusiveModeConfiguration {
+@JsonSerialize(as = ImmutableExclusiveMode.class)
+@JsonDeserialize(as = ImmutableExclusiveMode.class)
+public interface ExclusiveMode {
 
     @Value.Parameter
     @JsonProperty(value = "group", required = true)
@@ -44,12 +44,23 @@ public interface ExclusiveModeConfiguration {
     }
 
     enum Mode {
+        /**
+         * Cancel the current process if there's already a running process with the same {@link #group()} value.
+         */
         cancel,
+
+        /**
+         * Cancel all other processes (enqueued, running or suspended) with the same {@link #group()} value.
+         */
         cancelOld,
+
+        /**
+         * Wait in the queue if there's already a running process with the same {@link #group()} value.
+         */
         wait
     }
 
-    static ExclusiveModeConfiguration of(String group, Mode mode) {
-        return ImmutableExclusiveModeConfiguration.of(group, mode);
+    static ExclusiveMode of(String group, Mode mode) {
+        return ImmutableExclusiveMode.of(group, mode);
     }
 }

@@ -23,7 +23,7 @@ package com.walmartlabs.concord.runtime.v2.schema;
 import com.fasterxml.jackson.annotation.*;
 import com.kjetland.jackson.jsonSchema.annotations.JsonSchemaInject;
 import com.kjetland.jackson.jsonSchema.annotations.JsonSchemaString;
-import com.walmartlabs.concord.runtime.v2.model.ExclusiveModeConfiguration;
+import com.walmartlabs.concord.runtime.v2.model.ExclusiveMode;
 import com.walmartlabs.concord.runtime.v2.model.Trigger;
 
 import java.util.List;
@@ -162,6 +162,6 @@ public interface TriggerMixIn extends Trigger {
         Map<String, Object> arguments();
 
         @JsonProperty("exclusive")
-        ExclusiveModeConfiguration exclusive();
+        ExclusiveMode exclusive();
     }
 }

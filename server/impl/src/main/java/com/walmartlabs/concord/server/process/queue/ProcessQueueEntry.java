@@ -21,7 +21,7 @@ package com.walmartlabs.concord.server.process.queue;
  */
 
 import com.walmartlabs.concord.imports.Imports;
-import com.walmartlabs.concord.runtime.v2.model.ExclusiveModeConfiguration;
+import com.walmartlabs.concord.runtime.v2.model.ExclusiveMode;
 import com.walmartlabs.concord.server.sdk.ProcessKey;
 import org.immutables.value.Value;
 
@@ -47,7 +47,7 @@ public interface ProcessQueueEntry {
     UUID initiatorId();
 
     @Nullable
-    ExclusiveModeConfiguration exclusive();
+    ExclusiveMode exclusive();
 
     @Nullable
     UUID repoId();

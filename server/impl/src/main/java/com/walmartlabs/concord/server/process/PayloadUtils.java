@@ -22,7 +22,7 @@ package com.walmartlabs.concord.server.process;
 
 import com.walmartlabs.concord.common.DateTimeUtils;
 import com.walmartlabs.concord.repository.Snapshot;
-import com.walmartlabs.concord.runtime.v2.model.ExclusiveModeConfiguration;
+import com.walmartlabs.concord.runtime.v2.model.ExclusiveMode;
 import com.walmartlabs.concord.sdk.Constants;
 import com.walmartlabs.concord.sdk.MapUtils;
 
@@ -33,15 +33,15 @@ import java.util.*;
 
 public final class PayloadUtils {
 
-    public static ExclusiveModeConfiguration getExclusive(Payload p) {
+    public static ExclusiveMode getExclusive(Payload p) {
         Map<String, Object> cfg = p.getHeader(Payload.CONFIGURATION);
         Map<String, Object> exclusive = MapUtils.getMap(cfg, Constants.Request.EXCLUSIVE, Collections.emptyMap());
         if (exclusive.isEmpty()) {
             return null;
         }
         String group = MapUtils.getString(exclusive, "group");
-        ExclusiveModeConfiguration.Mode mode = MapUtils.getEnum(exclusive, "mode", ExclusiveModeConfiguration.Mode.class, ExclusiveModeConfiguration.Mode.cancel);
-        return ExclusiveModeConfiguration.of(group, mode);
+        ExclusiveMode.Mode mode = MapUtils.getEnum(exclusive, "mode", ExclusiveMode.Mode.class, ExclusiveMode.Mode.cancel);
+        return ExclusiveMode.of(group, mode);
     }
 
     @SuppressWarnings("unchecked")
