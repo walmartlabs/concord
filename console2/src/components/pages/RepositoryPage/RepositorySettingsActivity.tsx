@@ -28,7 +28,7 @@ import { EditRepositoryEntry } from '../../../api/org/project/repository';
 import { testRepository } from '../../../api/service/console';
 import { actions, selectors, State } from '../../../state/data/projects';
 import { RepositoryForm, RepositoryFormValues, RequestErrorMessage } from '../../molecules';
-import { RepositorySourceType } from '../../molecules/RepositoryForm';
+import { RepositorySourceType } from '../../molecules';
 
 interface ExternalProps {
     orgName: ConcordKey;
@@ -134,6 +134,7 @@ const toFormValues = (
         commitId: r.commitId,
         path: r.path,
         secretId: r.secretId,
+        secretName: r.secretName,
         enabled: !r.disabled
     };
 };
