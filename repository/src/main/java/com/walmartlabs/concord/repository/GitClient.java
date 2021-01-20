@@ -80,13 +80,10 @@ public class GitClient {
             configureRemote(req.destination(), updateUrl(req.url(), req.secret()));
 
             Ref ref = getHeadRef(req.destination(), req.branchOrTag(), req.secret());
-            if (ref == null && req.commitId() == null) {
-                throw new RepositoryException("Can't find head ref for '" + req.branchOrTag() + "'");
-            }
             configureFetch(req.destination(), getRefSpec(ref));
 
             // fetch
-            boolean effectiveShallow = req.shallow() && req.commitId() == null;
+            boolean effectiveShallow = req.shallow() && req.commitId() == null && ref != null;
             fetch(req.destination(), effectiveShallow, req.secret());
 
             checkout(req.destination(), req.commitId() != null ? req.commitId() : req.branchOrTag());
@@ -107,7 +104,7 @@ public class GitClient {
 
             if (req.withCommitInfo()) {
                 CommitInfo ci = getCommitInfo(req.destination());
-                result = result.message(ci.message())
+                result.message(ci.message())
                         .author(ci.author());
             }
 

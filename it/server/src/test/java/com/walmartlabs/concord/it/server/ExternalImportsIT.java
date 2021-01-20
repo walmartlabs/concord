@@ -485,6 +485,37 @@ public class ExternalImportsIT extends AbstractServerIT {
         processApi.kill(spr.getInstanceId());
     }
 
+    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    public void testGitImportWithCommitAsVersion() throws Exception {
+        String repoUrl = initRepo("externalImport");
+        Git repo = Git.open(new File(repoUrl));
+        String commitId = repo.log().setMaxCount(1).call().iterator().next().name();
+        // add new commitId:
+        Files.write(Paths.get(repoUrl).resolve("concord.yml"), "trash".getBytes());
+        repo.add().addFilepattern(".").call();
+        repo.commit().setMessage("up").call();
+
+        // prepare the payload
+        Map<String, String> replacements = new HashMap<>();
+        replacements.put("{{gitUrl}}", repoUrl);
+        replacements.put("{{version}}", commitId);
+        Path payloadDir = createPayload("externalImportMainWithVersion", replacements);
+        byte[] payload = archive(payloadDir.toUri());
+
+        // ---
+
+        StartProcessResponse spr = start(payload);
+
+        ProcessApi processApi = new ProcessApi(getApiClient());
+        ProcessEntry pir = waitForCompletion(processApi, spr.getInstanceId());
+
+        // ---
+
+        byte[] ab = getLog(pir.getLogFileName());
+
+        assertLog(".*Hello from Template, Concord!.*", ab);
+    }
+
     private static String initRepo(String resourceName) throws Exception {
         return initRepo(resourceName, null, null, null);
     }
