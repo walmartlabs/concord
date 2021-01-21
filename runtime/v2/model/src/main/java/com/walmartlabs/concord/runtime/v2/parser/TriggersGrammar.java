@@ -22,7 +22,7 @@ package com.walmartlabs.concord.runtime.v2.parser;
 
 import com.fasterxml.jackson.core.JsonToken;
 import com.google.common.collect.ImmutableMap;
-import com.walmartlabs.concord.runtime.v2.exception.OneOfMandatoryFieldNotFoundException;
+import com.walmartlabs.concord.runtime.v2.exception.OneOfMandatoryFieldsNotFoundException;
 import com.walmartlabs.concord.runtime.v2.exception.UnsupportedException;
 import com.walmartlabs.concord.runtime.v2.model.*;
 import io.takari.parc.Parser;
@@ -63,7 +63,7 @@ public final class TriggersGrammar {
 
     private static GithubTriggerExclusiveMode validateGithubExclusiveMode(GithubTriggerExclusiveMode e) {
         if (e.groupBy() == null && e.group() == null) {
-            throw new OneOfMandatoryFieldNotFoundException("group", "groupBy");
+            throw new OneOfMandatoryFieldsNotFoundException("group", "groupBy");
         }
         return e;
     }

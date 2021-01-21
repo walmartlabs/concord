@@ -21,22 +21,19 @@ package com.walmartlabs.concord.runtime.v2.exception;
  */
 
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 
-public class OneOfMandatoryFieldNotFoundException extends YamlProcessingException {
+public class OneOfMandatoryFieldsNotFoundException extends YamlProcessingException {
+
+    private static final long serialVersionUID = 1L;
 
     private final List<String> fields;
 
-    public OneOfMandatoryFieldNotFoundException(String field) {
-        this(Collections.singletonList(field));
-    }
-
-    public OneOfMandatoryFieldNotFoundException(String ... fields) {
+    public OneOfMandatoryFieldsNotFoundException(String... fields) {
         this(Arrays.asList(fields));
     }
 
-    public OneOfMandatoryFieldNotFoundException(List<String> fields) {
+    public OneOfMandatoryFieldsNotFoundException(List<String> fields) {
         super(null);
         this.fields = fields;
     }
