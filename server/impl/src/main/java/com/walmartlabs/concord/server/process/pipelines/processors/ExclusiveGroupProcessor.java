@@ -23,12 +23,12 @@ package com.walmartlabs.concord.server.process.pipelines.processors;
 import com.walmartlabs.concord.db.AbstractDao;
 import com.walmartlabs.concord.db.MainDB;
 import com.walmartlabs.concord.runtime.v2.model.ExclusiveModeConfiguration;
+import com.walmartlabs.concord.server.Locks;
 import com.walmartlabs.concord.server.agent.AgentManager;
 import com.walmartlabs.concord.server.jooq.tables.ProcessQueue;
 import com.walmartlabs.concord.server.process.Payload;
 import com.walmartlabs.concord.server.process.PayloadUtils;
 import com.walmartlabs.concord.server.process.logs.ProcessLogManager;
-import com.walmartlabs.concord.server.process.queue.ExclusiveGroupLock;
 import com.walmartlabs.concord.server.process.queue.ProcessQueueManager;
 import com.walmartlabs.concord.server.sdk.ProcessKey;
 import com.walmartlabs.concord.server.sdk.ProcessStatus;
@@ -51,7 +51,7 @@ import static org.jooq.impl.DSL.*;
 /**
  * If the process has an "exclusive group and mode cancel/cancelOld" assigned to it, this processor
  * determines whether the process can continue to run or should be cancelled.
- * The processor uses a global (DB) lock {@link ExclusiveGroupLock}.
+ * The processor uses a global (DB) lock {@link Locks}.
  */
 @Named
 public class ExclusiveGroupProcessor implements PayloadProcessor {
@@ -105,14 +105,16 @@ public class ExclusiveGroupProcessor implements PayloadProcessor {
     @Named
     static class CancelModeProcessor implements ModeProcessor {
 
+        private static final long LOCK_KEY = 1562319227723L;
+
         private final CancelModeDao dao;
-        private final ExclusiveGroupLock exclusiveGroupLock;
+        private final Locks exclusiveGroupLock;
         private final ProcessLogManager logManager;
         private final ProcessQueueManager queueManager;
 
         @Inject
         public CancelModeProcessor(CancelModeDao dao,
-                                   ExclusiveGroupLock exclusiveGroupLock,
+                                   Locks exclusiveGroupLock,
                                    ProcessLogManager logManager,
                                    ProcessQueueManager queueManager) {
             this.dao = dao;
@@ -128,7 +130,7 @@ public class ExclusiveGroupProcessor implements PayloadProcessor {
             UUID projectId = payload.getHeader(Payload.PROJECT_ID);
 
             return dao.txResult(tx -> {
-                exclusiveGroupLock.lock(tx);
+                exclusiveGroupLock.lock(tx, LOCK_KEY);
 
                 if (dao.exists(tx, processKey.getInstanceId(), parentInstanceId, projectId, exclusive.group())) {
                     logManager.warn(processKey, "Process(es) with exclusive group '" + exclusive.group() + "' is already in the queue. " +
@@ -153,19 +155,21 @@ public class ExclusiveGroupProcessor implements PayloadProcessor {
     @Named
     static class CancelOldModeProcessor implements ModeProcessor {
 
+        private static final long LOCK_KEY = 1562319227723L;
+
         private static final String CANCELLED_MSG = "Process '{}' with exclusive group '{}' is in the queue. Current process has been cancelled";
 
         private final CancelOldModeDao dao;
         private final AgentManager agentManager;
         private final ProcessLogManager logManager;
-        private final ExclusiveGroupLock exclusiveGroupLock;
+        private final Locks exclusiveGroupLock;
         private final ProcessQueueManager queueManager;
 
         @Inject
         public CancelOldModeProcessor(CancelOldModeDao dao,
                                       AgentManager agentManager,
                                       ProcessLogManager logManager,
-                                      ExclusiveGroupLock exclusiveGroupLock,
+                                      Locks exclusiveGroupLock,
                                       ProcessQueueManager queueManager) {
             this.dao = dao;
             this.agentManager = agentManager;
@@ -181,7 +185,7 @@ public class ExclusiveGroupProcessor implements PayloadProcessor {
             UUID projectId = payload.getHeader(Payload.PROJECT_ID);
 
             Result result = dao.txResult(tx -> {
-                exclusiveGroupLock.lock(tx);
+                exclusiveGroupLock.lock(tx, LOCK_KEY);
 
                 List<ProcessKey> processes = dao.listOld(tx, processKey, parentInstanceId, projectId, exclusive.group());
                 agentManager.killProcess(processes);
