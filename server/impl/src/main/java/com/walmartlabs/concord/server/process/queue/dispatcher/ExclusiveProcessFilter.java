@@ -20,19 +20,23 @@ package com.walmartlabs.concord.server.process.queue.dispatcher;
  * =====
  */
 
-import com.walmartlabs.concord.runtime.v2.model.ExclusiveModeConfiguration;
+import com.walmartlabs.concord.runtime.v2.model.ExclusiveMode;
 import com.walmartlabs.concord.server.process.queue.ProcessQueueEntry;
 import com.walmartlabs.concord.server.process.queue.ProcessQueueManager;
 import org.jooq.DSLContext;
 
 import javax.inject.Inject;
 import javax.inject.Named;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Objects;
+import java.util.UUID;
 
 /**
  * Handles "exclusive" processes.
  * Exclusive processes can't be executed when there is another process
- * running in the same project.
+ * running in the same project and group.
  */
 @Named
 public class ExclusiveProcessFilter extends WaitProcessFinishFilter {
@@ -52,14 +56,14 @@ public class ExclusiveProcessFilter extends WaitProcessFinishFilter {
 
     @Override
     protected List<UUID> findProcess(DSLContext tx, ProcessQueueEntry item, List<ProcessQueueEntry> startingProcesses) {
-        if (item.projectId() == null || item.exclusive() == null) {
+        UUID projectId = item.projectId();
+        ExclusiveMode exclusive = item.exclusive();
+
+        if (projectId == null || exclusive == null) {
             return Collections.emptyList();
         }
 
-        UUID projectId = Objects.requireNonNull(item.projectId());
-        ExclusiveModeConfiguration exclusive = Objects.requireNonNull(item.exclusive());
-
-        boolean isWaitMode = exclusive.mode() == ExclusiveModeConfiguration.Mode.wait;
+        boolean isWaitMode = exclusive.mode() == ExclusiveMode.Mode.wait;
         if (!isWaitMode) {
             return Collections.emptyList();
         }
@@ -73,7 +77,7 @@ public class ExclusiveProcessFilter extends WaitProcessFinishFilter {
         return result;
     }
 
-    private static boolean groupEquals(ExclusiveModeConfiguration a, ExclusiveModeConfiguration b) {
+    private static boolean groupEquals(ExclusiveMode a, ExclusiveMode b) {
         if (a == null || b == null) {
             return false;
         }

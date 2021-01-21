@@ -18,16 +18,17 @@
  * =====
  */
 
-import { InjectedFormikProps, withFormik } from 'formik';
+import { Field, getIn, InjectedFormikProps, withFormik } from 'formik';
 import * as React from 'react';
-import { Button, Divider, Form, Popup, Segment } from 'semantic-ui-react';
+import { Button, Divider, Form, Label, Popup, Segment } from 'semantic-ui-react';
 
 import { ConcordId, ConcordKey } from '../../../api/common';
 import { isRepositoryExists } from '../../../api/service/console';
 import { notEmpty } from '../../../utils';
 import { repository as validation, repositoryAlreadyExistsError } from '../../../validation';
 import { FormikCheckbox, FormikDropdown, FormikInput } from '../../atoms';
-import { SecretDropdown } from '../../organisms';
+import { SecretSearch } from '../../organisms';
+import { FieldProps } from 'formik/dist/Field';
 
 export enum RepositorySourceType {
     BRANCH_OR_TAG = 'branchOrTag',
@@ -44,6 +45,7 @@ interface FormValues {
     path?: string;
     withSecret?: boolean;
     secretId?: string;
+    secretName?: string;
     enabled: boolean;
 }
 
@@ -167,14 +169,42 @@ class RepositoryForm extends React.Component<InjectedFormikProps<Props, FormValu
                         </Popup>
 
                         {values.withSecret && (
-                            <SecretDropdown
-                                orgName={orgName}
-                                name="secretId"
-                                label="Credentials"
-                                required={false}
-                                fluid={true}
-                                disabled={!values.withSecret}
-                            />
+                            <>
+                                <Field name={'secretId'}>
+                                    {({ field, form }: FieldProps) => {
+                                        const fieldName = 'secretId';
+                                        const touched = getIn(form.touched, fieldName);
+                                        const error = getIn(form.errors, fieldName);
+                                        const invalid = !!(touched && error);
+
+                                        return (
+                                            <Form.Field error={invalid} required={true}>
+                                                <label>Credentials</label>
+                                                <SecretSearch
+                                                    orgName={orgName}
+                                                    placeholder={'Search for a secret...'}
+                                                    fluid={true}
+                                                    defaultSecretName={form.values.secretName}
+                                                    invalid={invalid}
+                                                    onBlur={(value) => {
+                                                        form.setFieldTouched(fieldName, true);
+                                                        form.setFieldValue(fieldName, value?.id);
+                                                    }}
+                                                    onSelect={(value) => {
+                                                        form.setFieldValue(fieldName, value.id);
+                                                    }}
+                                                />
+
+                                                {invalid && error && (
+                                                    <Label basic={true} pointing={true} color="red">
+                                                        {error}
+                                                    </Label>
+                                                )}
+                                            </Form.Field>
+                                        );
+                                    }}
+                                </Field>
+                            </>
                         )}
 
                         <FormikInput name="url" label="URL" placeholder="Git URL" required={true} />
@@ -325,7 +355,7 @@ const validator = async (values: FormValues, props: Props) => {
     } else {
         e = validation.secretId(values.secretId);
         if (e) {
-            return Promise.resolve({ secret: e });
+            return Promise.resolve({ secretId: e });
         }
     }
 

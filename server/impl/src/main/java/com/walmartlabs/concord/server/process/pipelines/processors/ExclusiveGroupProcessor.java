@@ -22,7 +22,7 @@ package com.walmartlabs.concord.server.process.pipelines.processors;
 
 import com.walmartlabs.concord.db.AbstractDao;
 import com.walmartlabs.concord.db.MainDB;
-import com.walmartlabs.concord.runtime.v2.model.ExclusiveModeConfiguration;
+import com.walmartlabs.concord.runtime.v2.model.ExclusiveMode;
 import com.walmartlabs.concord.server.Locks;
 import com.walmartlabs.concord.server.agent.AgentManager;
 import com.walmartlabs.concord.server.jooq.tables.ProcessQueue;
@@ -57,7 +57,7 @@ import static org.jooq.impl.DSL.*;
 public class ExclusiveGroupProcessor implements PayloadProcessor {
 
     private final ProcessLogManager logManager;
-    private final Map<ExclusiveModeConfiguration.Mode, ModeProcessor> processors;
+    private final Map<ExclusiveMode.Mode, ModeProcessor> processors;
 
     @Inject
     public ExclusiveGroupProcessor(ProcessLogManager logManager,
@@ -70,7 +70,7 @@ public class ExclusiveGroupProcessor implements PayloadProcessor {
     @Override
     @WithTimer
     public Payload process(Chain chain, Payload payload) {
-        ExclusiveModeConfiguration exclusive = PayloadUtils.getExclusive(payload);
+        ExclusiveMode exclusive = PayloadUtils.getExclusive(payload);
         if (exclusive == null) {
             return chain.process(payload);
         }
@@ -97,9 +97,9 @@ public class ExclusiveGroupProcessor implements PayloadProcessor {
 
     interface ModeProcessor {
 
-        boolean process(Payload payload, ExclusiveModeConfiguration exclusive);
+        boolean process(Payload payload, ExclusiveMode exclusive);
 
-        ExclusiveModeConfiguration.Mode mode();
+        ExclusiveMode.Mode mode();
     }
 
     @Named
@@ -124,7 +124,7 @@ public class ExclusiveGroupProcessor implements PayloadProcessor {
         }
 
         @Override
-        public boolean process(Payload payload, ExclusiveModeConfiguration exclusive) {
+        public boolean process(Payload payload, ExclusiveMode exclusive) {
             ProcessKey processKey = payload.getProcessKey();
             UUID parentInstanceId = payload.getHeader(Payload.PARENT_INSTANCE_ID);
             UUID projectId = payload.getHeader(Payload.PROJECT_ID);
@@ -147,8 +147,8 @@ public class ExclusiveGroupProcessor implements PayloadProcessor {
         }
 
         @Override
-        public ExclusiveModeConfiguration.Mode mode() {
-            return ExclusiveModeConfiguration.Mode.cancel;
+        public ExclusiveMode.Mode mode() {
+            return ExclusiveMode.Mode.cancel;
         }
     }
 
@@ -156,8 +156,7 @@ public class ExclusiveGroupProcessor implements PayloadProcessor {
     static class CancelOldModeProcessor implements ModeProcessor {
 
         private static final long LOCK_KEY = 1562319227723L;
-
-        private static final String CANCELLED_MSG = "Process '{}' with exclusive group '{}' is in the queue. Current process has been cancelled";
+        private static final String CANCELLED_MSG = "Process '{}' with exclusive group '{}' is already in the queue. Current process has been cancelled";
 
         private final CancelOldModeDao dao;
         private final AgentManager agentManager;
@@ -179,7 +178,7 @@ public class ExclusiveGroupProcessor implements PayloadProcessor {
         }
 
         @Override
-        public boolean process(Payload payload, ExclusiveModeConfiguration exclusive) {
+        public boolean process(Payload payload, ExclusiveMode exclusive) {
             ProcessKey processKey = payload.getProcessKey();
             UUID parentInstanceId = payload.getHeader(Payload.PARENT_INSTANCE_ID);
             UUID projectId = payload.getHeader(Payload.PROJECT_ID);
@@ -210,8 +209,8 @@ public class ExclusiveGroupProcessor implements PayloadProcessor {
         }
 
         @Override
-        public ExclusiveModeConfiguration.Mode mode() {
-            return ExclusiveModeConfiguration.Mode.cancelOld;
+        public ExclusiveMode.Mode mode() {
+            return ExclusiveMode.Mode.cancelOld;
         }
 
         private static class Result {
@@ -276,7 +275,7 @@ public class ExclusiveGroupProcessor implements PayloadProcessor {
     @Named
     static class CancelOldModeDao extends AbstractDao  {
 
-        private static final List<ProcessStatus> RUNNING_STATUSES = Arrays.asList(
+        private static final List<ProcessStatus> CANCELLABLE_STATUSES = Arrays.asList(
                 ProcessStatus.NEW,
                 ProcessStatus.PREPARING,
                 ProcessStatus.ENQUEUED,
@@ -302,7 +301,7 @@ public class ExclusiveGroupProcessor implements PayloadProcessor {
                             .and(PROCESS_QUEUE.PROJECT_ID.eq(projectId)
                                     .and(PROCESS_QUEUE.INSTANCE_ID.notEqual(currentProcessKey.getInstanceId())
                                             .and(PROCESS_QUEUE.CREATED_AT.lessOrEqual(currentProcessKey.getCreatedAt())
-                                                    .and(PROCESS_QUEUE.CURRENT_STATUS.in(RUNNING_STATUSES))))));
+                                                    .and(PROCESS_QUEUE.CURRENT_STATUS.in(CANCELLABLE_STATUSES))))));
 
             // parent's
             if (parentInstanceId != null) {

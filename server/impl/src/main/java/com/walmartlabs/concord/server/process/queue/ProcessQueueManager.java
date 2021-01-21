@@ -21,7 +21,7 @@ package com.walmartlabs.concord.server.process.queue;
  */
 
 import com.walmartlabs.concord.imports.Imports;
-import com.walmartlabs.concord.runtime.v2.model.ExclusiveModeConfiguration;
+import com.walmartlabs.concord.runtime.v2.model.ExclusiveMode;
 import com.walmartlabs.concord.sdk.Constants;
 import com.walmartlabs.concord.sdk.EventType;
 import com.walmartlabs.concord.server.ConcordObjectMapper;
@@ -87,7 +87,7 @@ public class ProcessQueueManager {
     }
 
     /**
-     * Updates the existing record, moving the process into the ENQUEUED status.
+     * Updates an existing record, moving the process into the ENQUEUED status.
      */
     public boolean enqueue(Payload payload) {
         ProcessKey processKey = payload.getProcessKey();
@@ -98,10 +98,13 @@ public class ProcessQueueManager {
         }
 
         if (s == ProcessStatus.CANCELLED) {
+            // the process was cancelled while going through EnqueueProcessPipeline
+            // (e.g. it was a process in an "exclusive" group)
             return false;
         }
 
         if (s != ProcessStatus.PREPARING && s != ProcessStatus.RESUMING && s != ProcessStatus.SUSPENDED) {
+            // something's wrong (e.g. someone tried to change the process' status directly in the DB and was unlucky)
             throw new ProcessException(processKey, "Invalid process status: " + s);
         }
 
@@ -112,7 +115,7 @@ public class ProcessQueueManager {
         Set<String> handlers = payload.getHeader(Payload.PROCESS_HANDLERS);
         Map<String, Object> meta = getMeta(getCfg(payload));
         Imports imports = payload.getHeader(Payload.IMPORTS);
-        ExclusiveModeConfiguration exclusive = PayloadUtils.getExclusive(payload);
+        ExclusiveMode exclusive = PayloadUtils.getExclusive(payload);
         String runtime = payload.getHeader(Payload.RUNTIME);
         List<String> dependencies = payload.getHeader(Payload.DEPENDENCIES);
 
@@ -217,7 +220,7 @@ public class ProcessQueueManager {
         eventManager.event(tx, Collections.singletonList(e));
     }
 
-    public void updateExclusive(DSLContext tx, ProcessKey processKey, ExclusiveModeConfiguration exclusive) {
+    public void updateExclusive(DSLContext tx, ProcessKey processKey, ExclusiveMode exclusive) {
         queueDao.updateExclusive(tx, processKey, exclusive);
     }
 

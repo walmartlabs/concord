@@ -31,8 +31,6 @@ import com.walmartlabs.concord.server.policy.EntityAction;
 import com.walmartlabs.concord.server.policy.EntityType;
 import com.walmartlabs.concord.server.policy.PolicyManager;
 import com.walmartlabs.concord.server.policy.PolicyUtils;
-import net.sf.jsqlparser.JSQLParserException;
-import net.sf.jsqlparser.parser.CCJSqlParserUtil;
 import org.sonatype.siesta.ValidationErrorsException;
 
 import javax.inject.Inject;
@@ -145,13 +143,6 @@ public class JsonStoreQueryManager {
     private static void validateQuery(String text) {
         if (text == null || text.trim().isEmpty()) {
             throw new ValidationErrorsException("Query should not be empty");
-        }
-
-        try {
-            CCJSqlParserUtil.parse(text);
-        } catch (JSQLParserException e) {
-            String msg = e.getCause().getMessage();
-            throw new ValidationErrorsException("Query parse error: " + msg);
         }
     }
 

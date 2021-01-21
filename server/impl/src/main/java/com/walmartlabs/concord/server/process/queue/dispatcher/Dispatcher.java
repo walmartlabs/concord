@@ -27,7 +27,7 @@ import com.walmartlabs.concord.common.Matcher;
 import com.walmartlabs.concord.db.AbstractDao;
 import com.walmartlabs.concord.db.MainDB;
 import com.walmartlabs.concord.imports.Imports;
-import com.walmartlabs.concord.runtime.v2.model.ExclusiveModeConfiguration;
+import com.walmartlabs.concord.runtime.v2.model.ExclusiveMode;
 import com.walmartlabs.concord.server.ConcordObjectMapper;
 import com.walmartlabs.concord.server.Locks;
 import com.walmartlabs.concord.server.PeriodicTask;
@@ -359,7 +359,7 @@ public class Dispatcher extends PeriodicTask {
                             .repoId(r.value10())
                             .imports(objectMapper.fromJSONB(r.value11(), Imports.class))
                             .requirements(objectMapper.fromJSONB(r.value12()))
-                            .exclusive(objectMapper.fromJSONB(r.value13(), ExclusiveModeConfiguration.class))
+                            .exclusive(objectMapper.fromJSONB(r.value13(), ExclusiveMode.class))
                             .build());
         }
 
