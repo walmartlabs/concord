@@ -29,7 +29,7 @@ import java.util.Map;
 
 import static com.walmartlabs.concord.it.common.ITUtils.archive;
 import static com.walmartlabs.concord.it.common.ServerClient.waitForStatus;
-import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.*;
 
 public class ExclusiveProcessIT extends AbstractServerIT {
 
@@ -60,9 +60,13 @@ public class ExclusiveProcessIT extends AbstractServerIT {
         StartProcessResponse spr2 = start(input);
 
         ProcessEntry p1 = waitForStatus(processApi, spr1.getInstanceId(), StatusEnum.CANCELLED);
-        assertEquals(StatusEnum.CANCELLED, p1.getStatus());
-
         ProcessEntry p2 = waitForStatus(processApi, spr2.getInstanceId(), StatusEnum.FINISHED);
+
+        System.out.println("p1: createdAt: " + p1.getCreatedAt() + ", status: " + p1.getStatus());
+        System.out.println("p2: createdAt: " + p2.getCreatedAt() + ", status: " + p2.getStatus());
+
+        assertTrue(p1.getCreatedAt().isBefore(p2.getCreatedAt()));
+        assertEquals(StatusEnum.CANCELLED, p1.getStatus());
         assertEquals(StatusEnum.FINISHED, p2.getStatus());
     }
 }
