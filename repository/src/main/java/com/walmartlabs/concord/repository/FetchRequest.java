@@ -82,10 +82,16 @@ public interface FetchRequest {
 
     class Version {
 
+        /**
+         * Any usable "version" value - branch name, tag or a commit ID.
+         */
         public static Version from(String value) {
             return new Version(value, value);
         }
 
+        /**
+         * Commit ID + branch or a tag.
+         */
         public static Version commitWithBranch(String commitId, String branchOrTag) {
             if (commitId == null) {
                 return from(branchOrTag);
@@ -97,7 +103,7 @@ public interface FetchRequest {
 
         private final String ref;
 
-        public Version(String value, String ref) {
+        private Version(String value, String ref) {
             this.value = value;
             this.ref = ref;
         }
