@@ -20,15 +20,16 @@ package com.walmartlabs.concord.plugins.ansible;
  * =====
  */
 
+import org.apache.kerby.KOptions;
+import org.apache.kerby.kerberos.kerb.KrbException;
+import org.apache.kerby.kerberos.kerb.ccache.CredentialCache;
+import org.apache.kerby.kerberos.kerb.client.ClientUtil;
+import org.apache.kerby.kerberos.kerb.client.KrbClient;
+import org.apache.kerby.kerberos.kerb.client.KrbKdcOption;
+import org.apache.kerby.kerberos.kerb.client.KrbOption;
+import org.apache.kerby.kerberos.kerb.type.ticket.TgtTicket;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import sun.security.krb5.KrbAsReqBuilder;
-import sun.security.krb5.KrbException;
-import sun.security.krb5.PrincipalName;
-import sun.security.krb5.RealmException;
-import sun.security.krb5.internal.HostAddresses;
-import sun.security.krb5.internal.KDCOptions;
-import sun.security.krb5.internal.ccache.CredentialsCache;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -49,17 +50,15 @@ public class KerberosAuth implements AnsibleAuth {
     private static final long RENEW = TimeUnit.MINUTES.toMillis(1);
 
     private final String username;
-    private final PrincipalName principal;
-    private final char[] password;
+    private final String password;
     private final Path tgtCacheFile;
     private final Path tgtTmpCacheFile;
 
     private Thread renewThread;
 
-    public KerberosAuth(String username, String password, Path tmpDir, boolean debug) throws RealmException {
+    public KerberosAuth(String username, String password, Path tmpDir, boolean debug) {
         this.username = username;
-        this.principal = new PrincipalName(username);
-        this.password = password.toCharArray();
+        this.password = password;
         this.tgtCacheFile = tmpDir.resolve("tgt-ticket");
         this.tgtTmpCacheFile = tmpDir.resolve("tmp-tgt-ticket");
         if (debug) {
@@ -119,35 +118,30 @@ public class KerberosAuth implements AnsibleAuth {
         }
     }
 
-    private long storeTgt(Path dest) throws KrbException, IOException {
+    private long storeTgt(Path dest) throws IOException, KrbException {
         Files.deleteIfExists(dest);
 
-        KDCOptions opt = new KDCOptions();
-        opt.set(KDCOptions.FORWARDABLE, false);
-        opt.set(KDCOptions.PROXIABLE, false);
+        KOptions requestOptions = new KOptions();
+        requestOptions.add(KrbOption.CLIENT_PRINCIPAL, username);
+        requestOptions.add(KrbOption.USE_PASSWD, true);
+        requestOptions.add(KrbOption.USER_PASSWD, password);
+        requestOptions.add(KrbOption.CONN_TIMEOUT, 30000);
+        requestOptions.add(KrbKdcOption.FORWARDABLE, false);
+        requestOptions.add(KrbKdcOption.PROXIABLE, false);
 
-        KrbAsReqBuilder builder = new KrbAsReqBuilder(principal, password);
-        builder.setOptions(opt);
+        KrbClient krbClient = new KrbClient(ClientUtil.getDefaultConfig());
+        krbClient.init();
 
-        String realm = principal.getRealmString();
+        TgtTicket ticket = krbClient.requestTgt(requestOptions);
 
-        PrincipalName sname = PrincipalName.tgsService(realm, realm);
-        builder.setTarget(sname);
-        builder.setAddresses(HostAddresses.getLocalAddresses());
-
-        builder.action();
-
-        sun.security.krb5.internal.ccache.Credentials credentials = builder.getCCreds();
-        builder.destroy();
-
-        CredentialsCache cache = CredentialsCache.create(principal, dest.toString());
-        if (cache == null) {
-            throw new IOException("Unable to create the cache file " + dest);
+        CredentialCache cache = new CredentialCache(ticket);
+        try {
+            cache.store(dest.toFile());
+        } catch (IOException e) {
+            throw new KrbException("Failed to store tgt", e);
         }
-        cache.update(credentials);
-        cache.save();
 
-        return credentials.getEndTime().getTime();
+        return ticket.getEncKdcRepPart().getEndTime().getTime();
     }
 
     private class TgtRenew implements Runnable {
