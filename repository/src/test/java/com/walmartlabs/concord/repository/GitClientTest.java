@@ -136,8 +136,7 @@ public class GitClientTest {
     private String fetch(String repoUri, String branch, String commitId, Secret secret, Path dest) {
         return client.fetch(FetchRequest.builder()
                 .url(repoUri)
-                .branchOrTag(branch)
-                .commitId(commitId)
+                .version(FetchRequest.Version.commitWithBranch(commitId, branch))
                 .secret(secret)
                 .destination(dest)
                 .shallow(true)

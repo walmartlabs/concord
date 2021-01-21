@@ -62,10 +62,6 @@ public class GitClient {
     }
 
     public FetchResult fetch(FetchRequest req) {
-        if (req.commitId() == null && req.branchOrTag() == null) {
-            throw new IllegalArgumentException("Specify branch, tag or commit Id.");
-        }
-
         assertSecret(req.url(), req.secret());
 
         try {
@@ -79,15 +75,15 @@ public class GitClient {
             configure(req.destination());
             configureRemote(req.destination(), updateUrl(req.url(), req.secret()));
 
-            Ref ref = getHeadRef(req.destination(), req.branchOrTag(), req.secret());
+            Ref ref = getHeadRef(req.destination(), req.version().ref(), req.secret());
             configureFetch(req.destination(), getRefSpec(ref));
 
             // fetch
-            boolean effectiveShallow = req.shallow() && req.commitId() == null && ref != null;
+            boolean effectiveShallow = req.shallow() && ref != null;
             fetch(req.destination(), effectiveShallow, req.secret());
 
-            checkout(req.destination(), req.commitId() != null ? req.commitId() : req.branchOrTag());
-            if (ref != null && req.commitId() == null) {
+            checkout(req.destination(), req.version().value());
+            if (ref != null) {
                 reset(req.destination(), ref.tag() ? "origin/tags/" + ref.name() : "origin/" + ref.name());
             }
 
@@ -213,11 +209,11 @@ public class GitClient {
         return ObjectId.fromString(line).name();
     }
 
-    private List<Ref> getRefs(Path workDir, String branchOrTag, Secret secret) {
+    private List<Ref> getRefs(Path workDir, String version, Secret secret) {
         String result = execWithCredentials(Command.builder()
                 .workDir(workDir)
                 .timeout(cfg.defaultOperationTimeout())
-                .addArgs("ls-remote", "--symref", "origin", branchOrTag)
+                .addArgs("ls-remote", "--symref", "origin", version)
                 .build(), secret);
 
         List<Ref> refs = new ArrayList<>();
@@ -237,7 +233,7 @@ public class GitClient {
                 refs.add(Ref.builder()
                         .commitId(commitRef[0].trim())
                         .ref(commitRef[1].trim())
-                        .name(branchOrTag)
+                        .name(version)
                         .build());
             }
         } catch (IOException e) {
@@ -247,14 +243,14 @@ public class GitClient {
         return refs;
     }
 
-    private Ref getHeadRef(Path workDir, String branchOrTag, Secret secret) {
-        if (branchOrTag == null) {
+    private Ref getHeadRef(Path workDir, String version, Secret secret) {
+        if (version == null) {
             return null;
         }
 
-        String branchHeadRef = "refs/heads/" + branchOrTag;
-        String tagRef = "refs/tags/" + branchOrTag;
-        return getRefs(workDir, branchOrTag, secret).stream()
+        String branchHeadRef = "refs/heads/" + version;
+        String tagRef = "refs/tags/" + version;
+        return getRefs(workDir, version, secret).stream()
                 .filter(r -> r.ref().equalsIgnoreCase(branchHeadRef) || r.ref().equalsIgnoreCase(tagRef))
                 .findFirst()
                 .orElse(null);

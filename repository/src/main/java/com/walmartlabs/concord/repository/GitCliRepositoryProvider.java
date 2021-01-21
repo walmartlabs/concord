@@ -53,8 +53,8 @@ public class GitCliRepositoryProvider implements RepositoryProvider {
         // try twice
         for (int attemptNo = 0; attemptNo < 2; attemptNo++) {
             if (attemptNo > 0) {
-                log.warn("fetch ['{}', '{}', '{}', '{}'] -> error: {}, retrying...",
-                        request.url(), request.branchOrTag(), request.commitId(), request.destination(), lastException.getMessage());
+                log.warn("fetch ['{}', '{}', '{}'] -> error: {}, retrying...",
+                        request.url(), request.version(), request.destination(), lastException.getMessage());
             }
 
             try {
@@ -64,8 +64,8 @@ public class GitCliRepositoryProvider implements RepositoryProvider {
                 try {
                     IOUtils.deleteRecursively(request.destination());
                 } catch (IOException ee) {
-                    log.warn("fetch ['{}', '{}', '{}', '{}'] -> cleanup error: {}",
-                            request.url(), request.branchOrTag(), request.commitId(), request.destination(), e.getMessage());
+                    log.warn("fetch ['{}', '{}', '{}'] -> cleanup error: {}",
+                            request.url(), request.version(), request.destination(), e.getMessage());
                 }
             }
         }
