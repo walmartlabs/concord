@@ -11,4 +11,17 @@
             </column>
         </addColumn>
     </changeSet>
+
+    <changeSet id="1780100" author="ybrigo@gmail.com">
+        <createView viewName="json_store_data_view_restricted">
+            select *
+            from json_store_data
+            where
+                json_store_id = current_setting('jsonStoreQueryExec.json_store_id')::uuid;
+        </createView>
+
+        <createView viewName="INVENTORY_DATA" replaceIfExists="true">
+            select JSON_STORE_ID as INVENTORY_ID, ITEM_PATH, ITEM_DATA from JSON_STORE_DATA_VIEW_RESTRICTED
+        </createView>
+    </changeSet>
 </databaseChangeLog>
