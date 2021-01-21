@@ -86,8 +86,11 @@ public interface FetchRequest {
             return new Version(value, value);
         }
 
-        public static Version commitWithBranch(String commit, String branchOrTag) {
-            return new Version(commit, branchOrTag);
+        public static Version commitWithBranch(String commitId, String branchOrTag) {
+            if (commitId == null) {
+                return from(branchOrTag);
+            }
+            return new Version(commitId, branchOrTag);
         }
 
         private final String value;
