@@ -26,45 +26,35 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import org.immutables.value.Value;
 
+import javax.annotation.Nullable;
 import java.io.Serializable;
 
 @Value.Immutable
 @Value.Style(jdkOnly = true)
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
-@JsonSerialize(as = ImmutableExclusiveMode.class)
-@JsonDeserialize(as = ImmutableExclusiveMode.class)
-public interface ExclusiveMode extends Serializable {
+@JsonSerialize(as = ImmutableGithubTriggerExclusiveMode.class)
+@JsonDeserialize(as = ImmutableGithubTriggerExclusiveMode.class)
+public interface GithubTriggerExclusiveMode extends Serializable {
 
     long serialVersionUID = 1L;
 
+    @Nullable
     @Value.Parameter
-    @JsonProperty(value = "group", required = true)
+    @JsonProperty(value = "group")
     String group();
+
+    @Nullable
+    @Value.Parameter
+    @JsonProperty(value = "groupBy")
+    GroupBy groupBy();
+
+    enum GroupBy {
+        branch
+    }
 
     @Value.Parameter
     @Value.Default
-    default Mode mode() {
-        return Mode.cancel;
-    }
-
-    enum Mode {
-        /**
-         * Cancel the current process if there's already a running process with the same {@link #group()} value.
-         */
-        cancel,
-
-        /**
-         * Cancel all other processes (enqueued, running or suspended) with the same {@link #group()} value.
-         */
-        cancelOld,
-
-        /**
-         * Wait in the queue if there's already a running process with the same {@link #group()} value.
-         */
-        wait
-    }
-
-    static ExclusiveMode of(String group, Mode mode) {
-        return ImmutableExclusiveMode.of(group, mode);
+    default ExclusiveModeConfiguration.Mode mode() {
+        return ExclusiveModeConfiguration.Mode.wait;
     }
 }

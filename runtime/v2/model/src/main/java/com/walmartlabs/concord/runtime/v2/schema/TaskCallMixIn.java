@@ -21,11 +21,13 @@ package com.walmartlabs.concord.runtime.v2.schema;
  */
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.kjetland.jackson.jsonSchema.annotations.JsonSchemaInject;
 
 import java.util.List;
 import java.util.Map;
 
+@JsonTypeName("TaskCall")
 public interface TaskCallMixIn extends NamedStep {
 
     @JsonProperty(value = "task", required = true)
