@@ -47,18 +47,6 @@ public interface FetchRequest {
     @Nullable
     Secret secret();
 
-//    /**
-//     * Branch or Tag to checkout.
-//     */
-//    @Nullable
-//    String branchOrTag();
-//
-//    /**
-//     * Commit ID to checkout.
-//     */
-//    @Nullable
-//    String commitId();
-
     /**
      * Version to checkout (branch, tag, commit ID).
      */
