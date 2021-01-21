@@ -4,6 +4,10 @@
 
 ### Added
 
+- concord-server: new `exclusive.mode` mode `cancelOld`. When a new
+process starts using the `cancelOld` mode, all currently running
+processes within the same `exclusive.group` are automatically
+cancelled ([#300](https://github.com/walmartlabs/concord/pull/300));
 - concord-cli: notification when copying a large working directory
 into `target/`
 ([#302](https://github.com/walmartlabs/concord/pull/302));
