@@ -54,6 +54,11 @@ public class TriggerProcessExecutor {
         Map<String, Object> enrich(TriggerEntry t, Map<String, Object> cfg);
     }
 
+    public interface TriggerExclusiveParamsResolver {
+
+        Map<String, Object> resolve(TriggerEntry t);
+    }
+
     private static final Logger log = LoggerFactory.getLogger(TriggerProcessExecutor.class);
 
     private final ExternalEventsConfiguration eventsCfg;
@@ -89,14 +94,15 @@ public class TriggerProcessExecutor {
                                            TriggerEventInitiatorResolver initiatorResolver,
                                            List<TriggerEntry> triggers) {
 
-        return execute(event, triggers, initiatorResolver, null);
+        return execute(event, triggers, initiatorResolver, null, TriggerUtils::getExclusive);
     }
 
     @WithTimer
     public List<PartialProcessKey> execute(Event event,
                                            List<TriggerEntry> triggers,
                                            TriggerEventInitiatorResolver initiatorResolver,
-                                           ProcessConfigurationEnricher cfgEnricher) {
+                                           ProcessConfigurationEnricher cfgEnricher,
+                                           TriggerExclusiveParamsResolver exclusiveResolver) {
 
         if (isDisabled(event.name())) {
             log.warn("process ['{}'] event '{}' disabled", event.id(), event.name());
@@ -107,7 +113,7 @@ public class TriggerProcessExecutor {
 
         return triggers.stream()
                 .filter(t -> !isRepositoryDisabled(t))
-                .map(t -> submitProcess(event, t, initiatorResolver, cfgEnricher))
+                .map(t -> submitProcess(event, t, initiatorResolver, cfgEnricher, exclusiveResolver))
                 .collect(Collectors.toList()) // collect all "futures"
                 .stream()
                 .map(TriggerProcessExecutor::resolve)
@@ -142,7 +148,8 @@ public class TriggerProcessExecutor {
     private Future<PartialProcessKey> submitProcess(Event event,
                                                     TriggerEntry t,
                                                     TriggerEventInitiatorResolver initiatorResolver,
-                                                    ProcessConfigurationEnricher cfgEnricher) {
+                                                    ProcessConfigurationEnricher cfgEnricher,
+                                                    TriggerExclusiveParamsResolver exclusiveResolver) {
 
         UserEntry initiator;
         try {
@@ -172,7 +179,7 @@ public class TriggerProcessExecutor {
                 cfg.put(Constants.Request.ACTIVE_PROFILES_KEY, t.getActiveProfiles());
             }
 
-            Map<String, Object> exclusive = TriggerUtils.getExclusive(t);
+            Map<String, Object> exclusive = exclusiveResolver.resolve(t);
             if (exclusive != null && !exclusive.isEmpty()) {
                 // avoid saving empty objects into the cfg
                 cfg.put(Constants.Request.EXCLUSIVE, exclusive);
