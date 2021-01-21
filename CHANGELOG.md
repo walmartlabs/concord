@@ -18,6 +18,9 @@ save the branch name in `process_queue` (in addition to `commit_id`)
 
 ### Changed
 
+- concord-repository: allow passing branch, tag and/or commit ID as
+a single request parameter
+([#304](https://github.com/walmartlabs/concord/pull/304));
 - ansible: use [Apache Kerby](https://directory.apache.org/kerby/)
 instead of `sun.security.*`
 ([#303](https://github.com/walmartlabs/concord/pull/303);
