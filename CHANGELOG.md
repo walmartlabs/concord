@@ -4,6 +4,9 @@
 
 ### Added
 
+- concord-cli: notification when copying a large working directory
+into `target/`
+([#302](https://github.com/walmartlabs/concord/pull/302));
 - concord-server: new `github` trigger parameter - `exclusive.groupBy`.
 Currently accepts only `branch` value. Provides a way to cancel new or
 already running processes that were triggered by a `push` into the
