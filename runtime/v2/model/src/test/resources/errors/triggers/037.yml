@@ -1,0 +1,8 @@
+triggers:
+  - github:
+      version: 2
+      entryPoint: "onGithub"
+      exclusive:
+        mode: cancel
+      conditions:
+        type: "push"

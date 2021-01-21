@@ -26,33 +26,35 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import org.immutables.value.Value;
 
+import javax.annotation.Nullable;
 import java.io.Serializable;
 
 @Value.Immutable
 @Value.Style(jdkOnly = true)
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
-@JsonSerialize(as = ImmutableExclusiveModeConfiguration.class)
-@JsonDeserialize(as = ImmutableExclusiveModeConfiguration.class)
-public interface ExclusiveModeConfiguration extends Serializable {
+@JsonSerialize(as = ImmutableGithubTriggerExclusiveMode.class)
+@JsonDeserialize(as = ImmutableGithubTriggerExclusiveMode.class)
+public interface GithubTriggerExclusiveMode extends Serializable {
 
     long serialVersionUID = 1L;
 
+    @Nullable
     @Value.Parameter
-    @JsonProperty(value = "group", required = true)
+    @JsonProperty(value = "group")
     String group();
+
+    @Nullable
+    @Value.Parameter
+    @JsonProperty(value = "groupBy")
+    GroupBy groupBy();
+
+    enum GroupBy {
+        branch
+    }
 
     @Value.Parameter
     @Value.Default
-    default Mode mode() {
-        return Mode.wait;
-    }
-
-    enum Mode {
-        cancel,
-        wait
-    }
-
-    static ExclusiveModeConfiguration of(String group, Mode mode) {
-        return ImmutableExclusiveModeConfiguration.of(group, mode);
+    default ExclusiveModeConfiguration.Mode mode() {
+        return ExclusiveModeConfiguration.Mode.wait;
     }
 }

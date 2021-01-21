@@ -22,6 +22,8 @@ package com.walmartlabs.concord.server.events;
 
 import com.codahale.metrics.Histogram;
 import com.codahale.metrics.MetricRegistry;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.walmartlabs.concord.runtime.v2.model.GithubTriggerExclusiveMode;
 import com.walmartlabs.concord.sdk.Constants;
 import com.walmartlabs.concord.sdk.MapUtils;
 import com.walmartlabs.concord.server.audit.AuditAction;
@@ -30,6 +32,7 @@ import com.walmartlabs.concord.server.audit.AuditObject;
 import com.walmartlabs.concord.server.cfg.GithubConfiguration;
 import com.walmartlabs.concord.server.events.github.GithubTriggerProcessor;
 import com.walmartlabs.concord.server.events.github.Payload;
+import com.walmartlabs.concord.server.org.triggers.TriggerEntry;
 import com.walmartlabs.concord.server.org.triggers.TriggerUtils;
 import com.walmartlabs.concord.server.sdk.ConcordApplicationException;
 import com.walmartlabs.concord.server.sdk.PartialProcessKey;
@@ -53,9 +56,7 @@ import javax.ws.rs.*;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.UriInfo;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.function.Supplier;
 
 import static com.walmartlabs.concord.common.MemoSupplier.memo;
@@ -88,7 +89,8 @@ public class GithubEventResource implements Resource {
 
     @Inject
     public GithubEventResource(GithubConfiguration githubCfg,
-                               TriggerProcessExecutor executor, AuditLog auditLog,
+                               TriggerProcessExecutor executor,
+                               AuditLog auditLog,
                                List<GithubTriggerProcessor> processors,
                                UserManager userManager,
                                LdapManager ldapManager,
@@ -164,7 +166,7 @@ public class GithubEventResource implements Resource {
                     cfg.put(Constants.Request.REPO_BRANCH_OR_TAG, payload.getBranch());
                 }
                 return cfg;
-            });
+            }, new GithubExclusiveParamsResolver(payload));
             startedProcesses += processes.size();
         }
         startedProcessesPerEvent.update(startedProcesses);
@@ -172,6 +174,48 @@ public class GithubEventResource implements Resource {
         log.info("onEvent ['{}', '{}'] -> done, started process count: {}", deliveryId, eventName, startedProcesses);
 
         return "ok";
+    }
+
+    private static class GithubExclusiveParamsResolver implements TriggerProcessExecutor.TriggerExclusiveParamsResolver {
+
+        private static final ObjectMapper objectMapper = new ObjectMapper();
+        private final Payload payload;
+
+        public GithubExclusiveParamsResolver(Payload payload) {
+            this.payload = payload;
+        }
+
+        @Override
+        public Map<String, Object> resolve(TriggerEntry t) {
+            Map<String, Object> exclusive = TriggerUtils.getExclusive(t);
+            if (exclusive.isEmpty()) {
+                return exclusive;
+            }
+
+            GithubTriggerExclusiveMode e = objectMapper.convertValue(exclusive, GithubTriggerExclusiveMode.class);
+            if (e.groupBy() == null) {
+                return exclusive;
+            }
+
+            String group;
+            switch (Objects.requireNonNull(e.groupBy())) {
+                case branch: {
+                    group = payload.getBranch();
+                    break;
+                }
+                default:
+                    throw new IllegalArgumentException("Unknown groupBy: '" + e.groupBy() + "'");
+            }
+
+            if (group == null) {
+                return Collections.emptyMap();
+            }
+
+            Map<String, Object> result = new HashMap<>();
+            result.put("group", group);
+            result.put("mode", e.mode().name());
+            return result;
+        }
     }
 
     private class GithubEventInitiatorSupplier implements Supplier<UserEntry> {

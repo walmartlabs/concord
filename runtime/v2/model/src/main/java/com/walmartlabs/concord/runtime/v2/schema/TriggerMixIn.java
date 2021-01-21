@@ -24,6 +24,7 @@ import com.fasterxml.jackson.annotation.*;
 import com.kjetland.jackson.jsonSchema.annotations.JsonSchemaInject;
 import com.kjetland.jackson.jsonSchema.annotations.JsonSchemaString;
 import com.walmartlabs.concord.runtime.v2.model.ExclusiveModeConfiguration;
+import com.walmartlabs.concord.runtime.v2.model.GithubTriggerExclusiveMode;
 import com.walmartlabs.concord.runtime.v2.model.Trigger;
 
 import java.util.List;
@@ -45,6 +46,9 @@ public interface TriggerMixIn extends Trigger {
     @JsonTypeName("ManualTrigger")
     interface ManualTriggerMixIn extends TriggerMixIn {
 
+        @JsonProperty("exclusive")
+        ExclusiveModeConfiguration exclusive();
+
         @JsonProperty("manual")
         ManualTriggerParams params();
 
@@ -62,6 +66,9 @@ public interface TriggerMixIn extends Trigger {
         CronTriggerMixIn.CronTriggerParams params();
 
         interface CronTriggerParams extends DefaultTriggerParams {
+
+            @JsonProperty("exclusive")
+            ExclusiveModeConfiguration exclusive();
 
             @JsonProperty(value = "spec", required = true)
             String spec();
@@ -95,6 +102,9 @@ public interface TriggerMixIn extends Trigger {
             @JsonProperty("conditions")
             GithubTriggerConditions conditions();
 
+            @JsonProperty("exclusive")
+            GithubTriggerExclusiveMode exclusive();
+
             interface GithubTriggerConditions {
                 @JsonProperty(value = "type", required = true)
                 String type();
@@ -126,6 +136,7 @@ public interface TriggerMixIn extends Trigger {
         }
     }
 
+    @JsonTypeName("OneOpsTrigger")
     interface OneOpsTriggerMixIn extends TriggerMixIn {
 
         @JsonProperty("oneops")
@@ -160,8 +171,5 @@ public interface TriggerMixIn extends Trigger {
 
         @JsonProperty("arguments")
         Map<String, Object> arguments();
-
-        @JsonProperty("exclusive")
-        ExclusiveModeConfiguration exclusive();
     }
 }
