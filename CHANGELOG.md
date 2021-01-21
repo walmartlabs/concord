@@ -18,6 +18,9 @@ save the branch name in `process_queue` (in addition to `commit_id`)
 
 ### Changed
 
+- ansible: use [Apache Kerby](https://directory.apache.org/kerby/)
+instead of `sun.security.*`
+([#303](https://github.com/walmartlabs/concord/pull/303);
 - concord-server: remove SQL parser, use restricted views for querying
 JSON stores ([#297](https://github.com/walmartlabs/concord/pull/297));
 - concord-console: the secret dropdown list on the repository page
