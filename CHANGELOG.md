@@ -4,6 +4,11 @@
 
 ### Added
 
+- concord-server: new `github` trigger parameter - `exclusive.groupBy`.
+Currently accepts only `branch` value. Provides a way to cancel new or
+already running processes that were triggered by a `push` into the
+same Git branch
+([#301](https://github.com/walmartlabs/concord/pull/301));
 - concord-server: when starting a process using a Git repository,
 save the branch name in `process_queue` (in addition to `commit_id`)
 ([#296](https://github.com/walmartlabs/concord/pull/296)).
