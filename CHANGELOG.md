@@ -1,5 +1,41 @@
 # Change log
 
+## [Unreleased]
+
+### Added
+
+- concord-server: new `exclusive.mode` mode `cancelOld`. When a new
+process starts using the `cancelOld` mode, all currently running
+processes within the same `exclusive.group` are automatically
+cancelled ([#300](https://github.com/walmartlabs/concord/pull/300));
+- concord-cli: notification when copying a large working directory
+into `target/`
+([#302](https://github.com/walmartlabs/concord/pull/302));
+- concord-server: new `github` trigger parameter - `exclusive.groupBy`.
+Currently accepts only `branch` value. Provides a way to cancel new or
+already running processes that were triggered by a `push` into the
+same Git branch
+([#301](https://github.com/walmartlabs/concord/pull/301));
+- concord-server: when starting a process using a Git repository,
+save the branch name in `process_queue` (in addition to `commit_id`)
+([#296](https://github.com/walmartlabs/concord/pull/296)).
+
+### Changed
+
+- concord-repository: allow passing branch, tag and/or commit ID as
+a single request parameter
+([#304](https://github.com/walmartlabs/concord/pull/304));
+- ansible: use [Apache Kerby](https://directory.apache.org/kerby/)
+instead of `sun.security.*`
+([#303](https://github.com/walmartlabs/concord/pull/303);
+- concord-server: remove SQL parser, use restricted views for querying
+JSON stores ([#297](https://github.com/walmartlabs/concord/pull/297));
+- concord-console: the secret dropdown list on the repository page
+is replaced with a search field
+([#299](https://github.com/walmartlabs/concord/pull/299)).
+
+
+
 ## [1.77.0] - 2021-01-07
 
 ### Added
