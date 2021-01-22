@@ -1934,7 +1934,7 @@ public class YamlErrorParserTest extends AbstractParserTest {
     @Test
     public void test1313() throws Exception {
         String msg =
-                "(013.yml): Error @ line: 13, col: 11. Invalid value: canceL, expected: [cancel, wait]\n" +
+                "(013.yml): Error @ line: 13, col: 11. Invalid value: canceL, expected: [cancel, cancelOld, wait]\n" +
                         "\twhile processing steps:\n" +
                         "\t'mode' @ line: 13, col: 5\n" +
                         "\t\t'exclusive' @ line: 11, col: 3\n" +

@@ -20,7 +20,7 @@ package com.walmartlabs.concord.server.process.queue.dispatcher;
  * =====
  */
 
-import com.walmartlabs.concord.sdk.MapUtils;
+import com.walmartlabs.concord.runtime.v2.model.ExclusiveMode;
 import com.walmartlabs.concord.server.process.queue.ProcessQueueEntry;
 import com.walmartlabs.concord.server.process.queue.ProcessQueueManager;
 import org.jooq.DSLContext;
@@ -30,17 +30,16 @@ import javax.inject.Named;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
 
 /**
  * Handles "exclusive" processes.
  * Exclusive processes can't be executed when there is another process
- * running in the same project.
+ * running in the same project and group.
  */
 @Named
 public class ExclusiveProcessFilter extends WaitProcessFinishFilter {
-
-    private static final String WAIT_MODE = "wait";
 
     private final ExclusiveProcessFilterDao dao;
 
@@ -57,27 +56,33 @@ public class ExclusiveProcessFilter extends WaitProcessFinishFilter {
 
     @Override
     protected List<UUID> findProcess(DSLContext tx, ProcessQueueEntry item, List<ProcessQueueEntry> startingProcesses) {
-        if (item.projectId() == null) {
+        UUID projectId = item.projectId();
+        ExclusiveMode exclusive = item.exclusive();
+
+        if (projectId == null || exclusive == null) {
             return Collections.emptyList();
         }
 
-        boolean isWaitMode = WAIT_MODE.equals(MapUtils.getString(item.exclusive(), "mode"));
-        String group = getGroup(item);
-        if (group == null || !isWaitMode) {
+        boolean isWaitMode = exclusive.mode() == ExclusiveMode.Mode.wait;
+        if (!isWaitMode) {
             return Collections.emptyList();
         }
 
-        List<UUID> result = new ArrayList<>(dao.findProcess(tx, item, group));
+        List<UUID> result = new ArrayList<>(dao.findProcess(tx, item, exclusive.group()));
         for (ProcessQueueEntry p : startingProcesses) {
-            if (item.projectId().equals(p.projectId()) && group.equals(getGroup(p))) {
+            if (projectId.equals(p.projectId()) && groupEquals(exclusive, p.exclusive())) {
                 result.add(p.key().getInstanceId());
             }
         }
         return result;
     }
 
-    private static String getGroup(ProcessQueueEntry entry) {
-        return MapUtils.getString(entry.exclusive(), "group");
+    private static boolean groupEquals(ExclusiveMode a, ExclusiveMode b) {
+        if (a == null || b == null) {
+            return false;
+        }
+
+        return Objects.equals(a.group(), b.group());
     }
 
     @Override

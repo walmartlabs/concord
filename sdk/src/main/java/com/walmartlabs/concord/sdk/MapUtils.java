@@ -20,11 +20,29 @@ package com.walmartlabs.concord.sdk;
  * =====
  */
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 public final class MapUtils {
+
+    public static <E extends Enum<E>> E getEnum(Map<String, Object> m, String name, Class<E> enumData, E defaultValue) {
+        String v = getString(m, name);
+        if (v == null) {
+            return defaultValue;
+        }
+
+        for (Enum<E> enumVal : enumData.getEnumConstants()) {
+            if (enumVal.name().equals(v)) {
+                return Enum.valueOf(enumData, v);
+            }
+        }
+        throw new IllegalArgumentException("Invalid variable '" + name + "' type, expected one of: " +
+                Arrays.stream(enumData.getEnumConstants()).map(Enum::name).collect(Collectors.toList()) +
+                ", got: " + v);
+    }
 
     public static UUID getUUID(Map<String, Object> m, String name) {
         Object o = m.get(name);

@@ -33,15 +33,15 @@ import static com.walmartlabs.concord.runtime.v2.parser.GrammarV2.*;
  */
 public final class ConfigurationGrammar {
 
-    private static final Parser<Atom, ExclusiveModeConfiguration> exclusive =
+    private static final Parser<Atom, ExclusiveMode> exclusive =
             betweenTokens(JsonToken.START_OBJECT, JsonToken.END_OBJECT,
-                    with(ImmutableExclusiveModeConfiguration::builder,
+                    with(ImmutableExclusiveMode::builder,
                             o -> options(
                                     mandatory("group", stringVal.map(o::group)),
-                                    optional("mode", enumVal(ExclusiveModeConfiguration.Mode.class).map(o::mode))))
-                            .map(ImmutableExclusiveModeConfiguration.Builder::build));
+                                    optional("mode", enumVal(ExclusiveMode.Mode.class).map(o::mode))))
+                            .map(ImmutableExclusiveMode.Builder::build));
 
-    public static final Parser<Atom, ExclusiveModeConfiguration> exclusiveVal =
+    public static final Parser<Atom, ExclusiveMode> exclusiveVal =
             orError(exclusive, YamlValueType.EXCLUSIVE_MODE);
 
     private static final Parser<Atom, EventConfiguration> events =

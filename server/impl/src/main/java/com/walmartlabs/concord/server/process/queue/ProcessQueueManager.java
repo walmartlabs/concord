@@ -21,6 +21,7 @@ package com.walmartlabs.concord.server.process.queue;
  */
 
 import com.walmartlabs.concord.imports.Imports;
+import com.walmartlabs.concord.runtime.v2.model.ExclusiveMode;
 import com.walmartlabs.concord.sdk.Constants;
 import com.walmartlabs.concord.sdk.EventType;
 import com.walmartlabs.concord.server.ConcordObjectMapper;
@@ -86,9 +87,9 @@ public class ProcessQueueManager {
     }
 
     /**
-     * Updates the existing record, moving the process into the ENQUEUED status.
+     * Updates an existing record, moving the process into the ENQUEUED status.
      */
-    public void enqueue(Payload payload) {
+    public boolean enqueue(Payload payload) {
         ProcessKey processKey = payload.getProcessKey();
 
         ProcessStatus s = queueDao.getStatus(processKey);
@@ -96,7 +97,14 @@ public class ProcessQueueManager {
             throw new ProcessException(processKey, "Process not found: " + processKey);
         }
 
+        if (s == ProcessStatus.CANCELLED) {
+            // the process was cancelled while going through EnqueueProcessPipeline
+            // (e.g. it was a process in an "exclusive" group)
+            return false;
+        }
+
         if (s != ProcessStatus.PREPARING && s != ProcessStatus.RESUMING && s != ProcessStatus.SUSPENDED) {
+            // something's wrong (e.g. someone tried to change the process' status directly in the DB and was unlucky)
             throw new ProcessException(processKey, "Invalid process status: " + s);
         }
 
@@ -107,7 +115,7 @@ public class ProcessQueueManager {
         Set<String> handlers = payload.getHeader(Payload.PROCESS_HANDLERS);
         Map<String, Object> meta = getMeta(getCfg(payload));
         Imports imports = payload.getHeader(Payload.IMPORTS);
-        Map<String, Object> exclusive = PayloadUtils.getExclusive(payload);
+        ExclusiveMode exclusive = PayloadUtils.getExclusive(payload);
         String runtime = payload.getHeader(Payload.RUNTIME);
         List<String> dependencies = payload.getHeader(Payload.DEPENDENCIES);
 
@@ -115,6 +123,8 @@ public class ProcessQueueManager {
             queueDao.enqueue(tx, processKey, tags, startAt, requirements, processTimeout, handlers, meta, imports, exclusive, runtime, dependencies);
             eventManager.insertStatusHistory(tx, processKey, ProcessStatus.ENQUEUED, Collections.emptyMap());
         });
+
+        return true;
     }
 
     /**
@@ -210,10 +220,7 @@ public class ProcessQueueManager {
         eventManager.event(tx, Collections.singletonList(e));
     }
 
-    /**
-     * @see #updateStatus(ProcessKey, ProcessStatus, Map)
-     */
-    public void updateExclusive(DSLContext tx, ProcessKey processKey, Map<String, Object> exclusive) {
+    public void updateExclusive(DSLContext tx, ProcessKey processKey, ExclusiveMode exclusive) {
         queueDao.updateExclusive(tx, processKey, exclusive);
     }
 
