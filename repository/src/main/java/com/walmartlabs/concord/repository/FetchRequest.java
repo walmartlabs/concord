@@ -48,16 +48,9 @@ public interface FetchRequest {
     Secret secret();
 
     /**
-     * Branch or Tag to checkout.
+     * Version to checkout (branch, tag, commit ID).
      */
-    @Nullable
-    String branchOrTag();
-
-    /**
-     * Commit ID to checkout.
-     */
-    @Nullable
-    String commitId();
+    Version version();
 
     /**
      * If {@code true} use shallow cloning.
@@ -85,5 +78,50 @@ public interface FetchRequest {
 
     static ImmutableFetchRequest.Builder builder() {
         return ImmutableFetchRequest.builder();
+    }
+
+    class Version {
+
+        /**
+         * Any usable "version" value - branch name, tag or a commit ID.
+         */
+        public static Version from(String value) {
+            return new Version(value, value);
+        }
+
+        /**
+         * Commit ID + branch or a tag.
+         */
+        public static Version commitWithBranch(String commitId, String branchOrTag) {
+            if (commitId == null) {
+                return from(branchOrTag);
+            }
+            return new Version(commitId, branchOrTag);
+        }
+
+        private final String value;
+
+        private final String ref;
+
+        private Version(String value, String ref) {
+            this.value = value;
+            this.ref = ref;
+        }
+
+        public String value() {
+            return value;
+        }
+
+        public String ref() {
+            return ref;
+        }
+
+        @Override
+        public String toString() {
+            return "Version{" +
+                    "value='" + value + '\'' +
+                    ", ref='" + ref + '\'' +
+                    '}';
+        }
     }
 }
