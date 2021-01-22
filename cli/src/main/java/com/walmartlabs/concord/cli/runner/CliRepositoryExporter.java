@@ -76,7 +76,7 @@ public class CliRepositoryExporter implements RepositoryExporter {
         Repository repo = providers.fetch(
                 FetchRequest.builder()
                         .url(url)
-                        .branchOrTag(entry.version())
+                        .version(FetchRequest.Version.from(entry.version()))
                         .secret(secret)
                         .destination(cacheDir)
                 .build(),

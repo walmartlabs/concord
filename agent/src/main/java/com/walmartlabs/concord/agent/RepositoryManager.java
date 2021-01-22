@@ -80,8 +80,7 @@ public class RepositoryManager {
             Repository repo = providers.fetch(
                     FetchRequest.builder()
                             .url(repoUrl)
-                            .branchOrTag(branch)
-                            .commitId(commitId)
+                            .version(FetchRequest.Version.commitWithBranch(commitId, branch))
                             .secret(secret)
                             .destination(cacheDir)
                             .shallow(gitCfg.isShallowClone())
