@@ -88,6 +88,10 @@ public class AgentManager {
     }
 
     public void killProcess(List<ProcessKey> processKeys) {
+        if (processKeys.isEmpty()) {
+            return;
+        }
+
         // TODO replace with a more appropriate method
         List<ProcessEntry> l = queueDao.get(processKeys.stream()
                 .map(k -> PartialProcessKey.from(k.getInstanceId()))

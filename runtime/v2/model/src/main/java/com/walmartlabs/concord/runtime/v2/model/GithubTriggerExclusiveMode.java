@@ -54,7 +54,7 @@ public interface GithubTriggerExclusiveMode extends Serializable {
 
     @Value.Parameter
     @Value.Default
-    default ExclusiveModeConfiguration.Mode mode() {
-        return ExclusiveModeConfiguration.Mode.wait;
+    default ExclusiveMode.Mode mode() {
+        return ExclusiveMode.Mode.wait;
     }
 }

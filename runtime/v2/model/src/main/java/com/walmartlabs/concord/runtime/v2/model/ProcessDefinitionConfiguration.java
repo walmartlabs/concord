@@ -91,7 +91,7 @@ public interface ProcessDefinitionConfiguration extends Serializable {
     Duration processTimeout();
 
     @Nullable
-    ExclusiveModeConfiguration exclusive();
+    ExclusiveMode exclusive();
 
     @Value.Default
     default List<String> out() {

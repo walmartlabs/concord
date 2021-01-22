@@ -31,9 +31,9 @@ import java.io.Serializable;
 @Value.Immutable
 @Value.Style(jdkOnly = true)
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
-@JsonSerialize(as = ImmutableExclusiveModeConfiguration.class)
-@JsonDeserialize(as = ImmutableExclusiveModeConfiguration.class)
-public interface ExclusiveModeConfiguration extends Serializable {
+@JsonSerialize(as = ImmutableExclusiveMode.class)
+@JsonDeserialize(as = ImmutableExclusiveMode.class)
+public interface ExclusiveMode extends Serializable {
 
     long serialVersionUID = 1L;
 
@@ -44,15 +44,27 @@ public interface ExclusiveModeConfiguration extends Serializable {
     @Value.Parameter
     @Value.Default
     default Mode mode() {
-        return Mode.wait;
+        return Mode.cancel;
     }
 
     enum Mode {
+        /**
+         * Cancel the current process if there's already a running process with the same {@link #group()} value.
+         */
         cancel,
+
+        /**
+         * Cancel all other processes (enqueued, running or suspended) with the same {@link #group()} value.
+         */
+        cancelOld,
+
+        /**
+         * Wait in the queue if there's already a running process with the same {@link #group()} value.
+         */
         wait
     }
 
-    static ExclusiveModeConfiguration of(String group, Mode mode) {
-        return ImmutableExclusiveModeConfiguration.of(group, mode);
+    static ExclusiveMode of(String group, Mode mode) {
+        return ImmutableExclusiveMode.of(group, mode);
     }
 }

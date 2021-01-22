@@ -62,6 +62,10 @@ public class AgentCommandsDao extends AbstractDao {
     }
 
     public void insertBatch(List<AgentCommand> ace) {
+        if (ace.isEmpty()) {
+            return;
+        }
+
         tx(tx -> {
             BatchBindStep q = tx.batch(tx.insertInto(AGENT_COMMANDS, AGENT_COMMANDS.COMMAND_ID, AGENT_COMMANDS.AGENT_ID,
                     AGENT_COMMANDS.COMMAND_STATUS, AGENT_COMMANDS.CREATED_AT,

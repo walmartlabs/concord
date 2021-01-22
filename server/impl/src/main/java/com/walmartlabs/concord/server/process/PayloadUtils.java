@@ -22,6 +22,7 @@ package com.walmartlabs.concord.server.process;
 
 import com.walmartlabs.concord.common.DateTimeUtils;
 import com.walmartlabs.concord.repository.Snapshot;
+import com.walmartlabs.concord.runtime.v2.model.ExclusiveMode;
 import com.walmartlabs.concord.sdk.Constants;
 import com.walmartlabs.concord.sdk.MapUtils;
 
@@ -32,9 +33,15 @@ import java.util.*;
 
 public final class PayloadUtils {
 
-    public static Map<String, Object> getExclusive(Payload p) {
+    public static ExclusiveMode getExclusive(Payload p) {
         Map<String, Object> cfg = p.getHeader(Payload.CONFIGURATION);
-        return MapUtils.getMap(cfg, Constants.Request.EXCLUSIVE, Collections.emptyMap());
+        Map<String, Object> exclusive = MapUtils.getMap(cfg, Constants.Request.EXCLUSIVE, Collections.emptyMap());
+        if (exclusive.isEmpty()) {
+            return null;
+        }
+        String group = MapUtils.getString(exclusive, "group");
+        ExclusiveMode.Mode mode = MapUtils.getEnum(exclusive, "mode", ExclusiveMode.Mode.class, ExclusiveMode.Mode.cancel);
+        return ExclusiveMode.of(group, mode);
     }
 
     @SuppressWarnings("unchecked")
@@ -72,18 +79,6 @@ public final class PayloadUtils {
         }
 
         throw new ProcessException(p.getProcessKey(), "Invalid '" + k + "' value, expected an ISO-8601 value, got: " + v);
-    }
-
-    public static Payload addSnapshot(Payload payload, Snapshot snapshot) {
-        List<Snapshot> result = new ArrayList<>();
-
-        List<Snapshot> snapshots = payload.getHeader(Payload.REPOSITORY_SNAPSHOT);
-        if (snapshots != null) {
-            result.addAll(snapshots);
-        }
-        result.add(snapshot);
-
-        return payload.putHeader(Payload.REPOSITORY_SNAPSHOT, result);
     }
 
     public static Payload addSnapshots(Payload payload, List<Snapshot> l) {
