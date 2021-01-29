@@ -39,6 +39,7 @@ import { passwordTooWeakError } from '../../../validation';
 import { NewSecretForm, NewSecretFormValues, RequestErrorMessage } from '../../molecules';
 
 import './styles.css';
+import { RequestErrorActivity } from '../index';
 
 interface OwnState {
     showPasswordConfirm: boolean;
@@ -166,7 +167,7 @@ class NewSecretActivity extends React.Component<Props, OwnState> {
 
         return (
             <>
-                {error && <RequestErrorMessage error={error} />}
+                {error && <RequestErrorActivity error={error} />}
 
                 {this.renderPasswordWarning()}
 
