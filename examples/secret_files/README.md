@@ -28,7 +28,7 @@ $ ./run.sh localhost:8001
 }
 ```
 
-5. open [the UI](http://localhost:8001), find the process entry and
+3. open [the UI](http://localhost:8001), find the process entry and
 open its log. You should see messages like these:
 ```
 13:51:54 [INFO ] My file A: .tmp/file698533367913439655.bin
