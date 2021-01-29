@@ -28,7 +28,7 @@ import { RequestErrorMessage, SecretProjectForm } from '../../molecules';
 interface ExternalProps {
     orgName: ConcordKey;
     secretName: ConcordKey;
-    projectName: ConcordKey;
+    projectName?: ConcordKey;
 }
 
 type Props = ExternalProps;

@@ -65,8 +65,8 @@ export interface SecretEntry {
     orgId: ConcordId;
     orgName: ConcordKey;
 
-    projectId: ConcordId;
-    projectName: ConcordKey;
+    projectId?: ConcordId;
+    projectName?: ConcordKey;
 
     visibility: SecretVisibility;
     type: SecretType;
@@ -154,8 +154,7 @@ export const deleteSecret = (
 export const renameSecret = (
     orgName: ConcordKey,
     secretId: ConcordId,
-    secretName: ConcordKey,
-    projectId: ConcordId
+    secretName: ConcordKey
 ): Promise<GenericOperationResult> => {
     const opts = {
         method: 'POST',
@@ -164,8 +163,7 @@ export const renameSecret = (
         },
         body: JSON.stringify({
             id: secretId,
-            name: secretName,
-            projectId
+            name: secretName
         })
     };
 
@@ -176,7 +174,6 @@ export const renameSecret = (
 export const updateSecretVisibility = (
     orgName: ConcordKey,
     secretId: ConcordId,
-    projectId: ConcordId,
     visibility: SecretVisibility
 ): Promise<GenericOperationResult> => {
     const opts = {
@@ -186,7 +183,6 @@ export const updateSecretVisibility = (
         },
         body: JSON.stringify({
             id: secretId,
-            projectId,
             visibility
         })
     };

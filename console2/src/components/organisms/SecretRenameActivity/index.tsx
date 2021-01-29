@@ -32,7 +32,6 @@ interface ExternalProps {
     orgName: ConcordKey;
     secretId: ConcordId;
     secretName: ConcordKey;
-    projectId: ConcordId;
 }
 
 interface StateProps {
@@ -41,19 +40,14 @@ interface StateProps {
 }
 
 interface DispatchProps {
-    rename: (
-        orgName: ConcordKey,
-        secretId: ConcordId,
-        secretName: ConcordKey,
-        projectId: ConcordId
-    ) => void;
+    rename: (orgName: ConcordKey, secretId: ConcordId, secretName: ConcordKey) => void;
 }
 
 type Props = ExternalProps & StateProps & DispatchProps;
 
 class SecretRenameActivity extends React.PureComponent<Props> {
     render() {
-        const { error, renaming, orgName, secretId, secretName, projectId, rename } = this.props;
+        const { error, renaming, orgName, secretId, secretName, rename } = this.props;
 
         return (
             <>
@@ -61,7 +55,7 @@ class SecretRenameActivity extends React.PureComponent<Props> {
                 <EntityRenameForm
                     originalName={secretName}
                     submitting={renaming}
-                    onSubmit={(values) => rename(orgName, secretId, values.name, projectId)}
+                    onSubmit={(values) => rename(orgName, secretId, values.name)}
                     inputPlaceholder="Secret name"
                     confirmationHeader="Rename the secret?"
                     confirmationContent="Are you sure you want to rename the secret?"
@@ -79,8 +73,8 @@ const mapStateToProps = ({ secrets }: { secrets: State }): StateProps => ({
 });
 
 const mapDispatchToProps = (dispatch: Dispatch<AnyAction>): DispatchProps => ({
-    rename: (orgName, secretId, secretName, projectId) =>
-        dispatch(actions.renameSecret(orgName, secretId, secretName, projectId))
+    rename: (orgName, secretId, secretName) =>
+        dispatch(actions.renameSecret(orgName, secretId, secretName))
 });
 
 export default connect(mapStateToProps, mapDispatchToProps)(SecretRenameActivity);

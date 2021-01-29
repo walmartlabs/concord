@@ -60,11 +60,11 @@ import {
     State,
     UpdateSecretTeamAccessState,
     UpdateSecretVisibilityResponse,
-    UpdateSecretVisiblityRequest,
+    UpdateSecretVisibilityRequest,
     UpdateSecretVisiblityState,
     SecretTeamAccessState
 } from './types';
-import { UpdateSecretTeamAccessRequest } from '../secrets/types';
+import { UpdateSecretTeamAccessRequest } from './types';
 import { ResourceAccessEntry } from '../../../api/org';
 
 // https://github.com/facebook/create-react-app/issues/6054
@@ -131,26 +131,22 @@ export const actions = {
     renameSecret: (
         orgName: ConcordKey,
         secretId: ConcordId,
-        secretName: ConcordKey,
-        projectId: ConcordId
+        secretName: ConcordKey
     ): RenameSecretRequest => ({
         type: actionTypes.RENAME_SECRET_REQUEST,
         orgName,
         secretId,
-        secretName,
-        projectId
+        secretName
     }),
 
     updateSecretVisibility: (
         orgName: ConcordKey,
         secretId: ConcordId,
-        projectId: ConcordId,
         visibility: SecretVisibility
-    ): UpdateSecretVisiblityRequest => ({
+    ): UpdateSecretVisibilityRequest => ({
         type: actionTypes.UPDATE_SECRET_VISIBLITY_REQUEST,
         orgName,
         secretId,
-        projectId,
         visibility
     }),
 
@@ -385,9 +381,9 @@ function* onDelete({ orgName, secretName }: DeleteSecretRequest) {
     }
 }
 
-function* onRename({ orgName, secretId, secretName, projectId }: RenameSecretRequest) {
+function* onRename({ orgName, secretId, secretName }: RenameSecretRequest) {
     try {
-        const response = yield call(apiRenameSecret, orgName, secretId, secretName, projectId);
+        const response = yield call(apiRenameSecret, orgName, secretId, secretName);
         yield put(genericResult(actionTypes.RENAME_SECRET_RESPONSE, response));
 
         yield put(pushHistory(`/org/${orgName}/secret`));
@@ -396,14 +392,9 @@ function* onRename({ orgName, secretId, secretName, projectId }: RenameSecretReq
     }
 }
 
-function* onUpdateVisibility({
-    orgName,
-    secretId,
-    projectId,
-    visibility
-}: UpdateSecretVisiblityRequest) {
+function* onUpdateVisibility({ orgName, secretId, visibility }: UpdateSecretVisibilityRequest) {
     try {
-        yield call(apiUpdateSecretVisibility, orgName, secretId, projectId, visibility);
+        yield call(apiUpdateSecretVisibility, orgName, secretId, visibility);
         yield put({
             type: actionTypes.UPDATE_SECRET_VISIBLITY_RESPONSE,
             secretId,

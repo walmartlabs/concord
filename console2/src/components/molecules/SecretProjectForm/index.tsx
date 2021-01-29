@@ -31,12 +31,12 @@ interface State {
 }
 
 interface FormValues {
-    projectName: ConcordKey;
+    projectName?: ConcordKey;
 }
 
 interface Props {
     orgName: ConcordKey;
-    projectName: ConcordKey;
+    projectName?: ConcordKey;
     submitting: boolean;
     inputPlaceholder?: string;
     confirmationHeader: string;
