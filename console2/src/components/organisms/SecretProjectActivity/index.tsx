@@ -101,7 +101,7 @@ export default ({ orgName, projectName, secretName }: Props) => {
                         negative={true}
                         content="Update"
                         disabled={!dirty}
-                        onClick={(ev) => setShowConfirm(true)}
+                        onClick={() => setShowConfirm(true)}
                     />
                 </Form.Group>
 
