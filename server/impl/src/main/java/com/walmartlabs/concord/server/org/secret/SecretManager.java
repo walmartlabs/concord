@@ -384,8 +384,8 @@ public class SecretManager {
             effectiveProjectName = null;
         }
 
-        // empty project name means "remove the project link"
         if (req.projectName() != null && req.projectName().trim().isEmpty()) {
+            // empty project name means "remove the project link"
             effectiveProjectId = null;
             effectiveProjectName = null;
         }
