@@ -20,93 +20,147 @@
 
 import * as React from 'react';
 import { useCallback, useEffect, useState } from 'react';
-import { Search, SearchResultData } from 'semantic-ui-react';
+import { Search } from 'semantic-ui-react';
 
-import { list as apiFindOrganizations, OrganizationEntry } from '../../../api/org';
+import { list as apiFindOrganizations, get as apiGet, OrganizationEntry } from '../../../api/org';
+import { SearchProps } from 'semantic-ui-react/dist/commonjs/modules/Search/Search';
 
 interface Props {
-    defaultValue: string;
-    onSelect: (value: OrganizationEntry) => void;
-    onChange?: (value?: string) => void;
+    defaultOrgName?: string;
     placeholder?: string;
+    required?: boolean;
+
+    onReset?: (value?: OrganizationEntry) => void;
+    onClear?: () => void;
+    onSelect?: (value: OrganizationEntry) => void;
 }
 
-export default (props: Props) => {
+interface Result {
+    title: string;
+    description: string;
+}
+
+const renderTitle = (e: OrganizationEntry) => `${e.name}`;
+
+const renderDescription = (e: OrganizationEntry): string => '';
+
+export default ({ defaultOrgName, placeholder, required, onClear, onReset, onSelect }: Props) => {
+    const [defaultItem, setDefaultItem] = useState<OrganizationEntry | undefined>();
+    const [value, setValue] = useState<string | undefined>();
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<boolean>();
-    const [data, setData] = useState<OrganizationEntry[]>([]);
-    const [filter, setFilter] = useState(props.defaultValue);
+    const [items, setItems] = useState<OrganizationEntry[]>([]);
+    const [results, setResults] = useState<Result[]>([]);
 
-    const toResults = () =>
-        data.map((o) => ({
-            title: o.name,
-            description: o.name,
-            key: o.id
-        }));
+    // perform search whenever the filter changes
+    useEffect(() => {
+        if (!value || value.trim().length < 3) {
+            setResults([]);
+            return;
+        }
 
-    const fetchData = useCallback(async () => {
-        if (filter && filter.length >= 2) {
+        const fetchData = async () => {
+            setLoading(true);
             try {
-                setLoading(true);
-
-                const offset = 0;
-                const active = true;
-                const limit = -1;
-
-                const organizationList = await apiFindOrganizations(active, offset, limit, filter);
-
-                setData(organizationList.items);
+                const result = await apiFindOrganizations(true, 0, 10, value);
+                setItems(result.items);
             } catch (e) {
                 setError(e);
             } finally {
                 setLoading(false);
             }
-        }
-    }, [filter]);
+        };
 
-    useEffect(() => {
         fetchData();
-    }, [fetchData]);
+    }, [value]);
 
-    const handleSelect = ({ result }: SearchResultData) => {
-        if (!result) {
+    // convert OrganizationEntries into whatever <Search> accepts
+    useEffect(() => {
+        const r = items.map((i) => ({
+            key: i.id,
+            title: renderTitle(i),
+            description: renderDescription(i)
+        }));
+
+        setResults(r);
+    }, [items]);
+
+    // load the default organization's data
+    useEffect(() => {
+        if (!defaultOrgName) {
+            setDefaultItem(undefined);
             return;
         }
 
-        const i = data.find((o) => o.name === result.description)!;
+        const fetchData = async () => {
+            setLoading(true);
+            try {
+                const result = await apiGet(defaultOrgName);
+                setValue(result ? renderTitle(result) : '');
+                setDefaultItem(result);
+            } catch (e) {
+                setError(e);
+            } finally {
+                setLoading(false);
+            }
+        };
 
-        if (!i) {
-            return;
-        }
+        fetchData();
+    }, [defaultOrgName]);
 
-        setFilter(i.name);
+    const onChangeCallBack = useCallback(
+        (event: React.MouseEvent<HTMLElement>, data: SearchProps) => {
+            setValue(data.value);
+        },
+        []
+    );
 
-        props.onSelect(i);
-    };
+    const handleItemSelected = useCallback(
+        (item?: OrganizationEntry) => {
+            setValue(item ? renderTitle(item) : '');
+
+            const isDefault = item?.id === defaultItem?.id;
+            if (isDefault) {
+                onReset?.(item);
+            } else if (item) {
+                onSelect?.(item);
+            } else {
+                if (required) {
+                    setValue(defaultItem ? renderTitle(defaultItem) : '');
+                    onReset?.(defaultItem);
+                } else {
+                    onClear?.();
+                }
+            }
+        },
+        [required, onReset, onSelect, onClear, defaultItem]
+    );
 
     return (
         <Search
-            value={filter}
+            fluid={true}
             input={{
                 fluid: true,
-                placeholder: props.placeholder
-                    ? props.placeholder
-                    : 'Search for an Organization...',
+                placeholder,
                 error
             }}
-            fluid={true}
+            value={value}
             loading={loading}
-            showNoResults={!loading}
-            onSearchChange={(ev, data) => {
-                const filter = data.value;
-                setFilter(filter || '');
-
-                if (props.onChange) {
-                    props.onChange(data.value);
+            results={results}
+            onBlur={(event, data) => {
+                if (data.value !== '') {
+                    const item = items.find((i) => i.name === data.value);
+                    handleItemSelected(item || defaultItem);
+                } else {
+                    handleItemSelected(undefined);
                 }
             }}
-            onResultSelect={(ev, data) => handleSelect(data)}
-            results={toResults()}
+            showNoResults={!loading}
+            onSearchChange={onChangeCallBack}
+            onResultSelect={(ev, data) => {
+                const item = items.find((i) => i.id === data.result.key);
+                handleItemSelected(item || defaultItem);
+            }}
         />
     );
 };
