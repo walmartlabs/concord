@@ -4,6 +4,9 @@
 
 ### Changed
 
+- concord-console: make `projectId` and `projectName` optional in
+the `SecretEntry` definition (minor API usage fix)
+([#306](https://github.com/walmartlabs/concord/pull/306));
 - concord-client, runtime-v1, runtime-v2: make `SecretService`
 throw `SecretNotFoundException` when the requested secret is not 
 found ([#309](https://github.com/walmartlabs/concord/pull/309));
