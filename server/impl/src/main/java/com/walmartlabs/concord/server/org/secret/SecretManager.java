@@ -370,28 +370,28 @@ public class SecretManager {
 
         UUID orgIdUpdate = organizationEntry != null ? organizationEntry.getId() : e.getOrgId();
 
-        UUID effectiveProjectId = e.getProjectId();
-        if (req.projectId() != null) {
-            effectiveProjectId = req.projectId();
+        UUID effectiveProjectId = req.projectId();
+        String effectiveProjectName = req.projectName();
+        if (req.projectId() == null && req.projectName() == null) {
+            effectiveProjectId = e.getProjectId();
+            effectiveProjectName = e.getProjectName();
         }
-
-        String projectName = req.projectName();
 
         if (!orgIdUpdate.equals(e.getOrgId())) {
             // set the project ID and project name as null when the updated org ID is not same as the current org ID
             // when a secret is changing orgs, the project link must be set to null
             effectiveProjectId = null;
-            projectName = null;
+            effectiveProjectName = null;
         }
 
-        if (projectName != null && projectName.trim().isEmpty()) {
+        if (req.projectName() != null && req.projectName().trim().isEmpty()) {
             // empty project name means "remove the project link"
             effectiveProjectId = null;
-            projectName = null;
+            effectiveProjectName = null;
         }
 
-        if (effectiveProjectId != null || projectName != null) {
-            ProjectEntry entry = projectAccessManager.assertAccess(e.getOrgId(), effectiveProjectId, projectName, ResourceAccessLevel.READER, true);
+        if (effectiveProjectId != null || effectiveProjectName != null) {
+            ProjectEntry entry = projectAccessManager.assertAccess(e.getOrgId(), effectiveProjectId, effectiveProjectName, ResourceAccessLevel.READER, true);
             effectiveProjectId = entry.getId();
             if (!entry.getOrgId().equals(e.getOrgId())) {
                 throw new ValidationErrorsException("Project '" + entry.getName() + "' does not belong to organization '" + orgName + "'");
