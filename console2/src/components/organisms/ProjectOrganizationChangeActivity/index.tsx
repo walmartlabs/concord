@@ -121,8 +121,8 @@ export default ({ orgName, projectName, disabled }: Props) => {
                                 </p>
                                 <ul>
                                     <li>
-                                        Any secret used by repositories in this project will not
-                                        be available.
+                                        Any secret used by repositories in this project will not be
+                                        available.
                                     </li>
                                     <li>
                                         Any secrets scoped to this project, the mapping will be

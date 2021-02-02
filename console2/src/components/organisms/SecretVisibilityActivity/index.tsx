@@ -30,7 +30,6 @@ import { RequestErrorMessage } from '../../molecules';
 interface ExternalProps {
     orgName: ConcordKey;
     secretId: ConcordId;
-    projectId: ConcordId;
     visibility: SecretVisibility;
 }
 
@@ -40,12 +39,7 @@ interface StateProps {
 }
 
 interface DispatchProps {
-    update: (
-        orgName: ConcordKey,
-        secretId: ConcordId,
-        projectId: ConcordId,
-        visibility: SecretVisibility
-    ) => void;
+    update: (orgName: ConcordKey, secretId: ConcordId, visibility: SecretVisibility) => void;
 }
 
 type Props = ExternalProps & StateProps & DispatchProps;
@@ -56,8 +50,8 @@ class ProjectRenameActivity extends React.PureComponent<Props> {
             return;
         }
 
-        const { update, orgName, secretId, projectId } = this.props;
-        update(orgName, secretId, projectId, SecretVisibility[value]);
+        const { update, orgName, secretId } = this.props;
+        update(orgName, secretId, SecretVisibility[value]);
     }
 
     render() {
@@ -98,8 +92,8 @@ const mapStateToProps = ({ secrets }: { secrets: State }): StateProps => ({
 });
 
 const mapDispatchToProps = (dispatch: Dispatch<AnyAction>): DispatchProps => ({
-    update: (orgName, secretId, projectId, visibility) =>
-        dispatch(actions.updateSecretVisibility(orgName, secretId, projectId, visibility))
+    update: (orgName, secretId, visibility) =>
+        dispatch(actions.updateSecretVisibility(orgName, secretId, visibility))
 });
 
 export default connect(mapStateToProps, mapDispatchToProps)(ProjectRenameActivity);
