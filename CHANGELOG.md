@@ -1,5 +1,22 @@
 # Change log
 
+## [Unreleased]
+
+### Changed
+
+- concord-client, runtime-v1, runtime-v2: make `SecretService`
+throw `SecretNotFoundException` when the requested secret is not 
+found ([#309](https://github.com/walmartlabs/concord/pull/309));
+- concord-console: fixed linking of organizations and secrets
+([#308](https://github.com/walmartlabs/concord/pull/308))
+- concord-server: fixed linking of projects and secrets
+([#307](https://github.com/walmartlabs/concord/pull/307))
+- concord-console: the project dropdown list on the new secret page
+and on the secret settings page was replaced with a search field
+([#305](https://github.com/walmartlabs/concord/pull/305)).
+
+
+
 ## [1.78.0] - 2021-01-22
 
 ### Added
