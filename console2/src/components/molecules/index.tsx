@@ -63,7 +63,6 @@ export { default as ProcessWaitList } from './ProcessWaitList';
 export { default as RepositoryForm } from './RepositoryForm';
 export { default as RepositoryList } from './RepositoryList';
 export { default as RequestErrorMessage } from './RequestErrorMessage';
-export { default as SecretProjectForm } from './SecretProjectForm';
 export { default as SingleOperationPopup } from './SingleOperationPopup';
 export { default as TeamAccessDropdown } from './TeamAccessDropdown';
 export { default as TeamAccessList } from './TeamAccessList';

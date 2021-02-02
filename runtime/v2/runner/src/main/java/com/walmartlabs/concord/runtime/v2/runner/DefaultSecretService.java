@@ -26,6 +26,7 @@ import com.walmartlabs.concord.common.secret.BinaryDataSecret;
 import com.walmartlabs.concord.runtime.common.cfg.RunnerConfiguration;
 import com.walmartlabs.concord.runtime.common.injector.InstanceId;
 import com.walmartlabs.concord.runtime.v2.sdk.FileService;
+import com.walmartlabs.concord.runtime.v2.sdk.SecretNotFoundException;
 import com.walmartlabs.concord.runtime.v2.sdk.SecretService;
 import com.walmartlabs.concord.sdk.Secret;
 
@@ -137,7 +138,11 @@ public class DefaultSecretService implements SecretService {
     }
 
     private <T extends Secret> T get(String orgName, String secretName, String password, SecretEntry.TypeEnum type) throws Exception {
-        return secretClient.getData(orgName, secretName, password, type);
+        try {
+            return secretClient.getData(orgName, secretName, password, type);
+        } catch (com.walmartlabs.concord.client.SecretNotFoundException e) {
+            throw new SecretNotFoundException(e.getOrgName(), e.getSecretName());
+        }
     }
 
     private ImmutableCreateSecretRequest.Builder secretRequest(SecretParams secret) {

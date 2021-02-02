@@ -19,20 +19,24 @@
  */
 
 import * as React from 'react';
-import { useCallback, useEffect, useState } from 'react';
 import { Search } from 'semantic-ui-react';
 
-import { list as apiFindOrganizations, get as apiGet, OrganizationEntry } from '../../../api/org';
+import { ConcordKey, RequestError } from '../../../api/common';
+import { useCallback, useEffect, useState } from 'react';
 import { SearchProps } from 'semantic-ui-react/dist/commonjs/modules/Search/Search';
+import { ProjectEntry, list as apiList, get as apiGet } from '../../../api/org/project';
 
-interface Props {
-    defaultOrgName?: string;
+interface ExternalProps {
+    orgName: ConcordKey;
+    defaultProjectName?: ConcordKey;
     placeholder?: string;
-    required?: boolean;
 
-    onReset?: (value?: OrganizationEntry) => void;
+    fluid?: boolean;
+    invalid?: boolean;
+
+    onReset?: (value?: ProjectEntry) => void;
     onClear?: () => void;
-    onSelect?: (value: OrganizationEntry) => void;
+    onSelect?: (value: ProjectEntry) => void;
 }
 
 interface Result {
@@ -40,16 +44,35 @@ interface Result {
     description: string;
 }
 
-const renderTitle = (e: OrganizationEntry) => `${e.name}`;
+const renderTitle = (e: ProjectEntry) => `${e.name}`;
 
-const renderDescription = (e: OrganizationEntry): string => '';
+const renderDescription = (e: ProjectEntry): string => `${e.description ? e.description : ''}`;
 
-export default ({ defaultOrgName, placeholder, required, onClear, onReset, onSelect }: Props) => {
-    const [defaultItem, setDefaultItem] = useState<OrganizationEntry | undefined>();
+const isEquals = (a?: ProjectEntry, b?: ProjectEntry): boolean => {
+    if (a === undefined && b === undefined) {
+        return true;
+    }
+    if (a === undefined || b === undefined) {
+        return false;
+    }
+    return a.id === b.id;
+};
+
+export default ({
+    orgName,
+    defaultProjectName,
+    placeholder,
+    fluid,
+    invalid,
+    onClear,
+    onReset,
+    onSelect
+}: ExternalProps) => {
+    const [defaultItem, setDefaultItem] = useState<ProjectEntry | undefined>();
     const [value, setValue] = useState<string | undefined>();
     const [loading, setLoading] = useState(false);
-    const [error, setError] = useState<boolean>();
-    const [items, setItems] = useState<OrganizationEntry[]>([]);
+    const [error, setError] = useState<RequestError>();
+    const [items, setItems] = useState<ProjectEntry[]>([]);
     const [results, setResults] = useState<Result[]>([]);
 
     // perform search whenever the filter changes
@@ -62,7 +85,7 @@ export default ({ defaultOrgName, placeholder, required, onClear, onReset, onSel
         const fetchData = async () => {
             setLoading(true);
             try {
-                const result = await apiFindOrganizations(true, 0, 10, value);
+                const result = await apiList(orgName, 0, 10, value);
                 setItems(result.items);
             } catch (e) {
                 setError(e);
@@ -72,9 +95,9 @@ export default ({ defaultOrgName, placeholder, required, onClear, onReset, onSel
         };
 
         fetchData();
-    }, [value]);
+    }, [orgName, value]);
 
-    // convert OrganizationEntries into whatever <Search> accepts
+    // convert ProjectEntries into whatever <Search> accepts
     useEffect(() => {
         const r = items.map((i) => ({
             key: i.id,
@@ -85,9 +108,9 @@ export default ({ defaultOrgName, placeholder, required, onClear, onReset, onSel
         setResults(r);
     }, [items]);
 
-    // load the default organization's data
+    // load the default project's data
     useEffect(() => {
-        if (!defaultOrgName) {
+        if (!defaultProjectName) {
             setDefaultItem(undefined);
             return;
         }
@@ -95,7 +118,7 @@ export default ({ defaultOrgName, placeholder, required, onClear, onReset, onSel
         const fetchData = async () => {
             setLoading(true);
             try {
-                const result = await apiGet(defaultOrgName);
+                const result = await apiGet(orgName, defaultProjectName);
                 setValue(result ? renderTitle(result) : '');
                 setDefaultItem(result);
             } catch (e) {
@@ -106,7 +129,7 @@ export default ({ defaultOrgName, placeholder, required, onClear, onReset, onSel
         };
 
         fetchData();
-    }, [defaultOrgName]);
+    }, [orgName, defaultProjectName]);
 
     const onChangeCallBack = useCallback(
         (event: React.MouseEvent<HTMLElement>, data: SearchProps) => {
@@ -116,33 +139,27 @@ export default ({ defaultOrgName, placeholder, required, onClear, onReset, onSel
     );
 
     const handleItemSelected = useCallback(
-        (item?: OrganizationEntry) => {
+        (item?: ProjectEntry) => {
             setValue(item ? renderTitle(item) : '');
 
-            const isDefault = item?.id === defaultItem?.id;
+            const isDefault = isEquals(item, defaultItem);
             if (isDefault) {
                 onReset?.(item);
             } else if (item) {
                 onSelect?.(item);
             } else {
-                if (required) {
-                    setValue(defaultItem ? renderTitle(defaultItem) : '');
-                    onReset?.(defaultItem);
-                } else {
-                    onClear?.();
-                }
+                onClear?.();
             }
         },
-        [required, onReset, onSelect, onClear, defaultItem]
+        [onReset, onSelect, onClear, defaultItem]
     );
 
     return (
         <Search
-            fluid={true}
+            fluid={fluid}
             input={{
-                fluid: true,
                 placeholder,
-                error
+                error: !!error || invalid
             }}
             value={value}
             loading={loading}
@@ -155,7 +172,6 @@ export default ({ defaultOrgName, placeholder, required, onClear, onReset, onSel
                     handleItemSelected(undefined);
                 }
             }}
-            showNoResults={!loading}
             onSearchChange={onChangeCallBack}
             onResultSelect={(ev, data) => {
                 const item = items.find((i) => i.id === data.result.key);

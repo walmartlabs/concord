@@ -194,7 +194,6 @@ class SecretActivity extends React.PureComponent<Props> {
                     <SecretOrganizationChangeActivity
                         orgName={data.orgName}
                         secretName={data.name}
-                        orgId={data.orgId}
                     />
 
                     <Header as="h4">Delete Secret</Header>

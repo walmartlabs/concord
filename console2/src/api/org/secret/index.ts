@@ -276,7 +276,7 @@ export const create = (
 export const changeOrganization = (
     orgName: ConcordKey,
     secretName: ConcordKey,
-    newOrgId: ConcordId
+    newOrgName: ConcordKey
 ): Promise<GenericOperationResult> => {
     const opts = {
         method: 'POST',
@@ -284,7 +284,7 @@ export const changeOrganization = (
             'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-            orgId: newOrgId
+            orgName: newOrgName
         })
     };
 

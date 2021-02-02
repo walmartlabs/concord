@@ -28,7 +28,6 @@ import {
 
 import { ConcordKey, RequestError } from '../../../api/common';
 import { SingleOperationPopup } from '../../molecules';
-import { OrganizationEntry } from '../../../api/org';
 import { Form, Input } from 'semantic-ui-react';
 import { FindOrganizationsField, RequestErrorActivity } from '../index';
 import { Redirect } from 'react-router';
@@ -47,11 +46,6 @@ export default ({ orgName, projectName, disabled }: Props) => {
     const [changing, setChanging] = useState<boolean>(false);
     const [success, setSuccess] = useState<boolean>(false);
     const [redirect, setRedirect] = useState<boolean>(false);
-
-    const onSelect = (o: OrganizationEntry) => {
-        setState(o.name);
-        setDirty(orgName !== o.name);
-    };
 
     const toUpdateProjectEntry = (orgName: string, projectName: string): UpdateProjectEntry => {
         return {
@@ -80,6 +74,10 @@ export default ({ orgName, projectName, disabled }: Props) => {
         setRedirect((prevState) => !prevState);
     }, []);
 
+    const resetHandler = useCallback(() => {
+        setConfirmation('');
+    }, []);
+
     if (redirect) {
         return <Redirect to={`/org/${state}/project/${projectName}`} />;
     }
@@ -92,8 +90,16 @@ export default ({ orgName, projectName, disabled }: Props) => {
                     <Form.Field disabled={disabled}>
                         <FindOrganizationsField
                             placeholder="Search for an organization..."
-                            defaultValue={orgName || ''}
-                            onSelect={(u: any) => onSelect(u)}
+                            defaultOrgName={orgName}
+                            required={true}
+                            onReset={() => {
+                                setDirty(false);
+                                setState(orgName);
+                            }}
+                            onSelect={(value) => {
+                                setDirty(true);
+                                setState(value.name);
+                            }}
                         />
                     </Form.Field>
                     <SingleOperationPopup
@@ -112,17 +118,17 @@ export default ({ orgName, projectName, disabled }: Props) => {
                                 <p>
                                     Are you sure you want to move the project to{' '}
                                     <strong>{state}</strong> organization?
-                                    <ul>
-                                        <li>
-                                            Any secret used by repositories in this project will not
-                                            be available.
-                                        </li>
-                                        <li>
-                                            Any secrets scoped to this project, the mapping will be
-                                            removed.{' '}
-                                        </li>
-                                    </ul>
                                 </p>
+                                <ul>
+                                    <li>
+                                        Any secret used by repositories in this project will not
+                                        be available.
+                                    </li>
+                                    <li>
+                                        Any secrets scoped to this project, the mapping will be
+                                        removed.{' '}
+                                    </li>
+                                </ul>
                                 <p>
                                     <strong>NOTE:</strong> Move the secrets to the same organization
                                     as this project, and map them to repositories or projects again
@@ -161,6 +167,7 @@ export default ({ orgName, projectName, disabled }: Props) => {
                             </p>
                         }
                         error={error}
+                        reset={resetHandler}
                         onConfirm={confirmHandler}
                         onDone={redirectHandler}
                         disableYes={confirmation !== projectName}
