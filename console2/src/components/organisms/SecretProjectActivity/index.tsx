@@ -19,48 +19,100 @@
  */
 
 import * as React from 'react';
-import { useState } from 'react';
+import { useCallback, useState } from 'react';
 
 import { ConcordKey, RequestError } from '../../../api/common';
 import { updateSecretProject as apiUpdateSecretProject } from '../../../api/org/secret';
-import { RequestErrorMessage, SecretProjectForm } from '../../molecules';
+import { ProjectSearch, RequestErrorActivity } from '../index';
+import { Confirm, Form } from 'semantic-ui-react';
 
 interface ExternalProps {
     orgName: ConcordKey;
+    projectName?: ConcordKey;
     secretName: ConcordKey;
-    projectName: ConcordKey;
 }
 
 type Props = ExternalProps;
 
-export default (props: Props) => {
+export default ({ orgName, projectName, secretName }: Props) => {
+    const [dirty, setDirty] = useState<boolean>(false);
+    const [showConfirm, setShowConfirm] = useState<boolean>(false);
     const [updating, setUpdating] = useState(false);
     const [error, setError] = useState<RequestError>();
 
-    const { orgName, secretName, projectName } = props;
+    const [submittedProjectName, setSubmittedProjectName] = useState<string | undefined>(
+        projectName
+    );
+    const [projectNameValue, setProjectNameValue] = useState<string | undefined>();
 
-    const update = async (projectName?: string) => {
+    const update = useCallback(async () => {
         try {
             setUpdating(true);
-            await apiUpdateSecretProject(orgName, secretName, projectName || '');
+            await apiUpdateSecretProject(orgName, secretName, projectNameValue || '');
+            setSubmittedProjectName(projectNameValue);
         } catch (e) {
             setError(e);
         } finally {
             setUpdating(false);
         }
-    };
+    }, [orgName, secretName, projectNameValue]);
+
+    const onConfirmHandler = useCallback(async () => {
+        setShowConfirm(false);
+
+        await update();
+
+        setDirty(false);
+    }, [update]);
+
+    const onCancelHandler = useCallback(() => {
+        setShowConfirm(false);
+    }, []);
 
     return (
         <>
-            {error && <RequestErrorMessage error={error} />}
-            <SecretProjectForm
-                orgName={orgName}
-                projectName={projectName}
-                submitting={updating}
-                onSubmit={(values) => update(values.projectName)}
-                confirmationHeader="Update the project?"
-                confirmationContent="Are you sure you want to update the project?"
-            />
+            {error && <RequestErrorActivity error={error} />}
+
+            <Form loading={updating}>
+                <Form.Group widths={3}>
+                    <Form.Field>
+                        <ProjectSearch
+                            orgName={orgName}
+                            placeholder="any"
+                            fluid={true}
+                            defaultProjectName={submittedProjectName}
+                            onReset={(value) => {
+                                setDirty(false);
+                                setProjectNameValue(value?.name);
+                            }}
+                            onClear={() => {
+                                setDirty(true);
+                                setProjectNameValue(undefined);
+                            }}
+                            onSelect={(value) => {
+                                setDirty(true);
+                                setProjectNameValue(value.name);
+                            }}
+                        />
+                    </Form.Field>
+
+                    <Form.Button
+                        primary={true}
+                        negative={true}
+                        content="Update"
+                        disabled={!dirty}
+                        onClick={() => setShowConfirm(true)}
+                    />
+                </Form.Group>
+
+                <Confirm
+                    open={showConfirm}
+                    header="Update the project?"
+                    content="Are you sure you want to update the project?"
+                    onConfirm={onConfirmHandler}
+                    onCancel={onCancelHandler}
+                />
+            </Form>
         </>
     );
 };
