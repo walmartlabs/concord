@@ -79,7 +79,7 @@ public class SecretClient {
                     () -> ClientUtils.postData(apiClient, path, params, File.class));
 
             if (r.getData() == null) {
-                throw new IllegalArgumentException("Secret not found: " + orgName + "/" + secretName);
+                throw new SecretNotFoundException(orgName, secretName);
             }
 
             String secretType = ClientUtils.getHeader(Constants.Headers.SECRET_TYPE, r);
@@ -99,7 +99,7 @@ public class SecretClient {
             return readSecret(actualSecretType, Files.readAllBytes(r.getData().toPath()));
         } catch (ApiException e) {
             if (e.getCode() == 404) {
-                throw new IllegalArgumentException("Secret not found: " + orgName + "/" + secretName);
+                throw new SecretNotFoundException(orgName, secretName);
             }
             throw e;
         } finally {
