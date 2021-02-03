@@ -163,7 +163,7 @@ public class GithubEventResource implements Resource {
                 String commitId = MapUtils.getString(r.event(), COMMIT_ID_KEY);
                 if (commitId != null && TriggerUtils.isUseEventCommitId(t)) {
                     cfg.put(Constants.Request.REPO_COMMIT_ID, commitId);
-                    cfg.put(Constants.Request.REPO_BRANCH_OR_TAG, payload.getBranch());
+                    cfg.put(Constants.Request.REPO_BRANCH_OR_TAG, payload.getHead());
                 }
                 return cfg;
             }, new GithubExclusiveParamsResolver(payload));

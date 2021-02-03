@@ -146,6 +146,21 @@ public class Payload {
         }
     }
 
+    public String getHead() {
+        switch (eventName.toLowerCase()) {
+            case PUSH_EVENT:
+            case "create":
+            case "delete":
+                return getRef(data);
+            case PULL_REQUEST_EVENT:
+            case "pull_request_review":
+            case "pull_request_review_comment":
+                return getPullRequestHead(data);
+            default:
+                return null;
+        }
+    }
+
     public Map<String, Set<String>> getFiles() {
         if (!eventName.toLowerCase().equals(PUSH_EVENT)) {
             return Collections.emptyMap();
@@ -198,6 +213,12 @@ public class Payload {
         }
 
         return GithubUtils.getRefShortName(ref);
+    }
+
+    private static String getPullRequestHead(Map<String, Object> event) {
+        Map<String, Object> pr = MapUtils.getMap(event, PULL_REQUEST_EVENT, Collections.emptyMap());
+        Map<String, Object> base = MapUtils.getMap(pr, "head", Collections.emptyMap());
+        return MapUtils.getString(base, "ref");
     }
 
     private static String getBranchPullRequest(Map<String, Object> event) {
