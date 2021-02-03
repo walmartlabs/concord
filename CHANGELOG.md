@@ -2,6 +2,11 @@
 
 ## [Unreleased]
 
+### Added
+
+- concord-tasks: add upsertQuery methods to the JSON store task
+([#311](https://github.com/walmartlabs/concord/pull/311)).
+
 ### Changed
 
 - concord-repository: fixed the Git CLI command for retrieving
