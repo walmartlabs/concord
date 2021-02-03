@@ -88,6 +88,18 @@ public class JsonStoreTask extends AbstractConcordTask {
                 .delete(orgName, storeName, itemPath));
     }
 
+    public void upsertQuery(@InjectVariable("context") Context ctx, String storeName, String queryName, String queryText) throws Exception {
+        upsertQuery(ctx, assertOrg(ctx), storeName, queryName, queryText);
+    }
+
+    public void upsertQuery(@InjectVariable("context") Context ctx, String orgName, String storeName, String queryName, String queryText) throws Exception {
+        withClient(ctx, client -> {
+            new JsonStoreTaskCommon(client)
+                    .createOrUpdateQuery(orgName, storeName, queryName, queryText);
+            return null;
+        });
+    }
+
     public List<Object> executeQuery(@InjectVariable("context") Context ctx, String storeName, String queryName) throws Exception {
         return executeQuery(ctx, storeName, queryName, (Map<String, Object>) null);
     }

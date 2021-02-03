@@ -99,6 +99,22 @@ public class JsonStoreTaskCommon {
     }
 
     /**
+     * Creates a new JSON store query or update an existing one.
+     */
+    public void createOrUpdateQuery(String orgName, String storeName, String queryName, String queryText) throws ApiException {
+        ClientUtils.withRetry(RETRY_COUNT, RETRY_INTERVAL, () -> {
+            JsonStoreQueryApi api = new JsonStoreQueryApi(apiClient);
+            JsonStoreQueryRequest request = new JsonStoreQueryRequest()
+                    .setName(queryName)
+                    .setText(queryText);
+            GenericOperationResult result = api.createOrUpdate(orgName, storeName, request);
+            log.info("The query '{}' in store '{}' has been successfully {}", queryName, storeName, result.getResult());
+            return null;
+        });
+
+    }
+
+    /**
      * Inserts a new item or replaces an existing one.
      * <p/>
      * If {@code createStore} is {@code true} the store will be automatically created.
