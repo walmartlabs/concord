@@ -191,7 +191,7 @@ public class ExclusiveGroupProcessor implements PayloadProcessor {
 
                 ProcessKey newProcess = dao.anyNew(tx, processKey, projectId, exclusive.group());
                 if (newProcess != null) {
-                    queueManager.updateStatus(processKey, ProcessStatus.CANCELLED);
+                    queueManager.updateStatus(tx, processKey, ProcessStatus.CANCELLED);
                 }
 
                 queueManager.updateExclusive(tx, processKey, exclusive);
@@ -316,7 +316,8 @@ public class ExclusiveGroupProcessor implements PayloadProcessor {
                     .from(PROCESS_QUEUE)
                     .where(jsonbText(PROCESS_QUEUE.EXCLUSIVE, "group").eq(exclusiveGroup)
                             .and(PROCESS_QUEUE.PROJECT_ID.eq(projectId)
-                                    .and(PROCESS_QUEUE.CREATED_AT.greaterOrEqual(currentProcessKey.getCreatedAt()))));
+                                    .and(PROCESS_QUEUE.CREATED_AT.greaterOrEqual(currentProcessKey.getCreatedAt())
+                                            .and(PROCESS_QUEUE.CURRENT_STATUS.in(CANCELLABLE_STATUSES)))));
 
             SelectJoinStep<Record1<UUID>> children = tx.withRecursive("children").as(
                     select(ProcessQueue.PROCESS_QUEUE.INSTANCE_ID, ProcessQueue.PROCESS_QUEUE.PARENT_INSTANCE_ID).from(ProcessQueue.PROCESS_QUEUE)
