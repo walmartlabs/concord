@@ -214,7 +214,7 @@ public class Constants {
         public static final String PROCESS_TIMEOUT = "processTimeout";
 
         /**
-         * Process timeout.
+         * Timeout for process in Suspended state.
          */
         public static final String SUSPEND_TIMEOUT = "suspendTimeout";
 
