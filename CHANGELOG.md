@@ -4,6 +4,8 @@
 
 ### Added
 
+- runtime-v2: add EL resolver for plain accessor methods
+([#316](https://github.com/walmartlabs/concord/pull/316));
 - concord-client: report the base API URL in error messages
 ([#312](https://github.com/walmartlabs/concord/pull/312));
 - concord-tasks: add upsertQuery methods to the JSON store task
