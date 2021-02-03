@@ -977,6 +977,9 @@ public class ApiClient {
                     throw new ApiException(response.message(), e, response.code(), response.headers().toMultimap());
                 }
             }
+
+            msg = "(" + basePath + ") " + msg;
+
             throw new ApiException(msg, response.code(), response.headers().toMultimap(), respBody);
         }
     }
