@@ -4,6 +4,8 @@
 
 ### Added
 
+- concord-client: report the base API URL in error messages
+([#312](https://github.com/walmartlabs/concord/pull/312));
 - concord-tasks: add upsertQuery methods to the JSON store task
 ([#311](https://github.com/walmartlabs/concord/pull/311)).
 
