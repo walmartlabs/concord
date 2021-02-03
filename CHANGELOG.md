@@ -4,6 +4,9 @@
 
 ### Changed
 
+- concord-repository: fixed the Git CLI command for retrieving
+commit info (extraneous `\n` in commit description)
+([#313](https://github.com/walmartlabs/concord/pull/313));
 - concord-console: make `projectId` and `projectName` optional in
 the `SecretEntry` definition (minor API usage fix)
 ([#306](https://github.com/walmartlabs/concord/pull/306));
