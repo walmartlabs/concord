@@ -36,10 +36,7 @@ import org.slf4j.LoggerFactory;
 import javax.inject.Inject;
 import javax.inject.Named;
 import java.time.OffsetDateTime;
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Named
@@ -84,7 +81,11 @@ public class AgentManager {
             return;
         }
 
-        commandQueue.insert(UUID.randomUUID(), agentId, Commands.cancel(processKey.toString()));
+        killProcess(processKey, agentId);
+    }
+
+    public void killProcess(ProcessKey processKey, String agentId) {
+        commandQueue.insert(UUID.randomUUID(), agentId, Commands.cancel(processKey));
     }
 
     public void killProcess(List<ProcessKey> processKeys) {
@@ -110,7 +111,7 @@ public class AgentManager {
         List<AgentCommand> commands = l.stream()
                 .filter(p -> p.lastAgentId() != null)
                 .map(p -> new AgentCommand(UUID.randomUUID(), p.lastAgentId(), AgentCommand.Status.CREATED,
-                        OffsetDateTime.now(), Commands.cancel(p.instanceId().toString())))
+                        OffsetDateTime.now(), Commands.cancel(new ProcessKey(p.instanceId(), p.createdAt()))))
                 .collect(Collectors.toList());
 
         commandQueue.insertBatch(commands);

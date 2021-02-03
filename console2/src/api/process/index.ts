@@ -194,6 +194,7 @@ export interface ProcessEntry {
     disabled: boolean;
     triggeredBy?: TriggeredByEntry;
     timeout?: number;
+    suspendTimeout?: number;
     runtime?: ProcessRuntime;
     requirements?: {};
 }

@@ -147,7 +147,7 @@ public class ProcessQueueDao extends AbstractDao {
     public void enqueue(DSLContext tx, ProcessKey processKey, Set<String> tags, OffsetDateTime startAt,
                         Map<String, Object> requirements, Long processTimeout, Set<String> handlers,
                         Map<String, Object> meta, Imports imports, ExclusiveMode exclusive,
-                        String runtime, List<String> dependencies) {
+                        String runtime, List<String> dependencies, Long suspendTimeout) {
 
         UpdateSetMoreStep<ProcessQueueRecord> q = tx.update(PROCESS_QUEUE)
                 .set(PROCESS_QUEUE.CURRENT_STATUS, ProcessStatus.ENQUEUED.toString())
@@ -166,7 +166,11 @@ public class ProcessQueueDao extends AbstractDao {
         }
 
         if (processTimeout != null) {
-            q.set(PROCESS_QUEUE.TIMEOUT, processTimeout);
+            q.set(PROCESS_QUEUE.PROCESS_TIMEOUT, processTimeout);
+        }
+
+        if (suspendTimeout != null) {
+            q.set(PROCESS_QUEUE.SUSPEND_TIMEOUT, suspendTimeout);
         }
 
         if (handlers != null) {
@@ -804,7 +808,8 @@ public class ProcessQueueDao extends AbstractDao {
                 .checkpoints(objectMapper.fromJSONB(getOrNull(r, "checkpoints"), LIST_OF_CHECKPOINTS))
                 .statusHistory(objectMapper.fromJSONB(getOrNull(r, "status_history"), LIST_OF_STATUS_HISTORY))
                 .triggeredBy(objectMapper.fromJSONB(r.get(PROCESS_QUEUE.TRIGGERED_BY), TriggeredByEntry.class))
-                .timeout(r.get(PROCESS_QUEUE.TIMEOUT))
+                .timeout(r.get(PROCESS_QUEUE.PROCESS_TIMEOUT))
+                .suspendTimeout(r.get(PROCESS_QUEUE.SUSPEND_TIMEOUT))
                 .runtime(r.get(PROCESS_QUEUE.RUNTIME))
                 .build();
     }

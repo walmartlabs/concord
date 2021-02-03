@@ -214,6 +214,11 @@ public class Constants {
         public static final String PROCESS_TIMEOUT = "processTimeout";
 
         /**
+         * Process timeout.
+         */
+        public static final String SUSPEND_TIMEOUT = "suspendTimeout";
+
+        /**
          * A specific GIT commit ID to use.
          */
         public static final String REPO_COMMIT_ID = "repoCommitId";
