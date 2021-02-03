@@ -4,7 +4,9 @@
 
 ### Added
 
-- runtime-v2: add EL resolver for plain accessor methods
+- runtime-v2: add EL resolver for plain accessor methods, e.g.
+`MyBean#property()`. Allows seamless usage of classes generated
+by [Immutables](https://immutables.github.io/);
 ([#316](https://github.com/walmartlabs/concord/pull/316));
 - concord-client: report the base API URL in error messages
 ([#312](https://github.com/walmartlabs/concord/pull/312));
