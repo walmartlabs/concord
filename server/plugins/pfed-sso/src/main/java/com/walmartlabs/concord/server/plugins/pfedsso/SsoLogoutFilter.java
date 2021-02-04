@@ -33,11 +33,13 @@ public class SsoLogoutFilter extends AbstractHttpFilter {
 
     private final SsoConfiguration cfg;
     private final RedirectHelper redirectHelper;
+    private final SsoClient ssoClient;
 
     @Inject
-    public SsoLogoutFilter(SsoConfiguration cfg, RedirectHelper redirectHelper) {
+    public SsoLogoutFilter(SsoConfiguration cfg, RedirectHelper redirectHelper, SsoClient ssoClient) {
         this.cfg = cfg;
         this.redirectHelper = redirectHelper;
+        this.ssoClient = ssoClient;
     }
 
     @Override
@@ -50,10 +52,8 @@ public class SsoLogoutFilter extends AbstractHttpFilter {
         String initParam = request.getParameter("init");
         boolean isInit = initParam != null && !initParam.trim().isEmpty();
         if (isInit) {
-            redirectHelper.sendRedirect(response, cfg.getLogoutEndpointUrl());
-            return;
+            ssoClient.revokeToken(SsoCookies.getRefreshCookie(request));
         }
-
         SsoCookies.clear(response);
         Subject subject = SecurityUtils.getSubject();
         subject.logout();

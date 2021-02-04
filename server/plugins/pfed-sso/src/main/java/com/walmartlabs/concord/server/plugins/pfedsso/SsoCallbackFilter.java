@@ -27,6 +27,9 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 
+import static com.walmartlabs.concord.server.plugins.pfedsso.SsoCookies.REFRESH_TOKEN_COOKIE;
+import static com.walmartlabs.concord.server.plugins.pfedsso.SsoCookies.TOKEN_COOKIE;
+
 public class SsoCallbackFilter extends AbstractHttpFilter {
 
     private final SsoConfiguration cfg;
@@ -61,8 +64,9 @@ public class SsoCallbackFilter extends AbstractHttpFilter {
 
         SsoClient.Token token;
         token = ssoClient.getToken(code, cfg.getRedirectUrl());
-        SsoCookies.addTokenCookie(token.accessToken(), token.expiresIn(), response);
-
+        SsoCookies.addCookie(TOKEN_COOKIE, token.accessToken(), token.expiresIn(), response);
+        SsoCookies.addCookie(REFRESH_TOKEN_COOKIE, token.refreshToken(), token.expiresIn(), response);
+        
         String redirectUrl = SsoCookies.getFromCookie(request);
         if (redirectUrl == null || redirectUrl.trim().isEmpty()) {
             redirectUrl = "/";

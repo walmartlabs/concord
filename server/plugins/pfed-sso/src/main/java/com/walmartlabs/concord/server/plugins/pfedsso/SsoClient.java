@@ -55,6 +55,7 @@ public class SsoClient {
     private static final String CONTENT_TYPE_HEADER = "application/x-www-form-urlencoded";
     private static final String CHARSET_HEADER = "utf-8";
     private static final String TOKEN_REQUEST = "code=%s&redirect_uri=%s&grant_type=authorization_code&client_id=%s";
+    private static final String REVOKE_TOKEN_REQUEST = "token=%s&token_type_hint=refresh_token&client_id=%s";
 
     private final SsoConfiguration cfg;
     private final ObjectMapper objectMapper = new ObjectMapper();
@@ -92,30 +93,8 @@ public class SsoClient {
         try {
             URL url = new URL(cfg.getTokenEndPointUrl());
             con = (HttpURLConnection) url.openConnection();
-            String clientIdAndSecret = String.format("%s:%s", cfg.getClientId(), cfg.getClientSecret());
-            String authzHeaderValue = String.format("Basic %s", Base64.getEncoder().encodeToString(clientIdAndSecret.getBytes()));
-
-            con.setRequestProperty(HttpHeaders.AUTHORIZATION, authzHeaderValue);
-            con.setRequestProperty(HttpHeaders.USER_AGENT, USER_AGENT_HEADER);
-            con.setRequestProperty(HttpHeaders.CONTENT_TYPE, CONTENT_TYPE_HEADER);
-            con.setRequestProperty(HttpHeaders.ACCEPT_LANGUAGE, ACCEPT_LANG_HEADER);
-            con.setRequestProperty(HttpHeaders.ACCEPT_CHARSET, CHARSET_HEADER);
-
-            con.setRequestMethod("POST");
-            con.setConnectTimeout((int) cfg.getTokenServiceConnectTimeout().toMillis());
-            con.setReadTimeout((int) cfg.getTokenServiceReadTimeout().toMillis());
-            con.setDoOutput(true);
-
             String urlParameters = String.format(TOKEN_REQUEST, authCode, clientRedirectURI, cfg.getClientId());
-            byte[] postData = urlParameters.getBytes(StandardCharsets.UTF_8);
-            int postDataLength = postData.length;
-            con.setRequestProperty(HttpHeaders.CONTENT_LENGTH, Integer.toString(postDataLength));
-
-            try (DataOutputStream wr = new DataOutputStream(con.getOutputStream())) {
-                wr.write(postData);
-                wr.flush();
-            }
-
+            postRequest(con, urlParameters);
             int responseCode = con.getResponseCode();
             if (responseCode != 200) {
                 log.error("getToken ['{}'] -> error response code {}", authCode, responseCode);
@@ -129,6 +108,51 @@ public class SsoClient {
             if (con != null) {
                 con.disconnect();
             }
+        }
+    }
+
+    public void revokeToken(String refreshToken) throws IOException {
+        HttpURLConnection con = null;
+        try {
+            URL url = new URL(cfg.getLogoutEndpointUrl());
+            con = (HttpURLConnection) url.openConnection();
+            String urlParameters = String.format(REVOKE_TOKEN_REQUEST, refreshToken, cfg.getClientId());
+            postRequest(con, urlParameters);
+            int responseCode = con.getResponseCode();
+            if (responseCode != 200) {
+                log.error("refreshToken ['{}'] -> error response code {}", refreshToken, responseCode);
+                throw new IOException("Invalid server response code: " + responseCode);
+            }
+
+        } finally {
+            if (con != null) {
+                con.disconnect();
+            }
+        }
+    }
+
+    private void postRequest(HttpURLConnection con, String urlParameters) throws IOException {
+        String clientIdAndSecret = String.format("%s:%s", cfg.getClientId(), cfg.getClientSecret());
+        String authzHeaderValue = String.format("Basic %s", Base64.getEncoder().encodeToString(clientIdAndSecret.getBytes()));
+
+        con.setRequestProperty(HttpHeaders.AUTHORIZATION, authzHeaderValue);
+        con.setRequestProperty(HttpHeaders.USER_AGENT, USER_AGENT_HEADER);
+        con.setRequestProperty(HttpHeaders.CONTENT_TYPE, CONTENT_TYPE_HEADER);
+        con.setRequestProperty(HttpHeaders.ACCEPT_LANGUAGE, ACCEPT_LANG_HEADER);
+        con.setRequestProperty(HttpHeaders.ACCEPT_CHARSET, CHARSET_HEADER);
+
+        con.setRequestMethod("POST");
+        con.setConnectTimeout((int) cfg.getTokenServiceConnectTimeout().toMillis());
+        con.setReadTimeout((int) cfg.getTokenServiceReadTimeout().toMillis());
+        con.setDoOutput(true);
+
+        byte[] postData = urlParameters.getBytes(StandardCharsets.UTF_8);
+        int postDataLength = postData.length;
+        con.setRequestProperty(HttpHeaders.CONTENT_LENGTH, Integer.toString(postDataLength));
+
+        try (DataOutputStream wr = new DataOutputStream(con.getOutputStream())) {
+            wr.write(postData);
+            wr.flush();
         }
     }
 

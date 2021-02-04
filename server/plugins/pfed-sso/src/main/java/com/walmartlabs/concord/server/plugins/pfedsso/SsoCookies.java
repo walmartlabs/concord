@@ -27,8 +27,9 @@ import java.util.Arrays;
 
 public final class SsoCookies {
 
-    private static final String TOKEN_COOKIE = "ssoToken";
-    private static final String POST_LOGIN_URL_COOKIE = "postLoginUrl";
+    public static final String TOKEN_COOKIE = "ssoToken";
+    public static final String REFRESH_TOKEN_COOKIE = "refreshToken";
+    public static final String POST_LOGIN_URL_COOKIE = "postLoginUrl";
 
     /**
      * Return the SSO token
@@ -41,14 +42,25 @@ public final class SsoCookies {
     }
 
     /**
+     * Return the Refresh token
+     *
+     * @param request from which Refresh token cookie will get
+     * @return SSO token or <code>null</code> if no SSO token cookie present
+     */
+    public static String getRefreshCookie(HttpServletRequest request) {
+        return getCookie(REFRESH_TOKEN_COOKIE, request);
+    }
+
+    /**
      * Store SSO token in response cookies
      *
+     * @param name Cookie name
      * @param token     SSO token
      * @param expiresIn SSO token expiration time in seconds
-     * @param response
+     * @param response response
      */
-    public static void addTokenCookie(String token, Integer expiresIn, HttpServletResponse response) {
-        Cookie cookie = new Cookie(TOKEN_COOKIE, token);
+    public static void addCookie(String name, String token, Integer expiresIn, HttpServletResponse response) {
+        Cookie cookie = new Cookie(name, token);
         cookie.setMaxAge(expiresIn);
         cookie.setPath("/");
         cookie.setHttpOnly(true);
@@ -70,7 +82,7 @@ public final class SsoCookies {
      * Store post successful redirect url in response cookies
      *
      * @param url      url to be redirected to
-     * @param response
+     * @param response response
      */
     public static void addFromCookie(String url, HttpServletResponse response) {
         Cookie cookie = new Cookie(POST_LOGIN_URL_COOKIE, url);
@@ -100,6 +112,7 @@ public final class SsoCookies {
     public static HttpServletResponse clear(HttpServletResponse response) {
         remove(TOKEN_COOKIE, response);
         remove(POST_LOGIN_URL_COOKIE, response);
+        remove(REFRESH_TOKEN_COOKIE, response);
         return response;
     }
 
