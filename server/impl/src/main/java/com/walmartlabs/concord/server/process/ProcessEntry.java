@@ -146,6 +146,9 @@ public interface ProcessEntry extends Serializable {
     Long timeout();
 
     @Nullable
+    Long suspendTimeout();
+
+    @Nullable
     String runtime();
 
     @Value.Immutable

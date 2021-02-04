@@ -20,7 +20,7 @@
 
 import * as React from 'react';
 import { Link } from 'react-router-dom';
-import { Grid, Popup, Table } from 'semantic-ui-react';
+import { Grid, Label, Popup, Table } from 'semantic-ui-react';
 
 import {
     getStatusSemanticColor,
@@ -164,15 +164,33 @@ class ProcessStatusTable extends React.PureComponent<Props> {
     }
 
     static renderTimeout(process?: ProcessEntry) {
-        if (!process || !process.timeout) {
+        if (!process || (!process.timeout && !process.suspendTimeout)) {
             return '-';
         }
 
         return (
-            <Popup
-                trigger={<span>{formatDuration(process.timeout * 1000)}</span>}
-                content={`${process.timeout}s`}
-            />
+            <>
+                {process.timeout && (
+                    <Label key={'running'}>
+                        <Popup
+                            trigger={<span>running: {formatDuration(process.timeout * 1000)}</span>}
+                            content={`${process.timeout}s`}
+                        />
+                    </Label>
+                )}
+                {process.suspendTimeout && (
+                    <Label key={'suspended'}>
+                        <Popup
+                            trigger={
+                                <span>
+                                    suspended: {formatDuration(process.suspendTimeout * 1000)}
+                                </span>
+                            }
+                            content={`${process.suspendTimeout}s`}
+                        />
+                    </Label>
+                )}
+            </>
         );
     }
 
