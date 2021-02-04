@@ -21,9 +21,11 @@ package com.walmartlabs.concord.server.agent;
  */
 
 import com.walmartlabs.concord.server.CommandType;
+import com.walmartlabs.concord.server.sdk.ProcessKey;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.UUID;
 
 public final class Commands {
 
@@ -31,10 +33,10 @@ public final class Commands {
 
     public static final String INSTANCE_ID_KEY = "instanceId";
 
-    public static Map<String, Object> cancel(String instanceId) {
+    public static Map<String, Object> cancel(ProcessKey processKey) {
         Map<String, Object> m = new HashMap<>();
         m.put(TYPE_KEY, CommandType.CANCEL_JOB);
-        m.put(INSTANCE_ID_KEY, instanceId);
+        m.put(INSTANCE_ID_KEY, processKey.getInstanceId().toString());
         return m;
     }
 
