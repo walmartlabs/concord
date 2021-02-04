@@ -380,4 +380,15 @@ public class ProcessIT {
         m.put("message", "BOOM");
         assertEquals(m, data.get("lastError"));
     }
+
+    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    public void testSuspendTimeout() throws Exception {
+        Payload payload = new Payload()
+                .parameter("suspendTimeout", "PT1S")
+                .archive(ProcessIT.class.getResource("form").toURI());
+
+        ConcordProcess proc = concord.processes().start(payload);
+
+        proc.expectStatus(ProcessEntry.StatusEnum.TIMED_OUT);
+    }
 }

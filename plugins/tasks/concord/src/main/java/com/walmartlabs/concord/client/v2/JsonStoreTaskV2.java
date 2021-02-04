@@ -91,6 +91,14 @@ public class JsonStoreTaskV2 implements Task {
         return delegate.delete(orgName, storeName, itemPath);
     }
 
+    public void upsertQuery(String storeName, String queryName, String queryText) throws Exception {
+        upsertQuery(assertOrg(processOrg), storeName, queryName, queryText);
+    }
+
+    public void upsertQuery(String orgName, String storeName, String queryName, String queryText) throws Exception {
+        delegate.createOrUpdateQuery(orgName, storeName, queryName, queryText);
+    }
+
     public List<Object> executeQuery(String storeName, String queryName) throws Exception {
         return executeQuery(storeName, queryName, (Map<String, Object>) null);
     }

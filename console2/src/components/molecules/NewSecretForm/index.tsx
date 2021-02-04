@@ -33,7 +33,7 @@ import { isSecretExists } from '../../../api/service/console';
 import { notEmpty } from '../../../utils';
 import { secret as validation, secretAlreadyExistsError } from '../../../validation';
 import { FormikDropdown, FormikFileInput, FormikInput } from '../../atoms';
-import { ProjectDropdown, SecretStoreDropdown } from '../../organisms';
+import { ProjectSearchFormField, SecretStoreDropdown } from '../../organisms';
 
 enum StorePasswordType {
     DONT_USE,
@@ -180,11 +180,11 @@ class NewSecretForm extends React.Component<InjectedFormikProps<Props, FormValue
 
                 <Divider />
 
-                <ProjectDropdown
-                    name="projectName"
+                <ProjectSearchFormField
+                    orgName={orgName}
+                    fieldName={'projectName'}
                     label="Project"
                     placeholder="any"
-                    orgName={orgName}
                 />
 
                 <Segment secondary={true} basic={true}>

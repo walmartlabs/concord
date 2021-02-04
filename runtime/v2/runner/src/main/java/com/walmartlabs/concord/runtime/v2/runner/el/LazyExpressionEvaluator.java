@@ -24,6 +24,7 @@ import com.walmartlabs.concord.common.ConfigurationUtils;
 import com.walmartlabs.concord.runtime.v2.runner.el.functions.AllVariablesFunction;
 import com.walmartlabs.concord.runtime.v2.runner.el.functions.HasVariableFunction;
 import com.walmartlabs.concord.runtime.v2.runner.el.resolvers.BeanELResolver;
+import com.walmartlabs.concord.runtime.v2.runner.el.resolvers.MethodAccessorResolver;
 import com.walmartlabs.concord.runtime.v2.runner.el.resolvers.TaskMethodResolver;
 import com.walmartlabs.concord.runtime.v2.runner.el.resolvers.TaskResolver;
 import com.walmartlabs.concord.runtime.v2.runner.el.resolvers.VariableResolver;
@@ -165,6 +166,7 @@ public class LazyExpressionEvaluator implements ExpressionEvaluator {
         r.add(expressionFactory.getStreamELResolver());
         r.add(new StaticFieldELResolver());
         r.add(new MapELResolver());
+        r.add(new MethodAccessorResolver());
         r.add(new ResourceBundleELResolver());
         r.add(new ListELResolver());
         r.add(new ArrayELResolver());

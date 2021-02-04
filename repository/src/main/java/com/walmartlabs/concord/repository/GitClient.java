@@ -596,7 +596,7 @@ public class GitClient {
         String result = exec(Command.builder()
                 .workDir(path)
                 .timeout(cfg.defaultOperationTimeout())
-                .addArgs("log", "-1", "--format=%n%an (%ae)%n%s%n%b")
+                .addArgs("log", "-1", "--format=%an (%ae)%n%s%n%b")
                 .build());
         String[] info = result.split("\n");
         if (info.length < 1) {

@@ -23,78 +23,76 @@ import { useCallback, useState } from 'react';
 
 import { changeOrganization as apiChangeOrganization } from '../../../api/org/secret';
 
-import { ConcordId, RequestError } from '../../../api/common';
-import { RequestErrorMessage, SingleOperationPopup } from '../../molecules';
-import { OrganizationEntry, OrganizationVisibility } from '../../../api/org';
+import { RequestError } from '../../../api/common';
+import { SingleOperationPopup } from '../../molecules';
 import { Form, Input } from 'semantic-ui-react';
-import { FindOrganizationsField } from '../index';
+import { FindOrganizationsField, RequestErrorActivity } from '../index';
 import { Redirect } from 'react-router';
 
 interface Props {
     orgName: string;
     secretName: string;
-    orgId: ConcordId;
 }
 
-export default ({ orgId, orgName, secretName }: Props) => {
+export default ({ orgName, secretName }: Props) => {
     const [dirty, setDirty] = useState<boolean>(false);
-    const [state, setState] = useState<OrganizationEntry>({
-        id: orgId,
-        name: orgName,
-        visibility: OrganizationVisibility.PRIVATE
-    });
+    const [orgNameValue, setOrgNameValue] = useState<string>(orgName);
     const [confirmation, setConfirmation] = useState('');
     const [error, setError] = useState<RequestError>();
     const [changing, setChanging] = useState<boolean>(false);
     const [success, setSuccess] = useState<boolean>(false);
     const [redirect, setRedirect] = useState<boolean>(false);
-    const [reset, setReset] = useState<boolean>(false);
-
-    const onSelect = (o: OrganizationEntry) => {
-        setState(o);
-        setDirty(orgName !== o.name);
-    };
 
     const confirmHandler = useCallback(async () => {
+        if (!orgNameValue) {
+            return;
+        }
+
         setChanging(true);
         try {
-            const result = await apiChangeOrganization(orgName, secretName, state.id);
+            const result = await apiChangeOrganization(orgName, secretName, orgNameValue);
             setSuccess(result.ok);
         } catch (e) {
             setError(e);
         } finally {
             setChanging(false);
         }
-    }, [state, orgName, secretName]);
+    }, [orgName, secretName, orgNameValue]);
 
     const redirectHandler = useCallback(() => {
         setRedirect((prevState) => !prevState);
     }, []);
 
     const resetHandler = useCallback(() => {
-        setReset((prevState) => !prevState);
+        setConfirmation('');
     }, []);
 
     if (redirect) {
-        return <Redirect to={`/org/${state.name}/secret/${secretName}`} />;
-    }
-
-    if (reset) {
-        return <Redirect to={`/org/${orgName}/secret/${secretName}`} />;
+        return <Redirect to={`/org/${orgNameValue}/secret/${secretName}`} />;
     }
 
     return (
         <>
-            {error && <RequestErrorMessage error={error} />}
+            {error && <RequestErrorActivity error={error} />}
+
             <Form loading={changing}>
                 <Form.Group widths={3}>
                     <Form.Field>
                         <FindOrganizationsField
                             placeholder="Search for an organization..."
-                            defaultValue={orgName || ''}
-                            onSelect={(u: any) => onSelect(u)}
+                            defaultOrgName={orgName}
+                            required={true}
+                            onReset={() => {
+                                setDirty(false);
+                                setOrgNameValue(orgName);
+                            }}
+                            onSelect={(value) => {
+                                setDirty(true);
+                                setOrgNameValue(value.name);
+                            }}
                         />
                     </Form.Field>
+
                     <SingleOperationPopup
                         trigger={(onClick) => (
                             <Form.Button
@@ -110,18 +108,18 @@ export default ({ orgId, orgName, secretName }: Props) => {
                             <>
                                 <p>
                                     Are you sure you want to move the secret to{' '}
-                                    <strong>{state.name}</strong> organization?
-                                    <ul>
-                                        <li>
-                                            Any repositories using this secret in this organization,
-                                            the mapping will be removed{' '}
-                                        </li>
-                                        <li>
-                                            If this secret is scoped to a project, the mapping will
-                                            be removed.{' '}
-                                        </li>
-                                    </ul>
+                                    <strong>{orgNameValue}</strong> organization?
                                 </p>
+                                <ul>
+                                    <li>
+                                        Any repositories using this secret in this organization, the
+                                        mapping will be removed{' '}
+                                    </li>
+                                    <li>
+                                        If this secret is scoped to a project, the mapping will be
+                                        removed.{' '}
+                                    </li>
+                                </ul>
                                 <p>
                                     Please type <strong>{secretName}</strong> to confirm.
                                 </p>
@@ -143,14 +141,14 @@ export default ({ orgId, orgName, secretName }: Props) => {
                         runningMsg={
                             <p>
                                 Moving the secret <strong>{secretName}</strong> to{' '}
-                                <strong>{state.name}</strong> organization...
+                                <strong>{orgNameValue}</strong> organization...
                             </p>
                         }
                         success={success}
                         successMsg={
                             <p>
                                 The secret <strong>{secretName}</strong> was moved successfully to{' '}
-                                <strong>{state.name}</strong> organization.
+                                <strong>{orgNameValue}</strong> organization.
                             </p>
                         }
                         error={error}

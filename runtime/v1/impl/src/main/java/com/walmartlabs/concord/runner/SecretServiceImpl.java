@@ -28,10 +28,8 @@ import com.walmartlabs.concord.client.*;
 import com.walmartlabs.concord.common.secret.BinaryDataSecret;
 import com.walmartlabs.concord.common.secret.KeyPair;
 import com.walmartlabs.concord.common.secret.UsernamePassword;
-import com.walmartlabs.concord.sdk.Constants;
-import com.walmartlabs.concord.sdk.Context;
-import com.walmartlabs.concord.sdk.Secret;
-import com.walmartlabs.concord.sdk.SecretService;
+import com.walmartlabs.concord.sdk.SecretNotFoundException;
+import com.walmartlabs.concord.sdk.*;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -172,7 +170,11 @@ public class SecretServiceImpl implements SecretService {
     }
 
     private <T extends Secret> T get(Context ctx, String orgName, String secretName, String password, SecretEntry.TypeEnum type) throws Exception {
-        return new SecretClient(clientFactory.create(ctx)).getData(assertOrgName(ctx, orgName), secretName, password, type);
+        try {
+            return new SecretClient(clientFactory.create(ctx)).getData(assertOrgName(ctx, orgName), secretName, password, type);
+        } catch (com.walmartlabs.concord.client.SecretNotFoundException e) {
+            throw new SecretNotFoundException(e.getOrgName(), e.getSecretName());
+        }
     }
 
     @SuppressWarnings("unchecked")
