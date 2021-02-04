@@ -4,6 +4,10 @@
 
 ### Added
 
+- concord-server: support for `configuration.suspendTimeout`.
+Allows users to specify the maximum amount of time the process
+can be in the `SUSPENDED` state;
+([#315](https://github.com/walmartlabs/concord/pull/315));
 - runtime-v2: add EL resolver for plain accessor methods, e.g.
 `MyBean#property()`. Allows seamless usage of classes generated
 by [Immutables](https://immutables.github.io/)
