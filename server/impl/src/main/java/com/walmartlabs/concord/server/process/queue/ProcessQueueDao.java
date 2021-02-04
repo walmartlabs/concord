@@ -166,7 +166,7 @@ public class ProcessQueueDao extends AbstractDao {
         }
 
         if (processTimeout != null) {
-            q.set(PROCESS_QUEUE.PROCESS_TIMEOUT, processTimeout);
+            q.set(PROCESS_QUEUE.TIMEOUT, processTimeout);
         }
 
         if (suspendTimeout != null) {
@@ -808,7 +808,7 @@ public class ProcessQueueDao extends AbstractDao {
                 .checkpoints(objectMapper.fromJSONB(getOrNull(r, "checkpoints"), LIST_OF_CHECKPOINTS))
                 .statusHistory(objectMapper.fromJSONB(getOrNull(r, "status_history"), LIST_OF_STATUS_HISTORY))
                 .triggeredBy(objectMapper.fromJSONB(r.get(PROCESS_QUEUE.TRIGGERED_BY), TriggeredByEntry.class))
-                .timeout(r.get(PROCESS_QUEUE.PROCESS_TIMEOUT))
+                .timeout(r.get(PROCESS_QUEUE.TIMEOUT))
                 .suspendTimeout(r.get(PROCESS_QUEUE.SUSPEND_TIMEOUT))
                 .runtime(r.get(PROCESS_QUEUE.RUNTIME))
                 .build();

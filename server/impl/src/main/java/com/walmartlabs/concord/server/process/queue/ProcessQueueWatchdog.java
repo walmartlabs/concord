@@ -317,9 +317,9 @@ public class ProcessQueueWatchdog implements ScheduledTask {
         public List<TimedOutEntry> pollExpired(int maxEntries) {
             ProcessQueue q = PROCESS_QUEUE.as("q");
 
-            Field<?> maxAge = interval("1 second").mul(q.PROCESS_TIMEOUT);
+            Field<?> maxAge = interval("1 second").mul(q.TIMEOUT);
 
-            return txResult(tx -> tx.select(q.INSTANCE_ID, q.CREATED_AT, q.LAST_AGENT_ID, q.PROCESS_TIMEOUT)
+            return txResult(tx -> tx.select(q.INSTANCE_ID, q.CREATED_AT, q.LAST_AGENT_ID, q.TIMEOUT)
                     .from(q)
                     .where(q.CURRENT_STATUS.eq(ProcessStatus.RUNNING.toString())
                             .and(q.LAST_RUN_AT.plus(maxAge).lessOrEqual(currentOffsetDateTime())))
