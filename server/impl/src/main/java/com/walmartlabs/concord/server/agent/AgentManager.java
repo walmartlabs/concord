@@ -97,14 +97,14 @@ public class AgentManager {
                 .map(k -> PartialProcessKey.from(k.getInstanceId()))
                 .collect(Collectors.toList()));
 
-        List<UUID> withoutAgent = l.stream()
+        List<ProcessKey> withoutAgent = l.stream()
                 .filter(p -> p.lastAgentId() == null)
-                .map(ProcessEntry::instanceId)
+                .map(p -> new ProcessKey(p.instanceId(), p.createdAt()))
                 .collect(Collectors.toList());
 
         if (!withoutAgent.isEmpty()) {
             withoutAgent.forEach(p -> log.warn("killProcess ['{}'] -> trying to kill a process w/o an agent", p));
-            queueManager.updateExpectedStatus(processKeys, null, ProcessStatus.CANCELLED);
+            queueManager.updateExpectedStatus(withoutAgent, null, ProcessStatus.CANCELLED);
         }
 
         List<AgentCommand> commands = l.stream()
