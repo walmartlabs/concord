@@ -242,8 +242,7 @@ public class ProcessResourceV2 implements Resource {
         if (orgId != null) {
             // we got an org ID, use it as it is
             orgIds = Collections.singleton(effectiveOrgId);
-        }
-        if (orgName != null) {
+        } else if (orgName != null) {
             // we got an org name, validate it first by resolving its ID
             OrganizationEntry org = orgManager.assertExisting(null, orgName);
             effectiveOrgId = org.getId();
