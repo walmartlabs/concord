@@ -113,10 +113,11 @@ public class RunnerJobExecutor implements JobExecutor {
         if (result != 0) {
             job.getLog().error("Process exit code: " + result);
         }
+
         if (result == 0) {
             return StatusEnum.FINISHED;
         } else if (result == 2) {
-            return StatusEnum.CANCELLED;
+            return null;
         } else {
             return StatusEnum.FAILED;
         }

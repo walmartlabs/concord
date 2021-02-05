@@ -250,11 +250,6 @@ public class ProcessManager {
             status = ProcessStatus.SUSPENDED;
         }
 
-        if (status == ProcessStatus.CANCELLED && isFinished(processKey)) {
-            logManager.info(processKey, "Process status: {}", status);
-            return;
-        }
-
         queueManager.updateAgentId(processKey, agentId, status);
         logManager.info(processKey, "Process status: {}", status);
 

@@ -111,7 +111,9 @@ public class Worker implements Runnable {
 
     private void onStatusChange(UUID instanceId, StatusEnum status) {
         try {
-            processStatusUpdater.update(instanceId, status);
+            if (status != null) {
+                processStatusUpdater.update(instanceId, status);
+            }
         } finally {
             completionCallback.onStatusChange(status);
         }

@@ -112,6 +112,7 @@ public class ProcessQueueManager {
         OffsetDateTime startAt = PayloadUtils.getStartAt(payload);
         Map<String, Object> requirements = PayloadUtils.getRequirements(payload);
         Long processTimeout = getProcessTimeout(payload);
+        Long suspendTimeout = getSuspendTimeout(payload);
         Set<String> handlers = payload.getHeader(Payload.PROCESS_HANDLERS);
         Map<String, Object> meta = getMeta(getCfg(payload));
         Imports imports = payload.getHeader(Payload.IMPORTS);
@@ -120,7 +121,7 @@ public class ProcessQueueManager {
         List<String> dependencies = payload.getHeader(Payload.DEPENDENCIES);
 
         queueDao.tx(tx -> {
-            queueDao.enqueue(tx, processKey, tags, startAt, requirements, processTimeout, handlers, meta, imports, exclusive, runtime, dependencies);
+            queueDao.enqueue(tx, processKey, tags, startAt, requirements, processTimeout, handlers, meta, imports, exclusive, runtime, dependencies, suspendTimeout);
             eventManager.insertStatusHistory(tx, processKey, ProcessStatus.ENQUEUED, Collections.emptyMap());
         });
 
@@ -267,12 +268,20 @@ public class ProcessQueueManager {
     }
 
     private static Long getProcessTimeout(Payload p) {
+        return getTimeout(p, Constants.Request.PROCESS_TIMEOUT);
+    }
+
+    private static Long getSuspendTimeout(Payload p) {
+        return getTimeout(p, Constants.Request.SUSPEND_TIMEOUT);
+    }
+
+    private static Long getTimeout(Payload p, String paramName) {
         Map<String, Object> cfg = p.getHeader(Payload.CONFIGURATION);
         if (cfg == null) {
             return null;
         }
 
-        Object processTimeout = cfg.get(Constants.Request.PROCESS_TIMEOUT);
+        Object processTimeout = cfg.get(paramName);
         if (processTimeout == null) {
             return null;
         }
@@ -286,6 +295,6 @@ public class ProcessQueueManager {
             return ((Number) processTimeout).longValue();
         }
 
-        throw new IllegalArgumentException("Invalid '" + Constants.Request.PROCESS_TIMEOUT + "' value: expected an ISO-8601 value, got: " + processTimeout);
+        throw new IllegalArgumentException("Invalid '" + paramName + "' value: expected an ISO-8601 value, got: " + processTimeout);
     }
 }

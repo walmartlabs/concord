@@ -47,7 +47,10 @@ import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
 import java.time.OffsetDateTime;
-import java.util.*;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 
 import static com.walmartlabs.concord.db.PgUtils.interval;
 import static com.walmartlabs.concord.server.jooq.tables.ProcessQueue.PROCESS_QUEUE;
@@ -142,7 +145,8 @@ public class ProcessQueueWatchdog implements ScheduledTask {
         new ProcessHandlersWorker().run();
         new ProcessStalledWorker().run();
         new ProcessStartFailuresWorker().run();
-        new ProcessTimedOutWorker().run();
+        new ProcessTimedOutWorker(ProcessStatus.RUNNING, () -> watchdogDao.pollExpired(1)).run();
+        new ProcessTimedOutWorker(ProcessStatus.SUSPENDED, () -> watchdogDao.pollSuspendExpired(1)).run();
     }
 
     private final class ProcessHandlersWorker implements Runnable {
@@ -222,17 +226,31 @@ public class ProcessQueueWatchdog implements ScheduledTask {
         }
     }
 
-    private final class ProcessTimedOutWorker implements Runnable {
+    interface TimedOutProcessPoller {
+
+        List<TimedOutEntry> poll();
+    }
+
+    class ProcessTimedOutWorker implements Runnable {
+
+        private final ProcessStatus expectedProcessStatus;
+        private final TimedOutProcessPoller poller;
+
+        public ProcessTimedOutWorker(ProcessStatus expectedProcessStatus, TimedOutProcessPoller poller) {
+            this.expectedProcessStatus = expectedProcessStatus;
+            this.poller = poller;
+        }
+
         @Override
         public void run() {
-            watchdogDao.transaction(tx -> {
-                List<TimedOutEntry> items = watchdogDao.pollExpired(tx, 1);
-                for (TimedOutEntry i : items) {
-                    queueManager.updateExpectedStatus(i.processKey, ProcessStatus.RUNNING, ProcessStatus.TIMED_OUT);
+            List<TimedOutEntry> items = poller.poll();
+            for (TimedOutEntry i : items) {
+                boolean updated = queueManager.updateExpectedStatus(i.processKey, expectedProcessStatus, ProcessStatus.TIMED_OUT);
+                if (updated) {
                     logManager.warn(i.processKey, "Process timed out ({}s limit)", i.timeout);
                     log.info("processTimedOut -> marked as timed out: {}", i.processKey);
                 }
-            });
+            }
         }
     }
 
@@ -294,19 +312,34 @@ public class ProcessQueueWatchdog implements ScheduledTask {
                     .fetch(r -> new ProcessKey(r.value1(), r.value2()));
         }
 
-        public List<TimedOutEntry> pollExpired(DSLContext tx, int maxEntries) {
+        public List<TimedOutEntry> pollExpired(int maxEntries) {
             ProcessQueue q = PROCESS_QUEUE.as("q");
 
             Field<?> maxAge = interval("1 second").mul(q.TIMEOUT);
 
-            return tx.select(q.INSTANCE_ID, q.CREATED_AT, q.TIMEOUT)
+            return txResult(tx -> tx.select(q.INSTANCE_ID, q.CREATED_AT, q.LAST_AGENT_ID, q.TIMEOUT)
                     .from(q)
                     .where(q.CURRENT_STATUS.eq(ProcessStatus.RUNNING.toString())
                             .and(q.LAST_RUN_AT.plus(maxAge).lessOrEqual(currentOffsetDateTime())))
                     .limit(maxEntries)
                     .forUpdate()
                     .skipLocked()
-                    .fetch(WatchdogDao::toExpiredEntry);
+                    .fetch(WatchdogDao::toExpiredEntry));
+        }
+
+        public List<TimedOutEntry> pollSuspendExpired(int maxEntries) {
+            ProcessQueue q = PROCESS_QUEUE.as("q");
+
+            Field<?> maxAge = interval("1 second").mul(q.SUSPEND_TIMEOUT);
+
+            return txResult(tx -> tx.select(q.INSTANCE_ID, q.CREATED_AT, q.LAST_AGENT_ID, q.SUSPEND_TIMEOUT)
+                    .from(q)
+                    .where(q.CURRENT_STATUS.eq(ProcessStatus.SUSPENDED.toString())
+                            .and(q.LAST_UPDATED_AT.plus(maxAge).lessOrEqual(currentOffsetDateTime())))
+                    .limit(maxEntries)
+                    .forUpdate()
+                    .skipLocked()
+                    .fetch(WatchdogDao::toExpiredEntry));
         }
 
         private Field<Number> count(DSLContext tx, Field<UUID> parentInstanceId, ProcessKind kind) {
@@ -339,9 +372,9 @@ public class ProcessQueueWatchdog implements ScheduledTask {
                     objectMapper.fromJSONB(r.get(PROCESS_QUEUE.IMPORTS), Imports.class));
         }
 
-        private static TimedOutEntry toExpiredEntry(Record3<UUID, OffsetDateTime, Long> r) {
+        private static TimedOutEntry toExpiredEntry(Record4<UUID, OffsetDateTime, String, Long> r) {
             ProcessKey processKey = new ProcessKey(r.value1(), r.value2());
-            return new TimedOutEntry(processKey, r.value3());
+            return new TimedOutEntry(processKey, r.value3(), r.value4());
         }
     }
 
@@ -363,10 +396,12 @@ public class ProcessQueueWatchdog implements ScheduledTask {
     private static class TimedOutEntry {
 
         private final ProcessKey processKey;
+        private final String agentId;
         private final Long timeout;
 
-        private TimedOutEntry(ProcessKey processKey, Long timeout) {
+        private TimedOutEntry(ProcessKey processKey, String agentId, Long timeout) {
             this.processKey = processKey;
+            this.agentId = agentId;
             this.timeout = timeout;
         }
     }
