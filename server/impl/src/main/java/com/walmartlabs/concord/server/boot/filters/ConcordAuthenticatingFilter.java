@@ -50,6 +50,8 @@ import java.util.Collections;
 import java.util.Map;
 import java.util.Set;
 
+import static com.walmartlabs.concord.sdk.Constants.Headers.AUTH_ERROR;
+
 @Named
 @Singleton
 public class ConcordAuthenticatingFilter extends AuthenticatingFilter {
@@ -148,6 +150,10 @@ public class ConcordAuthenticatingFilter extends AuthenticatingFilter {
         Subject s = SecurityUtils.getSubject();
         if (s.isRemembered()) {
             s.logout();
+        }
+
+        if (e instanceof ConcordAuthenticationException) {
+            WebUtils.toHttp(response).setHeader(AUTH_ERROR, e.getMessage());
         }
 
         return super.onLoginFailure(token, e, request, response);

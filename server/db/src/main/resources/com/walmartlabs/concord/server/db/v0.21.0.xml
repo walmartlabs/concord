@@ -5,7 +5,7 @@
         xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.3.xsd">
 
     <!-- AGENT_COMMANDS -->
-
+    <!-- removed in 1.80.0+
     <changeSet id="21000" author="ibodrov@gmail.com">
         <createTable tableName="AGENT_COMMANDS">
             <column name="COMMAND_ID" type="varchar(36)">
@@ -25,7 +25,7 @@
             </column>
         </createTable>
     </changeSet>
-
+    -->
     <!-- removed in 1.35.0+
     <changeSet id="21010" author="ibodrov@gmail.com">
         <createIndex tableName="AGENT_COMMANDS" indexName="IDX_A_CMD_A_ID">

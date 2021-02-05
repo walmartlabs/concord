@@ -21,9 +21,9 @@ package com.walmartlabs.concord.agent.executors;
  */
 
 import com.walmartlabs.concord.agent.ConfiguredJobRequest;
-import com.walmartlabs.concord.agent.JobInstance;
+import com.walmartlabs.concord.client.ProcessEntry;
 
 public interface JobExecutor {
 
-    JobInstance exec(ConfiguredJobRequest jobRequest) throws Exception;
+    ProcessEntry.StatusEnum exec(ConfiguredJobRequest jobRequest) throws Exception;
 }

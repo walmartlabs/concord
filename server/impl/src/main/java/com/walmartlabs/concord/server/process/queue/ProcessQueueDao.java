@@ -360,11 +360,11 @@ public class ProcessQueueDao extends AbstractDao {
         return txResult(tx -> get(tx, processKey, includes));
     }
 
-    public String getLastAgentId(PartialProcessKey processKey) {
-        return dsl().select(PROCESS_QUEUE.LAST_AGENT_ID).from(PROCESS_QUEUE)
-                .where(PROCESS_QUEUE.INSTANCE_ID.eq(processKey.getInstanceId()))
-                .fetchOne(PROCESS_QUEUE.LAST_AGENT_ID);
-    }
+//    public String getLastAgentId(PartialProcessKey processKey) {
+//        return dsl().select(PROCESS_QUEUE.LAST_AGENT_ID).from(PROCESS_QUEUE)
+//                .where(PROCESS_QUEUE.INSTANCE_ID.eq(processKey.getInstanceId()))
+//                .fetchOne(PROCESS_QUEUE.LAST_AGENT_ID);
+//    }
 
     public String getRuntime(PartialProcessKey processKey) {
         return dsl().select(PROCESS_QUEUE.RUNTIME).from(PROCESS_QUEUE)

@@ -21,12 +21,17 @@ package com.walmartlabs.concord.runtime.common;
  */
 
 import com.walmartlabs.concord.ApiClient;
+import com.walmartlabs.concord.ApiException;
 import com.walmartlabs.concord.client.ProcessHeartbeatApi;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.Collections;
 import java.util.Date;
+import java.util.List;
 import java.util.UUID;
+
+import static com.walmartlabs.concord.sdk.Constants.Headers.AUTH_ERROR;
 
 public class ProcessHeartbeat {
 
@@ -64,6 +69,13 @@ public class ProcessHeartbeat {
                     }
                     prevPingFailed = false;
                 } catch (Exception e) {
+                    if (e instanceof ApiException) {
+                        List<String> headers = ((ApiException) e).getResponseHeaders().getOrDefault(AUTH_ERROR, Collections.emptyList());
+                        if (!headers.isEmpty()) {
+                            log.warn("heartbeat: error: {}", headers.get(0));
+                            System.exit(2);
+                        }
+                    }
                     prevPingFailed = true;
                     log.warn("heartbeat: error: {}, last successful at {}", e.getMessage(), new Date(lastSuccessPing));
 

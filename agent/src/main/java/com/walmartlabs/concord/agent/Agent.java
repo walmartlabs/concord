@@ -40,7 +40,6 @@ import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
 import java.io.IOException;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Map;
 import java.util.UUID;
@@ -105,10 +104,6 @@ public class Agent {
         if (dockerCfg.isOrphanSweeperEnabled()) {
             executor.submit(new OrphanSweeper(this::isAlive, dockerCfg.getOrphanSweeperPeriod()));
         }
-
-        // start the command handler in a separate thread
-        CommandHandler commandHandler = new CommandHandler(agentCfg.getAgentId(), queueClient, agentCfg.getPollInterval(), this::cancel);
-        executor.submit(commandHandler);
 
         // main loop
         while (!Thread.currentThread().isInterrupted()) {
@@ -234,14 +229,5 @@ public class Agent {
         Path workDir = IOUtils.createTempDir(agentCfg.getPayloadDir(), "workDir");
 
         return JobRequest.from(resp, workDir);
-    }
-
-    private void cancel(UUID instanceId) {
-        Worker w = activeWorkers.get(instanceId);
-        if (w == null) {
-            return;
-        }
-
-        w.cancel();
     }
 }

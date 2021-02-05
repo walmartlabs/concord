@@ -21,6 +21,11 @@ package com.walmartlabs.concord.server.boot;
  */
 
 import com.walmartlabs.concord.server.security.rememberme.ConcordRememberMeManager;
+import org.apache.shiro.authc.AuthenticationException;
+import org.apache.shiro.authc.AuthenticationInfo;
+import org.apache.shiro.authc.AuthenticationToken;
+import org.apache.shiro.authc.pam.AtLeastOneSuccessfulStrategy;
+import org.apache.shiro.authc.pam.ModularRealmAuthenticator;
 import org.apache.shiro.mgt.SecurityManager;
 import org.apache.shiro.realm.Realm;
 import org.apache.shiro.web.mgt.DefaultWebSecurityManager;
@@ -43,5 +48,15 @@ public class ConcordSecurityManager extends DefaultWebSecurityManager {
         super(realms);
         setSessionManager(new ServletContainerSessionManager());
         setRememberMeManager(rememberMeManager);
+
+        ((ModularRealmAuthenticator)getAuthenticator()).setAuthenticationStrategy(new AtLeastOneSuccessfulStrategy() {
+            @Override
+            public AuthenticationInfo afterAttempt(Realm realm, AuthenticationToken token, AuthenticationInfo singleRealmInfo, AuthenticationInfo aggregateInfo, Throwable t) throws AuthenticationException {
+                if (t instanceof AuthenticationException) {
+                    throw (AuthenticationException)t;
+                }
+                return super.afterAttempt(realm, token, singleRealmInfo, aggregateInfo, t);
+            }
+        });
     }
 }

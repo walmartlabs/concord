@@ -30,7 +30,6 @@ import com.walmartlabs.concord.agent.guice.AgentDependencyManager;
 import com.walmartlabs.concord.agent.logging.ProcessLog;
 import com.walmartlabs.concord.agent.logging.ProcessLogFactory;
 import com.walmartlabs.concord.agent.remote.AttachmentsUploader;
-import com.walmartlabs.concord.dependencymanager.DependencyManager;
 import com.walmartlabs.concord.sdk.Constants;
 import com.walmartlabs.concord.sdk.MapUtils;
 

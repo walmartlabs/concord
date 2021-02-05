@@ -21,6 +21,7 @@ package com.walmartlabs.concord.server.security.sessionkey;
  */
 
 import com.google.common.collect.ImmutableSet;
+import com.walmartlabs.concord.server.boot.filters.ConcordAuthenticationException;
 import com.walmartlabs.concord.server.process.ProcessSecurityContext;
 import com.walmartlabs.concord.server.process.queue.ProcessInitiatorEntry;
 import com.walmartlabs.concord.server.process.queue.ProcessQueueManager;
@@ -87,16 +88,18 @@ public class SessionKeyRealm extends AuthorizingRealm {
 
             if (p.initiatorId() == null) {
                 log.warn("doGetAuthenticationInfo -> initiator not found: {}", t.getInstanceId());
-                return null;
+                throw new ConcordAuthenticationException("Initiator not found");
             }
 
             if (isFinished(p)) {
                 log.warn("doGetAuthenticationInfo -> process is finished: {}", t.getInstanceId());
-                return null;
+                throw new ConcordAuthenticationException("Process is finished");
             }
 
             PrincipalCollection principals = getPrincipals(processKey);
             return new SimpleAccount(principals, t.getInstanceId(), getName());
+        } catch (AuthenticationException e) {
+            throw e;
         } catch (Exception e) {
             log.error("doGetAuthenticationInfo ['{}'] -> error", t.getInstanceId(), e);
             throw e;

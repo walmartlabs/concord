@@ -88,11 +88,11 @@
     </changeSet>
 
     <!-- AGENT_COMMANDS.COMMAND_ID -->
-
+    <!-- removed in 1.80.0+
     <changeSet id="31140" author="ibodrov@gmail.com">
         <modifyDataType tableName="AGENT_COMMANDS" columnName="COMMAND_ID" newDataType="uuid"/>
     </changeSet>
-
+    -->
     <!-- PROCESS_EVENTS.INSTANCE_ID -->
 
     <changeSet id="31150" author="ibodrov@gmail.com">

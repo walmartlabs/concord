@@ -29,7 +29,6 @@ import com.google.common.hash.Hasher;
 import com.google.common.hash.Hashing;
 import com.walmartlabs.concord.agent.ConfiguredJobRequest;
 import com.walmartlabs.concord.agent.ExecutionException;
-import com.walmartlabs.concord.agent.JobInstance;
 import com.walmartlabs.concord.agent.Utils;
 import com.walmartlabs.concord.agent.executors.JobExecutor;
 import com.walmartlabs.concord.agent.executors.runner.ProcessPool.ProcessEntry;
@@ -66,6 +65,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static com.walmartlabs.concord.common.DockerProcessBuilder.CONCORD_DOCKER_LOCAL_MODE_KEY;
+import static com.walmartlabs.concord.client.ProcessEntry.StatusEnum;
 
 /**
  * Executes jobs using concord-runner runtime.
@@ -107,12 +107,22 @@ public class RunnerJobExecutor implements JobExecutor {
     }
 
     @Override
-    public JobInstance exec(ConfiguredJobRequest jobRequest) throws Exception {
+    public StatusEnum exec(ConfiguredJobRequest jobRequest) throws Exception {
         RunnerJob job = RunnerJob.from(cfg, jobRequest, logFactory);
-        return exec(job);
+        int result = exec(job);
+        if (result != 0) {
+            job.getLog().error("Process exit code: " + result);
+        }
+        if (result == 0) {
+            return StatusEnum.FINISHED;
+        } else if (result == 2) {
+            return StatusEnum.CANCELLED;
+        } else {
+            return StatusEnum.FAILED;
+        }
     }
 
-    private JobInstance exec(RunnerJob job) throws Exception {
+    private int exec(RunnerJob job) throws Exception {
         // prepare and start a new JVM of use a pre-forked one
         ProcessEntry pe;
         try {
@@ -131,35 +141,28 @@ public class RunnerJobExecutor implements JobExecutor {
             throw e;
         }
 
-        // continue the execution in a separate thread to make the process cancellable
-        RunnerJob _job = job;
-        Future<?> f = executor.submit(() -> {
-            boolean uploadAttachmentsOnError = true;
+        boolean uploadAttachmentsOnError = true;
 
-            try {
-                exec(_job, pe);
-
-                uploadAttachmentsOnError = false;
-                uploadAttachments(_job.getInstanceId(), pe);
-            } catch (Throwable t) {
-                if (uploadAttachmentsOnError) {
-                    try {
-                        uploadAttachments(_job.getInstanceId(), pe);
-                    } catch (Exception e) {
-                        // ignore
-                    }
+        try {
+            int result = exec(job, pe);
+            uploadAttachmentsOnError = false;
+            uploadAttachments(job.getInstanceId(), pe);
+            return result;
+        } catch (Throwable t) {
+            if (uploadAttachmentsOnError) {
+                try {
+                    uploadAttachments(job.getInstanceId(), pe);
+                } catch (Exception e) {
+                    // ignore
                 }
-
-                throw new RuntimeException(t);
-            } finally {
-                persistWorkDir(_job.getInstanceId(), pe.getProcDir());
-                cleanup(_job.getInstanceId(), pe);
-                cleanup(_job);
             }
-        });
 
-        // return a handle that can be used to cancel the process or wait for its completion
-        return new JobInstanceImpl(f, pe.getProcess());
+            throw new RuntimeException(t);
+        } finally {
+            persistWorkDir(job.getInstanceId(), pe.getProcDir());
+            cleanup(job.getInstanceId(), pe);
+            cleanup(job);
+        }
     }
 
     private void persistWorkDir(UUID instanceId, Path src) {
@@ -238,11 +241,10 @@ public class RunnerJobExecutor implements JobExecutor {
         }
     }
 
-    private void exec(RunnerJob job, ProcessEntry pe) throws Exception {
+    private int exec(RunnerJob job, ProcessEntry pe) throws Exception {
         // the actual OS process
         Process proc = pe.getProcess();
 
-        UUID instanceId = job.getInstanceId();
         ProcessLog processLog = job.getLog();
 
         // start the log's maintenance thread (e.g. streaming to the server)
@@ -264,17 +266,9 @@ public class RunnerJobExecutor implements JobExecutor {
                 throw new ExecutionException("Error while executing a job: " + e.getMessage());
             }
 
-            // wait for the log to finish
-            logStream.waitForCompletion();
+            log.info("exec ['{}'] -> finished with {}", job.getInstanceId(), code);
 
-            if (code != 0) {
-                log.warn("exec ['{}'] -> finished with {}", instanceId, code);
-                handleError(job, proc, "Process exit code: " + code);
-                throw new ExecutionException("Error while executing a job, process exit code: " + code);
-            }
-
-            log.info("exec ['{}'] -> finished with {}", instanceId, code);
-            processLog.info("Process finished with: {}", code);
+            return code;
         } finally {
             // wait for the log to finish
             logStream.waitForCompletion();
@@ -683,40 +677,6 @@ public class RunnerJobExecutor implements JobExecutor {
 
         static ImmutableRunnerJobExecutorConfiguration.Builder builder() {
             return ImmutableRunnerJobExecutorConfiguration.builder();
-        }
-    }
-
-    private static class JobInstanceImpl implements JobInstance {
-
-        private final Future<?> f;
-        private final Process proc;
-
-        private transient boolean cancelled = false;
-
-        private JobInstanceImpl(Future<?> f, Process proc) {
-            this.f = f;
-            this.proc = proc;
-        }
-
-        @Override
-        public void waitForCompletion() throws Exception {
-            f.get();
-        }
-
-        @Override
-        public void cancel() {
-            if (f.isCancelled() || f.isDone()) {
-                return;
-            }
-
-            cancelled = true;
-
-            Utils.kill(proc);
-        }
-
-        @Override
-        public boolean isCancelled() {
-            return cancelled;
         }
     }
 }

@@ -27,8 +27,6 @@ import com.walmartlabs.concord.imports.Imports;
 import com.walmartlabs.concord.sdk.Constants;
 import com.walmartlabs.concord.server.ConcordObjectMapper;
 import com.walmartlabs.concord.server.Utils;
-import com.walmartlabs.concord.server.agent.AgentCommandsDao;
-import com.walmartlabs.concord.server.agent.Commands;
 import com.walmartlabs.concord.server.cfg.ProcessWatchdogConfiguration;
 import com.walmartlabs.concord.server.jooq.tables.ProcessQueue;
 import com.walmartlabs.concord.server.process.Payload;
@@ -49,10 +47,7 @@ import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
 import java.time.OffsetDateTime;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 
 import static com.walmartlabs.concord.db.PgUtils.interval;
 import static com.walmartlabs.concord.server.jooq.tables.ProcessQueue.PROCESS_QUEUE;
@@ -110,7 +105,6 @@ public class ProcessQueueWatchdog implements ScheduledTask {
 
     private final ProcessWatchdogConfiguration cfg;
     private final ProcessQueueDao queueDao;
-    private final AgentCommandsDao agentCommandsDao;
     private final ProcessLogManager logManager;
     private final WatchdogDao watchdogDao;
     private final UserDao userDao;
@@ -121,7 +115,6 @@ public class ProcessQueueWatchdog implements ScheduledTask {
     @Inject
     public ProcessQueueWatchdog(ProcessWatchdogConfiguration cfg,
                                 ProcessQueueDao queueDao,
-                                AgentCommandsDao agentCommandsDao,
                                 ProcessLogManager logManager,
                                 WatchdogDao watchdogDao,
                                 UserDao userDao,
@@ -131,7 +124,6 @@ public class ProcessQueueWatchdog implements ScheduledTask {
         this.cfg = cfg;
 
         this.queueDao = queueDao;
-        this.agentCommandsDao = agentCommandsDao;
         this.logManager = logManager;
         this.watchdogDao = watchdogDao;
         this.userDao = userDao;
@@ -236,12 +228,7 @@ public class ProcessQueueWatchdog implements ScheduledTask {
             watchdogDao.transaction(tx -> {
                 List<TimedOutEntry> items = watchdogDao.pollExpired(tx, 1);
                 for (TimedOutEntry i : items) {
-                    queueManager.updateAgentId(tx, i.processKey, null, ProcessStatus.TIMED_OUT);
-
-                    // TODO should AgentManager be used instead?
-                    // TODO toString()? It should be typed
-                    agentCommandsDao.insert(UUID.randomUUID(), i.agentId, Commands.cancel(i.processKey.toString()));
-
+                    queueManager.updateExpectedStatus(i.processKey, ProcessStatus.RUNNING, ProcessStatus.TIMED_OUT);
                     logManager.warn(i.processKey, "Process timed out ({}s limit)", i.timeout);
                     log.info("processTimedOut -> marked as timed out: {}", i.processKey);
                 }
@@ -312,7 +299,7 @@ public class ProcessQueueWatchdog implements ScheduledTask {
 
             Field<?> maxAge = interval("1 second").mul(q.TIMEOUT);
 
-            return tx.select(q.INSTANCE_ID, q.CREATED_AT, q.LAST_AGENT_ID, q.TIMEOUT)
+            return tx.select(q.INSTANCE_ID, q.CREATED_AT, q.TIMEOUT)
                     .from(q)
                     .where(q.CURRENT_STATUS.eq(ProcessStatus.RUNNING.toString())
                             .and(q.LAST_RUN_AT.plus(maxAge).lessOrEqual(currentOffsetDateTime())))
@@ -352,9 +339,9 @@ public class ProcessQueueWatchdog implements ScheduledTask {
                     objectMapper.fromJSONB(r.get(PROCESS_QUEUE.IMPORTS), Imports.class));
         }
 
-        private static TimedOutEntry toExpiredEntry(Record4<UUID, OffsetDateTime, String, Long> r) {
+        private static TimedOutEntry toExpiredEntry(Record3<UUID, OffsetDateTime, Long> r) {
             ProcessKey processKey = new ProcessKey(r.value1(), r.value2());
-            return new TimedOutEntry(processKey, r.value3(), r.value4());
+            return new TimedOutEntry(processKey, r.value3());
         }
     }
 
@@ -376,12 +363,10 @@ public class ProcessQueueWatchdog implements ScheduledTask {
     private static class TimedOutEntry {
 
         private final ProcessKey processKey;
-        private final String agentId;
         private final Long timeout;
 
-        private TimedOutEntry(ProcessKey processKey, String agentId, Long timeout) {
+        private TimedOutEntry(ProcessKey processKey, Long timeout) {
             this.processKey = processKey;
-            this.agentId = agentId;
             this.timeout = timeout;
         }
     }

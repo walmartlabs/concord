@@ -49,8 +49,6 @@ public class Worker implements Runnable {
     private final ProcessLog processLog;
     private final JobRequest jobRequest;
 
-    private JobInstance jobInstance;
-
     @Inject
     public Worker(RepositoryManager repositoryManager,
                   AgentImportManager importManager,
@@ -88,18 +86,18 @@ public class Worker implements Runnable {
             ConfiguredJobRequest configuredJobRequest = ConfiguredJobRequest.from(jobRequest);
 
             // execute the job
-            jobInstance = executor.exec(configuredJobRequest);
-            jobInstance.waitForCompletion();
+            StatusEnum status = executor.exec(configuredJobRequest);
 
-            // successful completion
             log.info("run -> done with {}", configuredJobRequest);
-            onStatusChange(instanceId, StatusEnum.FINISHED);
+
+            onStatusChange(instanceId, status);
         } catch (Throwable e) {
             // unwrap the exception if needed
             Throwable t = unwrap(e);
+            log.error("run -> job '{}' failed", instanceId, t);
 
             // handle any error during the startup or the execution
-            handleError(instanceId, t);
+            onStatusChange(instanceId, StatusEnum.FAILED);
         } finally {
             Path payloadDir = jobRequest.getPayloadDir();
             try {
@@ -109,28 +107,6 @@ public class Worker implements Runnable {
                 log.warn("exec ['{}'] -> can't remove the payload directory: {}", instanceId, e.getMessage());
             }
         }
-    }
-
-    public void cancel() {
-        if (jobInstance == null) {
-            return;
-        }
-
-        jobInstance.cancel();
-    }
-
-    private void handleError(UUID instanceId, Throwable error) {
-        StatusEnum status = StatusEnum.FAILED;
-
-        if (jobInstance != null && jobInstance.isCancelled()) {
-            log.info("handleError ['{}'] -> job cancelled", instanceId);
-            status = StatusEnum.CANCELLED;
-        } else {
-            log.error("handleError ['{}'] -> job failed", instanceId, error);
-        }
-
-        onStatusChange(instanceId, status);
-        log.info("handleError ['{}'] -> done", instanceId);
     }
 
     private void onStatusChange(UUID instanceId, StatusEnum status) {
