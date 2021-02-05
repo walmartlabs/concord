@@ -9,9 +9,9 @@ package com.walmartlabs.concord.server.queueclient.message;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -20,20 +20,32 @@ package com.walmartlabs.concord.server.queueclient.message;
  * =====
  */
 
-public enum MessageType {
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
-    @Deprecated
-    COMMAND_REQUEST(CommandRequest.class),
-    PROCESS_REQUEST(ProcessRequest.class),
-    PROCESS_RESPONSE(ProcessResponse.class);
+import java.util.UUID;
 
-    private final Class<? extends Message> clazz;
+@Deprecated
+public class CommandRequest extends Message {
 
-    MessageType(Class<? extends Message> clazz) {
-        this.clazz = clazz;
+    private final UUID agentId;
+
+    @JsonCreator
+    public CommandRequest(
+            @JsonProperty("agentId") UUID agentId) {
+        super(MessageType.COMMAND_REQUEST);
+        this.agentId = agentId;
     }
 
-    public Class<? extends Message> getClazz() {
-        return clazz;
+    public UUID getAgentId() {
+        return agentId;
+    }
+
+    @Override
+    public String toString() {
+        return "CommandRequest{" +
+                "correlationId='" + getCorrelationId() + "', " +
+                "agentId='" + agentId + "'" +
+                '}';
     }
 }
