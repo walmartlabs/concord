@@ -64,7 +64,7 @@ public class SsoCallbackFilter extends AbstractHttpFilter {
 
         SsoClient.Token token;
         token = ssoClient.getToken(code, cfg.getRedirectUrl());
-        SsoCookies.addCookie(TOKEN_COOKIE, token.accessToken(), token.expiresIn(), response);
+        SsoCookies.addCookie(TOKEN_COOKIE, token.idToken(), token.expiresIn(), response);
         SsoCookies.addCookie(REFRESH_TOKEN_COOKIE, token.refreshToken(), token.expiresIn(), response);
         
         String redirectUrl = SsoCookies.getFromCookie(request);
