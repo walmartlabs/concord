@@ -1,5 +1,15 @@
 # Change log
 
+## [Unreleased]
+
+### Charged
+
+- concord-server: if both `orgId` and `orgName` are given,
+the `/api/v2/process` filter ignores `orgName`
+([#319](https://github.com/walmartlabs/concord/pull/319)).
+
+
+
 ## [1.79.0] - 2021-02-04
 
 ### Added
