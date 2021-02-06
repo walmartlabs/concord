@@ -4,6 +4,8 @@
 
 ### Charged
 
+- concord-server: fix the batch cancellation of processes without
+an agent ([#317](https://github.com/walmartlabs/concord/pull/317));
 - concord-server: if both `orgId` and `orgName` are given,
 the `/api/v2/process` filter ignores `orgName`
 ([#319](https://github.com/walmartlabs/concord/pull/319)).
