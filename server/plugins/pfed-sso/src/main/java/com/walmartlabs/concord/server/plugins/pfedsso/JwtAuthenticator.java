@@ -20,6 +20,10 @@ package com.walmartlabs.concord.server.plugins.pfedsso;
  * =====
  */
 
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 import com.nimbusds.jose.JOSEException;
 import com.nimbusds.jwt.*;
 import com.walmartlabs.concord.server.plugins.pfedsso.encryption.EncryptionConfiguration;
@@ -31,6 +35,7 @@ import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 import javax.inject.Named;
+import java.io.IOException;
 import java.text.ParseException;
 import java.util.Date;
 import java.util.HashMap;
@@ -43,11 +48,28 @@ public class JwtAuthenticator {
 
     private final EncryptionConfiguration encryptionConfiguration;
     private final SignatureConfiguration signatureConfiguration;
+    private final SsoClient ssoClient;
+
+    private enum ALGOTYPE {
+        RSA("RS256"),
+        EC("ES256");
+
+        private final String algorithm;
+
+        ALGOTYPE(String algorithm) {
+            this.algorithm = algorithm;
+        }
+
+        public String getAlgorithm() {
+            return this.algorithm;
+        }
+    }
 
     @Inject
-    public JwtAuthenticator(SsoConfiguration cfg) {
+    public JwtAuthenticator(SsoConfiguration cfg, SsoClient ssoClient) {
         this.encryptionConfiguration = EncryptionConfigurationFactory.create(cfg.getTokenEncryptionKey());
         this.signatureConfiguration = SignatureConfigurationFactory.create(cfg.getTokenSigningKey());
+        this.ssoClient = ssoClient;
     }
 
     /**
@@ -120,7 +142,7 @@ public class JwtAuthenticator {
         }
     }
 
-    private JWT validateToken(String token) throws ParseException, JOSEException {
+    private JWT validateToken(String token) throws ParseException, JOSEException, IOException {
         JWT jwt = JWTParser.parse(token);
 
         if (jwt instanceof PlainJWT) {
@@ -155,8 +177,13 @@ public class JwtAuthenticator {
 
         if (signedJWT != null) {
             if (signatureConfiguration == null) {
-                log.error("validateToken ['{}'] -> JWT is signed and no signature configuration", token);
-                return null;
+                String kid = signedJWT.getHeader().getKeyID();
+                String alg = signedJWT.getHeader().getAlgorithm().getName();
+                if (kid == null || alg == null) {
+                    log.error("validateToken ['{}'] -> JWT is signed and no signature configuration", token);
+                    return null;
+                }
+                return getSigningKeyFromServerAndVerify(signedJWT, kid, alg);
             }
 
             boolean verified = signatureConfiguration.verify(signedJWT);
@@ -164,8 +191,41 @@ public class JwtAuthenticator {
                 return null;
             }
         }
-
         return jwt;
+    }
+
+    private JWT getSigningKeyFromServerAndVerify(SignedJWT signedJWT, String kid, String alg) throws IOException, JOSEException {
+        String tokenSigningKey = getMatchedSigningKey(ssoClient.getTokenSigningKey(), kid, alg);
+        if (tokenSigningKey == null) {
+            log.error("validateToken ['{}'] -> JWT is signed and no signature configuration found from remote", signedJWT);
+            return null;
+        }
+        SignatureConfiguration signatureConfiguration = SignatureConfigurationFactory.create(tokenSigningKey);
+        return signatureConfiguration.verify(signedJWT) ? signedJWT : null;
+    }
+
+    private String getMatchedSigningKey(String tokenSigningKeys, String kid, String alg) {
+        if (tokenSigningKeys == null)
+            return null;
+        JsonObject mapping = JsonParser.parseString(tokenSigningKeys).getAsJsonObject();
+        JsonElement keysJson = mapping.get("keys");
+        JsonArray keysArray = keysJson.getAsJsonArray();
+        for (JsonElement jsonElement : keysArray) {
+            String algorithm;
+            String jsonKid = jsonElement.getAsJsonObject().get("kid").getAsString();
+            String algoType = jsonElement.getAsJsonObject().get("kty").getAsString();
+            try {
+                algorithm = ALGOTYPE.valueOf(algoType).getAlgorithm();
+            } catch (IllegalArgumentException e) {
+                log.warn("Algorithm for type: {} not found...", algoType);
+                continue;
+            }
+            if (alg.equals(algorithm)
+                    && jsonKid.equals(kid)) {
+                return jsonElement.toString();
+            }
+        }
+        return null;
     }
 
     private Map<String, Object> createClaims(JWT jwt) throws ParseException {

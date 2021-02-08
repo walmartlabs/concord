@@ -87,6 +87,11 @@ public class SsoConfiguration implements Serializable {
     @Config("sso.validateNonce")
     private boolean validateNonce;
 
+    @Inject
+    @Nullable
+    @Config("sso.tokenSigningKeyUrl")
+    private String tokenSigningKeyUrl;
+
 
     public boolean isEnabled() {
         return enabled;
@@ -138,5 +143,9 @@ public class SsoConfiguration implements Serializable {
 
     public Integer getPriority() {
         return priority;
+    }
+
+    public String getTokenSigningKeyUrl() {
+        return tokenSigningKeyUrl;
     }
 }

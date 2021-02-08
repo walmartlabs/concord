@@ -131,6 +131,39 @@ public class SsoClient {
         }
     }
 
+    public String getTokenSigningKey() throws IOException {
+        if (cfg.getTokenSigningKeyUrl() == null) {
+            return null;
+        }
+        HttpURLConnection con = null;
+        try {
+            URL url = new URL(cfg.getTokenSigningKeyUrl());
+            con = (HttpURLConnection) url.openConnection();
+            con.setRequestMethod("GET");
+            con.setConnectTimeout((int) cfg.getTokenServiceConnectTimeout().toMillis());
+            con.setReadTimeout((int) cfg.getTokenServiceReadTimeout().toMillis());
+            con.setDoOutput(true);
+            int responseCode = con.getResponseCode();
+            if (responseCode != 200) {
+                log.error("getTokenSigningKey ['{}'] -> error response code {}", cfg.getTokenSigningKeyUrl(), responseCode);
+                throw new IOException("Invalid server response code: " + responseCode);
+            }
+            BufferedReader in = new BufferedReader(
+                    new InputStreamReader(con.getInputStream()));
+            String inputLine;
+            StringBuilder content = new StringBuilder();
+            while ((inputLine = in.readLine()) != null) {
+                content.append(inputLine);
+            }
+            in.close();
+            return content.toString();
+        } finally {
+            if (con != null) {
+                con.disconnect();
+            }
+        }
+    }
+
     private void postRequest(HttpURLConnection con, String urlParameters) throws IOException {
         String clientIdAndSecret = String.format("%s:%s", cfg.getClientId(), cfg.getClientSecret());
         String authzHeaderValue = String.format("Basic %s", Base64.getEncoder().encodeToString(clientIdAndSecret.getBytes()));
