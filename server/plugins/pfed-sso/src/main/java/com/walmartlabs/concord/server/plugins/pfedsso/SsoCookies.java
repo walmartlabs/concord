@@ -54,10 +54,10 @@ public final class SsoCookies {
     /**
      * Store SSO token in response cookies
      *
-     * @param name Cookie name
+     * @param name      Cookie name
      * @param token     SSO token
      * @param expiresIn SSO token expiration time in seconds
-     * @param response response
+     * @param response  response
      */
     public static void addCookie(String name, String token, Integer expiresIn, HttpServletResponse response) {
         Cookie cookie = new Cookie(name, token);
