@@ -28,10 +28,10 @@ import com.walmartlabs.concord.server.ConcordObjectMapper;
 import com.walmartlabs.concord.server.cfg.ProcessConfiguration;
 import com.walmartlabs.concord.server.cfg.SecretStoreConfiguration;
 import com.walmartlabs.concord.server.policy.PolicyManager;
-import com.walmartlabs.concord.server.sdk.ProcessKey;
 import com.walmartlabs.concord.server.process.logs.ProcessLogManager;
 import com.walmartlabs.concord.server.process.queue.ProcessKeyCache;
 import com.walmartlabs.concord.server.process.queue.ProcessQueueDao;
+import com.walmartlabs.concord.server.sdk.ProcessKey;
 import org.junit.Ignore;
 import org.junit.Test;
 
@@ -40,7 +40,9 @@ import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
+import java.time.Duration;
 import java.time.OffsetDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.UUID;
@@ -64,7 +66,7 @@ public class ProcessStateManagerTest extends AbstractDaoTest {
 
         //
         ProcessKeyCache processKeyCache = new ProcessKeyCache(new ProcessQueueDao(getConfiguration(), new ConcordObjectMapper(new ObjectMapper())));
-        ProcessConfiguration stateCfg = new ProcessConfiguration("24 hours", Collections.singletonList(Constants.Files.CONFIGURATION_FILE_NAME));
+        ProcessConfiguration stateCfg = new ProcessConfiguration(Duration.of(24, ChronoUnit.HOURS), Collections.singletonList(Constants.Files.CONFIGURATION_FILE_NAME));
         ProcessStateManager stateManager = new ProcessStateManager(getConfiguration(), mock(SecretStoreConfiguration.class), stateCfg, mock(PolicyManager.class), mock(ProcessLogManager.class), processKeyCache);
         stateManager.importPath(processKey, null, baseDir, (p, attrs) -> true);
 
@@ -110,7 +112,7 @@ public class ProcessStateManagerTest extends AbstractDaoTest {
         }
 
         ProcessKeyCache processKeyCache = new ProcessKeyCache(new ProcessQueueDao(getConfiguration(), new ConcordObjectMapper(new ObjectMapper())));
-        ProcessConfiguration stateCfg = new ProcessConfiguration("24 hours", Collections.singletonList(Constants.Files.CONFIGURATION_FILE_NAME));
+        ProcessConfiguration stateCfg = new ProcessConfiguration(Duration.of(24, ChronoUnit.HOURS), Collections.singletonList(Constants.Files.CONFIGURATION_FILE_NAME));
         ProcessStateManager stateManager = new ProcessStateManager(getConfiguration(), mock(SecretStoreConfiguration.class), stateCfg, mock(PolicyManager.class), mock(ProcessLogManager.class), processKeyCache);
         stateManager.importPath(processKey, "/", baseDir, (p, attrs) -> true);
     }

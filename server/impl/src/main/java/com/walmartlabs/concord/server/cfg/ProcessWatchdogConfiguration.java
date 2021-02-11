@@ -38,29 +38,29 @@ public class ProcessWatchdogConfiguration implements Serializable {
 
     @Inject
     @Config("process.maxFailureHandlingAge")
-    private String maxFailureHandlingAge;
+    private Duration maxFailureHandlingAge;
 
     @Inject
     @Config("process.maxStalledAge")
-    private String maxStalledAge;
+    private Duration maxStalledAge;
 
     @Inject
     @Config("process.maxStartFailureAge")
-    private String maxStartFailureAge;
+    private Duration maxStartFailureAge;
 
     public Duration getPeriod() {
         return period;
     }
 
-    public String getMaxFailureHandlingAge() {
+    public Duration getMaxFailureHandlingAge() {
         return maxFailureHandlingAge;
     }
 
-    public String getMaxStalledAge() {
+    public Duration getMaxStalledAge() {
         return maxStalledAge;
     }
 
-    public String getMaxStartFailureAge() {
+    public Duration getMaxStartFailureAge() {
         return maxStartFailureAge;
     }
 }

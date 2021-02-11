@@ -20,6 +20,7 @@ package com.walmartlabs.concord.server.security.ldap;
  * =====
  */
 
+import com.walmartlabs.concord.db.PgUtils;
 import com.walmartlabs.concord.server.cfg.LdapGroupSyncConfiguration;
 import org.jooq.Field;
 
@@ -45,7 +46,7 @@ public class LdapGroupManager {
     }
 
     public void cacheLdapGroupsIfNeeded(UUID userId, Set<String> groups) {
-        Field<OffsetDateTime> cutOff = currentOffsetDateTime().minus(interval(syncCfg.getMinAgeLogin()));
-        groupDao.updateIfNeeded(userId, groups, cutOff);
+        Field<OffsetDateTime> cutoff = PgUtils.nowMinus(syncCfg.getMinAgeLogin());
+        groupDao.updateIfNeeded(userId, groups, cutoff);
     }
 }
