@@ -30,11 +30,11 @@ import org.postgresql.util.PSQLException;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.sql.Types;
+import java.time.Duration;
 import java.time.OffsetDateTime;
 import java.util.List;
 
-import static org.jooq.impl.DSL.field;
-import static org.jooq.impl.DSL.inline;
+import static org.jooq.impl.DSL.*;
 
 public final class PgUtils {
 
@@ -86,6 +86,14 @@ public final class PgUtils {
 
     public static Condition jsonbTextNotExistsByPath(Field<JSONB> field, List<String> path, String value) {
         return DSL.condition("not {0} #> {1} ?? {2}", field, inline(toPath(path)), DSL.value(value));
+    }
+
+    /**
+     * Returns a JOOQ field "now - d" where "d" is the specified duration.
+     * The result is rounded down to seconds.
+     */
+    public static Field<OffsetDateTime> nowMinus(Duration d) {
+        return currentOffsetDateTime().minus(interval((d.toMillis() / 1000 ) + " seconds"));
     }
 
     private static String toPath(List<String> path) {
