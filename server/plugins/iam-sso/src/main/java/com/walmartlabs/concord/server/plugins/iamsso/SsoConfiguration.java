@@ -40,7 +40,7 @@ public class SsoConfiguration implements Serializable {
 
     @Inject
     @Config("sso.iam.priority")
-    private Integer priority;
+    private int priority;
     
     @Inject
     @Config("sso.authEndpointUrl")
@@ -148,7 +148,7 @@ public class SsoConfiguration implements Serializable {
         return domainSuffix;
     }
 
-    public Integer getPriority() {
+    public int getPriority() {
         return priority;
     }
 

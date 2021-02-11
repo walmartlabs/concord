@@ -39,7 +39,7 @@ public class SsoConfiguration implements Serializable {
 
     @Inject
     @Config("sso.pfed.priority")
-    private Integer priority;
+    private int priority;
 
     @Inject
     @Config("sso.authEndpointUrl")
@@ -141,7 +141,7 @@ public class SsoConfiguration implements Serializable {
         return validateNonce;
     }
 
-    public Integer getPriority() {
+    public int getPriority() {
         return priority;
     }
 
