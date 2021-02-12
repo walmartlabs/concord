@@ -1,4 +1,4 @@
-package com.walmartlabs.concord.server.plugins.iamsso;
+package com.walmartlabs.concord.server.plugins.pfedsso;
 
 /*-
  * *****
@@ -9,9 +9,9 @@ package com.walmartlabs.concord.server.plugins.iamsso;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -28,20 +28,19 @@ import javax.inject.Named;
 import javax.inject.Singleton;
 import java.io.Serializable;
 import java.time.Duration;
-import java.util.Map;
 
 @Named
 @Singleton
 public class SsoConfiguration implements Serializable {
 
     @Inject
-    @Config("sso.iam.enabled")
+    @Config("sso.pfed.enabled")
     private boolean enabled;
 
     @Inject
-    @Config("sso.iam.priority")
+    @Config("sso.pfed.priority")
     private int priority;
-    
+
     @Inject
     @Config("sso.authEndpointUrl")
     private String authEndPointUrl;
@@ -89,12 +88,10 @@ public class SsoConfiguration implements Serializable {
     private boolean validateNonce;
 
     @Inject
-    @Config("sso.domainSuffix")
-    private String domainSuffix;
+    @Nullable
+    @Config("sso.tokenSigningKeyUrl")
+    private String tokenSigningKeyUrl;
 
-    @Inject
-    @Config("sso.domainMapping")
-    private Map<String, String> domainMapping;
 
     public boolean isEnabled() {
         return enabled;
@@ -144,15 +141,11 @@ public class SsoConfiguration implements Serializable {
         return validateNonce;
     }
 
-    public String getDomainSuffix() {
-        return domainSuffix;
-    }
-
     public int getPriority() {
         return priority;
     }
 
-    public Map<String, String> getDomainMapping() {
-        return domainMapping;
+    public String getTokenSigningKeyUrl() {
+        return tokenSigningKeyUrl;
     }
 }
