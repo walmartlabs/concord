@@ -87,6 +87,11 @@
             <artifactId>httpcore</artifactId>
             <scope>provided</scope>
         </dependency>
+        <dependency>
+            <groupId>com.google.code.gson</groupId>
+            <artifactId>gson</artifactId>
+            <scope>provided</scope>
+        </dependency>
 
         <dependency>
             <groupId>org.immutables</groupId>
@@ -119,11 +124,6 @@
             <artifactId>mockito-core</artifactId>
             <scope>test</scope>
         </dependency>
-        <dependency>
-            <groupId>com.google.code.gson</groupId>
-            <artifactId>gson</artifactId>
-            <scope>provided</scope>
-        </dependency>
     </dependencies>
 
     <build>
@@ -141,5 +141,4 @@
             </plugin>
         </plugins>
     </build>
-
 </project>
