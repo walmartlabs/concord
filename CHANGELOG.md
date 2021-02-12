@@ -2,8 +2,13 @@
 
 ## [Unreleased]
 
-### Charged
+### Changed
 
+- docker-images: restrict `cryptography` dependency to 3.3.1
+([#323](https://github.com/walmartlabs/concord/pull/323));
+- concord-server: use `java.time.Duration` for all intervals in
+the server configuration file
+([#322](https://github.com/walmartlabs/concord/pull/322));
 - concord-server: fix the batch cancellation of processes without
 an agent ([#317](https://github.com/walmartlabs/concord/pull/317));
 - concord-server: if both `orgId` and `orgName` are given,
