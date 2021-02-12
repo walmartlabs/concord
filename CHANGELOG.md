@@ -2,6 +2,11 @@
 
 ## [Unreleased]
 
+### Added
+
+- concord-server: new authentication plugin `pingfed-sso`
+([#318](https://github.com/walmartlabs/concord/pull/323)).
+
 ### Changed
 
 - docker-images: restrict `cryptography` dependency to 3.3.1
