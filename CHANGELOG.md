@@ -1,5 +1,27 @@
 # Change log
 
+## [1.80.0] - 2021-02-14
+
+### Added
+
+- concord-server: new authentication plugin `pingfed-sso`
+([#318](https://github.com/walmartlabs/concord/pull/323)).
+
+### Changed
+
+- docker-images: restrict `cryptography` dependency to 3.3.1
+([#323](https://github.com/walmartlabs/concord/pull/323));
+- concord-server: use `java.time.Duration` for all intervals in
+the server configuration file
+([#322](https://github.com/walmartlabs/concord/pull/322));
+- concord-server: fix the batch cancellation of processes without
+an agent ([#317](https://github.com/walmartlabs/concord/pull/317));
+- concord-server: if both `orgId` and `orgName` are given,
+the `/api/v2/process` filter ignores `orgName`
+([#319](https://github.com/walmartlabs/concord/pull/319)).
+
+
+
 ## [1.79.0] - 2021-02-04
 
 ### Added

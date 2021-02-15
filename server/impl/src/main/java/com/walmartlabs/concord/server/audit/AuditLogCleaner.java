@@ -22,6 +22,7 @@ package com.walmartlabs.concord.server.audit;
 
 import com.walmartlabs.concord.db.AbstractDao;
 import com.walmartlabs.concord.db.MainDB;
+import com.walmartlabs.concord.db.PgUtils;
 import com.walmartlabs.concord.server.cfg.AuditConfiguration;
 import com.walmartlabs.concord.server.sdk.ScheduledTask;
 import org.jooq.Configuration;
@@ -34,9 +35,7 @@ import javax.inject.Named;
 import javax.inject.Singleton;
 import java.time.OffsetDateTime;
 
-import static com.walmartlabs.concord.db.PgUtils.interval;
 import static com.walmartlabs.concord.server.jooq.tables.AuditLog.AUDIT_LOG;
-import static org.jooq.impl.DSL.currentOffsetDateTime;
 
 @Named("audit-log-cleaner")
 @Singleton
@@ -60,8 +59,7 @@ public class AuditLogCleaner implements ScheduledTask {
 
     @Override
     public void performTask() {
-        // TODO use PG's intervals
-        Field<OffsetDateTime> cutoff = currentOffsetDateTime().minus(interval(cfg.getMaxLogAge().toMillis() + " ms"));
+        Field<OffsetDateTime> cutoff = PgUtils.nowMinus(cfg.getMaxLogAge());
         cleanerDao.deleteOldLogs(cutoff);
     }
 

@@ -82,7 +82,7 @@ public class UserLdapGroupSynchronizer implements ScheduledTask {
 
     @Override
     public void performTask() {
-        Field<OffsetDateTime> cutoff = currentOffsetDateTime().minus(PgUtils.interval(cfg.getMinAgeSync()));
+        Field<OffsetDateTime> cutoff = PgUtils.nowMinus(cfg.getMinAgeSync());
         long usersCount = 0;
         List<UserItem> users;
         do {
