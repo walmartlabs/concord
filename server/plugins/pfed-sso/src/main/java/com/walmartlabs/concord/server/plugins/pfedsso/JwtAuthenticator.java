@@ -49,6 +49,7 @@ public class JwtAuthenticator {
     private final EncryptionConfiguration encryptionConfiguration;
     private final SignatureConfiguration signatureConfiguration;
     private final SsoClient ssoClient;
+    private final SsoConfiguration cfg;
 
     private enum ALGOTYPE {
         RSA("RS256"),
@@ -70,6 +71,7 @@ public class JwtAuthenticator {
         this.encryptionConfiguration = EncryptionConfigurationFactory.create(cfg.getTokenEncryptionKey());
         this.signatureConfiguration = SignatureConfigurationFactory.create(cfg.getTokenSigningKey());
         this.ssoClient = ssoClient;
+        this.cfg = cfg;
     }
 
     /**
@@ -175,7 +177,7 @@ public class JwtAuthenticator {
             }
         }
 
-        if (signedJWT != null) {
+        if (signedJWT != null && cfg.isTokenSignatureValidation()) {
             if (signatureConfiguration == null) {
                 String kid = signedJWT.getHeader().getKeyID();
                 String alg = signedJWT.getHeader().getAlgorithm().getName();
