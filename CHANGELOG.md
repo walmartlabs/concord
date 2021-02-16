@@ -1,5 +1,14 @@
 # Change log
 
+## [Unreleased]
+
+### Added
+
+- pfed-sso: add configuration parameter for token signature
+validation ([#325](https://github.com/walmartlabs/concord/pull/325)).
+
+
+
 ## [1.80.0] - 2021-02-14
 
 ### Added
