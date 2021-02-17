@@ -79,6 +79,10 @@ public class UserResource implements Resource {
 
         UUID id = userManager.getId(username, req.getUserDomain(), type).orElse(null);
         if (id == null) {
+            if (!userManager.validateInfo(username, req.getUserDomain(), type)) {
+                throw new ConcordApplicationException("Validating userinfo failed for user id: "+id+" of type: " + type, Status.BAD_REQUEST);
+            }
+            
             UserEntry e = userManager.create(username, req.getUserDomain(), req.getDisplayName(), req.getEmail(), req.getType(), req.getRoles());
             return new CreateUserResponse(e.getId(), e.getName(), OperationResult.CREATED);
         } else {

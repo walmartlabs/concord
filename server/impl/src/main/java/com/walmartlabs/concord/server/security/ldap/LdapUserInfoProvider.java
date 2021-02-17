@@ -79,12 +79,18 @@ public class LdapUserInfoProvider implements UserInfoProvider {
             throw new ConcordApplicationException("Automatic creation of users is disabled.");
         }
 
-        UserInfo info = getInfo(null, username, userDomain);
-        if (info == null) {
-            throw new ConcordApplicationException("User '" + username + "' with domain '" + userDomain + "' not found in LDAP");
-        }
+//        UserInfo info = getInfo(null, username, userDomain);
+//        if (info == null) {
+//            throw new ConcordApplicationException("User '" + username + "' with domain '" + userDomain + "' not found in LDAP");
+//        }
 
-        return userDao.insertOrUpdate(info.username(), info.userDomain(), info.displayName(), info.email(), UserType.LDAP, roles);
+        return userDao.insertOrUpdate(username, userDomain, displayName, email, UserType.LDAP, roles);
+    }
+
+    @Override
+    public boolean validate(String username, String userDomain) {
+        UserInfo userInfo = getInfo(null, username, userDomain);
+        return userInfo != null;
     }
 
     private static UserInfo buildInfo(UUID id, LdapPrincipal p) {

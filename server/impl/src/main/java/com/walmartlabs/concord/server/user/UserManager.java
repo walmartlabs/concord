@@ -88,6 +88,10 @@ public class UserManager {
             }
         }
 
+        if(!provider.validate(username, userDomain)){
+            throw new ConcordApplicationException("Validating userinfo failed for user username: "+username+" of type: " + type);
+        }
+        
         return Optional.of(create(username, userDomain, null, null, type, null));
     }
 
@@ -208,6 +212,11 @@ public class UserManager {
                 .log();
     }
 
+    public boolean validateInfo(String username, String domain, UserType type) {
+        UserInfoProvider p = assertProvider(type);
+        return p.validate(username, domain);
+    }
+    
     private UserInfoProvider assertProvider(UserType type) {
         UserInfoProvider p = userInfoProviders.get(type);
         if (p == null) {

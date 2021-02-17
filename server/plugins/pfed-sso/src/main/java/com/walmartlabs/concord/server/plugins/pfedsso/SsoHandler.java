@@ -67,7 +67,9 @@ public class SsoHandler implements AuthenticationHandler {
         }
 
         String[] as = parseDomain(login);
-        return new SsoToken(as[0], as[1]);
+
+        //TODO: call for user.info endpoint
+        return new SsoToken(as[0], as[1], null, null);
     }
 
     @Override

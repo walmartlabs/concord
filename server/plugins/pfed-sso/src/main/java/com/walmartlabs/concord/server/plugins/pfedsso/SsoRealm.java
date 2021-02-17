@@ -23,12 +23,10 @@ package com.walmartlabs.concord.server.plugins.pfedsso;
 import com.walmartlabs.concord.server.audit.AuditAction;
 import com.walmartlabs.concord.server.audit.AuditLog;
 import com.walmartlabs.concord.server.audit.AuditObject;
-import com.walmartlabs.concord.server.sdk.ConcordApplicationException;
 import com.walmartlabs.concord.server.sdk.metrics.WithTimer;
 import com.walmartlabs.concord.server.security.PrincipalUtils;
 import com.walmartlabs.concord.server.security.UserPrincipal;
 import com.walmartlabs.concord.server.security.ldap.LdapManager;
-import com.walmartlabs.concord.server.security.ldap.LdapPrincipal;
 import com.walmartlabs.concord.server.user.UserEntry;
 import com.walmartlabs.concord.server.user.UserManager;
 import com.walmartlabs.concord.server.user.UserType;
@@ -74,19 +72,24 @@ public class SsoRealm extends AuthorizingRealm {
             return null;
         }
 
-        LdapPrincipal ldapPrincipal;
-        try {
-            ldapPrincipal = ldapManager.getPrincipal(t.getUsername(), t.getDomain());
-        } catch (Exception e) {
-            throw new AuthenticationException("LDAP error", e);
+//        LdapPrincipal ldapPrincipal;
+//        try {
+//            ldapPrincipal = ldapManager.getPrincipal(t.getUsername(), t.getDomain());
+//        } catch (Exception e) {
+//            throw new AuthenticationException("LDAP error", e);
+//        }
+//
+//        if (ldapPrincipal == null) {
+//            throw new AuthenticationException("LDAP data not found: " + t.getUsername() + "@" + t.getDomain());
+//        }
+        
+       UserEntry u = userManager.get(t.getUsername(), t.getDomain(), UserType.LDAP)
+               .orElse(null);
+        if(u == null){
+           u = userManager.create(t.getUsername(), t.getDomain(), t.getDisplayName(), t.getMail(), UserType.LDAP, null);
         }
-
-        if (ldapPrincipal == null) {
-            throw new AuthenticationException("LDAP data not found: " + t.getUsername() + "@" + t.getDomain());
-        }
-
-        UserEntry u = userManager.getOrCreate(ldapPrincipal.getUsername(), ldapPrincipal.getDomain(), UserType.LDAP)
-                .orElseThrow(() -> new ConcordApplicationException("User not found: " + ldapPrincipal.getUsername()));
+//        UserEntry u = userManager.getOrCreate(t.getUsername(), t.getDomain(), UserType.LDAP)
+//                .orElseThrow(() -> new ConcordApplicationException("User neither found nor created: " + t.getUsername()));
 
         // we consider the account active if the authentication was successful
         userManager.enable(u.getId());
@@ -99,7 +102,7 @@ public class SsoRealm extends AuthorizingRealm {
                 .log();
 
         UserPrincipal userPrincipal = new UserPrincipal(REALM_NAME, u);
-        return new SimpleAccount(Arrays.asList(userPrincipal, t, ldapPrincipal), t.getCredentials(), getName());
+        return new SimpleAccount(Arrays.asList(userPrincipal, t), t.getCredentials(), getName());
     }
 
     @Override
