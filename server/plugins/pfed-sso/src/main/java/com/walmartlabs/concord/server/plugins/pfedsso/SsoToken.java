@@ -26,14 +26,12 @@ public class SsoToken implements AuthenticationToken {
 
     private final String username;
     private final String domain;
-    private final String displayName;
-    private final String mail;
+    private final SsoClient.Profile profile;
 
-    public SsoToken(String username, String domain, String displayName, String mail) {
+    public SsoToken(String username, String domain, SsoClient.Profile profile) {
         this.username = username;
         this.domain = domain;
-        this.displayName = displayName;
-        this.mail = mail;
+        this.profile = profile;
     }
 
     public String getUsername() {
@@ -44,12 +42,8 @@ public class SsoToken implements AuthenticationToken {
         return domain;
     }
 
-    public String getDisplayName() {
-        return displayName;
-    }
-
-    public String getMail() {
-        return mail;
+    public SsoClient.Profile getProfile() {
+        return profile;
     }
 
     @Override
@@ -67,8 +61,7 @@ public class SsoToken implements AuthenticationToken {
         return "SsoToken{" +
                 "username='" + username + '\'' +
                 ", domain='" + domain + '\'' +
-                ", displayName='" + displayName + '\'' +
-                ", mail='" + mail + '\'' +
+                ", profile=" + profile +
                 '}';
     }
 }

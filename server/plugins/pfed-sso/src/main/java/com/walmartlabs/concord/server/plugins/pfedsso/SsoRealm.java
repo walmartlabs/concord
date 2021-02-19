@@ -26,7 +26,6 @@ import com.walmartlabs.concord.server.audit.AuditObject;
 import com.walmartlabs.concord.server.sdk.metrics.WithTimer;
 import com.walmartlabs.concord.server.security.PrincipalUtils;
 import com.walmartlabs.concord.server.security.UserPrincipal;
-import com.walmartlabs.concord.server.security.ldap.LdapManager;
 import com.walmartlabs.concord.server.user.UserEntry;
 import com.walmartlabs.concord.server.user.UserManager;
 import com.walmartlabs.concord.server.user.UserType;
@@ -47,13 +46,13 @@ public class SsoRealm extends AuthorizingRealm {
 
     public static final String REALM_NAME = "sso";
 
-    private final LdapManager ldapManager;
+    private final SsoClient ssoClient;
     private final UserManager userManager;
     private final AuditLog auditLog;
 
     @Inject
-    public SsoRealm(LdapManager ldapManager, UserManager userManager, AuditLog auditLog) {
-        this.ldapManager = ldapManager;
+    public SsoRealm(SsoClient ssoClient, UserManager userManager, AuditLog auditLog) {
+        this.ssoClient = ssoClient;
         this.userManager = userManager;
         this.auditLog = auditLog;
     }
@@ -72,24 +71,11 @@ public class SsoRealm extends AuthorizingRealm {
             return null;
         }
 
-//        LdapPrincipal ldapPrincipal;
-//        try {
-//            ldapPrincipal = ldapManager.getPrincipal(t.getUsername(), t.getDomain());
-//        } catch (Exception e) {
-//            throw new AuthenticationException("LDAP error", e);
-//        }
-//
-//        if (ldapPrincipal == null) {
-//            throw new AuthenticationException("LDAP data not found: " + t.getUsername() + "@" + t.getDomain());
-//        }
-        
-       UserEntry u = userManager.get(t.getUsername(), t.getDomain(), UserType.LDAP)
-               .orElse(null);
-        if(u == null){
-           u = userManager.create(t.getUsername(), t.getDomain(), t.getDisplayName(), t.getMail(), UserType.LDAP, null);
+        UserEntry u = userManager.get(t.getUsername(), t.getDomain(), UserType.LDAP)
+                .orElse(null);
+        if (u == null) {
+            u = userManager.create(t.getUsername(), t.getDomain(), t.getProfile().displayName(), t.getProfile().mail(), UserType.LDAP, null);
         }
-//        UserEntry u = userManager.getOrCreate(t.getUsername(), t.getDomain(), UserType.LDAP)
-//                .orElseThrow(() -> new ConcordApplicationException("User neither found nor created: " + t.getUsername()));
 
         // we consider the account active if the authentication was successful
         userManager.enable(u.getId());

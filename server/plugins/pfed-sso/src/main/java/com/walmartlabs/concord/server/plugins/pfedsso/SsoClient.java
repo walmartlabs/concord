@@ -20,6 +20,7 @@ package com.walmartlabs.concord.server.plugins.pfedsso;
  * =====
  */
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -33,10 +34,6 @@ import org.slf4j.LoggerFactory;
 import javax.annotation.Nullable;
 import javax.inject.Inject;
 import javax.inject.Named;
-import javax.net.ssl.HttpsURLConnection;
-import javax.net.ssl.SSLContext;
-import javax.net.ssl.TrustManager;
-import javax.net.ssl.X509TrustManager;
 import java.io.BufferedReader;
 import java.io.DataOutputStream;
 import java.io.IOException;
@@ -56,6 +53,7 @@ public class SsoClient {
     private static final String CHARSET_HEADER = "utf-8";
     private static final String TOKEN_REQUEST = "code=%s&redirect_uri=%s&grant_type=authorization_code&client_id=%s";
     private static final String REVOKE_TOKEN_REQUEST = "token=%s&token_type_hint=refresh_token&client_id=%s";
+    private static final String TOKEN_BY_REFRESHER_REQUEST = "refresh_token=%s&grant_type=refresh_token&client_id=%s";
 
     private final SsoConfiguration cfg;
     private final ObjectMapper objectMapper = new ObjectMapper();
@@ -66,28 +64,15 @@ public class SsoClient {
     }
 
     public Token getToken(String authCode, String clientRedirectURI) throws IOException {
-        HttpURLConnection con = null;
-        try {
-            URL url = new URL(cfg.getTokenEndPointUrl());
-            con = (HttpURLConnection) url.openConnection();
-            String urlParameters = String.format(TOKEN_REQUEST, authCode, clientRedirectURI, cfg.getClientId());
-            postRequest(con, urlParameters);
-            int responseCode = con.getResponseCode();
-            if (responseCode != 200) {
-                log.error("getToken ['{}'] -> error response code {}", authCode, responseCode);
-                throw new IOException("Invalid server response code: " + responseCode);
-            }
-
-            try (BufferedReader in = new BufferedReader(new InputStreamReader(con.getInputStream(), StandardCharsets.UTF_8))) {
-                return objectMapper.readValue(in, Token.class);
-            }
-        } finally {
-            if (con != null) {
-                con.disconnect();
-            }
-        }
+        String urlParameters = String.format(TOKEN_REQUEST, authCode, clientRedirectURI, cfg.getClientId());
+        return getToken(urlParameters);
     }
 
+    public Token getTokenByRefreshToken(String refreshToken) throws IOException {
+        String urlParameters = String.format(TOKEN_BY_REFRESHER_REQUEST, refreshToken, cfg.getClientId());
+        return getToken(urlParameters);
+    }
+    
     public void revokeToken(String refreshToken) throws IOException {
         HttpURLConnection con = null;
         try {
@@ -140,7 +125,34 @@ public class SsoClient {
             }
         }
     }
+    
+    public Profile getUserProfile(String refreshToken) throws IOException {
+        Token token = getTokenByRefreshToken(refreshToken);
+        return getProfile(token);
+    }
 
+    private Token getToken(String urlParameters) throws IOException {
+        HttpURLConnection con = null;
+        try {
+            URL url = new URL(cfg.getTokenEndPointUrl());
+            con = (HttpURLConnection) url.openConnection();
+            postRequest(con, urlParameters);
+            int responseCode = con.getResponseCode();
+            if (responseCode != 200) {
+                log.error("getToken ['{}'] -> error response code {}", urlParameters, responseCode);
+                throw new IOException("Invalid server response code: " + responseCode);
+            }
+
+            try (BufferedReader in = new BufferedReader(new InputStreamReader(con.getInputStream(), StandardCharsets.UTF_8))) {
+                return objectMapper.readValue(in, Token.class);
+            }
+        } finally {
+            if (con != null) {
+                con.disconnect();
+            }
+        }
+    }
+    
     private void postRequest(HttpURLConnection con, String urlParameters) throws IOException {
         String clientIdAndSecret = String.format("%s:%s", cfg.getClientId(), cfg.getClientSecret());
         String authzHeaderValue = String.format("Basic %s", Base64.getEncoder().encodeToString(clientIdAndSecret.getBytes()));
@@ -165,7 +177,37 @@ public class SsoClient {
             wr.flush();
         }
     }
-
+    
+    private Profile getProfile(Token token) throws IOException{
+        if (cfg.getUserInfoEndpointUrl() == null) {
+            return null;
+        }
+        HttpURLConnection con = null;
+        try {
+            URL url = new URL(cfg.getUserInfoEndpointUrl());
+            con = (HttpURLConnection) url.openConnection();
+            String authzHeaderValue = String.format("Bearer %s", token.accessToken());
+            con.setRequestProperty(HttpHeaders.AUTHORIZATION, authzHeaderValue);
+            con.setRequestProperty(HttpHeaders.CONTENT_TYPE, CONTENT_TYPE_HEADER);
+            con.setRequestMethod("GET");
+            con.setConnectTimeout((int) cfg.getTokenServiceConnectTimeout().toMillis());
+            con.setReadTimeout((int) cfg.getTokenServiceReadTimeout().toMillis());
+            con.setDoOutput(true);
+            int responseCode = con.getResponseCode();
+            if (responseCode != 200) {
+                log.error("getProfile ['{}'] -> error response code {}", cfg.getUserInfoEndpointUrl(), responseCode);
+                throw new IOException("Invalid server response code: " + responseCode);
+            }
+            try (BufferedReader in = new BufferedReader(new InputStreamReader(con.getInputStream(), StandardCharsets.UTF_8))) {
+                return objectMapper.readValue(in, Profile.class);
+            }
+        } finally {
+            if (con != null) {
+                con.disconnect();
+            }
+        }
+    }
+    
     @Value.Immutable
     @JsonInclude(JsonInclude.Include.NON_EMPTY)
     @JsonSerialize(as = ImmutableToken.class)
@@ -184,9 +226,28 @@ public class SsoClient {
         Integer expiresIn();
 
         @JsonProperty("id_token")
+        @Nullable
         String idToken();
 
         @JsonProperty("refresh_token")
         String refreshToken();
+    }
+
+    @Value.Immutable
+    @JsonInclude(JsonInclude.Include.NON_EMPTY)
+    @JsonSerialize(as = ImmutableProfile.class)
+    @JsonDeserialize(as = ImmutableProfile.class)
+    @JsonIgnoreProperties(ignoreUnknown = true)
+    public interface Profile {
+
+        @JsonProperty("sAMAccountName")
+        String userId();
+        
+        @JsonProperty("mail")
+        String mail();
+
+        @JsonProperty("displayName")
+        String displayName();
+        
     }
 }
