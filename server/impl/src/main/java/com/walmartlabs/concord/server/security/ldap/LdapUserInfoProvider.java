@@ -78,12 +78,7 @@ public class LdapUserInfoProvider implements UserInfoProvider {
             // this will result in a 401 response with an empty body anyway
             throw new ConcordApplicationException("Automatic creation of users is disabled.");
         }
-
-//        UserInfo info = getInfo(null, username, userDomain);
-//        if (info == null) {
-//            throw new ConcordApplicationException("User '" + username + "' with domain '" + userDomain + "' not found in LDAP");
-//        }
-
+        
         return userDao.insertOrUpdate(username, userDomain, displayName, email, UserType.LDAP, roles);
     }
 
