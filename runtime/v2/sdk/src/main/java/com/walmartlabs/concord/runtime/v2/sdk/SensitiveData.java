@@ -29,7 +29,7 @@ import static java.lang.annotation.ElementType.PARAMETER;
 /**
  * This annotation can be used to prevent task arguments values from
  * being recorded in process events.
- * <p/>
+ * <p>
  * Currently, it is applicable only for task methods called directly
  * via expressions. For example:
  * <pre>{@code

@@ -31,6 +31,8 @@ public final class ContextUtils {
     /**
      * Returns the current "retry" attempt number (if applicable).
      *
+     * @param ctx current {@link Context}
+     * @return the current attemp number of {@code null} if the current call is a retry.
      * @see Constants.Runtime#RETRY_ATTEMPT_NUMBER
      */
     public static Integer getCurrentRetryAttemptNumber(Context ctx) {
