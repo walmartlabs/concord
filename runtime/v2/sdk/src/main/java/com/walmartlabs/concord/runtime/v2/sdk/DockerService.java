@@ -27,10 +27,12 @@ public interface DockerService {
     /**
      * Starts a new Docker container using the provided {@code spec}.
      *
-     * @param spec        the container's specification
-     * @param outCallback callback for stdout
-     * @param errCallback callback for stderr
-     * @return exit code of the `docker run` command
+     * @param spec        the container's specification.
+     * @param outCallback callback for stdout.
+     * @param errCallback callback for stderr.
+     * @return exit code of the `docker run` command.
+     * @throws IOException          if an error occurs during the start of the container.
+     * @throws InterruptedException if the thread was interrupted during the start of the container.
      */
     int start(DockerContainerSpec spec, LogCallback outCallback, LogCallback errCallback) throws IOException, InterruptedException; // TODO throw Exception instead?
 
