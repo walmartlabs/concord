@@ -28,6 +28,10 @@ public interface Task {
 
     /**
      * This method is called when the task is invoked using the {@code task} syntax.
+     *
+     * @param input {@code in} parameters.
+     * @return {@link TaskResult} instance.
+     * @throws Exception any error.
      */
     default TaskResult execute(Variables input) throws Exception {
         throw new IllegalStateException("The task doesn't support full task syntax yet. " +

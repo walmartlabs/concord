@@ -25,7 +25,6 @@ import java.nio.file.Path;
 /**
  * Contains path to the current process' working directory.
  * Can be @Inject-ed into services.
- * @apiNote v2 only
  */
 public class WorkingDirectory {
 

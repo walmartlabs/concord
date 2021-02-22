@@ -25,7 +25,7 @@ import java.util.Set;
 /**
  * Provider for tasks. Responsible for creating task instances using
  * the supplied {@link Context} and the key.
- * <p/>
+ * <p>
  * Multiple task providers can exist in the same injector.
  * The {@code @Priority} annotation can be used to specify the order
  * in which each provider is called. Providers with lowest numbers are

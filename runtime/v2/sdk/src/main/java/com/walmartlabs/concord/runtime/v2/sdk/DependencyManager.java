@@ -32,7 +32,11 @@ import java.nio.file.Path;
 public interface DependencyManager {
 
     /**
-     * Downloads the URL or returns a previously cached copy.
+     * Downloads the specified URI or returns a previously cached copy.
+     *
+     * @param uri target {@link URI}
+     * @return absolute path to the downloaded file.
+     * @throws IOException if an error occurs during downloading or saving the file.
      */
     Path resolve(URI uri) throws IOException;
 }
