@@ -23,21 +23,21 @@ package com.walmartlabs.concord.repository;
 import com.walmartlabs.concord.common.IOUtils;
 import com.walmartlabs.concord.common.TemporaryPath;
 import com.walmartlabs.concord.sdk.Secret;
-import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.revwalk.RevCommit;
 import org.junit.Before;
 import org.junit.Test;
 
-import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.StandardCopyOption;
+import java.nio.file.Paths;
 import java.time.Duration;
+import java.util.Arrays;
+import java.util.List;
 
 import static org.junit.Assert.assertEquals;
 
-public class GitClientTest4 {
+public class GitClientTest5 {
 
     private GitClient client;
 
@@ -53,36 +53,30 @@ public class GitClientTest4 {
 
     @Test
     public void testFetch() throws Exception {
-        Path tmpDir = IOUtils.createTempDir("test");
+        Path repo = GitUtils.createBareRepository(resourceToPath("/master"));
+        RevCommit commit0 = GitUtils.addContent(repo, resourceToPath("/test5/0_concord.yml"));
+        RevCommit commit1 = GitUtils.addContent(repo, resourceToPath("/test5/1_concord.yml"));
+        RevCommit commit2 = GitUtils.addContent(repo, resourceToPath("/test5/2_concord.yml"));
+        List<RevCommit> commits = Arrays.asList(commit0, commit1, commit2);
 
-        File src = new File(GitClientTest4.class.getResource("/test4").toURI());
-        IOUtils.copy(src.toPath(), tmpDir);
+        // fetch by commit + branch with clean repo
+        for (int i = 0; i < 3; i++) {
+            String commitId = commits.get(i).name();
+            try (TemporaryPath repoPath = IOUtils.tempDir("git-client-test")) {
+                String result = fetch(repo.toString(), "master", commitId, null, repoPath.path());
+                assertContent(repoPath, i + "_concord.yml", i + "-concord-content");
+                assertEquals(commitId, result);
+            }
+        }
 
-        // init repo
-        Git repo = Git.init().setDirectory(tmpDir.toFile()).call();
-        repo.add().addFilepattern(".").call();
-        RevCommit initialCommit = repo.commit().setMessage("import").call();
-
-        try (TemporaryPath repoPath = IOUtils.tempDir("git-client-test")) {
-            // --- fetch master
-            String actualCommitId = fetch(tmpDir.toUri().toString(), "master", null, null, repoPath.path());
-            assertContent(repoPath, "concord.yml", "concord-init");
-            assertEquals(initialCommit.name(), actualCommitId);
-
-            // update file in repo
-            Files.copy(tmpDir.resolve("new_concord.yml"), tmpDir.resolve("concord.yml"), StandardCopyOption.REPLACE_EXISTING);
-            repo.add().addFilepattern(".").call();
-            RevCommit commitAfterUpdate = repo.commit().setMessage("update").call();
-
-            // --- fetch prev commit
-            String prevCommit = fetch(tmpDir.toUri().toString(), "master", initialCommit.name(), null, repoPath.path());
-            assertContent(repoPath, "concord.yml", "concord-init");
-            assertEquals(initialCommit.name(), prevCommit);
-
-            // --- fetch master again
-            actualCommitId = fetch(tmpDir.toUri().toString(), "master", null, null, repoPath.path());
-            assertContent(repoPath, "concord.yml", "new-concord-content");
-            assertEquals(commitAfterUpdate.name(), actualCommitId);
+        // fetch by commit  with clean repo
+        for (int i = 0; i < 3; i++) {
+            String commitId = commits.get(i).name();
+            try (TemporaryPath repoPath = IOUtils.tempDir("git-client-test")) {
+                String result = fetch(repo.toString(), null, commitId, null, repoPath.path());
+                assertContent(repoPath, i + "_concord.yml", i + "-concord-content");
+                assertEquals(commitId, result);
+            }
         }
     }
 
@@ -98,5 +92,9 @@ public class GitClientTest4 {
 
     private static void assertContent(TemporaryPath repoPath, String path, String expectedContent) throws IOException {
         assertEquals(expectedContent, new String(Files.readAllBytes(repoPath.path().resolve(path))).trim());
+    }
+
+    private static Path resourceToPath(String resource) throws Exception {
+        return Paths.get(GitClientTest5.class.getResource(resource).toURI());
     }
 }
