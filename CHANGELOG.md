@@ -7,6 +7,11 @@
 - pfed-sso: add configuration parameter for token signature
 validation ([#325](https://github.com/walmartlabs/concord/pull/325)).
 
+### Changed
+
+- concord-repository: fix fetching when both commitId and branch
+specified ([#329](https://github.com/walmartlabs/concord/pull/329)).
+
 
 
 ## [1.80.0] - 2021-02-14
