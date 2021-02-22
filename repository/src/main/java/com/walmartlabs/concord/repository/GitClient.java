@@ -78,12 +78,15 @@ public class GitClient {
             Ref ref = getHeadRef(req.destination(), req.version().ref(), req.secret());
             configureFetch(req.destination(), getRefSpec(ref));
 
+            boolean versionRefIsBranchOrTag = ref != null;
+            boolean versionValueIsBranchOrTag = versionRefIsBranchOrTag && req.version().value().equals(req.version().ref());
+
             // fetch
-            boolean effectiveShallow = req.shallow() && ref != null;
+            boolean effectiveShallow = req.shallow() && versionValueIsBranchOrTag;
             fetch(req.destination(), effectiveShallow, req.secret());
 
             checkout(req.destination(), req.version().value());
-            if (ref != null) {
+            if (versionValueIsBranchOrTag) {
                 reset(req.destination(), ref.tag() ? "origin/tags/" + ref.name() : "origin/" + ref.name());
             }
 
