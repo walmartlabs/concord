@@ -68,8 +68,9 @@ public class SsoAuthFilter extends AbstractHttpFilter {
                 return;
             } else {
                 SsoCookies.removeTokenCookie(response);
-                if (SsoCookies.getRefreshCookie(request) != null)
+                if (SsoCookies.getRefreshCookie(request) != null) {
                     SsoCookies.removeRefreshTokenCookie(response);
+                }
             }
         }
 

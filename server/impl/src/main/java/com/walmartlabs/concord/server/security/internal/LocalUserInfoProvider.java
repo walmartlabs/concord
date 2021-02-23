@@ -76,9 +76,4 @@ public class LocalUserInfoProvider implements UserInfoProvider {
         return userDao.insertOrUpdate(username, domain, displayName, email, UserType.LOCAL, roles);
     }
 
-    @Override
-    public boolean validate(String username, String userDomain) {
-        // No external validation of userInfo required for usertype LOCAL
-        return true;
-    }
 }

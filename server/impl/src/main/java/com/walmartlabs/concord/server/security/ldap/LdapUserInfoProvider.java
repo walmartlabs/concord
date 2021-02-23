@@ -82,12 +82,6 @@ public class LdapUserInfoProvider implements UserInfoProvider {
         return userDao.insertOrUpdate(username, userDomain, displayName, email, UserType.LDAP, roles);
     }
 
-    @Override
-    public boolean validate(String username, String userDomain) {
-        UserInfo userInfo = getInfo(null, username, userDomain);
-        return userInfo != null;
-    }
-
     private static UserInfo buildInfo(UUID id, LdapPrincipal p) {
         if (p == null) {
             return null;

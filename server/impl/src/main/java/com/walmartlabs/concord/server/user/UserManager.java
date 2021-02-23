@@ -70,6 +70,11 @@ public class UserManager {
     }
 
     public Optional<UserEntry> getOrCreate(String username, String userDomain, UserType type) {
+        return getOrCreate(username, userDomain, type, null, null, null);
+    }
+
+
+    public Optional<UserEntry> getOrCreate(String username, String userDomain, UserType type, String displayName, String email, Set<String> roles) {
         Optional<UserEntry> result = get(username, userDomain, type);
         if (result.isPresent()) {
             return result;
@@ -81,6 +86,7 @@ public class UserManager {
 
         UserInfoProvider provider = assertProvider(type);
         UserInfo info = provider.getInfo(null, username, userDomain);
+
         if (info != null) {
             result = get(info.username(), info.userDomain(), type);
             if (result.isPresent()) {
@@ -88,11 +94,11 @@ public class UserManager {
             }
         }
 
-        if(!provider.validate(username, userDomain)){
-            throw new ConcordApplicationException("Validating userinfo failed for user username: "+username+" of type: " + type);
+        if (info == null && type.equals(UserType.LDAP)) {
+            throw new ConcordApplicationException("User '" + username + "' with domain '" + userDomain + "' not found in LDAP");
         }
-        
-        return Optional.of(create(username, userDomain, null, null, type, null));
+
+        return Optional.of(create(username, userDomain, displayName, email, type, roles));
     }
 
     public Optional<UserEntry> get(UUID id) {
@@ -212,11 +218,6 @@ public class UserManager {
                 .log();
     }
 
-    public boolean validateInfo(String username, String domain, UserType type) {
-        UserInfoProvider p = assertProvider(type);
-        return p.validate(username, domain);
-    }
-    
     private UserInfoProvider assertProvider(UserType type) {
         UserInfoProvider p = userInfoProviders.get(type);
         if (p == null) {
