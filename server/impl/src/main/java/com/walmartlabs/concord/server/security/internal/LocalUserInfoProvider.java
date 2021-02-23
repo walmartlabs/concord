@@ -75,5 +75,4 @@ public class LocalUserInfoProvider implements UserInfoProvider {
     public UUID create(String username, String domain, String displayName, String email, Set<String> roles) {
         return userDao.insertOrUpdate(username, domain, displayName, email, UserType.LOCAL, roles);
     }
-
 }
