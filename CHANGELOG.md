@@ -9,6 +9,8 @@ validation ([#325](https://github.com/walmartlabs/concord/pull/325)).
 
 ### Changed
 
+- concord-console: show runtime-v1 recorded in-vars
+([#331](https://github.com/walmartlabs/concord/pull/331));
 - dependency-manager: remove dots from the `resolveFile` log,
 prevent URLs from being mangled in the UI
 ([#330](https://github.com/walmartlabs/concord/pull/330));
