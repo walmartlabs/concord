@@ -74,7 +74,7 @@ public class SsoRealm extends AuthorizingRealm {
         UserEntry u = userManager.get(t.getUsername(), t.getDomain(), UserType.LDAP)
                 .orElse(null);
         if (u == null) {
-            u = userManager.create(t.getUsername(), t.getDomain(), t.getProfile().displayName(), t.getProfile().mail(), UserType.LDAP, null);
+            u = userManager.create(t.getUsername(), t.getDomain(), t.getDisplayName(), t.getMail(), UserType.LDAP, null);
         }
 
         // we consider the account active if the authentication was successful
