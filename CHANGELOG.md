@@ -9,6 +9,9 @@ validation ([#325](https://github.com/walmartlabs/concord/pull/325)).
 
 ### Changed
 
+- dependency-manager: remove dots from the `resolveFile` log,
+prevent URLs from being mangled in the UI
+([#330](https://github.com/walmartlabs/concord/pull/330));
 - concord-repository: fix fetching when both commitId and branch
 specified ([#329](https://github.com/walmartlabs/concord/pull/329)).
 
