@@ -87,7 +87,11 @@ public class UserManager {
         UserInfoProvider provider = assertProvider(type);
         UserInfo info = provider.getInfo(null, username, userDomain);
         if (info != null) {
-            result = get(info.username(), info.userDomain(), type);
+            username = info.username();
+            userDomain = info.userDomain();
+            displayName = info.displayName();
+            email = info.email();
+            result = get(username, userDomain, type);
             if (result.isPresent()) {
                 return result;
             }
