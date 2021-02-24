@@ -43,6 +43,14 @@ public interface DockerConfiguration {
         return Collections.emptyList();
     }
 
+    /**
+     * Expose docker daemon to containers created by DockerService
+     */
+    @Value.Default
+    default Boolean exposeDockerDaemon() {
+        return true;
+    }
+
     static ImmutableDockerConfiguration.Builder builder() {
         return ImmutableDockerConfiguration.builder();
     }

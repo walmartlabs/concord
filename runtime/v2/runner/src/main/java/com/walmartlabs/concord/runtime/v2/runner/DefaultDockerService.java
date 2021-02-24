@@ -56,12 +56,14 @@ public class DefaultDockerService implements DockerService {
     private final WorkingDirectory workingDirectory;
     private final InstanceId instanceId;
     private final List<String> extraVolumes;
+    private final Boolean exposeDockerDaemon;
 
     @Inject
     public DefaultDockerService(WorkingDirectory workingDirectory, InstanceId instanceId, RunnerConfiguration runnerCfg) {
         this.workingDirectory = workingDirectory;
         this.instanceId = instanceId;
         this.extraVolumes = runnerCfg.docker().extraVolumes();
+        this.exposeDockerDaemon = runnerCfg.docker().exposeDockerDaemon();
     }
 
     @Override
@@ -100,7 +102,7 @@ public class DefaultDockerService implements DockerService {
     private Process start(DockerContainerSpec spec) throws IOException {
         DockerProcessBuilder b = DockerProcessBuilder.from(instanceId.getValue(), spec);
 
-        b.env(createEffectiveEnv(spec.env()));
+        b.env(createEffectiveEnv(spec.env(), exposeDockerDaemon));
         // add the default volume - mount the process' workDir as /workspace
         b.volume(workingDirectory.getValue().toString(), WORKSPACE_TARGET_DIR);
         // add extra volumes from the runner's arguments
@@ -136,14 +138,16 @@ public class DefaultDockerService implements DockerService {
         }
     }
 
-    private static Map<String, String> createEffectiveEnv(Map<String, String> env) {
+    private static Map<String, String> createEffectiveEnv(Map<String, String> env, boolean exposeDockerDaemon) {
         Map<String, String> m = new HashMap<>();
 
-        String dockerHost = System.getenv("DOCKER_HOST");
-        if (dockerHost == null) {
-            dockerHost = "unix:///var/run/docker.sock";
+        if (exposeDockerDaemon) {
+            String dockerHost = System.getenv("DOCKER_HOST");
+            if (dockerHost == null) {
+                dockerHost = "unix:///var/run/docker.sock";
+            }
+            m.put("DOCKER_HOST", dockerHost);
         }
-        m.put("DOCKER_HOST", dockerHost);
 
         if (env != null) {
             m.putAll(env);
