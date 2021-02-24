@@ -117,6 +117,7 @@ public class JobExecutorFactory {
                     .runnerSecurityManagerEnabled(runnerCfg.isSecurityManagerEnabled())
                     .runnerMainClass(runnerCfg.getMainClass())
                     .extraDockerVolumes(dockerCfg.getExtraVolumes())
+                    .exposeDockerDaemon(dockerCfg.exposeDockerDaemon())
                     .maxHeartbeatInterval(serverCfg.getMaxNoHeartbeatInterval())
                     .segmentedLogs(segmentedLogs)
                     .logDir(agentCfg.getLogDir())

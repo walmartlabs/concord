@@ -54,10 +54,12 @@ public class DockerServiceImpl implements DockerService {
     };
 
     private final List<String> extraVolumes;
+    private final boolean exposeDockerDaemon;
 
     @Inject
     public DockerServiceImpl(RunnerConfiguration runnerCfg) {
         this.extraVolumes = runnerCfg.docker().extraVolumes();
+        this.exposeDockerDaemon = runnerCfg.docker().exposeDockerDaemon();
     }
 
     @Override
@@ -65,7 +67,7 @@ public class DockerServiceImpl implements DockerService {
     public Process start(Context ctx, DockerContainerSpec spec) throws IOException {
         DockerProcessBuilder b = DockerProcessBuilder.from(ctx, spec);
 
-        b.env(createEffectiveEnv(spec.env()));
+        b.env(createEffectiveEnv(spec.env(), exposeDockerDaemon));
 
         List<String> volumes = new ArrayList<>();
         // add the default volume - mount the process' workDir as /workspace
@@ -111,14 +113,16 @@ public class DockerServiceImpl implements DockerService {
         return result;
     }
 
-    private static Map<String, String> createEffectiveEnv(Map<String, String> env) {
+    private static Map<String, String> createEffectiveEnv(Map<String, String> env, boolean exposeDockerDaemon) {
         Map<String, String> m = new HashMap<>();
 
-        String dockerHost = System.getenv("DOCKER_HOST");
-        if (dockerHost == null) {
-            dockerHost = "unix:///var/run/docker.sock";
+        if (exposeDockerDaemon) {
+            String dockerHost = System.getenv("DOCKER_HOST");
+            if (dockerHost == null) {
+                dockerHost = "unix:///var/run/docker.sock";
+            }
+            m.put("DOCKER_HOST", dockerHost);
         }
-        m.put("DOCKER_HOST", dockerHost);
 
         if (env != null) {
             m.putAll(env);
