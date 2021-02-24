@@ -4,6 +4,8 @@
 
 ### Added
 
+- runtime-v1, runtime-v2: optionally expose docker daemon
+([#332](https://github.com/walmartlabs/concord/pull/332));
 - pfed-sso: add configuration parameter for token signature
 validation ([#325](https://github.com/walmartlabs/concord/pull/325)).
 
