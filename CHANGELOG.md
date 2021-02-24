@@ -11,6 +11,8 @@ validation ([#325](https://github.com/walmartlabs/concord/pull/325)).
 
 ### Changed
 
+- runtime-v2: fix Docker passwd generation 
+([#332](https://github.com/walmartlabs/concord/pull/332));
 - concord-server, pfed-sso: make sso login independent of ldap
 ([#327](https://github.com/walmartlabs/concord/pull/327));
 - concord-console: add redirect on SSO token/session expiration
