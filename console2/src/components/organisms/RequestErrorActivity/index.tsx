@@ -24,6 +24,7 @@ import { Redirect } from 'react-router';
 import { RequestError } from '../../../api/common';
 import { RequestErrorMessage } from '../../molecules';
 import { useLocation } from 'react-router-dom';
+import {Dimmer, Loader} from "semantic-ui-react";
 
 interface Props {
     error: RequestError;
@@ -33,16 +34,30 @@ export default ({ error }: Props) => {
     const location = useLocation();
 
     if (error && error.status === 401) {
-        return (
-            <Redirect
-                to={{
-                    pathname: '/login',
-                    state: {
-                        from: location
-                    }
-                }}
-            />
-        );
+        const loginUrl = window.concord?.loginUrl;
+        if (loginUrl) {
+            // delay the redirect to avoid layout issues
+            setTimeout(() => {
+                window.location.href = loginUrl + location.pathname;
+            }, 1000);
+
+            return (
+                <Dimmer active={true} inverted={true} page={true}>
+                    <Loader active={true} size="massive" content={'Logging in'} />
+                </Dimmer>
+            );
+        } else {
+            return (
+                <Redirect
+                    to={{
+                        pathname: '/login',
+                        state: {
+                            from: location
+                        }
+                    }}
+                />
+            );
+        }
     }
 
     return <RequestErrorMessage error={error} />;
