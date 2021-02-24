@@ -23,11 +23,13 @@ package com.walmartlabs.concord.server.user;
 import com.walmartlabs.concord.server.audit.AuditAction;
 import com.walmartlabs.concord.server.audit.AuditLog;
 import com.walmartlabs.concord.server.audit.AuditObject;
+import com.walmartlabs.concord.server.cfg.LdapConfiguration;
 import com.walmartlabs.concord.server.org.project.DiffUtils;
 import com.walmartlabs.concord.server.org.team.TeamDao;
 import com.walmartlabs.concord.server.org.team.TeamManager;
 import com.walmartlabs.concord.server.org.team.TeamRole;
 import com.walmartlabs.concord.server.sdk.ConcordApplicationException;
+import com.walmartlabs.concord.server.security.Roles;
 import com.walmartlabs.concord.server.security.UserPrincipal;
 import com.walmartlabs.concord.server.security.ldap.LdapGroupSearchResult;
 import org.jooq.DSLContext;
@@ -45,12 +47,14 @@ public class UserManager {
     private final TeamDao teamDao;
     private final AuditLog auditLog;
     private final Map<UserType, UserInfoProvider> userInfoProviders;
+    private final LdapConfiguration cfg;
 
     @Inject
-    public UserManager(UserDao userDao, TeamDao teamDao, AuditLog auditLog, List<UserInfoProvider> providers) {
+    public UserManager(UserDao userDao, TeamDao teamDao, AuditLog auditLog, List<UserInfoProvider> providers, LdapConfiguration cfg) {
         this.userDao = userDao;
         this.teamDao = teamDao;
         this.auditLog = auditLog;
+        this.cfg = cfg;
 
         this.userInfoProviders = new HashMap<>();
         providers.forEach(p -> this.userInfoProviders.put(p.getUserType(), p));
@@ -143,8 +147,13 @@ public class UserManager {
             type = UserPrincipal.assertCurrent().getType();
         }
 
-        UserInfoProvider provider = assertProvider(type);
-        UUID id = provider.create(username, domain, displayName, email, roles);
+        if (type.equals(UserType.LDAP) && !Roles.isAdmin() && !cfg.isAutoCreateUsers()) {
+            // unfortunately there's no easy way to throw a custom authentication error and keep the original message
+            // this will result in a 401 response with an empty body anyway
+            throw new ConcordApplicationException("Automatic creation of users is disabled.");
+        }
+
+        UUID id = userDao.insertOrUpdate(username, domain, displayName, email, type, roles);
 
         // add the new user to the default org/team
         UUID teamId = TeamManager.DEFAULT_ORG_TEAM_ID;

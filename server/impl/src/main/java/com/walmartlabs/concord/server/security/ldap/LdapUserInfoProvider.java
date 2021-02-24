@@ -20,10 +20,7 @@ package com.walmartlabs.concord.server.security.ldap;
  * =====
  */
 
-import com.walmartlabs.concord.server.cfg.LdapConfiguration;
 import com.walmartlabs.concord.server.sdk.ConcordApplicationException;
-import com.walmartlabs.concord.server.security.Roles;
-import com.walmartlabs.concord.server.user.UserDao;
 import com.walmartlabs.concord.server.user.UserInfoProvider;
 import com.walmartlabs.concord.server.user.UserType;
 import org.slf4j.Logger;
@@ -32,7 +29,6 @@ import org.slf4j.LoggerFactory;
 import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
-import java.util.Set;
 import java.util.UUID;
 
 @Named
@@ -40,19 +36,12 @@ import java.util.UUID;
 public class LdapUserInfoProvider implements UserInfoProvider {
 
     private static final Logger log = LoggerFactory.getLogger(LdapUserInfoProvider.class);
-
-    private final UserDao userDao;
+    
     private final LdapManager ldapManager;
-    private final LdapConfiguration cfg;
 
     @Inject
-    public LdapUserInfoProvider(UserDao userDao,
-                                LdapManager ldapManager,
-                                LdapConfiguration cfg) {
-
-        this.userDao = userDao;
+    public LdapUserInfoProvider(LdapManager ldapManager) {
         this.ldapManager = ldapManager;
-        this.cfg = cfg;
     }
 
     @Override
@@ -70,18 +59,7 @@ public class LdapUserInfoProvider implements UserInfoProvider {
             throw new ConcordApplicationException("Error while retrieving LDAP information for " + username, e);
         }
     }
-
-    @Override
-    public UUID create(String username, String userDomain, String displayName, String email, Set<String> roles) {
-        if (!Roles.isAdmin() && !cfg.isAutoCreateUsers()) {
-            // unfortunately there's no easy way to throw a custom authentication error and keep the original message
-            // this will result in a 401 response with an empty body anyway
-            throw new ConcordApplicationException("Automatic creation of users is disabled.");
-        }
-        
-        return userDao.insertOrUpdate(username, userDomain, displayName, email, UserType.LDAP, roles);
-    }
-
+    
     private static UserInfo buildInfo(UUID id, LdapPrincipal p) {
         if (p == null) {
             return null;
