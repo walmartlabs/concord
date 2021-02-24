@@ -387,6 +387,7 @@ public class RunnerJobExecutor implements JobExecutor {
                 .javaCmd(cfg.javaCmd())
                 .logLevel(getLogLevel(job))
                 .extraDockerVolumesFile(createExtraDockerVolumesFile(job))
+                .exposeDockerDaemon(cfg.exposeDockerDaemon())
                 .runnerPath(cfg.runnerPath().toAbsolutePath())
                 .runnerCfgPath(runnerCfgFile.toAbsolutePath())
                 .mainClass(cfg.runnerMainClass())
@@ -674,6 +675,11 @@ public class RunnerJobExecutor implements JobExecutor {
         @Value.Default
         default List<String> extraDockerVolumes() {
             return Collections.emptyList();
+        }
+
+        @Value.Default
+        default Boolean exposeDockerDaemon() {
+            return true;
         }
 
         long maxHeartbeatInterval();

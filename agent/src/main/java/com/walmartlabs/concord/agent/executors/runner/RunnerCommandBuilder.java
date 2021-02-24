@@ -32,6 +32,7 @@ public class RunnerCommandBuilder {
     private Path runnerCfgPath;
     private String logLevel;
     private Path extraDockerVolumesFile;
+    private boolean exposeDockerDaemon;
     private List<String> extraJvmParams;
     private String mainClass;
 
@@ -65,6 +66,11 @@ public class RunnerCommandBuilder {
 
     public RunnerCommandBuilder extraDockerVolumesFile(Path extraDockerVolumesFile) {
         this.extraDockerVolumesFile = extraDockerVolumesFile;
+        return this;
+    }
+
+    public RunnerCommandBuilder exposeDockerDaemon(boolean exposeDockerDaemon) {
+        this.exposeDockerDaemon = exposeDockerDaemon;
         return this;
     }
 
@@ -121,6 +127,8 @@ public class RunnerCommandBuilder {
             // TODO move into RunnerConfiguration
             l.add("-Dconcord.dockerExtraVolumes=" + extraDockerVolumesFile);
         }
+
+        l.add("-Dconcord.exposeDockerDaemon=" + exposeDockerDaemon);
 
         // classpath
         l.add("-cp");

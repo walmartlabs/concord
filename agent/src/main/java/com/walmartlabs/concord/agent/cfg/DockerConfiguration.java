@@ -36,6 +36,7 @@ public class DockerConfiguration {
     private final boolean orphanSweeperEnabled;
     private final long orphanSweeperPeriod;
     private final List<String> extraVolumes;
+    private final boolean exposeDockerDaemon;
 
     @Inject
     public DockerConfiguration(Config cfg) {
@@ -43,6 +44,7 @@ public class DockerConfiguration {
         this.orphanSweeperEnabled = cfg.getBoolean("docker.orphanSweeperEnabled");
         this.orphanSweeperPeriod = cfg.getDuration("docker.orphanSweeperPeriod", TimeUnit.MILLISECONDS);
         this.extraVolumes = cfg.getStringList("docker.extraVolumes");
+        this.exposeDockerDaemon = cfg.getBoolean("docker.exposeDockerDaemon");
     }
 
     public String getDockerHost() {
@@ -59,5 +61,9 @@ public class DockerConfiguration {
 
     public List<String> getExtraVolumes() {
         return extraVolumes;
+    }
+
+    public boolean exposeDockerDaemon() {
+        return exposeDockerDaemon;
     }
 }
