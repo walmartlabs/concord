@@ -56,7 +56,7 @@ public class DefaultDockerService implements DockerService {
     private final WorkingDirectory workingDirectory;
     private final InstanceId instanceId;
     private final List<String> extraVolumes;
-    private final Boolean exposeDockerDaemon;
+    private final boolean exposeDockerDaemon;
 
     @Inject
     public DefaultDockerService(WorkingDirectory workingDirectory, InstanceId instanceId, RunnerConfiguration runnerCfg) {

@@ -47,7 +47,7 @@ public interface DockerConfiguration {
      * Expose docker daemon to containers created by DockerService
      */
     @Value.Default
-    default Boolean exposeDockerDaemon() {
+    default boolean exposeDockerDaemon() {
         return true;
     }
 

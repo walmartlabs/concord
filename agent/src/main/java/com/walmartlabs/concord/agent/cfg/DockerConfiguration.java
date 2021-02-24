@@ -36,7 +36,7 @@ public class DockerConfiguration {
     private final boolean orphanSweeperEnabled;
     private final long orphanSweeperPeriod;
     private final List<String> extraVolumes;
-    private final Boolean exposeDockerDaemon;
+    private final boolean exposeDockerDaemon;
 
     @Inject
     public DockerConfiguration(Config cfg) {
@@ -63,7 +63,7 @@ public class DockerConfiguration {
         return extraVolumes;
     }
 
-    public Boolean exposeDockerDaemon() {
+    public boolean exposeDockerDaemon() {
         return exposeDockerDaemon;
     }
 }

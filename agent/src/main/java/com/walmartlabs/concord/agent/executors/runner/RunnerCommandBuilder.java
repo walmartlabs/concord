@@ -32,7 +32,7 @@ public class RunnerCommandBuilder {
     private Path runnerCfgPath;
     private String logLevel;
     private Path extraDockerVolumesFile;
-    private Boolean exposeDockerDaemon;
+    private boolean exposeDockerDaemon;
     private List<String> extraJvmParams;
     private String mainClass;
 
@@ -69,7 +69,7 @@ public class RunnerCommandBuilder {
         return this;
     }
 
-    public RunnerCommandBuilder exposeDockerDaemon(Boolean exposeDockerDaemon) {
+    public RunnerCommandBuilder exposeDockerDaemon(boolean exposeDockerDaemon) {
         this.exposeDockerDaemon = exposeDockerDaemon;
         return this;
     }
