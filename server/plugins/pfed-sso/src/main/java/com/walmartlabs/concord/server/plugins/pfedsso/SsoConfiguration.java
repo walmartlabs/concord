@@ -96,6 +96,11 @@ public class SsoConfiguration implements Serializable {
     @Config("sso.tokenSignatureValidation")
     private boolean tokenSignatureValidation;
 
+    @Inject
+    @Nullable
+    @Config("sso.userInfoEndpointUrl")
+    private String userInfoEndpointUrl;
+
 
     public boolean isEnabled() {
         return enabled;
@@ -155,5 +160,9 @@ public class SsoConfiguration implements Serializable {
 
     public boolean isTokenSignatureValidation() {
         return tokenSignatureValidation;
+    }
+
+    public String getUserInfoEndpointUrl() {
+        return userInfoEndpointUrl;
     }
 }

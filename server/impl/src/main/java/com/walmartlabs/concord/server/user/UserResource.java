@@ -79,14 +79,16 @@ public class UserResource implements Resource {
 
         UUID id = userManager.getId(username, req.getUserDomain(), type).orElse(null);
         if (id == null) {
-            UserEntry e = userManager.create(username, req.getUserDomain(), req.getDisplayName(), req.getEmail(), req.getType(), req.getRoles());
+            UserEntry e = userManager.getOrCreate(username, req.getUserDomain(), req.getType(), req.getDisplayName(), req.getEmail(), req.getRoles()).orElse(null);
+            if (e == null) {
+                throw new ConcordApplicationException("User not created: " + id, Status.BAD_REQUEST);
+            }
             return new CreateUserResponse(e.getId(), e.getName(), OperationResult.CREATED);
         } else {
             UserEntry e = userManager.update(id, req.getDisplayName(), req.getEmail(), req.getType(), req.isDisabled(), req.getRoles()).orElse(null);
             if (e == null) {
                 throw new ConcordApplicationException("User not found: " + id, Status.BAD_REQUEST);
             }
-
             return new CreateUserResponse(id, e.getName(), OperationResult.UPDATED);
         }
     }

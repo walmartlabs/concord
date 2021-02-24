@@ -38,14 +38,16 @@ public class SsoHandler implements AuthenticationHandler {
     private final SsoConfiguration cfg;
     private final JwtAuthenticator jwtAuthenticator;
     private final RedirectHelper redirectHelper;
+    private final SsoClient ssoClient;
 
     private static final String FORM_URL_PATTERN = "/forms/.*";
 
     @Inject
-    public SsoHandler(SsoConfiguration cfg, JwtAuthenticator jwtAuthenticator, RedirectHelper redirectHelper) {
+    public SsoHandler(SsoConfiguration cfg, JwtAuthenticator jwtAuthenticator, RedirectHelper redirectHelper, SsoClient ssoClient) {
         this.cfg = cfg;
         this.jwtAuthenticator = jwtAuthenticator;
         this.redirectHelper = redirectHelper;
+        this.ssoClient = ssoClient;
     }
 
     @Override
@@ -67,7 +69,19 @@ public class SsoHandler implements AuthenticationHandler {
         }
 
         String[] as = parseDomain(login);
-        return new SsoToken(as[0], as[1]);
+        
+        String refreshToken = SsoCookies.getRefreshCookie(req);
+        // get userprofile send the response as null if refreshToken is expired or used
+        SsoClient.Profile profile;
+        try {
+            profile = ssoClient.getUserProfile(refreshToken);
+        } catch (IOException e) {
+           return null;
+        }
+        if (profile == null){
+            return null;
+        }
+        return new SsoToken(as[0], as[1], profile.displayName(), profile.mail());
     }
 
     @Override

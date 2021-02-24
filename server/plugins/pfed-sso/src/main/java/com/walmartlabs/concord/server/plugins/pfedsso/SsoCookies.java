@@ -79,6 +79,15 @@ public final class SsoCookies {
     }
 
     /**
+     * Remove Refresh token cookie from response
+     *
+     * @param response response from which Refresh token cookie will be removed
+     */
+    public static void removeRefreshTokenCookie(HttpServletResponse response) {
+        remove(REFRESH_TOKEN_COOKIE, response);
+    }
+
+    /**
      * Store post successful redirect url in response cookies
      *
      * @param url      url to be redirected to
