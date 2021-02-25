@@ -48,7 +48,7 @@ public class UserManager {
     private final AuditLog auditLog;
     private final Map<UserType, UserInfoProvider> userInfoProviders;
     private final LdapConfiguration cfg;
-    
+
     @Inject
     public UserManager(UserDao userDao, TeamDao teamDao, AuditLog auditLog, List<UserInfoProvider> providers, LdapConfiguration cfg) {
         this.userDao = userDao;
