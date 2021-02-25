@@ -21,6 +21,9 @@ package com.walmartlabs.concord.server.security.ldap;
  */
 
 import com.walmartlabs.concord.server.sdk.ConcordApplicationException;
+import com.walmartlabs.concord.server.security.UserPrincipal;
+import com.walmartlabs.concord.server.user.UserDao;
+import com.walmartlabs.concord.server.user.UserEntry;
 import com.walmartlabs.concord.server.user.UserInfoProvider;
 import com.walmartlabs.concord.server.user.UserType;
 import org.slf4j.Logger;
@@ -38,10 +41,13 @@ public class LdapUserInfoProvider implements UserInfoProvider {
     private static final Logger log = LoggerFactory.getLogger(LdapUserInfoProvider.class);
     
     private final LdapManager ldapManager;
+    private final UserDao userDao;
+    private static final String SSO_REALM_NAME = "sso";
 
     @Inject
-    public LdapUserInfoProvider(LdapManager ldapManager) {
+    public LdapUserInfoProvider(LdapManager ldapManager, UserDao userDao) {
         this.ldapManager = ldapManager;
+        this.userDao = userDao;
     }
 
     @Override
@@ -51,6 +57,12 @@ public class LdapUserInfoProvider implements UserInfoProvider {
 
     @Override
     public UserInfo getInfo(UUID id, String username, String userDomain) {
+        /* Get User Data from database when user logged in via SSO */
+        UserPrincipal u = UserPrincipal.getCurrent();
+        if (u != null && u.getRealm().equals(SSO_REALM_NAME)){
+            return getInfoDao(id, username, userDomain);
+        }
+        
         try {
             LdapPrincipal p = ldapManager.getPrincipal(username, userDomain);
             return buildInfo(id, p);
@@ -73,6 +85,29 @@ public class LdapUserInfoProvider implements UserInfoProvider {
                 .email(p.getEmail())
                 .groups(p.getGroups())
                 .attributes(p.getAttributes())
+                .build();
+    }
+
+    private UserInfo getInfoDao(UUID id, String username, String userDomain) {
+        if (id == null) {
+            id = userDao.getId(username, userDomain, UserType.LDAP);
+        }
+
+        if (id == null) {
+            return null;
+        }
+
+        UserEntry e = userDao.get(id);
+        if (e == null) {
+            return null;
+        }
+
+        return UserInfo.builder()
+                .id(id)
+                .username(e.getName())
+                .userDomain(userDomain)
+                .displayName(e.getDisplayName())
+                .email(e.getEmail())
                 .build();
     }
 }
