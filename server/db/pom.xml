@@ -48,10 +48,6 @@
             <artifactId>HikariCP</artifactId>
         </dependency>
         <dependency>
-            <groupId>org.eclipse.sisu</groupId>
-            <artifactId>org.eclipse.sisu.inject</artifactId>
-        </dependency>
-        <dependency>
             <groupId>org.jooq</groupId>
             <artifactId>jooq</artifactId>
         </dependency>
