@@ -49,6 +49,8 @@ public class UserManager {
     private final Map<UserType, UserInfoProvider> userInfoProviders;
     private final LdapConfiguration cfg;
 
+    private static final String SSO_REALM_NAME = "sso";
+    
     @Inject
     public UserManager(UserDao userDao, TeamDao teamDao, AuditLog auditLog, List<UserInfoProvider> providers, LdapConfiguration cfg) {
         this.userDao = userDao;
@@ -185,6 +187,17 @@ public class UserManager {
             return null;
         }
 
+        if (u.getRealm().equals(SSO_REALM_NAME)){
+            UserEntry userEntry  = u.getUser();
+            return UserInfo.builder()
+                    .id(userEntry.getId())
+                    .username(userEntry.getName())
+                    .userDomain(userEntry.getDomain())
+                    .displayName(userEntry.getDisplayName())
+                    .email(userEntry.getEmail())
+                    .build();
+        }
+        
         UserInfoProvider p = assertProvider(u.getType());
         return p.getInfo(u.getId(), u.getUsername(), u.getDomain());
     }
