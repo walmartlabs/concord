@@ -1,4 +1,4 @@
-package com.walmartlabs.concord.server.security.sso;
+package com.walmartlabs.concord.server.plugins.pfedsso;
 
 /*-
  * *****
@@ -20,6 +20,8 @@ package com.walmartlabs.concord.server.security.sso;
  * =====
  */
 
+import com.walmartlabs.concord.server.sdk.ConcordApplicationException;
+import com.walmartlabs.concord.server.security.Roles;
 import com.walmartlabs.concord.server.user.AbstractUserInfoProvider;
 import com.walmartlabs.concord.server.user.UserDao;
 import com.walmartlabs.concord.server.user.UserType;
@@ -34,9 +36,12 @@ import java.util.UUID;
 @Singleton
 public class SsoUserInfoProvider extends AbstractUserInfoProvider {
     
+    private final SsoConfiguration cfg;
+    
     @Inject
-    public SsoUserInfoProvider(UserDao userDao) {
+    public SsoUserInfoProvider(UserDao userDao, SsoConfiguration ssoConfiguration) {
         super(userDao);
+        this.cfg = ssoConfiguration;
     }
 
     @Override
@@ -51,6 +56,11 @@ public class SsoUserInfoProvider extends AbstractUserInfoProvider {
 
     @Override
     public UUID create(String username, String domain, String displayName, String email, Set<String> roles) {
+        if (!Roles.isAdmin() && !cfg.isAutoCreateUsers()) {
+            // unfortunately there's no easy way to throw a custom authentication error and keep the original message
+            // this will result in a 401 response with an empty body anyway
+            throw new ConcordApplicationException("Automatic creation of users is disabled.");
+        }
         return create(username, domain, displayName, email, roles, UserType.LDAP);
     }
 }
