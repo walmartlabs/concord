@@ -224,7 +224,10 @@ public class UserManager {
         if (!type.equals(UserType.SSO)){
             UserPrincipal u = UserPrincipal.getCurrent();
             if (u != null && u.getRealm().equals(SSO_REALM_NAME) && u.getUsername().equalsIgnoreCase(username)){
-                type = UserType.SSO;
+                UserInfoProvider p = userInfoProviders.get(UserType.SSO);
+                if (p != null){
+                    return p;
+                }
             }
         }
         
