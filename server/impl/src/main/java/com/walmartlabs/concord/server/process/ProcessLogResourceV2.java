@@ -203,14 +203,6 @@ public class ProcessLogResourceV2 implements Resource {
         return downloadableFile(instanceId, segmentId, out, actualStart, actualEnd, l.getSize());
     }
 
-    private ProcessKey assertProcessKey(UUID instanceId) {
-        ProcessKey processKey = processKeyCache.get(instanceId);
-        if (processKey == null) {
-            throw new ConcordApplicationException("Process instance not found: " + instanceId, Response.Status.NOT_FOUND);
-        }
-        return processKey;
-    }
-
     private static Response downloadableFile(UUID instanceId, long segmentId, StreamingOutput out, int start, int end, int size) {
         return (out != null ? Response.ok(out) : Response.ok())
                 .header("Content-Range", "bytes " + start + "-" + end + "/" + size)

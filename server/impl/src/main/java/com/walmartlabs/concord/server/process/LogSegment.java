@@ -46,6 +46,10 @@ public interface LogSegment {
     @Nullable
     Status status();
 
+    @Nullable
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss.SSSX")
+    OffsetDateTime statusUpdatedAt();
+
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss.SSSX")
     OffsetDateTime createdAt();
 

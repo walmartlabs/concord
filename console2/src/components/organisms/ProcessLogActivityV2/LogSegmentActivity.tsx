@@ -52,6 +52,7 @@ interface ExternalProps {
     open?: boolean;
     processStatus?: ProcessStatus;
     status?: SegmentStatus;
+    statusUpdatedAt?: string;
     warnings?: number;
     errors?: number;
     opts: LogProcessorOptions;
@@ -72,6 +73,7 @@ const LogSegmentActivity = ({
     createdAt,
     open,
     status,
+    statusUpdatedAt,
     warnings,
     errors,
     opts,
@@ -174,6 +176,7 @@ const LogSegmentActivity = ({
                 open={open}
                 createdAt={createdAt}
                 status={status}
+                statusUpdatedAt={statusUpdatedAt}
                 warnings={warnings}
                 errors={errors}
                 onStartLoading={startPollingHandler}
