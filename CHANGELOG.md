@@ -4,6 +4,8 @@
 
 ### Added
 
+- concord-server, concord-console: add log segment duration
+([#335](https://github.com/walmartlabs/concord/pull/335));
 - runtime-v1, runtime-v2: optionally expose docker daemon
 ([#332](https://github.com/walmartlabs/concord/pull/332));
 - pfed-sso: add configuration parameter for token signature
