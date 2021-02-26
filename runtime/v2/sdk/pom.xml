@@ -22,7 +22,6 @@
             <groupId>com.walmartlabs.concord.runtime.v2</groupId>
             <artifactId>concord-runtime-vm-v2</artifactId>
         </dependency>
-
         <dependency>
             <groupId>com.walmartlabs.concord</groupId>
             <artifactId>concord-sdk</artifactId>
@@ -58,12 +57,6 @@
             <groupId>com.fasterxml.jackson.core</groupId>
             <artifactId>jackson-annotations</artifactId>
             <scope>provided</scope>
-        </dependency>
-
-        <dependency>
-            <groupId>junit</groupId>
-            <artifactId>junit</artifactId>
-            <scope>test</scope>
         </dependency>
     </dependencies>
 
