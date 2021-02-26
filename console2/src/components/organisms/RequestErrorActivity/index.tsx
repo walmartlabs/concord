@@ -24,7 +24,7 @@ import { Redirect } from 'react-router';
 import { RequestError } from '../../../api/common';
 import { RequestErrorMessage } from '../../molecules';
 import { useLocation } from 'react-router-dom';
-import {Dimmer, Loader} from "semantic-ui-react";
+import { Dimmer, Loader } from 'semantic-ui-react';
 
 interface Props {
     error: RequestError;

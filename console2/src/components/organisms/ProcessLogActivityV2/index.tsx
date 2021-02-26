@@ -218,6 +218,7 @@ const ProcessLogActivityV2 = ({
                             createdAt={s.createdAt}
                             open={handleOpen(s.id)}
                             status={s.status}
+                            statusUpdatedAt={s.statusUpdatedAt}
                             warnings={s.warnings}
                             errors={s.errors}
                             processStatus={processStatus}

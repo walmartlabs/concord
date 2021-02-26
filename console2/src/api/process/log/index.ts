@@ -90,6 +90,7 @@ export interface LogSegmentEntry {
     name: string;
     createdAt: string;
     status?: SegmentStatus;
+    statusUpdatedAt?: string;
     warnings?: number;
     errors?: number;
 }
