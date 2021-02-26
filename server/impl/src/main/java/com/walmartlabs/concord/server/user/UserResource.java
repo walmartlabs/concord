@@ -161,8 +161,9 @@ public class UserResource implements Resource {
 
     private static UserType assertUserType(UserType type) {
         if (type != null && type.equals(UserType.SSO)) {
-            throw new BadRequestException("User of type SSO cannot be created");
+            throw new ConcordApplicationException("User of type "+type.name()+" cannot be created", Status.BAD_REQUEST);
         }
+        
         if (type != null) {
             return type;
         }
