@@ -42,6 +42,8 @@ public interface UserInfoProvider {
      * @return UserInfo user's info
      */
     UserInfo getInfo(UUID id, String username, String userDomain);
+
+    UUID create(String username, String domain, String displayName, String email, Set<String> roles);
     
     @JsonInclude(JsonInclude.Include.NON_EMPTY)
     interface BaseUserInfo {

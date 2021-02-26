@@ -24,5 +24,6 @@ package com.walmartlabs.concord.server.user;
 public enum UserType {
 
     LOCAL,
-    LDAP
+    LDAP,
+    SSO
 }

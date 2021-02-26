@@ -23,13 +23,11 @@ package com.walmartlabs.concord.server.user;
 import com.walmartlabs.concord.server.audit.AuditAction;
 import com.walmartlabs.concord.server.audit.AuditLog;
 import com.walmartlabs.concord.server.audit.AuditObject;
-import com.walmartlabs.concord.server.cfg.LdapConfiguration;
 import com.walmartlabs.concord.server.org.project.DiffUtils;
 import com.walmartlabs.concord.server.org.team.TeamDao;
 import com.walmartlabs.concord.server.org.team.TeamManager;
 import com.walmartlabs.concord.server.org.team.TeamRole;
 import com.walmartlabs.concord.server.sdk.ConcordApplicationException;
-import com.walmartlabs.concord.server.security.Roles;
 import com.walmartlabs.concord.server.security.UserPrincipal;
 import com.walmartlabs.concord.server.security.ldap.LdapGroupSearchResult;
 import org.jooq.DSLContext;
@@ -47,14 +45,14 @@ public class UserManager {
     private final TeamDao teamDao;
     private final AuditLog auditLog;
     private final Map<UserType, UserInfoProvider> userInfoProviders;
-    private final LdapConfiguration cfg;
+
+    private static final String SSO_REALM_NAME = "sso";
 
     @Inject
-    public UserManager(UserDao userDao, TeamDao teamDao, AuditLog auditLog, List<UserInfoProvider> providers, LdapConfiguration cfg) {
+    public UserManager(UserDao userDao, TeamDao teamDao, AuditLog auditLog, List<UserInfoProvider> providers) {
         this.userDao = userDao;
         this.teamDao = teamDao;
         this.auditLog = auditLog;
-        this.cfg = cfg;
 
         this.userInfoProviders = new HashMap<>();
         providers.forEach(p -> this.userInfoProviders.put(p.getUserType(), p));
@@ -88,7 +86,7 @@ public class UserManager {
             type = UserPrincipal.assertCurrent().getType();
         }
 
-        UserInfoProvider provider = assertProvider(type);
+        UserInfoProvider provider = assertProvider(username, type);
         UserInfo info = provider.getInfo(null, username, userDomain);
         if (info != null) {
             username = info.username();
@@ -100,11 +98,7 @@ public class UserManager {
                 return result;
             }
         }
-
-        if (info == null && type.equals(UserType.LDAP)) {
-            throw new ConcordApplicationException("User '" + username + "' with domain '" + userDomain + "' not found in LDAP");
-        }
-
+        
         return Optional.of(create(username, userDomain, displayName, email, type, roles));
     }
 
@@ -147,13 +141,8 @@ public class UserManager {
             type = UserPrincipal.assertCurrent().getType();
         }
 
-        if (type.equals(UserType.LDAP) && !Roles.isAdmin() && !cfg.isAutoCreateUsers()) {
-            // unfortunately there's no easy way to throw a custom authentication error and keep the original message
-            // this will result in a 401 response with an empty body anyway
-            throw new ConcordApplicationException("Automatic creation of users is disabled.");
-        }
-
-        UUID id = userDao.insertOrUpdate(username, domain, displayName, email, type, roles);
+        UserInfoProvider provider = assertProvider(username, type);
+        UUID id = provider.create(username, domain, displayName, email, roles);
 
         // add the new user to the default org/team
         UUID teamId = TeamManager.DEFAULT_ORG_TEAM_ID;
@@ -185,7 +174,7 @@ public class UserManager {
             return null;
         }
 
-        UserInfoProvider p = assertProvider(u.getType());
+        UserInfoProvider p = assertProvider(u.getUsername(), u.getType());
         return p.getInfo(u.getId(), u.getUsername(), u.getDomain());
     }
 
@@ -194,7 +183,7 @@ public class UserManager {
     }
 
     public UserInfo getInfo(String username, String domain, UserType type) {
-        UserInfoProvider p = assertProvider(type);
+        UserInfoProvider p = assertProvider(username, type);
         return p.getInfo(null, username, domain);
     }
 
@@ -230,7 +219,15 @@ public class UserManager {
                 .log();
     }
 
-    private UserInfoProvider assertProvider(UserType type) {
+    private UserInfoProvider assertProvider(String username, UserType type) {
+        /* Override SSO type if current user loggedIn via SSO */
+        if (!type.equals(UserType.SSO)){
+            UserPrincipal u = UserPrincipal.getCurrent();
+            if (u != null && u.getRealm().equals(SSO_REALM_NAME) && u.getUsername().equalsIgnoreCase(username)){
+                type = UserType.SSO;
+            }
+        }
+        
         UserInfoProvider p = userInfoProviders.get(type);
         if (p == null) {
             throw new ConcordApplicationException("Unknown user account type: " + type);
