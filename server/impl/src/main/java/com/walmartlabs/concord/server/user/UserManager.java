@@ -86,7 +86,7 @@ public class UserManager {
             type = UserPrincipal.assertCurrent().getType();
         }
 
-        UserInfoProvider provider = assertProvider(username, type);
+        UserInfoProvider provider = assertProvider(type);
         UserInfo info = provider.getInfo(null, username, userDomain);
         if (info != null) {
             username = info.username();
@@ -141,7 +141,7 @@ public class UserManager {
             type = UserPrincipal.assertCurrent().getType();
         }
 
-        UserInfoProvider provider = assertProvider(username, type);
+        UserInfoProvider provider = assertProvider(type);
         UUID id = provider.create(username, domain, displayName, email, roles);
 
         // add the new user to the default org/team
@@ -173,8 +173,8 @@ public class UserManager {
         if (u == null) {
             return null;
         }
-
-        UserInfoProvider p = assertProvider(u.getUsername(), u.getType());
+        UserType type = assertSsoUserType(u, u.getType());
+        UserInfoProvider p = assertProvider(type);
         return p.getInfo(u.getId(), u.getUsername(), u.getDomain());
     }
 
@@ -183,7 +183,7 @@ public class UserManager {
     }
 
     public UserInfo getInfo(String username, String domain, UserType type) {
-        UserInfoProvider p = assertProvider(username, type);
+        UserInfoProvider p = assertProvider(assertUserType(username, domain, type));
         return p.getInfo(null, username, domain);
     }
 
@@ -219,23 +219,37 @@ public class UserManager {
                 .log();
     }
 
-    private UserInfoProvider assertProvider(String username, UserType type) {
-        /* Override SSO type if current user loggedIn via SSO */
-        if (!type.equals(UserType.SSO)){
-            UserPrincipal u = UserPrincipal.getCurrent();
-            if (u != null && u.getRealm().equals(SSO_REALM_NAME) && u.getUsername().equalsIgnoreCase(username)){
-                UserInfoProvider p = userInfoProviders.get(UserType.SSO);
-                if (p != null){
-                    return p;
-                }
-            }
-        }
-        
+    private UserInfoProvider assertProvider(UserType type) {
         UserInfoProvider p = userInfoProviders.get(type);
         if (p == null) {
             throw new ConcordApplicationException("Unknown user account type: " + type);
         }
         return p;
+    }
+    
+    private UserType assertUserType(String username, String domain, UserType type){
+        /* Override LDAP to SSO type if current user loggedIn via SSO */
+        /*
+        1. LoggedIn via internal user realm -> domain = null
+        2. LoggedIn via ldap realm -> realm != SSO_REALM_NAME
+        3. LoggedIn via SSO -> @return UserType.SSO
+         */
+        if (username != null && domain != null){
+            UserPrincipal u = UserPrincipal.getCurrent();
+            if (u != null && u.getUsername().equalsIgnoreCase(username) && u.getDomain().equalsIgnoreCase(domain)){
+              return assertSsoUserType(u, type);
+            }
+        }
+        return type;
+    }
+    
+    private UserType assertSsoUserType(UserPrincipal u, UserType type){
+        if (u.getRealm().equals(SSO_REALM_NAME)){
+            if (userInfoProviders.get(UserType.SSO) != null){
+                return UserType.SSO;
+            }
+        }
+        return type;
     }
 
     /**
