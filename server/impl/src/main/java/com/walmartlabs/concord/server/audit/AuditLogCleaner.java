@@ -33,6 +33,7 @@ import org.slf4j.LoggerFactory;
 import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
+import java.time.Duration;
 import java.time.OffsetDateTime;
 
 import static com.walmartlabs.concord.server.jooq.tables.AuditLog.AUDIT_LOG;
@@ -59,8 +60,7 @@ public class AuditLogCleaner implements ScheduledTask {
 
     @Override
     public void performTask() {
-        Field<OffsetDateTime> cutoff = PgUtils.nowMinus(cfg.getMaxLogAge());
-        cleanerDao.deleteOldLogs(cutoff);
+        cleanerDao.deleteOldLogs(cfg.getMaxLogAge());
     }
 
     @Named
@@ -71,12 +71,14 @@ public class AuditLogCleaner implements ScheduledTask {
             super(cfg);
         }
 
-        void deleteOldLogs(Field<OffsetDateTime> cutoff) {
-            long t1 = System.currentTimeMillis();
+        void deleteOldLogs(Duration maxAge) {
+            Field<OffsetDateTime> cutoff = PgUtils.nowMinus(maxAge);
 
+            long t1 = System.currentTimeMillis();
             tx(tx -> tx.deleteFrom(AUDIT_LOG).where(AUDIT_LOG.ENTRY_DATE.lessThan(cutoff)).execute());
             long t2 = System.currentTimeMillis();
-            log.info("deleteOldLogs -> removed entries older than {}, took {}ms", cutoff, (t2 - t1));
+
+            log.info("deleteOldLogs -> removed entries older than {}, took {}ms", maxAge, (t2 - t1));
         }
     }
 }
