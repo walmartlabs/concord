@@ -46,13 +46,11 @@ public class SsoRealm extends AuthorizingRealm {
 
     public static final String REALM_NAME = "sso";
 
-    private final SsoClient ssoClient;
     private final UserManager userManager;
     private final AuditLog auditLog;
 
     @Inject
-    public SsoRealm(SsoClient ssoClient, UserManager userManager, AuditLog auditLog) {
-        this.ssoClient = ssoClient;
+    public SsoRealm(UserManager userManager, AuditLog auditLog) {
         this.userManager = userManager;
         this.auditLog = auditLog;
     }
@@ -74,7 +72,7 @@ public class SsoRealm extends AuthorizingRealm {
         UserEntry u = userManager.get(t.getUsername(), t.getDomain(), UserType.LDAP)
                 .orElse(null);
         if (u == null) {
-            u = userManager.create(t.getUsername(), t.getDomain(), t.getDisplayName(), t.getMail(), UserType.LDAP, null);
+            u = userManager.create(t.getUsername(), t.getDomain(), t.getDisplayName(), t.getMail(), UserType.SSO, null);
         }
 
         // we consider the account active if the authentication was successful

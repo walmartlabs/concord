@@ -79,10 +79,7 @@ public class UserResource implements Resource {
 
         UUID id = userManager.getId(username, req.getUserDomain(), type).orElse(null);
         if (id == null) {
-            UserEntry e = userManager.getOrCreate(username, req.getUserDomain(), req.getType(), req.getDisplayName(), req.getEmail(), req.getRoles()).orElse(null);
-            if (e == null) {
-                throw new ConcordApplicationException("User not created: " + id, Status.BAD_REQUEST);
-            }
+            UserEntry e = userManager.create(username, req.getUserDomain(), req.getDisplayName(), req.getEmail(), req.getType(), req.getRoles());
             return new CreateUserResponse(e.getId(), e.getName(), OperationResult.CREATED);
         } else {
             UserEntry e = userManager.update(id, req.getDisplayName(), req.getEmail(), req.getType(), req.isDisabled(), req.getRoles()).orElse(null);
@@ -163,10 +160,13 @@ public class UserResource implements Resource {
     }
 
     private static UserType assertUserType(UserType type) {
+        if (type != null && type.equals(UserType.SSO)) {
+            throw new ConcordApplicationException("User of type "+type.name()+" cannot be created", Status.BAD_REQUEST);
+        }
+        
         if (type != null) {
             return type;
         }
-
         return UserPrincipal.assertCurrent().getType();
     }
 }
