@@ -4,32 +4,32 @@
 
 ### Added
 
-- concord-server, concord-console: add log segment duration
-([#335](https://github.com/walmartlabs/concord/pull/335));
+- pfed-sso: add configuration parameter for token signature
+validation ([#325](https://github.com/walmartlabs/concord/pull/325));
 - runtime-v1, runtime-v2: optionally expose docker daemon
 ([#332](https://github.com/walmartlabs/concord/pull/332));
-- pfed-sso: add configuration parameter for token signature
-validation ([#325](https://github.com/walmartlabs/concord/pull/325)).
+- concord-server, concord-console: add log segment duration
+([#335](https://github.com/walmartlabs/concord/pull/335)).
 
 ### Changed
 
-- concord-server, pfed-sso: get user information from the DB
-([#333](https://github.com/walmartlabs/concord/pull/333/files));
-- project: remove unused dependencies
-([#334](https://github.com/walmartlabs/concord/pull/334));
-- runtime-v2: fix Docker passwd generation 
-([#332](https://github.com/walmartlabs/concord/pull/332));
 - concord-server, pfed-sso: make sso login independent of ldap
 ([#327](https://github.com/walmartlabs/concord/pull/327));
-- concord-console: add redirect on SSO token/session expiration
+- concord-console: add a redirect on SSO token/session expiration
 ([#327](https://github.com/walmartlabs/concord/pull/327));
-- concord-console: show runtime-v1 recorded in-vars
-([#331](https://github.com/walmartlabs/concord/pull/331));
 - dependency-manager: remove dots from the `resolveFile` log,
 prevent URLs from being mangled in the UI
 ([#330](https://github.com/walmartlabs/concord/pull/330));
+- concord-console: show runtime-v1 recorded in-vars
+([#331](https://github.com/walmartlabs/concord/pull/331));
 - concord-repository: fix fetching when both commitId and branch
 specified ([#329](https://github.com/walmartlabs/concord/pull/329)).
+- runtime-v2: fix Docker passwd generation 
+([#332](https://github.com/walmartlabs/concord/pull/332));
+- concord-server, pfed-sso: get user information from the DB
+([#333](https://github.com/walmartlabs/concord/pull/333/files));
+- project: remove unused dependencies
+([#334](https://github.com/walmartlabs/concord/pull/334)).
 
 
 
