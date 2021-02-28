@@ -39,8 +39,6 @@ public final class IOUtils {
     public static final String TMP_DIR_KEY = "CONCORD_TMP_DIR";
     public static final Path TMP_DIR = Paths.get(getEnv(TMP_DIR_KEY, System.getProperty("java.io.tmpdir")));
 
-    private static final int MAX_COPY_DEPTH = 100;
-
     static {
         try {
             if (!Files.exists(TMP_DIR)) {
@@ -216,22 +214,18 @@ public final class IOUtils {
     }
 
     public static void copy(Path src, Path dst, String ignorePattern, CopyOption... options) throws IOException {
-        _copy(1, src, src, dst, toList(ignorePattern), null, options);
+        _copy(src, src, dst, toList(ignorePattern), null, options);
     }
 
     public static void copy(Path src, Path dst, String skipContents, FileVisitor visitor, CopyOption... options) throws IOException {
-        _copy(1, src, src, dst, toList(skipContents), visitor, options);
+        _copy(src, src, dst, toList(skipContents), visitor, options);
     }
 
     public static void copy(Path src, Path dst, List<String> skipContents, FileVisitor visitor, CopyOption... options) throws IOException {
-        _copy(1, src, src, dst, skipContents, visitor, options);
+        _copy(src, src, dst, skipContents, visitor, options);
     }
 
-    private static void _copy(int depth, Path root, Path src, Path dst, List<String> ignorePattern, FileVisitor visitor, CopyOption... options) throws IOException {
-        if (depth >= MAX_COPY_DEPTH) {
-            throw new IOException("Too deep: " + src);
-        }
-
+    private static void _copy(Path root, Path src, Path dst, List<String> ignorePattern, FileVisitor visitor, CopyOption... options) throws IOException {
         Files.walkFileTree(src, new SimpleFileVisitor<Path>() {
             @Override
             public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs) {
