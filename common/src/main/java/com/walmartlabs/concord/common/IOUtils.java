@@ -153,6 +153,8 @@ public final class IOUtils {
     }
 
     public static void unzip(Path in, Path targetDir, boolean skipExisting, FileVisitor visitor, CopyOption... options) throws IOException {
+        targetDir = targetDir.normalize().toAbsolutePath();
+
         try (ZipFile zip = new ZipFile(in.toFile())) {
             Enumeration<ZipArchiveEntry> entries = zip.getEntries();
 
@@ -160,6 +162,13 @@ public final class IOUtils {
                 ZipArchiveEntry e = entries.nextElement();
 
                 Path p = targetDir.resolve(e.getName());
+
+                // skip paths outside of targetDir
+                // (don't log anything to avoid "log bombing")
+                if (!p.normalize().toAbsolutePath().startsWith(targetDir)) {
+                    continue;
+                }
+
                 if (skipExisting && Files.exists(p)) {
                     continue;
                 }
