@@ -135,7 +135,7 @@ public class ProcessLogsDao extends AbstractDao {
         UUID instanceId = processKey.getInstanceId();
         OffsetDateTime createdAt = processKey.getCreatedAt();
 
-        SelectSeekStep1<Record8<Long, UUID, String, OffsetDateTime, String, OffsetDateTime, Integer, Integer>, OffsetDateTime> q = dsl()
+        SelectSeekStep2<Record8<Long, UUID, String, OffsetDateTime, String, OffsetDateTime, Integer, Integer>, OffsetDateTime, Long> q = dsl()
                 .select(PROCESS_LOG_SEGMENTS.SEGMENT_ID,
                         PROCESS_LOG_SEGMENTS.CORRELATION_ID,
                         PROCESS_LOG_SEGMENTS.SEGMENT_NAME,
