@@ -53,6 +53,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
+import java.util.stream.Collectors;
 
 public class Main {
 
@@ -131,7 +132,7 @@ public class Main {
         }
 
         if (processCfg.debug()) {
-            log.info("Available tasks: {}", taskProviders.names());
+            log.info("Available tasks: {}", taskProviders.names().stream().sorted().collect(Collectors.toList()));
         }
 
         Path workDir = this.workDir.getValue();
