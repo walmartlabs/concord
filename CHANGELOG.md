@@ -13,6 +13,8 @@ validation ([#325](https://github.com/walmartlabs/concord/pull/325)).
 
 ### Changed
 
+- concord-server, pfed-sso: get user information from the DB
+([#333](https://github.com/walmartlabs/concord/pull/333/files));
 - project: remove unused dependencies
 ([#334](https://github.com/walmartlabs/concord/pull/334));
 - runtime-v2: fix Docker passwd generation 
@@ -35,7 +37,7 @@ specified ([#329](https://github.com/walmartlabs/concord/pull/329)).
 
 ### Added
 
-- concord-server: new authentication plugin `pingfed-sso`
+- concord-server: new authentication plugin `pfed-sso`
 ([#318](https://github.com/walmartlabs/concord/pull/323)).
 
 ### Changed
