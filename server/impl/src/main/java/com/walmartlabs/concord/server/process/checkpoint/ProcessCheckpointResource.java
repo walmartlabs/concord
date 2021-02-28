@@ -125,11 +125,10 @@ public class ProcessCheckpointResource implements Resource {
 
             Files.copy(data, tmpIn.path(), StandardCopyOption.REPLACE_EXISTING);
             checkpointManager.importCheckpoint(processKey, checkpointId, checkpointName, tmpIn.path());
+            log.info("uploadCheckpoint ['{}'] -> done, checkpointId={}", processKey, checkpointId);
         } catch (IOException e) {
             log.error("uploadCheckpoint ['{}'] -> error", processKey, e);
             throw new ConcordApplicationException("upload error: " + e.getMessage());
         }
-
-        log.info("uploadCheckpoint ['{}'] -> done", processKey);
     }
 }
