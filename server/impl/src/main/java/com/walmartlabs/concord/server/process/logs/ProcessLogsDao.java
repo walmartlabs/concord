@@ -147,7 +147,7 @@ public class ProcessLogsDao extends AbstractDao {
                 .from(PROCESS_LOG_SEGMENTS)
                 .where(PROCESS_LOG_SEGMENTS.INSTANCE_ID.eq(instanceId)
                         .and(PROCESS_LOG_SEGMENTS.INSTANCE_CREATED_AT.eq(createdAt)))
-                .orderBy(PROCESS_LOG_SEGMENTS.SEGMENT_TS);
+                .orderBy(PROCESS_LOG_SEGMENTS.SEGMENT_TS, PROCESS_LOG_SEGMENTS.SEGMENT_ID);
 
         if (limit >= 0) {
             q.limit(limit);
