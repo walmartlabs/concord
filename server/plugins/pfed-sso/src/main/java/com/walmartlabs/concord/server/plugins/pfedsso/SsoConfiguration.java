@@ -101,6 +101,13 @@ public class SsoConfiguration implements Serializable {
     @Config("sso.userInfoEndpointUrl")
     private String userInfoEndpointUrl;
 
+    @Inject
+    @Config("sso.autoCreateUsers")
+    private boolean autoCreateUsers;
+
+    public boolean isAutoCreateUsers() {
+        return autoCreateUsers;
+    }
 
     public boolean isEnabled() {
         return enabled;
