@@ -1,6 +1,6 @@
 # Change log
 
-## [Unreleased]
+## [1.81.0] - 2021-03-01
 
 ### Added
 
@@ -37,7 +37,7 @@ using environment variables
 ([#337](https://github.com/walmartlabs/concord/pull/337));
 - concord-server: sort log segments by IDs in addition to their
 timestamps to make the order more stable (e.g. for `parallel`
-situations) ([#338)(https://github.com/walmartlabs/concord/pull/338)).
+situations) ([#338](https://github.com/walmartlabs/concord/pull/338)).
 
 
 
