@@ -34,7 +34,10 @@ specified ([#329](https://github.com/walmartlabs/concord/pull/329)).
 using environment variables
 ([#336](https://github.com/walmartlabs/concord/pull/336));
 - concord-common: skip outside paths when unzipping files
-([#337](https://github.com/walmartlabs/concord/pull/337)).
+([#337](https://github.com/walmartlabs/concord/pull/337));
+- concord-server: sort log segments by IDs in addition to their
+timestamps to make the order more stable (e.g. for `parallel`
+situations) ([#338)(https://github.com/walmartlabs/concord/pull/338)).
 
 
 
