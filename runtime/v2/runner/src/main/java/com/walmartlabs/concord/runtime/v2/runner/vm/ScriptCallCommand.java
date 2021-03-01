@@ -61,7 +61,7 @@ public class ScriptCallCommand extends StepCommand<ScriptCall> {
         ResourceResolver resourceResolver = runtime.getService(ResourceResolver.class);
 
         ScriptCall call = getStep();
-        ScriptCallOptions opts = call.getOptions();
+        ScriptCallOptions opts = Objects.requireNonNull(call.getOptions());
         Map<String, Object> input = VMUtils.prepareInput(expressionEvaluator, ctx, opts.input());
 
         String language = getLanguage(expressionEvaluator, scriptEvaluator, ctx, call);
@@ -88,7 +88,7 @@ public class ScriptCallCommand extends StepCommand<ScriptCall> {
         String languageOrRef = expressionEvaluator.eval(EvalContextFactory.global(ctx), call.getLanguageOrRef(), String.class);
 
         // if we have body then languageOrRef is language
-        if (call.getOptions().body() != null) {
+        if (Objects.requireNonNull(call.getOptions()).body() != null) {
             return assertLanguage(scriptEvaluator, languageOrRef);
         }
 
@@ -97,7 +97,7 @@ public class ScriptCallCommand extends StepCommand<ScriptCall> {
             return assertLanguage(scriptEvaluator, maybeLanguage);
         }
 
-        if (scriptEvaluator.hasLanguage(languageOrRef)) {
+        if (scriptEvaluator.getLanguage(languageOrRef) != null) {
             throw new RuntimeException("Invalid step definition: 'body' parameter not found.");
         }
 
@@ -106,8 +106,10 @@ public class ScriptCallCommand extends StepCommand<ScriptCall> {
     }
 
     private static String assertLanguage(ScriptEvaluator scriptEvaluator, String language) {
-        if (scriptEvaluator.hasLanguage(language)) {
-            return language;
+        String normalizedLanguage = scriptEvaluator.getLanguage(language);
+
+        if (normalizedLanguage != null) {
+            return normalizedLanguage;
         }
 
         throw new RuntimeException("Unknown language '" + language + "'. Check process dependencies.");
