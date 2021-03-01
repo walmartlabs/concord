@@ -32,14 +32,19 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
+/**
+ * Adds an event marker to the payload.
+ * <p>
+ * The event marker file is used by the runtime to determine whether the process
+ * should be started using a previously saved state snapshot.
+ */
 @Named
-public class ResumeStateStoringProcessor implements PayloadProcessor {
-
+public class ResumeMarkerStoringProcessor implements PayloadProcessor {
 
     private final ProcessLogManager logManager;
 
     @Inject
-    public ResumeStateStoringProcessor(ProcessLogManager logManager) {
+    public ResumeMarkerStoringProcessor(ProcessLogManager logManager) {
         this.logManager = logManager;
     }
 
