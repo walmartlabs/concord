@@ -27,7 +27,7 @@ specified ([#329](https://github.com/walmartlabs/concord/pull/329)).
 - runtime-v2: fix Docker passwd generation 
 ([#332](https://github.com/walmartlabs/concord/pull/332));
 - concord-server, pfed-sso: get user information from the DB
-([#333](https://github.com/walmartlabs/concord/pull/333/files));
+([#333](https://github.com/walmartlabs/concord/pull/333));
 - project: remove unused dependencies
 ([#334](https://github.com/walmartlabs/concord/pull/334));
 - concord-server: allow overriding of default configuration values
