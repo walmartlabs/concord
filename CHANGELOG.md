@@ -32,7 +32,9 @@ specified ([#329](https://github.com/walmartlabs/concord/pull/329)).
 ([#334](https://github.com/walmartlabs/concord/pull/334));
 - concord-server: allow overriding of default configuration values
 using environment variables
-([#336](https://github.com/walmartlabs/concord/pull/336)).
+([#336](https://github.com/walmartlabs/concord/pull/336));
+- concord-common: skip outside paths when unzipping files
+([#337](https://github.com/walmartlabs/concord/pull/337)).
 
 
 
