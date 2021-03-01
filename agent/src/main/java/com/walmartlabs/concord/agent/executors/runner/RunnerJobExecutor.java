@@ -110,7 +110,7 @@ public class RunnerJobExecutor implements JobExecutor {
     public StatusEnum exec(ConfiguredJobRequest jobRequest) throws Exception {
         RunnerJob job = RunnerJob.from(cfg, jobRequest, logFactory);
         int result = exec(job);
-        if (result != 0) {
+        if (result != Constants.RunnerExitCode.SUCCESS) {
             job.getLog().error("Process exit code: " + result);
         }
 
