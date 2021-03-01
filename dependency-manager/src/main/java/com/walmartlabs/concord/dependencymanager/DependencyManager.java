@@ -217,7 +217,7 @@ public class DependencyManager {
                 return dst;
             }
 
-            log.info("resolveFile -> downloading {}...", uri);
+            log.info("resolveFile -> downloading {}", uri);
 
             Path tmp = baseDir.resolve(name + ".tmp");
             try {

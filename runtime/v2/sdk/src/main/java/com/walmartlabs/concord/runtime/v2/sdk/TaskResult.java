@@ -35,6 +35,8 @@ public interface TaskResult extends Serializable {
 
     /**
      * Creates a new instance of {@link TaskResult} with {@link SimpleResult#ok()} set to {@code true}.
+     *
+     * @return {@link TaskResult}
      */
     static SimpleResult success() {
         return new SimpleResult(true, null, null);
@@ -55,6 +57,9 @@ public interface TaskResult extends Serializable {
     /**
      * Creates a new instance of {@link TaskResult} with {@link SimpleResult#ok()} set to {@code false}
      * and with the provided error message.
+     *
+     * @param message error message.
+     * @return {@link TaskResult}
      */
     static SimpleResult error(String message) {
         return new SimpleResult(false, message, null);
@@ -71,7 +76,7 @@ public interface TaskResult extends Serializable {
     /**
      * Result of a task call. Provides some common fields such as {@link #ok()}
      * and {@link #error()}, allows arbitrary data in {@link #values()}.
-     * <p/>
+     * <p>
      * All values must be {@link Serializable}, including collection types.
      * Avoid using custom types/classes as values.
      */
@@ -129,6 +134,8 @@ public interface TaskResult extends Serializable {
          * </ul>
          * <p>
          * Those fields will override any values with the same keys.
+         *
+         * @return {@link Map} of all result values.
          */
         public Map<String, Object> toMap() {
             Map<String, Object> result = new HashMap<>(values != null ? values : Collections.emptyMap());

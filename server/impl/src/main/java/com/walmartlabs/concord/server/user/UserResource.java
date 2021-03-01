@@ -86,7 +86,6 @@ public class UserResource implements Resource {
             if (e == null) {
                 throw new ConcordApplicationException("User not found: " + id, Status.BAD_REQUEST);
             }
-
             return new CreateUserResponse(id, e.getName(), OperationResult.UPDATED);
         }
     }
@@ -161,10 +160,13 @@ public class UserResource implements Resource {
     }
 
     private static UserType assertUserType(UserType type) {
+        if (type != null && type.equals(UserType.SSO)) {
+            throw new ConcordApplicationException("User of type "+type.name()+" cannot be created", Status.BAD_REQUEST);
+        }
+        
         if (type != null) {
             return type;
         }
-
         return UserPrincipal.assertCurrent().getType();
     }
 }

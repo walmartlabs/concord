@@ -21,14 +21,19 @@
 import * as React from 'react';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Button, Icon, SemanticCOLORS, SemanticICONS } from 'semantic-ui-react';
+import {
+    formatDistance,
+    formatDuration,
+    intervalToDuration,
+    parseISO as parseDate
+} from 'date-fns';
+import { Link, useLocation } from 'react-router-dom';
 
 import { SegmentStatus } from '../../../api/process/log';
 import { ConcordId } from '../../../api/common';
+import { getStatusSemanticColor, getStatusSemanticIcon, ProcessStatus } from '../../../api/process';
 
 import './styles.css';
-import { formatDistance, parseISO } from 'date-fns';
-import { getStatusSemanticColor, getStatusSemanticIcon, ProcessStatus } from '../../../api/process';
-import { Link, useLocation } from 'react-router-dom';
 
 interface Props {
     instanceId: ConcordId;
@@ -37,6 +42,7 @@ interface Props {
     createdAt: string;
     processStatus?: ProcessStatus;
     status?: SegmentStatus;
+    statusUpdatedAt?: string;
     lowRange?: number;
     warnings?: number;
     errors?: number;
@@ -55,6 +61,7 @@ const LogSegment = ({
     createdAt,
     processStatus,
     status,
+    statusUpdatedAt,
     lowRange,
     warnings,
     errors,
@@ -125,10 +132,22 @@ const LogSegment = ({
     const hasWarnings = !!(warnings && warnings > 0);
     const hasErrors = !!(errors && errors > 0);
 
-    const createdAtDate = parseISO(createdAt);
+    const createdAtDate = parseDate(createdAt);
+
     let beenRunningFor;
     if (status === SegmentStatus.RUNNING) {
         beenRunningFor = formatDistance(new Date(), createdAtDate);
+    }
+
+    let wasRunningFor;
+    if (status !== SegmentStatus.RUNNING && statusUpdatedAt) {
+        const statusUpdatedAtDate = parseDate(statusUpdatedAt);
+        wasRunningFor = formatDuration(
+            intervalToDuration({
+                start: createdAtDate,
+                end: statusUpdatedAtDate
+            })
+        );
     }
 
     return (
@@ -157,6 +176,7 @@ const LogSegment = ({
                 )}
 
                 {beenRunningFor && <span className="RunningFor">running for {beenRunningFor}</span>}
+                {wasRunningFor && <span className="RunningFor">{wasRunningFor}</span>}
 
                 <Link
                     to={`${baseUrl}#segmentId=${segmentId}`}

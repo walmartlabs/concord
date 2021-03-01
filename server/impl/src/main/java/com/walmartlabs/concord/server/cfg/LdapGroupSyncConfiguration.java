@@ -42,11 +42,11 @@ public class LdapGroupSyncConfiguration  implements Serializable {
 
     @Inject
     @Config("ldapGroupSync.minAgeLogin")
-    private String minAgeLogin;
+    private Duration minAgeLogin;
 
     @Inject
     @Config("ldapGroupSync.minAgeSync")
-    private String minAgeSync;
+    private Duration minAgeSync;
 
     public Duration getInterval() {
         return interval;
@@ -56,11 +56,11 @@ public class LdapGroupSyncConfiguration  implements Serializable {
         return fetchLimit;
     }
 
-    public String getMinAgeLogin() {
+    public Duration getMinAgeLogin() {
         return minAgeLogin;
     }
 
-    public String getMinAgeSync() {
+    public Duration getMinAgeSync() {
         return minAgeSync;
     }
 }

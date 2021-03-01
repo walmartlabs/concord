@@ -22,6 +22,7 @@ package com.walmartlabs.concord.server.process;
 
 import com.walmartlabs.concord.db.AbstractDao;
 import com.walmartlabs.concord.db.MainDB;
+import com.walmartlabs.concord.db.PgUtils;
 import com.walmartlabs.concord.server.cfg.ProcessConfiguration;
 import com.walmartlabs.concord.server.sdk.ProcessStatus;
 import com.walmartlabs.concord.server.sdk.ScheduledTask;
@@ -72,7 +73,7 @@ public class ProcessCleaner implements ScheduledTask {
 
     @Override
     public void performTask() {
-        Field<OffsetDateTime> cutoff = currentOffsetDateTime().minus(interval(cfg.getMaxStateAge()));
+        Field<OffsetDateTime> cutoff = PgUtils.nowMinus(cfg.getMaxStateAge());
         cleanerDao.deleteOldState(cutoff, cfg);
         cleanerDao.deleteOrphans(cfg);
     }

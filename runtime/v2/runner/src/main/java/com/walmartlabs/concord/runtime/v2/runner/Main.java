@@ -98,13 +98,13 @@ public class Main {
             Main main = injector.getInstance(Main.class);
             main.execute();
 
-            System.exit(0);
+            System.exit(Constants.RunnerExitCode.SUCCESS);
         } catch (MultiException e) {
             System.err.println(e.getMessage());
-            System.exit(1);
+            System.exit(Constants.RunnerExitCode.ERROR);
         } catch (Throwable t) {
             t.printStackTrace(System.err);
-            System.exit(1);
+            System.exit(Constants.RunnerExitCode.ERROR);
         }
     }
 

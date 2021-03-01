@@ -4,10 +4,16 @@
         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
         xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.3.xsd">
 
-    <changeSet id="1800000" author="ybrigo@gmail.com">
+    <changeSet id="1820000" author="ybrigo@gmail.com">
         <delete tableName="TASKS">
             <where>task_id='agent-command-watchdog'</where>
         </delete>
+    </changeSet>
+
+    <changeSet id="1820001" author="ybrigo@gmail.com">
+        <sql>
+            drop table if exists AGENT_COMMANDS
+        </sql>
     </changeSet>
 
 </databaseChangeLog>

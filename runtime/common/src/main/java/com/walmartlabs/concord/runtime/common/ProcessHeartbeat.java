@@ -23,6 +23,7 @@ package com.walmartlabs.concord.runtime.common;
 import com.walmartlabs.concord.ApiClient;
 import com.walmartlabs.concord.ApiException;
 import com.walmartlabs.concord.client.ProcessHeartbeatApi;
+import com.walmartlabs.concord.sdk.Constants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -73,7 +74,7 @@ public class ProcessHeartbeat {
                         List<String> headers = ((ApiException) e).getResponseHeaders().getOrDefault(AUTH_ERROR, Collections.emptyList());
                         if (!headers.isEmpty()) {
                             log.warn("heartbeat: error: {}", headers.get(0));
-                            System.exit(2);
+                            System.exit(Constants.RunnerExitCode.AUTH_ERROR);
                         }
                     }
                     prevPingFailed = true;
@@ -83,7 +84,7 @@ public class ProcessHeartbeat {
                     long pingInterval = System.currentTimeMillis() - lastSuccessPing;
                     if (pingInterval > maxNoHeartbeatInterval) {
                         log.error("No heartbeat for more than {}ms, terminating process...", pingInterval);
-                        System.exit(1);
+                        System.exit(Constants.RunnerExitCode.ERROR);
                     }
                 }
 

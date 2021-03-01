@@ -102,10 +102,10 @@ public interface DockerContainerSpec {
     interface Options {
 
         /**
-         * Extra /etc/hosts entries.
+         * Extra {@code /etc/hosts} entries.
          * Same as {@code --add-host} option in {@code docker run}
          *
-         * @return
+         * @return list of extra {@code /etc/hosts} entries.
          */
         @Nullable
         List<String> hosts();

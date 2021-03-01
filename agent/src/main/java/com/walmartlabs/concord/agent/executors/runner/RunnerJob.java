@@ -176,6 +176,7 @@ public class RunnerJob {
                         .build())
                 .docker(DockerConfiguration.builder()
                         .extraVolumes(execCfg.extraDockerVolumes())
+                        .exposeDockerDaemon(execCfg.exposeDockerDaemon())
                         .build())
                 .dependencyManager(DependencyManagerConfiguration.builder()
                         .cacheDir(execCfg.dependencyCacheDir().toAbsolutePath().toString())

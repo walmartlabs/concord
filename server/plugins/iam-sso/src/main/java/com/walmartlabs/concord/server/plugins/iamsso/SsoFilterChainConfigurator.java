@@ -34,15 +34,18 @@ public class SsoFilterChainConfigurator implements FilterChainConfigurator {
     private final SsoAuthFilter ssoAuthFilter;
     private final SsoCallbackFilter ssoCallbackFilter;
     private final SsoLogoutFilter ssoLogoutFilter;
+    private final SsoConfiguration ssoConfiguration;
 
     @Inject
     public SsoFilterChainConfigurator(SsoAuthFilter ssoAuthFilter,
                                       SsoCallbackFilter ssoCallbackFilter,
-                                      SsoLogoutFilter ssoLogoutFilter) {
+                                      SsoLogoutFilter ssoLogoutFilter,
+                                      SsoConfiguration ssoConfiguration) {
 
         this.ssoAuthFilter = ssoAuthFilter;
         this.ssoCallbackFilter = ssoCallbackFilter;
         this.ssoLogoutFilter = ssoLogoutFilter;
+        this.ssoConfiguration = ssoConfiguration;
     }
 
     @Override
@@ -55,5 +58,13 @@ public class SsoFilterChainConfigurator implements FilterChainConfigurator {
 
         manager.addFilter("ssoLogout", ssoLogoutFilter);
         manager.createChain("/api/service/sso/logout", "ssoLogout");
+    }
+
+    @Override
+    public int priority() {
+        int priority = ssoConfiguration.getPriority();
+        if(!ssoConfiguration.isEnabled())
+            return priority+1;
+        return priority;
     }
 }

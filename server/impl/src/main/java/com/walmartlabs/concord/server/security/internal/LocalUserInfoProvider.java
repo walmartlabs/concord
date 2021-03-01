@@ -20,10 +20,7 @@ package com.walmartlabs.concord.server.security.internal;
  * =====
  */
 
-import com.walmartlabs.concord.server.user.UserDao;
-import com.walmartlabs.concord.server.user.UserEntry;
-import com.walmartlabs.concord.server.user.UserInfoProvider;
-import com.walmartlabs.concord.server.user.UserType;
+import com.walmartlabs.concord.server.user.*;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -33,13 +30,11 @@ import java.util.UUID;
 
 @Named
 @Singleton
-public class LocalUserInfoProvider implements UserInfoProvider {
-
-    private final UserDao userDao;
-
+public class LocalUserInfoProvider extends AbstractUserInfoProvider {
+    
     @Inject
     public LocalUserInfoProvider(UserDao userDao) {
-        this.userDao = userDao;
+        super(userDao);
     }
 
     @Override
@@ -49,30 +44,11 @@ public class LocalUserInfoProvider implements UserInfoProvider {
 
     @Override
     public UserInfo getInfo(UUID id, String username, String userDomain) {
-        if (id == null) {
-            id = userDao.getId(username, userDomain, UserType.LOCAL);
-        }
-
-        if (id == null) {
-            return null;
-        }
-
-        UserEntry e = userDao.get(id);
-        if (e == null) {
-            return null;
-        }
-
-        return UserInfo.builder()
-                .id(id)
-                .username(e.getName())
-                .userDomain(userDomain)
-                .displayName(e.getDisplayName())
-                .email(e.getEmail())
-                .build();
+        return getInfo(id, username, userDomain, UserType.LOCAL);
     }
 
     @Override
     public UUID create(String username, String domain, String displayName, String email, Set<String> roles) {
-        return userDao.insertOrUpdate(username, domain, displayName, email, UserType.LOCAL, roles);
+        return create(username, domain, displayName, email, roles, UserType.LOCAL);
     }
 }

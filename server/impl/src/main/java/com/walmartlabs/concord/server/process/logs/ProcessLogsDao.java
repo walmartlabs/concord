@@ -113,6 +113,7 @@ public class ProcessLogsDao extends AbstractDao {
 
         if (status != null) {
             q.addValue(PROCESS_LOG_SEGMENTS.SEGMENT_STATUS, status.name());
+            q.addValue(PROCESS_LOG_SEGMENTS.STATUS_UPDATED_AT, currentOffsetDateTime());
         }
 
         if (warnings != null) {
@@ -134,11 +135,13 @@ public class ProcessLogsDao extends AbstractDao {
         UUID instanceId = processKey.getInstanceId();
         OffsetDateTime createdAt = processKey.getCreatedAt();
 
-        SelectSeekStep1<Record7<Long, UUID, String, OffsetDateTime, String, Integer, Integer>, OffsetDateTime> q = dsl()
-                .select(PROCESS_LOG_SEGMENTS.SEGMENT_ID, PROCESS_LOG_SEGMENTS.CORRELATION_ID,
+        SelectSeekStep1<Record8<Long, UUID, String, OffsetDateTime, String, OffsetDateTime, Integer, Integer>, OffsetDateTime> q = dsl()
+                .select(PROCESS_LOG_SEGMENTS.SEGMENT_ID,
+                        PROCESS_LOG_SEGMENTS.CORRELATION_ID,
                         PROCESS_LOG_SEGMENTS.SEGMENT_NAME,
                         PROCESS_LOG_SEGMENTS.SEGMENT_TS,
                         PROCESS_LOG_SEGMENTS.SEGMENT_STATUS,
+                        PROCESS_LOG_SEGMENTS.STATUS_UPDATED_AT,
                         PROCESS_LOG_SEGMENTS.SEGMENT_WARN,
                         PROCESS_LOG_SEGMENTS.SEGMENT_ERRORS)
                 .from(PROCESS_LOG_SEGMENTS)
@@ -280,16 +283,17 @@ public class ProcessLogsDao extends AbstractDao {
         return new ProcessLogChunk((Integer) r.value1(), r.value2());
     }
 
-    private static LogSegment toSegment(Record7<Long, UUID, String, OffsetDateTime, String, Integer, Integer> r) {
+    private static LogSegment toSegment(Record8<Long, UUID, String, OffsetDateTime, String, OffsetDateTime, Integer, Integer> r) {
         String status = r.get(PROCESS_LOG_SEGMENTS.SEGMENT_STATUS);
         return LogSegment.builder()
                 .id(r.get(PROCESS_LOG_SEGMENTS.SEGMENT_ID))
                 .correlationId(r.get(PROCESS_LOG_SEGMENTS.CORRELATION_ID))
                 .name(r.get(PROCESS_LOG_SEGMENTS.SEGMENT_NAME))
                 .createdAt(r.get(PROCESS_LOG_SEGMENTS.SEGMENT_TS))
+                .status(status != null ? LogSegment.Status.valueOf(status) : null)
+                .statusUpdatedAt(r.get(PROCESS_LOG_SEGMENTS.STATUS_UPDATED_AT))
                 .warnings(r.get(PROCESS_LOG_SEGMENTS.SEGMENT_WARN))
                 .errors(r.get(PROCESS_LOG_SEGMENTS.SEGMENT_ERRORS))
-                .status(status != null ? LogSegment.Status.valueOf(status) : null)
                 .build();
     }
 

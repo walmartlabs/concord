@@ -23,7 +23,9 @@ package com.walmartlabs.concord.server.security.ldap;
 import com.walmartlabs.concord.server.cfg.LdapConfiguration;
 import com.walmartlabs.concord.server.sdk.ConcordApplicationException;
 import com.walmartlabs.concord.server.security.Roles;
+import com.walmartlabs.concord.server.security.UserPrincipal;
 import com.walmartlabs.concord.server.user.UserDao;
+import com.walmartlabs.concord.server.user.UserEntry;
 import com.walmartlabs.concord.server.user.UserInfoProvider;
 import com.walmartlabs.concord.server.user.UserType;
 import org.slf4j.Logger;
@@ -86,7 +88,7 @@ public class LdapUserInfoProvider implements UserInfoProvider {
 
         return userDao.insertOrUpdate(info.username(), info.userDomain(), info.displayName(), info.email(), UserType.LDAP, roles);
     }
-
+    
     private static UserInfo buildInfo(UUID id, LdapPrincipal p) {
         if (p == null) {
             return null;

@@ -61,23 +61,28 @@ public class GitClientTest4 {
         // init repo
         Git repo = Git.init().setDirectory(tmpDir.toFile()).call();
         repo.add().addFilepattern(".").call();
-        RevCommit commitId = repo.commit().setMessage("import").call();
+        RevCommit initialCommit = repo.commit().setMessage("import").call();
 
         try (TemporaryPath repoPath = IOUtils.tempDir("git-client-test")) {
             // --- fetch master
             String actualCommitId = fetch(tmpDir.toUri().toString(), "master", null, null, repoPath.path());
             assertContent(repoPath, "concord.yml", "concord-init");
-            assertEquals(commitId.name(), actualCommitId);
+            assertEquals(initialCommit.name(), actualCommitId);
 
             // update file in repo
             Files.copy(tmpDir.resolve("new_concord.yml"), tmpDir.resolve("concord.yml"), StandardCopyOption.REPLACE_EXISTING);
             repo.add().addFilepattern(".").call();
-            commitId = repo.commit().setMessage("update").call();
+            RevCommit commitAfterUpdate = repo.commit().setMessage("update").call();
+
+            // --- fetch prev commit
+            String prevCommit = fetch(tmpDir.toUri().toString(), "master", initialCommit.name(), null, repoPath.path());
+            assertContent(repoPath, "concord.yml", "concord-init");
+            assertEquals(initialCommit.name(), prevCommit);
 
             // --- fetch master again
             actualCommitId = fetch(tmpDir.toUri().toString(), "master", null, null, repoPath.path());
             assertContent(repoPath, "concord.yml", "new-concord-content");
-            assertEquals(commitId.name(), actualCommitId);
+            assertEquals(commitAfterUpdate.name(), actualCommitId);
         }
     }
 

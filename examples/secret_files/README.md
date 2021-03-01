@@ -28,11 +28,9 @@ $ ./run.sh localhost:8001
 }
 ```
 
-5. open [the UI](http://localhost:8001), find the process entry and
+3. open [the UI](http://localhost:8001), find the process entry and
 open its log. You should see messages like these:
 ```
-12:00:55.817 [INFO ] c.w.c.runner.engine.LoggingTask - Public key file: .tmp/public1856673009465277934.key
-12:00:55.821 [INFO ] c.w.c.runner.engine.LoggingTask - Private key file: .tmp/private5358774395817724546.key
-12:00:55.832 [INFO ] c.w.c.runner.engine.LoggingTask - Credentials: {password=myPassword, username=myUser}
-12:00:55.846 [INFO ] c.w.c.runner.engine.LoggingTask - Plain secret: my horrible secret
+13:51:54 [INFO ] My file A: .tmp/file698533367913439655.bin
+13:51:54 [INFO ] My file B: .tmp/file4802153809032830974.bin
 ```

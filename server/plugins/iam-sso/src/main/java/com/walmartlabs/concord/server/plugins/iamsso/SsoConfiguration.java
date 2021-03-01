@@ -35,9 +35,13 @@ import java.util.Map;
 public class SsoConfiguration implements Serializable {
 
     @Inject
-    @Config("sso.enabled")
+    @Config("sso.iam.enabled")
     private boolean enabled;
 
+    @Inject
+    @Config("sso.iam.priority")
+    private int priority;
+    
     @Inject
     @Config("sso.authEndpointUrl")
     private String authEndPointUrl;
@@ -142,6 +146,10 @@ public class SsoConfiguration implements Serializable {
 
     public String getDomainSuffix() {
         return domainSuffix;
+    }
+
+    public int getPriority() {
+        return priority;
     }
 
     public Map<String, String> getDomainMapping() {

@@ -114,9 +114,9 @@ public class RunnerJobExecutor implements JobExecutor {
             job.getLog().error("Process exit code: " + result);
         }
 
-        if (result == 0) {
+        if (result == Constants.RunnerExitCode.SUCCESS) {
             return StatusEnum.FINISHED;
-        } else if (result == 2) {
+        } else if (result == Constants.RunnerExitCode.AUTH_ERROR) {
             return null;
         } else {
             return StatusEnum.FAILED;
@@ -382,6 +382,7 @@ public class RunnerJobExecutor implements JobExecutor {
                 .javaCmd(cfg.javaCmd())
                 .logLevel(getLogLevel(job))
                 .extraDockerVolumesFile(createExtraDockerVolumesFile(job))
+                .exposeDockerDaemon(cfg.exposeDockerDaemon())
                 .runnerPath(cfg.runnerPath().toAbsolutePath())
                 .runnerCfgPath(runnerCfgFile.toAbsolutePath())
                 .mainClass(cfg.runnerMainClass())
@@ -669,6 +670,11 @@ public class RunnerJobExecutor implements JobExecutor {
         @Value.Default
         default List<String> extraDockerVolumes() {
             return Collections.emptyList();
+        }
+
+        @Value.Default
+        default Boolean exposeDockerDaemon() {
+            return true;
         }
 
         long maxHeartbeatInterval();

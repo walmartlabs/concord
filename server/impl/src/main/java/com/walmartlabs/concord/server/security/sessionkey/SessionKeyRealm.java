@@ -88,7 +88,7 @@ public class SessionKeyRealm extends AuthorizingRealm {
 
             if (p.initiatorId() == null) {
                 log.warn("doGetAuthenticationInfo -> initiator not found: {}", t.getInstanceId());
-                throw new ConcordAuthenticationException("Initiator not found");
+                return null;
             }
 
             if (isFinished(p)) {

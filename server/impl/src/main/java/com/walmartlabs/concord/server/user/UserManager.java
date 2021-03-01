@@ -46,6 +46,8 @@ public class UserManager {
     private final AuditLog auditLog;
     private final Map<UserType, UserInfoProvider> userInfoProviders;
 
+    private static final String SSO_REALM_NAME = "sso";
+
     @Inject
     public UserManager(UserDao userDao, TeamDao teamDao, AuditLog auditLog, List<UserInfoProvider> providers) {
         this.userDao = userDao;
@@ -70,6 +72,11 @@ public class UserManager {
     }
 
     public Optional<UserEntry> getOrCreate(String username, String userDomain, UserType type) {
+        return getOrCreate(username, userDomain, type, null, null, null);
+    }
+
+
+    public Optional<UserEntry> getOrCreate(String username, String userDomain, UserType type, String displayName, String email, Set<String> roles) {
         Optional<UserEntry> result = get(username, userDomain, type);
         if (result.isPresent()) {
             return result;
@@ -82,13 +89,17 @@ public class UserManager {
         UserInfoProvider provider = assertProvider(type);
         UserInfo info = provider.getInfo(null, username, userDomain);
         if (info != null) {
-            result = get(info.username(), info.userDomain(), type);
+            username = info.username();
+            userDomain = info.userDomain();
+            displayName = info.displayName();
+            email = info.email();
+            result = get(username, userDomain, type);
             if (result.isPresent()) {
                 return result;
             }
         }
-
-        return Optional.of(create(username, userDomain, null, null, type, null));
+        
+        return Optional.of(create(username, userDomain, displayName, email, type, roles));
     }
 
     public Optional<UserEntry> get(UUID id) {
@@ -162,8 +173,8 @@ public class UserManager {
         if (u == null) {
             return null;
         }
-
-        UserInfoProvider p = assertProvider(u.getType());
+        UserType type = assertSsoUserType(u, u.getType());
+        UserInfoProvider p = assertProvider(type);
         return p.getInfo(u.getId(), u.getUsername(), u.getDomain());
     }
 
@@ -172,7 +183,7 @@ public class UserManager {
     }
 
     public UserInfo getInfo(String username, String domain, UserType type) {
-        UserInfoProvider p = assertProvider(type);
+        UserInfoProvider p = assertProvider(assertUserType(username, domain, type));
         return p.getInfo(null, username, domain);
     }
 
@@ -214,6 +225,31 @@ public class UserManager {
             throw new ConcordApplicationException("Unknown user account type: " + type);
         }
         return p;
+    }
+    
+    private UserType assertUserType(String username, String domain, UserType type){
+        /* Override LDAP to SSO type if current user loggedIn via SSO */
+        /*
+        1. LoggedIn via internal user realm -> domain = null
+        2. LoggedIn via ldap realm -> realm != SSO_REALM_NAME
+        3. LoggedIn via SSO -> @return UserType.SSO
+         */
+        if (username != null && domain != null){
+            UserPrincipal u = UserPrincipal.getCurrent();
+            if (u != null && u.getUsername().equalsIgnoreCase(username) && u.getDomain().equalsIgnoreCase(domain)){
+              return assertSsoUserType(u, type);
+            }
+        }
+        return type;
+    }
+    
+    private UserType assertSsoUserType(UserPrincipal u, UserType type){
+        if (u.getRealm().equals(SSO_REALM_NAME)){
+            if (userInfoProviders.get(UserType.SSO) != null){
+                return UserType.SSO;
+            }
+        }
+        return type;
     }
 
     /**

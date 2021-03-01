@@ -45,8 +45,10 @@ public interface Execution {
     Step currentStep();
 
     /**
-     * ID of the current task or expression call. Can be used by plugins to correlate their events
-     * with the task's event.
+     * ID of the current task or the expression call. Can be used by plugins to
+     * correlate their events with the task event.
+     *
+     * @return the event correlation ID of the current step.
      */
     UUID correlationId();
 

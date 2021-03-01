@@ -153,7 +153,7 @@ public class ProcessQueueWatchdog implements ScheduledTask {
 
         @Override
         public void run() {
-            Field<OffsetDateTime> maxAge = currentOffsetDateTime().minus(interval(cfg.getMaxFailureHandlingAge()));
+            Field<OffsetDateTime> maxAge = PgUtils.nowMinus(cfg.getMaxFailureHandlingAge());
 
             for (PollEntry e : POLL_ENTRIES) {
                 List<ProcessEntry> parents = watchdogDao.poll(e, maxAge, 1);
@@ -193,15 +193,13 @@ public class ProcessQueueWatchdog implements ScheduledTask {
     private final class ProcessStalledWorker implements Runnable {
         @Override
         public void run() {
-            String maxAge = cfg.getMaxStalledAge();
-
             watchdogDao.transaction(tx -> {
-                Field<OffsetDateTime> cutOff = currentOffsetDateTime().minus(interval(maxAge));
+                Field<OffsetDateTime> cutoff = PgUtils.nowMinus(cfg.getMaxStalledAge());
 
-                List<ProcessKey> pks = watchdogDao.pollStalled(tx, POTENTIAL_STALLED_STATUSES, cutOff, 1);
+                List<ProcessKey> pks = watchdogDao.pollStalled(tx, POTENTIAL_STALLED_STATUSES, cutoff, 1);
                 for (ProcessKey pk : pks) {
                     queueManager.updateAgentId(tx, pk, null, ProcessStatus.FAILED);
-                    logManager.warn(pk, "Process stalled, no heartbeat for more than '{}'", maxAge);
+                    logManager.warn(pk, "Process stalled, no heartbeat for more than '{}'", cfg.getMaxStalledAge());
                     log.info("processStalled -> marked as failed: {}", pk);
                 }
             });
@@ -211,15 +209,13 @@ public class ProcessQueueWatchdog implements ScheduledTask {
     private final class ProcessStartFailuresWorker implements Runnable {
         @Override
         public void run() {
-            String maxAge = cfg.getMaxStartFailureAge();
-
             watchdogDao.transaction(tx -> {
-                Field<OffsetDateTime> cutOff = currentOffsetDateTime().minus(interval(maxAge));
+                Field<OffsetDateTime> cutOff = PgUtils.nowMinus(cfg.getMaxStartFailureAge());
 
                 List<ProcessKey> pks = watchdogDao.pollStalled(tx, FAILED_TO_START_STATUSES, cutOff, 1);
                 for (ProcessKey pk : pks) {
                     queueManager.updateAgentId(tx, pk, null, ProcessStatus.FAILED);
-                    logManager.warn(pk, "Process failed to start for more than '{}'", maxAge);
+                    logManager.warn(pk, "Process failed to start for more than '{}'", cfg.getMaxStartFailureAge());
                     log.info("processStartFailures -> marked as failed: {}", pk);
                 }
             });

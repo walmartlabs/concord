@@ -593,4 +593,16 @@ public class Constants {
          */
         public static final String JVM_ARGS_KEY = "jvmArgs";
     }
+
+    /**
+     * Runner exit codes.
+     */
+    public static class RunnerExitCode {
+
+        public static final int SUCCESS = 0;
+
+        public static final int ERROR = 1;
+
+        public static final int AUTH_ERROR = 2;
+    }
 }
