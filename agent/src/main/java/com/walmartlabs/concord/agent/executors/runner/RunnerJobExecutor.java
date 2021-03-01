@@ -116,8 +116,6 @@ public class RunnerJobExecutor implements JobExecutor {
 
         if (result == Constants.RunnerExitCode.SUCCESS) {
             return StatusEnum.FINISHED;
-        } else if (result == Constants.RunnerExitCode.AUTH_ERROR) {
-            return null;
         } else {
             return StatusEnum.FAILED;
         }

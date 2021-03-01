@@ -20,6 +20,7 @@ package com.walmartlabs.concord.server.process.queue;
  * =====
  */
 
+import com.walmartlabs.concord.db.AbstractDao;
 import com.walmartlabs.concord.imports.Imports;
 import com.walmartlabs.concord.runtime.v2.model.ExclusiveMode;
 import com.walmartlabs.concord.sdk.Constants;
@@ -63,6 +64,10 @@ public class ProcessQueueManager {
         this.objectMapper = objectMapper;
         this.keyCache = keyCache;
         this.processLogManager = processLogManager;
+    }
+
+    public void tx(AbstractDao.Tx t) {
+        queueDao.tx(t);
     }
 
     /**
@@ -185,18 +190,10 @@ public class ProcessQueueManager {
     }
 
     /**
-     * @see #updateAgentId(DSLContext, ProcessKey, String, ProcessStatus)
+     * Updates the process' agent ID.
      */
-    public void updateAgentId(ProcessKey processKey, String agentId, ProcessStatus status) {
-        queueDao.tx(tx -> updateAgentId(tx, processKey, agentId, status));
-    }
-
-    /**
-     * Updates the process' agent ID and status.
-     */
-    public void updateAgentId(DSLContext tx, ProcessKey processKey, String agentId, ProcessStatus status) {
-        queueDao.updateAgentId(tx, processKey, agentId, status);
-        eventManager.insertStatusHistory(tx, processKey, status, Collections.emptyMap());
+    public void updateAgentId(DSLContext tx, ProcessKey processKey, String agentId) {
+        queueDao.updateAgentId(tx, processKey, agentId);
     }
 
     /**

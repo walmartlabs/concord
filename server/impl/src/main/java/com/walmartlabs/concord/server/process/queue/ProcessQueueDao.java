@@ -122,14 +122,12 @@ public class ProcessQueueDao extends AbstractDao {
                 .execute();
     }
 
-    public void updateAgentId(DSLContext tx, ProcessKey processKey, String agentId, ProcessStatus status) {
+    public void updateAgentId(DSLContext tx, ProcessKey processKey, String agentId) {
         UUID instanceId = processKey.getInstanceId();
 
         int i = tx.update(PROCESS_QUEUE)
-                .set(PROCESS_QUEUE.CURRENT_STATUS, status.toString())
                 .set(PROCESS_QUEUE.LAST_AGENT_ID, agentId)
                 .set(PROCESS_QUEUE.LAST_UPDATED_AT, currentOffsetDateTime())
-                .set(PROCESS_QUEUE.LAST_RUN_AT, createRunningAtValue(status))
                 .where(PROCESS_QUEUE.INSTANCE_ID.eq(instanceId))
                 .execute();
 

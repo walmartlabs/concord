@@ -198,7 +198,7 @@ public class ProcessQueueWatchdog implements ScheduledTask {
 
                 List<ProcessKey> pks = watchdogDao.pollStalled(tx, POTENTIAL_STALLED_STATUSES, cutoff, 1);
                 for (ProcessKey pk : pks) {
-                    queueManager.updateAgentId(tx, pk, null, ProcessStatus.FAILED);
+                    queueManager.updateStatus(tx, pk, ProcessStatus.FAILED);
                     logManager.warn(pk, "Process stalled, no heartbeat for more than '{}'", cfg.getMaxStalledAge());
                     log.info("processStalled -> marked as failed: {}", pk);
                 }
@@ -214,7 +214,7 @@ public class ProcessQueueWatchdog implements ScheduledTask {
 
                 List<ProcessKey> pks = watchdogDao.pollStalled(tx, FAILED_TO_START_STATUSES, cutOff, 1);
                 for (ProcessKey pk : pks) {
-                    queueManager.updateAgentId(tx, pk, null, ProcessStatus.FAILED);
+                    queueManager.updateStatus(tx, pk, ProcessStatus.FAILED);
                     logManager.warn(pk, "Process failed to start for more than '{}'", cfg.getMaxStartFailureAge());
                     log.info("processStartFailures -> marked as failed: {}", pk);
                 }
