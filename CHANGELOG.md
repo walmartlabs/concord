@@ -29,7 +29,10 @@ specified ([#329](https://github.com/walmartlabs/concord/pull/329)).
 - concord-server, pfed-sso: get user information from the DB
 ([#333](https://github.com/walmartlabs/concord/pull/333/files));
 - project: remove unused dependencies
-([#334](https://github.com/walmartlabs/concord/pull/334)).
+([#334](https://github.com/walmartlabs/concord/pull/334));
+- concord-server: allow overriding of default configuration values
+using environment variables
+([#336](https://github.com/walmartlabs/concord/pull/336)).
 
 
 
