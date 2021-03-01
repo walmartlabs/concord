@@ -26,7 +26,11 @@ import com.walmartlabs.concord.db.PgUtils;
 import com.walmartlabs.concord.server.cfg.ProcessConfiguration;
 import com.walmartlabs.concord.server.sdk.ProcessStatus;
 import com.walmartlabs.concord.server.sdk.ScheduledTask;
-import org.jooq.*;
+import org.jooq.Configuration;
+import org.jooq.Field;
+import org.jooq.Record1;
+import org.jooq.SelectConditionStep;
+import org.jooq.SelectJoinStep;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -36,14 +40,12 @@ import javax.inject.Singleton;
 import java.time.OffsetDateTime;
 import java.util.UUID;
 
-import static com.walmartlabs.concord.db.PgUtils.interval;
 import static com.walmartlabs.concord.server.jooq.Tables.PROCESS_LOG_DATA;
 import static com.walmartlabs.concord.server.jooq.Tables.PROCESS_LOG_SEGMENTS;
 import static com.walmartlabs.concord.server.jooq.tables.ProcessCheckpoints.PROCESS_CHECKPOINTS;
 import static com.walmartlabs.concord.server.jooq.tables.ProcessEvents.PROCESS_EVENTS;
 import static com.walmartlabs.concord.server.jooq.tables.ProcessQueue.PROCESS_QUEUE;
 import static com.walmartlabs.concord.server.jooq.tables.ProcessState.PROCESS_STATE;
-import static org.jooq.impl.DSL.currentOffsetDateTime;
 
 @Named("process-cleaner")
 @Singleton
@@ -73,8 +75,7 @@ public class ProcessCleaner implements ScheduledTask {
 
     @Override
     public void performTask() {
-        Field<OffsetDateTime> cutoff = PgUtils.nowMinus(cfg.getMaxStateAge());
-        cleanerDao.deleteOldState(cutoff, cfg);
+        cleanerDao.deleteOldState(cfg);
         cleanerDao.deleteOrphans(cfg);
     }
 
@@ -86,8 +87,10 @@ public class ProcessCleaner implements ScheduledTask {
             super(cfg);
         }
 
-        void deleteOldState(Field<OffsetDateTime> cutoff, ProcessConfiguration jobCfg) {
+        void deleteOldState(ProcessConfiguration jobCfg) {
             long t1 = System.currentTimeMillis();
+
+            Field<OffsetDateTime> cutoff = PgUtils.nowMinus(jobCfg.getMaxStateAge());
 
             tx(tx -> {
                 SelectConditionStep<Record1<UUID>> ids = tx.select(PROCESS_QUEUE.INSTANCE_ID)
@@ -136,7 +139,7 @@ public class ProcessCleaner implements ScheduledTask {
                 }
 
                 log.info("deleteOldState -> removed older than {}: {} queue entries, {} log data entries, {} log segments, {} state item(s), {} event(s), {} checkpoint(s)",
-                        cutoff, queueEntries, logDataEntries, logSegmentEntries, stateRecords, events, checkpoints);
+                        jobCfg.getMaxStateAge(), queueEntries, logDataEntries, logSegmentEntries, stateRecords, events, checkpoints);
             });
 
             long t2 = System.currentTimeMillis();

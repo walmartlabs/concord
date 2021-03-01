@@ -42,7 +42,7 @@ public class ResumePipeline extends Pipeline {
                 ChangeUserProcessor.class,
                 ResumingProcessor.class,
                 ResumingHooksProcessor.class,
-                ResumeStateStoringProcessor.class,
+                ResumeMarkerStoringProcessor.class,
                 FormFilesStoringProcessor.class,
                 ResumeConfigurationProcessor.class,
                 EventNameProcessor.class,
