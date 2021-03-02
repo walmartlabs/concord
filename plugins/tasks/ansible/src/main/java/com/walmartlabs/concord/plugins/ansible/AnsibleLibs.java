@@ -61,7 +61,7 @@ public class AnsibleLibs {
     }
 
     public AnsibleLibs enrichEnv(AnsibleEnv env) {
-        env.put("PYTHONPATH", workDir.relativize(tmpDir.resolve(PYTHON_LIB_DIR)).toString());
+        env.append("PYTHONPATH", workDir.relativize(tmpDir.resolve(PYTHON_LIB_DIR)).toString(), ":");
         return this;
     }
 }
