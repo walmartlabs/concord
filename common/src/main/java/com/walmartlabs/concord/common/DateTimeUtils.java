@@ -29,7 +29,7 @@ public final class DateTimeUtils {
 
     /**
      * Formats the supplied {@link OffsetDateTime} to an ISO-8601 string
-     * ({@code YYYY-MM-ddTHH:mm:ss.SSSX})
+     * ({@code yyyy-MM-ddTHH:mm:ss.SSSX})
      */
     public static String toIsoString(OffsetDateTime t) {
         return FORMAT.format(t);
@@ -37,7 +37,7 @@ public final class DateTimeUtils {
 
     /**
      * Parses the supplied {@code text} as an ISO-8601 date/time value
-     * ({@code YYYY-MM-ddTHH:mm:ss.SSSX}).
+     * ({@code yyyy-MM-ddTHH:mm:ss.SSSX}).
      */
     public static OffsetDateTime fromIsoString(CharSequence text) {
         return OffsetDateTime.parse(text, FORMAT);

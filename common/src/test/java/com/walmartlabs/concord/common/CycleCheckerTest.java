@@ -52,7 +52,6 @@ public class CycleCheckerTest {
 
         System.out.println(CycleChecker.check(m));
         assertTrue(CycleChecker.check(m).isHasCycle());
-//        System.out.println(new ObjectMapper().writeValueAsString(m));
     }
 
     /**
@@ -67,7 +66,6 @@ public class CycleCheckerTest {
 
         System.out.println(CycleChecker.check(m));
         assertTrue(CycleChecker.check(m).isHasCycle());
-//        System.out.println(new ObjectMapper().writeValueAsString(m));
     }
 
     /**

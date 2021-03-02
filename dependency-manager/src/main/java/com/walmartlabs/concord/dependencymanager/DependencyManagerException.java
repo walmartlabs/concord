@@ -24,6 +24,8 @@ import java.io.IOException;
 
 public class DependencyManagerException extends IOException {
 
+    private static final long serialVersionUID = 1L;
+
     public DependencyManagerException(String message) {
         super(message);
     }

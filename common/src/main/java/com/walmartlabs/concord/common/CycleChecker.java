@@ -109,17 +109,13 @@ public final class CycleChecker {
             Map<String, Object> m = (Map<String, Object>) element;
 
             List<N> result = new ArrayList<>(m.size());
-            m.forEach((key, value) -> {
-                result.add(new N(n.getPath() + "." + key, value));
-            });
+            m.forEach((key, value) -> result.add(new N(n.getPath() + "." + key, value)));
             return result;
         } else if (element instanceof Collection) {
             Collection<Object> c = (Collection<Object>) element;
 
             List<N> result = new ArrayList<>(c.size());
-            c.forEach(v -> {
-                result.add(new N(n.getPath(), v));
-            });
+            c.forEach(v -> result.add(new N(n.getPath(), v)));
             return result;
         }
         return Collections.emptyList();

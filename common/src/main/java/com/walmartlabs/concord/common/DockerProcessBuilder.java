@@ -104,7 +104,7 @@ public class DockerProcessBuilder {
     private String memory;
     private String stdOutFilePath;
 
-    private List<String> args = new ArrayList<>();
+    private final List<String> args = new ArrayList<>();
     private Map<String, String> env;
     private String envFile;
     private Map<String, String> labels;
@@ -409,7 +409,7 @@ public class DockerProcessBuilder {
 
     public static class DockerOptionsBuilder {
 
-        private List<Map.Entry<String, String>> options = new ArrayList<>();
+        private final List<Map.Entry<String, String>> options = new ArrayList<>();
 
         public DockerOptionsBuilder etcHost(String host) {
             this.options.add(new AbstractMap.SimpleEntry<>("--add-host", host));
