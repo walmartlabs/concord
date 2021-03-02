@@ -49,7 +49,7 @@ public class LoggingConfigurator {
     private static final org.slf4j.Logger log = LoggerFactory.getLogger(LoggingConfigurator.class);
 
     private static final String PATTERN_PROPERTY_KEY = "OUTPUT_PATTERN";
-    private static final String DEFAULT_PATTERN = "%date{YYYY-MM-dd'T'HH:mm:ss.SSSZ, UTC} [%-5level] %msg%n%rEx{full, com.sun, sun}";
+    private static final String DEFAULT_PATTERN = "%date{yyyy-MM-dd'T'HH:mm:ss.SSSZ, UTC} [%-5level] %msg%n%rEx{full, com.sun, sun}";
     private static final String DEFAULT_ROOT_APPENDER_NAME = "STDOUT";
     private static final String PROCESS_LOGGER_NAME = "processLog";
     private static final String DEFAULT_PROCESS_LOG_APPENDER_NAME = "PROCESS_STDOUT";
