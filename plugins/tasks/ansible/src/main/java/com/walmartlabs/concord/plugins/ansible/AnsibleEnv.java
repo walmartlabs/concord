@@ -86,6 +86,15 @@ public class AnsibleEnv {
         return this;
     }
 
+    public AnsibleEnv append(String key, String value, String delimiter) {
+        String current = env.get(key);
+        if (current == null) {
+            return put(key, value);
+        }
+
+        return put(key, value + delimiter + current);
+    }
+
     /**
      * Overridable environment variables.
      */
