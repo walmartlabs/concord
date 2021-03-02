@@ -30,6 +30,7 @@ import org.slf4j.LoggerFactory;
 import javax.inject.Inject;
 import javax.script.*;
 import java.io.Reader;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -56,7 +57,6 @@ public class DefaultScriptEvaluator implements ScriptEvaluator {
             throw new RuntimeException("Script engine not found: " + language);
         }
 
-        // expose all available variables plus the context
         ScriptContext ctx = new ScriptContext(context);
         Bindings b = engine.createBindings();
         for (String ctxVar: CONTEXT_VARIABLE_NAMES) {
@@ -76,23 +76,36 @@ public class DefaultScriptEvaluator implements ScriptEvaluator {
     }
 
     @Override
-    public boolean hasLanguage(String language) {
+    public String getLanguage(String languageOrExtension) {
         for (ScriptEngineFactory factory : scriptEngineManager.getEngineFactories()) {
-            List<String> names = null;
             try {
-                names = factory.getNames();
+                if (listOrEmpty(factory.getNames()).contains(languageOrExtension))  {
+                    return factory.getLanguageName();
+                }
             } catch (Exception exp) {
                 // ignore
             }
-            if (names != null && names.contains(language)) {
-                return true;
+
+            try {
+                if (listOrEmpty(factory.getExtensions()).contains(languageOrExtension)) {
+                    return factory.getLanguageName();
+                }
+            } catch (Exception exp) {
+                // ignore
             }
         }
-        return false;
+        return null;
     }
 
     private ScriptEngine getEngine(String language) {
         return scriptEngineManager.getEngineByName(language);
+    }
+
+    private static List<String> listOrEmpty(List<String> items) {
+        if (items == null) {
+            return Collections.emptyList();
+        }
+        return items;
     }
 
     public static class TaskAccessor {
