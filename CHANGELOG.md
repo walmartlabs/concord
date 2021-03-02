@@ -6,7 +6,10 @@
 
 - runtime-v2: fix the detection of script languages based on
 the script's file name
-([#339](https://github.com/walmartlabs/concord/pull/339)).
+([#339](https://github.com/walmartlabs/concord/pull/339));
+- ansible: append values to `PYTHONPATH`, allow users to
+use their own `PYTHONPATH` in addition to the provided one
+([#341](https://github.com/walmartlabs/concord/pull/341).
 
 
 
