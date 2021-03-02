@@ -1,10 +1,20 @@
 # Change log
 
+## [Unreleased]
+
+### Changed
+
+- runtime-v2: fix the detection of script languages based on
+the script's file name
+([#339](https://github.com/walmartlabs/concord/pull/339)).
+
+
+
 ## [1.81.0] - 2021-03-01
 
 ### Added
 
-- pfed-sso: add configuration parameter for token signature
+- pfed-sso: add a configuration parameter for token signature
 validation ([#325](https://github.com/walmartlabs/concord/pull/325));
 - runtime-v1, runtime-v2: optionally expose docker daemon
 ([#332](https://github.com/walmartlabs/concord/pull/332));
