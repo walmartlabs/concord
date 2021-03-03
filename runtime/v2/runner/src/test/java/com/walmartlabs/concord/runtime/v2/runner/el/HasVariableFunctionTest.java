@@ -5,7 +5,6 @@ import com.walmartlabs.concord.runtime.v2.runner.el.functions.HasVariableFunctio
 import com.walmartlabs.concord.runtime.v2.sdk.Context;
 import com.walmartlabs.concord.runtime.v2.sdk.MapBackedVariables;
 import com.walmartlabs.concord.runtime.v2.sdk.Variables;
-import org.jetbrains.annotations.Nullable;
 import org.junit.Test;
 
 import java.util.Collections;
@@ -36,7 +35,6 @@ public class HasVariableFunctionTest {
 
     public static void withVariables(Map<String, Object> variables, Runnable runnable) throws RuntimeException {
         ThreadLocalEvalContext.withEvalContext(new EvalContext() {
-            @Nullable
             @Override
             public Context context() {
                 return null;
