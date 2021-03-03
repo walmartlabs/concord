@@ -1,4 +1,4 @@
 log.info(kafkaTopic)
 log.info(dbUrl)
-log.info(dbUsername)
-log.info(dbPassword)
+log.info(dbUser)
+log.info(dbPswd)
