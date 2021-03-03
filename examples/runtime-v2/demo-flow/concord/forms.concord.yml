@@ -5,12 +5,15 @@ flows:
   formFlow:
     - log: "Going to do some form stuff..."
     - parallel:
-        - form: getFullName
-        - form: fetchMetadata
-        - form: approvalCRQ
-    - log: "${getFullName.firstName}"
-    - log: "${fetchMetadata.age}"
-    - log: "${approvalCRQ.password}"
+        - block:
+            - form: getFullName
+            - log: "${getFullName.firstName}"
+        - block:
+            - form: fetchMetadata
+            - log: "${fetchMetadata.age}"
+        - block:
+            - form: approvalCRQ
+            - log: "${approvalCRQ.password}"
 
 forms:
   getFullName:
