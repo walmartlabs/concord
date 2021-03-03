@@ -1,6 +1,6 @@
 flows:
 
-  # easier to use form links
+  # easier to access form links in v2
   # execute forms in parallel
   formFlow:
     - log: "Going to do some form stuff..."
@@ -14,6 +14,7 @@ flows:
         - block:
             - form: approvalCRQ
             - log: "${approvalCRQ.password}"
+  # form wizard will be rendered in alphabetical order when used with parallel step
 
 forms:
   getFullName:
