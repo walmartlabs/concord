@@ -5,8 +5,8 @@ configuration:
   dependencies:
     - "mvn://org.codehaus.groovy:groovy-all:pom:2.5.2"
 
-  # new directory structure
-  # new SDK
+# new directory structure
+# new SDK
 
   arguments:
     url: "https://concord.test.walmart.com"
@@ -37,6 +37,7 @@ flows:
 
     - call: externalFlow
     - call: scriptFlow
+    - call: formFlow
     - call: errorFlow
 
   # variable scoping changes

@@ -1,0 +1,25 @@
+flows:
+
+  # easier to use form links
+  # execute forms in parallel
+  formFlow:
+    - log: "Going to do some form stuff..."
+    - parallel:
+        - block:
+            - form: getFullName
+            - log: "${getFullName.firstName}"
+        - form: fetchMetadata
+        - form: approvalCRQ
+    - log: "${approvalCRQ.password}"
+    - log: "${fetchMetadata.age}"
+
+forms:
+  getFullName:
+    - firstName: { label: "First Name", type: "string" }
+    - lastName: { label: "Last Name", type: "string" }
+  fetchMetadata:
+    - age: { label: "Age", type: "int", min: 21, max: 100 }
+    - favouriteColour: { label: "Favourite colour", type: "string", allow: ["gray", "grey"], search: true }
+  approvalCRQ:
+    - password: { label: "Password", type: "string", inputType: "password" }
+    - rememberMe: { label: "Remember me", type: "boolean" }
