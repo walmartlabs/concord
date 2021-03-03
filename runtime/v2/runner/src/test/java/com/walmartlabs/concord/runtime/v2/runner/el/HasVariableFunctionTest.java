@@ -29,6 +29,8 @@ public class HasVariableFunctionTest {
             assertTrue(HasVariableFunction.hasVariable("a.b"));
             assertTrue(HasVariableFunction.hasVariable("a.b.c"));
             assertFalse(HasVariableFunction.hasVariable("a.b.c.d"));
+            assertFalse(HasVariableFunction.hasVariable(""));
+            assertFalse(HasVariableFunction.hasVariable(null));
         });
     }
 
