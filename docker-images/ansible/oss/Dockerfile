@@ -29,12 +29,12 @@ RUN umask 0022 && \
         "cryptography<=3.3.1" \
         "ansible>=2.8.0,<2.9.0" \
         "Appium-Python-Client<1.0" \
+        "openshift<=0.11.2" \
         boto3 \
         botocore \
         bzt \
         docker \
         kerberos \
-        openshift \
         pbr \
         pyvmomi \
         pywinrm>=0.4.1 \
