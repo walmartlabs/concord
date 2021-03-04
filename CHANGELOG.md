@@ -2,6 +2,11 @@
 
 ## [Unreleased]
 
+### Added
+
+- pfed-sso: add README
+([#339][https://github.com/walmartlabs/concord/pull/346]).
+
 ### Changed
 
 - runtime-v2: fix the detection of script languages based on
