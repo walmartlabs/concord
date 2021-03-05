@@ -38,17 +38,21 @@ public final class GitUtils {
     }
 
     public static Path createBareRepository(Path data, Path baseTmpDir) throws Exception {
-        return createBareRepository(data, "initial message", baseTmpDir);
+        return createBareRepository(data, "initial message", baseTmpDir, null);
     }
 
     public static Path createBareRepository(Path data, String commitMessage) throws Exception {
-        return createBareRepository(data, commitMessage, null);
+        return createBareRepository(data, commitMessage, null, null);
     }
 
-    public static Path createBareRepository(Path data, String commitMessage, Path baseTmpDir) throws Exception {
+    public static Path createBareRepository(Path data, String commitMessage, Path baseTmpDir, String leaf) throws Exception {
+        if (leaf == null) {
+            leaf = "test";
+        }
+
         // init bare repository
         Path tmp = createTempDir(baseTmpDir);
-        Path repo = tmp.resolve("test");
+        Path repo = tmp.resolve(leaf);
         Files.createDirectories(repo);
 
         Git.init().setBare(true).setDirectory(repo.toFile()).call();

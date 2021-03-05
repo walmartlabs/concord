@@ -197,6 +197,21 @@ public class RepositoryDao extends AbstractDao {
         return select.fetch(this::toEntry);
     }
 
+    public List<RepositoryEntry> findSimilar(String repoUrlPattern) {
+        return findSimilar(null, repoUrlPattern);
+    }
+
+    public List<RepositoryEntry> findSimilar(UUID projectId, String pattern) {
+        SelectConditionStep<Record12<UUID, UUID, String, String, String, String, String, Boolean, JSONB, UUID, String, String>> select = selectRepositoryEntry(dsl())
+                .where(REPOSITORIES.REPO_URL.similarTo(pattern));
+
+        if (projectId != null) {
+            select.and(REPOSITORIES.PROJECT_ID.eq(projectId));
+        }
+
+        return select.fetch(this::toEntry);
+    }
+
     public List<RepositoryEntry> findBySecretId(DSLContext tx, UUID secretId) {
         return selectRepositoryEntry(tx)
                 .where(REPOSITORIES.SECRET_ID.eq(secretId))
