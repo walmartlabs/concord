@@ -47,15 +47,16 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.ws.rs.core.Response.Status.Family;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.attribute.FileAttribute;
-import java.security.KeyManagementException;
-import java.security.KeyStoreException;
-import java.security.NoSuchAlgorithmException;
+import java.security.*;
+import java.security.cert.CertificateException;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -331,7 +332,7 @@ public class SimpleHttpClient {
         }
 
         return HttpClientBuilder.create()
-                .setConnectionManager(buildConnectionManager())
+                .setConnectionManager(buildConnectionManager(cfg))
                 .setDefaultRequestConfig(c.build())
                 .setRedirectStrategy(new LaxRedirectStrategy())
                 .build();
@@ -344,9 +345,33 @@ public class SimpleHttpClient {
      * @throws KeyManagementException   keyManagementException
      * @throws NoSuchAlgorithmException noSuchAlgorithmException
      */
-    private static HttpClientConnectionManager buildConnectionManager() throws KeyManagementException, NoSuchAlgorithmException, KeyStoreException {
+    private static HttpClientConnectionManager buildConnectionManager(Configuration cfg) throws Exception {
         SSLContextBuilder builder = new SSLContextBuilder();
         builder.loadTrustMaterial(new TrustAllStrategy());
+        if (cfg.keyStorePath() != null) {
+            Path keystorePath = Paths.get(cfg.getWorkDir()).resolve(cfg.keyStorePath());
+            if (Files.notExists(keystorePath)) {
+                throw new RuntimeException("Keystore '" + cfg.keyStorePath() + "' not found");
+            }
+
+            char[] keystorePass = cfg.keyStorePassword() != null ? cfg.keyStorePassword().toCharArray() : null;
+
+            KeyStore keyStore = KeyStore.getInstance("pkcs12");
+            try (InputStream keyStoreInput = Files.newInputStream(keystorePath) ) {
+                keyStore.load(keyStoreInput, keystorePass);
+            }
+
+            if (keyStore.size() == 0) {
+                throw new RuntimeException("Keystore is empty. Remove keystore input parameters or fix keystore");
+            }
+
+            try {
+                builder.loadKeyMaterial(keyStore, keystorePass);
+            } catch (UnrecoverableKeyException e) {
+                throw new RuntimeException("Get key failed. Check keystore password", e);
+            }
+        }
+
         SSLConnectionSocketFactory socketFactory = new SSLConnectionSocketFactory(
                 builder.build(), NoopHostnameVerifier.INSTANCE);
 

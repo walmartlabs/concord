@@ -173,6 +173,8 @@ public class HttpTask implements Task {
         static final String TOKEN_KEY = "token";
         static final String URL_KEY = "url";
         static final String USERNAME_KEY = "username";
+        static final String KEYSTORE_PATH = "keystorePath";
+        static final String KEYSTORE_PASSWD = "keystorePassword";
 
         static final String[] ALL_KEYS = {
                 AUTH_KEY,
@@ -195,7 +197,9 @@ public class HttpTask implements Task {
                 SOCKET_TIMEOUT_KEY,
                 TOKEN_KEY,
                 URL_KEY,
-                USERNAME_KEY
+                USERNAME_KEY,
+                KEYSTORE_PATH,
+                KEYSTORE_PASSWD
         };
 
         // internal constants
