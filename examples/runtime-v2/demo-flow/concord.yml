@@ -9,10 +9,10 @@ configuration:
 # new SDK
 
   arguments:
-    url: "https://concord.test.walmart.com"
+    url: "https://rubygems.org"
     cfg:
       topic: "Postgres JDBC Connection"
-      dbUrl: "jdbc:postgresql://concord.test.walmart.com:5432/postgres"
+      dbUrl: "jdbc:postgresql://concord.example.com:5432/postgres"
       dbUser: "svc_concord"
       dbPswd: "xYzAbC"
 
@@ -66,16 +66,16 @@ flows:
   # explicit task inputs
   taskFlow:
     - set:
-        url: https://concord.prod.walmart.com
+        url: https://github.com
 
-    - name: "Concord Test Endpoint Call"
+    - name: "Concord Endpoint Call"
       task: http
       in:
         url: "${url}" # will not use the global variable as tasks now use local variables
         method: "GET" # need to explicitly specify each required parameter
       out: response
 
-    - log: "Concord Test Endpoint Status: ${response.statusCode}"
+    - log: "Concord Endpoint Status: ${response.statusCode}"
 
     - call: default
 
