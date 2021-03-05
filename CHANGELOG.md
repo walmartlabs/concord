@@ -9,7 +9,9 @@
 - runtime-v2: support for nested variables in `hasVariable`
 function ([#343](https://github.com/walmartlabs/concord/pull/343));
 - examples: runtime-v2 demo
-([#344](https://github.com/walmartlabs/concord/pull/344)).
+([#344](https://github.com/walmartlabs/concord/pull/344));
+- http-tasks: support for external keystore files
+([#345](https://github.com/walmartlabs/concord/pull/345)).
 
 ### Changed
 
