@@ -20,9 +20,13 @@ package com.walmartlabs.concord.runtime.v2.runner.el.functions;
  * =====
  */
 
+import com.walmartlabs.concord.common.ConfigurationUtils;
 import com.walmartlabs.concord.runtime.v2.runner.el.ThreadLocalEvalContext;
+import com.walmartlabs.concord.runtime.v2.sdk.Variables;
 
 import java.lang.reflect.Method;
+import java.util.Arrays;
+import java.util.Map;
 
 public final class HasVariableFunction {
 
@@ -34,9 +38,23 @@ public final class HasVariableFunction {
         }
     }
 
+    @SuppressWarnings("unchecked")
     public static boolean hasVariable(String name) {
-        return ThreadLocalEvalContext.get()
-                .variables()
-                .has(name);
+        if (name == null || name.trim().isEmpty()) {
+            return false;
+        }
+
+        Variables variables = ThreadLocalEvalContext.get().variables();
+
+        String[] path = name.split("\\.");
+        if (path.length == 1) {
+            return variables.has(name);
+        } else {
+            Object maybeMap = variables.get(path[0]);
+            if (!(maybeMap instanceof Map)) {
+                return false;
+            }
+            return ConfigurationUtils.has((Map<String, Object>)maybeMap, Arrays.copyOfRange(path, 1, path.length));
+        }
     }
 }
