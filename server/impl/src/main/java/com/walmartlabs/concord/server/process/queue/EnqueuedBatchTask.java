@@ -128,12 +128,12 @@ public class EnqueuedBatchTask extends PeriodicTask {
         }
 
         for (Batch b : batches) {
-            if (b.repoId() != null) {
-                List<ProcessKey> k = dao.poll(b.repoId(), cfg.getBatchSize());
-                b.keys().addAll(k);
+            if (b.key() != null) {
+                List<ProcessKey> processes = dao.poll(b.key(), cfg.getBatchSize());
+                b.processes().addAll(processes);
             }
 
-            batchHistogram.update(b.keys().size());
+            batchHistogram.update(b.processes().size());
         }
 
         for (int i = 0; i < batches.size(); i++) {
@@ -192,10 +192,10 @@ public class EnqueuedBatchTask extends PeriodicTask {
 
         private void startProcessBatch(Batch batch) {
             try {
-                if (batch.repoUrl() != null && batch.keys().size() > 1) {
+                if (batch.repoUrl() != null && batch.processes().size() > 1) {
                     repositoryManager.withLock(batch.repoUrl(), () -> {
                         Repository repository = null;
-                        for (ProcessKey key : batch.keys()) {
+                        for (ProcessKey key : batch.processes()) {
                             Payload payload = startProcess(key, repository);
                             if (payload != null && repository == null) {
                                 repository = payload.getHeader(Payload.REPOSITORY);
@@ -204,7 +204,7 @@ public class EnqueuedBatchTask extends PeriodicTask {
                         return null;
                     });
                 } else {
-                    for (ProcessKey key : batch.keys()) {
+                    for (ProcessKey key : batch.processes()) {
                         startProcess(key, null);
                     }
                 }
@@ -229,53 +229,82 @@ public class EnqueuedBatchTask extends PeriodicTask {
 
     static class Batch {
 
-        public static Batch key(ProcessKey key) {
+        /**
+         * Batch key: repositoryId + branch + commitId (users can override branch/commit )
+         */
+        @Value.Immutable
+        interface Key {
+
+            @Value.Parameter
+            UUID repoId();
+
+            @Nullable
+            @Value.Parameter
+            String branchOrTag();
+
+            @Nullable
+            @Value.Parameter
+            String commitId();
+
+            static Key of(UUID repoId, String branchOrTag, String commitId) {
+                return ImmutableKey.of(repoId, branchOrTag, commitId);
+            }
+        }
+
+        public static Batch singleProcess(ProcessKey key) {
             return new Batch(null, null, Collections.singletonList(key));
         }
 
-        private final UUID repoId;
+        @Nullable
+        private final Key key;
+
+        @Nullable
         private final String repoUrl;
-        private final List<ProcessKey> keys;
 
-        public Batch(UUID repoId, String repoUrl) {
-            this(repoId, repoUrl, new ArrayList<>());
+        private final List<ProcessKey> processes;
+
+        private Batch(Key key, String repoUrl) {
+            this(key, repoUrl, Collections.emptyList());
         }
 
-        private Batch(UUID repoId, String repoUrl, List<ProcessKey> keys) {
-            this.repoId = repoId;
+        private Batch(Key key, String repoUrl, List<ProcessKey> processes) {
+            this.key = key;
             this.repoUrl = repoUrl;
-            this.keys = keys;
+            this.processes = new ArrayList<>(processes);
         }
 
-        public UUID repoId() {
-            return repoId;
+        public Key key() {
+            return key;
         }
 
         public String repoUrl() {
             return repoUrl;
         }
 
-        public List<ProcessKey> keys() {
-            return keys;
+        public List<ProcessKey> processes() {
+            return processes;
         }
     }
 
     @Value.Immutable
     interface ProcessItem {
 
-        @Value.Parameter
         ProcessKey key();
 
         @Nullable
-        @Value.Parameter
         UUID repoId();
 
         @Nullable
-        @Value.Parameter
         String repoUrl();
 
-        static ProcessItem of(ProcessKey key, UUID repoId, String repoUrl) {
-            return ImmutableProcessItem.of(key, repoId, repoUrl);
+        @Nullable
+        String branchOrTag();
+
+        @Nullable
+        String commitId();
+
+        static ImmutableProcessItem.Builder builder() {
+            return ImmutableProcessItem.builder();
         }
     }
 
@@ -290,7 +319,7 @@ public class EnqueuedBatchTask extends PeriodicTask {
         @WithTimer
         public Collection<Batch> poll(List<String> ignoreRepoUrls, int limit) {
             return txResult(tx -> {
-                List<ProcessItem> items = tx.select(PROCESS_QUEUE.INSTANCE_ID, PROCESS_QUEUE.CREATED_AT, PROCESS_QUEUE.REPO_ID, REPOSITORIES.REPO_URL)
+                List<ProcessItem> items = tx.select(PROCESS_QUEUE.INSTANCE_ID, PROCESS_QUEUE.CREATED_AT, PROCESS_QUEUE.REPO_ID, REPOSITORIES.REPO_URL, PROCESS_QUEUE.COMMIT_BRANCH, PROCESS_QUEUE.COMMIT_ID)
                         .from(PROCESS_QUEUE).leftJoin(REPOSITORIES).on(REPOSITORIES.REPO_ID.eq(PROCESS_QUEUE.REPO_ID))
                         .where(PROCESS_QUEUE.CURRENT_STATUS.eq(ProcessStatus.NEW.name())
                                 .and(REPOSITORIES.REPO_URL.isNull().or(REPOSITORIES.REPO_URL.notIn(ignoreRepoUrls))))
@@ -298,7 +327,13 @@ public class EnqueuedBatchTask extends PeriodicTask {
                         .limit(limit)
                         .forUpdate().of(PROCESS_QUEUE)
                         .skipLocked()
-                        .fetch(r -> ProcessItem.of(new ProcessKey(r.value1(), r.value2()), r.value3(), r.value4()));
+                        .fetch(r -> ProcessItem.builder()
+                                .key(new ProcessKey(r.value1(), r.value2()))
+                                .repoId(r.value3())
+                                .repoUrl(r.value4())
+                                .branchOrTag(r.value5())
+                                .commitId(r.value6())
+                                .build());
 
                 if (items.isEmpty()) {
                     return Collections.emptyList();
@@ -308,7 +343,7 @@ public class EnqueuedBatchTask extends PeriodicTask {
                 batches = removeDuplicateUrls(batches);
 
                 toPreparing(tx, batches.stream()
-                        .map(Batch::keys)
+                        .map(Batch::processes)
                         .flatMap(Collection::stream)
                         .map(PartialProcessKey::getInstanceId)
                         .collect(Collectors.toList()));
@@ -318,12 +353,14 @@ public class EnqueuedBatchTask extends PeriodicTask {
         }
 
         @WithTimer
-        public List<ProcessKey> poll(UUID repoId, int limit) {
+        public List<ProcessKey> poll(Batch.Key key, int limit) {
             return txResult(tx -> {
                 List<ProcessKey> result = tx.select(PROCESS_QUEUE.INSTANCE_ID, PROCESS_QUEUE.CREATED_AT)
                         .from(PROCESS_QUEUE)
                         .where(PROCESS_QUEUE.CURRENT_STATUS.eq(ProcessStatus.NEW.name())
-                                .and(PROCESS_QUEUE.REPO_ID.eq(repoId)))
+                                .and(PROCESS_QUEUE.REPO_ID.eq(key.repoId()))
+                                .and(PROCESS_QUEUE.COMMIT_BRANCH.isNotDistinctFrom(key.branchOrTag()))
+                                .and(PROCESS_QUEUE.COMMIT_ID.isNotDistinctFrom(key.commitId())))
                         .orderBy(PROCESS_QUEUE.CREATED_AT)
                         .limit(limit)
                         .forUpdate()
@@ -342,20 +379,21 @@ public class EnqueuedBatchTask extends PeriodicTask {
             });
         }
 
-        private static Collection<Batch> toBatches(List<ProcessItem> keys) {
+        private static Collection<Batch> toBatches(List<ProcessItem> items) {
             List<Batch> result = new ArrayList<>();
 
-            Map<UUID, Batch> batchByUrl = new HashMap<>();
-            for (ProcessItem item : keys) {
+            Map<Batch.Key, Batch> batches = new HashMap<>();
+            for (ProcessItem item : items) {
                 if (item.repoId() == null) {
-                    result.add(Batch.key(item.key()));
+                    result.add(Batch.singleProcess(item.key()));
                 } else {
-                    batchByUrl.computeIfAbsent(item.repoId(), k -> new Batch(item.repoId(), item.repoUrl()))
-                            .keys().add(item.key());
+                    Batch.Key key = Batch.Key.of(item.repoId(), item.branchOrTag(), item.commitId());
+                    batches.computeIfAbsent(key, k -> new Batch(key, item.repoUrl()))
+                            .processes().add(item.key());
                 }
             }
 
-            result.addAll(batchByUrl.values());
+            result.addAll(batches.values());
 
             return result;
         }
