@@ -1,0 +1,101 @@
+# how to enable v2
+configuration:
+  runtime: "concord-v2"
+  entryPoint: "aFlow"
+  dependencies:
+    - "mvn://org.codehaus.groovy:groovy-all:pom:2.5.2"
+
+# new directory structure
+# new SDK
+
+  arguments:
+    url: "https://rubygems.org"
+    cfg:
+      topic: "Postgres JDBC Connection"
+      dbUrl: "jdbc:postgresql://concord.example.com:5432/postgres"
+      dbUser: "svc_concord"
+      dbPswd: "xYzAbC"
+
+# restricted entrypoints. if not specified, all flows are public and can be used as an entrypoint
+publicFlows:
+  - default
+  - aFlow
+
+flows:
+  default:
+
+    # The "allVariables()" function returns a Java Map with all the provided process variables
+    # The "hasVariable()" function accepts a string parameter and returns true if the variable exists
+
+    - log: "All variables: ${allVariables()}"
+
+    - if: ${hasVariable('projectInfo.orgName')}
+      then:
+        - log: "Yep, we have 'orgName' variable with value ${projectInfo.orgName}"
+      else:
+        - log: "Nope, we do not have 'orgName' variable"
+
+    - call: externalFlow
+    - call: scriptFlow
+    - call: formFlow
+    - call: errorFlow
+
+  # variable scoping changes
+  aFlow:
+    - set:
+        x: 123
+
+    - log: "${x}" # prints out "123"
+
+    - call: anotherFlow
+
+    - log: "${x}" # prints out "123"
+
+    - call: anotherFlow
+      out: x  # required if output needs to be used in the parent flow
+
+    - log: "${x}" # prints out "789"
+
+    - call: taskFlow
+
+  anotherFlow:
+    - log: "${x}" # prints out "123"
+    - set:
+        x: 789
+
+  # explicit task inputs
+  taskFlow:
+    - set:
+        url: https://github.com
+
+    - name: "Concord Endpoint Call"
+      task: http
+      in:
+        url: "${url}" # will not use the global variable as tasks now use local variables
+        method: "GET" # need to explicitly specify each required parameter
+      out: response
+
+    - log: "Concord Endpoint Status: ${response.statusCode}"
+
+    - call: default
+
+  # explicitly pass parameters to python/groovy scripts
+  scriptFlow:
+    - script: scripts/test-script.groovy
+      in:
+        kafkaTopic: "${cfg.topic}"
+        dbUrl: "${cfg.dbUrl}"
+        dbUser: "${cfg.dbUser}"
+        dbPswd: "${cfg.dbPswd}"
+      meta:
+        segmentName: "Processing ${cfg.topic}..."
+      error:
+        - log: "${lastError}" # original exceptions, nothing added by concord
+
+  # improved error syntax
+  errorFlow:
+    - log: "uncomment the lines to see improved error messages!"
+#     - if: "${true}"
+#       then:
+#         log: "It's true!"   # the "then" block should’ve been a list
+# # this will throw an error with the problematic line and path
