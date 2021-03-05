@@ -57,6 +57,8 @@ public class Configuration {
     private final String proxy;
     private final boolean debug;
     private boolean followRedirects;
+    private final String keyStorePath;
+    private final String keyStorePassword;
 
     private Configuration(RequestMethodType methodType,
                           String url,
@@ -72,7 +74,9 @@ public class Configuration {
                           boolean ignoreErrors,
                           String proxy,
                           boolean debug,
-                          boolean followRedirects) {
+                          boolean followRedirects,
+                          String keyStorePath,
+                          String keyStorePassword) {
 
         this.methodType = methodType;
         this.url = url;
@@ -89,6 +93,8 @@ public class Configuration {
         this.proxy = proxy;
         this.debug = debug;
         this.followRedirects = followRedirects;
+        this.keyStorePath = keyStorePath;
+        this.keyStorePassword = keyStorePassword;
     }
 
     /**
@@ -196,6 +202,14 @@ public class Configuration {
         return followRedirects;
     }
 
+    public String keyStorePath() {
+        return keyStorePath;
+    }
+
+    public String keyStorePassword() {
+        return keyStorePassword;
+    }
+
     public static class Builder {
 
         private String url;
@@ -213,6 +227,8 @@ public class Configuration {
         private String proxy;
         private boolean debug;
         private boolean followRedirects = true;
+        private String keyStorePath;
+        private String keyStorePassword;
 
         /**
          * Used to specify the url which will later use to create {@link org.apache.http.client.methods.HttpUriRequest}
@@ -362,6 +378,12 @@ public class Configuration {
             return this;
         }
 
+        public Builder withKeyStore(String path, String password) {
+            this.keyStorePath = path;
+            this.keyStorePassword = password;
+            return this;
+        }
+
         /**
          * Invoking this method will result in a new configuration
          *
@@ -379,7 +401,8 @@ public class Configuration {
             }
 
             return new Configuration(methodType, url, encodedAuthToken, requestType, responseType, workDir,
-                    requestHeaders, body, connectTimeout, socketTimeout, requestTimeout, ignoreErrors, proxy, debug, followRedirects);
+                    requestHeaders, body, connectTimeout, socketTimeout, requestTimeout, ignoreErrors, proxy, debug, followRedirects,
+                    keyStorePath, keyStorePassword);
         }
 
         /**
@@ -482,8 +505,12 @@ public class Configuration {
 
             this.followRedirects = MapUtils.getBoolean(input, FOLLOW_REDIRECTS_KEY, true);
 
+            this.keyStorePath = MapUtils.getString(input, KEYSTORE_PATH);
+            this.keyStorePassword = MapUtils.getString(input, KEYSTORE_PASSWD);
+
             return new Configuration(methodType, url, encodedAuthToken, requestType, responseType, workDir,
-                    requestHeaders, body, connectTimeout, socketTimeout, requestTimeout, ignoreErrors, proxy, debug, followRedirects);
+                    requestHeaders, body, connectTimeout, socketTimeout, requestTimeout, ignoreErrors, proxy, debug, followRedirects,
+                    keyStorePath, keyStorePassword);
         }
 
         private static void validateMandatory(Map<String, Object> m) {
