@@ -104,8 +104,9 @@ public class ProcessQueueDao extends AbstractDao {
     }
 
     public void insert(DSLContext tx, ProcessKey processKey, ProcessStatus status, ProcessKind kind,
-                       UUID parentInstanceId, UUID projectId, UUID repoId, UUID initiatorId,
-                       Map<String, Object> meta, TriggeredByEntry triggeredBy) {
+                       UUID parentInstanceId, UUID projectId,
+                       UUID repoId, String branchOrTag, String commitId,
+                       UUID initiatorId, Map<String, Object> meta, TriggeredByEntry triggeredBy) {
 
         tx.insertInto(PROCESS_QUEUE)
                 .set(PROCESS_QUEUE.INSTANCE_ID, processKey.getInstanceId())
@@ -113,6 +114,8 @@ public class ProcessQueueDao extends AbstractDao {
                 .set(PROCESS_QUEUE.PARENT_INSTANCE_ID, parentInstanceId)
                 .set(PROCESS_QUEUE.PROJECT_ID, projectId)
                 .set(PROCESS_QUEUE.REPO_ID, repoId)
+                .set(PROCESS_QUEUE.COMMIT_ID, commitId)
+                .set(PROCESS_QUEUE.COMMIT_BRANCH, branchOrTag)
                 .set(PROCESS_QUEUE.CREATED_AT, processKey.getCreatedAt())
                 .set(PROCESS_QUEUE.INITIATOR_ID, initiatorId)
                 .set(PROCESS_QUEUE.CURRENT_STATUS, status.toString())
