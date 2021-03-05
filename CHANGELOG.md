@@ -5,7 +5,9 @@
 ### Added
 
 - pfed-sso: add README
-([#339][https://github.com/walmartlabs/concord/pull/346]).
+([#339][https://github.com/walmartlabs/concord/pull/346]);
+- runtime-v2: support for nested variables in `hasVariable`
+function ([#343](https://github.com/walmartlabs/concord/pull/343]).
 
 ### Changed
 
