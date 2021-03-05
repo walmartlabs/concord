@@ -24,6 +24,7 @@ import com.walmartlabs.concord.imports.Imports;
 import com.walmartlabs.concord.runtime.v2.model.ExclusiveMode;
 import com.walmartlabs.concord.sdk.Constants;
 import com.walmartlabs.concord.sdk.EventType;
+import com.walmartlabs.concord.sdk.MapUtils;
 import com.walmartlabs.concord.server.ConcordObjectMapper;
 import com.walmartlabs.concord.server.RequestUtils;
 import com.walmartlabs.concord.server.process.*;
@@ -78,9 +79,11 @@ public class ProcessQueueManager {
         Map<String, Object> cfg = getCfg(payload);
         Map<String, Object> meta = getMeta(cfg);
         TriggeredByEntry triggeredBy = payload.getHeader(Payload.TRIGGERED_BY);
+        String branchOrTag = MapUtils.getString(cfg, Constants.Request.REPO_BRANCH_OR_TAG);
+        String commitId = MapUtils.getString(cfg, Constants.Request.REPO_COMMIT_ID);
 
         queueDao.tx(tx -> {
-            queueDao.insert(tx, processKey, status, kind, parentInstanceId, projectId, repoId, initiatorId, meta, triggeredBy);
+            queueDao.insert(tx, processKey, status, kind, parentInstanceId, projectId, repoId, branchOrTag, commitId, initiatorId, meta, triggeredBy);
             eventManager.insertStatusHistory(tx, processKey, status, Collections.emptyMap());
             processLogManager.createSystemSegment(tx, payload.getProcessKey());
         });
@@ -254,13 +257,8 @@ public class ProcessQueueManager {
         return payload.getHeader(Payload.CONFIGURATION, Collections.emptyMap());
     }
 
-    @SuppressWarnings("unchecked")
     private static Map<String, Object> getMeta(Map<String, Object> cfg) {
-        Map<String, Object> m = (Map<String, Object>) cfg.get(Constants.Request.META);
-        if (m == null) {
-            m = Collections.emptyMap();
-        }
-
+        Map<String, Object> m = MapUtils.getMap(cfg, Constants.Request.META, Collections.emptyMap());
         m = new HashMap<>(m);
         m.put(Constants.Meta.SYSTEM_GROUP, Collections.singletonMap(Constants.Meta.REQUEST_ID, RequestUtils.getRequestId()));
         m.put(Constants.Request.ENTRY_POINT_KEY, cfg.get(Constants.Request.ENTRY_POINT_KEY));
