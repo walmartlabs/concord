@@ -1,0 +1,28 @@
+flows:
+
+  # easier to access form links in v2
+  # execute forms in parallel
+  formFlow:
+    - log: "Going to do some form stuff..."
+    - parallel:
+        - block:
+            - form: getFullName
+            - log: "${getFullName.firstName}"
+        - block:
+            - form: fetchMetadata
+            - log: "${fetchMetadata.age}"
+        - block:
+            - form: approvalCRQ
+            - log: "${approvalCRQ.password}"
+  # form wizard will be rendered in alphabetical order when used with parallel step
+
+forms:
+  getFullName:
+    - firstName: { label: "First Name", type: "string" }
+    - lastName: { label: "Last Name", type: "string" }
+  fetchMetadata:
+    - age: { label: "Age", type: "int", min: 21, max: 100 }
+    - favouriteColour: { label: "Favourite colour", type: "string", allow: ["gray", "grey"], search: true }
+  approvalCRQ:
+    - password: { label: "Password", type: "string", inputType: "password" }
+    - rememberMe: { label: "Remember me", type: "boolean" }

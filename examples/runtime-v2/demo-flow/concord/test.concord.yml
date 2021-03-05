@@ -1,0 +1,33 @@
+flows:
+  externalFlow:
+
+    # named log segments
+    - name: ${item}
+      task: log
+      in:
+        msg: "Hello! I'm being logged in a separate segment named ${item}!"
+      withItems:
+        - "Run Validation"
+        - "Trigger Deployment"
+        - "Send Notification"
+
+    # parallel execution
+    # The v2 runtime was designed with parallel execution in mind. It adds a new step - parallel.
+    - parallel:
+        - ${sleep.ms(5000)}
+        - ${sleep.ms(5000)}
+    # executes each expression in its own Java thread
+
+    - log: "Total sleeping duration should be 5 seconds!"
+
+    # parallel execution in loop
+    - task: http
+      in:
+        url: https://concord.${item}.walmart.com/
+        method: "GET"
+      out: results # withItems turns "results" into a list of results for each item
+      parallelWithItems:
+        - "prod"
+        - "test"
+        - "ci"
+    - log: ${results.stream().map(o -> o.statusCode).toList()}
