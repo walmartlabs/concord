@@ -28,8 +28,8 @@ import javax.naming.NameAlreadyBoundException;
 import javax.naming.directory.*;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.Map;
 
-import static com.walmartlabs.concord.it.common.ITUtils.randomString;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
@@ -287,6 +287,74 @@ public class GitHubTriggersV2IT extends AbstractGitHubTriggersIT {
 
             Thread.sleep(1000);
         }
+    }
+
+    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    public void testRefreshOnGitHubEvent() throws Exception {
+        String username = createUser();
+
+        OrganizationsApi orgApi = new OrganizationsApi(getApiClient());
+
+        String orgName = "org_" + randomString();
+        orgApi.createOrUpdate(new OrganizationEntry().setName(orgName));
+
+        // -- create two projects to hold two similarly named repos
+
+        String projectName1 = "project_" + randomString();
+        String projectName2 = "project_" + randomString();
+        String repoNameShort = "repo_" + randomString();
+        String repoNameLong = repoNameShort + "-two";
+
+        Path repoPathShort = initRepo("githubTests/repos/v2/defaultTrigger", orgName + "/" + repoNameShort);
+        Path repoPathLong = initRepo("githubTests/repos/v2/defaultTrigger", orgName + "/" + repoNameLong);
+
+        Path projectRepoShort = initProjectAndRepo(orgName, projectName1, repoNameShort, null, repoPathShort);
+        Path projectRepoLong = initProjectAndRepo(orgName, projectName2, repoNameLong, null, repoPathLong);
+        waitForProcessesToFinish();
+
+        // -- send GitHub event to trigger refresh
+
+        sendEvent("githubTests/events/direct_branch_push.json", "push",
+                "_USER_LDAP_DN", "",
+                "_USER_NAME", username,
+                "_ORG_NAME", orgName,
+                "_FULL_REPO_NAME", toRepoName(projectRepoShort), // must be before _REPO_NAME
+                "_REPO_NAME", repoNameShort,
+                "_REF", "refs/heads/master");
+
+        // -- locate and wait for repository refresh process
+
+        ProcessV2Api processApi = new ProcessV2Api(getApiClient());
+        ProcessEntry refreshProc;
+        while (true) {
+            refreshProc = processApi.list(null, "ConcordSystem", null,
+                    "concordTriggers", null, null, null, null, null, null, null,
+                    null, null, 1, 0).stream()
+                    .filter(e -> e.getInitiator().equals("github"))
+                    .findFirst()
+                    .orElse(null);
+
+            if (refreshProc != null && refreshProc.getStatus() == ProcessEntry.StatusEnum.FINISHED) {
+                break;
+            }
+            Thread.sleep(500);
+        }
+
+        assertNotNull("Must find repository refresh process.", refreshProc);
+        assertEquals("Repository refresh process must finish successfully.",
+                ProcessEntry.StatusEnum.FINISHED, refreshProc.getStatus());
+
+        // -- process log should indicate only one repo was refreshed
+
+        ProjectsApi projectsApi = new ProjectsApi(getApiClient());
+        ProjectEntry p = projectsApi.get(orgName, projectName1);
+        RepositoryEntry repo = p.getRepositories().entrySet().stream()
+                .filter(e -> e.getKey().equals(repoNameShort))
+                .map(Map.Entry::getValue)
+                .findFirst()
+                .orElseThrow(() -> new Exception("Unable to locate repository"));
+
+        assertLog(refreshProc, ".*Repository ids to refresh: \\[" + repo.getId().toString() + "\\].*");
     }
 
     @Test(timeout = DEFAULT_TEST_TIMEOUT)

@@ -162,13 +162,16 @@ public class GithubTriggerV2Processor implements GithubTriggerProcessor {
         @Override
         @WithTimer
         public void enrich(Payload payload, TriggerEntry trigger, Map<String, Object> result) {
-            Object projectInfoConditions = trigger.getConditions().get(com.walmartlabs.concord.sdk.Constants.Trigger.REPOSITORY_INFO);
+            Object projectInfoConditions =
+                    trigger.getConditions().get(com.walmartlabs.concord.sdk.Constants.Trigger.REPOSITORY_INFO);
             if (projectInfoConditions == null || payload.getFullRepoName() == null) {
                 return;
             }
 
             List<Map<String, Object>> repositoryInfos = new ArrayList<>();
-            List<RepositoryEntry> repositories = repositoryDao.find(payload.getFullRepoName());
+            List<RepositoryEntry> repositories =
+                    repositoryDao.findSimilar("%/" + payload.getFullRepoName() + "(.git)?/?");
+
             for (RepositoryEntry r : repositories) {
                 Map<String, Object> repositoryInfo = new HashMap<>();
                 repositoryInfo.put(REPO_ID_KEY, r.getId());

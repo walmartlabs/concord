@@ -30,12 +30,11 @@ import com.walmartlabs.concord.it.common.GitUtils;
 import com.walmartlabs.concord.it.common.ITUtils;
 import com.walmartlabs.concord.it.common.ServerClient;
 import org.eclipse.jgit.api.Git;
-import org.eclipse.jgit.transport.RefSpec;
 
-import java.io.ByteArrayOutputStream;
-import java.io.InputStream;
-import java.net.URL;
-import java.nio.file.*;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardOpenOption;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Locale;
@@ -54,6 +53,11 @@ public abstract class AbstractGitHubTriggersIT extends AbstractServerIT {
     protected Path initRepo(String resource) throws Exception {
         Path src = Paths.get(AbstractGitHubTriggersIT.class.getResource(resource).toURI());
         return GitUtils.createBareRepository(src);
+    }
+
+    protected Path initRepo(String resource, String leaf) throws Exception {
+        Path src = Paths.get(AbstractGitHubTriggersIT.class.getResource(resource).toURI());
+        return GitUtils.createBareRepository(src, "init", null, leaf);
     }
 
     protected Path initProjectAndRepo(String orgName, String projectName, String repoName, String repoBranch, Path bareRepo) throws Exception {
