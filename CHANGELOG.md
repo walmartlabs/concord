@@ -24,7 +24,9 @@ use their own `PYTHONPATH` in addition to the provided one
 - concord-server: fixed batching of processes with custom
 `branch` or `commitId`. Previously the batching mechanism might
 determine the effective branch and/or commitId incorrectly
-([#347](https://github.com/walmartlabs/concord/pull/347)).
+([#347](https://github.com/walmartlabs/concord/pull/347));
+- concord-server: fix repository refresh filtering on GitHub
+event ([#348](https://github.com/walmartlabs/concord/pull/348)).
 
 
 
