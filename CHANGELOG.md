@@ -1,5 +1,14 @@
 # Change log
 
+## [1.79.2] - 2021-03-08
+
+### Changed
+
+- concord-server: fixed batching of processes with custom
+`branch` or `commitId`. Previously the batching mechanism might
+determine the effective branch and/or commitId incorrectly
+([#347](https://github.com/walmartlabs/concord/pull/347));
+
 ## [1.79.1] - 2021-02-23
 
 ### Changed
