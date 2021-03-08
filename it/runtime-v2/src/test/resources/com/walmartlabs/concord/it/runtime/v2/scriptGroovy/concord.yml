@@ -11,4 +11,4 @@ flows:
 
     - script: groovy
       body: |
-        println "log from script: " + execution.variables().get("x")
+        println "log from script: " + x
