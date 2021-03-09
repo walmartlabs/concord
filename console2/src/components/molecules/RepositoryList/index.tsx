@@ -69,11 +69,44 @@ const RepositoryList = ({ orgName, projectName, data, loading, refresh }: Extern
     );
 };
 
-const getSource = (r: RepositoryEntry) => {
+const renderRepoPath = (r: RepositoryEntry) => {
     if (r.commitId) {
-        return r.commitId;
+        return (
+            <GitHubLink
+                url={r.url!}
+                commitId={r.commitId}
+                path={r.path}
+                text={r.path || '/'}
+            />
+        );
     }
-    return r.branch;
+    return (
+        <GitHubLink
+            url={r.url!}
+            branch={r.branch}
+            path={r.path}
+            text={r.path || '/'}
+        />
+    );
+};
+
+const renderRepoCommitIdOrBranch = (r: RepositoryEntry) => {
+    if (r.commitId) {
+        return (
+            <GitHubLink
+                url={r.url!}
+                commitId={r.commitId}
+                text={r.commitId}
+            />
+        );
+    }
+    return (
+        <GitHubLink
+            url={r.url!}
+            branch={r.branch}
+            text={r.branch}
+        />
+    );
 };
 
 const renderTableRow = (
@@ -103,8 +136,8 @@ const renderTableRow = (
             <Table.Cell>
                 <GitHubLink url={row.url} text={row.url} />
             </Table.Cell>
-            <Table.Cell>{getSource(row)}</Table.Cell>
-            <Table.Cell>{row.path || '/'}</Table.Cell>
+            <Table.Cell>{renderRepoCommitIdOrBranch(row)}</Table.Cell>
+            <Table.Cell>{renderRepoPath(row)}</Table.Cell>
             <Table.Cell>{row.secretName}</Table.Cell>
             <RepositoryActionDropdown
                 orgName={orgName}
