@@ -75,7 +75,7 @@ const renderRepoPath = (r: RepositoryEntry) => {
             <GitHubLink
                 url={r.url!}
                 commitId={r.commitId}
-                path={r.path}
+                path={r.path || '/'}
                 text={r.path || '/'}
             />
         );
@@ -84,7 +84,7 @@ const renderRepoPath = (r: RepositoryEntry) => {
         <GitHubLink
             url={r.url!}
             branch={r.branch}
-            path={r.path}
+            path={r.path || '/'}
             text={r.path || '/'}
         />
     );
