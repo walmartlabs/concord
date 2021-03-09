@@ -1,5 +1,14 @@
 # Change log
 
+## [Unreleased]
+
+### Changed
+
+- runtime-v2: implicitly pass variables into scripts
+([#349](https://github.com/walmartlabs/concord/pull/349)). 
+
+
+
 ## [1.82.0] - 2021-03-08
 
 ### Added
