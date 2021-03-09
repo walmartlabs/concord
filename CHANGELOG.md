@@ -1,10 +1,40 @@
 # Change log
 
+## [Unreleased]
+
+### Added
+
+- pfed-sso: add README
+([#339](https://github.com/walmartlabs/concord/pull/339));
+- runtime-v2: support for nested variables in `hasVariable`
+function ([#343](https://github.com/walmartlabs/concord/pull/343));
+- examples: runtime-v2 demo
+([#344](https://github.com/walmartlabs/concord/pull/344));
+- http-tasks: support for external keystore files
+([#345](https://github.com/walmartlabs/concord/pull/345)).
+
+### Changed
+
+- runtime-v2: fix the detection of script languages based on
+the script's file name
+([#339](https://github.com/walmartlabs/concord/pull/339));
+- ansible: append values to `PYTHONPATH`, allow users to
+use their own `PYTHONPATH` in addition to the provided one
+([#341](https://github.com/walmartlabs/concord/pull/341);
+- concord-server: fixed batching of processes with custom
+`branch` or `commitId`. Previously the batching mechanism might
+determine the effective branch and/or commitId incorrectly
+([#347](https://github.com/walmartlabs/concord/pull/347));
+- concord-server: fix repository refresh filtering on GitHub
+event ([#348](https://github.com/walmartlabs/concord/pull/348)).
+
+
+
 ## [1.81.0] - 2021-03-01
 
 ### Added
 
-- pfed-sso: add configuration parameter for token signature
+- pfed-sso: add a configuration parameter for token signature
 validation ([#325](https://github.com/walmartlabs/concord/pull/325));
 - runtime-v1, runtime-v2: optionally expose docker daemon
 ([#332](https://github.com/walmartlabs/concord/pull/332));
