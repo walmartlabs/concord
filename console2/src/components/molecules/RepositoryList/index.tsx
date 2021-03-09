@@ -80,33 +80,14 @@ const renderRepoPath = (r: RepositoryEntry) => {
             />
         );
     }
-    return (
-        <GitHubLink
-            url={r.url!}
-            branch={r.branch}
-            path={r.path || '/'}
-            text={r.path || '/'}
-        />
-    );
+    return <GitHubLink url={r.url!} branch={r.branch} path={r.path || '/'} text={r.path || '/'} />;
 };
 
 const renderRepoCommitIdOrBranch = (r: RepositoryEntry) => {
     if (r.commitId) {
-        return (
-            <GitHubLink
-                url={r.url!}
-                commitId={r.commitId}
-                text={r.commitId}
-            />
-        );
+        return <GitHubLink url={r.url!} commitId={r.commitId} text={r.commitId} />;
     }
-    return (
-        <GitHubLink
-            url={r.url!}
-            branch={r.branch}
-            text={r.branch}
-        />
-    );
+    return <GitHubLink url={r.url!} branch={r.branch} text={r.branch} />;
 };
 
 const renderTableRow = (

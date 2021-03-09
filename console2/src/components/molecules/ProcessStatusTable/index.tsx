@@ -232,7 +232,12 @@ class ProcessStatusTable extends React.PureComponent<Props> {
         }
 
         return (
-            <GitHubLink url={process.repoUrl!} commitId={process.commitId} path={process.repoPath || '/'} text={process.repoPath || '/'} />
+            <GitHubLink
+                url={process.repoUrl!}
+                commitId={process.commitId}
+                path={process.repoPath || '/'}
+                text={process.repoPath || '/'}
+            />
         );
     }
 
