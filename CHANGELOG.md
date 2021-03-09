@@ -2,6 +2,12 @@
 
 ## [Unreleased]
 
+### Added
+
+- concord-server: log handler process IDs (`onTimeout`,
+`onCancel`, etc) in the parent process log
+([#350](https://github.com/walmartlabs/concord/pull/350)).
+
 ### Changed
 
 - runtime-v2: implicitly pass variables into scripts
