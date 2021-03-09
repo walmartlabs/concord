@@ -180,6 +180,8 @@ public class ProcessQueueWatchdog implements ScheduledTask {
 
                 processManager.startFork(payload);
 
+                logManager.info(parent.processKey, "{} started: {}", toString(entry.handlerKind), payload.getProcessKey());
+
                 log.info("process -> created a new child process '{}' (parent '{}', entryPoint: '{}')",
                         childKey, parent.processKey, entry.flow);
             } catch (Exception e) {
@@ -187,6 +189,19 @@ public class ProcessQueueWatchdog implements ScheduledTask {
                 queueDao.removeHandler(parent.processKey, entry.flow);
                 logManager.warn(parent.processKey, "Error while starting {} handler: {}", entry.flow, e.getMessage());
                 throw new RuntimeException(e);
+            }
+        }
+
+        private String toString(ProcessKind kind) {
+            switch (kind) {
+                case CANCEL_HANDLER:
+                    return "Cancel handler";
+                case FAILURE_HANDLER:
+                    return "Failure handler";
+                case TIMEOUT_HANDLER:
+                    return "Timeout handler";
+                default:
+                    throw new RuntimeException("Unknown process kind: " + kind);
             }
         }
     }
