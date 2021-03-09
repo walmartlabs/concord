@@ -30,9 +30,7 @@ import org.slf4j.LoggerFactory;
 import javax.inject.Inject;
 import javax.script.*;
 import java.io.Reader;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public class DefaultScriptEvaluator implements ScriptEvaluator {
 
@@ -64,6 +62,7 @@ public class DefaultScriptEvaluator implements ScriptEvaluator {
         }
         b.put("tasks", new TaskAccessor(taskProviders, ctx));
         b.put("log", log);
+        b.putAll(context.variables().toMap());
         b.putAll(variables);
 
         try {
