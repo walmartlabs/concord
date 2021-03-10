@@ -130,6 +130,11 @@ public class GitClient {
                 .timeout(cfg.defaultOperationTimeout())
                 .addArgs("config", "advice.detachedHead", "false")
                 .build());
+        exec(Command.builder()
+                .workDir(workDir)
+                .timeout(cfg.defaultOperationTimeout())
+                .addArgs("config", "maintenance.auto", "false")
+                .build());
     }
 
     private void configureRemote(Path workDir, String url) {
