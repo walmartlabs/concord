@@ -28,6 +28,7 @@ import com.walmartlabs.concord.runtime.v2.model.ProcessDefinition;
 import com.walmartlabs.concord.runtime.v2.runner.compiler.CompilerUtils;
 import com.walmartlabs.concord.runtime.v2.runner.vm.SaveLastErrorCommand;
 import com.walmartlabs.concord.runtime.v2.runner.vm.UpdateLocalsCommand;
+import com.walmartlabs.concord.runtime.v2.runner.vm.VMUtils;
 import com.walmartlabs.concord.runtime.v2.sdk.Compiler;
 import com.walmartlabs.concord.runtime.v2.sdk.ProcessConfiguration;
 import com.walmartlabs.concord.svm.*;
@@ -72,7 +73,11 @@ public class Runner {
         log.debug("start ['{}'] -> running...", processConfiguration.entryPoint());
 
         Command cmd = CompilerUtils.compile(compiler, processConfiguration, processDefinition, processConfiguration.entryPoint());
-        State state = withDefaultExceptionHandler(new InMemoryState(cmd));
+        State state = new InMemoryState(cmd);
+        // install the exception handler into the root frame
+        // takes care of all unhandled errors bubbling up
+        VMUtils.assertNearestRoot(state, state.getRootThreadId())
+                .setExceptionHandler(new SaveLastErrorCommand());
 
         VM vm = createVM(processDefinition);
         // update the global variables using the input map by running a special command
@@ -92,7 +97,7 @@ public class Runner {
         statusCallback.onRunning(instanceId.getValue());
         log.debug("resume ['{}'] -> running...", eventRef);
 
-        State state = withDefaultExceptionHandler(snapshot.vmState());
+        State state = snapshot.vmState();
 
         VM vm = createVM(snapshot.processDefinition());
 
@@ -119,7 +124,7 @@ public class Runner {
         statusCallback.onRunning(instanceId.getValue());
         log.debug("resume -> running...");
 
-        State state = withDefaultExceptionHandler(snapshot.vmState());
+        State state = snapshot.vmState();
 
         VM vm = createVM(snapshot.processDefinition());
         // update the global variables using the input map by running a special command
@@ -143,13 +148,6 @@ public class Runner {
         RuntimeFactory runtimeFactory = vm -> new DefaultRuntime(vm, injectorWithProcessDefinition(injector, processDefinition));
 
         return new VM(runtimeFactory, listeners);
-    }
-
-    private static State withDefaultExceptionHandler(State state) {
-        // install the exception handler into the root frame
-        // takes care of all unhandled errors bubbling up
-        state.peekFrame(state.getRootThreadId()).setExceptionHandler(new SaveLastErrorCommand());
-        return state;
     }
 
     private static Injector injectorWithProcessDefinition(Injector injector, ProcessDefinition processDefinition) {
