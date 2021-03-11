@@ -60,7 +60,6 @@ class ProcessStatusTable extends React.PureComponent<Props> {
         const link = (
             <GitHubLink
                 url={process.repoUrl!}
-                path={process.repoPath}
                 commitId={process.commitId}
                 text={process.commitId}
             />
@@ -228,12 +227,17 @@ class ProcessStatusTable extends React.PureComponent<Props> {
     }
 
     static renderRepoPath(process?: ProcessEntry) {
-        if (!process || !process.repoPath) {
+        if (!process || !process.commitId) {
             return '-';
         }
 
         return (
-            <GitHubLink url={process.repoUrl!} path={process.repoPath} text={process.repoPath} />
+            <GitHubLink
+                url={process.repoUrl!}
+                commitId={process.commitId}
+                path={process.repoPath || '/'}
+                text={process.repoPath || '/'}
+            />
         );
     }
 
