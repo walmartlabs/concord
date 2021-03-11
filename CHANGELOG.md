@@ -6,7 +6,10 @@
 
 - concord-server: log handler process IDs (`onTimeout`,
 `onCancel`, etc) in the parent process log
-([#350](https://github.com/walmartlabs/concord/pull/350)).
+([#350](https://github.com/walmartlabs/concord/pull/350));
+- concord-console: on the repository list page, add commit
+ID and repository path links;
+([#351](https://github.com/walmartlabs/concord/pull/351)).
 
 ### Changed
 
