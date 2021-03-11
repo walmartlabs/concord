@@ -16,7 +16,9 @@ ID and repository path links;
 - runtime-v2: implicitly pass variables into scripts
 ([#349](https://github.com/walmartlabs/concord/pull/349));
 - concord-repository: disable git auto-maintenance
-([#353](https://github.com/walmartlabs/concord/pull/353)).
+([#353](https://github.com/walmartlabs/concord/pull/353));
+- runtime-v2: fix error handling in reentrable tasks
+([#354](https://github.com/walmartlabs/concord/pull/354)).
 
 
 
