@@ -74,6 +74,8 @@ class GitHubLink extends React.PureComponent<Props> {
             s += `/commit/${commitId}`;
         } else if (commitId && path) {
             s += `/tree/${commitId}/${normalizePath(path)}`;
+        } else if (!commitId && branch && !path) {
+            s += `/tree/${branch}`;
         } else if (!commitId && path && branch) {
             s += `/tree/${branch}/${normalizePath(path)}`;
         }
