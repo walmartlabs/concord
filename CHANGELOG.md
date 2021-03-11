@@ -11,7 +11,9 @@
 ### Changed
 
 - runtime-v2: implicitly pass variables into scripts
-([#349](https://github.com/walmartlabs/concord/pull/349)). 
+([#349](https://github.com/walmartlabs/concord/pull/349));
+- concord-repository: disable git auto-maintenance
+([#353](https://github.com/walmartlabs/concord/pull/353)).
 
 
 
