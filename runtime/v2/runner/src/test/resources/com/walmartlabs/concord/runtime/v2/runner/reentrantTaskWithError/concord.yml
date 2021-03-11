@@ -1,0 +1,10 @@
+flows:
+  default:
+    - log: "Before"
+    - task: reentrantTask
+      in:
+        action: ${actionName}
+        errorOnResume: ${errorOnResume}
+      error:
+        - log: "error handled: ${lastError}"
+    - log: "process finished"

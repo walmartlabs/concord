@@ -44,6 +44,7 @@ import com.walmartlabs.concord.runtime.v2.runner.tasks.TaskResultListener;
 import com.walmartlabs.concord.runtime.v2.runner.tasks.TaskV2Provider;
 import com.walmartlabs.concord.runtime.v2.sdk.*;
 import com.walmartlabs.concord.sdk.Constants;
+import com.walmartlabs.concord.sdk.MapUtils;
 import com.walmartlabs.concord.svm.ExecutionListener;
 import com.walmartlabs.concord.svm.Runtime;
 import com.walmartlabs.concord.svm.ThreadId;
@@ -721,13 +722,29 @@ public class MainTest {
                 .build());
 
         byte[] log = run();
-        assertLog(log, ".*execute \\{action=boo\\}.*");
+        assertLog(log, ".*execute .*action=boo.*");
 
         log = resume(ReentrantTaskExample.EVENT_NAME, ProcessConfiguration.builder().build());
         assertLog(log, ".*result.ok: true.*");
         assertLog(log, ".*result.action: boo.*");
         assertLog(log, ".*result.k: v.*");
         assertLog(log, ".*resultAction: boo.*");
+    }
+
+    @Test
+    public void testReentrantWithError() throws Exception {
+        deploy("reentrantTaskWithError");
+        save(ProcessConfiguration.builder()
+                .putArguments("actionName", "boo")
+                .putArguments("errorOnResume", true)
+                .build());
+
+        byte[] log = run();
+        assertLog(log, ".*execute .*errorOnResume=true.*");
+
+        log = resume(ReentrantTaskExample.EVENT_NAME, ProcessConfiguration.builder().build());
+        assertLog(log, ".*error handled: java.lang.RuntimeException: Error on resume.*");
+        assertLog(log, ".*process finished.*");
     }
 
     @Test
@@ -1211,6 +1228,7 @@ public class MainTest {
             HashMap<String, Serializable> payload = new HashMap<>();
             payload.put("k", "v");
             payload.put("action", input.assertString("action"));
+            payload.put("errorOnResume", input.getBoolean("errorOnResume", false));
 
             return TaskResult.reentrantSuspend(EVENT_NAME, payload);
         }
@@ -1218,6 +1236,10 @@ public class MainTest {
         @Override
         public TaskResult resume(ResumeEvent event) {
             log.info("RESUME: {}", event);
+            if ((boolean)event.state().get("errorOnResume")) {
+                throw new RuntimeException("Error on resume!");
+            }
+
             return TaskResult.success()
                     .values((Map) event.state());
         }

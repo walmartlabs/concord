@@ -207,6 +207,7 @@ public class ContextImpl implements Context {
             throw new IllegalStateException("Calling 'suspendResume' is allowed only in task calls. Current step: " + (step != null ? step.getClass() : "n/a"));
         }
 
-        state.peekFrame(currentThreadId).push(new TaskSuspendCommand(correlationId, eventName, (TaskCall) step, taskState));
+        state.peekFrame(currentThreadId)
+                .push(new TaskSuspendCommand(correlationId, eventName, (TaskCall) step, taskState));
     }
 }
