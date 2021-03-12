@@ -243,6 +243,10 @@ class ProcessForm extends React.Component<Props, State> {
             cardinality === Cardinality.AT_LEAST_ONE ||
             cardinality === Cardinality.ONE_AND_ONLY_ONE;
 
+        if (dropdown && allowedValue !== undefined && !(allowedValue instanceof Array)) {
+            allowedValue = [allowedValue];
+        }
+
         return (
             <Form.Field key={name} error={!!error} required={required}>
                 <label>{label}</label>
