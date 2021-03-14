@@ -137,6 +137,7 @@ public class RepositoryManager {
                     FetchRequest.builder()
                             .url(url)
                             .shallow(gitCfg.isShallowClone())
+                            .checkAlreadyFetched(gitCfg.isCheckAlreadyFetched())
                             .version(FetchRequest.Version.commitWithBranch(commitId, branch))
                             .secret(secret)
                             .destination(dest)
