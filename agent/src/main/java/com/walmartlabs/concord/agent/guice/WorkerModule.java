@@ -23,23 +23,22 @@ package com.walmartlabs.concord.agent.guice;
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
+import com.google.inject.multibindings.Multibinder;
 import com.walmartlabs.concord.ApiClient;
 import com.walmartlabs.concord.agent.DefaultStateFetcher;
 import com.walmartlabs.concord.agent.StateFetcher;
-import com.walmartlabs.concord.agent.logging.LogAppender;
-import com.walmartlabs.concord.agent.logging.ProcessLog;
-import com.walmartlabs.concord.agent.logging.RemoteLogAppender;
-import com.walmartlabs.concord.agent.logging.RemoteProcessLog;
+import com.walmartlabs.concord.agent.logging.*;
 import com.walmartlabs.concord.agent.remote.ApiClientFactory;
 import com.walmartlabs.concord.agent.remote.ProcessStatusUpdater;
 import com.walmartlabs.concord.client.ProcessApi;
 import com.walmartlabs.concord.client.SecretClient;
-import com.walmartlabs.concord.dependencymanager.DependencyManager;
 
 import java.io.IOException;
 import java.util.UUID;
 
 public class WorkerModule extends AbstractModule {
+
+    private static final String REDIRECT_RUNNER_LOG_KEY = "REDIRECT_RUNNER_TO_STDOUT";
 
     private final String agentId;
     private final UUID instanceId;
@@ -84,7 +83,13 @@ public class WorkerModule extends AbstractModule {
     @Override
     protected void configure() {
         bind(StateFetcher.class).to(DefaultStateFetcher.class);
-        bind(LogAppender.class).to(RemoteLogAppender.class);
+
+        Multibinder<LogAppender> logAppenders = Multibinder.newSetBinder(binder(), LogAppender.class);
+        logAppenders.addBinding().to(RemoteLogAppender.class);
+        if (Boolean.parseBoolean(System.getenv(REDIRECT_RUNNER_LOG_KEY))) {
+            logAppenders.addBinding().to(StdOutLogAppender.class);
+        }
+        bind(LogAppender.class).to(CombinedLogAppender.class);
 
         bind(AgentImportManager.class).toProvider(AgentImportManagerProvider.class);
         bind(AgentDependencyManager.class).toProvider(AgentDependencyManagerProvider.class);
