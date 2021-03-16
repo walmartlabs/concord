@@ -4,6 +4,9 @@
 
 ### Added
 
+- concord-console, runtime-v1, runtime-v2: ability to log
+process IDs as links in the UI
+([#356](https://github.com/walmartlabs/concord/pull/356));
 - concord-server: log handler process IDs (`onTimeout`,
 `onCancel`, etc) in the parent process log
 ([#350](https://github.com/walmartlabs/concord/pull/350));
