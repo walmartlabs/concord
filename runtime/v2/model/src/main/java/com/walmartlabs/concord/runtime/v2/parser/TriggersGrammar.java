@@ -31,6 +31,7 @@ import io.takari.parc.Seq;
 import java.util.List;
 import java.util.Map;
 
+import static com.walmartlabs.concord.runtime.v2.parser.ConfigurationGrammar.exclusiveVal;
 import static com.walmartlabs.concord.runtime.v2.parser.GrammarLookup.lookup;
 import static com.walmartlabs.concord.runtime.v2.parser.GrammarMisc.*;
 import static com.walmartlabs.concord.runtime.v2.parser.GrammarOptions.*;
@@ -135,7 +136,7 @@ public final class TriggersGrammar {
                                 optional("activeProfiles", stringArrayVal.map(o::activeProfiles)),
                                 optional("timezone", timezoneVal.map(v -> o.putConditions("timezone", v))),
                                 optional("arguments", mapVal.map(o::arguments)),
-                                optional("exclusive", stringVal.map(v -> o.putConfiguration("exclusive", v))))))
+                                optional("exclusive", exclusiveVal.map(v -> o.putConfiguration("exclusive", v))))))
                         .map(t -> t.name("cron"))
                         .map(ImmutableTrigger.Builder::build);
 
@@ -167,7 +168,7 @@ public final class TriggersGrammar {
                             mandatory("entryPoint", stringVal.map(v -> o.putConfiguration("entryPoint", v))),
                             optional("activeProfiles", stringArrayVal.map(o::activeProfiles)),
                             optional("arguments", mapVal.map(o::arguments)),
-                            optional("exclusive", stringVal.map(v -> o.putConfiguration("exclusive", v))),
+                            optional("exclusive", exclusiveVal.map(v -> o.putConfiguration("exclusive", v))),
                             mandatory("conditions", mapVal.map(o::putAllConditions)),
                             mandatory("version", intVal.map(v -> o.putConditions("version", v)))))
                     .map(t -> t.name("oneops"))
@@ -190,7 +191,7 @@ public final class TriggersGrammar {
                         mandatory("entryPoint", stringVal.map(v -> o.putConfiguration("entryPoint", v))),
                         optional("activeProfiles", stringArrayVal.map(o::activeProfiles)),
                         optional("arguments", mapVal.map(o::arguments)),
-                        optional("exclusive", stringVal.map(v -> o.putConfiguration("exclusive", v))),
+                        optional("exclusive", exclusiveVal.map(v -> o.putConfiguration("exclusive", v))),
                         mandatory("conditions", mapVal.map(o::conditions)),
                         mandatory("version", intVal.map(v -> o.putConfiguration("version", v)))))
                 .map(t -> t.name(triggerName))
