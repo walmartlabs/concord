@@ -83,6 +83,7 @@ export const processText = (s: string, { useLocalTime, showDate }: LogProcessorO
     s = processDate(s, useLocalTime, showDate);
     s = escapeHtml(s);
     s = processLinks(s);
+    s = processTags(s);
     s = colorize(s);
 
     return s;
@@ -94,6 +95,16 @@ const processLinks = (value: string): string => {
     return value.replace(
         RegExp(URL_PATTERN, 'ig'),
         (url) => `<a href="${url}" target="_blank">${url}</a>`
+    );
+};
+
+// html tags (<, >, ..) already escaped
+const INSTANCE_ID_TAG = /&lt;concord:instanceId&gt;([^&]*)&lt;\/concord:instanceId&gt;/
+
+const processTags = (value: string): string => {
+    return value.replace(
+        RegExp(INSTANCE_ID_TAG, 'ig'),
+        (s, instanceId) => `<a href="#/process/${instanceId}/log" target="_blank">${instanceId}</a>`
     );
 };
 

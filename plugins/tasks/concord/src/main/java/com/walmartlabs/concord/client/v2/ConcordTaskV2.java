@@ -111,7 +111,7 @@ public class ConcordTaskV2 implements ReentrantTask {
     }
 
     private ConcordTaskCommon delegate() {
-        return new ConcordTaskCommon(sessionToken, apiClientFactory, defaults.getString("processLinkTemplate"), instanceId, projectInfo.orgName(), workDir);
+        return new ConcordTaskCommon(sessionToken, apiClientFactory, instanceId, projectInfo.orgName(), workDir);
     }
 
     private static List<UUID> toUUIDs(List<String> ids) {
