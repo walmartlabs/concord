@@ -189,8 +189,7 @@ public class UserManager {
 
     public UserInfo getInfo(UUID userId) {
         UserEntry u = userDao.get(userId);
-        UserInfoProvider p = assertProvider(assertUserType(u.getName(), u.getDomain(), u.getType()));
-        return p.getInfo(null, u.getName(), u.getDomain());
+        return getInfo(u.getName(), u.getDomain(), u.getType());
     }
 
     public void enable(UUID userId) {
