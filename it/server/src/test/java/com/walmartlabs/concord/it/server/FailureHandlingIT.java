@@ -80,6 +80,7 @@ public class FailureHandlingIT extends AbstractServerIT {
         assertLog(".*lastError:.*boom.*", ab);
         assertLog(".*projectInfo: \\{.*orgName=Default.*\\}.*", ab);
         assertLog(".*processInfo: \\{.*sessionKey=.*\\}.*", ab);
+        assertLog(".*initiator: \\{.*username=.*\\}.*", ab);
     }
 
     @Test(timeout = DEFAULT_TEST_TIMEOUT)
@@ -147,7 +148,7 @@ public class FailureHandlingIT extends AbstractServerIT {
         // check the logs for the successful message
 
         byte[] ab = getLog(child.getLogFileName());
-        assertLog(".*abc!.*", ab);
+        assertLog(".*initiator is admin.*", ab);
     }
 
     @Test(timeout = DEFAULT_TEST_TIMEOUT)

@@ -23,6 +23,7 @@ package com.walmartlabs.concord.server.process.pipelines.processors;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.walmartlabs.concord.server.process.Payload;
+import com.walmartlabs.concord.server.process.ProcessKind;
 import com.walmartlabs.concord.server.process.pipelines.processors.signing.Signing;
 import com.walmartlabs.concord.server.sdk.ConcordApplicationException;
 import com.walmartlabs.concord.server.user.UserInfoProvider.BaseUserInfo;
@@ -31,6 +32,7 @@ import org.immutables.value.Value;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.UUID;
 
 /**
  * Collects and stores the current user's data.
@@ -50,6 +52,12 @@ public abstract class UserInfoProcessor implements PayloadProcessor {
     @Override
     public Payload process(Chain chain, Payload payload) {
         BaseUserInfo info = userManager.getCurrentUserInfo();
+        ProcessKind kind = payload.getHeader(Payload.PROCESS_KIND);
+
+        if (ProcessKind.CANCEL_HANDLER.equals(kind) || ProcessKind.FAILURE_HANDLER.equals(kind)) {
+            UUID initiatorID = payload.getHeader(Payload.INITIATOR_ID);
+            info = userManager.getInfo(initiatorID);
+        }
 
         if (signing.isEnabled()) {
             info = sign(info);

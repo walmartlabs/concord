@@ -187,6 +187,12 @@ public class UserManager {
         return p.getInfo(null, username, domain);
     }
 
+    public UserInfo getInfo(UUID userId) {
+        UserEntry u = userDao.get(userId);
+        UserInfoProvider p = assertProvider(assertUserType(u.getName(), u.getDomain(), u.getType()));
+        return p.getInfo(null, u.getName(), u.getDomain());
+    }
+
     public void enable(UUID userId) {
         if (!userDao.isDisabled(userId)
                 .orElseThrow(() -> new ConcordApplicationException("User not found: " + userId))) {
@@ -242,7 +248,7 @@ public class UserManager {
         }
         return type;
     }
-    
+
     private UserType assertSsoUserType(UserPrincipal u, UserType type){
         if (u.getRealm().equals(SSO_REALM_NAME)){
             if (userInfoProviders.get(UserType.SSO) != null){
