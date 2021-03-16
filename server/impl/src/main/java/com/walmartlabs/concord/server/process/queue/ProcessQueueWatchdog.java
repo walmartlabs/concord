@@ -25,6 +25,7 @@ import com.walmartlabs.concord.db.MainDB;
 import com.walmartlabs.concord.db.PgUtils;
 import com.walmartlabs.concord.imports.Imports;
 import com.walmartlabs.concord.sdk.Constants;
+import com.walmartlabs.concord.sdk.LogTags;
 import com.walmartlabs.concord.server.ConcordObjectMapper;
 import com.walmartlabs.concord.server.Utils;
 import com.walmartlabs.concord.server.agent.AgentManager;
@@ -180,7 +181,7 @@ public class ProcessQueueWatchdog implements ScheduledTask {
 
                 processManager.startFork(payload);
 
-                logManager.info(parent.processKey, "{} started: {}", toString(entry.handlerKind), payload.getProcessKey());
+                logManager.info(parent.processKey, "{} started: {}", toString(entry.handlerKind), LogTags.instanceId(payload.getProcessKey().getInstanceId()));
 
                 log.info("process -> created a new child process '{}' (parent '{}', entryPoint: '{}')",
                         childKey, parent.processKey, entry.flow);
