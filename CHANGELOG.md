@@ -12,7 +12,10 @@ process IDs as links in the UI
 ([#350](https://github.com/walmartlabs/concord/pull/350));
 - concord-console: on the repository list page, add commit
 ID and repository path links;
-([#351](https://github.com/walmartlabs/concord/pull/351)).
+([#351](https://github.com/walmartlabs/concord/pull/351));
+- concord-repository, concord-server, concord-agent: option
+to skip fetching if local commit ID equals remote commit ID
+([#359](https://github.com/walmartlabs/concord/pull/359)).
 
 ### Changed
 
