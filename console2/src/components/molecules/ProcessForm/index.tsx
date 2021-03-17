@@ -70,6 +70,18 @@ interface Props {
 type DropdownAllowedValue = Array<boolean | number | string> | undefined;
 type DropdownValue = boolean | number | string | DropdownAllowedValue;
 
+const convertAllowedValue = (allowedValue: any) => {
+    if (allowedValue === undefined) {
+        return [];
+    }
+
+    if (allowedValue instanceof Array) {
+        return allowedValue;
+    }
+
+    return [allowedValue];
+};
+
 class ProcessForm extends React.Component<Props, State> {
     constructor(props: Props) {
         super(props);
@@ -233,15 +245,21 @@ class ProcessForm extends React.Component<Props, State> {
             cardinality = Cardinality.ONE_OR_NONE;
         }
 
-        const singleSelect =
-            cardinality === Cardinality.ONE_AND_ONLY_ONE || Cardinality.ONE_OR_NONE;
-        const multiSelect =
-            cardinality === Cardinality.AT_LEAST_ONE || cardinality === Cardinality.ANY;
-
-        const dropdown = (allowedValue instanceof Array && singleSelect) || multiSelect;
         const required =
             cardinality === Cardinality.AT_LEAST_ONE ||
             cardinality === Cardinality.ONE_AND_ONLY_ONE;
+
+        const allowedValues = convertAllowedValue(allowedValue);
+
+        const fixedInput = required && allowedValues.length === 1;
+        if (fixedInput) {
+            value = allowedValues[0];
+        }
+
+        const dropdown = !fixedInput && allowedValues.length > 0;
+
+        const multiSelect =
+            cardinality === Cardinality.AT_LEAST_ONE || cardinality === Cardinality.ANY;
 
         return (
             <Form.Field key={name} error={!!error} required={required}>
@@ -252,11 +270,14 @@ class ProcessForm extends React.Component<Props, State> {
                           name,
                           cardinality,
                           value,
-                          allowedValue,
+                          allowedValues,
                           multiSelect,
                           options
                       )
-                    : this.renderInput(name, type, value, inputType, options)}
+                    : this.renderInput(name, type, value, inputType, {
+                          readOnly: fixedInput,
+                          ...options
+                      })}
 
                 {error && (
                     <Label basic={true} color="red" pointing={true}>
