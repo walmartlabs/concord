@@ -22,6 +22,9 @@ ID and repository path links;
 ([#353](https://github.com/walmartlabs/concord/pull/353));
 - runtime-v2: fix error handling in reentrable tasks
 ([#354](https://github.com/walmartlabs/concord/pull/354)).
+- concord-server, concord-console: fix the rendering of
+form dropdown fields with single allowed values
+([#357](https://github.com/walmartlabs/concord/pull/357)).
 
 
 
