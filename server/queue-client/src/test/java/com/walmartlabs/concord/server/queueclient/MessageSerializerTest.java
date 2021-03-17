@@ -35,36 +35,6 @@ import static org.junit.Assert.assertNotNull;
 public class MessageSerializerTest {
 
     @Test
-    public void testCommandRequest() {
-        CommandRequest r = new CommandRequest(UUID.randomUUID());
-        r.setCorrelationId(123);
-
-        // ---
-        String rSerialized = MessageSerializer.serialize(r);
-        assertNotNull(rSerialized);
-
-        CommandRequest rDeserialized = MessageSerializer.deserialize(rSerialized);
-        assertEquals(r.getMessageType(), MessageType.COMMAND_REQUEST);
-        assertEquals(r.getAgentId(), rDeserialized.getAgentId());
-        assertEquals(r.getCorrelationId(), rDeserialized.getCorrelationId());
-    }
-
-    @Test
-    public void testCommandResponse() {
-        CommandResponse r = new CommandResponse(123, CommandResponse.CommandType.CANCEL_JOB, null);
-
-        // ---
-        String rSerialized = MessageSerializer.serialize(r);
-        assertNotNull(rSerialized);
-
-        CommandResponse rDeserialized = MessageSerializer.deserialize(rSerialized);
-        assertEquals(r.getMessageType(), MessageType.COMMAND_RESPONSE);
-        assertEquals(r.getType(), rDeserialized.getType());
-        assertEquals(r.getPayload(), rDeserialized.getPayload());
-        assertEquals(r.getCorrelationId(), rDeserialized.getCorrelationId());
-    }
-
-    @Test
     public void testProcessRequest() {
         ProcessRequest r = new ProcessRequest(Collections.singletonMap("k", "v"));
         r.setCorrelationId(123);

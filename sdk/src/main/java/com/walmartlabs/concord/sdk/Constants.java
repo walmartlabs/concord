@@ -574,6 +574,8 @@ public class Constants {
         public static final String SESSION_TOKEN = "X-Concord-SessionToken";
 
         public static final String SECRET_TYPE = "X-Concord-SecretType";
+
+        public static final String AUTH_ERROR = "X-Concord-AuthError";
     }
 
     /**
@@ -590,5 +592,17 @@ public class Constants {
          * JVM parameters for an agent's job.
          */
         public static final String JVM_ARGS_KEY = "jvmArgs";
+    }
+
+    /**
+     * Runner exit codes.
+     */
+    public static class RunnerExitCode {
+
+        public static final int SUCCESS = 0;
+
+        public static final int ERROR = 1;
+
+        public static final int AUTH_ERROR = 2;
     }
 }

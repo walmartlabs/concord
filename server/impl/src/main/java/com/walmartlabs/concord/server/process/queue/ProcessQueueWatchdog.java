@@ -28,7 +28,6 @@ import com.walmartlabs.concord.sdk.Constants;
 import com.walmartlabs.concord.sdk.LogTags;
 import com.walmartlabs.concord.server.ConcordObjectMapper;
 import com.walmartlabs.concord.server.Utils;
-import com.walmartlabs.concord.server.agent.AgentManager;
 import com.walmartlabs.concord.server.cfg.ProcessWatchdogConfiguration;
 import com.walmartlabs.concord.server.jooq.tables.ProcessQueue;
 import com.walmartlabs.concord.server.process.Payload;
@@ -49,7 +48,10 @@ import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
 import java.time.OffsetDateTime;
-import java.util.*;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 
 import static com.walmartlabs.concord.db.PgUtils.interval;
 import static com.walmartlabs.concord.server.jooq.tables.ProcessQueue.PROCESS_QUEUE;
@@ -107,7 +109,6 @@ public class ProcessQueueWatchdog implements ScheduledTask {
 
     private final ProcessWatchdogConfiguration cfg;
     private final ProcessQueueDao queueDao;
-    private final AgentManager agentManager;
     private final ProcessLogManager logManager;
     private final WatchdogDao watchdogDao;
     private final UserDao userDao;
@@ -118,7 +119,6 @@ public class ProcessQueueWatchdog implements ScheduledTask {
     @Inject
     public ProcessQueueWatchdog(ProcessWatchdogConfiguration cfg,
                                 ProcessQueueDao queueDao,
-                                AgentManager agentManager,
                                 ProcessLogManager logManager,
                                 WatchdogDao watchdogDao,
                                 UserDao userDao,
@@ -128,7 +128,6 @@ public class ProcessQueueWatchdog implements ScheduledTask {
         this.cfg = cfg;
 
         this.queueDao = queueDao;
-        this.agentManager = agentManager;
         this.logManager = logManager;
         this.watchdogDao = watchdogDao;
         this.userDao = userDao;
@@ -215,7 +214,7 @@ public class ProcessQueueWatchdog implements ScheduledTask {
 
                 List<ProcessKey> pks = watchdogDao.pollStalled(tx, POTENTIAL_STALLED_STATUSES, cutoff, 1);
                 for (ProcessKey pk : pks) {
-                    queueManager.updateAgentId(tx, pk, null, ProcessStatus.FAILED);
+                    queueManager.updateStatus(tx, pk, ProcessStatus.FAILED);
                     logManager.warn(pk, "Process stalled, no heartbeat for more than '{}'", cfg.getMaxStalledAge());
                     log.info("processStalled -> marked as failed: {}", pk);
                 }
@@ -231,7 +230,7 @@ public class ProcessQueueWatchdog implements ScheduledTask {
 
                 List<ProcessKey> pks = watchdogDao.pollStalled(tx, FAILED_TO_START_STATUSES, cutOff, 1);
                 for (ProcessKey pk : pks) {
-                    queueManager.updateAgentId(tx, pk, null, ProcessStatus.FAILED);
+                    queueManager.updateStatus(tx, pk, ProcessStatus.FAILED);
                     logManager.warn(pk, "Process failed to start for more than '{}'", cfg.getMaxStartFailureAge());
                     log.info("processStartFailures -> marked as failed: {}", pk);
                 }
@@ -260,7 +259,6 @@ public class ProcessQueueWatchdog implements ScheduledTask {
             for (TimedOutEntry i : items) {
                 boolean updated = queueManager.updateExpectedStatus(i.processKey, expectedProcessStatus, ProcessStatus.TIMED_OUT);
                 if (updated) {
-                    agentManager.killProcess(i.processKey, i.agentId);
                     logManager.warn(i.processKey, "Process timed out ({}s limit)", i.timeout);
                     log.info("processTimedOut -> marked as timed out: {}", i.processKey);
                 }

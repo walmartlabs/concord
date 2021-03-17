@@ -22,8 +22,8 @@ package com.walmartlabs.concord.server.queueclient.message;
 
 public enum MessageType {
 
+    @Deprecated
     COMMAND_REQUEST(CommandRequest.class),
-    COMMAND_RESPONSE(CommandResponse.class),
     PROCESS_REQUEST(ProcessRequest.class),
     PROCESS_RESPONSE(ProcessResponse.class);
 

@@ -248,14 +248,16 @@ public class ProcessManager {
         // TODO determine the correct status on the agent?
         if (status == ProcessStatus.FINISHED && isSuspended(processKey)) {
             status = ProcessStatus.SUSPENDED;
-        }
-
-        if (status == ProcessStatus.CANCELLED && isFinished(processKey)) {
-            log.info("updateStatus [{}, '{}', {}] -> ignored, process finished", processKey, agentId, status);
+        } else if (TERMINATED_PROCESS_STATUSES.contains(status) && isFinished(processKey)) {
             return;
         }
 
-        queueManager.updateAgentId(processKey, agentId, status);
+        ProcessStatus effectiveStatus = status;
+        queueManager.tx(tx -> {
+            queueManager.updateAgentId(tx, processKey, agentId);
+            queueManager.updateStatus(tx, processKey, effectiveStatus);
+
+        });
         logManager.info(processKey, "Process status: {}", status);
 
         log.info("updateStatus [{}, '{}', {}] -> done", processKey, agentId, status);
