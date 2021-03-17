@@ -29,7 +29,10 @@ to skip fetching if local commit ID equals remote commit ID
 form dropdown fields with single allowed values
 ([#357](https://github.com/walmartlabs/concord/pull/357));
 - runtime-v2: cleanup `workDir` files after loading
-the state ([#358](https://github.com/walmartlabs/concord/pull/358)).
+the state ([#358](https://github.com/walmartlabs/concord/pull/358));
+- concord-client: skip empty bodies in error responses, use
+the HTTP status message instead
+([#363](https://github.com/walmartlabs/concord/pull/363)).
 
 
 
