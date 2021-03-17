@@ -76,6 +76,11 @@ public interface FetchRequest {
         return false;
     }
 
+    @Value.Default
+    default boolean checkAlreadyFetched() {
+        return false;
+    }
+
     static ImmutableFetchRequest.Builder builder() {
         return ImmutableFetchRequest.builder();
     }

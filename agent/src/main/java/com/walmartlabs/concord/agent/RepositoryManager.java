@@ -84,6 +84,7 @@ public class RepositoryManager {
                             .secret(secret)
                             .destination(cacheDir)
                             .shallow(gitCfg.isShallowClone())
+                            .checkAlreadyFetched(gitCfg.isCheckAlreadyFetched())
                             .build(),
                     repoPath);
             repo.export(dest, ignorePatterns);
