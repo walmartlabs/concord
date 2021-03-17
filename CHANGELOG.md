@@ -32,7 +32,10 @@ form dropdown fields with single allowed values
 the state ([#358](https://github.com/walmartlabs/concord/pull/358));
 - concord-client: skip empty bodies in error responses, use
 the HTTP status message instead
-([#363](https://github.com/walmartlabs/concord/pull/363)).
+([#363](https://github.com/walmartlabs/concord/pull/363));
+- runtime-v2: fixed the `exclusive` mode grammar in triggers
+(cron, generic, oneops)
+([#364](https://github.com/walmartlabs/concord/pull/364)).
 
 
 
