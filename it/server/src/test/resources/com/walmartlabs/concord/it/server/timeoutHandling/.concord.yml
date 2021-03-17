@@ -1,0 +1,13 @@
+configuration:
+  processTimeout: "PT1S"
+  entryPoint: main
+
+flows:
+  main:
+  - expr: ${sleep.ms(15000)}
+
+  onTimeout:
+    - log: "txId: ${txId}"
+    - log: "projectInfo: ${projectInfo}"
+    - log: "processInfo: ${processInfo}"
+    - log: "initiator: ${initiator}"

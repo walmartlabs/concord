@@ -30,6 +30,7 @@ import com.walmartlabs.concord.server.user.UserInfoProvider.BaseUserInfo;
 import com.walmartlabs.concord.server.user.UserManager;
 import org.immutables.value.Value;
 
+import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
@@ -42,11 +43,16 @@ public abstract class UserInfoProcessor implements PayloadProcessor {
     private final String key;
     private final UserManager userManager;
     private final Signing signing;
+    private final EnumSet<ProcessKind> handlerKinds;
 
     public UserInfoProcessor(String key, UserManager userManager, Signing signing) {
         this.key = key;
         this.userManager = userManager;
         this.signing = signing;
+        this.handlerKinds = EnumSet.of(
+                ProcessKind.CANCEL_HANDLER,
+                ProcessKind.FAILURE_HANDLER,
+                ProcessKind.TIMEOUT_HANDLER);
     }
 
     @Override
@@ -54,7 +60,7 @@ public abstract class UserInfoProcessor implements PayloadProcessor {
         BaseUserInfo info = userManager.getCurrentUserInfo();
         ProcessKind kind = payload.getHeader(Payload.PROCESS_KIND);
 
-        if (ProcessKind.CANCEL_HANDLER.equals(kind) || ProcessKind.FAILURE_HANDLER.equals(kind)) {
+        if (info == null && handlerKinds.contains(kind)) {
             UUID initiatorID = payload.getHeader(Payload.INITIATOR_ID);
             info = userManager.getInfo(initiatorID);
         }
