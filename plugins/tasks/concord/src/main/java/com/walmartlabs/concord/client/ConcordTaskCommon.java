@@ -26,6 +26,7 @@ import com.walmartlabs.concord.ApiException;
 import com.walmartlabs.concord.common.IOUtils;
 import com.walmartlabs.concord.runtime.v2.sdk.TaskResult;
 import com.walmartlabs.concord.sdk.Constants;
+import com.walmartlabs.concord.sdk.LogTags;
 import com.walmartlabs.concord.sdk.MapUtils;
 import org.apache.commons.compress.archivers.zip.ZipArchiveOutputStream;
 import org.slf4j.Logger;
@@ -67,15 +68,13 @@ public class ConcordTaskCommon {
 
     private final String sessionToken;
     private final ApiClientFactory apiClientFactory;
-    private final String processLinkTemplate;
     private final UUID currentProcessId;
     private final String currentOrgName;
     private final Path workDir;
 
-    public ConcordTaskCommon(String sessionToken, ApiClientFactory apiClientFactory, String processLinkTemplate, UUID currentProcessId, String currentOrgName, Path workDir) {
+    public ConcordTaskCommon(String sessionToken, ApiClientFactory apiClientFactory, UUID currentProcessId, String currentOrgName, Path workDir) {
         this.sessionToken = sessionToken;
         this.apiClientFactory = apiClientFactory;
-        this.processLinkTemplate = processLinkTemplate;
         this.currentProcessId = currentProcessId;
         this.currentOrgName = currentOrgName;
         this.workDir = workDir;
@@ -122,15 +121,15 @@ public class ConcordTaskCommon {
         Map<String, T> result = new HashMap<>();
 
         ids.parallelStream().forEach(id -> {
-            log.info("Waiting for {}, URL: {}", id, getProcessUrl(id));
+            log.info("Waiting for {}", LogTags.instanceId(id));
 
             long t1 = System.currentTimeMillis();
             while (true) {
                 try {
                     ProcessEntry e = ClientUtils.withRetry(3, 1000,
                             () -> withClient(client -> {
-                                ProcessApi api = new ProcessApi(client);
-                                return api.get(id);
+                                ProcessV2Api api = new ProcessV2Api(client);
+                                return api.get(id, Collections.emptyList());
                             }));
 
                     ProcessEntry.StatusEnum s = e.getStatus();
@@ -194,9 +193,6 @@ public class ConcordTaskCommon {
     }
 
     private TaskResult startExternalProcess(StartExternalParams in) throws Exception {
-        // just the validation
-        in.apiKey();
-
         return start(in, null);
     }
 
@@ -261,11 +257,14 @@ public class ConcordTaskCommon {
 
         UUID processId = resp.getInstanceId();
 
-        log.info("Started a process: {}, URL: {}", processId, getProcessUrl(in, processId));
+        log.info("Started a process: {}",
+                in.action() == Action.STARTEXTERNAL ? processId : LogTags.instanceId(processId));
 
         if (sync) {
             if (in.suspend()) {
-                log.info("Suspending the process until the child process ({}) is completed...", processId);
+                log.info("Suspending the process until the child process ({}) is completed...",
+                        in.action() == Action.STARTEXTERNAL ? processId : LogTags.instanceId(processId));
+
                 ResumePayload resume = new ResumePayload(
                         in.baseUrl(), in.apiKey(), !in.outVars().isEmpty(),
                         Collections.singletonList(processId), in.ignoreFailures());
@@ -328,8 +327,8 @@ public class ConcordTaskCommon {
     private Result continueAfterSuspend(String baseUrl, String apiKey, UUID processId, boolean collectOutVars) throws Exception {
         ProcessEntry e = ClientUtils.withRetry(3, 1000,
                 () -> withClient(baseUrl, apiKey, client -> {
-                    ProcessApi api = new ProcessApi(client);
-                    return api.get(processId);
+                    ProcessV2Api api = new ProcessV2Api(client);
+                    return api.get(processId, Collections.emptyList());
                 }));
 
         ProcessEntry.StatusEnum s = e.getStatus();
@@ -457,7 +456,9 @@ public class ConcordTaskCommon {
         if (sync) {
             boolean suspend = in.suspend();
             if (suspend) {
-                log.info("Suspending the process until the fork processes ({}) are completed...", ids);
+                log.info("Suspending the process until the fork processes ({}) are completed...",
+                        ids.stream().map(LogTags::instanceId).collect(Collectors.toList()));
+
                 ResumePayload resume = new ResumePayload(
                         null, null, !in.outVars().isEmpty(), ids, in.ignoreFailures());
 
@@ -488,26 +489,9 @@ public class ConcordTaskCommon {
         return executor.submit(() -> withClient(in.apiKey(), client -> {
             ProcessApi api = new ProcessApi(client);
             StartProcessResponse resp = api.fork(currentProcessId, req, false, null);
-            log.info("Forked a child process: {} url: {}", resp.getInstanceId(), getProcessUrl(in, resp.getInstanceId()));
+            log.info("Forked a child process: {}", LogTags.instanceId(resp.getInstanceId()));
             return resp.getInstanceId();
         }));
-    }
-
-    private String getProcessUrl(ConcordTaskParams in, UUID processId) {
-        Action action = in.action();
-        if (action == Action.STARTEXTERNAL || processLinkTemplate == null) {
-            return "n/a";
-        }
-
-        return String.format(processLinkTemplate, processId);
-    }
-
-    private String getProcessUrl(UUID processId) {
-        if (processLinkTemplate == null) {
-            return "n/a";
-        }
-
-        return String.format(processLinkTemplate, processId);
     }
 
     private static void addIfNotNull(Map<String, Object> m, String k, Object v) {
