@@ -24,7 +24,9 @@ ID and repository path links;
 ([#354](https://github.com/walmartlabs/concord/pull/354)).
 - concord-server, concord-console: fix the rendering of
 form dropdown fields with single allowed values
-([#357](https://github.com/walmartlabs/concord/pull/357)).
+([#357](https://github.com/walmartlabs/concord/pull/357));
+- runtime-v2: cleanup `workDir` files after loading
+the state ([#358](https://github.com/walmartlabs/concord/pull/358)).
 
 
 
