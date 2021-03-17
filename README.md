@@ -18,7 +18,7 @@ Dependencies:
 - [Git](https://git-scm.com/) 2.18+
 - [Java 8](https://adoptopenjdk.net/)
 - [Docker Community Edition](https://www.docker.com/community-edition)
-- (Optional) [NodeJS and NPM](https://nodejs.org/en/download/) (Node 10 or greater)
+- (Optional) [NodeJS and NPM](https://nodejs.org/en/download/) (Node 14 or greater)
 
 ```shell
 git clone ...
