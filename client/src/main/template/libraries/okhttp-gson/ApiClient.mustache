@@ -952,25 +952,27 @@ public class ApiClient {
                 try {
                     respBody = response.body().string();
 
-                    String type = response.header("Content-Type");
-                    Map<String, Object> vErrs = null;
-                    if ("application/vnd.siesta-validation-errors-v1+json".equals(type)) {
-                        List<Object> l = (List<Object>) json.deserialize(respBody, List.class);
-                        if (!l.isEmpty()) {
-                            vErrs = (Map<String,Object>) l.get(0);
+                    if (respBody != null && !respBody.isEmpty()) {
+                        String type = response.header("Content-Type");
+                        Map<String, Object> vErrs = null;
+                        if ("application/vnd.siesta-validation-errors-v1+json".equals(type)) {
+                            List<Object> l = (List<Object>) json.deserialize(respBody, List.class);
+                            if (!l.isEmpty()) {
+                                vErrs = (Map<String,Object>) l.get(0);
+                            }
+                        } else if ("application/json".equals(type)) {
+                            vErrs = (Map<String,Object>) json.deserialize(respBody, Map.class);
+                        } else {
+                            msg = "Server response: " + respBody;
                         }
-                    } else if ("application/json".equals(type)) {
-                        vErrs = (Map<String,Object>) json.deserialize(respBody, Map.class);
-                    } else {
-                        msg = "Server response: " + respBody;
-                    }
 
-                    if (vErrs != null) {
-                        if (vErrs.containsKey("message")) {
-                            msg = (String) vErrs.get("message");
-                        }
-                        if (vErrs.containsKey("details")) {
-                            msg = msg + " Details: " + (String) vErrs.get("details");
+                        if (vErrs != null) {
+                            if (vErrs.containsKey("message")) {
+                                msg = (String) vErrs.get("message");
+                            }
+                            if (vErrs.containsKey("details")) {
+                                msg = msg + " Details: " + (String) vErrs.get("details");
+                            }
                         }
                     }
                 } catch (IOException e) {
