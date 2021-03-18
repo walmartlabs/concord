@@ -187,11 +187,6 @@ public class UserManager {
         return p.getInfo(null, username, domain);
     }
 
-    public UserInfo getInfo(UUID userId) {
-        UserEntry u = userDao.get(userId);
-        return getInfo(u.getName(), u.getDomain(), u.getType());
-    }
-
     public void enable(UUID userId) {
         if (!userDao.isDisabled(userId)
                 .orElseThrow(() -> new ConcordApplicationException("User not found: " + userId))) {
