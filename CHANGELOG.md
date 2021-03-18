@@ -35,7 +35,9 @@ the HTTP status message instead
 ([#363](https://github.com/walmartlabs/concord/pull/363));
 - runtime-v2: fixed the `exclusive` mode grammar in triggers
 (cron, generic, oneops)
-([#364](https://github.com/walmartlabs/concord/pull/364)).
+([#364](https://github.com/walmartlabs/concord/pull/364));
+- concord-console: update node.js to the current LTS (14.16.0)
+([#366](https://github.com/walmartlabs/concord/pull/366)).
 
 
 
