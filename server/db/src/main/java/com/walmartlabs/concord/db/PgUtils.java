@@ -34,6 +34,7 @@ import java.time.Duration;
 import java.time.OffsetDateTime;
 import java.util.List;
 
+import static com.walmartlabs.concord.server.jooq.tables.ProcessQueue.PROCESS_QUEUE;
 import static org.jooq.impl.DSL.*;
 
 public final class PgUtils {
@@ -94,6 +95,22 @@ public final class PgUtils {
      */
     public static Field<OffsetDateTime> nowMinus(Duration d) {
         return currentOffsetDateTime().minus(interval((d.toMillis() / 1000 ) + " seconds"));
+    }
+
+    public static Field<String> jsonbTypeOf(Field<JSONB> field) {
+        return DSL.field("jsonb_typeof({0})", String.class, field);
+    }
+
+    public static <T> Field<JSONB> jsonbBuildArray(Field<T> field) {
+        return DSL.field("jsonb_build_array({0})", JSONB.class, field);
+    }
+
+    public static Field<JSONB> jsonbOrEmptyArray(Field<JSONB> field) {
+        return coalesce(field, field("?::jsonb", JSONB.class, JSONB.valueOf("[]")));
+    }
+
+    public static Field<JSONB> jsonbAppend(Field<JSONB> a, JSONB b) {
+        return field(a + " || ?::jsonb", JSONB.class, b);
     }
 
     private static String toPath(List<String> path) {

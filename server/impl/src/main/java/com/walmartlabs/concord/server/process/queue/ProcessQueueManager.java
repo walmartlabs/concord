@@ -203,18 +203,26 @@ public class ProcessQueueManager {
     }
 
     /**
-     * @see #updateWait(DSLContext, ProcessKey, AbstractWaitCondition)
+     * @see #addWait(DSLContext, ProcessKey, AbstractWaitCondition)
      */
-    public void updateWait(ProcessKey key, AbstractWaitCondition wait) {
-        queueDao.tx(tx -> updateWait(tx, key, wait));
+    public void addWait(ProcessKey key, AbstractWaitCondition wait) {
+        queueDao.tx(tx -> addWait(tx, key, wait));
     }
 
     /**
-     * Updates the process' wait conditions. Adds a wait condition history event.
+     * Add the process' wait conditions. Adds a wait condition history event.
      */
-    public void updateWait(DSLContext tx, ProcessKey processKey, AbstractWaitCondition wait) {
-        queueDao.updateWait(tx, processKey, wait);
+    public void addWait(DSLContext tx, ProcessKey key, AbstractWaitCondition wait) {
+        if (wait == null) {
+            return;
+        }
 
+        queueDao.addWait(tx, key, wait);
+
+//        addWaitEvent(tx, processKey, wait);
+    }
+
+    private void addWaitEvent(DSLContext tx, ProcessKey processKey, AbstractWaitCondition wait) {
         Map<String, Object> eventData = objectMapper.convertToMap(wait != null ? wait : new NoneCondition());
         NewProcessEvent e = NewProcessEvent.builder()
                 .processKey(processKey)
@@ -222,6 +230,18 @@ public class ProcessQueueManager {
                 .data(eventData)
                 .build();
         eventManager.event(tx, Collections.singletonList(e));
+    }
+
+    public void setWait(ProcessKey key, List<AbstractWaitCondition> waits) {
+        queueDao.tx(tx -> setWait(tx, key, waits));
+    }
+
+    public void setWait(DSLContext tx, ProcessKey processKey, List<AbstractWaitCondition> waits) {
+        if (waits.isEmpty()) {
+           waits = null;
+        }
+
+        queueDao.setWait(tx, processKey, waits);
     }
 
     public void updateExclusive(DSLContext tx, ProcessKey processKey, ExclusiveMode exclusive) {

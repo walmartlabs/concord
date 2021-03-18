@@ -51,7 +51,7 @@ import java.time.OffsetDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
-import static com.walmartlabs.concord.db.PgUtils.toChar;
+import static com.walmartlabs.concord.db.PgUtils.*;
 import static com.walmartlabs.concord.server.jooq.Tables.REPOSITORIES;
 import static com.walmartlabs.concord.server.jooq.Tables.USERS;
 import static com.walmartlabs.concord.server.jooq.tables.Organizations.ORGANIZATIONS;
@@ -565,7 +565,19 @@ public class ProcessQueueDao extends AbstractDao {
                 .where(PROCESS_QUEUE.INSTANCE_ID.eq(instanceId)));
     }
 
-    public void updateWait(DSLContext tx, ProcessKey key, AbstractWaitCondition waits) {
+    public void addWait(DSLContext tx, ProcessKey key, AbstractWaitCondition wait) {
+        // TODO: remove me in next version (after all wait conditions is arrays)
+        Field<JSONB> waitConditionsAsArray = when(jsonbTypeOf(PROCESS_QUEUE.WAIT_CONDITIONS).eq("object"), jsonbBuildArray(PROCESS_QUEUE.WAIT_CONDITIONS)).else_(PROCESS_QUEUE.WAIT_CONDITIONS);
+
+        tx.update(PROCESS_QUEUE)
+                .set(PROCESS_QUEUE.WAIT_CONDITIONS,
+                        jsonbAppend(jsonbOrEmptyArray(waitConditionsAsArray), objectMapper.toJSONB(wait)))
+                .set(PROCESS_QUEUE.LAST_UPDATED_AT, currentOffsetDateTime())
+                .where(PROCESS_QUEUE.INSTANCE_ID.eq(key.getInstanceId()))
+                .execute();
+    }
+
+    public void setWait(DSLContext tx, ProcessKey key, List<AbstractWaitCondition> waits) {
         tx.update(PROCESS_QUEUE)
                 .set(PROCESS_QUEUE.WAIT_CONDITIONS, field("?::jsonb", JSONB.class, objectMapper.toJSONB(waits)))
                 .set(PROCESS_QUEUE.LAST_UPDATED_AT, currentOffsetDateTime())

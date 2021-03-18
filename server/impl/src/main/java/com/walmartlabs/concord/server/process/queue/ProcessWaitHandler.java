@@ -20,10 +20,12 @@ package com.walmartlabs.concord.server.process.queue;
  * =====
  */
 
+import com.walmartlabs.concord.server.sdk.ProcessKey;
 import com.walmartlabs.concord.server.sdk.ProcessStatus;
+import org.immutables.value.Value;
 
+import javax.annotation.Nullable;
 import java.util.Set;
-import java.util.UUID;
 
 public interface ProcessWaitHandler<T extends AbstractWaitCondition> {
 
@@ -31,8 +33,28 @@ public interface ProcessWaitHandler<T extends AbstractWaitCondition> {
 
     Set<ProcessStatus> getProcessStatuses();
 
-    /**
-     * @return {@code null} if the specified process doesn't have any wait conditions.
-     */
-    T process(UUID instanceId, ProcessStatus processStatus, T waits);
+    Result<T> process(ProcessKey processKey, ProcessStatus processStatus, T waits);
+
+    @Value.Immutable
+    interface Result<T extends AbstractWaitCondition> {
+
+        /**
+         * return null if the process doesn't have any wait conditions.
+         */
+        @Value.Parameter
+        @Nullable
+        T waitCondition();
+
+        @Value.Parameter
+        @Nullable
+        String resumeEvent();
+
+        static <T extends AbstractWaitCondition> Result<T> of(T waitCondition) {
+            return ImmutableResult.of(waitCondition, null);
+        }
+
+        static <T extends AbstractWaitCondition> Result<T> of(String resumeEvent) {
+            return ImmutableResult.of(null, resumeEvent);
+        }
+    }
 }

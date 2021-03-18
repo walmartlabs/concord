@@ -22,11 +22,7 @@ package com.walmartlabs.concord.server.process.queue;
 
 import com.walmartlabs.concord.db.AbstractDao;
 import com.walmartlabs.concord.db.MainDB;
-import com.walmartlabs.concord.server.process.Payload;
-import com.walmartlabs.concord.server.process.PayloadManager;
-import com.walmartlabs.concord.server.process.ProcessManager;
-import com.walmartlabs.concord.server.sdk.ConcordApplicationException;
-import com.walmartlabs.concord.server.sdk.PartialProcessKey;
+import com.walmartlabs.concord.server.sdk.ProcessKey;
 import com.walmartlabs.concord.server.sdk.ProcessStatus;
 import org.jooq.Configuration;
 import org.jooq.Field;
@@ -35,7 +31,6 @@ import org.jooq.Record1;
 import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
-import java.io.IOException;
 import java.sql.Timestamp;
 import java.util.Collections;
 import java.util.Set;
@@ -55,14 +50,10 @@ public class WaitProcessSleepHandler implements ProcessWaitHandler<ProcessSleepC
 
     private static final Set<ProcessStatus> STATUSES = Collections.singleton(ProcessStatus.SUSPENDED);
 
-    private final ProcessManager processManager;
-    private final PayloadManager payloadManager;
     private final ProcessSleepDao processSleepDao;
 
     @Inject
-    public WaitProcessSleepHandler(ProcessManager processManager, PayloadManager payloadManager, ProcessSleepDao processSleepDao) {
-        this.processManager = processManager;
-        this.payloadManager = payloadManager;
+    public WaitProcessSleepHandler(ProcessSleepDao processSleepDao) {
         this.processSleepDao = processSleepDao;
     }
 
@@ -77,28 +68,16 @@ public class WaitProcessSleepHandler implements ProcessWaitHandler<ProcessSleepC
     }
 
     @Override
-    public ProcessSleepCondition process(UUID instanceId, ProcessStatus status, ProcessSleepCondition wait) {
-        if (processSleepDao.isSleepFinished(instanceId)) {
-            resumeProcess(instanceId, wait.resumeEvent());
-            return null;
+    public Result<ProcessSleepCondition> process(ProcessKey key, ProcessStatus status, ProcessSleepCondition wait) {
+        if (processSleepDao.isSleepFinished(key.getInstanceId())) {
+            return Result.of(wait.resumeEvent());
         }
 
-        return wait;
-    }
-
-    private void resumeProcess(UUID instanceId, String eventName) {
-        Payload payload;
-        try {
-            payload = payloadManager.createResumePayload(PartialProcessKey.from(instanceId), eventName, null);
-        } catch (IOException e) {
-            throw new ConcordApplicationException("Error creating a payload", e);
-        }
-
-        processManager.resume(payload);
+        return Result.of(wait);
     }
 
     @Named
-    private static final class ProcessSleepDao  extends AbstractDao {
+    private static final class ProcessSleepDao extends AbstractDao {
 
         @Inject
         protected ProcessSleepDao(@MainDB Configuration cfg) {

@@ -1059,7 +1059,7 @@ public class ProcessResource implements Resource {
     public Response setWaitCondition(@ApiParam @PathParam("id") UUID instanceId, @ApiParam Map<String, Object> waitCondition) {
         ProcessKey processKey = assertProcessKey(instanceId);
         AbstractWaitCondition condition = objectMapper.convertValue(waitCondition, AbstractWaitCondition.class);
-        processManager.setWaitCondition(processKey, condition);
+        processManager.addWaitCondition(processKey, condition);
         return Response.ok().build();
     }
 

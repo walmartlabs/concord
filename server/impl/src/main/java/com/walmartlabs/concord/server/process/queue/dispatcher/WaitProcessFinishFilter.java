@@ -55,7 +55,7 @@ public abstract class WaitProcessFinishFilter implements Filter {
             return true;
         }
 
-        processQueueManager.updateWait(tx, e.key(), ProcessCompletionCondition.builder()
+        processQueueManager.addWait(tx, e.key(), ProcessCompletionCondition.builder()
                 .processes(processes)
                 .reason(getReason())
                 .finalStatuses(getFinalStatuses())

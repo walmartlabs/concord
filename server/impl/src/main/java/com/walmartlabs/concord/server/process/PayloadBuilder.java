@@ -272,6 +272,11 @@ public final class PayloadBuilder {
         return this;
     }
 
+    public PayloadBuilder resumeEvents(Set<String> events) {
+        payload = payload.putHeader(Payload.RESUME_EVENTS, events);
+        return this;
+    }
+
     public PayloadBuilder triggeredBy(TriggeredByEntry t) {
         payload = payload.putHeader(Payload.TRIGGERED_BY, t);
         return this;

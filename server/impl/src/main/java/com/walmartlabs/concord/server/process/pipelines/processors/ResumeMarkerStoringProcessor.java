@@ -31,6 +31,8 @@ import javax.inject.Named;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Collections;
+import java.util.Set;
 
 /**
  * Adds an event marker to the payload.
@@ -53,7 +55,9 @@ public class ResumeMarkerStoringProcessor implements PayloadProcessor {
         ProcessKey processKey = payload.getProcessKey();
 
         String eventName = payload.getHeader(Payload.EVENT_NAME);
-        if (eventName == null) {
+        Set<String> events = payload.getHeader(Payload.RESUME_EVENTS, Collections.emptySet());
+
+        if (eventName == null && events.isEmpty()) {
             return chain.process(payload);
         }
 
@@ -67,7 +71,11 @@ public class ResumeMarkerStoringProcessor implements PayloadProcessor {
             }
 
             Path resumeMarker = stateDir.resolve(Constants.Files.RESUME_MARKER_FILE_NAME);
-            Files.write(resumeMarker, eventName.getBytes());
+            if (eventName != null) {
+                Files.write(resumeMarker, eventName.getBytes());
+            } else {
+                Files.write(resumeMarker, events);
+            }
         } catch (IOException e) {
             logManager.error(processKey, "Error while saving resume event", e);
             throw new ProcessException(processKey, "Error while saving resume event", e);
