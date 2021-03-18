@@ -54,10 +54,9 @@ public class ResumeMarkerStoringProcessor implements PayloadProcessor {
     public Payload process(Chain chain, Payload payload) {
         ProcessKey processKey = payload.getProcessKey();
 
-        String eventName = payload.getHeader(Payload.EVENT_NAME);
         Set<String> events = payload.getHeader(Payload.RESUME_EVENTS, Collections.emptySet());
 
-        if (eventName == null && events.isEmpty()) {
+        if (events.isEmpty()) {
             return chain.process(payload);
         }
 
@@ -71,11 +70,7 @@ public class ResumeMarkerStoringProcessor implements PayloadProcessor {
             }
 
             Path resumeMarker = stateDir.resolve(Constants.Files.RESUME_MARKER_FILE_NAME);
-            if (eventName != null) {
-                Files.write(resumeMarker, eventName.getBytes());
-            } else {
-                Files.write(resumeMarker, events);
-            }
+            Files.write(resumeMarker, events);
         } catch (IOException e) {
             logManager.error(processKey, "Error while saving resume event", e);
             throw new ProcessException(processKey, "Error while saving resume event", e);

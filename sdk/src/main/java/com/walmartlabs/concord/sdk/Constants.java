@@ -239,6 +239,11 @@ public class Constants {
         public static final String EVENT_NAME_KEY = "resumeEventName";
 
         /**
+         * Resume event name. Filled in for processes resumed after being suspended.
+         */
+        public static final String RESUME_EVENTS_KEY = "resumeEvents";
+
+        /**
          * The runner's configuration section.
          */
         public static final String RUNNER_KEY = "runner";

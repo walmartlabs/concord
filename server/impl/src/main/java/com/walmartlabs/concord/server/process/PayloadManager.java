@@ -197,32 +197,13 @@ public class PayloadManager {
 
     /**
      * Creates a payload to resume a suspended process, pulling the necessary data from the state storage.
-     *
-     * @param processKey
-     * @param eventName
-     * @param req
-     * @return
      */
     public Payload createResumePayload(ProcessKey processKey, String eventName, Map<String, Object> req) throws IOException {
-        Path tmpDir = IOUtils.createTempDir("payload");
-        if (!stateManager.export(processKey, copyTo(tmpDir))) {
-            throw new ProcessException(processKey, "Can't resume '" + processKey + "', state snapshot not found");
-        }
-
-        return PayloadBuilder.resume(processKey)
-                .workspace(tmpDir)
-                .configuration(req)
-                .eventName(eventName)
-                .build();
+        return createResumePayload(processKey, Collections.singleton(eventName), req);
     }
 
     /**
      * Creates a payload to resume a suspended process, pulling the necessary data from the state storage.
-     *
-     * @param processKey
-     * @param events
-     * @param req
-     * @return
      */
     public Payload createResumePayload(ProcessKey processKey, Set<String> events, Map<String, Object> req) throws IOException {
         Path tmpDir = IOUtils.createTempDir("payload");
