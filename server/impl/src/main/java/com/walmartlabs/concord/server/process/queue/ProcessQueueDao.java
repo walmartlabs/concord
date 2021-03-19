@@ -75,6 +75,8 @@ public class ProcessQueueDao extends AbstractDao {
     };
     private static final TypeReference<List<ProcessStatusHistoryEntry>> LIST_OF_STATUS_HISTORY = new TypeReference<List<ProcessStatusHistoryEntry>>() {
     };
+    private static final TypeReference<List<AbstractWaitCondition>> WAIT_LIST = new TypeReference<List<AbstractWaitCondition>>() {
+    };
 
     private static final Field<?>[] PROCESS_QUEUE_FIELDS = processEntryFields();
 
@@ -579,7 +581,7 @@ public class ProcessQueueDao extends AbstractDao {
 
     public void setWait(DSLContext tx, ProcessKey key, List<AbstractWaitCondition> waits) {
         tx.update(PROCESS_QUEUE)
-                .set(PROCESS_QUEUE.WAIT_CONDITIONS, field("?::jsonb", JSONB.class, objectMapper.toJSONB(waits)))
+                .set(PROCESS_QUEUE.WAIT_CONDITIONS, field("?::jsonb", JSONB.class, objectMapper.toJSONB(waits, WAIT_LIST)))
                 .set(PROCESS_QUEUE.LAST_UPDATED_AT, currentOffsetDateTime())
                 .where(PROCESS_QUEUE.INSTANCE_ID.eq(key.getInstanceId()))
                 .execute();

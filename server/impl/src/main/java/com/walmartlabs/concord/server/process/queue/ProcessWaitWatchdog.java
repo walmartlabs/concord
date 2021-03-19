@@ -131,7 +131,9 @@ public class ProcessWaitWatchdog implements ScheduledTask {
         }
 
         try {
-            resumeProcess(p.processKey(), resumeEvents);
+            if (!resumeEvents.isEmpty()) {
+                resumeProcess(p.processKey(), resumeEvents);
+            }
             queueManager.setWait(p.processKey(), resultWaits);
         } catch (Exception e) {
             log.info("process ['{}'] -> error", p, e);
