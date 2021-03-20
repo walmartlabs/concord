@@ -35,10 +35,7 @@ import com.walmartlabs.concord.svm.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 public class Runner {
@@ -93,9 +90,9 @@ public class Runner {
                 .build();
     }
 
-    public ProcessSnapshot resume(ProcessSnapshot snapshot, String eventRef, Map<String, Object> input) throws Exception {
+    public ProcessSnapshot resume(ProcessSnapshot snapshot, Set<String> eventRefs, Map<String, Object> input) throws Exception {
         statusCallback.onRunning(instanceId.getValue());
-        log.debug("resume ['{}'] -> running...", eventRef);
+        log.debug("resume ['{}'] -> running...", eventRefs);
 
         State state = snapshot.vmState();
 
@@ -104,15 +101,15 @@ public class Runner {
         // update the global variables using the input map by running a special command
         // only the threads with the specified eventRef will receive the input
         Collection<ThreadId> resumingThreads = state.getEventRefs().entrySet().stream()
-                .filter(kv -> eventRef.equals(kv.getValue()))
+                .filter(kv -> eventRefs.contains(kv.getValue()))
                 .map(Map.Entry::getKey)
                 .collect(Collectors.toList());
         vm.run(state, new UpdateLocalsCommand(input, resumingThreads));
 
         // resume normally
-        vm.resume(state, eventRef);
+        vm.resume(state, eventRefs);
 
-        log.debug("resume ['{}'] -> done", eventRef);
+        log.debug("resume ['{}'] -> done", eventRefs);
 
         return ProcessSnapshot.builder()
                 .from(snapshot)

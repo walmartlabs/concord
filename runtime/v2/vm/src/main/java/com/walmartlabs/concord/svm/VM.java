@@ -26,6 +26,7 @@ import org.slf4j.LoggerFactory;
 import java.io.Serializable;
 import java.util.Collection;
 import java.util.Map;
+import java.util.Set;
 
 import static com.walmartlabs.concord.svm.ExecutionListener.Result.BREAK;
 
@@ -60,13 +61,15 @@ public class VM {
     /**
      * Resumes the execution using the provided state and an event reference.
      */
-    public void resume(State state, String eventRef) throws Exception {
-        log.debug("resume ['{}'] -> start", eventRef);
+    public void resume(State state, Set<String> eventRefs) throws Exception {
+        log.debug("resume ['{}'] -> start", eventRefs);
 
-        ThreadId eventThreadId = state.removeEventRef(eventRef);
-        if (eventThreadId == null) {
-            throw new IllegalStateException("Can't find eventRef: " + eventRef);
-        }
+        eventRefs.forEach(eventRef -> {
+            ThreadId eventThreadId = state.removeEventRef(eventRef);
+            if (eventThreadId == null) {
+                throw new IllegalStateException("Can't find eventRef: " + eventRef);
+            }
+        });
 
         wakeSuspended(state);
 
@@ -77,7 +80,7 @@ public class VM {
 
         listeners.fireAfterProcessEnds(runtime, state, result.lastFrame);
 
-        log.debug("resume ['{}'] -> done", eventRef);
+        log.debug("resume ['{}'] -> done", eventRefs);
     }
 
     /**
@@ -153,7 +156,7 @@ public class VM {
     }
 
     private EvalResult execute(Runtime runtime, State state) throws Exception {
-        EvalResult result = null;
+        EvalResult result;
 
         while (true) {
             // if we're restoring from a previously saved state or we had new threads created

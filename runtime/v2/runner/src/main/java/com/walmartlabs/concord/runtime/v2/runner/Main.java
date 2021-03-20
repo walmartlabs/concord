@@ -234,11 +234,7 @@ public class Main {
             args.put(Constants.Request.CURRENT_USER_KEY, currentUser);
         }
 
-        for (String event : events) {
-            snapshot = runner.resume(snapshot, event, args);
-        }
-
-        return snapshot;
+        return runner.resume(snapshot, events, args);
     }
 
     private static boolean isSuspended(ProcessSnapshot snapshot) {
