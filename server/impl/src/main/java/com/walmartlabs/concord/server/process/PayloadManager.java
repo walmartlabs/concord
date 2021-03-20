@@ -199,7 +199,7 @@ public class PayloadManager {
      * Creates a payload to resume a suspended process, pulling the necessary data from the state storage.
      */
     public Payload createResumePayload(ProcessKey processKey, String eventName, Map<String, Object> req) throws IOException {
-        return createResumePayload(processKey, Collections.singleton(eventName), req);
+        return createResumePayload(processKey, eventName != null ? Collections.singleton(eventName) : Collections.emptySet(), req);
     }
 
     /**

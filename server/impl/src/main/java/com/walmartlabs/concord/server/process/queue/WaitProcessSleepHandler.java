@@ -20,25 +20,14 @@ package com.walmartlabs.concord.server.process.queue;
  * =====
  */
 
-import com.walmartlabs.concord.db.AbstractDao;
-import com.walmartlabs.concord.db.MainDB;
 import com.walmartlabs.concord.server.sdk.ProcessKey;
 import com.walmartlabs.concord.server.sdk.ProcessStatus;
-import org.jooq.Configuration;
-import org.jooq.Field;
-import org.jooq.Record1;
 
-import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
-import java.sql.Timestamp;
 import java.util.Collections;
+import java.util.Date;
 import java.util.Set;
-import java.util.UUID;
-
-import static com.walmartlabs.concord.server.jooq.Tables.PROCESS_QUEUE;
-import static org.jooq.impl.DSL.currentTimestamp;
-import static org.jooq.impl.DSL.field;
 
 /**
  * Handles the processes that are waiting for some timeout. Resumes a suspended process
@@ -49,13 +38,6 @@ import static org.jooq.impl.DSL.field;
 public class WaitProcessSleepHandler implements ProcessWaitHandler<ProcessSleepCondition> {
 
     private static final Set<ProcessStatus> STATUSES = Collections.singleton(ProcessStatus.SUSPENDED);
-
-    private final ProcessSleepDao processSleepDao;
-
-    @Inject
-    public WaitProcessSleepHandler(ProcessSleepDao processSleepDao) {
-        this.processSleepDao = processSleepDao;
-    }
 
     @Override
     public WaitType getType() {
@@ -69,32 +51,10 @@ public class WaitProcessSleepHandler implements ProcessWaitHandler<ProcessSleepC
 
     @Override
     public Result<ProcessSleepCondition> process(ProcessKey key, ProcessStatus status, ProcessSleepCondition wait) {
-        if (processSleepDao.isSleepFinished(key.getInstanceId())) {
+        if (wait.until().before(new Date())) {
             return Result.of(wait.resumeEvent());
         }
 
         return Result.of(wait);
-    }
-
-    @Named
-    private static final class ProcessSleepDao extends AbstractDao {
-
-        @Inject
-        protected ProcessSleepDao(@MainDB Configuration cfg) {
-            super(cfg);
-        }
-
-        public boolean isSleepFinished(UUID instanceId) {
-            Field<Timestamp> untilField = field("({0}->>'until')::timestamptz", Timestamp.class, PROCESS_QUEUE.WAIT_CONDITIONS);
-            return txResult(tx -> {
-                Record1<Integer> result = tx.selectOne()
-                        .from(PROCESS_QUEUE)
-                        .where(PROCESS_QUEUE.INSTANCE_ID.eq(instanceId)
-                                .and(PROCESS_QUEUE.WAIT_CONDITIONS.isNotNull()
-                                        .and(currentTimestamp().greaterOrEqual(untilField))))
-                        .fetchOne();
-                return result != null;
-            });
-        }
     }
 }
