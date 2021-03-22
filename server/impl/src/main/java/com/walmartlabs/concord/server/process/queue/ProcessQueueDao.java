@@ -580,6 +580,10 @@ public class ProcessQueueDao extends AbstractDao {
     }
 
     public void setWait(DSLContext tx, ProcessKey key, List<AbstractWaitCondition> waits) {
+        if (waits != null && waits.isEmpty()) {
+            waits = null;
+        }
+
         tx.update(PROCESS_QUEUE)
                 .set(PROCESS_QUEUE.WAIT_CONDITIONS, field("?::jsonb", JSONB.class, objectMapper.toJSONB(waits, WAIT_LIST)))
                 .set(PROCESS_QUEUE.LAST_UPDATED_AT, currentOffsetDateTime())

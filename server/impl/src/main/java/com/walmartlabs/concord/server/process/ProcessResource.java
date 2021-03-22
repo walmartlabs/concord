@@ -1045,10 +1045,6 @@ public class ProcessResource implements Resource {
 
     /**
      * Set the process' wait condition.
-     *
-     * @param instanceId
-     * @param waitCondition
-     * @return
      */
     @POST
     @ApiOperation(value = "Set the process' wait condition")
