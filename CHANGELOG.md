@@ -4,18 +4,20 @@
 
 ### Added
 
-- concord-console, runtime-v1, runtime-v2: ability to log
-process IDs as links in the UI
-([#356](https://github.com/walmartlabs/concord/pull/356));
 - concord-server: log handler process IDs (`onTimeout`,
 `onCancel`, etc) in the parent process log
 ([#350](https://github.com/walmartlabs/concord/pull/350));
 - concord-console: on the repository list page, add commit
 ID and repository path links;
 ([#351](https://github.com/walmartlabs/concord/pull/351));
+- concord-console, runtime-v1, runtime-v2: ability to log
+process IDs as links in the UI
+([#356](https://github.com/walmartlabs/concord/pull/356));
 - concord-repository, concord-server, concord-agent: option
 to skip fetching if local commit ID equals remote commit ID
 ([#359](https://github.com/walmartlabs/concord/pull/359)).
+- concord-agent: option to redirect process logs to stdout
+([#362](https://github.com/walmartlabs/concord/pull/362)).
 
 ### Changed
 
