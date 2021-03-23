@@ -55,6 +55,7 @@ export const getStatusColor = (status: string): string => {
             return '#DB2928';
         case ProcessStatus.ENQUEUED:
         case ProcessStatus.RESUMING:
+        case ProcessStatus.WAITING:
         default:
             return 'grey';
     }
@@ -76,6 +77,7 @@ export const getStatusButtonColor = (status: string): SemanticCOLORS => {
             return 'red';
         case ProcessStatus.ENQUEUED:
         case ProcessStatus.RESUMING:
+        case ProcessStatus.WAITING:
         default:
             return 'grey';
     }

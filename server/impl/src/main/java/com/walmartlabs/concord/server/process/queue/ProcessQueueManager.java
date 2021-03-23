@@ -168,7 +168,7 @@ public class ProcessQueueManager {
         return queueDao.txResult(tx -> {
             boolean success = queueDao.updateStatus(tx, processKey, expected, status);
             eventManager.insertStatusHistory(tx, processKey, status, Collections.emptyMap());
-            if(success) {
+            if (success) {
                 notifyStatusChange(tx, processKey, status);
             }
             return success;
@@ -185,7 +185,7 @@ public class ProcessQueueManager {
         return queueDao.txResult(tx -> {
             boolean success = queueDao.updateStatus(processKeys, expected, status);
             eventManager.insertStatusHistory(tx, processKeys, status);
-            if(success) {
+            if (success) {
                 notifyStatusChange(tx, processKeys, status);
             }
             return success;

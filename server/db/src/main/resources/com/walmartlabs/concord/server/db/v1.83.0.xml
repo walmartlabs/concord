@@ -33,7 +33,7 @@
 
     <changeSet id="1830020" author="ybrigo@gmail.com">
         <sql>
-            create index concurrently IDX_PROCESS_WAITS_POLL
+            create index IDX_PROCESS_WAITS_POLL
             on IDX_PROCESS_WAITS (INSTANCE_CREATED_AT, ID_SEQ)
             where IS_WAITING = true
         </sql>
