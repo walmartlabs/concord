@@ -32,13 +32,17 @@ import com.walmartlabs.concord.agent.remote.ApiClientFactory;
 import com.walmartlabs.concord.agent.remote.ProcessStatusUpdater;
 import com.walmartlabs.concord.client.ProcessApi;
 import com.walmartlabs.concord.client.SecretClient;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.UUID;
 
 public class WorkerModule extends AbstractModule {
 
-    private static final String REDIRECT_RUNNER_LOG_KEY = "REDIRECT_RUNNER_TO_STDOUT";
+    private static final Logger log = LoggerFactory.getLogger(WorkerModule.class);
+
+    private static final String REDIRECT_PROCESS_LOGS_TO_STDOUT_KEY = "REDIRECT_PROCESS_LOGS_TO_STDOUT";
 
     private final String agentId;
     private final UUID instanceId;
@@ -86,9 +90,12 @@ public class WorkerModule extends AbstractModule {
 
         Multibinder<LogAppender> logAppenders = Multibinder.newSetBinder(binder(), LogAppender.class);
         logAppenders.addBinding().to(RemoteLogAppender.class);
-        if (Boolean.parseBoolean(System.getenv(REDIRECT_RUNNER_LOG_KEY))) {
+
+        if (Boolean.parseBoolean(System.getenv(REDIRECT_PROCESS_LOGS_TO_STDOUT_KEY))) {
+            log.info("Redirecting process logs into the agent's stdout...");
             logAppenders.addBinding().to(StdOutLogAppender.class);
         }
+
         bind(LogAppender.class).to(CombinedLogAppender.class);
 
         bind(AgentImportManager.class).toProvider(AgentImportManagerProvider.class);
