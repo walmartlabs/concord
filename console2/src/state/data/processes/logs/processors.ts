@@ -99,7 +99,7 @@ const processLinks = (value: string): string => {
 };
 
 // html tags (<, >, ..) already escaped
-const INSTANCE_ID_TAG = /&lt;concord:instanceId&gt;([^&]*)&lt;\/concord:instanceId&gt;/
+const INSTANCE_ID_TAG = /&lt;concord:instanceId&gt;([^&]*)&lt;\/concord:instanceId&gt;/;
 
 const processTags = (value: string): string => {
     return value.replace(
