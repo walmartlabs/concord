@@ -82,19 +82,22 @@ public class GitClient {
             boolean versionValueIsBranchOrTag = versionRefIsBranchOrTag && req.version().value().equals(req.version().ref());
 
             // fetch
-            boolean effectiveShallow = req.shallow() && versionValueIsBranchOrTag;
-            fetch(req.destination(), effectiveShallow, req.secret());
+            boolean alreadyFetched = exists && req.checkAlreadyFetched() && alreadyFetched(req.destination(), ref);
+            if (!alreadyFetched) {
+                boolean effectiveShallow = req.shallow() && versionValueIsBranchOrTag;
+                fetch(req.destination(), effectiveShallow, req.secret());
 
-            checkout(req.destination(), req.version().value());
-            if (versionValueIsBranchOrTag) {
-                reset(req.destination(), ref.tag() ? "origin/tags/" + ref.name() : "origin/" + ref.name());
-            }
+                checkout(req.destination(), req.version().value());
+                if (versionValueIsBranchOrTag) {
+                    reset(req.destination(), ref.tag() ? "origin/tags/" + ref.name() : "origin/" + ref.name());
+                }
 
-            cleanup(req.destination());
+                cleanup(req.destination());
 
-            if (req.includeSubmodules() && hasSubmodules(req.destination())) {
-                updateSubmodules(req.destination(), req.secret());
-                resetSubmodules(req.destination());
+                if (req.includeSubmodules() && hasSubmodules(req.destination())) {
+                    updateSubmodules(req.destination(), req.secret());
+                    resetSubmodules(req.destination());
+                }
             }
 
             ImmutableFetchResult.Builder result = FetchResult.builder()
@@ -114,6 +117,14 @@ public class GitClient {
             log.error("fetch ['{}'] -> error", req, e);
             throw new RepositoryException("Error while fetching a repository: " + e.getMessage());
         }
+    }
+
+    private boolean alreadyFetched(Path workDir, Ref ref) {
+        if (ref == null) {
+            return false;
+        }
+
+        return ref.commitId().equals(revParse(workDir, "HEAD"));
     }
 
     private void init(Path workDir) {

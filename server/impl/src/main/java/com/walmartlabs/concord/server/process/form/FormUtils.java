@@ -110,6 +110,11 @@ public final class FormUtils {
 
             Object v = Boolean.TRUE.equals(f.getOption(READ_ONLY)) ? defaultData.get(k) : m.get(k);
 
+            boolean isOptional = f.getCardinality() == FormField.Cardinality.ONE_OR_NONE || f.getCardinality() == FormField.Cardinality.ANY;
+            if (v == null && !isOptional) {
+                v = allowedValueAsFieldValue(f.getAllowedValue());
+            }
+
             /*
              * Use cardinality as an indicator to convert single value (coming as a string) into an array
              * for the scenario when only one value was provided by the user
@@ -120,7 +125,6 @@ public final class FormUtils {
 
             v = convert(locale, fd.getName(), f, null, v);
 
-            boolean isOptional = f.getCardinality() == FormField.Cardinality.ONE_OR_NONE || f.getCardinality() == FormField.Cardinality.ANY;
             if (v == null && !isOptional) {
                 continue;
             }
@@ -252,6 +256,18 @@ public final class FormUtils {
         }
 
         return v;
+    }
+
+    private static Object allowedValueAsFieldValue(Object allowedValue) {
+        if (allowedValue instanceof Collection) {
+            if (((Collection<?>) allowedValue).size() == 1) {
+                return ((Collection<?>) allowedValue).iterator().next();
+            }
+
+            return null;
+        }
+
+        return allowedValue;
     }
 
     public static class ValidationException extends Exception {

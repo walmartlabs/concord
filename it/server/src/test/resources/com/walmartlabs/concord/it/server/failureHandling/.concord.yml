@@ -8,6 +8,7 @@ flows:
   - log: "txId: ${txId}"
   - log: "projectInfo: ${projectInfo}"
   - log: "processInfo: ${processInfo}"
+  - log: "initiator: ${initiator}"
 
 forms:
   myForm1:

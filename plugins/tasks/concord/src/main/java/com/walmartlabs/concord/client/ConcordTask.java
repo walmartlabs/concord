@@ -44,6 +44,7 @@ import static com.walmartlabs.concord.client.Keys.ACTION_KEY;
 import static com.walmartlabs.concord.sdk.MapUtils.*;
 
 @Named("concord")
+@SuppressWarnings("unused")
 public class ConcordTask extends AbstractConcordTask {
 
     private static final Logger log = LoggerFactory.getLogger(ConcordTask.class);

@@ -25,15 +25,13 @@ import com.walmartlabs.concord.db.MainDB;
 import com.walmartlabs.concord.db.PgUtils;
 import com.walmartlabs.concord.imports.Imports;
 import com.walmartlabs.concord.sdk.Constants;
+import com.walmartlabs.concord.sdk.LogTags;
 import com.walmartlabs.concord.server.ConcordObjectMapper;
 import com.walmartlabs.concord.server.Utils;
 import com.walmartlabs.concord.server.agent.AgentManager;
 import com.walmartlabs.concord.server.cfg.ProcessWatchdogConfiguration;
 import com.walmartlabs.concord.server.jooq.tables.ProcessQueue;
-import com.walmartlabs.concord.server.process.Payload;
-import com.walmartlabs.concord.server.process.PayloadManager;
-import com.walmartlabs.concord.server.process.ProcessKind;
-import com.walmartlabs.concord.server.process.ProcessManager;
+import com.walmartlabs.concord.server.process.*;
 import com.walmartlabs.concord.server.process.logs.ProcessLogManager;
 import com.walmartlabs.concord.server.sdk.PartialProcessKey;
 import com.walmartlabs.concord.server.sdk.ProcessKey;
@@ -48,7 +46,10 @@ import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
 import java.time.OffsetDateTime;
-import java.util.*;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 
 import static com.walmartlabs.concord.db.PgUtils.interval;
 import static com.walmartlabs.concord.server.jooq.tables.ProcessQueue.PROCESS_QUEUE;
@@ -113,6 +114,7 @@ public class ProcessQueueWatchdog implements ScheduledTask {
     private final PayloadManager payloadManager;
     private final ProcessManager processManager;
     private final ProcessQueueManager queueManager;
+    private final ProcessSecurityContext processSecurityContext;
 
     @Inject
     public ProcessQueueWatchdog(ProcessWatchdogConfiguration cfg,
@@ -123,7 +125,8 @@ public class ProcessQueueWatchdog implements ScheduledTask {
                                 UserDao userDao,
                                 PayloadManager payloadManager,
                                 ProcessManager processManager,
-                                ProcessQueueManager queueManager) {
+                                ProcessQueueManager queueManager,
+                                ProcessSecurityContext processSecurityContext) {
         this.cfg = cfg;
 
         this.queueDao = queueDao;
@@ -134,6 +137,7 @@ public class ProcessQueueWatchdog implements ScheduledTask {
         this.payloadManager = payloadManager;
         this.processManager = processManager;
         this.queueManager = queueManager;
+        this.processSecurityContext = processSecurityContext;
     }
 
     @Override
@@ -178,9 +182,9 @@ public class ProcessQueueWatchdog implements ScheduledTask {
                         parent.initiatorId, username, parent.projectId, req, null,
                         null, parent.imports);
 
-                processManager.startFork(payload);
+                processSecurityContext.runAs(parent.initiatorId, () -> processManager.startFork(payload));
 
-                logManager.info(parent.processKey, "{} started: {}", toString(entry.handlerKind), payload.getProcessKey());
+                logManager.info(parent.processKey, "{} started: {}", toString(entry.handlerKind), LogTags.instanceId(payload.getProcessKey().getInstanceId()));
 
                 log.info("process -> created a new child process '{}' (parent '{}', entryPoint: '{}')",
                         childKey, parent.processKey, entry.flow);
