@@ -40,7 +40,9 @@ the HTTP status message instead
 `onFailure` and `onTimeout` handlers
 ([#365](https://github.com/walmartlabs/concord/pull/365));
 - concord-console: update node.js to the current LTS (14.16.0)
-([#366](https://github.com/walmartlabs/concord/pull/366)).
+([#366](https://github.com/walmartlabs/concord/pull/366));
+- sleep-task: use UUIDs as event names to support parallel
+execution ([#369](https://github.com/walmartlabs/concord/pull/369)).
 
 
 
