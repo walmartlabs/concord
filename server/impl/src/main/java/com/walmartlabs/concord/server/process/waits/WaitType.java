@@ -1,10 +1,10 @@
-package com.walmartlabs.concord.server.sdk;
+package com.walmartlabs.concord.server.process.waits;
 
 /*-
  * *****
  * Concord
  * -----
- * Copyright (C) 2017 - 2018 Walmart Inc.
+ * Copyright (C) 2017 - 2019 Walmart Inc.
  * -----
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,18 +20,22 @@ package com.walmartlabs.concord.server.sdk;
  * =====
  */
 
+public enum WaitType {
 
-public enum ProcessStatus {
-    NEW,
-    PREPARING,
-    ENQUEUED,
-    WAITING,
-    STARTING,
-    RUNNING,
-    SUSPENDED,
-    RESUMING,
-    FINISHED,
-    FAILED,
-    CANCELLED,
-    TIMED_OUT
+    NONE,
+
+    /**
+     * Waiting for a specific process to complete.
+      */
+    PROCESS_COMPLETION,
+
+    /**
+     * Waiting for a (named) lock taken by another process.
+     */
+    PROCESS_LOCK,
+
+    /**
+     * Waiting for a specific timeout to resume process.
+     */
+    PROCESS_SLEEP
 }

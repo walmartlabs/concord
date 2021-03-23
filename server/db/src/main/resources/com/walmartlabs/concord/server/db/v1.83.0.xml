@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.3.xsd">
+
+    <changeSet id="1830000" author="ybrigo@gmail.com">
+        <createTable tableName="PROCESS_WAITS">
+            <column name="INSTANCE_ID" type="uuid">
+                <constraints nullable="false"/>
+            </column>
+            <column name="INSTANCE_CREATED_AT" type="timestamptz">
+                <constraints nullable="false"/>
+            </column>
+            <column name="IS_WAITING" type="boolean" defaultValue="false">
+                <constraints nullable="false"/>
+            </column>
+            <column name="WAIT_CONDITIONS" type="jsonb">
+                <constraints nullable="true"/>
+            </column>
+            <column name="ID_SEQ" type="bigserial">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="1830010" author="ybrigo@gmail.com">
+        <createIndex tableName="PROCESS_WAITS" indexName="IDX_PROCESS_WAITS_IDS">
+            <column name="INSTANCE_ID"/>
+            <column name="INSTANCE_CREATED_AT"/>
+        </createIndex>
+    </changeSet>
+
+    <changeSet id="1830020" author="ybrigo@gmail.com">
+        <sql>
+            create index concurrently IDX_PROCESS_WAITS_POLL
+            on IDX_PROCESS_WAITS (INSTANCE_CREATED_AT, ID_SEQ)
+            where IS_WAITING = true
+        </sql>
+    </changeSet>
+</databaseChangeLog>

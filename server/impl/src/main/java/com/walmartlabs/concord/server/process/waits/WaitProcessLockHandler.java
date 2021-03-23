@@ -1,4 +1,4 @@
-package com.walmartlabs.concord.server.process.queue;
+package com.walmartlabs.concord.server.process.waits;
 
 /*-
  * *****
@@ -20,55 +20,47 @@ package com.walmartlabs.concord.server.process.queue;
  * =====
  */
 
-import com.walmartlabs.concord.db.AbstractDao;
-import com.walmartlabs.concord.db.MainDB;
 import com.walmartlabs.concord.server.process.Payload;
 import com.walmartlabs.concord.server.process.PayloadManager;
 import com.walmartlabs.concord.server.process.ProcessManager;
+import com.walmartlabs.concord.server.process.locks.LockEntry;
+import com.walmartlabs.concord.server.process.locks.ProcessLocksDao;
 import com.walmartlabs.concord.server.sdk.ConcordApplicationException;
 import com.walmartlabs.concord.server.sdk.PartialProcessKey;
 import com.walmartlabs.concord.server.sdk.ProcessStatus;
-import org.jooq.Configuration;
-import org.jooq.Field;
-import org.jooq.Record1;
 
 import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
 import java.io.IOException;
-import java.sql.Timestamp;
 import java.util.Collections;
 import java.util.Set;
 import java.util.UUID;
 
-import static com.walmartlabs.concord.server.jooq.Tables.PROCESS_QUEUE;
-import static org.jooq.impl.DSL.currentTimestamp;
-import static org.jooq.impl.DSL.field;
-
 /**
- * Handles the processes that are waiting for some timeout. Resumes a suspended process
- * if the timeout exceeded.
+ * Handles the processes that are waiting for locks. Resumes a suspended process
+ * if the lock was acquired successfully.
  */
 @Named
 @Singleton
-public class WaitProcessSleepHandler implements ProcessWaitHandler<ProcessSleepCondition> {
+public class WaitProcessLockHandler implements ProcessWaitHandler<ProcessLockCondition> {
 
     private static final Set<ProcessStatus> STATUSES = Collections.singleton(ProcessStatus.SUSPENDED);
 
+    private final ProcessLocksDao locksDao;
     private final ProcessManager processManager;
     private final PayloadManager payloadManager;
-    private final ProcessSleepDao processSleepDao;
 
     @Inject
-    public WaitProcessSleepHandler(ProcessManager processManager, PayloadManager payloadManager, ProcessSleepDao processSleepDao) {
+    public WaitProcessLockHandler(ProcessLocksDao locksDao, ProcessManager processManager, PayloadManager payloadManager) {
+        this.locksDao = locksDao;
         this.processManager = processManager;
         this.payloadManager = payloadManager;
-        this.processSleepDao = processSleepDao;
     }
 
     @Override
     public WaitType getType() {
-        return WaitType.PROCESS_SLEEP;
+        return WaitType.PROCESS_LOCK;
     }
 
     @Override
@@ -77,13 +69,14 @@ public class WaitProcessSleepHandler implements ProcessWaitHandler<ProcessSleepC
     }
 
     @Override
-    public ProcessSleepCondition process(UUID instanceId, ProcessStatus status, ProcessSleepCondition wait) {
-        if (processSleepDao.isSleepFinished(instanceId)) {
-            resumeProcess(instanceId, wait.resumeEvent());
+    public ProcessLockCondition process(UUID instanceId, ProcessStatus status, ProcessLockCondition wait) {
+        LockEntry lock = locksDao.tryLock(instanceId, wait.orgId(), wait.projectId(), wait.scope(), wait.name());
+        if (lock.instanceId().equals(instanceId)) {
+            resumeProcess(instanceId, wait.name());
             return null;
         }
 
-        return wait;
+        return ProcessLockCondition.from(lock);
     }
 
     private void resumeProcess(UUID instanceId, String eventName) {
@@ -95,27 +88,5 @@ public class WaitProcessSleepHandler implements ProcessWaitHandler<ProcessSleepC
         }
 
         processManager.resume(payload);
-    }
-
-    @Named
-    private static final class ProcessSleepDao  extends AbstractDao {
-
-        @Inject
-        protected ProcessSleepDao(@MainDB Configuration cfg) {
-            super(cfg);
-        }
-
-        public boolean isSleepFinished(UUID instanceId) {
-            Field<Timestamp> untilField = field("({0}->>'until')::timestamptz", Timestamp.class, PROCESS_QUEUE.WAIT_CONDITIONS);
-            return txResult(tx -> {
-                Record1<Integer> result = tx.selectOne()
-                        .from(PROCESS_QUEUE)
-                        .where(PROCESS_QUEUE.INSTANCE_ID.eq(instanceId)
-                                .and(PROCESS_QUEUE.WAIT_CONDITIONS.isNotNull()
-                                        .and(currentTimestamp().greaterOrEqual(untilField))))
-                        .fetchOne();
-                return result != null;
-            });
-        }
     }
 }

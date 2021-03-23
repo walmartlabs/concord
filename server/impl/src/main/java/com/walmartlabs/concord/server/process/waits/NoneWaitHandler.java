@@ -1,4 +1,4 @@
-package com.walmartlabs.concord.server.process.queue;
+package com.walmartlabs.concord.server.process.waits;
 
 /*-
  * *****
@@ -9,9 +9,9 @@ package com.walmartlabs.concord.server.process.queue;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- *
+ * 
  *      http://www.apache.org/licenses/LICENSE-2.0
- *
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -22,17 +22,31 @@ package com.walmartlabs.concord.server.process.queue;
 
 import com.walmartlabs.concord.server.sdk.ProcessStatus;
 
+import javax.inject.Named;
+import javax.inject.Singleton;
+import java.util.Arrays;
+import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
 
-public interface ProcessWaitHandler<T extends AbstractWaitCondition> {
+@Named
+@Singleton
+public class NoneWaitHandler implements ProcessWaitHandler<NoneCondition> {
 
-    WaitType getType();
+    private static final Set<ProcessStatus> STATUSES = new HashSet<>(Arrays.asList(ProcessStatus.values()));
 
-    Set<ProcessStatus> getProcessStatuses();
+    @Override
+    public WaitType getType() {
+        return WaitType.NONE;
+    }
 
-    /**
-     * @return {@code null} if the specified process doesn't have any wait conditions.
-     */
-    T process(UUID instanceId, ProcessStatus processStatus, T waits);
+    @Override
+    public Set<ProcessStatus> getProcessStatuses() {
+        return STATUSES;
+    }
+
+    @Override
+    public NoneCondition process(UUID instanceId, ProcessStatus processStatus, NoneCondition waits) {
+        return null;
+    }
 }

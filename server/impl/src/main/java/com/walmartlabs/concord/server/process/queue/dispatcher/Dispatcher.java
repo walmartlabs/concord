@@ -338,7 +338,7 @@ public class Dispatcher extends PeriodicTask {
             s.where(q.CURRENT_STATUS.eq(ProcessStatus.ENQUEUED.toString())
                     .and(or(q.START_AT.isNull(),
                             q.START_AT.le(currentOffsetDateTime())))
-                    .and(q.WAIT_CONDITIONS.isNull()));
+                    .and(q.WAIT_CONDITIONS.isNull())); // TODO: remove me in the next release
 
             return s.orderBy(q.LAST_UPDATED_AT)
                     .offset(offset)

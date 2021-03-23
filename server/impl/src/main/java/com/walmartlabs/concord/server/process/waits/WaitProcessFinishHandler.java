@@ -1,4 +1,4 @@
-package com.walmartlabs.concord.server.process.queue;
+package com.walmartlabs.concord.server.process.waits;
 
 /*-
  * *****
@@ -40,7 +40,7 @@ import java.io.IOException;
 import java.util.*;
 
 import static com.walmartlabs.concord.server.jooq.tables.ProcessQueue.PROCESS_QUEUE;
-import static com.walmartlabs.concord.server.process.queue.ProcessCompletionCondition.CompleteCondition;
+import static com.walmartlabs.concord.server.process.waits.ProcessCompletionCondition.CompleteCondition;
 
 /**
  * Handles the processes that are waiting for other processes to finish.

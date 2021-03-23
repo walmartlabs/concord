@@ -37,6 +37,7 @@ import java.util.concurrent.TimeUnit;
 public class ProcessQueueGaugeModule extends AbstractModule {
 
     @Override
+    @SuppressWarnings("rawtypes")
     protected void configure() {
         Provider<ProcessQueueDao> queueDaoProvider = getProvider(ProcessQueueDao.class);
 
@@ -55,7 +56,6 @@ public class ProcessQueueGaugeModule extends AbstractModule {
             gauges.addBinding().toInstance(create(base, s.toString()));
         }
         gauges.addBinding().toInstance(create(base, ProcessQueueDao.ENQUEUED_NOW_METRIC));
-        gauges.addBinding().toInstance(create(base, ProcessQueueDao.ENQUEUED_WAIT_METRIC));
     }
 
     private static GaugeProvider<Map<String, Integer>> createBaseProvider(Gauge<Map<String, Integer>> base) {

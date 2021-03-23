@@ -1,4 +1,4 @@
-package com.walmartlabs.concord.server.process.queue;
+package com.walmartlabs.concord.server.process.waits;
 
 /*-
  * *****
@@ -9,9 +9,9 @@ package com.walmartlabs.concord.server.process.queue;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -20,22 +20,21 @@ package com.walmartlabs.concord.server.process.queue;
  * =====
  */
 
-public enum WaitType {
+import com.walmartlabs.concord.server.sdk.ProcessStatus;
 
-    NONE,
+import java.util.Set;
+import java.util.UUID;
+
+public interface ProcessWaitHandler<T extends AbstractWaitCondition> {
+
+    WaitType getType();
+
+    // TODO: remove me in the next release
+    @Deprecated
+    Set<ProcessStatus> getProcessStatuses();
 
     /**
-     * Waiting for a specific process to complete.
-      */
-    PROCESS_COMPLETION,
-
-    /**
-     * Waiting for a (named) lock taken by another process.
+     * @return {@code null} if the specified process doesn't have any wait conditions.
      */
-    PROCESS_LOCK,
-
-    /**
-     * Waiting for a specific timeout to resume process.
-     */
-    PROCESS_SLEEP
+    T process(UUID instanceId, ProcessStatus processStatus, T waits);
 }

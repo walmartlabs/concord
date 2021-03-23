@@ -1,4 +1,4 @@
-package com.walmartlabs.concord.server.process.queue;
+package com.walmartlabs.concord.server.process.waits;
 
 /*-
  * *****
@@ -23,8 +23,6 @@ package com.walmartlabs.concord.server.process.queue;
 import com.walmartlabs.concord.server.process.Payload;
 import com.walmartlabs.concord.server.process.PayloadManager;
 import com.walmartlabs.concord.server.process.ProcessManager;
-import com.walmartlabs.concord.server.process.locks.LockEntry;
-import com.walmartlabs.concord.server.process.locks.ProcessLocksDao;
 import com.walmartlabs.concord.server.sdk.ConcordApplicationException;
 import com.walmartlabs.concord.server.sdk.PartialProcessKey;
 import com.walmartlabs.concord.server.sdk.ProcessStatus;
@@ -34,33 +32,32 @@ import javax.inject.Named;
 import javax.inject.Singleton;
 import java.io.IOException;
 import java.util.Collections;
+import java.util.Date;
 import java.util.Set;
 import java.util.UUID;
 
 /**
- * Handles the processes that are waiting for locks. Resumes a suspended process
- * if the lock was acquired successfully.
+ * Handles the processes that are waiting for some timeout. Resumes a suspended process
+ * if the timeout exceeded.
  */
 @Named
 @Singleton
-public class WaitProcessLockHandler implements ProcessWaitHandler<ProcessLockCondition> {
+public class WaitProcessSleepHandler implements ProcessWaitHandler<ProcessSleepCondition> {
 
     private static final Set<ProcessStatus> STATUSES = Collections.singleton(ProcessStatus.SUSPENDED);
 
-    private final ProcessLocksDao locksDao;
     private final ProcessManager processManager;
     private final PayloadManager payloadManager;
 
     @Inject
-    public WaitProcessLockHandler(ProcessLocksDao locksDao, ProcessManager processManager, PayloadManager payloadManager) {
-        this.locksDao = locksDao;
+    public WaitProcessSleepHandler(ProcessManager processManager, PayloadManager payloadManager) {
         this.processManager = processManager;
         this.payloadManager = payloadManager;
     }
 
     @Override
     public WaitType getType() {
-        return WaitType.PROCESS_LOCK;
+        return WaitType.PROCESS_SLEEP;
     }
 
     @Override
@@ -69,14 +66,13 @@ public class WaitProcessLockHandler implements ProcessWaitHandler<ProcessLockCon
     }
 
     @Override
-    public ProcessLockCondition process(UUID instanceId, ProcessStatus status, ProcessLockCondition wait) {
-        LockEntry lock = locksDao.tryLock(instanceId, wait.orgId(), wait.projectId(), wait.scope(), wait.name());
-        if (lock.instanceId().equals(instanceId)) {
-            resumeProcess(instanceId, wait.name());
+    public ProcessSleepCondition process(UUID instanceId, ProcessStatus status, ProcessSleepCondition wait) {
+        if (wait.until().before(new Date())) {
+            resumeProcess(instanceId, wait.resumeEvent());
             return null;
         }
 
-        return ProcessLockCondition.from(lock);
+        return wait;
     }
 
     private void resumeProcess(UUID instanceId, String eventName) {
