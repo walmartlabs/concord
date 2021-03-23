@@ -78,7 +78,7 @@ public class ProcessLocksResource implements Resource {
 
         ProcessEntry e = assertProcess(instanceId);
 
-        LockEntry lock = dao.tryLock(e.instanceId(), e.orgId(), e.projectId(), scope, lockName);
+        LockEntry lock = dao.tryLock(new ProcessKey(e.instanceId(), e.createdAt()), e.orgId(), e.projectId(), scope, lockName);
         boolean acquired = lock.instanceId().equals(instanceId);
         AbstractWaitCondition waitCondition = acquired ? null : ProcessLockCondition.from(lock);
         waitManager.updateWait(new ProcessKey(e.instanceId(), e.createdAt()), waitCondition);

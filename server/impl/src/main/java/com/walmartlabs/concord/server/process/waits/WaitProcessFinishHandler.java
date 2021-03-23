@@ -26,8 +26,9 @@ import com.walmartlabs.concord.server.jooq.tables.ProcessQueue;
 import com.walmartlabs.concord.server.process.Payload;
 import com.walmartlabs.concord.server.process.PayloadManager;
 import com.walmartlabs.concord.server.process.ProcessManager;
+import com.walmartlabs.concord.server.process.queue.ProcessQueueManager;
 import com.walmartlabs.concord.server.sdk.ConcordApplicationException;
-import com.walmartlabs.concord.server.sdk.PartialProcessKey;
+import com.walmartlabs.concord.server.sdk.ProcessKey;
 import com.walmartlabs.concord.server.sdk.ProcessStatus;
 import org.jooq.Configuration;
 import org.slf4j.Logger;
@@ -54,12 +55,14 @@ public class WaitProcessFinishHandler implements ProcessWaitHandler<ProcessCompl
     private final Set<ProcessStatus> STATUSES = new HashSet<>(Arrays.asList(ProcessStatus.ENQUEUED, ProcessStatus.SUSPENDED));
 
     private final Dao dao;
+    private final ProcessQueueManager processQueueManager;
     private final ProcessManager processManager;
     private final PayloadManager payloadManager;
 
     @Inject
-    public WaitProcessFinishHandler(Dao dao, ProcessManager processManager, PayloadManager payloadManager) {
+    public WaitProcessFinishHandler(Dao dao, ProcessQueueManager processQueueManager, ProcessManager processManager, PayloadManager payloadManager) {
         this.dao = dao;
+        this.processQueueManager = processQueueManager;
         this.processManager = processManager;
         this.payloadManager = payloadManager;
     }
@@ -75,7 +78,7 @@ public class WaitProcessFinishHandler implements ProcessWaitHandler<ProcessCompl
     }
 
     @Override
-    public ProcessCompletionCondition process(UUID instanceId, ProcessStatus processStatus, ProcessCompletionCondition wait) {
+    public ProcessCompletionCondition process(ProcessKey processKey, ProcessStatus processStatus, ProcessCompletionCondition wait) {
         Set<ProcessStatus> finishedStatuses = wait.finalStatuses();
         Set<UUID> awaitProcesses = wait.processes();
 
@@ -87,7 +90,9 @@ public class WaitProcessFinishHandler implements ProcessWaitHandler<ProcessCompl
         boolean completed = isCompleted(wait.completeCondition(), awaitProcesses, finishedProcesses);
         if (completed) {
             if (wait.resumeEvent() != null) {
-                resumeProcess(instanceId, wait.resumeEvent());
+                resumeProcess(processKey, wait.resumeEvent());
+            } else {
+                processQueueManager.updateExpectedStatus(processKey, ProcessStatus.WAITING, ProcessStatus.ENQUEUED);
             }
             return null;
         }
@@ -101,16 +106,16 @@ public class WaitProcessFinishHandler implements ProcessWaitHandler<ProcessCompl
                 .build();
     }
 
-    private void resumeProcess(UUID instanceId, String eventName) {
+    private void resumeProcess(ProcessKey processKey, String eventName) {
         Payload payload;
         try {
-            payload = payloadManager.createResumePayload(PartialProcessKey.from(instanceId), eventName, null);
+            payload = payloadManager.createResumePayload(processKey, eventName, null);
         } catch (IOException e) {
             throw new ConcordApplicationException("Error creating a payload", e);
         }
 
         processManager.resume(payload);
-        log.info("resumeProcess ['{}', '{}'] -> done", instanceId, eventName);
+        log.info("resumeProcess ['{}', '{}'] -> done", processKey, eventName);
     }
 
     private static boolean isCompleted(CompleteCondition condition, Set<UUID> awaitProcesses, Set<UUID> finishedProcesses) {

@@ -26,7 +26,7 @@ import com.walmartlabs.concord.server.process.ProcessManager;
 import com.walmartlabs.concord.server.process.locks.LockEntry;
 import com.walmartlabs.concord.server.process.locks.ProcessLocksDao;
 import com.walmartlabs.concord.server.sdk.ConcordApplicationException;
-import com.walmartlabs.concord.server.sdk.PartialProcessKey;
+import com.walmartlabs.concord.server.sdk.ProcessKey;
 import com.walmartlabs.concord.server.sdk.ProcessStatus;
 
 import javax.inject.Inject;
@@ -35,7 +35,6 @@ import javax.inject.Singleton;
 import java.io.IOException;
 import java.util.Collections;
 import java.util.Set;
-import java.util.UUID;
 
 /**
  * Handles the processes that are waiting for locks. Resumes a suspended process
@@ -69,20 +68,20 @@ public class WaitProcessLockHandler implements ProcessWaitHandler<ProcessLockCon
     }
 
     @Override
-    public ProcessLockCondition process(UUID instanceId, ProcessStatus status, ProcessLockCondition wait) {
-        LockEntry lock = locksDao.tryLock(instanceId, wait.orgId(), wait.projectId(), wait.scope(), wait.name());
-        if (lock.instanceId().equals(instanceId)) {
-            resumeProcess(instanceId, wait.name());
+    public ProcessLockCondition process(ProcessKey processKey, ProcessStatus status, ProcessLockCondition wait) {
+        LockEntry lock = locksDao.tryLock(processKey, wait.orgId(), wait.projectId(), wait.scope(), wait.name());
+        if (lock.instanceId().equals(processKey.getInstanceId())) {
+            resumeProcess(processKey, wait.name());
             return null;
         }
 
         return ProcessLockCondition.from(lock);
     }
 
-    private void resumeProcess(UUID instanceId, String eventName) {
+    private void resumeProcess(ProcessKey processKey, String eventName) {
         Payload payload;
         try {
-            payload = payloadManager.createResumePayload(PartialProcessKey.from(instanceId), eventName, null);
+            payload = payloadManager.createResumePayload(processKey, eventName, null);
         } catch (IOException e) {
             throw new ConcordApplicationException("Error creating a payload", e);
         }

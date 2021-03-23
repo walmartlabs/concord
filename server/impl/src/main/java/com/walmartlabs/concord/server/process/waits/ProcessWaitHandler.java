@@ -20,6 +20,7 @@ package com.walmartlabs.concord.server.process.waits;
  * =====
  */
 
+import com.walmartlabs.concord.server.sdk.ProcessKey;
 import com.walmartlabs.concord.server.sdk.ProcessStatus;
 
 import java.util.Set;
@@ -36,5 +37,5 @@ public interface ProcessWaitHandler<T extends AbstractWaitCondition> {
     /**
      * @return {@code null} if the specified process doesn't have any wait conditions.
      */
-    T process(UUID instanceId, ProcessStatus processStatus, T waits);
+    T process(ProcessKey processKey, ProcessStatus processStatus, T waits);
 }

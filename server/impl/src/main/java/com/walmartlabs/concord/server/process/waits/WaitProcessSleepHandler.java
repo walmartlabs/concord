@@ -24,7 +24,7 @@ import com.walmartlabs.concord.server.process.Payload;
 import com.walmartlabs.concord.server.process.PayloadManager;
 import com.walmartlabs.concord.server.process.ProcessManager;
 import com.walmartlabs.concord.server.sdk.ConcordApplicationException;
-import com.walmartlabs.concord.server.sdk.PartialProcessKey;
+import com.walmartlabs.concord.server.sdk.ProcessKey;
 import com.walmartlabs.concord.server.sdk.ProcessStatus;
 
 import javax.inject.Inject;
@@ -34,7 +34,6 @@ import java.io.IOException;
 import java.util.Collections;
 import java.util.Date;
 import java.util.Set;
-import java.util.UUID;
 
 /**
  * Handles the processes that are waiting for some timeout. Resumes a suspended process
@@ -66,19 +65,19 @@ public class WaitProcessSleepHandler implements ProcessWaitHandler<ProcessSleepC
     }
 
     @Override
-    public ProcessSleepCondition process(UUID instanceId, ProcessStatus status, ProcessSleepCondition wait) {
+    public ProcessSleepCondition process(ProcessKey processKey, ProcessStatus status, ProcessSleepCondition wait) {
         if (wait.until().before(new Date())) {
-            resumeProcess(instanceId, wait.resumeEvent());
+            resumeProcess(processKey, wait.resumeEvent());
             return null;
         }
 
         return wait;
     }
 
-    private void resumeProcess(UUID instanceId, String eventName) {
+    private void resumeProcess(ProcessKey processKey, String eventName) {
         Payload payload;
         try {
-            payload = payloadManager.createResumePayload(PartialProcessKey.from(instanceId), eventName, null);
+            payload = payloadManager.createResumePayload(processKey, eventName, null);
         } catch (IOException e) {
             throw new ConcordApplicationException("Error creating a payload", e);
         }

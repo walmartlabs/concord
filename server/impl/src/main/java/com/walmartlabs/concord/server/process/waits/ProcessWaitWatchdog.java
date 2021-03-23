@@ -26,7 +26,6 @@ import com.walmartlabs.concord.server.ConcordObjectMapper;
 import com.walmartlabs.concord.server.cfg.ProcessWaitWatchdogConfiguration;
 import com.walmartlabs.concord.server.jooq.tables.ProcessQueue;
 import com.walmartlabs.concord.server.jooq.tables.ProcessWaits;
-import com.walmartlabs.concord.server.process.queue.*;
 import com.walmartlabs.concord.server.sdk.ProcessKey;
 import com.walmartlabs.concord.server.sdk.ProcessStatus;
 import com.walmartlabs.concord.server.sdk.ScheduledTask;
@@ -114,7 +113,7 @@ public class ProcessWaitWatchdog implements ScheduledTask {
     private void processHandler(WaitType type, WaitingProcess p) {
         ProcessWaitHandler<AbstractWaitCondition> handler = processWaitHandlers.get(type);
         if (handler == null) {
-            log.warn("processHandler ['{}'] -> handler '{}' not found", p.instanceId(), type);
+            log.warn("processHandler ['{}'] -> handler '{}' not found", p.processKey(), type);
             return;
         }
 
@@ -122,20 +121,20 @@ public class ProcessWaitWatchdog implements ScheduledTask {
         if (p.status() != null && !handler.getProcessStatuses().contains(p.status())) {
             // clear wait conditions for finished processes
             if (FINAL_STATUSES.contains(p.status())) {
-                processWaitManager.updateWaitOld(new ProcessKey(p.instanceId(), p.instanceCreatedAt()), null);
+                processWaitManager.updateWaitOld(p.processKey(), null);
             }
             return;
         }
 
         try {
             AbstractWaitCondition originalWaits = p.waits();
-            AbstractWaitCondition processedWaits = handler.process(p.instanceId(), p.status(), originalWaits);
+            AbstractWaitCondition processedWaits = handler.process(p.processKey(), p.status(), originalWaits);
             if (!originalWaits.equals(processedWaits)) {
-                processWaitManager.updateWait(new ProcessKey(p.instanceId(), p.instanceCreatedAt()), processedWaits);
+                processWaitManager.updateWait(p.processKey(), processedWaits);
 
                 // TODO: remove me in the next release
                 if (p.status() != null) {
-                    processWaitManager.updateWaitOld(new ProcessKey(p.instanceId(), p.instanceCreatedAt()), processedWaits);
+                    processWaitManager.updateWaitOld(p.processKey(), processedWaits);
                 }
             }
         } catch (Exception e) {
@@ -146,13 +145,11 @@ public class ProcessWaitWatchdog implements ScheduledTask {
     @Value.Immutable
     interface WaitingProcess {
 
-        UUID instanceId();
+        ProcessKey processKey();
 
         // TODO: remove me in the next release
         @Nullable
         ProcessStatus status();
-
-        OffsetDateTime instanceCreatedAt();
 
         long id();
 
@@ -199,8 +196,7 @@ public class ProcessWaitWatchdog implements ScheduledTask {
                 return s.orderBy(w.ID_SEQ)
                         .limit(pollLimit)
                         .fetch(r -> WaitingProcess.builder()
-                                .instanceId(r.value1())
-                                .instanceCreatedAt(r.value2())
+                                .processKey(new ProcessKey(r.value1(), r.value2()))
                                 .id(r.value3())
                                 .waits(objectMapper.fromJSONB(r.value4(), AbstractWaitCondition.class))
                                 .build());
@@ -240,9 +236,8 @@ public class ProcessWaitWatchdog implements ScheduledTask {
                 return s.orderBy(q.ID_SEQ)
                         .limit(pollLimit)
                         .fetch(r -> WaitingProcess.builder()
-                                .instanceId(r.value1())
+                                .processKey(new ProcessKey(r.value1(), r.value3()))
                                 .status(ProcessStatus.valueOf(r.value2()))
-                                .instanceCreatedAt(r.value3())
                                 .id(r.value4())
                                 .waits(objectMapper.fromJSONB(r.value5(), AbstractWaitCondition.class))
                                 .build());
