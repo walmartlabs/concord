@@ -25,17 +25,12 @@ public class Constants {
     public static final int RETRY_COUNT = 3;
     public static final long RETRY_INTERVAL = 5000;
 
-    public static final String RESUME_EVENT_NAME = "sleepTask";
     public static final String DATETIME_PATTERN = "yyyy-MM-dd'T'HH:mm:ss.SSSX";
-    public static final String CONTEXT_KEY = "context";
     public static final String DURATION_KEY = "duration";
     public static final String SUSPEND_KEY = "suspend";
     public static final String UNTIL_KEY = "until";
 
     public static final String[] ALL_IN_PARAMS = {
-            RESUME_EVENT_NAME,
-            DATETIME_PATTERN,
-            CONTEXT_KEY,
             DURATION_KEY,
             SUSPEND_KEY,
             UNTIL_KEY
