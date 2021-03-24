@@ -198,7 +198,7 @@ public class ProcessIT {
         proc.assertLog(".*#1.*x=123.*");
         proc.assertLog(".*#2.*y=234.*");
         proc.assertLog(".*#3.*y=345.*");
-        proc.assertLog(".*same workDir: true.*");
+        proc.assertLog(".*same workDir: false.*");
 
         // ---
 
