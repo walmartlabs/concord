@@ -35,7 +35,8 @@ public final class ConcordConfiguration {
                 .pullPolicy(PullPolicy.defaultPolicy())
                 .streamServerLogs(true)
                 .streamAgentLogs(true)
-                .useLocalMavenRepository(true);
+                .useLocalMavenRepository(true)
+                .extraConfigurationSupplier(() -> "concord-agent { prefork { enabled = true } }");
 
         boolean localMode = Boolean.parseBoolean(System.getProperty("it.local.mode"));
         if (localMode) {
