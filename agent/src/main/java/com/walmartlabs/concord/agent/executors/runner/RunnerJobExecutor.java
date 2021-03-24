@@ -152,7 +152,7 @@ public class RunnerJobExecutor implements JobExecutor {
 
                 throw new RuntimeException(t);
             } finally {
-                persistWorkDir(_job.getInstanceId(), pe.getProcDir());
+                persistWorkDir(_job.getInstanceId(), pe.getWorkDir());
                 cleanup(_job.getInstanceId(), pe);
                 cleanup(_job);
             }
@@ -204,7 +204,7 @@ public class RunnerJobExecutor implements JobExecutor {
 
 
     private void uploadAttachments(UUID instanceId, ProcessEntry pe) {
-        Path payloadDir = pe.getProcDir().resolve(Constants.Files.PAYLOAD_DIR_NAME);
+        Path payloadDir = pe.getWorkDir().resolve(Constants.Files.PAYLOAD_DIR_NAME);
 
         try {
             attachmentsUploader.upload(instanceId, payloadDir);
@@ -215,10 +215,10 @@ public class RunnerJobExecutor implements JobExecutor {
     }
 
     private void cleanup(UUID instanceId, ProcessEntry pe) {
-        Path procDir = pe.getProcDir();
+        Path workDir = pe.getWorkDir();
         try {
-            log.info("exec ['{}'] -> removing the working directory: {}", instanceId, procDir);
-            IOUtils.deleteRecursively(procDir);
+            log.info("exec ['{}'] -> removing the working directory: {}", instanceId, workDir);
+            IOUtils.deleteRecursively(workDir);
         } catch (IOException e) {
             log.warn("exec ['{}'] -> can't remove the working directory: {}", instanceId, e.getMessage());
         }
@@ -233,8 +233,7 @@ public class RunnerJobExecutor implements JobExecutor {
             return fork(job, cmd);
         } else {
             log.info("start ['{}'] -> can't use pre-forked instances", job.getInstanceId());
-            Path procDir = IOUtils.createTempDir("onetime");
-            return startOneTime(job, cmd, procDir);
+            return startOneTime(job, cmd);
         }
     }
 
@@ -402,14 +401,14 @@ public class RunnerJobExecutor implements JobExecutor {
 
         // take a "pre-forked" JVM from the pool or start a new one
         ProcessEntry entry = processPool.take(hc, () -> {
-            Path forkDir = IOUtils.createTempDir("prefork");
-            return start(forkDir, cmd);
+            Path workDir = IOUtils.createTempDir("workDir");
+            return start(workDir, cmd);
         });
 
         // the job's payload directory containing all files from the process' state snapshot and/or the repository's data
         Path src = job.getPayloadDir();
         // the VM's payload directory
-        Path dst = entry.getProcDir().resolve(Constants.Files.PAYLOAD_DIR_NAME);
+        Path dst = entry.getWorkDir().resolve(Constants.Files.PAYLOAD_DIR_NAME);
         // TODO use move
         IOUtils.copy(src, dst);
 
@@ -424,35 +423,33 @@ public class RunnerJobExecutor implements JobExecutor {
         return entry;
     }
 
-    protected ProcessEntry startOneTime(RunnerJob job, String[] cmd, Path procDir) throws IOException {
-        // the job's payload directory containing all files from the process' state snapshot and/or the repository's data
+    protected ProcessEntry startOneTime(RunnerJob job, String[] cmd) throws IOException {
+        // create the parent directory of the process' ${workDir}
+        Path workDir = IOUtils.createTempDir("workDir");
+
+        // the job's payload directory, contains all files from the state snapshot including imports
         Path src = job.getPayloadDir();
         // the VM's payload directory
-        Path dst = procDir.resolve(Constants.Files.PAYLOAD_DIR_NAME);
+        Path dst = workDir.resolve(Constants.Files.PAYLOAD_DIR_NAME);
         Files.move(src, dst, StandardCopyOption.ATOMIC_MOVE);
 
         writeInstanceId(job.getInstanceId(), dst);
 
-        return start(procDir, cmd);
+        return start(workDir, cmd);
     }
 
-    private ProcessEntry start(Path procDir, String[] cmd) throws IOException {
-        Path payloadDir = procDir.resolve(Constants.Files.PAYLOAD_DIR_NAME);
-        if (!Files.exists(payloadDir)) {
-            Files.createDirectories(payloadDir);
-        }
-
-        log.info("start -> {}, {}", payloadDir, String.join(" ", cmd));
+    private ProcessEntry start(Path workDir, String[] cmd) throws IOException {
+        log.info("start -> {}, {}", workDir, String.join(" ", cmd));
 
         ProcessBuilder b = new ProcessBuilder()
-                .directory(payloadDir.toFile())
+                .directory(workDir.toFile())
                 .command(cmd)
                 .redirectErrorStream(true);
 
         // TODO constants
         Map<String, String> env = b.environment();
         env.put(IOUtils.TMP_DIR_KEY, IOUtils.TMP_DIR.toAbsolutePath().toString());
-        env.put("_CONCORD_ATTACHMENTS_DIR", payloadDir.resolve(Constants.Files.JOB_ATTACHMENTS_DIR_NAME)
+        env.put("_CONCORD_ATTACHMENTS_DIR", workDir.resolve(Constants.Files.JOB_ATTACHMENTS_DIR_NAME)
                 .toAbsolutePath().toString());
 
         // pass through the docker mode
@@ -463,7 +460,7 @@ public class RunnerJobExecutor implements JobExecutor {
         }
 
         Process p = b.start();
-        return new ProcessEntry(p, procDir);
+        return new ProcessEntry(p, workDir);
     }
 
     protected Path storeRunnerCfg(Path baseDir, RunnerConfiguration runnerCfg) throws IOException {

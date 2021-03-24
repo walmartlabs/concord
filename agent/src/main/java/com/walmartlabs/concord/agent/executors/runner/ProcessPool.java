@@ -87,9 +87,9 @@ public class ProcessPool {
                     throw new ExecutionException("Error while starting a new process", e);
                 }
 
-                log.info("take -> started a new process: {}", entry.procDir);
+                log.info("take -> started a new process: {}", entry.workDir);
             } else {
-                log.info("take -> using a pre-forked instance: {}", entry.procDir);
+                log.info("take -> using a pre-forked instance: {}", entry.workDir);
             }
 
             executor.submit(() -> populate(hc, launcher));
@@ -170,9 +170,9 @@ public class ProcessPool {
 
     private static void cleanup(ProcessEntry process) {
         try {
-            IOUtils.deleteRecursively(process.procDir);
+            IOUtils.deleteRecursively(process.workDir);
         } catch (IOException e) {
-            log.info("cleanup ['{}'] -> error: {}", process.procDir, e.getMessage());
+            log.info("cleanup ['{}'] -> error: {}", process.workDir, e.getMessage());
             // ignore
         }
     }
@@ -186,22 +186,22 @@ public class ProcessPool {
 
         private final long timestamp;
         private final Process process;
-        private final Path procDir;
+        private final Path workDir;
 
         private boolean remove = false;
 
-        public ProcessEntry(Process process, Path procDir) {
+        public ProcessEntry(Process process, Path workDir) {
             this.timestamp = System.currentTimeMillis();
             this.process = process;
-            this.procDir = procDir;
+            this.workDir = workDir;
         }
 
         public Process getProcess() {
             return process;
         }
 
-        public Path getProcDir() {
-            return procDir;
+        public Path getWorkDir() {
+            return workDir;
         }
     }
 }
