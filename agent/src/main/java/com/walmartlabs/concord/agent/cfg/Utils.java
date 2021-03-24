@@ -63,10 +63,14 @@ public final class Utils {
 
             String value = cfg.getString(key);
             if (value.startsWith("/")) {
-                Path p = Paths.get(value);
+                Path p = Paths.get(value)
+                        .normalize()
+                        .toAbsolutePath();
+
                 if (!Files.exists(p)) {
                     Files.createDirectories(p);
                 }
+
                 return p;
             }
             return IOUtils.createTempDir(value);

@@ -204,10 +204,8 @@ public class RunnerJobExecutor implements JobExecutor {
 
 
     private void uploadAttachments(UUID instanceId, ProcessEntry pe) {
-        Path payloadDir = pe.getWorkDir().resolve(Constants.Files.PAYLOAD_DIR_NAME);
-
         try {
-            attachmentsUploader.upload(instanceId, payloadDir);
+            attachmentsUploader.upload(instanceId, pe.getWorkDir());
         } catch (Exception e) {
             log.error("uploadAttachments ['{}'] -> error: {}", instanceId, e.getMessage());
             throw new RuntimeException("Error while uploading attachments: " + e.getMessage());
@@ -230,9 +228,9 @@ public class RunnerJobExecutor implements JobExecutor {
 
         boolean prefork = canUsePrefork(job);
         if (prefork) {
+            log.info("start ['{}'] -> using a pre-forked instances", job.getInstanceId());
             return fork(job, cmd);
         } else {
-            log.info("start ['{}'] -> can't use pre-forked instances", job.getInstanceId());
             return startOneTime(job, cmd);
         }
     }
@@ -401,14 +399,16 @@ public class RunnerJobExecutor implements JobExecutor {
 
         // take a "pre-forked" JVM from the pool or start a new one
         ProcessEntry entry = processPool.take(hc, () -> {
+            // can't use workDirBase, "preforks" start before they receive their process payload
+            // create a new temporary directory
             Path workDir = IOUtils.createTempDir("workDir");
             return start(workDir, cmd);
         });
 
         // the job's payload directory containing all files from the process' state snapshot and/or the repository's data
         Path src = job.getPayloadDir();
-        // the VM's payload directory
-        Path dst = entry.getWorkDir().resolve(Constants.Files.PAYLOAD_DIR_NAME);
+        // the process' workDir
+        Path dst = entry.getWorkDir();
         // TODO use move
         IOUtils.copy(src, dst);
 
@@ -425,15 +425,17 @@ public class RunnerJobExecutor implements JobExecutor {
 
     protected ProcessEntry startOneTime(RunnerJob job, String[] cmd) throws IOException {
         // create the parent directory of the process' ${workDir}
-        Path workDir = IOUtils.createTempDir("workDir");
+        Path workDir = cfg.workDirBase().resolve(job.getInstanceId().toString());
+        if (!Files.exists(workDir)) {
+            Files.createDirectories(workDir);
+        }
 
         // the job's payload directory, contains all files from the state snapshot including imports
         Path src = job.getPayloadDir();
-        // the VM's payload directory
-        Path dst = workDir.resolve(Constants.Files.PAYLOAD_DIR_NAME);
-        Files.move(src, dst, StandardCopyOption.ATOMIC_MOVE);
 
-        writeInstanceId(job.getInstanceId(), dst);
+        Files.move(src, workDir, StandardCopyOption.ATOMIC_MOVE);
+
+        writeInstanceId(job.getInstanceId(), workDir);
 
         return start(workDir, cmd);
     }
@@ -522,6 +524,28 @@ public class RunnerJobExecutor implements JobExecutor {
         return cfg.jvmParams();
     }
 
+    private boolean canUsePrefork(RunnerJob job) {
+        if (!cfg.preforkEnabled()) {
+            return false;
+        }
+
+        Path workDir = job.getPayloadDir();
+
+        if (Files.exists(workDir.resolve(Constants.Files.LIBRARIES_DIR_NAME))) {
+            // the process supplied its own libraries, can't use preforking
+            return false;
+        }
+
+        // the process supplied its own JVM parameters in concord.yml, can't use preforking
+        List<String> jvmExtraArgs = getJvmArgsFromConfig(job.getProcessCfg());
+        if (jvmExtraArgs != null) {
+            return false;
+        }
+
+        // the process supplied its own JVM parameters in _agent.json, can't use preforking
+        return !Files.exists(workDir.resolve(Constants.Agent.AGENT_PARAMS_FILE_NAME));
+    }
+
     private static List<String> getJvmArgsFromConfig(Map<String, Object> processCfg) {
         Map<String, Object> requirements = MapUtils.get(processCfg, Constants.Request.REQUIREMENTS, null);
         if (requirements == null) {
@@ -555,24 +579,6 @@ public class RunnerJobExecutor implements JobExecutor {
         }
 
         return logLevel.toUpperCase();
-    }
-
-    private static boolean canUsePrefork(RunnerJob job) {
-        Path workDir = job.getPayloadDir();
-
-        if (Files.exists(workDir.resolve(Constants.Files.LIBRARIES_DIR_NAME))) {
-            // the process supplied its own libraries, can't use preforking
-            return false;
-        }
-
-        // the process supplied its own JVM parameters in concord.yml, can't use preforking
-        List<String> jvmExtraArgs = getJvmArgsFromConfig(job.getProcessCfg());
-        if (jvmExtraArgs != null) {
-            return false;
-        }
-
-        // the process supplied its own JVM parameters in _agent.json, can't use preforking
-        return !Files.exists(workDir.resolve(Constants.Agent.AGENT_PARAMS_FILE_NAME));
     }
 
     private static HashCode hash(String[] as) {
@@ -657,6 +663,8 @@ public class RunnerJobExecutor implements JobExecutor {
 
         Path dependencyCacheDir();
 
+        Path workDirBase();
+
         Path runnerPath();
 
         Path runnerCfgDir();
@@ -683,6 +691,8 @@ public class RunnerJobExecutor implements JobExecutor {
 
         @Nullable
         Path persistentWorkDir();
+
+        boolean preforkEnabled();
 
         static ImmutableRunnerJobExecutorConfiguration.Builder builder() {
             return ImmutableRunnerJobExecutorConfiguration.builder();
