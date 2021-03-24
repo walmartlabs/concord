@@ -17,7 +17,10 @@ process IDs as links in the UI
 to skip fetching if local commit ID equals remote commit ID
 ([#359](https://github.com/walmartlabs/concord/pull/359)).
 - concord-agent: option to redirect process logs to stdout
-([#362](https://github.com/walmartlabs/concord/pull/362)).
+([#362](https://github.com/walmartlabs/concord/pull/362));
+- concord-server, runtime-v2: it is now possible to resume
+a process waiting for multiple external events
+([#370](https://github.com/walmartlabs/concord/pull/370)).
 
 ### Changed
 
