@@ -62,7 +62,7 @@ public class EnqueueProcessPipeline extends Pipeline {
                 DependenciesProcessor.class,
                 InitiatorUserInfoProcessor.class,
                 OutVariablesSettingProcessor.class,
-                EventNameProcessor.class,
+                ResumeEventsProcessor.class,
                 ConfigurationStoringProcessor.class,
                 PolicyProcessor.class,
                 DependencyVersionsExportProcessor.class,
