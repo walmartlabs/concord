@@ -47,20 +47,22 @@ public class Suspender {
     }
 
     public TaskResult suspend(Instant until) throws ApiException {
+        String eventName = UUID.randomUUID().toString();
+
         ClientUtils.withRetry(Constants.RETRY_COUNT, Constants.RETRY_INTERVAL, () -> {
-            api.setWaitCondition(instanceId, createCondition(until));
+            api.setWaitCondition(instanceId, createCondition(until, eventName));
             return null;
         });
 
-        return TaskResult.suspend(Constants.RESUME_EVENT_NAME);
+        return TaskResult.suspend(eventName);
     }
 
-    private static Map<String, Object> createCondition(Instant until) {
+    private static Map<String, Object> createCondition(Instant until, String eventName) {
         Map<String, Object> condition = new HashMap<>();
         condition.put("type", "PROCESS_SLEEP");
         condition.put("until", dateFormatter.format(until));
         condition.put("reason", "Waiting till " + until);
-        condition.put("resumeEvent", Constants.RESUME_EVENT_NAME);
+        condition.put("resumeEvent", eventName);
         return condition;
     }
 }
