@@ -42,6 +42,7 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
+import java.util.Set;
 
 @Named
 public class SsoClient {
@@ -248,6 +249,11 @@ public class SsoClient {
 
         @JsonProperty("displayName")
         String displayName();
-        
+
+        @JsonProperty("userPrincipalName")
+        String userPrincipalName();
+
+        @JsonProperty("memberOf")
+        Set<String> groups();
     }
 }

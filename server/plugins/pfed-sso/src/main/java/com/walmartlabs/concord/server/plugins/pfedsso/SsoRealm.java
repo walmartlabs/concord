@@ -26,6 +26,9 @@ import com.walmartlabs.concord.server.audit.AuditObject;
 import com.walmartlabs.concord.server.sdk.metrics.WithTimer;
 import com.walmartlabs.concord.server.security.PrincipalUtils;
 import com.walmartlabs.concord.server.security.UserPrincipal;
+import com.walmartlabs.concord.server.security.ldap.LdapManagerImpl;
+import com.walmartlabs.concord.server.security.ldap.LdapManagerProvider;
+import com.walmartlabs.concord.server.security.ldap.LdapPrincipal;
 import com.walmartlabs.concord.server.user.UserEntry;
 import com.walmartlabs.concord.server.user.UserManager;
 import com.walmartlabs.concord.server.user.UserType;
@@ -86,7 +89,9 @@ public class SsoRealm extends AuthorizingRealm {
                 .log();
 
         UserPrincipal userPrincipal = new UserPrincipal(REALM_NAME, u);
-        return new SimpleAccount(Arrays.asList(userPrincipal, t), t.getCredentials(), getName());
+
+        LdapPrincipal ldapPrincipal = new LdapPrincipal(t.getUsername(), t.getDomain(), null, t.getUserPrincipalName(), t.getDisplayName(), t.getMail(), t.getGroups(), null);
+        return new SimpleAccount(Arrays.asList(userPrincipal, t, ldapPrincipal), t.getCredentials(), getName());
     }
 
     @Override
