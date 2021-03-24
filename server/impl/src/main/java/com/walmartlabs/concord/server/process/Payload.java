@@ -51,7 +51,7 @@ public class Payload {
     public static final HeaderKey<Set<String>> PROCESS_HANDLERS = HeaderKey.registerSet("_processHandlers");
     public static final HeaderKey<Set<String>> PROCESS_TAGS = HeaderKey.registerSet("_processTags");
     public static final HeaderKey<String> ENTRY_POINT = HeaderKey.register("_entryPoint", String.class);
-    public static final HeaderKey<String> EVENT_NAME = HeaderKey.register("_eventName", String.class);
+    public static final HeaderKey<Set<String>> RESUME_EVENTS = HeaderKey.registerSet("_resumeEvents");
     public static final HeaderKey<String> INITIATOR = HeaderKey.register("_initiator", String.class);
     public static final HeaderKey<String> RUNTIME = HeaderKey.register("_runtime", String.class);
     public static final HeaderKey<String> SESSION_TOKEN = HeaderKey.register("_sessionToken", String.class);

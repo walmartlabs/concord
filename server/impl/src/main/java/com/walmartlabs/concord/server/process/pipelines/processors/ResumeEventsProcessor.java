@@ -29,22 +29,23 @@ import javax.inject.Named;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 
 @Named
-public class EventNameProcessor implements PayloadProcessor {
+public class ResumeEventsProcessor implements PayloadProcessor {
 
     private final ProcessLogManager logManager;
 
     @Inject
-    public EventNameProcessor(ProcessLogManager logManager) {
+    public ResumeEventsProcessor(ProcessLogManager logManager) {
         this.logManager = logManager;
     }
 
     @Override
     @SuppressWarnings("unchecked")
     public Payload process(Chain chain, Payload payload) {
-        String eventName = payload.getHeader(Payload.EVENT_NAME);
-        if (eventName == null) {
+        Set<String> events = payload.getHeader(Payload.RESUME_EVENTS, Collections.emptySet());
+        if (events.isEmpty()) {
             return chain.process(payload);
         }
 
@@ -59,6 +60,9 @@ public class EventNameProcessor implements PayloadProcessor {
             cfg.put(Constants.Request.ARGUMENTS_KEY, args);
         }
 
+        args.put(Constants.Request.RESUME_EVENTS_KEY, events);
+        payload = payload.putHeader(Payload.CONFIGURATION, cfg);
+
         String old = (String) args.get(Constants.Request.EVENT_NAME_KEY);
         if (old != null) {
             // don't overwrite the existing value for backward-compatibility reasons
@@ -66,7 +70,9 @@ public class EventNameProcessor implements PayloadProcessor {
             return chain.process(payload);
         }
 
-        args.put(Constants.Request.EVENT_NAME_KEY, eventName);
+        if (events.size() == 1) {
+            args.put(Constants.Request.EVENT_NAME_KEY, events.iterator().next());
+        }
 
         payload = payload.putHeader(Payload.CONFIGURATION, cfg);
 
