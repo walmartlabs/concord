@@ -31,14 +31,20 @@ public class SsoToken implements AuthenticationToken {
     private final String displayName;
     private final String mail;
     private final String userPrincipalName;
+    private final String nameInNamespace;
     private final Set<String> groups;
 
-    public SsoToken(String username, String domain, String displayName, String mail, String userPrincipalName, Set<String> groups) {
+    public String getNameInNamespace() {
+        return nameInNamespace;
+    }
+
+    public SsoToken(String username, String domain, String displayName, String mail, String userPrincipalName, String nameInNamespace, Set<String> groups) {
         this.username = username;
         this.domain = domain;
         this.displayName = displayName;
         this.mail = mail;
         this.userPrincipalName = userPrincipalName;
+        this.nameInNamespace = nameInNamespace;
         this.groups = groups;
     }
 
@@ -56,6 +62,19 @@ public class SsoToken implements AuthenticationToken {
 
     public String getMail() {
         return mail;
+    }
+
+    @Override
+    public String toString() {
+        return "SsoToken{" +
+                "username='" + username + '\'' +
+                ", domain='" + domain + '\'' +
+                ", displayName='" + displayName + '\'' +
+                ", mail='" + mail + '\'' +
+                ", userPrincipalName='" + userPrincipalName + '\'' +
+                ", nameInNamespace='" + nameInNamespace + '\'' +
+                ", groups=" + groups +
+                '}';
     }
 
     public String getUserPrincipalName() {
@@ -76,15 +95,4 @@ public class SsoToken implements AuthenticationToken {
         return getPrincipal();
     }
 
-    @Override
-    public String toString() {
-        return "SsoToken{" +
-                "username='" + username + '\'' +
-                ", domain='" + domain + '\'' +
-                ", displayName='" + displayName + '\'' +
-                ", mail='" + mail + '\'' +
-                ", userPrincipalName='" + userPrincipalName + '\'' +
-                ", groups=" + groups +
-                '}';
-    }
 }

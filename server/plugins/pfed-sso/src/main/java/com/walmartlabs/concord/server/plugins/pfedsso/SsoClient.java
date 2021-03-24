@@ -252,6 +252,9 @@ public class SsoClient {
 
         @JsonProperty("userPrincipalName")
         String userPrincipalName();
+        
+        @JsonProperty("distinguishedName")
+        String nameInNamespace();
 
         @JsonProperty("memberOf")
         Set<String> groups();

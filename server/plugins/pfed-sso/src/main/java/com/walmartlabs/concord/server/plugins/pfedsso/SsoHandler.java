@@ -81,7 +81,7 @@ public class SsoHandler implements AuthenticationHandler {
         if (profile == null){
             return null;
         }
-        return new SsoToken(as[0], as[1], profile.displayName(), profile.mail(), profile.userPrincipalName(), profile.groups()) ;
+        return new SsoToken(as[0], as[1], profile.displayName(), profile.mail(), profile.userPrincipalName(), profile.nameInNamespace(), profile.groups()) ;
     }
 
     @Override

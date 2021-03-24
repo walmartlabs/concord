@@ -129,6 +129,13 @@ public class FormAccessManager {
         }
 
         return userLdapGroups.stream()
-                .anyMatch(g -> Pattern.compile(pattern, Pattern.CASE_INSENSITIVE).matcher(g).matches());
+                .anyMatch(g -> (Pattern.compile(pattern, Pattern.CASE_INSENSITIVE).matcher(g).matches()
+                        || Pattern.compile(normalizeGroup(pattern), Pattern.CASE_INSENSITIVE).matcher(g).matches()));
+    }
+
+    private static String normalizeGroup(String group){
+        String normalizedGroup = group.replace("CN=", "");
+        int endIndex = normalizedGroup.indexOf(',');
+        return normalizedGroup.substring(0, endIndex);
     }
 }

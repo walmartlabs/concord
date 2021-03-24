@@ -26,8 +26,6 @@ import com.walmartlabs.concord.server.audit.AuditObject;
 import com.walmartlabs.concord.server.sdk.metrics.WithTimer;
 import com.walmartlabs.concord.server.security.PrincipalUtils;
 import com.walmartlabs.concord.server.security.UserPrincipal;
-import com.walmartlabs.concord.server.security.ldap.LdapManagerImpl;
-import com.walmartlabs.concord.server.security.ldap.LdapManagerProvider;
 import com.walmartlabs.concord.server.security.ldap.LdapPrincipal;
 import com.walmartlabs.concord.server.user.UserEntry;
 import com.walmartlabs.concord.server.user.UserManager;
@@ -43,6 +41,7 @@ import org.apache.shiro.subject.PrincipalCollection;
 import javax.inject.Inject;
 import javax.inject.Named;
 import java.util.Arrays;
+import java.util.Collections;
 
 @Named
 public class SsoRealm extends AuthorizingRealm {
@@ -90,7 +89,7 @@ public class SsoRealm extends AuthorizingRealm {
 
         UserPrincipal userPrincipal = new UserPrincipal(REALM_NAME, u);
 
-        LdapPrincipal ldapPrincipal = new LdapPrincipal(t.getUsername(), t.getDomain(), null, t.getUserPrincipalName(), t.getDisplayName(), t.getMail(), t.getGroups(), null);
+        LdapPrincipal ldapPrincipal = new LdapPrincipal(t.getUsername(), t.getDomain(), t.getNameInNamespace(), t.getUserPrincipalName(), t.getDisplayName(), t.getMail(), t.getGroups(), Collections.singletonMap("mail", t.getMail()));
         return new SimpleAccount(Arrays.asList(userPrincipal, t, ldapPrincipal), t.getCredentials(), getName());
     }
 
