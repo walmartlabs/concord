@@ -64,7 +64,7 @@ public class ProcessWaitDao extends AbstractDao {
                 .execute();
     }
 
-    // TODO: remove me in the next release
+    // TODO: old process_queue.wait_conditions code, remove me (1.84.0 or later)
     public void updateWaitOld(DSLContext tx, ProcessKey processKey, AbstractWaitCondition wait) {
         tx.update(PROCESS_QUEUE)
                 .set(PROCESS_QUEUE.WAIT_CONDITIONS, field("?::jsonb", JSONB.class, objectMapper.toJSONB(wait)))

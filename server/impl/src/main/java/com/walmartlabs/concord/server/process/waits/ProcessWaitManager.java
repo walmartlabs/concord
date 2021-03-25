@@ -48,12 +48,12 @@ public class ProcessWaitManager {
         this.eventManager = eventManager;
     }
 
-    // TODO: remove me in the next release
+    // TODO: old process_queue.wait_conditions code, remove me (1.84.0 or later)
     public void updateWaitOld(ProcessKey processKey, AbstractWaitCondition wait) {
         processWaitDao.tx(tx -> updateWaitOld(tx, processKey, wait));
     }
 
-    // TODO: remove me in the next release
+    // TODO: old process_queue.wait_conditions code, remove me (1.84.0 or later)
     public void updateWaitOld(DSLContext tx, ProcessKey processKey, AbstractWaitCondition wait) {
         processWaitDao.updateWaitOld(tx, processKey, wait);
 
