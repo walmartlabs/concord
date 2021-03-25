@@ -135,7 +135,7 @@ public class FormAccessManager {
 
     private static String normalizeGroup(String group){
         String subStr =  StringUtils.substringBetween(group, "CN=", ",");
-        if (subStr!= null)
+        if (subStr != null)
             return subStr;
         return group;
     }
