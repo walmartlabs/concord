@@ -24,13 +24,12 @@ import com.walmartlabs.concord.server.sdk.ProcessKey;
 import com.walmartlabs.concord.server.sdk.ProcessStatus;
 
 import java.util.Set;
-import java.util.UUID;
 
 public interface ProcessWaitHandler<T extends AbstractWaitCondition> {
 
     WaitType getType();
 
-    // TODO: remove me in the next release
+    // TODO: old process_queue.wait_conditions code, remove me (1.84.0 or later)
     @Deprecated
     Set<ProcessStatus> getProcessStatuses();
 
