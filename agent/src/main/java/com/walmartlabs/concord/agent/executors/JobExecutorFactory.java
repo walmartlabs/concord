@@ -30,7 +30,6 @@ import com.walmartlabs.concord.agent.guice.AgentDependencyManager;
 import com.walmartlabs.concord.agent.logging.ProcessLog;
 import com.walmartlabs.concord.agent.logging.ProcessLogFactory;
 import com.walmartlabs.concord.agent.remote.AttachmentsUploader;
-import com.walmartlabs.concord.dependencymanager.DependencyManager;
 import com.walmartlabs.concord.sdk.Constants;
 import com.walmartlabs.concord.sdk.MapUtils;
 
@@ -46,6 +45,7 @@ public class JobExecutorFactory {
     private final AgentConfiguration agentCfg;
     private final ServerConfiguration serverCfg;
     private final DockerConfiguration dockerCfg;
+    private final PreForkConfiguration preForkCfg;
 
     private final RunnerV1Configuration runnerV1Cfg;
     private final RunnerV2Configuration runnerV2Cfg;
@@ -63,6 +63,7 @@ public class JobExecutorFactory {
     public JobExecutorFactory(AgentConfiguration agentCfg,
                               ServerConfiguration serverCfg,
                               DockerConfiguration dockerCfg,
+                              PreForkConfiguration preForkCfg,
                               RunnerV1Configuration runnerV1Cfg,
                               RunnerV2Configuration runnerV2Cfg,
                               AgentDependencyManager dependencyManager,
@@ -75,6 +76,7 @@ public class JobExecutorFactory {
         this.agentCfg = agentCfg;
         this.serverCfg = serverCfg;
         this.dockerCfg = dockerCfg;
+        this.preForkCfg = preForkCfg;
 
         this.runnerV1Cfg = runnerV1Cfg;
         this.runnerV2Cfg = runnerV2Cfg;
@@ -112,6 +114,7 @@ public class JobExecutorFactory {
                     .jvmParams(runnerCfg.getJvmParams())
                     .dependencyListDir(agentCfg.getDependencyListsDir())
                     .dependencyCacheDir(agentCfg.getDependencyCacheDir())
+                    .workDirBase(agentCfg.getWorkDirBase())
                     .runnerPath(runnerCfg.getPath())
                     .runnerCfgDir(runnerCfg.getCfgDir())
                     .runnerSecurityManagerEnabled(runnerCfg.isSecurityManagerEnabled())
@@ -122,6 +125,7 @@ public class JobExecutorFactory {
                     .segmentedLogs(segmentedLogs)
                     .logDir(agentCfg.getLogDir())
                     .persistentWorkDir(runnerCfg.getPersistentWorkDir())
+                    .preforkEnabled(preForkCfg.isEnabled())
                     .build();
 
             JobExecutor delegate = new RunnerJobExecutor(runnerExecutorCfg, dependencyManager, defaultDependencies, attachmentsUploader, processPool, processLogFactory, executor);

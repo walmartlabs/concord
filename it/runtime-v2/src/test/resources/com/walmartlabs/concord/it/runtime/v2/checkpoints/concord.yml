@@ -26,3 +26,5 @@ flows:
     - log: "#3 ${aVar}" # ${x=123, y=345}
 
     - log: "same workDir: ${workDir == oldWorkDir}" # 'true' first time, 'false' after restoring a checkpoint
+
+    # see also the description of "prefork.enable" parameter in concord-agent.conf
