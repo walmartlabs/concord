@@ -28,7 +28,8 @@ form) and processes waiting for "external" conditions (e.g.
 concurrent execution limits, waiting for another process or
 lock, etc). This PR creates a clear separation in statuses
 for such cases
-([#371](https://github.com/walmartlabs/concord/pull/371)).
+([#371](https://github.com/walmartlabs/concord/pull/371) and
+ [#379](https://github.com/walmartlabs/concord/pull/379)).
 
 ### Changed
 
