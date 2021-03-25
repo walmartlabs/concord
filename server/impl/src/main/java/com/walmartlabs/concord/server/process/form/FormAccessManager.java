@@ -27,7 +27,6 @@ import com.walmartlabs.concord.server.security.Roles;
 import com.walmartlabs.concord.server.security.UserPrincipal;
 import com.walmartlabs.concord.server.security.ldap.LdapPrincipal;
 import io.takari.bpm.form.Form;
-import org.apache.commons.lang3.StringUtils;
 import org.apache.shiro.authz.UnauthorizedException;
 
 import javax.inject.Inject;
@@ -39,6 +38,7 @@ import java.io.Serializable;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import static com.walmartlabs.concord.server.process.state.ProcessStateManager.path;
@@ -129,14 +129,29 @@ public class FormAccessManager {
             return false;
         }
 
+        String normalizedPattern = normalizeGroup(pattern);
+        boolean isLdapGroupPattern = checkLdapGroupPattern(pattern);
+
         return userLdapGroups.stream()
-                .anyMatch(g -> Pattern.compile(normalizeGroup(pattern), Pattern.CASE_INSENSITIVE).matcher(normalizeGroup(g)).matches());
+                .anyMatch(g -> {
+                    if (isLdapGroupPattern && checkLdapGroupPattern(g)) {
+                        return Pattern.compile(pattern, Pattern.CASE_INSENSITIVE).matcher(g).matches();
+                    }
+                    return normalizedPattern.equalsIgnoreCase(normalizeGroup(g));
+                });
     }
 
-    private static String normalizeGroup(String group){
-        String subStr =  StringUtils.substringBetween(group, "CN=", ",");
-        if (subStr != null)
-            return subStr;
+    private static boolean checkLdapGroupPattern(String group) {
+        // memberOf attribute values(groups) starts with CN
+        return group.toUpperCase().trim().startsWith("CN=");
+    }
+
+    private static String normalizeGroup(String group) {
+        Pattern pattern = Pattern.compile("CN=(.*?),", Pattern.CASE_INSENSITIVE);
+        Matcher matcher = pattern.matcher(group);
+        if (matcher.find()) {
+            return matcher.group(1);
+        }
         return group;
     }
 }
