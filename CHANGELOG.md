@@ -20,7 +20,15 @@ to skip fetching if local commit ID equals remote commit ID
 ([#362](https://github.com/walmartlabs/concord/pull/362));
 - concord-server, runtime-v2: it is now possible to resume
 a process waiting for multiple external events
-([#370](https://github.com/walmartlabs/concord/pull/370)).
+([#370](https://github.com/walmartlabs/concord/pull/370));
+- concord-server, concord-console: new process status
+`WAITING`. Before this change, the `SUSPENDED` status was
+used for both processes suspended on an event (e.g. on a
+form) and processes waiting for "external" conditions (e.g.
+concurrent execution limits, waiting for another process or
+lock, etc). This PR creates a clear separation in statuses
+for such cases
+([#371](https://github.com/walmartlabs/concord/pull/371)).
 
 ### Changed
 
