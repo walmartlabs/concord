@@ -31,7 +31,6 @@ import com.walmartlabs.concord.server.process.pipelines.ForkPipeline;
 import com.walmartlabs.concord.server.process.pipelines.NewProcessPipeline;
 import com.walmartlabs.concord.server.process.pipelines.ResumePipeline;
 import com.walmartlabs.concord.server.process.pipelines.processors.Chain;
-import com.walmartlabs.concord.server.process.queue.AbstractWaitCondition;
 import com.walmartlabs.concord.server.process.queue.ProcessQueueDao;
 import com.walmartlabs.concord.server.process.queue.ProcessQueueDao.IdAndStatus;
 import com.walmartlabs.concord.server.process.queue.ProcessQueueManager;
@@ -73,7 +72,6 @@ public class ProcessManager {
     private final PayloadManager payloadManager;
     private final RepositoryDao repositoryDao;
     private final ProcessQueueManager queueManager;
-    private final ProcessQueueManager processQueueManager;
 
     private final Chain processPipeline;
     private final Chain resumePipeline;
@@ -83,6 +81,7 @@ public class ProcessManager {
             ProcessStatus.NEW,
             ProcessStatus.PREPARING,
             ProcessStatus.ENQUEUED,
+            ProcessStatus.WAITING,
             ProcessStatus.SUSPENDED);
 
     private static final List<ProcessStatus> TERMINATED_PROCESS_STATUSES = Arrays.asList(
@@ -112,7 +111,6 @@ public class ProcessManager {
                           PayloadManager payloadManager,
                           RepositoryDao repositoryDao,
                           ProcessQueueManager queueManager,
-                          ProcessQueueManager processQueueManager,
                           NewProcessPipeline processPipeline,
                           ResumePipeline resumePipeline,
                           ForkPipeline forkPipeline) {
@@ -126,7 +124,6 @@ public class ProcessManager {
         this.checkpointManager = checkpointManager;
         this.payloadManager = payloadManager;
         this.repositoryDao = repositoryDao;
-        this.processQueueManager = processQueueManager;
 
         this.processPipeline = processPipeline;
         this.resumePipeline = resumePipeline;
@@ -183,7 +180,7 @@ public class ProcessManager {
     }
 
     public void killCascade(PartialProcessKey processKey) {
-        ProcessEntry e = processQueueManager.get(processKey);
+        ProcessEntry e = queueManager.get(processKey);
         if (e == null) {
             throw new ProcessException(null, "Process not found: " + processKey, Status.NOT_FOUND);
         }
@@ -261,13 +258,8 @@ public class ProcessManager {
         log.info("updateStatus [{}, '{}', {}] -> done", processKey, agentId, status);
     }
 
-    public void setWaitCondition(ProcessKey processKey, AbstractWaitCondition condition) {
-        assertUpdateRights(processKey);
-        queueManager.updateWait(processKey, condition);
-    }
-
     public ProcessEntry assertProcess(UUID instanceId) {
-        ProcessEntry p = processQueueManager.get(PartialProcessKey.from(instanceId));
+        ProcessEntry p = queueManager.get(PartialProcessKey.from(instanceId));
         if (p == null) {
             throw new ConcordApplicationException("Process instance not found", Response.Status.NOT_FOUND);
         }

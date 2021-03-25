@@ -25,6 +25,7 @@ import com.walmartlabs.concord.db.MainDB;
 import com.walmartlabs.concord.server.jooq.enums.ProcessLockScope;
 import com.walmartlabs.concord.server.jooq.tables.ProcessLocks;
 import com.walmartlabs.concord.server.jooq.tables.records.ProcessLocksRecord;
+import com.walmartlabs.concord.server.sdk.ProcessKey;
 import org.jooq.Configuration;
 import org.jooq.DSLContext;
 import org.jooq.SelectConditionStep;
@@ -43,12 +44,12 @@ public class ProcessLocksDao extends AbstractDao {
         super(cfg);
     }
 
-    public LockEntry tryLock(UUID instanceId, UUID orgId, UUID projectId, ProcessLockScope scope, String lockName) {
+    public LockEntry tryLock(ProcessKey processKey, UUID orgId, UUID projectId, ProcessLockScope scope, String lockName) {
         while (true) {
-            boolean locked = insert(instanceId, orgId, projectId, scope, lockName);
+            boolean locked = insert(processKey, orgId, projectId, scope, lockName);
             if (locked) {
                 return LockEntry.builder()
-                        .instanceId(instanceId)
+                        .instanceId(processKey.getInstanceId())
                         .orgId(orgId)
                         .projectId(projectId)
                         .scope(scope)
@@ -67,18 +68,18 @@ public class ProcessLocksDao extends AbstractDao {
         return txResult(tx -> get(tx, orgId, projectId, scope, lockName));
     }
 
-    public boolean insert(UUID instanceId, UUID orgId, UUID projectId, ProcessLockScope scope, String lockName) {
-        return txResult(tx -> insert(tx, instanceId, orgId, projectId, scope, lockName));
+    public boolean insert(ProcessKey processKey, UUID orgId, UUID projectId, ProcessLockScope scope, String lockName) {
+        return txResult(tx -> insert(tx, processKey, orgId, projectId, scope, lockName));
     }
 
     public void delete(UUID instanceId, UUID orgId, UUID projectId, ProcessLockScope scope, String lockName) {
         tx(tx -> delete(tx, instanceId, orgId, projectId, scope, lockName));
     }
 
-    private boolean insert(DSLContext tx, UUID instanceId, UUID orgId, UUID projectId, ProcessLockScope scope, String lockName) {
+    private boolean insert(DSLContext tx, ProcessKey processKey, UUID orgId, UUID projectId, ProcessLockScope scope, String lockName) {
         ProcessLocks l = PROCESS_LOCKS.as("l");
         return tx.insertInto(l, l.INSTANCE_ID, l.ORG_ID, l.PROJECT_ID, l.LOCK_SCOPE, l.LOCK_NAME)
-                .values(instanceId, orgId, projectId, scope, lockName)
+                .values(processKey.getInstanceId(), orgId, projectId, scope, lockName)
                 .onConflictDoNothing()
                 .execute() == 1;
     }

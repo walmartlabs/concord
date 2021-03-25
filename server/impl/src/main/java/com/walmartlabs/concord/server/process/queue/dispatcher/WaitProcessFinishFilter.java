@@ -21,9 +21,10 @@ package com.walmartlabs.concord.server.process.queue.dispatcher;
  */
 
 import com.google.common.collect.ImmutableSet;
-import com.walmartlabs.concord.server.process.queue.ProcessCompletionCondition;
+import com.walmartlabs.concord.server.process.waits.ProcessCompletionCondition;
 import com.walmartlabs.concord.server.process.queue.ProcessQueueEntry;
 import com.walmartlabs.concord.server.process.queue.ProcessQueueManager;
+import com.walmartlabs.concord.server.process.waits.ProcessWaitManager;
 import com.walmartlabs.concord.server.sdk.ProcessStatus;
 import org.jooq.DSLContext;
 
@@ -42,9 +43,13 @@ public abstract class WaitProcessFinishFilter implements Filter {
             ProcessStatus.CANCELLED,
             ProcessStatus.TIMED_OUT);
 
+    private final ProcessWaitManager processWaitManager;
     private final ProcessQueueManager processQueueManager;
 
-    protected WaitProcessFinishFilter(ProcessQueueManager processQueueManager) {
+    protected WaitProcessFinishFilter(ProcessWaitManager processWaitManager,
+                                      ProcessQueueManager processQueueManager) {
+
+        this.processWaitManager = processWaitManager;
         this.processQueueManager = processQueueManager;
     }
 
@@ -55,12 +60,14 @@ public abstract class WaitProcessFinishFilter implements Filter {
             return true;
         }
 
-        processQueueManager.updateWait(tx, e.key(), ProcessCompletionCondition.builder()
+        processWaitManager.updateWait(tx, e.key(), ProcessCompletionCondition.builder()
                 .processes(processes)
                 .reason(getReason())
                 .finalStatuses(getFinalStatuses())
                 .completeCondition(getCompleteCondition())
                 .build());
+
+        processQueueManager.updateStatus(tx, e.key(), ProcessStatus.WAITING);
 
         return false;
     }

@@ -52,8 +52,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 import static com.walmartlabs.concord.db.PgUtils.toChar;
-import static com.walmartlabs.concord.server.jooq.Tables.REPOSITORIES;
-import static com.walmartlabs.concord.server.jooq.Tables.USERS;
+import static com.walmartlabs.concord.server.jooq.Tables.*;
 import static com.walmartlabs.concord.server.jooq.tables.Organizations.ORGANIZATIONS;
 import static com.walmartlabs.concord.server.jooq.tables.ProcessCheckpoints.PROCESS_CHECKPOINTS;
 import static com.walmartlabs.concord.server.jooq.tables.ProcessEvents.PROCESS_EVENTS;
@@ -65,7 +64,6 @@ import static org.jooq.impl.DSL.*;
 public class ProcessQueueDao extends AbstractDao {
 
     public static final String ENQUEUED_NOW_METRIC = "ENQUEUED_NOW";
-    public static final String ENQUEUED_WAIT_METRIC = "ENQUEUED_WAIT";
 
     private static final Set<ProcessDataInclude> DEFAULT_INCLUDES = Collections.singleton(ProcessDataInclude.CHILDREN_IDS);
 
@@ -506,10 +504,6 @@ public class ProcessQueueDao extends AbstractDao {
                 .union(select(value(ENQUEUED_NOW_METRIC), DSL.count(asterisk())).from(PROCESS_QUEUE)
                         .where(PROCESS_QUEUE.CURRENT_STATUS.eq(ProcessStatus.ENQUEUED.name()))
                         .and(or(PROCESS_QUEUE.START_AT.isNull(), PROCESS_QUEUE.START_AT.lessOrEqual(currentOffsetDateTime()))))
-                .union(select(value(ENQUEUED_WAIT_METRIC), DSL.count(asterisk())).from(PROCESS_QUEUE)
-                        .where(PROCESS_QUEUE.CURRENT_STATUS.eq(ProcessStatus.ENQUEUED.name()))
-                        .and(or(PROCESS_QUEUE.START_AT.isNull(), PROCESS_QUEUE.START_AT.lessOrEqual(currentOffsetDateTime())))
-                        .and(PROCESS_QUEUE.WAIT_CONDITIONS.isNotNull()))
                 .fetchMap(Record2::value1, Record2::value2);
     }
 
@@ -563,14 +557,6 @@ public class ProcessQueueDao extends AbstractDao {
         UUID instanceId = processKey.getInstanceId();
         return tx.fetchExists(tx.selectFrom(PROCESS_QUEUE)
                 .where(PROCESS_QUEUE.INSTANCE_ID.eq(instanceId)));
-    }
-
-    public void updateWait(DSLContext tx, ProcessKey key, AbstractWaitCondition waits) {
-        tx.update(PROCESS_QUEUE)
-                .set(PROCESS_QUEUE.WAIT_CONDITIONS, field("?::jsonb", JSONB.class, objectMapper.toJSONB(waits)))
-                .set(PROCESS_QUEUE.LAST_UPDATED_AT, currentOffsetDateTime())
-                .where(PROCESS_QUEUE.INSTANCE_ID.eq(key.getInstanceId()))
-                .execute();
     }
 
     public void updateExclusive(DSLContext tx, ProcessKey key, ExclusiveMode exclusive) {

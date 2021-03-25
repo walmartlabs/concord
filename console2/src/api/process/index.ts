@@ -27,6 +27,7 @@ export enum ProcessStatus {
     NEW = 'NEW',
     PREPARING = 'PREPARING',
     ENQUEUED = 'ENQUEUED',
+    WAITING = 'WAITING',
     STARTING = 'STARTING',
     RUNNING = 'RUNNING',
     SUSPENDED = 'SUSPENDED',
@@ -53,6 +54,7 @@ export const getStatusSemanticColor = (status: ProcessStatus): SemanticCOLORS =>
             return 'red';
         case ProcessStatus.ENQUEUED:
         case ProcessStatus.RESUMING:
+        case ProcessStatus.WAITING:
         default:
             return 'grey';
     }
@@ -74,6 +76,7 @@ export const getStatusSemanticIcon = (status: ProcessStatus): SemanticICONS => {
             return 'exclamation circle';
         case ProcessStatus.ENQUEUED:
         case ProcessStatus.RESUMING:
+        case ProcessStatus.WAITING:
         default:
             return 'circle notch';
     }
@@ -88,7 +91,7 @@ export const isFinal = (s?: ProcessStatus) =>
 export const hasState = (s: ProcessStatus) => s !== ProcessStatus.PREPARING;
 
 export const canBeCancelled = (s: ProcessStatus) =>
-    s === ProcessStatus.ENQUEUED || s === ProcessStatus.RUNNING || s === ProcessStatus.SUSPENDED;
+    s === ProcessStatus.ENQUEUED || s === ProcessStatus.RUNNING || s === ProcessStatus.WAITING || s === ProcessStatus.SUSPENDED;
 
 export interface ProcessCheckpointEntry {
     id: string;

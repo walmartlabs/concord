@@ -29,7 +29,6 @@ import com.walmartlabs.concord.policyengine.CheckResult;
 import com.walmartlabs.concord.policyengine.PolicyEngine;
 import com.walmartlabs.concord.sdk.Constants;
 import com.walmartlabs.concord.server.HttpUtils;
-import com.walmartlabs.concord.server.IsoDateParam;
 import com.walmartlabs.concord.server.MultipartUtils;
 import com.walmartlabs.concord.server.OffsetDateTimeParam;
 import com.walmartlabs.concord.server.cfg.ProcessConfiguration;
@@ -51,6 +50,8 @@ import com.walmartlabs.concord.server.process.logs.ProcessLogManager;
 import com.walmartlabs.concord.server.process.logs.ProcessLogsDao.ProcessLog;
 import com.walmartlabs.concord.server.process.queue.*;
 import com.walmartlabs.concord.server.process.state.ProcessStateManager;
+import com.walmartlabs.concord.server.process.waits.AbstractWaitCondition;
+import com.walmartlabs.concord.server.process.waits.ProcessWaitManager;
 import com.walmartlabs.concord.server.sdk.ConcordApplicationException;
 import com.walmartlabs.concord.server.sdk.PartialProcessKey;
 import com.walmartlabs.concord.server.sdk.ProcessKey;
@@ -99,6 +100,7 @@ public class ProcessResource implements Resource {
 
     private static final Logger log = LoggerFactory.getLogger(ProcessResource.class);
 
+    private final ProcessWaitManager processWaitManager;
     private final ProcessManager processManager;
     private final ProcessQueueDao queueDao;
     private final ProcessQueueManager processQueueManager;
@@ -119,7 +121,8 @@ public class ProcessResource implements Resource {
     private final ProcessResourceV2 v2;
 
     @Inject
-    public ProcessResource(ProcessManager processManager,
+    public ProcessResource(ProcessWaitManager processWaitManager,
+                           ProcessManager processManager,
                            ProcessQueueDao queueDao,
                            ProcessQueueManager processQueueManager,
                            PayloadManager payloadManager,
@@ -136,6 +139,7 @@ public class ProcessResource implements Resource {
                            PolicyManager policyManager,
                            ProcessResourceV2 v2) {
 
+        this.processWaitManager = processWaitManager;
         this.processManager = processManager;
         this.queueDao = queueDao;
         this.processQueueManager = processQueueManager;
@@ -1059,7 +1063,7 @@ public class ProcessResource implements Resource {
     public Response setWaitCondition(@ApiParam @PathParam("id") UUID instanceId, @ApiParam Map<String, Object> waitCondition) {
         ProcessKey processKey = assertProcessKey(instanceId);
         AbstractWaitCondition condition = objectMapper.convertValue(waitCondition, AbstractWaitCondition.class);
-        processManager.setWaitCondition(processKey, condition);
+        processWaitManager.updateWait(processKey, condition);
         return Response.ok().build();
     }
 

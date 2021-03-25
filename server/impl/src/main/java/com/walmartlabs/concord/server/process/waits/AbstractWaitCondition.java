@@ -1,4 +1,4 @@
-package com.walmartlabs.concord.server.process.queue;
+package com.walmartlabs.concord.server.process.waits;
 
 /*-
  * *****
@@ -23,6 +23,9 @@ package com.walmartlabs.concord.server.process.queue;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import com.walmartlabs.concord.server.process.waits.ImmutableProcessCompletionCondition;
+import com.walmartlabs.concord.server.process.waits.ImmutableProcessLockCondition;
+import com.walmartlabs.concord.server.process.waits.ImmutableProcessSleepCondition;
 
 import javax.annotation.Nullable;
 import java.io.Serializable;
