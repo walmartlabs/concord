@@ -20,7 +20,6 @@ package com.walmartlabs.concord.server.process.pipelines.processors;
  * =====
  */
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.walmartlabs.concord.imports.Import;
 import com.walmartlabs.concord.imports.ImportProcessingException;
 import com.walmartlabs.concord.imports.ImportsListener;
@@ -60,18 +59,15 @@ public class ProcessDefinitionProcessor implements PayloadProcessor {
 
     private final ProjectLoader projectLoader;
     private final ImportsNormalizerFactory importsNormalizer;
-    private final ObjectMapper objectMapper;
     private final ProcessLogManager logManager;
 
     @Inject
     public ProcessDefinitionProcessor(ProjectLoader projectLoader,
                                       ImportsNormalizerFactory importsNormalizer,
-                                      ObjectMapper objectMapper,
                                       ProcessLogManager logManager) {
 
         this.projectLoader = projectLoader;
         this.importsNormalizer = importsNormalizer;
-        this.objectMapper = objectMapper;
         this.logManager = logManager;
     }
 
@@ -112,7 +108,7 @@ public class ProcessDefinitionProcessor implements PayloadProcessor {
             cfg.put(Constants.Request.RUNTIME_KEY, runtime);
             payload = payload.putHeader(Payload.CONFIGURATION, cfg);
         } catch (ImportProcessingException e) {
-            throw new ProcessException(processKey, "Error while processing import " + toString(e.getImport()) + ". Error: " + e.getMessage(), e);
+            throw new ProcessException(processKey, "Error while processing import " + e.getImport() + ". Error: " + e.getMessage(), e);
         } catch (Exception e) {
             log.warn("process -> ({}) project loading error: {}", workDir, e.getMessage());
             throw new ProcessException(processKey, "Error while loading the project, check the syntax. " + e.getMessage(), e);
@@ -139,14 +135,6 @@ public class ProcessDefinitionProcessor implements PayloadProcessor {
         return ProjectLoader.getRuntimeType(workDir, "concord-v1"); // TODO constants or configuration
     }
 
-    private String toString(Import i) {
-        try {
-            return objectMapper.writeValueAsString(i);
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
-    }
-
     class ProcessImportsListener implements ImportsListener {
 
         private final ProcessKey processKey;
@@ -157,7 +145,7 @@ public class ProcessDefinitionProcessor implements PayloadProcessor {
 
         @Override
         public void beforeImport(Import i) {
-            logManager.info(processKey, "Processing import {}", ProcessDefinitionProcessor.this.toString(i));
+            logManager.info(processKey, "Processing import {}", i);
         }
 
         @Override
