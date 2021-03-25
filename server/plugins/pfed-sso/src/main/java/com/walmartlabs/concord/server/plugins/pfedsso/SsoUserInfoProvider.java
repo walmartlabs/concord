@@ -22,6 +22,8 @@ package com.walmartlabs.concord.server.plugins.pfedsso;
 
 import com.walmartlabs.concord.server.sdk.ConcordApplicationException;
 import com.walmartlabs.concord.server.security.Roles;
+import com.walmartlabs.concord.server.security.ldap.LdapPrincipal;
+import com.walmartlabs.concord.server.security.ldap.LdapUserInfoProvider;
 import com.walmartlabs.concord.server.user.AbstractUserInfoProvider;
 import com.walmartlabs.concord.server.user.UserDao;
 import com.walmartlabs.concord.server.user.UserType;
@@ -51,6 +53,20 @@ public class SsoUserInfoProvider extends AbstractUserInfoProvider {
 
     @Override
     public UserInfo getInfo(UUID id, String username, String userDomain) {
+        // return if ldap principal exists as part of sso
+        LdapPrincipal ldapPrincipal = LdapPrincipal.getCurrent();
+        if (ldapPrincipal != null && ldapPrincipal.getUsername().equalsIgnoreCase(username) && ldapPrincipal.getDomain().equalsIgnoreCase(userDomain)){
+            return UserInfo.builder()
+                    .id(id)
+                    .username(ldapPrincipal.getUsername())
+                    .userDomain(ldapPrincipal.getDomain())
+                    .displayName(ldapPrincipal.getDisplayName())
+                    .email(ldapPrincipal.getEmail())
+                    .groups(ldapPrincipal.getGroups())
+                    .attributes(ldapPrincipal.getAttributes())
+                    .build();
+        }
+        
         return getInfo(id, username, userDomain, UserType.LDAP);
     }
 

@@ -59,9 +59,9 @@ public class FormAccessManager {
             return null;
         }
 
-        if (Roles.isAdmin()) {
-            return f;
-        }
+//        if (Roles.isAdmin()) {
+//            return f;
+//        }
 
         Map<String, Object> opts = f.getOptions();
         if (opts == null) {

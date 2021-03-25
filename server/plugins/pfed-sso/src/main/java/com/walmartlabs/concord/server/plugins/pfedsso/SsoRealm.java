@@ -88,8 +88,9 @@ public class SsoRealm extends AuthorizingRealm {
                 .log();
 
         UserPrincipal userPrincipal = new UserPrincipal(REALM_NAME, u);
-
+        
         LdapPrincipal ldapPrincipal = new LdapPrincipal(t.getUsername(), t.getDomain(), t.getNameInNamespace(), t.getUserPrincipalName(), t.getDisplayName(), t.getMail(), t.getGroups(), Collections.singletonMap("mail", t.getMail()));
+        
         return new SimpleAccount(Arrays.asList(userPrincipal, t, ldapPrincipal), t.getCredentials(), getName());
     }
 
