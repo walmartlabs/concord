@@ -169,7 +169,7 @@ public class ProcessWaitWatchdog implements ScheduledTask {
             return null;
         }
 
-        // TODO: remove me in the next release
+        // TODO: old process_queue.wait_conditions code, remove me (1.84.0 or later)
         if (p.status() != null && !handler.getProcessStatuses().contains(p.status())) {
             // clear wait conditions for finished processes
             if (FINAL_STATUSES.contains(p.status())) {
@@ -203,7 +203,7 @@ public class ProcessWaitWatchdog implements ScheduledTask {
 
         ProcessKey processKey();
 
-        // TODO: remove me in the next release
+        // TODO: old process_queue.wait_conditions code, remove me (1.84.0 or later)
         @Nullable
         ProcessStatus status();
 

@@ -50,10 +50,22 @@ public class ProcessWaitManager {
         this.eventManager = eventManager;
     }
 
-    // TODO: remove me in the next release
-    @Deprecated
-    public void updateWaitOld(ProcessKey key, AbstractWaitCondition wait) {
-//        processWaitDao.tx(tx -> updateWaitOld(tx, key, wait));
+    // TODO: old process_queue.wait_conditions code, remove me (1.84.0 or later)
+    public void updateWaitOld(ProcessKey processKey, AbstractWaitCondition wait) {
+        processWaitDao.tx(tx -> updateWaitOld(tx, processKey, wait));
+    }
+
+    // TODO: old process_queue.wait_conditions code, remove me (1.84.0 or later)
+    public void updateWaitOld(DSLContext tx, ProcessKey processKey, AbstractWaitCondition wait) {
+        processWaitDao.updateWaitOld(tx, processKey, wait);
+
+        Map<String, Object> eventData = objectMapper.convertToMap(wait != null ? wait : new NoneCondition());
+        NewProcessEvent e = NewProcessEvent.builder()
+                .processKey(processKey)
+                .eventType(EventType.PROCESS_WAIT.name())
+                .data(eventData)
+                .build();
+        eventManager.event(tx, Collections.singletonList(e));
     }
 
     /**
@@ -71,8 +83,8 @@ public class ProcessWaitManager {
         addWaitEvent(tx, processKey, wait);
     }
 
-    public void setWait(ProcessKey key, List<AbstractWaitCondition> waits) {
-        processWaitDao.tx(tx -> setWait(tx, key, waits));
+    public void setWait(ProcessKey processKey, List<AbstractWaitCondition> waits) {
+        processWaitDao.tx(tx -> setWait(tx, processKey, waits));
     }
 
     private void addWaitEvent(DSLContext tx, ProcessKey processKey, AbstractWaitCondition wait) {

@@ -31,9 +31,9 @@ import javax.inject.Inject;
 import java.util.List;
 
 import static com.walmartlabs.concord.db.PgUtils.*;
+import static com.walmartlabs.concord.server.jooq.Tables.PROCESS_QUEUE;
 import static com.walmartlabs.concord.server.jooq.Tables.PROCESS_WAIT_CONDITIONS;
-import static org.jooq.impl.DSL.field;
-import static org.jooq.impl.DSL.when;
+import static org.jooq.impl.DSL.*;
 
 public class ProcessWaitDao extends AbstractDao {
 
@@ -53,8 +53,17 @@ public class ProcessWaitDao extends AbstractDao {
         super.tx(t);
     }
 
+    // TODO: old process_queue.wait_conditions code, remove me (1.84.0 or later)
+    public void updateWaitOld(DSLContext tx, ProcessKey processKey, AbstractWaitCondition wait) {
+        tx.update(PROCESS_QUEUE)
+                .set(PROCESS_QUEUE.WAIT_CONDITIONS, field("?::jsonb", JSONB.class, objectMapper.toJSONB(wait)))
+                .set(PROCESS_QUEUE.LAST_UPDATED_AT, currentOffsetDateTime())
+                .where(PROCESS_QUEUE.INSTANCE_ID.eq(processKey.getInstanceId()))
+                .execute();
+    }
+
     public void addWait(DSLContext tx, ProcessKey key, AbstractWaitCondition wait) {
-        // TODO: remove me in next version (after all wait conditions is arrays)
+        // TODO: old process_queue.wait_conditions code, remove me (1.84.0 or later)
         Field<JSONB> waitConditionsAsArray = when(jsonbTypeOf(PROCESS_WAIT_CONDITIONS.WAIT_CONDITIONS).eq("object"), jsonbBuildArray(PROCESS_WAIT_CONDITIONS.WAIT_CONDITIONS)).else_(PROCESS_WAIT_CONDITIONS.WAIT_CONDITIONS);
 
         tx.update(PROCESS_WAIT_CONDITIONS)
