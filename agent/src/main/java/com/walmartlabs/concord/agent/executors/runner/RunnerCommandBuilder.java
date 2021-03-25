@@ -27,7 +27,7 @@ import java.util.List;
 public class RunnerCommandBuilder {
 
     private String javaCmd;
-    private Path procDir;
+    private Path workDir;
     private Path runnerPath;
     private Path runnerCfgPath;
     private String logLevel;
@@ -44,8 +44,8 @@ public class RunnerCommandBuilder {
         return this;
     }
 
-    public RunnerCommandBuilder procDir(Path procDir) {
-        this.procDir = procDir;
+    public RunnerCommandBuilder workDir(Path workDir) {
+        this.workDir = workDir;
         return this;
     }
 
@@ -110,8 +110,8 @@ public class RunnerCommandBuilder {
         l.add("-Dsun.zip.disableMemoryMapping=true");
 
         // working directory
-        if (procDir != null) {
-            l.add("-Duser.dir=" + procDir.toString());
+        if (workDir != null) {
+            l.add("-Duser.dir=" + workDir.toString());
         }
 
         // default to UTF-8

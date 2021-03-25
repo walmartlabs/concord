@@ -47,6 +47,7 @@ public class AgentConfiguration {
     private final Path dependencyCacheDir;
     private final Path dependencyListsDir;
     private final Path payloadDir;
+    private final Path workDirBase;
 
     private final Path logDir;
     private final long logMaxDelay;
@@ -66,6 +67,7 @@ public class AgentConfiguration {
         this.dependencyCacheDir = getOrCreatePath(cfg, "dependencyCacheDir");
         this.dependencyListsDir = getOrCreatePath(cfg, "dependencyListsDir");
         this.payloadDir = getOrCreatePath(cfg, "payloadDir");
+        this.workDirBase = getOrCreatePath(cfg, "workDirBase");
 
         this.logDir = getOrCreatePath(cfg, "logDir");
         this.logMaxDelay = cfg.getDuration("logMaxDelay", TimeUnit.MILLISECONDS);
@@ -94,6 +96,10 @@ public class AgentConfiguration {
 
     public Path getPayloadDir() {
         return payloadDir;
+    }
+
+    public Path getWorkDirBase() {
+        return workDirBase;
     }
 
     public Path getLogDir() {

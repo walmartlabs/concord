@@ -334,6 +334,7 @@ public class Constants {
         /**
          * Directory which contains payload data.
          */
+        @Deprecated
         public static final String PAYLOAD_DIR_NAME = "payload";
 
         /**
