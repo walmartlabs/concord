@@ -123,6 +123,7 @@ public class ProcessQueueManager {
 
         queueDao.tx(tx -> {
             queueDao.enqueue(tx, processKey, tags, startAt, requirements, processTimeout, handlers, meta, imports, exclusive, runtime, dependencies, suspendTimeout);
+            notifyStatusChange(tx, processKey, ProcessStatus.ENQUEUED);
             eventManager.insertStatusHistory(tx, processKey, ProcessStatus.ENQUEUED, Collections.emptyMap());
         });
 

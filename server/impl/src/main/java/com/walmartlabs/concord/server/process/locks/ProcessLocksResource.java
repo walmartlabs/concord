@@ -22,10 +22,8 @@ package com.walmartlabs.concord.server.process.locks;
 
 import com.walmartlabs.concord.server.jooq.enums.ProcessLockScope;
 import com.walmartlabs.concord.server.process.ProcessEntry;
-import com.walmartlabs.concord.server.process.queue.ProcessLockCondition;
-import com.walmartlabs.concord.server.process.waits.AbstractWaitCondition;
-import com.walmartlabs.concord.server.process.waits.ProcessLockCondition;
 import com.walmartlabs.concord.server.process.queue.ProcessQueueManager;
+import com.walmartlabs.concord.server.process.waits.ProcessLockCondition;
 import com.walmartlabs.concord.server.process.waits.ProcessWaitManager;
 import com.walmartlabs.concord.server.sdk.ConcordApplicationException;
 import com.walmartlabs.concord.server.sdk.PartialProcessKey;

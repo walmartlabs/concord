@@ -51,8 +51,9 @@ public class ProcessWaitManager {
     }
 
     // TODO: remove me in the next release
+    @Deprecated
     public void updateWaitOld(ProcessKey key, AbstractWaitCondition wait) {
-        processWaitDao.tx(tx -> updateWait(tx, key, wait));
+//        processWaitDao.tx(tx -> updateWaitOld(tx, key, wait));
     }
 
     /**
@@ -68,6 +69,10 @@ public class ProcessWaitManager {
     public void addWait(DSLContext tx, ProcessKey processKey, AbstractWaitCondition wait) {
         processWaitDao.addWait(tx, processKey, wait);
         addWaitEvent(tx, processKey, wait);
+    }
+
+    public void setWait(ProcessKey key, List<AbstractWaitCondition> waits) {
+        processWaitDao.tx(tx -> setWait(tx, key, waits));
     }
 
     private void addWaitEvent(DSLContext tx, ProcessKey processKey, AbstractWaitCondition wait) {
@@ -97,35 +102,8 @@ public class ProcessWaitManager {
         eventManager.event(tx, events);
     }
 
-    public void setWait(ProcessKey key, List<AbstractWaitCondition> waits) {
-        processWaitDao.tx(tx -> setWait(tx, key, waits));
-    }
-
     private void setWait(DSLContext tx, ProcessKey processKey, List<AbstractWaitCondition> waits) {
         processWaitDao.setWait(tx, processKey, waits);
         addWaitEvents(tx, processKey, waits);
-    }
-
-
-    /**
-     * @see #updateWait(DSLContext, ProcessKey, AbstractWaitCondition)
-     */
-    public void updateWait(ProcessKey key, AbstractWaitCondition wait) {
-        processWaitDao.tx(tx -> updateWait(tx, key, wait));
-    }
-
-    /**
-     * Updates the process' wait conditions. Adds a wait condition history event.
-     */
-    public void updateWait(DSLContext tx, ProcessKey processKey, AbstractWaitCondition wait) {
-        processWaitDao.updateWait(tx, processKey, wait);
-
-        Map<String, Object> eventData = objectMapper.convertToMap(wait != null ? wait : new NoneCondition());
-        NewProcessEvent e = NewProcessEvent.builder()
-                .processKey(processKey)
-                .eventType(EventType.PROCESS_WAIT.name())
-                .data(eventData)
-                .build();
-        eventManager.event(tx, Collections.singletonList(e));
     }
 }

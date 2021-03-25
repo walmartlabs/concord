@@ -26,13 +26,10 @@ import com.walmartlabs.concord.db.MainDB;
 import com.walmartlabs.concord.server.ConcordObjectMapper;
 import com.walmartlabs.concord.server.cfg.ProcessWaitWatchdogConfiguration;
 import com.walmartlabs.concord.server.jooq.tables.ProcessQueue;
-<<<<<<< HEAD:server/impl/src/main/java/com/walmartlabs/concord/server/process/queue/ProcessWaitWatchdog.java
+import com.walmartlabs.concord.server.jooq.tables.ProcessWaitConditions;
 import com.walmartlabs.concord.server.process.Payload;
 import com.walmartlabs.concord.server.process.PayloadManager;
 import com.walmartlabs.concord.server.process.ProcessManager;
-=======
-import com.walmartlabs.concord.server.jooq.tables.ProcessWaitConditions;
->>>>>>> origin/master:server/impl/src/main/java/com/walmartlabs/concord/server/process/waits/ProcessWaitWatchdog.java
 import com.walmartlabs.concord.server.sdk.ProcessKey;
 import com.walmartlabs.concord.server.sdk.ProcessStatus;
 import com.walmartlabs.concord.server.sdk.ScheduledTask;
@@ -49,12 +46,9 @@ import java.io.IOException;
 import java.time.OffsetDateTime;
 import java.util.*;
 
-<<<<<<< HEAD:server/impl/src/main/java/com/walmartlabs/concord/server/process/queue/ProcessWaitWatchdog.java
 import static com.walmartlabs.concord.db.PgUtils.jsonbBuildArray;
 import static com.walmartlabs.concord.db.PgUtils.jsonbTypeOf;
-=======
 import static com.walmartlabs.concord.server.jooq.Tables.PROCESS_WAIT_CONDITIONS;
->>>>>>> origin/master:server/impl/src/main/java/com/walmartlabs/concord/server/process/waits/ProcessWaitWatchdog.java
 import static com.walmartlabs.concord.server.jooq.tables.ProcessQueue.PROCESS_QUEUE;
 import static org.jooq.impl.DSL.when;
 
@@ -76,41 +70,28 @@ public class ProcessWaitWatchdog implements ScheduledTask {
 
     private final ProcessWaitWatchdogConfiguration cfg;
     private final WatchdogDao dao;
-<<<<<<< HEAD:server/impl/src/main/java/com/walmartlabs/concord/server/process/queue/ProcessWaitWatchdog.java
-    private final ProcessQueueManager queueManager;
-    private final ProcessManager processManager;
-    private final PayloadManager payloadManager;
-=======
     private final WatchdogDaoOld daoOld;
     private final ProcessWaitManager processWaitManager;
->>>>>>> origin/master:server/impl/src/main/java/com/walmartlabs/concord/server/process/waits/ProcessWaitWatchdog.java
+    private final ProcessManager processManager;
+    private final PayloadManager payloadManager;
     private final Map<WaitType, ProcessWaitHandler<AbstractWaitCondition>> processWaitHandlers;
 
     @Inject
     @SuppressWarnings({"unchecked", "rawtypes"})
     public ProcessWaitWatchdog(ProcessWaitWatchdogConfiguration cfg,
                                WatchdogDao dao,
-<<<<<<< HEAD:server/impl/src/main/java/com/walmartlabs/concord/server/process/queue/ProcessWaitWatchdog.java
-                               ProcessQueueManager queueManager,
-                               Set<ProcessWaitHandler> handlers,
-                               ProcessManager processManager,
-                               PayloadManager payloadManager) {
-
-        this.cfg = cfg;
-        this.dao = dao;
-        this.queueManager = queueManager;
-        this.processManager = processManager;
-        this.payloadManager = payloadManager;
-=======
                                WatchdogDaoOld daoOld,
                                ProcessWaitManager processWaitManager,
+                               ProcessManager processManager,
+                               PayloadManager payloadManager,
                                Set<ProcessWaitHandler> handlers) {
 
         this.cfg = cfg;
         this.dao = dao;
         this.daoOld = daoOld;
         this.processWaitManager = processWaitManager;
->>>>>>> origin/master:server/impl/src/main/java/com/walmartlabs/concord/server/process/waits/ProcessWaitWatchdog.java
+        this.processManager = processManager;
+        this.payloadManager = payloadManager;
         this.processWaitHandlers = new HashMap<>();
 
         handlers.forEach(h -> this.processWaitHandlers.put(h.getType(), h));
@@ -136,15 +117,16 @@ public class ProcessWaitWatchdog implements ScheduledTask {
             }
 
             for (WaitingProcess p : processes) {
-                process(p);
+                processWaits(p);
                 lastId = p.id();
             }
         }
     }
 
-    private void process(WaitingProcess p) {
+    private void processWaits(WaitingProcess p) {
         Set<String> resumeEvents = new HashSet<>();
         List<AbstractWaitCondition> resultWaits = new ArrayList<>();
+
         for (AbstractWaitCondition w : p.waits()) {
             ProcessWaitHandler.Result<AbstractWaitCondition> result = processWait(w, p);
             if (result != null) {
@@ -164,55 +146,42 @@ public class ProcessWaitWatchdog implements ScheduledTask {
             if (!resumeEvents.isEmpty()) {
                 resumeProcess(p.processKey(), resumeEvents);
             }
-            queueManager.setWait(p.processKey(), resultWaits);
+
+            if (p.status() != null) {
+                AbstractWaitCondition wait = null;
+                if (!resultWaits.isEmpty()) {
+                    assert(resultWaits.size() == 1);
+                    wait = resultWaits.get(0);
+                }
+                processWaitManager.updateWaitOld(p.processKey(), wait);
+            } else {
+                processWaitManager.setWait(p.processKey(), resultWaits);
+            }
         } catch (Exception e) {
-            log.info("process ['{}'] -> error", p, e);
+            log.info("processWaits ['{}'] -> error", p, e);
         }
     }
 
     private ProcessWaitHandler.Result<AbstractWaitCondition> processWait(AbstractWaitCondition w, WaitingProcess p) {
-        WaitType type = w.type();
-
-        ProcessWaitHandler<AbstractWaitCondition> handler = processWaitHandlers.get(type);
+        ProcessWaitHandler<AbstractWaitCondition> handler = processWaitHandlers.get(w.type());
         if (handler == null) {
-            log.warn("processHandler ['{}'] -> handler '{}' not found", p.processKey(), type);
-<<<<<<< HEAD:server/impl/src/main/java/com/walmartlabs/concord/server/process/queue/ProcessWaitWatchdog.java
+            log.warn("processHandler ['{}'] -> handler '{}' not found", p.processKey(), w.type());
             return null;
-=======
-            return;
->>>>>>> origin/master:server/impl/src/main/java/com/walmartlabs/concord/server/process/waits/ProcessWaitWatchdog.java
         }
 
         // TODO: remove me in the next release
         if (p.status() != null && !handler.getProcessStatuses().contains(p.status())) {
             // clear wait conditions for finished processes
             if (FINAL_STATUSES.contains(p.status())) {
-<<<<<<< HEAD:server/impl/src/main/java/com/walmartlabs/concord/server/process/queue/ProcessWaitWatchdog.java
                 return null;
-=======
-                processWaitManager.updateWaitOld(p.processKey(), null);
->>>>>>> origin/master:server/impl/src/main/java/com/walmartlabs/concord/server/process/waits/ProcessWaitWatchdog.java
             }
             return ProcessWaitHandler.Result.of(w);
         }
 
         try {
-<<<<<<< HEAD:server/impl/src/main/java/com/walmartlabs/concord/server/process/queue/ProcessWaitWatchdog.java
             return handler.process(p.processKey(), p.status(), w);
-=======
-            AbstractWaitCondition originalWaits = p.waits();
-            AbstractWaitCondition processedWaits = handler.process(p.processKey(), p.status(), originalWaits);
-            if (!originalWaits.equals(processedWaits)) {
-                processWaitManager.updateWait(p.processKey(), processedWaits);
-
-                // TODO: remove me in the next release
-                if (p.status() != null) {
-                    processWaitManager.updateWaitOld(p.processKey(), processedWaits);
-                }
-            }
->>>>>>> origin/master:server/impl/src/main/java/com/walmartlabs/concord/server/process/waits/ProcessWaitWatchdog.java
         } catch (Exception e) {
-            log.info("processWait ['{}', '{}'] -> error", type, p, e);
+            log.info("processHandler ['{}', '{}'] -> error", w.type(), p, e);
             return ProcessWaitHandler.Result.of(w);
         }
     }
@@ -271,11 +240,15 @@ public class ProcessWaitWatchdog implements ScheduledTask {
         public List<WaitingProcess> nextWaitItems(Long lastId, int pollLimit) {
             return txResult(tx -> {
                 ProcessWaitConditions w = PROCESS_WAIT_CONDITIONS.as("w");
+
+                // TODO: replace with w.WAIT_CONDITIONS in the next version (after all wait conditions is arrays)
+                Field<JSONB> waitConditionsAsArray = when(jsonbTypeOf(w.WAIT_CONDITIONS).eq("object"), jsonbBuildArray(w.WAIT_CONDITIONS)).else_(w.WAIT_CONDITIONS);
+
                 SelectConditionStep<Record4<UUID, OffsetDateTime, Long, JSONB>> s = tx.select(
                         w.INSTANCE_ID,
                         w.INSTANCE_CREATED_AT,
                         w.ID_SEQ,
-                        w.WAIT_CONDITIONS)
+                        waitConditionsAsArray)
                         .from(w)
                         .where(w.IS_WAITING.eq(true));
 
@@ -288,7 +261,7 @@ public class ProcessWaitWatchdog implements ScheduledTask {
                         .fetch(r -> WaitingProcess.builder()
                                 .processKey(new ProcessKey(r.value1(), r.value2()))
                                 .id(r.value3())
-                                .waits(objectMapper.fromJSONB(r.value4(), AbstractWaitCondition.class))
+                                .waits(objectMapper.fromJSONB(r.value4(), WAIT_LIST))
                                 .build());
             });
         }
@@ -310,16 +283,12 @@ public class ProcessWaitWatchdog implements ScheduledTask {
         public List<WaitingProcess> nextWaitItems(Long lastId, int pollLimit) {
             return txResult(tx -> {
                 ProcessQueue q = PROCESS_QUEUE.as("q");
-
-                // TODO: remove me in next version (after all wait conditions is arrays)
-                Field<JSONB> waitConditionsAsArray = when(jsonbTypeOf(q.WAIT_CONDITIONS).eq("object"), jsonbBuildArray(q.WAIT_CONDITIONS)).else_(q.WAIT_CONDITIONS);
-
                 SelectConditionStep<Record5<UUID, String, OffsetDateTime, Long, JSONB>> s = tx.select(
                         q.INSTANCE_ID,
                         q.CURRENT_STATUS,
                         q.CREATED_AT,
                         q.ID_SEQ,
-                        waitConditionsAsArray)
+                        q.WAIT_CONDITIONS)
                         .from(q)
                         .where(q.WAIT_CONDITIONS.isNotNull());
 
@@ -333,7 +302,7 @@ public class ProcessWaitWatchdog implements ScheduledTask {
                                 .processKey(new ProcessKey(r.value1(), r.value3()))
                                 .status(ProcessStatus.valueOf(r.value2()))
                                 .id(r.value4())
-                                .waits(objectMapper.fromJSONB(r.value5(), WAIT_LIST))
+                                .waits(Collections.singletonList(objectMapper.fromJSONB(r.value5(), AbstractWaitCondition.class)))
                                 .build());
             });
         }

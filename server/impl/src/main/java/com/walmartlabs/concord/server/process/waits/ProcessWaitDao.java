@@ -20,6 +20,7 @@ package com.walmartlabs.concord.server.process.waits;
  * =====
  */
 
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.walmartlabs.concord.db.AbstractDao;
 import com.walmartlabs.concord.db.MainDB;
 import com.walmartlabs.concord.server.ConcordObjectMapper;
@@ -52,37 +53,27 @@ public class ProcessWaitDao extends AbstractDao {
         super.tx(t);
     }
 
-    public void updateWait(DSLContext tx, ProcessKey key, AbstractWaitCondition waits) {
-        UpdateSetMoreStep<?> q = tx.update(PROCESS_WAIT_CONDITIONS)
-                .set(PROCESS_WAIT_CONDITIONS.WAIT_CONDITIONS, field("?::jsonb", JSONB.class, objectMapper.toJSONB(waits)));
-
-        if (waits == null) {
-            q = q.set(PROCESS_WAIT_CONDITIONS.IS_WAITING, false);
-        }
-
-        q.where(PROCESS_WAIT_CONDITIONS.INSTANCE_ID.eq(key.getInstanceId())
-                .and(PROCESS_WAIT_CONDITIONS.INSTANCE_CREATED_AT.eq(key.getCreatedAt())))
-                .execute();
-    }
-
     public void addWait(DSLContext tx, ProcessKey key, AbstractWaitCondition wait) {
         // TODO: remove me in next version (after all wait conditions is arrays)
         Field<JSONB> waitConditionsAsArray = when(jsonbTypeOf(PROCESS_WAIT_CONDITIONS.WAIT_CONDITIONS).eq("object"), jsonbBuildArray(PROCESS_WAIT_CONDITIONS.WAIT_CONDITIONS)).else_(PROCESS_WAIT_CONDITIONS.WAIT_CONDITIONS);
 
-        tx.update(PROCESS_QUEUE)
-                .set(PROCESS_QUEUE.WAIT_CONDITIONS,
+        tx.update(PROCESS_WAIT_CONDITIONS)
+                .set(PROCESS_WAIT_CONDITIONS.WAIT_CONDITIONS,
                         jsonbAppend(jsonbOrEmptyArray(waitConditionsAsArray), objectMapper.toJSONB(wait)))
-                .set(PROCESS_QUEUE.LAST_UPDATED_AT, currentOffsetDateTime())
-                .where(PROCESS_QUEUE.INSTANCE_ID.eq(key.getInstanceId()))
+                .where(PROCESS_WAIT_CONDITIONS.INSTANCE_ID.eq(key.getInstanceId())
+                        .and(PROCESS_WAIT_CONDITIONS.INSTANCE_CREATED_AT.eq(key.getCreatedAt())))
                 .execute();
     }
 
     public void setWait(DSLContext tx, ProcessKey key, List<AbstractWaitCondition> waits) {
+        if (waits != null && waits.isEmpty()) {
+            waits = null;
+        }
+
         UpdateSetMoreStep<?> q = tx.update(PROCESS_WAIT_CONDITIONS)
                 .set(PROCESS_WAIT_CONDITIONS.WAIT_CONDITIONS, field("?::jsonb", JSONB.class, objectMapper.toJSONB(waits, WAIT_LIST)));
 
-        if (waits != null && waits.isEmpty()) {
-            waits = null;
+        if (waits == null) {
             q = q.set(PROCESS_WAIT_CONDITIONS.IS_WAITING, false);
         }
 

@@ -258,11 +258,6 @@ public class ProcessManager {
         log.info("updateStatus [{}, '{}', {}] -> done", processKey, agentId, status);
     }
 
-    public void addWaitCondition(ProcessKey processKey, AbstractWaitCondition condition) {
-        assertUpdateRights(processKey);
-        queueManager.addWait(processKey, condition);
-    }
-
     public ProcessEntry assertProcess(UUID instanceId) {
         ProcessEntry p = queueManager.get(PartialProcessKey.from(instanceId));
         if (p == null) {
