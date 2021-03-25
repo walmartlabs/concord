@@ -267,8 +267,8 @@ public final class PayloadBuilder {
         return this;
     }
 
-    public PayloadBuilder eventName(String eventName) {
-        payload = payload.putHeader(Payload.EVENT_NAME, eventName);
+    public PayloadBuilder resumeEvents(Set<String> events) {
+        payload = payload.putHeader(Payload.RESUME_EVENTS, events);
         return this;
     }
 
