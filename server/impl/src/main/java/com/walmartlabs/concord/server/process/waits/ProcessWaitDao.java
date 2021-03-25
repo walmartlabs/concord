@@ -23,7 +23,6 @@ package com.walmartlabs.concord.server.process.waits;
 import com.walmartlabs.concord.db.AbstractDao;
 import com.walmartlabs.concord.db.MainDB;
 import com.walmartlabs.concord.server.ConcordObjectMapper;
-import com.walmartlabs.concord.server.jooq.tables.records.ProcessWaitsRecord;
 import com.walmartlabs.concord.server.sdk.ProcessKey;
 import org.jooq.Configuration;
 import org.jooq.DSLContext;
@@ -32,7 +31,7 @@ import org.jooq.UpdateSetMoreStep;
 
 import javax.inject.Inject;
 
-import static com.walmartlabs.concord.server.jooq.Tables.PROCESS_WAITS;
+import static com.walmartlabs.concord.server.jooq.Tables.PROCESS_WAIT_CONDITIONS;
 import static org.jooq.impl.DSL.field;
 
 public class ProcessWaitDao extends AbstractDao {
@@ -51,15 +50,15 @@ public class ProcessWaitDao extends AbstractDao {
     }
 
     public void updateWait(DSLContext tx, ProcessKey key, AbstractWaitCondition waits) {
-        UpdateSetMoreStep<ProcessWaitsRecord> q = tx.update(PROCESS_WAITS)
-                .set(PROCESS_WAITS.WAIT_CONDITIONS, field("?::jsonb", JSONB.class, objectMapper.toJSONB(waits)));
+        UpdateSetMoreStep<?> q = tx.update(PROCESS_WAIT_CONDITIONS)
+                .set(PROCESS_WAIT_CONDITIONS.WAIT_CONDITIONS, field("?::jsonb", JSONB.class, objectMapper.toJSONB(waits)));
 
         if (waits == null) {
-            q = q.set(PROCESS_WAITS.IS_WAITING, false);
+            q = q.set(PROCESS_WAIT_CONDITIONS.IS_WAITING, false);
         }
 
-        q.where(PROCESS_WAITS.INSTANCE_ID.eq(key.getInstanceId())
-                .and(PROCESS_WAITS.INSTANCE_CREATED_AT.eq(key.getCreatedAt())))
+        q.where(PROCESS_WAIT_CONDITIONS.INSTANCE_ID.eq(key.getInstanceId())
+                .and(PROCESS_WAIT_CONDITIONS.INSTANCE_CREATED_AT.eq(key.getCreatedAt())))
                 .execute();
     }
 }

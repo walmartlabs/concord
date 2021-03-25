@@ -25,7 +25,7 @@ import com.walmartlabs.concord.db.MainDB;
 import com.walmartlabs.concord.server.ConcordObjectMapper;
 import com.walmartlabs.concord.server.cfg.ProcessWaitWatchdogConfiguration;
 import com.walmartlabs.concord.server.jooq.tables.ProcessQueue;
-import com.walmartlabs.concord.server.jooq.tables.ProcessWaits;
+import com.walmartlabs.concord.server.jooq.tables.ProcessWaitConditions;
 import com.walmartlabs.concord.server.sdk.ProcessKey;
 import com.walmartlabs.concord.server.sdk.ProcessStatus;
 import com.walmartlabs.concord.server.sdk.ScheduledTask;
@@ -41,7 +41,7 @@ import javax.inject.Singleton;
 import java.time.OffsetDateTime;
 import java.util.*;
 
-import static com.walmartlabs.concord.server.jooq.Tables.PROCESS_WAITS;
+import static com.walmartlabs.concord.server.jooq.Tables.PROCESS_WAIT_CONDITIONS;
 import static com.walmartlabs.concord.server.jooq.tables.ProcessQueue.PROCESS_QUEUE;
 
 /**
@@ -180,7 +180,7 @@ public class ProcessWaitWatchdog implements ScheduledTask {
         @Override
         public List<WaitingProcess> nextWaitItems(Long lastId, int pollLimit) {
             return txResult(tx -> {
-                ProcessWaits w = PROCESS_WAITS.as("w");
+                ProcessWaitConditions w = PROCESS_WAIT_CONDITIONS.as("w");
                 SelectConditionStep<Record4<UUID, OffsetDateTime, Long, JSONB>> s = tx.select(
                         w.INSTANCE_ID,
                         w.INSTANCE_CREATED_AT,

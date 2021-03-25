@@ -12,7 +12,7 @@
         <dropIndex tableName="PROCESS_QUEUE" indexName="IDX_PROC_WAIT_COND_NN"/>
     </changeSet>
 
-    <!-- WAIT_CONDITIONS moved to new table ` in 1.83.0+
+    <!-- WAIT_CONDITIONS was moved to the new table "PROCESS_WAIT_CONDITIONS" in 1.83.0+
     <changeSet id="1400010" author="ybrigo@gmail.com" runInTransaction="false">
         <sql>
             create index concurrently IDX_PROC_WAIT_COND_NN
@@ -21,5 +21,4 @@
         </sql>
     </changeSet>
     -->
-
 </databaseChangeLog>

@@ -27,7 +27,7 @@ import org.jooq.DSLContext;
 
 import javax.inject.Named;
 
-import static com.walmartlabs.concord.server.jooq.Tables.PROCESS_WAITS;
+import static com.walmartlabs.concord.server.jooq.Tables.PROCESS_WAIT_CONDITIONS;
 
 @Named
 public class WaitProcessStatusListener implements ProcessStatusListener {
@@ -54,28 +54,28 @@ public class WaitProcessStatusListener implements ProcessStatusListener {
     }
 
     private static void init(DSLContext tx, ProcessKey processKey) {
-        tx.insertInto(PROCESS_WAITS)
-                .set(PROCESS_WAITS.INSTANCE_ID, processKey.getInstanceId())
-                .set(PROCESS_WAITS.INSTANCE_CREATED_AT, processKey.getCreatedAt())
+        tx.insertInto(PROCESS_WAIT_CONDITIONS)
+                .set(PROCESS_WAIT_CONDITIONS.INSTANCE_ID, processKey.getInstanceId())
+                .set(PROCESS_WAIT_CONDITIONS.INSTANCE_CREATED_AT, processKey.getCreatedAt())
                 .execute();
     }
 
     private static void waiting(DSLContext tx, ProcessKey processKey) {
-        tx.update(PROCESS_WAITS)
-                .set(PROCESS_WAITS.IS_WAITING, true)
-                .where(PROCESS_WAITS.INSTANCE_ID.eq(processKey.getInstanceId())
-                        .and(PROCESS_WAITS.INSTANCE_CREATED_AT.eq(processKey.getCreatedAt())
-                                .and(PROCESS_WAITS.WAIT_CONDITIONS.isNotNull())))
+        tx.update(PROCESS_WAIT_CONDITIONS)
+                .set(PROCESS_WAIT_CONDITIONS.IS_WAITING, true)
+                .where(PROCESS_WAIT_CONDITIONS.INSTANCE_ID.eq(processKey.getInstanceId())
+                        .and(PROCESS_WAIT_CONDITIONS.INSTANCE_CREATED_AT.eq(processKey.getCreatedAt())
+                                .and(PROCESS_WAIT_CONDITIONS.WAIT_CONDITIONS.isNotNull())))
                 .execute();
     }
 
     private static void clear(DSLContext tx, ProcessKey processKey) {
-        tx.update(PROCESS_WAITS)
-                .set(PROCESS_WAITS.IS_WAITING, false)
-                .setNull(PROCESS_WAITS.WAIT_CONDITIONS)
-                .where(PROCESS_WAITS.INSTANCE_ID.eq(processKey.getInstanceId())
-                        .and(PROCESS_WAITS.INSTANCE_CREATED_AT.eq(processKey.getCreatedAt())
-                                .and(PROCESS_WAITS.WAIT_CONDITIONS.isNotNull())))
+        tx.update(PROCESS_WAIT_CONDITIONS)
+                .set(PROCESS_WAIT_CONDITIONS.IS_WAITING, false)
+                .setNull(PROCESS_WAIT_CONDITIONS.WAIT_CONDITIONS)
+                .where(PROCESS_WAIT_CONDITIONS.INSTANCE_ID.eq(processKey.getInstanceId())
+                        .and(PROCESS_WAIT_CONDITIONS.INSTANCE_CREATED_AT.eq(processKey.getCreatedAt())
+                                .and(PROCESS_WAIT_CONDITIONS.WAIT_CONDITIONS.isNotNull())))
                 .execute();
     }
 }
