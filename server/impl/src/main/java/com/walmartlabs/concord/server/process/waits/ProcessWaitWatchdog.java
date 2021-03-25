@@ -30,7 +30,11 @@ import com.walmartlabs.concord.server.sdk.ProcessKey;
 import com.walmartlabs.concord.server.sdk.ProcessStatus;
 import com.walmartlabs.concord.server.sdk.ScheduledTask;
 import org.immutables.value.Value;
-import org.jooq.*;
+import org.jooq.Configuration;
+import org.jooq.JSONB;
+import org.jooq.Record4;
+import org.jooq.Record5;
+import org.jooq.SelectConditionStep;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -117,7 +121,7 @@ public class ProcessWaitWatchdog implements ScheduledTask {
             return;
         }
 
-        // TODO: remove me in the next release
+        // TODO: old process_queue.wait_conditions code, remove me (1.84.0 or later)
         if (p.status() != null && !handler.getProcessStatuses().contains(p.status())) {
             // clear wait conditions for finished processes
             if (FINAL_STATUSES.contains(p.status())) {
@@ -132,7 +136,7 @@ public class ProcessWaitWatchdog implements ScheduledTask {
             if (!originalWaits.equals(processedWaits)) {
                 processWaitManager.updateWait(p.processKey(), processedWaits);
 
-                // TODO: remove me in the next release
+                // TODO: old process_queue.wait_conditions code, remove me (1.84.0 or later)
                 if (p.status() != null) {
                     processWaitManager.updateWaitOld(p.processKey(), processedWaits);
                 }
@@ -147,7 +151,7 @@ public class ProcessWaitWatchdog implements ScheduledTask {
 
         ProcessKey processKey();
 
-        // TODO: remove me in the next release
+        // TODO: old process_queue.wait_conditions code, remove me (1.84.0 or later)
         @Nullable
         ProcessStatus status();
 
