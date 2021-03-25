@@ -31,7 +31,9 @@ import org.jooq.UpdateSetMoreStep;
 
 import javax.inject.Inject;
 
+import static com.walmartlabs.concord.server.jooq.Tables.PROCESS_QUEUE;
 import static com.walmartlabs.concord.server.jooq.Tables.PROCESS_WAIT_CONDITIONS;
+import static org.jooq.impl.DSL.currentOffsetDateTime;
 import static org.jooq.impl.DSL.field;
 
 public class ProcessWaitDao extends AbstractDao {
@@ -59,6 +61,15 @@ public class ProcessWaitDao extends AbstractDao {
 
         q.where(PROCESS_WAIT_CONDITIONS.INSTANCE_ID.eq(key.getInstanceId())
                 .and(PROCESS_WAIT_CONDITIONS.INSTANCE_CREATED_AT.eq(key.getCreatedAt())))
+                .execute();
+    }
+
+    // TODO: remove me in the next release
+    public void updateWaitOld(DSLContext tx, ProcessKey processKey, AbstractWaitCondition wait) {
+        tx.update(PROCESS_QUEUE)
+                .set(PROCESS_QUEUE.WAIT_CONDITIONS, field("?::jsonb", JSONB.class, objectMapper.toJSONB(wait)))
+                .set(PROCESS_QUEUE.LAST_UPDATED_AT, currentOffsetDateTime())
+                .where(PROCESS_QUEUE.INSTANCE_ID.eq(processKey.getInstanceId()))
                 .execute();
     }
 }
