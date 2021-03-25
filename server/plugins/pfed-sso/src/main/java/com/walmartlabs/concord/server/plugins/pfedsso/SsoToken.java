@@ -33,11 +33,7 @@ public class SsoToken implements AuthenticationToken {
     private final String userPrincipalName;
     private final String nameInNamespace;
     private final Set<String> groups;
-
-    public String getNameInNamespace() {
-        return nameInNamespace;
-    }
-
+    
     public SsoToken(String username, String domain, String displayName, String mail, String userPrincipalName, String nameInNamespace, Set<String> groups) {
         this.username = username;
         this.domain = domain;
@@ -64,19 +60,10 @@ public class SsoToken implements AuthenticationToken {
         return mail;
     }
 
-    @Override
-    public String toString() {
-        return "SsoToken{" +
-                "username='" + username + '\'' +
-                ", domain='" + domain + '\'' +
-                ", displayName='" + displayName + '\'' +
-                ", mail='" + mail + '\'' +
-                ", userPrincipalName='" + userPrincipalName + '\'' +
-                ", nameInNamespace='" + nameInNamespace + '\'' +
-                ", groups=" + groups +
-                '}';
+    public String getNameInNamespace() {
+        return nameInNamespace;
     }
-
+    
     public String getUserPrincipalName() {
         return userPrincipalName;
     }
@@ -95,4 +82,16 @@ public class SsoToken implements AuthenticationToken {
         return getPrincipal();
     }
 
+    @Override
+    public String toString() {
+        return "SsoToken{" +
+                "username='" + username + '\'' +
+                ", domain='" + domain + '\'' +
+                ", displayName='" + displayName + '\'' +
+                ", mail='" + mail + '\'' +
+                ", userPrincipalName='" + userPrincipalName + '\'' +
+                ", nameInNamespace='" + nameInNamespace + '\'' +
+                ", groups=" + groups +
+                '}';
+    }
 }
