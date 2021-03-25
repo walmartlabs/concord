@@ -21,9 +21,9 @@ package com.walmartlabs.concord.server.process.queue.dispatcher;
  */
 
 import com.google.common.collect.ImmutableSet;
-import com.walmartlabs.concord.server.process.waits.ProcessCompletionCondition;
 import com.walmartlabs.concord.server.process.queue.ProcessQueueEntry;
 import com.walmartlabs.concord.server.process.queue.ProcessQueueManager;
+import com.walmartlabs.concord.server.process.waits.ProcessCompletionCondition;
 import com.walmartlabs.concord.server.process.waits.ProcessWaitManager;
 import com.walmartlabs.concord.server.sdk.ProcessStatus;
 import org.jooq.DSLContext;

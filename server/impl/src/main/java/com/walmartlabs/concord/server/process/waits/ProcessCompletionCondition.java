@@ -23,7 +23,6 @@ package com.walmartlabs.concord.server.process.waits;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.google.common.collect.ImmutableSet;
-import com.walmartlabs.concord.server.process.waits.ImmutableProcessCompletionCondition;
 import com.walmartlabs.concord.server.sdk.ProcessStatus;
 import org.immutables.value.Value;
 

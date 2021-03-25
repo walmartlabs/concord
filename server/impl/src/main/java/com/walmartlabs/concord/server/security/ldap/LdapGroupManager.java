@@ -30,9 +30,6 @@ import java.time.OffsetDateTime;
 import java.util.Set;
 import java.util.UUID;
 
-import static com.walmartlabs.concord.db.PgUtils.interval;
-import static org.jooq.impl.DSL.currentOffsetDateTime;
-
 @Named
 public class LdapGroupManager {
 

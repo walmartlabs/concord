@@ -28,12 +28,12 @@ import com.walmartlabs.concord.server.sdk.ProcessKey;
 import org.jooq.*;
 
 import javax.inject.Inject;
-
 import java.util.List;
 
 import static com.walmartlabs.concord.db.PgUtils.*;
 import static com.walmartlabs.concord.server.jooq.Tables.PROCESS_WAIT_CONDITIONS;
-import static org.jooq.impl.DSL.*;
+import static org.jooq.impl.DSL.field;
+import static org.jooq.impl.DSL.when;
 
 public class ProcessWaitDao extends AbstractDao {
 

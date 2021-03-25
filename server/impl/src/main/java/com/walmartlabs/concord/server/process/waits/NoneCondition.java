@@ -20,9 +20,6 @@ package com.walmartlabs.concord.server.process.waits;
  * =====
  */
 
-import com.walmartlabs.concord.server.process.waits.AbstractWaitCondition;
-import com.walmartlabs.concord.server.process.waits.WaitType;
-
 /**
  * "No wait conditions" condition. Just to use as a history entry.
  */

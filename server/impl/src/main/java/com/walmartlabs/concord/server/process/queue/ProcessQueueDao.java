@@ -52,7 +52,8 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 import static com.walmartlabs.concord.db.PgUtils.toChar;
-import static com.walmartlabs.concord.server.jooq.Tables.*;
+import static com.walmartlabs.concord.server.jooq.Tables.REPOSITORIES;
+import static com.walmartlabs.concord.server.jooq.Tables.USERS;
 import static com.walmartlabs.concord.server.jooq.tables.Organizations.ORGANIZATIONS;
 import static com.walmartlabs.concord.server.jooq.tables.ProcessCheckpoints.PROCESS_CHECKPOINTS;
 import static com.walmartlabs.concord.server.jooq.tables.ProcessEvents.PROCESS_EVENTS;
