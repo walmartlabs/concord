@@ -27,6 +27,7 @@ import com.walmartlabs.concord.server.security.Roles;
 import com.walmartlabs.concord.server.security.UserPrincipal;
 import com.walmartlabs.concord.server.security.ldap.LdapPrincipal;
 import io.takari.bpm.form.Form;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.shiro.authz.UnauthorizedException;
 
 import javax.inject.Inject;
@@ -129,13 +130,13 @@ public class FormAccessManager {
         }
 
         return userLdapGroups.stream()
-                .anyMatch(g -> (Pattern.compile(pattern, Pattern.CASE_INSENSITIVE).matcher(g).matches()
-                        || Pattern.compile(normalizeGroup(pattern), Pattern.CASE_INSENSITIVE).matcher(g).matches()));
+                .anyMatch(g -> Pattern.compile(normalizeGroup(pattern), Pattern.CASE_INSENSITIVE).matcher(normalizeGroup(g)).matches());
     }
 
     private static String normalizeGroup(String group){
-        String normalizedGroup = group.replace("CN=", "");
-        int endIndex = normalizedGroup.indexOf(',');
-        return normalizedGroup.substring(0, endIndex);
+        String subStr =  StringUtils.substringBetween(group, "CN=", ",");
+        if (subStr!= null)
+            return subStr;
+        return group;
     }
 }
