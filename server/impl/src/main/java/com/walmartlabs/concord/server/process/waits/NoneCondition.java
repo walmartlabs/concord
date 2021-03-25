@@ -1,4 +1,4 @@
-package com.walmartlabs.concord.server.process.queue;
+package com.walmartlabs.concord.server.process.waits;
 
 /*-
  * *****
@@ -19,6 +19,9 @@ package com.walmartlabs.concord.server.process.queue;
  * limitations under the License.
  * =====
  */
+
+import com.walmartlabs.concord.server.process.waits.AbstractWaitCondition;
+import com.walmartlabs.concord.server.process.waits.WaitType;
 
 /**
  * "No wait conditions" condition. Just to use as a history entry.

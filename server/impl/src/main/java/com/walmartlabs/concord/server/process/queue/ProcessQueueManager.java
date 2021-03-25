@@ -23,12 +23,9 @@ package com.walmartlabs.concord.server.process.queue;
 import com.walmartlabs.concord.imports.Imports;
 import com.walmartlabs.concord.runtime.v2.model.ExclusiveMode;
 import com.walmartlabs.concord.sdk.Constants;
-import com.walmartlabs.concord.sdk.EventType;
 import com.walmartlabs.concord.sdk.MapUtils;
-import com.walmartlabs.concord.server.ConcordObjectMapper;
 import com.walmartlabs.concord.server.RequestUtils;
 import com.walmartlabs.concord.server.process.*;
-import com.walmartlabs.concord.server.process.event.NewProcessEvent;
 import com.walmartlabs.concord.server.process.event.ProcessEventManager;
 import com.walmartlabs.concord.server.process.logs.ProcessLogManager;
 import com.walmartlabs.concord.server.sdk.PartialProcessKey;
@@ -47,23 +44,23 @@ import java.util.*;
 public class ProcessQueueManager {
 
     private final ProcessQueueDao queueDao;
-    private final ConcordObjectMapper objectMapper;
     private final ProcessKeyCache keyCache;
     private final ProcessEventManager eventManager;
     private final ProcessLogManager processLogManager;
+    private final Collection<ProcessStatusListener> statusListeners;
 
     @Inject
     public ProcessQueueManager(ProcessQueueDao queueDao,
-                               ConcordObjectMapper objectMapper,
                                ProcessKeyCache keyCache,
                                ProcessEventManager eventManager,
-                               ProcessLogManager processLogManager) {
+                               ProcessLogManager processLogManager,
+                               Collection<ProcessStatusListener> statusListeners) {
 
         this.queueDao = queueDao;
         this.eventManager = eventManager;
-        this.objectMapper = objectMapper;
         this.keyCache = keyCache;
         this.processLogManager = processLogManager;
+        this.statusListeners = statusListeners;
     }
 
     /**
@@ -85,6 +82,7 @@ public class ProcessQueueManager {
         queueDao.tx(tx -> {
             queueDao.insert(tx, processKey, status, kind, parentInstanceId, projectId, repoId, branchOrTag, commitId, initiatorId, meta, triggeredBy);
             eventManager.insertStatusHistory(tx, processKey, status, Collections.emptyMap());
+            notifyStatusChange(tx, processKey, status);
             processLogManager.createSystemSegment(tx, payload.getProcessKey());
         });
     }
@@ -158,6 +156,7 @@ public class ProcessQueueManager {
     public void updateStatus(DSLContext tx, ProcessKey processKey, ProcessStatus status, Map<String, Object> statusPayload) {
         queueDao.updateStatus(tx, processKey, status);
         eventManager.insertStatusHistory(tx, processKey, status, statusPayload);
+        notifyStatusChange(tx, processKey, status);
     }
 
     /**
@@ -169,6 +168,9 @@ public class ProcessQueueManager {
         return queueDao.txResult(tx -> {
             boolean success = queueDao.updateStatus(tx, processKey, expected, status);
             eventManager.insertStatusHistory(tx, processKey, status, Collections.emptyMap());
+            if (success) {
+                notifyStatusChange(tx, processKey, status);
+            }
             return success;
         });
     }
@@ -183,6 +185,9 @@ public class ProcessQueueManager {
         return queueDao.txResult(tx -> {
             boolean success = queueDao.updateStatus(processKeys, expected, status);
             eventManager.insertStatusHistory(tx, processKeys, status);
+            if (success) {
+                notifyStatusChange(tx, processKeys, status);
+            }
             return success;
         });
     }
@@ -200,28 +205,7 @@ public class ProcessQueueManager {
     public void updateAgentId(DSLContext tx, ProcessKey processKey, String agentId, ProcessStatus status) {
         queueDao.updateAgentId(tx, processKey, agentId, status);
         eventManager.insertStatusHistory(tx, processKey, status, Collections.emptyMap());
-    }
-
-    /**
-     * @see #updateWait(DSLContext, ProcessKey, AbstractWaitCondition)
-     */
-    public void updateWait(ProcessKey key, AbstractWaitCondition wait) {
-        queueDao.tx(tx -> updateWait(tx, key, wait));
-    }
-
-    /**
-     * Updates the process' wait conditions. Adds a wait condition history event.
-     */
-    public void updateWait(DSLContext tx, ProcessKey processKey, AbstractWaitCondition wait) {
-        queueDao.updateWait(tx, processKey, wait);
-
-        Map<String, Object> eventData = objectMapper.convertToMap(wait != null ? wait : new NoneCondition());
-        NewProcessEvent e = NewProcessEvent.builder()
-                .processKey(processKey)
-                .eventType(EventType.PROCESS_WAIT.name())
-                .data(eventData)
-                .build();
-        eventManager.event(tx, Collections.singletonList(e));
+        notifyStatusChange(tx, processKey, status);
     }
 
     public void updateExclusive(DSLContext tx, ProcessKey processKey, ExclusiveMode exclusive) {
@@ -294,5 +278,13 @@ public class ProcessQueueManager {
         }
 
         throw new IllegalArgumentException("Invalid '" + paramName + "' value: expected an ISO-8601 value, got: " + processTimeout);
+    }
+
+    private void notifyStatusChange(DSLContext tx, List<ProcessKey> processKeys, ProcessStatus status) {
+        processKeys.forEach(processKey -> statusListeners.forEach(l -> l.onStatusChange(tx, processKey, status)));
+    }
+
+    private void notifyStatusChange(DSLContext tx, ProcessKey processKey, ProcessStatus status) {
+        statusListeners.forEach(l -> l.onStatusChange(tx, processKey, status));
     }
 }

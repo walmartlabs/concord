@@ -89,6 +89,7 @@ public class ProcessQueueWatchdog implements ScheduledTask {
             ProcessStatus.NEW,
             ProcessStatus.PREPARING,
             ProcessStatus.ENQUEUED,
+            ProcessStatus.WAITING,
             ProcessStatus.STARTING,
             ProcessStatus.RUNNING,
             ProcessStatus.SUSPENDED,

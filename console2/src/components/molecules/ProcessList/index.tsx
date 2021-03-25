@@ -35,6 +35,7 @@ export enum Status {
     NEW = 'NEW',
     PREPARING = 'PREPARING',
     ENQUEUED = 'ENQUEUED',
+    WAITING = 'WAITING',
     SCHEDULED = 'ENQUEUED (future)',
     STARTING = 'STARTING',
     RUNNING = 'RUNNING',

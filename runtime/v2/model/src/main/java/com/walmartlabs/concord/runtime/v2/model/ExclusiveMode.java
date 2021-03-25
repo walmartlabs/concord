@@ -54,7 +54,7 @@ public interface ExclusiveMode extends Serializable {
         cancel,
 
         /**
-         * Cancel all other processes (enqueued, running or suspended) with the same {@link #group()} value.
+         * Cancel all other processes (enqueued, waiting, running or suspended) with the same {@link #group()} value.
          */
         cancelOld,
 

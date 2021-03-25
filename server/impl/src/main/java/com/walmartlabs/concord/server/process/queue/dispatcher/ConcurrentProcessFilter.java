@@ -25,9 +25,10 @@ import com.walmartlabs.concord.policyengine.CheckResult;
 import com.walmartlabs.concord.policyengine.ConcurrentProcessRule;
 import com.walmartlabs.concord.policyengine.PolicyEngine;
 import com.walmartlabs.concord.server.policy.PolicyManager;
-import com.walmartlabs.concord.server.process.queue.ProcessCompletionCondition;
+import com.walmartlabs.concord.server.process.waits.ProcessCompletionCondition;
 import com.walmartlabs.concord.server.process.queue.ProcessQueueEntry;
 import com.walmartlabs.concord.server.process.queue.ProcessQueueManager;
+import com.walmartlabs.concord.server.process.waits.ProcessWaitManager;
 import com.walmartlabs.concord.server.sdk.ProcessStatus;
 import org.jooq.DSLContext;
 
@@ -54,8 +55,8 @@ public class ConcurrentProcessFilter extends WaitProcessFinishFilter {
     private final PolicyManager policyManager;
 
     @Inject
-    public ConcurrentProcessFilter(PolicyManager policyManager, ProcessQueueManager processQueueManager, ConcurrentProcessFilterDao dao) {
-        super(processQueueManager);
+    public ConcurrentProcessFilter(ProcessWaitManager processWaitManager, PolicyManager policyManager, ProcessQueueManager processQueueManager, ConcurrentProcessFilterDao dao) {
+        super(processWaitManager, processQueueManager);
         this.policyManager = policyManager;
         this.dao = dao;
     }
