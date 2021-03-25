@@ -48,7 +48,9 @@ the HTTP status message instead
 - concord-console: update node.js to the current LTS (14.16.0)
 ([#366](https://github.com/walmartlabs/concord/pull/366));
 - sleep-task: use UUIDs as event names to support parallel
-execution ([#369](https://github.com/walmartlabs/concord/pull/369)).
+execution ([#369](https://github.com/walmartlabs/concord/pull/369));
+- concord-agent: disable preforks by default, use stable
+`workDir` ([#374](https://github.com/walmartlabs/concord/pull/374)).
 
 
 
