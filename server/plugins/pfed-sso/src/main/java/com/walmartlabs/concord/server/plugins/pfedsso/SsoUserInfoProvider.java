@@ -23,7 +23,6 @@ package com.walmartlabs.concord.server.plugins.pfedsso;
 import com.walmartlabs.concord.server.sdk.ConcordApplicationException;
 import com.walmartlabs.concord.server.security.Roles;
 import com.walmartlabs.concord.server.security.ldap.LdapPrincipal;
-import com.walmartlabs.concord.server.security.ldap.LdapUserInfoProvider;
 import com.walmartlabs.concord.server.user.AbstractUserInfoProvider;
 import com.walmartlabs.concord.server.user.UserDao;
 import com.walmartlabs.concord.server.user.UserType;

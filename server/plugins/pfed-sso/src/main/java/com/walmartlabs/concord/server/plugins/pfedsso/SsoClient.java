@@ -248,15 +248,19 @@ public class SsoClient {
         String mail();
 
         @JsonProperty("displayName")
+        @Nullable
         String displayName();
 
         @JsonProperty("userPrincipalName")
+        @Nullable
         String userPrincipalName();
         
         @JsonProperty("distinguishedName")
+        @Nullable
         String nameInNamespace();
 
         @JsonProperty("memberOf")
+        @Nullable
         Set<String> groups();
     }
 }
