@@ -23,6 +23,7 @@ package com.walmartlabs.concord.server.process.queue;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.walmartlabs.concord.server.TestObjectMapper;
 import com.walmartlabs.concord.server.jooq.enums.ProcessLockScope;
+import com.walmartlabs.concord.server.process.waits.*;
 import org.junit.Test;
 
 import java.util.Collections;

@@ -1,10 +1,10 @@
-package com.walmartlabs.concord.server.sdk;
+package com.walmartlabs.concord.server.process.queue;
 
 /*-
  * *****
  * Concord
  * -----
- * Copyright (C) 2017 - 2018 Walmart Inc.
+ * Copyright (C) 2017 - 2021 Walmart Inc.
  * -----
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,18 +20,11 @@ package com.walmartlabs.concord.server.sdk;
  * =====
  */
 
+import com.walmartlabs.concord.server.sdk.ProcessKey;
+import com.walmartlabs.concord.server.sdk.ProcessStatus;
+import org.jooq.DSLContext;
 
-public enum ProcessStatus {
-    NEW,
-    PREPARING,
-    ENQUEUED,
-    WAITING,
-    STARTING,
-    RUNNING,
-    SUSPENDED,
-    RESUMING,
-    FINISHED,
-    FAILED,
-    CANCELLED,
-    TIMED_OUT
+public interface ProcessStatusListener {
+
+    void onStatusChange(DSLContext tx, ProcessKey processKey, ProcessStatus status);
 }

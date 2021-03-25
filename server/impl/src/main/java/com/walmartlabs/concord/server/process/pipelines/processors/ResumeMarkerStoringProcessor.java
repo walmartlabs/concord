@@ -55,7 +55,6 @@ public class ResumeMarkerStoringProcessor implements PayloadProcessor {
         ProcessKey processKey = payload.getProcessKey();
 
         Set<String> events = payload.getHeader(Payload.RESUME_EVENTS, Collections.emptySet());
-
         if (events.isEmpty()) {
             return chain.process(payload);
         }

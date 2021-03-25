@@ -32,12 +32,12 @@ import java.util.Map;
 import java.util.Set;
 
 @Named
-public class EventNameProcessor implements PayloadProcessor {
+public class ResumeEventsProcessor implements PayloadProcessor {
 
     private final ProcessLogManager logManager;
 
     @Inject
-    public EventNameProcessor(ProcessLogManager logManager) {
+    public ResumeEventsProcessor(ProcessLogManager logManager) {
         this.logManager = logManager;
     }
 

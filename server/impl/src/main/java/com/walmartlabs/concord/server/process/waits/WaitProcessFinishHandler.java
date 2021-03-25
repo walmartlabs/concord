@@ -1,4 +1,4 @@
-package com.walmartlabs.concord.server.process.queue;
+package com.walmartlabs.concord.server.process.waits;
 
 /*-
  * *****
@@ -23,6 +23,7 @@ package com.walmartlabs.concord.server.process.queue;
 import com.walmartlabs.concord.db.AbstractDao;
 import com.walmartlabs.concord.db.MainDB;
 import com.walmartlabs.concord.server.jooq.tables.ProcessQueue;
+import com.walmartlabs.concord.server.process.queue.ProcessQueueManager;
 import com.walmartlabs.concord.server.sdk.ProcessKey;
 import com.walmartlabs.concord.server.sdk.ProcessStatus;
 import org.jooq.Configuration;
@@ -33,7 +34,7 @@ import javax.inject.Singleton;
 import java.util.*;
 
 import static com.walmartlabs.concord.server.jooq.tables.ProcessQueue.PROCESS_QUEUE;
-import static com.walmartlabs.concord.server.process.queue.ProcessCompletionCondition.CompleteCondition;
+import static com.walmartlabs.concord.server.process.waits.ProcessCompletionCondition.CompleteCondition;
 
 /**
  * Handles the processes that are waiting for other processes to finish.
@@ -45,10 +46,12 @@ public class WaitProcessFinishHandler implements ProcessWaitHandler<ProcessCompl
     private final Set<ProcessStatus> STATUSES = new HashSet<>(Arrays.asList(ProcessStatus.ENQUEUED, ProcessStatus.SUSPENDED));
 
     private final Dao dao;
+    private final ProcessQueueManager processQueueManager;
 
     @Inject
-    public WaitProcessFinishHandler(Dao dao) {
+    public WaitProcessFinishHandler(Dao dao, ProcessQueueManager processQueueManager) {
         this.dao = dao;
+        this.processQueueManager = processQueueManager;
     }
 
     @Override
@@ -62,7 +65,7 @@ public class WaitProcessFinishHandler implements ProcessWaitHandler<ProcessCompl
     }
 
     @Override
-    public Result<ProcessCompletionCondition> process(ProcessKey key, ProcessStatus processStatus, ProcessCompletionCondition wait) {
+    public Result<ProcessCompletionCondition> process(ProcessKey processKey, ProcessStatus processStatus, ProcessCompletionCondition wait) {
         Set<ProcessStatus> finishedStatuses = wait.finalStatuses();
         Set<UUID> awaitProcesses = wait.processes();
 
@@ -75,6 +78,8 @@ public class WaitProcessFinishHandler implements ProcessWaitHandler<ProcessCompl
         if (completed) {
             if (wait.resumeEvent() != null) {
                 return Result.of(wait.resumeEvent());
+            } else {
+                processQueueManager.updateExpectedStatus(processKey, ProcessStatus.WAITING, ProcessStatus.ENQUEUED);
             }
             return null;
         }
@@ -88,8 +93,6 @@ public class WaitProcessFinishHandler implements ProcessWaitHandler<ProcessCompl
                         .reason(wait.reason())
                         .build());
     }
-
-
 
     private static boolean isCompleted(CompleteCondition condition, Set<UUID> awaitProcesses, Set<UUID> finishedProcesses) {
         switch (condition) {

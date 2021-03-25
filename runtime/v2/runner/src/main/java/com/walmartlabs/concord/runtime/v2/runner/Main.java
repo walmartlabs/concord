@@ -148,7 +148,7 @@ public class Main {
 
         StateManager.cleanupState(workDir); // TODO make it an interface
 
-        Action action = currentAction(snapshot, events);
+        Action action = currentAction(events);
         switch (action) {
             case START: {
                 if (snapshot != null) {
@@ -253,7 +253,7 @@ public class Main {
         return events;
     }
 
-    private static Action currentAction(ProcessSnapshot snapshot, Set<String> events) {
+    private static Action currentAction(Set<String> events) {
         if (events != null && !events.isEmpty()) {
             return Action.RESUME;
         }

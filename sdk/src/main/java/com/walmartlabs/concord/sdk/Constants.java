@@ -235,11 +235,12 @@ public class Constants {
 
         /**
          * Resume event name. Filled in for processes resumed after being suspended.
+         * @deprecated see {@link #RESUME_EVENTS_KEY}
          */
         public static final String EVENT_NAME_KEY = "resumeEventName";
 
         /**
-         * Resume event name. Filled in for processes resumed after being suspended.
+         * Resume events. Filled in for processes resumed after being suspended.
          */
         public static final String RESUME_EVENTS_KEY = "resumeEvents";
 

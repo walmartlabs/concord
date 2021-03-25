@@ -1,4 +1,4 @@
-package com.walmartlabs.concord.server.process.queue;
+package com.walmartlabs.concord.server.process.waits;
 
 /*-
  * *****
@@ -31,6 +31,8 @@ public interface ProcessWaitHandler<T extends AbstractWaitCondition> {
 
     WaitType getType();
 
+    // TODO: remove me in the next release
+    @Deprecated
     Set<ProcessStatus> getProcessStatuses();
 
     Result<T> process(ProcessKey processKey, ProcessStatus processStatus, T waits);

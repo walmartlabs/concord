@@ -42,8 +42,8 @@ public class AttachmentsUploader {
         this.apiClient = apiClient;
     }
 
-    public void upload(UUID instanceId, Path payloadDir) throws Exception {
-        Path attachmentsDir = payloadDir.resolve(Constants.Files.JOB_ATTACHMENTS_DIR_NAME);
+    public void upload(UUID instanceId, Path workDir) throws Exception {
+        Path attachmentsDir = workDir.resolve(Constants.Files.JOB_ATTACHMENTS_DIR_NAME);
         if (!Files.exists(attachmentsDir)) {
             return;
         }

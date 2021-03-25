@@ -256,10 +256,15 @@ class ProcessForm extends React.Component<Props, State> {
             value = allowedValues[0];
         }
 
-        const dropdown = !fixedInput && allowedValues.length > 0;
+        const singleValue =
+            cardinality === Cardinality.ONE_AND_ONLY_ONE || cardinality === Cardinality.ONE_OR_NONE;
+
+        const input = fixedInput || (singleValue && allowedValues.length === 0);
+        const dropdown = !input;
 
         const multiSelect =
-            cardinality === Cardinality.AT_LEAST_ONE || cardinality === Cardinality.ANY;
+            (cardinality === Cardinality.AT_LEAST_ONE || cardinality === Cardinality.ANY) &&
+            allowedValues.length !== 1;
 
         return (
             <Form.Field key={name} error={!!error} required={required}>

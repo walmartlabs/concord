@@ -23,6 +23,7 @@ package com.walmartlabs.concord.server.process.queue.dispatcher;
 import com.walmartlabs.concord.runtime.v2.model.ExclusiveMode;
 import com.walmartlabs.concord.server.process.queue.ProcessQueueEntry;
 import com.walmartlabs.concord.server.process.queue.ProcessQueueManager;
+import com.walmartlabs.concord.server.process.waits.ProcessWaitManager;
 import org.jooq.DSLContext;
 
 import javax.inject.Inject;
@@ -44,8 +45,8 @@ public class ExclusiveProcessFilter extends WaitProcessFinishFilter {
     private final ExclusiveProcessFilterDao dao;
 
     @Inject
-    public ExclusiveProcessFilter(ProcessQueueManager processQueueManager, ExclusiveProcessFilterDao dao) {
-        super(processQueueManager);
+    public ExclusiveProcessFilter(ProcessWaitManager processWaitManager, ProcessQueueManager processQueueManager, ExclusiveProcessFilterDao dao) {
+        super(processWaitManager, processQueueManager);
         this.dao = dao;
     }
 

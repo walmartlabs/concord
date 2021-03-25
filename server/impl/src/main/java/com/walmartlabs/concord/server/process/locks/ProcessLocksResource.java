@@ -23,7 +23,10 @@ package com.walmartlabs.concord.server.process.locks;
 import com.walmartlabs.concord.server.jooq.enums.ProcessLockScope;
 import com.walmartlabs.concord.server.process.ProcessEntry;
 import com.walmartlabs.concord.server.process.queue.ProcessLockCondition;
+import com.walmartlabs.concord.server.process.waits.AbstractWaitCondition;
+import com.walmartlabs.concord.server.process.waits.ProcessLockCondition;
 import com.walmartlabs.concord.server.process.queue.ProcessQueueManager;
+import com.walmartlabs.concord.server.process.waits.ProcessWaitManager;
 import com.walmartlabs.concord.server.sdk.ConcordApplicationException;
 import com.walmartlabs.concord.server.sdk.PartialProcessKey;
 import com.walmartlabs.concord.server.sdk.ProcessKey;
@@ -47,14 +50,17 @@ import java.util.UUID;
 @Path("/api/v1/process")
 public class ProcessLocksResource implements Resource {
 
+    private final ProcessWaitManager waitManager;
     private final ProcessQueueManager processQueueManager;
-    private final ProcessQueueManager queueManager;
     private final ProcessLocksDao dao;
 
     @Inject
-    public ProcessLocksResource(ProcessQueueManager processQueueManager, ProcessQueueManager queueManager, ProcessLocksDao dao) {
+    public ProcessLocksResource(ProcessWaitManager waitManager,
+                                ProcessQueueManager processQueueManager,
+                                ProcessLocksDao dao) {
+
+        this.waitManager = waitManager;
         this.processQueueManager = processQueueManager;
-        this.queueManager = queueManager;
         this.dao = dao;
     }
 
@@ -73,10 +79,10 @@ public class ProcessLocksResource implements Resource {
 
         ProcessEntry e = assertProcess(instanceId);
 
-        LockEntry lock = dao.tryLock(e.instanceId(), e.orgId(), e.projectId(), scope, lockName);
+        LockEntry lock = dao.tryLock(new ProcessKey(e.instanceId(), e.createdAt()), e.orgId(), e.projectId(), scope, lockName);
         boolean acquired = lock.instanceId().equals(instanceId);
         if (!acquired) {
-            queueManager.addWait(new ProcessKey(e.instanceId(), e.createdAt()), ProcessLockCondition.from(lock));
+            waitManager.addWait(new ProcessKey(e.instanceId(), e.createdAt()), ProcessLockCondition.from(lock));
         }
         return LockResult.builder()
                 .acquired(acquired)

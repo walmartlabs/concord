@@ -1,4 +1,4 @@
-package com.walmartlabs.concord.server.process.queue;
+package com.walmartlabs.concord.server.process.waits;
 
 /*-
  * *****
@@ -60,7 +60,7 @@ public class WaitProcessLockHandler implements ProcessWaitHandler<ProcessLockCon
 
     @Override
     public Result<ProcessLockCondition> process(ProcessKey key, ProcessStatus status, ProcessLockCondition wait) {
-        LockEntry lock = locksDao.tryLock(key.getInstanceId(), wait.orgId(), wait.projectId(), wait.scope(), wait.name());
+        LockEntry lock = locksDao.tryLock(key, wait.orgId(), wait.projectId(), wait.scope(), wait.name());
         if (lock.instanceId().equals(key.getInstanceId())) {
             return Result.of(wait.name());
         }
