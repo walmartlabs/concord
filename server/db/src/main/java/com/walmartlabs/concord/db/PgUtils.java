@@ -27,14 +27,10 @@ import org.jooq.exception.DataAccessException;
 import org.jooq.impl.DSL;
 import org.postgresql.util.PSQLException;
 
-import java.sql.PreparedStatement;
-import java.sql.SQLException;
-import java.sql.Types;
 import java.time.Duration;
 import java.time.OffsetDateTime;
 import java.util.List;
 
-import static com.walmartlabs.concord.server.jooq.tables.ProcessQueue.PROCESS_QUEUE;
 import static org.jooq.impl.DSL.*;
 
 public final class PgUtils {
@@ -111,6 +107,11 @@ public final class PgUtils {
 
     public static Field<JSONB> jsonbAppend(Field<JSONB> a, JSONB b) {
         return field(a + " || ?::jsonb", JSONB.class, b);
+    }
+
+    public static Field<String> toJsonDate(Field<OffsetDateTime> date) {
+        return toChar(date, "YYYY-MM-DD\"T\"HH24:MI:SS.MS")
+                .concat(replace(toChar(date, "OF"), ":", ""));
     }
 
     private static String toPath(List<String> path) {

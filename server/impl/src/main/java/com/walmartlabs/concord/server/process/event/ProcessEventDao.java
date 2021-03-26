@@ -39,7 +39,7 @@ import java.sql.PreparedStatement;
 import java.time.OffsetDateTime;
 import java.util.*;
 
-import static com.walmartlabs.concord.db.PgUtils.toChar;
+import static com.walmartlabs.concord.db.PgUtils.toJsonDate;
 import static com.walmartlabs.concord.server.jooq.Tables.PROCESS_EVENTS;
 import static org.jooq.impl.DSL.*;
 
@@ -246,10 +246,6 @@ public class ProcessEventDao extends AbstractDao {
                         inline("type"), field("{0}->'type'", Object.class, pe.EVENT_DATA),
                         inline("reason"), field("{0}->'reason'", Object.class, pe.EVENT_DATA),
                         inline("payload"), field("{0} - 'type' - 'reason'", Object.class, pe.EVENT_DATA)));
-    }
-
-    private static Field<String> toJsonDate(Field<OffsetDateTime> date) {
-        return toChar(date, "YYYY-MM-DD\"T\"HH24:MI:SS.MS\"Z\"");
     }
 
     private ProcessEventEntry toEntry(Record5<Long, UUID, String, OffsetDateTime, JSONB> r) {
