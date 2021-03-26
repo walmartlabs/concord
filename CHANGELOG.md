@@ -1,5 +1,68 @@
 # Change log
 
+## [Unreleased]
+
+### Added
+
+- concord-server: log handler process IDs (`onTimeout`,
+`onCancel`, etc) in the parent process log
+([#350](https://github.com/walmartlabs/concord/pull/350));
+- concord-console: on the repository list page, add commit
+ID and repository path links;
+([#351](https://github.com/walmartlabs/concord/pull/351));
+- concord-console, runtime-v1, runtime-v2: ability to log
+process IDs as links in the UI
+([#356](https://github.com/walmartlabs/concord/pull/356));
+- concord-repository, concord-server, concord-agent: option
+to skip fetching if local commit ID equals remote commit ID
+([#359](https://github.com/walmartlabs/concord/pull/359)).
+- concord-agent: option to redirect process logs to stdout
+([#362](https://github.com/walmartlabs/concord/pull/362));
+- concord-server, runtime-v2: it is now possible to resume
+a process waiting for multiple external events
+([#370](https://github.com/walmartlabs/concord/pull/370));
+- concord-server, concord-console: new process status
+`WAITING`. Before this change, the `SUSPENDED` status was
+used for both processes suspended on an event (e.g. on a
+form) and processes waiting for "external" conditions (e.g.
+concurrent execution limits, waiting for another process or
+lock, etc). This PR creates a clear separation in statuses
+for such cases
+([#371](https://github.com/walmartlabs/concord/pull/371) and
+ [#379](https://github.com/walmartlabs/concord/pull/379)).
+
+### Changed
+
+- runtime-v2: implicitly pass variables into scripts
+([#349](https://github.com/walmartlabs/concord/pull/349));
+- concord-repository: disable git auto-maintenance
+([#353](https://github.com/walmartlabs/concord/pull/353));
+- runtime-v2: fix error handling in reentrable tasks
+([#354](https://github.com/walmartlabs/concord/pull/354)).
+- concord-server, concord-console: fix the rendering of
+form dropdown fields with single allowed values
+([#357](https://github.com/walmartlabs/concord/pull/357))
+and ([372](https://github.com/walmartlabs/concord/pull/372));
+- runtime-v2: cleanup `workDir` files after loading
+the state ([#358](https://github.com/walmartlabs/concord/pull/358));
+- concord-client: skip empty bodies in error responses, use
+the HTTP status message instead
+([#363](https://github.com/walmartlabs/concord/pull/363));
+- runtime-v2: fixed the `exclusive` mode grammar in triggers
+(cron, generic, oneops)
+([#364](https://github.com/walmartlabs/concord/pull/364));
+- concord-server: set `initiator` for `onCancel`,
+`onFailure` and `onTimeout` handlers
+([#365](https://github.com/walmartlabs/concord/pull/365));
+- concord-console: update node.js to the current LTS (14.16.0)
+([#366](https://github.com/walmartlabs/concord/pull/366));
+- sleep-task: use UUIDs as event names to support parallel
+execution ([#369](https://github.com/walmartlabs/concord/pull/369));
+- concord-agent: disable preforks by default, use stable
+`workDir` ([#374](https://github.com/walmartlabs/concord/pull/374)).
+
+
+
 ## [1.82.0] - 2021-03-08
 
 ### Added
