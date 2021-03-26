@@ -1,5 +1,15 @@
 # Change log
 
+## [Unreleased]
+
+### Added
+
+- concord-server: cleanup job for `wait_conditions`.
+Automatically remove `wait_conditions` of expunged processes
+([#380](https://github.com/walmartlabs/concord/pull/380)).
+
+
+
 ## [1.83.0] - 2021-03-25
 
 ### Added
