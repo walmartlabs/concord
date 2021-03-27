@@ -30,12 +30,16 @@ import com.walmartlabs.concord.dependencymanager.DependencyManager;
 import com.walmartlabs.concord.imports.ImportManager;
 import com.walmartlabs.concord.imports.ImportManagerFactory;
 import com.walmartlabs.concord.imports.ImportProcessingException;
+import com.walmartlabs.concord.imports.Imports;
 import com.walmartlabs.concord.process.loader.model.ProcessDefinitionUtils;
 import com.walmartlabs.concord.process.loader.v2.ProcessDefinitionV2;
 import com.walmartlabs.concord.runtime.common.cfg.RunnerConfiguration;
 import com.walmartlabs.concord.runtime.v2.ProjectLoaderV2;
+import com.walmartlabs.concord.runtime.v2.ProjectSerializerV2;
 import com.walmartlabs.concord.runtime.v2.model.ProcessDefinition;
 import com.walmartlabs.concord.runtime.v2.model.ProcessDefinitionConfiguration;
+import com.walmartlabs.concord.runtime.v2.model.Profile;
+import com.walmartlabs.concord.runtime.v2.model.Step;
 import com.walmartlabs.concord.runtime.v2.runner.InjectorFactory;
 import com.walmartlabs.concord.runtime.v2.runner.Runner;
 import com.walmartlabs.concord.runtime.v2.runner.guice.ProcessDependenciesModule;
@@ -58,7 +62,6 @@ import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.util.*;
 import java.util.concurrent.Callable;
-import java.util.concurrent.atomic.AtomicLong;
 
 @Command(name = "run", description = "Run the current directory as a Concord process")
 public class Run implements Callable<Integer> {
@@ -101,6 +104,9 @@ public class Run implements Callable<Integer> {
 
     @Option(names = {"-v", "--verbose"}, description = "verbose output")
     boolean verbose = false;
+
+    @Option(names = {"-effectiveYaml"}, description = "generate effective yaml")
+    boolean effectiveYaml = false;
 
     @Option(names = {"--default-import-version"}, description = "default import version or repo branch")
     String defaultVersion = "main";
@@ -176,15 +182,6 @@ public class Run implements Callable<Integer> {
                 .debug(cfg.debug())
                 .build();
 
-        Injector injector = new InjectorFactory(new WorkingDirectory(targetDir),
-                runnerCfg,
-                () -> cfg,
-                new ProcessDependenciesModule(targetDir, runnerCfg.dependencies()),
-                new CliServicesModule(secretStoreDir, targetDir, new VaultProvider(vaultDir, vaultId)))
-                .create();
-
-        Runner runner = injector.getInstance(Runner.class);
-
         Map<String, Object> profileArgs = getProfilesArguments(processDefinition, profiles);
         Map<String, Object> args = ConfigurationUtils.deepMerge(cfg.arguments(), profileArgs, extraVars);
         if (verbose) {
@@ -193,7 +190,39 @@ public class Run implements Callable<Integer> {
         args.put(Constants.Context.TX_ID_KEY, instanceId.toString());
         args.put(Constants.Context.WORK_DIR_KEY, targetDir.toAbsolutePath().toString());
 
+        if (effectiveYaml) {
+            Map<String, List<Step>> flows = new HashMap<>(processDefinition.flows());
+            for (String ap : profiles) {
+                Profile p = processDefinition.profiles().get(ap);
+                if (p != null) {
+                    flows.putAll(p.flows());
+                }
+            }
+
+            ProcessDefinition pd = ProcessDefinition.builder().from(processDefinition)
+                    .configuration(ProcessDefinitionConfiguration.builder().from(processDefinition.configuration())
+                            .arguments(args)
+                            .build())
+                    .flows(flows)
+                    .imports(Imports.builder().build())
+                    .profiles(Collections.emptyMap())
+                    .build();
+
+            ProjectSerializerV2 serializer = new ProjectSerializerV2();
+            serializer.write(pd, System.out);
+            return 0;
+        }
+
         System.out.println("Starting...");
+
+        Injector injector = new InjectorFactory(new WorkingDirectory(targetDir),
+                runnerCfg,
+                () -> cfg,
+                new ProcessDependenciesModule(targetDir, runnerCfg.dependencies()),
+                new CliServicesModule(secretStoreDir, targetDir, new VaultProvider(vaultDir, vaultId)))
+                .create();
+
+        Runner runner = injector.getInstance(Runner.class);
 
         if (cfg.debug()) {
             System.out.println("Available tasks: " + injector.getInstance(TaskProviders.class).names());
