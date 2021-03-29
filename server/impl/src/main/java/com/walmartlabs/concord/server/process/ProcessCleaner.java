@@ -36,8 +36,7 @@ import javax.inject.Singleton;
 import java.time.OffsetDateTime;
 import java.util.UUID;
 
-import static com.walmartlabs.concord.server.jooq.Tables.PROCESS_LOG_DATA;
-import static com.walmartlabs.concord.server.jooq.Tables.PROCESS_LOG_SEGMENTS;
+import static com.walmartlabs.concord.server.jooq.Tables.*;
 import static com.walmartlabs.concord.server.jooq.tables.ProcessCheckpoints.PROCESS_CHECKPOINTS;
 import static com.walmartlabs.concord.server.jooq.tables.ProcessEvents.PROCESS_EVENTS;
 import static com.walmartlabs.concord.server.jooq.tables.ProcessQueue.PROCESS_QUEUE;
@@ -97,6 +96,10 @@ public class ProcessCleaner implements ScheduledTask {
                 int queueEntries = 0;
                 if (jobCfg.isQueueCleanup()) {
                     queueEntries = tx.deleteFrom(PROCESS_QUEUE)
+                            .where(PROCESS_QUEUE.INSTANCE_ID.in(ids))
+                            .execute();
+
+                    tx.deleteFrom(PROCESS_WAIT_CONDITIONS)
                             .where(PROCESS_QUEUE.INSTANCE_ID.in(ids))
                             .execute();
                 }
