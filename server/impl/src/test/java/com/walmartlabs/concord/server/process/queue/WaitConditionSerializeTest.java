@@ -36,18 +36,6 @@ public class WaitConditionSerializeTest {
     final ObjectMapper objectMapper = TestObjectMapper.INSTANCE;
 
     @Test
-    public void testNoneCondition() throws Exception {
-        NoneCondition c = new NoneCondition();
-
-        String json = objectMapper.writeValueAsString(c);
-        System.out.println(json);
-
-        AbstractWaitCondition cc = objectMapper.readValue(json, AbstractWaitCondition.class);
-        assertEquals(NoneCondition.class, cc.getClass());
-        assertEquals(WaitType.NONE, cc.type());
-    }
-
-    @Test
     public void testProcessLockCondition() throws Exception {
         ProcessLockCondition c = ProcessLockCondition.builder()
                 .instanceId(UUID.fromString("e7c43983-95b5-4426-acef-6682b8c1dabe"))

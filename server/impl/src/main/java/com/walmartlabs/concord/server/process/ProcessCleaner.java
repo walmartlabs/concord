@@ -100,7 +100,7 @@ public class ProcessCleaner implements ScheduledTask {
                             .execute();
 
                     tx.deleteFrom(PROCESS_WAIT_CONDITIONS)
-                            .where(PROCESS_QUEUE.INSTANCE_ID.in(ids))
+                            .where(PROCESS_WAIT_CONDITIONS.INSTANCE_ID.in(ids))
                             .execute();
                 }
 

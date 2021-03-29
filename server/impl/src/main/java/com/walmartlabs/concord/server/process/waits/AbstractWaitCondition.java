@@ -34,10 +34,8 @@ import java.io.Serializable;
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
 @JsonTypeInfo(
         use = JsonTypeInfo.Id.NAME,
-        visible = false,
         property = "type")
 @JsonSubTypes({
-        @JsonSubTypes.Type(value = NoneCondition.class, name = "NONE"),
         @JsonSubTypes.Type(value = ImmutableProcessCompletionCondition.class, name = "PROCESS_COMPLETION"),
         @JsonSubTypes.Type(value = ImmutableProcessLockCondition.class, name = "PROCESS_LOCK"),
         @JsonSubTypes.Type(value = ImmutableProcessSleepCondition.class, name = "PROCESS_SLEEP")
