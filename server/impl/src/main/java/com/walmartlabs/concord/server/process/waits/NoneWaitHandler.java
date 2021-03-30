@@ -1,4 +1,4 @@
-package com.walmartlabs.concord.server.process.queue;
+package com.walmartlabs.concord.server.process.waits;
 
 /*-
  * *****
@@ -20,6 +20,7 @@ package com.walmartlabs.concord.server.process.queue;
  * =====
  */
 
+import com.walmartlabs.concord.server.sdk.ProcessKey;
 import com.walmartlabs.concord.server.sdk.ProcessStatus;
 
 import javax.inject.Named;
@@ -27,7 +28,6 @@ import javax.inject.Singleton;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
-import java.util.UUID;
 
 @Named
 @Singleton
@@ -46,7 +46,7 @@ public class NoneWaitHandler implements ProcessWaitHandler<NoneCondition> {
     }
 
     @Override
-    public NoneCondition process(UUID instanceId, ProcessStatus processStatus, NoneCondition waits) {
+    public NoneCondition process(ProcessKey processKey, ProcessStatus processStatus, NoneCondition waits) {
         return null;
     }
 }

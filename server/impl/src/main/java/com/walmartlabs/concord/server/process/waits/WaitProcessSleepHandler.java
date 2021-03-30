@@ -1,4 +1,4 @@
-package com.walmartlabs.concord.server.process.queue;
+package com.walmartlabs.concord.server.process.waits;
 
 /*-
  * *****
@@ -20,30 +20,20 @@ package com.walmartlabs.concord.server.process.queue;
  * =====
  */
 
-import com.walmartlabs.concord.db.AbstractDao;
-import com.walmartlabs.concord.db.MainDB;
 import com.walmartlabs.concord.server.process.Payload;
 import com.walmartlabs.concord.server.process.PayloadManager;
 import com.walmartlabs.concord.server.process.ProcessManager;
 import com.walmartlabs.concord.server.sdk.ConcordApplicationException;
-import com.walmartlabs.concord.server.sdk.PartialProcessKey;
+import com.walmartlabs.concord.server.sdk.ProcessKey;
 import com.walmartlabs.concord.server.sdk.ProcessStatus;
-import org.jooq.Configuration;
-import org.jooq.Field;
-import org.jooq.Record1;
 
 import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
 import java.io.IOException;
-import java.sql.Timestamp;
 import java.util.Collections;
+import java.util.Date;
 import java.util.Set;
-import java.util.UUID;
-
-import static com.walmartlabs.concord.server.jooq.Tables.PROCESS_QUEUE;
-import static org.jooq.impl.DSL.currentTimestamp;
-import static org.jooq.impl.DSL.field;
 
 /**
  * Handles the processes that are waiting for some timeout. Resumes a suspended process
@@ -57,13 +47,11 @@ public class WaitProcessSleepHandler implements ProcessWaitHandler<ProcessSleepC
 
     private final ProcessManager processManager;
     private final PayloadManager payloadManager;
-    private final ProcessSleepDao processSleepDao;
 
     @Inject
-    public WaitProcessSleepHandler(ProcessManager processManager, PayloadManager payloadManager, ProcessSleepDao processSleepDao) {
+    public WaitProcessSleepHandler(ProcessManager processManager, PayloadManager payloadManager) {
         this.processManager = processManager;
         this.payloadManager = payloadManager;
-        this.processSleepDao = processSleepDao;
     }
 
     @Override
@@ -77,45 +65,23 @@ public class WaitProcessSleepHandler implements ProcessWaitHandler<ProcessSleepC
     }
 
     @Override
-    public ProcessSleepCondition process(UUID instanceId, ProcessStatus status, ProcessSleepCondition wait) {
-        if (processSleepDao.isSleepFinished(instanceId)) {
-            resumeProcess(instanceId, wait.resumeEvent());
+    public ProcessSleepCondition process(ProcessKey processKey, ProcessStatus status, ProcessSleepCondition wait) {
+        if (wait.until().before(new Date())) {
+            resumeProcess(processKey, wait.resumeEvent());
             return null;
         }
 
         return wait;
     }
 
-    private void resumeProcess(UUID instanceId, String eventName) {
+    private void resumeProcess(ProcessKey processKey, String eventName) {
         Payload payload;
         try {
-            payload = payloadManager.createResumePayload(PartialProcessKey.from(instanceId), eventName, null);
+            payload = payloadManager.createResumePayload(processKey, eventName, null);
         } catch (IOException e) {
             throw new ConcordApplicationException("Error creating a payload", e);
         }
 
         processManager.resume(payload);
-    }
-
-    @Named
-    private static final class ProcessSleepDao  extends AbstractDao {
-
-        @Inject
-        protected ProcessSleepDao(@MainDB Configuration cfg) {
-            super(cfg);
-        }
-
-        public boolean isSleepFinished(UUID instanceId) {
-            Field<Timestamp> untilField = field("({0}->>'until')::timestamptz", Timestamp.class, PROCESS_QUEUE.WAIT_CONDITIONS);
-            return txResult(tx -> {
-                Record1<Integer> result = tx.selectOne()
-                        .from(PROCESS_QUEUE)
-                        .where(PROCESS_QUEUE.INSTANCE_ID.eq(instanceId)
-                                .and(PROCESS_QUEUE.WAIT_CONDITIONS.isNotNull()
-                                        .and(currentTimestamp().greaterOrEqual(untilField))))
-                        .fetchOne();
-                return result != null;
-            });
-        }
     }
 }

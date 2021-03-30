@@ -57,7 +57,8 @@ public final class ConcordConfiguration {
                 .streamServerLogs(true)
                 .streamAgentLogs(true)
                 .sharedContainerDir(sharedDir)
-                .useLocalMavenRepository(true);
+                .useLocalMavenRepository(true)
+                .extraConfigurationSupplier(() -> "concord-agent { prefork { enabled = true } }");
 
         boolean localMode = Boolean.parseBoolean(System.getProperty("it.local.mode"));
         if (localMode) {

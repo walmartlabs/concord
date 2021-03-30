@@ -37,6 +37,7 @@ const statusToIcon: {
     NEW: { name: 'inbox', color: 'grey' },
     PREPARING: { name: 'info', color: 'blue' },
     ENQUEUED: { name: 'block layout', color: 'grey' },
+    WAITING: { name: 'block layout', color: 'grey' },
     SCHEDULED: { name: 'hourglass start', color: 'grey' },
     RESUMING: { name: 'circle notched', color: 'grey', loading: true },
     SUSPENDED: { name: 'wait', color: 'blue' },

@@ -1,4 +1,4 @@
-package com.walmartlabs.concord.server.process.queue;
+package com.walmartlabs.concord.server.process.waits;
 
 /*-
  * *****
@@ -9,9 +9,9 @@ package com.walmartlabs.concord.server.process.queue;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- *
+ * 
  *      http://www.apache.org/licenses/LICENSE-2.0
- *
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -20,19 +20,21 @@ package com.walmartlabs.concord.server.process.queue;
  * =====
  */
 
-import com.walmartlabs.concord.server.sdk.ProcessStatus;
+import com.walmartlabs.concord.server.process.waits.AbstractWaitCondition;
+import com.walmartlabs.concord.server.process.waits.WaitType;
 
-import java.util.Set;
-import java.util.UUID;
+/**
+ * "No wait conditions" condition. Just to use as a history entry.
+ */
+public class NoneCondition extends AbstractWaitCondition {
 
-public interface ProcessWaitHandler<T extends AbstractWaitCondition> {
+    @Override
+    public WaitType type() {
+        return WaitType.NONE;
+    }
 
-    WaitType getType();
-
-    Set<ProcessStatus> getProcessStatuses();
-
-    /**
-     * @return {@code null} if the specified process doesn't have any wait conditions.
-     */
-    T process(UUID instanceId, ProcessStatus processStatus, T waits);
+    @Override
+    public String reason() {
+        return null;
+    }
 }

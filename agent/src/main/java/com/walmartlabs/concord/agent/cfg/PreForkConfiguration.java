@@ -31,13 +31,19 @@ import java.util.concurrent.TimeUnit;
 @Singleton
 public class PreForkConfiguration {
 
+    private final boolean enabled;
     private final long maxAge;
     private final int maxCount;
 
     @Inject
     public PreForkConfiguration(Config cfg) {
+        this.enabled = cfg.getBoolean("prefork.enabled");
         this.maxAge = cfg.getDuration("prefork.maxAge", TimeUnit.MILLISECONDS);
         this.maxCount = cfg.getInt("prefork.maxCount");
+    }
+
+    public boolean isEnabled() {
+        return enabled;
     }
 
     public long getMaxAge() {

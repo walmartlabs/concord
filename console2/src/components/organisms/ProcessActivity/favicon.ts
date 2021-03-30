@@ -53,8 +53,11 @@ export const useStatusFavicon = (process: ProcessEntry | undefined) =>
             case ProcessStatus.ENQUEUED:
                 setFavicon('/favicon-status-enqueued.png');
                 break;
+            case ProcessStatus.WAITING:
+                setFavicon('/favicon-status-waiting.png');
+                break;
             case ProcessStatus.STARTING:
-                setFavicon('/favicon-status-enqueued.png');
+                setFavicon('/favicon-status-starting.png');
                 break;
             case ProcessStatus.RESUMING:
                 setFavicon('/favicon-status-resuming.png');

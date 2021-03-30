@@ -25,6 +25,7 @@ public enum ProcessStatus {
     NEW,
     PREPARING,
     ENQUEUED,
+    WAITING,
     STARTING,
     RUNNING,
     SUSPENDED,
