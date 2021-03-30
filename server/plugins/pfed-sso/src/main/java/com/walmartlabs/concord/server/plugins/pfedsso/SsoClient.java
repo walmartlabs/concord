@@ -73,7 +73,7 @@ public class SsoClient {
         String urlParameters = String.format(TOKEN_BY_REFRESHER_REQUEST, refreshToken, cfg.getClientId());
         return getToken(urlParameters);
     }
-    
+
     public void revokeToken(String refreshToken) throws IOException {
         HttpURLConnection con = null;
         try {
@@ -126,7 +126,7 @@ public class SsoClient {
             }
         }
     }
-    
+
     public Profile getUserProfile(String refreshToken) throws IOException {
         Token token = getTokenByRefreshToken(refreshToken);
         return getProfile(token);
@@ -153,7 +153,7 @@ public class SsoClient {
             }
         }
     }
-    
+
     private void postRequest(HttpURLConnection con, String urlParameters) throws IOException {
         String clientIdAndSecret = String.format("%s:%s", cfg.getClientId(), cfg.getClientSecret());
         String authzHeaderValue = String.format("Basic %s", Base64.getEncoder().encodeToString(clientIdAndSecret.getBytes()));
@@ -178,8 +178,8 @@ public class SsoClient {
             wr.flush();
         }
     }
-    
-    private Profile getProfile(Token token) throws IOException{
+
+    private Profile getProfile(Token token) throws IOException {
         if (cfg.getUserInfoEndpointUrl() == null) {
             return null;
         }
@@ -208,7 +208,7 @@ public class SsoClient {
             }
         }
     }
-    
+
     @Value.Immutable
     @JsonInclude(JsonInclude.Include.NON_EMPTY)
     @JsonSerialize(as = ImmutableToken.class)
@@ -243,7 +243,7 @@ public class SsoClient {
 
         @JsonProperty("sAMAccountName")
         String userId();
-        
+
         @JsonProperty("mail")
         String mail();
 
@@ -254,7 +254,7 @@ public class SsoClient {
         @JsonProperty("userPrincipalName")
         @Nullable
         String userPrincipalName();
-        
+
         @JsonProperty("distinguishedName")
         @Nullable
         String nameInNamespace();

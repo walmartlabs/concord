@@ -33,7 +33,7 @@ public class SsoToken implements AuthenticationToken {
     private final String userPrincipalName;
     private final String nameInNamespace;
     private final Set<String> groups;
-    
+
     public SsoToken(String username, String domain, String displayName, String mail, String userPrincipalName, String nameInNamespace, Set<String> groups) {
         this.username = username;
         this.domain = domain;
@@ -63,7 +63,7 @@ public class SsoToken implements AuthenticationToken {
     public String getNameInNamespace() {
         return nameInNamespace;
     }
-    
+
     public String getUserPrincipalName() {
         return userPrincipalName;
     }

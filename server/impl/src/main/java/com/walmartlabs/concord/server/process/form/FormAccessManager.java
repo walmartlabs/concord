@@ -46,6 +46,8 @@ import static com.walmartlabs.concord.server.process.state.ProcessStateManager.p
 @Named
 public class FormAccessManager {
 
+    private static final Pattern GROUP_PATTERN = Pattern.compile("CN=(.*?),", Pattern.CASE_INSENSITIVE);
+
     private final ProcessStateManager stateManager;
 
     @Inject
@@ -147,8 +149,7 @@ public class FormAccessManager {
     }
 
     private static String normalizeGroup(String group) {
-        Pattern pattern = Pattern.compile("CN=(.*?),", Pattern.CASE_INSENSITIVE);
-        Matcher matcher = pattern.matcher(group);
+        Matcher matcher = GROUP_PATTERN.matcher(group);
         if (matcher.find()) {
             return matcher.group(1);
         }
