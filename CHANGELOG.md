@@ -14,7 +14,9 @@ Automatically remove `wait_conditions` of expunged processes
 with legacy authentication providers
 ([#376](https://github.com/walmartlabs/concord/pull/376));
 - concord-imports: hide sensitive data in `toString` methods
-([#378](https://github.com/walmartlabs/concord/pull/378)).
+([#378](https://github.com/walmartlabs/concord/pull/378));
+- runtime-v2: fix the duration format when generating an
+effective yaml ([#383](https://github.com/walmartlabs/concord/pull/383)).
 
 
 
