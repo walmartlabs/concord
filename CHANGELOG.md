@@ -8,6 +8,12 @@
 Automatically remove `wait_conditions` of expunged processes
 ([#380](https://github.com/walmartlabs/concord/pull/380)).
 
+### Changed
+
+- pfed-sso: now provides a `LdapPrincipal` for compatibility
+with legacy authentication providers
+([#376](https://github.com/walmartlabs/concord/pull/376)).
+
 
 
 ## [1.83.0] - 2021-03-25
