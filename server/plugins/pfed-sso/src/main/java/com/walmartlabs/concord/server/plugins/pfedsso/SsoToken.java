@@ -22,18 +22,26 @@ package com.walmartlabs.concord.server.plugins.pfedsso;
 
 import org.apache.shiro.authc.AuthenticationToken;
 
+import java.util.Set;
+
 public class SsoToken implements AuthenticationToken {
 
     private final String username;
     private final String domain;
     private final String displayName;
     private final String mail;
+    private final String userPrincipalName;
+    private final String nameInNamespace;
+    private final Set<String> groups;
 
-    public SsoToken(String username, String domain, String displayName, String mail) {
+    public SsoToken(String username, String domain, String displayName, String mail, String userPrincipalName, String nameInNamespace, Set<String> groups) {
         this.username = username;
         this.domain = domain;
         this.displayName = displayName;
         this.mail = mail;
+        this.userPrincipalName = userPrincipalName;
+        this.nameInNamespace = nameInNamespace;
+        this.groups = groups;
     }
 
     public String getUsername() {
@@ -50,6 +58,18 @@ public class SsoToken implements AuthenticationToken {
 
     public String getMail() {
         return mail;
+    }
+
+    public String getNameInNamespace() {
+        return nameInNamespace;
+    }
+
+    public String getUserPrincipalName() {
+        return userPrincipalName;
+    }
+
+    public Set<String> getGroups() {
+        return groups;
     }
 
     @Override
@@ -69,6 +89,9 @@ public class SsoToken implements AuthenticationToken {
                 ", domain='" + domain + '\'' +
                 ", displayName='" + displayName + '\'' +
                 ", mail='" + mail + '\'' +
+                ", userPrincipalName='" + userPrincipalName + '\'' +
+                ", nameInNamespace='" + nameInNamespace + '\'' +
+                ", groups=" + groups +
                 '}';
     }
 }

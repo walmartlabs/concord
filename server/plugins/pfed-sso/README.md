@@ -1,6 +1,6 @@
 # PingFederate SSO plugin
 
-Adds support for authentication using [PingFederate](https://www.pingidentity.com/en/software/pingfederate.html) 
+Adds support for authentication using [PingFederate](https://www.pingidentity.com/en/software/pingfederate.html)
 
 ## Usage
 
@@ -31,12 +31,14 @@ concord-server {
     }
 }
 ```
-Click [here](https://docs.pingidentity.com/bundle/developer/page/erq1601508087286.html#developer-OpenIDConnect10DeveloperGuide-7) for developer guide to implement OpenID Connect with PingFederate
 
+Click [here](https://docs.pingidentity.com/bundle/developer/page/erq1601508087286.html#developer-OpenIDConnect10DeveloperGuide-7)
+for developer guide to implement OpenID Connect with PingFederate
 
 ### Interactive Login
 
 Configure the Concord Console to use custom logout/login URLs:
+
 - create a `cfg.js` (use [the default file](../../../console2/public/cfg.js) as an example):
   ```javascript
   window.concord = {
