@@ -69,19 +69,19 @@ public class SsoHandler implements AuthenticationHandler {
         }
 
         String[] as = parseDomain(login);
-        
+
         String refreshToken = SsoCookies.getRefreshCookie(req);
         // get userprofile send the response as null if refreshToken is expired or used
         SsoClient.Profile profile;
         try {
             profile = ssoClient.getUserProfile(refreshToken);
         } catch (IOException e) {
-           return null;
-        }
-        if (profile == null){
             return null;
         }
-        return new SsoToken(as[0], as[1], profile.displayName(), profile.mail());
+        if (profile == null) {
+            return null;
+        }
+        return new SsoToken(as[0], as[1], profile.displayName(), profile.mail(), profile.userPrincipalName(), profile.nameInNamespace(), profile.groups());
     }
 
     @Override
