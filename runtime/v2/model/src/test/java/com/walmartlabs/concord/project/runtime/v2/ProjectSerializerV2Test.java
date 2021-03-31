@@ -36,10 +36,21 @@ import java.time.Duration;
 import java.util.*;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 public class ProjectSerializerV2Test extends AbstractParserTest {
 
     private final ProjectSerializerV2 serializer = new ProjectSerializerV2();
+
+    @Test
+    public void testConfiguration() throws Exception {
+        ProcessDefinitionConfiguration cfg = ProcessDefinitionConfiguration.builder()
+                .processTimeout(Duration.parse("PT1H"))
+                .build();
+
+        String result = toYaml(cfg);
+        assertTrue(result.contains("processTimeout: \"PT1H\""));
+    }
 
     @Test
     public void testCheckpoint() throws Exception {
