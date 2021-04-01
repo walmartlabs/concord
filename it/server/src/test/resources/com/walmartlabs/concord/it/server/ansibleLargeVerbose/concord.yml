@@ -1,0 +1,9 @@
+flows:
+  default:
+    - task: ansible
+      in:
+        verbose: ${Integer.parseInt(verboseLevel)}
+        playbook: playbook.yml
+        inventoryFile: ${invFile}
+
+    - log: "ansible completed successfully"

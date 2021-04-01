@@ -560,6 +560,75 @@ public class AnsibleIT extends AbstractServerIT {
     }
 
     @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    public void testVerboseWithLargeInventory() throws Exception {
+        URI dir = AnsibleIT.class.getResource("ansibleLargeVerbose").toURI();
+        byte[] payload = archive(dir, ITConstants.DEPENDENCIES_DIR);
+
+        // ---
+
+        Map<String, Object> input = new HashMap<>();
+        input.put("arguments.verboseLevel", "1");
+        input.put("arguments.invFile", "inventory_large.ini");
+        input.put("archive", payload);
+
+        StartProcessResponse spr = start(input);
+
+        // ---
+
+        ProcessApi processApi = new ProcessApi(getApiClient());
+        ProcessEntry pir = waitForCompletion(processApi, spr.getInstanceId());
+        assertEquals("Large inventory with verbose logging must FAIL",
+                ProcessEntry.StatusEnum.FAILED, pir.getStatus());
+
+        // ---
+
+        byte[] ab = getLog(pir.getLogFileName());
+        assertLog(".*Inventory contains 51 hosts.*", ab);
+
+        // ---
+
+        input.put("arguments.verboseLevel", "0");
+        input.put("arguments.invFile", "inventory_large.ini");
+        input.put("archive", payload);
+
+        spr = start(input);
+
+        // ---
+
+        processApi = new ProcessApi(getApiClient());
+        pir = waitForCompletion(processApi, spr.getInstanceId());
+        assertEquals("Large inventory with standard logging must FINISH",
+                ProcessEntry.StatusEnum.FINISHED, pir.getStatus());
+
+        // ---
+
+        ab = getLog(pir.getLogFileName());
+        assertLog(".*ansible completed successfully.*", ab);
+
+        // ---
+
+        input.put("arguments.verboseLevel", "3");
+        input.put("arguments.invFile", "inventory_small.ini");
+        input.put("archive", payload);
+
+        spr = start(input);
+
+        // ---
+
+        processApi = new ProcessApi(getApiClient());
+        pir = waitForCompletion(processApi, spr.getInstanceId());
+        assertEquals("Small inventory with verbose logging must FINISH",
+                ProcessEntry.StatusEnum.FINISHED, pir.getStatus());
+
+        // ---
+
+        ab = getLog(pir.getLogFileName());
+        // only shows with verbose logging enabled
+        // TODO may be flaky? no guarantee it'll *always* be in every ansible version
+        assertLog(".*Using .* as config file.*", ab);
+    }
+
+    @Test(timeout = DEFAULT_TEST_TIMEOUT)
     public void testInventoryNameInvalidChars() throws Exception {
         URI dir = AnsibleIT.class.getResource("ansibleInventoryName").toURI();
         byte[] payload = archive(dir, ITConstants.DEPENDENCIES_DIR);
