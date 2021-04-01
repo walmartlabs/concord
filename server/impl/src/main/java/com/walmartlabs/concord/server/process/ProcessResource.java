@@ -42,7 +42,7 @@ import com.walmartlabs.concord.server.policy.PolicyException;
 import com.walmartlabs.concord.server.policy.PolicyManager;
 import com.walmartlabs.concord.server.process.PayloadManager.EntryPoint;
 import com.walmartlabs.concord.server.process.ProcessEntry.ProcessStatusHistoryEntry;
-import com.walmartlabs.concord.server.process.ProcessEntry.ProcessWaitHistoryEntry;
+import com.walmartlabs.concord.server.process.ProcessEntry.ProcessWaitEntry;
 import com.walmartlabs.concord.server.process.ProcessManager.ProcessResult;
 import com.walmartlabs.concord.server.process.event.ProcessEventDao;
 import com.walmartlabs.concord.server.process.logs.ProcessLogAccessManager;
@@ -601,12 +601,10 @@ public class ProcessResource implements Resource {
     /**
      * Returns a process instance details.
      *
-     * @param instanceId
-     * @return
      * @deprecated use {@link ProcessResourceV2#get(UUID, Set)}
      */
     @GET
-    @ApiOperation("Get status of a process")
+    @ApiOperation("Get a process' details")
     @javax.ws.rs.Path("/{id}")
     @Produces(MediaType.APPLICATION_JSON)
     @WithTimer
@@ -624,9 +622,6 @@ public class ProcessResource implements Resource {
 
     /**
      * Returns a process status history.
-     *
-     * @param instanceId
-     * @return
      */
     @GET
     @ApiOperation("Get process status history")
@@ -639,29 +634,20 @@ public class ProcessResource implements Resource {
     }
 
     /**
-     * Returns a history of the process' wait conditions.
-     *
-     * @param instanceId
-     * @return
+     * Returns current process' wait conditions.
      */
     @GET
-    @ApiOperation("Get process' wait conditions history")
+    @ApiOperation("Get process' wait conditions")
     @javax.ws.rs.Path("/{instanceId}/waits")
     @Produces(MediaType.APPLICATION_JSON)
     @WithTimer
-    public List<ProcessWaitHistoryEntry> getWaitHistory(@ApiParam @PathParam("instanceId") UUID instanceId,
-                                                        @ApiParam @QueryParam("limit") @DefaultValue("30") int limit,
-                                                        @ApiParam @QueryParam("offset") @DefaultValue("0") int offset) {
+    public ProcessWaitEntry getWait(@ApiParam @PathParam("instanceId") UUID instanceId) {
         ProcessKey pk = assertKey(instanceId);
-        return processEventDao.getWaitHistory(pk, limit, offset);
+        return processWaitManager.getWait(pk);
     }
 
     /**
      * Returns a process' attachment file.
-     *
-     * @param instanceId
-     * @param attachmentName
-     * @return
      */
     @GET
     @ApiOperation(value = "Download a process' attachment", response = File.class)

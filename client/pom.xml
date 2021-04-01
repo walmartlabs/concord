@@ -168,25 +168,10 @@
                     <analysisConfiguration>
                         <revapi.ignore>
                             <item>
-                                <code>java.class.nowFinal</code>
-                            </item>
-                            <item>
-                                <code>java.class.added</code>
-                            </item>
-                            <item>
-                                <code>java.field.serialVersionUIDUnchanged</code>
-                            </item>
-                            <item>
-                                <code>java.method.addedToInterface</code>
-                            </item>
-                            <item>
                                 <code>java.method.removed</code>
                             </item>
                             <item>
-                                <code>java.method.exception.checkedAdded</code>
-                            </item>
-                            <item>
-                                <code>java.method.exception.checkedRemoved</code>
+                                <code>java.class.removed</code>
                             </item>
                         </revapi.ignore>
                     </analysisConfiguration>

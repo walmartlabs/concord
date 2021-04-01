@@ -22,6 +22,7 @@ package com.walmartlabs.concord.server.process.waits;
 
 import com.walmartlabs.concord.sdk.EventType;
 import com.walmartlabs.concord.server.ConcordObjectMapper;
+import com.walmartlabs.concord.server.process.ProcessEntry.ProcessWaitEntry;
 import com.walmartlabs.concord.server.process.event.NewProcessEvent;
 import com.walmartlabs.concord.server.process.event.ProcessEventManager;
 import com.walmartlabs.concord.server.sdk.ProcessKey;
@@ -51,6 +52,10 @@ public class ProcessWaitManager {
         this.eventManager = eventManager;
     }
 
+    public ProcessWaitEntry getWait(ProcessKey processKey) {
+        return processWaitDao.get(processKey);
+    }
+
     // TODO: old process_queue.wait_conditions code, remove me (1.84.0 or later)
     public void updateWaitOld(ProcessKey processKey, AbstractWaitCondition wait) {
         processWaitDao.tx(tx -> updateWaitOld(tx, processKey, wait));
@@ -59,7 +64,7 @@ public class ProcessWaitManager {
     // TODO: old process_queue.wait_conditions code, remove me (1.84.0 or later)
     public void updateWaitOld(DSLContext tx, ProcessKey processKey, AbstractWaitCondition wait) {
         processWaitDao.updateWaitOld(tx, processKey, wait);
-        addWaitEvent(tx, processKey, wait);
+        eventManager.event(tx, Collections.singletonList(buildEvent(processKey, Collections.singletonList(wait), "add")));
     }
 
     /**
@@ -74,40 +79,30 @@ public class ProcessWaitManager {
      */
     public void addWait(DSLContext tx, ProcessKey processKey, AbstractWaitCondition wait) {
         processWaitDao.addWait(tx, processKey, wait);
-        addWaitEvent(tx, processKey, wait);
+
+        eventManager.event(tx, Collections.singletonList(buildEvent(processKey, Collections.singletonList(wait), "add")));
     }
 
     /**
      * Set the process' wait conditions. Adds a wait condition history event.
      */
-    public void setWait(ProcessKey processKey, List<AbstractWaitCondition> waits) {
-        processWaitDao.tx(tx -> setWait(tx, processKey, waits));
+    public void setWait(ProcessKey processKey, List<AbstractWaitCondition> waits, boolean isWaiting) {
+        processWaitDao.tx(tx -> setWait(tx, processKey, waits, isWaiting));
     }
 
-    private void setWait(DSLContext tx, ProcessKey processKey, List<AbstractWaitCondition> waits) {
-        processWaitDao.setWait(tx, processKey, waits);
-        addWaitEvents(tx, processKey, waits);
+    private void setWait(DSLContext tx, ProcessKey processKey, List<AbstractWaitCondition> waits, boolean isWaiting) {
+        processWaitDao.setWait(tx, processKey, waits, isWaiting);
+
+        eventManager.event(tx, buildEvent(processKey, waits, "set"));
     }
 
-    private void addWaitEvent(DSLContext tx, ProcessKey processKey, AbstractWaitCondition wait) {
-        eventManager.event(tx, Collections.singletonList(buildEvent(processKey, wait, "add")));
-    }
-
-    private void addWaitEvents(DSLContext tx, ProcessKey processKey, List<AbstractWaitCondition> waits) {
-        if (waits == null || waits.isEmpty()) {
-            return;
-        }
-
-        List<NewProcessEvent> events = waits.stream()
-                .map(wait -> buildEvent(processKey, wait, "set"))
-                .collect(Collectors.toList());
-
-        eventManager.event(tx, events);
-    }
-
-    private NewProcessEvent buildEvent(ProcessKey processKey, AbstractWaitCondition wait, String action) {
+    private NewProcessEvent buildEvent(ProcessKey processKey, List<AbstractWaitCondition> waits, String action) {
         Map<String, Object> data = new HashMap<>();
-        data.put("wait", objectMapper.convertToMap(wait));
+        if (waits != null && !waits.isEmpty()) {
+            data.put("waits", waits.stream()
+                    .map(objectMapper::convertToMap)
+                    .collect(Collectors.toList()));
+        }
         data.put("action", action);
         return NewProcessEvent.builder()
                 .processKey(processKey)
@@ -115,4 +110,5 @@ public class ProcessWaitManager {
                 .data(data)
                 .build();
     }
+
 }

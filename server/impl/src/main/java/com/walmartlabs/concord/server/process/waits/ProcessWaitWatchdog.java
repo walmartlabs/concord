@@ -148,6 +148,7 @@ public class ProcessWaitWatchdog implements ScheduledTask {
             }
 
             if (p.status() != null) {
+                // TODO: old process_queue.wait_conditions code, remove me (1.84.0 or later)
                 AbstractWaitCondition wait = null;
                 if (!resultWaits.isEmpty()) {
                     assert(resultWaits.size() == 1);
@@ -155,7 +156,7 @@ public class ProcessWaitWatchdog implements ScheduledTask {
                 }
                 processWaitManager.updateWaitOld(p.processKey(), wait);
             } else {
-                processWaitManager.setWait(p.processKey(), resultWaits);
+                processWaitManager.setWait(p.processKey(), resultWaits, false);
             }
         } catch (Exception e) {
             log.info("processWaits ['{}'] -> error", p, e);

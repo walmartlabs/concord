@@ -54,6 +54,10 @@ public interface ProcessEventEntry extends Serializable {
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss.SSSX")
     OffsetDateTime eventDate();
 
+    static ImmutableProcessEventEntry.Builder builder() {
+        return ImmutableProcessEventEntry.builder();
+    }
+
     static ImmutableProcessEventEntry.Builder from(ProcessEventEntry e) {
         return ImmutableProcessEventEntry.builder().from(e);
     }

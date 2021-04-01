@@ -34,6 +34,7 @@ import java.io.Serializable;
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
 @JsonTypeInfo(
         use = JsonTypeInfo.Id.NAME,
+        visible = false,
         property = "type")
 @JsonSubTypes({
         @JsonSubTypes.Type(value = ImmutableProcessCompletionCondition.class, name = "PROCESS_COMPLETION"),
