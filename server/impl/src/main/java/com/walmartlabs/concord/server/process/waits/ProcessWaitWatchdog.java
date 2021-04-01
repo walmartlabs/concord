@@ -143,8 +143,10 @@ public class ProcessWaitWatchdog implements ScheduledTask {
         }
 
         try {
+            boolean isWaiting = !resultWaits.isEmpty();
             if (!resumeEvents.isEmpty()) {
                 resumeProcess(p.processKey(), resumeEvents);
+                isWaiting = false;
             }
 
             if (p.status() != null) {
@@ -156,7 +158,7 @@ public class ProcessWaitWatchdog implements ScheduledTask {
                 }
                 processWaitManager.updateWaitOld(p.processKey(), wait);
             } else {
-                processWaitManager.setWait(p.processKey(), resultWaits, false);
+                processWaitManager.setWait(p.processKey(), resultWaits, isWaiting);
             }
         } catch (Exception e) {
             log.info("processWaits ['{}'] -> error", p, e);
