@@ -1,9 +1,14 @@
+configuration:
+  arguments:
+    groupLimit: null
+
 flows:
   default:
     - task: ansible
       in:
         verbose: ${Integer.parseInt(verboseLevel)}
-        playbook: playbook.yml
+        playbook: ${playbook}
+        limit: ${groupLimit}
         inventoryFile: ${invFile}
 
     - log: "ansible completed successfully"

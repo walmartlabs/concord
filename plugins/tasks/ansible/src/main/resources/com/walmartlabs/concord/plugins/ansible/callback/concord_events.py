@@ -15,6 +15,8 @@ import uuid
 import os
 import json
 
+from process_cfg_policy import ProcessCfgPolicy
+
 def to_millis(t):
     return int(round(t * 1000))
 
@@ -241,6 +243,10 @@ class CallbackModule(CallbackBase):
             info.append(play_info)
             hosts.update(play_hosts)
             total_work += play_hosts_count * len(play_task)
+
+        process_cfg_policy = ProcessCfgPolicy()
+        if process_cfg_policy.is_deny_verbose_logging(len(hosts), total_work):
+            exit(1)
 
         self._handle_event('ANSIBLE_PLAYBOOK_INFO', {'playbook':playbook._file_name,
                                                      'currentRetryCount': self.currentRetryCount,

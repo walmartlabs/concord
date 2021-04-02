@@ -25,92 +25,21 @@ import com.walmartlabs.concord.sdk.MapUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.*;
+import java.io.BufferedWriter;
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 import java.util.*;
-import java.util.concurrent.*;
 import java.util.stream.Collectors;
-
-import static com.walmartlabs.concord.common.LogUtils.withMdc;
 
 public class AnsibleInventory {
 
-    private static final int MAX_HOSTS_VERBOSE = 50;
-
-    public static void process(AnsibleContext context, PlaybookScriptBuilder playbook) throws AnsibleInventoryException, IOException {
+    public static void process(AnsibleContext context, PlaybookScriptBuilder playbook) throws IOException {
         List<String> inventories = new AnsibleInventory(context.workDir(), context.tmpDir(), context.debug())
                 .write(context.args());
 
-        int verbose = MapUtils.getInt(context.args(), "verbose", 0);
-        if (verbose > 0) { // disallow verbose logging with large inventories
-            int invSize = inventories.stream()
-                    .map(i -> countHosts(i, context.workDir()))
-                    .reduce(Integer::sum).orElse(0);
-
-            if (invSize > MAX_HOSTS_VERBOSE) {
-                throw new IllegalArgumentException("Inventory contains " + invSize +
-                        " hosts and verbose logging is enabled. Verbose logging" +
-                        " is not allowed for inventories with greater than " +
-                        MAX_HOSTS_VERBOSE + " hosts.");
-            }
-        }
-
         playbook.withInventories(inventories);
-    }
-
-    private static int countHosts(String inventory, Path workDir) {
-        Path inventoryPath = workDir.resolve(inventory);
-        if (!Files.exists(inventoryPath)) {
-            throw new IllegalArgumentException("Cannot find inventory: " + inventoryPath);
-        }
-
-        ProcessBuilder pb = new ProcessBuilder()
-                .command("ansible-inventory", "-i", inventoryPath.toString(), "--list")
-                .directory(workDir.toFile());
-
-        final ExecutorService executor = Executors.newCachedThreadPool();
-
-        try {
-            Process p = pb.start();
-
-            Future<Integer> out = executor.submit(() -> {
-                try (InputStream is = p.getInputStream()) {
-                    // parse ansible-inventory JSON output
-                    AnsibleInventoryParser counter = new AnsibleInventoryParser();
-                    return counter.countInventoryHosts(is);
-                }
-            });
-
-            Future<StringBuilder> error = executor.submit(withMdc(() -> {
-                StringBuilder sb = new StringBuilder();
-                try (BufferedReader reader = new BufferedReader(new InputStreamReader(p.getErrorStream()))) {
-                    String line;
-                    while ((line = reader.readLine()) != null) {
-                        log.info("ansible-inventory (stderr): {}", line);
-                        sb.append(line).append("\n");
-                    }
-                }
-                return sb;
-            }));
-
-            if (!p.waitFor(30_000, TimeUnit.MILLISECONDS)) {
-                p.destroy();
-                throw new RuntimeException(String.format("ansible-inventory operation timed out after %sms", 30000));
-            }
-
-            int code = p.exitValue();
-            if (code != 0) {
-                // TODO maybe don't do this
-                String msg = String.format("ansible-inventory exit code: %d, %s", code, error.get().toString());
-                throw new RuntimeException(msg);
-            }
-
-            return out.get();
-        } catch (ExecutionException | IOException | InterruptedException e) { // NOSONAR
-            throw new RuntimeException("ansible-inventory operation error: " + e.getMessage());
-        }
     }
 
     private static final Logger log = LoggerFactory.getLogger(AnsibleInventory.class);

@@ -1,6 +1,5 @@
 ---
-- hosts: test
+- hosts: all
   tasks:
     - debug:
         msg: "Hello!"
-        verbosity: 0
