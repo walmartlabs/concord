@@ -1,6 +1,17 @@
 # Change log
 
-## [Unreleased]
+## [1.82.1] - 2021-04-05
+
+### Changed
+
+- pfed-sso: provide LdapPrincipal 
+([#376](https://github.com/walmartlabs/concord/pull/376));
+- metrics: pull in newer version to fix deadlocks, leaks
+([#385](https://github.com/walmartlabs/concord/pull/385)).
+
+
+
+## [1.82.0] - 2021-03-08
 
 ### Added
 
