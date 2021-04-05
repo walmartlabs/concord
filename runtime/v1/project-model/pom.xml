@@ -6,7 +6,7 @@
     <parent>
         <groupId>com.walmartlabs.concord.runtime.v1</groupId>
         <artifactId>parent</artifactId>
-        <version>1.82.1-SNAPSHOT</version>
+        <version>1.82.1</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
 
