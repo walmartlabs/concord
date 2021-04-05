@@ -54,10 +54,3 @@ Concord system policies forbid verbose logging for playbooks with greater than {
             return True
 
         return False
-
-    def get_policy_value(self, key):
-        try:
-            self.policy_rules['processCfg']['arguments'][key]
-        except KeyError:
-            # no policy set
-            return -1
