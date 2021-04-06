@@ -4,6 +4,8 @@
 
 ### Added
 
+- concord-server: support multiple wait conditions per process
+([#368](https://github.com/walmartlabs/concord/pull/368));
 - concord-server: cleanup job for `wait_conditions`.
 Automatically remove `wait_conditions` of expunged processes
 ([#380](https://github.com/walmartlabs/concord/pull/380)).
