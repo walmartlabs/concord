@@ -156,7 +156,7 @@ public class VM {
     }
 
     private EvalResult execute(Runtime runtime, State state) throws Exception {
-        EvalResult result = null;
+        EvalResult result;
 
         while (true) {
             // if we're restoring from a previously saved state or we had new threads created

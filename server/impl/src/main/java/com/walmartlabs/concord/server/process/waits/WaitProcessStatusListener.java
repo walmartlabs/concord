@@ -55,8 +55,8 @@ public class WaitProcessStatusListener implements ProcessStatusListener {
 
     private static void init(DSLContext tx, ProcessKey processKey) {
         tx.insertInto(PROCESS_WAIT_CONDITIONS)
-                .set(PROCESS_WAIT_CONDITIONS.INSTANCE_ID, processKey.getInstanceId())
-                .set(PROCESS_WAIT_CONDITIONS.INSTANCE_CREATED_AT, processKey.getCreatedAt())
+                .columns(PROCESS_WAIT_CONDITIONS.INSTANCE_ID, PROCESS_WAIT_CONDITIONS.INSTANCE_CREATED_AT)
+                .values(processKey.getInstanceId(), processKey.getCreatedAt())
                 .execute();
     }
 

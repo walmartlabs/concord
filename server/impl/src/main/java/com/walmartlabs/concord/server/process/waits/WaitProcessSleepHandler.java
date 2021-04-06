@@ -20,17 +20,11 @@ package com.walmartlabs.concord.server.process.waits;
  * =====
  */
 
-import com.walmartlabs.concord.server.process.Payload;
-import com.walmartlabs.concord.server.process.PayloadManager;
-import com.walmartlabs.concord.server.process.ProcessManager;
-import com.walmartlabs.concord.server.sdk.ConcordApplicationException;
 import com.walmartlabs.concord.server.sdk.ProcessKey;
 import com.walmartlabs.concord.server.sdk.ProcessStatus;
 
-import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
-import java.io.IOException;
 import java.util.Collections;
 import java.util.Date;
 import java.util.Set;
@@ -45,15 +39,6 @@ public class WaitProcessSleepHandler implements ProcessWaitHandler<ProcessSleepC
 
     private static final Set<ProcessStatus> STATUSES = Collections.singleton(ProcessStatus.SUSPENDED);
 
-    private final ProcessManager processManager;
-    private final PayloadManager payloadManager;
-
-    @Inject
-    public WaitProcessSleepHandler(ProcessManager processManager, PayloadManager payloadManager) {
-        this.processManager = processManager;
-        this.payloadManager = payloadManager;
-    }
-
     @Override
     public WaitType getType() {
         return WaitType.PROCESS_SLEEP;
@@ -65,23 +50,11 @@ public class WaitProcessSleepHandler implements ProcessWaitHandler<ProcessSleepC
     }
 
     @Override
-    public ProcessSleepCondition process(ProcessKey processKey, ProcessStatus status, ProcessSleepCondition wait) {
+    public Result<ProcessSleepCondition> process(ProcessKey key, ProcessStatus status, ProcessSleepCondition wait) {
         if (wait.until().before(new Date())) {
-            resumeProcess(processKey, wait.resumeEvent());
-            return null;
+            return Result.of(wait.resumeEvent());
         }
 
-        return wait;
-    }
-
-    private void resumeProcess(ProcessKey processKey, String eventName) {
-        Payload payload;
-        try {
-            payload = payloadManager.createResumePayload(processKey, eventName, null);
-        } catch (IOException e) {
-            throw new ConcordApplicationException("Error creating a payload", e);
-        }
-
-        processManager.resume(payload);
+        return Result.of(wait);
     }
 }

@@ -52,6 +52,11 @@ public interface ProcessEventFilter {
         return -1;
     }
 
+    @Value.Default
+    default int offset() {
+        return -1;
+    }
+
     static ImmutableProcessEventFilter.Builder builder() {
         return ImmutableProcessEventFilter.builder();
     }

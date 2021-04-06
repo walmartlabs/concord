@@ -23,21 +23,14 @@ package com.walmartlabs.concord.server.process.waits;
 import com.walmartlabs.concord.db.AbstractDao;
 import com.walmartlabs.concord.db.MainDB;
 import com.walmartlabs.concord.server.jooq.tables.ProcessQueue;
-import com.walmartlabs.concord.server.process.Payload;
-import com.walmartlabs.concord.server.process.PayloadManager;
-import com.walmartlabs.concord.server.process.ProcessManager;
 import com.walmartlabs.concord.server.process.queue.ProcessQueueManager;
-import com.walmartlabs.concord.server.sdk.ConcordApplicationException;
 import com.walmartlabs.concord.server.sdk.ProcessKey;
 import com.walmartlabs.concord.server.sdk.ProcessStatus;
 import org.jooq.Configuration;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
-import java.io.IOException;
 import java.util.*;
 
 import static com.walmartlabs.concord.server.jooq.tables.ProcessQueue.PROCESS_QUEUE;
@@ -50,21 +43,15 @@ import static com.walmartlabs.concord.server.process.waits.ProcessCompletionCond
 @Singleton
 public class WaitProcessFinishHandler implements ProcessWaitHandler<ProcessCompletionCondition> {
 
-    private static final Logger log = LoggerFactory.getLogger(WaitProcessFinishHandler.class);
-
     private final Set<ProcessStatus> STATUSES = new HashSet<>(Arrays.asList(ProcessStatus.ENQUEUED, ProcessStatus.SUSPENDED));
 
     private final Dao dao;
     private final ProcessQueueManager processQueueManager;
-    private final ProcessManager processManager;
-    private final PayloadManager payloadManager;
 
     @Inject
-    public WaitProcessFinishHandler(Dao dao, ProcessQueueManager processQueueManager, ProcessManager processManager, PayloadManager payloadManager) {
+    public WaitProcessFinishHandler(Dao dao, ProcessQueueManager processQueueManager) {
         this.dao = dao;
         this.processQueueManager = processQueueManager;
-        this.processManager = processManager;
-        this.payloadManager = payloadManager;
     }
 
     @Override
@@ -78,19 +65,19 @@ public class WaitProcessFinishHandler implements ProcessWaitHandler<ProcessCompl
     }
 
     @Override
-    public ProcessCompletionCondition process(ProcessKey processKey, ProcessStatus processStatus, ProcessCompletionCondition wait) {
+    public Result<ProcessCompletionCondition> process(ProcessKey processKey, ProcessStatus processStatus, ProcessCompletionCondition wait) {
         Set<ProcessStatus> finishedStatuses = wait.finalStatuses();
         Set<UUID> awaitProcesses = wait.processes();
 
         Set<UUID> finishedProcesses = dao.findFinished(awaitProcesses, finishedStatuses);
         if (finishedProcesses.isEmpty()) {
-            return wait;
+            return Result.of(wait);
         }
 
         boolean completed = isCompleted(wait.completeCondition(), awaitProcesses, finishedProcesses);
         if (completed) {
             if (wait.resumeEvent() != null) {
-                resumeProcess(processKey, wait.resumeEvent());
+                return Result.of(wait.resumeEvent());
             } else {
                 processQueueManager.updateExpectedStatus(processKey, ProcessStatus.WAITING, ProcessStatus.ENQUEUED);
             }
@@ -100,22 +87,11 @@ public class WaitProcessFinishHandler implements ProcessWaitHandler<ProcessCompl
         List<UUID> processes = new ArrayList<>(awaitProcesses);
         processes.removeAll(finishedProcesses);
 
-        return ProcessCompletionCondition.builder().from(wait)
-                .processes(processes)
-                .reason(wait.reason())
-                .build();
-    }
-
-    private void resumeProcess(ProcessKey processKey, String eventName) {
-        Payload payload;
-        try {
-            payload = payloadManager.createResumePayload(processKey, eventName, null);
-        } catch (IOException e) {
-            throw new ConcordApplicationException("Error creating a payload", e);
-        }
-
-        processManager.resume(payload);
-        log.info("resumeProcess ['{}', '{}'] -> done", processKey, eventName);
+        return Result.of(
+                ProcessCompletionCondition.builder().from(wait)
+                        .processes(processes)
+                        .reason(wait.reason())
+                        .build());
     }
 
     private static boolean isCompleted(CompleteCondition condition, Set<UUID> awaitProcesses, Set<UUID> finishedProcesses) {

@@ -42,7 +42,6 @@ import com.walmartlabs.concord.server.sdk.metrics.WithTimer;
 import com.walmartlabs.concord.server.security.UserPrincipal;
 import com.walmartlabs.concord.server.security.apikey.ApiKeyDao;
 import com.walmartlabs.concord.server.security.ldap.LdapGroupSearchResult;
-import com.walmartlabs.concord.server.security.ldap.LdapManager;
 import com.walmartlabs.concord.server.security.ldap.LdapPrincipal;
 import com.walmartlabs.concord.server.user.UserEntry;
 import com.walmartlabs.concord.server.user.UserManager;

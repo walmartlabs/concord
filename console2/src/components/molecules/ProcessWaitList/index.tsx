@@ -20,11 +20,10 @@
 import * as React from 'react';
 
 import {
-    ProcessLockPayload,
-    ProcessSleepPayload,
-    ProcessWaitHistoryEntry,
-    ProcessWaitPayload,
-    WaitPayload,
+    ProcessLockCondition,
+    ProcessSleepCondition,
+    ProcessWaitCondition,
+    WaitCondition,
     WaitType
 } from '../../../api/process';
 import { Accordion, Icon, Table } from 'semantic-ui-react';
@@ -33,7 +32,7 @@ import { Link } from 'react-router-dom';
 import { LocalTimestamp } from '../index';
 
 interface ExternalProps {
-    data?: ProcessWaitHistoryEntry[];
+    data?: WaitCondition[];
 }
 
 const ProcessWaitList = ({ data }: ExternalProps) => {
@@ -48,14 +47,13 @@ const ProcessWaitList = ({ data }: ExternalProps) => {
 const renderTableHeader = () => {
     return (
         <Table.Row>
-            <Table.HeaderCell collapsing={true}>Date</Table.HeaderCell>
             <Table.HeaderCell collapsing={true}>Condition</Table.HeaderCell>
             <Table.HeaderCell>Dependencies</Table.HeaderCell>
         </Table.Row>
     );
 };
 
-const renderElements = (data?: ProcessWaitHistoryEntry[]) => {
+const renderElements = (data?: WaitCondition[]) => {
     if (!data) {
         return (
             <tr style={{ fontWeight: 'bold' }}>
@@ -72,7 +70,7 @@ const renderElements = (data?: ProcessWaitHistoryEntry[]) => {
         );
     }
 
-    return data.map((p) => renderTableRow(p));
+    return data.map((p, index) => renderTableRow(index, p));
 };
 
 const renderProcessLink = (id: ConcordId) => {
@@ -85,7 +83,10 @@ const renderProcessLink = (id: ConcordId) => {
     );
 };
 
-const renderCondition = ({ type, reason, payload }: ProcessWaitHistoryEntry) => {
+const renderCondition = (condition: WaitCondition) => {
+    const type = condition.type;
+    const reason = condition.reason;
+
     switch (type) {
         case WaitType.NONE: {
             return (
@@ -104,7 +105,7 @@ const renderCondition = ({ type, reason, payload }: ProcessWaitHistoryEntry) => 
             );
         }
         case WaitType.PROCESS_LOCK: {
-            const lockPayload = payload as ProcessLockPayload;
+            const lockPayload = condition as ProcessLockCondition;
             return (
                 <>
                     <Icon name="hourglass half" />
@@ -113,7 +114,7 @@ const renderCondition = ({ type, reason, payload }: ProcessWaitHistoryEntry) => 
             );
         }
         case WaitType.PROCESS_SLEEP: {
-            const sleepPayload = payload as ProcessSleepPayload;
+            const sleepPayload = condition as ProcessSleepCondition;
             return (
                 <>
                     <Icon name="hourglass half" />
@@ -126,11 +127,11 @@ const renderCondition = ({ type, reason, payload }: ProcessWaitHistoryEntry) => 
     }
 };
 
-const renderProcessWaitDetails = (payload: ProcessWaitPayload) => {
-    if (payload.processes.length === 0) {
+const renderProcessWaitDetails = (condition: ProcessWaitCondition) => {
+    if (condition.processes.length === 0) {
         return <></>;
-    } else if (payload.processes.length === 1) {
-        return renderProcessLink(payload.processes[0]);
+    } else if (condition.processes.length === 1) {
+        return renderProcessLink(condition.processes[0]);
     }
 
     const panels = [
@@ -138,43 +139,42 @@ const renderProcessWaitDetails = (payload: ProcessWaitPayload) => {
             key: 'k1',
             title: {
                 content: (
-                    <Link to={`/process/${payload.processes[0]}`} key={payload.processes[0]}>
-                        {payload.processes[0]}
+                    <Link to={`/process/${condition.processes[0]}`} key={condition.processes[0]}>
+                        {condition.processes[0]}
                     </Link>
                 ),
                 style: { padding: 0 }
             },
-            content: [payload.processes.slice(1).map((id) => renderProcessLink(id))]
+            content: [condition.processes.slice(1).map((id) => renderProcessLink(id))]
         }
     ];
     return <Accordion panels={panels} />;
 };
 
-const renderProcessLockDetails = (payload: ProcessLockPayload) => {
+const renderProcessLockDetails = (payload: ProcessLockCondition) => {
     return renderProcessLink(payload.instanceId);
 };
 
-const renderDependencies = (type: WaitType, payload: WaitPayload) => {
+const renderDependencies = (condition: WaitCondition) => {
+    const type = condition.type;
+
     switch (type) {
         case WaitType.PROCESS_COMPLETION: {
-            return renderProcessWaitDetails(payload as ProcessWaitPayload);
+            return renderProcessWaitDetails(condition as ProcessWaitCondition);
         }
         case WaitType.PROCESS_LOCK: {
-            return renderProcessLockDetails(payload as ProcessLockPayload);
+            return renderProcessLockDetails(condition as ProcessLockCondition);
         }
         default:
             return '';
     }
 };
 
-const renderTableRow = (row: ProcessWaitHistoryEntry) => {
+const renderTableRow = (idx: number, row: WaitCondition) => {
     return (
-        <Table.Row key={row.id} verticalAlign="top">
-            <Table.Cell singleLine={true}>
-                <LocalTimestamp value={row.eventDate} />
-            </Table.Cell>
+        <Table.Row key={idx} verticalAlign="top">
             <Table.Cell collapsing={true}>{renderCondition(row)}</Table.Cell>
-            <Table.Cell>{row.payload && renderDependencies(row.type, row.payload)}</Table.Cell>
+            <Table.Cell>{renderDependencies(row)}</Table.Cell>
         </Table.Row>
     );
 };

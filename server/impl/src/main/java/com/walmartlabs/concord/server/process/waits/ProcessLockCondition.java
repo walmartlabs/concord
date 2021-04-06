@@ -24,7 +24,6 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.walmartlabs.concord.server.jooq.enums.ProcessLockScope;
 import com.walmartlabs.concord.server.process.locks.LockEntry;
-import com.walmartlabs.concord.server.process.waits.ImmutableProcessLockCondition;
 import org.immutables.value.Value;
 
 import java.util.UUID;
