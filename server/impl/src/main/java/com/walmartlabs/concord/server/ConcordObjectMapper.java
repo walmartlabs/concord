@@ -49,7 +49,15 @@ public class ConcordObjectMapper {
             return null;
         }
 
-        return JSONB.valueOf(removeUnsupportedEscape(toString(m)));
+        return JSONB.valueOf(removeUnsupportedEscape(toString(m, null)));
+    }
+
+    public <T> JSONB toJSONB(T m, TypeReference<T> type) {
+        if (m == null) {
+            return null;
+        }
+
+        return JSONB.valueOf(removeUnsupportedEscape(toString(m, type)));
     }
 
     public JSONB jsonStringToJSONB(String json) {
@@ -61,12 +69,20 @@ public class ConcordObjectMapper {
     }
 
     public String toString(Object m) {
+        return toString(m, null);
+    }
+
+    public <T> String toString(T m, TypeReference<T> type) {
         if (m == null) {
             return null;
         }
 
         try {
-            return delegate.writeValueAsString(m);
+            if (type == null) {
+                return delegate.writeValueAsString(m);
+            } else {
+                return delegate.writerFor(type).writeValueAsString(m);
+            }
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -126,5 +142,13 @@ public class ConcordObjectMapper {
 
     public Map<String, Object> convertToMap(Object o) {
         return delegate.convertValue(o, MAP_TYPE);
+    }
+
+    public <T> T convertValue(Object o, TypeReference<T> valueTypeRef) {
+        return delegate.convertValue(o, valueTypeRef);
+    }
+
+    public <T> T convertValue(Object o, Class<T> toValueType) {
+        return delegate.convertValue(o, toValueType);
     }
 }

@@ -20,7 +20,9 @@ package com.walmartlabs.concord.server.security.internal;
  * =====
  */
 
-import com.walmartlabs.concord.server.user.*;
+import com.walmartlabs.concord.server.user.AbstractUserInfoProvider;
+import com.walmartlabs.concord.server.user.UserDao;
+import com.walmartlabs.concord.server.user.UserType;
 
 import javax.inject.Inject;
 import javax.inject.Named;

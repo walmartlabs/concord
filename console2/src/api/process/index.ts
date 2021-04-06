@@ -91,7 +91,10 @@ export const isFinal = (s?: ProcessStatus) =>
 export const hasState = (s: ProcessStatus) => s !== ProcessStatus.PREPARING;
 
 export const canBeCancelled = (s: ProcessStatus) =>
-    s === ProcessStatus.ENQUEUED || s === ProcessStatus.RUNNING || s === ProcessStatus.WAITING || s === ProcessStatus.SUSPENDED;
+    s === ProcessStatus.ENQUEUED ||
+    s === ProcessStatus.RUNNING ||
+    s === ProcessStatus.WAITING ||
+    s === ProcessStatus.SUSPENDED;
 
 export interface ProcessCheckpointEntry {
     id: string;
@@ -117,33 +120,30 @@ export enum WaitType {
     PROCESS_SLEEP = 'PROCESS_SLEEP'
 }
 
-export interface ProcessWaitPayload {
+export interface AbstractWaitCondition {
+    type: WaitType;
+    reason: string;
+}
+
+export interface ProcessWaitCondition extends AbstractWaitCondition {
     processes: ConcordId[];
 }
 
-export interface ProcessLockPayload {
+export interface ProcessLockCondition extends AbstractWaitCondition {
     instanceId: ConcordId;
     name: string;
     scope: string;
 }
 
-export interface ProcessSleepPayload {
+export interface ProcessSleepCondition extends AbstractWaitCondition {
     until: string;
 }
 
-export type WaitPayload = ProcessWaitPayload | ProcessLockPayload | ProcessSleepPayload;
+export type WaitCondition = ProcessWaitCondition | ProcessLockCondition | ProcessSleepCondition;
 
-export interface ProcessWaitHistoryEntry {
-    id: ConcordId;
-    eventDate: string;
-    type: WaitType;
-    reason?: string;
-    payload?: WaitPayload;
-}
-
-export interface PaginatedWaitHistoryEntries {
-    items: ProcessWaitHistoryEntry[];
-    next: boolean;
+export interface ProcessWaitEntry {
+    isWaiting: boolean;
+    waits?: WaitCondition[];
 }
 
 export interface ProcessMeta {

@@ -27,10 +27,12 @@ import com.fasterxml.jackson.annotation.JsonSubTypes.Type;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.walmartlabs.concord.common.ToStringHelper;
 import org.immutables.value.Value;
 
 import javax.annotation.Nullable;
 import java.io.Serializable;
+import java.net.URL;
 import java.util.Collections;
 import java.util.List;
 
@@ -56,40 +58,52 @@ public interface Import extends Serializable {
     @JsonInclude(JsonInclude.Include.NON_EMPTY)
     @JsonSerialize(as = ImmutableGitDefinition.class)
     @JsonDeserialize(as = ImmutableGitDefinition.class)
-    interface GitDefinition extends Import {
+    abstract class GitDefinition implements Import {
 
-        String TYPE = "git";
-
-        @Nullable
-        String name();
+        public static final String TYPE = "git";
 
         @Nullable
-        String url();
+        public abstract String name();
 
         @Nullable
-        String version();
+        public abstract String url();
 
         @Nullable
-        String path();
+        public abstract String version();
 
         @Nullable
-        String dest();
+        public abstract String path();
 
         @Nullable
-        SecretDefinition secret();
+        public abstract String dest();
+
+        @Nullable
+        public abstract SecretDefinition secret();
 
         @Value.Default
-        default List<String> exclude() {
+        public List<String> exclude() {
             return Collections.emptyList();
         }
 
         @Override
-        default String type() {
+        public String type() {
             return TYPE;
         }
 
-        static ImmutableGitDefinition.Builder builder() {
+        public static ImmutableGitDefinition.Builder builder() {
             return ImmutableGitDefinition.builder();
+        }
+
+        public String toString() {
+            return ToStringHelper.prefix(TYPE + ": ")
+                    .add("name", name())
+                    .add("url", hideSensitiveData(url()))
+                    .add("version", version())
+                    .add("path", path())
+                    .add("dest", dest())
+                    .add("secret", secret())
+                    .add("exclude", exclude())
+                    .toString();
         }
     }
 
@@ -97,23 +111,30 @@ public interface Import extends Serializable {
     @JsonInclude(JsonInclude.Include.NON_EMPTY)
     @JsonSerialize(as = ImmutableMvnDefinition.class)
     @JsonDeserialize(as = ImmutableMvnDefinition.class)
-    interface MvnDefinition extends Import {
+    abstract class MvnDefinition implements Import {
 
-        String TYPE = "mvn";
+        public static final String TYPE = "mvn";
 
         @JsonProperty(value = "url", required = true)
-        String url();
+        public abstract String url();
 
         @Nullable
-        String dest();
+        public abstract String dest();
 
         @Override
-        default String type() {
+        public String type() {
             return TYPE;
         }
 
-        static ImmutableMvnDefinition.Builder builder() {
+        public static ImmutableMvnDefinition.Builder builder() {
             return ImmutableMvnDefinition.builder();
+        }
+
+        public String toString() {
+            return ToStringHelper.prefix(TYPE + ": ")
+                    .add("url", hideSensitiveData(url()))
+                    .add("dest", dest())
+                    .toString();
         }
     }
 
@@ -121,23 +142,30 @@ public interface Import extends Serializable {
     @JsonInclude(JsonInclude.Include.NON_EMPTY)
     @JsonSerialize(as = ImmutableDirectoryDefinition.class)
     @JsonDeserialize(as = ImmutableDirectoryDefinition.class)
-    interface DirectoryDefinition extends Import {
+    abstract class DirectoryDefinition implements Import {
 
-        String TYPE = "dir";
+        public static final String TYPE = "dir";
 
         @JsonProperty(value = "src", required = true)
-        String src();
+        public abstract String src();
 
         @Nullable
-        String dest();
+        public abstract String dest();
 
         @Override
-        default String type() {
+        public String type() {
             return TYPE;
         }
 
-        static ImmutableDirectoryDefinition.Builder builder() {
+        public static ImmutableDirectoryDefinition.Builder builder() {
             return ImmutableDirectoryDefinition.builder();
+        }
+
+        public String toString() {
+            return ToStringHelper.prefix(TYPE + ": ")
+                    .add("src", src())
+                    .add("dest", dest())
+                    .toString();
         }
     }
 
@@ -145,20 +173,42 @@ public interface Import extends Serializable {
     @JsonInclude(JsonInclude.Include.NON_EMPTY)
     @JsonSerialize(as = ImmutableSecretDefinition.class)
     @JsonDeserialize(as = ImmutableSecretDefinition.class)
-    interface SecretDefinition extends Serializable {
+    abstract class SecretDefinition implements Serializable {
+
+        private static final long serialVersionUID = 1L;
 
         @Nullable
-        String org();
+        public abstract String org();
 
         @JsonProperty(value = "name", required = true)
-        String name();
+        public abstract String name();
 
         @Nullable
-        @Value.Redacted
-        String password();
+        public abstract String password();
 
-        static ImmutableSecretDefinition.Builder builder() {
+        public static ImmutableSecretDefinition.Builder builder() {
             return ImmutableSecretDefinition.builder();
+        }
+
+        public String toString() {
+            return ToStringHelper.prefix("")
+                    .add("org", org())
+                    .add("name", name())
+                    .add("password", password() != null ? "***" : null)
+                    .toString();
+        }
+    }
+
+    static String hideSensitiveData(String url) {
+        try {
+            URL u = new URL(url);
+            if (u.getUserInfo() == null) {
+                return url;
+            }
+
+            return url.replace(u.getUserInfo(), "***");
+        } catch (Exception e) {
+            return url;
         }
     }
 }

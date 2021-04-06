@@ -52,7 +52,9 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 import static com.walmartlabs.concord.db.PgUtils.toChar;
-import static com.walmartlabs.concord.server.jooq.Tables.*;
+import static com.walmartlabs.concord.db.PgUtils.toJsonDate;
+import static com.walmartlabs.concord.server.jooq.Tables.REPOSITORIES;
+import static com.walmartlabs.concord.server.jooq.Tables.USERS;
 import static com.walmartlabs.concord.server.jooq.tables.Organizations.ORGANIZATIONS;
 import static com.walmartlabs.concord.server.jooq.tables.ProcessCheckpoints.PROCESS_CHECKPOINTS;
 import static com.walmartlabs.concord.server.jooq.tables.ProcessEvents.PROCESS_EVENTS;
@@ -737,11 +739,6 @@ public class ProcessQueueDao extends AbstractDao {
         query.addConditions(PROCESS_QUEUE.INSTANCE_ID.eq(key.getInstanceId()));
 
         return query.fetchOne(this::toEntry);
-    }
-
-    private static Field<String> toJsonDate(Field<OffsetDateTime> date) {
-        return toChar(date, "YYYY-MM-DD\"T\"HH24:MI:SS.MS")
-                .concat(replace(toChar(date, "OF"), ":", ""));
     }
 
     private ProcessEntry toEntry(Record r) {

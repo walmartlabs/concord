@@ -42,13 +42,16 @@ import com.walmartlabs.concord.server.policy.PolicyException;
 import com.walmartlabs.concord.server.policy.PolicyManager;
 import com.walmartlabs.concord.server.process.PayloadManager.EntryPoint;
 import com.walmartlabs.concord.server.process.ProcessEntry.ProcessStatusHistoryEntry;
-import com.walmartlabs.concord.server.process.ProcessEntry.ProcessWaitHistoryEntry;
+import com.walmartlabs.concord.server.process.ProcessEntry.ProcessWaitEntry;
 import com.walmartlabs.concord.server.process.ProcessManager.ProcessResult;
 import com.walmartlabs.concord.server.process.event.ProcessEventDao;
 import com.walmartlabs.concord.server.process.logs.ProcessLogAccessManager;
 import com.walmartlabs.concord.server.process.logs.ProcessLogManager;
 import com.walmartlabs.concord.server.process.logs.ProcessLogsDao.ProcessLog;
-import com.walmartlabs.concord.server.process.queue.*;
+import com.walmartlabs.concord.server.process.queue.ProcessFilter;
+import com.walmartlabs.concord.server.process.queue.ProcessKeyCache;
+import com.walmartlabs.concord.server.process.queue.ProcessQueueDao;
+import com.walmartlabs.concord.server.process.queue.ProcessQueueManager;
 import com.walmartlabs.concord.server.process.state.ProcessStateManager;
 import com.walmartlabs.concord.server.process.waits.AbstractWaitCondition;
 import com.walmartlabs.concord.server.process.waits.ProcessWaitManager;
@@ -598,12 +601,10 @@ public class ProcessResource implements Resource {
     /**
      * Returns a process instance details.
      *
-     * @param instanceId
-     * @return
      * @deprecated use {@link ProcessResourceV2#get(UUID, Set)}
      */
     @GET
-    @ApiOperation("Get status of a process")
+    @ApiOperation("Get a process' details")
     @javax.ws.rs.Path("/{id}")
     @Produces(MediaType.APPLICATION_JSON)
     @WithTimer
@@ -621,9 +622,6 @@ public class ProcessResource implements Resource {
 
     /**
      * Returns a process status history.
-     *
-     * @param instanceId
-     * @return
      */
     @GET
     @ApiOperation("Get process status history")
@@ -636,29 +634,20 @@ public class ProcessResource implements Resource {
     }
 
     /**
-     * Returns a history of the process' wait conditions.
-     *
-     * @param instanceId
-     * @return
+     * Returns current process' wait conditions.
      */
     @GET
-    @ApiOperation("Get process' wait conditions history")
+    @ApiOperation("Get process' wait conditions")
     @javax.ws.rs.Path("/{instanceId}/waits")
     @Produces(MediaType.APPLICATION_JSON)
     @WithTimer
-    public List<ProcessWaitHistoryEntry> getWaitHistory(@ApiParam @PathParam("instanceId") UUID instanceId,
-                                                        @ApiParam @QueryParam("limit") @DefaultValue("30") int limit,
-                                                        @ApiParam @QueryParam("offset") @DefaultValue("0") int offset) {
+    public ProcessWaitEntry getWait(@ApiParam @PathParam("instanceId") UUID instanceId) {
         ProcessKey pk = assertKey(instanceId);
-        return processEventDao.getWaitHistory(pk, limit, offset);
+        return processWaitManager.getWait(pk);
     }
 
     /**
      * Returns a process' attachment file.
-     *
-     * @param instanceId
-     * @param attachmentName
-     * @return
      */
     @GET
     @ApiOperation(value = "Download a process' attachment", response = File.class)
@@ -1049,10 +1038,6 @@ public class ProcessResource implements Resource {
 
     /**
      * Set the process' wait condition.
-     *
-     * @param instanceId
-     * @param waitCondition
-     * @return
      */
     @POST
     @ApiOperation(value = "Set the process' wait condition")
@@ -1063,7 +1048,7 @@ public class ProcessResource implements Resource {
     public Response setWaitCondition(@ApiParam @PathParam("id") UUID instanceId, @ApiParam Map<String, Object> waitCondition) {
         ProcessKey processKey = assertProcessKey(instanceId);
         AbstractWaitCondition condition = objectMapper.convertValue(waitCondition, AbstractWaitCondition.class);
-        processWaitManager.updateWait(processKey, condition);
+        processWaitManager.addWait(processKey, condition);
         return Response.ok().build();
     }
 

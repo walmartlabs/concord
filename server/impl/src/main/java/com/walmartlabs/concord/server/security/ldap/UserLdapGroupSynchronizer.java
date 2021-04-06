@@ -44,7 +44,6 @@ import java.util.Set;
 import java.util.UUID;
 
 import static com.walmartlabs.concord.server.jooq.Tables.USERS;
-import static org.jooq.impl.DSL.currentOffsetDateTime;
 
 /**
  * Responsible for AD/LDAP group synchronization and enabling/disabling users

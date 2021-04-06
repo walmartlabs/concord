@@ -30,6 +30,7 @@ import com.walmartlabs.concord.runtime.v2.serializer.*;
 
 import java.io.IOException;
 import java.io.OutputStream;
+import java.time.Duration;
 
 public class ProjectSerializerV2 {
 
@@ -73,7 +74,8 @@ public class ProjectSerializerV2 {
                 .addSerializer(TaskCall.class, new TaskCallStepSerializer())
                 .addSerializer(Form.class, new FormDefinitionSerializer())
                 .addSerializer(Trigger.class, new TriggerSerializer())
-                .addSerializer(ProcessDefinition.class, new ProcessDefinitionSerializer());
+                .addSerializer(ProcessDefinition.class, new ProcessDefinitionSerializer())
+                .addSerializer(Duration.class, new DurationSerializer());
 
         return new ObjectMapper(new YAMLFactory()
                 .disable(YAMLGenerator.Feature.WRITE_DOC_START_MARKER))
