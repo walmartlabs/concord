@@ -19,16 +19,14 @@
  */
 
 import * as React from 'react';
-import { isFinal, ProcessStatus, ProcessWaitHistoryEntry } from '../../../api/process';
+import { isFinal, ProcessStatus, WaitCondition } from '../../../api/process';
 import { get as apiGetWaits } from '../../../api/process/wait';
-import { PaginationToolBar, ProcessWaitList } from '../../molecules';
+import { ProcessWaitList } from '../../molecules';
 import { useState } from 'react';
 import RequestErrorActivity from '../RequestErrorActivity';
 import { useCallback } from 'react';
 import { usePolling } from '../../../api/usePolling';
 import { ConcordId } from '../../../api/common';
-import { usePagination } from '../../molecules/PaginationToolBar/usePagination';
-import { Menu } from 'semantic-ui-react';
 
 interface ExternalProps {
     instanceId: ConcordId;
@@ -45,28 +43,14 @@ const ProcessWaitActivity = ({
     loadingHandler,
     forceRefresh
 }: ExternalProps) => {
-    const [data, setData] = useState<ProcessWaitHistoryEntry[]>();
-    const {
-        paginationFilter,
-        handleLimitChange,
-        handleNext,
-        handlePrev,
-        handleFirst
-    } = usePagination();
-    const [next, setNext] = useState<boolean>(false);
+    const [waitConditions, setWaitConditions] = useState<WaitCondition[] | undefined>(undefined);
 
     const fetchData = useCallback(async () => {
-        const result = await apiGetWaits(
-            instanceId,
-            paginationFilter.offset,
-            paginationFilter.limit
-        );
-
-        setData(makeProcessWaitList(result.items));
-        setNext(result.next);
+        const result = await apiGetWaits(instanceId);
+        setWaitConditions(result?.waits || []);
 
         return !isFinal(processStatus);
-    }, [instanceId, processStatus, paginationFilter.offset, paginationFilter.limit]);
+    }, [instanceId, processStatus]);
 
     const error = usePolling(fetchData, DATA_FETCH_INTERVAL, loadingHandler, forceRefresh);
 
@@ -76,35 +60,8 @@ const ProcessWaitActivity = ({
 
     return (
         <>
-            <Menu secondary={true}>
-                <Menu.Menu position={'right'}>
-                    <Menu.Item>
-                        <PaginationToolBar
-                            limit={paginationFilter.limit}
-                            handleLimitChange={(limit) => handleLimitChange(limit)}
-                            handleNext={handleNext}
-                            handlePrev={handlePrev}
-                            handleFirst={handleFirst}
-                            disablePrevious={paginationFilter.offset <= 0}
-                            disableNext={!next}
-                            disableFirst={paginationFilter.offset <= 0}
-                        />
-                    </Menu.Item>
-                </Menu.Menu>
-            </Menu>
-
-            <ProcessWaitList data={data} />
+            <ProcessWaitList data={waitConditions} />
         </>
-    );
-};
-
-const makeProcessWaitList = (data?: ProcessWaitHistoryEntry[]): ProcessWaitHistoryEntry[] => {
-    if (data === undefined) {
-        return [];
-    }
-
-    return data.sort((a, b) =>
-        a.eventDate < b.eventDate ? 1 : a.eventDate > b.eventDate ? -1 : 0
     );
 };
 

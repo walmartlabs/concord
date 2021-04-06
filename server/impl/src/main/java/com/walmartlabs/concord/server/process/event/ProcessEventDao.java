@@ -20,15 +20,11 @@ package com.walmartlabs.concord.server.process.event;
  * =====
  */
 
-import com.fasterxml.jackson.core.type.TypeReference;
 import com.walmartlabs.concord.db.AbstractDao;
 import com.walmartlabs.concord.db.MainDB;
 import com.walmartlabs.concord.db.PgUtils;
-import com.walmartlabs.concord.sdk.EventType;
 import com.walmartlabs.concord.server.ConcordObjectMapper;
-import com.walmartlabs.concord.server.jooq.tables.ProcessEvents;
 import com.walmartlabs.concord.server.jooq.tables.records.ProcessEventsRecord;
-import com.walmartlabs.concord.server.process.ProcessEntry;
 import com.walmartlabs.concord.server.sdk.ProcessKey;
 import com.walmartlabs.concord.server.sdk.events.ProcessEvent;
 import org.jooq.*;
@@ -39,15 +35,11 @@ import java.sql.PreparedStatement;
 import java.time.OffsetDateTime;
 import java.util.*;
 
-import static com.walmartlabs.concord.db.PgUtils.toChar;
 import static com.walmartlabs.concord.server.jooq.Tables.PROCESS_EVENTS;
 import static org.jooq.impl.DSL.*;
 
 @Named
 public class ProcessEventDao extends AbstractDao {
-
-    private static final TypeReference<ProcessEntry.ProcessWaitHistoryEntry> WAIT_HISTORY_ENTRY = new TypeReference<ProcessEntry.ProcessWaitHistoryEntry>() {
-    };
 
     private final ConcordObjectMapper objectMapper;
 
@@ -108,6 +100,11 @@ public class ProcessEventDao extends AbstractDao {
         int limit = filter.limit();
         if (limit > 0) {
             q.limit(limit);
+        }
+
+        int offset = filter.offset();
+        if (offset > 0) {
+            q.offset(offset);
         }
 
         return q.orderBy(PROCESS_EVENTS.EVENT_SEQ)
@@ -223,33 +220,6 @@ public class ProcessEventDao extends AbstractDao {
         }
 
         return result;
-    }
-
-    public List<ProcessEntry.ProcessWaitHistoryEntry> getWaitHistory(ProcessKey processKey, int limit, int offset) {
-        ProcessEvents pe = ProcessEvents.PROCESS_EVENTS.as("pe");
-        return dsl().select(waitEntryToJsonb(pe))
-                .from(pe)
-                .where(pe.INSTANCE_ID.eq(processKey.getInstanceId())
-                        .and(pe.INSTANCE_CREATED_AT.eq(processKey.getCreatedAt()))
-                        .and(pe.EVENT_TYPE.eq(EventType.PROCESS_WAIT.name())))
-                .orderBy(pe.EVENT_DATE.desc())
-                .limit(limit)
-                .offset(offset)
-                .fetch(r -> objectMapper.fromJSONB(r.value1(), WAIT_HISTORY_ENTRY));
-    }
-
-    private Field<JSONB> waitEntryToJsonb(ProcessEvents pe) {
-        return function("jsonb_strip_nulls", JSONB.class,
-                function("jsonb_build_object", JSONB.class,
-                        inline("id"), pe.EVENT_ID,
-                        inline("eventDate"), toJsonDate(pe.EVENT_DATE),
-                        inline("type"), field("{0}->'type'", Object.class, pe.EVENT_DATA),
-                        inline("reason"), field("{0}->'reason'", Object.class, pe.EVENT_DATA),
-                        inline("payload"), field("{0} - 'type' - 'reason'", Object.class, pe.EVENT_DATA)));
-    }
-
-    private static Field<String> toJsonDate(Field<OffsetDateTime> date) {
-        return toChar(date, "YYYY-MM-DD\"T\"HH24:MI:SS.MS\"Z\"");
     }
 
     private ProcessEventEntry toEntry(Record5<Long, UUID, String, OffsetDateTime, JSONB> r) {

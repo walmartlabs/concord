@@ -105,11 +105,19 @@ public class ProcessEventManager {
         listeners.onProcessEvent(insertedEvents);
     }
 
+    public void event(DSLContext tx, NewProcessEvent event) {
+        event(tx, Collections.singletonList(event));
+    }
+
     @WithTimer
     public void event(DSLContext tx, List<NewProcessEvent> events) {
         // TODO consider returning a callback that can be called outside of the transaction
         List<ProcessEvent> insertedEvents = doEvent(tx, events);
         listeners.onProcessEvent(insertedEvents);
+    }
+
+    public List<ProcessEventEntry> list(ProcessEventFilter filter) {
+        return eventDao.list(filter);
     }
 
     private List<ProcessEvent> doEvent(DSLContext tx, List<NewProcessEvent> events) {

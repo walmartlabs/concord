@@ -23,9 +23,6 @@ package com.walmartlabs.concord.server.process.waits;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
-import com.walmartlabs.concord.server.process.waits.ImmutableProcessCompletionCondition;
-import com.walmartlabs.concord.server.process.waits.ImmutableProcessLockCondition;
-import com.walmartlabs.concord.server.process.waits.ImmutableProcessSleepCondition;
 
 import javax.annotation.Nullable;
 import java.io.Serializable;
@@ -40,7 +37,6 @@ import java.io.Serializable;
         visible = false,
         property = "type")
 @JsonSubTypes({
-        @JsonSubTypes.Type(value = NoneCondition.class, name = "NONE"),
         @JsonSubTypes.Type(value = ImmutableProcessCompletionCondition.class, name = "PROCESS_COMPLETION"),
         @JsonSubTypes.Type(value = ImmutableProcessLockCondition.class, name = "PROCESS_LOCK"),
         @JsonSubTypes.Type(value = ImmutableProcessSleepCondition.class, name = "PROCESS_SLEEP")

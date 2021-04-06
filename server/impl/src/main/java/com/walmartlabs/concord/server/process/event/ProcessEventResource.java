@@ -59,20 +59,17 @@ public class ProcessEventResource implements Resource {
     // TODO this should be a common constant (in SDK maybe)
     private static final String ELEMENT_EVENT_TYPE = "ELEMENT";
 
-    private final ProcessEventDao eventDao;
     private final ProcessKeyCache processKeyCache;
     private final ProcessQueueDao queueDao;
     private final ProjectAccessManager projectAccessManager;
     private final ProcessEventManager eventManager;
 
     @Inject
-    public ProcessEventResource(ProcessEventDao eventDao,
-                                ProcessKeyCache processKeyCache,
+    public ProcessEventResource(ProcessKeyCache processKeyCache,
                                 ProcessQueueDao queueDao,
                                 ProjectAccessManager projectAccessManager,
                                 ProcessEventManager eventManager) {
 
-        this.eventDao = eventDao;
         this.processKeyCache = processKeyCache;
         this.queueDao = queueDao;
         this.projectAccessManager = projectAccessManager;
@@ -159,7 +156,7 @@ public class ProcessEventResource implements Resource {
                 .fromId(fromId)
                 .build();
 
-        List<ProcessEventEntry> l = eventDao.list(f);
+        List<ProcessEventEntry> l = eventManager.list(f);
         if (!includeAll) {
             l = filterOutSensitiveData(l);
         }

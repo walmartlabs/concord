@@ -1,4 +1,4 @@
-package com.walmartlabs.concord.server.process.queue;
+package com.walmartlabs.concord.server.process.waits;
 
 /*-
  * *****
@@ -20,10 +20,9 @@ package com.walmartlabs.concord.server.process.queue;
  * =====
  */
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+import com.walmartlabs.concord.server.ConcordObjectMapper;
 import com.walmartlabs.concord.server.TestObjectMapper;
 import com.walmartlabs.concord.server.jooq.enums.ProcessLockScope;
-import com.walmartlabs.concord.server.process.waits.*;
 import org.junit.Test;
 
 import java.util.Collections;
@@ -33,19 +32,7 @@ import static org.junit.Assert.assertEquals;
 
 public class WaitConditionSerializeTest {
 
-    final ObjectMapper objectMapper = TestObjectMapper.INSTANCE;
-
-    @Test
-    public void testNoneCondition() throws Exception {
-        NoneCondition c = new NoneCondition();
-
-        String json = objectMapper.writeValueAsString(c);
-        System.out.println(json);
-
-        AbstractWaitCondition cc = objectMapper.readValue(json, AbstractWaitCondition.class);
-        assertEquals(NoneCondition.class, cc.getClass());
-        assertEquals(WaitType.NONE, cc.type());
-    }
+    private final ConcordObjectMapper objectMapper = new ConcordObjectMapper(TestObjectMapper.INSTANCE);
 
     @Test
     public void testProcessLockCondition() throws Exception {
@@ -57,10 +44,10 @@ public class WaitConditionSerializeTest {
                 .name("test")
                 .build();
 
-        String json = objectMapper.writeValueAsString(c);
+        String json = objectMapper.toString(c);
         System.out.println(json);
 
-        AbstractWaitCondition cc = objectMapper.readValue(json, AbstractWaitCondition.class);
+        AbstractWaitCondition cc = objectMapper.fromString(json, AbstractWaitCondition.class);
         assertEquals(c, cc);
     }
 
@@ -71,10 +58,10 @@ public class WaitConditionSerializeTest {
                 .reason("test-reason")
                 .build();
 
-        String json = objectMapper.writeValueAsString(c);
+        String json = objectMapper.toString(c);
         System.out.println(json);
 
-        AbstractWaitCondition cc = objectMapper.readValue(json, AbstractWaitCondition.class);
+        AbstractWaitCondition cc = objectMapper.fromString(json, AbstractWaitCondition.class);
         assertEquals(c, cc);
     }
 }
