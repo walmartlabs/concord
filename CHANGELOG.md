@@ -9,6 +9,8 @@
 - concord-server: cleanup job for `wait_conditions`.
 Automatically remove `wait_conditions` of expunged processes
 ([#380](https://github.com/walmartlabs/concord/pull/380));
+- concord-cli: option to generate the effective Concord YAML file
+([#382](https://github.com/walmartlabs/concord/pull/382));
 - runtime-v2: add example of Ansible's `register` statement usage
 ([#387](https://github.com/walmartlabs/concord/pull/387).
 
