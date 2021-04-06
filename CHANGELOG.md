@@ -8,7 +8,9 @@
 ([#368](https://github.com/walmartlabs/concord/pull/368));
 - concord-server: cleanup job for `wait_conditions`.
 Automatically remove `wait_conditions` of expunged processes
-([#380](https://github.com/walmartlabs/concord/pull/380)).
+([#380](https://github.com/walmartlabs/concord/pull/380));
+- runtime-v2: add example of Ansible's `register` statement usage
+([#387](https://github.com/walmartlabs/concord/pull/387).
 
 ### Changed
 
