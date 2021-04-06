@@ -19,6 +19,9 @@ with legacy authentication providers
 ([#378](https://github.com/walmartlabs/concord/pull/378));
 - runtime-v2: fix the duration format when generating an
 effective yaml ([#383](https://github.com/walmartlabs/concord/pull/383)).
+- concord-repository: automatically create `repositoryInfo`
+directory if not exists
+([#386](https://github.com/walmartlabs/concord/pull/386)).
 
 
 
