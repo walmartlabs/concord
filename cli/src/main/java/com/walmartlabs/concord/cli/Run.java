@@ -105,7 +105,7 @@ public class Run implements Callable<Integer> {
     @Option(names = {"-v", "--verbose"}, description = "verbose output")
     boolean verbose = false;
 
-    @Option(names = {"-effective-yaml"}, description = "generate effective yaml")
+    @Option(names = {"--effective-yaml"}, description = "generate the effective YAML (skips execution)")
     boolean effectiveYaml = false;
 
     @Option(names = {"--default-import-version"}, description = "default import version or repo branch")
