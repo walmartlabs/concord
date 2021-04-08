@@ -1,5 +1,36 @@
 # Change log
 
+## [Unreleased]
+
+### Added
+
+- concord-server: support multiple wait conditions per process
+([#368](https://github.com/walmartlabs/concord/pull/368));
+- concord-server: cleanup job for `wait_conditions`.
+Automatically remove `wait_conditions` of expunged processes
+([#380](https://github.com/walmartlabs/concord/pull/380));
+- concord-cli: option to generate the effective Concord YAML file
+([#382](https://github.com/walmartlabs/concord/pull/382));
+- runtime-v2: add example of Ansible's `register` statement usage
+([#387](https://github.com/walmartlabs/concord/pull/387)).
+
+### Changed
+
+- pfed-sso: now provides a `LdapPrincipal` for compatibility
+with legacy authentication providers
+([#376](https://github.com/walmartlabs/concord/pull/376));
+- concord-imports: hide sensitive data in `toString` methods
+([#378](https://github.com/walmartlabs/concord/pull/378));
+- runtime-v2: fix the duration format when generating an
+effective yaml ([#383](https://github.com/walmartlabs/concord/pull/383)).
+- concord-repository: automatically create `repositoryInfo`
+directory if not exists
+([#386](https://github.com/walmartlabs/concord/pull/386));
+- pref-sso: do not redirect if refresh token exists
+([#388](https://github.com/walmartlabs/concord/pull/388).
+
+
+
 ## [1.83.0] - 2021-03-25
 
 ### Added
