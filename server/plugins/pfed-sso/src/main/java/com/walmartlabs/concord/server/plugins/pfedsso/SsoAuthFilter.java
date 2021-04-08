@@ -58,20 +58,26 @@ public class SsoAuthFilter extends AbstractHttpFilter {
         if (from == null || from.trim().isEmpty()) {
             from = "/";
         }
-
+        
+        // do not redirect if refresh token is not null as it is invalid after one use. Unfortunately no way to validate RefreshToken
+        // TODO: self-refresh using refresh token
         String token = SsoCookies.getTokenCookie(request);
+        String refreshToken = SsoCookies.getRefreshCookie(request);
+        
         if (token != null) {
-            boolean isValid = jwtAuthenticator.isTokenValid(token);
-            if (isValid) {
-                log.info("doFilter -> found valid token in cookies, redirect to '{}'", from);
-                redirectHelper.sendRedirect(response, from);
-                return;
-            } else {
-                SsoCookies.removeTokenCookie(response);
-                if (SsoCookies.getRefreshCookie(request) != null) {
-                    SsoCookies.removeRefreshTokenCookie(response);
+            if (refreshToken == null){
+                boolean isValid = jwtAuthenticator.isTokenValid(token);
+                if (isValid) {
+                    log.info("doFilter -> found valid token in cookies, redirect to '{}'", from);
+                    redirectHelper.sendRedirect(response, from);
+                    return;
                 }
             }
+            SsoCookies.removeTokenCookie(response);
+        }
+
+        if (refreshToken != null) {
+            SsoCookies.removeRefreshTokenCookie(response);
         }
 
         SsoCookies.addFromCookie(from, response);
