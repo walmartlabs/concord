@@ -25,7 +25,9 @@ with legacy authentication providers
 effective yaml ([#383](https://github.com/walmartlabs/concord/pull/383)).
 - concord-repository: automatically create `repositoryInfo`
 directory if not exists
-([#386](https://github.com/walmartlabs/concord/pull/386)).
+([#386](https://github.com/walmartlabs/concord/pull/386));
+- pref-sso: do not redirect if refresh token exists
+([#388](https://github.com/walmartlabs/concord/pull/388).
 
 
 
