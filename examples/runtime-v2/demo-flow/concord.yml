@@ -73,6 +73,7 @@ flows:
       in:
         url: "${url}" # will not use the global variable as tasks now use local variables
         method: "GET" # need to explicitly specify each required parameter
+        debug: true
       out: response
 
     - log: "Concord Endpoint Status: ${response.statusCode}"
