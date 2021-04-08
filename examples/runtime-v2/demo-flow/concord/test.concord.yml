@@ -25,6 +25,7 @@ flows:
       in:
         url: https://concord.${item}.walmart.com/
         method: "GET"
+        debug: true
       out: results # withItems turns "results" into a list of results for each item
       parallelWithItems:
         - "prod"
