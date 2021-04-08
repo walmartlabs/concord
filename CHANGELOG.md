@@ -12,7 +12,7 @@ Automatically remove `wait_conditions` of expunged processes
 - concord-cli: option to generate the effective Concord YAML file
 ([#382](https://github.com/walmartlabs/concord/pull/382));
 - runtime-v2: add example of Ansible's `register` statement usage
-([#387](https://github.com/walmartlabs/concord/pull/387).
+([#387](https://github.com/walmartlabs/concord/pull/387)).
 
 ### Changed
 
