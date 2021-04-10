@@ -21,7 +21,6 @@ package com.walmartlabs.concord.server.process;
  */
 
 import com.fasterxml.jackson.annotation.JsonFormat;
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
@@ -30,7 +29,6 @@ import com.walmartlabs.concord.server.sdk.ProcessStatus;
 import org.immutables.value.Value;
 
 import javax.annotation.Nullable;
-import java.io.Serializable;
 import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Map;
@@ -41,7 +39,7 @@ import java.util.UUID;
 @JsonInclude(Include.NON_EMPTY)
 @JsonSerialize(as = ImmutableProcessEntry.class)
 @JsonDeserialize(as = ImmutableProcessEntry.class)
-public interface ProcessEntry extends Serializable {
+public interface ProcessEntry {
 
     UUID instanceId();
 
@@ -136,6 +134,9 @@ public interface ProcessEntry extends Serializable {
     List<ProcessCheckpointEntry> checkpoints();
 
     @Nullable
+    List<CheckpointRestoreHistoryEntry> checkpointRestoreHistory();
+
+    @Nullable
     List<ProcessStatusHistoryEntry> statusHistory();
 
     @Nullable
@@ -149,6 +150,22 @@ public interface ProcessEntry extends Serializable {
 
     @Nullable
     String runtime();
+
+    @Value.Immutable
+    @JsonInclude(Include.NON_EMPTY)
+    @JsonSerialize(as = ImmutableCheckpointRestoreHistoryEntry.class)
+    @JsonDeserialize(as = ImmutableCheckpointRestoreHistoryEntry.class)
+    interface CheckpointRestoreHistoryEntry {
+
+        long id();
+
+        UUID checkpointId();
+
+        ProcessStatus processStatus();
+
+        @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss.SSSX")
+        OffsetDateTime changeDate();
+    }
 
     @Value.Immutable
     @JsonInclude(Include.NON_EMPTY)
@@ -166,17 +183,6 @@ public interface ProcessEntry extends Serializable {
 
     @Value.Immutable
     @JsonInclude(Include.NON_EMPTY)
-    @JsonIgnoreProperties(ignoreUnknown = true)
-    @JsonSerialize(as = ImmutableProcessStatusHistoryPayload.class)
-    @JsonDeserialize(as = ImmutableProcessStatusHistoryPayload.class)
-    interface ProcessStatusHistoryPayload {
-
-        @Nullable
-        UUID checkpointId();
-    }
-
-    @Value.Immutable
-    @JsonInclude(Include.NON_EMPTY)
     @JsonSerialize(as = ImmutableProcessStatusHistoryEntry.class)
     @JsonDeserialize(as = ImmutableProcessStatusHistoryEntry.class)
     interface ProcessStatusHistoryEntry {
@@ -184,9 +190,6 @@ public interface ProcessEntry extends Serializable {
         UUID id();
 
         ProcessStatus status();
-
-        @Nullable
-        ProcessStatusHistoryPayload payload();
 
         @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss.SSSX")
         OffsetDateTime changeDate();

@@ -44,7 +44,6 @@ import com.walmartlabs.concord.server.process.PayloadManager.EntryPoint;
 import com.walmartlabs.concord.server.process.ProcessEntry.ProcessStatusHistoryEntry;
 import com.walmartlabs.concord.server.process.ProcessEntry.ProcessWaitEntry;
 import com.walmartlabs.concord.server.process.ProcessManager.ProcessResult;
-import com.walmartlabs.concord.server.process.event.ProcessEventDao;
 import com.walmartlabs.concord.server.process.logs.ProcessLogAccessManager;
 import com.walmartlabs.concord.server.process.logs.ProcessLogManager;
 import com.walmartlabs.concord.server.process.logs.ProcessLogsDao.ProcessLog;
@@ -117,7 +116,6 @@ public class ProcessResource implements Resource {
     private final ProcessConfiguration processCfg;
     private final ProcessLogManager logManager;
     private final ProcessLogAccessManager logAccessManager;
-    private final ProcessEventDao processEventDao;
     private final ProcessLogManager processLogManager;
     private final PolicyManager policyManager;
 
@@ -137,7 +135,7 @@ public class ProcessResource implements Resource {
                            ObjectMapper objectMapper,
                            ProcessConfiguration processCfg,
                            ProcessLogManager logManager,
-                           ProcessLogAccessManager logAccessManager, ProcessEventDao processEventDao,
+                           ProcessLogAccessManager logAccessManager,
                            ProcessLogManager processLogManager,
                            PolicyManager policyManager,
                            ProcessResourceV2 v2) {
@@ -156,7 +154,6 @@ public class ProcessResource implements Resource {
         this.processCfg = processCfg;
         this.logManager = logManager;
         this.logAccessManager = logAccessManager;
-        this.processEventDao = processEventDao;
         this.processLogManager = processLogManager;
         this.policyManager = policyManager;
 
@@ -619,7 +616,6 @@ public class ProcessResource implements Resource {
         return e;
     }
 
-
     /**
      * Returns a process status history.
      */
@@ -630,7 +626,7 @@ public class ProcessResource implements Resource {
     @WithTimer
     public List<ProcessStatusHistoryEntry> getStatusHistory(@ApiParam @PathParam("instanceId") UUID instanceId) throws IOException {
         ProcessKey pk = assertKey(instanceId);
-        return queueDao.getHistory(pk);
+        return queueDao.getStatusHistory(pk);
     }
 
     /**

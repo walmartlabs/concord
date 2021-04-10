@@ -23,8 +23,9 @@ package com.walmartlabs.concord.server.process;
 public enum ProcessDataInclude {
 
     CHECKPOINTS ("checkpoints"),
+    CHECKPOINTS_HISTORY ("checkpointsHistory"),
     CHILDREN_IDS ("childrenIds"),
-    HISTORY ("history");
+    STATUS_HISTORY ("history");
 
     private final String value;
 

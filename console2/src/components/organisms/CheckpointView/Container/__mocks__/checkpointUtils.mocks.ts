@@ -46,31 +46,26 @@ export const validProcessHistory: ProcessHistoryEntry[] = [
     {
         changeDate: '2019-02-18T17:23:29.678Z',
         id: 'e89c124e-33a1-11e9-855e-fa163e7ef419',
-        payload: {},
         status: ProcessStatus.PREPARING
     },
     {
         changeDate: '2019-02-18T17:23:30.426Z',
         id: 'e90e2280-33a1-11e9-855e-fa163e7ef419',
-        payload: {},
         status: ProcessStatus.ENQUEUED
     },
     {
         changeDate: '2019-02-18T17:23:30.907Z',
         id: 'e9590f7a-33a1-11e9-aa54-fa163e7ef419',
-        payload: {},
         status: ProcessStatus.STARTING
     },
     {
         changeDate: '2019-02-18T17:23:31.878Z',
         id: 'e9ec1a36-33a1-11e9-bbef-fa163e7ef419',
-        payload: {},
         status: ProcessStatus.RUNNING
     },
     {
         changeDate: '2019-02-18T17:23:33.445Z',
         id: 'eadac2da-33a1-11e9-bbef-fa163e7ef419',
-        payload: {},
         status: ProcessStatus.FINISHED
     }
 ];

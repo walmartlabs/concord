@@ -19,7 +19,11 @@
  */
 import * as React from 'react';
 import { useCallback, useState } from 'react';
-import { ProcessCheckpointEntry, ProcessHistoryEntry, ProcessStatus } from '../../../api/process';
+import {
+    CheckpointRestoreHistoryEntry,
+    ProcessCheckpointEntry,
+    ProcessStatus
+} from '../../../api/process';
 import { ContentBlock } from '../CheckpointView/ProcessList/styles';
 import { generateCheckpointGroups } from '../CheckpointView/Container/checkpointUtils';
 import {
@@ -43,7 +47,7 @@ interface ExternalProps {
     processStatus: ProcessStatus;
     processDisabled: boolean;
     checkpoints: ProcessCheckpointEntry[];
-    statusHistory: ProcessHistoryEntry[];
+    checkpointRestoreHistory?: CheckpointRestoreHistoryEntry[];
     onRestoreComplete: () => void;
 }
 
@@ -149,7 +153,10 @@ const Checkpoint = (props: Props) => {
 };
 
 const ProcessCheckpointActivity = (props: ExternalProps) => {
-    const checkpointGroups = generateCheckpointGroups(props.checkpoints, props.statusHistory);
+    const checkpointGroups = generateCheckpointGroups(
+        props.checkpoints,
+        props.checkpointRestoreHistory
+    );
 
     return (
         <ContentBlock style={{ margin: '16px 0' }}>
