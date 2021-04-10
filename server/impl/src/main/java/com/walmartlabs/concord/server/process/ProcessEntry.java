@@ -29,6 +29,7 @@ import com.walmartlabs.concord.server.sdk.ProcessStatus;
 import org.immutables.value.Value;
 
 import javax.annotation.Nullable;
+import java.io.Serializable;
 import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Map;
@@ -39,7 +40,9 @@ import java.util.UUID;
 @JsonInclude(Include.NON_EMPTY)
 @JsonSerialize(as = ImmutableProcessEntry.class)
 @JsonDeserialize(as = ImmutableProcessEntry.class)
-public interface ProcessEntry {
+public interface ProcessEntry extends Serializable {
+
+    long serialVersionUID = 1L;
 
     UUID instanceId();
 
@@ -155,7 +158,9 @@ public interface ProcessEntry {
     @JsonInclude(Include.NON_EMPTY)
     @JsonSerialize(as = ImmutableCheckpointRestoreHistoryEntry.class)
     @JsonDeserialize(as = ImmutableCheckpointRestoreHistoryEntry.class)
-    interface CheckpointRestoreHistoryEntry {
+    interface CheckpointRestoreHistoryEntry extends Serializable{
+
+        long serialVersionUID = 1L;
 
         long id();
 
@@ -171,7 +176,9 @@ public interface ProcessEntry {
     @JsonInclude(Include.NON_EMPTY)
     @JsonSerialize(as = ImmutableProcessCheckpointEntry.class)
     @JsonDeserialize(as = ImmutableProcessCheckpointEntry.class)
-    interface ProcessCheckpointEntry {
+    interface ProcessCheckpointEntry extends Serializable {
+
+        long serialVersionUID = 1L;
 
         UUID id();
 
@@ -185,7 +192,9 @@ public interface ProcessEntry {
     @JsonInclude(Include.NON_EMPTY)
     @JsonSerialize(as = ImmutableProcessStatusHistoryEntry.class)
     @JsonDeserialize(as = ImmutableProcessStatusHistoryEntry.class)
-    interface ProcessStatusHistoryEntry {
+    interface ProcessStatusHistoryEntry extends Serializable {
+
+        long serialVersionUID = 1L;
 
         UUID id();
 
@@ -199,7 +208,9 @@ public interface ProcessEntry {
     @JsonInclude(Include.NON_EMPTY)
     @JsonSerialize(as = ImmutableProcessWaitEntry.class)
     @JsonDeserialize(as = ImmutableProcessWaitEntry.class)
-    interface ProcessWaitEntry {
+    interface ProcessWaitEntry extends Serializable {
+
+        long serialVersionUID = 1L;
 
         @Value.Parameter
         boolean isWaiting();

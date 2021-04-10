@@ -168,6 +168,9 @@
                     <analysisConfiguration>
                         <revapi.ignore>
                             <item>
+                                <code>java.field.serialVersionUIDUnchanged</code>
+                            </item>
+                            <item>
                                 <code>java.method.removed</code>
                             </item>
                             <item>

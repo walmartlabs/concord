@@ -27,12 +27,15 @@ import com.walmartlabs.concord.server.org.triggers.TriggerEntry;
 import org.immutables.value.Value;
 
 import javax.annotation.Nullable;
+import java.io.Serializable;
 
 @Value.Immutable
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
 @JsonSerialize(as = ImmutableTriggeredByEntry.class)
 @JsonDeserialize(as = ImmutableTriggeredByEntry.class)
-public interface TriggeredByEntry {
+public interface TriggeredByEntry extends Serializable {
+
+    long serialVersionUID = 1L;
 
     @Nullable
     String externalEventId();
