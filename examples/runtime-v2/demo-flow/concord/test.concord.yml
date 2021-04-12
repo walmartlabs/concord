@@ -10,6 +10,11 @@ flows:
         - "Run Validation"
         - "Trigger Deployment"
         - "Send Notification"
+        
+    # Other UI/UX features:
+       # show effective concord yaml
+       # Show task debug params by recording in/out vars
+       # View yaml line number in the Events tab
 
     # parallel execution
     # The v2 runtime was designed with parallel execution in mind. It adds a new step - parallel.
