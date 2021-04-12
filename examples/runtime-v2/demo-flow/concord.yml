@@ -13,11 +13,6 @@ configuration:
 
   arguments:
     url: "https://rubygems.org"
-#     cfg:
-#       topic: "Postgres JDBC Connection"
-#       dbUrl: "jdbc:postgresql://concord.example.com:5432/postgres"
-#       dbUser: "svc_concord"
-#       dbPswd: "xYzAbC"
 
 # restricted entrypoints. if not specified, all flows are public and can be used as an entrypoint
 publicFlows:
@@ -39,7 +34,6 @@ flows:
         - log: "Nope, we do not have 'orgName' variable"
 
     - call: externalFlow
-#     - call: scriptFlow
     - call: formFlow
     - call: errorFlow
 
@@ -82,19 +76,6 @@ flows:
     - log: "Concord Endpoint Status: ${response.statusCode}"
 
     - call: default
-
-#   # explicitly pass parameters to python/groovy scripts
-#   scriptFlow:
-#     - script: scripts/test-script.groovy
-#       in:
-#         kafkaTopic: "${cfg.topic}"
-#         dbUrl: "${cfg.dbUrl}"
-#         dbUser: "${cfg.dbUser}"
-#         dbPswd: "${cfg.dbPswd}"
-#       meta:
-#         segmentName: "Processing ${cfg.topic}..."
-#       error:
-#         - log: "${lastError}" # original exceptions, nothing added by concord
 
   # improved error syntax
   errorFlow:
