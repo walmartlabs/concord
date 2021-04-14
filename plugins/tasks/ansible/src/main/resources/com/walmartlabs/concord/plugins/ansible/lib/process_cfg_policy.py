@@ -18,39 +18,61 @@ class ProcessCfgPolicy:
     def __init__(self):
         rule_file = os.environ['CONCORD_POLICY']
 
-        self.policy_rules = dict()
-
         if os.path.isfile(rule_file):
             print("Loading policy from {}".format(rule_file))
-            self.policy_rules = json.load(open(rule_file))
+            policy_rules = json.load(open(rule_file))
 
             try:
-                self.verbose_limits = self.policy_rules['processCfg']['arguments']['ansibleVerboseLimits']
+                self.verbose_limits = policy_rules['processCfg']['arguments']['ansibleVerboseLimits']
             except KeyError:
                 self.verbose_limits = {'maxHosts': None, 'maxTotalWork': None}
 
+        self.max_hosts = self.verbose_limits.get('maxHosts')
+        self.max_total_work = self.verbose_limits.get('maxTotalWork')
 
-    def is_deny_verbose_logging(self, host_count, total_work):
+    def disable_verbose_after_too_much_work(self, completed_work):
+        '''
+        Methods for disabling verbose output after playbook starts execution. Useful
+        when the main playbook has few tasks but includes one or more include_tasks
+        calls which bypasses total_work calculations before playbook starts.
+        '''
+
         if display.verbosity == 0:
             return False
 
-        max_hosts = self.verbose_limits.get('maxHosts')
-        max_total_work = self.verbose_limits.get('maxTotalWork')
-
-        if max_hosts is not None and host_count > max_hosts:
+        if self.max_total_work is not None and completed_work > self.max_total_work:
             msg = """
-Too many hosts for verbose logging. Inventory contains {0} hosts and Concord
-system policies forbid verbose logging for inventories greater than {1} hosts.
-            """.format(host_count, str(max_hosts))
+Disabling verbose output. Too much work for verbose logging. Completed {0} work
+so far and Concord system policies forbid verbose logging for playbooks with
+greater than {1} total work.
+            """.format(str(completed_work), self.max_total_work)
             display.error(msg)
-            return True
+            display.verbosity = 0
 
-        if max_total_work is not None and total_work > max_total_work:
+    def disable_verbose_on_start(self, host_count, total_work):
+        '''
+        Disables verbose logging if policy exists to limit total number of inventory
+        hosts or total work.
+        '''
+
+        if display.verbosity == 0:
+            return
+
+        if self.max_hosts is not None and host_count > self.max_hosts:
             msg = """
-Too much work for verbose logging. Expecting to perform {0} total work and
-Concord system policies forbid verbose logging for playbooks with greater than {1} total work.
-            """.format(str(total_work), max_total_work)
+Disabling verbose output. Too many hosts for verbose logging. Inventory contains
+{0} hosts and Concord system policies forbid verbose logging for inventories
+greater than {1} hosts.
+            """.format(host_count, str(self.max_hosts))
             display.error(msg)
-            return True
+            display.verbosity = 0
+            return
 
-        return False
+        if self.max_total_work is not None and total_work > self.max_total_work:
+            msg = """
+Disabling verbose output. Too much work for verbose logging. Expecting to perform
+{0} total work and Concord system policies forbid verbose logging for playbooks
+with greater than {1} total work.
+            """.format(str(total_work), self.max_total_work)
+            display.error(msg)
+            display.verbosity = 0
