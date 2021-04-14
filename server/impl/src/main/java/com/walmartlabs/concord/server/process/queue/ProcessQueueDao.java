@@ -51,10 +51,8 @@ import java.time.OffsetDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
-import static com.walmartlabs.concord.db.PgUtils.toChar;
 import static com.walmartlabs.concord.db.PgUtils.toJsonDate;
-import static com.walmartlabs.concord.server.jooq.Tables.REPOSITORIES;
-import static com.walmartlabs.concord.server.jooq.Tables.USERS;
+import static com.walmartlabs.concord.server.jooq.Tables.*;
 import static com.walmartlabs.concord.server.jooq.tables.Organizations.ORGANIZATIONS;
 import static com.walmartlabs.concord.server.jooq.tables.ProcessCheckpoints.PROCESS_CHECKPOINTS;
 import static com.walmartlabs.concord.server.jooq.tables.ProcessEvents.PROCESS_EVENTS;
@@ -501,12 +499,13 @@ public class ProcessQueueDao extends AbstractDao {
     }
 
     public Map<String, Integer> getStatistics() {
-        return dsl().select(PROCESS_QUEUE.CURRENT_STATUS, DSL.count(asterisk())).from(PROCESS_QUEUE)
-                .groupBy(PROCESS_QUEUE.CURRENT_STATUS)
-                .union(select(value(ENQUEUED_NOW_METRIC), DSL.count(asterisk())).from(PROCESS_QUEUE)
+        return dsl().select(PROCESS_QUEUE_STATS.STATUS, PROCESS_QUEUE_STATS.PROCESS_COUNT)
+                .from(PROCESS_QUEUE_STATS)
+                .union(select(value(ENQUEUED_NOW_METRIC), DSL.count(asterisk()))
+                        .from(PROCESS_QUEUE)
                         .where(PROCESS_QUEUE.CURRENT_STATUS.eq(ProcessStatus.ENQUEUED.name()))
                         .and(or(PROCESS_QUEUE.START_AT.isNull(), PROCESS_QUEUE.START_AT.lessOrEqual(currentOffsetDateTime()))))
-                .fetchMap(Record2::value1, Record2::value2);
+                .fetchMap(Record2::value1, r -> r.value2() >= 0 ? r.value2() : 0);
     }
 
     // TODO move to EventDao?
@@ -540,7 +539,7 @@ public class ProcessQueueDao extends AbstractDao {
                 function("jsonb_build_object", JSONB.class,
                         inline("id"), pe.EVENT_ID,
                         inline("changeDate"), toJsonDate(pe.EVENT_DATE),
-                        inline("status"), field("{0}->'status'", Object.class, pe.EVENT_DATA),
+                        inline("status"), coalesce(field("{0}->'newStatus'", Object.class, pe.EVENT_DATA), field("{0}->'status'", Object.class, pe.EVENT_DATA)),
                         inline("payload"), field("{0} - 'status'", Object.class, pe.EVENT_DATA)));
     }
 

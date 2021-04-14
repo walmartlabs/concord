@@ -23,11 +23,8 @@ package com.walmartlabs.concord.server.process.event;
 import com.codahale.metrics.Histogram;
 import com.codahale.metrics.Meter;
 import com.codahale.metrics.MetricRegistry;
-import com.walmartlabs.concord.sdk.EventType;
 import com.walmartlabs.concord.server.ConcordObjectMapper;
 import com.walmartlabs.concord.server.Listeners;
-import com.walmartlabs.concord.server.sdk.ProcessKey;
-import com.walmartlabs.concord.server.sdk.ProcessStatus;
 import com.walmartlabs.concord.server.sdk.events.ProcessEvent;
 import com.walmartlabs.concord.server.sdk.metrics.InjectMeter;
 import com.walmartlabs.concord.server.sdk.metrics.WithTimer;
@@ -37,10 +34,7 @@ import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
 
 @Named
 @Singleton
@@ -68,35 +62,6 @@ public class ProcessEventManager {
         this.eventsReceived = eventsReceived;
 
         this.batchInsertHistogram = metricRegistry.histogram("process-events-batch-insert");
-    }
-
-    public void insertStatusHistory(DSLContext tx, ProcessKey processKey, ProcessStatus status, Map<String, Object> statusPayload) {
-        Map<String, Object> payload = new HashMap<>();
-        payload.put("status", status.name());
-        payload.putAll(statusPayload);
-
-        NewProcessEvent e = NewProcessEvent.builder()
-                .processKey(processKey)
-                .eventType(EventType.PROCESS_STATUS.name())
-                .data(objectMapper.convertToMap(payload))
-                .build();
-
-        event(tx, Collections.singletonList(e));
-    }
-
-    public void insertStatusHistory(DSLContext tx, List<ProcessKey> processKeys, ProcessStatus status) {
-        Map<String, Object> payload = new HashMap<>();
-        payload.put("status", status.name());
-
-        List<NewProcessEvent> events = processKeys.stream()
-                .map(k -> NewProcessEvent.builder()
-                        .processKey(k)
-                        .eventType(EventType.PROCESS_STATUS.name())
-                        .data(objectMapper.convertToMap(payload))
-                        .build())
-                .collect(Collectors.toList());
-
-        event(tx, events);
     }
 
     @WithTimer
