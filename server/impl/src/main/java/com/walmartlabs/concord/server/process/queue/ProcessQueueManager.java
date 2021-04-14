@@ -132,7 +132,7 @@ public class ProcessQueueManager {
     }
 
     /**
-     * Updates the process' status. Adds a process status history event with an optional {@code statusPayload}.
+     * Updates the process' status.
      */
     public void updateStatus(DSLContext tx, ProcessKey processKey, ProcessStatus status) {
         queueDao.updateStatus(tx, processKey, status);
