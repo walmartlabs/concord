@@ -3,7 +3,7 @@
 ## [Unreleased]
 
 ### Changed
-
+- concord-server: set SameSite=Lax for the session cookie ([#394](https://github.com/walmartlabs/concord/pull/394)).
 - runtime-v2: rollback the state cleanup code added in
 [#358](https://github.com/walmartlabs/concord/pull/358). 
 Fixed in ([#391](https://github.com/walmartlabs/concord/pull/391));
