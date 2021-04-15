@@ -6,7 +6,7 @@ flows:
   - log: "Refreshing repository... ${event}"
   - task: repositoryRefresh
     in:
-      repositoryInfo: ${event.repositoryInfo}
+      repositoryInfo: ${event.repositoryInfo.stream().filter(r -> r.enabled).toList()}
 
 triggers:
   - concord:
