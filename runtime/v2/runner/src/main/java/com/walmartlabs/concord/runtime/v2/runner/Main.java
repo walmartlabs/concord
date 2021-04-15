@@ -146,8 +146,6 @@ public class Main {
         ProcessSnapshot snapshot = StateManager.readProcessState(workDir, classLoader);
         Set<String> events = StateManager.readResumeEvents(workDir); // TODO make it an interface?
 
-        StateManager.cleanupState(workDir); // TODO make it an interface
-
         Action action = currentAction(events);
         switch (action) {
             case START: {
