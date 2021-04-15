@@ -18,32 +18,13 @@
  * =====
  */
 
-import { PaginatedWaitHistoryEntries, ProcessWaitHistoryEntry } from '../';
-import { ConcordId, fetchJson, queryParams } from '../../common';
+import { ProcessWaitEntry } from '../';
+import { ConcordId, managedFetch } from '../../common';
 
-export const get = async (
-    instanceId: ConcordId,
-    page: number,
-    limit: number
-): Promise<PaginatedWaitHistoryEntries> => {
-    const offsetParam = page > 0 && limit > 0 ? page * limit : page;
-    const limitParam = limit > 0 ? limit + 1 : limit;
-
-    const data: ProcessWaitHistoryEntry[] = await fetchJson(
-        `/api/v1/process/${instanceId}/waits?${queryParams({
-            offset: offsetParam,
-            limit: limitParam
-        })}`
-    );
-
-    const hasMoreElements: boolean = limit > 0 && data.length > limit;
-
-    if (limit > 0 && hasMoreElements) {
-        data.pop();
+export const get = async (instanceId: ConcordId): Promise<ProcessWaitEntry | undefined> => {
+    const response = await managedFetch(`/api/v1/process/${instanceId}/waits`);
+    if (response.status === 204) {
+        return undefined;
     }
-
-    return {
-        items: data,
-        next: hasMoreElements
-    };
+    return response.json();
 };

@@ -20,7 +20,6 @@ package com.walmartlabs.concord.server.process;
  * =====
  */
 
-import com.fasterxml.jackson.annotation.JsonAnyGetter;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
@@ -195,25 +194,20 @@ public interface ProcessEntry extends Serializable {
 
     @Value.Immutable
     @JsonInclude(Include.NON_EMPTY)
-    @JsonSerialize(as = ImmutableProcessWaitHistoryEntry.class)
-    @JsonDeserialize(as = ImmutableProcessWaitHistoryEntry.class)
-    interface ProcessWaitHistoryEntry {
+    @JsonSerialize(as = ImmutableProcessWaitEntry.class)
+    @JsonDeserialize(as = ImmutableProcessWaitEntry.class)
+    interface ProcessWaitEntry {
 
-        UUID id();
-
-        @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss.SSSX")
-        OffsetDateTime eventDate();
-
-        String type();
+        @Value.Parameter
+        boolean isWaiting();
 
         @Nullable
-        String reason();
+        @Value.Parameter
+        // Can't use AbstractWaitCondition because swagger can't generate code :(
+        List<Map<String, Object>> waits();
 
-        @JsonAnyGetter
-        Map<String, Object> payload();
-
-        static ImmutableProcessWaitHistoryEntry.Builder builder() {
-            return ImmutableProcessWaitHistoryEntry.builder();
+        static ProcessWaitEntry of(boolean isWaiting, List<Map<String, Object>> waits) {
+            return ImmutableProcessWaitEntry.of(isWaiting, waits);
         }
     }
 }

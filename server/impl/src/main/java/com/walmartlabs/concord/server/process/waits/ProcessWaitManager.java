@@ -22,6 +22,7 @@ package com.walmartlabs.concord.server.process.waits;
 
 import com.walmartlabs.concord.sdk.EventType;
 import com.walmartlabs.concord.server.ConcordObjectMapper;
+import com.walmartlabs.concord.server.process.ProcessEntry.ProcessWaitEntry;
 import com.walmartlabs.concord.server.process.event.NewProcessEvent;
 import com.walmartlabs.concord.server.process.event.ProcessEventManager;
 import com.walmartlabs.concord.server.sdk.ProcessKey;
@@ -31,7 +32,10 @@ import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
 import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @Named
 @Singleton
@@ -48,6 +52,10 @@ public class ProcessWaitManager {
         this.eventManager = eventManager;
     }
 
+    public ProcessWaitEntry getWait(ProcessKey processKey) {
+        return processWaitDao.get(processKey);
+    }
+
     // TODO: old process_queue.wait_conditions code, remove me (1.84.0 or later)
     public void updateWaitOld(ProcessKey processKey, AbstractWaitCondition wait) {
         processWaitDao.tx(tx -> updateWaitOld(tx, processKey, wait));
@@ -56,35 +64,51 @@ public class ProcessWaitManager {
     // TODO: old process_queue.wait_conditions code, remove me (1.84.0 or later)
     public void updateWaitOld(DSLContext tx, ProcessKey processKey, AbstractWaitCondition wait) {
         processWaitDao.updateWaitOld(tx, processKey, wait);
-
-        Map<String, Object> eventData = objectMapper.convertToMap(wait != null ? wait : new NoneCondition());
-        NewProcessEvent e = NewProcessEvent.builder()
-                .processKey(processKey)
-                .eventType(EventType.PROCESS_WAIT.name())
-                .data(eventData)
-                .build();
-        eventManager.event(tx, Collections.singletonList(e));
+        eventManager.event(tx, Collections.singletonList(buildEvent(processKey, Collections.singletonList(wait), "add")));
     }
 
     /**
-     * @see #updateWait(DSLContext, ProcessKey, AbstractWaitCondition)
+     * @see #addWait(DSLContext, ProcessKey, AbstractWaitCondition)
      */
-    public void updateWait(ProcessKey processKey, AbstractWaitCondition wait) {
-        processWaitDao.tx(tx -> updateWait(tx, processKey, wait));
+    public void addWait(ProcessKey processKey, AbstractWaitCondition wait) {
+        processWaitDao.tx(tx -> addWait(tx, processKey, wait));
     }
 
     /**
-     * Updates the process' wait conditions. Adds a wait condition history event.
+     * Add the process' wait conditions. Adds a wait condition history event.
      */
-    public void updateWait(DSLContext tx, ProcessKey processKey, AbstractWaitCondition wait) {
-        processWaitDao.updateWait(tx, processKey, wait);
+    public void addWait(DSLContext tx, ProcessKey processKey, AbstractWaitCondition wait) {
+        processWaitDao.addWait(tx, processKey, wait);
 
-        Map<String, Object> eventData = objectMapper.convertToMap(wait != null ? wait : new NoneCondition());
-        NewProcessEvent e = NewProcessEvent.builder()
+        eventManager.event(tx, Collections.singletonList(buildEvent(processKey, Collections.singletonList(wait), "add")));
+    }
+
+    /**
+     * Set the process' wait conditions. Adds a wait condition history event.
+     */
+    public void setWait(ProcessKey processKey, List<AbstractWaitCondition> waits, boolean isWaiting) {
+        processWaitDao.tx(tx -> setWait(tx, processKey, waits, isWaiting));
+    }
+
+    private void setWait(DSLContext tx, ProcessKey processKey, List<AbstractWaitCondition> waits, boolean isWaiting) {
+        processWaitDao.setWait(tx, processKey, waits, isWaiting);
+
+        eventManager.event(tx, buildEvent(processKey, waits, "set"));
+    }
+
+    private NewProcessEvent buildEvent(ProcessKey processKey, List<AbstractWaitCondition> waits, String action) {
+        Map<String, Object> data = new HashMap<>();
+        if (waits != null && !waits.isEmpty()) {
+            data.put("waits", waits.stream()
+                    .map(objectMapper::convertToMap)
+                    .collect(Collectors.toList()));
+        }
+        data.put("action", action);
+        return NewProcessEvent.builder()
                 .processKey(processKey)
                 .eventType(EventType.PROCESS_WAIT.name())
-                .data(eventData)
+                .data(data)
                 .build();
-        eventManager.event(tx, Collections.singletonList(e));
     }
+
 }

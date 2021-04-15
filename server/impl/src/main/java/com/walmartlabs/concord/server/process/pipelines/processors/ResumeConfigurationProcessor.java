@@ -23,12 +23,9 @@ package com.walmartlabs.concord.server.process.pipelines.processors;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.walmartlabs.concord.common.ConfigurationUtils;
 import com.walmartlabs.concord.sdk.Constants;
-import com.walmartlabs.concord.server.org.project.ProjectDao;
-import com.walmartlabs.concord.server.org.project.ProjectEntry;
 import com.walmartlabs.concord.server.process.Payload;
 import com.walmartlabs.concord.server.process.ProcessException;
 
-import javax.inject.Inject;
 import javax.inject.Named;
 import javax.ws.rs.core.Response.Status;
 import java.io.IOException;
@@ -37,7 +34,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Collections;
 import java.util.Map;
-import java.util.UUID;
 
 @Named
 public class ResumeConfigurationProcessor implements PayloadProcessor {

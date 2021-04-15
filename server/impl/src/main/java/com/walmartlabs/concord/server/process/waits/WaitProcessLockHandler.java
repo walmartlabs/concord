@@ -20,19 +20,14 @@ package com.walmartlabs.concord.server.process.waits;
  * =====
  */
 
-import com.walmartlabs.concord.server.process.Payload;
-import com.walmartlabs.concord.server.process.PayloadManager;
-import com.walmartlabs.concord.server.process.ProcessManager;
 import com.walmartlabs.concord.server.process.locks.LockEntry;
 import com.walmartlabs.concord.server.process.locks.ProcessLocksDao;
-import com.walmartlabs.concord.server.sdk.ConcordApplicationException;
 import com.walmartlabs.concord.server.sdk.ProcessKey;
 import com.walmartlabs.concord.server.sdk.ProcessStatus;
 
 import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
-import java.io.IOException;
 import java.util.Collections;
 import java.util.Set;
 
@@ -47,14 +42,10 @@ public class WaitProcessLockHandler implements ProcessWaitHandler<ProcessLockCon
     private static final Set<ProcessStatus> STATUSES = Collections.singleton(ProcessStatus.SUSPENDED);
 
     private final ProcessLocksDao locksDao;
-    private final ProcessManager processManager;
-    private final PayloadManager payloadManager;
 
     @Inject
-    public WaitProcessLockHandler(ProcessLocksDao locksDao, ProcessManager processManager, PayloadManager payloadManager) {
+    public WaitProcessLockHandler(ProcessLocksDao locksDao) {
         this.locksDao = locksDao;
-        this.processManager = processManager;
-        this.payloadManager = payloadManager;
     }
 
     @Override
@@ -68,24 +59,12 @@ public class WaitProcessLockHandler implements ProcessWaitHandler<ProcessLockCon
     }
 
     @Override
-    public ProcessLockCondition process(ProcessKey processKey, ProcessStatus status, ProcessLockCondition wait) {
-        LockEntry lock = locksDao.tryLock(processKey, wait.orgId(), wait.projectId(), wait.scope(), wait.name());
-        if (lock.instanceId().equals(processKey.getInstanceId())) {
-            resumeProcess(processKey, wait.name());
-            return null;
+    public Result<ProcessLockCondition> process(ProcessKey key, ProcessStatus status, ProcessLockCondition wait) {
+        LockEntry lock = locksDao.tryLock(key, wait.orgId(), wait.projectId(), wait.scope(), wait.name());
+        if (lock.instanceId().equals(key.getInstanceId())) {
+            return Result.of(wait.name());
         }
 
-        return ProcessLockCondition.from(lock);
-    }
-
-    private void resumeProcess(ProcessKey processKey, String eventName) {
-        Payload payload;
-        try {
-            payload = payloadManager.createResumePayload(processKey, eventName, null);
-        } catch (IOException e) {
-            throw new ConcordApplicationException("Error creating a payload", e);
-        }
-
-        processManager.resume(payload);
+        return Result.of(ProcessLockCondition.from(lock));
     }
 }

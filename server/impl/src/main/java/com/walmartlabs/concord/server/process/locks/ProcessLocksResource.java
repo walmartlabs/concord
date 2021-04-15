@@ -22,9 +22,8 @@ package com.walmartlabs.concord.server.process.locks;
 
 import com.walmartlabs.concord.server.jooq.enums.ProcessLockScope;
 import com.walmartlabs.concord.server.process.ProcessEntry;
-import com.walmartlabs.concord.server.process.waits.AbstractWaitCondition;
-import com.walmartlabs.concord.server.process.waits.ProcessLockCondition;
 import com.walmartlabs.concord.server.process.queue.ProcessQueueManager;
+import com.walmartlabs.concord.server.process.waits.ProcessLockCondition;
 import com.walmartlabs.concord.server.process.waits.ProcessWaitManager;
 import com.walmartlabs.concord.server.sdk.ConcordApplicationException;
 import com.walmartlabs.concord.server.sdk.PartialProcessKey;
@@ -80,8 +79,9 @@ public class ProcessLocksResource implements Resource {
 
         LockEntry lock = dao.tryLock(new ProcessKey(e.instanceId(), e.createdAt()), e.orgId(), e.projectId(), scope, lockName);
         boolean acquired = lock.instanceId().equals(instanceId);
-        AbstractWaitCondition waitCondition = acquired ? null : ProcessLockCondition.from(lock);
-        waitManager.updateWait(new ProcessKey(e.instanceId(), e.createdAt()), waitCondition);
+        if (!acquired) {
+            waitManager.addWait(new ProcessKey(e.instanceId(), e.createdAt()), ProcessLockCondition.from(lock));
+        }
         return LockResult.builder()
                 .acquired(acquired)
                 .info(lock)

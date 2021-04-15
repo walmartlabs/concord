@@ -26,7 +26,6 @@ import com.walmartlabs.concord.server.jooq.tables.records.UsersRecord;
 import com.walmartlabs.concord.server.org.OrganizationEntry;
 import com.walmartlabs.concord.server.security.ldap.LdapGroupSearchResult;
 import org.jooq.*;
-import org.jooq.impl.DSL;
 
 import javax.inject.Inject;
 import javax.inject.Named;

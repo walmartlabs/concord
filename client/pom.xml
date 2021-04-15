@@ -6,7 +6,7 @@
     <parent>
         <groupId>com.walmartlabs.concord</groupId>
         <artifactId>parent</artifactId>
-        <version>1.83.1-SNAPSHOT</version>
+        <version>1.84.1-SNAPSHOT</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
 
@@ -168,25 +168,10 @@
                     <analysisConfiguration>
                         <revapi.ignore>
                             <item>
-                                <code>java.class.nowFinal</code>
-                            </item>
-                            <item>
-                                <code>java.class.added</code>
-                            </item>
-                            <item>
-                                <code>java.field.serialVersionUIDUnchanged</code>
-                            </item>
-                            <item>
-                                <code>java.method.addedToInterface</code>
-                            </item>
-                            <item>
                                 <code>java.method.removed</code>
                             </item>
                             <item>
-                                <code>java.method.exception.checkedAdded</code>
-                            </item>
-                            <item>
-                                <code>java.method.exception.checkedRemoved</code>
+                                <code>java.class.removed</code>
                             </item>
                         </revapi.ignore>
                     </analysisConfiguration>

@@ -50,6 +50,10 @@ public class RepositoryAccessJournal {
 
     public RepositoryAccessJournal(ObjectMapper objectMapper, Path repoJournalPath) throws IOException {
         this.objectMapper = objectMapper;
+
+        if (Files.notExists(repoJournalPath)) {
+            Files.createDirectories(repoJournalPath);
+        }
         this.repoJournalPath = repoJournalPath;
         this.journal = load(repoJournalPath);
     }
