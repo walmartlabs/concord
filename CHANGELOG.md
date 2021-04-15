@@ -1,5 +1,14 @@
 # Change log
 
+## [Unreleased]
+
+### Changed
+
+- runtime-v2: rollback the state cleanup code added in
+[#358](https://github.com/walmartlabs/concord/pull/358). 
+Fixed in ([#391](https://github.com/walmartlabs/concord/pull/391)).
+
+
 ## [1.84.0] - 2021-04-08
 
 ### Added
@@ -27,7 +36,7 @@ effective yaml ([#383](https://github.com/walmartlabs/concord/pull/383)).
 directory if not exists
 ([#386](https://github.com/walmartlabs/concord/pull/386));
 - pref-sso: do not redirect if refresh token exists
-([#388](https://github.com/walmartlabs/concord/pull/388).
+([#388](https://github.com/walmartlabs/concord/pull/388)).
 
 
 
@@ -114,7 +123,7 @@ the script's file name
 ([#339](https://github.com/walmartlabs/concord/pull/339));
 - ansible: append values to `PYTHONPATH`, allow users to
 use their own `PYTHONPATH` in addition to the provided one
-([#341](https://github.com/walmartlabs/concord/pull/341);
+([#341](https://github.com/walmartlabs/concord/pull/341));
 - concord-server: fixed batching of processes with custom
 `branch` or `commitId`. Previously the batching mechanism might
 determine the effective branch and/or commitId incorrectly
