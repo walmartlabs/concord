@@ -6,7 +6,9 @@
 
 - runtime-v2: rollback the state cleanup code added in
 [#358](https://github.com/walmartlabs/concord/pull/358). 
-Fixed in ([#391](https://github.com/walmartlabs/concord/pull/391)).
+Fixed in ([#391](https://github.com/walmartlabs/concord/pull/391));
+- concord-server: fix validation of form fields with expressions in 
+allowed values ([#392](https://github.com/walmartlabs/concord/pull/392)).
 
 
 ## [1.84.0] - 2021-04-08
