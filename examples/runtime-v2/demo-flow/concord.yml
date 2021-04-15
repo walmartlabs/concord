@@ -80,7 +80,7 @@ flows:
   # improved error syntax
   errorFlow:
     - log: "uncomment the lines to see improved error messages!"
-    - if: "${true}"
-      then:
-        log: "It's true!"   # the "then" block should’ve been a list
-# this will throw an error with the problematic line and path
+#     - if: "${true}"
+#       then:
+#         log: "It's true!"   # the "then" block should’ve been a list
+# # this will throw an error with the problematic line and path
