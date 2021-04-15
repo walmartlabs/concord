@@ -18,17 +18,20 @@ class ProcessCfgPolicy:
     def __init__(self):
         rule_file = os.environ['CONCORD_POLICY']
 
+        # default value
+        verbose_limits = {'maxHosts': None, 'maxTotalWork': None}
+
         if os.path.isfile(rule_file):
             print("Loading policy from {}".format(rule_file))
             policy_rules = json.load(open(rule_file))
 
             try:
-                self.verbose_limits = policy_rules['processCfg']['arguments']['ansibleVerboseLimits']
+                verbose_limits = policy_rules['processCfg']['arguments']['ansibleVerboseLimits']
             except KeyError:
-                self.verbose_limits = {'maxHosts': None, 'maxTotalWork': None}
+                pass
 
-        self.max_hosts = self.verbose_limits.get('maxHosts')
-        self.max_total_work = self.verbose_limits.get('maxTotalWork')
+        self.max_hosts = verbose_limits.get('maxHosts')
+        self.max_total_work = verbose_limits.get('maxTotalWork')
 
     def disable_verbose_after_too_much_work(self, completed_work):
         '''
