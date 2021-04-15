@@ -112,7 +112,12 @@ public final class FormUtils {
 
             boolean isOptional = f.getCardinality() == FormField.Cardinality.ONE_OR_NONE || f.getCardinality() == FormField.Cardinality.ANY;
             if (v == null && !isOptional) {
-                v = allowedValueAsFieldValue(f.getAllowedValue());
+                Map<String, Object> allowedValues = form.getAllowedValues();
+                if (allowedValues == null) {
+                    allowedValues = Collections.emptyMap();
+                }
+
+                v = allowedValueAsFieldValue(allowedValues.get(f.getName()));
             }
 
             /*

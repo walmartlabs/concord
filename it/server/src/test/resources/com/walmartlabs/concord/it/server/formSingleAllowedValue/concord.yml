@@ -1,0 +1,13 @@
+flows:
+  default:
+  - set:
+      allowExpression:
+        - one
+
+  - form: myForm
+
+  - log: "field1: ${myForm.field1}"
+
+forms:
+  myForm:
+  - field1: { label: "Expression", type: "string", allow: "${allowExpression}", search: true }
