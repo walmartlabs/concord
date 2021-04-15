@@ -3,7 +3,7 @@
 SERVER_ADDR="$1"
 
 rm -rf target && mkdir target
-cp -R concord concord.yml target/
+cp -R concord scripts concord.yml target/
 
 cd target && zip -r payload.zip ./* > /dev/null && cd ..
 
