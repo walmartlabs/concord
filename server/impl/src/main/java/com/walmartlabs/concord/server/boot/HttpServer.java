@@ -96,6 +96,7 @@ public class HttpServer {
         ServletContext context = contextHandler.getServletContext();
         SessionCookieConfig sessionCookieConfig = context.getSessionCookieConfig();
         sessionCookieConfig.setHttpOnly(true);
+        sessionCookieConfig.setComment(cfg.getCookieComment());
         if (cfg.isSecureCookies()) {
             sessionCookieConfig.setSecure(true);
         }
