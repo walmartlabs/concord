@@ -480,4 +480,40 @@ public class FormIT extends AbstractServerIT {
         Field field = f.getFields().get(0);
         assertEquals(xValue, field.getLabel());
     }
+
+    @Test
+    public void testSingleExpressionAllowedValue() throws Exception {
+        byte[] payload = archive(FormIT.class.getResource("formSingleAllowedValue").toURI());
+
+        // ---
+
+        Map<String, Object> input = new HashMap<>();
+        input.put("archive", payload);
+
+        StartProcessResponse spr = start(input);
+
+        ProcessApi processApi = new ProcessApi(getApiClient());
+        waitForStatus(processApi, spr.getInstanceId(), StatusEnum.SUSPENDED);
+
+        // ---
+
+        ProcessFormsApi formsApi = new ProcessFormsApi(getApiClient());
+
+        List<FormListEntry> forms = formsApi.list(spr.getInstanceId());
+
+        FormListEntry f0 = forms.get(0);
+        String formName = f0.getName();
+
+        Map<String, Object> data = Collections.emptyMap();
+        FormSubmitResponse fsr = formsApi.submit(spr.getInstanceId(), formName, data);
+        assertTrue(fsr.isOk());
+
+        // ---
+
+        ProcessEntry psr = waitForCompletion(processApi, spr.getInstanceId());
+        assertEquals(StatusEnum.FINISHED, psr.getStatus());
+
+        byte[] ab = getLog(psr.getLogFileName());
+        assertLog(".*field1: one.*", ab);
+    }
 }
