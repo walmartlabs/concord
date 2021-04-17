@@ -21,13 +21,10 @@ package com.walmartlabs.concord.server.process.waits;
  */
 
 import com.walmartlabs.concord.server.sdk.ProcessKey;
-import com.walmartlabs.concord.server.sdk.ProcessStatus;
 
 import javax.inject.Named;
 import javax.inject.Singleton;
-import java.util.Collections;
 import java.util.Date;
-import java.util.Set;
 
 /**
  * Handles the processes that are waiting for some timeout. Resumes a suspended process
@@ -37,22 +34,14 @@ import java.util.Set;
 @Singleton
 public class WaitProcessSleepHandler implements ProcessWaitHandler<ProcessSleepCondition> {
 
-    private static final Set<ProcessStatus> STATUSES = Collections.singleton(ProcessStatus.SUSPENDED);
-
     @Override
     public WaitType getType() {
         return WaitType.PROCESS_SLEEP;
     }
 
-    @Override
-    public Set<ProcessStatus> getProcessStatuses() {
-        return STATUSES;
-    }
-
-    @Override
-    public Result<ProcessSleepCondition> process(ProcessKey key, ProcessStatus status, ProcessSleepCondition wait) {
+    public Result<ProcessSleepCondition> process(ProcessKey key, ProcessSleepCondition wait) {
         if (wait.until().before(new Date())) {
-            return Result.of(wait.resumeEvent());
+            return Result.resume(wait.resumeEvent());
         }
 
         return Result.of(wait);

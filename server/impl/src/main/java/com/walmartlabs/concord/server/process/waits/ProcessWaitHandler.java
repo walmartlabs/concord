@@ -21,21 +21,16 @@ package com.walmartlabs.concord.server.process.waits;
  */
 
 import com.walmartlabs.concord.server.sdk.ProcessKey;
-import com.walmartlabs.concord.server.sdk.ProcessStatus;
 import org.immutables.value.Value;
+import org.jooq.DSLContext;
 
 import javax.annotation.Nullable;
-import java.util.Set;
 
 public interface ProcessWaitHandler<T extends AbstractWaitCondition> {
 
     WaitType getType();
 
-    // TODO: old process_queue.wait_conditions code, remove me (1.84.0 or later)
-    @Deprecated
-    Set<ProcessStatus> getProcessStatuses();
-
-    Result<T> process(ProcessKey processKey, ProcessStatus processStatus, T waits);
+    Result<T> process(ProcessKey processKey, T waits);
 
     @Value.Immutable
     interface Result<T extends AbstractWaitCondition> {
@@ -47,16 +42,32 @@ public interface ProcessWaitHandler<T extends AbstractWaitCondition> {
         @Nullable
         T waitCondition();
 
+        /**
+         * resume event for resume process.
+         */
         @Value.Parameter
         @Nullable
         String resumeEvent();
 
+        @Value.Parameter
+        @Nullable
+        Action action();
+
         static <T extends AbstractWaitCondition> Result<T> of(T waitCondition) {
-            return ImmutableResult.of(waitCondition, null);
+            return ImmutableResult.of(waitCondition, null, null);
         }
 
-        static <T extends AbstractWaitCondition> Result<T> of(String resumeEvent) {
-            return ImmutableResult.of(null, resumeEvent);
+        static <T extends AbstractWaitCondition> Result<T> resume(String resumeEvent) {
+            return ImmutableResult.of(null, resumeEvent, null);
         }
+
+        static <T extends AbstractWaitCondition> Result<T> action(Action action) {
+            return ImmutableResult.of(null, null, action);
+        }
+    }
+
+    interface Action {
+
+        void execute(DSLContext tx);
     }
 }

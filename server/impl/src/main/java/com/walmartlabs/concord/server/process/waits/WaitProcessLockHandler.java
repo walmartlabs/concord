@@ -23,13 +23,10 @@ package com.walmartlabs.concord.server.process.waits;
 import com.walmartlabs.concord.server.process.locks.LockEntry;
 import com.walmartlabs.concord.server.process.locks.ProcessLocksDao;
 import com.walmartlabs.concord.server.sdk.ProcessKey;
-import com.walmartlabs.concord.server.sdk.ProcessStatus;
 
 import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
-import java.util.Collections;
-import java.util.Set;
 
 /**
  * Handles the processes that are waiting for locks. Resumes a suspended process
@@ -38,8 +35,6 @@ import java.util.Set;
 @Named
 @Singleton
 public class WaitProcessLockHandler implements ProcessWaitHandler<ProcessLockCondition> {
-
-    private static final Set<ProcessStatus> STATUSES = Collections.singleton(ProcessStatus.SUSPENDED);
 
     private final ProcessLocksDao locksDao;
 
@@ -54,15 +49,10 @@ public class WaitProcessLockHandler implements ProcessWaitHandler<ProcessLockCon
     }
 
     @Override
-    public Set<ProcessStatus> getProcessStatuses() {
-        return STATUSES;
-    }
-
-    @Override
-    public Result<ProcessLockCondition> process(ProcessKey key, ProcessStatus status, ProcessLockCondition wait) {
+    public Result<ProcessLockCondition> process(ProcessKey key, ProcessLockCondition wait) {
         LockEntry lock = locksDao.tryLock(key, wait.orgId(), wait.projectId(), wait.scope(), wait.name());
         if (lock.instanceId().equals(key.getInstanceId())) {
-            return Result.of(wait.name());
+            return Result.resume(wait.name());
         }
 
         return Result.of(ProcessLockCondition.from(lock));

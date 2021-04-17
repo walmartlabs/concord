@@ -51,7 +51,6 @@ import java.time.OffsetDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
-import static com.walmartlabs.concord.db.PgUtils.toChar;
 import static com.walmartlabs.concord.db.PgUtils.toJsonDate;
 import static com.walmartlabs.concord.server.jooq.Tables.REPOSITORIES;
 import static com.walmartlabs.concord.server.jooq.Tables.USERS;
@@ -268,7 +267,7 @@ public class ProcessQueueDao extends AbstractDao {
                 .set(PROCESS_QUEUE.LAST_UPDATED_AT, currentOffsetDateTime())
                 .set(PROCESS_QUEUE.LAST_RUN_AT, createRunningAtValue(status))
                 .where(PROCESS_QUEUE.INSTANCE_ID.eq(instanceId)
-                        .and(PROCESS_QUEUE.CURRENT_STATUS.eq(expected.toString())))
+                        .and(PROCESS_QUEUE.CURRENT_STATUS.eq(expected.name())))
                 .execute();
 
         return i == 1;

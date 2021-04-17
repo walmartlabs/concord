@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.3.xsd">
+
+    <changeSet id="1850600" author="ybrigo@gmail.com">
+        <sql>
+            ALTER TABLE PROCESS_WAIT_CONDITIONS ADD COLUMN version bigint;
+        </sql>
+    </changeSet>
+
+    <changeSet id="1850601" author="ybrigo@gmail.com">
+        <sql>
+            UPDATE PROCESS_WAIT_CONDITIONS SET version = 0;
+        </sql>
+    </changeSet>
+
+    <changeSet id="1850602" author="ybrigo@gmail.com">
+        <sql>
+            ALTER TABLE PROCESS_WAIT_CONDITIONS ALTER COLUMN version SET NOT NULL;
+        </sql>
+    </changeSet>
+
+    <changeSet id="1850603" author="ybrigo@gmail.com">
+        <sql>
+            ALTER TABLE PROCESS_WAIT_CONDITIONS ALTER COLUMN version SET DEFAULT 0;
+        </sql>
+    </changeSet>
+
+</databaseChangeLog>

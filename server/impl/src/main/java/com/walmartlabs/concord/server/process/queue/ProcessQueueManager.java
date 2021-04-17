@@ -166,14 +166,16 @@ public class ProcessQueueManager {
      * @return {@code true} if the process was updated
      */
     public boolean updateExpectedStatus(ProcessKey processKey, ProcessStatus expected, ProcessStatus status) {
-        return queueDao.txResult(tx -> {
-            boolean success = queueDao.updateStatus(tx, processKey, expected, status);
+        return queueDao.txResult(tx -> updateExpectedStatus(tx, processKey, expected, status));
+    }
+
+    public boolean updateExpectedStatus(DSLContext tx, ProcessKey processKey, ProcessStatus expected, ProcessStatus status) {
+        boolean success = queueDao.updateStatus(tx, processKey, expected, status);
+        if (success) {
             eventManager.insertStatusHistory(tx, processKey, status, Collections.emptyMap());
-            if (success) {
-                notifyStatusChange(tx, processKey, status);
-            }
-            return success;
-        });
+            notifyStatusChange(tx, processKey, status);
+        }
+        return success;
     }
 
     /**
@@ -185,8 +187,8 @@ public class ProcessQueueManager {
     public boolean updateExpectedStatus(List<ProcessKey> processKeys, List<ProcessStatus> expected, ProcessStatus status) {
         return queueDao.txResult(tx -> {
             boolean success = queueDao.updateStatus(processKeys, expected, status);
-            eventManager.insertStatusHistory(tx, processKeys, status);
             if (success) {
+                eventManager.insertStatusHistory(tx, processKeys, status);
                 notifyStatusChange(tx, processKeys, status);
             }
             return success;

@@ -31,7 +31,10 @@ import org.jooq.Configuration;
 import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Set;
+import java.util.UUID;
 
 import static com.walmartlabs.concord.server.jooq.tables.ProcessQueue.PROCESS_QUEUE;
 import static com.walmartlabs.concord.server.process.waits.ProcessCompletionCondition.CompleteCondition;
@@ -42,8 +45,6 @@ import static com.walmartlabs.concord.server.process.waits.ProcessCompletionCond
 @Named
 @Singleton
 public class WaitProcessFinishHandler implements ProcessWaitHandler<ProcessCompletionCondition> {
-
-    private final Set<ProcessStatus> STATUSES = new HashSet<>(Arrays.asList(ProcessStatus.ENQUEUED, ProcessStatus.SUSPENDED));
 
     private final Dao dao;
     private final ProcessQueueManager processQueueManager;
@@ -60,12 +61,7 @@ public class WaitProcessFinishHandler implements ProcessWaitHandler<ProcessCompl
     }
 
     @Override
-    public Set<ProcessStatus> getProcessStatuses() {
-        return STATUSES;
-    }
-
-    @Override
-    public Result<ProcessCompletionCondition> process(ProcessKey processKey, ProcessStatus processStatus, ProcessCompletionCondition wait) {
+    public Result<ProcessCompletionCondition> process(ProcessKey processKey, ProcessCompletionCondition wait) {
         Set<ProcessStatus> finishedStatuses = wait.finalStatuses();
         Set<UUID> awaitProcesses = wait.processes();
 
@@ -77,11 +73,10 @@ public class WaitProcessFinishHandler implements ProcessWaitHandler<ProcessCompl
         boolean completed = isCompleted(wait.completeCondition(), awaitProcesses, finishedProcesses);
         if (completed) {
             if (wait.resumeEvent() != null) {
-                return Result.of(wait.resumeEvent());
+                return Result.resume(wait.resumeEvent());
             } else {
-                processQueueManager.updateExpectedStatus(processKey, ProcessStatus.WAITING, ProcessStatus.ENQUEUED);
+                return Result.action(tx -> processQueueManager.updateExpectedStatus(tx, processKey, ProcessStatus.WAITING, ProcessStatus.ENQUEUED));
             }
-            return null;
         }
 
         List<UUID> processes = new ArrayList<>(awaitProcesses);
