@@ -136,7 +136,7 @@ public class ProjectRepositoryManager {
                 entry.isDisabled(),
                 entry.getMeta());
 
-        Map<String, Object> ev = Events.Repository.repositoryCreated(projectId, repoId, entry.getName());
+        Map<String, Object> ev = Events.Repository.repositoryCreated(projectId, repoId, entry.getName(), !entry.isDisabled());
         externalEventResource.event(Events.CONCORD_EVENT, ev);
 
         if (doAuditLog) {
@@ -170,7 +170,10 @@ public class ProjectRepositoryManager {
                 secret == null ? null : secret.getId(),
                 entry.isDisabled());
 
-        Map<String, Object> ev = Events.Repository.repositoryUpdated(projectId, repoId, entry.getName());
+        Map<String, Object> ev = Events.Repository.repositoryUpdated(projectId,
+                repoId,
+                entry.getName(),
+                !entry.isDisabled());
         externalEventResource.event(Events.CONCORD_EVENT, ev);
 
         RepositoryEntry newEntry = repositoryDao.get(tx, projectId, repoId);
