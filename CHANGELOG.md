@@ -11,7 +11,7 @@ Fixed in ([#391](https://github.com/walmartlabs/concord/pull/391));
 allowed values ([#392](https://github.com/walmartlabs/concord/pull/392));
 - concord-server: set SameSite=Lax for the session cookie
 ([#394](https://github.com/walmartlabs/concord/pull/394)).
-
+- concord-server: only pass enabled repos to refresh task ([395](https://github.com/walmartlabs/concord/pull/395)).
 
 
 ## [1.84.0] - 2021-04-08
