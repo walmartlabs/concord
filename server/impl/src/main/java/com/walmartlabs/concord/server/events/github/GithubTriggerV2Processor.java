@@ -170,7 +170,7 @@ public class GithubTriggerV2Processor implements GithubTriggerProcessor {
 
             List<Map<String, Object>> repositoryInfos = new ArrayList<>();
             List<RepositoryEntry> repositories =
-                    repositoryDao.findSimilar("%/" + payload.getFullRepoName() + "(.git)?/?");
+                    repositoryDao.findSimilar("%[/:]" + payload.getFullRepoName() + "(.git)?/?");
 
             for (RepositoryEntry r : repositories) {
                 Map<String, Object> repositoryInfo = new HashMap<>();
