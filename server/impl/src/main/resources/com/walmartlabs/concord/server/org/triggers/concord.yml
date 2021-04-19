@@ -4,9 +4,14 @@ configuration:
 flows:
   onChange:
   - log: "Refreshing repository... ${event}"
-  - task: repositoryRefresh
-    in:
-      repositoryInfo: ${event.repositoryInfo.stream().filter(r -> r.enabled).toList()}
+  - name: "Filter to enabled repositories"
+    expr: ${event.repositoryInfo.stream().filter(r -> r.enabled).toList()}
+    out: repoIdsToRefresh
+  - if: ${repoIdsToRefresh.size() > 0}
+    then:
+      - task: repositoryRefresh
+        in:
+          repositoryInfo: ${repoIdsToRefresh}
 
 triggers:
   - concord:
