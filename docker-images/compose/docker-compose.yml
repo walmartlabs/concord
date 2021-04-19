@@ -17,6 +17,8 @@ services:
   concord-dind:
     image: "docker:stable-dind"
     privileged: true
+    volumes:
+      - "agent-tmp:/tmp"
     command: "dockerd -H tcp://0.0.0.0:6666 --bip=10.11.13.1/24"
   concord-agent:
     image: "walmartlabs/concord-agent"
@@ -26,5 +28,9 @@ services:
     environment:
       CONCORD_CFG_FILE: "/concord.conf"
       CONCORD_DOCKER_LOCAL_MODE: "false"
+      DOCKER_HOST: "tcp://concord-dind:6666"
     volumes:
       - "./concord.conf:/concord.conf:ro"
+      - "agent-tmp:/tmp"
+volumes:
+  agent-tmp: {}
