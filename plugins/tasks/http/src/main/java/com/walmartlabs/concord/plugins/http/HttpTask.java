@@ -175,6 +175,9 @@ public class HttpTask implements Task {
         static final String USERNAME_KEY = "username";
         static final String KEYSTORE_PATH = "keystorePath";
         static final String KEYSTORE_PASSWD = "keystorePassword";
+        static final String STRICT_SSL = "strictSsl";
+        static final String TRUSTSTORE_PATH = "truststorePath";
+        static final String TRUSTSTORE_PASSWD = "truststorePassword";
 
         static final String[] ALL_KEYS = {
                 AUTH_KEY,
@@ -199,7 +202,10 @@ public class HttpTask implements Task {
                 URL_KEY,
                 USERNAME_KEY,
                 KEYSTORE_PATH,
-                KEYSTORE_PASSWD
+                KEYSTORE_PASSWD,
+                STRICT_SSL,
+                TRUSTSTORE_PATH,
+                TRUSTSTORE_PASSWD
         };
 
         // internal constants
