@@ -17,6 +17,9 @@ allowed values ([#392](https://github.com/walmartlabs/concord/pull/392));
 ([#394](https://github.com/walmartlabs/concord/pull/394));
 - concord-server: only pass enabled repositories to refresh task
 ([395](https://github.com/walmartlabs/concord/pull/395));
+- concord-server: do not mark processes as `FAILED` after resuming
+from an invalid status
+([#396](https://github.com/walmartlabs/concord/pull/396)).
 
 
 ## [1.84.0] - 2021-04-08
