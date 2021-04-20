@@ -20,6 +20,9 @@ allowed values ([#392](https://github.com/walmartlabs/concord/pull/392));
 - concord-server: do not mark processes as `FAILED` after resuming
 from an invalid status
 ([#396](https://github.com/walmartlabs/concord/pull/396)).
+- docker-compose: fix agent and dind communication
+([#400](https://github.com/walmartlabs/concord/pull/400)).
+
 
 
 ## [1.84.0] - 2021-04-08
