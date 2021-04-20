@@ -102,13 +102,15 @@ export interface ProcessCheckpointEntry {
     createdAt: string;
 }
 
-export interface ProcessHistoryPayload {
-    checkpointId?: string;
+export interface CheckpointRestoreHistoryEntry {
+    id: number;
+    checkpointId: string;
+    processStatus: ProcessStatus;
+    changeDate: string;
 }
 
 export interface ProcessHistoryEntry {
     id: ConcordId;
-    payload?: ProcessHistoryPayload;
     status: ProcessStatus;
     changeDate: string;
 }
@@ -193,6 +195,7 @@ export interface ProcessEntry {
     meta?: ProcessMeta;
     tags?: string[];
     checkpoints?: ProcessCheckpointEntry[];
+    checkpointRestoreHistory?: CheckpointRestoreHistoryEntry[];
     statusHistory?: ProcessHistoryEntry[];
     disabled: boolean;
     triggeredBy?: TriggeredByEntry;
@@ -244,7 +247,7 @@ export const start = (
     return fetchJson('/api/v1/process', opts);
 };
 
-export type ProcessDataInclude = 'checkpoints' | 'history' | 'childrenIds';
+export type ProcessDataInclude = 'checkpoints' | 'history' | 'childrenIds' | 'checkpointsHistory';
 
 export const get = (
     instanceId: ConcordId,

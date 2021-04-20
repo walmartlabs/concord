@@ -24,8 +24,6 @@ export interface CheckpointGroup {
     name: string;
     SubText?: string;
     checkpoints: CustomCheckpoint[];
-    start?: Date;
-    end?: Date;
     status?: ProcessStatus;
 }
 

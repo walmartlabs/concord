@@ -23,9 +23,11 @@ package com.walmartlabs.concord.server.process.queue;
 import com.walmartlabs.concord.imports.Imports;
 import com.walmartlabs.concord.runtime.v2.model.ExclusiveMode;
 import com.walmartlabs.concord.sdk.Constants;
+import com.walmartlabs.concord.sdk.EventType;
 import com.walmartlabs.concord.sdk.MapUtils;
 import com.walmartlabs.concord.server.RequestUtils;
 import com.walmartlabs.concord.server.process.*;
+import com.walmartlabs.concord.server.process.event.NewProcessEvent;
 import com.walmartlabs.concord.server.process.event.ProcessEventManager;
 import com.walmartlabs.concord.server.process.logs.ProcessLogManager;
 import com.walmartlabs.concord.server.sdk.PartialProcessKey;
@@ -39,6 +41,7 @@ import java.time.Duration;
 import java.time.OffsetDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Named
 public class ProcessQueueManager {
@@ -81,7 +84,7 @@ public class ProcessQueueManager {
 
         queueDao.tx(tx -> {
             queueDao.insert(tx, processKey, status, kind, parentInstanceId, projectId, repoId, branchOrTag, commitId, initiatorId, meta, triggeredBy);
-            eventManager.insertStatusHistory(tx, processKey, status, Collections.emptyMap());
+            insertStatusHistory(tx, processKey, status);
             notifyStatusChange(tx, processKey, status);
             processLogManager.createSystemSegment(tx, payload.getProcessKey());
         });
@@ -124,39 +127,25 @@ public class ProcessQueueManager {
         queueDao.tx(tx -> {
             queueDao.enqueue(tx, processKey, tags, startAt, requirements, processTimeout, handlers, meta, imports, exclusive, runtime, dependencies, suspendTimeout);
             notifyStatusChange(tx, processKey, ProcessStatus.ENQUEUED);
-            eventManager.insertStatusHistory(tx, processKey, ProcessStatus.ENQUEUED, Collections.emptyMap());
+            insertStatusHistory(tx, processKey, ProcessStatus.ENQUEUED);
         });
 
         return true;
     }
 
     /**
-     * @see #updateStatus(DSLContext, ProcessKey, ProcessStatus, Map)
+     * @see #updateStatus(DSLContext, ProcessKey, ProcessStatus)
      */
     public void updateStatus(ProcessKey processKey, ProcessStatus status) {
-        updateStatus(processKey, status, Collections.emptyMap());
-    }
-
-    /**
-     * @see #updateStatus(DSLContext, ProcessKey, ProcessStatus, Map)
-     */
-    public void updateStatus(DSLContext tx, ProcessKey processKey, ProcessStatus status) {
-        updateStatus(tx, processKey, status, Collections.emptyMap());
-    }
-
-    /**
-     * @see #updateStatus(DSLContext, ProcessKey, ProcessStatus, Map)
-     */
-    public void updateStatus(ProcessKey processKey, ProcessStatus status, Map<String, Object> statusPayload) {
-        queueDao.tx(tx -> updateStatus(tx, processKey, status, statusPayload));
+        queueDao.tx(tx -> updateStatus(tx, processKey, status));
     }
 
     /**
      * Updates the process' status. Adds a process status history event with an optional {@code statusPayload}.
      */
-    public void updateStatus(DSLContext tx, ProcessKey processKey, ProcessStatus status, Map<String, Object> statusPayload) {
+    public void updateStatus(DSLContext tx, ProcessKey processKey, ProcessStatus status) {
         queueDao.updateStatus(tx, processKey, status);
-        eventManager.insertStatusHistory(tx, processKey, status, statusPayload);
+        insertStatusHistory(tx, processKey, status);
         notifyStatusChange(tx, processKey, status);
     }
 
@@ -168,7 +157,7 @@ public class ProcessQueueManager {
     public boolean updateExpectedStatus(ProcessKey processKey, ProcessStatus expected, ProcessStatus status) {
         return queueDao.txResult(tx -> {
             boolean success = queueDao.updateStatus(tx, processKey, expected, status);
-            eventManager.insertStatusHistory(tx, processKey, status, Collections.emptyMap());
+            insertStatusHistory(tx, processKey, status);
             if (success) {
                 notifyStatusChange(tx, processKey, status);
             }
@@ -185,7 +174,7 @@ public class ProcessQueueManager {
     public boolean updateExpectedStatus(List<ProcessKey> processKeys, List<ProcessStatus> expected, ProcessStatus status) {
         return queueDao.txResult(tx -> {
             boolean success = queueDao.updateStatus(processKeys, expected, status);
-            eventManager.insertStatusHistory(tx, processKeys, status);
+            insertStatusHistory(tx, processKeys, status);
             if (success) {
                 notifyStatusChange(tx, processKeys, status);
             }
@@ -205,7 +194,7 @@ public class ProcessQueueManager {
      */
     public void updateAgentId(DSLContext tx, ProcessKey processKey, String agentId, ProcessStatus status) {
         queueDao.updateAgentId(tx, processKey, agentId, status);
-        eventManager.insertStatusHistory(tx, processKey, status, Collections.emptyMap());
+        insertStatusHistory(tx, processKey, status);
         notifyStatusChange(tx, processKey, status);
     }
 
@@ -236,6 +225,21 @@ public class ProcessQueueManager {
             return null;
         }
         return queueDao.get(key, includes);
+    }
+
+    public void restore(ProcessKey processKey, UUID checkpointId, ProcessStatus currentStatus) {
+        queueDao.tx(tx -> {
+            updateStatus(tx, processKey, ProcessStatus.SUSPENDED);
+            Map<String, Object> eventData = new HashMap<>();
+            eventData.put("checkpointId", checkpointId);
+            eventData.put("processStatus", currentStatus);
+
+            eventManager.event(tx, NewProcessEvent.builder()
+                    .processKey(processKey)
+                    .eventType(EventType.CHECKPOINT_RESTORE.name())
+                    .data(eventData)
+                    .build());
+        });
     }
 
     private static Map<String, Object> getCfg(Payload payload) {
@@ -287,5 +291,21 @@ public class ProcessQueueManager {
 
     private void notifyStatusChange(DSLContext tx, ProcessKey processKey, ProcessStatus status) {
         statusListeners.forEach(l -> l.onStatusChange(tx, processKey, status));
+    }
+
+    private void insertStatusHistory(DSLContext tx, ProcessKey processKey, ProcessStatus status) {
+        insertStatusHistory(tx, Collections.singletonList(processKey), status);
+    }
+
+    private void insertStatusHistory(DSLContext tx, List<ProcessKey> processKeys, ProcessStatus status) {
+        List<NewProcessEvent> events = processKeys.stream()
+                .map(k -> NewProcessEvent.builder()
+                        .processKey(k)
+                        .eventType(EventType.PROCESS_STATUS.name())
+                        .data(Collections.singletonMap("status", status.name()))
+                        .build())
+                .collect(Collectors.toList());
+
+        eventManager.event(tx, events);
     }
 }
