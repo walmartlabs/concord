@@ -232,7 +232,7 @@ public class ProcessManager {
             throw new ConcordApplicationException("Error creating a payload", e);
         }
 
-        queueManager.updateStatus(processKey, ProcessStatus.SUSPENDED);
+        queueManager.restore(processKey, checkpointId, entry.status());
 
         logManager.info(processKey, "Restoring from checkpoint '{}'", checkpointInfo.name());
 

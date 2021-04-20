@@ -205,15 +205,15 @@ export const useCheckpoint = (initial: InitialProps) => {
 
         const { items: processes }: PaginatedProcessEntries = await apiList({
             ...args,
-            include: ['checkpoints', 'history']
+            include: ['checkpoints', 'checkpointsHistory']
         });
 
         const checkpointGroups = {};
         processes.forEach((p) => {
-            if (p.checkpoints && p.statusHistory) {
+            if (p.checkpoints) {
                 checkpointGroups[p.instanceId] = generateCheckpointGroups(
                     p.checkpoints,
-                    p.statusHistory
+                    p.checkpointRestoreHistory
                 );
             }
         });

@@ -23,7 +23,6 @@ package com.walmartlabs.concord.server.process.event;
 import com.codahale.metrics.Histogram;
 import com.codahale.metrics.Meter;
 import com.codahale.metrics.MetricRegistry;
-import com.walmartlabs.concord.server.ConcordObjectMapper;
 import com.walmartlabs.concord.server.Listeners;
 import com.walmartlabs.concord.server.sdk.events.ProcessEvent;
 import com.walmartlabs.concord.server.sdk.metrics.InjectMeter;
@@ -41,7 +40,6 @@ import java.util.List;
 public class ProcessEventManager {
 
     private final ProcessEventDao eventDao;
-    private final ConcordObjectMapper objectMapper;
     private final Listeners listeners;
 
     private final Histogram batchInsertHistogram;
@@ -51,13 +49,11 @@ public class ProcessEventManager {
 
     @Inject
     public ProcessEventManager(ProcessEventDao eventDao,
-                               ConcordObjectMapper objectMapper,
                                Listeners listeners,
                                Meter eventsReceived,
                                MetricRegistry metricRegistry) {
 
         this.eventDao = eventDao;
-        this.objectMapper = objectMapper;
         this.listeners = listeners;
         this.eventsReceived = eventsReceived;
 

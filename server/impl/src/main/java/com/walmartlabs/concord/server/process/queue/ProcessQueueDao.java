@@ -37,6 +37,7 @@ import com.walmartlabs.concord.server.jooq.tables.records.ProcessQueueRecord;
 import com.walmartlabs.concord.server.process.*;
 import com.walmartlabs.concord.server.process.ProcessEntry.ProcessCheckpointEntry;
 import com.walmartlabs.concord.server.process.ProcessEntry.ProcessStatusHistoryEntry;
+import com.walmartlabs.concord.server.process.ProcessEntry.CheckpointRestoreHistoryEntry;
 import com.walmartlabs.concord.server.sdk.PartialProcessKey;
 import com.walmartlabs.concord.server.sdk.ProcessKey;
 import com.walmartlabs.concord.server.sdk.ProcessStatus;
@@ -51,12 +52,15 @@ import java.time.OffsetDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import static com.walmartlabs.concord.db.PgUtils.*;
+import static com.walmartlabs.concord.server.jooq.Tables.REPOSITORIES;
+import static com.walmartlabs.concord.server.jooq.Tables.USERS;
 import static com.walmartlabs.concord.db.PgUtils.toJsonDate;
-import static com.walmartlabs.concord.server.jooq.Tables.*;
 import static com.walmartlabs.concord.server.jooq.tables.Organizations.ORGANIZATIONS;
 import static com.walmartlabs.concord.server.jooq.tables.ProcessCheckpoints.PROCESS_CHECKPOINTS;
 import static com.walmartlabs.concord.server.jooq.tables.ProcessEvents.PROCESS_EVENTS;
 import static com.walmartlabs.concord.server.jooq.tables.ProcessQueue.PROCESS_QUEUE;
+import static com.walmartlabs.concord.server.jooq.tables.ProcessQueueStats.PROCESS_QUEUE_STATS;
 import static com.walmartlabs.concord.server.jooq.tables.Projects.PROJECTS;
 import static org.jooq.impl.DSL.*;
 
@@ -68,6 +72,8 @@ public class ProcessQueueDao extends AbstractDao {
     private static final Set<ProcessDataInclude> DEFAULT_INCLUDES = Collections.singleton(ProcessDataInclude.CHILDREN_IDS);
 
     private static final TypeReference<List<ProcessCheckpointEntry>> LIST_OF_CHECKPOINTS = new TypeReference<List<ProcessCheckpointEntry>>() {
+    };
+    private static final TypeReference<List<CheckpointRestoreHistoryEntry>> LIST_OF_CHECKPOINTS_HISTORY = new TypeReference<List<CheckpointRestoreHistoryEntry>>() {
     };
     private static final TypeReference<ProcessStatusHistoryEntry> STATUS_HISTORY_ENTRY = new TypeReference<ProcessStatusHistoryEntry>() {
     };
@@ -494,8 +500,9 @@ public class ProcessQueueDao extends AbstractDao {
         DSLContext tx = dsl();
         SelectQuery<Record> query = buildSelect(tx, filter);
         return tx.selectCount().from(query)
-                .fetchOne()
-                .value1();
+                .fetchOptional()
+                .map(Record1::value1)
+                .orElse(0);
     }
 
     public Map<String, Integer> getStatistics() {
@@ -509,9 +516,9 @@ public class ProcessQueueDao extends AbstractDao {
     }
 
     // TODO move to EventDao?
-    public List<ProcessStatusHistoryEntry> getHistory(ProcessKey processKey) {
+    public List<ProcessStatusHistoryEntry> getStatusHistory(ProcessKey processKey) {
         ProcessEvents pe = PROCESS_EVENTS.as("pe");
-        return dsl().select(historyEntryToJsonb(pe))
+        return dsl().select(statusHistoryEntryToJsonb(pe))
                 .from(pe)
                 .where(pe.INSTANCE_ID.eq(processKey.getInstanceId())
                         .and(pe.INSTANCE_CREATED_AT.eq(processKey.getCreatedAt()))
@@ -526,24 +533,31 @@ public class ProcessQueueDao extends AbstractDao {
     }
 
     public void clearStartAt(PartialProcessKey processKey) {
-        tx(tx -> {
-            tx.update(PROCESS_QUEUE)
-                    .set(PROCESS_QUEUE.START_AT, val((OffsetDateTime) null))
-                    .where(PROCESS_QUEUE.INSTANCE_ID.eq(processKey.getInstanceId()))
-                    .execute();
-        });
+        tx(tx -> tx.update(PROCESS_QUEUE)
+                .set(PROCESS_QUEUE.START_AT, val((OffsetDateTime) null))
+                .where(PROCESS_QUEUE.INSTANCE_ID.eq(processKey.getInstanceId()))
+                .execute());
     }
 
-    private Field<JSONB> historyEntryToJsonb(ProcessEvents pe) {
-        return function("jsonb_strip_nulls", JSONB.class,
-                function("jsonb_build_object", JSONB.class,
+    private static Field<JSONB> statusHistoryEntryToJsonb(ProcessEvents pe) {
+        return jsonbStripNulls(
+                jsonbBuildObject(
                         inline("id"), pe.EVENT_ID,
                         inline("changeDate"), toJsonDate(pe.EVENT_DATE),
                         inline("status"), coalesce(field("{0}->'newStatus'", Object.class, pe.EVENT_DATA), field("{0}->'status'", Object.class, pe.EVENT_DATA)),
                         inline("payload"), field("{0} - 'status'", Object.class, pe.EVENT_DATA)));
     }
 
-    private void filterByTags(SelectQuery<Record> query, Set<String> tags) {
+    private static Field<JSONB> checkpointHistoryEntryToJsonb(ProcessEvents pe) {
+        return jsonbStripNulls(
+                jsonbBuildObject(
+                        inline("id"), pe.EVENT_SEQ,
+                        inline("changeDate"), toJsonDate(pe.EVENT_DATE),
+                        inline("checkpointId"), field("{0}->'checkpointId'", Object.class, pe.EVENT_DATA),
+                        inline("processStatus"), field("{0}->'processStatus'", Object.class, pe.EVENT_DATA)));
+    }
+
+    private static void filterByTags(SelectQuery<Record> query, Set<String> tags) {
         if (tags == null || tags.isEmpty()) {
             return;
         }
@@ -679,8 +693,8 @@ public class ProcessQueueDao extends AbstractDao {
             SelectJoinStep<Record1<JSONB>> checkpoints = tx.select(
                     function("to_jsonb", JSONB.class,
                             function("array_agg", Object.class,
-                                    function("jsonb_strip_nulls", JSONB.class,
-                                            function("jsonb_build_object", JSONB.class,
+                                    jsonbStripNulls(
+                                            jsonbBuildObject(
                                                     inline("id"), pc.CHECKPOINT_ID,
                                                     inline("name"), pc.CHECKPOINT_NAME,
                                                     inline("createdAt"), toJsonDate(pc.CHECKPOINT_DATE))))))
@@ -697,10 +711,30 @@ public class ProcessQueueDao extends AbstractDao {
             query.addSelect(checkpoints.asField("checkpoints"));
         }
 
-        if (includes.contains(ProcessDataInclude.HISTORY)) {
+        if (includes.contains(ProcessDataInclude.CHECKPOINTS_HISTORY)) {
+            ProcessEvents pe = PROCESS_EVENTS.as("pe");
+
+            SelectJoinStep<Record1<JSONB>> history = tx.select(function("to_jsonb", JSONB.class,
+                    function("array_agg", Object.class, checkpointHistoryEntryToJsonb(pe))))
+                    .from(pe);
+
+            if (key != null) {
+                history.where(pe.INSTANCE_ID.eq(key.getInstanceId())
+                        .and(pe.INSTANCE_CREATED_AT.eq(key.getCreatedAt())
+                                .and(pe.EVENT_TYPE.eq(EventType.CHECKPOINT_RESTORE.name()))));
+            } else {
+                history.where(PROCESS_QUEUE.INSTANCE_ID.eq(pe.INSTANCE_ID)
+                        .and(pe.INSTANCE_CREATED_AT.eq(PROCESS_QUEUE.CREATED_AT)
+                                .and(pe.EVENT_TYPE.eq(EventType.CHECKPOINT_RESTORE.name()))));
+            }
+
+            query.addSelect(history.asField("checkpoints_history"));
+        }
+
+        if (includes.contains(ProcessDataInclude.STATUS_HISTORY)) {
             ProcessEvents pe = PROCESS_EVENTS.as("pe");
             SelectJoinStep<Record1<JSONB>> history = tx.select(function("to_jsonb", JSONB.class,
-                    function("array_agg", Object.class, historyEntryToJsonb(pe))))
+                    function("array_agg", Object.class, statusHistoryEntryToJsonb(pe))))
                     .from(pe);
 
             if (key != null) {
@@ -709,8 +743,7 @@ public class ProcessQueueDao extends AbstractDao {
                                 .and(pe.EVENT_TYPE.eq(EventType.PROCESS_STATUS.name()))));
             } else {
                 history.where(PROCESS_QUEUE.INSTANCE_ID.eq(pe.INSTANCE_ID)
-                        .and(pe.EVENT_TYPE.eq(EventType.PROCESS_STATUS.name())
-                                .and(pe.INSTANCE_CREATED_AT.eq(PROCESS_QUEUE.CREATED_AT))
+                        .and(pe.INSTANCE_CREATED_AT.eq(PROCESS_QUEUE.CREATED_AT)
                                 .and(pe.EVENT_TYPE.eq(EventType.PROCESS_STATUS.name()))));
             }
 
@@ -792,6 +825,7 @@ public class ProcessQueueDao extends AbstractDao {
                 .logFileName(r.get(PROCESS_QUEUE.INSTANCE_ID) + ".log")
                 .checkpoints(objectMapper.fromJSONB(getOrNull(r, "checkpoints"), LIST_OF_CHECKPOINTS))
                 .statusHistory(objectMapper.fromJSONB(getOrNull(r, "status_history"), LIST_OF_STATUS_HISTORY))
+                .checkpointRestoreHistory(objectMapper.fromJSONB(getOrNull(r, "checkpoints_history"), LIST_OF_CHECKPOINTS_HISTORY))
                 .triggeredBy(objectMapper.fromJSONB(r.get(PROCESS_QUEUE.TRIGGERED_BY), TriggeredByEntry.class))
                 .timeout(r.get(PROCESS_QUEUE.TIMEOUT))
                 .suspendTimeout(r.get(PROCESS_QUEUE.SUSPEND_TIMEOUT))

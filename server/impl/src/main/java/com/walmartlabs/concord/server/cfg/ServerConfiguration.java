@@ -45,6 +45,10 @@ public class ServerConfiguration implements Serializable {
     private boolean secureCookies;
 
     @Inject
+    @Config("server.cookieComment")
+    private String cookieComment;
+
+    @Inject
     @Config("server.sessionTimeout")
     private Duration sessionTimeout;
 
@@ -75,6 +79,10 @@ public class ServerConfiguration implements Serializable {
 
     public boolean isSecureCookies() {
         return secureCookies;
+    }
+
+    public String getCookieComment() {
+        return cookieComment;
     }
 
     public Duration getSessionTimeout() {

@@ -40,5 +40,11 @@ public enum EventType {
     /**
      * Process wait conditions.
      */
-    PROCESS_WAIT
+    PROCESS_WAIT,
+
+
+    /**
+     * Process checkpoint restore events.
+     */
+    CHECKPOINT_RESTORE
 }

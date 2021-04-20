@@ -18,11 +18,11 @@
  * =====
  */
 
-import { isAfter, isBefore, parseISO as parseDate } from 'date-fns';
+import { isAfter, isBefore, isEqual, parseISO as parseDate } from 'date-fns';
 
 import {
+    CheckpointRestoreHistoryEntry,
     ProcessCheckpointEntry,
-    ProcessHistoryEntry,
     ProcessStatus
 } from '../../../../api/process';
 import { comparators } from '../../../../utils';
@@ -41,17 +41,19 @@ export const geCheckpointsBetweenTime = (
     checkpoints: ProcessCheckpointEntry[],
     status: ProcessStatus,
     start: Date,
-    end: Date
+    end?: Date
 ): CustomCheckpoint[] => {
     // * Custom checkpoints extend checkpoints and add start/end times and status
     const resultCheckpoints: CustomCheckpoint[] = [];
 
     checkpoints
-        .sort(comparators.byProperty((i) => i.createdAt))
         // * Filter for checkpoints between a start and end date
         .filter((checkpoint) => {
             const checkTime = parseDate(checkpoint.createdAt);
-            return isAfter(checkTime, start) && isBefore(checkTime, end);
+            return (
+                (isEqual(checkTime, start) || isAfter(checkTime, start)) &&
+                (end === undefined || isBefore(checkTime, end))
+            );
         })
         .forEach((checkpoint, index, array) => {
             if (index !== array.length - 1) {
@@ -77,61 +79,55 @@ export const geCheckpointsBetweenTime = (
  * Correlates checkpoint data with history data to generate said object.
  *
  * @param checkpoints Original Process Checkpoint Array
- * @param historyEntries Original Process History Array
+ * @param checkpointRestoreHistory
  */
 export const generateCheckpointGroups = (
     checkpoints: ProcessCheckpointEntry[],
-    historyEntries: ProcessHistoryEntry[]
+    checkpointRestoreHistory?: CheckpointRestoreHistoryEntry[]
 ): CheckpointGroup[] => {
-    // make sure that the history is sorted
-    const history = historyEntries.sort(comparators.byProperty((i) => i.changeDate));
-    if (history.length === 0) {
+    const points = checkpoints.sort(comparators.byProperty((i) => parseDate(i.createdAt)));
+    if (points.length === 0) {
         return [];
     }
+
+    const history = (checkpointRestoreHistory || []).sort(
+        comparators.byProperty((i) => parseDate(i.changeDate))
+    );
 
     const groups: CheckpointGroup[] = [];
     let currentGroup: CheckpointGroup = {
         name: `#1`,
+        status: ProcessStatus.FINISHED,
         checkpoints: []
     };
+    let currentGroupStart = parseDate(points[0].createdAt);
+    history.forEach((h) => {
+        let currentGroupEnd = parseDate(h.changeDate);
 
-    history.forEach((event) => {
-        if (event.status === ProcessStatus.RUNNING) {
-            const eventDate = parseDate(event.changeDate);
-            currentGroup.status = ProcessStatus.RUNNING;
-            if (currentGroup.start === undefined) {
-                currentGroup.start = eventDate;
-            }
-            currentGroup.end = new Date();
-        } else if (
-            event.status === ProcessStatus.SUSPENDED &&
-            event.payload &&
-            event.payload.checkpointId
-        ) {
-            // close the previous group
-            groups.push({ ...currentGroup });
+        currentGroup.status = h.processStatus;
+        currentGroup.checkpoints = geCheckpointsBetweenTime(
+            points,
+            h.processStatus,
+            currentGroupStart,
+            currentGroupEnd
+        );
+        groups.push(currentGroup);
 
-            currentGroup = {
-                name: `#${groups.length + 1}`,
-                checkpoints: []
-            };
-        } else {
-            currentGroup.status = event.status;
-            currentGroup.end = parseDate(event.changeDate);
-        }
+        currentGroup = {
+            name: `#${groups.length + 1}`,
+            status: ProcessStatus.FINISHED,
+            checkpoints: []
+        };
+        currentGroupStart = currentGroupEnd;
     });
 
-    // close the last group
-    groups.push({ ...currentGroup });
-
-    // add checkpoints into groups
-    groups
-        .filter((g) => g.status !== undefined)
-        .filter((g) => g.start !== undefined)
-        .filter((g) => g.end !== undefined)
-        .forEach((g) => {
-            g.checkpoints = geCheckpointsBetweenTime(checkpoints, g.status!, g.start!, g.end!);
-        });
+    currentGroup.checkpoints = geCheckpointsBetweenTime(
+        checkpoints,
+        ProcessStatus.FINISHED,
+        currentGroupStart,
+        undefined
+    );
+    groups.push(currentGroup);
 
     return groups;
 };

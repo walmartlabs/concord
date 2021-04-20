@@ -23,9 +23,12 @@ package com.walmartlabs.concord.server.process.queue;
 import com.walmartlabs.concord.imports.Imports;
 import com.walmartlabs.concord.runtime.v2.model.ExclusiveMode;
 import com.walmartlabs.concord.sdk.Constants;
+import com.walmartlabs.concord.sdk.EventType;
 import com.walmartlabs.concord.sdk.MapUtils;
 import com.walmartlabs.concord.server.RequestUtils;
 import com.walmartlabs.concord.server.process.*;
+import com.walmartlabs.concord.server.process.event.NewProcessEvent;
+import com.walmartlabs.concord.server.process.event.ProcessEventManager;
 import com.walmartlabs.concord.server.process.logs.ProcessLogManager;
 import com.walmartlabs.concord.server.sdk.PartialProcessKey;
 import com.walmartlabs.concord.server.sdk.ProcessKey;
@@ -44,16 +47,19 @@ public class ProcessQueueManager {
 
     private final ProcessQueueDao queueDao;
     private final ProcessKeyCache keyCache;
+    private final ProcessEventManager eventManager;
     private final ProcessLogManager processLogManager;
     private final Collection<ProcessStatusListener> statusListeners;
 
     @Inject
     public ProcessQueueManager(ProcessQueueDao queueDao,
                                ProcessKeyCache keyCache,
+                               ProcessEventManager eventManager,
                                ProcessLogManager processLogManager,
                                Collection<ProcessStatusListener> statusListeners) {
 
         this.queueDao = queueDao;
+        this.eventManager = eventManager;
         this.keyCache = keyCache;
         this.processLogManager = processLogManager;
         this.statusListeners = statusListeners;
@@ -212,6 +218,21 @@ public class ProcessQueueManager {
             return null;
         }
         return queueDao.get(key, includes);
+    }
+
+    public void restore(ProcessKey processKey, UUID checkpointId, ProcessStatus currentStatus) {
+        queueDao.tx(tx -> {
+            updateStatus(tx, processKey, ProcessStatus.SUSPENDED);
+            Map<String, Object> eventData = new HashMap<>();
+            eventData.put("checkpointId", checkpointId);
+            eventData.put("processStatus", currentStatus);
+
+            eventManager.event(tx, NewProcessEvent.builder()
+                    .processKey(processKey)
+                    .eventType(EventType.CHECKPOINT_RESTORE.name())
+                    .data(eventData)
+                    .build());
+        });
     }
 
     private static Map<String, Object> getCfg(Payload payload) {

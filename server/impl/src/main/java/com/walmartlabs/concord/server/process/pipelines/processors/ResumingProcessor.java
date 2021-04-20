@@ -58,6 +58,6 @@ public class ResumingProcessor implements PayloadProcessor {
         }
 
         log.warn("process ['{}'] -> process is not suspended, can't resume", processKey);
-        throw new ConcordApplicationException("Process is not suspended, can't resume");
+        throw new InvalidProcessStateException("Process is not suspended, can't resume");
     }
 }

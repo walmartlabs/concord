@@ -891,7 +891,7 @@ public class MainTest {
 
         // resume the process using the saved form
 
-        Form form2 = forms.stream()
+        Form form2 = formService.list().stream()
                 .filter(f -> "form2".equals(f.name())).findFirst()
                 .orElseThrow(() -> new RuntimeException("form not found"));
         log = resume(form2.eventName(), ProcessConfiguration.builder()

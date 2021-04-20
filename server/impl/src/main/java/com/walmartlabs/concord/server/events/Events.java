@@ -42,19 +42,30 @@ public class Events {
 
         public static final String REPOSITORY_UPDATED_EVENT = "repositoryUpdated";
 
-        public static Map<String, Object> repositoryCreated(UUID projectId, UUID repositoryId, String repositoryName) {
-            return event(REPOSITORY_CREATED_EVENT, projectId, repositoryId, repositoryName);
+        public static Map<String, Object> repositoryCreated(UUID projectId,
+                                                            UUID repositoryId,
+                                                            String repositoryName,
+                                                            boolean enabled) {
+            return event(REPOSITORY_CREATED_EVENT, projectId, repositoryId, repositoryName, enabled);
         }
 
-        public static Map<String, Object> repositoryUpdated(UUID projectId, UUID repositoryId, String repositoryName) {
-            return event(REPOSITORY_UPDATED_EVENT, projectId, repositoryId, repositoryName);
+        public static Map<String, Object> repositoryUpdated(UUID projectId,
+                                                            UUID repositoryId,
+                                                            String repositoryName,
+                                                            boolean enabled) {
+            return event(REPOSITORY_UPDATED_EVENT, projectId, repositoryId, repositoryName, enabled);
         }
 
-        private static Map<String, Object> event(String eventType, UUID projectId, UUID repositoryId, String repositoryName) {
+        private static Map<String, Object> event(String eventType,
+                                                 UUID projectId,
+                                                 UUID repositoryId,
+                                                 String repositoryName,
+                                                 boolean enabled) {
             Map<String, Object> repositoryInfo = new HashMap<>();
             repositoryInfo.put(PROJECT_ID_KEY, projectId);
             repositoryInfo.put(REPO_ID_KEY, repositoryId);
             repositoryInfo.put(REPO_NAME_KEY, repositoryName);
+            repositoryInfo.put(REPO_ENABLED_KEY, enabled);
 
             Map<String, Object> event = new HashMap<>();
             event.put(Constants.Trigger.REPOSITORY_INFO, Collections.singletonList(repositoryInfo));
