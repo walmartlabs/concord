@@ -53,7 +53,7 @@ const ProcessStatusActivity = ({
     const [forms, setForms] = useState<FormListEntry[]>([]);
 
     const fetchData = useCallback(async () => {
-        const process = await apiGet(instanceId, ['checkpoints', 'history']);
+        const process = await apiGet(instanceId, ['checkpoints', 'checkpointsHistory']);
         setProcess(process);
 
         const forms = await apiListForms(instanceId);
@@ -69,7 +69,6 @@ const ProcessStatusActivity = ({
     }
 
     const hasCheckpoints = process && process.checkpoints && process.checkpoints.length > 0;
-    const hasStatusHistory = process && process.statusHistory && process.statusHistory.length > 0;
 
     return (
         <>
@@ -92,7 +91,7 @@ const ProcessStatusActivity = ({
                 </>
             )}
 
-            {process && hasCheckpoints && hasStatusHistory && (
+            {process && hasCheckpoints && (
                 <>
                     <Divider content="Checkpoints" horizontal={true} />
                     <ProcessCheckpointActivity
@@ -100,7 +99,7 @@ const ProcessStatusActivity = ({
                         processStatus={process.status}
                         processDisabled={process.disabled}
                         checkpoints={process.checkpoints!}
-                        statusHistory={process.statusHistory!}
+                        checkpointRestoreHistory={process.checkpointRestoreHistory}
                         onRestoreComplete={refreshHandler}
                     />
                 </>
