@@ -4,14 +4,19 @@
 
 ### Changed
 
+- concord-server: restoring from a checkpoint now generates a new
+`CHECKPOINT_RESTORE` event instead of a `PROCESS_STATUS` event
+with custom payload
+([#389](https://github.com/walmartlabs/concord/pull/389));
 - runtime-v2: rollback the state cleanup code added in
 [#358](https://github.com/walmartlabs/concord/pull/358). 
 Fixed in ([#391](https://github.com/walmartlabs/concord/pull/391));
 - concord-server: fix validation of form fields with expressions in 
 allowed values ([#392](https://github.com/walmartlabs/concord/pull/392));
 - concord-server: set SameSite=Lax for the session cookie
-([#394](https://github.com/walmartlabs/concord/pull/394)).
-- concord-server: only pass enabled repositories to refresh task ([395](https://github.com/walmartlabs/concord/pull/395)).
+([#394](https://github.com/walmartlabs/concord/pull/394));
+- concord-server: only pass enabled repositories to refresh task
+([395](https://github.com/walmartlabs/concord/pull/395));
 
 
 ## [1.84.0] - 2021-04-08
