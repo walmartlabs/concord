@@ -101,6 +101,14 @@ public final class PgUtils {
         return DSL.field("jsonb_build_array({0})", JSONB.class, field);
     }
 
+    public static Field<JSONB> jsonbBuildObject(Field<?>... kv) {
+        return DSL.function("jsonb_build_object", JSONB.class, kv);
+    }
+
+    public static Field<JSONB> jsonbStripNulls(Field<JSONB> field) {
+        return DSL.function("jsonb_strip_nulls", JSONB.class, field);
+    }
+
     public static Field<JSONB> jsonbOrEmptyArray(Field<JSONB> field) {
         return coalesce(field, field("?::jsonb", JSONB.class, JSONB.valueOf("[]")));
     }

@@ -39,7 +39,7 @@ export const ProcessCheckpoint: React.SFC<Props> = ({ process }) => {
                         process={process}
                         checkpointGroups={generateCheckpointGroups(
                             process.checkpoints,
-                            process.statusHistory || []
+                            process.checkpointRestoreHistory
                         )}
                     />
                 </CheckpointErrorBoundary>
