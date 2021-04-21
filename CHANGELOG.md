@@ -2,6 +2,13 @@
 
 ## [Unreleased]
 
+### Added
+
+- ansible: option to limit the logging verbosity based on
+the inventory size ([#384](https://github.com/walmartlabs/concord/pull/384)).
+
+
+
 ### Changed
 
 - concord-server: restoring from a checkpoint now generates a new
