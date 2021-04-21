@@ -1,0 +1,5 @@
+---
+- hosts: all
+  tasks:
+  - include_tasks: more_tasks.yml
+    when: True

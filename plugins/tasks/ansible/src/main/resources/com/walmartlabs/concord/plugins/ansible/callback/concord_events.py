@@ -15,6 +15,8 @@ import uuid
 import os
 import json
 
+from process_cfg_policy import ProcessCfgPolicy
+
 def to_millis(t):
     return int(round(t * 1000))
 
@@ -22,6 +24,7 @@ class CallbackModule(CallbackBase):
     CALLBACK_VERSION = 2.0
     CALLBACK_NAME = 'concord_events'
     CALLBACK_NEEDS_WHITELIST = False
+
 
     MAX_STRING_LEN = 1024
     HALF_MAX_STRING_LEN = int(MAX_STRING_LEN / 2)
@@ -50,6 +53,8 @@ class CallbackModule(CallbackBase):
 
         self.taskDurations = {}
         self.playbookId = self._get_playbook_id()
+        self.process_cfg_policy = ProcessCfgPolicy()
+        self.work_completed = 0
 
     def _get_playbook_id(self):
         if self.eventCorrelationId is not None:
@@ -132,6 +137,9 @@ class CallbackModule(CallbackBase):
         return 0
 
     def _on_task_start(self, host, task):
+        self.process_cfg_policy.disable_verbose_after_too_much_work(self.work_completed)
+        self.work_completed += 1
+
         task_correlation_id = self._task_correlation_id(host.name, task._uuid)
         self.taskDurations[task_correlation_id] = to_millis(time.time())
 
@@ -241,6 +249,9 @@ class CallbackModule(CallbackBase):
             info.append(play_info)
             hosts.update(play_hosts)
             total_work += play_hosts_count * len(play_task)
+
+        # Override verbose output (disable it) if policy is set to limit
+        self.process_cfg_policy.disable_verbose_on_start(len(hosts), total_work)
 
         self._handle_event('ANSIBLE_PLAYBOOK_INFO', {'playbook':playbook._file_name,
                                                      'currentRetryCount': self.currentRetryCount,

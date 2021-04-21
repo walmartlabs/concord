@@ -39,7 +39,7 @@ public class AnsibleLibs {
     private static final String PYTHON_LIB_DIR = "_python_lib";
 
     private static final String LIB_LOCATION = "/com/walmartlabs/concord/plugins/ansible/lib";
-    private static final String[] LIBS = new String[]{"task_policy.py", "concord_ansible_stats.py"};
+    private static final String[] LIBS = new String[]{"task_policy.py", "process_cfg_policy.py", "concord_ansible_stats.py"};
 
     private final Path workDir;
     private final Path tmpDir;
