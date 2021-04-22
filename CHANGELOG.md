@@ -6,7 +6,7 @@
 
 - ansible: option to limit the logging verbosity based on
 the inventory size ([#384](https://github.com/walmartlabs/concord/pull/384)).
-
+- runtime-v2: Support 'name' attribute for script calls ([#402](https://github.com/walmartlabs/concord/pull/402)).
 
 
 ### Changed
