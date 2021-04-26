@@ -14,7 +14,7 @@ configuration:
   arguments:
     url: "https://rubygems.org"
     myVar: "world"
-    newVar: "earth"
+    newVar: " Hello earth"
 
 # restricted entrypoints. if not specified, all flows are public and can be used as an entrypoint
 publicFlows:
@@ -84,11 +84,11 @@ flows:
   scriptFlow:
     - script: scripts/test-script.groovy
       meta:
-        segmentName: "Processing ${myVar} Script Variable..."
+        segmentName: "Processing "${myVar}" Script Variable..."
       error:
         - log: "${lastError}" # prints original exception, nothing added by concord
       
-    - log: "The new variable is: ${newVar}" # prints new value set inside the groovy script
+    - log: "The new value is: ${newVar}" # prints new value set inside the groovy script
 
   # improved error syntax
   errorFlow:
