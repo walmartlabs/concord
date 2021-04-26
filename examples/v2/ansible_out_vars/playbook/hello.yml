@@ -1,7 +1,0 @@
----
-- hosts: local
-  tasks:
-  - debug:
-      msg: "Hi there!"
-      verbosity: 0
-    register: myVar
