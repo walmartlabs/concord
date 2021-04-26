@@ -13,6 +13,7 @@ configuration:
 
   arguments:
     url: "https://rubygems.org"
+    myVar: "World"
 
 # restricted entrypoints. if not specified, all flows are public and can be used as an entrypoint
 publicFlows:
@@ -34,6 +35,7 @@ flows:
         - log: "Nope, we do not have 'orgName' variable"
 
     - call: externalFlow
+    - call: scriptFlow
     - call: formFlow
     - call: errorFlow
 
@@ -76,6 +78,14 @@ flows:
     - log: "Concord Endpoint Status: ${response.statusCode}"
 
     - call: default
+    
+  # get and set script variables
+  scriptFlow:
+    - script: scripts/test-script.groovy
+      meta:
+        segmentName: "Processing ${myVar} Script Variable..."
+      error:
+        - log: "${lastError}" # prints original exception, nothing added by concord
 
   # improved error syntax
   errorFlow:
