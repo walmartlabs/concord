@@ -84,7 +84,7 @@ flows:
   scriptFlow:
     - script: scripts/test-script.groovy
       meta:
-        segmentName: "Processing "${myVar}" Script Variable..."
+        segmentName: "Processing ${myVar} Script Variable..."
       error:
         - log: "${lastError}" # prints original exception, nothing added by concord
       
