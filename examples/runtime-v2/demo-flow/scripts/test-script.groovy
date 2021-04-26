@@ -4,4 +4,3 @@ println('Hello ' + myVar)
 
 // set a variable
 execution.variables().set('newVar', 'Hello, world!')
-println(newVar)
