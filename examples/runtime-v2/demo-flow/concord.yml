@@ -87,6 +87,8 @@ flows:
         segmentName: "Processing ${myVar} Script Variable..."
       error:
         - log: "${lastError}" # prints original exception, nothing added by concord
+      
+    - log: "The new variable is: ${newVar}" # prints new value set inside the groovy script
 
   # improved error syntax
   errorFlow:
