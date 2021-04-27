@@ -24,15 +24,18 @@ import ch.qos.logback.classic.Level;
 import org.immutables.value.Value;
 
 import javax.annotation.Nullable;
+import java.io.Serializable;
 import java.util.UUID;
 
 @Value.Immutable
-public interface LogContext {
+public interface LogContext extends Serializable {
 
-    String segmentName();
+   long serialVersionUID = 1L;
 
     @Nullable
     Long segmentId();
+
+    String segmentName();
 
     UUID correlationId();
 

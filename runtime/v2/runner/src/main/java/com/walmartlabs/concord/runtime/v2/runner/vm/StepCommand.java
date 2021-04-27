@@ -72,20 +72,10 @@ public abstract class StepCommand<T extends Step> implements Command {
         UUID correlationId = getCorrelationId();
         Context ctx = contextFactory.create(runtime, state, threadId, step, correlationId);
 
-        String segmentName = getSegmentName(ctx, step);
-
-        if (segmentName == null) {
+        LogContext logContext = getLogContext(runtime, ctx, correlationId);
+        if (logContext == null) {
             executeWithContext(ctx, runtime, state, threadId);
         } else {
-            RunnerConfiguration runnerCfg = runtime.getService(RunnerConfiguration.class);
-            boolean redirectSystemOutAndErr = runnerCfg.logging().sendSystemOutAndErrToSLF4J();
-            LogContext logContext = LogContext.builder()
-                    .segmentName(segmentName)
-                    .correlationId(correlationId)
-                    .redirectSystemOutAndErr(redirectSystemOutAndErr)
-                    .logLevel(getLogLevel(step))
-                    .build();
-
             runtime.getService(RunnerLogger.class).withContext(logContext,
                     () -> executeWithContext(ctx, runtime, state, threadId));
         }
@@ -111,6 +101,23 @@ public abstract class StepCommand<T extends Step> implements Command {
     }
 
     protected abstract void execute(Runtime runtime, State state, ThreadId threadId);
+
+    protected LogContext getLogContext(Runtime runtime, Context ctx, UUID correlationId) {
+        String segmentName = getSegmentName(ctx, getStep());
+        if (segmentName == null) {
+            return null;
+        }
+
+        RunnerConfiguration runnerCfg = runtime.getService(RunnerConfiguration.class);
+        boolean redirectSystemOutAndErr = runnerCfg.logging().sendSystemOutAndErrToSLF4J();
+
+        return LogContext.builder()
+                .segmentName(segmentName)
+                .correlationId(correlationId)
+                .redirectSystemOutAndErr(redirectSystemOutAndErr)
+                .logLevel(getLogLevel(step))
+                .build();
+    }
 
     protected String getSegmentName(Context ctx, T step) {
         if (step instanceof AbstractStep) {
