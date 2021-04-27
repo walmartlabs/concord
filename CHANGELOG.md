@@ -35,7 +35,10 @@ from an invalid status
 - runtime-v2: log exception as a single error line
 ([#401](https://github.com/walmartlabs/concord/pull/401));
 - concord-repository: specify path to the `.gitmodules` file when
-reading submodule urls ([#403](https://github.com/walmartlabs/concord/pull/403)).
+reading submodule urls ([#403](https://github.com/walmartlabs/concord/pull/403));
+- runtime-v2: subsequent execution of reentrant tasks now uses
+the same log segment as for the first call
+([#406](https://github.com/walmartlabs/concord/pull/406)).
 
 
 
