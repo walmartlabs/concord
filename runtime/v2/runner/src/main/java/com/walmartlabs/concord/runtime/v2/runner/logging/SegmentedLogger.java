@@ -47,10 +47,17 @@ public class SegmentedLogger implements RunnerLogger {
     }
 
     @Override
-    public void withContext(LogContext context, Runnable runnable) {
-        long segmentId = loggingClient.createSegment(context.correlationId(), context.segmentName());
+    public void withContext(LogContext ctx, Runnable runnable) {
+        Long segmentId = ctx.segmentId();
+        if (segmentId == null) {
+            segmentId = loggingClient.createSegment(ctx.correlationId(), ctx.segmentName());
+        }
 
-        ThreadGroup threadGroup = new LogContextThreadGroup(LogContext.builder().from(context).segmentId(segmentId).build());
+        LogContext context = LogContext.builder().from(ctx)
+                .segmentId(segmentId)
+                .build();
+
+        ThreadGroup threadGroup = new LogContextThreadGroup(context);
         executeInThreadGroup(threadGroup, "thread-" + context.segmentName(), () -> {
             // make sure the redirection is enabled in the current thread
             if (context.redirectSystemOutAndErr() && !SysOutOverSLF4J.systemOutputsAreSLF4JPrintStreams()) {
