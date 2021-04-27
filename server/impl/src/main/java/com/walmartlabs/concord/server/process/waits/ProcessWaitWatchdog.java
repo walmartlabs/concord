@@ -25,20 +25,17 @@ import com.walmartlabs.concord.db.AbstractDao;
 import com.walmartlabs.concord.db.MainDB;
 import com.walmartlabs.concord.server.ConcordObjectMapper;
 import com.walmartlabs.concord.server.cfg.ProcessWaitWatchdogConfiguration;
-import com.walmartlabs.concord.server.jooq.tables.ProcessQueue;
 import com.walmartlabs.concord.server.jooq.tables.ProcessWaitConditions;
 import com.walmartlabs.concord.server.process.Payload;
 import com.walmartlabs.concord.server.process.PayloadManager;
 import com.walmartlabs.concord.server.process.ProcessManager;
 import com.walmartlabs.concord.server.sdk.ProcessKey;
-import com.walmartlabs.concord.server.sdk.ProcessStatus;
 import com.walmartlabs.concord.server.sdk.ScheduledTask;
 import org.immutables.value.Value;
 import org.jooq.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.annotation.Nullable;
 import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
@@ -46,11 +43,7 @@ import java.io.IOException;
 import java.time.OffsetDateTime;
 import java.util.*;
 
-import static com.walmartlabs.concord.db.PgUtils.jsonbBuildArray;
-import static com.walmartlabs.concord.db.PgUtils.jsonbTypeOf;
 import static com.walmartlabs.concord.server.jooq.Tables.PROCESS_WAIT_CONDITIONS;
-import static com.walmartlabs.concord.server.jooq.tables.ProcessQueue.PROCESS_QUEUE;
-import static org.jooq.impl.DSL.when;
 
 /**
  * Takes care of processes with wait conditions.
@@ -62,15 +55,8 @@ public class ProcessWaitWatchdog implements ScheduledTask {
 
     private static final Logger log = LoggerFactory.getLogger(ProcessWaitWatchdog.class);
 
-    private static final Set<ProcessStatus> FINAL_STATUSES = new HashSet<>(Arrays.asList(
-            ProcessStatus.FINISHED,
-            ProcessStatus.FAILED,
-            ProcessStatus.CANCELLED,
-            ProcessStatus.TIMED_OUT));
-
     private final ProcessWaitWatchdogConfiguration cfg;
     private final WatchdogDao dao;
-    private final WatchdogDaoOld daoOld;
     private final ProcessWaitManager processWaitManager;
     private final ProcessManager processManager;
     private final PayloadManager payloadManager;
@@ -80,7 +66,6 @@ public class ProcessWaitWatchdog implements ScheduledTask {
     @SuppressWarnings({"unchecked", "rawtypes"})
     public ProcessWaitWatchdog(ProcessWaitWatchdogConfiguration cfg,
                                WatchdogDao dao,
-                               WatchdogDaoOld daoOld,
                                ProcessWaitManager processWaitManager,
                                ProcessManager processManager,
                                PayloadManager payloadManager,
@@ -88,7 +73,6 @@ public class ProcessWaitWatchdog implements ScheduledTask {
 
         this.cfg = cfg;
         this.dao = dao;
-        this.daoOld = daoOld;
         this.processWaitManager = processWaitManager;
         this.processManager = processManager;
         this.payloadManager = payloadManager;
@@ -104,11 +88,6 @@ public class ProcessWaitWatchdog implements ScheduledTask {
 
     @Override
     public void performTask() {
-        process(dao);
-        process(daoOld);
-    }
-
-    private void process(PollDao dao) {
         Long lastId = null;
         while (true) {
             List<WaitingProcess> processes = dao.nextWaitItems(lastId, cfg.getPollLimit());
@@ -126,6 +105,7 @@ public class ProcessWaitWatchdog implements ScheduledTask {
     private void processWaits(WaitingProcess p) {
         Set<String> resumeEvents = new HashSet<>();
         List<AbstractWaitCondition> resultWaits = new ArrayList<>();
+        List<ProcessWaitHandler.Action> resultActions = new ArrayList<>();
 
         for (AbstractWaitCondition w : p.waits()) {
             ProcessWaitHandler.Result<AbstractWaitCondition> result = processWait(w, p);
@@ -135,6 +115,10 @@ public class ProcessWaitWatchdog implements ScheduledTask {
                 } else if (result.resumeEvent() != null) {
                     resumeEvents.add(result.resumeEvent());
                 }
+
+                if (result.action() != null) {
+                    resultActions.add(result.action());
+                }
             }
         }
 
@@ -143,23 +127,17 @@ public class ProcessWaitWatchdog implements ScheduledTask {
         }
 
         try {
-            boolean isWaiting = !resultWaits.isEmpty();
+            boolean isWaiting = !resultWaits.isEmpty() && resumeEvents.isEmpty();
             if (!resumeEvents.isEmpty()) {
                 resumeProcess(p.processKey(), resumeEvents);
-                isWaiting = false;
             }
 
-            if (p.status() != null) {
-                // TODO: old process_queue.wait_conditions code, remove me (1.84.0 or later)
-                AbstractWaitCondition wait = null;
-                if (!resultWaits.isEmpty()) {
-                    assert(resultWaits.size() == 1);
-                    wait = resultWaits.get(0);
+            processWaitManager.tx(tx -> {
+                boolean updated = processWaitManager.setWait(tx, p.processKey(), resultWaits, isWaiting, p.version());
+                if (updated) {
+                    resultActions.forEach(a -> a.execute(tx));
                 }
-                processWaitManager.updateWaitOld(p.processKey(), wait);
-            } else {
-                processWaitManager.setWait(p.processKey(), resultWaits, isWaiting);
-            }
+            });
         } catch (Exception e) {
             log.info("processWaits ['{}'] -> error", p, e);
         }
@@ -172,17 +150,8 @@ public class ProcessWaitWatchdog implements ScheduledTask {
             return null;
         }
 
-        // TODO: old process_queue.wait_conditions code, remove me (1.84.0 or later)
-        if (p.status() != null && !handler.getProcessStatuses().contains(p.status())) {
-            // clear wait conditions for finished processes
-            if (FINAL_STATUSES.contains(p.status())) {
-                return null;
-            }
-            return ProcessWaitHandler.Result.of(w);
-        }
-
         try {
-            return handler.process(p.processKey(), p.status(), w);
+            return handler.process(p.processKey(), w);
         } catch (Exception e) {
             log.info("processHandler ['{}', '{}'] -> error", w.type(), p, e);
             return ProcessWaitHandler.Result.of(w);
@@ -206,26 +175,19 @@ public class ProcessWaitWatchdog implements ScheduledTask {
 
         ProcessKey processKey();
 
-        // TODO: old process_queue.wait_conditions code, remove me (1.84.0 or later)
-        @Nullable
-        ProcessStatus status();
-
         long id();
 
         List<AbstractWaitCondition> waits();
+
+        long version();
 
         static ImmutableWaitingProcess.Builder builder() {
             return ImmutableWaitingProcess.builder();
         }
     }
 
-    private interface PollDao {
-
-        List<WaitingProcess> nextWaitItems(Long lastId, int pollLimit);
-    }
-
     @Named
-    private static final class WatchdogDao extends AbstractDao implements PollDao {
+    private static final class WatchdogDao extends AbstractDao {
 
         private static final TypeReference<List<AbstractWaitCondition>> WAIT_LIST = new TypeReference<List<AbstractWaitCondition>>() {
         };
@@ -239,19 +201,16 @@ public class ProcessWaitWatchdog implements ScheduledTask {
             this.objectMapper = objectMapper;
         }
 
-        @Override
         public List<WaitingProcess> nextWaitItems(Long lastId, int pollLimit) {
             return txResult(tx -> {
                 ProcessWaitConditions w = PROCESS_WAIT_CONDITIONS.as("w");
 
-                // TODO: replace with w.WAIT_CONDITIONS in the next version (after all wait conditions is arrays)
-                Field<JSONB> waitConditionsAsArray = when(jsonbTypeOf(w.WAIT_CONDITIONS).eq("object"), jsonbBuildArray(w.WAIT_CONDITIONS)).else_(w.WAIT_CONDITIONS);
-
-                SelectConditionStep<Record4<UUID, OffsetDateTime, Long, JSONB>> s = tx.select(
+                SelectConditionStep<Record5<UUID, OffsetDateTime, Long, JSONB, Long>> s = tx.select(
                         w.INSTANCE_ID,
                         w.INSTANCE_CREATED_AT,
                         w.ID_SEQ,
-                        waitConditionsAsArray)
+                        w.WAIT_CONDITIONS,
+                        w.VERSION)
                         .from(w)
                         .where(w.IS_WAITING.eq(true));
 
@@ -265,47 +224,7 @@ public class ProcessWaitWatchdog implements ScheduledTask {
                                 .processKey(new ProcessKey(r.value1(), r.value2()))
                                 .id(r.value3())
                                 .waits(objectMapper.fromJSONB(r.value4(), WAIT_LIST))
-                                .build());
-            });
-        }
-    }
-
-    @Named
-    private static final class WatchdogDaoOld extends AbstractDao implements PollDao {
-
-        private final ConcordObjectMapper objectMapper;
-
-        @Inject
-        public WatchdogDaoOld(@MainDB Configuration cfg, ConcordObjectMapper objectMapper) {
-            super(cfg);
-
-            this.objectMapper = objectMapper;
-        }
-
-        @Override
-        public List<WaitingProcess> nextWaitItems(Long lastId, int pollLimit) {
-            return txResult(tx -> {
-                ProcessQueue q = PROCESS_QUEUE.as("q");
-                SelectConditionStep<Record5<UUID, String, OffsetDateTime, Long, JSONB>> s = tx.select(
-                        q.INSTANCE_ID,
-                        q.CURRENT_STATUS,
-                        q.CREATED_AT,
-                        q.ID_SEQ,
-                        q.WAIT_CONDITIONS)
-                        .from(q)
-                        .where(q.WAIT_CONDITIONS.isNotNull());
-
-                if (lastId != null) {
-                    s.and(q.ID_SEQ.greaterThan(lastId));
-                }
-
-                return s.orderBy(q.ID_SEQ)
-                        .limit(pollLimit)
-                        .fetch(r -> WaitingProcess.builder()
-                                .processKey(new ProcessKey(r.value1(), r.value3()))
-                                .status(ProcessStatus.valueOf(r.value2()))
-                                .id(r.value4())
-                                .waits(Collections.singletonList(objectMapper.fromJSONB(r.value5(), AbstractWaitCondition.class)))
+                                .version(r.value5())
                                 .build());
             });
         }

@@ -20,6 +20,7 @@ package com.walmartlabs.concord.server.process.waits;
  * =====
  */
 
+import com.walmartlabs.concord.db.AbstractDao;
 import com.walmartlabs.concord.sdk.EventType;
 import com.walmartlabs.concord.server.ConcordObjectMapper;
 import com.walmartlabs.concord.server.process.ProcessEntry.ProcessWaitEntry;
@@ -52,19 +53,12 @@ public class ProcessWaitManager {
         this.eventManager = eventManager;
     }
 
+    public void tx(AbstractDao.Tx t) {
+        processWaitDao.tx(t);
+    }
+
     public ProcessWaitEntry getWait(ProcessKey processKey) {
         return processWaitDao.get(processKey);
-    }
-
-    // TODO: old process_queue.wait_conditions code, remove me (1.84.0 or later)
-    public void updateWaitOld(ProcessKey processKey, AbstractWaitCondition wait) {
-        processWaitDao.tx(tx -> updateWaitOld(tx, processKey, wait));
-    }
-
-    // TODO: old process_queue.wait_conditions code, remove me (1.84.0 or later)
-    public void updateWaitOld(DSLContext tx, ProcessKey processKey, AbstractWaitCondition wait) {
-        processWaitDao.updateWaitOld(tx, processKey, wait);
-        eventManager.event(tx, Collections.singletonList(buildEvent(processKey, Collections.singletonList(wait), "add")));
     }
 
     /**
@@ -86,14 +80,12 @@ public class ProcessWaitManager {
     /**
      * Set the process' wait conditions. Adds a wait condition history event.
      */
-    public void setWait(ProcessKey processKey, List<AbstractWaitCondition> waits, boolean isWaiting) {
-        processWaitDao.tx(tx -> setWait(tx, processKey, waits, isWaiting));
-    }
-
-    private void setWait(DSLContext tx, ProcessKey processKey, List<AbstractWaitCondition> waits, boolean isWaiting) {
-        processWaitDao.setWait(tx, processKey, waits, isWaiting);
-
-        eventManager.event(tx, buildEvent(processKey, waits, "set"));
+    public boolean setWait(DSLContext tx, ProcessKey processKey, List<AbstractWaitCondition> waits, boolean isWaiting, long version) {
+        boolean updated = processWaitDao.setWait(tx, processKey, waits, isWaiting, version);
+        if (updated) {
+            eventManager.event(tx, buildEvent(processKey, waits, "set"));
+        }
+        return updated;
     }
 
     private NewProcessEvent buildEvent(ProcessKey processKey, List<AbstractWaitCondition> waits, String action) {

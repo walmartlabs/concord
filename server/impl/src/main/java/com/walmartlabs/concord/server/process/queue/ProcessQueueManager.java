@@ -151,13 +151,15 @@ public class ProcessQueueManager {
      * @return {@code true} if the process was updated
      */
     public boolean updateExpectedStatus(ProcessKey processKey, ProcessStatus expected, ProcessStatus status) {
-        return queueDao.txResult(tx -> {
-            boolean success = queueDao.updateStatus(tx, processKey, expected, status);
-            if (success) {
-                notifyStatusChange(tx, processKey, status);
-            }
-            return success;
-        });
+        return queueDao.txResult(tx -> updateExpectedStatus(tx, processKey, expected, status));
+    }
+
+    public boolean updateExpectedStatus(DSLContext tx, ProcessKey processKey, ProcessStatus expected, ProcessStatus status) {
+        boolean success = queueDao.updateStatus(tx, processKey, expected, status);
+        if (success) {
+            notifyStatusChange(tx, processKey, status);
+        }
+        return success;
     }
 
     /**

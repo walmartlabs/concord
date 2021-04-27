@@ -114,4 +114,28 @@
         </sql>
     </changeSet>
 
+    <changeSet id="1850600" author="ybrigo@gmail.com">
+        <sql>
+            alter table PROCESS_WAIT_CONDITIONS add column VERSION bigint;
+        </sql>
+    </changeSet>
+
+    <changeSet id="1850601" author="ybrigo@gmail.com">
+        <sql>
+            update PROCESS_WAIT_CONDITIONS set VERSION = 0;
+        </sql>
+    </changeSet>
+
+    <changeSet id="1850602" author="ybrigo@gmail.com">
+        <sql>
+            alter table PROCESS_WAIT_CONDITIONS alter column VERSION set not null;
+        </sql>
+    </changeSet>
+
+    <changeSet id="1850603" author="ybrigo@gmail.com">
+        <sql>
+            alter table PROCESS_WAIT_CONDITIONS alter column VERSION set default 0;
+        </sql>
+    </changeSet>
+
 </databaseChangeLog>
