@@ -30,6 +30,8 @@ allowed values ([#392](https://github.com/walmartlabs/concord/pull/392));
 - concord-server: do not mark processes as `FAILED` after resuming
 from an invalid status
 ([#396](https://github.com/walmartlabs/concord/pull/396)).
+- concord-server: use optimistic locking when updating wait
+conditions ([#397](https://github.com/walmartlabs/concord/pull/397));
 - docker-compose: fix agent and dind communication
 ([#400](https://github.com/walmartlabs/concord/pull/400));
 - runtime-v2: log exception as a single error line
