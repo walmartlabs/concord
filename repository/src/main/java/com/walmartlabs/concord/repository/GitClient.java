@@ -381,7 +381,7 @@ public class GitClient {
         String result = exec(Command.builder()
                 .workDir(workDir)
                 .timeout(cfg.defaultOperationTimeout())
-                .addArgs("config", "--get", "submodule." + name + ".url")
+                .addArgs("config", "-f", ".gitmodules", "--get", "submodule." + name + ".url")
                 .build());
         String s = firstLine(result);
         return s != null ? s.trim() : null;
