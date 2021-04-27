@@ -31,7 +31,9 @@ allowed values ([#392](https://github.com/walmartlabs/concord/pull/392));
 from an invalid status
 ([#396](https://github.com/walmartlabs/concord/pull/396)).
 - docker-compose: fix agent and dind communication
-([#400](https://github.com/walmartlabs/concord/pull/400)).
+([#400](https://github.com/walmartlabs/concord/pull/400));
+- runtime-v2: log exception as a single error line
+([#401](https://github.com/walmartlabs/concord/pull/401)).
 
 
 
