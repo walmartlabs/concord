@@ -1,5 +1,49 @@
 # Change log
 
+## [Unreleased]
+
+### Added
+
+- ansible: option to limit the logging verbosity based on
+the inventory size ([#384](https://github.com/walmartlabs/concord/pull/384));
+- runtime-v2: support `name` attribute for script calls 
+([#402](https://github.com/walmartlabs/concord/pull/402)).
+
+
+### Changed
+
+- concord-server: restoring from a checkpoint now generates a new
+`CHECKPOINT_RESTORE` event instead of a `PROCESS_STATUS` event
+with custom payload
+([#389](https://github.com/walmartlabs/concord/pull/389));
+- concord-server: use process events to calculate the process
+queue stats ([#390](https://github.com/walmartlabs/concord/pull/390));
+- runtime-v2: rollback the state cleanup code added in
+[#358](https://github.com/walmartlabs/concord/pull/358). 
+Fixed in ([#391](https://github.com/walmartlabs/concord/pull/391));
+- concord-server: fix validation of form fields with expressions in 
+allowed values ([#392](https://github.com/walmartlabs/concord/pull/392));
+- concord-server: set SameSite=Lax for the session cookie
+([#394](https://github.com/walmartlabs/concord/pull/394));
+- concord-server: only pass enabled repositories to refresh task
+([395](https://github.com/walmartlabs/concord/pull/395));
+- concord-server: do not mark processes as `FAILED` after resuming
+from an invalid status
+([#396](https://github.com/walmartlabs/concord/pull/396)).
+- concord-server: use optimistic locking when updating wait
+conditions ([#397](https://github.com/walmartlabs/concord/pull/397));
+- docker-compose: fix agent and dind communication
+([#400](https://github.com/walmartlabs/concord/pull/400));
+- runtime-v2: log exception as a single error line
+([#401](https://github.com/walmartlabs/concord/pull/401));
+- concord-repository: specify path to the `.gitmodules` file when
+reading submodule urls ([#403](https://github.com/walmartlabs/concord/pull/403));
+- runtime-v2: subsequent execution of reentrant tasks now uses
+the same log segment as for the first call
+([#406](https://github.com/walmartlabs/concord/pull/406)).
+
+
+
 ## [1.84.0] - 2021-04-08
 
 ### Added
@@ -27,7 +71,7 @@ effective yaml ([#383](https://github.com/walmartlabs/concord/pull/383)).
 directory if not exists
 ([#386](https://github.com/walmartlabs/concord/pull/386));
 - pref-sso: do not redirect if refresh token exists
-([#388](https://github.com/walmartlabs/concord/pull/388).
+([#388](https://github.com/walmartlabs/concord/pull/388)).
 
 
 
@@ -114,7 +158,7 @@ the script's file name
 ([#339](https://github.com/walmartlabs/concord/pull/339));
 - ansible: append values to `PYTHONPATH`, allow users to
 use their own `PYTHONPATH` in addition to the provided one
-([#341](https://github.com/walmartlabs/concord/pull/341);
+([#341](https://github.com/walmartlabs/concord/pull/341));
 - concord-server: fixed batching of processes with custom
 `branch` or `commitId`. Previously the batching mechanism might
 determine the effective branch and/or commitId incorrectly
