@@ -25,6 +25,7 @@ import com.walmartlabs.concord.client.ProcessEntry.StatusEnum;
 import org.junit.Test;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import static com.walmartlabs.concord.it.common.ITUtils.archive;
@@ -64,6 +65,13 @@ public class ExclusiveProcessIT extends AbstractServerIT {
 
         System.out.println("p1: createdAt: " + p1.getCreatedAt() + ", status: " + p1.getStatus());
         System.out.println("p2: createdAt: " + p2.getCreatedAt() + ", status: " + p2.getStatus());
+        if (p1.getStatus() != StatusEnum.CANCELLED) {
+            List<ProcessStatusHistoryEntry> p1History = processApi.getStatusHistory(p1.getInstanceId());
+            List<ProcessStatusHistoryEntry> p2History = processApi.getStatusHistory(p2.getInstanceId());
+
+            System.out.println("p1 history: " + p1History);
+            System.out.println("p2 history: " + p2History);
+        }
 
         assertTrue(p1.getCreatedAt().isBefore(p2.getCreatedAt()));
         assertEquals(StatusEnum.CANCELLED, p1.getStatus());
