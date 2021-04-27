@@ -33,7 +33,9 @@ from an invalid status
 - docker-compose: fix agent and dind communication
 ([#400](https://github.com/walmartlabs/concord/pull/400));
 - runtime-v2: log exception as a single error line
-([#401](https://github.com/walmartlabs/concord/pull/401)).
+([#401](https://github.com/walmartlabs/concord/pull/401));
+- concord-repository: specify path to the `.gitmodules` file when
+reading submodule urls ([#403](https://github.com/walmartlabs/concord/pull/403)).
 
 
 
