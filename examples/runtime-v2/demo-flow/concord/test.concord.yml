@@ -10,6 +10,11 @@ flows:
         - "Run Validation"
         - "Trigger Deployment"
         - "Send Notification"
+        
+    # Other UI/UX features:
+       # show effective concord yaml
+       # Show task debug params by recording in/out vars
+       # View yaml line number in the Events tab
 
     # parallel execution
     # The v2 runtime was designed with parallel execution in mind. It adds a new step - parallel.
@@ -25,6 +30,7 @@ flows:
       in:
         url: https://concord.${item}.walmart.com/
         method: "GET"
+        debug: true
       out: results # withItems turns "results" into a list of results for each item
       parallelWithItems:
         - "prod"
