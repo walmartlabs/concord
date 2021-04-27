@@ -5,8 +5,8 @@
 ### Added
 
 - ansible: option to limit the logging verbosity based on
-the inventory size ([#384](https://github.com/walmartlabs/concord/pull/384)).
-- runtime-v2: support 'name' attribute for script calls 
+the inventory size ([#384](https://github.com/walmartlabs/concord/pull/384));
+- runtime-v2: support `name` attribute for script calls 
 ([#402](https://github.com/walmartlabs/concord/pull/402)).
 
 
@@ -16,6 +16,8 @@ the inventory size ([#384](https://github.com/walmartlabs/concord/pull/384)).
 `CHECKPOINT_RESTORE` event instead of a `PROCESS_STATUS` event
 with custom payload
 ([#389](https://github.com/walmartlabs/concord/pull/389));
+- concord-server: use process events to calculate the process
+queue stats ([#390](https://github.com/walmartlabs/concord/pull/390));
 - runtime-v2: rollback the state cleanup code added in
 [#358](https://github.com/walmartlabs/concord/pull/358). 
 Fixed in ([#391](https://github.com/walmartlabs/concord/pull/391));
