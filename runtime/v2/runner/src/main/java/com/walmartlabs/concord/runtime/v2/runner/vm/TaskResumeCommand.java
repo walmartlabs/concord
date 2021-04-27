@@ -21,6 +21,7 @@ package com.walmartlabs.concord.runtime.v2.runner.vm;
  */
 
 import com.walmartlabs.concord.runtime.v2.model.TaskCall;
+import com.walmartlabs.concord.runtime.v2.runner.logging.LogContext;
 import com.walmartlabs.concord.runtime.v2.runner.tasks.TaskCallInterceptor;
 import com.walmartlabs.concord.runtime.v2.runner.tasks.TaskProviders;
 import com.walmartlabs.concord.runtime.v2.sdk.*;
@@ -36,12 +37,15 @@ public class TaskResumeCommand extends StepCommand<TaskCall> {
 
     private static final long serialVersionUID = 1L;
 
-    private final ResumeEvent event;
     private final UUID correlationId;
+    private final LogContext logContext;
+    private final ResumeEvent event;
 
-    protected TaskResumeCommand(UUID correlationId, TaskCall step, ResumeEvent event) {
+    protected TaskResumeCommand(UUID correlationId, LogContext logContext, TaskCall step, ResumeEvent event) {
         super(step);
+
         this.correlationId = correlationId;
+        this.logContext = logContext;
         this.event = event;
     }
 
@@ -91,5 +95,10 @@ public class TaskResumeCommand extends StepCommand<TaskCall> {
     @Override
     public UUID getCorrelationId() {
         return correlationId;
+    }
+
+    @Override
+    protected LogContext getLogContext(Runtime runtime, Context ctx, UUID correlationId) {
+        return logContext;
     }
 }
