@@ -1,4 +1,6 @@
-log.info(kafkaTopic)
-log.info(dbUrl)
-log.info(dbUser)
-log.info(dbPswd)
+// get a variable
+def v = execution.variables().get('myVar')
+println('Hello ' + myVar)
+
+// set a variable
+execution.variables().set('newVar', 'Hello, world!')

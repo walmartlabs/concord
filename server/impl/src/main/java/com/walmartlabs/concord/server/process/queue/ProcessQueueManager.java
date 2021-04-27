@@ -41,7 +41,6 @@ import java.time.Duration;
 import java.time.OffsetDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
-import java.util.stream.Collectors;
 
 @Named
 public class ProcessQueueManager {
@@ -84,7 +83,6 @@ public class ProcessQueueManager {
 
         queueDao.tx(tx -> {
             queueDao.insert(tx, processKey, status, kind, parentInstanceId, projectId, repoId, branchOrTag, commitId, initiatorId, meta, triggeredBy);
-            insertStatusHistory(tx, processKey, status);
             notifyStatusChange(tx, processKey, status);
             processLogManager.createSystemSegment(tx, payload.getProcessKey());
         });
@@ -127,7 +125,6 @@ public class ProcessQueueManager {
         queueDao.tx(tx -> {
             queueDao.enqueue(tx, processKey, tags, startAt, requirements, processTimeout, handlers, meta, imports, exclusive, runtime, dependencies, suspendTimeout);
             notifyStatusChange(tx, processKey, ProcessStatus.ENQUEUED);
-            insertStatusHistory(tx, processKey, ProcessStatus.ENQUEUED);
         });
 
         return true;
@@ -141,11 +138,10 @@ public class ProcessQueueManager {
     }
 
     /**
-     * Updates the process' status. Adds a process status history event with an optional {@code statusPayload}.
+     * Updates the process' status.
      */
     public void updateStatus(DSLContext tx, ProcessKey processKey, ProcessStatus status) {
         queueDao.updateStatus(tx, processKey, status);
-        insertStatusHistory(tx, processKey, status);
         notifyStatusChange(tx, processKey, status);
     }
 
@@ -161,7 +157,6 @@ public class ProcessQueueManager {
     public boolean updateExpectedStatus(DSLContext tx, ProcessKey processKey, ProcessStatus expected, ProcessStatus status) {
         boolean success = queueDao.updateStatus(tx, processKey, expected, status);
         if (success) {
-            insertStatusHistory(tx, processKey, status);
             notifyStatusChange(tx, processKey, status);
         }
         return success;
@@ -177,7 +172,6 @@ public class ProcessQueueManager {
         return queueDao.txResult(tx -> {
             boolean success = queueDao.updateStatus(processKeys, expected, status);
             if (success) {
-                insertStatusHistory(tx, processKeys, status);
                 notifyStatusChange(tx, processKeys, status);
             }
             return success;
@@ -196,7 +190,6 @@ public class ProcessQueueManager {
      */
     public void updateAgentId(DSLContext tx, ProcessKey processKey, String agentId, ProcessStatus status) {
         queueDao.updateAgentId(tx, processKey, agentId, status);
-        insertStatusHistory(tx, processKey, status);
         notifyStatusChange(tx, processKey, status);
     }
 
@@ -293,21 +286,5 @@ public class ProcessQueueManager {
 
     private void notifyStatusChange(DSLContext tx, ProcessKey processKey, ProcessStatus status) {
         statusListeners.forEach(l -> l.onStatusChange(tx, processKey, status));
-    }
-
-    private void insertStatusHistory(DSLContext tx, ProcessKey processKey, ProcessStatus status) {
-        insertStatusHistory(tx, Collections.singletonList(processKey), status);
-    }
-
-    private void insertStatusHistory(DSLContext tx, List<ProcessKey> processKeys, ProcessStatus status) {
-        List<NewProcessEvent> events = processKeys.stream()
-                .map(k -> NewProcessEvent.builder()
-                        .processKey(k)
-                        .eventType(EventType.PROCESS_STATUS.name())
-                        .data(Collections.singletonMap("status", status.name()))
-                        .build())
-                .collect(Collectors.toList());
-
-        eventManager.event(tx, events);
     }
 }

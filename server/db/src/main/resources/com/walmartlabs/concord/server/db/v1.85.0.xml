@@ -4,27 +4,137 @@
         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
         xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.3.xsd">
 
+    <changeSet id="1850000" author="ybrigo@gmail.com">
+        <createProcedure>
+            create or replace function PROCESS_STATUS_HISTORY()
+            returns trigger as
+            $$
+            declare
+                old_status varchar := null;
+                new_status varchar;
+            begin
+                if TG_OP = 'UPDATE' then
+                    old_status = OLD.current_status;
+                end if;
+
+                new_status = NEW.current_status;
+
+                if old_status is null or (new_status is not null and old_status != new_status) then
+                    insert into process_events(instance_id, instance_created_at, event_type, event_date, event_data)
+                    values (NEW.instance_id, NEW.created_at, 'PROCESS_STATUS', now(), json_build_object('oldStatus', old_status, 'newStatus', new_status));
+                end if;
+
+                return NEW;
+            end;
+            $$ language plpgsql;
+        </createProcedure>
+
+        <sql>
+            create trigger PROCESS_STATUS_HISTORY_EVENT before insert or update on PROCESS_QUEUE
+            for each row execute procedure PROCESS_STATUS_HISTORY();
+        </sql>
+    </changeSet>
+
+    <changeSet id="1850100" author="ybrigo@gmail.com">
+        <createTable tableName="PROCESS_QUEUE_STATS">
+            <column name="STATUS" type="text">
+                <constraints nullable="false"/>
+            </column>
+            <column name="PROCESS_COUNT" type="integer" defaultValue="0">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <insert tableName="PROCESS_QUEUE_STATS">
+            <column name="STATUS">NEW</column>
+            <column name="PROCESS_COUNT">0</column>
+        </insert>
+        <insert tableName="PROCESS_QUEUE_STATS">
+            <column name="STATUS">PREPARING</column>
+            <column name="PROCESS_COUNT">0</column>
+        </insert>
+        <insert tableName="PROCESS_QUEUE_STATS">
+            <column name="STATUS">ENQUEUED</column>
+            <column name="PROCESS_COUNT">0</column>
+        </insert>
+        <insert tableName="PROCESS_QUEUE_STATS">
+            <column name="STATUS">WAITING</column>
+            <column name="PROCESS_COUNT">0</column>
+        </insert>
+        <insert tableName="PROCESS_QUEUE_STATS">
+            <column name="STATUS">STARTING</column>
+            <column name="PROCESS_COUNT">0</column>
+        </insert>
+        <insert tableName="PROCESS_QUEUE_STATS">
+            <column name="STATUS">RUNNING</column>
+            <column name="PROCESS_COUNT">0</column>
+        </insert>
+        <insert tableName="PROCESS_QUEUE_STATS">
+            <column name="STATUS">SUSPENDED</column>
+            <column name="PROCESS_COUNT">0</column>
+        </insert>
+        <insert tableName="PROCESS_QUEUE_STATS">
+            <column name="STATUS">RESUMING</column>
+            <column name="PROCESS_COUNT">0</column>
+        </insert>
+        <insert tableName="PROCESS_QUEUE_STATS">
+            <column name="STATUS">FINISHED</column>
+            <column name="PROCESS_COUNT">0</column>
+        </insert>
+        <insert tableName="PROCESS_QUEUE_STATS">
+            <column name="STATUS">FAILED</column>
+            <column name="PROCESS_COUNT">0</column>
+        </insert>
+        <insert tableName="PROCESS_QUEUE_STATS">
+            <column name="STATUS">CANCELLED</column>
+            <column name="PROCESS_COUNT">0</column>
+        </insert>
+        <insert tableName="PROCESS_QUEUE_STATS">
+            <column name="STATUS">TIMED_OUT</column>
+            <column name="PROCESS_COUNT">0</column>
+        </insert>
+    </changeSet>
+
+    <changeSet id="1850200" author="ybrigo@gmail.com">
+        <sql>
+            LOCK TABLE process_queue IN EXCLUSIVE MODE;
+
+            update PROCESS_QUEUE_STATS
+            set process_count = q.process_count
+            from (
+                select current_status as process_status, count(*) as process_count
+                from PROCESS_QUEUE
+                group by current_status
+            ) as q
+            where
+                q.process_status = status;
+
+            insert into event_processor_marker(processor_name, event_seq)
+            values ('process-queue-statistics-processor', (select coalesce(max(event_seq), 0) from process_events));
+        </sql>
+    </changeSet>
+
     <changeSet id="1850600" author="ybrigo@gmail.com">
         <sql>
-            ALTER TABLE PROCESS_WAIT_CONDITIONS ADD COLUMN version bigint;
+            alter table PROCESS_WAIT_CONDITIONS add column VERSION bigint;
         </sql>
     </changeSet>
 
     <changeSet id="1850601" author="ybrigo@gmail.com">
         <sql>
-            UPDATE PROCESS_WAIT_CONDITIONS SET version = 0;
+            update PROCESS_WAIT_CONDITIONS set VERSION = 0;
         </sql>
     </changeSet>
 
     <changeSet id="1850602" author="ybrigo@gmail.com">
         <sql>
-            ALTER TABLE PROCESS_WAIT_CONDITIONS ALTER COLUMN version SET NOT NULL;
+            alter table PROCESS_WAIT_CONDITIONS alter column VERSION set not null;
         </sql>
     </changeSet>
 
     <changeSet id="1850603" author="ybrigo@gmail.com">
         <sql>
-            ALTER TABLE PROCESS_WAIT_CONDITIONS ALTER COLUMN version SET DEFAULT 0;
+            alter table PROCESS_WAIT_CONDITIONS alter column VERSION set default 0;
         </sql>
     </changeSet>
 
