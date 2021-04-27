@@ -101,10 +101,10 @@ public class Main {
 
             System.exit(0);
         } catch (MultiException e) {
-            System.err.println(e.getMessage());
+            log.error(e.getMessage());
             System.exit(1);
         } catch (Throwable t) {
-            t.printStackTrace(System.err);
+            log.error("", t);
             System.exit(1);
         }
     }
