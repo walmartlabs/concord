@@ -22,6 +22,7 @@ package com.walmartlabs.concord.agent.guice;
 
 import com.walmartlabs.concord.agent.RepositoryManager;
 import com.walmartlabs.concord.agent.cfg.ImportConfiguration;
+import com.walmartlabs.concord.dependencymanager.DependencyManager;
 import com.walmartlabs.concord.imports.ImportManagerFactory;
 import com.walmartlabs.concord.imports.RepositoryExporter;
 
@@ -37,7 +38,7 @@ public class AgentImportManagerProvider implements Provider<AgentImportManager> 
     private final ImportManagerFactory factory;
 
     @Inject
-    public AgentImportManagerProvider(ImportConfiguration cfg, RepositoryManager repositoryManager, AgentDependencyManager dependencyManager) {
+    public AgentImportManagerProvider(ImportConfiguration cfg, RepositoryManager repositoryManager, DependencyManager dependencyManager) {
         RepositoryExporter exporter = (entry, workDir) -> {
             Path dst = workDir;
 

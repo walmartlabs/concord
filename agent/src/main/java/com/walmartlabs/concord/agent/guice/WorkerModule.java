@@ -32,6 +32,7 @@ import com.walmartlabs.concord.agent.remote.ApiClientFactory;
 import com.walmartlabs.concord.agent.remote.ProcessStatusUpdater;
 import com.walmartlabs.concord.client.ProcessApi;
 import com.walmartlabs.concord.client.SecretClient;
+import com.walmartlabs.concord.dependencymanager.DependencyManagerConfiguration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -99,6 +100,7 @@ public class WorkerModule extends AbstractModule {
         bind(LogAppender.class).to(CombinedLogAppender.class);
 
         bind(AgentImportManager.class).toProvider(AgentImportManagerProvider.class);
-        bind(AgentDependencyManager.class).toProvider(AgentDependencyManagerProvider.class);
+
+        bind(DependencyManagerConfiguration.class).toProvider(AgentDependencyManagerConfigurationProvider.class);
     }
 }

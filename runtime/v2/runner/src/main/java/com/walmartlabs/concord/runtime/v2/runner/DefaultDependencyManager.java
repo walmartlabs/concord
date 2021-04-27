@@ -20,52 +20,24 @@ package com.walmartlabs.concord.runtime.v2.runner;
  * =====
  */
 
-import com.walmartlabs.concord.common.IOUtils;
-import com.walmartlabs.concord.dependencymanager.DependencyEntity;
-import com.walmartlabs.concord.runtime.common.cfg.RunnerConfiguration;
 import com.walmartlabs.concord.runtime.v2.sdk.DependencyManager;
 
 import javax.inject.Inject;
 import java.io.IOException;
 import java.net.URI;
-import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 
 public class DefaultDependencyManager implements DependencyManager {
 
     private final com.walmartlabs.concord.dependencymanager.DependencyManager delegate;
 
     @Inject
-    public DefaultDependencyManager(RunnerConfiguration cfg) {
-        try {
-            this.delegate = new com.walmartlabs.concord.dependencymanager.DependencyManager(getCacheDir(cfg));
-        } catch (IOException e) {
-            throw new RuntimeException("Error while initializing DependencyManager: " + e.getMessage());
-        }
+    public DefaultDependencyManager(com.walmartlabs.concord.dependencymanager.DependencyManager delegate) {
+        this.delegate = delegate;
     }
 
     @Override
     public Path resolve(URI uri) throws IOException {
-        DependencyEntity entity = delegate.resolveSingle(uri);
-        return entity.getPath();
-    }
-
-    private static Path getCacheDir(RunnerConfiguration cfg) {
-        try {
-            String s = cfg.dependencyManager().cacheDir();
-            if (s == null) {
-                return IOUtils.createTempDir("dependencyCache");
-            }
-
-            Path p = Paths.get(s);
-            if (!Files.exists(p) || !Files.isDirectory(p)) {
-                throw new RuntimeException("The dependency cache directory doesn't exist or not a directory: " + p);
-            }
-
-            return p;
-        } catch (IOException e) {
-            throw new RuntimeException("Error while creating the dependency cache directory", e);
-        }
+        return delegate.resolveSingle(uri).getPath();
     }
 }
