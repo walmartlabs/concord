@@ -34,10 +34,6 @@
         </dependency>
         <dependency>
             <groupId>com.walmartlabs.concord.server.plugins</groupId>
-            <artifactId>iam-sso</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.walmartlabs.concord.server.plugins</groupId>
             <artifactId>pfed-sso</artifactId>
         </dependency>
         <dependency>
