@@ -1,5 +1,14 @@
 # Change log
 
+## [Unreleased]
+
+### Changed
+
+- dependency-manager: update the `maven-resolver` version
+([#405](https://github.com/walmartlabs/concord/pull/405)).
+
+
+
 ## [1.85.0] - 2021-04-27
 
 ### Added
