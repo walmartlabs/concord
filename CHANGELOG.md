@@ -5,7 +5,9 @@
 ### Changed
 
 - dependency-manager: update the `maven-resolver` version
-([#405](https://github.com/walmartlabs/concord/pull/405)).
+([#405](https://github.com/walmartlabs/concord/pull/405));
+- concord-server: the `iam-sso` plugin is no longer supported
+and has to be removed ([#407](https://github.com/walmartlabs/concord/pull/407)).
 
 
 
