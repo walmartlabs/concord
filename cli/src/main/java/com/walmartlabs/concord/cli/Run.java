@@ -27,6 +27,8 @@ import com.walmartlabs.concord.common.ConfigurationUtils;
 import com.walmartlabs.concord.common.FileVisitor;
 import com.walmartlabs.concord.common.IOUtils;
 import com.walmartlabs.concord.dependencymanager.DependencyManager;
+import com.walmartlabs.concord.dependencymanager.DependencyManagerConfiguration;
+import com.walmartlabs.concord.dependencymanager.DependencyManagerRepositories;
 import com.walmartlabs.concord.imports.ImportManager;
 import com.walmartlabs.concord.imports.ImportManagerFactory;
 import com.walmartlabs.concord.imports.ImportProcessingException;
@@ -261,11 +263,15 @@ public class Run implements Callable<Integer> {
     }
 
     private DependencyManager initDependencyManager() throws IOException {
+        return new DependencyManager(getDependencyManagerConfiguration());
+    }
+
+    private DependencyManagerConfiguration getDependencyManagerConfiguration() {
         Path cfgFile = Paths.get(System.getProperty("user.home"), ".concord", "mvn.json");
-        if (!Files.exists(cfgFile)) {
-            return new DependencyManager(depsCacheDir);
+        if (Files.exists(cfgFile)) {
+            return DependencyManagerConfiguration.of(depsCacheDir, DependencyManagerRepositories.get(cfgFile));
         }
-        return new DependencyManager(depsCacheDir, cfgFile);
+        return DependencyManagerConfiguration.of(depsCacheDir);
     }
 
     private static class CopyNotifier implements FileVisitor {
