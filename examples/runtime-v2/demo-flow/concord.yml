@@ -76,7 +76,7 @@ flows:
         debug: true
       out: response # need to explicitly specify output var
 
-    - log: "Concord Endpoint Status: ${response.statusCode}"
+    - log: "Concord Endpoint Status: ${response.ok}"
 
     - call: default
     
