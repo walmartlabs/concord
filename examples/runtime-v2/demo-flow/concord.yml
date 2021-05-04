@@ -75,7 +75,7 @@ flows:
         method: "GET" # need to explicitly specify each input parameter
         debug: true
       out: response # need to explicitly specify output var
-    - if: ${response.success} # in v2, http response object contains the `ok` attribute instead of the `success` attribute in v1
+    - if: ${response.ok} # in v2, http response object contains the `ok` attribute instead of the `success` attribute in v1
       then:
         - log: "Concord Endpoint Status: ${response.statusCode}"
       else:
