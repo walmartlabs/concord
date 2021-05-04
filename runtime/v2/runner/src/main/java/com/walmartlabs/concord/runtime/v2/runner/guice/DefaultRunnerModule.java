@@ -23,6 +23,7 @@ package com.walmartlabs.concord.runtime.v2.runner.guice;
 import com.google.inject.AbstractModule;
 import com.google.inject.multibindings.Multibinder;
 import com.walmartlabs.concord.ApiClient;
+import com.walmartlabs.concord.dependencymanager.DependencyManagerConfiguration;
 import com.walmartlabs.concord.runtime.v2.runner.*;
 import com.walmartlabs.concord.runtime.v2.runner.checkpoints.CheckpointService;
 import com.walmartlabs.concord.runtime.v2.runner.checkpoints.DefaultCheckpointService;

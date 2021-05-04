@@ -20,9 +20,6 @@ package com.walmartlabs.concord.runner;
  * =====
  */
 
-import com.walmartlabs.concord.common.IOUtils;
-import com.walmartlabs.concord.dependencymanager.DependencyEntity;
-import com.walmartlabs.concord.runtime.common.cfg.RunnerConfiguration;
 import com.walmartlabs.concord.sdk.DependencyManager;
 
 import javax.inject.Inject;
@@ -30,43 +27,21 @@ import javax.inject.Named;
 import javax.inject.Singleton;
 import java.io.IOException;
 import java.net.URI;
-import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 
 @Named
 @Singleton
 public class DependencyManagerImpl implements DependencyManager {
 
-    private final com.walmartlabs.concord.dependencymanager.DependencyManager dependencyManager;
+    private final com.walmartlabs.concord.dependencymanager.DependencyManager delegate;
 
     @Inject
-    public DependencyManagerImpl(RunnerConfiguration cfg) throws IOException {
-        Path cacheDir = getCacheDir(cfg);
-        this.dependencyManager = new com.walmartlabs.concord.dependencymanager.DependencyManager(cacheDir);
+    public DependencyManagerImpl(com.walmartlabs.concord.dependencymanager.DependencyManager delegate) throws IOException {
+        this.delegate = delegate;
     }
 
     @Override
     public Path resolve(URI uri) throws IOException {
-        DependencyEntity e = dependencyManager.resolveSingle(uri);
-        return e.getPath();
-    }
-
-    private static Path getCacheDir(RunnerConfiguration cfg) {
-        try {
-            String s = cfg.dependencyManager().cacheDir();
-            if (s == null) {
-                return IOUtils.createTempDir("dependencyCache");
-            }
-
-            Path p = Paths.get(s);
-            if (!Files.exists(p) || !Files.isDirectory(p)) {
-                throw new RuntimeException("The dependency cache directory doesn't exist or not a directory: " + p);
-            }
-
-            return p;
-        } catch (IOException e) {
-            throw new RuntimeException("Error while creating the dependency cache directory", e);
-        }
+        return delegate.resolveSingle(uri).getPath();
     }
 }

@@ -26,10 +26,10 @@ import com.walmartlabs.concord.agent.cfg.*;
 import com.walmartlabs.concord.agent.executors.runner.DefaultDependencies;
 import com.walmartlabs.concord.agent.executors.runner.ProcessPool;
 import com.walmartlabs.concord.agent.executors.runner.RunnerJobExecutor;
-import com.walmartlabs.concord.agent.guice.AgentDependencyManager;
 import com.walmartlabs.concord.agent.logging.ProcessLog;
 import com.walmartlabs.concord.agent.logging.ProcessLogFactory;
 import com.walmartlabs.concord.agent.remote.AttachmentsUploader;
+import com.walmartlabs.concord.dependencymanager.DependencyManager;
 import com.walmartlabs.concord.sdk.Constants;
 import com.walmartlabs.concord.sdk.MapUtils;
 
@@ -50,7 +50,7 @@ public class JobExecutorFactory {
     private final RunnerV1Configuration runnerV1Cfg;
     private final RunnerV2Configuration runnerV2Cfg;
 
-    private final AgentDependencyManager dependencyManager;
+    private final DependencyManager dependencyManager;
     private final DefaultDependencies defaultDependencies;
     private final ProcessPool processPool;
     private final ProcessLog processLog;
@@ -66,7 +66,7 @@ public class JobExecutorFactory {
                               PreForkConfiguration preForkCfg,
                               RunnerV1Configuration runnerV1Cfg,
                               RunnerV2Configuration runnerV2Cfg,
-                              AgentDependencyManager dependencyManager,
+                              DependencyManager dependencyManager,
                               DefaultDependencies defaultDependencies,
                               ProcessPool processPool,
                               ProcessLog processLog,

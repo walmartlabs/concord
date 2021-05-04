@@ -33,13 +33,13 @@ import com.walmartlabs.concord.agent.JobInstance;
 import com.walmartlabs.concord.agent.Utils;
 import com.walmartlabs.concord.agent.executors.JobExecutor;
 import com.walmartlabs.concord.agent.executors.runner.ProcessPool.ProcessEntry;
-import com.walmartlabs.concord.agent.guice.AgentDependencyManager;
 import com.walmartlabs.concord.agent.logging.ProcessLog;
 import com.walmartlabs.concord.agent.logging.ProcessLogFactory;
 import com.walmartlabs.concord.agent.remote.AttachmentsUploader;
 import com.walmartlabs.concord.common.IOUtils;
 import com.walmartlabs.concord.common.Posix;
 import com.walmartlabs.concord.dependencymanager.DependencyEntity;
+import com.walmartlabs.concord.dependencymanager.DependencyManager;
 import com.walmartlabs.concord.policyengine.CheckResult;
 import com.walmartlabs.concord.policyengine.DependencyRule;
 import com.walmartlabs.concord.policyengine.PolicyEngine;
@@ -74,7 +74,7 @@ public class RunnerJobExecutor implements JobExecutor {
 
     private static final Logger log = LoggerFactory.getLogger(RunnerJobExecutor.class);
 
-    protected final AgentDependencyManager dependencyManager;
+    protected final DependencyManager dependencyManager;
 
     private final RunnerJobExecutorConfiguration cfg;
     private final DefaultDependencies defaultDependencies;
@@ -86,7 +86,7 @@ public class RunnerJobExecutor implements JobExecutor {
     private final ObjectMapper objectMapper;
 
     public RunnerJobExecutor(RunnerJobExecutorConfiguration cfg,
-                             AgentDependencyManager dependencyManager,
+                             DependencyManager dependencyManager,
                              DefaultDependencies defaultDependencies,
                              AttachmentsUploader attachmentsUploader,
                              ProcessPool processPool,

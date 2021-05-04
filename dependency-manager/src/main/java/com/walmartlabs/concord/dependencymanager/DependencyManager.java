@@ -20,33 +20,27 @@ package com.walmartlabs.concord.dependencymanager;
  * =====
  */
 
-import ca.ibodrov.concord.maven.http.ConcordHttpTransporterFactory;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.walmartlabs.concord.common.ExceptionUtils;
 import org.apache.maven.repository.internal.MavenRepositorySystemUtils;
 import org.eclipse.aether.*;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.artifact.DefaultArtifact;
 import org.eclipse.aether.collection.CollectRequest;
-import org.eclipse.aether.connector.basic.BasicRepositoryConnectorFactory;
 import org.eclipse.aether.graph.Dependency;
-import org.eclipse.aether.impl.DefaultServiceLocator;
 import org.eclipse.aether.repository.LocalRepository;
 import org.eclipse.aether.repository.Proxy;
 import org.eclipse.aether.repository.RemoteRepository;
 import org.eclipse.aether.repository.RepositoryPolicy;
 import org.eclipse.aether.resolution.*;
-import org.eclipse.aether.spi.connector.RepositoryConnectorFactory;
-import org.eclipse.aether.spi.connector.transport.TransporterFactory;
 import org.eclipse.aether.transfer.AbstractTransferListener;
 import org.eclipse.aether.transfer.ArtifactNotFoundException;
 import org.eclipse.aether.transfer.TransferEvent;
-import org.eclipse.aether.transport.file.FileTransporterFactory;
 import org.eclipse.aether.util.artifact.JavaScopes;
 import org.eclipse.aether.util.repository.AuthenticationBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.inject.Inject;
 import javax.xml.bind.DatatypeConverter;
 import java.io.IOException;
 import java.io.InputStream;
@@ -64,48 +58,29 @@ public class DependencyManager {
 
     private static final Logger log = LoggerFactory.getLogger(DependencyManager.class);
 
-    private static final String CFG_FILE_KEY = "CONCORD_MAVEN_CFG";
-
     private static final int RETRY_COUNT = 3;
     private static final long RETRY_INTERVAL = 5000;
 
     private static final String FILES_CACHE_DIR = "files";
     public static final String MAVEN_SCHEME = "mvn";
 
-    private static final MavenRepository MAVEN_CENTRAL = MavenRepository.builder()
-            .id("central")
-            .contentType("default")
-            .url("https://repo.maven.apache.org/maven2/")
-            .snapshotPolicy(MavenRepositoryPolicy.builder()
-                    .enabled(false)
-                    .build())
-            .build();
-
-    private static final List<MavenRepository> DEFAULT_REPOS = Collections.singletonList(MAVEN_CENTRAL);
-
     private final Path cacheDir;
     private final Path localCacheDir;
     private final List<RemoteRepository> repositories;
     private final Object mutex = new Object();
-    private final RepositorySystem maven = newMavenRepositorySystem();
+    private final RepositorySystem maven;
 
-    public DependencyManager(Path cacheDir) throws IOException {
-        this(cacheDir, getRepositories());
-    }
-
-    public DependencyManager(Path cacheDir, Path cfgFile) throws IOException {
-        this(cacheDir, readCfg(cfgFile));
-    }
-
-    public DependencyManager(Path cacheDir, List<MavenRepository> repositories) throws IOException {
-        this.cacheDir = cacheDir;
+    @Inject
+    public DependencyManager(DependencyManagerConfiguration cfg) throws IOException {
+        this.cacheDir = cfg.cacheDir();
         if (!Files.exists(cacheDir)) {
             Files.createDirectories(cacheDir);
         }
         this.localCacheDir = Paths.get(System.getProperty("user.home")).resolve(".m2/repository");
 
-        log.info("init -> using repositories: {}", repositories);
-        this.repositories = toRemote(repositories);
+        log.info("init -> using repositories: {}", cfg.repositories());
+        this.repositories = toRemote(cfg.repositories());
+        this.maven = RepositorySystemFactory.create();
     }
 
     public Collection<DependencyEntity> resolve(Collection<URI> items) throws IOException {
@@ -234,22 +209,6 @@ public class DependencyManager {
         }
     }
 
-    private static Path getConfigFileLocation() {
-        String s = System.getenv(CFG_FILE_KEY);
-        if (s == null || s.trim().isEmpty()) {
-            return null;
-        }
-        return Paths.get(s);
-    }
-
-    private static List<MavenRepository> getRepositories() {
-        Path src = getConfigFileLocation();
-        if (src == null) {
-            return DEFAULT_REPOS;
-        }
-        return readCfg(src);
-    }
-
     private static String hash(String s) {
         try {
             MessageDigest md = MessageDigest.getInstance("MD5");
@@ -286,7 +245,8 @@ public class DependencyManager {
     }
 
     private Collection<Artifact> resolveMavenTransitiveDependencies(Collection<MavenDependency> deps) throws IOException {
-        RepositorySystem system = newMavenRepositorySystem();
+        // TODO: why we need new RepositorySystem?
+        RepositorySystem system = RepositorySystemFactory.create();
         RepositorySystemSession session = newRepositorySystemSession(system);
 
         CollectRequest req = new CollectRequest();
@@ -367,22 +327,6 @@ public class DependencyManager {
         return "file".equalsIgnoreCase(u.getScheme()) || u.getPath().contains("SNAPSHOT");
     }
 
-    private static RepositorySystem newMavenRepositorySystem() {
-        DefaultServiceLocator locator = MavenRepositorySystemUtils.newServiceLocator();
-        locator.addService(RepositoryConnectorFactory.class, BasicRepositoryConnectorFactory.class);
-        locator.addService(TransporterFactory.class, FileTransporterFactory.class);
-        locator.addService(TransporterFactory.class, ConcordHttpTransporterFactory.class);
-
-        locator.setErrorHandler(new DefaultServiceLocator.ErrorHandler() {
-            @Override
-            public void serviceCreationFailed(Class<?> type, Class<?> impl, Throwable exception) {
-                log.error("newMavenRepositorySystem -> service creation error: type={}, impl={}", type, impl, exception);
-            }
-        });
-
-        return locator.getService(RepositorySystem.class);
-    }
-
     private static List<RemoteRepository> toRemote(List<MavenRepository> l) {
         return l.stream()
                 .map(DependencyManager::toRemote)
@@ -432,23 +376,6 @@ public class DependencyManager {
             m.put(URLDecoder.decode(k, "UTF-8"), URLDecoder.decode(v, "UTF-8"));
         }
         return m;
-    }
-
-    private static List<MavenRepository> readCfg(Path src) {
-        src = src.toAbsolutePath().normalize();
-
-        if (!Files.exists(src)) {
-            log.warn("readCfg -> file not found: {}, using the default repos", src);
-            return DEFAULT_REPOS;
-        }
-
-        ObjectMapper om = new ObjectMapper();
-        try (InputStream in = Files.newInputStream(src)) {
-            MavenRepositoryConfiguration cfg = om.readValue(in, MavenRepositoryConfiguration.class);
-            return cfg.repositories();
-        } catch (IOException e) {
-            throw new RuntimeException("Error while reading the Maven configuration file: " + src, e);
-        }
     }
 
     private static final class DependencyList {

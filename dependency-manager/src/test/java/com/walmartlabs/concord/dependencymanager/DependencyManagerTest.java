@@ -39,12 +39,12 @@ public class DependencyManagerTest {
     @Test(timeout = 30000)
     public void test() throws Exception {
         Path tmpDir = Files.createTempDirectory("test");
-        URI uriA = new URI("mvn://com.walmartlabs.concord:concord-project-model:0.44.0?scope=runtime");
-        URI uriB = new URI("mvn://com.walmartlabs.concord:concord-project-model:0.43.0?scope=runtime");
+        URI uriA = new URI("mvn://com.walmartlabs.concord:concord-policy-engine:1.44.0?scope=runtime");
+        URI uriB = new URI("mvn://com.walmartlabs.concord:concord-policy-engine:1.43.0?scope=runtime");
 
-        DependencyManager m = new DependencyManager(tmpDir);
+        DependencyManager m = new DependencyManager(DependencyManagerConfiguration.of(tmpDir));
         Collection<DependencyEntity> paths = m.resolve(Arrays.asList(uriA, uriB));
-        assertEquals(10, paths.size());
+        assertEquals(46, paths.size());
     }
 
     @Test(timeout = 30000)
@@ -62,7 +62,7 @@ public class DependencyManagerTest {
                         .build()
         );
 
-        DependencyManager m = new DependencyManager(tmpDir, repositories);
+        DependencyManager m = new DependencyManager(DependencyManagerConfiguration.of(tmpDir, repositories));
         m.resolveSingle(new URI("mvn://com.walmartlabs.concord:concord-sdk:1.54.0"));
     }
 }
