@@ -35,7 +35,7 @@ import java.security.SecureRandom;
 import java.util.Base64;
 
 /**
- * Generates a new admin API token.
+ * Generates a new API token for a given user.
  */
 public class ApiTokenCreator implements CustomSqlChange, CustomSqlRollback {
 
@@ -43,6 +43,7 @@ public class ApiTokenCreator implements CustomSqlChange, CustomSqlRollback {
 
     private String token;
     private String userId;
+    private String username;
 
     public void setUserId(String userId) {
         this.userId = userId;
@@ -50,6 +51,10 @@ public class ApiTokenCreator implements CustomSqlChange, CustomSqlRollback {
 
     public void setToken(String token) {
         this.token = token;
+    }
+
+    public void setUsername(String username) {
+        this.username = username;
     }
 
     @Override
@@ -78,7 +83,7 @@ public class ApiTokenCreator implements CustomSqlChange, CustomSqlRollback {
         System.out.println(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>");
         System.out.println(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>");
         System.out.println();
-        System.out.println("Admin API token created: " + token);
+        System.out.println("API token created for user '" + username + "': " + token);
         System.out.println();
         System.out.println("(don't forget to remove it in production)");
         System.out.println();

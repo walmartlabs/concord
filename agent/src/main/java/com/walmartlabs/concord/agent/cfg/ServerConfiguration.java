@@ -57,6 +57,9 @@ public class ServerConfiguration {
         log.info("Using the Server's websocket addresses: {}", (Object[]) websocketUrls);
 
         this.apiKey = cfg.getString("server.apiKey");
+        if (this.apiKey == null || this.apiKey.trim().isEmpty()) {
+            throw new IllegalArgumentException("Configuration is missing value for server.apiKey!");
+        }
 
         this.pingInterval = cfg.getDuration("server.websocketPingInterval", TimeUnit.MILLISECONDS);
         this.maxNoActivityPeriod = cfg.getDuration("server.websocketMaxNoActivityPeriod", TimeUnit.MILLISECONDS);
