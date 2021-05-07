@@ -59,6 +59,10 @@ public class Configuration {
     private boolean followRedirects;
     private final String keyStorePath;
     private final String keyStorePassword;
+    private final boolean strictSsl;
+    private final String trustStorePath;
+    private final String trustStorePassword;
+
 
     private Configuration(RequestMethodType methodType,
                           String url,
@@ -76,7 +80,10 @@ public class Configuration {
                           boolean debug,
                           boolean followRedirects,
                           String keyStorePath,
-                          String keyStorePassword) {
+                          String keyStorePassword,
+                          boolean strictSsl,
+                          String trustStorePath,
+                          String trustStorePassword) {
 
         this.methodType = methodType;
         this.url = url;
@@ -95,6 +102,9 @@ public class Configuration {
         this.followRedirects = followRedirects;
         this.keyStorePath = keyStorePath;
         this.keyStorePassword = keyStorePassword;
+        this.strictSsl = strictSsl;
+        this.trustStorePath = trustStorePath;
+        this.trustStorePassword = trustStorePassword;
     }
 
     /**
@@ -210,6 +220,18 @@ public class Configuration {
         return keyStorePassword;
     }
 
+    public boolean isStrictSsl() {
+        return strictSsl;
+    }
+
+    public String trustStorePath() {
+        return trustStorePath;
+    }
+
+    public String trustStorePassword() {
+        return trustStorePassword;
+    }
+
     public static class Builder {
 
         private String url;
@@ -229,6 +251,9 @@ public class Configuration {
         private boolean followRedirects = true;
         private String keyStorePath;
         private String keyStorePassword;
+        private boolean strictSsl = false;
+        private String trustStorePath;
+        private String trustStorePassword;
 
         /**
          * Used to specify the url which will later use to create {@link org.apache.http.client.methods.HttpUriRequest}
@@ -384,6 +409,17 @@ public class Configuration {
             return this;
         }
 
+        public Builder setStrictSsl(boolean strictSsl) {
+            this.strictSsl = strictSsl;
+            return this;
+        }
+
+        public Builder withTrustStore(String path, String password) {
+            this.trustStorePath = path;
+            this.trustStorePassword = password;
+            return this;
+        }
+
         /**
          * Invoking this method will result in a new configuration
          *
@@ -402,7 +438,7 @@ public class Configuration {
 
             return new Configuration(methodType, url, encodedAuthToken, requestType, responseType, workDir,
                     requestHeaders, body, connectTimeout, socketTimeout, requestTimeout, ignoreErrors, proxy, debug, followRedirects,
-                    keyStorePath, keyStorePassword);
+                    keyStorePath, keyStorePassword, strictSsl, trustStorePath, trustStorePassword);
         }
 
         /**
@@ -508,9 +544,14 @@ public class Configuration {
             this.keyStorePath = MapUtils.getString(input, KEYSTORE_PATH);
             this.keyStorePassword = MapUtils.getString(input, KEYSTORE_PASSWD);
 
+            this.strictSsl = MapUtils.getBoolean(input, STRICT_SSL, false);
+
+            this.trustStorePath = MapUtils.getString(input, TRUSTSTORE_PATH);
+            this.trustStorePassword = MapUtils.getString(input, TRUSTSTORE_PASSWD);
+
             return new Configuration(methodType, url, encodedAuthToken, requestType, responseType, workDir,
                     requestHeaders, body, connectTimeout, socketTimeout, requestTimeout, ignoreErrors, proxy, debug, followRedirects,
-                    keyStorePath, keyStorePassword);
+                    keyStorePath, keyStorePassword, strictSsl, trustStorePath, trustStorePassword);
         }
 
         private static void validateMandatory(Map<String, Object> m) {
