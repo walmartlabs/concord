@@ -2,6 +2,11 @@
 
 ## [Unreleased]
 
+### Added
+
+- http-tasks: ability to provide a custom trust stores
+([#399](https://github.com/walmartlabs/concord/pull/399)). 
+
 ### Changed
 
 - dependency-manager: update the `maven-resolver` version
