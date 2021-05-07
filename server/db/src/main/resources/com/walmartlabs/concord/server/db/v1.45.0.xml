@@ -4,16 +4,18 @@
         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
         xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.3.xsd">
 
-    <changeSet id="1450000" author="ybrigo@gmail.com" runInTransaction="false" context="!codegen">
-        <sql>
-            delete from API_KEYS where KEY_ID = 'd5165ca8-e8de-11e6-9bf5-136b5db23c32'
-        </sql>
+<!-- moved to v1.86.0.xml -->
+<!--    <changeSet id="1450000" author="ybrigo@gmail.com" runInTransaction="false" context="!codegen">
+            <sql>
+                delete from API_KEYS where KEY_ID = 'd5165ca8-e8de-11e6-9bf5-136b5db23c32'
+            </sql>
 
-        <customChange class="com.walmartlabs.concord.server.liquibase.ext.ApiTokenCreator">
-            <!-- default admin user ID -->
-            <param name="userId" value="230c5c9c-d9a7-11e6-bcfd-bb681c07b26c"/>
-            <!-- value from concord-server.conf -->
-            <param name="token" value="${defaultAdminToken}"/>
-        </customChange>
-    </changeSet>
+            <customChange class="com.walmartlabs.concord.server.liquibase.ext.ApiTokenCreator">
+                &lt;!&ndash; default admin user ID &ndash;&gt;
+                <param name="userId" value="230c5c9c-d9a7-11e6-bcfd-bb681c07b26c"/>
+                <param name="username" value="admin"/>
+                &lt;!&ndash; value from concord-server.conf &ndash;&gt;
+                <param name="token" value="${defaultAdminToken}"/>
+            </customChange>
+        </changeSet> -->
 </databaseChangeLog>

@@ -6,17 +6,35 @@
 
     <property name="concordAgentUserId" value="d4f123c1-f8d4-40b2-8a12-b8947b9ce2d8"/>
 
-    <changeSet id="69000" author="ybrigo@gmail.com">
+    <!-- moved to v1.86.0.xml (no more hard-coded default token) -->
+<!--    <changeSet id="69000" author="ybrigo@gmail.com">
+            <insert tableName="USERS">
+                <column name="USER_ID">${concordAgentUserId}</column>
+                <column name="USERNAME">concordAgent</column>
+                <column name="USER_TYPE">LOCAL</column>
+            </insert>
+
+            <insert tableName="API_KEYS">
+                &lt;!&ndash; "O+JMYwBsU797EKtlRQYu+Q" &ndash;&gt;
+                <column name="API_KEY">1sw9eLZ41EOK4w/iV3jFnn6cqeAMeFtxfazqVY04koY</column>
+                <column name="USER_ID">${concordAgentUserId}</column>
+            </insert>
+        </changeSet> -->
+
+    <!-- Create agent user when not exist -->
+    <changeSet id="69001" author="benjamin.broadaway@walmart.com.com">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="0">
+                select count(USER_ID)
+                from USERS
+                where user_id = '${concordAgentUserId}';
+            </sqlCheck>
+        </preConditions>
+
         <insert tableName="USERS">
             <column name="USER_ID">${concordAgentUserId}</column>
             <column name="USERNAME">concordAgent</column>
             <column name="USER_TYPE">LOCAL</column>
-        </insert>
-        
-        <insert tableName="API_KEYS">
-            <!-- "O+JMYwBsU797EKtlRQYu+Q" -->
-            <column name="API_KEY">1sw9eLZ41EOK4w/iV3jFnn6cqeAMeFtxfazqVY04koY</column>
-            <column name="USER_ID">${concordAgentUserId}</column>
         </insert>
     </changeSet>
 

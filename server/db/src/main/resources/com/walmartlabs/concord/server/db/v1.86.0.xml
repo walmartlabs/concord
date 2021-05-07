@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.3.xsd">
+
+    <property name="concordAdminUserId" value="230c5c9c-d9a7-11e6-bcfd-bb681c07b26c"/>
+    <property name="concordAgentUserId" value="d4f123c1-f8d4-40b2-8a12-b8947b9ce2d8"/>
+    <property name="concordRunnerUserId" value="2599c604-1384-4660-a767-8bc03baa7a31"/>
+
+    <!-- delete old hard-coded default admin API token -->
+    <changeSet id="1860000" author="ybrigo@gmail.com" runInTransaction="false" context="!codegen">
+        <sql>
+            delete from API_KEYS where KEY_ID = 'd5165ca8-e8de-11e6-9bf5-136b5db23c32'
+        </sql>
+    </changeSet>
+
+    <!-- Set initial admin API token when not exist  -->
+    <changeSet id="1860100" author="ybrigo@gmail.com" runInTransaction="false" context="!codegen">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="0">
+                select count(key_id)
+                from API_KEYS
+                where user_id = '${concordAdminUserId}';
+            </sqlCheck>
+        </preConditions>
+
+        <customChange class="com.walmartlabs.concord.server.liquibase.ext.ApiTokenCreator">
+            <!-- default admin user ID -->
+            <param name="userId" value="${concordAdminUserId}"/>
+            <param name="username" value="admin"/>
+            <!-- value from concord-server.conf -->
+            <param name="token" value="${defaultAdminToken}"/>
+        </customChange>
+    </changeSet>
+
+    <!-- Set initial agent API token when not exist  -->
+    <changeSet id="1860300" author="benjamin.broadaway@walmart.com" runInTransaction="false" context="!codegen">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="0">
+                select count(key_id)
+                from API_KEYS
+                    join users u ON api_keys.user_id = u.user_id
+                where lower(USERNAME) = lower('concordAgent');
+            </sqlCheck>
+        </preConditions>
+
+        <customChange class="com.walmartlabs.concord.server.liquibase.ext.ApiTokenCreator">
+            <!-- default agent user id from v0.69.0.xml -->
+            <param name="userId" value="${concordAgentUserId}"/>
+            <param name="username" value="concordAgent"/>
+            <!-- value from concord-server.conf -->
+            <param name="token" value="${defaultAgentToken}"/>
+        </customChange>
+    </changeSet>
+
+    <!-- Delete runner API tokens and user when exist  -->
+    <changeSet id="1860400" author="benjamin.broadaway@walmart.com" runInTransaction="false" context="!codegen">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="1">
+                select count(USER_ID)
+                from USERS
+                where lower(USERNAME) = lower('concordRunner');
+            </sqlCheck>
+        </preConditions>
+
+        <sql>
+            delete from API_KEYS where USER_ID = '${concordRunnerUserId}'
+        </sql>
+
+        <sql>
+            delete from USERS where USER_ID = '${concordRunnerUserId}'
+        </sql>
+    </changeSet>
+</databaseChangeLog>
