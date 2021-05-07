@@ -34,6 +34,7 @@ import org.apache.http.config.RegistryBuilder;
 import org.apache.http.conn.HttpClientConnectionManager;
 import org.apache.http.conn.socket.ConnectionSocketFactory;
 import org.apache.http.conn.socket.PlainConnectionSocketFactory;
+import org.apache.http.conn.ssl.DefaultHostnameVerifier;
 import org.apache.http.conn.ssl.NoopHostnameVerifier;
 import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
 import org.apache.http.conn.ssl.TrustAllStrategy;
@@ -46,8 +47,8 @@ import org.apache.http.util.EntityUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.net.ssl.HostnameVerifier;
 import javax.ws.rs.core.Response.Status.Family;
-import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -55,8 +56,10 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.attribute.FileAttribute;
-import java.security.*;
-import java.security.cert.CertificateException;
+import java.security.KeyManagementException;
+import java.security.KeyStore;
+import java.security.NoSuchAlgorithmException;
+import java.security.UnrecoverableKeyException;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -347,7 +350,11 @@ public class SimpleHttpClient {
      */
     private static HttpClientConnectionManager buildConnectionManager(Configuration cfg) throws Exception {
         SSLContextBuilder builder = new SSLContextBuilder();
-        builder.loadTrustMaterial(new TrustAllStrategy());
+
+        if (!cfg.isStrictSsl()) {
+            builder.loadTrustMaterial(new TrustAllStrategy());
+        }
+
         if (cfg.keyStorePath() != null) {
             Path keystorePath = Paths.get(cfg.getWorkDir()).resolve(cfg.keyStorePath());
             if (Files.notExists(keystorePath)) {
@@ -357,7 +364,7 @@ public class SimpleHttpClient {
             char[] keystorePass = cfg.keyStorePassword() != null ? cfg.keyStorePassword().toCharArray() : null;
 
             KeyStore keyStore = KeyStore.getInstance("pkcs12");
-            try (InputStream keyStoreInput = Files.newInputStream(keystorePath) ) {
+            try (InputStream keyStoreInput = Files.newInputStream(keystorePath)) {
                 keyStore.load(keyStoreInput, keystorePass);
             }
 
@@ -372,8 +379,22 @@ public class SimpleHttpClient {
             }
         }
 
-        SSLConnectionSocketFactory socketFactory = new SSLConnectionSocketFactory(
-                builder.build(), NoopHostnameVerifier.INSTANCE);
+        if (cfg.trustStorePath() != null) {
+            Path trustStorePath = Paths.get(cfg.getWorkDir()).resolve(cfg.trustStorePath());
+            if (Files.notExists(trustStorePath)) {
+                throw new RuntimeException("TrustStore '" + cfg.trustStorePath() + "' not found");
+            }
+
+            char[] trustStorePass = cfg.trustStorePassword() != null ? cfg.trustStorePassword().toCharArray() : null;
+
+            try {
+                builder.loadTrustMaterial(trustStorePath.toFile(), trustStorePass);
+            } catch (Exception e) {
+                throw new RuntimeException("load trustStore failed. Check truststore password", e);
+            }
+        }
+
+        SSLConnectionSocketFactory socketFactory = new SSLConnectionSocketFactory(builder.build(), assertHostNameVerifier(cfg));
 
         Registry<ConnectionSocketFactory> registry = RegistryBuilder.<ConnectionSocketFactory>create()
                 .register("http", PlainConnectionSocketFactory.INSTANCE)
@@ -382,6 +403,7 @@ public class SimpleHttpClient {
 
         return new PoolingHttpClientConnectionManager(registry);
     }
+
 
     private HttpUriRequest buildHttpUriRequest(Configuration cfg) throws Exception {
         switch (cfg.getMethodType()) {
@@ -529,5 +551,13 @@ public class SimpleHttpClient {
         public Map<String, Object> getResponse() {
             return response;
         }
+    }
+
+    private static HostnameVerifier assertHostNameVerifier(Configuration cfg) {
+        if (cfg.isStrictSsl()) {
+            return new DefaultHostnameVerifier(null);
+        }
+
+        return NoopHostnameVerifier.INSTANCE;
     }
 }
