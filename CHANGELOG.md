@@ -5,14 +5,26 @@
 ### Added
 
 - http-tasks: ability to provide a custom trust stores
-([#399](https://github.com/walmartlabs/concord/pull/399)). 
+([#399](https://github.com/walmartlabs/concord/pull/399));
+- concord-server: new configuration parameter
+`db.changeLogParameters.defaultAgentToken`. Sets the default
+API token for the Agent
+([#410](https://github.com/walmartlabs/concord/pull/410)).
 
 ### Changed
 
 - dependency-manager: update the `maven-resolver` version
 ([#405](https://github.com/walmartlabs/concord/pull/405));
 - concord-server: the `iam-sso` plugin has been removed
-([#407](https://github.com/walmartlabs/concord/pull/407)).
+([#407](https://github.com/walmartlabs/concord/pull/407));
+- concord-server: the server now automatically gener
+
+### Breaking
+
+- concord-server, concord-agent: the agent's default API
+token has been removed. The server now automatically
+generates a new API token on the first start
+([#410](https://github.com/walmartlabs/concord/pull/410)).
 
 
 
