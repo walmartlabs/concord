@@ -242,9 +242,11 @@
                                                 <volume>${settings.localRepository}:/host/.m2/repository:ro</volume>
                                                 <volume>${basedir}/src/test/resources/console.conf:/opt/concord/console/nginx/app.conf:ro</volume>
                                                 <volume>${basedir}/src/test/resources/mvn.json:/opt/concord/conf/mvn.json:ro</volume>
+                                                <volume>${basedir}/src/test/resources/agent.conf:/opt/concord/conf/agent.conf:ro</volume>
                                             </bind>
                                         </volumes>
                                         <env>
+                                            <CONCORD_CFG_FILE>/opt/concord/conf/agent.conf</CONCORD_CFG_FILE>
                                             <CONCORD_DOCKER_LOCAL_MODE>false</CONCORD_DOCKER_LOCAL_MODE>
                                             <CONCORD_MAVEN_CFG>/opt/concord/conf/mvn.json</CONCORD_MAVEN_CFG>
                                             <CONCORD_TMP_DIR>${tmp.dir}</CONCORD_TMP_DIR>

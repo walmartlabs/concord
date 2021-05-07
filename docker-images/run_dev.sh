@@ -25,6 +25,9 @@ fi
 echo "Removing old containers..."
 docker rm -f db dind agent server > /dev/null
 
+echo "Cleaning tmp volume..."
+docker volume rm concordAgentTmp
+
 docker run -d \
 --name db \
 -e 'POSTGRES_PASSWORD=q1' \
@@ -58,7 +61,7 @@ echo "done!"
 docker run -d \
 --name dind \
 --privileged \
--v "/tmp:/tmp" \
+--mount source=concordAgentTmp,target=/tmp \
 docker:stable-dind \
 dockerd -H tcp://0.0.0.0:6666 --bip=10.11.13.1/24
 
@@ -66,9 +69,11 @@ docker run -d \
 --name agent \
 --link server \
 --link dind \
--v "/tmp:/tmp" \
+--mount source=concordAgentTmp,target=/tmp \
 -v "${HOME}/.m2/repository:/host/.m2/repository:ro" \
 -v "${BASE_DIR}/mvn.json:/opt/concord/conf/mvn.json:ro" \
+-v "${CONCORD_CFG_FILE}:${CONCORD_CFG_FILE}:ro" \
+-e "CONCORD_CFG_FILE=${CONCORD_CFG_FILE}" \
 -e 'CONCORD_MAVEN_CFG=/opt/concord/conf/mvn.json' \
 -e 'CONCORD_DOCKER_LOCAL_MODE=false' \
 -e 'SERVER_API_BASE_URL=http://server:8001' \

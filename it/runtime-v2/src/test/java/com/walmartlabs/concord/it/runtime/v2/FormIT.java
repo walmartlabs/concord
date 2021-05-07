@@ -252,7 +252,7 @@ public class FormIT {
     }
 
     private static void startCustomFormSession(ConcordRule concord, UUID instanceId, String formName) throws Exception {
-        URL url = new URL(concord.apiUrlPrefix() + "/api/service/custom_form/" + instanceId + "/" + formName + "/start");
+        URL url = new URL(concord.apiBaseUrl() + "/api/service/custom_form/" + instanceId + "/" + formName + "/start");
         HttpURLConnection http = (HttpURLConnection)url.openConnection();
         http.setRequestProperty("Authorization", concord.environment().apiToken());
         http.setRequestMethod("POST");
@@ -266,7 +266,7 @@ public class FormIT {
 
     @SuppressWarnings("unchecked")
     private static Map<String, Object> getDataJs(ConcordRule concord, UUID instanceId, String formName) throws Exception {
-        URL url = new URL(concord.apiUrlPrefix() + "/forms/" + instanceId + "/" + formName + "/form/data.js");
+        URL url = new URL(concord.apiBaseUrl() + "/forms/" + instanceId + "/" + formName + "/form/data.js");
         HttpURLConnection http = (HttpURLConnection)url.openConnection();
         http.setRequestProperty("Authorization", concord.environment().apiToken());
         http.connect();
