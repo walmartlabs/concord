@@ -37,8 +37,6 @@ import javax.naming.directory.Attributes;
 import javax.naming.directory.DirContext;
 import javax.naming.directory.InitialDirContext;
 import javax.naming.ldap.LdapContext;
-import java.net.URI;
-import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Hashtable;
 import java.util.List;
@@ -48,7 +46,7 @@ import java.util.List;
 public class ConcordLdapContextFactory implements LdapContextFactory {
 
     private final LdapContextFactory delegate;
-    
+
     private final String ldapUrl;
 
     private static final Logger log = LoggerFactory.getLogger(ConcordLdapContextFactory.class);
@@ -70,7 +68,7 @@ public class ConcordLdapContextFactory implements LdapContextFactory {
                 return super.createLdapContext(env);
             }
         };
-        
+
         f.setSystemUsername(cfg.getSystemUsername());
         f.setSystemPassword(cfg.getSystemPassword());
         f.setPoolingEnabled(true);
@@ -88,18 +86,17 @@ public class ConcordLdapContextFactory implements LdapContextFactory {
                 log.info("Connected to ldap server: " + ldapServer);
                 break;
             }
-        }
-        else {
+        } else {
             f.setUrl(cfg.getUrl());
         }
         this.delegate = f;
         this.ldapUrl = f.getUrl();
     }
 
-    public String getLdapUrl(){
+    public String getLdapUrl() {
         return ldapUrl;
     }
-    
+
     @Override
     public LdapContext getSystemLdapContext() throws NamingException {
         return delegate.getSystemLdapContext();
@@ -135,9 +132,9 @@ public class ConcordLdapContextFactory implements LdapContextFactory {
     }
 
     public static String removeLastCharIfDot(String s) {
-        if (s == null || s.length() == 0) 
+        if (s == null || s.length() == 0)
             return null;
-        if (s.charAt(s.length()-1) != '.')
+        if (s.charAt(s.length() - 1) != '.')
             return s;
         return s.substring(0, s.length() - 1);
     }

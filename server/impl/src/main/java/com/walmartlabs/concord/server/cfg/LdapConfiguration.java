@@ -109,7 +109,7 @@ public class LdapConfiguration implements Serializable {
     @Nullable
     @Config("ldap.dnsSRVName")
     private String dnsSRVName;
-    
+
     private final Set<String> exposeAttributes;
 
     private final Set<String> excludeAttributes;
@@ -197,7 +197,7 @@ public class LdapConfiguration implements Serializable {
     public String getDnsSRVName() {
         return dnsSRVName;
     }
-    
+
     private static Set<String> split(String s) {
         if (s == null || s.isEmpty()) {
             return Collections.emptySet();
