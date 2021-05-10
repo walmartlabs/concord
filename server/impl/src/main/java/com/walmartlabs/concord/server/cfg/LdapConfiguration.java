@@ -38,6 +38,7 @@ import java.util.Set;
 public class LdapConfiguration implements Serializable {
 
     @Inject
+    @Nullable
     @Config("ldap.url")
     private String url;
 
@@ -104,6 +105,11 @@ public class LdapConfiguration implements Serializable {
     @Config("ldap.readTimeout")
     private Duration readTimeout;
 
+    @Inject
+    @Nullable
+    @Config("ldap.dnsSRVName")
+    private String dnsSRVName;
+    
     private final Set<String> exposeAttributes;
 
     private final Set<String> excludeAttributes;
@@ -188,6 +194,10 @@ public class LdapConfiguration implements Serializable {
         return readTimeout;
     }
 
+    public String getDnsSRVName() {
+        return dnsSRVName;
+    }
+    
     private static Set<String> split(String s) {
         if (s == null || s.isEmpty()) {
             return Collections.emptySet();
