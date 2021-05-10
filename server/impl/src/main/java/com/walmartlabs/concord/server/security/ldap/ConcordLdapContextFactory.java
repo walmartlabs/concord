@@ -51,6 +51,9 @@ public class ConcordLdapContextFactory implements LdapContextFactory {
 
     private static final Logger log = LoggerFactory.getLogger(ConcordLdapContextFactory.class);
 
+    private static final String protocol = "ldaps";
+    private static final String port = "3269";
+
     @Inject
     @SuppressWarnings("unchecked")
     public ConcordLdapContextFactory(LdapConfiguration cfg) throws NamingException {
@@ -58,7 +61,7 @@ public class ConcordLdapContextFactory implements LdapContextFactory {
             @Override
             protected LdapContext createLdapContext(Hashtable env) throws NamingException {
                 String url = cfg.getUrl();
-                if (url != null && url.startsWith("ldaps:")) {
+                if (url != null && url.startsWith(protocol)) {
                     env.put("java.naming.ldap.factory.socket", TrustingSslSocketFactory.class.getName());
                 }
 
@@ -125,7 +128,7 @@ public class ConcordLdapContextFactory implements LdapContextFactory {
             NamingEnumeration<?> srvRecord = srvRecords.getAll();
             while (srvRecord.hasMore()) {
                 String attr = (String) srvRecord.next();
-                servers.add("ldaps://" + removeLastCharIfDot(attr.split(" ")[3]) + ":3269");
+                servers.add(protocol + "://" + removeLastCharIfDot(attr.split(" ")[3]) + ":" + port);
             }
         }
         return servers;
