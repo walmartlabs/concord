@@ -35,7 +35,7 @@
     </changeSet>
 
     <!-- delete old hard-coded default agent API token -->
-    <changeSet id="1860200" author="ybrigo@gmail.com" runInTransaction="false" context="!codegen">
+    <changeSet id="1860200" author="benjamin.broadaway@walmart.com" runInTransaction="false" context="!codegen">
         <sql>
             delete from API_KEYS
             where USER_ID = '${concordAgentUserId}'
