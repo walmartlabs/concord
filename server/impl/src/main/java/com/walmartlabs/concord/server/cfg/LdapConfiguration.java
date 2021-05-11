@@ -38,7 +38,6 @@ import java.util.Set;
 public class LdapConfiguration implements Serializable {
 
     @Inject
-    @Nullable
     @Config("ldap.url")
     private String url;
 

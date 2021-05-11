@@ -76,7 +76,7 @@ public class ConcordLdapContextFactory implements LdapContextFactory {
         f.setSystemPassword(cfg.getSystemPassword());
         f.setPoolingEnabled(true);
 
-        if (cfg.getUrl() == null) {
+        if (cfg.getDnsSRVName() != null) {
             List<String> ldapServers = getLdapServers(cfg.getDnsSRVName());
             for (String ldapServer : ldapServers) {
                 f.setUrl(ldapServer);
