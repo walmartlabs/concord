@@ -34,6 +34,15 @@
         </customChange>
     </changeSet>
 
+    <!-- delete old hard-coded default agent API token -->
+    <changeSet id="1860200" author="benjamin.broadaway@walmart.com" runInTransaction="false" context="!codegen">
+        <sql>
+            delete from API_KEYS
+            where USER_ID = '${concordAgentUserId}'
+            and API_KEY = '1sw9eLZ41EOK4w/iV3jFnn6cqeAMeFtxfazqVY04koY'
+        </sql>
+    </changeSet>
+
     <!-- Set initial agent API token when not exist  -->
     <changeSet id="1860300" author="benjamin.broadaway@walmart.com" runInTransaction="false" context="!codegen">
         <preConditions onFail="MARK_RAN">
