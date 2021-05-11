@@ -24,7 +24,8 @@ API token for the Agent
 - concord-server, concord-agent: the agent's default API
 token has been removed. The server now automatically
 generates a new API token on the first start
-([#410](https://github.com/walmartlabs/concord/pull/410)).
+([#410](https://github.com/walmartlabs/concord/pull/410) and
+([#413](https://github.com/walmartlabs/concord/pull/413)).
 
 
 
