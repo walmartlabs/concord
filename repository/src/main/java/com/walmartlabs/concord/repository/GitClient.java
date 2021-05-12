@@ -26,7 +26,6 @@ import com.walmartlabs.concord.common.secret.BinaryDataSecret;
 import com.walmartlabs.concord.common.secret.KeyPair;
 import com.walmartlabs.concord.common.secret.UsernamePassword;
 import com.walmartlabs.concord.sdk.Secret;
-import org.eclipse.jgit.lib.ObjectId;
 import org.immutables.value.Value;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -47,6 +46,9 @@ import static java.nio.file.attribute.PosixFilePermission.OWNER_READ;
 public class GitClient {
 
     private static final Logger log = LoggerFactory.getLogger(GitClient.class);
+
+    private static final int OBJECT_ID_LENGTH = 20;
+    private static final int OBJECT_ID_STRING_LENGTH = OBJECT_ID_LENGTH * 2;
 
     private static final int SUCCESS_EXIT_CODE = 0;
 
@@ -230,7 +232,7 @@ public class GitClient {
         if (line.isEmpty()) {
             throw new RepositoryException("rev-parse no content returned for '" + rev + "'");
         }
-        return ObjectId.fromString(line).name();
+        return fromString(line);
     }
 
     private List<Ref> getRefs(Path workDir, String version, Secret secret) {
@@ -395,6 +397,28 @@ public class GitClient {
                 .build());
         String s = firstLine(result);
         return s != null ? s.trim() : null;
+    }
+
+    private CommitInfo getCommitInfo(Path path) {
+        String result = exec(Command.builder()
+                .workDir(path)
+                .timeout(cfg.defaultOperationTimeout())
+                .addArgs("log", "-1", "--format=%an (%ae)%n%s%n%b")
+                .build());
+        String[] info = result.split("\n");
+        if (info.length < 1) {
+            return CommitInfo.builder().build();
+        }
+        String author = info[0];
+        StringBuilder message = new StringBuilder();
+        for (int i = 1; i < info.length; i++) {
+            message.append(info[i]).append("\n");
+        }
+
+        return CommitInfo.builder()
+                .message(message.toString())
+                .author(author)
+                .build();
     }
 
     private String exec(Command command) {
@@ -616,28 +640,12 @@ public class GitClient {
         return line;
     }
 
-    private CommitInfo getCommitInfo(Path path) {
-        String result = exec(Command.builder()
-                .workDir(path)
-                .timeout(cfg.defaultOperationTimeout())
-                .addArgs("log", "-1", "--format=%an (%ae)%n%s%n%b")
-                .build());
-        String[] info = result.split("\n");
-        if (info.length < 1) {
-            return CommitInfo.builder().build();
+    private static String fromString(String str) {
+        if (str.length() != OBJECT_ID_STRING_LENGTH) {
+            throw new RuntimeException("Invalid object id:" + str);
         }
-        String author = info[0];
-        StringBuilder message = new StringBuilder();
-        for (int i = 1; i < info.length; i++) {
-            message.append(info[i]).append("\n");
-        }
-
-        return CommitInfo.builder()
-                .message(message.toString())
-                .author(author)
-                .build();
+        return str;
     }
-
 
     @Value.Immutable
     @Value.Style(jdkOnly = true)

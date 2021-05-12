@@ -29,7 +29,12 @@ import java.util.stream.Collectors;
 
 public class ConcordTaskParams {
 
-    public static ConcordTaskParams of(Variables variables) {
+    public static ConcordTaskParams of(Variables input, Map<String, Object> defaults) {
+        Map<String, Object> variablesMap = new HashMap<>(defaults != null ? defaults : Collections.emptyMap());
+        variablesMap.putAll(input.toMap());
+
+        Variables variables = new MapBackedVariables(variablesMap);
+
         ConcordTaskParams p = new ConcordTaskParams(variables);
         switch (p.action()) {
             case START: {
