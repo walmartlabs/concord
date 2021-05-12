@@ -60,7 +60,7 @@ public class ConcordTaskV2 implements ReentrantTask {
 
     @Override
     public TaskResult execute(Variables in) throws Exception {
-        return delegate().execute(ConcordTaskParams.of(in, defaults.toMap()));
+        return delegate().execute(ConcordTaskParams.of(in));
     }
 
     @Override
