@@ -17,7 +17,8 @@ API token for the Agent
 ([#405](https://github.com/walmartlabs/concord/pull/405));
 - concord-server: the `iam-sso` plugin has been removed
 ([#407](https://github.com/walmartlabs/concord/pull/407));
-- concord-server: the server now automatically gener
+- concord-repository: remove dependency on`jgit`
+([#414](https://github.com/walmartlabs/concord/pull/414)).
 
 ### Breaking
 
