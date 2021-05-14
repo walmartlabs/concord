@@ -221,7 +221,7 @@ public class Run implements Callable<Integer> {
                 runnerCfg,
                 () -> cfg,
                 new ProcessDependenciesModule(targetDir, runnerCfg.dependencies()),
-                new CliServicesModule(secretStoreDir, targetDir, new VaultProvider(vaultDir, vaultId)))
+                new CliServicesModule(secretStoreDir, targetDir, new VaultProvider(vaultDir, vaultId), dependencyManager))
                 .create();
 
         Runner runner = injector.getInstance(Runner.class);
