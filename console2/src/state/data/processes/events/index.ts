@@ -24,10 +24,12 @@ import { all, call, put, takeLatest } from 'redux-saga/effects';
 import { handleErrors, makeErrorReducer, makeLoadingReducer } from '../../common';
 import { AnsibleEvents, GetAnsibleEventsRequest, GetAnsibleEventsResponse, State } from './types';
 import {
+    AnsibleEvent,
     AnsibleStatus,
     listAnsibleEvents as apiListAnsibleEvents
 } from '../../../../api/process/ansible';
 import { ConcordId } from '../../../../api/common';
+import { ProcessEventEntry } from '../../../../api/process/event';
 
 // https://github.com/facebook/create-react-app/issues/6054
 export * from './types';
@@ -100,7 +102,7 @@ function* onAnsibleEvents({
     playbookId
 }: GetAnsibleEventsRequest) {
     try {
-        const response = yield call(
+        const response: ProcessEventEntry<AnsibleEvent> = yield call(
             apiListAnsibleEvents,
             instanceId,
             host,

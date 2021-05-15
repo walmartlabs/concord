@@ -17,7 +17,7 @@
  * limitations under the License.
  * =====
  */
-import { styled } from 'reakit';
+import styled from 'styled-components';
 import { ProcessStatus } from '../../../../api/process';
 import { SemanticCOLORS } from 'semantic-ui-react';
 

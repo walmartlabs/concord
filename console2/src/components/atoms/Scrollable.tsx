@@ -17,7 +17,7 @@
  * limitations under the License.
  * =====
  */
-import { styled } from 'reakit';
+import styled from 'styled-components';
 
 export const ScrollableX = styled.div`
     overflow-x: auto;

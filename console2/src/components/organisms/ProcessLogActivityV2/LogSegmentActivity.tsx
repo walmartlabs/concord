@@ -250,7 +250,7 @@ const usePolling = (
                 setLoading(false);
 
                 if (!stopPollingIndicator && !cancelled && continueFetch) {
-                    poll.current = setTimeout(() => fetchData(r), DATA_FETCH_INTERVAL);
+                    poll.current = window.setTimeout(() => fetchData(r), DATA_FETCH_INTERVAL);
                 } else {
                     stopPolling();
                 }

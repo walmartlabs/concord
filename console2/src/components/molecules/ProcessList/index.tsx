@@ -309,7 +309,7 @@ class ProcessList extends React.Component<Props, State> {
             return;
         }
 
-        const processes = [...this.state.data];
+        const processes = [...(this.state.data || [])];
 
         const idx: number = processes.findIndex((p) => p.instanceId === r.instanceId);
         if (idx === -1) {
@@ -322,7 +322,7 @@ class ProcessList extends React.Component<Props, State> {
     }
 
     onRowSelect(r: Entry, isChecked: any) {
-        const processes = [...this.state.data];
+        const processes = [...(this.state.data || [])];
 
         const idx: number = processes.findIndex((p) => p.instanceId === r.instanceId);
         if (idx === -1) {
@@ -336,7 +336,7 @@ class ProcessList extends React.Component<Props, State> {
     }
 
     onAllRowsSelect(isChecked: any) {
-        const processes = [...this.state.data];
+        const processes = [...(this.state.data || [])];
 
         processes.forEach((p) => {
             if (canBeCancelled(p.status)) {

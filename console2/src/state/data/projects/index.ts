@@ -22,15 +22,15 @@ import { push as pushHistory } from 'connected-react-router';
 import { Action, combineReducers, Reducer } from 'redux';
 import { all, call, put, takeLatest } from 'redux-saga/effects';
 
-import { ConcordKey } from '../../../api/common';
+import { ConcordKey, GenericOperationResult } from '../../../api/common';
 import { ResourceAccessEntry } from '../../../api/org';
 import {
     createOrUpdate as apiCreateOrUpdate,
     deleteProject as apiDeleteProject,
     get as apiGet,
     getProjectAccess,
-    list as apiList,
     NewProjectEntry,
+    ProjectEntry,
     updateProjectAccess,
     UpdateProjectEntry
 } from '../../../api/org/project';
@@ -38,6 +38,7 @@ import {
     createOrUpdate as apiRepoCreateOrUpdate,
     EditRepositoryEntry,
     refreshRepository as apiRepoRefresh,
+    RepositoryValidationResponse,
     validateRepository as apiRepoValidation
 } from '../../../api/org/project/repository';
 import {
@@ -54,9 +55,7 @@ import {
     DeleteProjectRequest,
     DeleteProjectState,
     GetProjectRequest,
-    ListProjectsRequest,
     PaginatedProjects,
-    Pagination,
     ProjectDataResponse,
     ProjectTeamAccessRequest,
     ProjectTeamAccessState,
@@ -80,7 +79,6 @@ const NAMESPACE = 'projects';
 
 const actionTypes = {
     GET_PROJECT_REQUEST: `${NAMESPACE}/get/request`,
-    LIST_PROJECTS_REQUEST: `${NAMESPACE}/list/request`,
     PROJECT_DATA_RESPONSE: `${NAMESPACE}/data/response`,
 
     CREATE_PROJECT_REQUEST: `${NAMESPACE}/create/request`,
@@ -118,17 +116,6 @@ export const actions = {
         type: actionTypes.GET_PROJECT_REQUEST,
         orgName,
         projectName
-    }),
-
-    listProjects: (
-        orgName: ConcordKey,
-        pagination: Pagination,
-        filter?: string
-    ): ListProjectsRequest => ({
-        type: actionTypes.LIST_PROJECTS_REQUEST,
-        orgName,
-        pagination,
-        filter
     }),
 
     createProject: (orgName: ConcordKey, entry: NewProjectEntry): CreateProjectRequest => ({
@@ -240,20 +227,12 @@ const projectById: Reducer<PaginatedProjects> = (state = {}, action: ProjectData
 };
 
 const loading = makeLoadingReducer(
-    [
-        actionTypes.GET_PROJECT_REQUEST,
-        actionTypes.LIST_PROJECTS_REQUEST,
-        actionTypes.CREATE_PROJECT_REQUEST
-    ],
+    [actionTypes.GET_PROJECT_REQUEST, actionTypes.CREATE_PROJECT_REQUEST],
     [actionTypes.PROJECT_DATA_RESPONSE]
 );
 
 const errorMsg = makeErrorReducer(
-    [
-        actionTypes.GET_PROJECT_REQUEST,
-        actionTypes.LIST_PROJECTS_REQUEST,
-        actionTypes.CREATE_PROJECT_REQUEST
-    ],
+    [actionTypes.GET_PROJECT_REQUEST, actionTypes.CREATE_PROJECT_REQUEST],
     [actionTypes.PROJECT_DATA_RESPONSE]
 );
 
@@ -423,24 +402,10 @@ export const selectors = {
 
 function* onGet({ orgName, projectName }: GetProjectRequest) {
     try {
-        const response = yield call(apiGet, orgName, projectName);
+        const response: ProjectEntry = yield call(apiGet, orgName, projectName);
         yield put({
             type: actionTypes.PROJECT_DATA_RESPONSE,
             items: [response] // normalizing the data
-        });
-    } catch (e) {
-        yield handleErrors(actionTypes.PROJECT_DATA_RESPONSE, e);
-    }
-}
-
-function* onList({ orgName, pagination, filter }: ListProjectsRequest) {
-    try {
-        const response = yield call(apiList, orgName, pagination.offset, pagination.limit, filter);
-        yield put({
-            type: actionTypes.PROJECT_DATA_RESPONSE,
-            items: response.items,
-            next: response.next,
-            prev: response.prev
         });
     } catch (e) {
         yield handleErrors(actionTypes.PROJECT_DATA_RESPONSE, e);
@@ -488,7 +453,12 @@ function* onDelete({ orgName, projectName }: DeleteProjectRequest) {
 
 function* onAddRepository({ orgName, projectName, entry }: AddRepositoryRequest) {
     try {
-        const response = yield call(apiRepoCreateOrUpdate, orgName, projectName, entry);
+        const response: GenericOperationResult = yield call(
+            apiRepoCreateOrUpdate,
+            orgName,
+            projectName,
+            entry
+        );
         yield put(genericResult(actionTypes.ADD_REPOSITORY_RESPONSE, response));
 
         yield put(pushHistory(`/org/${orgName}/project/${projectName}/repository`));
@@ -499,7 +469,12 @@ function* onAddRepository({ orgName, projectName, entry }: AddRepositoryRequest)
 
 function* onUpdateRepository({ orgName, projectName, entry }: UpdateRepositoryRequest) {
     try {
-        const response = yield call(apiRepoCreateOrUpdate, orgName, projectName, entry);
+        const response: GenericOperationResult = yield call(
+            apiRepoCreateOrUpdate,
+            orgName,
+            projectName,
+            entry
+        );
         yield put(genericResult(actionTypes.UPDATE_REPOSITORY_RESPONSE, response));
 
         yield put(pushHistory(`/org/${orgName}/project/${projectName}/repository`));
@@ -510,7 +485,13 @@ function* onUpdateRepository({ orgName, projectName, entry }: UpdateRepositoryRe
 
 function* onRefreshRepository({ orgName, projectName, repoName }: RefreshRepositoryRequest) {
     try {
-        const response = yield call(apiRepoRefresh, orgName, projectName, repoName, true);
+        const response: GenericOperationResult = yield call(
+            apiRepoRefresh,
+            orgName,
+            projectName,
+            repoName,
+            true
+        );
         yield put(genericResult(actionTypes.REFRESH_REPOSITORY_RESPONSE, response));
     } catch (e) {
         yield handleErrors(actionTypes.REFRESH_REPOSITORY_RESPONSE, e);
@@ -519,7 +500,12 @@ function* onRefreshRepository({ orgName, projectName, repoName }: RefreshReposit
 
 function* onValidateRepository({ orgName, projectName, repoName }: ValidateRepositoryRequest) {
     try {
-        const response = yield call(apiRepoValidation, orgName, projectName, repoName);
+        const response: RepositoryValidationResponse = yield call(
+            apiRepoValidation,
+            orgName,
+            projectName,
+            repoName
+        );
         yield put(genericResult(actionTypes.VALIDATE_REPOSITORY_RESPONSE, response));
     } catch (e) {
         yield handleErrors(actionTypes.VALIDATE_REPOSITORY_RESPONSE, e);
@@ -528,7 +514,7 @@ function* onValidateRepository({ orgName, projectName, repoName }: ValidateRepos
 
 function* onGetTeamAccess({ orgName, projectName }: ProjectTeamAccessRequest) {
     try {
-        const response = yield call(getProjectAccess, orgName, projectName);
+        const response: GenericOperationResult = yield call(getProjectAccess, orgName, projectName);
         yield put({
             type: actionTypes.PROJECT_TEAM_ACCESS_RESPONSE,
             items: response
@@ -540,7 +526,12 @@ function* onGetTeamAccess({ orgName, projectName }: ProjectTeamAccessRequest) {
 
 function* onUpdateTeamAccess({ orgName, projectName, teams }: UpdateProjectTeamAccessRequest) {
     try {
-        const response = yield call(updateProjectAccess, orgName, projectName, teams);
+        const response: GenericOperationResult = yield call(
+            updateProjectAccess,
+            orgName,
+            projectName,
+            teams
+        );
         yield put(genericResult(actionTypes.UPDATE_PROJECT_TEAM_ACCESS_RESPONSE, response));
         yield put(actions.getTeamAccess(orgName, projectName));
     } catch (e) {
@@ -551,7 +542,6 @@ function* onUpdateTeamAccess({ orgName, projectName, teams }: UpdateProjectTeamA
 export const sagas = function*() {
     yield all([
         takeLatest(actionTypes.GET_PROJECT_REQUEST, onGet),
-        takeLatest(actionTypes.LIST_PROJECTS_REQUEST, onList),
         takeLatest(actionTypes.CREATE_PROJECT_REQUEST, onCreate),
         takeLatest(actionTypes.DELETE_PROJECT_REQUEST, onDelete),
         takeLatest(actionTypes.UPDATE_PROJECT_REQUEST, onUpdateProject),

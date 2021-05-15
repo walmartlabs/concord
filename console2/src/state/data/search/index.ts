@@ -21,7 +21,10 @@
 import { Action, combineReducers } from 'redux';
 import { all, call, put, throttle } from 'redux-saga/effects';
 
-import { findLdapGroups as apiFindLdapGroups } from '../../../api/service/console';
+import {
+    findLdapGroups as apiFindLdapGroups,
+    LdapGroupSearchResult
+} from '../../../api/service/console';
 import { handleErrors, makeErrorReducer, makeLoadingReducer, makeResponseReducer } from '../common';
 import { SearchLdapGroupsRequest, SearchLdapGroupsState, State } from './types';
 
@@ -78,7 +81,7 @@ function* onFindLdapGroups({ filter }: SearchLdapGroupsRequest) {
     }
 
     try {
-        const response = yield call(apiFindLdapGroups, filter);
+        const response: LdapGroupSearchResult = yield call(apiFindLdapGroups, filter);
         yield put({
             type: actionTypes.FIND_LDAP_GROUPS_RESPONSE,
             items: response

@@ -22,7 +22,12 @@ import { Action, combineReducers } from 'redux';
 import { all, call, fork, put, takeLatest } from 'redux-saga/effects';
 
 import { ConcordId, ConcordKey } from '../../../api/common';
-import { start as apiStart, killBulk as apiKillBulk } from '../../../api/process';
+import {
+    start as apiStart,
+    killBulk as apiKillBulk,
+    StartProcessResponse,
+    ProcessEntry
+} from '../../../api/process';
 import { restoreProcess as apiRestore } from '../../../api/process/checkpoint';
 import { handleErrors, makeErrorReducer, makeLoadingReducer, makeResponseReducer } from '../common';
 import { reducers as eventsReducers, sagas as eventsSagas } from './events';
@@ -157,7 +162,7 @@ function* onStartProcess({
     args
 }: StartProcessRequest) {
     try {
-        const response = yield call(
+        const response: StartProcessResponse = yield call(
             apiStart,
             orgName,
             projectName,
@@ -188,7 +193,7 @@ function* onCancelBulkProcess({ instanceIds }: CancelBulkProcessRequest) {
 
 function* onRestoreProcess({ instanceId, checkpointId }: RestoreProcessRequest) {
     try {
-        const response = yield call(apiRestore, instanceId, checkpointId);
+        const response: ProcessEntry = yield call(apiRestore, instanceId, checkpointId);
         yield put({
             type: actionTypes.RESTORE_PROCESS_RESPONSE,
             ...response
