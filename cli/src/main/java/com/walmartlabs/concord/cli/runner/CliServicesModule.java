@@ -9,9 +9,9 @@ package com.walmartlabs.concord.cli.runner;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -22,19 +22,24 @@ package com.walmartlabs.concord.cli.runner;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.inject.AbstractModule;
+import com.google.inject.Singleton;
 import com.google.inject.multibindings.Multibinder;
-import com.walmartlabs.concord.runtime.v2.runner.*;
+import com.walmartlabs.concord.dependencymanager.DependencyManager;
+import com.walmartlabs.concord.runtime.v2.runner.DefaultDependencyManager;
+import com.walmartlabs.concord.runtime.v2.runner.DefaultPersistenceService;
+import com.walmartlabs.concord.runtime.v2.runner.DefaultTaskVariablesService;
+import com.walmartlabs.concord.runtime.v2.runner.MapBackedDefaultTaskVariablesService;
+import com.walmartlabs.concord.runtime.v2.runner.PersistenceService;
+import com.walmartlabs.concord.runtime.v2.runner.ProcessStatusCallback;
 import com.walmartlabs.concord.runtime.v2.runner.checkpoints.CheckpointService;
 import com.walmartlabs.concord.runtime.v2.runner.guice.BaseRunnerModule;
 import com.walmartlabs.concord.runtime.v2.runner.logging.RunnerLogger;
 import com.walmartlabs.concord.runtime.v2.runner.logging.SimpleLogger;
-import com.walmartlabs.concord.runtime.v2.sdk.DependencyManager;
 import com.walmartlabs.concord.runtime.v2.sdk.DockerService;
 import com.walmartlabs.concord.runtime.v2.sdk.LockService;
 import com.walmartlabs.concord.runtime.v2.sdk.SecretService;
 import com.walmartlabs.concord.svm.ExecutionListener;
 
-import javax.inject.Singleton;
 import java.nio.file.Path;
 import java.util.Map;
 
@@ -43,11 +48,17 @@ public class CliServicesModule extends AbstractModule {
     private final Path secretStoreDir;
     private final Path workDir;
     private final VaultProvider vaultProvider;
+    private final DependencyManager dependencyManager;
 
-    public CliServicesModule(Path secretStoreDir, Path workDir, VaultProvider vaultProvider) {
+    public CliServicesModule(Path secretStoreDir,
+                             Path workDir,
+                             VaultProvider vaultProvider,
+                             DependencyManager dependencyManager) {
+
         this.secretStoreDir = secretStoreDir;
         this.workDir = workDir;
         this.vaultProvider = vaultProvider;
+        this.dependencyManager = dependencyManager;
     }
 
     @Override
@@ -67,7 +78,8 @@ public class CliServicesModule extends AbstractModule {
 
         bind(LockService.class).to(CliLockService.class);
 
-        bind(DependencyManager.class).to(DefaultDependencyManager.class).in(Singleton.class);
+        bind(DependencyManager.class).toInstance(dependencyManager);
+        bind(com.walmartlabs.concord.runtime.v2.sdk.DependencyManager.class).to(DefaultDependencyManager.class).in(Singleton.class);
 
         Multibinder.newSetBinder(binder(), ExecutionListener.class);
     }
