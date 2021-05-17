@@ -43,8 +43,9 @@ import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.List;
 
+import static com.walmartlabs.concord.server.security.ldap.Utils.recursionLimiter;
+
 @Named
-@Singleton
 public class ConcordLdapContextFactory implements LdapContextFactory {
 
     private LdapContextFactory delegate;
@@ -61,28 +62,37 @@ public class ConcordLdapContextFactory implements LdapContextFactory {
     /*
     1. check dnsSRV and refresh SRV list
     2. pic one and create LDAP context
-    3. while getContext check for communication exception and update context with new URL
-    4. if list empty then call step 1.
+    3. while getContext check for communication exception and update context with next URL in SRV list
+    4. on SRV list empty, call step 1.
      */
     @Inject
     @SuppressWarnings("unchecked")
     public ConcordLdapContextFactory(LdapConfiguration cfg) throws NamingException {
         this.cfg = cfg;
 
-        refreshSRVList();
+        this.refreshSRVList();
 
-        this.delegate = getNewContextInstance(resolveUrl());
+        this.setLdapContextFactory(getNewContextInstance(resolveUrl()));
     }
 
     public String getCurrentLdapUrl() {
         return ((JndiLdapContextFactory) this.delegate).getUrl();
     }
 
+    public void setLdapContextFactory(LdapContextFactory ldapContextFactory) {
+        this.delegate = ldapContextFactory;
+    }
+    
+    public void setLdapUrlIterator(Iterator<String> ldapUrlIterator) {
+        this.ldapUrlIterator = ldapUrlIterator;
+    }
+    
     @Override
     public LdapContext getSystemLdapContext() throws NamingException {
         try {
-            return delegate.getSystemLdapContext();
+            return this.delegate.getSystemLdapContext();
         } catch (CommunicationException e) {
+            recursionLimiter();  // limiter to safe guard from infinite stack overflow
             handleCommunicationException(e);
             return getSystemLdapContext();
         }
@@ -91,8 +101,9 @@ public class ConcordLdapContextFactory implements LdapContextFactory {
     @Override
     public LdapContext getLdapContext(String username, String password) throws NamingException {
         try {
-            return delegate.getLdapContext(username, password);
+            return this.delegate.getLdapContext(username, password);
         } catch (CommunicationException e) {
+            recursionLimiter();
             handleCommunicationException(e);
             return getLdapContext(username, password);
         }
@@ -101,8 +112,9 @@ public class ConcordLdapContextFactory implements LdapContextFactory {
     @Override
     public LdapContext getLdapContext(Object principal, Object credentials) throws NamingException {
         try {
-            return delegate.getLdapContext(principal, credentials);
+            return this.delegate.getLdapContext(principal, credentials);
         } catch (CommunicationException e) {
+            recursionLimiter();
             handleCommunicationException(e);
             return getLdapContext(principal, credentials);
         }
@@ -110,7 +122,7 @@ public class ConcordLdapContextFactory implements LdapContextFactory {
 
     private void refreshSRVList() throws NamingException {
         if (cfg.getDnsSRVName() != null) {
-            this.ldapUrlIterator = getLdapServers(cfg.getDnsSRVName()).iterator();
+            this.setLdapUrlIterator(getLdapServers(cfg.getDnsSRVName()).iterator());
         }
     }
 
@@ -153,7 +165,7 @@ public class ConcordLdapContextFactory implements LdapContextFactory {
         while (srv.hasMore()) {
             Attribute srvRecords = (Attribute) srv.next();
             NamingEnumeration<?> srvRecord = srvRecords.getAll();
-            while (srvRecord.hasMore() && servers.size() <= 2) {
+            while (srvRecord.hasMore()) {
                 String attr = (String) srvRecord.next();
                 servers.add(protocol + "://" + removeLastCharIfDot(attr.split(" ")[3]) + ":" + port);
             }
@@ -195,8 +207,8 @@ public class ConcordLdapContextFactory implements LdapContextFactory {
             throw new RuntimeException(e);
         }
         if (this.ldapUrlIterator != null && !this.ldapUrlIterator.hasNext()) {
-            refreshSRVList();
+            this.refreshSRVList();
         }
-        this.delegate = getNewContextInstance(getNextLdapUrl(this.ldapUrlIterator));
+        this.setLdapContextFactory(getNewContextInstance(getNextLdapUrl(this.ldapUrlIterator)));
     }
 }
