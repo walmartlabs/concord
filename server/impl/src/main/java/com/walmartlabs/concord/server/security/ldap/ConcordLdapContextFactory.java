@@ -28,7 +28,6 @@ import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 import javax.inject.Named;
-import javax.inject.Singleton;
 import javax.naming.CommunicationException;
 import javax.naming.Context;
 import javax.naming.NamingEnumeration;
@@ -79,11 +78,11 @@ public class ConcordLdapContextFactory implements LdapContextFactory {
         return ((JndiLdapContextFactory) this.delegate).getUrl();
     }
 
-    public void setLdapContextFactory(LdapContextFactory ldapContextFactory) {
+    public synchronized void setLdapContextFactory(LdapContextFactory ldapContextFactory) {
         this.delegate = ldapContextFactory;
     }
     
-    public void setLdapUrlIterator(Iterator<String> ldapUrlIterator) {
+    public synchronized void setLdapUrlIterator(Iterator<String> ldapUrlIterator) {
         this.ldapUrlIterator = ldapUrlIterator;
     }
     
