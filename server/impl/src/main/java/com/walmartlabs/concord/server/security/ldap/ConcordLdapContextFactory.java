@@ -37,10 +37,10 @@ import javax.naming.directory.Attributes;
 import javax.naming.directory.DirContext;
 import javax.naming.directory.InitialDirContext;
 import javax.naming.ldap.LdapContext;
-import java.util.ArrayList;
 import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 import static com.walmartlabs.concord.server.security.ldap.Utils.recursionLimiter;
 
@@ -154,7 +154,7 @@ public class ConcordLdapContextFactory implements LdapContextFactory {
     }
 
     private List<String> getLdapServers(String dnsSRVName) throws NamingException {
-        List<String> servers = new ArrayList<>();
+        CopyOnWriteArrayList<String> servers = new CopyOnWriteArrayList<>();
         Hashtable<String, String> env = new Hashtable<>();
         env.put(Context.INITIAL_CONTEXT_FACTORY, "com.sun.jndi.dns.DnsContextFactory");
         env.put(Context.PROVIDER_URL, "dns:");
