@@ -22,7 +22,10 @@ package com.walmartlabs.concord.server.security.ldap;
 
 public class Utils {
     public static final int maxLevel = 20;
-
+    
+    /*
+    This must be called at base method where recursion is happening.
+     */
     public static void recursionLimiter() {
         try {
             throw new IllegalStateException("Too deep, recursion limit reached, emerging");
