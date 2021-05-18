@@ -91,7 +91,6 @@ public class ConcordLdapContextFactory implements LdapContextFactory {
         try {
             return this.delegate.getSystemLdapContext();
         } catch (CommunicationException e) {
-            recursionLimiter();  // limiter to safe guard from infinite stack overflow
             handleCommunicationException(e);
             return getSystemLdapContext();
         }
@@ -102,7 +101,6 @@ public class ConcordLdapContextFactory implements LdapContextFactory {
         try {
             return this.delegate.getLdapContext(username, password);
         } catch (CommunicationException e) {
-            recursionLimiter();
             handleCommunicationException(e);
             return getLdapContext(username, password);
         }
@@ -113,7 +111,6 @@ public class ConcordLdapContextFactory implements LdapContextFactory {
         try {
             return this.delegate.getLdapContext(principal, credentials);
         } catch (CommunicationException e) {
-            recursionLimiter();
             handleCommunicationException(e);
             return getLdapContext(principal, credentials);
         }
@@ -173,10 +170,9 @@ public class ConcordLdapContextFactory implements LdapContextFactory {
     }
 
     private static String removeLastCharIfDot(String s) {
-        if (s == null || s.length() == 0)
-            return null;
-        if (s.charAt(s.length() - 1) != '.')
+        if (s == null || s.length() == 0 || s.charAt(s.length() - 1) != '.') {
             return s;
+        }
         return s.substring(0, s.length() - 1);
     }
 
@@ -205,6 +201,9 @@ public class ConcordLdapContextFactory implements LdapContextFactory {
             log.error("Failed to communicate with ldap server: " + getCurrentLdapUrl());
             throw new RuntimeException(e);
         }
+
+        recursionLimiter(); // limiter to safe guard from infinite stack overflow
+        
         if (this.ldapUrlIterator != null && !this.ldapUrlIterator.hasNext()) {
             this.refreshSRVList();
         }

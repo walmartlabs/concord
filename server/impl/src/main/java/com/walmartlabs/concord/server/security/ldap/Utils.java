@@ -24,8 +24,6 @@ public class Utils {
     public static final int maxLevel = 20;
 
     public static void recursionLimiter() {
-        if (maxLevel == 0)
-            return;
         try {
             throw new IllegalStateException("Too deep, recursion limit reached, emerging");
         } catch (IllegalStateException e) {
