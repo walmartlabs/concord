@@ -20,16 +20,13 @@ package com.walmartlabs.concord.plugins.smtp;
  * =====
  */
 
-import com.walmartlabs.concord.runtime.v2.sdk.Context;
-import com.walmartlabs.concord.runtime.v2.sdk.Task;
-import com.walmartlabs.concord.runtime.v2.sdk.TaskResult;
-import com.walmartlabs.concord.runtime.v2.sdk.Variables;
+import com.walmartlabs.concord.runtime.v2.sdk.*;
 
 import javax.inject.Inject;
 import javax.inject.Named;
-import java.io.Serializable;
 import java.nio.file.Path;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.Map;
 
 @Named("smtp")
@@ -44,8 +41,10 @@ public class SmtpTaskV2 implements Task {
 
     @Override
     public TaskResult execute(Variables input) throws Exception {
-        Map<String, Object> smtp = getCfg(ctx, input, Constants.SMTP_PARAMS_KEY, Constants.SMTP_KEY);
-        Map<String, Object> mail = getCfg(ctx, input, Constants.MAIL_PARAMS_KEY, Constants.MAIL_KEY);
+        Map<String, Object> smtp = getCfg(ctx, input, ctx.defaultVariables().toMap(),
+                Constants.SMTP_PARAMS_KEY, Constants.SMTP_KEY);
+        Map<String, Object> mail = getCfg(ctx, input, ctx.defaultVariables().toMap(),
+                Constants.MAIL_PARAMS_KEY, Constants.MAIL_KEY);
         Path baseDir = ctx.workingDirectory();
         Object scope = getScope(ctx, mail);
         boolean debug = input.getBoolean(Constants.DEBUG_KEY, false);
@@ -59,10 +58,12 @@ public class SmtpTaskV2 implements Task {
         return SmtpTaskUtils.getScope(mailParams, ctxParams);
     }
 
-    private Map<String, Object> getCfg(Context ctx, Variables input, String a, String b) {
-        Map<String, Object> m = getMap(ctx, input, a);
+    private Map<String, Object> getCfg(Context ctx, Variables input,
+                                       Map<String, Object> defaults, String a, String b) {
+        Variables vars = merge(input, defaults);
+        Map<String, Object> m = getMap(ctx, vars, a);
         if (m == null) {
-            m = getMap(ctx, input, b);
+            m = getMap(ctx, vars, b);
         }
 
         return m;
@@ -74,5 +75,11 @@ public class SmtpTaskV2 implements Task {
             m = ctx.variables().getMap(s, null);
         }
         return m;
+    }
+
+    public static Variables merge(Variables variables, Map<String, Object> defaults) {
+        Map<String, Object> variablesMap = new HashMap<>(defaults != null ? defaults : Collections.emptyMap());
+        variablesMap.putAll(variables.toMap());
+        return new MapBackedVariables(variablesMap);
     }
 }
