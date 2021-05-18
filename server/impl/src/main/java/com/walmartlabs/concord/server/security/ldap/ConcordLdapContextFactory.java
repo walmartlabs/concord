@@ -91,6 +91,7 @@ public class ConcordLdapContextFactory implements LdapContextFactory {
         try {
             return this.delegate.getSystemLdapContext();
         } catch (CommunicationException e) {
+            recursionLimiter();  // limiter to safe guard from infinite stack overflow
             handleCommunicationException(e);
             return getSystemLdapContext();
         }
@@ -101,6 +102,7 @@ public class ConcordLdapContextFactory implements LdapContextFactory {
         try {
             return this.delegate.getLdapContext(username, password);
         } catch (CommunicationException e) {
+            recursionLimiter();
             handleCommunicationException(e);
             return getLdapContext(username, password);
         }
@@ -111,6 +113,7 @@ public class ConcordLdapContextFactory implements LdapContextFactory {
         try {
             return this.delegate.getLdapContext(principal, credentials);
         } catch (CommunicationException e) {
+            recursionLimiter();
             handleCommunicationException(e);
             return getLdapContext(principal, credentials);
         }
@@ -201,8 +204,6 @@ public class ConcordLdapContextFactory implements LdapContextFactory {
             log.error("Failed to communicate with ldap server: " + getCurrentLdapUrl());
             throw new RuntimeException(e);
         }
-
-        recursionLimiter(); // limiter to safe guard from infinite stack overflow
         
         if (this.ldapUrlIterator != null && !this.ldapUrlIterator.hasNext()) {
             this.refreshSRVList();
