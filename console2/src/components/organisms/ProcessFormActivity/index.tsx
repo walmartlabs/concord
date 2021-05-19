@@ -106,6 +106,13 @@ class ProcessFormActivity extends React.PureComponent<Props> {
             return <h3>Form not found.</h3>;
         }
 
+        if (!formName.match(/^[0-9a-zA-Z\s_$]+$/)) {
+            return <div>
+                <h3 style={{color:'red'}}>Invalid Form Name.</h3>
+                <span>Only alphanumerics, whitespaces, underscores(_) and dollar signs($) are allowed.</span>
+            </div>;
+        }
+
         return (
             <>
                 {form.custom && (
