@@ -87,10 +87,6 @@ export interface PaginatedStorageQueryEntries {
     next: boolean;
 }
 
-export interface StorageQueryEntry {
-    text: string;
-}
-
 export const get = (orgName: ConcordKey, storeName: ConcordKey): Promise<StorageEntry> => {
     return fetchJson(`/api/v1/org/${orgName}/jsonstore/${storeName}`);
 };

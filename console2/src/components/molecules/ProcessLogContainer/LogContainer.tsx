@@ -61,11 +61,7 @@ export const useLog = () => {
                 queuedToScroll = false;
             } else {
                 // Await on an Async timeout to resolve before trying again
-                await new Promise((resolve) =>
-                    setTimeout(() => {
-                        resolve();
-                    }, pauseTime)
-                );
+                await new Promise((resolve) => setTimeout(resolve, pauseTime));
 
                 // Prevent infinite loops and such.
                 tryCount++;

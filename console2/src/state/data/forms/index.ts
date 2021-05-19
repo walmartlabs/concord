@@ -23,7 +23,7 @@ import { all, call, put, takeLatest, delay } from 'redux-saga/effects';
 
 import { ConcordId } from '../../../api/common';
 import { isFinal, get as apiGetProcess, ProcessStatus } from '../../../api/process';
-import { FormListEntry } from '../../../api/process/form';
+import { FormListEntry, FormSubmitResponse } from '../../../api/process/form';
 import {
     FormInstanceEntry,
     get as apiGet,
@@ -151,7 +151,7 @@ const updateForDev = (uri: string) => {
 
 function* onGetProcessForm({ processInstanceId, formName }: GetProcessFormRequest) {
     try {
-        const response = yield call(apiGet, processInstanceId, formName);
+        const response: FormInstanceEntry = yield call(apiGet, processInstanceId, formName);
         yield put({
             type: actionTypes.GET_PROCESS_FORM_RESPONSE,
             ...response
@@ -169,7 +169,12 @@ function* onSubmitProcessForm({
     data
 }: SubmitProcessFormRequest) {
     try {
-        const response = yield call(apiSubmit, processInstanceId, formName, data);
+        const response: FormSubmitResponse = yield call(
+            apiSubmit,
+            processInstanceId,
+            formName,
+            data
+        );
         yield put({
             type: actionTypes.SUBMIT_PROCESS_FORM_RESPONSE,
             ...response

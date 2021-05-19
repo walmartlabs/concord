@@ -20,7 +20,7 @@
 import { combineReducers } from 'redux';
 import { all, call, put, takeLatest } from 'redux-saga/effects';
 import { ConcordKey } from '../../../api/common';
-import { listTriggers as apiList } from '../../../api/org/project/repository';
+import { listTriggers as apiList, TriggerEntry } from '../../../api/org/project/repository';
 import { handleErrors, makeErrorReducer, makeLoadingReducer, makeResponseReducer } from '../common';
 import { ListTriggersRequest, ListTriggersState, State } from './types';
 
@@ -65,7 +65,7 @@ export const reducers = combineReducers<State>({
 
 function* onList({ orgName, projectName, repoName }: ListTriggersRequest) {
     try {
-        const response = yield call(apiList, orgName, projectName, repoName);
+        const response: TriggerEntry[] = yield call(apiList, orgName, projectName, repoName);
         yield put({
             type: actionTypes.LIST_TRIGGERS_RESPONSE,
             items: response

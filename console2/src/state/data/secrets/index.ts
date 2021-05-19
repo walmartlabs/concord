@@ -22,7 +22,7 @@ import { push as pushHistory } from 'connected-react-router';
 import { Action, combineReducers, Reducer } from 'redux';
 import { all, call, put, takeLatest } from 'redux-saga/effects';
 
-import { ConcordId, ConcordKey } from '../../../api/common';
+import { ConcordId, ConcordKey, GenericOperationResult } from '../../../api/common';
 import {
     create as apiCreate,
     deleteSecret as apiDelete,
@@ -33,7 +33,9 @@ import {
     renameSecret as apiRenameSecret,
     updateSecretAccess,
     updateSecretVisibility as apiUpdateSecretVisibility,
-    SecretVisibility
+    SecretVisibility,
+    SecretEntry,
+    PaginatedSecretEntries
 } from '../../../api/org/secret';
 import {
     genericResult,
@@ -62,7 +64,8 @@ import {
     UpdateSecretVisibilityResponse,
     UpdateSecretVisibilityRequest,
     UpdateSecretVisiblityState,
-    SecretTeamAccessState
+    SecretTeamAccessState,
+    CreateSecretResponse
 } from './types';
 import { UpdateSecretTeamAccessRequest } from './types';
 import { ResourceAccessEntry } from '../../../api/org';
@@ -332,7 +335,7 @@ export const selectors = {
 
 function* onGet({ orgName, secretName }: GetSecretRequest) {
     try {
-        const response = yield call(apiGet, orgName, secretName);
+        const response: SecretEntry = yield call(apiGet, orgName, secretName);
         yield put({
             type: actionTypes.SECRET_DATA_RESPONSE,
             items: [response] // normalizing the data
@@ -344,7 +347,13 @@ function* onGet({ orgName, secretName }: GetSecretRequest) {
 
 function* onList({ orgName, pagination, filter }: ListSecretsRequest) {
     try {
-        const response = yield call(apiList, orgName, pagination.offset, pagination.limit, filter);
+        const response: PaginatedSecretEntries = yield call(
+            apiList,
+            orgName,
+            pagination.offset,
+            pagination.limit,
+            filter
+        );
         yield put({
             type: actionTypes.SECRET_DATA_RESPONSE,
             items: response.items,
@@ -357,7 +366,7 @@ function* onList({ orgName, pagination, filter }: ListSecretsRequest) {
 
 function* onCreate({ orgName, entry }: CreateSecretRequest) {
     try {
-        const response = yield call(apiCreate, orgName, entry);
+        const response: CreateSecretResponse = yield call(apiCreate, orgName, entry);
         yield put({
             type: actionTypes.CREATE_SECRET_RESPONSE,
             orgName,
@@ -372,7 +381,7 @@ function* onCreate({ orgName, entry }: CreateSecretRequest) {
 
 function* onDelete({ orgName, secretName }: DeleteSecretRequest) {
     try {
-        const response = yield call(apiDelete, orgName, secretName);
+        const response: GenericOperationResult = yield call(apiDelete, orgName, secretName);
         yield put(genericResult(actionTypes.DELETE_SECRET_RESPONSE, response));
 
         yield put(pushHistory(`/org/${orgName}/secret`));
@@ -383,7 +392,12 @@ function* onDelete({ orgName, secretName }: DeleteSecretRequest) {
 
 function* onRename({ orgName, secretId, secretName }: RenameSecretRequest) {
     try {
-        const response = yield call(apiRenameSecret, orgName, secretId, secretName);
+        const response: GenericOperationResult = yield call(
+            apiRenameSecret,
+            orgName,
+            secretId,
+            secretName
+        );
         yield put(genericResult(actionTypes.RENAME_SECRET_RESPONSE, response));
 
         yield put(pushHistory(`/org/${orgName}/secret`));
@@ -407,7 +421,7 @@ function* onUpdateVisibility({ orgName, secretId, visibility }: UpdateSecretVisi
 
 function* onGetSecretTeamAccess({ orgName, secretName }: SecretTeamAccessRequest) {
     try {
-        const response = yield call(getSecretAccess, orgName, secretName);
+        const response: GenericOperationResult = yield call(getSecretAccess, orgName, secretName);
         yield put({
             type: actionTypes.SECRET_TEAM_ACCESS_RESPONSE,
             items: response
@@ -419,7 +433,12 @@ function* onGetSecretTeamAccess({ orgName, secretName }: SecretTeamAccessRequest
 
 function* onUpdateSecretTeamAccess({ orgName, secretName, teams }: UpdateSecretTeamAccessRequest) {
     try {
-        const response = yield call(updateSecretAccess, orgName, secretName, teams);
+        const response: GenericOperationResult = yield call(
+            updateSecretAccess,
+            orgName,
+            secretName,
+            teams
+        );
         yield put(genericResult(actionTypes.UPDATE_SECRET_TEAM_ACCESS_RESPONSE, response));
         yield put(actions.secretTeamAccess(orgName, secretName));
     } catch (e) {

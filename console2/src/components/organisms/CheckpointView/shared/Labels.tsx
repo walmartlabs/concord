@@ -18,8 +18,8 @@
  * =====
  */
 import * as React from 'react';
-import { styled } from 'reakit';
 import { ClassIcon } from '../../../atoms/ClassIcon';
+import styled from 'styled-components';
 
 const TextBase = styled.span`
     font-family: lato;
