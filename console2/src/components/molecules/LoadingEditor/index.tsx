@@ -42,7 +42,7 @@ const LoadingEditor = ({
     return (
         <Editor
             language={language}
-            editorDidMount={handleEditorDidMount}
+            onMount={handleEditorDidMount}
             value={initValue}
             options={{ lineNumbers: 'on', minimap: { enabled: false }, readOnly: disabled }}
         />

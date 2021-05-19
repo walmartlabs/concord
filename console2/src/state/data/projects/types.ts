@@ -46,12 +46,6 @@ export interface GetProjectRequest extends Action {
     projectName: ConcordKey;
 }
 
-export interface ListProjectsRequest extends Action {
-    orgName: ConcordKey;
-    pagination: Pagination;
-    filter?: string;
-}
-
 export interface ProjectDataResponse extends Action {
     error?: RequestError;
     items?: ProjectEntry[];

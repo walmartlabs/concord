@@ -57,7 +57,12 @@ const visibilityOptions = [
 ];
 
 const NewStoreForm = ({ orgName, onSubmit, submitting, initial }: Props) => {
-    const { register, handleSubmit, errors, setValue } = useForm<FormValues>({
+    const {
+        register,
+        handleSubmit,
+        formState: { errors },
+        setValue
+    } = useForm<FormValues>({
         defaultValues: initial
     });
 

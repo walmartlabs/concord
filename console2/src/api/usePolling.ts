@@ -45,7 +45,7 @@ export const usePolling = (
             } finally {
                 if (result) {
                     if (!cancelled) {
-                        poll.current = setTimeout(() => fetchData(), interval);
+                        poll.current = window.setTimeout(() => fetchData(), interval);
                     }
                 } else {
                     stopPolling();

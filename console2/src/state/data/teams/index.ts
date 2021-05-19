@@ -29,7 +29,9 @@ import {
     get as apiGet,
     listUsers as apiListUsers,
     NewTeamEntry,
-    rename as apiRename
+    rename as apiRename,
+    TeamEntry,
+    TeamUserEntry
 } from '../../../api/org/team';
 import {
     handleErrors,
@@ -197,7 +199,7 @@ export const selectors = {
 
 function* onGet({ orgName, teamName }: GetTeamRequest) {
     try {
-        const response = yield call(apiGet, orgName, teamName);
+        const response: TeamEntry = yield call(apiGet, orgName, teamName);
         yield put({
             type: actionTypes.TEAM_DATA_RESPONSE,
             items: [response]
@@ -248,7 +250,7 @@ function* onDelete({ orgName, teamName }: DeleteTeamRequest) {
 
 function* onListUsers({ orgName, teamName }: ListTeamUsersRequest) {
     try {
-        const response = yield call(apiListUsers, orgName, teamName);
+        const response: TeamUserEntry[] = yield call(apiListUsers, orgName, teamName);
         yield put({
             type: actionTypes.LIST_TEAM_USERS_RESPONSE,
             items: response

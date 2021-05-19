@@ -213,7 +213,7 @@ const usePolling = (
                 setError(e);
             } finally {
                 if (!stopPollingIndicator && !cancelled) {
-                    poll.current = setTimeout(() => fetchData(r), DATA_FETCH_INTERVAL);
+                    poll.current = window.setTimeout(() => fetchData(r), DATA_FETCH_INTERVAL);
                 } else {
                     stopPolling();
                 }

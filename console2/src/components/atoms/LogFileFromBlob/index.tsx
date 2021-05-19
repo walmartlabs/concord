@@ -18,7 +18,7 @@
  * =====
  */
 import * as React from 'react';
-import { styled } from 'reakit';
+import styled from 'styled-components';
 import { Highlighter } from '../../../components/molecules';
 import { escapeHtml } from '../../../utils';
 
