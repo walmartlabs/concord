@@ -9,7 +9,10 @@
 - concord-server: new configuration parameter
 `db.changeLogParameters.defaultAgentToken`. Sets the default
 API token for the Agent
-([#410](https://github.com/walmartlabs/concord/pull/410)).
+([#410](https://github.com/walmartlabs/concord/pull/410));
+- smtp-tasks: read default parameters (`defaultProcessCfg`
+policy) in the runtime-v2 version of the task
+([#419](https://github.com/walmartlabs/concord/pull/419)).
 
 ### Changed
 
@@ -20,7 +23,7 @@ API token for the Agent
 - concord-repository: remove dependency on`jgit`
 ([#414](https://github.com/walmartlabs/concord/pull/414));
 - concord-console: update dependencies
-([418](https://github.com/walmartlabs/concord/pull/418)).
+([#418](https://github.com/walmartlabs/concord/pull/418)).
 
 ### Breaking
 
