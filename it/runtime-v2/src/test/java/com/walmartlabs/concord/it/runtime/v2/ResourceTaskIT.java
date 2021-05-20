@@ -65,7 +65,6 @@ public class ResourceTaskIT {
         test("resourceWriteAsYaml");
     }
 
-
     private void test(String resource) throws Exception {
         Payload payload = new Payload()
                 .archive(ResourceTaskIT.class.getResource(resource).toURI());
