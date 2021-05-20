@@ -47,6 +47,15 @@ public class ResourceTask implements Task {
         return delegate(ctx).asJson(path, eval);
     }
 
+    public Object fromJsonString(String jsonString) throws IOException {
+        return fromJsonString(null, jsonString, false);
+    }
+
+    public Object fromJsonString(@InjectVariable("context") Context ctx,
+                                 String jsonString, boolean eval) throws IOException {
+        return delegate(ctx).fromJsonString(jsonString, eval);
+    }
+
     public Object asYaml(String path) throws IOException {
         return asYaml(null, path, false);
     }

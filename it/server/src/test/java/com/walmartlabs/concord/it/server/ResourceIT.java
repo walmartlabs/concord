@@ -40,6 +40,11 @@ public class ResourceIT extends AbstractServerIT {
     }
 
     @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    public void testFromJsonString() throws Exception {
+        test("resourceReadFromJsonString", ".*Hello Concord!");
+    }
+
+    @Test(timeout = DEFAULT_TEST_TIMEOUT)
     public void testReadAsString() throws Exception {
         test("resourceReadAsString", ".*Hello Concord!");
     }
