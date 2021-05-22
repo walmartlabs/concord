@@ -42,8 +42,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 
-import static com.walmartlabs.concord.server.security.ldap.Utils.recursionLimiter;
-
 @Named
 public class ConcordLdapContextFactory implements LdapContextFactory {
 
@@ -53,6 +51,7 @@ public class ConcordLdapContextFactory implements LdapContextFactory {
 
     private static final String protocol = "ldaps";
     private static final String port = "3269";
+    private static final int MAX_DEPTH = 20;
 
     private Iterator<String> ldapUrlIterator;
 
@@ -81,41 +80,62 @@ public class ConcordLdapContextFactory implements LdapContextFactory {
     public synchronized void setLdapContextFactory(LdapContextFactory ldapContextFactory) {
         this.delegate = ldapContextFactory;
     }
-    
+
     public synchronized void setLdapUrlIterator(Iterator<String> ldapUrlIterator) {
         this.ldapUrlIterator = ldapUrlIterator;
     }
-    
+
     @Override
     public LdapContext getSystemLdapContext() throws NamingException {
+        return getSystemLdapContext(0);
+    }
+
+    private LdapContext getSystemLdapContext(int depth) throws NamingException {
         try {
             return this.delegate.getSystemLdapContext();
         } catch (CommunicationException e) {
-            recursionLimiter();  // limiter to safe guard from infinite stack overflow
-            handleCommunicationException(e);
-            return getSystemLdapContext();
+            while (depth < MAX_DEPTH) {
+                depth++;
+                handleCommunicationException(e);
+                return getSystemLdapContext(depth);
+            }
+            throw new IllegalStateException("Too deep, recursion limit reached, emerging");
         }
     }
 
     @Override
     public LdapContext getLdapContext(String username, String password) throws NamingException {
+        return getLdapContext(username, password, 0);
+    }
+
+    private LdapContext getLdapContext(String username, String password, int depth) throws NamingException {
         try {
             return this.delegate.getLdapContext(username, password);
         } catch (CommunicationException e) {
-            recursionLimiter();
-            handleCommunicationException(e);
-            return getLdapContext(username, password);
+            while (depth < MAX_DEPTH) {
+                depth++;
+                handleCommunicationException(e);
+                return getLdapContext(username, password, depth);
+            }
+            throw new IllegalStateException("Too deep, recursion limit reached, emerging");
         }
     }
 
     @Override
     public LdapContext getLdapContext(Object principal, Object credentials) throws NamingException {
+        return getLdapContext(principal, credentials, 0);
+    }
+
+    private LdapContext getLdapContext(Object principal, Object credentials, int depth) throws NamingException {
         try {
             return this.delegate.getLdapContext(principal, credentials);
         } catch (CommunicationException e) {
-            recursionLimiter();
-            handleCommunicationException(e);
-            return getLdapContext(principal, credentials);
+            while (depth < MAX_DEPTH) {
+                depth++;
+                handleCommunicationException(e);
+                return getLdapContext(principal, credentials, depth);
+            }
+            throw new IllegalStateException("Too deep, recursion limit reached, emerging");
         }
     }
 
@@ -204,7 +224,7 @@ public class ConcordLdapContextFactory implements LdapContextFactory {
             log.error("Failed to communicate with ldap server: " + getCurrentLdapUrl());
             throw new RuntimeException(e);
         }
-        
+
         if (this.ldapUrlIterator != null && !this.ldapUrlIterator.hasNext()) {
             this.refreshSRVList();
         }
