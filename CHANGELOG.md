@@ -10,6 +10,9 @@
 `db.changeLogParameters.defaultAgentToken`. Sets the default
 API token for the Agent
 ([#410](https://github.com/walmartlabs/concord/pull/410));
+- concord-server: add DNS Service Record feature ldap
+(dynamic loading of LDAP server address)
+([#412](https://github.com/walmartlabs/concord/pull/412));
 - smtp-tasks: read default parameters (`defaultProcessCfg`
 policy) in the runtime-v2 version of the task
 ([#419](https://github.com/walmartlabs/concord/pull/419)).
