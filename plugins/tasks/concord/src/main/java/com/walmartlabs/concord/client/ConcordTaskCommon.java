@@ -193,6 +193,10 @@ public class ConcordTaskCommon {
     }
 
     private TaskResult startExternalProcess(StartExternalParams in) throws Exception {
+        if (in.sync() && in.suspendRaw()) {
+            log.warn("Input parameter '{}' ignored for {} action", StartParams.SUSPEND_KEY, Action.STARTEXTERNAL);
+        }
+
         return start(in, null);
     }
 
