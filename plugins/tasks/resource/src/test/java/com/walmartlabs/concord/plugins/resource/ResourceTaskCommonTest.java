@@ -22,10 +22,17 @@ package com.walmartlabs.concord.plugins.resource;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
+import com.walmartlabs.concord.sdk.Constants;
 import org.junit.Test;
 
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.*;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 public class ResourceTaskCommonTest {
 
@@ -40,7 +47,38 @@ public class ResourceTaskCommonTest {
         assertValidYaml(String.format("value: %s", ResourceTaskCommon.prettyPrintYaml(Arrays.asList("a", "b", "c"), 2)));
     }
 
+    @Test
+    @SuppressWarnings("rawtypes")
+    public void testFromJsonString() throws Exception {
+        String jsonString = "{ \"stringKey\": \"stringValue\", \"listKey\": [1,2,3]}";
+        Path workDir = Paths.get(System.getProperty("user.dir"));
+
+        ResourceTaskCommon rsc = new ResourceTaskCommon(workDir,
+                (prefix, suffix) -> createTempFile(workDir, prefix, suffix), null);
+        Object obj = rsc.fromJsonString(jsonString);
+
+        assertTrue(obj instanceof Map);
+        assertEquals("stringValue", ((Map) obj).get("stringKey"));
+        List l = (List) ((Map) obj).get("listKey");
+        assertEquals(3, l.size());
+        assertEquals(2, l.get(1));
+    }
+
     private static void assertValidYaml(String s) throws IOException {
         new ObjectMapper(new YAMLFactory()).readValue(s, Object.class);
+    }
+
+    private static Path createTempFile(Path baseDir, String prefix, String suffix) throws IOException {
+        Path tempDir = assertTempDir(baseDir);
+        return Files.createTempFile(tempDir, prefix, suffix);
+    }
+
+    private static Path assertTempDir(Path baseDir) throws IOException {
+        Path p = baseDir.resolve(Constants.Files.CONCORD_TMP_DIR_NAME);
+        if (!p.toFile().exists()) {
+            Files.createDirectories(p);
+        }
+
+        return p;
     }
 }
