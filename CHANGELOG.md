@@ -25,6 +25,9 @@ policy) in the runtime-v2 version of the task
 ([#407](https://github.com/walmartlabs/concord/pull/407));
 - concord-repository: remove dependency on`jgit`
 ([#414](https://github.com/walmartlabs/concord/pull/414));
+- concord-task: `startExternal` action should ignore
+the `suspend` parameter
+([#416](https://github.com/walmartlabs/concord/pull/416));
 - concord-console: update dependencies
 ([#418](https://github.com/walmartlabs/concord/pull/418)).
 
