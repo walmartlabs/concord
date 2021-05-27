@@ -15,7 +15,9 @@ API token for the Agent
 ([#412](https://github.com/walmartlabs/concord/pull/412));
 - smtp-tasks: read default parameters (`defaultProcessCfg`
 policy) in the runtime-v2 version of the task
-([#419](https://github.com/walmartlabs/concord/pull/419)).
+([#419](https://github.com/walmartlabs/concord/pull/419));
+- resource-tasks: parse object from JSON string
+([#420](https://github.com/walmartlabs/concord/pull/420)).
 
 ### Changed
 
