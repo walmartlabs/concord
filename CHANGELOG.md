@@ -1,5 +1,48 @@
 # Change log
 
+## [Unreleased]
+
+### Added
+
+- http-tasks: ability to provide a custom trust stores
+([#399](https://github.com/walmartlabs/concord/pull/399));
+- concord-server: new configuration parameter
+`db.changeLogParameters.defaultAgentToken`. Sets the default
+API token for the Agent
+([#410](https://github.com/walmartlabs/concord/pull/410));
+- concord-server: add DNS Service Record feature ldap
+(dynamic loading of LDAP server address)
+([#412](https://github.com/walmartlabs/concord/pull/412));
+- smtp-tasks: read default parameters (`defaultProcessCfg`
+policy) in the runtime-v2 version of the task
+([#419](https://github.com/walmartlabs/concord/pull/419));
+- resource-tasks: parse object from JSON string
+([#420](https://github.com/walmartlabs/concord/pull/420)).
+
+### Changed
+
+- dependency-manager: update the `maven-resolver` version
+([#405](https://github.com/walmartlabs/concord/pull/405));
+- concord-server: the `iam-sso` plugin has been removed
+([#407](https://github.com/walmartlabs/concord/pull/407));
+- concord-repository: remove dependency on`jgit`
+([#414](https://github.com/walmartlabs/concord/pull/414));
+- concord-task: `startExternal` action should ignore
+the `suspend` parameter
+([#416](https://github.com/walmartlabs/concord/pull/416));
+- concord-console: update dependencies
+([#418](https://github.com/walmartlabs/concord/pull/418)).
+
+### Breaking
+
+- concord-server, concord-agent: the agent's default API
+token has been removed. The server now automatically
+generates a new API token on the first start
+([#410](https://github.com/walmartlabs/concord/pull/410) and
+([#413](https://github.com/walmartlabs/concord/pull/413)).
+
+
+
 ## [1.85.0] - 2021-04-27
 
 ### Added
