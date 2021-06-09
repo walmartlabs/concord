@@ -80,7 +80,7 @@
         <maven.model.builder.version>3.6.3</maven.model.builder.version>
         <maven.resolver.version>1.6.2</maven.resolver.version>
         <maven.resolver.version.concord>0.0.4</maven.resolver.version.concord>
-        <metrics.version>4.1.18</metrics.version>
+        <metrics.version>4.2.0</metrics.version>
         <mockito.version>3.2.4</mockito.version>
         <mustache.version>0.9.6</mustache.version>
         <nimbus.jwt.version>8.8</nimbus.jwt.version>
