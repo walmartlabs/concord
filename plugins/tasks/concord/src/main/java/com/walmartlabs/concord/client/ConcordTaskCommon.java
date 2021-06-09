@@ -283,11 +283,14 @@ public class ConcordTaskCommon {
             if (!in.outVars().isEmpty()) {
                 out = getOutVars(in.baseUrl(), in.apiKey(), processId);
             }
+            
             return TaskResult.success()
+                    .value("id", processId)
                     .values(out);
         }
 
-        return TaskResult.success();
+        return TaskResult.success()
+                .value("id", processId);
     }
 
     public TaskResult continueAfterSuspend(ResumePayload payload) throws Exception {
