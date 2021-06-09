@@ -20,7 +20,9 @@ package com.walmartlabs.concord.server.metrics;
  * =====
  */
 
+import com.codahale.metrics.LockFreeExponentiallyDecayingReservoir;
 import com.codahale.metrics.MetricRegistry;
+import com.codahale.metrics.Timer;
 
 import javax.inject.Named;
 import javax.inject.Provider;
@@ -32,6 +34,12 @@ public class MetricRegistryProvider implements Provider<MetricRegistry> {
 
     @Override
     public MetricRegistry get() {
-        return new MetricRegistry();
+        return new MetricRegistry() {
+
+            @Override
+            public Timer timer(String name) {
+                return super.timer(name, () -> new Timer(LockFreeExponentiallyDecayingReservoir.builder().build()));
+            }
+        };
     }
 }
