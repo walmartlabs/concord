@@ -11,7 +11,7 @@
 
     <groupId>com.walmartlabs.concord</groupId>
     <artifactId>parent</artifactId>
-    <version>1.86.3-SNAPSHOT</version>
+    <version>1.86.3</version>
     <packaging>pom</packaging>
 
     <name>${project.groupId}:${project.artifactId}</name>
@@ -358,7 +358,7 @@
 
     <scm>
         <developerConnection>${scm.connection}</developerConnection>
-        <tag>HEAD</tag>
+        <tag>1.86.3</tag>
     </scm>
 
     <profiles>
