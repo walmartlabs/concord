@@ -1,5 +1,13 @@
 # Change log
 
+## [1.86.3] - 2021-06-02
+
+###Changed 
+
+- concord-server: update metrics version, use lock free timers
+([#425](https://github.com/walmartlabs/concord/pull/425)).
+
+
 ## [1.86.2] - 2021-06-02
 
 ### Added
