@@ -2,13 +2,13 @@
 
 ## [Unreleased]
 
-- concord-cli: fixed Guava's "Unable to load cache item" error
-when running on Java 9 or higher
+### Changed
+
+- concord-cli, concord-server, concord-agent: ability to run
+Concord on Java 16
 ([#429](https://github.com/walmartlabs/concord/pull/429)).
 
 
-
-### Changed
 
 ## [1.86.3] - 2021-06-16
 
