@@ -28,8 +28,21 @@ fi
 echo "Using $(which java)"
 java -version
 
+JAVA_VERSION=$(java -version 2>&1 \
+  | head -1 \
+  | cut -d'"' -f2 \
+  | sed 's/^1\.//' \
+  | cut -d'.' -f1)
+
+JDK_SPECIFIC_OPTS=""
+if (( $JAVA_VERSION > 8 )); then
+  echo "Applying JDK 9+ specific options..."
+  JDK_SPECIFIC_OPTS="--add-opens java.base/java.lang=ALL-UNNAMED"
+fi
+
 exec java \
 ${CONCORD_JAVA_OPTS} \
+${JDK_SPECIFIC_OPTS} \
 -Dfile.encoding=UTF-8 \
 -Djava.net.preferIPv4Stack=true \
 -Djava.security.egd=file:/dev/./urandom \
