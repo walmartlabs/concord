@@ -2,6 +2,11 @@
 
 ## [Unreleased]
 
+### Added
+
+- concord-task: `start`, `startExternal` and `fork` actions now
+return process IDs ([#427](https://github.com/walmartlabs/concord/pull/427)).
+
 ### Changed
 
 - concord-cli, concord-server, concord-agent: ability to run
