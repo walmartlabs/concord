@@ -283,11 +283,14 @@ public class ConcordTaskCommon {
             if (!in.outVars().isEmpty()) {
                 out = getOutVars(in.baseUrl(), in.apiKey(), processId);
             }
+
             return TaskResult.success()
+                    .value("id", processId)
                     .values(out);
         }
 
-        return TaskResult.success();
+        return TaskResult.success()
+                .value("id", processId);
     }
 
     public TaskResult continueAfterSuspend(ResumePayload payload) throws Exception {
@@ -312,6 +315,7 @@ public class ConcordTaskCommon {
             // e.g. jobOut.someVar
             Map<String, Object> out = results.get(0).out;
             return TaskResult.success()
+                    .value("id", payload.jobs().get(0))
                     .values(out);
         } else {
             // for multiple jobs save their variable into a nested map
@@ -324,6 +328,7 @@ public class ConcordTaskCommon {
                 }
             }
             return TaskResult.success()
+                    .value("ids", payload.jobs())
                     .values(vars);
         }
     }
@@ -473,10 +478,16 @@ public class ConcordTaskCommon {
             handleResults(result, in.ignoreFailures());
         }
 
-        return TaskResult.success()
-                .value("forks", ids.stream()
-                        .map(UUID::toString)
-                        .collect(Collectors.toList()));
+        boolean single = ids.size() == 1;
+        if (single) {
+            return TaskResult.success()
+                    .value("id", ids.get(0).toString());
+        } else {
+            return TaskResult.success()
+                    .value("ids", ids.stream()
+                            .map(UUID::toString)
+                            .collect(Collectors.toList()));
+        }
     }
 
     private Future<UUID> forkOne(ForkStartParams in) {
