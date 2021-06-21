@@ -36,6 +36,7 @@ public class WaitProcessStatusListener implements ProcessStatusListener {
     public void onStatusChange(DSLContext tx, ProcessKey processKey, ProcessStatus status) {
         switch (status) {
             case NEW:
+            case PREPARING:
                 init(tx, processKey);
                 break;
             case WAITING:
