@@ -11,7 +11,9 @@ return process IDs ([#427](https://github.com/walmartlabs/concord/pull/427)).
 
 - concord-cli, concord-server, concord-agent: ability to run
 Concord on Java 16
-([#429](https://github.com/walmartlabs/concord/pull/429)).
+([#429](https://github.com/walmartlabs/concord/pull/429));
+- concord-server: fix insertion of wait conditions for forked
+processes (#430).
 
 
 
