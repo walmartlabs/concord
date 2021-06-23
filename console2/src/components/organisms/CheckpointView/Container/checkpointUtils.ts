@@ -78,10 +78,12 @@ export const geCheckpointsBetweenTime = (
  * Generates a custom object array of type CheckpointGroup
  * Correlates checkpoint data with history data to generate said object.
  *
+ * @param processStatus status of the process
  * @param checkpoints Original Process Checkpoint Array
  * @param checkpointRestoreHistory
  */
 export const generateCheckpointGroups = (
+    processStatus: ProcessStatus,
     checkpoints: ProcessCheckpointEntry[],
     checkpointRestoreHistory?: CheckpointRestoreHistoryEntry[]
 ): CheckpointGroup[] => {
@@ -115,7 +117,7 @@ export const generateCheckpointGroups = (
 
         currentGroup = {
             name: `#${groups.length + 1}`,
-            status: ProcessStatus.FINISHED,
+            status: processStatus,
             checkpoints: []
         };
         currentGroupStart = currentGroupEnd;
@@ -123,7 +125,7 @@ export const generateCheckpointGroups = (
 
     currentGroup.checkpoints = geCheckpointsBetweenTime(
         checkpoints,
-        ProcessStatus.FINISHED,
+        processStatus,
         currentGroupStart,
         undefined
     );
