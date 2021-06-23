@@ -21,6 +21,7 @@ import * as React from 'react';
 
 import { Loader } from 'semantic-ui-react';
 import Editor from '@monaco-editor/react';
+import {useCallback} from "react";
 
 interface LoadingEditorProps {
     language?: string;
@@ -35,6 +36,11 @@ const LoadingEditor = ({
     initValue,
     disabled
 }: LoadingEditorProps) => {
+
+    const onEditorDidMount = useCallback((editor) => {
+        handleEditorDidMount(() => editor.getValue());
+    }, [handleEditorDidMount]);
+
     if (!initValue) {
         return <Loader active={true} />;
     }
@@ -42,7 +48,7 @@ const LoadingEditor = ({
     return (
         <Editor
             language={language}
-            onMount={handleEditorDidMount}
+            onMount={onEditorDidMount}
             value={initValue}
             options={{ lineNumbers: 'on', minimap: { enabled: false }, readOnly: disabled }}
         />
