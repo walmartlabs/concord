@@ -18,6 +18,7 @@
  * =====
  */
 import {
+    CheckpointRestoreHistoryEntry,
     ProcessCheckpointEntry,
     ProcessHistoryEntry,
     ProcessStatus
@@ -42,35 +43,40 @@ export const validProcessCheckpoints: ProcessCheckpointEntry[] = [
     }
 ];
 
-export const validProcessHistory: ProcessHistoryEntry[] = [
+export const validProcessHistory: CheckpointRestoreHistoryEntry[] = [
     {
         changeDate: '2019-02-18T17:23:29.678Z',
-        id: 'e89c124e-33a1-11e9-855e-fa163e7ef419',
-        status: ProcessStatus.PREPARING
+        id: 1,
+        processStatus: ProcessStatus.PREPARING,
+        checkpointId: 'e90e2280-33a1-11e9-855e-fa163e7ef419'
     },
     {
+        id: 2,
         changeDate: '2019-02-18T17:23:30.426Z',
-        id: 'e90e2280-33a1-11e9-855e-fa163e7ef419',
-        status: ProcessStatus.ENQUEUED
+        checkpointId: 'e90e2280-33a1-11e9-855e-fa163e7ef419',
+        processStatus: ProcessStatus.ENQUEUED
     },
     {
+        id: 2,
         changeDate: '2019-02-18T17:23:30.907Z',
-        id: 'e9590f7a-33a1-11e9-aa54-fa163e7ef419',
-        status: ProcessStatus.STARTING
+        checkpointId: 'e9590f7a-33a1-11e9-aa54-fa163e7ef419',
+        processStatus: ProcessStatus.STARTING
     },
     {
+        id: 3,
         changeDate: '2019-02-18T17:23:31.878Z',
-        id: 'e9ec1a36-33a1-11e9-bbef-fa163e7ef419',
-        status: ProcessStatus.RUNNING
+        checkpointId: 'e9ec1a36-33a1-11e9-bbef-fa163e7ef419',
+        processStatus: ProcessStatus.RUNNING
     },
     {
+        id: 4,
         changeDate: '2019-02-18T17:23:33.445Z',
-        id: 'eadac2da-33a1-11e9-bbef-fa163e7ef419',
-        status: ProcessStatus.FINISHED
+        checkpointId: 'eadac2da-33a1-11e9-bbef-fa163e7ef419',
+        processStatus: ProcessStatus.FINISHED
     }
 ];
 
-export const emptyProcessHistory: ProcessHistoryEntry[] = [];
+export const emptyProcessHistory: CheckpointRestoreHistoryEntry[] = [];
 export const emptyProcessCheckpoints: ProcessCheckpointEntry[] = [];
 
 export const hasMetaColumnDefinition: ColumnDefinition = {

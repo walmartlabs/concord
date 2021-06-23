@@ -154,6 +154,7 @@ const Checkpoint = (props: Props) => {
 
 const ProcessCheckpointActivity = (props: ExternalProps) => {
     const checkpointGroups = generateCheckpointGroups(
+        props.processStatus,
         props.checkpoints,
         props.checkpointRestoreHistory
     );

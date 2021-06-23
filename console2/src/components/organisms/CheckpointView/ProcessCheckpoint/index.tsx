@@ -38,6 +38,7 @@ export const ProcessCheckpoint: React.SFC<Props> = ({ process }) => {
                     <CheckpointGroup
                         process={process}
                         checkpointGroups={generateCheckpointGroups(
+                            process.status,
                             process.checkpoints,
                             process.checkpointRestoreHistory
                         )}
