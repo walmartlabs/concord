@@ -13,7 +13,9 @@ return process IDs ([#427](https://github.com/walmartlabs/concord/pull/427)).
 Concord on Java 16
 ([#429](https://github.com/walmartlabs/concord/pull/429));
 - concord-server: fix insertion of wait conditions for forked
-processes ([#430](https://github.com/walmartlabs/concord/pull/430)).
+processes ([#430](https://github.com/walmartlabs/concord/pull/430));
+- concord-console: fix checkpoint color for failed processes
+([#432](https://github.com/walmartlabs/concord/pull/432)).
 
 
 
