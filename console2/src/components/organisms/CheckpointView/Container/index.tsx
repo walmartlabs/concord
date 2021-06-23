@@ -212,6 +212,7 @@ export const useCheckpoint = (initial: InitialProps) => {
         processes.forEach((p) => {
             if (p.checkpoints) {
                 checkpointGroups[p.instanceId] = generateCheckpointGroups(
+                    p.status,
                     p.checkpoints,
                     p.checkpointRestoreHistory
                 );

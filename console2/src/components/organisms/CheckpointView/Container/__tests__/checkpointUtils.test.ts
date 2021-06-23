@@ -17,30 +17,31 @@
  * limitations under the License.
  * =====
  */
-import { generateCheckpointGroups } from '../checkpointUtils';
+import {generateCheckpointGroups} from '../checkpointUtils';
 import {
-    validProcessHistory,
-    validProcessCheckpoints,
     emptyProcessCheckpoints,
-    emptyProcessHistory
+    emptyProcessHistory,
+    validProcessCheckpoints,
+    validProcessHistory
 } from '../__mocks__/checkpointUtils.mocks';
+import {ProcessStatus} from "../../../../../api/process";
 
 test('generateCheckpointGroups handles valid data', () => {
-    const result = generateCheckpointGroups(validProcessCheckpoints, validProcessHistory);
+    const result = generateCheckpointGroups(ProcessStatus.FINISHED, validProcessCheckpoints, validProcessHistory);
     expect(result).toMatchSnapshot();
 });
 
 test('generateCheckpointGroups handles no data', () => {
-    const result = generateCheckpointGroups(emptyProcessCheckpoints, emptyProcessHistory);
+    const result = generateCheckpointGroups(ProcessStatus.FINISHED, emptyProcessCheckpoints, emptyProcessHistory);
     expect(result).toEqual([]);
 });
 
 test('generateCheckpointGroups handles empty checkpoints', () => {
-    const result = generateCheckpointGroups(emptyProcessCheckpoints, validProcessHistory);
+    const result = generateCheckpointGroups(ProcessStatus.FINISHED, emptyProcessCheckpoints, validProcessHistory);
     expect(result).toMatchSnapshot();
 });
 
 test('generateCheckpointGroups handles empty history', () => {
-    const result = generateCheckpointGroups(validProcessCheckpoints, emptyProcessHistory);
+    const result = generateCheckpointGroups(ProcessStatus.FINISHED, validProcessCheckpoints, emptyProcessHistory);
     expect(result).toMatchSnapshot();
 });
