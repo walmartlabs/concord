@@ -105,6 +105,7 @@ public class HttpTaskTest extends AbstractHttpTaskTest {
         verify(postRequestedFor(urlEqualTo("/post"))
                 .withHeader("Content-Type", equalTo("application/json")));
     }
+
     @Test
     public void testExecutePostRequestForMultipart() throws Exception {
         initCxtForRequest(mockContext, "POST", "formData", "json",
