@@ -90,6 +90,7 @@ public class RepositoryManager {
             repo.export(dest, ignorePatterns);
             return null;
         });
+        repositoryCache.cleanup();
     }
 
     private Secret getSecret(SecretDefinition secret) throws ExecutionException {
