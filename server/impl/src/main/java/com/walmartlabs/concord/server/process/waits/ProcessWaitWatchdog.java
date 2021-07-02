@@ -31,6 +31,7 @@ import com.walmartlabs.concord.server.process.PayloadManager;
 import com.walmartlabs.concord.server.process.ProcessManager;
 import com.walmartlabs.concord.server.sdk.ProcessKey;
 import com.walmartlabs.concord.server.sdk.ScheduledTask;
+import com.walmartlabs.concord.server.sdk.metrics.WithTimer;
 import org.immutables.value.Value;
 import org.jooq.*;
 import org.slf4j.Logger;
@@ -187,7 +188,7 @@ public class ProcessWaitWatchdog implements ScheduledTask {
     }
 
     @Named
-    private static final class WatchdogDao extends AbstractDao {
+    static final class WatchdogDao extends AbstractDao {
 
         private static final TypeReference<List<AbstractWaitCondition>> WAIT_LIST = new TypeReference<List<AbstractWaitCondition>>() {
         };
@@ -201,6 +202,7 @@ public class ProcessWaitWatchdog implements ScheduledTask {
             this.objectMapper = objectMapper;
         }
 
+        @WithTimer
         public List<WaitingProcess> nextWaitItems(Long lastId, int pollLimit) {
             return txResult(tx -> {
                 ProcessWaitConditions w = PROCESS_WAIT_CONDITIONS.as("w");
