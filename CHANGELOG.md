@@ -16,9 +16,11 @@ Concord on Java 16
 processes ([#430](https://github.com/walmartlabs/concord/pull/430));
 - concord-console: fix checkpoint color for failed processes
 ([#432](https://github.com/walmartlabs/concord/pull/432));
-- concord-console: fix the editor component initialization. Affests
+- concord-console: fix the editor component initialization. Affects
 the JSON store query and the project configuration editors
-([#433](https://github.com/walmartlabs/concord/pull/433)).
+([#433](https://github.com/walmartlabs/concord/pull/433));
+- concord-server: clean up repository cache using a separate thread
+([#436](https://github.com/walmartlabs/concord/pull/436)).
 
 
 
