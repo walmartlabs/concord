@@ -48,8 +48,6 @@ public class RepositoryCache {
 
     private final Striped<Lock> locks;
 
-    private long nextCleanup = -1;
-
     public RepositoryCache(Path cacheDir,
                            Path repoJournalPath,
                            Duration lockTimeout,
@@ -80,11 +78,7 @@ public class RepositoryCache {
     }
 
     public <T> T withLock(String repoUrl, Callable<T> f) {
-        try {
-            return withLock(lockTimeout, repoUrl, f);
-        } finally {
-            cleanup();
-        }
+        return withLock(lockTimeout, repoUrl, f);
     }
 
     private <T> T withLock(long lockTimeout, String repoUrl, Callable<T> f) {
@@ -108,13 +102,8 @@ public class RepositoryCache {
         }
     }
 
-    private void cleanup() {
+    public void cleanup() {
         if (maxCacheAge == 0) {
-            return;
-        }
-
-        long now = System.currentTimeMillis();
-        if (nextCleanup >= now) {
             return;
         }
 
@@ -122,9 +111,10 @@ public class RepositoryCache {
         for (RepositoryAccessJournal.RepositoryJournalItem i : oldItems) {
             Path repoPath = withLock(lockTimeout, i.repoUrl(), () -> {
                 try {
-                    Path tmpDir = i.repoPath().getParent().resolve(i.repoPath().getFileName() + ".tmp");
+                    Path tmpDir = null;
 
                     if (Files.exists(i.repoPath())) {
+                        tmpDir = i.repoPath().getParent().resolve(i.repoPath().getFileName() + ".tmp");
                         Files.move(i.repoPath(), tmpDir);
                     }
                     
@@ -145,9 +135,11 @@ public class RepositoryCache {
             }
         }
 
-        nextCleanup += maxCacheAge;
-
         log.info("cleanup -> {} repositories removed", oldItems.size());
+    }
+
+    public long cleanupInterval() {
+        return maxCacheAge;
     }
 
     private static String encodeUrl(String url) {
