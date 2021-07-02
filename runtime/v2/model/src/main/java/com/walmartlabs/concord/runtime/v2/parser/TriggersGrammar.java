@@ -24,7 +24,11 @@ import com.fasterxml.jackson.core.JsonToken;
 import com.google.common.collect.ImmutableMap;
 import com.walmartlabs.concord.runtime.v2.exception.OneOfMandatoryFieldsNotFoundException;
 import com.walmartlabs.concord.runtime.v2.exception.UnsupportedException;
-import com.walmartlabs.concord.runtime.v2.model.*;
+import com.walmartlabs.concord.runtime.v2.model.ExclusiveMode;
+import com.walmartlabs.concord.runtime.v2.model.GithubTriggerExclusiveMode;
+import com.walmartlabs.concord.runtime.v2.model.ImmutableGithubTriggerExclusiveMode;
+import com.walmartlabs.concord.runtime.v2.model.ImmutableTrigger;
+import com.walmartlabs.concord.runtime.v2.model.Trigger;
 import io.takari.parc.Parser;
 import io.takari.parc.Seq;
 
@@ -82,7 +86,16 @@ public final class TriggersGrammar {
     private static final Parser<Atom, GithubTriggerExclusiveMode> githubTriggerExclusiveValV2 =
             orError(githubTriggerExclusiveV2, YamlValueType.GITHUB_EXCLUSIVE_MODE);
 
-    @SuppressWarnings("unchecked")
+    private static final Parser<Atom, Map<String, Object>> githubTriggerFilesVal =
+            betweenTokens(JsonToken.START_OBJECT, JsonToken.END_OBJECT,
+                with(ImmutableMap::<String, Object>builder,
+                    o -> options(
+                            optional("added", patternOrArrayVal.map(v -> o.put("added", v))),
+                            optional("removed", patternOrArrayVal.map(v -> o.put("removed", v))),
+                            optional("modified", patternOrArrayVal.map(v -> o.put("modified", v))),
+                            optional("any", patternOrArrayVal.map(v -> o.put("any", v)))))
+                        .map(ImmutableMap.Builder::build));
+
     private static final Parser<Atom, Map<String, Object>> githubTriggerConditionsV2 =
             betweenTokens(JsonToken.START_OBJECT, JsonToken.END_OBJECT,
                 with(ImmutableMap::<String, Object>builder,
@@ -95,6 +108,7 @@ public final class TriggersGrammar {
                                 optional("sender", regexpVal.map(v -> o.put("sender", v))),
                                 optional("status", regexpVal.map(v -> o.put("status", v))),
                                 optional("repositoryInfo", githubTriggerRepositoryInfoVal.map(v -> o.put("repositoryInfo", v))),
+                                optional("files", githubTriggerFilesVal.map(v -> o.put("files", v))),
                                 optional("payload", mapVal.map(v -> o.put("payload", v)))))
                         .map(ImmutableMap.Builder::build));
 
