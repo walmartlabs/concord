@@ -168,6 +168,30 @@ public class GitHubTriggersV2IT {
         process.assertLog(".*onPush: .*" + commitId + ".*");
     }
 
+    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    public void testOnPushWithFilesCondition() throws Exception {
+        String orgXName = "orgX_" + randomString();
+        concord.organizations().create(orgXName);
+
+        // Project A
+        // master branch + a trigger with "files" condition
+        String projectAName = "projectA_" + randomString();
+        String repoAName = "repoA_" + randomString();
+        initProjectAndRepo(orgXName, projectAName, repoAName, null, initRepo("triggers/github/repos/v2/filesTrigger"));
+        refreshRepo(orgXName, projectAName, repoAName);
+
+        // ---
+
+        sendEvent("triggers/github/events/direct_branch_push.json", "push",
+                "_FULL_REPO_NAME", "devtools/concord",
+                "_REF", "refs/heads/master",
+                "_USER_NAME", "vasia",
+                "_USER_LDAP_DN", "");
+
+        // A's trigger should be activated
+        waitForAProcess(orgXName, projectAName, "github");
+    }
+
     private static Path initRepo(String resource) throws Exception {
         Path src = Paths.get(GitHubTriggersV2IT.class.getResource(resource).toURI());
         return GitUtils.createBareRepository(src, concord.sharedContainerDir());
