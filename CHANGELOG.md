@@ -20,7 +20,9 @@ processes ([#430](https://github.com/walmartlabs/concord/pull/430));
 the JSON store query and the project configuration editors
 ([#433](https://github.com/walmartlabs/concord/pull/433));
 - concord-server: clean up repository cache using a separate thread
-([#436](https://github.com/walmartlabs/concord/pull/436)).
+([#436](https://github.com/walmartlabs/concord/pull/436));
+- runtime-v2: add grammar for the `files` condition in GitHub triggers
+([#437](https://github.com/walmartlabs/concord/pull/437)).
 
 
 
