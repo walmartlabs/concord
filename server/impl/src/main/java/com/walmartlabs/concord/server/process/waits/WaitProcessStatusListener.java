@@ -64,6 +64,7 @@ public class WaitProcessStatusListener implements ProcessStatusListener {
     private static void waiting(DSLContext tx, ProcessKey processKey) {
         tx.update(PROCESS_WAIT_CONDITIONS)
                 .set(PROCESS_WAIT_CONDITIONS.IS_WAITING, true)
+                .set(PROCESS_WAIT_CONDITIONS.VERSION, PROCESS_WAIT_CONDITIONS.VERSION.plus(1))
                 .where(PROCESS_WAIT_CONDITIONS.INSTANCE_ID.eq(processKey.getInstanceId())
                         .and(PROCESS_WAIT_CONDITIONS.INSTANCE_CREATED_AT.eq(processKey.getCreatedAt())
                                 .and(PROCESS_WAIT_CONDITIONS.WAIT_CONDITIONS.isNotNull())))
@@ -74,9 +75,9 @@ public class WaitProcessStatusListener implements ProcessStatusListener {
         tx.update(PROCESS_WAIT_CONDITIONS)
                 .set(PROCESS_WAIT_CONDITIONS.IS_WAITING, false)
                 .setNull(PROCESS_WAIT_CONDITIONS.WAIT_CONDITIONS)
+                .set(PROCESS_WAIT_CONDITIONS.VERSION, PROCESS_WAIT_CONDITIONS.VERSION.plus(1))
                 .where(PROCESS_WAIT_CONDITIONS.INSTANCE_ID.eq(processKey.getInstanceId())
-                        .and(PROCESS_WAIT_CONDITIONS.INSTANCE_CREATED_AT.eq(processKey.getCreatedAt())
-                                .and(PROCESS_WAIT_CONDITIONS.WAIT_CONDITIONS.isNotNull())))
+                        .and(PROCESS_WAIT_CONDITIONS.INSTANCE_CREATED_AT.eq(processKey.getCreatedAt())))
                 .execute();
     }
 }
