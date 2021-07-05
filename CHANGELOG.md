@@ -22,7 +22,9 @@ the JSON store query and the project configuration editors
 - concord-server: clean up repository cache using a separate thread
 ([#436](https://github.com/walmartlabs/concord/pull/436));
 - runtime-v2: add grammar for the `files` condition in GitHub triggers
-([#437](https://github.com/walmartlabs/concord/pull/437)).
+([#437](https://github.com/walmartlabs/concord/pull/437));
+- concord-server: use optimistic locking for wait conditions
+([#439](https://github.com/walmartlabs/concord/pull/439)).
 
 
 
