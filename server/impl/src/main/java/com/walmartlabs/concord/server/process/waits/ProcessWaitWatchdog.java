@@ -188,7 +188,7 @@ public class ProcessWaitWatchdog implements ScheduledTask {
     }
 
     @Named
-    static final class WatchdogDao extends AbstractDao {
+    static class WatchdogDao extends AbstractDao {
 
         private static final TypeReference<List<AbstractWaitCondition>> WAIT_LIST = new TypeReference<List<AbstractWaitCondition>>() {
         };
