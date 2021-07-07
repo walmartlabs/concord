@@ -170,6 +170,14 @@ public class RepositoryManager {
         }
     }
 
+    public void cleanup() {
+        repositoryCache.cleanup();
+    }
+
+    public long cleanupInterval() {
+        return repositoryCache.cleanupInterval();
+    }
+
     private UUID getOrgId(UUID projectId) {
         UUID orgId = projectDao.getOrgId(projectId);
 
