@@ -106,6 +106,7 @@ public class Listeners {
         try {
             task.get(MAX_LISTENER_TIME.toMillis(), TimeUnit.MILLISECONDS);
         } catch (InterruptedException | ExecutionException | TimeoutException e) {
+            task.cancel(true); // forcefully cancel the underlying task on exception
             throw new RuntimeException(e);
         }
     }
