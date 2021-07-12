@@ -29,7 +29,9 @@ the JSON store query and the project configuration editors
 ([#439](https://github.com/walmartlabs/concord/pull/439));
 - concord-server: send `PROCESS_STATUS` events to listeners
 (fix for the regression in 1.85.0+)
-([#440](https://github.com/walmartlabs/concord/pull/440)).
+([#440](https://github.com/walmartlabs/concord/pull/440));
+- concord-server: cancel listeners on exception
+([#441](https://github.com/walmartlabs/concord/pull/441)).
 
 
 
