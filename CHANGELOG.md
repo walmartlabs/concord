@@ -1,11 +1,47 @@
 # Change log
 
+## [Unreleased]
+
+### Added
+
+- concord-task: `start`, `startExternal` and `fork` actions now
+return process IDs ([#427](https://github.com/walmartlabs/concord/pull/427));
+- concord-server: add more metrics for wait conditions
+([#438](https://github.com/walmartlabs/concord/pull/438)).
+
+### Changed
+
+- concord-cli, concord-server, concord-agent: ability to run
+Concord on Java 16
+([#429](https://github.com/walmartlabs/concord/pull/429));
+- concord-server: fix insertion of wait conditions for forked
+processes ([#430](https://github.com/walmartlabs/concord/pull/430));
+- concord-console: fix checkpoint color for failed processes
+([#432](https://github.com/walmartlabs/concord/pull/432));
+- concord-console: fix the editor component initialization. Affects
+the JSON store query and the project configuration editors
+([#433](https://github.com/walmartlabs/concord/pull/433));
+- concord-server: clean up repository cache using a separate thread
+([#436](https://github.com/walmartlabs/concord/pull/436));
+- runtime-v2: add grammar for the `files` condition in GitHub triggers
+([#437](https://github.com/walmartlabs/concord/pull/437));
+- concord-server: use optimistic locking for wait conditions
+([#439](https://github.com/walmartlabs/concord/pull/439));
+- concord-server: send `PROCESS_STATUS` events to listeners
+(fix for the regression in 1.85.0+)
+([#440](https://github.com/walmartlabs/concord/pull/440));
+- concord-server: cancel listeners on exception
+([#441](https://github.com/walmartlabs/concord/pull/441)).
+
+
+
 ## [1.86.3] - 2021-06-16
 
-###Changed 
+### Changed
 
 - concord-server: update metrics version, use lock free timers
 ([#425](https://github.com/walmartlabs/concord/pull/425)).
+
 
 
 ## [1.86.2] - 2021-06-02
