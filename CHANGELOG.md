@@ -5,7 +5,9 @@
 ### Added
 
 - concord-task: `start`, `startExternal` and `fork` actions now
-return process IDs ([#427](https://github.com/walmartlabs/concord/pull/427)).
+return process IDs ([#427](https://github.com/walmartlabs/concord/pull/427));
+- concord-server: add more metrics for wait conditions
+([#438](https://github.com/walmartlabs/concord/pull/438)).
 
 ### Changed
 
