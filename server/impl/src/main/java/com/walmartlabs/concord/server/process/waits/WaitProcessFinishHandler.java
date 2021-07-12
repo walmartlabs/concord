@@ -26,6 +26,7 @@ import com.walmartlabs.concord.server.jooq.tables.ProcessQueue;
 import com.walmartlabs.concord.server.process.queue.ProcessQueueManager;
 import com.walmartlabs.concord.server.sdk.ProcessKey;
 import com.walmartlabs.concord.server.sdk.ProcessStatus;
+import com.walmartlabs.concord.server.sdk.metrics.WithTimer;
 import org.jooq.Configuration;
 
 import javax.inject.Inject;
@@ -61,6 +62,7 @@ public class WaitProcessFinishHandler implements ProcessWaitHandler<ProcessCompl
     }
 
     @Override
+    @WithTimer
     public Result<ProcessCompletionCondition> process(ProcessKey processKey, ProcessCompletionCondition wait) {
         Set<ProcessStatus> finishedStatuses = wait.finalStatuses();
         Set<UUID> awaitProcesses = wait.processes();
