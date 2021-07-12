@@ -24,7 +24,10 @@ the JSON store query and the project configuration editors
 - runtime-v2: add grammar for the `files` condition in GitHub triggers
 ([#437](https://github.com/walmartlabs/concord/pull/437));
 - concord-server: use optimistic locking for wait conditions
-([#439](https://github.com/walmartlabs/concord/pull/439)).
+([#439](https://github.com/walmartlabs/concord/pull/439));
+- concord-server: send `PROCESS_STATUS` events to listeners
+(fix for the regression in 1.85.0+)
+([#440](https://github.com/walmartlabs/concord/pull/440)).
 
 
 
