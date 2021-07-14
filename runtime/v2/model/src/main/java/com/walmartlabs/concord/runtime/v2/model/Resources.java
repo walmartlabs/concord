@@ -42,7 +42,7 @@ public interface Resources extends Serializable {
 
     @Value.Default
     default List<String> concord() {
-        return Collections.singletonList("glob:concord/{**/,}{*.,}concord.yml");
+        return Collections.singletonList("glob:concord/{**/,}{*.,}concord.{yml,yaml}");
     }
 
     static ImmutableResources.Builder builder() {

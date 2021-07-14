@@ -110,41 +110,6 @@ public class ProjectLoader {
         return com.walmartlabs.concord.project.ProjectLoader.isConcordFileExists(path);
     }
 
-    private static boolean isV2(Path workDir) {
-        for (String filename : Constants.Files.PROJECT_ROOT_FILE_NAMES) {
-            Path src = workDir.resolve(filename);
-            try {
-                if (Files.exists(src)) {
-                    ObjectMapper om = new ObjectMapper(new YAMLFactory());
-                    try (InputStream in = Files.newInputStream(src)) {
-                        JsonNode n = om.readTree(in);
-
-                        n = n.get(Constants.Request.CONFIGURATION_KEY);
-                        if (n == null) {
-                            continue;
-                        }
-
-                        n = n.get(Constants.Request.RUNTIME_KEY);
-                        if (n == null) {
-                            continue;
-                        }
-
-                        // TODO constants
-                        String s = n.textValue();
-                        if (s != null && "concord-v2".equals(n.textValue())) {
-                            return true;
-                        }
-                    }
-                }
-
-            } catch (IOException e) {
-                log.warn("isV2 ['{}'] -> error while reading a Concord file {}: {}", workDir, src, e.getMessage());
-            }
-        }
-
-        return false;
-    }
-
     public static String getRuntimeType(Path workDir, String defaultType) throws IOException {
         for (String filename : Constants.Files.PROJECT_ROOT_FILE_NAMES) {
             Path src = workDir.resolve(filename);

@@ -391,4 +391,14 @@ public class ProcessIT {
 
         proc.expectStatus(ProcessEntry.StatusEnum.TIMED_OUT);
     }
+
+    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    public void testYamlRootFile() throws Exception {
+        Payload payload = new Payload()
+                .archive(ProcessIT.class.getResource("yamlRootFile").toURI());
+
+        ConcordProcess proc = concord.processes().start(payload);
+        proc.expectStatus(ProcessEntry.StatusEnum.FINISHED);
+        proc.assertLog(".*Hello!*");
+    }
 }
