@@ -37,19 +37,21 @@ public class UserLdapGroup implements Resource {
     private final UserManager userManager;
     private final LdapUserInfoProvider ldapUserInfoProvider;
     private final LdapGroupDao ldapGroupsDao;
+    private final LdapManager ldapManager;
 
     @Inject
-    public UserLdapGroup(UserManager userManager, LdapUserInfoProvider ldapUserInfoProvider, LdapGroupDao ldapGroupsDao) {
+    public UserLdapGroup(UserManager userManager, LdapUserInfoProvider ldapUserInfoProvider, LdapGroupDao ldapGroupsDao, LdapManager ldapManager) {
         this.userManager = userManager;
         this.ldapUserInfoProvider = ldapUserInfoProvider;
         this.ldapGroupsDao = ldapGroupsDao;
+        this.ldapManager = ldapManager;
     }
 
     /**
      * Sync Ldap groups for a ldap user
      *
      * @param username username
-     * @param domain domain
+     * @param domain   domain
      * @return GenericOperationResult result
      */
     @POST
@@ -69,15 +71,19 @@ public class UserLdapGroup implements Resource {
         if (info == null) {
             throw new ConcordApplicationException("User '" + username + "' with domain '" + domain + "' not found in LDAP", Response.Status.BAD_REQUEST);
         }
-        
-        Set<String> groups = info.groups();
-        if (groups == null) {
-            ldapGroupsDao.update(id, Collections.emptySet());
-            ldapGroupsDao.updateLastSyncTimestamp(id);
-        } else {
-            ldapGroupsDao.update(id, groups);
+
+        try {
+            Set<String> groups = ldapManager.getGroups(username, domain);
+            if (groups == null) {
+                ldapGroupsDao.update(id, Collections.emptySet());
+                ldapGroupsDao.updateLastSyncTimestamp(id);
+            } else {
+                ldapGroupsDao.update(id, groups);
+            }
+        } catch (Exception e) {
+            throw new ConcordApplicationException("Failed to update groups for user '" + username + "' error -> '" + e.getMessage(), Response.Status.INTERNAL_SERVER_ERROR);
         }
-        
+
         return new GenericOperationResult(OperationResult.UPDATED);
     }
 
