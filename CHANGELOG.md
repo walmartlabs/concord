@@ -1,5 +1,14 @@
 # Change log
 
+## [Unreleased]
+
+### Changed
+
+- concord-server: ignore synthetic methods annotated with `WithTimer`
+([#444](https://github.com/walmartlabs/concord/pull/444)).
+
+
+
 ## [1.87.0] - 2021-07-12
 
 ### Added
