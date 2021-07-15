@@ -30,7 +30,8 @@ public class MetricModule extends AbstractModule {
     protected void configure() {
         MetricInterceptor i = new MetricInterceptor();
         requestInjection(i);
-        bindInterceptor(Matchers.any(), Matchers.annotatedWith(WithTimer.class), i);
+        bindInterceptor(Matchers.any(), NoSyntheticMethodMatcher.INSTANCE
+                .and(Matchers.annotatedWith(WithTimer.class)), i);
 
         bindListener(Matchers.any(), new MetricTypeListener());
     }
