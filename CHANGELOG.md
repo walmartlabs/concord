@@ -2,6 +2,11 @@
 
 ## [Unreleased]
 
+### Added
+
+- runtime-v1, runtime-v2: add support for `*.yaml` Concord files in
+addition to `*.yml` ([#443](https://github.com/walmartlabs/concord/pull/443));
+
 ### Changed
 
 - concord-server: ignore synthetic methods annotated with `WithTimer`
