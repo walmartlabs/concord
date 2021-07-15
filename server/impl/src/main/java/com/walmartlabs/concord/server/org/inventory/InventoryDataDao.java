@@ -26,6 +26,7 @@ import com.walmartlabs.concord.server.ConcordObjectMapper;
 import com.walmartlabs.concord.server.jooq.tables.JsonStoreData;
 import com.walmartlabs.concord.server.jooq.tables.JsonStores;
 import org.jooq.*;
+import org.jooq.Record;
 
 import javax.inject.Inject;
 import javax.inject.Named;

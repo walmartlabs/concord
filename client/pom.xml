@@ -176,6 +176,9 @@
                             <item>
                                 <code>java.class.removed</code>
                             </item>
+                            <item>
+                                <code>java.method.addedToInterface</code>
+                            </item>
                         </revapi.ignore>
                     </analysisConfiguration>
                 </configuration>

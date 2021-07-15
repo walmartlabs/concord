@@ -25,7 +25,12 @@ import ca.ibodrov.concord.testcontainers.ProcessListQuery;
 import ca.ibodrov.concord.testcontainers.junit4.ConcordRule;
 import com.google.common.collect.ImmutableMap;
 import com.walmartlabs.concord.ApiClient;
-import com.walmartlabs.concord.client.*;
+import com.walmartlabs.concord.client.GitHubEventsApi;
+import com.walmartlabs.concord.client.ProcessEntry;
+import com.walmartlabs.concord.client.ProjectEntry;
+import com.walmartlabs.concord.client.ProjectsApi;
+import com.walmartlabs.concord.client.RepositoriesApi;
+import com.walmartlabs.concord.client.RepositoryEntry;
 import com.walmartlabs.concord.it.common.GitHubUtils;
 import com.walmartlabs.concord.it.common.GitUtils;
 import com.walmartlabs.concord.it.common.ITUtils;
@@ -34,6 +39,8 @@ import org.junit.Test;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.time.OffsetDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
 
 import static com.walmartlabs.concord.it.common.ITUtils.randomString;
@@ -94,8 +101,15 @@ public class GitHubTriggersV2IT {
                 "_USER_LDAP_DN", "");
 
         // A's triggers should be activated
-        ProcessEntry procA = waitForAProcess(orgXName, projectAName, "github");
+        waitForAProcess(orgXName, projectAName, "github");
         expectNoProcesses(orgXName, projectGName, null);
+
+        // ---
+
+        // see https://github.com/walmartlabs/concord/issues/435
+        // wait a bit to reliably filter out subsequent processes of projectA
+        Thread.sleep(1000);
+        OffsetDateTime now = OffsetDateTime.now().truncatedTo(ChronoUnit.SECONDS);
 
         // ---
 
@@ -109,7 +123,7 @@ public class GitHubTriggersV2IT {
         waitForAProcess(orgXName, projectGName, "github");
 
         // no A's are expected
-        expectNoProcesses(orgXName, projectAName, procA);
+        expectNoProcesses(orgXName, projectAName, now);
     }
 
     @Test(timeout = DEFAULT_TEST_TIMEOUT)
@@ -245,7 +259,7 @@ public class GitHubTriggersV2IT {
     }
 
     private static String toRepoName(Path p) {
-        return p.getParent() .getFileName()+ "/" + p.getFileName();
+        return p.getParent().getFileName() + "/" + p.getFileName();
     }
 
     private static ProcessEntry waitForAProcess(String orgName, String projectName, String initiator) throws Exception {
@@ -274,11 +288,11 @@ public class GitHubTriggersV2IT {
                 status == ProcessEntry.StatusEnum.TIMED_OUT;
     }
 
-    private static void expectNoProcesses(String orgName, String projectName, ProcessEntry after) throws Exception {
+    private static void expectNoProcesses(String orgName, String projectName, OffsetDateTime afterCreatedAt) throws Exception {
         ProcessListQuery q = ProcessListQuery.builder()
                 .orgName(orgName)
                 .projectName(projectName)
-                .afterCreatedAt(after != null ? after.getCreatedAt() : null)
+                .afterCreatedAt(afterCreatedAt)
                 .build();
 
         List<ProcessEntry> l = concord.processes().list(q);

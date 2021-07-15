@@ -35,6 +35,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
+import java.time.OffsetDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Locale;
@@ -153,10 +154,10 @@ public abstract class AbstractGitHubTriggersIT extends AbstractServerIT {
         }
     }
 
-    protected void expectNoProceses(String orgName, String projectName, ProcessEntry after) throws Exception {
+    protected void expectNoProceses(String orgName, String projectName, OffsetDateTime afterCreatedAt) throws Exception {
         ProcessV2Api processApi = new ProcessV2Api(getApiClient());
-        String afterCreatedAt = after != null ? after.getCreatedAt().format(DATE_TIME_FORMATTER) : null;
-        List<ProcessEntry> l = processApi.list(null, orgName, null, projectName, null, null, afterCreatedAt, null, null, null, null, null, null, null, null);
+        String afterCreatedAtStr = afterCreatedAt != null ? afterCreatedAt.format(DATE_TIME_FORMATTER) : null;
+        List<ProcessEntry> l = processApi.list(null, orgName, null, projectName, null, null, afterCreatedAtStr, null, null, null, null, null, null, null, null);
         assertEquals(0, l.size());
     }
 
