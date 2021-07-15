@@ -3,4 +3,4 @@ configuration:
 
 flows:
   default:
-    - log: "Hello!"
+    - log: "Hello, ${name}!"

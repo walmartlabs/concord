@@ -399,6 +399,6 @@ public class ProcessIT {
 
         ConcordProcess proc = concord.processes().start(payload);
         proc.expectStatus(ProcessEntry.StatusEnum.FINISHED);
-        proc.assertLog(".*Hello!*");
+        proc.assertLog(".*Hello, Concord!*");
     }
 }

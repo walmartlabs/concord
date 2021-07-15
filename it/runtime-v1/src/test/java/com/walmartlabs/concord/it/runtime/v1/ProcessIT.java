@@ -485,7 +485,7 @@ public class ProcessIT {
                 .archive(resource("yamlRootFile")));
 
         proc.expectStatus(StatusEnum.FINISHED);
-        proc.assertLog(".*Hello!*");
+        proc.assertLog(".*Hello, Concord!*");
     }
 
     @SuppressWarnings("unchecked")
