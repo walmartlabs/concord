@@ -48,12 +48,11 @@ public final class YamlValueType<T> {
     public static final YamlValueType<Duration> DURATION = type("ISO 8601 DURATION");
     public static final YamlValueType<String> TIMEZONE = type("TIMEZONE");
     public static final YamlValueType<Object> STRING_OR_ARRAY = type("STRING_OR_ARRAY");
-
-    public static final YamlValueType<FlowCall> FLOW_CALL = type("FLOW_CALL");
     public static final YamlValueType<TaskCall> TASK = type("TASK");
     public static final YamlValueType<SetVariablesStep> SET_VARS = type("SET_VARIABLES");
     public static final YamlValueType<SuspendStep> SUSPEND = type("SUSPEND");
     public static final YamlValueType<ScriptCall> SCRIPT = type("SCRIPT");
+    public static final YamlValueType<ImmutableScriptCallOptions.Builder> SCRIPT_CALL_IN = type("OBJECT or EXPRESSION");
     public static final YamlValueType<Expression> EXPRESSION = type("EXPRESSION");
     public static final YamlValueType<String> EXPRESSION_VAL = type("EXPRESSION");
     public static final YamlValueType<Retry> RETRY = type("RETRY");
@@ -79,6 +78,9 @@ public final class YamlValueType<T> {
     public static final YamlValueType<Import.SecretDefinition> IMPORT_SECRET = type("IMPORT_SECRET");
     public static final YamlValueType<Map<String, List<Step>>> FLOWS = type("FLOWS");
     public static final YamlValueType<KV<String, List<Step>>> FLOW = type("FLOW");
+    public static final YamlValueType<FlowCall> FLOW_CALL = type("FLOW_CALL");
+    public static final YamlValueType<ImmutableFlowCallOptions.Builder> FLOW_CALL_INPUT = type("OBJECT or EXPRESSION");
+    public static final YamlValueType<ImmutableFlowCallOptions.Builder> FLOW_CALL_OUT = type("STRING or ARRAY_OF_STRING or OBJECT");
     public static final YamlValueType<Set<String>> PUBLIC_FLOWS = type("PUBLIC_FLOWS");
     public static final YamlValueType<Map<String, Profile>> PROFILES = type("PROFILES");
     public static final YamlValueType<KV<String, Profile>> PROFILE = type("PROFILE");
@@ -96,9 +98,9 @@ public final class YamlValueType<T> {
     public static final YamlValueType<Resources> RESOURCES = type("RESOURCES");
     public static final YamlValueType<ExclusiveMode> EXCLUSIVE_MODE = type("EXCLUSIVE_MODE");
     public static final YamlValueType<EventConfiguration> EVENTS_CFG = type("EVENTS_CONFIGURATION");
+    public static final YamlValueType<ImmutableTaskCallOptions.Builder> TASK_CALL_IN = type("OBJECT or EXPRESSION");
     public static final YamlValueType<ImmutableTaskCallOptions.Builder> TASK_CALL_OUT = type("STRING or OBJECT");
     public static final YamlValueType<ImmutableExpressionOptions.Builder> EXPRESSION_CALL_OUT = type("STRING or OBJECT");
-    public static final YamlValueType<ImmutableFlowCallOptions.Builder> FLOW_CALL_OUT = type("STRING or ARRAY_OF_STRING or OBJECT");
     public static final YamlValueType<ImmutableParallelBlockOptions.Builder> PARALLEL_BLOCK_OUT = type("STRING or ARRAY_OF_STRING or OBJECT");
     public static final YamlValueType<GithubTriggerExclusiveMode> GITHUB_EXCLUSIVE_MODE = type("GITHUB_EXCLUSIVE_MODE");
     public static final YamlValueType<Map<String, Object>> GITHUB_REPOSITORY_INFO = type("GITHUB_REPOSITORY_INFO");

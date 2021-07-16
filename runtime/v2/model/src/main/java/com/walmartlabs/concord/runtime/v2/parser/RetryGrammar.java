@@ -27,7 +27,7 @@ import io.takari.parc.Parser;
 
 import java.time.Duration;
 
-import static com.walmartlabs.concord.runtime.v2.parser.ExpressionGrammar.expression;
+import static com.walmartlabs.concord.runtime.v2.parser.ExpressionGrammar.maybeExpression;
 import static com.walmartlabs.concord.runtime.v2.parser.GrammarMisc.*;
 import static com.walmartlabs.concord.runtime.v2.parser.GrammarOptions.optional;
 import static com.walmartlabs.concord.runtime.v2.parser.GrammarOptions.options;
@@ -41,8 +41,8 @@ public final class RetryGrammar {
             betweenTokens(JsonToken.START_OBJECT, JsonToken.END_OBJECT,
                     with(Retry::builder,
                             o -> options(
-                                    optional("times", orError(or(maybeInt.map(o::times), expression.map(o::timesExpression)), YamlValueType.RETRY_TIMES)),
-                                    optional("delay", orError(or(maybeInt.map(i -> o.delay(Duration.ofSeconds(i))), expression.map(o::delayExpression)), YamlValueType.RETRY_DELAY)),
+                                    optional("times", orError(or(maybeInt.map(o::times), maybeExpression.map(o::timesExpression)), YamlValueType.RETRY_TIMES)),
+                                    optional("delay", orError(or(maybeInt.map(i -> o.delay(Duration.ofSeconds(i))), maybeExpression.map(o::delayExpression)), YamlValueType.RETRY_DELAY)),
                                     optional("in", mapVal.map(o::input))
                             ))
                             .map(ImmutableRetry.Builder::build));

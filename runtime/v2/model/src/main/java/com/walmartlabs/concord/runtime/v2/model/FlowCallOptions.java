@@ -42,6 +42,9 @@ public interface FlowCallOptions extends StepOptions {
         return Collections.emptyMap();
     }
 
+    @Nullable
+    String inputExpression();
+
     @Value.Default
     default List<String> out() {
         return Collections.emptyList();
