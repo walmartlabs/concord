@@ -740,11 +740,13 @@ public class ProcessQueueDao extends AbstractDao {
             if (key != null) {
                 history.where(pe.INSTANCE_ID.eq(key.getInstanceId())
                         .and(pe.INSTANCE_CREATED_AT.eq(key.getCreatedAt())
-                                .and(pe.EVENT_TYPE.eq(EventType.PROCESS_STATUS.name()))));
+                                .and(pe.EVENT_TYPE.eq(EventType.PROCESS_STATUS.name()))
+                                .and(field("{0}->'status'", String.class, pe.EVENT_DATA).isNotNull())));
             } else {
                 history.where(PROCESS_QUEUE.INSTANCE_ID.eq(pe.INSTANCE_ID)
                         .and(pe.INSTANCE_CREATED_AT.eq(PROCESS_QUEUE.CREATED_AT)
-                                .and(pe.EVENT_TYPE.eq(EventType.PROCESS_STATUS.name()))));
+                                .and(pe.EVENT_TYPE.eq(EventType.PROCESS_STATUS.name()))
+                                .and(field("{0}->'status'", String.class, pe.EVENT_DATA).isNotNull())));
             }
 
             query.addSelect(history.asField("status_history"));
