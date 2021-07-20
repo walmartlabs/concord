@@ -1,6 +1,7 @@
 #!/bin/bash
 
 SERVER_ADDR="$1"
+ENTRY_POINT="${2:-default}"
 
 rm -rf target && mkdir target
 cp -R concord.yml playbook target/
