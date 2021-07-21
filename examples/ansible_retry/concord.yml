@@ -57,7 +57,7 @@ flows:
         - log: "Ansible error: ${lastError.cause}"
 
         # Save retry file as an attachment
-        - call: copyRetryFile
+        - call: saveRetryFile
         - if: "${(attempts + 1) >= maxAttempts}"  # give up eventually
           then:
             - throw: "Too many attempts for hosts: ${resource.asString(retryFile)}"
@@ -96,7 +96,7 @@ flows:
         - log: "Ansible error: ${lastError.cause}"
 
         # Save retry file as an attachment
-        - call: copyRetryFile
+        - call: saveRetryFile
         - if: "${(attempts + 1) >= maxAttempts}"  # give up eventually
           then:
             - throw: "Too many attempts for hosts: ${resource.asString(retryFile)}"
@@ -119,7 +119,7 @@ flows:
 
   # Sets variables:
   # * retryFile - path to the persisted retry file
-  copyRetryFile:
+  saveRetryFile:
     - script: js
       body: |
         var Files = java.nio.file.Files;
