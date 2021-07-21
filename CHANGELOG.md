@@ -10,7 +10,10 @@ addition to `*.yml` ([#443](https://github.com/walmartlabs/concord/pull/443));
 ### Changed
 
 - concord-server: ignore synthetic methods annotated with `WithTimer`
-([#444](https://github.com/walmartlabs/concord/pull/444)).
+([#444](https://github.com/walmartlabs/concord/pull/444));
+-concord-targetplatform: update jackson-databind version to address
+[CVE](https://github.com/advisories/GHSA-288c-cq4h-88gq)
+([#449](https://github.com/walmartlabs/concord/pull/449)).
 
 
 
