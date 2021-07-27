@@ -6,8 +6,8 @@
 
     <changeSet id="1880000" author="ybrigo@gmail.com">
         <sql>
-            DROP TRIGGER IF EXISTS PROCESS_STATUS_HISTORY_EVENT ON PROCESS_QUEUE;
-            DROP FUNCTION IF EXISTS PROCESS_STATUS_HISTORY;
+            drop trigger if exists PROCESS_STATUS_HISTORY_EVENT on PROCESS_QUEUE;
+            drop function if exists PROCESS_STATUS_HISTORY;
         </sql>
     </changeSet>
 
@@ -21,7 +21,7 @@
 
     <changeSet id="1880200" author="ybrigo@gmail.com">
         <sql>
-            delete from event_processor_marker
+            delete from EVENT_PROCESSOR_MARKER
             where processor_name = 'process-queue-statistics-processor';
         </sql>
     </changeSet>
