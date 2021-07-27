@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.3.xsd">
+
+    <changeSet id="1880000" author="ybrigo@gmail.com">
+        <sql>
+            DROP TRIGGER IF EXISTS PROCESS_STATUS_HISTORY_EVENT ON PROCESS_QUEUE;
+            DROP FUNCTION IF EXISTS PROCESS_STATUS_HISTORY;
+        </sql>
+    </changeSet>
+
+    <changeSet id="1880100" author="ybrigo@gmail.com">
+        <preConditions onFail="MARK_RAN">
+            <tableExists tableName="PROCESS_QUEUE_STATS"/>
+        </preConditions>
+
+        <dropTable tableName="PROCESS_QUEUE_STATS"/>
+    </changeSet>
+
+    <changeSet id="1880200" author="ybrigo@gmail.com">
+        <sql>
+            delete from event_processor_marker
+            where processor_name = 'process-queue-statistics-processor';
+        </sql>
+    </changeSet>
+
+</databaseChangeLog>
