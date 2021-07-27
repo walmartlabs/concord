@@ -16,7 +16,10 @@ in `task`, `flow` and `script` steps
 ([#444](https://github.com/walmartlabs/concord/pull/444));
 -concord-targetplatform: update jackson-databind version to address
 [CVE](https://github.com/advisories/GHSA-288c-cq4h-88gq)
-([#449](https://github.com/walmartlabs/concord/pull/449)).
+([#449](https://github.com/walmartlabs/concord/pull/449));
+- concord-server: roll back changes introduced in
+[#390](https://github.com/walmartlabs/concord/pull/390)
+([#450](https://github.com/walmartlabs/concord/pull/450)).
 
 
 
