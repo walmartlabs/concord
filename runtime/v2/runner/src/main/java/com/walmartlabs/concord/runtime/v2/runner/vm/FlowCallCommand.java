@@ -55,7 +55,6 @@ public class FlowCallCommand extends StepCommand<FlowCall> {
         EvalContext evalCtx = EvalContextFactory.global(ctx);
 
         FlowCall call = getStep();
-        FlowCallOptions opts = call.getOptions();
 
         // the called flow's name
         String flowName = ee.eval(evalCtx, call.getFlowName(), String.class);
@@ -67,7 +66,8 @@ public class FlowCallCommand extends StepCommand<FlowCall> {
 
         Command steps = CompilerUtils.compile(compiler, pc, pd, flowName);
 
-        Map<String, Object> input = VMUtils.prepareInput(ee, ctx, Objects.requireNonNull(opts).input());
+        FlowCallOptions opts = Objects.requireNonNull(call.getOptions());
+        Map<String, Object> input = VMUtils.prepareInput(ee, ctx, opts.input(), opts.inputExpression());
 
         // the call's frame should be a "root" frame
         // all local variables will have this frame as their base

@@ -46,6 +46,9 @@ public interface ScriptCallOptions extends StepOptions {
     }
 
     @Nullable
+    String inputExpression();
+
+    @Nullable
     WithItems withItems();
 
     @Nullable

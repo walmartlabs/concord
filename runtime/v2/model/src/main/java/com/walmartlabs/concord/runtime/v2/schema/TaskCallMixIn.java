@@ -34,7 +34,8 @@ public interface TaskCallMixIn extends NamedStep {
     String task();
 
     @JsonProperty("in")
-    Map<String, Object> imput();
+    @JsonSchemaInject(json = "{\"oneOf\": [ {\"type\": \"string\"}, {\"type\": \"object\"} ]}", merge = false)
+    Object input();
 
     @JsonProperty("out")
     @JsonSchemaInject(json = "{\"oneOf\": [ {\"type\": \"string\"}, {\"type\": \"object\"} ]}", merge = false)

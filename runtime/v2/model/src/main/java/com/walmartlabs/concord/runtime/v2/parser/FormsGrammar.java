@@ -30,7 +30,7 @@ import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-import static com.walmartlabs.concord.runtime.v2.parser.ExpressionGrammar.expression;
+import static com.walmartlabs.concord.runtime.v2.parser.ExpressionGrammar.maybeExpression;
 import static com.walmartlabs.concord.runtime.v2.parser.GrammarMisc.*;
 import static com.walmartlabs.concord.runtime.v2.parser.GrammarOptions.optional;
 import static com.walmartlabs.concord.runtime.v2.parser.GrammarOptions.options;
@@ -72,7 +72,7 @@ public final class FormsGrammar {
                             .map(f -> f.stream().collect(Collectors.toMap(Form::name, Function.identity()))));
 
     private static Parser<Atom, ImmutableFormCallOptions.Builder> formCallFieldsOption(ImmutableFormCallOptions.Builder o) {
-        return orError(or(formFieldsArray.map(o::fields), expression.map(o::fieldsExpression)), YamlValueType.FORM_CALL_FIELDS);
+        return orError(or(formFieldsArray.map(o::fields), maybeExpression.map(o::fieldsExpression)), YamlValueType.FORM_CALL_FIELDS);
     }
 
     private static final Parser<Atom, FormCallOptions> formCallOptions =
