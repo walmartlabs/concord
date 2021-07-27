@@ -19,7 +19,9 @@ in `task`, `flow` and `script` steps
 ([#449](https://github.com/walmartlabs/concord/pull/449));
 - concord-server: roll back changes introduced in
 [#390](https://github.com/walmartlabs/concord/pull/390)
-([#450](https://github.com/walmartlabs/concord/pull/450)).
+([#450](https://github.com/walmartlabs/concord/pull/450));
+- ansible: fix retry file persistance (`saveRetry` task parameter)
+([#451](https://github.com/walmartlabs/concord/pull/451)).
 
 
 
