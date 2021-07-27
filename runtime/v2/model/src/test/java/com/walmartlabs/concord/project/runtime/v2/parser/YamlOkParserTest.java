@@ -76,6 +76,26 @@ public class YamlOkParserTest extends AbstractParserTest {
         assertMeta("Boo", t.getOptions());
     }
 
+    @Test
+    public void test000_1() throws Exception {
+        ProcessDefinition pd = load("000.1.yml");
+
+        List<Step> main = pd.flows().get("main");
+
+        assertEquals(1, main.size());
+
+        assertTrue(main.get(0) instanceof TaskCall);
+        TaskCall t = (TaskCall) main.get(0);
+        assertEquals("boo", t.getName());
+
+        // options
+        assertNotNull(t.getOptions());
+
+        // input
+        assertEquals(0, t.getOptions().input().size());
+        assertEquals("${inExpr}", t.getOptions().inputExpression());
+    }
+
     // Full Call Flow Definition Test
     @Test
     public void test002() throws Exception {
@@ -115,6 +135,25 @@ public class YamlOkParserTest extends AbstractParserTest {
 
         // meta
         assertMeta("boo-call", t.getOptions());
+    }
+
+    @Test
+    public void test002_1() throws Exception {
+        ProcessDefinition pd = load("002.1.yml");
+
+        List<Step> main = pd.flows().get("main");
+
+        assertEquals(1, main.size());
+
+        assertTrue(main.get(0) instanceof FlowCall);
+        FlowCall t = (FlowCall) main.get(0);
+        assertEquals("boo", t.getFlowName());
+
+        // options
+        assertNotNull(t.getOptions());
+        // input
+        assertEquals(0, t.getOptions().input().size());
+        assertEquals("${inExpr}", t.getOptions().inputExpression());
     }
 
     // Snapshot Definition Test
@@ -379,6 +418,24 @@ public class YamlOkParserTest extends AbstractParserTest {
 
         // meta
         assertMeta(t.getOptions());
+    }
+
+
+    // script definition
+    @Test
+    public void test014_1() throws Exception {
+        ProcessDefinition pd = load("014.1.yml");
+
+        List<Step> main = pd.flows().get("default");
+        assertEquals(1, main.size());
+
+        assertTrue(main.get(0) instanceof ScriptCall);
+        ScriptCall t = (ScriptCall) main.get(0);
+        assertEquals("groovy", t.getLanguageOrRef());
+
+        // input
+        assertEquals(0, t.getOptions().input().size());
+        assertEquals("${inExpr}", t.getOptions().inputExpression());
     }
 
     // resources definition

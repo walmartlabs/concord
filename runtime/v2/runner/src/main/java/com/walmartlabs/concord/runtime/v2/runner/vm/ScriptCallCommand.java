@@ -62,7 +62,7 @@ public class ScriptCallCommand extends StepCommand<ScriptCall> {
 
         ScriptCall call = getStep();
         ScriptCallOptions opts = Objects.requireNonNull(call.getOptions());
-        Map<String, Object> input = VMUtils.prepareInput(expressionEvaluator, ctx, opts.input());
+        Map<String, Object> input = VMUtils.prepareInput(expressionEvaluator, ctx, opts.input(), opts.inputExpression());
 
         String language = getLanguage(expressionEvaluator, scriptEvaluator, ctx, call);
         Reader content = getContent(expressionEvaluator, resourceResolver, ctx, call);

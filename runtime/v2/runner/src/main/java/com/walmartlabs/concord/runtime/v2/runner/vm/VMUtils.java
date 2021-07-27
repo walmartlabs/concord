@@ -41,15 +41,21 @@ public final class VMUtils {
      */
     public static Map<String, Object> prepareInput(ExpressionEvaluator ee,
                                                    Context ctx,
-                                                   Map<String, Serializable> input) {
+                                                   Map<String, Serializable> input,
+                                                   String inputExpression) {
 
-        if (input == null) {
+        Object value = null;
+        if (inputExpression != null) {
+            value = inputExpression;
+        } else if (input != null && !input.isEmpty()) {
+            value = input;
+        }
+
+        if (value == null) {
             return Collections.emptyMap();
         }
 
-        input = ee.evalAsMap(EvalContextFactory.global(ctx), input);
-
-        return Collections.unmodifiableMap(input);
+        return Collections.unmodifiableMap(ee.evalAsMap(EvalContextFactory.global(ctx), value));
     }
 
     /**
