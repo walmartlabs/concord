@@ -79,6 +79,7 @@ public enum TaskParams implements HasKey {
 
     INVENTORY_KEY("inventory"),
 
+    @Deprecated
     LAST_RETRY_FILE("ansible.retry"),
 
     LIMIT_KEY("limit"),

@@ -227,7 +227,7 @@ public class AnsibleTask {
         }
 
         String playbookName = getString(args, TaskParams.PLAYBOOK_KEY.getKey());
-        String retryFile = getNameWithoutExtension(playbookName + ".retry");
+        String retryFile = getNameWithoutExtension(playbookName) + ".retry";
 
         Path src = workDir.resolve(retryFile);
         if (!Files.exists(src)) {
@@ -236,7 +236,7 @@ public class AnsibleTask {
         }
 
         Path dst = workDir.resolve(Constants.Files.JOB_ATTACHMENTS_DIR_NAME)
-                .resolve(TaskParams.LAST_RETRY_FILE.getKey());
+                .resolve(src.getFileName());
         Files.copy(src, dst, StandardCopyOption.REPLACE_EXISTING);
         log.info("The retry file was saved as: {}", workDir.relativize(dst));
     }

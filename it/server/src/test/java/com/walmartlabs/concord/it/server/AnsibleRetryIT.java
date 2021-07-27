@@ -52,7 +52,7 @@ public class AnsibleRetryIT extends AbstractServerIT {
 
         // retrieve the retry file
 
-        File r = processApi.downloadAttachment(pir.getInstanceId(), "ansible.retry");
+        File r = processApi.downloadAttachment(pir.getInstanceId(), "hello.retry");
         assertNotNull(r);
     }
 }
