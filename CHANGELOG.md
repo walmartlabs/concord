@@ -6,6 +6,9 @@
 
 - runtime-v1, runtime-v2: add support for `*.yaml` Concord files in
 addition to `*.yml` ([#443](https://github.com/walmartlabs/concord/pull/443));
+- runtime-v2: allow expressions to be used as the `in` block value
+in `task`, `flow` and `script` steps
+([#447](https://github.com/walmartlabs/concord/pull/447)).
 
 ### Changed
 
