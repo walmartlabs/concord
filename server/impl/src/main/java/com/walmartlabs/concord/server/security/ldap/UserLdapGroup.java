@@ -24,7 +24,6 @@ import com.walmartlabs.concord.server.GenericOperationResult;
 import com.walmartlabs.concord.server.OperationResult;
 import com.walmartlabs.concord.server.sdk.ConcordApplicationException;
 import com.walmartlabs.concord.server.security.Roles;
-import com.walmartlabs.concord.server.user.CreateUserRequest;
 import com.walmartlabs.concord.server.user.UserInfoProvider;
 import com.walmartlabs.concord.server.user.UserManager;
 import com.walmartlabs.concord.server.user.UserType;
@@ -82,7 +81,7 @@ public class UserLdapGroup implements Resource {
     @Produces(MediaType.APPLICATION_JSON)
     @Path("/sync")
     @Validate
-    public GenericOperationResult sync(@ApiParam @Valid CreateUserRequest req) {
+    public GenericOperationResult sync(@ApiParam @Valid SyncUserLdapGroupRequest req) {
         assertAdmin();
 
         UUID id = userManager.getId(req.getUsername(), req.getUserDomain(), UserType.LDAP).orElse(null);
