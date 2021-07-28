@@ -653,7 +653,7 @@ public class YamlErrorParserTest extends AbstractParserTest {
     @Test
     public void test205() throws Exception {
         String msg =
-                "(005.yml): Error @ line: 5, col: 10. Invalid value type, expected: OBJECT, got: NULL. Remove attribute or complete the definition\n" +
+                "(005.yml): Error @ line: 5, col: 10. Invalid value type, expected: OBJECT or EXPRESSION, got: NULL. Remove attribute or complete the definition\n" +
                         "\twhile processing steps:\n" +
                         "\t'in' @ line: 5, col: 7\n" +
                         "\t\t'task' @ line: 3, col: 7\n" +
@@ -666,7 +666,7 @@ public class YamlErrorParserTest extends AbstractParserTest {
     @Test
     public void test206() throws Exception {
         String msg =
-                "(006.yml): Error @ line: 5, col: 11. Invalid value type, expected: OBJECT, got: INT\n" +
+                "(006.yml): Error @ line: 5, col: 11. Invalid value type, expected: OBJECT or EXPRESSION, got: INT\n" +
                         "\twhile processing steps:\n" +
                         "\t'in' @ line: 5, col: 7\n" +
                         "\t\t'task' @ line: 3, col: 7\n" +
@@ -898,7 +898,7 @@ public class YamlErrorParserTest extends AbstractParserTest {
     @Test
     public void test305() throws Exception {
         String msg =
-                "(005.yml): Error @ line: 5, col: 10. Invalid value type, expected: OBJECT, got: NULL. Remove attribute or complete the definition\n" +
+                "(005.yml): Error @ line: 5, col: 10. Invalid value type, expected: OBJECT or EXPRESSION, got: NULL. Remove attribute or complete the definition\n" +
                         "\twhile processing steps:\n" +
                         "\t'in' @ line: 5, col: 7\n" +
                         "\t\t'call' @ line: 3, col: 7\n" +
@@ -911,7 +911,7 @@ public class YamlErrorParserTest extends AbstractParserTest {
     @Test
     public void test306() throws Exception {
         String msg =
-                "(006.yml): Error @ line: 5, col: 11. Invalid value type, expected: OBJECT, got: INT\n" +
+                "(006.yml): Error @ line: 5, col: 11. Invalid value type, expected: OBJECT or EXPRESSION, got: INT\n" +
                         "\twhile processing steps:\n" +
                         "\t'in' @ line: 5, col: 7\n" +
                         "\t\t'call' @ line: 3, col: 7\n" +

@@ -43,6 +43,9 @@ public interface TaskCallOptions extends StepOptions {
     }
 
     @Nullable
+    String inputExpression();
+
+    @Nullable
     String out();
 
     @Value.Default

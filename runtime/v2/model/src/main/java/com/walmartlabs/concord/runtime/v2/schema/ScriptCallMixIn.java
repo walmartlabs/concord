@@ -22,6 +22,7 @@ package com.walmartlabs.concord.runtime.v2.schema;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
+import com.kjetland.jackson.jsonSchema.annotations.JsonSchemaInject;
 import com.kjetland.jackson.jsonSchema.annotations.JsonSchemaTitle;
 
 import java.io.Serializable;
@@ -39,7 +40,8 @@ public interface ScriptCallMixIn extends StepMixIn {
     String body();
 
     @JsonProperty("in")
-    Map<String, Serializable> input();
+    @JsonSchemaInject(json = "{\"oneOf\": [ {\"type\": \"string\"}, {\"type\": \"object\"} ]}", merge = false)
+    Object input();
 
     @JsonProperty("withItems")
     WithItemsMixIn withItems();

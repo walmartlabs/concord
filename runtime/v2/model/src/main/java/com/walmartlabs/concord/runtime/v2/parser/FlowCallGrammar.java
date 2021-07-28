@@ -27,6 +27,7 @@ import com.walmartlabs.concord.runtime.v2.model.ImmutableFlowCallOptions;
 import com.walmartlabs.concord.runtime.v2.model.WithItems;
 import io.takari.parc.Parser;
 
+import static com.walmartlabs.concord.runtime.v2.parser.ExpressionGrammar.maybeExpression;
 import static com.walmartlabs.concord.runtime.v2.parser.GrammarMisc.*;
 import static com.walmartlabs.concord.runtime.v2.parser.GrammarOptions.optional;
 import static com.walmartlabs.concord.runtime.v2.parser.GrammarOptions.options;
@@ -36,6 +37,10 @@ import static io.takari.parc.Combinators.or;
 
 public final class FlowCallGrammar {
 
+    private static Parser<Atom, ImmutableFlowCallOptions.Builder> flowCallInOption(ImmutableFlowCallOptions.Builder o) {
+        return orError(or(maybeMap.map(o::input), maybeExpression.map(o::inputExpression)), YamlValueType.FLOW_CALL_INPUT);
+    }
+
     private static Parser<Atom, ImmutableFlowCallOptions.Builder> flowCallOutOption(ImmutableFlowCallOptions.Builder o) {
         return orError(or(maybeMap.map(o::outExpr), or(maybeString.map(o::addOut), maybeStringArray.map(o::out))), YamlValueType.FLOW_CALL_OUT);
     }
@@ -43,7 +48,7 @@ public final class FlowCallGrammar {
     private static Parser<Atom, FlowCallOptions> callOptions(String stepName) {
         return with(() -> optionsBuilder(stepName),
                 o -> options(
-                        optional("in", mapVal.map(o::input)),
+                        optional("in", flowCallInOption(o)),
                         optional("out", flowCallOutOption(o)),
                         optional("meta", mapVal.map(o::putAllMeta)),
                         optional("withItems", nonNullVal.map(v -> o.withItems(WithItems.of(v, WithItems.Mode.SERIAL)))),

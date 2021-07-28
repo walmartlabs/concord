@@ -1,0 +1,5 @@
+flows:
+  main:
+    - name: "boo-call"
+      call: "boo"
+      in: ${inExpr}

@@ -76,7 +76,7 @@ public class TaskCallCommand extends StepCommand<TaskCall> {
                 .build();
 
         TaskCallOptions opts = Objects.requireNonNull(call.getOptions());
-        Variables input = new MapBackedVariables(VMUtils.prepareInput(expressionEvaluator, ctx, opts.input()));
+        Variables input = new MapBackedVariables(VMUtils.prepareInput(expressionEvaluator, ctx, opts.input(), opts.inputExpression()));
 
         TaskResult result;
         try {
