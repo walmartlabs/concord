@@ -41,7 +41,7 @@ publicFlows:
 
 resources:
   concord:
-    - "glob:concord/{**/,}{*.,}concord.yml"
+    - "glob:concord/{**/,}{*.,}concord.{yml,yaml}"
 
 triggers:
   - github:

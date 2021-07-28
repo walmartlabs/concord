@@ -44,4 +44,4 @@ forms:
       type: "string*"
 resources:
   concord:
-  - "glob:concord/{**/,}{*.,}concord.yml"
+  - "glob:concord/{**/,}{*.,}concord.{yml,yaml}"
