@@ -23,6 +23,7 @@ package com.walmartlabs.concord.project.runtime.v2.parser;
 import com.walmartlabs.concord.forms.FormField.Cardinality;
 import com.walmartlabs.concord.imports.Import;
 import com.walmartlabs.concord.imports.Imports;
+import com.walmartlabs.concord.runtime.v2.Constants;
 import com.walmartlabs.concord.runtime.v2.model.*;
 import com.walmartlabs.concord.runtime.v2.parser.StepOptions;
 import org.junit.Test;
@@ -94,6 +95,25 @@ public class YamlOkParserTest extends AbstractParserTest {
         // input
         assertEquals(0, t.getOptions().input().size());
         assertEquals("${inExpr}", t.getOptions().inputExpression());
+    }
+
+    @Test
+    public void test000_2() throws Exception {
+        ProcessDefinition pd = load("000.2.yml");
+
+        List<Step> main = pd.flows().get("main");
+
+        assertEquals(1, main.size());
+
+        assertTrue(main.get(0) instanceof TaskCall);
+        TaskCall t = (TaskCall) main.get(0);
+        assertEquals("log", t.getName());
+
+        // options
+        assertNotNull(t.getOptions());
+
+        // name
+        assertEquals("Test name", t.getOptions().meta().get(Constants.SEGMENT_NAME));
     }
 
     // Full Call Flow Definition Test

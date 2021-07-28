@@ -1,0 +1,4 @@
+flows:
+  main:
+    - log: "Log message"
+      name: "Test name"

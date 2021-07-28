@@ -28,6 +28,8 @@ import io.takari.parc.Input;
 import io.takari.parc.Parser;
 import io.takari.parc.Result;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.function.Predicate;
@@ -153,21 +155,26 @@ public final class GrammarMisc {
                 return fail(in, "EOF");
             }
 
-            Input<Atom> rest = in;
+            List<Atom> values = new ArrayList<>();
             String stepName = null;
-            Atom val = in.first();
-            if ("name".equals(val.name)) {
-                Result<Atom, String> stepNameResult = stringVal.apply(in.rest());
-                if (stepNameResult.isFailure()) {
-                    return invalidValueTypeError(YamlValueType.STRING).apply(in.rest()).cast();
-                }
+            while (!in.end()) {
+                Atom val = in.first();
+                if ("name".equals(val.name)) {
+                    Result<Atom, String> stepNameResult = stringVal.apply(in.rest());
+                    if (stepNameResult.isFailure()) {
+                        return invalidValueTypeError(YamlValueType.STRING).apply(in.rest()).cast();
+                    }
 
-                rest = stepNameResult.getRest();
-                stepName = stepNameResult.toSuccess().getResult();
+                    in = stepNameResult.getRest();
+                    stepName = stepNameResult.toSuccess().getResult();
+                } else {
+                    values.add(val);
+                    in = in.rest();
+                }
             }
 
-            final String finalStepName = stepName;
-            return satisfyField(name, valueType, atom -> f.apply(finalStepName, atom)).apply(rest);
+            String finalStepName = stepName;
+            return satisfyField(name, valueType, atom -> f.apply(finalStepName, atom)).apply(new ListInput<>(values));
         };
     }
 
