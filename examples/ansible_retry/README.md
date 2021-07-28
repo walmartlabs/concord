@@ -7,6 +7,10 @@ Example of running an Ansible playbook with retry (--limit <playbook>.retry).
 ```
 cd examples/ansible
 ./run.sh localhost:8001
+# or
+./run.sh localhost:8001 retryAfterSuspend
+# or
+./run.sh localhost:8001 retryAfterForm
 ```
 
 or
