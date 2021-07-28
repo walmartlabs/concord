@@ -1,10 +1,10 @@
 configuration:
   dependencies:
-    - "mvn://com.walmartlabs.concord.plugins.basic:ansible-tasks:1.76.1"
+    - "mvn://com.walmartlabs.concord.plugins.basic:ansible-tasks:1.88.0"
 
   arguments:
     attempts: 0
-    maxAttempts: 5
+    maxAttempts: 3
     retryFile: null
     makeItFail: true # just to simulate a failure inside of the playbook
 
@@ -42,6 +42,7 @@ flows:
         - task: ansible
           in:
             playbook: playbook/hello.yml
+            saveRetryFile: true    # saves hello.retry as an attachment on playbook error
             limit: "${retryFile}"  # default is null, will be a .retry file on retries
             inventory:
               local:
@@ -54,26 +55,23 @@ flows:
             extraVars:
               makeItFail: "${makeItFail}"
       error:
-        - log: "Ansible error: ${lastError.cause}"
-
-        # Save retry file as an attachment
-        - call: saveRetryFile
         - if: "${(attempts + 1) >= maxAttempts}"  # give up eventually
           then:
-            - throw: "Too many attempts for hosts: ${resource.asString(retryFile)}"
+            - throw: "Too many attempts for hosts: ${resource.asString('_attachments/hello.retry')}"
 
         # suspend until retry time
         - task: sleep
           in:
             suspend: true
-            # 3 seconds to prove the point
-            # more useful would be 2 hours: ${2 * 60 * 60)
+            # 3 seconds to prove the point in this example
+            # more useful would be 2 hours: ${2 * 60 * 60}
             duration: 3
         # try again, with retry file
         - call: retryAfterSuspend
           in:
             attempts: "${attempts + 1}"
-            retryFile: "@${retryFile}"
+            retryFile: "@_attachments/hello.retry"
+            makeItFail: false
 
   retryAfterForm:
     # Prompt to retry playbook after failure
@@ -81,6 +79,7 @@ flows:
         - task: ansible
           in:
             playbook: playbook/hello.yml
+            saveRetryFile: true    # saves hello.retry as an attachment on playbook error
             limit: "${retryFile}"  # default is null, will be a .retry file on retries
             inventory:
               local:
@@ -93,13 +92,9 @@ flows:
             extraVars:
               makeItFail: "${makeItFail}"
       error:
-        - log: "Ansible error: ${lastError.cause}"
-
-        # Save retry file as an attachment
-        - call: saveRetryFile
         - if: "${(attempts + 1) >= maxAttempts}"  # give up eventually
           then:
-            - throw: "Too many attempts for hosts: ${resource.asString(retryFile)}"
+            - throw: "Too many attempts for hosts: ${resource.asString('_attachments/hello.retry')}"
 
         - form: retryForm
           fields:
@@ -111,24 +106,8 @@ flows:
             - call: retryAfterForm
               in:
                 attempts: "${attempts + 1}"
-                retryFile: "@${retryFile}"
+                retryFile: "@_attachments/hello.retry"
                 makeItFail: "${retryForm.makeItFail}"
           else:
             - log: "Retry denied"
             - exit
-
-  # Sets variables:
-  # * retryFile - path to the persisted retry file
-  saveRetryFile:
-    - script: js
-      body: |
-        var Files = java.nio.file.Files;
-        var Paths = java.nio.file.Paths;
-        var StandardCopyOption = java.nio.file.StandardCopyOption;
-
-        var src = Paths.get('playbook/hello.retry');
-        var dst = Paths.get('_attachments/hello.retry')
-
-        Files.copy(src, dst, StandardCopyOption.REPLACE_EXISTING);
-        execution.setVariable('retryFile', dst.toString());
-    - log: "Retry file is: ${retryFile}"
