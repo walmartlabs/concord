@@ -1,5 +1,32 @@
 # Change log
 
+## [Unreleased]
+
+### Added
+
+- concord-server: a new API endpoint to force sync LDAP groups of
+a specific user ([#442](https://github.com/walmartlabs/concord/pull/442));
+- runtime-v1, runtime-v2: add support for `*.yaml` Concord files in
+addition to `*.yml` ([#443](https://github.com/walmartlabs/concord/pull/443));
+- runtime-v2: allow expressions to be used as the `in` block value
+in `task`, `flow` and `script` steps
+([#447](https://github.com/walmartlabs/concord/pull/447)).
+
+### Changed
+
+- concord-server: ignore synthetic methods annotated with `WithTimer`
+([#444](https://github.com/walmartlabs/concord/pull/444));
+-concord-targetplatform: update jackson-databind version to address
+[CVE](https://github.com/advisories/GHSA-288c-cq4h-88gq)
+([#449](https://github.com/walmartlabs/concord/pull/449));
+- concord-server: roll back changes introduced in
+[#390](https://github.com/walmartlabs/concord/pull/390)
+([#450](https://github.com/walmartlabs/concord/pull/450));
+- ansible: fix retry file persistance (`saveRetry` task parameter)
+([#451](https://github.com/walmartlabs/concord/pull/451)).
+
+
+
 ## [1.87.0] - 2021-07-12
 
 ### Added
