@@ -42,11 +42,11 @@ public final class Utils {
     /**
      * Returns the parent frame of the current frame of the specified thread.
      */
-    public static Frame assertParentFrame(State state, ThreadId threadId) {
+    public static Frame getParentFrame(State state, ThreadId threadId) {
         // we assume that the parent frame is the frame before the current one in the stack
         List<Frame> frames = state.getFrames(threadId);
         if (frames.size() < 2) {
-            throw new IllegalStateException("The parent frame doesn't exist");
+            return null;
         }
         return frames.get(1);
     }

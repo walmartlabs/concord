@@ -203,11 +203,13 @@ public class VM {
                 // remove the current frame after the error handling code is done
                 frame.push(new PopFrameCommand());
 
-                // copy all variables from the inner frame into the outer frame
+                // copy all variables from the inner frame into the outer frame (if exists)
                 // e.g. all values created before the error
-                List<String> variables = new ArrayList<>(frame.getLocals().keySet());
-                Frame target = Utils.assertParentFrame(state, threadId);
-                frame.push(new CopyVariablesCommand(variables, frame, target));
+                Frame target = Utils.getParentFrame(state, threadId);
+                if (target != null) {
+                    List<String> variables = new ArrayList<>(frame.getLocals().keySet());
+                    frame.push(new CopyVariablesCommand(variables, frame, target));
+                }
 
                 // save the exception as a local frame variable, so it can be retrieved
                 // by the error handling code
