@@ -27,6 +27,7 @@ import com.walmartlabs.concord.svm.Frame;
 import com.walmartlabs.concord.svm.FrameType;
 import com.walmartlabs.concord.svm.State;
 import com.walmartlabs.concord.svm.ThreadId;
+import com.walmartlabs.concord.svm.Utils;
 
 import java.io.Serializable;
 import java.util.Collections;
@@ -163,13 +164,7 @@ public final class VMUtils {
      * Only {@link Serializable} values are allowed.
      */
     public static void putLocal(Frame frame, String key, Object value) {
-        if (value instanceof Serializable || value == null) {
-            frame.setLocal(key, (Serializable) value);
-            return;
-        }
-
-        String msg = "Can't set a non-serializable local variable: %s -> %s";
-        throw new IllegalStateException(String.format(msg, key, value.getClass()));
+        Utils.putLocal(frame, key, value);
     }
 
     /**

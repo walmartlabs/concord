@@ -24,7 +24,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -195,15 +197,21 @@ public class VM {
 
             Command handler = frame.getExceptionHandler();
             if (handler != null) {
-                // avoid issues with exceptions throws in exception handlers
+                // avoids issue with exceptions thrown in exception handlers
                 frame.clearExceptionHandler();
-
-                // save the exception as a local frame variable, so it can be retrieved
-                // by the error handling core
-                frame.setLocal(Frame.LAST_EXCEPTION_KEY, cause);
 
                 // remove the current frame after the error handling code is done
                 frame.push(new PopFrameCommand());
+
+                // copy all variables from the inner frame into the outer frame
+                // e.g. all values created before the error
+                List<String> variables = new ArrayList<>(frame.getLocals().keySet());
+                Frame target = Utils.assertParentFrame(state, threadId);
+                frame.push(new CopyVariablesCommand(variables, frame, target));
+
+                // save the exception as a local frame variable, so it can be retrieved
+                // by the error handling code
+                frame.setLocal(Frame.LAST_EXCEPTION_KEY, cause);
 
                 // and run the error handler next
                 frame.push(handler);

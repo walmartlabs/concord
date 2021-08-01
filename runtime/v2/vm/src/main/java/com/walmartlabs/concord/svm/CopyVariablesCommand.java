@@ -1,4 +1,4 @@
-package com.walmartlabs.concord.runtime.v2.runner.vm;
+package com.walmartlabs.concord.svm;
 
 /*-
  * *****
@@ -56,10 +56,15 @@ public class CopyVariablesCommand implements Command {
         Frame effectiveSourceFrame = sourceFrame != null ? sourceFrame : frame;
         Frame effectiveTargetFrame = targetFrame != null ? targetFrame : frame;
 
+        if (effectiveSourceFrame == effectiveTargetFrame) {
+            throw new IllegalStateException("Can't copy variables: the source frame and the target frame are the same. " +
+                    "This is most likely a bug.");
+        }
+
         for (String variable : variables) {
             if (effectiveSourceFrame.hasLocal(variable)) {
                 Serializable value = effectiveSourceFrame.getLocal(variable);
-                VMUtils.putLocal(effectiveTargetFrame, variable, value);
+                Utils.putLocal(effectiveTargetFrame, variable, value);
             }
         }
     }

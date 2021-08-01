@@ -37,14 +37,16 @@ import com.walmartlabs.concord.runtime.common.cfg.LoggingConfiguration;
 import com.walmartlabs.concord.runtime.common.cfg.RunnerConfiguration;
 import com.walmartlabs.concord.runtime.v2.runner.checkpoints.CheckpointService;
 import com.walmartlabs.concord.runtime.v2.runner.guice.BaseRunnerModule;
-import com.walmartlabs.concord.runtime.v2.runner.logging.*;
+import com.walmartlabs.concord.runtime.v2.runner.logging.LoggerProvider;
+import com.walmartlabs.concord.runtime.v2.runner.logging.LoggingClient;
+import com.walmartlabs.concord.runtime.v2.runner.logging.LoggingConfigurator;
+import com.walmartlabs.concord.runtime.v2.runner.logging.RunnerLogger;
 import com.walmartlabs.concord.runtime.v2.runner.tasks.TaskCallListener;
 import com.walmartlabs.concord.runtime.v2.runner.tasks.TaskCallPolicyChecker;
 import com.walmartlabs.concord.runtime.v2.runner.tasks.TaskResultListener;
 import com.walmartlabs.concord.runtime.v2.runner.tasks.TaskV2Provider;
 import com.walmartlabs.concord.runtime.v2.sdk.*;
 import com.walmartlabs.concord.sdk.Constants;
-import com.walmartlabs.concord.sdk.MapUtils;
 import com.walmartlabs.concord.svm.ExecutionListener;
 import com.walmartlabs.concord.svm.Runtime;
 import com.walmartlabs.concord.svm.ThreadId;
@@ -64,7 +66,11 @@ import java.net.URISyntaxException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.*;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -73,9 +79,9 @@ import java.util.concurrent.atomic.AtomicLong;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
+import static java.util.regex.Pattern.quote;
 import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
-import static java.util.regex.Pattern.quote;
 
 public class MainTest {
 
@@ -938,6 +944,17 @@ public class MainTest {
         assertLog(log, ".*done!.*");
     }
 
+    @Test
+    public void testVariableVisibilityAfterErrorBlocks() throws Exception {
+        deploy("errorBlockScoping");
+
+        save(ProcessConfiguration.builder()
+                .build());
+
+        byte[] log = run();
+        assertLog(log, ".*Hello, world!.*");
+    }
+
     private void deploy(String resource) throws URISyntaxException, IOException {
         Path src = Paths.get(MainTest.class.getResource(resource).toURI());
         IOUtils.copy(src, workDir);
@@ -1236,7 +1253,7 @@ public class MainTest {
         @Override
         public TaskResult resume(ResumeEvent event) {
             log.info("RESUME: {}", event);
-            if ((boolean)event.state().get("errorOnResume")) {
+            if ((boolean) event.state().get("errorOnResume")) {
                 throw new RuntimeException("Error on resume!");
             }
 

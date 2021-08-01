@@ -105,8 +105,7 @@ public interface State extends Serializable {
     Map<ThreadId, String> getEventRefs();
 
     /**
-     * Sets an error for the specified thread. Those errors are used to propagate unhandled
-     * exceptions from child threads to the parent thread with a {@link com.walmartlabs.concord.svm.commands.Join}.
+     * Sets an error for the specified thread. Used during the thread unwinding.
      */
     void setThreadError(ThreadId threadId, Exception error);
 
