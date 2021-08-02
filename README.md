@@ -116,3 +116,4 @@ See the [examples](examples) directory.
   $ ./mvnw -f docker-images clean package -Pdocker
   $ ./docker-images/push.sh RELEASE_TAG
   ```
+test
