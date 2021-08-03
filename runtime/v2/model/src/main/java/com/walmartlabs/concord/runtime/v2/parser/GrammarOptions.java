@@ -203,7 +203,7 @@ public final class GrammarOptions {
     private static final Parser<Atom, List<KV<String, YamlValue>>> unparsedOptionsVal =
             many1(fieldValue).map(Seq::toList);
 
-    public static final Parser<Atom, Set<String>> allOptionKeys =
+    private static final Parser<Atom, Set<String>> allOptionKeys =
             many1(fieldValue).map(v -> v.stream().map(KV::getKey).collect(Collectors.toSet()));
 
     private GrammarOptions() {
