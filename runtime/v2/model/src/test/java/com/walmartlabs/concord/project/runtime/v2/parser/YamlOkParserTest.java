@@ -107,13 +107,20 @@ public class YamlOkParserTest extends AbstractParserTest {
 
         assertTrue(main.get(0) instanceof TaskCall);
         TaskCall t = (TaskCall) main.get(0);
-        assertEquals("log", t.getName());
+        assertEquals("project", t.getName());
 
         // options
         assertNotNull(t.getOptions());
 
         // name
         assertEquals("Test name", t.getOptions().meta().get(Constants.SEGMENT_NAME));
+
+        // input
+        assertNotNull(t.getOptions().input());
+
+        assertEquals("ProjectName", t.getOptions().input().get("name"));
+        assertEquals("Default", t.getOptions().input().get("org"));
+        assertEquals("create", t.getOptions().input().get("action"));
     }
 
     // Full Call Flow Definition Test
