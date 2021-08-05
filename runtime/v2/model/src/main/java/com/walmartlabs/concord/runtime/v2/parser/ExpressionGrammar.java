@@ -56,7 +56,8 @@ public final class ExpressionGrammar {
                 o -> options(
                         optional("error", stepsVal.map(o::errorSteps)),
                         optional("out", exprCallOutOption(o)),
-                        optional("meta", mapVal.map(o::putAllMeta))
+                        optional("meta", mapVal.map(o::putAllMeta)),
+                        optional("name", stringVal.map(v -> o.putMeta(Constants.SEGMENT_NAME, v)))
                 ))
                 .map(ImmutableExpressionOptions.Builder::build);
     }
