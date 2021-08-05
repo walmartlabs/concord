@@ -6,7 +6,10 @@
 
 - runtime-v2: allow step names to be placed anywhere in the step's
 definition (i.e. not necessarily as the first element)
-([#452](https://github.com/walmartlabs/concord/pull/452)).
+([#452](https://github.com/walmartlabs/concord/pull/452));
+- runtime-v2: fix evaluation of `retry` expressions. Now expressions
+are allowed to return any `Number` (e.g. `Integer`, `Long`, etc)
+([#454](https://github.com/walmartlabs/concord/pull/454)).
 
 
 
