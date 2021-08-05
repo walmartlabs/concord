@@ -47,7 +47,8 @@ public final class GroupOfStepsGrammar {
                         optional("error", stepsVal.map(o::errorSteps)),
                         optional("withItems", nonNullVal.map(v -> o.withItems(WithItems.of(v, WithItems.Mode.SERIAL)))),
                         optional("parallelWithItems", nonNullVal.map(v -> o.withItems(WithItems.of(v, WithItems.Mode.PARALLEL)))),
-                        optional("meta", mapVal.map(o::putAllMeta))
+                        optional("meta", mapVal.map(o::putAllMeta)),
+                        optional("name", stringVal.map(v -> o.putMeta(Constants.SEGMENT_NAME, v)))
                 ))
                 .map(ImmutableGroupOfStepsOptions.Builder::build);
     }

@@ -51,6 +51,7 @@ public final class FlowCallGrammar {
                         optional("in", flowCallInOption(o)),
                         optional("out", flowCallOutOption(o)),
                         optional("meta", mapVal.map(o::putAllMeta)),
+                        optional("name", stringVal.map(v -> o.putMeta(Constants.SEGMENT_NAME, v))),
                         optional("withItems", nonNullVal.map(v -> o.withItems(WithItems.of(v, WithItems.Mode.SERIAL)))),
                         optional("parallelWithItems", nonNullVal.map(v -> o.withItems(WithItems.of(v, WithItems.Mode.PARALLEL)))),
                         optional("retry", retryVal.map(o::retry)),
