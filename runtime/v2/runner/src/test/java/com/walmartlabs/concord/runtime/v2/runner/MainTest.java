@@ -783,6 +783,18 @@ public class MainTest {
     }
 
     @Test
+    public void testRetryInput() throws Exception {
+        deploy("retryInput");
+
+        save(ProcessConfiguration.builder().build());
+
+        byte[] log = run();
+        assertLogAtLeast(log, 1, ".*ConditionallyFailTask: fail.*");
+        assertLog(log, ".*Waiting for 1000ms.*");
+        assertLog(log, ".*ConditionallyFailTask: ok.*");
+    }
+
+    @Test
     public void testCheckpointExpr() throws Exception {
         deploy("checkpointExpr");
 
@@ -1209,6 +1221,25 @@ public class MainTest {
         @Override
         public TaskResult execute(Variables input) {
             log.info("neverFailTask: ok");
+            return TaskResult.success();
+        }
+    }
+
+    @Named("conditionallyFailTask")
+    @SuppressWarnings("unused")
+    static class ConditionallyFailTask implements Task {
+
+        private static final Logger log = LoggerFactory.getLogger(NeverFailTask.class);
+
+        @Override
+        public TaskResult execute(Variables input) {
+            if (input.getBoolean("fail", false)) {
+                log.info("ConditionallyFailTask: fail");
+                throw new RuntimeException("boom!");
+            }
+
+            log.info("ConditionallyFailTask: ok");
+
             return TaskResult.success();
         }
     }

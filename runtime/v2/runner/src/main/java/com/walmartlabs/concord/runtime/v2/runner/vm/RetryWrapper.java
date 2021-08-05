@@ -153,7 +153,7 @@ public class RetryWrapper implements Command {
             // override the task's "in" if needed
             if (retry.input() != null) {
                 Map<String, Object> m = Collections.unmodifiableMap(Objects.requireNonNull(retry.input()));
-                VMUtils.putLocals(frame, m);
+                VMUtils.setInputOverrides(frame, m);
             }
 
             frame.push(cmd);

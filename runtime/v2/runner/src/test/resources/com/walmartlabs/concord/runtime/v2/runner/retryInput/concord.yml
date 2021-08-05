@@ -1,0 +1,10 @@
+flows:
+  default:
+    - task: conditionallyFailTask
+      in:
+        fail: true
+      retry:
+        in:
+          fail: false
+        times: 3
+        delay: 1
