@@ -9,7 +9,9 @@ definition (i.e. not necessarily as the first element)
 ([#452](https://github.com/walmartlabs/concord/pull/452));
 - runtime-v2: fix evaluation of `retry` expressions. Now expressions
 are allowed to return any `Number` (e.g. `Integer`, `Long`, etc)
-([#454](https://github.com/walmartlabs/concord/pull/454)).
+([#454](https://github.com/walmartlabs/concord/pull/454));
+- runtime-v2: fix input parameter override on `retry`;
+([#455](https://github.com/walmartlabs/concord/pull/455)).
 
 
 
