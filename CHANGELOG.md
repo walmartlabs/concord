@@ -1,5 +1,15 @@
 # Change log
 
+## [Unreleased]
+
+### Changed
+
+- runtime-v2: allow step names to be placed anywhere in the step's
+definition (i.e. not necessarily as the first element)
+([#452](https://github.com/walmartlabs/concord/pull/452)).
+
+
+
 ## [1.88.0] - 2021-07-29
 
 ### Added
