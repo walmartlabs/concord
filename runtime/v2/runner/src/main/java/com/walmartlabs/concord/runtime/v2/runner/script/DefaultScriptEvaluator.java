@@ -24,6 +24,7 @@ import com.walmartlabs.concord.runtime.v2.runner.MetadataProcessor;
 import com.walmartlabs.concord.runtime.v2.runner.tasks.TaskProviders;
 import com.walmartlabs.concord.runtime.v2.sdk.Context;
 import com.walmartlabs.concord.sdk.Constants;
+import org.graalvm.polyglot.PolyglotException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -57,6 +58,8 @@ public class DefaultScriptEvaluator implements ScriptEvaluator {
 
         ScriptContext ctx = new ScriptContext(context);
         Bindings b = engine.createBindings();
+        b.put("polyglot.js.allowAllAccess", true);
+
         for (String ctxVar: CONTEXT_VARIABLE_NAMES) {
             b.put(ctxVar, ctx);
         }
@@ -68,6 +71,9 @@ public class DefaultScriptEvaluator implements ScriptEvaluator {
         try {
             engine.eval(input, b);
         } catch (ScriptException e) {
+            if (e.getCause() instanceof PolyglotException) {
+                throw new RuntimeException(e.getCause().getMessage());
+            }
             throw new RuntimeException(e.getMessage());
         } catch (Exception e) {
             throw new RuntimeException(e);

@@ -28,16 +28,10 @@ import com.walmartlabs.concord.server.sdk.ProcessKey;
 
 import javax.inject.Inject;
 import javax.inject.Named;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Map;
-
-import static com.walmartlabs.concord.common.NashornUtils.isNashornArray;
-import static com.walmartlabs.concord.common.NashornUtils.isNashornScriptObjectMirror;
 
 @Named
 public class DependenciesProcessor implements PayloadProcessor {
@@ -89,21 +83,6 @@ public class DependenciesProcessor implements PayloadProcessor {
 
         if (o instanceof Collection) {
             return (Collection<String>) o;
-        }
-
-        // TODO support for Graal JS
-        if (isNashornScriptObjectMirror(o)) {
-            if (!isNashornArray(o)) {
-                logManager.error(processKey, "Invalid dependencies object type. Expected a JavaScript array, got: {}", o);
-                throw new ProcessException(processKey, "Invalid dependencies object type. Expected a JavaScript array, got: " + o);
-            }
-
-            try {
-                Method to = o.getClass().getDeclaredMethod("to", Class.class);
-                return Arrays.asList((String[]) to.invoke(o, String[].class));
-            } catch (InvocationTargetException | NoSuchMethodException | IllegalAccessException e) {
-                throw new RuntimeException(e);
-            }
         }
 
         logManager.error(processKey, "Invalid dependencies object type. Expected an array or a collection, got: {}", o.getClass());

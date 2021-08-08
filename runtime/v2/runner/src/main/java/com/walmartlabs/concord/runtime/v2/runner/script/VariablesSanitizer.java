@@ -26,26 +26,11 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import static com.walmartlabs.concord.common.NashornUtils.*;
-
 public final class VariablesSanitizer {
 
     @SuppressWarnings("unchecked")
     public static Object sanitize(Object scriptObj) {
-        if (isNashornScriptObjectMirror(scriptObj)) {
-            if (isNashornArray(scriptObj)) {
-                // turn JS (Nashorn) arrays into Java Lists
-                return getNashornObjectEntrySet(scriptObj).
-                        stream()
-                        .map(entry -> sanitize(entry.getValue()))
-                        .collect(Collectors.toList());
-            } else {
-                // turn other JS (Nashorn) objects into Java Maps
-                return getNashornObjectEntrySet(scriptObj)
-                        .stream()
-                        .collect(Collectors.toMap(Map.Entry::getKey, entry -> sanitize(entry.getValue()), (a, b) -> b));
-            }
-        } else if (scriptObj instanceof Set) {
+        if (scriptObj instanceof Set) {
             Set<Object> c = (Set<Object>) scriptObj;
             return c.stream()
                     .map(VariablesSanitizer::sanitize)
