@@ -1,0 +1,8 @@
+flows:
+  default:
+    - script: js
+      body: |
+        var kv = context.variables().get("kv");
+        kv.boom = {}
+    - checkpoint: "booom"
+    - log: "boom: ${kv.boom}"
