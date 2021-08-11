@@ -1,5 +1,14 @@
 # Change log
 
+## [Unreleased]
+
+### Changed
+
+- runtime-v2: sanitize script variables, make sure values are
+`Serializable` ([#458](https://github.com/walmartlabs/concord/pull/458)).
+
+
+
 ## [1.88.1] - 2021-08-06
 
 ### Changed
