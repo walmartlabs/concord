@@ -398,6 +398,18 @@ public class MainTest {
     }
 
     @Test
+    public void testScriptVariablesSanitize() throws Exception {
+        deploy("scriptVariablesSanitize");
+
+        save(ProcessConfiguration.builder()
+                .putArguments("kv", Collections.singletonMap("k", "v"))
+                .build());
+
+        byte[] log = run();
+        assertLog(log, ".*boom: \\{\\}.*");
+    }
+
+    @Test
     public void testNonSerializableLocal() throws Exception {
         deploy("nonSerializableLocal");
 

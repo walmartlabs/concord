@@ -33,8 +33,14 @@ public class ScriptVariables implements Variables {
     }
 
     @Override
+    @SuppressWarnings({"unchecked", "rawtypes"})
     public Object get(String key) {
-        return delegate.get(key);
+        Object result = delegate.get(key);
+        if (result instanceof Map) {
+            return new SanitizedMap((Map) result);
+        }
+
+        return result;
     }
 
     @Override
