@@ -134,14 +134,16 @@
         </createIndex>
     </changeSet>
 
+    <!-- disabled in 1.89.0 -->
+    <!--
     <changeSet id="1440" author="ibodrov@gmail.com">
         <insert tableName="API_KEYS">
             <column name="KEY_ID">d5165ca8-e8de-11e6-9bf5-136b5db23c32</column>
-            <!-- original: auBy4eDWrKWsyhiDp3AQiw -->
             <column name="API_KEY">KLI+ltQThpx6RQrOc2nDBaM/8tDyVGDw+UVYMXDrqaA</column>
             <column name="USER_ID">230c5c9c-d9a7-11e6-bcfd-bb681c07b26c</column>
         </insert>
     </changeSet>
+    -->
 
     <!-- SECRETS -->
 

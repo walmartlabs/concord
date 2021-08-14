@@ -21,17 +21,22 @@ package com.walmartlabs.concord.server.cfg;
  */
 
 import com.walmartlabs.ollie.config.Config;
+import org.eclipse.sisu.Nullable;
 
 import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
 import java.io.Serializable;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.time.Duration;
 import java.util.List;
 
 @Named
 @Singleton
 public class ApiKeyConfiguration implements Serializable {
+
+    private static final long serialVersionUID = 1L;
 
     @Inject
     @Config("apiKey.expirationPeriod")
@@ -45,6 +50,13 @@ public class ApiKeyConfiguration implements Serializable {
     @Config("apiKey.notifyBeforeDays")
     private List<Integer> notifyBeforeDays;
 
+    private final Path loadFrom;
+
+    @Inject
+    public ApiKeyConfiguration(@Nullable @Config("apiKey.loadFrom") String loadFrom) {
+        this.loadFrom = loadFrom != null ? Paths.get(loadFrom) : null;
+    }
+
     public Duration getExpirationPeriod() {
         return expirationPeriod;
     }
@@ -55,5 +67,9 @@ public class ApiKeyConfiguration implements Serializable {
 
     public List<Integer> getNotifyBeforeDays() {
         return notifyBeforeDays;
+    }
+
+    public Path getLoadFrom() {
+        return loadFrom;
     }
 }
