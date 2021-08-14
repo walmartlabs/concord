@@ -2,6 +2,11 @@
 
 ## [Unreleased]
 
+### Added
+
+- concord-server: ability to load user API keys from a local file
+([457](https://github.com/walmartlabs/concord/pull/457)).
+
 ### Changed
 
 - runtime-v2: sanitize script variables, make sure values are
