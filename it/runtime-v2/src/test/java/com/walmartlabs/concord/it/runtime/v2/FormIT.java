@@ -29,7 +29,6 @@ import com.walmartlabs.concord.client.FormSubmitResponse;
 import com.walmartlabs.concord.client.ProcessApi;
 import com.walmartlabs.concord.client.ProcessEntry;
 import com.walmartlabs.concord.sdk.MapUtils;
-import jdk.nashorn.api.scripting.ScriptObjectMirror;
 import org.junit.Rule;
 import org.junit.Test;
 import org.testcontainers.shaded.com.google.common.collect.ImmutableMap;

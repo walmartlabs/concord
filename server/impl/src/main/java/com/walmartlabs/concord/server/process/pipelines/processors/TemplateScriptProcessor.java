@@ -55,11 +55,10 @@ public class TemplateScriptProcessor implements PayloadProcessor {
     @Inject
     public TemplateScriptProcessor(ProcessLogManager logManager) {
         this.logManager = logManager;
-        this.scriptEngine = new ScriptEngineManager().getEngineByName("nashorn");
+        this.scriptEngine = new ScriptEngineManager().getEngineByName("js");
     }
 
     @Override
-    @SuppressWarnings("unchecked")
     public Payload process(Chain chain, Payload payload) {
         Path workspace = payload.getHeader(Payload.WORKSPACE_DIR);
 
@@ -87,10 +86,11 @@ public class TemplateScriptProcessor implements PayloadProcessor {
     }
 
     @SuppressWarnings("unchecked")
-    private Map<String, Object> processScript(ProcessKey processKey, Map meta, Path templateMeta) {
+    private Map<String, Object> processScript(ProcessKey processKey, Map<String, Object> meta, Path templateMeta) {
         Object result;
         try (Reader r = new FileReader(templateMeta.toFile())) {
             Bindings b = scriptEngine.createBindings();
+            b.put("polyglot.js.allowAllAccess", true);
             b.put(INPUT_REQUEST_DATA_KEY, meta != null ? meta : Collections.emptyMap());
 
             result = scriptEngine.eval(r, b);
