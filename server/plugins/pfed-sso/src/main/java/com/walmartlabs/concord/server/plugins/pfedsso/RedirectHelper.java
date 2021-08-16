@@ -21,6 +21,8 @@ package com.walmartlabs.concord.server.plugins.pfedsso;
  */
 
 import org.eclipse.jetty.util.URIUtil;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -30,6 +32,7 @@ import java.net.URL;
 
 @Named
 public class RedirectHelper {
+    private static final Logger log = LoggerFactory.getLogger(RedirectHelper.class);
 
     private final String redirectHost;
 
@@ -40,6 +43,11 @@ public class RedirectHelper {
 
     public void sendRedirect(HttpServletResponse response, String location) throws IOException {
         response.sendRedirect(response.encodeRedirectURL(normalizeLocation(location)));
+    }
+
+    public void redirectToLoginOnError(HttpServletResponse response, String errorMsg) throws IOException {
+        log.warn("Error during sso login -> " + errorMsg);
+        sendRedirect(response, "/#/login");
     }
 
     private String normalizeLocation(String location) {

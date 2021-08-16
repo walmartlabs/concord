@@ -52,21 +52,25 @@ public class SsoCallbackFilter extends AbstractHttpFilter {
 
         String code = request.getParameter("code");
         if (code == null || code.trim().isEmpty()) {
-            response.sendError(HttpServletResponse.SC_BAD_REQUEST, "code param missing");
+            redirectHelper.redirectToLoginOnError(response, "code param missing");
             return;
         }
 
         String state = request.getParameter("state");
         if (state == null || state.trim().isEmpty()) {
-            response.sendError(HttpServletResponse.SC_BAD_REQUEST, "state param missing");
+            redirectHelper.redirectToLoginOnError(response, "state param missing");
             return;
         }
 
         SsoClient.Token token;
-        token = ssoClient.getToken(code, cfg.getRedirectUrl());
-        SsoCookies.addCookie(TOKEN_COOKIE, token.idToken(), token.expiresIn(), response);
-        SsoCookies.addCookie(REFRESH_TOKEN_COOKIE, token.refreshToken(), token.expiresIn(), response);
-
+        try {
+            token = ssoClient.getToken(code, cfg.getRedirectUrl());
+            SsoCookies.addCookie(TOKEN_COOKIE, token.idToken(), token.expiresIn(), response);
+            SsoCookies.addCookie(REFRESH_TOKEN_COOKIE, token.refreshToken(), token.expiresIn(), response);
+        } catch (Exception exception) {
+            redirectHelper.redirectToLoginOnError(response, exception.getMessage());
+            return;
+        }
         String redirectUrl = SsoCookies.getFromCookie(request);
         if (redirectUrl == null || redirectUrl.trim().isEmpty()) {
             redirectUrl = "/";
