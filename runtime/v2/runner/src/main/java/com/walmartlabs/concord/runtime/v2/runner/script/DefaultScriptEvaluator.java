@@ -20,11 +20,14 @@ package com.walmartlabs.concord.runtime.v2.runner.script;
  * =====
  */
 
+import com.oracle.truffle.js.scriptengine.GraalJSScriptEngine;
 import com.walmartlabs.concord.runtime.v2.runner.MetadataProcessor;
 import com.walmartlabs.concord.runtime.v2.runner.tasks.TaskProviders;
 import com.walmartlabs.concord.runtime.v2.sdk.Context;
 import com.walmartlabs.concord.sdk.Constants;
+import org.graalvm.polyglot.HostAccess;
 import org.graalvm.polyglot.PolyglotException;
+import org.graalvm.polyglot.Value;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -50,8 +53,19 @@ public class DefaultScriptEvaluator implements ScriptEvaluator {
     }
 
     @Override
+    @SuppressWarnings({"unchecked", "rawtypes"})
     public void eval(Context context, String language, Reader input, Map<String, Object> variables) {
         ScriptEngine engine = getEngine(language);
+        // workaround for:
+        // Javascript array is converted in Java to an empty map #214 (https://github.com/oracle/graaljs/issues/214)
+        if (engine instanceof GraalJSScriptEngine) {
+            HostAccess access = HostAccess.newBuilder(HostAccess.ALL)
+                    .targetTypeMapping(Value.class, Object.class, Value::hasArrayElements, v -> new LinkedList<>(v.as(List.class))).build();
+            engine = GraalJSScriptEngine.create(null,
+                    org.graalvm.polyglot.Context.newBuilder("js")
+                            .allowHostAccess(access));
+        }
+
         if (engine == null) {
             throw new RuntimeException("Script engine not found: " + language);
         }

@@ -20,19 +20,22 @@ package com.walmartlabs.concord.server.process.pipelines.processors;
  * =====
  */
 
+import com.oracle.truffle.js.scriptengine.GraalJSScriptEngine;
 import com.walmartlabs.concord.common.ConfigurationUtils;
 import com.walmartlabs.concord.common.CycleChecker;
 import com.walmartlabs.concord.server.process.Payload;
 import com.walmartlabs.concord.server.process.ProcessException;
 import com.walmartlabs.concord.server.process.logs.ProcessLogManager;
 import com.walmartlabs.concord.server.sdk.ProcessKey;
+import org.graalvm.polyglot.Context;
+import org.graalvm.polyglot.HostAccess;
+import org.graalvm.polyglot.Value;
 
 import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
 import javax.script.Bindings;
 import javax.script.ScriptEngine;
-import javax.script.ScriptEngineManager;
 import javax.script.ScriptException;
 import java.io.FileReader;
 import java.io.IOException;
@@ -40,6 +43,8 @@ import java.io.Reader;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Collections;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
 
 @Named
@@ -53,9 +58,17 @@ public class TemplateScriptProcessor implements PayloadProcessor {
     private final ScriptEngine scriptEngine;
 
     @Inject
+    @SuppressWarnings({"unchecked", "rawtypes"})
     public TemplateScriptProcessor(ProcessLogManager logManager) {
         this.logManager = logManager;
-        this.scriptEngine = new ScriptEngineManager().getEngineByName("js");
+
+        // workaround for:
+        // Javascript array is converted in Java to an empty map #214 (https://github.com/oracle/graaljs/issues/214)
+        HostAccess access = HostAccess.newBuilder(HostAccess.ALL)
+                .targetTypeMapping(Value.class, Object.class, Value::hasArrayElements, v -> new LinkedList<>(v.as(List.class))).build();
+        this.scriptEngine = GraalJSScriptEngine.create(null,
+                Context.newBuilder("js")
+                        .allowHostAccess(access));
     }
 
     @Override

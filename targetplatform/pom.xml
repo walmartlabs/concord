@@ -34,7 +34,7 @@
         <cronutils.version>9.0.2</cronutils.version>
         <errorproneannotations.version>2.3.4</errorproneannotations.version>
         <glassfish.el.version>3.0.1-b11</glassfish.el.version>
-        <graalvm.version>21.1.0</graalvm.version>
+        <graalvm.version>21.2.0</graalvm.version>
         <greenmail.version>1.5.11</greenmail.version>
         <groovy.version>2.5.8</groovy.version>
         <gson.fire.version>1.8.3</gson.fire.version>
