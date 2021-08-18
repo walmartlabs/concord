@@ -50,15 +50,20 @@ public class SsoCallbackFilter extends AbstractHttpFilter {
             return;
         }
 
+        String redirectUrl = SsoCookies.getFromCookie(request);
+        if (redirectUrl == null || redirectUrl.trim().isEmpty()) {
+            redirectUrl = "/";
+        }
+
         String code = request.getParameter("code");
         if (code == null || code.trim().isEmpty()) {
-            redirectHelper.redirectToLoginOnError(response, "code param missing");
+            redirectHelper.redirectToLoginOnError(response, redirectUrl, "code param missing");
             return;
         }
 
         String state = request.getParameter("state");
         if (state == null || state.trim().isEmpty()) {
-            redirectHelper.redirectToLoginOnError(response, "state param missing");
+            redirectHelper.redirectToLoginOnError(response, redirectUrl, "state param missing");
             return;
         }
 
@@ -68,12 +73,8 @@ public class SsoCallbackFilter extends AbstractHttpFilter {
             SsoCookies.addCookie(TOKEN_COOKIE, token.idToken(), token.expiresIn(), response);
             SsoCookies.addCookie(REFRESH_TOKEN_COOKIE, token.refreshToken(), token.expiresIn(), response);
         } catch (Exception exception) {
-            redirectHelper.redirectToLoginOnError(response, exception.getMessage());
+            redirectHelper.redirectToLoginOnError(response, redirectUrl, exception.getMessage());
             return;
-        }
-        String redirectUrl = SsoCookies.getFromCookie(request);
-        if (redirectUrl == null || redirectUrl.trim().isEmpty()) {
-            redirectUrl = "/";
         }
 
         redirectHelper.sendRedirect(response, redirectUrl);

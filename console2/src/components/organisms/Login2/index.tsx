@@ -19,24 +19,16 @@
  */
 
 import * as React from 'react';
-import { RouteComponentProps, withRouter } from 'react-router';
-import { useCallback, useContext, useState } from 'react';
-import {
-    Card,
-    CardContent,
-    Dimmer,
-    Divider,
-    Form,
-    Image,
-    Loader,
-    Message
-} from 'semantic-ui-react';
+import {useCallback, useContext, useState} from 'react';
+import {RouteComponentProps, withRouter} from 'react-router';
+import {Card, CardContent, Dimmer, Divider, Form, Image, Loader, Message} from 'semantic-ui-react';
 
-import { whoami as apiWhoami } from '../../../api/service/console';
-import { UserSessionContext } from '../../../session';
+import {whoami as apiWhoami} from '../../../api/service/console';
+import {UserSessionContext} from '../../../session';
 
 import './styles.css';
-import { Link } from 'react-router-dom';
+import {Link} from 'react-router-dom';
+import {parse as parseQueryString} from "query-string";
 
 const nonEmpty = (s?: string) => {
     if (!s) {
@@ -68,13 +60,17 @@ const DEFAULT_DESTINATION = '/';
 const getDestination = (props: RouteComponentProps<{}>) => {
     const location = props.location as any;
 
-    if (!location || !location.state || !location.state.from) {
-        return DEFAULT_DESTINATION;
+    if (location && location.state && location.state.from && location.state.from.pathname) {
+        return location.state.from.pathname
     }
 
-    const from = location.state.from;
+    const fromUrl = parseQueryString(props.location.search);
 
-    return from.pathname || DEFAULT_DESTINATION;
+    if (fromUrl && fromUrl.from) {
+        return fromUrl.from
+    }
+
+    return DEFAULT_DESTINATION
 };
 
 const Login = (props: RouteComponentProps<{}>) => {
@@ -86,7 +82,7 @@ const Login = (props: RouteComponentProps<{}>) => {
     const [apiKey, setApiKey] = useState<string>('');
     const [rememberMe, setRememberMe] = useState<boolean | undefined>();
     const [destination] = useState(getDestination(props));
-    const { loggingIn, setLoggingIn, setUserInfo } = useContext(UserSessionContext);
+    const {loggingIn, setLoggingIn, setUserInfo} = useContext(UserSessionContext);
 
     const handleSubmit = useCallback(async () => {
         setLoggingIn(true);
@@ -97,7 +93,7 @@ const Login = (props: RouteComponentProps<{}>) => {
                 rememberMe,
                 nonEmpty(apiKey)
             );
-            setUserInfo({ ...response });
+            setUserInfo({...response});
 
             saveLastLoginType(nonEmpty(apiKey) ? 'apiKey' : 'username');
 
@@ -139,10 +135,10 @@ const Login = (props: RouteComponentProps<{}>) => {
     return (
         <Card centered={true}>
             <CardContent>
-                <Image id="concord-logo" src="/images/concord.svg" size="medium" />
+                <Image id="concord-logo" src="/images/concord.svg" size="medium"/>
 
                 <Dimmer active={loggingIn} inverted={true}>
-                    <Loader />
+                    <Loader/>
                 </Dimmer>
 
                 <Form
@@ -157,7 +153,7 @@ const Login = (props: RouteComponentProps<{}>) => {
                                 required={true}
                                 value={username}
                                 placeholder={usernameHint}
-                                onChange={(e, { value }) => setUsername(value)}
+                                onChange={(e, {value}) => setUsername(value)}
                             />
                             <Form.Input
                                 name="password"
@@ -167,7 +163,7 @@ const Login = (props: RouteComponentProps<{}>) => {
                                 required={true}
                                 value={password}
                                 autoComplete="current-password"
-                                onChange={(e, { value }) => setPassword(value)}
+                                onChange={(e, {value}) => setPassword(value)}
                             />
                         </>
                     )}
@@ -181,7 +177,7 @@ const Login = (props: RouteComponentProps<{}>) => {
                             required={true}
                             value={apiKey}
                             autoComplete="current-password"
-                            onChange={(e, { value }) => setApiKey(value)}
+                            onChange={(e, {value}) => setApiKey(value)}
                         />
                     )}
 
@@ -189,13 +185,13 @@ const Login = (props: RouteComponentProps<{}>) => {
                         name="rememberMe"
                         label="Remember me"
                         checked={rememberMe}
-                        onChange={(e, { checked }) => setRememberMe(checked)}
+                        onChange={(e, {checked}) => setRememberMe(checked)}
                     />
 
-                    <Divider />
+                    <Divider/>
 
-                    <Message error={true} content={apiError} />
-                    <Message error={true} content={validationError} />
+                    <Message error={true} content={apiError}/>
+                    <Message error={true} content={validationError}/>
                     <Form.Button id="loginButton" primary={true} fluid={true}>
                         Login
                     </Form.Button>

@@ -45,9 +45,9 @@ public class RedirectHelper {
         response.sendRedirect(response.encodeRedirectURL(normalizeLocation(location)));
     }
 
-    public void redirectToLoginOnError(HttpServletResponse response, String errorMsg) throws IOException {
-        log.warn("Error during sso login -> " + errorMsg);
-        sendRedirect(response, "/#/login");
+    public void redirectToLoginOnError(HttpServletResponse response, String destination, String errorMsg) throws IOException {
+        log.warn("Error during sso login -> '{}'", errorMsg);
+        sendRedirect(response, String.format("/#/login?from=%s", getPathName(destination.trim())));
     }
 
     private String normalizeLocation(String location) {
@@ -87,5 +87,21 @@ public class RedirectHelper {
         } else {
             return url.getProtocol() + "://" + url.getHost() + ":" + url.getPort();
         }
+    }
+
+    private String getPathName(String s) {
+        if (s == null || s.trim().isEmpty()) {
+            return null;
+        }
+
+        if (s.startsWith("/#")) {
+            return s.replaceFirst("^/#", "");
+        }
+
+        if (s.startsWith("#")) {
+            return s.replaceFirst("^#", "");
+        }
+
+        return s;
     }
 }

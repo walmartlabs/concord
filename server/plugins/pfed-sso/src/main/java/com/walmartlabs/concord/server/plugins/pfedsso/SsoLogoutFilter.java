@@ -59,7 +59,7 @@ public class SsoLogoutFilter extends AbstractHttpFilter {
             try {
                 ssoClient.revokeToken(SsoCookies.getRefreshCookie(request));
             } catch (Exception e) {
-                log.warn("Error in revoking sso token during logout -> {}", e.getMessage(), e);
+                log.warn("Error in revoking sso token during logout -> '{}'", e.getMessage(), e);
             }
         }
         SsoCookies.clear(response);
