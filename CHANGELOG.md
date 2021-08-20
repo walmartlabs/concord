@@ -13,7 +13,9 @@
 `Serializable` ([#458](https://github.com/walmartlabs/concord/pull/458));
 - concord-server: do not mark processes that have been in the `NEW`
 status for a long time as failed to start
-([#459](https://github.com/walmartlabs/concord/pull/459)).
+([#459](https://github.com/walmartlabs/concord/pull/459));
+- pfed-sso: redirect to login on failure
+([#462](https://github.com/walmartlabs/concord/pull/462)).
 
 
 
