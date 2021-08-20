@@ -37,6 +37,7 @@ import { UserSessionContext } from '../../../session';
 
 import './styles.css';
 import { Link } from 'react-router-dom';
+import { parse as parseQueryString } from "query-string";
 
 const nonEmpty = (s?: string) => {
     if (!s) {
@@ -68,13 +69,17 @@ const DEFAULT_DESTINATION = '/';
 const getDestination = (props: RouteComponentProps<{}>) => {
     const location = props.location as any;
 
-    if (!location || !location.state || !location.state.from) {
-        return DEFAULT_DESTINATION;
+    if (location && location.state && location.state.from && location.state.from.pathname) {
+        return location.state.from.pathname
     }
 
-    const from = location.state.from;
+    const fromUrl = parseQueryString(props.location.search);
 
-    return from.pathname || DEFAULT_DESTINATION;
+    if (fromUrl && fromUrl.from) {
+        return fromUrl.from
+    }
+
+    return DEFAULT_DESTINATION
 };
 
 const Login = (props: RouteComponentProps<{}>) => {

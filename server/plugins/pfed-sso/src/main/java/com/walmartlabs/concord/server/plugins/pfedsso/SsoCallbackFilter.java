@@ -50,26 +50,31 @@ public class SsoCallbackFilter extends AbstractHttpFilter {
             return;
         }
 
+        String redirectUrl = SsoCookies.getFromCookie(request);
+        if (redirectUrl == null || redirectUrl.trim().isEmpty()) {
+            redirectUrl = "/";
+        }
+
         String code = request.getParameter("code");
         if (code == null || code.trim().isEmpty()) {
-            response.sendError(HttpServletResponse.SC_BAD_REQUEST, "code param missing");
+            redirectHelper.redirectToLoginOnError(response, redirectUrl, "code param missing");
             return;
         }
 
         String state = request.getParameter("state");
         if (state == null || state.trim().isEmpty()) {
-            response.sendError(HttpServletResponse.SC_BAD_REQUEST, "state param missing");
+            redirectHelper.redirectToLoginOnError(response, redirectUrl, "state param missing");
             return;
         }
 
         SsoClient.Token token;
-        token = ssoClient.getToken(code, cfg.getRedirectUrl());
-        SsoCookies.addCookie(TOKEN_COOKIE, token.idToken(), token.expiresIn(), response);
-        SsoCookies.addCookie(REFRESH_TOKEN_COOKIE, token.refreshToken(), token.expiresIn(), response);
-
-        String redirectUrl = SsoCookies.getFromCookie(request);
-        if (redirectUrl == null || redirectUrl.trim().isEmpty()) {
-            redirectUrl = "/";
+        try {
+            token = ssoClient.getToken(code, cfg.getRedirectUrl());
+            SsoCookies.addCookie(TOKEN_COOKIE, token.idToken(), token.expiresIn(), response);
+            SsoCookies.addCookie(REFRESH_TOKEN_COOKIE, token.refreshToken(), token.expiresIn(), response);
+        } catch (Exception exception) {
+            redirectHelper.redirectToLoginOnError(response, redirectUrl, exception.getMessage());
+            return;
         }
 
         redirectHelper.sendRedirect(response, redirectUrl);
