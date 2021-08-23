@@ -1,5 +1,24 @@
 # Change log
 
+## [Unreleased]
+
+### Added
+
+- concord-server: ability to load user API keys from a local file
+([457](https://github.com/walmartlabs/concord/pull/457)).
+
+### Changed
+
+- runtime-v2: sanitize script variables, make sure values are
+`Serializable` ([#458](https://github.com/walmartlabs/concord/pull/458));
+- concord-server: do not mark processes that have been in the `NEW`
+status for a long time as failed to start
+([#459](https://github.com/walmartlabs/concord/pull/459));
+- pfed-sso: redirect to login on failure
+([#462](https://github.com/walmartlabs/concord/pull/462)).
+
+
+
 ## [1.88.1] - 2021-08-06
 
 ### Changed
