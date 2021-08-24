@@ -320,6 +320,10 @@
         </dependency>
 
         <dependency>
+            <groupId>org.graalvm.sdk</groupId>
+            <artifactId>graal-sdk</artifactId>
+        </dependency>
+        <dependency>
             <groupId>org.graalvm.js</groupId>
             <artifactId>js</artifactId>
         </dependency>
