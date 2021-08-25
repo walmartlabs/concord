@@ -60,7 +60,7 @@ public class InjectorFactory {
                 runnerCfg,
                 processCfgProvider,
                 new DefaultRunnerModule(), // bind default services
-                new ProcessDependenciesModule(workDir.getValue(), runnerCfg.dependencies())) // grab process dependencies
+                new ProcessDependenciesModule(workDir.getValue(), runnerCfg.dependencies(), runnerCfg.debug())) // grab process dependencies
                 .create();
     }
 
