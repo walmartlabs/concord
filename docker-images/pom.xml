@@ -26,8 +26,11 @@
         <docker.namespace>walmartlabs</docker.namespace>
         <concord.baseDir>/opt/concord</concord.baseDir>
 
-        <!-- JDK version to use in the base image and all its descendants -->
-        <jdk.version>1.8.0</jdk.version>
+        <!--
+            JDK to use in the base image and all its derivatives.
+            Must be a .tar.gz archive for Linux x64
+         -->
+        <jdk.url>https://github.com/AdoptOpenJDK/openjdk8-binaries/releases/download/jdk8u292-b10/OpenJDK8U-jdk_x64_linux_hotspot_8u292b10.tar.gz</jdk.url>
     </properties>
 
     <build>
@@ -60,7 +63,7 @@
                                     <argument>--build-arg=docker_namespace=${docker.namespace}</argument>
                                     <argument>--build-arg=concord_version=${project.version}</argument>
 
-                                    <argument>--build-arg=jdk_version=${jdk.version}</argument>
+                                    <argument>--build-arg=jdk_url=${jdk.url}</argument>
 
                                     <argument>--network</argument>
                                     <argument>host</argument>
@@ -78,20 +81,20 @@
     <profiles>
         <profile>
             <id>docker</id>
-            <activation>
-                <activeByDefault>false</activeByDefault>
-            </activation>
             <properties>
                 <docker.skip>false</docker.skip>
             </properties>
         </profile>
         <profile>
             <id>jdk11</id>
-            <activation>
-                <activeByDefault>false</activeByDefault>
-            </activation>
             <properties>
-                <jdk.version>11</jdk.version>
+                <jdk.url>https://github.com/AdoptOpenJDK/openjdk11-binaries/releases/download/jdk-11.0.11%2B9/OpenJDK11U-jdk_x64_linux_hotspot_11.0.11_9.tar.gz</jdk.url>
+            </properties>
+        </profile>
+        <profile>
+            <id>jdk16</id>
+            <properties>
+                <jdk.url>https://github.com/AdoptOpenJDK/openjdk16-binaries/releases/download/jdk-16.0.1%2B9/OpenJDK16U-jdk_x64_linux_hotspot_16.0.1_9.tar.gz</jdk.url>
             </properties>
         </profile>
     </profiles>

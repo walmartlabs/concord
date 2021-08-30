@@ -394,7 +394,7 @@ public class MainTest {
                 .build());
 
         byte[] log = run();
-        assertLog(log, ".*error occurred: java.lang.RuntimeException: Error: this is an error in <eval> at line number 1 at column number 0.*");
+        assertLog(log, ".*error occurred: java.lang.RuntimeException: Error: this is an error.*");
     }
 
     @Test
