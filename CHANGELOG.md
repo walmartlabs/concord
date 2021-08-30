@@ -1,5 +1,14 @@
 # Change log
 
+## [Unreleased]
+
+### Changed
+
+- project: switch to AdoptOpenJDK, initial support for JDK 11 and 16.
+The default Docker images use JDK 8 by default.
+
+
+
 ## [1.89.0] - 2021-08-22
 
 ### Added
