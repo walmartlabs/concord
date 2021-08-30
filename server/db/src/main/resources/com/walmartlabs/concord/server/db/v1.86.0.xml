@@ -17,7 +17,7 @@
 
     <!-- Set initial admin API token when not exist  -->
     <changeSet id="1860100" author="ybrigo@gmail.com" runInTransaction="false" context="!codegen">
-        <validCheckSum>7:97bd1706bb87b4d5cd315b0eca75a543</validCheckSum>
+        <validCheckSum>ANY</validCheckSum>
 
         <preConditions onFail="MARK_RAN">
             <sqlCheck expectedResult="0">
@@ -48,7 +48,7 @@
 
     <!-- Set initial agent API token when not exist  -->
     <changeSet id="1860300" author="benjamin.broadaway@walmart.com" runInTransaction="false" context="!codegen">
-        <validCheckSum>7:c3982d658e1e65cc0e1de41272d15d0b</validCheckSum>
+        <validCheckSum>ANY</validCheckSum>
 
         <preConditions onFail="MARK_RAN">
             <sqlCheck expectedResult="0">
