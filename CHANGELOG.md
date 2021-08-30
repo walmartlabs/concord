@@ -4,11 +4,13 @@
 
 ### Changed
 
-- concord-server-db: fix checksum expectations for API key related
-changesets ([#463](https://github.com/walmartlabs/concord/pull/463));
 - project: switch to AdoptOpenJDK, initial support for JDK 11 and 16.
 The default Docker images use JDK 8 by default
-([#434](https://github.com/walmartlabs/concord/pull/434)).
+([#434](https://github.com/walmartlabs/concord/pull/434));
+- concord-server-db: fix checksum expectations for API key related
+changesets ([#463](https://github.com/walmartlabs/concord/pull/463));
+- concord-server: remove an old, unused task from the DB
+([#464](https://github.com/walmartlabs/concord/pull/464)).
 
 
 
