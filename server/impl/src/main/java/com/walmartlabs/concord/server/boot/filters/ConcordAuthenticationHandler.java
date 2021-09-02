@@ -83,17 +83,15 @@ public class ConcordAuthenticationHandler implements AuthenticationHandler {
     }
 
     private AuthenticationToken createFromAuthHeader(HttpServletRequest req) {
-        String h = req.getHeader(HttpHeaders.AUTHORIZATION);
-
-        // enable sessions
-        req.setAttribute(DefaultSubjectContext.SESSION_CREATION_ENABLED, Boolean.TRUE);
-
         // check the 'remember me' status
         boolean rememberMe = Boolean.parseBoolean(req.getHeader(REMEMBER_ME_HEADER));
 
-        AuthenticationToken token;
+        String h = req.getHeader(HttpHeaders.AUTHORIZATION);
         if (h.startsWith(BASIC_AUTH_PREFIX)) {
-            token = parseBasicAuth(h, rememberMe);
+            // enable sessions
+            req.setAttribute(DefaultSubjectContext.SESSION_CREATION_ENABLED, Boolean.TRUE);
+
+            return parseBasicAuth(h, rememberMe);
         } else {
             if (h.startsWith(BEARER_AUTH_PREFIX)) {
                 h = h.substring(BEARER_AUTH_PREFIX.length());
@@ -106,10 +104,8 @@ public class ConcordAuthenticationHandler implements AuthenticationHandler {
                 return new UsernamePasswordToken();
             }
 
-            token = new ApiKey(apiKey.getId(), apiKey.getUserId(), h, rememberMe);
+            return new ApiKey(apiKey.getId(), apiKey.getUserId(), h, rememberMe);
         }
-
-        return token;
     }
 
     private AuthenticationToken createFromSessionHeader(HttpServletRequest req) {
