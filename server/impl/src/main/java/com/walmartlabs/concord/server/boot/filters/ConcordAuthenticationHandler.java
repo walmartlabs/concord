@@ -93,6 +93,9 @@ public class ConcordAuthenticationHandler implements AuthenticationHandler {
 
             return parseBasicAuth(h, rememberMe);
         } else {
+            // disable sessions
+            req.setAttribute(DefaultSubjectContext.SESSION_CREATION_ENABLED, Boolean.FALSE);
+
             if (h.startsWith(BEARER_AUTH_PREFIX)) {
                 h = h.substring(BEARER_AUTH_PREFIX.length());
             }
