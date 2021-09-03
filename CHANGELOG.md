@@ -1,5 +1,16 @@
 # Change log
 
+## [1.89.1] - 2021-09-03
+
+### Changed
+
+- concord-server-db: fix checksum expectations for API key related 
+changesets ([#463](https://github.com/walmartlabs/concord/pull/463));
+- concord-server: remove unused task from DB 
+([#464](https://github.com/walmartlabs/concord/pull/464)).
+
+
+
 ## [1.89.0] - 2021-08-22
 
 ### Added
