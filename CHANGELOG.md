@@ -12,7 +12,9 @@ changesets ([#463](https://github.com/walmartlabs/concord/pull/463));
 - concord-server: remove an old, unused task from the DB
 ([#464](https://github.com/walmartlabs/concord/pull/464));
 - concord-server: do not create http sessions for api-key auth
-([#471](https://github.com/walmartlabs/concord/pull/471)).
+([#471](https://github.com/walmartlabs/concord/pull/471));
+- concord-server: disable servlet sessions for session token
+authentication ([#473](https://github.com/walmartlabs/concord/pull/473)).
 
 
 
