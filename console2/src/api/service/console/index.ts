@@ -37,6 +37,7 @@ export const whoami = async (
     const h = new Headers();
     if (apiKey) {
         h.set('Authorization', apiKey);
+        h.set('X-Concord-EnableSession', 'true');
     } else if (username && password) {
         h.set(
             'Authorization',

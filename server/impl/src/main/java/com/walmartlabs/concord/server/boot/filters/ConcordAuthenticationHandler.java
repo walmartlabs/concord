@@ -43,6 +43,8 @@ import javax.ws.rs.core.HttpHeaders;
 import java.util.Base64;
 import java.util.UUID;
 
+import static com.walmartlabs.concord.sdk.Constants.Headers.ENABLE_HTTP_SESSION;
+
 /**
  * Default authentication handler. Handles basic authentication (username/password),
  * API keys and session tokens.
@@ -93,8 +95,8 @@ public class ConcordAuthenticationHandler implements AuthenticationHandler {
 
             return parseBasicAuth(h, rememberMe);
         } else {
-            // disable sessions
-            req.setAttribute(DefaultSubjectContext.SESSION_CREATION_ENABLED, Boolean.FALSE);
+            boolean enableSessions = Boolean.parseBoolean(req.getHeader(ENABLE_HTTP_SESSION));
+            req.setAttribute(DefaultSubjectContext.SESSION_CREATION_ENABLED, enableSessions);
 
             if (h.startsWith(BEARER_AUTH_PREFIX)) {
                 h = h.substring(BEARER_AUTH_PREFIX.length());
