@@ -114,6 +114,9 @@ public class ConcordAuthenticationHandler implements AuthenticationHandler {
     }
 
     private AuthenticationToken createFromSessionHeader(HttpServletRequest req) {
+        // explicitly disable sessions
+        req.setAttribute(DefaultSubjectContext.SESSION_CREATION_ENABLED, Boolean.FALSE);
+
         String h = req.getHeader(Constants.Headers.SESSION_TOKEN);
         return buildSessionToken(h);
     }
