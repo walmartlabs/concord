@@ -10,7 +10,9 @@ The default Docker images use JDK 8 by default
 - concord-server-db: fix checksum expectations for API key related
 changesets ([#463](https://github.com/walmartlabs/concord/pull/463));
 - concord-server: remove an old, unused task from the DB
-([#464](https://github.com/walmartlabs/concord/pull/464)).
+([#464](https://github.com/walmartlabs/concord/pull/464));
+- concord-server: do not create http sessions for api-key auth
+([#471](https://github.com/walmartlabs/concord/pull/471)).
 
 
 
@@ -19,7 +21,7 @@ changesets ([#463](https://github.com/walmartlabs/concord/pull/463));
 ### Added
 
 - concord-server: ability to load user API keys from a local file
-([457](https://github.com/walmartlabs/concord/pull/457)).
+([#457](https://github.com/walmartlabs/concord/pull/457)).
 
 ### Changed
 
@@ -64,7 +66,7 @@ in `task`, `flow` and `script` steps
 
 - concord-server: ignore synthetic methods annotated with `WithTimer`
 ([#444](https://github.com/walmartlabs/concord/pull/444));
--concord-targetplatform: update jackson-databind version to address
+- concord-targetplatform: update jackson-databind version to address
 [CVE](https://github.com/advisories/GHSA-288c-cq4h-88gq)
 ([#449](https://github.com/walmartlabs/concord/pull/449));
 - concord-server: roll back changes introduced in
