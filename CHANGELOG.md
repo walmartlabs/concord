@@ -18,7 +18,9 @@ dispatcher ([#466](https://github.com/walmartlabs/concord/pull/466));
 - concord-server: do not create http sessions for api-key auth
 ([#471](https://github.com/walmartlabs/concord/pull/471));
 - concord-server: disable servlet sessions for session token
-authentication ([#473](https://github.com/walmartlabs/concord/pull/473)).
+authentication ([#473](https://github.com/walmartlabs/concord/pull/473));
+- runtime-v1, runtime-v2: ability to disable events recording
+([#474](https://github.com/walmartlabs/concord/pull/474)).
 
 
 
