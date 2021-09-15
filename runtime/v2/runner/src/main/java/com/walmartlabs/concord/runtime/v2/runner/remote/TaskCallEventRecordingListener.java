@@ -62,6 +62,10 @@ public class TaskCallEventRecordingListener implements TaskCallListener {
 
     @Override
     public void onEvent(TaskCallEvent event) {
+        if (!eventConfiguration.recordEvents()) {
+            return;
+        }
+
         Map<String, Object> m = event(event);
 
         m.put("phase", event.phase().name().toLowerCase());

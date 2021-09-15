@@ -3,6 +3,7 @@ configuration:
   debug: false
   entryPoint: "default"
   events:
+    recordEvents: true
     recordTaskInVars: false
     truncateInVars: true
     truncateMaxStringLength: 1024

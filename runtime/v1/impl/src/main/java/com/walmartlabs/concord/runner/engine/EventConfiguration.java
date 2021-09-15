@@ -33,6 +33,7 @@ public class EventConfiguration {
             "privateKey",
             "vaultPassword");
 
+    private boolean recordEvents = true;
     private boolean truncateInVars = true;
     private boolean recordTaskInVars = false;
     private boolean recordTaskOutVars = false;
@@ -42,6 +43,14 @@ public class EventConfiguration {
     private int truncateMaxStringLength = 1024;
     private int truncateMaxArrayLength = 32;
     private int truncateMaxDepth = 32;
+
+    public boolean isRecordEvents() {
+        return recordEvents;
+    }
+
+    public void setRecordEvents(boolean recordEvents) {
+        this.recordEvents = recordEvents;
+    }
 
     public boolean isRecordTaskInVars() {
         return recordTaskInVars;

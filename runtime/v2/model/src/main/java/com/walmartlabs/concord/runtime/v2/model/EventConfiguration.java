@@ -50,6 +50,14 @@ public interface EventConfiguration extends Serializable {
             "vaultPassword");
 
     /**
+     * Enable/disable recording of process events.
+     */
+    @Value.Default
+    default boolean recordEvents() {
+        return true;
+    }
+
+    /**
      * Enable/disable recording of IN variables in task calls.
      */
     @Value.Default
