@@ -46,6 +46,7 @@ public class ConcordJsonSchemaGeneratorTest {
 
         Set<ValidationMessage> validationResult = schema.validate(concordYml);
 
+        System.out.println(validationResult);
         assertTrue(validationResult.isEmpty());
     }
 }
