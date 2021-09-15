@@ -1,5 +1,16 @@
 # Change log
 
+## [1.89.2] - 2021-09-14
+
+### Changed
+
+- concord-server: do not create http sessions for api-key auth
+([#471](https://github.com/walmartlabs/concord/pull/471));
+- concord-server: disable http sessions for session token auth
+([#473](https://github.com/walmartlabs/concord/pull/473)).
+
+
+
 ## [1.89.1] - 2021-09-03
 
 ### Changed
