@@ -1857,6 +1857,17 @@ public class YamlErrorParserTest extends AbstractParserTest {
     }
 
     @Test
+    public void test1305_1() throws Exception {
+        String msg =
+                "(005_1.yml): Error @ line: 7, col: 7. Invalid value type, expected: NON_NULL, got: NULL. Remove attribute or complete the definition\n" +
+                        "\twhile processing steps:\n" +
+                        "\t'arguments' @ line: 6, col: 3\n" +
+                        "\t\t'configuration' @ line: 1, col: 1";
+
+        assertErrorMessage("errors/configuration/005_1.yml", msg);
+    }
+
+    @Test
     public void test1306() throws Exception {
         String msg =
                 "(006.yml): Error @ line: 8, col: 9. Unknown options: ['trash' [NULL] @ line: 8, col: 9], expected: [activeProfiles, arguments, debug, dependencies, entryPoint, events, exclusive, meta, out, processTimeout, requirements, runtime, template]. Remove invalid options and/or fix indentation\n" +
