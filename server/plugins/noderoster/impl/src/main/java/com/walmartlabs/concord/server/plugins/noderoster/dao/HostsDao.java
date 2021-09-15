@@ -32,6 +32,7 @@ import com.walmartlabs.concord.server.plugins.noderoster.jooq.tables.NodeRosterP
 import com.walmartlabs.concord.server.sdk.ProcessKey;
 import com.walmartlabs.concord.server.sdk.ProcessKeyCache;
 import org.jooq.*;
+import org.jooq.Record;
 
 import javax.inject.Inject;
 import java.time.OffsetDateTime;

@@ -20,37 +20,25 @@ package com.walmartlabs.concord.runtime.v2.runner.script;
  * =====
  */
 
-import jdk.nashorn.api.scripting.ScriptObjectMirror;
-
-import java.util.*;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 public final class VariablesSanitizer {
 
     @SuppressWarnings("unchecked")
     public static Object sanitize(Object scriptObj) {
-        if (scriptObj instanceof ScriptObjectMirror) {
-            ScriptObjectMirror scriptObjectMirror = (ScriptObjectMirror) scriptObj;
-            if (scriptObjectMirror.isArray()) {
-                List<Object> result = new ArrayList<>();
-                for (Map.Entry<String, Object> entry : scriptObjectMirror.entrySet()) {
-                    result.add(sanitize(entry.getValue()));
-                }
-                return result;
-            } else {
-                Map<String, Object> result = new HashMap<>();
-                for (Map.Entry<String, Object> entry : scriptObjectMirror.entrySet()) {
-                    result.put(entry.getKey(), sanitize(entry.getValue()));
-                }
-                return result;
-            }
-        } else if (scriptObj instanceof Set) {
+        if (scriptObj instanceof Set) {
             Set<Object> c = (Set<Object>) scriptObj;
-            return c.stream().map(VariablesSanitizer::sanitize)
+            return c.stream()
+                    .map(VariablesSanitizer::sanitize)
                     .collect(Collectors.toSet());
         } else if (scriptObj instanceof Collection) {
             Collection<Object> c = (Collection<Object>) scriptObj;
-            return c.stream().map(VariablesSanitizer::sanitize)
+            return c.stream()
+                    .map(VariablesSanitizer::sanitize)
                     .collect(Collectors.toList());
         } else if (scriptObj instanceof Map) {
             Map<Object, Object> m = (Map<Object, Object>) scriptObj;
