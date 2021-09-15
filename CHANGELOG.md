@@ -11,6 +11,8 @@ The default Docker images use JDK 8 by default
 changesets ([#463](https://github.com/walmartlabs/concord/pull/463));
 - concord-server: remove an old, unused task from the DB
 ([#464](https://github.com/walmartlabs/concord/pull/464));
+- runtime-v2: improved parser error message
+([#465](https://github.com/walmartlabs/concord/pull/465));
 - concord-server: fix a potential race condition in the process
 dispatcher ([#466](https://github.com/walmartlabs/concord/pull/466));
 - concord-server: do not create http sessions for api-key auth
