@@ -185,6 +185,18 @@ public final class GrammarV2 {
         return m;
     }
 
+    public static YamlValue assertNotNull(YamlValue v) {
+        if (v.getType() != YamlValueType.NULL) {
+            return v;
+        }
+
+        throw new InvalidValueTypeException.Builder()
+                .location(v.getLocation())
+                .expected(YamlValueType.NON_NULL)
+                .actual(v.getType())
+                .build();
+    }
+
     private static Map<String, YamlValue> valueToMap(Seq<KV<String, YamlValue>> values) {
         if (values == null) {
             return Collections.emptyMap();
@@ -193,18 +205,6 @@ public final class GrammarV2 {
         Map<String, YamlValue> m = new LinkedHashMap<>();
         values.stream().forEach(kv -> m.put(kv.getKey(), kv.getValue()));
         return m;
-    }
-
-    private static void assertNotNull(YamlValue v) {
-        if (v.getType() != YamlValueType.NULL) {
-            return;
-        }
-
-        throw new InvalidValueTypeException.Builder()
-                .location(v.getLocation())
-                .expected(YamlValueType.NON_NULL)
-                .actual(v.getType())
-                .build();
     }
 
     @SuppressWarnings({"unchecked", "rawtypes"})
