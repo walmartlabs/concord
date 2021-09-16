@@ -26,6 +26,8 @@ import com.walmartlabs.concord.sdk.Constants;
 import org.eclipse.sisu.space.BeanScanning;
 import org.eclipse.sisu.space.SpaceModule;
 import org.eclipse.sisu.space.URLClassSpace;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.net.MalformedURLException;
@@ -43,18 +45,22 @@ import java.util.stream.Stream;
  */
 public class ProcessDependenciesModule extends AbstractModule {
 
+    private static final Logger log = LoggerFactory.getLogger(ProcessDependenciesModule.class);
+
     private final Path workDir;
     private final Collection<String> dependencies;
+    private final boolean debug;
 
-    public ProcessDependenciesModule(Path workDir, Collection<String> dependencies) {
+    public ProcessDependenciesModule(Path workDir, Collection<String> dependencies, boolean debug) {
         this.workDir = workDir;
         this.dependencies = dependencies;
+        this.debug = debug;
     }
 
     @Override
     protected void configure() {
         try {
-            ClassLoader cl = loadDependencies(workDir, dependencies);
+            ClassLoader cl = loadDependencies(workDir, dependencies, debug);
 
             // required to support ScriptEngines from external dependencies
             Thread.currentThread().setContextClassLoader(cl);
@@ -66,8 +72,13 @@ public class ProcessDependenciesModule extends AbstractModule {
         }
     }
 
-    private static URLClassLoader loadDependencies(Path workDir, Collection<String> dependencies) throws IOException {
+    private static URLClassLoader loadDependencies(Path workDir, Collection<String> dependencies, boolean debug) throws IOException {
         List<URL> urls = toURLs(workDir, dependencies);
+        if (debug) {
+            log.info("Effective dependencies:\n\t{}", urls.stream()
+                    .map(URL::toString)
+                    .collect(Collectors.joining("\n\t")));
+        }
         return new URLClassLoader(urls.toArray(new URL[0]), ProcessDependenciesModule.class.getClassLoader());
     }
 

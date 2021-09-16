@@ -220,7 +220,7 @@ public class Run implements Callable<Integer> {
         Injector injector = new InjectorFactory(new WorkingDirectory(targetDir),
                 runnerCfg,
                 () -> cfg,
-                new ProcessDependenciesModule(targetDir, runnerCfg.dependencies()),
+                new ProcessDependenciesModule(targetDir, runnerCfg.dependencies(), cfg.debug()),
                 new CliServicesModule(secretStoreDir, targetDir, new VaultProvider(vaultDir, vaultId), dependencyManager))
                 .create();
 
