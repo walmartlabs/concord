@@ -2,6 +2,11 @@
 
 ## [Unreleased]
 
+### Added
+
+- runtime-v2: log effective process dependencies in debug mode
+([#467](https://github.com/walmartlabs/concord/pull/467)).
+
 ### Changed
 
 - project: switch to AdoptOpenJDK, initial support for JDK 11 and 16.
