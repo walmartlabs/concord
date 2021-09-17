@@ -73,7 +73,8 @@ public class RemoteLogAppender implements LogAppender {
             return true;
         } catch (ApiException e) {
             log.warn("appendLog ['{}'] -> error: {}", instanceId, e.getMessage());
-            return false;
+
+            return e.getCode() >= 400 && e.getCode() < 500;
         }
     }
 
