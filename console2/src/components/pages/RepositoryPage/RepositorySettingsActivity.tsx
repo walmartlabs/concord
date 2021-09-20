@@ -80,11 +80,12 @@ class EditRepositoryActivity extends React.PureComponent<Props> {
                             name: '',
                             url: '',
                             enabled: true,
-                            sourceType: RepositorySourceType.BRANCH_OR_TAG
+                            sourceType: RepositorySourceType.BRANCH_OR_TAG,
+                            triggersEnabled: true
                         }
                     }
-                    testRepository={({ name, sourceType, id, enabled, ...rest }) =>
-                        testRepository({ orgName, projectName, disabled: !enabled, ...rest })
+                    testRepository={({ name, sourceType, id, ...rest }) =>
+                        testRepository({ orgName, projectName, ...rest })
                     }
                 />
             </>
@@ -135,7 +136,8 @@ const toFormValues = (
         path: r.path,
         secretId: r.secretId,
         secretName: r.secretName,
-        enabled: !r.disabled
+        enabled: !r.disabled,
+        triggersEnabled: !r.triggersDisabled
     };
 };
 
@@ -175,7 +177,8 @@ const mapDispatchToProps = (
             commitId,
             path: values.path,
             secretId: values.secretId!,
-            disabled: !values.enabled
+            disabled: !values.enabled,
+            triggersDisabled: !values.triggersEnabled
         };
 
         if (repoName) {

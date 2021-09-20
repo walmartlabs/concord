@@ -47,6 +47,7 @@ interface FormValues {
     secretId?: string;
     secretName?: string;
     enabled: boolean;
+    triggersEnabled: boolean;
 }
 
 export type RepositoryFormValues = FormValues;
@@ -251,6 +252,15 @@ class RepositoryForm extends React.Component<InjectedFormikProps<Props, FormValu
                         <FormikCheckbox
                             name="enabled"
                             label="Enabled"
+                            toggle={true}
+                            inline={true}
+                        />
+                    </Segment>
+
+                    <Segment>
+                        <FormikCheckbox
+                            name="triggersEnabled"
+                            label="Triggers Enabled"
                             toggle={true}
                             inline={true}
                         />
