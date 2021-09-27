@@ -24,6 +24,7 @@ import com.walmartlabs.concord.common.validation.ConcordKey;
 import com.walmartlabs.concord.server.GenericOperationResult;
 import com.walmartlabs.concord.server.OperationResult;
 import com.walmartlabs.concord.server.org.ResourceAccessEntry;
+import com.walmartlabs.concord.server.sdk.ConcordApplicationException;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
@@ -37,6 +38,7 @@ import javax.inject.Singleton;
 import javax.validation.Valid;
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
 import java.util.Collection;
 import java.util.List;
 
@@ -159,6 +161,10 @@ public class JsonStoreResource implements Resource {
     public GenericOperationResult updateAccessLevel(@ApiParam @PathParam("orgName") @ConcordKey String orgName,
                                                     @ApiParam @PathParam("storeName") @ConcordKey String storeName,
                                                     @ApiParam @Valid Collection<ResourceAccessEntry> entries) {
+
+        if (entries == null) {
+            throw new ConcordApplicationException("List of teams is null.", Response.Status.BAD_REQUEST);
+        }
 
         storeManager.updateAccessLevel(orgName, storeName, entries, true);
         return new GenericOperationResult(OperationResult.UPDATED);
