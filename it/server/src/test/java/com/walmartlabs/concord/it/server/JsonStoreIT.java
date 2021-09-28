@@ -21,14 +21,14 @@ package com.walmartlabs.concord.it.server;
  */
 
 import com.walmartlabs.concord.ApiException;
-import com.walmartlabs.concord.client.JsonStoreApi;
-import com.walmartlabs.concord.client.JsonStoreRequest;
-import com.walmartlabs.concord.client.OrganizationEntry;
-import com.walmartlabs.concord.client.OrganizationsApi;
+import com.walmartlabs.concord.client.*;
 import org.junit.Test;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.fail;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+
+import static org.junit.Assert.*;
 
 public class JsonStoreIT extends AbstractServerIT {
 
@@ -46,5 +46,71 @@ public class JsonStoreIT extends AbstractServerIT {
             assertEquals(400, e.getCode());
             assertEquals("[{\"id\":\"PARAMETER createOrUpdate.arg1.name\",\"message\":\"must match \\\"^[0-9a-zA-Z][0-9a-zA-Z_@.\\\\-~]{2,128}$\\\"\"}]", e.getResponseBody());
         }
+    }
+
+    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    public void testBulkAccessUpdate() throws Exception {
+        String orgName = "org_" + randomString();
+
+        OrganizationsApi orgApi = new OrganizationsApi(getApiClient());
+        orgApi.createOrUpdate(new OrganizationEntry().setName(orgName));
+
+        // ---
+
+        String storeName = "store_" + randomString();
+
+        JsonStoreApi jsonStoreApi = new JsonStoreApi(getApiClient());
+        jsonStoreApi.createOrUpdate(orgName, new JsonStoreRequest()
+                .setName(storeName));
+
+        // ---
+
+        String teamName = "team_" + randomString();
+        TeamsApi teamsApi = new TeamsApi(getApiClient());
+        CreateTeamResponse teamResp = teamsApi.createOrUpdate(orgName, new TeamEntry()
+                .setName(teamName));
+
+        // --- Typical one-or-more teams bulk access update
+
+        List<ResourceAccessEntry> teams = new ArrayList<>(1);
+        teams.add(new ResourceAccessEntry()
+                .setOrgName(orgName)
+                .setTeamId(teamResp.getId())
+                .setTeamName(teamName)
+                .setLevel(ResourceAccessEntry.LevelEnum.OWNER));
+        GenericOperationResult addTeamsResult = jsonStoreApi.updateAccessLevel_0(orgName, storeName, teams);
+        assertNotNull(addTeamsResult);
+        assertTrue(addTeamsResult.isOk());
+
+        List<ResourceAccessEntry> currentTeams = jsonStoreApi.getAccessLevel(orgName, storeName);
+        assertNotNull(currentTeams);
+        assertEquals(1, currentTeams.size());
+
+        // --- Empty teams list clears all
+
+        GenericOperationResult clearTeamsResult = jsonStoreApi.updateAccessLevel_0(orgName, storeName, Collections.emptyList());
+        assertNotNull(clearTeamsResult);
+        assertTrue(clearTeamsResult.isOk());
+
+        currentTeams = jsonStoreApi.getAccessLevel(orgName, storeName);
+        assertNotNull(currentTeams);
+        assertEquals(0, currentTeams.size());
+
+        // --- Null list not allowed, throws error
+
+        try {
+            jsonStoreApi.updateAccessLevel_0(orgName, storeName, null);
+        } catch (ApiException expected) {
+            assertEquals(400, expected.getCode());
+            assertTrue(expected.getResponseBody().contains("List of teams is null"));
+        } catch (Exception e) {
+            fail("Expected ApiException. Got " + e.getClass().toString());
+        }
+
+        // ---
+
+        teamsApi.delete(orgName, teamName);
+        jsonStoreApi.delete(orgName, storeName);
+        orgApi.delete(orgName, "yes");
     }
 }
