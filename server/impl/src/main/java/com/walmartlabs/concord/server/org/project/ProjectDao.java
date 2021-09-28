@@ -144,7 +144,7 @@ public class ProjectDao extends AbstractDao {
             return null;
         }
 
-        Result<Record12<UUID, UUID, String, String, String, String, String, Boolean, JSONB, UUID, String, String>> repos = tx.select(
+        Result<Record13<UUID, UUID, String, String, String, String, String, Boolean, JSONB, UUID, String, String, Boolean>> repos = tx.select(
                 REPOSITORIES.REPO_ID,
                 REPOSITORIES.PROJECT_ID,
                 REPOSITORIES.REPO_NAME,
@@ -156,14 +156,15 @@ public class ProjectDao extends AbstractDao {
                 REPOSITORIES.META,
                 SECRETS.SECRET_ID,
                 SECRETS.SECRET_NAME,
-                SECRETS.STORE_TYPE)
+                SECRETS.STORE_TYPE,
+                REPOSITORIES.IS_TRIGGERS_DISABLED)
                 .from(REPOSITORIES)
                 .leftOuterJoin(SECRETS).on(SECRETS.SECRET_ID.eq(REPOSITORIES.SECRET_ID))
                 .where(REPOSITORIES.PROJECT_ID.eq(projectId))
                 .fetch();
 
         Map<String, RepositoryEntry> m = new HashMap<>();
-        for (Record12<UUID, UUID, String, String, String, String, String, Boolean, JSONB, UUID, String, String> repo : repos) {
+        for (Record13<UUID, UUID, String, String, String, String, String, Boolean, JSONB, UUID, String, String, Boolean> repo : repos) {
             m.put(repo.get(REPOSITORIES.REPO_NAME),
                     new RepositoryEntry(
                             repo.get(REPOSITORIES.REPO_ID),
@@ -177,7 +178,8 @@ public class ProjectDao extends AbstractDao {
                             repo.get(SECRETS.SECRET_ID),
                             repo.get(SECRETS.SECRET_NAME),
                             repo.get(SECRETS.STORE_TYPE),
-                            objectMapper.fromJSONB(repo.get(REPOSITORIES.META))));
+                            objectMapper.fromJSONB(repo.get(REPOSITORIES.META)),
+                            repo.get(REPOSITORIES.IS_TRIGGERS_DISABLED)));
         }
 
         Map<String, Object> cfg = objectMapper.fromJSONB(r.get(p.PROJECT_CFG));

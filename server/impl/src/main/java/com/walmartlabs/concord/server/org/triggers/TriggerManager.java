@@ -120,6 +120,10 @@ public class TriggerManager extends AbstractDao {
         log.info("refresh ['{}', '{}'] -> done, triggers count: {}", projectId, repoId, pd.triggers().size());
     }
 
+    public void clearTriggers(UUID projectId, UUID repoId) {
+        tx(tx -> triggersDao.delete(tx, projectId, repoId));
+    }
+
     private Trigger enrichTriggerDefinition(DSLContext tx, UUID repoId, Trigger t) {
         Map<String, Object> conditions = merge(triggersCfg.getDefaultConditions(), t.name(), t.conditions());
         Map<String, Object> cfg = merge(triggersCfg.getDefaultConfiguration(), t.name(), t.configuration());
