@@ -1,5 +1,14 @@
 # Change log
 
+## [Unreleased]
+
+### Changed
+
+- concord-agent: do not retry logs on 4xx-5xx response
+([#475](https://github.com/walmartlabs/concord/pull/476)).
+
+
+
 ## [1.90.0] - 2021-09-16
 
 ### Added
