@@ -46,6 +46,7 @@ export interface RepositoryEntry {
     secretName: string;
     meta?: RepositoryMeta;
     disabled: boolean;
+    triggersDisabled: boolean;
 }
 
 export interface EditRepositoryEntry {
@@ -58,6 +59,7 @@ export interface EditRepositoryEntry {
     secretId: string;
     disabled: boolean;
     triggers?: TriggerEntry;
+    triggersDisabled: boolean;
 }
 
 export interface TriggerCfg {

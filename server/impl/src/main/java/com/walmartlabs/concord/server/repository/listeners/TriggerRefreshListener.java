@@ -57,7 +57,12 @@ public class TriggerRefreshListener implements RepositoryRefreshListener {
 
     @Override
     public void onRefresh(DSLContext ctx, RepositoryEntry repo, Path repoPath) throws Exception {
-        log.info("refresh ['{}'] ->  triggers", repo.getId());
+        if (repo.isTriggersDisabled()) {
+            triggerManager.clearTriggers(repo.getProjectId(), repo.getId());
+            return;
+        }
+
+        log.info("refresh ['{}'] -> triggers", repo.getId());
 
         ProjectLoader.Result result = projectLoader.loadProject(repoPath, importsNormalizer.forProject(repo.getProjectId()), ImportsListener.NOP_LISTENER);
 

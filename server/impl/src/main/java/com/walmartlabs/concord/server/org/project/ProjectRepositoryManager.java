@@ -134,7 +134,8 @@ public class ProjectRepositoryManager {
                 trim(entry.getPath()),
                 secret == null ? null : secret.getId(),
                 entry.isDisabled(),
-                entry.getMeta());
+                entry.getMeta(),
+                entry.isTriggersDisabled());
 
         Map<String, Object> ev = Events.Repository.repositoryCreated(projectId, repoId, entry.getName(), !entry.isDisabled());
         externalEventResource.event(Events.CONCORD_EVENT, ev);
@@ -168,7 +169,8 @@ public class ProjectRepositoryManager {
                 trim(entry.getCommitId()),
                 trim(entry.getPath()),
                 secret == null ? null : secret.getId(),
-                entry.isDisabled());
+                entry.isDisabled(),
+                entry.isTriggersDisabled());
 
         Map<String, Object> ev = Events.Repository.repositoryUpdated(projectId,
                 repoId,
