@@ -296,6 +296,10 @@ public class SecretResource implements Resource {
             throw new ConcordApplicationException("Secret not found: " + secretName, Status.NOT_FOUND);
         }
 
+        if (entries == null) {
+            throw new ConcordApplicationException("List of teams is null.", Status.BAD_REQUEST);
+        }
+
         secretManager.updateAccessLevel(secretId, entries, true);
 
         return new GenericOperationResult(OperationResult.UPDATED);
