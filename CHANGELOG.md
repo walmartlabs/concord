@@ -2,10 +2,15 @@
 
 ## [Unreleased]
 
+### Added
+
+- concord-server, concord-console: allow users to disable triggers
+in repositories ([#476](https://github.com/walmartlabs/concord/pull/476)).
+
 ### Changed
 
 - concord-agent: do not retry logs on 4xx-5xx response
-([#475](https://github.com/walmartlabs/concord/pull/476)).
+([#475](https://github.com/walmartlabs/concord/pull/475)).
 
 
 
