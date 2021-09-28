@@ -146,6 +146,13 @@ class RepositoryForm extends React.Component<InjectedFormikProps<Props, FormValu
         return (
             <>
                 <Form onSubmit={handleSubmit}>
+                    <FormikCheckbox
+                        name="enabled"
+                        label="Enabled"
+                        toggle={true}
+                        inline={true}
+                    />
+
                     <FormikInput
                         name="name"
                         label="Name"
@@ -248,23 +255,12 @@ class RepositoryForm extends React.Component<InjectedFormikProps<Props, FormValu
                         </Popup.Content>
                     </Popup>
 
-                    <Segment>
-                        <FormikCheckbox
-                            name="enabled"
-                            label="Enabled"
-                            toggle={true}
-                            inline={true}
-                        />
-                    </Segment>
-
-                    <Segment>
-                        <FormikCheckbox
-                            name="triggersEnabled"
-                            label="Triggers Enabled"
-                            toggle={true}
-                            inline={true}
-                        />
-                    </Segment>
+                    <FormikCheckbox
+                        name="triggersEnabled"
+                        label="Enable Triggers"
+                        toggle={true}
+                        inline={true}
+                    />
 
                     <Divider />
 
