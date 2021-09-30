@@ -17,6 +17,9 @@ configuration:
     - "password"
     - "privateKey"
     - "vaultPassword"
+    recordTaskMeta: false
+    truncateMeta: true
+  
 flows:
   flow1:
   - checkpoint: "chp1"

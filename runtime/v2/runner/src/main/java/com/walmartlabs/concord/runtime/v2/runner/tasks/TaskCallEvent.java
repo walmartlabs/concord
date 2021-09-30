@@ -30,6 +30,7 @@ import java.io.Serializable;
 import java.lang.annotation.Annotation;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 @Value.Immutable
@@ -68,6 +69,12 @@ public interface TaskCallEvent {
 
     @Nullable
     String error();
+
+    @Value.Default
+    @AllowNulls
+    default Map<String, Serializable> meta() {
+        return Collections.emptyMap();
+    }
 
     static ImmutableTaskCallEvent.Builder builder() {
         return ImmutableTaskCallEvent.builder();

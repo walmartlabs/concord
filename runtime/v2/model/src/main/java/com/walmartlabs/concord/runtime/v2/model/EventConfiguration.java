@@ -138,6 +138,30 @@ public interface EventConfiguration extends Serializable {
         return Collections.emptyList();
     }
 
+    /**
+     * Enable/disable recording of metadata in task calls.
+     */
+    @Value.Default
+    default boolean recordTaskMeta() {
+        return false;
+    }
+
+    /**
+     * Enable/disable truncating of metadata in task call for events.
+     */
+    @Value.Default
+    default boolean truncateMeta() {
+        return true;
+    }
+
+    /**
+     * metadata in the blacklist won't be recorded.
+     */
+    @Value.Default
+    default Collection<String> metaBlacklist() {
+        return Collections.emptyList();
+    }
+    
     static ImmutableEventConfiguration.Builder builder() {
         return ImmutableEventConfiguration.builder();
     }
