@@ -63,29 +63,70 @@ public class GitClientTest6 {
 
         try (TemporaryPath repoPath = IOUtils.tempDir("git-client-test")) {
             // fetch master
-            fetch(repo.toString(), "master", null, null, repoPath.path());
+            fetch(repo.toString(), "master", null, repoPath.path());
             assertContent(repoPath, "master.txt", "master");
             assertContent(repoPath, "0_concord.yml", "0-concord-content");
             assertContent(repoPath, "1_concord.yml", "1-concord-content");
 
             // fetch master+prev commitId
-            fetch(repo.toString(), "master", commit0.name(), null, repoPath.path());
+            fetch(repo.toString(), "master", commit0.name(), repoPath.path());
             assertNoContent(repoPath, "1_concord.yml");
         }
     }
 
-    private String fetch(String repoUri, String branch, String commitId, Secret secret, Path dest) {
+    @Test
+    public void testFetch2() throws Exception {
+        Path repo = GitUtils.createBareRepository(resourceToPath("/master"));
+        RevCommit commit0 = GitUtils.addContent(repo, resourceToPath("/test5/0_concord.yml"));
+        GitUtils.addContent(repo, resourceToPath("/test5/1_concord.yml"));
+
+        try (TemporaryPath repoPath = IOUtils.tempDir("git-client-test")) {
+            // fetch master
+            fetch(repo.toString(), "master", null, repoPath.path());
+            assertContent(repoPath, "master.txt", "master");
+            assertContent(repoPath, "0_concord.yml", "0-concord-content");
+            assertContent(repoPath, "1_concord.yml", "1-concord-content");
+
+            System.out.println("fetching prev commit");
+
+            // fetch prev commitId
+            fetch(repo.toString(), null, commit0.name(), repoPath.path());
+            assertNoContent(repoPath, "1_concord.yml");
+        }
+    }
+
+    @Test
+    public void testFetch3() throws Exception {
+        Path repo = GitUtils.createBareRepository(resourceToPath("/master"));
+        RevCommit commit0 = GitUtils.addContent(repo, resourceToPath("/test5/0_concord.yml"));
+        GitUtils.addContent(repo, resourceToPath("/test5/1_concord.yml"));
+
+        try (TemporaryPath repoPath = IOUtils.tempDir("git-client-test")) {
+            // fetch master
+            fetch(repo.toString(), "master",null, repoPath.path());
+            assertContent(repoPath, "master.txt", "master");
+            assertContent(repoPath, "0_concord.yml", "0-concord-content");
+            assertContent(repoPath, "1_concord.yml", "1-concord-content");
+
+            System.out.println("refetching");
+
+            // refetch master
+            fetch(repo.toString(), "master", null, repoPath.path());
+            assertContent(repoPath, "1_concord.yml", "1-concord-content");
+        }
+    }
+
+    private String fetch(String repoUri, String branch, String commitId, Path dest) {
         return client.fetch(FetchRequest.builder()
                 .url(repoUri)
                 .version(FetchRequest.Version.commitWithBranch(commitId, branch))
-                .secret(secret)
                 .destination(dest)
                 .shallow(true)
                 .checkAlreadyFetched(true)
                 .build()).head();
     }
 
-    private static void assertNoContent(TemporaryPath repoPath, String path) throws IOException {
+    private static void assertNoContent(TemporaryPath repoPath, String path) {
         assertTrue(Files.notExists(repoPath.path().resolve(path)));
     }
 
