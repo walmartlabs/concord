@@ -41,7 +41,7 @@ import static org.junit.Assert.assertTrue;
 /**
  * test for checkout prev commitId on master branch + checkAlreadyFetched=true
  */
-public class GitClientTest6 {
+public class GitClientFetch2Test {
 
     private GitClient client;
 
@@ -56,7 +56,7 @@ public class GitClientTest6 {
     }
 
     @Test
-    public void testFetch() throws Exception {
+    public void testFetchByBranchAndPrevCommit() throws Exception {
         Path repo = GitUtils.createBareRepository(resourceToPath("/master"));
         RevCommit commit0 = GitUtils.addContent(repo, resourceToPath("/test5/0_concord.yml"));
         GitUtils.addContent(repo, resourceToPath("/test5/1_concord.yml"));
@@ -75,7 +75,7 @@ public class GitClientTest6 {
     }
 
     @Test
-    public void testFetch2() throws Exception {
+    public void testFetchByPrevCommit() throws Exception {
         Path repo = GitUtils.createBareRepository(resourceToPath("/master"));
         RevCommit commit0 = GitUtils.addContent(repo, resourceToPath("/test5/0_concord.yml"));
         GitUtils.addContent(repo, resourceToPath("/test5/1_concord.yml"));
@@ -96,7 +96,7 @@ public class GitClientTest6 {
     }
 
     @Test
-    public void testFetch3() throws Exception {
+    public void testReFetch() throws Exception {
         Path repo = GitUtils.createBareRepository(resourceToPath("/master"));
         RevCommit commit0 = GitUtils.addContent(repo, resourceToPath("/test5/0_concord.yml"));
         GitUtils.addContent(repo, resourceToPath("/test5/1_concord.yml"));
@@ -135,6 +135,6 @@ public class GitClientTest6 {
     }
 
     private static Path resourceToPath(String resource) throws Exception {
-        return Paths.get(GitClientTest5.class.getResource(resource).toURI());
+        return Paths.get(GitClientFetch2Test.class.getResource(resource).toURI());
     }
 }

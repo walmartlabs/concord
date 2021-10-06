@@ -38,7 +38,7 @@ import java.time.Duration;
 import static org.junit.Assert.assertEquals;
 
 @Ignore
-public class GitClientTest {
+public class GitClientRealTest {
 
     private static final String HTTPS_REPO_URL = System.getenv("HTTPS_REPO_URL");
     private static final String SSH_REPO_URL = System.getenv("SSH_REPO_URL");
