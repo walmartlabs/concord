@@ -22,7 +22,6 @@ package com.walmartlabs.concord.repository;
 
 import com.walmartlabs.concord.common.IOUtils;
 import com.walmartlabs.concord.common.TemporaryPath;
-import com.walmartlabs.concord.sdk.Secret;
 import org.eclipse.jgit.revwalk.RevCommit;
 import org.junit.Before;
 import org.junit.Test;
@@ -32,8 +31,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.Duration;
-import java.util.Arrays;
-import java.util.List;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
