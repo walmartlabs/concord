@@ -12,7 +12,10 @@ in repositories ([#476](https://github.com/walmartlabs/concord/pull/476)).
 - concord-agent: do not retry logs on 4xx-5xx response
 ([#475](https://github.com/walmartlabs/concord/pull/475)).
 - concord-server: throw error on null teams list in bulk access
-update ([#477](https://github.com/walmartlabs/concord/pull/477)).
+update ([#477](https://github.com/walmartlabs/concord/pull/477));
+- concord-repository: fix `checkAlreadyFetched` behavior when
+checking out an older commit using the current branch
+([#480](https://github.com/walmartlabs/concord/pull/480)).
 
 
 
