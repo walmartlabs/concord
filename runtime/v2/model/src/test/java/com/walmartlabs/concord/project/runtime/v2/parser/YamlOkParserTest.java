@@ -340,6 +340,8 @@ public class YamlOkParserTest extends AbstractParserTest {
                 .inVarsBlacklist(Collections.singletonList("pass"))
                 .recordTaskOutVars(true)
                 .outVarsBlacklist(Collections.singletonList("bass"))
+                .recordTaskMeta(true)
+                .metaBlacklist(Collections.singletonList("bass"))
                 .build(), cfg.events());
     }
 

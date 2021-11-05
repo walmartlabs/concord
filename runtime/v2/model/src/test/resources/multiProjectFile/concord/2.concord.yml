@@ -24,6 +24,8 @@ configuration:
     truncateMaxDepth: 30
     inVarsBlacklist:
       - "2.concord.yml"
+    recordTaskMeta: false
+    truncateMeta: false
   requirements:
     k: "2.concord.yml"
   out:

@@ -1,5 +1,4 @@
 configuration:
-  debug: true
   entryPoint: "main-test"
   dependencies:
     - "d1"
@@ -7,7 +6,7 @@ configuration:
   arguments:
     k: "v"
   requirements:
-    k: "v1"
+    k: "v"
   processTimeout: "PT1H"
   exclusive:
     group: "X"
@@ -15,10 +14,11 @@ configuration:
   events:
     recordTaskInVars: true
     inVarsBlacklist:
-      - "pass"
+      - "password"
+      - "apiToken"
+      - "apiKey"
     recordTaskOutVars: true
     outVarsBlacklist:
-      - "bass"
+      - "FOO"
     recordTaskMeta: true
-    metaBlacklist:
-      - "bass"
+    metaBlacklist: 1

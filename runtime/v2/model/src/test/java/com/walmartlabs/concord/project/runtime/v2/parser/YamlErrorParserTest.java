@@ -2005,7 +2005,7 @@ public class YamlErrorParserTest extends AbstractParserTest {
     @Test
     public void test1318() throws Exception {
         String msg =
-                "(018.yml): Error @ line: 26, col: 11. Unknown options: ['trash' [NULL] @ line: 26, col: 11], expected: [inVarsBlacklist, outVarsBlacklist, recordEvents, recordTaskInVars, recordTaskOutVars, truncateInVars, truncateMaxArrayLength, truncateMaxDepth, truncateMaxStringLength, truncateOutVars]. Remove invalid options and/or fix indentation\n" +
+                "(018.yml): Error @ line: 26, col: 11. Unknown options: ['trash' [NULL] @ line: 26, col: 11], expected: [inVarsBlacklist, metaBlacklist, outVarsBlacklist, recordEvents, recordTaskInVars, recordTaskMeta, recordTaskOutVars, truncateInVars, truncateMaxArrayLength, truncateMaxDepth, truncateMaxStringLength, truncateMeta, truncateOutVars]. Remove invalid options and/or fix indentation\n" +
                         "\twhile processing steps:\n" +
                         "\t'events' @ line: 14, col: 3\n" +
                         "\t\t'configuration' @ line: 1, col: 1";
@@ -2305,6 +2305,30 @@ public class YamlErrorParserTest extends AbstractParserTest {
         assertErrorMessage("errors/setVariables/001.yml", msg);
     }
 
+    @Test
+    public void test1902() throws Exception {
+        String msg =
+                "(021.yml): Error @ line: 23, col: 21. Invalid value type, expected: BOOLEAN, got: INT\n" +
+                        "\twhile processing steps:\n" +
+                        "\t'recordTaskMeta' @ line: 23, col: 5\n" +
+                        "\t\t'events' @ line: 14, col: 3\n" +
+                        "\t\t\t'configuration' @ line: 1, col: 1";
+
+        assertErrorMessage("errors/configuration/021.yml", msg);
+    }
+
+    @Test
+    public void test1903() throws Exception {
+        String msg =
+                "(022.yml): Error @ line: 24, col: 20. Invalid value type, expected: ARRAY_OF_STRING, got: INT\n" +
+                        "\twhile processing steps:\n" +
+                        "\t'metaBlacklist' @ line: 24, col: 5\n" +
+                        "\t\t'events' @ line: 14, col: 3\n" +
+                        "\t\t\t'configuration' @ line: 1, col: 1";
+
+        assertErrorMessage("errors/configuration/022.yml", msg);
+    }
+    
     private void assertErrorMessage(String resource, String expectedError) throws Exception {
         try {
             load(resource);
