@@ -5,7 +5,9 @@
 ### Added
 
 - concord-server, concord-console: allow users to disable triggers
-in repositories ([#476](https://github.com/walmartlabs/concord/pull/476)).
+in repositories ([#476](https://github.com/walmartlabs/concord/pull/476));
+- runtime-v2: add feature to record metadata in tasks call
+([#479][https://github.com/walmartlabs/concord/pull/476]).
 
 ### Changed
 
