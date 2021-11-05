@@ -30,6 +30,8 @@ configuration:
     inVarsBlacklist:
       - "apiKey"
       - "apiRootToken"
+    recordTaskMeta: true
+    truncateMeta: true
   requirements:
     req: "concord.yml"
   processTimeout: "PT1H"
