@@ -1,5 +1,26 @@
 # Change log
 
+## [Unreleased]
+
+### Added
+
+- concord-server, concord-console: allow users to disable triggers
+in repositories ([#476](https://github.com/walmartlabs/concord/pull/476));
+- runtime-v2: add feature to record metadata in tasks call
+([#479][https://github.com/walmartlabs/concord/pull/476]).
+
+### Changed
+
+- concord-agent: do not retry logs on 4xx-5xx response
+([#475](https://github.com/walmartlabs/concord/pull/475)).
+- concord-server: throw error on null teams list in bulk access
+update ([#477](https://github.com/walmartlabs/concord/pull/477));
+- concord-repository: fix `checkAlreadyFetched` behavior when
+checking out an older commit using the current branch
+([#480](https://github.com/walmartlabs/concord/pull/480)).
+
+
+
 ## [1.90.0] - 2021-09-16
 
 ### Added
