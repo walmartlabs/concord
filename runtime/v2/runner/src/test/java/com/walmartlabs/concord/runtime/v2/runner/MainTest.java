@@ -44,7 +44,6 @@ import com.walmartlabs.concord.runtime.v2.runner.tasks.TaskResultListener;
 import com.walmartlabs.concord.runtime.v2.runner.tasks.TaskV2Provider;
 import com.walmartlabs.concord.runtime.v2.sdk.*;
 import com.walmartlabs.concord.sdk.Constants;
-import com.walmartlabs.concord.sdk.MapUtils;
 import com.walmartlabs.concord.svm.ExecutionListener;
 import com.walmartlabs.concord.svm.Runtime;
 import com.walmartlabs.concord.svm.ThreadId;
@@ -218,6 +217,48 @@ public class MainTest {
 
         byte[] log = run();
         assertLog(log, ".*error occurred:.*boom!.*");
+    }
+
+    @Test
+    public void testTaskErrorBlock2() throws Exception {
+        deploy("faultyTask2");
+
+        save(ProcessConfiguration.builder().build());
+
+        byte[] log = run();
+        assertLog(log, ".*error occurred:.*boom!.*");
+    }
+
+    @Test
+    public void testTaskErrorOut() throws Exception {
+        deploy("faultyTaskOut");
+
+        save(ProcessConfiguration.builder().build());
+
+        byte[] log = run();
+        assertLog(log, ".*result.key: value.*");
+    }
+
+    @Test
+    public void testTaskIgnoreErrors() throws Exception {
+        deploy("taskIgnoreErrors");
+
+        save(ProcessConfiguration.builder().build());
+
+        byte[] log = run();
+        assertLog(log, ".*ok: false.*");
+        assertLog(log, ".*error:.*boom!.*");
+    }
+
+    @Test
+    public void testTaskIgnoreErrors2() throws Exception {
+        deploy("taskIgnoreErrors2");
+
+        save(ProcessConfiguration.builder().build());
+
+        byte[] log = run();
+        assertLog(log, ".*ok: false.*");
+        assertLog(log, ".*error:.*boom!.*");
     }
 
     @Test
@@ -1197,6 +1238,17 @@ public class MainTest {
     @Named("faultyTask")
     @SuppressWarnings("unused")
     static class FaultyTask implements Task {
+
+        @Override
+        public TaskResult execute(Variables input) {
+            return TaskResult.fail("boom!")
+                    .value("key", "value");
+        }
+    }
+
+    @Named("faultyTask2")
+    @SuppressWarnings("unused")
+    static class FaultyTask2 implements Task {
 
         @Override
         public TaskResult execute(Variables input) {

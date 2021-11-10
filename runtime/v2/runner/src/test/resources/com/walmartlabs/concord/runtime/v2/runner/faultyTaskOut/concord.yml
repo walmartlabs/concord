@@ -1,0 +1,6 @@
+flows:
+  default:
+    - task: faultyTask
+      out: result
+      error:
+        - log: "result.key: ${result.key}"

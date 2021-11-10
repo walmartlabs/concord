@@ -52,6 +52,23 @@ public final class TaskCallUtils {
                 Map<String, Serializable> out = expressionEvaluator.evalAsMap(EvalContextFactory.global(ctx, vars), opts.outExpr());
                 out.forEach((k, v) -> ctx.variables().set(k, v));
             }
+
+            if (result instanceof TaskResult.SimpleFailResult) {
+                if (r.ok() || opts.ignoreErrors()) {
+                    return;
+                }
+
+                TaskResult.SimpleFailResult rr = (TaskResult.SimpleFailResult) r;
+                if (rr.cause() != null) {
+                    if (rr.cause() instanceof RuntimeException) {
+                        throw (RuntimeException)rr.cause();
+                    } else {
+                        throw new RuntimeException(rr.cause());
+                    }
+                } else {
+                    throw new RuntimeException("Error during execution of '" + taskName + "' task" + (r.error() != null ? ": " + r.error() : ""));
+                }
+            }
         } else {
             throw new IllegalArgumentException("Unknown result: '" + result.getClass() + "'");
         }

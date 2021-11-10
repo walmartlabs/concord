@@ -42,14 +42,25 @@ public interface TaskResult extends Serializable {
         return new SimpleResult(true, null, null);
     }
 
+    static SimpleFailResult fail(String error) {
+        return new SimpleFailResult(error);
+    }
+
+    static TaskResult fail(Exception e) {
+        return new SimpleFailResult(e);
+    }
+
+    @Deprecated
     static SimpleResult of(boolean success) {
         return new SimpleResult(success, null, null);
     }
 
+    @Deprecated
     static SimpleResult of(boolean success, String error) {
         return new SimpleResult(success, error, null);
     }
 
+    @Deprecated
     static SimpleResult of(boolean success, String error, Map<String, Object> values) {
         return new SimpleResult(success, error, values);
     }
@@ -61,6 +72,7 @@ public interface TaskResult extends Serializable {
      * @param message error message.
      * @return {@link TaskResult}
      */
+    @Deprecated
     static SimpleResult error(String message) {
         return new SimpleResult(false, message, null);
     }
@@ -144,6 +156,27 @@ public interface TaskResult extends Serializable {
                 result.put("error", error);
             }
             return result;
+        }
+    }
+
+    class SimpleFailResult extends SimpleResult {
+
+        private final Exception cause;
+
+        SimpleFailResult(Exception e) {
+            super(false, e.getMessage(), null);
+
+            this.cause = e;
+        }
+
+        SimpleFailResult(String error) {
+            super(false, error, null);
+
+            this.cause = null;
+        }
+
+        public Exception cause() {
+            return cause;
         }
     }
 
