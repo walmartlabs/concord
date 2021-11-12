@@ -1,5 +1,14 @@
 # Change log
 
+## [Unreleased]
+
+### Added
+
+- runtime-v2: `ignoreErrors` mode support for tasks
+([#484](https://github.com/walmartlabs/concord/pull/484)).
+
+
+
 ## [1.91.0] - 2021-11-05
 
 ### Added
