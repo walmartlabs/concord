@@ -23,6 +23,7 @@ package com.walmartlabs.concord.runtime.v2.runner.vm;
 import com.walmartlabs.concord.runtime.v2.model.TaskCall;
 import com.walmartlabs.concord.runtime.v2.runner.logging.LogContext;
 import com.walmartlabs.concord.runtime.v2.runner.tasks.TaskCallInterceptor;
+import com.walmartlabs.concord.runtime.v2.runner.tasks.TaskException;
 import com.walmartlabs.concord.runtime.v2.runner.tasks.TaskProviders;
 import com.walmartlabs.concord.runtime.v2.sdk.*;
 import com.walmartlabs.concord.svm.Frame;
@@ -83,6 +84,8 @@ public class TaskResumeCommand extends StepCommand<TaskCall> {
         try {
             result = interceptor.invoke(callContext, TaskCallInterceptor.Method.of(rt, "resume", Collections.singletonList(event)),
                     () -> rt.resume(event));
+        } catch (TaskException e) {
+            result = TaskResult.fail(e.getCause());
         } catch (RuntimeException e) {
             throw e;
         } catch (Exception e) {

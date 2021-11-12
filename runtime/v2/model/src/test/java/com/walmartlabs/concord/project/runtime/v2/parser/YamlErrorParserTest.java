@@ -785,7 +785,7 @@ public class YamlErrorParserTest extends AbstractParserTest {
     @Test
     public void test215() throws Exception {
         String msg =
-                "(015.yml): Error @ line: 15, col: 14. Unknown options: ['trash' [STRING] @ line: 15, col: 14], expected: [error, in, meta, name, out, parallelWithItems, retry, withItems]. Remove invalid options and/or fix indentation\n" +
+                "(015.yml): Error @ line: 15, col: 14. Unknown options: ['trash' [STRING] @ line: 15, col: 14], expected: [error, ignoreErrors, in, meta, name, out, parallelWithItems, retry, withItems]. Remove invalid options and/or fix indentation\n" +
                         "\twhile processing steps:\n" +
                         "\t'task' @ line: 3, col: 7\n" +
                         "\t\t'main' @ line: 2, col: 3\n" +

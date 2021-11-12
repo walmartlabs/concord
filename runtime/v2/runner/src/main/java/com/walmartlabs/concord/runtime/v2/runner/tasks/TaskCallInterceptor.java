@@ -72,7 +72,7 @@ public class TaskCallInterceptor {
         listeners.forEach(l -> l.onEvent(postEvent));
 
         if (error != null) {
-            throw error;
+            throw new TaskException(error);
         }
 
         return result;
