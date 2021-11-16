@@ -28,6 +28,7 @@ import com.walmartlabs.concord.runtime.common.injector.InstanceId;
 import com.walmartlabs.concord.runtime.v2.ProcessDefinitionUtils;
 import com.walmartlabs.concord.runtime.v2.model.*;
 import com.walmartlabs.concord.runtime.v2.runner.vm.StepCommand;
+import com.walmartlabs.concord.runtime.v2.sdk.ProcessConfiguration;
 import com.walmartlabs.concord.svm.Runtime;
 import com.walmartlabs.concord.svm.*;
 import org.slf4j.Logger;
@@ -45,15 +46,21 @@ public class EventRecordingExecutionListener implements ExecutionListener {
 
     private final ProcessEventsApi eventsApi;
     private final InstanceId processInstanceId;
+    private final EventConfiguration eventConfiguration;
 
     @Inject
-    public EventRecordingExecutionListener(ApiClient apiClient, InstanceId processInstanceId) {
+    public EventRecordingExecutionListener(ApiClient apiClient, InstanceId processInstanceId, ProcessConfiguration processConfiguration) {
         this.eventsApi = new ProcessEventsApi(apiClient);
         this.processInstanceId = processInstanceId;
+        this.eventConfiguration = processConfiguration.events();
     }
 
     @Override
     public Result afterCommand(Runtime runtime, VM vm, State state, ThreadId threadId, Command cmd) {
+        if (!eventConfiguration.recordEvents()) {
+            return Result.CONTINUE;
+        }
+
         // TODO consider using marker interfaces to determine which step/command should produce ELEMENT events
 
         if (!(cmd instanceof StepCommand)) {

@@ -586,6 +586,8 @@ public class Constants {
         public static final String SESSION_TOKEN = "X-Concord-SessionToken";
 
         public static final String SECRET_TYPE = "X-Concord-SecretType";
+
+        public static final String ENABLE_HTTP_SESSION = "X-Concord-EnableSession";
     }
 
     /**

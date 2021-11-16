@@ -62,6 +62,10 @@ public class TaskCallEventRecordingListener implements TaskCallListener {
 
     @Override
     public void onEvent(TaskCallEvent event) {
+        if (!eventConfiguration.recordEvents()) {
+            return;
+        }
+
         Map<String, Object> m = event(event);
 
         m.put("phase", event.phase().name().toLowerCase());
@@ -88,10 +92,20 @@ public class TaskCallEventRecordingListener implements TaskCallListener {
             }
         }
 
+        Object metaVars = event.meta();
+        if (metaVars != null && eventConfiguration.recordTaskMeta()) {
+            Map<String, Object> meta = maskVars(asMapOrNull(metaVars), eventConfiguration.metaBlacklist());
+            if (eventConfiguration.truncateMeta()) {
+                meta = ObjectTruncater.truncateMap(meta, eventConfiguration.truncateMaxStringLength(), eventConfiguration.truncateMaxArrayLength(), eventConfiguration.truncateMaxDepth());
+            }
+            if (meta != null && !meta.isEmpty()) {
+                m.put("meta", meta);
+            }
+        }
+
         if (event.duration() != null) {
             m.put("duration", event.duration());
         }
-
         send(m);
     }
 

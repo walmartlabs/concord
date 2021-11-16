@@ -65,6 +65,11 @@ public interface TaskCallOptions extends StepOptions {
         return Collections.emptyList();
     }
 
+    @Value.Default
+    default boolean ignoreErrors() {
+        return false;
+    }
+
     static ImmutableTaskCallOptions.Builder builder() {
         return ImmutableTaskCallOptions.builder();
     }

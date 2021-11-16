@@ -314,6 +314,10 @@ public class ProjectResource implements Resource {
             throw new ConcordApplicationException("Project not found: " + projectName, Status.NOT_FOUND);
         }
 
+        if (entries == null) {
+            throw new ConcordApplicationException("List of teams is null.", Status.BAD_REQUEST);
+        }
+
         accessManager.updateAccessLevel(projectId, entries, true);
 
         return new GenericOperationResult(OperationResult.UPDATED);

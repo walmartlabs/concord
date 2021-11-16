@@ -209,7 +209,7 @@ public class Dispatcher extends PeriodicTask {
             ProcessQueueEntry candidate = m.response;
 
             // mark the process as STARTING
-            queueManager.updateStatus(tx, candidate.key(), ProcessStatus.STARTING);
+            queueManager.updateAgentId(tx, candidate.key(), m.request.channel.getAgentId(), ProcessStatus.STARTING);
         }
 
         return matches;

@@ -76,6 +76,8 @@ public class TaskCallStepSerializer extends StdSerializer<TaskCall> {
         writeNotEmptyObjectField("error", o.errorSteps(), gen);
         writeNotEmptyObjectField("meta", o.meta(), gen);
 
+        gen.writeObjectField("ignoreErrors", o.ignoreErrors());
+
         gen.writeEndObject();
     }
 }

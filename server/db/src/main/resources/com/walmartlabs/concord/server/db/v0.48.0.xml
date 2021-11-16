@@ -358,6 +358,7 @@
                                  onDelete="CASCADE"/>
     </changeSet>
 
+    <!-- deprecated in 1.31.0+
     <changeSet id="48700" author="ybrigo@gmail.com">
         <addColumn tableName="REPOSITORIES">
             <column name="WEBHOOK_ID" type="bigint">
@@ -365,4 +366,5 @@
             </column>
         </addColumn>
     </changeSet>
+    -->
 </databaseChangeLog>

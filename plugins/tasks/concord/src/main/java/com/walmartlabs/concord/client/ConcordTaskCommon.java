@@ -45,7 +45,6 @@ import java.util.stream.Collectors;
 
 import static com.walmartlabs.concord.client.ConcordTaskParams.*;
 
-@Named("concord")
 public class ConcordTaskCommon {
 
     private static final Logger log = LoggerFactory.getLogger(ConcordTaskCommon.class);

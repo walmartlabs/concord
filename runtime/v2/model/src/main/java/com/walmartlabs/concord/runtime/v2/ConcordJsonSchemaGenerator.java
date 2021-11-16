@@ -81,7 +81,7 @@ public class ConcordJsonSchemaGenerator {
 
         // remove invalid required primitive attributes
         removeRequired(path(jsonSchema, "definitions/ProcessDefinitionConfiguration"), "debug");
-        removeRequired(path(jsonSchema, "definitions/EventConfiguration"), "recordTaskInVars", "truncateInVars", "truncateMaxStringLength", "truncateMaxArrayLength", "truncateMaxDepth", "recordTaskOutVars", "truncateOutVars");
+        removeRequired(path(jsonSchema, "definitions/EventConfiguration"), "recordEvents", "recordTaskInVars", "truncateInVars", "truncateMaxStringLength", "truncateMaxArrayLength", "truncateMaxDepth", "recordTaskOutVars", "truncateOutVars", "recordTaskMeta", "truncateMeta");
 
         return jsonSchema;
     }

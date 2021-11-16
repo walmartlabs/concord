@@ -43,6 +43,8 @@ import javax.ws.rs.core.HttpHeaders;
 import java.util.Base64;
 import java.util.UUID;
 
+import static com.walmartlabs.concord.sdk.Constants.Headers.ENABLE_HTTP_SESSION;
+
 /**
  * Default authentication handler. Handles basic authentication (username/password),
  * API keys and session tokens.
@@ -83,18 +85,19 @@ public class ConcordAuthenticationHandler implements AuthenticationHandler {
     }
 
     private AuthenticationToken createFromAuthHeader(HttpServletRequest req) {
-        String h = req.getHeader(HttpHeaders.AUTHORIZATION);
-
-        // enable sessions
-        req.setAttribute(DefaultSubjectContext.SESSION_CREATION_ENABLED, Boolean.TRUE);
-
         // check the 'remember me' status
         boolean rememberMe = Boolean.parseBoolean(req.getHeader(REMEMBER_ME_HEADER));
 
-        AuthenticationToken token;
+        String h = req.getHeader(HttpHeaders.AUTHORIZATION);
         if (h.startsWith(BASIC_AUTH_PREFIX)) {
-            token = parseBasicAuth(h, rememberMe);
+            // enable sessions
+            req.setAttribute(DefaultSubjectContext.SESSION_CREATION_ENABLED, Boolean.TRUE);
+
+            return parseBasicAuth(h, rememberMe);
         } else {
+            boolean enableSessions = Boolean.parseBoolean(req.getHeader(ENABLE_HTTP_SESSION));
+            req.setAttribute(DefaultSubjectContext.SESSION_CREATION_ENABLED, enableSessions);
+
             if (h.startsWith(BEARER_AUTH_PREFIX)) {
                 h = h.substring(BEARER_AUTH_PREFIX.length());
             }
@@ -106,13 +109,14 @@ public class ConcordAuthenticationHandler implements AuthenticationHandler {
                 return new UsernamePasswordToken();
             }
 
-            token = new ApiKey(apiKey.getId(), apiKey.getUserId(), h, rememberMe);
+            return new ApiKey(apiKey.getId(), apiKey.getUserId(), h, rememberMe);
         }
-
-        return token;
     }
 
     private AuthenticationToken createFromSessionHeader(HttpServletRequest req) {
+        // explicitly disable sessions
+        req.setAttribute(DefaultSubjectContext.SESSION_CREATION_ENABLED, Boolean.FALSE);
+
         String h = req.getHeader(Constants.Headers.SESSION_TOKEN);
         return buildSessionToken(h);
     }

@@ -84,15 +84,17 @@ public class DockerTaskV2 implements Task {
                     processLog.info("DOCKER: {}", line);
                 } : null);
 
-        if (code != SUCCESS_EXIT_CODE) {
-            log.warn("call ['{}', '{}', '{}'] -> finished with code {}", params.image(), params.cmd(), workDir, code);
-            throw new RuntimeException("Docker process finished with with exit code " + code);
-        }
-
         String stdOut = null;
         if (stdOutFilePath != null) {
             InputStream inputStream = Files.newInputStream(Paths.get(stdOutFilePath));
             stdOut = DockerTaskCommon.toString(inputStream);
+        }
+
+        if (code != SUCCESS_EXIT_CODE) {
+            log.warn("call ['{}', '{}', '{}'] -> finished with code {}", params.image(), params.cmd(), workDir, code);
+            return TaskResult.fail("Docker process finished with with exit code " + code)
+                    .value("stdout", stdOut)
+                    .value("stderr", stdErr.toString());
         }
 
         log.info("call ['{}', '{}', '{}', '{}'] -> done", params.image(), params.cmd(), workDir, params.hosts());

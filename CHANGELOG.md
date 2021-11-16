@@ -1,11 +1,61 @@
 # Change log
 
+## [1.91.0] - 2021-11-05
+
+### Added
+
+- concord-server, concord-console: allow users to disable triggers
+in repositories ([#476](https://github.com/walmartlabs/concord/pull/476));
+- runtime-v2: add feature to record metadata in tasks call
+([#479](https://github.com/walmartlabs/concord/pull/476)).
+
+### Changed
+
+- concord-agent: do not retry logs on 4xx-5xx response
+([#475](https://github.com/walmartlabs/concord/pull/475)).
+- concord-server: throw error on null teams list in bulk access
+update ([#477](https://github.com/walmartlabs/concord/pull/477));
+- concord-repository: fix `checkAlreadyFetched` behavior when
+checking out an older commit using the current branch
+([#480](https://github.com/walmartlabs/concord/pull/480)).
+
+
+
+## [1.90.0] - 2021-09-16
+
+### Added
+
+- runtime-v2: log effective process dependencies in debug mode
+([#467](https://github.com/walmartlabs/concord/pull/467)).
+
+### Changed
+
+- project: switch to AdoptOpenJDK, initial support for JDK 11 and 16.
+The default Docker images use JDK 8 by default
+([#434](https://github.com/walmartlabs/concord/pull/434));
+- concord-server-db: fix checksum expectations for API key related
+changesets ([#463](https://github.com/walmartlabs/concord/pull/463));
+- concord-server: remove an old, unused task from the DB
+([#464](https://github.com/walmartlabs/concord/pull/464));
+- runtime-v2: improved parser error message
+([#465](https://github.com/walmartlabs/concord/pull/465));
+- concord-server: fix a potential race condition in the process
+dispatcher ([#466](https://github.com/walmartlabs/concord/pull/466));
+- concord-server: do not create http sessions for api-key auth
+([#471](https://github.com/walmartlabs/concord/pull/471));
+- concord-server: disable servlet sessions for session token
+authentication ([#473](https://github.com/walmartlabs/concord/pull/473));
+- runtime-v1, runtime-v2: ability to disable events recording
+([#474](https://github.com/walmartlabs/concord/pull/474)).
+
+
+
 ## [1.89.0] - 2021-08-22
 
 ### Added
 
 - concord-server: ability to load user API keys from a local file
-([457](https://github.com/walmartlabs/concord/pull/457)).
+([#457](https://github.com/walmartlabs/concord/pull/457)).
 
 ### Changed
 
@@ -50,7 +100,7 @@ in `task`, `flow` and `script` steps
 
 - concord-server: ignore synthetic methods annotated with `WithTimer`
 ([#444](https://github.com/walmartlabs/concord/pull/444));
--concord-targetplatform: update jackson-databind version to address
+- concord-targetplatform: update jackson-databind version to address
 [CVE](https://github.com/advisories/GHSA-288c-cq4h-88gq)
 ([#449](https://github.com/walmartlabs/concord/pull/449));
 - concord-server: roll back changes introduced in

@@ -63,7 +63,8 @@ public final class TaskGrammar {
                         optional("withItems", nonNullVal.map(v -> o.withItems(WithItems.of(v, WithItems.Mode.SERIAL)))),
                         optional("parallelWithItems", nonNullVal.map(v -> o.withItems(WithItems.of(v, WithItems.Mode.PARALLEL)))),
                         optional("retry", retryVal.map(o::retry)),
-                        optional("error", stepsVal.map(o::errorSteps))
+                        optional("error", stepsVal.map(o::errorSteps)),
+                        optional("ignoreErrors", booleanVal.map(o::ignoreErrors))
                 ))
                 .map(ImmutableTaskCallOptions.Builder::build);
     }

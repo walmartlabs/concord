@@ -60,7 +60,7 @@ public class SecretDaoTest extends AbstractDaoTest {
 
         String repoName = "repo#" + System.currentTimeMillis();
         RepositoryDao repositoryDao = new RepositoryDao(getConfiguration(), new ConcordObjectMapper(TestObjectMapper.INSTANCE));
-        UUID repoId = repositoryDao.insert(projectId, repoName, "n/a", null, null, null, secretId, false, null);
+        UUID repoId = repositoryDao.insert(projectId, repoName, "n/a", null, null, null, secretId, false, null, false);
 
         // ---
 

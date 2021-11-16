@@ -67,12 +67,14 @@ public class RepositoryEntry implements Serializable {
 
     private final Map<String, Object> meta;
 
+    private final boolean triggersDisabled;
+
     public RepositoryEntry(String name, String url) {
-        this(null, null, name, url, null, null, null, false, null, null, null, null);
+        this(null, null, name, url, null, null, null, false, null, null, null, null, false);
     }
 
     public RepositoryEntry(String name, RepositoryEntry e) {
-        this(e.id, e.projectId, name, e.url, e.branch, e.commitId, e.path, e.disabled, e.getSecretId(), e.secretName, e.secretStoreType, e.meta);
+        this(e.id, e.projectId, name, e.url, e.branch, e.commitId, e.path, e.disabled, e.getSecretId(), e.secretName, e.secretStoreType, e.meta, e.triggersDisabled);
     }
 
     public RepositoryEntry(RepositoryEntry e, String branch, String commitId) {
@@ -87,7 +89,8 @@ public class RepositoryEntry implements Serializable {
                 e.getSecretId(),
                 e.secretName,
                 e.secretStoreType,
-                e.meta);
+                e.meta,
+                e.triggersDisabled);
     }
 
     @JsonCreator
@@ -102,7 +105,8 @@ public class RepositoryEntry implements Serializable {
                            @JsonProperty("secretId") UUID secretId,
                            @JsonProperty("secretName") String secretName,
                            @JsonProperty("secretStoreType") String secretStoreType,
-                           @JsonProperty("meta") Map<String, Object> meta) {
+                           @JsonProperty("meta") Map<String, Object> meta,
+                           @JsonProperty("triggersDisabled") boolean triggersDisabled) {
 
         this.id = id;
         this.projectId = projectId;
@@ -116,6 +120,7 @@ public class RepositoryEntry implements Serializable {
         this.secretStoreType = secretStoreType;
         this.disabled = disabled;
         this.meta = meta;
+        this.triggersDisabled = triggersDisabled;
     }
 
     public UUID getId() {
@@ -166,6 +171,10 @@ public class RepositoryEntry implements Serializable {
         return meta;
     }
 
+    public boolean isTriggersDisabled() {
+        return triggersDisabled;
+    }
+
     @Override
     public String toString() {
         return "RepositoryEntry{" +
@@ -179,8 +188,9 @@ public class RepositoryEntry implements Serializable {
                 ", secretId=" + secretId +
                 ", secretName='" + secretName + '\'' +
                 ", secretStoreType='" + secretStoreType + '\'' +
-                ", disabled=" + disabled +
-                ", meta=" + meta +
+                ", disabled=" + disabled + '\'' +
+                ", meta=" + meta + '\'' +
+                ", triggersDisabled=" + triggersDisabled +
                 '}';
     }
 }

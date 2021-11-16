@@ -29,7 +29,6 @@ import com.walmartlabs.concord.runner.PolicyEngineHolder;
 import com.walmartlabs.concord.runner.VariablesSnapshotListener;
 import com.walmartlabs.concord.runner.engine.el.InjectVariableELResolver;
 import com.walmartlabs.concord.runner.engine.el.TaskResolver;
-import com.walmartlabs.concord.runtime.common.cfg.RunnerConfiguration;
 import com.walmartlabs.concord.sdk.Context;
 import com.walmartlabs.concord.sdk.Task;
 import io.takari.bpm.Configuration;
@@ -140,7 +139,12 @@ public class EngineFactory {
         cfg.setWrapAllExceptionsAsBpmnErrors(true);
         cfg.setCopyAllCallActivityOutVariables(true);
 
-        ElementEventProcessor eventProcessor = new ElementEventProcessor(apiClientFactory, adapter.processes());
+        ElementEventProcessor eventProcessor;
+        if (eventCfg.isRecordEvents()) {
+            eventProcessor = new DefaultElementEventProcessor(apiClientFactory, adapter.processes());
+        } else {
+            eventProcessor = new NopElementEventProcessor();
+        }
         ProcessOutVariables outVariables = new ProcessOutVariables(contextFactory);
 
         List<TaskInterceptor> taskInterceptors = new ArrayList<>();

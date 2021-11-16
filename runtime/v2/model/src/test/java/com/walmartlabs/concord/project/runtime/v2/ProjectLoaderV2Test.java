@@ -89,6 +89,8 @@ public class ProjectLoaderV2Test {
                 .truncateMaxArrayLength(2)
                 .truncateMaxDepth(3)
                 .inVarsBlacklist(ImmutableList.of("apiKey", "apiRootToken"))
+                .recordTaskMeta(true)
+                .truncateMeta(true)
                 .build(), cfg.events());
 
         // configuration.requirements: should be collected from ROOT concord.yml
