@@ -32,7 +32,6 @@ import org.apache.commons.compress.archivers.zip.ZipArchiveOutputStream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.inject.Named;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -311,29 +310,28 @@ public class ConcordTaskCommon {
 
         handleResults(instances, payload.ignoreFailures());
 
-        boolean single = payload.jobs().size() == 1;
-
-        if (single) {
-            // if only one job was started put all variables at the top level of the jobOut object
-            // e.g. jobOut.someVar
-            Map<String, Object> out = results.get(0).out;
-            return TaskResult.success()
-                    .value("id", payload.jobs().get(0))
-                    .values(out);
-        } else {
-            // for multiple jobs save their variable into a nested map
-            // e.g. jobOut['PROCESSID'].someVar
-            HashMap<String, Object> vars = new HashMap<>();
-            for (Result r : results) {
-                String id = r.processEntry.getInstanceId().toString();
-                if (r.out != null) {
-                    vars.put(id, r.out);
-                }
+        HashMap<String, Object> vars = new HashMap<>();
+        for (Result r : results) {
+            String id = r.processEntry.getInstanceId().toString();
+            if (r.out != null) {
+                vars.put(id, r.out);
             }
-            return TaskResult.success()
-                    .value("ids", payload.jobs())
-                    .values(vars);
         }
+
+        TaskResult.SimpleResult result = TaskResult.success()
+                .value("ids", payload.jobs().stream().map(UUID::toString).collect(Collectors.toList()))
+                .values(vars);
+
+        boolean single = payload.jobs().size() == 1;
+        if (single) {
+            // for single job also put all variables at the top level of the result
+            String id = payload.jobs().get(0).toString();
+            Map<String, Object> out = results.get(0).out;
+            result.value("id", id)
+                    .values(out);
+        }
+
+        return result;
     }
 
     private Result continueAfterSuspend(String baseUrl, String apiKey, UUID processId, boolean collectOutVars) throws Exception {
@@ -481,16 +479,14 @@ public class ConcordTaskCommon {
             handleResults(result, in.ignoreFailures());
         }
 
+        TaskResult.SimpleResult result = TaskResult.success()
+                .value("ids", ids.stream().map(UUID::toString).collect(Collectors.toList()));
+
         boolean single = ids.size() == 1;
         if (single) {
-            return TaskResult.success()
-                    .value("id", ids.get(0).toString());
-        } else {
-            return TaskResult.success()
-                    .value("ids", ids.stream()
-                            .map(UUID::toString)
-                            .collect(Collectors.toList()));
+            result.value("id", ids.get(0).toString());
         }
+        return result;
     }
 
     private Future<UUID> forkOne(ForkStartParams in) {

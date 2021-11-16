@@ -25,6 +25,7 @@ import com.walmartlabs.concord.runtime.v2.sdk.*;
 
 import javax.inject.Inject;
 import javax.inject.Named;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -76,8 +77,16 @@ public class ConcordTaskV2 implements ReentrantTask {
         context.suspend(eventName);
     }
 
+    public Map<String, ProcessEntry> waitForCompletion(String id) {
+        return waitForCompletion(Collections.singletonList(id));
+    }
+
     public Map<String, ProcessEntry> waitForCompletion(List<String> ids) {
         return waitForCompletion(ids, -1);
+    }
+
+    public Map<String, ProcessEntry> waitForCompletion(String id, long timeout) {
+        return waitForCompletion(Collections.singletonList(id), timeout);
     }
 
     public Map<String, ProcessEntry> waitForCompletion(List<String> ids, long timeout) {
@@ -92,8 +101,16 @@ public class ConcordTaskV2 implements ReentrantTask {
         delegate().kill(new KillParams(new MapBackedVariables(cfg)));
     }
 
+    public Map<String, Map<String, Object>> getOutVars(String id) {
+        return getOutVars(Collections.singletonList(id));
+    }
+
     public Map<String, Map<String, Object>> getOutVars(List<String> ids) {
         return getOutVars(ids, -1);
+    }
+
+    public Map<String, Map<String, Object>> getOutVars(String id, long timeout) {
+        return getOutVars(Collections.singletonList(id), timeout);
     }
 
     public Map<String, Map<String, Object>> getOutVars(List<String> ids, long timeout) {
