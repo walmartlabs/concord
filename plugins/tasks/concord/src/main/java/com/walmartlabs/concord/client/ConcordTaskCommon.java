@@ -112,8 +112,12 @@ public class ConcordTaskCommon {
         });
     }
 
-    public void suspendForCompletion(List<UUID> ids) throws Exception {
-        suspend(new ResumePayload(null, null, false, ids, false), false);
+    public String suspendForCompletion(List<UUID> ids) throws Exception {
+        TaskResult result = suspend(new ResumePayload(null, null, false, ids, false), false);
+        if (!(result instanceof TaskResult.SuspendResult)) {
+            throw new RuntimeException("Invalid result type. This is most likely a bug.");
+        }
+        return ((TaskResult.SuspendResult) result).eventName();
     }
 
     public <T> Map<String, T> waitForCompletion(List<UUID> ids, long timeout, Function<ProcessEntry, T> processor) {
@@ -284,12 +288,12 @@ public class ConcordTaskCommon {
             }
 
             return TaskResult.success()
-                    .value("id", processId)
+                    .value("id", processId.toString())
                     .values(out);
         }
 
         return TaskResult.success()
-                .value("id", processId);
+                .value("id", processId.toString());
     }
 
     public TaskResult continueAfterSuspend(ResumePayload payload) throws Exception {

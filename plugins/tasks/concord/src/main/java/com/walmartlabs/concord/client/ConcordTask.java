@@ -881,7 +881,11 @@ public class ConcordTask extends AbstractConcordTask {
 
     private static Action getAction(Context ctx) {
         String action = ContextUtils.assertString(ctx, ACTION_KEY);
-        return Action.valueOf(action.trim().toUpperCase());
+        try {
+            return Action.valueOf(action.trim().toUpperCase());
+        } catch (IllegalArgumentException e) {
+            throw new RuntimeException("Unknown action: '" + action + "'. Available actions: " + Arrays.toString(Action.values()));
+        }
     }
 
     private static int getInstances(Map<String, Object> cfg) {
