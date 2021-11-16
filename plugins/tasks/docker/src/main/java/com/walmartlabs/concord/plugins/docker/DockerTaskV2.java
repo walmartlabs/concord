@@ -92,7 +92,7 @@ public class DockerTaskV2 implements Task {
 
         if (code != SUCCESS_EXIT_CODE) {
             log.warn("call ['{}', '{}', '{}'] -> finished with code {}", params.image(), params.cmd(), workDir, code);
-            return TaskResult.fail("Docker process finished with with exit code " + code)
+            return TaskResult.fail("Docker process finished with exit code " + code)
                     .value("stdout", stdOut)
                     .value("stderr", stdErr.toString());
         }
