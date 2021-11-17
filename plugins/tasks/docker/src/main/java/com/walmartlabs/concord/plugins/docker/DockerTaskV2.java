@@ -40,7 +40,11 @@ public class DockerTaskV2 implements Task {
     private static final Logger log = LoggerFactory.getLogger(DockerTask.class);
     private static final Logger processLog = LoggerFactory.getLogger("processLog");
 
-    private static final String LOG_OUTPUT_KEY = "logOutput";
+    private static final String REDIRECT_ERROR_STREAM_KEY = "redirectErrorStream";
+    private static final String LOG_STD_OUT_KEY = "logOut";
+    private static final String LOG_STD_ERR_KEY = "logErr";
+    private static final String SAVE_STD_OUT_KEY = "saveOut";
+    private static final String SAVE_STD_ERR_KEY = "saveErr";
 
     private final WorkingDirectory workDir;
     private final DockerService dockerService;
@@ -56,11 +60,17 @@ public class DockerTaskV2 implements Task {
         Path workDir = this.workDir.getValue();
         TaskParams params = new TaskParams(input);
 
-        // redirect stderr to stdout
-        boolean logOutput = input.getBoolean(LOG_OUTPUT_KEY, true);
+        boolean logStdOut = input.getBoolean(LOG_STD_OUT_KEY, true);
+        boolean logStdError = input.getBoolean(LOG_STD_ERR_KEY, true);
+        boolean saveStdOut = input.getBoolean(SAVE_STD_OUT_KEY, false);
+        boolean saveStdError = input.getBoolean(SAVE_STD_ERR_KEY, false);
+        boolean redirectErrorStream = input.getBoolean(REDIRECT_ERROR_STREAM_KEY, false);
 
-        Path logFile = DockerTaskCommon.createTmpFile(workDir, "stdout", ".log");
-        String stdOutFilePath = workDir.relativize(logFile).toString();
+        String stdOutFilePath = null;
+        if (saveStdOut) {
+            Path logFile = DockerTaskCommon.createTmpFile(workDir, "stdout", ".log");
+            stdOutFilePath = workDir.relativize(logFile).toString();
+        }
 
         DockerContainerSpec spec = DockerContainerSpec.builder()
                 .image(params.image())
@@ -70,7 +80,7 @@ public class DockerTaskV2 implements Task {
                 .forcePull(params.forcePull())
                 .options(DockerContainerSpec.Options.builder().hosts(params.hosts()).build())
                 .debug(params.debug())
-                .redirectErrorStream(logOutput)
+                .redirectErrorStream(redirectErrorStream)
                 .stdOutFilePath(stdOutFilePath)
                 .pullRetryCount(params.pullRetryCount())
                 .pullRetryInterval(params.pullRetryInterval())
@@ -78,9 +88,11 @@ public class DockerTaskV2 implements Task {
 
         StringBuilder stdErr = new StringBuilder();
         int code = dockerService.start(spec,
-                logOutput ? line -> processLog.info("DOCKER: {}", line) : null,
-                logOutput ? line -> {
-                    stdErr.append(line).append("\n");
+                logStdOut ? line -> processLog.info("DOCKER: {}", line) : null,
+                logStdError ? line -> {
+                    if (saveStdError) {
+                        stdErr.append(line).append("\n");
+                    }
                     processLog.info("DOCKER: {}", line);
                 } : null);
 
