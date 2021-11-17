@@ -7,6 +7,20 @@
 - runtime-v2: `ignoreErrors` mode support for tasks
 ([#484](https://github.com/walmartlabs/concord/pull/484)).
 
+### Changed
+
+- concord-task: fix `suspendForCompletion` action in the v2
+version of the task
+([#488](https://github.com/walmartlabs/concord/pull/488));
+- concord-task: return fork IDs in the `ids` variable even for
+single-fork calls (v2 only)
+([#488](https://github.com/walmartlabs/concord/pull/488)).
+
+### Breaking
+
+- concord-task: return process IDs as `String` instead of `UUID`
+([#488](https://github.com/walmartlabs/concord/pull/488)).
+
 
 
 ## [1.91.0] - 2021-11-05
