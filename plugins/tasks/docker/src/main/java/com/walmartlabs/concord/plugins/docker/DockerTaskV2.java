@@ -89,11 +89,13 @@ public class DockerTaskV2 implements Task {
         StringBuilder stdErr = new StringBuilder();
         int code = dockerService.start(spec,
                 logStdOut ? line -> processLog.info("DOCKER: {}", line) : null,
-                logStdError ? line -> {
+                logStdError || saveStdError ? line -> {
+                    if (logStdError) {
+                        processLog.info("DOCKER: {}", line);
+                    }
                     if (saveStdError) {
                         stdErr.append(line).append("\n");
                     }
-                    processLog.info("DOCKER: {}", line);
                 } : null);
 
         if (code != SUCCESS_EXIT_CODE) {
