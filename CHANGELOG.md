@@ -20,6 +20,10 @@ single-fork calls (v2 only)
 
 - concord-task: return process IDs as `String` instead of `UUID`
 ([#488](https://github.com/walmartlabs/concord/pull/488)).
+- runtime-v2, docker: replace the `logOutput` parameter with
+a number of new fine-grained controls - `redirectErrorStream`, `logOut`,
+`logErr`, `saveOut` and `saveErr`
+([#489](https://github.com/walmartlabs/concord/pull/489)).
 
 
 
