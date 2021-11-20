@@ -129,20 +129,20 @@ public class ProcessQueueDao extends AbstractDao {
                 .execute();
     }
 
-    public void updateAgentId(DSLContext tx, ProcessKey processKey, String agentId, ProcessStatus status) {
+    public boolean updateAgentId(DSLContext tx, ProcessKey processKey, String agentId, ProcessStatus status, List<ProcessStatus> expectedStatuses) {
         UUID instanceId = processKey.getInstanceId();
 
-        int i = tx.update(PROCESS_QUEUE)
+        UpdateConditionStep<ProcessQueueRecord> q = tx.update(PROCESS_QUEUE)
                 .set(PROCESS_QUEUE.CURRENT_STATUS, status.toString())
                 .set(PROCESS_QUEUE.LAST_AGENT_ID, agentId)
                 .set(PROCESS_QUEUE.LAST_UPDATED_AT, currentOffsetDateTime())
                 .set(PROCESS_QUEUE.LAST_RUN_AT, createRunningAtValue(status))
-                .where(PROCESS_QUEUE.INSTANCE_ID.eq(instanceId))
-                .execute();
-
-        if (i != 1) {
-            throw new DataAccessException("Invalid number of rows updated: " + i);
+                .where(PROCESS_QUEUE.INSTANCE_ID.eq(instanceId));
+        if (!expectedStatuses.isEmpty()) {
+            q = q.and(PROCESS_QUEUE.CURRENT_STATUS.in(expectedStatuses.stream().map(Enum::name).collect(Collectors.toList())));
         }
+
+        return q.execute() == 1;
     }
 
     private static Field<OffsetDateTime> createRunningAtValue(ProcessStatus status) {

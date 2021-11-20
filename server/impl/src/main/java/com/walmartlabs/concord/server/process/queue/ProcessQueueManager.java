@@ -179,18 +179,21 @@ public class ProcessQueueManager {
     }
 
     /**
-     * @see #updateAgentId(DSLContext, ProcessKey, String, ProcessStatus)
+     * @see #updateAgentId(DSLContext, ProcessKey, String, ProcessStatus, List)
      */
     public void updateAgentId(ProcessKey processKey, String agentId, ProcessStatus status) {
-        queueDao.tx(tx -> updateAgentId(tx, processKey, agentId, status));
+        queueDao.tx(tx -> updateAgentId(tx, processKey, agentId, status, Collections.emptyList()));
     }
 
     /**
      * Updates the process' agent ID and status.
      */
-    public void updateAgentId(DSLContext tx, ProcessKey processKey, String agentId, ProcessStatus status) {
-        queueDao.updateAgentId(tx, processKey, agentId, status);
-        notifyStatusChange(tx, processKey, status);
+    public boolean updateAgentId(DSLContext tx, ProcessKey processKey, String agentId, ProcessStatus status, List<ProcessStatus> expectedStatuses) {
+        boolean updated = queueDao.updateAgentId(tx, processKey, agentId, status, expectedStatuses);
+        if (updated) {
+            notifyStatusChange(tx, processKey, status);
+        }
+        return updated;
     }
 
     public void updateExclusive(DSLContext tx, ProcessKey processKey, ExclusiveMode exclusive) {

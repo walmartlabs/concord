@@ -205,11 +205,15 @@ public class Dispatcher extends PeriodicTask {
             offset += batchSize;
         }
 
-        for (Match m : matches) {
+        for (Iterator<Match> it = matches.iterator(); it.hasNext(); ) {
+            Match m = it.next();
             ProcessQueueEntry candidate = m.response;
 
             // mark the process as STARTING
-            queueManager.updateAgentId(tx, candidate.key(), m.request.channel.getAgentId(), ProcessStatus.STARTING);
+            boolean marked = queueManager.updateAgentId(tx, candidate.key(), m.request.channel.getAgentId(), ProcessStatus.STARTING, Collections.singletonList(ProcessStatus.ENQUEUED));
+            if (!marked) {
+                it.remove();
+            }
         }
 
         return matches;
