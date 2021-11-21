@@ -71,6 +71,8 @@ public class ExclusiveProcessIT extends AbstractServerIT {
 
             System.out.println("p1 history: " + p1History);
             System.out.println("p2 history: " + p2History);
+            System.out.println("p1 log:" + new String(getLog(p1.getLogFileName())));
+            System.out.println("p2 log:" + new String(getLog(p2.getLogFileName())));
         }
 
         assertTrue(p1.getCreatedAt().isBefore(p2.getCreatedAt()));
