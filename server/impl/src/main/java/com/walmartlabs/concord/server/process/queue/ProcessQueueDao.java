@@ -290,7 +290,7 @@ public class ProcessQueueDao extends AbstractDao {
                     .set(PROCESS_QUEUE.LAST_RUN_AT, createRunningAtValue(status))
                     .where(PROCESS_QUEUE.INSTANCE_ID.in(instanceIds));
 
-            if (expected != null) {
+            if (expected != null && !expected.isEmpty()) {
                 List<String> l = expected.stream()
                         .map(Enum::toString)
                         .collect(Collectors.toList());
