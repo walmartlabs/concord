@@ -151,10 +151,11 @@ public class ProcessQueueDao extends AbstractDao {
                         .otherwise(PROCESS_QUEUE.LAST_RUN_AT));
     }
 
-    public void enqueue(DSLContext tx, ProcessKey processKey, Set<String> tags, OffsetDateTime startAt,
-                        Map<String, Object> requirements, Long processTimeout, Set<String> handlers,
-                        Map<String, Object> meta, Imports imports, ExclusiveMode exclusive,
-                        String runtime, List<String> dependencies, Long suspendTimeout) {
+    public boolean enqueue(DSLContext tx, ProcessKey processKey, Set<String> tags, OffsetDateTime startAt,
+                           Map<String, Object> requirements, Long processTimeout, Set<String> handlers,
+                           Map<String, Object> meta, Imports imports, ExclusiveMode exclusive,
+                           String runtime, List<String> dependencies, Long suspendTimeout,
+                           Collection<ProcessStatus> expectedStatuses) {
 
         UpdateSetMoreStep<ProcessQueueRecord> q = tx.update(PROCESS_QUEUE)
                 .set(PROCESS_QUEUE.CURRENT_STATUS, ProcessStatus.ENQUEUED.toString())
@@ -205,12 +206,11 @@ public class ProcessQueueDao extends AbstractDao {
         }
 
         int i = q
-                .where(PROCESS_QUEUE.INSTANCE_ID.eq(processKey.getInstanceId()))
+                .where(PROCESS_QUEUE.INSTANCE_ID.eq(processKey.getInstanceId())
+                        .and(PROCESS_QUEUE.CURRENT_STATUS.in(expectedStatuses.stream().map(Enum::name).collect(Collectors.toList()))))
                 .execute();
 
-        if (i != 1) {
-            throw new DataAccessException("Invalid number of rows updated: " + i);
-        }
+        return i == 1;
     }
 
     public void updateRepositoryDetails(PartialProcessKey processKey, UUID repoId, String repoUrl,
@@ -278,6 +278,31 @@ public class ProcessQueueDao extends AbstractDao {
         return i == 1;
     }
 
+    public boolean updateStatus(List<ProcessKey> processKeys, List<ProcessStatus> expected, ProcessStatus status) {
+        return txResult(tx -> {
+            List<UUID> instanceIds = processKeys.stream()
+                    .map(PartialProcessKey::getInstanceId)
+                    .collect(Collectors.toList());
+
+            UpdateConditionStep<ProcessQueueRecord> q = tx.update(PROCESS_QUEUE)
+                    .set(PROCESS_QUEUE.CURRENT_STATUS, status.toString())
+                    .set(PROCESS_QUEUE.LAST_UPDATED_AT, currentOffsetDateTime())
+                    .set(PROCESS_QUEUE.LAST_RUN_AT, createRunningAtValue(status))
+                    .where(PROCESS_QUEUE.INSTANCE_ID.in(instanceIds));
+
+            if (expected != null) {
+                List<String> l = expected.stream()
+                        .map(Enum::toString)
+                        .collect(Collectors.toList());
+
+                q.and(PROCESS_QUEUE.CURRENT_STATUS.in(l));
+            }
+
+            int i = q.execute();
+            return i == processKeys.size();
+        });
+    }
+
     public boolean updateMeta(PartialProcessKey processKey, Map<String, Object> meta) {
         UUID instanceId = processKey.getInstanceId();
 
@@ -302,31 +327,6 @@ public class ProcessQueueDao extends AbstractDao {
                     .execute();
 
             return i == 1;
-        });
-    }
-
-    public boolean updateStatus(List<ProcessKey> processKeys, List<ProcessStatus> expected, ProcessStatus status) {
-        return txResult(tx -> {
-            List<UUID> instanceIds = processKeys.stream()
-                    .map(PartialProcessKey::getInstanceId)
-                    .collect(Collectors.toList());
-
-            UpdateConditionStep<ProcessQueueRecord> q = tx.update(PROCESS_QUEUE)
-                    .set(PROCESS_QUEUE.CURRENT_STATUS, status.toString())
-                    .set(PROCESS_QUEUE.LAST_UPDATED_AT, currentOffsetDateTime())
-                    .set(PROCESS_QUEUE.LAST_RUN_AT, createRunningAtValue(status))
-                    .where(PROCESS_QUEUE.INSTANCE_ID.in(instanceIds));
-
-            if (expected != null) {
-                List<String> l = expected.stream()
-                        .map(Enum::toString)
-                        .collect(Collectors.toList());
-
-                q.and(PROCESS_QUEUE.CURRENT_STATUS.in(l));
-            }
-
-            int i = q.execute();
-            return i == processKeys.size();
         });
     }
 
