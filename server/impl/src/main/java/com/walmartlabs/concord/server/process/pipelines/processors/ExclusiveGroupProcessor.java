@@ -24,12 +24,11 @@ import com.walmartlabs.concord.db.AbstractDao;
 import com.walmartlabs.concord.db.MainDB;
 import com.walmartlabs.concord.runtime.v2.model.ExclusiveMode;
 import com.walmartlabs.concord.server.Locks;
-import com.walmartlabs.concord.server.agent.AgentManager;
 import com.walmartlabs.concord.server.jooq.tables.ProcessQueue;
 import com.walmartlabs.concord.server.process.Payload;
 import com.walmartlabs.concord.server.process.PayloadUtils;
+import com.walmartlabs.concord.server.process.ProcessManager;
 import com.walmartlabs.concord.server.process.logs.ProcessLogManager;
-import com.walmartlabs.concord.server.process.queue.ProcessQueueManager;
 import com.walmartlabs.concord.server.sdk.ProcessKey;
 import com.walmartlabs.concord.server.sdk.ProcessStatus;
 import com.walmartlabs.concord.server.sdk.metrics.WithTimer;
@@ -110,17 +109,17 @@ public class ExclusiveGroupProcessor implements PayloadProcessor {
         private final CancelModeDao dao;
         private final Locks exclusiveGroupLock;
         private final ProcessLogManager logManager;
-        private final ProcessQueueManager queueManager;
+        private final ProcessManager processManager;
 
         @Inject
         public CancelModeProcessor(CancelModeDao dao,
                                    Locks exclusiveGroupLock,
                                    ProcessLogManager logManager,
-                                   ProcessQueueManager queueManager) {
+                                   ProcessManager processManager) {
             this.dao = dao;
             this.exclusiveGroupLock = exclusiveGroupLock;
             this.logManager = logManager;
-            this.queueManager = queueManager;
+            this.processManager = processManager;
         }
 
         @Override
@@ -136,11 +135,12 @@ public class ExclusiveGroupProcessor implements PayloadProcessor {
                     logManager.warn(processKey, "Process(es) with exclusive group '" + exclusive.group() + "' is already in the queue. " +
                             "Current process has been cancelled");
 
-                    queueManager.updateStatus(tx, processKey, ProcessStatus.CANCELLED);
+                    processManager.kill(tx, processKey);
+
                     return false;
                 }
 
-                queueManager.updateExclusive(tx, processKey, exclusive);
+                processManager.updateExclusive(tx, processKey, exclusive);
 
                 return true;
             });
@@ -159,22 +159,19 @@ public class ExclusiveGroupProcessor implements PayloadProcessor {
         private static final String CANCELLED_MSG = "Process '{}' with exclusive group '{}' is already in the queue. Current process has been cancelled";
 
         private final CancelOldModeDao dao;
-        private final AgentManager agentManager;
+        private final ProcessManager processManager;
         private final ProcessLogManager logManager;
         private final Locks exclusiveGroupLock;
-        private final ProcessQueueManager queueManager;
 
         @Inject
         public CancelOldModeProcessor(CancelOldModeDao dao,
-                                      AgentManager agentManager,
+                                      ProcessManager processManager,
                                       ProcessLogManager logManager,
-                                      Locks exclusiveGroupLock,
-                                      ProcessQueueManager queueManager) {
+                                      Locks exclusiveGroupLock) {
             this.dao = dao;
-            this.agentManager = agentManager;
+            this.processManager = processManager;
             this.logManager = logManager;
             this.exclusiveGroupLock = exclusiveGroupLock;
-            this.queueManager = queueManager;
         }
 
         @Override
@@ -186,17 +183,18 @@ public class ExclusiveGroupProcessor implements PayloadProcessor {
             Result result = dao.txResult(tx -> {
                 exclusiveGroupLock.lock(tx, LOCK_KEY);
 
-                List<ProcessKey> processes = dao.listOld(tx, processKey, parentInstanceId, projectId, exclusive.group());
-                agentManager.killProcess(processes);
+                List<ProcessKey> oldProcesses = dao.listOld(tx, processKey, parentInstanceId, projectId, exclusive.group());
+                oldProcesses
+                        .forEach(k -> processManager.kill(tx, k, false));
 
                 ProcessKey newProcess = dao.anyNew(tx, processKey, projectId, exclusive.group());
                 if (newProcess != null) {
-                    queueManager.updateStatus(tx, processKey, ProcessStatus.CANCELLED);
+                    processManager.kill(tx, processKey);
                 }
 
-                queueManager.updateExclusive(tx, processKey, exclusive);
+                processManager.updateExclusive(tx, processKey, exclusive);
 
-                return new Result(processes, newProcess);
+                return new Result(oldProcesses, newProcess);
             });
 
             result.oldProcesses().forEach(pk -> logManager.warn(pk, CANCELLED_MSG, payload.getProcessKey(), exclusive.group()));

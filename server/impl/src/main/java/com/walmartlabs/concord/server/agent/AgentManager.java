@@ -30,6 +30,7 @@ import com.walmartlabs.concord.server.sdk.ProcessKey;
 import com.walmartlabs.concord.server.sdk.ProcessStatus;
 import com.walmartlabs.concord.server.websocket.WebSocketChannel;
 import com.walmartlabs.concord.server.websocket.WebSocketChannelManager;
+import org.jooq.DSLContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -76,47 +77,41 @@ public class AgentManager {
                 .collect(Collectors.toList());
     }
 
-    public void killProcess(ProcessKey processKey) {
-        String agentId = queueDao.getLastAgentId(processKey);
-        if (agentId == null) {
-            log.warn("killProcess ['{}'] -> trying to kill a process w/o an agent", processKey);
-            queueManager.updateStatus(processKey, ProcessStatus.CANCELLED);
-            return;
-        }
-
-        killProcess(processKey, agentId);
-    }
-
     public void killProcess(ProcessKey processKey, String agentId) {
-        commandQueue.insert(UUID.randomUUID(), agentId, Commands.cancel(processKey));
+        commandQueue.tx(tx -> killProcess(processKey, agentId));
     }
 
-    public void killProcess(List<ProcessKey> processKeys) {
-        if (processKeys.isEmpty()) {
-            return;
-        }
+    public void killProcess(DSLContext tx, ProcessKey processKey, String agentId) {
+        commandQueue.insert(tx, UUID.randomUUID(), agentId, Commands.cancel(processKey));
+    }
 
-        // TODO replace with a more appropriate method
-        List<ProcessEntry> l = queueDao.get(processKeys.stream()
-                .map(k -> PartialProcessKey.from(k.getInstanceId()))
-                .collect(Collectors.toList()));
-
-        List<ProcessKey> withoutAgent = l.stream()
-                .filter(p -> p.lastAgentId() == null)
-                .map(p -> new ProcessKey(p.instanceId(), p.createdAt()))
-                .collect(Collectors.toList());
-
-        if (!withoutAgent.isEmpty()) {
-            withoutAgent.forEach(p -> log.warn("killProcess ['{}'] -> trying to kill a process w/o an agent", p));
-            queueManager.updateExpectedStatus(withoutAgent, null, ProcessStatus.CANCELLED);
-        }
-
-        List<AgentCommand> commands = l.stream()
-                .filter(p -> p.lastAgentId() != null)
-                .map(p -> new AgentCommand(UUID.randomUUID(), p.lastAgentId(), AgentCommand.Status.CREATED,
-                        OffsetDateTime.now(), Commands.cancel(new ProcessKey(p.instanceId(), p.createdAt()))))
+    public void killProcess(List<KeyAndAgent> processes) {
+        List<AgentCommand> commands = processes.stream()
+                .filter(p -> p.getAgentId() != null)
+                .map(p -> new AgentCommand(UUID.randomUUID(), p.getAgentId(), AgentCommand.Status.CREATED,
+                        OffsetDateTime.now(), Commands.cancel(p.getProcessKey())))
                 .collect(Collectors.toList());
 
         commandQueue.insertBatch(commands);
+    }
+
+    public static class KeyAndAgent {
+
+        private final ProcessKey processKey;
+
+        private final String agentId;
+
+        public KeyAndAgent(ProcessKey processKey, String agentId) {
+            this.processKey = processKey;
+            this.agentId = agentId;
+        }
+
+        public ProcessKey getProcessKey() {
+            return processKey;
+        }
+
+        public String getAgentId() {
+            return agentId;
+        }
     }
 }

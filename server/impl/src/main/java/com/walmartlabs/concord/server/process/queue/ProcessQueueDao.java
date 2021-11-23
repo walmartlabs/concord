@@ -305,7 +305,7 @@ public class ProcessQueueDao extends AbstractDao {
         });
     }
 
-    public boolean updateStatus(List<ProcessKey> processKeys, List<ProcessStatus> expected, ProcessStatus status) {
+    public List<ProcessKey> updateStatus(List<ProcessKey> processKeys, List<ProcessStatus> expected, ProcessStatus status) {
         return txResult(tx -> {
             List<UUID> instanceIds = processKeys.stream()
                     .map(PartialProcessKey::getInstanceId)
@@ -325,8 +325,10 @@ public class ProcessQueueDao extends AbstractDao {
                 q.and(PROCESS_QUEUE.CURRENT_STATUS.in(l));
             }
 
-            int i = q.execute();
-            return i == processKeys.size();
+            return q.returningResult(PROCESS_QUEUE.INSTANCE_ID, PROCESS_QUEUE.CREATED_AT)
+                    .fetch().stream()
+                    .map(r -> new ProcessKey(r.value1(), r.value2()))
+                    .collect(Collectors.toList());
         });
     }
 
@@ -371,10 +373,14 @@ public class ProcessQueueDao extends AbstractDao {
         return txResult(tx -> get(tx, processKey, includes));
     }
 
-    public String getLastAgentId(PartialProcessKey processKey) {
-        return dsl().select(PROCESS_QUEUE.LAST_AGENT_ID).from(PROCESS_QUEUE)
-                .where(PROCESS_QUEUE.INSTANCE_ID.eq(processKey.getInstanceId()))
-                .fetchOne(PROCESS_QUEUE.LAST_AGENT_ID);
+    public ProcessEntry get(DSLContext tx, ProcessKey key, Set<ProcessDataInclude> includes) {
+        SelectQuery<Record> query = buildSelect(tx, key, ProcessFilter.builder()
+                .includes(includes)
+                .build());
+
+        query.addConditions(PROCESS_QUEUE.INSTANCE_ID.eq(key.getInstanceId()));
+
+        return query.fetchOne(this::toEntry);
     }
 
     public String getRuntime(PartialProcessKey processKey) {
@@ -411,21 +417,19 @@ public class ProcessQueueDao extends AbstractDao {
         return query.fetch(this::toEntry);
     }
 
-    public List<IdAndStatus> getCascade(PartialProcessKey parentKey) {
+    public List<ProcessKey> getCascade(PartialProcessKey parentKey) {
         UUID parentInstanceId = parentKey.getInstanceId();
         return dsl().withRecursive("children").as(
-                select(PROCESS_QUEUE.INSTANCE_ID, PROCESS_QUEUE.CREATED_AT, PROCESS_QUEUE.CURRENT_STATUS).from(PROCESS_QUEUE)
+                select(PROCESS_QUEUE.INSTANCE_ID, PROCESS_QUEUE.CREATED_AT).from(PROCESS_QUEUE)
                         .where(PROCESS_QUEUE.INSTANCE_ID.eq(parentInstanceId))
                         .unionAll(
-                                select(PROCESS_QUEUE.INSTANCE_ID, PROCESS_QUEUE.CREATED_AT, PROCESS_QUEUE.CURRENT_STATUS).from(PROCESS_QUEUE)
+                                select(PROCESS_QUEUE.INSTANCE_ID, PROCESS_QUEUE.CREATED_AT).from(PROCESS_QUEUE)
                                         .join(name("children"))
                                         .on(PROCESS_QUEUE.PARENT_INSTANCE_ID.eq(
                                                 field(name("children", "INSTANCE_ID"), UUID.class)))))
                 .select()
                 .from(name("children"))
-                .fetch(r -> new IdAndStatus(new ProcessKey(r.get(0, UUID.class),
-                        r.get(1, OffsetDateTime.class)),
-                        ProcessStatus.valueOf(r.get(2, String.class))));
+                .fetch(r -> new ProcessKey(r.get(0, UUID.class), r.get(1, OffsetDateTime.class)));
     }
 
     public ProcessInitiatorEntry getInitiator(PartialProcessKey processKey) {
@@ -762,16 +766,6 @@ public class ProcessQueueDao extends AbstractDao {
         return query;
     }
 
-    private ProcessEntry get(DSLContext tx, ProcessKey key, Set<ProcessDataInclude> includes) {
-        SelectQuery<Record> query = buildSelect(tx, key, ProcessFilter.builder()
-                .includes(includes)
-                .build());
-
-        query.addConditions(PROCESS_QUEUE.INSTANCE_ID.eq(key.getInstanceId()));
-
-        return query.fetchOne(this::toEntry);
-    }
-
     private ProcessEntry toEntry(Record r) {
         if (r == null) {
             return null;
@@ -878,25 +872,6 @@ public class ProcessQueueDao extends AbstractDao {
         }
 
         return l.toArray(new Field[0]);
-    }
-
-    public static class IdAndStatus {
-
-        private final ProcessKey processKey;
-        private final ProcessStatus status;
-
-        public IdAndStatus(ProcessKey processKey, ProcessStatus status) {
-            this.processKey = processKey;
-            this.status = status;
-        }
-
-        public ProcessKey getProcessKey() {
-            return processKey;
-        }
-
-        public ProcessStatus getStatus() {
-            return status;
-        }
     }
 
     public static class ProjectIdAndInitiator {
