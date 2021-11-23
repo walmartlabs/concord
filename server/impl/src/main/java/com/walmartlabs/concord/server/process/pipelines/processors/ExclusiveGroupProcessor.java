@@ -184,8 +184,7 @@ public class ExclusiveGroupProcessor implements PayloadProcessor {
                 exclusiveGroupLock.lock(tx, LOCK_KEY);
 
                 List<ProcessKey> oldProcesses = dao.listOld(tx, processKey, parentInstanceId, projectId, exclusive.group());
-                oldProcesses
-                        .forEach(k -> processManager.kill(tx, k, false));
+                processManager.kill(tx, oldProcesses);
 
                 ProcessKey newProcess = dao.anyNew(tx, processKey, projectId, exclusive.group());
                 if (newProcess != null) {

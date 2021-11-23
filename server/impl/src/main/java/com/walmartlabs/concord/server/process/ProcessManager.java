@@ -171,18 +171,12 @@ public class ProcessManager {
     }
 
     public void kill(DSLContext tx, ProcessKey processKey) {
-        kill(tx, processKey, true);
-    }
-
-    public void kill(DSLContext tx, ProcessKey processKey, boolean checkAccess) {
         ProcessEntry process = queueDao.get(tx, processKey, Collections.emptySet());
         if (process == null) {
             throw new ProcessException(null, "Process not found: " + processKey, Status.NOT_FOUND);
         }
 
-        if (checkAccess) {
-            assertKillOrDisableRights(process);
-        }
+        assertKillOrDisableRights(process);
 
         kill(tx, process);
     }
