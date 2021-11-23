@@ -20,19 +20,12 @@ package com.walmartlabs.concord.server.agent;
  * =====
  */
 
-import com.walmartlabs.concord.server.process.ProcessEntry;
-import com.walmartlabs.concord.server.process.queue.ProcessQueueDao;
-import com.walmartlabs.concord.server.process.queue.ProcessQueueManager;
 import com.walmartlabs.concord.server.queueclient.message.MessageType;
 import com.walmartlabs.concord.server.queueclient.message.ProcessRequest;
-import com.walmartlabs.concord.server.sdk.PartialProcessKey;
 import com.walmartlabs.concord.server.sdk.ProcessKey;
-import com.walmartlabs.concord.server.sdk.ProcessStatus;
 import com.walmartlabs.concord.server.websocket.WebSocketChannel;
 import com.walmartlabs.concord.server.websocket.WebSocketChannelManager;
 import org.jooq.DSLContext;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -46,22 +39,14 @@ import java.util.stream.Collectors;
 @Named
 public class AgentManager {
 
-    private static final Logger log = LoggerFactory.getLogger(AgentManager.class);
-
-    private final ProcessQueueDao queueDao;
     private final AgentCommandsDao commandQueue;
-    private final ProcessQueueManager queueManager;
     private final WebSocketChannelManager channelManager;
 
     @Inject
-    public AgentManager(ProcessQueueDao queueDao,
-                        AgentCommandsDao commandQueue,
-                        ProcessQueueManager queueManager,
+    public AgentManager(AgentCommandsDao commandQueue,
                         WebSocketChannelManager channelManager) {
 
-        this.queueDao = queueDao;
         this.commandQueue = commandQueue;
-        this.queueManager = queueManager;
         this.channelManager = channelManager;
     }
 
@@ -78,7 +63,7 @@ public class AgentManager {
     }
 
     public void killProcess(ProcessKey processKey, String agentId) {
-        commandQueue.tx(tx -> killProcess(processKey, agentId));
+        commandQueue.tx(tx -> killProcess(tx, processKey, agentId));
     }
 
     public void killProcess(DSLContext tx, ProcessKey processKey, String agentId) {
