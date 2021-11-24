@@ -5,7 +5,7 @@ flows:
         - myVar
       error:
         - log: "caught an error"
-    - log: "myVar should exist: ${myVar}"  # doesn't work
+    - log: "myVar should exist: ${myVar}"
 
   createMyVar:
     - set:
