@@ -1,0 +1,11 @@
+flows:
+  default:
+    - log: "Hello, ${name}!"
+    - exit
+
+configuration:
+  runtime: "concord-v2"
+  arguments:
+    name: "Concord"
+  meta:
+    test: "init-value"

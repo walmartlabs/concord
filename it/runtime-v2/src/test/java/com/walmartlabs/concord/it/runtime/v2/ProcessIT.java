@@ -133,6 +133,27 @@ public class ProcessIT {
         assertEquals("default", pe.getMeta().get("entryPoint"));
     }
 
+    /**
+     * Test the process metadata with exit step.
+     */
+    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    public void testMetaWithExit() throws Exception {
+        Payload payload = new Payload()
+                .archive(ProcessIT.class.getResource("exitWithMeta").toURI())
+                .arg("name", "Concord");
+
+        ConcordProcess proc = concord.processes().start(payload);
+
+        ProcessEntry pe = proc.expectStatus(ProcessEntry.StatusEnum.FINISHED);
+
+        // ---
+
+        proc.assertLog(".*Hello, Concord!.*");
+
+        assertNotNull(pe.getMeta());
+        assertEquals("init-value", pe.getMeta().get("test"));
+    }
+
     @Test(timeout = DEFAULT_TEST_TIMEOUT)
     public void testOutVariables() throws Exception {
         Payload payload = new Payload()
