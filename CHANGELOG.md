@@ -14,7 +14,10 @@ version of the task
 ([#488](https://github.com/walmartlabs/concord/pull/488));
 - concord-task: return fork IDs in the `ids` variable even for
 single-fork calls (v2 only)
-([#488](https://github.com/walmartlabs/concord/pull/488)).
+([#488](https://github.com/walmartlabs/concord/pull/488));
+- runtime-v2: fix exception when `MetadataProcessor` called
+after an `exit` step
+([#491](https://github.com/walmartlabs/concord/pull/491)).
 
 ### Breaking
 
