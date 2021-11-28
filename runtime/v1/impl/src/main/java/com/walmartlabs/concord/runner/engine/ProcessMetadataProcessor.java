@@ -40,6 +40,7 @@ public class ProcessMetadataProcessor {
     private static final int RETRY_COUNT = 3;
     private static final long RETRY_INTERVAL = 5000;
 
+    @SuppressWarnings("rawtypes")
     private static final Set<Class> VARIABLE_TYPES = new HashSet<>(Arrays.asList(
             String.class, Boolean.class, Character.class, Byte.class, Short.class, Integer.class, Long.class, Float.class, Double.class));
 
@@ -87,6 +88,7 @@ public class ProcessMetadataProcessor {
         Map<String, Object> result = new HashMap<>();
         for (String v : processMetaVariables) {
             Object value = ConfigurationUtils.get(vars, v.split("\\."));
+            value = unwind(value);
             if (value == null) {
                 continue;
             }
@@ -98,5 +100,20 @@ public class ProcessMetadataProcessor {
             }
         }
         return result;
+    }
+
+    @SuppressWarnings("unchecked")
+    private static Object unwind(Object value) {
+        if (!(value instanceof List)) {
+            return value;
+        }
+
+        List<Object> v = (List<Object>) value;
+
+        if (v.isEmpty()) {
+            return null;
+        }
+
+        return unwind(v.get(v.size() - 1));
     }
 }
