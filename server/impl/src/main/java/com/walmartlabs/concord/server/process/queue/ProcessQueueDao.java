@@ -151,10 +151,11 @@ public class ProcessQueueDao extends AbstractDao {
                         .otherwise(PROCESS_QUEUE.LAST_RUN_AT));
     }
 
-    public void enqueue(DSLContext tx, ProcessKey processKey, Set<String> tags, OffsetDateTime startAt,
-                        Map<String, Object> requirements, Long processTimeout, Set<String> handlers,
-                        Map<String, Object> meta, Imports imports, ExclusiveMode exclusive,
-                        String runtime, List<String> dependencies, Long suspendTimeout) {
+    public boolean enqueue(DSLContext tx, ProcessKey processKey, Set<String> tags, OffsetDateTime startAt,
+                           Map<String, Object> requirements, Long processTimeout, Set<String> handlers,
+                           Map<String, Object> meta, Imports imports, ExclusiveMode exclusive,
+                           String runtime, List<String> dependencies, Long suspendTimeout,
+                           Collection<ProcessStatus> expectedStatuses) {
 
         UpdateSetMoreStep<ProcessQueueRecord> q = tx.update(PROCESS_QUEUE)
                 .set(PROCESS_QUEUE.CURRENT_STATUS, ProcessStatus.ENQUEUED.toString())
@@ -205,12 +206,11 @@ public class ProcessQueueDao extends AbstractDao {
         }
 
         int i = q
-                .where(PROCESS_QUEUE.INSTANCE_ID.eq(processKey.getInstanceId()))
+                .where(PROCESS_QUEUE.INSTANCE_ID.eq(processKey.getInstanceId())
+                        .and(PROCESS_QUEUE.CURRENT_STATUS.in(expectedStatuses.stream().map(Enum::name).collect(Collectors.toList()))))
                 .execute();
 
-        if (i != 1) {
-            throw new DataAccessException("Invalid number of rows updated: " + i);
-        }
+        return i == 1;
     }
 
     public void updateRepositoryDetails(PartialProcessKey processKey, UUID repoId, String repoUrl,
@@ -278,33 +278,6 @@ public class ProcessQueueDao extends AbstractDao {
         return i == 1;
     }
 
-    public boolean updateMeta(PartialProcessKey processKey, Map<String, Object> meta) {
-        UUID instanceId = processKey.getInstanceId();
-
-        return txResult(tx -> {
-            int i = tx.update(PROCESS_QUEUE)
-                    .set(PROCESS_QUEUE.META, field(coalesce(PROCESS_QUEUE.META, field("?::jsonb", JSONB.class, JSONB.valueOf("{}"))) + " || ?::jsonb", JSONB.class, objectMapper.toJSONB(meta)))
-                    .where(PROCESS_QUEUE.INSTANCE_ID.eq(instanceId))
-                    .execute();
-
-            return i == 1;
-        });
-    }
-
-    public boolean removeMeta(PartialProcessKey processKey, String key) {
-        UUID instanceId = processKey.getInstanceId();
-
-        return txResult(tx -> {
-            Field<JSONB> v = field("{0}", JSONB.class, PROCESS_QUEUE.META).minus(value(key));
-            int i = tx.update(PROCESS_QUEUE)
-                    .set(PROCESS_QUEUE.META, v)
-                    .where(PROCESS_QUEUE.INSTANCE_ID.eq(instanceId))
-                    .execute();
-
-            return i == 1;
-        });
-    }
-
     public List<ProcessKey> updateStatus(List<ProcessKey> processKeys, List<ProcessStatus> expected, ProcessStatus status) {
         return txResult(tx -> {
             List<UUID> instanceIds = processKeys.stream()
@@ -329,6 +302,33 @@ public class ProcessQueueDao extends AbstractDao {
                     .fetch().stream()
                     .map(r -> new ProcessKey(r.value1(), r.value2()))
                     .collect(Collectors.toList());
+        });
+    }
+
+    public boolean updateMeta(PartialProcessKey processKey, Map<String, Object> meta) {
+        UUID instanceId = processKey.getInstanceId();
+
+        return txResult(tx -> {
+            int i = tx.update(PROCESS_QUEUE)
+                    .set(PROCESS_QUEUE.META, field(coalesce(PROCESS_QUEUE.META, field("?::jsonb", JSONB.class, JSONB.valueOf("{}"))) + " || ?::jsonb", JSONB.class, objectMapper.toJSONB(meta)))
+                    .where(PROCESS_QUEUE.INSTANCE_ID.eq(instanceId))
+                    .execute();
+
+            return i == 1;
+        });
+    }
+
+    public boolean removeMeta(PartialProcessKey processKey, String key) {
+        UUID instanceId = processKey.getInstanceId();
+
+        return txResult(tx -> {
+            Field<JSONB> v = field("{0}", JSONB.class, PROCESS_QUEUE.META).minus(value(key));
+            int i = tx.update(PROCESS_QUEUE)
+                    .set(PROCESS_QUEUE.META, v)
+                    .where(PROCESS_QUEUE.INSTANCE_ID.eq(instanceId))
+                    .execute();
+
+            return i == 1;
         });
     }
 

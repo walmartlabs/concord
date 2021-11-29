@@ -51,6 +51,10 @@ public class ProcessQueueManager {
     private final ProcessLogManager processLogManager;
     private final Collection<ProcessStatusListener> statusListeners;
 
+    private static final Set<ProcessStatus> TO_ENQUEUED_STATUSES = new HashSet<>(Arrays.asList(
+            ProcessStatus.PREPARING, ProcessStatus.RESUMING, ProcessStatus.SUSPENDED
+    ));
+
     @Inject
     public ProcessQueueManager(ProcessQueueDao queueDao,
                                ProcessKeyCache keyCache,
@@ -105,7 +109,7 @@ public class ProcessQueueManager {
             return false;
         }
 
-        if (s != ProcessStatus.PREPARING && s != ProcessStatus.RESUMING && s != ProcessStatus.SUSPENDED) {
+        if (!TO_ENQUEUED_STATUSES.contains(s)) {
             // something's wrong (e.g. someone tried to change the process' status directly in the DB and was unlucky)
             throw new ProcessException(processKey, "Invalid process status: " + s);
         }
@@ -122,12 +126,13 @@ public class ProcessQueueManager {
         String runtime = payload.getHeader(Payload.RUNTIME);
         List<String> dependencies = payload.getHeader(Payload.DEPENDENCIES);
 
-        queueDao.tx(tx -> {
-            queueDao.enqueue(tx, processKey, tags, startAt, requirements, processTimeout, handlers, meta, imports, exclusive, runtime, dependencies, suspendTimeout);
-            notifyStatusChange(tx, processKey, ProcessStatus.ENQUEUED);
+        return queueDao.txResult(tx -> {
+            boolean updated = queueDao.enqueue(tx, processKey, tags, startAt, requirements, processTimeout, handlers, meta, imports, exclusive, runtime, dependencies, suspendTimeout, TO_ENQUEUED_STATUSES);
+            if (updated) {
+                notifyStatusChange(tx, processKey, ProcessStatus.ENQUEUED);
+            }
+            return updated;
         });
-
-        return true;
     }
 
     /**

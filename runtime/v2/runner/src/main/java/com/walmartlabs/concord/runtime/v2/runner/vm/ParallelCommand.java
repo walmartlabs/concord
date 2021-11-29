@@ -65,7 +65,7 @@ public class ParallelCommand extends StepCommand<ParallelBlock> {
 
             frame.push(new EvalVariablesCommand(runtime.getService(Context.class), accumulator, opts.outExpr(), frame));
         } else {
-            outVarsCommand = new CopyVariablesCommand(opts.out(), null, frame);
+            outVarsCommand = new CopyVariablesCommand(opts.out(), State::peekFrame, frame);
         }
 
         Collection<ThreadId> forkIds = forks.stream().map(Map.Entry::getKey).collect(Collectors.toSet());

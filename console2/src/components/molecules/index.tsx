@@ -19,10 +19,7 @@
  */
 
 export { default as AnsibleHostList } from './ansible/AnsibleHostList';
-export { default as AnsibleStatChart } from './ansible/AnsibleStatChart';
-export { default as AnsibleStats } from './ansible/AnsibleStats';
 export { default as AnsibleTaskList } from './ansible/AnsibleTaskList';
-export { default as AnsibleViewToggle } from './ansible/AnsibleViewToggle';
 export { default as BreadcrumbSegment } from './BreadcrumbSegment';
 export { default as BulkProcessActionDropdown } from './BulkProcessActionDropdown';
 export { default as ButtonWithConfirmation } from './ButtonWithConfirmation';
