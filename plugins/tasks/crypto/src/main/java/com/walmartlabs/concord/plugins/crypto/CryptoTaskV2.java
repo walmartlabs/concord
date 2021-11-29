@@ -34,6 +34,8 @@ import javax.inject.Named;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -88,6 +90,18 @@ public class CryptoTaskV2 implements Task {
     public String exportAsFile(String orgName, String name, @SensitiveData String password) throws Exception {
         Path path = secretService.exportAsFile(orgName, name, password);
         return workDir.relativize(path).toString();
+    }
+
+    public String exportAsFile(String exportDir, String orgName, String name, @SensitiveData String password) throws Exception {
+        Path path = secretService.exportAsFile(orgName, name, password);
+        Path dest = workDir.resolve(exportDir);
+
+        Files.createDirectories(dest);
+
+        Path destFileName = dest.resolve(path.getFileName());
+        Files.move(path, destFileName, StandardCopyOption.REPLACE_EXISTING);
+
+        return workDir.relativize(destFileName).toString();
     }
 
     public String encryptString(String value) throws Exception {
