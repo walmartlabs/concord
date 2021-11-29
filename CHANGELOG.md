@@ -5,7 +5,9 @@
 ### Added
 
 - runtime-v2: `ignoreErrors` mode support for tasks
-([#484](https://github.com/walmartlabs/concord/pull/484)).
+([#484](https://github.com/walmartlabs/concord/pull/484));
+- file-tasks: new methods - `move`, `relativize`
+([#498](https://github.com/walmartlabs/concord/pull/498)).
 
 ### Changed
 
