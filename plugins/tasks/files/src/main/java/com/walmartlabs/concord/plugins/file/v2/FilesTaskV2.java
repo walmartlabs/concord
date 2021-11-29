@@ -25,8 +25,11 @@ import com.walmartlabs.concord.runtime.v2.sdk.Task;
 
 import javax.inject.Inject;
 import javax.inject.Named;
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 
 @Named("files")
 @SuppressWarnings("unused")
@@ -45,6 +48,22 @@ public class FilesTaskV2 implements Task {
 
     public boolean notExists(String path) {
         return Files.notExists(assertPath(workDir, path));
+    }
+
+    public String moveFile(String source, String targetDir) throws IOException {
+        Path src = assertPath(workDir, source);
+        Path dest = workDir.resolve(targetDir);
+
+        Files.createDirectories(dest);
+
+        Path destFileName = dest.resolve(src.getFileName());
+        Files.move(src, destFileName, StandardCopyOption.REPLACE_EXISTING);
+
+        return workDir.relativize(destFileName).toString();
+    }
+
+    public String relativize(String src, String other) {
+        return workDir.resolve(src).relativize(workDir.resolve(other)).toString();
     }
 
     private static Path assertPath(Path workDir, String path) {
