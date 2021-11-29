@@ -17,7 +17,9 @@ single-fork calls (v2 only)
 ([#488](https://github.com/walmartlabs/concord/pull/488));
 - runtime-v2: fix exception when `MetadataProcessor` called
 after an `exit` step
-([#491](https://github.com/walmartlabs/concord/pull/491)).
+([#491](https://github.com/walmartlabs/concord/pull/491));
+- concord-server: fix concurrent process status update
+([#493](https://github.com/walmartlabs/concord/pull/493)).
 
 ### Breaking
 
