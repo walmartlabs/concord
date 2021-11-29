@@ -31,7 +31,10 @@ the presense of an `error` block in flow calls
 - runtime-v2, docker: replace the `logOutput` parameter with
 a number of new fine-grained controls - `redirectErrorStream`, `logOut`,
 `logErr`, `saveOut` and `saveErr`
-([#489](https://github.com/walmartlabs/concord/pull/489)).
+([#489](https://github.com/walmartlabs/concord/pull/489));
+- concord-server, concord-console: remove the old deprecated
+Ansible UI and related API endpoints
+([#497](https://github.com/walmartlabs/concord/pull/497)).
 
 
 
