@@ -19,7 +19,10 @@ single-fork calls (v2 only)
 after an `exit` step
 ([#491](https://github.com/walmartlabs/concord/pull/491));
 - concord-server: fix concurrent process status update
-([#493](https://github.com/walmartlabs/concord/pull/493)).
+([#493](https://github.com/walmartlabs/concord/pull/493));
+- runtime-v2: fixed an issue with variable propagation in
+the presense of an `error` block in flow calls
+([#496](https://github.com/walmartlabs/concord/pull/496)).
 
 ### Breaking
 
