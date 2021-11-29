@@ -27,7 +27,6 @@ import com.walmartlabs.concord.client.ProcessApi;
 import com.walmartlabs.concord.common.ConfigurationUtils;
 import com.walmartlabs.concord.runtime.common.cfg.RunnerConfiguration;
 import com.walmartlabs.concord.runtime.common.injector.InstanceId;
-import com.walmartlabs.concord.runtime.v2.model.Location;
 import com.walmartlabs.concord.runtime.v2.runner.vm.StepCommand;
 import com.walmartlabs.concord.runtime.v2.runner.vm.VMUtils;
 import com.walmartlabs.concord.runtime.v2.sdk.ProcessConfiguration;
@@ -39,7 +38,6 @@ import org.slf4j.LoggerFactory;
 import javax.inject.Inject;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
-import java.util.stream.Collectors;
 
 /**
  * Records updates to the process' metadata.
@@ -67,8 +65,7 @@ public class MetadataProcessor implements ExecutionListener {
     private final int retryCount;
     private final int retryInterval;
 
-    private final AtomicReference<Map<String, Object>> latestMeta = new AtomicReference<>(new HashMap<>());
-    private final AtomicReference<Set<String>> latestInvalidMeta = new AtomicReference<>(new HashSet<>());
+    private final AtomicReference<Map<String, Object>> currentMeta = new AtomicReference<>(new HashMap<>());
 
     @Inject
     public MetadataProcessor(InstanceId processInstanceId,
@@ -93,32 +90,18 @@ public class MetadataProcessor implements ExecutionListener {
             return Result.CONTINUE;
         }
 
-        Map<String, Object> currentProcessVariables = VMUtils.getCombinedLocals(state, threadId);
+        Map<String, Object> vars = VMUtils.getCombinedLocals(state, threadId);
 
-        Map<String, Object> metaValues = varsToValues(metaVariables, currentProcessVariables);
-
-        Map<String, Object> invalidValues = new HashMap<>();
-        Map<String, Object> cleanValues = cleanupValues(metaValues, invalidValues);
-
-        Set<String> newInvalid = new HashSet<>(latestInvalidMeta.get());
-        newInvalid.addAll(invalidValues.keySet());
-        newInvalid.removeAll(cleanValues.keySet());
-
-        invalidValues.keySet().removeAll(latestInvalidMeta.get());
-        invalidValues.forEach((k, v) -> log.info("meta variable '{}' with value '{}' -> ignored (unsupported type: {}). {}", k, v, v.getClass(),
-                Location.toErrorPrefix(((StepCommand<?>) cmd).getStep().getLocation())));
-
-        latestInvalidMeta.set(newInvalid);
-
-        if (cleanValues.isEmpty() || !changed(latestMeta.get(), cleanValues)) {
+        Map<String, Object> meta = filter(vars, metaVariables);
+        if (meta.isEmpty() || !changed(currentMeta.get(), meta)) {
             return Result.CONTINUE;
         }
 
-        latestMeta.set(cleanValues);
+        currentMeta.set(meta);
 
         try {
             ClientUtils.withRetry(retryCount, retryInterval, () -> {
-                processApi.updateMetadata(processInstanceId.getValue(), cleanValues);
+                processApi.updateMetadata(processInstanceId.getValue(), meta);
                 return null;
             });
             return Result.CONTINUE;
@@ -127,50 +110,29 @@ public class MetadataProcessor implements ExecutionListener {
         }
     }
 
-    private static Map<String, Object> varsToValues(Set<String> metaVariables, Map<String, Object> vars) {
-        return metaVariables.stream()
-                .map(v -> {
-                    Object variableValue = ConfigurationUtils.get(vars, v.split("\\."));
-                    if (variableValue == null) {
-                        return null;
-                    }
-                    return new AbstractMap.SimpleEntry<>(v, variableValue);
-                })
-                .filter(Objects::nonNull)
-                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
-    }
+    private static Map<String, Object> filter(Map<String, Object> vars, Set<String> metaVariables) {
+        if (vars.isEmpty()) {
+            return vars;
+        }
 
-    private static Map<String, Object> cleanupValues(Map<String, Object> values, Map<String, Object> invalidValuesAccumulator) {
-        Map<String, Object> result = new HashMap<>(values.size());
-        for (Map.Entry<String, Object> e : values.entrySet()) {
-            String k = e.getKey();
-            Object v = e.getValue();
-            v = unwind(v);
-            if (v.getClass().isPrimitive() || VARIABLE_TYPES.contains(v.getClass())) {
-                result.put(k, v);
+        Map<String, Object> result = new HashMap<>();
+        for (String v : metaVariables) {
+            Object value = ConfigurationUtils.get(vars, v.split("\\."));
+            if (value == null) {
+                continue;
+            }
+
+            if (value.getClass().isPrimitive() || VARIABLE_TYPES.contains(value.getClass())) {
+                result.put(v, value);
             } else {
-                invalidValuesAccumulator.put(k, v);
+                log.debug("meta variable '{}' -> ignored (unsupported type: {})", v, value.getClass());
             }
         }
+
         return result;
     }
 
     private static boolean changed(Map<String, Object> oldMeta, Map<String, Object> newMeta) {
         return !oldMeta.equals(newMeta);
-    }
-
-    @SuppressWarnings("unchecked")
-    private static Object unwind(Object value) {
-        if (!(value instanceof List)) {
-            return value;
-        }
-
-        List<Object> v = (List<Object>) value;
-
-        if (v.isEmpty()) {
-            return null;
-        }
-
-        return unwind(v.get(v.size() - 1));
     }
 }

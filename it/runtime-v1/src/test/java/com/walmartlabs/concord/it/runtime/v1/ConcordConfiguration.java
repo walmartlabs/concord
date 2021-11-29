@@ -44,6 +44,7 @@ public final class ConcordConfiguration {
         } else if (Boolean.parseBoolean(System.getProperty("it.remote.mode"))) {
             concord.mode(ConcordRule.Mode.REMOTE);
             concord.apiToken(System.getProperty("it.remote.token"));
+            concord.apiBaseUrl(System.getProperty("it.remote.baseUrl"));
         } else {
             concord.mode(ConcordRule.Mode.DOCKER);
         }

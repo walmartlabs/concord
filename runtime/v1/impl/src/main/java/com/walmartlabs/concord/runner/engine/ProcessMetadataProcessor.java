@@ -88,7 +88,6 @@ public class ProcessMetadataProcessor {
         Map<String, Object> result = new HashMap<>();
         for (String v : processMetaVariables) {
             Object value = ConfigurationUtils.get(vars, v.split("\\."));
-            value = unwind(value);
             if (value == null) {
                 continue;
             }
@@ -96,24 +95,9 @@ public class ProcessMetadataProcessor {
             if (value.getClass().isPrimitive() || VARIABLE_TYPES.contains(value.getClass())) {
                 result.put(v, value);
             } else {
-                log.info("out variable {} -> ignored (unsupported type: {})", v, value.getClass());
+                log.debug("out variable {} -> ignored (unsupported type: {})", v, value.getClass());
             }
         }
         return result;
-    }
-
-    @SuppressWarnings("unchecked")
-    private static Object unwind(Object value) {
-        if (!(value instanceof List)) {
-            return value;
-        }
-
-        List<Object> v = (List<Object>) value;
-
-        if (v.isEmpty()) {
-            return null;
-        }
-
-        return unwind(v.get(v.size() - 1));
     }
 }
