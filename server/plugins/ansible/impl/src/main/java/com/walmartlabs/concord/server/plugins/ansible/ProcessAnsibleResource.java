@@ -30,7 +30,6 @@ import com.walmartlabs.concord.server.plugins.ansible.jooq.tables.AnsibleHosts;
 import com.walmartlabs.concord.server.plugins.ansible.jooq.tables.AnsiblePlayStats;
 import com.walmartlabs.concord.server.plugins.ansible.jooq.tables.AnsiblePlaybookStats;
 import com.walmartlabs.concord.server.plugins.ansible.jooq.tables.AnsibleTaskStats;
-import com.walmartlabs.concord.server.sdk.ConcordApplicationException;
 import com.walmartlabs.concord.server.sdk.ProcessKey;
 import com.walmartlabs.concord.server.sdk.ProcessKeyCache;
 import com.walmartlabs.concord.server.sdk.metrics.WithTimer;
@@ -47,13 +46,13 @@ import javax.inject.Named;
 import javax.inject.Singleton;
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
 import java.math.BigDecimal;
 import java.time.OffsetDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
-import static com.walmartlabs.concord.server.plugins.ansible.ProcessAnsibleResource.AnsibleHostStatus.*;
+import static com.walmartlabs.concord.server.plugins.ansible.ProcessAnsibleResource.AnsibleHostStatus.FAILED;
+import static com.walmartlabs.concord.server.plugins.ansible.ProcessAnsibleResource.AnsibleHostStatus.UNREACHABLE;
 import static com.walmartlabs.concord.server.plugins.ansible.jooq.Tables.*;
 import static com.walmartlabs.concord.server.plugins.ansible.jooq.tables.AnsibleTaskStats.ANSIBLE_TASK_STATS;
 import static org.jooq.impl.DSL.*;
@@ -152,24 +151,6 @@ public class ProcessAnsibleResource implements Resource {
                 .items(hosts)
                 .hostGroups(hostGroups)
                 .build();
-    }
-
-    /**
-     * Returns Ansible statistics of a specific process.
-     */
-    @GET
-    @ApiOperation("Returns Ansible statistics of a specific process")
-    @Path("/{processInstanceId}/ansible/stats")
-    @Produces(MediaType.APPLICATION_JSON)
-    @WithTimer
-    @Deprecated
-    public AnsibleStatsEntry stats(@PathParam("processInstanceId") UUID processInstanceId) {
-        ProcessKey key = processKeyCache.get(processInstanceId);
-        if (key == null) {
-            throw new ConcordApplicationException("Process instance not found", Response.Status.NOT_FOUND);
-        }
-
-        return ansibleDao.getStats(key.getInstanceId(), key.getCreatedAt());
     }
 
     /**
@@ -295,45 +276,6 @@ public class ProcessAnsibleResource implements Resource {
                                 .skippedCount(r.get(a.SKIPPED_COUNT))
                                 .runningCount(r.get(a.RUNNING_COUNT) < 0 ? 0 : r.get(a.RUNNING_COUNT))
                                 .build());
-            });
-        }
-
-        @Deprecated
-        public AnsibleStatsEntry getStats(UUID instanceId, OffsetDateTime instanceCreatedAt) {
-            return txResult(tx -> {
-                AnsibleHosts a = ANSIBLE_HOSTS.as("a");
-
-                Record8<Integer, BigDecimal, BigDecimal, BigDecimal, BigDecimal, BigDecimal, BigDecimal, String[]> r = tx.select(
-                        countDistinct(a.HOST),
-                        sum(when(a.STATUS.eq(RUNNING.name()), 1).otherwise(0)).as(RUNNING.name()),
-                        sum(when(a.STATUS.eq(CHANGED.name()), 1).otherwise(0)).as(CHANGED.name()),
-                        sum(when(a.STATUS.eq(FAILED.name()), 1).otherwise(0)).as(FAILED.name()),
-                        sum(when(a.STATUS.eq(OK.name()), 1).otherwise(0)).as(OK.name()),
-                        sum(when(a.STATUS.eq(SKIPPED.name()), 1).otherwise(0)).as(SKIPPED.name()),
-                        sum(when(a.STATUS.eq(UNREACHABLE.name()), 1).otherwise(0)).as(UNREACHABLE.name()),
-                        arrayAggDistinct(a.HOST_GROUP))
-                        .from(a)
-                        .where(a.INSTANCE_ID.eq(instanceId).and(a.INSTANCE_CREATED_AT.eq(instanceCreatedAt)))
-                        .fetchOne();
-
-                if (r == null || r.value1() == 0) {
-                    return ImmutableAnsibleStatsEntry.builder()
-                            .uniqueHosts(0)
-                            .addAllHostGroups(Collections.emptyList())
-                            .putAllStats(Collections.emptyMap())
-                            .build();
-                }
-
-                return ImmutableAnsibleStatsEntry.builder()
-                        .uniqueHosts(r.value1())
-                        .putStats(RUNNING, r.value2().intValue())
-                        .putStats(CHANGED, r.value3().intValue())
-                        .putStats(FAILED, r.value4().intValue())
-                        .putStats(OK, r.value5().intValue())
-                        .putStats(SKIPPED, r.value6().intValue())
-                        .putStats(UNREACHABLE, r.value7().intValue())
-                        .addHostGroups(r.value8())
-                        .build();
             });
         }
 
@@ -499,20 +441,6 @@ public class ProcessAnsibleResource implements Resource {
         List<String> hostGroups();
 
         List<AnsibleHostEntry> items();
-    }
-
-    @Value.Immutable
-    @JsonInclude(JsonInclude.Include.NON_NULL)
-    @JsonSerialize(as = ImmutableAnsibleStatsEntry.class)
-    @JsonDeserialize(as = ImmutableAnsibleStatsEntry.class)
-    @Deprecated
-    public interface AnsibleStatsEntry {
-
-        int uniqueHosts();
-
-        Map<AnsibleHostStatus, Integer> stats();
-
-        Set<String> hostGroups();
     }
 
     @Value.Immutable

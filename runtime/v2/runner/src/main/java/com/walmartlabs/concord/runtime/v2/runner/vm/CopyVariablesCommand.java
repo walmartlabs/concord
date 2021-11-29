@@ -24,24 +24,38 @@ import com.walmartlabs.concord.svm.Runtime;
 import com.walmartlabs.concord.svm.*;
 
 import java.io.Serializable;
-import java.util.ArrayList;
 import java.util.List;
+import java.util.function.BiFunction;
 
 /**
  * Copies the specified list of variables from the source frame to the target frame.
  */
 public class CopyVariablesCommand implements Command {
 
+    public interface FrameProducer extends BiFunction<State, ThreadId, Frame>, Serializable {};
+
     private static final long serialVersionUID = 1L;
 
     private final List<String> variables;
-    private final Frame sourceFrame;
-    private final Frame targetFrame;
+    private final FrameProducer sourceFrameProducer;
+    private final FrameProducer targetFrameProducer;
 
     public CopyVariablesCommand(List<String> variables, Frame sourceFrame, Frame targetFrame) {
-        this.variables = new ArrayList<>(variables);
-        this.sourceFrame = sourceFrame;
-        this.targetFrame = targetFrame;
+        this(variables, (state, threadId) -> sourceFrame, (state, threadId) -> targetFrame);
+    }
+
+    public CopyVariablesCommand(List<String> variables, Frame sourceFrame, FrameProducer targetFrameProducer) {
+        this(variables, (state, threadId) -> sourceFrame, targetFrameProducer);
+    }
+
+    public CopyVariablesCommand(List<String> variables, FrameProducer sourceFrameProducer, Frame targetFrame) {
+        this(variables, sourceFrameProducer, (state, threadId) -> targetFrame);
+    }
+
+    public CopyVariablesCommand(List<String> variables, FrameProducer sourceFrameProducer, FrameProducer targetFrameProducer) {
+        this.variables = variables;
+        this.sourceFrameProducer = sourceFrameProducer;
+        this.targetFrameProducer = targetFrameProducer;
     }
 
     @Override
@@ -53,8 +67,8 @@ public class CopyVariablesCommand implements Command {
             return;
         }
 
-        Frame effectiveSourceFrame = sourceFrame != null ? sourceFrame : frame;
-        Frame effectiveTargetFrame = targetFrame != null ? targetFrame : frame;
+        Frame effectiveSourceFrame = sourceFrameProducer.apply(state, threadId);
+        Frame effectiveTargetFrame = targetFrameProducer.apply(state, threadId);
 
         for (String variable : variables) {
             if (effectiveSourceFrame.hasLocal(variable)) {
