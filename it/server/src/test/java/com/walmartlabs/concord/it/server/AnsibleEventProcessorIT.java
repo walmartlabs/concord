@@ -25,7 +25,8 @@ import org.junit.Test;
 
 import java.net.URI;
 import java.util.List;
-import java.util.Map;
+import java.util.UUID;
+import java.util.concurrent.Callable;
 
 import static com.walmartlabs.concord.it.common.ITUtils.archive;
 import static com.walmartlabs.concord.it.common.ServerClient.waitForCompletion;
@@ -52,39 +53,36 @@ public class AnsibleEventProcessorIT extends AbstractServerIT {
 
         AnsibleProcessApi ansibleApi = new AnsibleProcessApi(getApiClient());
 
-        while (true) {
-            AnsibleStatsEntry stats = ansibleApi.stats(pir.getInstanceId());
-            if (match(stats)) {
-                break;
-            }
-            Thread.sleep(1000);
-        }
+        PlaybookEntry playbook = assertPlaybook(ansibleApi, pir.getInstanceId());
+        assertEquals("playbook/hello.yml", playbook.getName());
+        assertEquals(1L, playbook.getHostsCount().longValue());
+        assertEquals(1, playbook.getPlaysCount().intValue());
+
+        PlayInfo play = assertPlay(ansibleApi, pir.getInstanceId(), playbook.getId());
+        assertEquals("local", play.getPlayName());
+        assertEquals(2L, play.getTaskCount().longValue());
     }
 
-    private static boolean match(AnsibleStatsEntry e) {
-        if (e.getUniqueHosts() != 1) {
-            return false;
+    private static PlaybookEntry assertPlaybook(AnsibleProcessApi ansibleApi, UUID instanceId)  throws Exception {
+        List<PlaybookEntry> playbooks = poll(() -> ansibleApi.listPlaybooks(instanceId));
+        assertEquals(1, playbooks.size());
+        return playbooks.get(0);
+    }
+
+    private static PlayInfo assertPlay(AnsibleProcessApi ansibleApi, UUID instanceId, UUID playbookId)  throws Exception {
+        List<PlayInfo> plays = poll(() -> ansibleApi.listPlays(instanceId, playbookId));
+        assertEquals(1, plays.size());
+        return plays.get(0);
+    }
+
+    private static <T> List<T> poll(Callable<List<T>> call) throws Exception {
+        while (true) {
+            List<T> result = call.call();
+            if(result != null && !result.isEmpty()) {
+                return result;
+            }
+
+            Thread.sleep(1000);
         }
-
-        List<String> groups = e.getHostGroups();
-        if (groups == null || groups.size() != 1) {
-            return false;
-        }
-
-        if (!groups.get(0).equals("local")) {
-            return false;
-        }
-
-        Map<String, Integer> stats = e.getStats();
-
-        if (stats.get("OK") != 1) {
-            return false;
-        }
-
-        if (stats.get("SKIPPED") != 0) {
-            return false;
-        }
-
-        return true;
     }
 }
