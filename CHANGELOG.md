@@ -7,7 +7,10 @@
 - runtime-v2: `ignoreErrors` mode support for tasks
 ([#484](https://github.com/walmartlabs/concord/pull/484));
 - file-tasks: new methods - `move`, `relativize`
-([#498](https://github.com/walmartlabs/concord/pull/498)).
+([#498](https://github.com/walmartlabs/concord/pull/498));
+- crypto-v2: allow users to specify `dest` directory when
+calling `exportAsFile`
+([#499](https://github.com/walmartlabs/concord/pull/499)).
 
 ### Changed
 
