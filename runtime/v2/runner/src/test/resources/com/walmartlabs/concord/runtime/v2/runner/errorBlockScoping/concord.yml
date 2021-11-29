@@ -1,0 +1,20 @@
+flows:
+  default:
+    - call: anotherFlow
+      out:
+        - myVar
+    - log: "Hello, ${myVar}!"
+
+  anotherFlow:
+    - try:
+        - call: createMyVar
+          out:
+            - myVar
+        - throw: kapow! kamblamo!
+      error:
+        - log: "caught an error"
+    - log: "myVar should exist: ${myVar}"
+
+  createMyVar:
+    - set:
+        myVar: 'world'

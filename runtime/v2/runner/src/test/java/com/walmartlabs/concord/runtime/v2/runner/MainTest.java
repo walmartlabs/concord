@@ -682,6 +682,29 @@ public class MainTest {
     }
 
     @Test
+    public void testCallFlowWithErrorBlock() throws Exception {
+        deploy("callWithErrorBlock");
+
+        save(ProcessConfiguration.builder()
+                .build());
+
+        byte[] log = run();
+        assertLog(log, ".*variable has been planted.*");
+        assertLog(log, ".*myVar should exist: world.*");
+    }
+
+    @Test
+    public void testVariableVisibilityAfterErrorBlocks() throws Exception {
+        deploy("errorBlockScoping");
+
+        save(ProcessConfiguration.builder()
+                .build());
+
+        byte[] log = run();
+        assertLog(log, ".*Hello, world!.*");
+    }
+
+    @Test
     public void testCallFlowOut() throws Exception {
         deploy("callOut");
 

@@ -84,7 +84,7 @@ public class FlowCallCommand extends StepCommand<FlowCall> {
         if (!opts.outExpr().isEmpty()) {
             processOutVars = new EvalVariablesCommand(ctx, opts.outExpr(), innerFrame);
         } else {
-            processOutVars = new CopyVariablesCommand(opts.out(), innerFrame, null);
+            processOutVars = new CopyVariablesCommand(opts.out(), innerFrame, VMUtils::assertNearestRoot);
         }
 
         // push the out handler first so it executes after the called flow's frame is done

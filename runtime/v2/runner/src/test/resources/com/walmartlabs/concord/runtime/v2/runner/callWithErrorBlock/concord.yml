@@ -1,0 +1,13 @@
+flows:
+  default:
+    - call: createMyVar
+      out:
+        - myVar
+      error:
+        - log: "caught an error"
+    - log: "myVar should exist: ${myVar}"
+
+  createMyVar:
+    - set:
+        myVar: 'world'
+    - log: "variable has been planted"
