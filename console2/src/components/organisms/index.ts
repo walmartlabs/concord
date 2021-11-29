@@ -45,8 +45,6 @@ export { default as OrganizationList } from './OrganizationList';
 export { default as OrganizationOwnerChangeActivity } from './OrganizationOwnerChangeActivity';
 export { default as ProcessActivity } from './ProcessActivity';
 export { default as ProcessAnsibleActivity } from './ansible/ProcessAnsibleActivity';
-export { default as ProcessAnsibleActivityOld } from './ansible/ProcessAnsibleActivityOld';
-export { default as ProcessAnsibleActivitySwitcher } from './ansible/ProcessAnsibleActivitySwitcher';
 export { default as ProcessAttachmentsActivity } from './ProcessAttachmentsActivity';
 export { default as ProcessCheckpointActivity } from './ProcessCheckpointActivity';
 export { default as ProcessChildrenActivity } from './ProcessChildrenActivity';
