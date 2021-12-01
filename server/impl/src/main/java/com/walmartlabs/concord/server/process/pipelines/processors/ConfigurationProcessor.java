@@ -32,6 +32,7 @@ import com.walmartlabs.concord.server.org.project.ProjectDao;
 import com.walmartlabs.concord.server.org.project.ProjectEntry;
 import com.walmartlabs.concord.server.process.Payload;
 import com.walmartlabs.concord.server.process.ProcessException;
+import com.walmartlabs.concord.server.process.ProcessKind;
 import com.walmartlabs.concord.server.process.keys.AttachmentKey;
 import com.walmartlabs.concord.server.process.pipelines.processors.cfg.ProcessConfigurationUtils;
 
@@ -110,6 +111,9 @@ public class ConfigurationProcessor implements PayloadProcessor {
         // create the resulting configuration
         Map<String, Object> m = ConfigurationUtils.deepMerge(defCfg, policyDefCfg, orgCfg, projectCfg, profileCfg, workspaceCfg, attachedCfg, payloadCfg, providedCfg, policyCfg);
         m.put(Constants.Request.ACTIVE_PROFILES_KEY, activeProfiles);
+
+        // handle handlers special params
+        processHandlersConfiguration(payload, m);
 
         payload = payload.putHeader(Payload.CONFIGURATION, m);
 
@@ -211,6 +215,20 @@ public class ConfigurationProcessor implements PayloadProcessor {
             return om.readValue(in, Map.class);
         } catch (IOException e) {
             throw new ProcessException(payload.getProcessKey(), "Invalid request data format", e, Status.BAD_REQUEST);
+        }
+    }
+
+    private static void processHandlersConfiguration(Payload payload, Map<String, Object> m) {
+        ProcessKind processKind = payload.getHeader(Payload.PROCESS_KIND);
+        if (processKind != ProcessKind.FAILURE_HANDLER &&
+                processKind != ProcessKind.CANCEL_HANDLER &&
+                processKind != ProcessKind.TIMEOUT_HANDLER) {
+            return;
+        }
+
+        Object handlerTimeout = m.get(Constants.Request.HANDLER_PROCESS_TIMEOUT);
+        if (handlerTimeout != null) {
+            m.put(Constants.Request.PROCESS_TIMEOUT, handlerTimeout);
         }
     }
 }
