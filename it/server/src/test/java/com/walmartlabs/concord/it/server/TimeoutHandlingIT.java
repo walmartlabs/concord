@@ -28,6 +28,7 @@ import static com.walmartlabs.concord.it.common.ServerClient.*;
 import static com.walmartlabs.concord.it.common.ServerClient.assertLog;
 
 public class TimeoutHandlingIT extends AbstractServerIT {
+
     @Test(timeout = DEFAULT_TEST_TIMEOUT)
     public void testTimeout() throws Exception {
         ProcessApi processApi = new ProcessApi(getApiClient());

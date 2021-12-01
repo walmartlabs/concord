@@ -1,5 +1,6 @@
 configuration:
   processTimeout: "PT1S"
+  handlerProcessTimeout: "PT1M"
   entryPoint: main
 
 flows:
