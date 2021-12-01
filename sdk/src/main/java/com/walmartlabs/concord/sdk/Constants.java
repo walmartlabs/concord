@@ -214,6 +214,11 @@ public class Constants {
         public static final String PROCESS_TIMEOUT = "processTimeout";
 
         /**
+         * Handler process timeout.
+         */
+        public static final String HANDLER_PROCESS_TIMEOUT = "handlerProcessTimeout";
+
+        /**
          * Timeout for process in Suspended state.
          */
         public static final String SUSPEND_TIMEOUT = "suspendTimeout";
