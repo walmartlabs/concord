@@ -10,7 +10,11 @@
 ([#498](https://github.com/walmartlabs/concord/pull/498));
 - crypto-v2: allow users to specify `dest` directory when
 calling `exportAsFile`
-([#499](https://github.com/walmartlabs/concord/pull/499)).
+([#499](https://github.com/walmartlabs/concord/pull/499));
+- concord-server: allow users to override timeout for error
+handlers using new process configuration property
+`handlerProcessTimeout`
+([#501](https://github.com/walmartlabs/concord/pull/501)).
 
 ### Changed
 
