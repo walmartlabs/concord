@@ -1,4 +1,4 @@
-package com.walmartlabs.concord.server.ansible;
+package com.walmartlabs.concord.server.plugins.ansible.queue;
 
 /*-
  * *****
@@ -25,10 +25,12 @@ import com.walmartlabs.concord.server.process.ProcessException;
 import com.walmartlabs.concord.server.process.keys.AttachmentKey;
 import com.walmartlabs.concord.server.process.logs.ProcessLogManager;
 import com.walmartlabs.concord.server.process.pipelines.processors.Chain;
+import com.walmartlabs.concord.server.process.pipelines.processors.CustomEnqueueProcessor;
 import com.walmartlabs.concord.server.process.pipelines.processors.PayloadProcessor;
 import com.walmartlabs.concord.server.sdk.ProcessKey;
 
 import javax.inject.Inject;
+import javax.inject.Named;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -39,8 +41,9 @@ import java.nio.file.Path;
  * This processor takes an inventory file from a request and stores it in a request's workspace
  * for {@code com.walmartlabs.concord.plugins.ansible.RunPlaybookTask2} to pick it up later.
  */
+@Named
 @Deprecated
-public class InventoryProcessor implements PayloadProcessor {
+public class InventoryProcessor implements CustomEnqueueProcessor {
 
     public static final AttachmentKey INVENTORY_FILE = AttachmentKey.register("inventory");
     public static final AttachmentKey DYNAMIC_INVENTORY_FILE = AttachmentKey.register("dynamicInventory");
@@ -56,10 +59,10 @@ public class InventoryProcessor implements PayloadProcessor {
     }
 
     @Override
-    public Payload process(Chain chain, Payload payload) {
+    public Payload process(Payload payload) {
         if (!copy(payload, INVENTORY_FILE, INVENTORY_FILE_NAME)) {
             if (!copy(payload, DYNAMIC_INVENTORY_FILE, DYNAMIC_INVENTORY_FILE_NAME)) {
-                return chain.process(payload);
+                return payload;
             }
         }
 
@@ -68,7 +71,7 @@ public class InventoryProcessor implements PayloadProcessor {
         payload = payload.removeAttachment(INVENTORY_FILE)
                 .removeAttachment(DYNAMIC_INVENTORY_FILE);
 
-        return chain.process(payload);
+        return payload;
     }
 
     private boolean copy(Payload payload, AttachmentKey src, String dstName) {

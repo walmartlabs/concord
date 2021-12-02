@@ -1,10 +1,10 @@
-package com.walmartlabs.concord.server.ansible;
+package com.walmartlabs.concord.server.process.pipelines.processors;
 
 /*-
  * *****
  * Concord
  * -----
- * Copyright (C) 2017 - 2018 Walmart Inc.
+ * Copyright (C) 2017 - 2021 Walmart Inc.
  * -----
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,15 +20,9 @@ package com.walmartlabs.concord.server.ansible;
  * =====
  */
 
+import com.walmartlabs.concord.server.process.Payload;
 
-@Deprecated
-public final class AnsibleConfigurationConstants {
+public interface CustomEnqueueProcessor {
 
-    public static final String GROUP_KEY = "ansible";
-    public static final String PRIVATE_KEYS = "privateKeys";
-    public static final String SECRET_KEY = "secret";
-    public static final String REPOSITORY_KEY = "repository";
-
-    private AnsibleConfigurationConstants() {
-    }
+    Payload process(Payload payload);
 }
