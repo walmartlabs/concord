@@ -35,6 +35,7 @@ import com.walmartlabs.concord.ApiClient;
 import com.walmartlabs.concord.client.ApiClientConfiguration;
 import com.walmartlabs.concord.client.ApiClientFactory;
 import com.walmartlabs.concord.client.ProcessEntry;
+import com.walmartlabs.concord.common.ConfigurationUtils;
 import com.walmartlabs.concord.common.IOUtils;
 import com.walmartlabs.concord.imports.ImportsListener;
 import com.walmartlabs.concord.imports.NoopImportManager;
@@ -118,6 +119,7 @@ public class Main {
 
         // read the process configuration
         Map<String, Object> processCfg = readRequest(baseDir);
+        processCfg = convertV2DefaultVarsIntoV1(processCfg);
 
         String sessionToken = getSessionToken(processCfg);
         ApiClient apiClient = apiClientFactory.create(ApiClientConfiguration.builder()
@@ -140,6 +142,25 @@ public class Main {
         }
 
         executeProcess(instanceId.toString(), checkpointManager, baseDir, processCfg);
+    }
+
+    private Map<String, Object> convertV2DefaultVarsIntoV1(Map<String, Object> processCfg) {
+        Map<String, Object> v2Defaults = MapUtils.getMap(processCfg, "defaultTaskVariables", Collections.emptyMap());
+        Map<String, Object> v1Defaults = new HashMap<>(v2Defaults);
+
+        // v1 version of plugins expects default vars as `tasknameParams`
+        // v2 version: only `taskname`
+        for (Map.Entry<String, Object> e : v2Defaults.entrySet()) {
+            if (!(e.getKey().endsWith("Params"))) {
+                v1Defaults.put(e.getKey() + "Params", e.getValue());
+            }
+        }
+
+        Map<String, Object> arguments = MapUtils.getMap(processCfg, Constants.Request.ARGUMENTS_KEY, Collections.emptyMap());
+
+        Map<String, Object> result = new HashMap<>(processCfg);
+        result.put(Constants.Request.ARGUMENTS_KEY, ConfigurationUtils.deepMerge(v1Defaults, arguments));
+        return result;
     }
 
     private void executeProcess(String instanceId, CheckpointManager checkpointManager, Path baseDir, Map<String, Object> processCfg) throws ExecutionException {

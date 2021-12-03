@@ -26,7 +26,6 @@ import com.walmartlabs.concord.policyengine.PolicyEngine;
 import com.walmartlabs.concord.process.loader.model.ProcessDefinition;
 import com.walmartlabs.concord.process.loader.model.ProcessDefinitionUtils;
 import com.walmartlabs.concord.sdk.Constants;
-import com.walmartlabs.concord.sdk.MapUtils;
 import com.walmartlabs.concord.server.org.OrganizationDao;
 import com.walmartlabs.concord.server.org.project.ProjectDao;
 import com.walmartlabs.concord.server.org.project.ProjectEntry;
@@ -43,7 +42,10 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.*;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 
 /**
  * Responsible for preparing the process' {@code configuration} object.
@@ -66,10 +68,6 @@ public class ConfigurationProcessor implements PayloadProcessor {
     public Payload process(Chain chain, Payload payload) {
         // default configuration from policy
         Map<String, Object> policyDefCfg = getDefaultCfgFromPolicy(payload);
-        // v1 version of plugins expects default vars as `tasknameParams`
-        // v2 version: only `taskname`
-        // we can create v1 default vars from v2 so users do not needed to provide two default variables
-        policyDefCfg = appendV1VariablesFromV2(policyDefCfg);
 
         // org configuration
         Map<String, Object> orgCfg = getOrgCfg(payload);
@@ -223,22 +221,5 @@ public class ConfigurationProcessor implements PayloadProcessor {
         if (handlerTimeout != null) {
             m.put(Constants.Request.PROCESS_TIMEOUT, handlerTimeout);
         }
-    }
-
-    private Map<String, Object> appendV1VariablesFromV2(Map<String, Object> vars) {
-        Map<String, Object> result = new HashMap<>(vars);
-        Map<String, Object> arguments = new HashMap<>(MapUtils.getMap(vars, "arguments", Collections.emptyMap()));
-        Map<String, Object> defaults = MapUtils.getMap(vars, "defaultTaskVariables", Collections.emptyMap());
-        for (Map.Entry<String, Object> e : defaults.entrySet()) {
-            if (!(e.getKey().endsWith("Params"))) {
-                arguments.put(e.getKey() + "Params", e.getValue());
-            }
-        }
-
-        if (!arguments.isEmpty()) {
-            result.put("arguments", arguments);
-        }
-
-        return result;
     }
 }
