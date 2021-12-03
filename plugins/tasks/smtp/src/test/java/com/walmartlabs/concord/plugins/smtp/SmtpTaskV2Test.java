@@ -62,7 +62,7 @@ public class SmtpTaskV2Test {
         Context ctx = mock(Context.class);
         when(ctx.workingDirectory()).thenReturn(Paths.get(System.getProperty("user.dir")));
         when(ctx.variables()).thenReturn(new MapBackedVariables(Collections.emptyMap()));
-        when(ctx.defaultVariables()).thenReturn(new MapBackedVariables(Collections.singletonMap("smtpParams", smtpParams)));
+        when(ctx.defaultVariables()).thenReturn(new MapBackedVariables(smtpParams));
 
         SmtpTaskV2 t = new SmtpTaskV2(ctx);
         t.execute(new MapBackedVariables(Collections.singletonMap("mail", mail)));
@@ -115,7 +115,7 @@ public class SmtpTaskV2Test {
         Context ctx = mock(Context.class);
         when(ctx.workingDirectory()).thenReturn(Paths.get(System.getProperty("user.dir")));
         when(ctx.variables()).thenReturn(new MapBackedVariables(Collections.singletonMap("smtpParams", processArgsDefaults)));
-        when(ctx.defaultVariables()).thenReturn(new MapBackedVariables(Collections.singletonMap("smtpParams", policyDefaults)));
+        when(ctx.defaultVariables()).thenReturn(new MapBackedVariables(policyDefaults));
 
         SmtpTaskV2 t = new SmtpTaskV2(ctx);
         t.execute(new MapBackedVariables(Collections.singletonMap("mail", mail)));
