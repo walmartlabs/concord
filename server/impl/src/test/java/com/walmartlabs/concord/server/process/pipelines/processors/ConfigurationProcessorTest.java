@@ -23,7 +23,6 @@ package com.walmartlabs.concord.server.process.pipelines.processors;
 import com.walmartlabs.concord.policyengine.PolicyEngine;
 import com.walmartlabs.concord.policyengine.PolicyEngineRules;
 import com.walmartlabs.concord.sdk.Constants;
-import com.walmartlabs.concord.server.cfg.DefaultProcessConfiguration;
 import com.walmartlabs.concord.server.org.OrganizationDao;
 import com.walmartlabs.concord.server.org.project.ProjectDao;
 import com.walmartlabs.concord.server.org.project.ProjectEntry;
@@ -57,9 +56,7 @@ public class ConfigurationProcessorTest {
     public void init() {
         projectDao = mock(ProjectDao.class);
         orgDao = mock(OrganizationDao.class);
-
-        DefaultProcessConfiguration defaultCfg = mock(DefaultProcessConfiguration.class);
-        p = new ConfigurationProcessor(projectDao, orgDao, defaultCfg);
+        p = new ConfigurationProcessor(projectDao, orgDao);
     }
 
     @Test

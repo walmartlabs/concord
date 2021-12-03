@@ -26,7 +26,7 @@ import com.walmartlabs.concord.policyengine.PolicyEngine;
 import com.walmartlabs.concord.process.loader.model.ProcessDefinition;
 import com.walmartlabs.concord.process.loader.model.ProcessDefinitionUtils;
 import com.walmartlabs.concord.sdk.Constants;
-import com.walmartlabs.concord.server.cfg.DefaultProcessConfiguration;
+import com.walmartlabs.concord.sdk.MapUtils;
 import com.walmartlabs.concord.server.org.OrganizationDao;
 import com.walmartlabs.concord.server.org.project.ProjectDao;
 import com.walmartlabs.concord.server.org.project.ProjectEntry;
@@ -43,10 +43,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 
 /**
  * Responsible for preparing the process' {@code configuration} object.
@@ -58,25 +55,21 @@ public class ConfigurationProcessor implements PayloadProcessor {
 
     private final ProjectDao projectDao;
     private final OrganizationDao orgDao;
-    private final DefaultProcessConfiguration defaultCfg;
 
     @Inject
-    public ConfigurationProcessor(ProjectDao projectDao, OrganizationDao orgDao, DefaultProcessConfiguration defaultCfg) {
+    public ConfigurationProcessor(ProjectDao projectDao, OrganizationDao orgDao) {
         this.projectDao = projectDao;
         this.orgDao = orgDao;
-        this.defaultCfg = defaultCfg;
     }
 
     @Override
     public Payload process(Chain chain, Payload payload) {
-        // system-level default configuration
-        Map<String, Object> defCfg = Collections.emptyMap();
-        if (!"concord-v2".equalsIgnoreCase(payload.getHeader(Payload.RUNTIME))) {
-            defCfg = defaultCfg.getCfg();
-        }
-
         // default configuration from policy
         Map<String, Object> policyDefCfg = getDefaultCfgFromPolicy(payload);
+        // v1 version of plugins expects default vars as `tasknameParams`
+        // v2 version: only `taskname`
+        // we can create v1 default vars from v2 so users do not needed to provide two default variables
+        policyDefCfg = appendV1VariablesFromV2(policyDefCfg);
 
         // org configuration
         Map<String, Object> orgCfg = getOrgCfg(payload);
@@ -109,7 +102,7 @@ public class ConfigurationProcessor implements PayloadProcessor {
         Map<String, Object> policyCfg = getPolicyCfg(payload);
 
         // create the resulting configuration
-        Map<String, Object> m = ConfigurationUtils.deepMerge(defCfg, policyDefCfg, orgCfg, projectCfg, profileCfg, workspaceCfg, attachedCfg, payloadCfg, providedCfg, policyCfg);
+        Map<String, Object> m = ConfigurationUtils.deepMerge(policyDefCfg, orgCfg, projectCfg, profileCfg, workspaceCfg, attachedCfg, payloadCfg, providedCfg, policyCfg);
         m.put(Constants.Request.ACTIVE_PROFILES_KEY, activeProfiles);
 
         // handle handlers special params
@@ -230,5 +223,22 @@ public class ConfigurationProcessor implements PayloadProcessor {
         if (handlerTimeout != null) {
             m.put(Constants.Request.PROCESS_TIMEOUT, handlerTimeout);
         }
+    }
+
+    private Map<String, Object> appendV1VariablesFromV2(Map<String, Object> vars) {
+        Map<String, Object> result = new HashMap<>(vars);
+        Map<String, Object> arguments = new HashMap<>(MapUtils.getMap(vars, "arguments", Collections.emptyMap()));
+        Map<String, Object> defaults = MapUtils.getMap(vars, "defaultTaskVariables", Collections.emptyMap());
+        for (Map.Entry<String, Object> e : defaults.entrySet()) {
+            if (!(e.getKey().endsWith("Params"))) {
+                arguments.put(e.getKey() + "Params", e.getValue());
+            }
+        }
+
+        if (!arguments.isEmpty()) {
+            result.put("arguments", arguments);
+        }
+
+        return result;
     }
 }
