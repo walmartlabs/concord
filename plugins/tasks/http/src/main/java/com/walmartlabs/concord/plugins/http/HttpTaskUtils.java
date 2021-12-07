@@ -33,6 +33,8 @@ import org.apache.http.entity.mime.content.AbstractContentBody;
 import org.apache.http.entity.mime.content.FileBody;
 import org.apache.http.entity.mime.content.StringBody;
 import org.apache.http.message.BasicNameValuePair;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -46,6 +48,8 @@ import static com.walmartlabs.concord.plugins.http.HttpTask.HttpTaskConstant.*;
  * Utility class which contains helper methods for {@link HttpTask}
  */
 public final class HttpTaskUtils {
+
+    private static final Logger log = LoggerFactory.getLogger(HttpTaskUtils.class);
 
     /**
      * Method to get the basic authorization header entry using the basic authorization params provided in the concord.yml
@@ -190,6 +194,7 @@ public final class HttpTaskUtils {
         try {
             om.readTree(body);
         } catch (IOException e) {
+            log.error("invalid json body '{}': {}", body, e.getMessage());
             return false;
         }
 
