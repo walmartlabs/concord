@@ -31,6 +31,7 @@ public enum AuditObject {
     ORGANIZATION,
     POLICY,
     PROJECT,
+    PROCESS,
     ROLE,
     SECRET,
     SYSTEM,

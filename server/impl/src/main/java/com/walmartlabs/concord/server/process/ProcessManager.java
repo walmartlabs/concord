@@ -20,8 +20,12 @@ package com.walmartlabs.concord.server.process;
  * =====
  */
 
+import com.walmartlabs.concord.runtime.v2.model.ExclusiveMode;
 import com.walmartlabs.concord.sdk.Constants;
 import com.walmartlabs.concord.server.agent.AgentManager;
+import com.walmartlabs.concord.server.audit.AuditAction;
+import com.walmartlabs.concord.server.audit.AuditLog;
+import com.walmartlabs.concord.server.audit.AuditObject;
 import com.walmartlabs.concord.server.org.ResourceAccessLevel;
 import com.walmartlabs.concord.server.org.project.ProjectAccessManager;
 import com.walmartlabs.concord.server.org.project.RepositoryDao;
@@ -32,7 +36,6 @@ import com.walmartlabs.concord.server.process.pipelines.NewProcessPipeline;
 import com.walmartlabs.concord.server.process.pipelines.ResumePipeline;
 import com.walmartlabs.concord.server.process.pipelines.processors.Chain;
 import com.walmartlabs.concord.server.process.queue.ProcessQueueDao;
-import com.walmartlabs.concord.server.process.queue.ProcessQueueDao.IdAndStatus;
 import com.walmartlabs.concord.server.process.queue.ProcessQueueManager;
 import com.walmartlabs.concord.server.process.state.ProcessCheckpointManager;
 import com.walmartlabs.concord.server.process.state.ProcessStateManager;
@@ -44,6 +47,7 @@ import com.walmartlabs.concord.server.security.Roles;
 import com.walmartlabs.concord.server.security.UserPrincipal;
 import com.walmartlabs.concord.server.security.sessionkey.SessionKeyPrincipal;
 import org.apache.shiro.authz.UnauthorizedException;
+import org.jooq.DSLContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -56,6 +60,7 @@ import java.io.Serializable;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import static com.walmartlabs.concord.server.agent.AgentManager.KeyAndAgent;
 import static com.walmartlabs.concord.server.process.state.ProcessStateManager.path;
 
 @Named
@@ -72,6 +77,7 @@ public class ProcessManager {
     private final PayloadManager payloadManager;
     private final RepositoryDao repositoryDao;
     private final ProcessQueueManager queueManager;
+    private final AuditLog auditLog;
 
     private final Chain processPipeline;
     private final Chain resumePipeline;
@@ -111,6 +117,7 @@ public class ProcessManager {
                           PayloadManager payloadManager,
                           RepositoryDao repositoryDao,
                           ProcessQueueManager queueManager,
+                          AuditLog auditLog,
                           NewProcessPipeline processPipeline,
                           ResumePipeline resumePipeline,
                           ForkPipeline forkPipeline) {
@@ -124,6 +131,7 @@ public class ProcessManager {
         this.checkpointManager = checkpointManager;
         this.payloadManager = payloadManager;
         this.repositoryDao = repositoryDao;
+        this.auditLog = auditLog;
 
         this.processPipeline = processPipeline;
         this.resumePipeline = resumePipeline;
@@ -156,27 +164,66 @@ public class ProcessManager {
         if (TERMINATED_PROCESS_STATUSES.contains(s)) {
             queueDao.disable(processKey, disabled);
         }
-
     }
 
     public void kill(ProcessKey processKey) {
-        ProcessEntry e = queueDao.get(processKey);
-        if (e == null) {
+        queueDao.tx(tx -> kill(tx, processKey));
+    }
+
+    public void kill(DSLContext tx, ProcessKey processKey) {
+        ProcessEntry process = queueDao.get(tx, processKey, Collections.emptySet());
+        if (process == null) {
             throw new ProcessException(null, "Process not found: " + processKey, Status.NOT_FOUND);
         }
 
-        assertKillOrDisableRights(e);
+        assertKillOrDisableRights(process);
 
-        ProcessStatus s = e.status();
+        kill(tx, process);
+    }
+
+    public void kill(DSLContext tx, ProcessEntry process) {
+        ProcessStatus s = process.status();
         if (TERMINATED_PROCESS_STATUSES.contains(s)) {
             return;
         }
 
-        if (cancel(processKey, s, SERVER_PROCESS_STATUSES)) {
-            return;
+        boolean cancelled = false;
+        boolean isServerProcess = SERVER_PROCESS_STATUSES.contains(s);
+        if (isServerProcess) {
+            cancelled = queueManager.updateExpectedStatus(tx, new ProcessKey(process.instanceId(), process.createdAt()), process.status(), ProcessStatus.CANCELLED);
         }
 
-        agentManager.killProcess(processKey);
+        if (!cancelled) {
+            agentManager.killProcess(tx, new ProcessKey(process.instanceId(), process.createdAt()), process.lastAgentId());
+        }
+
+        auditLogOnCancelled(process);
+    }
+
+    public void kill(DSLContext tx, List<ProcessKey> processKeys) {
+        // TODO: better way
+        List<ProcessEntry> processes = processKeys.stream()
+                .map(k -> queueDao.get(tx, k, Collections.emptySet()))
+                .collect(Collectors.toList());
+
+        List<ProcessEntry> serverProcesses = filterProcesses(processes, SERVER_PROCESS_STATUSES);
+        if (!serverProcesses.isEmpty()) {
+            List<ProcessKey> serverProcessKeys = serverProcesses.stream()
+                    .map(p -> new ProcessKey(p.instanceId(), p.createdAt()))
+                    .collect(Collectors.toList());
+
+            List<ProcessKey> updated = queueManager.updateExpectedStatus(tx, serverProcessKeys, SERVER_PROCESS_STATUSES, ProcessStatus.CANCELLED);
+            serverProcesses.stream()
+                    .filter(p -> updated.contains(new ProcessKey(p.instanceId(), p.createdAt())))
+                    .forEach(this::auditLogOnCancelled);
+        }
+
+        List<ProcessEntry> agentProcesses = filterProcesses(processes, AGENT_PROCESS_STATUSES);
+        if (!agentProcesses.isEmpty()) {
+            agentManager.killProcess(agentProcesses.stream().map(p -> new KeyAndAgent(new ProcessKey(p.instanceId(), p.createdAt()), p.lastAgentId())).collect(Collectors.toList()));
+
+            agentProcesses.forEach(this::auditLogOnCancelled);
+        }
     }
 
     public void killCascade(PartialProcessKey processKey) {
@@ -187,18 +234,8 @@ public class ProcessManager {
 
         assertKillOrDisableRights(e);
 
-        List<IdAndStatus> l = null;
-        boolean updated = false;
-        while (!updated) {
-            l = queueDao.getCascade(processKey);
-            List<ProcessKey> keys = filterProcessKeys(l, SERVER_PROCESS_STATUSES);
-            updated = keys.isEmpty() || queueManager.updateExpectedStatus(keys, SERVER_PROCESS_STATUSES, ProcessStatus.CANCELLED);
-        }
-
-        List<ProcessKey> keys = filterProcessKeys(l, AGENT_PROCESS_STATUSES);
-        if (!keys.isEmpty()) {
-            agentManager.killProcess(keys);
-        }
+        List<ProcessKey> allProcesses = queueDao.getCascade(processKey);
+        queueDao.tx(tx -> kill(tx, allProcesses));
     }
 
     public void restoreFromCheckpoint(ProcessKey processKey, UUID checkpointId) {
@@ -266,6 +303,10 @@ public class ProcessManager {
         return p;
     }
 
+    public void updateExclusive(DSLContext tx, ProcessKey processKey, ExclusiveMode exclusive) {
+        queueDao.updateExclusive(tx, processKey, exclusive);
+    }
+
     private boolean isSuspended(ProcessKey processKey) {
         String resource = path(Constants.Files.JOB_ATTACHMENTS_DIR_NAME,
                 Constants.Files.JOB_STATE_DIR_NAME,
@@ -313,18 +354,6 @@ public class ProcessManager {
         }
     }
 
-    private boolean cancel(ProcessKey processKey, ProcessStatus current, List<ProcessStatus> expected) {
-        boolean found = false;
-        for (ProcessStatus s : expected) {
-            if (current == s) {
-                found = true;
-                break;
-            }
-        }
-
-        return found && queueManager.updateExpectedStatus(processKey, current, ProcessStatus.CANCELLED);
-    }
-
     private void assertKillOrDisableRights(ProcessEntry e) {
         if (Roles.isAdmin()) {
             return;
@@ -364,10 +393,18 @@ public class ProcessManager {
                 "to update the process status: " + processKey);
     }
 
-    private static List<ProcessKey> filterProcessKeys(List<IdAndStatus> l, List<ProcessStatus> expected) {
+    public void auditLogOnCancelled(ProcessEntry p) {
+        auditLog.add(AuditObject.PROCESS, AuditAction.DELETE)
+                .field("instanceId", p.instanceId())
+                .field("status", p.status())
+                .field("orgId", p.orgId())
+                .field("projectId", p.projectId())
+                .log();
+    }
+
+    private static List<ProcessEntry> filterProcesses(List<ProcessEntry> l, List<ProcessStatus> expected) {
         return l.stream()
-                .filter(r -> expected.contains(r.getStatus()))
-                .map(IdAndStatus::getProcessKey)
+                .filter(r -> expected.contains(r.status()))
                 .collect(Collectors.toList());
     }
 
