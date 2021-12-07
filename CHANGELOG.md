@@ -33,7 +33,9 @@ after an `exit` step
 ([#493](https://github.com/walmartlabs/concord/pull/493));
 - runtime-v2: fixed an issue with variable propagation in
 the presense of an `error` block in flow calls
-([#496](https://github.com/walmartlabs/concord/pull/496)).
+([#496](https://github.com/walmartlabs/concord/pull/496));
+- runtime-v1, runtime-v2: tone down the metadata processor's
+logs ([#500](https://github.com/walmartlabs/concord/pull/500)).
 
 ### Breaking
 
