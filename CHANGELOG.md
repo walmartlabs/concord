@@ -6,6 +6,8 @@
 
 - runtime-v2: `ignoreErrors` mode support for tasks
 ([#484](https://github.com/walmartlabs/concord/pull/484));
+- concord-server: record audit log when processes are
+cancelled ([#495](https://github.com/walmartlabs/concord/pull/495));
 - file-tasks: new methods - `move`, `relativize`
 ([#498](https://github.com/walmartlabs/concord/pull/498));
 - crypto-v2: allow users to specify `dest` directory when
