@@ -173,14 +173,14 @@ public class ProcessQueueManager {
      *
      * @return {@code true} if every processes was updated
      */
-    public boolean updateExpectedStatus(List<ProcessKey> processKeys, List<ProcessStatus> expected, ProcessStatus status) {
-        return queueDao.txResult(tx -> {
-            boolean success = queueDao.updateStatus(processKeys, expected, status);
-            if (success) {
-                notifyStatusChange(tx, processKeys, status);
-            }
-            return success;
-        });
+    public List<ProcessKey> updateExpectedStatus(DSLContext tx, List<ProcessKey> processKeys, List<ProcessStatus> expected, ProcessStatus status) {
+        if (processKeys.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        List<ProcessKey> updated = queueDao.updateStatus(processKeys, expected, status);
+        notifyStatusChange(tx, updated, status);
+        return updated;
     }
 
     /**
@@ -196,10 +196,6 @@ public class ProcessQueueManager {
     public void updateAgentId(DSLContext tx, ProcessKey processKey, String agentId, ProcessStatus status) {
         queueDao.updateAgentId(tx, processKey, agentId, status);
         notifyStatusChange(tx, processKey, status);
-    }
-
-    public void updateExclusive(DSLContext tx, ProcessKey processKey, ExclusiveMode exclusive) {
-        queueDao.updateExclusive(tx, processKey, exclusive);
     }
 
     public ProcessEntry get(PartialProcessKey partialProcessKey) {
