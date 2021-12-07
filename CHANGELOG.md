@@ -50,7 +50,10 @@ a number of new fine-grained controls - `redirectErrorStream`, `logOut`,
 ([#489](https://github.com/walmartlabs/concord/pull/489));
 - concord-server, concord-console: remove the old deprecated
 Ansible UI and related API endpoints
-([#497](https://github.com/walmartlabs/concord/pull/497)).
+([#497](https://github.com/walmartlabs/concord/pull/497));
+- concord-server: remove support for `process.defaultConfiguration`
+configuration parameter. This effectively removes concord-server's
+support of default process variable files (#504).
 
 
 
