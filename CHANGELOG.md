@@ -1,5 +1,66 @@
 # Change log
 
+## [Unreleased]
+
+### Added
+
+- runtime-v2: `ignoreErrors` mode support for tasks
+([#484](https://github.com/walmartlabs/concord/pull/484));
+- concord-server: record audit log when processes are
+cancelled ([#495](https://github.com/walmartlabs/concord/pull/495));
+- file-tasks: new methods - `move`, `relativize`
+([#498](https://github.com/walmartlabs/concord/pull/498));
+- crypto-v2: allow users to specify `dest` directory when
+calling `exportAsFile`
+([#499](https://github.com/walmartlabs/concord/pull/499));
+- concord-server: allow users to override timeout for error
+handlers using new process configuration property
+`handlerProcessTimeout`
+([#501](https://github.com/walmartlabs/concord/pull/501));
+- http-tasks: log invalid JSON bodies and parse errors
+([#505](https://github.com/walmartlabs/concord/pull/505)).
+
+### Changed
+
+- docker: fixed the behavior of `stdout` parameter
+([#472](https://github.com/walmartlabs/concord/pull/472));
+- concord-task: fix `suspendForCompletion` action in the v2
+version of the task
+([#488](https://github.com/walmartlabs/concord/pull/488));
+- concord-task: return fork IDs in the `ids` variable even for
+single-fork calls (v2 only)
+([#488](https://github.com/walmartlabs/concord/pull/488));
+- runtime-v2: fix exception when `MetadataProcessor` called
+after an `exit` step
+([#491](https://github.com/walmartlabs/concord/pull/491));
+- concord-server: fix concurrent process status update
+([#493](https://github.com/walmartlabs/concord/pull/493));
+- runtime-v2: fixed an issue with variable propagation in
+the presense of an `error` block in flow calls
+([#496](https://github.com/walmartlabs/concord/pull/496));
+- runtime-v1, runtime-v2: tone down the metadata processor's
+logs ([#500](https://github.com/walmartlabs/concord/pull/500));
+- smtp-tasks: simplify default variables, allow `host` and
+`port` parameters without nesting into `smtpParams`
+([#503](https://github.com/walmartlabs/concord/pull/503)).
+
+### Breaking
+
+- concord-task: return process IDs as `String` instead of `UUID`
+([#488](https://github.com/walmartlabs/concord/pull/488)).
+- runtime-v2, docker: replace the `logOutput` parameter with
+a number of new fine-grained controls - `redirectErrorStream`, `logOut`,
+`logErr`, `saveOut` and `saveErr`
+([#489](https://github.com/walmartlabs/concord/pull/489));
+- concord-server, concord-console: remove the old deprecated
+Ansible UI and related API endpoints
+([#497](https://github.com/walmartlabs/concord/pull/497));
+- concord-server: remove support for `process.defaultConfiguration`
+configuration parameter. This effectively removes concord-server's
+support of default process variable files (#504).
+
+
+
 ## [1.91.0] - 2021-11-05
 
 ### Added
