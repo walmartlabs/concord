@@ -246,10 +246,11 @@ public class DockerProcessBuilder {
             }
         });
         c.add(q(image));
-        if (args != null) {
-            args.forEach(a -> c.add(q(a)));
-        }
+
+        args.forEach(a -> c.add(q(a)));
+
         if (stdOutFilePath != null) {
+            c.add(0, "set -o pipefail && ");
             c.add("| tee ");
             c.add(stdOutFilePath);
         }
