@@ -125,7 +125,7 @@ public class MetadataProcessor implements ExecutionListener {
             if (value.getClass().isPrimitive() || VARIABLE_TYPES.contains(value.getClass())) {
                 result.put(v, value);
             } else {
-                log.info("meta variable '{}' -> ignored (unsupported type: {})", v, value.getClass());
+                log.debug("meta variable '{}' -> ignored (unsupported type: {})", v, value.getClass());
             }
         }
 
