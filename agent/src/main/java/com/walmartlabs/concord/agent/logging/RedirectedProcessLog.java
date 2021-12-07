@@ -25,11 +25,8 @@ import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
-import java.util.UUID;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
-
-import static com.walmartlabs.concord.agent.logging.FileWatcher.Chunk;
 
 /**
  * Log that uses a local file as a buffer before sending the data into the specified {@link LogAppender}.
@@ -37,27 +34,18 @@ import static com.walmartlabs.concord.agent.logging.FileWatcher.Chunk;
  */
 public class RedirectedProcessLog implements ProcessLog {
 
-    protected final UUID instanceId;
-    protected final LogAppender appender;
     protected final long logSteamMaxDelay;
-
     private final LocalProcessLog localLog;
+    private final Consumer<Chunk> consumer;
 
-    public RedirectedProcessLog(Path baseDir, UUID instanceId, LogAppender appender, long logSteamMaxDelay) throws IOException {
-        this.instanceId = instanceId;
-        this.appender = appender;
-        this.logSteamMaxDelay = logSteamMaxDelay;
+    public RedirectedProcessLog(Path baseDir, long logSteamMaxDelay, Consumer<Chunk> consumer) throws IOException {
         this.localLog = new LocalProcessLog(baseDir);
+        this.logSteamMaxDelay = logSteamMaxDelay;
+        this.consumer = consumer;
     }
 
     public void run(Supplier<Boolean> stopCondition) throws Exception {
-        Consumer<Chunk> sink = chunk -> {
-            byte[] ab = new byte[chunk.len()];
-            System.arraycopy(chunk.bytes(), 0, ab, 0, chunk.len());
-            appender.appendLog(instanceId, ab);
-        };
-
-        streamLog(localLog.logFile(), stopCondition, logSteamMaxDelay, sink);
+        streamLog(localLog.logFile(), stopCondition, logSteamMaxDelay, consumer);
     }
 
     @Override
@@ -113,6 +101,25 @@ public class RedirectedProcessLog implements ProcessLog {
                     }
                 }
             }
+        }
+    }
+
+    public static class Chunk {
+
+        private final byte[] ab;
+        private final int len;
+
+        protected Chunk(byte[] ab, int len) { // NOSONAR
+            this.ab = ab;
+            this.len = len;
+        }
+
+        public byte[] bytes() {
+            return ab;
+        }
+
+        public int len() {
+            return len;
         }
     }
 }

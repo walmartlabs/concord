@@ -27,6 +27,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.UUID;
+import java.util.function.Consumer;
 
 public class ProcessLogFactory {
 
@@ -47,11 +48,17 @@ public class ProcessLogFactory {
             Files.createDirectories(dst);
         }
 
-        if (segmented) {
-            return new SegmentedProcessLog(dst, instanceId, logAppender, logStreamMaxDelay);
-        } else {
-            return new RedirectedProcessLog(dst, instanceId, logAppender, logStreamMaxDelay);
-        }
+        Consumer<RedirectedProcessLog.Chunk> logConsumer;
+//        if (segmented) {
+//            logConsumer = new SegmentedLogsConsumer(instanceId, logAppender);
+//        } else {
+            logConsumer = chunk -> {
+                byte[] ab = new byte[chunk.len()];
+                System.arraycopy(chunk.bytes(), 0, ab, 0, chunk.len());
+                logAppender.appendLog(instanceId, ab);
+            };
+//        }
+        return new RedirectedProcessLog(dst, logStreamMaxDelay, logConsumer);
     }
 
     public RemoteProcessLog createRemoteLog(UUID instanceId) {

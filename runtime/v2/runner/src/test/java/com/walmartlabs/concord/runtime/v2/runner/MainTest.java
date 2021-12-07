@@ -91,8 +91,6 @@ public class MainTest {
     private byte[] lastLog;
     private byte[] allLogs;
 
-    private Path segmentedLogDir;
-
     @Before
     public void setUp() throws IOException {
         workDir = Files.createTempDirectory("test");
@@ -136,8 +134,6 @@ public class MainTest {
             }
         };
 
-        segmentedLogDir = Files.createTempDirectory("segmentedLog");
-
         allLogs = null;
     }
 
@@ -145,10 +141,6 @@ public class MainTest {
     public void tearDown() throws IOException {
         if (workDir != null) {
             IOUtils.deleteRecursively(workDir);
-        }
-
-        if (segmentedLogDir != null) {
-            IOUtils.deleteRecursively(segmentedLogDir);
         }
 
         LoggingConfigurator.reset();
@@ -488,18 +480,12 @@ public class MainTest {
         RunnerConfiguration runnerCfg = RunnerConfiguration.builder()
                 .logging(LoggingConfiguration.builder()
                         .sendSystemOutAndErrToSLF4J(false)
-                        .segmentedLogDir(segmentedLogDir.toAbsolutePath().toString())
                         .build())
                 .build();
 
         byte[] log = run(runnerCfg);
-        assertLog(log, ".*This goes directly into the stdout.*");
-        assertNoLog(log, ".*This is a processLog entry.*");
-
-        List<Path> paths = Files.walk(segmentedLogDir)
-                .filter(p -> p.getFileName().toString().endsWith(".log"))
-                .collect(Collectors.toList());
-        assertEquals(2, paths.size());
+        assertLog(log, "^This goes directly into the stdout$");
+        assertLog(log, ".*This is a processLog entry.*");
     }
 
     @Test
@@ -511,21 +497,11 @@ public class MainTest {
 
         RunnerConfiguration runnerCfg = RunnerConfiguration.builder()
                 .logging(LoggingConfiguration.builder()
-                        .sendSystemOutAndErrToSLF4J(true)
-                        .segmentedLogDir(segmentedLogDir.toAbsolutePath().toString())
                         .build())
                 .build();
 
         byte[] log = run(runnerCfg);
-        assertNoLog(log, ".*System.out in a script.*");
-
-        List<Path> paths = Files.walk(segmentedLogDir)
-                .filter(p -> p.getFileName().toString().endsWith(".log"))
-                .collect(Collectors.toList());
-
-        assertEquals(1, paths.size());
-        log = Files.readAllBytes(paths.get(0));
-        assertLog(log, ".*System.out in a script.*");
+        assertLog(log, "^.*\\|1\\|.*System.out in a script.*");
     }
 
     @Test
@@ -1006,24 +982,15 @@ public class MainTest {
 
         RunnerConfiguration runnerCfg = RunnerConfiguration.builder()
                 .logging(LoggingConfiguration.builder()
-                        .sendSystemOutAndErrToSLF4J(false)
-                        .segmentedLogDir(segmentedLogDir.toAbsolutePath().toString())
                         .build())
                 .build();
 
         save(ProcessConfiguration.builder()
                 .build());
 
-        run(runnerCfg);
+        byte[] log = run(runnerCfg);
 
-        List<Path> paths = Files.walk(segmentedLogDir)
-                .filter(p -> p.getFileName().toString().endsWith(".log"))
-                .sorted()
-                .collect(Collectors.toList());
-
-        assertEquals(2, paths.size());
-        byte[] log = Files.readAllBytes(paths.get(1));
-        assertLog(log, ".*done!.*");
+        assertLog(log, "70\\|2\\|.*done!.*");
     }
 
     private void deploy(String resource) throws URISyntaxException, IOException {
@@ -1057,7 +1024,8 @@ public class MainTest {
     private byte[] run(RunnerConfiguration baseCfg) throws Exception {
         assertNotNull("save() the process configuration first", processConfiguration);
 
-        ImmutableRunnerConfiguration.Builder runnerCfg = RunnerConfiguration.builder();
+        ImmutableRunnerConfiguration.Builder runnerCfg = RunnerConfiguration.builder()
+                .logging(LoggingConfiguration.builder().segmentedLogs(false).build());
 
         if (baseCfg != null) {
             runnerCfg.from(baseCfg);
@@ -1366,6 +1334,12 @@ public class MainTest {
     @Named("simpleMethodTask")
     @SuppressWarnings("unused")
     public static class SimpleMethodTask implements Task {
+
+        private static final org.slf4j.Logger log = LoggerFactory.getLogger(SimpleMethodTask.class);
+
+        public void exception() {
+            log.error("exception: ", new RuntimeException());
+        }
 
         public int getValue() {
             return 42;

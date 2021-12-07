@@ -673,8 +673,6 @@ public class RunnerJobExecutor implements JobExecutor {
 
         boolean runnerSecurityManagerEnabled();
 
-        Path logDir();
-
         boolean segmentedLogs();
 
         @Value.Default

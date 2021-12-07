@@ -1,10 +1,10 @@
-package com.walmartlabs.concord.agent.logging;
+package com.walmartlabs.concord.runtime.v2.runner.logging;
 
 /*-
  * *****
  * Concord
  * -----
- * Copyright (C) 2017 - 2020 Walmart Inc.
+ * Copyright (C) 2017 - 2021 Walmart Inc.
  * -----
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,21 +20,20 @@ package com.walmartlabs.concord.agent.logging;
  * =====
  */
 
-import org.junit.Test;
+import ch.qos.logback.classic.pattern.ClassicConverter;
+import ch.qos.logback.classic.spi.ILoggingEvent;
 
-import java.nio.file.Paths;
+public class SegmentConverter extends ClassicConverter {
 
-import static org.junit.Assert.assertEquals;
+    private static final String SYSTEM_SEGMENT_ID = "0";
 
-public class LogSegmentNameParserTest {
+    @Override
+    public String convert(ILoggingEvent event) {
+        Long segmentId = LogUtils.getSegmentId();
+        if (segmentId == null) {
+            return SYSTEM_SEGMENT_ID;
+        }
 
-    @Test
-    public void testSuccess() {
-        LogSegmentNameParser parser = new LogSegmentNameParser();
-
-        String fileName = "123.log";
-
-        Long id = parser.parse(Paths.get(fileName));
-        assertEquals(123L, (long)id);
+        return String.valueOf(segmentId);
     }
 }

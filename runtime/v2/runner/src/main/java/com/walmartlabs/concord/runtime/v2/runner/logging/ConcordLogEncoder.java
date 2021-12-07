@@ -4,7 +4,7 @@ package com.walmartlabs.concord.runtime.v2.runner.logging;
  * *****
  * Concord
  * -----
- * Copyright (C) 2017 - 2020 Walmart Inc.
+ * Copyright (C) 2017 - 2021 Walmart Inc.
  * -----
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,28 +20,21 @@ package com.walmartlabs.concord.runtime.v2.runner.logging;
  * =====
  */
 
+import ch.qos.logback.classic.PatternLayout;
 import ch.qos.logback.classic.spi.ILoggingEvent;
-import ch.qos.logback.core.sift.AbstractDiscriminator;
+import ch.qos.logback.core.pattern.PatternLayoutEncoderBase;
 
-/**
- * Returns a Logback's discriminator value based on the current log "segment".
- */
-public class SegmentDiscriminator extends AbstractDiscriminator<ILoggingEvent> {
-
-    private static final String SYSTEM_SEGMENT_ID = "0";
+public class ConcordLogEncoder extends PatternLayoutEncoderBase<ILoggingEvent> {
 
     @Override
-    public String getDiscriminatingValue(ILoggingEvent iLoggingEvent) {
-        Long segmentId = LogUtils.getSegmentId();
-        if (segmentId == null) {
-            return SYSTEM_SEGMENT_ID;
-        }
+    public void start() {
+        PatternLayout patternLayout = new ConcordLogLayout();
+        patternLayout.setContext(context);
+        patternLayout.setPattern(getPattern());
+        patternLayout.setOutputPatternAsHeader(outputPatternAsHeader);
+        patternLayout.start();
 
-        return String.valueOf(segmentId);
-    }
-
-    @Override
-    public String getKey() {
-        return "_concord_segment";
+        this.layout = patternLayout;
+        super.start();
     }
 }
