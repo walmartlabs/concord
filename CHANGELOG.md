@@ -22,6 +22,8 @@ handlers using new process configuration property
 
 ### Changed
 
+- docker: fixed the behavior of `stdout` parameter
+([#472](https://github.com/walmartlabs/concord/pull/472));
 - concord-task: fix `suspendForCompletion` action in the v2
 version of the task
 ([#488](https://github.com/walmartlabs/concord/pull/488));
