@@ -16,7 +16,9 @@ calling `exportAsFile`
 - concord-server: allow users to override timeout for error
 handlers using new process configuration property
 `handlerProcessTimeout`
-([#501](https://github.com/walmartlabs/concord/pull/501)).
+([#501](https://github.com/walmartlabs/concord/pull/501));
+- http-tasks: log invalid JSON bodies and parse errors
+([#505](https://github.com/walmartlabs/concord/pull/505)).
 
 ### Changed
 
