@@ -35,7 +35,10 @@ after an `exit` step
 the presense of an `error` block in flow calls
 ([#496](https://github.com/walmartlabs/concord/pull/496));
 - runtime-v1, runtime-v2: tone down the metadata processor's
-logs ([#500](https://github.com/walmartlabs/concord/pull/500)).
+logs ([#500](https://github.com/walmartlabs/concord/pull/500));
+- smtp-tasks: simplify default variables, allow `host` and
+`port` parameters without nesting into `smtpParams`
+([#503](https://github.com/walmartlabs/concord/pull/503)).
 
 ### Breaking
 
