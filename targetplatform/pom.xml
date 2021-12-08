@@ -62,7 +62,7 @@
         <jboss.logging>3.3.2.Final</jboss.logging>
         <jcl-over-slf4j.version>1.7.25</jcl-over-slf4j.version>
         <jetbrain.annotations.version>19.0.0</jetbrain.annotations.version>
-        <jetty.version>9.4.26.v20200117</jetty.version> <!-- wiremock requires this specific version to work correctly -->
+        <jetty.version>9.4.41.v20210516</jetty.version> <!-- wiremock requires this specific version to work correctly -->
         <jgit.version>5.2.0.201812061821-r</jgit.version> <!-- updating requires some changes in how the auth is set up in ITs -->
         <jna.version>5.5.0</jna.version>
         <jooq.version>3.14.0</jooq.version>
