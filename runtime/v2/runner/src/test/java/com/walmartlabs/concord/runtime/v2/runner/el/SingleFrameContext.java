@@ -163,6 +163,11 @@ public class SingleFrameContext extends DummyContext {
             }
 
             @Override
+            public String currentFlowName() {
+                return null;
+            }
+
+            @Override
             public UUID correlationId() {
                 throw new IllegalStateException("Not implemented");
             }

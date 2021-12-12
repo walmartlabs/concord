@@ -44,6 +44,8 @@ public interface Execution {
     @Nullable
     Step currentStep();
 
+    String currentFlowName();
+
     /**
      * ID of the current task or the expression call. Can be used by plugins to
      * correlate their events with the task event.
