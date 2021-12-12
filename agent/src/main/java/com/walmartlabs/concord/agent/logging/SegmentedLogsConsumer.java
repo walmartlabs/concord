@@ -1,9 +1,12 @@
 //package com.walmartlabs.concord.agent.logging;
 //
+//import com.walmartlabs.concord.client.LogSegmentUpdateRequest;
+//
 //import java.nio.ByteBuffer;
-//import java.util.List;
-//import java.util.UUID;
+//import java.util.*;
 //import java.util.function.Consumer;
+//
+//import static com.walmartlabs.concord.agent.logging.SegmentHeaderParser.*;
 //
 //public class SegmentedLogsConsumer implements Consumer<RedirectedProcessLog.Chunk> {
 //
@@ -12,7 +15,6 @@
 //    private final UUID instanceId;
 //    private final LogAppender logAppender;
 //
-//    private Long currentSegmentId;
 //    private byte[] unparsed = EMPTY;
 //
 //    public SegmentedLogsConsumer(UUID instanceId, LogAppender logAppender) {
@@ -27,40 +29,57 @@
 //            System.arraycopy(unparsed, 0, ab, 0, unparsed.length);
 //        }
 //        System.arraycopy(chunk.bytes(), 0, ab, unparsed.length, chunk.len());
+//        unparsed = EMPTY;
 //
-//        ByteBuffer bb = ByteBuffer.wrap(ab);
+//        Map<Long, List<HeaderLocation>> headers = new HashMap<>();
+//        int pos = SegmentHeaderParser.parse(ab, headers);
+//        for (Map.Entry<Long, List<HeaderLocation>> e : headers.entrySet()) {
+//            int buffLength = e.getValue().stream().mapToInt(h -> h.header().actualLength()).sum();
+//            byte[] segmentBuffer = new byte[buffLength];
+//            fillBuffer(e.getValue(), ab, segmentBuffer);
 //
-//        if (state == HEADER) {
-//            List<HeaderLocation> headers = findHeaders(bb);
+//            // TODO: retry?
+//            logAppender.appendLog(instanceId, e.getKey(), ab);
 //
-//            // find all headers
-//            // collect bytes for each segment
-//            // если есть байты для всех headers -> ждём новых headers
-//            // если байтов не хватает -> отправляем что есть, прикапываем
-//            // текуущий segmentId и сколько ещё байтов нужно.
+//            Header stats = findStats(e.getValue());
+//            if (stats != null) {
+//                logAppender.updateSegment(instanceId, e.getKey(), LogSegmentStats.builder()
+//                        .status(stats.done() ? LogSegmentUpdateRequest.StatusEnum.OK : LogSegmentUpdateRequest.StatusEnum.FAILED)
+//                        .warnings(stats.warnCount())
+//                        .errors(stats.errorCount())
+//                        .build());
+//            }
 //        }
 //
-//        Character.BYTES;
+//        HeaderLocation partialSegment = findPartialHeader(headers);
+//        if (partialSegment != null) {
+//            unparsed = SegmentHeaderParser.serialize(partialSegment.header()); // length = originalLength - actualLength
+//        }
 //
-//        bb.flip()
-//        bb.getChar()
-//        bb.remaining()
+//        if (pos < ab.length) {
+//            if (unparsed != EMPTY) {
+//                throw new RuntimeException("Unexpected partial segment and unparsed tail");
+//            }
 //
-//        logAppender.appendLog(instanceId, ab);
+//            unparsed = Arrays.copyOfRange(ab, pos, ab.length);
+//        }
 //    }
 //
-//    private static class Header {
-//
-//        private final int length;
-//        private final long segmentId;
-//        private final int warnCount;
-//        private final int errorCount;
+//    private static void fillBuffer(List<HeaderLocation> value, byte[] ab, byte[] segmentBuffer) {
 //    }
 //
-//    private static class HeaderLocation {
-//
-//        private final int start;
-//        private final int end;
-//        private final Header header;
+//    private static HeaderLocation findPartialHeader(Map<Long, List<HeaderLocation>> headers) {
+//        HeaderLocation result = null;
+//        for (Map.Entry<Long, List<HeaderLocation>> e : headers.entrySet()) {
+//            for (HeaderLocation segment : e.getValue()) {
+//                if (segment.header().actualLength() != segment.header().length()) {
+//                    if (result != null) {
+//                        throw new RuntimeException("Unexpected second partial segment");
+//                    }
+//                    result = segment;
+//                }
+//            }
+//        }
+//        return result;
 //    }
 //}

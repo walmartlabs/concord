@@ -58,17 +58,11 @@ public class ConcordLogLayout extends PatternLayout {
         boolean done = isDone(event);
         String msg = done ? "\n" : super.doLayout(event);
 
-        // msgLength|segmentId|DONE?|errors|warnings|msg
+        // msgLength|segmentId|DONE?|warnings|errors|msg
         String header = msg.length() + "|" + segmentId + "|" + (done ? "1" : "0") + "|";
         if (stats != null) {
-            header += stats.getWarnings() + "|";
-            header += stats.getErrors() + "|";
+            header += stats.getWarnings() + "|" + stats.getErrors() + "|";
         }
-
-        ByteBuffer bb = ByteBuffer.allocateDirect(10);
-        bb.putInt(123);
-        bb.putInt(2);
-        header = new String(bb.asCharBuffer().array());
 
         return header + msg;
     }
