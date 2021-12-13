@@ -31,8 +31,6 @@ import java.util.UUID;
 
 public interface Execution {
 
-    // TODO add current flow name
-
     ThreadId currentThreadId();
 
     Runtime runtime();
