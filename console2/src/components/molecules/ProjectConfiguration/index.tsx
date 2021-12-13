@@ -51,7 +51,7 @@ const ProjectConfiguration: React.FunctionComponent<Props> = ({ config, submitti
                 } else {
                     setJsonError('No changes detected');
                 }
-            } catch (error: any) {
+            } catch (error) {
                 setJsonError(error.message);
             }
         }
