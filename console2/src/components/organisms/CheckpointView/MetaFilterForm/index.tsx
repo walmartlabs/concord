@@ -17,10 +17,10 @@
  * limitations under the License.
  * =====
  */
-import React, { useContext, FunctionComponent } from 'react';
+import React, { FunctionComponent } from 'react';
 import { Grid, Header, Button, Divider, Popup } from 'semantic-ui-react';
 
-import CheckpointContainer from '../Container';
+import { useCheckpointContext } from '../Container';
 
 import useQueryParams from '../Container/useQueryParams';
 import useForm from '../Container/useForm';
@@ -33,9 +33,7 @@ import { usePopup } from '../Container/usePopup';
  * On load it should pull from state to populate it's data
  */
 export const MetaFilterForm: FunctionComponent<{ onClear: () => void }> = ({ onClear }) => {
-    const { getMetaDataConfigs, activeFilters, removeAllFilters } = useContext(
-        CheckpointContainer.Context
-    );
+    const { getMetaDataConfigs, activeFilters, removeAllFilters } = useCheckpointContext();
 
     const { replaceQueryParams } = useQueryParams();
 
@@ -118,7 +116,7 @@ export const MetaFilterForm: FunctionComponent<{ onClear: () => void }> = ({ onC
 };
 
 export const MetaFilterPopup: FunctionComponent = () => {
-    const { canFilter } = React.useContext(CheckpointContainer.Context);
+    const { canFilter } = useCheckpointContext();
     const { visible, open, close } = usePopup();
 
     return (

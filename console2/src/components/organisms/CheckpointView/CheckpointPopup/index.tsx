@@ -17,29 +17,27 @@
  * limitations under the License.
  * =====
  */
-import React, { useContext } from 'react';
+import React  from 'react';
 import { Button, Popup, Grid } from 'semantic-ui-react';
 
 import ClassIcon from '../../../atoms/ClassIcon';
 import Truncate from '../../../atoms/Truncate';
 
-import { ProcessLogContainer } from '../../../molecules';
 import RestoreProcess from './RestoreProcess';
 import { CheckpointName } from '../shared/Labels';
 import { CustomCheckpoint } from '../shared/types';
-import CheckpointViewContainer from '../Container';
 import { ProcessEntry, isFinal } from '../../../../api/process';
 import { format as formatDate } from 'date-fns';
+import {useCheckpointContext} from "../Container";
+import {useLogContext} from "../../../molecules/ProcessLogContainer/LogContainer";
 
 const CheckpointPopup: React.SFC<{
     checkpoint: CustomCheckpoint;
     process: ProcessEntry;
     render: React.ReactNode;
 }> = ({ checkpoint, process, render }) => {
-    const { currentPage, limitPerPage, loadData, orgId, projectId } = useContext(
-        CheckpointViewContainer.Context
-    );
-    useContext(ProcessLogContainer.Context);
+    const { currentPage, limitPerPage, loadData, orgId, projectId } = useCheckpointContext();
+    useLogContext();
 
     return (
         <Popup

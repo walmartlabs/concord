@@ -90,11 +90,17 @@ const App = () => {
                                     <Redirect to="/activity" />
                                 </Route>
 
-                                <Route path="/login" component={LoginPage} />
+                                <Route path="/login">
+                                    <LoginPage/>
+                                </Route>
 
-                                <Route path="/logout/done" component={LogoutPage} />
+                                <Route path="/logout/done">
+                                    <LogoutPage/>
+                                </Route>
 
-                                <Route path="/unauthorized" component={UnauthorizedPage} />
+                                <Route path="/unauthorized">
+                                    <UnauthorizedPage/>
+                                </Route>
 
                                 <Layout>
                                     <Switch>

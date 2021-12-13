@@ -41,7 +41,7 @@ export const usePolling = (
 
                 setError(undefined);
             } catch (e) {
-                setError(e);
+                setError(e as RequestError);
             } finally {
                 if (result) {
                     if (!cancelled) {
