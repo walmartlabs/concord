@@ -31,6 +31,9 @@ import com.walmartlabs.concord.client.ProcessEntry;
 import org.junit.ClassRule;
 import org.junit.Test;
 
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.net.URL;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
@@ -52,7 +55,7 @@ public class ProcessIT {
     @Test(timeout = DEFAULT_TEST_TIMEOUT)
     public void testArgs() throws Exception {
         Payload payload = new Payload()
-                .archive(ProcessIT.class.getResource("args").toURI())
+                .archive(resource("args"))
                 .arg("name", "Concord");
 
         ConcordProcess proc = concord.processes().start(payload);
@@ -72,7 +75,7 @@ public class ProcessIT {
     @Test(timeout = DEFAULT_TEST_TIMEOUT)
     public void testGroovyScripts() throws Exception {
         Payload payload = new Payload()
-                .archive(ProcessIT.class.getResource("scriptGroovy").toURI())
+                .archive(resource("scriptGroovy"))
                 .arg("name", "Concord");
 
         ConcordProcess proc = concord.processes().start(payload);
@@ -91,7 +94,7 @@ public class ProcessIT {
     @Test(timeout = DEFAULT_TEST_TIMEOUT)
     public void testMetaUpdate() throws Exception {
         Payload payload = new Payload()
-                .archive(ProcessIT.class.getResource("meta").toURI())
+                .archive(resource("meta"))
                 .arg("name", "Concord");
 
         ConcordProcess proc = concord.processes().start(payload);
@@ -133,10 +136,31 @@ public class ProcessIT {
         assertEquals("default", pe.getMeta().get("entryPoint"));
     }
 
+    /**
+     * Test the process metadata with exit step.
+     */
+    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    public void testMetaWithExit() throws Exception {
+        Payload payload = new Payload()
+                .archive(resource("exitWithMeta"))
+                .arg("name", "Concord");
+
+        ConcordProcess proc = concord.processes().start(payload);
+
+        ProcessEntry pe = proc.expectStatus(ProcessEntry.StatusEnum.FINISHED);
+
+        // ---
+
+        proc.assertLog(".*Hello, Concord!.*");
+
+        assertNotNull(pe.getMeta());
+        assertEquals("init-value", pe.getMeta().get("test"));
+    }
+
     @Test(timeout = DEFAULT_TEST_TIMEOUT)
     public void testOutVariables() throws Exception {
         Payload payload = new Payload()
-                .archive(ProcessIT.class.getResource("out").toURI())
+                .archive(resource("out"))
                 .out("x", "y.some.boolean", "z");
 
         ConcordProcess proc = concord.processes().start(payload);
@@ -156,7 +180,7 @@ public class ProcessIT {
     @Test(timeout = DEFAULT_TEST_TIMEOUT)
     public void testLogsFromExpressions() throws Exception {
         Payload payload = new Payload()
-                .archive(ProcessIT.class.getResource("logExpression").toURI());
+                .archive(resource("logExpression"));
 
         ConcordProcess proc = concord.processes().start(payload);
 
@@ -177,7 +201,7 @@ public class ProcessIT {
         Payload payload = new Payload()
                 .org(orgName)
                 .project(projectName)
-                .archive(ProcessIT.class.getResource("projectInfo").toURI());
+                .archive(resource("projectInfo"));
 
         ConcordProcess proc = concord.processes().start(payload);
 
@@ -190,7 +214,7 @@ public class ProcessIT {
     @Test(timeout = DEFAULT_TEST_TIMEOUT)
     public void testCheckpoints() throws Exception {
         Payload payload = new Payload()
-                .archive(ProcessIT.class.getResource("checkpoints").toURI());
+                .archive(resource("checkpoints"));
 
         ConcordProcess proc = concord.processes().start(payload);
         proc.expectStatus(ProcessEntry.StatusEnum.FINISHED);
@@ -238,7 +262,7 @@ public class ProcessIT {
     @Test(timeout = DEFAULT_TEST_TIMEOUT)
     public void testCheckpointsParallel() throws Exception {
         Payload payload = new Payload()
-                .archive(ProcessIT.class.getResource("checkpointsParallel").toURI());
+                .archive(resource("checkpointsParallel"));
 
         ConcordProcess proc = concord.processes().start(payload);
         proc.expectStatus(ProcessEntry.StatusEnum.FINISHED);
@@ -292,7 +316,7 @@ public class ProcessIT {
 
         Payload payload = new Payload()
                 .arg("forkTag", forkTag)
-                .archive(ProcessIT.class.getResource("forkCheckpoints").toURI());
+                .archive(resource("forkCheckpoints"));
 
         ConcordProcess parent = concord.processes().start(payload);
         parent.expectStatus(ProcessEntry.StatusEnum.FINISHED);
@@ -365,7 +389,7 @@ public class ProcessIT {
     @Test(timeout = DEFAULT_TEST_TIMEOUT)
     public void testLastErrorSave() throws Exception {
         Payload payload = new Payload()
-                .archive(ProcessIT.class.getResource("failProcess").toURI());
+                .archive(resource("failProcess"));
 
         ConcordProcess proc = concord.processes().start(payload);
 
@@ -385,10 +409,36 @@ public class ProcessIT {
     public void testSuspendTimeout() throws Exception {
         Payload payload = new Payload()
                 .parameter("suspendTimeout", "PT1S")
-                .archive(ProcessIT.class.getResource("form").toURI());
+                .archive(resource("form"));
 
         ConcordProcess proc = concord.processes().start(payload);
 
         proc.expectStatus(ProcessEntry.StatusEnum.TIMED_OUT);
+    }
+
+    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    public void testYamlRootFile() throws Exception {
+        Payload payload = new Payload()
+                .archive(resource("yamlRootFile"));
+
+        ConcordProcess proc = concord.processes().start(payload);
+        proc.expectStatus(ProcessEntry.StatusEnum.FINISHED);
+        proc.assertLog(".*Hello, Concord!*");
+    }
+
+    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    public void testMetadataWithWithItems() throws Exception {
+        ConcordProcess proc = concord.processes().start(new Payload()
+                .archive(resource("processMetadataWithItems")));
+
+        ProcessEntry pe = proc.expectStatus(ProcessEntry.StatusEnum.FINISHED);
+        assertNotNull(pe.getMeta());
+        assertEquals("c", pe.getMeta().get("var"));
+    }
+
+    private static URI resource(String name) throws URISyntaxException {
+        URL url = ProcessIT.class.getResource(name);
+        assertNotNull("can't find '" + name + "'", url);
+        return url.toURI();
     }
 }

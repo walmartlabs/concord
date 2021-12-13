@@ -23,6 +23,7 @@ package com.walmartlabs.concord.server.process.waits;
 import com.walmartlabs.concord.server.process.locks.LockEntry;
 import com.walmartlabs.concord.server.process.locks.ProcessLocksDao;
 import com.walmartlabs.concord.server.sdk.ProcessKey;
+import com.walmartlabs.concord.server.sdk.metrics.WithTimer;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -49,6 +50,7 @@ public class WaitProcessLockHandler implements ProcessWaitHandler<ProcessLockCon
     }
 
     @Override
+    @WithTimer
     public Result<ProcessLockCondition> process(ProcessKey key, ProcessLockCondition wait) {
         LockEntry lock = locksDao.tryLock(key, wait.orgId(), wait.projectId(), wait.scope(), wait.name());
         if (lock.instanceId().equals(key.getInstanceId())) {

@@ -9,9 +9,9 @@ package com.walmartlabs.concord.server.process.pipelines.processors;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -25,13 +25,11 @@ import com.walmartlabs.concord.server.process.Payload;
 import com.walmartlabs.concord.server.process.ProcessException;
 import com.walmartlabs.concord.server.process.logs.ProcessLogManager;
 import com.walmartlabs.concord.server.sdk.ProcessKey;
-import jdk.nashorn.api.scripting.ScriptObjectMirror;
 
 import javax.inject.Inject;
 import javax.inject.Named;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Map;
 
@@ -87,18 +85,7 @@ public class DependenciesProcessor implements PayloadProcessor {
             return (Collection<String>) o;
         }
 
-        if (o instanceof ScriptObjectMirror) {
-            ScriptObjectMirror m = (ScriptObjectMirror) o;
-            if (!m.isArray()) {
-                logManager.error(processKey, "Invalid dependencies object type. Expected a JavaScript array, got: " + m);
-                throw new ProcessException(processKey, "Invalid dependencies object type. Expected a JavaScript array, got: " + m);
-            }
-
-            String[] as = m.to(String[].class);
-            return Arrays.asList(as);
-        }
-
-        logManager.error(processKey, "Invalid dependencies object type. Expected an array or a collection, got: " + o.getClass());
+        logManager.error(processKey, "Invalid dependencies object type. Expected an array or a collection, got: {}", o.getClass());
         throw new ProcessException(processKey, "Invalid dependencies object type. Expected an array or a collection, got: " + o.getClass());
     }
 }

@@ -27,8 +27,6 @@ import org.jooq.Record4;
 
 import javax.inject.Inject;
 import javax.inject.Named;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.time.OffsetDateTime;
 import java.util.Base64;
@@ -37,6 +35,7 @@ import java.util.List;
 import java.util.UUID;
 
 import static com.walmartlabs.concord.server.jooq.tables.ApiKeys.API_KEYS;
+import static com.walmartlabs.concord.server.security.apikey.ApiKeyUtils.hash;
 import static org.jooq.impl.DSL.currentOffsetDateTime;
 import static org.jooq.impl.DSL.selectFrom;
 
@@ -112,20 +111,6 @@ public class ApiKeyDao extends AbstractDao {
 
     public int count(UUID userId) {
         return dsl().fetchCount(selectFrom(API_KEYS).where(API_KEYS.USER_ID.eq(userId)));
-    }
-
-    private static String hash(String s) {
-        MessageDigest md;
-        try {
-            md = MessageDigest.getInstance("SHA-256");
-        } catch (NoSuchAlgorithmException e) {
-            throw new RuntimeException(e);
-        }
-
-        byte[] ab = Base64.getDecoder().decode(s);
-        ab = md.digest(ab);
-
-        return Base64.getEncoder().withoutPadding().encodeToString(ab);
     }
 
     private static ApiKeyEntry toEntry(Record4<UUID, UUID, String, OffsetDateTime> r) {

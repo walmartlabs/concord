@@ -73,7 +73,7 @@ public class LdapRealm extends AbstractLdapRealm {
         this.ldapGroupManager = ldapGroupManager;
         this.auditLog = auditLog;
 
-        this.url = cfg.getUrl();
+        this.url = ldapContextFactory.getCurrentLdapUrl();
         this.searchBase = cfg.getSearchBase();
         this.systemUsername = cfg.getSystemUsername();
         this.systemPassword = cfg.getSystemPassword();

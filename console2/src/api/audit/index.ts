@@ -27,6 +27,7 @@ export enum AuditObject {
     JSON_STORE_QUERY = 'JSON_STORE_QUERY',
     ORGANIZATION = 'ORGANIZATION',
     PROJECT = 'PROJECT',
+    PROCESS = 'PROCESS',
     SECRET = 'SECRET',
     TEAM = 'TEAM'
 }

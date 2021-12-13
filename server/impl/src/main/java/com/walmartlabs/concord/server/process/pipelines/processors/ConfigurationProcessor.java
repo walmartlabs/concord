@@ -26,12 +26,12 @@ import com.walmartlabs.concord.policyengine.PolicyEngine;
 import com.walmartlabs.concord.process.loader.model.ProcessDefinition;
 import com.walmartlabs.concord.process.loader.model.ProcessDefinitionUtils;
 import com.walmartlabs.concord.sdk.Constants;
-import com.walmartlabs.concord.server.cfg.DefaultProcessConfiguration;
 import com.walmartlabs.concord.server.org.OrganizationDao;
 import com.walmartlabs.concord.server.org.project.ProjectDao;
 import com.walmartlabs.concord.server.org.project.ProjectEntry;
 import com.walmartlabs.concord.server.process.Payload;
 import com.walmartlabs.concord.server.process.ProcessException;
+import com.walmartlabs.concord.server.process.ProcessKind;
 import com.walmartlabs.concord.server.process.keys.AttachmentKey;
 import com.walmartlabs.concord.server.process.pipelines.processors.cfg.ProcessConfigurationUtils;
 
@@ -57,23 +57,15 @@ public class ConfigurationProcessor implements PayloadProcessor {
 
     private final ProjectDao projectDao;
     private final OrganizationDao orgDao;
-    private final DefaultProcessConfiguration defaultCfg;
 
     @Inject
-    public ConfigurationProcessor(ProjectDao projectDao, OrganizationDao orgDao, DefaultProcessConfiguration defaultCfg) {
+    public ConfigurationProcessor(ProjectDao projectDao, OrganizationDao orgDao) {
         this.projectDao = projectDao;
         this.orgDao = orgDao;
-        this.defaultCfg = defaultCfg;
     }
 
     @Override
     public Payload process(Chain chain, Payload payload) {
-        // system-level default configuration
-        Map<String, Object> defCfg = Collections.emptyMap();
-        if (!"concord-v2".equalsIgnoreCase(payload.getHeader(Payload.RUNTIME))) {
-            defCfg = defaultCfg.getCfg();
-        }
-
         // default configuration from policy
         Map<String, Object> policyDefCfg = getDefaultCfgFromPolicy(payload);
 
@@ -108,8 +100,11 @@ public class ConfigurationProcessor implements PayloadProcessor {
         Map<String, Object> policyCfg = getPolicyCfg(payload);
 
         // create the resulting configuration
-        Map<String, Object> m = ConfigurationUtils.deepMerge(defCfg, policyDefCfg, orgCfg, projectCfg, profileCfg, workspaceCfg, attachedCfg, payloadCfg, providedCfg, policyCfg);
+        Map<String, Object> m = ConfigurationUtils.deepMerge(policyDefCfg, orgCfg, projectCfg, profileCfg, workspaceCfg, attachedCfg, payloadCfg, providedCfg, policyCfg);
         m.put(Constants.Request.ACTIVE_PROFILES_KEY, activeProfiles);
+
+        // handle handlers special params
+        processHandlersConfiguration(payload, m);
 
         payload = payload.putHeader(Payload.CONFIGURATION, m);
 
@@ -211,6 +206,20 @@ public class ConfigurationProcessor implements PayloadProcessor {
             return om.readValue(in, Map.class);
         } catch (IOException e) {
             throw new ProcessException(payload.getProcessKey(), "Invalid request data format", e, Status.BAD_REQUEST);
+        }
+    }
+
+    private static void processHandlersConfiguration(Payload payload, Map<String, Object> m) {
+        ProcessKind processKind = payload.getHeader(Payload.PROCESS_KIND);
+        if (processKind != ProcessKind.FAILURE_HANDLER &&
+                processKind != ProcessKind.CANCEL_HANDLER &&
+                processKind != ProcessKind.TIMEOUT_HANDLER) {
+            return;
+        }
+
+        Object handlerTimeout = m.get(Constants.Request.HANDLER_PROCESS_TIMEOUT);
+        if (handlerTimeout != null) {
+            m.put(Constants.Request.PROCESS_TIMEOUT, handlerTimeout);
         }
     }
 }

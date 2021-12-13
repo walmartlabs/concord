@@ -80,17 +80,16 @@ public class GitClient {
             Ref ref = getHeadRef(req.destination(), req.version().ref(), req.secret());
             configureFetch(req.destination(), getRefSpec(ref));
 
-            boolean versionRefIsBranchOrTag = ref != null;
-            boolean versionValueIsBranchOrTag = versionRefIsBranchOrTag && req.version().value().equals(req.version().ref());
+            NormalizedVersion version = NormalizedVersion.from(req.version(), ref);
 
             // fetch
-            boolean alreadyFetched = exists && req.checkAlreadyFetched() && alreadyFetched(req.destination(), ref);
+            boolean alreadyFetched = exists && req.checkAlreadyFetched() && alreadyFetched(req.destination(), ref, version);
             if (!alreadyFetched) {
-                boolean effectiveShallow = req.shallow() && versionValueIsBranchOrTag;
+                boolean effectiveShallow = req.shallow() && version.commitId() == null;
                 fetch(req.destination(), effectiveShallow, req.secret());
 
                 checkout(req.destination(), req.version().value());
-                if (versionValueIsBranchOrTag) {
+                if (version.commitId() == null) {
                     reset(req.destination(), ref.tag() ? "origin/tags/" + ref.name() : "origin/" + ref.name());
                 }
 
@@ -121,12 +120,18 @@ public class GitClient {
         }
     }
 
-    private boolean alreadyFetched(Path workDir, Ref ref) {
+    private boolean alreadyFetched(Path workDir, Ref ref, NormalizedVersion version) {
+        String head = revParse(workDir, "HEAD");
+
+        if (version.commitId() != null) {
+            return head.equalsIgnoreCase(version.commitId());
+        }
+
         if (ref == null) {
             return false;
         }
 
-        return ref.commitId().equals(revParse(workDir, "HEAD"));
+        return ref.commitId().equals(head);
     }
 
     private void init(Path workDir) {
@@ -687,6 +692,27 @@ public class GitClient {
         static ImmutableRef.Builder builder() {
             return ImmutableRef.builder();
         }
+    }
+
+    @Value.Immutable
+    @Value.Style(jdkOnly = true)
+    interface NormalizedVersion {
+
+        static NormalizedVersion from(FetchRequest.Version version, Ref ref) {
+            boolean versionRefIsBranchOrTag = ref != null;
+            boolean versionValueIsBranchOrTag = versionRefIsBranchOrTag && version.value().equals(version.ref());
+            String commitId = versionValueIsBranchOrTag ? null : version.value();
+            return ImmutableNormalizedVersion.builder()
+                    .commitId(commitId)
+                    .branchOrTag(version.ref())
+                    .build();
+        }
+
+        @Nullable
+        String commitId();
+
+        @Nullable
+        String branchOrTag();
     }
 
     @Value.Immutable

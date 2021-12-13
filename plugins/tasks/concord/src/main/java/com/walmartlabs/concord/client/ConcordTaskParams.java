@@ -29,7 +29,12 @@ import java.util.stream.Collectors;
 
 public class ConcordTaskParams {
 
-    public static ConcordTaskParams of(Variables variables) {
+    public static ConcordTaskParams of(Variables input, Map<String, Object> defaults) {
+        Map<String, Object> variablesMap = new HashMap<>(defaults != null ? defaults : Collections.emptyMap());
+        variablesMap.putAll(input.toMap());
+
+        Variables variables = new MapBackedVariables(variablesMap);
+
         ConcordTaskParams p = new ConcordTaskParams(variables);
         switch (p.action()) {
             case START: {
@@ -113,7 +118,7 @@ public class ConcordTaskParams {
         private static final String REPO_COMMIT_ID_KEY = "repoCommitId";
         private static final String REQUIREMENTS_KEY = "requirements";
         private static final String START_AT_KEY = "startAt";
-        private static final String SUSPEND_KEY = "suspend";
+        public static final String SUSPEND_KEY = "suspend";
         private static final String SYNC_KEY = "sync";
         private static final String TAGS_KEY = "tags";
         protected static final String ENTRY_POINT_KEY = "entryPoint";
@@ -246,6 +251,15 @@ public class ConcordTaskParams {
         @Override
         public String apiKey() {
             return variables.assertString("'" + API_KEY + "' is required to start a process on an external Concord instance", API_KEY);
+        }
+
+        @Override
+        public boolean suspend() {
+            return false;
+        }
+
+        public boolean suspendRaw() {
+            return super.suspend();
         }
     }
 

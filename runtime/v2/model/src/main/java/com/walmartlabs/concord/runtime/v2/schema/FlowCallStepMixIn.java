@@ -37,7 +37,8 @@ public interface FlowCallStepMixIn extends NamedStep {
     String call();
 
     @JsonProperty("in")
-    Map<String, Object> in();
+    @JsonSchemaInject(json = "{\"oneOf\": [ {\"type\": \"string\"}, {\"type\": \"object\"} ]}", merge = false)
+    Object input();
 
     @JsonProperty("out")
     @JsonSchemaInject(json = "{\"oneOf\": [ {\"type\": \"array\", \"items\" : {\"type\" : \"string\"}}, {\"type\": \"object\"}, {\"type\": \"string\"} ]}", merge = false)

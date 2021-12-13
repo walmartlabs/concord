@@ -78,12 +78,6 @@ export interface PaginatedAnsibleHostEntries {
     prev?: number;
 }
 
-export interface AnsibleStatsEntry {
-    uniqueHosts: number;
-    hostGroups: string[];
-    stats: any;
-}
-
 export interface AnsibleEvent {
     host: string;
     hostGroup: string;
@@ -180,9 +174,6 @@ export const listAnsibleHosts = (
         };
     });
 };
-
-export const getAnsibleStats = (instanceId: ConcordId): Promise<AnsibleStatsEntry> =>
-    fetchJson(`/api/v1/process/${instanceId}/ansible/stats`);
 
 export const listAnsibleEvents = (
     instanceId: ConcordId,

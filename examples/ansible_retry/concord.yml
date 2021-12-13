@@ -1,9 +1,16 @@
 configuration:
   dependencies:
-    - "mvn://com.walmartlabs.concord.plugins.basic:ansible-tasks:1.76.1"
+    - "mvn://com.walmartlabs.concord.plugins.basic:ansible-tasks:1.88.0"
+
+  arguments:
+    attempts: 0
+    maxAttempts: 3
+    retryFile: null
+    makeItFail: true # just to simulate a failure inside of the playbook
 
 flows:
   default:
+    # simply retry immediately after failure
     - task: ansible
       in:
         playbook: playbook/hello.yml
@@ -16,7 +23,7 @@ flows:
             vars:
               ansible_connection: "local"
         extraVars:
-          makeItFail: true # just to simulate a failure inside of the playbook
+          makeItFail: "${makeItFail}"
       retry:
         # specify new task parameters on the retry
         in:
@@ -28,3 +35,79 @@ flows:
 
         times: 1
         delay: 3
+
+  retryAfterSuspend:
+    # Retry the playbook after suspending for some period of time
+    - try:
+        - task: ansible
+          in:
+            playbook: playbook/hello.yml
+            saveRetryFile: true    # saves hello.retry as an attachment on playbook error
+            limit: "${retryFile}"  # default is null, will be a .retry file on retries
+            inventory:
+              local:
+                hosts:
+                  - "127.0.0.1"
+                  - "127.0.0.2"
+                  - "127.0.0.3"
+                vars:
+                  ansible_connection: "local"
+            extraVars:
+              makeItFail: "${makeItFail}"
+      error:
+        - if: "${(attempts + 1) >= maxAttempts}"  # give up eventually
+          then:
+            - throw: "Too many attempts for hosts: ${resource.asString('_attachments/hello.retry')}"
+
+        # suspend until retry time
+        - task: sleep
+          in:
+            suspend: true
+            # 3 seconds to prove the point in this example
+            # more useful would be 2 hours: ${2 * 60 * 60}
+            duration: 3
+        # try again, with retry file
+        - call: retryAfterSuspend
+          in:
+            attempts: "${attempts + 1}"
+            retryFile: "@_attachments/hello.retry"
+            makeItFail: false
+
+  retryAfterForm:
+    # Prompt to retry playbook after failure
+    - try:
+        - task: ansible
+          in:
+            playbook: playbook/hello.yml
+            saveRetryFile: true    # saves hello.retry as an attachment on playbook error
+            limit: "${retryFile}"  # default is null, will be a .retry file on retries
+            inventory:
+              local:
+                hosts:
+                  - "127.0.0.1"
+                  - "127.0.0.2"
+                  - "127.0.0.3"
+                vars:
+                  ansible_connection: "local"
+            extraVars:
+              makeItFail: "${makeItFail}"
+      error:
+        - if: "${(attempts + 1) >= maxAttempts}"  # give up eventually
+          then:
+            - throw: "Too many attempts for hosts: ${resource.asString('_attachments/hello.retry')}"
+
+        - form: retryForm
+          fields:
+            - doRetry: { label: "Retry deployment?", type: "boolean" }
+            - makeItFail: { label: "Make deployment fail?", type: "boolean" }
+        - if: "${retryForm.doRetry}"
+          then:
+            # try again, with retry file
+            - call: retryAfterForm
+              in:
+                attempts: "${attempts + 1}"
+                retryFile: "@_attachments/hello.retry"
+                makeItFail: "${retryForm.makeItFail}"
+          else:
+            - log: "Retry denied"
+            - exit

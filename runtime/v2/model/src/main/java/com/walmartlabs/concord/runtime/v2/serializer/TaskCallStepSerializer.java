@@ -58,12 +58,10 @@ public class TaskCallStepSerializer extends StdSerializer<TaskCall> {
             gen.writeObjectField("task", value.getName());
 
             writeNotEmptyObjectField("in", o.input(), gen);
+            writeNotEmptyObjectField("in", o.inputExpression(), gen);
         }
 
-        if (o.out() != null) {
-            gen.writeObjectField("out", o.out());
-        }
-
+        writeNotEmptyObjectField("out", o.out(), gen);
         writeNotEmptyObjectField("out", o.outExpr(), gen);
 
         if (o.withItems() != null) {
@@ -77,6 +75,8 @@ public class TaskCallStepSerializer extends StdSerializer<TaskCall> {
 
         writeNotEmptyObjectField("error", o.errorSteps(), gen);
         writeNotEmptyObjectField("meta", o.meta(), gen);
+
+        gen.writeObjectField("ignoreErrors", o.ignoreErrors());
 
         gen.writeEndObject();
     }

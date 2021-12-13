@@ -92,22 +92,22 @@ public class RepositoryDao extends AbstractDao {
                 .fetchOne(this::toEntry);
     }
 
-    public UUID insert(UUID projectId, String repositoryName, String url, String branch, String commitId, String path, UUID secretId, boolean disabled, Map<String, Object> meta) {
-        return txResult(tx -> insert(tx, projectId, repositoryName, url, branch, commitId, path, secretId, disabled, meta));
+    public UUID insert(UUID projectId, String repositoryName, String url, String branch, String commitId, String path, UUID secretId, boolean disabled, Map<String, Object> meta, boolean isTriggersDisabled) {
+        return txResult(tx -> insert(tx, projectId, repositoryName, url, branch, commitId, path, secretId, disabled, meta, isTriggersDisabled));
     }
 
-    public UUID insert(DSLContext tx, UUID projectId, String repositoryName, String url, String branch, String commitId, String path, UUID secretId, boolean disabled, Map<String, Object> meta) {
+    public UUID insert(DSLContext tx, UUID projectId, String repositoryName, String url, String branch, String commitId, String path, UUID secretId, boolean disabled, Map<String, Object> meta, boolean isTriggersDisabled) {
         return tx.insertInto(REPOSITORIES)
                 .columns(REPOSITORIES.PROJECT_ID, REPOSITORIES.REPO_NAME,
                         REPOSITORIES.REPO_URL, REPOSITORIES.REPO_BRANCH, REPOSITORIES.REPO_COMMIT_ID,
-                        REPOSITORIES.REPO_PATH, REPOSITORIES.SECRET_ID, REPOSITORIES.META, REPOSITORIES.IS_DISABLED)
-                .values(projectId, repositoryName, url, branch, commitId, path, secretId, objectMapper.toJSONB(meta), disabled)
+                        REPOSITORIES.REPO_PATH, REPOSITORIES.SECRET_ID, REPOSITORIES.META, REPOSITORIES.IS_DISABLED, REPOSITORIES.IS_TRIGGERS_DISABLED)
+                .values(projectId, repositoryName, url, branch, commitId, path, secretId, objectMapper.toJSONB(meta), disabled, isTriggersDisabled)
                 .returning(REPOSITORIES.REPO_ID)
                 .fetchOne()
                 .getRepoId();
     }
 
-    public void update(DSLContext tx, UUID repoId, String repositoryName, String url, String branch, String commitId, String path, UUID secretId, boolean disabled) {
+    public void update(DSLContext tx, UUID repoId, String repositoryName, String url, String branch, String commitId, String path, UUID secretId, boolean disabled, boolean isTriggersDisabled) {
         int i = tx.update(REPOSITORIES)
                 .set(REPOSITORIES.REPO_NAME, repositoryName)
                 .set(REPOSITORIES.REPO_URL, url)
@@ -116,6 +116,7 @@ public class RepositoryDao extends AbstractDao {
                 .set(REPOSITORIES.REPO_COMMIT_ID, commitId)
                 .set(REPOSITORIES.REPO_PATH, path)
                 .set(REPOSITORIES.IS_DISABLED, disabled)
+                .set(REPOSITORIES.IS_TRIGGERS_DISABLED, isTriggersDisabled)
                 .where(REPOSITORIES.REPO_ID.eq(repoId))
                 .execute();
 
@@ -172,7 +173,7 @@ public class RepositoryDao extends AbstractDao {
     }
 
     public List<RepositoryEntry> list(DSLContext tx, UUID projectId, Field<?> sortField, boolean asc) {
-        SelectConditionStep<Record12<UUID, UUID, String, String, String, String, String, Boolean, JSONB, UUID, String, String>> query = selectRepositoryEntry(tx)
+        SelectConditionStep<Record13<UUID, UUID, String, String, String, String, String, Boolean, JSONB, UUID, String, String, Boolean>> query = selectRepositoryEntry(tx)
                 .where(REPOSITORIES.PROJECT_ID.eq(projectId));
 
         if (sortField != null) {
@@ -187,7 +188,7 @@ public class RepositoryDao extends AbstractDao {
     }
 
     public List<RepositoryEntry> find(UUID projectId, String repoUrl) {
-        SelectConditionStep<Record12<UUID, UUID, String, String, String, String, String, Boolean, JSONB, UUID, String, String>> select = selectRepositoryEntry(dsl())
+        SelectConditionStep<Record13<UUID, UUID, String, String, String, String, String, Boolean, JSONB, UUID, String, String, Boolean>> select = selectRepositoryEntry(dsl())
                 .where(REPOSITORIES.REPO_URL.contains(repoUrl));
 
         if (projectId != null) {
@@ -202,7 +203,7 @@ public class RepositoryDao extends AbstractDao {
     }
 
     public List<RepositoryEntry> findSimilar(UUID projectId, String pattern) {
-        SelectConditionStep<Record12<UUID, UUID, String, String, String, String, String, Boolean, JSONB, UUID, String, String>> select = selectRepositoryEntry(dsl())
+        SelectConditionStep<Record13<UUID, UUID, String, String, String, String, String, Boolean, JSONB, UUID, String, String, Boolean>> select = selectRepositoryEntry(dsl())
                 .where(REPOSITORIES.REPO_URL.similarTo(pattern));
 
         if (projectId != null) {
@@ -210,12 +211,6 @@ public class RepositoryDao extends AbstractDao {
         }
 
         return select.fetch(this::toEntry);
-    }
-
-    public List<RepositoryEntry> findBySecretId(DSLContext tx, UUID secretId) {
-        return selectRepositoryEntry(tx)
-                .where(REPOSITORIES.SECRET_ID.eq(secretId))
-                .fetch(this::toEntry);
     }
 
     public void updateMeta(DSLContext tx, UUID id, Map<String, Object> meta) {
@@ -228,7 +223,7 @@ public class RepositoryDao extends AbstractDao {
                 .execute();
     }
 
-    private static SelectJoinStep<Record12<UUID, UUID, String, String, String, String, String, Boolean, JSONB, UUID, String, String>> selectRepositoryEntry(DSLContext tx) {
+    private static SelectJoinStep<Record13<UUID, UUID, String, String, String, String, String, Boolean, JSONB, UUID, String, String, Boolean>> selectRepositoryEntry(DSLContext tx) {
         return tx.select(REPOSITORIES.REPO_ID,
                 REPOSITORIES.PROJECT_ID,
                 REPOSITORIES.REPO_NAME,
@@ -240,12 +235,13 @@ public class RepositoryDao extends AbstractDao {
                 REPOSITORIES.META,
                 SECRETS.SECRET_ID,
                 SECRETS.SECRET_NAME,
-                SECRETS.STORE_TYPE)
+                SECRETS.STORE_TYPE,
+                REPOSITORIES.IS_TRIGGERS_DISABLED)
                 .from(REPOSITORIES)
                 .leftOuterJoin(SECRETS).on(SECRETS.SECRET_ID.eq(REPOSITORIES.SECRET_ID));
     }
 
-    private RepositoryEntry toEntry(Record12<UUID, UUID, String, String, String, String, String, Boolean, JSONB, UUID, String, String> r) {
+    private RepositoryEntry toEntry(Record13<UUID, UUID, String, String, String, String, String, Boolean, JSONB, UUID, String, String, Boolean> r) {
         return new RepositoryEntry(r.get(REPOSITORIES.REPO_ID),
                 r.get(REPOSITORIES.PROJECT_ID),
                 r.get(REPOSITORIES.REPO_NAME),
@@ -257,6 +253,7 @@ public class RepositoryDao extends AbstractDao {
                 r.get(SECRETS.SECRET_ID),
                 r.get(SECRETS.SECRET_NAME),
                 r.get(SECRETS.STORE_TYPE),
-                objectMapper.fromJSONB(r.get(REPOSITORIES.META)));
+                objectMapper.fromJSONB(r.get(REPOSITORIES.META)),
+                r.get(REPOSITORIES.IS_TRIGGERS_DISABLED));
     }
 }

@@ -24,6 +24,7 @@ import com.icegreen.greenmail.junit.GreenMailRule;
 import com.icegreen.greenmail.util.ServerSetupTest;
 import com.walmartlabs.concord.runtime.v2.sdk.Context;
 import com.walmartlabs.concord.runtime.v2.sdk.MapBackedVariables;
+import org.junit.After;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -42,30 +43,85 @@ public class SmtpTaskV2Test {
     @Rule
     public final GreenMailRule mailServer = new GreenMailRule(ServerSetupTest.SMTP);
 
-    @Test
-    public void test() throws Exception {
-        int port = mailServer.getSmtp().getPort();
+    @After
+    public void cleanup() {
+        mailServer.reset();
+    }
 
+    @Test
+    public void testWithPolicyDefaults() throws Exception {
         Map<String, Object> smtpParams = new HashMap<>();
         smtpParams.put("host", "localhost");
-        smtpParams.put("port", port);
+        smtpParams.put("port", mailServer.getSmtp().getPort());
 
         Map<String, Object> mail = new HashMap<>();
         mail.put("from", "me@localhost");
         mail.put("to", "you@localhost");
-        mail.put("message", "Hello!");
+        mail.put("message", "Default vars from policy.");
 
         Context ctx = mock(Context.class);
         when(ctx.workingDirectory()).thenReturn(Paths.get(System.getProperty("user.dir")));
-        when(ctx.variables()).thenReturn(new MapBackedVariables(Collections.singletonMap("smtpParams", smtpParams)));
+        when(ctx.variables()).thenReturn(new MapBackedVariables(Collections.emptyMap()));
+        when(ctx.defaultVariables()).thenReturn(new MapBackedVariables(smtpParams));
 
         SmtpTaskV2 t = new SmtpTaskV2(ctx);
         t.execute(new MapBackedVariables(Collections.singletonMap("mail", mail)));
 
         MimeMessage[] messages = mailServer.getReceivedMessages();
         assertEquals(1, messages.length);
-        assertEquals("Hello!\r\n", messages[0].getContent());
+        assertEquals("Default vars from policy.\r\n", messages[0].getContent());
+    }
 
-        mailServer.reset();
+    @Test
+    public void testWithProcessDefaults() throws Exception {
+        Map<String, Object> smtpParams = new HashMap<>();
+        smtpParams.put("host", "localhost");
+        smtpParams.put("port", mailServer.getSmtp().getPort());
+
+        Map<String, Object> mail = new HashMap<>();
+        mail.put("from", "me@localhost");
+        mail.put("to", "you@localhost");
+        mail.put("message", "Default vars from process arguments.");
+
+        Context ctx = mock(Context.class);
+        when(ctx.workingDirectory()).thenReturn(Paths.get(System.getProperty("user.dir")));
+        when(ctx.variables()).thenReturn(new MapBackedVariables(Collections.singletonMap("smtpParams", smtpParams)));
+        when(ctx.defaultVariables()).thenReturn(new MapBackedVariables(Collections.emptyMap()));
+
+        SmtpTaskV2 t = new SmtpTaskV2(ctx);
+        t.execute(new MapBackedVariables(Collections.singletonMap("mail", mail)));
+
+        MimeMessage[] messages = mailServer.getReceivedMessages();
+        assertEquals(1, messages.length);
+        assertEquals("Default vars from process arguments.\r\n", messages[0].getContent());
+    }
+
+    @Test
+    public void testWithBothDefaults() throws Exception {
+        Map<String, Object> policyDefaults = new HashMap<>();
+        policyDefaults.put("host", "badserver");
+        policyDefaults.put("port", -1);
+
+        // Process arg defaults override policy defaults
+        Map<String, Object> processArgsDefaults = new HashMap<>();
+        processArgsDefaults.put("host", "localhost");
+        processArgsDefaults.put("port", mailServer.getSmtp().getPort());
+
+        Map<String, Object> mail = new HashMap<>();
+        mail.put("from", "me@localhost");
+        mail.put("to", "you@localhost");
+        mail.put("message", "Default vars from process arguments.");
+
+        Context ctx = mock(Context.class);
+        when(ctx.workingDirectory()).thenReturn(Paths.get(System.getProperty("user.dir")));
+        when(ctx.variables()).thenReturn(new MapBackedVariables(Collections.singletonMap("smtpParams", processArgsDefaults)));
+        when(ctx.defaultVariables()).thenReturn(new MapBackedVariables(policyDefaults));
+
+        SmtpTaskV2 t = new SmtpTaskV2(ctx);
+        t.execute(new MapBackedVariables(Collections.singletonMap("mail", mail)));
+
+        MimeMessage[] messages = mailServer.getReceivedMessages();
+        assertEquals(1, messages.length);
+        assertEquals("Default vars from process arguments.\r\n", messages[0].getContent());
     }
 }

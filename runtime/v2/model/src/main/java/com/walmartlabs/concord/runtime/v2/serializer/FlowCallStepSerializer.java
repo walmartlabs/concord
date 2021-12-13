@@ -60,6 +60,8 @@ public class FlowCallStepSerializer extends StdSerializer<FlowCall> {
         }
 
         writeNotEmptyObjectField("in", options.input(), gen);
+        writeNotEmptyObjectField("in", options.inputExpression(), gen);
+
         writeNotEmptyObjectField("out", options.out(), gen);
         writeNotEmptyObjectField("out", options.outExpr(), gen);
 

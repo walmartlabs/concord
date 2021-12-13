@@ -11,7 +11,7 @@
 
     <groupId>com.walmartlabs.concord</groupId>
     <artifactId>parent</artifactId>
-    <version>1.85.1-SNAPSHOT</version>
+    <version>1.92.1-SNAPSHOT</version>
     <packaging>pom</packaging>
 
     <name>${project.groupId}:${project.artifactId}</name>
@@ -72,9 +72,12 @@
 
         <scm.connection>scm:git:https://github.com/walmartlabs/concord.git</scm.connection>
 
+        <jdk.version>1.8.0</jdk.version>
+
         <docker.plugin.version>0.30.0</docker.plugin.version>
         <jooq.version>3.13.4</jooq.version>
-        <liquibase.version>3.5.1</liquibase.version> <!-- the newer versions (up to 3.5.3) have incorrect mappings for PG's blob/bytea -->
+        <liquibase.version>3.5.1
+        </liquibase.version> <!-- the newer versions (up to 3.5.3) have incorrect mappings for PG's blob/bytea -->
         <maven.dependency.plugin.version>3.1.2</maven.dependency.plugin.version>
         <node.version>14.16.0</node.version>
     </properties>
@@ -151,6 +154,30 @@
                         </goals>
                     </execution>
                 </executions>
+            </plugin>
+            <plugin>
+                <artifactId>maven-enforcer-plugin</artifactId>
+                <version>3.0.0-M3</version>
+                <executions>
+                    <execution>
+                        <phase>validate</phase>
+                        <goals>
+                            <goal>enforce</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <configuration>
+                    <rules>
+                        <banDuplicatePomDependencyVersions />
+                        <requireUpperBoundDeps />
+                        <requireMavenVersion>
+                            <version>3.6.3</version>
+                        </requireMavenVersion>
+                        <requireJavaVersion>
+                            <version>${jdk.version}</version>
+                        </requireJavaVersion>
+                    </rules>
+                </configuration>
             </plugin>
         </plugins>
 
@@ -446,6 +473,18 @@
                     <url>${site.url}</url>
                 </site>
             </distributionManagement>
+        </profile>
+        <profile>
+            <id>jdk11</id>
+            <properties>
+                <jdk.version>11.0</jdk.version>
+            </properties>
+        </profile>
+        <profile>
+            <id>jdk16</id>
+            <properties>
+                <jdk.version>16</jdk.version>
+            </properties>
         </profile>
     </profiles>
 </project>

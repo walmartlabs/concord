@@ -52,7 +52,7 @@ import java.util.stream.Collectors;
 
 import static com.walmartlabs.concord.server.jooq.Tables.REPOSITORIES;
 import static com.walmartlabs.concord.server.jooq.tables.ProcessQueue.PROCESS_QUEUE;
-import static org.jooq.impl.DSL.value;
+import static org.jooq.impl.DSL.*;
 
 public class EnqueuedBatchTask extends PeriodicTask {
 
@@ -415,6 +415,7 @@ public class EnqueuedBatchTask extends PeriodicTask {
         private void toPreparing(DSLContext tx, List<UUID> processes) {
             tx.update(PROCESS_QUEUE)
                     .set(PROCESS_QUEUE.CURRENT_STATUS, value(ProcessStatus.PREPARING.name()))
+                    .set(PROCESS_QUEUE.LAST_UPDATED_AT, currentOffsetDateTime())
                     .where(PROCESS_QUEUE.INSTANCE_ID.in(processes))
                     .execute();
         }

@@ -276,7 +276,15 @@ public class ConcordTask extends AbstractConcordTask {
         ContextUtils.assertString("'" + API_KEY + "' is required to start a process on an external Concord instance",
                 ctx, API_KEY);
 
-        start(ctx, null);
+        Map<String, Object> cfg = createJobCfg(ctx, defaults);
+        boolean sync = getBoolean(cfg, SYNC_KEY, false);
+        boolean suspend = getBoolean(cfg, SUSPEND_KEY, false);
+        if (sync && suspend) {
+            log.warn("Input parameter '{}' ignored for {} action", SUSPEND_KEY, Action.STARTEXTERNAL);
+            cfg.put(SUSPEND_KEY, false);
+        }
+
+        start(ctx, cfg,null);
     }
 
     private void startChildProcess(Context ctx) throws Exception {
@@ -286,7 +294,10 @@ public class ConcordTask extends AbstractConcordTask {
 
     private void start(Context ctx, UUID parentInstanceId) throws Exception {
         Map<String, Object> cfg = createJobCfg(ctx, defaults);
+        start(ctx, cfg, parentInstanceId);
+    }
 
+    private void start(Context ctx, Map<String, Object> cfg, UUID parentInstanceId) throws Exception {
         Map<String, Object> req = createRequest(cfg);
 
         Path workDir = ContextUtils.getWorkDir(ctx);
@@ -870,7 +881,11 @@ public class ConcordTask extends AbstractConcordTask {
 
     private static Action getAction(Context ctx) {
         String action = ContextUtils.assertString(ctx, ACTION_KEY);
-        return Action.valueOf(action.trim().toUpperCase());
+        try {
+            return Action.valueOf(action.trim().toUpperCase());
+        } catch (IllegalArgumentException e) {
+            throw new RuntimeException("Unknown action: '" + action + "'. Available actions: " + Arrays.toString(Action.values()));
+        }
     }
 
     private static int getInstances(Map<String, Object> cfg) {

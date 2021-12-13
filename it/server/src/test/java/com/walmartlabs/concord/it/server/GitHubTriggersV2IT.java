@@ -27,6 +27,8 @@ import org.junit.Test;
 import javax.naming.NameAlreadyBoundException;
 import javax.naming.directory.*;
 import java.nio.file.Path;
+import java.time.OffsetDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Map;
 
@@ -96,6 +98,13 @@ public class GitHubTriggersV2IT extends AbstractGitHubTriggersIT {
 
         // ---
 
+        // see https://github.com/walmartlabs/concord/issues/435
+        // wait a bit to reliably filter out subsequent processes of projectA
+        Thread.sleep(1000);
+        OffsetDateTime now = OffsetDateTime.now().truncatedTo(ChronoUnit.SECONDS);
+
+        // ---
+
         sendEvent("githubTests/events/direct_branch_push.json", "push",
                 "_FULL_REPO_NAME", toRepoName(projectBRepo),
                 "_REF", "refs/heads/master",
@@ -106,7 +115,7 @@ public class GitHubTriggersV2IT extends AbstractGitHubTriggersIT {
         waitForAProcess(orgXName, projectGName, "github", null);
 
         // no A's are expected
-        expectNoProceses(orgXName, projectAName, procA);
+        expectNoProceses(orgXName, projectAName, now);
 
         // ---
 

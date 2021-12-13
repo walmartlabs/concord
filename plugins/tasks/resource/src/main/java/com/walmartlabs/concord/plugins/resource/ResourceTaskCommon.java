@@ -69,6 +69,19 @@ public class ResourceTaskCommon {
         }
     }
 
+    public Object fromJsonString(String jsonsString) throws IOException {
+        return fromJsonString(jsonsString, false);
+    }
+
+    public Object fromJsonString(String jsonString, boolean eval) throws IOException {
+        Object result = new ObjectMapper().readValue(jsonString, Object.class);
+        if (eval) {
+            return evaluator.eval(result);
+        } else {
+            return result;
+        }
+    }
+
     public Object asYaml(String path) throws IOException {
         return asYaml(path, false);
     }

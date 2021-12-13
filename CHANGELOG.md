@@ -1,5 +1,264 @@
 # Change log
 
+## [1.92.0] - 2021-12-07
+
+### Added
+
+- runtime-v2: `ignoreErrors` mode support for tasks
+([#484](https://github.com/walmartlabs/concord/pull/484));
+- concord-server: record audit log when processes are
+cancelled ([#495](https://github.com/walmartlabs/concord/pull/495));
+- file-tasks: new methods - `move`, `relativize`
+([#498](https://github.com/walmartlabs/concord/pull/498));
+- crypto-v2: allow users to specify `dest` directory when
+calling `exportAsFile`
+([#499](https://github.com/walmartlabs/concord/pull/499));
+- concord-server: allow users to override timeout for error
+handlers using new process configuration property
+`handlerProcessTimeout`
+([#501](https://github.com/walmartlabs/concord/pull/501));
+- http-tasks: log invalid JSON bodies and parse errors
+([#505](https://github.com/walmartlabs/concord/pull/505)).
+
+### Changed
+
+- docker: fixed the behavior of `stdout` parameter
+([#472](https://github.com/walmartlabs/concord/pull/472));
+- concord-task: fix `suspendForCompletion` action in the v2
+version of the task
+([#488](https://github.com/walmartlabs/concord/pull/488));
+- concord-task: return fork IDs in the `ids` variable even for
+single-fork calls (v2 only)
+([#488](https://github.com/walmartlabs/concord/pull/488));
+- runtime-v2: fix exception when `MetadataProcessor` called
+after an `exit` step
+([#491](https://github.com/walmartlabs/concord/pull/491));
+- concord-server: fix concurrent process status update
+([#493](https://github.com/walmartlabs/concord/pull/493));
+- runtime-v2: fixed an issue with variable propagation in
+the presense of an `error` block in flow calls
+([#496](https://github.com/walmartlabs/concord/pull/496));
+- runtime-v1, runtime-v2: tone down the metadata processor's
+logs ([#500](https://github.com/walmartlabs/concord/pull/500));
+- smtp-tasks: simplify default variables, allow `host` and
+`port` parameters without nesting into `smtpParams`
+([#503](https://github.com/walmartlabs/concord/pull/503)).
+
+### Breaking
+
+- concord-task: return process IDs as `String` instead of `UUID`
+([#488](https://github.com/walmartlabs/concord/pull/488)).
+- runtime-v2, docker: replace the `logOutput` parameter with
+a number of new fine-grained controls - `redirectErrorStream`, `logOut`,
+`logErr`, `saveOut` and `saveErr`
+([#489](https://github.com/walmartlabs/concord/pull/489));
+- concord-server, concord-console: remove the old deprecated
+Ansible UI and related API endpoints
+([#497](https://github.com/walmartlabs/concord/pull/497));
+- concord-server: remove support for `process.defaultConfiguration`
+configuration parameter. This effectively removes concord-server's
+support of default process variable files (#504).
+
+
+
+## [1.91.0] - 2021-11-05
+
+### Added
+
+- concord-server, concord-console: allow users to disable triggers
+in repositories ([#476](https://github.com/walmartlabs/concord/pull/476));
+- runtime-v2: add feature to record metadata in tasks call
+([#479](https://github.com/walmartlabs/concord/pull/476)).
+
+### Changed
+
+- concord-agent: do not retry logs on 4xx-5xx response
+([#475](https://github.com/walmartlabs/concord/pull/475)).
+- concord-server: throw error on null teams list in bulk access
+update ([#477](https://github.com/walmartlabs/concord/pull/477));
+- concord-repository: fix `checkAlreadyFetched` behavior when
+checking out an older commit using the current branch
+([#480](https://github.com/walmartlabs/concord/pull/480)).
+
+
+
+## [1.90.0] - 2021-09-16
+
+### Added
+
+- runtime-v2: log effective process dependencies in debug mode
+([#467](https://github.com/walmartlabs/concord/pull/467)).
+
+### Changed
+
+- project: switch to AdoptOpenJDK, initial support for JDK 11 and 16.
+The default Docker images use JDK 8 by default
+([#434](https://github.com/walmartlabs/concord/pull/434));
+- concord-server-db: fix checksum expectations for API key related
+changesets ([#463](https://github.com/walmartlabs/concord/pull/463));
+- concord-server: remove an old, unused task from the DB
+([#464](https://github.com/walmartlabs/concord/pull/464));
+- runtime-v2: improved parser error message
+([#465](https://github.com/walmartlabs/concord/pull/465));
+- concord-server: fix a potential race condition in the process
+dispatcher ([#466](https://github.com/walmartlabs/concord/pull/466));
+- concord-server: do not create http sessions for api-key auth
+([#471](https://github.com/walmartlabs/concord/pull/471));
+- concord-server: disable servlet sessions for session token
+authentication ([#473](https://github.com/walmartlabs/concord/pull/473));
+- runtime-v1, runtime-v2: ability to disable events recording
+([#474](https://github.com/walmartlabs/concord/pull/474)).
+
+
+
+## [1.89.0] - 2021-08-22
+
+### Added
+
+- concord-server: ability to load user API keys from a local file
+([#457](https://github.com/walmartlabs/concord/pull/457)).
+
+### Changed
+
+- runtime-v2: sanitize script variables, make sure values are
+`Serializable` ([#458](https://github.com/walmartlabs/concord/pull/458));
+- concord-server: do not mark processes that have been in the `NEW`
+status for a long time as failed to start
+([#459](https://github.com/walmartlabs/concord/pull/459));
+- pfed-sso: redirect to login on failure
+([#462](https://github.com/walmartlabs/concord/pull/462)).
+
+
+
+## [1.88.1] - 2021-08-06
+
+### Changed
+
+- runtime-v2: allow step names to be placed anywhere in the step's
+definition (i.e. not necessarily as the first element)
+([#452](https://github.com/walmartlabs/concord/pull/452));
+- runtime-v2: fix evaluation of `retry` expressions. Now expressions
+are allowed to return any `Number` (e.g. `Integer`, `Long`, etc)
+([#454](https://github.com/walmartlabs/concord/pull/454));
+- runtime-v2: fix input parameter override on `retry`;
+([#455](https://github.com/walmartlabs/concord/pull/455)).
+
+
+
+## [1.88.0] - 2021-07-29
+
+### Added
+
+- concord-server: a new API endpoint to force sync LDAP groups of
+a specific user ([#442](https://github.com/walmartlabs/concord/pull/442));
+- runtime-v1, runtime-v2: add support for `*.yaml` Concord files in
+addition to `*.yml` ([#443](https://github.com/walmartlabs/concord/pull/443));
+- runtime-v2: allow expressions to be used as the `in` block value
+in `task`, `flow` and `script` steps
+([#447](https://github.com/walmartlabs/concord/pull/447)).
+
+### Changed
+
+- concord-server: ignore synthetic methods annotated with `WithTimer`
+([#444](https://github.com/walmartlabs/concord/pull/444));
+- concord-targetplatform: update jackson-databind version to address
+[CVE](https://github.com/advisories/GHSA-288c-cq4h-88gq)
+([#449](https://github.com/walmartlabs/concord/pull/449));
+- concord-server: roll back changes introduced in
+[#390](https://github.com/walmartlabs/concord/pull/390)
+([#450](https://github.com/walmartlabs/concord/pull/450));
+- ansible: fix retry file persistance (`saveRetry` task parameter)
+([#451](https://github.com/walmartlabs/concord/pull/451)).
+
+
+
+## [1.87.0] - 2021-07-12
+
+### Added
+
+- concord-task: `start`, `startExternal` and `fork` actions now
+return process IDs ([#427](https://github.com/walmartlabs/concord/pull/427));
+- concord-server: add more metrics for wait conditions
+([#438](https://github.com/walmartlabs/concord/pull/438)).
+
+### Changed
+
+- concord-cli, concord-server, concord-agent: ability to run
+Concord on Java 16
+([#429](https://github.com/walmartlabs/concord/pull/429));
+- concord-server: fix insertion of wait conditions for forked
+processes ([#430](https://github.com/walmartlabs/concord/pull/430));
+- concord-console: fix checkpoint color for failed processes
+([#432](https://github.com/walmartlabs/concord/pull/432));
+- concord-console: fix the editor component initialization. Affects
+the JSON store query and the project configuration editors
+([#433](https://github.com/walmartlabs/concord/pull/433));
+- concord-server: clean up repository cache using a separate thread
+([#436](https://github.com/walmartlabs/concord/pull/436));
+- runtime-v2: add grammar for the `files` condition in GitHub triggers
+([#437](https://github.com/walmartlabs/concord/pull/437));
+- concord-server: use optimistic locking for wait conditions
+([#439](https://github.com/walmartlabs/concord/pull/439));
+- concord-server: send `PROCESS_STATUS` events to listeners
+(fix for the regression in 1.85.0+)
+([#440](https://github.com/walmartlabs/concord/pull/440));
+- concord-server: cancel listeners on exception
+([#441](https://github.com/walmartlabs/concord/pull/441)).
+
+
+
+## [1.86.3] - 2021-06-16
+
+### Changed
+
+- concord-server: update metrics version, use lock free timers
+([#425](https://github.com/walmartlabs/concord/pull/425)).
+
+
+
+## [1.86.2] - 2021-06-02
+
+### Added
+
+- http-tasks: ability to provide a custom trust stores
+([#399](https://github.com/walmartlabs/concord/pull/399));
+- concord-server: new configuration parameter
+`db.changeLogParameters.defaultAgentToken`. Sets the default
+API token for the Agent
+([#410](https://github.com/walmartlabs/concord/pull/410));
+- concord-server: add DNS Service Record feature ldap
+(dynamic loading of LDAP server address)
+([#412](https://github.com/walmartlabs/concord/pull/412));
+- smtp-tasks: read default parameters (`defaultProcessCfg`
+policy) in the runtime-v2 version of the task
+([#419](https://github.com/walmartlabs/concord/pull/419));
+- resource-tasks: parse object from JSON string
+([#420](https://github.com/walmartlabs/concord/pull/420)).
+
+### Changed
+
+- dependency-manager: update the `maven-resolver` version
+([#405](https://github.com/walmartlabs/concord/pull/405));
+- concord-server: the `iam-sso` plugin has been removed
+([#407](https://github.com/walmartlabs/concord/pull/407));
+- concord-repository: remove dependency on`jgit`
+([#414](https://github.com/walmartlabs/concord/pull/414));
+- concord-task: `startExternal` action should ignore
+the `suspend` parameter
+([#416](https://github.com/walmartlabs/concord/pull/416));
+- concord-console: update dependencies
+([#418](https://github.com/walmartlabs/concord/pull/418)).
+
+### Breaking
+
+- concord-server, concord-agent: the agent's default API
+token has been removed. The server now automatically
+generates a new API token on the first start
+([#410](https://github.com/walmartlabs/concord/pull/410) and
+([#413](https://github.com/walmartlabs/concord/pull/413)).
+
+
+
 ## [1.85.0] - 2021-04-27
 
 ### Added

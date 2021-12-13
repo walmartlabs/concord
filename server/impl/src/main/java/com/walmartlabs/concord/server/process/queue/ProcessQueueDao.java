@@ -42,6 +42,7 @@ import com.walmartlabs.concord.server.sdk.PartialProcessKey;
 import com.walmartlabs.concord.server.sdk.ProcessKey;
 import com.walmartlabs.concord.server.sdk.ProcessStatus;
 import org.jooq.*;
+import org.jooq.Record;
 import org.jooq.exception.DataAccessException;
 import org.jooq.impl.DSL;
 import org.jooq.util.postgres.PostgresDSL;
@@ -60,7 +61,6 @@ import static com.walmartlabs.concord.server.jooq.tables.Organizations.ORGANIZAT
 import static com.walmartlabs.concord.server.jooq.tables.ProcessCheckpoints.PROCESS_CHECKPOINTS;
 import static com.walmartlabs.concord.server.jooq.tables.ProcessEvents.PROCESS_EVENTS;
 import static com.walmartlabs.concord.server.jooq.tables.ProcessQueue.PROCESS_QUEUE;
-import static com.walmartlabs.concord.server.jooq.tables.ProcessQueueStats.PROCESS_QUEUE_STATS;
 import static com.walmartlabs.concord.server.jooq.tables.Projects.PROJECTS;
 import static org.jooq.impl.DSL.*;
 
@@ -151,10 +151,11 @@ public class ProcessQueueDao extends AbstractDao {
                         .otherwise(PROCESS_QUEUE.LAST_RUN_AT));
     }
 
-    public void enqueue(DSLContext tx, ProcessKey processKey, Set<String> tags, OffsetDateTime startAt,
-                        Map<String, Object> requirements, Long processTimeout, Set<String> handlers,
-                        Map<String, Object> meta, Imports imports, ExclusiveMode exclusive,
-                        String runtime, List<String> dependencies, Long suspendTimeout) {
+    public boolean enqueue(DSLContext tx, ProcessKey processKey, Set<String> tags, OffsetDateTime startAt,
+                           Map<String, Object> requirements, Long processTimeout, Set<String> handlers,
+                           Map<String, Object> meta, Imports imports, ExclusiveMode exclusive,
+                           String runtime, List<String> dependencies, Long suspendTimeout,
+                           Collection<ProcessStatus> expectedStatuses) {
 
         UpdateSetMoreStep<ProcessQueueRecord> q = tx.update(PROCESS_QUEUE)
                 .set(PROCESS_QUEUE.CURRENT_STATUS, ProcessStatus.ENQUEUED.toString())
@@ -205,12 +206,11 @@ public class ProcessQueueDao extends AbstractDao {
         }
 
         int i = q
-                .where(PROCESS_QUEUE.INSTANCE_ID.eq(processKey.getInstanceId()))
+                .where(PROCESS_QUEUE.INSTANCE_ID.eq(processKey.getInstanceId())
+                        .and(PROCESS_QUEUE.CURRENT_STATUS.in(expectedStatuses.stream().map(Enum::name).collect(Collectors.toList()))))
                 .execute();
 
-        if (i != 1) {
-            throw new DataAccessException("Invalid number of rows updated: " + i);
-        }
+        return i == 1;
     }
 
     public void updateRepositoryDetails(PartialProcessKey processKey, UUID repoId, String repoUrl,
@@ -278,6 +278,33 @@ public class ProcessQueueDao extends AbstractDao {
         return i == 1;
     }
 
+    public List<ProcessKey> updateStatus(List<ProcessKey> processKeys, List<ProcessStatus> expected, ProcessStatus status) {
+        return txResult(tx -> {
+            List<UUID> instanceIds = processKeys.stream()
+                    .map(PartialProcessKey::getInstanceId)
+                    .collect(Collectors.toList());
+
+            UpdateConditionStep<ProcessQueueRecord> q = tx.update(PROCESS_QUEUE)
+                    .set(PROCESS_QUEUE.CURRENT_STATUS, status.toString())
+                    .set(PROCESS_QUEUE.LAST_UPDATED_AT, currentOffsetDateTime())
+                    .set(PROCESS_QUEUE.LAST_RUN_AT, createRunningAtValue(status))
+                    .where(PROCESS_QUEUE.INSTANCE_ID.in(instanceIds));
+
+            if (expected != null) {
+                List<String> l = expected.stream()
+                        .map(Enum::toString)
+                        .collect(Collectors.toList());
+
+                q.and(PROCESS_QUEUE.CURRENT_STATUS.in(l));
+            }
+
+            return q.returningResult(PROCESS_QUEUE.INSTANCE_ID, PROCESS_QUEUE.CREATED_AT)
+                    .fetch().stream()
+                    .map(r -> new ProcessKey(r.value1(), r.value2()))
+                    .collect(Collectors.toList());
+        });
+    }
+
     public boolean updateMeta(PartialProcessKey processKey, Map<String, Object> meta) {
         UUID instanceId = processKey.getInstanceId();
 
@@ -302,31 +329,6 @@ public class ProcessQueueDao extends AbstractDao {
                     .execute();
 
             return i == 1;
-        });
-    }
-
-    public boolean updateStatus(List<ProcessKey> processKeys, List<ProcessStatus> expected, ProcessStatus status) {
-        return txResult(tx -> {
-            List<UUID> instanceIds = processKeys.stream()
-                    .map(PartialProcessKey::getInstanceId)
-                    .collect(Collectors.toList());
-
-            UpdateConditionStep<ProcessQueueRecord> q = tx.update(PROCESS_QUEUE)
-                    .set(PROCESS_QUEUE.CURRENT_STATUS, status.toString())
-                    .set(PROCESS_QUEUE.LAST_UPDATED_AT, currentOffsetDateTime())
-                    .set(PROCESS_QUEUE.LAST_RUN_AT, createRunningAtValue(status))
-                    .where(PROCESS_QUEUE.INSTANCE_ID.in(instanceIds));
-
-            if (expected != null) {
-                List<String> l = expected.stream()
-                        .map(Enum::toString)
-                        .collect(Collectors.toList());
-
-                q.and(PROCESS_QUEUE.CURRENT_STATUS.in(l));
-            }
-
-            int i = q.execute();
-            return i == processKeys.size();
         });
     }
 
@@ -371,10 +373,14 @@ public class ProcessQueueDao extends AbstractDao {
         return txResult(tx -> get(tx, processKey, includes));
     }
 
-    public String getLastAgentId(PartialProcessKey processKey) {
-        return dsl().select(PROCESS_QUEUE.LAST_AGENT_ID).from(PROCESS_QUEUE)
-                .where(PROCESS_QUEUE.INSTANCE_ID.eq(processKey.getInstanceId()))
-                .fetchOne(PROCESS_QUEUE.LAST_AGENT_ID);
+    public ProcessEntry get(DSLContext tx, ProcessKey key, Set<ProcessDataInclude> includes) {
+        SelectQuery<Record> query = buildSelect(tx, key, ProcessFilter.builder()
+                .includes(includes)
+                .build());
+
+        query.addConditions(PROCESS_QUEUE.INSTANCE_ID.eq(key.getInstanceId()));
+
+        return query.fetchOne(this::toEntry);
     }
 
     public String getRuntime(PartialProcessKey processKey) {
@@ -411,21 +417,19 @@ public class ProcessQueueDao extends AbstractDao {
         return query.fetch(this::toEntry);
     }
 
-    public List<IdAndStatus> getCascade(PartialProcessKey parentKey) {
+    public List<ProcessKey> getCascade(PartialProcessKey parentKey) {
         UUID parentInstanceId = parentKey.getInstanceId();
         return dsl().withRecursive("children").as(
-                select(PROCESS_QUEUE.INSTANCE_ID, PROCESS_QUEUE.CREATED_AT, PROCESS_QUEUE.CURRENT_STATUS).from(PROCESS_QUEUE)
+                select(PROCESS_QUEUE.INSTANCE_ID, PROCESS_QUEUE.CREATED_AT).from(PROCESS_QUEUE)
                         .where(PROCESS_QUEUE.INSTANCE_ID.eq(parentInstanceId))
                         .unionAll(
-                                select(PROCESS_QUEUE.INSTANCE_ID, PROCESS_QUEUE.CREATED_AT, PROCESS_QUEUE.CURRENT_STATUS).from(PROCESS_QUEUE)
+                                select(PROCESS_QUEUE.INSTANCE_ID, PROCESS_QUEUE.CREATED_AT).from(PROCESS_QUEUE)
                                         .join(name("children"))
                                         .on(PROCESS_QUEUE.PARENT_INSTANCE_ID.eq(
                                                 field(name("children", "INSTANCE_ID"), UUID.class)))))
                 .select()
                 .from(name("children"))
-                .fetch(r -> new IdAndStatus(new ProcessKey(r.get(0, UUID.class),
-                        r.get(1, OffsetDateTime.class)),
-                        ProcessStatus.valueOf(r.get(2, String.class))));
+                .fetch(r -> new ProcessKey(r.get(0, UUID.class), r.get(1, OffsetDateTime.class)));
     }
 
     public ProcessInitiatorEntry getInitiator(PartialProcessKey processKey) {
@@ -506,13 +510,12 @@ public class ProcessQueueDao extends AbstractDao {
     }
 
     public Map<String, Integer> getStatistics() {
-        return dsl().select(PROCESS_QUEUE_STATS.STATUS, PROCESS_QUEUE_STATS.PROCESS_COUNT)
-                .from(PROCESS_QUEUE_STATS)
-                .union(select(value(ENQUEUED_NOW_METRIC), DSL.count(asterisk()))
-                        .from(PROCESS_QUEUE)
+        return dsl().select(PROCESS_QUEUE.CURRENT_STATUS, DSL.count(asterisk())).from(PROCESS_QUEUE)
+                .groupBy(PROCESS_QUEUE.CURRENT_STATUS)
+                .union(select(value(ENQUEUED_NOW_METRIC), DSL.count(asterisk())).from(PROCESS_QUEUE)
                         .where(PROCESS_QUEUE.CURRENT_STATUS.eq(ProcessStatus.ENQUEUED.name()))
                         .and(or(PROCESS_QUEUE.START_AT.isNull(), PROCESS_QUEUE.START_AT.lessOrEqual(currentOffsetDateTime()))))
-                .fetchMap(Record2::value1, r -> r.value2() >= 0 ? r.value2() : 0);
+                .fetchMap(Record2::value1, Record2::value2);
     }
 
     // TODO move to EventDao?
@@ -544,7 +547,7 @@ public class ProcessQueueDao extends AbstractDao {
                 jsonbBuildObject(
                         inline("id"), pe.EVENT_ID,
                         inline("changeDate"), toJsonDate(pe.EVENT_DATE),
-                        inline("status"), coalesce(field("{0}->'newStatus'", Object.class, pe.EVENT_DATA), field("{0}->'status'", Object.class, pe.EVENT_DATA)),
+                        inline("status"), field("{0}->'status'", Object.class, pe.EVENT_DATA),
                         inline("payload"), field("{0} - 'status'", Object.class, pe.EVENT_DATA)));
     }
 
@@ -763,16 +766,6 @@ public class ProcessQueueDao extends AbstractDao {
         return query;
     }
 
-    private ProcessEntry get(DSLContext tx, ProcessKey key, Set<ProcessDataInclude> includes) {
-        SelectQuery<Record> query = buildSelect(tx, key, ProcessFilter.builder()
-                .includes(includes)
-                .build());
-
-        query.addConditions(PROCESS_QUEUE.INSTANCE_ID.eq(key.getInstanceId()));
-
-        return query.fetchOne(this::toEntry);
-    }
-
     private ProcessEntry toEntry(Record r) {
         if (r == null) {
             return null;
@@ -879,25 +872,6 @@ public class ProcessQueueDao extends AbstractDao {
         }
 
         return l.toArray(new Field[0]);
-    }
-
-    public static class IdAndStatus {
-
-        private final ProcessKey processKey;
-        private final ProcessStatus status;
-
-        public IdAndStatus(ProcessKey processKey, ProcessStatus status) {
-            this.processKey = processKey;
-            this.status = status;
-        }
-
-        public ProcessKey getProcessKey() {
-            return processKey;
-        }
-
-        public ProcessStatus getStatus() {
-            return status;
-        }
     }
 
     public static class ProjectIdAndInitiator {

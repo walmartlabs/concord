@@ -19,3 +19,6 @@ configuration:
     recordTaskOutVars: true
     outVarsBlacklist:
       - "bass"
+    recordTaskMeta: true
+    metaBlacklist:
+      - "bass"

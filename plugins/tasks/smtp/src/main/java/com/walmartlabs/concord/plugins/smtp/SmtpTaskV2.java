@@ -27,7 +27,6 @@ import com.walmartlabs.concord.runtime.v2.sdk.Variables;
 
 import javax.inject.Inject;
 import javax.inject.Named;
-import java.io.Serializable;
 import java.nio.file.Path;
 import java.util.Collections;
 import java.util.Map;
@@ -59,16 +58,20 @@ public class SmtpTaskV2 implements Task {
         return SmtpTaskUtils.getScope(mailParams, ctxParams);
     }
 
-    private Map<String, Object> getCfg(Context ctx, Variables input, String a, String b) {
+    private static Map<String, Object> getCfg(Context ctx, Variables input, String a, String b) {
         Map<String, Object> m = getMap(ctx, input, a);
         if (m == null) {
             m = getMap(ctx, input, b);
         }
 
+        if (m == null) {
+            return ctx.defaultVariables().toMap();
+        }
+
         return m;
     }
 
-    private Map<String, Object> getMap(Context ctx, Variables input, String s) {
+    private static Map<String, Object> getMap(Context ctx, Variables input, String s) {
         Map<String, Object> m = input.getMap(s, null);
         if (m == null) {
             m = ctx.variables().getMap(s, null);

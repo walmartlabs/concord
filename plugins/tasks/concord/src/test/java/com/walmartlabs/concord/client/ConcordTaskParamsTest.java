@@ -44,7 +44,7 @@ public class ConcordTaskParamsTest {
                 Collections.singletonMap("entryPoint", "bbb")
         ));
 
-        ForkParams params = (ForkParams) ConcordTaskParams.of(new MapBackedVariables(input));
+        ForkParams params = (ForkParams) ConcordTaskParams.of(new MapBackedVariables(input), Collections.emptyMap());
 
         List<ForkStartParams> forks = params.forks();
         assertEquals(2, forks.size());

@@ -23,6 +23,7 @@ package com.walmartlabs.concord.project.runtime.v2.parser;
 import com.walmartlabs.concord.forms.FormField.Cardinality;
 import com.walmartlabs.concord.imports.Import;
 import com.walmartlabs.concord.imports.Imports;
+import com.walmartlabs.concord.runtime.v2.Constants;
 import com.walmartlabs.concord.runtime.v2.model.*;
 import com.walmartlabs.concord.runtime.v2.parser.StepOptions;
 import org.junit.Test;
@@ -76,6 +77,52 @@ public class YamlOkParserTest extends AbstractParserTest {
         assertMeta("Boo", t.getOptions());
     }
 
+    @Test
+    public void test000_1() throws Exception {
+        ProcessDefinition pd = load("000.1.yml");
+
+        List<Step> main = pd.flows().get("main");
+
+        assertEquals(1, main.size());
+
+        assertTrue(main.get(0) instanceof TaskCall);
+        TaskCall t = (TaskCall) main.get(0);
+        assertEquals("boo", t.getName());
+
+        // options
+        assertNotNull(t.getOptions());
+
+        // input
+        assertEquals(0, t.getOptions().input().size());
+        assertEquals("${inExpr}", t.getOptions().inputExpression());
+    }
+
+    @Test
+    public void test000_2() throws Exception {
+        ProcessDefinition pd = load("000.2.yml");
+
+        List<Step> main = pd.flows().get("main");
+
+        assertEquals(1, main.size());
+
+        assertTrue(main.get(0) instanceof TaskCall);
+        TaskCall t = (TaskCall) main.get(0);
+        assertEquals("project", t.getName());
+
+        // options
+        assertNotNull(t.getOptions());
+
+        // name
+        assertEquals("Test name", t.getOptions().meta().get(Constants.SEGMENT_NAME));
+
+        // input
+        assertNotNull(t.getOptions().input());
+
+        assertEquals("ProjectName", t.getOptions().input().get("name"));
+        assertEquals("Default", t.getOptions().input().get("org"));
+        assertEquals("create", t.getOptions().input().get("action"));
+    }
+
     // Full Call Flow Definition Test
     @Test
     public void test002() throws Exception {
@@ -115,6 +162,25 @@ public class YamlOkParserTest extends AbstractParserTest {
 
         // meta
         assertMeta("boo-call", t.getOptions());
+    }
+
+    @Test
+    public void test002_1() throws Exception {
+        ProcessDefinition pd = load("002.1.yml");
+
+        List<Step> main = pd.flows().get("main");
+
+        assertEquals(1, main.size());
+
+        assertTrue(main.get(0) instanceof FlowCall);
+        FlowCall t = (FlowCall) main.get(0);
+        assertEquals("boo", t.getFlowName());
+
+        // options
+        assertNotNull(t.getOptions());
+        // input
+        assertEquals(0, t.getOptions().input().size());
+        assertEquals("${inExpr}", t.getOptions().inputExpression());
     }
 
     // Snapshot Definition Test
@@ -274,6 +340,8 @@ public class YamlOkParserTest extends AbstractParserTest {
                 .inVarsBlacklist(Collections.singletonList("pass"))
                 .recordTaskOutVars(true)
                 .outVarsBlacklist(Collections.singletonList("bass"))
+                .recordTaskMeta(true)
+                .metaBlacklist(Collections.singletonList("bass"))
                 .build(), cfg.events());
     }
 
@@ -379,6 +447,24 @@ public class YamlOkParserTest extends AbstractParserTest {
 
         // meta
         assertMeta(t.getOptions());
+    }
+
+
+    // script definition
+    @Test
+    public void test014_1() throws Exception {
+        ProcessDefinition pd = load("014.1.yml");
+
+        List<Step> main = pd.flows().get("default");
+        assertEquals(1, main.size());
+
+        assertTrue(main.get(0) instanceof ScriptCall);
+        ScriptCall t = (ScriptCall) main.get(0);
+        assertEquals("groovy", t.getLanguageOrRef());
+
+        // input
+        assertEquals(0, t.getOptions().input().size());
+        assertEquals("${inExpr}", t.getOptions().inputExpression());
     }
 
     // resources definition

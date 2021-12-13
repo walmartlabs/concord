@@ -26,6 +26,8 @@ import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Map;
 
+import static com.walmartlabs.concord.runtime.v2.parser.GrammarV2.assertNotNull;
+
 public class YamlObject extends YamlValue {
 
     private static final long serialVersionUID = 1L;
@@ -42,7 +44,7 @@ public class YamlObject extends YamlValue {
     public Map<String, Serializable> getValue() {
         Map<String, Serializable> result = new HashMap<>();
         for (Map.Entry<String, YamlValue> e : values.entrySet()) {
-            result.put(e.getKey(), e.getValue().getValue());
+            result.put(e.getKey(), assertNotNull(e.getValue()).getValue());
         }
         return result;
     }

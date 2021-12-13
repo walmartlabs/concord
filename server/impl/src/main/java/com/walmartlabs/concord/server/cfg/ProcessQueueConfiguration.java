@@ -22,7 +22,6 @@ package com.walmartlabs.concord.server.cfg;
 
 import com.walmartlabs.ollie.config.Config;
 
-import javax.annotation.Nullable;
 import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
@@ -41,29 +40,11 @@ public class ProcessQueueConfiguration implements Serializable {
     @Config("queue.dispatcher.batchSize")
     private int dispatcherBatchSize;
 
-    @Nullable
-    @Inject
-    @Config("queue.stats.refreshInterval")
-    private Duration refreshInterval;
-
-    @Inject
-    @Config("queue.stats.fetchLimit")
-    private int fetchLimit;
-
     public Duration getDispatcherPollDelay() {
         return dispatcherPollDelay;
     }
 
     public int getDispatcherBatchSize() {
         return dispatcherBatchSize;
-    }
-
-    @Nullable
-    public Duration getRefreshInterval() {
-        return refreshInterval;
-    }
-
-    public int getFetchLimit() {
-        return fetchLimit;
     }
 }

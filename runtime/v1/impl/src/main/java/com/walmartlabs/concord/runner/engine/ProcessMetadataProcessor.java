@@ -40,6 +40,7 @@ public class ProcessMetadataProcessor {
     private static final int RETRY_COUNT = 3;
     private static final long RETRY_INTERVAL = 5000;
 
+    @SuppressWarnings("rawtypes")
     private static final Set<Class> VARIABLE_TYPES = new HashSet<>(Arrays.asList(
             String.class, Boolean.class, Character.class, Byte.class, Short.class, Integer.class, Long.class, Float.class, Double.class));
 
@@ -94,7 +95,7 @@ public class ProcessMetadataProcessor {
             if (value.getClass().isPrimitive() || VARIABLE_TYPES.contains(value.getClass())) {
                 result.put(v, value);
             } else {
-                log.info("out variable {} -> ignored (unsupported type: {})", v, value.getClass());
+                log.debug("out variable {} -> ignored (unsupported type: {})", v, value.getClass());
             }
         }
         return result;

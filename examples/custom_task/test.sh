@@ -3,6 +3,7 @@
 set -e
 
 SERVER_ADDR="$1"
+CONCORD_YAML="$2"
 
 # build the task
 mvn clean package -DskipTests
@@ -11,7 +12,7 @@ mvn clean package -DskipTests
 rm -rf target/test && mkdir -p target/test
 
 # copy the test flow
-cp test.yml target/test/concord.yml
+cp ${CONCORD_YAML:-test.yml} target/test/concord.yml
 
 # copy the task's JAR...
 mkdir -p target/test/lib/

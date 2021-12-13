@@ -29,6 +29,14 @@ import java.util.Map;
 
 public final class SerializerUtils {
 
+    public static void writeNotEmptyObjectField(String fieldName, String value, JsonGenerator gen) throws IOException {
+        if (value == null || value.trim().isEmpty()) {
+            return;
+        }
+
+        gen.writeObjectField(fieldName, value);
+    }
+
     public static <K, V> void writeNotEmptyObjectField(String fieldName, Map<K, V> value, JsonGenerator gen) throws IOException {
         if (value == null || value.isEmpty()) {
             return;

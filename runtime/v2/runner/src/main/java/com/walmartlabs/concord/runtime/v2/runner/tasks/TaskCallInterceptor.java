@@ -22,6 +22,7 @@ package com.walmartlabs.concord.runtime.v2.runner.tasks;
 
 import com.sun.el.util.ReflectionUtil;
 import com.walmartlabs.concord.common.AllowNulls;
+import com.walmartlabs.concord.runtime.v2.model.AbstractStep;
 import com.walmartlabs.concord.runtime.v2.model.ProcessDefinition;
 import com.walmartlabs.concord.runtime.v2.model.Step;
 import com.walmartlabs.concord.runtime.v2.runner.tasks.TaskCallEvent.Phase;
@@ -71,7 +72,7 @@ public class TaskCallInterceptor {
         listeners.forEach(l -> l.onEvent(postEvent));
 
         if (error != null) {
-            throw error;
+            throw new TaskException(error);
         }
 
         return result;
@@ -98,7 +99,8 @@ public class TaskCallInterceptor {
                 .inputAnnotations(method.annotations())
                 .methodName(method.name())
                 .processDefinition(ctx.processDefinition())
-                .taskName(ctx.taskName());
+                .taskName(ctx.taskName())
+                .meta(((AbstractStep)ctx.currentStep()).getOptions().meta());
     }
 
     @Value.Immutable

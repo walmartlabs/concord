@@ -21,12 +21,11 @@ package com.walmartlabs.concord.client.v2;
  */
 
 import com.walmartlabs.concord.client.*;
-import com.walmartlabs.concord.runtime.v2.sdk.ProjectInfo;
 import com.walmartlabs.concord.runtime.v2.sdk.*;
 
 import javax.inject.Inject;
 import javax.inject.Named;
-import java.nio.file.Path;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -40,27 +39,18 @@ import static com.walmartlabs.concord.client.ConcordTaskParams.ListSubProcesses;
 @SuppressWarnings("unused")
 public class ConcordTaskV2 implements ReentrantTask {
 
-    private final Variables defaults;
-    private final String sessionToken;
-    private final UUID instanceId;
     private final ApiClientFactory apiClientFactory;
-    private final ProjectInfo projectInfo;
-    private final Path workDir;
+    private final Context context;
 
     @Inject
     public ConcordTaskV2(ApiClientFactory apiClientFactory, Context context) {
-        this.defaults = context.defaultVariables();
-        this.sessionToken = context.processConfiguration().processInfo().sessionToken();
-        this.instanceId = context.processInstanceId();
         this.apiClientFactory = apiClientFactory;
-        this.projectInfo = context.processConfiguration().projectInfo();
-
-        this.workDir = context.workingDirectory();
+        this.context = context;
     }
 
     @Override
     public TaskResult execute(Variables in) throws Exception {
-        return delegate().execute(ConcordTaskParams.of(in));
+        return delegate().execute(ConcordTaskParams.of(in, context.defaultVariables().toMap()));
     }
 
     @Override
@@ -81,13 +71,22 @@ public class ConcordTaskV2 implements ReentrantTask {
     }
 
     public void suspendForCompletion(List<String> ids) throws Exception {
-        delegate().suspendForCompletion(ids.stream()
+        String eventName = delegate().suspendForCompletion(ids.stream()
                 .map(UUID::fromString)
                 .collect(Collectors.toList()));
+        context.suspend(eventName);
+    }
+
+    public Map<String, ProcessEntry> waitForCompletion(String id) {
+        return waitForCompletion(Collections.singletonList(id));
     }
 
     public Map<String, ProcessEntry> waitForCompletion(List<String> ids) {
         return waitForCompletion(ids, -1);
+    }
+
+    public Map<String, ProcessEntry> waitForCompletion(String id, long timeout) {
+        return waitForCompletion(Collections.singletonList(id), timeout);
     }
 
     public Map<String, ProcessEntry> waitForCompletion(List<String> ids, long timeout) {
@@ -102,8 +101,16 @@ public class ConcordTaskV2 implements ReentrantTask {
         delegate().kill(new KillParams(new MapBackedVariables(cfg)));
     }
 
+    public Map<String, Map<String, Object>> getOutVars(String id) {
+        return getOutVars(Collections.singletonList(id));
+    }
+
     public Map<String, Map<String, Object>> getOutVars(List<String> ids) {
         return getOutVars(ids, -1);
+    }
+
+    public Map<String, Map<String, Object>> getOutVars(String id, long timeout) {
+        return getOutVars(Collections.singletonList(id), timeout);
     }
 
     public Map<String, Map<String, Object>> getOutVars(List<String> ids, long timeout) {
@@ -111,7 +118,10 @@ public class ConcordTaskV2 implements ReentrantTask {
     }
 
     private ConcordTaskCommon delegate() {
-        return new ConcordTaskCommon(sessionToken, apiClientFactory, instanceId, projectInfo.orgName(), workDir);
+        String sessionToken = context.processConfiguration().processInfo().sessionToken();
+        UUID instanceId = context.processInstanceId();
+        ProjectInfo projectInfo = context.processConfiguration().projectInfo();
+        return new ConcordTaskCommon(sessionToken, apiClientFactory, instanceId, projectInfo.orgName(), context.workingDirectory());
     }
 
     private static List<UUID> toUUIDs(List<String> ids) {

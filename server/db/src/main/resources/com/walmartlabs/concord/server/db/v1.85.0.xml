@@ -4,6 +4,7 @@
         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
         xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.3.xsd">
 
+<!-- removed in 1.88.0+
     <changeSet id="1850000" author="ybrigo@gmail.com">
         <createProcedure>
             create or replace function PROCESS_STATUS_HISTORY()
@@ -113,7 +114,7 @@
             values ('process-queue-statistics-processor', (select coalesce(max(event_seq), 0) from process_events));
         </sql>
     </changeSet>
-
+-->
     <changeSet id="1850600" author="ybrigo@gmail.com">
         <sql>
             alter table PROCESS_WAIT_CONDITIONS add column VERSION bigint;

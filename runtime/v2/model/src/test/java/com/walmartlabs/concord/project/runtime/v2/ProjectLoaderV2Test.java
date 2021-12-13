@@ -89,6 +89,8 @@ public class ProjectLoaderV2Test {
                 .truncateMaxArrayLength(2)
                 .truncateMaxDepth(3)
                 .inVarsBlacklist(ImmutableList.of("apiKey", "apiRootToken"))
+                .recordTaskMeta(true)
+                .truncateMeta(true)
                 .build(), cfg.events());
 
         // configuration.requirements: should be collected from ROOT concord.yml
@@ -134,6 +136,6 @@ public class ProjectLoaderV2Test {
         assertNotNull("name3", pd.forms().get("myForm").fields().get(0).name());
 
         // resources: should be collected from ALL *.concord.yml
-        assertEquals(ImmutableList.of("glob:concord/{**/,}{*.,}concord.yml", "glob:tmp/1.yml"), pd.resources().concord());
+        assertEquals(ImmutableList.of("glob:concord/{**/,}{*.,}concord.{yml,yaml}", "glob:tmp/1.yml"), pd.resources().concord());
     }
 }

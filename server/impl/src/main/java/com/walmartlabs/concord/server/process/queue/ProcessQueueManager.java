@@ -51,6 +51,10 @@ public class ProcessQueueManager {
     private final ProcessLogManager processLogManager;
     private final Collection<ProcessStatusListener> statusListeners;
 
+    private static final Set<ProcessStatus> TO_ENQUEUED_STATUSES = new HashSet<>(Arrays.asList(
+            ProcessStatus.PREPARING, ProcessStatus.RESUMING, ProcessStatus.SUSPENDED
+    ));
+
     @Inject
     public ProcessQueueManager(ProcessQueueDao queueDao,
                                ProcessKeyCache keyCache,
@@ -105,7 +109,7 @@ public class ProcessQueueManager {
             return false;
         }
 
-        if (s != ProcessStatus.PREPARING && s != ProcessStatus.RESUMING && s != ProcessStatus.SUSPENDED) {
+        if (!TO_ENQUEUED_STATUSES.contains(s)) {
             // something's wrong (e.g. someone tried to change the process' status directly in the DB and was unlucky)
             throw new ProcessException(processKey, "Invalid process status: " + s);
         }
@@ -122,12 +126,13 @@ public class ProcessQueueManager {
         String runtime = payload.getHeader(Payload.RUNTIME);
         List<String> dependencies = payload.getHeader(Payload.DEPENDENCIES);
 
-        queueDao.tx(tx -> {
-            queueDao.enqueue(tx, processKey, tags, startAt, requirements, processTimeout, handlers, meta, imports, exclusive, runtime, dependencies, suspendTimeout);
-            notifyStatusChange(tx, processKey, ProcessStatus.ENQUEUED);
+        return queueDao.txResult(tx -> {
+            boolean updated = queueDao.enqueue(tx, processKey, tags, startAt, requirements, processTimeout, handlers, meta, imports, exclusive, runtime, dependencies, suspendTimeout, TO_ENQUEUED_STATUSES);
+            if (updated) {
+                notifyStatusChange(tx, processKey, ProcessStatus.ENQUEUED);
+            }
+            return updated;
         });
-
-        return true;
     }
 
     /**
@@ -168,14 +173,14 @@ public class ProcessQueueManager {
      *
      * @return {@code true} if every processes was updated
      */
-    public boolean updateExpectedStatus(List<ProcessKey> processKeys, List<ProcessStatus> expected, ProcessStatus status) {
-        return queueDao.txResult(tx -> {
-            boolean success = queueDao.updateStatus(processKeys, expected, status);
-            if (success) {
-                notifyStatusChange(tx, processKeys, status);
-            }
-            return success;
-        });
+    public List<ProcessKey> updateExpectedStatus(DSLContext tx, List<ProcessKey> processKeys, List<ProcessStatus> expected, ProcessStatus status) {
+        if (processKeys.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        List<ProcessKey> updated = queueDao.updateStatus(processKeys, expected, status);
+        notifyStatusChange(tx, updated, status);
+        return updated;
     }
 
     /**
@@ -191,10 +196,6 @@ public class ProcessQueueManager {
     public void updateAgentId(DSLContext tx, ProcessKey processKey, String agentId, ProcessStatus status) {
         queueDao.updateAgentId(tx, processKey, agentId, status);
         notifyStatusChange(tx, processKey, status);
-    }
-
-    public void updateExclusive(DSLContext tx, ProcessKey processKey, ExclusiveMode exclusive) {
-        queueDao.updateExclusive(tx, processKey, exclusive);
     }
 
     public ProcessEntry get(PartialProcessKey partialProcessKey) {

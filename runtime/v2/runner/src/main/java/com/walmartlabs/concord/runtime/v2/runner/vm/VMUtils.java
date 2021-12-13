@@ -20,6 +20,7 @@ package com.walmartlabs.concord.runtime.v2.runner.vm;
  * =====
  */
 
+import com.walmartlabs.concord.common.ConfigurationUtils;
 import com.walmartlabs.concord.runtime.v2.runner.el.EvalContextFactory;
 import com.walmartlabs.concord.runtime.v2.runner.el.ExpressionEvaluator;
 import com.walmartlabs.concord.runtime.v2.sdk.Context;
@@ -29,27 +30,43 @@ import com.walmartlabs.concord.svm.State;
 import com.walmartlabs.concord.svm.ThreadId;
 
 import java.io.Serializable;
-import java.util.Collections;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public final class VMUtils {
+
+    private static final String FRAME_INPUT_OVERRIDES_KEY = "__frame_input_overrides";
 
     /**
      * Evaluates a step's {@code in} section using all currently available variables.
      */
     public static Map<String, Object> prepareInput(ExpressionEvaluator ee,
                                                    Context ctx,
-                                                   Map<String, Serializable> input) {
+                                                   Map<String, Serializable> input,
+                                                   String inputExpression) {
 
-        if (input == null) {
-            return Collections.emptyMap();
+        Object value = null;
+        if (inputExpression != null) {
+            value = inputExpression;
+        } else if (input != null && !input.isEmpty()) {
+            value = input;
         }
 
-        input = ee.evalAsMap(EvalContextFactory.global(ctx), input);
+        Map<String, Object> stepInput = ee.evalAsMap(EvalContextFactory.global(ctx), value);
+        if (stepInput == null) {
+            stepInput = Collections.emptyMap();
+        }
 
-        return Collections.unmodifiableMap(input);
+        Map<String, Object> overrides = getLocal(ctx.execution().state(), ctx.execution().currentThreadId(), FRAME_INPUT_OVERRIDES_KEY);
+        overrides = ee.evalAsMap(EvalContextFactory.global(ctx), overrides);
+        if (overrides == null) {
+            overrides = Collections.emptyMap();
+        }
+
+        return Collections.unmodifiableMap(ConfigurationUtils.deepMerge(stepInput, overrides));
+    }
+
+    public static void setInputOverrides(Frame frame, Map<String, Object> overrides) {
+        putLocal(frame, FRAME_INPUT_OVERRIDES_KEY, new HashMap<>(overrides));
     }
 
     /**

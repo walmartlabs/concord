@@ -78,12 +78,18 @@ public class RetryWrapper implements Command {
 
         int times = retry.times();
         if (retry.timesExpression() != null) {
-            times = ee.eval(EvalContextFactory.global(ctx), retry.timesExpression(), Integer.class);
+            Number n = ee.eval(EvalContextFactory.global(ctx), retry.timesExpression(), Number.class);
+            if (n != null) {
+                times = n.intValue();
+            }
         }
 
         Duration delay = retry.delay();
         if (retry.delayExpression() != null) {
-            delay = Duration.ofSeconds(ee.eval(EvalContextFactory.global(ctx), retry.delayExpression(), Long.class));
+            Number n = ee.eval(EvalContextFactory.global(ctx), retry.delayExpression(), Number.class);
+            if (n != null) {
+                delay = Duration.ofSeconds(n.longValue());
+            }
         }
 
         inner.setLocal(Constants.Runtime.RETRY_ATTEMPT_NUMBER, 0);
@@ -147,7 +153,7 @@ public class RetryWrapper implements Command {
             // override the task's "in" if needed
             if (retry.input() != null) {
                 Map<String, Object> m = Collections.unmodifiableMap(Objects.requireNonNull(retry.input()));
-                VMUtils.putLocals(frame, m);
+                VMUtils.setInputOverrides(frame, m);
             }
 
             frame.push(cmd);

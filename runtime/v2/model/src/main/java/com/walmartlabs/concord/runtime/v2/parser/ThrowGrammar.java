@@ -24,7 +24,7 @@ import com.walmartlabs.concord.runtime.v2.model.TaskCall;
 import io.takari.parc.Parser;
 
 import static com.walmartlabs.concord.runtime.v2.parser.GrammarMisc.namedStep;
-import static com.walmartlabs.concord.runtime.v2.parser.GrammarOptions.simpleOptions;
+import static com.walmartlabs.concord.runtime.v2.parser.GrammarOptions.namedOptions;
 import static com.walmartlabs.concord.runtime.v2.parser.GrammarV2.anyVal;
 import static com.walmartlabs.concord.runtime.v2.parser.TaskGrammar.optionsWithStepName;
 
@@ -32,7 +32,7 @@ public final class ThrowGrammar {
 
     public static final Parser<Atom, TaskCall> throwStep =
             namedStep("throw", YamlValueType.TASK, (stepName, a) -> anyVal.bind(e ->
-                    simpleOptions.map(options ->
+                    namedOptions.map(options ->
                             new TaskCall(a.location, "throw", optionsWithStepName(stepName)
                                     .putInput("exception", e)
                                     .build()))));

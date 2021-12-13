@@ -43,6 +43,9 @@ public interface TaskCallOptions extends StepOptions {
     }
 
     @Nullable
+    String inputExpression();
+
+    @Nullable
     String out();
 
     @Value.Default
@@ -60,6 +63,11 @@ public interface TaskCallOptions extends StepOptions {
     @Value.Default
     default List<Step> errorSteps() {
         return Collections.emptyList();
+    }
+
+    @Value.Default
+    default boolean ignoreErrors() {
+        return false;
     }
 
     static ImmutableTaskCallOptions.Builder builder() {

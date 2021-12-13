@@ -44,7 +44,7 @@ public final class ExpressionGrammar {
         return s != null && s.startsWith("${") && s.endsWith("}");
     });
 
-    public static final Parser<Atom, String> expression = expressionParser.map(expr -> (String)expr.value);
+    public static final Parser<Atom, String> maybeExpression = expressionParser.map(expr -> (String)expr.value);
     public static final Parser<Atom, String> expressionVal = orError(expressionParser.map(expr -> (String)expr.value), YamlValueType.EXPRESSION_VAL);
 
     private static Parser<Atom, ImmutableExpressionOptions.Builder> exprCallOutOption(ImmutableExpressionOptions.Builder o) {
@@ -56,7 +56,8 @@ public final class ExpressionGrammar {
                 o -> options(
                         optional("error", stepsVal.map(o::errorSteps)),
                         optional("out", exprCallOutOption(o)),
-                        optional("meta", mapVal.map(o::putAllMeta))
+                        optional("meta", mapVal.map(o::putAllMeta)),
+                        optional("name", stringVal.map(v -> o.putMeta(Constants.SEGMENT_NAME, v)))
                 ))
                 .map(ImmutableExpressionOptions.Builder::build);
     }
@@ -71,7 +72,7 @@ public final class ExpressionGrammar {
 
     public static final Parser<Atom, Expression> exprFull =
             namedStep("expr", YamlValueType.EXPRESSION, (stepName, a) ->
-                    expression.bind(expr ->
+                    maybeExpression.bind(expr ->
                             expressionOptions(stepName).map(options -> new Expression(a.location, expr, options))));
 
     // exprShort := expression

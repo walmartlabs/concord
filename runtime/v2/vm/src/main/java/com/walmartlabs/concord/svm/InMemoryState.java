@@ -100,7 +100,7 @@ public class InMemoryState implements Serializable, State {
         synchronized (this) {
             List<Frame> l = this.frames.get(threadId);
             if (l == null) {
-                throw new IllegalStateException("Call frame doesn't exist: " + threadId);
+                return Collections.emptyList();
             }
 
             return Collections.unmodifiableList(new ArrayList<>(l));

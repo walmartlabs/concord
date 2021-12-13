@@ -21,6 +21,7 @@ package com.walmartlabs.concord.server.process.waits;
  */
 
 import com.walmartlabs.concord.server.sdk.ProcessKey;
+import com.walmartlabs.concord.server.sdk.metrics.WithTimer;
 
 import javax.inject.Named;
 import javax.inject.Singleton;
@@ -39,6 +40,8 @@ public class WaitProcessSleepHandler implements ProcessWaitHandler<ProcessSleepC
         return WaitType.PROCESS_SLEEP;
     }
 
+    @Override
+    @WithTimer
     public Result<ProcessSleepCondition> process(ProcessKey key, ProcessSleepCondition wait) {
         if (wait.until().before(new Date())) {
             return Result.resume(wait.resumeEvent());

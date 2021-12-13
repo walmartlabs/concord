@@ -20,6 +20,7 @@ package com.walmartlabs.concord.it.server;
  * =====
  */
 
+import com.walmartlabs.concord.ApiException;
 import com.walmartlabs.concord.client.*;
 import com.walmartlabs.concord.common.IOUtils;
 import com.walmartlabs.concord.sdk.Constants;
@@ -365,6 +366,72 @@ public class ProjectIT extends AbstractServerIT {
         input.put("repo", repoName);
 
         start(input);
+    }
+
+    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    public void testBulkAccessUpdate() throws Exception {
+        String orgName = "org_" + randomString();
+
+        OrganizationsApi orgApi = new OrganizationsApi(getApiClient());
+        orgApi.createOrUpdate(new OrganizationEntry().setName(orgName));
+
+        // ---
+
+        String projectName = "project_" + randomString();
+
+        ProjectsApi projectsApi = new ProjectsApi(getApiClient());
+        projectsApi.createOrUpdate(orgName, new ProjectEntry()
+                .setName(projectName));
+
+        // ---
+
+        String teamName = "team_" + randomString();
+        TeamsApi teamsApi = new TeamsApi(getApiClient());
+        CreateTeamResponse teamResp = teamsApi.createOrUpdate(orgName, new TeamEntry()
+                .setName(teamName));
+
+        // --- Typical one-or-more teams bulk access update
+
+        List<ResourceAccessEntry> teams = new ArrayList<>(1);
+        teams.add(new ResourceAccessEntry()
+                .setOrgName(orgName)
+                .setTeamId(teamResp.getId())
+                .setTeamName(teamName)
+                .setLevel(ResourceAccessEntry.LevelEnum.OWNER));
+        GenericOperationResult addTeamsResult = projectsApi.updateAccessLevel_0(orgName, projectName, teams);
+        assertNotNull(addTeamsResult);
+        assertTrue(addTeamsResult.isOk());
+
+        List<ResourceAccessEntry> currentTeams = projectsApi.getAccessLevel(orgName, projectName);
+        assertNotNull(currentTeams);
+        assertEquals(1, currentTeams.size());
+
+        // --- Empty teams list clears all
+
+        GenericOperationResult clearTeamsResult = projectsApi.updateAccessLevel_0(orgName, projectName, Collections.emptyList());
+        assertNotNull(clearTeamsResult);
+        assertTrue(clearTeamsResult.isOk());
+
+        currentTeams = projectsApi.getAccessLevel(orgName, projectName);
+        assertNotNull(currentTeams);
+        assertEquals(0, currentTeams.size());
+
+        // --- Null list not allowed, throws error
+
+        try {
+            projectsApi.updateAccessLevel_0(orgName, projectName, null);
+        } catch (ApiException expected) {
+            assertEquals(400, expected.getCode());
+            assertTrue(expected.getResponseBody().contains("List of teams is null"));
+        } catch (Exception e) {
+            fail("Expected ApiException. Got " + e.getClass().toString());
+        }
+
+        // ---
+
+        teamsApi.delete(orgName, teamName);
+        projectsApi.delete(orgName, projectName);
+        orgApi.delete(orgName, "yes");
     }
 
 

@@ -1,0 +1,16 @@
+configuration:
+  runtime: "concord-v2"
+
+flows:
+  default:
+    - set:
+        myObj:
+          name: Concord!
+
+    - expr: "${resource.writeAsJson(myObj)}"
+      out: path
+
+    - expr: ${resource.asJson(path)}
+      out: jsonObj
+
+    - log: "Hello ${jsonObj.name}"

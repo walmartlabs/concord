@@ -1,0 +1,16 @@
+configuration:
+  runtime: "concord-v2"
+
+flows:
+  default:
+    - set:
+        myObj:
+          name: Concord!
+
+    - expr: "${resource.writeAsYaml(myObj)}"
+      out: path
+
+    - expr: ${resource.asYaml(path)}
+      out: yamlObj
+
+    - log: "Hello ${yamlObj.name}"

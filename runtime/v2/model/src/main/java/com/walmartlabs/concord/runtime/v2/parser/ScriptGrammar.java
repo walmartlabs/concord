@@ -21,27 +21,30 @@ package com.walmartlabs.concord.runtime.v2.parser;
  */
 
 import com.walmartlabs.concord.runtime.v2.Constants;
-import com.walmartlabs.concord.runtime.v2.model.ImmutableScriptCallOptions;
-import com.walmartlabs.concord.runtime.v2.model.ScriptCall;
-import com.walmartlabs.concord.runtime.v2.model.ScriptCallOptions;
-import com.walmartlabs.concord.runtime.v2.model.WithItems;
+import com.walmartlabs.concord.runtime.v2.model.*;
 import io.takari.parc.Parser;
 
-import static com.walmartlabs.concord.runtime.v2.parser.GrammarMisc.namedStep;
-import static com.walmartlabs.concord.runtime.v2.parser.GrammarMisc.with;
+import static com.walmartlabs.concord.runtime.v2.parser.ExpressionGrammar.maybeExpression;
+import static com.walmartlabs.concord.runtime.v2.parser.GrammarMisc.*;
 import static com.walmartlabs.concord.runtime.v2.parser.GrammarOptions.optional;
 import static com.walmartlabs.concord.runtime.v2.parser.GrammarOptions.options;
 import static com.walmartlabs.concord.runtime.v2.parser.GrammarV2.*;
 import static com.walmartlabs.concord.runtime.v2.parser.RetryGrammar.retryVal;
+import static io.takari.parc.Combinators.or;
 
 public final class ScriptGrammar {
+
+    private static Parser<Atom, ImmutableScriptCallOptions.Builder> scriptCallInOption(ImmutableScriptCallOptions.Builder o) {
+        return orError(or(maybeMap.map(o::input), maybeExpression.map(o::inputExpression)), YamlValueType.SCRIPT_CALL_IN);
+    }
 
     private static Parser<Atom, ScriptCallOptions> scriptOptions(String stepName) {
         return with(() -> optionsBuilder(stepName),
                 o -> options(
                         optional("body", stringVal.map(o::body)),
-                        optional("in", mapVal.map(o::input)),
+                        optional("in", scriptCallInOption(o)),
                         optional("meta", mapVal.map(o::meta)),
+                        optional("name", stringVal.map(v -> o.putMeta(Constants.SEGMENT_NAME, v))),
                         optional("withItems", nonNullVal.map(v -> o.withItems(WithItems.of(v, WithItems.Mode.SERIAL)))),
                         optional("parallelWithItems", nonNullVal.map(v -> o.withItems(WithItems.of(v, WithItems.Mode.PARALLEL)))),
                         optional("retry", retryVal.map(o::retry)),

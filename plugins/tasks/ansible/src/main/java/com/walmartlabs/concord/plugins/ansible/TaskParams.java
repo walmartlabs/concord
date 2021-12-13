@@ -79,6 +79,7 @@ public enum TaskParams implements HasKey {
 
     INVENTORY_KEY("inventory"),
 
+    @Deprecated
     LAST_RETRY_FILE("ansible.retry"),
 
     LIMIT_KEY("limit"),
@@ -109,6 +110,7 @@ public enum TaskParams implements HasKey {
 
     SKIP_TAGS_KEY("skipTags"),
 
+    // TODO not really a TaskParam
     STATS_FILE_NAME("ansible_stats.json"),
 
     SYNTAX_CHECK_KEY("syntaxCheck"),

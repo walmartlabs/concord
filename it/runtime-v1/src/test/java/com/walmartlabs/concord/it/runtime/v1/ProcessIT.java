@@ -479,6 +479,25 @@ public class ProcessIT {
         onFailureProc.assertLog(".*Last error was:.*PropertyNotFoundException.*");
     }
 
+    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    public void testYamlRootFile() throws Exception {
+        ConcordProcess proc = concord.processes().start(new Payload()
+                .archive(resource("yamlRootFile")));
+
+        proc.expectStatus(StatusEnum.FINISHED);
+        proc.assertLog(".*Hello, Concord!*");
+    }
+
+    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    public void testMetadataWithWithItems() throws Exception {
+        ConcordProcess proc = concord.processes().start(new Payload()
+                .archive(resource("processMetadataWithItems")));
+
+        ProcessEntry pe = proc.expectStatus(StatusEnum.FINISHED);
+        assertNotNull(pe.getMeta());
+        assertEquals("c", pe.getMeta().get("var"));
+    }
+
     @SuppressWarnings("unchecked")
     private static void assertProcessErrorMessage(ProcessEntry p, String expected) {
         assertNotNull(p);

@@ -5,27 +5,21 @@
     <parent>
         <groupId>com.walmartlabs.concord.server.plugins</groupId>
         <artifactId>parent</artifactId>
-        <version>1.85.1-SNAPSHOT</version>
+        <version>1.92.1-SNAPSHOT</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
 
     <artifactId>oidc</artifactId>
     <packaging>takari-jar</packaging>
 
-    <properties>
-        <pac4j.version>4.0.0-RC3</pac4j.version>
-    </properties>
-
     <dependencies>
         <dependency>
             <groupId>org.pac4j</groupId>
             <artifactId>pac4j-core</artifactId>
-            <version>${pac4j.version}</version>
         </dependency>
         <dependency>
             <groupId>org.pac4j</groupId>
             <artifactId>pac4j-oidc</artifactId>
-            <version>${pac4j.version}</version>
         </dependency>
 
         <dependency>

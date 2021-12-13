@@ -44,7 +44,6 @@ import com.walmartlabs.concord.runtime.v2.runner.tasks.TaskResultListener;
 import com.walmartlabs.concord.runtime.v2.runner.tasks.TaskV2Provider;
 import com.walmartlabs.concord.runtime.v2.sdk.*;
 import com.walmartlabs.concord.sdk.Constants;
-import com.walmartlabs.concord.sdk.MapUtils;
 import com.walmartlabs.concord.svm.ExecutionListener;
 import com.walmartlabs.concord.svm.Runtime;
 import com.walmartlabs.concord.svm.ThreadId;
@@ -221,6 +220,48 @@ public class MainTest {
     }
 
     @Test
+    public void testTaskErrorBlock2() throws Exception {
+        deploy("faultyTask2");
+
+        save(ProcessConfiguration.builder().build());
+
+        byte[] log = run();
+        assertLog(log, ".*error occurred:.*boom!.*");
+    }
+
+    @Test
+    public void testTaskErrorOut() throws Exception {
+        deploy("faultyTaskOut");
+
+        save(ProcessConfiguration.builder().build());
+
+        byte[] log = run();
+        assertLog(log, ".*result.key: value.*");
+    }
+
+    @Test
+    public void testTaskIgnoreErrors() throws Exception {
+        deploy("taskIgnoreErrors");
+
+        save(ProcessConfiguration.builder().build());
+
+        byte[] log = run();
+        assertLog(log, ".*ok: false.*");
+        assertLog(log, ".*error:.*boom!.*");
+    }
+
+    @Test
+    public void testTaskIgnoreErrors2() throws Exception {
+        deploy("taskIgnoreErrors2");
+
+        save(ProcessConfiguration.builder().build());
+
+        byte[] log = run();
+        assertLog(log, ".*ok: false.*");
+        assertLog(log, ".*error:.*boom!.*");
+    }
+
+    @Test
     public void testFlowErrorBlock() throws Exception {
         deploy("faultyFlow");
 
@@ -394,7 +435,19 @@ public class MainTest {
                 .build());
 
         byte[] log = run();
-        assertLog(log, ".*error occurred: java.lang.RuntimeException: Error: this is an error in <eval> at line number 1 at column number 0.*");
+        assertLog(log, ".*error occurred: java.lang.RuntimeException: Error: this is an error.*");
+    }
+
+    @Test
+    public void testScriptVariablesSanitize() throws Exception {
+        deploy("scriptVariablesSanitize");
+
+        save(ProcessConfiguration.builder()
+                .putArguments("kv", Collections.singletonMap("k", "v"))
+                .build());
+
+        byte[] log = run();
+        assertLog(log, ".*boom: \\{\\}.*");
     }
 
     @Test
@@ -629,6 +682,29 @@ public class MainTest {
     }
 
     @Test
+    public void testCallFlowWithErrorBlock() throws Exception {
+        deploy("callWithErrorBlock");
+
+        save(ProcessConfiguration.builder()
+                .build());
+
+        byte[] log = run();
+        assertLog(log, ".*variable has been planted.*");
+        assertLog(log, ".*myVar should exist: world.*");
+    }
+
+    @Test
+    public void testVariableVisibilityAfterErrorBlocks() throws Exception {
+        deploy("errorBlockScoping");
+
+        save(ProcessConfiguration.builder()
+                .build());
+
+        byte[] log = run();
+        assertLog(log, ".*Hello, world!.*");
+    }
+
+    @Test
     public void testCallFlowOut() throws Exception {
         deploy("callOut");
 
@@ -780,6 +856,18 @@ public class MainTest {
         assertLog(log, ".*Waiting for 1000ms.*");
         assertLog(log, ".*faultyOnceTask: ok.*");
         assertLog(log, ".*neverFailTask: ok.*");
+    }
+
+    @Test
+    public void testRetryInput() throws Exception {
+        deploy("retryInput");
+
+        save(ProcessConfiguration.builder().build());
+
+        byte[] log = run();
+        assertLogAtLeast(log, 1, ".*ConditionallyFailTask: fail.*");
+        assertLog(log, ".*Waiting for 1000ms.*");
+        assertLog(log, ".*ConditionallyFailTask: ok.*");
     }
 
     @Test
@@ -1176,6 +1264,17 @@ public class MainTest {
 
         @Override
         public TaskResult execute(Variables input) {
+            return TaskResult.fail("boom!")
+                    .value("key", "value");
+        }
+    }
+
+    @Named("faultyTask2")
+    @SuppressWarnings("unused")
+    static class FaultyTask2 implements Task {
+
+        @Override
+        public TaskResult execute(Variables input) {
             throw new RuntimeException("boom!");
         }
     }
@@ -1209,6 +1308,25 @@ public class MainTest {
         @Override
         public TaskResult execute(Variables input) {
             log.info("neverFailTask: ok");
+            return TaskResult.success();
+        }
+    }
+
+    @Named("conditionallyFailTask")
+    @SuppressWarnings("unused")
+    static class ConditionallyFailTask implements Task {
+
+        private static final Logger log = LoggerFactory.getLogger(NeverFailTask.class);
+
+        @Override
+        public TaskResult execute(Variables input) {
+            if (input.getBoolean("fail", false)) {
+                log.info("ConditionallyFailTask: fail");
+                throw new RuntimeException("boom!");
+            }
+
+            log.info("ConditionallyFailTask: ok");
+
             return TaskResult.success();
         }
     }

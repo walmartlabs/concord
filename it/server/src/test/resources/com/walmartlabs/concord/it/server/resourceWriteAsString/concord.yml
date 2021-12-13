@@ -1,6 +1,6 @@
 flows:
   default:
-   - expr: ${resource.writeAsString('Hello Concord!')}
-     out: path
+    - expr: ${resource.writeAsString('Hello Concord!')}
+      out: path
 
-   - log: "${resource.asString(path)}"
+    - log: "${resource.asString(path)}"

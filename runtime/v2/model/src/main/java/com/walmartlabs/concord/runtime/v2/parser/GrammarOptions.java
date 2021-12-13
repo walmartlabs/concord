@@ -21,6 +21,7 @@ package com.walmartlabs.concord.runtime.v2.parser;
  */
 
 import com.fasterxml.jackson.core.JsonToken;
+import com.walmartlabs.concord.runtime.v2.Constants;
 import com.walmartlabs.concord.runtime.v2.exception.MandatoryFieldNotFoundException;
 import com.walmartlabs.concord.runtime.v2.exception.UnknownOptionException;
 import io.takari.parc.Input;
@@ -35,8 +36,7 @@ import java.util.function.BiFunction;
 import java.util.stream.Collectors;
 
 import static com.walmartlabs.concord.runtime.v2.parser.GrammarMisc.*;
-import static com.walmartlabs.concord.runtime.v2.parser.GrammarV2.mapVal;
-import static com.walmartlabs.concord.runtime.v2.parser.GrammarV2.value;
+import static com.walmartlabs.concord.runtime.v2.parser.GrammarV2.*;
 import static io.takari.parc.Combinators.*;
 
 public final class GrammarOptions {
@@ -45,6 +45,14 @@ public final class GrammarOptions {
             with(ImmutableSimpleOptions::builder,
                     o -> options(
                             optional("meta", mapVal.map(o::meta))
+                    ))
+                    .map(ImmutableSimpleOptions.Builder::build);
+
+    public static final Parser<Atom, SimpleOptions> namedOptions =
+            with(ImmutableSimpleOptions::builder,
+                    o -> options(
+                            optional("meta", mapVal.map(o::meta)),
+                            optional("name", stringVal.map(v -> o.putMeta(Constants.SEGMENT_NAME, v)))
                     ))
                     .map(ImmutableSimpleOptions.Builder::build);
 

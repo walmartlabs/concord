@@ -157,13 +157,16 @@ public final class GrammarMisc {
             String stepName = null;
             Atom val = in.first();
             if ("name".equals(val.name)) {
-                Result<Atom, String> stepNameResult = stringVal.apply(in.rest());
-                if (stepNameResult.isFailure()) {
-                    return invalidValueTypeError(YamlValueType.STRING).apply(in.rest()).cast();
+                try {
+                    Result<Atom, String> stepNameResult = stringVal.apply(in.rest());
+                    if (stepNameResult.isFailure()) {
+                            return invalidValueTypeError(YamlValueType.STRING).apply(in.rest()).cast();
+                    }
+                    rest = stepNameResult.getRest();
+                    stepName = stepNameResult.toSuccess().getResult();
+                } catch (YamlProcessingException e) {
+                    throw new InvalidFieldDefinitionException("name", val.location, e);
                 }
-
-                rest = stepNameResult.getRest();
-                stepName = stepNameResult.toSuccess().getResult();
             }
 
             final String finalStepName = stepName;

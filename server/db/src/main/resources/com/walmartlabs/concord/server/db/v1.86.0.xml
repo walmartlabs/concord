@@ -17,6 +17,8 @@
 
     <!-- Set initial admin API token when not exist  -->
     <changeSet id="1860100" author="ybrigo@gmail.com" runInTransaction="false" context="!codegen">
+        <validCheckSum>ANY</validCheckSum>
+
         <preConditions onFail="MARK_RAN">
             <sqlCheck expectedResult="0">
                 select count(key_id)
@@ -29,8 +31,9 @@
             <!-- default admin user ID -->
             <param name="userId" value="${concordAdminUserId}"/>
             <param name="username" value="admin"/>
-            <!-- value from concord-server.conf -->
+            <!-- values from concord-server.conf -->
             <param name="token" value="${defaultAdminToken}"/>
+            <param name="skip" value="${skipAdminTokenGeneration}"/>
         </customChange>
     </changeSet>
 
@@ -45,6 +48,8 @@
 
     <!-- Set initial agent API token when not exist  -->
     <changeSet id="1860300" author="benjamin.broadaway@walmart.com" runInTransaction="false" context="!codegen">
+        <validCheckSum>ANY</validCheckSum>
+
         <preConditions onFail="MARK_RAN">
             <sqlCheck expectedResult="0">
                 select count(key_id)
@@ -58,8 +63,9 @@
             <!-- default agent user id from v0.69.0.xml -->
             <param name="userId" value="${concordAgentUserId}"/>
             <param name="username" value="concordAgent"/>
-            <!-- value from concord-server.conf -->
+            <!-- values from concord-server.conf -->
             <param name="token" value="${defaultAgentToken}"/>
+            <param name="skip" value="${skipAgentTokenGeneration}"/>
         </customChange>
     </changeSet>
 

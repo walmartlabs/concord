@@ -28,7 +28,7 @@ import { ConcordId } from '../../../api/common';
 import { get as apiGet, isFinal, ProcessEntry } from '../../../api/process';
 import { NotFoundPage } from '../../pages';
 import {
-    ProcessAnsibleActivitySwitcher,
+    ProcessAnsibleActivity,
     ProcessAttachmentsActivity,
     ProcessChildrenActivity,
     ProcessEventsActivity,
@@ -207,7 +207,7 @@ const ProcessActivity = (props: ExternalProps) => {
                     />
                 </Route>
                 <Route path={`${baseUrl}/ansible`}>
-                    <ProcessAnsibleActivitySwitcher
+                    <ProcessAnsibleActivity
                         instanceId={instanceId}
                         loadingHandler={loadingHandler}
                         forceRefresh={refresh}

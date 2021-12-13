@@ -1,8 +1,6 @@
 FROM library/centos:8
 LABEL maintainer="mtkunke@walmartlabs.com"
 
-ARG jdk_version=1.8.0
-
 ENTRYPOINT ["/usr/local/bin/concord_venv/bin/dumb-init", "--"]
 
 RUN echo 'fastestmirror=true' >> /etc/dnf/dnf.conf && \
@@ -13,7 +11,6 @@ RUN rpm --import /etc/pki/rpm-gpg/RPM-GPG-KEY-centosofficial && \
     dnf -y upgrade && \
     dnf -y install \
            dnf-plugins-core \
-           java-${jdk_version}-openjdk-devel \
            which \
            libtool-ltdl \
            strace \
@@ -26,7 +23,14 @@ RUN rpm --import /etc/pki/rpm-gpg/RPM-GPG-KEY-centosofficial && \
     alternatives --set python /usr/bin/python3 && \
     alternatives --install /usr/bin/pip pip /usr/bin/pip2 0
 
-ENV JAVA_HOME /usr/lib/jvm/java-${jdk_version}
+ARG jdk_url
+RUN curl --location --output /tmp/jdk.tar.gz ${jdk_url} && \
+    mkdir /opt/jdk && \
+    tar xpf /tmp/jdk.tar.gz --strip 1 -C /opt/jdk && \
+    rm /tmp/jdk.tar.gz
+
+ENV JAVA_HOME /opt/jdk
+ENV PATH="${JAVA_HOME}/bin:${PATH}"
 ENV LC_CTYPE en_US.UTF-8
 ENV LANG en_US.UTF-8
 

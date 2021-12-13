@@ -104,6 +104,11 @@ public class LdapConfiguration implements Serializable {
     @Config("ldap.readTimeout")
     private Duration readTimeout;
 
+    @Inject
+    @Nullable
+    @Config("ldap.dnsSRVName")
+    private String dnsSRVName;
+
     private final Set<String> exposeAttributes;
 
     private final Set<String> excludeAttributes;
@@ -186,6 +191,10 @@ public class LdapConfiguration implements Serializable {
 
     public Duration getReadTimeout() {
         return readTimeout;
+    }
+
+    public String getDnsSRVName() {
+        return dnsSRVName;
     }
 
     private static Set<String> split(String s) {

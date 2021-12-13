@@ -9,9 +9,9 @@ package com.walmartlabs.concord.server.agent;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -26,6 +26,7 @@ import com.walmartlabs.concord.db.MainDB;
 import com.walmartlabs.concord.server.agent.AgentCommand.Status;
 import org.jooq.BatchBindStep;
 import org.jooq.Configuration;
+import org.jooq.DSLContext;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -50,15 +51,24 @@ public class AgentCommandsDao extends AbstractDao {
         this.objectMapper = new ObjectMapper();
     }
 
+    @Override
+    public void tx(Tx t) {
+        super.tx(t);
+    }
+
     public void insert(UUID commandId, String agentId, Map<String, Object> data) {
-        tx(tx -> tx.insertInto(AGENT_COMMANDS)
+        tx(tx -> insert(tx, commandId, agentId, data));
+    }
+
+    public void insert(DSLContext tx, UUID commandId, String agentId, Map<String, Object> data) {
+        tx.insertInto(AGENT_COMMANDS)
                 .columns(AGENT_COMMANDS.COMMAND_ID, AGENT_COMMANDS.AGENT_ID,
                         AGENT_COMMANDS.COMMAND_STATUS, AGENT_COMMANDS.CREATED_AT,
                         AGENT_COMMANDS.COMMAND_DATA)
                 .values(value(commandId), value(agentId),
                         value(Status.CREATED.toString()), currentOffsetDateTime(),
                         value(convert(data)))
-                .execute());
+                .execute();
     }
 
     public void insertBatch(List<AgentCommand> ace) {

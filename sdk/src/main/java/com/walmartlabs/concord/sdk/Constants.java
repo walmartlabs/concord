@@ -214,6 +214,11 @@ public class Constants {
         public static final String PROCESS_TIMEOUT = "processTimeout";
 
         /**
+         * Handler process timeout.
+         */
+        public static final String HANDLER_PROCESS_TIMEOUT = "handlerProcessTimeout";
+
+        /**
          * Timeout for process in Suspended state.
          */
         public static final String SUSPEND_TIMEOUT = "suspendTimeout";
@@ -329,7 +334,12 @@ public class Constants {
         /**
          * Files that the runtime considers "root" project files.
          */
-        public static final String[] PROJECT_ROOT_FILE_NAMES = {".concord.yml", "concord.yml"};
+        public static final String[] PROJECT_ROOT_FILE_NAMES = {
+                ".concord.yml",
+                "concord.yml",
+                ".concord.yaml",
+                "concord.yaml"
+        };
 
         /**
          * Directory which contains payload data.
@@ -581,6 +591,8 @@ public class Constants {
         public static final String SESSION_TOKEN = "X-Concord-SessionToken";
 
         public static final String SECRET_TYPE = "X-Concord-SecretType";
+
+        public static final String ENABLE_HTTP_SESSION = "X-Concord-EnableSession";
     }
 
     /**
