@@ -1026,6 +1026,18 @@ public class MainTest {
         assertLog(log, ".*done!.*");
     }
 
+    @Test
+    public void testCurrentFlowName() throws Exception {
+        deploy("currentFlowName");
+
+        save(ProcessConfiguration.builder()
+                .build());
+
+        byte[] log = run();
+        assertLog(log, ".*default: default.*");
+        assertLog(log, ".*myFlow: myFlow.*");
+    }
+
     private void deploy(String resource) throws URISyntaxException, IOException {
         Path src = Paths.get(MainTest.class.getResource(resource).toURI());
         IOUtils.copy(src, workDir);
