@@ -103,18 +103,11 @@ public class DockerTask implements Task {
                     processLog.info("DOCKER: {}", line);
                 } : null);
 
-        if (code != SUCCESS_EXIT_CODE) {
-            log.warn("call ['{}', '{}', '{}'] -> finished with code {}", params.image(), params.cmd(), workDir, code);
-            throw new RuntimeException("Docker process finished with with exit code " + code);
-        }
-
         String stdOut = null;
         if (stdOutFilePath != null) {
             InputStream inputStream = Files.newInputStream(Paths.get(stdOutFilePath));
             stdOut = DockerTaskCommon.toString(inputStream);
         }
-
-        log.info("call ['{}', '{}', '{}', '{}'] -> done", params.image(), params.cmd(), workDir, params.hosts());
 
         if (stdOutVar != null) {
             ctx.setVariable(stdOutVar, stdOut);
@@ -123,6 +116,13 @@ public class DockerTask implements Task {
         if (stdErrVar != null) {
             ctx.setVariable(stdErrVar, stdErr.toString());
         }
+
+        if (code != SUCCESS_EXIT_CODE) {
+            log.warn("call ['{}', '{}', '{}'] -> finished with code {}", params.image(), params.cmd(), workDir, code);
+            throw new RuntimeException("Docker process finished with with exit code " + code);
+        }
+
+        log.info("call ['{}', '{}', '{}', '{}'] -> done", params.image(), params.cmd(), workDir, params.hosts());
     }
 
     private static Map<String, Object> createInput(Context ctx) {
