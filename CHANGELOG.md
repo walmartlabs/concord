@@ -1,5 +1,12 @@
 # Change log
 
+## [Unreleased]
+
+### Added
+
+- runtime-v2: allow users to get current flow name 
+([#514](https://github.com/walmartlabs/concord/pull/514));
+
 ## [1.92.0] - 2021-12-07
 
 ### Added
