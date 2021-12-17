@@ -990,7 +990,7 @@ public class MainTest {
 
         byte[] log = run(runnerCfg);
 
-        assertLog(log, "70\\|2\\|.*done!.*");
+        assertLog(log, "\\|70\\|2\\|.*done!.*");
     }
 
     private void deploy(String resource) throws URISyntaxException, IOException {
