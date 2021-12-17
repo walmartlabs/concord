@@ -1,6 +1,5 @@
 flows:
   default:
-    - ${simpleMethodTask.exception}
     - script: js
       body: |
         var x = {a: 1};
