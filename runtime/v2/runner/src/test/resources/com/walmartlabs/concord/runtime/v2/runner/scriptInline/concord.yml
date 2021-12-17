@@ -5,6 +5,4 @@ flows:
       body: |
         var x = {a: 1};
         execution.variables().set('x', x);
-        print('XXXX');
-        print('123');
     - log: "x: ${x.a}"

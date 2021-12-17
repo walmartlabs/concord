@@ -1335,12 +1335,6 @@ public class MainTest {
     @SuppressWarnings("unused")
     public static class SimpleMethodTask implements Task {
 
-        private static final org.slf4j.Logger log = LoggerFactory.getLogger(SimpleMethodTask.class);
-
-        public void exception() {
-            log.error("exception: ", new RuntimeException());
-        }
-
         public int getValue() {
             return 42;
         }
