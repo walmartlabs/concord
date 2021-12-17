@@ -20,21 +20,105 @@ package com.walmartlabs.concord.runtime.v2.runner.logging;
  * =====
  */
 
+import ch.qos.logback.classic.ClassicConstants;
+import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.PatternLayout;
+import ch.qos.logback.classic.encoder.PatternLayoutEncoder;
 import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.core.pattern.PatternLayoutEncoderBase;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.google.common.primitives.Bytes;
 
-public class ConcordLogEncoder extends PatternLayoutEncoderBase<ILoggingEvent> {
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+
+public class ConcordLogEncoder extends PatternLayoutEncoder {
+
+    public static boolean SEGMENTED = false;
+
+    private static final byte[] EMPTY_AB = new byte[0];
+    private static final Stats EMPTY_STATS = new Stats();
+    private static final Map<Long, Stats> statsHolder = new ConcurrentHashMap<>();
 
     @Override
-    public void start() {
-        PatternLayout patternLayout = new ConcordLogLayout();
-        patternLayout.setContext(context);
-        patternLayout.setPattern(getPattern());
-        patternLayout.setOutputPatternAsHeader(outputPatternAsHeader);
-        patternLayout.start();
+    public byte[] encode(ILoggingEvent event) {
+        if (!SEGMENTED) {
+            return super.encode(event);
+        }
 
-        this.layout = patternLayout;
-        super.start();
+        boolean done = isDone(event);
+        byte[] msgBytes = EMPTY_AB;
+        if (!done) {
+            String msg = layout.doLayout(event);
+            msgBytes = convertToBytes(msg);
+        }
+        byte[] header = header(event, msgBytes);
+        return Bytes.concat(header, msgBytes);
+    }
+
+    private byte[] header(ILoggingEvent event, byte[] msgBytes) {
+        Long segmentId = LogUtils.getSegmentId();
+        if (segmentId == null) {
+            segmentId = 0L;
+        }
+
+        Stats stats = processStats(segmentId, event);
+
+        return String.format("|%d|%d|%s|%d|%d|", msgBytes.length, segmentId, (isDone(event) ? '0' : '1'), stats.warnings(), stats.errors()).getBytes();
+    }
+
+    private static boolean isDone(ILoggingEvent event) {
+        return event.getMarker() != null && event.getMarker().contains(ClassicConstants.FINALIZE_SESSION_MARKER);
+    }
+
+    private static Stats processStats(long segmentId, ILoggingEvent event) {
+        Stats stats = EMPTY_STATS;
+        if (event.getLevel() == Level.ERROR) {
+            stats = statsHolder.computeIfAbsent(segmentId, s -> new Stats())
+                    .incError();
+        } else if (event.getLevel() == Level.WARN) {
+            stats = statsHolder.computeIfAbsent(segmentId, s -> new Stats())
+                    .incWarn();
+        }
+
+        if (isDone(event)) {
+            stats = statsHolder.remove(segmentId);
+        }
+
+        return stats;
+    }
+
+    private static byte[] convertToBytes(String s) {
+        return s.getBytes();
+    }
+
+    private static class Stats {
+
+        private int errors = 0;
+        private int warnings = 0;
+
+        public int errors() {
+            return errors;
+        }
+
+        public int warnings() {
+            return warnings;
+        }
+
+        @JsonIgnore
+        public Stats incError() {
+            synchronized (this) {
+                errors++;
+                return this;
+            }
+        }
+
+        @JsonIgnore
+        public Stats incWarn() {
+            synchronized (this) {
+                warnings++;
+                return this;
+            }
+        }
     }
 }

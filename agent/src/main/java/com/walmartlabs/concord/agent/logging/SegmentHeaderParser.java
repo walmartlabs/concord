@@ -1,11 +1,29 @@
 package com.walmartlabs.concord.agent.logging;
 
+/*-
+ * *****
+ * Concord
+ * -----
+ * Copyright (C) 2017 - 2021 Walmart Inc.
+ * -----
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ * 
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ * =====
+ */
+
 import org.immutables.value.Value;
 
 import java.nio.ByteBuffer;
-import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 public class SegmentHeaderParser {
 
@@ -13,71 +31,105 @@ public class SegmentHeaderParser {
 
     // msgLength|segmentId|DONE?|warnings|errors|msg
 
-    public static int parse(byte[] ab, Map<Long, List<HeaderLocation>> headers) {
-        int result = 0;
+    public static int parse(byte[] ab, List<Segment> segments, List<Position> invalidSegments) {
+        Field field = Field.MSG_LENGTH;
+        StringBuilder fieldData = new StringBuilder();
+        int mark = -1;
+        ImmutableHeader.Builder headerBuilder = Header.builder();
 
+        State state = State.FIND_HEADER;
         ByteBuffer bb = ByteBuffer.wrap(ab);
+        while (bb.remaining() > 0) {
+            switch (state) {
+                case FIND_HEADER: {
+                    char ch = (char) bb.get();
+                    if (ch == '|') {
+                        if (mark != -1) {
+                            invalidSegments.add(Position.of(mark, bb.position() - 1));
+                        }
 
-        Field[] fields = new Field[5];
-        while (true) {
-            for (int i = 0; i < fields.length; i++) {
-                Field f = nextField(bb);
-                if (f == null) {
-                    return result;
-                } else if (f == Field.INVALID) {
-                    return
+                        mark = bb.position() - 1;
+                        state = State.FIELD_DATA;
+                    } else {
+                        if (mark == -1) {
+                            mark = bb.position() - 1;
+                        }
+                    }
+                    break;
                 }
-                fields[i] = f;
+                case FIELD_DATA: {
+                    char ch = (char)bb.get();
+                    if (ch == '|') {
+                        state = State.END_FIELD;
+                        break;
+                    }
+
+                    if (fieldData.length() > MAX_FIELD_BYTES || !Character.isDigit(ch)) {
+                        // reset
+                        fieldData.setLength(0);
+                        field = Field.MSG_LENGTH;
+                        break;
+                    }
+
+                    fieldData.append(ch);
+                    break;
+                }
+                case END_FIELD: {
+                    String fieldValue = fieldData.toString();
+                    if (fieldData.length() == 0) {
+                        // reset
+                        fieldData.setLength(0);
+                        field = Field.MSG_LENGTH;
+                        break;
+                    }
+
+                    field.process(fieldValue, headerBuilder);
+
+                    field = field.next();
+                    if (field == null) {
+                        Header h = headerBuilder.build();
+                        segments.add(Segment.of(h, bb.position()));
+
+                        int actualLength = Math.min(h.length(), bb.remaining());
+                        bb.position(bb.position() + actualLength);
+
+                        // reset
+                        field = Field.MSG_LENGTH;
+                        mark = -1;
+
+                        state = State.FIND_HEADER;
+                    } else {
+                        state = State.FIELD_DATA;
+                    }
+
+                    fieldData.setLength(0);
+
+                    break;
+                }
             }
+        }
 
-            int length = Integer.parseInt(fields[0].value());
-            int actualLength = Math.min(length, bb.remaining());
-            long segmentId = Long.parseLong(fields[1].value());
-            Header h = Header.builder()
-                    .length(length)
-                    .actualLength(actualLength)
-                    .segmentId(segmentId)
-                    .done(toBoolean(fields[2]))
-                    .warnCount(Integer.parseInt(fields[3].value()))
-                    .errorCount(Integer.parseInt(fields[4].value()))
-                    .build();
-            HeaderLocation hl = HeaderLocation.builder()
-                    .start(fields[0].start())
-                    .end(fields[4].end())
-                    .header(h)
-                    .build();
-
-            headers.computeIfAbsent(segmentId, id -> new ArrayList<>())
-                    .add(hl);
+        int result;
+        if (mark != -1) {
+            if (state == State.FIND_HEADER) {
+                invalidSegments.add(Position.of(mark, bb.position()));
+                result = bb.position();
+            } else {
+                result = mark;
+            }
+        } else {
+            result = bb.position();
         }
 
         return result;
     }
 
-    private static Field nextField(ByteBuffer bb) {
-        int start = bb.position();
-        int end = indexOf(bb, '|');
-        if (end <= 0) {
-            if (bb.remaining() > MAX_FIELD_BYTES) {
-                return Field.INVALID;
-            }
-
-            return null;
-        } else if (end - start > MAX_FIELD_BYTES) {
-            return Field.INVALID;
-        }
-
-        return Field.of(start, end);
-    }
-
-    private static int indexOf(ByteBuffer bb, char c) {
-        return 0;
+    public static byte[] serialize(Header header) {
+        return String.format("|%d|%d|%s|%d|%d|", header.length(), header.segmentId(), (header.done() ? '0' : '1'), header.warnCount(), header.errorCount()).getBytes();
     }
 
     @Value.Immutable
-    private interface Field {
-
-        static Field INVALID = Field.of(-1, -1, -1);
+    public interface Position {
 
         @Value.Parameter
         int start();
@@ -85,33 +137,29 @@ public class SegmentHeaderParser {
         @Value.Parameter
         int end();
 
-        String value();
-
-        static Field of(int start, int end, String value) {
-            return ImmutableField.of(start, end, value);
+        static Position of(int start, int end) {
+            return ImmutablePosition.of(start, end);
         }
     }
 
-    public static void main(String[] args) {
-        System.out.println(">>" + (Long.MAX_VALUE));
-        System.out.println(">>" + ("" + Long.MAX_VALUE).getBytes().length);
+    @Value.Immutable
+    public interface Segment {
 
-        System.out.println(">>" + (Integer.MAX_VALUE));
-        System.out.println(">>" + ("" + Integer.MAX_VALUE).getBytes().length);
-    }
+        @Value.Parameter
+        Header header();
 
-    public static byte[] serialize(Header header) {
-        int length = header.length() - header.actualLength();
+        @Value.Parameter
+        int msgStart();
 
-        return String.format("|%d|%d|%s|%d|%d|", length, header.segmentId(), (header.done() ? '0' : '1'), header.warnCount(), header.errorCount()).getBytes();
+        static Segment of(Header header, int msgStart) {
+            return ImmutableSegment.of(header, msgStart);
+        }
     }
 
     @Value.Immutable
     public interface Header {
 
         int length();
-
-        int actualLength();
 
         long segmentId();
 
@@ -126,17 +174,75 @@ public class SegmentHeaderParser {
         }
     }
 
-    @Value.Immutable
-    public interface HeaderLocation {
+    enum State {
+        FIND_HEADER,
+        FIELD_DATA,
+        END_FIELD
+    }
 
-        int start();
+    enum Field {
+        MSG_LENGTH {
+            @Override
+            public Field next() {
+                return SEGMENT_ID;
+            }
 
-        int end();
+            @Override
+            public void process(String fieldValue, ImmutableHeader.Builder headerBuilder) {
+                headerBuilder.length(Integer.parseInt(fieldValue));
+            }
+        },
 
-        Header header();
+        SEGMENT_ID {
+            @Override
+            public Field next() {
+                return DONE;
+            }
 
-        static ImmutableHeaderLocation.Builder builder() {
-            return ImmutableHeaderLocation.builder();
-        }
+            @Override
+            public void process(String fieldValue, ImmutableHeader.Builder headerBuilder) {
+                headerBuilder.segmentId(Long.parseLong(fieldValue));
+            }
+        },
+
+        DONE {
+            @Override
+            public Field next() {
+                return WARNINGS;
+            }
+
+            @Override
+            public void process(String fieldValue, ImmutableHeader.Builder headerBuilder) {
+                headerBuilder.done("0".equals(fieldValue));
+            }
+        },
+
+        WARNINGS {
+            @Override
+            public Field next() {
+                return ERRORS;
+            }
+
+            @Override
+            public void process(String fieldValue, ImmutableHeader.Builder headerBuilder) {
+                headerBuilder.warnCount(Integer.parseInt(fieldValue));
+            }
+        },
+
+        ERRORS {
+            @Override
+            public Field next() {
+                return null;
+            }
+
+            @Override
+            public void process(String fieldValue, ImmutableHeader.Builder headerBuilder) {
+                headerBuilder.errorCount(Integer.parseInt(fieldValue));
+            }
+        };
+
+        public abstract Field next();
+
+        public abstract void process(String fieldValue, ImmutableHeader.Builder headerBuilder);
     }
 }

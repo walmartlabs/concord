@@ -49,15 +49,15 @@ public class ProcessLogFactory {
         }
 
         Consumer<RedirectedProcessLog.Chunk> logConsumer;
-//        if (segmented) {
-//            logConsumer = new SegmentedLogsConsumer(instanceId, logAppender);
-//        } else {
+        if (segmented) {
+            logConsumer = new SegmentedLogsConsumer(instanceId, logAppender);
+        } else {
             logConsumer = chunk -> {
                 byte[] ab = new byte[chunk.len()];
                 System.arraycopy(chunk.bytes(), 0, ab, 0, chunk.len());
                 logAppender.appendLog(instanceId, ab);
             };
-//        }
+        }
         return new RedirectedProcessLog(dst, logStreamMaxDelay, logConsumer);
     }
 

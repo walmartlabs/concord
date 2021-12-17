@@ -23,10 +23,10 @@ package com.walmartlabs.concord.runtime.v2.runner.logging;
 public class LoggingConfigurator {
 
     public static void configure(boolean segmented) {
-        ConcordLogLayout.SEGMENTED = segmented;
+        ConcordLogEncoder.SEGMENTED = segmented;
     }
 
     public static void reset() {
-        ConcordLogLayout.SEGMENTED = false;
+        ConcordLogEncoder.SEGMENTED = false;
     }
 }
