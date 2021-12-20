@@ -64,7 +64,7 @@ public class ConcordLogEncoder extends PatternLayoutEncoder {
 
         Stats stats = processStats(segmentId, event);
 
-        return String.format("|%d|%d|%s|%d|%d|", msgBytes.length, segmentId, (isDone(event) ? '0' : '1'), stats.warnings(), stats.errors()).getBytes();
+        return String.format("|%d|%d|%s|%d|%d|", msgBytes.length, segmentId, (isDone(event) ? '1' : '0'), stats.warnings(), stats.errors()).getBytes();
     }
 
     private static boolean isDone(ILoggingEvent event) {

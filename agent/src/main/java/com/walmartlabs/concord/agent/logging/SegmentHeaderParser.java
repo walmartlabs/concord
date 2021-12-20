@@ -125,7 +125,7 @@ public class SegmentHeaderParser {
     }
 
     public static byte[] serialize(Header header) {
-        return String.format("|%d|%d|%s|%d|%d|", header.length(), header.segmentId(), (header.done() ? '0' : '1'), header.warnCount(), header.errorCount()).getBytes();
+        return String.format("|%d|%d|%s|%d|%d|", header.length(), header.segmentId(), (header.done() ? '1' : '0'), header.warnCount(), header.errorCount()).getBytes();
     }
 
     @Value.Immutable
@@ -213,7 +213,7 @@ public class SegmentHeaderParser {
 
             @Override
             public void process(String fieldValue, ImmutableHeader.Builder headerBuilder) {
-                headerBuilder.done("0".equals(fieldValue));
+                headerBuilder.done("1".equals(fieldValue));
             }
         },
 
