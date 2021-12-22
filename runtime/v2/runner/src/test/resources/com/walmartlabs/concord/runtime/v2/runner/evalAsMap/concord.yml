@@ -10,7 +10,7 @@ flows:
     - expr: ${evalAsMap(x)}
       out: x
 
-    - log: "eval: ${x}"
+    - log: "eval: ${x}" # eval: {a={out3=1, out1=1, out2=2}}
 
     - log: "1: ${x.a.out1}"
     - log: "2: ${x.a.out2}"
