@@ -18,8 +18,8 @@
  * =====
  */
 import { useState } from 'react';
-import createContainer from 'constate';
 import fetchLogData from '../../../api/process/log/fetchLogAsBlobURL';
+import constate from "constate";
 
 type logDetails = {
     // Blob URL containing log data
@@ -97,6 +97,6 @@ export const useLog = () => {
     };
 };
 
-const LogContainer = createContainer(useLog);
+export const [LogProvider, useLogContext] = constate(useLog);
 
-export default LogContainer;
+export default LogProvider;

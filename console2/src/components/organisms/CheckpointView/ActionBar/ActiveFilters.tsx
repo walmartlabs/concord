@@ -17,10 +17,10 @@
  * limitations under the License.
  * =====
  */
-import React, { useContext, FunctionComponent } from 'react';
+import React, { FunctionComponent } from 'react';
 import { Label, Icon } from 'semantic-ui-react';
 import { CancelButton } from './CancelButton';
-import CheckpointContainer from '../Container';
+import { useCheckpointContext } from '../Container';
 import { Item } from './styles';
 
 export interface FilterLabelProps {
@@ -36,7 +36,7 @@ export interface FilterLabelProps {
  * @param {string} value the filter input
  */
 export const FilterLabel: FunctionComponent<FilterLabelProps> = ({ caption, source, value }) => {
-    const { removeFilter } = useContext(CheckpointContainer.Context);
+    const { removeFilter } = useCheckpointContext();
 
     return (
         <Label as="a" onClick={() => removeFilter(source)}>
@@ -50,9 +50,7 @@ export const FilterLabel: FunctionComponent<FilterLabelProps> = ({ caption, sour
  * Component Lists all active filters
  */
 export const ActiveFilters: FunctionComponent<{}> = () => {
-    const { activeFilters, removeAllFilters, getConfigBySourceName } = useContext(
-        CheckpointContainer.Context
-    );
+    const { activeFilters, removeAllFilters, getConfigBySourceName } = useCheckpointContext();
 
     if (Object.keys(activeFilters).length > 0) {
         return (
