@@ -114,6 +114,7 @@ public class JobExecutorFactory {
                     .jvmParams(runnerCfg.getJvmParams())
                     .dependencyListDir(agentCfg.getDependencyListsDir())
                     .dependencyCacheDir(agentCfg.getDependencyCacheDir())
+                    .dependencyResolveTimeout(agentCfg.getDependencyResolveTimeout())
                     .workDirBase(agentCfg.getWorkDirBase())
                     .runnerPath(runnerCfg.getPath())
                     .runnerCfgDir(runnerCfg.getCfgDir())
