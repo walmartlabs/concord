@@ -23,4 +23,8 @@ package com.walmartlabs.concord.dependencymanager;
 public interface ProgressListener {
 
     void onRetry(int retryCount, int maxRetry, long interval, String cause);
+
+    default void onTransferFailed(String error) {
+        // do nothing
+    }
 }
