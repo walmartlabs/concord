@@ -31,7 +31,7 @@
         <commons.text.version>1.8</commons.text.version>
         <commons.validator.version>1.6</commons.validator.version>
         <config.version>1.4.0</config.version>
-        <cronutils.version>9.0.2</cronutils.version>
+        <cronutils.version>9.1.6</cronutils.version>
         <errorproneannotations.version>2.3.4</errorproneannotations.version>
         <glassfish.el.version>3.0.1-b11</glassfish.el.version>
         <graalvm.version>21.2.0</graalvm.version>
