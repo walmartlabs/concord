@@ -21,14 +21,14 @@ package com.walmartlabs.concord.server.org.project;
  */
 
 import org.javers.core.metamodel.annotation.Id;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class DiffUtilsTest {
 

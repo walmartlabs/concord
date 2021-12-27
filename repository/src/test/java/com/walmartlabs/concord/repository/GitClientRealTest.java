@@ -9,9 +9,9 @@ package com.walmartlabs.concord.repository;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -25,9 +25,9 @@ import com.walmartlabs.concord.common.TemporaryPath;
 import com.walmartlabs.concord.common.secret.KeyPair;
 import com.walmartlabs.concord.common.secret.UsernamePassword;
 import com.walmartlabs.concord.sdk.Secret;
-import org.junit.Before;
-import org.junit.Ignore;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -35,9 +35,9 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.Duration;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
-@Ignore
+@Disabled
 public class GitClientRealTest {
 
     private static final String HTTPS_REPO_URL = System.getenv("HTTPS_REPO_URL");
@@ -61,7 +61,7 @@ public class GitClientRealTest {
 
     private GitClient client;
 
-    @Before
+    @BeforeEach
     public void init() {
         client = new GitClient(GitClientConfiguration.builder()
                 .oauthToken(System.getenv("GIT_TEST_OAUTH_TOKEN"))

@@ -22,21 +22,20 @@ package com.walmartlabs.concord.it.server;
 
 import com.github.tomakehurst.wiremock.client.ResponseDefinitionBuilder;
 import com.github.tomakehurst.wiremock.common.FileSource;
-import com.github.tomakehurst.wiremock.core.WireMockConfiguration;
 import com.github.tomakehurst.wiremock.extension.Parameters;
 import com.github.tomakehurst.wiremock.extension.ResponseDefinitionTransformer;
 import com.github.tomakehurst.wiremock.extension.responsetemplating.ResponseTemplateTransformer;
 import com.github.tomakehurst.wiremock.http.HttpHeader;
 import com.github.tomakehurst.wiremock.http.Request;
 import com.github.tomakehurst.wiremock.http.ResponseDefinition;
-import com.github.tomakehurst.wiremock.junit.WireMockRule;
+import com.github.tomakehurst.wiremock.junit5.WireMockExtension;
 import com.walmartlabs.concord.client.ProcessApi;
 import com.walmartlabs.concord.client.ProcessEntry;
 import com.walmartlabs.concord.client.StartProcessResponse;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
 import java.net.URI;
 import java.util.HashMap;
@@ -44,10 +43,11 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
+import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMockConfig;
 import static com.walmartlabs.concord.it.common.ITUtils.archive;
 import static com.walmartlabs.concord.it.common.ServerClient.assertLog;
 import static com.walmartlabs.concord.it.common.ServerClient.waitForCompletion;
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class HttpTaskIT extends AbstractServerIT {
 
@@ -72,12 +72,14 @@ public class HttpTaskIT extends AbstractServerIT {
         mockHttpBaseUrl = "http://" + env("IT_DOCKER_HOST_ADDR", "localhost") + ":";
     }
 
-    @Rule
-    public WireMockRule rule = new WireMockRule(WireMockConfiguration.options()
-            .extensions(new RequestHeaders(), new ResponseTemplateTransformer(false))
-            .dynamicPort());
+    @RegisterExtension
+    static WireMockExtension rule = WireMockExtension.newInstance()
+            .options(wireMockConfig()
+                    .dynamicPort()
+                    .extensions(new RequestHeaders(), new ResponseTemplateTransformer(false)))
+            .build();
 
-    @Before
+    @BeforeEach
     public void setup() {
         stubForGetAsStringEndpoint(mockHttpPathPing);
         stubForGetWithQueryEndpoint(mockHttpPathQueryParams);
@@ -93,12 +95,12 @@ public class HttpTaskIT extends AbstractServerIT {
         stubForRedirects(mockHttpPathFollowRedirects);
     }
 
-    @After
+    @AfterEach
     public void tearDown() {
         rule.shutdownServer();
     }
 
-    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    @Test
     public void testGetAsString() throws Exception {
         URI dir = HttpTaskIT.class.getResource("httpGetAsString").toURI();
         byte[] payload = archive(dir);
@@ -118,7 +120,7 @@ public class HttpTaskIT extends AbstractServerIT {
         assertLog(".*Success response.*", ab);
     }
 
-    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    @Test
     public void testGet() throws Exception {
         URI dir = HttpTaskIT.class.getResource("httpGet").toURI();
         byte[] payload = archive(dir);
@@ -139,7 +141,7 @@ public class HttpTaskIT extends AbstractServerIT {
         assertLog(".*Out Response: true*", ab);
     }
 
-    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    @Test
     public void testGetAsDefaultMethod() throws Exception {
         URI dir = HttpTaskIT.class.getResource("httpGetAsDefaultMethod").toURI();
         byte[] payload = archive(dir);
@@ -161,7 +163,7 @@ public class HttpTaskIT extends AbstractServerIT {
         assertLog(".*Out Response: true*", ab);
     }
 
-    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    @Test
     public void testGetWithQueryParams() throws Exception {
         URI dir = HttpTaskIT.class.getResource("httpGetWithQueryParams").toURI();
         byte[] payload = archive(dir);
@@ -170,7 +172,7 @@ public class HttpTaskIT extends AbstractServerIT {
 
         Map<String, Object> input = new HashMap<>();
         input.put("archive", payload);
-        input.put("arguments.url", mockHttpBaseUrl + rule.port() + mockHttpPathQueryParams);
+        input.put("arguments.url", mockHttpBaseUrl + rule.getPort() + mockHttpPathQueryParams);
 
         StartProcessResponse spr = start(input);
 
@@ -184,7 +186,7 @@ public class HttpTaskIT extends AbstractServerIT {
         assertLog(".*multi-value-2: value2*", ab);
     }
 
-    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    @Test
     public void testGetWithAuthUsingPassword() throws Exception {
 
         URI dir = HttpTaskIT.class.getResource("httpGetWithAuthUsingPassword").toURI();
@@ -194,7 +196,7 @@ public class HttpTaskIT extends AbstractServerIT {
         input.put("archive", payload);
         input.put("arguments.user", mockHttpAuthUser);
         input.put("arguments.password", mockHttpAuthPassword);
-        input.put("arguments.url", mockHttpBaseUrl + rule.port() + mockHttpPathPassword);
+        input.put("arguments.url", mockHttpBaseUrl + rule.getPort() + mockHttpPathPassword);
         StartProcessResponse spr = start(input);
 
         ProcessApi processApi = new ProcessApi(getApiClient());
@@ -207,7 +209,7 @@ public class HttpTaskIT extends AbstractServerIT {
         assertLog(".*Out Response: true*", ab);
     }
 
-    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    @Test
     public void testGetWithAuthUsingToken() throws Exception {
         URI dir = HttpTaskIT.class.getResource("httpGetWithAuthUsingToken").toURI();
         byte[] payload = archive(dir);
@@ -215,7 +217,7 @@ public class HttpTaskIT extends AbstractServerIT {
         Map<String, Object> input = new HashMap<>();
         input.put("archive", payload);
         input.put("arguments.authToken", mockHttpAuthToken);
-        input.put("arguments.url", mockHttpBaseUrl + rule.port() + mockHttpPathToken);
+        input.put("arguments.url", mockHttpBaseUrl + rule.getPort() + mockHttpPathToken);
         StartProcessResponse spr = start(input);
 
         ProcessApi processApi = new ProcessApi(getApiClient());
@@ -228,7 +230,7 @@ public class HttpTaskIT extends AbstractServerIT {
         assertLog(".*Out Response: true*", ab);
     }
 
-    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    @Test
     public void testPost() throws Exception {
         URI dir = HttpTaskIT.class.getResource("httpPost").toURI();
         byte[] payload = archive(dir);
@@ -237,7 +239,7 @@ public class HttpTaskIT extends AbstractServerIT {
         input.put("archive", payload);
         input.put("arguments.user", mockHttpAuthUser);
         input.put("arguments.password", mockHttpAuthPassword);
-        input.put("arguments.url", mockHttpBaseUrl + rule.port() + mockHttpPathPassword);
+        input.put("arguments.url", mockHttpBaseUrl + rule.getPort() + mockHttpPathPassword);
         StartProcessResponse spr = start(input);
 
         ProcessApi processApi = new ProcessApi(getApiClient());
@@ -250,7 +252,7 @@ public class HttpTaskIT extends AbstractServerIT {
         assertLog(".*Out Response: true*", ab);
     }
 
-    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    @Test
     public void testPostWithDebug() throws Exception {
         URI dir = HttpTaskIT.class.getResource("httpPostWithDebug").toURI();
         byte[] payload = archive(dir);
@@ -259,7 +261,7 @@ public class HttpTaskIT extends AbstractServerIT {
         input.put("archive", payload);
         input.put("arguments.user", mockHttpAuthUser);
         input.put("arguments.password", mockHttpAuthPassword);
-        input.put("arguments.url", mockHttpBaseUrl + rule.port() + mockHttpPathPassword);
+        input.put("arguments.url", mockHttpBaseUrl + rule.getPort() + mockHttpPathPassword);
         StartProcessResponse spr = start(input);
 
         ProcessApi processApi = new ProcessApi(getApiClient());
@@ -272,14 +274,14 @@ public class HttpTaskIT extends AbstractServerIT {
         assertLog(".*responseInfo.*", ab);
     }
 
-    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    @Test
     public void testPostWithFormUrlEncoded() throws Exception {
         URI dir = HttpTaskIT.class.getResource("httpPostWithFormUrlEncoded").toURI();
         byte[] payload = archive(dir);
 
         Map<String, Object> input = new HashMap<>();
         input.put("archive", payload);
-        input.put("arguments.url", mockHttpBaseUrl + rule.port() + mockHttpPathFormUrlEncoded);
+        input.put("arguments.url", mockHttpBaseUrl + rule.getPort() + mockHttpPathFormUrlEncoded);
         StartProcessResponse spr = start(input);
 
         ProcessApi processApi = new ProcessApi(getApiClient());
@@ -292,7 +294,7 @@ public class HttpTaskIT extends AbstractServerIT {
         assertLog(".*Out Response: true*", ab);
     }
 
-    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    @Test
     public void testPatch() throws Exception {
         URI dir = HttpTaskIT.class.getResource("httpPatch").toURI();
         byte[] payload = archive(dir);
@@ -301,7 +303,7 @@ public class HttpTaskIT extends AbstractServerIT {
         input.put("archive", payload);
         input.put("arguments.user", mockHttpAuthUser);
         input.put("arguments.password", mockHttpAuthPassword);
-        input.put("arguments.url", mockHttpBaseUrl + rule.port() + mockHttpPathPassword);
+        input.put("arguments.url", mockHttpBaseUrl + rule.getPort() + mockHttpPathPassword);
         StartProcessResponse spr = start(input);
 
         ProcessApi processApi = new ProcessApi(getApiClient());
@@ -314,7 +316,7 @@ public class HttpTaskIT extends AbstractServerIT {
         assertLog(".*Out Response: true*", ab);
     }
 
-    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    @Test
     public void testPostWithAuthUsingToken() throws Exception {
         URI dir = HttpTaskIT.class.getResource("httpPostWithAuthUsingToken").toURI();
         byte[] payload = archive(dir);
@@ -322,7 +324,7 @@ public class HttpTaskIT extends AbstractServerIT {
         Map<String, Object> input = new HashMap<>();
         input.put("archive", payload);
         input.put("arguments.authToken", mockHttpAuthToken);
-        input.put("arguments.url", mockHttpBaseUrl + rule.port() + mockHttpPathToken);
+        input.put("arguments.url", mockHttpBaseUrl + rule.getPort() + mockHttpPathToken);
         StartProcessResponse spr = start(input);
 
         ProcessApi processApi = new ProcessApi(getApiClient());
@@ -335,7 +337,7 @@ public class HttpTaskIT extends AbstractServerIT {
         assertLog(".*Out Response: true*", ab);
     }
 
-    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    @Test
     public void testGetWithInvalidUrl() throws Exception {
         URI dir = HttpTaskIT.class.getResource("httpGetWithInvalidUrl").toURI();
         byte[] payload = archive(dir);
@@ -350,7 +352,7 @@ public class HttpTaskIT extends AbstractServerIT {
         assertLog(".*server not exists.*", ab);
     }
 
-    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    @Test
     public void testGetWithHeaders() throws Exception {
 
         URI dir = HttpTaskIT.class.getResource("httpGetWithHeaders").toURI();
@@ -358,7 +360,7 @@ public class HttpTaskIT extends AbstractServerIT {
 
         Map<String, Object> input = new HashMap<>();
         input.put("archive", payload);
-        input.put("arguments.url", mockHttpBaseUrl + rule.port() + mockHttpPathHeaders);
+        input.put("arguments.url", mockHttpBaseUrl + rule.getPort() + mockHttpPathHeaders);
         StartProcessResponse spr = start(input);
 
         ProcessApi processApi = new ProcessApi(getApiClient());
@@ -373,7 +375,7 @@ public class HttpTaskIT extends AbstractServerIT {
         assertLog(".*Response content: request headers:.*h2=v2.*", ab);
     }
 
-    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    @Test
     public void testGetWithIgnoreErrors() throws Exception {
         URI dir = HttpTaskIT.class.getResource("httpGetWithIgnoreErrors").toURI();
         byte[] payload = archive(dir);
@@ -382,7 +384,7 @@ public class HttpTaskIT extends AbstractServerIT {
         input.put("archive", payload);
         input.put("arguments.user", "wrongUsername");
         input.put("arguments.password", "wrongPassword");
-        input.put("arguments.url", mockHttpBaseUrl + rule.port() + mockHttpPathUnauthorized);
+        input.put("arguments.url", mockHttpBaseUrl + rule.getPort() + mockHttpPathUnauthorized);
         StartProcessResponse spr = start(input);
 
         ProcessApi processApi = new ProcessApi(getApiClient());
@@ -395,7 +397,7 @@ public class HttpTaskIT extends AbstractServerIT {
         assertLog(".*Success response: false*", ab);
     }
 
-    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    @Test
     public void testGetEmptyResponse() throws Exception {
         URI dir = HttpTaskIT.class.getResource("httpGetEmpty").toURI();
         byte[] payload = archive(dir);
@@ -404,7 +406,7 @@ public class HttpTaskIT extends AbstractServerIT {
 
         Map<String, Object> input = new HashMap<>();
         input.put("archive", payload);
-        input.put("arguments.url", mockHttpBaseUrl + rule.port() + mockHttpPathEmpty);
+        input.put("arguments.url", mockHttpBaseUrl + rule.getPort() + mockHttpPathEmpty);
 
         StartProcessResponse spr = start(input);
 
@@ -416,7 +418,7 @@ public class HttpTaskIT extends AbstractServerIT {
         assertLog(".*Content is NULL: true.*", ab);
     }
 
-    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    @Test
     public void testFollowRedirects() throws Exception {
         URI dir = HttpTaskIT.class.getResource("httpFollowRedirects").toURI();
         byte[] payload = archive(dir);
@@ -424,7 +426,7 @@ public class HttpTaskIT extends AbstractServerIT {
         Map<String, Object> input = new HashMap<>();
         input.put("archive", payload);
         input.put("arguments.authToken", mockHttpAuthToken);
-        input.put("arguments.url", mockHttpBaseUrl + rule.port() + mockHttpPathFollowRedirects);
+        input.put("arguments.url", mockHttpBaseUrl + rule.getPort() + mockHttpPathFollowRedirects);
         StartProcessResponse spr = start(input);
 
         ProcessApi processApi = new ProcessApi(getApiClient());

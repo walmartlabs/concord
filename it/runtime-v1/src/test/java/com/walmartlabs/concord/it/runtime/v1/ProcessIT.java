@@ -29,8 +29,6 @@ import com.walmartlabs.concord.client.FormSubmitResponse;
 import com.walmartlabs.concord.client.ProcessEntry;
 import com.walmartlabs.concord.client.ProcessEntry.StatusEnum;
 import com.walmartlabs.concord.sdk.Constants;
-import org.junit.ClassRule;
-import org.junit.Test;
 
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -41,7 +39,6 @@ import java.util.Map;
 import static com.walmartlabs.concord.it.common.ITUtils.archive;
 import static com.walmartlabs.concord.it.common.ITUtils.randomString;
 import static com.walmartlabs.concord.it.runtime.v1.ITConstants.DEFAULT_TEST_TIMEOUT;
-import static org.junit.Assert.*;
 
 public class ProcessIT {
 

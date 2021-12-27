@@ -22,13 +22,13 @@ package com.walmartlabs.concord.runner.engine.el;
 
 import com.walmartlabs.concord.sdk.InjectVariable;
 import io.takari.bpm.task.ServiceTaskRegistryImpl;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import javax.el.ELContext;
 
-import static org.junit.Assert.assertEquals;
 import static org.mockito.Mockito.spy;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class TaskResolverTest extends AbstractElResolverTest {
 
@@ -36,15 +36,15 @@ public class TaskResolverTest extends AbstractElResolverTest {
     private ELContext elContext;
     private TaskResolver resolver;
 
-    @Before
-    public void setUp() throws Exception {
+    @BeforeEach
+    public void setUp() {
         registry = new ServiceTaskRegistryImpl();
         resolver = new TaskResolver(registry);
         elContext = createContext();
     }
 
     @Test
-    public void test() throws Exception {
+    public void test() {
         TestTask task = spy(new TestTask());
         registry.register("test", task);
 
@@ -55,6 +55,7 @@ public class TaskResolverTest extends AbstractElResolverTest {
         assertEquals("var1-value", task.value);
     }
 
+    @SuppressWarnings("unused")
     private static class TestTask {
 
         @InjectVariable("var1")

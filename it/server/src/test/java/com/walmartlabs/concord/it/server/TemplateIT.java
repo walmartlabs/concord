@@ -25,7 +25,7 @@ import com.walmartlabs.concord.common.IOUtils;
 import com.walmartlabs.concord.sdk.Constants;
 import org.apache.commons.compress.archivers.zip.ZipArchiveOutputStream;
 import org.eclipse.jgit.api.Git;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.io.File;
 import java.io.IOException;
@@ -37,13 +37,13 @@ import java.util.Map;
 
 import static com.walmartlabs.concord.it.common.ServerClient.assertLog;
 import static com.walmartlabs.concord.it.common.ServerClient.waitForCompletion;
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class TemplateIT extends AbstractServerIT {
 
     private static final String MAIN_JS = "({ entryPoint: \"main\", arguments: { greeting: \"Hello, \" + _input.name }})";
 
-    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    @Test
     public void test() throws Exception {
         final String processYml = "main:\n- expr: ${log.info(\"test\", greeting)}";
 
@@ -91,7 +91,7 @@ public class TemplateIT extends AbstractServerIT {
         assertLog(".*Hello, " + myName + ".*", ab);
     }
 
-    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    @Test
     public void testInputVariablesStillPresent() throws Exception {
         final String processYml = "main:\n- expr: ${log.info(\"test\", xxx)}";
 
@@ -142,7 +142,7 @@ public class TemplateIT extends AbstractServerIT {
         assertLog(".*BOO.*", ab);
     }
 
-    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    @Test
     public void testEntryPointReference() throws Exception {
         final String processYml = "fromTemplate:\n- log: \"hello!\"";
         Path templatePath = createTemplate(processYml, null);

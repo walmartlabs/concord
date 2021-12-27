@@ -21,11 +21,11 @@ package com.walmartlabs.concord.project.runtime.v2.parser;
  */
 
 import com.walmartlabs.concord.runtime.v2.exception.YamlParserException;
-import org.junit.Ignore;
-import org.junit.Test;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.fail;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.fail;
 
 public class YamlErrorParserTest extends AbstractParserTest {
 
@@ -677,7 +677,7 @@ public class YamlErrorParserTest extends AbstractParserTest {
     }
 
     @Test
-    @Ignore("we allow nulls in kv now")
+    @Disabled("we allow nulls in kv now")
     public void test207() throws Exception {
         String msg =
                 "(007.yml): Error @ line: 8, col: 12. Invalid value type of 'k3' parameter, expected: NON_NULL, got: NULL. Remove attribute or complete the definition\n" +
@@ -923,7 +923,7 @@ public class YamlErrorParserTest extends AbstractParserTest {
     }
 
     @Test
-    @Ignore("we allow nulls in kv now")
+    @Disabled("we allow nulls in kv now")
     public void test307() throws Exception {
         String msg =
                 "(003.yml): Error @ line: 4, col: 12. Invalid value type, expected: STRING, got: INT\n" +
@@ -2328,7 +2328,7 @@ public class YamlErrorParserTest extends AbstractParserTest {
 
         assertErrorMessage("errors/configuration/022.yml", msg);
     }
-    
+
     private void assertErrorMessage(String resource, String expectedError) throws Exception {
         try {
             load(resource);

@@ -21,18 +21,18 @@ package com.walmartlabs.concord.it.server;
  */
 
 import com.walmartlabs.concord.client.*;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import javax.xml.bind.DatatypeConverter;
 import java.util.*;
 
 import static com.walmartlabs.concord.it.common.ITUtils.archive;
 import static com.walmartlabs.concord.it.common.ServerClient.*;
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class ConcordTaskIT extends AbstractServerIT {
 
-    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    @Test
     public void testStartArchive() throws Exception {
         // create a new org
 
@@ -100,7 +100,7 @@ public class ConcordTaskIT extends AbstractServerIT {
         assertLog(".*Done!.*", ab);
     }
 
-    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    @Test
     public void testStartDirectory() throws Exception {
         byte[] payload = archive(ConcordTaskIT.class.getResource("concordDirTask").toURI());
         Map<String, Object> input = new HashMap<>();
@@ -118,7 +118,7 @@ public class ConcordTaskIT extends AbstractServerIT {
         assertLog(".*Done! Hello! Good Bye.*", ab);
     }
 
-    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    @Test
     public void testCreateProject() throws Exception {
         String projectName = "project_" + randomString();
 
@@ -140,7 +140,7 @@ public class ConcordTaskIT extends AbstractServerIT {
         assertLog(".*Done!.*", ab);
     }
 
-    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    @Test
     public void testStartAt() throws Exception {
         byte[] payload = archive(ConcordTaskIT.class.getResource("concordDirTask").toURI());
         Map<String, Object> input = new HashMap<>();
@@ -162,7 +162,7 @@ public class ConcordTaskIT extends AbstractServerIT {
         assertLog(".*Done! Hello!.*", ab);
     }
 
-    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    @Test
     public void testOutVarsNotFound() throws Exception {
         byte[] payload = archive(ConcordTaskIT.class.getResource("concordOutVars").toURI());
         Map<String, Object> input = new HashMap<>();
@@ -180,7 +180,7 @@ public class ConcordTaskIT extends AbstractServerIT {
         assertLog(".*Done!.*", ab);
     }
 
-    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    @Test
     public void testSubprocessFail() throws Exception {
         byte[] payload = archive(ConcordTaskIT.class.getResource("concordSubFail").toURI());
         Map<String, Object> input = new HashMap<>();
@@ -199,7 +199,7 @@ public class ConcordTaskIT extends AbstractServerIT {
         assertNoLog(".*Done!.*", ab);
     }
 
-    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    @Test
     public void testSubprocessIgnoreFail() throws Exception {
         byte[] payload = archive(ConcordTaskIT.class.getResource("concordSubIgnoreFail").toURI());
         Map<String, Object> input = new HashMap<>();
@@ -217,7 +217,7 @@ public class ConcordTaskIT extends AbstractServerIT {
         assertLog(".*Done!.*", ab);
     }
 
-    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    @Test
     public void testStartChildFinishedWithError() throws Exception {
         String orgName = "org_" + randomString();
 
@@ -249,7 +249,7 @@ public class ConcordTaskIT extends AbstractServerIT {
         assertLog(".*Child process.*FAILED.*BOOOM.*", ab);
     }
 
-    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    @Test
     public void testForkWithItemsWithOutVariable() throws Exception {
         String orgName = "org_" + randomString();
 
@@ -283,7 +283,7 @@ public class ConcordTaskIT extends AbstractServerIT {
         assertLog(".*Done.*\\[\\[.*\\], \\[.*\\]\\] is completed.*", ab);
     }
 
-    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    @Test
     public void testForkWithItems() throws Exception {
         String orgName = "org_" + randomString();
 
@@ -317,7 +317,7 @@ public class ConcordTaskIT extends AbstractServerIT {
         assertLog(".*Done.*\\[\\[.*\\], \\[.*\\]\\] is completed.*", ab);
     }
 
-    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    @Test
     public void testExternalApiToken() throws Exception {
         String username = "user_" + randomString();
 
@@ -348,7 +348,7 @@ public class ConcordTaskIT extends AbstractServerIT {
         assertLog(".*Hello, Concord!.*", ab);
     }
 
-    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    @Test
     public void testSuspendParentProcess() throws Exception {
         String username = "user_" + randomString();
 
@@ -379,7 +379,7 @@ public class ConcordTaskIT extends AbstractServerIT {
         assertLog(".*Hello, Concord!.*", ab);
     }
 
-    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    @Test
     public void testForkWithArguments() throws Exception {
         String orgName = "org_" + randomString();
 
@@ -419,7 +419,7 @@ public class ConcordTaskIT extends AbstractServerIT {
         assertLog(".*Concord Fork Process 123.*", ab);
     }
 
-    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    @Test
     public void testForkWithForm() throws Exception {
         String orgName = "org_" + randomString();
 
@@ -476,7 +476,7 @@ public class ConcordTaskIT extends AbstractServerIT {
         assertLog(".*Concord Fork Process 234.*", ab);
     }
 
-    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    @Test
     public void testForkSuspend() throws Exception {
         String nameVar = "name_" + randomString();
 
@@ -514,7 +514,7 @@ public class ConcordTaskIT extends AbstractServerIT {
         assertLog(".*\\{varFromFork=Bye, " + nameVar + "\\}.*", ab);
     }
 
-    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    @Test
     public void testForkAsyncGrabOutVars() throws Exception {
         byte[] payload = archive(ConcordTaskIT.class.getResource("concordTaskForkAsyncGrabOutVars").toURI());
 
@@ -532,7 +532,7 @@ public class ConcordTaskIT extends AbstractServerIT {
         assertLog(".*\\{a=4, b=5, c=6\\}.*", ab);
     }
 
-    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    @Test
     public void testParentInstanceId() throws Exception {
         byte[] payload = archive(ConcordTaskIT.class.getResource("parentInstanceId").toURI());
 

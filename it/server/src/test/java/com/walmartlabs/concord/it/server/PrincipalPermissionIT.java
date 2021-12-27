@@ -21,7 +21,7 @@ package com.walmartlabs.concord.it.server;
  */
 
 import com.walmartlabs.concord.client.*;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.util.HashMap;
 import java.util.List;
@@ -30,12 +30,12 @@ import java.util.Map;
 import static com.walmartlabs.concord.it.common.ITUtils.archive;
 import static com.walmartlabs.concord.it.common.ServerClient.assertLog;
 import static com.walmartlabs.concord.it.common.ServerClient.waitForCompletion;
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class PrincipalPermissionIT extends AbstractServerIT {
 
 
-    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    @Test
     public void testPrincipalPermission() throws Exception {
 
         byte[] payload = archive(PrincipalPermissionIT.class.getResource("principalPermission").toURI());

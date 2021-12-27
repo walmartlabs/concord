@@ -26,13 +26,13 @@ import com.walmartlabs.concord.imports.Imports;
 import com.walmartlabs.concord.runtime.v2.Constants;
 import com.walmartlabs.concord.runtime.v2.model.*;
 import com.walmartlabs.concord.runtime.v2.parser.StepOptions;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.io.Serializable;
 import java.time.Duration;
 import java.util.*;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class YamlOkParserTest extends AbstractParserTest {
 

@@ -20,13 +20,13 @@ package com.walmartlabs.concord.it.server;
  * =====
  */
 
-import com.googlecode.junittoolbox.ParallelSuite;
 import com.googlecode.junittoolbox.SuiteClasses;
-import org.junit.Ignore;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.parallel.Execution;
+import org.junit.jupiter.api.parallel.ExecutionMode;
 
-@Ignore
-@RunWith(ParallelSuite.class)
+@Disabled
+@Execution(ExecutionMode.CONCURRENT)
 @SuiteClasses("**/*IT.class")
 public class AllTests {
 }

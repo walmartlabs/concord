@@ -21,12 +21,12 @@ package com.walmartlabs.concord.it.server;
  */
 
 import com.walmartlabs.concord.it.common.ServerClient;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.net.HttpURLConnection;
 import java.net.URL;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class BearerTokenIT {
 

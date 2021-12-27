@@ -21,8 +21,8 @@ package com.walmartlabs.concord.it.server;
  */
 
 import com.walmartlabs.concord.client.*;
-import org.junit.After;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Test;
 
 import javax.naming.NameAlreadyBoundException;
 import javax.naming.directory.*;
@@ -32,12 +32,12 @@ import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Map;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 public class GitHubTriggersV2IT extends AbstractGitHubTriggersIT {
 
-    @After
+    @AfterEach
     public void tearDown() throws Exception {
         waitForProcessesToFinish();
     }
@@ -59,7 +59,7 @@ public class GitHubTriggersV2IT extends AbstractGitHubTriggersIT {
      *       entryPoint: onPush
      * </pre>
      */
-    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    @Test
     public void testFilterBySender() throws Exception {
         OrganizationsApi orgApi = new OrganizationsApi(getApiClient());
 
@@ -132,7 +132,7 @@ public class GitHubTriggersV2IT extends AbstractGitHubTriggersIT {
      *       entryPoint: onPush
      * </pre>
      */
-    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    @Test
     public void testDefaultBranch() throws Exception {
         OrganizationsApi orgApi = new OrganizationsApi(getApiClient());
 
@@ -161,7 +161,7 @@ public class GitHubTriggersV2IT extends AbstractGitHubTriggersIT {
         deleteOrg(orgXName);
     }
 
-    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    @Test
     public void testOnPushWithFullTriggerParams() throws Exception {
         OrganizationsApi orgApi = new OrganizationsApi(getApiClient());
 
@@ -191,7 +191,7 @@ public class GitHubTriggersV2IT extends AbstractGitHubTriggersIT {
         deleteOrg(orgXName);
     }
 
-    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    @Test
     public void testOnPushWithFiles() throws Exception {
         OrganizationsApi orgApi = new OrganizationsApi(getApiClient());
 
@@ -224,7 +224,7 @@ public class GitHubTriggersV2IT extends AbstractGitHubTriggersIT {
      * Verify that the "requestInfo" variable is available for GitHub processes
      * (should be empty).
      */
-    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    @Test
     public void testRequestInfo() throws Exception {
         OrganizationsApi orgApi = new OrganizationsApi(getApiClient());
 
@@ -255,7 +255,7 @@ public class GitHubTriggersV2IT extends AbstractGitHubTriggersIT {
         deleteOrg(orgXName);
     }
 
-    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    @Test
     public void testIgnoreEmptyPush() throws Exception {
         OrganizationsApi orgApi = new OrganizationsApi(getApiClient());
 
@@ -298,7 +298,7 @@ public class GitHubTriggersV2IT extends AbstractGitHubTriggersIT {
         }
     }
 
-    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    @Test
     public void testRefreshOnGitHubEvent() throws Exception {
         String username = createUser();
 
@@ -349,9 +349,9 @@ public class GitHubTriggersV2IT extends AbstractGitHubTriggersIT {
             Thread.sleep(500);
         }
 
-        assertNotNull("Must find repository refresh process.", refreshProc);
-        assertEquals("Repository refresh process must finish successfully.",
-                ProcessEntry.StatusEnum.FINISHED, refreshProc.getStatus());
+        assertNotNull(refreshProc, "Must find repository refresh process.");
+        assertEquals(ProcessEntry.StatusEnum.FINISHED, refreshProc.getStatus(),
+                "Repository refresh process must finish successfully.");
 
         // -- process log should indicate only one repo was refreshed
 
@@ -366,7 +366,7 @@ public class GitHubTriggersV2IT extends AbstractGitHubTriggersIT {
         assertLog(refreshProc, ".*Repository ids to refresh: \\[" + repo.getId().toString() + "\\].*");
     }
 
-    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    @Test
     public void testUseInitiatorFromSender() throws Exception {
         String username = createUser();
 
@@ -392,7 +392,7 @@ public class GitHubTriggersV2IT extends AbstractGitHubTriggersIT {
         assertEquals(username, pe.getInitiator());
     }
 
-    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    @Test
     public void testUseInitiatorFromSenderLdapDn() throws Exception {
         String username = createUser();
 

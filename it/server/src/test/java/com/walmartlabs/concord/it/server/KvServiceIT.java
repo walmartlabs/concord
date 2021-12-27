@@ -25,7 +25,7 @@ import com.walmartlabs.concord.client.*;
 import com.walmartlabs.concord.common.IOUtils;
 import com.walmartlabs.concord.sdk.Constants;
 import org.apache.commons.compress.archivers.zip.ZipArchiveOutputStream;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.io.ByteArrayOutputStream;
 import java.io.FileWriter;
@@ -38,12 +38,12 @@ import java.util.regex.Pattern;
 
 import static com.walmartlabs.concord.it.common.ITUtils.archive;
 import static com.walmartlabs.concord.it.common.ServerClient.*;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 public class KvServiceIT extends AbstractServerIT {
 
-    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    @Test
     public void testKv() throws Exception {
         String testKey = "key_" + randomString();
 
@@ -63,7 +63,7 @@ public class KvServiceIT extends AbstractServerIT {
         assertLog(".*xyz.*", ab);
     }
 
-    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    @Test
     public void testKvLong() throws Exception {
         String testKey = "key_" + randomString();
 
@@ -76,7 +76,7 @@ public class KvServiceIT extends AbstractServerIT {
         assertLog(".*d=235.*", ab);
     }
 
-    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    @Test
     public void testKvWithSpecialString() throws Exception {
         String testKey = "key_" + randomString();
 
@@ -85,7 +85,7 @@ public class KvServiceIT extends AbstractServerIT {
         assertLog(".*" + Pattern.quote("#aaa#bbb") + ".*", ab);
     }
 
-    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    @Test
     public void testInvalidKeys() throws Exception {
         OrganizationsApi organizationsApi = new OrganizationsApi(getApiClient());
         String orgName = "org_" + randomString();
@@ -120,7 +120,7 @@ public class KvServiceIT extends AbstractServerIT {
         assertLogAtLeast(".*Keys cannot be empty or null.*", 1, ab);
     }
 
-    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    @Test
     public void testCallFromScript() throws Exception {
         OrganizationsApi organizationsApi = new OrganizationsApi(getApiClient());
         String orgName = "org_" + randomString();

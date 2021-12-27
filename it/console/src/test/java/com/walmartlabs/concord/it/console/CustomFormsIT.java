@@ -23,31 +23,34 @@ package com.walmartlabs.concord.it.console;
 import com.walmartlabs.concord.ApiClient;
 import com.walmartlabs.concord.client.*;
 import com.walmartlabs.concord.it.common.ITUtils;
-import org.junit.Rule;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.Timeout;
+import org.junit.jupiter.api.extension.RegisterExtension;
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebElement;
 
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 import static com.walmartlabs.concord.it.console.Utils.DEFAULT_TEST_TIMEOUT;
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  * The Console must be running in Docker, i.e. API redirects must be correctly working.
  */
+@Timeout(value = DEFAULT_TEST_TIMEOUT, unit = TimeUnit.MILLISECONDS)
 public class CustomFormsIT {
 
-    @Rule
-    public ConcordServerRule serverRule = new ConcordServerRule();
+    @RegisterExtension
+    public static ConcordServerRule serverRule = new ConcordServerRule();
 
-    @Rule
-    public ConcordConsoleRule consoleRule = new ConcordConsoleRule();
+    @RegisterExtension
+    public static ConcordConsoleRule consoleRule = new ConcordConsoleRule();
 
     @SuppressWarnings("unchecked")
-    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    @Test
     public void test() throws Exception {
         ApiClient client = serverRule.getClient();
 
@@ -90,6 +93,6 @@ public class CustomFormsIT {
         Map<String, Object> formFields = (Map<String, Object>) consoleRule.executeJavaScript("return data.definitions");
         Map<String, Object> fieldX = (Map<String, Object>) formFields.get("x");
         List<Object> allowedValues = (List<Object>) fieldX.get("allow");
-        assertEquals("Expression object should have added two allowed values", 2, allowedValues.size());
+        assertEquals(2, allowedValues.size(), "Expression object should have added two allowed values");
     }
 }

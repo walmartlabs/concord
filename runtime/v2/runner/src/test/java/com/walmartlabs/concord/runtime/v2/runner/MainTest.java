@@ -48,9 +48,9 @@ import com.walmartlabs.concord.svm.ExecutionListener;
 import com.walmartlabs.concord.svm.Runtime;
 import com.walmartlabs.concord.svm.ThreadId;
 import org.immutables.value.Value;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -72,7 +72,7 @@ import java.util.concurrent.atomic.AtomicLong;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 import static java.util.regex.Pattern.quote;
 
@@ -93,7 +93,7 @@ public class MainTest {
 
     private Path segmentedLogDir;
 
-    @Before
+    @BeforeEach
     public void setUp() throws IOException {
         workDir = Files.createTempDirectory("test");
 
@@ -141,7 +141,7 @@ public class MainTest {
         allLogs = null;
     }
 
-    @After
+    @AfterEach
     public void tearDown() throws IOException {
         if (workDir != null) {
             IOUtils.deleteRecursively(workDir);
@@ -1067,7 +1067,7 @@ public class MainTest {
     }
 
     private byte[] run(RunnerConfiguration baseCfg) throws Exception {
-        assertNotNull("save() the process configuration first", processConfiguration);
+        assertNotNull(processConfiguration, "save() the process configuration first");
 
         ImmutableRunnerConfiguration.Builder runnerCfg = RunnerConfiguration.builder();
 

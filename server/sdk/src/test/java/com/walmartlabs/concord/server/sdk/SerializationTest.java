@@ -25,14 +25,13 @@ import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.walmartlabs.concord.server.sdk.audit.AuditEvent;
 import com.walmartlabs.concord.server.sdk.events.ProcessEvent;
 import com.walmartlabs.concord.server.sdk.log.ProcessLogEntry;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.time.OffsetDateTime;
 import java.util.Collections;
 import java.util.UUID;
 
-import static org.junit.Assert.assertArrayEquals;
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class SerializationTest {
 
