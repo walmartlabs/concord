@@ -76,8 +76,7 @@
 
         <docker.plugin.version>0.30.0</docker.plugin.version>
         <jooq.version>3.13.4</jooq.version>
-        <liquibase.version>3.5.1
-        </liquibase.version> <!-- the newer versions (up to 3.5.3) have incorrect mappings for PG's blob/bytea -->
+        <liquibase.version>3.5.1</liquibase.version> <!-- the newer versions (up to 3.5.3) have incorrect mappings for PG's blob/bytea -->
         <maven.dependency.plugin.version>3.1.2</maven.dependency.plugin.version>
         <node.version>14.16.0</node.version>
     </properties>
