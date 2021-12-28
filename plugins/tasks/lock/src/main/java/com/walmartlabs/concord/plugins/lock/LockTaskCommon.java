@@ -22,13 +22,13 @@ package com.walmartlabs.concord.plugins.lock;
 
 import com.walmartlabs.concord.ApiClient;
 import com.walmartlabs.concord.ApiException;
-import com.walmartlabs.concord.client.ClientUtils;
-import com.walmartlabs.concord.client.LockResult;
-import com.walmartlabs.concord.client.ProcessLocksApi;
+import com.walmartlabs.concord.client.*;
 import com.walmartlabs.concord.runtime.v2.sdk.TaskResult;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.Callable;
 
@@ -39,11 +39,13 @@ public class LockTaskCommon {
 
     private static final Logger log = LoggerFactory.getLogger(LockTaskCommon.class);
 
-    private final ProcessLocksApi api;
+    private final ProcessApi processApi;
+    private final ProcessLocksApi lockApi;
     private final UUID instanceId;
 
     public LockTaskCommon(ApiClient apiClient, UUID instanceId) {
-        this.api = new ProcessLocksApi(apiClient);
+        this.processApi = new ProcessApi(apiClient);
+        this.lockApi = new ProcessLocksApi(apiClient);
         this.instanceId = instanceId;
     }
 
@@ -54,10 +56,15 @@ public class LockTaskCommon {
             throw new IllegalArgumentException("Mandatory variable 'lockName' is required");
         }
 
-        LockResult lock = withRetry(() -> api.tryLock(instanceId, lockName, checkScope(lockScope)));
+        LockResult lock = withRetry(() -> lockApi.tryLock(instanceId, lockName, checkScope(lockScope)));
 
         boolean result = lock.isAcquired();
         if (!result) {
+            withRetry(() -> {
+                processApi.setWaitCondition(instanceId, createCondition(lock.getInfo()));
+                return null;
+            });
+
             return TaskResult.suspend(lockName);
         }
         return TaskResult.success();
@@ -67,7 +74,7 @@ public class LockTaskCommon {
         log.info("Unlocking '{}' with scope '{}'...", lockName, lockScope);
 
         withRetry(() -> {
-            api.unlock(instanceId, lockName, checkScope(lockScope));
+            lockApi.unlock(instanceId, lockName, checkScope(lockScope));
             return null;
         });
     }
@@ -84,6 +91,21 @@ public class LockTaskCommon {
         }
 
         return scope.toUpperCase();
+    }
+
+    /**
+     *  @see com.walmartlabs.concord.server.process.waits.ProcessLockCondition
+      */
+    private static Map<String, Object> createCondition(LockEntry lock) {
+        Map<String, Object> condition = new HashMap<>();
+        condition.put("type", "PROCESS_LOCK");
+        condition.put("instanceId", lock.getInstanceId());
+        condition.put("orgId", lock.getOrgId());
+        condition.put("projectId", lock.getProjectId());
+        condition.put("scope", lock.getScope());
+        condition.put("name", lock.getName());
+        condition.put("resumeEvent", UUID.randomUUID().toString());
+        return condition;
     }
 
     private static <T> T withRetry(Callable<T> c) throws ApiException {
