@@ -10,7 +10,7 @@
 ([#520](https://github.com/walmartlabs/concord/pull/520));
 - concord-agent: add dependencyResolveTimeout configuration
 parameter ([#522](https://github.com/walmartlabs/concord/pull/522));
--concord-parent: support for Apple M1 silicon
+- concord-parent: support for Apple M1 silicon
 ([#527](https://github.com/walmartlabs/concord/pull/527)).
 
 ### Changed
