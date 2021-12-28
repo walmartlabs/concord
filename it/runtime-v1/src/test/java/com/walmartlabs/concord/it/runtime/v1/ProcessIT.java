@@ -498,6 +498,15 @@ public class ProcessIT {
         assertEquals("c", pe.getMeta().get("var"));
     }
 
+    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    public void testEmptyExclusiveGroup() throws Exception {
+        ConcordProcess proc = concord.processes().start(new Payload()
+                .archive(resource("emptyExclusiveGroup")));
+
+        proc.expectStatus(StatusEnum.FAILED);
+        proc.assertLog(".*Invalid exclusive mode.*");
+    }
+
     @SuppressWarnings("unchecked")
     private static void assertProcessErrorMessage(ProcessEntry p, String expected) {
         assertNotNull(p);
