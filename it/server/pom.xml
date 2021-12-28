@@ -20,7 +20,7 @@
         <db.image>library/postgres</db.image>
         <deps.dir.src.mount>${project.basedir}/target/deps</deps.dir.src.mount>
         <deps.dir>${project.basedir}/target/deps</deps.dir>
-        <dind.image>docker:stable-dind</dind.image>
+        <dind.image>docker:dind</dind.image>
         <docker.daemon.addr>tcp://127.0.0.1:2375</docker.daemon.addr>
         <docker.host.addr>localhost</docker.host.addr>
         <is.docker.profile>false</is.docker.profile>
