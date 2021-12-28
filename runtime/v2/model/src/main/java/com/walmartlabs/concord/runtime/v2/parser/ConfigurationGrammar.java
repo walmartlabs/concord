@@ -37,7 +37,7 @@ public final class ConfigurationGrammar {
             betweenTokens(JsonToken.START_OBJECT, JsonToken.END_OBJECT,
                     with(ImmutableExclusiveMode::builder,
                             o -> options(
-                                    mandatory("group", stringVal.map(o::group)),
+                                    mandatory("group", stringNotEmptyVal.map(o::group)),
                                     optional("mode", enumVal(ExclusiveMode.Mode.class).map(o::mode))))
                             .map(ImmutableExclusiveMode.Builder::build));
 

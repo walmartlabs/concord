@@ -82,6 +82,18 @@ public final class GrammarV2 {
     public static final Parser<Atom, Duration> durationVal = value.map(GrammarV2::durationConverter);
     public static final Parser<Atom, String> timezoneVal = value.map(GrammarV2::timezoneConverter);
     public static final Parser<Atom, List<String>> stringOrArrayVal = value.map(GrammarV2::stringOrArrayConverter);
+    public static final Parser<Atom, String> stringNotEmptyVal = value.map(v -> {
+        String vv = v.getValue(YamlValueType.STRING);
+        if (vv.trim().isEmpty()) {
+            throw new InvalidValueTypeException.Builder()
+                    .location(v.getLocation())
+                    .expected(YamlValueType.NON_EMPTY_STRING)
+                    .actual(v.getType())
+                    .message("Empty value")
+                    .build();
+        }
+        return vv;
+    });
 
     public static <E extends Enum<E>> Parser<Atom, E> enumVal(Class<E> enumData) {
         return value.map(vv -> {

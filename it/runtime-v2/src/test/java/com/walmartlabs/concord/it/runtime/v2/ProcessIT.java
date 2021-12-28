@@ -436,6 +436,15 @@ public class ProcessIT {
         assertEquals("c", pe.getMeta().get("var"));
     }
 
+    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    public void testEmptyExclusiveGroup() throws Exception {
+        ConcordProcess proc = concord.processes().start(new Payload()
+                .archive(resource("emptyExclusiveGroup")));
+
+        proc.expectStatus(ProcessEntry.StatusEnum.FAILED);
+        proc.assertLog(".*Invalid exclusive mode.*");
+    }
+
     private static URI resource(String name) throws URISyntaxException {
         URL url = ProcessIT.class.getResource(name);
         assertNotNull("can't find '" + name + "'", url);
