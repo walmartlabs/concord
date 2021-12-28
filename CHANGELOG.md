@@ -4,8 +4,15 @@
 
 ### Added
 
-- runtime-v2: allow users to get current flow name 
+- runtime-v2: function to retrieve the current flow name 
 ([#514](https://github.com/walmartlabs/concord/pull/514));
+
+### Changed
+
+- runtime-v2: disable GraalVM runtime compilation warning,
+fix logging ([#517](https://github.com/walmartlabs/concord/pull/517)).
+
+
 
 ## [1.92.0] - 2021-12-07
 
