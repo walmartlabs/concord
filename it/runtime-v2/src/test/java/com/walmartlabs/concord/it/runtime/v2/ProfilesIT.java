@@ -9,9 +9,9 @@ package com.walmartlabs.concord.it.runtime.v2;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -22,31 +22,33 @@ package com.walmartlabs.concord.it.runtime.v2;
 
 import ca.ibodrov.concord.testcontainers.ConcordProcess;
 import ca.ibodrov.concord.testcontainers.Payload;
-import ca.ibodrov.concord.testcontainers.junit4.ConcordRule;
+import ca.ibodrov.concord.testcontainers.junit5.ConcordRule;
 import com.walmartlabs.concord.client.FormListEntry;
 import com.walmartlabs.concord.client.FormSubmitResponse;
 import com.walmartlabs.concord.client.ProcessEntry;
-import org.junit.ClassRule;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.Timeout;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 import static com.walmartlabs.concord.it.common.ITUtils.randomString;
 import static com.walmartlabs.concord.it.runtime.v2.ITConstants.DEFAULT_TEST_TIMEOUT;
-import static org.junit.Assert.*;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 
+@Timeout(value = DEFAULT_TEST_TIMEOUT, unit = TimeUnit.MILLISECONDS)
 public class ProfilesIT {
 
-    @ClassRule
+    @RegisterExtension
     public static final ConcordRule concord = ConcordConfiguration.configure();
 
     /**
      * Override flows from active profiles.
      */
-    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    @Test
     public void testFlowOverride() throws Exception {
         Payload payload = new Payload()
                 .activeProfiles("stranger")
@@ -65,7 +67,7 @@ public class ProfilesIT {
     /**
      * Override/define forms from profiles.
      */
-    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    @Test
     public void testFormOverride() throws Exception {
         Payload payload = new Payload()
                 .activeProfiles("stranger")

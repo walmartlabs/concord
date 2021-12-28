@@ -23,11 +23,14 @@ package com.walmartlabs.concord.it.compat;
 import ca.ibodrov.concord.testcontainers.Concord;
 import ca.ibodrov.concord.testcontainers.ConcordProcess;
 import ca.ibodrov.concord.testcontainers.Payload;
-import ca.ibodrov.concord.testcontainers.junit4.ConcordRule;
+import ca.ibodrov.concord.testcontainers.junit5.ConcordRule;
 import com.walmartlabs.concord.client.ProcessEntry;
-import org.junit.Ignore;
-import org.junit.Rule;
-import org.junit.Test;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.Timeout;
+import org.junit.jupiter.api.extension.RegisterExtension;
+
+import java.util.concurrent.TimeUnit;
 
 import static com.walmartlabs.concord.it.compat.ITConstants.DEFAULT_TEST_TIMEOUT;
 
@@ -36,14 +39,15 @@ import static com.walmartlabs.concord.it.compat.ITConstants.DEFAULT_TEST_TIMEOUT
  *
  * Currently, the test is ignored due to some port conflicts.
  */
-@Ignore
+@Disabled
+@Timeout(value = DEFAULT_TEST_TIMEOUT, unit = TimeUnit.MILLISECONDS)
 public class LocalModeIT {
 
-    @Rule
+    @RegisterExtension
     public ConcordRule concord = new ConcordRule()
             .mode(Concord.Mode.LOCAL);
 
-    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    @Test
     public void test() throws Exception {
         String concordYml = "flows:\n" +
                 "  default:\n" +

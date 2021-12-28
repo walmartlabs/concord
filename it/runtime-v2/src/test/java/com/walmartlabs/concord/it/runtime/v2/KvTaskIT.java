@@ -22,25 +22,29 @@ package com.walmartlabs.concord.it.runtime.v2;
 
 import ca.ibodrov.concord.testcontainers.ConcordProcess;
 import ca.ibodrov.concord.testcontainers.Payload;
-import ca.ibodrov.concord.testcontainers.junit4.ConcordRule;
+import ca.ibodrov.concord.testcontainers.junit5.ConcordRule;
 import com.walmartlabs.concord.ApiClient;
 import com.walmartlabs.concord.client.*;
-import org.junit.Rule;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.Timeout;
+import org.junit.jupiter.api.extension.RegisterExtension;
+
+import java.util.concurrent.TimeUnit;
 
 import static com.walmartlabs.concord.it.common.ITUtils.randomString;
 import static com.walmartlabs.concord.it.runtime.v2.ITConstants.DEFAULT_TEST_TIMEOUT;
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
+@Timeout(value = DEFAULT_TEST_TIMEOUT, unit = TimeUnit.MILLISECONDS)
 public class KvTaskIT {
 
-    @Rule
+    @RegisterExtension
     public final ConcordRule concord = ConcordConfiguration.configure();
 
     /**
      * Tests various methods of the 'kv' plugin.
      */
-    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    @Test
     public void test() throws Exception {
         ApiClient apiClient = concord.apiClient();
 

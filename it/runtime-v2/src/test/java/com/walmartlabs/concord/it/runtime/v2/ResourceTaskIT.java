@@ -22,45 +22,49 @@ package com.walmartlabs.concord.it.runtime.v2;
 
 import ca.ibodrov.concord.testcontainers.ConcordProcess;
 import ca.ibodrov.concord.testcontainers.Payload;
-import ca.ibodrov.concord.testcontainers.junit4.ConcordRule;
+import ca.ibodrov.concord.testcontainers.junit5.ConcordRule;
 import com.walmartlabs.concord.client.ProcessEntry;
-import org.junit.ClassRule;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.Timeout;
+import org.junit.jupiter.api.extension.RegisterExtension;
+
+import java.util.concurrent.TimeUnit;
 
 import static com.walmartlabs.concord.it.runtime.v2.ITConstants.DEFAULT_TEST_TIMEOUT;
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.*;
 
+@Timeout(value = DEFAULT_TEST_TIMEOUT, unit = TimeUnit.MILLISECONDS)
 public class ResourceTaskIT {
 
-    @ClassRule
+    @RegisterExtension
     public static final ConcordRule concord = ConcordConfiguration.configure();
 
-    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    @Test
     public void testReadAsJson() throws Exception {
         test("resourceReadAsJson");
     }
 
-    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    @Test
     public void testFromJsonString() throws Exception {
         test("resourceReadFromJsonString");
     }
 
-    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    @Test
     public void testReadAsString() throws Exception {
         test("resourceReadAsString");
     }
 
-    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    @Test
     public void testWriteAsJson() throws Exception {
         test("resourceWriteAsJson");
     }
 
-    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    @Test
     public void testWriteAsString() throws Exception {
         test("resourceWriteAsString");
     }
 
-    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    @Test
     public void testWriteAsYaml() throws Exception {
         test("resourceWriteAsYaml");
     }

@@ -23,29 +23,35 @@ package com.walmartlabs.concord.it.runtime.v1;
 import ca.ibodrov.concord.testcontainers.ConcordProcess;
 import ca.ibodrov.concord.testcontainers.Payload;
 import ca.ibodrov.concord.testcontainers.ProcessListQuery;
-import ca.ibodrov.concord.testcontainers.junit4.ConcordRule;
+import ca.ibodrov.concord.testcontainers.junit5.ConcordRule;
 import com.walmartlabs.concord.client.FormListEntry;
 import com.walmartlabs.concord.client.FormSubmitResponse;
 import com.walmartlabs.concord.client.ProcessEntry;
 import com.walmartlabs.concord.client.ProcessEntry.StatusEnum;
 import com.walmartlabs.concord.sdk.Constants;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.Timeout;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 import static com.walmartlabs.concord.it.common.ITUtils.archive;
 import static com.walmartlabs.concord.it.common.ITUtils.randomString;
 import static com.walmartlabs.concord.it.runtime.v1.ITConstants.DEFAULT_TEST_TIMEOUT;
+import static org.junit.jupiter.api.Assertions.*;
 
+@Timeout(value = DEFAULT_TEST_TIMEOUT, unit = TimeUnit.MILLISECONDS)
 public class ProcessIT {
 
-    @ClassRule
+    @RegisterExtension
     public static final ConcordRule concord = ConcordConfiguration.configure();
 
-    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    @Test
     public void testUploadAndRun() throws Exception {
         // prepare the payload
         byte[] archive = archive(ProcessIT.class.getResource("example").toURI());
@@ -60,7 +66,7 @@ public class ProcessIT {
         proc.assertLog(".*Hello, local files!.*");
     }
 
-    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    @Test
     public void testDefaultEntryPoint() throws Exception {
         byte[] archive = archive(ProcessIT.class.getResource("defaultEntryPoint").toURI());
 
@@ -72,7 +78,7 @@ public class ProcessIT {
         proc.assertLog(".*Hello, Concord!.*");
     }
 
-    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    @Test
     public void testInterpolation() throws Exception {
         byte[] archive = archive(ProcessIT.class.getResource("interpolation").toURI());
 
@@ -89,7 +95,7 @@ public class ProcessIT {
         proc.assertLog(".*Hello, world.*");
     }
 
-    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    @Test
     public void testErrorHandling() throws Exception {
         byte[] archive = archive(ProcessIT.class.getResource("errorHandling").toURI());
 
@@ -101,7 +107,7 @@ public class ProcessIT {
         proc.assertLog(".*We got:.*java.lang.RuntimeException.*");
     }
 
-    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    @Test
     public void testStartupProblem() throws Exception {
         byte[] archive = archive(ProcessIT.class.getResource("startupProblem").toURI());
 
@@ -112,7 +118,7 @@ public class ProcessIT {
         proc.assertLog(".*gaaarbage.*");
     }
 
-    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    @Test
     public void testMultipart() throws Exception {
         String zVal = "z" + randomString();
         String myFileVal = "myFile" + randomString();
@@ -139,7 +145,7 @@ public class ProcessIT {
         proc.assertLog(".*myfile=" + myFileVal + ".*");
     }
 
-    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    @Test
     public void testWorkDir() throws Exception {
         byte[] archive = archive(ProcessIT.class.getResource("workDir").toURI());
 
@@ -166,7 +172,7 @@ public class ProcessIT {
         proc.assertLogAtLeast(".*Bye!", 2);
     }
 
-    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    @Test
     public void testSwitch() throws Exception {
         byte[] archive = archive(ProcessIT.class.getResource("switchCase").toURI());
 
@@ -183,7 +189,7 @@ public class ProcessIT {
         proc.assertLog(".*Bye!.*");
     }
 
-    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    @Test
     public void testTags() throws Exception {
         byte[] archive = archive(ProcessIT.class.getResource("example").toURI());
 
@@ -230,7 +236,7 @@ public class ProcessIT {
         assertEquals(child.instanceId(), e.getInstanceId());
     }
 
-    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    @Test
     public void testGetProcessForChildIds() throws Exception {
         byte[] archive = archive(ProcessIT.class.getResource("processWithChildren").toURI());
 
@@ -243,7 +249,7 @@ public class ProcessIT {
         assertEquals(3, proc.getEntry("childrenIds").getChildrenIds().size());
     }
 
-    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    @Test
     public void testKillCascade() throws Exception {
         byte[] archive = archive(ProcessIT.class.getResource("killCascade").toURI());
 
@@ -261,7 +267,7 @@ public class ProcessIT {
         }
     }
 
-    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    @Test
     public void testActiveProfiles() throws Exception {
         byte[] archive = archive(ProcessIT.class.getResource("activeProfiles").toURI());
 
@@ -281,7 +287,7 @@ public class ProcessIT {
         proc.assertLog(".*We got \\[profileA, profileB].*");
     }
 
-    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    @Test
     public void testGetProcessErrorMessageFromRuntime() throws Exception {
         byte[] archive = archive(ProcessIT.class.getResource("throwRuntime").toURI());
 
@@ -296,7 +302,7 @@ public class ProcessIT {
         assertProcessErrorMessage(pe, "BOOOM");
     }
 
-    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    @Test
     public void testGetProcessErrorMessageFromBpmnError() throws Exception {
         byte[] archive = archive(ProcessIT.class.getResource("throwBpmnError").toURI());
 
@@ -311,7 +317,7 @@ public class ProcessIT {
         assertProcessErrorMessage(pe, ".*myBnpmError.*");
     }
 
-    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    @Test
     public void testInvalidEntryPointError() throws Exception {
         byte[] archive = archive(ProcessIT.class.getResource("multipart").toURI());
 
@@ -353,7 +359,7 @@ public class ProcessIT {
         proc.assertLog(".*test from file.*");
     }
 
-    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    @Test
     public void testRunnerLogLevel() throws Exception {
         byte[] archive = archive(ProcessIT.class.getResource("runnerLogLevel").toURI());
 
@@ -373,7 +379,7 @@ public class ProcessIT {
         proc.assertLog(".*I AM AN ERROR.*");
     }
 
-    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    @Test
     public void testDisableProcess() throws Exception {
         byte[] archive = archive(ProcessIT.class.getResource("disableProcess").toURI());
 
@@ -392,7 +398,7 @@ public class ProcessIT {
         assertTrue(pe.isDisabled());
     }
 
-    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    @Test
     public void testCustomJvmArgs() throws Exception {
         byte[] archive = archive(ProcessIT.class.getResource("customJvmArgs").toURI());
 
@@ -409,7 +415,7 @@ public class ProcessIT {
         proc.assertLog(".*Got: hello.*");
     }
 
-    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    @Test
     public void testInterpolateWithVariables() throws Exception {
         byte[] archive = archive(ProcessIT.class.getResource("interpolateWithVars").toURI());
 
@@ -427,7 +433,7 @@ public class ProcessIT {
     /**
      * Verifies that variables changed in runtime are available in onFailure flows.
      */
-    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    @Test
     public void testOnFailureVariables() throws Exception {
         ConcordProcess proc = concord.processes().start(new Payload()
                 .archive(resource("onFailureVars")));
@@ -452,7 +458,7 @@ public class ProcessIT {
         onFailureProc.assertLog(".*Last error was:.*Boom!.*");
     }
 
-    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    @Test
     public void testOnFailureVariables2() throws Exception {
         ConcordProcess proc = concord.processes().start(new Payload()
                 .archive(resource("onFailureVars2")));
@@ -476,7 +482,7 @@ public class ProcessIT {
         onFailureProc.assertLog(".*Last error was:.*PropertyNotFoundException.*");
     }
 
-    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    @Test
     public void testYamlRootFile() throws Exception {
         ConcordProcess proc = concord.processes().start(new Payload()
                 .archive(resource("yamlRootFile")));
@@ -485,7 +491,7 @@ public class ProcessIT {
         proc.assertLog(".*Hello, Concord!*");
     }
 
-    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    @Test
     public void testMetadataWithWithItems() throws Exception {
         ConcordProcess proc = concord.processes().start(new Payload()
                 .archive(resource("processMetadataWithItems")));
@@ -495,7 +501,7 @@ public class ProcessIT {
         assertEquals("c", pe.getMeta().get("var"));
     }
 
-    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    @Test
     public void testEmptyExclusiveGroup() throws Exception {
         ConcordProcess proc = concord.processes().start(new Payload()
                 .archive(resource("emptyExclusiveGroup")));

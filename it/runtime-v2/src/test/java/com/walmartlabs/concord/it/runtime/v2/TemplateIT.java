@@ -23,7 +23,7 @@ package com.walmartlabs.concord.it.runtime.v2;
 import ca.ibodrov.concord.testcontainers.ConcordProcess;
 import ca.ibodrov.concord.testcontainers.ContainerListener;
 import ca.ibodrov.concord.testcontainers.ContainerType;
-import ca.ibodrov.concord.testcontainers.junit4.ConcordRule;
+import ca.ibodrov.concord.testcontainers.junit5.ConcordRule;
 import com.github.tomakehurst.wiremock.client.WireMock;
 import com.github.tomakehurst.wiremock.core.WireMockConfiguration;
 import com.github.tomakehurst.wiremock.extension.responsetemplating.ResponseTemplateTransformer;
@@ -32,8 +32,9 @@ import com.walmartlabs.concord.client.*;
 import com.walmartlabs.concord.common.IOUtils;
 import com.walmartlabs.concord.sdk.Constants;
 import org.apache.commons.compress.archivers.zip.ZipArchiveOutputStream;
-import org.junit.ClassRule;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.Timeout;
+import org.junit.jupiter.api.extension.RegisterExtension;
 import org.testcontainers.Testcontainers;
 
 import java.io.FileInputStream;
@@ -46,21 +47,23 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo;
 import static com.walmartlabs.concord.common.IOUtils.createTempFile;
 import static com.walmartlabs.concord.it.common.ITUtils.randomString;
 import static com.walmartlabs.concord.it.runtime.v2.ITConstants.DEFAULT_TEST_TIMEOUT;
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
+@Timeout(value = DEFAULT_TEST_TIMEOUT, unit = TimeUnit.MILLISECONDS)
 public class TemplateIT {
 
-    @ClassRule
+    @RegisterExtension
     public static WireMockRule rule = new WireMockRule(WireMockConfiguration.options()
             .extensions(new ResponseTemplateTransformer(false))
             .dynamicPort());
 
-    @ClassRule
+    @RegisterExtension
     public static final ConcordRule concord = ConcordConfiguration
             .configure()
             .containerListener(new ContainerListener() {
@@ -72,7 +75,7 @@ public class TemplateIT {
                 }
             });
 
-    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    @Test
     public void testTemplate() throws Exception {
         Path templatePath = createTemplate(Paths.get(ProcessIT.class.getResource("template").toURI()));
         String templateUrl = stubForGetTemplate(templatePath.toAbsolutePath());

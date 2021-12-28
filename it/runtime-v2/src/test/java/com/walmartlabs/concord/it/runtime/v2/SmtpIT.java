@@ -24,25 +24,29 @@ import ca.ibodrov.concord.testcontainers.ConcordProcess;
 import ca.ibodrov.concord.testcontainers.ContainerListener;
 import ca.ibodrov.concord.testcontainers.ContainerType;
 import ca.ibodrov.concord.testcontainers.Payload;
-import ca.ibodrov.concord.testcontainers.junit4.ConcordRule;
-import com.icegreen.greenmail.junit.GreenMailRule;
+import ca.ibodrov.concord.testcontainers.junit5.ConcordRule;
+import com.icegreen.greenmail.junit5.GreenMailExtension;
 import com.icegreen.greenmail.util.ServerSetup;
 import com.walmartlabs.concord.client.ProcessEntry;
-import org.junit.Rule;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.Timeout;
+import org.junit.jupiter.api.extension.RegisterExtension;
 import org.testcontainers.Testcontainers;
 
 import javax.mail.internet.MimeMessage;
+import java.util.concurrent.TimeUnit;
 
+import static com.walmartlabs.concord.it.runtime.v2.ITConstants.DEFAULT_TEST_TIMEOUT;
 import static com.walmartlabs.concord.it.runtime.v2.Utils.resourceToString;
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
+@Timeout(value = DEFAULT_TEST_TIMEOUT, unit = TimeUnit.MILLISECONDS)
 public class SmtpIT {
 
-    @Rule
-    public final GreenMailRule mailServer = new GreenMailRule(new ServerSetup(0, "0.0.0.0", ServerSetup.PROTOCOL_SMTP));
+    @RegisterExtension
+    GreenMailExtension mailServer = new GreenMailExtension(new ServerSetup(0, "0.0.0.0", ServerSetup.PROTOCOL_SMTP));
 
-    @Rule
+    @RegisterExtension
     public final ConcordRule concord = ConcordConfiguration.configure()
             .containerListener(new ContainerListener() {
                 @Override

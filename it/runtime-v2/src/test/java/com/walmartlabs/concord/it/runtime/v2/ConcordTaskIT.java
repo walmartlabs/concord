@@ -9,9 +9,9 @@ package com.walmartlabs.concord.it.runtime.v2;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -22,30 +22,37 @@ package com.walmartlabs.concord.it.runtime.v2;
 
 import ca.ibodrov.concord.testcontainers.ConcordProcess;
 import ca.ibodrov.concord.testcontainers.Payload;
-import ca.ibodrov.concord.testcontainers.junit4.ConcordRule;
+import ca.ibodrov.concord.testcontainers.junit5.ConcordRule;
 import com.walmartlabs.concord.client.*;
-import org.junit.ClassRule;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.Timeout;
+import org.junit.jupiter.api.extension.RegisterExtension;
+
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.net.URL;
+import java.util.concurrent.TimeUnit;
 
 import static com.walmartlabs.concord.it.common.ITUtils.randomString;
 import static com.walmartlabs.concord.it.runtime.v2.ITConstants.DEFAULT_TEST_TIMEOUT;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
+@Timeout(value = DEFAULT_TEST_TIMEOUT, unit = TimeUnit.MILLISECONDS)
 public class ConcordTaskIT {
 
-    @ClassRule
+    @RegisterExtension
     public static final ConcordRule concord = ConcordConfiguration.configure();
 
     /**
      * Test for concord/project-task
      */
-    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    @Test
     public void testCreateProject() throws Exception {
         String projectName = "project_" + randomString();
 
         Payload payload = new Payload()
-                .archive(ConcordTaskIT.class.getResource("concord/projectTask").toURI())
+                .archive(resource("concord/projectTask"))
                 .arg("newProjectName", projectName);
 
         ConcordProcess proc = concord.processes().start(payload);
@@ -58,7 +65,7 @@ public class ConcordTaskIT {
     /**
      * start process with api key
      */
-    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    @Test
     public void testExternalApiToken() throws Exception {
 
         String username = "user_" + randomString();
@@ -74,7 +81,7 @@ public class ConcordTaskIT {
 
         // ---
         Payload payload = new Payload()
-                .archive(ConcordTaskIT.class.getResource("concord/concordTaskApiKey").toURI())
+                .archive(resource("concord/concordTaskApiKey"))
                 .arg("myApiKey", cakr.getKey());
 
         ConcordProcess proc = concord.processes().start(payload);
@@ -83,10 +90,10 @@ public class ConcordTaskIT {
         proc.expectStatus(ProcessEntry.StatusEnum.FINISHED);
 
         // ---
-        proc.assertLog(".*Hello, Concord!. From: .*" + username + ".*" );
+        proc.assertLog(".*Hello, Concord!. From: .*" + username + ".*");
     }
 
-    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    @Test
     public void testSuspendParentProcess() throws Exception {
         Payload payload = new Payload()
                 .archive(ConcordTaskIT.class.getResource("concord/concordTaskSuspendParentProcess").toURI());
@@ -98,7 +105,7 @@ public class ConcordTaskIT {
         proc.assertLog(".*Hello, Concord!.*");
     }
 
-    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    @Test
     public void testForkWithArguments() throws Exception {
         String orgName = "org_" + randomString();
         concord.organizations().create(orgName);
@@ -107,7 +114,7 @@ public class ConcordTaskIT {
         concord.projects().create(orgName, projectName);
 
         Payload payload = new Payload()
-                .archive(ConcordTaskIT.class.getResource("concord/concordTaskForkWithArguments").toURI())
+                .archive(resource("concord/concordTaskForkWithArguments"))
                 .org(orgName)
                 .project(projectName);
 
@@ -130,7 +137,7 @@ public class ConcordTaskIT {
         child.assertLog(".*Concord Fork Process 123.*");
     }
 
-    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    @Test
     public void testForkSuspend() throws Exception {
         String nameVar = "name_" + randomString();
 
@@ -141,7 +148,7 @@ public class ConcordTaskIT {
         concord.projects().create(orgName, projectName);
 
         Payload payload = new Payload()
-                .archive(ConcordTaskIT.class.getResource("concord/concordTaskForkSuspend").toURI())
+                .archive(resource("concord/concordTaskForkSuspend"))
                 .org(orgName)
                 .project(projectName)
                 .arg("name", nameVar);
@@ -157,10 +164,10 @@ public class ConcordTaskIT {
         proc.assertLog(".*\\{varFromFork=Bye, " + nameVar + "}.*");
     }
 
-    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    @Test
     public void testSubprocessIgnoreFail() throws Exception {
         Payload payload = new Payload()
-                .archive(ConcordTaskIT.class.getResource("concord/concordSubIgnoreFail").toURI());
+                .archive(resource("concord/concordSubIgnoreFail"));
 
         ConcordProcess proc = concord.processes().start(payload);
 
@@ -171,10 +178,10 @@ public class ConcordTaskIT {
         proc.assertLog(".*Done!.*");
     }
 
-    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    @Test
     public void testOutVarsNotFound() throws Exception {
         Payload payload = new Payload()
-                .archive(ConcordTaskIT.class.getResource("concord/concordOutVars").toURI());
+                .archive(resource("concord/concordOutVars"));
 
         ConcordProcess proc = concord.processes().start(payload);
 
@@ -189,16 +196,22 @@ public class ConcordTaskIT {
     /**
      * Test for concord/repositoryRefresh-task
      */
-    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    @Test
     public void testRepositoryRefresh() throws Exception {
 
         Payload payload = new Payload()
-                .archive(ConcordTaskIT.class.getResource("concord/repositoryRefreshTask").toURI());
+                .archive(resource("concord/repositoryRefreshTask"));
 
         ConcordProcess proc = concord.processes().start(payload);
         proc.expectStatus(ProcessEntry.StatusEnum.FINISHED);
 
         // ---
         proc.assertLog(".*Done!.*");
+    }
+
+    private static URI resource(String name) throws URISyntaxException {
+        URL url = ConcordTaskIT.class.getResource(name);
+        assertNotNull(url, "can't find '" + name + "'");
+        return url.toURI();
     }
 }

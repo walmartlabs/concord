@@ -22,21 +22,25 @@ package com.walmartlabs.concord.it.runtime.v2;
 
 import ca.ibodrov.concord.testcontainers.ConcordProcess;
 import ca.ibodrov.concord.testcontainers.Payload;
-import ca.ibodrov.concord.testcontainers.junit4.ConcordRule;
+import ca.ibodrov.concord.testcontainers.junit5.ConcordRule;
 import com.walmartlabs.concord.client.ProcessEntry;
 import com.walmartlabs.concord.common.Posix;
-import org.junit.Rule;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.Timeout;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.concurrent.TimeUnit;
 
 import static com.walmartlabs.concord.it.common.ITUtils.randomString;
+import static com.walmartlabs.concord.it.runtime.v2.ITConstants.DEFAULT_TEST_TIMEOUT;
 
+@Timeout(value = DEFAULT_TEST_TIMEOUT, unit = TimeUnit.MILLISECONDS)
 public class ImportsIT {
 
-    @Rule
+    @RegisterExtension
     public final ConcordRule concord = ConcordConfiguration.configure()
             .extraConfigurationSupplier(() -> "concord-server { imports { disabledProcessors = [] } }\n" +
                     "concord-agent { imports { disabledProcessors = [] } }");

@@ -22,7 +22,7 @@ package com.walmartlabs.concord.it.runtime.v2;
 
 import ca.ibodrov.concord.testcontainers.ConcordProcess;
 import ca.ibodrov.concord.testcontainers.ProcessListQuery;
-import ca.ibodrov.concord.testcontainers.junit4.ConcordRule;
+import ca.ibodrov.concord.testcontainers.junit5.ConcordRule;
 import com.google.common.collect.ImmutableMap;
 import com.walmartlabs.concord.ApiClient;
 import com.walmartlabs.concord.client.GitHubEventsApi;
@@ -34,22 +34,25 @@ import com.walmartlabs.concord.client.RepositoryEntry;
 import com.walmartlabs.concord.it.common.GitHubUtils;
 import com.walmartlabs.concord.it.common.GitUtils;
 import com.walmartlabs.concord.it.common.ITUtils;
-import org.junit.ClassRule;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.Timeout;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.OffsetDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 import static com.walmartlabs.concord.it.common.ITUtils.randomString;
 import static com.walmartlabs.concord.it.runtime.v2.ITConstants.DEFAULT_TEST_TIMEOUT;
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
+@Timeout(value = DEFAULT_TEST_TIMEOUT, unit = TimeUnit.MILLISECONDS)
 public class GitHubTriggersV2IT {
 
-    @ClassRule
+    @RegisterExtension
     public static final ConcordRule concord = ConcordConfiguration.configure();
 
     /**
@@ -69,7 +72,7 @@ public class GitHubTriggersV2IT {
      *       entryPoint: onPush
      * </pre>
      */
-    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    @Test
     public void testFilterBySender() throws Exception {
         String orgXName = "orgX_" + randomString();
         concord.organizations().create(orgXName);
@@ -126,7 +129,7 @@ public class GitHubTriggersV2IT {
         expectNoProcesses(orgXName, projectAName, now);
     }
 
-    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    @Test
     public void testOnPushWithFullTriggerParams() throws Exception {
         String orgXName = "orgX_" + randomString();
         concord.organizations().create(orgXName);
@@ -150,7 +153,7 @@ public class GitHubTriggersV2IT {
         waitForAProcess(orgXName, projectAName, "github");
     }
 
-    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    @Test
     public void testOnPushWithUseEventCommitId() throws Exception {
         //
         Path repo = initRepo("triggers/github/repos/v2/useEventCommitIdTrigger");
@@ -182,7 +185,7 @@ public class GitHubTriggersV2IT {
         process.assertLog(".*onPush: .*" + commitId + ".*");
     }
 
-    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    @Test
     public void testOnPushWithFilesCondition() throws Exception {
         String orgXName = "orgX_" + randomString();
         concord.organizations().create(orgXName);

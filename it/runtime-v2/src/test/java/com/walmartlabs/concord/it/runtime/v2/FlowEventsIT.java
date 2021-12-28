@@ -22,28 +22,34 @@ package com.walmartlabs.concord.it.runtime.v2;
 
 import ca.ibodrov.concord.testcontainers.ConcordProcess;
 import ca.ibodrov.concord.testcontainers.Payload;
-import ca.ibodrov.concord.testcontainers.junit4.ConcordRule;
+import ca.ibodrov.concord.testcontainers.junit5.ConcordRule;
 import com.walmartlabs.concord.client.ProcessEntry;
 import com.walmartlabs.concord.client.ProcessEventEntry;
 import com.walmartlabs.concord.client.ProcessEventsApi;
-import org.junit.ClassRule;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.Timeout;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.net.URL;
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 import static com.walmartlabs.concord.it.runtime.v2.ITConstants.DEFAULT_TEST_TIMEOUT;
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
+@Timeout(value = DEFAULT_TEST_TIMEOUT, unit = TimeUnit.MILLISECONDS)
 public class FlowEventsIT {
 
-    @ClassRule
+    @RegisterExtension
     public static final ConcordRule concord = ConcordConfiguration.configure();
 
-    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    @Test
     public void test() throws Exception {
         Payload payload = new Payload()
-                .archive(FlowEventsIT.class.getResource("flowEvents").toURI());
+                .archive(resource("flowEvents"));
 
         ConcordProcess proc = concord.processes().start(payload);
 
@@ -201,6 +207,12 @@ public class FlowEventsIT {
             .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
 
         assertEquals(expected, actual);
+    }
+
+    private static URI resource(String name) throws URISyntaxException {
+        URL url = FlowEventsIT.class.getResource(name);
+        assertNotNull(url, "can't find '" + name + "'");
+        return url.toURI();
     }
 
     static class EventData extends HashMap<String, Object> {

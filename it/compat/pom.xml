@@ -32,7 +32,7 @@
         </dependency>
         <dependency>
             <groupId>ca.ibodrov.concord</groupId>
-            <artifactId>testcontainers-concord-junit4</artifactId>
+            <artifactId>testcontainers-concord-junit5</artifactId>
             <scope>test</scope>
         </dependency>
         <dependency>

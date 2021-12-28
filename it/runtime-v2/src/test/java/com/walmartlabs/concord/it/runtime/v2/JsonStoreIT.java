@@ -9,9 +9,9 @@ package com.walmartlabs.concord.it.runtime.v2;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -22,33 +22,31 @@ package com.walmartlabs.concord.it.runtime.v2;
 
 import ca.ibodrov.concord.testcontainers.ConcordProcess;
 import ca.ibodrov.concord.testcontainers.Payload;
-import ca.ibodrov.concord.testcontainers.junit4.ConcordRule;
+import ca.ibodrov.concord.testcontainers.junit5.ConcordRule;
 import com.walmartlabs.concord.ApiClient;
-import com.walmartlabs.concord.client.JsonStoreDataApi;
-import com.walmartlabs.concord.client.OrganizationEntry;
-import com.walmartlabs.concord.client.OrganizationsApi;
-import com.walmartlabs.concord.client.ProcessEntry;
-import com.walmartlabs.concord.client.ProjectEntry;
-import com.walmartlabs.concord.client.ProjectsApi;
-import org.junit.Rule;
-import org.junit.Test;
+import com.walmartlabs.concord.client.*;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.Timeout;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 import static com.walmartlabs.concord.it.common.ITUtils.randomString;
-import static com.walmartlabs.concord.it.common.ServerClient.assertLog;
 import static com.walmartlabs.concord.it.runtime.v2.ITConstants.DEFAULT_TEST_TIMEOUT;
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
+@Timeout(value = DEFAULT_TEST_TIMEOUT, unit = TimeUnit.MILLISECONDS)
 public class JsonStoreIT {
 
-    @Rule
+    @RegisterExtension
     public final ConcordRule concord = ConcordConfiguration.configure();
 
     /**
      * Tests various methods of the 'jsonStore' plugin.
      */
-    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    @Test
+    @SuppressWarnings("unchecked")
     public void test() throws Exception {
         ApiClient apiClient = concord.apiClient();
 
