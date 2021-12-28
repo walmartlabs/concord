@@ -14,7 +14,10 @@
 - runtime-v2: disable GraalVM runtime compilation warning,
 fix logging ([#517](https://github.com/walmartlabs/concord/pull/517));
 - concord-server, runtime-v2: fix for empty exclusive group
-values ([#519](https://github.com/walmartlabs/concord/pull/519).
+values ([#519](https://github.com/walmartlabs/concord/pull/519);
+- concord-server, lock-tasks: avoid creating a wait
+condition on each lock aquisition attempt
+([#521](https://github.com/walmartlabs/concord/pull/521)).
 
 
 
