@@ -10,7 +10,9 @@
 ### Changed
 
 - runtime-v2: disable GraalVM runtime compilation warning,
-fix logging ([#517](https://github.com/walmartlabs/concord/pull/517)).
+fix logging ([#517](https://github.com/walmartlabs/concord/pull/517));
+- concord-server, runtime-v2: fix for empty exclusive group
+values ([#519](https://github.com/walmartlabs/concord/pull/519).
 
 
 
