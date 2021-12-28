@@ -40,6 +40,9 @@ public final class PayloadUtils {
             return null;
         }
         String group = MapUtils.getString(exclusive, "group");
+        if (group == null || group.trim().isEmpty()) {
+            throw new ProcessException(p.getProcessKey(), "Invalid exclusive mode: exclusive group not specified or empty");
+        }
         ExclusiveMode.Mode mode = MapUtils.getEnum(exclusive, "mode", ExclusiveMode.Mode.class, ExclusiveMode.Mode.cancel);
         return ExclusiveMode.of(group, mode);
     }

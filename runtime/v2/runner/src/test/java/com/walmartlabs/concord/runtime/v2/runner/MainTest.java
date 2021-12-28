@@ -1038,6 +1038,24 @@ public class MainTest {
         assertLog(log, ".*myFlow: myFlow.*");
     }
 
+    @Test
+    public void testEvalAsMap() throws Exception {
+        deploy("evalAsMap");
+
+        save(ProcessConfiguration.builder()
+                .build());
+
+        byte[] log = run();
+        assertLog(log, ".*x:.*a.out3=\\$\\{a.out1}.*");
+        assertLog(log, ".*x:.*a.out1=1.*");
+        assertLog(log, ".*x:.*a.out2=2.*");
+
+        assertLog(log, ".*eval: \\{a=\\{.*");
+        assertLog(log, ".*1: 1.*");
+        assertLog(log, ".*2: 2.*");
+        assertLog(log, ".*3: 1.*");
+    }
+
     private void deploy(String resource) throws URISyntaxException, IOException {
         Path src = Paths.get(MainTest.class.getResource(resource).toURI());
         IOUtils.copy(src, workDir);

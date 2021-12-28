@@ -1,0 +1,8 @@
+configuration:
+  exclusive:
+    group: ""
+    mode: wait
+
+flows:
+  default:
+    - log: "Hello"

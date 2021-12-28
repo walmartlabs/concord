@@ -38,6 +38,7 @@ public final class YamlValueType<T> {
     public static final YamlValueType<Float> FLOAT = type("FLOAT");
     public static final YamlValueType<Boolean> BOOLEAN = type("BOOLEAN");
     public static final YamlValueType<String> STRING = type("STRING");
+    public static final YamlValueType<String> NON_EMPTY_STRING = type("NON_EMPTY_STRING");
     public static final YamlValueType<String> PATTERN = type("PATTERN");
     public static final YamlValueType<Object> NULL = type("NULL");
     public static final YamlValueType<List<Serializable>> ARRAY = array("ARRAY", null);

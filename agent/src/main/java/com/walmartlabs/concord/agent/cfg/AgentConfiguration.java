@@ -28,6 +28,7 @@ import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
 import java.nio.file.Path;
+import java.time.Duration;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
@@ -46,6 +47,7 @@ public class AgentConfiguration {
 
     private final Path dependencyCacheDir;
     private final Path dependencyListsDir;
+    private final Duration dependencyResolveTimeout;
     private final Path payloadDir;
     private final Path workDirBase;
 
@@ -66,6 +68,7 @@ public class AgentConfiguration {
 
         this.dependencyCacheDir = getOrCreatePath(cfg, "dependencyCacheDir");
         this.dependencyListsDir = getOrCreatePath(cfg, "dependencyListsDir");
+        this.dependencyResolveTimeout = cfg.hasPath("dependencyResolveTimeout") ? cfg.getDuration("dependencyResolveTimeout") : null;
         this.payloadDir = getOrCreatePath(cfg, "payloadDir");
         this.workDirBase = getOrCreatePath(cfg, "workDirBase");
 
@@ -92,6 +95,10 @@ public class AgentConfiguration {
 
     public Path getDependencyListsDir() {
         return dependencyListsDir;
+    }
+
+    public Duration getDependencyResolveTimeout() {
+        return dependencyResolveTimeout;
     }
 
     public Path getPayloadDir() {

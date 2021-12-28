@@ -1933,6 +1933,18 @@ public class YamlErrorParserTest extends AbstractParserTest {
     }
 
     @Test
+    public void test1311_1() throws Exception {
+        String msg =
+                "(011_1.yml): Error @ line: 4, col: 12. Invalid value type, expected: NON_EMPTY_STRING, got: STRING. Error info: Empty value\n" +
+                        "\twhile processing steps:\n" +
+                        "\t'group' @ line: 4, col: 5\n" +
+                        "\t\t'exclusive' @ line: 2, col: 3\n" +
+                        "\t\t\t'configuration' @ line: 1, col: 1";
+
+        assertErrorMessage("errors/configuration/011_1.yml", msg);
+    }
+
+    @Test
     public void test1312() throws Exception {
         String msg =
                 "(012.yml): Error @ line: 13, col: 12. Unknown options: ['mode1' [STRING] @ line: 13, col: 12], expected: [group, mode]. Remove invalid options and/or fix indentation\n" +
