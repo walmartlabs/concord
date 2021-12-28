@@ -7,7 +7,9 @@
 - runtime-v2: function to retrieve the current flow name 
 ([#514](https://github.com/walmartlabs/concord/pull/514));
 - runtime-v2: add `evalAsMap` flow function
-([#520](https://github.com/walmartlabs/concord/pull/520)).
+([#520](https://github.com/walmartlabs/concord/pull/520));
+- concord-agent: add dependencyResolveTimeout configuration
+parameter ([#522](https://github.com/walmartlabs/concord/pull/522)).
 
 ### Changed
 
