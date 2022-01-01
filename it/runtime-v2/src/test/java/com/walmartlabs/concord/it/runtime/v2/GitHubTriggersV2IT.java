@@ -25,17 +25,11 @@ import ca.ibodrov.concord.testcontainers.ProcessListQuery;
 import ca.ibodrov.concord.testcontainers.junit5.ConcordRule;
 import com.google.common.collect.ImmutableMap;
 import com.walmartlabs.concord.ApiClient;
-import com.walmartlabs.concord.client.GitHubEventsApi;
-import com.walmartlabs.concord.client.ProcessEntry;
-import com.walmartlabs.concord.client.ProjectEntry;
-import com.walmartlabs.concord.client.ProjectsApi;
-import com.walmartlabs.concord.client.RepositoriesApi;
-import com.walmartlabs.concord.client.RepositoryEntry;
+import com.walmartlabs.concord.client.*;
 import com.walmartlabs.concord.it.common.GitHubUtils;
 import com.walmartlabs.concord.it.common.GitUtils;
 import com.walmartlabs.concord.it.common.ITUtils;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.Timeout;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 import java.nio.file.Path;
@@ -43,14 +37,11 @@ import java.nio.file.Paths;
 import java.time.OffsetDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
 
 import static com.walmartlabs.concord.it.common.ITUtils.randomString;
-import static com.walmartlabs.concord.it.runtime.v2.ITConstants.DEFAULT_TEST_TIMEOUT;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-@Timeout(value = DEFAULT_TEST_TIMEOUT, unit = TimeUnit.MILLISECONDS)
-public class GitHubTriggersV2IT {
+public class GitHubTriggersV2IT extends AbstractTest {
 
     @RegisterExtension
     public static final ConcordRule concord = ConcordConfiguration.configure();
@@ -209,13 +200,13 @@ public class GitHubTriggersV2IT {
         waitForAProcess(orgXName, projectAName, "github");
     }
 
-    private static Path initRepo(String resource) throws Exception {
-        Path src = Paths.get(GitHubTriggersV2IT.class.getResource(resource).toURI());
+    private Path initRepo(String resource) throws Exception {
+        Path src = Paths.get(resource(resource));
         return GitUtils.createBareRepository(src, concord.sharedContainerDir());
     }
 
-    private static String createNewBranch(Path bareRepo, String branch, String resource) throws Exception {
-        Path src = Paths.get(GitHubTriggersV2IT.class.getResource(resource).toURI());
+    private String createNewBranch(Path bareRepo, String branch, String resource) throws Exception {
+        Path src = Paths.get(resource(resource));
         return GitUtils.createNewBranch(bareRepo, branch, src);
     }
 

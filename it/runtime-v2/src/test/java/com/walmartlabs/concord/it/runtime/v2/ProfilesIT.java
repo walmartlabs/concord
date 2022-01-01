@@ -27,20 +27,16 @@ import com.walmartlabs.concord.client.FormListEntry;
 import com.walmartlabs.concord.client.FormSubmitResponse;
 import com.walmartlabs.concord.client.ProcessEntry;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.Timeout;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.TimeUnit;
 
 import static com.walmartlabs.concord.it.common.ITUtils.randomString;
-import static com.walmartlabs.concord.it.runtime.v2.ITConstants.DEFAULT_TEST_TIMEOUT;
 import static org.junit.jupiter.api.Assertions.*;
 
-@Timeout(value = DEFAULT_TEST_TIMEOUT, unit = TimeUnit.MILLISECONDS)
-public class ProfilesIT {
+public class ProfilesIT extends AbstractTest {
 
     @RegisterExtension
     public static final ConcordRule concord = ConcordConfiguration.configure();
@@ -52,12 +48,11 @@ public class ProfilesIT {
     public void testFlowOverride() throws Exception {
         Payload payload = new Payload()
                 .activeProfiles("stranger")
-                .archive(ProfilesIT.class.getResource("profileFlow").toURI());
+                .archive(resource("profileFlow"));
 
         ConcordProcess proc = concord.processes().start(payload);
 
-        ProcessEntry pe = proc.waitForStatus(ProcessEntry.StatusEnum.FINISHED);
-        assertEquals(ProcessEntry.StatusEnum.FINISHED, pe.getStatus());
+        expectStatus(proc, ProcessEntry.StatusEnum.FINISHED);
 
         // ---
 
@@ -71,14 +66,13 @@ public class ProfilesIT {
     public void testFormOverride() throws Exception {
         Payload payload = new Payload()
                 .activeProfiles("stranger")
-                .archive(ProfilesIT.class.getResource("profileForm").toURI());
+                .archive(resource("profileForm"));
 
         ConcordProcess proc = concord.processes().start(payload);
 
         // ---
 
-        ProcessEntry pe = proc.waitForStatus(ProcessEntry.StatusEnum.SUSPENDED);
-        assertEquals(ProcessEntry.StatusEnum.SUSPENDED, pe.getStatus());
+        expectStatus(proc, ProcessEntry.StatusEnum.SUSPENDED);
 
         // ---
 
@@ -98,8 +92,7 @@ public class ProfilesIT {
         assertTrue(fsr.isOk());
         assertTrue(fsr.getErrors() == null || fsr.getErrors().isEmpty());
 
-        pe = proc.waitForStatus(ProcessEntry.StatusEnum.FINISHED);
-        assertEquals(ProcessEntry.StatusEnum.FINISHED, pe.getStatus());
+        expectStatus(proc, ProcessEntry.StatusEnum.FINISHED);
 
         proc.assertLog(".*firstName=" + firstName + ".*");
         proc.assertLog(".*lastName=" + lastName + ".*");

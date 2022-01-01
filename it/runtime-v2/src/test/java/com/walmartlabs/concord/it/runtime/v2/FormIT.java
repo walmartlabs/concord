@@ -30,7 +30,6 @@ import com.walmartlabs.concord.client.ProcessApi;
 import com.walmartlabs.concord.client.ProcessEntry;
 import com.walmartlabs.concord.sdk.MapUtils;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.Timeout;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.testcontainers.shaded.com.google.common.collect.ImmutableMap;
 
@@ -39,20 +38,15 @@ import javax.script.ScriptEngineManager;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
-import java.net.URI;
-import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.concurrent.ThreadLocalRandom;
-import java.util.concurrent.TimeUnit;
 
 import static com.walmartlabs.concord.it.common.ITUtils.randomString;
-import static com.walmartlabs.concord.it.runtime.v2.ITConstants.DEFAULT_TEST_TIMEOUT;
 import static org.junit.jupiter.api.Assertions.*;
 
-@Timeout(value = DEFAULT_TEST_TIMEOUT, unit = TimeUnit.MILLISECONDS)
-public class FormIT {
+public class FormIT extends AbstractTest {
 
     @RegisterExtension
     public final ConcordRule concord = ConcordConfiguration.configure();
@@ -68,9 +62,7 @@ public class FormIT {
         // ---
 
         ConcordProcess proc = concord.processes().start(payload);
-
-        ProcessEntry pe = proc.waitForStatus(ProcessEntry.StatusEnum.SUSPENDED);
-        assertEquals(ProcessEntry.StatusEnum.SUSPENDED, pe.getStatus());
+        expectStatus(proc, ProcessEntry.StatusEnum.SUSPENDED);
 
         // ---
 
@@ -99,8 +91,7 @@ public class FormIT {
 
         assertEquals(0, proc.forms().size());
 
-        pe = proc.waitForStatus(ProcessEntry.StatusEnum.FINISHED);
-        assertEquals(ProcessEntry.StatusEnum.FINISHED, pe.getStatus());
+        expectStatus(proc, ProcessEntry.StatusEnum.FINISHED);
 
         // ---
 
@@ -122,9 +113,7 @@ public class FormIT {
         // ---
 
         ConcordProcess proc = concord.processes().start(payload);
-
-        ProcessEntry pe = proc.waitForStatus(ProcessEntry.StatusEnum.SUSPENDED);
-        assertEquals(ProcessEntry.StatusEnum.SUSPENDED, pe.getStatus());
+        expectStatus(proc, ProcessEntry.StatusEnum.SUSPENDED);
 
         List<FormListEntry> forms = proc.forms();
         assertEquals(1, forms.size());
@@ -143,9 +132,9 @@ public class FormIT {
 
         // ---
 
-        proc.waitForStatus(ProcessEntry.StatusEnum.RUNNING);
+        expectStatus(proc, ProcessEntry.StatusEnum.RUNNING);
         proc.kill();
-        proc.waitForStatus(ProcessEntry.StatusEnum.CANCELLED);
+        expectStatus(proc, ProcessEntry.StatusEnum.CANCELLED);
 
         ConcordProcess child = concord.processes().get(proc.waitForChildStatus(ProcessEntry.StatusEnum.FINISHED).getInstanceId());
         child.assertLog(".*myForm.firstName: " + firstName + ".*");
@@ -160,9 +149,7 @@ public class FormIT {
         // ---
 
         ConcordProcess proc = concord.processes().start(payload);
-
-        ProcessEntry pe = proc.waitForStatus(ProcessEntry.StatusEnum.SUSPENDED);
-        assertEquals(ProcessEntry.StatusEnum.SUSPENDED, pe.getStatus());
+        ProcessEntry pe = expectStatus(proc, ProcessEntry.StatusEnum.SUSPENDED);
 
         // ---
 
@@ -195,9 +182,7 @@ public class FormIT {
         // ---
 
         ConcordProcess proc = concord.processes().start(payload);
-
-        ProcessEntry pe = proc.waitForStatus(ProcessEntry.StatusEnum.SUSPENDED);
-        assertEquals(ProcessEntry.StatusEnum.SUSPENDED, pe.getStatus());
+        expectStatus(proc, ProcessEntry.StatusEnum.SUSPENDED);
 
         // ---
 
@@ -241,8 +226,7 @@ public class FormIT {
         assertTrue(fsr.isOk());
         assertTrue(fsr.getErrors() == null || fsr.getErrors().isEmpty());
 
-        pe = proc.waitForStatus(ProcessEntry.StatusEnum.FINISHED);
-        assertEquals(ProcessEntry.StatusEnum.FINISHED, pe.getStatus());
+        expectStatus(proc, ProcessEntry.StatusEnum.FINISHED);
 
         // ---
 
@@ -264,7 +248,7 @@ public class FormIT {
         http.disconnect();
     }
 
-    @SuppressWarnings("unchecked")
+    @SuppressWarnings({"unchecked", "UnstableApiUsage"})
     private static Map<String, Object> getDataJs(ConcordRule concord, UUID instanceId, String formName) throws Exception {
         URL url = new URL(concord.apiBaseUrl() + "/forms/" + instanceId + "/" + formName + "/form/data.js");
         HttpURLConnection http = (HttpURLConnection) url.openConnection();
@@ -282,11 +266,5 @@ public class FormIT {
         } finally {
             http.disconnect();
         }
-    }
-
-    private static URI resource(String name) throws URISyntaxException {
-        URL url = FormIT.class.getResource(name);
-        assertNotNull(url, "can't find '" + name + "'");
-        return url.toURI();
     }
 }

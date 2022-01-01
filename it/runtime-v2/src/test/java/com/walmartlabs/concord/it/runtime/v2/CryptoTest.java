@@ -27,22 +27,12 @@ import ca.ibodrov.concord.testcontainers.junit5.ConcordRule;
 import com.walmartlabs.concord.ApiClient;
 import com.walmartlabs.concord.client.*;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.Timeout;
 import org.junit.jupiter.api.extension.RegisterExtension;
-
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.net.URL;
-import java.util.concurrent.TimeUnit;
 
 import static com.walmartlabs.concord.it.common.ITUtils.randomPwd;
 import static com.walmartlabs.concord.it.common.ITUtils.randomString;
-import static com.walmartlabs.concord.it.runtime.v2.ITConstants.DEFAULT_TEST_TIMEOUT;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
 
-@Timeout(value = DEFAULT_TEST_TIMEOUT, unit = TimeUnit.MILLISECONDS)
-public class CryptoIT {
+public class CryptoTest extends AbstractTest {
 
     @RegisterExtension
     public final ConcordRule concord = ConcordConfiguration.configure();
@@ -120,9 +110,7 @@ public class CryptoIT {
                 .arg("myRawString", myRawString);
 
         ConcordProcess proc = concord.processes().start(payload);
-
-        ProcessEntry pe = proc.waitForStatus(ProcessEntry.StatusEnum.FINISHED);
-        assertEquals(ProcessEntry.StatusEnum.FINISHED, pe.getStatus());
+        expectStatus(proc, ProcessEntry.StatusEnum.FINISHED);
 
         proc.assertLog(".*String: " + myStringSecretValue + ".*");
         proc.assertLog(".*Keypair: \\{.*private.*}.*");
@@ -143,18 +131,10 @@ public class CryptoIT {
                 .archive(resource("cryptoCreate"));
 
         ConcordProcess proc = concord.processes().start(payload);
-
-        ProcessEntry pe = proc.waitForStatus(ProcessEntry.StatusEnum.FINISHED);
-        assertEquals(ProcessEntry.StatusEnum.FINISHED, pe.getStatus());
+        expectStatus(proc, ProcessEntry.StatusEnum.FINISHED);
 
         proc.assertLog(".*result.ok: true.*");
         proc.assertLog(".*result.password: pAss123qweasd.*");
         proc.assertLog(".*credentials: .*password=123.*");
-    }
-
-    private static URI resource(String name) throws URISyntaxException {
-        URL url = CryptoIT.class.getResource(name);
-        assertNotNull(url, "can't find '" + name + "'");
-        return url.toURI();
     }
 }

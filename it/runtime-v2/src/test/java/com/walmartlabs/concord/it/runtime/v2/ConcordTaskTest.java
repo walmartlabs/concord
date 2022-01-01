@@ -25,21 +25,13 @@ import ca.ibodrov.concord.testcontainers.Payload;
 import ca.ibodrov.concord.testcontainers.junit5.ConcordRule;
 import com.walmartlabs.concord.client.*;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.Timeout;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.net.URL;
-import java.util.concurrent.TimeUnit;
-
 import static com.walmartlabs.concord.it.common.ITUtils.randomString;
-import static com.walmartlabs.concord.it.runtime.v2.ITConstants.DEFAULT_TEST_TIMEOUT;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
-@Timeout(value = DEFAULT_TEST_TIMEOUT, unit = TimeUnit.MILLISECONDS)
-public class ConcordTaskIT {
+public class ConcordTaskTest extends AbstractTest {
 
     @RegisterExtension
     public static final ConcordRule concord = ConcordConfiguration.configure();
@@ -56,7 +48,7 @@ public class ConcordTaskIT {
                 .arg("newProjectName", projectName);
 
         ConcordProcess proc = concord.processes().start(payload);
-        proc.expectStatus(ProcessEntry.StatusEnum.FINISHED);
+        expectStatus(proc, ProcessEntry.StatusEnum.FINISHED);
 
         // ---
         proc.assertLog(".*Done!.*");
@@ -87,7 +79,7 @@ public class ConcordTaskIT {
         ConcordProcess proc = concord.processes().start(payload);
 
         // ---
-        proc.expectStatus(ProcessEntry.StatusEnum.FINISHED);
+        expectStatus(proc, ProcessEntry.StatusEnum.FINISHED);
 
         // ---
         proc.assertLog(".*Hello, Concord!. From: .*" + username + ".*");
@@ -96,10 +88,10 @@ public class ConcordTaskIT {
     @Test
     public void testSuspendParentProcess() throws Exception {
         Payload payload = new Payload()
-                .archive(ConcordTaskIT.class.getResource("concord/concordTaskSuspendParentProcess").toURI());
+                .archive(resource("concord/concordTaskSuspendParentProcess"));
 
         ConcordProcess proc = concord.processes().start(payload);
-        proc.expectStatus(ProcessEntry.StatusEnum.FINISHED);
+        expectStatus(proc, ProcessEntry.StatusEnum.FINISHED);
 
         // ---
         proc.assertLog(".*Hello, Concord!.*");
@@ -119,7 +111,7 @@ public class ConcordTaskIT {
                 .project(projectName);
 
         ConcordProcess proc = concord.processes().start(payload);
-        proc.expectStatus(ProcessEntry.StatusEnum.FINISHED);
+        expectStatus(proc, ProcessEntry.StatusEnum.FINISHED);
         ProcessEntry processEntry = proc.getEntry("childrenIds");
 
         // ---
@@ -156,7 +148,7 @@ public class ConcordTaskIT {
         ConcordProcess proc = concord.processes().start(payload);
 
         // ---
-        proc.expectStatus(ProcessEntry.StatusEnum.FINISHED);
+        expectStatus(proc, ProcessEntry.StatusEnum.FINISHED);
 
         // ---
 
@@ -172,7 +164,7 @@ public class ConcordTaskIT {
         ConcordProcess proc = concord.processes().start(payload);
 
         // ---
-        proc.expectStatus(ProcessEntry.StatusEnum.FINISHED);
+        expectStatus(proc, ProcessEntry.StatusEnum.FINISHED);
 
         // ---
         proc.assertLog(".*Done!.*");
@@ -186,8 +178,7 @@ public class ConcordTaskIT {
         ConcordProcess proc = concord.processes().start(payload);
 
         // ---
-        ProcessEntry pe = proc.waitForStatus(ProcessEntry.StatusEnum.FINISHED);
-        assertEquals(ProcessEntry.StatusEnum.FINISHED, pe.getStatus());
+        expectStatus(proc, ProcessEntry.StatusEnum.FINISHED);
 
         // ---
         proc.assertLog(".*Done!.*");
@@ -203,15 +194,9 @@ public class ConcordTaskIT {
                 .archive(resource("concord/repositoryRefreshTask"));
 
         ConcordProcess proc = concord.processes().start(payload);
-        proc.expectStatus(ProcessEntry.StatusEnum.FINISHED);
+        expectStatus(proc, ProcessEntry.StatusEnum.FINISHED);
 
         // ---
         proc.assertLog(".*Done!.*");
-    }
-
-    private static URI resource(String name) throws URISyntaxException {
-        URL url = ConcordTaskIT.class.getResource(name);
-        assertNotNull(url, "can't find '" + name + "'");
-        return url.toURI();
     }
 }

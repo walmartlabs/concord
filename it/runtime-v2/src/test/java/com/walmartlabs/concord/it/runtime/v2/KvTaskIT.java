@@ -26,17 +26,11 @@ import ca.ibodrov.concord.testcontainers.junit5.ConcordRule;
 import com.walmartlabs.concord.ApiClient;
 import com.walmartlabs.concord.client.*;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.Timeout;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-import java.util.concurrent.TimeUnit;
-
 import static com.walmartlabs.concord.it.common.ITUtils.randomString;
-import static com.walmartlabs.concord.it.runtime.v2.ITConstants.DEFAULT_TEST_TIMEOUT;
-import static org.junit.jupiter.api.Assertions.assertEquals;
 
-@Timeout(value = DEFAULT_TEST_TIMEOUT, unit = TimeUnit.MILLISECONDS)
-public class KvTaskIT {
+public class KvTaskIT extends AbstractTest {
 
     @RegisterExtension
     public final ConcordRule concord = ConcordConfiguration.configure();
@@ -64,12 +58,11 @@ public class KvTaskIT {
         Payload payload = new Payload()
                 .org(orgName)
                 .project(projectName)
-                .archive(ProcessIT.class.getResource("kv").toURI());
+                .archive(resource("kv"));
 
         ConcordProcess proc = concord.processes().start(payload);
 
-        ProcessEntry pe = proc.waitForStatus(ProcessEntry.StatusEnum.FINISHED);
-        assertEquals(ProcessEntry.StatusEnum.FINISHED, pe.getStatus());
+        expectStatus(proc, ProcessEntry.StatusEnum.FINISHED);
 
         proc.assertLog(".*msg: Hello!.*");
         proc.assertLog(".*msg \\(removed\\): \\[].*");

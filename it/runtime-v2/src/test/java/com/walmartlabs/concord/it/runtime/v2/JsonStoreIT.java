@@ -26,18 +26,14 @@ import ca.ibodrov.concord.testcontainers.junit5.ConcordRule;
 import com.walmartlabs.concord.ApiClient;
 import com.walmartlabs.concord.client.*;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.Timeout;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 import java.util.Map;
-import java.util.concurrent.TimeUnit;
 
 import static com.walmartlabs.concord.it.common.ITUtils.randomString;
-import static com.walmartlabs.concord.it.runtime.v2.ITConstants.DEFAULT_TEST_TIMEOUT;
 import static org.junit.jupiter.api.Assertions.*;
 
-@Timeout(value = DEFAULT_TEST_TIMEOUT, unit = TimeUnit.MILLISECONDS)
-public class JsonStoreIT {
+public class JsonStoreIT extends AbstractTest {
 
     @RegisterExtension
     public final ConcordRule concord = ConcordConfiguration.configure();
@@ -67,13 +63,12 @@ public class JsonStoreIT {
         Payload payload = new Payload()
                 .org(orgName)
                 .project(projectName)
-                .archive(ProcessIT.class.getResource("jsonStore").toURI())
+                .archive(resource("jsonStore"))
                 .arg("storeName", storeName);
 
         ConcordProcess proc = concord.processes().start(payload);
 
-        ProcessEntry pe = proc.waitForStatus(ProcessEntry.StatusEnum.FINISHED);
-        assertEquals(ProcessEntry.StatusEnum.FINISHED, pe.getStatus());
+        expectStatus(proc, ProcessEntry.StatusEnum.FINISHED);
 
         proc.assertLog(".*the store doesn't exist.*");
         proc.assertLog(".*the item doesn't exist.*");

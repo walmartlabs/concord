@@ -26,19 +26,18 @@ import ca.ibodrov.concord.testcontainers.junit5.ConcordRule;
 import com.walmartlabs.concord.client.ProcessEntry;
 import com.walmartlabs.concord.common.Posix;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.Timeout;
 import org.junit.jupiter.api.extension.RegisterExtension;
+import org.junit.jupiter.api.parallel.Execution;
+import org.junit.jupiter.api.parallel.ExecutionMode;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.concurrent.TimeUnit;
 
 import static com.walmartlabs.concord.it.common.ITUtils.randomString;
-import static com.walmartlabs.concord.it.runtime.v2.ITConstants.DEFAULT_TEST_TIMEOUT;
 
-@Timeout(value = DEFAULT_TEST_TIMEOUT, unit = TimeUnit.MILLISECONDS)
-public class ImportsIT {
+@Execution(ExecutionMode.SAME_THREAD)
+public class ImportsIT extends AbstractTest {
 
     @RegisterExtension
     public final ConcordRule concord = ConcordConfiguration.configure()
@@ -50,7 +49,7 @@ public class ImportsIT {
         Path tmpDir = Files.createTempDirectory(ConcordConfiguration.sharedDir(), "test");
         Files.setPosixFilePermissions(tmpDir, Posix.posix(0755));
 
-        Path src = Paths.get(ImportsIT.class.getResource("dirImport/other.concord.yml").toURI());
+        Path src = Paths.get(resource("dirImport/other.concord.yml"));
         Path dst = tmpDir.resolve("other.concord.yml");
         Files.copy(src, dst);
         Files.setPosixFilePermissions(dst, Posix.posix(0644));
@@ -66,7 +65,7 @@ public class ImportsIT {
                         "      dest: concord");
 
         ConcordProcess proc = concord.processes().start(payload);
-        proc.waitForStatus(ProcessEntry.StatusEnum.FINISHED);
+        expectStatus(proc, ProcessEntry.StatusEnum.FINISHED);
 
         proc.assertLog(".*Hello, " + name + ".*");
     }

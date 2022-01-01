@@ -27,18 +27,13 @@ import com.walmartlabs.concord.client.HostEntry;
 import com.walmartlabs.concord.client.NodeRosterHostsApi;
 import com.walmartlabs.concord.client.ProcessEntry;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.Timeout;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 import java.util.List;
-import java.util.concurrent.TimeUnit;
 
-import static com.walmartlabs.concord.it.runtime.v2.ITConstants.DEFAULT_TEST_TIMEOUT;
 import static com.walmartlabs.concord.it.runtime.v2.Utils.resourceToString;
-import static org.junit.jupiter.api.Assertions.assertEquals;
 
-@Timeout(value = DEFAULT_TEST_TIMEOUT, unit = TimeUnit.MILLISECONDS)
-public class NodeRosterIT {
+public class NodeRosterIT extends AbstractTest {
 
     @RegisterExtension
     public final ConcordRule concord = ConcordConfiguration.configure();
@@ -57,8 +52,7 @@ public class NodeRosterIT {
                 .concordYml(concordYml)
                 .resource("playbook.yml", NodeRosterIT.class.getResource("noderoster/playbook.yml")));
 
-        ProcessEntry pe = proc.waitForStatus(ProcessEntry.StatusEnum.FINISHED);
-        assertEquals(ProcessEntry.StatusEnum.FINISHED, pe.getStatus());
+        ProcessEntry pe = expectStatus(proc, ProcessEntry.StatusEnum.FINISHED);
 
         // wait for the Node Roster data to appear
 
@@ -78,8 +72,7 @@ public class NodeRosterIT {
         proc = concord.processes().start(new Payload()
                 .concordYml(concordYml));
 
-        pe = proc.waitForStatus(ProcessEntry.StatusEnum.FINISHED);
-        assertEquals(ProcessEntry.StatusEnum.FINISHED, pe.getStatus());
+        expectStatus(proc, ProcessEntry.StatusEnum.FINISHED);
 
         proc.assertLog(".*hostsWithArtifacts:.*ok=true.*");
         proc.assertLog(".*ansible_dns=.*");
