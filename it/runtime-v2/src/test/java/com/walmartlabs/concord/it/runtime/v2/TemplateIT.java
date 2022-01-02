@@ -25,9 +25,8 @@ import ca.ibodrov.concord.testcontainers.ContainerListener;
 import ca.ibodrov.concord.testcontainers.ContainerType;
 import ca.ibodrov.concord.testcontainers.junit5.ConcordRule;
 import com.github.tomakehurst.wiremock.client.WireMock;
-import com.github.tomakehurst.wiremock.core.WireMockConfiguration;
 import com.github.tomakehurst.wiremock.extension.responsetemplating.ResponseTemplateTransformer;
-import com.github.tomakehurst.wiremock.junit.WireMockRule;
+import com.github.tomakehurst.wiremock.junit5.WireMockExtension;
 import com.walmartlabs.concord.client.*;
 import com.walmartlabs.concord.common.IOUtils;
 import com.walmartlabs.concord.sdk.Constants;
@@ -48,15 +47,18 @@ import java.util.HashMap;
 import java.util.Map;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo;
+import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMockConfig;
 import static com.walmartlabs.concord.common.IOUtils.createTempFile;
 import static com.walmartlabs.concord.it.common.ITUtils.randomString;
 
 public class TemplateIT extends AbstractTest {
 
     @RegisterExtension
-    public static WireMockRule rule = new WireMockRule(WireMockConfiguration.options()
-            .extensions(new ResponseTemplateTransformer(false))
-            .dynamicPort());
+    public static WireMockExtension rule = WireMockExtension.newInstance()
+            .options(wireMockConfig()
+                    .dynamicPort()
+                    .extensions(new ResponseTemplateTransformer(false)))
+            .build();
 
     @RegisterExtension
     public static final ConcordRule concord = ConcordConfiguration
@@ -65,7 +67,7 @@ public class TemplateIT extends AbstractTest {
                 @Override
                 public void beforeStart(ContainerType type) {
                     if (type == ContainerType.SERVER) {
-                        Testcontainers.exposeHostPorts(rule.port());
+                        Testcontainers.exposeHostPorts(rule.getPort());
                     }
                 }
             });
@@ -134,7 +136,7 @@ public class TemplateIT extends AbstractTest {
             throw new RuntimeException("Failed to stub for template file download" + e.getMessage());
         }
 
-        return new URL("http", concord.hostAddressAccessibleByContainers(), rule.port(), tPath.toString()).toString();
+        return new URL("http", concord.hostAddressAccessibleByContainers(), rule.getPort(), tPath.toString()).toString();
     }
 
     /**
