@@ -32,6 +32,7 @@ import com.github.tomakehurst.wiremock.junit5.WireMockExtension;
 import com.walmartlabs.concord.client.ProcessApi;
 import com.walmartlabs.concord.client.ProcessEntry;
 import com.walmartlabs.concord.client.StartProcessResponse;
+import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -73,7 +74,7 @@ public class HttpTaskIT extends AbstractServerIT {
     }
 
     @RegisterExtension
-    static WireMockExtension rule = WireMockExtension.newInstance()
+    final WireMockExtension rule = WireMockExtension.newInstance()
             .options(wireMockConfig()
                     .dynamicPort()
                     .extensions(new RequestHeaders(), new ResponseTemplateTransformer(false)))
