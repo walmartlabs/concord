@@ -31,7 +31,7 @@ import static com.walmartlabs.concord.it.common.ITUtils.randomString;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
-public class ConcordTaskTest extends AbstractTest {
+public class ConcordTaskIT extends AbstractTest {
 
     @RegisterExtension
     public static final ConcordRule concord = ConcordConfiguration.configure();

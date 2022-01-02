@@ -32,7 +32,7 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 import static com.walmartlabs.concord.it.common.ITUtils.randomPwd;
 import static com.walmartlabs.concord.it.common.ITUtils.randomString;
 
-public class CryptoTest extends AbstractTest {
+public class CryptoIT extends AbstractTest {
 
     @RegisterExtension
     public final ConcordRule concord = ConcordConfiguration.configure();

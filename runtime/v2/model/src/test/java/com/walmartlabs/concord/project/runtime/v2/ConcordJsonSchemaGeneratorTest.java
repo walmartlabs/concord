@@ -28,12 +28,14 @@ import com.networknt.schema.JsonSchemaFactory;
 import com.networknt.schema.SpecVersion;
 import com.networknt.schema.ValidationMessage;
 import com.walmartlabs.concord.runtime.v2.ConcordJsonSchemaGenerator;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+@Disabled
 public class ConcordJsonSchemaGeneratorTest {
 
     @Test
