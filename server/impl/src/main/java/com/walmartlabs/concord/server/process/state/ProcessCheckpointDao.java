@@ -27,6 +27,7 @@ import com.walmartlabs.concord.server.process.ProcessEntry.ProcessCheckpointEntr
 import com.walmartlabs.concord.server.sdk.ProcessKey;
 import org.jooq.Configuration;
 import org.jooq.Record;
+import org.sonatype.siesta.ValidationErrorsException;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -71,6 +72,9 @@ public class ProcessCheckpointDao extends AbstractDao {
     }
 
     public void importCheckpoint(ProcessKey processKey, UUID checkpointId, String checkpointName, Path data) {
+        if (checkpointName.length() > PROCESS_CHECKPOINTS.CHECKPOINT_NAME.getDataType().length()) {
+            throw new ValidationErrorsException("Invalid checkpoint name: value too long. Actual: " + checkpointName.length() + ", max: " + PROCESS_CHECKPOINTS.CHECKPOINT_NAME.getDataType().length());
+        }
         tx(tx -> {
             String sql = tx.insertInto(PROCESS_CHECKPOINTS)
                     .columns(PROCESS_CHECKPOINTS.INSTANCE_ID,
