@@ -21,7 +21,9 @@ fix logging ([#517](https://github.com/walmartlabs/concord/pull/517));
 values ([#519](https://github.com/walmartlabs/concord/pull/519);
 - concord-server, lock-tasks: avoid creating a wait
 condition on each lock aquisition attempt
-([#521](https://github.com/walmartlabs/concord/pull/521)).
+([#521](https://github.com/walmartlabs/concord/pull/521));
+- concord-agent: log artifact download errors into process
+log ([#523](https://github.com/walmartlabs/concord/pull/523)).
 
 
 
