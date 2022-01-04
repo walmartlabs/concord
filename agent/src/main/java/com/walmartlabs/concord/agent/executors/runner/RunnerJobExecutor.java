@@ -40,6 +40,7 @@ import com.walmartlabs.concord.common.IOUtils;
 import com.walmartlabs.concord.common.Posix;
 import com.walmartlabs.concord.dependencymanager.DependencyEntity;
 import com.walmartlabs.concord.dependencymanager.DependencyManager;
+import com.walmartlabs.concord.dependencymanager.ProgressListener;
 import com.walmartlabs.concord.policyengine.CheckResult;
 import com.walmartlabs.concord.policyengine.DependencyRule;
 import com.walmartlabs.concord.policyengine.PolicyEngine;
@@ -312,9 +313,17 @@ public class RunnerJobExecutor implements JobExecutor {
 
         uris = rewriteDependencies(job, uris);
 
-        Collection<DependencyEntity> deps = dependencyManager.resolve(uris, (retryCount, maxRetry, interval, cause) -> {
-            job.getLog().warn("Error while downloading dependencies: {}", cause);
-            job.getLog().info("Retrying in {}ms", interval);
+        Collection<DependencyEntity> deps = dependencyManager.resolve(uris, new ProgressListener() {
+            @Override
+            public void onRetry(int retryCount, int maxRetry, long interval, String cause) {
+                job.getLog().warn("Error while downloading dependencies: {}", cause);
+                job.getLog().info("Retrying in {}ms", interval);
+            }
+
+            @Override
+            public void onTransferFailed(String error) {
+                job.getLog().error(error);
+            }
         });
 
         // check the resolved dependencies against the current policy

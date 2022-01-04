@@ -89,7 +89,8 @@ public class DependencyManager {
 
     public Collection<DependencyEntity> resolve(Collection<URI> items, ProgressListener listener) throws IOException {
         ResolveExceptionConverter exceptionConverter = new ResolveExceptionConverter(items);
-        return withRetry(RETRY_COUNT, RETRY_INTERVAL, () -> tryResolve(items), exceptionConverter, new ProgressNotifier(listener, exceptionConverter));
+        ProgressNotifier progressNotifier = new ProgressNotifier(listener, exceptionConverter);
+        return withRetry(RETRY_COUNT, RETRY_INTERVAL, () -> tryResolve(items, progressNotifier), exceptionConverter, progressNotifier);
     }
 
     public DependencyEntity resolveSingle(URI item) throws IOException {
@@ -98,10 +99,11 @@ public class DependencyManager {
 
     public DependencyEntity resolveSingle(URI item, ProgressListener listener) throws IOException {
         ResolveExceptionConverter exceptionConverter = new ResolveExceptionConverter(item);
-        return withRetry(RETRY_COUNT, RETRY_INTERVAL, () -> tryResolveSingle(item), exceptionConverter, new ProgressNotifier(listener, exceptionConverter));
+        ProgressNotifier progressNotifier = new ProgressNotifier(listener, exceptionConverter);
+        return withRetry(RETRY_COUNT, RETRY_INTERVAL, () -> tryResolveSingle(item, progressNotifier), exceptionConverter, progressNotifier);
     }
 
-    private Collection<DependencyEntity> tryResolve(Collection<URI> items) throws IOException {
+    private Collection<DependencyEntity> tryResolve(Collection<URI> items, ProgressNotifier progressNotifier) throws IOException {
         if (items == null || items.isEmpty()) {
             return Collections.emptySet();
         }
@@ -116,22 +118,22 @@ public class DependencyManager {
 
         result.addAll(resolveDirectLinks(deps.directLinks));
 
-        result.addAll(resolveMavenTransitiveDependencies(deps.mavenTransitiveDependencies).stream()
+        result.addAll(resolveMavenTransitiveDependencies(deps.mavenTransitiveDependencies, progressNotifier).stream()
                 .map(DependencyManager::toDependency)
                 .collect(Collectors.toList()));
 
-        result.addAll(resolveMavenSingleDependencies(deps.mavenSingleDependencies).stream()
+        result.addAll(resolveMavenSingleDependencies(deps.mavenSingleDependencies, progressNotifier).stream()
                 .map(DependencyManager::toDependency)
                 .collect(Collectors.toList()));
 
         return result;
     }
 
-    private DependencyEntity tryResolveSingle(URI item) throws IOException {
+    private DependencyEntity tryResolveSingle(URI item, ProgressNotifier progressNotifier) throws IOException {
         String scheme = item.getScheme();
         if (MAVEN_SCHEME.equalsIgnoreCase(scheme)) {
             String id = item.getAuthority();
-            Artifact artifact = resolveMavenSingle(new MavenDependency(new DefaultArtifact(id), JavaScopes.COMPILE));
+            Artifact artifact = resolveMavenSingle(new MavenDependency(new DefaultArtifact(id), JavaScopes.COMPILE), progressNotifier);
             return toDependency(artifact);
         } else {
             return new DependencyEntity(resolveFile(item), item);
@@ -219,8 +221,8 @@ public class DependencyManager {
         }
     }
 
-    private Artifact resolveMavenSingle(MavenDependency dep) throws IOException {
-        RepositorySystemSession session = newRepositorySystemSession(maven);
+    private Artifact resolveMavenSingle(MavenDependency dep, ProgressNotifier progressNotifier) throws IOException {
+        RepositorySystemSession session = newRepositorySystemSession(maven, progressNotifier);
 
         ArtifactRequest req = new ArtifactRequest();
         req.setArtifact(dep.artifact);
@@ -236,18 +238,18 @@ public class DependencyManager {
         }
     }
 
-    private Collection<Artifact> resolveMavenSingleDependencies(Collection<MavenDependency> deps) throws IOException {
+    private Collection<Artifact> resolveMavenSingleDependencies(Collection<MavenDependency> deps, ProgressNotifier progressNotifier) throws IOException {
         Collection<Artifact> paths = new HashSet<>();
         for (MavenDependency dep : deps) {
-            paths.add(resolveMavenSingle(dep));
+            paths.add(resolveMavenSingle(dep, progressNotifier));
         }
         return paths;
     }
 
-    private Collection<Artifact> resolveMavenTransitiveDependencies(Collection<MavenDependency> deps) throws IOException {
+    private Collection<Artifact> resolveMavenTransitiveDependencies(Collection<MavenDependency> deps, ProgressNotifier progressNotifier) throws IOException {
         // TODO: why we need new RepositorySystem?
         RepositorySystem system = RepositorySystemFactory.create();
-        RepositorySystemSession session = newRepositorySystemSession(system);
+        RepositorySystemSession session = newRepositorySystemSession(system, progressNotifier);
 
         CollectRequest req = new CollectRequest();
         req.setDependencies(deps.stream()
@@ -269,7 +271,7 @@ public class DependencyManager {
         }
     }
 
-    private DefaultRepositorySystemSession newRepositorySystemSession(RepositorySystem system) {
+    private DefaultRepositorySystemSession newRepositorySystemSession(RepositorySystem system, ProgressNotifier progressNotifier) {
         DefaultRepositorySystemSession session = MavenRepositorySystemUtils.newSession();
         session.setChecksumPolicy(RepositoryPolicy.CHECKSUM_POLICY_IGNORE);
 
@@ -278,7 +280,7 @@ public class DependencyManager {
         session.setTransferListener(new AbstractTransferListener() {
             @Override
             public void transferFailed(TransferEvent event) {
-                log.error("transferFailed -> {}", event);
+                progressNotifier.transferFailed(event);
             }
         });
 
@@ -420,6 +422,14 @@ public class DependencyManager {
             if (listener != null) {
                 DependencyManagerException ex = exceptionConverter.convert(e);
                 listener.onRetry(tryCount, retryCount, retryInterval, ex.getMessage());
+            }
+        }
+
+        public void transferFailed(TransferEvent event) {
+            log.error("transferFailed -> {}", event);
+
+            if (event != null && listener != null) {
+                listener.onTransferFailed(event.toString());
             }
         }
     }
