@@ -28,6 +28,7 @@ import com.networknt.schema.JsonSchemaFactory;
 import com.networknt.schema.SpecVersion;
 import com.networknt.schema.ValidationMessage;
 import com.walmartlabs.concord.runtime.v2.ConcordJsonSchemaGenerator;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import java.util.Set;
@@ -37,6 +38,7 @@ import static org.junit.Assert.assertTrue;
 public class ConcordJsonSchemaGeneratorTest {
 
     @Test
+    @Ignore
     public void validateOk() throws Exception {
         JsonNode concordYml = new ObjectMapper(new YAMLFactory())
                 .readTree(ConcordJsonSchemaGeneratorTest.class.getResourceAsStream("/schema/concord.yml"));
