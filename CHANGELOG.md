@@ -26,6 +26,8 @@ condition on each lock aquisition attempt
 ([#521](https://github.com/walmartlabs/concord/pull/521));
 - concord-agent: log artifact download errors into process
 log ([#523](https://github.com/walmartlabs/concord/pull/523)).
+- concord-server: remove `/api/service/process_portal`
+([#531](https://github.com/walmartlabs/concord/pull/531));
 
 
 
