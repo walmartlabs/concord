@@ -38,6 +38,11 @@
             <artifactId>javax.mail</artifactId>
         </dependency>
         <dependency>
+            <groupId>com.sun.activation</groupId>
+            <artifactId>javax.activation</artifactId>
+        </dependency>
+
+        <dependency>
             <groupId>com.github.spullara.mustache.java</groupId>
             <artifactId>compiler</artifactId>
         </dependency>

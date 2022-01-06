@@ -1,0 +1,7 @@
+flows:
+  default:
+    - log: "default: ${currentFlowName()}"
+    - call: myFlow
+
+  myFlow:
+    - log: "myFlow: ${currentFlowName()}"

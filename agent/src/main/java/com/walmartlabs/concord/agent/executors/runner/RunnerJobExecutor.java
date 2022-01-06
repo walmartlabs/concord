@@ -40,6 +40,7 @@ import com.walmartlabs.concord.common.IOUtils;
 import com.walmartlabs.concord.common.Posix;
 import com.walmartlabs.concord.dependencymanager.DependencyEntity;
 import com.walmartlabs.concord.dependencymanager.DependencyManager;
+import com.walmartlabs.concord.dependencymanager.ProgressListener;
 import com.walmartlabs.concord.policyengine.CheckResult;
 import com.walmartlabs.concord.policyengine.DependencyRule;
 import com.walmartlabs.concord.policyengine.PolicyEngine;
@@ -58,10 +59,12 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.nio.file.StandardOpenOption;
+import java.time.Duration;
 import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -117,7 +120,21 @@ public class RunnerJobExecutor implements JobExecutor {
         ProcessEntry pe;
         try {
             // resolve and download the dependencies
-            Collection<String> resolvedDeps = resolveDeps(job);
+            Collection<String> resolvedDeps;
+            if (cfg.dependencyResolveTimeout() != null) {
+                Duration timeout = Objects.requireNonNull(cfg.dependencyResolveTimeout());
+                RunnerJob finalJob = job;
+                Future<Collection<String>> future = executor.submit(() -> resolveDeps(finalJob));
+                try {
+                    resolvedDeps = future.get(timeout.toMillis(), TimeUnit.MILLISECONDS);
+                } catch (InterruptedException | TimeoutException e) {
+                    future.cancel(true);
+                    throw new RuntimeException("Timeout resolving dependencies");
+                }
+            } else {
+                resolvedDeps = resolveDeps(job);
+            }
+
             job = job.withDependencies(resolvedDeps);
 
             pe = buildProcessEntry(job);
@@ -201,7 +218,6 @@ public class RunnerJobExecutor implements JobExecutor {
             log.warn("persistWorkDir -> failed to copy {} into {}: {}", src, dst, e.getMessage());
         }
     }
-
 
     private void uploadAttachments(UUID instanceId, ProcessEntry pe) {
         try {
@@ -297,9 +313,17 @@ public class RunnerJobExecutor implements JobExecutor {
 
         uris = rewriteDependencies(job, uris);
 
-        Collection<DependencyEntity> deps = dependencyManager.resolve(uris, (retryCount, maxRetry, interval, cause) -> {
-            job.getLog().warn("Error while downloading dependencies: {}", cause);
-            job.getLog().info("Retrying in {}ms", interval);
+        Collection<DependencyEntity> deps = dependencyManager.resolve(uris, new ProgressListener() {
+            @Override
+            public void onRetry(int retryCount, int maxRetry, long interval, String cause) {
+                job.getLog().warn("Error while downloading dependencies: {}", cause);
+                job.getLog().info("Retrying in {}ms", interval);
+            }
+
+            @Override
+            public void onTransferFailed(String error) {
+                job.getLog().error(error);
+            }
         });
 
         // check the resolved dependencies against the current policy
@@ -662,6 +686,9 @@ public class RunnerJobExecutor implements JobExecutor {
         Path dependencyListDir();
 
         Path dependencyCacheDir();
+
+        @Nullable
+        Duration dependencyResolveTimeout();
 
         Path workDirBase();
 

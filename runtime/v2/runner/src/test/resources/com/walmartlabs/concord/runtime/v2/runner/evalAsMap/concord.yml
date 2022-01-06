@@ -1,0 +1,17 @@
+flows:
+  default:
+    - script: js
+      body: |
+        var x = {'a.out1': 1, 'a.out2': 2, 'a.out3': '${a.out1}'};
+        context.variables().set('x', x);
+
+    - log: "x: ${x}"
+
+    - expr: ${evalAsMap(x)}
+      out: x
+
+    - log: "eval: ${x}" # eval: {a={out3=1, out1=1, out2=2}}
+
+    - log: "1: ${x.a.out1}"
+    - log: "2: ${x.a.out2}"
+    - log: "3: ${x.a.out3}"
