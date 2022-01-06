@@ -30,7 +30,9 @@ log ([#523](https://github.com/walmartlabs/concord/pull/523));
 the same names as task names to avoid conflicts
 ([#529](https://github.com/walmartlabs/concord/pull/529));
 - concord-server: remove `/api/service/process_portal`
-([#531](https://github.com/walmartlabs/concord/pull/531)).
+([#531](https://github.com/walmartlabs/concord/pull/531));
+- concord-server: better checkpoint data validation
+([#533](https://github.com/walmartlabs/concord/pull/533)).
 
 
 
