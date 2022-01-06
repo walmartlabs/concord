@@ -25,9 +25,12 @@ values ([#519](https://github.com/walmartlabs/concord/pull/519);
 condition on each lock aquisition attempt
 ([#521](https://github.com/walmartlabs/concord/pull/521));
 - concord-agent: log artifact download errors into process
-log ([#523](https://github.com/walmartlabs/concord/pull/523)).
+log ([#523](https://github.com/walmartlabs/concord/pull/523));
+- runtime-v1: remove variables from default vars with
+the same names as task names to avoid conflicts
+([#529](https://github.com/walmartlabs/concord/pull/529));
 - concord-server: remove `/api/service/process_portal`
-([#531](https://github.com/walmartlabs/concord/pull/531));
+([#531](https://github.com/walmartlabs/concord/pull/531)).
 
 
 
