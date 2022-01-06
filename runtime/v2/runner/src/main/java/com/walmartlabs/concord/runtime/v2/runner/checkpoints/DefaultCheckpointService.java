@@ -107,7 +107,7 @@ public class DefaultCheckpointService implements CheckpointService {
             throw new RuntimeException("Checkpoint upload error", e);
         }
 
-        log.info("create ['{}'] -> done", name);
+        log.info("Checkpoint '{}' created", name);
     }
 
     private void uploadCheckpoint(UUID instanceId, Map<String, Object> data) throws ApiException {
