@@ -28,6 +28,7 @@ import org.jboss.resteasy.plugins.providers.multipart.MultipartInput;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
+import javax.ws.rs.core.Response;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.*;
@@ -134,6 +135,15 @@ public final class MultipartUtils {
         return null;
     }
 
+    public static String assertString(MultipartInput input, String key) {
+        String result = getString(input, key);
+        if (result != null) {
+            return result;
+        }
+
+        throw new ConcordApplicationException(key + " not specified", Response.Status.BAD_REQUEST);
+    }
+
     public static boolean getBoolean(MultipartInput input, String key, boolean defaultValue) {
         String s = getString(input, key);
         if (s == null) {
@@ -154,6 +164,14 @@ public final class MultipartUtils {
         }
     }
 
+    public static UUID assertUuid(MultipartInput input, String key) {
+        UUID result = getUuid(input, key);
+        if (result != null) {
+            return result;
+        }
+        throw new ConcordApplicationException(key + " not specified", Response.Status.BAD_REQUEST);
+    }
+
     public static InputStream getStream(MultipartInput input, String key) {
         try {
             for (InputPart p : input.getParts()) {
@@ -166,6 +184,14 @@ public final class MultipartUtils {
             throw new ConcordApplicationException("Error parsing the request", e);
         }
         return null;
+    }
+
+    public static InputStream assertStream(MultipartInput input, String key) {
+        InputStream result = getStream(input, key);
+        if (result != null) {
+            return result;
+        }
+        throw new ConcordApplicationException(key + " not specified", Response.Status.BAD_REQUEST);
     }
 
     @SuppressWarnings("unchecked")

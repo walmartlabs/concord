@@ -272,6 +272,7 @@ const StatusIcon = ({ status, processStatus, warnings = 0, errors = 0 }: StatusI
         return (
             <Icon
                 loading={
+                    processStatus !== ProcessStatus.SUSPENDED &&
                     processStatus !== ProcessStatus.FAILED &&
                     processStatus !== ProcessStatus.FINISHED &&
                     processStatus !== ProcessStatus.CANCELLED &&
