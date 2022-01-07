@@ -39,6 +39,8 @@ import java.nio.file.Paths;
 @Deprecated
 public class DependencyVersionConfiguration implements Serializable {
 
+    private static final long serialVersionUID = -1L;
+
     private final Path path;
 
     @Inject

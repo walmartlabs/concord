@@ -32,6 +32,8 @@ import java.util.Optional;
 
 public class FileRule implements Serializable {
 
+    private static final long serialVersionUID = -1L;
+
     private final String msg;
 
     private final Long maxSizeInBytes;

@@ -22,6 +22,8 @@ package com.walmartlabs.concord.runtime.v2.runner.tasks;
 
 public class TaskException extends Exception {
 
+    private static final long serialVersionUID = -5809134340125047859L;
+
     public TaskException(Exception cause) {
         super(cause);
     }

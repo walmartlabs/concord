@@ -21,6 +21,7 @@ package com.walmartlabs.concord.forms;
  */
 
 import com.walmartlabs.concord.common.AllowNulls;
+import org.immutables.serial.Serial;
 import org.immutables.value.Value;
 
 import javax.annotation.Nullable;
@@ -30,6 +31,7 @@ import java.util.Map;
 
 @Value.Immutable
 @Value.Style(jdkOnly = true)
+@Serial.Version(-9087815156857537835L)
 public interface FormField extends Serializable {
 
     String name();

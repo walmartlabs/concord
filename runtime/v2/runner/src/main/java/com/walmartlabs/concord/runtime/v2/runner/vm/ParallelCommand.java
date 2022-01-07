@@ -80,6 +80,8 @@ public class ParallelCommand extends StepCommand<ParallelBlock> {
 
     static class CollectVariablesCommand implements Command {
 
+        private static final long serialVersionUID = 457427720732724912L;
+
         private final Map<String, Object> accumulator;
 
         public CollectVariablesCommand(Map<String, Object> accumulator) {
@@ -96,6 +98,8 @@ public class ParallelCommand extends StepCommand<ParallelBlock> {
     }
 
     static class EvalVariablesCommand implements Command {
+
+        private static final long serialVersionUID = 1370076263447141826L;
 
         private final Context ctx;
         private final Map<String, Object> allVars;

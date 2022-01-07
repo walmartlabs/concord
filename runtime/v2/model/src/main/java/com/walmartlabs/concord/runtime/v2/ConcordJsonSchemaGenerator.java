@@ -182,6 +182,8 @@ public class ConcordJsonSchemaGenerator {
 
     private static class JsonSchemaModule extends SimpleModule {
 
+        private static final long serialVersionUID = 1L;
+
         public JsonSchemaModule() {
             setMixInAnnotation(ProcessDefinition.class, ProcessDefinitionMixIn.class);
             setMixInAnnotation(ProcessDefinitionConfiguration.class, ProcessDefinitionConfigurationMixIn.class);
@@ -189,6 +191,8 @@ public class ConcordJsonSchemaGenerator {
             setMixInAnnotation(Step.class, StepMixIn.class);
 
             addSerializer(Duration.class, new StdSerializer<Duration>(Duration.class) {
+                private static final long serialVersionUID = 1L;
+
                 @Override
                 public void serialize(Duration value, JsonGenerator gen, SerializerProvider provider) {
                     // do nothing

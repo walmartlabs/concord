@@ -32,6 +32,8 @@ import java.util.Date;
 @JsonDeserialize(as = ImmutableProcessSleepCondition.class)
 public abstract class ProcessSleepCondition extends AbstractWaitCondition {
 
+    private static final long serialVersionUID = 1L;
+
     public abstract String resumeEvent();
 
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss.SSSX")

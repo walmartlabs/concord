@@ -410,6 +410,8 @@ public class ProcessManager {
 
     public static final class ProcessResult implements Serializable {
 
+        private static final long serialVersionUID = 1L;
+
         private final UUID instanceId;
 
         public ProcessResult(UUID instanceId) {

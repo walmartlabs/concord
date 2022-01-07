@@ -31,8 +31,6 @@ import java.util.Map;
 
 public interface TaskResult extends Serializable {
 
-    long serialVersionUID = 1L;
-
     /**
      * Creates a new instance of {@link TaskResult} with {@link SimpleResult#ok()} set to {@code true}.
      *
@@ -93,6 +91,8 @@ public interface TaskResult extends Serializable {
      * Avoid using custom types/classes as values.
      */
     class SimpleResult implements TaskResult {
+
+        private static final long serialVersionUID = -2964915156894763525L;
 
         private final boolean ok;
         private final String error;
@@ -161,6 +161,8 @@ public interface TaskResult extends Serializable {
 
     class SimpleFailResult extends SimpleResult {
 
+        private static final long serialVersionUID = 6405940706761648254L;
+
         private final Exception cause;
 
         SimpleFailResult(Exception e) {
@@ -182,6 +184,8 @@ public interface TaskResult extends Serializable {
 
     class SuspendResult implements TaskResult {
 
+        private static final long serialVersionUID = 7103889933507730380L;
+
         private final String eventName;
 
         SuspendResult(String eventName) {
@@ -194,6 +198,8 @@ public interface TaskResult extends Serializable {
     }
 
     class ReentrantSuspendResult implements TaskResult {
+
+        private static final long serialVersionUID = -4652050582959900705L;
 
         private final String eventName;
         private final Map<String, Serializable> payload;

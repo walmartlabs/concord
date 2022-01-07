@@ -24,6 +24,8 @@ import com.walmartlabs.concord.runtime.v2.model.Location;
 
 public class YamlProcessingException extends RuntimeException {
 
+    private static final long serialVersionUID = 1L;
+
     private final Location location;
 
     public YamlProcessingException(Location location, String message) {

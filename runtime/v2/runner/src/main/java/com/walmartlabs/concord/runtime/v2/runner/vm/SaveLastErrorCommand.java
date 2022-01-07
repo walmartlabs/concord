@@ -41,6 +41,8 @@ import java.util.Map;
  */
 public class SaveLastErrorCommand implements Command {
 
+    private static final long serialVersionUID = 5759484819869224819L;
+
     private static final TypeReference<Map<String, Object>> MAP_TYPE = new TypeReference<Map<String, Object>>() {
     };
 

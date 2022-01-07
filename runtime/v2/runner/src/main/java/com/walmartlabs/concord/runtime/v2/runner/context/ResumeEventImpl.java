@@ -27,6 +27,8 @@ import java.util.Map;
 
 public class ResumeEventImpl implements ResumeEvent {
 
+    private static final long serialVersionUID = -8446483662158789554L;
+
     private final String eventName;
 
     private final Map<String, Serializable> state;

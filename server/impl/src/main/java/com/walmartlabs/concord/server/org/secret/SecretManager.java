@@ -829,6 +829,8 @@ public class SecretManager {
      */
     public static abstract class AccessScope implements Serializable {
 
+        private static final long serialVersionUID = 1L;
+
         /**
          * External access via API. Requires additional security checks.
          */
@@ -860,6 +862,8 @@ public class SecretManager {
 
     private static class ApiAccessScope extends AccessScope {
 
+        private static final long serialVersionUID = 1L;
+
         @Override
         public String getName() {
             return "apiAccess";
@@ -867,6 +871,8 @@ public class SecretManager {
     }
 
     public static class ProjectAccessScope extends AccessScope {
+
+        private static final long serialVersionUID = 1L;
 
         private final UUID projectId;
 
@@ -886,6 +892,8 @@ public class SecretManager {
     }
 
     public static class InternalAccessScope extends AccessScope {
+
+        private static final long serialVersionUID = 1L;
 
         @Override
         public String getName() {

@@ -23,6 +23,8 @@ package com.walmartlabs.concord.it.common;
 
 public class ForbiddenException extends RuntimeException {
 
+    private static final long serialVersionUID = -1L;
+
     private final Object data;
 
     public ForbiddenException(String message, Object data) {

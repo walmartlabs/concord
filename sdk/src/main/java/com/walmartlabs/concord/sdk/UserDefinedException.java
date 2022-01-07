@@ -25,6 +25,8 @@ package com.walmartlabs.concord.sdk;
  */
 public class UserDefinedException extends RuntimeException {
 
+    private static final long serialVersionUID = -3926184420837445120L;
+
     public UserDefinedException(String message) {
         super(message);
     }

@@ -24,6 +24,8 @@ import com.walmartlabs.concord.runtime.v2.model.Location;
 
 public class InvalidFieldDefinitionException extends YamlProcessingException {
 
+    private static final long serialVersionUID = 7839061025127853584L;
+
     private final String fieldName;
     private final YamlProcessingException cause;
 

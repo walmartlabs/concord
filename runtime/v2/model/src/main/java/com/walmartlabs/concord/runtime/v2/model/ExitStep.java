@@ -22,6 +22,8 @@ package com.walmartlabs.concord.runtime.v2.model;
 
 public class ExitStep implements Step {
 
+    private static final long serialVersionUID = -2225644171118983147L;
+
     private final Location location;
 
     public ExitStep(Location location) {

@@ -23,6 +23,8 @@ package com.walmartlabs.concord.sdk;
 
 public class ClientException extends Exception {
 
+    private static final long serialVersionUID = 1L;
+
     private final String instanceId;
 
     public ClientException(String message) {

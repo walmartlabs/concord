@@ -25,6 +25,8 @@ import java.util.Objects;
 
 public class ThreadId implements Serializable, Comparable<ThreadId> {
 
+    private static final long serialVersionUID = -4315435932994207071L;
+
     private final long id;
 
     ThreadId(long id) {
