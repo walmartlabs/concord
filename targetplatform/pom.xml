@@ -94,7 +94,7 @@
         <okhttp3.version>3.14.1</okhttp3.version>
         <okio.version>1.17.2</okio.version>
         <ollie.version>0.0.37</ollie.version>
-        <pac4j.version>4.0.0-RC3</pac4j.version>
+        <pac4j.version>5.2.0</pac4j.version>
         <parc.version>0.1.2</parc.version>
         <picocli.version>4.2.0</picocli.version>
         <postgres.version>42.2.9</postgres.version>
