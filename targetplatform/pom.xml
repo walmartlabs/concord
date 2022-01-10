@@ -36,7 +36,7 @@
         <glassfish.el.version>3.0.1-b11</glassfish.el.version>
         <graalvm.version>21.2.0</graalvm.version>
         <greenmail.version>1.6.5</greenmail.version>
-        <groovy.version>2.5.8</groovy.version>
+        <groovy.version>2.5.15</groovy.version>
         <gson.fire.version>1.8.3</gson.fire.version>
         <gson.version>2.8.6</gson.version>
         <guava.version>25.1-jre</guava.version>
@@ -96,7 +96,7 @@
         <ollie.version>0.0.37</ollie.version>
         <pac4j.version>4.0.0-RC3</pac4j.version>
         <parc.version>0.1.2</parc.version>
-        <picocli.version>4.2.0</picocli.version>
+        <picocli.version>4.3.2</picocli.version>
         <postgres.version>42.2.9</postgres.version>
         <prometheus.simpleclient.version>0.8.1</prometheus.simpleclient.version>
         <resteasy.version>3.1.4.Final</resteasy.version>
