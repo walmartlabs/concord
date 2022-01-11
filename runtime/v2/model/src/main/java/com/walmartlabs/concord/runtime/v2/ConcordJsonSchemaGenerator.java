@@ -55,6 +55,7 @@ import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
 import java.time.Duration;
 import java.util.*;
+import java.util.function.Predicate;
 import java.util.function.Supplier;
 
 public class ConcordJsonSchemaGenerator {
@@ -82,6 +83,15 @@ public class ConcordJsonSchemaGenerator {
         // remove invalid required primitive attributes
         removeRequired(path(jsonSchema, "definitions/ProcessDefinitionConfiguration"), "debug");
         removeRequired(path(jsonSchema, "definitions/EventConfiguration"), "recordEvents", "recordTaskInVars", "truncateInVars", "truncateMaxStringLength", "truncateMaxArrayLength", "truncateMaxDepth", "recordTaskOutVars", "truncateOutVars", "recordTaskMeta", "truncateMeta");
+        removeRequired(path(jsonSchema, "definitions/TaskCall"), "ignoreErrors");
+
+        // remove invalid Object definition
+        /*
+            "additionalProperties" : {
+              "$ref" : "#/definitions/Object"
+            }
+         */
+        removeFieldIf(jsonSchema, "additionalProperties", n -> "#/definitions/Object".equals(n.path("$ref").asText()));
 
         return jsonSchema;
     }
@@ -176,6 +186,18 @@ public class ConcordJsonSchemaGenerator {
             if (n instanceof ObjectNode) {
                 clearProperty(n, propName);
                 clearAllProperty(n, propName);
+            }
+        }
+    }
+
+    private static void removeFieldIf(JsonNode root, String fieldName, Predicate<JsonNode> p) {
+        for (Iterator<JsonNode> it = root.elements(); it.hasNext(); ) {
+            JsonNode n = it.next();
+            JsonNode ap = n.path(fieldName);
+            if (!ap.isMissingNode() && p.test(ap)) {
+                ((ObjectNode) n).remove(fieldName);
+            } else {
+                removeFieldIf(n, fieldName, p);
             }
         }
     }

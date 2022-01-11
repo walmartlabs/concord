@@ -67,7 +67,7 @@
         <jna.version>5.5.0</jna.version>
         <jooq.version>3.14.0</jooq.version>
         <jsch.version>0.1.55</jsch.version>
-        <json.schema.validator.version>1.0.45</json.schema.validator.version>
+        <json.schema.validator.version>1.0.64</json.schema.validator.version>
         <json.smart.version>2.4.7</json.smart.version>
         <jsr305.version>3.0.2</jsr305.version>
         <junit.version>5.8.2</junit.version>

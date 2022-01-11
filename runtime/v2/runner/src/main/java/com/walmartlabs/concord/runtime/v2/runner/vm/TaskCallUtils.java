@@ -26,12 +26,16 @@ import com.walmartlabs.concord.runtime.v2.runner.el.ExpressionEvaluator;
 import com.walmartlabs.concord.runtime.v2.sdk.Context;
 import com.walmartlabs.concord.runtime.v2.sdk.TaskResult;
 import com.walmartlabs.concord.svm.Runtime;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.Serializable;
 import java.util.Collections;
 import java.util.Map;
 
 public final class TaskCallUtils {
+
+    private static final Logger log = LoggerFactory.getLogger(TaskCallUtils.class);
 
     public static void processTaskResult(Runtime runtime, Context ctx, String taskName, TaskCallOptions opts, TaskResult result) {
         assertTaskResult(taskName, result);
@@ -53,24 +57,34 @@ public final class TaskCallUtils {
                 out.forEach((k, v) -> ctx.variables().set(k, v));
             }
 
-            if (result instanceof TaskResult.SimpleFailResult) {
-                if (r.ok() || opts.ignoreErrors()) {
-                    return;
-                }
+            if (r.ok()) {
+                return;
+            }
 
+            if (result instanceof TaskResult.SimpleFailResult) {
                 TaskResult.SimpleFailResult rr = (TaskResult.SimpleFailResult) r;
-                if (rr.cause() != null) {
-                    if (rr.cause() instanceof RuntimeException) {
-                        throw (RuntimeException)rr.cause();
-                    } else {
-                        throw new RuntimeException(rr.cause());
-                    }
+                RuntimeException exception = toException(taskName, rr);
+
+                if (opts.ignoreErrors()) {
+                   log.error("Error ignored:", exception);
                 } else {
-                    throw new RuntimeException("Error during execution of '" + taskName + "' task" + (r.error() != null ? ": " + r.error() : ""));
+                    throw exception;
                 }
             }
         } else {
             throw new IllegalArgumentException("Unknown result: '" + result.getClass() + "'");
+        }
+    }
+
+    private static RuntimeException toException(String taskName, TaskResult.SimpleFailResult rr) {
+        if (rr.cause() != null) {
+            if (rr.cause() instanceof RuntimeException) {
+                return (RuntimeException)rr.cause();
+            } else {
+                return new RuntimeException(rr.cause());
+            }
+        } else {
+            return new RuntimeException("Error during execution of '" + taskName + "' task" + (rr.error() != null ? ": " + rr.error() : ""));
         }
     }
 
