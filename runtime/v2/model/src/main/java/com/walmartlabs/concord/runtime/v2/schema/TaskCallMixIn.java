@@ -55,4 +55,7 @@ public interface TaskCallMixIn extends NamedStep {
 
     @JsonProperty("meta")
     Map<String, Object> meta();
+
+    @JsonProperty("ignoreErrors")
+    boolean ignoreErrors();
 }
