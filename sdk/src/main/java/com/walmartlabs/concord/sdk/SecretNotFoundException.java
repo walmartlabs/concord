@@ -22,7 +22,8 @@ package com.walmartlabs.concord.sdk;
 
 public class SecretNotFoundException extends IllegalArgumentException {
 
-    private static final long serialVersionUID = 1L;
+    // for backward compatibility (java8 concord 1.92.0 version)
+    private static final long serialVersionUID = 6544929210725956736L;
 
     private final String orgName;
 

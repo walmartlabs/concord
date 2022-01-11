@@ -27,6 +27,7 @@ import java.util.Map;
 
 public class ResumeEventImpl implements ResumeEvent {
 
+    // for backward compatibility (java8 concord 1.92.0 version)
     private static final long serialVersionUID = -8446483662158789554L;
 
     private final String eventName;

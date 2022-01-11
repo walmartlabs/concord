@@ -25,7 +25,7 @@ import java.io.Serializable;
 @Deprecated
 public class DeleteInventoryDataResponse implements Serializable {
 
-    private static final long serialVersionUID = -1L;
+    private static final long serialVersionUID = 1L;
 
     private final boolean ok = true;
 

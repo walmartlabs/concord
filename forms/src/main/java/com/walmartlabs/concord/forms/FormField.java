@@ -31,7 +31,7 @@ import java.util.Map;
 
 @Value.Immutable
 @Value.Style(jdkOnly = true)
-@Serial.Version(-9087815156857537835L)
+@Serial.Version(-9087815156857537835L) // for backward compatibility (java8 concord 1.92.0 version)
 public interface FormField extends Serializable {
 
     String name();

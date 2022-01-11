@@ -31,7 +31,7 @@ import java.util.UUID;
 @JsonInclude(Include.NON_NULL)
 public class ErrorMessage implements Serializable {
 
-    private static final long serialVersionUID = -1L;
+    private static final long serialVersionUID = 1L;
 
     private final UUID instanceId;
     private final String message;

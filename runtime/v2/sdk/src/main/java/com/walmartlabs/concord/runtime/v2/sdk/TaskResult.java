@@ -92,6 +92,7 @@ public interface TaskResult extends Serializable {
      */
     class SimpleResult implements TaskResult {
 
+        // for backward compatibility (java8 concord 1.92.0 version)
         private static final long serialVersionUID = -2964915156894763525L;
 
         private final boolean ok;
@@ -161,6 +162,7 @@ public interface TaskResult extends Serializable {
 
     class SimpleFailResult extends SimpleResult {
 
+        // for backward compatibility (java8 concord 1.92.0 version)
         private static final long serialVersionUID = 6405940706761648254L;
 
         private final Exception cause;
@@ -184,6 +186,7 @@ public interface TaskResult extends Serializable {
 
     class SuspendResult implements TaskResult {
 
+        // for backward compatibility (java8 concord 1.92.0 version)
         private static final long serialVersionUID = 7103889933507730380L;
 
         private final String eventName;
@@ -199,6 +202,7 @@ public interface TaskResult extends Serializable {
 
     class ReentrantSuspendResult implements TaskResult {
 
+        // for backward compatibility (java8 concord 1.92.0 version)
         private static final long serialVersionUID = -4652050582959900705L;
 
         private final String eventName;

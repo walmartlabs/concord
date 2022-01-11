@@ -91,7 +91,7 @@ public class FormInstanceEntry implements Serializable {
     @JsonInclude(Include.NON_NULL)
     public static class Field implements Serializable {
 
-        private static final long serialVersionUID = -1L;
+        private static final long serialVersionUID = 1L;
 
         private final String name;
         private final String label;

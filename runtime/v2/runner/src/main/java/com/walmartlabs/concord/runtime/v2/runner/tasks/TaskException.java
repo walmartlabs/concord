@@ -22,6 +22,7 @@ package com.walmartlabs.concord.runtime.v2.runner.tasks;
 
 public class TaskException extends Exception {
 
+    // for backward compatibility (java8 concord 1.92.0 version)
     private static final long serialVersionUID = -5809134340125047859L;
 
     public TaskException(Exception cause) {

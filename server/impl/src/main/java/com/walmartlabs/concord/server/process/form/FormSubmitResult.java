@@ -28,7 +28,7 @@ import java.util.UUID;
 
 public final class FormSubmitResult implements Serializable {
 
-    private static final long serialVersionUID = -1L;
+    private static final long serialVersionUID = 1L;
 
     private final UUID processInstanceId;
     private final String formName;

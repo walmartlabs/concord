@@ -60,7 +60,7 @@ public interface Import extends Serializable {
     @JsonDeserialize(as = ImmutableGitDefinition.class)
     abstract class GitDefinition implements Import {
 
-        private static final long serialVersionUID = -1L;
+        private static final long serialVersionUID = 1L;
 
         public static final String TYPE = "git";
 
@@ -115,7 +115,7 @@ public interface Import extends Serializable {
     @JsonDeserialize(as = ImmutableMvnDefinition.class)
     abstract class MvnDefinition implements Import {
 
-        private static final long serialVersionUID = -1L;
+        private static final long serialVersionUID = 1L;
 
         public static final String TYPE = "mvn";
 
@@ -148,7 +148,7 @@ public interface Import extends Serializable {
     @JsonDeserialize(as = ImmutableDirectoryDefinition.class)
     abstract class DirectoryDefinition implements Import {
 
-        private static final long serialVersionUID = -1L;
+        private static final long serialVersionUID = 1L;
 
         public static final String TYPE = "dir";
 
