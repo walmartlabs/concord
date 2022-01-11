@@ -34,7 +34,9 @@ the same names as task names to avoid conflicts
 - runtime-v2: log errors when `ignoreErrors` specified
 ([#532](https://github.com/walmartlabs/concord/pull/532));
 - concord-server: better checkpoint data validation
-([#533](https://github.com/walmartlabs/concord/pull/533)).
+([#533](https://github.com/walmartlabs/concord/pull/533));
+- runtime-v2: update JSON schema generation for `ignoreErrors`
+params ([#536](https://github.com/walmartlabs/concord/pull/536)).
 
 
 
