@@ -38,7 +38,6 @@ import static org.junit.Assert.assertTrue;
 public class ConcordJsonSchemaGeneratorTest {
 
     @Test
-    @Ignore
     public void validateOk() throws Exception {
         JsonNode concordYml = new ObjectMapper(new YAMLFactory())
                 .readTree(ConcordJsonSchemaGeneratorTest.class.getResourceAsStream("/schema/concord.yml"));
