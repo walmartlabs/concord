@@ -36,7 +36,9 @@ the same names as task names to avoid conflicts
 - concord-server: better checkpoint data validation
 ([#533](https://github.com/walmartlabs/concord/pull/533));
 - runtime-v2: update JSON schema generation for `ignoreErrors`
-params ([#536](https://github.com/walmartlabs/concord/pull/536)).
+params ([#536](https://github.com/walmartlabs/concord/pull/536));
+- project: add missing `serialVersionUUID` fields to model
+classes ([#537](https://github.com/walmartlabs/concord/pull/537)).
 
 
 
