@@ -18,6 +18,15 @@
         <docker.file>oss/Dockerfile</docker.file>
     </properties>
 
+    <dependencies>
+        <dependency>
+            <groupId>com.walmartlabs.concord.docker</groupId>
+            <artifactId>concord-base</artifactId>
+            <version>${project.version}</version>
+            <type>pom</type>
+        </dependency>
+    </dependencies>
+
     <build>
         <plugins>
             <plugin>
