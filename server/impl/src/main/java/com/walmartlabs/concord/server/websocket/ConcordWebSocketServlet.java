@@ -32,6 +32,8 @@ import javax.servlet.annotation.WebServlet;
 @WebServlet("/websocket")
 public class ConcordWebSocketServlet extends WebSocketServlet {
 
+    private static final long serialVersionUID = 1L;
+
     private final WebSocketChannelManager channelManager;
     private final ApiKeyDao apiKeyDao;
 

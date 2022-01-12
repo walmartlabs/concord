@@ -27,6 +27,8 @@ import java.io.Serializable;
 
 public class VersionResponse implements Serializable {
 
+    private static final long serialVersionUID = 1L;
+
     private final boolean ok = true;
     private final String version;
     private final String commitId;

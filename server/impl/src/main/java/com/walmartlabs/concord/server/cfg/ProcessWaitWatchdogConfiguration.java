@@ -32,6 +32,8 @@ import java.time.Duration;
 @Singleton
 public class ProcessWaitWatchdogConfiguration implements Serializable {
 
+    private static final long serialVersionUID = 1L;
+
     @Inject
     @Config("process.waitCheckPeriod")
     private Duration period;

@@ -29,6 +29,9 @@ import java.util.StringJoiner;
 @SuppressWarnings("rawtypes")
 public class InvalidValueTypeException extends YamlProcessingException {
 
+    // for backward compatibility (java8 concord 1.92.0 version)
+    private static final long serialVersionUID = -1409066590954412190L;
+
     private final YamlValueType[] expectedType;
     private final YamlValueType actualType;
     private final String valueKey;

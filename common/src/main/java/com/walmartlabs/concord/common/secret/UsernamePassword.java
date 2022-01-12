@@ -29,6 +29,8 @@ import java.nio.charset.StandardCharsets;
 
 public class UsernamePassword implements Secret {
 
+    private static final long serialVersionUID = 1L;
+
     public static byte[] serialize(UsernamePassword input) {
         try {
             ByteArrayOutputStream baos = new ByteArrayOutputStream();

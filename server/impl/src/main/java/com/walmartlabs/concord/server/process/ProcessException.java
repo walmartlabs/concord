@@ -27,6 +27,8 @@ import javax.ws.rs.core.Response.StatusType;
 
 public class ProcessException extends RuntimeException {
 
+    private static final long serialVersionUID = 1L;
+
     private final PartialProcessKey processKey;
     private final StatusType status;
 

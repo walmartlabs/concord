@@ -31,6 +31,8 @@ import java.util.UUID;
 @JsonInclude(Include.NON_NULL)
 public class StartProcessResponse implements Serializable {
 
+    private static final long serialVersionUID = 1L;
+
     private final boolean ok = true;
     private final UUID instanceId;
 

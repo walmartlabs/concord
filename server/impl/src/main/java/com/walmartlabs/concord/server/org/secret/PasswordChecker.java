@@ -72,6 +72,8 @@ public final class PasswordChecker {
 
     public static class CheckerException extends Exception {
 
+        private static final long serialVersionUID = 1L;
+
         public CheckerException(String msg) {
             super(msg);
         }

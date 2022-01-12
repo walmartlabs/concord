@@ -31,6 +31,8 @@ import java.util.Optional;
 
 public class StateRule implements Serializable {
 
+    private static final long serialVersionUID = 1L;
+
     private final String msg;
     private final Long maxSizeInBytes;
     private final Integer maxFilesCount;

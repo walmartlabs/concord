@@ -32,6 +32,8 @@ import java.time.Duration;
 @Singleton
 public class PolicyCacheConfiguration implements Serializable {
 
+    private static final long serialVersionUID = 1L;
+
     @Inject
     @Config("policyCache.reloadInterval")
     private Duration reloadInterval;

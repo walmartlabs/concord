@@ -22,6 +22,8 @@ package com.walmartlabs.concord.plugins.http.exception;
 
 public class RequestTimeoutException extends Exception {
 
+    private static final long serialVersionUID = 1L;
+
     public RequestTimeoutException(String message) {
         super(message);
     }

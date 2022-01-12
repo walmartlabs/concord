@@ -31,6 +31,8 @@ import java.util.Optional;
 
 public class TaskRule implements Serializable {
 
+    private static final long serialVersionUID = 1L;
+
     private final String msg;
     private final String taskName;
     private final String method;
@@ -101,6 +103,8 @@ public class TaskRule implements Serializable {
     }
 
     public static class Param implements Serializable {
+
+        private static final long serialVersionUID = 1L;
 
         private final int index;
 

@@ -22,6 +22,8 @@ package com.walmartlabs.concord.imports;
 
 public class ImportProcessingException extends Exception {
 
+    private static final long serialVersionUID = 1L;
+
     private final Import value;
 
     public ImportProcessingException(Import value, Exception e) {

@@ -32,6 +32,8 @@ import java.util.UUID;
 @JsonInclude(Include.NON_NULL)
 public class RestoreCheckpointRequest implements Serializable {
 
+    private static final long serialVersionUID = 1L;
+
     @NotNull
     private final UUID id;
 
