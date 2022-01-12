@@ -32,6 +32,8 @@ import java.time.Duration;
 @Singleton
 public class AgentConfiguration implements Serializable {
 
+    private static final long serialVersionUID = 1L;
+
     @Inject
     @Config("agent.commandPollDelay")
     private Duration commandPollDelay;

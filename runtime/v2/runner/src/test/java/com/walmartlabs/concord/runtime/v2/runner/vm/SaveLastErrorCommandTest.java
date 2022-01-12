@@ -84,6 +84,8 @@ public class SaveLastErrorCommandTest {
     @SuppressWarnings("unused")
     static class MyException extends Exception {
 
+        private static final long serialVersionUID = 1L;
+
         private Exception someCyclicField;
 
         public MyException(String message) {

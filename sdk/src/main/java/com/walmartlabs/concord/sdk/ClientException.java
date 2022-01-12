@@ -23,6 +23,9 @@ package com.walmartlabs.concord.sdk;
 
 public class ClientException extends Exception {
 
+    // for backward compatibility (java8 concord 1.92.0 version)
+    private static final long serialVersionUID = 2690318957293887651L;
+
     private final String instanceId;
 
     public ClientException(String message) {

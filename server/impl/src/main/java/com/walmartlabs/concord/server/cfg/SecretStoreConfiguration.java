@@ -31,6 +31,8 @@ import java.io.Serializable;
 @Singleton
 public class SecretStoreConfiguration implements Serializable {
 
+    private static final long serialVersionUID = 1L;
+
     @Inject
     @Config("secretStore.serverPassword")
     private byte[] serverPwd;

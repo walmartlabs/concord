@@ -34,6 +34,8 @@ import java.time.Duration;
 @Singleton
 public class ServerConfiguration implements Serializable {
 
+    private static final long serialVersionUID = 1L;
+
     public static final String ACCESS_LOG_FORMAT = CustomRequestLog.EXTENDED_NCSA_FORMAT + " %{ms}T";
 
     @Inject
@@ -114,6 +116,8 @@ public class ServerConfiguration implements Serializable {
     @Named
     @Singleton
     public static class CORSConfiguration implements Serializable {
+
+        private static final long serialVersionUID = 1L;
 
         @Inject
         @Config("server.cors.allowOrigin")

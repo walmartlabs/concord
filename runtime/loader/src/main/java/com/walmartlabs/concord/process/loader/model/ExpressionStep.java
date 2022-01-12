@@ -21,6 +21,7 @@ package com.walmartlabs.concord.process.loader.model;
  */
 
 import com.walmartlabs.concord.common.AllowNulls;
+import org.immutables.serial.Serial;
 import org.immutables.value.Value;
 
 import java.io.Serializable;
@@ -29,6 +30,7 @@ import java.util.Map;
 
 @Value.Immutable
 @Value.Style(jdkOnly = true)
+@Serial.Version(1)
 public interface ExpressionStep extends Step {
 
     String expression();

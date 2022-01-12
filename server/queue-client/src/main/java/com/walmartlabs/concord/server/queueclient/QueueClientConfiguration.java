@@ -24,6 +24,8 @@ import java.io.Serializable;
 
 public class QueueClientConfiguration implements Serializable {
 
+    private static final long serialVersionUID = 1L;
+
     private final String[] addresses;
     private final String agentId;
     private final String apiKey;

@@ -69,6 +69,8 @@ public final class YamlDeserializers {
 
     private static final class YamlStepDeserializer extends StdDeserializer<YamlStep> {
 
+        private static final long serialVersionUID = 1L;
+
         protected YamlStepDeserializer() {
             super(YamlStep.class);
         }
@@ -81,6 +83,8 @@ public final class YamlDeserializers {
 
     private static final class YamlFormFieldDeserializer extends StdDeserializer<YamlFormField> {
 
+        private static final long serialVersionUID = 1L;
+
         protected YamlFormFieldDeserializer() {
             super(YamlFormField.class);
         }
@@ -92,6 +96,8 @@ public final class YamlDeserializers {
     }
 
     private static final class YamlDefinitionFileDeserializer extends StdDeserializer<YamlDefinitionFile> {
+
+        private static final long serialVersionUID = 1L;
 
         protected YamlDefinitionFileDeserializer() {
             super(YamlDefinitionFile.class);
@@ -113,6 +119,8 @@ public final class YamlDeserializers {
 
     private static final class YamlTriggerDeserializer extends StdDeserializer<YamlTrigger> {
 
+        private static final long serialVersionUID = 1L;
+
         public YamlTriggerDeserializer() {
             super(YamlTrigger.class);
         }
@@ -124,6 +132,8 @@ public final class YamlDeserializers {
     }
 
     private static final class YamlImportDeserializer extends StdDeserializer<YamlImport> {
+
+        private static final long serialVersionUID = 1L;
 
         public YamlImportDeserializer() {
             super(YamlImport.class);

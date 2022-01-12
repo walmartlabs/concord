@@ -24,6 +24,9 @@ import java.io.IOException;
 
 public class YamlParserException extends IOException {
 
+    // for backward compatibility (java8 concord 1.92.0 version)
+    private static final long serialVersionUID = -1967047158567778135L;
+
     public YamlParserException(String message) {
         super(message);
     }

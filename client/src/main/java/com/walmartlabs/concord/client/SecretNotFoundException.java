@@ -22,6 +22,8 @@ package com.walmartlabs.concord.client;
 
 public class SecretNotFoundException extends IllegalArgumentException {
 
+    private static final long serialVersionUID = 1L;
+
     private final String orgName;
 
     private final String secretName;
