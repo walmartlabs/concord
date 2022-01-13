@@ -86,6 +86,7 @@ flows:
   # get and set script variables
   scriptFlow:
     - script: scripts/test-script.groovy
+      out: newVar
       meta:
         segmentName: "Processing ${myVar} Script Variable..."
       error:

@@ -451,6 +451,30 @@ public class MainTest {
     }
 
     @Test
+    public void testScriptOut() throws Exception {
+        deploy("scriptOut");
+
+        save(ProcessConfiguration.builder()
+                .build());
+
+        byte[] log = run();
+        assertLog(log, ".*result.boom: \\{\\}.*");
+        assertLog(log, ".*result.k1: value1");
+        assertLog(log, ".*result.k2: value2");
+    }
+
+    @Test
+    public void testScriptOutExpr() throws Exception {
+        deploy("scriptOutExpr");
+
+        save(ProcessConfiguration.builder()
+                .build());
+
+        byte[] log = run();
+        assertLog(log, ".*k1: value1");
+    }
+
+    @Test
     public void testNonSerializableLocal() throws Exception {
         deploy("nonSerializableLocal");
 

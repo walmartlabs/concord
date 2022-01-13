@@ -4,7 +4,7 @@ package com.walmartlabs.concord.runtime.v2.runner.script;
  * *****
  * Concord
  * -----
- * Copyright (C) 2017 - 2020 Walmart Inc.
+ * Copyright (C) 2017 - 2022 Walmart Inc.
  * -----
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,14 +20,20 @@ package com.walmartlabs.concord.runtime.v2.runner.script;
  * =====
  */
 
-import com.walmartlabs.concord.runtime.v2.sdk.Context;
-
-import java.io.Reader;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
-public interface ScriptEvaluator {
+public class ScriptResult {
 
-    ScriptResult eval(Context context, String language, Reader input, Map<String, Object> variables);
+    private final Map<String, Object> items = new ConcurrentHashMap<>();
 
-    String getLanguage(String languageOrExtension);
+    public ScriptResult set(String key, Object value) {
+        Object sanitized = VariablesSanitizer.sanitize(value);
+        items.put(key, sanitized);
+        return this;
+    }
+
+    public Map<String, Object> items() {
+        return items;
+    }
 }

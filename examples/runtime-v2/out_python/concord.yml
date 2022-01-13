@@ -1,0 +1,21 @@
+configuration:
+  runtime: "concord-v2"
+  dependencies:
+  - "mvn://org.python:jython-standalone:2.7.0"
+
+flows:
+  default:
+  - script: python
+    body:
+      result.set("myVar", "myValue");
+    out: scriptResult
+
+  - log: "result: ${scriptResult}"    # result: {myVar=myValue}
+
+  - script: python
+    body:
+      result.set("myVar", "myValue");
+    out:
+      myVar: ${result.myVar}
+
+  - log: "myVar: ${myVar}"    # myVar: myValue
