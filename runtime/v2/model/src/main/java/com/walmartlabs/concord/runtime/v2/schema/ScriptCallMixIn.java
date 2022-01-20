@@ -43,6 +43,10 @@ public interface ScriptCallMixIn extends StepMixIn {
     @JsonSchemaInject(json = "{\"oneOf\": [ {\"type\": \"string\"}, {\"type\": \"object\"} ]}", merge = false)
     Object input();
 
+    @JsonProperty("out")
+    @JsonSchemaInject(json = "{\"oneOf\": [ {\"type\": \"string\"}, {\"type\": \"object\"} ]}", merge = false)
+    Object out();
+
     @JsonProperty("withItems")
     WithItemsMixIn withItems();
 

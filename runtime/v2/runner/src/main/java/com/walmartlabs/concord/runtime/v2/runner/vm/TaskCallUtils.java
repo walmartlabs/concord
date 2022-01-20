@@ -48,14 +48,8 @@ public final class TaskCallUtils {
             ctx.reentrantSuspend(r.eventName(), r.payload());
         } else if (result instanceof TaskResult.SimpleResult) {
             TaskResult.SimpleResult r = (TaskResult.SimpleResult) result;
-            if (opts.out() != null) {
-                ctx.variables().set(opts.out(), toMap(ctx, r));
-            } else if (opts.outExpr() != null) {
-                ExpressionEvaluator expressionEvaluator = runtime.getService(ExpressionEvaluator.class);
-                Map<String, Object> vars = Collections.singletonMap("result", toMap(ctx, r));
-                Map<String, Serializable> out = expressionEvaluator.evalAsMap(EvalContextFactory.global(ctx, vars), opts.outExpr());
-                out.forEach((k, v) -> ctx.variables().set(k, v));
-            }
+
+            OutputUtils.process(runtime, ctx, toMap(ctx, r), opts.out(), opts.outExpr());
 
             if (r.ok()) {
                 return;
