@@ -33,7 +33,12 @@ import java.util.Map;
 @JsonInclude(Include.NON_EMPTY)
 public class UserActivityResponse implements Serializable {
 
+    private static final long serialVersionUID = 1L;
+
     public static class ProjectProcesses implements Serializable {
+
+        private static final long serialVersionUID = 1L;
+
         private final String projectName;
         private final int running;
 

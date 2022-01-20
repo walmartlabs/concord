@@ -328,6 +328,8 @@ public class PolicyResource implements Resource {
     @JsonInclude(Include.NON_NULL)
     private static class PolicyLink implements Serializable {
 
+        private static final long serialVersionUID = 1L;
+
         private final UUID policyId;
         private final UUID orgId;
         private final UUID projectId;

@@ -24,6 +24,8 @@ import com.walmartlabs.concord.sdk.Secret;
 
 public class BinaryDataSecret implements Secret {
 
+    private static final long serialVersionUID = 1L;
+
     private final byte[] data;
 
     public BinaryDataSecret(byte[] data) { // NOSONAR

@@ -29,6 +29,8 @@ import java.util.Objects;
 
 public class DependencyRewriteRule implements Serializable {
 
+    private static final long serialVersionUID = 1L;
+
     private final String msg;
     private final String groupId;
     private final String artifactId;

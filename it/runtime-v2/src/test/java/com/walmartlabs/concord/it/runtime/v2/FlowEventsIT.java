@@ -202,6 +202,8 @@ public class FlowEventsIT extends AbstractTest {
 
     static class EventData extends HashMap<String, Object> {
 
+        private static final long serialVersionUID = 1L;
+
         public EventData location(int line, int column, String fileName) {
             put("line", line);
             put("column", column);

@@ -37,7 +37,10 @@ import com.walmartlabs.concord.runtime.common.cfg.LoggingConfiguration;
 import com.walmartlabs.concord.runtime.common.cfg.RunnerConfiguration;
 import com.walmartlabs.concord.runtime.v2.runner.checkpoints.CheckpointService;
 import com.walmartlabs.concord.runtime.v2.runner.guice.BaseRunnerModule;
-import com.walmartlabs.concord.runtime.v2.runner.logging.*;
+import com.walmartlabs.concord.runtime.v2.runner.logging.LoggerProvider;
+import com.walmartlabs.concord.runtime.v2.runner.logging.LoggingClient;
+import com.walmartlabs.concord.runtime.v2.runner.logging.LoggingConfigurator;
+import com.walmartlabs.concord.runtime.v2.runner.logging.RunnerLogger;
 import com.walmartlabs.concord.runtime.v2.runner.tasks.TaskCallListener;
 import com.walmartlabs.concord.runtime.v2.runner.tasks.TaskCallPolicyChecker;
 import com.walmartlabs.concord.runtime.v2.runner.tasks.TaskResultListener;
@@ -70,11 +73,10 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 
+import static java.util.regex.Pattern.quote;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
-import static java.util.regex.Pattern.quote;
 
 public class MainTest {
 
@@ -136,8 +138,6 @@ public class MainTest {
             }
         };
 
-        segmentedLogDir = Files.createTempDirectory("segmentedLog");
-
         allLogs = null;
     }
 
@@ -145,10 +145,6 @@ public class MainTest {
     public void tearDown() throws IOException {
         if (workDir != null) {
             IOUtils.deleteRecursively(workDir);
-        }
-
-        if (segmentedLogDir != null) {
-            IOUtils.deleteRecursively(segmentedLogDir);
         }
 
         LoggingConfigurator.reset();
@@ -488,18 +484,12 @@ public class MainTest {
         RunnerConfiguration runnerCfg = RunnerConfiguration.builder()
                 .logging(LoggingConfiguration.builder()
                         .sendSystemOutAndErrToSLF4J(false)
-                        .segmentedLogDir(segmentedLogDir.toAbsolutePath().toString())
                         .build())
                 .build();
 
         byte[] log = run(runnerCfg);
-        assertLog(log, ".*This goes directly into the stdout.*");
-        assertNoLog(log, ".*This is a processLog entry.*");
-
-        List<Path> paths = Files.walk(segmentedLogDir)
-                .filter(p -> p.getFileName().toString().endsWith(".log"))
-                .collect(Collectors.toList());
-        assertEquals(2, paths.size());
+        assertLog(log, "^This goes directly into the stdout$");
+        assertLog(log, ".*This is a processLog entry.*");
     }
 
     @Test
@@ -511,21 +501,11 @@ public class MainTest {
 
         RunnerConfiguration runnerCfg = RunnerConfiguration.builder()
                 .logging(LoggingConfiguration.builder()
-                        .sendSystemOutAndErrToSLF4J(true)
-                        .segmentedLogDir(segmentedLogDir.toAbsolutePath().toString())
                         .build())
                 .build();
 
         byte[] log = run(runnerCfg);
-        assertNoLog(log, ".*System.out in a script.*");
-
-        List<Path> paths = Files.walk(segmentedLogDir)
-                .filter(p -> p.getFileName().toString().endsWith(".log"))
-                .collect(Collectors.toList());
-
-        assertEquals(1, paths.size());
-        log = Files.readAllBytes(paths.get(0));
-        assertLog(log, ".*System.out in a script.*");
+        assertLog(log, "^.*\\|1\\|.*System.out in a script.*");
     }
 
     @Test
@@ -1006,24 +986,15 @@ public class MainTest {
 
         RunnerConfiguration runnerCfg = RunnerConfiguration.builder()
                 .logging(LoggingConfiguration.builder()
-                        .sendSystemOutAndErrToSLF4J(false)
-                        .segmentedLogDir(segmentedLogDir.toAbsolutePath().toString())
                         .build())
                 .build();
 
         save(ProcessConfiguration.builder()
                 .build());
 
-        run(runnerCfg);
+        byte[] log = run(runnerCfg);
 
-        List<Path> paths = Files.walk(segmentedLogDir)
-                .filter(p -> p.getFileName().toString().endsWith(".log"))
-                .sorted()
-                .collect(Collectors.toList());
-
-        assertEquals(2, paths.size());
-        byte[] log = Files.readAllBytes(paths.get(1));
-        assertLog(log, ".*done!.*");
+        assertLog(log, "\\|70\\|2\\|.*done!.*");
     }
 
     @Test
@@ -1087,7 +1058,8 @@ public class MainTest {
     private byte[] run(RunnerConfiguration baseCfg) throws Exception {
         assertNotNull(processConfiguration, "save() the process configuration first");
 
-        ImmutableRunnerConfiguration.Builder runnerCfg = RunnerConfiguration.builder();
+        ImmutableRunnerConfiguration.Builder runnerCfg = RunnerConfiguration.builder()
+                .logging(LoggingConfiguration.builder().segmentedLogs(false).build());
 
         if (baseCfg != null) {
             runnerCfg.from(baseCfg);
@@ -1384,7 +1356,7 @@ public class MainTest {
         @Override
         public TaskResult resume(ResumeEvent event) {
             log.info("RESUME: {}", event);
-            if ((boolean)event.state().get("errorOnResume")) {
+            if ((boolean) event.state().get("errorOnResume")) {
                 throw new RuntimeException("Error on resume!");
             }
 

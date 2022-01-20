@@ -34,6 +34,8 @@ import java.time.Instant;
 @Singleton
 public class NodeRosterEventsConfiguration implements Serializable {
 
+    private static final long serialVersionUID = 1L;
+
     @Inject
     @Config("noderoster.events.period")
     private Duration period;

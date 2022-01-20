@@ -21,6 +21,7 @@ package com.walmartlabs.concord.forms;
  */
 
 import com.walmartlabs.concord.common.AllowNulls;
+import org.immutables.serial.Serial;
 import org.immutables.value.Value;
 
 import java.io.Serializable;
@@ -29,9 +30,8 @@ import java.util.Map;
 
 @Value.Immutable
 @Value.Style(jdkOnly = true)
+@Serial.Version(1)
 public interface FormOptions extends Serializable {
-
-    long serialVersionUID = 1L;
 
     @Value.Default
     default boolean yield() {

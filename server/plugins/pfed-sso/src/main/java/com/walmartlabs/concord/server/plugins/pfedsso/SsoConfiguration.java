@@ -33,6 +33,8 @@ import java.time.Duration;
 @Singleton
 public class SsoConfiguration implements Serializable {
 
+    private static final long serialVersionUID = 1L;
+
     @Inject
     @Config("sso.pfed.enabled")
     private boolean enabled;
