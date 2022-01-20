@@ -25,8 +25,8 @@ import com.walmartlabs.concord.agent.logging.LogAppender;
 import com.walmartlabs.concord.agent.logging.LogSegmentStats;
 import com.walmartlabs.concord.agent.logging.SegmentHeaderParser;
 import com.walmartlabs.concord.agent.logging.SegmentedLogsConsumer;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import java.util.Arrays;
 import java.util.UUID;
@@ -39,7 +39,7 @@ public class SegmentedLogsConsumerTest {
     private LogAppender logAppender;
     private SegmentedLogsConsumer consumer;
 
-    @Before
+    @BeforeEach
     public void init() {
         this.logAppender = mock(LogAppender.class);
         consumer = new SegmentedLogsConsumer(UUID.randomUUID(), logAppender);
