@@ -34,15 +34,10 @@ import javax.annotation.Nullable;
 @JsonDeserialize(as = ImmutableLoggingConfiguration.class)
 public interface LoggingConfiguration {
 
-    /**
-     * Absolute path to the directory with segmented logs.
-     * If {@code null} then the runtime is not going to use segmented
-     * log files and logs will be redirected to stdout.
-     *
-     * @apiNote only for the runtime v2.
-     */
-    @Nullable
-    String segmentedLogDir();
+    @Value.Default
+    default boolean segmentedLogs() {
+        return true;
+    }
 
     /**
      * If {@code true} {@code System.out} and {@code System.err} will be
@@ -50,7 +45,7 @@ public interface LoggingConfiguration {
      * <p/>
      * Default is {@code true}.
      * <p/>
-     * Requires {@link #segmentedLogDir()}.
+     * Requires {@link #segmentedLogs()}.
      *
      * @apiNote only for the runtime v2. Not applicable for the CLI version
      * of the runner.

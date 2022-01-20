@@ -39,7 +39,7 @@ public class TaskHolder<T> {
         Class<T> old = classes.put(key, value);
         if (old != null) {
             throw new IllegalStateException("Non-unique task name: " + key + ". " +
-                    "Another task with the same name: " + old.getName());
+                    "Another task with the same name: old: " + old.getName() + ", new: " + value.getName());
         }
     }
 
