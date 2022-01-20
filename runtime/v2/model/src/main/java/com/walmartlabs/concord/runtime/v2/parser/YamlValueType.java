@@ -54,6 +54,7 @@ public final class YamlValueType<T> {
     public static final YamlValueType<SuspendStep> SUSPEND = type("SUSPEND");
     public static final YamlValueType<ScriptCall> SCRIPT = type("SCRIPT");
     public static final YamlValueType<ImmutableScriptCallOptions.Builder> SCRIPT_CALL_IN = type("OBJECT or EXPRESSION");
+    public static final YamlValueType<ImmutableScriptCallOptions.Builder> SCRIPT_CALL_OUT = type("STRING or OBJECT");
     public static final YamlValueType<Expression> EXPRESSION = type("EXPRESSION");
     public static final YamlValueType<String> EXPRESSION_VAL = type("EXPRESSION");
     public static final YamlValueType<Retry> RETRY = type("RETRY");

@@ -437,6 +437,9 @@ public class YamlOkParserTest extends AbstractParserTest {
         input.put("k", "v1");
         assertEquals(input, t.getOptions().input());
 
+        // out
+        assertEquals("result", t.getOptions().out());
+
         // retry
         assertNotNull(t.getOptions().retry());
         assertEquals(1, t.getOptions().retry().times());

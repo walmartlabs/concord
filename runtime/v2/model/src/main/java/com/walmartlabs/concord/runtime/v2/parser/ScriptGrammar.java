@@ -38,11 +38,16 @@ public final class ScriptGrammar {
         return orError(or(maybeMap.map(o::input), maybeExpression.map(o::inputExpression)), YamlValueType.SCRIPT_CALL_IN);
     }
 
+    private static Parser<Atom, ImmutableScriptCallOptions.Builder> scriptCallOutOption(ImmutableScriptCallOptions.Builder o) {
+        return orError(or(maybeMap.map(o::outExpr), maybeString.map(o::out)), YamlValueType.SCRIPT_CALL_OUT);
+    }
+
     private static Parser<Atom, ScriptCallOptions> scriptOptions(String stepName) {
         return with(() -> optionsBuilder(stepName),
                 o -> options(
                         optional("body", stringVal.map(o::body)),
                         optional("in", scriptCallInOption(o)),
+                        optional("out", scriptCallOutOption(o)),
                         optional("meta", mapVal.map(o::meta)),
                         optional("name", stringVal.map(v -> o.putMeta(Constants.SEGMENT_NAME, v))),
                         optional("withItems", nonNullVal.map(v -> o.withItems(WithItems.of(v, WithItems.Mode.SERIAL)))),
