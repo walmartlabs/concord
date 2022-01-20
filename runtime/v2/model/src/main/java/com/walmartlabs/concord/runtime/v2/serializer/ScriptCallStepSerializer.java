@@ -67,6 +67,9 @@ public class ScriptCallStepSerializer extends StdSerializer<ScriptCall> {
         writeNotEmptyObjectField("in", options.input(), gen);
         writeNotEmptyObjectField("in", options.inputExpression(), gen);
 
+        writeNotEmptyObjectField("out", options.out(), gen);
+        writeNotEmptyObjectField("out", options.outExpr(), gen);
+
         if (options.withItems() != null) {
             WithItems items = Objects.requireNonNull(options.withItems());
             writeWithItems(items, gen);

@@ -26,7 +26,9 @@ import com.walmartlabs.concord.runtime.v2.runner.ResourceResolver;
 import com.walmartlabs.concord.runtime.v2.runner.el.EvalContextFactory;
 import com.walmartlabs.concord.runtime.v2.runner.el.ExpressionEvaluator;
 import com.walmartlabs.concord.runtime.v2.runner.script.ScriptEvaluator;
+import com.walmartlabs.concord.runtime.v2.runner.script.ScriptResult;
 import com.walmartlabs.concord.runtime.v2.sdk.Context;
+import com.walmartlabs.concord.runtime.v2.sdk.TaskResult;
 import com.walmartlabs.concord.svm.Runtime;
 import com.walmartlabs.concord.svm.State;
 import com.walmartlabs.concord.svm.ThreadId;
@@ -34,6 +36,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.*;
+import java.util.Collections;
 import java.util.Map;
 import java.util.Objects;
 
@@ -67,8 +70,9 @@ public class ScriptCallCommand extends StepCommand<ScriptCall> {
         String language = getLanguage(expressionEvaluator, scriptEvaluator, ctx, call);
         Reader content = getContent(expressionEvaluator, resourceResolver, ctx, call);
 
+        ScriptResult scriptResult;
         try {
-            scriptEvaluator.eval(ctx, language, content, input);
+            scriptResult = scriptEvaluator.eval(ctx, language, content, input);
         } finally {
             try {
                 content.close();
@@ -77,6 +81,8 @@ public class ScriptCallCommand extends StepCommand<ScriptCall> {
                 log.warn("Error while closing the script's reader: {}", e.getMessage() + ". This is most likely a bug.");
             }
         }
+
+        OutputUtils.process(runtime, ctx, scriptResult.items(), opts.out(), opts.outExpr());
     }
 
     @Override

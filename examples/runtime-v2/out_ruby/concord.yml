@@ -1,0 +1,21 @@
+configuration:
+  runtime: "concord-v2"
+  dependencies:
+  - "mvn://org.jruby:jruby:9.1.13.0"
+
+flows:
+  default:
+  - script: ruby
+    body: |
+      $result.set("myVar", "myValue");
+    out: scriptResult
+
+  - log: "result: ${scriptResult}"    # result: {myVar=myValue}
+
+  - script: ruby
+    body: |
+      $result.set("myVar", "myValue");
+    out:
+      myVar: ${result.myVar}
+
+  - log: "myVar: ${myVar}"    # myVar: myValue

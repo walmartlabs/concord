@@ -59,17 +59,18 @@ public class DefaultScriptEvaluator implements ScriptEvaluator {
     }
 
     @Override
-    public void eval(Context context, String language, Reader input, Map<String, Object> variables) {
+    public ScriptResult eval(Context context, String language, Reader input, Map<String, Object> variables) {
         ScriptEngine engine = getEngine(language);
 
         if (engine == null) {
             throw new RuntimeException("Script engine not found: " + language);
         }
 
-        ScriptContext ctx = new ScriptContext(context);
         Bindings b = engine.createBindings();
         b.put("polyglot.js.allowAllAccess", true);
 
+        ScriptResult scriptResult = new ScriptResult();
+        ScriptContext ctx = new ScriptContext(context);
         for (String ctxVar: CONTEXT_VARIABLE_NAMES) {
             b.put(ctxVar, ctx);
         }
@@ -77,9 +78,11 @@ public class DefaultScriptEvaluator implements ScriptEvaluator {
         b.put("log", log);
         b.putAll(context.variables().toMap());
         b.putAll(variables);
+        b.put("result", scriptResult);
 
         try {
             engine.eval(input, b);
+            return scriptResult;
         } catch (ScriptException e) {
             if (e.getCause() instanceof PolyglotException) {
                 throw new RuntimeException(e.getCause().getMessage());
@@ -114,7 +117,6 @@ public class DefaultScriptEvaluator implements ScriptEvaluator {
 
     @SuppressWarnings({"rawtypes", "unchecked"})
     private ScriptEngine getEngine(String language) {
-        // Javascript array is converted in Java to an empty map #214 (https://github.com/oracle/graaljs/issues/214)
         if (new GraalJSEngineFactory().getNames().contains(language)) {
             // Javascript array is converted in Java to an empty map #214 (https://github.com/oracle/graaljs/issues/214)
             HostAccess access = HostAccess.newBuilder(HostAccess.ALL)

@@ -1,0 +1,22 @@
+configuration:
+  runtime: "concord-v2"
+  dependencies:
+  - "mvn://org.codehaus.groovy:groovy-all:pom:2.5.8"
+
+flows:
+  default:
+  - script: groovy
+    body: |
+      result.set("myVar", "myValue");
+    out: scriptResult
+
+  - log: "result: ${scriptResult}"    # result: {myVar=myValue}
+
+  - script: groovy
+    body: |
+      result.set("myVar", "myValue");
+    out:
+      myVar: ${result.myVar}
+
+  - log: "myVar: ${myVar}"    # myVar: myValue
+
