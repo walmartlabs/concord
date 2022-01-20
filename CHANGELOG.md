@@ -40,7 +40,9 @@ the same names as task names to avoid conflicts
 - runtime-v2: update JSON schema generation for `ignoreErrors`
 params ([#536](https://github.com/walmartlabs/concord/pull/536));
 - project: add missing `serialVersionUUID` fields to model
-classes ([#537](https://github.com/walmartlabs/concord/pull/537)).
+classes ([#537](https://github.com/walmartlabs/concord/pull/537));
+- runtime-v2: support for `out` parameters of `script` steps
+([#540](https://github.com/walmartlabs/concord/pull/540)).
 
 
 
