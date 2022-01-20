@@ -19,6 +19,8 @@ parameter ([#522](https://github.com/walmartlabs/concord/pull/522));
 
 - runtime-v2: disable GraalVM runtime compilation warning,
 fix logging ([#517](https://github.com/walmartlabs/concord/pull/517));
+- runtime-v2: use stdout instead of files for logging
+([#518](https://github.com/walmartlabs/concord/pull/518));
 - concord-server, runtime-v2: fix for empty exclusive group
 values ([#519](https://github.com/walmartlabs/concord/pull/519);
 - concord-server, lock-tasks: avoid creating a wait
