@@ -42,4 +42,8 @@ public interface LogSegmentStats {
 
     @Nullable
     Integer warnings();
+
+    static ImmutableLogSegmentStats.Builder builder() {
+        return ImmutableLogSegmentStats.builder();
+    }
 }

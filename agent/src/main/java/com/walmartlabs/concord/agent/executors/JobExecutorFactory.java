@@ -124,7 +124,6 @@ public class JobExecutorFactory {
                     .exposeDockerDaemon(dockerCfg.exposeDockerDaemon())
                     .maxHeartbeatInterval(serverCfg.getMaxNoHeartbeatInterval())
                     .segmentedLogs(segmentedLogs)
-                    .logDir(agentCfg.getLogDir())
                     .persistentWorkDir(runnerCfg.getPersistentWorkDir())
                     .preforkEnabled(preForkCfg.isEnabled())
                     .build();
