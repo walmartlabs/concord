@@ -28,6 +28,8 @@ condition on each lock aquisition attempt
 ([#521](https://github.com/walmartlabs/concord/pull/521));
 - concord-agent: log artifact download errors into process
 log ([#523](https://github.com/walmartlabs/concord/pull/523));
+- project: migrate to JUnit 5
+([#528](https://github.com/walmartlabs/concord/pull/528));
 - runtime-v1: remove variables from default vars with
 the same names as task names to avoid conflicts
 ([#529](https://github.com/walmartlabs/concord/pull/529));
@@ -45,7 +47,7 @@ classes ([#537](https://github.com/walmartlabs/concord/pull/537));
 system log segment
 ([#539](https://github.com/walmartlabs/concord/pull/539));
 - runtime-v2: support for `out` parameters of `script` steps
-([#540](https://github.com/walmartlabs/concord/pull/540));
+([#540](https://github.com/walmartlabs/concord/pull/540)).
 
 
 
