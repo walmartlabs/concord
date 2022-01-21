@@ -22,20 +22,15 @@ package com.walmartlabs.concord.it.runtime.v2;
 
 import ca.ibodrov.concord.testcontainers.ConcordProcess;
 import ca.ibodrov.concord.testcontainers.ProcessListQuery;
-import ca.ibodrov.concord.testcontainers.junit4.ConcordRule;
+import ca.ibodrov.concord.testcontainers.junit5.ConcordRule;
 import com.google.common.collect.ImmutableMap;
 import com.walmartlabs.concord.ApiClient;
-import com.walmartlabs.concord.client.GitHubEventsApi;
-import com.walmartlabs.concord.client.ProcessEntry;
-import com.walmartlabs.concord.client.ProjectEntry;
-import com.walmartlabs.concord.client.ProjectsApi;
-import com.walmartlabs.concord.client.RepositoriesApi;
-import com.walmartlabs.concord.client.RepositoryEntry;
+import com.walmartlabs.concord.client.*;
 import com.walmartlabs.concord.it.common.GitHubUtils;
 import com.walmartlabs.concord.it.common.GitUtils;
 import com.walmartlabs.concord.it.common.ITUtils;
-import org.junit.ClassRule;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -44,12 +39,11 @@ import java.time.temporal.ChronoUnit;
 import java.util.List;
 
 import static com.walmartlabs.concord.it.common.ITUtils.randomString;
-import static com.walmartlabs.concord.it.runtime.v2.ITConstants.DEFAULT_TEST_TIMEOUT;
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
-public class GitHubTriggersV2IT {
+public class GitHubTriggersV2IT extends AbstractTest {
 
-    @ClassRule
+    @RegisterExtension
     public static final ConcordRule concord = ConcordConfiguration.configure();
 
     /**
@@ -69,7 +63,7 @@ public class GitHubTriggersV2IT {
      *       entryPoint: onPush
      * </pre>
      */
-    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    @Test
     public void testFilterBySender() throws Exception {
         String orgXName = "orgX_" + randomString();
         concord.organizations().create(orgXName);
@@ -126,7 +120,7 @@ public class GitHubTriggersV2IT {
         expectNoProcesses(orgXName, projectAName, now);
     }
 
-    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    @Test
     public void testOnPushWithFullTriggerParams() throws Exception {
         String orgXName = "orgX_" + randomString();
         concord.organizations().create(orgXName);
@@ -150,7 +144,7 @@ public class GitHubTriggersV2IT {
         waitForAProcess(orgXName, projectAName, "github");
     }
 
-    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    @Test
     public void testOnPushWithUseEventCommitId() throws Exception {
         //
         Path repo = initRepo("triggers/github/repos/v2/useEventCommitIdTrigger");
@@ -182,7 +176,7 @@ public class GitHubTriggersV2IT {
         process.assertLog(".*onPush: .*" + commitId + ".*");
     }
 
-    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    @Test
     public void testOnPushWithFilesCondition() throws Exception {
         String orgXName = "orgX_" + randomString();
         concord.organizations().create(orgXName);
@@ -206,13 +200,13 @@ public class GitHubTriggersV2IT {
         waitForAProcess(orgXName, projectAName, "github");
     }
 
-    private static Path initRepo(String resource) throws Exception {
-        Path src = Paths.get(GitHubTriggersV2IT.class.getResource(resource).toURI());
+    private Path initRepo(String resource) throws Exception {
+        Path src = Paths.get(resource(resource));
         return GitUtils.createBareRepository(src, concord.sharedContainerDir());
     }
 
-    private static String createNewBranch(Path bareRepo, String branch, String resource) throws Exception {
-        Path src = Paths.get(GitHubTriggersV2IT.class.getResource(resource).toURI());
+    private String createNewBranch(Path bareRepo, String branch, String resource) throws Exception {
+        Path src = Paths.get(resource(resource));
         return GitUtils.createNewBranch(bareRepo, branch, src);
     }
 

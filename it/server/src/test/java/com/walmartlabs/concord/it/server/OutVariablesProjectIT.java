@@ -23,19 +23,17 @@ package com.walmartlabs.concord.it.server;
 import com.walmartlabs.concord.ApiException;
 import com.walmartlabs.concord.client.ProjectEntry;
 import com.walmartlabs.concord.client.ProjectsApi;
-import com.walmartlabs.concord.client.StartProcessResponse;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
 import static com.walmartlabs.concord.it.common.ITUtils.archive;
-import static org.junit.Assert.fail;
+import static org.junit.jupiter.api.Assertions.fail;
 
 public class OutVariablesProjectIT extends AbstractServerIT {
 
-    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    @Test
     public void testReject() throws Exception {
         ProjectsApi projectsApi = new ProjectsApi(getApiClient());
 

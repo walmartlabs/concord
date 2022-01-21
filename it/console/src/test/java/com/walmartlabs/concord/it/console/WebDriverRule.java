@@ -20,9 +20,10 @@ package com.walmartlabs.concord.it.console;
  * =====
  */
 
-import org.junit.rules.TestRule;
-import org.junit.runner.Description;
-import org.junit.runners.model.Statement;
+import org.junit.jupiter.api.extension.AfterEachCallback;
+import org.junit.jupiter.api.extension.BeforeEachCallback;
+import org.junit.jupiter.api.extension.ExtensionContext;
+import org.junit.jupiter.api.extension.TestExecutionExceptionHandler;
 import org.openqa.selenium.OutputType;
 import org.openqa.selenium.TakesScreenshot;
 import org.openqa.selenium.WebDriver;
@@ -48,7 +49,7 @@ import java.util.logging.Level;
 
 import static com.walmartlabs.concord.it.console.Utils.env;
 
-public class WebDriverRule implements TestRule {
+public class WebDriverRule implements BeforeEachCallback, TestExecutionExceptionHandler, AfterEachCallback {
 
     private static final Logger log = LoggerFactory.getLogger(WebDriverRule.class);
 
@@ -97,13 +98,13 @@ public class WebDriverRule implements TestRule {
         driver.quit();
     }
 
-    private void takeScreenshot(Description d) throws IOException {
+    private void takeScreenshot(ExtensionContext context) throws IOException {
         File src = ((TakesScreenshot) driver).getScreenshotAs(OutputType.FILE);
 
         Path dstDir = Paths.get(screenshotsDir);
         Files.createDirectories(dstDir);
 
-        String fileName = d.getTestClass().getName() + "-" + d.getMethodName() + ".png";
+        String fileName = context.getTestClass().get().getName() + context.getTestMethod().get().getName() + ".png";
         Path dst = dstDir.resolve(fileName);
 
         Files.copy(src.toPath(), dst, StandardCopyOption.REPLACE_EXISTING);
@@ -112,20 +113,18 @@ public class WebDriverRule implements TestRule {
     }
 
     @Override
-    public Statement apply(Statement base, Description description) {
-        return new Statement() {
-            @Override
-            public void evaluate() throws Throwable {
-                setUp();
-                try {
-                    base.evaluate();
-                } catch (Throwable t) {
-                    takeScreenshot(description);
-                    throw t;
-                } finally {
-                    tearDown();
-                }
-            }
-        };
+    public void beforeEach(ExtensionContext context) throws Exception {
+        setUp();
+    }
+
+    @Override
+    public void afterEach(ExtensionContext context) throws Exception {
+        tearDown();
+    }
+
+    @Override
+    public void handleTestExecutionException(ExtensionContext context, Throwable throwable) throws Throwable {
+        takeScreenshot(context);
+        throw throwable;
     }
 }

@@ -24,9 +24,9 @@ import com.walmartlabs.concord.client.*;
 import com.walmartlabs.concord.common.IOUtils;
 import com.walmartlabs.concord.it.common.MockGitSshServer;
 import org.eclipse.jgit.api.Git;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -36,13 +36,13 @@ import java.util.Map;
 
 import static com.walmartlabs.concord.it.common.ServerClient.assertLog;
 import static com.walmartlabs.concord.it.common.ServerClient.waitForCompletion;
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class GitRepositoryIT extends AbstractServerIT {
 
     private MockGitSshServer gitServer;
 
-    @Before
+    @BeforeEach
     public void setUp() throws Exception {
         Path bareRepo = createTempDir();
         Git.init().setBare(true).setDirectory(bareRepo.toFile()).call();
@@ -65,12 +65,12 @@ public class GitRepositoryIT extends AbstractServerIT {
         gitServer.start();
     }
 
-    @After
+    @AfterEach
     public void tearDown() throws Exception {
         gitServer.stop();
     }
 
-    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    @Test
     public void testGitUrlWithDifferentUser() throws Exception {
         String orgName = "Default";
         String projectName = "project_" + randomString();

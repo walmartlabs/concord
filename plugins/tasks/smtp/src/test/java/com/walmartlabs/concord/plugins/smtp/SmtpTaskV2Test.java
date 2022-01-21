@@ -20,13 +20,13 @@ package com.walmartlabs.concord.plugins.smtp;
  * =====
  */
 
-import com.icegreen.greenmail.junit.GreenMailRule;
+import com.icegreen.greenmail.junit5.GreenMailExtension;
 import com.icegreen.greenmail.util.ServerSetupTest;
 import com.walmartlabs.concord.runtime.v2.sdk.Context;
 import com.walmartlabs.concord.runtime.v2.sdk.MapBackedVariables;
-import org.junit.After;
-import org.junit.Rule;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
 import javax.mail.internet.MimeMessage;
 import java.nio.file.Paths;
@@ -34,16 +34,16 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 public class SmtpTaskV2Test {
 
-    @Rule
-    public final GreenMailRule mailServer = new GreenMailRule(ServerSetupTest.SMTP);
+    @RegisterExtension
+    GreenMailExtension mailServer = new GreenMailExtension(ServerSetupTest.SMTP);
 
-    @After
+    @AfterEach
     public void cleanup() {
         mailServer.reset();
     }

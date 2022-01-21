@@ -26,7 +26,8 @@ import com.walmartlabs.concord.client.SecretOperationResponse;
 import com.walmartlabs.concord.client.StartProcessResponse;
 import com.walmartlabs.concord.it.common.ITUtils;
 import com.walmartlabs.concord.it.common.ServerClient;
-import org.junit.Before;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Timeout;
 
 import java.io.*;
 import java.nio.file.Files;
@@ -35,14 +36,18 @@ import java.nio.file.attribute.PosixFilePermissions;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
+import static com.walmartlabs.concord.it.server.AbstractServerIT.DEFAULT_TEST_TIMEOUT;
+
+@Timeout(value = DEFAULT_TEST_TIMEOUT, unit = TimeUnit.MILLISECONDS)
 public abstract class AbstractServerIT {
 
-    protected static final long DEFAULT_TEST_TIMEOUT = 120000;
+    public static final long DEFAULT_TEST_TIMEOUT = 120000;
 
     private ServerClient serverClient;
 
-    @Before
+    @BeforeEach
     public void _init() {
         serverClient = new ServerClient(ITConstants.SERVER_URL);
     }

@@ -24,7 +24,7 @@ import com.walmartlabs.concord.client.*;
 import com.walmartlabs.concord.client.ProcessEntry.StatusEnum;
 import com.walmartlabs.concord.common.IOUtils;
 import org.eclipse.jgit.api.Git;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.io.File;
 import java.net.URL;
@@ -38,7 +38,7 @@ import static com.walmartlabs.concord.it.common.ServerClient.assertLog;
 
 public class TriggerIT extends AbstractServerIT {
 
-    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    @Test
     public void testTriggerProcessStartupFailure() throws Exception {
         String orgName = "org_" + randomString();
         String projectAName = "projectA_" + randomString();
@@ -69,7 +69,7 @@ public class TriggerIT extends AbstractServerIT {
         waitForProcs(porB.getId(), 1, StatusEnum.FINISHED);
     }
 
-    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    @Test
     public void testTriggerProfiles() throws Exception {
         String orgName = "org_" + randomString();
         String projectName = "project_" + randomString();

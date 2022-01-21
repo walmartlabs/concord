@@ -23,18 +23,18 @@ package com.walmartlabs.concord.it.server;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.walmartlabs.concord.client.ProcessApi;
 import com.walmartlabs.concord.client.StartProcessResponse;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.io.File;
 import java.util.*;
 
 import static com.walmartlabs.concord.it.common.ITUtils.archive;
 import static com.walmartlabs.concord.it.common.ServerClient.waitForCompletion;
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class OutVariablesIT extends AbstractServerIT {
 
-    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    @Test
     public void test() throws Exception {
         byte[] payload = archive(ProcessIT.class.getResource("out").toURI());
         String[] out = {"x", "y.some.boolean", "z"};
@@ -52,7 +52,7 @@ public class OutVariablesIT extends AbstractServerIT {
         assertFalse(data.containsKey("z"));
     }
 
-    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    @Test
     public void testPredefined() throws Exception {
         byte[] payload = archive(ProcessIT.class.getResource("out").toURI());
 

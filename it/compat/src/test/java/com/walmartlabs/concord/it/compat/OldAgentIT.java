@@ -22,20 +22,24 @@ package com.walmartlabs.concord.it.compat;
 
 import ca.ibodrov.concord.testcontainers.ConcordProcess;
 import ca.ibodrov.concord.testcontainers.Payload;
-import ca.ibodrov.concord.testcontainers.junit4.ConcordRule;
+import ca.ibodrov.concord.testcontainers.junit5.ConcordRule;
 import com.walmartlabs.concord.client.ProcessEntry;
-import org.junit.Rule;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.Timeout;
+import org.junit.jupiter.api.extension.RegisterExtension;
 import org.testcontainers.images.PullPolicy;
+
+import java.util.concurrent.TimeUnit;
 
 import static com.walmartlabs.concord.it.compat.ITConstants.DEFAULT_TEST_TIMEOUT;
 
 /**
  * Runs an older version of the Agent with the current version of the Server.
  */
+@Timeout(value = DEFAULT_TEST_TIMEOUT, unit = TimeUnit.MILLISECONDS)
 public class OldAgentIT {
 
-    @Rule
+    @RegisterExtension
     public final ConcordRule concord = new ConcordRule()
             .serverImage(System.getProperty("server.image", "walmartlabs/concord-server"))
             .agentImage(System.getProperty("agent.image", "walmartlabs/concord-agent"))
@@ -43,7 +47,7 @@ public class OldAgentIT {
             .streamServerLogs(true)
             .streamAgentLogs(true);
 
-    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    @Test
     public void test() throws Exception {
         String concordYml = "flows:\n" +
                 "  default:\n" +

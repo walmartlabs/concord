@@ -9,9 +9,9 @@ package com.walmartlabs.concord.it.runtime.v2;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -22,33 +22,30 @@ package com.walmartlabs.concord.it.runtime.v2;
 
 import ca.ibodrov.concord.testcontainers.ConcordProcess;
 import ca.ibodrov.concord.testcontainers.Payload;
-import ca.ibodrov.concord.testcontainers.junit4.ConcordRule;
+import ca.ibodrov.concord.testcontainers.junit5.ConcordRule;
 import com.walmartlabs.concord.client.ProcessEntry;
 import com.walmartlabs.concord.client.ProcessEventEntry;
 import com.walmartlabs.concord.client.ProcessEventsApi;
-import org.junit.ClassRule;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
 import java.util.*;
 import java.util.stream.Collectors;
 
-import static com.walmartlabs.concord.it.runtime.v2.ITConstants.DEFAULT_TEST_TIMEOUT;
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
-public class FlowEventsIT {
+public class FlowEventsIT extends AbstractTest {
 
-    @ClassRule
+    @RegisterExtension
     public static final ConcordRule concord = ConcordConfiguration.configure();
 
-    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    @Test
     public void test() throws Exception {
         Payload payload = new Payload()
-                .archive(FlowEventsIT.class.getResource("flowEvents").toURI());
+                .archive(resource("flowEvents"));
 
         ConcordProcess proc = concord.processes().start(payload);
-
-        ProcessEntry pe = proc.waitForStatus(ProcessEntry.StatusEnum.FINISHED);
-        assertEquals(ProcessEntry.StatusEnum.FINISHED, pe.getStatus());
+        expectStatus(proc, ProcessEntry.StatusEnum.FINISHED);
 
         // ---
 
@@ -192,13 +189,13 @@ public class FlowEventsIT {
 
         Set<String> toIntKeys = new HashSet<>(Arrays.asList("line", "column"));
         Map<String, Object> actual = events.get(index).getData().entrySet().stream()
-            .map(e -> {
-                if (toIntKeys.contains(e.getKey())) {
-                    return new AbstractMap.SimpleEntry<>(e.getKey(), ((Number)e.getValue()).intValue());
-                }
-                return e;
-            })
-            .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+                .map(e -> {
+                    if (toIntKeys.contains(e.getKey())) {
+                        return new AbstractMap.SimpleEntry<>(e.getKey(), ((Number) e.getValue()).intValue());
+                    }
+                    return e;
+                })
+                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
 
         assertEquals(expected, actual);
     }

@@ -23,7 +23,7 @@ package com.walmartlabs.concord.it.server;
 import com.walmartlabs.concord.client.*;
 import com.walmartlabs.concord.common.IOUtils;
 import org.eclipse.jgit.api.Git;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.io.File;
 import java.nio.file.Path;
@@ -33,12 +33,12 @@ import java.util.List;
 import java.util.Set;
 
 import static com.walmartlabs.concord.common.IOUtils.grep;
-import static org.junit.Assert.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
 
 public class CronIT extends AbstractServerIT {
 
     // we need extra time for cron to fire up the processes
-    @Test(timeout = DEFAULT_TEST_TIMEOUT * 2)
+    @Test
     public void testProfiles() throws Exception {
         Path tmpDir = createTempDir();
 

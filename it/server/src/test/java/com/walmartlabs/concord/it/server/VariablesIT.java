@@ -22,7 +22,7 @@ package com.walmartlabs.concord.it.server;
 
 import com.google.common.collect.ImmutableMap;
 import com.walmartlabs.concord.client.*;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -33,7 +33,7 @@ import static com.walmartlabs.concord.it.common.ServerClient.waitForCompletion;
 
 public class VariablesIT extends AbstractServerIT {
 
-    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    @Test
     public void test() throws Exception {
         String orgName = "Default";
         String projectName = "project_" + randomString();
@@ -71,7 +71,7 @@ public class VariablesIT extends AbstractServerIT {
         assertLog(".*var1=var1-value.*", ab);
     }
 
-    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    @Test
     public void testCrypto() throws Exception {
         String orgName = "Default";
         String projectName = "project_" + randomString();
@@ -106,7 +106,7 @@ public class VariablesIT extends AbstractServerIT {
         assertLog(".*" + secretValue + ".*", ab);
     }
 
-    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    @Test
     public void testArrayInterpolation() throws Exception {
         String varA = "varA_" + System.currentTimeMillis();
         String varB = "varB_" + System.currentTimeMillis();
@@ -135,7 +135,7 @@ public class VariablesIT extends AbstractServerIT {
         assertLog(".*" + varA + ".*" + varB + ".*", ab);
     }
 
-    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    @Test
     public void testSetVar() throws Exception {
         byte[] payload = archive(VariablesIT.class.getResource("setVar").toURI(),
                 ITConstants.DEPENDENCIES_DIR);
@@ -154,7 +154,7 @@ public class VariablesIT extends AbstractServerIT {
         assertLog(".*nested\\.var: nested\\.var.*", ab);
     }
 
-    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    @Test
     public void testGetNestedVar() throws Exception {
         byte[] payload = archive(VariablesIT.class.getResource("getVar").toURI(),
                 ITConstants.DEPENDENCIES_DIR);
@@ -174,7 +174,7 @@ public class VariablesIT extends AbstractServerIT {
         assertLog(".*defaultValueFromUnknown: 102$", ab);
     }
 
-    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    @Test
     public void testSetDependentVars() throws Exception {
         byte[] payload = archive(VariablesIT.class.getResource("setVarNested").toURI(),
                 ITConstants.DEPENDENCIES_DIR);
@@ -195,7 +195,7 @@ public class VariablesIT extends AbstractServerIT {
         assertLog(".*obj.msg: Hello, Concord$", ab);
     }
 
-    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    @Test
     public void testSetDependentVars2() throws Exception {
         byte[] payload = archive(VariablesIT.class.getResource("setVarNested2").toURI(),
                 ITConstants.DEPENDENCIES_DIR);

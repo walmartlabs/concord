@@ -20,49 +20,55 @@ package com.walmartlabs.concord.dependencymanager;
  * =====
  */
 
-import org.junit.Ignore;
-import org.junit.Test;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
 
 import java.net.URI;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.time.Duration;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.*;
 
-@Ignore
+@Disabled
 public class DependencyManagerTest {
 
-    @Test(timeout = 30000)
+    @Test
     public void test() throws Exception {
-        Path tmpDir = Files.createTempDirectory("test");
-        URI uriA = new URI("mvn://com.walmartlabs.concord:concord-policy-engine:1.44.0?scope=runtime");
-        URI uriB = new URI("mvn://com.walmartlabs.concord:concord-policy-engine:1.43.0?scope=runtime");
+        assertTimeout(Duration.ofMillis(30000), () -> {
+            Path tmpDir = Files.createTempDirectory("test");
+            URI uriA = new URI("mvn://com.walmartlabs.concord:concord-policy-engine:1.44.0?scope=runtime");
+            URI uriB = new URI("mvn://com.walmartlabs.concord:concord-policy-engine:1.43.0?scope=runtime");
 
-        DependencyManager m = new DependencyManager(DependencyManagerConfiguration.of(tmpDir));
-        Collection<DependencyEntity> paths = m.resolve(Arrays.asList(uriA, uriB));
-        assertEquals(46, paths.size());
+            DependencyManager m = new DependencyManager(DependencyManagerConfiguration.of(tmpDir));
+            Collection<DependencyEntity> paths = m.resolve(Arrays.asList(uriA, uriB));
+            assertEquals(46, paths.size());
+        });
     }
 
-    @Test(timeout = 30000)
-    public void testProxy() throws Exception {
-        Path tmpDir = Files.createTempDirectory("test");
+    @Disabled
+    @Test
+    public void testProxy() {
+        assertTimeout(Duration.ofMillis(30000), () -> {
+            Path tmpDir = Files.createTempDirectory("test");
 
-        List<MavenRepository> repositories = Collections.singletonList(
-                MavenRepository.builder()
-                        .id("test")
-                        .url("https://repo.maven.apache.org/maven2/")
-                        .proxy(MavenProxy.builder()
-                                .host("localhost")
-                                .port(3128)
-                                .build())
-                        .build()
-        );
+            List<MavenRepository> repositories = Collections.singletonList(
+                    MavenRepository.builder()
+                            .id("test")
+                            .url("https://repo.maven.apache.org/maven2/")
+                            .proxy(MavenProxy.builder()
+                                    .host("localhost")
+                                    .port(3128)
+                                    .build())
+                            .build()
+            );
 
-        DependencyManager m = new DependencyManager(DependencyManagerConfiguration.of(tmpDir, repositories));
-        m.resolveSingle(new URI("mvn://com.walmartlabs.concord:concord-sdk:1.54.0"));
+            DependencyManager m = new DependencyManager(DependencyManagerConfiguration.of(tmpDir, repositories));
+            m.resolveSingle(new URI("mvn://com.walmartlabs.concord:concord-sdk:1.54.0"));
+        });
     }
 }

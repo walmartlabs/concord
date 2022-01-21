@@ -22,7 +22,7 @@ package com.walmartlabs.concord.agent.executors.runner;
 
 import com.google.common.primitives.Bytes;
 import com.walmartlabs.concord.agent.logging.SegmentHeaderParser;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -31,7 +31,7 @@ import java.util.List;
 import static com.walmartlabs.concord.agent.logging.SegmentHeaderParser.Header;
 import static com.walmartlabs.concord.agent.logging.SegmentHeaderParser.Position;
 import static com.walmartlabs.concord.agent.logging.SegmentHeaderParser.Segment;
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class SegmentHeaderParserTest {
 

@@ -25,10 +25,10 @@ import com.walmartlabs.concord.client.CreateUserRequest;
 import com.walmartlabs.concord.client.ProjectEntry;
 import com.walmartlabs.concord.client.ProjectsApi;
 import com.walmartlabs.concord.client.UsersApi;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
 
 public class ValidationIT extends AbstractServerIT {
 

@@ -1,10 +1,10 @@
-package com.walmartlabs.concord.it.server;
+package com.walmartlabs.concord.it.console;
 
 /*-
  * *****
  * Concord
  * -----
- * Copyright (C) 2017 - 2018 Walmart Inc.
+ * Copyright (C) 2017 - 2021 Walmart Inc.
  * -----
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,13 +20,10 @@ package com.walmartlabs.concord.it.server;
  * =====
  */
 
-import com.googlecode.junittoolbox.ParallelSuite;
-import com.googlecode.junittoolbox.SuiteClasses;
-import org.junit.Ignore;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.Timeout;
 
-@Ignore
-@RunWith(ParallelSuite.class)
-@SuiteClasses("**/*IT.class")
-public class AllTests {
+import java.util.concurrent.TimeUnit;
+
+@Timeout(value = 5000, unit = TimeUnit.MILLISECONDS)
+public abstract class Base {
 }
