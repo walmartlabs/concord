@@ -23,14 +23,14 @@ package com.walmartlabs.concord.it.server;
 import com.walmartlabs.concord.client.ProcessApi;
 import com.walmartlabs.concord.client.ProcessEntry;
 import com.walmartlabs.concord.client.StartProcessResponse;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.util.HashMap;
 import java.util.Map;
 
 import static com.walmartlabs.concord.it.common.ITUtils.archive;
 import static com.walmartlabs.concord.it.common.ServerClient.*;
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class PublicFlowsIT extends AbstractServerIT {
 
@@ -38,7 +38,7 @@ public class PublicFlowsIT extends AbstractServerIT {
      * Verifies that {@code publicFlow} values are merged across profiles
      * and a {@code publicFlow} from a profile can be used an the {@code entryPoint}
      */
-    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    @Test
     public void testProfiles() throws Exception {
         byte[] payload = archive(ProcessIT.class.getResource("publicFlowsInProfiles").toURI());
 

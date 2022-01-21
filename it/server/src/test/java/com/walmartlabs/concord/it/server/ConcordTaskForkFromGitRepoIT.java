@@ -23,9 +23,9 @@ package com.walmartlabs.concord.it.server;
 import com.walmartlabs.concord.client.*;
 import com.walmartlabs.concord.it.common.GitUtils;
 import com.walmartlabs.concord.it.common.MockGitSshServer;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -34,15 +34,15 @@ import java.util.Map;
 
 import static com.walmartlabs.concord.it.common.ServerClient.waitForCompletion;
 import static java.util.Collections.singletonMap;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 public class ConcordTaskForkFromGitRepoIT extends AbstractServerIT {
 
     private MockGitSshServer gitServer;
     private int gitPort;
 
-    @Before
+    @BeforeEach
     public void setUp() throws Exception {
         Path data = Paths.get(PortalIT.class.getResource("concordTaskFork").toURI());
         Path repo = GitUtils.createBareRepository(data);
@@ -53,12 +53,12 @@ public class ConcordTaskForkFromGitRepoIT extends AbstractServerIT {
         gitPort = gitServer.getPort();
     }
 
-    @After
+    @AfterEach
     public void tearDown() throws Exception {
         gitServer.stop();
     }
 
-    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    @Test
     public void testFork() throws Exception {
         String orgName = "Default";
 

@@ -23,45 +23,39 @@ package com.walmartlabs.concord.it.runtime.v2;
 import ca.ibodrov.concord.testcontainers.ConcordProcess;
 import ca.ibodrov.concord.testcontainers.Payload;
 import ca.ibodrov.concord.testcontainers.ProcessListQuery;
-import ca.ibodrov.concord.testcontainers.junit4.ConcordRule;
+import ca.ibodrov.concord.testcontainers.junit5.ConcordRule;
 import com.walmartlabs.concord.client.FormListEntry;
 import com.walmartlabs.concord.client.FormSubmitResponse;
 import com.walmartlabs.concord.client.ProcessCheckpointEntry;
 import com.walmartlabs.concord.client.ProcessEntry;
-import org.junit.ClassRule;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.net.URL;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import static com.walmartlabs.concord.it.common.ITUtils.randomString;
-import static com.walmartlabs.concord.it.runtime.v2.ITConstants.DEFAULT_TEST_TIMEOUT;
 import static com.walmartlabs.concord.it.runtime.v2.Utils.resourceToString;
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
-public class ProcessIT {
+public class ProcessIT extends AbstractTest {
 
-    @ClassRule
+    @RegisterExtension
     public static final ConcordRule concord = ConcordConfiguration.configure();
 
     /**
      * Argument passing.
      */
-    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    @Test
     public void testArgs() throws Exception {
         Payload payload = new Payload()
                 .archive(resource("args"))
                 .arg("name", "Concord");
 
         ConcordProcess proc = concord.processes().start(payload);
-
-        ProcessEntry pe = proc.waitForStatus(ProcessEntry.StatusEnum.FINISHED);
-        assertEquals(ProcessEntry.StatusEnum.FINISHED, pe.getStatus());
+        expectStatus(proc, ProcessEntry.StatusEnum.FINISHED);
 
         // ---
 
@@ -72,26 +66,23 @@ public class ProcessIT {
     /**
      * Groovy script execution.
      */
-    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    @Test
     public void testGroovyScripts() throws Exception {
         Payload payload = new Payload()
                 .archive(resource("scriptGroovy"))
                 .arg("name", "Concord");
 
         ConcordProcess proc = concord.processes().start(payload);
-
-        ProcessEntry pe = proc.waitForStatus(ProcessEntry.StatusEnum.FINISHED);
+        expectStatus(proc, ProcessEntry.StatusEnum.FINISHED);
 
         proc.assertLog(".*Runtime: concord-v2.*");
         proc.assertLog(".*log from script: 123.*");
-
-        assertEquals(ProcessEntry.StatusEnum.FINISHED, pe.getStatus());
     }
 
     /**
      * Test the process metadata.
      */
-    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    @Test
     public void testMetaUpdate() throws Exception {
         Payload payload = new Payload()
                 .archive(resource("meta"))
@@ -99,7 +90,7 @@ public class ProcessIT {
 
         ConcordProcess proc = concord.processes().start(payload);
 
-        ProcessEntry pe = proc.expectStatus(ProcessEntry.StatusEnum.SUSPENDED);
+        ProcessEntry pe = expectStatus(proc, ProcessEntry.StatusEnum.SUSPENDED);
 
         // ---
 
@@ -123,7 +114,7 @@ public class ProcessIT {
         FormSubmitResponse fsr = proc.submitForm(forms.get(0).getName(), data);
         assertTrue(fsr.isOk());
 
-        pe = proc.expectStatus(ProcessEntry.StatusEnum.FINISHED);
+        pe = expectStatus(proc, ProcessEntry.StatusEnum.FINISHED);
 
         // ---
 
@@ -139,7 +130,7 @@ public class ProcessIT {
     /**
      * Test the process metadata with exit step.
      */
-    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    @Test
     public void testMetaWithExit() throws Exception {
         Payload payload = new Payload()
                 .archive(resource("exitWithMeta"))
@@ -147,7 +138,7 @@ public class ProcessIT {
 
         ConcordProcess proc = concord.processes().start(payload);
 
-        ProcessEntry pe = proc.expectStatus(ProcessEntry.StatusEnum.FINISHED);
+        ProcessEntry pe = expectStatus(proc, ProcessEntry.StatusEnum.FINISHED);
 
         // ---
 
@@ -157,15 +148,14 @@ public class ProcessIT {
         assertEquals("init-value", pe.getMeta().get("test"));
     }
 
-    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    @Test
     public void testOutVariables() throws Exception {
         Payload payload = new Payload()
                 .archive(resource("out"))
                 .out("x", "y.some.boolean", "z");
 
         ConcordProcess proc = concord.processes().start(payload);
-
-        proc.expectStatus(ProcessEntry.StatusEnum.FINISHED);
+        expectStatus(proc, ProcessEntry.StatusEnum.FINISHED);
 
         // ---
 
@@ -177,20 +167,19 @@ public class ProcessIT {
         assertFalse(data.containsKey("z"));
     }
 
-    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    @Test
     public void testLogsFromExpressions() throws Exception {
         Payload payload = new Payload()
                 .archive(resource("logExpression"));
 
         ConcordProcess proc = concord.processes().start(payload);
-
-        proc.expectStatus(ProcessEntry.StatusEnum.FINISHED);
+        expectStatus(proc, ProcessEntry.StatusEnum.FINISHED);
 
         proc.assertLog(".*log from expression short.*");
         proc.assertLog(".*log from expression full form.*");
     }
 
-    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    @Test
     public void testProjectInfo() throws Exception {
         String orgName = "org_" + randomString();
         concord.organizations().create(orgName);
@@ -205,19 +194,19 @@ public class ProcessIT {
 
         ConcordProcess proc = concord.processes().start(payload);
 
-        proc.expectStatus(ProcessEntry.StatusEnum.FINISHED);
+        expectStatus(proc, ProcessEntry.StatusEnum.FINISHED);
 
         proc.assertLog(".*orgName=" + orgName + ".*");
         proc.assertLog(".*projectName=" + projectName + ".*");
     }
 
-    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    @Test
     public void testCheckpoints() throws Exception {
         Payload payload = new Payload()
                 .archive(resource("checkpoints"));
 
         ConcordProcess proc = concord.processes().start(payload);
-        proc.expectStatus(ProcessEntry.StatusEnum.FINISHED);
+        expectStatus(proc, ProcessEntry.StatusEnum.FINISHED);
 
         proc.assertLog(".*#1.*x=123.*");
         proc.assertLog(".*#2.*y=234.*");
@@ -242,7 +231,7 @@ public class ProcessIT {
         // restore from the first checkpoint
 
         proc.restoreCheckpoint(firstCheckpoint.getId());
-        proc.expectStatus(ProcessEntry.StatusEnum.FINISHED);
+        expectStatus(proc, ProcessEntry.StatusEnum.FINISHED);
 
         // we should see the second checkpoint being saved the second time
 
@@ -259,13 +248,13 @@ public class ProcessIT {
         proc.assertLog(".*same workDir: false.*");
     }
 
-    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    @Test
     public void testCheckpointsParallel() throws Exception {
         Payload payload = new Payload()
                 .archive(resource("checkpointsParallel"));
 
         ConcordProcess proc = concord.processes().start(payload);
-        proc.expectStatus(ProcessEntry.StatusEnum.FINISHED);
+        expectStatus(proc, ProcessEntry.StatusEnum.FINISHED);
         proc.assertLogAtLeast(".*#1 \\{x=123}.*", 1);
         proc.assertLogAtLeast(".*#2 \\{x=123, y=234}.*", 1);
         proc.assertLogAtLeast(".*#3 \\{x=123, z=345}.*", 1);
@@ -284,12 +273,12 @@ public class ProcessIT {
         // ---
 
         proc.restoreCheckpoint(checkpoints.get(1).getId());
-        proc.expectStatus(ProcessEntry.StatusEnum.FINISHED);
+        expectStatus(proc, ProcessEntry.StatusEnum.FINISHED);
 
         proc.assertLogAtLeast(".*#4 \\{x=123}.*", 2);
     }
 
-    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    @Test
     public void testNoStateAfterCheckpoint() throws Exception {
         String concordYml = resourceToString(ProcessIT.class.getResource("checkpointState/concord.yml"))
                 .replaceAll("PROJECT_VERSION", ITConstants.PROJECT_VERSION);
@@ -297,9 +286,7 @@ public class ProcessIT {
         Payload payload = new Payload().concordYml(concordYml);
 
         ConcordProcess proc = concord.processes().start(payload);
-
-        ProcessEntry pe = proc.waitForStatus(ProcessEntry.StatusEnum.FINISHED);
-        assertEquals(ProcessEntry.StatusEnum.FINISHED, pe.getStatus());
+        expectStatus(proc, ProcessEntry.StatusEnum.FINISHED);
 
         // ---
 
@@ -319,7 +306,7 @@ public class ProcessIT {
                 .archive(resource("forkCheckpoints"));
 
         ConcordProcess parent = concord.processes().start(payload);
-        parent.expectStatus(ProcessEntry.StatusEnum.FINISHED);
+        expectStatus(parent, ProcessEntry.StatusEnum.FINISHED);
         parent.assertLog(".*#1.*");
         parent.assertLog(".*#2.*");
 
@@ -341,7 +328,7 @@ public class ProcessIT {
         assertEquals(1, checkpoints.size());
 
         parent.restoreCheckpoint(checkpoints.get(0).getId());
-        parent.expectStatus(ProcessEntry.StatusEnum.FINISHED);
+        expectStatus(parent, ProcessEntry.StatusEnum.FINISHED);
 
         // ---
 
@@ -362,7 +349,7 @@ public class ProcessIT {
         }
     }
 
-    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    @Test
     public void testCheckpointsWith3rdPartyClasses() throws Exception {
         String concordYml = resourceToString(NodeRosterIT.class.getResource("checkpointClasses/concord.yml"))
                 .replaceAll("PROJECT_VERSION", ITConstants.PROJECT_VERSION);
@@ -370,7 +357,7 @@ public class ProcessIT {
         ConcordProcess proc = concord.processes().start(new Payload()
                 .concordYml(concordYml));
 
-        proc.expectStatus(ProcessEntry.StatusEnum.FINISHED);
+        expectStatus(proc, ProcessEntry.StatusEnum.FINISHED);
 
         // ---
 
@@ -378,7 +365,7 @@ public class ProcessIT {
         assertEquals(1, checkpoints.size());
 
         proc.restoreCheckpoint(checkpoints.get(0).getId());
-        proc.expectStatus(ProcessEntry.StatusEnum.FINISHED);
+        expectStatus(proc, ProcessEntry.StatusEnum.FINISHED);
 
         // ---
 
@@ -386,14 +373,13 @@ public class ProcessIT {
         proc.assertLogAtLeast(".*2: Hello!.*", 2);
     }
 
-    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    @Test
     public void testLastErrorSave() throws Exception {
         Payload payload = new Payload()
                 .archive(resource("failProcess"));
 
         ConcordProcess proc = concord.processes().start(payload);
-
-        proc.expectStatus(ProcessEntry.StatusEnum.FAILED);
+        expectStatus(proc, ProcessEntry.StatusEnum.FAILED);
 
         // ---
 
@@ -405,49 +391,42 @@ public class ProcessIT {
         assertEquals(m, data.get("lastError"));
     }
 
-    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    @Test
     public void testSuspendTimeout() throws Exception {
         Payload payload = new Payload()
                 .parameter("suspendTimeout", "PT1S")
                 .archive(resource("form"));
 
         ConcordProcess proc = concord.processes().start(payload);
-
-        proc.expectStatus(ProcessEntry.StatusEnum.TIMED_OUT);
+        expectStatus(proc, ProcessEntry.StatusEnum.TIMED_OUT);
     }
 
-    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    @Test
     public void testYamlRootFile() throws Exception {
         Payload payload = new Payload()
                 .archive(resource("yamlRootFile"));
 
         ConcordProcess proc = concord.processes().start(payload);
-        proc.expectStatus(ProcessEntry.StatusEnum.FINISHED);
+        expectStatus(proc, ProcessEntry.StatusEnum.FINISHED);
         proc.assertLog(".*Hello, Concord!*");
     }
 
-    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    @Test
     public void testMetadataWithWithItems() throws Exception {
         ConcordProcess proc = concord.processes().start(new Payload()
                 .archive(resource("processMetadataWithItems")));
 
-        ProcessEntry pe = proc.expectStatus(ProcessEntry.StatusEnum.FINISHED);
+        ProcessEntry pe = expectStatus(proc, ProcessEntry.StatusEnum.FINISHED);
         assertNotNull(pe.getMeta());
         assertEquals("c", pe.getMeta().get("var"));
     }
 
-    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    @Test
     public void testEmptyExclusiveGroup() throws Exception {
         ConcordProcess proc = concord.processes().start(new Payload()
                 .archive(resource("emptyExclusiveGroup")));
 
-        proc.expectStatus(ProcessEntry.StatusEnum.FAILED);
+        expectStatus(proc, ProcessEntry.StatusEnum.FAILED);
         proc.assertLog(".*Invalid exclusive mode.*");
-    }
-
-    private static URI resource(String name) throws URISyntaxException {
-        URL url = ProcessIT.class.getResource(name);
-        assertNotNull("can't find '" + name + "'", url);
-        return url.toURI();
     }
 }

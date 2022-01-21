@@ -23,7 +23,7 @@ package com.walmartlabs.concord.it.server;
 import com.walmartlabs.concord.client.*;
 import com.walmartlabs.concord.common.IOUtils;
 import org.eclipse.jgit.api.Git;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.io.File;
 import java.nio.file.Path;
@@ -33,7 +33,7 @@ import java.util.Map;
 
 public class GeneralTriggerIT extends AbstractGeneralTriggerIT {
 
-    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    @Test
     public void testExclusive() throws Exception {
         Path tmpDir = createTempDir();
 
@@ -87,7 +87,7 @@ public class GeneralTriggerIT extends AbstractGeneralTriggerIT {
         orgApi.delete(orgName, "yes");
     }
 
-    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    @Test
     public void testExclusiveFromConfiguration() throws Exception {
         Path tmpDir = createTempDir();
 
@@ -142,7 +142,7 @@ public class GeneralTriggerIT extends AbstractGeneralTriggerIT {
         orgApi.delete(orgName, "yes");
     }
 
-    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    @Test
     public void testExclusiveWithTriggerOverride() throws Exception {
         Path tmpDir = createTempDir();
 

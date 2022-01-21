@@ -30,7 +30,7 @@ import com.walmartlabs.concord.ApiClient;
 import com.walmartlabs.concord.client.*;
 import com.walmartlabs.concord.it.common.ServerClient;
 import com.walmartlabs.concord.it.common.ServerCompatModule;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.util.HashMap;
 import java.util.List;
@@ -38,14 +38,14 @@ import java.util.Map;
 
 import static com.walmartlabs.concord.it.common.ITUtils.archive;
 import static com.walmartlabs.concord.it.common.ServerClient.waitForCompletion;
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class ProcessMetadataIT extends AbstractServerIT {
 
     private static final TypeReference<List<ProcessEntry>> LIST_OF_PROCESS_ENTRIES = new TypeReference<List<ProcessEntry>>() {
     };
 
-    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    @Test
     public void test() throws Exception {
         String orgName = "Default";
         String projectName = "project_" + randomString();

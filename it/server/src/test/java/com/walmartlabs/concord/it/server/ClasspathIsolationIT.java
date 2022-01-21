@@ -23,7 +23,7 @@ package com.walmartlabs.concord.it.server;
 import com.walmartlabs.concord.client.ProcessApi;
 import com.walmartlabs.concord.client.ProcessEntry;
 import com.walmartlabs.concord.client.StartProcessResponse;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -34,7 +34,7 @@ import static com.walmartlabs.concord.it.common.ServerClient.waitForCompletion;
 
 public class ClasspathIsolationIT extends AbstractServerIT {
 
-    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    @Test
     public void testBrokenDeps() throws Exception {
         byte[] payload = archive(ClasspathIsolationIT.class.getResource("brokenDeps").toURI());
 

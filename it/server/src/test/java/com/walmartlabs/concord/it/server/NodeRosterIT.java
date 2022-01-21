@@ -20,13 +20,12 @@ package com.walmartlabs.concord.it.server;
  * =====
  */
 
-import com.github.tomakehurst.wiremock.core.WireMockConfiguration;
-import com.github.tomakehurst.wiremock.junit.WireMockRule;
+import com.github.tomakehurst.wiremock.junit5.WireMockExtension;
 import com.walmartlabs.concord.ApiException;
 import com.walmartlabs.concord.client.*;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
 import java.util.HashMap;
 import java.util.List;
@@ -34,18 +33,21 @@ import java.util.Map;
 import java.util.UUID;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
+import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMockConfig;
 import static com.walmartlabs.concord.it.common.ITUtils.archive;
 import static com.walmartlabs.concord.it.common.ServerClient.assertLog;
 import static com.walmartlabs.concord.it.common.ServerClient.waitForCompletion;
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class NodeRosterIT extends AbstractServerIT {
 
-    @Rule
-    public WireMockRule rule = new WireMockRule(WireMockConfiguration.options()
-            .dynamicPort());
+    @RegisterExtension
+    static WireMockExtension rule = WireMockExtension.newInstance()
+            .options(wireMockConfig()
+                    .dynamicPort())
+            .build();
 
-    @Before
+    @BeforeEach
     public void setUp() {
         rule.stubFor(get(urlEqualTo("/test.txt"))
                 .willReturn(aResponse()
@@ -53,7 +55,7 @@ public class NodeRosterIT extends AbstractServerIT {
                         .withBody("Hello!")));
     }
 
-    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    @Test
     public void testE2e() throws Exception {
         String hostA = "hostA_" + randomString();
         String hostB = "hostB_" + randomString();
@@ -62,7 +64,7 @@ public class NodeRosterIT extends AbstractServerIT {
 
         byte[] payload = archive(ProcessIT.class.getResource("nodeRoster").toURI(), ITConstants.DEPENDENCIES_DIR);
 
-        String artifactUrl = "http://" + env("IT_DOCKER_HOST_ADDR", "localhost") + ":" + rule.port() + "/test.txt";
+        String artifactUrl = "http://" + env("IT_DOCKER_HOST_ADDR", "localhost") + ":" + rule.getPort() + "/test.txt";
 
         Map<String, Object> input = new HashMap<>();
         input.put("archive", payload);
@@ -130,7 +132,7 @@ public class NodeRosterIT extends AbstractServerIT {
         assertLog(".*name: " + hostB.toLowerCase() + ".*", ab);
     }
 
-    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    @Test
     public void testMultipleFactsPerHost() throws Exception {
         byte[] payload = archive(ProcessIT.class.getResource("nodeRosterMultiFacts").toURI(), ITConstants.DEPENDENCIES_DIR);
 

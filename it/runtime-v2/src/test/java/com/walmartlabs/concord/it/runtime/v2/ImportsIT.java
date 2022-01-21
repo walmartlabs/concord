@@ -22,11 +22,13 @@ package com.walmartlabs.concord.it.runtime.v2;
 
 import ca.ibodrov.concord.testcontainers.ConcordProcess;
 import ca.ibodrov.concord.testcontainers.Payload;
-import ca.ibodrov.concord.testcontainers.junit4.ConcordRule;
+import ca.ibodrov.concord.testcontainers.junit5.ConcordRule;
 import com.walmartlabs.concord.client.ProcessEntry;
 import com.walmartlabs.concord.common.Posix;
-import org.junit.Rule;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
+import org.junit.jupiter.api.parallel.Execution;
+import org.junit.jupiter.api.parallel.ExecutionMode;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -34,9 +36,10 @@ import java.nio.file.Paths;
 
 import static com.walmartlabs.concord.it.common.ITUtils.randomString;
 
-public class ImportsIT {
+@Execution(ExecutionMode.SAME_THREAD)
+public class ImportsIT extends AbstractTest {
 
-    @Rule
+    @RegisterExtension
     public final ConcordRule concord = ConcordConfiguration.configure()
             .extraConfigurationSupplier(() -> "concord-server { imports { disabledProcessors = [] } }\n" +
                     "concord-agent { imports { disabledProcessors = [] } }");
@@ -46,7 +49,7 @@ public class ImportsIT {
         Path tmpDir = Files.createTempDirectory(ConcordConfiguration.sharedDir(), "test");
         Files.setPosixFilePermissions(tmpDir, Posix.posix(0755));
 
-        Path src = Paths.get(ImportsIT.class.getResource("dirImport/other.concord.yml").toURI());
+        Path src = Paths.get(resource("dirImport/other.concord.yml"));
         Path dst = tmpDir.resolve("other.concord.yml");
         Files.copy(src, dst);
         Files.setPosixFilePermissions(dst, Posix.posix(0644));
@@ -62,7 +65,7 @@ public class ImportsIT {
                         "      dest: concord");
 
         ConcordProcess proc = concord.processes().start(payload);
-        proc.waitForStatus(ProcessEntry.StatusEnum.FINISHED);
+        expectStatus(proc, ProcessEntry.StatusEnum.FINISHED);
 
         proc.assertLog(".*Hello, " + name + ".*");
     }

@@ -21,7 +21,7 @@ package com.walmartlabs.concord.it.server;
  */
 
 import com.walmartlabs.concord.client.*;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -32,7 +32,7 @@ import static com.walmartlabs.concord.it.common.ServerClient.waitForCompletion;
 
 public class JsonStoreTaskIT extends AbstractServerIT {
 
-    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    @Test
     public void testStoreOperations() throws Exception {
         withOrg(orgName -> {
             withProject(orgName, projectName -> {
@@ -62,7 +62,7 @@ public class JsonStoreTaskIT extends AbstractServerIT {
         });
     }
 
-    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    @Test
     public void testPutGetData() throws Exception {
         withOrg(orgName -> {
             withProject(orgName, projectName -> {

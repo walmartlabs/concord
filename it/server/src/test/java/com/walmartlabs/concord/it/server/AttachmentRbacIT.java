@@ -9,9 +9,9 @@ package com.walmartlabs.concord.it.server;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -21,8 +21,7 @@ package com.walmartlabs.concord.it.server;
  */
 
 import com.walmartlabs.concord.client.*;
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -31,13 +30,13 @@ import java.util.*;
 
 import static com.walmartlabs.concord.it.common.ITUtils.archive;
 import static com.walmartlabs.concord.it.common.ServerClient.waitForStatus;
-import static org.junit.Assert.fail;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class AttachmentRbacIT extends AbstractServerIT {
 
     private static final Logger log = LoggerFactory.getLogger(AttachmentRbacIT.class);
 
-    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    @Test
     public void test() throws Exception {
 
         // create a new org
@@ -124,11 +123,11 @@ public class AttachmentRbacIT extends AbstractServerIT {
 
         log.info("The initiator shall be able to list attachments");
         List<String> attachments = processApi.listAttachments(spr.getInstanceId());
-        Assert.assertNotNull("Attachments shall not be null for initiator", attachments);
-        Assert.assertSame("Attachment size shall be 1 for initiator", 1, attachments.size());
+        assertNotNull(attachments, "Attachments shall not be null for initiator");
+        assertSame(1, attachments.size(), "Attachment size shall be 1 for initiator");
 
         File file = processApi.downloadAttachment(spr.getInstanceId(), attachments.get(0));
-        Assert.assertNotNull("File object shall not be null for initiator", file);
+        assertNotNull(file, "File object shall not be null for initiator");
 
         // switch to admin and add the user B
 
@@ -154,11 +153,11 @@ public class AttachmentRbacIT extends AbstractServerIT {
 
         resetApiKey();
         attachments = processApi.listAttachments(spr.getInstanceId());
-        Assert.assertNotNull("Attachments shall not be null for admin", attachments);
-        Assert.assertSame("Attachment size shall be 1 for admin", 1, attachments.size());
+        assertNotNull(attachments, "Attachments shall not be null for admin");
+        assertSame(1, attachments.size(), "Attachment size shall be 1 for admin");
 
         file = processApi.downloadAttachment(spr.getInstanceId(), attachments.get(0));
-        Assert.assertNotNull("File object shall not be null for admin", file);
+        assertNotNull(file, "File object shall not be null for admin");
 
         // switch to the user B (non admin) and try to list and download the attachments
 
@@ -169,8 +168,8 @@ public class AttachmentRbacIT extends AbstractServerIT {
             processApi.listAttachments(spr.getInstanceId());
             fail("Should fail when listing attachments for non-admin");
         } catch (Exception e) {
-            Assert.assertNotNull("Exception shall not be null", e);
-            Assert.assertTrue("Exception doesn't match", e.getMessage().contains("doesn't have the necessary access level"));
+            assertNotNull(e, "Exception shall not be null");
+            assertTrue(e.getMessage().contains("doesn't have the necessary access level"), "Exception doesn't match");
         }
 
         // Non-admin who is only a member shall not able to download the attachments
@@ -178,8 +177,8 @@ public class AttachmentRbacIT extends AbstractServerIT {
             processApi.downloadAttachment(spr.getInstanceId(), attachments.get(0));
             fail("Should fail when downloading attachments for non-admin");
         } catch (Exception e) {
-            Assert.assertNotNull("Exception shall not be null", e);
-            Assert.assertTrue("Exception doesn't match", e.getMessage().contains("doesn't have the necessary access level"));
+            assertNotNull(e, "Exception shall not be null");
+            assertTrue(e.getMessage().contains("doesn't have the necessary access level"), "Exception doesn't match");
         }
 
         // Switch to userC who should be able to list and download the attachments since its
@@ -187,12 +186,11 @@ public class AttachmentRbacIT extends AbstractServerIT {
         setApiKey(apiKeyC.getKey());
 
         attachments = processApi.listAttachments(spr.getInstanceId());
-        Assert.assertNotNull("Attachments shall not be null for non-admin who is a owner", attachments);
-        Assert.assertSame("Attachment size shall be 1 for non-admin who is a owner",
-                1, attachments.size());
+        assertNotNull(attachments, "Attachments shall not be null for non-admin who is a owner");
+        assertSame(1, attachments.size(),
+                "Attachment size shall be 1 for non-admin who is a owner");
 
         file = processApi.downloadAttachment(spr.getInstanceId(), attachments.get(0));
-        Assert.assertNotNull("File object shall not be null for non-admin who is a owner", file);
-
+        assertNotNull(file, "File object shall not be null for non-admin who is a owner");
     }
 }

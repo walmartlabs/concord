@@ -37,7 +37,7 @@ import io.takari.bpm.model.form.FormDefinition;
 import io.takari.bpm.model.form.FormField;
 import io.takari.bpm.resource.ResourceResolver;
 import io.takari.bpm.task.ServiceTaskRegistry;
-import org.junit.Before;
+import org.junit.jupiter.api.BeforeEach;
 
 import java.io.InputStream;
 import java.util.HashMap;
@@ -54,7 +54,7 @@ public abstract class AbstractYamlParserTest {
     private Map<UUID, Form> forms;
     private FormService formService;
 
-    @Before
+    @BeforeEach
     @SuppressWarnings("unchecked")
     public void setUp() {
         taskRegistry = new TestServiceTaskRegistry();
@@ -149,7 +149,7 @@ public abstract class AbstractYamlParserTest {
         }
 
         @Override
-        public void complete(UUID formInstanceId) throws ExecutionException {
+        public void complete(UUID formInstanceId) {
             forms.remove(formInstanceId);
         }
 

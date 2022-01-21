@@ -21,9 +21,9 @@ package com.walmartlabs.concord.it.server;
  */
 
 import com.walmartlabs.concord.client.*;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import java.util.Collections;
 import java.util.HashMap;
@@ -32,13 +32,13 @@ import java.util.Map;
 import static com.walmartlabs.concord.it.common.ITUtils.archive;
 import static com.walmartlabs.concord.it.common.ServerClient.assertLog;
 import static com.walmartlabs.concord.it.common.ServerClient.waitForCompletion;
-import static org.junit.Assert.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 public class DefaultProcessVariablesIT extends AbstractServerIT {
 
     private static final String POLICY_NAME = "default-vars-from-test";
 
-    @Before
+    @BeforeEach
     public void precondition() throws Exception {
         Map<String, Object> defVars = new HashMap<>();
         defVars.put("var1", "value1");
@@ -56,7 +56,7 @@ public class DefaultProcessVariablesIT extends AbstractServerIT {
         policyApi.refresh();
     }
 
-    @After
+    @AfterEach
     public void cleanup() {
         PolicyApi policyApi = new PolicyApi(getApiClient());
         try {
@@ -66,7 +66,7 @@ public class DefaultProcessVariablesIT extends AbstractServerIT {
         }
     }
 
-    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    @Test
     public void testDefaultVarsAccess() throws Exception {
         // prepare the payload
 

@@ -24,28 +24,31 @@ import com.walmartlabs.concord.ApiClient;
 import com.walmartlabs.concord.client.ProcessApi;
 import com.walmartlabs.concord.client.ProcessEntry;
 import com.walmartlabs.concord.client.StartProcessResponse;
-import org.junit.Rule;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.Timeout;
+import org.junit.jupiter.api.extension.RegisterExtension;
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebElement;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 import static com.walmartlabs.concord.it.common.ITUtils.archive;
 import static com.walmartlabs.concord.it.common.ServerClient.*;
 import static com.walmartlabs.concord.it.console.Utils.DEFAULT_TEST_TIMEOUT;
-import static org.junit.Assert.assertNotNull;
+import static org.junit.jupiter.api.Assertions.*;
 
+@Timeout(value = DEFAULT_TEST_TIMEOUT, unit = TimeUnit.MILLISECONDS)
 public class FormsIT {
 
-    @Rule
-    public ConcordServerRule serverRule = new ConcordServerRule();
+    @RegisterExtension
+    public static ConcordServerRule serverRule = new ConcordServerRule();
 
-    @Rule
-    public ConcordConsoleRule consoleRule = new ConcordConsoleRule();
+    @RegisterExtension
+    public static ConcordConsoleRule consoleRule = new ConcordConsoleRule();
 
-    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    @Test
     public void testDateTimeField() throws Exception {
         ApiClient apiClient = serverRule.getClient();
 

@@ -20,7 +20,7 @@ package com.walmartlabs.concord.it.runtime.v1;
  * =====
  */
 
-import ca.ibodrov.concord.testcontainers.junit4.ConcordRule;
+import ca.ibodrov.concord.testcontainers.junit5.ConcordRule;
 import org.testcontainers.images.PullPolicy;
 
 public final class ConcordConfiguration {

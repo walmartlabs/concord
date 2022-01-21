@@ -24,17 +24,17 @@ import com.walmartlabs.concord.ApiException;
 import com.walmartlabs.concord.client.ProcessApi;
 import com.walmartlabs.concord.client.ProcessEntry;
 import com.walmartlabs.concord.client.StartProcessResponse;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import static com.walmartlabs.concord.it.common.ITUtils.archive;
 import static com.walmartlabs.concord.it.common.ServerClient.assertLog;
 import static com.walmartlabs.concord.it.common.ServerClient.waitForCompletion;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class ConfigurableResourcesIT extends AbstractServerIT {
 
-    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    @Test
     public void testProfiles() throws Exception {
         // prepare the payload
 
@@ -61,7 +61,7 @@ public class ConfigurableResourcesIT extends AbstractServerIT {
         assertLog(".*Hello, world.*", ab);
     }
 
-    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    @Test
     public void testFlows() throws Exception {
         // prepare the payload
 
@@ -88,7 +88,7 @@ public class ConfigurableResourcesIT extends AbstractServerIT {
         assertLog(".*External flow!.*", ab);
     }
 
-    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    @Test
     public void testDisabledProfiles() throws Exception {
         // prepare the payload
 
@@ -115,7 +115,7 @@ public class ConfigurableResourcesIT extends AbstractServerIT {
         assertLog(".*Hello, stranger.*", ab);
     }
 
-    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    @Test
     public void testInvalidDir() throws Exception {
         byte[] payload = archive(ProcessIT.class.getResource("invalidResourcesPath").toURI());
 

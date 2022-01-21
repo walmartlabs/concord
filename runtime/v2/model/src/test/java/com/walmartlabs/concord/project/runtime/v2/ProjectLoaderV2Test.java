@@ -32,14 +32,14 @@ import com.walmartlabs.concord.runtime.v2.model.Checkpoint;
 import com.walmartlabs.concord.runtime.v2.model.EventConfiguration;
 import com.walmartlabs.concord.runtime.v2.model.ProcessDefinition;
 import com.walmartlabs.concord.runtime.v2.model.ProcessDefinitionConfiguration;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.net.URI;
 import java.nio.file.Paths;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.mock;
 
 public class ProjectLoaderV2Test {
@@ -126,14 +126,14 @@ public class ProjectLoaderV2Test {
 
         // imports: should be collected from ALL *.concord.yml
         assertEquals(2, pd.imports().items().size());
-        assertEquals(ImmutableList.of("2.concord.yml", "concord.yml"), pd.imports().items().stream().map(i -> ((Import.GitDefinition)i).url()).collect(Collectors.toList()));
+        assertEquals(ImmutableList.of("2.concord.yml", "concord.yml"), pd.imports().items().stream().map(i -> ((Import.GitDefinition) i).url()).collect(Collectors.toList()));
 
         // forms: should be collected from ALL *.concord.yml
         // if form has same name then most recent used
         assertEquals(1, pd.forms().size());
         assertNotNull(pd.forms().get("myForm"));
         assertEquals(1, pd.forms().get("myForm").fields().size());
-        assertNotNull("name3", pd.forms().get("myForm").fields().get(0).name());
+        assertEquals("myName3", pd.forms().get("myForm").fields().get(0).name());
 
         // resources: should be collected from ALL *.concord.yml
         assertEquals(ImmutableList.of("glob:concord/{**/,}{*.,}concord.{yml,yaml}", "glob:tmp/1.yml"), pd.resources().concord());

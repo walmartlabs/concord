@@ -20,35 +20,38 @@ package com.walmartlabs.concord.plugins.http;
  * =====
  */
 
+import com.github.tomakehurst.wiremock.junit5.WireMockRuntimeInfo;
 import com.walmartlabs.concord.plugins.http.exception.RequestTimeoutException;
 import com.walmartlabs.concord.sdk.Context;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 
 import java.io.File;
+import java.nio.file.Path;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 public class HttpTaskTest extends AbstractHttpTaskTest {
 
-    private Context mockContext = mock(Context.class);
+    private final Context mockContext = mock(Context.class);
 
     @Test
-    public void testForAsStringMethod() throws Exception {
-        String response = task.asString("http://localhost:" + rule.port() + "/json");
+    public void testForAsStringMethod(WireMockRuntimeInfo wmRuntimeInfo) throws Exception {
+        String response = task.asString("http://localhost:" + wmRuntimeInfo.getHttpPort() + "/json");
         verify(getRequestedFor(urlEqualTo("/json")));
         assertNotNull(response);
     }
 
     @Test
-    public void testExecuteGetRequestForJson() throws Exception {
+    public void testExecuteGetRequestForJson(WireMockRuntimeInfo wmRuntimeInfo) throws Exception {
         initCxtForRequest(mockContext, "GET", "json", "json",
-                "http://localhost:" + rule.port() + "/json", false, 0, true);
+                "http://localhost:" + wmRuntimeInfo.getHttpPort() + "/json", false, 0, true);
         task.execute(mockContext);
         verify(getRequestedFor(urlEqualTo("/json")));
         assertEquals(200, response.get("statusCode"));
@@ -56,36 +59,36 @@ public class HttpTaskTest extends AbstractHttpTaskTest {
     }
 
     @Test
-    public void testExecuteGetRequestForString() throws Exception {
+    public void testExecuteGetRequestForString(WireMockRuntimeInfo wmRuntimeInfo) throws Exception {
         initCxtForRequest(mockContext, "GET", "string", "string",
-                "http://localhost:" + rule.port() + "/string", false, 0, true);
+                "http://localhost:" + wmRuntimeInfo.getHttpPort() + "/string", false, 0, true);
         task.execute(mockContext);
         verify(getRequestedFor(urlEqualTo("/string")));
     }
 
     @Test
-    public void testExecuteGetRequestWithQueryParams() throws Exception {
+    public void testExecuteGetRequestWithQueryParams(WireMockRuntimeInfo wmRuntimeInfo) throws Exception {
         Map<String, Object> queryParams = new HashMap<>();
         queryParams.put("key", "value with space");
 
         initCxtForRequest(mockContext, "GET", queryParams, null, "string",
-                "http://localhost:" + rule.port() + "/query", false, 0, true);
+                "http://localhost:" + wmRuntimeInfo.getHttpPort() + "/query", false, 0, true);
         task.execute(mockContext);
         verify(getRequestedFor(urlPathEqualTo("/query")).withQueryParam("key", equalTo("value with space")));
     }
 
     @Test
-    public void testExecutePostRequestWithFormUrlEncoded() throws Exception {
+    public void testExecutePostRequestWithFormUrlEncoded(WireMockRuntimeInfo wmRuntimeInfo) throws Exception {
         initCxtForRequest(mockContext, "POST", "form", "json",
-                "http://localhost:" + rule.port() + "/post", false, 0, true);
+                "http://localhost:" + wmRuntimeInfo.getHttpPort() + "/post", false, 0, true);
         when(mockContext.getVariable("body")).thenReturn(Collections.singletonMap("message", "Hello Concord!"));
         task.execute(mockContext);
     }
 
     @Test
-    public void testExecutePostRequestForJson() throws Exception {
+    public void testExecutePostRequestForJson(WireMockRuntimeInfo wmRuntimeInfo) throws Exception {
         initCxtForRequest(mockContext, "POST", "json", "json",
-                "http://localhost:" + rule.port() + "/post", false, 0, true);
+                "http://localhost:" + wmRuntimeInfo.getHttpPort() + "/post", false, 0, true);
         when(mockContext.getVariable("body")).thenReturn("{ \"request\": \"PostTest\" }");
         task.execute(mockContext);
         verify(postRequestedFor(urlEqualTo("/post"))
@@ -93,9 +96,9 @@ public class HttpTaskTest extends AbstractHttpTaskTest {
     }
 
     @Test
-    public void testExecutePostRequestForComplexObject() throws Exception {
+    public void testExecutePostRequestForComplexObject(WireMockRuntimeInfo wmRuntimeInfo) throws Exception {
         initCxtForRequest(mockContext, "POST", "json", "json",
-                "http://localhost:" + rule.port() + "/post", false, 0, true);
+                "http://localhost:" + wmRuntimeInfo.getHttpPort() + "/post", false, 0, true);
         HashMap<String, Object> complexObject = new HashMap<>();
         HashMap<String, Object> nestedObject = new HashMap<>();
         nestedObject.put("nestedVar", 123);
@@ -107,9 +110,9 @@ public class HttpTaskTest extends AbstractHttpTaskTest {
     }
 
     @Test
-    public void testExecutePostRequestForMultipart() throws Exception {
+    public void testExecutePostRequestForMultipart(WireMockRuntimeInfo wmRuntimeInfo) throws Exception {
         initCxtForRequest(mockContext, "POST", "formData", "json",
-                "http://localhost:" + rule.port() + "/post", false, 0, true);
+                "http://localhost:" + wmRuntimeInfo.getHttpPort() + "/post", false, 0, true);
 
         HashMap<String, Object> formInput = new HashMap<>();
         HashMap<String, Object> field = new HashMap<>();
@@ -126,81 +129,85 @@ public class HttpTaskTest extends AbstractHttpTaskTest {
         assertTrue((Boolean) response.get("success"));
     }
 
-    @Test(expected = Exception.class)
-    public void testExecuteForException() throws Exception {
+    @Test
+    public void testExecuteForException(WireMockRuntimeInfo wmRuntimeInfo) throws Exception {
+        assertThrows(Exception.class,  () -> {
+            initCxtForRequest(mockContext, "GET", "string", "string",
+                    "http://localhost:" + wmRuntimeInfo.getHttpPort() + "/fault", false, 0, true);
+            task.execute(mockContext);
+        });
+    }
+
+    @Test
+    public void testExecuteWithIgnoreError(WireMockRuntimeInfo wmRuntimeInfo) throws Exception {
         initCxtForRequest(mockContext, "GET", "string", "string",
-                "http://localhost:" + rule.port() + "/fault", false, 0, true);
+                "http://localhost:" + wmRuntimeInfo.getHttpPort() + "/fault", true, 0, true);
         task.execute(mockContext);
     }
 
     @Test
-    public void testExecuteWithIgnoreError() throws Exception {
+    public void testExecuteGetRequestWithoutFollowRedirect(WireMockRuntimeInfo wmRuntimeInfo) throws Exception {
         initCxtForRequest(mockContext, "GET", "string", "string",
-                "http://localhost:" + rule.port() + "/fault", true, 0, true);
-        task.execute(mockContext);
-    }
-
-    @Test
-    public void testExecuteGetRequestWithoutFollowRedirect() throws Exception {
-        initCxtForRequest(mockContext, "GET", "string", "string",
-                "http://localhost:" + rule.port() + "/followRedirects", false, 0, false);
+                "http://localhost:" + wmRuntimeInfo.getHttpPort() + "/followRedirects", false, 0, false);
         task.execute(mockContext);
         assertEquals(301, response.get("statusCode"));
     }
 
     @Test
-    public void testExecuteGetRequestWithFollowRedirect() throws Exception {
+    public void testExecuteGetRequestWithFollowRedirect(WireMockRuntimeInfo wmRuntimeInfo) throws Exception {
         initCxtForRequest(mockContext, "GET", "string", "string",
-                "http://localhost:" + rule.port() + "/followRedirects", false, 0, true);
+                "http://localhost:" + wmRuntimeInfo.getHttpPort() + "/followRedirects", false, 0, true);
         task.execute(mockContext);
         assertEquals(200, response.get("statusCode"));
     }
 
     @Test
-    public void testExecutePostRequestWithoutFollowRedirect() throws Exception {
+    public void testExecutePostRequestWithoutFollowRedirect(WireMockRuntimeInfo wmRuntimeInfo) throws Exception {
         initCxtForRequest(mockContext, "POST", "json", "json",
-                "http://localhost:" + rule.port() + "/followRedirectsPost", false, 0, false);
+                "http://localhost:" + wmRuntimeInfo.getHttpPort() + "/followRedirectsPost", false, 0, false);
         when(mockContext.getVariable("body")).thenReturn("{}");
         task.execute(mockContext);
         assertEquals(301, response.get("statusCode"));
     }
 
     @Test
-    public void testExecutePostRequestWithFollowRedirect() throws Exception {
+    public void testExecutePostRequestWithFollowRedirect(WireMockRuntimeInfo wmRuntimeInfo) throws Exception {
         initCxtForRequest(mockContext, "POST", "json", "string",
-                "http://localhost:" + rule.port() + "/followRedirectsPost", false, 0, true);
+                "http://localhost:" + wmRuntimeInfo.getHttpPort() + "/followRedirectsPost", false, 0, true);
         when(mockContext.getVariable("body")).thenReturn("{}");
         task.execute(mockContext);
         assertEquals(200, response.get("statusCode"));
     }
 
-    @Test(expected = IllegalArgumentException.class)
-    public void testIllegalArgumentExceptionForRequest() throws Exception {
-        task.execute(mockContext);
+    @Test
+    public void testIllegalArgumentExceptionForRequest() {
+        assertThrows(IllegalArgumentException.class,  () -> {
+            task.execute(mockContext);
+        });
     }
 
     @Test
-    public void testGetAsDefaultRequestMethod() throws Exception {
+    public void testGetAsDefaultRequestMethod(WireMockRuntimeInfo wmRuntimeInfo) throws Exception {
         initCxtForRequest(mockContext, null, "json", "json",
-                "http://localhost:" + rule.port() + "/json", false, 0, true);
+                "http://localhost:" + wmRuntimeInfo.getHttpPort() + "/json", false, 0, true);
         task.execute(mockContext);
         assertNotNull(response);
         assertNotNull(response.get("content"));
     }
 
     @Test
-    public void testGetRequestForResponseContent() throws Exception {
+    public void testGetRequestForResponseContent(WireMockRuntimeInfo wmRuntimeInfo) throws Exception {
         initCxtForRequest(mockContext, "GET", "json", "json",
-                "http://localhost:" + rule.port() + "/json", false, 0, true);
+                "http://localhost:" + wmRuntimeInfo.getHttpPort() + "/json", false, 0, true);
         task.execute(mockContext);
         assertNotNull(response);
         assertNotNull(response.get("content"));
     }
 
     @Test
-    public void testUnsuccessfulResponse() throws Exception {
+    public void testUnsuccessfulResponse(WireMockRuntimeInfo wmRuntimeInfo) throws Exception {
         initCxtForRequest(mockContext, "GET", "json", "json",
-                "http://localhost:" + rule.port() + "/unsuccessful", false, 0, true);
+                "http://localhost:" + wmRuntimeInfo.getHttpPort() + "/unsuccessful", false, 0, true);
         task.execute(mockContext);
         assertNotNull(response);
         assertFalse((Boolean) response.get("success"));
@@ -208,29 +215,30 @@ public class HttpTaskTest extends AbstractHttpTaskTest {
     }
 
     @Test
-    public void testFilePostRequest() throws Exception {
+    public void testFilePostRequest(WireMockRuntimeInfo wmRuntimeInfo) throws Exception {
         initCxtForRequest(mockContext, "POST", "file", "json",
-                "http://localhost:" + rule.port() + "/file", false, 0, true);
+                "http://localhost:" + wmRuntimeInfo.getHttpPort() + "/file", false, 0, true);
         when(mockContext.getVariable("body")).thenReturn("src/test/resources/__files/file.bin");
         task.execute(mockContext);
         assertNotNull(response);
         assertTrue((Boolean) response.get("success"));
     }
 
-    @Test(expected = IllegalArgumentException.class)
-    public void testForMissingWorkDirForFileGetRequest() throws Exception {
-        // Working directory is mandatory for response type file
-        initCxtForRequest(mockContext, "GET", "json", "file",
-                "http://localhost:" + rule.port() + "/stringFile", false, 0, true);
-        task.execute(mockContext);
-
+    @Test
+    public void testForMissingWorkDirForFileGetRequest(WireMockRuntimeInfo wmRuntimeInfo) {
+        assertThrows(IllegalArgumentException.class,  () -> {
+            // Working directory is mandatory for response type file
+            initCxtForRequest(mockContext, "GET", "json", "file",
+                    "http://localhost:" + wmRuntimeInfo.getHttpPort() + "/stringFile", false, 0, true);
+            task.execute(mockContext);
+        });
     }
 
     @Test
-    public void testFileGetRequestWithWorkDir() throws Exception {
+    public void testFileGetRequestWithWorkDir(WireMockRuntimeInfo wmRuntimeInfo, @TempDir Path tempDir) throws Exception {
         initCxtForRequest(mockContext, "GET", "json", "file",
-                "http://localhost:" + rule.port() + "/stringFile", false, 0, true);
-        when(mockContext.getVariable("workDir")).thenReturn(folder.getRoot().toString());
+                "http://localhost:" + wmRuntimeInfo.getHttpPort() + "/stringFile", false, 0, true);
+        when(mockContext.getVariable("workDir")).thenReturn(tempDir.toString());
         task.execute(mockContext);
         assertNotNull(response);
         assertTrue((Boolean) response.get("success"));
@@ -238,10 +246,10 @@ public class HttpTaskTest extends AbstractHttpTaskTest {
     }
 
     @Test
-    public void testFileGetRequestWithNoFilename() throws Exception {
+    public void testFileGetRequestWithNoFilename(WireMockRuntimeInfo wmRuntimeInfo, @TempDir Path tempDir) throws Exception {
         initCxtForRequest(mockContext, "GET", "json", "file",
-                "http://localhost:" + rule.port() + "/fileUrlWithoutName/", false, 0, true);
-        when(mockContext.getVariable("workDir")).thenReturn(folder.getRoot().toString());
+                "http://localhost:" + wmRuntimeInfo.getHttpPort() + "/fileUrlWithoutName/", false, 0, true);
+        when(mockContext.getVariable("workDir")).thenReturn(tempDir.toString());
         task.execute(mockContext);
         assertNotNull(response);
         assertTrue((Boolean) response.get("success"));
@@ -249,81 +257,93 @@ public class HttpTaskTest extends AbstractHttpTaskTest {
     }
 
     @Test
-    public void testFileGetWithResponseTypeString() throws Exception {
+    public void testFileGetWithResponseTypeString(WireMockRuntimeInfo wmRuntimeInfo, @TempDir Path tempDir) throws Exception {
         initCxtForRequest(mockContext, "GET", "json", "string",
-                "http://localhost:" + rule.port() + "/stringFile", false, 0, true);
-        when(mockContext.getVariable("workDir")).thenReturn(folder.getRoot().toString());
+                "http://localhost:" + wmRuntimeInfo.getHttpPort() + "/stringFile", false, 0, true);
+        when(mockContext.getVariable("workDir")).thenReturn(tempDir.toString());
         task.execute(mockContext);
         assertNotNull(response);
     }
 
     @Test
-    public void testFileGetWithResponseTypeJSON() throws Exception {
+    public void testFileGetWithResponseTypeJSON(WireMockRuntimeInfo wmRuntimeInfo, @TempDir Path tempDir) throws Exception {
         initCxtForRequest(mockContext, "GET", "json", "json",
-                "http://localhost:" + rule.port() + "/JSONFile", false, 0, true);
-        when(mockContext.getVariable("workDir")).thenReturn(folder.getRoot().toString());
+                "http://localhost:" + wmRuntimeInfo.getHttpPort() + "/JSONFile", false, 0, true);
+        when(mockContext.getVariable("workDir")).thenReturn(tempDir.toString());
         task.execute(mockContext);
         assertNotNull(response);
         assertTrue((Boolean) response.get("success"));
     }
 
-    @Test(expected = IllegalArgumentException.class)
-    public void testPostJsonRequestForIncompatibleBody() throws Exception {
-        initCxtForRequest(mockContext, "POST", "json", "string",
-                "http://localhost:" + rule.port() + "/post", false, 0, true);
-        when(mockContext.getVariable("body")).thenReturn("src/test/resources/__files/file.bin");
-        task.execute(mockContext);
-    }
-
-    @Test(expected = IllegalArgumentException.class)
-    public void testPostStringRequestForIncompatibleComplexBody() throws Exception {
-        initCxtForRequest(mockContext, "POST", "string", "string",
-                "http://localhost:" + rule.port() + "/post", false, 0, true);
-        when(mockContext.getVariable("body")).thenReturn(new HashMap<>());
-        task.execute(mockContext);
-    }
-
-    @Test(expected = IllegalArgumentException.class)
-    public void testPostFileRequestForIncompatibleComplexBody() throws Exception {
-        initCxtForRequest(mockContext, "POST", "file", "string",
-                "http://localhost:" + rule.port() + "/post", false, 0, true);
-        when(mockContext.getVariable("body")).thenReturn(new HashMap<>());
-        task.execute(mockContext);
-    }
-
-    @Test(expected = IllegalArgumentException.class)
-    public void testInvalidRequestMethodType() throws Exception {
-        initCxtForRequest(mockContext, "GET1", "json", "file",
-                "http://localhost:" + rule.port() + "/file", false, 0, true);
-        task.execute(mockContext);
-    }
-
-    @Test(expected = IllegalArgumentException.class)
-    public void testInvalidRequestType() throws Exception {
-        initCxtForRequest(mockContext, "GET", "json1", "file",
-                "http://localhost:" + rule.port() + "/file", false, 0, true);
-        task.execute(mockContext);
-    }
-
-    @Test(expected = IllegalArgumentException.class)
-    public void testInvalidResponseType() throws Exception {
-        initCxtForRequest(mockContext, "GET", "json", "file1",
-                "http://localhost:" + rule.port() + "/file", false, 0, true);
-        task.execute(mockContext);
+    @Test
+    public void testPostJsonRequestForIncompatibleBody(WireMockRuntimeInfo wmRuntimeInfo) {
+        assertThrows(IllegalArgumentException.class,  () -> {
+            initCxtForRequest(mockContext, "POST", "json", "string",
+                    "http://localhost:" + wmRuntimeInfo.getHttpPort() + "/post", false, 0, true);
+            when(mockContext.getVariable("body")).thenReturn("src/test/resources/__files/file.bin");
+            task.execute(mockContext);
+        });
     }
 
     @Test
-    public void testOptionalResponseType() throws Exception {
-        initCxtForRequest(mockContext, "GET", "string", null, "http://localhost:" + rule.port() + "/string", false, 0, true);
+    public void testPostStringRequestForIncompatibleComplexBody(WireMockRuntimeInfo wmRuntimeInfo) {
+        assertThrows(IllegalArgumentException.class,  () -> {
+            initCxtForRequest(mockContext, "POST", "string", "string",
+                    "http://localhost:" + wmRuntimeInfo.getHttpPort() + "/post", false, 0, true);
+            when(mockContext.getVariable("body")).thenReturn(new HashMap<>());
+            task.execute(mockContext);
+        });
+    }
+
+    @Test
+    public void testPostFileRequestForIncompatibleComplexBody(WireMockRuntimeInfo wmRuntimeInfo) {
+        assertThrows(IllegalArgumentException.class,  () -> {
+            initCxtForRequest(mockContext, "POST", "file", "string",
+                    "http://localhost:" + wmRuntimeInfo.getHttpPort() + "/post", false, 0, true);
+            when(mockContext.getVariable("body")).thenReturn(new HashMap<>());
+            task.execute(mockContext);
+        });
+    }
+
+    @Test
+    public void testInvalidRequestMethodType(WireMockRuntimeInfo wmRuntimeInfo) {
+        assertThrows(IllegalArgumentException.class,  () -> {
+            initCxtForRequest(mockContext, "GET1", "json", "file",
+                    "http://localhost:" + wmRuntimeInfo.getHttpPort() + "/file", false, 0, true);
+            task.execute(mockContext);
+        });
+    }
+
+    @Test
+    public void testInvalidRequestType(WireMockRuntimeInfo wmRuntimeInfo) {
+        assertThrows(IllegalArgumentException.class,  () -> {
+            initCxtForRequest(mockContext, "GET", "json1", "file",
+                    "http://localhost:" + wmRuntimeInfo.getHttpPort() + "/file", false, 0, true);
+            task.execute(mockContext);
+        });
+    }
+
+    @Test
+    public void testInvalidResponseType(WireMockRuntimeInfo wmRuntimeInfo) {
+        assertThrows(IllegalArgumentException.class,  () -> {
+            initCxtForRequest(mockContext, "GET", "json", "file1",
+                    "http://localhost:" + wmRuntimeInfo.getHttpPort() + "/file", false, 0, true);
+            task.execute(mockContext);
+        });
+    }
+
+    @Test
+    public void testOptionalResponseType(WireMockRuntimeInfo wmRuntimeInfo) throws Exception {
+        initCxtForRequest(mockContext, "GET", "string", null, "http://localhost:" + wmRuntimeInfo.getHttpPort() + "/string", false, 0, true);
         task.execute(mockContext);
         assertTrue((Boolean) response.get("success"));
     }
 
     @Test
     @SuppressWarnings("unchecked")
-    public void testDelete() throws Exception {
+    public void testDelete(WireMockRuntimeInfo wmRuntimeInfo) throws Exception {
         initCxtForRequest(mockContext, "DELETE", "string", "json",
-                "http://localhost:" + rule.port() + "/delete", false, 0, true);
+                "http://localhost:" + wmRuntimeInfo.getHttpPort() + "/delete", false, 0, true);
         task.execute(mockContext);
         verify(deleteRequestedFor(urlEqualTo("/delete")));
         assertNotNull(response);
@@ -332,9 +352,9 @@ public class HttpTaskTest extends AbstractHttpTaskTest {
 
     @Test
     @SuppressWarnings("unchecked")
-    public void testPatch() throws Exception {
+    public void testPatch(WireMockRuntimeInfo wmRuntimeInfo) throws Exception {
         initCxtForRequest(mockContext, "PATCH", "json", "json",
-                "http://localhost:" + rule.port() + "/patch", false, 0, true);
+                "http://localhost:" + wmRuntimeInfo.getHttpPort() + "/patch", false, 0, true);
         when(mockContext.getVariable("body")).thenReturn("{ \"request\": \"PatchTest\" }");
         task.execute(mockContext);
         verify(patchRequestedFor(urlEqualTo("/patch")));
@@ -342,39 +362,49 @@ public class HttpTaskTest extends AbstractHttpTaskTest {
         assertEquals("Success", ((Map<String, Object>) response.get("content")).get("message"));
     }
 
-    @Test(expected = RequestTimeoutException.class)
-    public void testRequestTimeoutException() throws Exception {
-        initCxtForRequest(mockContext, "GET", "string", "string",
-                "http://localhost:" + rule.port() + "/requestTimeout", false, 5000, true);
-        task.execute(mockContext);
+    @Test
+    public void testRequestTimeoutException(WireMockRuntimeInfo wmRuntimeInfo) {
+        assertThrows(RequestTimeoutException.class,  () -> {
+            initCxtForRequest(mockContext, "GET", "string", "string",
+                    "http://localhost:" + wmRuntimeInfo.getHttpPort() + "/requestTimeout", false, 5000, true);
+            task.execute(mockContext);
+        });
     }
 
-    @Test(expected = RuntimeException.class)
-    public void testInvalidJsonResponse() throws Exception {
-        initCxtForRequest(mockContext, "GET", "json", "json",
-                "http://localhost:" + rule.port() + "/invalid/json", false, 0, true);
-        task.execute(mockContext);
+    @Test
+    public void testInvalidJsonResponse(WireMockRuntimeInfo wmRuntimeInfo) {
+        assertThrows(RuntimeException.class,  () -> {
+            initCxtForRequest(mockContext, "GET", "json", "json",
+                    "http://localhost:" + wmRuntimeInfo.getHttpPort() + "/invalid/json", false, 0, true);
+            task.execute(mockContext);
+        });
     }
 
-    @Test(expected = IllegalArgumentException.class)
-    public void testInvalidRequestMethod() throws Exception {
-        initCxtForRequest(mockContext, 123, "json", "json",
-                "http://localhost:" + rule.port() + "/json", false, 0, true);
-        task.execute(mockContext);
+    @Test
+    public void testInvalidRequestMethod(WireMockRuntimeInfo wmRuntimeInfo) {
+        assertThrows(IllegalArgumentException.class,  () -> {
+            initCxtForRequest(mockContext, 123, "json", "json",
+                    "http://localhost:" + wmRuntimeInfo.getHttpPort() + "/json", false, 0, true);
+            task.execute(mockContext);
+        });
     }
 
-    @Test(expected = IllegalArgumentException.class)
-    public void testInvalidRequest() throws Exception {
-        initCxtForRequest(mockContext, "GET", 123, "json",
-                "http://localhost:" + rule.port() + "/json", false, 0, true);
-        task.execute(mockContext);
+    @Test
+    public void testInvalidRequest(WireMockRuntimeInfo wmRuntimeInfo) {
+        assertThrows(IllegalArgumentException.class,  () -> {
+            initCxtForRequest(mockContext, "GET", 123, "json",
+                    "http://localhost:" + wmRuntimeInfo.getHttpPort() + "/json", false, 0, true);
+            task.execute(mockContext);
+        });
     }
 
-    @Test(expected = IllegalArgumentException.class)
-    public void testInvalidResponse() throws Exception {
-        initCxtForRequest(mockContext, "GET", "json", 123,
-                "http://localhost:" + rule.port() + "/json", false, 0, true);
-        task.execute(mockContext);
+    @Test
+    public void testInvalidResponse(WireMockRuntimeInfo wmRuntimeInfo) {
+        assertThrows(IllegalArgumentException.class,  () -> {
+            initCxtForRequest(mockContext, "GET", "json", 123,
+                    "http://localhost:" + wmRuntimeInfo.getHttpPort() + "/json", false, 0, true);
+            task.execute(mockContext);
+        });
     }
 
 }

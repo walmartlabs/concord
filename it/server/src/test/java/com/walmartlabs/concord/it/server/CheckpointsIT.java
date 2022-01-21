@@ -24,7 +24,7 @@ import com.google.common.collect.ImmutableMap;
 import com.walmartlabs.concord.ApiException;
 import com.walmartlabs.concord.client.*;
 import com.walmartlabs.concord.sdk.Constants;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.util.Collections;
 import java.util.List;
@@ -33,11 +33,11 @@ import java.util.UUID;
 
 import static com.walmartlabs.concord.it.common.ITUtils.archive;
 import static com.walmartlabs.concord.it.common.ServerClient.*;
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class CheckpointsIT extends AbstractServerIT {
 
-    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    @Test
     public void testCheckpoint() throws Exception {
         // prepare the payload
 
@@ -83,7 +83,7 @@ public class CheckpointsIT extends AbstractServerIT {
         assertLog(".*==End.*", 3, ab);
     }
 
-    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    @Test
     public void testRestoreCheckpointWithGetByName() throws Exception {
         byte[] payload = archive(CheckpointsIT.class.getResource("oneCheckpoint").toURI());
 
@@ -116,7 +116,7 @@ public class CheckpointsIT extends AbstractServerIT {
         assertLog(".*bbb after.*", 2, ab);
     }
 
-    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    @Test
     public void testRestoreCheckpointWithEventName() throws Exception {
         // prepare the payload
 
@@ -150,7 +150,7 @@ public class CheckpointsIT extends AbstractServerIT {
         assertLog(".*Event Name: second.*", ab);
     }
 
-    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    @Test
     public void testCheckpointWithError() throws Exception {
         // prepare the payload
 
@@ -194,7 +194,7 @@ public class CheckpointsIT extends AbstractServerIT {
         assertLog(".*==End.*", ab);
     }
 
-    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    @Test
     public void testCheckpointWithArgs() throws Exception {
         String orgName = "org_" + randomString();
 
@@ -238,7 +238,7 @@ public class CheckpointsIT extends AbstractServerIT {
         assertLog(".*checkpoint pointA.*", ab);
     }
 
-    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    @Test
     public void testExpressions() throws Exception {
         String xValue = "x_" + randomString();
 
@@ -262,7 +262,7 @@ public class CheckpointsIT extends AbstractServerIT {
     /**
      * Verifies the {@code LogTagMetadataProvider} feature.
      */
-    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    @Test
     public void testTags() throws Exception {
         byte[] payload = archive(CheckpointsIT.class.getResource("checkpoints").toURI());
 

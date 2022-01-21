@@ -25,13 +25,13 @@ import com.walmartlabs.concord.imports.ImportsListener;
 import com.walmartlabs.concord.project.model.ProjectDefinition;
 import com.walmartlabs.concord.project.yaml.YamlConverterException;
 import com.walmartlabs.concord.project.yaml.YamlParserException;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.net.URI;
 import java.nio.file.Paths;
 import java.util.Map;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.mock;
 
 public class ProjectLoaderTest {
@@ -52,12 +52,14 @@ public class ProjectLoaderTest {
         assertNotNull(pd.getForms().get("myForm"));
     }
 
-    @Test(expected = YamlConverterException.class)
-    public void testEmptyField() throws Exception {
-        ProjectLoader loader = new ProjectLoader(mock(ImportManager.class));
+    @Test
+    public void testEmptyField() {
+        assertThrows(YamlConverterException.class, () -> {
+            ProjectLoader loader = new ProjectLoader(mock(ImportManager.class));
 
-        URI uri = ClassLoader.getSystemResource("emptyField").toURI();
-        loader.loadProject(Paths.get(uri), new NoopImportsNormalizer(), ImportsListener.NOP_LISTENER);
+            URI uri = ClassLoader.getSystemResource("emptyField").toURI();
+            loader.loadProject(Paths.get(uri), new NoopImportsNormalizer(), ImportsListener.NOP_LISTENER);
+        });
     }
 
     @Test

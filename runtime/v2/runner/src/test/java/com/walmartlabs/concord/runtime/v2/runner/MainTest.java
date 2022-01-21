@@ -37,7 +37,10 @@ import com.walmartlabs.concord.runtime.common.cfg.LoggingConfiguration;
 import com.walmartlabs.concord.runtime.common.cfg.RunnerConfiguration;
 import com.walmartlabs.concord.runtime.v2.runner.checkpoints.CheckpointService;
 import com.walmartlabs.concord.runtime.v2.runner.guice.BaseRunnerModule;
-import com.walmartlabs.concord.runtime.v2.runner.logging.*;
+import com.walmartlabs.concord.runtime.v2.runner.logging.LoggerProvider;
+import com.walmartlabs.concord.runtime.v2.runner.logging.LoggingClient;
+import com.walmartlabs.concord.runtime.v2.runner.logging.LoggingConfigurator;
+import com.walmartlabs.concord.runtime.v2.runner.logging.RunnerLogger;
 import com.walmartlabs.concord.runtime.v2.runner.tasks.TaskCallListener;
 import com.walmartlabs.concord.runtime.v2.runner.tasks.TaskCallPolicyChecker;
 import com.walmartlabs.concord.runtime.v2.runner.tasks.TaskResultListener;
@@ -48,9 +51,9 @@ import com.walmartlabs.concord.svm.ExecutionListener;
 import com.walmartlabs.concord.svm.Runtime;
 import com.walmartlabs.concord.svm.ThreadId;
 import org.immutables.value.Value;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -70,11 +73,10 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 
-import static org.junit.Assert.*;
-import static org.mockito.Mockito.*;
 import static java.util.regex.Pattern.quote;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
 
 public class MainTest {
 
@@ -91,7 +93,9 @@ public class MainTest {
     private byte[] lastLog;
     private byte[] allLogs;
 
-    @Before
+    private Path segmentedLogDir;
+
+    @BeforeEach
     public void setUp() throws IOException {
         workDir = Files.createTempDirectory("test");
 
@@ -137,7 +141,7 @@ public class MainTest {
         allLogs = null;
     }
 
-    @After
+    @AfterEach
     public void tearDown() throws IOException {
         if (workDir != null) {
             IOUtils.deleteRecursively(workDir);
@@ -1076,7 +1080,7 @@ public class MainTest {
     }
 
     private byte[] run(RunnerConfiguration baseCfg) throws Exception {
-        assertNotNull("save() the process configuration first", processConfiguration);
+        assertNotNull(processConfiguration, "save() the process configuration first");
 
         ImmutableRunnerConfiguration.Builder runnerCfg = RunnerConfiguration.builder()
                 .logging(LoggingConfiguration.builder().segmentedLogs(false).build());
@@ -1376,7 +1380,7 @@ public class MainTest {
         @Override
         public TaskResult resume(ResumeEvent event) {
             log.info("RESUME: {}", event);
-            if ((boolean)event.state().get("errorOnResume")) {
+            if ((boolean) event.state().get("errorOnResume")) {
                 throw new RuntimeException("Error on resume!");
             }
 

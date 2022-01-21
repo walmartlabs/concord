@@ -27,7 +27,7 @@ import com.walmartlabs.concord.sdk.Context;
 import io.takari.bpm.api.Variables;
 import io.takari.bpm.el.DefaultExpressionManager;
 import io.takari.bpm.el.ExpressionManager;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.io.InputStream;
 import java.nio.file.Files;
@@ -36,7 +36,7 @@ import java.nio.file.StandardCopyOption;
 import java.util.Arrays;
 import java.util.Map;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class PolicyPreprocessorTest {
 
