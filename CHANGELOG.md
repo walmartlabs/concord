@@ -1,6 +1,6 @@
 # Change log
 
-## [Unreleased]
+## [1.93.0] - 2022-01-24
 
 ### Added
 
