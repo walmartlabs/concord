@@ -1,5 +1,56 @@
 # Change log
 
+## [Unreleased]
+
+### Added
+
+- runtime-v2: function to retrieve the current flow name 
+([#514](https://github.com/walmartlabs/concord/pull/514));
+- runtime-v2: add `evalAsMap` flow function
+([#520](https://github.com/walmartlabs/concord/pull/520));
+- concord-agent: add dependencyResolveTimeout configuration
+parameter ([#522](https://github.com/walmartlabs/concord/pull/522));
+- concord-parent: support for Apple M1 silicon
+([#527](https://github.com/walmartlabs/concord/pull/527));
+- concord-console: add icon for suspended status
+([#530](https://github.com/walmartlabs/concord/pull/530)).
+
+### Changed
+
+- runtime-v2: disable GraalVM runtime compilation warning,
+fix logging ([#517](https://github.com/walmartlabs/concord/pull/517));
+- runtime-v2: use stdout instead of files for logging
+([#518](https://github.com/walmartlabs/concord/pull/518));
+- concord-server, runtime-v2: fix for empty exclusive group
+values ([#519](https://github.com/walmartlabs/concord/pull/519);
+- concord-server, lock-tasks: avoid creating a wait
+condition on each lock aquisition attempt
+([#521](https://github.com/walmartlabs/concord/pull/521));
+- concord-agent: log artifact download errors into process
+log ([#523](https://github.com/walmartlabs/concord/pull/523));
+- project: migrate to JUnit 5
+([#528](https://github.com/walmartlabs/concord/pull/528));
+- runtime-v1: remove variables from default vars with
+the same names as task names to avoid conflicts
+([#529](https://github.com/walmartlabs/concord/pull/529));
+- concord-server: remove `/api/service/process_portal`
+([#531](https://github.com/walmartlabs/concord/pull/531));
+- runtime-v2: log errors when `ignoreErrors` specified
+([#532](https://github.com/walmartlabs/concord/pull/532));
+- concord-server: better checkpoint data validation
+([#533](https://github.com/walmartlabs/concord/pull/533));
+- runtime-v2: update JSON schema generation for `ignoreErrors`
+params ([#536](https://github.com/walmartlabs/concord/pull/536));
+- project: add missing `serialVersionUUID` fields to model
+classes ([#537](https://github.com/walmartlabs/concord/pull/537));
+- concord-console, runtime-v2: do not automatically open the
+system log segment
+([#539](https://github.com/walmartlabs/concord/pull/539));
+- runtime-v2: support for `out` parameters of `script` steps
+([#540](https://github.com/walmartlabs/concord/pull/540)).
+
+
+
 ## [1.92.0] - 2021-12-07
 
 ### Added
