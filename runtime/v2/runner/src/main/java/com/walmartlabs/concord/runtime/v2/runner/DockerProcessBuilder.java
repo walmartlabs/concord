@@ -122,7 +122,7 @@ public class DockerProcessBuilder {
     public DockerProcessBuilder(String image) {
         this.image = image;
 
-        if (Boolean.parseBoolean(env(CONCORD_DOCKER_LOCAL_MODE_KEY, "false"))) {
+        if (Boolean.parseBoolean(env(CONCORD_DOCKER_LOCAL_MODE_KEY, "true"))) {
             // in the "local docker mode" we run all Docker processes using the current OS user's UID/GID
             // in order to do that, we need to mount the local /etc/passwd inside of the container
             log.warn("Running in the local Docker mode. Consider setting {}=false in the production environment.", CONCORD_DOCKER_LOCAL_MODE_KEY);
