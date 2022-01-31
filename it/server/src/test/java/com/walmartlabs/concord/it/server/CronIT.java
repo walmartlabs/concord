@@ -26,6 +26,7 @@ import org.eclipse.jgit.api.Git;
 import org.junit.jupiter.api.Test;
 
 import java.io.File;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.util.Collections;
 import java.util.HashSet;
@@ -33,6 +34,7 @@ import java.util.List;
 import java.util.Set;
 
 import static com.walmartlabs.concord.common.IOUtils.grep;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 
 public class CronIT extends AbstractServerIT {
@@ -40,16 +42,7 @@ public class CronIT extends AbstractServerIT {
     // we need extra time for cron to fire up the processes
     @Test
     public void testProfiles() throws Exception {
-        Path tmpDir = createTempDir();
-
-        File src = new File(TriggersRefreshIT.class.getResource("cronProfiles").toURI());
-        IOUtils.copy(src.toPath(), tmpDir);
-
-        Git repo = Git.init().setDirectory(tmpDir.toFile()).call();
-        repo.add().addFilepattern(".").call();
-        repo.commit().setMessage("import").call();
-
-        String gitUrl = tmpDir.toAbsolutePath().toString();
+        String gitUrl = initRepo("cronProfiles");
 
         // ---
 
@@ -111,6 +104,90 @@ public class CronIT extends AbstractServerIT {
         // ---
 
         projectsApi.delete(orgName, projectName);
+    }
+
+    // we need extra time for cron to fire up the processes
+    @Test
+    public void testRunAs() throws Exception {
+        String gitUrl = initRepo("cronRunAs");
+
+        // ---
+
+        String orgName = "org_" + randomString();
+        System.out.println(">>>" + orgName);
+        String projectName = "project_" + randomString();
+        String repoName = "repo_" + randomString();
+
+        OrganizationsApi orgApi = new OrganizationsApi(getApiClient());
+        if (orgApi.get(orgName) == null) {
+            orgApi.createOrUpdate(new OrganizationEntry().setName(orgName));
+        }
+
+        ProjectsApi projectsApi = new ProjectsApi(getApiClient());
+        projectsApi.createOrUpdate(orgName, new ProjectEntry()
+                .setName(projectName)
+                .setVisibility(ProjectEntry.VisibilityEnum.PUBLIC)
+                .setRepositories(Collections.singletonMap(repoName, new RepositoryEntry()
+                        .setUrl(gitUrl)
+                        .setBranch("master"))));
+
+        // ---
+
+        String username = "user_" + randomString();
+
+        UsersApi usersApi = new UsersApi(getApiClient());
+        CreateUserResponse cur = usersApi.createOrUpdate(new CreateUserRequest()
+                .setUsername(username)
+                .setType(CreateUserRequest.TypeEnum.LOCAL));
+
+        ApiKeysApi apiKeyResource = new ApiKeysApi(getApiClient());
+        CreateApiKeyResponse apiKeyResponse = apiKeyResource.create(new CreateApiKeyRequest().setUsername(username));
+
+        SecretClient secretsApi = new SecretClient(getApiClient());
+        CreateSecretRequest secret = CreateSecretRequest.builder()
+                .org(orgName)
+                .project(projectName)
+                .name("test-run-as")
+                .data(apiKeyResponse.getKey().getBytes(StandardCharsets.UTF_8))
+                .build();
+        secretsApi.createSecret(secret);
+
+        waitForTriggers(orgName, projectName, repoName, 1);
+
+        // ---
+
+        ProcessApi processApi = new ProcessApi(getApiClient());
+
+        while (true) {
+            Thread.sleep(1000);
+
+            List<ProcessEntry> processes = processApi.list(orgName, projectName, null, null, null, null, null, null, null, null, null);
+            if (processes.size() != 1) {
+                continue;
+            }
+
+            ProcessEntry pe = processes.get(0);
+            assertNotEquals(ProcessEntry.StatusEnum.FAILED, pe.getStatus());
+            assertEquals(cur.getId(), pe.getInitiatorId());
+            assertEquals(username, pe.getInitiator());
+            break;
+        }
+
+        // ---
+
+        projectsApi.delete(orgName, projectName);
+    }
+
+    private static String initRepo(String initResource) throws Exception {
+        Path tmpDir = createTempDir();
+
+        File src = new File(TriggersRefreshIT.class.getResource(initResource).toURI());
+        IOUtils.copy(src.toPath(), tmpDir);
+
+        Git repo = Git.init().setDirectory(tmpDir.toFile()).call();
+        repo.add().addFilepattern(".").call();
+        repo.commit().setMessage("import").call();
+        return tmpDir.toAbsolutePath().toString();
     }
 
     private List<TriggerEntry> waitForTriggers(String orgName, String projectName, String repoName, int expectedCount) throws Exception {

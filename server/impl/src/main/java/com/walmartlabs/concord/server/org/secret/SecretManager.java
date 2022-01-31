@@ -50,6 +50,8 @@ import com.walmartlabs.concord.server.sdk.ConcordApplicationException;
 import com.walmartlabs.concord.server.sdk.metrics.WithTimer;
 import com.walmartlabs.concord.server.security.Roles;
 import com.walmartlabs.concord.server.security.UserPrincipal;
+import com.walmartlabs.concord.server.security.apikey.ApiKeyDao;
+import com.walmartlabs.concord.server.security.apikey.ApiKeyEntry;
 import com.walmartlabs.concord.server.security.sessionkey.SessionKeyPrincipal;
 import com.walmartlabs.concord.server.user.UserDao;
 import com.walmartlabs.concord.server.user.UserEntry;
@@ -88,6 +90,7 @@ public class SecretManager {
     private final ProjectAccessManager projectAccessManager;
     private final RepositoryDao repositoryDao;
     private final UserManager userManager;
+    private final ApiKeyDao apiKeyDao;
 
     @Inject
     public SecretManager(PolicyManager policyManager,
@@ -100,7 +103,8 @@ public class SecretManager {
                          UserDao userDao,
                          ProjectAccessManager projectAccessManager,
                          RepositoryDao repositoryDao,
-                         UserManager userManager) {
+                         UserManager userManager,
+                         ApiKeyDao apiKeyDao) {
 
         this.policyManager = policyManager;
         this.processQueueManager = processQueueManager;
@@ -113,6 +117,7 @@ public class SecretManager {
         this.projectAccessManager = projectAccessManager;
         this.repositoryDao = repositoryDao;
         this.userManager = userManager;
+        this.apiKeyDao = apiKeyDao;
     }
 
     @WithTimer
@@ -272,6 +277,16 @@ public class SecretManager {
         }
         UUID id = create(tx, name, orgId, projectId, d, storePassword, visibility, storeType, insertMode);
         return new DecryptedBinaryData(id);
+    }
+
+    public ApiKeyEntry assertApiKey(AccessScope accessScope, UUID orgId, String secretName, String password) {
+        DecryptedSecret secret = getSecret(accessScope, orgId, secretName, password, SecretType.DATA);
+        BinaryDataSecret data = (BinaryDataSecret)secret.getSecret();
+        ApiKeyEntry result = apiKeyDao.find(new String(data.getData()));
+        if (result == null) {
+            throw new ConcordApplicationException("Api key from secter '" + secretName + "' not found", Status.NOT_FOUND);
+        }
+        return result;
     }
 
     /**

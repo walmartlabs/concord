@@ -74,6 +74,15 @@ public interface TriggerMixIn extends Trigger {
 
             @JsonProperty("timeZone")
             String timeZone();
+
+            @JsonProperty("runAs")
+            RunAs runAs();
+        }
+
+        interface RunAs {
+
+            @JsonProperty(value = "withSecret", required = true)
+            String withSecret();
         }
     }
 

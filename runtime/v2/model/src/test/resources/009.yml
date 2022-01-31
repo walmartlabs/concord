@@ -23,6 +23,8 @@ triggers:
   - cron:
       spec: "* 12 * * *"
       entryPoint: eventOutput
+      runAs:
+        withSecret: "secret-name"
       activeProfiles:
         - myProfile
       arguments:
