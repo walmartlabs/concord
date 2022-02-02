@@ -20,10 +20,13 @@ package com.walmartlabs.concord.agent.logging;
  * =====
  */
 
+import com.walmartlabs.concord.common.IOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.*;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
@@ -58,15 +61,8 @@ public class LocalProcessLog extends AbstractProcessLog {
     @Override
     public void log(InputStream src) throws IOException {
         Path f = logFile();
-        try (OutputStream dst = Files.newOutputStream(f, StandardOpenOption.CREATE, StandardOpenOption.APPEND);
-             BufferedReader reader = new BufferedReader(new InputStreamReader(src))) {
-
-            String line;
-            while ((line = reader.readLine()) != null) {
-                dst.write(line.getBytes());
-                dst.write('\n');
-                dst.flush();
-            }
+        try (OutputStream dst = Files.newOutputStream(f, StandardOpenOption.CREATE, StandardOpenOption.APPEND)) {
+             IOUtils.copy(src, dst);
         }
     }
 

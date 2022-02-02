@@ -63,8 +63,10 @@ public class SegmentedLogsConsumer implements Consumer<RedirectedProcessLog.Chun
             byte[] segmentBuffer = new byte[buffLength];
             fillBuffer(e.getValue(), ab, segmentBuffer);
 
-            // TODO: retry?
-            logAppender.appendLog(instanceId, e.getKey(), segmentBuffer);
+            if (segmentBuffer.length > 0) {
+                // TODO: retry?
+                logAppender.appendLog(instanceId, e.getKey(), segmentBuffer);
+            }
 
             LogSegmentStats stats = findStats(e.getValue());
             if (stats != null) {
