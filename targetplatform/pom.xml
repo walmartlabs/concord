@@ -97,7 +97,7 @@
         <pac4j.version>4.0.0-RC3</pac4j.version>
         <parc.version>0.1.2</parc.version>
         <picocli.version>4.3.2</picocli.version>
-        <postgres.version>42.2.9</postgres.version>
+        <postgres.version>42.2.25</postgres.version>
         <prometheus.simpleclient.version>0.8.1</prometheus.simpleclient.version>
         <resteasy.version>3.1.4.Final</resteasy.version>
         <selenium.version>3.141.59</selenium.version>
