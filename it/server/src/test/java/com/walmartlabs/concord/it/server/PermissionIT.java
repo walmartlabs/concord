@@ -27,8 +27,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.junit.jupiter.api.Assertions.fail;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class PermissionIT extends AbstractServerIT {
 
@@ -96,6 +95,91 @@ public class PermissionIT extends AbstractServerIT {
         } catch (Exception e) {
             assertTrue(e.getMessage().contains("'createOrg' permission"));
         }
+    }
 
+    @Test
+    public void testUpdateOrgPermission() throws Exception {
+        String userNameA = "userA_" + randomString();
+        String userNameB = "userB_" + randomString();
+        String roleName = "role_" + randomString();
+        String orgName = "org_" + randomString();
+
+
+        // -- Create role with permission to update orgs
+
+        RolesApi rolesApi = new RolesApi(getApiClient());
+        RoleOperationResponse role = rolesApi.createOrUpdate(new RoleEntry()
+                .setName(roleName)
+                .setPermissions(Collections.singletonList("updateOrg")));
+
+        // -- Create user with the role
+
+        UsersApi usersApi = new UsersApi(getApiClient());
+        CreateUserResponse userA = usersApi.createOrUpdate(new CreateUserRequest()
+                .setType(CreateUserRequest.TypeEnum.LOCAL)
+                .setUsername(userNameA)
+                .roles(Collections.singletonList(roleName)));
+
+        // -- Create the org
+
+        OrganizationsApi organizationsApi = new OrganizationsApi(getApiClient());
+        CreateOrganizationResponse cor1 = organizationsApi.createOrUpdate(new OrganizationEntry().setName(orgName));
+
+        assertTrue(cor1.isOk());
+        assertEquals("admin", organizationsApi.get(orgName).getOwner().getUsername());
+
+        // -- Switch to new user's api key
+        ApiKeysApi apiKeysApi = new ApiKeysApi(getApiClient());
+        CreateApiKeyResponse userAKey = apiKeysApi.create(new CreateApiKeyRequest().setUsername(userNameA));
+
+        setApiKey(userAKey.getKey());
+
+        // update org owner
+
+        organizationsApi.createOrUpdate(new OrganizationEntry()
+                .setName(orgName)
+                .owner(new EntityOwner().setId(userA.getId())));
+
+        assertEquals(userA.getId(), organizationsApi.get(orgName).getOwner().getId());
+
+        // -- Remove role (and permission) from user
+
+        resetApiKey();
+        usersApi.createOrUpdate(new CreateUserRequest()
+                .setType(CreateUserRequest.TypeEnum.LOCAL)
+                .setUsername(userNameA)
+                .setRoles(Collections.emptyList())
+        );
+
+        // new user - userB
+
+        CreateUserResponse userB = usersApi.createOrUpdate(new CreateUserRequest()
+                .setType(CreateUserRequest.TypeEnum.LOCAL)
+                .setUsername(userNameB));
+
+        // change owner: userA -> userB
+
+        setApiKey(userAKey.getKey());
+        organizationsApi.createOrUpdate(new OrganizationEntry()
+                .setName(orgName)
+                .owner(new EntityOwner().setId(userB.getId())));
+
+        assertEquals(userB.getId(), organizationsApi.get(orgName).getOwner().getId());
+
+        // -- Org update must be denied
+
+        try {
+            organizationsApi.createOrUpdate(new OrganizationEntry().setName(orgName).setVisibility(OrganizationEntry.VisibilityEnum.PRIVATE));
+            fail("users without updateOrg permissions must not be allowed to create orgs.");
+        } catch (Exception e) {
+            assertTrue(e.getMessage().contains("'updateOrg' permission"));
+        }
+
+        // cleanup
+        resetApiKey();
+        organizationsApi.delete(orgName, "yes");
+        usersApi.delete(userA.getId());
+        usersApi.delete(userB.getId());
+        rolesApi.delete(roleName);
     }
 }
