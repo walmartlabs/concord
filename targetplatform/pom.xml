@@ -20,7 +20,7 @@
         <aopalliance.version>1.0</aopalliance.version>
         <aws.version>1.11.475</aws.version>
         <bouncycastle.version>1.67</bouncycastle.version>
-        <bpm.version>1.0.0</bpm.version>
+        <bpm.version>1.0.1-SNAPSHOT</bpm.version>
         <commons.beanutils.version>1.9.4</commons.beanutils.version>
         <commons.collections.version>3.2.2</commons.collections.version>
         <commons.compress.version>1.21</commons.compress.version>
