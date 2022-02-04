@@ -25,6 +25,7 @@ import com.walmartlabs.concord.client.*;
 import com.walmartlabs.concord.common.IOUtils;
 import org.eclipse.jgit.api.Git;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.Timeout;
 
 import java.io.File;
 import java.nio.file.Path;
@@ -32,6 +33,7 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -42,6 +44,7 @@ public class CronIT extends AbstractServerIT {
 
     // we need extra time for cron to fire up the processes
     @Test
+    @Timeout(value = 4, unit = TimeUnit.MINUTES)
     public void testProfiles() throws Exception {
         Path tmpDir = createTempDir();
 
@@ -78,8 +81,6 @@ public class CronIT extends AbstractServerIT {
         waitForTriggers(orgName, projectName, repoName, 2);
 
         // ---
-
-        ProcessV2Api processV2Api = new ProcessV2Api(getApiClient());
 
         Set<String> expectedPatterns = new HashSet<>();
         expectedPatterns.add(".*Hello, AAA!.*");
