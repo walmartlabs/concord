@@ -56,10 +56,6 @@
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-api</artifactId>
         </dependency>
-        <dependency>
-            <groupId>com.google.guava</groupId>
-            <artifactId>guava</artifactId>
-        </dependency>
 
         <!-- Immutables -->
         <dependency>
@@ -176,13 +172,7 @@
                                 <code>java.field.serialVersionUIDUnchanged</code>
                             </item>
                             <item>
-                                <code>java.method.removed</code>
-                            </item>
-                            <item>
-                                <code>java.class.removed</code>
-                            </item>
-                            <item>
-                                <code>java.method.addedToInterface</code>
+                                <code>java.annotation.added</code>
                             </item>
                         </revapi.ignore>
                     </analysisConfiguration>

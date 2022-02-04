@@ -227,9 +227,11 @@ public class AnsibleHostProcessor implements EventProcessor {
     }
 
     @Value.Immutable
+    @Value.Style(jdkOnly = true)
     public interface HostItem {
 
         @Value.Immutable
+        @Value.Style(jdkOnly = true)
         interface Key {
 
             @Value.Parameter

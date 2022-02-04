@@ -129,6 +129,7 @@ public class SegmentHeaderParser {
     }
 
     @Value.Immutable
+    @Value.Style(jdkOnly = true)
     public interface Position {
 
         @Value.Parameter
@@ -143,6 +144,7 @@ public class SegmentHeaderParser {
     }
 
     @Value.Immutable
+    @Value.Style(jdkOnly = true)
     public interface Segment {
 
         @Value.Parameter
@@ -157,6 +159,7 @@ public class SegmentHeaderParser {
     }
 
     @Value.Immutable
+    @Value.Style(jdkOnly = true)
     public interface Header {
 
         int length();

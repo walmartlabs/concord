@@ -21,7 +21,6 @@ package com.walmartlabs.concord.runtime.v2.parser;
  */
 
 import com.fasterxml.jackson.core.JsonToken;
-import com.google.common.collect.ImmutableMap;
 import com.walmartlabs.concord.runtime.v2.exception.OneOfMandatoryFieldsNotFoundException;
 import com.walmartlabs.concord.runtime.v2.exception.UnsupportedException;
 import com.walmartlabs.concord.runtime.v2.model.ExclusiveMode;
@@ -32,8 +31,11 @@ import com.walmartlabs.concord.runtime.v2.model.Trigger;
 import io.takari.parc.Parser;
 import io.takari.parc.Seq;
 
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Supplier;
 
 import static com.walmartlabs.concord.runtime.v2.parser.ConfigurationGrammar.exclusiveVal;
 import static com.walmartlabs.concord.runtime.v2.parser.GrammarLookup.lookup;
@@ -45,17 +47,15 @@ import static io.takari.parc.Combinators.many1;
 
 public final class TriggersGrammar {
 
-    @SuppressWarnings("unchecked")
     private static final Parser<Atom, Map<String, Object>> githubTriggerRepositoryInfoItem =
             betweenTokens(JsonToken.START_OBJECT, JsonToken.END_OBJECT,
-                    with(ImmutableMap::<String, Object>builder,
+                    with(HashMap::new,
                             o -> options(
                                     optional("repositoryId", regexpVal.map(v -> o.put("repositoryId", v))),
                                     optional("repository", regexpVal.map(v -> o.put("repository", v))),
                                     optional("projectId", regexpVal.map(v -> o.put("projectId", v))),
                                     optional("branch", regexpVal.map(v -> o.put("branch", v))),
-                                    optional("enabled", booleanVal.map(v -> o.put("enabled", v)))))
-                            .map(ImmutableMap.Builder::build));
+                                    optional("enabled", booleanVal.map(v -> o.put("enabled", v))))));
 
     private static final Parser<Atom, Map<String, Object>> githubTriggerRepositoryInfoItemVal =
             orError(githubTriggerRepositoryInfoItem, YamlValueType.GITHUB_REPOSITORY_INFO);
@@ -88,18 +88,18 @@ public final class TriggersGrammar {
 
     private static final Parser<Atom, Map<String, Object>> githubTriggerFilesVal =
             betweenTokens(JsonToken.START_OBJECT, JsonToken.END_OBJECT,
-                with(ImmutableMap::<String, Object>builder,
-                    o -> options(
+                with((Supplier<HashMap<String, Object>>) HashMap::new,
+                        o -> options(
                             optional("added", patternOrArrayVal.map(v -> o.put("added", v))),
                             optional("removed", patternOrArrayVal.map(v -> o.put("removed", v))),
                             optional("modified", patternOrArrayVal.map(v -> o.put("modified", v))),
                             optional("any", patternOrArrayVal.map(v -> o.put("any", v)))))
-                        .map(ImmutableMap.Builder::build));
+                        .map(Collections::unmodifiableMap));
 
     private static final Parser<Atom, Map<String, Object>> githubTriggerConditionsV2 =
             betweenTokens(JsonToken.START_OBJECT, JsonToken.END_OBJECT,
-                with(ImmutableMap::<String, Object>builder,
-                        o -> options(
+                    with((Supplier<HashMap<String, Object>>) HashMap::new,
+                            o -> options(
                                 mandatory("type", stringVal.map(v -> o.put("type", v))),
                                 optional("githubOrg", patternOrArrayVal.map(v -> o.put("githubOrg", v))),
                                 optional("githubRepo", patternOrArrayVal.map(v -> o.put("githubRepo", v))),
@@ -110,7 +110,7 @@ public final class TriggersGrammar {
                                 optional("repositoryInfo", githubTriggerRepositoryInfoVal.map(v -> o.put("repositoryInfo", v))),
                                 optional("files", githubTriggerFilesVal.map(v -> o.put("files", v))),
                                 optional("payload", mapVal.map(v -> o.put("payload", v)))))
-                        .map(ImmutableMap.Builder::build));
+                            .map(Collections::unmodifiableMap));
 
     private static final Parser<Atom, Map<String, Object>> githubTriggerConditionsValV2 =
             orError(githubTriggerConditionsV2, YamlValueType.GITHUB_TRIGGER_CONDITIONS);
