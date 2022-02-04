@@ -20,6 +20,7 @@ package com.walmartlabs.concord.it.server;
  * =====
  */
 
+import com.walmartlabs.concord.ApiException;
 import com.walmartlabs.concord.client.*;
 import com.walmartlabs.concord.common.IOUtils;
 import org.eclipse.jgit.api.Git;
@@ -31,6 +32,8 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static com.walmartlabs.concord.common.IOUtils.grep;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
@@ -76,7 +79,7 @@ public class CronIT extends AbstractServerIT {
 
         // ---
 
-        ProcessApi processApi = new ProcessApi(getApiClient());
+        ProcessV2Api processV2Api = new ProcessV2Api(getApiClient());
 
         Set<String> expectedPatterns = new HashSet<>();
         expectedPatterns.add(".*Hello, AAA!.*");
@@ -85,10 +88,15 @@ public class CronIT extends AbstractServerIT {
         while (true) {
             Thread.sleep(1000);
 
-            List<ProcessEntry> processes = processApi.list(orgName, projectName, null, null, null, null, null, null, null, null, null);
-            if (processes.size() != 2) {
+            List<ProcessEntry> aaaProcesses = listCronProcesses(orgName, projectName, repoName, "AAA");
+            List<ProcessEntry> bbbProcesses = listCronProcesses(orgName, projectName, repoName, "BBB");
+
+            if (aaaProcesses.isEmpty() || bbbProcesses.isEmpty()) {
                 continue;
             }
+
+            List<ProcessEntry> processes = Stream.concat(aaaProcesses.stream(), bbbProcesses.stream())
+                    .collect(Collectors.toList());
 
             for (ProcessEntry e : processes) {
                 assertNotEquals(ProcessEntry.StatusEnum.FAILED, e.getStatus());
@@ -108,9 +116,17 @@ public class CronIT extends AbstractServerIT {
             }
         }
 
-        // ---
+        // --- clean up
 
         projectsApi.delete(orgName, projectName);
+    }
+
+    private List<ProcessEntry> listCronProcesses(String o, String p, String r, String tag) throws ApiException {
+        ProcessV2Api processV2Api = new ProcessV2Api(getApiClient());
+
+        return processV2Api.list(null, o, null, p, null, r, null, null,
+                Collections.singletonList(tag), null, "cron", null, null, null, null);
+
     }
 
     private List<TriggerEntry> waitForTriggers(String orgName, String projectName, String repoName, int expectedCount) throws Exception {
