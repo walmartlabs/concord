@@ -284,7 +284,7 @@ public class SecretManager {
         BinaryDataSecret data = (BinaryDataSecret)secret.getSecret();
         ApiKeyEntry result = apiKeyDao.find(new String(data.getData()));
         if (result == null) {
-            throw new ConcordApplicationException("Api key from secter '" + secretName + "' not found", Status.NOT_FOUND);
+            throw new ConcordApplicationException("Api key from secret '" + secretName + "' not found", Status.NOT_FOUND);
         }
         return result;
     }
