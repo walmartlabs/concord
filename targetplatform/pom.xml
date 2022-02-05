@@ -22,14 +22,12 @@
         <bouncycastle.version>1.70</bouncycastle.version>
         <bpm.version>1.0.0</bpm.version>
         <commons.beanutils.version>1.9.4</commons.beanutils.version>
-        <commons.collections.version>3.2.2</commons.collections.version>
         <commons.compress.version>1.21</commons.compress.version>
         <commons.email.version>1.5</commons.email.version>
         <commons.io.version>2.11.0</commons.io.version> <!-- necessary for resteasy -->
         <commons.lang.version>3.12.0</commons.lang.version>
-        <commons.pool.version>2.8.0</commons.pool.version>
-        <commons.text.version>1.8</commons.text.version>
-        <commons.validator.version>1.6</commons.validator.version>
+        <commons.text.version>1.9</commons.text.version>
+        <commons.validator.version>1.7</commons.validator.version>
         <config.version>1.4.2</config.version>
         <cronutils.version>9.1.6</cronutils.version>
         <errorproneannotations.version>2.11.0</errorproneannotations.version>
@@ -38,11 +36,11 @@
         <greenmail.version>1.6.5</greenmail.version>
         <groovy.version>2.5.15</groovy.version>
         <gson.fire.version>1.8.3</gson.fire.version>
-        <gson.version>2.8.6</gson.version>
+        <gson.version>2.8.8</gson.version>
         <guava.version>31.0.1-jre</guava.version>
-        <guice.version>4.2.3</guice.version>
+        <guice.version>5.1.0</guice.version>
         <hibernate.validator.version>6.1.5.Final</hibernate.validator.version>
-        <hikaricp.version>5.0.1</hikaricp.version>
+        <hikaricp.version>4.0.3</hikaricp.version>
         <http.request.version>6.0</http.request.version>
         <httpclient.version>4.5.13</httpclient.version>
         <httpcore.version>4.4.13</httpcore.version>
@@ -58,12 +56,12 @@
         <javax.mail.version>1.6.2</javax.mail.version>
         <javax.validation.version>2.0.1.Final</javax.validation.version>
         <javax.ws.rs.version>1.0.1.Final</javax.ws.rs.version>
-        <javers.version>3.11.1</javers.version>
+        <javers.version>6.6.2</javers.version>
         <jboss.logging>3.3.2.Final</jboss.logging>
-        <jcl-over-slf4j.version>1.7.25</jcl-over-slf4j.version>
-        <jetbrain.annotations.version>19.0.0</jetbrain.annotations.version>
+        <jcl-over-slf4j.version>1.7.32</jcl-over-slf4j.version>
+        <jetbrain.annotations.version>23.0.0</jetbrain.annotations.version>
         <jetty.version>9.4.44.v20210927</jetty.version>
-        <jgit.version>5.2.0.201812061821-r</jgit.version> <!-- updating requires some changes in how the auth is set up in ITs -->
+        <jgit.version>5.13.0.202109080827-r</jgit.version> <!-- updating requires some changes in how the auth is set up in ITs -->
         <jna.version>5.10.0</jna.version>
         <jooq.version>3.14.0</jooq.version>
         <jsch.version>0.1.55</jsch.version>
@@ -86,7 +84,7 @@
         <maven.resolver.version>1.7.3</maven.resolver.version>
         <maven.resolver.version.concord>0.0.4</maven.resolver.version.concord>
         <metrics.version>4.2.8</metrics.version>
-        <mockito.version>3.2.4</mockito.version>
+        <mockito.version>4.3.1</mockito.version>
         <mustache.version>0.9.10</mustache.version>
         <nimbus.jwt.version>8.8</nimbus.jwt.version>
         <node.version>10.11.0</node.version>
@@ -97,17 +95,17 @@
         <pac4j.version>4.0.0-RC3</pac4j.version>
         <parc.version>0.1.2</parc.version>
         <picocli.version>4.6.2</picocli.version>
-        <postgres.version>42.2.9</postgres.version>
+        <postgres.version>42.3.2</postgres.version>
         <prometheus.simpleclient.version>0.14.1</prometheus.simpleclient.version>
         <resteasy.version>3.1.4.Final</resteasy.version>
         <selenium.version>3.141.59</selenium.version>
-        <servlet.version>3.1.0</servlet.version>
+        <servlet.version>4.0.1</servlet.version>
         <shiro.version>1.8.0</shiro.version>
         <siesta.version>2.3.2</siesta.version>
         <sisu.version>0.3.5</sisu.version>
         <slf4j.version>1.7.35</slf4j.version>
-        <snakeyaml.version>1.28</snakeyaml.version>
-        <sshd.version>1.6.0</sshd.version>
+        <snakeyaml.version>1.30</snakeyaml.version>
+        <sshd.version>2.8.0</sshd.version>
         <swagger.version>1.5.20</swagger.version>
         <sysoutslf4j.version>1.0.2</sysoutslf4j.version>
         <testcontainers.concord.version>0.0.40</testcontainers.concord.version>
@@ -517,11 +515,6 @@
             </dependency>
             <dependency>
                 <groupId>com.google.inject.extensions</groupId>
-                <artifactId>guice-multibindings</artifactId>
-                <version>${guice.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.google.inject.extensions</groupId>
                 <artifactId>guice-servlet</artifactId>
                 <version>${guice.version}</version>
             </dependency>
@@ -677,11 +670,6 @@
                 <version>${commons.email.version}</version>
             </dependency>
             <dependency>
-                <groupId>org.apache.commons</groupId>
-                <artifactId>commons-pool2</artifactId>
-                <version>${commons.pool.version}</version>
-            </dependency>
-            <dependency>
                 <groupId>commons-validator</groupId>
                 <artifactId>commons-validator</artifactId>
                 <version>${commons.validator.version}</version>
@@ -738,6 +726,11 @@
             <dependency>
                 <groupId>org.apache.sshd</groupId>
                 <artifactId>sshd-git</artifactId>
+                <version>${sshd.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.sshd</groupId>
+                <artifactId>sshd-common</artifactId>
                 <version>${sshd.version}</version>
             </dependency>
             <dependency>
@@ -902,6 +895,12 @@
                 <groupId>org.postgresql</groupId>
                 <artifactId>postgresql</artifactId>
                 <version>${postgres.version}</version>
+                <exclusions>
+                    <exclusion>
+                        <groupId>org.checkerframework</groupId>
+                        <artifactId>checker-qual</artifactId>
+                    </exclusion>
+                </exclusions>
             </dependency>
             <dependency>
                 <groupId>com.icegreen</groupId>
@@ -1103,11 +1102,6 @@
                 <groupId>io.fabric8</groupId>
                 <artifactId>kubernetes-client</artifactId>
                 <version>${kubernetes.client.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>commons-collections</groupId>
-                <artifactId>commons-collections</artifactId>
-                <version>${commons.collections.version}</version>
             </dependency>
             <dependency>
                 <groupId>io.fabric8</groupId>

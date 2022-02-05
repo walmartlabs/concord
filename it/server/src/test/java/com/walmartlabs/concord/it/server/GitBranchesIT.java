@@ -73,7 +73,7 @@ public class GitBranchesIT extends AbstractServerIT {
         git.commit().setMessage("dev commit").call();
         git.push().setRefSpecs(new RefSpec("dev:dev")).call();
 
-        gitServer = new MockGitSshServer(0, bareRepo.toAbsolutePath().toString());
+        gitServer = new MockGitSshServer(0, bareRepo);
         gitServer.start();
     }
 

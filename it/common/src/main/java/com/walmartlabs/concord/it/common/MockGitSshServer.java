@@ -20,6 +20,7 @@ package com.walmartlabs.concord.it.common;
  * =====
  */
 
+import org.apache.sshd.git.GitLocationResolver;
 import org.apache.sshd.git.pack.GitPackCommandFactory;
 import org.apache.sshd.server.SshServer;
 import org.apache.sshd.server.keyprovider.SimpleGeneratorHostKeyProvider;
@@ -27,6 +28,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.nio.file.Path;
 
 public class MockGitSshServer {
 
@@ -34,7 +36,7 @@ public class MockGitSshServer {
 
     private final SshServer server;
 
-    public MockGitSshServer(int port, String repository) {
+    public MockGitSshServer(int port, Path repository) {
         log.info("Creating a mock git+ssh server on port {}, using {}...", port, repository);
         this.server = createServer(port, repository);
     }
@@ -51,12 +53,12 @@ public class MockGitSshServer {
         return server.getPort();
     }
 
-    private static SshServer createServer(int port, String repository) {
+    private static SshServer createServer(int port, Path repository) {
         SshServer s = SshServer.setUpDefaultServer();
         s.setPort(port);
         s.setKeyPairProvider(new SimpleGeneratorHostKeyProvider());
         s.setPublickeyAuthenticator((username, key, session) -> true);
-        s.setCommandFactory(new GitPackCommandFactory(repository));
+        s.setCommandFactory(new GitPackCommandFactory(GitLocationResolver.constantPath(repository)));
         return s;
     }
 }

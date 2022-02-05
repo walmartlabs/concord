@@ -46,7 +46,7 @@ public class EscapeGitCommitMessageIT extends AbstractServerIT {
         Path data = Paths.get(EscapeGitCommitMessageIT.class.getResource("escapeCommitMessage").toURI());
         Path repo = GitUtils.createBareRepository(data, "oops ${booom}");
 
-        gitServer = new MockGitSshServer(0, repo.toAbsolutePath().toString());
+        gitServer = new MockGitSshServer(0, repo);
         gitServer.start();
 
         gitPort = gitServer.getPort();
