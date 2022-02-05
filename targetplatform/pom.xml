@@ -61,7 +61,7 @@
         <jcl-over-slf4j.version>1.7.32</jcl-over-slf4j.version>
         <jetbrain.annotations.version>23.0.0</jetbrain.annotations.version>
         <jetty.version>9.4.44.v20210927</jetty.version>
-        <jgit.version>5.13.0.202109080827-r</jgit.version> <!-- updating requires some changes in how the auth is set up in ITs -->
+        <jgit.version>5.13.0.202109080827-r</jgit.version>
         <jna.version>5.10.0</jna.version>
         <jooq.version>3.14.0</jooq.version>
         <jsch.version>0.1.55</jsch.version>

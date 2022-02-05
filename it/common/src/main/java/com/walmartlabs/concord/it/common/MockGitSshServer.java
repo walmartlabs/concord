@@ -21,6 +21,7 @@ package com.walmartlabs.concord.it.common;
  */
 
 import org.apache.sshd.git.GitLocationResolver;
+import org.apache.sshd.git.pack.GitPackCommand;
 import org.apache.sshd.git.pack.GitPackCommandFactory;
 import org.apache.sshd.server.SshServer;
 import org.apache.sshd.server.keyprovider.SimpleGeneratorHostKeyProvider;
@@ -58,7 +59,17 @@ public class MockGitSshServer {
         s.setPort(port);
         s.setKeyPairProvider(new SimpleGeneratorHostKeyProvider());
         s.setPublickeyAuthenticator((username, key, session) -> true);
-        s.setCommandFactory(new GitPackCommandFactory(GitLocationResolver.constantPath(repository)));
+        s.setCommandFactory(new GitPackCommandFactory(GitLocationResolver.constantPath(repository)) {
+            @Override
+            public GitPackCommand createGitCommand(String command) {
+                return new GitPackCommand(getGitLocationResolver(), command, resolveExecutorService(command)) {
+                    @Override
+                    protected Path resolveRootDirectory(String command, String[] args) {
+                        return repository;
+                    }
+                };
+            }
+        });
         return s;
     }
 }

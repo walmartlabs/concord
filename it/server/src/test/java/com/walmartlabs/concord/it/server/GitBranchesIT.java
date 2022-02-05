@@ -24,6 +24,7 @@ import com.walmartlabs.concord.client.*;
 import com.walmartlabs.concord.common.IOUtils;
 import com.walmartlabs.concord.it.common.MockGitSshServer;
 import org.eclipse.jgit.api.Git;
+import org.eclipse.jgit.lib.ConfigConstants;
 import org.eclipse.jgit.transport.RefSpec;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -52,7 +53,7 @@ public class GitBranchesIT extends AbstractServerIT {
         Path workdir = createTempDir();
         Git git = Git.cloneRepository()
                 .setDirectory(workdir.toFile())
-                .setURI("file://" + bareRepo.toString())
+                .setURI("file://" + bareRepo)
                 .call();
 
         Path initialData = Paths.get(PortalIT.class.getResource("gitBranches/qa").toURI());
