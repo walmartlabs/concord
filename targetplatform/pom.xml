@@ -40,7 +40,7 @@
         <guava.version>31.0.1-jre</guava.version>
         <guice.version>5.1.0</guice.version>
         <hibernate.validator.version>6.1.5.Final</hibernate.validator.version>
-        <hikaricp.version>4.0.3</hikaricp.version>
+        <hikaricp.version>3.4.2</hikaricp.version>
         <http.request.version>6.0</http.request.version>
         <httpclient.version>4.5.13</httpclient.version>
         <httpcore.version>4.4.13</httpcore.version>
@@ -74,7 +74,7 @@
         <kubernetes.client.version>4.8.0</kubernetes.client.version>
         <launcher.version>0.128</launcher.version>
         <liquibase.version>3.5.1</liquibase.version> <!-- the newer versions (up to 3.5.3) have incorrect mappings for PG's blob/bytea -->
-        <logback.version>1.2.3</logback.version>
+        <logback.version>1.2.10</logback.version>
         <maven.annotation.version>3.5</maven.annotation.version>
         <maven.api.version>3.0.5</maven.api.version>
         <maven.artifact.version>3.8.4</maven.artifact.version>

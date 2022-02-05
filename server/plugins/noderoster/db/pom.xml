@@ -134,10 +134,6 @@
                                     <log>(?s).*ready for start up.*ready to accept connections.*</log>
                                     <time>60000</time>
                                 </wait>
-                                <restartPolicy>
-                                    <name>on-failure</name>
-                                    <retry>3</retry>
-                                </restartPolicy>
                             </run>
                         </image>
                     </images>
