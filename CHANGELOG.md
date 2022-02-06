@@ -6,6 +6,8 @@
 
 ### Changed
 
+concord-agent: use single tmp directory for api-client
+([#544](https://github.com/walmartlabs/concord/pull/544));
 
 ## [1.93.0] - 2022-01-24
 
