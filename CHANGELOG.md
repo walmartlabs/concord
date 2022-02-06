@@ -6,6 +6,8 @@
 
 ### Changed
 
+runtime-v1/v2: cleanup docker tmp files
+([#545](https://github.com/walmartlabs/concord/pull/545));
 concord-agent: use single tmp directory for api-client
 ([#544](https://github.com/walmartlabs/concord/pull/544));
 
