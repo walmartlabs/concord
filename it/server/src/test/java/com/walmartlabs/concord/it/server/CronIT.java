@@ -24,6 +24,7 @@ import com.walmartlabs.concord.client.*;
 import com.walmartlabs.concord.common.IOUtils;
 import org.eclipse.jgit.api.Git;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.Timeout;
 
 import java.io.File;
 import java.nio.file.Path;
@@ -31,10 +32,13 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 
 import static com.walmartlabs.concord.common.IOUtils.grep;
+import static com.walmartlabs.concord.it.server.AbstractServerIT.DEFAULT_TEST_TIMEOUT;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 
+@Timeout(value = 2*DEFAULT_TEST_TIMEOUT, unit = TimeUnit.MILLISECONDS)
 public class CronIT extends AbstractServerIT {
 
     // we need extra time for cron to fire up the processes
