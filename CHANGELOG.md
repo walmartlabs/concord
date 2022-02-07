@@ -6,6 +6,8 @@
 
 ### Changed
 
+runtime-v1/v2: use nashorn compat mode for graalvm
+([#551](https://github.com/walmartlabs/concord/pull/551));
 runtime-v1/v2: cleanup docker tmp files
 ([#545](https://github.com/walmartlabs/concord/pull/545));
 concord-agent: use single tmp directory for api-client
