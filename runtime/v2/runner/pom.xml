@@ -290,6 +290,9 @@
                                 <transformer implementation="org.apache.maven.plugins.shade.resource.AppendingTransformer">
                                     <resource>META-INF/sisu/javax.inject.Named</resource>
                                 </transformer>
+                                <transformer implementation="org.apache.maven.plugins.shade.resource.AppendingTransformer">
+                                    <resource>META-INF/services/com.oracle.truffle.api.TruffleLanguage$Provider</resource>
+                                </transformer>
                                 <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
                                     <mainClass>com.walmartlabs.concord.runtime.v2.runner.Main</mainClass>
                                 </transformer>
