@@ -125,6 +125,7 @@ public class DefaultScriptEvaluator implements ScriptEvaluator {
             ScriptEngine engine = GraalJSScriptEngine.create(Engine.newBuilder()
                             .allowExperimentalOptions(true)
                             .option("engine.WarnInterpreterOnly", "false")
+                            .option("js.nashorn-compat", "true")
                             .build(),
                     org.graalvm.polyglot.Context.newBuilder("js")
                             .allowHostAccess(access));
