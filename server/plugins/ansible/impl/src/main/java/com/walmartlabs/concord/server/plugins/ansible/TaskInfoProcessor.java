@@ -248,6 +248,7 @@ public class TaskInfoProcessor implements EventProcessor {
     }
 
     @Value.Immutable
+    @Value.Style(jdkOnly = true)
     interface TaskInfoKey {
 
         UUID instanceId();
@@ -262,6 +263,7 @@ public class TaskInfoProcessor implements EventProcessor {
     }
 
     @Value.Immutable
+    @Value.Style(jdkOnly = true)
     interface TaskInfoItem {
 
         @Value.Parameter
@@ -272,6 +274,7 @@ public class TaskInfoProcessor implements EventProcessor {
     }
 
     @Value.Immutable
+    @Value.Style(jdkOnly = true)
     interface TaskDetails {
 
         String taskName();

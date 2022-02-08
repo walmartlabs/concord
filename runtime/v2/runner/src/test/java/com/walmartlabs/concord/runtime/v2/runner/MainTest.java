@@ -1202,6 +1202,7 @@ public class MainTest {
         }
 
         @Value.Immutable
+        @Value.Style(jdkOnly = true)
         @JsonSerialize(as = ImmutableDefaults.class)
         @JsonDeserialize(as = ImmutableDefaults.class)
         public interface Defaults {

@@ -30,7 +30,6 @@ import com.fasterxml.jackson.databind.jsonFormatVisitors.JsonFormatVisitorWrappe
 import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.databind.ser.std.StdSerializer;
-import com.google.common.collect.ImmutableMap;
 import com.kjetland.jackson.jsonSchema.JsonSchemaConfig;
 import com.kjetland.jackson.jsonSchema.JsonSchemaGenerator;
 import com.kjetland.jackson.jsonSchema.SubclassesResolver;
@@ -130,7 +129,9 @@ public class ConcordJsonSchemaGenerator {
         Map<String, String> customType2FormatMapping = Collections.emptyMap();
         boolean useMultipleEditorSelectViaProperty = false;
         Set<Class<?>> uniqueItemClasses = Collections.emptySet();
-        Map<Class<?>, Class<?>> classTypeReMapping = ImmutableMap.of(Imports.class, ImportsMixIn.class, Form.class, Object.class);
+        Map<Class<?>, Class<?>> classTypeReMapping = new HashMap<>();
+        classTypeReMapping.put(Imports.class, ImportsMixIn.class);
+        classTypeReMapping.put(Form.class, Object.class);
         Map<String, Supplier<JsonNode>> jsonSuppliers = Collections.emptyMap();
         SubclassesResolver subclassesResolver = new SubclassesResolverImpl();
         boolean failOnUnknownProperties = true;
