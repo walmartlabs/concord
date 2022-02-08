@@ -345,6 +345,9 @@ public class YamlOkParserTest extends AbstractParserTest {
                 .build(), cfg.events());
     }
 
+    /**
+     * Triggers
+     */
     @Test
     public void test009() throws Exception {
         ProcessDefinition pd = load("009.yml");
@@ -363,6 +366,7 @@ public class YamlOkParserTest extends AbstractParserTest {
 
         t = triggers.get(2);
         assertEquals("cron", t.name());
+        assertEquals(Collections.singletonMap("withSecret", "secret-name"), t.configuration().get("runAs"));
 
         t = triggers.get(3);
         assertEquals("manual", t.name());
