@@ -47,6 +47,7 @@ public class ImmutablesTest {
     }
 
     @Value.Immutable
+    @Value.Style(jdkOnly = true)
     public interface TestBean extends Serializable {
 
         String foo();

@@ -30,6 +30,7 @@ import java.io.Serializable;
 
 @Value.Immutable
 @Serial.Version(1)
+@Value.Style(jdkOnly = true)
 public interface SourceMap extends Serializable {
 
     static SourceMap from(Location location) {

@@ -673,6 +673,7 @@ public class RunnerJobExecutor implements JobExecutor {
     }
 
     @Value.Immutable
+    @Value.Style(jdkOnly = true)
     public interface RunnerJobExecutorConfiguration {
 
         String agentId();

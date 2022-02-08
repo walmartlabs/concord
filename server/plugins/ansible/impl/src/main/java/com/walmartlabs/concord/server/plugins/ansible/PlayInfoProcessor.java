@@ -285,6 +285,7 @@ public class PlayInfoProcessor implements EventProcessor {
     }
 
     @Value.Immutable
+    @Value.Style(jdkOnly = true)
     interface PlayInfoKey {
 
         UUID instanceId();
@@ -301,6 +302,7 @@ public class PlayInfoProcessor implements EventProcessor {
     }
 
     @Value.Immutable
+    @Value.Style(jdkOnly = true)
     interface PlayInfoFinishedItem {
 
         PlayInfoKey key();
@@ -316,6 +318,7 @@ public class PlayInfoProcessor implements EventProcessor {
     }
 
     @Value.Immutable
+    @Value.Style(jdkOnly = true)
     interface PlayInfoItem {
 
         PlayInfoKey key();

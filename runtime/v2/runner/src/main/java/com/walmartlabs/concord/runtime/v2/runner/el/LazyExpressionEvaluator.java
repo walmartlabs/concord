@@ -183,6 +183,7 @@ public class LazyExpressionEvaluator implements ExpressionEvaluator {
         functions.put("allVariables", AllVariablesFunction.getMethod());
         functions.put("currentFlowName", CurrentFlowNameFunction.getMethod());
         functions.put("evalAsMap", EvalAsMapFunction.getMethod());
+        functions.put("isDebug", IsDebugFunction.getMethod());
         return new FunctionMapper(functions);
     }
 

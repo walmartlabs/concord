@@ -22,12 +22,9 @@ package com.walmartlabs.concord.runtime.v2.runner.logging;
 
 import ch.qos.logback.classic.ClassicConstants;
 import ch.qos.logback.classic.Level;
-import ch.qos.logback.classic.PatternLayout;
 import ch.qos.logback.classic.encoder.PatternLayoutEncoder;
 import ch.qos.logback.classic.spi.ILoggingEvent;
-import ch.qos.logback.core.pattern.PatternLayoutEncoderBase;
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.google.common.primitives.Bytes;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -53,7 +50,7 @@ public class ConcordLogEncoder extends PatternLayoutEncoder {
             msgBytes = convertToBytes(msg);
         }
         byte[] header = header(event, msgBytes);
-        return Bytes.concat(header, msgBytes);
+        return concat(header, msgBytes);
     }
 
     private byte[] header(ILoggingEvent event, byte[] msgBytes) {
@@ -92,6 +89,13 @@ public class ConcordLogEncoder extends PatternLayoutEncoder {
 
     private static byte[] convertToBytes(String s) {
         return s.getBytes();
+    }
+
+    private static byte[] concat(byte[] a, byte[] b) {
+        byte[] c = new byte[a.length + b.length];
+        System.arraycopy(a, 0, c, 0, a.length);
+        System.arraycopy(b, 0, c, a.length, b.length);
+        return c;
     }
 
     private static class Stats {
