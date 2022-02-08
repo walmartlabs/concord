@@ -63,7 +63,6 @@ public class ConcordLogEncoder extends PatternLayoutEncoder {
         }
 
         Stats stats = processStats(segmentId, event);
-
         return String.format("|%d|%d|%s|%d|%d|", msgBytes.length, segmentId, (isDone(event) ? '1' : '0'), stats.warnings(), stats.errors()).getBytes();
     }
 
@@ -83,6 +82,9 @@ public class ConcordLogEncoder extends PatternLayoutEncoder {
 
         if (isDone(event)) {
             stats = statsHolder.remove(segmentId);
+            if (stats == null) {
+                stats = EMPTY_STATS;
+            }
         }
 
         return stats;

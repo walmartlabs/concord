@@ -1018,7 +1018,8 @@ public class MainTest {
 
         byte[] log = run(runnerCfg);
 
-        assertLog(log, "\\|70\\|2\\|.*done!.*");
+        assertLog(log, Pattern.quote("|0|1|1|0|0||70|2|0|0|0|") + ".*done!.*");
+        assertLog(log, Pattern.quote("|0|2|1|0|0|"));
     }
 
     @Test

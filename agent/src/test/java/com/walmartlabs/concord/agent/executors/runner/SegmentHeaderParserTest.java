@@ -24,6 +24,7 @@ import com.google.common.primitives.Bytes;
 import com.walmartlabs.concord.agent.logging.SegmentHeaderParser;
 import org.junit.jupiter.api.Test;
 
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -32,6 +33,7 @@ import static com.walmartlabs.concord.agent.logging.SegmentHeaderParser.Header;
 import static com.walmartlabs.concord.agent.logging.SegmentHeaderParser.Position;
 import static com.walmartlabs.concord.agent.logging.SegmentHeaderParser.Segment;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class SegmentHeaderParserTest {
 
@@ -181,6 +183,27 @@ public class SegmentHeaderParserTest {
         assertEquals(1, segments.size());
         assertEquals("he", msg(ab, segments.get(0)));
         assertEquals(0, invalidSegments.size());
+    }
+
+    /**
+     *
+     * |0|552|1|0|0|
+     */
+    @Test
+    public void testParseSegmentEndMarker() {
+        String log = "|0|552|1|0|0|";
+        byte[] ab = log.getBytes(StandardCharsets.UTF_8);
+
+        List<Segment> segments = new ArrayList<>();
+        List<Position> invalidSegments = new ArrayList<>();
+
+        int result = SegmentHeaderParser.parse(ab, segments, invalidSegments);
+
+        assertEquals(ab.length, result);
+        assertEquals(1, segments.size());
+        Segment s = segments.get(0);
+        assertEquals(0, s.header().length());
+        assertTrue(s.header().done());
     }
 
     private static String msg(byte[] ab, Segment segment) {

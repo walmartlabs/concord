@@ -1,0 +1,7 @@
+triggers:
+  - cron:
+      spec: "*"
+      entryPoint: "foo"
+      runAs:
+        unknown: 123
+      timezone: "Europe/Moscow"
