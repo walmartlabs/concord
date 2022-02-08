@@ -1051,6 +1051,24 @@ public class MainTest {
         assertLog(log, ".*3: 1.*");
     }
 
+    @Test
+    public void testIsDebug() throws Exception {
+        deploy("isDebug");
+
+        save(ProcessConfiguration.builder()
+                .build());
+
+        byte[] log = run();
+        assertLog(log, ".*isDebug: false.*");
+
+        save(ProcessConfiguration.builder()
+                .debug(true)
+                .build());
+
+        log = run();
+        assertLog(log, ".*isDebug: true.*");
+    }
+
     private void deploy(String resource) throws URISyntaxException, IOException {
         Path src = Paths.get(MainTest.class.getResource(resource).toURI());
         IOUtils.copy(src, workDir);
