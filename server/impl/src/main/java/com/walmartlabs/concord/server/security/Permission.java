@@ -36,7 +36,13 @@ public enum Permission {
      * <p>
      * As in {@code com/walmartlabs/concord/server/db/v1.57.0.xml}
      */
-    CREATE_ORG("createOrg");
+    CREATE_ORG("createOrg"),
+    /**
+     * Permission to update organizations
+     * <p>
+     * As in {@code com/walmartlabs/concord/server/db/v1.94.0.xml}
+     */
+    UPDATE_ORG("updateOrg");
 
     private final String key;
 

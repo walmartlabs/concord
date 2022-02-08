@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.3.xsd">
+
+    <property name="updateOrgPermissionId" value="8fba1fbc-53da-4a4c-b47a-4d2b4cd0b9cf"/>
+
+    <changeSet id="1940000" author="ybrigo@gmail.com">
+        <insert tableName="PERMISSIONS">
+            <column name="PERMISSION_ID" value="${updateOrgPermissionId}"/>
+            <column name="PERMISSION_NAME" value="updateOrg"/>
+            <column name="DESCRIPTION" value="Permission to update organizations"/>
+        </insert>
+
+        <sql>
+            insert into ROLE_PERMISSIONS values (
+                (select ROLE_ID from ROLES where ROLE_NAME = 'concordAdmin'),
+                '${updateOrgPermissionId}'
+            )
+        </sql>
+    </changeSet>
+</databaseChangeLog>
