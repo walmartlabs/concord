@@ -27,6 +27,7 @@ import java.util.Collections;
 import java.util.List;
 
 @Value.Immutable
+@Value.Style(jdkOnly = true)
 public interface Form {
 
     String name();
