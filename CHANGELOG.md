@@ -6,12 +6,16 @@
 
 ### Changed
 
-runtime-v1/v2: use nashorn compat mode for graalvm
+runtime-v1/v2: use Nashorn compat mode for GraalVM
 ([#551](https://github.com/walmartlabs/concord/pull/551));
-runtime-v1/v2: cleanup docker tmp files
+runtime-v1/v2: remove temporary Docker files
 ([#545](https://github.com/walmartlabs/concord/pull/545));
-concord-agent: use single tmp directory for api-client
+concord-agent: use a single temporary directory for API clients
 ([#544](https://github.com/walmartlabs/concord/pull/544));
+- runtime-v2: support for runAs (running as another user)
+in cron ([#547](https://github.com/walmartlabs/concord/pull/547)).
+
+
 
 ## [1.93.0] - 2022-01-24
 
