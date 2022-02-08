@@ -45,13 +45,14 @@ public final class TriggersGrammar {
 
     private static final Parser<Atom, Map<String, Object>> githubTriggerRepositoryInfoItem =
             betweenTokens(JsonToken.START_OBJECT, JsonToken.END_OBJECT,
-                    with(HashMap::new,
+                    with((Supplier<HashMap<String, Object>>) HashMap::new,
                             o -> options(
                                     optional("repositoryId", regexpVal.map(v -> o.put("repositoryId", v))),
                                     optional("repository", regexpVal.map(v -> o.put("repository", v))),
                                     optional("projectId", regexpVal.map(v -> o.put("projectId", v))),
                                     optional("branch", regexpVal.map(v -> o.put("branch", v))),
-                                    optional("enabled", booleanVal.map(v -> o.put("enabled", v))))));
+                                    optional("enabled", booleanVal.map(v -> o.put("enabled", v))))
+                        .map(Collections::unmodifiableMap));
 
     private static final Parser<Atom, Map<String, Object>> githubTriggerRepositoryInfoItemVal =
             orError(githubTriggerRepositoryInfoItem, YamlValueType.GITHUB_REPOSITORY_INFO);
@@ -140,10 +141,10 @@ public final class TriggersGrammar {
 
     private static final Parser<Atom, Map<String, Object>> runAs =
             betweenTokens(JsonToken.START_OBJECT, JsonToken.END_OBJECT,
-                    with(ImmutableMap::<String, Object>builder,
+                    with((Supplier<HashMap<String, Object>>) HashMap::new,
                             o -> options(
                                     mandatory("withSecret", stringNotEmptyVal.map(v -> o.put("withSecret", v)))))
-                            .map(ImmutableMap.Builder::build));
+                            .map(Collections::unmodifiableMap));
 
     private static final Parser<Atom, Map<String, Object>> runAsVal =
             orError(runAs, YamlValueType.RUN_AS);
