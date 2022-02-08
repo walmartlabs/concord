@@ -13,7 +13,9 @@ runtime-v1/v2: remove temporary Docker files
 concord-agent: use a single temporary directory for API clients
 ([#544](https://github.com/walmartlabs/concord/pull/544));
 - runtime-v2: support for runAs (running as another user)
-in cron ([#547](https://github.com/walmartlabs/concord/pull/547)).
+in cron ([#547](https://github.com/walmartlabs/concord/pull/547));
+- project: update Guava version, remove unneeded usage
+([#550](https://github.com/walmartlabs/concord/pull/550)).
 
 
 
