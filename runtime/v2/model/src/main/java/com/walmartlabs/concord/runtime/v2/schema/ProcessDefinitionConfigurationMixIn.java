@@ -20,9 +20,12 @@ package com.walmartlabs.concord.runtime.v2.schema;
  * =====
  */
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.kjetland.jackson.jsonSchema.annotations.JsonSchemaInject;
 import com.walmartlabs.concord.runtime.v2.model.ProcessDefinitionConfiguration;
+
+import java.util.List;
 
 public interface ProcessDefinitionConfigurationMixIn extends ProcessDefinitionConfiguration {
 
@@ -30,4 +33,10 @@ public interface ProcessDefinitionConfigurationMixIn extends ProcessDefinitionCo
     @JsonProperty("runtime")
     @JsonSchemaInject(json = "{\"enum\" : [\"concord-v2\"]}")
     String runtime();
+
+    @Override
+    @JsonIgnore
+    default List<String> activeProfiles() {
+        return ProcessDefinitionConfiguration.super.activeProfiles();
+    }
 }
