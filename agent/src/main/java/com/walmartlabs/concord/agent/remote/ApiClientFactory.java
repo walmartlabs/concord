@@ -33,6 +33,7 @@ import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
 import java.io.IOException;
+import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -45,10 +46,12 @@ public class ApiClientFactory {
     private static final String SESSION_COOKIE_NAME = "JSESSIONID";
 
     private final ServerConfiguration cfg;
+    private final Path tmpPath;
 
     @Inject
-    public ApiClientFactory(ServerConfiguration cfg) {
+    public ApiClientFactory(ServerConfiguration cfg) throws IOException {
         this.cfg = cfg;
+        this.tmpPath = IOUtils.createTempDir("agent-client");
     }
 
     public ApiClient create(String sessionToken) throws IOException {
@@ -61,7 +64,7 @@ public class ApiClientFactory {
         ok.interceptors().add(new ReceivedCookiesInterceptor(cookieJar));
 
         ConcordApiClient client = new ConcordApiClient(cfg.getApiBaseUrl(), ok);
-        client.setTempFolderPath(IOUtils.createTempDir("agent-client").toString());
+        client.setTempFolderPath(tmpPath.toString());
         if (sessionToken != null) {
             client.setSessionToken(sessionToken);
         } else {
