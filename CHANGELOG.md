@@ -5,7 +5,9 @@
 ### Added
 
 - concord-server: add `orgUpdate` permission
-([#552](https://github.com/walmartlabs/concord/pull/552).
+([#552](https://github.com/walmartlabs/concord/pull/552);
+- runtime-v2: add `isDebug` function
+([#558](https://github.com/walmartlabs/concord/pull/558)).
 
 ### Changed
 
