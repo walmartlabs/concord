@@ -49,6 +49,17 @@
             <artifactId>guice</artifactId>
         </dependency>
 
+        <!-- mask ansible-task deps transfer failed errors -->
+        <!-- TODO: update kerby-all once new version is available-->
+        <dependency>
+            <groupId>org.apache.kerby</groupId>
+            <artifactId>kerb-client-api-all</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.kerby</groupId>
+            <artifactId>kerb-client</artifactId>
+        </dependency>
+
         <!-- Immutables -->
         <dependency>
             <groupId>org.immutables</groupId>
