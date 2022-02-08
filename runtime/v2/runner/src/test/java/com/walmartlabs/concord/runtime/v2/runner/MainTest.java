@@ -1051,6 +1051,25 @@ public class MainTest {
         assertLog(log, ".*3: 1.*");
     }
 
+    @Test
+    public void testOrDefaultFunction() throws Exception {
+        deploy("orDefault");
+
+        save(ProcessConfiguration.builder()
+                .build());
+
+        byte[] log = run();
+        assertLog(log, ".*x:.*defaultValue.*");
+
+        // ---
+        save(ProcessConfiguration.builder()
+                .putArguments("x", "x-value")
+                .build());
+
+        log = run();
+        assertLog(log, ".*x:.*x-value.*");
+    }
+
     private void deploy(String resource) throws URISyntaxException, IOException {
         Path src = Paths.get(MainTest.class.getResource(resource).toURI());
         IOUtils.copy(src, workDir);

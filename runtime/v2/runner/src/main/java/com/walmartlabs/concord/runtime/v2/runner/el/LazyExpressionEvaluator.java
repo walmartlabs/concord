@@ -21,10 +21,7 @@ package com.walmartlabs.concord.runtime.v2.runner.el;
  */
 
 import com.walmartlabs.concord.common.ConfigurationUtils;
-import com.walmartlabs.concord.runtime.v2.runner.el.functions.AllVariablesFunction;
-import com.walmartlabs.concord.runtime.v2.runner.el.functions.CurrentFlowNameFunction;
-import com.walmartlabs.concord.runtime.v2.runner.el.functions.EvalAsMapFunction;
-import com.walmartlabs.concord.runtime.v2.runner.el.functions.HasVariableFunction;
+import com.walmartlabs.concord.runtime.v2.runner.el.functions.*;
 import com.walmartlabs.concord.runtime.v2.runner.el.resolvers.BeanELResolver;
 import com.walmartlabs.concord.runtime.v2.runner.el.resolvers.MethodAccessorResolver;
 import com.walmartlabs.concord.runtime.v2.runner.el.resolvers.TaskMethodResolver;
@@ -182,6 +179,7 @@ public class LazyExpressionEvaluator implements ExpressionEvaluator {
     private static FunctionMapper createFunctionMapper() {
         Map<String, Method> functions = new HashMap<>();
         functions.put("hasVariable", HasVariableFunction.getMethod());
+        functions.put("orDefault", OrDefaultFunction.getMethod());
         functions.put("allVariables", AllVariablesFunction.getMethod());
         functions.put("currentFlowName", CurrentFlowNameFunction.getMethod());
         functions.put("evalAsMap", EvalAsMapFunction.getMethod());
