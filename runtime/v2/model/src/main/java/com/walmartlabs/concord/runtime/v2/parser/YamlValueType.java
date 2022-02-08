@@ -98,6 +98,7 @@ public final class YamlValueType<T> {
     public static final YamlValueType<IfStep> IF = type("IF");
     public static final YamlValueType<SwitchStep> SWITCH = type("SWITCH");
     public static final YamlValueType<Resources> RESOURCES = type("RESOURCES");
+    public static final YamlValueType<Map<String, Object>> RUN_AS = type("RUN_AS");
     public static final YamlValueType<ExclusiveMode> EXCLUSIVE_MODE = type("EXCLUSIVE_MODE");
     public static final YamlValueType<EventConfiguration> EVENTS_CFG = type("EVENTS_CONFIGURATION");
     public static final YamlValueType<ImmutableTaskCallOptions.Builder> TASK_CALL_IN = type("OBJECT or EXPRESSION");

@@ -122,6 +122,8 @@ public class DockerProcessBuilder {
 
     private boolean redirectErrorStream = true;
 
+    private final List<Path> tmpPaths = new ArrayList<>();
+
     public DockerProcessBuilder(String image) {
         this.image = image;
 
@@ -139,19 +141,17 @@ public class DockerProcessBuilder {
         this.useContainerUser = Boolean.parseBoolean(env(CONCORD_DOCKER_USE_CONTAINER_USER_KEY, "false"));
     }
 
-    public Process build() throws IOException {
+    public DockerProcess build() throws IOException {
         String[] cmd = buildCmd();
 
         if (debug) {
             log.info("CMD: {}", (Object) cmd);
         }
 
-        return PrivilegedAction.perform("docker", () -> new ProcessBuilder(cmd)
-                .redirectErrorStream(redirectErrorStream)
-                .start());
+        return new DockerProcess(cmd, redirectErrorStream, tmpPaths);
     }
 
-    public String[] buildCmd() throws IOException {
+    private String[] buildCmd() throws IOException {
         if (forcePull) {
             return new String[]{"/bin/sh", "-c", "docker pull " + q(image) + " && " + buildDockerCmd()};
         } else {
@@ -210,12 +210,14 @@ public class DockerProcessBuilder {
         }
         if (generateUsers) {
             Path tmp = IOUtils.createTempFile("passwd", ".docker"); // NOSONAR
-            try (InputStream src = DockerProcessBuilder.class.getResourceAsStream("dockerPasswd");
+            tmpPaths.add(tmp);
+
+            try (InputStream src = Objects.requireNonNull(DockerProcessBuilder.class.getResourceAsStream("dockerPasswd"));
                  OutputStream dst = Files.newOutputStream(tmp)) {
                 IOUtils.copy(src, dst);
             }
             c.add("-v");
-            c.add(tmp.toAbsolutePath().toString() + ":/etc/passwd:ro");
+            c.add(tmp.toAbsolutePath() + ":/etc/passwd:ro");
         }
         if (exposeHostUsers) {
             c.add("-v");
@@ -419,6 +421,40 @@ public class DockerProcessBuilder {
 
         public List<Map.Entry<String, String>> build() {
             return options;
+        }
+    }
+
+    public static class DockerProcess implements AutoCloseable {
+
+        private final String[] cmd;
+        private final boolean redirectErrorStream;
+        private final List<Path> tmpPaths;
+
+        public DockerProcess(String[] cmd, boolean redirectErrorStream, List<Path> tmpPaths) {
+            this.cmd = cmd;
+            this.redirectErrorStream = redirectErrorStream;
+            this.tmpPaths = tmpPaths;
+        }
+
+        public Process start() throws IOException {
+            return PrivilegedAction.perform("docker", () -> new ProcessBuilder(cmd)
+                    .redirectErrorStream(redirectErrorStream)
+                    .start());
+        }
+
+        public String[] cmd() {
+            return cmd;
+        }
+
+        @Override
+        public void close() {
+            for (Path p : tmpPaths) {
+                try {
+                    IOUtils.deleteRecursively(p);
+                } catch (IOException e) {
+                    log.warn("delete '{}' -> error: {}", p, e.getMessage());
+                }
+            }
         }
     }
 }

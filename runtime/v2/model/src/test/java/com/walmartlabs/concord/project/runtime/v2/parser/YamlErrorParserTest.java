@@ -520,12 +520,23 @@ public class YamlErrorParserTest extends AbstractParserTest {
 
     @Test
     public void test131() throws Exception {
-        String msg = "(031.yml): Error @ line: 6, col: 14. Unknown options: ['trash' [STRING] @ line: 6, col: 14], expected: [activeProfiles, arguments, entryPoint, exclusive, spec, timezone]. Remove invalid options and/or fix indentation\n" +
+        String msg = "(031.yml): Error @ line: 6, col: 14. Unknown options: ['trash' [STRING] @ line: 6, col: 14], expected: [activeProfiles, arguments, entryPoint, exclusive, runAs, spec, timezone]. Remove invalid options and/or fix indentation\n" +
                 "\twhile processing steps:\n" +
                 "\t'cron' @ line: 2, col: 5\n" +
                 "\t\t'triggers' @ line: 1, col: 1";
 
         assertErrorMessage("errors/triggers/031.yml", msg);
+    }
+
+    @Test
+    public void test131_1() throws Exception {
+        String msg = "(031_1.yml): Error @ n/a. Mandatory parameter 'withSecret' not found\n" +
+                "\twhile processing steps:\n" +
+                "\t'runAs' @ line: 5, col: 7\n" +
+                "\t\t'cron' @ line: 2, col: 5\n" +
+                "\t\t\t'triggers' @ line: 1, col: 1";
+
+        assertErrorMessage("errors/triggers/031_1.yml", msg);
     }
 
     @Test

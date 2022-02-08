@@ -80,6 +80,22 @@ public class ProcessIT extends AbstractTest {
     }
 
     /**
+     * Js script execution.
+     */
+    @Test
+    public void testJsScripts() throws Exception {
+        Payload payload = new Payload()
+                .archive(resource("scriptJs"))
+                .arg("arg", "12345")
+                .arg("pattern", ".234.");
+
+        ConcordProcess proc = concord.processes().start(payload);
+        expectStatus(proc, ProcessEntry.StatusEnum.FINISHED);
+
+        proc.assertLog(".*matches: true.*");
+    }
+
+    /**
      * Test the process metadata.
      */
     @Test

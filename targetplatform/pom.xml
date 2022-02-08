@@ -20,8 +20,9 @@
         <aopalliance.version>1.0</aopalliance.version>
         <aws.version>1.11.475</aws.version>
         <bouncycastle.version>1.70</bouncycastle.version>
-        <bpm.version>1.0.0</bpm.version>
+        <bpm.version>1.0.1</bpm.version>
         <commons.beanutils.version>1.9.4</commons.beanutils.version>
+        <commons.collections.version>3.2.2</commons.collections.version>
         <commons.compress.version>1.21</commons.compress.version>
         <commons.email.version>1.5</commons.email.version>
         <commons.io.version>2.11.0</commons.io.version> <!-- necessary for resteasy -->
@@ -1102,6 +1103,11 @@
                 <groupId>io.fabric8</groupId>
                 <artifactId>kubernetes-client</artifactId>
                 <version>${kubernetes.client.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>commons-collections</groupId>
+                <artifactId>commons-collections</artifactId>
+                <version>${commons.collections.version}</version>
             </dependency>
             <dependency>
                 <groupId>io.fabric8</groupId>

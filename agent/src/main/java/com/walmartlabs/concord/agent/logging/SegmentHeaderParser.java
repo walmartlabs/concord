@@ -37,11 +37,17 @@ public class SegmentHeaderParser {
         int mark = -1;
         ImmutableHeader.Builder headerBuilder = Header.builder();
 
+        boolean continueParse = true;
         State state = State.FIND_HEADER;
         ByteBuffer bb = ByteBuffer.wrap(ab);
-        while (bb.remaining() > 0) {
+        while (continueParse) {
             switch (state) {
                 case FIND_HEADER: {
+                    if (bb.remaining() <= 0) {
+                        continueParse = false;
+                        break;
+                    }
+
                     char ch = (char) bb.get();
                     if (ch == '|') {
                         if (mark != -1) {
@@ -58,6 +64,11 @@ public class SegmentHeaderParser {
                     break;
                 }
                 case FIELD_DATA: {
+                    if (bb.remaining() <= 0) {
+                        continueParse = false;
+                        break;
+                    }
+
                     char ch = (char)bb.get();
                     if (ch == '|') {
                         state = State.END_FIELD;

@@ -23,11 +23,7 @@ package com.walmartlabs.concord.runtime.v2.parser;
 import com.fasterxml.jackson.core.JsonToken;
 import com.walmartlabs.concord.runtime.v2.exception.OneOfMandatoryFieldsNotFoundException;
 import com.walmartlabs.concord.runtime.v2.exception.UnsupportedException;
-import com.walmartlabs.concord.runtime.v2.model.ExclusiveMode;
-import com.walmartlabs.concord.runtime.v2.model.GithubTriggerExclusiveMode;
-import com.walmartlabs.concord.runtime.v2.model.ImmutableGithubTriggerExclusiveMode;
-import com.walmartlabs.concord.runtime.v2.model.ImmutableTrigger;
-import com.walmartlabs.concord.runtime.v2.model.Trigger;
+import com.walmartlabs.concord.runtime.v2.model.*;
 import io.takari.parc.Parser;
 import io.takari.parc.Seq;
 
@@ -141,12 +137,24 @@ public final class TriggersGrammar {
     private static final Parser<Atom, Trigger> githubTriggerVal =
             orError(githubTrigger, YamlValueType.GITHUB_TRIGGER);
 
+
+    private static final Parser<Atom, Map<String, Object>> runAs =
+            betweenTokens(JsonToken.START_OBJECT, JsonToken.END_OBJECT,
+                    with(ImmutableMap::<String, Object>builder,
+                            o -> options(
+                                    mandatory("withSecret", stringNotEmptyVal.map(v -> o.put("withSecret", v)))))
+                            .map(ImmutableMap.Builder::build));
+
+    private static final Parser<Atom, Map<String, Object>> runAsVal =
+            orError(runAs, YamlValueType.RUN_AS);
+
     private static final Parser<Atom, Trigger> cronTrigger =
             betweenTokens(JsonToken.START_OBJECT, JsonToken.END_OBJECT,
                 with(ImmutableTrigger::builder,
                         o -> options(
                                 mandatory("spec", stringVal.map(v -> o.putConditions("spec", v))),
                                 mandatory("entryPoint", stringVal.map(v -> o.putConfiguration("entryPoint", v))),
+                                optional("runAs", runAsVal.map(v -> o.putConfiguration("runAs", v))),
                                 optional("activeProfiles", stringArrayVal.map(o::activeProfiles)),
                                 optional("timezone", timezoneVal.map(v -> o.putConditions("timezone", v))),
                                 optional("arguments", mapVal.map(o::arguments)),
