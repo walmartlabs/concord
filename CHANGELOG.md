@@ -4,6 +4,9 @@
 
 ### Added
 
+- concord-server: add `orgUpdate` permission
+([#552](https://github.com/walmartlabs/concord/pull/552).
+
 ### Changed
 
 runtime-v1/v2: use Nashorn compat mode for GraalVM
