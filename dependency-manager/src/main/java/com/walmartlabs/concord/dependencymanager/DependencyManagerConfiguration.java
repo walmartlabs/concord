@@ -45,6 +45,11 @@ public interface DependencyManagerConfiguration {
     Path cacheDir();
 
     @Value.Default
+    default boolean strictRepositories() {
+        return false;
+    }
+
+    @Value.Default
     default List<MavenRepository> repositories() {
         return DependencyManagerRepositories.get();
     }

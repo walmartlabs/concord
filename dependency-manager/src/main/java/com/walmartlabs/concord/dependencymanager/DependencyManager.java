@@ -69,6 +69,7 @@ public class DependencyManager {
     private final List<RemoteRepository> repositories;
     private final Object mutex = new Object();
     private final RepositorySystem maven;
+    private final boolean strictRepositories;
 
     @Inject
     public DependencyManager(DependencyManagerConfiguration cfg) throws IOException {
@@ -81,6 +82,7 @@ public class DependencyManager {
         log.info("init -> using repositories: {}", cfg.repositories());
         this.repositories = toRemote(cfg.repositories());
         this.maven = RepositorySystemFactory.create();
+        this.strictRepositories = cfg.strictRepositories();
     }
 
     public Collection<DependencyEntity> resolve(Collection<URI> items) throws IOException {
@@ -274,6 +276,7 @@ public class DependencyManager {
     private DefaultRepositorySystemSession newRepositorySystemSession(RepositorySystem system, ProgressNotifier progressNotifier) {
         DefaultRepositorySystemSession session = MavenRepositorySystemUtils.newSession();
         session.setChecksumPolicy(RepositoryPolicy.CHECKSUM_POLICY_IGNORE);
+        session.setIgnoreArtifactDescriptorRepositories(strictRepositories);
 
         LocalRepository localRepo = new LocalRepository(localCacheDir.toFile());
         session.setLocalRepositoryManager(system.newLocalRepositoryManager(session, localRepo));
