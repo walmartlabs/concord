@@ -77,6 +77,7 @@ public final class ConfigurationGrammar {
                                     optional("meta", mapVal.map(o::meta)),
                                     optional("requirements", mapVal.map(o::requirements)),
                                     optional("processTimeout", durationVal.map(o::processTimeout)),
+                                    optional("suspendTimeout", durationVal.map(o::suspendTimeout)),
                                     optional("activeProfiles", stringArrayVal.map(o::activeProfiles)),
                                     optional("exclusive", exclusiveVal.map(o::exclusive)),
                                     optional("events", eventsVal.map(o::events)),
