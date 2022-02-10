@@ -4,6 +4,8 @@
 
 ### Added
 
+- agent: option to ignore artifact descriptor repositories
+([#561](https://github.com/walmartlabs/concord/pull/561);
 - concord-server: add `orgUpdate` permission
 ([#552](https://github.com/walmartlabs/concord/pull/552);
 - runtime-v2: add `isDebug` function
