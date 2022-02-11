@@ -1,5 +1,23 @@
 # Change log
 
+## [1.93.1] - 2022-01-24
+
+### Added
+
+- concord-server: add orgUpdate permission 
+([#552](https://github.com/walmartlabs/concord/pull/552)).
+
+### Changed
+
+- runtime-v2: fix segment status parse 
+([#549](https://github.com/walmartlabs/concord/pull/549));
+- graalvm: use nashorn compat mode 
+([#551](https://github.com/walmartlabs/concord/pull/551));
+- agent: allow ignore artifact descriptor repositories 
+([#561](https://github.com/walmartlabs/concord/pull/561)).
+
+
+
 ## [1.93.0] - 2022-01-24
 
 ### Added
