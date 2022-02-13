@@ -3,7 +3,8 @@
 ## [Unreleased]
 
 ### Added
-
+- runtime-v2: project document support for suspendTimeout
+([#562](https://github.com/walmartlabs/concord/pull/562);
 - agent: option to ignore artifact descriptor repositories
 ([#561](https://github.com/walmartlabs/concord/pull/561);
 - concord-server: add `orgUpdate` permission
