@@ -285,7 +285,6 @@ public class ProjectSerializerV2Test extends AbstractParserTest {
         assertResult("serializer/expressionStepOutExpr.yml", result);
     }
 
-
     @Test
     public void testProcessDefinition() throws Exception {
         Map<String, Form> forms = Collections.singletonMap("form1", Form.builder()
@@ -304,6 +303,7 @@ public class ProjectSerializerV2Test extends AbstractParserTest {
                 .putConfiguration("entryPoint", "www")
                 .putConfiguration("useInitiator", true)
                 .putConditions("type", "push")
+                .putConditions("status", Arrays.asList("opened", "reopened"))
                 .putArguments("arg", "arg-value")
                 .addActiveProfiles("p1")
                 .build();

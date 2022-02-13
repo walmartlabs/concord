@@ -78,7 +78,7 @@ public final class GrammarV2 {
     public static final Parser<Atom, String> maybeString = _val(JsonToken.VALUE_STRING).map(v -> v.getValue(YamlValueType.STRING));
     public static final Parser<Atom, List<String>> maybeStringArray = arrayOfValues.map(v -> v.getListValue(YamlValueType.STRING));
     public static final Parser<Atom, Map<String, Serializable>> maybeMap = object.map(YamlObject::getValue);
-    public static final Parser<Atom, Object> patternOrArrayVal = value.map(GrammarV2::patternOrArrayConverter);
+    public static final Parser<Atom, Object> regexpOrArrayVal = value.map(GrammarV2::regexpOrArrayConverter);
     public static final Parser<Atom, Duration> durationVal = value.map(GrammarV2::durationConverter);
     public static final Parser<Atom, String> timezoneVal = value.map(GrammarV2::timezoneConverter);
     public static final Parser<Atom, List<String>> stringOrArrayVal = value.map(GrammarV2::stringOrArrayConverter);
@@ -248,12 +248,12 @@ public final class GrammarV2 {
         }
     }
 
-    private static Object patternOrArrayConverter(YamlValue v) {
+    private static Object regexpOrArrayConverter(YamlValue v) {
         if (v.getType() == YamlValueType.STRING) {
             return regexpConverter(v);
         }
 
-        YamlList list = asList(v, YamlValueType.PATTERN_OR_ARRAY);
+        YamlList list = asList(v, YamlValueType.REGEXP_OR_ARRAY);
         return list.getListValue(GrammarV2::regexpConverter);
     }
 
