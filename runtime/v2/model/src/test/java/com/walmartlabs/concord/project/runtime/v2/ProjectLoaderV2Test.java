@@ -96,8 +96,11 @@ public class ProjectLoaderV2Test {
         // configuration.requirements: should be collected from ROOT concord.yml
         assertEquals(Collections.singletonMap("req", "concord.yml"), cfg.requirements());
 
-        // configuration.requirements: should be collected from ROOT concord.yml
+        // configuration.processTimeout: should be collected from ROOT concord.yml
         assertEquals("PT1H", cfg.processTimeout().toString());
+
+        // configuration.suspendTimeout: should be collected from ROOT concord.yml
+        assertEquals("PT26H", cfg.suspendTimeout().toString());
 
         // configuration.out: should be collected from ROOT concord.yml
         assertEquals(Collections.singletonList("from-root"), cfg.out());
