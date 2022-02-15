@@ -16,18 +16,20 @@
 
 ### Changed
 
-runtime-v2: allow arrays for GH trigger conditions
+- runtime-v2: allow arrays for GH trigger conditions
 ([#563](https://github.com/walmartlabs/concord/pull/563));
-runtime-v1/v2: use Nashorn compat mode for GraalVM
+- runtime-v1/v2: use Nashorn compat mode for GraalVM
 ([#551](https://github.com/walmartlabs/concord/pull/551));
-runtime-v1/v2: remove temporary Docker files
+- runtime-v1/v2: remove temporary Docker files
 ([#545](https://github.com/walmartlabs/concord/pull/545));
-concord-agent: use a single temporary directory for API clients
+- concord-agent: use a single temporary directory for API clients
 ([#544](https://github.com/walmartlabs/concord/pull/544));
 - runtime-v2: support for runAs (running as another user)
 in cron ([#547](https://github.com/walmartlabs/concord/pull/547));
 - project: update Guava version, remove unneeded usage
 ([#550](https://github.com/walmartlabs/concord/pull/550));
+- project: upgrade dependencies
+([#554](https://github.com/walmartlabs/concord/pull/554));
 - runtime-v2: remove `configuration.activeProfiles` from
 the JSON schema (specifying `activeProfiles` in YAML
 documents was never supported)
