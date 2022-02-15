@@ -48,12 +48,7 @@ public class DiffUtils {
     public static Map<String, Object> compare(Object left, Object right) {
         Javers javers = JaversBuilder.javers().build();
 
-        Diff diff;
-        if (left == null) {
-            diff = javers.initial(right);
-        } else {
-            diff = javers.compare(left, right);
-        }
+        Diff diff = javers.compare(left, right);
 
         CustomChangeProcessor changeProcessor = new CustomChangeProcessor();
         javers.processChangeList(diff.getChanges(), changeProcessor);
@@ -99,15 +94,25 @@ public class DiffUtils {
 
 
                 for (String p : path) {
-                    prevO.putIfAbsent(p, new HashMap<String, Object>());
-                    prevO = (Map<String, Object>) prevO.get(p);
+                    if (valueChange.getLeft() != null) {
+                        prevO.putIfAbsent(p, new HashMap<String, Object>());
+                        prevO = (Map<String, Object>) prevO.get(p);
+                    }
 
-                    nextO.putIfAbsent(p, new HashMap<String, Object>());
-                    nextO = (Map<String, Object>) nextO.get(p);
+                    if (valueChange.getRight() != null) {
+                        nextO.putIfAbsent(p, new HashMap<String, Object>());
+                        nextO = (Map<String, Object>) nextO.get(p);
+                    }
                 }
             }
-            prevO.put(valueChange.getPropertyName(), valueChange.getLeft());
-            nextO.put(valueChange.getPropertyName(), valueChange.getRight());
+
+            if (valueChange.getLeft() != null) {
+                prevO.put(valueChange.getPropertyName(), valueChange.getLeft());
+            }
+
+            if (valueChange.getRight() != null) {
+                nextO.put(valueChange.getPropertyName(), valueChange.getRight());
+            }
         }
 
         @Override
