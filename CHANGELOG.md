@@ -3,6 +3,7 @@
 ## [Unreleased]
 
 ### Added
+
 - runtime-v2: project document support for suspendTimeout
 ([#562](https://github.com/walmartlabs/concord/pull/562);
 - agent: option to ignore artifact descriptor repositories
@@ -14,6 +15,8 @@
 
 ### Changed
 
+runtime-v2: allow arrays for GH trigger conditions
+([#563](https://github.com/walmartlabs/concord/pull/563));
 runtime-v1/v2: use Nashorn compat mode for GraalVM
 ([#551](https://github.com/walmartlabs/concord/pull/551));
 runtime-v1/v2: remove temporary Docker files
