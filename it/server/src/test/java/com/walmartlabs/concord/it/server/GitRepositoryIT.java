@@ -61,7 +61,7 @@ public class GitRepositoryIT extends AbstractServerIT {
 
         git.push().call();
 
-        gitServer = new MockGitSshServer(0, bareRepo.toAbsolutePath().toString());
+        gitServer = new MockGitSshServer(0, bareRepo);
         gitServer.start();
     }
 

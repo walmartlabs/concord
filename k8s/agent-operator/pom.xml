@@ -81,7 +81,7 @@
             <artifactId>jaxb-impl</artifactId>
         </dependency>
 
-        <!-- required by the fabric8 client, but not included automatically for some reason -->
+        <!-- required at runtime by the fabric8 client, but not included automatically for some reason -->
         <dependency>
             <groupId>commons-collections</groupId>
             <artifactId>commons-collections</artifactId>

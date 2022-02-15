@@ -47,7 +47,7 @@ public class ConcordTaskForkFromGitRepoIT extends AbstractServerIT {
         Path data = Paths.get(PortalIT.class.getResource("concordTaskFork").toURI());
         Path repo = GitUtils.createBareRepository(data);
 
-        gitServer = new MockGitSshServer(0, repo.toAbsolutePath().toString());
+        gitServer = new MockGitSshServer(0, repo);
         gitServer.start();
 
         gitPort = gitServer.getPort();

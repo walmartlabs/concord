@@ -24,6 +24,7 @@ import com.walmartlabs.concord.common.IOUtils;
 import com.walmartlabs.concord.common.TemporaryPath;
 import com.walmartlabs.concord.sdk.Secret;
 import org.eclipse.jgit.api.Git;
+import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.revwalk.RevCommit;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -64,7 +65,7 @@ public class GitClientFetchTest {
         // init repo
         Git repo = Git.init().setDirectory(tmpDir.toFile()).call();
         repo.add().addFilepattern(".").call();
-        RevCommit initialCommit = repo.commit().setMessage("import").call();
+        RevCommit initialCommit = commit(repo, "import");
 
         try (TemporaryPath repoPath = IOUtils.tempDir("git-client-test")) {
             // --- fetch master
@@ -75,7 +76,7 @@ public class GitClientFetchTest {
             // update file in repo
             Files.copy(tmpDir.resolve("new_concord.yml"), tmpDir.resolve("concord.yml"), StandardCopyOption.REPLACE_EXISTING);
             repo.add().addFilepattern(".").call();
-            RevCommit commitAfterUpdate = repo.commit().setMessage("update").call();
+            RevCommit commitAfterUpdate = commit(repo, "update");
 
             // --- fetch prev commit
             String prevCommit = fetch(tmpDir.toUri().toString(), "master", initialCommit.name(), null, repoPath.path());
@@ -189,6 +190,13 @@ public class GitClientFetchTest {
                 .destination(dest)
                 .shallow(true)
                 .build()).head();
+    }
+
+    private static RevCommit commit(Git repo, String message) throws GitAPIException {
+        return repo.commit()
+                .setSign(false)
+                .setMessage(message)
+                .call();
     }
 
     private static void assertContent(TemporaryPath repoPath, String path, String expectedContent) throws IOException {
