@@ -87,10 +87,10 @@ public final class TriggersGrammar {
             betweenTokens(JsonToken.START_OBJECT, JsonToken.END_OBJECT,
                 with((Supplier<HashMap<String, Object>>) HashMap::new,
                         o -> options(
-                            optional("added", patternOrArrayVal.map(v -> o.put("added", v))),
-                            optional("removed", patternOrArrayVal.map(v -> o.put("removed", v))),
-                            optional("modified", patternOrArrayVal.map(v -> o.put("modified", v))),
-                            optional("any", patternOrArrayVal.map(v -> o.put("any", v)))))
+                            optional("added", regexpOrArrayVal.map(v -> o.put("added", v))),
+                            optional("removed", regexpOrArrayVal.map(v -> o.put("removed", v))),
+                            optional("modified", regexpOrArrayVal.map(v -> o.put("modified", v))),
+                            optional("any", regexpOrArrayVal.map(v -> o.put("any", v)))))
                         .map(Collections::unmodifiableMap));
 
     private static final Parser<Atom, Map<String, Object>> githubTriggerConditionsV2 =
@@ -98,12 +98,12 @@ public final class TriggersGrammar {
                     with((Supplier<HashMap<String, Object>>) HashMap::new,
                             o -> options(
                                 mandatory("type", stringVal.map(v -> o.put("type", v))),
-                                optional("githubOrg", patternOrArrayVal.map(v -> o.put("githubOrg", v))),
-                                optional("githubRepo", patternOrArrayVal.map(v -> o.put("githubRepo", v))),
+                                optional("githubOrg", regexpOrArrayVal.map(v -> o.put("githubOrg", v))),
+                                optional("githubRepo", regexpOrArrayVal.map(v -> o.put("githubRepo", v))),
                                 optional("githubHost", regexpVal.map(v -> o.put("githubHost", v))),
-                                optional("branch", regexpVal.map(v -> o.put("branch", v))),
-                                optional("sender", regexpVal.map(v -> o.put("sender", v))),
-                                optional("status", regexpVal.map(v -> o.put("status", v))),
+                                optional("branch", regexpOrArrayVal.map(v -> o.put("branch", v))),
+                                optional("sender", regexpOrArrayVal.map(v -> o.put("sender", v))),
+                                optional("status", regexpOrArrayVal.map(v -> o.put("status", v))),
                                 optional("repositoryInfo", githubTriggerRepositoryInfoVal.map(v -> o.put("repositoryInfo", v))),
                                 optional("files", githubTriggerFilesVal.map(v -> o.put("files", v))),
                                 optional("payload", mapVal.map(v -> o.put("payload", v)))))
