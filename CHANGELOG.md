@@ -3,7 +3,8 @@
 ## [Unreleased]
 
 ### Added
-
+- runtime-v2: add `orDefault` function
+([#557](https://github.com/walmartlabs/concord/pull/557);
 - runtime-v2: project document support for suspendTimeout
 ([#562](https://github.com/walmartlabs/concord/pull/562);
 - agent: option to ignore artifact descriptor repositories
