@@ -45,7 +45,7 @@ public final class YamlValueType<T> {
     public static final YamlValueType<List<String>> ARRAY_OF_PATTERN = array("ARRAY_OF_PATTERN", PATTERN);
     public static final YamlValueType<List<String>> ARRAY_OF_STRING = array("ARRAY_OF_STRING", STRING);
     public static final YamlValueType<Map<String, Serializable>> OBJECT = map("OBJECT");
-    public static final YamlValueType<Object> PATTERN_OR_ARRAY = type("PATTERN_OR_ARRAY");
+    public static final YamlValueType<Object> REGEXP_OR_ARRAY = type("REGEXP_OR_ARRAY");
     public static final YamlValueType<Duration> DURATION = type("ISO 8601 DURATION");
     public static final YamlValueType<String> TIMEZONE = type("TIMEZONE");
     public static final YamlValueType<Object> STRING_OR_ARRAY = type("STRING_OR_ARRAY");
