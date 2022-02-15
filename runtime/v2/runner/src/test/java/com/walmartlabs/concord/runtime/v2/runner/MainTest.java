@@ -1053,6 +1053,25 @@ public class MainTest {
     }
 
     @Test
+    public void testOrDefaultFunction() throws Exception {
+        deploy("orDefault");
+
+        save(ProcessConfiguration.builder()
+                .build());
+
+        byte[] log = run();
+        assertLog(log, ".*x:.*defaultValue.*");
+
+        // ---
+        save(ProcessConfiguration.builder()
+                .putArguments("x", "x-value")
+                .build());
+
+        log = run();
+        assertLog(log, ".*x:.*x-value.*");
+    }
+
+    @Test
     public void testIsDebug() throws Exception {
         deploy("isDebug");
 
