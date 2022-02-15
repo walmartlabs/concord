@@ -408,10 +408,19 @@ public class ProcessIT extends AbstractTest {
     }
 
     @Test
-    public void testSuspendTimeout() throws Exception {
+    public void testSuspendTimeoutFromPayload() throws Exception {
         Payload payload = new Payload()
                 .parameter("suspendTimeout", "PT1S")
                 .archive(resource("form"));
+
+        ConcordProcess proc = concord.processes().start(payload);
+        expectStatus(proc, ProcessEntry.StatusEnum.TIMED_OUT);
+    }
+
+    @Test
+    public void testSuspendTimeout() throws Exception {
+        Payload payload = new Payload()
+                .archive(resource("formWithTimeout"));
 
         ConcordProcess proc = concord.processes().start(payload);
         expectStatus(proc, ProcessEntry.StatusEnum.TIMED_OUT);

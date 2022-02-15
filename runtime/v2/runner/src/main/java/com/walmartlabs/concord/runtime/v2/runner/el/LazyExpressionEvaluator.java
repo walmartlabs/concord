@@ -179,6 +179,7 @@ public class LazyExpressionEvaluator implements ExpressionEvaluator {
     private static FunctionMapper createFunctionMapper() {
         Map<String, Method> functions = new HashMap<>();
         functions.put("hasVariable", HasVariableFunction.getMethod());
+        functions.put("orDefault", OrDefaultFunction.getMethod());
         functions.put("allVariables", AllVariablesFunction.getMethod());
         functions.put("currentFlowName", CurrentFlowNameFunction.getMethod());
         functions.put("evalAsMap", EvalAsMapFunction.getMethod());
