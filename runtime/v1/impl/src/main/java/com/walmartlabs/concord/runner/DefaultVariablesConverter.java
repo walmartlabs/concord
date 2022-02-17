@@ -21,14 +21,17 @@ package com.walmartlabs.concord.runner;
  */
 
 import com.walmartlabs.concord.common.ConfigurationUtils;
+import com.walmartlabs.concord.runtime.common.StateManager;
 import com.walmartlabs.concord.sdk.Constants;
 import com.walmartlabs.concord.sdk.MapUtils;
 
 import javax.inject.Inject;
 import javax.inject.Named;
+import java.nio.file.Path;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 
 @Named
 public class DefaultVariablesConverter {
@@ -40,7 +43,14 @@ public class DefaultVariablesConverter {
         this.tasks = tasks;
     }
 
-    public Map<String, Object> convert(Map<String, Object> processCfg) {
+    public Map<String, Object> convert(Path baseDir, Map<String, Object> processCfg) {
+        Set<String> eventNames = StateManager.readResumeEvents(baseDir);
+        boolean isResume = eventNames != null && !eventNames.isEmpty();
+        if (isResume) {
+            // do nothing for resume.
+            return processCfg;
+        }
+
         Map<String, Object> v2Defaults = MapUtils.getMap(processCfg, "defaultTaskVariables", Collections.emptyMap());
         Map<String, Object> v1Defaults = new HashMap<>(v2Defaults);
 
