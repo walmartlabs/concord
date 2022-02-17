@@ -120,7 +120,7 @@ public class Main {
 
         // read the process configuration
         Map<String, Object> processCfg = readRequest(baseDir);
-        processCfg = variablesConverter.convert(processCfg);
+        processCfg = variablesConverter.convert(baseDir, processCfg);
 
         String sessionToken = getSessionToken(processCfg);
         ApiClient apiClient = apiClientFactory.create(ApiClientConfiguration.builder()
