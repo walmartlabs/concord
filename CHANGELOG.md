@@ -1,5 +1,12 @@
 # Change log
 
+## [1.93.2] - 2022-02-17
+
+### Changed
+
+- runtime-v1: do not override process arguments with default variables
+([#569](https://github.com/walmartlabs/concord/pull/569));
+
 ## [1.93.1] - 2022-01-24
 
 ### Added
