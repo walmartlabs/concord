@@ -380,6 +380,30 @@ public class ConcordTaskIT extends AbstractServerIT {
     }
 
     @Test
+    public void testSubWithNullArgValue() throws Exception {
+        byte[] payload = archive(ConcordTaskIT.class.getResource("concordSubWithNullArg").toURI());
+
+        StartProcessResponse parentSpr = start(payload);
+
+        ProcessApi processApi = new ProcessApi(getApiClient());
+        waitForCompletion(processApi, parentSpr.getInstanceId());
+
+        ProcessEntry processEntry = processApi.get(parentSpr.getInstanceId());
+        assertEquals(1, processEntry.getChildrenIds().size());
+
+        ProcessEntry child = processApi.get(processEntry.getChildrenIds().get(0));
+        assertNotNull(child);
+        assertEquals(ProcessEntry.StatusEnum.FINISHED, child.getStatus());
+
+        // ---
+
+        byte[] ab = getLog(child.getLogFileName());
+        assertLog(".*Child process, nullValue: ''.*", ab);
+        assertLog(".*Child process, nullValue == null: 'true'.*", ab);
+        assertLog(".*Child process, hasVariable\\('nullValue'\\): true.*", ab);
+    }
+
+    @Test
     public void testForkWithArguments() throws Exception {
         String orgName = "org_" + randomString();
 
