@@ -24,8 +24,8 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.walmartlabs.concord.runner.ContextUtils;
 import com.walmartlabs.concord.runtime.common.ObjectTruncater;
+import com.walmartlabs.concord.sdk.ContextUtils;
 import com.walmartlabs.concord.sdk.Context;
 import io.takari.bpm.api.ExecutionContext;
 import io.takari.bpm.api.ExecutionException;
@@ -137,11 +137,11 @@ public class TaskEventInterceptor implements TaskInterceptor {
                 .filter(v -> v.getTarget().equals("checkpointName"))
                 .map(v -> {
                     String name;
-                    if (!cfg.isEvalCheckpointNames()) {
-                        name = v.getSourceExpression();
-                    } else {
-                        String evaluated = (String) ctx.interpolate(v.getSourceExpression());
+                    if (cfg.isEvalCheckpointNames()) {
+                        String evaluated = ContextUtils.getString(ctx, "checkpointName", v.getSourceExpression());
                         name = ObjectTruncater.truncate(evaluated, 128, 1, 1).toString();
+                    } else {
+                        name = v.getSourceExpression();
                     }
 
                     return "Checkpoint: " + name;
