@@ -38,6 +38,7 @@ public class EventConfiguration {
     private boolean recordTaskInVars = false;
     private boolean recordTaskOutVars = false;
     private boolean truncateOutVars = true;
+    private boolean evalCheckpointNames = false;
     private Collection<String> inVarsBlacklist = DEFAULT_IN_VARS_BLACKLIST;
     private Collection<String> outVarsBlacklist = Collections.emptyList();
     private int truncateMaxStringLength = 1024;
@@ -122,5 +123,13 @@ public class EventConfiguration {
 
     public void setTruncateMaxDepth(int truncateMaxDepth) {
         this.truncateMaxDepth = truncateMaxDepth;
+    }
+
+    public void setEvalCheckpointNames(boolean evalCheckpointNames) {
+        this.evalCheckpointNames = evalCheckpointNames;
+    }
+
+    public boolean isEvalCheckpointNames() {
+        return this.evalCheckpointNames;
     }
 }

@@ -24,24 +24,24 @@ import com.google.common.collect.ImmutableMap;
 import com.walmartlabs.concord.ApiException;
 import com.walmartlabs.concord.client.*;
 import com.walmartlabs.concord.sdk.Constants;
+import org.intellij.lang.annotations.Language;
 import org.junit.jupiter.api.Test;
 
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
+import java.util.regex.Pattern;
 
 import static com.walmartlabs.concord.it.common.ITUtils.archive;
+import static com.walmartlabs.concord.it.common.ITUtils.resourceToURI;
 import static com.walmartlabs.concord.it.common.ServerClient.*;
 import static org.junit.jupiter.api.Assertions.*;
 
 public class CheckpointsIT extends AbstractServerIT {
 
     @Test
-    public void testCheckpoint() throws Exception {
+    void testCheckpoint() throws Exception {
         // prepare the payload
 
-        byte[] payload = archive(CheckpointsIT.class.getResource("checkpoints").toURI());
+        byte[] payload = archive(resourceToURI(CheckpointsIT.class, "checkpoints"));
 
         // start the process
 
@@ -84,8 +84,8 @@ public class CheckpointsIT extends AbstractServerIT {
     }
 
     @Test
-    public void testRestoreCheckpointWithGetByName() throws Exception {
-        byte[] payload = archive(CheckpointsIT.class.getResource("oneCheckpoint").toURI());
+    void testRestoreCheckpointWithGetByName() throws Exception {
+        byte[] payload = archive(resourceToURI(CheckpointsIT.class, "oneCheckpoint"));
 
         ProcessApi processApi = new ProcessApi(getApiClient());
         StartProcessResponse spr = start(payload);
@@ -117,10 +117,10 @@ public class CheckpointsIT extends AbstractServerIT {
     }
 
     @Test
-    public void testRestoreCheckpointWithEventName() throws Exception {
+    void testRestoreCheckpointWithEventName() throws Exception {
         // prepare the payload
 
-        byte[] payload = archive(CheckpointsIT.class.getResource("checkpointsWithEventName").toURI());
+        byte[] payload = archive(resourceToURI(CheckpointsIT.class, "checkpointsWithEventName"));
 
         ProcessApi processApi = new ProcessApi(getApiClient());
         StartProcessResponse spr = start(payload);
@@ -151,10 +151,10 @@ public class CheckpointsIT extends AbstractServerIT {
     }
 
     @Test
-    public void testCheckpointWithError() throws Exception {
+    void testCheckpointWithError() throws Exception {
         // prepare the payload
 
-        byte[] payload = archive(CheckpointsIT.class.getResource("checkpointsWithError").toURI());
+        byte[] payload = archive(resourceToURI(CheckpointsIT.class, "checkpointsWithError"));
 
         // start the process
 
@@ -195,7 +195,7 @@ public class CheckpointsIT extends AbstractServerIT {
     }
 
     @Test
-    public void testCheckpointWithArgs() throws Exception {
+    void testCheckpointWithArgs() throws Exception {
         String orgName = "org_" + randomString();
 
         OrganizationsApi orgApi = new OrganizationsApi(getApiClient());
@@ -217,7 +217,7 @@ public class CheckpointsIT extends AbstractServerIT {
 
         // prepare the payload
 
-        byte[] payload = archive(CheckpointsIT.class.getResource("checkpointsWithArgs").toURI());
+        byte[] payload = archive(resourceToURI(CheckpointsIT.class, "checkpointsWithArgs"));
 
         // start the process
 
@@ -239,12 +239,12 @@ public class CheckpointsIT extends AbstractServerIT {
     }
 
     @Test
-    public void testExpressions() throws Exception {
+    void testExpressions() throws Exception {
         String xValue = "x_" + randomString();
 
         // ---
 
-        byte[] payload = archive(CheckpointsIT.class.getResource("checkpointExpressions").toURI());
+        byte[] payload = archive(resourceToURI(CheckpointsIT.class, "checkpointExpressions"));
 
         StartProcessResponse spr = start(ImmutableMap.of(
                 "arguments.x", xValue,
@@ -259,12 +259,143 @@ public class CheckpointsIT extends AbstractServerIT {
         assertLog(".*checkpoint test " + xValue + ".*", 1, ab);
     }
 
+    @Test
+    void testEventInterpolationV2() throws Exception {
+        String xValue = "x_" + randomString();
+
+        // ---
+
+        byte[] payload = archive(resourceToURI(CheckpointsIT.class, "checkpointsEventInterpolation"));
+        Map<String, Object> input = ImmutableMap.of(
+                "arguments.x", xValue,
+                "runtime", "concord-v2",
+                "events.evalCheckpointNames", true,
+                "archive", payload);
+
+        // ---
+
+        executeAndValidateCheckpointEvent(input, "test " + xValue);
+    }
+
+    @Test
+    void testEventInterpolationV1() throws Exception {
+        String xValue = "x_" + randomString();
+
+        // ---
+
+        byte[] payload = archive(resourceToURI(CheckpointsIT.class, "checkpointsEventInterpolation"));
+        Map<String, Object> input = ImmutableMap.of(
+                "arguments.x", xValue,
+                "runtime", "concord-v1",
+                "runner.events.evalCheckpointNames", true,
+                "archive", payload);
+
+        // ---
+
+        executeAndValidateCheckpointEvent(input, "test " + xValue);
+    }
+
+    @Test
+    void testEventInterpolationTooLongV2() throws Exception {
+        String xValue = randomString(140);
+
+        // ---
+
+        byte[] payload = archive(resourceToURI(CheckpointsIT.class, "checkpointsEventInterpolation"));
+        Map<String, Object> input = ImmutableMap.of(
+                "arguments.x", xValue,
+                "runtime", "concord-v2",
+                "events.evalCheckpointNames", true,
+                "archive", payload);
+
+        // ---
+        String skippedText = "...[skipped 17 chars]...";
+        executeAndValidateCheckpointEvent(input, ".*" + Pattern.quote(skippedText) + ".*");
+    }
+
+    @Test
+    void testEventInterpolationTooLongV1() throws Exception {
+        String xValue = randomString(140);
+
+        // ---
+
+        byte[] payload = archive(resourceToURI(CheckpointsIT.class, "checkpointsEventInterpolation"));
+        Map<String, Object> input = ImmutableMap.of(
+                "arguments.x", xValue,
+                "runtime", "concord-v1",
+                "runner.events.evalCheckpointNames", true,
+                "archive", payload);
+
+        // ---
+        String skippedText = "...[skipped 17 chars]...";
+        executeAndValidateCheckpointEvent(input, ".*" + Pattern.quote(skippedText) + ".*");
+    }
+
+    @Test
+    void testDefaultEventDescriptionV2() throws Exception {
+        String xValue = "x_" + randomString();
+
+        // ---
+
+        byte[] payload = archive(resourceToURI(CheckpointsIT.class, "checkpointsEventInterpolation"));
+        Map<String, Object> input = ImmutableMap.of(
+                "arguments.x", xValue,
+                "runtime", "concord-v2",
+                "archive", payload);
+
+        // ---
+
+        executeAndValidateCheckpointEvent(input, Pattern.quote("test ${x}"));
+    }
+
+    @Test
+    void testDefaultEventDescriptionV1() throws Exception {
+        String xValue = "x_" + randomString();
+
+        // ---
+
+        byte[] payload = archive(resourceToURI(CheckpointsIT.class, "checkpointsEventInterpolation"));
+        Map<String, Object> input = ImmutableMap.of(
+                "arguments.x", xValue,
+                "runtime", "concord-v1",
+                "archive", payload);
+
+        // ---
+
+        executeAndValidateCheckpointEvent(input, Pattern.quote("test ${x}"));
+    }
+
+    /**
+     * Evaluates the results of tests for checkpoint name evaluation (or not-evaluation)
+     * by checking the generated process event descriptions
+     */
+    private void executeAndValidateCheckpointEvent(Map<String, Object> input,
+                                                   @Language("RegExp") String expectedName) throws Exception {
+        StartProcessResponse spr = start(input);
+
+        ProcessApi processApi = new ProcessApi(getApiClient());
+        waitForCompletion(processApi, spr.getInstanceId());
+
+        ProcessEventsApi peApi = new ProcessEventsApi(getApiClient());
+        List<ProcessEventEntry> events = peApi.list(spr.getInstanceId(), null, null, null, null, null, null, null);
+
+        Optional<ProcessEventEntry> event = events.stream()
+                .filter(e -> e.getEventType().equals("ELEMENT"))
+                .filter(e -> e.getData().get("description").toString().contains("Checkpoint: "))
+                .findFirst();
+
+        assertTrue(event.isPresent(), "Test process must create one checkpoint event");
+
+        Map<String, Object> data = event.get().getData();
+        assertTrue(data.get("description").toString().matches("^Checkpoint: " + expectedName + "$"));
+    }
+
     /**
      * Verifies the {@code LogTagMetadataProvider} feature.
      */
     @Test
-    public void testTags() throws Exception {
-        byte[] payload = archive(CheckpointsIT.class.getResource("checkpoints").toURI());
+    void testTags() throws Exception {
+        byte[] payload = archive(resourceToURI(CheckpointsIT.class, "checkpoints"));
 
         // ---
 

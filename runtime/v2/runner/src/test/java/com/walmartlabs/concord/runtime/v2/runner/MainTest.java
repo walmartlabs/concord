@@ -27,6 +27,8 @@ import com.google.inject.Injector;
 import com.google.inject.Module;
 import com.google.inject.multibindings.Multibinder;
 import com.google.inject.name.Names;
+import com.walmartlabs.concord.ApiClient;
+import com.walmartlabs.concord.client.ProcessEventRequest;
 import com.walmartlabs.concord.common.IOUtils;
 import com.walmartlabs.concord.forms.Form;
 import com.walmartlabs.concord.runtime.common.FormService;
@@ -35,12 +37,15 @@ import com.walmartlabs.concord.runtime.common.cfg.ApiConfiguration;
 import com.walmartlabs.concord.runtime.common.cfg.ImmutableRunnerConfiguration;
 import com.walmartlabs.concord.runtime.common.cfg.LoggingConfiguration;
 import com.walmartlabs.concord.runtime.common.cfg.RunnerConfiguration;
+import com.walmartlabs.concord.runtime.common.injector.InstanceId;
+import com.walmartlabs.concord.runtime.v2.model.ImmutableEventConfiguration;
 import com.walmartlabs.concord.runtime.v2.runner.checkpoints.CheckpointService;
 import com.walmartlabs.concord.runtime.v2.runner.guice.BaseRunnerModule;
 import com.walmartlabs.concord.runtime.v2.runner.logging.LoggerProvider;
 import com.walmartlabs.concord.runtime.v2.runner.logging.LoggingClient;
 import com.walmartlabs.concord.runtime.v2.runner.logging.LoggingConfigurator;
 import com.walmartlabs.concord.runtime.v2.runner.logging.RunnerLogger;
+import com.walmartlabs.concord.runtime.v2.runner.remote.EventRecordingExecutionListener;
 import com.walmartlabs.concord.runtime.v2.runner.tasks.TaskCallListener;
 import com.walmartlabs.concord.runtime.v2.runner.tasks.TaskCallPolicyChecker;
 import com.walmartlabs.concord.runtime.v2.runner.tasks.TaskResultListener;
@@ -54,6 +59,7 @@ import org.immutables.value.Value;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentMatcher;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -69,6 +75,7 @@ import java.nio.file.Paths;
 import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
@@ -80,6 +87,8 @@ import static org.mockito.Mockito.*;
 
 public class MainTest {
 
+    private static final char[] RANDOM_CHARS = "abcdef0123456789".toCharArray();
+
     private Path workDir;
     private UUID instanceId;
     private FormService formService;
@@ -88,7 +97,9 @@ public class MainTest {
     private ProcessStatusCallback processStatusCallback;
     private Module testServices;
 
+    private ApiClient apiClient;
     private TestCheckpointService checkpointService;
+    private EventRecordingExecutionListener eventRecordingExecutionListener;
 
     private byte[] lastLog;
     private byte[] allLogs;
@@ -110,6 +121,9 @@ public class MainTest {
         processStatusCallback = mock(ProcessStatusCallback.class);
 
         checkpointService = spy(new TestCheckpointService());
+
+        apiClient = mock(ApiClient.class);
+        when(apiClient.escapeString(anyString())).thenCallRealMethod();
 
         testServices = new AbstractModule() {
             @Override
@@ -151,7 +165,7 @@ public class MainTest {
     }
 
     @Test
-    public void test() throws Exception {
+    void test() throws Exception {
         deploy("hello");
 
         save(ProcessConfiguration.builder()
@@ -167,7 +181,7 @@ public class MainTest {
     }
 
     @Test
-    public void testForm() throws Exception {
+    void testForm() throws Exception {
         deploy("form");
 
         save(ProcessConfiguration.builder().build());
@@ -192,7 +206,7 @@ public class MainTest {
     }
 
     @Test
-    public void testUnknownTask() throws Exception {
+    void testUnknownTask() throws Exception {
         deploy("unknownTask");
 
         save(ProcessConfiguration.builder().build());
@@ -206,7 +220,7 @@ public class MainTest {
     }
 
     @Test
-    public void testTaskErrorBlock() throws Exception {
+    void testTaskErrorBlock() throws Exception {
         deploy("faultyTask");
 
         save(ProcessConfiguration.builder().build());
@@ -216,7 +230,7 @@ public class MainTest {
     }
 
     @Test
-    public void testTaskErrorBlock2() throws Exception {
+    void testTaskErrorBlock2() throws Exception {
         deploy("faultyTask2");
 
         save(ProcessConfiguration.builder().build());
@@ -226,7 +240,7 @@ public class MainTest {
     }
 
     @Test
-    public void testTaskErrorOut() throws Exception {
+    void testTaskErrorOut() throws Exception {
         deploy("faultyTaskOut");
 
         save(ProcessConfiguration.builder().build());
@@ -236,7 +250,7 @@ public class MainTest {
     }
 
     @Test
-    public void testTaskIgnoreErrors() throws Exception {
+    void testTaskIgnoreErrors() throws Exception {
         deploy("taskIgnoreErrors");
 
         save(ProcessConfiguration.builder().build());
@@ -247,7 +261,7 @@ public class MainTest {
     }
 
     @Test
-    public void testTaskIgnoreErrors2() throws Exception {
+    void testTaskIgnoreErrors2() throws Exception {
         deploy("taskIgnoreErrors2");
 
         save(ProcessConfiguration.builder().build());
@@ -258,7 +272,7 @@ public class MainTest {
     }
 
     @Test
-    public void testFlowErrorBlock() throws Exception {
+    void testFlowErrorBlock() throws Exception {
         deploy("faultyFlow");
 
         save(ProcessConfiguration.builder().build());
@@ -268,7 +282,7 @@ public class MainTest {
     }
 
     @Test
-    public void testTryErrorBlock() throws Exception {
+    void testTryErrorBlock() throws Exception {
         deploy("tryError");
 
         save(ProcessConfiguration.builder().build());
@@ -284,7 +298,7 @@ public class MainTest {
     }
 
     @Test
-    public void testCheckpoints() throws Exception {
+    void testCheckpoints() throws Exception {
         deploy("checkpoints");
 
         save(ProcessConfiguration.builder()
@@ -299,7 +313,7 @@ public class MainTest {
     }
 
     @Test
-    public void testTaskResultPolicy() throws Exception {
+    void testTaskResultPolicy() throws Exception {
         deploy("taskResultPolicy");
 
         save(ProcessConfiguration.builder().build());
@@ -315,7 +329,7 @@ public class MainTest {
     }
 
     @Test
-    public void testTaskInputInterpolate() throws Exception {
+    void testTaskInputInterpolate() throws Exception {
         deploy("taskInputInterpolate");
 
         save(ProcessConfiguration.builder()
@@ -326,7 +340,7 @@ public class MainTest {
     }
 
     @Test
-    public void testIfExpression() throws Exception {
+    void testIfExpression() throws Exception {
         deploy("ifExpression");
 
         save(ProcessConfiguration.builder()
@@ -340,7 +354,7 @@ public class MainTest {
     }
 
     @Test
-    public void testSwitchExpressionCaseFound() throws Exception {
+    void testSwitchExpressionCaseFound() throws Exception {
         deploy("switchExpressionFull");
 
         save(ProcessConfiguration.builder()
@@ -352,7 +366,7 @@ public class MainTest {
     }
 
     @Test
-    public void testSwitchExpressionCaseNotFound() throws Exception {
+    void testSwitchExpressionCaseNotFound() throws Exception {
         deploy("switchExpressionFull");
 
         save(ProcessConfiguration.builder()
@@ -364,7 +378,7 @@ public class MainTest {
     }
 
     @Test
-    public void testSwitchExpressionDefault() throws Exception {
+    void testSwitchExpressionDefault() throws Exception {
         deploy("switchExpressionDefault");
 
         save(ProcessConfiguration.builder()
@@ -376,7 +390,7 @@ public class MainTest {
     }
 
     @Test
-    public void testSwitchExpressionCaseExpression() throws Exception {
+    void testSwitchExpressionCaseExpression() throws Exception {
         deploy("switchExpressionCaseExpression");
 
         save(ProcessConfiguration.builder()
@@ -389,7 +403,7 @@ public class MainTest {
     }
 
     @Test
-    public void testSwitchExpressionCaseExpressionDefault() throws Exception {
+    void testSwitchExpressionCaseExpressionDefault() throws Exception {
         deploy("switchExpressionCaseExpression");
 
         save(ProcessConfiguration.builder()
@@ -402,7 +416,7 @@ public class MainTest {
     }
 
     @Test
-    public void testScriptInline() throws Exception {
+    void testScriptInline() throws Exception {
         deploy("scriptInline");
 
         save(ProcessConfiguration.builder()
@@ -413,7 +427,7 @@ public class MainTest {
     }
 
     @Test
-    public void testScriptAttached() throws Exception {
+    void testScriptAttached() throws Exception {
         deploy("scriptAttached");
 
         save(ProcessConfiguration.builder()
@@ -424,7 +438,7 @@ public class MainTest {
     }
 
     @Test
-    public void testScriptErrorBlock() throws Exception {
+    void testScriptErrorBlock() throws Exception {
         deploy("scriptError");
 
         save(ProcessConfiguration.builder()
@@ -435,7 +449,7 @@ public class MainTest {
     }
 
     @Test
-    public void testScriptVariablesSanitize() throws Exception {
+    void testScriptVariablesSanitize() throws Exception {
         deploy("scriptVariablesSanitize");
 
         save(ProcessConfiguration.builder()
@@ -447,7 +461,7 @@ public class MainTest {
     }
 
     @Test
-    public void testScriptOut() throws Exception {
+    void testScriptOut() throws Exception {
         deploy("scriptOut");
 
         save(ProcessConfiguration.builder()
@@ -460,7 +474,7 @@ public class MainTest {
     }
 
     @Test
-    public void testScriptOutExpr() throws Exception {
+    void testScriptOutExpr() throws Exception {
         deploy("scriptOutExpr");
 
         save(ProcessConfiguration.builder()
@@ -471,7 +485,7 @@ public class MainTest {
     }
 
     @Test
-    public void testNonSerializableLocal() throws Exception {
+    void testNonSerializableLocal() throws Exception {
         deploy("nonSerializableLocal");
 
         save(ProcessConfiguration.builder()
@@ -482,7 +496,7 @@ public class MainTest {
     }
 
     @Test
-    public void testInitiator() throws Exception {
+    void testInitiator() throws Exception {
         deploy("initiator");
 
         Map<String, Object> initiator = new HashMap<>();
@@ -499,7 +513,7 @@ public class MainTest {
     }
 
     @Test
-    public void testSegmentedLogging() throws Exception {
+    void testSegmentedLogging() throws Exception {
         deploy("logging");
 
         save(ProcessConfiguration.builder()
@@ -517,7 +531,7 @@ public class MainTest {
     }
 
     @Test
-    public void testSystemOutRedirectInScripts() throws Exception {
+    void testSystemOutRedirectInScripts() throws Exception {
         deploy("systemOutRedirect");
 
         save(ProcessConfiguration.builder()
@@ -533,7 +547,7 @@ public class MainTest {
     }
 
     @Test
-    public void testMultipleWithItems() throws Exception {
+    void testMultipleWithItems() throws Exception {
         deploy("multipleWithItems");
 
         save(ProcessConfiguration.builder()
@@ -546,7 +560,7 @@ public class MainTest {
     }
 
     @Test
-    public void testParallelWithItemsTask() throws Exception {
+    void testParallelWithItemsTask() throws Exception {
         deploy("parallelWithItemsTask");
 
         save(ProcessConfiguration.builder()
@@ -558,7 +572,7 @@ public class MainTest {
     }
 
     @Test
-    public void testWithItemsBlock() throws Exception {
+    void testWithItemsBlock() throws Exception {
         deploy("withItemsBlock");
 
         save(ProcessConfiguration.builder()
@@ -569,7 +583,7 @@ public class MainTest {
     }
 
     @Test
-    public void testWithItemsSet() throws Exception {
+    void testWithItemsSet() throws Exception {
         deploy("withItemsSet");
 
         save(ProcessConfiguration.builder()
@@ -583,7 +597,7 @@ public class MainTest {
     }
 
     @Test
-    public void testUnknownMethod() throws Exception {
+    void testUnknownMethod() throws Exception {
         deploy("unknownMethod");
 
         save(ProcessConfiguration.builder()
@@ -600,7 +614,7 @@ public class MainTest {
     }
 
     @Test
-    public void testSuspend() throws Exception {
+    void testSuspend() throws Exception {
         deploy("suspend");
 
         save(ProcessConfiguration.builder()
@@ -615,7 +629,7 @@ public class MainTest {
     }
 
     @Test
-    public void testDefaultProcessVariables() throws Exception {
+    void testDefaultProcessVariables() throws Exception {
         deploy("defaultVariables");
 
         save(ProcessConfiguration.builder().build());
@@ -636,7 +650,7 @@ public class MainTest {
     }
 
     @Test
-    public void testSetVariables() throws Exception {
+    void testSetVariables() throws Exception {
         deploy("setVariables");
 
         save(ProcessConfiguration.builder()
@@ -649,7 +663,7 @@ public class MainTest {
     }
 
     @Test
-    public void testReturn() throws Exception {
+    void testReturn() throws Exception {
         deploy("return");
 
         save(ProcessConfiguration.builder()
@@ -661,7 +675,7 @@ public class MainTest {
     }
 
     @Test
-    public void testExit() throws Exception {
+    void testExit() throws Exception {
         deploy("exit");
 
         save(ProcessConfiguration.builder()
@@ -673,7 +687,7 @@ public class MainTest {
     }
 
     @Test
-    public void testCallFlow() throws Exception {
+    void testCallFlow() throws Exception {
         deploy("call");
 
         save(ProcessConfiguration.builder()
@@ -686,7 +700,7 @@ public class MainTest {
     }
 
     @Test
-    public void testCallFlowWithErrorBlock() throws Exception {
+    void testCallFlowWithErrorBlock() throws Exception {
         deploy("callWithErrorBlock");
 
         save(ProcessConfiguration.builder()
@@ -698,7 +712,7 @@ public class MainTest {
     }
 
     @Test
-    public void testVariableVisibilityAfterErrorBlocks() throws Exception {
+    void testVariableVisibilityAfterErrorBlocks() throws Exception {
         deploy("errorBlockScoping");
 
         save(ProcessConfiguration.builder()
@@ -709,7 +723,7 @@ public class MainTest {
     }
 
     @Test
-    public void testCallFlowOut() throws Exception {
+    void testCallFlowOut() throws Exception {
         deploy("callOut");
 
         save(ProcessConfiguration.builder()
@@ -722,7 +736,7 @@ public class MainTest {
     }
 
     @Test
-    public void testCallOutWithItems() throws Exception {
+    void testCallOutWithItems() throws Exception {
         deploy("callOutWithItems");
 
         save(ProcessConfiguration.builder()
@@ -736,7 +750,7 @@ public class MainTest {
     }
 
     @Test
-    public void testVarScoping() throws Exception {
+    void testVarScoping() throws Exception {
         deploy("varScoping");
 
         save(ProcessConfiguration.builder()
@@ -754,7 +768,7 @@ public class MainTest {
     }
 
     @Test
-    public void testParallelIn() throws Exception {
+    void testParallelIn() throws Exception {
         deploy("parallelIn");
 
         save(ProcessConfiguration.builder()
@@ -771,7 +785,7 @@ public class MainTest {
     }
 
     @Test
-    public void testParallelOut() throws Exception {
+    void testParallelOut() throws Exception {
         deploy("parallelOut");
 
         save(ProcessConfiguration.builder()
@@ -783,7 +797,7 @@ public class MainTest {
     }
 
     @Test
-    public void testParallelOutExpr() throws Exception {
+    void testParallelOutExpr() throws Exception {
         deploy("parallelOutExpr");
 
         save(ProcessConfiguration.builder()
@@ -795,7 +809,7 @@ public class MainTest {
     }
 
     @Test
-    public void testReentrant() throws Exception {
+    void testReentrant() throws Exception {
         deploy("reentrantTask");
         save(ProcessConfiguration.builder()
                 .putArguments("actionName", "boo")
@@ -812,7 +826,7 @@ public class MainTest {
     }
 
     @Test
-    public void testReentrantWithError() throws Exception {
+    void testReentrantWithError() throws Exception {
         deploy("reentrantTaskWithError");
         save(ProcessConfiguration.builder()
                 .putArguments("actionName", "boo")
@@ -828,7 +842,7 @@ public class MainTest {
     }
 
     @Test
-    public void testNestedSet() throws Exception {
+    void testNestedSet() throws Exception {
         Map<String, Object> args = new HashMap<>();
         args.put("deep", 3);
         args.put("z", 234);
@@ -850,7 +864,7 @@ public class MainTest {
     }
 
     @Test
-    public void testRetry() throws Exception {
+    void testRetry() throws Exception {
         deploy("retry");
 
         save(ProcessConfiguration.builder().build());
@@ -863,7 +877,7 @@ public class MainTest {
     }
 
     @Test
-    public void testRetryInput() throws Exception {
+    void testRetryInput() throws Exception {
         deploy("retryInput");
 
         save(ProcessConfiguration.builder().build());
@@ -875,7 +889,7 @@ public class MainTest {
     }
 
     @Test
-    public void testCheckpointExpr() throws Exception {
+    void testCheckpointExpr() throws Exception {
         deploy("checkpointExpr");
 
         save(ProcessConfiguration.builder()
@@ -883,11 +897,52 @@ public class MainTest {
                 .build());
 
         run();
+        ArgumentMatcher<ProcessEventRequest> eventBodyMatcher =
+                body -> "Checkpoint: test_${x}".equals(body.getData().get("description"));
+
+        verify(apiClient, times(1)).buildCall(any(), any(), any(), any(), argThat(eventBodyMatcher), any(), any(), any(), any());
         verify(checkpointService, times(1)).create(any(ThreadId.class), eq("test_123"), any(Runtime.class), any(ProcessSnapshot.class));
     }
 
     @Test
-    public void testCheckpointRestore() throws Exception {
+    void testCheckpointExprNameInterpolation() throws Exception {
+        deploy("checkpointExpr");
+
+        save(ProcessConfiguration.builder()
+                .putArguments("x", 123)
+                .events(ImmutableEventConfiguration.builder().evalCheckpointNames(true).build())
+                .build());
+
+        run();
+        ArgumentMatcher<ProcessEventRequest> eventBodyMatcher =
+                body -> "Checkpoint: test_123".equals(body.getData().get("description"));
+
+        verify(apiClient, times(1)).buildCall(any(), any(), any(), any(), argThat(eventBodyMatcher), any(), any(), any(), any());
+        verify(checkpointService, times(1)).create(any(ThreadId.class), eq("test_123"), any(Runtime.class), any(ProcessSnapshot.class));
+    }
+
+    @Test
+    void testCheckpointExprNameInterpolationTooLong() throws Exception {
+        deploy("checkpointExpr");
+        
+        String xValue = randomString(140);
+        String skippedText = "...[skipped 17 chars]...";
+
+        save(ProcessConfiguration.builder()
+                .putArguments("x", xValue)
+                .events(ImmutableEventConfiguration.builder().evalCheckpointNames(true).build())
+                .build());
+
+        run();
+        ArgumentMatcher<ProcessEventRequest> eventBodyMatcher =
+                body -> body.getData().get("description").toString().matches("^Checkpoint: .*" + skippedText + ".*$");
+
+        // event gets sent, but proces fails because name is invalid (too long)
+        verify(apiClient, times(1)).buildCall(any(), any(), any(), any(), argThat(eventBodyMatcher), any(), any(), any(), any());
+    }
+
+    @Test
+    void testCheckpointRestore() throws Exception {
         deploy("checkpointRestore");
 
         save(ProcessConfiguration.builder()
@@ -911,7 +966,7 @@ public class MainTest {
     }
 
     @Test
-    public void testNullIfExpression() throws Exception {
+    void testNullIfExpression() throws Exception {
         deploy("ifExpressionAsNull");
 
         save(ProcessConfiguration.builder()
@@ -923,7 +978,7 @@ public class MainTest {
     }
 
     @Test
-    public void testTaskOut() throws Exception {
+    void testTaskOut() throws Exception {
         deploy("taskOut");
 
         save(ProcessConfiguration.builder()
@@ -936,7 +991,7 @@ public class MainTest {
     }
 
     @Test
-    public void testTaskOutWithItems() throws Exception {
+    void testTaskOutWithItems() throws Exception {
         deploy("taskOutWithItems");
 
         save(ProcessConfiguration.builder()
@@ -947,7 +1002,7 @@ public class MainTest {
     }
 
     @Test
-    public void testExprOutExpression() throws Exception {
+    void testExprOutExpression() throws Exception {
         deploy("exprOutExpr");
 
         save(ProcessConfiguration.builder()
@@ -958,7 +1013,7 @@ public class MainTest {
     }
 
     @Test
-    public void testFormsParallel() throws Exception {
+    void testFormsParallel() throws Exception {
         deploy("parallelForm");
 
         save(ProcessConfiguration.builder()
@@ -994,7 +1049,7 @@ public class MainTest {
     }
 
     @Test
-    public void testContextInjector() throws Exception {
+    void testContextInjector() throws Exception {
         deploy("injectorTest");
 
         save(ProcessConfiguration.builder()
@@ -1005,7 +1060,7 @@ public class MainTest {
     }
 
     @Test
-    public void testContextInjectorWithSegmentedLogger() throws Exception {
+    void testContextInjectorWithSegmentedLogger() throws Exception {
         deploy("injectorTest");
 
         RunnerConfiguration runnerCfg = RunnerConfiguration.builder()
@@ -1023,7 +1078,7 @@ public class MainTest {
     }
 
     @Test
-    public void testCurrentFlowName() throws Exception {
+    void testCurrentFlowName() throws Exception {
         deploy("currentFlowName");
 
         save(ProcessConfiguration.builder()
@@ -1035,7 +1090,7 @@ public class MainTest {
     }
 
     @Test
-    public void testEvalAsMap() throws Exception {
+    void testEvalAsMap() throws Exception {
         deploy("evalAsMap");
 
         save(ProcessConfiguration.builder()
@@ -1053,7 +1108,7 @@ public class MainTest {
     }
 
     @Test
-    public void testOrDefaultFunction() throws Exception {
+    void testOrDefaultFunction() throws Exception {
         deploy("orDefault");
 
         save(ProcessConfiguration.builder()
@@ -1072,7 +1127,7 @@ public class MainTest {
     }
 
     @Test
-    public void testIsDebug() throws Exception {
+    void testIsDebug() throws Exception {
         deploy("isDebug");
 
         save(ProcessConfiguration.builder()
@@ -1144,6 +1199,10 @@ public class MainTest {
                 bind(DefaultTaskVariablesService.class).toProvider(new DefaultTaskVariablesProvider(processConfiguration));
                 bind(RunnerLogger.class).toProvider(LoggerProvider.class);
                 bind(LoggingClient.class).to(TestLoggingClient.class);
+
+                eventRecordingExecutionListener = spy(new EventRecordingExecutionListener(apiClient, new InstanceId(instanceId), processConfiguration));
+                Multibinder<ExecutionListener> executionListeners = Multibinder.newSetBinder(binder(), ExecutionListener.class);
+                executionListeners.addBinding().toInstance(eventRecordingExecutionListener);
             }
         };
 
@@ -1220,6 +1279,22 @@ public class MainTest {
         }
 
         return cnt;
+    }
+
+    public static String randomString() {
+        return System.currentTimeMillis() + "_" + randomString(6);
+    }
+
+    public static String randomString(int length) {
+        StringBuilder b = new StringBuilder();
+
+        Random rng = ThreadLocalRandom.current();
+        for (int i = 0; i < length; i++) {
+            int n = rng.nextInt(RANDOM_CHARS.length);
+            b.append(RANDOM_CHARS[n]);
+        }
+
+        return b.toString();
     }
 
     @Named("testDefaults")

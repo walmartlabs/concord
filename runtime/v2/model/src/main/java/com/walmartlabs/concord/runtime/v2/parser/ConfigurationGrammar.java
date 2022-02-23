@@ -60,7 +60,8 @@ public final class ConfigurationGrammar {
                                     optional("outVarsBlacklist", stringArrayVal.map(o::outVarsBlacklist)),
                                     optional("recordTaskMeta", booleanVal.map(o::recordTaskMeta)),
                                     optional("truncateMeta", booleanVal.map(o::truncateMeta)),
-                                    optional("metaBlacklist", stringArrayVal.map(o::metaBlacklist))))
+                                    optional("metaBlacklist", stringArrayVal.map(o::metaBlacklist)),
+                                    optional("evalCheckpointNames", booleanVal.map(o::evalCheckpointNames))))
                             .map(ImmutableEventConfiguration.Builder::build));
 
     private static final Parser<Atom, EventConfiguration> eventsVal =

@@ -155,6 +155,14 @@ public interface EventConfiguration extends Serializable {
     }
 
     /**
+     * Enable/disable evaluation of checkpoint names.
+     */
+    @Value.Default
+    default boolean evalCheckpointNames() {
+        return false;
+    }
+
+    /**
      * metadata in the blacklist won't be recorded.
      */
     @Value.Default

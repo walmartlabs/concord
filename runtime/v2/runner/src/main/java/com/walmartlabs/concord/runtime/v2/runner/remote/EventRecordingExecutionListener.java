@@ -24,9 +24,14 @@ import com.walmartlabs.concord.ApiClient;
 import com.walmartlabs.concord.ApiException;
 import com.walmartlabs.concord.client.ProcessEventRequest;
 import com.walmartlabs.concord.client.ProcessEventsApi;
+import com.walmartlabs.concord.runtime.common.ObjectTruncater;
 import com.walmartlabs.concord.runtime.common.injector.InstanceId;
 import com.walmartlabs.concord.runtime.v2.ProcessDefinitionUtils;
 import com.walmartlabs.concord.runtime.v2.model.*;
+import com.walmartlabs.concord.runtime.v2.runner.el.DefaultEvalContext;
+import com.walmartlabs.concord.runtime.v2.runner.el.EvalContext;
+import com.walmartlabs.concord.runtime.v2.runner.el.EvalContextFactory;
+import com.walmartlabs.concord.runtime.v2.runner.el.ExpressionEvaluator;
 import com.walmartlabs.concord.runtime.v2.runner.vm.StepCommand;
 import com.walmartlabs.concord.runtime.v2.sdk.ProcessConfiguration;
 import com.walmartlabs.concord.svm.Runtime;
@@ -39,6 +44,7 @@ import java.time.Instant;
 import java.time.ZoneOffset;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.function.UnaryOperator;
 
 public class EventRecordingExecutionListener implements ExecutionListener {
 
@@ -75,12 +81,22 @@ public class EventRecordingExecutionListener implements ExecutionListener {
         ProcessDefinition pd = runtime.getService(ProcessDefinition.class);
         Location loc = s.getStep().getLocation();
 
+        UnaryOperator<String> descriptionInterpolator = expr -> {
+            ExpressionEvaluator ee = runtime.getService(ExpressionEvaluator.class);
+            Map<String, Object> vars = new HashMap<>(state.getFrames(threadId).get(0).getLocals());
+            EvalContext evalContext = DefaultEvalContext.builder()
+                    .from(EvalContextFactory.strict(vars))
+                    .undefinedVariableAsNull(true)
+                    .build();
+            return ee.eval(evalContext, expr, String.class);
+        };
+
         Map<String, Object> m = new HashMap<>();
         m.put("processDefinitionId", ProcessDefinitionUtils.getCurrentFlowName(pd, s.getStep()));
         m.put("fileName", loc.fileName());
         m.put("line", loc.lineNum());
         m.put("column", loc.column());
-        m.put("description", getDescription(s.getStep()));
+        m.put("description", getDescription(s.getStep(), eventConfiguration, descriptionInterpolator));
 
         ProcessEventRequest req = new ProcessEventRequest();
         req.setEventType("ELEMENT"); // TODO constants
@@ -96,7 +112,7 @@ public class EventRecordingExecutionListener implements ExecutionListener {
         return Result.CONTINUE;
     }
 
-    private static String getDescription(Step step) {
+    private static String getDescription(Step step, EventConfiguration eventConfiguration, UnaryOperator<String> interpolator) {
         // TODO: add 'description' into step? so we will not miss description for new steps...
         if (step instanceof FlowCall) {
             return "Flow call: " + ((FlowCall) step).getFlowName();
@@ -111,7 +127,15 @@ public class EventRecordingExecutionListener implements ExecutionListener {
         } else if (step instanceof SetVariablesStep) {
             return "Set variables";
         } else if (step instanceof Checkpoint) {
-            return "Checkpoint: " + ((Checkpoint) step).getName();
+            String name;
+            if (!eventConfiguration.evalCheckpointNames()) {
+                name = ((Checkpoint) step).getName();
+            } else {
+                String evaluated = interpolator.apply(((Checkpoint) step).getName());
+                name = (String) ObjectTruncater.truncate(evaluated, 128, 1, 1);
+            }
+
+            return "Checkpoint: " + name;
         } else if (step instanceof FormCall) {
             return "Form call: " + ((FormCall) step).getName();
         } else if (step instanceof GroupOfSteps) {

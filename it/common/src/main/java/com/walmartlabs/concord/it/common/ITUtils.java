@@ -36,8 +36,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.attribute.PosixFilePermissions;
-import java.time.format.DateTimeFormatter;
-import java.util.Locale;
 import java.util.Random;
 import java.util.concurrent.ThreadLocalRandom;
 
@@ -58,6 +56,15 @@ public final class ITUtils {
             }
         }
         return out.toByteArray();
+    }
+
+    public static URI resourceToURI(Class<?> klass, String resource) throws URISyntaxException {
+        URL url = klass.getResource(resource);
+        if (url == null) {
+            throw new RuntimeException("Resource not found: " + resource);
+        }
+
+        return url.toURI();
     }
 
     public static String resourceToString(Class<?> klass, String resource) throws Exception {
@@ -94,11 +101,14 @@ public final class ITUtils {
     }
 
     public static String randomString() {
+        return System.currentTimeMillis() + "_" + randomString(6);
+    }
+
+    public static String randomString(int length) {
         StringBuilder b = new StringBuilder();
-        b.append(System.currentTimeMillis()).append("_");
 
         Random rng = ThreadLocalRandom.current();
-        for (int i = 0; i < 6; i++) {
+        for (int i = 0; i < length; i++) {
             int n = rng.nextInt(RANDOM_CHARS.length);
             b.append(RANDOM_CHARS[n]);
         }

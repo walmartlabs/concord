@@ -59,11 +59,12 @@ public class TaskEventInterceptor implements TaskInterceptor {
         Map<String, Object> logMetaData = getLogMetaData(instance, ctx);
         TaskTag.pre(taskName, instance, correlationId, logMetaData).log();
 
-        eventProcessor.process(buildEvent(ctx), (element) -> {
+        eventProcessor.process(buildEvent(ctx), element -> {
             Map<String, Object> params = new HashMap<>();
             params.put("name", taskName);
             params.put("correlationId", correlationId);
             params.put("phase", "pre");
+            getCheckpointName(ctx, element).ifPresent(n -> params.put("description", n));
             List<VariableMapping> p = getInParams(ctx, element);
             if (p != null) {
                 params.put("in", p);
@@ -83,11 +84,13 @@ public class TaskEventInterceptor implements TaskInterceptor {
         Map<String, Object> logMetaData = getLogMetaData(instance, ctx);
         TaskTag.post(taskName, instance, correlationId, logMetaData).log();
 
-        eventProcessor.process(buildEvent(ctx), (element) -> {
+        eventProcessor.process(buildEvent(ctx), element -> {
             Map<String, Object> params = new HashMap<>();
             params.put("name", taskName);
             params.put("correlationId", correlationId);
             params.put("phase", "post");
+            getCheckpointName(ctx, element)
+                    .ifPresent(n -> params.put("description", n));
             List<VariableMapping> p = getOutParams(ctx, element);
             if (p != null) {
                 params.put("out", p);
@@ -114,6 +117,36 @@ public class TaskEventInterceptor implements TaskInterceptor {
         }
 
         return null;
+    }
+
+    private Optional<String> getCheckpointName(Context ctx, AbstractElement element) {
+        if (!(element instanceof ServiceTask)) {
+            return Optional.empty();
+        }
+
+        ServiceTask t = (ServiceTask) element;
+        if (t.getIn() == null) {
+            return Optional.empty();
+        }
+
+        if (!t.getExpression().equals("${checkpoint}")) {
+            return Optional.empty();
+        }
+
+        return t.getIn().stream()
+                .filter(v -> v.getTarget().equals("checkpointName"))
+                .map(v -> {
+                    String name;
+                    if (!cfg.isEvalCheckpointNames()) {
+                        name = v.getSourceExpression();
+                    } else {
+                        String evaluated = (String) ctx.interpolate(v.getSourceExpression());
+                        name = ObjectTruncater.truncate(evaluated, 128, 1, 1).toString();
+                    }
+
+                    return "Checkpoint: " + name;
+                })
+                .findAny();
     }
 
     private List<VariableMapping> getInParams(Context ctx, AbstractElement element) {

@@ -161,6 +161,10 @@ public abstract class AbstractServerIT {
         return ITUtils.randomString();
     }
 
+    protected static String randomString(int length) {
+        return ITUtils.randomString(length);
+    }
+
     protected static String randomPwd() {
         return ITUtils.randomPwd();
     }
