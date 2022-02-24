@@ -1,3 +1,8 @@
 flows:
   default:
     - checkpoint: "test_${x}"
+
+  resourceExpr:
+    - set:
+        jsonString: '{"k": "${x}"}'
+    - checkpoint: "test_${resource.fromJsonString(jsonString).k}"

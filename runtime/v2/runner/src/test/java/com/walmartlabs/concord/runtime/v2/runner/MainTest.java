@@ -942,6 +942,24 @@ public class MainTest {
     }
 
     @Test
+    void testCheckpointExprNameInterpolationNull() throws Exception {
+        deploy("checkpointExpr");
+
+        save(ProcessConfiguration.builder()
+                .putArguments("x", 123)
+                .entryPoint("resourceExpr")
+                .events(ImmutableEventConfiguration.builder().evalCheckpointNames(true).build())
+                .build());
+
+        run();
+        ArgumentMatcher<ProcessEventRequest> eventBodyMatcher =
+                body -> "Checkpoint: test_${resource.fromJsonString(jsonString).k}".equals(body.getData().get("description"));
+
+        verify(apiClient, times(1)).buildCall(any(), any(), any(), any(), argThat(eventBodyMatcher), any(), any(), any(), any());
+        verify(checkpointService, times(1)).create(any(ThreadId.class), eq("test_123"), any(Runtime.class), any(ProcessSnapshot.class));
+    }
+
+    @Test
     void testCheckpointRestore() throws Exception {
         deploy("checkpointRestore");
 

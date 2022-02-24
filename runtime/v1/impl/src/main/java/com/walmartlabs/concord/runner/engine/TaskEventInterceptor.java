@@ -136,12 +136,11 @@ public class TaskEventInterceptor implements TaskInterceptor {
         return t.getIn().stream()
                 .filter(v -> v.getTarget().equals("checkpointName"))
                 .map(v -> {
-                    String name;
+                    String name = v.getSourceExpression();
+
                     if (cfg.isEvalCheckpointNames()) {
-                        String evaluated = ContextUtils.getString(ctx, "checkpointName", v.getSourceExpression());
+                        String evaluated = ContextUtils.getString(ctx, "checkpointName", name);
                         name = ObjectTruncater.truncate(evaluated, 128, 1, 1).toString();
-                    } else {
-                        name = v.getSourceExpression();
                     }
 
                     return "Checkpoint: " + name;

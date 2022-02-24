@@ -127,12 +127,11 @@ public class EventRecordingExecutionListener implements ExecutionListener {
         } else if (step instanceof SetVariablesStep) {
             return "Set variables";
         } else if (step instanceof Checkpoint) {
-            String name;
+            String name = ((Checkpoint) step).getName();
+
             if (eventConfiguration.evalCheckpointNames()) {
-                String evaluated = interpolator.apply(((Checkpoint) step).getName());
-                name = (String) ObjectTruncater.truncate(evaluated, 128, 1, 1);
-            } else {
-                name = ((Checkpoint) step).getName();
+                String evaluated = interpolator.apply(name);
+                name = evaluated == null ? name : (String) ObjectTruncater.truncate(evaluated, 128, 1, 1);
             }
 
             return "Checkpoint: " + name;
