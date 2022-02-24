@@ -19,6 +19,7 @@ configuration:
     - "vaultPassword"
     recordTaskMeta: false
     truncateMeta: true
+    evalCheckpointNames: false
 flows:
   flow1:
   - checkpoint: "chp1"
