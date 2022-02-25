@@ -146,7 +146,7 @@ public class ProcessAnsibleResource implements Resource {
         }
 
         List<AnsibleHostEntry> hosts = ansibleDao.list(key.getInstanceId(), key.getCreatedAt(), host, hostGroup, statuses, playbookId, limit, offset);
-        List<String> hostGroups = ansibleDao.listHostGroups(key.getInstanceId(), key.getCreatedAt());
+        List<String> hostGroups = ansibleDao.listHostGroups(key.getInstanceId(), key.getCreatedAt(), playbookId);
         return ImmutableAnsibleHostListResponse.builder()
                 .items(hosts)
                 .hostGroups(hostGroups)
@@ -279,13 +279,19 @@ public class ProcessAnsibleResource implements Resource {
             });
         }
 
-        public List<String> listHostGroups(UUID instanceId, OffsetDateTime instanceCreatedAt) {
+        public List<String> listHostGroups(UUID instanceId, OffsetDateTime instanceCreatedAt, UUID playbookId) {
             return txResult(tx -> {
                 AnsibleHosts a = ANSIBLE_HOSTS.as("a");
-                return tx.selectDistinct(a.HOST_GROUP)
+                SelectConditionStep<Record1<String>> q = tx.selectDistinct(a.HOST_GROUP)
                         .from(a)
-                        .where(a.INSTANCE_ID.eq(instanceId).and(a.INSTANCE_CREATED_AT.eq(instanceCreatedAt)))
-                        .fetch(Record1::value1);
+                        .where(a.INSTANCE_ID.eq(instanceId)
+                                .and(a.INSTANCE_CREATED_AT.eq(instanceCreatedAt)));
+
+                if (playbookId != null) {
+                    q = q.and(a.PLAYBOOK_ID.eq(playbookId));
+                }
+
+                return q.fetch(Record1::value1);
             });
         }
 
