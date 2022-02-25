@@ -16,6 +16,8 @@
 
 ### Changed
 
+- runtime-v2: allow null values in configuration.arguments
+([#571](https://github.com/walmartlabs/concord/pull/571));
 - runtime-v2: allow arrays for GH trigger conditions
 ([#563](https://github.com/walmartlabs/concord/pull/563));
 - runtime-v1/v2: use Nashorn compat mode for GraalVM
