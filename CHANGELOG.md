@@ -3,6 +3,7 @@
 ## [Unreleased]
 
 ### Added
+
 - runtime-v2: add `orDefault` function
 ([#557](https://github.com/walmartlabs/concord/pull/557);
 - runtime-v2: project document support for suspendTimeout
@@ -16,6 +17,10 @@
 
 ### Changed
 
+- ansible: clear host filters after switching to the next stat tab
+([#575](https://github.com/walmartlabs/concord/pull/575));
+- ansible: filter host groups by playbookId
+([#574](https://github.com/walmartlabs/concord/pull/574));
 - runtime-v2: allow null values in configuration.arguments
 ([#571](https://github.com/walmartlabs/concord/pull/571));
 - runtime-v2: allow arrays for GH trigger conditions
