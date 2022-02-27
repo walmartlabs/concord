@@ -84,7 +84,8 @@ public final class ConfigurationGrammar {
                                     optional("out", stringArrayVal.map(o::addAllOut)),
                                     optional("arguments", mapVal.map(o::arguments)),
                                     optional("debug", booleanVal.map(o::debug)),
-                                    optional("template", stringVal.map(o::template))))
+                                    optional("template", stringVal.map(o::template)),
+                                    optional("parallelWithItemsParallelism", intVal.map(o::parallelWithItemsParallelism))))
                             .map(ImmutableProcessDefinitionConfiguration.Builder::build));
 
     public static final Parser<Atom, ProcessDefinitionConfiguration> processCfgVal =

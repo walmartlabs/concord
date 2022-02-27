@@ -20,6 +20,8 @@ package com.walmartlabs.concord.runtime.v2.runner.vm;
  * =====
  */
 
+import com.walmartlabs.concord.runtime.v2.model.ProcessDefinition;
+import com.walmartlabs.concord.runtime.v2.model.ProcessDefinitionConfiguration;
 import com.walmartlabs.concord.runtime.v2.model.Step;
 import com.walmartlabs.concord.runtime.v2.model.WithItems;
 import com.walmartlabs.concord.runtime.v2.runner.context.ContextFactory;
@@ -129,10 +131,10 @@ public abstract class WithItemsWrapper implements Command {
             return;
         }
 
-        eval(state, threadId, items);
+        eval(runtime, state, threadId, items);
     }
 
-    protected abstract void eval(State state, ThreadId threadId, ArrayList<Serializable> items);
+    protected abstract void eval(Runtime runtime, State state, ThreadId threadId, ArrayList<Serializable> items);
 
     static void assertItem(Object item) {
         if (item == null) {
@@ -155,11 +157,25 @@ public abstract class WithItemsWrapper implements Command {
         }
 
         @Override
-        protected void eval(State state, ThreadId threadId, ArrayList<Serializable> items) {
-            Frame frame = state.peekFrame(threadId);
-
+        protected void eval(Runtime runtime, State state, ThreadId threadId, ArrayList<Serializable> items) {
             // target frame for out variables
             Frame targetFrame = VMUtils.assertNearestRoot(state, threadId);
+
+            ProcessDefinitionConfiguration cfg = runtime.getService(ProcessDefinition.class).configuration();
+
+            List<ArrayList<Serializable>> batches = batches(items, cfg.parallelWithItemsParallelism());
+            for (ArrayList<Serializable> batch : batches) {
+                evalBatch(state, threadId, targetFrame, batch);
+            }
+
+            state.pushFrame(threadId, Frame.builder()
+                    .commands(new PrepareOutVariables(outVariables, targetFrame))
+                    .nonRoot()
+                    .build());
+        }
+
+        private void evalBatch(State state, ThreadId threadId, Frame targetFrame, ArrayList<Serializable> items) {
+            Frame frame = state.peekFrame(threadId);
 
             List<Map.Entry<ThreadId, Serializable>> forks = items.stream()
                     .map(e -> new AbstractMap.SimpleEntry<>(state.nextThreadId(), e))
@@ -170,7 +186,6 @@ public abstract class WithItemsWrapper implements Command {
 
                 Frame cmdFrame = Frame.builder()
                         .nonRoot()
-                        .commands()
                         .build();
 
                 cmdFrame.setLocal(CURRENT_ITEMS, items);
@@ -186,12 +201,15 @@ public abstract class WithItemsWrapper implements Command {
                 state.pushFrame(threadId, cmdFrame);
             }
 
-            state.pushFrame(threadId, Frame.builder()
-                    .commands(new PrepareOutVariables(outVariables, targetFrame))
-                    .nonRoot()
-                    .build());
-
             frame.push(new JoinCommand(forks.stream().map(Map.Entry::getKey).collect(Collectors.toSet())));
+        }
+
+        private static List<ArrayList<Serializable>> batches(ArrayList<Serializable> items, int batchSize) {
+            List<ArrayList<Serializable>> result = new ArrayList<>();
+            for (int i = 0; i < items.size(); i += batchSize) {
+                result.add(new ArrayList<>(items.subList(i, Math.min(items.size(), i + batchSize))));
+            }
+            return result;
         }
     }
 
@@ -209,7 +227,7 @@ public abstract class WithItemsWrapper implements Command {
         }
 
         @Override
-        protected void eval(State state, ThreadId threadId, ArrayList<Serializable> items) {
+        protected void eval(Runtime runtime, State state, ThreadId threadId, ArrayList<Serializable> items) {
             Frame loop = Frame.builder()
                     .nonRoot()
                     .build();

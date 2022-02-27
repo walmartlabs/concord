@@ -313,7 +313,12 @@ public class ProjectSerializerV2Test extends AbstractParserTest {
                 .dest("dest")
                 .build()));
 
+        ProcessDefinitionConfiguration cfg = ProcessDefinitionConfiguration.builder()
+                .parallelWithItemsParallelism(123)
+                .build();
+
         ProcessDefinition pd = ProcessDefinition.builder()
+                .configuration(cfg)
                 .forms(forms)
                 .putFlows("flow1", steps())
                 .addPublicFlows("flow1")
