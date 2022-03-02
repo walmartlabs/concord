@@ -23,6 +23,7 @@ package com.walmartlabs.concord.runtime.v2.runner.checkpoints;
 import com.walmartlabs.concord.ApiClient;
 import com.walmartlabs.concord.client.ClientUtils;
 import com.walmartlabs.concord.runtime.common.cfg.ApiConfiguration;
+import com.walmartlabs.concord.runtime.common.cfg.RunnerConfiguration;
 import com.walmartlabs.concord.runtime.common.injector.InstanceId;
 
 import javax.inject.Inject;
@@ -39,11 +40,11 @@ public class DefaultCheckpointUploader implements CheckpointUploader {
 
     @Inject
     public DefaultCheckpointUploader(InstanceId instanceId,
-                                     ApiClient apiClient,
-                                     ApiConfiguration apiConfiguration) {
+                                     RunnerConfiguration configuration,
+                                     ApiClient apiClient) {
         this.instanceId = instanceId;
         this.apiClient = apiClient;
-        this.apiConfiguration = apiConfiguration;
+        this.apiConfiguration = configuration.api();
     }
 
     @Override
