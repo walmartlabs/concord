@@ -61,6 +61,9 @@ public interface ScriptCallOptions extends StepOptions {
     WithItems withItems();
 
     @Nullable
+    Loop loop();
+
+    @Nullable
     Retry retry();
 
     @Value.Default

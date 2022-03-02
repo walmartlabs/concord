@@ -56,6 +56,7 @@ public class ProjectSerializerV2 {
         SimpleModule module = new SimpleModule()
                 .addSerializer(SimpleOptions.class, new SimpleOptionsSerializer())
                 .addSerializer(Retry.class, new RetryOptionsSerializer())
+                .addSerializer(Loop.class, new LoopOptionsSerializer())
                 .addSerializer(WithItems.class, new WithItemsSerializer())
                 .addSerializer(Checkpoint.class, new CheckpointStepSerializer())
                 .addSerializer(ExitStep.class, new ExitStepSerializer())

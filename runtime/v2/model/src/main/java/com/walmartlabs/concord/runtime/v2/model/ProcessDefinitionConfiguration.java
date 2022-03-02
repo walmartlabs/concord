@@ -104,6 +104,11 @@ public interface ProcessDefinitionConfiguration extends Serializable {
     @Nullable
     String template();
 
+    @Value.Default
+    default int parallelLoopParallelism() {
+        return Runtime.getRuntime().availableProcessors();
+    }
+
     static ImmutableProcessDefinitionConfiguration.Builder builder() {
         return ImmutableProcessDefinitionConfiguration.builder();
     }

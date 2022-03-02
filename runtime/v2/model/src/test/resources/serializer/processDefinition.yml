@@ -19,6 +19,7 @@ configuration:
     - "vaultPassword"
     recordTaskMeta: false
     truncateMeta: true
+  parallelLoopParallelism: 123
 flows:
   flow1:
   - checkpoint: "chp1"

@@ -34,11 +34,8 @@ public interface GroupOfStepsMixIn extends NamedStep {
     @JsonSchemaInject(json = "{\"oneOf\": [ {\"type\": \"array\", \"items\" : {\"type\" : \"string\"}}, {\"type\": \"string\"} ]}", merge = false)
     Object out();
 
-    @JsonProperty("withItems")
-    WithItemsMixIn withItems();
-
-    @JsonProperty("parallelWithItems")
-    WithItemsMixIn parallelWithItems();
+    @JsonProperty("loop")
+    LoopMixIn loop();
 
     @JsonProperty("error")
     List<StepMixIn> errorSteps();

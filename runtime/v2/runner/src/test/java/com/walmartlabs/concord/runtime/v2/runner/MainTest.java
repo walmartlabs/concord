@@ -36,6 +36,8 @@ import com.walmartlabs.concord.runtime.common.cfg.ImmutableRunnerConfiguration;
 import com.walmartlabs.concord.runtime.common.cfg.LoggingConfiguration;
 import com.walmartlabs.concord.runtime.common.cfg.RunnerConfiguration;
 import com.walmartlabs.concord.runtime.v2.runner.checkpoints.CheckpointService;
+import com.walmartlabs.concord.runtime.v2.runner.checkpoints.CheckpointUploader;
+import com.walmartlabs.concord.runtime.v2.runner.checkpoints.DefaultCheckpointService;
 import com.walmartlabs.concord.runtime.v2.runner.guice.BaseRunnerModule;
 import com.walmartlabs.concord.runtime.v2.runner.logging.LoggerProvider;
 import com.walmartlabs.concord.runtime.v2.runner.logging.LoggingClient;
@@ -48,8 +50,6 @@ import com.walmartlabs.concord.runtime.v2.runner.tasks.TaskV2Provider;
 import com.walmartlabs.concord.runtime.v2.sdk.*;
 import com.walmartlabs.concord.sdk.Constants;
 import com.walmartlabs.concord.svm.ExecutionListener;
-import com.walmartlabs.concord.svm.Runtime;
-import com.walmartlabs.concord.svm.ThreadId;
 import org.immutables.value.Value;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -88,12 +88,10 @@ public class MainTest {
     private ProcessStatusCallback processStatusCallback;
     private Module testServices;
 
-    private TestCheckpointService checkpointService;
+    private TestCheckpointUploader checkpointService;
 
     private byte[] lastLog;
     private byte[] allLogs;
-
-    private Path segmentedLogDir;
 
     @BeforeEach
     public void setUp() throws IOException {
@@ -109,7 +107,7 @@ public class MainTest {
 
         processStatusCallback = mock(ProcessStatusCallback.class);
 
-        checkpointService = spy(new TestCheckpointService());
+        checkpointService = spy(new TestCheckpointUploader());
 
         testServices = new AbstractModule() {
             @Override
@@ -118,7 +116,8 @@ public class MainTest {
 
                 bind(ClassLoader.class).annotatedWith(Names.named("runtime")).toInstance(MainTest.class.getClassLoader());
 
-                bind(CheckpointService.class).toInstance(checkpointService);
+                bind(CheckpointUploader.class).toInstance(checkpointService);
+                bind(CheckpointService.class).to(DefaultCheckpointService.class);
                 bind(DependencyManager.class).to(DefaultDependencyManager.class);
                 bind(DockerService.class).to(DefaultDockerService.class);
                 bind(FileService.class).to(DefaultFileService.class);
@@ -295,7 +294,7 @@ public class MainTest {
         assertLog(log, ".*Hello, Concord!.*");
 
         verify(processStatusCallback, times(1)).onRunning(eq(instanceId));
-        verify(checkpointService, times(1)).create(any(), eq("A"), any(), any());
+        verify(checkpointService, times(1)).upload(any(), eq("A"), any());
     }
 
     @Test
@@ -558,6 +557,18 @@ public class MainTest {
     }
 
     @Test
+    public void testParallelLoopTask() throws Exception {
+        deploy("parallelLoopTask");
+
+        save(ProcessConfiguration.builder()
+                .build());
+
+        byte[] log = run();
+        assertLog(log, ".*result: \\[10, 20, 30\\].*");
+        assertLog(log, ".*threadIds: \\[1, 2, 3].*");
+    }
+
+    @Test
     public void testWithItemsBlock() throws Exception {
         deploy("withItemsBlock");
 
@@ -569,8 +580,33 @@ public class MainTest {
     }
 
     @Test
+    public void testLoopBlock() throws Exception {
+        deploy("loopBlock");
+
+        save(ProcessConfiguration.builder()
+                .build());
+
+        byte[] log = run();
+        assertLog(log, ".*result: \\[10, 20, 30\\].*");
+    }
+
+    @Test
     public void testWithItemsSet() throws Exception {
         deploy("withItemsSet");
+
+        save(ProcessConfiguration.builder()
+                .build());
+
+        byte[] log = run();
+        assertLogAtLeast(log, 3, ".*empty: \\[\\].*");
+        assertLog(log, ".*after add: \\[1\\].*");
+        assertLog(log, ".*after add: \\[2\\].*");
+        assertLog(log, ".*after add: \\[3\\].*");
+    }
+
+    @Test
+    public void testLoopSet() throws Exception {
+        deploy("loopSet");
 
         save(ProcessConfiguration.builder()
                 .build());
@@ -883,7 +919,7 @@ public class MainTest {
                 .build());
 
         run();
-        verify(checkpointService, times(1)).create(any(ThreadId.class), eq("test_123"), any(Runtime.class), any(ProcessSnapshot.class));
+        verify(checkpointService, times(1)).upload(any(), eq("test_123"), any());
     }
 
     @Test
@@ -896,18 +932,31 @@ public class MainTest {
 
         run();
 
-        verify(checkpointService, times(1)).create(any(ThreadId.class), eq("first"), any(Runtime.class), any(ProcessSnapshot.class));
-        verify(checkpointService, times(1)).create(any(ThreadId.class), eq("second"), any(Runtime.class), any(ProcessSnapshot.class));
+        verify(checkpointService, times(1)).upload(any(), eq("first"), any());
+        verify(checkpointService, times(1)).upload(any(), eq("second"), any());
 
-        Serializable firstCheckpoint = checkpointService.getCheckpoints().get("first");
-        assertNotNull(firstCheckpoint);
-
-        StateManager.saveProcessState(workDir, firstCheckpoint);
+        checkpointService.restore("first", workDir);
 
         run();
 
         assertLogAtLeast(allLogs, 2, ".*#3.*x=124.*");
         assertLogAtLeast(allLogs, 2, ".*#3.*y=345.*");
+    }
+
+    @Test
+    public void testCheckpoint1_93_0Restore() throws Exception {
+        deploy("checkpointRestore2");
+
+        save(ProcessConfiguration.builder()
+                .build());
+
+        checkpointService.put("first", Paths.get(MainTest.class.getResource("checkpointRestore2/first_1.93.0.zip").toURI()));
+        checkpointService.restore("first", workDir);
+
+        run();
+
+        assertLog(allLogs, ".*item: one.*");
+        assertLog(allLogs, ".*item: two.*");
     }
 
     @Test
