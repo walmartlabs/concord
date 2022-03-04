@@ -202,6 +202,13 @@ const ProcessAnsibleActivity = (props: ExternalProps) => {
         setSelectedBlock(block);
         setSelectedPlayId(undefined);
         setTaskStats(undefined);
+        setAnsibleHosts(undefined);
+        setAnsibleHostGroups([]);
+        setAnsibleHostsFilter({});
+        setFailedAnsibleHosts(undefined);
+        setFailedAnsibleHostGroups([]);
+        setFailedAnsibleHostsFilter({});
+        setFailedTasks(undefined);
     }, []);
 
     const playClickHandler = useCallback((playId: ConcordId) => {
