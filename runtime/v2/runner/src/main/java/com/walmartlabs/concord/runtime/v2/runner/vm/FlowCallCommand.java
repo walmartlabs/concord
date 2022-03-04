@@ -34,10 +34,17 @@ import com.walmartlabs.concord.svm.Runtime;
 import com.walmartlabs.concord.svm.*;
 
 import java.io.Serializable;
+import java.util.Collections;
 import java.util.Map;
 import java.util.Objects;
 
 public class FlowCallCommand extends StepCommand<FlowCall> {
+
+    public static String currentFlowName(State state, ThreadId threadId) {
+        return VMUtils.getCombinedLocal(state, threadId, FLOW_NAME_VAR);
+    }
+
+    private static final String FLOW_NAME_VAR = "__currentFlowName";
 
     private static final long serialVersionUID = 1L;
 
@@ -75,6 +82,7 @@ public class FlowCallCommand extends StepCommand<FlowCall> {
                 .root()
                 .commands(steps)
                 .locals(input)
+                .locals(Collections.singletonMap(FLOW_NAME_VAR, flowName))
                 .build();
 
         // an "out" handler:

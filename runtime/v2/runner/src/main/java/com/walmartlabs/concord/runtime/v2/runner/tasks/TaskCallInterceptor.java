@@ -23,11 +23,11 @@ package com.walmartlabs.concord.runtime.v2.runner.tasks;
 import com.sun.el.util.ReflectionUtil;
 import com.walmartlabs.concord.common.AllowNulls;
 import com.walmartlabs.concord.runtime.v2.model.AbstractStep;
-import com.walmartlabs.concord.runtime.v2.model.ProcessDefinition;
 import com.walmartlabs.concord.runtime.v2.model.Step;
 import com.walmartlabs.concord.runtime.v2.runner.tasks.TaskCallEvent.Phase;
 import org.immutables.value.Value;
 
+import javax.annotation.Nullable;
 import javax.inject.Inject;
 import java.io.Serializable;
 import java.lang.annotation.Annotation;
@@ -98,7 +98,7 @@ public class TaskCallInterceptor {
                 .input(method.arguments())
                 .inputAnnotations(method.annotations())
                 .methodName(method.name())
-                .processDefinition(ctx.processDefinition())
+                .currentFlowName(ctx.currentFlowName())
                 .taskName(ctx.taskName())
                 .meta(((AbstractStep)ctx.currentStep()).getOptions().meta());
     }
@@ -148,7 +148,10 @@ public class TaskCallInterceptor {
 
         Step currentStep();
 
-        ProcessDefinition processDefinition();
+        // TODO: remove `nullable` after no old process state in DB left;
+        // there are no currentFlowName variable in old processes;
+        @Nullable
+        String currentFlowName();
 
         static ImmutableCallContext.Builder builder() {
             return ImmutableCallContext.builder();

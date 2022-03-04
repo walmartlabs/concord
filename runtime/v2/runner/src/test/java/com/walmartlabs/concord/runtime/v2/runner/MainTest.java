@@ -1044,6 +1044,12 @@ public class MainTest {
         byte[] log = run();
         assertLog(log, ".*default: default.*");
         assertLog(log, ".*myFlow: myFlow.*");
+
+        checkpointService.restore("first", workDir);
+
+        run();
+
+        assertLogAtLeast(allLogs, 2, ".*after checkpoint: default.*");
     }
 
     @Test

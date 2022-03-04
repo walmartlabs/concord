@@ -61,7 +61,7 @@ public class TaskMethodResolver extends javax.el.BeanELResolver {
                 .taskName(taskName)
                 .correlationId(context.execution().correlationId())
                 .currentStep(step)
-                .processDefinition(context.execution().processDefinition())
+                .currentFlowName(context.execution().currentFlowName())
                 .build();
 
         TaskCallInterceptor interceptor = context.execution().runtime().getService(TaskCallInterceptor.class);

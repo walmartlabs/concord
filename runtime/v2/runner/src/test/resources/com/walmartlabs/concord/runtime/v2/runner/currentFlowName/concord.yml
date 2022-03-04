@@ -3,5 +3,8 @@ flows:
     - log: "default: ${currentFlowName()}"
     - call: myFlow
 
+    - checkpoint: "first"
+    - log: "after checkpoint: ${currentFlowName()}"
+
   myFlow:
     - log: "myFlow: ${currentFlowName()}"

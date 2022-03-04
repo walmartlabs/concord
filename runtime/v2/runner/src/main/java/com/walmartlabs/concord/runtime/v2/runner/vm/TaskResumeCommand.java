@@ -75,7 +75,7 @@ public class TaskResumeCommand extends StepCommand<TaskCall> {
                 .taskName(taskName)
                 .correlationId(ctx.execution().correlationId())
                 .currentStep(getStep())
-                .processDefinition(ctx.execution().processDefinition())
+                .currentFlowName(ctx.execution().currentFlowName())
                 .build();
 
         TaskCallInterceptor interceptor = runtime.getService(TaskCallInterceptor.class);
