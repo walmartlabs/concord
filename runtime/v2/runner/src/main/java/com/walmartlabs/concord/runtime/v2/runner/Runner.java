@@ -24,23 +24,19 @@ import com.google.inject.AbstractModule;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
 import com.walmartlabs.concord.runtime.common.injector.InstanceId;
-import com.walmartlabs.concord.runtime.v2.model.FlowCall;
-import com.walmartlabs.concord.runtime.v2.model.FlowCallOptions;
-import com.walmartlabs.concord.runtime.v2.model.Location;
 import com.walmartlabs.concord.runtime.v2.model.ProcessDefinition;
+import com.walmartlabs.concord.runtime.v2.runner.compiler.CompilerUtils;
 import com.walmartlabs.concord.runtime.v2.runner.vm.FlowCallCommand;
 import com.walmartlabs.concord.runtime.v2.runner.vm.SaveLastErrorCommand;
 import com.walmartlabs.concord.runtime.v2.runner.vm.UpdateLocalsCommand;
 import com.walmartlabs.concord.runtime.v2.runner.vm.VMUtils;
+import com.walmartlabs.concord.runtime.v2.sdk.Compiler;
 import com.walmartlabs.concord.runtime.v2.sdk.ProcessConfiguration;
 import com.walmartlabs.concord.svm.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 public class Runner {
@@ -52,29 +48,29 @@ public class Runner {
     private final SynchronizationService synchronizationService;
     private final Set<ExecutionListener> listeners;
     private final ProcessStatusCallback statusCallback;
+    private final Compiler compiler;
 
     @Inject
     public Runner(Injector injector,
                   InstanceId instanceId,
                   SynchronizationService synchronizationService,
                   Set<ExecutionListener> listeners,
-                  ProcessStatusCallback statusCallback) {
+                  ProcessStatusCallback statusCallback,
+                  Compiler compiler) {
 
         this.injector = injector;
         this.instanceId = instanceId;
         this.synchronizationService = synchronizationService;
         this.listeners = listeners;
         this.statusCallback = statusCallback;
+        this.compiler = compiler;
     }
 
     public ProcessSnapshot start(ProcessConfiguration processConfiguration, ProcessDefinition processDefinition, Map<String, Object> input) throws Exception {
         statusCallback.onRunning(instanceId.getValue());
         log.debug("start ['{}'] -> running...", processConfiguration.entryPoint());
 
-        Command cmd = new FlowCallCommand(new FlowCall(Location.builder().build(), processConfiguration.entryPoint(), FlowCallOptions.builder()
-                .out(processConfiguration.out())
-                .build()));
-
+        Command cmd = CompilerUtils.compile(compiler, processConfiguration, processDefinition, processConfiguration.entryPoint());
         State state = new InMemoryState(cmd);
         // install the exception handler into the root frame
         // takes care of all unhandled errors bubbling up
@@ -82,6 +78,11 @@ public class Runner {
                 .setExceptionHandler(new SaveLastErrorCommand());
 
         VM vm = createVM(processDefinition);
+
+        // TODO: find a better way
+        input = new HashMap<>(input);
+        input.put(FlowCallCommand.FLOW_NAME_VAR, processConfiguration.entryPoint());
+
         // update the global variables using the input map by running a special command
         vm.run(state, new UpdateLocalsCommand(input)); // TODO merge with the cfg's arguments
         // start the normal execution
