@@ -16,6 +16,9 @@
 ([#562](https://github.com/walmartlabs/concord/pull/562);
 - concord-server: add process-wait-watchdog metrics
 ([#566](https://github.com/walmartlabs/concord/pull/566));
+- runtime-v2: implement `loop` syntax - improved version
+of `(parallel)withItems`
+([#578](https://github.com/walmartlabs/concord/pull/578)).
 
 ### Changed
 
