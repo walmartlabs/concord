@@ -47,7 +47,10 @@ documents was never supported)
 - runtime-v2: allow null values in configuration.arguments
 ([#571](https://github.com/walmartlabs/concord/pull/571));
 - concord-server: implement a better way to kill processes
-([#572](https://github.com/walmartlabs/concord/pull/572)).
+([#572](https://github.com/walmartlabs/concord/pull/572));
+- runtime-v2: fix currentFlowName after restoring from a
+checkpoint
+([#580](https://github.com/walmartlabs/concord/pull/580)).
 
 
 
