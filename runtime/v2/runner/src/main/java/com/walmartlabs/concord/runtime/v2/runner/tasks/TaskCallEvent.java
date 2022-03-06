@@ -21,6 +21,7 @@ package com.walmartlabs.concord.runtime.v2.runner.tasks;
  */
 
 import com.walmartlabs.concord.common.AllowNulls;
+import com.walmartlabs.concord.runtime.v2.model.ProcessDefinition;
 import com.walmartlabs.concord.runtime.v2.model.Step;
 import org.immutables.value.Value;
 
@@ -38,10 +39,7 @@ public interface TaskCallEvent {
 
     Phase phase();
 
-    // TODO: remove `nullable` after no old process state in DB left;
-    // there are no currentFlowName variable in old processes;
-    @Nullable
-    String currentFlowName();
+    ProcessDefinition processDefinition();
 
     Step currentStep();
 

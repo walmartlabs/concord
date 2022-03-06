@@ -73,7 +73,7 @@ public class TaskCallCommand extends StepCommand<TaskCall> {
                 .taskName(taskName)
                 .correlationId(ctx.execution().correlationId())
                 .currentStep(getStep())
-                .currentFlowName(FlowCallCommand.currentFlowName(state, threadId))
+                .processDefinition(ctx.execution().processDefinition())
                 .build();
 
         TaskCallOptions opts = Objects.requireNonNull(call.getOptions());

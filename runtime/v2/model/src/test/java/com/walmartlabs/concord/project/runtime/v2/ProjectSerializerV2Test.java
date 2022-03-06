@@ -300,6 +300,7 @@ public class ProjectSerializerV2Test extends AbstractParserTest {
 
         Trigger trigger = Trigger.builder()
                 .name("github")
+                .location(location())
                 .putConfiguration("entryPoint", "www")
                 .putConfiguration("useInitiator", true)
                 .putConditions("type", "push")
@@ -332,7 +333,9 @@ public class ProjectSerializerV2Test extends AbstractParserTest {
     }
 
     private static Location location() {
-        return Location.builder().build();
+        return Location.builder()
+                .fileName("test.concord.yml")
+                .build();
     }
 
     private static SimpleOptions simpleOptions() {

@@ -27,6 +27,7 @@ import com.walmartlabs.concord.client.ProcessEventsApi;
 import com.walmartlabs.concord.common.ConfigurationUtils;
 import com.walmartlabs.concord.runtime.common.ObjectTruncater;
 import com.walmartlabs.concord.runtime.common.injector.InstanceId;
+import com.walmartlabs.concord.runtime.v2.ProcessDefinitionUtils;
 import com.walmartlabs.concord.runtime.v2.model.EventConfiguration;
 import com.walmartlabs.concord.runtime.v2.model.Location;
 import com.walmartlabs.concord.runtime.v2.model.Step;
@@ -112,7 +113,7 @@ public class TaskCallEventRecordingListener implements TaskCallListener {
         Map<String, Object> m = new HashMap<>();
 
         Step currentStep = event.currentStep();
-        m.put("processDefinitionId", event.currentFlowName());
+        m.put("processDefinitionId", ProcessDefinitionUtils.getCurrentFlowName(event.processDefinition(), currentStep));
         Location loc = currentStep != null ? currentStep.getLocation() : null;
         if (loc != null) {
             m.put("fileName", currentStep.getLocation().fileName());

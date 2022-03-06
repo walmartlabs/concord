@@ -26,7 +26,6 @@ import com.google.inject.Injector;
 import com.walmartlabs.concord.runtime.common.injector.InstanceId;
 import com.walmartlabs.concord.runtime.v2.model.ProcessDefinition;
 import com.walmartlabs.concord.runtime.v2.runner.compiler.CompilerUtils;
-import com.walmartlabs.concord.runtime.v2.runner.vm.FlowCallCommand;
 import com.walmartlabs.concord.runtime.v2.runner.vm.SaveLastErrorCommand;
 import com.walmartlabs.concord.runtime.v2.runner.vm.UpdateLocalsCommand;
 import com.walmartlabs.concord.runtime.v2.runner.vm.VMUtils;
@@ -36,7 +35,10 @@ import com.walmartlabs.concord.svm.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 public class Runner {
@@ -45,25 +47,25 @@ public class Runner {
 
     private final Injector injector;
     private final InstanceId instanceId;
+    private final Compiler compiler;
     private final SynchronizationService synchronizationService;
     private final Set<ExecutionListener> listeners;
     private final ProcessStatusCallback statusCallback;
-    private final Compiler compiler;
 
     @Inject
     public Runner(Injector injector,
                   InstanceId instanceId,
+                  Compiler compiler,
                   SynchronizationService synchronizationService,
                   Set<ExecutionListener> listeners,
-                  ProcessStatusCallback statusCallback,
-                  Compiler compiler) {
+                  ProcessStatusCallback statusCallback) {
 
         this.injector = injector;
         this.instanceId = instanceId;
+        this.compiler = compiler;
         this.synchronizationService = synchronizationService;
         this.listeners = listeners;
         this.statusCallback = statusCallback;
-        this.compiler = compiler;
     }
 
     public ProcessSnapshot start(ProcessConfiguration processConfiguration, ProcessDefinition processDefinition, Map<String, Object> input) throws Exception {
@@ -78,11 +80,6 @@ public class Runner {
                 .setExceptionHandler(new SaveLastErrorCommand());
 
         VM vm = createVM(processDefinition);
-
-        // TODO: find a better way
-        input = new HashMap<>(input);
-        input.put(FlowCallCommand.FLOW_NAME_VAR, processConfiguration.entryPoint());
-
         // update the global variables using the input map by running a special command
         vm.run(state, new UpdateLocalsCommand(input)); // TODO merge with the cfg's arguments
         // start the normal execution
