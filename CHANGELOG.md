@@ -42,7 +42,10 @@ documents was never supported)
 - ansible: filter host groups by playbookId
 ([#574](https://github.com/walmartlabs/concord/pull/574));
 - runtime-v2: allow null values in configuration.arguments
-([#571](https://github.com/walmartlabs/concord/pull/571)).
+([#571](https://github.com/walmartlabs/concord/pull/571));
+- concord-server: implement a better way to kill processes
+([#572](https://github.com/walmartlabs/concord/pull/572)).
+
 
 
 ## [1.93.0] - 2022-01-24
