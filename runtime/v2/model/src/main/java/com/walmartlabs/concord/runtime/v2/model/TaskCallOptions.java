@@ -58,6 +58,9 @@ public interface TaskCallOptions extends StepOptions {
     WithItems withItems();
 
     @Nullable
+    Loop loop();
+
+    @Nullable
     Retry retry();
 
     @Value.Default

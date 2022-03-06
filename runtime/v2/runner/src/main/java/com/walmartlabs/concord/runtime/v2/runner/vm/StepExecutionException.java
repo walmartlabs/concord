@@ -1,10 +1,10 @@
-package com.walmartlabs.concord.runtime.v2.serializer;
+package com.walmartlabs.concord.runtime.v2.runner.vm;
 
 /*-
  * *****
  * Concord
  * -----
- * Copyright (C) 2017 - 2020 Walmart Inc.
+ * Copyright (C) 2017 - 2022 Walmart Inc.
  * -----
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,29 +20,27 @@ package com.walmartlabs.concord.runtime.v2.serializer;
  * =====
  */
 
-import com.fasterxml.jackson.core.JsonGenerator;
-import com.fasterxml.jackson.databind.SerializerProvider;
-import com.fasterxml.jackson.databind.ser.std.StdSerializer;
+import com.walmartlabs.concord.runtime.v2.model.Location;
+import com.walmartlabs.concord.runtime.v2.model.Step;
 
-import java.io.IOException;
-import java.time.Duration;
-
-public class DurationSerializer extends StdSerializer<Duration> {
+public class StepExecutionException extends RuntimeException {
 
     private static final long serialVersionUID = 1L;
 
-    public DurationSerializer() {
-        this(null);
+    private final Step step;
+
+    public StepExecutionException(Step step, Exception cause) {
+        super(cause);
+
+        this.step = step;
     }
 
-    public DurationSerializer(Class<Duration> t) {
-        super(t);
+    public Step getStep() {
+        return step;
     }
 
     @Override
-    public void serialize(Duration value, JsonGenerator gen, SerializerProvider provider) throws IOException {
-        if (value != null) {
-            gen.writeString(value.toString());
-        }
+    public String getMessage() {
+        return Location.toErrorPrefix(step.getLocation()) + getCause().getMessage();
     }
 }

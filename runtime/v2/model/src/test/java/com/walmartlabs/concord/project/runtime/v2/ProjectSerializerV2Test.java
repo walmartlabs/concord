@@ -85,6 +85,7 @@ public class ProjectSerializerV2Test extends AbstractParserTest {
                 .putInput("in-1", "v1")
                 .addOut("o1")
                 .withItems(withItems())
+                .loop(serialLoop())
                 .retry(retry())
                 .errorSteps(steps())
                 .build();
@@ -197,6 +198,7 @@ public class ProjectSerializerV2Test extends AbstractParserTest {
                 .body("print(\"Hello, \", myVar)")
                 .putInput("in", "v")
                 .withItems(withItems())
+                .loop(serialLoop())
                 .retry(retry())
                 .errorSteps(steps())
                 .meta(meta())
@@ -233,6 +235,7 @@ public class ProjectSerializerV2Test extends AbstractParserTest {
                 .putInput("msg", "BOO")
                 .out("out")
                 .withItems(withItems())
+                .loop(serialLoop())
                 .retry(retry())
                 .errorSteps(steps())
                 .meta(meta())
@@ -313,7 +316,12 @@ public class ProjectSerializerV2Test extends AbstractParserTest {
                 .dest("dest")
                 .build()));
 
+        ProcessDefinitionConfiguration cfg = ProcessDefinitionConfiguration.builder()
+                .parallelLoopParallelism(123)
+                .build();
+
         ProcessDefinition pd = ProcessDefinition.builder()
+                .configuration(cfg)
                 .forms(forms)
                 .putFlows("flow1", steps())
                 .addPublicFlows("flow1")
@@ -358,6 +366,16 @@ public class ProjectSerializerV2Test extends AbstractParserTest {
         items.add("item1");
         items.add("item2");
         return WithItems.of(items, WithItems.Mode.PARALLEL);
+    }
+
+    private static Loop serialLoop() {
+        ArrayList<String> items = new ArrayList<>();
+        items.add("item1");
+        items.add("item2");
+        return Loop.builder()
+                .items(items)
+                .mode(Loop.Mode.SERIAL)
+                .build();
     }
 
     private static Retry retry() {

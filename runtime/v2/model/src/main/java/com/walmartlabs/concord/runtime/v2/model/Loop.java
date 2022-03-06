@@ -20,58 +20,36 @@ package com.walmartlabs.concord.runtime.v2.model;
  * =====
  */
 
-import com.walmartlabs.concord.common.AllowNulls;
-import com.walmartlabs.concord.runtime.v2.parser.StepOptions;
 import org.immutables.value.Value;
 
-import javax.annotation.Nullable;
 import java.io.Serializable;
 import java.util.Collections;
-import java.util.List;
 import java.util.Map;
 
 @Value.Immutable
 @Value.Style(jdkOnly = true)
-public interface ScriptCallOptions extends StepOptions {
+public interface Loop extends Serializable {
 
     long serialVersionUID = 1L;
 
-    @Nullable
-    String body();
+    static ImmutableLoop.Builder builder() {
+        return  ImmutableLoop.builder();
+    }
+
+    Serializable items();
 
     @Value.Default
-    @AllowNulls
-    default Map<String, Serializable> input() {
+    default Mode mode() {
+        return Mode.SERIAL;
+    }
+
+    @Value.Default
+    default Map<String, Object> options() {
         return Collections.emptyMap();
     }
 
-    @Nullable
-    String out();
-
-    @Value.Default
-    @AllowNulls
-    default Map<String, Serializable> outExpr() {
-        return Collections.emptyMap();
-    }
-
-    @Nullable
-    String inputExpression();
-
-    @Nullable
-    WithItems withItems();
-
-    @Nullable
-    Loop loop();
-
-    @Nullable
-    Retry retry();
-
-    @Value.Default
-    default List<Step> errorSteps() {
-        return Collections.emptyList();
-    }
-
-    static ImmutableScriptCallOptions.Builder builder() {
-        return ImmutableScriptCallOptions.builder();
+    enum Mode {
+        SERIAL,
+        PARALLEL
     }
 }

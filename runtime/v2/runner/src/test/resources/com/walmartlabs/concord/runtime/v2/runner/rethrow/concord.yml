@@ -1,0 +1,5 @@
+flows:
+  default:
+    - log: "before exit"
+    - exit
+    - log: "after exit"

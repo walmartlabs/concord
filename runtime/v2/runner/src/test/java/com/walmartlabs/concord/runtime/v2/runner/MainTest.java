@@ -557,6 +557,18 @@ public class MainTest {
     }
 
     @Test
+    public void testParallelLoopTask() throws Exception {
+        deploy("parallelLoopTask");
+
+        save(ProcessConfiguration.builder()
+                .build());
+
+        byte[] log = run();
+        assertLog(log, ".*result: \\[10, 20, 30\\].*");
+        assertLog(log, ".*threadIds: \\[1, 2, 3].*");
+    }
+
+    @Test
     public void testWithItemsBlock() throws Exception {
         deploy("withItemsBlock");
 
@@ -568,8 +580,33 @@ public class MainTest {
     }
 
     @Test
+    public void testLoopBlock() throws Exception {
+        deploy("loopBlock");
+
+        save(ProcessConfiguration.builder()
+                .build());
+
+        byte[] log = run();
+        assertLog(log, ".*result: \\[10, 20, 30\\].*");
+    }
+
+    @Test
     public void testWithItemsSet() throws Exception {
         deploy("withItemsSet");
+
+        save(ProcessConfiguration.builder()
+                .build());
+
+        byte[] log = run();
+        assertLogAtLeast(log, 3, ".*empty: \\[\\].*");
+        assertLog(log, ".*after add: \\[1\\].*");
+        assertLog(log, ".*after add: \\[2\\].*");
+        assertLog(log, ".*after add: \\[3\\].*");
+    }
+
+    @Test
+    public void testLoopSet() throws Exception {
+        deploy("loopSet");
 
         save(ProcessConfiguration.builder()
                 .build());

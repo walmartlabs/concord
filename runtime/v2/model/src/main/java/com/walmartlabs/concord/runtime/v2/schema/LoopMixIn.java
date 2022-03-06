@@ -20,10 +20,21 @@ package com.walmartlabs.concord.runtime.v2.schema;
  * =====
  */
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.kjetland.jackson.jsonSchema.annotations.JsonSchemaInject;
+import com.walmartlabs.concord.runtime.v2.model.Loop;
 
-@JsonTypeName("WithItems")
-@JsonSchemaInject(json = "{\"type\": [\"string\", \"object\", \"array\"]}", merge = false)
-public interface WithItemsMixIn {
+@JsonTypeName("Loop")
+public interface LoopMixIn {
+
+    @JsonProperty("items")
+    @JsonSchemaInject(json = "{\"oneOf\": [ {\"type\": \"string\"}, {\"type\": \"object\"}, {\"type\": \"array\"} ]}", merge = false)
+    Object items();
+
+    @JsonProperty("mode")
+    Loop.Mode mode();
+
+    @JsonProperty("parallelism")
+    Integer parallelism();
 }
