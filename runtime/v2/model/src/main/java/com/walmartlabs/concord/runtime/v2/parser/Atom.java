@@ -54,7 +54,7 @@ public class Atom implements Serializable {
             default:
                 value = null;
         }
-        return new Atom(toLocation(p.getTokenLocation()), p.currentToken(), p.getCurrentName(), value);
+        return new Atom(toLocation(p.currentTokenLocation()), p.currentToken(), p.getCurrentName(), value);
     }
 
     public final Location location;
@@ -102,10 +102,6 @@ public class Atom implements Serializable {
     }
 
     private static Location toLocation(JsonLocation tokenLocation) {
-        if (tokenLocation == null) {
-            return Location.builder().build();
-        }
-
         return Location.builder()
                 .lineNum(tokenLocation.getLineNr())
                 .column(tokenLocation.getColumnNr())
