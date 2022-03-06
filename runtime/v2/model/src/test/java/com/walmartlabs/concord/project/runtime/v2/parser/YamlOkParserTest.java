@@ -56,6 +56,10 @@ public class YamlOkParserTest extends AbstractParserTest {
         // withItems
         assertEquals(1, t.getOptions().withItems().value());
 
+        // loop
+        assertEquals(1, t.getOptions().loop().items());
+        assertEquals(Loop.Mode.SERIAL, t.getOptions().loop().mode());
+
         // input
         Map<String, Object> input = new HashMap<>();
         input.put("k", "v");

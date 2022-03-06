@@ -23,26 +23,34 @@ package com.walmartlabs.concord.runtime.v2.serializer;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.databind.ser.std.StdSerializer;
+import com.walmartlabs.concord.runtime.v2.model.Loop;
 
 import java.io.IOException;
-import java.time.Duration;
+import java.util.Map;
 
-public class DurationSerializer extends StdSerializer<Duration> {
+public class LoopOptionsSerializer extends StdSerializer<Loop> {
 
     private static final long serialVersionUID = 1L;
 
-    public DurationSerializer() {
+    public LoopOptionsSerializer() {
         this(null);
     }
 
-    public DurationSerializer(Class<Duration> t) {
+    public LoopOptionsSerializer(Class<Loop> t) {
         super(t);
     }
 
     @Override
-    public void serialize(Duration value, JsonGenerator gen, SerializerProvider provider) throws IOException {
-        if (value != null) {
-            gen.writeString(value.toString());
+    public void serialize(Loop value, JsonGenerator gen, SerializerProvider provider) throws IOException {
+        gen.writeStartObject();
+
+        gen.writeObjectField("mode", value.mode().name().toLowerCase());
+        gen.writeObjectField("items", value.items());
+
+        for (Map.Entry<String, Object> e : value.options().entrySet()) {
+            gen.writeObjectField(e.getKey(), e.getValue());
         }
+
+        gen.writeEndObject();
     }
 }

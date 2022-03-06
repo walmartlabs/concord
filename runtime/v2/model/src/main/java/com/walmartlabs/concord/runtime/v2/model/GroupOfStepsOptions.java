@@ -46,6 +46,9 @@ public interface GroupOfStepsOptions extends StepOptions {
     @Nullable
     WithItems withItems();
 
+    @Nullable
+    Loop loop();
+
     static ImmutableGroupOfStepsOptions.Builder builder() {
         return ImmutableGroupOfStepsOptions.builder();
     }

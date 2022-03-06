@@ -108,6 +108,7 @@ public final class YamlValueType<T> {
     public static final YamlValueType<GithubTriggerExclusiveMode> GITHUB_EXCLUSIVE_MODE = type("GITHUB_EXCLUSIVE_MODE");
     public static final YamlValueType<Map<String, Object>> GITHUB_REPOSITORY_INFO = type("GITHUB_REPOSITORY_INFO");
     public static final YamlValueType<List<Map<String, Object>>> ARRAY_OF_GITHUB_REPOSITORY_INFO = array("REPOSITORY_INFO", GITHUB_REPOSITORY_INFO);
+    public static final YamlValueType<Loop> LOOP = type("LOOP");
 
     private final String name;
 

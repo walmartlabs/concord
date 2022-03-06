@@ -21,10 +21,7 @@ package com.walmartlabs.concord.runtime.v2.runner.compiler;
  */
 
 import com.walmartlabs.concord.runtime.v2.model.*;
-import com.walmartlabs.concord.runtime.v2.runner.vm.ErrorWrapper;
-import com.walmartlabs.concord.runtime.v2.runner.vm.RetryWrapper;
-import com.walmartlabs.concord.runtime.v2.runner.vm.ScriptCallCommand;
-import com.walmartlabs.concord.runtime.v2.runner.vm.WithItemsWrapper;
+import com.walmartlabs.concord.runtime.v2.runner.vm.*;
 import com.walmartlabs.concord.svm.Command;
 
 import javax.inject.Named;
@@ -54,6 +51,11 @@ public final class ScriptCallCompiler implements StepCompiler<ScriptCall> {
         WithItems withItems = options.withItems();
         if (withItems != null) {
             cmd = WithItemsWrapper.of(cmd, withItems, Collections.emptyList(), Collections.emptyMap());
+        }
+
+        Loop loop = options.loop();
+        if (loop != null) {
+            cmd = LoopWrapper.of(context, cmd, loop, Collections.emptyList(), Collections.emptyMap());
         }
 
         List<Step> errorSteps = options.errorSteps();

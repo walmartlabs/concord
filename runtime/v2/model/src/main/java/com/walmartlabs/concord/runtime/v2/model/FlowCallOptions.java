@@ -60,6 +60,9 @@ public interface FlowCallOptions extends StepOptions {
     WithItems withItems();
 
     @Nullable
+    Loop loop();
+
+    @Nullable
     Retry retry();
 
     @Value.Default

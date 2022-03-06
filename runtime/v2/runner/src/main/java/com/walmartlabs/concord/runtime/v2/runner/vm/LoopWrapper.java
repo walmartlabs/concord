@@ -20,12 +20,14 @@ package com.walmartlabs.concord.runtime.v2.runner.vm;
  * =====
  */
 
+import com.walmartlabs.concord.runtime.v2.model.Loop;
 import com.walmartlabs.concord.runtime.v2.model.Step;
-import com.walmartlabs.concord.runtime.v2.model.WithItems;
+import com.walmartlabs.concord.runtime.v2.runner.compiler.CompilerContext;
 import com.walmartlabs.concord.runtime.v2.runner.context.ContextFactory;
 import com.walmartlabs.concord.runtime.v2.runner.el.EvalContextFactory;
 import com.walmartlabs.concord.runtime.v2.runner.el.ExpressionEvaluator;
 import com.walmartlabs.concord.runtime.v2.sdk.Context;
+import com.walmartlabs.concord.sdk.MapUtils;
 import com.walmartlabs.concord.svm.Runtime;
 import com.walmartlabs.concord.svm.*;
 
@@ -36,13 +38,9 @@ import java.io.Serializable;
 import java.util.*;
 import java.util.stream.Collectors;
 
-/**
- * @deprecated use {@link com.walmartlabs.concord.runtime.v2.runner.vm.LoopWrapper}
- */
-@Deprecated
-public abstract class WithItemsWrapper implements Command {
+public abstract class LoopWrapper implements Command {
 
-    public static WithItemsWrapper of(Command cmd, WithItems withItems, Collection<String> outVariables, Map<String, Serializable> outExpressions) {
+    public static LoopWrapper of(CompilerContext ctx, Command cmd, Loop withItems, Collection<String> outVariables, Map<String, Serializable> outExpressions) {
         Collection<String> out = Collections.emptyList();
         if (!outExpressions.isEmpty()) {
             out = outExpressions.keySet();
@@ -50,12 +48,12 @@ public abstract class WithItemsWrapper implements Command {
             out = outVariables;
         }
 
-        WithItems.Mode mode = withItems.mode();
+        Loop.Mode mode = withItems.mode();
         switch (mode) {
             case SERIAL:
                 return new SerialWithItems(cmd, withItems, out);
             case PARALLEL:
-                return new ParallelWithItems(cmd, withItems, out);
+                return new ParallelWithItems(ctx, cmd, withItems, out);
             default:
                 throw new IllegalArgumentException("Unknown withItems mode: " + mode);
         }
@@ -69,12 +67,12 @@ public abstract class WithItemsWrapper implements Command {
     public static final String CURRENT_ITEM = "item";
 
     protected final Command cmd;
-    protected final WithItems withItems;
+    protected final Serializable items;
     protected final Collection<String> outVariables;
 
-    protected WithItemsWrapper(Command cmd, WithItems withItems, Collection<String> outVariables) {
+    protected LoopWrapper(Command cmd, Serializable items, Collection<String> outVariables) {
         this.cmd = cmd;
-        this.withItems = withItems;
+        this.items = items;
         this.outVariables = outVariables;
     }
 
@@ -84,7 +82,7 @@ public abstract class WithItemsWrapper implements Command {
         Frame frame = state.peekFrame(threadId);
         frame.pop();
 
-        Serializable value = withItems.value();
+        Serializable value = items;
         if (value == null) {
             // value is null, not going to run the wrapped command at all
             return;
@@ -127,7 +125,7 @@ public abstract class WithItemsWrapper implements Command {
             throw new IllegalArgumentException("'withItems' accepts only Lists of items, Java Maps or arrays of values. Got: " + value.getClass());
         }
 
-        items.forEach(WithItemsWrapper::assertItem);
+        items.forEach(LoopWrapper::assertItem);
 
         if (items.isEmpty()) {
             return;
@@ -150,20 +148,36 @@ public abstract class WithItemsWrapper implements Command {
         }
     }
 
-    static class ParallelWithItems extends WithItemsWrapper {
+    static class ParallelWithItems extends LoopWrapper {
 
         private static final long serialVersionUID = 1L;
 
-        protected ParallelWithItems(Command cmd, WithItems withItems, Collection<String> outVariables) {
-            super(cmd, withItems, outVariables);
+        private final int batchSize;
+
+        protected ParallelWithItems(CompilerContext ctx, Command cmd, Loop loop, Collection<String> outVariables) {
+            super(cmd, loop.items(), outVariables);
+
+            this.batchSize = batchSize(ctx, loop);
         }
 
         @Override
         protected void eval(State state, ThreadId threadId, ArrayList<Serializable> items) {
-            Frame frame = state.peekFrame(threadId);
-
             // target frame for out variables
             Frame targetFrame = VMUtils.assertNearestRoot(state, threadId);
+
+            List<ArrayList<Serializable>> batches = batches(items, batchSize);
+            for (ArrayList<Serializable> batch : batches) {
+                evalBatch(state, threadId, targetFrame, batch);
+            }
+
+            state.pushFrame(threadId, Frame.builder()
+                    .commands(new PrepareOutVariables(outVariables, targetFrame))
+                    .nonRoot()
+                    .build());
+        }
+
+        private void evalBatch(State state, ThreadId threadId, Frame targetFrame, ArrayList<Serializable> items) {
+            Frame frame = state.peekFrame(threadId);
 
             List<Map.Entry<ThreadId, Serializable>> forks = items.stream()
                     .map(e -> new AbstractMap.SimpleEntry<>(state.nextThreadId(), e))
@@ -174,7 +188,6 @@ public abstract class WithItemsWrapper implements Command {
 
                 Frame cmdFrame = Frame.builder()
                         .nonRoot()
-                        .commands()
                         .build();
 
                 cmdFrame.setLocal(CURRENT_ITEMS, items);
@@ -190,12 +203,23 @@ public abstract class WithItemsWrapper implements Command {
                 state.pushFrame(threadId, cmdFrame);
             }
 
-            state.pushFrame(threadId, Frame.builder()
-                    .commands(new PrepareOutVariables(outVariables, targetFrame))
-                    .nonRoot()
-                    .build());
-
             frame.push(new JoinCommand(forks.stream().map(Map.Entry::getKey).collect(Collectors.toSet())));
+        }
+
+        private static int batchSize(CompilerContext ctx, Loop loop) {
+            int result = MapUtils.getInt(loop.options(), "parallelism", -1);
+            if (result > 0) {
+                return result;
+            }
+            return ctx.processDefinition().configuration().parallelLoopParallelism();
+        }
+
+        private static List<ArrayList<Serializable>> batches(ArrayList<Serializable> items, int batchSize) {
+            List<ArrayList<Serializable>> result = new ArrayList<>();
+            for (int i = 0; i < items.size(); i += batchSize) {
+                result.add(new ArrayList<>(items.subList(i, Math.min(items.size(), i + batchSize))));
+            }
+            return result;
         }
     }
 
@@ -204,12 +228,12 @@ public abstract class WithItemsWrapper implements Command {
      * Creates a new call frame and keeps the item list, the current item
      * and the index as frame-local variables.
      */
-    static class SerialWithItems extends WithItemsWrapper {
+    static class SerialWithItems extends LoopWrapper {
 
         private static final long serialVersionUID = 1L;
 
-        protected SerialWithItems(Command cmd, WithItems withItems, Collection<String> outVariables) {
-            super(cmd, withItems, outVariables);
+        protected SerialWithItems(Command cmd, Loop loop, Collection<String> outVariables) {
+            super(cmd, loop.items(), outVariables);
         }
 
         @Override
