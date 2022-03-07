@@ -1,5 +1,59 @@
 # Change log
 
+## [Unreleased]
+
+### Added
+
+- concord-server: add `orgUpdate` permission
+([#552](https://github.com/walmartlabs/concord/pull/552);
+- runtime-v2: add `orDefault` function
+([#557](https://github.com/walmartlabs/concord/pull/557);
+- runtime-v2: add `isDebug` function
+([#558](https://github.com/walmartlabs/concord/pull/558)).
+- agent: option to ignore artifact descriptor repositories
+([#561](https://github.com/walmartlabs/concord/pull/561);
+- runtime-v2: project document support for suspendTimeout
+([#562](https://github.com/walmartlabs/concord/pull/562);
+- concord-server: add process-wait-watchdog metrics
+([#566](https://github.com/walmartlabs/concord/pull/566));
+- runtime-v2: implement `loop` syntax - improved version
+of `(parallel)withItems`
+([#578](https://github.com/walmartlabs/concord/pull/578)).
+
+### Changed
+
+- concord-agent: use a single temporary directory for API clients
+([#544](https://github.com/walmartlabs/concord/pull/544));
+- runtime-v1/v2: remove temporary Docker files
+([#545](https://github.com/walmartlabs/concord/pull/545));
+- runtime-v2: support for runAs (running as another user)
+in cron ([#547](https://github.com/walmartlabs/concord/pull/547));
+- project: update Guava version, remove unneeded usage
+([#550](https://github.com/walmartlabs/concord/pull/550));
+- runtime-v1/v2: use Nashorn compat mode for GraalVM
+([#551](https://github.com/walmartlabs/concord/pull/551));
+- project: upgrade dependencies
+([#554](https://github.com/walmartlabs/concord/pull/554));
+- runtime-v2: remove `configuration.activeProfiles` from
+the JSON schema (specifying `activeProfiles` in YAML
+documents was never supported)
+([#556](https://github.com/walmartlabs/concord/pull/556));
+- runtime-v2: allow arrays for GH trigger conditions
+([#563](https://github.com/walmartlabs/concord/pull/563));
+- ansible: clear host filters after switching to the next stat tab
+([#575](https://github.com/walmartlabs/concord/pull/575));
+- ansible: filter host groups by playbookId
+([#574](https://github.com/walmartlabs/concord/pull/574));
+- runtime-v2: allow null values in configuration.arguments
+([#571](https://github.com/walmartlabs/concord/pull/571));
+- concord-server: implement a better way to kill processes
+([#572](https://github.com/walmartlabs/concord/pull/572));
+- runtime-v2: fix currentFlowName after restoring from a
+checkpoint
+([#580](https://github.com/walmartlabs/concord/pull/580)).
+
+
+
 ## [1.93.0] - 2022-01-24
 
 ### Added
