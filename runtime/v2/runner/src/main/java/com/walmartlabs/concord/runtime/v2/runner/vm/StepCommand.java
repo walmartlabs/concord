@@ -56,6 +56,8 @@ public abstract class StepCommand<T extends Step> implements Command {
 
     private final T step;
 
+    private UUID correlationId;
+
     protected StepCommand(T step) {
         this.step = step;
     }
@@ -81,8 +83,11 @@ public abstract class StepCommand<T extends Step> implements Command {
         }
     }
 
-    protected UUID getCorrelationId() {
-        return UUID.randomUUID();
+    public UUID getCorrelationId() {
+        if (correlationId == null) {
+            correlationId = UUID.randomUUID();
+        }
+        return correlationId;
     }
 
     private void executeWithContext(Context ctx, Runtime runtime, State state, ThreadId threadId) {

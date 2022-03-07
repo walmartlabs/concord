@@ -25,5 +25,5 @@ import java.util.UUID;
 
 public interface CheckpointUploader {
 
-    void upload(UUID checkpointId, String name, Path archivePath) throws Exception;
+    void upload(UUID checkpointId, UUID correlationId, String name, Path archivePath) throws Exception;
 }

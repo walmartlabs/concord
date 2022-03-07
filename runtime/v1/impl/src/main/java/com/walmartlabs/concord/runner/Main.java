@@ -188,7 +188,7 @@ public class Main {
 
             // found a checkpoint, resume the process immediately
             if (checkpointEvent != null) {
-                checkpointManager.process(getCheckpointId(checkpointEvent), checkpointEvent.getName(), baseDir);
+                checkpointManager.process(getCheckpointId(checkpointEvent), getCorrelationId(checkpointEvent), checkpointEvent.getName(), baseDir);
                 // clear arguments
                 if (resumeCheckpointReq == null) {
                     resumeCheckpointReq = new HashMap<>(processCfg);
@@ -256,6 +256,15 @@ public class Main {
     @SuppressWarnings("unchecked")
     private static UUID getCheckpointId(Event e) {
         String s = MapUtils.getString((Map<String, Object>) e.getPayload(), "checkpointId");
+        if (s == null) {
+            return null;
+        }
+        return UUID.fromString(s);
+    }
+
+    @SuppressWarnings("unchecked")
+    private static UUID getCorrelationId(Event e) {
+        String s = MapUtils.getString((Map<String, Object>) e.getPayload(), "correlationId");
         if (s == null) {
             return null;
         }

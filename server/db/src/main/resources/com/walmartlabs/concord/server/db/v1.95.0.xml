@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.3.xsd">
+
+    <property name="updateOrgPermissionId" value="8fba1fbc-53da-4a4c-b47a-4d2b4cd0b9cf"/>
+
+    <changeSet id="1950000" author="ybrigo@gmail.com">
+        <addColumn tableName="PROCESS_CHECKPOINTS">
+            <column name="CORRELATION_ID" type="uuid">
+                <constraints nullable="true"/>
+            </column>
+        </addColumn>
+    </changeSet>
+</databaseChangeLog>
