@@ -55,7 +55,7 @@ public final class GitUtils {
         Path repo = tmp.resolve(leaf);
         Files.createDirectories(repo);
 
-        Git.init().setBare(true).setDirectory(repo.toFile()).call();
+        Git.init().setInitialBranch("master").setBare(true).setDirectory(repo.toFile()).call();
 
         // clone the repository into a new directory
         Path workdir = createTempDir(baseTmpDir);
