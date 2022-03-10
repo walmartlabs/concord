@@ -1,5 +1,12 @@
 # Change log
 
+## [1.95.0] - TBD
+
+### Changed
+
+- it: explicitly specify initialBranch for git tests
+([#582](https://github.com/walmartlabs/concord/pull/582))
+
 ## [1.94.0] - 2022-03-07
 
 ### Added
