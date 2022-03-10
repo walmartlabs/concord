@@ -45,7 +45,7 @@ public class GitRepositoryIT extends AbstractServerIT {
     @BeforeEach
     public void setUp() throws Exception {
         Path bareRepo = createTempDir();
-        Git.init().setBare(true).setDirectory(bareRepo.toFile()).call();
+        Git.init().setInitialBranch("master").setBare(true).setDirectory(bareRepo.toFile()).call();
 
         Path workdir = createTempDir();
         Git git = Git.cloneRepository()
