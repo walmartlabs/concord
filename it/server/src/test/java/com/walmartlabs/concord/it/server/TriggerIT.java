@@ -126,7 +126,7 @@ public class TriggerIT extends AbstractServerIT {
         File src = new File(TriggerIT.class.getResource(repoResource).toURI());
         IOUtils.copy(src.toPath(), tmpDir);
 
-        Git repo = Git.init().setDirectory(tmpDir.toFile()).call();
+        Git repo = Git.init().setInitialBranch("master").setDirectory(tmpDir.toFile()).call();
         repo.add().addFilepattern(".").call();
         repo.commit().setMessage("import").call();
 

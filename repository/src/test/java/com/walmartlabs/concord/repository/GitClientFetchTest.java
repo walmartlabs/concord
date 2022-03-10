@@ -25,6 +25,7 @@ import com.walmartlabs.concord.common.TemporaryPath;
 import com.walmartlabs.concord.sdk.Secret;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.errors.GitAPIException;
+import org.eclipse.jgit.api.errors.InvalidRefNameException;
 import org.eclipse.jgit.revwalk.RevCommit;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -59,11 +60,10 @@ public class GitClientFetchTest {
     public void testFetch1() throws Exception {
         Path tmpDir = IOUtils.createTempDir("test");
 
-        File src = new File(GitClientFetchTest.class.getResource("/test4").toURI());
-        IOUtils.copy(src.toPath(), tmpDir);
+        IOUtils.copy(resourceToPath("/test4"), tmpDir);
 
         // init repo
-        Git repo = Git.init().setDirectory(tmpDir.toFile()).call();
+        Git repo = Git.init().setInitialBranch("master").setDirectory(tmpDir.toFile()).call();
         repo.add().addFilepattern(".").call();
         RevCommit initialCommit = commit(repo, "import");
 

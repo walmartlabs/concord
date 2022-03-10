@@ -46,7 +46,8 @@ public class ProjectIT extends AbstractServerIT {
         File src = new File(ProjectIT.class.getResource("project").toURI());
         IOUtils.copy(src.toPath(), tmpDir);
 
-        Git repo = Git.init().setDirectory(tmpDir.toFile()).call();
+        Git repo = initRepo(tmpDir);
+
         repo.add().addFilepattern(".").call();
         repo.commit().setMessage("import").call();
 
@@ -72,6 +73,10 @@ public class ProjectIT extends AbstractServerIT {
         assertLog(".*" + greeting + ".*", ab);
     }
 
+    private static Git initRepo(Path initDir) throws Exception {
+        return Git.init().setInitialBranch("master").setDirectory(initDir.toFile()).call();
+    }
+
     @Test
     public void testEntryPointFromYml() throws Exception {
         Path tmpDir = createTempDir();
@@ -79,7 +84,8 @@ public class ProjectIT extends AbstractServerIT {
         File src = new File(ProjectIT.class.getResource("projectEntryPoint").toURI());
         IOUtils.copy(src.toPath(), tmpDir);
 
-        Git repo = Git.init().setDirectory(tmpDir.toFile()).call();
+        Git repo = initRepo(tmpDir);
+
         repo.add().addFilepattern(".").call();
         repo.commit().setMessage("import").call();
 
@@ -108,7 +114,8 @@ public class ProjectIT extends AbstractServerIT {
         File src = new File(ProjectIT.class.getResource("project").toURI());
         IOUtils.copy(src.toPath(), tmpDir);
 
-        Git repo = Git.init().setDirectory(tmpDir.toFile()).call();
+        Git repo = initRepo(tmpDir);
+
         repo.add().addFilepattern(".").call();
         repo.commit().setMessage("import").call();
 
@@ -160,7 +167,8 @@ public class ProjectIT extends AbstractServerIT {
         File src = new File(ProjectIT.class.getResource("project").toURI());
         IOUtils.copy(src.toPath(), tmpDir);
 
-        Git repo = Git.init().setDirectory(tmpDir.toFile()).call();
+        Git repo = initRepo(tmpDir);
+
         repo.add().addFilepattern(".").call();
         repo.commit().setMessage("import").call();
 
@@ -208,7 +216,8 @@ public class ProjectIT extends AbstractServerIT {
         File src = new File(ProjectIT.class.getResource("project-triggers").toURI());
         IOUtils.copy(src.toPath(), tmpDir);
 
-        Git repo = Git.init().setDirectory(tmpDir.toFile()).call();
+        Git repo = initRepo(tmpDir);
+
         repo.add().addFilepattern(".").call();
         repo.commit().setMessage("import").call();
 
@@ -244,7 +253,7 @@ public class ProjectIT extends AbstractServerIT {
         File src = new File(ProjectIT.class.getResource("repositoryValidation").toURI());
         IOUtils.copy(src.toPath(), tmpDir);
 
-        Git repo = Git.init().setDirectory(tmpDir.toFile()).call();
+        Git repo = initRepo(tmpDir);
         repo.add().addFilepattern(".").call();
         repo.commit().setMessage("import").call();
 
@@ -277,7 +286,7 @@ public class ProjectIT extends AbstractServerIT {
             File src = new File(ProjectIT.class.getResource("repositoryValidationEmptyFlow").toURI());
             IOUtils.copy(src.toPath(), tmpDir);
 
-            Git repo = Git.init().setDirectory(tmpDir.toFile()).call();
+            Git repo = initRepo(tmpDir);
             repo.add().addFilepattern(".").call();
             repo.commit().setMessage("import").call();
 
@@ -311,7 +320,7 @@ public class ProjectIT extends AbstractServerIT {
             File src = new File(ProjectIT.class.getResource("repositoryValidationEmptyForm").toURI());
             IOUtils.copy(src.toPath(), tmpDir);
 
-            Git repo = Git.init().setDirectory(tmpDir.toFile()).call();
+            Git repo = initRepo(tmpDir);
             repo.add().addFilepattern(".").call();
             repo.commit().setMessage("import").call();
 
@@ -345,7 +354,7 @@ public class ProjectIT extends AbstractServerIT {
             File src = new File(ProjectIT.class.getResource("ProcessDisabledRepo").toURI());
             IOUtils.copy(src.toPath(), tmpDir);
 
-            Git repo = Git.init().setDirectory(tmpDir.toFile()).call();
+            Git repo = initRepo(tmpDir);
             repo.add().addFilepattern(".").call();
             repo.commit().setMessage("import").call();
 
