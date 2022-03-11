@@ -1,13 +1,24 @@
 # Change log
 
+## [1.93.3] - 2022-03-11
+
+### Changed
+
+- agent: fix log segments parse
+([#586](https://github.com/walmartlabs/concord/pull/586)).
+
+
+
 ## [1.93.2] - 2022-02-17
 
 ### Changed
 
 - runtime-v1: do not override process arguments with default variables
-([#569](https://github.com/walmartlabs/concord/pull/569));
+([#569](https://github.com/walmartlabs/concord/pull/569)).
 
 ## [1.93.1] - 2022-01-24
+
+
 
 ### Added
 
