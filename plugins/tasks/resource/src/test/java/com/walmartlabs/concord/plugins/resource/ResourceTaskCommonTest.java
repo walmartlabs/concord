@@ -29,6 +29,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.time.OffsetDateTime;
 import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -41,10 +42,18 @@ public class ResourceTaskCommonTest {
         Map<String, Object> m = new HashMap<>();
         m.put("x", 123);
         m.put("y", Collections.singletonMap("a", false));
+        m.put("jsr310", OffsetDateTime.now());
 
         assertValidYaml(ResourceTaskCommon.prettyPrintYaml(m, 0));
         assertValidYaml(String.format("value: %s", ResourceTaskCommon.prettyPrintYaml(m, 2)));
         assertValidYaml(String.format("value: %s", ResourceTaskCommon.prettyPrintYaml(Arrays.asList("a", "b", "c"), 2)));
+    }
+
+    @Test
+    public void testPrettyPrintJson() {
+        Map<String, Object> m = new HashMap<>();
+        m.put("x", 123);
+        m.put("y", OffsetDateTime.now());
     }
 
     @Test

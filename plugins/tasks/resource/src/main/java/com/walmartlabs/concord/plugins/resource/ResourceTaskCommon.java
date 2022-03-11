@@ -20,9 +20,12 @@ package com.walmartlabs.concord.plugins.resource;
  * =====
  */
 
+import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import com.fasterxml.jackson.dataformat.yaml.YAMLGenerator;
+import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -60,7 +63,7 @@ public class ResourceTaskCommon {
 
     public Object asJson(String path, boolean eval) throws IOException {
         try (InputStream in = Files.newInputStream(Paths.get(path))) {
-            Object result = new ObjectMapper().readValue(in, Object.class);
+            Object result = createObjectMapper().readValue(in, Object.class);
             if (eval) {
                 return evaluator.eval(result);
             } else {
@@ -69,12 +72,23 @@ public class ResourceTaskCommon {
         }
     }
 
+    private static ObjectMapper createObjectMapper() {
+        return createObjectMapper(null);
+    }
+
+    private static ObjectMapper createObjectMapper(JsonFactory jf) {
+        ObjectMapper om = new ObjectMapper(jf);
+        om.registerModule(new Jdk8Module());
+        om.registerModule(new JavaTimeModule());
+        return om;
+    }
+
     public Object fromJsonString(String jsonsString) throws IOException {
         return fromJsonString(jsonsString, false);
     }
 
     public Object fromJsonString(String jsonString, boolean eval) throws IOException {
-        Object result = new ObjectMapper().readValue(jsonString, Object.class);
+        Object result = createObjectMapper().readValue(jsonString, Object.class);
         if (eval) {
             return evaluator.eval(result);
         } else {
@@ -88,7 +102,7 @@ public class ResourceTaskCommon {
 
     public Object asYaml(String path, boolean eval) throws IOException {
         try (InputStream in = Files.newInputStream(Paths.get(path))) {
-            Object result = new ObjectMapper(new YAMLFactory()).readValue(in, Object.class);
+            Object result = createObjectMapper(new YAMLFactory()).readValue(in, Object.class);
             if (eval) {
                 return evaluator.eval(result);
             } else {
@@ -101,7 +115,7 @@ public class ResourceTaskCommon {
         Path tmpFile = fileService.createTempFile(RESOURCE_PREFIX, JSON_FILE_SUFFIX);
         writeToFile(tmpFile, p -> {
             try (OutputStream out = Files.newOutputStream(p)) {
-                new ObjectMapper().writerWithDefaultPrettyPrinter().writeValue(out, content);
+                createObjectMapper().writerWithDefaultPrettyPrinter().writeValue(out, content);
             }
         });
         return workDir.relativize(tmpFile.toAbsolutePath()).toString();
@@ -117,7 +131,7 @@ public class ResourceTaskCommon {
         Path tmpFile = fileService.createTempFile(RESOURCE_PREFIX, YAML_FILE_SUFFIX);
         writeToFile(tmpFile, p -> {
             try (OutputStream out = Files.newOutputStream(p)) {
-                new ObjectMapper(new YAMLFactory()).writerWithDefaultPrettyPrinter()
+                createObjectMapper(new YAMLFactory()).writerWithDefaultPrettyPrinter()
                         .writeValue(out, content);
             }
         });
@@ -125,7 +139,8 @@ public class ResourceTaskCommon {
     }
 
     public static String prettyPrintJson(Object value) throws IOException {
-        ObjectMapper mapper = new ObjectMapper();
+        ObjectMapper mapper = createObjectMapper();
+
         if (value instanceof String) {
             // to add line feeds
             value = mapper.readValue((String) value, Object.class);
@@ -139,7 +154,8 @@ public class ResourceTaskCommon {
     }
 
     public static String prettyPrintYaml(Object value, int indent) throws IOException {
-        ObjectMapper mapper = new ObjectMapper(new YAMLFactory().disable(YAMLGenerator.Feature.WRITE_DOC_START_MARKER));
+        ObjectMapper mapper = createObjectMapper(new YAMLFactory().disable(YAMLGenerator.Feature.WRITE_DOC_START_MARKER));
+
         if (value instanceof String) {
             value = mapper.readValue((String) value, Object.class);
         }
