@@ -35,8 +35,8 @@ import java.nio.file.Paths;
 @SuppressWarnings("unused")
 public class ResourceTask implements Task {
 
-    public String asString(String path) throws IOException {
-        return ResourceTaskCommon.asString(path);
+    public String asString(@InjectVariable("context") Context ctx, String path) throws IOException {
+        return delegate(ctx).asString(path);
     }
 
     public Object asJson(String path) throws IOException {

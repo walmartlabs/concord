@@ -49,8 +49,8 @@ public class ResourceTaskCommon {
         this.evaluator = evaluator;
     }
 
-    public static String asString(String path) throws IOException {
-        byte[] ab = Files.readAllBytes(Paths.get(path));
+    public String asString(String path) throws IOException {
+        byte[] ab = Files.readAllBytes(normalizePath(path));
         return new String(ab);
     }
 
@@ -59,7 +59,7 @@ public class ResourceTaskCommon {
     }
 
     public Object asJson(String path, boolean eval) throws IOException {
-        try (InputStream in = Files.newInputStream(Paths.get(path))) {
+        try (InputStream in = Files.newInputStream(normalizePath(path))) {
             Object result = new ObjectMapper().readValue(in, Object.class);
             if (eval) {
                 return evaluator.eval(result);
@@ -87,7 +87,7 @@ public class ResourceTaskCommon {
     }
 
     public Object asYaml(String path, boolean eval) throws IOException {
-        try (InputStream in = Files.newInputStream(Paths.get(path))) {
+        try (InputStream in = Files.newInputStream(normalizePath(path))) {
             Object result = new ObjectMapper(new YAMLFactory()).readValue(in, Object.class);
             if (eval) {
                 return evaluator.eval(result);
@@ -157,6 +157,14 @@ public class ResourceTaskCommon {
             s = prefix + s.replace("\n", prefix);
         }
         return s;
+    }
+
+    private Path normalizePath(String path) {
+        Path p = Paths.get(path);
+        if (p.isAbsolute()) {
+            return p;
+        }
+        return workDir.resolve(path);
     }
 
     static void writeToFile(Path file, PathHandler h) throws IOException {
