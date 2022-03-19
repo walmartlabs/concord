@@ -322,7 +322,7 @@ public class SecretManager {
     public void update(UUID orgId, String secretName, SecretUpdateParams params) {
         SecretEntry e = assertAccess(orgId,null, secretName, ResourceAccessLevel.WRITER, false);
 
-        UUID newOrgId = validateOrgId(params, e);
+        UUID newOrgId = validateOrgId(params.newOrgId(), params.newOrgName(), e);
         UUID newProjectId = validateProjectId(params.newProjectId(), params.newProjectName(), params.removeProjectLink(), newOrgId, e);
         UserEntry newOwner = validateOwner(params.newOwnerId(), e);
 
@@ -372,6 +372,8 @@ public class SecretManager {
         policyManager.checkEntity(e.getOrgId(), newProjectId, EntityType.SECRET, EntityAction.UPDATE, newOwner,
                 PolicyUtils.secretToMap(e.getOrgId(), e.getName(), e.getType(), e.getVisibility(), e.getStoreType()));
 
+        String newName = validateName(params.newName(), newOrgId, e);
+
         SecretType finalNewType = newType;
         secretDao.tx(tx -> {
             if (newOrgId != null) {
@@ -392,6 +394,19 @@ public class SecretManager {
                 .field("name", e.getName())
                 .field("changes", changes)
                 .log();
+    }
+
+    private String validateName(String newName, UUID newOrgId, SecretEntry e) {
+        if (newOrgId == null && newName == null) {
+            return null;
+        }
+
+        UUID orgId = newOrgId != null ? newOrgId : e.getOrgId();
+        String name = newName != null ? newName : e.getName();
+        if (secretDao.getId(orgId, name) != null) {
+            throw new ValidationErrorsException("Secret already exists: " + e.getName());
+        }
+        return newName;
     }
 
     /**
@@ -639,12 +654,12 @@ public class SecretManager {
         }
     }
 
-    private UUID validateOrgId(SecretUpdateParams p, SecretEntry e) {
+    private UUID validateOrgId(UUID newOrgId, String newOrgName, SecretEntry e) {
         UUID orgId = null;
-        if (p.newOrgId() != null) {
-            orgId = orgManager.assertAccess(p.newOrgId(), true).getId();
-        } else if (p.newOrgName() != null) {
-            orgId = orgManager.assertAccess(p.newOrgName(), true).getId();
+        if (newOrgId != null) {
+            orgId = orgManager.assertAccess(newOrgId, true).getId();
+        } else if (newOrgName != null) {
+            orgId = orgManager.assertAccess(newOrgName, true).getId();
         }
 
         if (!e.getOrgId().equals(orgId)) {

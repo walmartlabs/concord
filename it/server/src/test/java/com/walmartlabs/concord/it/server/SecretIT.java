@@ -24,6 +24,7 @@ import com.walmartlabs.concord.ApiException;
 import com.walmartlabs.concord.client.*;
 import com.walmartlabs.concord.common.secret.KeyPair;
 import com.walmartlabs.concord.common.secret.UsernamePassword;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
@@ -31,6 +32,8 @@ import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.containsString;
 import static org.junit.jupiter.api.Assertions.*;
 
 public class SecretIT extends AbstractServerIT {
@@ -275,5 +278,30 @@ public class SecretIT extends AbstractServerIT {
         assertNotNull(up);
         assertEquals("test", up.getUsername());
         assertArrayEquals("q1".toCharArray(), up.getPassword());
+    }
+
+    @Test
+    public void testUpdateNonUniqueName() throws Exception {
+        String orgName1 = "org_" + randomString();
+        String orgName2 = "org_" + randomString();
+
+        OrganizationsApi orgApi = new OrganizationsApi(getApiClient());
+        orgApi.createOrUpdate(new OrganizationEntry().setName(orgName1));
+        orgApi.createOrUpdate(new OrganizationEntry().setName(orgName2));
+
+        // ---
+
+        String secretName = "secret_" + randomString();
+        addUsernamePassword(orgName1, secretName, false, null, "test", "q1");
+        addUsernamePassword(orgName2, secretName, false, null, "test", "q1");
+
+        UpdateSecretRequest request = UpdateSecretRequest.builder()
+                .newOrgName(orgName2)
+                .build();
+
+        SecretClient secretClient = new SecretClient(getApiClient());
+        ApiException exception = Assertions.assertThrows(ApiException.class,
+                () -> secretClient.updateSecret(orgName1, secretName, request));
+        assertThat(exception.getMessage(), containsString("Secret already exists"));
     }
 }
