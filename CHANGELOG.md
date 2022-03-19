@@ -3,6 +3,8 @@
 ## [1.95.0] - TBD
 
 ### Changed
+- resource-task: convert relative paths to absolute
+([#589](https://github.com/walmartlabs/concord/pull/589)) 
 - agent: fix log segments parser
 ([#586](https://github.com/walmartlabs/concord/pull/586)) 
 - resource-task: fix java 8 date/time serialization
