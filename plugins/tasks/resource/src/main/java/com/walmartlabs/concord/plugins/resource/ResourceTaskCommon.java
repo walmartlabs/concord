@@ -52,8 +52,8 @@ public class ResourceTaskCommon {
         this.evaluator = evaluator;
     }
 
-    public static String asString(String path) throws IOException {
-        byte[] ab = Files.readAllBytes(Paths.get(path));
+    public String asString(String path) throws IOException {
+        byte[] ab = Files.readAllBytes(normalizePath(path));
         return new String(ab);
     }
 
@@ -62,7 +62,7 @@ public class ResourceTaskCommon {
     }
 
     public Object asJson(String path, boolean eval) throws IOException {
-        try (InputStream in = Files.newInputStream(Paths.get(path))) {
+        try (InputStream in = Files.newInputStream(normalizePath(path))) {
             Object result = createObjectMapper().readValue(in, Object.class);
             if (eval) {
                 return evaluator.eval(result);
@@ -70,17 +70,6 @@ public class ResourceTaskCommon {
                 return result;
             }
         }
-    }
-
-    private static ObjectMapper createObjectMapper() {
-        return createObjectMapper(null);
-    }
-
-    private static ObjectMapper createObjectMapper(JsonFactory jf) {
-        ObjectMapper om = new ObjectMapper(jf);
-        om.registerModule(new Jdk8Module());
-        om.registerModule(new JavaTimeModule());
-        return om;
     }
 
     public Object fromJsonString(String jsonsString) throws IOException {
@@ -101,7 +90,7 @@ public class ResourceTaskCommon {
     }
 
     public Object asYaml(String path, boolean eval) throws IOException {
-        try (InputStream in = Files.newInputStream(Paths.get(path))) {
+        try (InputStream in = Files.newInputStream(normalizePath(path))) {
             Object result = createObjectMapper(new YAMLFactory()).readValue(in, Object.class);
             if (eval) {
                 return evaluator.eval(result);
@@ -173,6 +162,25 @@ public class ResourceTaskCommon {
             s = prefix + s.replace("\n", prefix);
         }
         return s;
+    }
+
+    private Path normalizePath(String path) {
+        Path p = Paths.get(path);
+        if (p.isAbsolute()) {
+            return p;
+        }
+        return workDir.resolve(path);
+    }
+
+    private static ObjectMapper createObjectMapper() {
+        return createObjectMapper(null);
+    }
+
+    private static ObjectMapper createObjectMapper(JsonFactory jf) {
+        ObjectMapper om = new ObjectMapper(jf);
+        om.registerModule(new Jdk8Module());
+        om.registerModule(new JavaTimeModule());
+        return om;
     }
 
     static void writeToFile(Path file, PathHandler h) throws IOException {

@@ -67,6 +67,13 @@ public class RunTest {
         assertLog(".*Hello, Concord.*");
     }
 
+    @Test
+    public void testResourceTask() throws Exception {
+        int exitCode = run("resourceTask", Collections.emptyMap());
+        assertEquals(0, exitCode);
+        assertLog(".*\"k\" : \"v\".*");
+    }
+
     private static int run(String payload, Map<String, Object> extraVars) throws Exception {
         URI uri = RunTest.class.getResource(payload).toURI();
         Path source = Paths.get(uri);
