@@ -38,14 +38,12 @@ public class TaskResumeCommand extends StepCommand<TaskCall> {
 
     private static final long serialVersionUID = 1L;
 
-    private final UUID correlationId;
     private final LogContext logContext;
     private final ResumeEvent event;
 
     protected TaskResumeCommand(UUID correlationId, LogContext logContext, TaskCall step, ResumeEvent event) {
-        super(step);
+        super(correlationId, step);
 
-        this.correlationId = correlationId;
         this.logContext = logContext;
         this.event = event;
     }
@@ -93,11 +91,6 @@ public class TaskResumeCommand extends StepCommand<TaskCall> {
         }
 
         TaskCallUtils.processTaskResult(runtime, ctx, taskName, getStep().getOptions(), result);
-    }
-
-    @Override
-    public UUID getCorrelationId() {
-        return correlationId;
     }
 
     @Override

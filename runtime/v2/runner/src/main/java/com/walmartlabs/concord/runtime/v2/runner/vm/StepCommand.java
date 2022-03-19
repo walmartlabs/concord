@@ -56,10 +56,16 @@ public abstract class StepCommand<T extends Step> implements Command {
 
     private final T step;
 
+    // TODO: make final after there is no state of the processes of the previous version.
     private UUID correlationId;
 
     protected StepCommand(T step) {
+        this(UUID.randomUUID(), step);
+    }
+
+    protected StepCommand(UUID correlationId, T step) {
         this.step = step;
+        this.correlationId = correlationId;
     }
 
     public T getStep() {
@@ -84,6 +90,7 @@ public abstract class StepCommand<T extends Step> implements Command {
     }
 
     public UUID getCorrelationId() {
+        // backward compatibility with old process state
         if (correlationId == null) {
             correlationId = UUID.randomUUID();
         }
