@@ -22,11 +22,14 @@ package com.walmartlabs.concord.it.server;
 
 import com.walmartlabs.concord.ApiException;
 import com.walmartlabs.concord.client.*;
+import com.walmartlabs.concord.common.secret.KeyPair;
+import com.walmartlabs.concord.common.secret.UsernamePassword;
 import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -147,5 +150,130 @@ public class SecretIT extends AbstractServerIT {
         secretsApi.delete(orgName, secretName);
         projectsApi.delete(orgName, projectName);
         orgApi.delete(orgName, "yes");
+    }
+
+    @Test
+    public void testSecretUpdate() throws Exception {
+        String orgNameInit = "org_" + randomString();
+
+        OrganizationsApi orgApi = new OrganizationsApi(getApiClient());
+        orgApi.createOrUpdate(new OrganizationEntry().setName(orgNameInit));
+
+        // ---
+
+        String projectName = "project_" + randomString();
+
+        ProjectsApi projectsApi = new ProjectsApi(getApiClient());
+        projectsApi.createOrUpdate(orgNameInit, new ProjectEntry()
+                .setName(projectName));
+
+        // ---
+
+        String secretName = "secret_" + randomString();
+        generateKeyPair(orgNameInit, projectName, secretName, false, null);
+
+        // ---
+
+        String userName = "myUser_" + randomString();
+
+        UsersApi usersApi = new UsersApi(getApiClient());
+        CreateUserResponse cur = usersApi.createOrUpdate(new CreateUserRequest()
+                .setUsername(userName)
+                .setType(CreateUserRequest.TypeEnum.LOCAL));
+
+        // ---
+
+        String newOrgName = "org_" + randomString();
+        UUID newOrgId = orgApi.createOrUpdate(new OrganizationEntry().setName(newOrgName)).getId();
+        String newSecretName = "name_" + randomString();
+
+        UpdateSecretRequest request = UpdateSecretRequest.builder()
+                .newOrgId(newOrgId)
+                .newOwnerId(cur.getId())
+                .newVisibility(SecretEntry.VisibilityEnum.PRIVATE)
+                .newName(newSecretName)
+                .build();
+
+        SecretClient secretClient = new SecretClient(getApiClient());
+        secretClient.updateSecret(orgNameInit, secretName, request);
+
+        SecretsApi secretsApi = new SecretsApi(getApiClient());
+
+        PublicKeyResponse pkr = secretsApi.getPublicKey(newOrgName, newSecretName);
+
+        assertNotNull(pkr);
+        assertNotNull(pkr.getPublicKey());
+
+        SecretEntry secret = secretsApi.get(newOrgName, newSecretName);
+
+        assertNotNull(secret);
+        assertEquals(cur.getId(), secret.getOwner().getId());
+        assertNull(secret.getProjectName());
+        assertEquals(SecretEntry.VisibilityEnum.PRIVATE, secret.getVisibility());
+
+        // ---
+
+        orgApi.delete(orgNameInit, "yes");
+        orgApi.delete(newOrgName, "yes");
+    }
+
+    @Test
+    public void testSecretPasswordUpdate() throws Exception {
+        String orgName = "org_" + randomString();
+
+        OrganizationsApi orgApi = new OrganizationsApi(getApiClient());
+        orgApi.createOrUpdate(new OrganizationEntry().setName(orgName));
+
+        // ---
+
+        String initPassword = "q1q1Q1Q1";
+
+        String secretName = "secret_" + randomString();
+        generateKeyPair(orgName, null, secretName, false, initPassword);
+
+        // ---
+        String newPassword = "q2q2Q2Q2";
+
+        UpdateSecretRequest request = UpdateSecretRequest.builder()
+                .currentPassword(initPassword)
+                .newPassword(newPassword)
+                .build();
+
+        // ---
+
+        SecretClient secretsApi = new SecretClient(getApiClient());
+        secretsApi.updateSecret(orgName, secretName, request);
+
+        KeyPair kp = secretsApi.getData(orgName, secretName, newPassword, SecretEntry.TypeEnum.KEY_PAIR);
+
+        assertNotNull(kp);
+    }
+
+    @Test
+    public void testSecretDataUpdate() throws Exception {
+        String orgName = "org_" + randomString();
+
+        OrganizationsApi orgApi = new OrganizationsApi(getApiClient());
+        orgApi.createOrUpdate(new OrganizationEntry().setName(orgName));
+
+        // ---
+
+        String secretName = "secret_" + randomString();
+        generateKeyPair(orgName, null, secretName, false, null);
+
+        // ---
+
+        UpdateSecretRequest request = UpdateSecretRequest.builder()
+                .usernamePassword(CreateSecretRequest.UsernamePassword.of("test", "q1"))
+                .build();
+
+        SecretClient secretClient = new SecretClient(getApiClient());
+        secretClient.updateSecret(orgName, secretName, request);
+
+        UsernamePassword up = secretClient.getData(orgName, secretName, null, SecretEntry.TypeEnum.USERNAME_PASSWORD);
+
+        assertNotNull(up);
+        assertEquals("test", up.getUsername());
+        assertArrayEquals("q1".toCharArray(), up.getPassword());
     }
 }
