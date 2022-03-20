@@ -5,7 +5,7 @@
 ### Added
 
 - runtime-v1, v2: add correlationId to checkpoint events
-([#581](https://github.com/walmartlabs/concord/pull/589)).
+([#581](https://github.com/walmartlabs/concord/pull/581)).
 
 ### Changed
 
