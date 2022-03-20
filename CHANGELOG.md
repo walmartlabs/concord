@@ -2,7 +2,13 @@
 
 ## [1.95.0] - TBD
 
+### Added
+
+- runtime-v1, v2: add correlationId to checkpoint events
+([#581](https://github.com/walmartlabs/concord/pull/589)).
+
 ### Changed
+
 - resource-task: convert relative paths to absolute
 ([#589](https://github.com/walmartlabs/concord/pull/589)) 
 - agent: fix log segments parser
