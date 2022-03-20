@@ -42,7 +42,6 @@ public final class ProcessDefinitionUtils {
         return null;
     }
 
-    // TODO: add flow name into state local variable?
     private static boolean containsStep(List<Step> steps, Step step) {
         if (steps == null) {
             return false;
@@ -68,9 +67,37 @@ public final class ProcessDefinitionUtils {
                     return true;
                 }
             } else if (s instanceof GroupOfSteps) {
-                return containsStep(((GroupOfSteps) s).getSteps(), step);
+                GroupOfStepsOptions options = ((GroupOfSteps)s).getOptions();
+                if (options != null && containsStep(options.errorSteps(),step)) {
+                    return true;
+                }
+                if (containsStep(((GroupOfSteps) s).getSteps(), step)) {
+                    return true;
+                }
             } else if (s instanceof ParallelBlock) {
-                return containsStep(((ParallelBlock) s).getSteps(), step);
+                if (containsStep(((ParallelBlock) s).getSteps(), step)) {
+                    return true;
+                }
+            } else if (s instanceof TaskCall) {
+                TaskCallOptions options = ((TaskCall)s).getOptions();
+                if (options != null && containsStep(options.errorSteps(),step)) {
+                    return true;
+                }
+            } else if (s instanceof FlowCall) {
+                FlowCallOptions options = ((FlowCall)s).getOptions();
+                if (options != null && containsStep(options.errorSteps(),step)) {
+                    return true;
+                }
+            } else if (s instanceof ScriptCall) {
+                ScriptCallOptions options = ((ScriptCall)s).getOptions();
+                if (options != null && containsStep(options.errorSteps(),step)) {
+                    return true;
+                }
+            } else if (s instanceof Expression) {
+                ExpressionOptions options = ((Expression)s).getOptions();
+                if (options != null && containsStep(options.errorSteps(),step)) {
+                    return true;
+                }
             }
         }
         return false;

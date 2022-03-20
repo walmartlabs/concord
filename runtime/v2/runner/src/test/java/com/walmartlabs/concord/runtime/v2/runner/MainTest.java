@@ -1087,6 +1087,7 @@ public class MainTest {
         run();
 
         assertLogAtLeast(allLogs, 2, ".*after checkpoint: default.*");
+        assertLogAtLeast(allLogs, 2, ".*current flow name in error block: default.*");
     }
 
     @Test
