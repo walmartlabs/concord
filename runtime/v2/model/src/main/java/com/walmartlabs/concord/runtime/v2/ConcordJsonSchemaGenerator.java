@@ -81,7 +81,7 @@ public class ConcordJsonSchemaGenerator {
         switchStep.set("additionalProperties", switchDefault);
 
         // remove invalid required primitive attributes
-        removeRequired(path(jsonSchema, "definitions/ProcessDefinitionConfiguration"), "debug");
+        removeRequired(path(jsonSchema, "definitions/ProcessDefinitionConfiguration"), "debug", "parallelLoopParallelism");
         removeRequired(path(jsonSchema, "definitions/EventConfiguration"), "recordEvents", "recordTaskInVars", "truncateInVars", "truncateMaxStringLength", "truncateMaxArrayLength", "truncateMaxDepth", "recordTaskOutVars", "truncateOutVars", "recordTaskMeta", "truncateMeta");
         removeRequired(path(jsonSchema, "definitions/TaskCall"), "ignoreErrors");
 

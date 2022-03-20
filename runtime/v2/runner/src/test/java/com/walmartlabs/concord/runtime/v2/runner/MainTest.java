@@ -294,7 +294,7 @@ public class MainTest {
         assertLog(log, ".*Hello, Concord!.*");
 
         verify(processStatusCallback, times(1)).onRunning(eq(instanceId));
-        verify(checkpointService, times(1)).upload(any(), eq("A"), any());
+        verify(checkpointService, times(1)).upload(any(), any(), eq("A"), any());
     }
 
     @Test
@@ -882,7 +882,7 @@ public class MainTest {
                 .build());
 
         run();
-        verify(checkpointService, times(1)).upload(any(), eq("test_123"), any());
+        verify(checkpointService, times(1)).upload(any(), any(), eq("test_123"), any());
     }
 
     @Test
@@ -895,8 +895,8 @@ public class MainTest {
 
         run();
 
-        verify(checkpointService, times(1)).upload(any(), eq("first"), any());
-        verify(checkpointService, times(1)).upload(any(), eq("second"), any());
+        verify(checkpointService, times(1)).upload(any(), any(), eq("first"), any());
+        verify(checkpointService, times(1)).upload(any(), any(), eq("second"), any());
 
         checkpointService.restore("first", workDir);
 

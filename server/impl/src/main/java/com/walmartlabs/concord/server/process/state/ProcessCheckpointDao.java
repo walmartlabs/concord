@@ -71,7 +71,7 @@ public class ProcessCheckpointDao extends AbstractDao {
                 .fetchOne(PROCESS_CHECKPOINTS.CHECKPOINT_ID));
     }
 
-    public void importCheckpoint(ProcessKey processKey, UUID checkpointId, String checkpointName, Path data) {
+    public void importCheckpoint(ProcessKey processKey, UUID checkpointId, UUID correlationId, String checkpointName, Path data) {
         if (checkpointName.length() > PROCESS_CHECKPOINTS.CHECKPOINT_NAME.getDataType().length()) {
             throw new ValidationErrorsException("Invalid checkpoint name: value too long. Actual: " + checkpointName.length() + ", max: " + PROCESS_CHECKPOINTS.CHECKPOINT_NAME.getDataType().length());
         }
@@ -82,8 +82,9 @@ public class ProcessCheckpointDao extends AbstractDao {
                             PROCESS_CHECKPOINTS.CHECKPOINT_ID,
                             PROCESS_CHECKPOINTS.CHECKPOINT_NAME,
                             PROCESS_CHECKPOINTS.CHECKPOINT_DATE,
-                            PROCESS_CHECKPOINTS.CHECKPOINT_DATA)
-                    .values((UUID) null, null, null, null, null, null)
+                            PROCESS_CHECKPOINTS.CHECKPOINT_DATA,
+                            PROCESS_CHECKPOINTS.CORRELATION_ID)
+                    .values((UUID) null, null, null, null, null, null, null)
                     .getSQL();
 
             tx.connection(conn -> {
@@ -96,6 +97,7 @@ public class ProcessCheckpointDao extends AbstractDao {
                     try (InputStream in = Files.newInputStream(data)) {
                         ps.setBinaryStream(6, in);
                     }
+                    ps.setObject(7, correlationId);
 
                     ps.execute();
                 }
@@ -138,6 +140,7 @@ public class ProcessCheckpointDao extends AbstractDao {
                 .id(r.get(PROCESS_CHECKPOINTS.CHECKPOINT_ID))
                 .name(r.get(PROCESS_CHECKPOINTS.CHECKPOINT_NAME))
                 .createdAt(r.get(PROCESS_CHECKPOINTS.CHECKPOINT_DATE))
+                .correlationId(r.get(PROCESS_CHECKPOINTS.CORRELATION_ID))
                 .build();
     }
 }

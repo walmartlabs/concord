@@ -58,7 +58,7 @@ public class DefaultCheckpointService implements CheckpointService {
     }
 
     @Override
-    public void create(ThreadId threadId, String name, Runtime runtime, ProcessSnapshot snapshot) {
+    public void create(ThreadId threadId, UUID correlationId, String name, Runtime runtime, ProcessSnapshot snapshot) {
         validate(threadId, snapshot);
 
         UUID checkpointId = UUID.randomUUID();
@@ -82,7 +82,7 @@ public class DefaultCheckpointService implements CheckpointService {
                     .withSystemDirectory(workingDirectory.getValue());
 
             try (TemporaryPath zip = archive.zip()) {
-                checkpointUploader.upload(checkpointId, name, zip.path());
+                checkpointUploader.upload(checkpointId, correlationId, name, zip.path());
             }
         } catch (Exception e) {
             throw new RuntimeException("Checkpoint upload error", e);

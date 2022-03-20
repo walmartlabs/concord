@@ -80,8 +80,8 @@ public class ProcessCheckpointManager {
      * @param checkpointName process checkpoint name
      * @param data           checkpoint data file
      */
-    public void importCheckpoint(ProcessKey processKey, UUID checkpointId, String checkpointName, Path data) {
-        checkpointDao.importCheckpoint(processKey, checkpointId, checkpointName, data);
+    public void importCheckpoint(ProcessKey processKey, UUID checkpointId, UUID correlationId, String checkpointName, Path data) {
+        checkpointDao.importCheckpoint(processKey, checkpointId, correlationId, checkpointName, data);
     }
 
     /**
