@@ -10,13 +10,15 @@
 ### Changed
 
 - resource-task: convert relative paths to absolute
-([#589](https://github.com/walmartlabs/concord/pull/589)) 
+([#589](https://github.com/walmartlabs/concord/pull/589));
+- runtime-v2: redirect script output to logger
+([#587](https://github.com/walmartlabs/concord/pull/587));
 - agent: fix log segments parser
-([#586](https://github.com/walmartlabs/concord/pull/586)) 
+([#586](https://github.com/walmartlabs/concord/pull/586));
 - resource-task: fix java 8 date/time serialization
-([#584](https://github.com/walmartlabs/concord/pull/584)) 
+([#584](https://github.com/walmartlabs/concord/pull/584));
 - it: explicitly specify initialBranch for git tests
-([#582](https://github.com/walmartlabs/concord/pull/582))
+([#582](https://github.com/walmartlabs/concord/pull/582)).
 
 ## [1.94.0] - 2022-03-07
 
