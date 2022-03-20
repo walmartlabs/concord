@@ -50,7 +50,7 @@ public class CheckpointManager {
         this.processApiClient = processApiClient;
     }
 
-    public void process(UUID checkpointId, String checkpointName, Path baseDir) throws ExecutionException {
+    public void process(UUID checkpointId, UUID correlationId, String checkpointName, Path baseDir) throws ExecutionException {
         try {
             Path checkpointDir = baseDir.resolve(Constants.Files.JOB_CHECKPOINTS_DIR_NAME);
             if (!Files.exists(checkpointDir)) {
@@ -70,6 +70,7 @@ public class CheckpointManager {
                 try (InputStream in = Files.newInputStream(checkpointFile.path())) {
                     Map<String, Object> data = new HashMap<>();
                     data.put("id", checkpointId);
+                    data.put("correlationId", correlationId);
                     data.put("name", checkpointName);
                     data.put("data", in);
 

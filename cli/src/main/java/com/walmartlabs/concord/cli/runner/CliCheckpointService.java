@@ -25,10 +25,12 @@ import com.walmartlabs.concord.runtime.v2.runner.checkpoints.CheckpointService;
 import com.walmartlabs.concord.svm.Runtime;
 import com.walmartlabs.concord.svm.ThreadId;
 
+import java.util.UUID;
+
 public class CliCheckpointService implements CheckpointService {
 
     @Override
-    public void create(ThreadId threadId, String name, Runtime runtime, ProcessSnapshot snapshot) {
+    public void create(ThreadId threadId, UUID correlationId, String name, Runtime runtime, ProcessSnapshot snapshot) {
         throw new UnsupportedOperationException("not implemented yet");
     }
 }
