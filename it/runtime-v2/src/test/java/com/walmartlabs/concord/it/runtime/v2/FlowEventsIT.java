@@ -98,6 +98,7 @@ public class FlowEventsIT extends AbstractTest {
         // script:
         // - script: js
         assertEvent(events, 4, new EventData()
+                .correlationId()
                 .location(17, 7, "concord.yml")
                 .flow("default")
                 .description("Script: js"));
@@ -105,6 +106,7 @@ public class FlowEventsIT extends AbstractTest {
         // if
         // - if: ${1 == 1}
         assertEvent(events, 5, new EventData()
+                .correlationId()
                 .location(22, 7, "concord.yml")
                 .flow("default")
                 .description("Check: ${1 == 1}"));
@@ -130,6 +132,7 @@ public class FlowEventsIT extends AbstractTest {
 
         // - switch: ${myVar}
         assertEvent(events, 8, new EventData()
+                .correlationId()
                 .location(26, 7, "concord.yml")
                 .flow("default")
                 .description("Switch: ${myVar}"));
@@ -155,30 +158,35 @@ public class FlowEventsIT extends AbstractTest {
 
         // set variables
         assertEvent(events, 11, new EventData()
+                .correlationId()
                 .location(30, 7, "concord.yml")
                 .flow("default")
                 .description("Set variables"));
 
         // flow call
         assertEvent(events, 12, new EventData()
+                .correlationId()
                 .location(33, 7, "concord.yml")
                 .flow("default")
                 .description("Flow call: returnFlow"));
 
         // return
         assertEvent(events, 13, new EventData()
+                .correlationId()
                 .location(38, 7, "concord.yml")
                 .flow("returnFlow")
                 .description("Return"));
 
         // flow call
         assertEvent(events, 14, new EventData()
+                .correlationId()
                 .location(35, 7, "concord.yml")
                 .flow("default")
                 .description("Flow call: exitFlow"));
 
         // exit
         assertEvent(events, 15, new EventData()
+                .correlationId()
                 .location(41, 7, "concord.yml")
                 .flow("exitFlow")
                 .description("Exit"));

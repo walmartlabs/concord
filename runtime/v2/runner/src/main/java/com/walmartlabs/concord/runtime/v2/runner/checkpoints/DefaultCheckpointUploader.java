@@ -48,9 +48,10 @@ public class DefaultCheckpointUploader implements CheckpointUploader {
     }
 
     @Override
-    public void upload(UUID checkpointId, String name, Path path) throws Exception {
+    public void upload(UUID checkpointId, UUID correlationId, String name, Path path) throws Exception {
         Map<String, Object> data = new HashMap<>();
         data.put("id", checkpointId);
+        data.put("correlationId", correlationId);
         data.put("name", name);
         data.put("data", path);
 

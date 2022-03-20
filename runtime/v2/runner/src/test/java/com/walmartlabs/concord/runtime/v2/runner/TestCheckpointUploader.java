@@ -37,7 +37,7 @@ public class TestCheckpointUploader implements CheckpointUploader {
     private final Map<String, Path> checkpoints = new ConcurrentHashMap<>();
 
     @Override
-    public void upload(UUID checkpointId, String name, Path archivePath) throws Exception {
+    public void upload(UUID checkpointId, UUID correlationId, String name, Path archivePath) throws Exception {
         Path tmpFile = IOUtils.createTempDir("unittests").resolve(archivePath.getFileName());
         Files.move(archivePath, tmpFile);
         checkpoints.put(name, tmpFile);
