@@ -9,6 +9,8 @@
 
 ### Changed
 
+- runtime-v2: fix `currentFlowName()` in error blocks
+([#591](https://github.com/walmartlabs/concord/pull/591));
 - runtime-v2: serialize ignoreErrors only if it is true
 ([#588](https://github.com/walmartlabs/concord/pull/588));
 - resource-task: convert relative paths to absolute
