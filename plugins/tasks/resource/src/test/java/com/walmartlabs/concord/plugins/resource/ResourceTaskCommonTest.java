@@ -82,10 +82,9 @@ public class ResourceTaskCommonTest {
         ResourceTaskCommon rsc = new ResourceTaskCommon(workDir,
                 (prefix, suffix) -> createTempFile(workDir, prefix, suffix), null);
 
-        Object obj = rsc.asProperties(resource("test.properties").toString());
+        Map<String, Object> result = rsc.asProperties(resource("test.properties").toString());
 
-        assertTrue(obj instanceof Properties);
-        assertEquals("value2", ((Properties) obj).getProperty("param2"));
+        assertEquals("value2", result.get("param2"));
     }
 
     private static void assertValidYaml(String s) throws IOException {
