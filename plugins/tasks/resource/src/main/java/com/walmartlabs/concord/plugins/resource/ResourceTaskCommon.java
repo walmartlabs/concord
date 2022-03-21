@@ -34,6 +34,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
+import java.util.Properties;
 
 public class ResourceTaskCommon {
 
@@ -64,6 +65,23 @@ public class ResourceTaskCommon {
     public Object asJson(String path, boolean eval) throws IOException {
         try (InputStream in = Files.newInputStream(normalizePath(path))) {
             Object result = createObjectMapper().readValue(in, Object.class);
+            if (eval) {
+                return evaluator.eval(result);
+            } else {
+                return result;
+            }
+        }
+    }
+
+    public Object asProperties(String path) throws IOException {
+        return asProperties(path, false);
+    }
+
+    public Object asProperties(String path, boolean eval) throws IOException {
+        try (InputStream in = Files.newInputStream(normalizePath(path))) {
+            Properties result = new Properties();
+            result.load(in);
+
             if (eval) {
                 return evaluator.eval(result);
             } else {

@@ -26,14 +26,16 @@ import com.walmartlabs.concord.sdk.Constants;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.OffsetDateTime;
 import java.util.*;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class ResourceTaskCommonTest {
 
@@ -73,6 +75,19 @@ public class ResourceTaskCommonTest {
         assertEquals(2, l.get(1));
     }
 
+    @Test
+    public void testAsProperties() throws Exception {
+        Path workDir = Paths.get(System.getProperty("user.dir"));
+
+        ResourceTaskCommon rsc = new ResourceTaskCommon(workDir,
+                (prefix, suffix) -> createTempFile(workDir, prefix, suffix), null);
+
+        Object obj = rsc.asProperties(resource("test.properties").toString());
+
+        assertTrue(obj instanceof Properties);
+        assertEquals("value2", ((Properties) obj).getProperty("param2"));
+    }
+
     private static void assertValidYaml(String s) throws IOException {
         new ObjectMapper(new YAMLFactory()).readValue(s, Object.class);
     }
@@ -89,5 +104,11 @@ public class ResourceTaskCommonTest {
         }
 
         return p;
+    }
+
+    private static Path resource(String name) throws URISyntaxException {
+        URL url = ResourceTaskCommonTest.class.getResource(name);
+        assertNotNull(url, "can't find '" + name + "'");
+        return Paths.get(url.toURI());
     }
 }
