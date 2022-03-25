@@ -9,6 +9,8 @@
 
 ### Changed
 
+- runner: exit JVM on OOM error
+([#594](https://github.com/walmartlabs/concord/pull/594));
 - runtime-v2: fix `currentFlowName()` in error blocks
 ([#591](https://github.com/walmartlabs/concord/pull/591));
 - runtime-v2: serialize ignoreErrors only if it is true
