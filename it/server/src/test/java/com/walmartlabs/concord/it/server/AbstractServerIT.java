@@ -177,8 +177,12 @@ public abstract class AbstractServerIT {
 
     @SuppressWarnings("unchecked")
     protected Map<String, Object> fromJson(File f) throws IOException {
+        return fromJson(f, Map.class);
+    }
+
+    protected <T> T fromJson(File f, Class<T> classOfT) throws IOException {
         try (Reader r = new FileReader(f)) {
-            return getApiClient().getJSON().getGson().fromJson(r, Map.class);
+            return getApiClient().getJSON().getGson().fromJson(r, classOfT);
         }
     }
 
