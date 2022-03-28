@@ -124,7 +124,7 @@ public class AttachmentRbacIT extends AbstractServerIT {
         log.info("The initiator shall be able to list attachments");
         List<String> attachments = processApi.listAttachments(spr.getInstanceId());
         assertNotNull(attachments, "Attachments shall not be null for initiator");
-        assertSame(1, attachments.size(), "Attachment size shall be 1 for initiator");
+        assertSame(2, attachments.size(), "Attachment size shall be 2 for initiator");
 
         File file = processApi.downloadAttachment(spr.getInstanceId(), attachments.get(0));
         assertNotNull(file, "File object shall not be null for initiator");
@@ -154,7 +154,7 @@ public class AttachmentRbacIT extends AbstractServerIT {
         resetApiKey();
         attachments = processApi.listAttachments(spr.getInstanceId());
         assertNotNull(attachments, "Attachments shall not be null for admin");
-        assertSame(1, attachments.size(), "Attachment size shall be 1 for admin");
+        assertSame(2, attachments.size(), "Attachment size shall be 2 for admin");
 
         file = processApi.downloadAttachment(spr.getInstanceId(), attachments.get(0));
         assertNotNull(file, "File object shall not be null for admin");
@@ -187,8 +187,8 @@ public class AttachmentRbacIT extends AbstractServerIT {
 
         attachments = processApi.listAttachments(spr.getInstanceId());
         assertNotNull(attachments, "Attachments shall not be null for non-admin who is a owner");
-        assertSame(1, attachments.size(),
-                "Attachment size shall be 1 for non-admin who is a owner");
+        assertSame(2, attachments.size(),
+                "Attachment size shall be 2 for non-admin who is a owner");
 
         file = processApi.downloadAttachment(spr.getInstanceId(), attachments.get(0));
         assertNotNull(file, "File object shall not be null for non-admin who is a owner");
