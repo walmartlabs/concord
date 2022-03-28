@@ -37,7 +37,9 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.nio.file.StandardOpenOption;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import static com.walmartlabs.concord.plugins.ansible.ArgUtils.getListAsString;
@@ -141,6 +143,7 @@ public class AnsibleTask {
             log.debug("execution -> done, code {}", code);
 
             updateAnsibleStats(workDir, code);
+            updateAnsibleStatsV2(workDir, code);
 
             Map<String, Object> result = outVarsProcessor.process();
 
@@ -197,6 +200,7 @@ public class AnsibleTask {
     }
 
     @SuppressWarnings("unchecked")
+    @Deprecated
     private static void updateAnsibleStats(Path workDir, int code) throws IOException {
         Path p = workDir.resolve(Constants.Files.JOB_ATTACHMENTS_DIR_NAME)
                 .resolve(TaskParams.STATS_FILE_NAME.getKey());
@@ -217,6 +221,35 @@ public class AnsibleTask {
 
         try (OutputStream out = Files.newOutputStream(p, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING)) {
             om.writeValue(out, m);
+        }
+    }
+
+    @SuppressWarnings("unchecked")
+    private static void updateAnsibleStatsV2(Path workDir, int code) throws IOException {
+        Path p = workDir.resolve(Constants.Files.JOB_ATTACHMENTS_DIR_NAME)
+                .resolve("ansible_stats_v2.json");
+        if (!Files.exists(p)) {
+            return;
+        }
+
+        ObjectMapper om = new ObjectMapper()
+                .enable(SerializationFeature.INDENT_OUTPUT);
+
+        List<Map<String, Object>> stats = new ArrayList<>();
+        try (InputStream in = Files.newInputStream(p)) {
+            stats.addAll(om.readValue(in, List.class));
+        }
+
+        if (stats.isEmpty()) {
+            return;
+        }
+
+        Map<String, Object> currentStats = new HashMap<>(stats.get(stats.size() - 1));
+        currentStats.put(TaskParams.EXIT_CODE_KEY.getKey(), code);
+        stats.set(stats.size() - 1, currentStats);
+
+        try (OutputStream out = Files.newOutputStream(p, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING)) {
+            om.writeValue(out, stats);
         }
     }
 
