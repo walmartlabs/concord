@@ -796,7 +796,7 @@ public class YamlErrorParserTest extends AbstractParserTest {
     @Test
     public void test215() throws Exception {
         String msg =
-                "(015.yml): Error @ line: 15, col: 14. Unknown options: ['trash' [STRING] @ line: 15, col: 14], expected: [error, ignoreErrors, in, meta, name, out, parallelWithItems, retry, withItems]. Remove invalid options and/or fix indentation\n" +
+                "(015.yml): Error @ line: 15, col: 14. Unknown options: ['trash' [STRING] @ line: 15, col: 14], expected: [error, ignoreErrors, in, loop, meta, name, out, parallelWithItems, retry, withItems]. Remove invalid options and/or fix indentation\n" +
                         "\twhile processing steps:\n" +
                         "\t'task' @ line: 3, col: 7\n" +
                         "\t\t'main' @ line: 2, col: 3\n" +
@@ -855,6 +855,34 @@ public class YamlErrorParserTest extends AbstractParserTest {
                         "\t\t\t'flows' @ line: 1, col: 1";
 
         assertErrorMessage("errors/tasks/019.yml", msg);
+    }
+
+    @Test
+    public void test220() throws Exception {
+        String msg =
+                "(020.yml): Error @ line: 7, col: 15. Invalid value: trash, expected: [SERIAL, PARALLEL]\n" +
+                        "\twhile processing steps:\n" +
+                        "\t'mode' @ line: 7, col: 9\n" +
+                        "\t\t'loop' @ line: 5, col: 7\n" +
+                        "\t\t\t'task' @ line: 4, col: 7\n" +
+                        "\t\t\t\t'main' @ line: 2, col: 3\n" +
+                        "\t\t\t\t\t'flows' @ line: 1, col: 1";
+
+        assertErrorMessage("errors/tasks/020.yml", msg);
+    }
+
+    @Test
+    public void test221() throws Exception {
+        String msg =
+                "(021.yml): Error @ line: 7, col: 22. Invalid value type, expected: INT, got: STRING\n" +
+                        "\twhile processing steps:\n" +
+                        "\t'parallelism' @ line: 7, col: 9\n" +
+                        "\t\t'loop' @ line: 5, col: 7\n" +
+                        "\t\t\t'task' @ line: 4, col: 7\n" +
+                        "\t\t\t\t'main' @ line: 2, col: 3\n" +
+                        "\t\t\t\t\t'flows' @ line: 1, col: 1";
+
+        assertErrorMessage("errors/tasks/021.yml", msg);
     }
 
     @Test
@@ -1043,7 +1071,7 @@ public class YamlErrorParserTest extends AbstractParserTest {
     @Test
     public void test315() throws Exception {
         String msg =
-                "(015.yml): Error @ line: 15, col: 14. Unknown options: ['trash' [STRING] @ line: 15, col: 14], expected: [error, in, meta, name, out, parallelWithItems, retry, withItems]. Remove invalid options and/or fix indentation\n" +
+                "(015.yml): Error @ line: 15, col: 14. Unknown options: ['trash' [STRING] @ line: 15, col: 14], expected: [error, in, loop, meta, name, out, parallelWithItems, retry, withItems]. Remove invalid options and/or fix indentation\n" +
                         "\twhile processing steps:\n" +
                         "\t'call' @ line: 3, col: 7\n" +
                         "\t\t'main' @ line: 2, col: 3\n" +
@@ -1332,7 +1360,7 @@ public class YamlErrorParserTest extends AbstractParserTest {
     @Test
     public void test703() throws Exception {
         String msg =
-                "(003.yml): Error @ line: 5, col: 13. Unknown options: ['trash' [NULL] @ line: 5, col: 13], expected: [error, meta, name, out, parallelWithItems, withItems]. Remove invalid options and/or fix indentation\n" +
+                "(003.yml): Error @ line: 5, col: 13. Unknown options: ['trash' [NULL] @ line: 5, col: 13], expected: [error, loop, meta, name, out, parallelWithItems, withItems]. Remove invalid options and/or fix indentation\n" +
                         "\twhile processing steps:\n" +
                         "\t'try' @ line: 3, col: 7\n" +
                         "\t\t'main' @ line: 2, col: 3\n" +
@@ -1383,7 +1411,7 @@ public class YamlErrorParserTest extends AbstractParserTest {
     @Test
     public void test707() throws Exception {
         String msg =
-                "(007.yml): Error @ line: 11, col: 13. Unknown options: ['trash' [NULL] @ line: 11, col: 13], expected: [error, meta, name, out, parallelWithItems, withItems]. Remove invalid options and/or fix indentation\n" +
+                "(007.yml): Error @ line: 11, col: 13. Unknown options: ['trash' [NULL] @ line: 11, col: 13], expected: [error, loop, meta, name, out, parallelWithItems, withItems]. Remove invalid options and/or fix indentation\n" +
                         "\twhile processing steps:\n" +
                         "\t'try' @ line: 3, col: 7\n" +
                         "\t\t'main' @ line: 2, col: 3\n" +
@@ -1881,7 +1909,7 @@ public class YamlErrorParserTest extends AbstractParserTest {
     @Test
     public void test1306() throws Exception {
         String msg =
-                "(006.yml): Error @ line: 8, col: 9. Unknown options: ['trash' [NULL] @ line: 8, col: 9], expected: [activeProfiles, arguments, debug, dependencies, entryPoint, events, exclusive, meta, out, processTimeout, requirements, runtime, suspendTimeout, template]. Remove invalid options and/or fix indentation\n" +
+                "(006.yml): Error @ line: 8, col: 9. Unknown options: ['trash' [NULL] @ line: 8, col: 9], expected: [activeProfiles, arguments, debug, dependencies, entryPoint, events, exclusive, meta, out, parallelLoopParallelism, processTimeout, requirements, runtime, suspendTimeout, template]. Remove invalid options and/or fix indentation\n" +
                         "\twhile processing steps:\n" +
                         "\t'configuration' @ line: 1, col: 1";
 
@@ -2257,7 +2285,7 @@ public class YamlErrorParserTest extends AbstractParserTest {
 
     @Test
     public void test1702() throws Exception {
-        String msg = "(002.yml): Error @ line: 4, col: 14. Unknown options: ['body1' [STRING] @ line: 4, col: 14], expected: [body, error, in, meta, name, out, parallelWithItems, retry, withItems]. Remove invalid options and/or fix indentation\n" +
+        String msg = "(002.yml): Error @ line: 4, col: 14. Unknown options: ['body1' [STRING] @ line: 4, col: 14], expected: [body, error, in, loop, meta, name, out, parallelWithItems, retry, withItems]. Remove invalid options and/or fix indentation\n" +
                 "\twhile processing steps:\n" +
                 "\t'script' @ line: 3, col: 7\n" +
                 "\t\t'main' @ line: 2, col: 3\n" +

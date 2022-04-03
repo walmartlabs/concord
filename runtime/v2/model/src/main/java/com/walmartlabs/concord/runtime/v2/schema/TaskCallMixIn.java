@@ -41,11 +41,8 @@ public interface TaskCallMixIn extends NamedStep {
     @JsonSchemaInject(json = "{\"oneOf\": [ {\"type\": \"string\"}, {\"type\": \"object\"} ]}", merge = false)
     Object out();
 
-    @JsonProperty("withItems")
-    WithItemsMixIn withItems();
-
-    @JsonProperty("parallelWithItems")
-    WithItemsMixIn parallelWithItems();
+    @JsonProperty("loop")
+    LoopMixIn loop();
 
     @JsonProperty("retry")
     RetryMixIn retry();

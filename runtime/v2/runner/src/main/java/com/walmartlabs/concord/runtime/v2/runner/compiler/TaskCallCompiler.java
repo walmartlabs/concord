@@ -21,10 +21,7 @@ package com.walmartlabs.concord.runtime.v2.runner.compiler;
  */
 
 import com.walmartlabs.concord.runtime.v2.model.*;
-import com.walmartlabs.concord.runtime.v2.runner.vm.ErrorWrapper;
-import com.walmartlabs.concord.runtime.v2.runner.vm.RetryWrapper;
-import com.walmartlabs.concord.runtime.v2.runner.vm.TaskCallCommand;
-import com.walmartlabs.concord.runtime.v2.runner.vm.WithItemsWrapper;
+import com.walmartlabs.concord.runtime.v2.runner.vm.*;
 import com.walmartlabs.concord.svm.Command;
 
 import javax.inject.Named;
@@ -59,6 +56,15 @@ public final class TaskCallCompiler implements StepCompiler<TaskCall> {
                 out = Collections.singletonList(options.out());
             }
             cmd = WithItemsWrapper.of(cmd, withItems, out, options.outExpr());
+        }
+
+        Loop loop = options.loop();
+        if (loop != null) {
+            Collection<String> out = Collections.emptyList();
+            if (options.out() != null) {
+                out = Collections.singletonList(options.out());
+            }
+            cmd = LoopWrapper.of(context, cmd, loop, out, options.outExpr());
         }
 
         List<Step> errorSteps = options.errorSteps();

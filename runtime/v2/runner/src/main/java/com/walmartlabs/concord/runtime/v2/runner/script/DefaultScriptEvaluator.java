@@ -9,9 +9,9 @@ package com.walmartlabs.concord.runtime.v2.runner.script;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -71,7 +71,7 @@ public class DefaultScriptEvaluator implements ScriptEvaluator {
 
         ScriptResult scriptResult = new ScriptResult();
         ScriptContext ctx = new ScriptContext(context);
-        for (String ctxVar: CONTEXT_VARIABLE_NAMES) {
+        for (String ctxVar : CONTEXT_VARIABLE_NAMES) {
             b.put(ctxVar, ctx);
         }
         b.put("tasks", new TaskAccessor(taskProviders, ctx));
@@ -97,7 +97,7 @@ public class DefaultScriptEvaluator implements ScriptEvaluator {
     public String getLanguage(String languageOrExtension) {
         for (ScriptEngineFactory factory : scriptEngineManager.getEngineFactories()) {
             try {
-                if (listOrEmpty(factory.getNames()).contains(languageOrExtension))  {
+                if (listOrEmpty(factory.getNames()).contains(languageOrExtension)) {
                     return factory.getLanguageName();
                 }
             } catch (Exception exp) {
@@ -117,46 +117,28 @@ public class DefaultScriptEvaluator implements ScriptEvaluator {
 
     @SuppressWarnings({"rawtypes", "unchecked"})
     private ScriptEngine getEngine(String language) {
+        ScriptEngine engine;
         if (new GraalJSEngineFactory().getNames().contains(language)) {
             // Javascript array is converted in Java to an empty map #214 (https://github.com/oracle/graaljs/issues/214)
             HostAccess access = HostAccess.newBuilder(HostAccess.ALL)
                     .targetTypeMapping(Value.class, Object.class, Value::hasArrayElements, v -> new LinkedList<>(v.as(List.class))).build();
 
-            ScriptEngine engine = GraalJSScriptEngine.create(Engine.newBuilder()
+            engine = GraalJSScriptEngine.create(Engine.newBuilder()
                             .allowExperimentalOptions(true)
                             .option("engine.WarnInterpreterOnly", "false")
                             .option("js.nashorn-compat", "true")
                             .build(),
                     org.graalvm.polyglot.Context.newBuilder("js")
                             .allowHostAccess(access));
-
-            engine.getContext().setWriter(new BufferedWriter(new Writer() {
-
-                @Override
-                public void write(char[] cbuf, int off, int len) {
-                    if (len == 0) {
-                        return;
-                    }
-
-                    int l = cbuf[len - 1] == '\n' ? len - 1 : len;
-                    log.info("{}", new String(cbuf, off, l));
-                }
-
-                @Override
-                public void flush() {
-                    //do nothing
-                }
-
-                @Override
-                public void close() {
-                    // do nothing
-                }
-            }));
-
-            return engine;
+        } else {
+            engine = scriptEngineManager.getEngineByName(language);
         }
 
-        return scriptEngineManager.getEngineByName(language);
+        if (engine != null) {
+            engine.getContext().setWriter(new BufferedWriter(new LogWriter()));
+        }
+
+        return engine;
     }
 
     private static List<String> listOrEmpty(List<String> items) {
@@ -178,6 +160,29 @@ public class DefaultScriptEvaluator implements ScriptEvaluator {
 
         public Object get(String key) {
             return tasks.createTask(context, key);
+        }
+    }
+
+    private static class LogWriter extends Writer {
+
+        @Override
+        public void write(char[] cbuf, int off, int len) {
+            if (len == 0) {
+                return;
+            }
+
+            int l = cbuf[len - 1] == '\n' ? len - 1 : len;
+            log.info("{}", new String(cbuf, off, l));
+        }
+
+        @Override
+        public void flush() {
+            //do nothing
+        }
+
+        @Override
+        public void close() {
+            // do nothing
         }
     }
 }

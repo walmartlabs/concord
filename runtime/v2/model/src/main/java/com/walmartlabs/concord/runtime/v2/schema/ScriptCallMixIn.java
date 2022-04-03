@@ -25,7 +25,6 @@ import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.kjetland.jackson.jsonSchema.annotations.JsonSchemaInject;
 import com.kjetland.jackson.jsonSchema.annotations.JsonSchemaTitle;
 
-import java.io.Serializable;
 import java.util.List;
 import java.util.Map;
 
@@ -47,11 +46,8 @@ public interface ScriptCallMixIn extends StepMixIn {
     @JsonSchemaInject(json = "{\"oneOf\": [ {\"type\": \"string\"}, {\"type\": \"object\"} ]}", merge = false)
     Object out();
 
-    @JsonProperty("withItems")
-    WithItemsMixIn withItems();
-
-    @JsonProperty("parallelWithItems")
-    WithItemsMixIn parallelWithItems();
+    @JsonProperty("loop")
+    LoopMixIn loop();
 
     @JsonProperty("retry")
     RetryMixIn retry();

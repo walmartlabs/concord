@@ -36,6 +36,10 @@ import java.io.Serializable;
 import java.util.*;
 import java.util.stream.Collectors;
 
+/**
+ * @deprecated use {@link com.walmartlabs.concord.runtime.v2.runner.vm.LoopWrapper}
+ */
+@Deprecated
 public abstract class WithItemsWrapper implements Command {
 
     public static WithItemsWrapper of(Command cmd, WithItems withItems, Collection<String> outVariables, Map<String, Serializable> outExpressions) {

@@ -3,6 +3,11 @@ out: "out"
 withItems:
 - "item1"
 - "item2"
+loop:
+  mode: "serial"
+  items:
+  - "item1"
+  - "item2"
 retry:
   times: "${times}"
   delay: "${delay}"
@@ -16,4 +21,3 @@ error:
 meta:
   meta-1: "v1"
   meta-2: "v2"
-ignoreErrors: false
