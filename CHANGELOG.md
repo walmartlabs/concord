@@ -5,7 +5,9 @@
 ### Added
 
 - runtime-v1, v2: add correlationId to checkpoint events
-([#581](https://github.com/walmartlabs/concord/pull/581)).
+([#581](https://github.com/walmartlabs/concord/pull/581));
+- resource-tasks, runtime-v2: support for properties
+files ([#593](https://github.com/walmartlabs/concord/pull/593)).
 
 ### Changed
 
