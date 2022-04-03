@@ -46,6 +46,8 @@
             <artifactId>http-tasks</artifactId>
             <version>${project.version}</version>
         </dependency>
+
+        <!-- dependency tree fix for mvnd -->
         <dependency>
             <groupId>com.walmartlabs.concord</groupId>
             <artifactId>concord-agent</artifactId>

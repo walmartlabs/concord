@@ -32,6 +32,8 @@
                 </exclusion>
             </exclusions>
         </dependency>
+
+        <!-- dependency tree fix for mvnd -->
         <dependency>
             <groupId>com.walmartlabs.concord.server</groupId>
             <artifactId>concord-server</artifactId>

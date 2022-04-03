@@ -155,7 +155,7 @@
             <scope>test</scope>
         </dependency>
 
-        <!-- for mvnd dependencies order -->
+        <!-- dependency tree fix for mvnd -->
         <dependency>
             <groupId>com.walmartlabs.concord.runtime.v1</groupId>
             <artifactId>concord-runtime-impl-v1</artifactId>
