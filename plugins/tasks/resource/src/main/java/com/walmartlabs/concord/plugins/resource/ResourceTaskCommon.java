@@ -34,6 +34,9 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Properties;
 
 public class ResourceTaskCommon {
 
@@ -66,6 +69,29 @@ public class ResourceTaskCommon {
             Object result = createObjectMapper().readValue(in, Object.class);
             if (eval) {
                 return evaluator.eval(result);
+            } else {
+                return result;
+            }
+        }
+    }
+
+    public Map<String, Object> asProperties(String path) throws IOException {
+        return asProperties(path, false);
+    }
+
+    @SuppressWarnings("unchecked")
+    public Map<String, Object> asProperties(String path, boolean eval) throws IOException {
+        try (InputStream in = Files.newInputStream(normalizePath(path))) {
+            Properties props = new Properties();
+            props.load(in);
+
+            HashMap<String, Object> result = new HashMap<>();
+            for (final String name: props.stringPropertyNames()) {
+                result.put(name, props.getProperty(name));
+            }
+
+            if (eval) {
+                return (Map<String, Object>) evaluator.eval(result);
             } else {
                 return result;
             }

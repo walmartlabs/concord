@@ -27,6 +27,7 @@ import com.walmartlabs.concord.runtime.v2.sdk.Task;
 import javax.inject.Inject;
 import javax.inject.Named;
 import java.io.IOException;
+import java.util.Map;
 
 @Named("resource")
 @SuppressWarnings("unused")
@@ -49,6 +50,14 @@ public class ResourceTaskV2 implements Task {
 
     public Object asJson(String path, boolean eval) throws IOException {
         return delegate.asJson(path, eval);
+    }
+
+    public Map<String, Object> asProperties(String path) throws IOException {
+        return delegate.asProperties(path);
+    }
+
+    public Map<String, Object> asProperties(String path, boolean eval) throws IOException {
+        return delegate.asProperties(path, eval);
     }
 
     public Object fromJsonString(String jsonString) throws IOException {
