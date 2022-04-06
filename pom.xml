@@ -193,6 +193,9 @@
                     <groupId>io.fabric8</groupId>
                     <artifactId>docker-maven-plugin</artifactId>
                     <version>${docker.plugin.version}</version>
+                    <configuration>
+                        <containerNamePattern>%e</containerNamePattern>
+                    </configuration>
                 </plugin>
                 <plugin>
                     <groupId>org.jooq</groupId>
