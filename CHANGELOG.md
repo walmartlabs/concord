@@ -11,6 +11,8 @@ files ([#593](https://github.com/walmartlabs/concord/pull/593)).
 
 ### Changed
 
+- project: improve mvnd support
+([#567](https://github.com/walmartlabs/concord/pull/567));
 - runner: exit JVM on OOM error
 ([#594](https://github.com/walmartlabs/concord/pull/594));
 - runtime-v2: fix `currentFlowName()` in error blocks
