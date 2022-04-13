@@ -153,7 +153,7 @@ public class DockerIT extends AbstractServerIT {
         assertLogAtLeast(".*Error pulling the image.*", 2, ab);
     }
 
-    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    @Test
     public void testDockerLogCaptureLimit() throws Exception {
         byte[] payload = archive(DockerIT.class.getResource("dockerCaptureLimit").toURI());
 
@@ -171,7 +171,7 @@ public class DockerIT extends AbstractServerIT {
         assertLog(".*stderr loop 10000.*", ab);
     }
 
-    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    @Test
     public void testDockerLogCaptureLimitV2() throws Exception {
         byte[] payload = archive(DockerIT.class.getResource("dockerCaptureLimitV2").toURI());
 
