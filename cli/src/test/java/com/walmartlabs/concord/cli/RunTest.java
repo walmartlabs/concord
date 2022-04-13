@@ -22,14 +22,13 @@ package com.walmartlabs.concord.cli;
 
 import com.walmartlabs.concord.common.IOUtils;
 import com.walmartlabs.concord.common.TemporaryPath;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import picocli.CommandLine;
 
 import java.io.*;
 import java.net.URI;
-import java.net.URISyntaxException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
@@ -37,8 +36,8 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.fail;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.fail;
 
 public class RunTest {
 
@@ -47,7 +46,7 @@ public class RunTest {
     private final ByteArrayOutputStream out = new ByteArrayOutputStream();
     private final ByteArrayOutputStream err = new ByteArrayOutputStream();
 
-    @Before
+    @BeforeEach
     public void setUpStreams() {
         out.reset();
         err.reset();
@@ -55,7 +54,7 @@ public class RunTest {
         System.setErr(new PrintStream(err));
     }
 
-    @After
+    @AfterEach
     public void restoreStreams() {
         System.setOut(originalOut);
         System.setErr(originalErr);
@@ -66,6 +65,13 @@ public class RunTest {
         int exitCode = run("simple", Collections.singletonMap("name", "Concord"));
         assertEquals(0, exitCode);
         assertLog(".*Hello, Concord.*");
+    }
+
+    @Test
+    public void testResourceTask() throws Exception {
+        int exitCode = run("resourceTask", Collections.emptyMap());
+        assertEquals(0, exitCode);
+        assertLog(".*\"k\" : \"v\".*");
     }
 
     private static int run(String payload, Map<String, Object> extraVars) throws Exception {

@@ -38,13 +38,14 @@ public final class YamlValueType<T> {
     public static final YamlValueType<Float> FLOAT = type("FLOAT");
     public static final YamlValueType<Boolean> BOOLEAN = type("BOOLEAN");
     public static final YamlValueType<String> STRING = type("STRING");
+    public static final YamlValueType<String> NON_EMPTY_STRING = type("NON_EMPTY_STRING");
     public static final YamlValueType<String> PATTERN = type("PATTERN");
     public static final YamlValueType<Object> NULL = type("NULL");
     public static final YamlValueType<List<Serializable>> ARRAY = array("ARRAY", null);
     public static final YamlValueType<List<String>> ARRAY_OF_PATTERN = array("ARRAY_OF_PATTERN", PATTERN);
     public static final YamlValueType<List<String>> ARRAY_OF_STRING = array("ARRAY_OF_STRING", STRING);
     public static final YamlValueType<Map<String, Serializable>> OBJECT = map("OBJECT");
-    public static final YamlValueType<Object> PATTERN_OR_ARRAY = type("PATTERN_OR_ARRAY");
+    public static final YamlValueType<Object> REGEXP_OR_ARRAY = type("REGEXP_OR_ARRAY");
     public static final YamlValueType<Duration> DURATION = type("ISO 8601 DURATION");
     public static final YamlValueType<String> TIMEZONE = type("TIMEZONE");
     public static final YamlValueType<Object> STRING_OR_ARRAY = type("STRING_OR_ARRAY");
@@ -53,6 +54,7 @@ public final class YamlValueType<T> {
     public static final YamlValueType<SuspendStep> SUSPEND = type("SUSPEND");
     public static final YamlValueType<ScriptCall> SCRIPT = type("SCRIPT");
     public static final YamlValueType<ImmutableScriptCallOptions.Builder> SCRIPT_CALL_IN = type("OBJECT or EXPRESSION");
+    public static final YamlValueType<ImmutableScriptCallOptions.Builder> SCRIPT_CALL_OUT = type("STRING or OBJECT");
     public static final YamlValueType<Expression> EXPRESSION = type("EXPRESSION");
     public static final YamlValueType<String> EXPRESSION_VAL = type("EXPRESSION");
     public static final YamlValueType<Retry> RETRY = type("RETRY");
@@ -96,6 +98,7 @@ public final class YamlValueType<T> {
     public static final YamlValueType<IfStep> IF = type("IF");
     public static final YamlValueType<SwitchStep> SWITCH = type("SWITCH");
     public static final YamlValueType<Resources> RESOURCES = type("RESOURCES");
+    public static final YamlValueType<Map<String, Object>> RUN_AS = type("RUN_AS");
     public static final YamlValueType<ExclusiveMode> EXCLUSIVE_MODE = type("EXCLUSIVE_MODE");
     public static final YamlValueType<EventConfiguration> EVENTS_CFG = type("EVENTS_CONFIGURATION");
     public static final YamlValueType<ImmutableTaskCallOptions.Builder> TASK_CALL_IN = type("OBJECT or EXPRESSION");
@@ -105,6 +108,7 @@ public final class YamlValueType<T> {
     public static final YamlValueType<GithubTriggerExclusiveMode> GITHUB_EXCLUSIVE_MODE = type("GITHUB_EXCLUSIVE_MODE");
     public static final YamlValueType<Map<String, Object>> GITHUB_REPOSITORY_INFO = type("GITHUB_REPOSITORY_INFO");
     public static final YamlValueType<List<Map<String, Object>>> ARRAY_OF_GITHUB_REPOSITORY_INFO = array("REPOSITORY_INFO", GITHUB_REPOSITORY_INFO);
+    public static final YamlValueType<Loop> LOOP = type("LOOP");
 
     private final String name;
 

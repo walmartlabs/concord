@@ -30,8 +30,7 @@ import com.walmartlabs.concord.runtime.v2.model.WithItems;
 import java.io.IOException;
 import java.util.Objects;
 
-import static com.walmartlabs.concord.runtime.v2.serializer.SerializerUtils.writeNotEmptyObjectField;
-import static com.walmartlabs.concord.runtime.v2.serializer.SerializerUtils.writeWithItems;
+import static com.walmartlabs.concord.runtime.v2.serializer.SerializerUtils.*;
 
 public class ScriptCallStepSerializer extends StdSerializer<ScriptCall> {
 
@@ -67,10 +66,15 @@ public class ScriptCallStepSerializer extends StdSerializer<ScriptCall> {
         writeNotEmptyObjectField("in", options.input(), gen);
         writeNotEmptyObjectField("in", options.inputExpression(), gen);
 
+        writeNotEmptyObjectField("out", options.out(), gen);
+        writeNotEmptyObjectField("out", options.outExpr(), gen);
+
         if (options.withItems() != null) {
             WithItems items = Objects.requireNonNull(options.withItems());
             writeWithItems(items, gen);
         }
+
+        writeLoop(options.loop(), gen);
 
         if (options.retry() != null) {
             gen.writeObjectField("retry", options.retry());

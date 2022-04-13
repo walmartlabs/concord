@@ -11,7 +11,7 @@
 
     <groupId>com.walmartlabs.concord</groupId>
     <artifactId>parent</artifactId>
-    <version>1.92.1-SNAPSHOT</version>
+    <version>1.94.1-SNAPSHOT</version>
     <packaging>pom</packaging>
 
     <name>${project.groupId}:${project.artifactId}</name>
@@ -74,12 +74,13 @@
 
         <jdk.version>1.8.0</jdk.version>
 
-        <docker.plugin.version>0.30.0</docker.plugin.version>
+        <docker.plugin.version>0.38.1</docker.plugin.version>
         <jooq.version>3.13.4</jooq.version>
-        <liquibase.version>3.5.1
-        </liquibase.version> <!-- the newer versions (up to 3.5.3) have incorrect mappings for PG's blob/bytea -->
+        <junit.version>5.8.2</junit.version>
+        <liquibase.version>3.5.1</liquibase.version> <!-- the newer versions (up to 3.5.3) have incorrect mappings for PG's blob/bytea -->
         <maven.dependency.plugin.version>3.1.2</maven.dependency.plugin.version>
-        <node.version>14.16.0</node.version>
+        <node.version>16.13.1</node.version>
+        <frontend.plugin.version>1.12.0</frontend.plugin.version>
     </properties>
 
     <dependencyManagement>
@@ -186,12 +187,15 @@
                 <plugin>
                     <groupId>com.github.eirslett</groupId>
                     <artifactId>frontend-maven-plugin</artifactId>
-                    <version>1.4</version>
+                    <version>${frontend.plugin.version}</version>
                 </plugin>
                 <plugin>
                     <groupId>io.fabric8</groupId>
                     <artifactId>docker-maven-plugin</artifactId>
                     <version>${docker.plugin.version}</version>
+                    <configuration>
+                        <containerNamePattern>%e</containerNamePattern>
+                    </configuration>
                 </plugin>
                 <plugin>
                     <groupId>org.jooq</groupId>
@@ -227,7 +231,22 @@
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-failsafe-plugin</artifactId>
-                    <version>2.21.0</version>
+                    <version>3.0.0-M5</version>
+                    <dependencies>
+                        <dependency>
+                            <groupId>org.junit.jupiter</groupId>
+                            <artifactId>junit-jupiter-engine</artifactId>
+                            <version>${junit.version}</version>
+                        </dependency>
+                    </dependencies>
+                    <configuration>
+                        <includes>
+                            <include>**/IT*.java</include>
+                            <include>**/*IT.java</include>
+                            <include>**/*ITCase.java</include>
+                            <include>**/Test*.java</include>
+                        </includes>
+                    </configuration>
                     <executions>
                         <execution>
                             <goals>
@@ -236,16 +255,16 @@
                             </goals>
                         </execution>
                     </executions>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-surefire-plugin</artifactId>
+                    <version>3.0.0-M5</version>
                     <dependencies>
                         <dependency>
-                            <groupId>org.apache.maven.surefire</groupId>
-                            <artifactId>surefire-logger-api</artifactId>
-                            <version>2.21.0</version>
-                        </dependency>
-                        <dependency>
-                            <groupId>org.apache.maven.surefire</groupId>
-                            <artifactId>surefire-junit47</artifactId>
-                            <version>2.21.0</version>
+                            <groupId>org.junit.jupiter</groupId>
+                            <artifactId>junit-jupiter-engine</artifactId>
+                            <version>${junit.version}</version>
                         </dependency>
                     </dependencies>
                 </plugin>
@@ -277,7 +296,7 @@
                         <dependency>
                             <groupId>org.apache.commons</groupId>
                             <artifactId>commons-lang3</artifactId>
-                            <version>3.6</version>
+                            <version>3.12.0</version>
                         </dependency>
                         <dependency>
                             <groupId>org.reflections</groupId>
@@ -342,12 +361,12 @@
                 <plugin>
                     <groupId>org.revapi</groupId>
                     <artifactId>revapi-maven-plugin</artifactId>
-                    <version>0.11.1</version>
+                    <version>0.14.6</version>
                     <dependencies>
                         <dependency>
                             <groupId>org.revapi</groupId>
                             <artifactId>revapi-java</artifactId>
-                            <version>0.19.1</version>
+                            <version>0.26.1</version>
                         </dependency>
                     </dependencies>
                     <executions>

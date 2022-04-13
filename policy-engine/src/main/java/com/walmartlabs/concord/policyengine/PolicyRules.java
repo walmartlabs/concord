@@ -32,6 +32,8 @@ import java.util.Optional;
 
 public class PolicyRules<E extends Serializable> implements Serializable {
 
+    private static final long serialVersionUID = 1L;
+
     private final List<E> allow;
     private final List<E> warn;
     private final List<E> deny;

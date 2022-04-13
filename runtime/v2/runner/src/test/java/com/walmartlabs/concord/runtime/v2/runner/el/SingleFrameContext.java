@@ -59,6 +59,8 @@ public class SingleFrameContext extends DummyContext {
             public State state() {
                 return new State() {
 
+                    private static final long serialVersionUID = 1L;
+
                     private final List<Frame> frames = Collections.singletonList(Frame.builder()
                             .root()
                             .locals(variables)
@@ -159,6 +161,11 @@ public class SingleFrameContext extends DummyContext {
             @Nullable
             @Override
             public Step currentStep() {
+                return null;
+            }
+
+            @Override
+            public String currentFlowName() {
                 return null;
             }
 

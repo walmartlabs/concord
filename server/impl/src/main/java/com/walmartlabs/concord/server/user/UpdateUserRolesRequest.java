@@ -28,6 +28,8 @@ import java.util.Set;
 
 public class UpdateUserRolesRequest implements Serializable {
 
+    private static final long serialVersionUID = 1L;
+
     @NotNull
     private final Set<String> roles;
 

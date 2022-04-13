@@ -9,9 +9,9 @@ package com.walmartlabs.concord.project.runtime.v2;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -26,7 +26,7 @@ import com.walmartlabs.concord.project.runtime.v2.parser.AbstractParserTest;
 import com.walmartlabs.concord.runtime.v2.ProjectSerializerV2;
 import com.walmartlabs.concord.runtime.v2.model.*;
 import com.walmartlabs.concord.runtime.v2.parser.SimpleOptions;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.io.Serializable;
 import java.net.URI;
@@ -35,8 +35,8 @@ import java.nio.file.Paths;
 import java.time.Duration;
 import java.util.*;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class ProjectSerializerV2Test extends AbstractParserTest {
 
@@ -85,6 +85,7 @@ public class ProjectSerializerV2Test extends AbstractParserTest {
                 .putInput("in-1", "v1")
                 .addOut("o1")
                 .withItems(withItems())
+                .loop(serialLoop())
                 .retry(retry())
                 .errorSteps(steps())
                 .build();
@@ -197,6 +198,7 @@ public class ProjectSerializerV2Test extends AbstractParserTest {
                 .body("print(\"Hello, \", myVar)")
                 .putInput("in", "v")
                 .withItems(withItems())
+                .loop(serialLoop())
                 .retry(retry())
                 .errorSteps(steps())
                 .meta(meta())
@@ -233,6 +235,7 @@ public class ProjectSerializerV2Test extends AbstractParserTest {
                 .putInput("msg", "BOO")
                 .out("out")
                 .withItems(withItems())
+                .loop(serialLoop())
                 .retry(retry())
                 .errorSteps(steps())
                 .meta(meta())
@@ -285,7 +288,6 @@ public class ProjectSerializerV2Test extends AbstractParserTest {
         assertResult("serializer/expressionStepOutExpr.yml", result);
     }
 
-
     @Test
     public void testProcessDefinition() throws Exception {
         Map<String, Form> forms = Collections.singletonMap("form1", Form.builder()
@@ -301,9 +303,11 @@ public class ProjectSerializerV2Test extends AbstractParserTest {
 
         Trigger trigger = Trigger.builder()
                 .name("github")
+                .location(location())
                 .putConfiguration("entryPoint", "www")
                 .putConfiguration("useInitiator", true)
                 .putConditions("type", "push")
+                .putConditions("status", Arrays.asList("opened", "reopened"))
                 .putArguments("arg", "arg-value")
                 .addActiveProfiles("p1")
                 .build();
@@ -313,7 +317,12 @@ public class ProjectSerializerV2Test extends AbstractParserTest {
                 .dest("dest")
                 .build()));
 
+        ProcessDefinitionConfiguration cfg = ProcessDefinitionConfiguration.builder()
+                .parallelLoopParallelism(123)
+                .build();
+
         ProcessDefinition pd = ProcessDefinition.builder()
+                .configuration(cfg)
                 .forms(forms)
                 .putFlows("flow1", steps())
                 .addPublicFlows("flow1")
@@ -332,7 +341,9 @@ public class ProjectSerializerV2Test extends AbstractParserTest {
     }
 
     private static Location location() {
-        return Location.builder().build();
+        return Location.builder()
+                .fileName("test.concord.yml")
+                .build();
     }
 
     private static SimpleOptions simpleOptions() {
@@ -358,6 +369,16 @@ public class ProjectSerializerV2Test extends AbstractParserTest {
         items.add("item1");
         items.add("item2");
         return WithItems.of(items, WithItems.Mode.PARALLEL);
+    }
+
+    private static Loop serialLoop() {
+        ArrayList<String> items = new ArrayList<>();
+        items.add("item1");
+        items.add("item2");
+        return Loop.builder()
+                .items(items)
+                .mode(Loop.Mode.SERIAL)
+                .build();
     }
 
     private static Retry retry() {

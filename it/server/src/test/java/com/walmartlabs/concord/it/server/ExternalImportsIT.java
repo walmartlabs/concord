@@ -24,7 +24,7 @@ import com.walmartlabs.concord.ApiException;
 import com.walmartlabs.concord.client.*;
 import com.walmartlabs.concord.common.IOUtils;
 import org.eclipse.jgit.api.Git;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.io.File;
 import java.io.IOException;
@@ -38,11 +38,11 @@ import java.util.stream.Collectors;
 
 import static com.walmartlabs.concord.it.common.ITUtils.archive;
 import static com.walmartlabs.concord.it.common.ServerClient.*;
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class ExternalImportsIT extends AbstractServerIT {
 
-    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    @Test
     public void testExternalImportWithForm() throws Exception {
         String repoUrl = initRepo("externalImportWithForm");
 
@@ -82,7 +82,7 @@ public class ExternalImportsIT extends AbstractServerIT {
         assertLog(".*Template form submitted: boo.*", ab);
     }
 
-    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    @Test
     public void testExternalImportWithDefaults() throws Exception {
         String repoUrl = initRepo("externalImport");
 
@@ -112,7 +112,7 @@ public class ExternalImportsIT extends AbstractServerIT {
         assertLog(".*Hello from Template, Concord!.*", ab);
     }
 
-    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    @Test
     public void testExternalImportWithPath() throws Exception {
         String repoUrl = initRepo("externalImportWithDir");
 
@@ -142,7 +142,7 @@ public class ExternalImportsIT extends AbstractServerIT {
         assertLog(".*Hello from Template DIR, Concord!.*", ab);
     }
 
-    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    @Test
     public void testExternalImportWithConfigurationInImport() throws Exception {
         String repoUrl = initRepo("externalImportWithConfiguration");
 
@@ -174,7 +174,7 @@ public class ExternalImportsIT extends AbstractServerIT {
 
     // payload with concord/concord.yml and import with concord/concord.yml,
     // concord.yml from import will use.
-    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    @Test
     public void testExternalImportWithConcordDirReplace() throws Exception {
         String repoUrl = initRepo("externalImport");
 
@@ -203,7 +203,7 @@ public class ExternalImportsIT extends AbstractServerIT {
         assertLog(".*Hello from Template, Concord!.*", ab);
     }
 
-    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    @Test
     public void testExternalImportWithOnFailure() throws Exception {
         String repoUrl = initRepo("externalImportFailHandler");
 
@@ -230,7 +230,7 @@ public class ExternalImportsIT extends AbstractServerIT {
         assertLog(".*oh, handled.*", ab);
     }
 
-    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    @Test
     public void testExternalImportWithForks() throws Exception {
         String repoUrl = initRepo("externalImportWithForks");
 
@@ -258,7 +258,7 @@ public class ExternalImportsIT extends AbstractServerIT {
         assertLog(".*Hello from Concord, imports!.*", cd);
     }
 
-    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    @Test
     public void testExternalImportValidation() throws Exception {
         String importRepoUrl = initRepo("externalImport");
 
@@ -287,7 +287,7 @@ public class ExternalImportsIT extends AbstractServerIT {
         assertTrue(resp.isOk());
     }
 
-    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    @Test
     public void testExternalImportWithExcludeFullDir() throws Exception {
         String repoUrl = initRepo("externalImportWithDir");
 
@@ -317,7 +317,7 @@ public class ExternalImportsIT extends AbstractServerIT {
         assertLog(".*Hello from Template, Concord!.*", ab);
     }
 
-    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    @Test
     public void testExternalImportWithExcludeFileFromDir() throws Exception {
         String repoUrl = initRepo("externalImportWithDir");
 
@@ -347,7 +347,7 @@ public class ExternalImportsIT extends AbstractServerIT {
         assertLog(".*Hello from Template, Concord!.*", ab);
     }
 
-    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    @Test
     public void testExternalImportWithExcludeFile() throws Exception {
         String repoUrl = initRepo("externalImportWithDir");
 
@@ -377,7 +377,7 @@ public class ExternalImportsIT extends AbstractServerIT {
         assertLog(".*Hello from Template DIR, Concord!.*", ab);
     }
 
-    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    @Test
     public void testImportWithTriggers() throws Exception {
         String importRepoUrl = initRepo("testTrigger");
         String clientRepoUrl = initRepo("importATrigger", "concord.yml", "{{gitUrl}}", importRepoUrl);
@@ -460,7 +460,7 @@ public class ExternalImportsIT extends AbstractServerIT {
         assertLog(".*Hello from Python!.*", ab);
     }
 
-    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    @Test
     public void testExternalImportState() throws Exception {
         String repoUrl = initRepo("externalImportWithDir");
 
@@ -485,7 +485,7 @@ public class ExternalImportsIT extends AbstractServerIT {
         processApi.kill(spr.getInstanceId());
     }
 
-    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    @Test
     public void testGitImportWithCommitAsVersion() throws Exception {
         String repoUrl = initRepo("externalImport");
         Git repo = Git.open(new File(repoUrl));
@@ -532,7 +532,7 @@ public class ExternalImportsIT extends AbstractServerIT {
             Files.write(p, s.replace(find, replace).getBytes());
         }
 
-        Git repo = Git.init().setDirectory(tmpDir.toFile()).call();
+        Git repo = Git.init().setInitialBranch("master").setDirectory(tmpDir.toFile()).call();
         repo.add().addFilepattern(".").call();
         repo.commit().setMessage("import").call();
         repo.branchCreate().setName("main").call();

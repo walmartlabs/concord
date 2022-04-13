@@ -26,13 +26,13 @@ import com.walmartlabs.concord.imports.Imports;
 import com.walmartlabs.concord.runtime.v2.Constants;
 import com.walmartlabs.concord.runtime.v2.model.*;
 import com.walmartlabs.concord.runtime.v2.parser.StepOptions;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.io.Serializable;
 import java.time.Duration;
 import java.util.*;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class YamlOkParserTest extends AbstractParserTest {
 
@@ -55,6 +55,10 @@ public class YamlOkParserTest extends AbstractParserTest {
 
         // withItems
         assertEquals(1, t.getOptions().withItems().value());
+
+        // loop
+        assertEquals(1, t.getOptions().loop().items());
+        assertEquals(Loop.Mode.SERIAL, t.getOptions().loop().mode());
 
         // input
         Map<String, Object> input = new HashMap<>();
@@ -345,6 +349,9 @@ public class YamlOkParserTest extends AbstractParserTest {
                 .build(), cfg.events());
     }
 
+    /**
+     * Triggers
+     */
     @Test
     public void test009() throws Exception {
         ProcessDefinition pd = load("009.yml");
@@ -363,6 +370,7 @@ public class YamlOkParserTest extends AbstractParserTest {
 
         t = triggers.get(2);
         assertEquals("cron", t.name());
+        assertEquals(Collections.singletonMap("withSecret", "secret-name"), t.configuration().get("runAs"));
 
         t = triggers.get(3);
         assertEquals("manual", t.name());
@@ -436,6 +444,9 @@ public class YamlOkParserTest extends AbstractParserTest {
         Map<String, Object> input = new HashMap<>();
         input.put("k", "v1");
         assertEquals(input, t.getOptions().input());
+
+        // out
+        assertEquals("result", t.getOptions().out());
 
         // retry
         assertNotNull(t.getOptions().retry());

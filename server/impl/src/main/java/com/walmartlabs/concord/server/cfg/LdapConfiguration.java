@@ -37,6 +37,8 @@ import java.util.Set;
 @Singleton
 public class LdapConfiguration implements Serializable {
 
+    private static final long serialVersionUID = 1L;
+
     @Inject
     @Config("ldap.url")
     private String url;

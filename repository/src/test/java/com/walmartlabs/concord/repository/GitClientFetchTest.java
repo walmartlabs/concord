@@ -9,9 +9,9 @@ package com.walmartlabs.concord.repository;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -24,9 +24,11 @@ import com.walmartlabs.concord.common.IOUtils;
 import com.walmartlabs.concord.common.TemporaryPath;
 import com.walmartlabs.concord.sdk.Secret;
 import org.eclipse.jgit.api.Git;
+import org.eclipse.jgit.api.errors.GitAPIException;
+import org.eclipse.jgit.api.errors.InvalidRefNameException;
 import org.eclipse.jgit.revwalk.RevCommit;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import java.io.File;
 import java.io.IOException;
@@ -38,13 +40,13 @@ import java.time.Duration;
 import java.util.Arrays;
 import java.util.List;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class GitClientFetchTest {
 
     private GitClient client;
 
-    @Before
+    @BeforeEach
     public void init() {
         client = new GitClient(GitClientConfiguration.builder()
                 .sshTimeout(Duration.ofMinutes(10))
@@ -58,13 +60,12 @@ public class GitClientFetchTest {
     public void testFetch1() throws Exception {
         Path tmpDir = IOUtils.createTempDir("test");
 
-        File src = new File(GitClientFetchTest.class.getResource("/test4").toURI());
-        IOUtils.copy(src.toPath(), tmpDir);
+        IOUtils.copy(resourceToPath("/test4"), tmpDir);
 
         // init repo
-        Git repo = Git.init().setDirectory(tmpDir.toFile()).call();
+        Git repo = Git.init().setInitialBranch("master").setDirectory(tmpDir.toFile()).call();
         repo.add().addFilepattern(".").call();
-        RevCommit initialCommit = repo.commit().setMessage("import").call();
+        RevCommit initialCommit = commit(repo, "import");
 
         try (TemporaryPath repoPath = IOUtils.tempDir("git-client-test")) {
             // --- fetch master
@@ -75,7 +76,7 @@ public class GitClientFetchTest {
             // update file in repo
             Files.copy(tmpDir.resolve("new_concord.yml"), tmpDir.resolve("concord.yml"), StandardCopyOption.REPLACE_EXISTING);
             repo.add().addFilepattern(".").call();
-            RevCommit commitAfterUpdate = repo.commit().setMessage("update").call();
+            RevCommit commitAfterUpdate = commit(repo, "update");
 
             // --- fetch prev commit
             String prevCommit = fetch(tmpDir.toUri().toString(), "master", initialCommit.name(), null, repoPath.path());
@@ -189,6 +190,13 @@ public class GitClientFetchTest {
                 .destination(dest)
                 .shallow(true)
                 .build()).head();
+    }
+
+    private static RevCommit commit(Git repo, String message) throws GitAPIException {
+        return repo.commit()
+                .setSign(false)
+                .setMessage(message)
+                .call();
     }
 
     private static void assertContent(TemporaryPath repoPath, String path, String expectedContent) throws IOException {

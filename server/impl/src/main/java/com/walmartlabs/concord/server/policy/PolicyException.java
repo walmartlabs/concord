@@ -22,6 +22,8 @@ package com.walmartlabs.concord.server.policy;
 
 public class PolicyException extends RuntimeException {
 
+    private static final long serialVersionUID = 1L;
+
     public PolicyException(String message) {
         super(message);
     }

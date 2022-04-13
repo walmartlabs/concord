@@ -41,14 +41,14 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public abstract class AbstractGitHubTriggersIT extends AbstractServerIT {
 
     private static final DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSSX", Locale.US);
 
     protected static String toRepoName(Path p) {
-        return p.getParent() .getFileName()+ "/" + p.getFileName();
+        return p.getParent().getFileName() + "/" + p.getFileName();
     }
 
     protected Path initRepo(String resource) throws Exception {

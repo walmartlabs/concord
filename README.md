@@ -18,7 +18,7 @@ Dependencies:
 - [Git](https://git-scm.com/) 2.18+
 - [Java 8](https://adoptopenjdk.net/)
 - [Docker Community Edition](https://www.docker.com/community-edition)
-- (Optional) [NodeJS and NPM](https://nodejs.org/en/download/) (Node 14 or greater)
+- (Optional) [NodeJS and NPM](https://nodejs.org/en/download/) (Node 16 or greater)
 
 ```shell
 git clone ...
@@ -58,6 +58,16 @@ Use the `jdk11` profile:
 ```
 
 This command builds binaries and Docker images using JDK 11.
+
+### Apple M1 Silicon (aarch64)
+
+Use the `jdk8-aarch64` profile:
+
+```
+./mvnw clean install -DskipTests -Pdocker -Pjdk8-aarch64
+```
+
+This command builds binaries and Docker images using JDK 8 for arm64 architecture.
 
 ### Integration tests
 

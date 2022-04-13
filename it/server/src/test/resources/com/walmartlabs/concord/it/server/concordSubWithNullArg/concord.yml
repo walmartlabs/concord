@@ -1,0 +1,14 @@
+configuration:
+  runtime: concord-v2
+
+flows:
+  default:
+    - task: concord
+      in:
+        action: start
+        payload: myPayload
+        sync: true
+        suspend: true
+        arguments:
+          nullValue: ${null}
+    - log: "Done!"

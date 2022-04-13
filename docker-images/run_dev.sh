@@ -62,7 +62,7 @@ docker run -d \
 --name dind \
 --privileged \
 --mount source=concordAgentTmp,target=/tmp \
-docker:stable-dind \
+docker:dind \
 dockerd -H tcp://0.0.0.0:6666 --bip=10.11.13.1/24
 
 docker run -d \

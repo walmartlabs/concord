@@ -21,31 +21,18 @@ package com.walmartlabs.concord.runtime.v2;
  */
 
 import com.fasterxml.jackson.core.JsonGenerator;
-import com.fasterxml.jackson.databind.JavaType;
-import com.fasterxml.jackson.databind.JsonMappingException;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.SerializerProvider;
+import com.fasterxml.jackson.databind.*;
 import com.fasterxml.jackson.databind.jsonFormatVisitors.JsonFormatVisitorWrapper;
 import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.databind.ser.std.StdSerializer;
-import com.google.common.collect.ImmutableMap;
 import com.kjetland.jackson.jsonSchema.JsonSchemaConfig;
 import com.kjetland.jackson.jsonSchema.JsonSchemaGenerator;
 import com.kjetland.jackson.jsonSchema.SubclassesResolver;
 import com.kjetland.jackson.jsonSchema.SubclassesResolverImpl;
 import com.walmartlabs.concord.imports.Imports;
-import com.walmartlabs.concord.runtime.v2.model.Form;
-import com.walmartlabs.concord.runtime.v2.model.ProcessDefinition;
-import com.walmartlabs.concord.runtime.v2.model.ProcessDefinitionConfiguration;
-import com.walmartlabs.concord.runtime.v2.model.Step;
-import com.walmartlabs.concord.runtime.v2.model.Trigger;
-import com.walmartlabs.concord.runtime.v2.schema.ImportsMixIn;
-import com.walmartlabs.concord.runtime.v2.schema.ProcessDefinitionConfigurationMixIn;
-import com.walmartlabs.concord.runtime.v2.schema.ProcessDefinitionMixIn;
-import com.walmartlabs.concord.runtime.v2.schema.StepMixIn;
-import com.walmartlabs.concord.runtime.v2.schema.TriggerMixIn;
+import com.walmartlabs.concord.runtime.v2.model.*;
+import com.walmartlabs.concord.runtime.v2.schema.*;
 
 import java.io.IOException;
 import java.io.OutputStream;
@@ -55,6 +42,7 @@ import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
 import java.time.Duration;
 import java.util.*;
+import java.util.function.Predicate;
 import java.util.function.Supplier;
 
 public class ConcordJsonSchemaGenerator {
@@ -80,8 +68,17 @@ public class ConcordJsonSchemaGenerator {
         switchStep.set("additionalProperties", switchDefault);
 
         // remove invalid required primitive attributes
-        removeRequired(path(jsonSchema, "definitions/ProcessDefinitionConfiguration"), "debug");
+        removeRequired(path(jsonSchema, "definitions/ProcessDefinitionConfiguration"), "debug", "parallelLoopParallelism");
         removeRequired(path(jsonSchema, "definitions/EventConfiguration"), "recordEvents", "recordTaskInVars", "truncateInVars", "truncateMaxStringLength", "truncateMaxArrayLength", "truncateMaxDepth", "recordTaskOutVars", "truncateOutVars", "recordTaskMeta", "truncateMeta");
+        removeRequired(path(jsonSchema, "definitions/TaskCall"), "ignoreErrors");
+
+        // remove invalid Object definition
+        /*
+            "additionalProperties" : {
+              "$ref" : "#/definitions/Object"
+            }
+         */
+        removeFieldIf(jsonSchema, "additionalProperties", n -> "#/definitions/Object".equals(n.path("$ref").asText()));
 
         return jsonSchema;
     }
@@ -120,7 +117,9 @@ public class ConcordJsonSchemaGenerator {
         Map<String, String> customType2FormatMapping = Collections.emptyMap();
         boolean useMultipleEditorSelectViaProperty = false;
         Set<Class<?>> uniqueItemClasses = Collections.emptySet();
-        Map<Class<?>, Class<?>> classTypeReMapping = ImmutableMap.of(Imports.class, ImportsMixIn.class, Form.class, Object.class);
+        Map<Class<?>, Class<?>> classTypeReMapping = new HashMap<>();
+        classTypeReMapping.put(Imports.class, ImportsMixIn.class);
+        classTypeReMapping.put(Form.class, Object.class);
         Map<String, Supplier<JsonNode>> jsonSuppliers = Collections.emptyMap();
         SubclassesResolver subclassesResolver = new SubclassesResolverImpl();
         boolean failOnUnknownProperties = true;
@@ -180,7 +179,21 @@ public class ConcordJsonSchemaGenerator {
         }
     }
 
+    private static void removeFieldIf(JsonNode root, String fieldName, Predicate<JsonNode> p) {
+        for (Iterator<JsonNode> it = root.elements(); it.hasNext(); ) {
+            JsonNode n = it.next();
+            JsonNode ap = n.path(fieldName);
+            if (!ap.isMissingNode() && p.test(ap)) {
+                ((ObjectNode) n).remove(fieldName);
+            } else {
+                removeFieldIf(n, fieldName, p);
+            }
+        }
+    }
+
     private static class JsonSchemaModule extends SimpleModule {
+
+        private static final long serialVersionUID = 1L;
 
         public JsonSchemaModule() {
             setMixInAnnotation(ProcessDefinition.class, ProcessDefinitionMixIn.class);
@@ -189,6 +202,8 @@ public class ConcordJsonSchemaGenerator {
             setMixInAnnotation(Step.class, StepMixIn.class);
 
             addSerializer(Duration.class, new StdSerializer<Duration>(Duration.class) {
+                private static final long serialVersionUID = 1L;
+
                 @Override
                 public void serialize(Duration value, JsonGenerator gen, SerializerProvider provider) {
                     // do nothing

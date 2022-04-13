@@ -285,9 +285,7 @@ public class OrganizationManager {
             return entry;
         }
 
-        if (!Roles.isAdmin()) {
-            throw new AuthorizationException("Only admins or owners are allowed to update organizations");
-        }
+        assertPermission(Permission.UPDATE_ORG);
 
         return entry;
     }

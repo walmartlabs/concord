@@ -25,8 +25,6 @@ import java.util.List;
 
 public interface FlowDefinition extends Serializable {
 
-    long serialVersionUID = 1L;
-
     String name();
 
     List<Step> steps();

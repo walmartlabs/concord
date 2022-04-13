@@ -9,9 +9,9 @@ package com.walmartlabs.concord.server.policy;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -20,23 +20,22 @@ package com.walmartlabs.concord.server.policy;
  * =====
  */
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.ImmutableMap;
 import com.walmartlabs.concord.policyengine.EntityRule;
 import com.walmartlabs.concord.policyengine.PolicyEngineRules;
 import com.walmartlabs.concord.server.TestObjectMapper;
 import com.walmartlabs.concord.server.cfg.PolicyCacheConfiguration;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.util.*;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.mock;
 
 public class PolicyCacheTest {
 
     @Test
-    public void allowNullValues() throws Exception {
+    public void allowNullValues() {
         PolicyCache.Dao dao = mock(PolicyCache.Dao.class);
         PolicyCache pc = new PolicyCache(TestObjectMapper.INSTANCE, new PolicyCacheConfiguration(), dao);
 
@@ -60,7 +59,7 @@ public class PolicyCacheTest {
                         .id(UUID.randomUUID())
                         .name("test")
                         .rules(rules)
-                .build());
+                        .build());
 
         // ---
         Map<UUID, PolicyCache.Policy> merged = pc.mergePolicies(policies);

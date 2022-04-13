@@ -33,6 +33,8 @@ import java.util.UUID;
 @JsonDeserialize(as = ImmutableProcessLockCondition.class)
 public abstract class ProcessLockCondition extends AbstractWaitCondition {
 
+    private static final long serialVersionUID = 1L;
+
     public abstract UUID instanceId();
 
     public abstract UUID orgId();

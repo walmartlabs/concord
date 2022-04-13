@@ -21,8 +21,8 @@ package com.walmartlabs.concord.it.server;
  */
 
 import com.walmartlabs.concord.client.*;
-import org.junit.Ignore;
-import org.junit.Test;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
 
 import java.util.Collections;
 import java.util.HashMap;
@@ -31,16 +31,16 @@ import java.util.Map;
 
 import static com.walmartlabs.concord.it.common.ITUtils.archive;
 import static com.walmartlabs.concord.it.common.ServerClient.waitForCompletion;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 
 public class RepositoryRefreshIT extends AbstractServerIT {
     /**
      * Test case is ignored as repository refresh task is enabled only for concord runtime-v2
      * @throws Exception
      */
-    @Ignore
-    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    @Disabled
+    @Test
     public void test() throws Exception {
         String orgName = "ConcordSystem";
         String projectName = "concordTriggers";

@@ -22,8 +22,8 @@ package com.walmartlabs.concord.runner.engine.el;
 
 import com.walmartlabs.concord.sdk.InjectVariable;
 import io.takari.bpm.api.ExecutionContext;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import javax.el.ELContext;
 
@@ -34,7 +34,7 @@ public class InjectVariableELResolverTest extends AbstractElResolverTest {
     private ELContext elContext;
     private InjectVariableELResolver resolver;
 
-    @Before
+    @BeforeEach
     public void setUp() {
         resolver = new InjectVariableELResolver();
         elContext = createContext();

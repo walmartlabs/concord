@@ -29,20 +29,19 @@ import org.apache.shiro.subject.Subject;
 import org.apache.shiro.subject.SubjectContext;
 import org.apache.shiro.subject.support.DefaultSubjectContext;
 import org.apache.shiro.util.ThreadContext;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import java.util.UUID;
 
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class PasswordCheckerTest {
 
     private static final String USERNAME = "vasia";
 
-    @Before
+    @BeforeEach
     public void bindUser() {
         SecurityManager securityManager = new DefaultSecurityManager();
         ThreadContext.bind(securityManager);
@@ -56,7 +55,7 @@ public class PasswordCheckerTest {
         ThreadContext.bind(subject);
     }
 
-    @After
+    @AfterEach
     public void unbindUser() {
         ThreadContext.unbindSubject();
     }

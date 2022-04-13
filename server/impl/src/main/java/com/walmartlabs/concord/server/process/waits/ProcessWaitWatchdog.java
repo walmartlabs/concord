@@ -20,6 +20,8 @@ package com.walmartlabs.concord.server.process.waits;
  * =====
  */
 
+import com.codahale.metrics.Histogram;
+import com.codahale.metrics.MetricRegistry;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.walmartlabs.concord.db.AbstractDao;
 import com.walmartlabs.concord.db.MainDB;
@@ -62,6 +64,7 @@ public class ProcessWaitWatchdog implements ScheduledTask {
     private final ProcessManager processManager;
     private final PayloadManager payloadManager;
     private final Map<WaitType, ProcessWaitHandler<AbstractWaitCondition>> processWaitHandlers;
+    private final Histogram waitItemsHistogram;
 
     @Inject
     @SuppressWarnings({"unchecked", "rawtypes"})
@@ -70,7 +73,8 @@ public class ProcessWaitWatchdog implements ScheduledTask {
                                ProcessWaitManager processWaitManager,
                                ProcessManager processManager,
                                PayloadManager payloadManager,
-                               Set<ProcessWaitHandler> handlers) {
+                               Set<ProcessWaitHandler> handlers,
+                               MetricRegistry metricRegistry) {
 
         this.cfg = cfg;
         this.dao = dao;
@@ -80,6 +84,7 @@ public class ProcessWaitWatchdog implements ScheduledTask {
         this.processWaitHandlers = new HashMap<>();
 
         handlers.forEach(h -> this.processWaitHandlers.put(h.getType(), h));
+        this.waitItemsHistogram = metricRegistry.histogram("process-wait-watchdog-items");
     }
 
     @Override
@@ -88,10 +93,13 @@ public class ProcessWaitWatchdog implements ScheduledTask {
     }
 
     @Override
+    @WithTimer
     public void performTask() {
         Long lastId = null;
         while (true) {
             List<WaitingProcess> processes = dao.nextWaitItems(lastId, cfg.getPollLimit());
+            waitItemsHistogram.update(processes.size());
+
             if (processes.isEmpty()) {
                 return;
             }
@@ -103,7 +111,8 @@ public class ProcessWaitWatchdog implements ScheduledTask {
         }
     }
 
-    private void processWaits(WaitingProcess p) {
+    @WithTimer
+    void processWaits(WaitingProcess p) {
         Set<String> resumeEvents = new HashSet<>();
         List<AbstractWaitCondition> resultWaits = new ArrayList<>();
         List<ProcessWaitHandler.Action> resultActions = new ArrayList<>();
@@ -144,7 +153,8 @@ public class ProcessWaitWatchdog implements ScheduledTask {
         }
     }
 
-    private ProcessWaitHandler.Result<AbstractWaitCondition> processWait(AbstractWaitCondition w, WaitingProcess p) {
+    @WithTimer
+    ProcessWaitHandler.Result<AbstractWaitCondition> processWait(AbstractWaitCondition w, WaitingProcess p) {
         ProcessWaitHandler<AbstractWaitCondition> handler = processWaitHandlers.get(w.type());
         if (handler == null) {
             log.warn("processHandler ['{}'] -> handler '{}' not found", p.processKey(), w.type());
@@ -159,7 +169,8 @@ public class ProcessWaitWatchdog implements ScheduledTask {
         }
     }
 
-    private void resumeProcess(ProcessKey key, Set<String> events) {
+    @WithTimer
+    void resumeProcess(ProcessKey key, Set<String> events) {
         Payload payload;
         try {
             payload = payloadManager.createResumePayload(key, events, null);

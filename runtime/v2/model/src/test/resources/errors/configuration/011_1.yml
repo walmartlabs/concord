@@ -1,0 +1,4 @@
+configuration:
+  exclusive:
+    mode: "cancel"
+    group: ""

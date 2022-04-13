@@ -22,20 +22,19 @@ package com.walmartlabs.concord.server.tasks;
 import com.walmartlabs.concord.server.AbstractDaoTest;
 import com.walmartlabs.concord.server.metrics.FailedTaskError;
 import com.walmartlabs.concord.server.task.SchedulerDao;
-import org.junit.Before;
-import org.junit.Ignore;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
 
 import java.util.List;
+import static org.junit.jupiter.api.Assertions.*;
 
-import static org.junit.Assert.assertEquals;
-
-@Ignore("requires a local DB instance")
+@Disabled("requires a local DB instance")
 public class SchedulerDaoTest extends AbstractDaoTest {
 
     private SchedulerDao schedulerDao;
 
-    @Before
+    @BeforeEach
     public void setUp() {
         schedulerDao = new SchedulerDao(getConfiguration());
     }

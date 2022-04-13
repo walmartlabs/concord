@@ -24,9 +24,9 @@ import com.walmartlabs.concord.ApiException;
 import com.walmartlabs.concord.client.OrganizationEntry;
 import com.walmartlabs.concord.client.OrganizationsApi;
 import com.walmartlabs.concord.client.ProcessEntry;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import java.nio.file.Path;
 import java.util.Map;
@@ -40,7 +40,7 @@ public class OneOpsTriggerIT extends AbstractOneOpsTriggerIT {
     private String projectName;
     private String repoName;
 
-    @Before
+    @BeforeEach
     public void setup() throws Exception {
         orgApi = new OrganizationsApi(getApiClient());
         orgName = "org_" + randomString();
@@ -53,12 +53,12 @@ public class OneOpsTriggerIT extends AbstractOneOpsTriggerIT {
         refreshRepo(orgName, projectName, repoName);
     }
 
-    @After
+    @AfterEach
     public void tearDown() throws ApiException {
         orgApi.delete(orgName, "yes");
     }
 
-    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    @Test
     public void testOneOpsTriggerv1() throws Exception {
         waitForTriggers(orgName, projectName, repoName, 2);
 

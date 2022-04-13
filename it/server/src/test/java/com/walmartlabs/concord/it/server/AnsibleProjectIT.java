@@ -24,9 +24,9 @@ import com.walmartlabs.concord.client.*;
 import com.walmartlabs.concord.it.common.GitUtils;
 import com.walmartlabs.concord.it.common.MockGitSshServer;
 import com.walmartlabs.concord.sdk.Constants;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import java.io.File;
 import java.io.InputStream;
@@ -39,8 +39,8 @@ import java.util.Map;
 
 import static com.walmartlabs.concord.it.common.ServerClient.*;
 import static java.util.Collections.singletonMap;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 /**
  * @see "docs/examples/ansible_project"
@@ -50,18 +50,18 @@ public class AnsibleProjectIT extends AbstractServerIT {
     private MockGitSshServer gitServer;
     private int gitPort;
 
-    @Before
+    @BeforeEach
     public void setUp() throws Exception {
         Path data = Paths.get(AnsibleProjectIT.class.getResource("ansibleproject/git").toURI());
         Path repo = GitUtils.createBareRepository(data);
 
-        gitServer = new MockGitSshServer(0, repo.toAbsolutePath().toString());
+        gitServer = new MockGitSshServer(0, repo);
         gitServer.start();
 
         gitPort = gitServer.getPort();
     }
 
-    @After
+    @AfterEach
     public void tearDown() throws Exception {
         gitServer.stop();
     }

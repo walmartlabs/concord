@@ -28,6 +28,8 @@ import java.io.Serializable;
 
 public class LogSegmentOperationResponse implements Serializable {
 
+    private static final long serialVersionUID = 1L;
+
     private final boolean ok = true;
     private final long id;
     private final OperationResult result;

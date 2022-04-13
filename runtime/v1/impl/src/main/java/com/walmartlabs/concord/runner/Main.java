@@ -35,7 +35,6 @@ import com.walmartlabs.concord.ApiClient;
 import com.walmartlabs.concord.client.ApiClientConfiguration;
 import com.walmartlabs.concord.client.ApiClientFactory;
 import com.walmartlabs.concord.client.ProcessEntry;
-import com.walmartlabs.concord.common.ConfigurationUtils;
 import com.walmartlabs.concord.common.IOUtils;
 import com.walmartlabs.concord.imports.ImportsListener;
 import com.walmartlabs.concord.imports.NoopImportManager;
@@ -90,12 +89,14 @@ public class Main {
 
     private final EngineFactory engineFactory;
     private final ApiClientFactory apiClientFactory;
+    private final DefaultVariablesConverter variablesConverter;
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     @Inject
-    public Main(EngineFactory engineFactory, ApiClientFactory apiClientFactory) {
+    public Main(EngineFactory engineFactory, ApiClientFactory apiClientFactory, DefaultVariablesConverter variablesConverter) {
         this.engineFactory = engineFactory;
         this.apiClientFactory = apiClientFactory;
+        this.variablesConverter = variablesConverter;
     }
 
     public void run(RunnerConfiguration runnerCfg, Path baseDir) throws Exception {
@@ -119,7 +120,7 @@ public class Main {
 
         // read the process configuration
         Map<String, Object> processCfg = readRequest(baseDir);
-        processCfg = convertV2DefaultVarsIntoV1(processCfg);
+        processCfg = variablesConverter.convert(baseDir, processCfg);
 
         String sessionToken = getSessionToken(processCfg);
         ApiClient apiClient = apiClientFactory.create(ApiClientConfiguration.builder()
@@ -142,25 +143,6 @@ public class Main {
         }
 
         executeProcess(instanceId.toString(), checkpointManager, baseDir, processCfg);
-    }
-
-    private Map<String, Object> convertV2DefaultVarsIntoV1(Map<String, Object> processCfg) {
-        Map<String, Object> v2Defaults = MapUtils.getMap(processCfg, "defaultTaskVariables", Collections.emptyMap());
-        Map<String, Object> v1Defaults = new HashMap<>(v2Defaults);
-
-        // v1 version of plugins expects default vars as `tasknameParams`
-        // v2 version: only `taskname`
-        for (Map.Entry<String, Object> e : v2Defaults.entrySet()) {
-            if (!(e.getKey().endsWith("Params"))) {
-                v1Defaults.put(e.getKey() + "Params", e.getValue());
-            }
-        }
-
-        Map<String, Object> arguments = MapUtils.getMap(processCfg, Constants.Request.ARGUMENTS_KEY, Collections.emptyMap());
-
-        Map<String, Object> result = new HashMap<>(processCfg);
-        result.put(Constants.Request.ARGUMENTS_KEY, ConfigurationUtils.deepMerge(v1Defaults, arguments));
-        return result;
     }
 
     private void executeProcess(String instanceId, CheckpointManager checkpointManager, Path baseDir, Map<String, Object> processCfg) throws ExecutionException {
@@ -206,7 +188,7 @@ public class Main {
 
             // found a checkpoint, resume the process immediately
             if (checkpointEvent != null) {
-                checkpointManager.process(getCheckpointId(checkpointEvent), checkpointEvent.getName(), baseDir);
+                checkpointManager.process(getCheckpointId(checkpointEvent), getCorrelationId(checkpointEvent), checkpointEvent.getName(), baseDir);
                 // clear arguments
                 if (resumeCheckpointReq == null) {
                     resumeCheckpointReq = new HashMap<>(processCfg);
@@ -274,6 +256,15 @@ public class Main {
     @SuppressWarnings("unchecked")
     private static UUID getCheckpointId(Event e) {
         String s = MapUtils.getString((Map<String, Object>) e.getPayload(), "checkpointId");
+        if (s == null) {
+            return null;
+        }
+        return UUID.fromString(s);
+    }
+
+    @SuppressWarnings("unchecked")
+    private static UUID getCorrelationId(Event e) {
+        String s = MapUtils.getString((Map<String, Object>) e.getPayload(), "correlationId");
         if (s == null) {
             return null;
         }

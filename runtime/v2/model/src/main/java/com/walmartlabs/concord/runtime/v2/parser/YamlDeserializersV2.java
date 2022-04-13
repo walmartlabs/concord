@@ -46,6 +46,8 @@ public final class YamlDeserializersV2 {
 
     private static final class ProcessDefinitionDeserializer extends StdDeserializer<ProcessDefinition> {
 
+        private static final long serialVersionUID = 1L;
+
         protected ProcessDefinitionDeserializer() {
             super(Step.class);
         }

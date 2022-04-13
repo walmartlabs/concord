@@ -29,6 +29,7 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.walmartlabs.concord.common.ToStringHelper;
 import org.immutables.value.Value;
+import org.immutables.serial.Serial;
 
 import javax.annotation.Nullable;
 import java.io.Serializable;
@@ -48,9 +49,8 @@ import java.util.List;
         @Type(value = Import.DirectoryDefinition.class, name = Import.DirectoryDefinition.TYPE),
         @Type(value = ImmutableDirectoryDefinition.class, name = Import.DirectoryDefinition.TYPE),
 })
+@Serial.Version(1)
 public interface Import extends Serializable {
-
-    long serialVersionUID = 1L;
 
     String type();
 
@@ -59,6 +59,8 @@ public interface Import extends Serializable {
     @JsonSerialize(as = ImmutableGitDefinition.class)
     @JsonDeserialize(as = ImmutableGitDefinition.class)
     abstract class GitDefinition implements Import {
+
+        private static final long serialVersionUID = 1L;
 
         public static final String TYPE = "git";
 
@@ -113,6 +115,8 @@ public interface Import extends Serializable {
     @JsonDeserialize(as = ImmutableMvnDefinition.class)
     abstract class MvnDefinition implements Import {
 
+        private static final long serialVersionUID = 1L;
+
         public static final String TYPE = "mvn";
 
         @JsonProperty(value = "url", required = true)
@@ -143,6 +147,8 @@ public interface Import extends Serializable {
     @JsonSerialize(as = ImmutableDirectoryDefinition.class)
     @JsonDeserialize(as = ImmutableDirectoryDefinition.class)
     abstract class DirectoryDefinition implements Import {
+
+        private static final long serialVersionUID = 1L;
 
         public static final String TYPE = "dir";
 

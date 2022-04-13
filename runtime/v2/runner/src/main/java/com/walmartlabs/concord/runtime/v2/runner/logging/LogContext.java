@@ -28,6 +28,7 @@ import java.io.Serializable;
 import java.util.UUID;
 
 @Value.Immutable
+@Value.Style(jdkOnly = true)
 public interface LogContext extends Serializable {
 
    long serialVersionUID = 1L;

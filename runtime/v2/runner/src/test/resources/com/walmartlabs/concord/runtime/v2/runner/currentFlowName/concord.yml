@@ -1,0 +1,14 @@
+flows:
+  default:
+    - log: "default: ${currentFlowName()}"
+    - call: myFlow
+
+    - checkpoint: "first"
+    - log: "after checkpoint: ${currentFlowName()}"
+
+    - task: faultyTask
+      error:
+        - log: "current flow name in error block: ${currentFlowName()}"
+
+  myFlow:
+    - log: "myFlow: ${currentFlowName()}"

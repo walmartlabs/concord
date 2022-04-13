@@ -20,14 +20,13 @@ package com.walmartlabs.concord.plugins.smtp;
  * =====
  */
 
-import com.icegreen.greenmail.junit.GreenMailRule;
+import com.icegreen.greenmail.junit5.GreenMailExtension;
 import com.icegreen.greenmail.smtp.SmtpServer;
 import com.icegreen.greenmail.util.ServerSetupTest;
 import com.walmartlabs.concord.sdk.Context;
 import com.walmartlabs.concord.sdk.MockContext;
-import org.junit.Ignore;
-import org.junit.Rule;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
 import javax.mail.internet.MimeMessage;
 import javax.mail.internet.MimeMultipart;
@@ -37,13 +36,13 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 @SuppressWarnings("deprecation")
 public class SmtpTaskTest {
 
-    @Rule
-    public final GreenMailRule mail = new GreenMailRule(ServerSetupTest.SMTP);
+    @RegisterExtension
+    GreenMailExtension mail = new GreenMailExtension(ServerSetupTest.SMTP);
 
     @Test
     public void test() throws Exception {
@@ -108,8 +107,8 @@ public class SmtpTaskTest {
     public void testNoBccViaCall() throws Exception {
         SmtpServer server = mail.getSmtp();
 
-        Map<String, Object> smtpParams = new HashMap<String, Object>();
-        Map<String, Object> mailParams = new HashMap<String, Object>();
+        Map<String, Object> smtpParams = new HashMap<>();
+        Map<String, Object> mailParams = new HashMap<>();
 
         smtpParams.put("host", "localhost");
         smtpParams.put("port", server.getPort());
@@ -219,6 +218,7 @@ public class SmtpTaskTest {
             t.call(smtpParams, mailParams);
             fail("should fail");
         } catch (IllegalArgumentException e) {
+            // expected
         }
 
         mail.reset();

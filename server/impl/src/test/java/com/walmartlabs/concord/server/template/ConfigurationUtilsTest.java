@@ -22,14 +22,13 @@ package com.walmartlabs.concord.server.template;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.walmartlabs.concord.common.ConfigurationUtils;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class ConfigurationUtilsTest {
 
@@ -83,7 +82,7 @@ public class ConfigurationUtilsTest {
     }
 
     @Test
-    public void testDeepMergeEmptyLeftSide() throws Exception {
+    public void testDeepMergeEmptyLeftSide() {
         Map<String, Object> a = Collections.emptyMap();
 
         Map<String, Object> b = new HashMap<>();
@@ -94,7 +93,7 @@ public class ConfigurationUtilsTest {
     }
 
     @Test
-    public void testMerge() throws Exception {
+    public void testMerge() {
         Map<String, Object> a = new HashMap<>();
         a.put("x", 123);
 
@@ -107,7 +106,7 @@ public class ConfigurationUtilsTest {
 
     @Test
     @SuppressWarnings("unchecked")
-    public void testToNested() throws Exception {
+    public void testToNested() {
         String k = "a.b.c";
         Object v = 123;
 
@@ -125,7 +124,7 @@ public class ConfigurationUtilsTest {
     }
 
     @Test
-    public void testToNestedMinimal() throws Exception {
+    public void testToNestedMinimal() {
         String k = "a";
         Object v = 123;
 

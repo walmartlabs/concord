@@ -50,11 +50,8 @@ public interface FlowCallStepMixIn extends NamedStep {
     @JsonProperty("error")
     List<Step> error();
 
-    @JsonProperty("withItems")
-    WithItemsMixIn withItems();
-
-    @JsonProperty("parallelWithItems")
-    WithItemsMixIn parallelWithItems();
+    @JsonProperty("loop")
+    LoopMixIn loop();
 
     @JsonProperty("meta")
     Map<String, Object> meta();

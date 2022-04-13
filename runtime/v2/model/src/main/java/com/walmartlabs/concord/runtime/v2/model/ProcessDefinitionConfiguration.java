@@ -23,6 +23,7 @@ package com.walmartlabs.concord.runtime.v2.model;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.walmartlabs.concord.common.AllowNulls;
 import com.walmartlabs.concord.sdk.Constants;
 import org.immutables.value.Value;
 
@@ -68,6 +69,7 @@ public interface ProcessDefinitionConfiguration extends Serializable {
     }
 
     @Value.Default
+    @AllowNulls
     default Map<String, Object> arguments() {
         return Collections.emptyMap();
     }
@@ -91,6 +93,9 @@ public interface ProcessDefinitionConfiguration extends Serializable {
     Duration processTimeout();
 
     @Nullable
+    Duration suspendTimeout();
+
+    @Nullable
     ExclusiveMode exclusive();
 
     @Value.Default
@@ -100,6 +105,11 @@ public interface ProcessDefinitionConfiguration extends Serializable {
 
     @Nullable
     String template();
+
+    @Value.Default
+    default int parallelLoopParallelism() {
+        return Runtime.getRuntime().availableProcessors();
+    }
 
     static ImmutableProcessDefinitionConfiguration.Builder builder() {
         return ImmutableProcessDefinitionConfiguration.builder();

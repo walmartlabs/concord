@@ -126,10 +126,7 @@ public class Main {
     public void execute() throws Exception {
         validate(processCfg);
 
-        String segmentedLogDir = runnerCfg.logging().segmentedLogDir();
-        if (segmentedLogDir != null) {
-            LoggingConfigurator.configure(Objects.requireNonNull(processCfg.instanceId()), segmentedLogDir);
-        }
+        LoggingConfigurator.configure(runnerCfg.logging().segmentedLogs());
 
         if (processCfg.debug()) {
             log.info("Available tasks: {}", taskProviders.names().stream().sorted().collect(Collectors.toList()));

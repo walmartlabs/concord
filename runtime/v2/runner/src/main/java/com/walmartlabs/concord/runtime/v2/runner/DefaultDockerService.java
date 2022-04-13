@@ -40,6 +40,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.regex.Pattern;
 
+import static com.walmartlabs.concord.runtime.v2.runner.DockerProcessBuilder.DockerProcess;
+
 public class DefaultDockerService implements DockerService {
 
     private static final Logger log = LoggerFactory.getLogger(DefaultDockerService.class);
@@ -74,31 +76,45 @@ public class DefaultDockerService implements DockerService {
         long retryInterval = spec.pullRetryInterval();
 
         do {
-            Process p = start(spec);
+            try (DockerProcess dp = build(spec)) {
+                Process p = dp.start();
 
-            LogCapture c = new LogCapture(outCallback); // wrap to handle retries
-            Thread outCaptureThread = startDockerOutThread(p.getInputStream(), c);
-            Thread errCaptureThread = startDockerOutThread(p.getErrorStream(), errCallback);
+                LogCapture c = new LogCapture(outCallback);
+                Thread outCaptureThread = startDockerOutThread(p.getInputStream(), c);
+                Thread errCaptureThread = startDockerOutThread(p.getErrorStream(), errCallback);
 
-            result = p.waitFor();
+                result = p.waitFor();
 
-            interruptThread(errCaptureThread);
-            interruptThread(outCaptureThread);
+                interruptThread(errCaptureThread);
+                interruptThread(outCaptureThread);
 
-            if (result == SUCCESS_EXIT_CODE || retryCount == 0 || tryCount >= retryCount) {
-                return result;
+                if (result == SUCCESS_EXIT_CODE || retryCount == 0 || tryCount >= retryCount) {
+                    return result;
+                }
+
+                if (!needRetry(c.getLines())) {
+                    return result;
+                }
+
+                log.info("Error pulling the image. Retry after {} sec", retryInterval / 1000);
+                sleep(retryInterval);
+                tryCount++;
             }
-
-            if (!needRetry(c.getLines())) {
-                return result;
-            }
-
-            log.info("Error pulling the image. Retry after {} sec", retryInterval / 1000);
-            sleep(retryInterval);
-            tryCount++;
         } while (!Thread.currentThread().isInterrupted() && tryCount <= retryCount);
 
         return result;
+    }
+
+    private DockerProcess build(DockerContainerSpec spec) throws IOException {
+        DockerProcessBuilder b = DockerProcessBuilder.from(instanceId.getValue(), spec);
+
+        b.env(createEffectiveEnv(spec.env(), exposeDockerDaemon));
+        // add the default volume - mount the process' workDir as /workspace
+        b.volume(workingDirectory.getValue().toString(), WORKSPACE_TARGET_DIR);
+        // add extra volumes from the runner's arguments
+        extraVolumes.forEach(b::volume);
+
+        return b.build();
     }
 
     private static Thread startDockerOutThread(InputStream i, LogCallback c) {
@@ -123,18 +139,6 @@ public class DefaultDockerService implements DockerService {
         if (t != null) {
             t.interrupt();
         }
-    }
-
-    private Process start(DockerContainerSpec spec) throws IOException {
-        DockerProcessBuilder b = DockerProcessBuilder.from(instanceId.getValue(), spec);
-
-        b.env(createEffectiveEnv(spec.env(), exposeDockerDaemon));
-        // add the default volume - mount the process' workDir as /workspace
-        b.volume(workingDirectory.getValue().toString(), WORKSPACE_TARGET_DIR);
-        // add extra volumes from the runner's arguments
-        extraVolumes.forEach(volume -> b.volume(volume));
-
-        return b.build();
     }
 
     private static boolean needRetry(List<String> lines) {

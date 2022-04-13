@@ -23,17 +23,19 @@ package com.walmartlabs.concord.it.server;
 
 import com.walmartlabs.concord.client.*;
 import com.walmartlabs.concord.client.ProcessEntry.StatusEnum;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.Timeout;
 
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 
 import static com.walmartlabs.concord.it.common.ITUtils.archive;
 import static com.walmartlabs.concord.it.common.ServerClient.*;
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class FormIT extends AbstractServerIT {
 
-    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    @Test
     public void test() throws Exception {
         String firstName = "john_" + randomString();
         String lastName = "smith_" + randomString();
@@ -102,7 +104,7 @@ public class FormIT extends AbstractServerIT {
         assertLog(".*AAA true.*", ab);
     }
 
-    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    @Test
     public void testSubmitMultipart() throws Exception {
         String firstName = "john_" + randomString();
         String lastName = "smith_" + randomString();
@@ -169,7 +171,7 @@ public class FormIT extends AbstractServerIT {
         assertLog(".*AAA true.*", ab);
     }
 
-    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    @Test
     public void testValues() throws Exception {
         byte[] payload = archive(FormIT.class.getResource("formValues").toURI());
 
@@ -202,7 +204,7 @@ public class FormIT extends AbstractServerIT {
         assertLog(".*Hello, Concord.*", ab);
     }
 
-    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    @Test
     public void testAdditionalValuesSubmit() throws Exception {
         byte[] payload = archive(FormIT.class.getResource("formValuesSubmit").toURI());
 
@@ -232,7 +234,7 @@ public class FormIT extends AbstractServerIT {
         assertLog(".*we got 123 hello 234.*", ab);
     }
 
-    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    @Test
     public void testExternalFormFile() throws Exception {
         String fieldValue = "value_" + randomString();
 
@@ -272,7 +274,7 @@ public class FormIT extends AbstractServerIT {
         assertLog(".*We got " + fieldValue + ".*", ab);
     }
 
-    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    @Test
     public void testMultiValueInput() throws Exception {
         byte[] payload = archive(FormIT.class.getResource("formMultiValue").toURI());
 
@@ -308,7 +310,8 @@ public class FormIT extends AbstractServerIT {
         assertLog(".*(Skills ->) \\[(angular|react), (react|angular)\\].*", ab);
     }
 
-    @Test(timeout = 60000)
+    @Test
+    @Timeout(value = 60000, unit= TimeUnit.MILLISECONDS)
     public void testDynamicFields() throws Exception {
         byte[] payload = archive(FormIT.class.getResource("dynamicFormFields").toURI());
 
@@ -345,7 +348,7 @@ public class FormIT extends AbstractServerIT {
         assertLog(".*We got: " + fieldValue + ".*", ab);
     }
 
-    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    @Test
     public void testReadonlyField() throws Exception {
         byte[] payload = archive(FormIT.class.getResource("formReadonlyField").toURI());
 
@@ -382,7 +385,7 @@ public class FormIT extends AbstractServerIT {
         assertLog(".*default value.*", ab);
     }
 
-    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    @Test
     public void testOptionalFileTypeField() throws Exception {
         byte[] payload = archive(FormIT.class.getResource("formOptionalFileTypeField").toURI());
 
@@ -414,7 +417,7 @@ public class FormIT extends AbstractServerIT {
         assertEquals(StatusEnum.FINISHED, psr.getStatus());
     }
 
-    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    @Test
     public void testFormCallWithExpression() throws Exception {
         byte[] payload = archive(FormIT.class.getResource("formCallWithExpression").toURI());
 
@@ -450,7 +453,7 @@ public class FormIT extends AbstractServerIT {
         assertLog(".*Hello, Concord.*", ab);
     }
 
-    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    @Test
     public void testFormLabelInterpolation() throws Exception {
         String xValue = "x_" + randomString();
 

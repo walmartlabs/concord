@@ -20,34 +20,36 @@ package com.walmartlabs.concord.it.server;
  * =====
  */
 
-import com.github.tomakehurst.wiremock.core.WireMockConfiguration;
 import com.github.tomakehurst.wiremock.extension.responsetemplating.ResponseTemplateTransformer;
-import com.github.tomakehurst.wiremock.junit.WireMockRule;
+import com.github.tomakehurst.wiremock.junit5.WireMockExtension;
 import com.walmartlabs.concord.client.ProcessApi;
 import com.walmartlabs.concord.client.ProcessEntry;
 import com.walmartlabs.concord.client.StartProcessResponse;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
+import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMockConfig;
 import static com.walmartlabs.concord.it.common.ITUtils.archive;
 import static com.walmartlabs.concord.it.common.ServerClient.assertLog;
 import static com.walmartlabs.concord.it.common.ServerClient.waitForStatus;
 
 public class DependencyManagerIT extends AbstractServerIT {
 
-    @Rule
-    public WireMockRule rule = new WireMockRule(WireMockConfiguration.options()
-            .extensions(new HttpTaskIT.RequestHeaders(), new ResponseTemplateTransformer(false))
-            .dynamicPort());
+    @RegisterExtension
+    static WireMockExtension rule = WireMockExtension.newInstance()
+            .options(wireMockConfig()
+                    .dynamicPort()
+                    .extensions(new HttpTaskIT.RequestHeaders(), new ResponseTemplateTransformer(false)))
+            .build();
 
-    @Before
+    @BeforeEach
     public void setUp() {
         rule.stubFor(get(urlEqualTo("/item.txt"))
                 .willReturn(aResponse()
@@ -57,12 +59,12 @@ public class DependencyManagerIT extends AbstractServerIT {
         );
     }
 
-    @After
+    @AfterEach
     public void tearDown() {
         rule.shutdownServer();
     }
 
-    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    @Test
     public void test() throws Exception {
         byte[] payload = archive(DependencyManagerIT.class.getResource("dependencyManager").toURI());
 
@@ -71,7 +73,7 @@ public class DependencyManagerIT extends AbstractServerIT {
 
         Map<String, Object> cfg = new HashMap<>();
         cfg.put("dependencies", new String[]{"mvn://com.walmartlabs.concord.it.tasks:dependency-manager-test:" + ITConstants.PROJECT_VERSION});
-        String url = "http://" + env("IT_DOCKER_HOST_ADDR", "localhost") + ":" + rule.port() + "/item.txt";
+        String url = "http://" + env("IT_DOCKER_HOST_ADDR", "localhost") + ":" + rule.getPort() + "/item.txt";
         cfg.put("arguments", Collections.singletonMap("url", url));
 
         input.put("request", cfg);

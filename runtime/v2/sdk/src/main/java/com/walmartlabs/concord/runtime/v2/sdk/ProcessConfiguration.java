@@ -59,6 +59,7 @@ public interface ProcessConfiguration extends Serializable {
     }
 
     @Value.Default
+    @AllowNulls
     default Map<String, Object> arguments() {
         return Collections.emptyMap();
     }

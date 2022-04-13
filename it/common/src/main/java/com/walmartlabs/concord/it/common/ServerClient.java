@@ -34,7 +34,7 @@ import java.lang.reflect.Type;
 import java.util.*;
 
 import static com.walmartlabs.concord.common.IOUtils.grep;
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class ServerClient {
 
@@ -43,7 +43,7 @@ public class ServerClient {
      */
     public static final String DEFAULT_API_KEY = envApiKey();
 
-    private ApiClient client;
+    private final ApiClient client;
 
     public ServerClient(String baseUrl) {
         this.client = createClient(baseUrl, DEFAULT_API_KEY, null);
@@ -163,7 +163,7 @@ public class ServerClient {
                 }
             } catch (ApiException e) {
                 if (e.getCode() == 404) {
-                    System.out.println(String.format("waitForCompletion ['%s'] -> not found, retrying... (%s)", instanceId, retries));
+                    System.out.printf("waitForCompletion ['%s'] -> not found, retrying... (%s)%n", instanceId, retries);
                     if (--retries < 0) {
                         throw new RuntimeException(e);
                     }
@@ -225,13 +225,13 @@ public class ServerClient {
     public static void assertLog(@Language("RegExp") String pattern, byte[] ab) throws IOException {
         String msg = "Expected: " + pattern + "\n"
                 + "Got: " + new String(ab);
-        assertEquals(msg, 1, grep(pattern, ab).size());
+        assertEquals(1, grep(pattern, ab).size(), msg);
     }
 
     public static void assertNoLog(@Language("RegExp") String pattern, byte[] ab) throws IOException {
         String msg = "Expected: " + pattern + "\n"
                 + "Got: " + new String(ab);
-        assertEquals(msg, 0, grep(pattern, ab).size());
+        assertEquals(0, grep(pattern, ab).size(), msg);
     }
 
     public static void assertLog(@Language("RegExp") String pattern, int times, byte[] ab) throws IOException {
@@ -240,7 +240,7 @@ public class ServerClient {
 
     public static void assertLogAtLeast(@Language("RegExp") String pattern, int times, byte[] ab) throws IOException {
         int matches = grep(pattern, ab).size();
-        assertTrue("Expected to find " + pattern + " at least " + times + " time(s), found only " + matches, times <= matches);
+        assertTrue(times <= matches, "Expected to find " + pattern + " at least " + times + " time(s), found only " + matches);
     }
 
     public void waitForLog(String logFileName, @Language("RegExp") String pattern) throws ApiException, IOException, InterruptedException {

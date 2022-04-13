@@ -20,20 +20,20 @@ package com.walmartlabs.concord.it.server;
  * =====
  */
 
-import com.googlecode.junittoolbox.ParallelRunner;
 import com.walmartlabs.concord.ApiException;
 import com.walmartlabs.concord.client.*;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.parallel.Execution;
+import org.junit.jupiter.api.parallel.ExecutionMode;
 
 import java.util.*;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
-@RunWith(ParallelRunner.class)
+@Execution(ExecutionMode.CONCURRENT)
 public class CrudIT extends AbstractServerIT {
 
-    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    @Test
     public void testOrgUpdate() throws Exception {
         String orgName = "org_" + randomString();
         Map<String, Object> meta = Collections.singletonMap("x", "123");
@@ -61,7 +61,7 @@ public class CrudIT extends AbstractServerIT {
         assertEquals("234", e.getMeta().get("x"));
     }
 
-    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    @Test
     public void testProject() throws Exception {
         ProjectsApi projectsApi = new ProjectsApi(getApiClient());
 
@@ -155,7 +155,7 @@ public class CrudIT extends AbstractServerIT {
         assertTrue(deleteResp.isOk());
     }
 
-    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    @Test
     public void testNonUniqueRepositoryNames() throws Exception {
         String orgName = "Default";
 
@@ -180,7 +180,7 @@ public class CrudIT extends AbstractServerIT {
                         .setBranch("n/a"))));
     }
 
-    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    @Test
     public void testInventory() throws Exception {
         InventoriesApi inventoriesApi = new InventoriesApi(getApiClient());
 
@@ -219,7 +219,7 @@ public class CrudIT extends AbstractServerIT {
         assertTrue(deleteInventoryResponse.getResult() == GenericOperationResult.ResultEnum.DELETED);
     }
 
-    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    @Test
     public void testInventoryData() throws Exception {
         InventoryDataApi dataApi = new InventoryDataApi(getApiClient());
 
@@ -252,7 +252,7 @@ public class CrudIT extends AbstractServerIT {
         assertTrue(didr.isOk());
     }
 
-    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    @Test
     @SuppressWarnings("unchecked")
     public void testInventoryQuery() throws Exception {
         InventoryQueriesApi queriesApi = new InventoryQueriesApi(getApiClient());
@@ -306,7 +306,7 @@ public class CrudIT extends AbstractServerIT {
         assertTrue(dqr.isOk());
     }
 
-    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    @Test
     public void testInvalidQueryName() throws Exception {
         InventoryQueriesApi queriesApi = new InventoryQueriesApi(getApiClient());
 
@@ -327,7 +327,7 @@ public class CrudIT extends AbstractServerIT {
         }
     }
 
-    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    @Test
     public void testDashes() throws Exception {
         String orgName = randomString() + "-test~";
 
@@ -363,7 +363,7 @@ public class CrudIT extends AbstractServerIT {
         secretResource.delete(orgName, secretName);
     }
 
-    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    @Test
     public void testTeam() throws Exception {
         String teamName = "team_" + randomString();
         String orgName = "Default";
@@ -397,7 +397,7 @@ public class CrudIT extends AbstractServerIT {
         assertEquals(updatedTeamName, teamEntry.getName());
     }
 
-    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    @Test
     public void testTeamManagementWithUserIds() throws Exception {
         OrganizationsApi organizationsApi = new OrganizationsApi(getApiClient());
 
@@ -443,7 +443,7 @@ public class CrudIT extends AbstractServerIT {
         assertEquals(userBName.toLowerCase(), l.get(1).getUsername());
     }
 
-    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    @Test
     public void testSecrets() throws Exception {
         String orgName = "org_" + randomString();
 
@@ -512,7 +512,7 @@ public class CrudIT extends AbstractServerIT {
         return l.stream().filter(e -> name.equals(e.getName())).findAny().get();
     }
 
-    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    @Test
     public void testOrganization() throws Exception {
         OrganizationsApi orgApi = new OrganizationsApi(getApiClient());
 
@@ -547,7 +547,7 @@ public class CrudIT extends AbstractServerIT {
         assertNotNull(organizationEntry);
     }
 
-    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    @Test
     public void testOrgVisibility() throws Exception {
         OrganizationsApi orgApi = new OrganizationsApi(getApiClient());
 
@@ -582,7 +582,7 @@ public class CrudIT extends AbstractServerIT {
         assertTrue(orgs.stream().noneMatch(e -> e.getId().equals(createOrganizationResponse.getId())));
     }
 
-    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    @Test
     public void testOrgMeta() throws Exception {
         OrganizationsApi orgApi = new OrganizationsApi(getApiClient());
 
@@ -618,7 +618,7 @@ public class CrudIT extends AbstractServerIT {
         assertEquals(meta.get("y"), meta3.get("y"));
     }
 
-    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    @Test
     public void testPolicies() throws Exception {
         OrganizationsApi orgApi = new OrganizationsApi(getApiClient());
 
@@ -757,7 +757,7 @@ public class CrudIT extends AbstractServerIT {
         policyResource.delete(policyForUser);
     }
 
-    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    @Test
     public void testRoles() throws Exception {
         RolesApi rolesApi = new RolesApi(getApiClient());
 
@@ -793,7 +793,7 @@ public class CrudIT extends AbstractServerIT {
         assertEquals(GenericOperationResult.ResultEnum.DELETED, r.getResult());
     }
 
-    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    @Test
     public void testChangeOrganization() throws Exception {
 
         String orgName = "Default";

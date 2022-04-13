@@ -21,20 +21,20 @@ package com.walmartlabs.concord.plugins.slack;
  */
 
 import com.walmartlabs.concord.sdk.MockContext;
-import org.junit.Before;
-import org.junit.Ignore;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
 
 import java.util.HashMap;
 import java.util.Map;
 
-import static org.junit.Assert.fail;
-import static org.junit.Assume.assumeTrue;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
-@Ignore
+@Disabled
 public class SlackTaskTest {
 
-    @Before
+    @BeforeEach
     public void setUp() {
         assumeTrue(TestParams.TEST_API_TOKEN != null);
     }
@@ -61,6 +61,7 @@ public class SlackTaskTest {
     }
 
     @Test
+    @SuppressWarnings("unchecked")
     public void testJsonMessage() {
         Map<String, Object> m = new HashMap<>();
 
@@ -128,6 +129,7 @@ public class SlackTaskTest {
             t.execute(ctx);
             fail("should fail");
         } catch (Exception e) {
+            // expected
         }
     }
 

@@ -27,7 +27,7 @@ import com.walmartlabs.concord.sdk.Constants;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.lib.Ref;
 import org.eclipse.jgit.revwalk.RevCommit;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.io.File;
 import java.nio.file.Path;
@@ -35,18 +35,19 @@ import java.util.*;
 
 import static com.walmartlabs.concord.it.common.ServerClient.assertLog;
 import static com.walmartlabs.concord.it.common.ServerClient.waitForCompletion;
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class ProjectIT extends AbstractServerIT {
 
-    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    @Test
     public void test() throws Exception {
         Path tmpDir = createTempDir();
 
         File src = new File(ProjectIT.class.getResource("project").toURI());
         IOUtils.copy(src.toPath(), tmpDir);
 
-        Git repo = Git.init().setDirectory(tmpDir.toFile()).call();
+        Git repo = initRepo(tmpDir);
+
         repo.add().addFilepattern(".").call();
         repo.commit().setMessage("import").call();
 
@@ -72,14 +73,19 @@ public class ProjectIT extends AbstractServerIT {
         assertLog(".*" + greeting + ".*", ab);
     }
 
-    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    private static Git initRepo(Path initDir) throws Exception {
+        return Git.init().setInitialBranch("master").setDirectory(initDir.toFile()).call();
+    }
+
+    @Test
     public void testEntryPointFromYml() throws Exception {
         Path tmpDir = createTempDir();
 
         File src = new File(ProjectIT.class.getResource("projectEntryPoint").toURI());
         IOUtils.copy(src.toPath(), tmpDir);
 
-        Git repo = Git.init().setDirectory(tmpDir.toFile()).call();
+        Git repo = initRepo(tmpDir);
+
         repo.add().addFilepattern(".").call();
         repo.commit().setMessage("import").call();
 
@@ -101,14 +107,15 @@ public class ProjectIT extends AbstractServerIT {
         assertLog(".*Hello, Concord.*", ab);
     }
 
-    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    @Test
     public void testWithCommitId() throws Exception {
         Path tmpDir = createTempDir();
 
         File src = new File(ProjectIT.class.getResource("project").toURI());
         IOUtils.copy(src.toPath(), tmpDir);
 
-        Git repo = Git.init().setDirectory(tmpDir.toFile()).call();
+        Git repo = initRepo(tmpDir);
+
         repo.add().addFilepattern(".").call();
         repo.commit().setMessage("import").call();
 
@@ -153,14 +160,15 @@ public class ProjectIT extends AbstractServerIT {
         assertLog(".*test-commit-1.*" + greeting + ".*", ab);
     }
 
-    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    @Test
     public void testWithTag() throws Exception {
         Path tmpDir = createTempDir();
 
         File src = new File(ProjectIT.class.getResource("project").toURI());
         IOUtils.copy(src.toPath(), tmpDir);
 
-        Git repo = Git.init().setDirectory(tmpDir.toFile()).call();
+        Git repo = initRepo(tmpDir);
+
         repo.add().addFilepattern(".").call();
         repo.commit().setMessage("import").call();
 
@@ -201,14 +209,15 @@ public class ProjectIT extends AbstractServerIT {
         assertLog(".*test-commit-1.*" + greeting + ".*", ab);
     }
 
-    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    @Test
     public void testInitImport() throws Exception {
         Path tmpDir = createTempDir();
 
         File src = new File(ProjectIT.class.getResource("project-triggers").toURI());
         IOUtils.copy(src.toPath(), tmpDir);
 
-        Git repo = Git.init().setDirectory(tmpDir.toFile()).call();
+        Git repo = initRepo(tmpDir);
+
         repo.add().addFilepattern(".").call();
         repo.commit().setMessage("import").call();
 
@@ -237,14 +246,14 @@ public class ProjectIT extends AbstractServerIT {
         }
     }
 
-    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    @Test
     public void testRepositoryValidation() throws Exception {
         Path tmpDir = createTempDir();
 
         File src = new File(ProjectIT.class.getResource("repositoryValidation").toURI());
         IOUtils.copy(src.toPath(), tmpDir);
 
-        Git repo = Git.init().setDirectory(tmpDir.toFile()).call();
+        Git repo = initRepo(tmpDir);
         repo.add().addFilepattern(".").call();
         repo.commit().setMessage("import").call();
 
@@ -269,106 +278,112 @@ public class ProjectIT extends AbstractServerIT {
         assertTrue(result.isOk());
     }
 
-    @Test(expected = Exception.class)
+    @Test
     public void testRepositoryValidationForEmptyFlow() throws Exception {
-        Path tmpDir = createTempDir();
+        assertThrows(Exception.class, () -> {
+            Path tmpDir = createTempDir();
 
-        File src = new File(ProjectIT.class.getResource("repositoryValidationEmptyFlow").toURI());
-        IOUtils.copy(src.toPath(), tmpDir);
+            File src = new File(ProjectIT.class.getResource("repositoryValidationEmptyFlow").toURI());
+            IOUtils.copy(src.toPath(), tmpDir);
 
-        Git repo = Git.init().setDirectory(tmpDir.toFile()).call();
-        repo.add().addFilepattern(".").call();
-        repo.commit().setMessage("import").call();
+            Git repo = initRepo(tmpDir);
+            repo.add().addFilepattern(".").call();
+            repo.commit().setMessage("import").call();
 
-        String gitUrl = tmpDir.toAbsolutePath().toString();
+            String gitUrl = tmpDir.toAbsolutePath().toString();
 
-        // ---
+            // ---
 
-        String projectName = "myProject_" + randomString();
-        String username = "myUser_" + randomString();
-        Set<String> permissions = Collections.emptySet();
-        String repoName = "myRepo_" + randomString();
-        String repoUrl = gitUrl;
+            String projectName = "myProject_" + randomString();
+            String username = "myUser_" + randomString();
+            Set<String> permissions = Collections.emptySet();
+            String repoName = "myRepo_" + randomString();
+            String repoUrl = gitUrl;
 
-        // ---
+            // ---
 
-        createProjectAndRepo(projectName, username, permissions, repoName, repoUrl, null, null);
+            createProjectAndRepo(projectName, username, permissions, repoName, repoUrl, null, null);
 
-        // ---
+            // ---
 
-        RepositoriesApi repositoriesApi = new RepositoriesApi(getApiClient());
-        RepositoryValidationResponse resp = repositoriesApi.validateRepository("Default", projectName, repoName);
-        assertTrue(resp.isOk());
+            RepositoriesApi repositoriesApi = new RepositoriesApi(getApiClient());
+            RepositoryValidationResponse resp = repositoriesApi.validateRepository("Default", projectName, repoName);
+            assertTrue(resp.isOk());
+        });
     }
 
-    @Test(expected = Exception.class)
+    @Test
     public void testRepositoryValidationForEmptyForm() throws Exception {
-        Path tmpDir = createTempDir();
+        assertThrows(Exception.class, () -> {
+            Path tmpDir = createTempDir();
 
-        File src = new File(ProjectIT.class.getResource("repositoryValidationEmptyForm").toURI());
-        IOUtils.copy(src.toPath(), tmpDir);
+            File src = new File(ProjectIT.class.getResource("repositoryValidationEmptyForm").toURI());
+            IOUtils.copy(src.toPath(), tmpDir);
 
-        Git repo = Git.init().setDirectory(tmpDir.toFile()).call();
-        repo.add().addFilepattern(".").call();
-        repo.commit().setMessage("import").call();
+            Git repo = initRepo(tmpDir);
+            repo.add().addFilepattern(".").call();
+            repo.commit().setMessage("import").call();
 
-        String gitUrl = tmpDir.toAbsolutePath().toString();
+            String gitUrl = tmpDir.toAbsolutePath().toString();
 
-        // ---
+            // ---
 
-        String projectName = "myProject_" + randomString();
-        String username = "myUser_" + randomString();
-        Set<String> permissions = Collections.emptySet();
-        String repoName = "myRepo_" + randomString();
-        String repoUrl = gitUrl;
+            String projectName = "myProject_" + randomString();
+            String username = "myUser_" + randomString();
+            Set<String> permissions = Collections.emptySet();
+            String repoName = "myRepo_" + randomString();
+            String repoUrl = gitUrl;
 
-        // ---
+            // ---
 
-        createProjectAndRepo(projectName, username, permissions, repoName, repoUrl, null, null);
+            createProjectAndRepo(projectName, username, permissions, repoName, repoUrl, null, null);
 
-        // ---
+            // ---
 
-        RepositoriesApi repositoriesApi = new RepositoriesApi(getApiClient());
-        RepositoryValidationResponse resp = repositoriesApi.validateRepository("Default", projectName, repoName);
-        assertTrue(resp.isOk());
+            RepositoriesApi repositoriesApi = new RepositoriesApi(getApiClient());
+            RepositoryValidationResponse resp = repositoriesApi.validateRepository("Default", projectName, repoName);
+            assertTrue(resp.isOk());
+        });
     }
 
-    @Test(expected = Exception.class)
+    @Test
     public void testDisabledRepository() throws Exception {
-        Path tmpDir = createTempDir();
+        assertThrows(Exception.class, () -> {
+            Path tmpDir = createTempDir();
 
-        File src = new File(ProjectIT.class.getResource("ProcessDisabledRepo").toURI());
-        IOUtils.copy(src.toPath(), tmpDir);
+            File src = new File(ProjectIT.class.getResource("ProcessDisabledRepo").toURI());
+            IOUtils.copy(src.toPath(), tmpDir);
 
-        Git repo = Git.init().setDirectory(tmpDir.toFile()).call();
-        repo.add().addFilepattern(".").call();
-        repo.commit().setMessage("import").call();
+            Git repo = initRepo(tmpDir);
+            repo.add().addFilepattern(".").call();
+            repo.commit().setMessage("import").call();
 
-        String gitUrl = tmpDir.toAbsolutePath().toString();
+            String gitUrl = tmpDir.toAbsolutePath().toString();
 
-        // ---
-        String orgName = "Default";
-        String projectName = "myProject_" + randomString();
-        String repoName = "myRepo_" + randomString();
-        String repoUrl = gitUrl;
+            // ---
+            String orgName = "Default";
+            String projectName = "myProject_" + randomString();
+            String repoName = "myRepo_" + randomString();
+            String repoUrl = gitUrl;
 
-        ProjectsApi projectsApi = new ProjectsApi(getApiClient());
-        projectsApi.createOrUpdate(orgName, new ProjectEntry()
-                .setName(projectName)
-                .setRepositories(Collections.singletonMap(repoName, new RepositoryEntry()
-                        .setName(repoName).setUrl(repoUrl)
-                        .setDisabled(true))));
+            ProjectsApi projectsApi = new ProjectsApi(getApiClient());
+            projectsApi.createOrUpdate(orgName, new ProjectEntry()
+                    .setName(projectName)
+                    .setRepositories(Collections.singletonMap(repoName, new RepositoryEntry()
+                            .setName(repoName).setUrl(repoUrl)
+                            .setDisabled(true))));
 
-        // ---
-        Map<String, Object> input = new HashMap<>();
-        input.put("org", orgName);
-        input.put("project", projectName);
-        input.put("repo", repoName);
+            // ---
+            Map<String, Object> input = new HashMap<>();
+            input.put("org", orgName);
+            input.put("project", projectName);
+            input.put("repo", repoName);
 
-        start(input);
+            start(input);
+        });
     }
 
-    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    @Test
     public void testBulkAccessUpdate() throws Exception {
         String orgName = "org_" + randomString();
 

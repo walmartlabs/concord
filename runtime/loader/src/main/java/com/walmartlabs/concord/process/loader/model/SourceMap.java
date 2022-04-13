@@ -22,15 +22,16 @@ package com.walmartlabs.concord.process.loader.model;
 
 import com.fasterxml.jackson.core.JsonLocation;
 import com.walmartlabs.concord.runtime.v2.model.Location;
+import org.immutables.serial.Serial;
 import org.immutables.value.Value;
 
 import javax.annotation.Nullable;
 import java.io.Serializable;
 
 @Value.Immutable
+@Serial.Version(1)
+@Value.Style(jdkOnly = true)
 public interface SourceMap extends Serializable {
-
-    long serialVersionUID = 1L;
 
     static SourceMap from(Location location) {
         return SourceMap.builder()

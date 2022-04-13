@@ -22,18 +22,18 @@ package com.walmartlabs.concord.it.server;
 
 import com.walmartlabs.concord.ApiException;
 import com.walmartlabs.concord.client.*;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.util.*;
 import java.util.stream.Collectors;
 
 import static com.walmartlabs.concord.it.common.ITUtils.archive;
 import static com.walmartlabs.concord.it.common.ServerClient.*;
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class RunAsIT extends AbstractServerIT {
 
-    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    @Test
     public void testSwitchCurrentUser() throws Exception {
         // create a new org
 
@@ -111,7 +111,7 @@ public class RunAsIT extends AbstractServerIT {
         assertLog(".*Now we are running as admin. Initiator: " + userAName.toLowerCase() + ".*", ab);
     }
 
-    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    @Test
     public void testWithMultipleUsers() throws Exception {
         // create a new org
 
@@ -207,7 +207,7 @@ public class RunAsIT extends AbstractServerIT {
         assertLog(".*Now we are running as " + userBName.toLowerCase() + ".*", ab);
     }
 
-    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    @Test
     public void testPayload() throws Exception {
         // create a new org
 

@@ -19,6 +19,7 @@ configuration:
     - "vaultPassword"
     recordTaskMeta: false
     truncateMeta: true
+  parallelLoopParallelism: 123
 flows:
   flow1:
   - checkpoint: "chp1"
@@ -37,6 +38,9 @@ triggers:
       arg: "arg-value"
     conditions:
       type: "push"
+      status:
+      - "opened"
+      - "reopened"
 imports:
 - mvn:
     url: "http://url"

@@ -29,6 +29,8 @@ import java.util.Objects;
 
 public class ConcurrentProcessRule implements Serializable {
 
+    private static final long serialVersionUID = 1L;
+
     private final String msg;
     private final Integer maxPerOrg;
     private final Integer maxPerProject;

@@ -25,6 +25,7 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonRawValue;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import io.swagger.annotations.ApiModel;
 import org.immutables.value.Value;
 
 import javax.annotation.Nullable;
@@ -32,7 +33,9 @@ import java.io.Serializable;
 import java.time.OffsetDateTime;
 import java.util.UUID;
 
+@ApiModel(value="AnsibleProcessEventEntry")
 @Value.Immutable
+@Value.Style(jdkOnly = true)
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonSerialize(as = ImmutableProcessEventEntry.class)
 @JsonDeserialize(as = ImmutableProcessEventEntry.class)

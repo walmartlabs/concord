@@ -15,7 +15,7 @@ services:
     environment:
       CONCORD_CFG_FILE: "/concord.conf"
   concord-dind:
-    image: "docker:stable-dind"
+    image: "docker:dind"
     privileged: true
     volumes:
       - "agent-tmp:/tmp"

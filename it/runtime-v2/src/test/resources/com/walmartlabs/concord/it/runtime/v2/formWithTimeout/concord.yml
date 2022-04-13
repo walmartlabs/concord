@@ -1,0 +1,13 @@
+configuration:
+  runtime: "concord-v2"
+  suspendTimeout: "PT1S"
+
+flows:
+  default:
+    - form: myForm
+      fields:
+        - firstName: { type: "string" }
+        - lastName: { type: "string" }
+        - age: { type: "int" }
+
+    - log: "myForm: ${myForm}"
