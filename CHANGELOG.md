@@ -4,6 +4,9 @@
 
 ### Added
 
+- ansible-tasks: implement stats file for flows with
+multiple playbook runs
+([#596](https://github.com/walmartlabs/concord/pull/596));
 - runtime-v1, v2: add correlationId to checkpoint events
 ([#581](https://github.com/walmartlabs/concord/pull/581));
 - resource-tasks, runtime-v2: support for properties
