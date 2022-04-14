@@ -35,10 +35,7 @@ import java.io.IOException;
 import java.lang.reflect.Type;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.Base64;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 
 public class SecretClient {
 
@@ -203,6 +200,44 @@ public class SecretClient {
         ApiResponse<SecretOperationResponse> response = ClientUtils.withRetry(retryCount, retryInterval,
                 () -> ClientUtils.postData(apiClient, path, params, SecretOperationResponse.class));
         return response.getData();
+    }
+
+    public void updateSecret(String orgName, String secretName, UpdateSecretRequest request) throws ApiException {
+        String path = "/api/v2/org/" + orgName + "/secret/" + secretName;
+
+        Map<String, Object> params = new HashMap<>();
+        params.put(Constants.Multipart.ORG_ID, request.newOrgId());
+        params.put(Constants.Multipart.ORG_NAME, request.newOrgName());
+        params.put(Constants.Multipart.PROJECT_ID, request.newProjectId());
+        params.put(Constants.Multipart.PROJECT_NAME, request.newProjectName());
+        params.put("removeProjectLink", request.removeProjectLink());
+        params.put("ownerId", request.newOwnerId());
+        params.put(Constants.Multipart.STORE_PASSWORD, request.currentPassword());
+        params.put("newStorePassword", request.newPassword());
+        params.put(Constants.Multipart.NAME, request.newName());
+        params.put(Constants.Multipart.VISIBILITY, request.newVisibility());
+
+        byte[] data = request.data();
+        CreateSecretRequest.KeyPair keyPair = request.keyPair();
+        CreateSecretRequest.UsernamePassword usernamePassword = request.usernamePassword();
+
+        if (data != null) {
+            params.put(Constants.Multipart.TYPE, SecretEntry.TypeEnum.DATA.getValue());
+            params.put(Constants.Multipart.DATA, data);
+        } else if (keyPair != null) {
+            params.put(Constants.Multipart.TYPE, SecretEntry.TypeEnum.KEY_PAIR.getValue());
+            params.put(Constants.Multipart.PUBLIC, readFile(keyPair.publicKey()));
+            params.put(Constants.Multipart.PRIVATE, readFile(keyPair.privateKey()));
+        } else if (usernamePassword != null) {
+            params.put(Constants.Multipart.TYPE, SecretEntry.TypeEnum.USERNAME_PASSWORD.getValue());
+            params.put(Constants.Multipart.USERNAME, usernamePassword.username());
+            params.put(Constants.Multipart.PASSWORD, usernamePassword.password());
+        }
+
+        params.values().removeIf(Objects::isNull);
+
+        ClientUtils.withRetry(retryCount, retryInterval,
+                () -> ClientUtils.postData(apiClient, path, params, null));
     }
 
     private static byte[] readFile(Path file) {
