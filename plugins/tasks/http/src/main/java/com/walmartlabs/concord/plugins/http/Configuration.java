@@ -27,10 +27,7 @@ import com.walmartlabs.concord.sdk.Context;
 import com.walmartlabs.concord.sdk.MapUtils;
 import org.apache.http.client.utils.URIBuilder;
 
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 import static com.walmartlabs.concord.plugins.http.HttpTask.HttpTaskConstant.*;
 import static com.walmartlabs.concord.plugins.http.HttpTask.RequestMethodType;
@@ -57,9 +54,9 @@ public class Configuration {
     private final boolean ignoreErrors;
     private final String proxy;
     private final String proxyUser;
-    private final String proxyPassword;
+    private final char[] proxyPassword;
     private final boolean debug;
-    private boolean followRedirects;
+    private final boolean followRedirects;
     private final String keyStorePath;
     private final String keyStorePassword;
     private final boolean strictSsl;
@@ -81,7 +78,7 @@ public class Configuration {
                           boolean ignoreErrors,
                           String proxy,
                           String proxyUser,
-                          String proxyPassword,
+                          char[] proxyPassword,
                           boolean debug,
                           boolean followRedirects,
                           String keyStorePath,
@@ -215,7 +212,7 @@ public class Configuration {
         return proxyUser;
     }
 
-    public String getProxyPassword() {
+    public char[] getProxyPassword() {
         return proxyPassword;
     }
 
@@ -263,7 +260,7 @@ public class Configuration {
         private boolean ignoreErrors;
         private String proxy;
         private String proxyUser;
-        private String proxyPassword;
+        private char[] proxyPassword;
         private boolean debug;
         private boolean followRedirects = true;
         private String keyStorePath;
@@ -556,7 +553,9 @@ public class Configuration {
             this.proxy = MapUtils.getString(input, PROXY_KEY);
             Map<String, Object> proxyAuth = MapUtils.getMap(input, PROXY_AUTH_KEY, Collections.emptyMap());
             this.proxyUser = MapUtils.getString(proxyAuth, PROXY_USER_KEY);
-            this.proxyPassword = MapUtils.getString(proxyAuth, PROXY_PASSWORD_KEY);
+            this.proxyPassword = Optional.ofNullable(MapUtils.getString(proxyAuth, PROXY_PASSWORD_KEY))
+                    .map(String::toCharArray)
+                    .orElse(null);
 
             this.debug = MapUtils.getBoolean(input, DEBUG_KEY, false);
 

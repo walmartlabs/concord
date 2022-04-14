@@ -346,7 +346,7 @@ public class SimpleHttpClient {
                 CredentialsProvider proxyCredsProvider = new BasicCredentialsProvider();
                 proxyCredsProvider.setCredentials(
                         new AuthScope(proxyHost.getHostName(), proxyHost.getPort()),
-                        new UsernamePasswordCredentials(cfg.getProxyUser(), cfg.getProxyPassword()));
+                        new UsernamePasswordCredentials(cfg.getProxyUser(), new String(cfg.getProxyPassword())));
 
                 clientBuilder.setDefaultCredentialsProvider(proxyCredsProvider);
             }
