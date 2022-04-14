@@ -18,6 +18,8 @@ files ([#593](https://github.com/walmartlabs/concord/pull/593)).
 
 ### Changed
 
+- project: improve jdk16 compatibility
+([#592](https://github.com/walmartlabs/concord/pull/592));
 - concord-server: introduce exclusive wait conditions
 ([#595](https://github.com/walmartlabs/concord/pull/595));
 - project: improve mvnd support
