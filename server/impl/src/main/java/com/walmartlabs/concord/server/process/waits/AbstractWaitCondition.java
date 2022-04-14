@@ -48,4 +48,6 @@ public abstract class AbstractWaitCondition implements Serializable {
 
     @Nullable
     public abstract String reason();
+
+    public abstract boolean exclusive();
 }

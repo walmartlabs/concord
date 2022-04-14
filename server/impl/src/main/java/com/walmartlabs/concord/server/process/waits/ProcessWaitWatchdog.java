@@ -117,8 +117,16 @@ public class ProcessWaitWatchdog implements ScheduledTask {
         List<AbstractWaitCondition> resultWaits = new ArrayList<>();
         List<ProcessWaitHandler.Action> resultActions = new ArrayList<>();
 
+        boolean hasExclusive = p.waits().stream().anyMatch(AbstractWaitCondition::exclusive);
+
         for (AbstractWaitCondition w : p.waits()) {
-            ProcessWaitHandler.Result<AbstractWaitCondition> result = processWait(w, p);
+            ProcessWaitHandler.Result<AbstractWaitCondition> result;
+            if (!hasExclusive || w.exclusive()) {
+                result = processWait(w, p);
+            } else {
+                result = ProcessWaitHandler.Result.of(w);
+            }
+
             if (result != null) {
                 if (result.waitCondition() != null){
                     resultWaits.add(result.waitCondition());
@@ -137,17 +145,18 @@ public class ProcessWaitWatchdog implements ScheduledTask {
         }
 
         try {
-            boolean isWaiting = !resultWaits.isEmpty() && resumeEvents.isEmpty();
-            if (!resumeEvents.isEmpty()) {
-                resumeProcess(p.processKey(), resumeEvents);
-            }
-
-            processWaitManager.tx(tx -> {
-                boolean updated = processWaitManager.setWait(tx, p.processKey(), resultWaits, isWaiting, p.version());
-                if (updated) {
+            boolean updated = processWaitManager.txResult(tx -> {
+                boolean isWaiting = !resultWaits.isEmpty() && resumeEvents.isEmpty();
+                boolean up = processWaitManager.setWait(tx, p.processKey(), resultWaits, isWaiting, p.version());
+                if (up) {
                     resultActions.forEach(a -> a.execute(tx));
                 }
+                return up;
             });
+
+            if (updated && !resumeEvents.isEmpty()) {
+                resumeProcess(p.processKey(), resumeEvents);
+            }
         } catch (Exception e) {
             log.info("processWaits ['{}'] -> error", p, e);
         }

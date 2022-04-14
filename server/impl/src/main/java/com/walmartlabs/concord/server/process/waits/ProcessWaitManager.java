@@ -57,6 +57,10 @@ public class ProcessWaitManager {
         processWaitDao.tx(t);
     }
 
+    public <T> T txResult(AbstractDao.TxResult<T> t) {
+        return processWaitDao.txResult(t);
+    }
+
     public ProcessWaitEntry getWait(ProcessKey processKey) {
         return processWaitDao.get(processKey);
     }

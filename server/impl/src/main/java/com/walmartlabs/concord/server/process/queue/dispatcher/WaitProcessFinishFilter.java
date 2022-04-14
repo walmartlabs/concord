@@ -65,6 +65,7 @@ public abstract class WaitProcessFinishFilter implements Filter {
                 .reason(getReason())
                 .finalStatuses(getFinalStatuses())
                 .completeCondition(getCompleteCondition())
+                .exclusive(true)
                 .build());
 
         processQueueManager.updateStatus(tx, e.key(), ProcessStatus.WAITING);
