@@ -4,6 +4,8 @@
 
 ### Added
 
+- concord-server: add API for updating secrets
+([#590](https://github.com/walmartlabs/concord/pull/590));
 - http-tasks: add proxy authentication parameters
 ([#597](https://github.com/walmartlabs/concord/pull/597));
 - ansible-tasks: implement stats file for flows with
