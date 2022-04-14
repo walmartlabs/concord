@@ -22,6 +22,7 @@ package com.walmartlabs.concord.it.server;
 
 import com.google.common.io.Files;
 import com.walmartlabs.concord.client.*;
+import com.walmartlabs.concord.common.ConfigurationUtils;
 import org.junit.jupiter.api.Test;
 
 import java.io.File;
@@ -30,10 +31,7 @@ import java.io.InputStream;
 import java.net.URI;
 import java.net.URL;
 import java.nio.file.Paths;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.regex.Pattern;
 
 import static com.walmartlabs.concord.common.IOUtils.grep;
@@ -151,6 +149,7 @@ public class AnsibleIT extends AbstractServerIT {
     }
 
     @Test
+    @SuppressWarnings("unchecked")
     public void testTwoAnsibleRuns() throws Exception {
         URI dir = AnsibleIT.class.getResource("twoAnsible").toURI();
         byte[] payload = archive(dir, ITConstants.DEPENDENCIES_DIR);
@@ -172,6 +171,21 @@ public class AnsibleIT extends AbstractServerIT {
         byte[] ab = getLog(pir.getLogFileName());
         assertLog(".*\"msg\":.*Hello!.*", ab);
         assertLog(".*\"msg\":.*Bye-bye!.*", ab);
+
+        // ---
+
+        File resp = processApi.downloadAttachment(spr.getInstanceId(), "ansible_stats_v2.json");
+        assertNotNull(resp);
+
+        List<Map<String, Object>> stats = fromJson(resp, List.class);
+
+        assertEquals(2, stats.size());
+
+        assertEquals("playbook/hello.yml", stats.get(0).get("playbook"));
+        Collection<String> oks = (Collection<String>)ConfigurationUtils.get(stats.get(0), "stats", "ok");
+        assertNotNull(oks);
+        assertEquals(1, oks.size());
+        assertEquals("127.0.0.1", oks.iterator().next());
     }
 
     @Test
