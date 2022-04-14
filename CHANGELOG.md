@@ -4,6 +4,8 @@
 
 ### Added
 
+- http-tasks: add proxy authentication parameters
+([#597](https://github.com/walmartlabs/concord/pull/597));
 - ansible-tasks: implement stats file for flows with
 multiple playbook runs
 ([#596](https://github.com/walmartlabs/concord/pull/596));
