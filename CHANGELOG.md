@@ -1,5 +1,46 @@
 # Change log
 
+## [1.95.0] - TBD
+
+### Added
+
+- concord-server: add API for updating secrets
+([#590](https://github.com/walmartlabs/concord/pull/590));
+- http-tasks: add proxy authentication parameters
+([#597](https://github.com/walmartlabs/concord/pull/597));
+- ansible-tasks: implement stats file for flows with
+multiple playbook runs
+([#596](https://github.com/walmartlabs/concord/pull/596));
+- runtime-v1, v2: add correlationId to checkpoint events
+([#581](https://github.com/walmartlabs/concord/pull/581));
+- resource-tasks, runtime-v2: support for properties
+files ([#593](https://github.com/walmartlabs/concord/pull/593)).
+
+### Changed
+
+- project: improve jdk16 compatibility
+([#592](https://github.com/walmartlabs/concord/pull/592));
+- concord-server: introduce exclusive wait conditions
+([#595](https://github.com/walmartlabs/concord/pull/595));
+- project: improve mvnd support
+([#567](https://github.com/walmartlabs/concord/pull/567));
+- runner: exit JVM on OOM error
+([#594](https://github.com/walmartlabs/concord/pull/594));
+- runtime-v2: fix `currentFlowName()` in error blocks
+([#591](https://github.com/walmartlabs/concord/pull/591));
+- runtime-v2: serialize ignoreErrors only if it is true
+([#588](https://github.com/walmartlabs/concord/pull/588));
+- resource-task: convert relative paths to absolute
+([#589](https://github.com/walmartlabs/concord/pull/589));
+- runtime-v2: redirect script output to logger
+([#587](https://github.com/walmartlabs/concord/pull/587));
+- agent: fix log segments parser
+([#586](https://github.com/walmartlabs/concord/pull/586));
+- resource-task: fix java 8 date/time serialization
+([#584](https://github.com/walmartlabs/concord/pull/584));
+- it: explicitly specify initialBranch for git tests
+([#582](https://github.com/walmartlabs/concord/pull/582)).
+
 ## [1.94.0] - 2022-03-07
 
 ### Added
