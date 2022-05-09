@@ -1,5 +1,12 @@
 # Change log
 
+## [1.93.4] - 2022-05-09
+
+### Added
+
+- runtime-v1, v2: add correlationId to checkpoint events 
+([#581](https://github.com/walmartlabs/concord/pull/581));
+
 ## [1.93.3] - 2022-03-11
 
 ### Changed
