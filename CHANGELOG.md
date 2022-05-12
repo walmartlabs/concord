@@ -41,20 +41,27 @@ files ([#593](https://github.com/walmartlabs/concord/pull/593)).
 - it: explicitly specify initialBranch for git tests
 ([#582](https://github.com/walmartlabs/concord/pull/582)).
 
+## [1.93.3] - 2022-03-11
+
+### Changed
+
+- agent: fix log segments parse
+([#586](https://github.com/walmartlabs/concord/pull/586)).
+
 ## [1.94.0] - 2022-03-07
 
 ### Added
 
 - concord-server: add `orgUpdate` permission
-([#552](https://github.com/walmartlabs/concord/pull/552);
+([#552](https://github.com/walmartlabs/concord/pull/552));
 - runtime-v2: add `orDefault` function
-([#557](https://github.com/walmartlabs/concord/pull/557);
+([#557](https://github.com/walmartlabs/concord/pull/557));
 - runtime-v2: add `isDebug` function
 ([#558](https://github.com/walmartlabs/concord/pull/558)).
 - agent: option to ignore artifact descriptor repositories
-([#561](https://github.com/walmartlabs/concord/pull/561);
+([#561](https://github.com/walmartlabs/concord/pull/561));
 - runtime-v2: project document support for suspendTimeout
-([#562](https://github.com/walmartlabs/concord/pull/562);
+([#562](https://github.com/walmartlabs/concord/pull/562));
 - concord-server: add process-wait-watchdog metrics
 ([#566](https://github.com/walmartlabs/concord/pull/566));
 - runtime-v2: implement `loop` syntax - improved version
@@ -92,6 +99,33 @@ documents was never supported)
 - runtime-v2: fix currentFlowName after restoring from a
 checkpoint
 ([#580](https://github.com/walmartlabs/concord/pull/580)).
+
+
+
+## [1.93.2] - 2022-02-17
+
+### Changed
+
+- runtime-v1: do not override process arguments with default variables
+([#569](https://github.com/walmartlabs/concord/pull/569)).
+
+
+
+## [1.93.1] - 2022-02-11
+
+### Added
+
+- concord-server: add orgUpdate permission
+([#552](https://github.com/walmartlabs/concord/pull/552)).
+
+### Changed
+
+- runtime-v2: fix segment status parse
+([#549](https://github.com/walmartlabs/concord/pull/549));
+- graalvm: use nashorn compat mode
+([#551](https://github.com/walmartlabs/concord/pull/551));
+- agent: allow ignore artifact descriptor repositories
+([#561](https://github.com/walmartlabs/concord/pull/561)).
 
 
 
@@ -254,6 +288,28 @@ dispatcher ([#466](https://github.com/walmartlabs/concord/pull/466));
 authentication ([#473](https://github.com/walmartlabs/concord/pull/473));
 - runtime-v1, runtime-v2: ability to disable events recording
 ([#474](https://github.com/walmartlabs/concord/pull/474)).
+
+
+
+## [1.89.2] - 2021-09-14
+
+### Changed
+
+- concord-server: do not create http sessions for api-key auth
+([#471](https://github.com/walmartlabs/concord/pull/471));
+- concord-server: disable http sessions for session token auth
+([#473](https://github.com/walmartlabs/concord/pull/473)).
+
+
+
+## [1.89.1] - 2021-09-03
+
+### Changed
+
+- concord-server-db: fix checksum expectations for API key related
+changesets ([#463](https://github.com/walmartlabs/concord/pull/463));
+- concord-server: remove unused task from DB
+([#464](https://github.com/walmartlabs/concord/pull/464)).
 
 
 
