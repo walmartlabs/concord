@@ -41,7 +41,7 @@ public class ResourceTaskV2 implements Task {
     }
 
     public String asString(String path) throws IOException {
-        return delegate.asString(path);
+        return ResourceTaskCommon.asString(path);
     }
 
     public Object asJson(String path) throws IOException {

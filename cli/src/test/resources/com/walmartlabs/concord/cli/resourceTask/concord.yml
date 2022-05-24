@@ -1,9 +1,0 @@
-configuration:
-  runtime: "concord-v2"
-  arguments:
-    msg:
-      k: v
-
-flows:
-  default:
-    - log: ${resource.asString(resource.writeAsJson(msg))}
