@@ -1,5 +1,13 @@
 # Change log
 
+## [1.96.0] - Unreleased
+
+### Added
+
+- concord-server: implement endpoints for adding LDAP
+groups to roles
+([#606](https://github.com/walmartlabs/concord/pull/606)).
+
 ## [1.95.0] - 2022-04-16
 
 ### Added
