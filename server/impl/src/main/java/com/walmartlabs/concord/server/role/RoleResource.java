@@ -36,6 +36,7 @@ import io.swagger.annotations.ApiParam;
 import io.swagger.annotations.Authorization;
 import org.apache.shiro.authz.UnauthorizedException;
 import org.sonatype.siesta.Resource;
+import org.sonatype.siesta.ValidationErrorsException;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -43,6 +44,7 @@ import javax.inject.Singleton;
 import javax.validation.Valid;
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
+import java.util.Collection;
 import java.util.List;
 import java.util.UUID;
 
@@ -146,6 +148,75 @@ public class RoleResource implements Resource {
         return new GenericOperationResult(OperationResult.DELETED);
     }
 
+    /**
+     * Add LDAP groups to the specified role.
+     *
+     * @param roleName Name of the Role
+     * @param groups LDAP groups collection
+     * @return result
+     */
+    @PUT
+    @ApiOperation("Add LDAP groups to a role")
+    @Path("/{roleName}/ldapGroups")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    public GenericOperationResult addLdapGroups(@ApiParam @PathParam("roleName") @ConcordKey String roleName,
+                                                @ApiParam @QueryParam("replace") @DefaultValue("false") boolean replace,
+                                                @ApiParam @Valid Collection<String> groups) {
+        assertAdmin();
+
+        boolean isEmptyGroups = groups == null || groups.isEmpty();
+        if (isEmptyGroups && !replace) {
+            throw new ValidationErrorsException("Empty LDAP group list");
+        }
+
+        UUID id = roleDao.getId(roleName);
+        if (id == null) {
+            throw new ConcordApplicationException("Role not found: " + roleName, Status.NOT_FOUND);
+        }
+
+        roleDao.tx(tx -> {
+            if (replace) {
+                roleDao.removeLdapGroups(tx, id);
+            }
+
+            for (String g : groups) {
+                roleDao.upsertLdapGroup(tx, id, g);
+            }
+        });
+
+        auditLog.add(AuditObject.ROLE, AuditAction.UPDATE)
+                .field("roleId", id)
+                .field("name", roleName)
+                .field("action", "addLdapGroups")
+                .field("groups", groups)
+                .field("replace", replace)
+                .log();
+
+        return new GenericOperationResult(OperationResult.UPDATED);
+    }
+
+    /**
+     * List LDAP groups of a role.
+     *
+     * @param roleName Name of a Role
+     * @return list of groups
+     */
+    @GET
+    @ApiOperation("List ldap groups of a role")
+    @Path("/{roleName}/ldapGroups")
+    @Produces(MediaType.APPLICATION_JSON)
+    public List<String> listLdapGroups(@ApiParam @PathParam("roleName") @ConcordKey String roleName) {
+        assertAdmin();
+
+        UUID id = roleDao.getId(roleName);
+        if (id == null) {
+            throw new ConcordApplicationException("Role not found: " + roleName, Status.NOT_FOUND);
+        }
+        
+        return roleDao.listLdapGroups(id);
+    }
+    
     private static void assertAdmin() {
         if (!Roles.isAdmin()) {
             throw new UnauthorizedException("Only admins can do that");
