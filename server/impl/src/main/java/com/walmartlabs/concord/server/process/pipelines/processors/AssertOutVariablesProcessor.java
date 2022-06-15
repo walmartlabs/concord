@@ -27,12 +27,13 @@ import com.walmartlabs.concord.server.org.project.ProjectDao;
 import com.walmartlabs.concord.server.org.project.ProjectEntry;
 import com.walmartlabs.concord.server.process.Payload;
 import com.walmartlabs.concord.server.process.ProcessException;
+import com.walmartlabs.concord.server.process.pipelines.processors.cfg.ProcessConfigurationUtils;
 import com.walmartlabs.concord.server.user.UserManager;
 
 import javax.inject.Inject;
 import javax.inject.Named;
 import javax.ws.rs.core.Response.Status;
-import java.util.UUID;
+import java.util.*;
 
 @Named
 public class AssertOutVariablesProcessor implements PayloadProcessor {
@@ -53,13 +54,41 @@ public class AssertOutVariablesProcessor implements PayloadProcessor {
 
     @Override
     public Payload process(Chain chain, Payload payload) {
-        if (payload.getHeader(Payload.OUT_EXPRESSIONS) == null) {
+        Set<String> outVars = getOutVariables(payload);
+
+        if (outVars.isEmpty()) {
             return chain.process(payload);
         }
 
         assertOutVariables(payload);
 
         return chain.process(payload);
+    }
+
+    private Set<String> getOutVariables(Payload payload) {
+        // 'out' variables can be defined in a number of parts of a payload
+
+        Set<String> outVars = new HashSet<>();
+
+        // initial request field (e.g. form input 'out' value)
+        Set<String> fromRequest = payload.getHeader(Payload.OUT_EXPRESSIONS);
+
+        if (fromRequest != null) {
+            outVars.addAll(fromRequest);
+        }
+
+        // _main.json file in the workspace
+        Map<String, Object> workspaceCfg = ProcessConfigurationUtils.getWorkspaceCfg(payload);
+
+        // attached to the request JSON file
+        Map<String, Object> attachedCfg = ProcessConfigurationUtils.getAttachedCfg(payload);
+
+        // existing configuration values from the payload
+        Map<String, Object> payloadCfg = payload.getHeader(Payload.CONFIGURATION, Collections.emptyMap());
+
+        outVars.addAll(ProcessConfigurationUtils.getOutVars(payloadCfg, attachedCfg, workspaceCfg));
+
+        return outVars;
     }
 
     private void assertOutVariables(Payload payload) {

@@ -20,18 +20,27 @@ package com.walmartlabs.concord.server.process.pipelines.processors.cfg;
  * =====
  */
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.walmartlabs.concord.sdk.Constants;
 import com.walmartlabs.concord.server.org.OrganizationManager;
 import com.walmartlabs.concord.server.org.project.ProjectEntry;
 import com.walmartlabs.concord.server.process.Payload;
+import com.walmartlabs.concord.server.process.ProcessException;
+import com.walmartlabs.concord.server.process.keys.AttachmentKey;
 import com.walmartlabs.concord.server.process.pipelines.processors.RepositoryProcessor;
 
+import javax.ws.rs.core.Response;
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.*;
 import java.util.stream.Collectors;
 
 public final class ProcessConfigurationUtils {
 
     private static final List<String> DEFAULT_PROFILES = Collections.singletonList("default");
+    public static final AttachmentKey REQUEST_ATTACHMENT_KEY = AttachmentKey.register("request");
 
     /**
      * Creates a process {@code configuration} object with variables that
@@ -59,6 +68,37 @@ public final class ProcessConfigurationUtils {
         return cfg;
     }
 
+    @SuppressWarnings("unchecked")
+    public static Map<String, Object> getAttachedCfg(Payload payload) {
+        Path p = payload.getAttachment(REQUEST_ATTACHMENT_KEY);
+        if (p == null) {
+            return Collections.emptyMap();
+        }
+
+        try (InputStream in = Files.newInputStream(p)) {
+            ObjectMapper om = new ObjectMapper();
+            return om.readValue(in, Map.class);
+        } catch (IOException e) {
+            throw new ProcessException(payload.getProcessKey(), "Invalid request data format", e, Response.Status.BAD_REQUEST);
+        }
+    }
+
+    @SuppressWarnings("unchecked")
+    public static Map<String, Object> getWorkspaceCfg(Payload payload) {
+        Path workspace = payload.getHeader(Payload.WORKSPACE_DIR);
+        Path src = workspace.resolve(Constants.Files.CONFIGURATION_FILE_NAME);
+        if (!Files.exists(src)) {
+            return Collections.emptyMap();
+        }
+
+        try (InputStream in = Files.newInputStream(src)) {
+            ObjectMapper om = new ObjectMapper();
+            return om.readValue(in, Map.class);
+        } catch (IOException e) {
+            throw new ProcessException(payload.getProcessKey(), "Invalid request data format", e, Response.Status.BAD_REQUEST);
+        }
+    }
+
     @SafeVarargs
     @SuppressWarnings("unchecked")
     public static List<String> getActiveProfiles(Map<String, Object> ... mm) {
@@ -81,6 +121,28 @@ public final class ProcessConfigurationUtils {
         }
 
         return DEFAULT_PROFILES;
+    }
+
+    @SafeVarargs
+    public static Set<String> getOutVars(Map<String, Object> ... mm) {
+        for (Map<String, Object> m : mm) {
+            Object o = m.get(Constants.Request.OUT_EXPRESSIONS_KEY);
+
+            if (o == null) {
+                continue;
+            }
+
+            if (o instanceof List) {
+                return new HashSet<>(assertListType("out", removeNulls((List<String>) o), String.class));
+            } else if (o instanceof String) {
+                return new HashSet<>(Arrays.asList(((String) o).split(",")));
+            } else {
+                throw new IllegalArgumentException("Invalid '" + Constants.Request.OUT_EXPRESSIONS_KEY +
+                        "' value. Expected JSON array, got: " + o);
+            }
+        }
+
+        return Collections.emptySet();
     }
 
     private static Map<String, Object> createProjectInfo(Payload payload, ProjectEntry projectEntry) {

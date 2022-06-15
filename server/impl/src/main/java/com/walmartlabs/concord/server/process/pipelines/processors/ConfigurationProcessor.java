@@ -20,7 +20,6 @@ package com.walmartlabs.concord.server.process.pipelines.processors;
  * =====
  */
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.walmartlabs.concord.common.ConfigurationUtils;
 import com.walmartlabs.concord.policyengine.PolicyEngine;
 import com.walmartlabs.concord.process.loader.model.ProcessDefinition;
@@ -32,16 +31,11 @@ import com.walmartlabs.concord.server.org.project.ProjectEntry;
 import com.walmartlabs.concord.server.process.Payload;
 import com.walmartlabs.concord.server.process.ProcessException;
 import com.walmartlabs.concord.server.process.ProcessKind;
-import com.walmartlabs.concord.server.process.keys.AttachmentKey;
 import com.walmartlabs.concord.server.process.pipelines.processors.cfg.ProcessConfigurationUtils;
 
 import javax.inject.Inject;
 import javax.inject.Named;
 import javax.ws.rs.core.Response.Status;
-import java.io.IOException;
-import java.io.InputStream;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -53,7 +47,6 @@ import java.util.UUID;
 @Named
 public class ConfigurationProcessor implements PayloadProcessor {
 
-    public static final AttachmentKey REQUEST_ATTACHMENT_KEY = AttachmentKey.register("request");
 
     private final ProjectDao projectDao;
     private final OrganizationDao orgDao;
@@ -78,10 +71,10 @@ public class ConfigurationProcessor implements PayloadProcessor {
         Map<String, Object> projectCfg = getProjectCfg(projectEntry);
 
         // _main.json file in the workspace
-        Map<String, Object> workspaceCfg = getWorkspaceCfg(payload);
+        Map<String, Object> workspaceCfg = ProcessConfigurationUtils.getWorkspaceCfg(payload);
 
         // attached to the request JSON file
-        Map<String, Object> attachedCfg = getAttachedCfg(payload);
+        Map<String, Object> attachedCfg = ProcessConfigurationUtils.getAttachedCfg(payload);
 
         // existing configuration values from the payload
         Map<String, Object> payloadCfg = payload.getHeader(Payload.CONFIGURATION, Collections.emptyMap());
@@ -164,22 +157,6 @@ public class ConfigurationProcessor implements PayloadProcessor {
         return policy.getProcessCfgPolicy().get();
     }
 
-    @SuppressWarnings("unchecked")
-    private static Map<String, Object> getWorkspaceCfg(Payload payload) {
-        Path workspace = payload.getHeader(Payload.WORKSPACE_DIR);
-        Path src = workspace.resolve(Constants.Files.CONFIGURATION_FILE_NAME);
-        if (!Files.exists(src)) {
-            return Collections.emptyMap();
-        }
-
-        try (InputStream in = Files.newInputStream(src)) {
-            ObjectMapper om = new ObjectMapper();
-            return om.readValue(in, Map.class);
-        } catch (IOException e) {
-            throw new ProcessException(payload.getProcessKey(), "Invalid request data format", e, Status.BAD_REQUEST);
-        }
-    }
-
     private static Map<String, Object> getProfileCfg(Payload payload, List<String> activeProfiles) {
         if (activeProfiles == null) {
             activeProfiles = Collections.emptyList();
@@ -192,21 +169,6 @@ public class ConfigurationProcessor implements PayloadProcessor {
 
         Map<String, Object> m = ProcessDefinitionUtils.getVariables(pd, activeProfiles);
         return m != null ? m : Collections.emptyMap();
-    }
-
-    @SuppressWarnings("unchecked")
-    private static Map<String, Object> getAttachedCfg(Payload payload) {
-        Path p = payload.getAttachment(REQUEST_ATTACHMENT_KEY);
-        if (p == null) {
-            return Collections.emptyMap();
-        }
-
-        try (InputStream in = Files.newInputStream(p)) {
-            ObjectMapper om = new ObjectMapper();
-            return om.readValue(in, Map.class);
-        } catch (IOException e) {
-            throw new ProcessException(payload.getProcessKey(), "Invalid request data format", e, Status.BAD_REQUEST);
-        }
     }
 
     private static void processHandlersConfiguration(Payload payload, Map<String, Object> m) {

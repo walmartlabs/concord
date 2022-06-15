@@ -26,6 +26,7 @@ import com.walmartlabs.concord.server.org.project.ProjectDao;
 import com.walmartlabs.concord.server.org.project.ProjectEntry;
 import com.walmartlabs.concord.server.process.Payload;
 import com.walmartlabs.concord.server.process.ProcessException;
+import com.walmartlabs.concord.server.process.pipelines.processors.cfg.ProcessConfigurationUtils;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -45,7 +46,7 @@ public class AttachmentStoringProcessor implements PayloadProcessor {
      * Attachments used by the server. They should not be added to the workspace.
      */
     private static final Set<String> SYSTEM_ATTACHMENT_NAMES = ImmutableSet.of(Payload.WORKSPACE_ARCHIVE.name(),
-            ConfigurationProcessor.REQUEST_ATTACHMENT_KEY.name());
+            ProcessConfigurationUtils.REQUEST_ATTACHMENT_KEY.name());
 
     private static final Pattern RAW_PAYLOAD_PATTERN = Pattern.compile("^(concord|flows)[/.](.*)(yml|yaml)$");
 
