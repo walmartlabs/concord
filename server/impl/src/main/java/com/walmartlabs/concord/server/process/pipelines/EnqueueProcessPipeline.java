@@ -53,6 +53,7 @@ public class EnqueueProcessPipeline extends Pipeline {
                 ProcessDefinitionProcessor.class,
                 SessionTokenProcessor.class,
                 ConfigurationProcessor.class,
+                AssertOutVariablesProcessor.class,
                 ExclusiveGroupProcessor.class,
                 EntryPointProcessor.class,
                 TagsExtractingProcessor.class,

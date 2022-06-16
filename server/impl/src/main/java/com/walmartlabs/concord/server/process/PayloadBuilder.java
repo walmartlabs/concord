@@ -233,6 +233,11 @@ public final class PayloadBuilder {
         }
 
         Set<String> s = payload.getHeader(Payload.OUT_EXPRESSIONS);
+
+        if (s == null) {
+            s = new HashSet<>(out.length);
+        }
+
         s.addAll(Arrays.asList(out));
         payload = payload.putHeader(Payload.OUT_EXPRESSIONS, s);
 
