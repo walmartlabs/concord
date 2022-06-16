@@ -84,7 +84,10 @@ public final class ProcessConfigurationUtils {
     }
 
     @SafeVarargs
+    @SuppressWarnings("unchecked")
     public static Set<String> getOutVars(Map<String, Object> ... mm) {
+        Set<String> outVars = new HashSet<>();
+
         for (Map<String, Object> m : mm) {
             Object o = m.get(Constants.Request.OUT_EXPRESSIONS_KEY);
 
@@ -93,16 +96,16 @@ public final class ProcessConfigurationUtils {
             }
 
             if (o instanceof List) {
-                return new HashSet<>(assertListType("out", removeNulls((List<String>) o), String.class));
+                outVars.addAll(assertListType("out", removeNulls((List<String>) o), String.class));
             } else if (o instanceof String) {
-                return new HashSet<>(Arrays.asList(((String) o).split(",")));
+                outVars.addAll(Arrays.asList(((String) o).split(",")));
             } else {
                 throw new IllegalArgumentException("Invalid '" + Constants.Request.OUT_EXPRESSIONS_KEY +
                         "' value. Expected JSON array, got: " + o);
             }
         }
 
-        return Collections.emptySet();
+        return outVars;
     }
 
     private static Map<String, Object> createProjectInfo(Payload payload, ProjectEntry projectEntry) {

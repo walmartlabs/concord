@@ -54,11 +54,15 @@ public class OutVariablesProjectIT extends AbstractServerIT {
         input.put("org", orgName);
         input.put("project", projectName);
         input.put("archive", payload);
-        input.put("out", "myName,myBool");
+        input.put("out", "myName");
+        Map<String, Object> cfg = new HashMap<>();
+        cfg.put("out", Collections.singletonList("myBool"));
+        input.put("request", cfg);
         StartProcessResponse spr = start(input);
 
         ProcessEntry pe = waitForCompletion(new ProcessApi(getApiClient()), spr.getInstanceId());
         Map<String, Object> out = (Map<String, Object>) pe.getMeta().get("out");
+        assertEquals("world", out.get("myName"));
         assertEquals(true, out.get("myBool"));
     }
 
