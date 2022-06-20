@@ -562,7 +562,8 @@ public class ProcessAnsibleResource implements Resource {
     public enum SortField {
         host,
         duration,
-        status
+        status,
+        host_group
     }
     
     public enum SortBy {
