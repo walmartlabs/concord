@@ -34,6 +34,14 @@ You can build docker images using this commands:
 ./mvnw clean install -DskipTests -Pdocker
 ```
 
+#### Debian based docker Images
+
+By default `centos` is used as base os. It can be changed to debian by using profile `debian`
+
+```shell
+./mvnw clean install -DskipTests -Pdocker -Pdebian
+```
+
 ### Console
 
 See the [console2/README.md](./console2/README.md) file.
