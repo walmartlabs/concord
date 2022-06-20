@@ -15,7 +15,7 @@
     <properties>
         <agent.image>${docker.namespace}/concord-agent</agent.image>
         <docker.tagbase>${agent.image}</docker.tagbase>
-        <docker.file>oss/Dockerfile</docker.file>
+        <docker.file>oss/centos/Dockerfile</docker.file>
     </properties>
 
     <!-- default dependencies, will be copied into the agent's local .m2 -->
@@ -116,4 +116,12 @@
             </plugin>
         </plugins>
     </build>
+    <profiles>
+        <profile>
+            <id>debian</id>
+            <properties>
+                <docker.file>oss/debian/Dockerfile</docker.file>
+            </properties>
+        </profile>
+    </profiles>
 </project>
