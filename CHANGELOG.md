@@ -6,7 +6,11 @@
 
 - concord-server: implement endpoints for adding LDAP
 groups to roles
-([#606](https://github.com/walmartlabs/concord/pull/606)).
+([#606](https://github.com/walmartlabs/concord/pull/606));
+- docker-images: support for debian os based docker images
+([#611](https://github.com/walmartlabs/concord/pull/611)).
+
+
 
 ## [1.95.0] - 2022-04-16
 
