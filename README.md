@@ -69,10 +69,10 @@ This command builds binaries and Docker images using JDK 11.
 
 ### Apple M1 Silicon (aarch64)
 
-Use the `jdk8-aarch64` profile:
+Use the `aarch64` profile:
 
 ```
-./mvnw clean install -DskipTests -Pdocker -Pjdk8-aarch64
+./mvnw clean install -DskipTests -Pdocker -Paarch64
 ```
 
 This command builds binaries and Docker images using JDK 8 for arm64 architecture.
