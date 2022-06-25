@@ -15,7 +15,7 @@
     <properties>
         <base.image>${docker.namespace}/concord-base</base.image>
         <docker.tagbase>${base.image}</docker.tagbase>
-        <docker.file>oss/Dockerfile</docker.file>
+        <docker.file>oss/centos/Dockerfile</docker.file>
     </properties>
 
     <build>
@@ -32,4 +32,13 @@
             </plugin>
         </plugins>
     </build>
+
+    <profiles>
+    <profile>
+        <id>debian</id>
+        <properties>
+            <docker.file>oss/debian/Dockerfile</docker.file>
+        </properties>
+    </profile>
+    </profiles>
 </project>
