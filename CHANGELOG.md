@@ -10,6 +10,11 @@ groups to roles
 - docker-images: support for debian os based docker images
 ([#611](https://github.com/walmartlabs/concord/pull/611)).
 
+### Changed
+
+- concord-cli: fixed broken JS support
+([#612](https://github.com/walmartlabs/concord/pull/612)).
+
 
 
 ## [1.95.0] - 2022-04-16
