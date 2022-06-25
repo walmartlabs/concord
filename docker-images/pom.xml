@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
@@ -30,7 +31,10 @@
             JDK to use in the base image and all its derivatives.
             Must be a .tar.gz archive for Linux x64
          -->
-        <jdk.url>https://github.com/AdoptOpenJDK/openjdk8-binaries/releases/download/jdk8u292-b10/OpenJDK8U-jdk_x64_linux_hotspot_8u292b10.tar.gz</jdk.url>
+        <jdk.url>
+            https://github.com/AdoptOpenJDK/openjdk8-binaries/releases/download/jdk8u292-b10/OpenJDK8U-jdk_x64_linux_hotspot_8u292b10.tar.gz
+        </jdk.url>
+        <image.platforms>linux/amd64</image.platforms>
     </properties>
 
     <build>
@@ -69,6 +73,8 @@
                                     <argument>--network</argument>
                                     <argument>host</argument>
 
+                                    <argument>--platform=${image.platforms}</argument>
+
                                     <argument>.</argument>
                                 </arguments>
                             </configuration>
@@ -89,19 +95,25 @@
         <profile>
             <id>jdk11</id>
             <properties>
-                <jdk.url>https://github.com/AdoptOpenJDK/openjdk11-binaries/releases/download/jdk-11.0.11%2B9/OpenJDK11U-jdk_x64_linux_hotspot_11.0.11_9.tar.gz</jdk.url>
+                <jdk.url>
+                    https://github.com/AdoptOpenJDK/openjdk11-binaries/releases/download/jdk-11.0.11%2B9/OpenJDK11U-jdk_x64_linux_hotspot_11.0.11_9.tar.gz
+                </jdk.url>
             </properties>
         </profile>
         <profile>
             <id>jdk16</id>
             <properties>
-                <jdk.url>https://github.com/AdoptOpenJDK/openjdk16-binaries/releases/download/jdk-16.0.1%2B9/OpenJDK16U-jdk_x64_linux_hotspot_16.0.1_9.tar.gz</jdk.url>
+                <jdk.url>
+                    https://github.com/AdoptOpenJDK/openjdk16-binaries/releases/download/jdk-16.0.1%2B9/OpenJDK16U-jdk_x64_linux_hotspot_16.0.1_9.tar.gz
+                </jdk.url>
             </properties>
         </profile>
         <profile>
             <id>jdk8-aarch64</id>
             <properties>
-                <jdk.url>https://github.com/AdoptOpenJDK/openjdk8-binaries/releases/download/jdk8u292-b10/OpenJDK8U-jdk_aarch64_linux_hotspot_8u292b10.tar.gz</jdk.url>
+                <jdk.url>
+                    https://github.com/AdoptOpenJDK/openjdk8-binaries/releases/download/jdk8u292-b10/OpenJDK8U-jdk_aarch64_linux_hotspot_8u292b10.tar.gz
+                </jdk.url>
             </properties>
         </profile>
     </profiles>
