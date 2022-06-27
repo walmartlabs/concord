@@ -6,7 +6,7 @@ ENTRYPOINT ["/usr/local/bin/concord_venv/bin/dumb-init", "--"]
 RUN echo 'fastestmirror=true' >> /etc/dnf/dnf.conf && \
     echo 'max_parallel_downloads=10' >> /etc/dnf/dnf.conf
 
-# update mirrors to point to vault(older versions)
+# update mirrors to point to vault.centos.org(older versions)
 RUN cd /etc/yum.repos.d/ && \
     sed -i 's/mirrorlist/#mirrorlist/g' /etc/yum.repos.d/CentOS-* && \
     sed -i 's|#baseurl=http://mirror.centos.org|baseurl=http://vault.centos.org|g' /etc/yum.repos.d/CentOS-*
