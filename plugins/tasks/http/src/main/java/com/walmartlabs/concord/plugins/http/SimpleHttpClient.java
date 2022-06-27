@@ -341,7 +341,7 @@ public class SimpleHttpClient {
             c.setProxy(proxyHost);
 
             if (cfg.getProxyUser() != null) {
-                log.info("Using proxy auth: {}:******", cfg.getProxyUser());
+                log.info("Using proxy auth: {}:***", cfg.getProxyUser());
 
                 CredentialsProvider proxyCredsProvider = new BasicCredentialsProvider();
                 proxyCredsProvider.setCredentials(
