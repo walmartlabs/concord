@@ -35,7 +35,7 @@ import static org.junit.jupiter.api.Assertions.*;
 public class OutVariablesIT extends AbstractServerIT {
 
     @Test
-    public void test() throws Exception {
+    public void testRequestParamAndPredefined() throws Exception {
         byte[] payload = archive(ProcessIT.class.getResource("out").toURI());
         String[] out = {"x", "y.some.boolean", "z"};
 
@@ -67,7 +67,6 @@ public class OutVariablesIT extends AbstractServerIT {
 
         assertEquals(123, data.get("x"));
     }
-
 
     @SuppressWarnings("unchecked")
     private Map<String, Object> getOutVars(UUID instanceId) throws Exception {
