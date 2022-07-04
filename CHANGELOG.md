@@ -3,7 +3,8 @@
 ## [1.96.0] - Unreleased
 
 ### Added
-
+- concord-cli: option to show version 
+([#615](https://github.com/walmartlabs/concord/pull/615));
 - concord-server: implement endpoints for adding LDAP
 groups to roles
 ([#606](https://github.com/walmartlabs/concord/pull/606));
