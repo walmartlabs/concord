@@ -1,6 +1,7 @@
 {
   "entryPoint": "main",
   "arguments": {
-    "myName": "world"
+    "myName": "world",
+    "myBool": true
   }
 }
