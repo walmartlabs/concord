@@ -199,7 +199,7 @@ public class CustomFormServiceV2 {
         try {
             Map<String, Object> m = new HashMap<>();
             try {
-                m = FormUtils.convert(new ExternalFileFormValidatorLocaleV2(processKey, formName, stateManager), form, data);
+                m = formService.convertData(processKey, formName, data);
 
                 FormSubmitResult r = formService.submit(processKey, formName, m);
                 if (r.isValid()) {
