@@ -17,8 +17,9 @@ groups to roles
 - concord-server: fix out vars processing and restrictions
 ([#609](https://github.com/walmartlabs/concord/pull/609);
 - concord-cli: fixed broken JS support
-([#612](https://github.com/walmartlabs/concord/pull/612)).
-
+([#612](https://github.com/walmartlabs/concord/pull/612));
+- concord-server, runtime-v2: fix file upload in forms
+([#623](https://github.com/walmartlabs/concord/pull/623)).
 
 
 ## [1.95.0] - 2022-04-16
