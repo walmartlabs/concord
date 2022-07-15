@@ -8,8 +8,10 @@ flows:
 
   - form: testForm
     values:
-      testValue: "${requestInfo.query.testValue}"
+      testValue: "${testValue}"
+  - log: "uploaded contents: ${resource.asJson(testForm.f)}"
 
 forms:
   testForm:
   - x: { type: "string?", allow: "${yamlObj.values}" }
+  - f: { type: "file" }
