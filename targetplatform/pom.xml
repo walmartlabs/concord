@@ -72,7 +72,7 @@
         <junit.version>5.8.2</junit.version>
         <kafka.client.version>2.4.0</kafka.client.version>
         <kerby.version>2.0.1</kerby.version>
-        <kubernetes.client.version>5.12.2</kubernetes.client.version>
+        <kubernetes.client.version>5.7.0</kubernetes.client.version>
         <launcher.version>0.128</launcher.version>
         <liquibase.version>3.5.1</liquibase.version> <!-- the newer versions (up to 3.5.3) have incorrect mappings for PG's blob/bytea -->
         <logback.version>1.2.10</logback.version>
