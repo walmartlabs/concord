@@ -32,8 +32,8 @@ import com.walmartlabs.concord.server.process.logs.ProcessLogManager;
 import com.walmartlabs.concord.server.process.queue.ProcessKeyCache;
 import com.walmartlabs.concord.server.process.queue.ProcessQueueDao;
 import com.walmartlabs.concord.server.sdk.ProcessKey;
-import org.junit.Ignore;
-import org.junit.Test;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
 import java.io.OutputStream;
@@ -48,11 +48,11 @@ import java.util.Collections;
 import java.util.UUID;
 
 import static com.walmartlabs.concord.server.process.state.ProcessStateManager.copyTo;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
 
-@Ignore("requires a local DB instance")
+import static org.junit.jupiter.api.Assertions.*;
+
+@Disabled("requires a local DB instance")
 public class ProcessStateManagerTest extends AbstractDaoTest {
 
     @Test
@@ -89,7 +89,6 @@ public class ProcessStateManagerTest extends AbstractDaoTest {
         assertFileContent("456", tmpDir.resolve("file-2"));
     }
 
-    @Ignore
     @Test
     public void testLargeImport() throws Exception {
         ProcessKey processKey = new ProcessKey(UUID.randomUUID(), OffsetDateTime.now());

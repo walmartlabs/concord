@@ -49,7 +49,6 @@ interface ExternalProps {
     correlationId?: string;
     name: string;
     createdAt: string;
-    open?: boolean;
     processStatus?: ProcessStatus;
     status?: SegmentStatus;
     statusUpdatedAt?: string;
@@ -71,7 +70,6 @@ const LogSegmentActivity = ({
     correlationId,
     name,
     createdAt,
-    open,
     status,
     statusUpdatedAt,
     warnings,
@@ -173,7 +171,6 @@ const LogSegmentActivity = ({
                 segmentId={segmentId}
                 processStatus={processStatus}
                 name={name}
-                open={open}
                 createdAt={createdAt}
                 status={status}
                 statusUpdatedAt={statusUpdatedAt}

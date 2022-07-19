@@ -20,26 +20,53 @@ package com.walmartlabs.concord.it.server;
  * =====
  */
 
-import com.walmartlabs.concord.client.ProcessApi;
-import com.walmartlabs.concord.client.ProcessEntry;
-import com.walmartlabs.concord.client.StartProcessResponse;
-import org.junit.Assume;
-import org.junit.Before;
-import org.junit.Test;
+import com.walmartlabs.concord.client.*;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
 
 import static com.walmartlabs.concord.it.common.ITUtils.archive;
 import static com.walmartlabs.concord.it.common.ServerClient.assertLog;
 import static com.walmartlabs.concord.it.common.ServerClient.waitForCompletion;
-import static org.junit.Assert.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 public class DefaultProcessVariablesIT extends AbstractServerIT {
 
-    @Before
-    public void precondition() {
-        Assume.assumeTrue(Boolean.valueOf(System.getProperty("isDocker")));
+    private static final String POLICY_NAME = "default-vars-from-test";
+
+    @BeforeEach
+    public void precondition() throws Exception {
+        Map<String, Object> defVars = new HashMap<>();
+        defVars.put("var1", "value1");
+        defVars.put("var2", "value2");
+
+        PolicyApi policyApi = new PolicyApi(getApiClient());
+        PolicyEntry policy = new PolicyEntry();
+        policy.setName(POLICY_NAME);
+        policy.setRules(Collections.singletonMap("defaultProcessCfg", Collections.singletonMap("defaultTaskVariables",
+                Collections.singletonMap("testDefaultVars", defVars))));
+
+        policyApi.createOrUpdate(policy);
+        PolicyLinkEntry link = new PolicyLinkEntry();
+        policyApi.link(POLICY_NAME, link);
+        policyApi.refresh();
     }
 
-    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    @AfterEach
+    public void cleanup() {
+        PolicyApi policyApi = new PolicyApi(getApiClient());
+        try {
+            policyApi.delete(POLICY_NAME);
+        } catch (Exception e) {
+            // ignore
+        }
+    }
+
+    @Test
     public void testDefaultVarsAccess() throws Exception {
         // prepare the payload
 

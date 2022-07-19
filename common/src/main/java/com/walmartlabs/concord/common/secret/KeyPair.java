@@ -26,6 +26,8 @@ import java.io.*;
 
 public class KeyPair implements Secret {
 
+    private static final long serialVersionUID = 1L;
+
     public static KeyPair deserialize(byte[] input) {
         try {
             DataInput in = new DataInputStream(new ByteArrayInputStream(input));

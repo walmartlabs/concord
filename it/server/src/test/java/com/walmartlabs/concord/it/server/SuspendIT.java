@@ -24,7 +24,7 @@ import com.walmartlabs.concord.client.ProcessApi;
 import com.walmartlabs.concord.client.ProcessEntry;
 import com.walmartlabs.concord.client.StartProcessResponse;
 import com.walmartlabs.concord.sdk.Constants;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.net.URI;
 import java.util.Collections;
@@ -35,11 +35,11 @@ import java.util.regex.Pattern;
 
 import static com.walmartlabs.concord.it.common.ITUtils.archive;
 import static com.walmartlabs.concord.it.common.ServerClient.*;
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class SuspendIT extends AbstractServerIT {
 
-    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    @Test
     public void test() throws Exception {
         URI dir = SuspendIT.class.getResource("suspend").toURI();
         byte[] payload = archive(dir);
@@ -71,7 +71,7 @@ public class SuspendIT extends AbstractServerIT {
         waitForLog(pir.getLogFileName(), ".*" + Pattern.quote(testValue) + ".*");
     }
 
-    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    @Test
     public void testSuspendForCompletion() throws Exception {
 
         // ---
@@ -96,7 +96,7 @@ public class SuspendIT extends AbstractServerIT {
         assertLog(".*process is resumed.*", ab);
     }
 
-    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    @Test
     public void testSuspendForForkedProcess() throws Exception {
 
         // ---

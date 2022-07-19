@@ -23,4 +23,6 @@ package com.walmartlabs.concord.agentoperator.crd;
 import io.fabric8.kubernetes.client.CustomResourceList;
 
 public class AgentPoolList extends CustomResourceList<AgentPool> {
+
+    private static final long serialVersionUID = 1L;
 }

@@ -46,7 +46,8 @@ flows:
     - call: "default1"
     - form: "formName"
     - throw: ${error}
-    - call: "default2"
+    - name: call step name
+      call: "default2"
 #      in:
 #        k: "v"
       out:
@@ -89,6 +90,8 @@ flows:
       withItems:
         - "one"
         - "two"
+      ignoreErrors: true
+
 forms:
   myForm:
     - firstName: { label: "First name", type: "string", placeholder: "Place first name here" }

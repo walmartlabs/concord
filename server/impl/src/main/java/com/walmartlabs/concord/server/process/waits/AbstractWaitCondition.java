@@ -34,7 +34,6 @@ import java.io.Serializable;
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
 @JsonTypeInfo(
         use = JsonTypeInfo.Id.NAME,
-        visible = false,
         property = "type")
 @JsonSubTypes({
         @JsonSubTypes.Type(value = ImmutableProcessCompletionCondition.class, name = "PROCESS_COMPLETION"),
@@ -43,8 +42,12 @@ import java.io.Serializable;
 })
 public abstract class AbstractWaitCondition implements Serializable {
 
+    private static final long serialVersionUID = 1L;
+
     public abstract WaitType type();
 
     @Nullable
     public abstract String reason();
+
+    public abstract boolean exclusive();
 }

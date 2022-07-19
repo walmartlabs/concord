@@ -26,7 +26,7 @@ import com.walmartlabs.concord.client.StartProcessResponse;
 import com.walmartlabs.concord.common.IOUtils;
 import com.walmartlabs.concord.sdk.Constants;
 import org.apache.commons.compress.archivers.zip.ZipArchiveOutputStream;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.io.ByteArrayOutputStream;
 import java.nio.file.Files;
@@ -37,12 +37,12 @@ import java.util.Collections;
 import static com.walmartlabs.concord.it.common.ITUtils.archive;
 import static com.walmartlabs.concord.it.common.ServerClient.assertLog;
 import static com.walmartlabs.concord.it.common.ServerClient.waitForCompletion;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 public class DependenciesIT extends AbstractServerIT {
 
-    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    @Test
     public void testUploadAndRun() throws Exception {
         String dep = "file:///" + ITConstants.DEPENDENCIES_DIR + "/example.jar";
 
@@ -75,7 +75,7 @@ public class DependenciesIT extends AbstractServerIT {
         assertLog(".*Hello!.*", ab);
     }
 
-    @Test(timeout = 180000)
+    @Test
     public void testMaven() throws Exception {
         byte[] payload = archive(ProcessIT.class.getResource("mvnDeps").toURI());
 

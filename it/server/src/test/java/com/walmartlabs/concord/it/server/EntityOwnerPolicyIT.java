@@ -22,23 +22,23 @@ package com.walmartlabs.concord.it.server;
 
 import com.walmartlabs.concord.ApiException;
 import com.walmartlabs.concord.client.*;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
 
 public class EntityOwnerPolicyIT extends AbstractServerIT {
 
     private final String userOwner = "ownerUser_" + randomString();
     private final String policyName = "policy_" + randomString();
 
-    @Before
+    @BeforeEach
     public void init() throws Exception {
 
         // --- policy
@@ -53,7 +53,7 @@ public class EntityOwnerPolicyIT extends AbstractServerIT {
         createPolicy(null, null, rules);
     }
 
-    @After
+    @AfterEach
     public void cleanup() throws Exception {
         PolicyApi policyApi = new PolicyApi(getApiClient());
         policyApi.delete(policyName);

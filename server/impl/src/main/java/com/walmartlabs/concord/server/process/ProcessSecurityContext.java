@@ -107,20 +107,25 @@ public class ProcessSecurityContext {
             throw new UnauthorizedException("User '" + userID + "'not found");
         }
 
-        ThreadContext.bind(securityManager);
+        try {
+            ThreadContext.bind(securityManager);
 
-        SimplePrincipalCollection principals = new SimplePrincipalCollection();
-        principals.add(new UserPrincipal(InternalRealm.REALM_NAME, u), InternalRealm.REALM_NAME);
+            SimplePrincipalCollection principals = new SimplePrincipalCollection();
+            principals.add(new UserPrincipal(InternalRealm.REALM_NAME, u), InternalRealm.REALM_NAME);
 
-        Subject subject = new Subject.Builder()
-                .sessionCreationEnabled(false)
-                .authenticated(true)
-                .principals(principals)
-                .buildSubject();
+            Subject subject = new Subject.Builder()
+                    .sessionCreationEnabled(false)
+                    .authenticated(true)
+                    .principals(principals)
+                    .buildSubject();
 
-        ThreadContext.bind(subject);
+            ThreadContext.bind(subject);
 
-        return c.call();
+            return c.call();
+        } finally {
+            ThreadContext.unbindSubject();
+            ThreadContext.unbindSecurityManager();
+        }
     }
 
     public <T> T runAsCurrentUser(ProcessKey processKey, Callable<T> c) throws Exception {

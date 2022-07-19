@@ -23,14 +23,14 @@ package com.walmartlabs.concord.agentoperator.scheduler;
 import com.walmartlabs.concord.agentoperator.crd.AgentPool;
 import com.walmartlabs.concord.agentoperator.crd.AgentPoolConfiguration;
 import com.walmartlabs.concord.agentoperator.processqueue.ProcessQueueEntry;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class AutoScalerTest {
 

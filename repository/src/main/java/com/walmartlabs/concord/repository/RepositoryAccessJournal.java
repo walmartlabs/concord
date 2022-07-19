@@ -119,6 +119,7 @@ public class RepositoryAccessJournal {
     }
 
     @Value.Immutable
+    @Value.Style(jdkOnly = true)
     @JsonSerialize(as = ImmutableRepositoryJournalItem.class)
     @JsonDeserialize(as = ImmutableRepositoryJournalItem.class)
     interface RepositoryJournalItem {

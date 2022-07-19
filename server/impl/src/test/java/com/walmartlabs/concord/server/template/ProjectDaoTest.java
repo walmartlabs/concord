@@ -9,9 +9,9 @@ package com.walmartlabs.concord.server.template;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -29,25 +29,25 @@ import com.walmartlabs.concord.server.org.project.ProjectDao;
 import com.walmartlabs.concord.server.org.project.ProjectEntry;
 import com.walmartlabs.concord.server.org.project.ProjectVisibility;
 import com.walmartlabs.concord.server.org.project.RepositoryDao;
-import org.junit.Before;
-import org.junit.Ignore;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
 
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
 import static com.walmartlabs.concord.server.jooq.tables.Projects.PROJECTS;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
-@Ignore("requires a local DB instance")
+@Disabled("requires a local DB instance")
 public class ProjectDaoTest extends AbstractDaoTest {
 
     private ProjectDao projectDao;
     private RepositoryDao repositoryDao;
 
-    @Before
+    @BeforeEach
     public void setUp() {
         repositoryDao = new RepositoryDao(getConfiguration(), new ConcordObjectMapper(TestObjectMapper.INSTANCE));
         projectDao = new ProjectDao(getConfiguration(), new ConcordObjectMapper(TestObjectMapper.INSTANCE));
@@ -80,7 +80,7 @@ public class ProjectDaoTest extends AbstractDaoTest {
 
         // ---
         Map<String, Object> newCfg2 = ImmutableMap.of("a2", "a2-v");
-        tx(tx -> projectDao.update(tx, orgId, projectId, ProjectVisibility.PRIVATE, projectName, "new-description", newCfg2, null, null,null, null));
+        tx(tx -> projectDao.update(tx, orgId, projectId, ProjectVisibility.PRIVATE, projectName, "new-description", newCfg2, null, null, null, null));
 
         actualCfg = projectDao.getConfiguration(projectId);
         assertEquals(newCfg2, actualCfg);

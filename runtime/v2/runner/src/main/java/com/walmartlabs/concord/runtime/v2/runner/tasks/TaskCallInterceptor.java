@@ -139,6 +139,7 @@ public class TaskCallInterceptor {
     }
 
     @Value.Immutable
+    @Value.Style(jdkOnly = true)
     public interface CallContext {
 
         String taskName();

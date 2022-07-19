@@ -22,6 +22,8 @@ package com.walmartlabs.concord.server.process.pipelines.processors;
 
 public class InvalidProcessStateException extends RuntimeException {
 
+    private static final long serialVersionUID = 1L;
+
     public InvalidProcessStateException(String message) {
         super(message);
     }

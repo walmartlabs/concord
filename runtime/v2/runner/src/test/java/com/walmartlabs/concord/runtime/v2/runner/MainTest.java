@@ -36,8 +36,13 @@ import com.walmartlabs.concord.runtime.common.cfg.ImmutableRunnerConfiguration;
 import com.walmartlabs.concord.runtime.common.cfg.LoggingConfiguration;
 import com.walmartlabs.concord.runtime.common.cfg.RunnerConfiguration;
 import com.walmartlabs.concord.runtime.v2.runner.checkpoints.CheckpointService;
+import com.walmartlabs.concord.runtime.v2.runner.checkpoints.CheckpointUploader;
+import com.walmartlabs.concord.runtime.v2.runner.checkpoints.DefaultCheckpointService;
 import com.walmartlabs.concord.runtime.v2.runner.guice.BaseRunnerModule;
-import com.walmartlabs.concord.runtime.v2.runner.logging.*;
+import com.walmartlabs.concord.runtime.v2.runner.logging.LoggerProvider;
+import com.walmartlabs.concord.runtime.v2.runner.logging.LoggingClient;
+import com.walmartlabs.concord.runtime.v2.runner.logging.LoggingConfigurator;
+import com.walmartlabs.concord.runtime.v2.runner.logging.RunnerLogger;
 import com.walmartlabs.concord.runtime.v2.runner.tasks.TaskCallListener;
 import com.walmartlabs.concord.runtime.v2.runner.tasks.TaskCallPolicyChecker;
 import com.walmartlabs.concord.runtime.v2.runner.tasks.TaskResultListener;
@@ -45,12 +50,10 @@ import com.walmartlabs.concord.runtime.v2.runner.tasks.TaskV2Provider;
 import com.walmartlabs.concord.runtime.v2.sdk.*;
 import com.walmartlabs.concord.sdk.Constants;
 import com.walmartlabs.concord.svm.ExecutionListener;
-import com.walmartlabs.concord.svm.Runtime;
-import com.walmartlabs.concord.svm.ThreadId;
 import org.immutables.value.Value;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -70,11 +73,10 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 
-import static org.junit.Assert.*;
-import static org.mockito.Mockito.*;
 import static java.util.regex.Pattern.quote;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
 
 public class MainTest {
 
@@ -86,14 +88,12 @@ public class MainTest {
     private ProcessStatusCallback processStatusCallback;
     private Module testServices;
 
-    private TestCheckpointService checkpointService;
+    private TestCheckpointUploader checkpointService;
 
     private byte[] lastLog;
     private byte[] allLogs;
 
-    private Path segmentedLogDir;
-
-    @Before
+    @BeforeEach
     public void setUp() throws IOException {
         workDir = Files.createTempDirectory("test");
 
@@ -107,7 +107,7 @@ public class MainTest {
 
         processStatusCallback = mock(ProcessStatusCallback.class);
 
-        checkpointService = spy(new TestCheckpointService());
+        checkpointService = spy(new TestCheckpointUploader());
 
         testServices = new AbstractModule() {
             @Override
@@ -116,7 +116,8 @@ public class MainTest {
 
                 bind(ClassLoader.class).annotatedWith(Names.named("runtime")).toInstance(MainTest.class.getClassLoader());
 
-                bind(CheckpointService.class).toInstance(checkpointService);
+                bind(CheckpointUploader.class).toInstance(checkpointService);
+                bind(CheckpointService.class).to(DefaultCheckpointService.class);
                 bind(DependencyManager.class).to(DefaultDependencyManager.class);
                 bind(DockerService.class).to(DefaultDockerService.class);
                 bind(FileService.class).to(DefaultFileService.class);
@@ -136,19 +137,13 @@ public class MainTest {
             }
         };
 
-        segmentedLogDir = Files.createTempDirectory("segmentedLog");
-
         allLogs = null;
     }
 
-    @After
+    @AfterEach
     public void tearDown() throws IOException {
         if (workDir != null) {
             IOUtils.deleteRecursively(workDir);
-        }
-
-        if (segmentedLogDir != null) {
-            IOUtils.deleteRecursively(segmentedLogDir);
         }
 
         LoggingConfigurator.reset();
@@ -299,7 +294,7 @@ public class MainTest {
         assertLog(log, ".*Hello, Concord!.*");
 
         verify(processStatusCallback, times(1)).onRunning(eq(instanceId));
-        verify(checkpointService, times(1)).create(any(), eq("A"), any(), any());
+        verify(checkpointService, times(1)).upload(any(), any(), eq("A"), any());
     }
 
     @Test
@@ -451,6 +446,30 @@ public class MainTest {
     }
 
     @Test
+    public void testScriptOut() throws Exception {
+        deploy("scriptOut");
+
+        save(ProcessConfiguration.builder()
+                .build());
+
+        byte[] log = run();
+        assertLog(log, ".*result.boom: \\{\\}.*");
+        assertLog(log, ".*result.k1: value1");
+        assertLog(log, ".*result.k2: value2");
+    }
+
+    @Test
+    public void testScriptOutExpr() throws Exception {
+        deploy("scriptOutExpr");
+
+        save(ProcessConfiguration.builder()
+                .build());
+
+        byte[] log = run();
+        assertLog(log, ".*k1: value1");
+    }
+
+    @Test
     public void testNonSerializableLocal() throws Exception {
         deploy("nonSerializableLocal");
 
@@ -488,18 +507,12 @@ public class MainTest {
         RunnerConfiguration runnerCfg = RunnerConfiguration.builder()
                 .logging(LoggingConfiguration.builder()
                         .sendSystemOutAndErrToSLF4J(false)
-                        .segmentedLogDir(segmentedLogDir.toAbsolutePath().toString())
                         .build())
                 .build();
 
         byte[] log = run(runnerCfg);
-        assertLog(log, ".*This goes directly into the stdout.*");
-        assertNoLog(log, ".*This is a processLog entry.*");
-
-        List<Path> paths = Files.walk(segmentedLogDir)
-                .filter(p -> p.getFileName().toString().endsWith(".log"))
-                .collect(Collectors.toList());
-        assertEquals(2, paths.size());
+        assertLog(log, "^This goes directly into the stdout$");
+        assertLog(log, ".*This is a processLog entry.*");
     }
 
     @Test
@@ -511,21 +524,11 @@ public class MainTest {
 
         RunnerConfiguration runnerCfg = RunnerConfiguration.builder()
                 .logging(LoggingConfiguration.builder()
-                        .sendSystemOutAndErrToSLF4J(true)
-                        .segmentedLogDir(segmentedLogDir.toAbsolutePath().toString())
                         .build())
                 .build();
 
         byte[] log = run(runnerCfg);
-        assertNoLog(log, ".*System.out in a script.*");
-
-        List<Path> paths = Files.walk(segmentedLogDir)
-                .filter(p -> p.getFileName().toString().endsWith(".log"))
-                .collect(Collectors.toList());
-
-        assertEquals(1, paths.size());
-        log = Files.readAllBytes(paths.get(0));
-        assertLog(log, ".*System.out in a script.*");
+        assertLog(log, "^.*\\|1\\|.*System.out in a script.*");
     }
 
     @Test
@@ -554,6 +557,18 @@ public class MainTest {
     }
 
     @Test
+    public void testParallelLoopTask() throws Exception {
+        deploy("parallelLoopTask");
+
+        save(ProcessConfiguration.builder()
+                .build());
+
+        byte[] log = run();
+        assertLog(log, ".*result: \\[10, 20, 30\\].*");
+        assertLog(log, ".*threadIds: \\[1, 2, 3].*");
+    }
+
+    @Test
     public void testWithItemsBlock() throws Exception {
         deploy("withItemsBlock");
 
@@ -565,8 +580,33 @@ public class MainTest {
     }
 
     @Test
+    public void testLoopBlock() throws Exception {
+        deploy("loopBlock");
+
+        save(ProcessConfiguration.builder()
+                .build());
+
+        byte[] log = run();
+        assertLog(log, ".*result: \\[10, 20, 30\\].*");
+    }
+
+    @Test
     public void testWithItemsSet() throws Exception {
         deploy("withItemsSet");
+
+        save(ProcessConfiguration.builder()
+                .build());
+
+        byte[] log = run();
+        assertLogAtLeast(log, 3, ".*empty: \\[\\].*");
+        assertLog(log, ".*after add: \\[1\\].*");
+        assertLog(log, ".*after add: \\[2\\].*");
+        assertLog(log, ".*after add: \\[3\\].*");
+    }
+
+    @Test
+    public void testLoopSet() throws Exception {
+        deploy("loopSet");
 
         save(ProcessConfiguration.builder()
                 .build());
@@ -879,7 +919,7 @@ public class MainTest {
                 .build());
 
         run();
-        verify(checkpointService, times(1)).create(any(ThreadId.class), eq("test_123"), any(Runtime.class), any(ProcessSnapshot.class));
+        verify(checkpointService, times(1)).upload(any(), any(), eq("test_123"), any());
     }
 
     @Test
@@ -892,18 +932,31 @@ public class MainTest {
 
         run();
 
-        verify(checkpointService, times(1)).create(any(ThreadId.class), eq("first"), any(Runtime.class), any(ProcessSnapshot.class));
-        verify(checkpointService, times(1)).create(any(ThreadId.class), eq("second"), any(Runtime.class), any(ProcessSnapshot.class));
+        verify(checkpointService, times(1)).upload(any(), any(), eq("first"), any());
+        verify(checkpointService, times(1)).upload(any(), any(), eq("second"), any());
 
-        Serializable firstCheckpoint = checkpointService.getCheckpoints().get("first");
-        assertNotNull(firstCheckpoint);
-
-        StateManager.saveProcessState(workDir, firstCheckpoint);
+        checkpointService.restore("first", workDir);
 
         run();
 
         assertLogAtLeast(allLogs, 2, ".*#3.*x=124.*");
         assertLogAtLeast(allLogs, 2, ".*#3.*y=345.*");
+    }
+
+    @Test
+    public void testCheckpoint1_93_0Restore() throws Exception {
+        deploy("checkpointRestore2");
+
+        save(ProcessConfiguration.builder()
+                .build());
+
+        checkpointService.put("first", Paths.get(MainTest.class.getResource("checkpointRestore2/first_1.93.0.zip").toURI()));
+        checkpointService.restore("first", workDir);
+
+        run();
+
+        assertLog(allLogs, ".*item: one.*");
+        assertLog(allLogs, ".*item: two.*");
     }
 
     @Test
@@ -1006,24 +1059,90 @@ public class MainTest {
 
         RunnerConfiguration runnerCfg = RunnerConfiguration.builder()
                 .logging(LoggingConfiguration.builder()
-                        .sendSystemOutAndErrToSLF4J(false)
-                        .segmentedLogDir(segmentedLogDir.toAbsolutePath().toString())
                         .build())
                 .build();
 
         save(ProcessConfiguration.builder()
                 .build());
 
-        run(runnerCfg);
+        byte[] log = run(runnerCfg);
 
-        List<Path> paths = Files.walk(segmentedLogDir)
-                .filter(p -> p.getFileName().toString().endsWith(".log"))
-                .sorted()
-                .collect(Collectors.toList());
+        assertLog(log, Pattern.quote("|0|1|1|0|0||70|2|0|0|0|") + ".*done!.*");
+        assertLog(log, Pattern.quote("|0|2|1|0|0|"));
+    }
 
-        assertEquals(2, paths.size());
-        byte[] log = Files.readAllBytes(paths.get(1));
-        assertLog(log, ".*done!.*");
+    @Test
+    public void testCurrentFlowName() throws Exception {
+        deploy("currentFlowName");
+
+        save(ProcessConfiguration.builder()
+                .build());
+
+        byte[] log = run();
+        assertLog(log, ".*default: default.*");
+        assertLog(log, ".*myFlow: myFlow.*");
+
+        checkpointService.restore("first", workDir);
+
+        run();
+
+        assertLogAtLeast(allLogs, 2, ".*after checkpoint: default.*");
+        assertLogAtLeast(allLogs, 2, ".*current flow name in error block: default.*");
+    }
+
+    @Test
+    public void testEvalAsMap() throws Exception {
+        deploy("evalAsMap");
+
+        save(ProcessConfiguration.builder()
+                .build());
+
+        byte[] log = run();
+        assertLog(log, ".*x:.*a.out3=\\$\\{a.out1}.*");
+        assertLog(log, ".*x:.*a.out1=1.*");
+        assertLog(log, ".*x:.*a.out2=2.*");
+
+        assertLog(log, ".*eval: \\{a=\\{.*");
+        assertLog(log, ".*1: 1.*");
+        assertLog(log, ".*2: 2.*");
+        assertLog(log, ".*3: 1.*");
+    }
+
+    @Test
+    public void testOrDefaultFunction() throws Exception {
+        deploy("orDefault");
+
+        save(ProcessConfiguration.builder()
+                .build());
+
+        byte[] log = run();
+        assertLog(log, ".*x:.*defaultValue.*");
+
+        // ---
+        save(ProcessConfiguration.builder()
+                .putArguments("x", "x-value")
+                .build());
+
+        log = run();
+        assertLog(log, ".*x:.*x-value.*");
+    }
+
+    @Test
+    public void testIsDebug() throws Exception {
+        deploy("isDebug");
+
+        save(ProcessConfiguration.builder()
+                .build());
+
+        byte[] log = run();
+        assertLog(log, ".*isDebug: false.*");
+
+        save(ProcessConfiguration.builder()
+                .debug(true)
+                .build());
+
+        log = run();
+        assertLog(log, ".*isDebug: true.*");
     }
 
     private void deploy(String resource) throws URISyntaxException, IOException {
@@ -1055,9 +1174,10 @@ public class MainTest {
     }
 
     private byte[] run(RunnerConfiguration baseCfg) throws Exception {
-        assertNotNull("save() the process configuration first", processConfiguration);
+        assertNotNull(processConfiguration, "save() the process configuration first");
 
-        ImmutableRunnerConfiguration.Builder runnerCfg = RunnerConfiguration.builder();
+        ImmutableRunnerConfiguration.Builder runnerCfg = RunnerConfiguration.builder()
+                .logging(LoggingConfiguration.builder().segmentedLogs(false).build());
 
         if (baseCfg != null) {
             runnerCfg.from(baseCfg);
@@ -1175,6 +1295,7 @@ public class MainTest {
         }
 
         @Value.Immutable
+        @Value.Style(jdkOnly = true)
         @JsonSerialize(as = ImmutableDefaults.class)
         @JsonDeserialize(as = ImmutableDefaults.class)
         public interface Defaults {
@@ -1354,7 +1475,7 @@ public class MainTest {
         @Override
         public TaskResult resume(ResumeEvent event) {
             log.info("RESUME: {}", event);
-            if ((boolean)event.state().get("errorOnResume")) {
+            if ((boolean) event.state().get("errorOnResume")) {
                 throw new RuntimeException("Error on resume!");
             }
 

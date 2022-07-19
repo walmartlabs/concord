@@ -31,6 +31,7 @@ import java.util.UUID;
 public interface EventProcessor {
 
     @Value.Immutable
+    @Value.Style(jdkOnly = true)
     interface Event extends AbstractEventProcessor.Event {
 
         UUID instanceId();

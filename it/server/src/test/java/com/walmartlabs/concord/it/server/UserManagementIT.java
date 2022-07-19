@@ -22,15 +22,15 @@ package com.walmartlabs.concord.it.server;
 
 import com.walmartlabs.concord.ApiException;
 import com.walmartlabs.concord.client.*;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.util.Collections;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class UserManagementIT extends AbstractServerIT {
 
-    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    @Test
     public void test() throws Exception {
         UsersApi usersApi = new UsersApi(getApiClient());
 
@@ -52,7 +52,7 @@ public class UserManagementIT extends AbstractServerIT {
         usersApi.delete(cur.getId());
     }
 
-    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    @Test
     public void testAdmins() throws Exception {
         UsersApi usersApi = new UsersApi(getApiClient());
 
@@ -97,7 +97,7 @@ public class UserManagementIT extends AbstractServerIT {
                 .setType(CreateUserRequest.TypeEnum.LOCAL));
     }
 
-    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    @Test
     public void testWithRoles() throws Exception {
         UsersApi usersApi = new UsersApi(getApiClient());
 
@@ -127,7 +127,7 @@ public class UserManagementIT extends AbstractServerIT {
         assertEquals(GenericOperationResult.ResultEnum.DELETED, delete.getResult());
     }
 
-    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    @Test
     public void testSpecialCharactersInUsernames() throws Exception {
         String userName = "usEr_" + randomString() + "@domain.local";
 

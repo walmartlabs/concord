@@ -20,6 +20,7 @@ package com.walmartlabs.concord.forms;
  * =====
  */
 
+import org.immutables.serial.Serial;
 import org.immutables.value.Value;
 
 import java.io.Serializable;
@@ -28,9 +29,8 @@ import java.util.List;
 
 @Value.Immutable
 @Value.Style(jdkOnly = true)
+@Serial.Version(1)
 public interface Form extends Serializable {
-
-    long serialVersionUID = 1L;
 
     String name();
 

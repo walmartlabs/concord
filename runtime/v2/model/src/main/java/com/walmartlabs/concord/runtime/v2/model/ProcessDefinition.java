@@ -24,7 +24,10 @@ import com.walmartlabs.concord.imports.Imports;
 import org.immutables.value.Value;
 
 import java.io.Serializable;
-import java.util.*;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 @Value.Immutable
 @Value.Style(jdkOnly = true)

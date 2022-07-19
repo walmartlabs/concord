@@ -22,16 +22,16 @@ package com.walmartlabs.concord.it.server;
 
 import com.walmartlabs.concord.ApiException;
 import com.walmartlabs.concord.client.*;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.util.Collections;
 import java.util.List;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class TeamRbacIT extends AbstractServerIT {
 
-    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    @Test
     public void testOrgs() throws Exception {
         OrganizationsApi orgApi = new OrganizationsApi(getApiClient());
 
@@ -102,7 +102,7 @@ public class TeamRbacIT extends AbstractServerIT {
         projectsApi.createOrUpdate(orgBName, new ProjectEntry().setName(projectBName));
     }
 
-    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    @Test
     public void testTeamCreators() throws Exception {
         OrganizationsApi orgApi = new OrganizationsApi(getApiClient());
 
@@ -178,7 +178,7 @@ public class TeamRbacIT extends AbstractServerIT {
         teamsApi.createOrUpdate(orgName, new TeamEntry().setName(teamBName));
     }
 
-    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    @Test
     public void testTeamMaintainers() throws Exception {
         OrganizationsApi orgApi = new OrganizationsApi(getApiClient());
 
@@ -231,7 +231,7 @@ public class TeamRbacIT extends AbstractServerIT {
                 .setRole(TeamUserEntry.RoleEnum.MEMBER)));
     }
 
-    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    @Test
     public void testNewTeamOwner() throws Exception {
         String userA = "userA_" + randomString();
 
@@ -288,7 +288,7 @@ public class TeamRbacIT extends AbstractServerIT {
                 .setRole(TeamUserEntry.RoleEnum.MEMBER)));
     }
 
-    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    @Test
     public void testTeamDelete() throws Exception {
         OrganizationsApi orgApi = new OrganizationsApi(getApiClient());
 
@@ -323,7 +323,7 @@ public class TeamRbacIT extends AbstractServerIT {
         assertEquals(1, l.size());
     }
 
-    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    @Test
     public void testOrgProjects() throws Exception {
         OrganizationsApi orgApi = new OrganizationsApi(getApiClient());
 
@@ -436,7 +436,7 @@ public class TeamRbacIT extends AbstractServerIT {
                 .setRawPayloadMode(ProjectEntry.RawPayloadModeEnum.EVERYONE));
     }
 
-    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    @Test
     public void testOrgPublicSecrets() throws Exception {
         OrganizationsApi orgApi = new OrganizationsApi(getApiClient());
 
@@ -511,7 +511,7 @@ public class TeamRbacIT extends AbstractServerIT {
         secretResource.delete(orgAName, secretAName);
     }
 
-    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    @Test
     public void testInventory() throws Exception {
         String orgName = "org_" + randomString();
 
@@ -595,7 +595,7 @@ public class TeamRbacIT extends AbstractServerIT {
         inventoryResource.get(orgName, inventoryName);
     }
 
-    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    @Test
     public void testTeamUsersUpsert() throws Exception {
         String orgName = "org_" + randomString();
 
@@ -628,7 +628,7 @@ public class TeamRbacIT extends AbstractServerIT {
                 .setRole(TeamUserEntry.RoleEnum.MAINTAINER)));
     }
 
-    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    @Test
     public void testSecretAccessLevels() throws Exception {
         SecretsApi secretResource = new SecretsApi(getApiClient());
 
@@ -733,7 +733,7 @@ public class TeamRbacIT extends AbstractServerIT {
      * Public organizations must be visible
      * regardless of whether the user is in the org or not.
      */
-    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    @Test
     public void testPublicOrgVisibility() throws Exception {
         String orgName = "org_" + randomString();
         OrganizationsApi organizationsApi = new OrganizationsApi(getApiClient());
@@ -781,7 +781,7 @@ public class TeamRbacIT extends AbstractServerIT {
      * Organization owners should see the organization and all resources
      * regardless of whether they're in the org (team) or not.
      */
-    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    @Test
     public void testOwnersVisibility() throws Exception {
         String orgName = "org_" + randomString();
         OrganizationsApi organizationsApi = new OrganizationsApi(getApiClient());

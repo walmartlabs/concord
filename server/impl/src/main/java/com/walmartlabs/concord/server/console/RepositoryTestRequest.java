@@ -35,6 +35,8 @@ import java.util.UUID;
 @JsonInclude(Include.NON_NULL)
 public class RepositoryTestRequest implements Serializable {
 
+    private static final long serialVersionUID = 1L;
+
     @ConcordKey
     private final String orgName;
 

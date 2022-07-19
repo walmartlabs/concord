@@ -37,7 +37,7 @@ public final class ConfigurationGrammar {
             betweenTokens(JsonToken.START_OBJECT, JsonToken.END_OBJECT,
                     with(ImmutableExclusiveMode::builder,
                             o -> options(
-                                    mandatory("group", stringVal.map(o::group)),
+                                    mandatory("group", stringNotEmptyVal.map(o::group)),
                                     optional("mode", enumVal(ExclusiveMode.Mode.class).map(o::mode))))
                             .map(ImmutableExclusiveMode.Builder::build));
 
@@ -77,13 +77,15 @@ public final class ConfigurationGrammar {
                                     optional("meta", mapVal.map(o::meta)),
                                     optional("requirements", mapVal.map(o::requirements)),
                                     optional("processTimeout", durationVal.map(o::processTimeout)),
+                                    optional("suspendTimeout", durationVal.map(o::suspendTimeout)),
                                     optional("activeProfiles", stringArrayVal.map(o::activeProfiles)),
                                     optional("exclusive", exclusiveVal.map(o::exclusive)),
                                     optional("events", eventsVal.map(o::events)),
                                     optional("out", stringArrayVal.map(o::addAllOut)),
                                     optional("arguments", mapVal.map(o::arguments)),
                                     optional("debug", booleanVal.map(o::debug)),
-                                    optional("template", stringVal.map(o::template))))
+                                    optional("template", stringVal.map(o::template)),
+                                    optional("parallelLoopParallelism", intVal.map(o::parallelLoopParallelism))))
                             .map(ImmutableProcessDefinitionConfiguration.Builder::build));
 
     public static final Parser<Atom, ProcessDefinitionConfiguration> processCfgVal =

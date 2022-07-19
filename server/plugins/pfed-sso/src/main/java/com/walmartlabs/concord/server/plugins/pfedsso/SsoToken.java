@@ -26,6 +26,8 @@ import java.util.Set;
 
 public class SsoToken implements AuthenticationToken {
 
+    private static final long serialVersionUID = 1L;
+
     private final String username;
     private final String domain;
     private final String displayName;

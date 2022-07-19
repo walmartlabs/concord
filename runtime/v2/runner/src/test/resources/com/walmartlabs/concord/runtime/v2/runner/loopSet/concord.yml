@@ -1,0 +1,15 @@
+flows:
+  default:
+    - set:
+        items: [1,2,3]
+
+    - call: test
+      loop:
+        items: ${items}
+
+  test:
+    - set:
+        arr: []
+    - log: "empty: ${arr}"
+    - ${arr.add(item)}
+    - log: "after add: ${arr}"

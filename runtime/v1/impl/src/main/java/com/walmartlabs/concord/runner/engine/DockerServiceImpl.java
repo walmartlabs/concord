@@ -63,8 +63,47 @@ public class DockerServiceImpl implements DockerService {
     }
 
     @Override
-    @SuppressWarnings("unchecked")
     public Process start(Context ctx, DockerContainerSpec spec) throws IOException {
+        return build(ctx, spec).start();
+    }
+
+    @Override
+    public int start(Context ctx, DockerContainerSpec spec, LogCallback outCallback, LogCallback errCallback) throws IOException, InterruptedException {
+        int tryCount = 0;
+        int result;
+        int retryCount = Math.max(spec.pullRetryCount(), 0);
+        long retryInterval = spec.pullRetryInterval();
+
+        do {
+            try (DockerProcessBuilder.DockerProcess dp = build(ctx, spec)) {
+                Process p = dp.start();
+
+                LogCapture c = new LogCapture(outCallback);
+                streamToLog(p.getInputStream(), c);
+                if (errCallback != null) {
+                    streamToLog(p.getErrorStream(), errCallback);
+                }
+
+                result = p.waitFor();
+                if (result == SUCCESS_EXIT_CODE || retryCount == 0 || tryCount >= retryCount) {
+                    return result;
+                }
+
+                if (!needRetry(c.getLines())) {
+                    return result;
+                }
+
+                log.info("Error pulling the image. Retry after {} sec", retryInterval / 1000);
+                sleep(retryInterval);
+                tryCount++;
+            }
+        } while (!Thread.currentThread().isInterrupted() && tryCount <= retryCount);
+
+        return result;
+    }
+
+    @SuppressWarnings("unchecked")
+    private DockerProcessBuilder.DockerProcess build(Context ctx, DockerContainerSpec spec) throws IOException {
         DockerProcessBuilder b = DockerProcessBuilder.from(ctx, spec);
 
         b.env(createEffectiveEnv(spec.env(), exposeDockerDaemon));
@@ -78,39 +117,6 @@ public class DockerServiceImpl implements DockerService {
         b.volumes((Collection<String>) ctx.interpolate(volumes));
 
         return b.build();
-    }
-
-    @Override
-    public int start(Context ctx, DockerContainerSpec spec, LogCallback outCallback, LogCallback errCallback) throws IOException, InterruptedException {
-        int tryCount = 0;
-        int result;
-        int retryCount = Math.max(spec.pullRetryCount(), 0);
-        long retryInterval = spec.pullRetryInterval();
-
-        do {
-            Process p = start(ctx, spec);
-
-            LogCapture c = new LogCapture(outCallback);
-            streamToLog(p.getInputStream(), c);
-            if (errCallback != null) {
-                streamToLog(p.getErrorStream(), errCallback);
-            }
-
-            result = p.waitFor();
-            if (result == SUCCESS_EXIT_CODE || retryCount == 0 || tryCount >= retryCount) {
-                return result;
-            }
-
-            if (!needRetry(c.getLines())) {
-                return result;
-            }
-
-            log.info("Error pulling the image. Retry after {} sec", retryInterval / 1000);
-            sleep(retryInterval);
-            tryCount++;
-        } while (!Thread.currentThread().isInterrupted() && tryCount <= retryCount);
-
-        return result;
     }
 
     private static Map<String, String> createEffectiveEnv(Map<String, String> env, boolean exposeDockerDaemon) {

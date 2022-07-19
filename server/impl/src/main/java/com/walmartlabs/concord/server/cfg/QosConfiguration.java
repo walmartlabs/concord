@@ -28,6 +28,8 @@ import java.time.Duration;
 
 public class QosConfiguration implements Serializable {
 
+    private static final long serialVersionUID = 1L;
+
     @Inject
     @Config("qos.maxRequests")
     public int maxRequests;

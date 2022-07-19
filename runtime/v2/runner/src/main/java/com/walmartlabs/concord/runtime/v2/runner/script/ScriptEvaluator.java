@@ -27,7 +27,7 @@ import java.util.Map;
 
 public interface ScriptEvaluator {
 
-    void eval(Context context, String language, Reader input, Map<String, Object> variables);
+    ScriptResult eval(Context context, String language, Reader input, Map<String, Object> variables);
 
     String getLanguage(String languageOrExtension);
 }

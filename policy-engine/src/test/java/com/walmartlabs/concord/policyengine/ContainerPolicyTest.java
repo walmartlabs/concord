@@ -9,9 +9,9 @@ package com.walmartlabs.concord.policyengine;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -20,19 +20,18 @@ package com.walmartlabs.concord.policyengine;
  * =====
  */
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class ContainerPolicyTest {
 
     @Test
-    public void testCpu() throws Exception {
+    public void testCpu() {
         ContainerPolicy oneCpu = new ContainerPolicy(new ContainerRule("1 CPU", null, 1));
         ContainerPolicy twoCpu = new ContainerPolicy(new ContainerRule("1 CPU", null, 2));
 
@@ -46,7 +45,7 @@ public class ContainerPolicyTest {
     }
 
     @Test
-    public void testRam() throws Exception {
+    public void testRam() {
         ContainerPolicy ram1 = new ContainerPolicy(new ContainerRule("128 RAM", "128m", null));
         ContainerPolicy ram2 = new ContainerPolicy(new ContainerRule("256 RAM", "256m", null));
 
@@ -59,12 +58,12 @@ public class ContainerPolicyTest {
         assertAllow(ram2, containerParams);
     }
 
-    private static void assertAllow(ContainerPolicy policy, Map<String, Object> p) throws IOException {
+    private static void assertAllow(ContainerPolicy policy, Map<String, Object> p) {
         CheckResult<ContainerRule, Object> result = policy.check(p);
         assertTrue(result.getDeny().isEmpty());
     }
 
-    private static void assertDeny(ContainerPolicy policy, Map<String, Object> p) throws IOException {
+    private static void assertDeny(ContainerPolicy policy, Map<String, Object> p) {
         CheckResult<ContainerRule, Object> result = policy.check(p);
         assertFalse(result.getDeny().isEmpty());
     }

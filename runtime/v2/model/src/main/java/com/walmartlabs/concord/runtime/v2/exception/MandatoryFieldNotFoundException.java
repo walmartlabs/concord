@@ -25,6 +25,9 @@ import java.util.List;
 
 public class MandatoryFieldNotFoundException extends YamlProcessingException {
 
+    // for backward compatibility (java8 concord 1.92.0 version)
+    private static final long serialVersionUID = 2604568258403971784L;
+
     private final List<String> fields;
 
     public MandatoryFieldNotFoundException(String field) {

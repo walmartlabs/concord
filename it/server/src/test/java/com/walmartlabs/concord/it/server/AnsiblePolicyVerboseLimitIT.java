@@ -21,8 +21,8 @@ package com.walmartlabs.concord.it.server;
  */
 
 import com.walmartlabs.concord.client.*;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import java.net.URI;
 import java.util.HashMap;
@@ -32,14 +32,14 @@ import static com.walmartlabs.concord.it.common.ITUtils.archive;
 import static com.walmartlabs.concord.it.common.ServerClient.assertLog;
 import static com.walmartlabs.concord.it.common.ServerClient.waitForCompletion;
 import static java.util.Collections.singletonMap;
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class AnsiblePolicyVerboseLimitIT extends AbstractServerIT {
 
     private String orgName;
     private String projectName;
 
-    @Before
+    @BeforeEach
     public void setup() throws Exception {
 
         // -- Add policy to restrict verbose logging
@@ -72,7 +72,7 @@ public class AnsiblePolicyVerboseLimitIT extends AbstractServerIT {
                 .setProjectName(projectName));
     }
 
-    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    @Test
     public void testLargeInventoryLimitedToGroup() throws Exception {
         URI dir = AnsibleIT.class.getResource("ansibleLargeVerbose").toURI();
         byte[] payload = archive(dir, ITConstants.DEPENDENCIES_DIR);
@@ -94,8 +94,7 @@ public class AnsiblePolicyVerboseLimitIT extends AbstractServerIT {
 
         ProcessApi processApi = new ProcessApi(getApiClient());
         ProcessEntry pir = waitForCompletion(processApi, spr.getInstanceId());
-        assertEquals("Large inventory limited to small group must FINISH",
-                ProcessEntry.StatusEnum.FINISHED, pir.getStatus());
+        assertEquals(ProcessEntry.StatusEnum.FINISHED, pir.getStatus(), "Large inventory limited to small group must FINISH");
 
         // ---
 
@@ -103,7 +102,7 @@ public class AnsiblePolicyVerboseLimitIT extends AbstractServerIT {
         assertLog(".*ansible completed successfully.*", ab);
     }
 
-    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    @Test
     public void testVerboseTooManyImportedTasks() throws Exception {
         URI dir = AnsibleIT.class.getResource("ansibleLargeVerbose").toURI();
         byte[] payload = archive(dir, ITConstants.DEPENDENCIES_DIR);
@@ -124,8 +123,8 @@ public class AnsiblePolicyVerboseLimitIT extends AbstractServerIT {
 
         ProcessApi processApi = new ProcessApi(getApiClient());
         ProcessEntry pir = waitForCompletion(processApi, spr.getInstanceId());
-        assertEquals("Imported tasks exceeding max work must FINISH",
-                ProcessEntry.StatusEnum.FINISHED, pir.getStatus());
+        assertEquals(ProcessEntry.StatusEnum.FINISHED, pir.getStatus(),
+                "Imported tasks exceeding max work must FINISH");
 
         // ---
 
@@ -133,7 +132,7 @@ public class AnsiblePolicyVerboseLimitIT extends AbstractServerIT {
         assertLog(".*Disabling verbose output. Too much work.*", ab);
     }
 
-    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    @Test
     public void testVerboseTooManyHosts() throws Exception {
         URI dir = AnsibleIT.class.getResource("ansibleLargeVerbose").toURI();
         byte[] payload = archive(dir, ITConstants.DEPENDENCIES_DIR);
@@ -154,8 +153,8 @@ public class AnsiblePolicyVerboseLimitIT extends AbstractServerIT {
 
         ProcessApi processApi = new ProcessApi(getApiClient());
         ProcessEntry pir = waitForCompletion(processApi, spr.getInstanceId());
-        assertEquals("Large inventory with verbose logging must FINISH",
-                ProcessEntry.StatusEnum.FINISHED, pir.getStatus());
+        assertEquals(ProcessEntry.StatusEnum.FINISHED, pir.getStatus(),
+                "Large inventory with verbose logging must FINISH");
 
         // ---
 
@@ -163,7 +162,7 @@ public class AnsiblePolicyVerboseLimitIT extends AbstractServerIT {
         assertLog(".*Disabling verbose output. Too many hosts.*", ab);
     }
 
-    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    @Test
     public void testVerboseTooMuchWork() throws Exception {
         URI dir = AnsibleIT.class.getResource("ansibleLargeVerbose").toURI();
         byte[] payload = archive(dir, ITConstants.DEPENDENCIES_DIR);
@@ -184,8 +183,8 @@ public class AnsiblePolicyVerboseLimitIT extends AbstractServerIT {
 
         ProcessApi processApi = new ProcessApi(getApiClient());
         ProcessEntry pir = waitForCompletion(processApi, spr.getInstanceId());
-        assertEquals("Small inventory with many calls and verbose logging must FINISH",
-                ProcessEntry.StatusEnum.FINISHED, pir.getStatus());
+        assertEquals(ProcessEntry.StatusEnum.FINISHED, pir.getStatus(),
+                "Small inventory with many calls and verbose logging must FINISH");
 
         // ---
 
@@ -193,7 +192,7 @@ public class AnsiblePolicyVerboseLimitIT extends AbstractServerIT {
         assertLog(".*Disabling verbose output. Too much work.*", ab);
     }
 
-    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    @Test
     public void testNoVerboseLargeInventory() throws Exception {
         URI dir = AnsibleIT.class.getResource("ansibleLargeVerbose").toURI();
         byte[] payload = archive(dir, ITConstants.DEPENDENCIES_DIR);
@@ -214,8 +213,8 @@ public class AnsiblePolicyVerboseLimitIT extends AbstractServerIT {
 
         ProcessApi processApi = new ProcessApi(getApiClient());
         ProcessEntry pir = waitForCompletion(processApi, spr.getInstanceId());
-        assertEquals("Large inventory with standard logging must FINISH",
-                ProcessEntry.StatusEnum.FINISHED, pir.getStatus());
+        assertEquals(ProcessEntry.StatusEnum.FINISHED, pir.getStatus(),
+                "Large inventory with standard logging must FINISH");
 
         // ---
 
@@ -223,7 +222,7 @@ public class AnsiblePolicyVerboseLimitIT extends AbstractServerIT {
         assertLog(".*ansible completed successfully.*", ab);
     }
 
-    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    @Test
     public void testVerboseSmallInventory() throws Exception {
         URI dir = AnsibleIT.class.getResource("ansibleLargeVerbose").toURI();
         byte[] payload = archive(dir, ITConstants.DEPENDENCIES_DIR);
@@ -244,8 +243,8 @@ public class AnsiblePolicyVerboseLimitIT extends AbstractServerIT {
 
         ProcessApi processApi = new ProcessApi(getApiClient());
         ProcessEntry pir = waitForCompletion(processApi, spr.getInstanceId());
-        assertEquals("Small inventory with verbose logging must FINISH",
-                ProcessEntry.StatusEnum.FINISHED, pir.getStatus());
+        assertEquals(ProcessEntry.StatusEnum.FINISHED, pir.getStatus(),
+                "Small inventory with verbose logging must FINISH");
 
         // ---
 

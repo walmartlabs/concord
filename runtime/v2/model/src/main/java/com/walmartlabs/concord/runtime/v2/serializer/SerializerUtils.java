@@ -21,6 +21,7 @@ package com.walmartlabs.concord.runtime.v2.serializer;
  */
 
 import com.fasterxml.jackson.core.JsonGenerator;
+import com.walmartlabs.concord.runtime.v2.model.Loop;
 import com.walmartlabs.concord.runtime.v2.model.WithItems;
 
 import java.io.IOException;
@@ -53,6 +54,7 @@ public final class SerializerUtils {
         gen.writeObjectField(fieldName, value);
     }
 
+    @Deprecated
     public static void writeWithItems(WithItems items, JsonGenerator gen) throws IOException {
         switch (items.mode()) {
             case PARALLEL: {
@@ -66,6 +68,14 @@ public final class SerializerUtils {
             default:
                 throw new IllegalArgumentException("Unsupported withItems mode: " + items.mode());
         }
+    }
+
+    public static void writeLoop(Loop loop, JsonGenerator gen) throws IOException {
+        if (loop == null) {
+            return;
+        }
+
+        gen.writeObjectField("loop", loop);
     }
 
     private SerializerUtils() {

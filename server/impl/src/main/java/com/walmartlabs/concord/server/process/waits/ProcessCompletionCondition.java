@@ -35,6 +35,8 @@ import java.util.UUID;
 @JsonDeserialize(as = ImmutableProcessCompletionCondition.class)
 public abstract class ProcessCompletionCondition extends AbstractWaitCondition {
 
+    private static final long serialVersionUID = 1L;
+
     private static final Set<ProcessStatus> DEFAULT_FINISHED_STATUSES = ImmutableSet.of(
             ProcessStatus.FINISHED,
             ProcessStatus.FAILED,
@@ -59,6 +61,12 @@ public abstract class ProcessCompletionCondition extends AbstractWaitCondition {
     @Override
     public WaitType type() {
         return WaitType.PROCESS_COMPLETION;
+    }
+
+    @Value.Default
+    @Override
+    public boolean exclusive() {
+        return false;
     }
 
     public static ImmutableProcessCompletionCondition.Builder builder() {

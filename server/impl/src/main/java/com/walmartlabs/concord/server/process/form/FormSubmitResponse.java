@@ -32,6 +32,8 @@ import java.util.UUID;
 @JsonInclude(Include.NON_NULL)
 public class FormSubmitResponse implements Serializable {
 
+    private static final long serialVersionUID = 1L;
+
     private final boolean ok;
     private final UUID processInstanceId;
     private final Map<String, String> errors;

@@ -25,7 +25,7 @@ import com.walmartlabs.concord.client.ProcessEntry;
 import com.walmartlabs.concord.client.StartProcessResponse;
 import com.walmartlabs.concord.common.IOUtils;
 import org.apache.commons.compress.archivers.zip.ZipArchiveOutputStream;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.io.ByteArrayOutputStream;
 import java.nio.file.Files;
@@ -37,11 +37,11 @@ import java.util.Set;
 
 import static com.walmartlabs.concord.it.common.ServerClient.assertLog;
 import static com.walmartlabs.concord.it.common.ServerClient.waitForCompletion;
-import static org.junit.Assert.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 public class FilePermissionsIT extends AbstractServerIT {
 
-    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    @Test
     public void test() throws Exception {
         Path src = Paths.get(FilePermissionsIT.class.getResource("filePerm").toURI());
 

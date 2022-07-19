@@ -26,7 +26,6 @@ import com.walmartlabs.concord.policyengine.PolicyEngine;
 import com.walmartlabs.concord.process.loader.model.ProcessDefinition;
 import com.walmartlabs.concord.process.loader.model.ProcessDefinitionUtils;
 import com.walmartlabs.concord.sdk.Constants;
-import com.walmartlabs.concord.server.cfg.DefaultProcessConfiguration;
 import com.walmartlabs.concord.server.org.OrganizationDao;
 import com.walmartlabs.concord.server.org.project.ProjectDao;
 import com.walmartlabs.concord.server.org.project.ProjectEntry;
@@ -43,10 +42,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 
 /**
  * Responsible for preparing the process' {@code configuration} object.
@@ -58,23 +54,15 @@ public class ConfigurationProcessor implements PayloadProcessor {
 
     private final ProjectDao projectDao;
     private final OrganizationDao orgDao;
-    private final DefaultProcessConfiguration defaultCfg;
 
     @Inject
-    public ConfigurationProcessor(ProjectDao projectDao, OrganizationDao orgDao, DefaultProcessConfiguration defaultCfg) {
+    public ConfigurationProcessor(ProjectDao projectDao, OrganizationDao orgDao) {
         this.projectDao = projectDao;
         this.orgDao = orgDao;
-        this.defaultCfg = defaultCfg;
     }
 
     @Override
     public Payload process(Chain chain, Payload payload) {
-        // system-level default configuration
-        Map<String, Object> defCfg = Collections.emptyMap();
-        if (!"concord-v2".equalsIgnoreCase(payload.getHeader(Payload.RUNTIME))) {
-            defCfg = defaultCfg.getCfg();
-        }
-
         // default configuration from policy
         Map<String, Object> policyDefCfg = getDefaultCfgFromPolicy(payload);
 
@@ -99,6 +87,10 @@ public class ConfigurationProcessor implements PayloadProcessor {
         List<String> activeProfiles = ProcessConfigurationUtils.getActiveProfiles(payloadCfg, attachedCfg, workspaceCfg, projectCfg, orgCfg);
         payload = payload.putHeader(Payload.ACTIVE_PROFILES, activeProfiles);
 
+        // consolidate out variables
+        Set<String> outVars = new HashSet<>(ProcessConfigurationUtils.getOutVars(payloadCfg, attachedCfg, workspaceCfg));
+        payload = payload.putHeader(Payload.OUT_EXPRESSIONS, outVars);
+
         // merged profile data
         Map<String, Object> profileCfg = getProfileCfg(payload, activeProfiles);
 
@@ -109,7 +101,7 @@ public class ConfigurationProcessor implements PayloadProcessor {
         Map<String, Object> policyCfg = getPolicyCfg(payload);
 
         // create the resulting configuration
-        Map<String, Object> m = ConfigurationUtils.deepMerge(defCfg, policyDefCfg, orgCfg, projectCfg, profileCfg, workspaceCfg, attachedCfg, payloadCfg, providedCfg, policyCfg);
+        Map<String, Object> m = ConfigurationUtils.deepMerge(policyDefCfg, orgCfg, projectCfg, profileCfg, workspaceCfg, attachedCfg, payloadCfg, providedCfg, policyCfg);
         m.put(Constants.Request.ACTIVE_PROFILES_KEY, activeProfiles);
 
         // handle handlers special params

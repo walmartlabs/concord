@@ -51,7 +51,6 @@ interface Props {
     onStopLoading: () => void;
     onSegmentInfo?: () => void;
     loading: boolean;
-    open?: boolean;
 }
 
 const LogSegment = ({
@@ -69,12 +68,11 @@ const LogSegment = ({
     onStartLoading,
     onStopLoading,
     onSegmentInfo,
-    loading,
-    open
+    loading
 }: Props) => {
     const scrollAnchorRef = useRef<HTMLDivElement>(null);
     const location = useLocation();
-    const [isOpen, setOpen] = useState<boolean>(!!open);
+    const [isOpen, setOpen] = useState<boolean>(false);
     const [isLoadAll, setLoadAll] = useState<boolean>(false);
     const [isAutoScroll, setAutoScroll] = useState<boolean>(false);
 
@@ -272,6 +270,7 @@ const StatusIcon = ({ status, processStatus, warnings = 0, errors = 0 }: StatusI
         return (
             <Icon
                 loading={
+                    processStatus !== ProcessStatus.SUSPENDED &&
                     processStatus !== ProcessStatus.FAILED &&
                     processStatus !== ProcessStatus.FINISHED &&
                     processStatus !== ProcessStatus.CANCELLED &&

@@ -28,8 +28,8 @@ import com.walmartlabs.concord.db.MainDBChangeLogProvider;
 import org.jooq.Configuration;
 import org.jooq.DSLContext;
 import org.jooq.impl.DSL;
-import org.junit.After;
-import org.junit.Before;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 
 import javax.sql.DataSource;
 import java.lang.reflect.Method;
@@ -51,7 +51,7 @@ public abstract class AbstractDaoTest {
     private DataSource dataSource;
     private Configuration cfg;
 
-    @Before
+    @BeforeEach
     public void initDataSource() {
         DatabaseConfiguration cfg = new DatabaseConfigurationImpl("jdbc:postgresql://localhost:5432/postgres", "postgres", "q1", 3);
 
@@ -61,7 +61,7 @@ public abstract class AbstractDaoTest {
         this.cfg = db.appJooqConfiguration(this.dataSource);
     }
 
-    @After
+    @AfterEach
     public void closeDataSource() throws Exception {
         Method m = dataSource.getClass().getMethod("close");
         m.invoke(dataSource);

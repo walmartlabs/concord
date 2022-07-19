@@ -27,6 +27,8 @@ import javax.ws.rs.core.Response.StatusType;
 
 public class RepositoryValidationException extends RuntimeException {
 
+    private static final long serialVersionUID = 1L;
+
     private final StatusType status;
 
     public RepositoryValidationException(String message, Throwable cause) {

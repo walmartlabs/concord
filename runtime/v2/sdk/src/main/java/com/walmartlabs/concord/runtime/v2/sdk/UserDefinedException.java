@@ -25,6 +25,9 @@ package com.walmartlabs.concord.runtime.v2.sdk;
  */
 public class UserDefinedException extends RuntimeException {
 
+    // for backward compatibility (java8 concord 1.92.0 version)
+    private static final long serialVersionUID = 8152584338845805365L;
+
     public UserDefinedException(String message) {
         super(message);
     }

@@ -357,6 +357,8 @@ public class PayloadManager {
 
     public static class EntryPoint implements Serializable {
 
+        private static final long serialVersionUID = 1L;
+
         private final UUID orgId;
         private final UUID projectId;
         private final UUID repoId;

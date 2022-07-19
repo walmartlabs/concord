@@ -32,7 +32,7 @@ import static org.mockito.Mockito.when;
 
 public abstract class AbstractElResolverTest {
 
-    private ExecutionContext execution = mock(ExecutionContext.class);
+    private final ExecutionContext execution = mock(ExecutionContext.class);
 
     protected void mockVariables(String varName, Object varValue) {
         when(execution.getVariable(eq(varName))).thenReturn(varValue);

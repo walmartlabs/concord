@@ -22,7 +22,7 @@ package com.walmartlabs.concord.runtime.v2.runner.el;
 
 import com.walmartlabs.concord.runtime.v2.runner.tasks.TaskProviders;
 import com.walmartlabs.concord.runtime.v2.sdk.Task;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.io.Serializable;
 import java.util.*;
@@ -30,7 +30,7 @@ import java.util.*;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.is;
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
@@ -110,7 +110,7 @@ public class ExpressionEvaluatorTest {
         input.add("Hello, ${name}");
 
         List<String> expected = new ArrayList<>();
-        expected.add( "Hello, ${Concord}");
+        expected.add("Hello, ${Concord}");
 
         List<String> output = ee.evalAsList(global(vars), input);
         assertThat(output, is(expected));
@@ -131,9 +131,9 @@ public class ExpressionEvaluatorTest {
 
         Map<Object, Object> input = map(
                 "x", "${y}",
-                    "z", "${y.y1}",
-                    "y", map(
-                "y1", "${in}",
+                "z", "${y.y1}",
+                "y", map(
+                        "y1", "${in}",
                         "y2", "abc",
                         "y3", "${z}"));
 
@@ -146,7 +146,7 @@ public class ExpressionEvaluatorTest {
 
         Map<Object, Object> y = map("y1", "task", "y2", "abc", "y3", "task");
         assertThat(output, is(map("x", y,
-                "z","task",
+                "z", "task",
                 "y", y)));
 
         // global -> error (y undefined)
@@ -164,7 +164,7 @@ public class ExpressionEvaluatorTest {
 
         y.put("y3", null);
         assertThat(output, is(map("x", null,
-                "z",null,
+                "z", null,
                 "y", y)));
     }
 
@@ -240,7 +240,7 @@ public class ExpressionEvaluatorTest {
 
         Map<Object, Object> y = map("y1", "from-task: abc", "y2", "abc", "y3", "from-task: abc");
         assertThat(output, is(map("x", y,
-                "z","from-task: abc",
+                "z", "from-task: abc",
                 "y", y)));
 
         verify(task, times(1)).foo(anyString());
@@ -279,7 +279,7 @@ public class ExpressionEvaluatorTest {
 
         Map<Object, Object> y = map("y1", "${abc}", "y2", "abc", "y3", "${abc}");
         assertThat(output, is(map("x", y,
-                "z","${abc}",
+                "z", "${abc}",
                 "y", y)));
 
         verify(task, times(1)).foo(anyString());
@@ -306,7 +306,7 @@ public class ExpressionEvaluatorTest {
     public void testEval6() {
         Map<Object, Object> input = map(
                 "x", Collections.singletonList("${y}"),
-                        "y", "abc");
+                "y", "abc");
 
         ExpressionEvaluator ee = new DefaultExpressionEvaluator(new TaskProviders());
         Map<String, Object> vars = Collections.emptyMap();
@@ -316,7 +316,7 @@ public class ExpressionEvaluatorTest {
         Map<Object, Object> output = ee.evalAsMap(scope(vars), input);
 
         assertThat(output, is(map("x", Collections.singletonList("abc"),
-                "y","abc")));
+                "y", "abc")));
     }
 
     @Test
@@ -385,9 +385,9 @@ public class ExpressionEvaluatorTest {
                 .build();
     }
 
-    private static Map<Object, Object> map(Object ... values) {
+    private static Map<Object, Object> map(Object... values) {
         Map<Object, Object> result = new LinkedHashMap<>();
-        for (int i = 0; i < values.length; i+=2) {
+        for (int i = 0; i < values.length; i += 2) {
             Object k = values[i];
             Object v = values[i + 1];
             result.put(k, v);

@@ -24,6 +24,7 @@ import java.io.Serializable;
 
 public class TemplateAliasResponse implements Serializable {
 
+    private static final long serialVersionUID = 1L;
     private final boolean ok = true;
 
     public boolean isOk() {

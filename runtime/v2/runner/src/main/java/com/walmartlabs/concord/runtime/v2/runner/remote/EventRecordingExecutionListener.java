@@ -81,6 +81,7 @@ public class EventRecordingExecutionListener implements ExecutionListener {
         m.put("line", loc.lineNum());
         m.put("column", loc.column());
         m.put("description", getDescription(s.getStep()));
+        m.put("correlationId", s.getCorrelationId());
 
         ProcessEventRequest req = new ProcessEventRequest();
         req.setEventType("ELEMENT"); // TODO constants

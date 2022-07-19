@@ -36,6 +36,8 @@ import java.util.List;
 @Singleton
 public class ProcessConfiguration implements Serializable {
 
+    private static final long serialVersionUID = 1L;
+
     @Inject
     @Config("process.cleanupInterval")
     private Duration cleanupInterval;

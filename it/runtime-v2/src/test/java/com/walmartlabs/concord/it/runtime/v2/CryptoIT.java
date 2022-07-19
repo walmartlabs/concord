@@ -23,26 +23,24 @@ package com.walmartlabs.concord.it.runtime.v2;
 import ca.ibodrov.concord.testcontainers.ConcordProcess;
 import ca.ibodrov.concord.testcontainers.NewSecretQuery;
 import ca.ibodrov.concord.testcontainers.Payload;
-import ca.ibodrov.concord.testcontainers.junit4.ConcordRule;
+import ca.ibodrov.concord.testcontainers.junit5.ConcordRule;
 import com.walmartlabs.concord.ApiClient;
 import com.walmartlabs.concord.client.*;
-import org.junit.Rule;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
 import static com.walmartlabs.concord.it.common.ITUtils.randomPwd;
 import static com.walmartlabs.concord.it.common.ITUtils.randomString;
-import static com.walmartlabs.concord.it.runtime.v2.ITConstants.DEFAULT_TEST_TIMEOUT;
-import static org.junit.Assert.assertEquals;
 
-public class CryptoIT {
+public class CryptoIT extends AbstractTest {
 
-    @Rule
+    @RegisterExtension
     public final ConcordRule concord = ConcordConfiguration.configure();
 
     /**
      * Tests various methods of the 'crypto' plugin.
      */
-    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    @Test
     public void test() throws Exception {
         ApiClient apiClient = concord.apiClient();
 
@@ -102,7 +100,7 @@ public class CryptoIT {
         Payload payload = new Payload()
                 .org(orgName)
                 .project(projectName)
-                .archive(ProcessIT.class.getResource("crypto").toURI())
+                .archive(resource("crypto"))
                 .arg("myOrg", orgName)
                 .arg("mySecretPwd", mySecretPwd)
                 .arg("myStringSecret", myStringSecretName)
@@ -112,9 +110,7 @@ public class CryptoIT {
                 .arg("myRawString", myRawString);
 
         ConcordProcess proc = concord.processes().start(payload);
-
-        ProcessEntry pe = proc.waitForStatus(ProcessEntry.StatusEnum.FINISHED);
-        assertEquals(ProcessEntry.StatusEnum.FINISHED, pe.getStatus());
+        expectStatus(proc, ProcessEntry.StatusEnum.FINISHED);
 
         proc.assertLog(".*String: " + myStringSecretValue + ".*");
         proc.assertLog(".*Keypair: \\{.*private.*}.*");
@@ -123,7 +119,7 @@ public class CryptoIT {
         proc.assertLog(".*Encrypted string: " + myRawString + ".*");
     }
 
-    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    @Test
     public void testCreate() throws Exception {
         String orgName = "org_" + randomString();
         OrganizationsApi orgApi = new OrganizationsApi(concord.apiClient());
@@ -132,12 +128,10 @@ public class CryptoIT {
         Payload payload = new Payload()
                 .arg("org", orgName)
                 .arg("secretName", "secret_" + randomString())
-                .archive(CryptoIT.class.getResource("cryptoCreate").toURI());
+                .archive(resource("cryptoCreate"));
 
         ConcordProcess proc = concord.processes().start(payload);
-
-        ProcessEntry pe = proc.waitForStatus(ProcessEntry.StatusEnum.FINISHED);
-        assertEquals(ProcessEntry.StatusEnum.FINISHED, pe.getStatus());
+        expectStatus(proc, ProcessEntry.StatusEnum.FINISHED);
 
         proc.assertLog(".*result.ok: true.*");
         proc.assertLog(".*result.password: pAss123qweasd.*");

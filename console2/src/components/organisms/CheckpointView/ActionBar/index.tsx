@@ -22,9 +22,9 @@ import React, { FunctionComponent } from 'react';
 import { FullBar, Item } from './styles';
 import RefreshButton from '../../../atoms/RefreshButton';
 import { PaginationToolBar } from '../../../../components/molecules';
-import CheckpointViewContainer from '../Container';
 import { MetaFilterPopup } from '../MetaFilterForm';
 import ActiveFilters from './ActiveFilters';
+import {useCheckpointContext} from "../Container";
 
 const ActionBar: FunctionComponent = () => {
     const {
@@ -40,7 +40,7 @@ const ActionBar: FunctionComponent = () => {
         projectId,
         setPageLimit,
         processes
-    } = React.useContext(CheckpointViewContainer.Context);
+    } = useCheckpointContext();
 
     return (
         <FullBar>

@@ -22,17 +22,17 @@ package com.walmartlabs.concord.it.server;
 
 import com.walmartlabs.concord.ApiException;
 import com.walmartlabs.concord.client.*;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class JsonStoreIT extends AbstractServerIT {
 
-    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    @Test
     public void testValidationJsonStoreRequest() throws Exception {
         String orgName = "org_" + randomString();
         OrganizationsApi organizationsApi = new OrganizationsApi(getApiClient());
@@ -48,7 +48,7 @@ public class JsonStoreIT extends AbstractServerIT {
         }
     }
 
-    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    @Test
     public void testBulkAccessUpdate() throws Exception {
         String orgName = "org_" + randomString();
 

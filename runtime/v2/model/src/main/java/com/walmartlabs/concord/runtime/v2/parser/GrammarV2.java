@@ -31,6 +31,7 @@ import java.io.Serializable;
 import java.time.Duration;
 import java.time.format.DateTimeParseException;
 import java.util.*;
+import java.util.function.BiPredicate;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 import java.util.stream.Collectors;
@@ -78,18 +79,35 @@ public final class GrammarV2 {
     public static final Parser<Atom, String> maybeString = _val(JsonToken.VALUE_STRING).map(v -> v.getValue(YamlValueType.STRING));
     public static final Parser<Atom, List<String>> maybeStringArray = arrayOfValues.map(v -> v.getListValue(YamlValueType.STRING));
     public static final Parser<Atom, Map<String, Serializable>> maybeMap = object.map(YamlObject::getValue);
-    public static final Parser<Atom, Object> patternOrArrayVal = value.map(GrammarV2::patternOrArrayConverter);
+    public static final Parser<Atom, Object> regexpOrArrayVal = value.map(GrammarV2::regexpOrArrayConverter);
     public static final Parser<Atom, Duration> durationVal = value.map(GrammarV2::durationConverter);
     public static final Parser<Atom, String> timezoneVal = value.map(GrammarV2::timezoneConverter);
     public static final Parser<Atom, List<String>> stringOrArrayVal = value.map(GrammarV2::stringOrArrayConverter);
+    public static final Parser<Atom, String> stringNotEmptyVal = value.map(v -> {
+        String vv = v.getValue(YamlValueType.STRING);
+        if (vv.trim().isEmpty()) {
+            throw new InvalidValueTypeException.Builder()
+                    .location(v.getLocation())
+                    .expected(YamlValueType.NON_EMPTY_STRING)
+                    .actual(v.getType())
+                    .message("Empty value")
+                    .build();
+        }
+        return vv;
+    });
 
     public static <E extends Enum<E>> Parser<Atom, E> enumVal(Class<E> enumData) {
+        return enumVal(enumData, String::equals);
+    }
+
+    public static <E extends Enum<E>> Parser<Atom, E> enumVal(Class<E> enumData,
+                                                              BiPredicate<String, String> cmp) {
         return value.map(vv -> {
             String v = vv.getValue(YamlValueType.STRING);
 
-            for (Enum<E> enumVal : enumData.getEnumConstants()) {
-                if (enumVal.name().equals(v)) {
-                    return Enum.valueOf(enumData, v);
+            for (E enumVal : enumData.getEnumConstants()) {
+                if (cmp.test(enumVal.name(), v)) {
+                    return enumVal;
                 }
             }
 
@@ -236,12 +254,12 @@ public final class GrammarV2 {
         }
     }
 
-    private static Object patternOrArrayConverter(YamlValue v) {
+    private static Object regexpOrArrayConverter(YamlValue v) {
         if (v.getType() == YamlValueType.STRING) {
             return regexpConverter(v);
         }
 
-        YamlList list = asList(v, YamlValueType.PATTERN_OR_ARRAY);
+        YamlList list = asList(v, YamlValueType.REGEXP_OR_ARRAY);
         return list.getListValue(GrammarV2::regexpConverter);
     }
 

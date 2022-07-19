@@ -21,20 +21,19 @@ package com.walmartlabs.concord.it.server;
  */
 
 
-
 import com.walmartlabs.concord.client.*;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.net.URI;
 import java.util.*;
 
 import static com.walmartlabs.concord.it.common.ITUtils.archive;
 import static com.walmartlabs.concord.it.common.ServerClient.*;
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class WithItemsIT extends AbstractServerIT {
 
-    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    @Test
     public void testAnsible() throws Exception {
         URI uri = ProcessIT.class.getResource("ansibleWithItems").toURI();
         byte[] payload = archive(uri, ITConstants.DEPENDENCIES_DIR);
@@ -59,7 +58,7 @@ public class WithItemsIT extends AbstractServerIT {
         assertLog(".*Howdy!.*", ab);
     }
 
-    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    @Test
     public void testForms() throws Exception {
         URI uri = ProcessIT.class.getResource("formsWithItems").toURI();
         byte[] payload = archive(uri);
@@ -99,7 +98,7 @@ public class WithItemsIT extends AbstractServerIT {
         assertLog(".*Hi there!.*", ab);
     }
 
-    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    @Test
     public void testExternalItems() throws Exception {
         URI uri = ProcessIT.class.getResource("externalWithItems").toURI();
         byte[] payload = archive(uri);
@@ -126,7 +125,7 @@ public class WithItemsIT extends AbstractServerIT {
         assertLog(".*Howdy!.*", ab);
     }
 
-    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    @Test
     public void testLotsOfItems() throws Exception {
         URI uri = ProcessIT.class.getResource("externalWithItems").toURI();
         byte[] payload = archive(uri);
@@ -151,7 +150,7 @@ public class WithItemsIT extends AbstractServerIT {
         assertEquals(ProcessEntry.StatusEnum.FINISHED, pir.getStatus());
     }
 
-    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    @Test
     public void testSubsequentCalls() throws Exception {
         URI uri = ProcessIT.class.getResource("multipleWithItems").toURI();
         byte[] payload = archive(uri);

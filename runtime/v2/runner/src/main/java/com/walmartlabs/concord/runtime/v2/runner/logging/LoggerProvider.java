@@ -41,11 +41,10 @@ public class LoggerProvider implements Provider<RunnerLogger> {
     }
 
     private static RunnerLogger createLogger(RunnerConfiguration runnerCfg, LoggingClient loggingClient) {
-        String segmentedLogDir = runnerCfg.logging().segmentedLogDir();
-        if (segmentedLogDir == null) {
-            return new SimpleLogger();
-        } else {
+        if (runnerCfg.logging().segmentedLogs()) {
             return new SegmentedLogger(loggingClient);
+        } else {
+            return new SimpleLogger();
         }
     }
 }

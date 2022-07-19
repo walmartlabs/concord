@@ -23,14 +23,9 @@ package com.walmartlabs.concord.runtime.v2.serializer;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.databind.ser.std.StdSerializer;
-import com.walmartlabs.concord.runtime.v2.model.ProcessDefinition;
 
 import java.io.IOException;
 import java.time.Duration;
-import java.util.Collections;
-import java.util.stream.Collectors;
-
-import static com.walmartlabs.concord.runtime.v2.serializer.SerializerUtils.writeNotEmptyObjectField;
 
 public class DurationSerializer extends StdSerializer<Duration> {
 

@@ -8,6 +8,8 @@ flows:
         k2: 2
         k3: false
       withItems: 1
+      loop:
+        items: 1
       retry:
         times: 1
         delay: 2

@@ -22,7 +22,8 @@ package com.walmartlabs.concord.it.server;
 
 import com.google.common.io.Files;
 import com.walmartlabs.concord.client.*;
-import org.junit.Test;
+import com.walmartlabs.concord.common.ConfigurationUtils;
+import org.junit.jupiter.api.Test;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -30,21 +31,18 @@ import java.io.InputStream;
 import java.net.URI;
 import java.net.URL;
 import java.nio.file.Paths;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.regex.Pattern;
 
 import static com.walmartlabs.concord.common.IOUtils.grep;
 import static com.walmartlabs.concord.it.common.ITUtils.archive;
 import static com.walmartlabs.concord.it.common.ServerClient.*;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 public class AnsibleIT extends AbstractServerIT {
 
-    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    @Test
     public void testHello() throws Exception {
         URI dir = AnsibleIT.class.getResource("ansible").toURI();
         byte[] payload = archive(dir, ITConstants.DEPENDENCIES_DIR);
@@ -65,7 +63,7 @@ public class AnsibleIT extends AbstractServerIT {
         assertLog(".*\"msg\":.*Hello, world.*", ab);
     }
 
-    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    @Test
     public void testSkipTags() throws Exception {
         URI dir = AnsibleIT.class.getResource("ansibleSkipTags").toURI();
         byte[] payload = archive(dir, ITConstants.DEPENDENCIES_DIR);
@@ -84,10 +82,10 @@ public class AnsibleIT extends AbstractServerIT {
 
         byte[] ab = getLog(pir.getLogFileName());
         assertLog(".*\"msg\":.*Hello2, world.*", ab);
-        assertEquals("unexpected 'Hello, world' log", 0, grep(".*Hello, world.*", ab).size());
+        assertEquals(0, grep(".*Hello, world.*", ab).size(), "unexpected 'Hello, world' log");
     }
 
-    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    @Test
     public void testVault() throws Exception {
         URI dir = AnsibleIT.class.getResource("ansibleVault").toURI();
         byte[] payload = archive(dir, ITConstants.DEPENDENCIES_DIR);
@@ -108,7 +106,7 @@ public class AnsibleIT extends AbstractServerIT {
         assertLog(".*Hello, Concord.*", ab);
     }
 
-    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    @Test
     public void testVaultWithMultiplePasswords() throws Exception {
         URI dir = AnsibleIT.class.getResource("ansibleVaultMultiplePasswords").toURI();
         byte[] payload = archive(dir, ITConstants.DEPENDENCIES_DIR);
@@ -129,7 +127,7 @@ public class AnsibleIT extends AbstractServerIT {
         assertLog(".*Hello, Concord.*", ab);
     }
 
-    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    @Test
     public void testVaultWithMultiplePasswordFiles() throws Exception {
         URI dir = AnsibleIT.class.getResource("ansibleVaultMultiplePasswordFiles").toURI();
         byte[] payload = archive(dir, ITConstants.DEPENDENCIES_DIR);
@@ -150,7 +148,8 @@ public class AnsibleIT extends AbstractServerIT {
         assertLog(".*Hello, Concord.*", ab);
     }
 
-    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    @Test
+    @SuppressWarnings("unchecked")
     public void testTwoAnsibleRuns() throws Exception {
         URI dir = AnsibleIT.class.getResource("twoAnsible").toURI();
         byte[] payload = archive(dir, ITConstants.DEPENDENCIES_DIR);
@@ -172,9 +171,24 @@ public class AnsibleIT extends AbstractServerIT {
         byte[] ab = getLog(pir.getLogFileName());
         assertLog(".*\"msg\":.*Hello!.*", ab);
         assertLog(".*\"msg\":.*Bye-bye!.*", ab);
+
+        // ---
+
+        File resp = processApi.downloadAttachment(spr.getInstanceId(), "ansible_stats_v2.json");
+        assertNotNull(resp);
+
+        List<Map<String, Object>> stats = fromJson(resp, List.class);
+
+        assertEquals(2, stats.size());
+
+        assertEquals("playbook/hello.yml", stats.get(0).get("playbook"));
+        Collection<String> oks = (Collection<String>)ConfigurationUtils.get(stats.get(0), "stats", "ok");
+        assertNotNull(oks);
+        assertEquals(1, oks.size());
+        assertEquals("127.0.0.1", oks.iterator().next());
     }
 
-    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    @Test
     public void testWithForm() throws Exception {
         URI dir = AnsibleIT.class.getResource("ansibleWithForm").toURI();
         byte[] payload = archive(dir, ITConstants.DEPENDENCIES_DIR);
@@ -209,7 +223,7 @@ public class AnsibleIT extends AbstractServerIT {
         assertLog(".*\"msg\":.*Hello!.*", ab);
     }
 
-    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    @Test
     public void testWithFormSuspensionPostAnsible() throws Exception {
         URI dir = AnsibleIT.class.getResource("ansibleWithPostFormSuspension/payload").toURI();
         byte[] payload = archive(dir, ITConstants.DEPENDENCIES_DIR);
@@ -251,7 +265,7 @@ public class AnsibleIT extends AbstractServerIT {
         assertLog(".*Hello!.*", ab);
     }
 
-    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    @Test
     public void testExtenalPlaybook() throws Exception {
 
         URI dir = AnsibleIT.class.getResource("ansibleExternalPlaybook/payload").toURI();
@@ -275,7 +289,7 @@ public class AnsibleIT extends AbstractServerIT {
         assertEquals(ProcessEntry.StatusEnum.FINISHED, pir.getStatus());
     }
 
-    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    @Test
     public void testMergeDefaults() throws Exception {
         URI dir = AnsibleIT.class.getResource("ansibleMergeDefaults").toURI();
         byte[] payload = archive(dir, ITConstants.DEPENDENCIES_DIR);
@@ -300,7 +314,7 @@ public class AnsibleIT extends AbstractServerIT {
         assertLog(".*_callbacks:myCallbackDir.*", ab);
     }
 
-    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    @Test
     public void testGroupVars() throws Exception {
         String orgName = "org_" + randomString();
         OrganizationsApi orgApi = new OrganizationsApi(getApiClient());
@@ -336,7 +350,7 @@ public class AnsibleIT extends AbstractServerIT {
         assertLog(".*\"msg\":.*Hi there!.*", ab);
     }
 
-    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    @Test
     public void testOutVars() throws Exception {
         URI dir = AnsibleIT.class.getResource("ansibleOutVars").toURI();
         byte[] payload = archive(dir, ITConstants.DEPENDENCIES_DIR);
@@ -358,7 +372,7 @@ public class AnsibleIT extends AbstractServerIT {
         assertLog(".*\"msg\":.*Second message.*", ab);
     }
 
-    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    @Test
     public void testStats() throws Exception {
         URI dir = AnsibleIT.class.getResource("ansibleStats").toURI();
         byte[] payload = archive(dir, ITConstants.DEPENDENCIES_DIR);
@@ -379,7 +393,7 @@ public class AnsibleIT extends AbstractServerIT {
         assertLog(".*OK:.*127.0.0.1.*", ab);
     }
 
-    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    @Test
     public void testBadStrings() throws Exception {
         URI dir = AnsibleIT.class.getResource("ansibleBadStrings").toURI();
         byte[] payload = archive(dir, ITConstants.DEPENDENCIES_DIR);
@@ -400,7 +414,7 @@ public class AnsibleIT extends AbstractServerIT {
         assertLog(".*THIS TASK CONTAINS SENSITIVE INFORMATION.*", ab);
     }
 
-    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    @Test
     public void testRawStrings() throws Exception {
         URI dir = AnsibleIT.class.getResource("ansibleRawStrings").toURI();
         byte[] payload = archive(dir, ITConstants.DEPENDENCIES_DIR);
@@ -422,7 +436,7 @@ public class AnsibleIT extends AbstractServerIT {
         assertLog(".*" + Pattern.quote("message {{.unsafe}}") + ".*", ab);
     }
 
-    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    @Test
     @SuppressWarnings("unchecked")
     public void testTemplateArgs() throws Exception {
         URI dir = AnsibleIT.class.getResource("ansibleTemplateArgs").toURI();
@@ -445,7 +459,7 @@ public class AnsibleIT extends AbstractServerIT {
 
         // ---
         ProcessEventsApi eventsApi = new ProcessEventsApi(getApiClient());
-        List<ProcessEventEntry> events = eventsApi.list(pir.getInstanceId(), "ANSIBLE", null, null, null,null, null, null);
+        List<ProcessEventEntry> events = eventsApi.list(pir.getInstanceId(), "ANSIBLE", null, null, null, null, null, null);
         assertNotNull(events);
         // one pre and one post event
         assertEquals(2, events.size());
@@ -538,7 +552,7 @@ public class AnsibleIT extends AbstractServerIT {
         assertNoLog(".*Hello bbb.*", ab);
     }
 
-    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    @Test
     public void testInventoryMixMatch() throws Exception {
         URI dir = AnsibleIT.class.getResource("ansibleInventoryMix").toURI();
         byte[] payload = archive(dir, ITConstants.DEPENDENCIES_DIR);
@@ -559,7 +573,7 @@ public class AnsibleIT extends AbstractServerIT {
         assertLog(".*Hello!.*", ab);
     }
 
-    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    @Test
     public void testInventoryNameInvalidChars() throws Exception {
         URI dir = AnsibleIT.class.getResource("ansibleInventoryName").toURI();
         byte[] payload = archive(dir, ITConstants.DEPENDENCIES_DIR);
@@ -580,7 +594,7 @@ public class AnsibleIT extends AbstractServerIT {
         assertLog(".*Hello!.*", ab);
     }
 
-    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    @Test
     public void testLogFiltering() throws Exception {
         // run w/o filtering first
 

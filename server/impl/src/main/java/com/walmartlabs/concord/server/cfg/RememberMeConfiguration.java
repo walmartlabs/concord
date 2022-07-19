@@ -33,6 +33,8 @@ import java.time.Duration;
 @Singleton
 public class RememberMeConfiguration implements Serializable {
 
+    private static final long serialVersionUID = 1L;
+
     @Inject
     @Config("rememberMe.maxAge")
     private Duration rememberMeMaxAge;

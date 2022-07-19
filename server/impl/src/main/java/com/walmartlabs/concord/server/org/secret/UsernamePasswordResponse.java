@@ -29,6 +29,8 @@ import java.util.UUID;
 @JsonInclude(Include.NON_NULL)
 public class UsernamePasswordResponse implements Serializable {
 
+    private static final long serialVersionUID = 1L;
+
     private final UUID id;
     private final Value value;
 
@@ -47,6 +49,8 @@ public class UsernamePasswordResponse implements Serializable {
 
     @JsonInclude(Include.NON_NULL)
     public static class Value implements Serializable {
+
+        private static final long serialVersionUID = 1L;
 
         private final String username;
         private final String password;

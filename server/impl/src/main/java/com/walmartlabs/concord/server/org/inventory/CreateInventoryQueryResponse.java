@@ -30,6 +30,8 @@ import java.util.UUID;
 @Deprecated
 public class CreateInventoryQueryResponse implements Serializable {
 
+    private static final long serialVersionUID = 1L;
+
     private final boolean ok = true;
 
     private final OperationResult result;

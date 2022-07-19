@@ -22,15 +22,15 @@ package com.walmartlabs.concord.server;
 
 import com.walmartlabs.concord.common.DateTimeUtils;
 import org.jooq.impl.DSL;
-import org.junit.Ignore;
-import org.junit.Test;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
 
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.time.OffsetDateTime;
 import java.util.UUID;
 
-@Ignore
+@Disabled
 public class OffsetDateTimeTest extends AbstractDaoTest {
 
     public OffsetDateTimeTest() {

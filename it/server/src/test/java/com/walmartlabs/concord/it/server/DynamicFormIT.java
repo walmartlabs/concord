@@ -21,7 +21,7 @@ package com.walmartlabs.concord.it.server;
  */
 
 import com.walmartlabs.concord.client.*;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.util.HashMap;
 import java.util.List;
@@ -29,11 +29,11 @@ import java.util.Map;
 
 import static com.walmartlabs.concord.it.common.ITUtils.archive;
 import static com.walmartlabs.concord.it.common.ServerClient.*;
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class DynamicFormIT extends AbstractServerIT {
 
-    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    @Test
     public void testWithGroovy() throws Exception {
         String firstName = "firstName_" + randomString();
         String lastName = "lastName_" + randomString();

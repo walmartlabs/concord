@@ -700,6 +700,7 @@ public class ProcessQueueDao extends AbstractDao {
                                             jsonbBuildObject(
                                                     inline("id"), pc.CHECKPOINT_ID,
                                                     inline("name"), pc.CHECKPOINT_NAME,
+                                                    inline("correlationId"), pc.CORRELATION_ID,
                                                     inline("createdAt"), toJsonDate(pc.CHECKPOINT_DATE))))))
                     .from(pc);
 

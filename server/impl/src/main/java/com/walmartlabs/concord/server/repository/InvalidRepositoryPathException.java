@@ -23,6 +23,8 @@ package com.walmartlabs.concord.server.repository;
 
 public class InvalidRepositoryPathException extends RuntimeException {
 
+    private static final long serialVersionUID = 1L;
+
     public InvalidRepositoryPathException(String message) {
         super(message);
     }

@@ -27,6 +27,7 @@ import java.util.List;
 import java.util.Map;
 
 @Value.Immutable
+@Value.Style(jdkOnly = true)
 public interface Trigger {
 
     String name();

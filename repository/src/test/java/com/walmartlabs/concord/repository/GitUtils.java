@@ -42,7 +42,7 @@ public final class GitUtils {
         Path repo = tmp.resolve("test");
         Files.createDirectories(repo);
 
-        Git.init().setBare(true).setDirectory(repo.toFile()).call();
+        Git.init().setInitialBranch("master").setBare(true).setDirectory(repo.toFile()).call();
 
         // clone the repository into a new directory
         Path workdir = Files.createTempDirectory("workDir");
@@ -56,7 +56,7 @@ public final class GitUtils {
 
         // add, commit, and push copied files
         git.add().addFilepattern(".").call();
-        git.commit().setMessage("init from: " + data).call();
+        git.commit().setSign(false).setMessage("init from: " + data).call();
         git.push().call();
 
         return repo;
@@ -72,7 +72,7 @@ public final class GitUtils {
             Files.copy(file, tmp.path().resolve(file.getFileName()), StandardCopyOption.REPLACE_EXISTING);
 
             git.add().addFilepattern(".").call();
-            RevCommit commit = git.commit().setMessage("update").call();
+            RevCommit commit = git.commit().setSign(false).setMessage("update").call();
             git.push().call();
             return commit;
         }
@@ -102,6 +102,7 @@ public final class GitUtils {
                 .call();
 
         RevCommit commit = git.commit()
+                .setSign(false)
                 .setMessage("adding files from " + src.getFileName())
                 .call();
 
@@ -131,6 +132,7 @@ public final class GitUtils {
                 .call();
 
         RevCommit commit = git.commit()
+                .setSign(false)
                 .setMessage("adding files from " + src.getFileName())
                 .call();
 

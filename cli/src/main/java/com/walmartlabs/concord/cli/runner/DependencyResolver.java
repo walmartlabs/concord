@@ -22,6 +22,7 @@ package com.walmartlabs.concord.cli.runner;
 
 import com.walmartlabs.concord.dependencymanager.DependencyEntity;
 import com.walmartlabs.concord.dependencymanager.DependencyManager;
+import com.walmartlabs.concord.dependencymanager.ProgressListener;
 import com.walmartlabs.concord.runtime.v2.model.ProcessDefinition;
 
 import java.io.IOException;
@@ -58,9 +59,17 @@ public class DependencyResolver {
                 normalizeUrls(processDefinition.configuration().dependencies()).stream())
                 .collect(Collectors.toList());
 
-        Collection<DependencyEntity> deps = dependencyManager.resolve(uris, (retryCount, maxRetry, interval, cause) -> {
-            System.err.println("Error while downloading dependencies: " + cause);
-            System.err.println("Retrying in " + interval + "ms");
+        Collection<DependencyEntity> deps = dependencyManager.resolve(uris, new ProgressListener() {
+            @Override
+            public void onRetry(int retryCount, int maxRetry, long interval, String cause) {
+                System.err.println("Error while downloading dependencies: " + cause);
+                System.err.println("Retrying in " + interval + "ms");
+            }
+
+            @Override
+            public void onTransferFailed(String error) {
+                System.err.println("Transfer failed: " + error);
+            }
         });
 
         // sort dependencies to maintain consistency in runner configurations

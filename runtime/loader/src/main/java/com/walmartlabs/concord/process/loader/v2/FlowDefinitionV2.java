@@ -30,6 +30,8 @@ import java.util.Objects;
 
 public class FlowDefinitionV2 implements FlowDefinition {
 
+    private static final long serialVersionUID = 1L;
+
     private final String name;
     private final List<Step> steps;
 

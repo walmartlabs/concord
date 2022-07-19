@@ -20,13 +20,13 @@ package com.walmartlabs.concord.plugins.smtp;
  * =====
  */
 
-import com.icegreen.greenmail.junit.GreenMailRule;
+import com.icegreen.greenmail.junit5.GreenMailExtension;
 import com.icegreen.greenmail.util.ServerSetupTest;
 import com.walmartlabs.concord.runtime.v2.sdk.Context;
 import com.walmartlabs.concord.runtime.v2.sdk.MapBackedVariables;
-import org.junit.After;
-import org.junit.Rule;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
 import javax.mail.internet.MimeMessage;
 import java.nio.file.Paths;
@@ -34,16 +34,16 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 public class SmtpTaskV2Test {
 
-    @Rule
-    public final GreenMailRule mailServer = new GreenMailRule(ServerSetupTest.SMTP);
+    @RegisterExtension
+    GreenMailExtension mailServer = new GreenMailExtension(ServerSetupTest.SMTP);
 
-    @After
+    @AfterEach
     public void cleanup() {
         mailServer.reset();
     }
@@ -62,7 +62,7 @@ public class SmtpTaskV2Test {
         Context ctx = mock(Context.class);
         when(ctx.workingDirectory()).thenReturn(Paths.get(System.getProperty("user.dir")));
         when(ctx.variables()).thenReturn(new MapBackedVariables(Collections.emptyMap()));
-        when(ctx.defaultVariables()).thenReturn(new MapBackedVariables(Collections.singletonMap("smtpParams", smtpParams)));
+        when(ctx.defaultVariables()).thenReturn(new MapBackedVariables(smtpParams));
 
         SmtpTaskV2 t = new SmtpTaskV2(ctx);
         t.execute(new MapBackedVariables(Collections.singletonMap("mail", mail)));
@@ -115,7 +115,7 @@ public class SmtpTaskV2Test {
         Context ctx = mock(Context.class);
         when(ctx.workingDirectory()).thenReturn(Paths.get(System.getProperty("user.dir")));
         when(ctx.variables()).thenReturn(new MapBackedVariables(Collections.singletonMap("smtpParams", processArgsDefaults)));
-        when(ctx.defaultVariables()).thenReturn(new MapBackedVariables(Collections.singletonMap("smtpParams", policyDefaults)));
+        when(ctx.defaultVariables()).thenReturn(new MapBackedVariables(policyDefaults));
 
         SmtpTaskV2 t = new SmtpTaskV2(ctx);
         t.execute(new MapBackedVariables(Collections.singletonMap("mail", mail)));

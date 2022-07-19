@@ -29,6 +29,8 @@ import java.io.Serializable;
 @Named
 public class WorkerMetricsConfiguration implements Serializable {
 
+    private static final long serialVersionUID = 1L;
+
     @Inject
     @Config("workerMetrics.groupByCapabilitiesProperty")
     private String groupByCapabilitiesProperty;

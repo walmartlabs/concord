@@ -9,9 +9,9 @@ package com.walmartlabs.concord.it.runtime.v2;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -23,17 +23,16 @@ package com.walmartlabs.concord.it.runtime.v2;
 import ca.ibodrov.concord.testcontainers.ConcordProcess;
 import ca.ibodrov.concord.testcontainers.ContainerListener;
 import ca.ibodrov.concord.testcontainers.ContainerType;
-import ca.ibodrov.concord.testcontainers.junit4.ConcordRule;
+import ca.ibodrov.concord.testcontainers.junit5.ConcordRule;
 import com.github.tomakehurst.wiremock.client.WireMock;
-import com.github.tomakehurst.wiremock.core.WireMockConfiguration;
 import com.github.tomakehurst.wiremock.extension.responsetemplating.ResponseTemplateTransformer;
-import com.github.tomakehurst.wiremock.junit.WireMockRule;
+import com.github.tomakehurst.wiremock.junit5.WireMockExtension;
 import com.walmartlabs.concord.client.*;
 import com.walmartlabs.concord.common.IOUtils;
 import com.walmartlabs.concord.sdk.Constants;
 import org.apache.commons.compress.archivers.zip.ZipArchiveOutputStream;
-import org.junit.ClassRule;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
 import org.testcontainers.Testcontainers;
 
 import java.io.FileInputStream;
@@ -48,33 +47,34 @@ import java.util.HashMap;
 import java.util.Map;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo;
+import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMockConfig;
 import static com.walmartlabs.concord.common.IOUtils.createTempFile;
 import static com.walmartlabs.concord.it.common.ITUtils.randomString;
-import static com.walmartlabs.concord.it.runtime.v2.ITConstants.DEFAULT_TEST_TIMEOUT;
-import static org.junit.Assert.assertEquals;
 
-public class TemplateIT {
+public class TemplateIT extends AbstractTest {
 
-    @ClassRule
-    public static WireMockRule rule = new WireMockRule(WireMockConfiguration.options()
-            .extensions(new ResponseTemplateTransformer(false))
-            .dynamicPort());
+    @RegisterExtension
+    public static WireMockExtension rule = WireMockExtension.newInstance()
+            .options(wireMockConfig()
+                    .dynamicPort()
+                    .extensions(new ResponseTemplateTransformer(false)))
+            .build();
 
-    @ClassRule
+    @RegisterExtension
     public static final ConcordRule concord = ConcordConfiguration
             .configure()
             .containerListener(new ContainerListener() {
                 @Override
                 public void beforeStart(ContainerType type) {
                     if (type == ContainerType.SERVER) {
-                        Testcontainers.exposeHostPorts(rule.port());
+                        Testcontainers.exposeHostPorts(rule.getPort());
                     }
                 }
             });
 
-    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    @Test
     public void testTemplate() throws Exception {
-        Path templatePath = createTemplate(Paths.get(ProcessIT.class.getResource("template").toURI()));
+        Path templatePath = createTemplate(Paths.get(resource("template")));
         String templateUrl = stubForGetTemplate(templatePath.toAbsolutePath());
         String templateAlias = "template_" + randomString();
 
@@ -110,8 +110,7 @@ public class TemplateIT {
 
         // ---
 
-        ProcessEntry pe = proc.waitForStatus(ProcessEntry.StatusEnum.FINISHED);
-        assertEquals(ProcessEntry.StatusEnum.FINISHED, pe.getStatus());
+        expectStatus(proc, ProcessEntry.StatusEnum.FINISHED);
 
         // ---
 
@@ -137,7 +136,7 @@ public class TemplateIT {
             throw new RuntimeException("Failed to stub for template file download" + e.getMessage());
         }
 
-        return new URL("http", concord.hostAddressAccessibleByContainers(), rule.port(), tPath.toString()).toString();
+        return new URL("http", concord.hostAddressAccessibleByContainers(), rule.getPort(), tPath.toString()).toString();
     }
 
     /**
@@ -154,7 +153,7 @@ public class TemplateIT {
         }
 
         if (!tmpZip.toFile().setReadable(true, false)) {
-            throw new RuntimeException("Cannot set readable permissions for template file: " + tmpZip.toString());
+            throw new RuntimeException("Cannot set readable permissions for template file: " + tmpZip);
         }
 
         return tmpZip;

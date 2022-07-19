@@ -17,14 +17,14 @@
  * limitations under the License.
  * =====
  */
-import React, { useContext, FunctionComponent } from 'react';
+import React, { FunctionComponent } from 'react';
 import CheckpointErrorBoundary from './CheckpointErrorBoundry';
-import CheckpointContainer from './Container';
 import ActionBar from './ActionBar';
 import LeftContent from './ProcessList/LeftContent';
 import { Row } from './shared/Layout';
 import RightContent from './ProcessList/RightContent';
 import { ProjectEntry } from '../../../api/org/project';
+import {useCheckpointContext, CheckpointProvider} from "./Container";
 
 /**
  * This View renders the two bigger components that make up the this checkpoint view
@@ -33,7 +33,7 @@ import { ProjectEntry } from '../../../api/org/project';
  * @Component Map over process details to create list of process items and details
  */
 export const View = () => {
-    const { project, processes } = useContext(CheckpointContainer.Context);
+    const { project, processes } = useCheckpointContext();
 
     return (
         <CheckpointErrorBoundary>
@@ -57,9 +57,9 @@ export const View = () => {
  * @param project the Concord Project
  */
 export const CheckpointView: FunctionComponent<{ project: ProjectEntry }> = ({ project }) => (
-    <CheckpointContainer.Provider project={project} refreshInterval={5000}>
+    <CheckpointProvider project={project} refreshInterval={5000}>
         <View />
-    </CheckpointContainer.Provider>
+    </CheckpointProvider>
 );
 
 export default CheckpointView;

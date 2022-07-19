@@ -299,6 +299,8 @@ public class ProcessLogsDao extends AbstractDao {
 
     public static final class ProcessLogChunk implements Serializable {
 
+        private static final long serialVersionUID = 1L;
+
         private final int start;
         private final byte[] data;
 
@@ -317,6 +319,8 @@ public class ProcessLogsDao extends AbstractDao {
     }
 
     public static final class ProcessLog implements Serializable {
+
+        private static final long serialVersionUID = 1L;
 
         private final int size;
         private final List<ProcessLogChunk> chunks;

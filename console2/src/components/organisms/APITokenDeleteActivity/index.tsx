@@ -22,7 +22,7 @@ import * as React from 'react';
 import { useState } from 'react';
 import { Button } from 'semantic-ui-react';
 
-import { ConcordId, ConcordKey, GenericOperationResult, RequestError } from '../../../api/common';
+import {ConcordId, ConcordKey, GenericOperationResult, RequestError} from '../../../api/common';
 import { RequestErrorMessage, SingleOperationPopup } from '../../molecules';
 import { deleteToken as apiDelete } from '../../../api/profile/api_token';
 

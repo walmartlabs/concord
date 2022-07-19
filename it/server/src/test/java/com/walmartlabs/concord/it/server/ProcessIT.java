@@ -24,8 +24,8 @@ import com.walmartlabs.concord.ApiException;
 import com.walmartlabs.concord.client.*;
 import com.walmartlabs.concord.client.ProcessEntry.StatusEnum;
 import com.walmartlabs.concord.common.IOUtils;
-import org.junit.Ignore;
-import org.junit.Test;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -37,12 +37,12 @@ import java.util.Map;
 
 import static com.walmartlabs.concord.it.common.ITUtils.archive;
 import static com.walmartlabs.concord.it.common.ServerClient.*;
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class ProcessIT extends AbstractServerIT {
 
     @Test
-    @Ignore
+    @Disabled
     public void testLotsOfProcesses() throws Exception {
         byte[] payload = archive(ProcessIT.class.getResource("example").toURI());
 
@@ -52,7 +52,7 @@ public class ProcessIT extends AbstractServerIT {
         }
     }
 
-    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    @Test
     public void testTimeout() throws Exception {
         byte[] payload = archive(ProcessIT.class.getResource("timeout").toURI());
 
@@ -65,10 +65,11 @@ public class ProcessIT extends AbstractServerIT {
         } catch (ApiException e) {
             String s = e.getResponseBody();
             ProcessEntry pir = getApiClient().getJSON().deserialize(s, ProcessEntry.class);
-            assertTrue("Unexpected status: " + pir.getStatus(), StatusEnum.RUNNING.equals(pir.getStatus())
+            assertTrue(StatusEnum.RUNNING.equals(pir.getStatus())
                     || StatusEnum.ENQUEUED.equals(pir.getStatus())
                     || StatusEnum.PREPARING.equals(pir.getStatus())
-                    || StatusEnum.STARTING.equals(pir.getStatus()));
+                    || StatusEnum.STARTING.equals(pir.getStatus()),
+                    "Unexpected status: " + pir.getStatus());
         }
 
         processApi.kill(spr.getInstanceId());
@@ -76,7 +77,7 @@ public class ProcessIT extends AbstractServerIT {
         waitForStatus(processApi, spr.getInstanceId(), StatusEnum.CANCELLED, StatusEnum.FAILED, StatusEnum.FINISHED);
     }
 
-    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    @Test
     public void testTaskOut() throws Exception {
         byte[] payload = archive(ProcessIT.class.getResource("taskOut").toURI(), ITConstants.DEPENDENCIES_DIR);
 
@@ -93,7 +94,7 @@ public class ProcessIT extends AbstractServerIT {
         assertLog(".*I said: Hello!.*", ab);
     }
 
-    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    @Test
     public void testDelegateOut() throws Exception {
         byte[] payload = archive(ProcessIT.class.getResource("delegateOut").toURI(), ITConstants.DEPENDENCIES_DIR);
 
@@ -110,7 +111,7 @@ public class ProcessIT extends AbstractServerIT {
         assertLog(".*I said: Hello!.*", ab);
     }
 
-    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    @Test
     public void testProjectId() throws Exception {
         String orgName = "Default";
         String projectName = "project_" + randomString();
@@ -160,7 +161,7 @@ public class ProcessIT extends AbstractServerIT {
         assertNotNull(p);
     }
 
-    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    @Test
     public void testGetAllProcessesForChildIds() throws Exception {
         // create a new org
 
@@ -245,7 +246,7 @@ public class ProcessIT extends AbstractServerIT {
         }
     }
 
-    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    @Test
     public void testForkInitiatorFromApiKey() throws Exception {
         // add the user A
         UsersApi usersApi = new UsersApi(getApiClient());

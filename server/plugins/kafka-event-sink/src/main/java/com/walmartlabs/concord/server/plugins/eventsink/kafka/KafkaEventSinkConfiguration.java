@@ -30,6 +30,8 @@ import java.io.Serializable;
 @Named
 public class KafkaEventSinkConfiguration implements Serializable {
 
+    private static final long serialVersionUID = 1L;
+
     @Inject
     @Nullable
     @Config("eventSink.kafka.enabled")

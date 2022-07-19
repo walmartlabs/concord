@@ -27,22 +27,24 @@ import io.takari.bpm.api.ExecutionContextFactory;
 import io.takari.bpm.api.Variables;
 import io.takari.bpm.el.ExpressionManager;
 import io.takari.bpm.form.FormService;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import static com.walmartlabs.concord.runner.engine.ConcordExecutionContextFactory.ConcordExecutionContext;
-import static org.junit.Assert.*;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class ConcordExecutionContextTest {
 
     private final ProtectedVarContext varContext = new ProtectedVarContext(policyEngine());
 
-    @Test(expected = RuntimeException.class)
+    @Test
     public void testProtectedVariableWithoutContext() {
-        ConcordExecutionContext ctx = ctx();
-        ctx.setProtectedVariable("oops", 1);
+        assertThrows(RuntimeException.class, () -> {
+            ConcordExecutionContext ctx = ctx();
+            ctx.setProtectedVariable("oops", 1);
+        });
     }
 
     @Test

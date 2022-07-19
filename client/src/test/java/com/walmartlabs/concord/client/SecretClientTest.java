@@ -9,9 +9,9 @@ package com.walmartlabs.concord.client;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -20,34 +20,30 @@ package com.walmartlabs.concord.client;
  * =====
  */
 
-import com.github.tomakehurst.wiremock.core.WireMockConfiguration;
-import com.github.tomakehurst.wiremock.junit.WireMockRule;
+import com.github.tomakehurst.wiremock.junit5.WireMockRuntimeInfo;
+import com.github.tomakehurst.wiremock.junit5.WireMockTest;
 import com.walmartlabs.concord.ApiClient;
 import com.walmartlabs.concord.sdk.Constants;
-import org.junit.Rule;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
+@WireMockTest
 public class SecretClientTest {
 
-    @Rule
-    public WireMockRule wireMock = new WireMockRule(WireMockConfiguration.options()
-            .dynamicPort());
-
     @Test
-    public void testInvalidSecretType() throws Exception {
+    public void testInvalidSecretType(WireMockRuntimeInfo wmRuntimeInfo) throws Exception {
         String orgName = "org_" + System.currentTimeMillis();
         String secretName = "secret_" + System.currentTimeMillis();
 
-        wireMock.stubFor(post(urlEqualTo("/api/v1/org/" + orgName + "/secret/" + secretName + "/data"))
+        stubFor(post(urlEqualTo("/api/v1/org/" + orgName + "/secret/" + secretName + "/data"))
                 .willReturn(aResponse()
                         .withStatus(200)
                         .withHeader(Constants.Headers.SECRET_TYPE, SecretEntry.TypeEnum.DATA.name())
                         .withBody("Hello!")));
 
-        ApiClient apiClient = new ConcordApiClient("http://localhost:" + wireMock.port());
+        ApiClient apiClient = new ConcordApiClient("http://localhost:" + wmRuntimeInfo.getHttpPort());
         SecretClient secretClient = new SecretClient(apiClient);
 
         try {

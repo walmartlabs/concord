@@ -20,12 +20,12 @@ package com.walmartlabs.concord.it.server;
  * =====
  */
 
-import com.icegreen.greenmail.junit.GreenMailRule;
+import com.icegreen.greenmail.junit5.GreenMailExtension;
 import com.icegreen.greenmail.util.ServerSetup;
 import com.walmartlabs.concord.client.*;
 import com.walmartlabs.concord.sdk.Constants;
-import org.junit.Rule;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
 import javax.mail.internet.MimeMessage;
 import java.net.URI;
@@ -34,15 +34,15 @@ import java.util.Map;
 
 import static com.walmartlabs.concord.it.common.ITUtils.archive;
 import static com.walmartlabs.concord.it.common.ServerClient.waitForCompletion;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 public class SmtpIT extends AbstractServerIT {
 
-    @Rule
-    public final GreenMailRule mail = new GreenMailRule(new ServerSetup(0, "0.0.0.0", ServerSetup.PROTOCOL_SMTP));
+    @RegisterExtension
+    GreenMailExtension mail = new GreenMailExtension(new ServerSetup(0, "0.0.0.0", ServerSetup.PROTOCOL_SMTP));
 
-    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    @Test
     public void testSimple() throws Exception {
         URI dir = SmtpIT.class.getResource("smtp").toURI();
         byte[] payload = archive(dir, ITConstants.DEPENDENCIES_DIR);

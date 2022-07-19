@@ -1,0 +1,7 @@
+flows:
+  main:
+    - name: "123123"
+      task: "boo"
+      loop:
+        items: 1
+        parallelism: one

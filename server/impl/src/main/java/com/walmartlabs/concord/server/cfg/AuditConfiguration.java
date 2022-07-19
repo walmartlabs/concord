@@ -33,6 +33,8 @@ import java.time.Duration;
 @Singleton
 public class AuditConfiguration implements Serializable {
 
+    private static final long serialVersionUID = 1L;
+
     @Inject
     @Config("audit.enabled")
     private boolean enabled;

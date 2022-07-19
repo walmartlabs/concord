@@ -120,7 +120,7 @@ public class ConcordTaskCommon {
     }
 
     public <T> Map<String, T> waitForCompletion(List<UUID> ids, long timeout, Function<ProcessEntry, T> processor) {
-        Map<String, T> result = new HashMap<>();
+        Map<String, T> result = new ConcurrentHashMap<>();
 
         ids.parallelStream().forEach(id -> {
             log.info("Waiting for {}", LogTags.instanceId(id));

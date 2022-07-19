@@ -25,7 +25,7 @@ import com.walmartlabs.concord.client.ProcessEntry;
 import com.walmartlabs.concord.client.StartProcessResponse;
 import com.walmartlabs.concord.common.IOUtils;
 import org.apache.commons.compress.archivers.zip.ZipArchiveOutputStream;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -43,7 +43,7 @@ import static com.walmartlabs.concord.it.common.ServerClient.waitForCompletion;
 
 public class MultipleProjectFilesIT extends AbstractServerIT {
 
-    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    @Test
     public void test() throws Exception {
         Path template = zip(Paths.get(MultipleProjectFilesIT.class.getResource("multiProjectTemplate/template").toURI()));
         String templateUrl = "file://" + template.toAbsolutePath();

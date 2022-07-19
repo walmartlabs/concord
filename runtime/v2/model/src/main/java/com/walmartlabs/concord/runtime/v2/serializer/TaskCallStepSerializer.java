@@ -30,8 +30,7 @@ import com.walmartlabs.concord.runtime.v2.model.WithItems;
 import java.io.IOException;
 import java.util.Objects;
 
-import static com.walmartlabs.concord.runtime.v2.serializer.SerializerUtils.writeNotEmptyObjectField;
-import static com.walmartlabs.concord.runtime.v2.serializer.SerializerUtils.writeWithItems;
+import static com.walmartlabs.concord.runtime.v2.serializer.SerializerUtils.*;
 
 public class TaskCallStepSerializer extends StdSerializer<TaskCall> {
 
@@ -69,6 +68,8 @@ public class TaskCallStepSerializer extends StdSerializer<TaskCall> {
             writeWithItems(items, gen);
         }
 
+        writeLoop(o.loop(), gen);
+
         if (o.retry() != null) {
             gen.writeObjectField("retry", o.retry());
         }
@@ -76,7 +77,9 @@ public class TaskCallStepSerializer extends StdSerializer<TaskCall> {
         writeNotEmptyObjectField("error", o.errorSteps(), gen);
         writeNotEmptyObjectField("meta", o.meta(), gen);
 
-        gen.writeObjectField("ignoreErrors", o.ignoreErrors());
+        if (o.ignoreErrors()) {
+            gen.writeObjectField("ignoreErrors", o.ignoreErrors());
+        }
 
         gen.writeEndObject();
     }

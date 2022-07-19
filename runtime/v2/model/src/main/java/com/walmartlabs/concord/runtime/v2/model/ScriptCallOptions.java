@@ -46,10 +46,22 @@ public interface ScriptCallOptions extends StepOptions {
     }
 
     @Nullable
+    String out();
+
+    @Value.Default
+    @AllowNulls
+    default Map<String, Serializable> outExpr() {
+        return Collections.emptyMap();
+    }
+
+    @Nullable
     String inputExpression();
 
     @Nullable
     WithItems withItems();
+
+    @Nullable
+    Loop loop();
 
     @Nullable
     Retry retry();

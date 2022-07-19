@@ -218,6 +218,7 @@ public class QoSFilter implements Filter {
     }
 
     private static class AsyncContextQueue extends ConcurrentLinkedQueue<AsyncContext> {
+        private static final long serialVersionUID = 1L;
     }
 
     private class QoSAsyncListener implements AsyncListener {

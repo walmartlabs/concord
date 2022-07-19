@@ -21,10 +21,7 @@ package com.walmartlabs.concord.runtime.v2.runner.compiler;
  */
 
 import com.walmartlabs.concord.runtime.v2.model.*;
-import com.walmartlabs.concord.runtime.v2.runner.vm.ErrorWrapper;
-import com.walmartlabs.concord.runtime.v2.runner.vm.FlowCallCommand;
-import com.walmartlabs.concord.runtime.v2.runner.vm.RetryWrapper;
-import com.walmartlabs.concord.runtime.v2.runner.vm.WithItemsWrapper;
+import com.walmartlabs.concord.runtime.v2.runner.vm.*;
 import com.walmartlabs.concord.svm.Command;
 
 import javax.inject.Named;
@@ -53,6 +50,11 @@ public class FlowCallCompiler implements StepCompiler<FlowCall> {
         WithItems withItems = options.withItems();
         if (withItems != null) {
             cmd = WithItemsWrapper.of(cmd, withItems, options.out(), options.outExpr());
+        }
+
+        Loop loop = options.loop();
+        if (loop != null) {
+            cmd = LoopWrapper.of(context, cmd, loop, options.out(), options.outExpr());
         }
 
         List<Step> errorSteps = options.errorSteps();

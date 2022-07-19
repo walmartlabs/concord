@@ -28,6 +28,9 @@ import java.util.StringJoiner;
 
 public class UnknownOptionException extends YamlProcessingException {
 
+    // for backward compatibility (java8 concord 1.92.0 version)
+    private static final long serialVersionUID = 8029483558704928232L;
+
     private final List<String> expected;
     private final List<UnknownOption> unknown;
 
@@ -54,13 +57,13 @@ public class UnknownOptionException extends YamlProcessingException {
         StringJoiner unknownOptions = new StringJoiner(", ", "[", "]");
         unknown.forEach(o -> unknownOptions.add(toString(o)));
 
-        String msg = "Unknown options: " + unknownOptions.toString();
+        String msg = "Unknown options: " + unknownOptions;
         if (expected.isEmpty()) {
             msg += ", no options expected";
         } else {
             StringJoiner expectedOptions = new StringJoiner(", ", "[", "]");
             expected.forEach(expectedOptions::add);
-            msg += ", expected: " + expectedOptions.toString();
+            msg += ", expected: " + expectedOptions;
         }
 
         msg += ". Remove invalid options and/or fix indentation";

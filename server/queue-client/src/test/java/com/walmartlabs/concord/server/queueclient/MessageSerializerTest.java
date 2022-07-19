@@ -24,13 +24,13 @@ import com.walmartlabs.concord.imports.Import;
 import com.walmartlabs.concord.imports.Import.SecretDefinition;
 import com.walmartlabs.concord.imports.Imports;
 import com.walmartlabs.concord.server.queueclient.message.*;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.util.Collections;
 import java.util.UUID;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 public class MessageSerializerTest {
 

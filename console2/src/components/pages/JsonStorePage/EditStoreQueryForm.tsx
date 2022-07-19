@@ -66,7 +66,7 @@ const EditStoreQueryForm = (props: Props) => {
     }, []);
 
     const handleSubmit = useCallback(async () => {
-        const success = handleValidate();
+        const success = await handleValidate();
         if (success) {
             await onSubmit(valueGetter.current());
         }

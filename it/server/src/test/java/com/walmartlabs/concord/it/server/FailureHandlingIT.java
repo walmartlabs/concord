@@ -21,10 +21,9 @@ package com.walmartlabs.concord.it.server;
  */
 
 
-
 import com.walmartlabs.concord.client.*;
 import com.walmartlabs.concord.client.ProcessEntry.StatusEnum;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.util.Collections;
 import java.util.HashMap;
@@ -33,12 +32,12 @@ import java.util.Map;
 
 import static com.walmartlabs.concord.it.common.ITUtils.archive;
 import static com.walmartlabs.concord.it.common.ServerClient.*;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class FailureHandlingIT extends AbstractServerIT {
 
-    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    @Test
     public void testFailure() throws Exception {
         ProcessApi processApi = new ProcessApi(getApiClient());
 
@@ -83,7 +82,7 @@ public class FailureHandlingIT extends AbstractServerIT {
         assertLog(".*initiator: \\{.*username=.*\\}.*", ab);
     }
 
-    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    @Test
     public void testFailureHandlingError() throws Exception {
         ProcessApi processApi = new ProcessApi(getApiClient());
         byte[] payload = archive(ProcessIT.class.getResource("failureHandlingError").toURI());
@@ -96,7 +95,7 @@ public class FailureHandlingIT extends AbstractServerIT {
         waitForChild(processApi, spr.getInstanceId(), ProcessEntry.KindEnum.FAILURE_HANDLER, StatusEnum.FAILED);
     }
 
-    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    @Test
     public void testOnFailureDependencies() throws Exception {
         String msg = "msg_" + randomString();
         byte[] payload = archive(ProcessIT.class.getResource("onFailureDependencies").toURI());
@@ -128,7 +127,7 @@ public class FailureHandlingIT extends AbstractServerIT {
         assertLog(".*Hello!", ab);
     }
 
-    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    @Test
     public void testCancel() throws Exception {
         byte[] payload = archive(ProcessIT.class.getResource("cancelHandling").toURI());
 
@@ -151,7 +150,7 @@ public class FailureHandlingIT extends AbstractServerIT {
         assertLog(".*initiator is admin.*", ab);
     }
 
-    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    @Test
     public void testCancelSuspended() throws Exception {
         String aValue = "value_" + randomString();
         byte[] payload = archive(ProcessIT.class.getResource("cancelSuspendHandling").toURI());
@@ -186,7 +185,7 @@ public class FailureHandlingIT extends AbstractServerIT {
         assertLog(".*" + aValue + " still here.*", ab);
     }
 
-    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    @Test
     public void testCancelSuspendedAfterTwoForms() throws Exception {
         byte[] payload = archive(ProcessIT.class.getResource("cancelSuspendAfterTwoForms").toURI());
 
@@ -223,7 +222,7 @@ public class FailureHandlingIT extends AbstractServerIT {
         assertLog(".*Hello!.*", ab);
     }
 
-    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    @Test
     public void testOnFailureForForks() throws Exception {
         byte[] payload = archive(ProcessIT.class.getResource("forkOnFailure").toURI());
 

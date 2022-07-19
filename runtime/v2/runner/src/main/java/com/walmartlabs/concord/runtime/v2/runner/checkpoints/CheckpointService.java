@@ -24,7 +24,9 @@ import com.walmartlabs.concord.runtime.v2.runner.ProcessSnapshot;
 import com.walmartlabs.concord.svm.Runtime;
 import com.walmartlabs.concord.svm.ThreadId;
 
+import java.util.UUID;
+
 public interface CheckpointService {
 
-    void create(ThreadId threadId, String name, Runtime runtime, ProcessSnapshot snapshot);
+    void create(ThreadId threadId, UUID correlationId, String name, Runtime runtime, ProcessSnapshot snapshot);
 }

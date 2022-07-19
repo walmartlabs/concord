@@ -26,6 +26,7 @@ import org.immutables.value.Value;
 import javax.annotation.Nullable;
 
 @Value.Immutable
+@Value.Style(jdkOnly = true)
 public interface UnknownOption {
 
     @Value.Parameter

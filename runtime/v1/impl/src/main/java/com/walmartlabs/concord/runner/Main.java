@@ -89,12 +89,14 @@ public class Main {
 
     private final EngineFactory engineFactory;
     private final ApiClientFactory apiClientFactory;
+    private final DefaultVariablesConverter variablesConverter;
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     @Inject
-    public Main(EngineFactory engineFactory, ApiClientFactory apiClientFactory) {
+    public Main(EngineFactory engineFactory, ApiClientFactory apiClientFactory, DefaultVariablesConverter variablesConverter) {
         this.engineFactory = engineFactory;
         this.apiClientFactory = apiClientFactory;
+        this.variablesConverter = variablesConverter;
     }
 
     public void run(RunnerConfiguration runnerCfg, Path baseDir) throws Exception {
@@ -118,6 +120,7 @@ public class Main {
 
         // read the process configuration
         Map<String, Object> processCfg = readRequest(baseDir);
+        processCfg = variablesConverter.convert(baseDir, processCfg);
 
         String sessionToken = getSessionToken(processCfg);
         ApiClient apiClient = apiClientFactory.create(ApiClientConfiguration.builder()
@@ -185,7 +188,7 @@ public class Main {
 
             // found a checkpoint, resume the process immediately
             if (checkpointEvent != null) {
-                checkpointManager.process(getCheckpointId(checkpointEvent), checkpointEvent.getName(), baseDir);
+                checkpointManager.process(getCheckpointId(checkpointEvent), getCorrelationId(checkpointEvent), checkpointEvent.getName(), baseDir);
                 // clear arguments
                 if (resumeCheckpointReq == null) {
                     resumeCheckpointReq = new HashMap<>(processCfg);
@@ -253,6 +256,15 @@ public class Main {
     @SuppressWarnings("unchecked")
     private static UUID getCheckpointId(Event e) {
         String s = MapUtils.getString((Map<String, Object>) e.getPayload(), "checkpointId");
+        if (s == null) {
+            return null;
+        }
+        return UUID.fromString(s);
+    }
+
+    @SuppressWarnings("unchecked")
+    private static UUID getCorrelationId(Event e) {
+        String s = MapUtils.getString((Map<String, Object>) e.getPayload(), "correlationId");
         if (s == null) {
             return null;
         }

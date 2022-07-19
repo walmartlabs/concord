@@ -22,7 +22,7 @@ package com.walmartlabs.concord.it.server;
 
 
 import com.walmartlabs.concord.client.*;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.util.Collections;
 import java.util.HashMap;
@@ -31,12 +31,12 @@ import java.util.Map;
 
 import static com.walmartlabs.concord.it.common.ITUtils.archive;
 import static com.walmartlabs.concord.it.common.ServerClient.*;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 public class SerializationIT extends AbstractServerIT {
 
-    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    @Test
     public void test() throws Exception {
         byte[] payload = archive(SerializationIT.class.getResource("serialization").toURI(),
                 ITConstants.DEPENDENCIES_DIR);
@@ -70,7 +70,7 @@ public class SerializationIT extends AbstractServerIT {
         assertLog(".*hello.*", ab);
     }
 
-    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    @Test
     public void testNonSerializable() throws Exception {
         byte[] payload = archive(DependencyManagerIT.class.getResource("nonSerializableTest").toURI());
 

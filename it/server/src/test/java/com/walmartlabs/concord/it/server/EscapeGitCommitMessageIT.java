@@ -23,9 +23,9 @@ package com.walmartlabs.concord.it.server;
 import com.walmartlabs.concord.client.*;
 import com.walmartlabs.concord.it.common.GitUtils;
 import com.walmartlabs.concord.it.common.MockGitSshServer;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -41,18 +41,18 @@ public class EscapeGitCommitMessageIT extends AbstractServerIT {
     private MockGitSshServer gitServer;
     private int gitPort;
 
-    @Before
+    @BeforeEach
     public void setUp() throws Exception {
         Path data = Paths.get(EscapeGitCommitMessageIT.class.getResource("escapeCommitMessage").toURI());
         Path repo = GitUtils.createBareRepository(data, "oops ${booom}");
 
-        gitServer = new MockGitSshServer(0, repo.toAbsolutePath().toString());
+        gitServer = new MockGitSshServer(0, repo);
         gitServer.start();
 
         gitPort = gitServer.getPort();
     }
 
-    @After
+    @AfterEach
     public void tearDown() throws Exception {
         gitServer.stop();
     }

@@ -23,33 +23,36 @@ package com.walmartlabs.concord.project;
 import com.walmartlabs.concord.imports.ImportManager;
 import com.walmartlabs.concord.imports.ImportsListener;
 import com.walmartlabs.concord.project.yaml.YamlParserException;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.nio.file.Paths;
 
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.mock;
 
 public class BrokenTest {
 
-    @Test(expected = YamlParserException.class)
-    public void testDir() throws Exception {
-        loadProject("brokenMain");
+    @Test
+    public void testDir() {
+        assertThrows(YamlParserException.class, () -> loadProject("brokenMain"));
     }
 
-    @Test(expected = YamlParserException.class)
-    public void testStream() throws Exception {
-        ProjectLoader l = new ProjectLoader(mock(ImportManager.class));
-        l.loadProject(ClassLoader.getSystemResourceAsStream("brokenMain/concord.yml"));
+    @Test
+    public void testStream() {
+        assertThrows(YamlParserException.class, () -> {
+            ProjectLoader l = new ProjectLoader(mock(ImportManager.class));
+            l.loadProject(ClassLoader.getSystemResourceAsStream("brokenMain/concord.yml"));
+        });
     }
 
-    @Test(expected = YamlParserException.class)
-    public void testProfiles() throws Exception {
-        loadProject("brokenProfiles");
+    @Test
+    public void testProfiles() {
+        assertThrows(YamlParserException.class, () -> loadProject("brokenProfiles"));
     }
 
-    @Test(expected = YamlParserException.class)
-    public void testFlows() throws Exception {
-        loadProject("brokenFlows");
+    @Test
+    public void testFlows() {
+        assertThrows(YamlParserException.class, () -> loadProject("brokenFlows"));
     }
 
     private static void loadProject(String name) throws Exception {

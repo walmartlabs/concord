@@ -24,15 +24,15 @@ import com.squareup.okhttp.Call;
 import com.walmartlabs.concord.ApiClient;
 import com.walmartlabs.concord.ApiResponse;
 import com.walmartlabs.concord.client.*;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.util.*;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class InventoryQueryIT extends AbstractServerIT {
 
-    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    @Test
     public void testQueryWithEmptyParams() throws Exception {
         InventoryQueriesApi resource = new InventoryQueriesApi(getApiClient());
 
@@ -57,7 +57,7 @@ public class InventoryQueryIT extends AbstractServerIT {
         assertNotNull(resp);
     }
 
-    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    @Test
     public void testDifferentContentTypes() throws Exception {
         ApiClient client = getApiClient();
 

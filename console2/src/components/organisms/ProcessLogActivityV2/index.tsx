@@ -32,7 +32,7 @@ import LogSegmentActivity from './LogSegmentActivity';
 import { FormWizardAction, ProcessToolbar } from '../../molecules';
 import { Button, Divider, Popup, Radio } from 'semantic-ui-react';
 import { LogProcessorOptions } from '../../../state/data/processes/logs/processors';
-import { Route, useLocation } from 'react-router';
+import { Route } from 'react-router';
 import { FormListEntry, list as apiListForms } from '../../../api/process/form';
 
 const SEGMENT_FETCH_INTERVAL = 5000;
@@ -70,7 +70,6 @@ const ProcessLogActivityV2 = ({
 }: ExternalProps) => {
     const [segments, setSegments] = useState<LogSegmentEntry[]>([]);
     const [logOpts, setLogOptions] = useState<LogOptions>(getStoredOpts());
-    const location = useLocation();
     const [forms, setForms] = useState<FormListEntry[]>([]);
 
     const segmentOptsHandler = useCallback((o: LogProcessorOptions) => {
@@ -97,14 +96,6 @@ const ProcessLogActivityV2 = ({
 
         return !isFinal(processStatus) && processStatus !== ProcessStatus.SUSPENDED;
     }, [instanceId, processStatus]);
-
-    const handleOpen = useCallback(
-        (id: number) => {
-            const hashFragment = location.hash.split('#');
-            return !(hashFragment.length > 1 || id !== 0);
-        },
-        [location]
-    );
 
     const fetchForm = useCallback(async () => {
         const forms = await apiListForms(instanceId);
@@ -216,7 +207,6 @@ const ProcessLogActivityV2 = ({
                             correlationId={s.correlationId}
                             name={s.name}
                             createdAt={s.createdAt}
-                            open={handleOpen(s.id)}
                             status={s.status}
                             statusUpdatedAt={s.statusUpdatedAt}
                             warnings={s.warnings}

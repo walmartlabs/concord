@@ -19,8 +19,8 @@ package com.walmartlabs.concord.it.server;/*-
  */
 
 import com.walmartlabs.concord.client.*;
-import org.junit.BeforeClass;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 
 import javax.naming.Context;
 import javax.naming.NameAlreadyBoundException;
@@ -30,9 +30,9 @@ import java.util.Properties;
 import static com.walmartlabs.concord.it.common.ITUtils.archive;
 import static com.walmartlabs.concord.it.common.ServerClient.assertLog;
 import static com.walmartlabs.concord.it.common.ServerClient.waitForCompletion;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assume.assumeNotNull;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 public class LdapIT extends AbstractServerIT {
 
@@ -42,9 +42,9 @@ public class LdapIT extends AbstractServerIT {
     private static final String USER_OU = "ou=users,dc=example,dc=org";
     private static DirContext ldapCtx;
 
-    @BeforeClass
+    @BeforeAll
     public static void createLdapStructure() throws Exception {
-        assumeNotNull(System.getenv("IT_LDAP_URL"));
+        assumeTrue(System.getenv("IT_LDAP_URL") != null);
 
         ldapCtx = createContext();
 
@@ -53,7 +53,7 @@ public class LdapIT extends AbstractServerIT {
         createLdapOrganizationalUnits(USER_OU, "users");
     }
 
-    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    @Test
     public void testLdapUserGroups() throws Exception {
         // create user in ldap
         String username = "tester";
@@ -93,7 +93,7 @@ public class LdapIT extends AbstractServerIT {
 
     }
 
-    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    @Test
     public void testCaseInsensitive() throws Exception {
         String username = "testUser_" + randomString();
         createLdapUser(username);

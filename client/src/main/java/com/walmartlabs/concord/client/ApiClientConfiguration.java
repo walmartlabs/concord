@@ -27,18 +27,17 @@ import javax.annotation.Nullable;
 import java.util.UUID;
 
 @Value.Immutable
+@Value.Style(jdkOnly = true)
 public interface ApiClientConfiguration {
 
     /**
      * Base URL of the API, e.g. {@code http://localhost:8001}
-     * @return
      */
     @Nullable
     String baseUrl();
 
     /**
      * The process' session token.
-     * @return
      * @see {@link com.walmartlabs.concord.sdk.ApiConfiguration#getSessionToken(Context)}
      */
     @Nullable
@@ -46,7 +45,6 @@ public interface ApiClientConfiguration {
 
     /**
      * The user's API key. If set then the session token will be ignored.
-     * @return
      */
     @Nullable
     String apiKey();
@@ -54,7 +52,6 @@ public interface ApiClientConfiguration {
     /**
      * Current process' context. If {@link #sessionToken()} or {@link #apiKey()} both are
      * omitted, then the context can be used to extract the current session token.
-     * @return
      */
     @Nullable
     @Deprecated
@@ -62,7 +59,6 @@ public interface ApiClientConfiguration {
 
     /**
      * Current process instanceId.
-     * @return
      */
     @Nullable
     @Deprecated

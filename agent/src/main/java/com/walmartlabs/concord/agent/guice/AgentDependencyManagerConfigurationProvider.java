@@ -39,6 +39,9 @@ public class AgentDependencyManagerConfigurationProvider implements Provider<Dep
 
     @Override
     public DependencyManagerConfiguration get() {
-        return DependencyManagerConfiguration.of(cfg.getDependencyCacheDir());
+        return DependencyManagerConfiguration.builder()
+                .cacheDir(cfg.getDependencyCacheDir())
+                .strictRepositories(cfg.dependencyStrictRepositories())
+                .build();
     }
 }

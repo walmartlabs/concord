@@ -20,34 +20,24 @@ package com.walmartlabs.concord.plugins.http;
  * =====
  */
 
-import com.github.tomakehurst.wiremock.common.ConsoleNotifier;
 import com.github.tomakehurst.wiremock.http.Fault;
-import com.github.tomakehurst.wiremock.junit.WireMockRule;
+import com.github.tomakehurst.wiremock.junit5.WireMockRuntimeInfo;
+import com.github.tomakehurst.wiremock.junit5.WireMockTest;
 import com.walmartlabs.concord.sdk.Context;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.rules.TemporaryFolder;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.mockito.stubbing.Answer;
 
-import java.io.File;
 import java.util.Map;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
-import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMockConfig;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.when;
 
+@WireMockTest
 public abstract class AbstractHttpTaskTest {
-    @Rule
-    public WireMockRule rule = new WireMockRule(wireMockConfig()
-            .dynamicPort()
-            .notifier(new ConsoleNotifier(true)));
-
-    @Rule
-    public TemporaryFolder folder = new TemporaryFolder(new File(System.getProperty("user.dir") + "/src/test/resources/__files"));
 
     protected HttpTask task;
     /**
@@ -55,9 +45,10 @@ public abstract class AbstractHttpTaskTest {
      */
     protected Map<String, Object> response;
 
-    @Before
-    public void setup() {
+    @BeforeEach
+    public void setup(WireMockRuntimeInfo wmRuntimeInfo) {
         task = new HttpTask();
+
         stubForJsonResponse();
         stubForStringResponse();
         stubForPostRequest();
@@ -74,11 +65,11 @@ public abstract class AbstractHttpTaskTest {
         stubForFault();
         stubForRequestTimeout();
         stubForInvalidJsonResponse();
-        stubForFollowRedirect();
-        stubForFollowRedirectPost();
+        stubForFollowRedirect(wmRuntimeInfo);
+        stubForFollowRedirectPost(wmRuntimeInfo);
     }
 
-    @After
+    @AfterEach
     public void tearDown() {
         response = null;
     }
@@ -108,7 +99,7 @@ public abstract class AbstractHttpTaskTest {
     }
 
     protected void stubForJsonResponse() {
-        rule.stubFor(get(urlEqualTo("/json"))
+        stubFor(get(urlEqualTo("/json"))
                 .willReturn(aResponse()
                         .withStatus(200)
                         .withHeader("Content-Type", "application/json")
@@ -127,7 +118,7 @@ public abstract class AbstractHttpTaskTest {
     }
 
     protected void stubForInvalidJsonResponse() {
-        rule.stubFor(get(urlEqualTo("/invalid/json"))
+        stubFor(get(urlEqualTo("/invalid/json"))
                 .willReturn(aResponse()
                         .withStatus(200)
                         .withHeader("Content-Type", "application/json")
@@ -137,7 +128,7 @@ public abstract class AbstractHttpTaskTest {
     }
 
     protected void stubForFault() {
-        rule.stubFor(get(urlEqualTo("/fault"))
+        stubFor(get(urlEqualTo("/fault"))
                 .willReturn(aResponse()
                         .withFault(Fault.EMPTY_RESPONSE)
                         .withHeader("Content-Type", "text/plain")
@@ -146,7 +137,7 @@ public abstract class AbstractHttpTaskTest {
     }
 
     protected void stubForStringResponse() {
-        rule.stubFor(get(urlEqualTo("/string"))
+        stubFor(get(urlEqualTo("/string"))
                 .willReturn(aResponse()
                         .withStatus(200)
                         .withHeader("Content-Type", "text/plain")
@@ -156,7 +147,7 @@ public abstract class AbstractHttpTaskTest {
     }
 
     protected void stubForPostRequest() {
-        rule.stubFor(post(urlEqualTo("/post"))
+        stubFor(post(urlEqualTo("/post"))
                 .willReturn(aResponse()
                         .withStatus(201)
                         .withHeader("Content-Type", "application/json")
@@ -168,7 +159,7 @@ public abstract class AbstractHttpTaskTest {
     }
 
     protected void stubForGetSecureEndpoint() {
-        rule.stubFor(get(urlEqualTo("/secure"))
+        stubFor(get(urlEqualTo("/secure"))
                 .withBasicAuth("cn=test", "password")
                 .willReturn(aResponse()
                         .withStatus(401)
@@ -177,7 +168,7 @@ public abstract class AbstractHttpTaskTest {
     }
 
     protected void stubForGetWithQueryParams() {
-        rule.stubFor(get(urlPathEqualTo("/query"))
+        stubFor(get(urlPathEqualTo("/query"))
                 .withQueryParam("key", equalTo("value with space"))
                 .willReturn(aResponse()
                         .withStatus(200)
@@ -186,7 +177,7 @@ public abstract class AbstractHttpTaskTest {
     }
 
     protected void stubForPostSecureEndpoint() {
-        rule.stubFor(post(urlEqualTo("/secure"))
+        stubFor(post(urlEqualTo("/secure"))
                 .withBasicAuth("cn=test", "password")
                 .willReturn(aResponse()
                         .withStatus(201)
@@ -195,7 +186,7 @@ public abstract class AbstractHttpTaskTest {
     }
 
     protected void stubForPostRequestForRequestTypeFile() {
-        rule.stubFor(post(urlEqualTo("/file"))
+        stubFor(post(urlEqualTo("/file"))
                 .withHeader("Content-Type", equalTo("application/octet-stream"))
                 .willReturn(aResponse()
                         .withStatus(200)
@@ -211,7 +202,7 @@ public abstract class AbstractHttpTaskTest {
 
 
     protected void stubForGetRequestForResponseTypeStringFile() {
-        rule.stubFor(get(urlEqualTo("/stringFile"))
+        stubFor(get(urlEqualTo("/stringFile"))
                 .withHeader("Accept", equalTo("*/*"))
                 .willReturn(aResponse()
                         .withStatus(200)
@@ -221,7 +212,7 @@ public abstract class AbstractHttpTaskTest {
     }
 
     protected void stubForGetRequestForResponseTypeStringFileWithNoFilename() {
-        rule.stubFor(get(urlEqualTo("/fileUrlWithoutName/"))
+        stubFor(get(urlEqualTo("/fileUrlWithoutName/"))
                 .withHeader("Accept", equalTo("*/*"))
                 .willReturn(aResponse()
                         .withStatus(200)
@@ -231,7 +222,7 @@ public abstract class AbstractHttpTaskTest {
     }
 
     protected void stubForGetRequestForResponseTypeJSONFile() {
-        rule.stubFor(get(urlEqualTo("/JSONFile"))
+        stubFor(get(urlEqualTo("/JSONFile"))
                 .withHeader("Accept", equalTo("*/*"))
                 .willReturn(aResponse()
                         .withStatus(200)
@@ -242,7 +233,7 @@ public abstract class AbstractHttpTaskTest {
 
 
     protected void stubForUnsuccessfulResponse() {
-        rule.stubFor(get(urlEqualTo("/unsuccessful"))
+        stubFor(get(urlEqualTo("/unsuccessful"))
                 .willReturn(aResponse()
                         .withStatus(400)
                         .withBody("Error string"))
@@ -250,7 +241,7 @@ public abstract class AbstractHttpTaskTest {
     }
 
     protected void stubForDeleteRequest() {
-        rule.stubFor(delete(urlEqualTo("/delete"))
+        stubFor(delete(urlEqualTo("/delete"))
                 .willReturn(aResponse()
                         .withStatus(200)
                         .withHeader("Content-Type", "application/json")
@@ -262,7 +253,7 @@ public abstract class AbstractHttpTaskTest {
     }
 
     protected void stubForPatchRequest() {
-        rule.stubFor(patch(urlEqualTo("/patch"))
+        stubFor(patch(urlEqualTo("/patch"))
                 .willReturn(aResponse()
                         .withStatus(200)
                         .withHeader("Content-Type", "application/json")
@@ -274,7 +265,7 @@ public abstract class AbstractHttpTaskTest {
     }
 
     protected void stubForRequestTimeout() {
-        rule.stubFor(get(urlEqualTo("/requestTimeout"))
+        stubFor(get(urlEqualTo("/requestTimeout"))
                 .willReturn(aResponse()
                         .withStatus(200)
                         .withHeader("Content-Type", "text/plain")
@@ -284,15 +275,23 @@ public abstract class AbstractHttpTaskTest {
         );
     }
 
-    protected void stubForFollowRedirect() {
-        rule.stubFor(get(urlEqualTo("/followRedirects"))
-                .willReturn(permanentRedirect(rule.url("/string")))
+    protected void stubForFollowRedirect(WireMockRuntimeInfo wmRuntimeInfo) {
+        stubFor(get(urlEqualTo("/followRedirects"))
+                .willReturn(permanentRedirect(url(wmRuntimeInfo, "/string")))
         );
     }
 
-    protected void stubForFollowRedirectPost() {
-        rule.stubFor(post(urlEqualTo("/followRedirectsPost"))
-                .willReturn(permanentRedirect(rule.url("/string")))
+    protected void stubForFollowRedirectPost(WireMockRuntimeInfo wmRuntimeInfo) {
+        stubFor(post(urlEqualTo("/followRedirectsPost"))
+                .willReturn(permanentRedirect(url(wmRuntimeInfo, "/string")))
         );
+    }
+
+    private static String url(WireMockRuntimeInfo wmRuntimeInfo, String path) {
+        if (!path.startsWith("/")) {
+            path = "/" + path;
+        }
+
+        return String.format("%s%s", wmRuntimeInfo.getHttpBaseUrl(), path);
     }
 }

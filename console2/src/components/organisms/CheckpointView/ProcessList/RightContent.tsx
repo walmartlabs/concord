@@ -19,19 +19,19 @@
  */
 // @ts-nocheck
 
-import React, { useContext } from 'react';
+import React from 'react';
 import { RightWrap } from './styles';
 import CheckpointGroup from '../CheckpointGroup';
 import NoCheckpointsMessage from '../NoCheckpointsMessage';
-import Container from '../Container';
 import { ProcessEntry } from '../../../../api/process';
+import {useCheckpointContext} from "../Container";
 
 interface Props {
     process: ProcessEntry;
 }
 
 export default ({ process }: Props) => {
-    const { checkpointGroups } = useContext(Container.Context);
+    const { checkpointGroups } = useCheckpointContext();
 
     return (
         <RightWrap>

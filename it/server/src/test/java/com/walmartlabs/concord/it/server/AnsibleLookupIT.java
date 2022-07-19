@@ -21,7 +21,7 @@ package com.walmartlabs.concord.it.server;
  */
 
 import com.walmartlabs.concord.client.*;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.net.URI;
 import java.util.HashMap;
@@ -29,11 +29,11 @@ import java.util.Map;
 
 import static com.walmartlabs.concord.it.common.ITUtils.archive;
 import static com.walmartlabs.concord.it.common.ServerClient.*;
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class AnsibleLookupIT extends AbstractServerIT {
 
-    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    @Test
     public void testSecrets() throws Exception {
         String orgName = "org_" + randomString();
         OrganizationsApi orgApi = new OrganizationsApi(getApiClient());
@@ -79,7 +79,7 @@ public class AnsibleLookupIT extends AbstractServerIT {
         assertLogAtLeast(".*ENABLING NO_LOG.*", 2, ab);
     }
 
-    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    @Test
     public void testSecretData() throws Exception {
         String orgName = "org_" + randomString();
         OrganizationsApi orgApi = new OrganizationsApi(getApiClient());
@@ -125,7 +125,7 @@ public class AnsibleLookupIT extends AbstractServerIT {
         assertLogAtLeast(".*ENABLING NO_LOG.*", 2, ab);
     }
 
-    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    @Test
     public void testSecretDataNoPassword() throws Exception {
         String orgName = "org_" + randomString();
         OrganizationsApi orgApi = new OrganizationsApi(getApiClient());
@@ -167,7 +167,7 @@ public class AnsibleLookupIT extends AbstractServerIT {
         assertNoLog(".*Implicit org " + secretValue + ".*", ab);
     }
 
-    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    @Test
     public void testPublickey() throws Exception {
         String orgName = "org_" + randomString();
         OrganizationsApi orgApi = new OrganizationsApi(getApiClient());
@@ -214,7 +214,7 @@ public class AnsibleLookupIT extends AbstractServerIT {
     /**
      * Verify that {@code lookup('concord_data_secret', ...)} returns a valid value.
      */
-    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    @Test
     public void testSecretValue() throws Exception {
         String orgName = "org_" + randomString();
         OrganizationsApi orgApi = new OrganizationsApi(getApiClient());

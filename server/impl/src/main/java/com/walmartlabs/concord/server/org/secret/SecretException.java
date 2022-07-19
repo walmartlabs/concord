@@ -23,6 +23,8 @@ package com.walmartlabs.concord.server.org.secret;
 
 public class SecretException extends RuntimeException {
 
+    private static final long serialVersionUID = 1L;
+
     public SecretException(String message) {
         super(message);
     }

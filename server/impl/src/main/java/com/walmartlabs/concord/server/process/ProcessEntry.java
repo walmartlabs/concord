@@ -186,6 +186,9 @@ public interface ProcessEntry extends Serializable {
 
         @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss.SSSX")
         OffsetDateTime createdAt();
+
+        @Nullable
+        UUID correlationId();
     }
 
     @Value.Immutable

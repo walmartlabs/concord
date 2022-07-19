@@ -20,14 +20,14 @@ package com.walmartlabs.concord.plugins.ansible;
  * =====
  */
 
-import org.junit.Ignore;
-import org.junit.Test;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.concurrent.TimeUnit;
 
-@Ignore
+@Disabled
 public class KerberosTest {
 
     @Test

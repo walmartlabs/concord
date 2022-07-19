@@ -20,36 +20,35 @@ package com.walmartlabs.concord.it.server;
  * =====
  */
 
+import com.walmartlabs.concord.ApiException;
 import com.walmartlabs.concord.client.*;
 import com.walmartlabs.concord.common.IOUtils;
 import org.eclipse.jgit.api.Git;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.Timeout;
 
 import java.io.File;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static com.walmartlabs.concord.common.IOUtils.grep;
-import static org.junit.Assert.assertNotEquals;
+import static com.walmartlabs.concord.it.server.AbstractServerIT.DEFAULT_TEST_TIMEOUT;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
 
+@Timeout(value = 2 * DEFAULT_TEST_TIMEOUT, unit = TimeUnit.MILLISECONDS)
 public class CronIT extends AbstractServerIT {
 
-    // we need extra time for cron to fire up the processes
-    @Test(timeout = DEFAULT_TEST_TIMEOUT * 2)
+    @Test
     public void testProfiles() throws Exception {
-        Path tmpDir = createTempDir();
-
-        File src = new File(TriggersRefreshIT.class.getResource("cronProfiles").toURI());
-        IOUtils.copy(src.toPath(), tmpDir);
-
-        Git repo = Git.init().setDirectory(tmpDir.toFile()).call();
-        repo.add().addFilepattern(".").call();
-        repo.commit().setMessage("import").call();
-
-        String gitUrl = tmpDir.toAbsolutePath().toString();
+        String gitUrl = initRepo("cronProfiles");
 
         // ---
 
@@ -76,8 +75,6 @@ public class CronIT extends AbstractServerIT {
 
         // ---
 
-        ProcessApi processApi = new ProcessApi(getApiClient());
-
         Set<String> expectedPatterns = new HashSet<>();
         expectedPatterns.add(".*Hello, AAA!.*");
         expectedPatterns.add(".*Hello, BBB!.*");
@@ -85,10 +82,15 @@ public class CronIT extends AbstractServerIT {
         while (true) {
             Thread.sleep(1000);
 
-            List<ProcessEntry> processes = processApi.list(orgName, projectName, null, null, null, null, null, null, null, null, null);
-            if (processes.size() != 2) {
+            List<ProcessEntry> aaaProcesses = listCronProcesses(orgName, projectName, repoName, "AAA");
+            List<ProcessEntry> bbbProcesses = listCronProcesses(orgName, projectName, repoName, "BBB");
+
+            if (aaaProcesses.isEmpty() || bbbProcesses.isEmpty()) {
                 continue;
             }
+
+            List<ProcessEntry> processes = Stream.concat(aaaProcesses.stream(), bbbProcesses.stream())
+                    .collect(Collectors.toList());
 
             for (ProcessEntry e : processes) {
                 assertNotEquals(ProcessEntry.StatusEnum.FAILED, e.getStatus());
@@ -108,9 +110,98 @@ public class CronIT extends AbstractServerIT {
             }
         }
 
+        // --- clean up
+
+        projectsApi.delete(orgName, projectName);
+    }
+
+    @Test
+    public void testRunAs() throws Exception {
+        String gitUrl = initRepo("cronRunAs");
+
+        // ---
+
+        String orgName = "org_" + randomString();
+        String projectName = "project_" + randomString();
+        String repoName = "repo_" + randomString();
+
+        OrganizationsApi orgApi = new OrganizationsApi(getApiClient());
+        if (orgApi.get(orgName) == null) {
+            orgApi.createOrUpdate(new OrganizationEntry().setName(orgName));
+        }
+
+        ProjectsApi projectsApi = new ProjectsApi(getApiClient());
+        projectsApi.createOrUpdate(orgName, new ProjectEntry()
+                .setName(projectName)
+                .setVisibility(ProjectEntry.VisibilityEnum.PUBLIC)
+                .setRepositories(Collections.singletonMap(repoName, new RepositoryEntry()
+                        .setUrl(gitUrl)
+                        .setBranch("master"))));
+
+        // ---
+
+        String username = "user_" + randomString();
+
+        UsersApi usersApi = new UsersApi(getApiClient());
+        CreateUserResponse cur = usersApi.createOrUpdate(new CreateUserRequest()
+                .setUsername(username)
+                .setType(CreateUserRequest.TypeEnum.LOCAL));
+
+        ApiKeysApi apiKeyResource = new ApiKeysApi(getApiClient());
+        CreateApiKeyResponse apiKeyResponse = apiKeyResource.create(new CreateApiKeyRequest().setUsername(username));
+
+        SecretClient secretsApi = new SecretClient(getApiClient());
+        CreateSecretRequest secret = CreateSecretRequest.builder()
+                .org(orgName)
+                .project(projectName)
+                .name("test-run-as")
+                .data(apiKeyResponse.getKey().getBytes(StandardCharsets.UTF_8))
+                .build();
+        secretsApi.createSecret(secret);
+
+        waitForTriggers(orgName, projectName, repoName, 1);
+
+        // ---
+
+        ProcessApi processApi = new ProcessApi(getApiClient());
+
+        while (true) {
+            Thread.sleep(1000);
+
+            List<ProcessEntry> processes = processApi.list(orgName, projectName, null, null, null, null, null, null, null, null, null);
+            if (processes.size() != 1) {
+                continue;
+            }
+
+            ProcessEntry pe = processes.get(0);
+            assertNotEquals(ProcessEntry.StatusEnum.FAILED, pe.getStatus());
+            assertEquals(cur.getId(), pe.getInitiatorId());
+            assertEquals(username, pe.getInitiator());
+            break;
+        }
+
         // ---
 
         projectsApi.delete(orgName, projectName);
+    }
+
+    private static String initRepo(String initResource) throws Exception {
+        Path tmpDir = createTempDir();
+
+        File src = new File(TriggersRefreshIT.class.getResource(initResource).toURI());
+        IOUtils.copy(src.toPath(), tmpDir);
+
+        Git repo = Git.init().setInitialBranch("master").setDirectory(tmpDir.toFile()).call();
+        repo.add().addFilepattern(".").call();
+        repo.commit().setMessage("import").call();
+        return tmpDir.toAbsolutePath().toString();
+    }
+
+    private List<ProcessEntry> listCronProcesses(String o, String p, String r, String tag) throws ApiException {
+        ProcessV2Api processV2Api = new ProcessV2Api(getApiClient());
+
+        return processV2Api.list(null, o, null, p, null, r, null, null,
+                Collections.singletonList(tag), null, "cron", null, null, null, null);
     }
 
     private List<TriggerEntry> waitForTriggers(String orgName, String projectName, String repoName, int expectedCount) throws Exception {

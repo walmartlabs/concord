@@ -33,6 +33,8 @@ import com.walmartlabs.concord.server.org.secret.SecretManager.DecryptedUsername
 import com.walmartlabs.concord.server.org.team.TeamDao;
 import com.walmartlabs.concord.server.sdk.ConcordApplicationException;
 import com.walmartlabs.concord.server.sdk.metrics.WithTimer;
+import com.walmartlabs.concord.server.user.UserManager;
+import com.walmartlabs.concord.server.user.UserType;
 import io.swagger.annotations.*;
 import org.jboss.resteasy.plugins.providers.multipart.MultipartInput;
 import org.slf4j.Logger;
@@ -50,11 +52,13 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.core.StreamingOutput;
+import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Collection;
 import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
 
 @Named
@@ -71,6 +75,7 @@ public class SecretResource implements Resource {
     private final SecretDao secretDao;
     private final TeamDao teamDao;
     private final ProjectDao projectDao;
+    private final UserManager userManager;
 
     @Inject
     public SecretResource(OrganizationManager orgManager,
@@ -78,7 +83,8 @@ public class SecretResource implements Resource {
                           SecretManager secretManager,
                           SecretDao secretDao,
                           TeamDao teamDao,
-                          ProjectDao projectDao) {
+                          ProjectDao projectDao,
+                          UserManager userManager) {
 
         this.orgManager = orgManager;
         this.orgDao = orgDao;
@@ -86,6 +92,7 @@ public class SecretResource implements Resource {
         this.secretDao = secretDao;
         this.teamDao = teamDao;
         this.projectDao = projectDao;
+        this.userManager = userManager;
     }
 
     @POST
@@ -130,18 +137,39 @@ public class SecretResource implements Resource {
         }
     }
 
-    // TODO replace (or add) with a multipart/form-data version, similar to #create
     @POST
     @ApiOperation("Updates an existing secret") // weird URLs as a workaround for swagger-maven-plugin issue
     @Path("/{orgName}/secret/{secretName}")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     @Validate
+    @Deprecated
     public GenericOperationResult update(@ApiParam @PathParam("orgName") @ConcordKey String orgName,
                                          @ApiParam @PathParam("secretName") @ConcordKey String secretName,
                                          @ApiParam @Valid SecretUpdateRequest req) {
 
-        secretManager.update(orgName, secretName, req);
+        OrganizationEntry org = orgManager.assertAccess(orgName, true);
+
+        try {
+            SecretUpdateParams newSecretParams = SecretUpdateParams.builder()
+                    .newOrgId(req.orgId())
+                    .newOrgName(req.orgName())
+                    .newProjectId(req.projectId())
+                    .newProjectName(req.projectName())
+                    .removeProjectLink(req.projectName() != null && req.projectName().trim().isEmpty())
+                    .newOwnerId(getOwnerId(req.owner()))
+                    .currentPassword(req.storePassword())
+                    .newPassword(req.newStorePassword())
+                    .newSecret(req.data() != null ? secretManager.buildBinaryData(new ByteArrayInputStream(Objects.requireNonNull(req.data()))) : null)
+                    .newName(req.name())
+                    .newVisibility(req.visibility())
+                    .build();
+
+            secretManager.update(org.getId(), secretName, newSecretParams);
+        } catch (IOException e) {
+            throw new ConcordApplicationException("Error while processing the request: " + e.getMessage(), e);
+        }
+
         return new GenericOperationResult(OperationResult.UPDATED);
     }
 
@@ -310,7 +338,7 @@ public class SecretResource implements Resource {
 
         InputStream publicKey = MultipartUtils.getStream(input, Constants.Multipart.PUBLIC);
         if (publicKey != null) {
-            InputStream privateKey = assertStream(input, Constants.Multipart.PRIVATE);
+            InputStream privateKey = MultipartUtils.assertStream(input, Constants.Multipart.PRIVATE);
             try {
                 k = secretManager.createKeyPair(orgId, projectId, name, storePassword, publicKey, privateKey, visibility, storeType);
             } catch (IllegalArgumentException e) {
@@ -327,8 +355,8 @@ public class SecretResource implements Resource {
                                                            SecretVisibility visibility, MultipartInput input,
                                                            String storeType) {
 
-        String username = assertString(input, Constants.Multipart.USERNAME);
-        String password = assertString(input, Constants.Multipart.PASSWORD);
+        String username = MultipartUtils.assertString(input, Constants.Multipart.USERNAME);
+        String password = MultipartUtils.assertString(input, Constants.Multipart.PASSWORD);
 
         DecryptedUsernamePassword e = secretManager.createUsernamePassword(orgId, projectId, name, storePassword, username, password.toCharArray(), visibility, storeType);
         return new SecretOperationResponse(e.getId(), OperationResult.CREATED, storePassword);
@@ -338,7 +366,7 @@ public class SecretResource implements Resource {
                                                SecretVisibility visibility, MultipartInput input,
                                                String storeType) throws IOException {
 
-        InputStream data = assertStream(input, Constants.Multipart.DATA);
+        InputStream data = MultipartUtils.assertStream(input, Constants.Multipart.DATA);
         DecryptedBinaryData e = secretManager.createBinaryData(orgId, projectId, name, storePassword, data, visibility, storeType);
         return new SecretOperationResponse(e.getId(), OperationResult.CREATED, storePassword);
     }
@@ -373,8 +401,8 @@ public class SecretResource implements Resource {
     }
 
     private String assertName(MultipartInput input) {
-        String s = assertString(input, Constants.Multipart.NAME);
-        if (s == null || s.trim().isEmpty()) {
+        String s = MultipartUtils.assertString(input, Constants.Multipart.NAME);
+        if (s.trim().isEmpty()) {
             throw new ValidationErrorsException("'name' is required");
         }
 
@@ -386,9 +414,17 @@ public class SecretResource implements Resource {
     }
 
     private static SecretType assertType(MultipartInput input) {
+        SecretType type = getType(input);
+        if (type == null) {
+            throw new ValidationErrorsException("'type' is required");
+        }
+        return type;
+    }
+
+    private static SecretType getType(MultipartInput input) {
         String s = MultipartUtils.getString(input, Constants.Multipart.TYPE);
         if (s == null) {
-            throw new ValidationErrorsException("'type' is required");
+            return null;
         }
 
         try {
@@ -415,14 +451,6 @@ public class SecretResource implements Resource {
         return s;
     }
 
-    private static String assertString(MultipartInput input, String key) {
-        String s = MultipartUtils.getString(input, key);
-        if (s == null) {
-            throw new ValidationErrorsException("Value not found: " + key);
-        }
-        return s;
-    }
-
     private static SecretVisibility getVisibility(MultipartInput input) {
         String s = MultipartUtils.getString(input, Constants.Multipart.VISIBILITY);
         if (s == null) {
@@ -436,14 +464,6 @@ public class SecretResource implements Resource {
         }
     }
 
-    private static InputStream assertStream(MultipartInput input, String key) {
-        InputStream in = MultipartUtils.getStream(input, key);
-        if (in == null) {
-            throw new ValidationErrorsException("Value not found: " + key);
-        }
-        return in;
-    }
-
     private UUID getProject(MultipartInput input, UUID orgId) {
         UUID id = MultipartUtils.getUuid(input, Constants.Multipart.PROJECT_ID);
         String name = MultipartUtils.getString(input, Constants.Multipart.PROJECT_NAME);
@@ -454,5 +474,26 @@ public class SecretResource implements Resource {
             }
         }
         return id;
+    }
+
+    private UUID getOwnerId(EntityOwner owner) {
+        if (owner == null) {
+            return null;
+        }
+
+        if (owner.id() != null) {
+            return userManager.get(owner.id())
+                    .orElseThrow(() -> new ValidationErrorsException("User not found: " + owner.id()))
+                    .getId();
+        }
+
+        if (owner.username() != null) {
+            // TODO don't assume LDAP here
+            return userManager.get(owner.username(), owner.userDomain(), UserType.LDAP)
+                    .orElseThrow(() -> new ConcordApplicationException("User not found: " + owner.username()))
+                    .getId();
+        }
+
+        return null;
     }
 }

@@ -25,7 +25,7 @@ import com.fasterxml.jackson.datatype.guava.GuavaModule;
 import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.walmartlabs.concord.server.sdk.ProcessStatus;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.time.OffsetDateTime;
 import java.util.UUID;

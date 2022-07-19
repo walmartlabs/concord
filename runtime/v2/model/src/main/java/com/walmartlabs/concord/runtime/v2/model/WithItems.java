@@ -24,6 +24,10 @@ import org.immutables.value.Value;
 
 import java.io.Serializable;
 
+/**
+ * @deprecated use {@link com.walmartlabs.concord.runtime.v2.model.Loop}
+ */
+@Deprecated
 @Value.Immutable
 @Value.Style(jdkOnly = true)
 public interface WithItems extends Serializable {

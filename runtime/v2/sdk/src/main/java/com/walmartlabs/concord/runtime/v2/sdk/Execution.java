@@ -31,8 +31,6 @@ import java.util.UUID;
 
 public interface Execution {
 
-    // TODO add current flow name
-
     ThreadId currentThreadId();
 
     Runtime runtime();
@@ -43,6 +41,8 @@ public interface Execution {
 
     @Nullable
     Step currentStep();
+
+    String currentFlowName();
 
     /**
      * ID of the current task or the expression call. Can be used by plugins to

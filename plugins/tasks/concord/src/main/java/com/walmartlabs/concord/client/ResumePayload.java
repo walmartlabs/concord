@@ -27,6 +27,8 @@ import java.util.*;
 
 public class ResumePayload implements Serializable {
 
+    private static final long serialVersionUID = 1L;
+
     private final String baseUrl;
     private final String apiKey;
     private final boolean collectOutVars;

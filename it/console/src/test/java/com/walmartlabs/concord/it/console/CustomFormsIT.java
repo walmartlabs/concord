@@ -23,31 +23,37 @@ package com.walmartlabs.concord.it.console;
 import com.walmartlabs.concord.ApiClient;
 import com.walmartlabs.concord.client.*;
 import com.walmartlabs.concord.it.common.ITUtils;
-import org.junit.Rule;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.Timeout;
+import org.junit.jupiter.api.extension.RegisterExtension;
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebElement;
 
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
+import static com.walmartlabs.concord.it.common.ServerClient.*;
 import static com.walmartlabs.concord.it.console.Utils.DEFAULT_TEST_TIMEOUT;
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 /**
  * The Console must be running in Docker, i.e. API redirects must be correctly working.
  */
+@Timeout(value = DEFAULT_TEST_TIMEOUT, unit = TimeUnit.MILLISECONDS)
 public class CustomFormsIT {
 
-    @Rule
-    public ConcordServerRule serverRule = new ConcordServerRule();
+    @RegisterExtension
+    public static ConcordServerRule serverRule = new ConcordServerRule();
 
-    @Rule
-    public ConcordConsoleRule consoleRule = new ConcordConsoleRule();
+    @RegisterExtension
+    public static ConcordConsoleRule consoleRule = new ConcordConsoleRule();
 
     @SuppressWarnings("unchecked")
-    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    @Test
     public void test() throws Exception {
         ApiClient client = serverRule.getClient();
 
@@ -80,8 +86,22 @@ public class CustomFormsIT {
 
         String testValue = "test_" + ITUtils.randomString();
 
-        String url = "/api/v1/org/" + orgName + "/project/" + projectName + "/repo/" + repoName + "/start/default?testValue=" + testValue;
+        Map<String, Object> input = new HashMap<>();
+        input.put("org", orgName);
+        input.put("project", projectName);
+        input.put("repo", repoName);
+        input.put("arguments.testValue", testValue);
+
+        ProcessApi processApi = new ProcessApi(client);
+        StartProcessResponse spr = serverRule.start(input);
+        assertNotNull(spr.getInstanceId());
+
+        ProcessEntry pir = waitForStatus(processApi, spr.getInstanceId(), ProcessEntry.StatusEnum.SUSPENDED);
+
+        String url = "/#/process/" + spr.getInstanceId() + "/wizard";
         consoleRule.navigateToRelative(url);
+
+        //  -- validate form rules and submit it
 
         By selector = By.id("testValue");
         WebElement element = consoleRule.waitFor(selector);
@@ -90,6 +110,16 @@ public class CustomFormsIT {
         Map<String, Object> formFields = (Map<String, Object>) consoleRule.executeJavaScript("return data.definitions");
         Map<String, Object> fieldX = (Map<String, Object>) formFields.get("x");
         List<Object> allowedValues = (List<Object>) fieldX.get("allow");
-        assertEquals("Expression object should have added two allowed values", 2, allowedValues.size());
+        assertEquals(2, allowedValues.size(), "Expression object should have added two allowed values");
+
+        WebElement submitButton = consoleRule.waitFor(By.id("submitButton"));
+        submitButton.click();
+
+        //  -- validate log output
+
+        pir = waitForCompletion(processApi, pir.getInstanceId());
+
+        byte[] ab = serverRule.getLog(pir.getLogFileName());
+        assertLog(".*uploaded contents: \\{hello=world\\}.*", ab);
     }
 }

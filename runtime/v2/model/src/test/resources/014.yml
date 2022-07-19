@@ -5,6 +5,7 @@ flows:
         throw new RuntimeException("kaboom!")
       in:
         k: "v1"
+      out: result
       error:
         - log: "Caught an error"
       withItems: 1

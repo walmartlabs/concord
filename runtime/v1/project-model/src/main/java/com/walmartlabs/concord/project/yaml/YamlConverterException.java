@@ -24,6 +24,8 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 
 public class YamlConverterException extends JsonProcessingException {
 
+    private static final long serialVersionUID = 1L;
+
     public YamlConverterException(String message) {
         super(message);
     }

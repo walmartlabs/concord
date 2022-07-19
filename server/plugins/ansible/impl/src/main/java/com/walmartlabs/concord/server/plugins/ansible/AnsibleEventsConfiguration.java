@@ -32,6 +32,8 @@ import java.time.Duration;
 @Singleton
 public class AnsibleEventsConfiguration implements Serializable {
 
+    private static final long serialVersionUID = 1L;
+
     @Inject
     @Config("ansibleEvents.period")
     private Duration period;
@@ -39,14 +41,6 @@ public class AnsibleEventsConfiguration implements Serializable {
     @Inject
     @Config("ansibleEvents.fetchLimit")
     private int fetchLimit;
-
-    public AnsibleEventsConfiguration() {
-    }
-
-    public AnsibleEventsConfiguration(Duration period, int fetchLimit) {
-        this.period = period;
-        this.fetchLimit = fetchLimit;
-    }
 
     public Duration getPeriod() {
         return period;

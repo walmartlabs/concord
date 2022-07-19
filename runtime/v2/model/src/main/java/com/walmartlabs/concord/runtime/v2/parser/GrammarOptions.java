@@ -129,6 +129,7 @@ public final class GrammarOptions {
     }
 
     @Value.Immutable
+    @Value.Style(jdkOnly = true)
     public interface Option<O> {
 
         @Nullable

@@ -24,6 +24,8 @@ import java.io.IOException;
 
 public class YamlParserException extends IOException {
 
+    private static final long serialVersionUID = 1L;
+
     public YamlParserException(String message) {
         super(message);
     }

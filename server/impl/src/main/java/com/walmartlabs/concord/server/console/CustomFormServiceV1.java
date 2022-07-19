@@ -403,6 +403,8 @@ public class CustomFormServiceV1 {
     @JsonInclude(Include.NON_EMPTY)
     public static class FormData implements Serializable {
 
+        private static final long serialVersionUID = -1591440785695774602L;
+
         private final boolean success;
         private final boolean processFailed;
         private final String submitUrl;
@@ -453,6 +455,8 @@ public class CustomFormServiceV1 {
 
     @JsonInclude(Include.NON_NULL)
     public static class FormDataDefinition implements Serializable {
+
+        private static final long serialVersionUID = -3887713057699620530L;
 
         private final String label;
         private final String type;

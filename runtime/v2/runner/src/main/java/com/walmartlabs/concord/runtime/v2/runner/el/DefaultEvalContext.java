@@ -23,6 +23,7 @@ package com.walmartlabs.concord.runtime.v2.runner.el;
 import org.immutables.value.Value;
 
 @Value.Immutable
+@Value.Style(jdkOnly = true)
 public interface DefaultEvalContext extends EvalContext {
 
     static ImmutableDefaultEvalContext.Builder builder() {

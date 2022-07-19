@@ -28,6 +28,8 @@ import java.util.Objects;
 
 public class QueueRule implements Serializable {
 
+    private static final long serialVersionUID = 1L;
+
     public static QueueRule empty() {
         return new QueueRule(null, null, null);
     }

@@ -32,6 +32,8 @@ import java.time.Duration;
 @Singleton
 public class ProcessQueueConfiguration implements Serializable {
 
+    private static final long serialVersionUID = 1L;
+
     @Inject
     @Config("queue.dispatcher.pollDelay")
     private Duration dispatcherPollDelay;

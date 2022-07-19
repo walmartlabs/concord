@@ -25,7 +25,7 @@ import com.walmartlabs.concord.client.*;
 import com.walmartlabs.concord.common.IOUtils;
 import com.walmartlabs.concord.it.common.GitHubUtils;
 import org.eclipse.jgit.api.Git;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.io.File;
 import java.nio.file.Files;
@@ -35,18 +35,18 @@ import java.util.Collections;
 import java.util.List;
 
 import static com.walmartlabs.concord.it.common.ServerClient.assertLog;
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class GitHubNonOrgEventIt extends AbstractServerIT {
 
-    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    @Test
     public void test() throws Exception {
         Path tmpDir = createTempDir();
 
         File src = new File(GitHubNonOrgEventIt.class.getResource("githubNonRepoEvent").toURI());
         IOUtils.copy(src.toPath(), tmpDir);
 
-        Git repo = Git.init().setDirectory(tmpDir.toFile()).call();
+        Git repo = Git.init().setInitialBranch("master").setDirectory(tmpDir.toFile()).call();
         repo.add().addFilepattern(".").call();
         repo.commit().setMessage("import").call();
 

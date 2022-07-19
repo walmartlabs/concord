@@ -28,6 +28,8 @@ import java.util.Objects;
 
 public class JsonStoreRule implements Serializable {
 
+    private static final long serialVersionUID = 1L;
+
     private final StoreRule store;
     private final StoreDataRule data;
 
@@ -62,6 +64,8 @@ public class JsonStoreRule implements Serializable {
     }
 
     public static class StoreRule implements Serializable {
+
+        private static final long serialVersionUID = 1L;
 
         private final int maxNumberPerOrg;
         private final String msg;
@@ -98,6 +102,8 @@ public class JsonStoreRule implements Serializable {
     }
 
     public static class StoreDataRule implements Serializable {
+
+        private static final long serialVersionUID = 1L;
 
         private final Long maxSizeInBytes;
         private final String msg;

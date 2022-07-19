@@ -29,6 +29,9 @@ import java.util.StringJoiner;
 
 public class InvalidValueException extends YamlProcessingException {
 
+    // for backward compatibility (java8 concord 1.92.0 version)
+    private static final long serialVersionUID = -3923028761051516018L;
+
     private final List<String> expected;
     private final Serializable actual;
 

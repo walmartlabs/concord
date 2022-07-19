@@ -24,7 +24,7 @@ import com.walmartlabs.concord.ApiException;
 import com.walmartlabs.concord.client.*;
 import com.walmartlabs.concord.common.IOUtils;
 import org.eclipse.jgit.api.Git;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.io.File;
 import java.nio.file.Path;
@@ -45,7 +45,7 @@ public class GeneralTriggerV2IT extends AbstractGeneralTriggerIT {
         File src = new File(TriggersRefreshIT.class.getResource(yamlPath).toURI());
         IOUtils.copy(src.toPath(), tmpDir);
 
-        Git repo = Git.init().setDirectory(tmpDir.toFile()).call();
+        Git repo = Git.init().setInitialBranch("master").setDirectory(tmpDir.toFile()).call();
         repo.add().addFilepattern(".").call();
         repo.commit().setMessage("import").call();
 
@@ -73,7 +73,7 @@ public class GeneralTriggerV2IT extends AbstractGeneralTriggerIT {
         orgApi.delete(orgName, "yes");
     }
 
-    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    @Test
     public void testExclusiveV2() throws Exception {
         setup("generalExclusiveTriggerv2");
 
@@ -96,7 +96,7 @@ public class GeneralTriggerV2IT extends AbstractGeneralTriggerIT {
         cleanup();
     }
 
-    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    @Test
     public void testExclusiveFromConfigurationV2() throws Exception {
         setup("generalTriggerWithExclusiveCfgv2");
 
@@ -123,7 +123,7 @@ public class GeneralTriggerV2IT extends AbstractGeneralTriggerIT {
         cleanup();
     }
 
-    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    @Test
     public void testExclusiveWithTriggerOverrideV2() throws Exception {
         setup("generalTriggerWithExclusiveOverridev2");
 

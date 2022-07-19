@@ -23,8 +23,8 @@ package com.walmartlabs.concord.server.org.jsonstore;
 import com.walmartlabs.concord.server.AbstractDaoTest;
 import com.walmartlabs.concord.server.ConcordObjectMapper;
 import com.walmartlabs.concord.server.TestObjectMapper;
-import org.junit.Ignore;
-import org.junit.Test;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -32,12 +32,13 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.*;
 
-import static junit.framework.TestCase.assertNotNull;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-@Ignore("local DB connection required")
+import static org.junit.jupiter.api.Assertions.*;
+
+@Disabled("local DB connection required")
 public class JsonStorageQueryExecDaoTest extends AbstractDaoTest {
 
     @Test

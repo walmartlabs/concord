@@ -29,6 +29,8 @@ import java.util.Set;
 
 public class WorkspaceRule implements Serializable {
 
+    private static final long serialVersionUID = 1L;
+
     private final String msg;
     private final Long maxSizeInBytes;
     private final Set<String> ignoredFiles;

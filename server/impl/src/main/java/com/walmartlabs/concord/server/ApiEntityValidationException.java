@@ -24,6 +24,8 @@ import org.sonatype.siesta.ValidationErrorsException;
 
 public class ApiEntityValidationException extends ValidationErrorsException {
 
+    private static final long serialVersionUID = 1L;
+
     public ApiEntityValidationException(String message) {
         super(buildMessage(message));
     }

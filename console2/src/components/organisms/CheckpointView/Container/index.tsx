@@ -18,7 +18,7 @@
  * =====
  */
 import { useEffect, useState } from 'react';
-import createContainer from 'constate';
+import constate from "constate";
 import {
     ProcessEntry,
     PaginatedProcessEntries,
@@ -358,6 +358,4 @@ export const useCheckpoint = (initial: InitialProps) => {
         setActiveFilters
     };
 };
-export const CheckpointContainer = createContainer(useCheckpoint);
-
-export default CheckpointContainer;
+export const [CheckpointProvider, useCheckpointContext] = constate(useCheckpoint);

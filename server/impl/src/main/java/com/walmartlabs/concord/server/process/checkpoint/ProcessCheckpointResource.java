@@ -40,6 +40,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.sonatype.siesta.Resource;
 import org.sonatype.siesta.Validate;
+import org.sonatype.siesta.ValidationErrorsException;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -47,6 +48,7 @@ import javax.inject.Singleton;
 import javax.validation.Valid;
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
@@ -118,13 +120,16 @@ public class ProcessCheckpointResource implements Resource {
         ProcessEntry entry = processManager.assertProcess(instanceId);
         ProcessKey processKey = new ProcessKey(entry.instanceId(), entry.createdAt());
 
-        UUID checkpointId = MultipartUtils.getUuid(input, "id");
-        String checkpointName = MultipartUtils.getString(input, "name");
-        try (InputStream data = MultipartUtils.getStream(input, "data");
+        UUID checkpointId = MultipartUtils.assertUuid(input, "id");
+        UUID correlationId = MultipartUtils.assertUuid(input, "correlationId");
+        String checkpointName = MultipartUtils.assertString(input, "name");
+        try (InputStream data = MultipartUtils.assertStream(input, "data");
              TemporaryPath tmpIn = IOUtils.tempFile("checkpoint", ".zip")) {
 
             Files.copy(data, tmpIn.path(), StandardCopyOption.REPLACE_EXISTING);
-            checkpointManager.importCheckpoint(processKey, checkpointId, checkpointName, tmpIn.path());
+            checkpointManager.importCheckpoint(processKey, checkpointId, correlationId, checkpointName, tmpIn.path());
+        } catch (ValidationErrorsException e) {
+            throw new ConcordApplicationException(e.getMessage(), Response.Status.BAD_REQUEST);
         } catch (IOException e) {
             log.error("uploadCheckpoint ['{}'] -> error", processKey, e);
             throw new ConcordApplicationException("upload error: " + e.getMessage());

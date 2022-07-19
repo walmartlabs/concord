@@ -88,5 +88,6 @@ public class ProcessKeyCache implements com.walmartlabs.concord.server.sdk.Proce
     }
 
     private static class ProcessNotFoundException extends Exception {
+        private static final long serialVersionUID = 1L;
     }
 }

@@ -29,6 +29,8 @@ import java.util.Set;
 
 public class ProtectedTasksRule implements Serializable {
 
+    private static final long serialVersionUID = 1L;
+
     private final Set<String> names;
 
     @JsonCreator

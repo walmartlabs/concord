@@ -26,6 +26,7 @@ import com.walmartlabs.concord.sdk.Task;
 
 import javax.inject.Named;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 import java.util.regex.Pattern;
@@ -48,7 +49,10 @@ public class CheckpointTask implements Task, LogTagMetadataProvider {
         UUID checkpointId = UUID.randomUUID();
         ctx.setVariable("checkpointId", checkpointId.toString());
 
-        ctx.suspend(checkpointName, Collections.singletonMap("checkpointId", checkpointId.toString()), false);
+        Map<String, Object> eventPayload = new HashMap<>();
+        eventPayload.put("checkpointId", checkpointId.toString());
+        eventPayload.put("correlationId", ctx.getEventCorrelationId().toString());
+        ctx.suspend(checkpointName, eventPayload, false);
     }
 
     @Override

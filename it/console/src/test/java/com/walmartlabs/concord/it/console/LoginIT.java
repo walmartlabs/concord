@@ -20,23 +20,29 @@ package com.walmartlabs.concord.it.console;
  * =====
  */
 
-import org.junit.Rule;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.Timeout;
+import org.junit.jupiter.api.extension.RegisterExtension;
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriver;
 
+import java.util.concurrent.TimeUnit;
+
+import static com.walmartlabs.concord.it.console.Utils.DEFAULT_TEST_TIMEOUT;
+
+@Timeout(value = 60000, unit = TimeUnit.MILLISECONDS)
 public class LoginIT {
 
-    @Rule
-    public ConcordConsoleRule consoleRule = new ConcordConsoleRule();
+    @RegisterExtension
+    public static ConcordConsoleRule consoleRule = new ConcordConsoleRule();
 
-    @Test(timeout = 60000)
+    @Test
     public void test() throws Exception {
         consoleRule.login(Concord.ADMIN_API_KEY);
         consoleRule.waitFor(By.id("concordLogo"));
     }
 
-    @Test(timeout = 60000)
+    @Test
     public void refresh() throws Exception {
         consoleRule.login(Concord.ADMIN_API_KEY);
         consoleRule.waitFor(By.id("concordLogo"));

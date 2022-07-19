@@ -20,12 +20,10 @@ package com.walmartlabs.concord.runtime.v2.runner.compiler;
  * =====
  */
 
-import com.walmartlabs.concord.runtime.v2.model.GroupOfSteps;
-import com.walmartlabs.concord.runtime.v2.model.GroupOfStepsOptions;
-import com.walmartlabs.concord.runtime.v2.model.Step;
-import com.walmartlabs.concord.runtime.v2.model.WithItems;
+import com.walmartlabs.concord.runtime.v2.model.*;
 import com.walmartlabs.concord.runtime.v2.runner.vm.BlockCommand;
 import com.walmartlabs.concord.runtime.v2.runner.vm.ErrorWrapper;
+import com.walmartlabs.concord.runtime.v2.runner.vm.LoopWrapper;
 import com.walmartlabs.concord.runtime.v2.runner.vm.WithItemsWrapper;
 import com.walmartlabs.concord.svm.Command;
 
@@ -51,6 +49,11 @@ public final class GroupOfStepsCompiler implements StepCompiler<GroupOfSteps> {
         WithItems withItems = options.withItems();
         if (withItems != null) {
             return WithItemsWrapper.of(cmd, withItems, options.out(), Collections.emptyMap());
+        }
+
+        Loop loop = options.loop();
+        if (loop != null) {
+            cmd = LoopWrapper.of(context, cmd, loop, options.out(), Collections.emptyMap());
         }
 
         List<Step> errorSteps = options.errorSteps();

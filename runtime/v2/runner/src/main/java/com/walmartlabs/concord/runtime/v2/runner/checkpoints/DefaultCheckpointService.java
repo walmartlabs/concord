@@ -20,14 +20,8 @@ package com.walmartlabs.concord.runtime.v2.runner.checkpoints;
  * =====
  */
 
-import com.walmartlabs.concord.ApiClient;
-import com.walmartlabs.concord.ApiException;
-import com.walmartlabs.concord.client.ClientUtils;
 import com.walmartlabs.concord.common.ObjectInputStreamWithClassLoader;
 import com.walmartlabs.concord.common.TemporaryPath;
-import com.walmartlabs.concord.runtime.common.cfg.ApiConfiguration;
-import com.walmartlabs.concord.runtime.common.cfg.RunnerConfiguration;
-import com.walmartlabs.concord.runtime.common.injector.InstanceId;
 import com.walmartlabs.concord.runtime.v2.runner.ProcessSnapshot;
 import com.walmartlabs.concord.runtime.v2.sdk.WorkingDirectory;
 import com.walmartlabs.concord.svm.Runtime;
@@ -43,36 +37,28 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.UUID;
 
 public class DefaultCheckpointService implements CheckpointService {
 
     private static final Logger log = LoggerFactory.getLogger(DefaultCheckpointService.class);
 
-    private final InstanceId instanceId;
     private final WorkingDirectory workingDirectory;
-    private final ApiClient apiClient;
-    private final ApiConfiguration apiConfiguration;
+    private final CheckpointUploader checkpointUploader;
     private final ClassLoader classLoader;
 
     @Inject
-    public DefaultCheckpointService(InstanceId instanceId,
-                                    WorkingDirectory workingDirectory,
-                                    RunnerConfiguration configuration,
-                                    ApiClient apiClient,
+    public DefaultCheckpointService(WorkingDirectory workingDirectory,
+                                    CheckpointUploader checkpointUploader,
                                     @Named("runtime") ClassLoader classLoader) {
 
-        this.instanceId = instanceId;
         this.workingDirectory = workingDirectory;
-        this.apiConfiguration = configuration.api();
-        this.apiClient = apiClient;
+        this.checkpointUploader = checkpointUploader;
         this.classLoader = classLoader;
     }
 
     @Override
-    public void create(ThreadId threadId, String name, Runtime runtime, ProcessSnapshot snapshot) {
+    public void create(ThreadId threadId, UUID correlationId, String name, Runtime runtime, ProcessSnapshot snapshot) {
         validate(threadId, snapshot);
 
         UUID checkpointId = UUID.randomUUID();
@@ -96,27 +82,13 @@ public class DefaultCheckpointService implements CheckpointService {
                     .withSystemDirectory(workingDirectory.getValue());
 
             try (TemporaryPath zip = archive.zip()) {
-                Map<String, Object> data = new HashMap<>();
-                data.put("id", checkpointId);
-                data.put("name", name);
-                data.put("data", zip.path());
-
-                uploadCheckpoint(instanceId.getValue(), data);
+                checkpointUploader.upload(checkpointId, correlationId, name, zip.path());
             }
         } catch (Exception e) {
             throw new RuntimeException("Checkpoint upload error", e);
         }
 
-        log.info("create ['{}'] -> done", name);
-    }
-
-    private void uploadCheckpoint(UUID instanceId, Map<String, Object> data) throws ApiException {
-        String path = "/api/v1/process/" + instanceId + "/checkpoint";
-
-        ClientUtils.withRetry(apiConfiguration.retryCount(), apiConfiguration.retryInterval(), () -> {
-            ClientUtils.postData(apiClient, path, data, null);
-            return null;
-        });
+        log.info("Checkpoint '{}' created", name);
     }
 
     private static void validate(ThreadId threadId, ProcessSnapshot snapshot) {

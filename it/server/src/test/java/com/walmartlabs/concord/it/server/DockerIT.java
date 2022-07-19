@@ -23,18 +23,18 @@ package com.walmartlabs.concord.it.server;
 import com.walmartlabs.concord.client.ProcessApi;
 import com.walmartlabs.concord.client.ProcessEntry;
 import com.walmartlabs.concord.client.StartProcessResponse;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.util.HashMap;
 import java.util.Map;
 
 import static com.walmartlabs.concord.it.common.ITUtils.archive;
 import static com.walmartlabs.concord.it.common.ServerClient.*;
-import static org.junit.Assert.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 public class DockerIT extends AbstractServerIT {
 
-    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    @Test
     public void test() throws Exception {
         byte[] payload = archive(DockerIT.class.getResource("docker").toURI());
 
@@ -51,7 +51,7 @@ public class DockerIT extends AbstractServerIT {
         assertLog(".*DOCKER: Hello, world.*", ab);
     }
 
-    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    @Test
     public void testOut() throws Exception {
         byte[] payload = archive(DockerIT.class.getResource("dockerOut").toURI());
 
@@ -69,7 +69,7 @@ public class DockerIT extends AbstractServerIT {
         assertLog(".*DOCKER: STDERR STILL WORKS.*", ab);
     }
 
-    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    @Test
     public void testTaskSyntaxOut() throws Exception {
         byte[] payload = archive(DockerIT.class.getResource("dockerTaskSyntaxOut").toURI());
 
@@ -87,7 +87,7 @@ public class DockerIT extends AbstractServerIT {
         assertLog(".*DOCKER: STDERR STILL WORKS.*", ab);
     }
 
-    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    @Test
     public void testNoLogWithStdOut() throws Exception {
         byte[] payload = archive(DockerIT.class.getResource("dockerNoLogWithStdOut").toURI());
 
@@ -105,7 +105,7 @@ public class DockerIT extends AbstractServerIT {
         assertNoLog(".*STDERR WORKS !!.*", ab);
     }
 
-    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    @Test
     public void testLogWithoutStdOut() throws Exception {
         byte[] payload = archive(DockerIT.class.getResource("dockerLogWithoutStdOut").toURI());
 
@@ -123,7 +123,7 @@ public class DockerIT extends AbstractServerIT {
         assertLog(".*DOCKER: STDERR WORKS.*", ab);
     }
 
-    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    @Test
     public void testLogWithStdErr() throws Exception {
         byte[] payload = archive(DockerIT.class.getResource("dockerLogWithStdErr").toURI());
 
@@ -140,7 +140,7 @@ public class DockerIT extends AbstractServerIT {
         assertLog(".*STDERR: STDERR WORKS.*", ab);
     }
 
-    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    @Test
     public void testPullRetry() throws Exception {
         byte[] payload = archive(DockerIT.class.getResource("dockerPullRetry").toURI());
 

@@ -183,11 +183,11 @@ public class SecretDao extends AbstractDao {
         }
     }
 
-    public void update(UUID id, String newName, UUID ownerId, byte[] data, SecretVisibility visibility, UUID projectId, UUID orgId) {
-        tx(tx -> update(tx, id, newName, ownerId, data, visibility, projectId, orgId));
+    public void update(UUID id, String newName, UUID ownerId, SecretType newType, byte[] data, SecretVisibility visibility, UUID projectId, UUID orgId) {
+        tx(tx -> update(tx, id, newName, ownerId, newType, data, visibility, projectId, orgId));
     }
 
-    public void update(DSLContext tx, UUID id, String newName, UUID ownerId, byte[] data, SecretVisibility visibility, UUID projectId, UUID orgId) {
+    public void update(DSLContext tx, UUID id, String newName, UUID ownerId, SecretType newType, byte[] data, SecretVisibility visibility, UUID projectId, UUID orgId) {
         UpdateSetMoreStep<SecretsRecord> u = tx.update(SECRETS).set(SECRETS.PROJECT_ID, projectId);
 
         if (newName != null) {
@@ -202,6 +202,10 @@ public class SecretDao extends AbstractDao {
             u.set(SECRETS.VISIBILITY, visibility.toString());
         }
 
+        if (newType != null) {
+            u.set(SECRETS.SECRET_TYPE, newType.name());
+        }
+
         if (data != null) {
             u.set(SECRETS.SECRET_DATA, data);
         }
@@ -211,23 +215,6 @@ public class SecretDao extends AbstractDao {
         }
 
         int i = u.where(SECRETS.SECRET_ID.eq(id))
-                .execute();
-
-        if (i != 1) {
-            throw new DataAccessException("Invalid number of rows updated: " + i);
-        }
-    }
-
-    public void update(DSLContext tx, UUID id, UUID orgId, UUID projectId, String name, SecretType type, SecretEncryptedByType encryptedByType, SecretVisibility visibility, byte[] data) {
-        int i = tx.update(SECRETS)
-                .set(SECRETS.ORG_ID, orgId)
-                .set(SECRETS.PROJECT_ID, projectId)
-                .set(SECRETS.SECRET_NAME, name)
-                .set(SECRETS.SECRET_TYPE, type.toString())
-                .set(SECRETS.ENCRYPTED_BY, encryptedByType.toString())
-                .set(SECRETS.SECRET_DATA, data)
-                .set(SECRETS.VISIBILITY, visibility.toString())
-                .where(SECRETS.SECRET_ID.eq(id))
                 .execute();
 
         if (i != 1) {

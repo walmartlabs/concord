@@ -22,7 +22,7 @@ package com.walmartlabs.concord.it.server;
 
 import com.walmartlabs.concord.client.*;
 import com.walmartlabs.concord.client.ProcessEntry.StatusEnum;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.util.HashMap;
 import java.util.List;
@@ -30,11 +30,12 @@ import java.util.Map;
 
 import static com.walmartlabs.concord.it.common.ITUtils.archive;
 import static com.walmartlabs.concord.it.common.ServerClient.waitForStatus;
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class ExclusiveProcessIT extends AbstractServerIT {
 
-    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    @Test
     public void testExclusiveCancelOld() throws Exception {
         String orgName = "org_" + randomString();
         OrganizationsApi orgApi = new OrganizationsApi(getApiClient());

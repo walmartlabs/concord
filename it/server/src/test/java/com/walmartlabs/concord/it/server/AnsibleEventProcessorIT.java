@@ -21,7 +21,8 @@ package com.walmartlabs.concord.it.server;
  */
 
 import com.walmartlabs.concord.client.*;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 
 import java.net.URI;
 import java.util.List;
@@ -30,11 +31,11 @@ import java.util.concurrent.Callable;
 
 import static com.walmartlabs.concord.it.common.ITUtils.archive;
 import static com.walmartlabs.concord.it.common.ServerClient.waitForCompletion;
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class AnsibleEventProcessorIT extends AbstractServerIT {
 
-    @Test(timeout = 60000)
+    @Test
     public void test() throws Exception {
         URI uri = ProcessIT.class.getResource("ansibleEventProcessor").toURI();
         byte[] payload = archive(uri, ITConstants.DEPENDENCIES_DIR);
@@ -47,7 +48,7 @@ public class AnsibleEventProcessorIT extends AbstractServerIT {
         // ---
 
         ProcessEntry pir = waitForCompletion(processApi, spr.getInstanceId());
-        assertEquals(ProcessEntry.StatusEnum.FINISHED, pir.getStatus());
+        Assertions.assertEquals(ProcessEntry.StatusEnum.FINISHED, pir.getStatus());
 
         // ---
 

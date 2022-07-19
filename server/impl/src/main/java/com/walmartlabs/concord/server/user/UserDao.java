@@ -292,8 +292,8 @@ public class UserDao extends AbstractDao {
                         select(ROLE_PERMISSIONS.PERMISSION_ID).from(ROLE_PERMISSIONS)
                                 .where(ROLE_PERMISSIONS.ROLE_ID.in(ROLES.ROLE_ID))));
 
-        SelectConditionStep<Record1<UUID>> roleIds = select(USER_ROLES.ROLE_ID).from(USER_ROLES)
-                .where(USER_ROLES.USER_ID
+        SelectConditionStep<Record1<UUID>> roleIds = select(V_USER_ROLES.ROLE_ID).from(V_USER_ROLES)
+                .where(V_USER_ROLES.USER_ID
                         .eq(r.get(USERS.USER_ID)));
 
         List<RoleEntry> roles = tx.select(ROLES.ROLE_ID, ROLES.ROLE_NAME,

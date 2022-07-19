@@ -66,8 +66,9 @@ export const getStatusSemanticIcon = (status: ProcessStatus): SemanticICONS => {
         case ProcessStatus.PREPARING:
         case ProcessStatus.RUNNING:
         case ProcessStatus.STARTING:
-        case ProcessStatus.SUSPENDED:
             return 'spinner';
+        case ProcessStatus.SUSPENDED:
+            return 'hourglass half';
         case ProcessStatus.FINISHED:
             return 'circle';
         case ProcessStatus.CANCELLED:

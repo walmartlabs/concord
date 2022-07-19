@@ -29,7 +29,6 @@ import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import com.fasterxml.jackson.datatype.guava.GuavaModule;
 import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
-import com.google.common.collect.Lists;
 import com.walmartlabs.concord.runtime.v2.exception.InvalidFieldDefinitionException;
 import com.walmartlabs.concord.runtime.v2.exception.YamlParserException;
 import com.walmartlabs.concord.runtime.v2.exception.YamlProcessingException;
@@ -39,6 +38,7 @@ import com.walmartlabs.concord.runtime.v2.model.ProcessDefinition;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -86,7 +86,8 @@ public class YamlParserV2 {
     private static String buildErrorMessage(String fileName, YamlProcessingException e) {
         String prefix = "(" + fileName + "): Error";
 
-        List<YamlProcessingException> errors = Lists.reverse(getYamlProcessingExceptionList(e));
+        List<YamlProcessingException> errors = getYamlProcessingExceptionList(e);
+        Collections.reverse(errors);
 
         String padding = "\t";
         StringBuilder result = new StringBuilder(toMessage(prefix, errors.remove(0)));

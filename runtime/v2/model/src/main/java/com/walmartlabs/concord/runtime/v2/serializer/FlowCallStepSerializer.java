@@ -30,6 +30,7 @@ import com.walmartlabs.concord.runtime.v2.model.WithItems;
 import java.io.IOException;
 import java.util.Objects;
 
+import static com.walmartlabs.concord.runtime.v2.serializer.SerializerUtils.writeLoop;
 import static com.walmartlabs.concord.runtime.v2.serializer.SerializerUtils.writeNotEmptyObjectField;
 
 public class FlowCallStepSerializer extends StdSerializer<FlowCall> {
@@ -69,6 +70,8 @@ public class FlowCallStepSerializer extends StdSerializer<FlowCall> {
             WithItems items = Objects.requireNonNull(options.withItems());
             SerializerUtils.writeWithItems(items, gen);
         }
+
+        writeLoop(options.loop(), gen);
 
         if (options.retry() != null) {
             gen.writeObjectField("retry", options.retry());

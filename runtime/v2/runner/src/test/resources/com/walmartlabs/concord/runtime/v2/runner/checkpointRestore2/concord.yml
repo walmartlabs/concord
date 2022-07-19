@@ -1,0 +1,17 @@
+flows:
+  default:
+    - log: "#1 start"
+
+    - checkpoint: "first"
+
+    - call: print
+      withItems:
+        - one
+        - two
+
+    - checkpoint: "second"
+
+    - log: "#2 end"
+
+  print:
+    - log: "item: ${item}"

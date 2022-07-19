@@ -9,9 +9,9 @@ package com.walmartlabs.concord.policyengine;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -20,13 +20,13 @@ package com.walmartlabs.concord.policyengine;
  * =====
  */
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.io.Serializable;
 import java.util.*;
 
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class TaskPolicyTest {
 
@@ -169,12 +169,12 @@ public class TaskPolicyTest {
         assertDenyByTaskResults(policy, "taskName-12", "foo", Collections.singletonMap("taskName-12", taskResults));
     }
 
-    private static void assertDeny(TaskPolicy policy, String taskName, String methodName, Object...params) {
+    private static void assertDeny(TaskPolicy policy, String taskName, String methodName, Object... params) {
         CheckResult<TaskRule, String> result = policy.check(taskName, methodName, params, null);
         assertFalse(result.getDeny().isEmpty());
     }
 
-    private static void assertAllow(TaskPolicy policy, String taskName, String methodName, Object...params) {
+    private static void assertAllow(TaskPolicy policy, String taskName, String methodName, Object... params) {
         CheckResult<TaskRule, String> result = policy.check(taskName, methodName, params, null);
         assertTrue(result.getDeny().isEmpty());
     }

@@ -20,7 +20,7 @@ package com.walmartlabs.concord.it.runtime.v2;
  * =====
  */
 
-import ca.ibodrov.concord.testcontainers.junit4.ConcordRule;
+import ca.ibodrov.concord.testcontainers.junit5.ConcordRule;
 import org.testcontainers.images.PullPolicy;
 
 import java.io.IOException;

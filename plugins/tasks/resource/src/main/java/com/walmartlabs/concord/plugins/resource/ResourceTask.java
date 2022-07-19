@@ -35,8 +35,11 @@ import java.nio.file.Paths;
 @SuppressWarnings("unused")
 public class ResourceTask implements Task {
 
+    @InjectVariable("workDir")
+    private String workDir;
+
     public String asString(String path) throws IOException {
-        return ResourceTaskCommon.asString(path);
+        return delegate(null).asString(path);
     }
 
     public Object asJson(String path) throws IOException {
@@ -65,15 +68,15 @@ public class ResourceTask implements Task {
     }
 
     public String writeAsJson(Object content, @InjectVariable("workDir") String workDir) throws IOException {
-        return delegate(workDir).writeAsJson(content);
+        return delegate(null).writeAsJson(content);
     }
 
     public String writeAsString(String content, @InjectVariable("workDir") String workDir) throws IOException {
-        return delegate(workDir).writeAsString(content);
+        return delegate(null).writeAsString(content);
     }
 
     public String writeAsYaml(Object content, @InjectVariable("workDir") String workDir) throws IOException {
-        return delegate(workDir).writeAsYaml(content);
+        return delegate(null).writeAsYaml(content);
     }
 
     public String prettyPrintJson(Object value) throws IOException {
@@ -88,18 +91,14 @@ public class ResourceTask implements Task {
         return ResourceTaskCommon.prettyPrintYaml(value, indent);
     }
 
-    private static ResourceTaskCommon delegate(Context ctx) {
+    private ResourceTaskCommon delegate(Context ctx) {
         Evaluator evaluator = null;
         if (ctx != null) {
             evaluator = ctx::interpolate;
         }
-        return new ResourceTaskCommon(null, null, evaluator);
-    }
-
-    private static ResourceTaskCommon delegate(String workDirStr) {
-        Path workDir = Paths.get(workDirStr);
-        return new ResourceTaskCommon(workDir,
-                (prefix, suffix) -> createTempFile(workDir, prefix, suffix), null);
+        Path wd = Paths.get(workDir);
+        return new ResourceTaskCommon(wd,
+                (prefix, suffix) -> createTempFile(wd, prefix, suffix), evaluator);
     }
 
     private static Path createTempFile(Path baseDir, String prefix, String suffix) throws IOException {

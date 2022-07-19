@@ -23,7 +23,7 @@ package com.walmartlabs.concord.it.server;
 import com.google.common.collect.ImmutableMap;
 import com.walmartlabs.concord.client.*;
 import org.intellij.lang.annotations.Language;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import javax.xml.bind.DatatypeConverter;
 import java.util.Collections;
@@ -34,12 +34,12 @@ import java.util.regex.Pattern;
 
 import static com.walmartlabs.concord.it.common.ITUtils.archive;
 import static com.walmartlabs.concord.it.common.ServerClient.*;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class CryptoIT extends AbstractServerIT {
 
-    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    @Test
     public void testPlain() throws Exception {
         String orgName = "Default";
 
@@ -56,7 +56,7 @@ public class CryptoIT extends AbstractServerIT {
         test("cryptoPlain", secretName, storePassword, ".*value=" + secretValue + ".*");
     }
 
-    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    @Test
     public void testUsernamePassword() throws Exception {
         String orgName = "Default";
 
@@ -74,7 +74,7 @@ public class CryptoIT extends AbstractServerIT {
         test("cryptoPwd", secretName, storePassword, ".*" + secretUsername + " " + secretPassword + ".*");
     }
 
-    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    @Test
     public void testExportAsFile() throws Exception {
         String orgName = "Default";
 
@@ -91,7 +91,7 @@ public class CryptoIT extends AbstractServerIT {
         test("cryptoFile", secretName, storePassword, ".*We got " + secretValue + ".*");
     }
 
-    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    @Test
     public void testExportAsFileWithOrg() throws Exception {
         String orgName = "org@" + randomString();
 
@@ -125,7 +125,7 @@ public class CryptoIT extends AbstractServerIT {
         assertLog(".*We got " + secretValue + ".*", ab);
     }
 
-    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    @Test
     public void testWithoutPassword() throws Exception {
         String orgName = "org@" + randomString();
 
@@ -157,7 +157,7 @@ public class CryptoIT extends AbstractServerIT {
         assertLog(".*We got " + secretValue + ".*", ab);
     }
 
-    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    @Test
     public void testEncryptString() throws Exception {
         String orgName = "org_" + randomString();
 
@@ -199,7 +199,7 @@ public class CryptoIT extends AbstractServerIT {
         assertLog(".*We got " + Pattern.quote(evr.getData()) + ".*", ab);
     }
 
-    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    @Test
     public void testDecryptString() throws Exception {
         String orgName = "org_" + randomString();
 
@@ -241,7 +241,7 @@ public class CryptoIT extends AbstractServerIT {
         assertLog(".*We got " + value + ".*", ab);
     }
 
-    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    @Test
     public void testDecryptStringTooBig() throws Exception {
         String orgName = "org_" + randomString();
 
@@ -282,7 +282,7 @@ public class CryptoIT extends AbstractServerIT {
         assertLogAtLeast(".*too big.*", 1, ab);
     }
 
-    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    @Test
     public void testDecryptInvalidString() throws Exception {
         String orgName = "org_" + randomString();
 
@@ -379,7 +379,7 @@ public class CryptoIT extends AbstractServerIT {
      * The test uses a form to verify that "organization auto select" works
      * for new and resumed processes.
      */
-    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    @Test
     public void testCurrentOrg() throws Exception {
         String orgName = "org_" + randomString();
         OrganizationsApi organizationsApi = new OrganizationsApi(getApiClient());

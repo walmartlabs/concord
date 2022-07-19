@@ -21,14 +21,14 @@ package com.walmartlabs.concord.server.org.project;
  */
 
 import org.javers.core.metamodel.annotation.Id;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class DiffUtilsTest {
 
@@ -46,7 +46,7 @@ public class DiffUtilsTest {
         Map<String, Object> result = DiffUtils.compare(left, right);
 
 
-        assertNotNull(getProperty(result, "prev"));
+        assertNull(getProperty(result, "prev"));
         assertEquals(personId, getProperty(result, "new.id"));
         assertEquals("Bravo", getProperty(result, "new.name"));
     }
@@ -64,7 +64,7 @@ public class DiffUtilsTest {
         Map<String, Object> result = DiffUtils.compare(left, right);
 
 
-        assertNotNull(getProperty(result, "new"));
+        assertNull(getProperty(result, "new"));
         assertEquals(personId, getProperty(result, "prev.id"));
         assertEquals("Bravo", getProperty(result, "prev.name"));
     }
@@ -134,8 +134,8 @@ public class DiffUtilsTest {
         Map<String, Object> result = DiffUtils.compare(left, right);
 
 
-        assertEquals(personId.toString(), getProperty(result, "prev.id"));
-        assertEquals(personId2.toString(), getProperty(result, "new.id"));
+        assertEquals(personId, getProperty(result, "prev.id"));
+        assertEquals(personId2, getProperty(result, "new.id"));
 
         assertEquals("Bravo", getProperty(result, "prev.name"));
         assertEquals("Bravo", getProperty(result, "new.name"));
@@ -249,7 +249,7 @@ public class DiffUtilsTest {
         assertNull(getProperty(result, "new.id"));
         assertNull(getProperty(result, "new.name"));
 
-        assertEquals(carId2.toString(), getProperty(result, "new.cars." + carId2 + ".id"));
+        assertEquals(carId2, getProperty(result, "new.cars." + carId2 + ".id"));
         assertNull(getProperty(result, "prev.cars"));
     }
 
@@ -279,8 +279,8 @@ public class DiffUtilsTest {
         assertNull(getProperty(result, "new.id"));
         assertNull(getProperty(result, "new.name"));
 
-        assertEquals(carId1.toString(), getProperty(result, "new.cars." + carId1 + ".id"));
-        assertEquals(carId2.toString(), getProperty(result, "new.cars." + carId2 + ".id"));
+        assertEquals(carId1, getProperty(result, "new.cars." + carId1 + ".id"));
+        assertEquals(carId2, getProperty(result, "new.cars." + carId2 + ".id"));
         assertNull(getProperty(result, "prev.cars"));
     }
 
@@ -311,7 +311,7 @@ public class DiffUtilsTest {
         assertNull(getProperty(result, "new.id"));
         assertNull(getProperty(result, "new.name"));
 
-        assertEquals(carId2.toString(), getProperty(result, "prev.cars." + carId2 + ".id"));
+        assertEquals(carId2, getProperty(result, "prev.cars." + carId2 + ".id"));
         assertNull(getProperty(result, "new.cars"));
     }
 

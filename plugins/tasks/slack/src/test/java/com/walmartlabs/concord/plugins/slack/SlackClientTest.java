@@ -9,10 +9,10 @@ package com.walmartlabs.concord.plugins.slack;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
  * Unless required by applicable law or agreed to in writing, software
+ *
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
@@ -21,20 +21,20 @@ package com.walmartlabs.concord.plugins.slack;
  */
 
 import com.walmartlabs.concord.runtime.v2.sdk.MapBackedVariables;
-import org.junit.Before;
-import org.junit.Ignore;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
 
 import java.util.HashMap;
 import java.util.Map;
 
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assume.assumeTrue;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
-@Ignore
+@Disabled
 public class SlackClientTest {
 
-    @Before
+    @BeforeEach
     public void setUp() {
         assumeTrue(TestParams.TEST_API_TOKEN != null);
     }

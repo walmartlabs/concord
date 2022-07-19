@@ -1,0 +1,14 @@
+flows:
+  default:
+    - script: js
+      body: |
+        result.set('k1', 'value1')
+              .set('k2', 'value2')
+              .set('boom', {});
+      out: result
+
+    - checkpoint: "test"
+
+    - log: "result.boom: ${result.boom}"
+    - log: "result.k1: ${result.k1}"
+    - log: "result.k2: ${result.k2}"

@@ -24,10 +24,11 @@ import com.walmartlabs.concord.client.*;
 import com.walmartlabs.concord.common.IOUtils;
 import com.walmartlabs.concord.it.common.MockGitSshServer;
 import org.eclipse.jgit.api.Git;
+import org.eclipse.jgit.lib.ConfigConstants;
 import org.eclipse.jgit.transport.RefSpec;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -38,21 +39,21 @@ import java.util.Map;
 
 import static com.walmartlabs.concord.it.common.ServerClient.assertLog;
 import static com.walmartlabs.concord.it.common.ServerClient.waitForCompletion;
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class GitBranchesIT extends AbstractServerIT {
 
     private MockGitSshServer gitServer;
 
-    @Before
+    @BeforeEach
     public void setUp() throws Exception {
         Path bareRepo = createTempDir();
-        Git.init().setBare(true).setDirectory(bareRepo.toFile()).call();
+        Git.init().setInitialBranch("master").setBare(true).setDirectory(bareRepo.toFile()).call();
 
         Path workdir = createTempDir();
         Git git = Git.cloneRepository()
                 .setDirectory(workdir.toFile())
-                .setURI("file://" + bareRepo.toString())
+                .setURI("file://" + bareRepo)
                 .call();
 
         Path initialData = Paths.get(PortalIT.class.getResource("gitBranches/qa").toURI());
@@ -73,16 +74,16 @@ public class GitBranchesIT extends AbstractServerIT {
         git.commit().setMessage("dev commit").call();
         git.push().setRefSpecs(new RefSpec("dev:dev")).call();
 
-        gitServer = new MockGitSshServer(0, bareRepo.toAbsolutePath().toString());
+        gitServer = new MockGitSshServer(0, bareRepo);
         gitServer.start();
     }
 
-    @After
+    @AfterEach
     public void tearDown() throws Exception {
         gitServer.stop();
     }
 
-    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    @Test
     public void test() throws Exception {
         String orgName = "Default";
         String projectName = "project_" + randomString();

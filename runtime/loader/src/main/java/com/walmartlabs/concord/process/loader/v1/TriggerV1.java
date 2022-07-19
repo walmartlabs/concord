@@ -29,6 +29,8 @@ import java.util.Map;
 
 public class TriggerV1 implements Trigger, Serializable {
 
+    private static final long serialVersionUID = 1L;
+
     private final com.walmartlabs.concord.project.model.Trigger delegate;
     private final SourceMap sourceMap;
 

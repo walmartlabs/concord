@@ -94,6 +94,9 @@ public class FlowCallCommand extends StepCommand<FlowCall> {
 
     private static class EvalVariablesCommand implements Command {
 
+        // for backward compatibility (java8 concord 1.92.0 version)
+        private static final long serialVersionUID = -7294220776008029488L;
+
         private final Context ctx;
         private final Map<String, Serializable> variables;
         private final Frame variablesFrame;

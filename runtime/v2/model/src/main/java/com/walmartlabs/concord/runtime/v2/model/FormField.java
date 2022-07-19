@@ -29,6 +29,7 @@ import java.util.Collections;
 import java.util.Map;
 
 @Value.Immutable
+@Value.Style(jdkOnly = true)
 public interface FormField extends Serializable {
 
     long serialVersionUID = 1L;

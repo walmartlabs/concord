@@ -30,7 +30,7 @@ import io.takari.bpm.api.JavaDelegate;
 import io.takari.bpm.form.Form;
 import io.takari.bpm.form.FormSubmitResult;
 import io.takari.bpm.model.ProcessDefinition;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 
 import java.io.Serializable;
@@ -38,7 +38,7 @@ import java.util.*;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.stream.Collectors;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.anyInt;
 import static org.mockito.Mockito.anyString;
@@ -49,12 +49,15 @@ public class YamlParserTest extends AbstractYamlParserTest {
 
     // PROCESSES (000 - 099)
 
-    @Test(expected = RuntimeException.class)
-    public void test000() throws Exception {
-        deploy("000.yml");
+    @Test
+    public void test000() {
+        assertThrows(RuntimeException.class, () -> {
+            deploy("000.yml");
 
-        String key = UUID.randomUUID().toString();
-        start(key, "main", null);
+            String key = UUID.randomUUID().toString();
+
+            start(key, "main", null);
+        });
     }
 
     @Test
@@ -1120,8 +1123,6 @@ public class YamlParserTest extends AbstractYamlParserTest {
     public void test032() throws Exception {
         deploy("032.yml");
 
-        ProcessDefinition pd = getDefinition("main");
-
         TestBean testBean = spy(new TestBean());
         register("testBean", testBean);
 
@@ -1201,8 +1202,9 @@ public class YamlParserTest extends AbstractYamlParserTest {
         deploy("035.yml");
 
         JavaDelegate task = spy(new JavaDelegate() {
+            @SuppressWarnings("rawtypes")
             @Override
-            public void execute(ExecutionContext ctx) throws Exception {
+            public void execute(ExecutionContext ctx) {
                 Object o = ctx.getVariable("aList");
                 assertTrue(o instanceof List);
 
@@ -1457,8 +1459,6 @@ public class YamlParserTest extends AbstractYamlParserTest {
     public void test048() throws Exception {
         deploy("048.yml");
 
-        ProcessDefinition pd = getDefinition("main");
-
         TestBean testBean = spy(new TestBean());
         register("testBean", testBean);
 
@@ -1712,8 +1712,6 @@ public class YamlParserTest extends AbstractYamlParserTest {
     public void test058() throws Exception {
         deploy("058.yml");
 
-        ProcessDefinition pd = getDefinition("main");
-
         TestBean testBean = spy(new TestBean());
         register("testBean", testBean);
 
@@ -1798,7 +1796,7 @@ public class YamlParserTest extends AbstractYamlParserTest {
     }
 
     @Test
-    public void test061() throws Exception {
+    public void test061() {
         deploy("061.yml");
 
         MyLogger task = spy(new MyLogger());
@@ -1974,7 +1972,7 @@ public class YamlParserTest extends AbstractYamlParserTest {
         register("myLogger", task);
         register("myTask", new JavaDelegate() {
             @Override
-            public void execute(ExecutionContext ctx) throws Exception {
+            public void execute(ExecutionContext ctx) {
                 ctx.setVariable("var", ctx.getVariable("message"));
             }
         });
@@ -2192,7 +2190,7 @@ public class YamlParserTest extends AbstractYamlParserTest {
 
         List<String> urls = captor.getAllValues()
                 .stream()
-                .map(e -> (String)e.getVariable("url"))
+                .map(e -> (String) e.getVariable("url"))
                 .collect(Collectors.toList());
 
         assertContains("https://nonexistant.example.com/test/a", urls, 4);
@@ -2220,6 +2218,7 @@ public class YamlParserTest extends AbstractYamlParserTest {
             start(key, "default");
             fail("should fail");
         } catch (ExecutionException e) {
+            // do nothing
         }
 
         // ---
@@ -2228,7 +2227,7 @@ public class YamlParserTest extends AbstractYamlParserTest {
     }
 
     @Test
-    public void test076() throws Exception {
+    public void test076() {
         deploy("076.yml");
 
         MyLogger log = spy(new MyLogger());
@@ -2245,6 +2244,7 @@ public class YamlParserTest extends AbstractYamlParserTest {
             start(key, "default");
             fail("should fail");
         } catch (ExecutionException e) {
+            // do nothing
         }
 
         // ---
@@ -2583,15 +2583,15 @@ public class YamlParserTest extends AbstractYamlParserTest {
     }
 
     @Test
-    public void testJunk() throws Exception {
+    public void testJunk() {
         deploy("junk.yml");
     }
 
     // MISC
 
-    @Test(expected = RuntimeException.class)
-    public void testOld() throws Exception {
-        deploy("old.yml");
+    @Test
+    public void testOld() {
+        assertThrows(RuntimeException.class, () -> deploy("old.yml"));
     }
 
     private ProcessDefinition findSubprocess(ProcessDefinition pd) {
@@ -2663,7 +2663,7 @@ public class YamlParserTest extends AbstractYamlParserTest {
     private static class MyLogger implements JavaDelegate {
 
         @Override
-        public void execute(ExecutionContext executionContext) throws Exception {
+        public void execute(ExecutionContext executionContext) {
             log(executionContext.getVariable("message"));
         }
 
@@ -2691,7 +2691,7 @@ public class YamlParserTest extends AbstractYamlParserTest {
         }
 
         @Override
-        public void execute(ExecutionContext ctx) throws Exception {
+        public void execute(ExecutionContext ctx) {
             if (srcVar != null && dstVar != null) {
                 ctx.setVariable(dstVar, ctx.getVariable(srcVar));
             }
@@ -2719,7 +2719,7 @@ public class YamlParserTest extends AbstractYamlParserTest {
     private static class TestErrorTask implements JavaDelegate {
 
         @Override
-        public void execute(ExecutionContext ctx) throws Exception {
+        public void execute(ExecutionContext ctx) {
             throw new BpmnError("boom!");
         }
     }

@@ -27,6 +27,8 @@ import java.io.Serializable;
 
 public class PingResponse implements Serializable {
 
+    private static final long serialVersionUID = 1L;
+
     private final boolean ok;
 
     @JsonCreator

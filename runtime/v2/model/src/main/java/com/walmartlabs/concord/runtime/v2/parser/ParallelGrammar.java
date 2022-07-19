@@ -21,7 +21,6 @@ package com.walmartlabs.concord.runtime.v2.parser;
  */
 
 import com.walmartlabs.concord.runtime.v2.model.ImmutableParallelBlockOptions;
-import com.walmartlabs.concord.runtime.v2.model.ImmutableTaskCallOptions;
 import com.walmartlabs.concord.runtime.v2.model.ParallelBlock;
 import com.walmartlabs.concord.runtime.v2.model.ParallelBlockOptions;
 import io.takari.parc.Parser;

@@ -85,6 +85,7 @@ public class EventMarkerDao extends AbstractDao {
     }
 
     @Value.Immutable
+    @Value.Style(jdkOnly = true)
     public interface EventMarker {
 
         long eventSeq();

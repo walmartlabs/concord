@@ -21,8 +21,10 @@ package com.walmartlabs.concord.server.org.triggers;
  */
 
 import com.walmartlabs.concord.sdk.Constants;
+import com.walmartlabs.concord.sdk.MapUtils;
 
 import java.time.OffsetDateTime;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -54,12 +56,18 @@ public class TriggerSchedulerEntry extends TriggerEntry {
         return triggerId;
     }
 
-    public String getEntryPoint() {
-        if (this.getCfg() == null) {
-            return null;
-        }
+    @Override
+    public Map<String, Object> getCfg() {
+        Map<String, Object> result = super.getCfg();
+        return result == null ? Collections.emptyMap() : result;
+    }
 
-        return (String) this.getCfg().get(Constants.Request.ENTRY_POINT_KEY);
+    public String getEntryPoint() {
+        return (String) getCfg().get(Constants.Request.ENTRY_POINT_KEY);
+    }
+
+    public TriggerRunAs runAs() {
+        return TriggerRunAs.from(MapUtils.getMap(getCfg(), "runAs", Collections.emptyMap()));
     }
 
     @Override

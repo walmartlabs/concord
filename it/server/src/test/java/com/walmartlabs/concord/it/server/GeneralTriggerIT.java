@@ -23,7 +23,7 @@ package com.walmartlabs.concord.it.server;
 import com.walmartlabs.concord.client.*;
 import com.walmartlabs.concord.common.IOUtils;
 import org.eclipse.jgit.api.Git;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.io.File;
 import java.nio.file.Path;
@@ -33,14 +33,14 @@ import java.util.Map;
 
 public class GeneralTriggerIT extends AbstractGeneralTriggerIT {
 
-    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    @Test
     public void testExclusive() throws Exception {
         Path tmpDir = createTempDir();
 
         File src = new File(TriggersRefreshIT.class.getResource("generalExclusiveTrigger").toURI());
         IOUtils.copy(src.toPath(), tmpDir);
 
-        Git repo = Git.init().setDirectory(tmpDir.toFile()).call();
+        Git repo = Git.init().setInitialBranch("master").setDirectory(tmpDir.toFile()).call();
         repo.add().addFilepattern(".").call();
         repo.commit().setMessage("import").call();
 
@@ -87,14 +87,14 @@ public class GeneralTriggerIT extends AbstractGeneralTriggerIT {
         orgApi.delete(orgName, "yes");
     }
 
-    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    @Test
     public void testExclusiveFromConfiguration() throws Exception {
         Path tmpDir = createTempDir();
 
         File src = new File(TriggersRefreshIT.class.getResource("generalTriggerWithExclusiveCfg").toURI());
         IOUtils.copy(src.toPath(), tmpDir);
 
-        Git repo = Git.init().setDirectory(tmpDir.toFile()).call();
+        Git repo = Git.init().setInitialBranch("master").setDirectory(tmpDir.toFile()).call();
         repo.add().addFilepattern(".").call();
         repo.commit().setMessage("import").call();
 
@@ -142,14 +142,14 @@ public class GeneralTriggerIT extends AbstractGeneralTriggerIT {
         orgApi.delete(orgName, "yes");
     }
 
-    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    @Test
     public void testExclusiveWithTriggerOverride() throws Exception {
         Path tmpDir = createTempDir();
 
         File src = new File(TriggersRefreshIT.class.getResource("generalTriggerWithExclusiveOverride").toURI());
         IOUtils.copy(src.toPath(), tmpDir);
 
-        Git repo = Git.init().setDirectory(tmpDir.toFile()).call();
+        Git repo = Git.init().setInitialBranch("master").setDirectory(tmpDir.toFile()).call();
         repo.add().addFilepattern(".").call();
         repo.commit().setMessage("import").call();
 

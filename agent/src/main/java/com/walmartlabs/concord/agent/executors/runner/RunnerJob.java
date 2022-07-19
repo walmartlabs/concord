@@ -183,7 +183,7 @@ public class RunnerJob {
                         .build())
                 .logging(LoggingConfiguration.builder()
                         .sendSystemOutAndErrToSLF4J(true)
-                        .segmentedLogDir(execCfg.logDir().toString())
+                        .segmentedLogs(execCfg.segmentedLogs())
                         .build())
                 .build();
     }

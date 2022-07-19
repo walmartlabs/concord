@@ -1,0 +1,13 @@
+configuration:
+  runtime: concord-v2
+
+flows:
+  onCron:
+    - log: "Hello, ${initiator}!"
+
+triggers:
+- cron:
+    spec: "* * * * *"
+    entryPoint: onCron
+    runAs:
+      withSecret: "test-run-as"

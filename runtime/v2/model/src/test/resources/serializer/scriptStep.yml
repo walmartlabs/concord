@@ -5,6 +5,11 @@ in:
 withItems:
 - "item1"
 - "item2"
+loop:
+  mode: "serial"
+  items:
+  - "item1"
+  - "item2"
 retry:
   times: "${times}"
   delay: "${delay}"

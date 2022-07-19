@@ -148,6 +148,7 @@ public class PlaybookInfoProcessor implements EventProcessor {
     }
 
     @Value.Immutable
+    @Value.Style(jdkOnly = true)
     interface PlaybookInfo {
 
         UUID instanceId();

@@ -147,6 +147,8 @@ public class RepositoryProcessor implements PayloadProcessor {
 
     public static final class RepositoryInfo implements Serializable {
 
+        private static final long serialVersionUID = 1L;
+
         private final UUID id;
         private final String name;
         private final String url;
@@ -215,6 +217,8 @@ public class RepositoryProcessor implements PayloadProcessor {
     }
 
     public static final class CommitInfo implements Serializable {
+
+        private static final long serialVersionUID = 1L;
 
         private final String id;
         private final String branch;

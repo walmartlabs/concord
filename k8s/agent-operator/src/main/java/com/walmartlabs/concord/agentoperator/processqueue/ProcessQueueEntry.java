@@ -30,6 +30,8 @@ import java.util.Map;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class ProcessQueueEntry implements Serializable {
 
+    private static final long serialVersionUID = 1L;
+
     private final Map<String, Object> requirements;
 
     @JsonCreator

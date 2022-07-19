@@ -9,9 +9,9 @@ package com.walmartlabs.concord.runtime.v2;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -42,14 +42,13 @@ public final class ProcessDefinitionUtils {
         return null;
     }
 
-    // TODO: add flow name into state local variable?
     private static boolean containsStep(List<Step> steps, Step step) {
         if (steps == null) {
             return false;
         }
 
         for (Step s : steps) {
-            if (s == step) {
+            if (s.getLocation().equals(step.getLocation())) {
                 return true;
             } else if (s instanceof IfStep) {
                 boolean contains = containsStep(((IfStep) s).getThenSteps(), step)
@@ -68,9 +67,37 @@ public final class ProcessDefinitionUtils {
                     return true;
                 }
             } else if (s instanceof GroupOfSteps) {
-                return containsStep(((GroupOfSteps) s).getSteps(), step);
+                GroupOfStepsOptions options = ((GroupOfSteps)s).getOptions();
+                if (options != null && containsStep(options.errorSteps(),step)) {
+                    return true;
+                }
+                if (containsStep(((GroupOfSteps) s).getSteps(), step)) {
+                    return true;
+                }
             } else if (s instanceof ParallelBlock) {
-                return containsStep(((ParallelBlock) s).getSteps(), step);
+                if (containsStep(((ParallelBlock) s).getSteps(), step)) {
+                    return true;
+                }
+            } else if (s instanceof TaskCall) {
+                TaskCallOptions options = ((TaskCall)s).getOptions();
+                if (options != null && containsStep(options.errorSteps(),step)) {
+                    return true;
+                }
+            } else if (s instanceof FlowCall) {
+                FlowCallOptions options = ((FlowCall)s).getOptions();
+                if (options != null && containsStep(options.errorSteps(),step)) {
+                    return true;
+                }
+            } else if (s instanceof ScriptCall) {
+                ScriptCallOptions options = ((ScriptCall)s).getOptions();
+                if (options != null && containsStep(options.errorSteps(),step)) {
+                    return true;
+                }
+            } else if (s instanceof Expression) {
+                ExpressionOptions options = ((Expression)s).getOptions();
+                if (options != null && containsStep(options.errorSteps(),step)) {
+                    return true;
+                }
             }
         }
         return false;
