@@ -308,29 +308,29 @@ class AnsibleHostList extends React.Component<Props, State> {
                             <Table.HeaderCell singleLine={true}>
                                 <div style={{ height:'0px', lineHeight:'36px' }}>Host</div>
                                 <ColumnSort 
-                                    ascSort={() => this.handleOrderByChange(SortField.host, SortOrder.ASC)} 
-                                    descSort={() => this.handleOrderByChange(SortField.host, SortOrder.DESC)} 
+                                    ascSort={() => this.handleOrderByChange(SortField.HOST, SortOrder.ASC)} 
+                                    descSort={() => this.handleOrderByChange(SortField.HOST, SortOrder.DESC)} 
                                 />
                             </Table.HeaderCell>
                             <Table.HeaderCell singleLine={true}>
                                 <div style={{ height:'0px', lineHeight:'36px' }}>Host Group</div>
                                 <ColumnSort
-                                    ascSort={() => this.handleOrderByChange(SortField.host_group, SortOrder.ASC)}
-                                    descSort={() => this.handleOrderByChange(SortField.host_group, SortOrder.DESC)}
+                                    ascSort={() => this.handleOrderByChange(SortField.HOST_GROUP, SortOrder.ASC)}
+                                    descSort={() => this.handleOrderByChange(SortField.HOST_GROUP, SortOrder.DESC)}
                                 />
                             </Table.HeaderCell>
                             <Table.HeaderCell singleLine={true}>
                                 <div style={{ height:'0px', lineHeight:'36px' }}>Host Status</div>
                                 <ColumnSort
-                                    ascSort={() => this.handleOrderByChange(SortField.status, SortOrder.ASC)}
-                                    descSort={() => this.handleOrderByChange(SortField.status, SortOrder.DESC)}
+                                    ascSort={() => this.handleOrderByChange(SortField.STATUS, SortOrder.ASC)}
+                                    descSort={() => this.handleOrderByChange(SortField.STATUS, SortOrder.DESC)}
                                 />
                             </Table.HeaderCell>
                             <Table.HeaderCell singleLine={true}>
                                 <div style={{ height:'0px', lineHeight:'36px' }}>Duration</div>
                                 <ColumnSort
-                                    ascSort={() => this.handleOrderByChange(SortField.duration, SortOrder.ASC)}
-                                    descSort={() => this.handleOrderByChange(SortField.duration, SortOrder.DESC)}
+                                    ascSort={() => this.handleOrderByChange(SortField.DURATION, SortOrder.ASC)}
+                                    descSort={() => this.handleOrderByChange(SortField.DURATION, SortOrder.DESC)}
                                 />
                             </Table.HeaderCell>
                         </Table.Row>

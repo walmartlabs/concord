@@ -39,6 +39,7 @@ import io.swagger.annotations.Authorization;
 import org.immutables.value.Value;
 import org.jooq.*;
 import org.sonatype.siesta.Resource;
+import org.sonatype.siesta.ValidationErrorsException;
 
 import javax.annotation.Nullable;
 import javax.inject.Inject;
@@ -302,6 +303,9 @@ public class ProcessAnsibleResource implements Resource {
                                            List<AnsibleHostStatus> statuses,
                                            UUID playbookId,
                                            int limit, int offset, SortField sortField, SortBy sortBy) {
+            
+            Field<String> orderField = assertSortField(sortField);
+            
             return txResult(tx -> {
                 AnsibleHosts a = ANSIBLE_HOSTS.as("a");
                 SelectConditionStep<Record4<String, String, Long, String>> q =
@@ -330,11 +334,11 @@ public class ProcessAnsibleResource implements Resource {
                     q.and(a.PLAYBOOK_ID.eq(playbookId));
                 }
                 
-                if (sortField != null) {
+                if (orderField != null) {
                     if (sortBy != null && sortBy.equals(SortBy.DESC)) {
-                        q.orderBy(Objects.requireNonNull(a.field(sortField.name())).desc());
+                        q.orderBy(orderField.desc());
                     }
-                    q.orderBy(Objects.requireNonNull(a.field(sortField.name())).asc());
+                    q.orderBy(orderField.asc());
                 }
                 else {
                     q.orderBy(a.HOST);
@@ -344,6 +348,19 @@ public class ProcessAnsibleResource implements Resource {
                         .offset(offset)
                         .fetch(AnsibleDao::toHostEntity);
             });
+        }
+
+        private static Field<String> assertSortField(SortField sortField) { 
+            if (sortField == null) {
+                return null;
+            }
+            
+            Field<String> orderField = (Field<String>) ANSIBLE_HOSTS.as("a").field(sortField.name().toLowerCase());
+            if (orderField == null) {
+                throw new ValidationErrorsException("Invalid sort field: " + sortField.name());
+            }
+            
+            return orderField;
         }
 
         public List<PlaybookEntry> listPlaybooks(UUID instanceId, OffsetDateTime createdAt) {
@@ -560,10 +577,10 @@ public class ProcessAnsibleResource implements Resource {
     }
     
     public enum SortField {
-        host,
-        duration,
-        status,
-        host_group
+        HOST,
+        DURATION,
+        STATUS,
+        HOST_GROUP
     }
     
     public enum SortBy {

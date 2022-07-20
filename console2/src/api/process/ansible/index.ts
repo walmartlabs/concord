@@ -48,10 +48,10 @@ export enum SortOrder {
 }
 
 export enum SortField {
-    host = 'host',
-    duration = 'duration',
-    status = 'status',
-    host_group = 'host_group'
+    HOST = 'HOST',
+    DURATION = 'DURATION',
+    STATUS = 'STATUS',
+    HOST_GROUP = 'HOST_GROUP'
 }
 
 export const getStatusColor = (status: AnsibleStatus) => {

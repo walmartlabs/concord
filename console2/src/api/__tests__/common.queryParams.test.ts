@@ -57,11 +57,11 @@ test('queryParams handles SearchFilter type', () => {
         limit: 1,
         offset: 10,
         status: AnsibleStatus.CHANGED,
-        sortField: SortField.duration,
+        sortField: SortField.DURATION,
         sortBy: SortOrder.DESC
     };
 
     const actual = queryParams({ ...filters });
-    const expected = 'host=host&hostGroup=host-group&limit=1&offset=10&status=CHANGED&sortField=duration&sortBy=DESC';
+    const expected = 'host=host&hostGroup=host-group&limit=1&offset=10&status=CHANGED&sortField=DURATION&sortBy=DESC';
     expect(actual).toEqual(expected);
 });
