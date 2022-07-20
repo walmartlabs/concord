@@ -20,19 +20,29 @@ package com.walmartlabs.concord.agentoperator.crd;
  * =====
  */
 
+import io.fabric8.kubernetes.api.model.KubernetesResource;
+import io.fabric8.kubernetes.api.model.Namespaced;
 import io.fabric8.kubernetes.client.CustomResource;
+import io.fabric8.kubernetes.model.annotation.*;
 
-public class AgentPool extends CustomResource {
 
+@Version(AgentPool.VERSION)
+@Group(AgentPool.CONCORD_GROUP)
+@Singular(AgentPool.SERVICE_SINGULAR_NAME)
+@Plural(AgentPool.SERVICE_PLURAL_NAME)
+@ShortNames("aps")
+@Kind(AgentPool.SERVICE_KIND)
+public class AgentPool extends CustomResource<AgentPoolConfiguration, KubernetesResource> implements Namespaced {
+
+    public static final String VERSION = "v1alpha1";
     private static final long serialVersionUID = 1L;
+    public static final String CONCORD_GROUP = "concord.walmartlabs.com";
+    public static final String SERVICE_KIND = "AgentPool";
+    public static final String SERVICE_LIST_KIND = "AgentPoolList";
+    public static final String SERVICE_SINGULAR_NAME = "agentpool";
+    public static final String SERVICE_PLURAL_NAME = "agentpools";
+    public static final String SERVICE_FULL_NAME = SERVICE_PLURAL_NAME + "." + CONCORD_GROUP;
 
-    private AgentPoolConfiguration spec;
 
-    public AgentPoolConfiguration getSpec() {
-        return spec;
-    }
-
-    public void setSpec(AgentPoolConfiguration spec) {
-        this.spec = spec;
-    }
 }
+
