@@ -17,6 +17,7 @@ jobs:
           docker rm -f $(docker ps -aq) || true
           docker system prune -af || true
           docker image prune -af || true
+          docker volume prune -f || true
 
       - uses: actions/checkout@v3
 
