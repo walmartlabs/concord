@@ -76,7 +76,10 @@ public class HttpServer {
         httpCfg.setRequestHeaderSize(cfg.getRequestHeaderSize());
         httpCfg.addCustomizer(new ForwardedRequestCustomizer());
 
-        ServerConnector http = new ServerConnector(server, new HttpConnectionFactory(httpCfg));
+        int cores = Runtime.getRuntime().availableProcessors();
+        int acceptors = Math.max(1, cores / 4);
+        int selectors = -1; // use the default value
+        ServerConnector http = new ServerConnector(server, acceptors, selectors, new HttpConnectionFactory(httpCfg));
         http.setName("http");
         http.setPort(cfg.getPort());
         server.addConnector(http);
@@ -90,7 +93,7 @@ public class HttpServer {
 
         // session timeout
         SessionHandler sessionHandler = contextHandler.getSessionHandler();
-        sessionHandler.setMaxInactiveInterval((int)cfg.getSessionTimeout().getSeconds());
+        sessionHandler.setMaxInactiveInterval((int) cfg.getSessionTimeout().getSeconds());
 
         // session cookies
         ServletContext context = contextHandler.getServletContext();
