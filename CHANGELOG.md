@@ -22,7 +22,10 @@ groups to roles
 ([#623](https://github.com/walmartlabs/concord/pull/623));
 - agent-operator: support for apiextensions.k8s.io/v1 crd
 to support k8s 1.22+
-([#624](https://github.com/walmartlabs/concord/pull/624)).
+([#624](https://github.com/walmartlabs/concord/pull/624));
+- concord-server: limit the number of acceptor threads to
+`core count / 4` (min 1)
+([#627](https://github.com/walmartlabs/concord/pull/627)).
 
 
 ## [1.95.0] - 2022-04-16
