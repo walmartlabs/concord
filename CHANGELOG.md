@@ -19,7 +19,10 @@ groups to roles
 - concord-cli: fixed broken JS support
 ([#612](https://github.com/walmartlabs/concord/pull/612));
 - concord-server, runtime-v2: fix file upload in forms
-([#623](https://github.com/walmartlabs/concord/pull/623)).
+([#623](https://github.com/walmartlabs/concord/pull/623));
+- agent-operator: support for apiextensions.k8s.io/v1 crd
+to support k8s 1.22+
+([#624](https://github.com/walmartlabs/concord/pull/624)).
 
 
 ## [1.95.0] - 2022-04-16
