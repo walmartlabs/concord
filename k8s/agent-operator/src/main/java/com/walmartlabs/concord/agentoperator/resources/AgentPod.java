@@ -21,7 +21,7 @@ package com.walmartlabs.concord.agentoperator.resources;
  */
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.walmartlabs.concord.agentoperator.crd.AgentPoolCRD;
+import com.walmartlabs.concord.agentoperator.crd.AgentPool;
 import com.walmartlabs.concord.agentoperator.crd.AgentPoolConfiguration;
 import com.walmartlabs.concord.agentoperator.scheduler.AgentPoolInstance;
 import io.fabric8.kubernetes.api.model.Pod;
@@ -57,7 +57,7 @@ public final class AgentPod {
 
         String podYaml = objectMapper.writeValueAsString(spec.getPod())
                 .replaceAll("%%podName%%", podName)
-                .replaceAll("%%app%%", AgentPoolCRD.SERVICE_FULL_NAME)
+                .replaceAll("%%app%%", AgentPool.SERVICE_FULL_NAME)
                 .replaceAll("%%" + POOL_NAME_LABEL + "%%", poolInstance.getName())
                 .replaceAll("%%configMapName%%", configMapName)
                 .replaceAll("%%" + CONFIG_HASH_LABEL + "%%", hash);
