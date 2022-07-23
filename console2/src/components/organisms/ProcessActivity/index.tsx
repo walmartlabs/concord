@@ -138,23 +138,39 @@ const ProcessActivity = (props: ExternalProps) => {
         toggleRefresh((prevState) => !prevState);
     }, []);
 
+    const [isIdle, setIsIdle] = useState(false);
+
     const idleTimer = useIdleTimer({
         timeout: IDLE_TIMEOUT,
         immediateEvents: ['visibilitychange'],
         onActive: (event?: Event) => {
-            console.log(event);
+            if (!isIdle || document.visibilityState !== 'visible') {
+                // visibility (probably browser tab) was changed. That immediately
+                // triggers onIdle(), but we want the timer to re-trigger at the
+                // actual timeout too for "abandoned" status
+                return;
+            }
+
             // this essentially prevents a data fetch on processes we already know are "final"
             if (process !== undefined && !isFinal(process.status)) {
                 setDataFetchInterval(DATA_FETCH_INTERVAL_ACTIVE);
             }
+
+            idleTimer.reset();
+            setIsIdle(false);
         },
         onIdle: () => {
-            const actuallyIdle = idleTimer.getTotalActiveTime() > IDLE_TIMEOUT; // user may just have switched tabs
+            const triggeredEarly = idleTimer.getElapsedTime() < IDLE_TIMEOUT; // user may just have switched tabs
             const visible = document.visibilityState === 'visible';
-            const interval =
-                actuallyIdle && visible ? DATA_FETCH_INTERVAL_IDLE : DATA_FETCH_INTERVAL_ABANDONED;
+            const interval = (!triggeredEarly && !visible) ? DATA_FETCH_INTERVAL_ABANDONED : DATA_FETCH_INTERVAL_IDLE;
 
             setDataFetchInterval(interval);
+
+            if (triggeredEarly) {
+                idleTimer.activate();  // keep using the same timer
+            } else {
+                setIsIdle(true);
+            }
         }
     });
 
