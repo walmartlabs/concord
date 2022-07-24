@@ -1132,11 +1132,6 @@
             </dependency>
             <dependency>
                 <groupId>io.fabric8</groupId>
-                <artifactId>kubernetes-model</artifactId>
-                <version>${kubernetes.client.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>io.fabric8</groupId>
                 <artifactId>kubernetes-model-common</artifactId>
                 <version>${kubernetes.client.version}</version>
             </dependency>
