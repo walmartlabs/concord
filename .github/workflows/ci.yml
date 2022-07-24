@@ -11,6 +11,7 @@ jobs:
     strategy:
       matrix:
         jdk_version: ['8', '11', '17']
+      fail-fast: false
 
     runs-on: self-hosted
 
