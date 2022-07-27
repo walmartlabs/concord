@@ -29,9 +29,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.nio.charset.StandardCharsets;
-import java.util.Base64;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
+import java.util.stream.Collectors;
 
 import static com.walmartlabs.concord.client.SecretsTaskParams.*;
 
@@ -133,7 +132,8 @@ public class SecretsTaskCommon {
         addIfPresent(m, Constants.Multipart.GENERATE_PASSWORD, in.generatePassword());
         addIfPresent(m, Constants.Multipart.VISIBILITY, in.visibility());
         addIfPresent(m, Constants.Multipart.PROJECT_NAME, in.projectName());
-
+        addIfPresent(m, Constants.Multipart.PROJECT_NAMES, (in.projectNames() != null) ? String.join(",", in.projectNames()) : null);
+        addIfPresent(m, Constants.Multipart.PROJECT_IDS, (in.projectIds() != null) ? in.projectIds().stream().map(UUID::toString).collect(Collectors.joining(",")) : null);
         return m;
     }
 
@@ -183,13 +183,17 @@ public class SecretsTaskCommon {
 
         String orgName = in.orgName(defaultOrg);
         String secretName = in.secretName();
+        List<String> projectNames = in.projectNames();
+        List<UUID> projectIds = in.projectIds();
 
         try {
             SecretsApi api = new SecretsApi(apiClient);
             api.update(orgName, secretName, new SecretUpdateRequest()
                     .setData(newData)
                     .setStorePassword(storePassword)
-                    .setNewStorePassword(newStorePassword));
+                    .setNewStorePassword(newStorePassword)
+                    .setProjectIds(projectIds)
+                    .setProjectNames(projectNames));
 
             log.info("The secret was successfully updated: {}", secretName);
             return Result.ok();

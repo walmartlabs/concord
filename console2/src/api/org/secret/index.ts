@@ -28,6 +28,7 @@ import {
     queryParams
 } from '../../common';
 import { ResourceAccessEntry } from '../';
+import { ProjectEntry } from '../project';
 
 export enum SecretVisibility {
     PUBLIC = 'PUBLIC',
@@ -65,8 +66,7 @@ export interface SecretEntry {
     orgId: ConcordId;
     orgName: ConcordKey;
 
-    projectId?: ConcordId;
-    projectName?: ConcordKey;
+    projects: ProjectEntry[];
 
     visibility: SecretVisibility;
     type: SecretType;
@@ -80,7 +80,7 @@ export interface SecretEntry {
 export interface NewSecretEntry {
     name: string;
     visibility: SecretVisibility;
-    projectName?: ConcordKey;
+    projects?: ProjectEntry[];
     type: SecretTypeExt;
     publicFile?: File;
     privateFile?: File;
@@ -194,7 +194,7 @@ export const updateSecretVisibility = (
 export const updateSecretProject = (
     orgName: ConcordKey,
     secretName: ConcordKey,
-    projectName: ConcordKey
+    projects: ProjectEntry[]
 ): Promise<GenericOperationResult> => {
     const opts = {
         method: 'POST',
@@ -202,7 +202,7 @@ export const updateSecretProject = (
             'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-            projectName
+            projectIds:projects.map(project => project.id)
         })
     };
 
@@ -261,15 +261,14 @@ export const create = (
         data.append('storeType', entry.storeType);
     }
 
-    if (entry.projectName) {
-        data.append('project', entry.projectName);
+    if (entry.projects) {
+        data.append('projectIds', entry.projects.map(project => project.id).join(","));
     }
 
     const opts = {
         method: 'POST',
         body: data
     };
-
     return fetchJson(`/api/v1/org/${orgName}/secret`, opts);
 };
 

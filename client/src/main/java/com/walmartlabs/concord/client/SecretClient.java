@@ -36,6 +36,7 @@ import java.lang.reflect.Type;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
+import java.util.stream.Collectors;
 
 public class SecretClient {
 
@@ -176,6 +177,10 @@ public class SecretClient {
 
         if (secretRequest.project() != null) {
             params.put(Constants.Multipart.PROJECT_NAME, secretRequest.project());
+        } else if (secretRequest.projectIds() != null) {
+            params.put(Constants.Multipart.PROJECT_IDS, secretRequest.projectIds().stream().map(UUID::toString).collect(Collectors.joining(",")));
+        } else if (secretRequest.projectNames() != null) {
+            params.put(Constants.Multipart.PROJECT_NAMES, String.join(",", secretRequest.projectNames()));
         }
 
         byte[] data = secretRequest.data();
@@ -208,14 +213,22 @@ public class SecretClient {
         Map<String, Object> params = new HashMap<>();
         params.put(Constants.Multipart.ORG_ID, request.newOrgId());
         params.put(Constants.Multipart.ORG_NAME, request.newOrgName());
-        params.put(Constants.Multipart.PROJECT_ID, request.newProjectId());
-        params.put(Constants.Multipart.PROJECT_NAME, request.newProjectName());
         params.put("removeProjectLink", request.removeProjectLink());
         params.put("ownerId", request.newOwnerId());
         params.put(Constants.Multipart.STORE_PASSWORD, request.currentPassword());
         params.put("newStorePassword", request.newPassword());
         params.put(Constants.Multipart.NAME, request.newName());
         params.put(Constants.Multipart.VISIBILITY, request.newVisibility());
+        params.put(Constants.Multipart.PROJECT_NAME, request.newProjectName());
+        if (request.newProjectId() != null) {
+            params.put(Constants.Multipart.PROJECT_ID, request.newProjectId());
+        } else if (request.newProjectName() != null) {
+            params.put(Constants.Multipart.PROJECT_NAME, request.newProjectName());
+        } else if (request.newProjectIds() != null) {
+            params.put(Constants.Multipart.PROJECT_IDS, request.newProjectIds().stream().map(UUID::toString).collect(Collectors.joining(",")));
+        } else if (request.newProjectNames() != null) {
+            params.put(Constants.Multipart.PROJECT_NAMES, String.join(",", request.newProjectNames()));
+        }
 
         byte[] data = request.data();
         CreateSecretRequest.KeyPair keyPair = request.keyPair();

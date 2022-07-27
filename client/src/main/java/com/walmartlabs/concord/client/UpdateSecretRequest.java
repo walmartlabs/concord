@@ -24,6 +24,7 @@ package com.walmartlabs.concord.client;
 import org.immutables.value.Value;
 
 import javax.annotation.Nullable;
+import java.util.List;
 import java.util.UUID;
 
 @Value.Immutable
@@ -37,10 +38,18 @@ public interface UpdateSecretRequest {
     String newOrgName();
 
     @Nullable
+    @Deprecated
     UUID newProjectId();
 
     @Nullable
+    @Deprecated
     String newProjectName();
+
+    @Nullable
+    List<String> newProjectNames();
+
+    @Nullable
+    List<UUID> newProjectIds();
 
     @Value.Default
     default boolean removeProjectLink() {

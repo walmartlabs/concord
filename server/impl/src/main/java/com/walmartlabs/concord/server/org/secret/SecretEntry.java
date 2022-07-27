@@ -9,9 +9,9 @@ package com.walmartlabs.concord.server.org.secret;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -20,16 +20,16 @@ package com.walmartlabs.concord.server.org.secret;
  * =====
  */
 
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.*;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
-import com.fasterxml.jackson.annotation.JsonProperty;
 import com.walmartlabs.concord.common.secret.SecretEncryptedByType;
 import com.walmartlabs.concord.common.validation.ConcordKey;
 import com.walmartlabs.concord.server.org.EntityOwner;
+import com.walmartlabs.concord.server.org.project.ProjectEntry;
 
 import javax.validation.constraints.NotNull;
 import java.io.Serializable;
+import java.util.Set;
 import java.util.UUID;
 
 @JsonInclude(Include.NON_NULL)
@@ -48,9 +48,13 @@ public class SecretEntry implements Serializable {
     @ConcordKey
     private final String orgName;
 
+    private final Set<ProjectEntry> projects;
+
+    @Deprecated
     private final UUID projectId;
 
     @ConcordKey
+    @Deprecated
     private final String projectName;
 
     @NotNull
@@ -70,6 +74,7 @@ public class SecretEntry implements Serializable {
                        @JsonProperty("name") String name,
                        @JsonProperty("orgId") UUID orgId,
                        @JsonProperty("orgName") String orgName,
+                       @JsonProperty("projects") Set<ProjectEntry> projects,
                        @JsonProperty("projectId") UUID projectId,
                        @JsonProperty("projectName") String projectName,
                        @JsonProperty("type") SecretType type,
@@ -82,6 +87,7 @@ public class SecretEntry implements Serializable {
         this.name = name;
         this.orgId = orgId;
         this.orgName = orgName;
+        this.projects = projects;
         this.projectId = projectId;
         this.projectName = projectName;
         this.type = type;
@@ -107,12 +113,16 @@ public class SecretEntry implements Serializable {
         return orgName;
     }
 
-    public UUID getProjectId() {
-        return projectId;
+    public Set<ProjectEntry> getProjects() {
+        return projects;
     }
 
     public String getProjectName() {
         return projectName;
+    }
+
+    public UUID getProjectId() {
+        return projectId;
     }
 
     public SecretType getType() {
@@ -142,8 +152,6 @@ public class SecretEntry implements Serializable {
                 ", name='" + name + '\'' +
                 ", orgId=" + orgId +
                 ", orgName='" + orgName + '\'' +
-                ", projectId='" + projectId + '\'' +
-                ", projectName='" + projectName + '\'' +
                 ", type=" + type +
                 ", encryptedBy=" + encryptedBy +
                 ", storeType=" + storeType +

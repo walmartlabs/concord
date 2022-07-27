@@ -543,6 +543,11 @@ public class Constants {
 
         public static final String PROJECT_ID = "projectId";
 
+        // Contains list of project ids
+        public static final String PROJECT_IDS = "projectIds";
+
+        public static final String PROJECT_NAMES = "projects";
+
         public static final String PROJECT_NAME = "project";
 
         public static final String STORE_TYPE = "storeType";

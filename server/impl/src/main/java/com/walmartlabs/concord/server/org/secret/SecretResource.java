@@ -56,10 +56,9 @@ import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.Collection;
-import java.util.List;
-import java.util.Objects;
-import java.util.UUID;
+import java.util.*;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @Named
 @Singleton
@@ -117,17 +116,23 @@ public class SecretResource implements Resource {
             String storePwd = getOrGenerateStorePassword(input, generatePwd);
             SecretVisibility visibility = getVisibility(input);
 
-            UUID projectId = getProject(input, org.getId());
+            Set<UUID> projectIds = getProjectIds(
+                    org.getId(),
+                    MultipartUtils.getUUIDList(input, Constants.Multipart.PROJECT_IDS),
+                    MultipartUtils.getStringList(input, Constants.Multipart.PROJECT_NAMES),
+                    MultipartUtils.getUuid(input, Constants.Multipart.PROJECT_ID),
+                    MultipartUtils.getString(input, Constants.Multipart.PROJECT_NAME)
+            );
 
             switch (type) {
                 case KEY_PAIR: {
-                    return createKeyPair(org.getId(), projectId, name, storePwd, visibility, input, storeType);
+                    return createKeyPair(org.getId(), projectIds, name, storePwd, visibility, input, storeType);
                 }
                 case USERNAME_PASSWORD: {
-                    return createUsernamePassword(org.getId(), projectId, name, storePwd, visibility, input, storeType);
+                    return createUsernamePassword(org.getId(), projectIds, name, storePwd, visibility, input, storeType);
                 }
                 case DATA: {
-                    return createData(org.getId(), projectId, name, storePwd, visibility, input, storeType);
+                    return createData(org.getId(), projectIds, name, storePwd, visibility, input, storeType);
                 }
                 default:
                     throw new ValidationErrorsException("Unsupported secret type: " + type);
@@ -149,14 +154,18 @@ public class SecretResource implements Resource {
                                          @ApiParam @Valid SecretUpdateRequest req) {
 
         OrganizationEntry org = orgManager.assertAccess(orgName, true);
-
+        Set<UUID> projectIds = getProjectIds(
+                org.getId(),
+                req.projectIds(),
+                req.projectNames(),
+                req.projectId(), req.projectName());
+        boolean removeProjectLink = (req.projectName() != null && req.projectName().trim().isEmpty()) || (req.projectNames() != null && req.projectNames().isEmpty()) || (req.projectIds() != null && req.projectIds().isEmpty());
         try {
             SecretUpdateParams newSecretParams = SecretUpdateParams.builder()
                     .newOrgId(req.orgId())
                     .newOrgName(req.orgName())
-                    .newProjectId(req.projectId())
-                    .newProjectName(req.projectName())
-                    .removeProjectLink(req.projectName() != null && req.projectName().trim().isEmpty())
+                    .newProjectIds(projectIds)
+                    .removeProjectLink(removeProjectLink)
                     .newOwnerId(getOwnerId(req.owner()))
                     .currentPassword(req.storePassword())
                     .newPassword(req.newStorePassword())
@@ -218,7 +227,7 @@ public class SecretResource implements Resource {
 
         try {
             return Response.ok((StreamingOutput) output -> output.write(entry.getData()),
-                    MediaType.APPLICATION_OCTET_STREAM)
+                            MediaType.APPLICATION_OCTET_STREAM)
                     .header(Constants.Headers.SECRET_TYPE, entry.getType().name())
                     .build();
         } catch (Exception e) {
@@ -333,41 +342,41 @@ public class SecretResource implements Resource {
         return new GenericOperationResult(OperationResult.UPDATED);
     }
 
-    private PublicKeyResponse createKeyPair(UUID orgId, UUID projectId, String name, String storePassword, SecretVisibility visibility, MultipartInput input, String storeType) throws IOException {
+    private PublicKeyResponse createKeyPair(UUID orgId, Set<UUID> projectIds, String name, String storePassword, SecretVisibility visibility, MultipartInput input, String storeType) throws IOException {
         DecryptedKeyPair k;
 
         InputStream publicKey = MultipartUtils.getStream(input, Constants.Multipart.PUBLIC);
         if (publicKey != null) {
             InputStream privateKey = MultipartUtils.assertStream(input, Constants.Multipart.PRIVATE);
             try {
-                k = secretManager.createKeyPair(orgId, projectId, name, storePassword, publicKey, privateKey, visibility, storeType);
+                k = secretManager.createKeyPair(orgId, projectIds, name, storePassword, publicKey, privateKey, visibility, storeType);
             } catch (IllegalArgumentException e) {
                 throw new ValidationErrorsException(e.getMessage());
             }
         } else {
-            k = secretManager.createKeyPair(orgId, projectId, name, storePassword, visibility, storeType);
+            k = secretManager.createKeyPair(orgId, projectIds, name, storePassword, visibility, storeType);
         }
 
         return new PublicKeyResponse(k.getId(), OperationResult.CREATED, storePassword, new String(k.getData()));
     }
 
-    private SecretOperationResponse createUsernamePassword(UUID orgId, UUID projectId, String name, String storePassword,
+    private SecretOperationResponse createUsernamePassword(UUID orgId, Set<UUID> projectIds, String name, String storePassword,
                                                            SecretVisibility visibility, MultipartInput input,
                                                            String storeType) {
 
         String username = MultipartUtils.assertString(input, Constants.Multipart.USERNAME);
         String password = MultipartUtils.assertString(input, Constants.Multipart.PASSWORD);
 
-        DecryptedUsernamePassword e = secretManager.createUsernamePassword(orgId, projectId, name, storePassword, username, password.toCharArray(), visibility, storeType);
+        DecryptedUsernamePassword e = secretManager.createUsernamePassword(orgId, projectIds, name, storePassword, username, password.toCharArray(), visibility, storeType);
         return new SecretOperationResponse(e.getId(), OperationResult.CREATED, storePassword);
     }
 
-    private SecretOperationResponse createData(UUID orgId, UUID projectId, String name, String storePassword,
+    private SecretOperationResponse createData(UUID orgId, Set<UUID> projectIds, String name, String storePassword,
                                                SecretVisibility visibility, MultipartInput input,
                                                String storeType) throws IOException {
 
         InputStream data = MultipartUtils.assertStream(input, Constants.Multipart.DATA);
-        DecryptedBinaryData e = secretManager.createBinaryData(orgId, projectId, name, storePassword, data, visibility, storeType);
+        DecryptedBinaryData e = secretManager.createBinaryData(orgId, projectIds, name, storePassword, data, visibility, storeType);
         return new SecretOperationResponse(e.getId(), OperationResult.CREATED, storePassword);
     }
 
@@ -464,14 +473,26 @@ public class SecretResource implements Resource {
         }
     }
 
-    private UUID getProject(MultipartInput input, UUID orgId) {
-        UUID id = MultipartUtils.getUuid(input, Constants.Multipart.PROJECT_ID);
-        String name = MultipartUtils.getString(input, Constants.Multipart.PROJECT_NAME);
-        if (id == null && name != null) {
-            id = projectDao.getId(orgId, name);
-            if (id == null) {
-                throw new ValidationErrorsException("Project not found: " + name);
-            }
+    private Set<UUID> getProjectIds(UUID orgId, List<UUID> projectIds, List<String> projectNames, UUID projectId, String projectName) {
+        if(projectIds != null && !projectIds.isEmpty()) {
+            return new HashSet<>(projectIds);
+        }
+        if (projectNames != null && !projectNames.isEmpty()) {
+            return projectNames.stream().map(name -> getProjectIdFromName(orgId, name)).collect(Collectors.toSet());
+        }
+        if (projectId != null) {
+            return new HashSet<>(Collections.singletonList(projectId));
+        }
+        if (projectName != null && !projectName.isEmpty()){
+            return new HashSet<>(Collections.singletonList(getProjectIdFromName(orgId, projectName)));
+        }
+        return null;
+    }
+
+    private UUID getProjectIdFromName(UUID orgId, String projectName) {
+        UUID id = projectDao.getId(orgId, projectName);
+        if (id == null) {
+            throw new ValidationErrorsException("Project not found: " + projectName);
         }
         return id;
     }

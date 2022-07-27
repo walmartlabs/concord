@@ -30,6 +30,7 @@ import org.immutables.value.Value;
 
 import javax.annotation.Nullable;
 import java.io.Serializable;
+import java.util.List;
 import java.util.UUID;
 
 @Value.Immutable
@@ -58,10 +59,18 @@ public interface SecretUpdateRequest extends Serializable {
     String newStorePassword();
 
     @Nullable
+    @Deprecated
     String projectName();
 
     @Nullable
+    @Deprecated
     UUID projectId();
+
+    @Nullable
+    List<String> projectNames();
+
+    @Nullable
+    List<UUID> projectIds();
 
     @Nullable
     UUID orgId();

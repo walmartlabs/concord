@@ -20,9 +20,7 @@ package com.walmartlabs.concord.it.server;
  * =====
  */
 
-import com.walmartlabs.concord.client.ProcessApi;
-import com.walmartlabs.concord.client.ProcessEntry;
-import com.walmartlabs.concord.client.StartProcessResponse;
+import com.walmartlabs.concord.client.*;
 import org.junit.jupiter.api.Test;
 
 import java.util.HashMap;
@@ -37,13 +35,28 @@ public class SecretsTaskIT extends AbstractServerIT {
 
     @Test
     public void test() throws Exception {
+        ProjectsApi projectsApi = new ProjectsApi(getApiClient());
+
+        String orgName = "Default";
+        String projectName1 = "project_"+ randomString();
+        String projectName2 = "project_" + randomString();
+
+        projectsApi.createOrUpdate(orgName, new ProjectEntry()
+                .setName(projectName2).setRawPayloadMode(ProjectEntry.RawPayloadModeEnum.EVERYONE));
+        projectsApi.createOrUpdate(orgName, new ProjectEntry()
+                .setName(projectName1).setRawPayloadMode(ProjectEntry.RawPayloadModeEnum.EVERYONE));
+
         String secretName = "secret_" + randomString();
 
         byte[] payload = archive(SecretsTaskIT.class.getResource("secretsTask").toURI());
 
         Map<String, Object> input = new HashMap<>();
         input.put("archive", payload);
+        input.put("org", orgName);
         input.put("arguments.secretName", secretName);
+        input.put("arguments.projectName1", projectName1);
+        input.put("arguments.projectName2", projectName2);
+        input.put("arguments.orgName", orgName);
 
         StartProcessResponse spr = start(input);
 

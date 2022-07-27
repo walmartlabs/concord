@@ -32,17 +32,17 @@ import com.walmartlabs.concord.server.jooq.tables.records.SecretsRecord;
 import com.walmartlabs.concord.server.org.EntityOwner;
 import com.walmartlabs.concord.server.org.ResourceAccessEntry;
 import com.walmartlabs.concord.server.org.ResourceAccessLevel;
+import com.walmartlabs.concord.server.org.project.ProjectEntry;
 import com.walmartlabs.concord.server.user.UserType;
 import org.jooq.*;
 import org.jooq.exception.DataAccessException;
 
 import javax.inject.Inject;
 import javax.inject.Named;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
+import java.util.stream.Collectors;
 
+import static com.walmartlabs.concord.server.jooq.Tables.SECRET_PROJECTS;
 import static com.walmartlabs.concord.server.jooq.Tables.V_USER_TEAMS;
 import static com.walmartlabs.concord.server.jooq.tables.Organizations.ORGANIZATIONS;
 import static com.walmartlabs.concord.server.jooq.tables.Projects.PROJECTS;
@@ -101,14 +101,14 @@ public class SecretDao extends AbstractDao {
                 .fetchOne(SECRETS.ORG_ID);
     }
 
-    public UUID insert(UUID orgId, UUID projectId, String name, UUID ownerId, SecretType type,
+    public UUID insert(UUID orgId, String name, UUID ownerId, SecretType type,
                        SecretEncryptedByType encryptedBy, String storeType,
                        SecretVisibility visibility, InsertMode insertMode) {
 
-        return txResult(tx -> insert(tx, orgId, projectId, name, ownerId, type, encryptedBy, storeType, visibility, insertMode));
+        return txResult(tx -> insert(tx, orgId, name, ownerId, type, encryptedBy, storeType, visibility, insertMode));
     }
 
-    public UUID insert(DSLContext tx, UUID orgId, UUID projectId, String name, UUID ownerId, SecretType type,
+    public UUID insert(DSLContext tx, UUID orgId, String name, UUID ownerId, SecretType type,
                        SecretEncryptedByType encryptedBy, String storeType,
                        SecretVisibility visibility, InsertMode insertMode) {
 
@@ -116,12 +116,11 @@ public class SecretDao extends AbstractDao {
                 .columns(SECRETS.SECRET_NAME,
                         SECRETS.SECRET_TYPE,
                         SECRETS.ORG_ID,
-                        SECRETS.PROJECT_ID,
                         SECRETS.OWNER_ID,
                         SECRETS.ENCRYPTED_BY,
                         SECRETS.STORE_TYPE,
                         SECRETS.VISIBILITY)
-                .values(name, type.toString(), orgId, projectId, ownerId, encryptedBy.toString(), storeType, visibility.toString());
+                .values(name, type.toString(), orgId, ownerId, encryptedBy.toString(), storeType, visibility.toString());
 
         if (insertMode == InsertMode.UPSERT) {
             Optional<SecretsRecord> secretsRecord = builder.onDuplicateKeyIgnore()
@@ -141,9 +140,10 @@ public class SecretDao extends AbstractDao {
     }
 
     public SecretEntry get(UUID id) {
-        return selectEntry(dsl())
+        DSLContext tx = dsl();
+        return selectEntry(tx)
                 .where(SECRETS.SECRET_ID.eq(id))
-                .fetchOne(SecretDao::toEntry);
+                .fetchOne(secretRecord -> toEntry(tx, secretRecord));
     }
 
     public byte[] getData(UUID id) {
@@ -154,18 +154,19 @@ public class SecretDao extends AbstractDao {
     }
 
     public SecretEntry getByName(UUID orgId, String name) {
-        return selectEntry(dsl())
+        DSLContext tx = dsl();
+        return selectEntry(tx)
                 .where(SECRETS.ORG_ID.eq(orgId)
                         .and(SECRETS.SECRET_NAME.eq(name)))
-                .fetchOne(SecretDao::toEntry);
+                .fetchOne(secretRecord -> toEntry(tx, secretRecord));
     }
 
     public void updateProjectScopeByProjectId(DSLContext tx, UUID orgId, UUID projectId, UUID newProjectId) {
-        tx.update(SECRETS)
-                .set(SECRETS.PROJECT_ID, newProjectId)
-                .where(SECRETS.ORG_ID.eq(orgId))
-                .and(SECRETS.PROJECT_ID.eq(projectId))
-                .execute();
+        if (newProjectId == null) {
+            tx.deleteFrom(SECRET_PROJECTS).where(SECRET_PROJECTS.PROJECT_ID.eq(projectId));
+        } else {
+            tx.update(SECRET_PROJECTS).set(SECRET_PROJECTS.PROJECT_ID, newProjectId).where(SECRET_PROJECTS.PROJECT_ID.eq(projectId));
+        }
     }
 
     public void updateData(UUID id, byte[] data) {
@@ -183,55 +184,76 @@ public class SecretDao extends AbstractDao {
         }
     }
 
-    public void update(UUID id, String newName, UUID ownerId, SecretType newType, byte[] data, SecretVisibility visibility, UUID projectId, UUID orgId) {
-        tx(tx -> update(tx, id, newName, ownerId, newType, data, visibility, projectId, orgId));
+    public void update(UUID id, String newName, UUID ownerId, SecretType newType, byte[] data, SecretVisibility visibility, UUID orgId) {
+        tx(tx -> update(tx, id, newName, ownerId, newType, data, visibility, orgId));
     }
 
-    public void update(DSLContext tx, UUID id, String newName, UUID ownerId, SecretType newType, byte[] data, SecretVisibility visibility, UUID projectId, UUID orgId) {
-        UpdateSetMoreStep<SecretsRecord> u = tx.update(SECRETS).set(SECRETS.PROJECT_ID, projectId);
+    public void updateSecretProjects(UUID id, Set<UUID> projectIds) {
+        tx(tx -> updateSecretProjects(tx, id, projectIds));
+    }
 
+    public void updateSecretProjects(DSLContext tx, UUID id, Set<UUID> projectIds) {
+        if(projectIds != null) {
+            tx.deleteFrom(SECRET_PROJECTS).where(SECRET_PROJECTS.SECRET_ID.eq(id)).execute();
+            for (UUID projectId : projectIds) {
+                tx.insertInto(SECRET_PROJECTS).columns(SECRET_PROJECTS.SECRET_ID, SECRET_PROJECTS.PROJECT_ID).values(id, projectId).execute();
+            }
+        }
+    }
+
+    public void update(DSLContext tx, UUID id, String newName, UUID ownerId, SecretType newType, byte[] data, SecretVisibility visibility, UUID orgId) {
+        UpdateSetFirstStep<SecretsRecord> u = tx.update(SECRETS);
+        boolean needUpdate = false;
         if (newName != null) {
             u.set(SECRETS.SECRET_NAME, newName);
+            needUpdate = true;
         }
 
         if (ownerId != null) {
             u.set(SECRETS.OWNER_ID, ownerId);
+            needUpdate = true;
         }
 
         if (visibility != null) {
             u.set(SECRETS.VISIBILITY, visibility.toString());
+            needUpdate = true;
         }
 
         if (newType != null) {
             u.set(SECRETS.SECRET_TYPE, newType.name());
+            needUpdate = true;
         }
 
         if (data != null) {
             u.set(SECRETS.SECRET_DATA, data);
+            needUpdate = true;
         }
 
         if (orgId != null) {
             u.set(SECRETS.ORG_ID, orgId);
+            needUpdate = true;
+        }
+        if (needUpdate) {
+            int i = ((UpdateSetMoreStep) u).where(SECRETS.SECRET_ID.eq(id))
+                    .execute();
+
+            if (i != 1) {
+                throw new DataAccessException("Invalid number of rows updated: " + i);
+            }
         }
 
-        int i = u.where(SECRETS.SECRET_ID.eq(id))
-                .execute();
-
-        if (i != 1) {
-            throw new DataAccessException("Invalid number of rows updated: " + i);
-        }
     }
 
     public List<SecretEntry> list(UUID orgId, UUID currentUserId, Field<?> sortField, boolean asc, int offset, int limit, String filter) {
 
         Organizations o = ORGANIZATIONS.as("o");
         Secrets s = SECRETS.as("s");
-        Projects p = PROJECTS.as("p");
         Users u = USERS.as("u");
 
         sortField = s.field(sortField);
 
-        SelectOnConditionStep<Record15<UUID, String, UUID, String, UUID, String, String, String, String, String, UUID, String, String, String, String>> q = selectEntry(dsl(), o, s, p, u);
+        DSLContext tx = dsl();
+        SelectOnConditionStep<Record13<UUID, String, UUID, String, String, String, String, String, UUID, String, String, String, String>> q = selectEntry(tx, o, s, u);
 
         if (currentUserId != null) {
             // public secrets are visible for anyone
@@ -276,7 +298,7 @@ public class SecretDao extends AbstractDao {
             q.limit(limit);
         }
 
-        return q.fetch(SecretDao::toEntry);
+        return q.fetch(secretRecord -> toEntry(tx, secretRecord));
     }
 
     public void delete(UUID id) {
@@ -293,10 +315,10 @@ public class SecretDao extends AbstractDao {
         List<ResourceAccessEntry> resourceAccessList = new ArrayList<>();
 
         Result<Record4<UUID, UUID, String, String>> teamAccess = dsl().select(
-                SECRET_TEAM_ACCESS.TEAM_ID,
-                SECRET_TEAM_ACCESS.SECRET_ID,
-                TEAMS.TEAM_NAME,
-                SECRET_TEAM_ACCESS.ACCESS_LEVEL)
+                        SECRET_TEAM_ACCESS.TEAM_ID,
+                        SECRET_TEAM_ACCESS.SECRET_ID,
+                        TEAMS.TEAM_NAME,
+                        SECRET_TEAM_ACCESS.ACCESS_LEVEL)
                 .from(SECRET_TEAM_ACCESS)
                 .leftOuterJoin(TEAMS).on(TEAMS.TEAM_ID.eq(SECRET_TEAM_ACCESS.TEAM_ID))
                 .where(SECRET_TEAM_ACCESS.SECRET_ID.eq(getByName(orgId, name).getId()))
@@ -346,43 +368,46 @@ public class SecretDao extends AbstractDao {
                 .execute();
     }
 
-    private static SelectOnConditionStep<Record15<UUID, String, UUID, String, UUID, String, String, String, String, String, UUID, String, String, String, String>> selectEntry(DSLContext tx) {
-        return selectEntry(tx, ORGANIZATIONS, SECRETS, PROJECTS, USERS);
+    private static SelectOnConditionStep<Record13<UUID, String, UUID, String, String, String, String, String, UUID, String, String, String, String>> selectEntry(DSLContext tx) {
+        return selectEntry(tx, ORGANIZATIONS, SECRETS, USERS);
     }
 
-    private static SelectOnConditionStep<Record15<UUID, String, UUID, String, UUID, String, String, String, String, String, UUID, String, String, String, String>> selectEntry(DSLContext tx,
-                                                                                                                                                                               Organizations orgAlias,
-                                                                                                                                                                               Secrets secretAlias,
-                                                                                                                                                                               Projects projectAlias,
-                                                                                                                                                                               Users userAlias) {
+    private static SelectOnConditionStep<Record13<UUID, String, UUID, String, String, String, String, String, UUID, String, String, String, String>> selectEntry(DSLContext tx,
+                                                                                                                                                                 Organizations orgAlias,
+                                                                                                                                                                 Secrets secretAlias,
+                                                                                                                                                                 Users userAlias) {
         return tx.select(secretAlias.SECRET_ID,
-                secretAlias.SECRET_NAME,
-                secretAlias.ORG_ID,
-                orgAlias.ORG_NAME,
-                secretAlias.PROJECT_ID,
-                projectAlias.PROJECT_NAME,
-                secretAlias.SECRET_TYPE,
-                secretAlias.ENCRYPTED_BY,
-                secretAlias.STORE_TYPE,
-                secretAlias.VISIBILITY,
-                userAlias.USER_ID,
-                userAlias.USERNAME,
-                userAlias.DOMAIN,
-                userAlias.DISPLAY_NAME,
-                userAlias.USER_TYPE)
+                        secretAlias.SECRET_NAME,
+                        secretAlias.ORG_ID,
+                        orgAlias.ORG_NAME,
+                        secretAlias.SECRET_TYPE,
+                        secretAlias.ENCRYPTED_BY,
+                        secretAlias.STORE_TYPE,
+                        secretAlias.VISIBILITY,
+                        userAlias.USER_ID,
+                        userAlias.USERNAME,
+                        userAlias.DOMAIN,
+                        userAlias.DISPLAY_NAME,
+                        userAlias.USER_TYPE)
                 .from(secretAlias)
                 .leftJoin(userAlias).on(secretAlias.OWNER_ID.eq(userAlias.USER_ID))
-                .leftJoin(projectAlias).on(projectAlias.PROJECT_ID.eq(secretAlias.PROJECT_ID))
                 .leftJoin(orgAlias).on(orgAlias.ORG_ID.eq(secretAlias.ORG_ID));
     }
 
-    private static SecretEntry toEntry(Record15<UUID, String, UUID, String, UUID, String, String, String, String, String, UUID, String, String, String, String> r) {
+    private static SecretEntry toEntry(DSLContext tx, Record13<UUID, String, UUID, String, String, String, String, String, UUID, String, String, String, String> r) {
+        UUID secretId = r.get(SECRETS.SECRET_ID);
+        Set<ProjectEntry> projects = tx.select(PROJECTS.PROJECT_ID, PROJECTS.PROJECT_NAME).from(PROJECTS).leftJoin(SECRET_PROJECTS).on(PROJECTS.PROJECT_ID.eq(SECRET_PROJECTS.PROJECT_ID))
+                .where(SECRET_PROJECTS.SECRET_ID.eq(secretId)).stream()
+                .map(projectRecord -> new ProjectEntry(projectRecord.get(PROJECTS.PROJECT_NAME), projectRecord.get(PROJECTS.PROJECT_ID))).collect(Collectors.toSet());
+        String projectName = projects.stream().map(ProjectEntry::getName).findFirst().orElse(null);
+        UUID projectId = projects.stream().map(ProjectEntry::getId).findFirst().orElse(null);
         return new SecretEntry(r.get(SECRETS.SECRET_ID),
                 r.get(SECRETS.SECRET_NAME),
                 r.get(SECRETS.ORG_ID),
                 r.value4(),
-                r.get(SECRETS.PROJECT_ID),
-                r.value6(),
+                projects,
+                projectId,
+                projectName,
                 SecretType.valueOf(r.get(SECRETS.SECRET_TYPE)),
                 SecretEncryptedByType.valueOf(r.get(SECRETS.ENCRYPTED_BY)),
                 r.get(SECRETS.STORE_TYPE),
@@ -390,7 +415,7 @@ public class SecretDao extends AbstractDao {
                 toOwner(r));
     }
 
-    private static EntityOwner toOwner(Record15<UUID, String, UUID, String, UUID, String, String, String, String, String, UUID, String, String, String, String> r) {
+    private static EntityOwner toOwner(Record13<UUID, String, UUID, String, String, String, String, String, UUID, String, String, String, String> r) {
         UUID id = r.get(USERS.USER_ID);
         if (id == null) {
             return null;
@@ -412,15 +437,14 @@ public class SecretDao extends AbstractDao {
         private final byte[] data;
 
         public SecretDataEntry(SecretEntry s, byte[] data) { // NOSONAR
-            this(s.getId(), s.getName(), s.getOrgId(), s.getOrgName(), s.getProjectId(), s.getProjectName(),
+            this(s.getId(), s.getName(), s.getOrgId(), s.getOrgName(), s.getProjects(), s.getProjectId(), s.getProjectName(),
                     s.getType(), s.getEncryptedBy(), s.getStoreType(), s.getVisibility(), s.getOwner(), data);
         }
 
-        public SecretDataEntry(UUID id, String name, UUID orgId, String orgName, UUID projectId, String projectName, SecretType type,
+        public SecretDataEntry(UUID id, String name, UUID orgId, String orgName, Set<ProjectEntry> projects, UUID projectId, String projectName, SecretType type,
                                SecretEncryptedByType encryptedByType, String storeType, SecretVisibility visibility,
                                EntityOwner owner, byte[] data) { // NOSONAR
-
-            super(id, name, orgId, orgName, projectId, projectName, type, encryptedByType, storeType, visibility, owner);
+            super(id, name, orgId, orgName, projects, projectId, projectName, type, encryptedByType, storeType, visibility, owner);
             this.data = data;
         }
 
