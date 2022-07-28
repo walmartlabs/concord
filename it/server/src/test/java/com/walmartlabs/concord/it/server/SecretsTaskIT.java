@@ -53,6 +53,7 @@ public class SecretsTaskIT extends AbstractServerIT {
         Map<String, Object> input = new HashMap<>();
         input.put("archive", payload);
         input.put("org", orgName);
+        input.put("project", projectName1);
         input.put("arguments.secretName", secretName);
         input.put("arguments.projectName1", projectName1);
         input.put("arguments.projectName2", projectName2);
