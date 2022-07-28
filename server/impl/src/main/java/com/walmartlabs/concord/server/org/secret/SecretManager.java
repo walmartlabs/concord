@@ -664,7 +664,7 @@ public class SecretManager {
             throw new IllegalStateException("Process not found: " + session.getProcessKey());
         }
 
-        if (p.projectId() !=null && projectIds.stream().noneMatch(p.projectId()::equals)) {
+        if (p.projectId() == null || projectIds.stream().noneMatch(p.projectId()::equals)) {
             throw new UnauthorizedException("Project-scoped secrets can only be accessed within the project they belong to. Secret: " + e.getName());
         }
     }
