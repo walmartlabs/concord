@@ -20,9 +20,7 @@ package com.walmartlabs.concord.it.server;
  * =====
  */
 
-import com.walmartlabs.concord.ApiException;
 import com.walmartlabs.concord.client.*;
-import org.junit.Before;
 import org.junit.jupiter.api.Test;
 
 import java.util.*;
