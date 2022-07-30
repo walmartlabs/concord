@@ -494,6 +494,7 @@
                                         </network>
                                         <env>
                                             <POSTGRES_PASSWORD>it</POSTGRES_PASSWORD>
+                                            <POSTGRES_INITDB_ARGS>--no-sync</POSTGRES_INITDB_ARGS>
                                         </env>
                                         <wait>
                                             <log>(?s).*ready for start up.*ready to accept connections.*</log>
