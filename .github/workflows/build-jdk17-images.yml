@@ -1,0 +1,94 @@
+# Custom build flow to publish concord-base, concord-server and concord-agent multi-arch images using JDK17
+
+name: build-jdk17-images
+
+on:
+  push:
+    branches: [ 'master' ]
+  pull_request:
+    branches: [ 'master' ]
+  workflow_dispatch:
+    inputs:
+      tag:
+        type: string
+        required: true
+        description: Release tag
+
+env:
+  DOCKER_REGISTRY: "ibodrov"
+  TAG: "1.95.0"
+
+jobs:
+  build-jdk17-images:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          ref: ${{ env.TAG }}
+
+      - name: Set up JDK
+        uses: actions/setup-java@v3
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+      - name: Download release artifacts
+        run: ./mvnw -C -B -f docker-images clean install -DskipTests
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v1
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v1
+
+      - name: Login to DockerHub
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.OSS_DOCKERHUB_USERNAME }}
+          password: ${{ secrets.OSS_DOCKERHUB_PASSWORD }}
+
+      # workaround for docker/build-push-action@v3 not working well with our project structure
+      - run: |
+          ls -lah
+          find .
+          cp ./docker-images/base/oss/centos/Dockerfile ./docker-images/base/
+          cp ./docker-images/server/oss/centos/Dockerfile ./docker-images/server/
+          cp ./docker-images/agent/oss/centos/Dockerfile ./docker-images/agent/
+
+      - name: Build and push the base image
+        uses: docker/build-push-action@v3
+        with:
+          push: true
+          context: ./docker-images/base
+          platforms: linux/amd64, linux/aarch64
+          build-args: |
+            jdk_url=https://github.com/adoptium/temurin17-binaries/releases/download/jdk-17.0.3%2B7/OpenJDK17U-jdk_aarch64_linux_hotspot_17.0.3_7.tar.gz
+          tags: |
+            walmartlabs/concord-base:${{ env.TAG }}-jdk17
+
+      - name: Build and push the server image
+        uses: docker/build-push-action@v3
+        with:
+          push: true
+          context: ./docker-images/server
+          platforms: linux/amd64, linux/aarch64
+          build-args: |
+            docker_namespace=$DOCKER_REGISTRY
+            concord_version=latest
+            jdk_url=https://github.com/adoptium/temurin17-binaries/releases/download/jdk-17.0.3%2B7/OpenJDK17U-jdk_aarch64_linux_hotspot_17.0.3_7.tar.gz
+          tags: |
+            $DOCKER_REGISTRY/concord-server:${{ env.TAG }}-jdk17
+
+      - name: Build and push the agent image
+        uses: docker/build-push-action@v3
+        with:
+          push: true
+          context: ./docker-images/agent
+          platforms: linux/amd64, linux/aarch64
+          build-args: |
+            docker_namespace=$DOCKER_REGISTRY
+            concord_version=latest
+            jdk_url=https://github.com/adoptium/temurin17-binaries/releases/download/jdk-17.0.3%2B7/OpenJDK17U-jdk_aarch64_linux_hotspot_17.0.3_7.tar.gz
+          tags: |
+            $DOCKER_REGISTRY/concord-agent:${{ env.TAG }}-jdk17

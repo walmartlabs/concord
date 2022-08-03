@@ -1,16 +1,16 @@
-name: Build and test
+name: build
 
 on:
   push:
-    branches: [ 'master' ]
+    branches: [ 'master_TODO' ] # TODO
   pull_request:
-    branches: [ 'master' ]
+    branches: [ 'master_TODO' ] # TODO
 
 jobs:
   build:
     strategy:
       matrix:
-        jdk_version: ['8', '11', '17']
+        jdk_version: ['8', '11']
       fail-fast: false
 
     runs-on: self-hosted
@@ -36,5 +36,5 @@ jobs:
           rm -rf ~/.m2/repository/com/walmartlabs/concord
           rm -rf ~/actions-runner/.m2/repository/com/walmartlabs/concord
 
-      - name: Build with Maven
+      - name: Build and test with Maven
         run: ./mvnw -B clean install -Pdocker -Pit -Pjdk${{ matrix.jdk_version }}
