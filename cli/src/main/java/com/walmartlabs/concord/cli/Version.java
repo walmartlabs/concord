@@ -1,4 +1,4 @@
-package com.walmartlabs.concord.agentoperator.crd;
+package com.walmartlabs.concord.cli;
 
 /*-
  * *****
@@ -20,17 +20,24 @@ package com.walmartlabs.concord.agentoperator.crd;
  * =====
  */
 
-import io.fabric8.kubernetes.api.KubernetesResourceMappingProvider;
-import io.fabric8.kubernetes.api.model.KubernetesResource;
+import java.io.IOException;
+import java.util.Properties;
 
-import java.util.Collections;
-import java.util.Map;
+public class Version {
 
-public class AgentPoolMappingProvider implements KubernetesResourceMappingProvider {
+    private static final String VERSION;
 
-    @Override
-    public Map<String, Class<? extends KubernetesResource>> getMappings() {
-        String key = AgentPoolCRD.CONCORD_GROUP + "/" + AgentPoolCRD.VERSION + "#" + AgentPoolCRD.SERVICE_KIND;
-        return Collections.singletonMap(key, AgentPool.class);
+    static {
+        Properties props = new Properties();
+        try {
+            props.load(Version.class.getClassLoader().getResourceAsStream("project.properties"));
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+        VERSION = props.getProperty("project.version");
+    }
+
+    public static String getVersion() {
+        return VERSION;
     }
 }
