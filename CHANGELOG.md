@@ -25,7 +25,9 @@ to support k8s 1.22+
 ([#624](https://github.com/walmartlabs/concord/pull/624));
 - concord-server: limit the number of acceptor threads to
 `core count / 4` (min 1)
-([#627](https://github.com/walmartlabs/concord/pull/627)).
+([#627](https://github.com/walmartlabs/concord/pull/627));
+- project: update to Groovy 2.5.17 to support JDK 17
+([#639](https://github.com/walmartlabs/concord/pull/639)).
 
 
 ## [1.95.0] - 2022-04-16
