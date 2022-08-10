@@ -9,6 +9,9 @@
 - concord-server: implement endpoints for adding LDAP
 groups to roles
 ([#606](https://github.com/walmartlabs/concord/pull/606));
+- concord-ansile, concord-console: add sort options to the
+Ansible host stats
+([#610](https://github.com/walmartlabs/concord/pull/610);
 - docker-images: support for debian os based docker images
 ([#611](https://github.com/walmartlabs/concord/pull/611)).
 
