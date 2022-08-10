@@ -48,19 +48,12 @@ jobs:
           username: ${{ secrets.OSS_DOCKERHUB_USERNAME }}
           password: ${{ secrets.OSS_DOCKERHUB_PASSWORD }}
 
-      # workaround for docker/build-push-action@v3 not working well with our project structure
-      - run: |
-          ls -lah
-          find .
-          cp ./docker-images/base/oss/centos/Dockerfile ./docker-images/base/
-          cp ./docker-images/server/oss/centos/Dockerfile ./docker-images/server/
-          cp ./docker-images/agent/oss/centos/Dockerfile ./docker-images/agent/
-
       - name: Build and push the base image
         uses: docker/build-push-action@v3
         with:
           push: true
           context: ./docker-images/base
+          file: ./docker-images/base/oss/centos
           platforms: linux/amd64, linux/aarch64
           build-args: |
             jdk_url=https://github.com/adoptium/temurin17-binaries/releases/download/jdk-17.0.3%2B7/OpenJDK17U-jdk_aarch64_linux_hotspot_17.0.3_7.tar.gz
@@ -72,6 +65,7 @@ jobs:
         with:
           push: true
           context: ./docker-images/server
+          file: ./docker-images/server/oss/centos
           platforms: linux/amd64, linux/aarch64
           build-args: |
             docker_namespace=$DOCKER_REGISTRY
@@ -85,6 +79,7 @@ jobs:
         with:
           push: true
           context: ./docker-images/agent
+          file: ./docker-images/agent/oss/centos
           platforms: linux/amd64, linux/aarch64
           build-args: |
             docker_namespace=$DOCKER_REGISTRY
