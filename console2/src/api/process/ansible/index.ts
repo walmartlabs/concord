@@ -29,6 +29,8 @@ export interface SearchFilter {
     status?: AnsibleStatus;
     statuses?: AnsibleStatus[];
     playbookId?: ConcordId;
+    sortField?: SortField;
+    sortBy?: SortOrder;
 }
 
 export enum AnsibleStatus {
@@ -38,6 +40,18 @@ export enum AnsibleStatus {
     RUNNING = 'RUNNING',
     SKIPPED = 'SKIPPED',
     UNREACHABLE = 'UNREACHABLE'
+}
+
+export enum SortOrder {
+    ASC = 'ASC',
+    DESC = 'DESC'
+}
+
+export enum SortField {
+    HOST = 'HOST',
+    DURATION = 'DURATION',
+    STATUS = 'STATUS',
+    HOST_GROUP = 'HOST_GROUP'
 }
 
 export const getStatusColor = (status: AnsibleStatus) => {
