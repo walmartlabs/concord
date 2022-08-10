@@ -21,6 +21,8 @@ Ansible host stats
 ([#609](https://github.com/walmartlabs/concord/pull/609);
 - concord-cli: fixed broken JS support
 ([#612](https://github.com/walmartlabs/concord/pull/612));
+- concord-repository: use regular repositories in tests
+([#616](https://github.com/walmartlabs/concord/pull/616));
 - concord-server, runtime-v2: fix file upload in forms
 ([#623](https://github.com/walmartlabs/concord/pull/623));
 - agent-operator: support for apiextensions.k8s.io/v1 crd
