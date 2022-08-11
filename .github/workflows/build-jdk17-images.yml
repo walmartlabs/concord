@@ -53,7 +53,7 @@ jobs:
         with:
           push: true
           context: ./docker-images/base
-          file: ./docker-images/base/oss/centos
+          file: ./docker-images/base/oss/centos/Dockerfile
           platforms: linux/amd64, linux/aarch64
           build-args: |
             jdk_url=https://github.com/adoptium/temurin17-binaries/releases/download/jdk-17.0.3%2B7/OpenJDK17U-jdk_aarch64_linux_hotspot_17.0.3_7.tar.gz
@@ -65,7 +65,7 @@ jobs:
         with:
           push: true
           context: ./docker-images/server
-          file: ./docker-images/server/oss/centos
+          file: ./docker-images/server/oss/centos/Dockerfile
           platforms: linux/amd64, linux/aarch64
           build-args: |
             docker_namespace=$DOCKER_REGISTRY
@@ -79,7 +79,7 @@ jobs:
         with:
           push: true
           context: ./docker-images/agent
-          file: ./docker-images/agent/oss/centos
+          file: ./docker-images/agent/oss/centos/Dockerfile
           platforms: linux/amd64, linux/aarch64
           build-args: |
             docker_namespace=$DOCKER_REGISTRY
