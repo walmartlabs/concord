@@ -10,6 +10,10 @@ on:
         required: true
         description: Release tag
 
+concurrency:
+  group: ${{ github.ref }}-build-jdk17-images
+  cancel-in-progress: true
+
 env:
   DOCKER_REGISTRY: "ibodrov"
 
