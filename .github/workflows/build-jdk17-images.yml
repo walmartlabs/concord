@@ -23,6 +23,13 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      - name: Clear old Docker resources
+        run: |
+          docker rm -f $(docker ps -aq) || true
+          docker system prune -af || true
+          docker image prune -af || true
+          docker volume prune -f || true
+
       - uses: actions/checkout@v3
         with:
           ref: ${{ env.TAG }}
