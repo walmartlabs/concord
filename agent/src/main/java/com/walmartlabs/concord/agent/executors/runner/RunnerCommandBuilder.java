@@ -35,7 +35,7 @@ public class RunnerCommandBuilder {
     private boolean exposeDockerDaemon;
     private List<String> extraJvmParams;
     private String mainClass;
-    private boolean jdk9OrHigher;
+    private int majorJavaVersion;
 
     public RunnerCommandBuilder() {
     }
@@ -85,8 +85,8 @@ public class RunnerCommandBuilder {
         return this;
     }
 
-    public RunnerCommandBuilder jdk9OrHigher(boolean jdk9OrHigher) {
-        this.jdk9OrHigher = jdk9OrHigher;
+    public RunnerCommandBuilder majorJavaVersion(int majorJavaVersion) {
+        this.majorJavaVersion = majorJavaVersion;
         return this;
     }
 
@@ -136,7 +136,8 @@ public class RunnerCommandBuilder {
 
         l.add("-Dconcord.exposeDockerDaemon=" + exposeDockerDaemon);
 
-        if (jdk9OrHigher) {
+        // Java 9+ requires additional add-opens for compatibility
+        if (majorJavaVersion >= 9) {
             l.add("--add-opens");
             l.add("java.base/java.lang=ALL-UNNAMED");
             l.add("--add-opens");

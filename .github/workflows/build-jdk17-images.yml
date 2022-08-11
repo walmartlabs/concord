@@ -42,6 +42,15 @@ jobs:
       - name: Download release artifacts
         run: ./mvnw -C -B -f docker-images clean install -DskipTests
 
+      # for better caching
+      - name: Download latest images
+        run: |
+          docker pull library/centos:8 || true
+          docker pull ${{ env.DOCKER_REGISTRY }}/concord-base:latest-jdk17 || true
+          docker pull ${{ env.DOCKER_REGISTRY }}/concord-server:latest-jdk17 || true
+          docker pull ${{ env.DOCKER_REGISTRY }}/concord-ansible:latest-jdk17 || true
+          docker pull ${{ env.DOCKER_REGISTRY }}/concord-agent:latest-jdk17 || true
+
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v1
 

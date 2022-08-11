@@ -90,7 +90,7 @@ public class RunnerJobExecutor implements JobExecutor {
 
     private final ObjectMapper objectMapper;
 
-    private boolean jdk9OrHigher;
+    private int majorJavaVersion;
 
     public RunnerJobExecutor(RunnerJobExecutorConfiguration cfg,
                              DependencyManager dependencyManager,
@@ -112,10 +112,10 @@ public class RunnerJobExecutor implements JobExecutor {
         this.objectMapper = new ObjectMapper()
                 .configure(SerializationFeature.ORDER_MAP_ENTRIES_BY_KEYS, true);
 
-        this.jdk9OrHigher = isJdk9OrHigher(cfg.javaCmd());
+        this.majorJavaVersion = getMajorJavaVersion(cfg.javaCmd());
     }
 
-    private static boolean isJdk9OrHigher(String javaCmd) {
+    private static int getMajorJavaVersion(String javaCmd) {
         try {
             Process process = new ProcessBuilder(javaCmd, "-version")
                     .start();
@@ -143,7 +143,7 @@ public class RunnerJobExecutor implements JobExecutor {
                 throw new RuntimeException("Unknown version string: " + version);
             }
 
-            return major >= 9;
+            return major;
         } catch (Exception e) {
             throw new RuntimeException("Can't determine the target Java runtime version", e);
         }
@@ -453,7 +453,7 @@ public class RunnerJobExecutor implements JobExecutor {
                 .runnerCfgPath(runnerCfgFile.toAbsolutePath())
                 .mainClass(cfg.runnerMainClass())
                 .jvmParams(jvmParams)
-                .jdk9OrHigher(this.jdk9OrHigher)
+                .majorJavaVersion(this.majorJavaVersion)
                 .build();
     }
 
