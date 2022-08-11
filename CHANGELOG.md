@@ -1,5 +1,15 @@
 # Change log
 
+## [1.97.0] - Unreleased
+
+### Added
+
+### Changed
+
+- concord-server: remove log call for github event in repository refresh flow 
+([#633](https://github.com/walmartlabs/concord/pull/633));
+
+
 ## [1.96.0] - 2022-08-10
 
 ### Added
