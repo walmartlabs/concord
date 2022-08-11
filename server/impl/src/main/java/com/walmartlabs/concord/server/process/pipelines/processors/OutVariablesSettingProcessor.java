@@ -35,7 +35,7 @@ public class OutVariablesSettingProcessor implements PayloadProcessor {
     @Override
     public Payload process(Chain chain, Payload payload) {
         Set<String> outExpr = payload.getHeader(Payload.OUT_EXPRESSIONS);
-        if (outExpr == null) {
+        if (outExpr == null || outExpr.isEmpty()) {
             return chain.process(payload);
         }
 

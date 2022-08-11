@@ -46,10 +46,10 @@ public class ProjectIT extends AbstractServerIT {
         File src = new File(ProjectIT.class.getResource("project").toURI());
         IOUtils.copy(src.toPath(), tmpDir);
 
-        Git repo = initRepo(tmpDir);
-
-        repo.add().addFilepattern(".").call();
-        repo.commit().setMessage("import").call();
+        try (Git repo = initRepo(tmpDir)) {
+            repo.add().addFilepattern(".").call();
+            repo.commit().setMessage("import").call();
+        }
 
         String gitUrl = tmpDir.toAbsolutePath().toString();
 
@@ -84,10 +84,10 @@ public class ProjectIT extends AbstractServerIT {
         File src = new File(ProjectIT.class.getResource("projectEntryPoint").toURI());
         IOUtils.copy(src.toPath(), tmpDir);
 
-        Git repo = initRepo(tmpDir);
-
-        repo.add().addFilepattern(".").call();
-        repo.commit().setMessage("import").call();
+        try (Git repo = initRepo(tmpDir)) {
+            repo.add().addFilepattern(".").call();
+            repo.commit().setMessage("import").call();
+        }
 
         String gitUrl = tmpDir.toAbsolutePath().toString();
 
@@ -114,50 +114,50 @@ public class ProjectIT extends AbstractServerIT {
         File src = new File(ProjectIT.class.getResource("project").toURI());
         IOUtils.copy(src.toPath(), tmpDir);
 
-        Git repo = initRepo(tmpDir);
+        try (Git repo = initRepo(tmpDir)) {
+            repo.add().addFilepattern(".").call();
+            repo.commit().setMessage("import").call();
 
-        repo.add().addFilepattern(".").call();
-        repo.commit().setMessage("import").call();
+            // commit-1
+            IOUtils.deleteRecursively(tmpDir.resolve("processes"));
+            src = new File(ProjectIT.class.getResource("project-commit-id").toURI());
+            IOUtils.copy(src.toPath().resolve("1"), tmpDir);
+            Ref result = repo.checkout().setName("test-branch").setCreateBranch(true).call();
+            assertNotNull(result);
 
-        // commit-1
-        IOUtils.deleteRecursively(tmpDir.resolve("processes"));
-        src = new File(ProjectIT.class.getResource("project-commit-id").toURI());
-        IOUtils.copy(src.toPath().resolve("1"), tmpDir);
-        Ref result = repo.checkout().setName("test-branch").setCreateBranch(true).call();
-        assertNotNull(result);
+            repo.add().addFilepattern(".").call();
+            RevCommit cmt = repo.commit().setMessage("commit-1").call();
+            String commitId = cmt.getId().getName();
 
-        repo.add().addFilepattern(".").call();
-        RevCommit cmt = repo.commit().setMessage("commit-1").call();
-        String commitId = cmt.getId().getName();
+            // commit-2
+            result = repo.checkout().setName("master").call();
+            IOUtils.deleteRecursively(tmpDir.resolve("processes"));
+            src = new File(ProjectIT.class.getResource("project-commit-id").toURI());
+            IOUtils.copy(src.toPath().resolve("2"), tmpDir);
+            assertNotNull(result);
+            repo.add().addFilepattern(".").call();
+            repo.commit().setMessage("commit-2").call();
 
-        // commit-2
-        result = repo.checkout().setName("master").call();
-        IOUtils.deleteRecursively(tmpDir.resolve("processes"));
-        src = new File(ProjectIT.class.getResource("project-commit-id").toURI());
-        IOUtils.copy(src.toPath().resolve("2"), tmpDir);
-        assertNotNull(result);
-        repo.add().addFilepattern(".").call();
-        repo.commit().setMessage("commit-2").call();
+            String gitUrl = tmpDir.toAbsolutePath().toString();
 
-        String gitUrl = tmpDir.toAbsolutePath().toString();
+            // ---
 
-        // ---
+            String projectName = "myProject_" + randomString();
+            String username = "myUser_" + randomString();
+            Set<String> permissions = Collections.emptySet();
+            String repoName = "myRepo_" + randomString();
+            String repoUrl = gitUrl;
+            String entryPoint = "main";
+            String greeting = "Hello, _" + randomString();
+            Map<String, Object> args = Collections.singletonMap(Constants.Request.ARGUMENTS_KEY,
+                    Collections.singletonMap("greeting", greeting));
 
-        String projectName = "myProject_" + randomString();
-        String username = "myUser_" + randomString();
-        Set<String> permissions = Collections.emptySet();
-        String repoName = "myRepo_" + randomString();
-        String repoUrl = gitUrl;
-        String entryPoint = "main";
-        String greeting = "Hello, _" + randomString();
-        Map<String, Object> args = Collections.singletonMap(Constants.Request.ARGUMENTS_KEY,
-                Collections.singletonMap("greeting", greeting));
+            // ---
+            ProcessEntry psr = doTest(projectName, username, permissions, repoName, repoUrl, entryPoint, args, commitId, null, false);
 
-        // ---
-        ProcessEntry psr = doTest(projectName, username, permissions, repoName, repoUrl, entryPoint, args, commitId, null, false);
-
-        byte[] ab = getLog(psr.getLogFileName());
-        assertLog(".*test-commit-1.*" + greeting + ".*", ab);
+            byte[] ab = getLog(psr.getLogFileName());
+            assertLog(".*test-commit-1.*" + greeting + ".*", ab);
+        }
     }
 
     @Test
@@ -167,27 +167,28 @@ public class ProjectIT extends AbstractServerIT {
         File src = new File(ProjectIT.class.getResource("project").toURI());
         IOUtils.copy(src.toPath(), tmpDir);
 
-        Git repo = initRepo(tmpDir);
-
-        repo.add().addFilepattern(".").call();
-        repo.commit().setMessage("import").call();
-
-        // commit-1
-        IOUtils.deleteRecursively(tmpDir.resolve("processes"));
-        src = new File(ProjectIT.class.getResource("project-commit-id").toURI());
-        IOUtils.copy(src.toPath().resolve("1"), tmpDir);
-        repo.add().addFilepattern(".").call();
-        repo.commit().setMessage("commit-1").call();
-
         String tag = "tag_for_testing";
-        repo.tag().setName(tag).call();
 
-        // commit-2
-        IOUtils.deleteRecursively(tmpDir.resolve("processes"));
-        src = new File(ProjectIT.class.getResource("project-commit-id").toURI());
-        IOUtils.copy(src.toPath().resolve("2"), tmpDir);
-        repo.add().addFilepattern(".").call();
-        repo.commit().setMessage("commit-2").call();
+        try (Git repo = initRepo(tmpDir)) {
+            repo.add().addFilepattern(".").call();
+            repo.commit().setMessage("import").call();
+
+            // commit-1
+            IOUtils.deleteRecursively(tmpDir.resolve("processes"));
+            src = new File(ProjectIT.class.getResource("project-commit-id").toURI());
+            IOUtils.copy(src.toPath().resolve("1"), tmpDir);
+            repo.add().addFilepattern(".").call();
+            repo.commit().setMessage("commit-1").call();
+
+            repo.tag().setName(tag).call();
+
+            // commit-2
+            IOUtils.deleteRecursively(tmpDir.resolve("processes"));
+            src = new File(ProjectIT.class.getResource("project-commit-id").toURI());
+            IOUtils.copy(src.toPath().resolve("2"), tmpDir);
+            repo.add().addFilepattern(".").call();
+            repo.commit().setMessage("commit-2").call();
+        }
 
         String gitUrl = tmpDir.toAbsolutePath().toString();
 
@@ -216,10 +217,10 @@ public class ProjectIT extends AbstractServerIT {
         File src = new File(ProjectIT.class.getResource("project-triggers").toURI());
         IOUtils.copy(src.toPath(), tmpDir);
 
-        Git repo = initRepo(tmpDir);
-
-        repo.add().addFilepattern(".").call();
-        repo.commit().setMessage("import").call();
+        try (Git repo = initRepo(tmpDir)) {
+            repo.add().addFilepattern(".").call();
+            repo.commit().setMessage("import").call();
+        }
 
         String gitUrl = tmpDir.toAbsolutePath().toString();
 
@@ -253,9 +254,10 @@ public class ProjectIT extends AbstractServerIT {
         File src = new File(ProjectIT.class.getResource("repositoryValidation").toURI());
         IOUtils.copy(src.toPath(), tmpDir);
 
-        Git repo = initRepo(tmpDir);
-        repo.add().addFilepattern(".").call();
-        repo.commit().setMessage("import").call();
+        try (Git repo = initRepo(tmpDir)) {
+            repo.add().addFilepattern(".").call();
+            repo.commit().setMessage("import").call();
+        }
 
         String gitUrl = tmpDir.toAbsolutePath().toString();
 
@@ -286,9 +288,10 @@ public class ProjectIT extends AbstractServerIT {
             File src = new File(ProjectIT.class.getResource("repositoryValidationEmptyFlow").toURI());
             IOUtils.copy(src.toPath(), tmpDir);
 
-            Git repo = initRepo(tmpDir);
-            repo.add().addFilepattern(".").call();
-            repo.commit().setMessage("import").call();
+            try (Git repo = initRepo(tmpDir)) {
+                repo.add().addFilepattern(".").call();
+                repo.commit().setMessage("import").call();
+            }
 
             String gitUrl = tmpDir.toAbsolutePath().toString();
 
@@ -320,9 +323,10 @@ public class ProjectIT extends AbstractServerIT {
             File src = new File(ProjectIT.class.getResource("repositoryValidationEmptyForm").toURI());
             IOUtils.copy(src.toPath(), tmpDir);
 
-            Git repo = initRepo(tmpDir);
-            repo.add().addFilepattern(".").call();
-            repo.commit().setMessage("import").call();
+            try (Git repo = initRepo(tmpDir)) {
+                repo.add().addFilepattern(".").call();
+                repo.commit().setMessage("import").call();
+            }
 
             String gitUrl = tmpDir.toAbsolutePath().toString();
 
@@ -354,9 +358,10 @@ public class ProjectIT extends AbstractServerIT {
             File src = new File(ProjectIT.class.getResource("ProcessDisabledRepo").toURI());
             IOUtils.copy(src.toPath(), tmpDir);
 
-            Git repo = initRepo(tmpDir);
-            repo.add().addFilepattern(".").call();
-            repo.commit().setMessage("import").call();
+            try (Git repo = initRepo(tmpDir)) {
+                repo.add().addFilepattern(".").call();
+                repo.commit().setMessage("import").call();
+            }
 
             String gitUrl = tmpDir.toAbsolutePath().toString();
 

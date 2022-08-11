@@ -6,7 +6,7 @@
     <parent>
         <groupId>com.walmartlabs.concord</groupId>
         <artifactId>parent</artifactId>
-        <version>1.94.1-SNAPSHOT</version>
+        <version>1.96.1-SNAPSHOT</version>
         <relativePath>../../pom.xml</relativePath>
     </parent>
 
@@ -23,11 +23,31 @@
         <!-- k8s stuff -->
         <dependency>
             <groupId>io.fabric8</groupId>
+            <artifactId>crd-generator-api</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>io.fabric8</groupId>
+            <artifactId>crd-generator-apt</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>io.fabric8</groupId>
             <artifactId>kubernetes-client</artifactId>
         </dependency>
         <dependency>
             <groupId>io.fabric8</groupId>
             <artifactId>kubernetes-model</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>io.fabric8</groupId>
+            <artifactId>kubernetes-model-apiextensions</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>io.fabric8</groupId>
+            <artifactId>kubernetes-model-core</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>io.fabric8</groupId>
+            <artifactId>kubernetes-model-common</artifactId>
         </dependency>
         <dependency>
             <groupId>org.bouncycastle</groupId>
@@ -105,6 +125,10 @@
             <plugin>
                 <groupId>io.takari.maven.plugins</groupId>
                 <artifactId>takari-lifecycle-plugin</artifactId>
+                <extensions>true</extensions>
+                <configuration>
+                    <proc>proc</proc>
+                </configuration>
             </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>

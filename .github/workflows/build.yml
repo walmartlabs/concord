@@ -1,0 +1,40 @@
+name: build
+
+on:
+  push:
+    branches: [ 'master_TODO' ] # TODO
+  pull_request:
+    branches: [ 'master_TODO' ] # TODO
+
+jobs:
+  build:
+    strategy:
+      matrix:
+        jdk_version: ['8', '11']
+      fail-fast: false
+
+    runs-on: self-hosted
+
+    steps:
+      - name: Clear old Docker resources
+        run: |
+          docker rm -f $(docker ps -aq) || true
+          docker system prune -af || true
+          docker image prune -af || true
+          docker volume prune -f || true
+
+      - uses: actions/checkout@v3
+
+      - name: Set up JDK
+        uses: actions/setup-java@v3
+        with:
+          java-version: '${{ matrix.jdk_version }}'
+          distribution: 'temurin'
+
+      - name: Remove old Concord artifacts
+        run: |
+          rm -rf ~/.m2/repository/com/walmartlabs/concord
+          rm -rf ~/actions-runner/.m2/repository/com/walmartlabs/concord
+
+      - name: Build and test with Maven
+        run: ./mvnw -B clean install -Pdocker -Pit -Pjdk${{ matrix.jdk_version }}

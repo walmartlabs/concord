@@ -60,6 +60,11 @@ public class ProcessWaitDao extends AbstractDao {
         super.tx(t);
     }
 
+    @Override
+    public <T> T txResult(TxResult<T> t) {
+        return super.txResult(t);
+    }
+
     public void addWait(DSLContext tx, ProcessKey processKey, AbstractWaitCondition wait) {
         tx.update(PROCESS_WAIT_CONDITIONS)
                 .set(PROCESS_WAIT_CONDITIONS.VERSION, PROCESS_WAIT_CONDITIONS.VERSION.plus(1))

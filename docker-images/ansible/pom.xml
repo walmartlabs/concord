@@ -5,7 +5,7 @@
     <parent>
         <groupId>com.walmartlabs.concord.docker</groupId>
         <artifactId>parent</artifactId>
-        <version>1.94.1-SNAPSHOT</version>
+        <version>1.96.1-SNAPSHOT</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
 
@@ -15,8 +15,17 @@
     <properties>
         <ansible.image>${docker.namespace}/concord-ansible</ansible.image>
         <docker.tagbase>${ansible.image}</docker.tagbase>
-        <docker.file>oss/Dockerfile</docker.file>
+        <docker.file>oss/centos/Dockerfile</docker.file>
     </properties>
+
+    <dependencies>
+        <dependency>
+            <groupId>com.walmartlabs.concord.docker</groupId>
+            <artifactId>concord-base</artifactId>
+            <version>${project.version}</version>
+            <type>pom</type>
+        </dependency>
+    </dependencies>
 
     <build>
         <plugins>
@@ -32,4 +41,13 @@
             </plugin>
         </plugins>
     </build>
+
+    <profiles>
+        <profile>
+            <id>debian</id>
+            <properties>
+                <docker.file>oss/debian/Dockerfile</docker.file>
+            </properties>
+        </profile>
+    </profiles>
 </project>

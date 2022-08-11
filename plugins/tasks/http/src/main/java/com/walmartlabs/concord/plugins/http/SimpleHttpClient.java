@@ -26,6 +26,9 @@ import com.walmartlabs.concord.plugins.http.exception.RequestTimeoutException;
 import com.walmartlabs.concord.plugins.http.exception.UnauthorizedException;
 import com.walmartlabs.concord.plugins.http.request.HttpTaskRequest;
 import org.apache.http.*;
+import org.apache.http.auth.AuthScope;
+import org.apache.http.auth.UsernamePasswordCredentials;
+import org.apache.http.client.CredentialsProvider;
 import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpUriRequest;
@@ -38,6 +41,7 @@ import org.apache.http.conn.ssl.DefaultHostnameVerifier;
 import org.apache.http.conn.ssl.NoopHostnameVerifier;
 import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
 import org.apache.http.conn.ssl.TrustAllStrategy;
+import org.apache.http.impl.client.BasicCredentialsProvider;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.impl.client.LaxRedirectStrategy;
@@ -328,13 +332,27 @@ public class SimpleHttpClient {
                 .setSocketTimeout(cfg.getSocketTimeout())
                 .setRedirectsEnabled(cfg.isFollowRedirects());
 
+        HttpClientBuilder clientBuilder = HttpClientBuilder.create();
+
         String proxy = cfg.getProxy();
         if (proxy != null) {
             log.info("Using proxy: {}", proxy);
-            c.setProxy(HttpHost.create(proxy));
+            HttpHost proxyHost = HttpHost.create(proxy);
+            c.setProxy(proxyHost);
+
+            if (cfg.getProxyUser() != null) {
+                log.info("Using proxy auth: {}:***", cfg.getProxyUser());
+
+                CredentialsProvider proxyCredsProvider = new BasicCredentialsProvider();
+                proxyCredsProvider.setCredentials(
+                        new AuthScope(proxyHost.getHostName(), proxyHost.getPort()),
+                        new UsernamePasswordCredentials(cfg.getProxyUser(), new String(cfg.getProxyPassword())));
+
+                clientBuilder.setDefaultCredentialsProvider(proxyCredsProvider);
+            }
         }
 
-        return HttpClientBuilder.create()
+        return clientBuilder
                 .setConnectionManager(buildConnectionManager(cfg))
                 .setDefaultRequestConfig(c.build())
                 .setRedirectStrategy(new LaxRedirectStrategy())

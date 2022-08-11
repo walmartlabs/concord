@@ -6,7 +6,7 @@
     <parent>
         <groupId>com.walmartlabs.concord.it</groupId>
         <artifactId>parent</artifactId>
-        <version>1.94.1-SNAPSHOT</version>
+        <version>1.96.1-SNAPSHOT</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
 
@@ -68,6 +68,11 @@
         <dependency>
             <groupId>org.testcontainers</groupId>
             <artifactId>testcontainers</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
             <scope>test</scope>
         </dependency>
         <dependency>

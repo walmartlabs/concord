@@ -63,6 +63,12 @@ public abstract class ProcessCompletionCondition extends AbstractWaitCondition {
         return WaitType.PROCESS_COMPLETION;
     }
 
+    @Value.Default
+    @Override
+    public boolean exclusive() {
+        return false;
+    }
+
     public static ImmutableProcessCompletionCondition.Builder builder() {
         return ImmutableProcessCompletionCondition.builder();
     }
