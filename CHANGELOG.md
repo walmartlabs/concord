@@ -1,6 +1,6 @@
 # Change log
 
-## [1.96.0] - Unreleased
+## [1.96.0] - 2022-08-10
 
 ### Added
 
