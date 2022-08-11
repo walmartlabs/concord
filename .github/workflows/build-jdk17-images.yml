@@ -16,7 +16,7 @@ on:
 
 env:
   DOCKER_REGISTRY: "ibodrov"
-  TAG: "1.95.0"
+  TAG: "1.96.0"
 
 jobs:
   build-jdk17-images:
