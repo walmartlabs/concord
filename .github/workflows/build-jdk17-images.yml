@@ -58,7 +58,7 @@ jobs:
           build-args: |
             jdk_url=https://github.com/adoptium/temurin17-binaries/releases/download/jdk-17.0.3%2B7/OpenJDK17U-jdk_aarch64_linux_hotspot_17.0.3_7.tar.gz
           tags: |
-            walmartlabs/concord-base:${{ env.TAG }}-jdk17
+            ${{ env.DOCKER_REGISTRY }}/concord-base:${{ env.TAG }}-jdk17
 
       - name: Build and push the server image
         uses: docker/build-push-action@v3
@@ -68,11 +68,11 @@ jobs:
           file: ./docker-images/server/oss/centos/Dockerfile
           platforms: linux/amd64, linux/aarch64
           build-args: |
-            docker_namespace=$DOCKER_REGISTRY
+            docker_namespace=${{ env.DOCKER_REGISTRY }}
             concord_version=latest
             jdk_url=https://github.com/adoptium/temurin17-binaries/releases/download/jdk-17.0.3%2B7/OpenJDK17U-jdk_aarch64_linux_hotspot_17.0.3_7.tar.gz
           tags: |
-            $DOCKER_REGISTRY/concord-server:${{ env.TAG }}-jdk17
+            ${{ env.DOCKER_REGISTRY }}/concord-server:${{ env.TAG }}-jdk17
 
       - name: Build and push the agent image
         uses: docker/build-push-action@v3
@@ -82,8 +82,8 @@ jobs:
           file: ./docker-images/agent/oss/centos/Dockerfile
           platforms: linux/amd64, linux/aarch64
           build-args: |
-            docker_namespace=$DOCKER_REGISTRY
+            docker_namespace=${{ env.DOCKER_REGISTRY }}
             concord_version=latest
             jdk_url=https://github.com/adoptium/temurin17-binaries/releases/download/jdk-17.0.3%2B7/OpenJDK17U-jdk_aarch64_linux_hotspot_17.0.3_7.tar.gz
           tags: |
-            $DOCKER_REGISTRY/concord-agent:${{ env.TAG }}-jdk17
+            ${{ env.DOCKER_REGISTRY }}/concord-agent:${{ env.TAG }}-jdk17
