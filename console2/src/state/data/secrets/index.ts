@@ -145,11 +145,13 @@ export const actions = {
     updateSecretVisibility: (
         orgName: ConcordKey,
         secretId: ConcordId,
+        secretName: ConcordKey,
         visibility: SecretVisibility
     ): UpdateSecretVisibilityRequest => ({
         type: actionTypes.UPDATE_SECRET_VISIBLITY_REQUEST,
         orgName,
         secretId,
+        secretName,
         visibility
     }),
 
@@ -406,9 +408,9 @@ function* onRename({ orgName, secretId, secretName }: RenameSecretRequest) {
     }
 }
 
-function* onUpdateVisibility({ orgName, secretId, visibility }: UpdateSecretVisibilityRequest) {
+function* onUpdateVisibility({ orgName, secretName, secretId, visibility }: UpdateSecretVisibilityRequest) {
     try {
-        yield call(apiUpdateSecretVisibility, orgName, secretId, visibility);
+        yield call(apiUpdateSecretVisibility, orgName, secretName, visibility);
         yield put({
             type: actionTypes.UPDATE_SECRET_VISIBLITY_RESPONSE,
             secretId,

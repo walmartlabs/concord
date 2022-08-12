@@ -73,6 +73,7 @@ export interface RenameSecretRequest extends Action {
 export interface UpdateSecretVisibilityRequest extends Action {
     orgName: ConcordKey;
     secretId: ConcordId;
+    secretName: ConcordKey;
     visibility: SecretVisibility;
 }
 
