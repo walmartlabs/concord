@@ -25,13 +25,16 @@ import { Form } from 'semantic-ui-react';
 import { ConcordId, ConcordKey, RequestError } from '../../../api/common';
 import { SecretVisibility } from '../../../api/org/secret';
 import { actions, State } from '../../../state/data/secrets';
-import { RequestErrorMessage } from '../../molecules';
+import { ButtonWithConfirmation, RequestErrorMessage } from '../../molecules';
+
+
 
 interface ExternalProps {
     orgName: ConcordKey;
     secretId: ConcordId;
     secretName: ConcordKey;
     visibility: SecretVisibility;
+    renderOverride?: React.ReactNode;
 }
 
 interface StateProps {
@@ -43,20 +46,33 @@ interface DispatchProps {
     update: (orgName: ConcordKey, secretId: ConcordId, secretName: ConcordKey, visibility: SecretVisibility) => void;
 }
 
+interface OwnState { 
+    newVisibility: SecretVisibility;
+}
+
 type Props = ExternalProps & StateProps & DispatchProps;
 
-class ProjectRenameActivity extends React.PureComponent<Props> {
+class ProjectRenameActivity extends React.PureComponent<Props, OwnState> {
+    constructor(props: Props) {
+        super(props);
+        this.state = { newVisibility: this.props.visibility };
+    }
+    
     onChange(value: string | undefined) {
         if (!value) {
             return;
         }
-
-        const { update, orgName, secretName, secretId } = this.props;
-        update(orgName, secretId, secretName, SecretVisibility[value]);
+        
+        this.setState({ newVisibility: SecretVisibility[value] });
     }
-
+    
+    changeVisibility() {
+        const { update, orgName, secretName, secretId } = this.props;
+        update(orgName, secretId, secretName, this.state.newVisibility);
+    }
+    
     render() {
-        const { error, updating, visibility } = this.props;
+        const { error, updating, visibility, renderOverride } = this.props;
 
         return (
             <>
@@ -79,6 +95,16 @@ class ProjectRenameActivity extends React.PureComponent<Props> {
                             ]}
                             defaultValue={visibility}
                             onChange={(ev, data) => this.onChange(data.value as string)}
+                        />
+                        <ButtonWithConfirmation
+                            renderOverride={renderOverride}
+                            floated={'right'}
+                            disabled={visibility === this.state.newVisibility}
+                            content="Change"
+                            loading={updating}
+                            confirmationHeader="Change the visibility?"
+                            confirmationContent={`Are you sure you want to change the visibility to ${this.state.newVisibility}`}
+                            onConfirm={() => this.changeVisibility()}
                         />
                     </Form.Group>
                 </Form>

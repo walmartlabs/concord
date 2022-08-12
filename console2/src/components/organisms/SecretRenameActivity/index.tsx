@@ -47,7 +47,7 @@ type Props = ExternalProps & StateProps & DispatchProps;
 
 class SecretRenameActivity extends React.PureComponent<Props> {
     render() {
-        const { error, renaming, orgName, secretId, secretName, rename } = this.props;
+        const { error, renaming, orgName, secretName, rename } = this.props;
 
         return (
             <>

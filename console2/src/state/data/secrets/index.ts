@@ -416,6 +416,8 @@ function* onUpdateVisibility({ orgName, secretName, secretId, visibility }: Upda
             secretId,
             visibility
         });
+
+        yield put(pushHistory(`/org/${orgName}/secret/${secretName}`));
     } catch (e) {
         yield handleErrors(actionTypes.UPDATE_SECRET_VISIBLITY_RESPONSE, e);
     }
