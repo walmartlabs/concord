@@ -133,13 +133,13 @@ export const actions = {
 
     renameSecret: (
         orgName: ConcordKey,
-        secretId: ConcordId,
-        secretName: ConcordKey
+        secretName: ConcordKey,
+        newSecretName: ConcordKey
     ): RenameSecretRequest => ({
         type: actionTypes.RENAME_SECRET_REQUEST,
         orgName,
-        secretId,
-        secretName
+        secretName,
+        newSecretName
     }),
 
     updateSecretVisibility: (
@@ -392,13 +392,13 @@ function* onDelete({ orgName, secretName }: DeleteSecretRequest) {
     }
 }
 
-function* onRename({ orgName, secretId, secretName }: RenameSecretRequest) {
+function* onRename({ orgName, secretName, newSecretName }: RenameSecretRequest) {
     try {
         const response: GenericOperationResult = yield call(
             apiRenameSecret,
             orgName,
-            secretId,
-            secretName
+            secretName,
+            newSecretName
         );
         yield put(genericResult(actionTypes.RENAME_SECRET_RESPONSE, response));
 
