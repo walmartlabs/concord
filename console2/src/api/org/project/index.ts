@@ -107,7 +107,7 @@ export interface PaginatedProjectEntries {
 }
 
 export const get = (orgName: ConcordKey, projectName: ConcordKey): Promise<ProjectEntry> => {
-    return fetchJson<ProjectEntry>(`/api/v1/org/${orgName}/project/${projectName}`);
+    return fetchJson<ProjectEntry>(`/api/v2/org/${orgName}/project/${projectName}`);
 };
 
 export const list = async (

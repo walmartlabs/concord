@@ -29,6 +29,7 @@ import com.walmartlabs.concord.server.audit.AuditLog;
 import com.walmartlabs.concord.server.audit.AuditObject;
 import com.walmartlabs.concord.server.events.Events;
 import com.walmartlabs.concord.server.events.ExternalEventResource;
+import com.walmartlabs.concord.server.jooq.Tables;
 import com.walmartlabs.concord.server.org.ResourceAccessLevel;
 import com.walmartlabs.concord.server.org.secret.SecretEntry;
 import com.walmartlabs.concord.server.org.secret.SecretManager;
@@ -44,6 +45,7 @@ import org.sonatype.siesta.ValidationErrorsException;
 import javax.inject.Inject;
 import javax.inject.Named;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -82,6 +84,19 @@ public class ProjectRepositoryManager {
         this.policyManager = policyManager;
     }
 
+    public RepositoryEntry get(UUID projectId, String repositoryName) {
+        return repositoryDao.get(projectId, repositoryName);
+    }
+
+    public List<RepositoryEntry> list(UUID projectId) {
+        return repositoryDao.list(projectId);
+    }
+
+    public List<RepositoryEntry> list(UUID orgId, String projectName, int offset, int limit, String filter) {
+        ProjectEntry project = projectAccessManager.assertAccess(orgId, null, projectName, ResourceAccessLevel.READER, false);
+        return repositoryDao.list(project.getId(), Tables.REPOSITORIES.REPO_NAME, true, offset, limit, filter);
+    }
+
     public void createOrUpdate(UUID projectId, RepositoryEntry entry) {
         repositoryDao.tx(tx -> createOrUpdate(tx, projectId, entry));
     }
@@ -104,18 +119,18 @@ public class ProjectRepositoryManager {
     public void delete(UUID projectId, String repoName) {
         ProjectEntry projEntry = projectAccessManager.assertAccess(projectId, ResourceAccessLevel.WRITER, false);
 
-        UUID repoId = repositoryDao.getId(projectId, repoName);
-        if (repoId == null) {
+        RepositoryEntry r = repositoryDao.get(projectId, repoName);
+        if (r == null) {
             throw new ValidationErrorsException("Repository not found: " + repoName);
         }
 
-        repositoryDao.delete(repoId);
+        repositoryDao.delete(r.getId());
         addAuditLog(
                 projEntry.getOrgId(),
                 projEntry.getOrgName(),
                 projEntry.getId(),
                 projEntry.getName(),
-                projEntry.getRepositories().get(repoName),
+                r,
                 null);
     }
 

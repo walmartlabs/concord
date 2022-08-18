@@ -34,6 +34,7 @@ import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 import io.swagger.annotations.Authorization;
 import org.sonatype.siesta.Resource;
+import org.sonatype.siesta.Validate;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -42,6 +43,7 @@ import javax.validation.Valid;
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response.Status;
+import java.util.List;
 import java.util.UUID;
 
 @Named
@@ -71,6 +73,20 @@ public class RepositoryResource implements Resource {
         this.repositoryDao = repositoryDao;
         this.projectRepositoryManager = projectRepositoryManager;
         this.repositoryRefresher = repositoryRefresher;
+    }
+
+    @GET
+    @ApiOperation(value = "List existing repositories", responseContainer = "list", response = RepositoryEntry.class)
+    @Path("/{orgName}/project/{projectName}/repository")
+    @Produces(MediaType.APPLICATION_JSON)
+    @Validate
+    public List<RepositoryEntry> find(@ApiParam @PathParam("orgName") @ConcordKey String orgName,
+                                      @ApiParam @PathParam("projectName") @ConcordKey String projectName,
+                                      @QueryParam("offset") int offset,
+                                      @QueryParam("limit") int limit,
+                                      @QueryParam("filter") String filter) {
+        OrganizationEntry org = orgManager.assertAccess(orgName, false);
+        return projectRepositoryManager.list(org.getId(), projectName, offset, limit, filter);
     }
 
     @POST
