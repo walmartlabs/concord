@@ -108,7 +108,7 @@ export interface PublicKeyResponse {
 }
 
 export const get = (orgName: ConcordKey, secretName: ConcordKey): Promise<SecretEntry> => {
-    return fetchJson(`/api/v1/org/${orgName}/secret/${secretName}`);
+    return fetchJson(`/api/v2/org/${orgName}/secret/${secretName}`);
 };
 
 export const list = async (
@@ -121,7 +121,7 @@ export const list = async (
     const limitParam = limit > 0 ? limit + 1 : limit;
 
     const data: SecretEntry[] = await fetchJson(
-        `/api/v1/org/${orgName}/secret?${queryParams({
+        `/api/v2/org/${orgName}/secret?${queryParams({
             offset: offsetParam,
             limit: limitParam,
             filter
@@ -196,17 +196,14 @@ export const updateSecretProject = (
     secretName: ConcordKey,
     projects: ProjectEntry[]
 ): Promise<GenericOperationResult> => {
+    const data = new FormData();
+    data.append("projectIds", projects.map(project => project.id).join(","));
     const opts = {
         method: 'POST',
-        headers: {
-            'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-            projectIds:projects.map(project => project.id)
-        })
+        body: data
     };
 
-    return fetchJson(`/api/v1/org/${orgName}/secret/${secretName}`, opts);
+    return fetchJson(`/api/v2/org/${orgName}/secret/${secretName}`, opts);
 };
 
 // TODO response type
@@ -269,7 +266,7 @@ export const create = (
         method: 'POST',
         body: data
     };
-    return fetchJson(`/api/v1/org/${orgName}/secret`, opts);
+    return fetchJson(`/api/v2/org/${orgName}/secret`, opts);
 };
 
 export const changeOrganization = (

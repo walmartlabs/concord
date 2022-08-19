@@ -187,13 +187,13 @@ public class SecretsTaskCommon {
         List<UUID> projectIds = in.projectIds();
 
         try {
-            SecretsApi api = new SecretsApi(apiClient);
-            api.update(orgName, secretName, new SecretUpdateRequest()
-                    .setData(newData)
-                    .setStorePassword(storePassword)
-                    .setNewStorePassword(newStorePassword)
-                    .setProjectIds(projectIds)
-                    .setProjectNames(projectNames));
+
+            Map<String,Object> params = new HashMap<>();
+            params.put(Constants.Multipart.DATA, newData);
+            params.put(Constants.Multipart.STORE_PASSWORD, storePassword);
+            params.put(Constants.Multipart.PROJECT_IDS, projectIds);
+            params.put(Constants.Multipart.PROJECT_NAMES, projectNames);
+            post("/api/v2/org/" + orgName + "/secret/" + secretName, params, SecretOperationResponse.class);
 
             log.info("The secret was successfully updated: {}", secretName);
             return Result.ok();

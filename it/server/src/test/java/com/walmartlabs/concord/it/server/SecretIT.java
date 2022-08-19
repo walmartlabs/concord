@@ -322,8 +322,9 @@ public class SecretIT extends AbstractServerIT {
         String secretName = "secret_" + randomString();
         SecretOperationResponse secretResponse = generateKeyPairWithProjectIds(orgName, new HashSet<>(Arrays.asList(response1.getId(), response2.getId())), secretName, false, null);
         assertEquals(secretResponse.getResult().toString(), "CREATED");
+        SecretsV2Api secretsV2Api = new SecretsV2Api(getApiClient());
         SecretsApi secretsApi = new SecretsApi(getApiClient());
-        SecretEntry secretEntry = secretsApi.get(orgName, secretName);
+        SecretEntryV2 secretEntry = secretsV2Api.get(orgName, secretName);
         assertTrue(secretEntry.getProjects().stream().map(ProjectEntry::getName).anyMatch(projectName -> projectName.equals(projectName1)));
         assertTrue(secretEntry.getProjects().stream().map(ProjectEntry::getName).anyMatch(projectName -> projectName.equals(projectName2)));
 
@@ -355,11 +356,11 @@ public class SecretIT extends AbstractServerIT {
         SecretOperationResponse secretResponse = generateKeyPairWithProjectNames(orgName, new HashSet<>(Arrays.asList(projectName1, projectName2)), secretName, false, null);
         assertEquals(secretResponse.getResult().toString(), "CREATED");
 
+        SecretsV2Api secretsV2Api = new SecretsV2Api(getApiClient());
         SecretsApi secretsApi = new SecretsApi(getApiClient());
-        SecretEntry secretEntry = secretsApi.get(orgName, secretName);
+        SecretEntryV2 secretEntry = secretsV2Api.get(orgName, secretName);
         assertTrue(secretEntry.getProjects().stream().map(ProjectEntry::getName).anyMatch(projectName -> projectName.equals(projectName1)));
         assertTrue(secretEntry.getProjects().stream().map(ProjectEntry::getName).anyMatch(projectName -> projectName.equals(projectName2)));
-
 
         projectsApi.delete(orgName, projectName1);
         projectsApi.delete(orgName, projectName2);
@@ -390,12 +391,13 @@ public class SecretIT extends AbstractServerIT {
                 .setName(projectName2));
 
         SecretClient secretClient = new SecretClient(getApiClient());
-        UpdateSecretRequest request = UpdateSecretRequest.builder().newProjectIds(new HashSet<UUID>(Arrays.asList(response1.getId(), response2.getId()))).build();
+        UpdateSecretRequestV2 request = UpdateSecretRequestV2.builder().newProjectIds(new HashSet<UUID>(Arrays.asList(response1.getId(), response2.getId()))).build();
         secretClient.updateSecret(orgName, secretName, request);
 
 
         SecretsApi secretsApi = new SecretsApi(getApiClient());
-        SecretEntry secretEntry = secretsApi.get(orgName, secretName);
+        SecretsV2Api secretsV2Api = new SecretsV2Api(getApiClient());
+        SecretEntryV2 secretEntry = secretsV2Api.get(orgName, secretName);
         assertTrue(secretEntry.getProjects().stream().map(ProjectEntry::getName).anyMatch(projectName -> projectName.equals(projectName1)));
         assertTrue(secretEntry.getProjects().stream().map(ProjectEntry::getName).anyMatch(projectName -> projectName.equals(projectName2)));
 

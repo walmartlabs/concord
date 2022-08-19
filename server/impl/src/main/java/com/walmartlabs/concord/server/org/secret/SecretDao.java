@@ -139,7 +139,7 @@ public class SecretDao extends AbstractDao {
                 .getSecretId();
     }
 
-    public SecretEntry get(UUID id) {
+    public SecretEntryV2 get(UUID id) {
         DSLContext tx = dsl();
         return selectEntry(tx)
                 .where(SECRETS.SECRET_ID.eq(id))
@@ -153,7 +153,7 @@ public class SecretDao extends AbstractDao {
                 .fetchOne(SECRETS.SECRET_DATA);
     }
 
-    public SecretEntry getByName(UUID orgId, String name) {
+    public SecretEntryV2 getByName(UUID orgId, String name) {
         DSLContext tx = dsl();
         return selectEntry(tx)
                 .where(SECRETS.ORG_ID.eq(orgId)
@@ -244,7 +244,7 @@ public class SecretDao extends AbstractDao {
 
     }
 
-    public List<SecretEntry> list(UUID orgId, UUID currentUserId, Field<?> sortField, boolean asc, int offset, int limit, String filter) {
+    public List<SecretEntryV2> list(UUID orgId, UUID currentUserId, Field<?> sortField, boolean asc, int offset, int limit, String filter) {
 
         Organizations o = ORGANIZATIONS.as("o");
         Secrets s = SECRETS.as("s");
@@ -394,20 +394,18 @@ public class SecretDao extends AbstractDao {
                 .leftJoin(orgAlias).on(orgAlias.ORG_ID.eq(secretAlias.ORG_ID));
     }
 
-    private static SecretEntry toEntry(DSLContext tx, Record13<UUID, String, UUID, String, String, String, String, String, UUID, String, String, String, String> r) {
+    private static SecretEntryV2 toEntry(DSLContext tx, Record13<UUID, String, UUID, String, String, String, String, String, UUID, String, String, String, String> r) {
         UUID secretId = r.get(SECRETS.SECRET_ID);
         Set<ProjectEntry> projects = tx.select(PROJECTS.PROJECT_ID, PROJECTS.PROJECT_NAME).from(PROJECTS).leftJoin(SECRET_PROJECTS).on(PROJECTS.PROJECT_ID.eq(SECRET_PROJECTS.PROJECT_ID))
                 .where(SECRET_PROJECTS.SECRET_ID.eq(secretId)).stream()
                 .map(projectRecord -> new ProjectEntry(projectRecord.get(PROJECTS.PROJECT_NAME), projectRecord.get(PROJECTS.PROJECT_ID))).collect(Collectors.toSet());
         String projectName = projects.stream().map(ProjectEntry::getName).findFirst().orElse(null);
         UUID projectId = projects.stream().map(ProjectEntry::getId).findFirst().orElse(null);
-        return new SecretEntry(r.get(SECRETS.SECRET_ID),
+        return new SecretEntryV2(r.get(SECRETS.SECRET_ID),
                 r.get(SECRETS.SECRET_NAME),
                 r.get(SECRETS.ORG_ID),
                 r.value4(),
                 projects,
-                projectId,
-                projectName,
                 SecretType.valueOf(r.get(SECRETS.SECRET_TYPE)),
                 SecretEncryptedByType.valueOf(r.get(SECRETS.ENCRYPTED_BY)),
                 r.get(SECRETS.STORE_TYPE),
@@ -430,21 +428,21 @@ public class SecretDao extends AbstractDao {
                 .build();
     }
 
-    public static class SecretDataEntry extends SecretEntry {
+    public static class SecretDataEntry extends SecretEntryV2 {
 
         private static final long serialVersionUID = 1L;
 
         private final byte[] data;
 
-        public SecretDataEntry(SecretEntry s, byte[] data) { // NOSONAR
-            this(s.getId(), s.getName(), s.getOrgId(), s.getOrgName(), s.getProjects(), s.getProjectId(), s.getProjectName(),
+        public SecretDataEntry(SecretEntryV2 s, byte[] data) { // NOSONAR
+            this(s.getId(), s.getName(), s.getOrgId(), s.getOrgName(), s.getProjects(),
                     s.getType(), s.getEncryptedBy(), s.getStoreType(), s.getVisibility(), s.getOwner(), data);
         }
 
-        public SecretDataEntry(UUID id, String name, UUID orgId, String orgName, Set<ProjectEntry> projects, UUID projectId, String projectName, SecretType type,
+        public SecretDataEntry(UUID id, String name, UUID orgId, String orgName, Set<ProjectEntry> projects, SecretType type,
                                SecretEncryptedByType encryptedByType, String storeType, SecretVisibility visibility,
                                EntityOwner owner, byte[] data) { // NOSONAR
-            super(id, name, orgId, orgName, projects, projectId, projectName, type, encryptedByType, storeType, visibility, owner);
+            super(id, name, orgId, orgName, projects, type, encryptedByType, storeType, visibility, owner);
             this.data = data;
         }
 

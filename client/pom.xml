@@ -176,7 +176,6 @@
                             </item>
                         </revapi.ignore>
                     </analysisConfiguration>
-                    <skip>true</skip>
                 </configuration>
             </plugin>
         </plugins>

@@ -25,8 +25,6 @@ import org.immutables.value.Value;
 
 import javax.annotation.Nullable;
 import java.nio.file.Path;
-import java.util.List;
-import java.util.UUID;
 
 @Value.Immutable
 @Value.Style(jdkOnly = true)
@@ -48,14 +46,7 @@ public interface CreateSecretRequest {
     SecretEntry.VisibilityEnum visibility();
 
     @Nullable
-    @Deprecated
     String project();
-
-    @Nullable
-    List<String> projectNames();
-
-    @Nullable
-    List<UUID> projectIds();
 
     @Nullable
     byte[] data();

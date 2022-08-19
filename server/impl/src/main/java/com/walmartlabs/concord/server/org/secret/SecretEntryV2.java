@@ -9,9 +9,9 @@ package com.walmartlabs.concord.server.org.secret;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -20,10 +20,8 @@ package com.walmartlabs.concord.server.org.secret;
  * =====
  */
 
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.*;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
-import com.fasterxml.jackson.annotation.JsonProperty;
 import com.walmartlabs.concord.common.secret.SecretEncryptedByType;
 import com.walmartlabs.concord.common.validation.ConcordKey;
 import com.walmartlabs.concord.server.org.EntityOwner;
@@ -31,11 +29,10 @@ import com.walmartlabs.concord.server.org.project.ProjectEntry;
 
 import javax.validation.constraints.NotNull;
 import java.io.Serializable;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 
 @JsonInclude(Include.NON_NULL)
-public class SecretEntry implements Serializable {
+public class SecretEntryV2 implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
@@ -50,10 +47,7 @@ public class SecretEntry implements Serializable {
     @ConcordKey
     private final String orgName;
 
-    private final UUID projectId;
-
-    @ConcordKey
-    private final String projectName;
+    private final Set<ProjectEntry> projects;
 
     @NotNull
     private final SecretType type;
@@ -68,12 +62,11 @@ public class SecretEntry implements Serializable {
     private final EntityOwner owner;
 
     @JsonCreator
-    public SecretEntry(@JsonProperty("id") UUID id,
+    public SecretEntryV2(@JsonProperty("id") UUID id,
                        @JsonProperty("name") String name,
                        @JsonProperty("orgId") UUID orgId,
                        @JsonProperty("orgName") String orgName,
-                       @JsonProperty("projectId") UUID projectId,
-                       @JsonProperty("projectName") String projectName,
+                       @JsonProperty("projects") Set<ProjectEntry> projects,
                        @JsonProperty("type") SecretType type,
                        @JsonProperty("encryptedBy") SecretEncryptedByType encryptedBy,
                        @JsonProperty("storeType") String storeType,
@@ -84,8 +77,7 @@ public class SecretEntry implements Serializable {
         this.name = name;
         this.orgId = orgId;
         this.orgName = orgName;
-        this.projectId = projectId;
-        this.projectName = projectName;
+        this.projects = projects;
         this.type = type;
         this.encryptedBy = encryptedBy;
         this.storeType = storeType;
@@ -93,19 +85,13 @@ public class SecretEntry implements Serializable {
         this.owner = owner;
     }
 
-    public SecretEntry(SecretEntryV2 secretEntry) {
+    public SecretEntryV2(SecretEntry secretEntry) {
+        Set<ProjectEntry> projects = Collections.singleton(new ProjectEntry(secretEntry.getProjectName(), secretEntry.getProjectId()));
         this.id = secretEntry.getId();
         this.name = secretEntry.getName();
         this.orgId = secretEntry.getOrgId();
         this.orgName = secretEntry.getOrgName();
-        Set<ProjectEntry> projects = secretEntry.getProjects();
-        if(projects != null && !projects.isEmpty()) {
-            this.projectId =  projects.stream().findFirst().get().getId();
-            this.projectName = projects.stream().findFirst().get().getName();
-        } else {
-            this.projectId = null;
-            this.projectName = null;
-        }
+        this.projects = projects;
         this.type = secretEntry.getType();
         this.encryptedBy = secretEntry.getEncryptedBy();
         this.storeType = secretEntry.getStoreType();
@@ -129,12 +115,8 @@ public class SecretEntry implements Serializable {
         return orgName;
     }
 
-    public UUID getProjectId() {
-        return projectId;
-    }
-
-    public String getProjectName() {
-        return projectName;
+    public Set<ProjectEntry> getProjects() {
+        return projects;
     }
 
     public SecretType getType() {
@@ -164,8 +146,6 @@ public class SecretEntry implements Serializable {
                 ", name='" + name + '\'' +
                 ", orgId=" + orgId +
                 ", orgName='" + orgName + '\'' +
-                ", projectId='" + projectId + '\'' +
-                ", projectName='" + projectName + '\'' +
                 ", type=" + type +
                 ", encryptedBy=" + encryptedBy +
                 ", storeType=" + storeType +

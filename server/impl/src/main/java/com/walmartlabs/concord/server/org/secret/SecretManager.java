@@ -120,12 +120,12 @@ public class SecretManager {
     }
 
     @WithTimer
-    public SecretEntry assertAccess(UUID orgId, UUID secretId, String secretName, ResourceAccessLevel level, boolean orgMembersOnly) {
+    public SecretEntryV2 assertAccess(UUID orgId, UUID secretId, String secretName, ResourceAccessLevel level, boolean orgMembersOnly) {
         if (secretId == null && (orgId == null || secretName == null)) {
             throw new ValidationErrorsException("Secret ID or an organization ID and a secret name is required");
         }
 
-        SecretEntry e = null;
+        SecretEntryV2 e = null;
 
         if (secretId != null) {
             e = secretDao.get(secretId);
@@ -320,7 +320,7 @@ public class SecretManager {
     }
 
     public void update(UUID orgId, String secretName, SecretUpdateParams params) {
-        SecretEntry e = assertAccess(orgId,null, secretName, ResourceAccessLevel.WRITER, false);
+        SecretEntryV2 e = assertAccess(orgId,null, secretName, ResourceAccessLevel.WRITER, false);
 
         UUID newOrgId = validateOrgId(params.newOrgId(), params.newOrgName(), e);
         Set<UUID> newProjectIds = validateProjectIds(params.newProjectIds(), params.removeProjectLink(), newOrgId, e);
@@ -403,7 +403,7 @@ public class SecretManager {
                 .log();
     }
 
-    private String validateName(String newName, UUID newOrgId, SecretEntry e) {
+    private String validateName(String newName, UUID newOrgId, SecretEntryV2 e) {
         if (newOrgId == null && newName == null) {
             return null;
         }
@@ -420,7 +420,7 @@ public class SecretManager {
      * Removes an existing secret.
      */
     public void delete(DSLContext tx, UUID orgId, String secretName) {
-        SecretEntry e = assertAccess(orgId, null, secretName, ResourceAccessLevel.OWNER, true);
+        SecretEntryV2 e = assertAccess(orgId, null, secretName, ResourceAccessLevel.OWNER, true);
 
         // delete the content first
         getSecretStore(e.getStoreType()).delete(tx, e.getId());
@@ -471,7 +471,7 @@ public class SecretManager {
      * Returns a raw (unencrypted) secret value.
      */
     public SecretDataEntry getRaw(AccessScope accessScope, UUID orgId, String name, String password) {
-        SecretEntry e = assertAccess(orgId, null, name, ResourceAccessLevel.READER, false);
+        SecretEntryV2 e = assertAccess(orgId, null, name, ResourceAccessLevel.READER, false);
         if (e == null) {
             return null;
         }
@@ -511,7 +511,7 @@ public class SecretManager {
     /**
      * Returns a list of secrets for the specified organization.
      */
-    public List<SecretEntry> list(UUID orgId, int offset, int limit, String filter) {
+    public List<SecretEntryV2> list(UUID orgId, int offset, int limit, String filter) {
         UserPrincipal p = UserPrincipal.assertCurrent();
         UUID userId = p.getId();
         if (Roles.isAdmin() || Roles.isGlobalReader() || Roles.isGlobalWriter()) {
@@ -537,7 +537,7 @@ public class SecretManager {
                         SecretVisibility visibility,
                         String storeType,
                         SecretDao.InsertMode insertMode) {
-        return secretDao.txResult(tx -> create(tx, name, orgId, projectIds, s, password, visibility, storeType, insertMode));
+        return secretDao.txResult(tx -> create(tx, name, orgId, projectIds.stream().filter(Objects::nonNull).collect(Collectors.toSet()), s, password, visibility, storeType, insertMode));
     }
 
     private UUID create(DSLContext tx,
@@ -626,7 +626,7 @@ public class SecretManager {
         return pwd.getBytes(StandardCharsets.UTF_8);
     }
 
-    private void assertProjectScope(AccessScope scope, SecretEntry e) {
+    private void assertProjectScope(AccessScope scope, SecretEntryV2 e) {
         Set<UUID> projectIds = e.getProjects().stream().map(ProjectEntry::getId).collect(Collectors.toSet());
         if (projectIds.isEmpty()) {
             return;
@@ -669,7 +669,7 @@ public class SecretManager {
         }
     }
 
-    private UUID validateOrgId(UUID newOrgId, String newOrgName, SecretEntry e) {
+    private UUID validateOrgId(UUID newOrgId, String newOrgName, SecretEntryV2 e) {
         UUID orgId = null;
         if (newOrgId != null) {
             orgId = orgManager.assertAccess(newOrgId, true).getId();
@@ -684,7 +684,7 @@ public class SecretManager {
         return null;
     }
 
-    private Set<UUID> validateProjectIds(Set<UUID> newProjectIds, boolean removeProjectLink, UUID newOrgId, SecretEntry e) {
+    private Set<UUID> validateProjectIds(Set<UUID> newProjectIds, boolean removeProjectLink, UUID newOrgId, SecretEntryV2 e) {
         if (newOrgId != null) {
             // set the project ID as null when the updated org ID is not same as the current org ID
             // when a secret is changing orgs, the project link must be set to null
@@ -707,7 +707,7 @@ public class SecretManager {
         }).collect(Collectors.toSet());
     }
 
-    private UserEntry validateOwner(UUID newOwnerId, SecretEntry e) {
+    private UserEntry validateOwner(UUID newOwnerId, SecretEntryV2 e) {
         if (newOwnerId == null) {
             return null;
         }

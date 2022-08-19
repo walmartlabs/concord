@@ -30,8 +30,7 @@ import com.walmartlabs.concord.server.audit.AuditObject;
 import com.walmartlabs.concord.server.events.Events;
 import com.walmartlabs.concord.server.events.ExternalEventResource;
 import com.walmartlabs.concord.server.org.ResourceAccessLevel;
-import com.walmartlabs.concord.server.org.secret.SecretEntry;
-import com.walmartlabs.concord.server.org.secret.SecretManager;
+import com.walmartlabs.concord.server.org.secret.*;
 import com.walmartlabs.concord.server.policy.EntityAction;
 import com.walmartlabs.concord.server.policy.EntityType;
 import com.walmartlabs.concord.server.policy.PolicyManager;
@@ -122,7 +121,7 @@ public class ProjectRepositoryManager {
     public void insert(DSLContext tx, UUID orgId, String orgName, UUID projectId, String projectName, RepositoryEntry entry, boolean doAuditLog) {
         RepositoryUtils.assertRepository(entry);
 
-        SecretEntry secret = assertSecret(orgId, entry);
+        SecretEntryV2 secret = assertSecret(orgId, entry);
 
         policyManager.checkEntity(orgId, projectId, EntityType.REPOSITORY, EntityAction.CREATE, null,
                 PolicyUtils.repositoryToMap(orgId, orgName, projectId, projectName, entry, secret));
@@ -158,7 +157,7 @@ public class ProjectRepositoryManager {
 
         RepositoryEntry prevEntry = repositoryDao.get(tx, projectId, repoId);
 
-        SecretEntry secret = assertSecret(orgId, entry);
+        SecretEntryV2 secret = assertSecret(orgId, entry);
         policyManager.checkEntity(orgId, projectId, EntityType.REPOSITORY, EntityAction.UPDATE, null,
                 PolicyUtils.repositoryToMap(orgId, orgName, projectId, projectName, entry, secret));
 
@@ -203,7 +202,7 @@ public class ProjectRepositoryManager {
         }
     }
 
-    private SecretEntry assertSecret(UUID orgId, RepositoryEntry entry) {
+    private SecretEntryV2 assertSecret(UUID orgId, RepositoryEntry entry) {
         if (entry.getSecretId() == null && entry.getSecretName() == null) {
             return null;
         }

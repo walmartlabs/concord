@@ -58,7 +58,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.*;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 @Named
 @Singleton
@@ -100,39 +99,35 @@ public class SecretResource implements Resource {
     @Consumes(MediaType.MULTIPART_FORM_DATA)
     @Produces(MediaType.APPLICATION_JSON)
     @Validate
+    @Deprecated
     public SecretOperationResponse create(@ApiParam @PathParam("orgName") @ConcordKey String orgName,
                                           @ApiParam MultipartInput input) {
 
         OrganizationEntry org = orgManager.assertAccess(orgName, true);
 
         try {
-            SecretType type = assertType(input);
-            String storeType = assertStoreType(input);
+            SecretType type = SecretResourceUtils.assertType(input);
+            String storeType = SecretResourceUtils.assertStoreType(secretManager, input);
 
-            String name = assertName(input);
-            assertUnique(org.getId(), name);
+            String name = SecretResourceUtils.assertName(input);
+            SecretResourceUtils.assertUnique(secretDao, org.getId(), name);
 
             boolean generatePwd = MultipartUtils.getBoolean(input, Constants.Multipart.GENERATE_PASSWORD, false);
-            String storePwd = getOrGenerateStorePassword(input, generatePwd);
-            SecretVisibility visibility = getVisibility(input);
+            String storePwd = SecretResourceUtils.getOrGenerateStorePassword(input, generatePwd);
+            SecretVisibility visibility = SecretResourceUtils.getVisibility(input);
 
-            Set<UUID> projectIds = getProjectIds(
-                    org.getId(),
-                    MultipartUtils.getUUIDList(input, Constants.Multipart.PROJECT_IDS),
-                    MultipartUtils.getStringList(input, Constants.Multipart.PROJECT_NAMES),
-                    MultipartUtils.getUuid(input, Constants.Multipart.PROJECT_ID),
-                    MultipartUtils.getString(input, Constants.Multipart.PROJECT_NAME)
-            );
+            UUID projectId = getProject(org.getId(), MultipartUtils.getUuid(input, Constants.Multipart.PROJECT_ID),
+                    MultipartUtils.getString(input, Constants.Multipart.PROJECT_NAME));
 
             switch (type) {
                 case KEY_PAIR: {
-                    return createKeyPair(org.getId(), projectIds, name, storePwd, visibility, input, storeType);
+                    return SecretResourceUtils.createKeyPair(secretManager, org.getId(), Collections.singleton(projectId), name, storePwd, visibility, input, storeType);
                 }
                 case USERNAME_PASSWORD: {
-                    return createUsernamePassword(org.getId(), projectIds, name, storePwd, visibility, input, storeType);
+                    return SecretResourceUtils.createUsernamePassword(secretManager, org.getId(), Collections.singleton(projectId), name, storePwd, visibility, input, storeType);
                 }
                 case DATA: {
-                    return createData(org.getId(), projectIds, name, storePwd, visibility, input, storeType);
+                    return SecretResourceUtils.createData(secretManager, org.getId(), Collections.singleton(projectId), name, storePwd, visibility, input, storeType);
                 }
                 default:
                     throw new ValidationErrorsException("Unsupported secret type: " + type);
@@ -154,18 +149,13 @@ public class SecretResource implements Resource {
                                          @ApiParam @Valid SecretUpdateRequest req) {
 
         OrganizationEntry org = orgManager.assertAccess(orgName, true);
-        Set<UUID> projectIds = getProjectIds(
-                org.getId(),
-                req.projectIds(),
-                req.projectNames(),
-                req.projectId(), req.projectName());
-        boolean removeProjectLink = (req.projectName() != null && req.projectName().trim().isEmpty()) || (req.projectNames() != null && req.projectNames().isEmpty()) || (req.projectIds() != null && req.projectIds().isEmpty());
+
         try {
             SecretUpdateParams newSecretParams = SecretUpdateParams.builder()
                     .newOrgId(req.orgId())
                     .newOrgName(req.orgName())
-                    .newProjectIds(projectIds)
-                    .removeProjectLink(removeProjectLink)
+                    .newProjectIds(Arrays.asList(getProject(req.orgId(), req.projectId(), req.projectName())))
+                    .removeProjectLink(req.projectName() != null && req.projectName().trim().isEmpty())
                     .newOwnerId(getOwnerId(req.owner()))
                     .currentPassword(req.storePassword())
                     .newPassword(req.newStorePassword())
@@ -187,11 +177,12 @@ public class SecretResource implements Resource {
     @Path("/{orgName}/secret/{secretName}")
     @Produces(MediaType.APPLICATION_JSON)
     @WithTimer
+    @Deprecated
     public SecretEntry get(@ApiParam @PathParam("orgName") @ConcordKey String orgName,
                            @ApiParam @PathParam("secretName") @ConcordKey String secretName) {
 
         OrganizationEntry org = orgManager.assertAccess(orgName, false);
-        return secretManager.assertAccess(org.getId(), null, secretName, ResourceAccessLevel.READER, false);
+        return new SecretEntry(secretManager.assertAccess(org.getId(), null, secretName, ResourceAccessLevel.READER, false));
     }
 
     @POST
@@ -260,12 +251,13 @@ public class SecretResource implements Resource {
     @Path("/{orgName}/secret")
     @Produces(MediaType.APPLICATION_JSON)
     @Validate
+    @Deprecated
     public List<SecretEntry> list(@ApiParam @PathParam("orgName") @ConcordKey String orgName,
                                   @QueryParam("offset") int offset,
                                   @QueryParam("limit") int limit,
                                   @QueryParam("filter") String filter) {
         OrganizationEntry org = orgManager.assertAccess(orgName, false);
-        return secretManager.list(org.getId(), offset, limit, filter);
+        return secretManager.list(org.getId(), offset, limit, filter).stream().map(SecretEntry::new).collect(Collectors.toList());
     }
 
     @DELETE
@@ -342,157 +334,12 @@ public class SecretResource implements Resource {
         return new GenericOperationResult(OperationResult.UPDATED);
     }
 
-    private PublicKeyResponse createKeyPair(UUID orgId, Set<UUID> projectIds, String name, String storePassword, SecretVisibility visibility, MultipartInput input, String storeType) throws IOException {
-        DecryptedKeyPair k;
-
-        InputStream publicKey = MultipartUtils.getStream(input, Constants.Multipart.PUBLIC);
-        if (publicKey != null) {
-            InputStream privateKey = MultipartUtils.assertStream(input, Constants.Multipart.PRIVATE);
-            try {
-                k = secretManager.createKeyPair(orgId, projectIds, name, storePassword, publicKey, privateKey, visibility, storeType);
-            } catch (IllegalArgumentException e) {
-                throw new ValidationErrorsException(e.getMessage());
+    private UUID getProject(UUID orgId, UUID id, String name) {
+        if (id == null && name != null) {
+            id = projectDao.getId(orgId, name);
+            if (id == null) {
+                throw new ValidationErrorsException("Project not found: " + name);
             }
-        } else {
-            k = secretManager.createKeyPair(orgId, projectIds, name, storePassword, visibility, storeType);
-        }
-
-        return new PublicKeyResponse(k.getId(), OperationResult.CREATED, storePassword, new String(k.getData()));
-    }
-
-    private SecretOperationResponse createUsernamePassword(UUID orgId, Set<UUID> projectIds, String name, String storePassword,
-                                                           SecretVisibility visibility, MultipartInput input,
-                                                           String storeType) {
-
-        String username = MultipartUtils.assertString(input, Constants.Multipart.USERNAME);
-        String password = MultipartUtils.assertString(input, Constants.Multipart.PASSWORD);
-
-        DecryptedUsernamePassword e = secretManager.createUsernamePassword(orgId, projectIds, name, storePassword, username, password.toCharArray(), visibility, storeType);
-        return new SecretOperationResponse(e.getId(), OperationResult.CREATED, storePassword);
-    }
-
-    private SecretOperationResponse createData(UUID orgId, Set<UUID> projectIds, String name, String storePassword,
-                                               SecretVisibility visibility, MultipartInput input,
-                                               String storeType) throws IOException {
-
-        InputStream data = MultipartUtils.assertStream(input, Constants.Multipart.DATA);
-        DecryptedBinaryData e = secretManager.createBinaryData(orgId, projectIds, name, storePassword, data, visibility, storeType);
-        return new SecretOperationResponse(e.getId(), OperationResult.CREATED, storePassword);
-    }
-
-    private void assertUnique(UUID orgId, String name) {
-        if (secretDao.getId(orgId, name) != null) {
-            throw new ValidationErrorsException("Secret already exists: " + name);
-        }
-    }
-
-    private String getOrGenerateStorePassword(MultipartInput input, boolean generatePassword) {
-        String password;
-        try {
-            password = MultipartUtils.getString(input, Constants.Multipart.STORE_PASSWORD);
-        } catch (WebApplicationException e) {
-            throw new ConcordApplicationException("Can't get a password from the request", e);
-        }
-
-        if (password != null) {
-            try {
-                PasswordChecker.check(password);
-            } catch (PasswordChecker.CheckerException e) {
-                throw new ConcordApplicationException("Invalid password: " + e.getMessage(), Status.BAD_REQUEST);
-            }
-        }
-
-        if (password == null && generatePassword) {
-            return PasswordGenerator.generate();
-        }
-
-        return password;
-    }
-
-    private String assertName(MultipartInput input) {
-        String s = MultipartUtils.assertString(input, Constants.Multipart.NAME);
-        if (s.trim().isEmpty()) {
-            throw new ValidationErrorsException("'name' is required");
-        }
-
-        if (!s.matches(ConcordKey.PATTERN)) {
-            throw new ValidationErrorsException("Invalid secret name: " + s + ". " + ConcordKey.MESSAGE);
-        }
-
-        return s;
-    }
-
-    private static SecretType assertType(MultipartInput input) {
-        SecretType type = getType(input);
-        if (type == null) {
-            throw new ValidationErrorsException("'type' is required");
-        }
-        return type;
-    }
-
-    private static SecretType getType(MultipartInput input) {
-        String s = MultipartUtils.getString(input, Constants.Multipart.TYPE);
-        if (s == null) {
-            return null;
-        }
-
-        try {
-            return SecretType.valueOf(s.toUpperCase());
-        } catch (IllegalArgumentException e) {
-            throw new ValidationErrorsException("Unsupported secret type: " + s);
-        }
-    }
-
-    private String assertStoreType(MultipartInput input) {
-        String s = MultipartUtils.getString(input, Constants.Multipart.STORE_TYPE);
-        if (s == null) {
-            return secretManager.getDefaultSecretStoreType();
-        }
-
-        // check if the given secret source type is enabled or not
-        boolean isStoreActive = secretManager.getActiveSecretStores().stream()
-                .anyMatch(store -> store.getType().equalsIgnoreCase(s));
-
-        if (!isStoreActive) {
-            throw new ValidationErrorsException("Secret store of type " + s + " is not available!");
-        }
-
-        return s;
-    }
-
-    private static SecretVisibility getVisibility(MultipartInput input) {
-        String s = MultipartUtils.getString(input, Constants.Multipart.VISIBILITY);
-        if (s == null) {
-            return SecretVisibility.PUBLIC;
-        }
-
-        try {
-            return SecretVisibility.valueOf(s);
-        } catch (IllegalArgumentException e) {
-            throw new ConcordApplicationException("Invalid visibility value: " + s, Status.BAD_REQUEST);
-        }
-    }
-
-    private Set<UUID> getProjectIds(UUID orgId, List<UUID> projectIds, List<String> projectNames, UUID projectId, String projectName) {
-        if(projectIds != null && !projectIds.isEmpty()) {
-            return new HashSet<>(projectIds);
-        }
-        if (projectNames != null && !projectNames.isEmpty()) {
-            return projectNames.stream().map(name -> getProjectIdFromName(orgId, name)).collect(Collectors.toSet());
-        }
-        if (projectId != null) {
-            return new HashSet<>(Collections.singletonList(projectId));
-        }
-        if (projectName != null && !projectName.isEmpty()){
-            return new HashSet<>(Collections.singletonList(getProjectIdFromName(orgId, projectName)));
-        }
-        return null;
-    }
-
-    private UUID getProjectIdFromName(UUID orgId, String projectName) {
-        UUID id = projectDao.getId(orgId, projectName);
-        if (id == null) {
-            throw new ValidationErrorsException("Project not found: " + projectName);
         }
         return id;
     }
