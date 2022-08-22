@@ -99,10 +99,10 @@ public class SecretResourceV2 implements Resource {
                     .removeProjectLink(MultipartUtils.getBoolean(input, "removeProjectLink", false))
                     .newOwnerId(MultipartUtils.getUuid(input, "ownerId"))
                     .currentPassword(MultipartUtils.getString(input, Constants.Multipart.STORE_PASSWORD))
-                    .newPassword(MultipartUtils.getString(input, "newStorePassword"))
+                    .newPassword(MultipartUtils.getString(input, Constants.Multipart.NEW_STORE_PASSWORD))
                     .newSecret(buildSecret(input))
                     .newName(MultipartUtils.getString(input, Constants.Multipart.NAME))
-                    .newVisibility(getVisibility(input))
+                    .newVisibility(SecretResourceUtils.getVisibility(input))
                     .build();
 
             secretManager.update(org.getId(), secretName, newSecretParams);
@@ -158,7 +158,7 @@ public class SecretResourceV2 implements Resource {
 
             boolean generatePwd = MultipartUtils.getBoolean(input, Constants.Multipart.GENERATE_PASSWORD, false);
             String storePwd = SecretResourceUtils.getOrGenerateStorePassword(input, generatePwd);
-            SecretVisibility visibility = getVisibility(input);
+            SecretVisibility visibility = SecretResourceUtils.getVisibility(input);
 
             Set<UUID> projectIds = getProjectIds(
                     org.getId(),
@@ -187,8 +187,8 @@ public class SecretResourceV2 implements Resource {
     }
 
 
-    private Secret buildSecret(MultipartInput input) throws IOException {
-        SecretType type = getType(input);
+    public Secret buildSecret(MultipartInput input) throws IOException {
+        SecretType type = SecretResourceUtils.getType(input);
         if (type == null) {
             return null;
         }
@@ -213,33 +213,6 @@ public class SecretResourceV2 implements Resource {
         }
     }
 
-    private static SecretType getType(MultipartInput input) {
-        String s = MultipartUtils.getString(input, Constants.Multipart.TYPE);
-        if (s == null) {
-            return null;
-        }
-
-        try {
-            return SecretType.valueOf(s.toUpperCase());
-        } catch (IllegalArgumentException e) {
-            throw new ValidationErrorsException("Unsupported secret type: " + s);
-        }
-    }
-
-    private static SecretVisibility getVisibility(MultipartInput input) {
-        String s = MultipartUtils.getString(input, Constants.Multipart.VISIBILITY);
-        if (s == null) {
-            return null;
-        }
-
-        try {
-            return SecretVisibility.valueOf(s);
-        } catch (IllegalArgumentException e) {
-            throw new ConcordApplicationException("Invalid visibility value: " + s, Status.BAD_REQUEST);
-        }
-    }
-
-
     private Set<UUID> getProjectIds(UUID orgId, List<UUID> projectIds, List<String> projectNames, UUID projectId, String projectName) {
         if (projectIds == null || projectIds.isEmpty()) {
             if (projectNames != null && !projectNames.isEmpty()) {
@@ -252,7 +225,7 @@ public class SecretResourceV2 implements Resource {
                 }
             }
         }
-        return (projectIds == null) ? Collections.emptySet() : new HashSet<>(projectIds);
+        return (projectIds == null) ? null : new HashSet<>(projectIds.stream().filter(Objects::nonNull).collect(Collectors.toSet()));
     }
 
     private UUID getProjectIdFromName(UUID orgId, String projectName) {

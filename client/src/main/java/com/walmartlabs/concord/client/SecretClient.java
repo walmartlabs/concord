@@ -158,7 +158,7 @@ public class SecretClient {
     }
 
     public SecretOperationResponse createSecret(CreateSecretRequest secretRequest) throws ApiException {
-        Set<String> projectNames = secretRequest.project() == null ? null : Collections.singleton(secretRequest.project());
+        Set<String> projectNames = secretRequest.project() == null ? Collections.emptySet() : Collections.singleton(secretRequest.project());
         CreateSecretRequestV2 secretRequestv2 = CreateSecretRequestV2.builder().org(secretRequest.org())
                 .name(secretRequest.name())
                 .generatePassword(secretRequest.generatePassword())

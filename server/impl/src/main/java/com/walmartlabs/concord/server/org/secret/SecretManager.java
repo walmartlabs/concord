@@ -389,7 +389,7 @@ public class SecretManager {
 
             secretDao.update(tx, e.getId(), params.newName(), newOwner != null ? newOwner.getId() : null,
                     finalNewType, newEncryptedData, params.newVisibility(), newOrgId);
-            secretDao.updateSecretProjects(tx, e.getId(), newProjectIds);
+            secretDao.updateSecretProjects(tx, e.getId(), params.removeProjectLink() ? Collections.emptySet() : newProjectIds);
         });
 
         Map<String, Object> changes = DiffUtils.compare(e, secretDao.get(e.getId()));
@@ -537,7 +537,7 @@ public class SecretManager {
                         SecretVisibility visibility,
                         String storeType,
                         SecretDao.InsertMode insertMode) {
-        return secretDao.txResult(tx -> create(tx, name, orgId, projectIds.stream().filter(Objects::nonNull).collect(Collectors.toSet()), s, password, visibility, storeType, insertMode));
+        return secretDao.txResult(tx -> create(tx, name, orgId, projectIds, s, password, visibility, storeType, insertMode));
     }
 
     private UUID create(DSLContext tx,

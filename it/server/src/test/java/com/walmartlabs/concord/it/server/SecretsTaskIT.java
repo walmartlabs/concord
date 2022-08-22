@@ -31,7 +31,8 @@ import static com.walmartlabs.concord.it.common.ServerClient.assertLog;
 import static com.walmartlabs.concord.it.common.ServerClient.waitForCompletion;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
-public class SecretsTaskIT extends AbstractServerIT {
+public class
+SecretsTaskIT extends AbstractServerIT {
 
     @Test
     public void test() throws Exception {

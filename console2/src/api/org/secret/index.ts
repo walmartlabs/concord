@@ -197,7 +197,11 @@ export const updateSecretProject = (
     projects: ProjectEntry[]
 ): Promise<GenericOperationResult> => {
     const data = new FormData();
-    data.append("projectIds", projects.map(project => project.id).join(","));
+    if(projects.length > 0) {
+        data.append("projectIds", projects.map(project => project.id).join(","));
+    } else {
+        data.append("removeProjectLink", "true");
+    }
     const opts = {
         method: 'POST',
         body: data

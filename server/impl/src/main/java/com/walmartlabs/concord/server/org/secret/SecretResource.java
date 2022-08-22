@@ -119,15 +119,17 @@ public class SecretResource implements Resource {
             UUID projectId = getProject(org.getId(), MultipartUtils.getUuid(input, Constants.Multipart.PROJECT_ID),
                     MultipartUtils.getString(input, Constants.Multipart.PROJECT_NAME));
 
+            Set<UUID> projectIds = (projectId == null) ? Collections.emptySet() : Collections.singleton(projectId);
+
             switch (type) {
                 case KEY_PAIR: {
-                    return SecretResourceUtils.createKeyPair(secretManager, org.getId(), Collections.singleton(projectId), name, storePwd, visibility, input, storeType);
+                    return SecretResourceUtils.createKeyPair(secretManager, org.getId(), projectIds, name, storePwd, visibility, input, storeType);
                 }
                 case USERNAME_PASSWORD: {
-                    return SecretResourceUtils.createUsernamePassword(secretManager, org.getId(), Collections.singleton(projectId), name, storePwd, visibility, input, storeType);
+                    return SecretResourceUtils.createUsernamePassword(secretManager, org.getId(), projectIds, name, storePwd, visibility, input, storeType);
                 }
                 case DATA: {
-                    return SecretResourceUtils.createData(secretManager, org.getId(), Collections.singleton(projectId), name, storePwd, visibility, input, storeType);
+                    return SecretResourceUtils.createData(secretManager, org.getId(), projectIds, name, storePwd, visibility, input, storeType);
                 }
                 default:
                     throw new ValidationErrorsException("Unsupported secret type: " + type);
@@ -151,10 +153,11 @@ public class SecretResource implements Resource {
         OrganizationEntry org = orgManager.assertAccess(orgName, true);
 
         try {
+            UUID projectId = getProject(req.orgId(), req.projectId(), req.projectName());
             SecretUpdateParams newSecretParams = SecretUpdateParams.builder()
                     .newOrgId(req.orgId())
                     .newOrgName(req.orgName())
-                    .newProjectIds(Arrays.asList(getProject(req.orgId(), req.projectId(), req.projectName())))
+                    .newProjectIds(projectId == null ? null : Collections.singletonList(projectId))
                     .removeProjectLink(req.projectName() != null && req.projectName().trim().isEmpty())
                     .newOwnerId(getOwnerId(req.owner()))
                     .currentPassword(req.storePassword())
@@ -335,7 +338,7 @@ public class SecretResource implements Resource {
     }
 
     private UUID getProject(UUID orgId, UUID id, String name) {
-        if (id == null && name != null) {
+        if (id == null && ( name != null && !name.trim().isEmpty()) ) {
             id = projectDao.getId(orgId, name);
             if (id == null) {
                 throw new ValidationErrorsException("Project not found: " + name);

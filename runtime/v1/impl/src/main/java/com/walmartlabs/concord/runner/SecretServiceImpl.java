@@ -29,6 +29,7 @@ import com.walmartlabs.concord.common.secret.BinaryDataSecret;
 import com.walmartlabs.concord.common.secret.KeyPair;
 import com.walmartlabs.concord.common.secret.UsernamePassword;
 import com.walmartlabs.concord.sdk.SecretNotFoundException;
+import com.walmartlabs.concord.sdk.Secret;
 import com.walmartlabs.concord.sdk.*;
 
 import javax.inject.Inject;

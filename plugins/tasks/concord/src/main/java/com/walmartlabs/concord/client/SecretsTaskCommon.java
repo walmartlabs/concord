@@ -156,43 +156,32 @@ public class SecretsTaskCommon {
     }
 
     private TaskResult.SimpleResult update(UpdateParams in) throws Exception {
-
-        String newData = null;
         Object data = in.data();
 
-        if (data != null) {
-            if (data instanceof String) {
-                String s = data.toString();
-                newData = Base64.getEncoder().encodeToString(s.getBytes(StandardCharsets.UTF_8));
-            } else if (data instanceof byte[]) {
-                byte[] ab = (byte[]) data;
-                newData = Base64.getEncoder().encodeToString(ab);
-            } else {
-                throw new RuntimeException("Unsupported '" + Constants.Multipart.DATA + "' type: " + data.getClass() + ". " +
-                        "Only string values and byte arrays are allowed.");
-            }
-        }
 
         String storePassword = in.storePassword();
         String newStorePassword = in.newStorePassword();
 
-        if (newData == null && newStorePassword == null) {
+        if (data == null && newStorePassword == null) {
             log.warn("Not updating anything since nothing has changed.");
             return Result.ok();
         }
 
         String orgName = in.orgName(defaultOrg);
         String secretName = in.secretName();
+        SecretEntry.TypeEnum type = in.secretType();
         List<String> projectNames = in.projectNames();
         List<UUID> projectIds = in.projectIds();
 
         try {
 
             Map<String,Object> params = new HashMap<>();
-            params.put(Constants.Multipart.DATA, newData);
-            params.put(Constants.Multipart.STORE_PASSWORD, storePassword);
-            params.put(Constants.Multipart.PROJECT_IDS, projectIds);
-            params.put(Constants.Multipart.PROJECT_NAMES, projectNames);
+            addIfPresent(params, Constants.Multipart.DATA, data);
+            addIfPresent(params, Constants.Multipart.STORE_PASSWORD, storePassword);
+            addIfPresent(params, Constants.Multipart.NEW_STORE_PASSWORD, newStorePassword);
+            addIfPresent(params, Constants.Multipart.PROJECT_IDS, projectIds);
+            addIfPresent(params, Constants.Multipart.PROJECT_NAMES, projectNames);
+            addIfPresent(params, Constants.Multipart.TYPE, type);
             post("/api/v2/org/" + orgName + "/secret/" + secretName, params, SecretOperationResponse.class);
 
             log.info("The secret was successfully updated: {}", secretName);

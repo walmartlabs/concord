@@ -120,7 +120,7 @@ public class SecretsTaskParams {
         }
 
         public SecretEntry.TypeEnum secretType() {
-            String type = variables.getString(Constants.Multipart.TYPE, SecretEntry.TypeEnum.DATA.toString());
+            String type = variables.assertString(Constants.Multipart.TYPE);
             try {
                 return SecretEntry.TypeEnum.valueOf(type.trim().toUpperCase());
             } catch (Exception e) {
@@ -189,6 +189,17 @@ public class SecretsTaskParams {
 
         public boolean createIfMissing() {
             return variables.getBoolean(CREATE_IF_MISSING_KEY, false);
+        }
+
+        public SecretEntry.TypeEnum secretType() {
+            String type = variables.getString(Constants.Multipart.TYPE);
+            if(type == null) return null;
+            try {
+                return SecretEntry.TypeEnum.valueOf(type.trim().toUpperCase());
+            } catch (Exception e) {
+                String message = String.format("Invalid argument '%s', allowed values are: 'data' (default), 'key_pair' and 'username_password'", type);
+                throw new IllegalArgumentException(message);
+            }
         }
     }
 

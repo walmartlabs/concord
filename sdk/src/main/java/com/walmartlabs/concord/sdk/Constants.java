@@ -570,6 +570,8 @@ public class Constants {
 
         public static final String STORE_PASSWORD = "storePassword"; // NOSONAR
 
+        public static final String NEW_STORE_PASSWORD = "newStorePassword";
+
         public static final String VISIBILITY = "visibility";
 
         public static final String PARENT_INSTANCE_ID = "parentInstanceId";

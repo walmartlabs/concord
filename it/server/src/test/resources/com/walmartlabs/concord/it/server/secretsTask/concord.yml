@@ -20,6 +20,7 @@ flows:
       in:
         action: create
         name: ${secretName}
+        type: data
         data: anders-test-value
         storePassword: Dingo1234
         projects:
@@ -91,6 +92,7 @@ flows:
         action: update
         name: ${secretName}
         storePassword: Tapir1234
+        type: DATA
         data: anders-test-elephant
 
   get-secret-again:
@@ -119,6 +121,7 @@ flows:
         action: update
         name: ${secretName}2
         storePassword: Tapir1234
+        type: DATA
         data: anders-test-elephant
         createIfMissing: true
 
