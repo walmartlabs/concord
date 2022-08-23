@@ -1,3 +1,5 @@
+ARG DEBIAN_FRONTEND=noninteractive
+
 FROM library/debian:stable
 LABEL maintainer="amith.k.b@walmartlabs.com"
 
@@ -27,3 +29,7 @@ RUN virtualenv /usr/local/bin/concord_venv && \
     /usr/local/bin/concord_venv/bin/pip3 --no-cache-dir install dumb-init
 
 RUN groupadd -g 456 concord && useradd --no-log-init -u 456 -g concord -m -s /sbin/nologin concord
+
+# Point /bin/sh to bash from dash
+RUN echo "dash dash/sh boolean false" | debconf-set-selections && \
+    DEBIAN_FRONTEND=${DEBIAN_FRONTEND} dpkg-reconfigure dash
