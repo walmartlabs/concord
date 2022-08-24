@@ -84,7 +84,6 @@ public class RepositoryResource implements Resource {
                             @ApiParam @PathParam("projectName") @ConcordKey String projectName,
                             @ApiParam @PathParam("repositoryName") @ConcordKey String repositoryName) {
 
-
         OrganizationEntry org = orgManager.assertAccess(orgName, false);
         return projectRepositoryManager.get(org.getId(), projectName, repositoryName);
     }
@@ -99,6 +98,7 @@ public class RepositoryResource implements Resource {
                                       @QueryParam("offset") int offset,
                                       @QueryParam("limit") int limit,
                                       @QueryParam("filter") String filter) {
+
         OrganizationEntry org = orgManager.assertAccess(orgName, false);
         return projectRepositoryManager.list(org.getId(), projectName, offset, limit, filter);
     }

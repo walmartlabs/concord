@@ -19,17 +19,20 @@
  */
 
 import * as React from 'react';
-import { connect } from 'react-redux';
-import { AnyAction, Dispatch } from 'redux';
-import { Loader, Dimmer } from 'semantic-ui-react';
-import { ConcordKey, RequestError } from '../../../api/common';
-import { ProjectEntry } from '../../../api/org/project';
-import { EditRepositoryEntry } from '../../../api/org/project/repository';
-import { testRepository } from '../../../api/service/console';
-import { actions, selectors, State } from '../../../state/data/projects';
-import { RepositoryForm, RepositoryFormValues } from '../../molecules';
-import { RepositorySourceType } from '../../molecules';
-import { RequestErrorActivity } from '../index';
+import {useCallback, useEffect, useState} from 'react';
+import {testRepository} from '../../../api/service/console';
+import {RepositoryForm, RepositoryFormValues, RepositorySourceType} from '../../molecules';
+import {RequestErrorActivity} from '../index';
+import {
+    createOrUpdate as apiCreateOrUpdate,
+    EditRepositoryEntry,
+    get as apiGetRepo,
+    RepositoryEntry
+} from "../../../api/org/project/repository";
+import {useApi} from "../../../hooks/useApi";
+import {ConcordKey, GenericOperationResult} from "../../../api/common";
+import {LoadingDispatch} from "../../../App";
+import {Redirect} from "react-router";
 
 interface ExternalProps {
     orgName: ConcordKey;
@@ -37,32 +40,71 @@ interface ExternalProps {
 
     /** defined for edit, undefined for new repos */
     repoName?: ConcordKey;
+
+    forceRefresh: any;
 }
 
+const INITIAL_VALUES:RepositoryFormValues = {
+    name: '',
+    url: '',
+    enabled: true,
+    sourceType: RepositorySourceType.BRANCH_OR_TAG,
+    triggersEnabled: true
+};
+
 const EditRepositoryActivity = (props: ExternalProps) => {
-    const {orgName, projectName, repoName} = props;
+    const {orgName, projectName, repoName, forceRefresh} = props;
+
+    const dispatch = React.useContext(LoadingDispatch);
+    const [repo, setRepo] = useState<RepositoryFormValues>(INITIAL_VALUES);
+
+    const loadRepo = useCallback(() => {
+        return apiGetRepo(orgName, projectName, repoName!);
+    }, [orgName, projectName, repoName]);
+
+    const { fetch: loadRepoFetch, clearState: loadRepoClearState, data: loadRepoData, error: loadError } =
+        useApi<RepositoryEntry>(loadRepo, { fetchOnMount: false });
+
+    useEffect(() => {
+        loadRepoClearState();
+        loadRepoFetch();
+    }, [loadRepoFetch, loadRepoClearState, forceRefresh]);
+
+    const postData = useCallback(() => {
+        return apiCreateOrUpdate(orgName, projectName, toEditRepositoryEntry(repo));
+    }, [orgName, projectName, repo]);
+
+    const { error, isLoading, data, fetch } = useApi<GenericOperationResult>(postData, {
+        fetchOnMount: false,
+        requestByFetch: true,
+        dispatch
+    });
+
+    const handleSubmit = useCallback(
+        (values: RepositoryFormValues) => {
+            setRepo(values);
+            fetch();
+        },
+        [fetch]
+    );
+
+    if (data) {
+        return <Redirect to={`/org/${orgName}/project/${projectName}/repository`} />;
+    }
 
     return (
         <>
-            <Dimmer active={submitting} inverted={true} page={true}>
-                <Loader active={submitting} size="massive" content={'Saving'} />
-            </Dimmer>
-
+            {loadError && <RequestErrorActivity error={loadError} />}
             {error && <RequestErrorActivity error={error} />}
+
             <RepositoryForm
                 orgName={orgName}
                 projectName={projectName}
-                onSubmit={submit}
-                submitting={submitting}
+                onSubmit={handleSubmit}
+                submitting={isLoading}
                 editMode={true}
                 initial={
-                    initial || {
-                        name: '',
-                        url: '',
-                        enabled: true,
-                        sourceType: RepositorySourceType.BRANCH_OR_TAG,
-                        triggersEnabled: true
-                    }
+                    toFormValues(loadRepoData) || INITIAL_VALUES
                 }
                 testRepository={({ name, sourceType, id, ...rest }) =>
                     testRepository({ orgName, projectName, ...rest })
@@ -71,6 +113,70 @@ const EditRepositoryActivity = (props: ExternalProps) => {
         </>
     );
 };
+
+const toFormValues = (
+    r?: RepositoryEntry
+): RepositoryFormValues | undefined => {
+    if (!r) {
+        return;
+    }
+
+    const sourceType = r.commitId
+        ? RepositorySourceType.COMMIT_ID
+        : RepositorySourceType.BRANCH_OR_TAG;
+
+    return {
+        id: r.id,
+        name: r.name,
+        url: r.url,
+        sourceType,
+        branch: r.branch,
+        commitId: r.commitId,
+        path: r.path,
+        secretId: r.secretId,
+        secretName: r.secretName,
+        enabled: !r.disabled,
+        triggersEnabled: !r.triggersDisabled
+    };
+};
+
+const notEmpty = (s: string | undefined): string | undefined => {
+    if (!s) {
+        return;
+    }
+
+    if (s === '') {
+        return;
+    }
+
+    return s;
+};
+
+const toEditRepositoryEntry = (
+    repo: RepositoryFormValues
+): EditRepositoryEntry => {
+    let branch = notEmpty(repo.branch);
+    if (repo.sourceType !== RepositorySourceType.BRANCH_OR_TAG) {
+        branch = undefined;
+    }
+
+    let commitId = notEmpty(repo.commitId);
+    if (repo.sourceType !== RepositorySourceType.COMMIT_ID) {
+        commitId = undefined;
+    }
+
+    return {
+        id: repo.id,
+        name: repo.name,
+        url: repo.url,
+        branch,
+        commitId,
+        path: repo.path,
+        secretId: repo.secretId!,
+        disabled: !repo.enabled,
+        triggersDisabled: !repo.triggersEnabled
+    };
+}
 
 export default EditRepositoryActivity;
 
@@ -149,34 +255,6 @@ const findRepo = (p?: ProjectEntry, repoName?: ConcordKey) => {
     }
 
     return p.repositories[repoName];
-};
-
-const toFormValues = (
-    p?: ProjectEntry,
-    repoName?: ConcordKey
-): RepositoryFormValues | undefined => {
-    const r = findRepo(p, repoName);
-    if (!r) {
-        return;
-    }
-
-    const sourceType = r.commitId
-        ? RepositorySourceType.COMMIT_ID
-        : RepositorySourceType.BRANCH_OR_TAG;
-
-    return {
-        id: r.id,
-        name: r.name,
-        url: r.url,
-        sourceType,
-        branch: r.branch,
-        commitId: r.commitId,
-        path: r.path,
-        secretId: r.secretId,
-        secretName: r.secretName,
-        enabled: !r.disabled,
-        triggersEnabled: !r.triggersDisabled
-    };
 };
 
 const mapStateToProps = (

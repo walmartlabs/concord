@@ -92,7 +92,7 @@ export const get = async (
     repoName: ConcordKey
 ): Promise<RepositoryEntry> => {
     return fetchJson<RepositoryEntry>(
-        `/api/v2/org/${orgName}/project/${projectName}/repository/${repoName}`
+        `/api/v1/org/${orgName}/project/${projectName}/repository/${repoName}`
     );
 };
 
