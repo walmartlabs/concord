@@ -12,6 +12,7 @@ jobs:
     runs-on: self-hosted
 
     strategy:
+      fail-fast: false
       matrix:
         baseos: [ centos, debian ]
 
