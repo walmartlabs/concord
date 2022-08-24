@@ -144,7 +144,7 @@ public class Frame implements Serializable {
             }
 
             locals.forEach((k, v) -> {
-                if (v instanceof Serializable) {
+                if (v == null || v instanceof Serializable) {
                     this.locals.put(k, (Serializable) v);
                 } else {
                     throw new IllegalStateException("Can't set a non-serializable local variable: " + k + " -> " + v.getClass());
