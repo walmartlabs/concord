@@ -454,4 +454,13 @@ public class ProcessIT extends AbstractTest {
         expectStatus(proc, ProcessEntry.StatusEnum.FAILED);
         proc.assertLog(".*Invalid exclusive mode.*");
     }
+
+    @Test
+    public void testNullCallInputParam() throws Exception {
+        ConcordProcess proc = concord.processes().start(new Payload()
+                .archive(resource("nullCallInputParam")));
+
+        expectStatus(proc, ProcessEntry.StatusEnum.FINISHED);
+        proc.assertLog(".*nullParam: ''.*");
+    }
 }
