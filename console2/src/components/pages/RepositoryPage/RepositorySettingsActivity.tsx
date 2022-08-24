@@ -29,6 +29,10 @@ import { testRepository } from '../../../api/service/console';
 import { actions, selectors, State } from '../../../state/data/projects';
 import { RepositoryForm, RepositoryFormValues, RequestErrorMessage } from '../../molecules';
 import { RepositorySourceType } from '../../molecules';
+import EditStoreQueryActivity from "../JsonStorePage/EditStoreQueryActivity";
+import {RequestErrorActivity} from "../../organisms";
+import ExecuteQueryResult from "../JsonStorePage/ExecuteQueryResult";
+import EditStoreQueryForm from "../JsonStorePage/EditStoreQueryForm";
 
 interface ExternalProps {
     orgName: ConcordKey;
@@ -38,20 +42,19 @@ interface ExternalProps {
     repoName?: ConcordKey;
 }
 
-interface StateProps {
-    submitting: boolean;
-    error: RequestError;
-    initial?: RepositoryFormValues;
-}
+const EditRepositoryActivity = (props: ExternalProps) => {
+    const {orgName, projectName, repoName} = props;
 
-interface DispatchProps {
-    load: () => void;
-    submit: (values: RepositoryFormValues) => void;
-}
+    return (
+        <>
+        </>
+    );
+};
 
-type Props = ExternalProps & StateProps & DispatchProps;
+export default EditRepositoryActivity;
 
-class EditRepositoryActivity extends React.PureComponent<Props> {
+/*
+class EditRepositoryActivity1 extends React.PureComponent<Props> {
     componentDidMount() {
         const { repoName, load } = this.props;
         if (repoName) {
@@ -190,3 +193,4 @@ const mapDispatchToProps = (
 });
 
 export default connect(mapStateToProps, mapDispatchToProps)(EditRepositoryActivity);
+*/

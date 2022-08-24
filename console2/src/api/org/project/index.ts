@@ -28,15 +28,10 @@ import {
     OperationResult,
     queryParams
 } from '../../common';
-import { RepositoryEntry } from './repository';
 
 export enum ProjectVisibility {
     PUBLIC = 'PUBLIC',
     PRIVATE = 'PRIVATE'
-}
-
-export interface Repositories {
-    [name: string]: RepositoryEntry;
 }
 
 export interface ProjectEntryMetaUI {
@@ -74,8 +69,6 @@ export interface ProjectEntry {
 
     description?: string;
     visibility: ProjectVisibility;
-
-    repositories?: Repositories;
 
     rawPayloadMode: RawPayloadMode;
 

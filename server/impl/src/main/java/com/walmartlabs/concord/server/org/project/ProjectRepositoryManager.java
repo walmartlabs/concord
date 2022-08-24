@@ -88,6 +88,11 @@ public class ProjectRepositoryManager {
         return repositoryDao.get(projectId, repositoryName);
     }
 
+    public RepositoryEntry get(UUID orgId, String projectName, String repositoryName) {
+        ProjectEntry project = projectAccessManager.assertAccess(orgId, null, projectName, ResourceAccessLevel.READER, false);
+        return get(project.getId(), repositoryName);
+    }
+
     public List<RepositoryEntry> list(UUID projectId) {
         return repositoryDao.list(projectId);
     }

@@ -39,6 +39,42 @@ interface ExternalProps {
     repoName?: ConcordKey;
 }
 
+const EditRepositoryActivity = (props: ExternalProps) => {
+    const {orgName, projectName, repoName} = props;
+
+    return (
+        <>
+            <Dimmer active={submitting} inverted={true} page={true}>
+                <Loader active={submitting} size="massive" content={'Saving'} />
+            </Dimmer>
+
+            {error && <RequestErrorActivity error={error} />}
+            <RepositoryForm
+                orgName={orgName}
+                projectName={projectName}
+                onSubmit={submit}
+                submitting={submitting}
+                editMode={true}
+                initial={
+                    initial || {
+                        name: '',
+                        url: '',
+                        enabled: true,
+                        sourceType: RepositorySourceType.BRANCH_OR_TAG,
+                        triggersEnabled: true
+                    }
+                }
+                testRepository={({ name, sourceType, id, ...rest }) =>
+                    testRepository({ orgName, projectName, ...rest })
+                }
+            />
+        </>
+    );
+};
+
+export default EditRepositoryActivity;
+
+/*
 interface StateProps {
     submitting: boolean;
     error: RequestError;
@@ -192,3 +228,4 @@ const mapDispatchToProps = (
 });
 
 export default connect(mapStateToProps, mapDispatchToProps)(EditRepositoryActivity);
+*/

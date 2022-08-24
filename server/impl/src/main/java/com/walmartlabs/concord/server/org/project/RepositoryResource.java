@@ -76,6 +76,20 @@ public class RepositoryResource implements Resource {
     }
 
     @GET
+    @ApiOperation("Get an existing repository")
+    @Path("/{orgName}/project/{projectName}/repository/{repositoryName}")
+    @Produces(MediaType.APPLICATION_JSON)
+    @Validate
+    public RepositoryEntry get(@ApiParam @PathParam("orgName") @ConcordKey String orgName,
+                            @ApiParam @PathParam("projectName") @ConcordKey String projectName,
+                            @ApiParam @PathParam("repositoryName") @ConcordKey String repositoryName) {
+
+
+        OrganizationEntry org = orgManager.assertAccess(orgName, false);
+        return projectRepositoryManager.get(org.getId(), projectName, repositoryName);
+    }
+
+    @GET
     @ApiOperation(value = "List existing repositories", responseContainer = "list", response = RepositoryEntry.class)
     @Path("/{orgName}/project/{projectName}/repository")
     @Produces(MediaType.APPLICATION_JSON)

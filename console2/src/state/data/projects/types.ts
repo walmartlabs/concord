@@ -20,18 +20,8 @@
 
 import { Action } from 'redux';
 
-import { ConcordKey, GenericOperationResult, RequestError } from '../../../api/common';
+import { ConcordKey, RequestError } from '../../../api/common';
 import { ResourceAccessEntry } from '../../../api/org';
-import {
-    NewProjectEntry,
-    ProjectEntry,
-    ProjectOperationResult,
-    UpdateProjectEntry
-} from '../../../api/org/project';
-import {
-    EditRepositoryEntry,
-    RepositoryValidationResponse
-} from '../../../api/org/project/repository';
 import { RequestState } from '../common';
 
 // TODO should it be a common type?
@@ -39,62 +29,6 @@ import { RequestState } from '../common';
 export interface Pagination {
     limit: number;
     offset: number;
-}
-
-export interface GetProjectRequest extends Action {
-    orgName: ConcordKey;
-    projectName: ConcordKey;
-}
-
-export interface ProjectDataResponse extends Action {
-    error?: RequestError;
-    items?: ProjectEntry[];
-    next?: boolean;
-}
-
-export interface CreateProjectRequest extends Action {
-    orgName: ConcordKey;
-    entry: NewProjectEntry;
-}
-
-export interface UpdateProjectRequest extends Action {
-    orgName: ConcordKey;
-    entry: UpdateProjectEntry;
-}
-
-export interface DeleteProjectRequest extends Action {
-    orgName: ConcordKey;
-    projectName: ConcordKey;
-}
-
-export interface AddRepositoryRequest extends Action {
-    orgName: ConcordKey;
-    projectName: ConcordKey;
-    entry: EditRepositoryEntry;
-}
-
-export interface UpdateRepositoryRequest extends Action {
-    orgName: ConcordKey;
-    projectName: ConcordKey;
-    entry: EditRepositoryEntry;
-}
-
-export interface DeleteRepositoryRequest extends Action {
-    orgName: ConcordKey;
-    projectName: ConcordKey;
-    repoName: ConcordKey;
-}
-
-export interface RefreshRepositoryRequest extends Action {
-    orgName: ConcordKey;
-    projectName: ConcordKey;
-    repoName: ConcordKey;
-}
-
-export interface ValidateRepositoryRequest extends Action {
-    orgName: ConcordKey;
-    projectName: ConcordKey;
-    repoName: ConcordKey;
 }
 
 export interface ProjectTeamAccessRequest extends Action {
@@ -113,39 +47,10 @@ export interface ProjectTeamAccessResponse extends Action {
     items?: ResourceAccessEntry[];
 }
 
-export interface Projects {
-    [id: string]: ProjectEntry;
-}
-
-export interface PaginatedProjects {
-    items?: Projects;
-    next?: boolean;
-}
-
-export type DeleteProjectState = RequestState<GenericOperationResult>;
-export type CreateRepositoryState = RequestState<GenericOperationResult>;
-export type UpdateRepositoryState = RequestState<GenericOperationResult>;
-export type DeleteRepositoryState = RequestState<GenericOperationResult>;
-export type RefreshRepositoryState = RequestState<GenericOperationResult>;
-export type ValidateRepositoryState = RequestState<RepositoryValidationResponse>;
-export type updateProjectState = RequestState<ProjectOperationResult>;
 export type ProjectTeamAccessState = RequestState<ProjectTeamAccessResponse>;
 export type UpdateProjectTeamAccessState = RequestState<ProjectTeamAccessResponse>;
 
 export interface State {
-    projectById: PaginatedProjects;
-
-    // TODO move into a RequestState field
-    loading: boolean;
-    error: RequestError;
-
-    deleteProject: DeleteProjectState;
-    updateProject: updateProjectState;
     projectTeamAccess: ProjectTeamAccessState;
     updateProjectTeamAccess: UpdateProjectTeamAccessState;
-
-    createRepository: CreateRepositoryState;
-    updateRepository: UpdateRepositoryState;
-    refreshRepository: RefreshRepositoryState;
-    validateRepository: ValidateRepositoryState;
 }
