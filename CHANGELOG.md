@@ -6,6 +6,8 @@
 
 ### Changed
 
+- runtime-v2: runtime-v2: fix NPE in flow call step
+([#645](https://github.com/walmartlabs/concord/pull/645));
 - concord-server: remove log call for github event in repository refresh flow 
 ([#633](https://github.com/walmartlabs/concord/pull/633));
 
