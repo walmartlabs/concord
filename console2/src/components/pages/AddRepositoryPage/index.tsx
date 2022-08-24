@@ -57,7 +57,7 @@ class AddRepositoryPage extends React.PureComponent<RouteComponentProps<RoutePro
                         <EditRepositoryActivity
                             orgName={orgName}
                             projectName={projectName}
-                            forceRefresh={null}/>
+                            forceRefresh={undefined}/>
                     </Container>
                 </Segment>
             </>

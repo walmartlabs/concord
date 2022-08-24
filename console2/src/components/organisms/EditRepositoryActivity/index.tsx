@@ -66,9 +66,13 @@ const EditRepositoryActivity = (props: ExternalProps) => {
         useApi<RepositoryEntry>(loadRepo, { fetchOnMount: false });
 
     useEffect(() => {
+        if (repoName == undefined) {
+            return
+        }
+
         loadRepoClearState();
         loadRepoFetch();
-    }, [loadRepoFetch, loadRepoClearState, forceRefresh]);
+    }, [loadRepoFetch, loadRepoClearState, forceRefresh, repoName]);
 
     const postData = useCallback(() => {
         return apiCreateOrUpdate(orgName, projectName, toEditRepositoryEntry(repo));
@@ -92,9 +96,12 @@ const EditRepositoryActivity = (props: ExternalProps) => {
         return <Redirect to={`/org/${orgName}/project/${projectName}/repository`} />;
     }
 
+    if (loadError) {
+        return <RequestErrorActivity error={loadError} />
+    }
+
     return (
         <>
-            {loadError && <RequestErrorActivity error={loadError} />}
             {error && <RequestErrorActivity error={error} />}
 
             <RepositoryForm
