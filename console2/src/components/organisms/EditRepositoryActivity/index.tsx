@@ -66,7 +66,7 @@ const EditRepositoryActivity = (props: ExternalProps) => {
         useApi<RepositoryEntry>(loadRepo, { fetchOnMount: false });
 
     useEffect(() => {
-        if (repoName == undefined) {
+        if (repoName === undefined) {
             return
         }
 
