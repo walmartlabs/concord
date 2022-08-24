@@ -6,6 +6,8 @@
 
 ### Changed
 
+- concord-console: fix for change visibility and renaming of secrets from UI
+([#642](https://github.com/walmartlabs/concord/pull/642));
 - runtime-v2: runtime-v2: fix NPE in flow call step
 ([#645](https://github.com/walmartlabs/concord/pull/645));
 - concord-server: remove log call for github event in repository refresh flow 
