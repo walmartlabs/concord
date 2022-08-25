@@ -45,21 +45,23 @@ public class GitRepositoryIT extends AbstractServerIT {
     @BeforeEach
     public void setUp() throws Exception {
         Path bareRepo = createTempDir();
-        Git.init().setInitialBranch("master").setBare(true).setDirectory(bareRepo.toFile()).call();
+        try (Git git = Git.init().setInitialBranch("master").setBare(true).setDirectory(bareRepo.toFile()).call()) {
+        }
 
         Path workdir = createTempDir();
-        Git git = Git.cloneRepository()
+        try (Git git = Git.cloneRepository()
                 .setDirectory(workdir.toFile())
                 .setURI("file://" + bareRepo.toString())
-                .call();
+                .call()) {
 
-        Path initialData = Paths.get(GitRepositoryIT.class.getResource("gitRepository").toURI());
-        IOUtils.copy(initialData, workdir);
+            Path initialData = Paths.get(GitRepositoryIT.class.getResource("gitRepository").toURI());
+            IOUtils.copy(initialData, workdir);
 
-        git.add().addFilepattern(".").call();
-        git.commit().setMessage("initial commit").call();
+            git.add().addFilepattern(".").call();
+            git.commit().setMessage("initial commit").call();
 
-        git.push().call();
+            git.push().call();
+        }
 
         gitServer = new MockGitSshServer(0, bareRepo);
         gitServer.start();
