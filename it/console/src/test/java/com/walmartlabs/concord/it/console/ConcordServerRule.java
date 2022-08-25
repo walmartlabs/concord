@@ -29,6 +29,7 @@ import com.walmartlabs.concord.client.ClientUtils;
 import com.walmartlabs.concord.client.ConcordApiClient;
 import com.walmartlabs.concord.client.StartProcessResponse;
 import com.walmartlabs.concord.it.common.ForbiddenException;
+import com.walmartlabs.concord.it.common.JGitUtils;
 import org.junit.jupiter.api.extension.BeforeEachCallback;
 import org.junit.jupiter.api.extension.ExtensionContext;
 import org.slf4j.Logger;
@@ -53,6 +54,8 @@ public class ConcordServerRule implements BeforeEachCallback {
     public ConcordServerRule() {
         this.baseUrl = env("IT_SERVER_BASE_URL", "http://localhost:8001");
         log.info("Using baseUrl: {}", baseUrl);
+
+        JGitUtils.applyWorkarounds();
     }
 
     public ApiClient getClient() {
