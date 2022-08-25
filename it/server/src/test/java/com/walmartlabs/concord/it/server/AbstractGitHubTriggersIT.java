@@ -45,7 +45,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public abstract class AbstractGitHubTriggersIT extends AbstractServerIT {
 
-    private static final DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSSX", Locale.US);
+    private static final DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter.ISO_OFFSET_DATE_TIME;
 
     protected static String toRepoName(Path p) {
         return p.getParent().getFileName() + "/" + p.getFileName();

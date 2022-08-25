@@ -532,11 +532,12 @@ public class ExternalImportsIT extends AbstractServerIT {
             Files.write(p, s.replace(find, replace).getBytes());
         }
 
-        Git repo = Git.init().setInitialBranch("master").setDirectory(tmpDir.toFile()).call();
-        repo.add().addFilepattern(".").call();
-        repo.commit().setMessage("import").call();
-        repo.branchCreate().setName("main").call();
-        return tmpDir.toAbsolutePath().toString();
+        try (Git repo = Git.init().setInitialBranch("master").setDirectory(tmpDir.toFile()).call()) {
+            repo.add().addFilepattern(".").call();
+            repo.commit().setMessage("import").call();
+            repo.branchCreate().setName("main").call();
+            return tmpDir.toAbsolutePath().toString();
+        }
     }
 
     private static Path createPayload(String resourceName, String repoUrl) throws Exception {
