@@ -6,6 +6,8 @@
 
 ### Changed
 
+- project: initial JDK 17 support
+([#625](https://github.com/walmartlabs/concord/pull/625));
 - concord-console: fix for change visibility and renaming of secrets from UI
 ([#642](https://github.com/walmartlabs/concord/pull/642));
 - runtime-v2: runtime-v2: fix NPE in flow call step
