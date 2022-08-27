@@ -3,7 +3,6 @@ configuration:
 
 flows:
   onChange:
-  - log: "Refreshing repository... ${event}"
   - name: "Filter to enabled repositories"
     expr: ${event.repositoryInfo.stream().filter(r -> r.enabled).toList()}
     out: repoIdsToRefresh
