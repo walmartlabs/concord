@@ -37,8 +37,8 @@
         <greenmail.version>1.6.5</greenmail.version>
         <groovy.version>2.5.17</groovy.version>
         <gson.fire.version>1.8.3</gson.fire.version>
-        <gson.version>2.8.8</gson.version>
-        <guava.version>31.0.1-jre</guava.version>
+        <gson.version>2.9.1</gson.version>
+        <guava.version>31.1-jre</guava.version>
         <guice.version>5.1.0</guice.version>
         <hibernate.validator.version>6.1.5.Final</hibernate.validator.version>
         <hikaricp.version>3.4.2</hikaricp.version>
@@ -61,7 +61,7 @@
         <jboss.logging>3.3.2.Final</jboss.logging>
         <jcl-over-slf4j.version>1.7.35</jcl-over-slf4j.version>
         <jetbrain.annotations.version>23.0.0</jetbrain.annotations.version>
-        <jetty.version>9.4.44.v20210927</jetty.version>
+        <jetty.version>9.4.48.v20220622</jetty.version>
         <jgit.version>5.13.0.202109080827-r</jgit.version>
         <jna.version>5.10.0</jna.version>
         <jooq.version>3.14.0</jooq.version>
@@ -84,13 +84,13 @@
         <maven.model.builder.version>3.8.4</maven.model.builder.version>
         <maven.resolver.version>1.7.3</maven.resolver.version>
         <maven.resolver.version.concord>0.0.4</maven.resolver.version.concord>
-        <metrics.version>4.2.8</metrics.version>
+        <metrics.version>4.2.11</metrics.version>
         <mockito.version>4.3.1</mockito.version>
         <mustache.version>0.9.10</mustache.version>
         <nimbus.jwt.version>8.8</nimbus.jwt.version>
         <node.version>10.11.0</node.version>
         <okhttp.version>2.7.5</okhttp.version>
-        <okhttp3.version>3.14.1</okhttp3.version>
+        <okhttp3.version>3.14.9</okhttp3.version>
         <okio.version>1.17.2</okio.version>
         <ollie.version>0.0.37</ollie.version>
         <pac4j.version>4.0.0-RC3</pac4j.version>
@@ -104,7 +104,7 @@
         <shiro.version>1.8.0</shiro.version>
         <siesta.version>2.3.2</siesta.version>
         <sisu.version>0.3.5</sisu.version>
-        <slf4j.version>1.7.35</slf4j.version>
+        <slf4j.version>1.7.36</slf4j.version>
         <snakeyaml.version>1.30</snakeyaml.version>
         <sshd.version>2.8.0</sshd.version>
         <swagger.version>1.5.20</swagger.version>
