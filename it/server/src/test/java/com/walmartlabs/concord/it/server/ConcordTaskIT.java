@@ -20,12 +20,17 @@ package com.walmartlabs.concord.it.server;
  * =====
  */
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.walmartlabs.concord.ApiException;
 import com.walmartlabs.concord.client.*;
+import com.walmartlabs.concord.common.IOUtils;
 import org.junit.jupiter.api.Test;
 
 import javax.xml.bind.DatatypeConverter;
+import java.io.File;
 import java.util.*;
 
+import static com.walmartlabs.concord.common.IOUtils.grep;
 import static com.walmartlabs.concord.it.common.ITUtils.archive;
 import static com.walmartlabs.concord.it.common.ServerClient.*;
 import static org.junit.jupiter.api.Assertions.*;
@@ -550,10 +555,35 @@ public class ConcordTaskIT extends AbstractServerIT {
         ProcessEntry pe = waitForCompletion(processApi, spr.getInstanceId());
 
         // ---
-
         byte[] ab = getLog(pe.getLogFileName());
+        if (grep(".*\\{x=1, y=2, z=3\\}.*", ab).isEmpty()
+                || grep(".*\\{a=4, b=5, c=6\\}.*", ab).isEmpty()) {
+
+            for (UUID id : pe.getChildrenIds()) {
+                ProcessEntry pp = processApi.get(id);
+                System.out.println("process: " + pp.getInstanceId() + ", status: " + pp.getStatus() + ", out: " + getOutVars(id, processApi));
+                System.out.println(">>>");
+            }
+        }
         assertLog(".*\\{x=1, y=2, z=3\\}.*", ab);
         assertLog(".*\\{a=4, b=5, c=6\\}.*", ab);
+    }
+
+    @SuppressWarnings("unchecked")
+    private static Map<String, Object> getOutVars(UUID id, ProcessApi processApi) throws Exception {
+        File f = null;
+        try {
+            f = processApi.downloadAttachment(id, "out.json");
+            ObjectMapper om = new ObjectMapper();
+            return om.readValue(f, Map.class);
+        } catch (ApiException e) {
+            if (e.getCode() == 404) {
+                return null;
+            }
+            throw e;
+        } finally {
+            IOUtils.delete(f);
+        }
     }
 
     @Test
