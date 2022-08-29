@@ -167,6 +167,7 @@ class SecretActivity extends React.PureComponent<Props> {
                     <SecretVisibilityActivity
                         orgName={data.orgName}
                         secretId={data.id}
+                        secretName={data.name}
                         visibility={data.visibility}
                     />
                 </Segment>

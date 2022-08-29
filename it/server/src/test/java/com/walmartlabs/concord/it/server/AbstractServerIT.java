@@ -25,18 +25,13 @@ import com.walmartlabs.concord.ApiException;
 import com.walmartlabs.concord.client.SecretOperationResponse;
 import com.walmartlabs.concord.client.StartProcessResponse;
 import com.walmartlabs.concord.it.common.ITUtils;
+import com.walmartlabs.concord.it.common.JGitUtils;
 import com.walmartlabs.concord.it.common.ServerClient;
-import org.eclipse.jgit.lib.Config;
-import org.eclipse.jgit.storage.file.FileBasedConfig;
-import org.eclipse.jgit.util.FS;
-import org.eclipse.jgit.util.SystemReader;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Timeout;
 
 import java.io.*;
-import java.net.InetAddress;
-import java.net.UnknownHostException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.attribute.PosixFilePermissions;
@@ -54,7 +49,7 @@ public abstract class AbstractServerIT {
 
     @BeforeAll
     public static void _initJGit() {
-        SystemReader.setInstance(new JGitSystemReader());
+        JGitUtils.applyWorkarounds();
     }
 
     @BeforeEach
@@ -202,76 +197,5 @@ public abstract class AbstractServerIT {
             return def;
         }
         return v;
-    }
-
-    private static class JGitSystemReader extends SystemReader {
-
-        private static class EmptyFileBasedConfig extends FileBasedConfig {
-
-            public EmptyFileBasedConfig(Config parent, FS fs) {
-                super(parent, null, fs);
-            }
-
-            @Override
-            public void load() {
-                // empty, do not load
-            }
-
-            @Override
-            public boolean isOutdated() {
-                return false;
-            }
-        }
-
-        private volatile String hostname;
-
-        @Override
-        public String getenv(String variable) {
-            return System.getenv(variable);
-        }
-
-        @Override
-        public String getProperty(String key) {
-            return System.getProperty(key);
-        }
-
-        @Override
-        public FileBasedConfig openSystemConfig(Config parent, FS fs) {
-            return new EmptyFileBasedConfig(parent, fs);
-        }
-
-        @Override
-        public FileBasedConfig openUserConfig(Config parent, FS fs) {
-            return new EmptyFileBasedConfig(parent, fs);
-        }
-
-        @Override
-        public FileBasedConfig openJGitConfig(Config parent, FS fs) {
-            return new EmptyFileBasedConfig(parent, fs);
-        }
-
-        @Override
-        public String getHostname() {
-            if (hostname == null) {
-                try {
-                    InetAddress localMachine = InetAddress.getLocalHost();
-                    hostname = localMachine.getCanonicalHostName();
-                } catch (UnknownHostException e) {
-                    hostname = "localhost";
-                }
-                assert hostname != null;
-            }
-            return hostname;
-        }
-
-        @Override
-        public long getCurrentTime() {
-            return System.currentTimeMillis();
-        }
-
-        @Override
-        public int getTimezone(long when) {
-            return getTimeZone().getOffset(when) / (60 * 1000);
-        }
     }
 }

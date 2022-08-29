@@ -28,8 +28,11 @@ RUN rpm --import /etc/pki/rpm-gpg/RPM-GPG-KEY-centosofficial && \
     alternatives --set python /usr/bin/python3 && \
     alternatives --install /usr/bin/pip pip /usr/bin/pip2 0
 
-ARG jdk_url
-RUN curl --location --output /tmp/jdk.tar.gz ${jdk_url} && \
+ADD --chmod=755 ./get_jdk_url.sh /tmp/
+ARG jdk_version
+ENV JDK_VERSION=${jdk_version}
+ENV TARGETARCH=${TARGETARCH:-"amd64"}
+RUN curl --location --output /tmp/jdk.tar.gz $(/tmp/get_jdk_url.sh) && \
     mkdir /opt/jdk && \
     tar xpf /tmp/jdk.tar.gz --strip 1 -C /opt/jdk && \
     rm /tmp/jdk.tar.gz
