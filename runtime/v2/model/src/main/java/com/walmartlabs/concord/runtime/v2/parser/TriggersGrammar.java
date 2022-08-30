@@ -43,6 +43,14 @@ import static io.takari.parc.Combinators.many1;
 
 public final class TriggersGrammar {
 
+    private static final Parser<Atom, Map<String, Object>> githubTriggerRepositoryContentItem =
+            betweenTokens(JsonToken.START_OBJECT, JsonToken.END_OBJECT,
+                    with((Supplier<HashMap<String, Object>>) HashMap::new,
+                            o -> options(
+                                    optional("ref", stringVal.map(v -> o.put("ref", v))),
+                                    mandatory("path", stringVal.map(v -> o.put("path", v)))))
+                            .map(Collections::unmodifiableMap));
+
     private static final Parser<Atom, Map<String, Object>> githubTriggerRepositoryInfoItem =
             betweenTokens(JsonToken.START_OBJECT, JsonToken.END_OBJECT,
                     with((Supplier<HashMap<String, Object>>) HashMap::new,
@@ -54,12 +62,19 @@ public final class TriggersGrammar {
                                     optional("enabled", booleanVal.map(v -> o.put("enabled", v)))))
                         .map(Collections::unmodifiableMap));
 
+    private static final Parser<Atom, Map<String, Object>> githubTriggerRepositoryContentItemVal =
+            orError(githubTriggerRepositoryContentItem, YamlValueType.GITHUB_REPOSITORY_CONTENT);
+
     private static final Parser<Atom, Map<String, Object>> githubTriggerRepositoryInfoItemVal =
             orError(githubTriggerRepositoryInfoItem, YamlValueType.GITHUB_REPOSITORY_INFO);
 
+    private static final Parser<Atom, List<Map<String, Object>>> githubTriggerRepositoryContent =
+            betweenTokens(JsonToken.START_ARRAY, JsonToken.END_ARRAY, many1(githubTriggerRepositoryContentItemVal).map(Seq::toList));
     private static final Parser<Atom, List<Map<String, Object>>> githubTriggerRepositoryInfo =
             betweenTokens(JsonToken.START_ARRAY, JsonToken.END_ARRAY, many1(githubTriggerRepositoryInfoItemVal).map(Seq::toList));
 
+    private static final Parser<Atom, List<Map<String, Object>>> githubTriggerRepositoryContentVal =
+            orError(githubTriggerRepositoryContent, YamlValueType.ARRAY_OF_GITHUB_REPOSITORY_CONTENT);
     private static final Parser<Atom, List<Map<String, Object>>> githubTriggerRepositoryInfoVal =
             orError(githubTriggerRepositoryInfo, YamlValueType.ARRAY_OF_GITHUB_REPOSITORY_INFO);
 
@@ -105,6 +120,7 @@ public final class TriggersGrammar {
                                 optional("sender", regexpOrArrayVal.map(v -> o.put("sender", v))),
                                 optional("status", regexpOrArrayVal.map(v -> o.put("status", v))),
                                 optional("repositoryInfo", githubTriggerRepositoryInfoVal.map(v -> o.put("repositoryInfo", v))),
+                                optional("content", githubTriggerRepositoryContentVal.map(v -> o.put("content", v))),
                                 optional("files", githubTriggerFilesVal.map(v -> o.put("files", v))),
                                 optional("payload", mapVal.map(v -> o.put("payload", v)))))
                             .map(Collections::unmodifiableMap));

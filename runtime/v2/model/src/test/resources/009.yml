@@ -12,6 +12,9 @@ triggers:
         repositoryInfo:
           - repository: ".*"
             enabled: true
+        content:
+          - ref: main
+            path: kitt.yml
 
   - github:
       version: 2

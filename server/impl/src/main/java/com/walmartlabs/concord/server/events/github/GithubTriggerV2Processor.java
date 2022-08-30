@@ -21,9 +21,6 @@ package com.walmartlabs.concord.server.events.github;
  */
 
 import com.walmartlabs.concord.sdk.MapUtils;
-import com.walmartlabs.concord.server.events.DefaultEventFilter;
-import com.walmartlabs.concord.server.org.project.RepositoryDao;
-import com.walmartlabs.concord.server.org.project.RepositoryEntry;
 import com.walmartlabs.concord.server.org.triggers.TriggerEntry;
 import com.walmartlabs.concord.server.org.triggers.TriggersDao;
 import com.walmartlabs.concord.server.sdk.metrics.WithTimer;
@@ -45,12 +42,15 @@ public class GithubTriggerV2Processor implements GithubTriggerProcessor {
     private static final int VERSION_ID = 2;
 
     private final TriggersDao dao;
-    private final List<EventEnricher> eventEnrichers;
+
+    private final List<ConditionsFilter> filters;
 
     @Inject
-    public GithubTriggerV2Processor(TriggersDao dao, List<EventEnricher> eventEnrichers) {
+    public GithubTriggerV2Processor(TriggersDao dao, List<ConditionsFilter> filters) {
         this.dao = dao;
-        this.eventEnrichers = eventEnrichers;
+        this.filters = filters.stream()
+                .sorted(Comparator.comparingInt(ConditionsFilter::priority))
+                .collect(Collectors.toList());
     }
 
     @Override
@@ -67,17 +67,22 @@ public class GithubTriggerV2Processor implements GithubTriggerProcessor {
             }
 
             Map<String, Object> event = buildEvent(eventName, payload);
-            enrichEventConditions(payload, t, event);
+            Map<String, Object> triggerConditions = t.getConditions() == null ? Collections.emptyMap() : t.getConditions();
+            for (ConditionsFilter f : filters) {
+                triggerConditions = f.preprocess(triggerConditions);
+            }
 
-            if (DefaultEventFilter.filter(event, t)) {
+            boolean match = true;
+            for (ConditionsFilter f : filters) {
+                if (!f.filter(payload, t, triggerConditions, event)) {
+                    match = false;
+                    break;
+                }
+            }
+
+            if (match) {
                 result.add(Result.from(event, t));
             }
-        }
-    }
-
-    private void enrichEventConditions(Payload payload, TriggerEntry trigger, Map<String, Object> result) {
-        for (EventEnricher e : eventEnrichers) {
-            e.enrich(payload, trigger, result);
         }
     }
 
@@ -138,55 +143,5 @@ public class GithubTriggerV2Processor implements GithubTriggerProcessor {
         result.put(VERSION_KEY, VERSION_ID);
 
         return result;
-    }
-
-    interface EventEnricher {
-
-        void enrich(Payload payload, TriggerEntry trigger, Map<String, Object> result);
-    }
-
-    /**
-     * Adds {@link com.walmartlabs.concord.sdk.Constants.Trigger#REPOSITORY_INFO} property to
-     * the event, but only if the trigger's conditions contained the clause with the same key.
-     */
-    @Named
-    private static class RepositoryInfoEnricher implements EventEnricher {
-
-        private final RepositoryDao repositoryDao;
-
-        @Inject
-        public RepositoryInfoEnricher(RepositoryDao repositoryDao) {
-            this.repositoryDao = repositoryDao;
-        }
-
-        @Override
-        @WithTimer
-        public void enrich(Payload payload, TriggerEntry trigger, Map<String, Object> result) {
-            Object projectInfoConditions =
-                    trigger.getConditions().get(com.walmartlabs.concord.sdk.Constants.Trigger.REPOSITORY_INFO);
-            if (projectInfoConditions == null || payload.getFullRepoName() == null) {
-                return;
-            }
-
-            List<Map<String, Object>> repositoryInfos = new ArrayList<>();
-            List<RepositoryEntry> repositories =
-                    repositoryDao.findSimilar("%[/:]" + payload.getFullRepoName() + "(.git)?/?");
-
-            for (RepositoryEntry r : repositories) {
-                Map<String, Object> repositoryInfo = new HashMap<>();
-                repositoryInfo.put(REPO_ID_KEY, r.getId());
-                repositoryInfo.put(REPO_NAME_KEY, r.getName());
-                repositoryInfo.put(PROJECT_ID_KEY, r.getProjectId());
-                if(r.getBranch() != null)
-                    repositoryInfo.put(REPO_BRANCH_KEY, r.getBranch());
-                repositoryInfo.put(REPO_ENABLED_KEY, !r.isDisabled());
-
-                repositoryInfos.add(repositoryInfo);
-            }
-
-            if (!repositoryInfos.isEmpty()) {
-                result.put(com.walmartlabs.concord.sdk.Constants.Trigger.REPOSITORY_INFO, repositoryInfos);
-            }
-        }
     }
 }

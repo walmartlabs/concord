@@ -299,6 +299,11 @@ public class Constants {
         public static final String REPOSITORY_INFO = "repositoryInfo";
 
         /**
+         * Used to match repository content in GitHub triggers.
+         */
+        public static final String REPOSITORY_CONTENT = "content";
+
+        /**
          * {@code conditions} field. Used to match the specified parameters
          * with the incoming event's payload.
          */

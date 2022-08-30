@@ -31,15 +31,19 @@ public final class DefaultEventFilter {
 
     private static final Logger log = LoggerFactory.getLogger(DefaultEventFilter.class);
 
-    public static boolean filter(Map<String, Object> conditions, TriggerEntry t) {
+    public static boolean filter(Map<String, Object> event, TriggerEntry t) {
         if (t.getConditions() == null || t.getConditions().isEmpty()) {
             return true;
         }
 
+        return filter(event, t.getConditions());
+    }
+
+    public static boolean filter(Map<String, Object> event, Map<String, Object> triggerConditions) {
         try {
-            return Matcher.matches(conditions, t.getConditions());
+            return Matcher.matches(event, triggerConditions);
         } catch (Exception e) {
-            log.warn("filter [{}, {}] -> error while matching events: {}", conditions, t, e.getMessage());
+            log.warn("filter [{}, {}] -> error while matching events: {}", event, triggerConditions, e.getMessage());
             return false;
         }
     }

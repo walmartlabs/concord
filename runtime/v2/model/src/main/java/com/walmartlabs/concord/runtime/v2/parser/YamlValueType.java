@@ -107,7 +107,11 @@ public final class YamlValueType<T> {
     public static final YamlValueType<ImmutableParallelBlockOptions.Builder> PARALLEL_BLOCK_OUT = type("STRING or ARRAY_OF_STRING or OBJECT");
     public static final YamlValueType<GithubTriggerExclusiveMode> GITHUB_EXCLUSIVE_MODE = type("GITHUB_EXCLUSIVE_MODE");
     public static final YamlValueType<Map<String, Object>> GITHUB_REPOSITORY_INFO = type("GITHUB_REPOSITORY_INFO");
+
+    public static final YamlValueType<Map<String, Object>> GITHUB_REPOSITORY_CONTENT = type("GITHUB_REPOSITORY_CONTENT");
     public static final YamlValueType<List<Map<String, Object>>> ARRAY_OF_GITHUB_REPOSITORY_INFO = array("REPOSITORY_INFO", GITHUB_REPOSITORY_INFO);
+
+    public static final YamlValueType<List<Map<String, Object>>> ARRAY_OF_GITHUB_REPOSITORY_CONTENT = array("REPOSITORY_CONTENT", GITHUB_REPOSITORY_CONTENT);
     public static final YamlValueType<Loop> LOOP = type("LOOP");
 
     private final String name;
