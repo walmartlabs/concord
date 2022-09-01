@@ -50,6 +50,13 @@
                                  referencedTableName="PROJECTS"
                                  referencedColumnNames="PROJECT_ID"
                                  onDelete="CASCADE"/>
+        <addUniqueConstraint tableName="SECRET_PROJECTS" columnNames="SECRET_ID,PROJECT_ID"/>
+        <createIndex tableName="SECRET_PROJECTS" indexName="SECRET_PROJECTS_SECRET_IDX">
+            <column name="SECRET_ID"/>
+        </createIndex>
+        <createIndex tableName="SECRET_PROJECTS" indexName="SECRET_PROJECTS_PROJECT_IDX">
+            <column name="PROJECT_ID"/>
+        </createIndex>
         <sql>
             insert into secret_projects (secret_id, project_id) select secret_id, project_id from secrets where project_id is not null
         </sql>
