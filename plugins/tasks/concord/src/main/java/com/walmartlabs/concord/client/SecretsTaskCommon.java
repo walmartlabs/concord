@@ -181,7 +181,9 @@ public class SecretsTaskCommon {
             addIfPresent(params, Constants.Multipart.NEW_STORE_PASSWORD, newStorePassword);
             addIfPresent(params, Constants.Multipart.PROJECT_IDS, projectIds);
             addIfPresent(params, Constants.Multipart.PROJECT_NAMES, projectNames);
-            addIfPresent(params, Constants.Multipart.TYPE, type);
+            if(data != null) {
+                addIfPresent(params, Constants.Multipart.TYPE, type);
+            }
             post("/api/v2/org/" + orgName + "/secret/" + secretName, params, SecretOperationResponse.class);
 
             log.info("The secret was successfully updated: {}", secretName);
