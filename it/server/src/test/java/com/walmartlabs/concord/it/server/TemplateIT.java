@@ -157,9 +157,10 @@ public class TemplateIT extends AbstractServerIT {
                 .replace("{{ template }}", "file://" + templatePath.toAbsolutePath().toString());
         Files.write(concordYml, s.getBytes());
 
-        Git repo = Git.init().setInitialBranch("master").setDirectory(tmpDir.toFile()).call();
-        repo.add().addFilepattern(".").call();
-        repo.commit().setMessage("import").call();
+        try (Git repo = Git.init().setInitialBranch("master").setDirectory(tmpDir.toFile()).call()) {
+            repo.add().addFilepattern(".").call();
+            repo.commit().setMessage("import").call();
+        }
 
         String gitUrl = tmpDir.toAbsolutePath().toString();
 
