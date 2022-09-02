@@ -26,6 +26,7 @@ import org.eclipse.sisu.Nullable;
 import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
+import java.time.Duration;
 
 @Named
 @Singleton
@@ -44,6 +45,14 @@ public class GithubConfiguration {
     @Config("github.logEvents")
     private boolean logEvents;
 
+    @Inject
+    @Config("github.content.connectTimeout")
+    private Duration contentCheckConnectTimeout;
+
+    @Inject
+    @Config("github.content.readTimeout")
+    private Duration contentCheckReadTimeout;
+
     public String getSecret() {
         return secret;
     }
@@ -54,5 +63,13 @@ public class GithubConfiguration {
 
     public boolean isLogEvents() {
         return logEvents;
+    }
+
+    public Duration getContentCheckConnectTimeout() {
+        return contentCheckConnectTimeout;
+    }
+
+    public Duration getContentCheckReadTimeout() {
+        return contentCheckReadTimeout;
     }
 }

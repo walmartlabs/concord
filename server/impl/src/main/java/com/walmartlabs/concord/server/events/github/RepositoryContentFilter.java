@@ -23,7 +23,9 @@ package com.walmartlabs.concord.server.events.github;
 import com.walmartlabs.concord.common.ConfigurationUtils;
 import com.walmartlabs.concord.sdk.MapUtils;
 import com.walmartlabs.concord.server.cfg.GitConfiguration;
+import com.walmartlabs.concord.server.cfg.GithubConfiguration;
 import com.walmartlabs.concord.server.org.triggers.TriggerEntry;
+import com.walmartlabs.concord.server.sdk.metrics.WithTimer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -41,14 +43,16 @@ public class RepositoryContentFilter implements ConditionsFilter {
 
     private static final Logger log = LoggerFactory.getLogger(RepositoryContentFilter.class);
 
-    private static final int CONNECT_TIMEOUT = 10_000;
-    private static final int READ_TIMEOUT = 10_000;
+    private final long connectTimeout;
+    private final long readTimeout;
 
     private final String token;
 
     @Inject
-    public RepositoryContentFilter(GitConfiguration cfg) {
+    public RepositoryContentFilter(GitConfiguration cfg, GithubConfiguration githubCfg) {
         this.token = cfg.getOauthToken();
+        this.connectTimeout = githubCfg.getContentCheckConnectTimeout().toMillis();
+        this.readTimeout = githubCfg.getContentCheckReadTimeout().toMillis();
     }
 
     @Override
@@ -68,6 +72,7 @@ public class RepositoryContentFilter implements ConditionsFilter {
     }
 
     @Override
+    @WithTimer
     public boolean filter(Payload payload, TriggerEntry trigger, Map<String, Object> triggerConditions, Map<String, Object> event) {
         String apiUrl = (String) ConfigurationUtils.get(payload.raw(), "repository", "contents_url");
 
@@ -84,7 +89,6 @@ public class RepositoryContentFilter implements ConditionsFilter {
     }
 
     private boolean exists(String apiUrl, String path, String ref) {
-
         HttpURLConnection con = null;
         try {
             path = URLEncoder.encode(path, "utf8").replaceAll("\\+", "%20");
@@ -93,8 +97,8 @@ public class RepositoryContentFilter implements ConditionsFilter {
             con.setRequestProperty("Authorization", Base64.getEncoder().encodeToString(token.getBytes()));
             con.setRequestProperty("Accept", "application/vnd.github+json");
             con.setRequestMethod("GET");
-            con.setConnectTimeout(CONNECT_TIMEOUT);
-            con.setReadTimeout(READ_TIMEOUT);
+            con.setConnectTimeout((int)connectTimeout);
+            con.setReadTimeout((int)readTimeout);
             con.setDoOutput(false);
             int responseCode = con.getResponseCode();
             return responseCode == 200;
