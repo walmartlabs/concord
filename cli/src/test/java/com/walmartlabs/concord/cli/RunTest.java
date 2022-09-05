@@ -63,6 +63,10 @@ public class RunTest {
         int exitCode = run("simple", Collections.singletonMap("name", "Concord"));
         assertEquals(0, exitCode);
         assertLog(".*Hello, Concord.*");
+        // default dependencies should be added
+        assertLog(".*concord-tasks-" + Version.getVersion() + ".jar.*");
+        assertLog(".*http-tasks-" + Version.getVersion() + ".jar.*");
+        assertLog(".*slack-tasks-" + Version.getVersion() + ".jar.*");
     }
 
     @Test
@@ -73,7 +77,7 @@ public class RunTest {
     }
 
     @Test
-    public void testDefaultConfig() throws Exception {
+    public void testCustomDefaultConfig() throws Exception {
         int exitCode = run("defaultCfg", Collections.emptyMap(), "defaults.yml");
         assertEquals(0, exitCode);
         assertLog(".*file-tasks-" + Version.getVersion() + ".jar.*");
