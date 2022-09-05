@@ -27,14 +27,12 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import picocli.CommandLine;
 
-import java.io.*;
+import java.io.ByteArrayOutputStream;
+import java.io.PrintStream;
 import java.net.URI;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.fail;
@@ -74,7 +72,18 @@ public class RunTest {
         assertLog(".*\"k\" : \"v\".*");
     }
 
+    @Test
+    public void testDefaultConfig() throws Exception {
+        int exitCode = run("defaultCfg", Collections.emptyMap(), "defaults.yml");
+        assertEquals(0, exitCode);
+        assertLog(".*file-tasks-" + Version.getVersion() + ".jar.*");
+    }
+
     private static int run(String payload, Map<String, Object> extraVars) throws Exception {
+        return run(payload, extraVars, null);
+    }
+
+    private static int run(String payload, Map<String, Object> extraVars, String defaultCfg) throws Exception {
         URI uri = RunTest.class.getResource(payload).toURI();
         Path source = Paths.get(uri);
 
@@ -91,6 +100,11 @@ public class RunTest {
                 args.add(e.getKey() + "=" + e.getValue());
             }
             args.add(dst.path().toString());
+
+            if (defaultCfg != null) {
+                args.add("--default-cfg");
+                args.add(dst.path().resolve(defaultCfg).toString());
+            }
 
             return cmd.execute(args.toArray(new String[0]));
         }
