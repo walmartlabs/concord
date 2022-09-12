@@ -1,5 +1,27 @@
 # Change log
 
+## [1.97.0] - Unreleased
+
+### Added
+
+### Changed
+
+## [1.96.1] - 2022-09-06 
+
+### Added
+
+### Changed
+
+- project: initial JDK 17 support
+([#625](https://github.com/walmartlabs/concord/pull/625));
+- concord-console: fix for change visibility and renaming of secrets from UI
+([#642](https://github.com/walmartlabs/concord/pull/642));
+- runtime-v2: runtime-v2: fix NPE in flow call step
+([#645](https://github.com/walmartlabs/concord/pull/645));
+- concord-server: remove log call for github event in repository refresh flow 
+([#633](https://github.com/walmartlabs/concord/pull/633));
+
+
 ## [1.96.0] - 2022-08-10
 
 ### Added
