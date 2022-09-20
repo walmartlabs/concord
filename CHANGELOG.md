@@ -5,6 +5,8 @@
 ### Added
 
 ### Changed
+- concord-cli: ensure absolute target dir
+([#625](https://github.com/walmartlabs/concord/pull/652));
 
 ## [1.96.1] - 2022-09-06 
 
