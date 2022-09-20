@@ -28,10 +28,7 @@ import picocli.CommandLine;
 import java.net.URI;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -39,19 +36,33 @@ class RunTest extends AbstractTest {
 
     @Test
     void runTest() throws Exception {
-        int exitCode = run("simple", Collections.singletonMap("name", "Concord"));
+        Map<String, Object> extraVars = Collections.singletonMap("name", "Concord");
+        List<String> args = new ArrayList<>();
+        for (Map.Entry<String, Object> e : extraVars.entrySet()) {
+            args.add("-e");
+            args.add(e.getKey() + "=" + e.getValue());
+        }
+
+        int exitCode = run("simple", args);
         assertEquals(0, exitCode);
         assertLog(".*Hello, Concord.*");
     }
 
     @Test
     void testResourceTask() throws Exception {
-        int exitCode = run("resourceTask", Collections.emptyMap());
+        int exitCode = run("resourceTask", Collections.emptyList());
         assertEquals(0, exitCode);
         assertLog(".*\"k\" : \"v\".*");
     }
 
-    private static int run(String payload, Map<String, Object> extraVars) throws Exception {
+    @Test
+    void testDepsFromProfile() throws Exception {
+        int exitCode = run("profileDeps", Arrays.asList("-p", "test"));
+        assertEquals(0, exitCode);
+        assertLog(".*x=123.*");
+    }
+
+    private static int run(String payload, List<String> args) throws Exception {
         URI uri = RunTest.class.getResource(payload).toURI();
         Path source = Paths.get(uri);
 
@@ -61,15 +72,12 @@ class RunTest extends AbstractTest {
             App app = new App();
             CommandLine cmd = new CommandLine(app);
 
-            List<String> args = new ArrayList<>();
-            args.add("run");
-            for (Map.Entry<String, Object> e : extraVars.entrySet()) {
-                args.add("-e");
-                args.add(e.getKey() + "=" + e.getValue());
-            }
-            args.add(dst.path().toString());
+            List<String> effectiveArgs = new ArrayList<>();
+            effectiveArgs.add("run");
+            effectiveArgs.addAll(args);
+            effectiveArgs.add(dst.path().toString());
 
-            return cmd.execute(args.toArray(new String[0]));
+            return cmd.execute(effectiveArgs.toArray(new String[0]));
         }
     }
 }

@@ -1,0 +1,16 @@
+configuration:
+  runtime: "concord-v2"
+
+profiles:
+  test:
+    configuration:
+      dependencies:
+        - "mvn://org.codehaus.groovy:groovy-all:pom:2.5.8"
+
+flows:
+  default:
+    - script: groovy
+      body: |
+        execution.variables().set("x", 123)
+
+    - log: "x=${x}"
