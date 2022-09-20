@@ -29,12 +29,14 @@ import com.walmartlabs.concord.agent.executors.runner.RunnerJobExecutor;
 import com.walmartlabs.concord.agent.logging.ProcessLog;
 import com.walmartlabs.concord.agent.logging.ProcessLogFactory;
 import com.walmartlabs.concord.agent.remote.AttachmentsUploader;
+import com.walmartlabs.concord.dependencymanager.DependencyEntity;
 import com.walmartlabs.concord.dependencymanager.DependencyManager;
 import com.walmartlabs.concord.sdk.Constants;
 import com.walmartlabs.concord.sdk.MapUtils;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
+import java.net.URI;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -107,6 +109,8 @@ public class JobExecutorFactory {
 
             processLog.info("Runtime: {}", runnerCfg.getRuntimeName());
 
+            DependencyEntity runner = dependencyManager.resolveSingle(runnerCfg.getLocation());
+
             RunnerJobExecutor.RunnerJobExecutorConfiguration runnerExecutorCfg = RunnerJobExecutor.RunnerJobExecutorConfiguration.builder()
                     .agentId(agentCfg.getAgentId())
                     .serverApiBaseUrl(serverCfg.getApiBaseUrl())
@@ -116,7 +120,7 @@ public class JobExecutorFactory {
                     .dependencyCacheDir(agentCfg.getDependencyCacheDir())
                     .dependencyResolveTimeout(agentCfg.getDependencyResolveTimeout())
                     .workDirBase(agentCfg.getWorkDirBase())
-                    .runnerPath(runnerCfg.getPath())
+                    .runnerPath(runner.getPath())
                     .runnerCfgDir(runnerCfg.getCfgDir())
                     .runnerSecurityManagerEnabled(runnerCfg.isSecurityManagerEnabled())
                     .runnerMainClass(runnerCfg.getMainClass())
