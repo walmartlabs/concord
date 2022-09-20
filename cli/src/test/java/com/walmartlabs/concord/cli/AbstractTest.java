@@ -31,8 +31,8 @@ import static org.junit.jupiter.api.Assertions.fail;
 public abstract class AbstractTest {
     private final PrintStream originalOut = System.out;
     private final PrintStream originalErr = System.err;
-    protected final ByteArrayOutputStream out = new ByteArrayOutputStream();
-    protected final ByteArrayOutputStream err = new ByteArrayOutputStream();
+    private final ByteArrayOutputStream out = new ByteArrayOutputStream();
+    private final ByteArrayOutputStream err = new ByteArrayOutputStream();
 
     @BeforeEach
     public void setUpStreams() {
