@@ -23,6 +23,8 @@ package com.walmartlabs.concord.agent.cfg;
 import com.typesafe.config.Config;
 
 import java.io.IOException;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
@@ -32,7 +34,7 @@ import static com.walmartlabs.concord.agent.cfg.Utils.*;
 
 public abstract class AbstractRunnerConfiguration {
 
-    private final Path path;
+    private final URI location;
     private final Path cfgDir;
     private final String javaCmd;
     private final List<String> jvmParams;
@@ -41,7 +43,7 @@ public abstract class AbstractRunnerConfiguration {
     private final Path persistentWorkDir;
 
     public AbstractRunnerConfiguration(String prefix, Config cfg) {
-        String path = getStringOrDefault(cfg, prefix + ".path", () -> {
+        String locationStr = getStringOrDefault(cfg, prefix + ".path", () -> {
             try {
                 Properties props = new Properties();
                 props.load(RunnerV2Configuration.class.getResourceAsStream(prefix + ".properties"));
@@ -51,7 +53,12 @@ public abstract class AbstractRunnerConfiguration {
             }
         });
 
-        this.path = Paths.get(path);
+        try {
+            this.location = new URI(locationStr);
+        } catch (URISyntaxException e) {
+            throw new RuntimeException(e);
+        }
+
         this.cfgDir = getOrCreatePath(cfg, prefix + ".cfgDir");
         this.javaCmd = getJavaCmd(cfg, prefix);
         this.jvmParams = cfg.getStringList(prefix + ".jvmParams");
@@ -60,8 +67,8 @@ public abstract class AbstractRunnerConfiguration {
         this.persistentWorkDir = getOptionalAbsolutePath(cfg, prefix + ".persistentWorkDir");
     }
 
-    public Path getPath() {
-        return path;
+    public URI getLocation() {
+        return location;
     }
 
     public Path getCfgDir() {

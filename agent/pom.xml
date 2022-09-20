@@ -15,10 +15,10 @@
 
     <properties>
         <runnerV1.path>
-            ${project.basedir}/../runtime/v1/impl/target/concord-runtime-impl-v1-${project.version}-jar-with-dependencies.jar
+            file://${project.basedir}/../runtime/v1/impl/target/concord-runtime-impl-v1-${project.version}-jar-with-dependencies.jar
         </runnerV1.path>
         <runnerV2.path>
-            ${project.basedir}/../runtime/v2/runner/target/concord-runner-v2-${project.version}-jar-with-dependencies.jar
+            file://${project.basedir}/../runtime/v2/runner/target/concord-runner-v2-${project.version}-jar-with-dependencies.jar
         </runnerV2.path>
     </properties>
 
