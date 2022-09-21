@@ -82,7 +82,7 @@ public class FlowCallCommand extends StepCommand<FlowCall> {
         // and put it into the callee's frame
         Command processOutVars;
         if (!opts.outExpr().isEmpty()) {
-            processOutVars = new EvalVariablesCommand(ctx, opts.outExpr(), innerFrame);
+            processOutVars = new EvalVariablesCommand(opts.outExpr(), innerFrame);
         } else {
             processOutVars = new CopyVariablesCommand(opts.out(), innerFrame, VMUtils::assertNearestRoot);
         }
@@ -97,12 +97,10 @@ public class FlowCallCommand extends StepCommand<FlowCall> {
         // for backward compatibility (java8 concord 1.92.0 version)
         private static final long serialVersionUID = -7294220776008029488L;
 
-        private final Context ctx;
         private final Map<String, Serializable> variables;
         private final Frame variablesFrame;
 
-        private EvalVariablesCommand(Context ctx, Map<String, Serializable> variables, Frame variablesFrame) {
-            this.ctx = ctx;
+        private EvalVariablesCommand(Map<String, Serializable> variables, Frame variablesFrame) {
             this.variables = variables;
             this.variablesFrame = variablesFrame;
         }
@@ -113,6 +111,7 @@ public class FlowCallCommand extends StepCommand<FlowCall> {
             Frame frame = state.peekFrame(threadId);
             frame.pop();
 
+            Context ctx = runtime.getService(Context.class);
             ExpressionEvaluator expressionEvaluator = runtime.getService(ExpressionEvaluator.class);
             Map<String, Object> vars = (Map)variablesFrame.getLocals();
             Map<String, Serializable> out = expressionEvaluator.evalAsMap(EvalContextFactory.global(ctx, vars), variables);
