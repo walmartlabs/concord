@@ -5,8 +5,10 @@
 ### Added
 
 ### Changed
+- runtime-v2: fix serialization error of flow call command
+([#625](https://github.com/walmartlabs/concord/pull/655));
 - concord-cli: ensure absolute target dir
-([#625](https://github.com/walmartlabs/concord/pull/652));
+([#625](https://github.com/walmartlabs/concord/pull/652)).
 
 ## [1.96.1] - 2022-09-06 
 
