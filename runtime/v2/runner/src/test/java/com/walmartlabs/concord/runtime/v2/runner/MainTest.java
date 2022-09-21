@@ -755,6 +755,9 @@ public class MainTest {
         assertLog(log, ".*" + quote("single out a=a-value") + ".*");
         assertLog(log, ".*" + quote("array out a=a-value, b=b-value") + ".*");
         assertLog(log, ".*" + quote("expression out a=a-value, xx=123, zz=10000") + ".*");
+        assertLog(log, ".*" + quote("out after suspend: a=aaa-value") + ".*");
+
+        verify(checkpointService, times(1)).upload(any(), any(), eq("A"), any());
     }
 
     @Test
