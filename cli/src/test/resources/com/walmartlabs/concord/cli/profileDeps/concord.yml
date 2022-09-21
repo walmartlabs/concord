@@ -5,12 +5,8 @@ profiles:
   test:
     configuration:
       dependencies:
-        - "mvn://org.codehaus.groovy:groovy-all:pom:2.5.8"
+        - "mvn://com.walmartlabs.concord.plugins.basic:file-tasks:1.96.0"
 
 flows:
   default:
-    - script: groovy
-      body: |
-        execution.variables().set("x", 123)
-
-    - log: "x=${x}"
+    - log: "exists=${files.exists('concord.yml')}"

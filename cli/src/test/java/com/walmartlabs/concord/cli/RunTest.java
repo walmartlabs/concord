@@ -59,7 +59,7 @@ class RunTest extends AbstractTest {
     void testDepsFromProfile() throws Exception {
         int exitCode = run("profileDeps", Arrays.asList("-p", "test"));
         assertEquals(0, exitCode);
-        assertLog(".*x=123.*");
+        assertLog(".*exists=true.*");
     }
 
     private static int run(String payload, List<String> args) throws Exception {
