@@ -5,6 +5,8 @@
 ### Added
 
 ### Changed
+- concord-server: termintate process wait watchdog loop on batches less than fetch limit
+([#625](https://github.com/walmartlabs/concord/pull/656));
 - runtime-v2: fix serialization error of flow call command
 ([#625](https://github.com/walmartlabs/concord/pull/655));
 - concord-cli: ensure absolute target dir
