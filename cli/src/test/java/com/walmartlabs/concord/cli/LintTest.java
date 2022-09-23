@@ -4,7 +4,7 @@ package com.walmartlabs.concord.cli;
  * *****
  * Concord
  * -----
- * Copyright (C) 2017 - 2020 Walmart Inc.
+ * Copyright (C) 2017 - 2022 Walmart Inc.
  * -----
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -29,30 +29,28 @@ import java.net.URI;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-class RunTest extends AbstractTest {
+class LintTest extends AbstractTest {
 
     @Test
-    void runTest() throws Exception {
-        int exitCode = run("simple", Collections.singletonMap("name", "Concord"));
+    void lintV1Test() throws Exception {
+        int exitCode = lint("lintV1");
         assertEquals(0, exitCode);
-        assertLog(".*Hello, Concord.*");
+        assertLog(".*flows: 2.*");
     }
 
     @Test
-    void testResourceTask() throws Exception {
-        int exitCode = run("resourceTask", Collections.emptyMap());
+    void lintV2Test() throws Exception {
+        int exitCode = lint("lintV2");
         assertEquals(0, exitCode);
-        assertLog(".*\"k\" : \"v\".*");
+        assertLog(".*flows: 2.*");
     }
 
-    private static int run(String payload, Map<String, Object> extraVars) throws Exception {
-        URI uri = RunTest.class.getResource(payload).toURI();
+    private static int lint(String payload) throws Exception {
+        URI uri = LintTest.class.getResource(payload).toURI();
         Path source = Paths.get(uri);
 
         try (TemporaryPath dst = IOUtils.tempDir("cli-tests")) {
@@ -62,12 +60,12 @@ class RunTest extends AbstractTest {
             CommandLine cmd = new CommandLine(app);
 
             List<String> args = new ArrayList<>();
-            args.add("run");
-            for (Map.Entry<String, Object> e : extraVars.entrySet()) {
-                args.add("-e");
-                args.add(e.getKey() + "=" + e.getValue());
-            }
-            args.add(dst.path().toString());
+            args.add("lint");
+
+            Path pwd = Paths.get(System.getProperty("user.dir")).toAbsolutePath();
+            Path relative = pwd.relativize(dst.path());
+
+            args.add(relative.toString());
 
             return cmd.execute(args.toArray(new String[0]));
         }
