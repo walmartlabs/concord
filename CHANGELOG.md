@@ -5,6 +5,8 @@
 ### Added
 
 ### Changed
+- concord-cli: load deps from active profiles
+([#654](https://github.com/walmartlabs/concord/pull/654));
 - runtime-v2: fix parallel execution of ruby scripts
 ([#651](https://github.com/walmartlabs/concord/pull/651));
 - concord-server: termintate process wait watchdog loop on batches less than fetch limit
