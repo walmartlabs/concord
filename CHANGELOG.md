@@ -5,12 +5,14 @@
 ### Added
 
 ### Changed
+- runtime-v2: fix parallel execution of ruby scripts
+([#651](https://github.com/walmartlabs/concord/pull/651));
 - concord-server: termintate process wait watchdog loop on batches less than fetch limit
-([#625](https://github.com/walmartlabs/concord/pull/656));
+([#656](https://github.com/walmartlabs/concord/pull/656));
 - runtime-v2: fix serialization error of flow call command
-([#625](https://github.com/walmartlabs/concord/pull/655));
+([#655](https://github.com/walmartlabs/concord/pull/655));
 - concord-cli: ensure absolute target dir
-([#625](https://github.com/walmartlabs/concord/pull/652)).
+([#652](https://github.com/walmartlabs/concord/pull/652)).
 
 ## [1.96.1] - 2022-09-06 
 
