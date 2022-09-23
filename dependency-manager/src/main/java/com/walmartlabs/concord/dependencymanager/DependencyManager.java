@@ -72,6 +72,8 @@ public class DependencyManager {
     private final RepositorySystem maven;
     private final boolean strictRepositories;
 
+    private final List<String> defaultExclusions;
+
     @Inject
     public DependencyManager(DependencyManagerConfiguration cfg) throws IOException {
         this.cacheDir = cfg.cacheDir();
@@ -84,6 +86,7 @@ public class DependencyManager {
         this.repositories = toRemote(cfg.repositories());
         this.maven = RepositorySystemFactory.create();
         this.strictRepositories = cfg.strictRepositories();
+        this.defaultExclusions = cfg.exclusions();
     }
 
     public Collection<DependencyEntity> resolve(Collection<URI> items) throws IOException {
@@ -263,7 +266,10 @@ public class DependencyManager {
                 .collect(Collectors.toList()));
         req.setRepositories(repositories);
 
-        DependencyRequest dependencyRequest = new DependencyRequest(req, new ExclusionsDependencyFilter(exclusions));
+        List<String> excludes = new ArrayList<>(exclusions);
+        excludes.addAll(defaultExclusions);
+
+        DependencyRequest dependencyRequest = new DependencyRequest(req, new ExclusionsDependencyFilter(excludes));
 
         synchronized (mutex) {
             try {
