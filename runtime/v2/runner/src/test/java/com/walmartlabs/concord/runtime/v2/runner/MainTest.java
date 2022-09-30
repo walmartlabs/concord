@@ -822,6 +822,28 @@ public class MainTest {
     }
 
     @Test
+    public void testSerialLoopEmptyCall() throws Exception {
+        deploy("serialEmptyCall");
+
+        save(ProcessConfiguration.builder()
+                .build());
+
+        byte[] log = run();
+        assertLog(log, ".*" + Pattern.quote("outVar: [null, null]") + ".*");
+    }
+
+    @Test
+    public void testParallelLoopEmptyCall() throws Exception {
+        deploy("parallelEmptyCall");
+
+        save(ProcessConfiguration.builder()
+                .build());
+
+        byte[] log = run();
+        assertLog(log, ".*" + Pattern.quote("outVar: [null, null]") + ".*");
+    }
+
+    @Test
     public void testParallelOutExpr() throws Exception {
         deploy("parallelOutExpr");
 

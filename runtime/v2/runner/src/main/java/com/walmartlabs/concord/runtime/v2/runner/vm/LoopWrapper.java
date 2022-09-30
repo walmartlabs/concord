@@ -36,6 +36,7 @@ import java.io.IOException;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
 public abstract class LoopWrapper implements Command {
@@ -165,18 +166,19 @@ public abstract class LoopWrapper implements Command {
             // target frame for out variables
             Frame targetFrame = VMUtils.assertNearestRoot(state, threadId);
 
-            List<ArrayList<Serializable>> batches = batches(items, batchSize);
-            for (ArrayList<Serializable> batch : batches) {
-                evalBatch(state, threadId, targetFrame, batch);
-            }
-
+            Map<String, List<Serializable>> outVarsAccumulator = new ConcurrentHashMap<>();
             state.pushFrame(threadId, Frame.builder()
-                    .commands(new PrepareOutVariables(outVariables, targetFrame))
+                    .commands(new SetVariablesCommand(outVarsAccumulator, targetFrame))
                     .nonRoot()
                     .build());
+
+            List<ArrayList<Serializable>> batches = batches(items, batchSize);
+            for (ArrayList<Serializable> batch : batches) {
+                evalBatch(state, threadId, batch, outVarsAccumulator);
+            }
         }
 
-        private void evalBatch(State state, ThreadId threadId, Frame targetFrame, ArrayList<Serializable> items) {
+        private void evalBatch(State state, ThreadId threadId, ArrayList<Serializable> items, Map<String, List<Serializable>> outVarsAccumulator) {
             Frame frame = state.peekFrame(threadId);
 
             List<Map.Entry<ThreadId, Serializable>> forks = items.stream()
@@ -196,7 +198,7 @@ public abstract class LoopWrapper implements Command {
 
                 // fork will create rootFrame for forked commands
                 Command itemCmd = new ForkCommand(f.getKey(),
-                        new AppendVariablesCommand(outVariables, null, targetFrame),
+                        new CollectVariablesCommand(outVariables, null, outVarsAccumulator),
                         cmd);
                 cmdFrame.push(itemCmd);
 
@@ -246,16 +248,19 @@ public abstract class LoopWrapper implements Command {
             loop.setLocal(CURRENT_INDEX, 0);
             loop.setLocal(CURRENT_ITEM, items.get(0));
 
-            loop.push(new WithItemsNext(outVariables, cmd)); // next iteration
+            Map<String, List<Serializable>> variablesAccumulator = new ConcurrentHashMap<>();
+
+            Frame targetFrame = VMUtils.assertNearestRoot(state, threadId);
+            loop.push(new SetVariablesCommand(variablesAccumulator, targetFrame));
+
+            loop.push(new WithItemsNext(outVariables, variablesAccumulator, cmd)); // next iteration
 
             Frame cmdFrame = Frame.builder()
                     .commands(cmd)
                     .root()
                     .build();
 
-            Frame targetFrame = VMUtils.assertNearestRoot(state, threadId);
-            loop.push(new AppendVariablesCommand(outVariables, cmdFrame, targetFrame));
-            loop.push(new PrepareOutVariables(outVariables, targetFrame));
+            loop.push(new CollectVariablesCommand(outVariables, cmdFrame, variablesAccumulator));
 
             state.pushFrame(threadId, loop);
             state.pushFrame(threadId, cmdFrame);
@@ -267,10 +272,12 @@ public abstract class LoopWrapper implements Command {
         private static final long serialVersionUID = 1L;
 
         private final Collection<String> outVariables;
+        private final Map<String, List<Serializable>> variablesAccumulator;
         private final Command cmd;
 
-        public WithItemsNext(Collection<String> outVariables, Command cmd) {
+        public WithItemsNext(Collection<String> outVariables, Map<String, List<Serializable>> variablesAccumulator, Command cmd) {
             this.outVariables = outVariables;
+            this.variablesAccumulator = variablesAccumulator;
             this.cmd = cmd;
         }
 
@@ -291,7 +298,7 @@ public abstract class LoopWrapper implements Command {
             loop.setLocal(CURRENT_INDEX, newIndex);
             loop.setLocal(CURRENT_ITEM, items.get(newIndex));
 
-            loop.push(new WithItemsNext(outVariables, cmd)); // next iteration
+            loop.push(new WithItemsNext(outVariables, variablesAccumulator, cmd)); // next iteration
 
             // frame wrapped command
             Frame cmdFrame = Frame.builder()
@@ -299,61 +306,60 @@ public abstract class LoopWrapper implements Command {
                     .root()
                     .build();
 
-            Frame targetFrame = VMUtils.assertNearestRoot(state, threadId);
-            loop.push(new AppendVariablesCommand(outVariables, cmdFrame, targetFrame));
+            loop.push(new CollectVariablesCommand(outVariables, cmdFrame, variablesAccumulator));
 
             state.pushFrame(threadId, cmdFrame);
         }
     }
 
-    static class PrepareOutVariables implements Command {
+    static class SetVariablesCommand implements Command {
 
         private static final long serialVersionUID = 1L;
 
-        private final Collection<String> outVars;
+        private final Map<String, List<Serializable>> variables;
         private final Frame targetFrame;
 
-        private PrepareOutVariables(Collection<String> outVars, Frame targetFrame) {
-            this.outVars = outVars;
+        private SetVariablesCommand(Map<String, List<Serializable>> variables, Frame targetFrame) {
+            this.variables = variables;
             this.targetFrame = targetFrame;
         }
 
         @Override
-        public void eval(Runtime runtime, State state, ThreadId threadId) {
+        public void eval(Runtime runtime, State state, ThreadId threadId) throws Exception {
             Frame frame = state.peekFrame(threadId);
             frame.pop();
 
-            if (outVars.isEmpty()) {
+            if (variables.isEmpty()) {
                 return;
             }
 
-            for (String outVar : outVars) {
-                VMUtils.putLocal(targetFrame, outVar, new ArrayList<>());
+            for (Map.Entry<String, List<Serializable>> e : variables.entrySet()) {
+                VMUtils.putLocal(targetFrame, e.getKey(), e.getValue());
             }
         }
     }
 
     /**
-     * Appends values of the specified variables from the source frame into
-     * list variables in the target frame.
+     * Collect values of the specified variables from the source frame or nearest root frame into
+     * internal accumulator.
      */
-    static class AppendVariablesCommand implements Command {
+    static class CollectVariablesCommand implements Command {
 
         private static final long serialVersionUID = 1L;
 
         private final Collection<String> variables;
-        private final Frame sourceFrame;
-        private final Frame targetFrame;
+        private final Map<String, List<Serializable>> variablesAccumulator;
 
-        public AppendVariablesCommand(Collection<String> variables, Frame sourceFrame, Frame targetFrame) {
+        private final Frame sourceFrame;
+
+        public CollectVariablesCommand(Collection<String> variables, Frame sourceFrame, Map<String, List<Serializable>> variablesAccumulator) {
             this.variables = variables;
             this.sourceFrame = sourceFrame;
-            this.targetFrame = targetFrame;
+            this.variablesAccumulator = variablesAccumulator;
         }
 
         @Override
-        @SuppressWarnings("unchecked")
-        public void eval(Runtime runtime, State state, ThreadId threadId) {
+        public void eval(Runtime runtime, State state, ThreadId threadId) throws Exception {
             Frame frame = state.peekFrame(threadId);
             frame.pop();
 
@@ -363,16 +369,17 @@ public abstract class LoopWrapper implements Command {
 
             Frame effectiveSourceFrame = sourceFrame != null ? sourceFrame : VMUtils.assertNearestRoot(state, threadId);
 
-            for (String v : variables) {
-                // make sure we're not modifying the same list concurrently
-                synchronized (targetFrame) {
-                    ArrayList<Serializable> results = (ArrayList<Serializable>) targetFrame.getLocal(v);
-                    Serializable result = null;
-                    if (effectiveSourceFrame.hasLocal(v)) {
-                        result = effectiveSourceFrame.getLocal(v);
+            for (String var : variables) {
+                Serializable result = effectiveSourceFrame.hasLocal(var) ? effectiveSourceFrame.getLocal(var) : null;
+
+                variablesAccumulator.compute(var, (k, v) -> {
+                    List<Serializable> values = v;
+                    if (values == null) {
+                        values = new ArrayList<>();
                     }
-                    results.add(result);
-                }
+                    values.add(result);
+                    return values;
+                });
             }
         }
     }
