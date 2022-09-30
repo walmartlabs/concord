@@ -6,7 +6,7 @@ flows:
         items:
           - "one"
           - "two"
-        mode: serial
+        mode: parallel
 
     - log: "outVar: ${outVar}"
 
