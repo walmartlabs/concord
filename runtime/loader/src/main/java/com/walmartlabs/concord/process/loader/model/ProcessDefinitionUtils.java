@@ -39,7 +39,7 @@ public final class ProcessDefinitionUtils {
         return view.get(flowName);
     }
 
-    public static Map<String, Object> getVariables(ProcessDefinition project, Collection<String> activeProfiles) {
+    public static Map<String, Object> getProfilesOverlayCfg(ProcessDefinition project, Collection<String> activeProfiles) {
         Map<String, Object> cfg = asMap(project.configuration());
         Map<String, Profile> profiles = project.profiles();
 
