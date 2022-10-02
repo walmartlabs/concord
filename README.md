@@ -26,6 +26,7 @@ Dependencies:
 - [Git](https://git-scm.com/) 2.18+
 - [Java 8](https://adoptium.net/)
 - [Docker Community Edition](https://www.docker.com/community-edition)
+- [Docker Buildx](https://docs.docker.com/build/buildx/install/)
 - (Optional) [NodeJS and NPM](https://nodejs.org/en/download/) (Node 16 or greater)
 
 ```shell
