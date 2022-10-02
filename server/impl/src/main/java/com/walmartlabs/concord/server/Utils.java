@@ -20,8 +20,6 @@ package com.walmartlabs.concord.server;
  * =====
  */
 
-import java.sql.Timestamp;
-import java.util.Calendar;
 import java.util.List;
 
 public final class Utils {
@@ -47,15 +45,6 @@ public final class Utils {
             return defaultValue;
         }
         return s;
-    }
-
-    public static Timestamp toTimestamp(IsoDateParam p) {
-        if (p == null) {
-            return null;
-        }
-
-        Calendar c = p.getValue();
-        return new Timestamp(c.getTimeInMillis());
     }
 
     public static <T> T unwrap(WrappedValue<T> v) {
