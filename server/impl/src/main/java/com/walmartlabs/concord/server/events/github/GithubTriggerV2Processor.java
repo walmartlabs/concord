@@ -66,7 +66,7 @@ public class GithubTriggerV2Processor implements GithubTriggerProcessor {
                 continue;
             }
 
-            Map<String, Object> event = buildEvent(eventName, payload);
+            Map<String, Object> event = buildEvent(eventName, uriInfo, payload);
             enrichEventConditions(payload, t, event);
 
             if (DefaultEventFilter.filter(event, t)) {
@@ -96,7 +96,7 @@ public class GithubTriggerV2Processor implements GithubTriggerProcessor {
         return dao.list(projectId, EVENT_SOURCE, VERSION_ID, conditions);
     }
 
-    private Map<String, Object> buildEvent(String eventName, Payload payload) {
+    private Map<String, Object> buildEvent(String eventName, UriInfo uriInfo, Payload payload) {
         Map<String, Object> result = new HashMap<>();
 
         result.put(GITHUB_ORG_KEY, payload.getOrg());
@@ -125,6 +125,7 @@ public class GithubTriggerV2Processor implements GithubTriggerProcessor {
         result.put(TYPE_KEY, eventName);
         result.put(STATUS_KEY, payload.getAction());
         result.put(PAYLOAD_KEY, payload.raw());
+        result.put(QUERY_PARAMS_KEY, uriInfo.getQueryParameters());
 
         // files
         Map<String, Set<String>> files = new HashMap<>(payload.getFiles());
