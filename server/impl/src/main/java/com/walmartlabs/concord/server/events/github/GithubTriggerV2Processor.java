@@ -125,7 +125,7 @@ public class GithubTriggerV2Processor implements GithubTriggerProcessor {
         result.put(TYPE_KEY, eventName);
         result.put(STATUS_KEY, payload.getAction());
         result.put(PAYLOAD_KEY, payload.raw());
-        result.put(QUERY_PARAMS_KEY, uriInfo.getQueryParameters());
+        result.put(QUERY_PARAMS_KEY, new HashMap<>(uriInfo.getQueryParameters()));
 
         // files
         Map<String, Set<String>> files = new HashMap<>(payload.getFiles());
