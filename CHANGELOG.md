@@ -3,6 +3,8 @@
 ## [1.97.0] - Unreleased
 
 ### Added
+- dependency-manager: allow exclusion artifacts from transitive dependencies
+([#657](https://github.com/walmartlabs/concord/pull/657)).
 
 ### Changed
 - concord-cli: load deps from active profiles
