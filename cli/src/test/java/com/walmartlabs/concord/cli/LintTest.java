@@ -4,7 +4,7 @@ package com.walmartlabs.concord.cli;
  * *****
  * Concord
  * -----
- * Copyright (C) 2017 - 2020 Walmart Inc.
+ * Copyright (C) 2017 - 2022 Walmart Inc.
  * -----
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -28,42 +28,29 @@ import picocli.CommandLine;
 import java.net.URI;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-class RunTest extends AbstractTest {
+class LintTest extends AbstractTest {
 
     @Test
-    void runTest() throws Exception {
-        Map<String, Object> extraVars = Collections.singletonMap("name", "Concord");
-        List<String> args = new ArrayList<>();
-        for (Map.Entry<String, Object> e : extraVars.entrySet()) {
-            args.add("-e");
-            args.add(e.getKey() + "=" + e.getValue());
-        }
-
-        int exitCode = run("simple", args);
+    void lintV1Test() throws Exception {
+        int exitCode = lint("lintV1");
         assertEquals(0, exitCode);
-        assertLog(".*Hello, Concord.*");
+        assertLog(".*flows: 2.*");
     }
 
     @Test
-    void testResourceTask() throws Exception {
-        int exitCode = run("resourceTask", Collections.emptyList());
+    void lintV2Test() throws Exception {
+        int exitCode = lint("lintV2");
         assertEquals(0, exitCode);
-        assertLog(".*\"k\" : \"v\".*");
+        assertLog(".*flows: 2.*");
     }
 
-    @Test
-    void testDepsFromProfile() throws Exception {
-        int exitCode = run("profileDeps", Arrays.asList("-p", "test"));
-        assertEquals(0, exitCode);
-        assertLog(".*exists=true.*");
-    }
-
-    private static int run(String payload, List<String> args) throws Exception {
-        URI uri = RunTest.class.getResource(payload).toURI();
+    private static int lint(String payload) throws Exception {
+        URI uri = LintTest.class.getResource(payload).toURI();
         Path source = Paths.get(uri);
 
         try (TemporaryPath dst = IOUtils.tempDir("cli-tests")) {
@@ -72,12 +59,15 @@ class RunTest extends AbstractTest {
             App app = new App();
             CommandLine cmd = new CommandLine(app);
 
-            List<String> effectiveArgs = new ArrayList<>();
-            effectiveArgs.add("run");
-            effectiveArgs.addAll(args);
-            effectiveArgs.add(dst.path().toString());
+            List<String> args = new ArrayList<>();
+            args.add("lint");
 
-            return cmd.execute(effectiveArgs.toArray(new String[0]));
+            Path pwd = Paths.get(System.getProperty("user.dir")).toAbsolutePath();
+            Path relative = pwd.relativize(dst.path());
+
+            args.add(relative.toString());
+
+            return cmd.execute(args.toArray(new String[0]));
         }
     }
 }

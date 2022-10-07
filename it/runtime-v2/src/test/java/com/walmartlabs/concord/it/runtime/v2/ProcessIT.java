@@ -95,6 +95,24 @@ public class ProcessIT extends AbstractTest {
         proc.assertLog(".*matches: true.*");
     }
 
+
+    /**
+     * Ruby script execution.
+     */
+    @Test
+    public void testRubyScripts() throws Exception {
+        Payload payload = new Payload()
+                .archive(resource("scriptRuby"));
+
+        ConcordProcess proc = concord.processes().start(payload);
+        expectStatus(proc, ProcessEntry.StatusEnum.FINISHED);
+
+        proc.assertLog(".*scriptTask: A1:A2*");
+        proc.assertLog(".*scriptTask: B1:B2*");
+        proc.assertLog(".*scriptTask: result: A1-Ruby*");
+        proc.assertLog(".*scriptTask: result: B1-Ruby*");
+    }
+
     /**
      * Test the process metadata.
      */
