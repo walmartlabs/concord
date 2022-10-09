@@ -47,10 +47,12 @@
             </column>
         </addColumn>
 
+        <!-- removed in 1.97.0+
         <sql>
             lock table PROCESS_CHECKPOINTS;
             update PROCESS_CHECKPOINTS s set INSTANCE_CREATED_AT = (select CREATED_AT from PROCESS_QUEUE q where q.INSTANCE_ID = s.INSTANCE_ID);
         </sql>
+        -->
 
         <addNotNullConstraint tableName="PROCESS_CHECKPOINTS" columnName="INSTANCE_CREATED_AT"/>
     </changeSet>

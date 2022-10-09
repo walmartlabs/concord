@@ -14,11 +14,13 @@
         </sql>
     </changeSet>
 
+    <!--
     <changeSet id="1344010" author="ibodrov@gmail.com" runInTransaction="false">
         <sql>
             create index concurrently IDX_PROC_INITIATOR_ID on PROCESS_QUEUE (INITIATOR_ID)
         </sql>
     </changeSet>
+    -->
 
     <changeSet id="1344020" author="ibodrov@gmail.com" runInTransaction="false">
         <sql>
@@ -26,11 +28,13 @@
         </sql>
     </changeSet>
 
+    <!--
     <changeSet id="1344030" author="ibodrov@gmail.com" runInTransaction="false">
         <sql>
             create index concurrently IDX_PROC_META on PROCESS_QUEUE using gin (META jsonb_path_ops)
         </sql>
     </changeSet>
+    -->
 
     <changeSet id="1344100" author="ybrigo@gmail.com">
         <preConditions onFail="MARK_RAN">
@@ -62,11 +66,13 @@
         </sql>
     </changeSet>
 
+    <!--
     <changeSet id="1344200" author="ibodrov@gmail.com" runInTransaction="false">
         <sql>
             create index concurrently IDX_PROC_ENQUEUED on PROCESS_QUEUE (CURRENT_STATUS) where CURRENT_STATUS = 'ENQUEUED';
         </sql>
     </changeSet>
+    -->
 
     <changeSet id="1344300" author="ibodrov@gmail.com" runInTransaction="false">
         <!-- skip if the table is partitioned -->

@@ -47,7 +47,7 @@ import java.util.stream.Collectors;
 
 import static com.walmartlabs.concord.server.console.UserActivityResponse.ProjectProcesses;
 import static com.walmartlabs.concord.server.jooq.tables.Organizations.ORGANIZATIONS;
-import static com.walmartlabs.concord.server.jooq.tables.ProcessQueue.PROCESS_QUEUE;
+import static com.walmartlabs.concord.server.jooq.tables.ProcessStatus.PROCESS_STATUS;
 import static com.walmartlabs.concord.server.jooq.tables.Projects.PROJECTS;
 import static com.walmartlabs.concord.server.sdk.ProcessStatus.*;
 import static org.jooq.impl.DSL.*;
@@ -117,15 +117,15 @@ public class UserActivityResource implements Resource {
                     .where(PROJECTS.ORG_ID.in(orgIds));
 
             SelectConditionStep<Record5<Integer, Integer, Integer, Integer, Integer>> q = tx.select(
-                    when(PROCESS_QUEUE.CURRENT_STATUS.eq(RUNNING.name()), 1).otherwise(0).as(RUNNING.name()),
-                    when(PROCESS_QUEUE.CURRENT_STATUS.eq(SUSPENDED.name()), 1).otherwise(0).as(SUSPENDED.name()),
-                    when(PROCESS_QUEUE.CURRENT_STATUS.eq(FINISHED.name()), 1).otherwise(0).as(FINISHED.name()),
-                    when(PROCESS_QUEUE.CURRENT_STATUS.eq(FAILED.name()), 1).otherwise(0).as(FAILED.name()),
-                    when(PROCESS_QUEUE.CURRENT_STATUS.eq(ENQUEUED.name()), 1).otherwise(0).as(ENQUEUED.name()))
-                    .from(PROCESS_QUEUE)
-                    .where(PROCESS_QUEUE.INITIATOR_ID.eq(initiatorId)
-                            .and(PROCESS_QUEUE.LAST_UPDATED_AT.greaterOrEqual(fromUpdatedAt))
-                            .and(or(PROCESS_QUEUE.PROJECT_ID.in(projectIds), PROCESS_QUEUE.PROJECT_ID.isNull())));
+                    when(PROCESS_STATUS.CURRENT_STATUS.eq(RUNNING.name()), 1).otherwise(0).as(RUNNING.name()),
+                    when(PROCESS_STATUS.CURRENT_STATUS.eq(SUSPENDED.name()), 1).otherwise(0).as(SUSPENDED.name()),
+                    when(PROCESS_STATUS.CURRENT_STATUS.eq(FINISHED.name()), 1).otherwise(0).as(FINISHED.name()),
+                    when(PROCESS_STATUS.CURRENT_STATUS.eq(FAILED.name()), 1).otherwise(0).as(FAILED.name()),
+                    when(PROCESS_STATUS.CURRENT_STATUS.eq(ENQUEUED.name()), 1).otherwise(0).as(ENQUEUED.name()))
+                    .from(PROCESS_STATUS)
+                    .where(PROCESS_STATUS.INITIATOR_ID.eq(initiatorId)
+                            .and(PROCESS_STATUS.LAST_UPDATED_AT.greaterOrEqual(fromUpdatedAt))
+                            .and(or(PROCESS_STATUS.PROJECT_ID.in(projectIds), PROCESS_STATUS.PROJECT_ID.isNull())));
 
             Record5<BigDecimal, BigDecimal, BigDecimal, BigDecimal, BigDecimal> r = tx.select(
                     sum(q.field(RUNNING.name(), Integer.class)),
@@ -157,11 +157,11 @@ public class UserActivityResource implements Resource {
 
             SelectHavingStep<Record4<String, String, Integer, Integer>> a =
                     tx.select(ORGANIZATIONS.ORG_NAME, PROJECTS.PROJECT_NAME, count(), rnField)
-                            .from(PROCESS_QUEUE)
+                            .from(PROCESS_STATUS)
                             .innerJoin(PROJECTS)
-                            .on(PROCESS_QUEUE.PROJECT_ID.eq(PROJECTS.PROJECT_ID)
-                                    .and(PROCESS_QUEUE.CURRENT_STATUS.in(statuses))
-                                    .and(PROCESS_QUEUE.LAST_UPDATED_AT.greaterOrEqual(fromUpdatedAt))
+                            .on(PROCESS_STATUS.PROJECT_ID.eq(PROJECTS.PROJECT_ID)
+                                    .and(PROCESS_STATUS.CURRENT_STATUS.in(statuses))
+                                    .and(PROCESS_STATUS.LAST_UPDATED_AT.greaterOrEqual(fromUpdatedAt))
                                     .and(PROJECTS.ORG_ID.in(orgIds))
                             )
                             .innerJoin(ORGANIZATIONS)

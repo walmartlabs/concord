@@ -14,9 +14,11 @@
     </changeSet>
     -->
 
+    <!-- removed in 1.97.0+
     <changeSet id="1270100" author="ibodrov@gmail.com">
         <dropIndex tableName="PROCESS_QUEUE" indexName="IDX_PROC_Q_CURR_STAT"/>
     </changeSet>
+    -->
 
     <!-- replaced with `exclusive` in 1.33.0+
     <changeSet id="1270200" author="ybrigo@gmail.com">

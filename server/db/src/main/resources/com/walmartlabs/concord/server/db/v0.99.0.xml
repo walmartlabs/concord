@@ -9,8 +9,8 @@
             lock table PROCESS_EVENTS;
 
             alter table PROCESS_EVENTS add column INSTANCE_CREATED_AT timestamp;
-            update PROCESS_EVENTS as pe set INSTANCE_CREATED_AT = (select CREATED_AT from PROCESS_QUEUE as pq where pq.INSTANCE_ID = pe.INSTANCE_ID);
-            delete from PROCESS_EVENTS where INSTANCE_CREATED_AT is null;
+--             update PROCESS_EVENTS as pe set INSTANCE_CREATED_AT = (select CREATED_AT from PROCESS_QUEUE as pq where pq.INSTANCE_ID = pe.INSTANCE_ID);
+--             delete from PROCESS_EVENTS where INSTANCE_CREATED_AT is null;
         </sql>
 
         <addNotNullConstraint tableName="PROCESS_EVENTS" columnName="INSTANCE_CREATED_AT"/>

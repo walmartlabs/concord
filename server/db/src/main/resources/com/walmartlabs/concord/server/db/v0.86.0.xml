@@ -12,6 +12,7 @@
         </addColumn>
     </changeSet>
 
+    <!-- removed in 1.97.0+
     <changeSet id="86200" author="muhammad.wasi@walmart.com">
         <validCheckSum>7:d93133941dc7620cf83d20401d17cd57</validCheckSum>
 
@@ -58,14 +59,14 @@
             $$ language plpgsql;
         </createProcedure>
 
-        <!-- temporary triggers to mitigate data inconsistency during blue-green deployment -->
+         temporary triggers to mitigate data inconsistency during blue-green deployment
         <sql>
             drop trigger if exists UPDATE_PROCESS_QUEUE_INITIATOR on PROCESS_QUEUE;
             drop trigger if exists UPDATE_PROCESS_QUEUE_INITIATOR_ID on PROCESS_QUEUE;
             create trigger UPDATE_PROCESS_QUEUE_INITIATOR_ID before insert on PROCESS_QUEUE for each row execute procedure UPDATE_PROCESS_QUEUE_INITIATOR_ID();
         </sql>
 
-        <!-- deprecated in 1.31.0+
+         deprecated in 1.31.0+
         <createView viewName="V_PROCESS_QUEUE" replaceIfExists="true">
             select
                 q1.INSTANCE_ID,
@@ -107,7 +108,7 @@
             left join
                 USERS users on users.user_id = q1.INITIATOR_ID
         </createView>
-        -->
+
 
         <sql>
             update process_queue p
@@ -116,6 +117,7 @@
             where u.username = p.initiator
         </sql>
     </changeSet>
+    -->
 
     <changeSet id="86300" author="muhammad.wasi@walmart.com">
         <addColumn tableName="PROCESS_CHECKPOINTS">

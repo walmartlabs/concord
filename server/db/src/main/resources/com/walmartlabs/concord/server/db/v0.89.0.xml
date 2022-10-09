@@ -4,6 +4,7 @@
         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
         xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.3.xsd">
 
+    <!-- removed in 1.97.0+
     <changeSet id="89000" author="ybrigo@gmail.com">
         <addColumn tableName="PROCESS_QUEUE">
             <column name="TIMEOUT" type="bigint" remarks="Timeout (in seconds)">
@@ -11,6 +12,7 @@
             </column>
         </addColumn>
     </changeSet>
+    -->
 
     <!-- removed in 0.97.0+
     <changeSet id="89100" author="ybrigo@gmail.com">

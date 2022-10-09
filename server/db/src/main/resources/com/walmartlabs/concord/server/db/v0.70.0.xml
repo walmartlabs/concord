@@ -20,6 +20,7 @@
             </insert>
         </changeSet> -->
 
+    <!-- removed in 1.97.0+
     <changeSet id="70100" author="ybrigo@gmail.com">
         <addColumn tableName="PROCESS_QUEUE">
             <column name="REQUIREMENTS" type="jsonb">
@@ -27,4 +28,5 @@
             </column>
         </addColumn>
     </changeSet>
+    -->
 </databaseChangeLog>

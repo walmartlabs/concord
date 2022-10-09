@@ -20,7 +20,6 @@ package com.walmartlabs.concord.server.process.queue.dispatcher;
  * =====
  */
 
-import com.walmartlabs.concord.server.jooq.tables.ProcessQueue;
 import com.walmartlabs.concord.server.jooq.tables.Projects;
 import com.walmartlabs.concord.server.sdk.ProcessStatus;
 import org.jooq.DSLContext;
@@ -28,6 +27,8 @@ import org.jooq.Record1;
 
 import javax.inject.Named;
 import java.util.*;
+
+import static com.walmartlabs.concord.server.jooq.tables.ProcessStatus.PROCESS_STATUS;
 
 @Named
 public class ConcurrentProcessFilterDao {
@@ -54,7 +55,7 @@ public class ConcurrentProcessFilterDao {
     }
 
     private List<UUID> computeProcessesPerOrg(DSLContext tx, UUID orgId) {
-        ProcessQueue q = ProcessQueue.PROCESS_QUEUE.as("q");
+        com.walmartlabs.concord.server.jooq.tables.ProcessStatus q = PROCESS_STATUS.as("q");
         Projects p = Projects.PROJECTS.as("p");
         return tx.select(q.INSTANCE_ID)
                 .from(q)
@@ -65,7 +66,7 @@ public class ConcurrentProcessFilterDao {
     }
 
     private static List<UUID> computeProcessesPerProject(DSLContext tx, UUID projectId) {
-        ProcessQueue q = ProcessQueue.PROCESS_QUEUE.as("q");
+        com.walmartlabs.concord.server.jooq.tables.ProcessStatus q = PROCESS_STATUS.as("q");
         return tx.select(q.INSTANCE_ID)
                 .from(q)
                 .where(q.PROJECT_ID.eq(projectId)

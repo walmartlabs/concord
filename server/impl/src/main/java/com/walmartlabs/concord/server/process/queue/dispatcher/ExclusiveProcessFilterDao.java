@@ -20,7 +20,6 @@ package com.walmartlabs.concord.server.process.queue.dispatcher;
  * =====
  */
 
-import com.walmartlabs.concord.server.jooq.tables.ProcessQueue;
 import com.walmartlabs.concord.server.process.queue.ProcessQueueEntry;
 import com.walmartlabs.concord.server.sdk.ProcessStatus;
 import org.immutables.value.Value;
@@ -34,7 +33,7 @@ import javax.inject.Named;
 import java.util.*;
 
 import static com.walmartlabs.concord.db.PgUtils.jsonbText;
-import static com.walmartlabs.concord.server.jooq.tables.ProcessQueue.PROCESS_QUEUE;
+import static com.walmartlabs.concord.server.jooq.Tables.PROCESS_STATUS;
 import static org.jooq.impl.DSL.*;
 
 @Named
@@ -58,7 +57,7 @@ public class ExclusiveProcessFilterDao {
     }
 
     private List<UUID> findProcess(DSLContext tx, String group, UUID projectId, UUID parentInstanceId) {
-        ProcessQueue q = ProcessQueue.PROCESS_QUEUE.as("q");
+        com.walmartlabs.concord.server.jooq.tables.ProcessStatus q = PROCESS_STATUS.as("q");
         SelectConditionStep<Record1<UUID>> s = tx.select(q.INSTANCE_ID)
                 .from(q)
                 .where(q.PROJECT_ID.eq(projectId)
@@ -68,13 +67,13 @@ public class ExclusiveProcessFilterDao {
         // parent's
         if (parentInstanceId != null) {
             SelectJoinStep<Record1<UUID>> parents = tx.withRecursive("parents").as(
-                    select(PROCESS_QUEUE.INSTANCE_ID, PROCESS_QUEUE.PARENT_INSTANCE_ID).from(PROCESS_QUEUE)
-                            .where(PROCESS_QUEUE.INSTANCE_ID.eq(parentInstanceId))
+                    select(PROCESS_STATUS.INSTANCE_ID, PROCESS_STATUS.PARENT_INSTANCE_ID).from(PROCESS_STATUS)
+                            .where(PROCESS_STATUS.INSTANCE_ID.eq(parentInstanceId))
                             .unionAll(
-                                    select(PROCESS_QUEUE.INSTANCE_ID, PROCESS_QUEUE.PARENT_INSTANCE_ID)
-                                            .from(PROCESS_QUEUE)
+                                    select(PROCESS_STATUS.INSTANCE_ID, PROCESS_STATUS.PARENT_INSTANCE_ID)
+                                            .from(PROCESS_STATUS)
                                             .join(name("parents"))
-                                            .on(PROCESS_QUEUE.INSTANCE_ID.eq(
+                                            .on(PROCESS_STATUS.INSTANCE_ID.eq(
                                                     field(name("parents", "PARENT_INSTANCE_ID"), UUID.class)))))
                     .select(field("parents.INSTANCE_ID", UUID.class))
                     .from(name("parents"));

@@ -39,8 +39,8 @@ import java.util.UUID;
 import static com.walmartlabs.concord.server.jooq.Tables.*;
 import static com.walmartlabs.concord.server.jooq.tables.ProcessCheckpoints.PROCESS_CHECKPOINTS;
 import static com.walmartlabs.concord.server.jooq.tables.ProcessEvents.PROCESS_EVENTS;
-import static com.walmartlabs.concord.server.jooq.tables.ProcessQueue.PROCESS_QUEUE;
 import static com.walmartlabs.concord.server.jooq.tables.ProcessState.PROCESS_STATE;
+import static com.walmartlabs.concord.server.jooq.tables.ProcessStatus.PROCESS_STATUS;
 
 @Named("process-cleaner")
 @Singleton
@@ -88,15 +88,15 @@ public class ProcessCleaner implements ScheduledTask {
             Field<OffsetDateTime> cutoff = PgUtils.nowMinus(jobCfg.getMaxStateAge());
 
             tx(tx -> {
-                SelectConditionStep<Record1<UUID>> ids = tx.select(PROCESS_QUEUE.INSTANCE_ID)
-                        .from(PROCESS_QUEUE)
-                        .where(PROCESS_QUEUE.LAST_UPDATED_AT.lessThan(cutoff)
-                                .and(PROCESS_QUEUE.CURRENT_STATUS.notIn(EXCLUDE_STATUSES)));
+                SelectConditionStep<Record1<UUID>> ids = tx.select(PROCESS_STATUS.INSTANCE_ID)
+                        .from(PROCESS_STATUS)
+                        .where(PROCESS_STATUS.LAST_UPDATED_AT.lessThan(cutoff)
+                                .and(PROCESS_STATUS.CURRENT_STATUS.notIn(EXCLUDE_STATUSES)));
 
                 int queueEntries = 0;
                 if (jobCfg.isQueueCleanup()) {
-                    queueEntries = tx.deleteFrom(PROCESS_QUEUE)
-                            .where(PROCESS_QUEUE.INSTANCE_ID.in(ids))
+                    queueEntries = tx.deleteFrom(PROCESS_STATUS)
+                            .where(PROCESS_STATUS.INSTANCE_ID.in(ids))
                             .execute();
 
                     tx.deleteFrom(PROCESS_WAIT_CONDITIONS)
@@ -149,7 +149,7 @@ public class ProcessCleaner implements ScheduledTask {
             long t1 = System.currentTimeMillis();
 
             tx(tx -> {
-                SelectJoinStep<Record1<UUID>> alive = tx.select(PROCESS_QUEUE.INSTANCE_ID).from(PROCESS_QUEUE);
+                SelectJoinStep<Record1<UUID>> alive = tx.select(PROCESS_STATUS.INSTANCE_ID).from(PROCESS_STATUS);
 
                 int stateRecords = 0;
                 if (jobCfg.isStateCleanup()) {

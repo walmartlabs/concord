@@ -66,7 +66,8 @@ import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.stream.Stream;
 
-import static com.walmartlabs.concord.server.jooq.tables.ProcessQueue.PROCESS_QUEUE;
+import static com.walmartlabs.concord.server.jooq.Tables.PROCESS_INFO;
+import static com.walmartlabs.concord.server.jooq.Tables.PROCESS_STATUS;
 import static com.walmartlabs.concord.server.jooq.tables.ProcessState.PROCESS_STATE;
 import static com.walmartlabs.concord.server.jooq.tables.Projects.PROJECTS;
 import static org.jooq.impl.DSL.*;
@@ -623,12 +624,18 @@ public class ProcessStateManager extends AbstractDao {
     private PolicyEngine getPolicyEngine(DSLContext tx, ProcessKey processKey) {
         Field<UUID> orgId = select(PROJECTS.ORG_ID)
                 .from(PROJECTS)
-                .where(PROJECTS.PROJECT_ID.eq(PROCESS_QUEUE.PROJECT_ID))
+                .where(PROJECTS.PROJECT_ID.eq(PROCESS_STATUS.PROJECT_ID))
                 .asField();
 
-        Map<String, UUID> info = tx.select(orgId, PROCESS_QUEUE.PROJECT_ID, PROCESS_QUEUE.INITIATOR_ID)
-                .from(PROCESS_QUEUE)
-                .where(PROCESS_QUEUE.INSTANCE_ID.eq(processKey.getInstanceId()))
+        Field<UUID> initiatorId = select(PROCESS_INFO.INITIATOR_ID)
+                .from(PROCESS_INFO)
+                .where(PROCESS_INFO.INSTANCE_ID.eq(processKey.getInstanceId())
+                        .and(PROCESS_INFO.INSTANCE_CREATED_AT.eq(processKey.getCreatedAt())))
+                .asField();
+
+        Map<String, UUID> info = tx.select(orgId, PROCESS_STATUS.PROJECT_ID, initiatorId)
+                .from(PROCESS_STATUS)
+                .where(PROCESS_STATUS.INSTANCE_ID.eq(processKey.getInstanceId()))
                 .fetchOne(r -> {
                     Map<String, UUID> result = new HashMap<>();
                     result.put("orgId", r.value1());

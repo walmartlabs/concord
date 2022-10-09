@@ -27,12 +27,14 @@
             </column>
         </createTable>
 
+        <!-- removed in 1.97.0+
         <addForeignKeyConstraint baseTableName="PROCESS_LOCKS"
                                  baseColumnNames="INSTANCE_ID"
                                  constraintName="FK_PROCESS_LOCKS_INSTANCE_ID"
                                  referencedTableName="PROCESS_QUEUE"
                                  referencedColumnNames="INSTANCE_ID"
                                  onDelete="CASCADE"/>
+        -->
 
         <addForeignKeyConstraint baseTableName="PROCESS_LOCKS"
                                  baseColumnNames="ORG_ID"

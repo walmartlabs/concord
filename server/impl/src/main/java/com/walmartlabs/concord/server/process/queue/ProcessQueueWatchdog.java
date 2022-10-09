@@ -30,7 +30,6 @@ import com.walmartlabs.concord.server.ConcordObjectMapper;
 import com.walmartlabs.concord.server.Utils;
 import com.walmartlabs.concord.server.agent.AgentManager;
 import com.walmartlabs.concord.server.cfg.ProcessWatchdogConfiguration;
-import com.walmartlabs.concord.server.jooq.tables.ProcessQueue;
 import com.walmartlabs.concord.server.process.*;
 import com.walmartlabs.concord.server.process.logs.ProcessLogManager;
 import com.walmartlabs.concord.server.sdk.PartialProcessKey;
@@ -52,7 +51,7 @@ import java.util.Map;
 import java.util.UUID;
 
 import static com.walmartlabs.concord.db.PgUtils.interval;
-import static com.walmartlabs.concord.server.jooq.tables.ProcessQueue.PROCESS_QUEUE;
+import static com.walmartlabs.concord.server.jooq.tables.ProcessStatus.PROCESS_STATUS;
 import static org.jooq.impl.DSL.*;
 
 @Named("process-queue-watchdog")
@@ -319,7 +318,7 @@ public class ProcessQueueWatchdog implements ScheduledTask {
         }
 
         public List<ProcessKey> pollStalled(DSLContext tx, ProcessStatus[] statuses, Field<OffsetDateTime> cutOff, int maxEntries) {
-            ProcessQueue q = PROCESS_QUEUE.as("q");
+            com.walmartlabs.concord.server.jooq.tables.ProcessStatus q = PROCESS_STATUS.as("q");
             return tx.select(q.INSTANCE_ID, q.CREATED_AT)
                     .from(q)
                     .where(q.CURRENT_STATUS.in(Utils.toString(statuses))
@@ -331,7 +330,7 @@ public class ProcessQueueWatchdog implements ScheduledTask {
         }
 
         public List<TimedOutEntry> pollExpired(int maxEntries) {
-            ProcessQueue q = PROCESS_QUEUE.as("q");
+            com.walmartlabs.concord.server.jooq.tables.ProcessStatus q = PROCESS_STATUS.as("q");
 
             Field<?> maxAge = interval("1 second").mul(q.TIMEOUT);
 

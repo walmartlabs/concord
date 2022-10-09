@@ -103,6 +103,7 @@
         <addUniqueConstraint tableName="SECRETS" columnNames="TEAM_ID, SECRET_NAME"/>
     </changeSet>
 
+    <!-- removed in 1.97.0+
     <changeSet id="47500" author="ibodrov@gmail.com">
         <sql>
             alter table PROCESS_QUEUE
@@ -113,7 +114,8 @@
             on delete set null
         </sql>
     </changeSet>
-
+    -->
+    
     <changeSet id="47600" author="ybrigo@gmail.com">
         <insert tableName="USERS">
             <column name="USER_ID" value="${concordGithubUserId}"/>

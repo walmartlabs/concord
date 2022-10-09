@@ -24,7 +24,6 @@ import com.walmartlabs.concord.db.AbstractDao;
 import com.walmartlabs.concord.db.MainDB;
 import com.walmartlabs.concord.server.Utils;
 import com.walmartlabs.concord.server.jooq.tables.ProcessLocks;
-import com.walmartlabs.concord.server.jooq.tables.ProcessQueue;
 import com.walmartlabs.concord.server.sdk.ProcessStatus;
 import com.walmartlabs.concord.server.sdk.ScheduledTask;
 import org.jooq.Configuration;
@@ -39,7 +38,7 @@ import javax.inject.Singleton;
 import java.util.UUID;
 
 import static com.walmartlabs.concord.server.jooq.Tables.PROCESS_LOCKS;
-import static com.walmartlabs.concord.server.jooq.tables.ProcessQueue.PROCESS_QUEUE;
+import static com.walmartlabs.concord.server.jooq.tables.ProcessStatus.PROCESS_STATUS;
 
 /**
  * Takes care of processes dead process locks.
@@ -87,7 +86,7 @@ public class ProcessLocksWatchdog implements ScheduledTask {
 
         public int deleteStalledLocks() {
             return txResult(tx -> {
-                ProcessQueue q = PROCESS_QUEUE.as("q");
+                com.walmartlabs.concord.server.jooq.tables.ProcessStatus q = PROCESS_STATUS.as("q");
                 ProcessLocks l = PROCESS_LOCKS.as("l");
 
                 SelectConditionStep<Record1<UUID>> finishedProcesses = tx.select(q.INSTANCE_ID)

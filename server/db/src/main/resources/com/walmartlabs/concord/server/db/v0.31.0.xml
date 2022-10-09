@@ -77,9 +77,11 @@
 
     <!-- PROCESS_QUEUE.INSTANCE_ID -->
 
+    <!-- removed in 1.97.0+
     <changeSet id="31120" author="ibodrov@gmail.com">
         <modifyDataType tableName="PROCESS_QUEUE" columnName="INSTANCE_ID" newDataType="uuid"/>
     </changeSet>
+    -->
 
     <!-- PROCESS_STATE.INSTANCE_ID -->
 

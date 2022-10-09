@@ -4,6 +4,7 @@
         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
         xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.3.xsd">
 
+    <!-- removed in 1.97.0+
     <changeSet id="1400000" author="ybrigo@gmail.com">
         <preConditions onFail="MARK_RAN">
             <indexExists tableName="PROCESS_QUEUE" indexName="IDX_PROC_WAIT_COND_NN"/>
@@ -11,6 +12,7 @@
 
         <dropIndex tableName="PROCESS_QUEUE" indexName="IDX_PROC_WAIT_COND_NN"/>
     </changeSet>
+    -->
 
     <!-- WAIT_CONDITIONS was moved to the new table "PROCESS_WAIT_CONDITIONS" in 1.83.0+
     <changeSet id="1400010" author="ybrigo@gmail.com" runInTransaction="false">
