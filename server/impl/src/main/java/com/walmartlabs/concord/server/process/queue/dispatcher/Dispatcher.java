@@ -32,7 +32,6 @@ import com.walmartlabs.concord.server.ConcordObjectMapper;
 import com.walmartlabs.concord.server.Locks;
 import com.walmartlabs.concord.server.PeriodicTask;
 import com.walmartlabs.concord.server.cfg.ProcessQueueConfiguration;
-import com.walmartlabs.concord.server.jooq.tables.ProcessQueue;
 import com.walmartlabs.concord.server.process.ImportsNormalizerFactory;
 import com.walmartlabs.concord.server.process.SessionTokenCreator;
 import com.walmartlabs.concord.server.process.logs.ProcessLogManager;
@@ -58,6 +57,7 @@ import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
+import static com.walmartlabs.concord.server.jooq.Tables.PROCESS_STATUS;
 import static com.walmartlabs.concord.server.jooq.tables.Organizations.ORGANIZATIONS;
 import static com.walmartlabs.concord.server.jooq.tables.ProcessQueue.PROCESS_QUEUE;
 import static com.walmartlabs.concord.server.jooq.tables.Projects.PROJECTS;
@@ -313,7 +313,7 @@ public class Dispatcher extends PeriodicTask {
         public List<ProcessQueueEntry> next(DSLContext tx, int offset, int limit) {
             offsetHistogram.update(offset);
 
-            ProcessQueue q = PROCESS_QUEUE.as("q");
+            com.walmartlabs.concord.server.jooq.tables.ProcessStatus q = PROCESS_STATUS.as("q");
 
             Field<UUID> orgIdField = select(PROJECTS.ORG_ID).from(PROJECTS).where(PROJECTS.PROJECT_ID.eq(q.PROJECT_ID)).asField();
 

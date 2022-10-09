@@ -172,7 +172,7 @@ public class ProcessEventResource implements Resource {
         return processKey;
     }
 
-    private void assertAccessRights(PartialProcessKey processKey) {
+    private void assertAccessRights(ProcessKey processKey) {
         if (Roles.isAdmin()) {
             // an admin can access any project
             return;

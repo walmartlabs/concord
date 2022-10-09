@@ -4,9 +4,11 @@
         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
         xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.3.xsd">
 
+    <!-- removed in 1.97.0+
     <changeSet id="85000" author="ibodrov@gmail.com">
         <createIndex tableName="PROCESS_QUEUE" indexName="IDX_PROC_Q_CURR_STAT">
             <column name="CURRENT_STATUS"/>
         </createIndex>
     </changeSet>
+    -->
 </databaseChangeLog>

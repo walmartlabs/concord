@@ -44,7 +44,7 @@ import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
-import static com.walmartlabs.concord.server.jooq.tables.ProcessQueue.PROCESS_QUEUE;
+import static com.walmartlabs.concord.server.jooq.tables.ProcessStatus.PROCESS_STATUS;
 import static org.jooq.impl.DSL.currentOffsetDateTime;
 import static org.jooq.impl.DSL.value;
 
@@ -169,10 +169,10 @@ public class EnqueuedTask extends PeriodicTask {
 
         public List<ProcessKey> poll(int limit) {
             return txResult(tx -> {
-                List<ProcessKey> result = tx.select(PROCESS_QUEUE.INSTANCE_ID, PROCESS_QUEUE.CREATED_AT)
-                        .from(PROCESS_QUEUE)
-                        .where(PROCESS_QUEUE.CURRENT_STATUS.eq(ProcessStatus.NEW.name()))
-                        .orderBy(PROCESS_QUEUE.LAST_UPDATED_AT)
+                List<ProcessKey> result = tx.select(PROCESS_STATUS.INSTANCE_ID, PROCESS_STATUS.CREATED_AT)
+                        .from(PROCESS_STATUS)
+                        .where(PROCESS_STATUS.CURRENT_STATUS.eq(ProcessStatus.NEW.name()))
+                        .orderBy(PROCESS_STATUS.LAST_UPDATED_AT)
                         .limit(limit)
                         .forUpdate()
                         .skipLocked()
@@ -182,10 +182,10 @@ public class EnqueuedTask extends PeriodicTask {
                     return result;
                 }
 
-                tx.update(PROCESS_QUEUE)
-                        .set(PROCESS_QUEUE.CURRENT_STATUS, value(ProcessStatus.PREPARING.name()))
-                        .set(PROCESS_QUEUE.LAST_UPDATED_AT, currentOffsetDateTime())
-                        .where(PROCESS_QUEUE.INSTANCE_ID.in(result.stream().map(PartialProcessKey::getInstanceId).collect(Collectors.toList())))
+                tx.update(PROCESS_STATUS)
+                        .set(PROCESS_STATUS.CURRENT_STATUS, value(ProcessStatus.PREPARING.name()))
+                        .set(PROCESS_STATUS.LAST_UPDATED_AT, currentOffsetDateTime())
+                        .where(PROCESS_STATUS.INSTANCE_ID.in(result.stream().map(PartialProcessKey::getInstanceId).collect(Collectors.toList())))
                         .execute();
 
                 return result;

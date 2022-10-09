@@ -22,7 +22,6 @@ package com.walmartlabs.concord.server.process.waits;
 
 import com.walmartlabs.concord.db.AbstractDao;
 import com.walmartlabs.concord.db.MainDB;
-import com.walmartlabs.concord.server.jooq.tables.ProcessQueue;
 import com.walmartlabs.concord.server.process.queue.ProcessQueueManager;
 import com.walmartlabs.concord.server.sdk.ProcessKey;
 import com.walmartlabs.concord.server.sdk.ProcessStatus;
@@ -37,7 +36,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
-import static com.walmartlabs.concord.server.jooq.tables.ProcessQueue.PROCESS_QUEUE;
+import static com.walmartlabs.concord.server.jooq.tables.ProcessStatus.PROCESS_STATUS;
 import static com.walmartlabs.concord.server.process.waits.ProcessCompletionCondition.CompleteCondition;
 
 /**
@@ -114,7 +113,7 @@ public class WaitProcessFinishHandler implements ProcessWaitHandler<ProcessCompl
 
         public Set<UUID> findFinished(Set<UUID> awaitProcesses, Set<ProcessStatus> finishedStatuses) {
             return txResult(tx -> {
-                ProcessQueue q = PROCESS_QUEUE.as("q");
+                com.walmartlabs.concord.server.jooq.tables.ProcessStatus q = PROCESS_STATUS.as("q");
                 return tx.select(q.INSTANCE_ID)
                         .from(q)
                         .where(q.INSTANCE_ID.in(awaitProcesses)

@@ -17,12 +17,14 @@
             </column>
         </createTable>
 
+        <!-- removed in 1.97.0+
         <addForeignKeyConstraint baseTableName="PROCESS_CHECKPOINTS"
                                  baseColumnNames="INSTANCE_ID"
                                  constraintName="FK_PCHECKP_PQ_ID"
                                  referencedTableName="PROCESS_QUEUE"
                                  referencedColumnNames="INSTANCE_ID"
                                  onDelete="CASCADE"/>
+         -->
     </changeSet>
 
     <!-- removed in 1.9.0+

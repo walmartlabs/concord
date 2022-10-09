@@ -1,0 +1,128 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.3.xsd">
+
+    <changeSet id="1970000" author="ybrigo@gmail.com">
+        <createTable tableName="PROCESS_STATUS">
+            <column name="ID_SEQ" type="bigserial">
+                <constraints nullable="false"/>
+            </column>
+            <column name="INSTANCE_ID" type="uuid" remarks="Unique process ID">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="PARENT_INSTANCE_ID" type="uuid">
+                <constraints nullable="true"/>
+            </column>
+            <column name="CREATED_AT" type="timestamptz" remarks="Timestamp of process creation">
+                <constraints nullable="false"/>
+            </column>
+            <column name="CURRENT_STATUS" type="varchar(32)" remarks="Current status of a process">
+                <constraints nullable="false"/>
+            </column>
+            <column name="START_AT" type="timestamptz">
+                <constraints nullable="true"/>
+            </column>
+            <column name="LAST_AGENT_ID" type="varchar(128)" remarks="ID of the last agent that was executing the process">
+                <constraints nullable="true"/>
+            </column>
+            <column name="LAST_UPDATED_AT" type="timestamptz" remarks="Timestamp of the last update">
+                <constraints nullable="false"/>
+            </column>
+            <column name="LAST_RUN_AT" type="timestamptz">
+                <constraints nullable="true"/>
+            </column>
+            <column name="IS_DISABLED" type="boolean" defaultValue="false">
+                <constraints nullable="false"/>
+            </column>
+            <column name="PROJECT_ID" type="uuid">
+                <constraints nullable="true"/>
+            </column>
+            <column name="REPO_ID" type="uuid">
+                <constraints nullable="true"/>
+            </column>
+            <column name="COMMIT_ID" type="varchar(64)">
+                <constraints nullable="true"/>
+            </column>
+            <column name="COMMIT_BRANCH" type="varchar(255)">
+                <constraints nullable="true"/>
+            </column>
+            <column name="EXCLUSIVE" type="jsonb">
+                <constraints nullable="true"/>
+            </column>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="1970010" author="ybrigo@gmail.com">
+        <createTable tableName="PROCESS_INFO">
+            <column name="INSTANCE_ID" type="uuid" remarks="Unique process ID">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="INSTANCE_CREATED_AT" type="timestamptz" remarks="Timestamp of process creation">
+                <constraints nullable="false"/>
+            </column>
+            <column name="PROCESS_KIND" type="varchar(128)">
+                <constraints nullable="true"/>
+            </column>
+            <column name="INITIATOR_ID" type="uuid">
+                <constraints nullable="true"/>
+            </column>
+            <column name="PROCESS_TAGS" type="text[]">
+                <constraints nullable="true"/>
+            </column>
+            <column name="REQUIREMENTS" type="jsonb">
+                <constraints nullable="true"/>
+            </column>
+            <column name="TIMEOUT" type="bigint" remarks="Timeout (in seconds)">
+                <constraints nullable="true"/>
+            </column>
+            <column name="SUSPEND_TIMEOUT" type="bigint">
+                <constraints nullable="true"/>
+            </column>
+            <column name="HANDLERS" type="text[]" remarks="List of process handlers">
+                <constraints nullable="true"/>
+            </column>
+            <column name="IMPORTS" type="jsonb">
+                <constraints nullable="true"/>
+            </column>
+            <column name="TRIGGERED_BY" type="jsonb">
+                <constraints nullable="true"/>
+            </column>
+            <column name="RUNTIME" type="text">
+                <constraints nullable="true"/>
+            </column>
+            <column name="DEPENDENCIES" type="text[]">
+                <constraints nullable="true"/>
+            </column>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="1970020" author="ybrigo@gmail.com">
+        <createTable tableName="PROCESS_REPOSITORY_INFO">
+            <column name="INSTANCE_ID" type="uuid" remarks="Unique process ID">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="INSTANCE_CREATED_AT" type="timestamptz" remarks="Timestamp of process creation">
+                <constraints nullable="false"/>
+            </column>
+            <column name="COMMIT_MSG" type="varchar(128)">
+                <constraints nullable="true"/>
+            </column>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="1970030" author="ybrigo@gmail.com">
+        <createTable tableName="PROCESS_META">
+            <column name="INSTANCE_ID" type="uuid" remarks="Unique process ID">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="INSTANCE_CREATED_AT" type="timestamptz" remarks="Timestamp of process creation">
+                <constraints nullable="false"/>
+            </column>
+            <column name="META" type="jsonb">
+                <constraints nullable="true"/>
+            </column>
+        </createTable>
+    </changeSet>
+</databaseChangeLog>

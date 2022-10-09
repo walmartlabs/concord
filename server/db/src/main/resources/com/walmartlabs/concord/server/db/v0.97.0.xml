@@ -4,6 +4,7 @@
         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
         xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.3.xsd">
 
+    <!-- removed in 1.97.0+
     <changeSet id="97000" author="ybrigo@gmail.com">
         <addColumn tableName="PROCESS_QUEUE">
             <column name="LAST_RUN_AT" type="timestamp">
@@ -11,6 +12,7 @@
             </column>
         </addColumn>
     </changeSet>
+    -->
 
     <changeSet id="97100" author="ybrigo@gmail.com">
         <dropIndex tableName="PROCESS_EVENTS" indexName="IDX_PROC_EV_I_ID_DT"/>

@@ -24,7 +24,6 @@ import com.walmartlabs.concord.db.AbstractDao;
 import com.walmartlabs.concord.db.MainDB;
 import com.walmartlabs.concord.runtime.v2.model.ExclusiveMode;
 import com.walmartlabs.concord.server.Locks;
-import com.walmartlabs.concord.server.jooq.tables.ProcessQueue;
 import com.walmartlabs.concord.server.process.Payload;
 import com.walmartlabs.concord.server.process.PayloadUtils;
 import com.walmartlabs.concord.server.process.ProcessManager;
@@ -44,7 +43,7 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 
 import static com.walmartlabs.concord.db.PgUtils.jsonbText;
-import static com.walmartlabs.concord.server.jooq.Tables.PROCESS_QUEUE;
+import static com.walmartlabs.concord.server.jooq.tables.ProcessStatus.PROCESS_STATUS;
 import static org.jooq.impl.DSL.*;
 
 /**
@@ -255,15 +254,15 @@ public class ExclusiveGroupProcessor implements PayloadProcessor {
 
         public boolean exists(DSLContext tx, UUID currentInstanceId, UUID parentInstanceId, UUID projectId, String exclusiveGroup) {
             SelectConditionStep<Record1<Integer>> s = tx.selectOne()
-                            .from(PROCESS_QUEUE)
-                            .where(jsonbText(PROCESS_QUEUE.EXCLUSIVE, "group").eq(exclusiveGroup)
-                                    .and(PROCESS_QUEUE.PROJECT_ID.eq(projectId)
-                                            .and(PROCESS_QUEUE.INSTANCE_ID.notEqual(currentInstanceId)
-                                                    .and(PROCESS_QUEUE.CURRENT_STATUS.in(RUNNING_STATUSES)))));
+                            .from(PROCESS_STATUS)
+                            .where(jsonbText(PROCESS_STATUS.EXCLUSIVE, "group").eq(exclusiveGroup)
+                                    .and(PROCESS_STATUS.PROJECT_ID.eq(projectId)
+                                            .and(PROCESS_STATUS.INSTANCE_ID.notEqual(currentInstanceId)
+                                                    .and(PROCESS_STATUS.CURRENT_STATUS.in(RUNNING_STATUSES)))));
 
             // parent's
             if (parentInstanceId != null) {
-                s.and(PROCESS_QUEUE.INSTANCE_ID.notIn(parents(tx, parentInstanceId)));
+                s.and(PROCESS_STATUS.INSTANCE_ID.notIn(parents(tx, parentInstanceId)));
             }
 
             return tx.fetchExists(s);
@@ -294,43 +293,43 @@ public class ExclusiveGroupProcessor implements PayloadProcessor {
         }
 
         public List<ProcessKey> listOld(DSLContext tx, ProcessKey currentProcessKey, UUID parentInstanceId, UUID projectId, String exclusiveGroup) {
-            SelectConditionStep<Record2<UUID, OffsetDateTime>> s = tx.select(PROCESS_QUEUE.INSTANCE_ID, PROCESS_QUEUE.CREATED_AT)
-                    .from(PROCESS_QUEUE)
-                    .where(jsonbText(PROCESS_QUEUE.EXCLUSIVE, "group").eq(exclusiveGroup)
-                            .and(PROCESS_QUEUE.PROJECT_ID.eq(projectId)
-                                    .and(PROCESS_QUEUE.INSTANCE_ID.notEqual(currentProcessKey.getInstanceId())
-                                            .and(PROCESS_QUEUE.CREATED_AT.lessOrEqual(currentProcessKey.getCreatedAt())
-                                                    .and(PROCESS_QUEUE.CURRENT_STATUS.in(CANCELLABLE_STATUSES))))));
+            SelectConditionStep<Record2<UUID, OffsetDateTime>> s = tx.select(PROCESS_STATUS.INSTANCE_ID, PROCESS_STATUS.CREATED_AT)
+                    .from(PROCESS_STATUS)
+                    .where(jsonbText(PROCESS_STATUS.EXCLUSIVE, "group").eq(exclusiveGroup)
+                            .and(PROCESS_STATUS.PROJECT_ID.eq(projectId)
+                                    .and(PROCESS_STATUS.INSTANCE_ID.notEqual(currentProcessKey.getInstanceId())
+                                            .and(PROCESS_STATUS.CREATED_AT.lessOrEqual(currentProcessKey.getCreatedAt())
+                                                    .and(PROCESS_STATUS.CURRENT_STATUS.in(CANCELLABLE_STATUSES))))));
 
             // parent's
             if (parentInstanceId != null) {
-                s.and(PROCESS_QUEUE.INSTANCE_ID.notIn(parents(tx, parentInstanceId)));
+                s.and(PROCESS_STATUS.INSTANCE_ID.notIn(parents(tx, parentInstanceId)));
             }
 
             return s.fetch(r -> new ProcessKey(r.value1(), r.value2()));
         }
 
         public ProcessKey anyNew(DSLContext tx, ProcessKey currentProcessKey, UUID projectId, String exclusiveGroup) {
-            SelectConditionStep<Record2<UUID, OffsetDateTime>> s = tx.select(PROCESS_QUEUE.INSTANCE_ID, PROCESS_QUEUE.CREATED_AT)
-                    .from(PROCESS_QUEUE)
-                    .where(jsonbText(PROCESS_QUEUE.EXCLUSIVE, "group").eq(exclusiveGroup)
-                            .and(PROCESS_QUEUE.PROJECT_ID.eq(projectId)
-                                    .and(PROCESS_QUEUE.CREATED_AT.greaterOrEqual(currentProcessKey.getCreatedAt())
-                                            .and(PROCESS_QUEUE.CURRENT_STATUS.in(CANCELLABLE_STATUSES)))));
+            SelectConditionStep<Record2<UUID, OffsetDateTime>> s = tx.select(PROCESS_STATUS.INSTANCE_ID, PROCESS_STATUS.CREATED_AT)
+                    .from(PROCESS_STATUS)
+                    .where(jsonbText(PROCESS_STATUS.EXCLUSIVE, "group").eq(exclusiveGroup)
+                            .and(PROCESS_STATUS.PROJECT_ID.eq(projectId)
+                                    .and(PROCESS_STATUS.CREATED_AT.greaterOrEqual(currentProcessKey.getCreatedAt())
+                                            .and(PROCESS_STATUS.CURRENT_STATUS.in(CANCELLABLE_STATUSES)))));
 
             SelectJoinStep<Record1<UUID>> children = tx.withRecursive("children").as(
-                    select(ProcessQueue.PROCESS_QUEUE.INSTANCE_ID, ProcessQueue.PROCESS_QUEUE.PARENT_INSTANCE_ID).from(ProcessQueue.PROCESS_QUEUE)
-                            .where(ProcessQueue.PROCESS_QUEUE.INSTANCE_ID.eq(currentProcessKey.getInstanceId()))
+                    select(PROCESS_STATUS.INSTANCE_ID, PROCESS_STATUS.PARENT_INSTANCE_ID).from(PROCESS_STATUS)
+                            .where(PROCESS_STATUS.INSTANCE_ID.eq(currentProcessKey.getInstanceId()))
                             .unionAll(
-                                    select(ProcessQueue.PROCESS_QUEUE.INSTANCE_ID, ProcessQueue.PROCESS_QUEUE.PARENT_INSTANCE_ID)
-                                            .from(ProcessQueue.PROCESS_QUEUE)
+                                    select(PROCESS_STATUS.INSTANCE_ID, PROCESS_STATUS.PARENT_INSTANCE_ID)
+                                            .from(PROCESS_STATUS)
                                             .join(name("children"))
-                                            .on(ProcessQueue.PROCESS_QUEUE.PARENT_INSTANCE_ID.eq(
+                                            .on(PROCESS_STATUS.PARENT_INSTANCE_ID.eq(
                                                     field(name("children", "INSTANCE_ID"), UUID.class)))))
                     .select(field("children.INSTANCE_ID", UUID.class))
                     .from(name("children"));
 
-            s.and(PROCESS_QUEUE.INSTANCE_ID.notIn(children));
+            s.and(PROCESS_STATUS.INSTANCE_ID.notIn(children));
 
             return s.limit(1)
                     .fetchOne(r -> new ProcessKey(r.value1(), r.value2()));
@@ -339,13 +338,13 @@ public class ExclusiveGroupProcessor implements PayloadProcessor {
 
     private static SelectJoinStep<Record1<UUID>> parents(DSLContext tx, UUID parentInstanceId) {
         return tx.withRecursive("parents").as(
-                select(ProcessQueue.PROCESS_QUEUE.INSTANCE_ID, ProcessQueue.PROCESS_QUEUE.PARENT_INSTANCE_ID).from(ProcessQueue.PROCESS_QUEUE)
-                        .where(ProcessQueue.PROCESS_QUEUE.INSTANCE_ID.eq(parentInstanceId))
+                select(PROCESS_STATUS.INSTANCE_ID, PROCESS_STATUS.PARENT_INSTANCE_ID).from(PROCESS_STATUS)
+                        .where(PROCESS_STATUS.INSTANCE_ID.eq(parentInstanceId))
                         .unionAll(
-                                select(ProcessQueue.PROCESS_QUEUE.INSTANCE_ID, ProcessQueue.PROCESS_QUEUE.PARENT_INSTANCE_ID)
-                                        .from(ProcessQueue.PROCESS_QUEUE)
+                                select(PROCESS_STATUS.INSTANCE_ID, PROCESS_STATUS.PARENT_INSTANCE_ID)
+                                        .from(PROCESS_STATUS)
                                         .join(name("parents"))
-                                        .on(ProcessQueue.PROCESS_QUEUE.INSTANCE_ID.eq(
+                                        .on(PROCESS_STATUS.INSTANCE_ID.eq(
                                                 field(name("parents", "PARENT_INSTANCE_ID"), UUID.class)))))
                 .select(field("parents.INSTANCE_ID", UUID.class))
                 .from(name("parents"));

@@ -39,10 +39,12 @@
             </column>
         </addColumn>
 
+        <!-- removed in 1.97.0+
         <sql>
             lock table PROCESS_STATE;
             update PROCESS_STATE s set INSTANCE_CREATED_AT = (select CREATED_AT from PROCESS_QUEUE q where q.INSTANCE_ID = s.INSTANCE_ID);
         </sql>
+        -->
 
         <addNotNullConstraint tableName="PROCESS_STATE" columnName="INSTANCE_CREATED_AT"/>
 

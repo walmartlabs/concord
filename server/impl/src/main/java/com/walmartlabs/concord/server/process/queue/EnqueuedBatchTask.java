@@ -50,6 +50,7 @@ import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
+import static com.walmartlabs.concord.server.jooq.Tables.PROCESS_STATUS;
 import static com.walmartlabs.concord.server.jooq.Tables.REPOSITORIES;
 import static com.walmartlabs.concord.server.jooq.tables.ProcessQueue.PROCESS_QUEUE;
 import static org.jooq.impl.DSL.*;
@@ -319,13 +320,19 @@ public class EnqueuedBatchTask extends PeriodicTask {
         @WithTimer
         public Collection<Batch> poll(List<String> ignoreRepoUrls, int limit) {
             return txResult(tx -> {
-                List<ProcessItem> items = tx.select(PROCESS_QUEUE.INSTANCE_ID, PROCESS_QUEUE.CREATED_AT, PROCESS_QUEUE.REPO_ID, REPOSITORIES.REPO_URL, PROCESS_QUEUE.COMMIT_BRANCH, PROCESS_QUEUE.COMMIT_ID)
-                        .from(PROCESS_QUEUE).leftJoin(REPOSITORIES).on(REPOSITORIES.REPO_ID.eq(PROCESS_QUEUE.REPO_ID))
-                        .where(PROCESS_QUEUE.CURRENT_STATUS.eq(ProcessStatus.NEW.name())
+                List<ProcessItem> items = tx.select(
+                            PROCESS_STATUS.INSTANCE_ID,
+                            PROCESS_STATUS.CREATED_AT,
+                            PROCESS_STATUS.REPO_ID,
+                            REPOSITORIES.REPO_URL,
+                            PROCESS_STATUS.COMMIT_BRANCH,
+                            PROCESS_STATUS.COMMIT_ID)
+                        .from(PROCESS_STATUS).leftJoin(REPOSITORIES).on(REPOSITORIES.REPO_ID.eq(PROCESS_STATUS.REPO_ID))
+                        .where(PROCESS_STATUS.CURRENT_STATUS.eq(ProcessStatus.NEW.name())
                                 .and(REPOSITORIES.REPO_URL.isNull().or(REPOSITORIES.REPO_URL.notIn(ignoreRepoUrls))))
-                        .orderBy(PROCESS_QUEUE.CREATED_AT)
+                        .orderBy(PROCESS_STATUS.CREATED_AT)
                         .limit(limit)
-                        .forUpdate().of(PROCESS_QUEUE)
+                        .forUpdate().of(PROCESS_STATUS)
                         .skipLocked()
                         .fetch(r -> ProcessItem.builder()
                                 .key(new ProcessKey(r.value1(), r.value2()))
@@ -355,13 +362,13 @@ public class EnqueuedBatchTask extends PeriodicTask {
         @WithTimer
         public List<ProcessKey> poll(Batch.Key key, int limit) {
             return txResult(tx -> {
-                List<ProcessKey> result = tx.select(PROCESS_QUEUE.INSTANCE_ID, PROCESS_QUEUE.CREATED_AT)
-                        .from(PROCESS_QUEUE)
-                        .where(PROCESS_QUEUE.CURRENT_STATUS.eq(ProcessStatus.NEW.name())
-                                .and(PROCESS_QUEUE.REPO_ID.eq(key.repoId()))
-                                .and(PROCESS_QUEUE.COMMIT_BRANCH.isNotDistinctFrom(key.branchOrTag()))
-                                .and(PROCESS_QUEUE.COMMIT_ID.isNotDistinctFrom(key.commitId())))
-                        .orderBy(PROCESS_QUEUE.CREATED_AT)
+                List<ProcessKey> result = tx.select(PROCESS_STATUS.INSTANCE_ID, PROCESS_STATUS.CREATED_AT)
+                        .from(PROCESS_STATUS)
+                        .where(PROCESS_STATUS.CURRENT_STATUS.eq(ProcessStatus.NEW.name())
+                                .and(PROCESS_STATUS.REPO_ID.eq(key.repoId()))
+                                .and(PROCESS_STATUS.COMMIT_BRANCH.isNotDistinctFrom(key.branchOrTag()))
+                                .and(PROCESS_STATUS.COMMIT_ID.isNotDistinctFrom(key.commitId())))
+                        .orderBy(PROCESS_STATUS.CREATED_AT)
                         .limit(limit)
                         .forUpdate()
                         .skipLocked()
@@ -413,10 +420,10 @@ public class EnqueuedBatchTask extends PeriodicTask {
         }
 
         private void toPreparing(DSLContext tx, List<UUID> processes) {
-            tx.update(PROCESS_QUEUE)
-                    .set(PROCESS_QUEUE.CURRENT_STATUS, value(ProcessStatus.PREPARING.name()))
-                    .set(PROCESS_QUEUE.LAST_UPDATED_AT, currentOffsetDateTime())
-                    .where(PROCESS_QUEUE.INSTANCE_ID.in(processes))
+            tx.update(PROCESS_STATUS)
+                    .set(PROCESS_STATUS.CURRENT_STATUS, value(ProcessStatus.PREPARING.name()))
+                    .set(PROCESS_STATUS.LAST_UPDATED_AT, currentOffsetDateTime())
+                    .where(PROCESS_STATUS.INSTANCE_ID.in(processes))
                     .execute();
         }
     }

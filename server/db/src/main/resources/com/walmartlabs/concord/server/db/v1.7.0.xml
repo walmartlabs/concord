@@ -36,17 +36,19 @@
     </changeSet>
     -->
 
+    <!-- removed in 1.97.0+
     <changeSet id="170100" author="ybrigo@gmail.com">
         <validCheckSum>7:91607973cfe00ca1dedaaf3ac4ecdd91</validCheckSum>
         <addColumn tableName="PROCESS_QUEUE">
             <column name="WAIT_CONDITIONS" type="jsonb">
                 <constraints nullable="true"/>
             </column>
-            <!-- deprecated in 1.32.0+
+
+            deprecated in 1.32.0+
             <column name="IS_EXCLUSIVE" type="boolean" defaultValue="false">
                 <constraints nullable="false"/>
             </column>
-            -->
         </addColumn>
     </changeSet>
+    -->
 </databaseChangeLog>

@@ -76,6 +76,7 @@
     </changeSet>
     -->
 
+    <!-- removed in 1.97.0+
     <changeSet id="79200" author="ibodrov@gmail.com">
         <addColumn tableName="PROCESS_QUEUE">
             <column name="REPO_ID" type="uuid">
@@ -102,6 +103,7 @@
                                  referencedColumnNames="REPO_ID"
                                  onDelete="SET NULL"/>
     </changeSet>
+    -->
 
     <!-- deprecated in 1.31.0+
     <changeSet id="79210" author="ibodrov@gmail.com">

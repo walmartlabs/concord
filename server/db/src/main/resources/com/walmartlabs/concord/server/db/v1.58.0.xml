@@ -105,6 +105,7 @@
         </sql>
     </changeSet>
 
+    <!-- removed in 1.97.0+
     <changeSet id="1580120-a" author="ibodrov@gmail.com">
         <preConditions onFail="MARK_RAN">
             <changeLogPropertyDefined property="superuserAvailable" value="false"/>
@@ -118,6 +119,7 @@
                 alter column LAST_RUN_AT type timestamptz using LAST_RUN_AT at time zone 'UTC'
         </sql>
     </changeSet>
+    -->
 
     <!-- TASKS -->
     <changeSet id="1580130" author="ibodrov@gmail.com">

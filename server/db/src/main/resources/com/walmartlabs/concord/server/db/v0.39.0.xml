@@ -12,6 +12,7 @@
         </addColumn>
     </changeSet>
 
+    <!-- removed in 1.97.0+
     <changeSet id="39100" author="ibodrov@gmail.com">
         <addColumn tableName="PROCESS_QUEUE">
             <column name="PARENT_INSTANCE_ID" type="uuid">
@@ -28,4 +29,6 @@
             <column name="PARENT_INSTANCE_ID"/>
         </createIndex>
     </changeSet>
+    -->
+
 </databaseChangeLog>

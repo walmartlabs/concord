@@ -56,6 +56,7 @@
     </changeSet>
 
     <!-- migrate PROCESS_QUEUE to the new PROJECTS FK -->
+    <!-- removed in 1.97.0+
     <changeSet id="44020" author="ibodrov@gmail.com">
         <addColumn tableName="PROCESS_QUEUE">
             <column name="PROJECT_ID" type="uuid">
@@ -71,6 +72,7 @@
             <column name="PROJECT_NAME"/>
         </dropColumn>
     </changeSet>
+    -->
 
     <!-- create a PROCESS_QUEUE view to simplify queries -->
     <!-- deprecated in 1.31.0+
@@ -196,6 +198,7 @@
 
     </changeSet>
 
+    <!-- removed in 1.97.0+
     <changeSet id="44310" author="ibodrov@gmail.com">
         <addForeignKeyConstraint baseTableName="PROCESS_QUEUE"
                                  baseColumnNames="PROJECT_ID"
@@ -203,6 +206,7 @@
                                  referencedTableName="PROJECTS"
                                  referencedColumnNames="PROJECT_ID"/>
     </changeSet>
+    -->
 
     <changeSet id="44320" author="ibodrov@gmail.com">
         <addForeignKeyConstraint baseTableName="REPOSITORIES"
