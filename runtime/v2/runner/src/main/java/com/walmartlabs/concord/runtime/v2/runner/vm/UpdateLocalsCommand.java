@@ -63,13 +63,18 @@ public class UpdateLocalsCommand implements Command {
         ContextFactory contextFactory = runtime.getService(ContextFactory.class);
         Context ctx = contextFactory.create(runtime, state, threadId, null);
 
-        ExpressionEvaluator ee = runtime.getService(ExpressionEvaluator.class);
-        Map<String, Object> m = ee.evalAsMap(EvalContextFactory.scope(ctx), input);
-
         Collection<ThreadId> threads = threadIds;
         if (threads.isEmpty()) {
             threads = Collections.singletonList(threadId);
         }
+
+        for (ThreadId tid : threads) {
+            Frame root = VMUtils.assertNearestRoot(state, tid);
+            VMUtils.putLocals(root, input);
+        }
+
+        ExpressionEvaluator ee = runtime.getService(ExpressionEvaluator.class);
+        Map<String, Object> m = ee.evalAsMap(EvalContextFactory.scope(ctx), input);
 
         for (ThreadId tid : threads) {
             Frame root = VMUtils.assertNearestRoot(state, tid);
