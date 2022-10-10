@@ -3,8 +3,22 @@
 ## [1.97.0] - Unreleased
 
 ### Added
+- github: queryParams condition
+([#663](https://github.com/walmartlabs/concord/pull/663));
+- dependency-manager: allow exclusion artifacts from transitive dependencies
+([#657](https://github.com/walmartlabs/concord/pull/657)).
 
 ### Changed
+- concord-cli: load deps from active profiles
+([#654](https://github.com/walmartlabs/concord/pull/654));
+- runtime-v2: fix parallel execution of ruby scripts
+([#651](https://github.com/walmartlabs/concord/pull/651));
+- concord-server: termintate process wait watchdog loop on batches less than fetch limit
+([#656](https://github.com/walmartlabs/concord/pull/656));
+- runtime-v2: fix serialization error of flow call command
+([#655](https://github.com/walmartlabs/concord/pull/655));
+- concord-cli: ensure absolute target dir
+([#652](https://github.com/walmartlabs/concord/pull/652)).
 
 ## [1.96.1] - 2022-09-06 
 
