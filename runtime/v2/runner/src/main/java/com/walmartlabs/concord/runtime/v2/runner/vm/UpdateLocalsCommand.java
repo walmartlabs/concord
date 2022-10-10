@@ -68,6 +68,14 @@ public class UpdateLocalsCommand implements Command {
             threads = Collections.singletonList(threadId);
         }
 
+        // allow access to arguments from arguments:
+        /* e.g.
+           configuration:
+             arguments:
+               args:
+                 k1: v1
+                 k2: ${context.variables().get('args.k1')}
+         */
         for (ThreadId tid : threads) {
             Frame root = VMUtils.assertNearestRoot(state, tid);
             VMUtils.putLocals(root, input);
