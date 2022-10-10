@@ -29,6 +29,7 @@ import javax.naming.directory.*;
 import java.nio.file.Path;
 import java.time.OffsetDateTime;
 import java.time.temporal.ChronoUnit;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -249,6 +250,38 @@ public class GitHubTriggersV2IT extends AbstractGitHubTriggersIT {
         ProcessEntry pe = waitForAProcess(orgXName, projectAName, "github", null);
 
         assertLog(pe, ".*Hello, !.*");
+
+        // ---
+
+        deleteOrg(orgXName);
+    }
+
+    @Test
+    public void testQueryParamsCondition() throws Exception {
+        OrganizationsApi orgApi = new OrganizationsApi(getApiClient());
+
+        String orgXName = "orgX_" + randomString();
+        orgApi.createOrUpdate(new OrganizationEntry().setName(orgXName));
+
+        // Project A
+        // master branch + a default trigger
+        String projectAName = "projectA_" + randomString();
+        String repoAName = "repoA_" + randomString();
+        Path projectARepo = initProjectAndRepo(orgXName, projectAName, repoAName, null, initRepo("githubTests/repos/v2/queryParams"));
+        refreshRepo(orgXName, projectAName, repoAName);
+
+        // ---
+
+        sendEvent("githubTests/events/direct_branch_push.json", "push",
+                Collections.singletonMap("param1", "value1"),
+                "_FULL_REPO_NAME", toRepoName(projectARepo),
+                "_REF", "refs/heads/master",
+                "_USER_LDAP_DN", "");
+
+        // A's trigger should be activated
+        ProcessEntry pe = waitForAProcess(orgXName, projectAName, "github", null);
+
+        assertLog(pe, ".*Hello, value1!.*");
 
         // ---
 
