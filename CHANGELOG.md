@@ -1,6 +1,16 @@
 # Change log
 
-## [1.97.0] - Unreleased
+## [1.98.0] - Unreleased
+
+### Added
+
+### Changed
+
+- cli: log checkpoint instead of throwing Exception
+([#665](https://github.com/walmartlabs/concord/pull/665)).
+
+
+## [1.97.0] - 2022 - 10 - 11
 
 ### Added
 
