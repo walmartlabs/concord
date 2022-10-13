@@ -21,10 +21,9 @@ package com.walmartlabs.concord.runtime.v2.runner;
  */
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.walmartlabs.concord.runtime.v2.runner.el.DefaultEvalContext;
-import com.walmartlabs.concord.runtime.v2.runner.el.EvalContext;
-import com.walmartlabs.concord.runtime.v2.runner.el.EvalContextFactory;
-import com.walmartlabs.concord.runtime.v2.runner.el.ExpressionEvaluator;
+import com.walmartlabs.concord.runtime.v2.sdk.EvalContext;
+import com.walmartlabs.concord.runtime.v2.sdk.EvalContextFactory;
+import com.walmartlabs.concord.runtime.v2.sdk.ExpressionEvaluator;
 import com.walmartlabs.concord.runtime.v2.sdk.ProcessConfiguration;
 import com.walmartlabs.concord.sdk.Constants;
 import com.walmartlabs.concord.svm.ExecutionListener;
@@ -63,9 +62,10 @@ public class OutVariablesProcessor implements ExecutionListener {
 
         Map<String, Object> vars = Collections.unmodifiableMap(lastFrame.getLocals());
 
+        EvalContextFactory ecf = runtime.getService(EvalContextFactory.class);
         ExpressionEvaluator ee = runtime.getService(ExpressionEvaluator.class);
-        EvalContext evalContext = DefaultEvalContext.builder()
-                .from(EvalContextFactory.strict(vars))
+        EvalContext evalContext = EvalContext.builder()
+                .from(ecf.strict(vars))
                 .undefinedVariableAsNull(true)
                 .build();
 

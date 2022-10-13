@@ -25,8 +25,8 @@ import com.walmartlabs.concord.runtime.v2.model.ProcessDefinition;
 import com.walmartlabs.concord.runtime.v2.runner.ProcessSnapshot;
 import com.walmartlabs.concord.runtime.v2.runner.SynchronizationService;
 import com.walmartlabs.concord.runtime.v2.runner.checkpoints.CheckpointService;
-import com.walmartlabs.concord.runtime.v2.runner.el.EvalContextFactory;
-import com.walmartlabs.concord.runtime.v2.runner.el.ExpressionEvaluator;
+import com.walmartlabs.concord.runtime.v2.sdk.EvalContextFactory;
+import com.walmartlabs.concord.runtime.v2.sdk.ExpressionEvaluator;
 import com.walmartlabs.concord.runtime.v2.sdk.Context;
 import com.walmartlabs.concord.svm.Runtime;
 import com.walmartlabs.concord.svm.State;
@@ -46,8 +46,9 @@ public class CheckpointCommand extends StepCommand<Checkpoint> {
 
         // eval the name in case it contains an expression
         Context ctx = runtime.getService(Context.class);
+        EvalContextFactory ecf = runtime.getService(EvalContextFactory.class);
         ExpressionEvaluator ee = runtime.getService(ExpressionEvaluator.class);
-        String name = ee.eval(EvalContextFactory.global(ctx), getStep().getName(), String.class);
+        String name = ee.eval(ecf.global(ctx), getStep().getName(), String.class);
 
         runtime.getService(SynchronizationService.class).point(() -> {
             CheckpointService checkpointService = runtime.getService(CheckpointService.class);
