@@ -6,6 +6,8 @@
 
 ### Changed
 
+- runtime-v2: move expression evaluator into sdk
+([#667](https://github.com/walmartlabs/concord/pull/667));
 - cli: log checkpoint instead of throwing Exception
 ([#665](https://github.com/walmartlabs/concord/pull/665)).
 
