@@ -86,6 +86,7 @@ public class UserDao extends AbstractDao {
     public void enable(UUID id) {
         tx(tx -> tx.update(USERS)
                 .set(USERS.IS_DISABLED, inline(false))
+                .setNull(USERS.DISABLED_DATE)
                 .where(USERS.USER_ID.eq(id))
                 .execute());
     }
@@ -93,6 +94,7 @@ public class UserDao extends AbstractDao {
     public void disable(UUID id) {
         tx(tx -> tx.update(USERS)
                 .set(USERS.IS_DISABLED, inline(true))
+                .set(USERS.DISABLED_DATE, currentOffsetDateTime())
                 .where(USERS.USER_ID.eq(id))
                 .execute());
     }
