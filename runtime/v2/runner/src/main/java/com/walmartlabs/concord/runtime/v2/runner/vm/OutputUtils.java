@@ -20,8 +20,8 @@ package com.walmartlabs.concord.runtime.v2.runner.vm;
  * =====
  */
 
-import com.walmartlabs.concord.runtime.v2.runner.el.EvalContextFactory;
-import com.walmartlabs.concord.runtime.v2.runner.el.ExpressionEvaluator;
+import com.walmartlabs.concord.runtime.v2.sdk.EvalContextFactory;
+import com.walmartlabs.concord.runtime.v2.sdk.ExpressionEvaluator;
 import com.walmartlabs.concord.runtime.v2.sdk.Context;
 import com.walmartlabs.concord.svm.Runtime;
 
@@ -35,9 +35,10 @@ public final class OutputUtils {
         if (out != null) {
             ctx.variables().set(out, result);
         } else if (!outExpr.isEmpty()) {
+            EvalContextFactory ecf = runtime.getService(EvalContextFactory.class);
             ExpressionEvaluator expressionEvaluator = runtime.getService(ExpressionEvaluator.class);
             Map<String, Object> vars = Collections.singletonMap("result", result);
-            Map<String, Serializable> evalOut = expressionEvaluator.evalAsMap(EvalContextFactory.global(ctx, vars), outExpr);
+            Map<String, Serializable> evalOut = expressionEvaluator.evalAsMap(ecf.global(ctx, vars), outExpr);
             evalOut.forEach((k, v) -> ctx.variables().set(k, v));
         }
     }
