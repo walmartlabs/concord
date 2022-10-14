@@ -1,4 +1,4 @@
-package com.walmartlabs.concord.runtime.v2.runner.el;
+package com.walmartlabs.concord.runtime.v2.sdk;
 
 /*-
  * *****
@@ -27,7 +27,7 @@ public interface ExpressionEvaluator {
 
     /**
      * Non-recursively evaluates the specified value as an expression.
-     * </p>
+     *
      * For example:
      * <pre>{@code
      *  // returns a string with ${name} replaced as its value

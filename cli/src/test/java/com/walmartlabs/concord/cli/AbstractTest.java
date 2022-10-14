@@ -55,6 +55,13 @@ public abstract class AbstractTest {
         }
     }
 
+    protected void assertLog(String pattern, int times) {
+        String outStr = out.toString();
+        if (grep(outStr, pattern) != times) {
+            fail("Expected a single log entry: '" + pattern + "', got: \n" + outStr);
+        }
+    }
+
     private static int grep(String str, String pattern) {
         int cnt = 0;
 

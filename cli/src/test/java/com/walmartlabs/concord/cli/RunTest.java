@@ -62,6 +62,13 @@ class RunTest extends AbstractTest {
         assertLog(".*exists=true.*");
     }
 
+    @Test
+    void testCliCheckpointService() throws Exception {
+        int exitCode = run("cliCheckpointService", Collections.emptyList());
+        assertEquals(0, exitCode);
+        assertLog(".*Checkpoint.*ignored.*", 2);
+    }
+
     private static int run(String payload, List<String> args) throws Exception {
         URI uri = RunTest.class.getResource(payload).toURI();
         Path source = Paths.get(uri);

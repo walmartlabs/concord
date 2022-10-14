@@ -31,6 +31,6 @@ public class CliCheckpointService implements CheckpointService {
 
     @Override
     public void create(ThreadId threadId, UUID correlationId, String name, Runtime runtime, ProcessSnapshot snapshot) {
-        throw new UnsupportedOperationException("not implemented yet");
+        System.out.println("Checkpoint '" +  name +  "' ignored");
     }
 }

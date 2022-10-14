@@ -24,8 +24,8 @@ import com.walmartlabs.concord.runtime.v2.ProcessDefinitionUtils;
 import com.walmartlabs.concord.runtime.v2.model.ProcessDefinition;
 import com.walmartlabs.concord.runtime.v2.model.Step;
 import com.walmartlabs.concord.runtime.v2.model.TaskCall;
-import com.walmartlabs.concord.runtime.v2.runner.el.EvalContextFactory;
-import com.walmartlabs.concord.runtime.v2.runner.el.ExpressionEvaluator;
+import com.walmartlabs.concord.runtime.v2.sdk.EvalContextFactory;
+import com.walmartlabs.concord.runtime.v2.sdk.ExpressionEvaluator;
 import com.walmartlabs.concord.runtime.v2.runner.logging.LogUtils;
 import com.walmartlabs.concord.runtime.v2.runner.vm.SuspendCommand;
 import com.walmartlabs.concord.runtime.v2.runner.vm.TaskSuspendCommand;
@@ -194,12 +194,12 @@ public class ContextImpl implements Context {
 
     @Override
     public <T> T eval(Object v, Class<T> type) {
-        return expressionEvaluator.eval(EvalContextFactory.global(this), v, type);
+        return expressionEvaluator.eval(runtime.getService(EvalContextFactory.class).global(this), v, type);
     }
 
     @Override
     public <T> T eval(Object v, Map<String, Object> additionalVariables, Class<T> type) {
-        return expressionEvaluator.eval(EvalContextFactory.global(this, additionalVariables), v, type);
+        return expressionEvaluator.eval(runtime.getService(EvalContextFactory.class).global(this, additionalVariables), v, type);
     }
 
     @Override

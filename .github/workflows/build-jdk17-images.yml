@@ -69,9 +69,9 @@ jobs:
           push: true
           context: ./docker-images/base
           file: ./docker-images/base/oss/centos/Dockerfile
-          platforms: linux/amd64, linux/aarch64
+          platforms: linux/amd64, linux/arm64
           build-args: |
-            jdk_url=https://github.com/adoptium/temurin17-binaries/releases/download/jdk-17.0.3%2B7/OpenJDK17U-jdk_aarch64_linux_hotspot_17.0.3_7.tar.gz
+            jdk_version=17
           tags: |
             ${{ env.DOCKER_REGISTRY }}/concord-base:${{ github.event.inputs.tag }}-jdk17
             ${{ env.DOCKER_REGISTRY }}/concord-base:latest-jdk17
@@ -82,11 +82,10 @@ jobs:
           push: true
           context: ./docker-images/server
           file: ./docker-images/server/oss/Dockerfile
-          platforms: linux/amd64, linux/aarch64
+          platforms: linux/amd64, linux/arm64
           build-args: |
             docker_namespace=${{ env.DOCKER_REGISTRY }}
             concord_version=${{ github.event.inputs.tag }}-jdk17
-            jdk_url=https://github.com/adoptium/temurin17-binaries/releases/download/jdk-17.0.3%2B7/OpenJDK17U-jdk_aarch64_linux_hotspot_17.0.3_7.tar.gz
           tags: |
             ${{ env.DOCKER_REGISTRY }}/concord-server:${{ github.event.inputs.tag }}-jdk17
             ${{ env.DOCKER_REGISTRY }}/concord-server:latest-jdk17
@@ -97,7 +96,7 @@ jobs:
           push: true
           context: ./docker-images/ansible
           file: ./docker-images/ansible/oss/centos/Dockerfile
-          platforms: linux/amd64, linux/aarch64
+          platforms: linux/amd64, linux/arm64
           build-args: |
             docker_namespace=${{ env.DOCKER_REGISTRY }}
             concord_version=${{ github.event.inputs.tag }}-jdk17
@@ -111,10 +110,26 @@ jobs:
           push: true
           context: ./docker-images/agent
           file: ./docker-images/agent/oss/centos/Dockerfile
-          platforms: linux/amd64, linux/aarch64
+          platforms: linux/amd64, linux/arm64
           build-args: |
             docker_namespace=${{ env.DOCKER_REGISTRY }}
             concord_version=${{ github.event.inputs.tag }}-jdk17
           tags: |
             ${{ env.DOCKER_REGISTRY }}/concord-agent:${{ github.event.inputs.tag }}-jdk17
             ${{ env.DOCKER_REGISTRY }}/concord-agent:latest-jdk17
+
+      - name: Build the agent-operator
+        run: ./mvnw -C -B -f k8s/agent-operator clean install -DskipTests
+
+      - name: Build and push the agent-operator image
+        uses: docker/build-push-action@v3
+        with:
+          push: true
+          context: ./k8s/agent-operator
+          file: ./k8s/agent-operator/Dockerfile
+          platforms: linux/amd64, linux/arm64
+          build-args: |
+            from_image=gcr.io/distroless/java17-debian11
+          tags: |
+            ${{ env.DOCKER_REGISTRY }}/concord-agent-operator:${{ github.event.inputs.tag }}-jdk17
+            ${{ env.DOCKER_REGISTRY }}/concord-agent-operator:latest-jdk17

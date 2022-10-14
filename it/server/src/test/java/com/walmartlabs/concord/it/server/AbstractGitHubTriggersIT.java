@@ -21,7 +21,8 @@ package com.walmartlabs.concord.it.server;
  */
 
 import com.google.common.collect.ImmutableMap;
-import com.walmartlabs.concord.ApiClient;
+import com.google.gson.reflect.TypeToken;
+import com.walmartlabs.concord.*;
 import com.walmartlabs.concord.client.*;
 import com.walmartlabs.concord.client.ProcessEntry.StatusEnum;
 import com.walmartlabs.concord.common.IOUtils;
@@ -31,15 +32,15 @@ import com.walmartlabs.concord.it.common.ITUtils;
 import com.walmartlabs.concord.it.common.ServerClient;
 import org.eclipse.jgit.api.Git;
 
+import java.lang.reflect.Type;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
 import java.time.OffsetDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
+import java.util.*;
+import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -161,7 +162,11 @@ public abstract class AbstractGitHubTriggersIT extends AbstractServerIT {
         assertEquals(0, l.size());
     }
 
-    protected void sendEvent(String resource, String event, String... params) throws Exception {
+    protected String sendEvent(String resource, String event, String... params) throws Exception {
+        return sendEvent(resource, event, Collections.emptyMap(), params);
+    }
+
+    protected String sendEvent(String resource, String event, Map<String, String> queryParams, String... params) throws Exception {
         String payload = resourceToString(resource);
         if (params != null) {
             for (int i = 0; i < params.length; i += 2) {
@@ -175,7 +180,48 @@ public abstract class AbstractGitHubTriggersIT extends AbstractServerIT {
         client.addDefaultHeader("X-Hub-Signature", "sha1=" + GitHubUtils.sign(payload));
 
         GitHubEventsApi eventsApi = new GitHubEventsApi(client);
-        eventsApi.onEvent(payload, "abc", event);
+        if (queryParams.isEmpty()) {
+            return eventsApi.onEvent(payload, "abc", event);
+        } else {
+            return sendWithQueryParams(eventsApi, payload, event, queryParams);
+        }
+    }
+
+    private String sendWithQueryParams(GitHubEventsApi eventsApi, String payload, String event, Map<String, String> queryParams) throws ApiException {
+        String localVarPath = "/events/github/webhook";
+
+        List<Pair> localVarQueryParams = queryParams.entrySet().stream()
+                .map(e -> new Pair(e.getKey(), e.getValue()))
+                .collect(Collectors.toList());
+
+        Map<String, String> localVarHeaderParams = new HashMap<String, String>();
+        localVarHeaderParams.put("X-GitHub-Delivery", eventsApi.getApiClient().parameterToString("abc"));
+        localVarHeaderParams.put("X-GitHub-Event", eventsApi.getApiClient().parameterToString(event));
+
+        Map<String, Object> localVarFormParams = new HashMap<String, Object>();
+
+        String[] localVarAccepts = {
+                "text/plain"
+        };
+        String localVarAccept = eventsApi.getApiClient().selectHeaderAccept(localVarAccepts);
+        if (localVarAccept == null) {
+            localVarAccept = "application/vnd.siesta-validation-errors-v1+json";
+        } else {
+            localVarAccept += ",application/vnd.siesta-validation-errors-v1+json";
+        }
+        localVarHeaderParams.put("Accept", localVarAccept);
+
+        String[] localVarContentTypes = {
+                "application/json"
+        };
+        String localVarContentType = eventsApi.getApiClient().selectHeaderContentType(localVarContentTypes);
+        localVarHeaderParams.put("Content-Type", localVarContentType);
+
+        String[] localVarAuthNames = new String[] {  };
+        com.squareup.okhttp.Call call = eventsApi.getApiClient().buildCall(localVarPath, "POST", localVarQueryParams, new ArrayList<>(), payload, localVarHeaderParams, localVarFormParams, localVarAuthNames, null);
+        Type localVarReturnType = new TypeToken<String>(){}.getType();
+        ApiResponse<String> resp = eventsApi.getApiClient().execute(call, localVarReturnType);
+        return resp.getData();
     }
 
     protected void assertLog(ProcessEntry entry, String pattern) throws Exception {
