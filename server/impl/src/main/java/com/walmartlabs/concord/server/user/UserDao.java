@@ -22,6 +22,7 @@ package com.walmartlabs.concord.server.user;
 
 import com.walmartlabs.concord.db.AbstractDao;
 import com.walmartlabs.concord.db.MainDB;
+import com.walmartlabs.concord.server.OffsetDateTimeParam;
 import com.walmartlabs.concord.server.jooq.tables.records.UsersRecord;
 import com.walmartlabs.concord.server.org.OrganizationEntry;
 import com.walmartlabs.concord.server.security.ldap.LdapGroupSearchResult;
@@ -29,6 +30,7 @@ import org.jooq.*;
 
 import javax.inject.Inject;
 import javax.inject.Named;
+import java.time.OffsetDateTime;
 import java.util.*;
 
 import static com.walmartlabs.concord.server.jooq.Tables.*;
@@ -104,6 +106,12 @@ public class UserDao extends AbstractDao {
             UpdateSetMoreStep<UsersRecord> q = tx.update(USERS)
                     .set(USERS.IS_DISABLED, isDisabled);
 
+            if (isDisabled) {
+                q.set(USERS.DISABLED_DATE, currentOffsetDateTime());
+            } else {
+                q.setNull(USERS.DISABLED_DATE);
+            }
+
             if (userType != null) {
                 q.set(USERS.USER_TYPE, userType.name());
             }
@@ -131,8 +139,8 @@ public class UserDao extends AbstractDao {
     public UserEntry get(UUID id) {
         DSLContext tx = dsl();
 
-        Record7<UUID, String, String, String, String, String, Boolean> r =
-                tx.select(USERS.USER_ID, USERS.USER_TYPE, USERS.USERNAME, USERS.DOMAIN, USERS.DISPLAY_NAME, USERS.USER_EMAIL, USERS.IS_DISABLED)
+        Record8<UUID, String, String, String, String, String, Boolean, OffsetDateTime> r =
+                tx.select(USERS.USER_ID, USERS.USER_TYPE, USERS.USERNAME, USERS.DOMAIN, USERS.DISPLAY_NAME, USERS.USER_EMAIL, USERS.IS_DISABLED, USERS.DISABLED_DATE)
                         .from(USERS)
                         .where(USERS.USER_ID.eq(id))
                         .fetchOne();
@@ -241,7 +249,7 @@ public class UserDao extends AbstractDao {
 
     // TODO add "include" option
     public List<UserEntry> list(String filter, int offset, int limit) {
-        return dsl().select(USERS.USER_ID, USERS.USERNAME, USERS.DOMAIN, USERS.USER_TYPE, USERS.DISPLAY_NAME, USERS.USER_EMAIL, USERS.IS_DISABLED)
+        return dsl().select(USERS.USER_ID, USERS.USERNAME, USERS.DOMAIN, USERS.USER_TYPE, USERS.DISPLAY_NAME, USERS.USER_EMAIL, USERS.IS_DISABLED, USERS.DISABLED_DATE)
                 .from(USERS)
                 .where(USERS.IS_DISABLED.isFalse())
                 .and(value(filter).isNotNull()
@@ -259,7 +267,8 @@ public class UserDao extends AbstractDao {
                         UserType.valueOf(r.get(USERS.USER_TYPE)),
                         r.get(USERS.USER_EMAIL),
                         null,
-                        r.get(USERS.IS_DISABLED)));
+                        r.get(USERS.IS_DISABLED),
+                        r.get(USERS.DISABLED_DATE)));
     }
 
     public List<LdapGroupSearchResult> searchLdapGroups(String filter) {
@@ -274,7 +283,7 @@ public class UserDao extends AbstractDao {
                         .build());
     }
 
-    private UserEntry getUserInfo(DSLContext tx, Record7<UUID, String, String, String, String, String, Boolean> r) {
+    private UserEntry getUserInfo(DSLContext tx, Record8<UUID, String, String, String, String, String, Boolean, OffsetDateTime> r) {
         // TODO join?
         Field<String> orgNameField = select(ORGANIZATIONS.ORG_NAME)
                 .from(ORGANIZATIONS)
@@ -312,7 +321,8 @@ public class UserDao extends AbstractDao {
                 UserType.valueOf(r.get(USERS.USER_TYPE)),
                 r.get(USERS.USER_EMAIL),
                 new HashSet<>(roles),
-                r.get(USERS.IS_DISABLED));
+                r.get(USERS.IS_DISABLED),
+                r.get(USERS.DISABLED_DATE));
     }
 
     private static String toLowerCase(String s) {

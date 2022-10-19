@@ -204,9 +204,12 @@ public class UserManager {
     }
 
     public void disable(UUID userId) {
-        if (userDao.isDisabled(userId)
-                .orElseThrow(() -> new ConcordApplicationException("User not found: " + userId))) {
+        UserEntry user = userDao.get(userId);
+        if (user == null) {
+            throw new ConcordApplicationException("User not found: " + userId);
+        }
 
+        if (user.isDisabled() && user.getDisabledDate() != null) {
             // the account is already disabled, nothing to do
             return;
         }
@@ -216,6 +219,20 @@ public class UserManager {
         auditLog.add(AuditObject.USER, AuditAction.UPDATE)
                 .field("userId", userId)
                 .changes(describeStatusChange(false), describeStatusChange(true))
+                .log();
+    }
+
+    public void delete(UUID userId) {
+        UserEntry user = userDao.get(userId);
+        if (user == null) {
+            return;
+        }
+
+        userDao.delete(userId);
+
+        auditLog.add(AuditObject.USER, AuditAction.DELETE)
+                .field("userId", userId)
+                .field("name", user.getName())
                 .log();
     }
 
