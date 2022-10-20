@@ -48,7 +48,16 @@
             <column name="COMMIT_BRANCH" type="varchar(255)">
                 <constraints nullable="true"/>
             </column>
+            <column name="COMMIT_MSG" type="varchar(128)">
+                <constraints nullable="true"/>
+            </column>
             <column name="EXCLUSIVE" type="jsonb">
+                <constraints nullable="true"/>
+            </column>
+            <column name="PROCESS_KIND" type="varchar(128)">
+                <constraints nullable="true"/>
+            </column>
+            <column name="INITIATOR_ID" type="uuid">
                 <constraints nullable="true"/>
             </column>
         </createTable>
@@ -61,12 +70,6 @@
             </column>
             <column name="INSTANCE_CREATED_AT" type="timestamptz" remarks="Timestamp of process creation">
                 <constraints nullable="false"/>
-            </column>
-            <column name="PROCESS_KIND" type="varchar(128)">
-                <constraints nullable="true"/>
-            </column>
-            <column name="INITIATOR_ID" type="uuid">
-                <constraints nullable="true"/>
             </column>
             <column name="PROCESS_TAGS" type="text[]">
                 <constraints nullable="true"/>
@@ -86,27 +89,10 @@
             <column name="IMPORTS" type="jsonb">
                 <constraints nullable="true"/>
             </column>
-            <column name="TRIGGERED_BY" type="jsonb">
-                <constraints nullable="true"/>
-            </column>
             <column name="RUNTIME" type="text">
                 <constraints nullable="true"/>
             </column>
             <column name="DEPENDENCIES" type="text[]">
-                <constraints nullable="true"/>
-            </column>
-        </createTable>
-    </changeSet>
-
-    <changeSet id="1970020" author="ybrigo@gmail.com">
-        <createTable tableName="PROCESS_REPOSITORY_INFO">
-            <column name="INSTANCE_ID" type="uuid" remarks="Unique process ID">
-                <constraints primaryKey="true" nullable="false"/>
-            </column>
-            <column name="INSTANCE_CREATED_AT" type="timestamptz" remarks="Timestamp of process creation">
-                <constraints nullable="false"/>
-            </column>
-            <column name="COMMIT_MSG" type="varchar(128)">
                 <constraints nullable="true"/>
             </column>
         </createTable>
@@ -121,6 +107,20 @@
                 <constraints nullable="false"/>
             </column>
             <column name="META" type="jsonb">
+                <constraints nullable="true"/>
+            </column>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="1970040" author="ybrigo@gmail.com">
+        <createTable tableName="PROCESS_TRIGGER_INFO">
+            <column name="INSTANCE_ID" type="uuid" remarks="Unique process ID">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="INSTANCE_CREATED_AT" type="timestamptz" remarks="Timestamp of process creation">
+                <constraints nullable="false"/>
+            </column>
+            <column name="TRIGGERED_BY" type="jsonb">
                 <constraints nullable="true"/>
             </column>
         </createTable>
