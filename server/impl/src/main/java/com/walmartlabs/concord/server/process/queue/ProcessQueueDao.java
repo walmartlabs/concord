@@ -132,11 +132,13 @@ public class ProcessQueueDao extends AbstractDao {
                 .set(PROCESS_META.META, objectMapper.toJSONB(meta))
                 .execute();
 
-        tx.insertInto(PROCESS_TRIGGER_INFO)
-                .set(PROCESS_TRIGGER_INFO.INSTANCE_ID, processKey.getInstanceId())
-                .set(PROCESS_TRIGGER_INFO.INSTANCE_CREATED_AT, processKey.getCreatedAt())
-                .set(PROCESS_TRIGGER_INFO.TRIGGERED_BY, objectMapper.toJSONB(triggeredBy))
-                .execute();
+        if (triggeredBy != null) {
+            tx.insertInto(PROCESS_TRIGGER_INFO)
+                    .set(PROCESS_TRIGGER_INFO.INSTANCE_ID, processKey.getInstanceId())
+                    .set(PROCESS_TRIGGER_INFO.INSTANCE_CREATED_AT, processKey.getCreatedAt())
+                    .set(PROCESS_TRIGGER_INFO.TRIGGERED_BY, objectMapper.toJSONB(triggeredBy))
+                    .execute();
+        }
     }
 
     public void updateAgentId(DSLContext tx, ProcessKey processKey, String agentId, ProcessStatus status) {
