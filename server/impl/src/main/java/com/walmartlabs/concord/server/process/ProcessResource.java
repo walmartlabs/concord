@@ -1023,7 +1023,7 @@ public class ProcessResource implements Resource {
     @Produces(MediaType.APPLICATION_JSON)
     @WithTimer
     public Response updateMetadata(@ApiParam @PathParam("id") UUID instanceId, @ApiParam Map<String, Object> meta) {
-        PartialProcessKey processKey = PartialProcessKey.from(instanceId);
+        ProcessKey processKey = assertProcessKey(instanceId);
 
         if (!queueDao.updateMeta(processKey, meta)) {
             throw new ConcordApplicationException("Process instance not found", Status.NOT_FOUND);
