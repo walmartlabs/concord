@@ -4,6 +4,7 @@
         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
         xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.3.xsd">
 
+    <!-- removed in 1.99.0+
     <changeSet id="87000" author="ybrigo@gmail.com">
         <addColumn tableName="PROCESS_QUEUE">
             <column name="META" type="jsonb">
@@ -11,6 +12,7 @@
             </column>
         </addColumn>
     </changeSet>
+    -->
 
     <changeSet id="87100" author="ybrigo@gmail.com">
         <addColumn tableName="PROJECTS">
