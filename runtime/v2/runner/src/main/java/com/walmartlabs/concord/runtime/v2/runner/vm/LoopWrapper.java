@@ -24,8 +24,8 @@ import com.walmartlabs.concord.runtime.v2.model.Loop;
 import com.walmartlabs.concord.runtime.v2.model.Step;
 import com.walmartlabs.concord.runtime.v2.runner.compiler.CompilerContext;
 import com.walmartlabs.concord.runtime.v2.runner.context.ContextFactory;
-import com.walmartlabs.concord.runtime.v2.runner.el.EvalContextFactory;
-import com.walmartlabs.concord.runtime.v2.runner.el.ExpressionEvaluator;
+import com.walmartlabs.concord.runtime.v2.sdk.EvalContextFactory;
+import com.walmartlabs.concord.runtime.v2.sdk.ExpressionEvaluator;
 import com.walmartlabs.concord.runtime.v2.sdk.Context;
 import com.walmartlabs.concord.sdk.MapUtils;
 import com.walmartlabs.concord.svm.Runtime;
@@ -98,8 +98,9 @@ public abstract class LoopWrapper implements Command {
         ContextFactory contextFactory = runtime.getService(ContextFactory.class);
         Context ctx = contextFactory.create(runtime, state, threadId, currentStep);
 
+        EvalContextFactory ecf = runtime.getService(EvalContextFactory.class);
         ExpressionEvaluator ee = runtime.getService(ExpressionEvaluator.class);
-        value = ee.eval(EvalContextFactory.global(ctx), value, Serializable.class);
+        value = ee.eval(ecf.global(ctx), value, Serializable.class);
 
         // prepare items
         // store items in an ArrayList because it is Serializable

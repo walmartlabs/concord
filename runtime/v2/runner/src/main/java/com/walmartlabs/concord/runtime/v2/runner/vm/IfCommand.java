@@ -21,9 +21,9 @@ package com.walmartlabs.concord.runtime.v2.runner.vm;
  */
 
 import com.walmartlabs.concord.runtime.v2.model.IfStep;
-import com.walmartlabs.concord.runtime.v2.runner.el.EvalContext;
-import com.walmartlabs.concord.runtime.v2.runner.el.EvalContextFactory;
-import com.walmartlabs.concord.runtime.v2.runner.el.ExpressionEvaluator;
+import com.walmartlabs.concord.runtime.v2.sdk.EvalContext;
+import com.walmartlabs.concord.runtime.v2.sdk.EvalContextFactory;
+import com.walmartlabs.concord.runtime.v2.sdk.ExpressionEvaluator;
 import com.walmartlabs.concord.runtime.v2.sdk.Context;
 import com.walmartlabs.concord.svm.Runtime;
 import com.walmartlabs.concord.svm.*;
@@ -49,8 +49,9 @@ public class IfCommand extends StepCommand<IfStep> {
         IfStep step = getStep();
         String expr = step.getExpression();
 
+        EvalContextFactory ecf = runtime.getService(EvalContextFactory.class);
         Context ctx = runtime.getService(Context.class);
-        EvalContext evalContext = EvalContextFactory.global(ctx);
+        EvalContext evalContext = ecf.global(ctx);
 
         ExpressionEvaluator ee = runtime.getService(ExpressionEvaluator.class);
         Boolean ifResult = ee.eval(evalContext, expr, Boolean.class);

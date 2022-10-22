@@ -27,6 +27,7 @@ import com.google.inject.Injector;
 import com.google.inject.Module;
 import com.google.inject.multibindings.Multibinder;
 import com.google.inject.name.Names;
+import com.walmartlabs.concord.common.ConfigurationUtils;
 import com.walmartlabs.concord.common.IOUtils;
 import com.walmartlabs.concord.forms.Form;
 import com.walmartlabs.concord.runtime.common.FormService;
@@ -1170,6 +1171,22 @@ public class MainTest {
         assertLog(log, ".*isDebug: true.*");
     }
 
+    @Test
+    public void argsFromArgs() throws Exception {
+        deploy("argsFromArgs");
+
+        Map<String, Object> args = new LinkedHashMap<>();
+        args.put("k1", "v1");
+        args.put("k2", "${resultTask.get('args.k1')}");
+
+        save(ProcessConfiguration.builder()
+                .putArguments("args", args)
+                .build());
+
+        byte[] log = run();
+        assertLog(log, ".*Hello, " + Pattern.quote("{k1=v1, k2=v1}") + ".*");
+    }
+
     private void deploy(String resource) throws URISyntaxException, IOException {
         Path src = Paths.get(MainTest.class.getResource(resource).toURI());
         IOUtils.copy(src, workDir);
@@ -1356,12 +1373,26 @@ public class MainTest {
 
     @Named("resultTask")
     @SuppressWarnings("unused")
-    static class ResultTask implements Task {
+    public static class ResultTask implements Task {
+
+        private final Context context;
+
+        @Inject
+        public ResultTask(Context context) {
+            this.context = context;
+        }
 
         @Override
         public TaskResult execute(Variables input) {
             return TaskResult.success()
                     .value("result", input.get("result"));
+        }
+
+        public Object get(String path) {
+            String[] p = path.split("\\.");
+            Map<String, Object> m = context.variables().getMap(p[0], Collections.emptyMap());
+            p = Arrays.copyOfRange(p, 1, p.length);
+            return ConfigurationUtils.get(m, p);
         }
     }
 

@@ -36,6 +36,7 @@ import org.eclipse.aether.transfer.AbstractTransferListener;
 import org.eclipse.aether.transfer.ArtifactNotFoundException;
 import org.eclipse.aether.transfer.TransferEvent;
 import org.eclipse.aether.util.artifact.JavaScopes;
+import org.eclipse.aether.util.filter.ExclusionsDependencyFilter;
 import org.eclipse.aether.util.repository.AuthenticationBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -71,6 +72,8 @@ public class DependencyManager {
     private final RepositorySystem maven;
     private final boolean strictRepositories;
 
+    private final List<String> defaultExclusions;
+
     @Inject
     public DependencyManager(DependencyManagerConfiguration cfg) throws IOException {
         this.cacheDir = cfg.cacheDir();
@@ -83,6 +86,7 @@ public class DependencyManager {
         this.repositories = toRemote(cfg.repositories());
         this.maven = RepositorySystemFactory.create();
         this.strictRepositories = cfg.strictRepositories();
+        this.defaultExclusions = cfg.exclusions();
     }
 
     public Collection<DependencyEntity> resolve(Collection<URI> items) throws IOException {
@@ -120,7 +124,7 @@ public class DependencyManager {
 
         result.addAll(resolveDirectLinks(deps.directLinks));
 
-        result.addAll(resolveMavenTransitiveDependencies(deps.mavenTransitiveDependencies, progressNotifier).stream()
+        result.addAll(resolveMavenTransitiveDependencies(deps.mavenTransitiveDependencies, deps.mavenExclusions, progressNotifier).stream()
                 .map(DependencyManager::toDependency)
                 .collect(Collectors.toList()));
 
@@ -145,6 +149,7 @@ public class DependencyManager {
     private DependencyList categorize(List<URI> items) throws IOException {
         List<MavenDependency> mavenTransitiveDependencies = new ArrayList<>();
         List<MavenDependency> mavenSingleDependencies = new ArrayList<>();
+        List<String> mavenExclusions = new ArrayList<>();
         List<URI> directLinks = new ArrayList<>();
 
         for (URI item : items) {
@@ -154,21 +159,23 @@ public class DependencyManager {
 
                 Artifact artifact = new DefaultArtifact(id);
 
-                Map<String, String> cfg = splitQuery(item);
-                String scope = cfg.getOrDefault("scope", JavaScopes.COMPILE);
-                boolean transitive = Boolean.parseBoolean(cfg.getOrDefault("transitive", "true"));
+                Map<String, List<String>> cfg = splitQuery(item);
+                String scope = getSingleValue(cfg,"scope", JavaScopes.COMPILE);
+                boolean transitive = Boolean.parseBoolean(getSingleValue(cfg,"transitive", "true"));
 
                 if (transitive) {
                     mavenTransitiveDependencies.add(new MavenDependency(artifact, scope));
                 } else {
                     mavenSingleDependencies.add(new MavenDependency(artifact, scope));
                 }
+
+                mavenExclusions.addAll(cfg.getOrDefault("exclude", Collections.emptyList()));
             } else {
                 directLinks.add(item);
             }
         }
 
-        return new DependencyList(mavenTransitiveDependencies, mavenSingleDependencies, directLinks);
+        return new DependencyList(mavenTransitiveDependencies, mavenSingleDependencies, mavenExclusions, directLinks);
     }
 
     private Collection<DependencyEntity> resolveDirectLinks(Collection<URI> items) throws IOException {
@@ -248,7 +255,7 @@ public class DependencyManager {
         return paths;
     }
 
-    private Collection<Artifact> resolveMavenTransitiveDependencies(Collection<MavenDependency> deps, ProgressNotifier progressNotifier) throws IOException {
+    private Collection<Artifact> resolveMavenTransitiveDependencies(Collection<MavenDependency> deps, List<String> exclusions, ProgressNotifier progressNotifier) throws IOException {
         // TODO: why we need new RepositorySystem?
         RepositorySystem system = RepositorySystemFactory.create();
         RepositorySystemSession session = newRepositorySystemSession(system, progressNotifier);
@@ -259,7 +266,10 @@ public class DependencyManager {
                 .collect(Collectors.toList()));
         req.setRepositories(repositories);
 
-        DependencyRequest dependencyRequest = new DependencyRequest(req, null);
+        List<String> excludes = new ArrayList<>(exclusions);
+        excludes.addAll(defaultExclusions);
+
+        DependencyRequest dependencyRequest = new DependencyRequest(req, new ExclusionsDependencyFilter(excludes));
 
         synchronized (mutex) {
             try {
@@ -366,19 +376,30 @@ public class DependencyManager {
         return b.build();
     }
 
-    private static Map<String, String> splitQuery(URI uri) throws UnsupportedEncodingException {
+    private static String getSingleValue(Map<String, List<String>> m, String k, String defaultValue) {
+        List<String> vv = m.get(k);
+        if (vv == null || vv.isEmpty()) {
+            return defaultValue;
+        }
+        return vv.get(0);
+    }
+
+    private static Map<String, List<String>> splitQuery(URI uri) throws UnsupportedEncodingException {
         String query = uri.getQuery();
         if (query == null || query.isEmpty()) {
             return Collections.emptyMap();
         }
 
-        Map<String, String> m = new LinkedHashMap<>();
+        Map<String, List<String>> m = new LinkedHashMap<>();
         String[] pairs = query.split("&");
         for (String pair : pairs) {
             int idx = pair.indexOf("=");
-            String k = pair.substring(0, idx);
-            String v = pair.substring(idx + 1);
-            m.put(URLDecoder.decode(k, "UTF-8"), URLDecoder.decode(v, "UTF-8"));
+            String k = URLDecoder.decode(pair.substring(0, idx), "UTF-8");
+            String v = URLDecoder.decode(pair.substring(idx + 1), "UTF-8");
+
+            List<String> vv = m.computeIfAbsent(k, s -> new ArrayList<>());
+            vv.add(v);
+            m.put(k, vv);
         }
         return m;
     }
@@ -387,14 +408,19 @@ public class DependencyManager {
 
         private final List<MavenDependency> mavenTransitiveDependencies;
         private final List<MavenDependency> mavenSingleDependencies;
+
+        private final List<String> mavenExclusions;
+
         private final List<URI> directLinks;
 
         private DependencyList(List<MavenDependency> mavenTransitiveDependencies,
                                List<MavenDependency> mavenSingleDependencies,
+                               List<String> mavenExclusions,
                                List<URI> directLinks) {
 
             this.mavenTransitiveDependencies = mavenTransitiveDependencies;
             this.mavenSingleDependencies = mavenSingleDependencies;
+            this.mavenExclusions = mavenExclusions;
             this.directLinks = directLinks;
         }
     }
