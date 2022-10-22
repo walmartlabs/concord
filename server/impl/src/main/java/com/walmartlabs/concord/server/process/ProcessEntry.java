@@ -81,9 +81,6 @@ public interface ProcessEntry extends Serializable {
     @Nullable
     String commitBranch();
 
-    @Nullable
-    String commitMsg();
-
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss.SSSX")
     OffsetDateTime createdAt();
 
