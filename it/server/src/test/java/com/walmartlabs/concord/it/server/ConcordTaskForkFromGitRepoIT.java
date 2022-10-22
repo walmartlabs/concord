@@ -32,6 +32,7 @@ import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.Map;
 
+import static com.walmartlabs.concord.it.common.ServerClient.assertLog;
 import static com.walmartlabs.concord.it.common.ServerClient.waitForCompletion;
 import static java.util.Collections.singletonMap;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -97,7 +98,10 @@ public class ConcordTaskForkFromGitRepoIT extends AbstractServerIT {
         // ---
 
         ProcessApi processApi = new ProcessApi(getApiClient());
-        waitForCompletion(processApi, parentSpr.getInstanceId());
+        ProcessEntry parentProcessEntry = waitForCompletion(processApi, parentSpr.getInstanceId());
+
+        byte[] ab = getLog(parentProcessEntry.getLogFileName());
+        assertLog(".*repoCommitMessage: initial message.*", ab);
 
         ProcessEntry processEntry = processApi.get(parentSpr.getInstanceId());
         assertEquals(1, processEntry.getChildrenIds().size());
@@ -105,5 +109,8 @@ public class ConcordTaskForkFromGitRepoIT extends AbstractServerIT {
         ProcessEntry child = processApi.get(processEntry.getChildrenIds().get(0));
         assertNotNull(child);
         assertEquals(ProcessEntry.StatusEnum.FINISHED, child.getStatus());
+
+        ab = getLog(child.getLogFileName());
+        assertLog(".*repoCommitMessage: initial message.*", ab);
     }
 }
