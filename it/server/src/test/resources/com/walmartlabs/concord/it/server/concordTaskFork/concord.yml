@@ -4,6 +4,8 @@ configuration:
 
 flows:
   default:
+    - log: "repoCommitMessage: ${projectInfo.repoCommitMessage}"
+
     # "forks" the current process as a child process
     - task: concord
       in:
@@ -26,4 +28,6 @@ flows:
     # forked processes can access the latest snapshot of the parent's
     # state in addition to the arguments provided by the parent task
     - log: "FORK: Hello, ${otherName}. I'm ${myName}"
+
+    - log: "repoCommitMessage: ${projectInfo.repoCommitMessage}"
 
