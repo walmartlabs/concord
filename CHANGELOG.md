@@ -6,6 +6,8 @@
 
 ### Changed
 
+- runtime-v2: "throw" with a string value shouldn't produce a stacktrace
+([#673](https://github.com/walmartlabs/concord/pull/673));
 - concord-server: deprecate `process_queue.commit_msg`
 ([#670](https://github.com/walmartlabs/concord/pull/670));
 - runtime-v2: move expression evaluator into sdk
