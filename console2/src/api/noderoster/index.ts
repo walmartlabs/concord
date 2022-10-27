@@ -67,7 +67,6 @@ export interface HostProcessEntry {
     repoUrl?: string;
     repoPath?: string;
     commitId?: string;
-    commitMsg?: string;
     initiator: string;
     createdAt: string;
     startAt?: string;
