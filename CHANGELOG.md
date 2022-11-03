@@ -3,6 +3,8 @@
 ## [1.98.0] - Unreleased
 
 ### Added
+- server: cleanup agent commands
+([#674](https://github.com/walmartlabs/concord/pull/674));
 
 ### Changed
 
