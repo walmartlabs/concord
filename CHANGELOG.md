@@ -3,8 +3,10 @@
 ## [1.98.0] - Unreleased
 
 ### Added
+- resource-task: add printJson() method
+([#676](https://github.com/walmartlabs/concord/pull/676));
 - server: cleanup agent commands
-([#674](https://github.com/walmartlabs/concord/pull/674));
+([#674](https://github.com/walmartlabs/concord/pull/674)).
 
 ### Changed
 
@@ -15,7 +17,7 @@
 - runtime-v2: move expression evaluator into sdk
 ([#667](https://github.com/walmartlabs/concord/pull/667));
 - cli: log checkpoint instead of throwing Exception
-([#665](https://github.com/walmartlabs/concord/pull/665)).
+([#665](https://github.com/walmartlabs/concord/pull/665));
 - http-task: allow any value as json body
 ([#675](https://github.com/walmartlabs/concord/pull/675)).
 
