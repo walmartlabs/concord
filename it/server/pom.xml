@@ -6,7 +6,7 @@
     <parent>
         <groupId>com.walmartlabs.concord.it</groupId>
         <artifactId>parent</artifactId>
-        <version>1.96.1-SNAPSHOT</version>
+        <version>1.97.1-SNAPSHOT</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
 
@@ -458,6 +458,7 @@
                                         </volumes>
                                         <labels>
                                             <concordTxId>${txId}</concordTxId>
+                                            <com.walmartlabs.concord.it.name>socat</com.walmartlabs.concord.it.name>
                                         </labels>
                                         <cmd> TCP-LISTEN:${it.docker.port},fork UNIX-CONNECT:/var/run/docker.sock</cmd>
                                     </run>
@@ -478,6 +479,9 @@
                                             <log>(?s).*slapd starting*</log>
                                             <time>60000</time>
                                         </wait>
+                                        <labels>
+                                            <com.walmartlabs.concord.it.name>oldap</com.walmartlabs.concord.it.name>
+                                        </labels>
                                     </run>
                                 </image>
                                 <image>
@@ -494,6 +498,7 @@
                                         </network>
                                         <env>
                                             <POSTGRES_PASSWORD>it</POSTGRES_PASSWORD>
+                                            <POSTGRES_INITDB_ARGS>--no-sync</POSTGRES_INITDB_ARGS>
                                         </env>
                                         <wait>
                                             <log>(?s).*ready for start up.*ready to accept connections.*</log>
@@ -501,6 +506,7 @@
                                         </wait>
                                         <labels>
                                             <concordTxId>${txId}</concordTxId>
+                                            <com.walmartlabs.concord.it.name>db</com.walmartlabs.concord.it.name>
                                         </labels>
                                     </run>
                                 </image>
@@ -550,6 +556,7 @@
                                         </wait>
                                         <labels>
                                             <concordTxId>${txId}</concordTxId>
+                                            <com.walmartlabs.concord.it.name>server</com.walmartlabs.concord.it.name>
                                         </labels>
                                     </run>
                                 </image>
@@ -586,6 +593,7 @@
                                         </env>
                                         <labels>
                                             <concordTxId>${txId}</concordTxId>
+                                            <com.walmartlabs.concord.it.name>agent</com.walmartlabs.concord.it.name>
                                         </labels>
                                     </run>
                                 </image>

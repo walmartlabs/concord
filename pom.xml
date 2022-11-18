@@ -11,7 +11,7 @@
 
     <groupId>com.walmartlabs.concord</groupId>
     <artifactId>parent</artifactId>
-    <version>1.96.1-SNAPSHOT</version>
+    <version>1.97.1-SNAPSHOT</version>
     <packaging>pom</packaging>
 
     <name>${project.groupId}:${project.artifactId}</name>
@@ -77,10 +77,14 @@
         <docker.plugin.version>0.38.1</docker.plugin.version>
         <jooq.version>3.13.4</jooq.version>
         <junit.version>5.8.2</junit.version>
-        <liquibase.version>3.5.1</liquibase.version> <!-- the newer versions (up to 3.5.3) have incorrect mappings for PG's blob/bytea -->
+        <liquibase.version>3.5.1
+        </liquibase.version> <!-- the newer versions (up to 3.5.3) have incorrect mappings for PG's blob/bytea -->
         <maven.dependency.plugin.version>3.1.2</maven.dependency.plugin.version>
         <node.version>16.13.1</node.version>
         <frontend.plugin.version>1.12.0</frontend.plugin.version>
+
+        <!-- used in profiles -->
+        <failsafe.args />
     </properties>
 
     <dependencyManagement>
@@ -246,6 +250,7 @@
                             <include>**/*ITCase.java</include>
                             <include>**/Test*.java</include>
                         </includes>
+                        <argLine>${failsafe.args}</argLine>
                     </configuration>
                     <executions>
                         <execution>
@@ -494,15 +499,54 @@
             </distributionManagement>
         </profile>
         <profile>
-            <id>jdk11</id>
+            <id>jdk8</id>
+            <activation>
+                <activeByDefault>true</activeByDefault>
+            </activation>
             <properties>
-                <jdk.version>11.0</jdk.version>
+                <jdk.version>1.8</jdk.version>
             </properties>
         </profile>
         <profile>
-            <id>jdk16</id>
+            <id>jdk8-aarch64</id>
             <properties>
-                <jdk.version>16</jdk.version>
+                <jdk.version>1.8</jdk.version>
+            </properties>
+        </profile>
+        <profile>
+            <id>jdk11</id>
+            <properties>
+                <jdk.version>11</jdk.version>
+                <failsafe.args>
+                    --add-opens java.base/java.util=ALL-UNNAMED
+                </failsafe.args>
+            </properties>
+        </profile>
+        <profile>
+            <id>jdk11-aarch64</id>
+            <properties>
+                <jdk.version>11</jdk.version>
+                <failsafe.args>
+                    --add-opens java.base/java.util=ALL-UNNAMED
+                </failsafe.args>
+            </properties>
+        </profile>
+        <profile>
+            <id>jdk17</id>
+            <properties>
+                <jdk.version>17</jdk.version>
+                <failsafe.args>
+                    --add-opens java.base/java.util=ALL-UNNAMED
+                </failsafe.args>
+            </properties>
+        </profile>
+        <profile>
+            <id>jdk17-aarch64</id>
+            <properties>
+                <jdk.version>17</jdk.version>
+                <failsafe.args>
+                    --add-opens java.base/java.util=ALL-UNNAMED
+                </failsafe.args>
             </properties>
         </profile>
     </profiles>

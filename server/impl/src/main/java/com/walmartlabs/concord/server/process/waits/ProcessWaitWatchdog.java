@@ -35,7 +35,10 @@ import com.walmartlabs.concord.server.sdk.ProcessKey;
 import com.walmartlabs.concord.server.sdk.ScheduledTask;
 import com.walmartlabs.concord.server.sdk.metrics.WithTimer;
 import org.immutables.value.Value;
-import org.jooq.*;
+import org.jooq.Configuration;
+import org.jooq.JSONB;
+import org.jooq.Record5;
+import org.jooq.SelectConditionStep;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -81,7 +84,7 @@ public class ProcessWaitWatchdog implements ScheduledTask {
         this.processWaitManager = processWaitManager;
         this.processManager = processManager;
         this.payloadManager = payloadManager;
-        this.processWaitHandlers = new HashMap<>();
+        this.processWaitHandlers = new EnumMap<>(WaitType.class);
 
         handlers.forEach(h -> this.processWaitHandlers.put(h.getType(), h));
         this.waitItemsHistogram = metricRegistry.histogram("process-wait-watchdog-items");
@@ -107,6 +110,10 @@ public class ProcessWaitWatchdog implements ScheduledTask {
             for (WaitingProcess p : processes) {
                 processWaits(p);
                 lastId = p.id();
+            }
+
+            if (processes.size() < cfg.getPollLimit()) {
+                return;
             }
         }
     }
