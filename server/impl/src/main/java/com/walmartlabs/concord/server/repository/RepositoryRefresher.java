@@ -41,8 +41,6 @@ import javax.inject.Named;
 import java.util.*;
 import java.util.stream.Collectors;
 
-import static com.walmartlabs.concord.server.org.project.RepositoryUtils.assertRepository;
-
 @Named
 public class RepositoryRefresher extends AbstractDao {
 
@@ -56,6 +54,8 @@ public class RepositoryRefresher extends AbstractDao {
     private final RepositoryDao repositoryDao;
     private final ProjectDao projectDao;
 
+    private final ProjectRepositoryManager projectRepositoryManager;
+
     @Inject
     public RepositoryRefresher(@MainDB Configuration cfg,
                                Set<RepositoryRefreshListener> listeners,
@@ -64,7 +64,8 @@ public class RepositoryRefresher extends AbstractDao {
                                RepositoryManager repositoryManager,
                                ExternalEventResource externalEventResource,
                                RepositoryDao repositoryDao,
-                               ProjectDao projectDao) {
+                               ProjectDao projectDao,
+                               ProjectRepositoryManager projectRepositoryManager) {
 
         super(cfg);
 
@@ -75,6 +76,7 @@ public class RepositoryRefresher extends AbstractDao {
         this.externalEventResource = externalEventResource;
         this.repositoryDao = repositoryDao;
         this.projectDao = projectDao;
+        this.projectRepositoryManager = projectRepositoryManager;
     }
 
     public void refresh(List<UUID> repositoryIds) {
@@ -103,10 +105,8 @@ public class RepositoryRefresher extends AbstractDao {
 
     public void refresh(String orgName, String projectName, String repositoryName, boolean sync) {
         UUID orgId = orgManager.assertAccess(orgName, true).getId();
-        ProjectEntry projectEntry = assertProject(orgId, projectName, ResourceAccessLevel.READER, true);
-        UUID projectId = projectEntry.getId();
-
-        RepositoryEntry repositoryEntry = assertRepository(projectEntry, repositoryName);
+        ProjectEntry projectEntry = assertProject(orgId, projectName);
+        RepositoryEntry repositoryEntry = projectRepositoryManager.get(projectEntry.getId(), repositoryName);
 
         if (!sync) {
             Map<String, Object> event = new HashMap<>();
@@ -121,7 +121,7 @@ public class RepositoryRefresher extends AbstractDao {
 
         try (TemporaryPath tmpRepoPath = IOUtils.tempDir("refreshRepo_")) {
             repositoryManager.withLock(repositoryEntry.getUrl(), () -> {
-                Repository repo = repositoryManager.fetch(projectId, repositoryEntry);
+                Repository repo = repositoryManager.fetch(projectEntry.getId(), repositoryEntry);
                 repo.export(tmpRepoPath.path());
                 return null;
             });
@@ -137,11 +137,11 @@ public class RepositoryRefresher extends AbstractDao {
         }
     }
 
-    private ProjectEntry assertProject(UUID orgId, String projectName, ResourceAccessLevel accessLevel, boolean orgMembersOnly) {
+    private ProjectEntry assertProject(UUID orgId, String projectName) {
         if (projectName == null) {
             throw new ValidationErrorsException("Invalid project name");
         }
 
-        return projectAccessManager.assertAccess(orgId, null, projectName, accessLevel, orgMembersOnly);
+        return projectAccessManager.assertAccess(orgId, null, projectName, ResourceAccessLevel.READER, true);
     }
 }
