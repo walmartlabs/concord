@@ -10,6 +10,10 @@
 
 ### Changed
 
+- console2: repository list now with paging
+([#643://github.com/walmartlabs/concord/pull/643));
+- server: api for list project repositories with limit/offset
+([#643](https://github.com/walmartlabs/concord/pull/643));
 - runtime-v2: "throw" with a string value shouldn't produce a stacktrace
 ([#673](https://github.com/walmartlabs/concord/pull/673));
 - concord-server: deprecate `process_queue.commit_msg`
