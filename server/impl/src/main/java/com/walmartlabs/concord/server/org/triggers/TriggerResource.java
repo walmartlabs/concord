@@ -55,8 +55,6 @@ import javax.ws.rs.core.Response;
 import java.util.List;
 import java.util.UUID;
 
-import static com.walmartlabs.concord.server.org.project.RepositoryUtils.assertRepository;
-
 @Named
 @Singleton
 @Api(value = "Triggers", authorizations = {@Authorization("api_key"), @Authorization("session_key"), @Authorization("ldap")})
@@ -74,6 +72,8 @@ public class TriggerResource implements Resource {
     private final ProjectLoader projectLoader;
     private final ImportsNormalizerFactory importsNormalizerFactory;
 
+    private final ProjectRepositoryManager projectRepositoryManager;
+
     @Inject
     public TriggerResource(RepositoryDao repositoryDao,
                            TriggersDao triggersDao,
@@ -82,7 +82,8 @@ public class TriggerResource implements Resource {
                            OrganizationManager orgManager,
                            TriggerManager triggerManager,
                            ProjectLoader projectLoader,
-                           ImportsNormalizerFactory importsNormalizerFactory) {
+                           ImportsNormalizerFactory importsNormalizerFactory,
+                           ProjectRepositoryManager projectRepositoryManager) {
 
         this.repositoryDao = repositoryDao;
         this.triggersDao = triggersDao;
@@ -92,6 +93,7 @@ public class TriggerResource implements Resource {
         this.triggerManager = triggerManager;
         this.projectLoader = projectLoader;
         this.importsNormalizerFactory = importsNormalizerFactory;
+        this.projectRepositoryManager = projectRepositoryManager;
     }
 
     /**
@@ -111,8 +113,10 @@ public class TriggerResource implements Resource {
 
         OrganizationEntry org = orgManager.assertAccess(orgName, true);
         ProjectEntry p = assertProject(org.getId(), projectName, ResourceAccessLevel.READER, true);
-        RepositoryEntry r = assertRepository(p, repositoryName);
-
+        RepositoryEntry r = projectRepositoryManager.get(p.getId(), repositoryName);
+        if (r == null) {
+            throw new ValidationErrorsException("Repository not found: " + repositoryName);
+        }
         return triggersDao.list(p.getId(), r.getId());
     }
 
@@ -154,7 +158,7 @@ public class TriggerResource implements Resource {
 
         // allow READERs to refresh triggers - it helps with troubleshooting
         ProjectEntry p = assertProject(org.getId(), projectName, ResourceAccessLevel.READER, true);
-        RepositoryEntry r = assertRepository(p, repositoryName);
+        RepositoryEntry r = projectRepositoryManager.get(p.getId(), repositoryName);
 
         refresh(r);
 
