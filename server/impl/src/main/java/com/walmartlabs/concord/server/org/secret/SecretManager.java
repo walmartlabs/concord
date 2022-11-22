@@ -188,13 +188,13 @@ public class SecretManager {
     /**
      * Generates and stores a new SSH key pair.
      */
-    public DecryptedKeyPair createKeyPair(UUID orgId, UUID projectId, String name, String storePassword,
+    public DecryptedKeyPair createKeyPair(UUID orgId, Set<UUID> projectIds, String name, String storePassword,
                                           SecretVisibility visibility, String secretStoreType) {
 
         orgManager.assertAccess(orgId, true);
 
         KeyPair k = generateKeyPair();
-        UUID id = create(name, orgId, projectId, k, storePassword, visibility, secretStoreType, INSERT);
+        UUID id = create(name, orgId, projectIds, k, storePassword, visibility, secretStoreType, INSERT);
         return new DecryptedKeyPair(id, k.getPublicKey());
     }
 
@@ -205,7 +205,7 @@ public class SecretManager {
     /**
      * Stores a new SSH key pair using the provided public and private keys.
      */
-    public DecryptedKeyPair createKeyPair(UUID orgId, UUID projectId, String name, String storePassword,
+    public DecryptedKeyPair createKeyPair(UUID orgId, Set<UUID> projectIds, String name, String storePassword,
                                           InputStream publicKey,
                                           InputStream privateKey, SecretVisibility visibility,
                                           String secretStoreType) throws IOException {
@@ -213,7 +213,7 @@ public class SecretManager {
         orgManager.assertAccess(orgId, true);
 
         KeyPair k = buildKeyPair(publicKey, privateKey);
-        UUID id = create(name, orgId, projectId, k, storePassword, visibility, secretStoreType, INSERT);
+        UUID id = create(name, orgId, projectIds, k, storePassword, visibility, secretStoreType, INSERT);
 
         return new DecryptedKeyPair(id, k.getPublicKey());
     }
@@ -225,14 +225,14 @@ public class SecretManager {
     /**
      * Stores a new username and password secret.
      */
-    public DecryptedUsernamePassword createUsernamePassword(UUID orgId, UUID projectId, String name, String storePassword,
+    public DecryptedUsernamePassword createUsernamePassword(UUID orgId, Set<UUID> projectIds, String name, String storePassword,
                                                             String username, char[] password, SecretVisibility visibility,
                                                             String secretStoreType) {
 
         orgManager.assertAccess(orgId, true);
 
         UsernamePassword p = buildUsernamePassword(username, password);
-        UUID id = create(name, orgId, projectId, p, storePassword, visibility, secretStoreType, INSERT);
+        UUID id = create(name, orgId, projectIds, p, storePassword, visibility, secretStoreType, INSERT);
         return new DecryptedUsernamePassword(id);
     }
 
@@ -243,18 +243,18 @@ public class SecretManager {
     /**
      * Stores a new single value secret.
      */
-    public DecryptedBinaryData createBinaryData(UUID orgId, UUID projectId, String name, String storePassword,
+    public DecryptedBinaryData createBinaryData(UUID orgId, Set<UUID> projectIds, String name, String storePassword,
                                                 InputStream data, SecretVisibility visibility,
                                                 String storeType) {
 
-        return createBinaryData(orgId, projectId, name, storePassword, data, visibility, storeType, INSERT);
+        return createBinaryData(orgId, projectIds, name, storePassword, data, visibility, storeType, INSERT);
     }
 
     /**
      * Stores a new single value secret.
      */
     public DecryptedBinaryData createBinaryData(UUID orgId,
-                                                UUID projectId,
+                                                Set<UUID> projectIds,
                                                 String name,
                                                 String storePassword,
                                                 InputStream data,
@@ -262,7 +262,7 @@ public class SecretManager {
                                                 String storeType,
                                                 SecretDao.InsertMode insertMode) {
 
-        return secretDao.txResult(tx -> createBinaryData(tx, orgId, projectId, name, storePassword, data, visibility, storeType, insertMode));
+        return secretDao.txResult(tx -> createBinaryData(tx, orgId, projectIds, name, storePassword, data, visibility, storeType, insertMode));
     }
 
     /**
@@ -270,7 +270,7 @@ public class SecretManager {
      */
     public DecryptedBinaryData createBinaryData(DSLContext tx,
                                                 UUID orgId,
-                                                UUID projectId,
+                                                Set<UUID> projectIds,
                                                 String name,
                                                 String storePassword,
                                                 InputStream data,
@@ -281,7 +281,7 @@ public class SecretManager {
         orgManager.assertAccess(tx, orgId, true);
 
         BinaryDataSecret d = buildBinaryData(data);
-        UUID id = create(tx, name, orgId, projectId, d, storePassword, visibility, storeType, insertMode);
+        UUID id = create(tx, name, orgId, projectIds, d, storePassword, visibility, storeType, insertMode);
         return new DecryptedBinaryData(id);
     }
 
@@ -323,7 +323,7 @@ public class SecretManager {
         SecretEntry e = assertAccess(orgId,null, secretName, ResourceAccessLevel.WRITER, false);
 
         UUID newOrgId = validateOrgId(params.newOrgId(), params.newOrgName(), e);
-        UUID newProjectId = validateProjectId(params.newProjectId(), params.newProjectName(), params.removeProjectLink(), newOrgId, e);
+        Set<UUID> newProjectIds = validateProjectIds(params.newProjectIds(), params.removeProjectLink(), newOrgId, e);
         UserEntry newOwner = validateOwner(params.newOwnerId(), e);
 
         String currentPassword = params.currentPassword();
@@ -343,7 +343,7 @@ public class SecretManager {
             }
 
             // validate the current password
-            decryptData(e.getId(), e.getStoreType(), currentPassword);
+            decryptData(e, currentPassword);
 
             newData = serialize(params.newSecret());
             newType = secretType(params.newSecret());
@@ -351,7 +351,7 @@ public class SecretManager {
             updated.put("data", true);
         } else if (newPassword != null) {
             // keeping the old data, just changing the store password
-            newData = decryptData(e.getId(), e.getStoreType(), currentPassword);
+            newData = decryptData(e, currentPassword);
         }
 
         String pwd = currentPassword;
@@ -361,16 +361,25 @@ public class SecretManager {
         }
 
         byte[] newEncryptedData;
+        HashAlgorithm hashAlgorithm;
         if (newData != null) {
             // encrypt the supplied data
-            byte[] salt = secretCfg.getSecretStoreSalt();
-            newEncryptedData = SecretUtils.encrypt(newData, getPwd(pwd), salt);
+            byte[] salt = e.getSecretSalt();
+            newEncryptedData = SecretUtils.encrypt(newData, getPwd(pwd), salt, HashAlgorithm.SHA256);
+            hashAlgorithm = HashAlgorithm.SHA256;
         } else {
             newEncryptedData = null;
+            hashAlgorithm = null;
         }
-
-        policyManager.checkEntity(e.getOrgId(), newProjectId, EntityType.SECRET, EntityAction.UPDATE, newOwner,
-                PolicyUtils.secretToMap(e.getOrgId(), e.getName(), e.getType(), e.getVisibility(), e.getStoreType()));
+        if(newProjectIds == null || newProjectIds.isEmpty()){
+            policyManager.checkEntity(e.getOrgId(), null, EntityType.SECRET, EntityAction.UPDATE, newOwner,
+                    PolicyUtils.secretToMap(e.getOrgId(), e.getName(), e.getType(), e.getVisibility(), e.getStoreType()));
+        } else {
+            newProjectIds.stream().forEach(newProjectId -> {
+                policyManager.checkEntity(e.getOrgId(), newProjectId, EntityType.SECRET, EntityAction.UPDATE, newOwner,
+                        PolicyUtils.secretToMap(e.getOrgId(), e.getName(), e.getType(), e.getVisibility(), e.getStoreType()));
+            });
+        }
 
         String newName = validateName(params.newName(), newOrgId, e);
 
@@ -382,7 +391,8 @@ public class SecretManager {
             }
 
             secretDao.update(tx, e.getId(), params.newName(), newOwner != null ? newOwner.getId() : null,
-                    finalNewType, newEncryptedData, params.newVisibility(), newProjectId, newOrgId);
+                    finalNewType, newEncryptedData, params.newVisibility(), newOrgId, hashAlgorithm);
+            secretDao.updateSecretProjects(tx, e.getId(), params.removeProjectLink() ? Collections.emptySet() : newProjectIds);
         });
 
         Map<String, Object> changes = DiffUtils.compare(e, secretDao.get(e.getId()));
@@ -448,16 +458,15 @@ public class SecretManager {
         return new DecryptedSecret(e.getId(), s);
     }
 
-    private byte[] decryptData(UUID secretId, String storeType, String password) {
-        byte[] data = getSecretStore(storeType).get(secretId);
+    private byte[] decryptData(SecretEntry secretEntry, String password) {
+        byte[] data = getSecretStore(secretEntry.getStoreType()).get(secretEntry.getId());
         if (data == null) {
-            throw new IllegalStateException("Can't find the secret's data in the store " + storeType + " : " + secretId);
+            throw new IllegalStateException("Can't find the secret's data in the store " + secretEntry.getStoreType() + " : " + secretEntry.getId());
         }
 
         byte[] pwd = getPwd(password);
-        byte[] salt = secretCfg.getSecretStoreSalt();
-
-        return SecretUtils.decrypt(data, pwd, salt);
+        byte[] salt = secretEntry.getSecretSalt();
+        return SecretUtils.decrypt(data, pwd, salt, secretEntry.getHashAlgorithm());
     }
 
     /**
@@ -475,7 +484,12 @@ public class SecretManager {
         SecretEncryptedByType providedEncryptedByType = getEncryptedBy(password);
         assertEncryptedByType(name, providedEncryptedByType, e.getEncryptedBy());
 
-        byte[] ab = decryptData(e.getId(), e.getStoreType(), password);
+        byte[] ab = decryptData(e, password);
+
+        if(e.getHashAlgorithm() == HashAlgorithm.MD5) {
+            byte[] newEncryptedData = SecretUtils.encrypt(ab, getPwd(password), e.getSecretSalt(), HashAlgorithm.SHA256);
+            secretDao.update(e.getId(), null, null, null, newEncryptedData, null, null, HashAlgorithm.SHA256);
+        }
 
         auditLog.add(AuditObject.SECRET, AuditAction.ACCESS)
                 .field("orgId", e.getOrgId())
@@ -524,19 +538,19 @@ public class SecretManager {
 
     private UUID create(String name,
                         UUID orgId,
-                        UUID projectId,
+                        Set<UUID> projectIds,
                         Secret s,
                         String password,
                         SecretVisibility visibility,
                         String storeType,
                         SecretDao.InsertMode insertMode) {
-        return secretDao.txResult(tx -> create(tx, name, orgId, projectId, s, password, visibility, storeType, insertMode));
+        return secretDao.txResult(tx -> create(tx, name, orgId, projectIds, s, password, visibility, storeType, insertMode));
     }
 
     private UUID create(DSLContext tx,
                         String name,
                         UUID orgId,
-                        UUID projectId,
+                        Set<UUID> projectIds,
                         Secret s,
                         String password,
                         SecretVisibility visibility,
@@ -547,18 +561,24 @@ public class SecretManager {
         SecretType type = secretType(s);
 
         byte[] pwd = getPwd(password);
-        byte[] salt = secretCfg.getSecretStoreSalt();
+        byte[] salt =  SecretUtils.generateSalt(16);
 
-        byte[] ab = SecretUtils.encrypt(data, pwd, salt);
+        byte[] ab = SecretUtils.encrypt(data, pwd, salt, HashAlgorithm.SHA256);
         SecretEncryptedByType encryptedByType = getEncryptedBy(password);
 
         storeType = storeType.toLowerCase();
 
         UserEntry owner = UserPrincipal.assertCurrent().getUser();
-        policyManager.checkEntity(orgId, projectId, EntityType.SECRET, EntityAction.CREATE, owner,
-                PolicyUtils.secretToMap(orgId, name, type, visibility, storeType));
+        if(projectIds != null) {
+            for(UUID projectId: projectIds) {
+                policyManager.checkEntity(orgId, projectId, EntityType.SECRET, EntityAction.CREATE, owner,
+                        PolicyUtils.secretToMap(orgId, name, type, visibility, storeType));
+            }
+        } else {
+            policyManager.checkEntity(orgId, null, EntityType.SECRET, EntityAction.CREATE, owner,PolicyUtils.secretToMap(orgId, name, type, visibility, storeType));
+        }
 
-        UUID id = secretDao.insert(tx, orgId, projectId, name, owner.getId(), type, encryptedByType, storeType, visibility, insertMode);
+        UUID id = secretDao.insert(tx, orgId, name, owner.getId(), type, encryptedByType, storeType, visibility, insertMode, salt, HashAlgorithm.SHA256);
         try {
             getSecretStore(storeType).store(tx, id, ab);
         } catch (Exception e) {
@@ -567,6 +587,8 @@ public class SecretManager {
             secretDao.delete(tx, id);
             throw new RuntimeException(e);
         }
+
+        secretDao.updateSecretProjects(tx, id, projectIds);
 
         auditLog.add(AuditObject.SECRET, AuditAction.CREATE)
                 .field("orgId", orgId)
@@ -612,8 +634,8 @@ public class SecretManager {
     }
 
     private void assertProjectScope(AccessScope scope, SecretEntry e) {
-        UUID projectId = e.getProjectId();
-        if (projectId == null) {
+        Set<UUID> projectIds = e.getProjects().stream().map(ProjectEntry::getId).collect(Collectors.toSet());
+        if (projectIds.isEmpty()) {
             return;
         }
 
@@ -633,7 +655,7 @@ public class SecretManager {
         // internal access within a scope of a project
         if (scope instanceof ProjectAccessScope) {
             UUID scopeProjectId = ((ProjectAccessScope) scope).getProjectId();
-            if (!projectId.equals(scopeProjectId)) {
+            if (projectIds.stream().noneMatch(scopeProjectId::equals)) {
                 throw new UnauthorizedException("Project-scoped secrets can only be accessed within the project they belong to. Secret: " + e.getName());
             }
             return;
@@ -649,7 +671,7 @@ public class SecretManager {
             throw new IllegalStateException("Process not found: " + session.getProcessKey());
         }
 
-        if (!projectId.equals(p.projectId())) {
+        if (p.projectId() !=null && projectIds.stream().noneMatch(p.projectId()::equals)) {
             throw new UnauthorizedException("Project-scoped secrets can only be accessed within the project they belong to. Secret: " + e.getName());
         }
     }
@@ -669,26 +691,27 @@ public class SecretManager {
         return null;
     }
 
-    private UUID validateProjectId(UUID newProjectId, String newProjectName, boolean removeProjectLink, UUID newOrgId, SecretEntry e) {
+    private Set<UUID> validateProjectIds(Set<UUID> newProjectIds, boolean removeProjectLink, UUID newOrgId, SecretEntry e) {
         if (newOrgId != null) {
             // set the project ID as null when the updated org ID is not same as the current org ID
             // when a secret is changing orgs, the project link must be set to null
-            return null;
+            return Collections.emptySet();
         }
 
         if (removeProjectLink) {
-            return null;
+            return Collections.emptySet();
         }
 
-        if (newProjectId == null && newProjectName == null) {
-            return e.getProjectId();
+        if (newProjectIds == null || newProjectIds.isEmpty()) {
+            return e.getProjects().stream().map(ProjectEntry::getId).collect(Collectors.toSet());
         }
-
-        ProjectEntry entry = projectAccessManager.assertAccess(e.getOrgId(), newProjectId, newProjectName, ResourceAccessLevel.READER, true);
-        if (!entry.getOrgId().equals(e.getOrgId())) {
-            throw new ValidationErrorsException("Project '" + entry.getName() + "' does not belong to organization '" + e.getOrgName() + "'");
-        }
-        return entry.getId();
+        return newProjectIds.stream().map(newProjectId -> {
+            ProjectEntry entry = projectAccessManager.assertAccess(e.getOrgId(), newProjectId, null, ResourceAccessLevel.READER, true);
+            if (!entry.getOrgId().equals(e.getOrgId())) {
+                throw new ValidationErrorsException("Project '" + entry.getName() + "' does not belong to organization '" + e.getOrgName() + "'");
+            }
+            return entry.getId();
+        }).collect(Collectors.toSet());
     }
 
     private UserEntry validateOwner(UUID newOwnerId, SecretEntry e) {

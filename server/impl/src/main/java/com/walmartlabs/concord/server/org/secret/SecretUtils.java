@@ -32,29 +32,37 @@ import java.io.InputStream;
 import java.security.GeneralSecurityException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.security.SecureRandom;
 
 public final class SecretUtils {
 
     public static byte[] encrypt(byte[] input, byte[] password, byte[] salt) {
+        return encrypt(input, password, salt, HashAlgorithm.MD5);
+    }
+    public static byte[] encrypt(byte[] input, byte[] password, byte[] salt, HashAlgorithm hashAlgorithm) {
         try {
-            return IOUtils.toByteArray(encrypt(new ByteArrayInputStream(input), password, salt));
+            return IOUtils.toByteArray(encrypt(new ByteArrayInputStream(input), password, salt, hashAlgorithm));
         } catch (IOException e) {
             throw new SecurityException("Error encrypting a secret: " + e);
         }
     }
-
     public static InputStream encrypt(InputStream input, byte[] password, byte[] salt) {
+        return encrypt(input, password, salt, HashAlgorithm.MD5);
+    }
+    public static InputStream encrypt(InputStream input, byte[] password, byte[] salt, HashAlgorithm hashAlgorithm) {
         try {
-            Cipher c = init(password, salt, Cipher.ENCRYPT_MODE);
+            Cipher c = init(password, salt, Cipher.ENCRYPT_MODE, hashAlgorithm);
             return new CipherInputStream(input, c);
         } catch (GeneralSecurityException e) {
             throw new SecurityException("Error encrypting a secret: " + e);
         }
     }
-
-    public static byte[] decrypt(byte[] input, byte[] password, byte[] salt) {
+    public static byte[] decrypt(byte[] input, byte[] password, byte[] salt){
+        return decrypt(input, password, salt, HashAlgorithm.MD5);
+    }
+    public static byte[] decrypt(byte[] input, byte[] password, byte[] salt, HashAlgorithm hashAlgorithm) {
         try {
-            InputStream out = decrypt(new ByteArrayInputStream(input), password, salt);
+            InputStream out = decrypt(new ByteArrayInputStream(input), password, salt, hashAlgorithm);
             return IOUtils.toByteArray(out);
         } catch (IOException e) {
             Throwable t = e.getCause() == null ? e : e.getCause();
@@ -64,10 +72,12 @@ public final class SecretUtils {
             throw new SecurityException("Error decrypting a secret: " + e.getMessage(), t);
         }
     }
-
     public static InputStream decrypt(InputStream input, byte[] password, byte[] salt) {
+        return decrypt(input, password, salt, HashAlgorithm.MD5);
+    }
+    public static InputStream decrypt(InputStream input, byte[] password, byte[] salt, HashAlgorithm hashAlgorithm) {
         try {
-            Cipher c = init(password, salt, Cipher.DECRYPT_MODE);
+            Cipher c = init(password, salt, Cipher.DECRYPT_MODE, hashAlgorithm);
             return new CipherInputStream(input, c);
         } catch (BadPaddingException e) {
             throw new SecurityException("Error decrypting a secret: " + e.getMessage() + ". Invalid input data and/or a password.");
@@ -76,20 +86,27 @@ public final class SecretUtils {
         }
     }
 
-    public static byte[] hash(byte[] in, byte[] salt) throws NoSuchAlgorithmException {
-        MessageDigest digest = MessageDigest.getInstance("MD5");
+    public static byte[] hash(byte[] in, byte[] salt, HashAlgorithm hashAlgorithm) throws NoSuchAlgorithmException {
+        MessageDigest digest = MessageDigest.getInstance(hashAlgorithm.getName());
         digest.update(salt);
         return in != null ? digest.digest(in) : digest.digest();
     }
 
-    private static Cipher init(byte[] password, byte[] salt, int mode) throws GeneralSecurityException {
+    private static Cipher init(byte[] password, byte[] salt, int mode, HashAlgorithm hashAlgorithm) throws GeneralSecurityException {
         Cipher c = Cipher.getInstance("AES");
 
-        byte[] key = hash(password, salt);
+        byte[] key = hash(password, salt, hashAlgorithm);
         SecretKeySpec k = new SecretKeySpec(key, "AES");
 
         c.init(mode, k);
         return c;
+    }
+
+    public static byte[] generateSalt(int size) {
+        SecureRandom sr = new SecureRandom();
+        byte[] bytes = new byte[size];
+        sr.nextBytes(bytes);
+        return bytes;
     }
 
     private SecretUtils() {

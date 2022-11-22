@@ -9,9 +9,9 @@ package com.walmartlabs.concord.it.server;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -35,9 +35,7 @@ import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.attribute.PosixFilePermissions;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 
 import static com.walmartlabs.concord.it.server.AbstractServerIT.DEFAULT_TEST_TIMEOUT;
@@ -109,7 +107,11 @@ public abstract class AbstractServerIT {
     }
 
     protected SecretOperationResponse addPlainSecret(String orgName, String name, boolean generatePassword, String storePassword, byte[] secret) throws ApiException {
-        return serverClient.addPlainSecret(orgName, name, generatePassword, storePassword, secret);
+        return serverClient.addPlainSecret(orgName, name, null, generatePassword, storePassword, secret);
+    }
+
+    protected SecretOperationResponse addPlainSecretWithProjectNames(String orgName, String name, Set<String> projectNames, boolean generatePassword, String storePassword, byte[] secret) throws ApiException {
+        return serverClient.addPlainSecretV2(orgName, name, projectNames, null, generatePassword, storePassword, secret);
     }
 
     protected SecretOperationResponse addUsernamePassword(String orgName, String name, boolean generatePassword, String storePassword, String username, String password) throws ApiException {
@@ -126,6 +128,14 @@ public abstract class AbstractServerIT {
 
     protected SecretOperationResponse generateKeyPair(String orgName, String projectName, String name, boolean generatePassword, String storePassword) throws ApiException {
         return serverClient.generateKeyPair(orgName, projectName, name, generatePassword, storePassword);
+    }
+
+    protected SecretOperationResponse generateKeyPairWithProjectNames(String orgName, Set<String> projectNames, String name, boolean generatePassword, String storePassword) throws ApiException {
+        return serverClient.generateKeyPairV2(orgName, projectNames, null, name, generatePassword, storePassword);
+    }
+
+    protected SecretOperationResponse generateKeyPairWithProjectIds(String orgName, Set<UUID> projectIds, String name, boolean generatePassword, String storePassword) throws ApiException {
+        return serverClient.generateKeyPairV2(orgName, null, projectIds, name, generatePassword, storePassword);
     }
 
     protected byte[] getLog(String logFileName) throws ApiException {

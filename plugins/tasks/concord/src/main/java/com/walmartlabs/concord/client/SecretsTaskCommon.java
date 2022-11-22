@@ -29,9 +29,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.nio.charset.StandardCharsets;
-import java.util.Base64;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 import static com.walmartlabs.concord.client.SecretsTaskParams.*;
 
@@ -183,13 +181,20 @@ public class SecretsTaskCommon {
 
         String orgName = in.orgName(defaultOrg);
         String secretName = in.secretName();
+        List<String> projectNames = in.projectNames();
+        List<UUID> projectIds = in.projectIds();
 
         try {
-            SecretsApi api = new SecretsApi(apiClient);
-            api.update(orgName, secretName, new SecretUpdateRequest()
-                    .setData(newData)
-                    .setStorePassword(storePassword)
-                    .setNewStorePassword(newStorePassword));
+            Map<String,Object> params = new HashMap<>();
+            addIfPresent(params, Constants.Multipart.DATA, data);
+            addIfPresent(params, Constants.Multipart.STORE_PASSWORD, storePassword);
+            addIfPresent(params, Constants.Multipart.NEW_STORE_PASSWORD, newStorePassword);
+            addIfPresent(params, Constants.Multipart.PROJECT_IDS, projectIds);
+            addIfPresent(params, Constants.Multipart.PROJECT_NAMES, projectNames);
+            if(data != null){
+                addIfPresent(params, Constants.Multipart.TYPE, in.secretType());
+            }
+            post("/api/v2/org/" + orgName + "/secret/" + secretName, params, SecretOperationResponse.class);
 
             log.info("The secret was successfully updated: {}", secretName);
             return Result.ok();

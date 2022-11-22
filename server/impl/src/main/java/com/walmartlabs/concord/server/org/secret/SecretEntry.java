@@ -21,15 +21,19 @@ package com.walmartlabs.concord.server.org.secret;
  */
 
 import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.walmartlabs.concord.common.secret.SecretEncryptedByType;
 import com.walmartlabs.concord.common.validation.ConcordKey;
 import com.walmartlabs.concord.server.org.EntityOwner;
+import com.walmartlabs.concord.server.org.project.ProjectEntry;
 
 import javax.validation.constraints.NotNull;
 import java.io.Serializable;
+import java.util.Arrays;
+import java.util.Set;
 import java.util.UUID;
 
 @JsonInclude(Include.NON_NULL)
@@ -65,6 +69,14 @@ public class SecretEntry implements Serializable {
 
     private final EntityOwner owner;
 
+    private final Set<ProjectEntry> projects;
+
+    @JsonIgnore
+    private final byte[] secretSalt;
+
+    @JsonIgnore
+    private final HashAlgorithm hashAlgorithm;
+
     @JsonCreator
     public SecretEntry(@JsonProperty("id") UUID id,
                        @JsonProperty("name") String name,
@@ -72,11 +84,14 @@ public class SecretEntry implements Serializable {
                        @JsonProperty("orgName") String orgName,
                        @JsonProperty("projectId") UUID projectId,
                        @JsonProperty("projectName") String projectName,
+                       @JsonProperty("projects") Set<ProjectEntry> projects,
                        @JsonProperty("type") SecretType type,
                        @JsonProperty("encryptedBy") SecretEncryptedByType encryptedBy,
                        @JsonProperty("storeType") String storeType,
                        @JsonProperty("visibility") SecretVisibility visibility,
-                       @JsonProperty("owner") EntityOwner owner) {
+                       @JsonProperty("owner") EntityOwner owner,
+                       byte[] secretSalt,
+                       HashAlgorithm hashAlgorithm) {
 
         this.id = id;
         this.name = name;
@@ -84,11 +99,14 @@ public class SecretEntry implements Serializable {
         this.orgName = orgName;
         this.projectId = projectId;
         this.projectName = projectName;
+        this.projects = projects;
         this.type = type;
         this.encryptedBy = encryptedBy;
         this.storeType = storeType;
         this.visibility = visibility;
         this.owner = owner;
+        this.secretSalt = secretSalt;
+        this.hashAlgorithm = hashAlgorithm;
     }
 
     public UUID getId() {
@@ -135,6 +153,18 @@ public class SecretEntry implements Serializable {
         return owner;
     }
 
+    public Set<ProjectEntry> getProjects() {
+        return projects;
+    }
+
+    public byte[] getSecretSalt() {
+        return secretSalt;
+    }
+
+    public HashAlgorithm getHashAlgorithm() {
+        return hashAlgorithm;
+    }
+
     @Override
     public String toString() {
         return "SecretEntry{" +
@@ -144,6 +174,7 @@ public class SecretEntry implements Serializable {
                 ", orgName='" + orgName + '\'' +
                 ", projectId='" + projectId + '\'' +
                 ", projectName='" + projectName + '\'' +
+                ", projects='" + projects +'\'' +
                 ", type=" + type +
                 ", encryptedBy=" + encryptedBy +
                 ", storeType=" + storeType +
@@ -151,4 +182,5 @@ public class SecretEntry implements Serializable {
                 ", owner=" + owner +
                 '}';
     }
+
 }
