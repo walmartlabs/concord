@@ -28,6 +28,7 @@ import {
     queryParams
 } from '../../common';
 import { ResourceAccessEntry } from '../';
+import { ProjectEntry } from '../project';
 
 export enum SecretVisibility {
     PUBLIC = 'PUBLIC',
@@ -65,8 +66,7 @@ export interface SecretEntry {
     orgId: ConcordId;
     orgName: ConcordKey;
 
-    projectId?: ConcordId;
-    projectName?: ConcordKey;
+    projects: ProjectEntry[];
 
     visibility: SecretVisibility;
     type: SecretType;
@@ -80,7 +80,7 @@ export interface SecretEntry {
 export interface NewSecretEntry {
     name: string;
     visibility: SecretVisibility;
-    projectName?: ConcordKey;
+    projects?: ProjectEntry[];
     type: SecretTypeExt;
     publicFile?: File;
     privateFile?: File;
@@ -184,19 +184,20 @@ export const updateSecretVisibility = (
 export const updateSecretProject = (
     orgName: ConcordKey,
     secretName: ConcordKey,
-    projectName: ConcordKey
+    projects: ProjectEntry[]
 ): Promise<GenericOperationResult> => {
+    const data = new FormData();
+    if(projects.length > 0) {
+        data.append("projectIds", projects.map(project => project.id).join(","));
+    } else {
+        data.append("removeProjectLink", "true");
+    }
     const opts = {
         method: 'POST',
-        headers: {
-            'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-            projectName
-        })
+        body: data
     };
 
-    return fetchJson(`/api/v1/org/${orgName}/secret/${secretName}`, opts);
+    return fetchJson(`/api/v2/org/${orgName}/secret/${secretName}`, opts);
 };
 
 // TODO response type
@@ -251,15 +252,14 @@ export const create = (
         data.append('storeType', entry.storeType);
     }
 
-    if (entry.projectName) {
-        data.append('project', entry.projectName);
+    if (entry.projects) {
+        data.append('projectIds', entry.projects.map(project => project.id).join(","));
     }
 
     const opts = {
         method: 'POST',
         body: data
     };
-
     return fetchJson(`/api/v1/org/${orgName}/secret`, opts);
 };
 
@@ -278,7 +278,7 @@ export const changeOrganization = (
         })
     };
 
-    return fetchJson(`/api/v1/org/${orgName}/secret/${secretName}`, opts);
+    return fetchJson(`/api/v2/org/${orgName}/secret/${secretName}`, opts);
 };
 
 export const getPublicKey = (orgName: string, secretName: string): Promise<PublicKeyResponse> =>

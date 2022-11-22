@@ -27,10 +27,7 @@ import com.walmartlabs.concord.common.secret.UsernamePassword;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsString;
@@ -303,5 +300,107 @@ public class SecretIT extends AbstractServerIT {
         ApiException exception = Assertions.assertThrows(ApiException.class,
                 () -> secretClient.updateSecret(orgName1, secretName, request));
         assertThat(exception.getMessage(), containsString("Secret already exists"));
+    }
+
+    @Test
+    public void testCreateSecretWithMultipleProjectIds() throws Exception {
+        String orgName = "org_" + randomString();
+
+        OrganizationsApi orgApi = new OrganizationsApi(getApiClient());
+        orgApi.createOrUpdate(new OrganizationEntry().setName(orgName));
+
+        String projectName1 = "project_" + randomString();
+        String projectName2 = "proejct_" + randomString();
+        ProjectsApi projectsApi = new ProjectsApi(getApiClient());
+        ProjectOperationResponse response1 = projectsApi.createOrUpdate(orgName, new ProjectEntry()
+                .setName(projectName1));
+        ProjectOperationResponse response2 = projectsApi.createOrUpdate(orgName, new ProjectEntry()
+                .setName(projectName2));
+
+        // ---
+
+        String secretName = "secret_" + randomString();
+        SecretOperationResponse secretResponse = generateKeyPairWithProjectIds(orgName, new HashSet<>(Arrays.asList(response1.getId(), response2.getId())), secretName, false, null);
+        assertEquals(secretResponse.getResult().toString(), "CREATED");
+        SecretsApi secretsApi = new SecretsApi(getApiClient());
+        SecretEntry secretEntry = secretsApi.get(orgName, secretName);
+        assertTrue(secretEntry.getProjects().stream().map(ProjectEntry::getName).anyMatch(projectName -> projectName.equals(projectName1)));
+        assertTrue(secretEntry.getProjects().stream().map(ProjectEntry::getName).anyMatch(projectName -> projectName.equals(projectName2)));
+
+
+        projectsApi.delete(orgName, projectName1);
+        projectsApi.delete(orgName, projectName2);
+        secretsApi.delete(orgName, secretName);
+        orgApi.delete(orgName, "yes");
+    }
+
+    @Test
+    public void testCreateSecretWithMultipleProjectNames() throws Exception {
+        String orgName = "org_" + randomString();
+
+        OrganizationsApi orgApi = new OrganizationsApi(getApiClient());
+        orgApi.createOrUpdate(new OrganizationEntry().setName(orgName));
+
+        String projectName1 = "project_" + randomString();
+        String projectName2 = "proejct_" + randomString();
+        ProjectsApi projectsApi = new ProjectsApi(getApiClient());
+        ProjectOperationResponse response1 = projectsApi.createOrUpdate(orgName, new ProjectEntry()
+                .setName(projectName1));
+        ProjectOperationResponse response2 = projectsApi.createOrUpdate(orgName, new ProjectEntry()
+                .setName(projectName2));
+
+        // ---
+
+        String secretName = "secret_" + randomString();
+        SecretOperationResponse secretResponse = generateKeyPairWithProjectNames(orgName, new HashSet<>(Arrays.asList(projectName1, projectName2)), secretName, false, null);
+        assertEquals(secretResponse.getResult().toString(), "CREATED");
+
+        SecretsApi secretsApi = new SecretsApi(getApiClient());
+        SecretEntry secretEntry = secretsApi.get(orgName, secretName);
+        assertTrue(secretEntry.getProjects().stream().map(ProjectEntry::getName).anyMatch(projectName -> projectName.equals(projectName1)));
+        assertTrue(secretEntry.getProjects().stream().map(ProjectEntry::getName).anyMatch(projectName -> projectName.equals(projectName2)));
+
+        projectsApi.delete(orgName, projectName1);
+        projectsApi.delete(orgName, projectName2);
+        secretsApi.delete(orgName, secretName);
+        orgApi.delete(orgName, "yes");
+    }
+
+
+    @Test
+    public void testUpdateSecretWithMultipleProjectNames() throws Exception {
+        String orgName = "org_" + randomString();
+
+        OrganizationsApi orgApi = new OrganizationsApi(getApiClient());
+        orgApi.createOrUpdate(new OrganizationEntry().setName(orgName));
+
+        // ---
+
+        String secretName = "secret_" + randomString();
+        SecretOperationResponse secretResponse = generateKeyPair(orgName, secretName, false, null);
+        assertEquals(secretResponse.getResult().toString(), "CREATED");
+
+        String projectName1 = "project_" + randomString();
+        String projectName2 = "proejct_" + randomString();
+        ProjectsApi projectsApi = new ProjectsApi(getApiClient());
+        ProjectOperationResponse response1 = projectsApi.createOrUpdate(orgName, new ProjectEntry()
+                .setName(projectName1));
+        ProjectOperationResponse response2 = projectsApi.createOrUpdate(orgName, new ProjectEntry()
+                .setName(projectName2));
+
+        SecretClient secretClient = new SecretClient(getApiClient());
+        UpdateSecretRequestV2 request = UpdateSecretRequestV2.builder().newProjectIds(new HashSet<UUID>(Arrays.asList(response1.getId(), response2.getId()))).build();
+        secretClient.updateSecret(orgName, secretName, request);
+
+
+        SecretsApi secretsApi = new SecretsApi(getApiClient());
+        SecretEntry secretEntry = secretsApi.get(orgName, secretName);
+        assertTrue(secretEntry.getProjects().stream().map(ProjectEntry::getName).anyMatch(projectName -> projectName.equals(projectName1)));
+        assertTrue(secretEntry.getProjects().stream().map(ProjectEntry::getName).anyMatch(projectName -> projectName.equals(projectName2)));
+
+        projectsApi.delete(orgName, projectName1);
+        projectsApi.delete(orgName, projectName2);
+        secretsApi.delete(orgName, secretName);
+        orgApi.delete(orgName, "yes");
     }
 }

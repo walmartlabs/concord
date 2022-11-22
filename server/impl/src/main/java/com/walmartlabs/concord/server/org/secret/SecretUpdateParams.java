@@ -25,6 +25,7 @@ import org.immutables.value.Value;
 
 import javax.annotation.Nullable;
 import java.io.Serializable;
+import java.util.Set;
 import java.util.UUID;
 
 @Value.Immutable
@@ -37,10 +38,7 @@ public interface SecretUpdateParams extends Serializable {
     String newOrgName();
 
     @Nullable
-    UUID newProjectId();
-
-    @Nullable
-    String newProjectName();
+    Set<UUID> newProjectIds();
 
     @Value.Default
     default boolean removeProjectLink() {
