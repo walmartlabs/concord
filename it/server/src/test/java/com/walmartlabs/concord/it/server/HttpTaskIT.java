@@ -254,6 +254,28 @@ public class HttpTaskIT extends AbstractServerIT {
     }
 
     @Test
+    public void testPostWithArrayBody() throws Exception {
+        URI dir = HttpTaskIT.class.getResource("httpPostArray").toURI();
+        byte[] payload = archive(dir);
+
+        Map<String, Object> input = new HashMap<>();
+        input.put("archive", payload);
+        input.put("arguments.user", mockHttpAuthUser);
+        input.put("arguments.password", mockHttpAuthPassword);
+        input.put("arguments.url", mockHttpBaseUrl + rule.getPort() + mockHttpPathPassword);
+        StartProcessResponse spr = start(input);
+
+        ProcessApi processApi = new ProcessApi(getApiClient());
+
+        ProcessEntry pir = waitForCompletion(processApi, spr.getInstanceId());
+        assertEquals(ProcessEntry.StatusEnum.FINISHED, pir.getStatus());
+
+        byte[] ab = getLog(pir.getLogFileName());
+        assertLog(".*Success response.*", ab);
+        assertLog(".*Out Response: true*", ab);
+    }
+
+    @Test
     public void testPostWithDebug() throws Exception {
         URI dir = HttpTaskIT.class.getResource("httpPostWithDebug").toURI();
         byte[] payload = archive(dir);

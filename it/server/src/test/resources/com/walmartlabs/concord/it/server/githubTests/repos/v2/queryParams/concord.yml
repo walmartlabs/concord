@@ -1,0 +1,12 @@
+flows:
+  onPush:
+    - log: "Hello, ${event.queryParams.param1[0]}!"
+
+triggers:
+  - github:
+      entryPoint: "onPush"
+      version: 2
+      conditions:
+        type: push
+        queryParams:
+          param1: "value1"

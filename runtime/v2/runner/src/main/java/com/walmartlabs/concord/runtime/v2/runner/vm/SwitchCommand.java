@@ -21,9 +21,9 @@ package com.walmartlabs.concord.runtime.v2.runner.vm;
  */
 
 import com.walmartlabs.concord.runtime.v2.model.SwitchStep;
-import com.walmartlabs.concord.runtime.v2.runner.el.EvalContext;
-import com.walmartlabs.concord.runtime.v2.runner.el.EvalContextFactory;
-import com.walmartlabs.concord.runtime.v2.runner.el.ExpressionEvaluator;
+import com.walmartlabs.concord.runtime.v2.sdk.EvalContext;
+import com.walmartlabs.concord.runtime.v2.sdk.EvalContextFactory;
+import com.walmartlabs.concord.runtime.v2.sdk.ExpressionEvaluator;
 import com.walmartlabs.concord.runtime.v2.sdk.Context;
 import com.walmartlabs.concord.svm.Runtime;
 import com.walmartlabs.concord.svm.*;
@@ -54,7 +54,8 @@ public class SwitchCommand extends StepCommand<SwitchStep> {
         String expr = step.getExpression();
 
         Context ctx = runtime.getService(Context.class);
-        EvalContext evalContext = EvalContextFactory.global(ctx);
+        EvalContextFactory ecf = runtime.getService(EvalContextFactory.class);
+        EvalContext evalContext = ecf.global(ctx);
 
         ExpressionEvaluator ee = runtime.getService(ExpressionEvaluator.class);
         String switchResult = ee.eval(evalContext, expr, String.class);

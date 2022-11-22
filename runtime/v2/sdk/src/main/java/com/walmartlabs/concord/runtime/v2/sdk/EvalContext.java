@@ -1,4 +1,4 @@
-package com.walmartlabs.concord.runtime.v2.runner.el;
+package com.walmartlabs.concord.runtime.v2.sdk;
 
 /*-
  * *****
@@ -20,9 +20,6 @@ package com.walmartlabs.concord.runtime.v2.runner.el;
  * =====
  */
 
-import com.walmartlabs.concord.runtime.v2.runner.context.NoopVariables;
-import com.walmartlabs.concord.runtime.v2.sdk.Context;
-import com.walmartlabs.concord.runtime.v2.sdk.Variables;
 import org.immutables.value.Value;
 
 import javax.annotation.Nullable;
@@ -30,6 +27,9 @@ import javax.annotation.Nullable;
 /**
  * Expression evaluation context.
  */
+@Value.Immutable
+@Value.Style(jdkOnly = true,
+        visibility = Value.Style.ImplementationVisibility.PACKAGE, overshadowImplementation = true)
 public interface EvalContext {
 
     /**
@@ -64,5 +64,11 @@ public interface EvalContext {
     @Value.Default
     default boolean undefinedVariableAsNull() {
         return false;
+    }
+
+    class Builder extends ImmutableEvalContext.Builder {}
+
+    static EvalContext.Builder builder() {
+        return new Builder();
     }
 }

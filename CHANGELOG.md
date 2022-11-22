@@ -1,5 +1,50 @@
 # Change log
 
+## [1.97.0] - Unreleased
+
+### Added
+
+- github: queryParams condition
+([#663](https://github.com/walmartlabs/concord/pull/663));
+- dependency-manager: allow exclusion artifacts from
+transitive dependencies
+([#657](https://github.com/walmartlabs/concord/pull/657)).
+
+### Changed
+
+- concord-cli: load deps from active profiles
+([#654](https://github.com/walmartlabs/concord/pull/654));
+- runtime-v2: fix parallel execution of ruby scripts
+([#651](https://github.com/walmartlabs/concord/pull/651));
+- concord-server: termintate process wait watchdog loop on
+batches less than fetch limit
+([#656](https://github.com/walmartlabs/concord/pull/656));
+- runtime-v2: fix serialization error of flow call command
+([#655](https://github.com/walmartlabs/concord/pull/655));
+- concord-cli: ensure absolute target dir
+([#652](https://github.com/walmartlabs/concord/pull/652));
+- runtime-v2: allow access to current argument when
+argument is evaluated
+([#664](https://github.com/walmartlabs/concord/pull/664)).
+
+## [1.96.1] - 2022-09-06 
+
+### Added
+
+### Changed
+
+- project: initial JDK 17 support
+([#625](https://github.com/walmartlabs/concord/pull/625));
+- concord-console: fix for change visibility and renaming
+of secrets from UI
+([#642](https://github.com/walmartlabs/concord/pull/642));
+- runtime-v2: runtime-v2: fix NPE in flow call step
+([#645](https://github.com/walmartlabs/concord/pull/645));
+- concord-server: remove log call for github event in
+repository refresh flow 
+([#633](https://github.com/walmartlabs/concord/pull/633));
+
+
 ## [1.96.0] - 2022-08-10
 
 ### Added

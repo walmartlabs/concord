@@ -36,10 +36,6 @@ interface ExternalProps {
 }
 
 const RepositoryList = ({ orgName, projectName, data, loading, refresh }: ExternalProps) => {
-    if (!loading && data?.length === 0) {
-        return <h3>No repositories found.</h3>;
-    }
-
     return (
         <div style={{ overflowX: 'auto', width: '100%', height: '100%' }}>
             <Table striped>
@@ -62,6 +58,12 @@ const RepositoryList = ({ orgName, projectName, data, loading, refresh }: Extern
                     </Table.Row>
                 </Table.Header>
                 <Table.Body>
+                    {!loading && data?.length === 0 && (
+                        <tr style={{ fontWeight: 'bold' }}>
+                            <Table.Cell> </Table.Cell>
+                            <Table.Cell colSpan={6}>No repositories found</Table.Cell>
+                        </tr>
+                    )}
                     {data?.map((r) => renderTableRow(orgName, projectName, r, refresh))}
                 </Table.Body>
             </Table>

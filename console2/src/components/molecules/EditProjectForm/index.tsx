@@ -24,7 +24,7 @@ import { Divider, Form } from 'semantic-ui-react';
 import { ProjectVisibility, UpdateProjectEntry } from '../../../api/org/project';
 import { FormikDropdown, FormikInput } from '../../atoms';
 
-interface FormValues {
+export interface FormValues {
     data: UpdateProjectEntry;
 }
 
