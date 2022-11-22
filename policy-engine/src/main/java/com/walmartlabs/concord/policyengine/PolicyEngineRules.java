@@ -47,6 +47,7 @@ public class PolicyEngineRules {
     private final Map<String, Object> defaultProcessCfg;
     private final List<DependencyVersionsPolicy.Dependency> dependencyVersions;
     private final PolicyRules<StateRule> stateRules;
+    private final RawPayloadRule rawPayloadRule;
 
     public PolicyEngineRules(@JsonProperty("dependency") PolicyRules<DependencyRule> dependencyRules,
                              @JsonProperty("file") PolicyRules<FileRule> fileRules,
@@ -59,10 +60,11 @@ public class PolicyEngineRules {
                              @JsonProperty("processCfg") Map<String, Object> processCfg,
                              @JsonProperty("jsonStore") JsonStoreRule jsonStoreRule,
                              @JsonProperty("defaultProcessCfg") Map<String, Object> defaultProcessCfg,
-                             @JsonProperty("dependencyVersions")List<DependencyVersionsPolicy.Dependency> dependencyVersions,
+                             @JsonProperty("dependencyVersions") List<DependencyVersionsPolicy.Dependency> dependencyVersions,
                              @JsonProperty("attachments") AttachmentsRule attachmentsRule,
                              @JsonProperty("state") PolicyRules<StateRule> stateRules,
-                             @JsonProperty("dependencyRewrite") List<DependencyRewriteRule> dependencyRewriteRules) {
+                             @JsonProperty("dependencyRewrite") List<DependencyRewriteRule> dependencyRewriteRules, 
+                             @JsonProperty("rawPayload") RawPayloadRule rawPayloadRule) {
 
         this.dependencyRules = dependencyRules;
         this.fileRules = fileRules;
@@ -74,6 +76,7 @@ public class PolicyEngineRules {
         this.protectedTasksRules = protectedTasksRules;
         this.entityRules = entityRules;
         this.processCfg = processCfg;
+        this.rawPayloadRule = rawPayloadRule;
         this.customRule = new HashMap<>();
         this.jsonStoreRule = jsonStoreRule;
         this.defaultProcessCfg = defaultProcessCfg;
@@ -133,6 +136,11 @@ public class PolicyEngineRules {
         return dependencyVersions;
     }
 
+    @JsonProperty("rawPayload")
+    public RawPayloadRule getRawPayloadRule() {
+        return rawPayloadRule;
+    }
+
     @JsonAnySetter
     public void addCustomRule(String name, Object value) {
         customRule.put(name, value);
@@ -161,6 +169,7 @@ public class PolicyEngineRules {
         if (o == null || getClass() != o.getClass()) return false;
         PolicyEngineRules that = (PolicyEngineRules) o;
         return Objects.equals(dependencyRules, that.dependencyRules) &&
+                Objects.equals(dependencyRewriteRules, that.dependencyRewriteRules) &&
                 Objects.equals(fileRules, that.fileRules) &&
                 Objects.equals(taskRules, that.taskRules) &&
                 Objects.equals(workspaceRule, that.workspaceRule) &&
@@ -174,18 +183,20 @@ public class PolicyEngineRules {
                 Objects.equals(jsonStoreRule, that.jsonStoreRule) &&
                 Objects.equals(defaultProcessCfg, that.defaultProcessCfg) &&
                 Objects.equals(dependencyVersions, that.dependencyVersions) &&
-                Objects.equals(stateRules, that.stateRules);
+                Objects.equals(stateRules, that.stateRules) &&
+                Objects.equals(rawPayloadRule, that.rawPayloadRule);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(dependencyRules, fileRules, taskRules, workspaceRule, attachmentsRule, containerRules, queueRules, protectedTasksRules, entityRules, processCfg, customRule, jsonStoreRule, defaultProcessCfg, dependencyVersions, stateRules);
+        return Objects.hash(dependencyRules, dependencyRewriteRules, fileRules, taskRules, workspaceRule, attachmentsRule, containerRules, queueRules, protectedTasksRules, entityRules, processCfg, customRule, jsonStoreRule, defaultProcessCfg, dependencyVersions, stateRules, rawPayloadRule);
     }
 
     @Override
     public String toString() {
         return "PolicyEngineRules{" +
                 "dependencyRules=" + dependencyRules +
+                ", dependencyRewriteRules=" + dependencyRewriteRules +
                 ", fileRules=" + fileRules +
                 ", taskRules=" + taskRules +
                 ", workspaceRule=" + workspaceRule +
@@ -200,6 +211,7 @@ public class PolicyEngineRules {
                 ", defaultProcessCfg=" + defaultProcessCfg +
                 ", dependencyVersions=" + dependencyVersions +
                 ", stateRules=" + stateRules +
+                ", rawPayloadRule=" + rawPayloadRule +
                 '}';
     }
 }

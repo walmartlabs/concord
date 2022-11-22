@@ -79,6 +79,8 @@ public class PolicyEngineRulesTest {
 
         AttachmentsRule attachmentsRule = new AttachmentsRule("msg", 12345L);
 
+        RawPayloadRule rawPayloadRule = new RawPayloadRule("msg", 12345L);
+        
         StateRule s1 = new StateRule("msg1", 123L, 456, Collections.singletonList("a"));
         StateRule s2 = new StateRule("msg1", 321L, null, null);
         PolicyRules<StateRule> stateRules = new PolicyRules<>(null, Collections.singletonList(s1), Collections.singletonList(s2));
@@ -87,7 +89,7 @@ public class PolicyEngineRulesTest {
 
         PolicyEngineRules r = new PolicyEngineRules(dependencyRules, fileRules, taskRules, workspaceRule,
                 containerRules, queueRules, protectedTasksRules, entityRules, processCfg, new JsonStoreRule(storageRule, storageDataRule),
-                defaultProcessCfg, dependencies, attachmentsRule, stateRules, depRewriteRules);
+                defaultProcessCfg, dependencies, attachmentsRule, stateRules, depRewriteRules, rawPayloadRule);
 
         r.addCustomRule("ansible", Collections.singletonMap("k", "v"));
 
