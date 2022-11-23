@@ -1,3 +1,6 @@
+configuration:
+  debug: true
+
 flows:
   default:
     - log: "Hello, ${name}"

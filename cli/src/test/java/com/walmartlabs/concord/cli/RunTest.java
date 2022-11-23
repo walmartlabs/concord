@@ -46,6 +46,10 @@ class RunTest extends AbstractTest {
         int exitCode = run("simple", args);
         assertEquals(0, exitCode);
         assertLog(".*Hello, Concord.*");
+        // default dependencies should be added
+        assertLog(".*concord-tasks-" + Version.getVersion() + ".jar.*");
+        assertLog(".*http-tasks-" + Version.getVersion() + ".jar.*");
+        assertLog(".*slack-tasks-" + Version.getVersion() + ".jar.*");
     }
 
     @Test
@@ -69,7 +73,18 @@ class RunTest extends AbstractTest {
         assertLog(".*Checkpoint.*ignored.*", 2);
     }
 
+    @Test
+    void testCustomDefaultConfig() throws Exception {
+        int exitCode = run("defaultCfg", Collections.emptyList(), "defaults.yml");
+        assertEquals(0, exitCode);
+        assertLog(".*file-tasks-" + Version.getVersion() + ".jar.*");
+    }
+
     private static int run(String payload, List<String> args) throws Exception {
+        return run(payload, args, null);
+    }
+
+    private static int run(String payload, List<String> args, String defaultCfg) throws Exception {
         URI uri = RunTest.class.getResource(payload).toURI();
         Path source = Paths.get(uri);
 
@@ -83,6 +98,11 @@ class RunTest extends AbstractTest {
             effectiveArgs.add("run");
             effectiveArgs.addAll(args);
             effectiveArgs.add(dst.path().toString());
+
+            if (defaultCfg != null) {
+                effectiveArgs.add("--default-cfg");
+                effectiveArgs.add(dst.path().resolve(defaultCfg).toString());
+            }
 
             return cmd.execute(effectiveArgs.toArray(new String[0]));
         }
