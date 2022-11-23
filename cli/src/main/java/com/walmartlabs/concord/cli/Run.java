@@ -185,13 +185,16 @@ public class Run implements Callable<Integer> {
                 .instanceId(instanceId)
                 .build();
 
+        Map<String, Object> overlayCfg = ProcessDefinitionUtils.getProfilesOverlayCfg(new ProcessDefinitionV2(processDefinition), profiles);
+        List<String> overlayDeps = MapUtils.getList(overlayCfg, Constants.Request.DEPENDENCIES_KEY, Collections.emptyList());
+
         RunnerConfiguration runnerCfg = RunnerConfiguration.builder()
-                .dependencies(new DependencyResolver(dependencyManager, verbose).resolveDeps(processDefinition))
+                .dependencies(new DependencyResolver(dependencyManager, verbose).resolveDeps(overlayDeps))
                 .debug(cfg.debug())
                 .build();
 
-        Map<String, Object> profileArgs = getProfilesArguments(processDefinition, profiles);
-        Map<String, Object> args = ConfigurationUtils.deepMerge(cfg.arguments(), profileArgs, extraVars);
+        Map<String, Object> overlayArgs = MapUtils.getMap(overlayCfg, Constants.Request.ARGUMENTS_KEY, Collections.emptyMap());
+        Map<String, Object> args = ConfigurationUtils.deepMerge(cfg.arguments(), overlayArgs, extraVars);
         if (verbose) {
             System.out.println("Process arguments: " + args);
         }
@@ -210,6 +213,7 @@ public class Run implements Callable<Integer> {
             ProcessDefinition pd = ProcessDefinition.builder().from(processDefinition)
                     .configuration(ProcessDefinitionConfiguration.builder().from(processDefinition.configuration())
                             .arguments(args)
+                            .dependencies(overlayDeps)
                             .build())
                     .flows(flows)
                     .imports(Imports.builder().build())
@@ -261,11 +265,6 @@ public class Run implements Callable<Integer> {
                 .meta(cfg.meta())
                 .events(cfg.events())
                 .out(cfg.out());
-    }
-
-    private static Map<String, Object> getProfilesArguments(ProcessDefinition processDefinition, List<String> profiles) {
-        Map<String, Object> result = ProcessDefinitionUtils.getVariables(new ProcessDefinitionV2(processDefinition), profiles);
-        return MapUtils.getMap(result, Constants.Request.ARGUMENTS_KEY, Collections.emptyMap());
     }
 
     private static void copyDefaultCfg(Path targetDir, Path defaultCfg) throws IOException {

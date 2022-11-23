@@ -22,45 +22,28 @@ package com.walmartlabs.concord.cli;
 
 import com.walmartlabs.concord.common.IOUtils;
 import com.walmartlabs.concord.common.TemporaryPath;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import picocli.CommandLine;
 
-import java.io.ByteArrayOutputStream;
-import java.io.PrintStream;
 import java.net.URI;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.fail;
 
-public class RunTest {
-
-    private final PrintStream originalOut = System.out;
-    private final PrintStream originalErr = System.err;
-    private final ByteArrayOutputStream out = new ByteArrayOutputStream();
-    private final ByteArrayOutputStream err = new ByteArrayOutputStream();
-
-    @BeforeEach
-    public void setUpStreams() {
-        out.reset();
-        err.reset();
-        System.setOut(new PrintStream(out));
-        System.setErr(new PrintStream(err));
-    }
-
-    @AfterEach
-    public void restoreStreams() {
-        System.setOut(originalOut);
-        System.setErr(originalErr);
-    }
+class RunTest extends AbstractTest {
 
     @Test
-    public void runTest() throws Exception {
-        int exitCode = run("simple", Collections.singletonMap("name", "Concord"));
+    void runTest() throws Exception {
+        Map<String, Object> extraVars = Collections.singletonMap("name", "Concord");
+        List<String> args = new ArrayList<>();
+        for (Map.Entry<String, Object> e : extraVars.entrySet()) {
+            args.add("-e");
+            args.add(e.getKey() + "=" + e.getValue());
+        }
+
+        int exitCode = run("simple", args);
         assertEquals(0, exitCode);
         assertLog(".*Hello, Concord.*");
         // default dependencies should be added
@@ -70,24 +53,38 @@ public class RunTest {
     }
 
     @Test
-    public void testResourceTask() throws Exception {
-        int exitCode = run("resourceTask", Collections.emptyMap());
+    void testResourceTask() throws Exception {
+        int exitCode = run("resourceTask", Collections.emptyList());
         assertEquals(0, exitCode);
         assertLog(".*\"k\" : \"v\".*");
     }
 
     @Test
-    public void testCustomDefaultConfig() throws Exception {
-        int exitCode = run("defaultCfg", Collections.emptyMap(), "defaults.yml");
+    void testDepsFromProfile() throws Exception {
+        int exitCode = run("profileDeps", Arrays.asList("-p", "test"));
+        assertEquals(0, exitCode);
+        assertLog(".*exists=true.*");
+    }
+
+    @Test
+    void testCliCheckpointService() throws Exception {
+        int exitCode = run("cliCheckpointService", Collections.emptyList());
+        assertEquals(0, exitCode);
+        assertLog(".*Checkpoint.*ignored.*", 2);
+    }
+
+    @Test
+    void testCustomDefaultConfig() throws Exception {
+        int exitCode = run("defaultCfg", Collections.emptyList(), "defaults.yml");
         assertEquals(0, exitCode);
         assertLog(".*file-tasks-" + Version.getVersion() + ".jar.*");
     }
 
-    private static int run(String payload, Map<String, Object> extraVars) throws Exception {
-        return run(payload, extraVars, null);
+    private static int run(String payload, List<String> args) throws Exception {
+        return run(payload, args, null);
     }
 
-    private static int run(String payload, Map<String, Object> extraVars, String defaultCfg) throws Exception {
+    private static int run(String payload, List<String> args, String defaultCfg) throws Exception {
         URI uri = RunTest.class.getResource(payload).toURI();
         Path source = Paths.get(uri);
 
@@ -97,40 +94,17 @@ public class RunTest {
             App app = new App();
             CommandLine cmd = new CommandLine(app);
 
-            List<String> args = new ArrayList<>();
-            args.add("run");
-            for (Map.Entry<String, Object> e : extraVars.entrySet()) {
-                args.add("-e");
-                args.add(e.getKey() + "=" + e.getValue());
-            }
-            args.add(dst.path().toString());
+            List<String> effectiveArgs = new ArrayList<>();
+            effectiveArgs.add("run");
+            effectiveArgs.addAll(args);
+            effectiveArgs.add(dst.path().toString());
 
             if (defaultCfg != null) {
-                args.add("--default-cfg");
-                args.add(dst.path().resolve(defaultCfg).toString());
+                effectiveArgs.add("--default-cfg");
+                effectiveArgs.add(dst.path().resolve(defaultCfg).toString());
             }
 
-            return cmd.execute(args.toArray(new String[0]));
+            return cmd.execute(effectiveArgs.toArray(new String[0]));
         }
-    }
-
-    private void assertLog(String pattern) {
-        String outStr = out.toString();
-        if (grep(outStr, pattern) != 1) {
-            fail("Expected a single log entry: '" + pattern + "', got: \n" + outStr);
-        }
-    }
-
-    private static int grep(String str, String pattern) {
-        int cnt = 0;
-
-        String[] lines = str.split("\\r?\\n");
-        for (String line : lines) {
-            if (line.matches(pattern)) {
-                cnt++;
-            }
-        }
-
-        return cnt;
     }
 }
