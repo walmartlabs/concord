@@ -3,6 +3,8 @@
 ## [1.98.0] - Unreleased
 
 ### Added
+- policy: policy to restrict runtime of process
+([#671](https://github.com/walmartlabs/concord/pull/671));
 - resource-task: add printJson() method
 ([#676](https://github.com/walmartlabs/concord/pull/676));
 - server: cleanup agent commands
