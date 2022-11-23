@@ -10,6 +10,8 @@
 
 ### Changed
 
+- runtime-v2: fix parallel loop execution when no out variable defined
+([#659://github.com/walmartlabs/concord/pull/659));
 - console2: repository list now with paging
 ([#643://github.com/walmartlabs/concord/pull/643));
 - server: api for list project repositories with limit/offset
