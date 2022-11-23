@@ -29,7 +29,7 @@ import { ConcordKey } from '../../../api/common';
 import { LoadingState } from '../../../App';
 import { NotFoundPage } from '../index';
 import RepositoryEventsActivity from './RepositoryEventsActivity';
-import EditRepositoryActivity from './RepositorySettingsActivity';
+import { EditRepositoryActivity } from '../../organisms';
 import RepositoryTriggersActivity from './RepositoryTriggersActivity';
 
 interface RouteProps {
@@ -100,6 +100,7 @@ const RepositoryPage = (props: RouteComponentProps<RouteProps>) => {
                         orgName={orgName}
                         projectName={projectName}
                         repoName={repoName}
+                        forceRefresh={refresh}
                     />
                 </Route>
                 <Route path={`${baseUrl}/triggers`} exact={true}>

@@ -133,23 +133,25 @@ export const actions = {
 
     renameSecret: (
         orgName: ConcordKey,
-        secretId: ConcordId,
-        secretName: ConcordKey
+        secretName: ConcordKey,
+        newSecretName: ConcordKey
     ): RenameSecretRequest => ({
         type: actionTypes.RENAME_SECRET_REQUEST,
         orgName,
-        secretId,
-        secretName
+        secretName,
+        newSecretName
     }),
 
     updateSecretVisibility: (
         orgName: ConcordKey,
         secretId: ConcordId,
+        secretName: ConcordKey,
         visibility: SecretVisibility
     ): UpdateSecretVisibilityRequest => ({
         type: actionTypes.UPDATE_SECRET_VISIBLITY_REQUEST,
         orgName,
         secretId,
+        secretName,
         visibility
     }),
 
@@ -390,13 +392,13 @@ function* onDelete({ orgName, secretName }: DeleteSecretRequest) {
     }
 }
 
-function* onRename({ orgName, secretId, secretName }: RenameSecretRequest) {
+function* onRename({ orgName, secretName, newSecretName }: RenameSecretRequest) {
     try {
         const response: GenericOperationResult = yield call(
             apiRenameSecret,
             orgName,
-            secretId,
-            secretName
+            secretName,
+            newSecretName
         );
         yield put(genericResult(actionTypes.RENAME_SECRET_RESPONSE, response));
 
@@ -406,14 +408,16 @@ function* onRename({ orgName, secretId, secretName }: RenameSecretRequest) {
     }
 }
 
-function* onUpdateVisibility({ orgName, secretId, visibility }: UpdateSecretVisibilityRequest) {
+function* onUpdateVisibility({ orgName, secretName, secretId, visibility }: UpdateSecretVisibilityRequest) {
     try {
-        yield call(apiUpdateSecretVisibility, orgName, secretId, visibility);
+        yield call(apiUpdateSecretVisibility, orgName, secretName, visibility);
         yield put({
             type: actionTypes.UPDATE_SECRET_VISIBLITY_RESPONSE,
             secretId,
             visibility
         });
+
+        yield put(pushHistory(`/org/${orgName}/secret/${secretName}`));
     } catch (e) {
         yield handleErrors(actionTypes.UPDATE_SECRET_VISIBLITY_RESPONSE, e);
     }

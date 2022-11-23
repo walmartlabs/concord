@@ -1,0 +1,14 @@
+configuration:
+  runtime: concord-v2
+  arguments:
+    arg:
+      k: "v"
+
+flows:
+  default:
+    - call: test
+      in:
+        nullParam: ${arg.a}
+
+  test:
+    - log: "nullParam: '${nullParam}'"

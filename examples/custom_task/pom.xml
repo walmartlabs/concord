@@ -15,7 +15,7 @@
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
 
         <concord.version>1.88.0</concord.version>
-        <jackson.version>2.9.8</jackson.version>
+        <jackson.version>2.13.2</jackson.version>
         <okhttp.version>3.12.1</okhttp.version>
     </properties>
 

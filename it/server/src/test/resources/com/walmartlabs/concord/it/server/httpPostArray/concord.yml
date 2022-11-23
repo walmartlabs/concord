@@ -1,0 +1,18 @@
+flows:
+  default:
+
+  - task: http
+    in:
+      method: POST
+      url: ${url}
+      auth:
+        basic:
+          username: ${user}
+          password: ${password}
+      body:
+        - key: value
+          one: two
+      request: json
+      response: json
+      out: rsp
+  - log: "Out Response: ${rsp.success}"

@@ -23,6 +23,7 @@ package com.walmartlabs.concord.dependencymanager;
 import org.immutables.value.Value;
 
 import java.nio.file.Path;
+import java.util.Collections;
 import java.util.List;
 
 @Value.Immutable
@@ -52,6 +53,11 @@ public interface DependencyManagerConfiguration {
     @Value.Default
     default List<MavenRepository> repositories() {
         return DependencyManagerRepositories.get();
+    }
+
+    @Value.Default
+    default List<String> exclusions() {
+        return Collections.emptyList();
     }
 
     static ImmutableDependencyManagerConfiguration.Builder builder() {

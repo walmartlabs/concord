@@ -20,6 +20,7 @@ package com.walmartlabs.concord.runtime.v2.runner.el;
  * =====
  */
 
+import com.walmartlabs.concord.runtime.v2.sdk.EvalContext;
 import org.immutables.value.Value;
 
 import javax.annotation.Nullable;

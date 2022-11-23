@@ -46,9 +46,10 @@ public class ProcessCountIT extends AbstractServerIT {
         File src = new File(TriggersRefreshIT.class.getResource("processCount").toURI());
         IOUtils.copy(src.toPath(), tmpDir);
 
-        Git repo = Git.init().setInitialBranch("master").setDirectory(tmpDir.toFile()).call();
-        repo.add().addFilepattern(".").call();
-        repo.commit().setMessage("import").call();
+        try (Git repo = Git.init().setInitialBranch("master").setDirectory(tmpDir.toFile()).call()) {
+            repo.add().addFilepattern(".").call();
+            repo.commit().setMessage("import").call();
+        }
 
         String gitUrl = tmpDir.toAbsolutePath().toString();
 

@@ -144,44 +144,6 @@ public class ProjectDao extends AbstractDao {
             return null;
         }
 
-        Result<Record13<UUID, UUID, String, String, String, String, String, Boolean, JSONB, UUID, String, String, Boolean>> repos = tx.select(
-                REPOSITORIES.REPO_ID,
-                REPOSITORIES.PROJECT_ID,
-                REPOSITORIES.REPO_NAME,
-                REPOSITORIES.REPO_URL,
-                REPOSITORIES.REPO_BRANCH,
-                REPOSITORIES.REPO_COMMIT_ID,
-                REPOSITORIES.REPO_PATH,
-                REPOSITORIES.IS_DISABLED,
-                REPOSITORIES.META,
-                SECRETS.SECRET_ID,
-                SECRETS.SECRET_NAME,
-                SECRETS.STORE_TYPE,
-                REPOSITORIES.IS_TRIGGERS_DISABLED)
-                .from(REPOSITORIES)
-                .leftOuterJoin(SECRETS).on(SECRETS.SECRET_ID.eq(REPOSITORIES.SECRET_ID))
-                .where(REPOSITORIES.PROJECT_ID.eq(projectId))
-                .fetch();
-
-        Map<String, RepositoryEntry> m = new HashMap<>();
-        for (Record13<UUID, UUID, String, String, String, String, String, Boolean, JSONB, UUID, String, String, Boolean> repo : repos) {
-            m.put(repo.get(REPOSITORIES.REPO_NAME),
-                    new RepositoryEntry(
-                            repo.get(REPOSITORIES.REPO_ID),
-                            repo.get(REPOSITORIES.PROJECT_ID),
-                            repo.get(REPOSITORIES.REPO_NAME),
-                            repo.get(REPOSITORIES.REPO_URL),
-                            repo.get(REPOSITORIES.REPO_BRANCH),
-                            repo.get(REPOSITORIES.REPO_COMMIT_ID),
-                            repo.get(REPOSITORIES.REPO_PATH),
-                            repo.get(REPOSITORIES.IS_DISABLED),
-                            repo.get(SECRETS.SECRET_ID),
-                            repo.get(SECRETS.SECRET_NAME),
-                            repo.get(SECRETS.STORE_TYPE),
-                            objectMapper.fromJSONB(repo.get(REPOSITORIES.META)),
-                            repo.get(REPOSITORIES.IS_TRIGGERS_DISABLED)));
-        }
-
         Map<String, Object> cfg = objectMapper.fromJSONB(r.get(p.PROJECT_CFG));
 
         return new ProjectEntry(projectId,
@@ -189,7 +151,7 @@ public class ProjectDao extends AbstractDao {
                 r.get(p.DESCRIPTION),
                 r.get(p.ORG_ID),
                 r.get(orgNameField),
-                m,
+                null,
                 cfg,
                 ProjectVisibility.valueOf(r.get(p.VISIBILITY)),
                 toOwner(r.get(p.OWNER_ID), r.get(u.USERNAME), r.get(u.DOMAIN), r.get(u.DISPLAY_NAME), r.get(u.USER_TYPE)),

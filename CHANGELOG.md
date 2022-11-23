@@ -1,5 +1,85 @@
 # Change log
 
+## [1.97.0] - Unreleased
+
+### Added
+
+- github: queryParams condition
+([#663](https://github.com/walmartlabs/concord/pull/663));
+- dependency-manager: allow exclusion artifacts from
+transitive dependencies
+([#657](https://github.com/walmartlabs/concord/pull/657)).
+
+### Changed
+
+- concord-cli: load deps from active profiles
+([#654](https://github.com/walmartlabs/concord/pull/654));
+- runtime-v2: fix parallel execution of ruby scripts
+([#651](https://github.com/walmartlabs/concord/pull/651));
+- concord-server: termintate process wait watchdog loop on
+batches less than fetch limit
+([#656](https://github.com/walmartlabs/concord/pull/656));
+- runtime-v2: fix serialization error of flow call command
+([#655](https://github.com/walmartlabs/concord/pull/655));
+- concord-cli: ensure absolute target dir
+([#652](https://github.com/walmartlabs/concord/pull/652));
+- runtime-v2: allow access to current argument when
+argument is evaluated
+([#664](https://github.com/walmartlabs/concord/pull/664)).
+
+## [1.96.1] - 2022-09-06 
+
+### Added
+
+### Changed
+
+- project: initial JDK 17 support
+([#625](https://github.com/walmartlabs/concord/pull/625));
+- concord-console: fix for change visibility and renaming
+of secrets from UI
+([#642](https://github.com/walmartlabs/concord/pull/642));
+- runtime-v2: runtime-v2: fix NPE in flow call step
+([#645](https://github.com/walmartlabs/concord/pull/645));
+- concord-server: remove log call for github event in
+repository refresh flow 
+([#633](https://github.com/walmartlabs/concord/pull/633));
+
+
+## [1.96.0] - 2022-08-10
+
+### Added
+
+- concord-cli: option to show version 
+([#615](https://github.com/walmartlabs/concord/pull/615));
+- concord-server: implement endpoints for adding LDAP
+groups to roles
+([#606](https://github.com/walmartlabs/concord/pull/606));
+- concord-ansile, concord-console: add sort options to the
+Ansible host stats
+([#610](https://github.com/walmartlabs/concord/pull/610);
+- docker-images: support for debian os based docker images
+([#611](https://github.com/walmartlabs/concord/pull/611)).
+
+### Changed
+
+- concord-server: fix out vars processing and restrictions
+([#609](https://github.com/walmartlabs/concord/pull/609);
+- concord-cli: fixed broken JS support
+([#612](https://github.com/walmartlabs/concord/pull/612));
+- concord-repository: use regular repositories in tests
+([#616](https://github.com/walmartlabs/concord/pull/616));
+- concord-server, runtime-v2: fix file upload in forms
+([#623](https://github.com/walmartlabs/concord/pull/623));
+- agent-operator: support for apiextensions.k8s.io/v1 crd
+to support k8s 1.22+
+([#624](https://github.com/walmartlabs/concord/pull/624));
+- concord-server: limit the number of acceptor threads to
+`core count / 4` (min 1)
+([#627](https://github.com/walmartlabs/concord/pull/627));
+- project: update to Groovy 2.5.17 to support JDK 17
+([#639](https://github.com/walmartlabs/concord/pull/639)).
+
+
 ## [1.95.0] - 2022-04-16
 
 ### Added

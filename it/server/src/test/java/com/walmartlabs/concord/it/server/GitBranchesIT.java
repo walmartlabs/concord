@@ -48,31 +48,33 @@ public class GitBranchesIT extends AbstractServerIT {
     @BeforeEach
     public void setUp() throws Exception {
         Path bareRepo = createTempDir();
-        Git.init().setInitialBranch("master").setBare(true).setDirectory(bareRepo.toFile()).call();
+        try (Git git = Git.init().setInitialBranch("master").setBare(true).setDirectory(bareRepo.toFile()).call()) {
+        }
 
         Path workdir = createTempDir();
-        Git git = Git.cloneRepository()
+        try (Git git = Git.cloneRepository()
                 .setDirectory(workdir.toFile())
                 .setURI("file://" + bareRepo)
-                .call();
+                .call()) {
 
-        Path initialData = Paths.get(PortalIT.class.getResource("gitBranches/qa").toURI());
-        IOUtils.copy(initialData, workdir);
+            Path initialData = Paths.get(PortalIT.class.getResource("gitBranches/qa").toURI());
+            IOUtils.copy(initialData, workdir);
 
-        git.add().addFilepattern(".").call();
-        git.commit().setMessage("initial commit").call();
+            git.add().addFilepattern(".").call();
+            git.commit().setMessage("initial commit").call();
 
-        git.checkout().setCreateBranch(true).setName("qa").call();
-        git.push().setRefSpecs(new RefSpec("qa:qa")).call();
+            git.checkout().setCreateBranch(true).setName("qa").call();
+            git.push().setRefSpecs(new RefSpec("qa:qa")).call();
 
-        git.checkout().setCreateBranch(true).setName("dev").call();
+            git.checkout().setCreateBranch(true).setName("dev").call();
 
-        Path devData = Paths.get(PortalIT.class.getResource("gitBranches/dev").toURI());
-        IOUtils.copy(devData, workdir, StandardCopyOption.REPLACE_EXISTING);
+            Path devData = Paths.get(PortalIT.class.getResource("gitBranches/dev").toURI());
+            IOUtils.copy(devData, workdir, StandardCopyOption.REPLACE_EXISTING);
 
-        git.add().addFilepattern(".").call();
-        git.commit().setMessage("dev commit").call();
-        git.push().setRefSpecs(new RefSpec("dev:dev")).call();
+            git.add().addFilepattern(".").call();
+            git.commit().setMessage("dev commit").call();
+            git.push().setRefSpecs(new RefSpec("dev:dev")).call();
+        }
 
         gitServer = new MockGitSshServer(0, bareRepo);
         gitServer.start();

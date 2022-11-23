@@ -46,9 +46,10 @@ public class TriggersRefreshIT extends AbstractServerIT {
         File src = new File(TriggersRefreshIT.class.getResource("triggerRepo").toURI());
         IOUtils.copy(src.toPath(), tmpDir);
 
-        Git repo = Git.init().setInitialBranch("master").setDirectory(tmpDir.toFile()).call();
-        repo.add().addFilepattern(".").call();
-        repo.commit().setMessage("import").call();
+        try (Git repo = Git.init().setInitialBranch("master").setDirectory(tmpDir.toFile()).call()) {
+            repo.add().addFilepattern(".").call();
+            repo.commit().setMessage("import").call();
+        }
 
         String gitUrl = tmpDir.toAbsolutePath().toString();
 
@@ -99,8 +100,11 @@ public class TriggersRefreshIT extends AbstractServerIT {
         // ---
 
         Files.copy(tmpDir.resolve("new_concord.yml"), tmpDir.resolve("concord.yml"), StandardCopyOption.REPLACE_EXISTING);
-        repo.add().addFilepattern(".").call();
-        repo.commit().setMessage("update").call();
+
+        try (Git repo = Git.open(tmpDir.toFile())) {
+            repo.add().addFilepattern(".").call();
+            repo.commit().setMessage("update").call();
+        }
 
         // ---
 

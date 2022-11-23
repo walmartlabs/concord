@@ -20,6 +20,8 @@ package com.walmartlabs.concord.runtime.v2.runner.el;
  * =====
  */
 
+import com.walmartlabs.concord.runtime.v2.sdk.EvalContext;
+
 import java.util.concurrent.Callable;
 
 public class ThreadLocalEvalContext {

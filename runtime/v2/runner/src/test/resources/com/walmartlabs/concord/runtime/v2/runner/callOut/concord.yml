@@ -24,6 +24,13 @@ flows:
 
     - log: "expression out a=${a}, xx=${xx}, zz=${zz}"
 
+    # expression on with inner call
+    - call: flowWithSuspend
+      out:
+        a: ${a}
+
+    - log: "out after suspend: a=${a}"
+
   myFlow:
     - set:
         a: "a-value"
@@ -32,3 +39,8 @@ flows:
           y: 123
         z: 100
 
+  flowWithSuspend:
+    - set:
+        a: "aaa-value"
+
+    - checkpoint: "A"

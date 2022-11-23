@@ -38,7 +38,31 @@ public class AgentConfiguration implements Serializable {
     @Config("agent.commandPollDelay")
     private Duration commandPollDelay;
 
+    @Inject
+    @Config("agent.watchdogPeriod")
+    private Duration watchdogPeriod;
+
+    @Inject
+    @Config("agent.maxCommandAge")
+    private Duration maxCommandAge;
+
+    @Inject
+    @Config("agent.maxStalledAge")
+    private Duration maxStalledAge;
+
     public Duration getCommandPollDelay() {
         return commandPollDelay;
+    }
+
+    public Duration getWatchdogPeriod() {
+        return watchdogPeriod;
+    }
+
+    public Duration getMaxCommandAge() {
+        return maxCommandAge;
+    }
+
+    public Duration getMaxStalledAge() {
+        return maxStalledAge;
     }
 }

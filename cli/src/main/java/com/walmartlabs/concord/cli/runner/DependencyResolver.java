@@ -47,7 +47,7 @@ public class DependencyResolver {
         this.verbose = verbose;
     }
 
-    public Collection<String> resolveDeps(ProcessDefinition processDefinition) throws Exception {
+    public Collection<String> resolveDeps(List<String> dependencies) throws Exception {
         if (verbose) {
             System.out.println("Resolving process dependencies...");
         }
@@ -56,7 +56,7 @@ public class DependencyResolver {
 
         // combine the default dependencies and the process' dependencies
         Collection<URI> uris = Stream.concat(defaultDependencies.stream(),
-                normalizeUrls(processDefinition.configuration().dependencies()).stream())
+                normalizeUrls(dependencies).stream())
                 .collect(Collectors.toList());
 
         Collection<DependencyEntity> deps = dependencyManager.resolve(uris, new ProgressListener() {

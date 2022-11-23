@@ -21,7 +21,7 @@ package com.walmartlabs.concord.runtime.v2.runner.el;
  */
 
 import com.walmartlabs.concord.runtime.v2.runner.tasks.TaskProviders;
-import com.walmartlabs.concord.runtime.v2.sdk.Task;
+import com.walmartlabs.concord.runtime.v2.sdk.*;
 import org.junit.jupiter.api.Test;
 
 import java.io.Serializable;
@@ -53,7 +53,7 @@ public class ExpressionEvaluatorTest {
         Map<String, Object> vars = Collections.singletonMap("name", "Concord");
         Map<String, Object> strict = Collections.singletonMap("name", "Concord!!!");
 
-        EvalContext ctx = EvalContextFactory.strict(new SingleFrameContext(vars), strict);
+        EvalContext ctx = new EvalContextFactoryImpl().strict(new SingleFrameContext(vars), strict);
 
         // ---
         String str = ee.eval(ctx, "Hello ${name}", String.class);
@@ -66,7 +66,7 @@ public class ExpressionEvaluatorTest {
         Map<String, Object> vars = Collections.singletonMap("name", "Concord");
         Map<String, Object> strict = Collections.emptyMap();
 
-        EvalContext ctx = EvalContextFactory.strict(new SingleFrameContext(vars), strict);
+        EvalContext ctx = new EvalContextFactoryImpl().strict(new SingleFrameContext(vars), strict);
 
         // ---
         try {
@@ -372,15 +372,15 @@ public class ExpressionEvaluatorTest {
     }
 
     private static EvalContext global(Map<String, Object> vars) {
-        return EvalContextFactory.global(new SingleFrameContext(vars));
+        return new EvalContextFactoryImpl().global(new SingleFrameContext(vars));
     }
 
     private static EvalContext scope(Map<String, Object> vars) {
-        return EvalContextFactory.scope(new SingleFrameContext(vars));
+        return new EvalContextFactoryImpl().scope(new SingleFrameContext(vars));
     }
 
     private static EvalContext undefAsNull(EvalContext ctx) {
-        return DefaultEvalContext.builder().from(ctx)
+        return EvalContext.builder().from(ctx)
                 .undefinedVariableAsNull(true)
                 .build();
     }

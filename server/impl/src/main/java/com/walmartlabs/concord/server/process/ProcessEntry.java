@@ -81,6 +81,7 @@ public interface ProcessEntry extends Serializable {
     @Nullable
     String commitBranch();
 
+    @Deprecated
     @Nullable
     String commitMsg();
 

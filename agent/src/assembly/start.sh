@@ -31,7 +31,7 @@ JAVA_VERSION=$(java -version 2>&1 \
 JDK_SPECIFIC_OPTS=""
 if (( $JAVA_VERSION > 8 )); then
   echo "Applying JDK 9+ specific options..."
-  JDK_SPECIFIC_OPTS="--add-opens java.base/java.lang=ALL-UNNAMED"
+  JDK_SPECIFIC_OPTS="--add-opens java.base/java.lang=ALL-UNNAMED --add-opens java.base/java.util=ALL-UNNAMED"
 fi
 
 exec java \

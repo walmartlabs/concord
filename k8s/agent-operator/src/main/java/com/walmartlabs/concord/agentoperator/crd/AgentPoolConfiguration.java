@@ -20,6 +20,9 @@ package com.walmartlabs.concord.agentoperator.crd;
  * =====
  */
 
+import io.fabric8.kubernetes.api.model.ConfigMap;
+import io.fabric8.kubernetes.api.model.Pod;
+
 import java.io.Serializable;
 import java.util.Map;
 
@@ -86,8 +89,10 @@ public class AgentPoolConfiguration implements Serializable {
     private double decrementThresholdFactor = getDoubleFromEnv(ENV_DECREMENT_THRESHOLD_FACTOR, DEFAULT_DECREMENT_THRESHOLD_FACTOR);
 
     private Map<String, Object> queueSelector;
-    private Map<String, Object> configMap;
-    private Map<String, Object> pod;
+    private ConfigMap configMap;
+
+
+    private Pod pod;
 
     public boolean isAutoScale() {
         return autoScale;
@@ -185,19 +190,19 @@ public class AgentPoolConfiguration implements Serializable {
         this.queueQueryLimit = queueQueryLimit;
     }
 
-    public Map<String, Object> getConfigMap() {
+    public ConfigMap getConfigMap() {
         return configMap;
     }
 
-    public void setConfigMap(Map<String, Object> configMap) {
+    public void setConfigMap(ConfigMap configMap) {
         this.configMap = configMap;
     }
 
-    public Map<String, Object> getPod() {
+    public Pod getPod() {
         return pod;
     }
 
-    public void setPod(Map<String, Object> pod) {
+    public void setPod(Pod pod) {
         this.pod = pod;
     }
 

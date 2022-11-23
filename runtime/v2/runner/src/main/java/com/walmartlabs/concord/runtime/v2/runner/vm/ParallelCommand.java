@@ -22,8 +22,8 @@ package com.walmartlabs.concord.runtime.v2.runner.vm;
 
 import com.walmartlabs.concord.runtime.v2.model.ParallelBlock;
 import com.walmartlabs.concord.runtime.v2.model.ParallelBlockOptions;
-import com.walmartlabs.concord.runtime.v2.runner.el.EvalContextFactory;
-import com.walmartlabs.concord.runtime.v2.runner.el.ExpressionEvaluator;
+import com.walmartlabs.concord.runtime.v2.sdk.EvalContextFactory;
+import com.walmartlabs.concord.runtime.v2.sdk.ExpressionEvaluator;
 import com.walmartlabs.concord.runtime.v2.sdk.Context;
 import com.walmartlabs.concord.svm.Runtime;
 import com.walmartlabs.concord.svm.*;
@@ -120,8 +120,9 @@ public class ParallelCommand extends StepCommand<ParallelBlock> {
             Frame frame = state.peekFrame(threadId);
             frame.pop();
 
+            EvalContextFactory ecf = runtime.getService(EvalContextFactory.class);
             ExpressionEvaluator expressionEvaluator = runtime.getService(ExpressionEvaluator.class);
-            Map<String, Serializable> out = expressionEvaluator.evalAsMap(EvalContextFactory.global(ctx, allVars), variables);
+            Map<String, Serializable> out = expressionEvaluator.evalAsMap(ecf.global(ctx, allVars), variables);
             out.forEach((k, v) -> VMUtils.putLocal(target, k, v));
         }
     }

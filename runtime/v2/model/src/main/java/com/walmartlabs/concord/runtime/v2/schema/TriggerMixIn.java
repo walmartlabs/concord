@@ -145,6 +145,9 @@ public interface TriggerMixIn extends Trigger {
 
                 @JsonProperty("payload")
                 Map<String, Object> payload();
+
+                @JsonProperty("queryParams")
+                Map<String, Object> queryParams();
             }
         }
     }

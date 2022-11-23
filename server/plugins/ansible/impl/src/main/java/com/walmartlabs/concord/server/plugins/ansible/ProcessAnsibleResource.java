@@ -39,6 +39,7 @@ import io.swagger.annotations.Authorization;
 import org.immutables.value.Value;
 import org.jooq.*;
 import org.sonatype.siesta.Resource;
+import org.sonatype.siesta.ValidationErrorsException;
 
 import javax.annotation.Nullable;
 import javax.inject.Inject;
@@ -131,7 +132,9 @@ public class ProcessAnsibleResource implements Resource {
                                         @QueryParam("statuses") List<AnsibleHostStatus> statuses,
                                         @QueryParam("playbookId") UUID playbookId,
                                         @QueryParam("limit") @DefaultValue("30") int limit,
-                                        @QueryParam("offset") @DefaultValue("0") int offset) {
+                                        @QueryParam("offset") @DefaultValue("0") int offset,
+                                        @QueryParam("sortField") SortField sortField,
+                                        @QueryParam("sortBy") SortBy sortBy) {
 
         ProcessKey key = processKeyCache.get(processInstanceId);
         if (key == null) {
@@ -145,7 +148,7 @@ public class ProcessAnsibleResource implements Resource {
             statuses.add(status);
         }
 
-        List<AnsibleHostEntry> hosts = ansibleDao.list(key.getInstanceId(), key.getCreatedAt(), host, hostGroup, statuses, playbookId, limit, offset);
+        List<AnsibleHostEntry> hosts = ansibleDao.list(key.getInstanceId(), key.getCreatedAt(), host, hostGroup, statuses, playbookId, limit, offset, sortField, sortBy);
         List<String> hostGroups = ansibleDao.listHostGroups(key.getInstanceId(), key.getCreatedAt(), playbookId);
         return ImmutableAnsibleHostListResponse.builder()
                 .items(hosts)
@@ -299,7 +302,10 @@ public class ProcessAnsibleResource implements Resource {
                                            String host, String hostGroup,
                                            List<AnsibleHostStatus> statuses,
                                            UUID playbookId,
-                                           int limit, int offset) {
+                                           int limit, int offset, SortField sortField, SortBy sortBy) {
+            
+            Field<String> orderField = assertSortField(sortField);
+            
             return txResult(tx -> {
                 AnsibleHosts a = ANSIBLE_HOSTS.as("a");
                 SelectConditionStep<Record4<String, String, Long, String>> q =
@@ -327,12 +333,34 @@ public class ProcessAnsibleResource implements Resource {
                 if (playbookId != null) {
                     q.and(a.PLAYBOOK_ID.eq(playbookId));
                 }
-
-                return q.orderBy(a.HOST)
-                        .limit(limit)
+                
+                if (orderField != null) {
+                    if (sortBy != null && sortBy.equals(SortBy.DESC)) {
+                        q.orderBy(orderField.desc());
+                    }
+                    q.orderBy(orderField.asc());
+                }
+                else {
+                    q.orderBy(a.HOST);
+                }
+                
+                return q.limit(limit)
                         .offset(offset)
                         .fetch(AnsibleDao::toHostEntity);
             });
+        }
+
+        private static Field<String> assertSortField(SortField sortField) { 
+            if (sortField == null) {
+                return null;
+            }
+            
+            Field<String> orderField = (Field<String>) ANSIBLE_HOSTS.as("a").field(sortField.name().toLowerCase());
+            if (orderField == null) {
+                throw new ValidationErrorsException("Invalid sort field: " + sortField.name());
+            }
+            
+            return orderField;
         }
 
         public List<PlaybookEntry> listPlaybooks(UUID instanceId, OffsetDateTime createdAt) {
@@ -546,5 +574,17 @@ public class ProcessAnsibleResource implements Resource {
         TASK,
         SETUP,
         HANDLER
+    }
+    
+    public enum SortField {
+        HOST,
+        DURATION,
+        STATUS,
+        HOST_GROUP
+    }
+    
+    public enum SortBy {
+        ASC,
+        DESC
     }
 }

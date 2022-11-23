@@ -23,48 +23,69 @@ package com.walmartlabs.concord.it.server;
 import com.walmartlabs.concord.client.ProcessApi;
 import com.walmartlabs.concord.client.ProcessEntry;
 import com.walmartlabs.concord.client.StartProcessResponse;
+import org.intellij.lang.annotations.Language;
 import org.junit.jupiter.api.Test;
 
 import java.net.URI;
+import java.util.Map;
 
 import static com.walmartlabs.concord.it.common.ITUtils.archive;
 import static com.walmartlabs.concord.it.common.ServerClient.assertLog;
 import static com.walmartlabs.concord.it.common.ServerClient.waitForCompletion;
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class ResourceIT extends AbstractServerIT {
 
     @Test
     public void testReadAsJson() throws Exception {
-        test("resourceReadAsJson", ".*Hello Concord!");
+        basicAssert(test("resourceReadAsJson"), ".*Hello Concord!");
     }
 
     @Test
     public void testFromJsonString() throws Exception {
-        test("resourceReadFromJsonString", ".*Hello Concord!");
+        basicAssert(test("resourceReadFromJsonString"), ".*Hello Concord!");
     }
 
     @Test
     public void testReadAsString() throws Exception {
-        test("resourceReadAsString", ".*Hello Concord!");
+        basicAssert(test("resourceReadAsString"), ".*Hello Concord!");
     }
 
     @Test
     public void testWriteAsJson() throws Exception {
-        test("resourceWriteAsJson", ".*Hello Concord!");
+        basicAssert(test("resourceWriteAsJson"), ".*Hello Concord!");
     }
 
     @Test
     public void testWriteAsString() throws Exception {
-        test("resourceWriteAsString", ".*Hello Concord!");
+        basicAssert(test("resourceWriteAsString"), ".*Hello Concord!");
     }
 
     @Test
     public void testWriteAsYaml() throws Exception {
-        test("resourceWriteAsYaml", ".*Hello Concord!");
+        basicAssert(test("resourceWriteAsYaml"), ".*Hello Concord!");
     }
 
-    private void test(String resource, String pattern) throws Exception {
+    @Test
+    void testPrintJson() throws Exception {
+        ProcessEntry pir = test("resourcePrintJson");
+
+        // ---
+
+        Map<String, Object> meta = pir.getMeta();
+
+        String condensedResult = (String) meta.get("condensedResult");
+        assertFalse(condensedResult.contains("\n"));
+        assertTrue(condensedResult.contains("\"x\":123"));
+        assertTrue(condensedResult.contains("\"y\":\"hello"));
+
+        String prettyResult = (String) meta.get("prettyResult");
+        assertTrue(prettyResult.contains("\n"));
+        assertTrue(prettyResult.contains("\"x\" : 123"));
+        assertTrue(prettyResult.contains("\"y\" : \"hello\""));
+    }
+
+    private ProcessEntry test(String resource) throws Exception {
         URI dir = ResourceIT.class.getResource(resource).toURI();
         byte[] payload = archive(dir);
 
@@ -74,6 +95,10 @@ public class ResourceIT extends AbstractServerIT {
         ProcessEntry pir = waitForCompletion(processApi, spr.getInstanceId());
         assertEquals(ProcessEntry.StatusEnum.FINISHED, pir.getStatus());
 
+        return pir;
+    }
+
+    private void basicAssert(ProcessEntry pir, @Language("RegExp") String pattern) throws Exception {
         byte[] ab = getLog(pir.getLogFileName());
         assertLog(pattern, ab);
     }

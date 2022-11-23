@@ -66,8 +66,7 @@ public class DefaultScriptEvaluator implements ScriptEvaluator {
             throw new RuntimeException("Script engine not found: " + language);
         }
 
-        Bindings b = engine.createBindings();
-        b.put("polyglot.js.allowAllAccess", true);
+        Bindings b = ScriptEngineBindings.create(engine, language);
 
         ScriptResult scriptResult = new ScriptResult();
         ScriptContext ctx = new ScriptContext(context);
@@ -131,6 +130,8 @@ public class DefaultScriptEvaluator implements ScriptEvaluator {
                     org.graalvm.polyglot.Context.newBuilder("js")
                             .allowHostAccess(access));
         } else {
+            ScriptEngineProperties.applyFor(language);
+
             engine = scriptEngineManager.getEngineByName(language);
         }
 

@@ -23,10 +23,12 @@ package com.walmartlabs.concord.runtime.v2.runner.vm;
 import com.walmartlabs.concord.runtime.v2.model.FlowCall;
 import com.walmartlabs.concord.runtime.v2.model.FlowCallOptions;
 import com.walmartlabs.concord.runtime.v2.model.ProcessDefinition;
+import com.walmartlabs.concord.runtime.v2.model.Step;
 import com.walmartlabs.concord.runtime.v2.runner.compiler.CompilerUtils;
-import com.walmartlabs.concord.runtime.v2.runner.el.EvalContext;
-import com.walmartlabs.concord.runtime.v2.runner.el.EvalContextFactory;
-import com.walmartlabs.concord.runtime.v2.runner.el.ExpressionEvaluator;
+import com.walmartlabs.concord.runtime.v2.runner.context.ContextFactory;
+import com.walmartlabs.concord.runtime.v2.sdk.EvalContext;
+import com.walmartlabs.concord.runtime.v2.sdk.EvalContextFactory;
+import com.walmartlabs.concord.runtime.v2.sdk.ExpressionEvaluator;
 import com.walmartlabs.concord.runtime.v2.sdk.Compiler;
 import com.walmartlabs.concord.runtime.v2.sdk.Context;
 import com.walmartlabs.concord.runtime.v2.sdk.ProcessConfiguration;
@@ -51,8 +53,9 @@ public class FlowCallCommand extends StepCommand<FlowCall> {
 
         Context ctx = runtime.getService(Context.class);
 
+        EvalContextFactory ecf = runtime.getService(EvalContextFactory.class);
         ExpressionEvaluator ee = runtime.getService(ExpressionEvaluator.class);
-        EvalContext evalCtx = EvalContextFactory.global(ctx);
+        EvalContext evalCtx = ecf.global(ctx);
 
         FlowCall call = getStep();
 
@@ -67,7 +70,7 @@ public class FlowCallCommand extends StepCommand<FlowCall> {
         Command steps = CompilerUtils.compile(compiler, pc, pd, flowName);
 
         FlowCallOptions opts = Objects.requireNonNull(call.getOptions());
-        Map<String, Object> input = VMUtils.prepareInput(ee, ctx, opts.input(), opts.inputExpression());
+        Map<String, Object> input = VMUtils.prepareInput(ecf, ee, ctx, opts.input(), opts.inputExpression());
 
         // the call's frame should be a "root" frame
         // all local variables will have this frame as their base
@@ -82,7 +85,7 @@ public class FlowCallCommand extends StepCommand<FlowCall> {
         // and put it into the callee's frame
         Command processOutVars;
         if (!opts.outExpr().isEmpty()) {
-            processOutVars = new EvalVariablesCommand(ctx, opts.outExpr(), innerFrame);
+            processOutVars = new EvalVariablesCommand(getStep(), opts.outExpr(), innerFrame);
         } else {
             processOutVars = new CopyVariablesCommand(opts.out(), innerFrame, VMUtils::assertNearestRoot);
         }
@@ -97,12 +100,13 @@ public class FlowCallCommand extends StepCommand<FlowCall> {
         // for backward compatibility (java8 concord 1.92.0 version)
         private static final long serialVersionUID = -7294220776008029488L;
 
-        private final Context ctx;
+        private final Step step;
+
         private final Map<String, Serializable> variables;
         private final Frame variablesFrame;
 
-        private EvalVariablesCommand(Context ctx, Map<String, Serializable> variables, Frame variablesFrame) {
-            this.ctx = ctx;
+        private EvalVariablesCommand(FlowCall step, Map<String, Serializable> variables, Frame variablesFrame) {
+            this.step = step;
             this.variables = variables;
             this.variablesFrame = variablesFrame;
         }
@@ -113,9 +117,13 @@ public class FlowCallCommand extends StepCommand<FlowCall> {
             Frame frame = state.peekFrame(threadId);
             frame.pop();
 
+            ContextFactory contextFactory = runtime.getService(ContextFactory.class);
+            Context ctx = contextFactory.create(runtime, state, threadId, step);
+
+            EvalContextFactory ecf = runtime.getService(EvalContextFactory.class);
             ExpressionEvaluator expressionEvaluator = runtime.getService(ExpressionEvaluator.class);
             Map<String, Object> vars = (Map)variablesFrame.getLocals();
-            Map<String, Serializable> out = expressionEvaluator.evalAsMap(EvalContextFactory.global(ctx, vars), variables);
+            Map<String, Serializable> out = expressionEvaluator.evalAsMap(ecf.global(ctx, vars), variables);
             out.forEach((k, v) -> ctx.variables().set(k, v));
         }
     }

@@ -52,8 +52,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nullable;
+import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.net.URI;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -88,6 +90,8 @@ public class RunnerJobExecutor implements JobExecutor {
 
     private final ObjectMapper objectMapper;
 
+    private int majorJavaVersion;
+
     public RunnerJobExecutor(RunnerJobExecutorConfiguration cfg,
                              DependencyManager dependencyManager,
                              DefaultDependencies defaultDependencies,
@@ -107,6 +111,42 @@ public class RunnerJobExecutor implements JobExecutor {
         // sort JSON keys for consistency
         this.objectMapper = new ObjectMapper()
                 .configure(SerializationFeature.ORDER_MAP_ENTRIES_BY_KEYS, true);
+
+        this.majorJavaVersion = getMajorJavaVersion(cfg.javaCmd());
+    }
+
+    private static int getMajorJavaVersion(String javaCmd) {
+        try {
+            Process process = new ProcessBuilder(javaCmd, "-version")
+                    .start();
+
+            int exitCode = process.waitFor();
+            if (exitCode != 0) {
+                throw new RuntimeException("`java -version` exited with " + exitCode);
+            }
+
+            String version;
+            try (BufferedReader reader = new BufferedReader(new InputStreamReader(process.getErrorStream()))) {
+                version = reader.readLine();
+            }
+
+            int start = version.indexOf("\"");
+            int end = version.indexOf(".", start + 1);
+            if (start < 0 || start + 1 >= version.length() || end < 0) {
+                throw new RuntimeException("Unknown version string: " + version);
+            }
+
+            int major;
+            try {
+                major = Integer.parseInt(version.substring(start + 1, end));
+            } catch (NumberFormatException e) {
+                throw new RuntimeException("Unknown version string: " + version);
+            }
+
+            return major;
+        } catch (Exception e) {
+            throw new RuntimeException("Can't determine the target Java runtime version", e);
+        }
     }
 
     @Override
@@ -413,6 +453,7 @@ public class RunnerJobExecutor implements JobExecutor {
                 .runnerCfgPath(runnerCfgFile.toAbsolutePath())
                 .mainClass(cfg.runnerMainClass())
                 .jvmParams(jvmParams)
+                .majorJavaVersion(this.majorJavaVersion)
                 .build();
     }
 

@@ -42,32 +42,28 @@ public final class GitUtils {
         Path repo = tmp.resolve("test");
         Files.createDirectories(repo);
 
-        Git.init().setInitialBranch("master").setBare(true).setDirectory(repo.toFile()).call();
+        try (Git git = Git.init()
+                .setInitialBranch("master")
+                .setDirectory(repo.toFile())
+                .call()) {
 
-        // clone the repository into a new directory
-        Path workdir = Files.createTempDirectory("workDir");
-        Git git = Git.cloneRepository()
-                .setDirectory(workdir.toFile())
-                .setURI("file://" + repo.toString())
-                .call();
+            // copy our files into the repository
+            IOUtils.copy(data, repo);
 
-        // copy our files into the repository
-        IOUtils.copy(data, workdir);
-
-        // add, commit, and push copied files
-        git.add().addFilepattern(".").call();
-        git.commit().setSign(false).setMessage("init from: " + data).call();
-        git.push().call();
+            // add and commit copied files
+            git.add().addFilepattern(".").call();
+            git.commit().setSign(false).setMessage("init from: " + data).call();
+        }
 
         return repo;
     }
 
     public static RevCommit addContent(Path bareRepo, Path file) throws Exception {
-        try(TemporaryPath tmp = IOUtils.tempDir("repo-tmp");
-            Git git = Git.cloneRepository()
-                    .setDirectory(tmp.path().toFile())
-                    .setURI(bareRepo.toAbsolutePath().toString())
-                    .call()) {
+        try (TemporaryPath tmp = IOUtils.tempDir("repo-tmp");
+             Git git = Git.cloneRepository()
+                     .setDirectory(tmp.path().toFile())
+                     .setURI(bareRepo.toAbsolutePath().toString())
+                     .call()) {
 
             Files.copy(file, tmp.path().resolve(file.getFileName()), StandardCopyOption.REPLACE_EXISTING);
 

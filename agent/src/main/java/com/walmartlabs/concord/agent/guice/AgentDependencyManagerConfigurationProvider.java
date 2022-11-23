@@ -42,6 +42,7 @@ public class AgentDependencyManagerConfigurationProvider implements Provider<Dep
         return DependencyManagerConfiguration.builder()
                 .cacheDir(cfg.getDependencyCacheDir())
                 .strictRepositories(cfg.dependencyStrictRepositories())
+                .exclusions(cfg.dependencyExclusions())
                 .build();
     }
 }

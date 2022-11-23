@@ -20,13 +20,17 @@ package com.walmartlabs.concord.agentoperator;
  * =====
  */
 
+
 import com.walmartlabs.concord.agentoperator.crd.AgentPool;
-import com.walmartlabs.concord.agentoperator.crd.AgentPoolCRD;
 import com.walmartlabs.concord.agentoperator.crd.AgentPoolList;
-import com.walmartlabs.concord.agentoperator.crd.DoneableAgentPool;
+import com.walmartlabs.concord.agentoperator.scheduler.Event;
 import com.walmartlabs.concord.agentoperator.scheduler.Scheduler;
 import io.fabric8.kubernetes.client.DefaultKubernetesClient;
 import io.fabric8.kubernetes.client.KubernetesClient;
+import io.fabric8.kubernetes.client.Watcher;
+import io.fabric8.kubernetes.client.WatcherException;
+import io.fabric8.kubernetes.client.dsl.NonNamespaceOperation;
+import io.fabric8.kubernetes.client.dsl.Resource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -55,8 +59,33 @@ public class Operator {
 
         // TODO retries
         log.info("main -> my watch begins... (namespace={})", namespace);
-        client.customResources(AgentPoolCRD.SERVICE_DEFINITION, AgentPool.class, AgentPoolList.class, DoneableAgentPool.class)
-                .watch(new ClusterWatcher(scheduler));
+
+        NonNamespaceOperation<AgentPool, AgentPoolList, Resource<AgentPool>> dummyClient = client.resources(AgentPool.class, AgentPoolList.class);
+        dummyClient.watch(new Watcher<AgentPool>() {
+            @Override
+            public void eventReceived(Action action, AgentPool resource) {
+                scheduler.onEvent(actionToEvent(action), resource);
+            }
+
+            @Override
+            public void onClose(WatcherException we) {
+                log.error("Watcher exception  {}", we.getMessage(), we);
+            }
+        });
+    }
+
+    private static final Event.Type actionToEvent(Watcher.Action action) {
+        switch (action) {
+            case ADDED:
+            case MODIFIED: {
+                return Event.Type.MODIFIED;
+            }
+            case DELETED: {
+                return Event.Type.DELETED;
+            }
+            default:
+                throw new IllegalArgumentException("Unknown action type: " + action);
+        }
     }
 
     private static String getEnv(String key, String defaultValue) {

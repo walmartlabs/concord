@@ -59,6 +59,7 @@ public class ProjectEntry implements Serializable {
     @ConcordKey
     private final String orgName;
 
+    @Deprecated
     @Valid
     private final Map<String, RepositoryEntry> repositories;
 
