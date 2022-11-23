@@ -23,10 +23,7 @@ package com.walmartlabs.concord.server.org.triggers;
 import com.walmartlabs.concord.common.validation.ConcordKey;
 import com.walmartlabs.concord.server.org.OrganizationDao;
 import com.walmartlabs.concord.server.org.ResourceAccessLevel;
-import com.walmartlabs.concord.server.org.project.ProjectAccessManager;
-import com.walmartlabs.concord.server.org.project.ProjectDao;
-import com.walmartlabs.concord.server.org.project.ProjectEntry;
-import com.walmartlabs.concord.server.org.project.RepositoryEntry;
+import com.walmartlabs.concord.server.org.project.*;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
@@ -45,8 +42,6 @@ import javax.ws.rs.core.MediaType;
 import java.util.List;
 import java.util.UUID;
 
-import static com.walmartlabs.concord.server.org.project.RepositoryUtils.assertRepository;
-
 @Named
 @Singleton
 @Api(value = "TriggersV2", authorizations = {@Authorization("api_key"), @Authorization("session_key"), @Authorization("ldap")})
@@ -58,16 +53,20 @@ public class TriggerV2Resource implements Resource {
     private final TriggersDao triggersDao;
     private final ProjectAccessManager projectAccessManager;
 
+    private final ProjectRepositoryManager projectRepositoryManager;
+
     @Inject
     public TriggerV2Resource(OrganizationDao orgDao,
                              ProjectDao projectDao,
                              TriggersDao triggersDao,
-                             ProjectAccessManager projectAccessManager) {
+                             ProjectAccessManager projectAccessManager,
+                             ProjectRepositoryManager projectRepositoryManager) {
 
         this.orgDao = orgDao;
         this.projectDao = projectDao;
         this.triggersDao = triggersDao;
         this.projectAccessManager = projectAccessManager;
+        this.projectRepositoryManager = projectRepositoryManager;
     }
 
     /**
@@ -83,6 +82,8 @@ public class TriggerV2Resource implements Resource {
                                    @ApiParam @QueryParam("projectName") @ConcordKey String projectName,
                                    @ApiParam @QueryParam("repoId") UUID repoId,
                                    @ApiParam @QueryParam("repoName") @ConcordKey String repoName) {
+
+        // TODO: assert org/project access
 
         if (type != null && (type.isEmpty() || type.length() > 128)) {
             throw new ValidationErrorsException("Invalid type value: " + type);
@@ -107,13 +108,11 @@ public class TriggerV2Resource implements Resource {
         }
 
         if (repoId == null && repoName != null) {
-            ProjectEntry p = assertProject(projectId, ResourceAccessLevel.READER, false);
-
-            if (p == null) {
-                throw new IllegalArgumentException("Both organization and project IDs or names are required");
+            ProjectEntry p = assertProject(projectId);
+            RepositoryEntry r = projectRepositoryManager.get(p.getId(), repoName);
+            if (r == null) {
+                throw new ValidationErrorsException("Repository not found");
             }
-
-            RepositoryEntry r = assertRepository(p, repoName);
             repoId = r.getId();
         }
 
@@ -121,11 +120,11 @@ public class TriggerV2Resource implements Resource {
     }
 
 
-    private ProjectEntry assertProject(UUID projectId, ResourceAccessLevel accessLevel, boolean orgMembersOnly) {
+    private ProjectEntry assertProject(UUID projectId) {
         if (projectId == null) {
             throw new ValidationErrorsException("Invalid project ID or name");
         }
 
-        return projectAccessManager.assertAccess(projectId, accessLevel, orgMembersOnly);
+        return projectAccessManager.assertAccess(projectId, ResourceAccessLevel.READER, false);
     }
 }
