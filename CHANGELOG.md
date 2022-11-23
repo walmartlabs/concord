@@ -3,6 +3,9 @@
 ## [1.98.0] - Unreleased
 
 ### Added
+
+- concord-cli: provide default process configuration
+([#649](https://github.com/walmartlabs/concord/pull/649));
 - policy: policy to restrict runtime of process
 ([#671](https://github.com/walmartlabs/concord/pull/671));
 - resource-task: add printJson() method
