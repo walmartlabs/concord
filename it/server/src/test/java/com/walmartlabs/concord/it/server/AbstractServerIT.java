@@ -111,7 +111,7 @@ public abstract class AbstractServerIT {
     }
 
     protected SecretOperationResponse addPlainSecretWithProjectNames(String orgName, String name, Set<String> projectNames, boolean generatePassword, String storePassword, byte[] secret) throws ApiException {
-        return serverClient.addPlainSecretV2(orgName, name, projectNames, null, generatePassword, storePassword, secret);
+        return serverClient.addPlainSecret(orgName, name, projectNames, null, generatePassword, storePassword, secret);
     }
 
     protected SecretOperationResponse addUsernamePassword(String orgName, String name, boolean generatePassword, String storePassword, String username, String password) throws ApiException {
@@ -131,11 +131,11 @@ public abstract class AbstractServerIT {
     }
 
     protected SecretOperationResponse generateKeyPairWithProjectNames(String orgName, Set<String> projectNames, String name, boolean generatePassword, String storePassword) throws ApiException {
-        return serverClient.generateKeyPairV2(orgName, projectNames, null, name, generatePassword, storePassword);
+        return serverClient.generateKeyPair(orgName, projectNames, null, name, generatePassword, storePassword);
     }
 
     protected SecretOperationResponse generateKeyPairWithProjectIds(String orgName, Set<UUID> projectIds, String name, boolean generatePassword, String storePassword) throws ApiException {
-        return serverClient.generateKeyPairV2(orgName, null, projectIds, name, generatePassword, storePassword);
+        return serverClient.generateKeyPair(orgName, null, projectIds, name, generatePassword, storePassword);
     }
 
     protected byte[] getLog(String logFileName) throws ApiException {

@@ -105,7 +105,7 @@ public class ServerClient {
         }
         return postSecret(orgName, m);
     }
-    public SecretOperationResponse generateKeyPairV2(String orgName, Set<String> projectNames, Set<UUID> projectIds, String name, boolean generatePassword, String storePassword) throws ApiException {
+    public SecretOperationResponse generateKeyPair(String orgName, Set<String> projectNames, Set<UUID> projectIds, String name, boolean generatePassword, String storePassword) throws ApiException {
         Map<String, Object> m = new HashMap<>();
         m.put("name", name);
         m.put("generatePassword", generatePassword);
@@ -119,7 +119,7 @@ public class ServerClient {
         } else if (projectNames != null && !projectNames.isEmpty()) {
             m.put("projects", String.join(",", projectNames));
         }
-        return postSecretV2(orgName, m);
+        return postSecret(orgName, m);
     }
     public SecretOperationResponse addPlainSecret(String orgName, String name, String projectName, boolean generatePassword, String storePassword, byte[] secret) throws ApiException {
         Map<String, Object> m = new HashMap<>();
@@ -138,7 +138,7 @@ public class ServerClient {
         return postSecret(orgName, m);
     }
 
-    public SecretOperationResponse addPlainSecretV2(String orgName, String name, Set<String> projectNames, Set<UUID> projectIds, boolean generatePassword, String storePassword, byte[] secret) throws ApiException {
+    public SecretOperationResponse addPlainSecret(String orgName, String name, Set<String> projectNames, Set<UUID> projectIds, boolean generatePassword, String storePassword, byte[] secret) throws ApiException {
         Map<String, Object> m = new HashMap<>();
         m.put("name", name);
         m.put("type", SecretEntry.TypeEnum.DATA.toString());
@@ -154,7 +154,7 @@ public class ServerClient {
             m.put("storePassword", storePassword);
         }
 
-        return postSecretV2(orgName, m);
+        return postSecret(orgName, m);
     }
 
     public SecretOperationResponse addUsernamePassword(String orgName, String projectName, String name, boolean generatePassword, String storePassword, String username, String password) throws ApiException {
