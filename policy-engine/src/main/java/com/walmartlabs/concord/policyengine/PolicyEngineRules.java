@@ -64,7 +64,7 @@ public class PolicyEngineRules {
                              @JsonProperty("dependencyVersions") List<DependencyVersionsPolicy.Dependency> dependencyVersions,
                              @JsonProperty("attachments") AttachmentsRule attachmentsRule,
                              @JsonProperty("state") PolicyRules<StateRule> stateRules,
-                             @JsonProperty("rawPayload") RawPayloadRule rawPayloadRule) {
+                             @JsonProperty("rawPayload") RawPayloadRule rawPayloadRule,
                              @JsonProperty("dependencyRewrite") List<DependencyRewriteRule> dependencyRewriteRules,
                              @JsonProperty("runtime") RuntimeRule runtimeRule) {
                              
