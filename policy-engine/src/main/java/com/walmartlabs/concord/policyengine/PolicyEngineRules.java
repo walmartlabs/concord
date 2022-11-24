@@ -67,7 +67,7 @@ public class PolicyEngineRules {
                              @JsonProperty("rawPayload") RawPayloadRule rawPayloadRule,
                              @JsonProperty("dependencyRewrite") List<DependencyRewriteRule> dependencyRewriteRules,
                              @JsonProperty("runtime") RuntimeRule runtimeRule) {
-                             
+
         this.dependencyRules = dependencyRules;
         this.fileRules = fileRules;
         this.taskRules = taskRules;
