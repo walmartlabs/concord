@@ -43,6 +43,7 @@ public class SecretsSaltMigrationTask implements MigrationTask {
 
     @Override
     public void execute(DataSource dataSource) {
+        log.info("Starting migration task for updating secret salt");
         int retryCount = 0;
         while(retryCount <= MAX_RETRIES) {
             try(Connection connection = dataSource.getConnection()) {
@@ -61,6 +62,7 @@ public class SecretsSaltMigrationTask implements MigrationTask {
         if(retryCount == MAX_RETRIES) {
             throw new RuntimeException("Failed to run migration for SecretsMigrationTask");
         }
+        log.info("Successfully completed migration task for secret salt");
     }
 
 }

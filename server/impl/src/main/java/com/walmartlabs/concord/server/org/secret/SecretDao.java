@@ -20,6 +20,7 @@ package com.walmartlabs.concord.server.org.secret;
  * =====
  */
 
+import com.walmartlabs.concord.common.secret.HashAlgorithm;
 import com.walmartlabs.concord.common.secret.SecretEncryptedByType;
 import com.walmartlabs.concord.db.AbstractDao;
 import com.walmartlabs.concord.db.MainDB;

@@ -42,7 +42,7 @@
             </column>
         </addColumn>
         <addColumn tableName="SECRETS">
-            <column name="hash_algorithm" type="varchar(32)" defaultValue="MD5">
+            <column name="hash_algorithm" type="varchar(32)" defaultValue="md5">
                 <constraints nullable="true"/>
             </column>
         </addColumn>

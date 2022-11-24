@@ -82,6 +82,10 @@
             <groupId>com.walmartlabs.ollie</groupId>
             <artifactId>ollie-config</artifactId>
         </dependency>
+        <dependency>
+            <groupId>com.walmartlabs.concord</groupId>
+            <artifactId>concord-common</artifactId>
+        </dependency>
     </dependencies>
 
     <build>

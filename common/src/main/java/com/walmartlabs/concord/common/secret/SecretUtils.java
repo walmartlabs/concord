@@ -1,4 +1,4 @@
-package com.walmartlabs.concord.server.org.secret;
+package com.walmartlabs.concord.common.secret;
 
 /*-
  * *****

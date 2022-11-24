@@ -20,7 +20,9 @@ package com.walmartlabs.concord.server.security.secret;
  * =====
  */
 
+import com.walmartlabs.concord.common.secret.HashAlgorithm;
 import com.walmartlabs.concord.common.secret.SecretEncryptedByType;
+import com.walmartlabs.concord.common.secret.SecretUtils;
 import com.walmartlabs.concord.server.AbstractDaoTest;
 import com.walmartlabs.concord.server.ConcordObjectMapper;
 import com.walmartlabs.concord.server.TestObjectMapper;
