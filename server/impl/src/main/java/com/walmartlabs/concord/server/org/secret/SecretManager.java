@@ -343,7 +343,7 @@ public class SecretManager {
             }
 
             // validate the current password
-            decryptData(e.getId(), e.getStoreType(), currentPassword);
+            decryptData(e, currentPassword);
 
             newData = serialize(params.newSecret());
             newType = secretType(params.newSecret());
@@ -351,7 +351,7 @@ public class SecretManager {
             updated.put("data", true);
         } else if (newPassword != null) {
             // keeping the old data, just changing the store password
-            newData = decryptData(e.getId(), e.getStoreType(), currentPassword);
+            newData = decryptData(e, currentPassword);
         }
 
         String pwd = currentPassword;
@@ -361,12 +361,15 @@ public class SecretManager {
         }
 
         byte[] newEncryptedData;
+        HashAlgorithm hashAlgorithm;
         if (newData != null) {
             // encrypt the supplied data
-            byte[] salt = secretCfg.getSecretStoreSalt();
-            newEncryptedData = SecretUtils.encrypt(newData, getPwd(pwd), salt);
+            byte[] salt = e.getSecretSalt();
+            newEncryptedData = SecretUtils.encrypt(newData, getPwd(pwd), salt, HashAlgorithm.SHA256);
+            hashAlgorithm = HashAlgorithm.SHA256;
         } else {
             newEncryptedData = null;
+            hashAlgorithm = null;
         }
 
         policyManager.checkEntity(e.getOrgId(), newProjectId, EntityType.SECRET, EntityAction.UPDATE, newOwner,
@@ -382,7 +385,7 @@ public class SecretManager {
             }
 
             secretDao.update(tx, e.getId(), params.newName(), newOwner != null ? newOwner.getId() : null,
-                    finalNewType, newEncryptedData, params.newVisibility(), newProjectId, newOrgId);
+                    finalNewType, newEncryptedData, params.newVisibility(), newProjectId, newOrgId, hashAlgorithm);
         });
 
         Map<String, Object> changes = DiffUtils.compare(e, secretDao.get(e.getId()));
@@ -448,16 +451,16 @@ public class SecretManager {
         return new DecryptedSecret(e.getId(), s);
     }
 
-    private byte[] decryptData(UUID secretId, String storeType, String password) {
-        byte[] data = getSecretStore(storeType).get(secretId);
+    private byte[] decryptData(SecretEntry e, String password) {
+        byte[] data = getSecretStore(e.getStoreType()).get(e.getId());
         if (data == null) {
-            throw new IllegalStateException("Can't find the secret's data in the store " + storeType + " : " + secretId);
+            throw new IllegalStateException("Can't find the secret's data in the store " + e.getStoreType() + " : " + e.getId());
         }
 
         byte[] pwd = getPwd(password);
-        byte[] salt = secretCfg.getSecretStoreSalt();
+        byte[] salt = e.getSecretSalt();
 
-        return SecretUtils.decrypt(data, pwd, salt);
+        return SecretUtils.decrypt(data, pwd, salt, e.getHashAlgorithm());
     }
 
     /**
@@ -475,7 +478,12 @@ public class SecretManager {
         SecretEncryptedByType providedEncryptedByType = getEncryptedBy(password);
         assertEncryptedByType(name, providedEncryptedByType, e.getEncryptedBy());
 
-        byte[] ab = decryptData(e.getId(), e.getStoreType(), password);
+        byte[] ab = decryptData(e, password);
+
+        if(e.getHashAlgorithm() == HashAlgorithm.MD5) {
+            byte[] encryptedData = SecretUtils.encrypt(ab, getPwd(password), e.getSecretSalt(), HashAlgorithm.SHA256);
+            secretDao.update(e.getId(),null, null, null, encryptedData, null, null, null, HashAlgorithm.SHA256);
+        }
 
         auditLog.add(AuditObject.SECRET, AuditAction.ACCESS)
                 .field("orgId", e.getOrgId())
@@ -547,9 +555,9 @@ public class SecretManager {
         SecretType type = secretType(s);
 
         byte[] pwd = getPwd(password);
-        byte[] salt = secretCfg.getSecretStoreSalt();
+        byte[] salt = SecretUtils.generateSalt(16);
 
-        byte[] ab = SecretUtils.encrypt(data, pwd, salt);
+        byte[] ab = SecretUtils.encrypt(data, pwd, salt, HashAlgorithm.SHA256);
         SecretEncryptedByType encryptedByType = getEncryptedBy(password);
 
         storeType = storeType.toLowerCase();
@@ -558,7 +566,7 @@ public class SecretManager {
         policyManager.checkEntity(orgId, projectId, EntityType.SECRET, EntityAction.CREATE, owner,
                 PolicyUtils.secretToMap(orgId, name, type, visibility, storeType));
 
-        UUID id = secretDao.insert(tx, orgId, projectId, name, owner.getId(), type, encryptedByType, storeType, visibility, insertMode);
+        UUID id = secretDao.insert(tx, orgId, projectId, name, owner.getId(), type, encryptedByType, storeType, visibility, salt, HashAlgorithm.SHA256, insertMode);
         try {
             getSecretStore(storeType).store(tx, id, ab);
         } catch (Exception e) {

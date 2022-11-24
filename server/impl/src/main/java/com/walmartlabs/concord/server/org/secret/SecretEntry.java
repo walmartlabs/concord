@@ -21,15 +21,18 @@ package com.walmartlabs.concord.server.org.secret;
  */
 
 import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.walmartlabs.concord.common.secret.SecretEncryptedByType;
 import com.walmartlabs.concord.common.validation.ConcordKey;
 import com.walmartlabs.concord.server.org.EntityOwner;
+import com.walmartlabs.concord.server.org.project.ProjectEntry;
 
 import javax.validation.constraints.NotNull;
 import java.io.Serializable;
+import java.util.Set;
 import java.util.UUID;
 
 @JsonInclude(Include.NON_NULL)
@@ -65,6 +68,12 @@ public class SecretEntry implements Serializable {
 
     private final EntityOwner owner;
 
+    @JsonIgnore
+    private final byte[] secretSalt;
+
+    @JsonIgnore
+    private final HashAlgorithm hashAlgorithm;
+
     @JsonCreator
     public SecretEntry(@JsonProperty("id") UUID id,
                        @JsonProperty("name") String name,
@@ -76,7 +85,10 @@ public class SecretEntry implements Serializable {
                        @JsonProperty("encryptedBy") SecretEncryptedByType encryptedBy,
                        @JsonProperty("storeType") String storeType,
                        @JsonProperty("visibility") SecretVisibility visibility,
-                       @JsonProperty("owner") EntityOwner owner) {
+                       @JsonProperty("owner") EntityOwner owner,
+                       byte[] secretSalt,
+                       HashAlgorithm hashAlgorithm
+                       ) {
 
         this.id = id;
         this.name = name;
@@ -89,6 +101,8 @@ public class SecretEntry implements Serializable {
         this.storeType = storeType;
         this.visibility = visibility;
         this.owner = owner;
+        this.secretSalt = secretSalt;
+        this.hashAlgorithm = hashAlgorithm;
     }
 
     public UUID getId() {
@@ -133,6 +147,14 @@ public class SecretEntry implements Serializable {
 
     public EntityOwner getOwner() {
         return owner;
+    }
+
+    public byte[] getSecretSalt() {
+        return secretSalt;
+    }
+
+    public HashAlgorithm getHashAlgorithm() {
+        return hashAlgorithm;
     }
 
     @Override

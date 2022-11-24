@@ -103,14 +103,14 @@ public class SecretDao extends AbstractDao {
 
     public UUID insert(UUID orgId, UUID projectId, String name, UUID ownerId, SecretType type,
                        SecretEncryptedByType encryptedBy, String storeType,
-                       SecretVisibility visibility, InsertMode insertMode) {
+                       SecretVisibility visibility, byte[] secretSalt, HashAlgorithm hashAlgorithm, InsertMode insertMode) {
 
-        return txResult(tx -> insert(tx, orgId, projectId, name, ownerId, type, encryptedBy, storeType, visibility, insertMode));
+        return txResult(tx -> insert(tx, orgId, projectId, name, ownerId, type, encryptedBy, storeType, visibility, secretSalt, hashAlgorithm, insertMode));
     }
 
     public UUID insert(DSLContext tx, UUID orgId, UUID projectId, String name, UUID ownerId, SecretType type,
                        SecretEncryptedByType encryptedBy, String storeType,
-                       SecretVisibility visibility, InsertMode insertMode) {
+                       SecretVisibility visibility, byte[] secretSalt, HashAlgorithm hashAlgorithm, InsertMode insertMode) {
 
         InsertOnDuplicateStep<SecretsRecord> builder = tx.insertInto(SECRETS)
                 .columns(SECRETS.SECRET_NAME,
@@ -120,8 +120,10 @@ public class SecretDao extends AbstractDao {
                         SECRETS.OWNER_ID,
                         SECRETS.ENCRYPTED_BY,
                         SECRETS.STORE_TYPE,
-                        SECRETS.VISIBILITY)
-                .values(name, type.toString(), orgId, projectId, ownerId, encryptedBy.toString(), storeType, visibility.toString());
+                        SECRETS.VISIBILITY,
+                        SECRETS.SECRET_SALT,
+                        SECRETS.HASH_ALGORITHM)
+                .values(name, type.toString(), orgId, projectId, ownerId, encryptedBy.toString(), storeType, visibility.toString(), secretSalt, hashAlgorithm.getName());
 
         if (insertMode == InsertMode.UPSERT) {
             Optional<SecretsRecord> secretsRecord = builder.onDuplicateKeyIgnore()
@@ -183,11 +185,11 @@ public class SecretDao extends AbstractDao {
         }
     }
 
-    public void update(UUID id, String newName, UUID ownerId, SecretType newType, byte[] data, SecretVisibility visibility, UUID projectId, UUID orgId) {
-        tx(tx -> update(tx, id, newName, ownerId, newType, data, visibility, projectId, orgId));
+    public void update(UUID id, String newName, UUID ownerId, SecretType newType, byte[] data, SecretVisibility visibility, UUID projectId, UUID orgId, HashAlgorithm hashAlgorithm) {
+        tx(tx -> update(tx, id, newName, ownerId, newType, data, visibility, projectId, orgId, hashAlgorithm));
     }
 
-    public void update(DSLContext tx, UUID id, String newName, UUID ownerId, SecretType newType, byte[] data, SecretVisibility visibility, UUID projectId, UUID orgId) {
+    public void update(DSLContext tx, UUID id, String newName, UUID ownerId, SecretType newType, byte[] data, SecretVisibility visibility, UUID projectId, UUID orgId, HashAlgorithm hashAlgorithm) {
         UpdateSetMoreStep<SecretsRecord> u = tx.update(SECRETS).set(SECRETS.PROJECT_ID, projectId);
 
         if (newName != null) {
@@ -208,10 +210,15 @@ public class SecretDao extends AbstractDao {
 
         if (data != null) {
             u.set(SECRETS.SECRET_DATA, data);
+            u.set(SECRETS.LAST_UPDATED_AT, currentOffsetDateTime());
         }
 
         if (orgId != null) {
             u.set(SECRETS.ORG_ID, orgId);
+        }
+
+        if(hashAlgorithm != null){
+            u.set(SECRETS.HASH_ALGORITHM, hashAlgorithm.getName());
         }
 
         int i = u.where(SECRETS.SECRET_ID.eq(id))
@@ -231,7 +238,7 @@ public class SecretDao extends AbstractDao {
 
         sortField = s.field(sortField);
 
-        SelectOnConditionStep<Record15<UUID, String, UUID, String, UUID, String, String, String, String, String, UUID, String, String, String, String>> q = selectEntry(dsl(), o, s, p, u);
+        SelectOnConditionStep<Record17<UUID, String, UUID, String, UUID, String, String, String, String, String, UUID, String, String, String, String, byte[], String>> q = selectEntry(dsl(), o, s, p, u);
 
         if (currentUserId != null) {
             // public secrets are visible for anyone
@@ -346,11 +353,11 @@ public class SecretDao extends AbstractDao {
                 .execute();
     }
 
-    private static SelectOnConditionStep<Record15<UUID, String, UUID, String, UUID, String, String, String, String, String, UUID, String, String, String, String>> selectEntry(DSLContext tx) {
+    private static SelectOnConditionStep<Record17<UUID, String, UUID, String, UUID, String, String, String, String, String, UUID, String, String, String, String, byte[], String>> selectEntry(DSLContext tx) {
         return selectEntry(tx, ORGANIZATIONS, SECRETS, PROJECTS, USERS);
     }
 
-    private static SelectOnConditionStep<Record15<UUID, String, UUID, String, UUID, String, String, String, String, String, UUID, String, String, String, String>> selectEntry(DSLContext tx,
+    private static SelectOnConditionStep<Record17<UUID, String, UUID, String, UUID, String, String, String, String, String, UUID, String, String, String, String, byte[], String>> selectEntry(DSLContext tx,
                                                                                                                                                                                Organizations orgAlias,
                                                                                                                                                                                Secrets secretAlias,
                                                                                                                                                                                Projects projectAlias,
@@ -369,14 +376,16 @@ public class SecretDao extends AbstractDao {
                 userAlias.USERNAME,
                 userAlias.DOMAIN,
                 userAlias.DISPLAY_NAME,
-                userAlias.USER_TYPE)
+                userAlias.USER_TYPE,
+                secretAlias.SECRET_SALT,
+                secretAlias.HASH_ALGORITHM)
                 .from(secretAlias)
                 .leftJoin(userAlias).on(secretAlias.OWNER_ID.eq(userAlias.USER_ID))
                 .leftJoin(projectAlias).on(projectAlias.PROJECT_ID.eq(secretAlias.PROJECT_ID))
                 .leftJoin(orgAlias).on(orgAlias.ORG_ID.eq(secretAlias.ORG_ID));
     }
 
-    private static SecretEntry toEntry(Record15<UUID, String, UUID, String, UUID, String, String, String, String, String, UUID, String, String, String, String> r) {
+    private static SecretEntry toEntry(Record17<UUID, String, UUID, String, UUID, String, String, String, String, String, UUID, String, String, String, String, byte[], String> r) {
         return new SecretEntry(r.get(SECRETS.SECRET_ID),
                 r.get(SECRETS.SECRET_NAME),
                 r.get(SECRETS.ORG_ID),
@@ -387,10 +396,13 @@ public class SecretDao extends AbstractDao {
                 SecretEncryptedByType.valueOf(r.get(SECRETS.ENCRYPTED_BY)),
                 r.get(SECRETS.STORE_TYPE),
                 SecretVisibility.valueOf(r.get(SECRETS.VISIBILITY)),
-                toOwner(r));
+                toOwner(r),
+                r.get(SECRETS.SECRET_SALT),
+                HashAlgorithm.getByName(r.get(SECRETS.HASH_ALGORITHM))
+                );
     }
 
-    private static EntityOwner toOwner(Record15<UUID, String, UUID, String, UUID, String, String, String, String, String, UUID, String, String, String, String> r) {
+    private static EntityOwner toOwner(Record17<UUID, String, UUID, String, UUID, String, String, String, String, String, UUID, String, String, String, String, byte[], String> r) {
         UUID id = r.get(USERS.USER_ID);
         if (id == null) {
             return null;
@@ -413,14 +425,14 @@ public class SecretDao extends AbstractDao {
 
         public SecretDataEntry(SecretEntry s, byte[] data) { // NOSONAR
             this(s.getId(), s.getName(), s.getOrgId(), s.getOrgName(), s.getProjectId(), s.getProjectName(),
-                    s.getType(), s.getEncryptedBy(), s.getStoreType(), s.getVisibility(), s.getOwner(), data);
+                    s.getType(), s.getEncryptedBy(), s.getStoreType(), s.getVisibility(), s.getOwner(),s.getSecretSalt(), s.getHashAlgorithm(), data);
         }
 
         public SecretDataEntry(UUID id, String name, UUID orgId, String orgName, UUID projectId, String projectName, SecretType type,
                                SecretEncryptedByType encryptedByType, String storeType, SecretVisibility visibility,
-                               EntityOwner owner, byte[] data) { // NOSONAR
+                               EntityOwner owner,byte[] secretSalt, HashAlgorithm hashAlgorithm, byte[] data) { // NOSONAR
 
-            super(id, name, orgId, orgName, projectId, projectName, type, encryptedByType, storeType, visibility, owner);
+            super(id, name, orgId, orgName, projectId, projectName, type, encryptedByType, storeType, visibility, owner, secretSalt, hashAlgorithm);
             this.data = data;
         }
 
