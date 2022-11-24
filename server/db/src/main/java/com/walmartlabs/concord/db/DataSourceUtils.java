@@ -95,7 +95,7 @@ public final class DataSourceUtils {
                     throw new RuntimeException(e);
                 }
 
-                log.warn("migrateDb -> db migration error, retrying in {}ms: {}", MIGRATION_RETRY_DELAY, e.getMessage());
+                log.warn("migrateDb -> db migration error, retrying in {} ms: {}", MIGRATION_RETRY_DELAY, e.getMessage());
                 try {
                     Thread.sleep(MIGRATION_RETRY_DELAY);
                 } catch (InterruptedException ee) {
