@@ -1,4 +1,4 @@
-package com.walmartlabs.concord.server.org.project;
+package com.walmartlabs.concord.policyengine;
 
 /*-
  * *****
@@ -20,18 +20,23 @@ package com.walmartlabs.concord.server.org.project;
  * =====
  */
 
-import org.sonatype.siesta.ValidationErrorsException;
+public class RuntimePolicy {
 
-public final class RepositoryUtils {
+    private final RuntimeRule rule;
 
-    public static RepositoryEntry assertRepository(RepositoryEntry entry) {
-        if (entry.getBranch() == null && entry.getCommitId() == null){
-            throw new ValidationErrorsException("Branch or CommitId required");
-        }
-
-        return entry;
+    public RuntimePolicy(RuntimeRule rule) {
+        this.rule = rule;
     }
 
-    private RepositoryUtils() {
+    public CheckResult<RuntimeRule, String> check(String processRuntime) {
+        if (rule == null || processRuntime == null) {
+            return CheckResult.success();
+        }
+
+        if (!rule.getAllowedRuntimes().contains(processRuntime)) {
+            return CheckResult.error(new CheckResult.Item<>(rule, processRuntime));
+        }
+
+        return CheckResult.success();
     }
 }

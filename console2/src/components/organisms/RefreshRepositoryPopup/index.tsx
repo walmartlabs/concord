@@ -19,12 +19,12 @@
  */
 
 import * as React from 'react';
-import { connect } from 'react-redux';
-import { AnyAction, Dispatch } from 'redux';
 
-import { ConcordKey, RequestError } from '../../../api/common';
-import { actions, State } from '../../../state/data/projects';
+import {ConcordKey, GenericOperationResult} from '../../../api/common';
 import { SingleOperationPopup } from '../../molecules';
+import {useCallback, useState} from "react";
+import {refreshRepository as apiRefreshRepo} from "../../../api/org/project/repository";
+import {useApi} from "../../../hooks/useApi";
 
 interface ExternalProps {
     orgName: ConcordKey;
@@ -34,57 +34,46 @@ interface ExternalProps {
     onDone?: () => void;
 }
 
-interface DispatchProps {
-    reset: () => void;
-    onConfirm: () => void;
-}
+const RefreshRepositoryPopup = (props: ExternalProps) => {
+    const {orgName, projectName, repoName, trigger, onDone} = props;
+    const [forceRequest, toggleForceRequest] = useState<boolean>(false);
 
-interface StateProps {
-    refreshing: boolean;
-    success: boolean;
-    error: RequestError;
-}
+    const refreshRepo = useCallback(async () => {
+        return await apiRefreshRepo(orgName, projectName, repoName, true);
+    }, [orgName, projectName, repoName]);
 
-type Props = DispatchProps & ExternalProps & StateProps;
+    const { data, error, clearState, isLoading } = useApi<GenericOperationResult>(refreshRepo, {
+        fetchOnMount: false,
+        forceRequest
+    });
 
-class RefreshRepositoryPopup extends React.Component<Props> {
-    render() {
-        const { trigger, refreshing, success, error, reset, onConfirm, onDone } = this.props;
+    const confirmHandler = useCallback(() => {
+        toggleForceRequest((prevState) => !prevState);
+    }, []);
 
-        return (
-            <SingleOperationPopup
-                trigger={trigger}
-                title="Refresh repository?"
-                introMsg={
-                    <p>
-                        Refreshing the repository will update the Concord's cache and reload the
-                        project's trigger definitions.
-                    </p>
-                }
-                running={refreshing}
-                success={success}
-                successMsg={<p>The repository was refreshed successfully.</p>}
-                error={error}
-                reset={reset}
-                onConfirm={onConfirm}
-                onDone={onDone}
-            />
-        );
-    }
-}
+    const resetHandler = useCallback(() => {
+        clearState();
+    }, [clearState]);
 
-const mapStateToProps = ({ projects }: { projects: State }): StateProps => ({
-    refreshing: projects.refreshRepository.running,
-    success: !!projects.refreshRepository.response && projects.refreshRepository.response.ok,
-    error: projects.refreshRepository.error
-});
+    return (
+        <SingleOperationPopup
+            trigger={trigger}
+            title="Refresh repository?"
+            introMsg={
+                <p>
+                    Refreshing the repository will update the Concord's cache and reload the
+                    project's trigger definitions.
+                </p>
+            }
+            running={isLoading}
+            success={data !== undefined}
+            successMsg={<p>The repository was refreshed successfully.</p>}
+            error={error}
+            onConfirm={confirmHandler}
+            onDone={onDone}
+            reset={resetHandler}
+        />
+    );
+};
 
-const mapDispatchToProps = (
-    dispatch: Dispatch<AnyAction>,
-    { orgName, projectName, repoName }: ExternalProps
-): DispatchProps => ({
-    reset: () => dispatch(actions.resetRepository()),
-    onConfirm: () => dispatch(actions.refreshRepository(orgName, projectName, repoName))
-});
-
-export default connect(mapStateToProps, mapDispatchToProps)(RefreshRepositoryPopup);
+export default RefreshRepositoryPopup;

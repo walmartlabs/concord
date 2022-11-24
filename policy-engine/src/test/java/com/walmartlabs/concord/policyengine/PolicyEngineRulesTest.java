@@ -86,15 +86,16 @@ public class PolicyEngineRulesTest {
         PolicyRules<StateRule> stateRules = new PolicyRules<>(null, Collections.singletonList(s1), Collections.singletonList(s2));
 
         List<DependencyRewriteRule> depRewriteRules = Collections.singletonList(new DependencyRewriteRule("mmmsg", "grp", "artifact", "versionFrom", "versionTo", new URI("value")));
+        RuntimeRule runtimeRule = new RuntimeRule(null, Collections.singleton("concord-v2"));
 
         PolicyEngineRules r = new PolicyEngineRules(dependencyRules, fileRules, taskRules, workspaceRule,
                 containerRules, queueRules, protectedTasksRules, entityRules, processCfg, new JsonStoreRule(storageRule, storageDataRule),
-                defaultProcessCfg, dependencies, attachmentsRule, stateRules, depRewriteRules, rawPayloadRule);
+                defaultProcessCfg, dependencies, attachmentsRule, stateRules, rawPayloadRule, depRewriteRules, runtimeRule);
 
         r.addCustomRule("ansible", Collections.singletonMap("k", "v"));
 
         String s = om.writeValueAsString(r);
-
+        System.out.println(">>>" + s);
         PolicyEngineRules rr = om.readValue(s, PolicyEngineRules.class);
         assertEquals(r, rr);
     }

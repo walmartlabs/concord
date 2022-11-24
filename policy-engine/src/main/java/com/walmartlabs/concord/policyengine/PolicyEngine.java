@@ -46,6 +46,7 @@ public class PolicyEngine {
     private final DependencyVersionsPolicy defaultDependencyVersionsPolicy;
     private final StatePolicy statePolicy;
     private final RawPayloadPolicy rawPayloadPolicy;
+    private final RuntimePolicy runtimePolicy;
 
     public PolicyEngine(PolicyEngineRules rules) {
         this(Collections.emptyList(), rules);
@@ -79,6 +80,7 @@ public class PolicyEngine {
         this.defaultProcessCfgPolicy = new ProcessCfgPolicy(rules.getDefaultProcessCfg());
         this.defaultDependencyVersionsPolicy = new DependencyVersionsPolicy(rules.getDependencyVersions());
         this.statePolicy = new StatePolicy(rules.getStateRules());
+        this.runtimePolicy = new RuntimePolicy(rules.getRuntimeRule());
     }
 
     public List<String> policyNames() {
@@ -159,6 +161,9 @@ public class PolicyEngine {
 
     public RawPayloadPolicy getRawPayloadPolicy() {
         return rawPayloadPolicy;
+
+    public RuntimePolicy getRuntimePolicy() {
+        return runtimePolicy;
     }
 
     @Override

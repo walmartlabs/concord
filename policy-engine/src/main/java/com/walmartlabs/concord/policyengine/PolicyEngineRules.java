@@ -48,6 +48,7 @@ public class PolicyEngineRules {
     private final List<DependencyVersionsPolicy.Dependency> dependencyVersions;
     private final PolicyRules<StateRule> stateRules;
     private final RawPayloadRule rawPayloadRule;
+    private final RuntimeRule runtimeRule;
 
     public PolicyEngineRules(@JsonProperty("dependency") PolicyRules<DependencyRule> dependencyRules,
                              @JsonProperty("file") PolicyRules<FileRule> fileRules,
@@ -63,9 +64,10 @@ public class PolicyEngineRules {
                              @JsonProperty("dependencyVersions") List<DependencyVersionsPolicy.Dependency> dependencyVersions,
                              @JsonProperty("attachments") AttachmentsRule attachmentsRule,
                              @JsonProperty("state") PolicyRules<StateRule> stateRules,
-                             @JsonProperty("dependencyRewrite") List<DependencyRewriteRule> dependencyRewriteRules, 
                              @JsonProperty("rawPayload") RawPayloadRule rawPayloadRule) {
-
+                             @JsonProperty("dependencyRewrite") List<DependencyRewriteRule> dependencyRewriteRules,
+                             @JsonProperty("runtime") RuntimeRule runtimeRule) {
+                             
         this.dependencyRules = dependencyRules;
         this.fileRules = fileRules;
         this.taskRules = taskRules;
@@ -83,6 +85,7 @@ public class PolicyEngineRules {
         this.dependencyVersions = dependencyVersions;
         this.stateRules = stateRules;
         this.dependencyRewriteRules = dependencyRewriteRules;
+        this.runtimeRule = runtimeRule;
     }
 
     public PolicyRules<DependencyRule> getDependencyRules() {
@@ -163,6 +166,11 @@ public class PolicyEngineRules {
         return stateRules;
     }
 
+    @JsonProperty("runtime")
+    public RuntimeRule getRuntimeRule() {
+        return runtimeRule;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -183,13 +191,14 @@ public class PolicyEngineRules {
                 Objects.equals(jsonStoreRule, that.jsonStoreRule) &&
                 Objects.equals(defaultProcessCfg, that.defaultProcessCfg) &&
                 Objects.equals(dependencyVersions, that.dependencyVersions) &&
-                Objects.equals(stateRules, that.stateRules) &&
+                Objects.equals(stateRules, that.stateRules) && 
+                Objects.equals(runtimeRule, that.runtimeRule) &&
                 Objects.equals(rawPayloadRule, that.rawPayloadRule);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(dependencyRules, dependencyRewriteRules, fileRules, taskRules, workspaceRule, attachmentsRule, containerRules, queueRules, protectedTasksRules, entityRules, processCfg, customRule, jsonStoreRule, defaultProcessCfg, dependencyVersions, stateRules, rawPayloadRule);
+        return Objects.hash(dependencyRules, dependencyRewriteRules, fileRules, taskRules, workspaceRule, attachmentsRule, containerRules, queueRules, protectedTasksRules, entityRules, processCfg, customRule, jsonStoreRule, defaultProcessCfg, dependencyVersions, stateRules, runtimeRule, rawPayloadRule);
     }
 
     @Override
@@ -212,6 +221,7 @@ public class PolicyEngineRules {
                 ", dependencyVersions=" + dependencyVersions +
                 ", stateRules=" + stateRules +
                 ", rawPayloadRule=" + rawPayloadRule +
+                ", runtimeRule=" + runtimeRule +
                 '}';
     }
 }
