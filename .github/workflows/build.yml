@@ -42,3 +42,6 @@ jobs:
 
       - name: Build and test with Maven
         run: ./mvnw -B clean install -Pdocker -Pit -Pjdk${{ matrix.jdk_version }}
+        
+      - name: Build with debian docker images
+        run: ./mvnw -C -B -f docker-images install -DskipTests -Pdocker -Pdebian -Pjdk${{ matrix.jdk_version }}
