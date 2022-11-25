@@ -30,7 +30,10 @@
 - cli: log checkpoint instead of throwing Exception
 ([#665](https://github.com/walmartlabs/concord/pull/665));
 - http-task: allow any value as json body
-([#675](https://github.com/walmartlabs/concord/pull/675)).
+([#675](https://github.com/walmartlabs/concord/pull/675));
+- docker-images: change the default shell to bash in
+Debian-based images
+([#644](https://github.com/walmartlabs/concord/pull/675)).
 
 
 ## [1.97.0] - 2022-10-11
