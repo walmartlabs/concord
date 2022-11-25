@@ -25,9 +25,9 @@ import com.walmartlabs.concord.forms.FormOptions;
 import com.walmartlabs.concord.runtime.common.FormService;
 import com.walmartlabs.concord.runtime.v2.model.*;
 import com.walmartlabs.concord.runtime.v2.parser.FormFieldParser;
-import com.walmartlabs.concord.runtime.v2.runner.el.EvalContext;
-import com.walmartlabs.concord.runtime.v2.runner.el.EvalContextFactory;
-import com.walmartlabs.concord.runtime.v2.runner.el.ExpressionEvaluator;
+import com.walmartlabs.concord.runtime.v2.sdk.EvalContext;
+import com.walmartlabs.concord.runtime.v2.sdk.EvalContextFactory;
+import com.walmartlabs.concord.runtime.v2.sdk.ExpressionEvaluator;
 import com.walmartlabs.concord.runtime.v2.sdk.Context;
 import com.walmartlabs.concord.runtime.v2.sdk.ProcessConfiguration;
 import com.walmartlabs.concord.svm.Runtime;
@@ -52,10 +52,11 @@ public class FormCallCommand extends StepCommand<FormCall> {
 
         Context ctx = runtime.getService(Context.class);
 
-        ExpressionEvaluator expressionEvaluator = runtime.getService(ExpressionEvaluator.class);
-        EvalContext evalContext = EvalContextFactory.global(ctx);
+        EvalContextFactory ecf = runtime.getService(EvalContextFactory.class);
+        EvalContext evalContext = ecf.global(ctx);
 
         FormCall call = getStep();
+        ExpressionEvaluator expressionEvaluator = runtime.getService(ExpressionEvaluator.class);
         String formName = expressionEvaluator.eval(evalContext, call.getName(), String.class);
 
         ProcessDefinition processDefinition = runtime.getService(ProcessDefinition.class);

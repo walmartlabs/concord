@@ -47,6 +47,7 @@ public class PolicyEngineRules {
     private final Map<String, Object> defaultProcessCfg;
     private final List<DependencyVersionsPolicy.Dependency> dependencyVersions;
     private final PolicyRules<StateRule> stateRules;
+    private final RuntimeRule runtimeRule;
 
     public PolicyEngineRules(@JsonProperty("dependency") PolicyRules<DependencyRule> dependencyRules,
                              @JsonProperty("file") PolicyRules<FileRule> fileRules,
@@ -62,7 +63,8 @@ public class PolicyEngineRules {
                              @JsonProperty("dependencyVersions")List<DependencyVersionsPolicy.Dependency> dependencyVersions,
                              @JsonProperty("attachments") AttachmentsRule attachmentsRule,
                              @JsonProperty("state") PolicyRules<StateRule> stateRules,
-                             @JsonProperty("dependencyRewrite") List<DependencyRewriteRule> dependencyRewriteRules) {
+                             @JsonProperty("dependencyRewrite") List<DependencyRewriteRule> dependencyRewriteRules,
+                             @JsonProperty("runtime") RuntimeRule runtimeRule) {
 
         this.dependencyRules = dependencyRules;
         this.fileRules = fileRules;
@@ -80,6 +82,7 @@ public class PolicyEngineRules {
         this.dependencyVersions = dependencyVersions;
         this.stateRules = stateRules;
         this.dependencyRewriteRules = dependencyRewriteRules;
+        this.runtimeRule = runtimeRule;
     }
 
     public PolicyRules<DependencyRule> getDependencyRules() {
@@ -155,37 +158,29 @@ public class PolicyEngineRules {
         return stateRules;
     }
 
+    @JsonProperty("runtime")
+    public RuntimeRule getRuntimeRule() {
+        return runtimeRule;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         PolicyEngineRules that = (PolicyEngineRules) o;
-        return Objects.equals(dependencyRules, that.dependencyRules) &&
-                Objects.equals(fileRules, that.fileRules) &&
-                Objects.equals(taskRules, that.taskRules) &&
-                Objects.equals(workspaceRule, that.workspaceRule) &&
-                Objects.equals(attachmentsRule, that.attachmentsRule) &&
-                Objects.equals(containerRules, that.containerRules) &&
-                Objects.equals(queueRules, that.queueRules) &&
-                Objects.equals(protectedTasksRules, that.protectedTasksRules) &&
-                Objects.equals(entityRules, that.entityRules) &&
-                Objects.equals(processCfg, that.processCfg) &&
-                Objects.equals(customRule, that.customRule) &&
-                Objects.equals(jsonStoreRule, that.jsonStoreRule) &&
-                Objects.equals(defaultProcessCfg, that.defaultProcessCfg) &&
-                Objects.equals(dependencyVersions, that.dependencyVersions) &&
-                Objects.equals(stateRules, that.stateRules);
+        return Objects.equals(dependencyRules, that.dependencyRules) && Objects.equals(dependencyRewriteRules, that.dependencyRewriteRules) && Objects.equals(fileRules, that.fileRules) && Objects.equals(taskRules, that.taskRules) && Objects.equals(workspaceRule, that.workspaceRule) && Objects.equals(attachmentsRule, that.attachmentsRule) && Objects.equals(containerRules, that.containerRules) && Objects.equals(queueRules, that.queueRules) && Objects.equals(protectedTasksRules, that.protectedTasksRules) && Objects.equals(entityRules, that.entityRules) && Objects.equals(processCfg, that.processCfg) && Objects.equals(customRule, that.customRule) && Objects.equals(jsonStoreRule, that.jsonStoreRule) && Objects.equals(defaultProcessCfg, that.defaultProcessCfg) && Objects.equals(dependencyVersions, that.dependencyVersions) && Objects.equals(stateRules, that.stateRules) && Objects.equals(runtimeRule, that.runtimeRule);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(dependencyRules, fileRules, taskRules, workspaceRule, attachmentsRule, containerRules, queueRules, protectedTasksRules, entityRules, processCfg, customRule, jsonStoreRule, defaultProcessCfg, dependencyVersions, stateRules);
+        return Objects.hash(dependencyRules, dependencyRewriteRules, fileRules, taskRules, workspaceRule, attachmentsRule, containerRules, queueRules, protectedTasksRules, entityRules, processCfg, customRule, jsonStoreRule, defaultProcessCfg, dependencyVersions, stateRules, runtimeRule);
     }
 
     @Override
     public String toString() {
         return "PolicyEngineRules{" +
                 "dependencyRules=" + dependencyRules +
+                ", dependencyRewriteRules=" + dependencyRewriteRules +
                 ", fileRules=" + fileRules +
                 ", taskRules=" + taskRules +
                 ", workspaceRule=" + workspaceRule +
@@ -200,6 +195,7 @@ public class PolicyEngineRules {
                 ", defaultProcessCfg=" + defaultProcessCfg +
                 ", dependencyVersions=" + dependencyVersions +
                 ", stateRules=" + stateRules +
+                ", runtimeRule=" + runtimeRule +
                 '}';
     }
 }

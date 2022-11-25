@@ -58,6 +58,7 @@ import picocli.CommandLine.Parameters;
 import picocli.CommandLine.Spec;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -76,6 +77,9 @@ public class Run implements Callable<Integer> {
 
     @Option(names = {"-e", "--extra-vars"}, description = "additional process variables")
     Map<String, Object> extraVars = new LinkedHashMap<>();
+
+    @Option(names = {"--default-cfg"}, description = "default Concord configuration file")
+    Path defaultCfg = Paths.get(System.getProperty("user.home")).resolve(".concord").resolve("defaultCfg.yml");
 
     @Option(names = {"--deps-cache-dir"}, description = "process dependencies cache dir")
     Path depsCacheDir = Paths.get(System.getProperty("user.home")).resolve(".concord").resolve("depsCache");
@@ -143,6 +147,8 @@ public class Run implements Callable<Integer> {
             throw new IllegalArgumentException("Not a directory or single Concord YAML file: " + sourceDir);
         }
 
+        copyDefaultCfg(targetDir, defaultCfg);
+
         DependencyManager dependencyManager = initDependencyManager();
         ImportManager importManager = new ImportManagerFactory(dependencyManager,
                 new CliRepositoryExporter(repoCacheDir), Collections.emptySet())
@@ -179,13 +185,16 @@ public class Run implements Callable<Integer> {
                 .instanceId(instanceId)
                 .build();
 
+        Map<String, Object> overlayCfg = ProcessDefinitionUtils.getProfilesOverlayCfg(new ProcessDefinitionV2(processDefinition), profiles);
+        List<String> overlayDeps = MapUtils.getList(overlayCfg, Constants.Request.DEPENDENCIES_KEY, Collections.emptyList());
+
         RunnerConfiguration runnerCfg = RunnerConfiguration.builder()
-                .dependencies(new DependencyResolver(dependencyManager, verbose).resolveDeps(processDefinition))
+                .dependencies(new DependencyResolver(dependencyManager, verbose).resolveDeps(overlayDeps))
                 .debug(cfg.debug())
                 .build();
 
-        Map<String, Object> profileArgs = getProfilesArguments(processDefinition, profiles);
-        Map<String, Object> args = ConfigurationUtils.deepMerge(cfg.arguments(), profileArgs, extraVars);
+        Map<String, Object> overlayArgs = MapUtils.getMap(overlayCfg, Constants.Request.ARGUMENTS_KEY, Collections.emptyMap());
+        Map<String, Object> args = ConfigurationUtils.deepMerge(cfg.arguments(), overlayArgs, extraVars);
         if (verbose) {
             System.out.println("Process arguments: " + args);
         }
@@ -204,6 +213,7 @@ public class Run implements Callable<Integer> {
             ProcessDefinition pd = ProcessDefinition.builder().from(processDefinition)
                     .configuration(ProcessDefinitionConfiguration.builder().from(processDefinition.configuration())
                             .arguments(args)
+                            .dependencies(overlayDeps)
                             .build())
                     .flows(flows)
                     .imports(Imports.builder().build())
@@ -257,9 +267,34 @@ public class Run implements Callable<Integer> {
                 .out(cfg.out());
     }
 
-    private static Map<String, Object> getProfilesArguments(ProcessDefinition processDefinition, List<String> profiles) {
-        Map<String, Object> result = ProcessDefinitionUtils.getVariables(new ProcessDefinitionV2(processDefinition), profiles);
-        return MapUtils.getMap(result, Constants.Request.ARGUMENTS_KEY, Collections.emptyMap());
+    private static void copyDefaultCfg(Path targetDir, Path defaultCfg) throws IOException {
+        final Path destDir = targetDir.resolve("concord");
+        final Path destFile = destDir.resolve("_defaultCfg.concord.yml");
+
+        // Don't overwrite existing file is given project dir
+        if (Files.exists(destFile)) {
+            System.err.println("Default configuration already exists: " + defaultCfg);
+            return;
+        }
+
+        if (!Files.exists(destDir)) {
+            Files.createDirectory(destDir);
+        }
+
+        if (Files.exists(defaultCfg)) {
+            if (Files.isRegularFile(defaultCfg)) {
+                Files.copy(defaultCfg, destFile);
+            } else {
+                System.err.println("Default configuration must be a file!");
+            }
+        } else {
+            try (InputStream in = Run.class.getClassLoader().getResourceAsStream("defaultCfg.yml")) {
+                if (in == null) {
+                    throw new IllegalStateException("Failed to load embedded default concord configuration.");
+                }
+                Files.copy(in, destFile);
+            }
+        }
     }
 
     private DependencyManager initDependencyManager() throws IOException {

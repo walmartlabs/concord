@@ -12,74 +12,59 @@
 Concord is a workflow server. It is the orchestration engine that connects
 different systems together using scenarios and plugins created by users.
 
+- [Building](#building)
+- [Console](#console)
+- [Integration tests](#integration-tests)
+  * [Prerequisites](#prerequisites)
+  * [Running tests](#running-tests)
+- [Examples](#examples)
+- [How To Release New Versions](#how-to-release-new-versions)
+
 ## Building
 
 Dependencies:
 - [Git](https://git-scm.com/) 2.18+
-- [Java 8](https://adoptopenjdk.net/)
+- [Java 8](https://adoptium.net/)
 - [Docker Community Edition](https://www.docker.com/community-edition)
+- [Docker Buildx](https://docs.docker.com/build/buildx/install/)
 - (Optional) [NodeJS and NPM](https://nodejs.org/en/download/) (Node 16 or greater)
 
 ```shell
-git clone ...
+git clone https://github.com/walmartlabs/concord.git
 cd concord
 ./mvnw clean install -DskipTests
 ```
 
-### Docker Images
+Available Maven profiles:
 
-You can build docker images using this commands:
+- `docker` - build Docker images;
+- `debian` - build Debian-based Docker images instead of the default CentOS base;
+- `it` - run integration tests;
+- `jdk11`, `jdk17`, `jdk8-aarch64`, `jdk17-aarch64` - use a different JDK version
+  for building artifacts and Docker images.
 
-```shell
-./mvnw clean install -DskipTests -Pdocker
+Profiles can be combined, e.g.
+
+```
+./mvnw clean install -Pdocker -Pdebian -Pit -Pjdk17-aarch64
 ```
 
-#### Debian based docker Images
-
-By default `centos` is used as base os. It can be changed to debian by using profile `debian`
-
-```shell
-./mvnw clean install -DskipTests -Pdocker -Pdebian
-```
-
-### Console
+## Console
 
 See the [console2/README.md](./console2/README.md) file.
 ```shell
 cd ./console2
-npm install # Install dependencies
+npm ci # Install dependencies
 ```
-
-
 
 Start the console in dev mode by running:
 ```shell
 npm run start
 ```
 
-### Java 11
+## Integration tests
 
-Use the `jdk11` profile:
-
-```
-./mvnw clean install -DskipTests -Pdocker -Pjdk11
-```
-
-This command builds binaries and Docker images using JDK 11.
-
-### Apple M1 Silicon (aarch64)
-
-Use the `jdk8-aarch64` profile:
-
-```
-./mvnw clean install -DskipTests -Pdocker -Pjdk8-aarch64
-```
-
-This command builds binaries and Docker images using JDK 8 for arm64 architecture.
-
-### Integration tests
-
-#### Prerequisites
+### Prerequisites
 
 Prerequisites:
 
@@ -92,7 +77,7 @@ Prerequisites:
 - Java must be available in `$PATH` as `java`;
 - [Chrome WebDriver](http://chromedriver.chromium.org/) available in `$PATH`.
 
-#### Running tests
+### Running tests
 
 Integration tests are disabled by default. Use the `it` profile to enable them:
 

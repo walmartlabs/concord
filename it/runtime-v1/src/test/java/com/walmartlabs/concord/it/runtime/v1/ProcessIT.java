@@ -28,7 +28,9 @@ import com.walmartlabs.concord.client.FormListEntry;
 import com.walmartlabs.concord.client.FormSubmitResponse;
 import com.walmartlabs.concord.client.ProcessEntry;
 import com.walmartlabs.concord.client.ProcessEntry.StatusEnum;
+import com.walmartlabs.concord.it.common.JGitUtils;
 import com.walmartlabs.concord.sdk.Constants;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.Timeout;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -50,6 +52,11 @@ public class ProcessIT {
 
     @RegisterExtension
     public static final ConcordRule concord = ConcordConfiguration.configure();
+
+    @BeforeAll
+    public static void init() {
+        JGitUtils.applyWorkarounds();
+    }
 
     @Test
     public void testUploadAndRun() throws Exception {

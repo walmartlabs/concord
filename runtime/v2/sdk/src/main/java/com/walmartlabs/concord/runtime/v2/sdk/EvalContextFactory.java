@@ -1,4 +1,4 @@
-package com.walmartlabs.concord.runtime.v2.runner.el;
+package com.walmartlabs.concord.runtime.v2.sdk;
 
 /*-
  * *****
@@ -20,13 +20,9 @@ package com.walmartlabs.concord.runtime.v2.runner.el;
  * =====
  */
 
-import com.walmartlabs.concord.runtime.v2.runner.context.ContextVariables;
-import com.walmartlabs.concord.runtime.v2.sdk.Context;
-import com.walmartlabs.concord.runtime.v2.sdk.MapBackedVariables;
-
 import java.util.Map;
 
-public final class EvalContextFactory {
+public interface EvalContextFactory {
 
     /**
      * Includes all flow variables.
@@ -38,37 +34,21 @@ public final class EvalContextFactory {
      *      msg: "Hello, ${name}!" # evaluated to "Hello, Concord!"
      * }</pre>
      */
-    public static EvalContext scope(Context ctx) {
-        return DefaultEvalContext.builder()
-                .context(ctx)
-                .variables(new ContextVariables(ctx))
-                .useIntermediateResults(true)
-                .build();
-    }
+    EvalContext scope(Context ctx);
 
     /**
      * Includes all flow variables.
      * Allows access to tasks.
      * Doesn't allow access to intermediate results.
      */
-    public static EvalContext global(Context ctx) {
-        return DefaultEvalContext.builder()
-                .context(ctx)
-                .variables(new ContextVariables(ctx))
-                .build();
-    }
+    EvalContext global(Context ctx);
 
     /**
      * Includes all flow variables and additional variables.
      * Allows access to tasks.
      * Doesn't allow access to intermediate results.
      */
-    public static EvalContext global(Context ctx, Map<String, Object> additionalVariables) {
-        return DefaultEvalContext.builder()
-                .context(ctx)
-                .variables(new ContextVariablesWithOverrides(ctx, additionalVariables))
-                .build();
-    }
+    EvalContext global(Context ctx, Map<String, Object> additionalVariables);
 
     /**
      * Includes only the specified variables.
@@ -76,12 +56,7 @@ public final class EvalContextFactory {
      * Allows access to tasks.
      * Doesn't allow access to intermediate results.
      */
-    public static EvalContext strict(Context ctx, Map<String, Object> variables) {
-        return DefaultEvalContext.builder()
-                .context(ctx)
-                .variables(new MapBackedVariables(variables))
-                .build();
-    }
+    EvalContext strict(Context ctx, Map<String, Object> variables);
 
     /**
      * Includes only the specified variables.
@@ -89,12 +64,5 @@ public final class EvalContextFactory {
      * Doesn't allow access to tasks.
      * Doesn't allow access to intermediate results.
      */
-    public static EvalContext strict(Map<String, Object> variables) {
-        return DefaultEvalContext.builder()
-                .variables(new MapBackedVariables(variables))
-                .build();
-    }
-
-    private EvalContextFactory() {
-    }
+    EvalContext strict(Map<String, Object> variables);
 }
