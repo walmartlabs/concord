@@ -26,13 +26,13 @@ import com.walmartlabs.concord.policyengine.RawPayloadRule;
 import com.walmartlabs.concord.server.policy.PolicyManager;
 import com.walmartlabs.concord.server.process.Payload;
 import com.walmartlabs.concord.server.process.ProcessException;
-import com.walmartlabs.concord.server.process.logs.ProcessLogManager;
 import com.walmartlabs.concord.server.sdk.ProcessKey;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 import javax.inject.Named;
+import javax.ws.rs.core.Response;
 import java.text.MessageFormat;
 import java.util.List;
 
@@ -43,20 +43,18 @@ public class RawPayloadPolicyProcessor implements PayloadProcessor{
     
     private static final Logger log = LoggerFactory.getLogger(RawPayloadPolicyProcessor.class);
 
-    private final ProcessLogManager logManager;
     private final PolicyManager policyManager;
     
     @Inject
-    public RawPayloadPolicyProcessor(ProcessLogManager logManager, PolicyManager policyManager) {
-        this.logManager = logManager;
+    public RawPayloadPolicyProcessor(PolicyManager policyManager) {
         this.policyManager = policyManager;
     }
 
     @Override
     public Payload process(Chain chain, Payload payload) {
         ProcessKey processKey = payload.getProcessKey();
-        PolicyEngine policy = policyManager.getPolicyEngine(processKey);
         
+        PolicyEngine policy = policyManager.getPolicyEngine(payload);
         if (policy == null) {
             return chain.process(payload);
         }
@@ -71,8 +69,7 @@ public class RawPayloadPolicyProcessor implements PayloadProcessor{
         }
 
         if (!result.getDeny().isEmpty()) {
-            logManager.error(processKey, buildErrorMessage(result.getDeny()));
-            throw new ProcessException(processKey, "Found raw payload policy violations");
+            throw new ProcessException(processKey, String.format("Found raw payload policy violations: %s", buildErrorMessage(result.getDeny())), Response.Status.BAD_REQUEST);
         }
 
         return chain.process(payload);
