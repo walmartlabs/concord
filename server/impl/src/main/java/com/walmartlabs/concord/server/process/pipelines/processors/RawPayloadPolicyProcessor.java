@@ -23,7 +23,7 @@ package com.walmartlabs.concord.server.process.pipelines.processors;
 import com.walmartlabs.concord.policyengine.CheckResult;
 import com.walmartlabs.concord.policyengine.PolicyEngine;
 import com.walmartlabs.concord.policyengine.RawPayloadRule;
-import com.walmartlabs.concord.sdk.Constants;
+import com.walmartlabs.concord.server.policy.PolicyManager;
 import com.walmartlabs.concord.server.process.Payload;
 import com.walmartlabs.concord.server.process.ProcessException;
 import com.walmartlabs.concord.server.process.logs.ProcessLogManager;
@@ -34,10 +34,7 @@ import org.slf4j.LoggerFactory;
 import javax.inject.Inject;
 import javax.inject.Named;
 import java.text.MessageFormat;
-import java.util.Arrays;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
 @Named
 public class RawPayloadPolicyProcessor implements PayloadProcessor{
@@ -47,31 +44,27 @@ public class RawPayloadPolicyProcessor implements PayloadProcessor{
     private static final Logger log = LoggerFactory.getLogger(RawPayloadPolicyProcessor.class);
 
     private final ProcessLogManager logManager;
+    private final PolicyManager policyManager;
     
-    private static final Set<String> PROJECT_ROOT_FILE_NAMES = new HashSet<>(Arrays.asList(Constants.Files.PROJECT_ROOT_FILE_NAMES));
-
     @Inject
-    public RawPayloadPolicyProcessor(ProcessLogManager logManager) {
+    public RawPayloadPolicyProcessor(ProcessLogManager logManager, PolicyManager policyManager) {
         this.logManager = logManager;
+        this.policyManager = policyManager;
     }
 
     @Override
     public Payload process(Chain chain, Payload payload) {
         ProcessKey processKey = payload.getProcessKey();
-        PolicyEngine policy = payload.getHeader(Payload.POLICY);
+        PolicyEngine policy = policyManager.getPolicyEngine(processKey);
         
         if (policy == null) {
-            return chain.process(payload);
-        }
-        
-        if (!hasRawPayloadAttachment(payload)) {
             return chain.process(payload);
         }
 
         CheckResult<RawPayloadRule, Long> result;
         try {
             result = policy.getRawPayloadPolicy()
-                    .check(payload.getAttachment(payload.WORKSPACE_ARCHIVE));
+                    .check(payload.getAttachment(Payload.WORKSPACE_ARCHIVE));
         } catch (Exception e) {
             log.error("process -> error", e);
             throw new ProcessException(processKey, "Found raw payload policy check error", e);
@@ -99,17 +92,4 @@ public class RawPayloadPolicyProcessor implements PayloadProcessor{
         return sb.toString();
     }
     
-    /**
-     * @return {@code true} if the payload contains any file we consider
-     * a "raw payload" attachment: workspace archives, concord.yml, etc.
-     */
-    private boolean hasRawPayloadAttachment(Payload payload) {
-        if (payload.getAttachment(Payload.WORKSPACE_ARCHIVE) != null) {
-            return true;
-        }
-
-        return payload.getAttachments().keySet().stream()
-                .anyMatch(k -> PROJECT_ROOT_FILE_NAMES.contains(k) ||
-                        (k.startsWith(Constants.Files.PROJECT_FILES_DIR_NAME + "/") && k.endsWith(".yml")));
-    }
 }

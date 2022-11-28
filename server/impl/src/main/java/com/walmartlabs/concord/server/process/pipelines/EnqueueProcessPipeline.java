@@ -45,7 +45,6 @@ public class EnqueueProcessPipeline extends Pipeline {
                 LoggingMDCProcessor.class,
                 PayloadRestoreProcessor.class,
                 PolicyExportProcessor.class,
-                RawPayloadPolicyProcessor.class,
                 WorkspaceArchiveProcessor.class,
                 RepositoryProcessor.class,
                 RepositoryInfoUpdateProcessor.class,

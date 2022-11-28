@@ -25,6 +25,9 @@ import com.walmartlabs.concord.policyengine.EntityRule;
 import com.walmartlabs.concord.policyengine.PolicyEngine;
 import com.walmartlabs.concord.server.org.policy.PolicyDao;
 import com.walmartlabs.concord.server.org.policy.PolicyEntry;
+import com.walmartlabs.concord.server.process.ProcessEntry;
+import com.walmartlabs.concord.server.process.queue.ProcessQueueDao;
+import com.walmartlabs.concord.server.sdk.ProcessKey;
 import com.walmartlabs.concord.server.security.UserPrincipal;
 import com.walmartlabs.concord.server.user.UserEntry;
 import com.walmartlabs.concord.server.user.UserInfoProvider;
@@ -43,12 +46,15 @@ public class PolicyManager {
     private final PolicyCache policyCache;
     private final PolicyDao policyDao;
     private final UserManager userManager;
+    private final ProcessQueueDao processQueueDao;
+    
 
     @Inject
-    public PolicyManager(PolicyCache policyCache, PolicyDao policyDao, UserManager userManager) {
+    public PolicyManager(PolicyCache policyCache, PolicyDao policyDao, UserManager userManager, ProcessQueueDao processQueueDao) {
         this.policyCache = policyCache;
         this.policyDao = policyDao;
         this.userManager = userManager;
+        this.processQueueDao = processQueueDao;
     }
 
     public void refresh() {
@@ -120,6 +126,16 @@ public class PolicyManager {
         }
     }
 
+    public PolicyEngine getPolicyEngine(ProcessKey processKey) {
+
+        ProcessEntry info = processQueueDao.get(processKey);
+        if (info == null) {
+            return null;
+        }
+       
+        return get(info.orgId(), info.projectId(), info.initiatorId());
+    }
+    
     private Map<String, Object> getOwnerAttrs(UserEntry owner) {
         if (owner == null) {
             return Collections.emptyMap();
