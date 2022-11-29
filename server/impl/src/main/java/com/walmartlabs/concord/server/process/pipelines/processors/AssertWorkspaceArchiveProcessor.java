@@ -67,7 +67,7 @@ public class AssertWorkspaceArchiveProcessor implements PayloadProcessor {
 
         return chain.process(payload);
     }
-    
+
     private void assertAcceptsRawPayload(Payload payload) {
         UUID projectId = payload.getHeader(Payload.PROJECT_ID);
 

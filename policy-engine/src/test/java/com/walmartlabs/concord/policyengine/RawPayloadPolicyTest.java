@@ -42,8 +42,8 @@ public class RawPayloadPolicyTest {
 
         // ---
 
-        assertDeny(fiveBytes, p);
-        assertAllow(tenBytes, p);
+        assertDeny(fiveBytes, p.resolve("test.bin"));
+        assertAllow(tenBytes, p.resolve("test.bin"));
     }
 
     private static void assertAllow(RawPayloadPolicy policy, Path p) throws IOException {
