@@ -21,11 +21,8 @@ package com.walmartlabs.concord.policyengine;
  */
 
 import java.io.IOException;
-import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.SimpleFileVisitor;
-import java.nio.file.attribute.BasicFileAttributes;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -45,20 +42,10 @@ public class RawPayloadPolicy {
 
         List<CheckResult.Item<RawPayloadRule, Long>> deny = new ArrayList<>();
 
-        Long[] size = { 0L };
+        long size = Files.size(p);
 
-        Files.walkFileTree(p, new SimpleFileVisitor<Path>() {
-
-            @Override
-            public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
-                size[0] += Files.size(file);
-
-                return FileVisitResult.CONTINUE;
-            }
-        });
-
-        if (size[0] > rule.getMaxSizeInBytes()) {
-            deny.add(new CheckResult.Item<>(rule, size[0], null));
+        if (size > rule.getMaxSizeInBytes()) {
+            deny.add(new CheckResult.Item<>(rule, size, null));
         }
 
         return new CheckResult<>(Collections.emptyList(), deny);

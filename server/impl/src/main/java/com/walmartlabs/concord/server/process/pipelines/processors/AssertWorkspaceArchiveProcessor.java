@@ -46,17 +46,15 @@ public class AssertWorkspaceArchiveProcessor implements PayloadProcessor {
     private final ProjectDao projectDao;
     private final ProjectAccessManager projectAccessManager;
     private final UserManager userManager;
-    private final RawPayloadPolicyProcessor rawPayloadPolicyProcessor;
-    
+
     @Inject
     public AssertWorkspaceArchiveProcessor(ProjectDao projectDao,
                                            ProjectAccessManager projectAccessManager,
-                                           UserManager userManager, RawPayloadPolicyProcessor rawPayloadPolicyProcessor) {
+                                           UserManager userManager) {
 
         this.projectDao = projectDao;
         this.projectAccessManager = projectAccessManager;
         this.userManager = userManager;
-        this.rawPayloadPolicyProcessor = rawPayloadPolicyProcessor;
     }
 
     @Override
@@ -67,7 +65,7 @@ public class AssertWorkspaceArchiveProcessor implements PayloadProcessor {
 
         assertAcceptsRawPayload(payload);
 
-        return rawPayloadPolicyProcessor.process(chain, payload);
+        return chain.process(payload);
     }
     
     private void assertAcceptsRawPayload(Payload payload) {

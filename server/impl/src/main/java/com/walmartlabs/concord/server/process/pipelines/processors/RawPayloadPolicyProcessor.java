@@ -59,6 +59,10 @@ public class RawPayloadPolicyProcessor implements PayloadProcessor{
             return chain.process(payload);
         }
 
+        if (payload.getAttachment(Payload.WORKSPACE_ARCHIVE) == null) {
+            return chain.process(payload);
+        }
+        
         CheckResult<RawPayloadRule, Long> result;
         try {
             result = policy.getRawPayloadPolicy()
