@@ -36,7 +36,7 @@ public class RawPayloadPolicy {
     }
 
     public CheckResult<RawPayloadRule, Long> check(Path p) throws IOException {
-        if (rule == null || rule.getMaxSizeInBytes() == null || !Files.exists(p)) {
+        if (rule == null || rule.getMaxSizeInBytes() == null || !Files.exists(p) || !Files.isRegularFile(p)) {
             return CheckResult.success();
         }
 
