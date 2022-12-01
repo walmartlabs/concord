@@ -88,6 +88,8 @@ public class SecretManager {
     private final UserManager userManager;
     private final ApiKeyDao apiKeyDao;
 
+    private static final int SALT_LENGTH = 16;
+
     @Inject
     public SecretManager(PolicyManager policyManager,
                          AuditLog auditLog,
@@ -294,7 +296,7 @@ public class SecretManager {
 
     public ApiKeyEntry assertApiKey(AccessScope accessScope, UUID orgId, String secretName, String password) {
         DecryptedSecret secret = getSecret(accessScope, orgId, secretName, password, SecretType.DATA);
-        BinaryDataSecret data = (BinaryDataSecret)secret.getSecret();
+        BinaryDataSecret data = (BinaryDataSecret) secret.getSecret();
         ApiKeyEntry result = apiKeyDao.find(new String(data.getData()));
         if (result == null) {
             throw new ConcordApplicationException("Api key from secret '" + secretName + "' not found", Status.NOT_FOUND);
@@ -317,7 +319,7 @@ public class SecretManager {
     }
 
     public void update(UUID orgId, String secretName, SecretUpdateParams params) {
-        SecretEntry e = assertAccess(orgId,null, secretName, ResourceAccessLevel.WRITER, false);
+        SecretEntry e = assertAccess(orgId, null, secretName, ResourceAccessLevel.WRITER, false);
 
         UUID newOrgId = validateOrgId(params.newOrgId(), params.newOrgName(), e);
         UUID newProjectId = validateProjectId(params.newProjectId(), params.newProjectName(), params.removeProjectLink(), newOrgId, e);
@@ -477,9 +479,9 @@ public class SecretManager {
 
         byte[] ab = decryptData(e, password);
 
-        if(e.getHashAlgorithm() == HashAlgorithm.MD5) {
+        if (e.getHashAlgorithm() == HashAlgorithm.LEGACY_MD5) {
             byte[] encryptedData = SecretUtils.encrypt(ab, getPwd(password), e.getSecretSalt(), HashAlgorithm.SHA256);
-            secretDao.update(e.getId(),null, null, null, encryptedData, null, null, null, HashAlgorithm.SHA256);
+            secretDao.update(e.getId(), null, null, null, encryptedData, null, null, null, HashAlgorithm.SHA256);
         }
 
         auditLog.add(AuditObject.SECRET, AuditAction.ACCESS)
@@ -552,7 +554,7 @@ public class SecretManager {
         SecretType type = secretType(s);
 
         byte[] pwd = getPwd(password);
-        byte[] salt = SecretUtils.generateSalt(16);
+        byte[] salt = SecretUtils.generateSalt(SALT_LENGTH);
 
         byte[] ab = SecretUtils.encrypt(data, pwd, salt, HashAlgorithm.SHA256);
         SecretEncryptedByType encryptedByType = getEncryptedBy(password);

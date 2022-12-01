@@ -88,6 +88,7 @@ public final class DataSourceUtils {
                 String logTable = changeLogProvider.getChangeLogTable();
                 String lockTable = changeLogProvider.getLockTable();
                 migrateDb(c, logPath, logTable, lockTable, changeLogParams);
+                log.info("migrateDb -> completed '{}' migration..", changeLogProvider);
                 break;
             } catch (Exception e) {
                 if (i + 1 >= retries) {
@@ -95,7 +96,7 @@ public final class DataSourceUtils {
                     throw new RuntimeException(e);
                 }
 
-                log.warn("migrateDb -> db migration error, retrying in {} ms: {}", MIGRATION_RETRY_DELAY, e.getMessage());
+                log.warn("migrateDb -> db migration error, retrying in {}ms: {}", MIGRATION_RETRY_DELAY, e.getMessage());
                 try {
                     Thread.sleep(MIGRATION_RETRY_DELAY);
                 } catch (InterruptedException ee) {
