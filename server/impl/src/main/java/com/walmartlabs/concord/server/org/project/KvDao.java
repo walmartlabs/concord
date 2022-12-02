@@ -24,12 +24,14 @@ import com.walmartlabs.concord.db.AbstractDao;
 import com.walmartlabs.concord.db.MainDB;
 import com.walmartlabs.concord.server.Locks;
 import com.walmartlabs.concord.server.jooq.tables.ProjectKvStore;
-import org.jooq.Configuration;
-import org.jooq.Record1;
+import org.jooq.*;
 import org.jooq.exception.DataAccessException;
 
 import javax.inject.Inject;
 import javax.inject.Named;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 import static com.walmartlabs.concord.server.jooq.tables.ProjectKvStore.PROJECT_KV_STORE;
@@ -131,5 +133,42 @@ public class KvDao extends AbstractDao {
                             .and(kv.VALUE_KEY.eq(key)))
                     .fetchOne(kv.VALUE_LONG);
         });
+    }
+
+    public List<Map<String, Object>> list(UUID projectId, int offset, int limit, String filter) {
+        ProjectKvStore kv = PROJECT_KV_STORE.as("kv");
+
+        return txResult(tx -> {
+            SelectJoinStep<Record3<String, Long, String>> q = tx.select(kv.VALUE_KEY, kv.VALUE_LONG, kv.VALUE_STRING)
+                    .from(kv);
+
+            if (filter != null) {
+                q.where(kv.VALUE_KEY.containsIgnoreCase(filter));
+            }
+
+            if (offset > 0) {
+                q.offset(offset);
+            }
+
+            if (limit > 0) {
+                q.limit(limit);
+            }
+
+            return q
+                    .where(kv.PROJECT_ID.eq(projectId))
+                    .orderBy(kv.VALUE_KEY)
+                    .fetch(KvDao::toEntry);
+        });
+    }
+
+    private static Map<String, Object> toEntry(Record3<String, Long, String> r) {
+        Object value = r.get(PROJECT_KV_STORE.VALUE_STRING);
+        if (value == null) {
+            value = r.get(PROJECT_KV_STORE.VALUE_LONG);
+        }
+        Map<String, Object> m = new HashMap<>();
+        m.put("key", r.get(PROJECT_KV_STORE.VALUE_KEY));
+        m.put("value", value);
+        return m;
     }
 }
