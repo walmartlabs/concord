@@ -4,6 +4,8 @@
 
 ### Added
 
+- policy: new policy to restrict raw payload
+([#679](https://github.com/walmartlabs/concord/pull/679));
 - concord-cli: provide default process configuration
 ([#649](https://github.com/walmartlabs/concord/pull/649));
 - policy: policy to restrict runtime of process
