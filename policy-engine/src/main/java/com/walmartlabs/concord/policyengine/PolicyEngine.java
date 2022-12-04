@@ -45,6 +45,7 @@ public class PolicyEngine {
     private final ProcessCfgPolicy defaultProcessCfgPolicy;
     private final DependencyVersionsPolicy defaultDependencyVersionsPolicy;
     private final StatePolicy statePolicy;
+    private final RawPayloadPolicy rawPayloadPolicy;
     private final RuntimePolicy runtimePolicy;
 
     public PolicyEngine(PolicyEngineRules rules) {
@@ -65,6 +66,7 @@ public class PolicyEngine {
         this.workspacePolicy = new WorkspacePolicy(rules.getWorkspaceRule());
         this.attachmentsPolicy = new AttachmentsPolicy(rules.getAttachmentsRule());
         this.containerPolicy = new ContainerPolicy(rules.getContainerRules());
+        this.rawPayloadPolicy = new RawPayloadPolicy(rules.getRawPayloadRule());
 
         QueueRule qr = getQueueRule(rules);
         this.concurrentProcessPolicy = new ConcurrentProcessPolicy(qr.getConcurrent());
@@ -157,6 +159,10 @@ public class PolicyEngine {
         return statePolicy;
     }
 
+    public RawPayloadPolicy getRawPayloadPolicy() {
+        return rawPayloadPolicy;
+    }
+    
     public RuntimePolicy getRuntimePolicy() {
         return runtimePolicy;
     }
