@@ -1,10 +1,11 @@
+@Value.Style(jdkOnly = true)
 package com.walmartlabs.concord.policyengine;
 
 /*-
  * *****
  * Concord
  * -----
- * Copyright (C) 2017 - 2018 Walmart Inc.
+ * Copyright (C) 2017 - 2020 Walmart Inc.
  * -----
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,23 +21,4 @@ package com.walmartlabs.concord.policyengine;
  * =====
  */
 
-public class RuntimePolicy {
-
-    private final RuntimeRule rule;
-
-    public RuntimePolicy(RuntimeRule rule) {
-        this.rule = rule;
-    }
-
-    public CheckResult<RuntimeRule, String> check(String processRuntime) {
-        if (rule == null || processRuntime == null) {
-            return CheckResult.success();
-        }
-
-        if (!rule.allowedRuntimes().contains(processRuntime)) {
-            return CheckResult.error(new CheckResult.Item<>(rule, processRuntime));
-        }
-
-        return CheckResult.success();
-    }
-}
+import org.immutables.value.Value;

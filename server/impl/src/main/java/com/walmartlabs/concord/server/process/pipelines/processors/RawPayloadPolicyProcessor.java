@@ -35,6 +35,7 @@ import javax.inject.Named;
 import javax.ws.rs.core.Response;
 import java.text.MessageFormat;
 import java.util.List;
+import java.util.Objects;
 
 @Named
 public class RawPayloadPolicyProcessor implements PayloadProcessor{
@@ -84,11 +85,11 @@ public class RawPayloadPolicyProcessor implements PayloadProcessor{
         for (CheckResult.Item<RawPayloadRule, Long> e : errors) {
             RawPayloadRule r = e.getRule();
 
-            String msg = r.getMsg() != null ? r.getMsg() : DEFAULT_POLICY_MESSAGE;
+            String msg = r.msg() != null ? r.msg() : DEFAULT_POLICY_MESSAGE;
             long actualCount = e.getEntity();
-            long limit = r.getMaxSizeInBytes();
+            long limit = r.maxSizeInBytes();
 
-            sb.append(MessageFormat.format(msg, actualCount, limit)).append(';');
+            sb.append(MessageFormat.format(Objects.requireNonNull(msg), actualCount, limit)).append(';');
         }
         return sb.toString();
     }

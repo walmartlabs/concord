@@ -587,8 +587,8 @@ public class ProcessStateManager extends AbstractDao {
             throw new RuntimeException(e);
         }
 
-        result.getWarn().forEach(w -> logManager.warn(processKey, "Potentially restricted state file '{}' (state policy: {})", src.relativize(w.getEntity()), w.getRule().getMsg()));
-        result.getDeny().forEach(e -> logManager.error(processKey, "State file '{}' is forbidden by the state policy {}", src.relativize(e.getEntity()), e.getRule().getMsg()));
+        result.getWarn().forEach(w -> logManager.warn(processKey, "Potentially restricted state file '{}' (state policy: {})", src.relativize(w.getEntity()), w.getRule().msg()));
+        result.getDeny().forEach(e -> logManager.error(processKey, "State file '{}' is forbidden by the state policy {}", src.relativize(e.getEntity()), e.getRule().msg()));
 
         if (!result.getDeny().isEmpty()) {
             throw new PolicyException("Found forbidden state files");
@@ -604,8 +604,8 @@ public class ProcessStateManager extends AbstractDao {
 
         CheckResult<StateRule, StatePolicy.StateStats> result = policyEngine.getStatePolicy().check(() -> getStateStats(tx, processKey));
 
-        result.getWarn().forEach(w -> logManager.warn(processKey, "Potentially restricted state: '{}' (state policy: {})", w.getMsg(), w.getRule().getMsg()));
-        result.getDeny().forEach(e -> logManager.error(processKey, "State is forbidden: '{}' (state policy {})", e.getMsg(), e.getRule().getMsg()));
+        result.getWarn().forEach(w -> logManager.warn(processKey, "Potentially restricted state: '{}' (state policy: {})", w.getMsg(), w.getRule().msg()));
+        result.getDeny().forEach(e -> logManager.error(processKey, "State is forbidden: '{}' (state policy {})", e.getMsg(), e.getRule().msg()));
 
         if (!result.getDeny().isEmpty()) {
             throw new PolicyException("Found forbidden state files");

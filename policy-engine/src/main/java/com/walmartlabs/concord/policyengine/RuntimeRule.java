@@ -20,55 +20,33 @@ package com.walmartlabs.concord.policyengine;
  * =====
  */
 
-import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import org.immutables.value.Value;
 
+import javax.annotation.Nullable;
 import java.io.Serializable;
-import java.util.Objects;
 import java.util.Set;
 
-public class RuntimeRule implements Serializable {
+@Value.Immutable
+@JsonInclude(JsonInclude.Include.NON_EMPTY)
+@JsonSerialize(as = ImmutableRuntimeRule.class)
+@JsonDeserialize(as = ImmutableRuntimeRule.class)
+public interface RuntimeRule extends Serializable {
 
-    private static final long serialVersionUID = 1L;
+    long serialVersionUID = 1L;
 
-    private final String msg;
-    private final Set<String> allowedRuntimes;
+    @Nullable
+    @Value.Parameter
+    String msg();
 
-    @JsonCreator
-    public RuntimeRule(@JsonProperty("msg") String msg,
-                       @JsonProperty("runtimes") Set<String> allowedRuntimes) {
-
-        this.msg = msg;
-        this.allowedRuntimes = allowedRuntimes;
-    }
-
-    public String getMsg() {
-        return msg;
-    }
-
+    @Value.Parameter
     @JsonProperty("runtimes")
-    public Set<String> getAllowedRuntimes() {
-        return allowedRuntimes;
-    }
+    Set<String> allowedRuntimes();
 
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        RuntimeRule that = (RuntimeRule) o;
-        return Objects.equals(msg, that.msg) && Objects.equals(allowedRuntimes, that.allowedRuntimes);
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(msg, allowedRuntimes);
-    }
-
-    @Override
-    public String toString() {
-        return "RuntimeRule{" +
-                "msg='" + msg + '\'' +
-                ", allowedRuntimes=" + allowedRuntimes +
-                '}';
+    static RuntimeRule of(String msg, Set<String> runtimes) {
+        return ImmutableRuntimeRule.of(msg, runtimes);
     }
 }
