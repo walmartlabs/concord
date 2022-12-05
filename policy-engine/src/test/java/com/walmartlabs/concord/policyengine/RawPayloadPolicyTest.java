@@ -37,8 +37,8 @@ public class RawPayloadPolicyTest {
         Path p = Files.createTempDirectory("test1");
         Files.write(p.resolve("test.bin"), new byte[]{0, 1, 2, 3, 4, 5}, StandardOpenOption.CREATE_NEW);
 
-        RawPayloadPolicy fiveBytes = new RawPayloadPolicy(new RawPayloadRule("5 bytes", 5L));
-        RawPayloadPolicy tenBytes = new RawPayloadPolicy(new RawPayloadRule("10 bytes", 10L));
+        RawPayloadPolicy fiveBytes = new RawPayloadPolicy(RawPayloadRule.of("5 bytes", 5L));
+        RawPayloadPolicy tenBytes = new RawPayloadPolicy(RawPayloadRule.of("10 bytes", 10L));
 
         // ---
 

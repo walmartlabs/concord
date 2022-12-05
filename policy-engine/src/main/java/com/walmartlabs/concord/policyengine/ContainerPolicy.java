@@ -40,16 +40,16 @@ public class ContainerPolicy {
 
         List<CheckResult.Item<ContainerRule, Object>> deny = new ArrayList<>();
 
-        if (rule.getMaxCpu() != null) {
+        if (rule.maxCpu() != null) {
             Integer actualCpu = getInt("cpu", containerOptions);
-            if (actualCpu != null && actualCpu > rule.getMaxCpu()) {
+            if (actualCpu != null && actualCpu > rule.maxCpu()) {
                 deny.add(new CheckResult.Item<>(rule, actualCpu, "Max CPU exceeded: " + actualCpu));
             }
         }
 
-        if (rule.getMaxRam() != null) {
+        if (rule.maxRam() != null) {
             String actualRamStr = getString("ram", containerOptions);
-            Long maxRam = parseRam(rule.getMaxRam());
+            Long maxRam = parseRam(rule.maxRam());
             Long actualRam = parseRam(actualRamStr);
             if (actualRam != null && actualRam > maxRam) {
                 deny.add(new CheckResult.Item<>(rule, actualRamStr, "Max RAM exceeded: " + actualRamStr));

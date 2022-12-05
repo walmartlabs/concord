@@ -117,7 +117,7 @@ public class PolicyManager {
         });
 
         if (!result.getDeny().isEmpty()) {
-            throw new ValidationErrorsException("Action forbidden: " + result.getDeny().get(0).getRule().getMsg());
+            throw new ValidationErrorsException("Action forbidden: " + result.getDeny().get(0).getRule().msg());
         }
     }
 
@@ -143,7 +143,7 @@ public class PolicyManager {
         attrs.put("email", userInfo.email());
         attrs.put("displayName", userInfo.displayName());
         if (userInfo.attributes() != null) {
-            attrs.putAll(userInfo.attributes());
+            attrs.putAll(Objects.requireNonNull(userInfo.attributes()));
         }
 
         return attrs;

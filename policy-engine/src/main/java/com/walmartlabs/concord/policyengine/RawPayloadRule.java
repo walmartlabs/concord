@@ -20,52 +20,30 @@ package com.walmartlabs.concord.policyengine;
  * =====
  */
 
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import org.immutables.value.Value;
 
-import java.util.Objects;
+import javax.annotation.Nullable;
+import java.io.Serializable;
 
-public class RawPayloadRule {
-    private static final long serialVersionUID = 1L;
+@Value.Immutable
+@JsonInclude(JsonInclude.Include.NON_EMPTY)
+@JsonSerialize(as = ImmutableRawPayloadRule.class)
+@JsonDeserialize(as = ImmutableRawPayloadRule.class)
+public interface RawPayloadRule extends Serializable {
 
-    private final String msg;
-    private final Long maxSizeInBytes;
+    long serialVersionUID = 1L;
 
-    @JsonCreator
-    public RawPayloadRule(@JsonProperty("msg") String msg,
-                          @JsonProperty("maxSizeInBytes") Long maxSizeInBytes) {
+    @Nullable
+    @Value.Parameter
+    String msg();
 
-        this.msg = msg;
-        this.maxSizeInBytes = maxSizeInBytes;
-    }
+    @Value.Parameter
+    long maxSizeInBytes();
 
-    public String getMsg() {
-        return msg;
-    }
-
-    public Long getMaxSizeInBytes() {
-        return maxSizeInBytes;
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        RawPayloadRule that = (RawPayloadRule) o;
-        return Objects.equals(msg, that.msg) &&
-                Objects.equals(maxSizeInBytes, that.maxSizeInBytes);
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(msg, maxSizeInBytes);
-    }
-
-    @Override
-    public String toString() {
-        return "PayloadRule{" +
-                "msg='" + msg + '\'' +
-                ", maxSizeInBytes=" + maxSizeInBytes +
-                '}';
+    static RawPayloadRule of(String msg, long size) {
+        return ImmutableRawPayloadRule.of(msg, size);
     }
 }
