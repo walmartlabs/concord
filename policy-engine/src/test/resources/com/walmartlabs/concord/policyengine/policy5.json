@@ -1,0 +1,73 @@
+{
+  "entity": {
+    "deny": [
+      {
+        "msg": "New project creation is disabled in this organization by the environment's policy",
+        "action": "create",
+        "entity": "project",
+        "conditions": {
+          "entity": {
+            "orgId": ".*"
+          }
+        }
+      },
+      {
+        "msg": "Subscribing to all GitHub repository notifications is not allowed",
+        "action": "create",
+        "entity": "trigger",
+        "conditions": {
+          "entity": {
+            "params": {
+              "org": "\\.\\*",
+              "project": "\\.\\*",
+              "repository": "\\.\\*"
+            },
+            "eventSource": "github"
+          }
+        }
+      },
+      {
+        "msg": "Subscribing to all GitHub repository notifications is not allowed",
+        "action": "create",
+        "entity": "trigger",
+        "conditions": {
+          "entity": {
+            "params": {
+              "githubOrg": "\\.\\*",
+              "githubRepo": "\\.\\*"
+            },
+            "eventSource": "github"
+          }
+        }
+      },
+      {
+        "msg": "Using Github triggers without passing condition parameters is not allowed. Please check your syntax",
+        "action": "create",
+        "entity": "trigger",
+        "conditions": {
+          "entity": {
+            "params": {
+              "type": null,
+              "payload": {
+                "type": null
+              }
+            },
+            "eventSource": "github"
+          }
+        }
+      }
+    ]
+  },
+  "jsonStore": {
+    "data": {
+      "maxSizeInBytes": 16777216
+    },
+    "store": {
+      "maxNumberPerOrg": 128
+    }
+  },
+  "attachments": {
+    "msg": "Attachments too big: current {0} bytes, limit {1} bytes",
+    "maxSizeInBytes": 2097152
+  }
+}

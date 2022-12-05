@@ -33,7 +33,9 @@ public class DependencyPolicyTest {
 
     @Test
     public void testSingleDepDeny() {
-        DependencyRule di = new DependencyRule(null, null, ".*", null, null, null);
+        DependencyRule di = DependencyRule.builder()
+                .groupId(".*")
+                .build();
 
         PolicyRules<DependencyRule> rules = new PolicyRules<>(null, null, Collections.singletonList(di));
 
@@ -49,7 +51,9 @@ public class DependencyPolicyTest {
 
     @Test
     public void testSingleDepAllow() {
-        DependencyRule di = new DependencyRule(null, null, "com.walmartlabs.concord.plugins.basic", null, null, null);
+        DependencyRule di = DependencyRule.builder()
+                .groupId("com.walmartlabs.concord.plugins.basic")
+                .build();
 
         PolicyRules<DependencyRule> rules = new PolicyRules<>(Collections.singletonList(di), null, null);
 
@@ -66,8 +70,14 @@ public class DependencyPolicyTest {
 
     @Test
     public void testSingleDepAllowVersion() {
-        DependencyRule allow = new DependencyRule(null, null, "com.walmartlabs.concord.plugins.basic", null, "0.5.0", "1.0.0");
-        DependencyRule deny = new DependencyRule(null, null, "com.walmartlabs.concord.plugins.basic", null, null, null);
+        DependencyRule allow = DependencyRule.builder()
+                .groupId("com.walmartlabs.concord.plugins.basic")
+                .fromVersion("0.5.0")
+                .toVersion("1.0.0")
+                .build();
+        DependencyRule deny = DependencyRule.builder()
+                .groupId("com.walmartlabs.concord.plugins.basic")
+                .build();
 
         PolicyRules<DependencyRule> rules = new PolicyRules<>(Collections.singletonList(allow), null, Collections.singletonList(deny));
 

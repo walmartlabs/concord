@@ -71,9 +71,9 @@ public class ProcessTimeoutPolicyApplier implements PolicyApplier {
         result.getDeny().forEach(i -> {
             policyDeny.inc();
 
-            String msg = i.getRule().getMsg() != null ? i.getRule().getMsg() : DEFAULT_PROCESS_TIMEOUT_MSG;
+            String msg = i.getRule().msg() != null ? i.getRule().msg() : DEFAULT_PROCESS_TIMEOUT_MSG;
             Object actualTimeout = i.getEntity();
-            String limit = i.getRule().getMax();
+            String limit = i.getRule().max();
             logManager.error(processKey, MessageFormat.format(msg, actualTimeout, limit));
         });
 
