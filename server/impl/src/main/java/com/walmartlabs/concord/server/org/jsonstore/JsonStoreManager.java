@@ -46,10 +46,7 @@ import javax.inject.Inject;
 import javax.inject.Named;
 import java.io.Serializable;
 import java.text.MessageFormat;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Named
@@ -275,11 +272,11 @@ public class JsonStoreManager {
         for (CheckResult.Item<JsonStoreRule.StoreRule, Integer> e : errors) {
             JsonStoreRule.StoreRule r = e.getRule();
 
-            String msg = r.getMsg() != null ? r.getMsg() : DEFAULT_POLICY_MESSAGE;
+            String msg = r.msg() != null ? r.msg() : DEFAULT_POLICY_MESSAGE;
             int actualCount = e.getEntity();
-            int max = r.getMaxNumberPerOrg();
+            int max = r.maxNumberPerOrg();
 
-            sb.append(MessageFormat.format(msg, actualCount, max)).append(';');
+            sb.append(MessageFormat.format(Objects.requireNonNull(msg), actualCount, max)).append(';');
         }
         return sb.toString();
     }

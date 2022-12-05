@@ -45,6 +45,7 @@ import javax.inject.Singleton;
 import java.text.MessageFormat;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.UUID;
 
 @Named
@@ -148,11 +149,11 @@ public class JsonStoreDataManager {
         for (CheckResult.Item<JsonStoreRule.StoreDataRule, Long> e : errors) {
             JsonStoreRule.StoreDataRule r = e.getRule();
 
-            String msg = r.getMsg() != null ? r.getMsg() : DEFAULT_POLICY_MESSAGE;
+            String msg = r.msg() != null ? r.msg() : DEFAULT_POLICY_MESSAGE;
             Long actual = e.getEntity();
-            Long max = r.getMaxSizeInBytes();
+            Long max = r.maxSizeInBytes();
 
-            sb.append(MessageFormat.format(msg, actual, max)).append(';');
+            sb.append(MessageFormat.format(Objects.requireNonNull(msg), actual, max)).append(';');
         }
         return sb.toString();
     }

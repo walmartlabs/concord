@@ -36,7 +36,7 @@ public class RawPayloadPolicy {
     }
 
     public CheckResult<RawPayloadRule, Long> check(Path p) throws IOException {
-        if (rule == null || rule.getMaxSizeInBytes() == null || !Files.exists(p) || !Files.isRegularFile(p)) {
+        if (rule == null || !Files.exists(p) || !Files.isRegularFile(p)) {
             return CheckResult.success();
         }
 
@@ -44,7 +44,7 @@ public class RawPayloadPolicy {
 
         long size = Files.size(p);
 
-        if (size > rule.getMaxSizeInBytes()) {
+        if (size > rule.maxSizeInBytes()) {
             deny.add(new CheckResult.Item<>(rule, size, null));
         }
 

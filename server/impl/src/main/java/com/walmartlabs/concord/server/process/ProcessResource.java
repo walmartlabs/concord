@@ -1154,11 +1154,11 @@ public class ProcessResource implements Resource {
         for (CheckResult.Item<AttachmentsRule, Long> e : errors) {
             AttachmentsRule r = e.getRule();
 
-            String msg = r.getMsg() != null ? r.getMsg() : defaultMessage;
+            String msg = r.msg() != null ? r.msg() : defaultMessage;
             long actualSize = e.getEntity();
-            long limit = r.getMaxSizeInBytes();
+            long limit = r.maxSizeInBytes();
 
-            sb.append(MessageFormat.format(msg, actualSize, limit)).append(';');
+            sb.append(MessageFormat.format(Objects.requireNonNull(msg), actualSize, limit)).append(';');
         }
         return sb.toString();
     }
