@@ -13,7 +13,9 @@
 - resource-task: add printJson() method
 ([#676](https://github.com/walmartlabs/concord/pull/676));
 - server: cleanup agent commands
-([#674](https://github.com/walmartlabs/concord/pull/674)).
+([#674](https://github.com/walmartlabs/concord/pull/674));
+- policy-engine: `cron` trigger policy
+([#686](https://github.com/walmartlabs/concord/pull/686)).
 
 ### Changed
 
