@@ -26,6 +26,7 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.walmartlabs.concord.common.validation.ConcordKey;
+import org.immutables.builder.Builder;
 
 import javax.validation.constraints.NotNull;
 import java.io.Serializable;
@@ -70,6 +71,7 @@ public class TriggerEntry implements Serializable {
     private final Map<String, Object> cfg;
 
     @JsonCreator
+    @Builder.Constructor
     public TriggerEntry(@JsonProperty("id") UUID id,
                         @JsonProperty("orgId") UUID orgId,
                         @JsonProperty("orgName") String orgName,

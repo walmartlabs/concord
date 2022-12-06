@@ -47,6 +47,7 @@ public class PolicyEngine {
     private final StatePolicy statePolicy;
     private final RawPayloadPolicy rawPayloadPolicy;
     private final RuntimePolicy runtimePolicy;
+    private final CronTriggerPolicy cronTriggerPolicy;
 
     public PolicyEngine(PolicyEngineRules rules) {
         this(Collections.emptyList(), rules);
@@ -81,6 +82,7 @@ public class PolicyEngine {
         this.defaultDependencyVersionsPolicy = new DependencyVersionsPolicy(rules.dependencyVersions());
         this.statePolicy = new StatePolicy(rules.stateRules());
         this.runtimePolicy = new RuntimePolicy(rules.runtimeRule());
+        this.cronTriggerPolicy = new CronTriggerPolicy(rules.cronTriggerRule());
     }
 
     public List<String> policyNames() {
@@ -165,6 +167,10 @@ public class PolicyEngine {
     
     public RuntimePolicy getRuntimePolicy() {
         return runtimePolicy;
+    }
+
+    public CronTriggerPolicy getCronTriggerPolicy() {
+        return cronTriggerPolicy;
     }
 
     @Override
