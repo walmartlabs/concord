@@ -246,6 +246,11 @@
             <scope>provided</scope>
         </dependency>
         <dependency>
+            <groupId>org.immutables</groupId>
+            <artifactId>builder</artifactId>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
             <groupId>com.fasterxml.jackson.datatype</groupId>
             <artifactId>jackson-datatype-guava</artifactId>
         </dependency>
