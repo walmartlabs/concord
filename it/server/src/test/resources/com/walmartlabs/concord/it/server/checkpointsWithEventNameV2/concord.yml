@@ -1,0 +1,12 @@
+configuration:
+  runtime: concord-v2
+
+flows:
+  default:
+  - log: "Starting the process..."
+  - checkpoint: "first"
+  - log: "Continuing the process..."
+  - checkpoint: "second"
+  - log: "Done!"
+
+  - log: "Event Name: ${resumeEvents[0]}"
