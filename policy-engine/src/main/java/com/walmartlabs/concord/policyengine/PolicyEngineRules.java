@@ -114,6 +114,10 @@ public interface PolicyEngineRules extends Serializable {
     @Nullable
     RuntimeRule runtimeRule();
 
+    @JsonProperty("cronTrigger")
+    @Nullable
+    CronTriggerRule cronTriggerRule();
+
     static ImmutablePolicyEngineRules.Builder builder() {
         return ImmutablePolicyEngineRules.builder();
     }

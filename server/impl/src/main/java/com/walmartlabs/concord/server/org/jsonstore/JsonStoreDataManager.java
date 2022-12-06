@@ -144,7 +144,7 @@ public class JsonStoreDataManager {
         }
     }
 
-    private String buildErrorMessage(List<CheckResult.Item<JsonStoreRule.StoreDataRule, Long>> errors) {
+    private static String buildErrorMessage(List<CheckResult.Item<JsonStoreRule.StoreDataRule, Long>> errors) {
         StringBuilder sb = new StringBuilder();
         for (CheckResult.Item<JsonStoreRule.StoreDataRule, Long> e : errors) {
             JsonStoreRule.StoreDataRule r = e.getRule();
