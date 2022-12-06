@@ -117,10 +117,19 @@ public class CheckpointsIT extends AbstractServerIT {
     }
 
     @Test
-    public void testRestoreCheckpointWithEventName() throws Exception {
+    public void testRestoreCheckpointWithEventNameV1() throws Exception {
+        testRestoreCheckpointWithEventName("checkpointsWithEventName");
+    }
+
+    @Test
+    public void testRestoreCheckpointWithEventNameV2() throws Exception {
+        testRestoreCheckpointWithEventName("checkpointsWithEventNameV2");
+    }
+
+    private void testRestoreCheckpointWithEventName(String resource) throws Exception {
         // prepare the payload
 
-        byte[] payload = archive(CheckpointsIT.class.getResource("checkpointsWithEventName").toURI());
+        byte[] payload = archive(CheckpointsIT.class.getResource(resource).toURI());
 
         ProcessApi processApi = new ProcessApi(getApiClient());
         StartProcessResponse spr = start(payload);

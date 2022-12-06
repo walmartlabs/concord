@@ -17,3 +17,7 @@ flows:
     - expr: "${aVar.x = aVar.x + 1}"
 
     - log: "#3 ${aVar}" # {x=123, y=345}
+
+    - if: ${hasVariable('resumeEvents')}
+      then:
+        - log: "Event Name: ${resumeEvents[0]}"
