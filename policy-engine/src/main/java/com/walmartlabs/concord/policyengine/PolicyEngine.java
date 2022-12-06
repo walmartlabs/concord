@@ -45,6 +45,8 @@ public class PolicyEngine {
     private final ProcessCfgPolicy defaultProcessCfgPolicy;
     private final DependencyVersionsPolicy defaultDependencyVersionsPolicy;
     private final StatePolicy statePolicy;
+    private final RawPayloadPolicy rawPayloadPolicy;
+    private final RuntimePolicy runtimePolicy;
 
     public PolicyEngine(PolicyEngineRules rules) {
         this(Collections.emptyList(), rules);
@@ -57,26 +59,28 @@ public class PolicyEngine {
     public PolicyEngine(List<String> ruleNames, PolicyEngineRules rules) {
         this.ruleNames = ruleNames;
         this.rules = rules;
-        this.dependencyPolicy = new DependencyPolicy(rules.getDependencyRules());
-        this.dependencyRewritePolicy = new DependencyRewritePolicy(rules.getDependencyRewriteRules());
-        this.filePolicy = new FilePolicy(rules.getFileRules());
-        this.taskPolicy = new TaskPolicy(rules.getTaskRules());
-        this.workspacePolicy = new WorkspacePolicy(rules.getWorkspaceRule());
-        this.attachmentsPolicy = new AttachmentsPolicy(rules.getAttachmentsRule());
-        this.containerPolicy = new ContainerPolicy(rules.getContainerRules());
+        this.dependencyPolicy = new DependencyPolicy(rules.dependencyRules());
+        this.dependencyRewritePolicy = new DependencyRewritePolicy(rules.dependencyRewriteRules());
+        this.filePolicy = new FilePolicy(rules.fileRules());
+        this.taskPolicy = new TaskPolicy(rules.taskRules());
+        this.workspacePolicy = new WorkspacePolicy(rules.workspaceRule());
+        this.attachmentsPolicy = new AttachmentsPolicy(rules.attachmentsRule());
+        this.containerPolicy = new ContainerPolicy(rules.containerRules());
+        this.rawPayloadPolicy = new RawPayloadPolicy(rules.rawPayloadRule());
 
         QueueRule qr = getQueueRule(rules);
-        this.concurrentProcessPolicy = new ConcurrentProcessPolicy(qr.getConcurrent());
-        this.forkDepthPolicy = new ForkDepthPolicy(qr.getForkDepthRule());
-        this.processTimeoutPolicy = new ProcessTimeoutPolicy(qr.getProcessTimeoutRule());
+        this.concurrentProcessPolicy = new ConcurrentProcessPolicy(qr.concurrentRule());
+        this.forkDepthPolicy = new ForkDepthPolicy(qr.forkDepthRule());
+        this.processTimeoutPolicy = new ProcessTimeoutPolicy(qr.processTimeoutRule());
 
-        this.protectedTasksPolicy = new ProtectedTasksPolicy(rules.getProtectedTasksRules());
-        this.entityPolicy = new EntityPolicy(rules.getEntityRules());
-        this.processCfgPolicy = new ProcessCfgPolicy(rules.getProcessCfgRules());
-        this.jsonStoragePolicy = new JsonStorePolicy(rules.getJsonStoreRule());
-        this.defaultProcessCfgPolicy = new ProcessCfgPolicy(rules.getDefaultProcessCfg());
-        this.defaultDependencyVersionsPolicy = new DependencyVersionsPolicy(rules.getDependencyVersions());
-        this.statePolicy = new StatePolicy(rules.getStateRules());
+        this.protectedTasksPolicy = new ProtectedTasksPolicy(rules.protectedTasksRules());
+        this.entityPolicy = new EntityPolicy(rules.entityRules());
+        this.processCfgPolicy = new ProcessCfgPolicy(rules.processCfg());
+        this.jsonStoragePolicy = new JsonStorePolicy(rules.jsonStoreRule());
+        this.defaultProcessCfgPolicy = new ProcessCfgPolicy(rules.defaultProcessCfg());
+        this.defaultDependencyVersionsPolicy = new DependencyVersionsPolicy(rules.dependencyVersions());
+        this.statePolicy = new StatePolicy(rules.stateRules());
+        this.runtimePolicy = new RuntimePolicy(rules.runtimeRule());
     }
 
     public List<String> policyNames() {
@@ -155,6 +159,14 @@ public class PolicyEngine {
         return statePolicy;
     }
 
+    public RawPayloadPolicy getRawPayloadPolicy() {
+        return rawPayloadPolicy;
+    }
+    
+    public RuntimePolicy getRuntimePolicy() {
+        return runtimePolicy;
+    }
+
     @Override
     public String toString() {
         if (ruleNames == null) {
@@ -165,10 +177,10 @@ public class PolicyEngine {
     }
 
     private static QueueRule getQueueRule(PolicyEngineRules rules) {
-        if (rules.getQueueRules() == null) {
+        if (rules.queueRules() == null) {
             return QueueRule.empty();
         }
 
-        return rules.getQueueRules();
+        return rules.queueRules();
     }
 }
