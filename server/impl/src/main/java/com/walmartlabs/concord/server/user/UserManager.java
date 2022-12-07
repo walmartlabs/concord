@@ -75,7 +75,6 @@ public class UserManager {
         return getOrCreate(username, userDomain, type, null, null, null);
     }
 
-
     public Optional<UserEntry> getOrCreate(String username, String userDomain, UserType type, String displayName, String email, Set<String> roles) {
         Optional<UserEntry> result = get(username, userDomain, type);
         if (result.isPresent()) {
