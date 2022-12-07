@@ -206,6 +206,10 @@ public class ProcessQueueManager {
         return queueDao.get(key);
     }
 
+    public UUID getProjectId(PartialProcessKey partialProcessKey) {
+        return queueDao.getProjectId(partialProcessKey.getInstanceId());
+    }
+
     public ProcessInitiatorEntry getInitiator(PartialProcessKey partialProcessKey) {
         ProcessKey key = keyCache.get(partialProcessKey.getInstanceId());
         if (key == null) {

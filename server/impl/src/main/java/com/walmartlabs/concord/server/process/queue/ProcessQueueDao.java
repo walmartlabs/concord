@@ -488,6 +488,13 @@ public class ProcessQueueDao extends AbstractDao {
                 .fetchOne(orgId);
     }
 
+    public UUID getProjectId(UUID instanceId) {
+        return dsl().select(PROCESS_QUEUE.PROJECT_ID)
+                .from(PROCESS_QUEUE)
+                .where(PROCESS_QUEUE.INSTANCE_ID.eq(instanceId))
+                .fetchOne(PROCESS_QUEUE.PROJECT_ID);
+    }
+
     public Imports getImports(PartialProcessKey processKey) {
         return dsl().select(PROCESS_QUEUE.IMPORTS).from(PROCESS_QUEUE)
                 .where(PROCESS_QUEUE.INSTANCE_ID.eq(processKey.getInstanceId()))
