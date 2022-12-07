@@ -218,7 +218,7 @@ public class SecretDao extends AbstractDao {
             u.set(SECRETS.ORG_ID, orgId);
         }
 
-        if(hashAlgorithm != null){
+        if (hashAlgorithm != null) {
             u.set(SECRETS.HASH_ALGORITHM, hashAlgorithm.getName());
         }
 
@@ -301,10 +301,10 @@ public class SecretDao extends AbstractDao {
         List<ResourceAccessEntry> resourceAccessList = new ArrayList<>();
 
         Result<Record4<UUID, UUID, String, String>> teamAccess = dsl().select(
-                SECRET_TEAM_ACCESS.TEAM_ID,
-                SECRET_TEAM_ACCESS.SECRET_ID,
-                TEAMS.TEAM_NAME,
-                SECRET_TEAM_ACCESS.ACCESS_LEVEL)
+                        SECRET_TEAM_ACCESS.TEAM_ID,
+                        SECRET_TEAM_ACCESS.SECRET_ID,
+                        TEAMS.TEAM_NAME,
+                        SECRET_TEAM_ACCESS.ACCESS_LEVEL)
                 .from(SECRET_TEAM_ACCESS)
                 .leftOuterJoin(TEAMS).on(TEAMS.TEAM_ID.eq(SECRET_TEAM_ACCESS.TEAM_ID))
                 .where(SECRET_TEAM_ACCESS.SECRET_ID.eq(getByName(orgId, name).getId()))
@@ -359,27 +359,27 @@ public class SecretDao extends AbstractDao {
     }
 
     private static SelectOnConditionStep<Record17<UUID, String, UUID, String, UUID, String, String, String, String, String, UUID, String, String, String, String, byte[], String>> selectEntry(DSLContext tx,
-                                                                                                                                                                               Organizations orgAlias,
-                                                                                                                                                                               Secrets secretAlias,
-                                                                                                                                                                               Projects projectAlias,
-                                                                                                                                                                               Users userAlias) {
+                                                                                                                                                                                               Organizations orgAlias,
+                                                                                                                                                                                               Secrets secretAlias,
+                                                                                                                                                                                               Projects projectAlias,
+                                                                                                                                                                                               Users userAlias) {
         return tx.select(secretAlias.SECRET_ID,
-                secretAlias.SECRET_NAME,
-                secretAlias.ORG_ID,
-                orgAlias.ORG_NAME,
-                secretAlias.PROJECT_ID,
-                projectAlias.PROJECT_NAME,
-                secretAlias.SECRET_TYPE,
-                secretAlias.ENCRYPTED_BY,
-                secretAlias.STORE_TYPE,
-                secretAlias.VISIBILITY,
-                userAlias.USER_ID,
-                userAlias.USERNAME,
-                userAlias.DOMAIN,
-                userAlias.DISPLAY_NAME,
-                userAlias.USER_TYPE,
-                secretAlias.SECRET_SALT,
-                secretAlias.HASH_ALGORITHM)
+                        secretAlias.SECRET_NAME,
+                        secretAlias.ORG_ID,
+                        orgAlias.ORG_NAME,
+                        secretAlias.PROJECT_ID,
+                        projectAlias.PROJECT_NAME,
+                        secretAlias.SECRET_TYPE,
+                        secretAlias.ENCRYPTED_BY,
+                        secretAlias.STORE_TYPE,
+                        secretAlias.VISIBILITY,
+                        userAlias.USER_ID,
+                        userAlias.USERNAME,
+                        userAlias.DOMAIN,
+                        userAlias.DISPLAY_NAME,
+                        userAlias.USER_TYPE,
+                        secretAlias.SECRET_SALT,
+                        secretAlias.HASH_ALGORITHM)
                 .from(secretAlias)
                 .leftJoin(userAlias).on(secretAlias.OWNER_ID.eq(userAlias.USER_ID))
                 .leftJoin(projectAlias).on(projectAlias.PROJECT_ID.eq(secretAlias.PROJECT_ID))
@@ -400,7 +400,7 @@ public class SecretDao extends AbstractDao {
                 toOwner(r),
                 r.get(SECRETS.SECRET_SALT),
                 HashAlgorithm.getByName(r.get(SECRETS.HASH_ALGORITHM))
-                );
+        );
     }
 
     private static EntityOwner toOwner(Record17<UUID, String, UUID, String, UUID, String, String, String, String, String, UUID, String, String, String, String, byte[], String> r) {
@@ -426,12 +426,12 @@ public class SecretDao extends AbstractDao {
 
         public SecretDataEntry(SecretEntry s, byte[] data) { // NOSONAR
             this(s.getId(), s.getName(), s.getOrgId(), s.getOrgName(), s.getProjectId(), s.getProjectName(),
-                    s.getType(), s.getEncryptedBy(), s.getStoreType(), s.getVisibility(), s.getOwner(),s.getSecretSalt(), s.getHashAlgorithm(), data);
+                    s.getType(), s.getEncryptedBy(), s.getStoreType(), s.getVisibility(), s.getOwner(), s.getSecretSalt(), s.getHashAlgorithm(), data);
         }
 
         public SecretDataEntry(UUID id, String name, UUID orgId, String orgName, UUID projectId, String projectName, SecretType type,
                                SecretEncryptedByType encryptedByType, String storeType, SecretVisibility visibility,
-                               EntityOwner owner,byte[] secretSalt, HashAlgorithm hashAlgorithm, byte[] data) { // NOSONAR
+                               EntityOwner owner, byte[] secretSalt, HashAlgorithm hashAlgorithm, byte[] data) { // NOSONAR
 
             super(id, name, orgId, orgName, projectId, projectName, type, encryptedByType, storeType, visibility, owner, secretSalt, hashAlgorithm);
             this.data = data;

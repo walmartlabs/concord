@@ -9,9 +9,9 @@ package com.walmartlabs.concord.common.secret;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -39,6 +39,7 @@ public final class SecretUtils {
     public static byte[] encrypt(byte[] input, byte[] password, byte[] salt) {
         return encrypt(input, password, salt, HashAlgorithm.LEGACY_MD5);
     }
+
     public static byte[] encrypt(byte[] input, byte[] password, byte[] salt, HashAlgorithm hashAlgorithm) {
         try {
             return IOUtils.toByteArray(encrypt(new ByteArrayInputStream(input), password, salt, hashAlgorithm));
@@ -46,9 +47,11 @@ public final class SecretUtils {
             throw new SecurityException("Error encrypting a secret: " + e);
         }
     }
+
     public static InputStream encrypt(InputStream input, byte[] password, byte[] salt) {
         return encrypt(input, password, salt, HashAlgorithm.LEGACY_MD5);
     }
+
     public static InputStream encrypt(InputStream input, byte[] password, byte[] salt, HashAlgorithm hashAlgorithm) {
         try {
             Cipher c = init(password, salt, Cipher.ENCRYPT_MODE, hashAlgorithm);
@@ -57,9 +60,11 @@ public final class SecretUtils {
             throw new SecurityException("Error encrypting a secret: " + e);
         }
     }
-    public static byte[] decrypt(byte[] input, byte[] password, byte[] salt){
+
+    public static byte[] decrypt(byte[] input, byte[] password, byte[] salt) {
         return decrypt(input, password, salt, HashAlgorithm.LEGACY_MD5);
     }
+
     public static byte[] decrypt(byte[] input, byte[] password, byte[] salt, HashAlgorithm hashAlgorithm) {
         try {
             InputStream out = decrypt(new ByteArrayInputStream(input), password, salt, hashAlgorithm);
@@ -72,9 +77,11 @@ public final class SecretUtils {
             throw new SecurityException("Error decrypting a secret: " + e.getMessage(), t);
         }
     }
+
     public static InputStream decrypt(InputStream input, byte[] password, byte[] salt) {
         return decrypt(input, password, salt, HashAlgorithm.LEGACY_MD5);
     }
+
     public static InputStream decrypt(InputStream input, byte[] password, byte[] salt, HashAlgorithm hashAlgorithm) {
         try {
             Cipher c = init(password, salt, Cipher.DECRYPT_MODE, hashAlgorithm);
