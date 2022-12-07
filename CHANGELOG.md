@@ -39,7 +39,9 @@
 ([#675](https://github.com/walmartlabs/concord/pull/675));
 - docker-images: change the default shell to bash in
 Debian-based images
-([#644](https://github.com/walmartlabs/concord/pull/675)).
+([#644](https://github.com/walmartlabs/concord/pull/675));
+- runtime-v2: fix `entryPoint` calculation in effective YAML
+([#685](https://github.com/walmartlabs/concord/pull/685)).
 
 
 ## [1.97.0] - 2022-10-11
