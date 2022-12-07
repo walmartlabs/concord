@@ -22,7 +22,6 @@ package com.walmartlabs.concord.server.process;
 
 import com.walmartlabs.concord.server.org.project.KvDao;
 import com.walmartlabs.concord.server.process.queue.ProcessQueueManager;
-import com.walmartlabs.concord.server.sdk.ConcordApplicationException;
 import com.walmartlabs.concord.server.sdk.PartialProcessKey;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -37,7 +36,6 @@ import javax.inject.Named;
 import javax.inject.Singleton;
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
 import java.util.UUID;
 
 @Named
@@ -127,17 +125,9 @@ public class ProcessKvResource implements Resource {
     }
 
     private UUID assertProjectId(UUID instanceId) {
-        PartialProcessKey processKey = PartialProcessKey.from(instanceId);
-
-        // TODO replace with getProjectId
-        ProcessEntry entry = processQueueManager.get(processKey);
-        if (entry == null) {
-            throw new ConcordApplicationException("Process instance not found", Response.Status.NOT_FOUND);
-        }
-
-        UUID projectId = entry.projectId();
+        UUID projectId = processQueueManager.getProjectId(PartialProcessKey.from(instanceId));
         if (projectId == null) {
-            log.warn("assertProjectId ['{}'] -> no project found, using the default value", processKey);
+            log.warn("assertProjectId ['{}'] -> no project found, using the default value", instanceId);
             projectId = DEFAULT_PROJECT_ID;
         }
 
