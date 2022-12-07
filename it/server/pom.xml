@@ -193,6 +193,11 @@
             <scope>test</scope>
         </dependency>
         <dependency>
+            <groupId>com.fasterxml.jackson.dataformat</groupId>
+            <artifactId>jackson-dataformat-yaml</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
             <groupId>com.squareup.okhttp</groupId>
             <artifactId>okhttp</artifactId>
             <scope>test</scope>
