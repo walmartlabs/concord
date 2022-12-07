@@ -1,0 +1,35 @@
+{
+  "queue": {
+    "forkDepth": {
+      "max": 5
+    }
+  },
+  "processCfg": {
+    "meta": {
+      "__currentFlow": "n/a"
+    }
+  },
+  "protectedTask": {
+    "names": [
+      "gatekeeper"
+    ]
+  },
+  "dependencyRewrite": [
+    {
+      "msg": "msg1",
+      "value": "mvn://com.walmartlabs.concord.plugins.basic:ansible-tasks:1.71.0",
+      "groupId": "com.walmartlabs.concord.plugins.basic",
+      "toVersion": "1.70.3",
+      "artifactId": "ansible-tasks",
+      "fromVersion": "1.62.0"
+    },
+    {
+      "msg": "msg2",
+      "value": "mvn://com.walmartlabs.concord.plugins:git:1.33.0",
+      "groupId": "com.walmartlabs.concord.plugins",
+      "toVersion": "1.32.3",
+      "artifactId": "git",
+      "fromVersion": "1.25.0"
+    }
+  ]
+}

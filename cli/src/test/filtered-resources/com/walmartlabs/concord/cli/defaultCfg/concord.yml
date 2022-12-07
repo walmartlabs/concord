@@ -1,0 +1,5 @@
+configuration:
+  debug: true
+flows:
+  default:
+    - log: "isTrue = ${files.notExists('non-exist-dir')}"

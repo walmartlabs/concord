@@ -823,6 +823,28 @@ public class MainTest {
     }
 
     @Test
+    public void testSerialLoopEmptyCall() throws Exception {
+        deploy("serialEmptyCall");
+
+        save(ProcessConfiguration.builder()
+                .build());
+
+        byte[] log = run();
+        assertLog(log, ".*" + Pattern.quote("outVar: [null, null]") + ".*");
+    }
+
+    @Test
+    public void testParallelLoopEmptyCall() throws Exception {
+        deploy("parallelEmptyCall");
+
+        save(ProcessConfiguration.builder()
+                .build());
+
+        byte[] log = run();
+        assertLog(log, ".*" + Pattern.quote("outVar: [null, null]") + ".*");
+    }
+
+    @Test
     public void testParallelOutExpr() throws Exception {
         deploy("parallelOutExpr");
 
@@ -945,6 +967,8 @@ public class MainTest {
 
         assertLogAtLeast(allLogs, 2, ".*#3.*x=124.*");
         assertLogAtLeast(allLogs, 2, ".*#3.*y=345.*");
+
+        assertLog(allLogs, ".*Event Name: first.*");
     }
 
     @Test

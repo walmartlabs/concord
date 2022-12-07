@@ -54,7 +54,10 @@ class AddRepositoryPage extends React.PureComponent<RouteComponentProps<RoutePro
                             <Header.Content>Add a Repository</Header.Content>
                             <Header.Subheader>Register an existing GIT repository</Header.Subheader>
                         </Header>
-                        <EditRepositoryActivity orgName={orgName} projectName={projectName} />
+                        <EditRepositoryActivity
+                            orgName={orgName}
+                            projectName={projectName}
+                            forceRefresh={undefined}/>
                     </Container>
                 </Segment>
             </>
