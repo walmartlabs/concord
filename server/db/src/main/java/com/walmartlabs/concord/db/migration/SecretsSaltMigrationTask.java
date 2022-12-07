@@ -37,7 +37,7 @@ public class SecretsSaltMigrationTask implements MigrationTask {
 
     private static final Logger log = LoggerFactory.getLogger(SecretsSaltMigrationTask.class);
     private static final int MAX_RETRIES = 10;
-    private static final long RETRY_DELAY = 1000;
+    private static final long RETRY_DELAY = 10000;
 
     @Inject
     @Config("secretStore.secretStoreSalt")
