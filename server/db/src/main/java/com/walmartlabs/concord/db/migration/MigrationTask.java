@@ -26,5 +26,5 @@ import javax.sql.DataSource;
 import java.sql.SQLException;
 
 public interface MigrationTask {
-    public void execute(DataSource dataSource);
+    void execute(DataSource dataSource);
 }

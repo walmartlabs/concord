@@ -37,6 +37,7 @@ public class SecretsSaltMigrationTask implements MigrationTask {
 
     private static final Logger log = LoggerFactory.getLogger(SecretsSaltMigrationTask.class);
     private static final int MAX_RETRIES = 10;
+    private static final long RETRY_DELAY = 1000;
 
     @Inject
     @Config("secretStore.secretStoreSalt")
@@ -49,19 +50,25 @@ public class SecretsSaltMigrationTask implements MigrationTask {
         while(retryCount <= MAX_RETRIES) {
             try(Connection connection = dataSource.getConnection()) {
                 String updateSql = "UPDATE SECRETS SET SECRET_SALT = ? WHERE SECRET_SALT IS NULL";
-                PreparedStatement preparedStatement = connection.prepareStatement(updateSql);
-                preparedStatement.setBytes(1, secretSalt);
-                preparedStatement.executeUpdate();
-                connection.commit();
-                preparedStatement.close();
-                break;
+                try(PreparedStatement preparedStatement = connection.prepareStatement(updateSql)){
+                    preparedStatement.setBytes(1, secretSalt);
+                    preparedStatement.executeUpdate();
+                    connection.commit();
+                    break;
+                }
             } catch (SQLException e) {
-                e.printStackTrace();
-                retryCount++;
+                if(retryCount == MAX_RETRIES) {
+                    log.error("secret salt migration -> Error while running secret salt migration. giving up");
+                    throw new RuntimeException(e);
+                }
+
+                log.error("Exception: {} while executing migration task for {} time.", e.getMessage(), ++retryCount);
+                try {
+                    Thread.sleep(RETRY_DELAY);
+                } catch (InterruptedException ex) {
+                    Thread.currentThread().interrupt();
+                }
             }
-        }
-        if(retryCount == MAX_RETRIES) {
-            throw new RuntimeException("Failed to run migration for SecretsMigrationTask");
         }
         log.info("Successfully completed migration task for secret salt");
     }
