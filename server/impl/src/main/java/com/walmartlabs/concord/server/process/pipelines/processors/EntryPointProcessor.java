@@ -66,7 +66,8 @@ public class EntryPointProcessor implements PayloadProcessor {
         }
 
         cfg.put(Constants.Request.ENTRY_POINT_KEY, s);
-        payload = payload.putHeader(Payload.CONFIGURATION, cfg);
+        payload = payload.putHeader(Payload.CONFIGURATION, cfg)
+                .putHeader(Payload.ENTRY_POINT, s);
 
         logManager.info(payload.getProcessKey(), "Using entry point: {}", s);
 

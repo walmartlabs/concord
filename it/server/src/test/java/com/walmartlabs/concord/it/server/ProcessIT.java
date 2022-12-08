@@ -20,13 +20,17 @@ package com.walmartlabs.concord.it.server;
  * =====
  */
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import com.walmartlabs.concord.ApiException;
 import com.walmartlabs.concord.client.*;
 import com.walmartlabs.concord.client.ProcessEntry.StatusEnum;
+import com.walmartlabs.concord.common.ConfigurationUtils;
 import com.walmartlabs.concord.common.IOUtils;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
+import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -288,5 +292,26 @@ public class ProcessIT extends AbstractServerIT {
             byte[] ab = getLog(child.getLogFileName());
             assertLog(".*initiator: .*" + userAName.toLowerCase() + ".*", ab);
         }
+    }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    public void testEffectiveYaml() throws Exception {
+        byte[] payload = archive(ProcessIT.class.getResource("effectiveYaml").toURI());
+
+        ProcessApi processApi = new ProcessApi(getApiClient());
+        StartProcessResponse spr = start("test", payload);
+
+        // ---
+
+        ProcessEntry pir = waitForCompletion(processApi, spr.getInstanceId());
+        assertEquals(ProcessEntry.StatusEnum.FINISHED, pir.getStatus());
+
+        File effectiveYaml = processApi.downloadStateFile(pir.getInstanceId(), ".concord/effective.concord.yml");
+        assertNotNull(effectiveYaml);
+
+        Map<String, Object> m = new ObjectMapper(new YAMLFactory()).readValue(effectiveYaml, Map.class);
+        String entryPoint = (String) ConfigurationUtils.get(m, "configuration", "entryPoint");
+        assertEquals("test", entryPoint);
     }
 }
