@@ -23,6 +23,8 @@ package com.walmartlabs.concord.db;
 import com.codahale.metrics.MetricRegistry;
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
+import com.walmartlabs.concord.db.migration.MigrationOrder;
+import com.walmartlabs.concord.db.migration.MigrationTask;
 import org.jooq.Configuration;
 
 import javax.inject.Singleton;
@@ -51,7 +53,8 @@ public class DatabaseModule extends AbstractModule {
     @Singleton
     public DataSource appDataSource(@MainDB DatabaseConfiguration cfg,
                                     MetricRegistry metricRegistry,
-                                    Set<DatabaseChangeLogProvider> changeLogProviders) {
+                                    Set<DatabaseChangeLogProvider> changeLogProviders,
+                                    Set<MigrationTask> migrationTasks) {
 
         DataSource ds = DataSourceUtils.createDataSource(cfg, "app", cfg.username(), cfg.password(), metricRegistry);
 
@@ -61,6 +64,7 @@ public class DatabaseModule extends AbstractModule {
                     .filter(p -> p.getClass().getAnnotation(MainDB.class) != null)
                     .sorted(Comparator.comparingInt(DatabaseChangeLogProvider::order))
                     .forEach(p -> DataSourceUtils.migrateDb(ds, p, cfg.changeLogParameters()));
+            migrationTasks.stream().sorted(Comparator.comparingInt(o -> o.getClass().getAnnotation(MigrationOrder.class).value())).forEach(migrationTask -> migrationTask.execute(ds));
         }
 
         return ds;
