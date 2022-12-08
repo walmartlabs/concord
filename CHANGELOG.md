@@ -6,6 +6,8 @@
 
 ### Changed
 
+concord-server: `process_queue` table split (part 1)
+([#668](https://github.com/walmartlabs/concord/pull/668)).
 
 
 ## [1.98.0] - 2022-12-07
