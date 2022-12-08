@@ -61,8 +61,8 @@ public class DependencyRewritePolicy {
         Artifact artifact = new DefaultArtifact(value.getAuthority());
         for (DependencyRewriteRule rule : rules) {
             if (match(rule, artifact)) {
-                listener.onRewrite(rule.getMsg(), value, rule.getValue());
-                return rule.getValue();
+                listener.onRewrite(rule.msg(), value, rule.value());
+                return rule.value();
             }
         }
 
@@ -70,19 +70,19 @@ public class DependencyRewritePolicy {
     }
 
     private static boolean match(DependencyRewriteRule r, Artifact a) {
-        if (r.getGroupId() != null && !matches(r.getGroupId(), a.getGroupId())) {
+        if (r.groupId() != null && !matches(r.groupId(), a.getGroupId())) {
             return false;
         }
 
-        if (r.getArtifactId() != null && !matches(r.getArtifactId(), a.getArtifactId())) {
+        if (r.artifactId() != null && !matches(r.artifactId(), a.getArtifactId())) {
             return false;
         }
 
-        if (r.getFromVersion() != null && compareVersions(r.getFromVersion(), a.getVersion()) > 0) {
+        if (r.fromVersion() != null && compareVersions(r.fromVersion(), a.getVersion()) > 0) {
             return false;
         }
 
-        if (r.getToVersion() != null && compareVersions(r.getToVersion(), a.getVersion()) < 0) {
+        if (r.toVersion() != null && compareVersions(r.toVersion(), a.getVersion()) < 0) {
             return false;
         }
 

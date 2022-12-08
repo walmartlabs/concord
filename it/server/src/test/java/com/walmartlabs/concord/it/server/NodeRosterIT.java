@@ -27,10 +27,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
 import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMockConfig;
@@ -100,13 +97,10 @@ public class NodeRosterIT extends AbstractServerIT {
 
         // check if we know who deployed to our hosts
 
-        NodeRosterProcessesApi nrProcessApi = new NodeRosterProcessesApi(getApiClient());
-        List<ProcessEntry> hostAProcesses = nrProcessApi.list(hostAId, null, 1000, 0);
-        assertFalse(hostAProcesses.isEmpty());
+        List<ProcessEntry> hostAProcesses = listHostProcesses(hostAId);
         assertEquals("admin", hostAProcesses.get(0).getInitiator());
 
-        List<ProcessEntry> hostBProcesses = nrProcessApi.list(hostBId, null, 1000, 0);
-        assertFalse(hostBProcesses.isEmpty());
+        List<ProcessEntry> hostBProcesses = listHostProcesses(hostBId);
         assertEquals("admin", hostBProcesses.get(0).getInitiator());
 
         // check the host facts
@@ -155,9 +149,7 @@ public class NodeRosterIT extends AbstractServerIT {
         NodeRosterHostsApi hostsApi = new NodeRosterHostsApi(getApiClient());
 
         UUID hostId = findHost(host, hostsApi);
-
-        NodeRosterFactsApi factsApi = new NodeRosterFactsApi(getApiClient());
-        assertNotNull(factsApi.getFacts(hostId, null));
+        assertNotNull(getFacts(hostId));
     }
 
     private static UUID findHost(String host, NodeRosterHostsApi hostsApi) throws InterruptedException, ApiException {
@@ -169,6 +161,30 @@ public class NodeRosterIT extends AbstractServerIT {
                 return e.getId();
             }
 
+            Thread.sleep(1000);
+        }
+    }
+
+    private List<ProcessEntry> listHostProcesses(UUID hostAId) throws Exception {
+        NodeRosterProcessesApi nrProcessApi = new NodeRosterProcessesApi(getApiClient());
+        while (true) {
+            List<ProcessEntry> result = nrProcessApi.list(hostAId, null, 1000, 0);
+            if (!result.isEmpty()) {
+                return result;
+            }
+
+            Thread.sleep(1000);
+        }
+    }
+
+    private Object getFacts(UUID hostId) throws Exception {
+        NodeRosterFactsApi factsApi = new NodeRosterFactsApi(getApiClient());
+        while (true) {
+            Object facts = factsApi.getFacts(hostId, null);
+            if (facts != null) {
+                return facts;
+            }
+            
             Thread.sleep(1000);
         }
     }
