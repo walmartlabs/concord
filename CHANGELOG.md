@@ -6,8 +6,13 @@
 
 ### Changed
 
-concord-server: `process_queue` table split (part 1)
-([#668](https://github.com/walmartlabs/concord/pull/668)).
+- concord-server: `process_queue` table split (part 1)
+([#668](https://github.com/walmartlabs/concord/pull/668));
+- runtime-v2: do not create log segments for expressions
+by default. Logs produced by expression blocks without
+`name` will no longer be displayed as a separate log
+"segment".
+([#689](https://github.com/walmartlabs/concord/pull/689)).
 
 
 ## [1.98.0] - 2022-12-07
