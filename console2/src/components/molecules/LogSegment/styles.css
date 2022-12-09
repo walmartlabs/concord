@@ -36,13 +36,13 @@
     /*border-color: rgb(214, 214, 214);*/
 }
 
+.LogSegment .Segment:focus {
+    background: none;
+}
+
 .LogSegment .Segment:hover {
     background-color: rgb(230, 230, 230);
     border-radius: 3px;
-}
-
-.LogSegment .Segment:focus {
-    background: none;
 }
 
 .LogSegment .Loader {
