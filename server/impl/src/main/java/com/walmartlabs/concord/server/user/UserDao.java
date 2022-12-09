@@ -282,6 +282,10 @@ public class UserDao extends AbstractDao {
     }
 
     public void excludeFromTeams(DSLContext tx, UUID userId, List<UUID> teamIds) {
+        if (teamIds.isEmpty()) {
+            return;
+        }
+
         tx.deleteFrom(USER_TEAMS)
                 .where(USER_TEAMS.USER_ID.eq(userId)
                         .and(USER_TEAMS.TEAM_ID.in(teamIds)))
