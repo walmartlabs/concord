@@ -37,7 +37,7 @@ import java.util.UUID;
 @JsonInclude(Include.NON_NULL)
 public class SecretEntry implements Serializable {
 
-    private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 2L;
 
     private final UUID id;
 
@@ -172,4 +172,5 @@ public class SecretEntry implements Serializable {
                 ", owner=" + owner +
                 '}';
     }
+
 }

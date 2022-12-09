@@ -47,4 +47,40 @@
             </column>
         </addColumn>
     </changeSet>
+
+    <changeSet id="1960012" author="g0h04k0walmart.com">
+        <createTable tableName="SECRET_PROJECTS">
+            <column name="SECRET_ID" type="uuid">
+                <constraints nullable="false"/>
+            </column>
+            <column name="PROJECT_ID" type="uuid">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+        <addForeignKeyConstraint baseTableName="SECRET_PROJECTS"
+                                 baseColumnNames="SECRET_ID"
+                                 constraintName="FK_SECRET_PROJECTS_SECRET"
+                                 referencedTableName="SECRETS"
+                                 referencedColumnNames="SECRET_ID"
+                                 onDelete="CASCADE"/>
+        <addForeignKeyConstraint baseTableName="SECRET_PROJECTS"
+                                 baseColumnNames="PROJECT_ID"
+                                 constraintName="FK_SECRET_PROJECTS_PROJECT"
+                                 referencedTableName="PROJECTS"
+                                 referencedColumnNames="PROJECT_ID"
+                                 onDelete="CASCADE"/>
+        <addUniqueConstraint tableName="SECRET_PROJECTS" columnNames="SECRET_ID,PROJECT_ID"/>
+        <createIndex tableName="SECRET_PROJECTS" indexName="SECRET_PROJECTS_SECRET_IDX">
+            <column name="SECRET_ID"/>
+        </createIndex>
+        <createIndex tableName="SECRET_PROJECTS" indexName="SECRET_PROJECTS_PROJECT_IDX">
+            <column name="PROJECT_ID"/>
+        </createIndex>
+        <sql>
+            insert into secret_projects (secret_id, project_id) select secret_id, project_id from secrets where project_id is not null
+        </sql>
+        <dropColumn  tableName="SECRETS">
+            <column  name="PROJECT_ID"/>
+        </dropColumn>
+    </changeSet>
 </databaseChangeLog>

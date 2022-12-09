@@ -32,6 +32,7 @@ import org.intellij.lang.annotations.Language;
 import java.io.IOException;
 import java.lang.reflect.Type;
 import java.util.*;
+import java.util.stream.Collectors;
 
 import static com.walmartlabs.concord.common.IOUtils.grep;
 import static org.junit.jupiter.api.Assertions.*;
@@ -87,7 +88,9 @@ public class ServerClient {
     public SecretOperationResponse postSecret(String orgName, Map<String, Object> input) throws ApiException {
         return request("/api/v1/org/" + orgName + "/secret", input, SecretOperationResponse.class);
     }
-
+    private SecretOperationResponse postSecretV2(String orgName, Map<String, Object> input) throws ApiException {
+        return request("/api/v2/org/" + orgName + "/secret", input, SecretOperationResponse.class);
+    }
     public SecretOperationResponse generateKeyPair(String orgName, String projectName, String name, boolean generatePassword, String storePassword) throws ApiException {
         Map<String, Object> m = new HashMap<>();
         m.put("name", name);
@@ -97,18 +100,55 @@ public class ServerClient {
             m.put("storePassword", storePassword);
         }
 
-        if (projectName != null) {
+        if (projectName != null && !projectName.isEmpty()) {
             m.put("project", projectName);
+        }
+        return postSecret(orgName, m);
+    }
+    public SecretOperationResponse generateKeyPair(String orgName, Set<String> projectNames, Set<UUID> projectIds, String name, boolean generatePassword, String storePassword) throws ApiException {
+        Map<String, Object> m = new HashMap<>();
+        m.put("name", name);
+        m.put("generatePassword", generatePassword);
+        m.put("type", SecretEntry.TypeEnum.KEY_PAIR.toString());
+        if (storePassword != null) {
+            m.put("storePassword", storePassword);
+        }
+
+        if (projectIds != null && !projectIds.isEmpty()) {
+            m.put("projectIds", projectIds.stream().map(UUID::toString).collect(Collectors.joining(",")));
+        } else if (projectNames != null && !projectNames.isEmpty()) {
+            m.put("projects", String.join(",", projectNames));
+        }
+        return postSecret(orgName, m);
+    }
+    public SecretOperationResponse addPlainSecret(String orgName, String name, String projectName, boolean generatePassword, String storePassword, byte[] secret) throws ApiException {
+        Map<String, Object> m = new HashMap<>();
+        m.put("name", name);
+        m.put("type", SecretEntry.TypeEnum.DATA.toString());
+        m.put("generatePassword", generatePassword);
+
+        if (projectName != null && !projectName.isEmpty()) {
+            m.put("project", projectName);
+        }
+        m.put("data", secret);
+        if (storePassword != null) {
+            m.put("storePassword", storePassword);
         }
 
         return postSecret(orgName, m);
     }
 
-    public SecretOperationResponse addPlainSecret(String orgName, String name, boolean generatePassword, String storePassword, byte[] secret) throws ApiException {
+    public SecretOperationResponse addPlainSecret(String orgName, String name, Set<String> projectNames, Set<UUID> projectIds, boolean generatePassword, String storePassword, byte[] secret) throws ApiException {
         Map<String, Object> m = new HashMap<>();
         m.put("name", name);
         m.put("type", SecretEntry.TypeEnum.DATA.toString());
         m.put("generatePassword", generatePassword);
+
+        if (projectIds != null && !projectIds.isEmpty()) {
+            m.put("projectIds", projectIds.stream().map(UUID::toString).collect(Collectors.joining(",")));
+        } else if (projectNames != null && !projectNames.isEmpty()) {
+            m.put("projects", String.join(",", projectNames));
+        }
         m.put("data", secret);
         if (storePassword != null) {
             m.put("storePassword", storePassword);
@@ -124,7 +164,7 @@ public class ServerClient {
         m.put("generatePassword", generatePassword);
         m.put("username", username);
         m.put("password", password);
-        if (projectName != null) {
+        if (projectName != null && !projectName.isEmpty()) {
             m.put("project", projectName);
         }
         if (storePassword != null) {

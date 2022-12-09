@@ -34,7 +34,7 @@ import com.walmartlabs.concord.server.org.secret.*;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
-import java.util.UUID;
+import java.util.*;
 
 import static com.walmartlabs.concord.server.org.secret.SecretDao.InsertMode.INSERT;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -54,9 +54,11 @@ public class SecretDaoTest extends AbstractDaoTest {
 
         String secretName = "secret#" + System.currentTimeMillis();
         SecretDao secretDao = new SecretDao(getConfiguration());
-        UUID secretId = secretDao.insert(orgId, null, secretName, null, SecretType.KEY_PAIR, SecretEncryptedByType.SERVER_KEY, "concord", SecretVisibility.PUBLIC, SecretUtils.generateSalt(16), HashAlgorithm.SHA256, INSERT);
+        byte[] secretSalt = SecretUtils.generateSalt(16);
+        UUID secretId = secretDao.insert(orgId, secretName, null, SecretType.KEY_PAIR, SecretEncryptedByType.SERVER_KEY, "concord", SecretVisibility.PUBLIC, secretSalt, HashAlgorithm.SHA256, INSERT);
         secretDao.updateData(secretId, new byte[]{0, 1, 2});
-        secretDao.update(secretId, secretName, UUID.fromString("4b9d496a-c3a0-4e1b-804c-ac3fccddcb27"), null, new byte[0], null, projectId, orgId, HashAlgorithm.SHA256);
+        secretDao.update(secretId, secretName, UUID.fromString("4b9d496a-c3a0-4e1b-804c-ac3fccddcb27"), null, new byte[0], null, orgId, HashAlgorithm.SHA256);
+
 
         String repoName = "repo#" + System.currentTimeMillis();
         RepositoryDao repositoryDao = new RepositoryDao(getConfiguration(), new ConcordObjectMapper(TestObjectMapper.INSTANCE));
