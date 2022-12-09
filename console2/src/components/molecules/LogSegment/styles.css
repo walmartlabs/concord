@@ -20,23 +20,29 @@
 
 .LogSegment {
     color: rgb(22, 22, 22);
-    border-radius: 3px;
-    margin-bottom: 4px;
+    /*border-radius: 3px;*/
+    /*margin-bottom: 4px;*/
 }
 
 .LogSegment .Segment {
     text-align: left;
-    background-color: rgb(244, 244, 244);
+    background-color: white;
+    /*background-color: rgb(244, 244, 244);*/
     position: sticky;
     top: 57px;
-    border-radius: 5px 5px 0 0;
-    border-style: solid;
-    border-width: thin;
-    border-color: rgb(214, 214, 214);
+    /*border-radius: 5px 5px 0 0;*/
+    /*border-style: solid;*/
+    /*border-width: thin;*/
+    /*border-color: rgb(214, 214, 214);*/
 }
 
 .LogSegment .Segment:hover {
     background-color: rgb(230, 230, 230);
+    border-radius: 3px;
+}
+
+.LogSegment .Segment:focus {
+    background: none;
 }
 
 .LogSegment .Loader {
@@ -106,12 +112,12 @@
 }
 
 .LogSegment .ContentContainer {
-    padding: 0 0 0 0;
-    margin-bottom: 8px;
-    border-style: solid;
-    border-width: thin;
-    border-color: rgb(214, 214, 214);
-    border-top: none;
+    padding: 0 0 0 40px;
+    /*margin-bottom: 8px;*/
+    /*border-style: solid;*/
+    /*border-width: thin;*/
+    /*border-color: rgb(214, 214, 214);*/
+    /*border-top: none;*/
 }
 
 .LogSegment .InnerContentContainer {
@@ -133,7 +139,7 @@
     line-height: 18px;
     background: rgb(255, 255, 255);
     margin: 0;
-    padding: 10px 0 10px 10px;
+    /*padding: 10px 0 10px 10px;*/
     display: inline-block;
     min-width: 100%;
 }
