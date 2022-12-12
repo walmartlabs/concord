@@ -50,23 +50,31 @@ public class SecretsHashMigrationTask implements MigrationTask {
     @Config("secretStore.serverPassword")
     private byte[] serverPwd;
 
+    @Inject
+    @Config("secretStore.secretStoreSalt")
+    private byte[] defaultSecretSalt;
+
     @Override
     synchronized public void execute(DataSource dataSource) {
         log.info("Starting migration task for secretsHash");
         int retryCount = 0;
         while(retryCount <= MAX_RETRIES) {
             try(Connection con = dataSource.getConnection()) {
+                con.setAutoCommit(false);
                 while(true) {
-                    try(PreparedStatement psSelect = con.prepareStatement("SELECT secret_id, secret_salt, secret_data FROM secrets WHERE hash_algorithm = ? AND encrypted_by = ? LIMIT ?")){
+                    try(PreparedStatement psSelect = con.prepareStatement("SELECT secret_id, secret_salt, secret_data FROM secrets WHERE hash_algorithm = ? AND encrypted_by = ? LIMIT ? FOR UPDATE")){
                         psSelect.setString(1, HashAlgorithm.LEGACY_MD5.getName());
                         psSelect.setString(2, SecretEncryptedByType.SERVER_KEY.toString());
                         psSelect.setInt(3, BATCH_SIZE);
                         ResultSet resultSet = psSelect.executeQuery();
                         int count = 0;
-                        try(PreparedStatement psUpdated = con.prepareStatement("UPDATE secrets SET secret_data = ?, hash_algorithm = ? WHERE secret_id = ?")) {
+                        try(PreparedStatement psUpdated = con.prepareStatement("UPDATE secrets SET secret_data = ?, hash_algorithm = ? WHERE secret_id = ?::uuid")) {
                             while(resultSet.next()) {
                                 String secretId = resultSet.getString(1);
                                 byte[] secretSalt = resultSet.getBytes(2);
+                                if(secretSalt == null){
+                                    secretSalt = defaultSecretSalt;
+                                }
                                 byte[] encryptedData = resultSet.getBytes(3);
                                 PGobject uuidObject = new PGobject();
                                 uuidObject.setType("uuid");
@@ -75,7 +83,7 @@ public class SecretsHashMigrationTask implements MigrationTask {
                                 byte[] newlyEncryptedData = SecretUtils.encrypt(decryptedData, serverPwd, secretSalt, HashAlgorithm.SHA256);
                                 psUpdated.setBytes(1, newlyEncryptedData);
                                 psUpdated.setString(2, HashAlgorithm.SHA256.getName());
-                                psUpdated.setObject(3, uuidObject);
+                                psUpdated.setObject(3, secretId);
                                 psUpdated.addBatch();
                                 count++;
                             }
@@ -88,6 +96,7 @@ public class SecretsHashMigrationTask implements MigrationTask {
                                 break;
                             }
                         }
+                        resultSet.close();
                     }
                 }
                 log.info("Successfully completed migrating password less secrets with SHA256 hash algorithm");
