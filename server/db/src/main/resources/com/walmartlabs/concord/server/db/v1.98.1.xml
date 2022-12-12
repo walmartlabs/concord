@@ -42,4 +42,14 @@
         </sql>
     </changeSet>
 
+    <changeSet id="1981030" author="ybrigo@gmail.com">
+        <validCheckSum>ANY</validCheckSum>
+        <addDefaultValue tableName="SECRETS" columnName="SECRET_SALT" defaultValue="${secretStoreSalt}"/>
+    </changeSet>
+
+    <changeSet id="1981040" author="ybrigo@gmail.com">
+        <validCheckSum>ANY</validCheckSum>
+        <addNotNullConstraint tableName="SECRETS" columnName="SECRET_SALT" defaultNullValue="${secretStoreSalt}"/>
+    </changeSet>
+
 </databaseChangeLog>
