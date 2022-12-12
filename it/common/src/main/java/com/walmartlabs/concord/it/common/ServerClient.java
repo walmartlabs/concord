@@ -88,9 +88,6 @@ public class ServerClient {
     public SecretOperationResponse postSecret(String orgName, Map<String, Object> input) throws ApiException {
         return request("/api/v1/org/" + orgName + "/secret", input, SecretOperationResponse.class);
     }
-    private SecretOperationResponse postSecretV2(String orgName, Map<String, Object> input) throws ApiException {
-        return request("/api/v2/org/" + orgName + "/secret", input, SecretOperationResponse.class);
-    }
     public SecretOperationResponse generateKeyPair(String orgName, String projectName, String name, boolean generatePassword, String storePassword) throws ApiException {
         Map<String, Object> m = new HashMap<>();
         m.put("name", name);

@@ -43,7 +43,7 @@ import javax.inject.Named;
 import java.util.*;
 import java.util.stream.Collectors;
 
-import static com.walmartlabs.concord.server.jooq.Tables.SECRET_PROJECTS;
+import static com.walmartlabs.concord.server.jooq.Tables.PROJECT_SECRETS;
 import static com.walmartlabs.concord.server.jooq.Tables.V_USER_TEAMS;
 import static com.walmartlabs.concord.server.jooq.tables.Organizations.ORGANIZATIONS;
 import static com.walmartlabs.concord.server.jooq.tables.Projects.PROJECTS;
@@ -168,9 +168,9 @@ public class SecretDao extends AbstractDao {
 
     public void updateProjectScopeByProjectId(DSLContext tx, UUID orgId, UUID projectId, UUID newProjectId) {
         if (newProjectId == null) {
-            tx.deleteFrom(SECRET_PROJECTS).where(SECRET_PROJECTS.PROJECT_ID.eq(projectId));
+            tx.deleteFrom(PROJECT_SECRETS).where(PROJECT_SECRETS.PROJECT_ID.eq(projectId));
         } else {
-            tx.update(SECRET_PROJECTS).set(SECRET_PROJECTS.PROJECT_ID, newProjectId).where(SECRET_PROJECTS.PROJECT_ID.eq(projectId));
+            tx.update(PROJECT_SECRETS).set(PROJECT_SECRETS.PROJECT_ID, newProjectId).where(PROJECT_SECRETS.PROJECT_ID.eq(projectId));
         }
     }
 
@@ -199,9 +199,9 @@ public class SecretDao extends AbstractDao {
 
     public void updateSecretProjects(DSLContext tx, UUID id, Set<UUID> projectIds) {
         if (projectIds != null) {
-            tx.deleteFrom(SECRET_PROJECTS).where(SECRET_PROJECTS.SECRET_ID.eq(id)).execute();
+            tx.deleteFrom(PROJECT_SECRETS).where(PROJECT_SECRETS.SECRET_ID.eq(id)).execute();
             for (UUID projectId : projectIds) {
-                tx.insertInto(SECRET_PROJECTS).columns(SECRET_PROJECTS.SECRET_ID, SECRET_PROJECTS.PROJECT_ID).values(id, projectId).execute();
+                tx.insertInto(PROJECT_SECRETS).columns(PROJECT_SECRETS.SECRET_ID, PROJECT_SECRETS.PROJECT_ID).values(id, projectId).execute();
             }
         }
     }
@@ -411,8 +411,8 @@ public class SecretDao extends AbstractDao {
 
     private static SecretEntryV2 toEntry(DSLContext tx, Record15<UUID, String, UUID, String, String, String, String, String, UUID, String, String, String, String, byte[], String> r) {
         UUID secretId = r.get(SECRETS.SECRET_ID);
-        Set<ProjectEntry> projects = tx.select(PROJECTS.PROJECT_ID, PROJECTS.PROJECT_NAME).from(PROJECTS).leftJoin(SECRET_PROJECTS).on(PROJECTS.PROJECT_ID.eq(SECRET_PROJECTS.PROJECT_ID))
-                .where(SECRET_PROJECTS.SECRET_ID.eq(secretId)).stream()
+        Set<ProjectEntry> projects = tx.select(PROJECTS.PROJECT_ID, PROJECTS.PROJECT_NAME).from(PROJECTS).leftJoin(PROJECT_SECRETS).on(PROJECTS.PROJECT_ID.eq(PROJECT_SECRETS.PROJECT_ID))
+                .where(PROJECT_SECRETS.SECRET_ID.eq(secretId)).stream()
                 .map(projectRecord -> new ProjectEntry(projectRecord.get(PROJECTS.PROJECT_NAME), projectRecord.get(PROJECTS.PROJECT_ID))).collect(Collectors.toSet());
         return new SecretEntryV2(r.get(SECRETS.SECRET_ID),
                 r.get(SECRETS.SECRET_NAME),

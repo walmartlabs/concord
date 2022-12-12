@@ -46,7 +46,7 @@ export default ({ orgName, projects, secretName }: Props) => {
     const update = useCallback(async () => {
         try {
             setUpdating(true);
-            await apiUpdateSecretProject(orgName, secretName, newProjects);
+            await apiUpdateSecretProject(orgName, secretName, newProjects.map(project => project.id));
         } catch (e) {
             setError(e);
         } finally {

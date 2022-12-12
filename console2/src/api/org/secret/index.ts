@@ -135,6 +135,7 @@ export const list = async (
     }
 
     return {
+        
         items: data,
         next: hasMoreElements
     };
@@ -184,11 +185,11 @@ export const updateSecretVisibility = (
 export const updateSecretProject = (
     orgName: ConcordKey,
     secretName: ConcordKey,
-    projects: ProjectEntry[]
+    projectIds: String[]
 ): Promise<GenericOperationResult> => {
     const data = new FormData();
-    if(projects.length > 0) {
-        data.append("projectIds", projects.map(project => project.id).join(","));
+    if(projectIds.length > 0) {
+        data.append("projectIds", projectIds.join(","));
     } else {
         data.append("removeProjectLink", "true");
     }
