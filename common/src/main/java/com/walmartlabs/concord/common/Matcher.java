@@ -74,7 +74,7 @@ public final class Matcher {
         } else if (conditions instanceof Collection) {
             return matchAny((Collection) conditions, data);
         } else if (data instanceof Collection) {
-            return matchAny((Collection)data, conditions);
+            return matchAny(conditions, (Collection)data);
         } else {
             return compareValues(data, conditions);
         }
