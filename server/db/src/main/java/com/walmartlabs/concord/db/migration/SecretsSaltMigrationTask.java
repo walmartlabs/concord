@@ -44,7 +44,7 @@ public class SecretsSaltMigrationTask implements MigrationTask {
     private byte[] secretSalt;
 
     @Override
-    synchronized public void execute(DataSource dataSource) {
+    public void execute(DataSource dataSource) {
         log.info("Starting migration task for updating secret salt");
         int retryCount = 0;
         while (retryCount <= MAX_RETRIES) {
