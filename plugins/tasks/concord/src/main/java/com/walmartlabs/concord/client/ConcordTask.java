@@ -284,7 +284,7 @@ public class ConcordTask extends AbstractConcordTask {
             cfg.put(SUSPEND_KEY, false);
         }
 
-        start(ctx, cfg,null);
+        start(ctx, cfg, null);
     }
 
     private void startChildProcess(Context ctx) throws Exception {
@@ -842,7 +842,7 @@ public class ConcordTask extends AbstractConcordTask {
 
         if (v instanceof String) {
             return Arrays.stream(((String) v)
-                    .split(","))
+                            .split(","))
                     .map(String::trim)
                     .collect(Collectors.toSet());
         } else if (v instanceof String[]) {
