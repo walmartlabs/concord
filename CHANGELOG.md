@@ -6,6 +6,8 @@
 
 ### Changed
 
+- concord-task: fix concurrency issue when collecting output of processes
+([#693](https://github.com/walmartlabs/concord/pull/693));
 - concord-server: `process_queue` table split (part 1)
 ([#668](https://github.com/walmartlabs/concord/pull/668));
 - concord-server, oidc: OIDC team/role mapping. Maps
