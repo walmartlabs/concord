@@ -6,6 +6,8 @@
 
 ### Changed
 
+- concord-server: @Inject refactoring (part 1)
+([#658](https://github.com/walmartlabs/concord/pull/658));
 - concord-task: fix concurrency issue when collecting output of processes
 ([#693](https://github.com/walmartlabs/concord/pull/693));
 - concord-server: `process_queue` table split (part 1)
