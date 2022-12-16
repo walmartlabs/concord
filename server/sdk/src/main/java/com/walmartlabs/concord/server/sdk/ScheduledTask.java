@@ -22,6 +22,8 @@ package com.walmartlabs.concord.server.sdk;
 
 public interface ScheduledTask {
 
+    String getId();
+
     long getIntervalInSec();
 
     void performTask() throws Exception;

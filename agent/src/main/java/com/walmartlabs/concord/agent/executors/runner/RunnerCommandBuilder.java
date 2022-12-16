@@ -104,8 +104,10 @@ public class RunnerCommandBuilder {
 
         // speeds up the start, we don't care much about all potential optimizations done by HotSpot
         l.add("-client");
-        // don't do bytecode verification
-        l.add("-noverify");
+        if (majorJavaVersion < 13) {
+            // don't do bytecode verification
+            l.add("-noverify");
+        }
         // enable support for calling vararg methods in JUEL
         l.add("-Djavax.el.varArgs=true");
         // avoid blocking on crypto

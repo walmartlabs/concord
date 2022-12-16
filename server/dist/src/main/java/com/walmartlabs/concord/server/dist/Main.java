@@ -37,7 +37,10 @@ public class Main {
         log.info("Starting Concord Server ({}, {}, {})...", v.getVersion(), v.getCommitId(), v.getEnv());
 
         long t1 = System.currentTimeMillis();
-        ConcordServer.start();
+
+        ConcordServer.withAutoWiring()
+                .start();
+
         long t2 = System.currentTimeMillis();
         log.info("main -> started in {}ms", (t2 - t1));
     }
