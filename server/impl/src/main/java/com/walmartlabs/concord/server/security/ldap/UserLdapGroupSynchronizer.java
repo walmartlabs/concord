@@ -49,7 +49,7 @@ import static com.walmartlabs.concord.server.jooq.Tables.USERS;
  * Responsible for AD/LDAP group synchronization and enabling/disabling users
  * based on whether they have active groups or not.
  */
-@Named("user-ldap-group-sync")
+@Named
 @Singleton
 public class UserLdapGroupSynchronizer implements ScheduledTask {
 
@@ -72,6 +72,11 @@ public class UserLdapGroupSynchronizer implements ScheduledTask {
         this.ldapManager = ldapManager;
         this.userManager = userManager;
         this.ldapGroupsDao = ldapGroupsDao;
+    }
+
+    @Override
+    public String getId() {
+        return "user-ldap-group-sync";
     }
 
     @Override
