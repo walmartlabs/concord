@@ -36,8 +36,8 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.time.OffsetDateTime;
+import java.util.Collection;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -109,17 +109,17 @@ public final class SchedulerDao extends AbstractDao {
         taskFinished(tx, taskId, TaskStatusType.STALLED, null);
     }
 
-    public void updateTaskIntervals(Map<String, ScheduledTask> tasks) {
+    public void updateTaskIntervals(Collection<ScheduledTask> tasks) {
         tx(tx -> {
-            for (Map.Entry<String, ScheduledTask> e : tasks.entrySet()) {
-                ScheduledTask task = e.getValue();
+            for (ScheduledTask task : tasks) {
+                String taskId = task.getId();
 
                 if (task.getIntervalInSec() <= 0) {
-                    log.warn("{} has period <= 0, the task will be disabled", e.getKey());
+                    log.warn("{} has period <= 0, the task will be disabled", taskId);
                 }
 
                 tx.insertInto(TASKS, TASKS.TASK_ID, TASKS.TASK_INTERVAL)
-                        .values(e.getKey(), task.getIntervalInSec())
+                        .values(taskId, task.getIntervalInSec())
                         .onDuplicateKeyUpdate().set(TASKS.TASK_INTERVAL, task.getIntervalInSec())
                         .execute();
             }
