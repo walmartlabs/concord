@@ -6,6 +6,8 @@
 
 ### Changed
 
+- concord-console: compact view of log segments
+([#690](https://github.com/walmartlabs/concord/pull/690));
 - concord-server: @Inject refactoring (part 1)
 ([#658](https://github.com/walmartlabs/concord/pull/658));
 - concord-task: fix concurrency issue when collecting output of processes
