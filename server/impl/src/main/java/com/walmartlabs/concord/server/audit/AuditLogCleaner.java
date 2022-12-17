@@ -38,7 +38,7 @@ import java.time.OffsetDateTime;
 
 import static com.walmartlabs.concord.server.jooq.tables.AuditLog.AUDIT_LOG;
 
-@Named("audit-log-cleaner")
+@Named
 @Singleton
 public class AuditLogCleaner implements ScheduledTask {
 
@@ -51,6 +51,11 @@ public class AuditLogCleaner implements ScheduledTask {
     public AuditLogCleaner(AuditConfiguration cfg, CleanerDao cleanerDao) {
         this.cfg = cfg;
         this.cleanerDao = cleanerDao;
+    }
+
+    @Override
+    public String getId() {
+        return "audit-log-cleaner";
     }
 
     @Override
