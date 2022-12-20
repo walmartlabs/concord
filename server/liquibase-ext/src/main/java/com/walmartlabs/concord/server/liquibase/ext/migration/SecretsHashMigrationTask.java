@@ -1,4 +1,4 @@
-package com.walmartlabs.concord.db.migration;
+package com.walmartlabs.concord.server.liquibase.ext.migration;
 
 /*-
  * *****
@@ -9,9 +9,9 @@ package com.walmartlabs.concord.db.migration;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- *
+ * 
  *      http://www.apache.org/licenses/LICENSE-2.0
- *
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -23,62 +23,58 @@ package com.walmartlabs.concord.db.migration;
 import com.walmartlabs.concord.common.secret.HashAlgorithm;
 import com.walmartlabs.concord.common.secret.SecretEncryptedByType;
 import com.walmartlabs.concord.common.secret.SecretUtils;
-import com.walmartlabs.ollie.config.Config;
-import org.postgresql.util.PGobject;
+import liquibase.change.custom.CustomTaskChange;
+import liquibase.database.Database;
+import liquibase.database.jvm.JdbcConnection;
+import liquibase.exception.CustomChangeException;
+import liquibase.exception.SetupException;
+import liquibase.exception.ValidationErrors;
+import liquibase.resource.ResourceAccessor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.sql.DataSource;
-import java.sql.Connection;
+import java.nio.charset.StandardCharsets;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.util.UUID;
+import java.util.Base64;
 
-@Named
-@MigrationOrder(1)
-public class SecretsHashMigrationTask implements MigrationTask {
-
+public class SecretsHashMigrationTask implements CustomTaskChange {
 
     private static final Logger log = LoggerFactory.getLogger(SecretsHashMigrationTask.class);
     private static final int MAX_RETRIES = 10;
     private static final int BATCH_SIZE = 100;
 
-    @Inject
-    @Config("secretStore.serverPassword")
-    private byte[] serverPwd;
+    private String serverPassword;
 
-    @Inject
-    @Config("secretStore.secretStoreSalt")
-    private byte[] defaultSecretSalt;
+    public String getServerPassword() {
+        return serverPassword;
+    }
+
+    public void setServerPassword(String serverPassword) {
+        this.serverPassword = serverPassword;
+    }
 
     @Override
-    synchronized public void execute(DataSource dataSource) {
+    public void execute(Database database) throws CustomChangeException {
         log.info("Starting migration task for secretsHash");
         int retryCount = 0;
-        while(retryCount <= MAX_RETRIES) {
-            try(Connection con = dataSource.getConnection()) {
+        while (retryCount <= MAX_RETRIES) {
+            try {
+                JdbcConnection con = (JdbcConnection) database.getConnection();
+                byte[] serverPwd = serverPassword.getBytes(StandardCharsets.UTF_8);
                 con.setAutoCommit(false);
-                while(true) {
-                    try(PreparedStatement psSelect = con.prepareStatement("SELECT secret_id, secret_salt, secret_data FROM secrets WHERE hash_algorithm = ? AND encrypted_by = ? LIMIT ? FOR UPDATE")){
+                while (true) {
+                    try (PreparedStatement psSelect = con.prepareStatement("SELECT secret_id, secret_salt, secret_data FROM secrets WHERE hash_algorithm = ? AND encrypted_by = ? LIMIT ? FOR UPDATE")) {
                         psSelect.setString(1, HashAlgorithm.LEGACY_MD5.getName());
                         psSelect.setString(2, SecretEncryptedByType.SERVER_KEY.toString());
                         psSelect.setInt(3, BATCH_SIZE);
                         ResultSet resultSet = psSelect.executeQuery();
                         int count = 0;
-                        try(PreparedStatement psUpdated = con.prepareStatement("UPDATE secrets SET secret_data = ?, hash_algorithm = ? WHERE secret_id = ?::uuid")) {
-                            while(resultSet.next()) {
+                        try (PreparedStatement psUpdated = con.prepareStatement("UPDATE secrets SET secret_data = ?, hash_algorithm = ? WHERE secret_id = ?::uuid")) {
+                            while (resultSet.next()) {
                                 String secretId = resultSet.getString(1);
                                 byte[] secretSalt = resultSet.getBytes(2);
-                                if(secretSalt == null){
-                                    secretSalt = defaultSecretSalt;
-                                }
                                 byte[] encryptedData = resultSet.getBytes(3);
-                                PGobject uuidObject = new PGobject();
-                                uuidObject.setType("uuid");
-                                uuidObject.setValue(secretId);
                                 byte[] decryptedData = SecretUtils.decrypt(encryptedData, serverPwd, secretSalt, HashAlgorithm.LEGACY_MD5);
                                 byte[] newlyEncryptedData = SecretUtils.encrypt(decryptedData, serverPwd, secretSalt, HashAlgorithm.SHA256);
                                 psUpdated.setBytes(1, newlyEncryptedData);
@@ -87,12 +83,12 @@ public class SecretsHashMigrationTask implements MigrationTask {
                                 psUpdated.addBatch();
                                 count++;
                             }
-                            if(count > 0){
+                            if (count > 0) {
                                 psUpdated.executeBatch();
                                 con.commit();
                             }
                             log.info("Committing {} records with new hash algorithm", count);
-                            if(count < BATCH_SIZE) {
+                            if (count < BATCH_SIZE) {
                                 break;
                             }
                         }
@@ -102,13 +98,32 @@ public class SecretsHashMigrationTask implements MigrationTask {
                 log.info("Successfully completed migrating password less secrets with SHA256 hash algorithm");
                 break;
             } catch (Exception e) {
-                if(retryCount == MAX_RETRIES) {
+                if (retryCount == MAX_RETRIES) {
                     log.error("secret hash migration -> Error while running secret hash migration. giving up");
                     throw new RuntimeException(e);
                 }
                 log.error("Exception: {} while executing migration task for {} time.", e.getMessage(), ++retryCount);
             }
         }
+    }
 
+    @Override
+    public String getConfirmationMessage() {
+        return null;
+    }
+
+    @Override
+    public void setUp() throws SetupException {
+
+    }
+
+    @Override
+    public void setFileOpener(ResourceAccessor resourceAccessor) {
+
+    }
+
+    @Override
+    public ValidationErrors validate(Database database) {
+        return null;
     }
 }

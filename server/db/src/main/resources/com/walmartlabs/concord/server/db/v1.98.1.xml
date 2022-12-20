@@ -57,6 +57,7 @@
             <column name="hash_algorithm" type="varchar(32)" defaultValue="md5">
                 <constraints nullable="true"/>
             </column>
+
         </addColumn>
     </changeSet>
 
@@ -68,6 +69,11 @@
     <changeSet id="1981032" author="ybrigo@gmail.com">
         <validCheckSum>ANY</validCheckSum>
         <addNotNullConstraint tableName="SECRETS" columnName="SECRET_SALT" defaultNullValue="${secretStoreSalt}"/>
+    </changeSet>
+    <changeSet id="1981033" author="ginni.hema.sundara.rao@walmart.com" >
+        <customChange class="com.walmartlabs.concord.server.liquibase.ext.migration.SecretsHashMigrationTask">
+            <param name="serverPassword" value="${serverPassword}"/>
+        </customChange>
     </changeSet>
 
 </databaseChangeLog>
