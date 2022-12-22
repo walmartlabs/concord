@@ -30,12 +30,9 @@ import java.util.Hashtable;
 
 public class ConcordLdapContextFactory implements LdapContextFactory {
     private final LdapContextFactory delegate;
-    
-    private final LdapConfiguration cfg;
-    
+
     @SuppressWarnings("unchecked")
     public ConcordLdapContextFactory(LdapConfiguration cfg) {
-        this.cfg = cfg;
         JndiLdapContextFactory f = new JndiLdapContextFactory() {
             @Override
             protected LdapContext createLdapContext(Hashtable env) throws NamingException {
