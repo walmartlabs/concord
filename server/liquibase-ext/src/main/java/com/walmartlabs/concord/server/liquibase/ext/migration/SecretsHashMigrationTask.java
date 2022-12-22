@@ -59,7 +59,7 @@ public class SecretsHashMigrationTask implements CustomTaskChange {
         log.info("Starting migration task for secretsHash");
         try {
             JdbcConnection con = (JdbcConnection) database.getConnection();
-            byte[] serverPwd = serverPassword.getBytes(StandardCharsets.UTF_8);
+            byte[] serverPwd = Base64.getDecoder().decode(serverPassword);
             con.setAutoCommit(false);
             while (true) {
                 try (PreparedStatement psSelect = con.prepareStatement("SELECT secret_id, secret_salt, secret_data FROM secrets WHERE hash_algorithm = ? AND encrypted_by = ? LIMIT ? FOR UPDATE")) {
