@@ -63,17 +63,17 @@ public class LdapRealm extends AbstractLdapRealm {
     @Inject
     public LdapRealm(LdapConfiguration cfg,
                      UserManager userManager,
-                     ConcordLdapContextFactory ldapContextFactory,
+                     LdapContextFactory ldapContextFactory,
                      LdapManager ldapManager,
                      LdapGroupManager ldapGroupManager,
-                     AuditLog auditLog) {
+                     AuditLog auditLog) throws NamingException {
 
         this.userManager = userManager;
         this.ldapManager = ldapManager;
         this.ldapGroupManager = ldapGroupManager;
         this.auditLog = auditLog;
 
-        this.url = ldapContextFactory.getCurrentLdapUrl();
+        this.url = (String) ldapContextFactory.getSystemLdapContext().getEnvironment().get("java.naming.provider.url");
         this.searchBase = cfg.getSearchBase();
         this.systemUsername = cfg.getSystemUsername();
         this.systemPassword = cfg.getSystemPassword();
