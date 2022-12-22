@@ -66,9 +66,9 @@ public class SecretsHashMigrationTask implements CustomTaskChange {
                     psSelect.setString(1, HashAlgorithm.LEGACY_MD5.getName());
                     psSelect.setString(2, SecretEncryptedByType.SERVER_KEY.toString());
                     psSelect.setInt(3, BATCH_SIZE);
-                    ResultSet resultSet = psSelect.executeQuery();
                     int count = 0;
-                    try (PreparedStatement psUpdated = con.prepareStatement("UPDATE secrets SET secret_data = ?, hash_algorithm = ? WHERE secret_id = ?::uuid")) {
+                    try (ResultSet resultSet = psSelect.executeQuery();
+                         PreparedStatement psUpdated = con.prepareStatement("UPDATE secrets SET secret_data = ?, hash_algorithm = ? WHERE secret_id = ?::uuid")) {
                         while (resultSet.next()) {
                             String secretId = resultSet.getString(1);
                             byte[] secretSalt = resultSet.getBytes(2);
@@ -90,7 +90,6 @@ public class SecretsHashMigrationTask implements CustomTaskChange {
                             break;
                         }
                     }
-                    resultSet.close();
                 }
             }
         } catch (Exception e) {
@@ -108,12 +107,10 @@ public class SecretsHashMigrationTask implements CustomTaskChange {
 
     @Override
     public void setUp() throws SetupException {
-
     }
 
     @Override
     public void setFileOpener(ResourceAccessor resourceAccessor) {
-
     }
 
     @Override
