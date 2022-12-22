@@ -3,6 +3,8 @@
 ## [1.98.1] - Unreleased
 
 ### Added
+- migration task to update secrets data with new SHA algorithm
+([#691](https://github.com/walmartlabs/concord/pull/691));
 
 ### Changed
 
