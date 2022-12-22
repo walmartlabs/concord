@@ -21,8 +21,10 @@ roles;
 - runtime-v2: do not create log segments for expressions
 by default. Logs produced by expression blocks without
 `name` will no longer be displayed as a separate log
-"segment".
-([#689](https://github.com/walmartlabs/concord/pull/689)).
+"segment";
+([#689](https://github.com/walmartlabs/concord/pull/689));
+- concord-server-db: pass secret salt as a base64 value
+([#694][https://github.com/walmartlabs/concord/pull/689]).
 
 
 
