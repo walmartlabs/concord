@@ -62,12 +62,16 @@
 
     <changeSet id="1981031" author="ybrigo@gmail.com">
         <validCheckSum>ANY</validCheckSum>
-        <addDefaultValue tableName="SECRETS" columnName="SECRET_SALT" defaultValue="${secretStoreSalt}"/>
+        <addDefaultValue tableName="SECRETS" columnName="SECRET_SALT" defaultValueComputed="decode('${secretStoreSalt}', 'base64')"/>
     </changeSet>
 
     <changeSet id="1981032" author="ybrigo@gmail.com">
         <validCheckSum>ANY</validCheckSum>
-        <addNotNullConstraint tableName="SECRETS" columnName="SECRET_SALT" defaultNullValue="${secretStoreSalt}"/>
+        <update tableName="SECRETS">
+            <column name="SECRET_SALT" valueComputed="decode('${secretStoreSalt}', 'base64')"/>
+            <where>SECRET_SALT is NULL</where>
+        </update>
+        <addNotNullConstraint tableName="SECRETS" columnName="SECRET_SALT"/>
     </changeSet>
 
 </databaseChangeLog>
