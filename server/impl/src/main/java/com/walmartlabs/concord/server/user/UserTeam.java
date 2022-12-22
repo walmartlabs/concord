@@ -1,10 +1,10 @@
-package com.walmartlabs.concord.server.sdk;
+package com.walmartlabs.concord.server.user;
 
 /*-
  * *****
  * Concord
  * -----
- * Copyright (C) 2017 - 2018 Walmart Inc.
+ * Copyright (C) 2017 - 2022 Walmart Inc.
  * -----
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,11 +20,26 @@ package com.walmartlabs.concord.server.sdk;
  * =====
  */
 
-public interface ScheduledTask {
+import com.walmartlabs.concord.server.org.team.TeamRole;
+import org.immutables.value.Value;
 
-    String getId();
+import java.util.UUID;
 
-    long getIntervalInSec();
+@Value.Immutable
+public interface UserTeam {
 
-    void performTask() throws Exception;
+    UUID teamId();
+
+    TeamRole role();
+
+    static UserTeam of(UUID teamId, TeamRole role) {
+        return UserTeam.builder()
+                .teamId(teamId)
+                .role(role)
+                .build();
+    }
+
+    static ImmutableUserTeam.Builder builder() {
+        return ImmutableUserTeam.builder();
+    }
 }
