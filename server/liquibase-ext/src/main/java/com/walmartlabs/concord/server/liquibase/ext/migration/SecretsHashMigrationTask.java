@@ -33,7 +33,6 @@ import liquibase.resource.ResourceAccessor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.nio.charset.StandardCharsets;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.util.Base64;
@@ -41,7 +40,7 @@ import java.util.Base64;
 public class SecretsHashMigrationTask implements CustomTaskChange {
 
     private static final Logger log = LoggerFactory.getLogger(SecretsHashMigrationTask.class);
-    private static final int MAX_RETRIES = 10;
+
     private static final int BATCH_SIZE = 100;
 
     private String serverPassword;
@@ -97,7 +96,6 @@ public class SecretsHashMigrationTask implements CustomTaskChange {
             throw new CustomChangeException(e);
         }
         log.info("Successfully completed migrating password less secrets with SHA256 hash algorithm");
-
     }
 
     @Override
