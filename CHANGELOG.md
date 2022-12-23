@@ -3,16 +3,18 @@
 ## [1.98.1] - Unreleased
 
 ### Added
-- migration task to update secrets data with new SHA algorithm
+- concord-server-db: a migration task to update secrets using
+the updated hashing algorithm
 ([#691](https://github.com/walmartlabs/concord/pull/691));
 
 ### Changed
 
-- concord-console: compact view of log segments
+- concord-console: new compact view for the Log tab
 ([#690](https://github.com/walmartlabs/concord/pull/690));
 - concord-server: @Inject refactoring (part 1)
 ([#658](https://github.com/walmartlabs/concord/pull/658));
-- concord-task: fix concurrency issue when collecting output of processes
+- concord-task: fix concurrency issue when collecting output
+of processes
 ([#693](https://github.com/walmartlabs/concord/pull/693));
 - concord-server: `process_queue` table split (part 1)
 ([#668](https://github.com/walmartlabs/concord/pull/668));
