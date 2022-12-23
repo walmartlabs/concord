@@ -57,17 +57,32 @@
             <column name="hash_algorithm" type="varchar(32)" defaultValue="md5">
                 <constraints nullable="true"/>
             </column>
+
         </addColumn>
     </changeSet>
 
-    <changeSet id="1981031" author="ybrigo@gmail.com">
+    <changeSet id="1981031" author="ybrigo@gmail.com" context="!codegen">
         <validCheckSum>ANY</validCheckSum>
-        <addDefaultValue tableName="SECRETS" columnName="SECRET_SALT" defaultValue="${secretStoreSalt}"/>
+        <addDefaultValue tableName="SECRETS" columnName="SECRET_SALT" defaultValueComputed="decode('${secretStoreSalt}', 'base64')"/>
     </changeSet>
 
-    <changeSet id="1981032" author="ybrigo@gmail.com">
+    <changeSet id="1981032" author="ybrigo@gmail.com" context="!codegen">
         <validCheckSum>ANY</validCheckSum>
-        <addNotNullConstraint tableName="SECRETS" columnName="SECRET_SALT" defaultNullValue="${secretStoreSalt}"/>
+        <update tableName="SECRETS">
+            <column name="SECRET_SALT" valueComputed="decode('${secretStoreSalt}', 'base64')"/>
+            <where>SECRET_SALT is NULL</where>
+        </update>
+    </changeSet>
+
+    <changeSet id="1981033" author="ybrigo@gmail.com">
+        <addNotNullConstraint tableName="SECRETS" columnName="SECRET_SALT"/>
+    </changeSet>
+
+    <changeSet id="1981034" author="ginni.hema.sundara.rao@walmart.com" context="!codegen">
+        <validCheckSum>ANY</validCheckSum>
+        <customChange class="com.walmartlabs.concord.server.liquibase.ext.migration.SecretsHashMigrationTask">
+            <param name="serverPassword" value="${serverPassword}"/>
+        </customChange>
     </changeSet>
 
 </databaseChangeLog>
