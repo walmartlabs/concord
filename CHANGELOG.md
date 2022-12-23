@@ -1,5 +1,37 @@
 # Change log
 
+## [1.98.1] - Unreleased
+
+### Added
+- concord-server-db: a migration task to update secrets using
+the updated hashing algorithm
+([#691](https://github.com/walmartlabs/concord/pull/691));
+
+### Changed
+
+- concord-console: new compact view for the Log tab
+([#690](https://github.com/walmartlabs/concord/pull/690));
+- concord-server: @Inject refactoring (part 1)
+([#658](https://github.com/walmartlabs/concord/pull/658));
+- concord-task: fix concurrency issue when collecting output
+of processes
+([#693](https://github.com/walmartlabs/concord/pull/693));
+- concord-server: `process_queue` table split (part 1)
+([#668](https://github.com/walmartlabs/concord/pull/668));
+- concord-server, oidc: OIDC team/role mapping. Maps
+OpenID properties (e.g. `groups`) to Concord teams and
+roles;
+([#682](https://github.com/walmartlabs/concord/pull/682));
+- runtime-v2: do not create log segments for expressions
+by default. Logs produced by expression blocks without
+`name` will no longer be displayed as a separate log
+"segment";
+([#689](https://github.com/walmartlabs/concord/pull/689));
+- concord-server-db: pass secret salt as a base64 value
+([#694][https://github.com/walmartlabs/concord/pull/689]).
+
+
+
 ## [1.98.0] - 2022-12-07
 
 ### Added
