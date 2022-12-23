@@ -72,11 +72,13 @@ public class LdapRealm extends AbstractLdapRealm {
         this.ldapManager = ldapManager;
         this.ldapGroupManager = ldapGroupManager;
         this.auditLog = auditLog;
-
-        this.url = (String) ldapContextFactory.getSystemLdapContext().getEnvironment().get("java.naming.provider.url");
         this.searchBase = cfg.getSearchBase();
         this.systemUsername = cfg.getSystemUsername();
         this.systemPassword = cfg.getSystemPassword();
+
+        setUrl(cfg.getSystemPassword() != null 
+                ? (String) ldapContextFactory.getSystemLdapContext().getEnvironment().get("java.naming.provider.url") 
+                : cfg.getUrl());
 
         setCachingEnabled(false);
 
