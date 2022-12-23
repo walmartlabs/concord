@@ -80,7 +80,7 @@ public class ConcordDnsSrvLdapContextFactory implements LdapContextFactory {
     public synchronized void setLdapUrlIterator(Iterator<String> ldapUrlIterator) {
         this.ldapUrlIterator = ldapUrlIterator;
     }
-    
+
     @Override
     public LdapContext getSystemLdapContext() {
         try {
@@ -98,7 +98,7 @@ public class ConcordDnsSrvLdapContextFactory implements LdapContextFactory {
             throw new RuntimeException(e);
         }
     }
-    
+
     @Override
     public LdapContext getLdapContext(Object principal, Object credentials) {
         try {
@@ -107,11 +107,11 @@ public class ConcordDnsSrvLdapContextFactory implements LdapContextFactory {
             throw new RuntimeException(e);
         }
     }
-    
+
     private <T> T withRetry(Callable<T> f) throws Exception {
         int tryCount = 0;
-        while(tryCount < MAX_RETRY) {
-            try{
+        while (tryCount < MAX_RETRY) {
+            try {
                 return f.call();
             } catch (CommunicationException e) {
                 handleCommunicationException(e);
@@ -120,7 +120,7 @@ public class ConcordDnsSrvLdapContextFactory implements LdapContextFactory {
         }
         throw new IllegalStateException("Too deep, max retries limit reached with ldap url identifier");
     }
-    
+
     private void refreshSRVList() throws NamingException {
         if (cfg.getDnsSRVName() != null) {
             this.setLdapUrlIterator(getLdapServers(cfg.getDnsSRVName()).iterator());

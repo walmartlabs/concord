@@ -37,8 +37,7 @@ public class LdapContextFactoryProvider implements Provider<LdapContextFactory> 
     public LdapContextFactoryProvider(LdapConfiguration cfg) throws NamingException {
         if (cfg.getDnsSRVName() != null) {
             this.ldapContextFactory = new ConcordDnsSrvLdapContextFactory(cfg);
-        }
-        else {
+        } else {
             this.ldapContextFactory = new ConcordLdapContextFactory(cfg);
         }
     }
