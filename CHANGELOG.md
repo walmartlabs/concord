@@ -1,5 +1,13 @@
 # Change log
 
+## [1.98.1] - Unreleased
+
+### Added
+
+### Changed
+- console2: single vertical scroll for process log page
+([#696](https://github.com/walmartlabs/concord/pull/696)).
+
 ## [1.98.1] - 2022-12-22
 
 ### Changed
