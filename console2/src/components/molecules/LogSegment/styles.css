@@ -30,7 +30,7 @@
 }
 
 .LogSegment .Segment:focus {
-    background: none;
+    background: white none;
 }
 
 .LogSegment .Segment:hover {
@@ -111,7 +111,6 @@
 .LogSegment .InnerContentContainer {
     overflow: auto;
     min-height: 12px;
-    max-height: 640px;
 }
 
 .LogSegment .Loading {
