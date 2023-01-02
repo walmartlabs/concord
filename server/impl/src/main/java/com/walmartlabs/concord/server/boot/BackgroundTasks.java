@@ -45,4 +45,8 @@ public class BackgroundTasks {
     public synchronized void stop() {
         tasks.forEach(BackgroundTask::stop);
     }
+
+    public int count() {
+        return tasks.size();
+    }
 }

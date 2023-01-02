@@ -231,7 +231,7 @@ public class ProcessQueueDao extends AbstractDao {
     }
 
     public void updateRepositoryDetails(PartialProcessKey processKey, UUID repoId, String repoUrl,
-                                        String repoPath, String commitId, String commitMsg, String commitBranch) {
+                                        String repoPath, String commitId, String commitBranch) {
         tx(tx -> {
             UpdateSetMoreStep<ProcessQueueRecord> q = tx.update(PROCESS_QUEUE)
                     .set(PROCESS_QUEUE.LAST_UPDATED_AT, currentOffsetDateTime());
@@ -250,10 +250,6 @@ public class ProcessQueueDao extends AbstractDao {
 
             if (commitId != null) {
                 q.set(PROCESS_QUEUE.COMMIT_ID, commitId);
-            }
-
-            if (commitMsg != null) {
-                q.set(PROCESS_QUEUE.COMMIT_MSG, commitMsg);
             }
 
             if (commitBranch != null) {
@@ -469,6 +465,13 @@ public class ProcessQueueDao extends AbstractDao {
                 .from(PROCESS_QUEUE)
                 .where(PROCESS_QUEUE.INSTANCE_ID.eq(instanceId))
                 .fetchOne(orgId);
+    }
+
+    public UUID getProjectId(UUID instanceId) {
+        return dsl().select(PROCESS_QUEUE.PROJECT_ID)
+                .from(PROCESS_QUEUE)
+                .where(PROCESS_QUEUE.INSTANCE_ID.eq(instanceId))
+                .fetchOne(PROCESS_QUEUE.PROJECT_ID);
     }
 
     public Imports getImports(PartialProcessKey processKey) {
@@ -827,7 +830,6 @@ public class ProcessQueueDao extends AbstractDao {
                 .repoPath(r.get(PROCESS_QUEUE.REPO_PATH))
                 .commitId(r.get(PROCESS_QUEUE.COMMIT_ID))
                 .commitBranch(r.get(PROCESS_QUEUE.COMMIT_BRANCH))
-                .commitMsg(r.get(PROCESS_QUEUE.COMMIT_MSG))
                 .initiator(r.get(USERS.USERNAME))
                 .initiatorId(r.get(PROCESS_QUEUE.INITIATOR_ID))
                 .startAt(r.get(PROCESS_QUEUE.START_AT))

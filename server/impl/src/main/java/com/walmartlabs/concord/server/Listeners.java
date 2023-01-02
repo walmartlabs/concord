@@ -34,8 +34,8 @@ import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
 import java.time.Duration;
-import java.util.Collection;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.*;
 
 @Named
@@ -48,18 +48,18 @@ public class Listeners {
 
     private static final Duration MAX_LISTENER_TIME = Duration.ofSeconds(3);
 
-    private final Collection<ProcessEventListener> eventListeners;
-    private final Collection<ProcessLogListener> logListeners;
-    private final Collection<AuditLogListener> auditLogListeners;
+    private final Set<ProcessEventListener> eventListeners;
+    private final Set<ProcessLogListener> logListeners;
+    private final Set<AuditLogListener> auditLogListeners;
 
     private final ForkJoinPool eventListenerPool;
     private final ForkJoinPool logListenerPool;
     private final ForkJoinPool auditLogListenerPool;
 
     @Inject
-    public Listeners(Collection<ProcessEventListener> eventListeners,
-                     Collection<ProcessLogListener> logListeners,
-                     Collection<AuditLogListener> auditLogListeners) {
+    public Listeners(Set<ProcessEventListener> eventListeners,
+                     Set<ProcessLogListener> logListeners,
+                     Set<AuditLogListener> auditLogListeners) {
 
         this.eventListeners = eventListeners;
         eventListeners.forEach(l -> log.info("Using process event listener: {}", l));

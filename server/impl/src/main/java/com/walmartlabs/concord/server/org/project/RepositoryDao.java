@@ -62,7 +62,6 @@ public class RepositoryDao extends AbstractDao {
     }
 
     public UUID getProjectId(UUID repoId) {
-
         return dsl().select(REPOSITORIES.PROJECT_ID)
                 .from(REPOSITORIES)
                 .where(REPOSITORIES.REPO_ID.eq(repoId))
@@ -77,6 +76,17 @@ public class RepositoryDao extends AbstractDao {
         return selectRepositoryEntry(tx)
                 .where(REPOSITORIES.PROJECT_ID.eq(projectId)
                         .and(REPOSITORIES.REPO_ID.eq(repoId)))
+                .fetchOne(this::toEntry);
+    }
+
+    public RepositoryEntry get(UUID projectId, String repoName) {
+        return txResult(tx -> get(tx, projectId, repoName));
+    }
+
+    public RepositoryEntry get(DSLContext tx, UUID projectId, String repoName) {
+        return selectRepositoryEntry(tx)
+                .where(REPOSITORIES.PROJECT_ID.eq(projectId)
+                        .and(REPOSITORIES.REPO_NAME.eq(repoName)))
                 .fetchOne(this::toEntry);
     }
 
@@ -161,26 +171,39 @@ public class RepositoryDao extends AbstractDao {
     }
 
     public List<RepositoryEntry> list(UUID projectId) {
-        return list(projectId, null, false);
+        return txResult(tx -> list(tx, projectId));
     }
 
     public List<RepositoryEntry> list(DSLContext tx, UUID projectId) {
-        return list(tx, projectId, null, false);
-    }
-
-    public List<RepositoryEntry> list(UUID projectId, Field<?> sortField, boolean asc) {
-        return list(dsl(), projectId, sortField, asc);
-    }
-
-    public List<RepositoryEntry> list(DSLContext tx, UUID projectId, Field<?> sortField, boolean asc) {
         SelectConditionStep<Record13<UUID, UUID, String, String, String, String, String, Boolean, JSONB, UUID, String, String, Boolean>> query = selectRepositoryEntry(tx)
+                .where(REPOSITORIES.PROJECT_ID.eq(projectId));
+        return query.fetch(this::toEntry);
+    }
+
+    public List<RepositoryEntry> list(UUID projectId, Field<?> sortField,
+                                      boolean asc, int offset, int limit,
+                                      String filter) {
+
+        SelectConditionStep<Record13<UUID, UUID, String, String, String, String, String, Boolean, JSONB, UUID, String, String, Boolean>> q = selectRepositoryEntry(dsl())
                 .where(REPOSITORIES.PROJECT_ID.eq(projectId));
 
         if (sortField != null) {
-            query.orderBy(asc ? sortField.asc() : sortField.desc());
+            q.orderBy(asc ? sortField.asc() : sortField.desc());
         }
 
-        return query.fetch(this::toEntry);
+        if (filter != null) {
+            q.and(REPOSITORIES.REPO_NAME.containsIgnoreCase(filter));
+        }
+
+        if (offset > 0) {
+            q.offset(offset);
+        }
+
+        if (limit > 0) {
+            q.limit(limit);
+        }
+
+        return q.fetch(this::toEntry);
     }
 
     public List<RepositoryEntry> find(String repoUrl) {

@@ -1,0 +1,78 @@
+{
+  "task": {
+    "deny": [
+      {
+        "msg": "msg1",
+        "method": "execute",
+        "params": [
+          {
+            "name": "gatekeeperResult",
+            "index": 0,
+            "values": [
+              false,
+              null
+            ],
+            "protected": true
+          }
+        ],
+        "taskName": "ansible.*"
+      }
+    ],
+    "warn": [],
+    "allow": []
+  },
+  "ansible": {
+    "deny": [
+      {
+        "msg": "msg2",
+        "action": "uri",
+        "gatekeeperArtifacts": "${context.getProtectedVariable('gatekeeperArtifacts')}"
+      },
+      {
+        "msg": "msg3",
+        "action": "maven_artifact",
+        "gatekeeperArtifacts": "${context.getProtectedVariable('gatekeeperArtifacts')}"
+      },
+      {
+        "msg": "msg4",
+        "action": "docker_container",
+        "gatekeeperArtifacts": "${context.getProtectedVariable('gatekeeperArtifacts')}"
+      }
+    ],
+    "warn": [],
+    "allow": [
+      {
+        "action": "uri",
+        "params": [
+          {
+            "name": "url",
+            "values": "${context.getProtectedVariable('gatekeeperArtifacts')}"
+          }
+        ]
+      },
+      {
+        "action": "maven_artifact",
+        "params": [
+          {
+            "name": "artifact_url",
+            "values": "${context.getProtectedVariable('gatekeeperArtifacts')}"
+          }
+        ]
+      },
+      {
+        "action": "docker_container",
+        "params": [
+          {
+            "name": "image",
+            "values": "${context.getProtectedVariable('gatekeeperArtifacts')}"
+          }
+        ]
+      }
+    ]
+  },
+  "protectedTask": {
+    "names": [
+      "gatekeeper"
+    ]
+  }
+}
