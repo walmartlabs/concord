@@ -458,7 +458,7 @@ public class DependencyManager {
             log.error("transferFailed -> {}", event);
 
             if (event != null && listener != null) {
-                listener.onTransferFailed(event.toString());
+                listener.onTransferFailed(event + ". error: " + event.getException());
             }
         }
     }
