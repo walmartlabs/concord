@@ -43,10 +43,7 @@ import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 import javax.xml.bind.DatatypeConverter;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.io.UnsupportedEncodingException;
+import java.io.*;
 import java.net.URI;
 import java.net.URLDecoder;
 import java.nio.file.*;
@@ -455,10 +452,10 @@ public class DependencyManager {
         }
 
         public void transferFailed(TransferEvent event) {
-            log.error("transferFailed -> {}. error: {}", event, event != null ? event.getException() : "");
+            log.error("transferFailed -> {}. error: {}", event, Optional.ofNullable(event).map(TransferEvent::getException).map(Throwable::toString).orElse("n/a"));
 
             if (event != null && listener != null) {
-                listener.onTransferFailed(event + ". error: " + event.getException());
+                listener.onTransferFailed(event + ". error: " + Optional.ofNullable(event.getException()).map(Throwable::toString).orElse("n/a"));
             }
         }
     }
