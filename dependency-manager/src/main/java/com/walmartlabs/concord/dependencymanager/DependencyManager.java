@@ -455,7 +455,7 @@ public class DependencyManager {
         }
 
         public void transferFailed(TransferEvent event) {
-            log.error("transferFailed -> {}", event);
+            log.error("transferFailed -> {}. error: {}", event, event != null ? event.getException() : "");
 
             if (event != null && listener != null) {
                 listener.onTransferFailed(event + ". error: " + event.getException());
