@@ -1,4 +1,4 @@
-package com.walmartlabs.concord.db.migration;
+package com.walmartlabs.concord.server.user;
 
 /*-
  * *****
@@ -20,12 +20,26 @@ package com.walmartlabs.concord.db.migration;
  * =====
  */
 
-import javax.inject.Qualifier;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
+import com.walmartlabs.concord.server.org.team.TeamRole;
+import org.immutables.value.Value;
 
-@Retention(RetentionPolicy.RUNTIME)
-@Qualifier
-public @interface MigrationOrder {
-    public int value() default 0;
+import java.util.UUID;
+
+@Value.Immutable
+public interface UserTeam {
+
+    UUID teamId();
+
+    TeamRole role();
+
+    static UserTeam of(UUID teamId, TeamRole role) {
+        return UserTeam.builder()
+                .teamId(teamId)
+                .role(role)
+                .build();
+    }
+
+    static ImmutableUserTeam.Builder builder() {
+        return ImmutableUserTeam.builder();
+    }
 }

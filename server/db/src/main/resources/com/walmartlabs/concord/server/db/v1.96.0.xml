@@ -29,7 +29,6 @@
             and not exists(select 1 from USER_ROLES ur where ur.USER_ID = ulg.USER_ID and ur.ROLE_ID = rlg.ROLE_ID)
         </createView>
     </changeSet>
-
     <changeSet id="1960011" author="g0h04k0@walmart.com">
         <addColumn tableName="SECRETS">
             <column name="LAST_UPDATED_AT" type="timestamptz">

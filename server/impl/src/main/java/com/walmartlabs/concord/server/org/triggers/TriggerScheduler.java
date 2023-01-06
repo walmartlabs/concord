@@ -53,7 +53,7 @@ import java.time.OffsetDateTime;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 
-@Named("trigger-scheduler")
+@Named
 @Singleton
 public class TriggerScheduler implements ScheduledTask {
 
@@ -97,6 +97,11 @@ public class TriggerScheduler implements ScheduledTask {
         this.processManager = processManager;
         this.processSecurityContext = processSecurityContext;
         this.triggerCfg = triggerCfg;
+    }
+
+    @Override
+    public String getId() {
+        return "trigger-scheduler";
     }
 
     @Override
