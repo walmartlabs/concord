@@ -30,10 +30,8 @@ import org.immutables.value.Value;
 
 import javax.annotation.Nullable;
 import java.io.Serializable;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 
 @Value.Immutable
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
@@ -117,6 +115,10 @@ public interface PolicyEngineRules extends Serializable {
     @JsonProperty("cronTrigger")
     @Nullable
     CronTriggerRule cronTriggerRule();
+
+    @JsonProperty("kv")
+    @Nullable
+    KvRule kvRule();
 
     static ImmutablePolicyEngineRules.Builder builder() {
         return ImmutablePolicyEngineRules.builder();

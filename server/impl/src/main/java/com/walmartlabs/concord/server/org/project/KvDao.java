@@ -161,6 +161,20 @@ public class KvDao extends AbstractDao {
         });
     }
 
+    public int count(UUID projectId) {
+        return txResult(tx -> tx.selectCount()
+                .from(PROJECT_KV_STORE)
+                .where(PROJECT_KV_STORE.PROJECT_ID.eq(projectId))
+                .fetchOne(0, int.class));
+    }
+
+    public boolean exists(UUID projectId, String key) {
+        return txResult(tx -> tx.fetchExists((tx.selectOne()
+                .from(PROJECT_KV_STORE)
+                .where(PROJECT_KV_STORE.PROJECT_ID.eq(projectId)
+                        .and(PROJECT_KV_STORE.VALUE_KEY.eq(key))))));
+    }
+
     private static Map<String, Object> toEntry(Record3<String, Long, String> r) {
         Object value = r.get(PROJECT_KV_STORE.VALUE_STRING);
         if (value == null) {

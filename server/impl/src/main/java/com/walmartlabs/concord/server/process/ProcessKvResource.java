@@ -21,6 +21,7 @@ package com.walmartlabs.concord.server.process;
  */
 
 import com.walmartlabs.concord.server.org.project.KvDao;
+import com.walmartlabs.concord.server.org.project.KvManager;
 import com.walmartlabs.concord.server.process.queue.ProcessQueueManager;
 import com.walmartlabs.concord.server.sdk.PartialProcessKey;
 import io.swagger.annotations.Api;
@@ -49,12 +50,12 @@ public class ProcessKvResource implements Resource {
     private static final UUID DEFAULT_PROJECT_ID = UUID.fromString("00000000-0000-0000-0000-000000000000");
 
     private final ProcessQueueManager processQueueManager;
-    private final KvDao kvDao;
+    private final KvManager kvManager;
 
     @Inject
-    public ProcessKvResource(ProcessQueueManager processQueueManager, KvDao kvDao) {
+    public ProcessKvResource(ProcessQueueManager processQueueManager, KvManager kvManager) {
         this.processQueueManager = processQueueManager;
-        this.kvDao = kvDao;
+        this.kvManager = kvManager;
     }
 
     @DELETE
@@ -64,7 +65,7 @@ public class ProcessKvResource implements Resource {
                           @PathParam("key") String key) {
 
         UUID projectId = assertProjectId(instanceId);
-        kvDao.remove(projectId, key);
+        kvManager.remove(projectId, key);
     }
 
     @PUT
@@ -76,7 +77,7 @@ public class ProcessKvResource implements Resource {
                           @ApiParam(required = true) String value) {
 
         UUID projectId = assertProjectId(instanceId);
-        kvDao.putString(projectId, key, value);
+        kvManager.putString(projectId, key, value);
     }
 
     @GET
@@ -87,7 +88,7 @@ public class ProcessKvResource implements Resource {
                             @PathParam("key") String key) {
 
         UUID projectId = assertProjectId(instanceId);
-        return kvDao.getString(projectId, key);
+        return kvManager.getString(projectId, key);
     }
 
     @PUT
@@ -99,7 +100,7 @@ public class ProcessKvResource implements Resource {
                         @ApiParam(required = true) long value) {
 
         UUID projectId = assertProjectId(instanceId);
-        kvDao.putLong(projectId, key, value);
+        kvManager.putLong(projectId, key, value);
     }
 
     @GET
@@ -110,7 +111,7 @@ public class ProcessKvResource implements Resource {
                         @PathParam("key") String key) {
 
         UUID projectId = assertProjectId(instanceId);
-        return kvDao.getLong(projectId, key);
+        return kvManager.getLong(projectId, key);
     }
 
     @POST
@@ -121,7 +122,7 @@ public class ProcessKvResource implements Resource {
                         @PathParam("key") String key) {
 
         UUID projectId = assertProjectId(instanceId);
-        return kvDao.inc(projectId, key);
+        return kvManager.inc(projectId, key);
     }
 
     private UUID assertProjectId(UUID instanceId) {

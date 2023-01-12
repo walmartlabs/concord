@@ -210,6 +210,7 @@ public class PolicyEngineRulesTest {
                 .runtimeRule(runtimeRule)
                 .putCustomRule("ansible", Collections.singletonMap("k", "v"))
                 .cronTriggerRule(CronTriggerRule.of("msg", 1000))
+                .kvRule(KvRule.of("msg", 123))
                 .build();
 
         String s = om.writeValueAsString(r);
