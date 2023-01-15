@@ -5,6 +5,8 @@
 ### Added
 
 ### Changed
+- cli: check that state is serializable in checkpoint service
+([#703](https://github.com/walmartlabs/concord/pull/703));
 - console2: single vertical scroll for process log page
 ([#696](https://github.com/walmartlabs/concord/pull/696)).
 
