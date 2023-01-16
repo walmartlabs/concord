@@ -1,0 +1,16 @@
+configuration:
+  arguments:
+    keyStorePassword: crypto.decryptString("<somestring>")
+
+profiles:
+  pci:
+    configuration:
+      arguments:
+        keyStorePassword: ''
+
+flows:
+  default:
+    - log: "Hello!"
+    - ${kv.putLong('one', 123)}
+    - ${kv.putLong('one', 321)}
+    - ${kv.putLong('two', 444)}
