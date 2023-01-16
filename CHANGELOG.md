@@ -1,6 +1,8 @@
 # Change log
 
 ## [1.98.1] - Unreleased
+- policy-engine, server: kv policy
+([#702](https://github.com/walmartlabs/concord/pull/702)).
 
 ### Added
 
