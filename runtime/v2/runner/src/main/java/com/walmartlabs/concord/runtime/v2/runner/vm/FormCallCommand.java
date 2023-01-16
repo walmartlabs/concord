@@ -63,11 +63,12 @@ public class FormCallCommand extends StepCommand<FormCall> {
         ProcessConfiguration processConfiguration = runtime.getService(ProcessConfiguration.class);
 
         List<FormField> fields = assertFormFields(expressionEvaluator, evalContext, processConfiguration, processDefinition, formName, call);
+        Map<String, Serializable> values = getFormValues(expressionEvaluator, evalContext, call);
         Form form = Form.builder()
                 .name(formName)
                 .eventName(eventRef)
-                .options(buildFormOptions(expressionEvaluator, evalContext, call))
-                .fields(buildFormFields(expressionEvaluator, evalContext, fields, Objects.requireNonNull(call.getOptions()).values()))
+                .options(buildFormOptions(expressionEvaluator, evalContext, call, values))
+                .fields(buildFormFields(expressionEvaluator, evalContext, fields, Objects.requireNonNull(values)))
                 .build();
 
         FormService formService = runtime.getService(FormService.class);
@@ -78,16 +79,16 @@ public class FormCallCommand extends StepCommand<FormCall> {
         state.setStatus(threadId, ThreadStatus.SUSPENDED);
     }
 
-    private static FormOptions buildFormOptions(ExpressionEvaluator expressionEvaluator, EvalContext ctx, FormCall formCall) {
+    private static FormOptions buildFormOptions(ExpressionEvaluator expressionEvaluator, EvalContext ctx, FormCall formCall, Map<String, Serializable> values) {
         FormCallOptions options = Objects.requireNonNull(formCall.getOptions());
 
-        Map<String, Serializable> runAs = expressionEvaluator.evalAsMap(ctx, options.runAs());
+        Map<String, Serializable> runAs = getFormRunAs(expressionEvaluator, ctx, formCall);
 
         return FormOptions.builder()
                 .yield(options.yield())
                 .saveSubmittedBy(options.saveSubmittedBy())
                 .runAs(runAs)
-                .extraValues(expressionEvaluator.evalAsMap(ctx, options.values()))
+                .extraValues(values)
                 .build();
     }
 
@@ -126,7 +127,8 @@ public class FormCallCommand extends StepCommand<FormCall> {
         return result;
     }
 
-    private static List<FormField> assertFormFields(ExpressionEvaluator expressionEvaluator, EvalContext ctx,
+    private static List<FormField> assertFormFields(ExpressionEvaluator expressionEvaluator,
+                                                    EvalContext ctx,
                                                     ProcessConfiguration processConfiguration,
                                                     ProcessDefinition pd,
                                                     String formName,
@@ -154,5 +156,37 @@ public class FormCallCommand extends StepCommand<FormCall> {
         }
 
         throw new IllegalStateException("Form not found: " + formName);
+    }
+
+    private static Map<String, Serializable> getFormValues(ExpressionEvaluator expressionEvaluator,
+                                                           EvalContext ctx,
+                                                           FormCall formCall) {
+        FormCallOptions options = Objects.requireNonNull(formCall.getOptions());
+        if (!options.values().isEmpty()) {
+            return options.values();
+        }
+
+        Map<String, Serializable> rawValues = expressionEvaluator.evalAsMap(ctx, options.valuesExpression());
+        if (rawValues != null) {
+            return rawValues;
+        }
+
+        return Collections.emptyMap();
+    }
+
+    private static Map<String, Serializable> getFormRunAs(ExpressionEvaluator expressionEvaluator,
+                                                          EvalContext ctx,
+                                                          FormCall formCall) {
+        FormCallOptions options = Objects.requireNonNull(formCall.getOptions());
+        if (!options.runAs().isEmpty()) {
+            return options.runAs();
+        }
+
+        Map<String, Serializable> rawRunAs = expressionEvaluator.evalAsMap(ctx, options.runAsExpression());
+        if (rawRunAs != null) {
+            return rawRunAs;
+        }
+
+        return Collections.emptyMap();
     }
 }

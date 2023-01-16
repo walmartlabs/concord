@@ -175,6 +175,46 @@ public class FormIT extends AbstractTest {
     }
 
     @Test
+    public void testFormExpressionValues() throws Exception {
+        Payload payload = new Payload()
+                .entryPoint("callExpressions")
+                .archive(resource("customFormValues"));
+
+        // ---
+
+        ConcordProcess proc = concord.processes().start(payload);
+        ProcessEntry pe = expectStatus(proc, ProcessEntry.StatusEnum.SUSPENDED);
+
+        // ---
+
+        List<FormListEntry> forms = proc.forms();
+        assertEquals(1, forms.size());
+
+        // ---
+        FormListEntry form = forms.get(0);
+        String formName = form.getName();
+        assertEquals("myForm", formName);
+
+        // runAs username from expression
+        Map<String, Object> runAs = form.getRunAs();
+        assertNotNull(runAs);
+        assertEquals("admin", runAs.get("username"));
+
+        // start session
+        startCustomFormSession(concord, pe.getInstanceId(), formName);
+
+        // get data.js
+        Map<String, Object> dataJs = getDataJs(concord, pe.getInstanceId(), formName);
+        Map<String, Object> values = MapUtils.get(dataJs, "values", Collections.emptyMap());
+
+        assertEquals(4, values.size());
+        assertEquals("Moo", values.get("firstName"));
+        assertEquals("Xaa", values.get("lastName"));
+        assertEquals(3, values.get("sum"));
+        assertEquals(ImmutableMap.of("city", "Toronto", "province", "Ontario"), values.get("address"));
+    }
+
+    @Test
     public void testSubmitInInvalidProcessState() throws Exception {
         Payload payload = new Payload()
                 .archive(resource("form"));

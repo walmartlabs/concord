@@ -1,5 +1,15 @@
 configuration:
   runtime: "concord-v2"
+  arguments:
+    formValues:
+      firstName: "Moo"
+      lastName: "Xaa"
+      sum: "${1 + 2}"
+      address:
+        city: Toronto
+        province: Ontario
+    formRunAs:
+      username: 'admin'
 
 flows:
   default:
@@ -12,6 +22,12 @@ flows:
         address:
           city: Toronto
           province: Ontario
+
+  callExpressions:
+    - form: myForm
+      # form calls can override form values or provide additional data
+      values: "${formValues}"
+      runAs: "${formRunAs}"
 
 forms:
   myForm:
