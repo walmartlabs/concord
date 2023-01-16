@@ -5,6 +5,8 @@
 ### Added
 
 ### Changed
+- console2: allow expand all log segments
+([#698](https://github.com/walmartlabs/concord/pull/698));
 - cli: check that state is serializable in checkpoint service
 ([#703](https://github.com/walmartlabs/concord/pull/703));
 - console2: single vertical scroll for process log page
