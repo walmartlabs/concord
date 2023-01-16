@@ -5,6 +5,8 @@
 ### Added
 
 ### Changed
+- dependency-manager: log exception
+([#700](https://github.com/walmartlabs/concord/pull/700));
 - console2: allow expand all log segments
 ([#698](https://github.com/walmartlabs/concord/pull/698));
 - cli: check that state is serializable in checkpoint service
