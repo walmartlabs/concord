@@ -1,6 +1,7 @@
 configuration:
   runtime: "concord-v2"
   arguments:
+    runAsUser: 'admin'
     formValues:
       firstName: "Moo"
       lastName: "Xaa"
@@ -9,7 +10,7 @@ configuration:
         city: Toronto
         province: Ontario
     formRunAs:
-      username: 'admin'
+      username: "${runAsUser}"
 
 flows:
   default:
@@ -22,6 +23,8 @@ flows:
         address:
           city: Toronto
           province: Ontario
+      runAs:
+        username: "${runAsUser}"
 
   callExpressions:
     - form: myForm

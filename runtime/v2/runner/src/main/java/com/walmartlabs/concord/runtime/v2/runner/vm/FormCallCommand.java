@@ -92,7 +92,10 @@ public class FormCallCommand extends StepCommand<FormCall> {
                 .build();
     }
 
-    private static List<com.walmartlabs.concord.forms.FormField> buildFormFields(ExpressionEvaluator expressionEvaluator, EvalContext ctx, List<com.walmartlabs.concord.runtime.v2.model.FormField> fields, Map<String, Serializable> values) {
+    private static List<com.walmartlabs.concord.forms.FormField> buildFormFields(ExpressionEvaluator expressionEvaluator,
+                                                                                 EvalContext ctx,
+                                                                                 List<com.walmartlabs.concord.runtime.v2.model.FormField> fields,
+                                                                                 Map<String, Serializable> values) {
         List<com.walmartlabs.concord.forms.FormField> result = new ArrayList<>();
 
         fields.forEach(f -> {
@@ -163,7 +166,7 @@ public class FormCallCommand extends StepCommand<FormCall> {
                                                            FormCall formCall) {
         FormCallOptions options = Objects.requireNonNull(formCall.getOptions());
         if (!options.values().isEmpty()) {
-            return options.values();
+            return expressionEvaluator.evalAsMap(ctx, options.values());
         }
 
         Map<String, Serializable> rawValues = expressionEvaluator.evalAsMap(ctx, options.valuesExpression());
@@ -179,7 +182,7 @@ public class FormCallCommand extends StepCommand<FormCall> {
                                                           FormCall formCall) {
         FormCallOptions options = Objects.requireNonNull(formCall.getOptions());
         if (!options.runAs().isEmpty()) {
-            return options.runAs();
+            return expressionEvaluator.evalAsMap(ctx, options.runAs());
         }
 
         Map<String, Serializable> rawRunAs = expressionEvaluator.evalAsMap(ctx, options.runAsExpression());

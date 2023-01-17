@@ -148,30 +148,7 @@ public class FormIT extends AbstractTest {
 
         // ---
 
-        ConcordProcess proc = concord.processes().start(payload);
-        ProcessEntry pe = expectStatus(proc, ProcessEntry.StatusEnum.SUSPENDED);
-
-        // ---
-
-        List<FormListEntry> forms = proc.forms();
-        assertEquals(1, forms.size());
-
-        // ---
-        String formName = forms.get(0).getName();
-        assertEquals("myForm", formName);
-
-        // start session
-        startCustomFormSession(concord, pe.getInstanceId(), formName);
-
-        // get data.js
-        Map<String, Object> dataJs = getDataJs(concord, pe.getInstanceId(), formName);
-        Map<String, Object> values = MapUtils.get(dataJs, "values", Collections.emptyMap());
-
-        assertEquals(4, values.size());
-        assertEquals("Moo", values.get("firstName"));
-        assertEquals("Xaa", values.get("lastName"));
-        assertEquals(3, values.get("sum"));
-        assertEquals(ImmutableMap.of("city", "Toronto", "province", "Ontario"), values.get("address"));
+        assertFormValues(payload);
     }
 
     @Test
@@ -182,6 +159,10 @@ public class FormIT extends AbstractTest {
 
         // ---
 
+        assertFormValues(payload);
+    }
+
+    private void assertFormValues(Payload payload) throws Exception {
         ConcordProcess proc = concord.processes().start(payload);
         ProcessEntry pe = expectStatus(proc, ProcessEntry.StatusEnum.SUSPENDED);
 
