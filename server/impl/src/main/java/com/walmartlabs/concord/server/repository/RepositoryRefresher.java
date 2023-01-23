@@ -32,6 +32,7 @@ import com.walmartlabs.concord.server.org.project.*;
 import com.walmartlabs.concord.server.repository.listeners.RepositoryRefreshListener;
 import com.walmartlabs.concord.server.sdk.ConcordApplicationException;
 import org.jooq.Configuration;
+import org.jooq.DSLContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.sonatype.siesta.ValidationErrorsException;
@@ -128,12 +129,20 @@ public class RepositoryRefresher extends AbstractDao {
 
             tx(tx -> {
                 for (RepositoryRefreshListener l : listeners) {
-                    l.onRefresh(tx, repositoryEntry, tmpRepoPath.path());
+                    callRefreshListener(tx, repositoryEntry, l, tmpRepoPath);
                 }
             });
         } catch (Exception e) {
             String errorMessage = e.getCause() != null ? e.getCause().getMessage() : e.getMessage();
             throw new ConcordApplicationException("Error while refreshing repository: \n" + errorMessage, e);
+        }
+    }
+
+    private void callRefreshListener(DSLContext tx, RepositoryEntry repositoryEntry, RepositoryRefreshListener l, TemporaryPath tmpRepo) throws Exception {
+        // copy base repo to a new path just for this listener. Imports may be re-processed
+        try (TemporaryPath listenerTmp = IOUtils.tempDir("refreshRepoListener_")) {
+            IOUtils.copy(tmpRepo.path(), listenerTmp.path());
+            l.onRefresh(tx, repositoryEntry, listenerTmp.path());
         }
     }
 
