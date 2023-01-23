@@ -78,11 +78,4 @@
         <addNotNullConstraint tableName="SECRETS" columnName="SECRET_SALT"/>
     </changeSet>
 
-    <changeSet id="1981034" author="ginni.hema.sundara.rao@walmart.com" context="!codegen">
-        <validCheckSum>ANY</validCheckSum>
-        <customChange class="com.walmartlabs.concord.server.liquibase.ext.migration.SecretsHashMigrationTask">
-            <param name="serverPassword" value="${serverPassword}"/>
-        </customChange>
-    </changeSet>
-
 </databaseChangeLog>
