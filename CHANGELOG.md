@@ -7,6 +7,8 @@
 ([#702](https://github.com/walmartlabs/concord/pull/702)).
 
 ### Changed
+- runtime-v2: allow expression for form call values and runAs
+([#704](https://github.com/walmartlabs/concord/pull/704));
 - dependency-manager: log exception
 ([#700](https://github.com/walmartlabs/concord/pull/700));
 - console2: allow expand all log segments
