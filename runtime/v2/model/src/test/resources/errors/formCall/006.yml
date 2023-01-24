@@ -7,4 +7,4 @@ flows:
         username:
           - "userA"
           - "userB"
-      values: "boo"
+      values: [ "one" ]
