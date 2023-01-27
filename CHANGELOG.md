@@ -3,20 +3,25 @@
 ## [1.98.1] - Unreleased
 
 ### Added
-- policy-engine, server: kv policy
+
+- policy-engine, server: initial support for the KV store
+policies
 ([#702](https://github.com/walmartlabs/concord/pull/702)).
 
 ### Changed
-- runtime-v2: allow expression for form call values and runAs
-([#704](https://github.com/walmartlabs/concord/pull/704));
-- dependency-manager: log exception
-([#700](https://github.com/walmartlabs/concord/pull/700));
+
+- console2: single vertical scroll for process log page
+([#696](https://github.com/walmartlabs/concord/pull/696));
 - console2: allow expand all log segments
 ([#698](https://github.com/walmartlabs/concord/pull/698));
+- dependency-manager: log exception
+([#700](https://github.com/walmartlabs/concord/pull/700));
 - cli: check that state is serializable in checkpoint service
 ([#703](https://github.com/walmartlabs/concord/pull/703));
-- console2: single vertical scroll for process log page
-([#696](https://github.com/walmartlabs/concord/pull/696)).
+- runtime-v2: allow expression for form call values and runAs
+([#704](https://github.com/walmartlabs/concord/pull/704));
+- runtime-v2: fix argument passing in forks
+([#708](https://github.com/walmartlabs/concord/pull/708)).
 
 ## [1.98.1] - 2022-12-22
 
