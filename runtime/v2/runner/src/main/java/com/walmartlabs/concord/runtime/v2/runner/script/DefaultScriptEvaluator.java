@@ -128,6 +128,7 @@ public class DefaultScriptEvaluator implements ScriptEvaluator {
                             .option("js.nashorn-compat", "true")
                             .build(),
                     org.graalvm.polyglot.Context.newBuilder("js")
+                            .option("js.ecmascript-version", "2020")
                             .allowHostAccess(access));
         } else {
             ScriptEngineProperties.applyFor(language);
