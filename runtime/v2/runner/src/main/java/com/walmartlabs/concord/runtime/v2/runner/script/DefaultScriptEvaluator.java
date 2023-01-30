@@ -60,7 +60,7 @@ public class DefaultScriptEvaluator implements ScriptEvaluator {
 
     @Override
     public ScriptResult eval(Context context, String language, Reader input, Map<String, Object> variables) {
-        ScriptEngine engine = getEngine(language);
+        ScriptEngine engine = getEngine(language, variables);
 
         if (engine == null) {
             throw new RuntimeException("Script engine not found: " + language);
@@ -114,22 +114,34 @@ public class DefaultScriptEvaluator implements ScriptEvaluator {
         return null;
     }
 
+    private org.graalvm.polyglot.Context.Builder getGraalEngineContextBuilder(Map<String,Object> variables) {
+      HostAccess access = HostAccess.newBuilder(HostAccess.ALL)
+        .targetTypeMapping(Value.class, Object.class, Value::hasArrayElements, v -> new LinkedList<>(v.as(List.class))).build();
+      org.graalvm.polyglot.Context.Builder ctx = org.graalvm.polyglot.Context.newBuilder("js")
+        .allowHostAccess(access);
+      for (String key : variables.keySet()) {
+        switch (key) {
+          case "ecmascript-version":
+            ctx.option("js."+key, variables.get(key).toString());
+            break;
+          default:
+            throw new RuntimeException("unsupported engine option: " + key);
+        }
+      }
+      return ctx;
+    }
+
     @SuppressWarnings({"rawtypes", "unchecked"})
-    private ScriptEngine getEngine(String language) {
+    private ScriptEngine getEngine(String language, Map<String, Object> variables) {
         ScriptEngine engine;
         if (new GraalJSEngineFactory().getNames().contains(language)) {
             // Javascript array is converted in Java to an empty map #214 (https://github.com/oracle/graaljs/issues/214)
-            HostAccess access = HostAccess.newBuilder(HostAccess.ALL)
-                    .targetTypeMapping(Value.class, Object.class, Value::hasArrayElements, v -> new LinkedList<>(v.as(List.class))).build();
-
             engine = GraalJSScriptEngine.create(Engine.newBuilder()
                             .allowExperimentalOptions(true)
                             .option("engine.WarnInterpreterOnly", "false")
                             .option("js.nashorn-compat", "true")
                             .build(),
-                    org.graalvm.polyglot.Context.newBuilder("js")
-                            .option("js.ecmascript-version", "2020")
-                            .allowHostAccess(access));
+                    getGraalEngineContextBuilder(variables));
         } else {
             ScriptEngineProperties.applyFor(language);
 
