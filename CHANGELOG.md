@@ -3,13 +3,13 @@
 ## [1.98.1] - Unreleased
 
 ### Added
-
 - policy-engine, server: initial support for the KV store
 policies
 ([#702](https://github.com/walmartlabs/concord/pull/702)).
 
 ### Changed
-
+concord-agent, queue-client: make more delays configurable
+([#705](https://github.com/walmartlabs/concord/pull/705));
 - console2: single vertical scroll for process log page
 ([#696](https://github.com/walmartlabs/concord/pull/696));
 - console2: allow expand all log segments
