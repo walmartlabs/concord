@@ -70,6 +70,8 @@ public final class YamlValueType<T> {
     public static final YamlValueType<List<FormField>> ARRAY_OF_FORM_FIELD = array("ARRAY_OF_FORM_FIELD", FORM_FIELD);
     public static final YamlValueType<FormCall> FORM_CALL = type("FORM_CALL");
     public static final YamlValueType<ImmutableFormCallOptions.Builder> FORM_CALL_FIELDS = type("ARRAY_OF_FORM_FIELD or EXPRESSION");
+    public static final YamlValueType<ImmutableFormCallOptions.Builder> FORM_CALL_RUN_AS = type("OBJECT or EXPRESSION");
+    public static final YamlValueType<ImmutableFormCallOptions.Builder> FORM_CALL_VALUES = type("OBJECT or EXPRESSION");
     public static final YamlValueType<ImmutableRetry.Builder> RETRY_TIMES = type("INT or EXPRESSION");
     public static final YamlValueType<ImmutableRetry.Builder> RETRY_DELAY = type("INT or EXPRESSION");
     public static final YamlValueType<Imports> IMPORTS = type("IMPORTS");

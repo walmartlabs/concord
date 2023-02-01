@@ -4,7 +4,7 @@ package com.walmartlabs.concord.server.org.project;
  * *****
  * Concord
  * -----
- * Copyright (C) 2017 - 2018 Walmart Inc.
+ * Copyright (C) 2017 - 2023 Walmart Inc.
  * -----
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -169,6 +169,20 @@ public class KvDao extends AbstractDao {
                     .orderBy(kv.VALUE_KEY)
                     .fetch(KvDao::toEntry);
         });
+    }
+
+    public int count(UUID projectId) {
+        return txResult(tx -> tx.selectCount()
+                .from(PROJECT_KV_STORE)
+                .where(PROJECT_KV_STORE.PROJECT_ID.eq(projectId))
+                .fetchOne(0, int.class));
+    }
+
+    public boolean exists(UUID projectId, String key) {
+        return txResult(tx -> tx.fetchExists((tx.selectOne()
+                .from(PROJECT_KV_STORE)
+                .where(PROJECT_KV_STORE.PROJECT_ID.eq(projectId)
+                        .and(PROJECT_KV_STORE.VALUE_KEY.eq(key))))));
     }
 
     private static KvEntry toEntry(Record4<String, Long, String, OffsetDateTime> r) {
