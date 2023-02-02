@@ -166,7 +166,11 @@ public class TriggerProcessExecutor {
             if (t.getArguments() != null) {
                 args.putAll(t.getArguments());
             }
-            args.put("event", ExpressionUtils.escapeMap(event.attributes()));
+
+            Map<String, Object> eventArg = new LinkedHashMap<>(event.attributes());
+            eventArg.put("id", event.id());
+
+            args.put("event", ExpressionUtils.escapeMap(eventArg));
 
             Map<String, Object> cfg = new HashMap<>();
             cfg.put(Constants.Request.ARGUMENTS_KEY, args);
