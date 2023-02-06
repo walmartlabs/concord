@@ -55,7 +55,7 @@ public final class LoopItemSanitizer {
                     .collect(Collectors.toCollection(ArrayList::new));
         } else if (items instanceof Map) {
             Map<?, ?> m = (Map<?, ?>) items;
-            items = m.entrySet().stream()
+            return m.entrySet().stream()
                     .map(e -> new AbstractMap.SimpleImmutableEntry<>(e.getKey(), e.getValue()))
                     .collect(Collectors.toCollection(ArrayList::new));
         } else if (items.getClass().isArray()) {
