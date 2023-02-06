@@ -31,10 +31,7 @@ import com.walmartlabs.concord.client.ProcessEntry;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import static com.walmartlabs.concord.it.common.ITUtils.randomString;
 import static com.walmartlabs.concord.it.runtime.v2.Utils.resourceToString;
@@ -480,5 +477,23 @@ public class ProcessIT extends AbstractTest {
 
         expectStatus(proc, ProcessEntry.StatusEnum.FINISHED);
         proc.assertLog(".*nullParam: ''.*");
+    }
+
+    @Test
+    public void testForkVariablesAfterForm() throws Exception {
+        ConcordProcess proc = concord.processes().start(new Payload()
+                .archive(resource("forkAfterForm")));
+
+        expectStatus(proc, ProcessEntry.StatusEnum.SUSPENDED);
+
+        proc.submitForm("myForm", Collections.singletonMap("name", "test"));
+
+        proc.expectStatus(ProcessEntry.StatusEnum.FINISHED);
+
+        ProcessEntry forkEntry = proc.waitForChildStatus(ProcessEntry.StatusEnum.FINISHED);
+        ConcordProcess fork = concord.processes().get(forkEntry.getInstanceId());
+
+        fork.assertLog(".*parentInstanceId: " + proc.instanceId() + ".*");
+        fork.assertLog(".*txId: " + fork.instanceId() + ".*");
     }
 }
