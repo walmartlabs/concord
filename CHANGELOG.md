@@ -1,5 +1,12 @@
 # Change log
 
+## [1.98.2] - 2023-02-08
+
+### Changed
+
+- concord-server: clean nulls from trigger conditions, args, cfg
+([#713](https://github.com/walmartlabs/concord/pull/713));
+
 ## [1.98.1] - 2022-12-22
 
 ### Changed
@@ -27,7 +34,6 @@ of processes
 ([#693](https://github.com/walmartlabs/concord/pull/693));
 - concord-server-db: pass secret salt as a base64 value
 ([#694][https://github.com/walmartlabs/concord/pull/689]).
-
 
 
 ## [1.98.0] - 2022-12-07
