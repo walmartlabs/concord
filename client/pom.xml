@@ -169,10 +169,7 @@
                     <analysisConfiguration>
                         <revapi.ignore>
                             <item>
-                                <code>java.field.enumConstantOrderChanged</code>
-                            </item>
-                            <item>
-                                <code>java.class.externalClassExposedInAPI</code>
+                                <code>java.field.serialVersionUIDUnchanged</code>
                             </item>
                         </revapi.ignore>
                     </analysisConfiguration>
