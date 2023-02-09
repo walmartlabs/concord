@@ -1023,7 +1023,7 @@ public class ProcessResource implements Resource {
     @Produces(MediaType.APPLICATION_JSON)
     @WithTimer
     public Response updateMetadata(@ApiParam @PathParam("id") UUID instanceId, @ApiParam Map<String, Object> meta) {
-        PartialProcessKey processKey = PartialProcessKey.from(instanceId);
+        ProcessKey processKey = assertProcessKey(instanceId);
 
         if (!queueDao.updateMeta(processKey, meta)) {
             throw new ConcordApplicationException("Process instance not found", Status.NOT_FOUND);
@@ -1154,11 +1154,11 @@ public class ProcessResource implements Resource {
         for (CheckResult.Item<AttachmentsRule, Long> e : errors) {
             AttachmentsRule r = e.getRule();
 
-            String msg = r.getMsg() != null ? r.getMsg() : defaultMessage;
+            String msg = r.msg() != null ? r.msg() : defaultMessage;
             long actualSize = e.getEntity();
-            long limit = r.getMaxSizeInBytes();
+            long limit = r.maxSizeInBytes();
 
-            sb.append(MessageFormat.format(msg, actualSize, limit)).append(';');
+            sb.append(MessageFormat.format(Objects.requireNonNull(msg), actualSize, limit)).append(';');
         }
         return sb.toString();
     }

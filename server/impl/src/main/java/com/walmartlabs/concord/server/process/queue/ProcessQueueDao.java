@@ -54,9 +54,8 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 import static com.walmartlabs.concord.db.PgUtils.*;
-import static com.walmartlabs.concord.server.jooq.Tables.REPOSITORIES;
-import static com.walmartlabs.concord.server.jooq.Tables.USERS;
 import static com.walmartlabs.concord.db.PgUtils.toJsonDate;
+import static com.walmartlabs.concord.server.jooq.Tables.*;
 import static com.walmartlabs.concord.server.jooq.tables.Organizations.ORGANIZATIONS;
 import static com.walmartlabs.concord.server.jooq.tables.ProcessCheckpoints.PROCESS_CHECKPOINTS;
 import static com.walmartlabs.concord.server.jooq.tables.ProcessEvents.PROCESS_EVENTS;
@@ -127,6 +126,20 @@ public class ProcessQueueDao extends AbstractDao {
                 .set(PROCESS_QUEUE.META, objectMapper.toJSONB(meta))
                 .set(PROCESS_QUEUE.TRIGGERED_BY, objectMapper.toJSONB(triggeredBy))
                 .execute();
+
+        tx.insertInto(PROCESS_META)
+                .set(PROCESS_META.INSTANCE_ID, processKey.getInstanceId())
+                .set(PROCESS_META.INSTANCE_CREATED_AT, processKey.getCreatedAt())
+                .set(PROCESS_META.META, objectMapper.toJSONB(meta))
+                .execute();
+
+        if (triggeredBy != null) {
+            tx.insertInto(PROCESS_TRIGGER_INFO)
+                    .set(PROCESS_TRIGGER_INFO.INSTANCE_ID, processKey.getInstanceId())
+                    .set(PROCESS_TRIGGER_INFO.INSTANCE_CREATED_AT, processKey.getCreatedAt())
+                    .set(PROCESS_TRIGGER_INFO.TRIGGERED_BY, objectMapper.toJSONB(triggeredBy))
+                    .execute();
+        }
     }
 
     public void updateAgentId(DSLContext tx, ProcessKey processKey, String agentId, ProcessStatus status) {
@@ -210,11 +223,21 @@ public class ProcessQueueDao extends AbstractDao {
                         .and(PROCESS_QUEUE.CURRENT_STATUS.in(expectedStatuses.stream().map(Enum::name).collect(Collectors.toList()))))
                 .execute();
 
+        if (i == 1) {
+            if (meta != null) {
+                tx.update(PROCESS_META)
+                        .set(PROCESS_META.META, field(coalesce(PROCESS_META.META, field("?", JSONB.class, JSONB.valueOf("{}"))) + " || ?::jsonb", JSONB.class, objectMapper.toJSONB(meta)))
+                        .where(PROCESS_META.INSTANCE_ID.eq(processKey.getInstanceId())
+                                .and(PROCESS_META.INSTANCE_CREATED_AT.eq(processKey.getCreatedAt())))
+                        .execute();
+            }
+        }
+
         return i == 1;
     }
 
     public void updateRepositoryDetails(PartialProcessKey processKey, UUID repoId, String repoUrl,
-                                        String repoPath, String commitId, String commitMsg, String commitBranch) {
+                                        String repoPath, String commitId, String commitBranch) {
         tx(tx -> {
             UpdateSetMoreStep<ProcessQueueRecord> q = tx.update(PROCESS_QUEUE)
                     .set(PROCESS_QUEUE.LAST_UPDATED_AT, currentOffsetDateTime());
@@ -233,10 +256,6 @@ public class ProcessQueueDao extends AbstractDao {
 
             if (commitId != null) {
                 q.set(PROCESS_QUEUE.COMMIT_ID, commitId);
-            }
-
-            if (commitMsg != null) {
-                q.set(PROCESS_QUEUE.COMMIT_MSG, commitMsg);
             }
 
             if (commitBranch != null) {
@@ -305,7 +324,7 @@ public class ProcessQueueDao extends AbstractDao {
         });
     }
 
-    public boolean updateMeta(PartialProcessKey processKey, Map<String, Object> meta) {
+    public boolean updateMeta(ProcessKey processKey, Map<String, Object> meta) {
         UUID instanceId = processKey.getInstanceId();
 
         return txResult(tx -> {
@@ -314,11 +333,17 @@ public class ProcessQueueDao extends AbstractDao {
                     .where(PROCESS_QUEUE.INSTANCE_ID.eq(instanceId))
                     .execute();
 
+            tx.update(PROCESS_META)
+                    .set(PROCESS_META.META, field(coalesce(PROCESS_META.META, field("?::jsonb", JSONB.class, JSONB.valueOf("{}"))) + " || ?::jsonb", JSONB.class, objectMapper.toJSONB(meta)))
+                    .where(PROCESS_META.INSTANCE_ID.eq(processKey.getInstanceId())
+                            .and(PROCESS_META.INSTANCE_CREATED_AT.eq(processKey.getCreatedAt())))
+                    .execute();
+
             return i == 1;
         });
     }
 
-    public boolean removeMeta(PartialProcessKey processKey, String key) {
+    public boolean removeMeta(ProcessKey processKey, String key) {
         UUID instanceId = processKey.getInstanceId();
 
         return txResult(tx -> {
@@ -326,6 +351,13 @@ public class ProcessQueueDao extends AbstractDao {
             int i = tx.update(PROCESS_QUEUE)
                     .set(PROCESS_QUEUE.META, v)
                     .where(PROCESS_QUEUE.INSTANCE_ID.eq(instanceId))
+                    .execute();
+
+            v = field("{0}", JSONB.class, PROCESS_META.META).minus(value(key));
+            tx.update(PROCESS_META)
+                    .set(PROCESS_META.META, v)
+                    .where(PROCESS_META.INSTANCE_ID.eq(processKey.getInstanceId())
+                            .and(PROCESS_META.INSTANCE_CREATED_AT.eq(processKey.getCreatedAt())))
                     .execute();
 
             return i == 1;
@@ -454,6 +486,13 @@ public class ProcessQueueDao extends AbstractDao {
                 .from(PROCESS_QUEUE)
                 .where(PROCESS_QUEUE.INSTANCE_ID.eq(instanceId))
                 .fetchOne(orgId);
+    }
+
+    public UUID getProjectId(UUID instanceId) {
+        return dsl().select(PROCESS_QUEUE.PROJECT_ID)
+                .from(PROCESS_QUEUE)
+                .where(PROCESS_QUEUE.INSTANCE_ID.eq(instanceId))
+                .fetchOne(PROCESS_QUEUE.PROJECT_ID);
     }
 
     public Imports getImports(PartialProcessKey processKey) {
@@ -801,7 +840,6 @@ public class ProcessQueueDao extends AbstractDao {
                 .repoPath(r.get(PROCESS_QUEUE.REPO_PATH))
                 .commitId(r.get(PROCESS_QUEUE.COMMIT_ID))
                 .commitBranch(r.get(PROCESS_QUEUE.COMMIT_BRANCH))
-                .commitMsg(r.get(PROCESS_QUEUE.COMMIT_MSG))
                 .initiator(r.get(USERS.USERNAME))
                 .initiatorId(r.get(PROCESS_QUEUE.INITIATOR_ID))
                 .startAt(r.get(PROCESS_QUEUE.START_AT))

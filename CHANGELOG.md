@@ -1,6 +1,80 @@
 # Change log
 
-## [1.97.0] - Unreleased
+## [1.98.1] - 2022-12-22
+
+### Changed
+
+- concord-server: @Inject refactoring (part 1)
+([#658](https://github.com/walmartlabs/concord/pull/658));
+- concord-server, oidc: OIDC team/role mapping. Maps
+OpenID properties (e.g. `groups`) to Concord teams and
+roles
+([#682](https://github.com/walmartlabs/concord/pull/682));
+- concord-server: `process_queue` table split (part 1)
+([#668](https://github.com/walmartlabs/concord/pull/668));
+- runtime-v2: do not create log segments for expressions
+by default. Logs produced by expression blocks without
+`name` will no longer be displayed as a separate log
+"segment";
+([#689](https://github.com/walmartlabs/concord/pull/689));
+- concord-console: new compact view for the Log tab
+([#690](https://github.com/walmartlabs/concord/pull/690));
+- concord-server-db: a migration task to update secrets using
+the updated hashing algorithm
+([#691](https://github.com/walmartlabs/concord/pull/691));
+- concord-task: fix concurrency issue when collecting output
+of processes
+([#693](https://github.com/walmartlabs/concord/pull/693));
+- concord-server-db: pass secret salt as a base64 value
+([#694][https://github.com/walmartlabs/concord/pull/689]).
+
+
+
+## [1.98.0] - 2022-12-07
+
+### Added
+
+- runtime-v2: provide checkpoint name after restore
+([#677](https://github.com/walmartlabs/concord/pull/677));
+- policy: new policy to restrict raw payload
+([#679](https://github.com/walmartlabs/concord/pull/679));
+- concord-cli: provide default process configuration
+([#649](https://github.com/walmartlabs/concord/pull/649));
+- policy: policy to restrict runtime of process
+([#671](https://github.com/walmartlabs/concord/pull/671));
+- resource-task: add printJson() method
+([#676](https://github.com/walmartlabs/concord/pull/676));
+- server: cleanup agent commands
+([#674](https://github.com/walmartlabs/concord/pull/674));
+- policy-engine: `cron` trigger policy
+([#686](https://github.com/walmartlabs/concord/pull/686)).
+
+### Changed
+
+- runtime-v2: fix parallel loop execution when no out variable defined
+([#659](https://github.com/walmartlabs/concord/pull/659));
+- console2: repository list now with paging
+([#643](https://github.com/walmartlabs/concord/pull/643));
+- server: api for list project repositories with limit/offset
+([#643](https://github.com/walmartlabs/concord/pull/643));
+- runtime-v2: "throw" with a string value shouldn't produce a stacktrace
+([#673](https://github.com/walmartlabs/concord/pull/673));
+- concord-server: deprecate `process_queue.commit_msg`
+([#670](https://github.com/walmartlabs/concord/pull/670));
+- runtime-v2: move expression evaluator into sdk
+([#667](https://github.com/walmartlabs/concord/pull/667));
+- cli: log checkpoint instead of throwing Exception
+([#665](https://github.com/walmartlabs/concord/pull/665));
+- http-task: allow any value as json body
+([#675](https://github.com/walmartlabs/concord/pull/675));
+- docker-images: change the default shell to bash in
+Debian-based images
+([#644](https://github.com/walmartlabs/concord/pull/675));
+- runtime-v2: fix `entryPoint` calculation in effective YAML
+([#685](https://github.com/walmartlabs/concord/pull/685)).
+
+
+## [1.97.0] - 2022-10-11
 
 ### Added
 

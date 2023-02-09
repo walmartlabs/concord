@@ -36,6 +36,7 @@ import com.walmartlabs.concord.runtime.v2.runner.guice.ObjectMapperProvider;
 import com.walmartlabs.concord.runtime.v2.runner.logging.LoggingConfigurator;
 import com.walmartlabs.concord.runtime.v2.runner.tasks.TaskProviders;
 import com.walmartlabs.concord.runtime.v2.sdk.ProcessConfiguration;
+import com.walmartlabs.concord.runtime.v2.sdk.UserDefinedException;
 import com.walmartlabs.concord.runtime.v2.sdk.WorkingDirectory;
 import com.walmartlabs.concord.sdk.Constants;
 import com.walmartlabs.concord.svm.Frame;
@@ -100,7 +101,7 @@ public class Main {
             main.execute();
 
             System.exit(0);
-        } catch (MultiException e) {
+        } catch (MultiException | UserDefinedException e) {
             log.error(e.getMessage());
             System.exit(1);
         } catch (Throwable t) {
@@ -133,7 +134,6 @@ public class Main {
         }
 
         Path workDir = this.workDir.getValue();
-        Map<String, Object> processArgs = prepareProcessArgs(processCfg);
 
         // three modes:
         //  - regular start "from scratch" (or running a "handler" process)
@@ -146,15 +146,19 @@ public class Main {
         Action action = currentAction(events);
         switch (action) {
             case START: {
+                Map<String, Object> processArgs = new LinkedHashMap<>();
                 if (snapshot != null) {
                     // grab top-level variables from the snapshot and use them as process arguments
                     processArgs.putAll(getTopLevelVariables(snapshot));
                 }
+                processArgs.putAll(prepareProcessArgs(processCfg));
 
                 snapshot = start(runner, processCfg, workDir, processArgs);
                 break;
             }
             case RESUME: {
+                Map<String, Object> processArgs = prepareProcessArgs(processCfg);
+
                 snapshot = resume(runner, processCfg, snapshot, processArgs, events);
                 break;
             }

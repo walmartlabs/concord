@@ -153,6 +153,17 @@ public class ResourceTaskCommon {
         return workDir.relativize(tmpFile.toAbsolutePath()).toString();
     }
 
+    public static String printJson(Object value) throws IOException {
+        ObjectMapper mapper = createObjectMapper();
+
+        if (value instanceof String) {
+            // parse json string to object
+            value = mapper.readValue((String) value, Object.class);
+        }
+
+        return mapper.writeValueAsString(value);
+    }
+
     public static String prettyPrintJson(Object value) throws IOException {
         ObjectMapper mapper = createObjectMapper();
 

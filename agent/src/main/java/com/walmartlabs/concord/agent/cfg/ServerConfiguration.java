@@ -47,6 +47,8 @@ public class ServerConfiguration {
     private final long readTimeout;
     private final String userAgent;
     private final long maxNoHeartbeatInterval;
+    private final long processRequestDelay;
+    private final long reconnectDelay;
 
     @Inject
     public ServerConfiguration(Config cfg, AgentConfiguration agentCfg) {
@@ -71,6 +73,9 @@ public class ServerConfiguration {
         this.userAgent = getStringOrDefault(cfg, "server.userAgent", () -> "Concord-Agent: id=" + agentCfg.getAgentId());
 
         this.maxNoHeartbeatInterval = cfg.getDuration("server.maxNoHeartbeatInterval", TimeUnit.MILLISECONDS);
+
+        this.processRequestDelay = cfg.getDuration("server.processRequestDelay", TimeUnit.MILLISECONDS);
+        this.reconnectDelay = cfg.getDuration("server.reconnectDelay", TimeUnit.MILLISECONDS);
     }
 
     public String getApiBaseUrl() {
@@ -111,6 +116,14 @@ public class ServerConfiguration {
 
     public long getMaxNoHeartbeatInterval() {
         return maxNoHeartbeatInterval;
+    }
+
+    public long getProcessRequestDelay() {
+        return processRequestDelay;
+    }
+
+    public long getReconnectDelay() {
+        return reconnectDelay;
     }
 
     private static String[] getWebsocketUrls(Config cfg) {

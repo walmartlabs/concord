@@ -42,7 +42,7 @@ import static com.walmartlabs.concord.server.jooq.tables.ProcessEvents.PROCESS_E
 import static com.walmartlabs.concord.server.jooq.tables.ProcessQueue.PROCESS_QUEUE;
 import static com.walmartlabs.concord.server.jooq.tables.ProcessState.PROCESS_STATE;
 
-@Named("process-cleaner")
+@Named
 @Singleton
 public class ProcessCleaner implements ScheduledTask {
 
@@ -61,6 +61,11 @@ public class ProcessCleaner implements ScheduledTask {
     public ProcessCleaner(ProcessConfiguration cfg, CleanerDao cleanerDao) {
         this.cfg = cfg;
         this.cleanerDao = cleanerDao;
+    }
+
+    @Override
+    public String getId() {
+        return "process-cleaner";
     }
 
     @Override

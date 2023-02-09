@@ -25,6 +25,7 @@ import com.walmartlabs.concord.db.MainDB;
 import com.walmartlabs.concord.server.OffsetDateTimeParam;
 import com.walmartlabs.concord.server.jooq.tables.records.UsersRecord;
 import com.walmartlabs.concord.server.org.OrganizationEntry;
+import com.walmartlabs.concord.server.org.team.TeamRole;
 import com.walmartlabs.concord.server.security.ldap.LdapGroupSearchResult;
 import org.jooq.*;
 
@@ -38,6 +39,7 @@ import static com.walmartlabs.concord.server.jooq.tables.Organizations.ORGANIZAT
 import static com.walmartlabs.concord.server.jooq.tables.Roles.ROLES;
 import static com.walmartlabs.concord.server.jooq.tables.Teams.TEAMS;
 import static com.walmartlabs.concord.server.jooq.tables.UserRoles.USER_ROLES;
+import static com.walmartlabs.concord.server.jooq.tables.UserTeams.USER_TEAMS;
 import static com.walmartlabs.concord.server.jooq.tables.Users.USERS;
 import static org.jooq.impl.DSL.*;
 
@@ -281,6 +283,24 @@ public class UserDao extends AbstractDao {
                         .displayName(r.get(USER_LDAP_GROUPS.LDAP_GROUP))
                         .groupName(r.get(USER_LDAP_GROUPS.LDAP_GROUP))
                         .build());
+    }
+
+    public List<UserTeam> listTeams(DSLContext tx, UUID userId) {
+        return tx.select(USER_TEAMS.TEAM_ID, USER_TEAMS.TEAM_ROLE)
+                .from(USER_TEAMS)
+                .where(USER_TEAMS.USER_ID.eq(userId))
+                .fetch(r -> UserTeam.of(r.get(USER_TEAMS.TEAM_ID), TeamRole.valueOf(r.get(USER_TEAMS.TEAM_ROLE))));
+    }
+
+    public void excludeFromTeams(DSLContext tx, UUID userId, List<UUID> teamIds) {
+        if (teamIds.isEmpty()) {
+            return;
+        }
+
+        tx.deleteFrom(USER_TEAMS)
+                .where(USER_TEAMS.USER_ID.eq(userId)
+                        .and(USER_TEAMS.TEAM_ID.in(teamIds)))
+                .execute();
     }
 
     private UserEntry getUserInfo(DSLContext tx, Record8<UUID, String, String, String, String, String, Boolean, OffsetDateTime> r) {

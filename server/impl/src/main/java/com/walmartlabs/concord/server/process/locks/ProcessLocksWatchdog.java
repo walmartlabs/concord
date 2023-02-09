@@ -45,8 +45,7 @@ import static com.walmartlabs.concord.server.jooq.tables.ProcessQueue.PROCESS_QU
  * Takes care of processes dead process locks.
  * E.g. removes locks for finished processes.
  */
-@Named("process-locks-watchdog")
-@Singleton
+@Named
 public class ProcessLocksWatchdog implements ScheduledTask {
 
     private static final Logger log = LoggerFactory.getLogger(ProcessLocksWatchdog.class);
@@ -56,6 +55,11 @@ public class ProcessLocksWatchdog implements ScheduledTask {
     @Inject
     public ProcessLocksWatchdog(WatchdogDao dao) {
         this.dao = dao;
+    }
+
+    @Override
+    public String getId() {
+        return "process-locks-watchdog";
     }
 
     @Override

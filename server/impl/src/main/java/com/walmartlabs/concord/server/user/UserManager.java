@@ -49,7 +49,7 @@ public class UserManager {
     private static final String SSO_REALM_NAME = "sso";
 
     @Inject
-    public UserManager(UserDao userDao, TeamDao teamDao, AuditLog auditLog, List<UserInfoProvider> providers) {
+    public UserManager(UserDao userDao, TeamDao teamDao, AuditLog auditLog, Set<UserInfoProvider> providers) {
         this.userDao = userDao;
         this.teamDao = teamDao;
         this.auditLog = auditLog;
@@ -75,7 +75,6 @@ public class UserManager {
         return getOrCreate(username, userDomain, type, null, null, null);
     }
 
-
     public Optional<UserEntry> getOrCreate(String username, String userDomain, UserType type, String displayName, String email, Set<String> roles) {
         Optional<UserEntry> result = get(username, userDomain, type);
         if (result.isPresent()) {
@@ -98,7 +97,7 @@ public class UserManager {
                 return result;
             }
         }
-        
+
         return Optional.of(create(username, userDomain, displayName, email, type, roles));
     }
 
@@ -243,26 +242,26 @@ public class UserManager {
         }
         return p;
     }
-    
-    private UserType assertUserType(String username, String domain, UserType type){
+
+    private UserType assertUserType(String username, String domain, UserType type) {
         /* Override LDAP to SSO type if current user loggedIn via SSO */
         /*
         1. LoggedIn via internal user realm -> domain = null
         2. LoggedIn via ldap realm -> realm != SSO_REALM_NAME
         3. LoggedIn via SSO -> @return UserType.SSO
          */
-        if (username != null && domain != null){
+        if (username != null && domain != null) {
             UserPrincipal u = UserPrincipal.getCurrent();
-            if (u != null && u.getUsername().equalsIgnoreCase(username) && u.getDomain().equalsIgnoreCase(domain)){
-              return assertSsoUserType(u, type);
+            if (u != null && u.getUsername().equalsIgnoreCase(username) && u.getDomain().equalsIgnoreCase(domain)) {
+                return assertSsoUserType(u, type);
             }
         }
         return type;
     }
 
-    private UserType assertSsoUserType(UserPrincipal u, UserType type){
-        if (u.getRealm().equals(SSO_REALM_NAME)){
-            if (userInfoProviders.get(UserType.SSO) != null){
+    private UserType assertSsoUserType(UserPrincipal u, UserType type) {
+        if (u.getRealm().equals(SSO_REALM_NAME)) {
+            if (userInfoProviders.get(UserType.SSO) != null) {
                 return UserType.SSO;
             }
         }

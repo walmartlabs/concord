@@ -268,7 +268,7 @@ public class YamlOkParserTest extends AbstractParserTest {
 
         List<Step> main = pd.flows().get("main");
 
-        assertEquals(1, main.size());
+        assertEquals(2, main.size());
 
         assertTrue(main.get(0) instanceof FormCall);
         FormCall t = (FormCall) main.get(0);
@@ -276,6 +276,7 @@ public class YamlOkParserTest extends AbstractParserTest {
         assertNotNull(t.getName());
         assertNotNull(t.getLocation());
         assertEquals("myForm", t.getName());
+        assertNotNull(t.getOptions());
         assertTrue(t.getOptions().yield());
         assertTrue(t.getOptions().saveSubmittedBy());
         assertEquals(Collections.singletonMap("username", Arrays.asList("userA", "userB")), t.getOptions().runAs());
@@ -287,6 +288,18 @@ public class YamlOkParserTest extends AbstractParserTest {
         assertEquals(Cardinality.ONE_AND_ONLY_ONE, field.cardinality());
         assertEquals(0, field.options().size());
         assertNotNull(field.location());
+
+
+        assertTrue(main.get(1) instanceof FormCall);
+        FormCall t2 = (FormCall) main.get(1);
+
+        assertNotNull(t2.getOptions());
+        assertNotNull(t2.getOptions().valuesExpression());
+        assertFalse(t2.getOptions().yield());
+        assertFalse(t2.getOptions().saveSubmittedBy());
+        assertEquals("${{ 'fieldA': 'valueA' }}", t2.getOptions().valuesExpression());
+        assertEquals("${{ 'username': [ 'userA', 'userB' ] }}", t2.getOptions().runAsExpression());
+
 
         assertNotNull(pd.forms());
         assertEquals(1, pd.forms().size());
