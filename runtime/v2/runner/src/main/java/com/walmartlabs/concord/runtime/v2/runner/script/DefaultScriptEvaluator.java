@@ -145,8 +145,6 @@ public class DefaultScriptEvaluator implements ScriptEvaluator {
           throw new RuntimeException("unsupported esVersion: " + value.toString());
         }
         ctx.option("js.ecmascript-version", esVersion.get().toString());
-      } else {
-        throw new RuntimeException("unsupported engine option: " + key);
       }
     }
     return ctx;
