@@ -37,12 +37,26 @@ import javax.script.*;
 import java.io.BufferedWriter;
 import java.io.Reader;
 import java.io.Writer;
-import java.util.Collections;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public class DefaultScriptEvaluator implements ScriptEvaluator {
+
+  // https://www.graalvm.org/latest/reference-manual/js/JavaScriptCompatibility/#ecmascript-language-compliance
+  static Integer[] GRAAL_ES_VERSIONS = new Integer[]{
+    3,
+    5,
+    6,
+    7,
+    2015,
+    2016,
+    2017,
+    2018,
+    2019,
+    2020,
+    2021,
+    2022,
+  };
+
 
   private static final Logger log = LoggerFactory.getLogger(DefaultScriptEvaluator.class);
 
@@ -122,12 +136,17 @@ public class DefaultScriptEvaluator implements ScriptEvaluator {
       .allowHostAccess(access);
     for (Map.Entry<String, Object> entry : variables.entrySet()) {
       String key = entry.getKey();
-      switch (key) {
-        case "ecmascript-version":
-          ctx.option("js." + key, entry.getValue().toString());
-          break;
-        default:
-          throw new RuntimeException("unsupported engine option: " + key);
+      Object value = entry.getValue();
+      if ("esVersion".equals(key)) {
+        Optional<Integer> esVersion = Arrays.stream(GRAAL_ES_VERSIONS).filter(it -> {
+          return it.equals(value);
+        }).findFirst();
+        if (!esVersion.isPresent()) {
+          throw new RuntimeException("unsupported esVersion: " + value.toString());
+        }
+        ctx.option("js.ecmascript-version", esVersion.get().toString());
+      } else {
+        throw new RuntimeException("unsupported engine option: " + key);
       }
     }
     return ctx;
