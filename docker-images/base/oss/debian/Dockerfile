@@ -14,14 +14,16 @@ RUN apt-get update && \
     
 
 ADD --chmod=755 ./get_jdk_url.sh /tmp/
+ADD --chmod=755 ./get_arch.sh /tmp/
 ARG jdk_version
 ENV JDK_VERSION=${jdk_version}
-ENV TARGETARCH=${TARGETARCH:-"amd64"}
-RUN curl --location --output /tmp/jdk.tar.gz $(/tmp/get_jdk_url.sh) && \
+RUN export DEFAULT_TARGETARCH=$(/tmp/get_arch.sh); \
+    export TARGETARCH=${TARGETARCH:-${DEFAULT_TARGETARCH}}; \
+    curl --location --output /tmp/jdk.tar.gz $(/tmp/get_jdk_url.sh) && \
     mkdir /opt/jdk && \
     tar xpf /tmp/jdk.tar.gz --strip 1 -C /opt/jdk && \
     rm /tmp/jdk.tar.gz
-    
+
 ENV JAVA_HOME /opt/jdk
 ENV PATH="${JAVA_HOME}/bin:${PATH}"
 ENV LC_CTYPE en_US.UTF-8
