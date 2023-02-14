@@ -114,15 +114,17 @@ public class DefaultScriptEvaluator implements ScriptEvaluator {
     return null;
   }
 
+  @SuppressWarnings({"rawtypes", "unchecked"})
   private org.graalvm.polyglot.Context.Builder getGraalEngineContextBuilder(Map<String, Object> variables) {
     HostAccess access = HostAccess.newBuilder(HostAccess.ALL)
       .targetTypeMapping(Value.class, Object.class, Value::hasArrayElements, v -> new LinkedList<>(v.as(List.class))).build();
     org.graalvm.polyglot.Context.Builder ctx = org.graalvm.polyglot.Context.newBuilder("js")
       .allowHostAccess(access);
-    for (String key : variables.keySet()) {
+    for (Map.Entry<String, Object> entry : variables.entrySet()) {
+      String key = entry.getKey();
       switch (key) {
         case "ecmascript-version":
-          ctx.option("js." + key, variables.get(key).toString());
+          ctx.option("js." + key, entry.getValue().toString());
           break;
         default:
           throw new RuntimeException("unsupported engine option: " + key);
@@ -131,7 +133,6 @@ public class DefaultScriptEvaluator implements ScriptEvaluator {
     return ctx;
   }
 
-  @SuppressWarnings({"rawtypes", "unchecked"})
   private ScriptEngine getEngine(String language, Map<String, Object> variables) {
     ScriptEngine engine;
     if (new GraalJSEngineFactory().getNames().contains(language)) {
