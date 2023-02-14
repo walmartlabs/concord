@@ -44,159 +44,159 @@ import java.util.Map;
 
 public class DefaultScriptEvaluator implements ScriptEvaluator {
 
-    private static final Logger log = LoggerFactory.getLogger(DefaultScriptEvaluator.class);
+  private static final Logger log = LoggerFactory.getLogger(DefaultScriptEvaluator.class);
 
-    // TODO: deprecate "execution"? what about scripts - can't use "context" there?
-    private static final String[] CONTEXT_VARIABLE_NAMES = {Constants.Context.CONTEXT_KEY, "execution"};
+  // TODO: deprecate "execution"? what about scripts - can't use "context" there?
+  private static final String[] CONTEXT_VARIABLE_NAMES = {Constants.Context.CONTEXT_KEY, "execution"};
 
-    private final TaskProviders taskProviders;
-    private final ScriptEngineManager scriptEngineManager;
+  private final TaskProviders taskProviders;
+  private final ScriptEngineManager scriptEngineManager;
 
-    @Inject
-    public DefaultScriptEvaluator(TaskProviders taskProviders) {
-        this.taskProviders = taskProviders;
-        this.scriptEngineManager = new ScriptEngineManager();
+  @Inject
+  public DefaultScriptEvaluator(TaskProviders taskProviders) {
+    this.taskProviders = taskProviders;
+    this.scriptEngineManager = new ScriptEngineManager();
+  }
+
+  @Override
+  public ScriptResult eval(Context context, String language, Reader input, Map<String, Object> variables) {
+    ScriptEngine engine = getEngine(language, variables);
+
+    if (engine == null) {
+      throw new RuntimeException("Script engine not found: " + language);
     }
 
-    @Override
-    public ScriptResult eval(Context context, String language, Reader input, Map<String, Object> variables) {
-        ScriptEngine engine = getEngine(language, variables);
+    Bindings b = ScriptEngineBindings.create(engine, language);
 
-        if (engine == null) {
-            throw new RuntimeException("Script engine not found: " + language);
-        }
-
-        Bindings b = ScriptEngineBindings.create(engine, language);
-
-        ScriptResult scriptResult = new ScriptResult();
-        ScriptContext ctx = new ScriptContext(context);
-        for (String ctxVar : CONTEXT_VARIABLE_NAMES) {
-            b.put(ctxVar, ctx);
-        }
-        b.put("tasks", new TaskAccessor(taskProviders, ctx));
-        b.put("log", log);
-        b.putAll(context.variables().toMap());
-        b.putAll(variables);
-        b.put("result", scriptResult);
-
-        try {
-            engine.eval(input, b);
-            return scriptResult;
-        } catch (ScriptException e) {
-            if (e.getCause() instanceof PolyglotException) {
-                throw new RuntimeException(e.getCause().getMessage());
-            }
-            throw new RuntimeException(e.getMessage());
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
+    ScriptResult scriptResult = new ScriptResult();
+    ScriptContext ctx = new ScriptContext(context);
+    for (String ctxVar : CONTEXT_VARIABLE_NAMES) {
+      b.put(ctxVar, ctx);
     }
+    b.put("tasks", new TaskAccessor(taskProviders, ctx));
+    b.put("log", log);
+    b.putAll(context.variables().toMap());
+    b.putAll(variables);
+    b.put("result", scriptResult);
 
-    @Override
-    public String getLanguage(String languageOrExtension) {
-        for (ScriptEngineFactory factory : scriptEngineManager.getEngineFactories()) {
-            try {
-                if (listOrEmpty(factory.getNames()).contains(languageOrExtension)) {
-                    return factory.getLanguageName();
-                }
-            } catch (Exception exp) {
-                // ignore
-            }
-
-            try {
-                if (listOrEmpty(factory.getExtensions()).contains(languageOrExtension)) {
-                    return factory.getLanguageName();
-                }
-            } catch (Exception exp) {
-                // ignore
-            }
-        }
-        return null;
-    }
-
-    private org.graalvm.polyglot.Context.Builder getGraalEngineContextBuilder(Map<String,Object> variables) {
-      HostAccess access = HostAccess.newBuilder(HostAccess.ALL)
-        .targetTypeMapping(Value.class, Object.class, Value::hasArrayElements, v -> new LinkedList<>(v.as(List.class))).build();
-      org.graalvm.polyglot.Context.Builder ctx = org.graalvm.polyglot.Context.newBuilder("js")
-        .allowHostAccess(access);
-      for (String key : variables.keySet()) {
-        switch (key) {
-          case "ecmascript-version":
-            ctx.option("js."+key, variables.get(key).toString());
-            break;
-          default:
-            throw new RuntimeException("unsupported engine option: " + key);
-        }
+    try {
+      engine.eval(input, b);
+      return scriptResult;
+    } catch (ScriptException e) {
+      if (e.getCause() instanceof PolyglotException) {
+        throw new RuntimeException(e.getCause().getMessage());
       }
-      return ctx;
+      throw new RuntimeException(e.getMessage());
+    } catch (Exception e) {
+      throw new RuntimeException(e);
+    }
+  }
+
+  @Override
+  public String getLanguage(String languageOrExtension) {
+    for (ScriptEngineFactory factory : scriptEngineManager.getEngineFactories()) {
+      try {
+        if (listOrEmpty(factory.getNames()).contains(languageOrExtension)) {
+          return factory.getLanguageName();
+        }
+      } catch (Exception exp) {
+        // ignore
+      }
+
+      try {
+        if (listOrEmpty(factory.getExtensions()).contains(languageOrExtension)) {
+          return factory.getLanguageName();
+        }
+      } catch (Exception exp) {
+        // ignore
+      }
+    }
+    return null;
+  }
+
+  private org.graalvm.polyglot.Context.Builder getGraalEngineContextBuilder(Map<String, Object> variables) {
+    HostAccess access = HostAccess.newBuilder(HostAccess.ALL)
+      .targetTypeMapping(Value.class, Object.class, Value::hasArrayElements, v -> new LinkedList<>(v.as(List.class))).build();
+    org.graalvm.polyglot.Context.Builder ctx = org.graalvm.polyglot.Context.newBuilder("js")
+      .allowHostAccess(access);
+    for (String key : variables.keySet()) {
+      switch (key) {
+        case "ecmascript-version":
+          ctx.option("js." + key, variables.get(key).toString());
+          break;
+        default:
+          throw new RuntimeException("unsupported engine option: " + key);
+      }
+    }
+    return ctx;
+  }
+
+  @SuppressWarnings({"rawtypes", "unchecked"})
+  private ScriptEngine getEngine(String language, Map<String, Object> variables) {
+    ScriptEngine engine;
+    if (new GraalJSEngineFactory().getNames().contains(language)) {
+      // Javascript array is converted in Java to an empty map #214 (https://github.com/oracle/graaljs/issues/214)
+      engine = GraalJSScriptEngine.create(Engine.newBuilder()
+          .allowExperimentalOptions(true)
+          .option("engine.WarnInterpreterOnly", "false")
+          .option("js.nashorn-compat", "true")
+          .build(),
+        getGraalEngineContextBuilder(variables));
+    } else {
+      ScriptEngineProperties.applyFor(language);
+
+      engine = scriptEngineManager.getEngineByName(language);
     }
 
-    @SuppressWarnings({"rawtypes", "unchecked"})
-    private ScriptEngine getEngine(String language, Map<String, Object> variables) {
-        ScriptEngine engine;
-        if (new GraalJSEngineFactory().getNames().contains(language)) {
-            // Javascript array is converted in Java to an empty map #214 (https://github.com/oracle/graaljs/issues/214)
-            engine = GraalJSScriptEngine.create(Engine.newBuilder()
-                            .allowExperimentalOptions(true)
-                            .option("engine.WarnInterpreterOnly", "false")
-                            .option("js.nashorn-compat", "true")
-                            .build(),
-                    getGraalEngineContextBuilder(variables));
-        } else {
-            ScriptEngineProperties.applyFor(language);
-
-            engine = scriptEngineManager.getEngineByName(language);
-        }
-
-        if (engine != null) {
-            engine.getContext().setWriter(new BufferedWriter(new LogWriter()));
-        }
-
-        return engine;
+    if (engine != null) {
+      engine.getContext().setWriter(new BufferedWriter(new LogWriter()));
     }
 
-    private static List<String> listOrEmpty(List<String> items) {
-        if (items == null) {
-            return Collections.emptyList();
-        }
-        return items;
+    return engine;
+  }
+
+  private static List<String> listOrEmpty(List<String> items) {
+    if (items == null) {
+      return Collections.emptyList();
+    }
+    return items;
+  }
+
+  public static class TaskAccessor {
+
+    private final TaskProviders tasks;
+    private final Context context;
+
+    public TaskAccessor(TaskProviders tasks, Context context) {
+      this.tasks = tasks;
+      this.context = context;
     }
 
-    public static class TaskAccessor {
+    public Object get(String key) {
+      return tasks.createTask(context, key);
+    }
+  }
 
-        private final TaskProviders tasks;
-        private final Context context;
+  private static class LogWriter extends Writer {
 
-        public TaskAccessor(TaskProviders tasks, Context context) {
-            this.tasks = tasks;
-            this.context = context;
-        }
+    @Override
+    public void write(char[] cbuf, int off, int len) {
+      if (len == 0) {
+        return;
+      }
 
-        public Object get(String key) {
-            return tasks.createTask(context, key);
-        }
+      int l = cbuf[len - 1] == '\n' ? len - 1 : len;
+      log.info("{}", new String(cbuf, off, l));
     }
 
-    private static class LogWriter extends Writer {
-
-        @Override
-        public void write(char[] cbuf, int off, int len) {
-            if (len == 0) {
-                return;
-            }
-
-            int l = cbuf[len - 1] == '\n' ? len - 1 : len;
-            log.info("{}", new String(cbuf, off, l));
-        }
-
-        @Override
-        public void flush() {
-            //do nothing
-        }
-
-        @Override
-        public void close() {
-            // do nothing
-        }
+    @Override
+    public void flush() {
+      //do nothing
     }
+
+    @Override
+    public void close() {
+      // do nothing
+    }
+  }
 }
