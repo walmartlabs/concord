@@ -138,9 +138,9 @@ public class DefaultScriptEvaluator implements ScriptEvaluator {
       String key = entry.getKey();
       Object value = entry.getValue();
       if ("esVersion".equals(key)) {
-        Optional<Integer> esVersion = Arrays.stream(GRAAL_ES_VERSIONS).filter(it -> {
-          return it.equals(value);
-        }).findFirst();
+        Optional<Integer> esVersion = Arrays.stream(GRAAL_ES_VERSIONS)
+          .filter(it -> it.equals(value))
+          .findFirst();
         if (!esVersion.isPresent()) {
           throw new RuntimeException("unsupported esVersion: " + value.toString());
         }
