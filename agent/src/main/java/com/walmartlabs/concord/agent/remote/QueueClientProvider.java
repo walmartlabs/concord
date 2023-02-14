@@ -54,6 +54,8 @@ public class QueueClientProvider implements Provider<QueueClient> {
                     .connectTimeout(serverCfg.getConnectTimeout())
                     .pingInterval(serverCfg.getPingInterval())
                     .maxNoActivityPeriod(serverCfg.getMaxNoActivityPeriod())
+                    .processRequestDelay(serverCfg.getProcessRequestDelay())
+                    .reconnectDelay(serverCfg.getReconnectDelay())
                     .build());
 
             queueClient.start();
