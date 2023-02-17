@@ -41,6 +41,7 @@ public class MethodAccessorResolver extends ELResolver {
             try {
                 Method m = base.getClass().getDeclaredMethod(k);
                 Object value = m.invoke(base);
+                SensitiveDataProcessor.process(value, m);
                 context.setPropertyResolved(true);
                 return value;
             } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {

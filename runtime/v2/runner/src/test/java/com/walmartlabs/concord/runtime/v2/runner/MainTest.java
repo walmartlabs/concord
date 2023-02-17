@@ -1189,6 +1189,19 @@ public class MainTest {
         assertLog(log, ".*Hello, " + Pattern.quote("{k1=v1, k2=v1}") + ".*");
     }
 
+    @Test
+    public void testSensitiveData() throws Exception {
+        deploy("sensitiveData");
+
+        save(ProcessConfiguration.builder()
+                .build());
+
+        byte[] log = run();
+        assertLog(log, ".*" + Pattern.quote("sensitive: ******") + ".*");
+        assertLog(log, ".*" + Pattern.quote("log value: ******") + ".*");
+        assertLog(log, ".*" + Pattern.quote("plain: plain") + ".*");
+    }
+
     private void deploy(String resource) throws URISyntaxException, IOException {
         Path src = Paths.get(MainTest.class.getResource(resource).toURI());
         IOUtils.copy(src, workDir);
@@ -1552,6 +1565,19 @@ public class MainTest {
 
         public int getDerivedValue(int value) {
             return value + 42;
+        }
+    }
+
+    @Named("sensitiveTask")
+    public static class TaskWithSensitiveData implements Task {
+
+        @SensitiveData
+        public String getSensitive(String str) {
+            return str;
+        }
+
+        public String getPlain(String str) {
+            return str;
         }
     }
 

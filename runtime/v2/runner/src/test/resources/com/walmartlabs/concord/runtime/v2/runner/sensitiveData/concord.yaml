@@ -1,0 +1,10 @@
+flows:
+  default:
+    - log: "sensitive: ${sensitiveTask.getSensitive('BOOM')}"
+
+    - expr: "${sensitiveTask.getSensitive('BOOM')}"
+      out: mySecret
+
+    - log: "log value: ${mySecret}"
+
+    - log: "plain: ${sensitiveTask.getPlain('plain')}"

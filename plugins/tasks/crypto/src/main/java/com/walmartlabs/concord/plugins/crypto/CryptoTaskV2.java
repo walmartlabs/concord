@@ -63,6 +63,7 @@ public class CryptoTaskV2 implements Task {
         this.processOrg = projectInfo != null ? projectInfo.orgName() : null;
     }
 
+    @SensitiveData
     public String exportAsString(String orgName, String name, @SensitiveData String password) throws Exception {
         return secretService.exportAsString(orgName, name, password);
     }
@@ -78,6 +79,7 @@ public class CryptoTaskV2 implements Task {
         return m;
     }
 
+    @SensitiveData
     public Map<String, String> exportCredentials(String orgName, String name, @SensitiveData String password) throws Exception {
         UsernamePassword credentials = secretService.exportCredentials(orgName, name, password);
 

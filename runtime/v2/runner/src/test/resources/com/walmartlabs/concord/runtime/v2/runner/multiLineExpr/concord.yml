@@ -1,0 +1,12 @@
+flows:
+  default:
+    - set:
+        m:
+          k: v
+
+    - expr: >-
+        ${m
+        .k}
+      out: a
+
+    - log: ${a}
