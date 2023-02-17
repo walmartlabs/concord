@@ -1,0 +1,30 @@
+flows:
+  default:
+    - set:
+        phrase: "mama mia!"
+    - script: js
+      in:
+        esVersion: 2022
+      body: |
+        // dummy script to exercise newer ECMAScript features
+        const phrase = context.variables().get("phrase");
+        // lambda expressions
+        const varsByKey = [...context.variables().toMap().entrySet()].reduce(
+          (acc, it) =>
+            // splat operator
+            ({ ...acc, [it[0]]: it[1] }),
+          {}
+        );
+        const uniqueKeys = new Set(Object.keys(varsByKey));
+        const charCountProduct = Object.values(
+          `${phrase}`
+          .split("")
+          .flatMap((char) => char.at(-1))
+          .reduce((acc, char) => {
+          const count = char in acc ? acc[char] : 0;
+          return { ...acc, [char]: count + 1 };
+            }, {})
+        ).reduce((acc, n) => acc * n, 1);
+        // demo destructuring, JSON methods
+        kv.json = JSON.stringify({ charCountProduct, varsByKey });
+    - log: "${kv.json}"
