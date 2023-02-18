@@ -28,6 +28,7 @@ import org.slf4j.LoggerFactory;
 
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.time.Duration;
 
 import static com.walmartlabs.concord.it.console.Utils.env;
 
@@ -84,7 +85,7 @@ public class ConcordConsoleRule extends WebDriverRule {
 
         WebDriver driver = getDriver();
 
-        WebDriverWait wait = new WebDriverWait(driver, 60);
+        WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(60));
         wait.until(condition);
 
         return driver.findElement(by);
@@ -97,7 +98,7 @@ public class ConcordConsoleRule extends WebDriverRule {
 
         Thread.sleep(500);
 
-        WebDriverWait wait = new WebDriverWait(getDriver(), 30);
+        WebDriverWait wait = new WebDriverWait(getDriver(), Duration.ofSeconds(30));
         wait.until(expectation);
     }
 
