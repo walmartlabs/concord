@@ -113,7 +113,7 @@
         <postgres.version>42.5.0</postgres.version>
         <prometheus.simpleclient.version>0.16.0</prometheus.simpleclient.version>
         <resteasy.version>3.1.4.Final</resteasy.version>
-        <selenium.version>3.141.59</selenium.version>
+        <selenium.version>4.8.1</selenium.version>
         <servlet.version>4.0.1</servlet.version>
         <shiro.version>1.10.1</shiro.version>
         <siesta.version>2.3.2</siesta.version>
@@ -1077,6 +1077,11 @@
             <dependency>
                 <groupId>org.seleniumhq.selenium</groupId>
                 <artifactId>selenium-chrome-driver</artifactId>
+                <version>${selenium.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.seleniumhq.selenium</groupId>
+                <artifactId>selenium-chromium-driver</artifactId>
                 <version>${selenium.version}</version>
             </dependency>
             <dependency>
