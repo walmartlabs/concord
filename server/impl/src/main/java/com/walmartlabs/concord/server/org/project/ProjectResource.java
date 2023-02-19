@@ -58,6 +58,7 @@ public class ProjectResource implements Resource {
     private final ProjectAccessManager accessManager;
     private final OrganizationDao orgDao;
     private final TeamDao teamDao;
+    private final KvDao kvDao;
     private final EncryptedProjectValueManager encryptedValueManager;
 
     private final ProjectRepositoryManager projectRepositoryManager;
@@ -69,6 +70,7 @@ public class ProjectResource implements Resource {
                            ProjectAccessManager accessManager,
                            OrganizationDao orgDao,
                            TeamDao teamDao,
+                           KvDao kvDao,
                            EncryptedProjectValueManager encryptedValueManager,
                            ProjectRepositoryManager projectRepositoryManager) {
 
@@ -76,6 +78,7 @@ public class ProjectResource implements Resource {
         this.projectDao = projectDao;
         this.projectManager = projectManager;
         this.accessManager = accessManager;
+        this.kvDao = kvDao;
         this.encryptedValueManager = encryptedValueManager;
         this.orgDao = orgDao;
         this.teamDao = teamDao;
@@ -123,6 +126,23 @@ public class ProjectResource implements Resource {
                                    @QueryParam("filter") String filter) {
         OrganizationEntry org = orgManager.assertAccess(orgName, false);
         return projectManager.list(org.getId(), offset, limit, filter);
+    }
+
+    @GET
+    @ApiOperation("list KV")
+    @Path("/{orgName}/project/{projectName}/kv")
+    @Produces(MediaType.APPLICATION_JSON)
+    public List<Map<String, Object>> findKV(@ApiParam @PathParam("orgName") @ConcordKey String orgName,
+                                            @ApiParam @PathParam("projectName") @ConcordKey String projectName,
+                                            @QueryParam("offset") int offset,
+                                            @QueryParam("limit") int limit,
+                                            @QueryParam("filter") String filter) {
+
+        OrganizationEntry org = orgManager.assertAccess(orgName, false);
+
+        ProjectEntry project = accessManager.assertAccess(org.getId(), null, projectName, ResourceAccessLevel.READER, false);
+
+        return kvDao.list(project.getId(), offset, limit, filter);
     }
 
     @GET

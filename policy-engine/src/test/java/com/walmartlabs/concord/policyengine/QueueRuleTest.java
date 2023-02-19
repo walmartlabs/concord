@@ -68,9 +68,9 @@ public class QueueRuleTest {
 
         QueueRule r = objectMapper.convertValue(rules, QueueRule.class);
 
-        assertNotNull(r.getConcurrent());
-        assertEquals(4, (int) r.getConcurrent().getMaxPerOrg());
-        assertEquals(5, (int) r.getConcurrent().getMaxPerProject());
-        assertEquals("Concurrent message", r.getConcurrent().getMsg());
+        assertNotNull(r.concurrentRule());
+        assertEquals(4, (int) r.concurrentRule().maxPerOrg());
+        assertEquals(5, (int) r.concurrentRule().maxPerProject());
+        assertEquals("Concurrent message", r.concurrentRule().msg());
     }
 }

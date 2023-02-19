@@ -21,6 +21,8 @@ package com.walmartlabs.concord.cli;
  */
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
+import com.fasterxml.jackson.dataformat.yaml.YAMLGenerator;
 import com.google.inject.Injector;
 import com.walmartlabs.concord.cli.runner.*;
 import com.walmartlabs.concord.common.ConfigurationUtils;
@@ -196,7 +198,7 @@ public class Run implements Callable<Integer> {
         Map<String, Object> overlayArgs = MapUtils.getMap(overlayCfg, Constants.Request.ARGUMENTS_KEY, Collections.emptyMap());
         Map<String, Object> args = ConfigurationUtils.deepMerge(cfg.arguments(), overlayArgs, extraVars);
         if (verbose) {
-            System.out.println("Process arguments: " + args);
+            dumpArguments(args);
         }
         args.put(Constants.Context.TX_ID_KEY, instanceId.toString());
         args.put(Constants.Context.WORK_DIR_KEY, targetDir.toAbsolutePath().toString());
@@ -231,7 +233,7 @@ public class Run implements Callable<Integer> {
                 runnerCfg,
                 () -> cfg,
                 new ProcessDependenciesModule(targetDir, runnerCfg.dependencies(), cfg.debug()),
-                new CliServicesModule(secretStoreDir, targetDir, new VaultProvider(vaultDir, vaultId), dependencyManager))
+                new CliServicesModule(secretStoreDir, targetDir, new VaultProvider(vaultDir, vaultId), dependencyManager, verbose))
                 .create();
 
         Runner runner = injector.getInstance(Runner.class);
@@ -307,6 +309,16 @@ public class Run implements Callable<Integer> {
             return DependencyManagerConfiguration.of(depsCacheDir, DependencyManagerRepositories.get(cfgFile));
         }
         return DependencyManagerConfiguration.of(depsCacheDir);
+    }
+
+    private static void dumpArguments(Map<String, Object> args) {
+        ObjectMapper om = new ObjectMapper(new YAMLFactory().disable(YAMLGenerator.Feature.WRITE_DOC_START_MARKER));
+        try {
+            System.out.println("Process arguments:");
+            System.out.println(om.writerWithDefaultPrettyPrinter().writeValueAsString(args));
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
     }
 
     private static class CopyNotifier implements FileVisitor {

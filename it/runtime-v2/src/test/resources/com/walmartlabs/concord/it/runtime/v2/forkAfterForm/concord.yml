@@ -1,0 +1,20 @@
+configuration:
+  runtime: concord-v2
+
+forms:
+  myForm:
+    - name: { type: "string" }
+
+flows:
+  default:
+    - form: myForm
+
+    - task: concord
+      in:
+        action: fork
+        entryPoint: newProcess
+
+  newProcess:
+    - log: |
+        parentInstanceId: ${parentInstanceId}
+        txId: ${txId}:

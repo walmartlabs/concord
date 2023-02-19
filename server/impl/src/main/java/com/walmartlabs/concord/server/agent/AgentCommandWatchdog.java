@@ -36,7 +36,7 @@ import java.time.OffsetDateTime;
 
 import static com.walmartlabs.concord.server.jooq.tables.AgentCommands.AGENT_COMMANDS;
 
-@Named("agent-command-watchdog")
+@Named
 @Singleton
 public class AgentCommandWatchdog implements ScheduledTask {
 
@@ -48,6 +48,11 @@ public class AgentCommandWatchdog implements ScheduledTask {
     public AgentCommandWatchdog(AgentConfiguration cfg, WatchdogDao watchdogDao) {
         this.cfg = cfg;
         this.watchdogDao = watchdogDao;
+    }
+
+    @Override
+    public String getId() {
+        return "agent-command-watchdog";
     }
 
     @Override

@@ -187,7 +187,7 @@ public class ConcordTask extends AbstractConcordTask {
     }
 
     public <T> Map<String, T> waitForCompletion(@InjectVariable("context") Context ctx, List<String> ids, long timeout, Function<ProcessEntry, T> processor) {
-        Map<String, T> result = new HashMap<>();
+        Map<String, T> result = new ConcurrentHashMap<>();
 
         ids.parallelStream().map(UUID::fromString).forEach(id -> {
             log.info("Waiting for {}, URL: {}", id, getProcessUrl(ctx, id));
@@ -284,7 +284,7 @@ public class ConcordTask extends AbstractConcordTask {
             cfg.put(SUSPEND_KEY, false);
         }
 
-        start(ctx, cfg,null);
+        start(ctx, cfg, null);
     }
 
     private void startChildProcess(Context ctx) throws Exception {
@@ -842,7 +842,7 @@ public class ConcordTask extends AbstractConcordTask {
 
         if (v instanceof String) {
             return Arrays.stream(((String) v)
-                    .split(","))
+                            .split(","))
                     .map(String::trim)
                     .collect(Collectors.toSet());
         } else if (v instanceof String[]) {

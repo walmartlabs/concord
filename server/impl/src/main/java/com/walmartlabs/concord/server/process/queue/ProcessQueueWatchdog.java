@@ -55,7 +55,7 @@ import static com.walmartlabs.concord.db.PgUtils.interval;
 import static com.walmartlabs.concord.server.jooq.tables.ProcessQueue.PROCESS_QUEUE;
 import static org.jooq.impl.DSL.*;
 
-@Named("process-queue-watchdog")
+@Named
 @Singleton
 public class ProcessQueueWatchdog implements ScheduledTask {
 
@@ -139,6 +139,11 @@ public class ProcessQueueWatchdog implements ScheduledTask {
         this.processManager = processManager;
         this.queueManager = queueManager;
         this.processSecurityContext = processSecurityContext;
+    }
+
+    @Override
+    public String getId() {
+        return "process-queue-watchdog";
     }
 
     @Override

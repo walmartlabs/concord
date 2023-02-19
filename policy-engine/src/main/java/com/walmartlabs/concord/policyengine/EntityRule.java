@@ -20,77 +20,36 @@ package com.walmartlabs.concord.policyengine;
  * =====
  */
 
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import org.immutables.value.Value;
 
+import javax.annotation.Nullable;
 import java.io.Serializable;
 import java.util.Map;
-import java.util.Objects;
 
-public class EntityRule implements Serializable {
+@Value.Immutable
+@JsonInclude(JsonInclude.Include.NON_EMPTY)
+@JsonSerialize(as = ImmutableEntityRule.class)
+@JsonDeserialize(as = ImmutableEntityRule.class)
+public interface EntityRule extends Serializable {
 
-    private static final long serialVersionUID = 1L;
+    long serialVersionUID = 1L;
 
-    private final String msg;
+    @Nullable
+    String msg();
 
-    private final String entity;
+    @Nullable
+    String entity();
 
-    private final String action;
+    @Nullable
+    String action();
 
-    private final Map<String, Object> conditions;
+    @Nullable
+    Map<String, Object> conditions();
 
-    @JsonCreator
-    public EntityRule(
-            @JsonProperty("msg") String msg,
-            @JsonProperty("entity") String entity,
-            @JsonProperty("action") String action,
-            @JsonProperty("conditions") Map<String, Object> conditions) {
-
-        this.msg = msg;
-        this.entity = entity;
-        this.action = action;
-        this.conditions = conditions;
-    }
-
-    public String getMsg() {
-        return msg;
-    }
-
-    public String getEntity() {
-        return entity;
-    }
-
-    public String getAction() {
-        return action;
-    }
-
-    public Map<String, Object> getConditions() {
-        return conditions;
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        EntityRule that = (EntityRule) o;
-        return Objects.equals(msg, that.msg) &&
-                Objects.equals(entity, that.entity) &&
-                Objects.equals(action, that.action) &&
-                Objects.equals(conditions, that.conditions);
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(msg, entity, action, conditions);
-    }
-
-    @Override
-    public String toString() {
-        return "EntityRule{" +
-                "msg='" + msg + '\'' +
-                ", entity='" + entity + '\'' +
-                ", action='" + action + '\'' +
-                ", conditions=" + conditions +
-                '}';
+    static ImmutableEntityRule.Builder builder() {
+        return ImmutableEntityRule.builder();
     }
 }

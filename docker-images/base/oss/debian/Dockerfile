@@ -1,3 +1,5 @@
+ARG DEBIAN_FRONTEND=noninteractive
+
 FROM library/debian:stable
 LABEL maintainer="amith.k.b@walmartlabs.com"
 
@@ -12,8 +14,11 @@ RUN apt-get update && \
     pip3 install --no-cache-dir dumb-init virtualenv
     
 
-ARG jdk_url
-RUN curl --location --output /tmp/jdk.tar.gz ${jdk_url} && \
+ADD --chmod=755 ./get_jdk_url.sh /tmp/
+ARG jdk_version
+ENV JDK_VERSION=${jdk_version}
+ENV TARGETARCH=${TARGETARCH:-"amd64"}
+RUN curl --location --output /tmp/jdk.tar.gz $(/tmp/get_jdk_url.sh) && \
     mkdir /opt/jdk && \
     tar xpf /tmp/jdk.tar.gz --strip 1 -C /opt/jdk && \
     rm /tmp/jdk.tar.gz
@@ -27,3 +32,7 @@ RUN virtualenv /usr/local/bin/concord_venv && \
     /usr/local/bin/concord_venv/bin/pip3 --no-cache-dir install dumb-init
 
 RUN groupadd -g 456 concord && useradd --no-log-init -u 456 -g concord -m -s /sbin/nologin concord
+
+# Point /bin/sh to bash from dash
+RUN echo "dash dash/sh boolean false" | debconf-set-selections && \
+    DEBIAN_FRONTEND=${DEBIAN_FRONTEND} dpkg-reconfigure dash

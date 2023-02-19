@@ -55,7 +55,7 @@ import static com.walmartlabs.concord.server.jooq.Tables.PROCESS_WAIT_CONDITIONS
  * Takes care of processes with wait conditions.
  * E.g. waiting for other processes to finish, locking, etc.
  */
-@Named("process-wait-watchdog")
+@Named
 @Singleton
 public class ProcessWaitWatchdog implements ScheduledTask {
 
@@ -88,6 +88,11 @@ public class ProcessWaitWatchdog implements ScheduledTask {
 
         handlers.forEach(h -> this.processWaitHandlers.put(h.getType(), h));
         this.waitItemsHistogram = metricRegistry.histogram("process-wait-watchdog-items");
+    }
+
+    @Override
+    public String getId() {
+        return "process-wait-watchdog";
     }
 
     @Override

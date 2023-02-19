@@ -51,6 +51,7 @@ interface Props {
     onStopLoading: () => void;
     onSegmentInfo?: () => void;
     loading: boolean;
+    forceOpen: boolean;
 }
 
 const LogSegment = ({
@@ -68,11 +69,12 @@ const LogSegment = ({
     onStartLoading,
     onStopLoading,
     onSegmentInfo,
-    loading
+    loading,
+    forceOpen
 }: Props) => {
     const scrollAnchorRef = useRef<HTMLDivElement>(null);
     const location = useLocation();
-    const [isOpen, setOpen] = useState<boolean>(false);
+    const [isOpen, setOpen] = useState<boolean>(forceOpen);
     const [isLoadAll, setLoadAll] = useState<boolean>(false);
     const [isAutoScroll, setAutoScroll] = useState<boolean>(false);
 
@@ -112,6 +114,10 @@ const LogSegment = ({
         ev.stopPropagation();
         setAutoScroll((prevState) => !prevState);
     }, []);
+
+    useEffect(() => {
+        setOpen(forceOpen);
+    }, [forceOpen])
 
     useEffect(() => {
         if (isOpen) {

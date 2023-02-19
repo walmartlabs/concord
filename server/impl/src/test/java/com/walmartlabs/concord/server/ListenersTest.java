@@ -35,13 +35,13 @@ public class ListenersTest {
     @Test
     public void test() {
         List<ProcessEvent> receivedEvents = new ArrayList<>();
-        Collection<ProcessEventListener> processEventListeners = Collections.singletonList(events -> {
+        Set<ProcessEventListener> processEventListeners = Collections.singleton(events -> {
             synchronized (receivedEvents) {
                 receivedEvents.addAll(events);
             }
         });
 
-        Listeners listeners = new Listeners(processEventListeners, Collections.emptyList(), Collections.emptyList());
+        Listeners listeners = new Listeners(processEventListeners, Collections.emptySet(), Collections.emptySet());
         listeners.onProcessEvent(Collections.singletonList(ProcessEvent.builder()
                 .processKey(new ProcessKey(UUID.randomUUID(), OffsetDateTime.now()))
                 .eventSeq(0)

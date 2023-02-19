@@ -36,7 +36,7 @@ import java.util.concurrent.TimeUnit;
 import static com.walmartlabs.concord.server.jooq.Tables.API_KEYS;
 import static org.jooq.impl.DSL.currentOffsetDateTime;
 
-@Named("api-key-cleanup")
+@Named
 @Singleton
 public class ApiKeyCleaner implements ScheduledTask {
 
@@ -51,6 +51,11 @@ public class ApiKeyCleaner implements ScheduledTask {
     public ApiKeyCleaner(ApiKeyConfiguration cfg, CleanerDao cleanerDao) {
         this.enabled = cfg.isExpirationEnabled();
         this.cleanerDao = cleanerDao;
+    }
+
+    @Override
+    public String getId() {
+        return "api-key-cleanup";
     }
 
     @Override

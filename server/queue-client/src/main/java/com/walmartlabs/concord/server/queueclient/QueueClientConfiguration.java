@@ -34,6 +34,9 @@ public class QueueClientConfiguration implements Serializable {
     private final long pingInterval;
     private final long maxNoActivityPeriod;
 
+    private final long processRequestDelay;
+    private final long reconnectDelay;
+
     private QueueClientConfiguration(Builder b) {
         this.addresses = b.addresses;
         this.agentId = b.agentId;
@@ -42,6 +45,8 @@ public class QueueClientConfiguration implements Serializable {
         this.connectTimeout = b.connectTimeout;
         this.pingInterval = b.pingInterval;
         this.maxNoActivityPeriod = b.maxNoActivityPeriod;
+        this.processRequestDelay = b.processRequestDelay;
+        this.reconnectDelay = b.reconnectDelay;
     }
 
     public String[] getAddresses() {
@@ -72,6 +77,14 @@ public class QueueClientConfiguration implements Serializable {
         return maxNoActivityPeriod;
     }
 
+    public long getProcessRequestDelay() {
+        return processRequestDelay;
+    }
+
+    public long getReconnectDelay() {
+        return reconnectDelay;
+    }
+
     public static class Builder {
 
         private final String[] addresses;
@@ -82,6 +95,8 @@ public class QueueClientConfiguration implements Serializable {
         private long connectTimeout = 30000;
         private long pingInterval = 10000;
         private long maxNoActivityPeriod = 30000;
+        private long processRequestDelay = 1000;
+        private long reconnectDelay = 10000;
 
         public Builder(String[] addresses) {
             this.addresses = addresses;
@@ -114,6 +129,16 @@ public class QueueClientConfiguration implements Serializable {
 
         public Builder maxNoActivityPeriod(long maxNoActivityPeriod) {
             this.maxNoActivityPeriod = maxNoActivityPeriod;
+            return this;
+        }
+
+        public Builder processRequestDelay(long processRequestDelay) {
+            this.processRequestDelay = processRequestDelay;
+            return this;
+        }
+
+        public Builder reconnectDelay(long reconnectDelay) {
+            this.reconnectDelay = reconnectDelay;
             return this;
         }
 

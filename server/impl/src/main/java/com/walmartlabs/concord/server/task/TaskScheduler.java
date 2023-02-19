@@ -36,6 +36,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
 import static com.walmartlabs.concord.db.PgUtils.interval;
+import static java.util.stream.Collectors.toMap;
 import static org.jooq.impl.DSL.currentOffsetDateTime;
 
 @Named
@@ -59,12 +60,12 @@ public class TaskScheduler extends PeriodicTask {
     private long lasStalledCheckDate;
 
     @Inject
-    public TaskScheduler(Map<String, ScheduledTask> tasks, SchedulerDao dao) {
+    public TaskScheduler(Set<ScheduledTask> tasks, SchedulerDao dao) {
         super(POLL_INTERVAL, ERROR_DELAY);
 
         this.executor = Executors.newCachedThreadPool();
         this.dao = dao;
-        this.tasks = tasks;
+        this.tasks = tasks.stream().collect(toMap(ScheduledTask::getId, t -> t));
 
         this.dao.updateTaskIntervals(tasks);
     }

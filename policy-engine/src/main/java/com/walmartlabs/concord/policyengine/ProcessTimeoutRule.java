@@ -20,53 +20,30 @@ package com.walmartlabs.concord.policyengine;
  * =====
  */
 
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import org.immutables.value.Value;
 
+import javax.annotation.Nullable;
 import java.io.Serializable;
-import java.util.Objects;
 
-public class ProcessTimeoutRule implements Serializable {
+@Value.Immutable
+@JsonInclude(JsonInclude.Include.NON_EMPTY)
+@JsonSerialize(as = ImmutableProcessTimeoutRule.class)
+@JsonDeserialize(as = ImmutableProcessTimeoutRule.class)
+public interface ProcessTimeoutRule extends Serializable {
 
-    private static final long serialVersionUID = 1L;
+    long serialVersionUID = 1L;
 
-    private final String msg;
-    private final String max;
+    @Nullable
+    @Value.Parameter
+    String msg();
 
-    @JsonCreator
-    public ProcessTimeoutRule(@JsonProperty("msg") String msg,
-                              @JsonProperty("max") String max) {
-        this.msg = msg;
-        this.max = max;
-    }
+    @Value.Parameter
+    String max();
 
-    public String getMsg() {
-        return msg;
-    }
-
-    public String getMax() {
-        return max;
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        ProcessTimeoutRule that = (ProcessTimeoutRule) o;
-        return Objects.equals(msg, that.msg) &&
-                Objects.equals(max, that.max);
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(msg, max);
-    }
-
-    @Override
-    public String toString() {
-        return "ProcessTimeoutRule{" +
-                "msg='" + msg + '\'' +
-                ", max='" + max + '\'' +
-                '}';
+    static ProcessTimeoutRule of(String msg, String max) {
+        return ImmutableProcessTimeoutRule.of(msg, max);
     }
 }

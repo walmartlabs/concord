@@ -32,6 +32,7 @@ import com.walmartlabs.concord.server.sdk.metrics.InjectCounter;
 import javax.inject.Inject;
 import javax.inject.Named;
 import java.text.MessageFormat;
+import java.util.Objects;
 import java.util.Set;
 
 @Named
@@ -58,10 +59,10 @@ public class ProcessRuntimePolicyApplier implements PolicyApplier {
         result.getDeny().forEach(i -> {
             policyDeny.inc();
 
-            String msg = i.getRule().getMsg() != null ? i.getRule().getMsg() : DEFAULT_PROCESS_TIMEOUT_MSG;
+            String msg = i.getRule().msg() != null ? i.getRule().msg() : DEFAULT_PROCESS_TIMEOUT_MSG;
             Object actualRuntime = i.getEntity();
-            Set<String> allowed = i.getRule().getAllowedRuntimes();
-            logManager.error(payload.getProcessKey(), MessageFormat.format(msg, actualRuntime, allowed));
+            Set<String> allowed = i.getRule().allowedRuntimes();
+            logManager.error(payload.getProcessKey(), MessageFormat.format(Objects.requireNonNull(msg), actualRuntime, allowed));
         });
 
         if (!result.getDeny().isEmpty()) {

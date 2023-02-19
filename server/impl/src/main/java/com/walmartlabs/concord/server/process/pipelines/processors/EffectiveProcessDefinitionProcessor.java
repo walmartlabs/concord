@@ -62,6 +62,7 @@ public class EffectiveProcessDefinitionProcessor implements PayloadProcessor {
 
         Options opts = Options.builder()
                 .instanceId(payload.getProcessKey().getInstanceId())
+                .entryPoint(payload.getHeader(Payload.ENTRY_POINT))
                 .parentInstanceId(payload.getHeader(Payload.PARENT_INSTANCE_ID))
                 .configuration(sanitizeConfiguration(payload.getHeader(Payload.CONFIGURATION, Collections.emptyMap())))
                 .activeProfiles(payload.getHeader(Payload.ACTIVE_PROFILES, Collections.emptyList()))

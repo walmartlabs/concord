@@ -88,6 +88,7 @@ public final class DataSourceUtils {
                 String logTable = changeLogProvider.getChangeLogTable();
                 String lockTable = changeLogProvider.getLockTable();
                 migrateDb(c, logPath, logTable, lockTable, changeLogParams);
+                log.info("migrateDb -> completed '{}' migration..", changeLogProvider);
                 break;
             } catch (Exception e) {
                 if (i + 1 >= retries) {

@@ -33,7 +33,7 @@ public class RuntimePolicy {
             return CheckResult.success();
         }
 
-        if (!rule.getAllowedRuntimes().contains(processRuntime)) {
+        if (!rule.allowedRuntimes().contains(processRuntime)) {
             return CheckResult.error(new CheckResult.Item<>(rule, processRuntime));
         }
 

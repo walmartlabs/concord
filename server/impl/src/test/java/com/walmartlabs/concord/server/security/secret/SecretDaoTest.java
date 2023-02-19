@@ -20,7 +20,9 @@ package com.walmartlabs.concord.server.security.secret;
  * =====
  */
 
+import com.walmartlabs.concord.common.secret.HashAlgorithm;
 import com.walmartlabs.concord.common.secret.SecretEncryptedByType;
+import com.walmartlabs.concord.common.secret.SecretUtils;
 import com.walmartlabs.concord.server.AbstractDaoTest;
 import com.walmartlabs.concord.server.ConcordObjectMapper;
 import com.walmartlabs.concord.server.TestObjectMapper;
@@ -28,9 +30,7 @@ import com.walmartlabs.concord.server.org.OrganizationManager;
 import com.walmartlabs.concord.server.org.project.ProjectDao;
 import com.walmartlabs.concord.server.org.project.RepositoryDao;
 import com.walmartlabs.concord.server.org.project.RepositoryEntry;
-import com.walmartlabs.concord.server.org.secret.SecretDao;
-import com.walmartlabs.concord.server.org.secret.SecretType;
-import com.walmartlabs.concord.server.org.secret.SecretVisibility;
+import com.walmartlabs.concord.server.org.secret.*;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
@@ -54,9 +54,9 @@ public class SecretDaoTest extends AbstractDaoTest {
 
         String secretName = "secret#" + System.currentTimeMillis();
         SecretDao secretDao = new SecretDao(getConfiguration());
-        UUID secretId = secretDao.insert(orgId, null, secretName, null, SecretType.KEY_PAIR, SecretEncryptedByType.SERVER_KEY, "concord", SecretVisibility.PUBLIC, INSERT);
+        UUID secretId = secretDao.insert(orgId, null, secretName, null, SecretType.KEY_PAIR, SecretEncryptedByType.SERVER_KEY, "concord", SecretVisibility.PUBLIC, SecretUtils.generateSalt(16), HashAlgorithm.SHA256, INSERT);
         secretDao.updateData(secretId, new byte[]{0, 1, 2});
-        secretDao.update(secretId, secretName, UUID.fromString("4b9d496a-c3a0-4e1b-804c-ac3fccddcb27"), null, new byte[0], null, projectId, orgId);
+        secretDao.update(secretId, secretName, UUID.fromString("4b9d496a-c3a0-4e1b-804c-ac3fccddcb27"), null, new byte[0], null, projectId, orgId, HashAlgorithm.SHA256);
 
         String repoName = "repo#" + System.currentTimeMillis();
         RepositoryDao repositoryDao = new RepositoryDao(getConfiguration(), new ConcordObjectMapper(TestObjectMapper.INSTANCE));

@@ -46,6 +46,9 @@ public class PluginModule extends AbstractModule {
         oidcCfg.setClientId(cfg.getClientId());
         oidcCfg.setSecret(cfg.getSecret());
         oidcCfg.setDiscoveryURI(cfg.getDiscoveryUri());
+        if (cfg.getScopes() != null) {
+            oidcCfg.setScope(String.join(" ", cfg.getScopes()));
+        }
         return oidcCfg;
     }
 

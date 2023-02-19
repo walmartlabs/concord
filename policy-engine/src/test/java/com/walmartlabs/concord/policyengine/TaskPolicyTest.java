@@ -32,7 +32,9 @@ public class TaskPolicyTest {
 
     @Test
     public void testDenyByTaskName() {
-        TaskRule r = new TaskRule(null, "taskName-.*", null, null, null);
+        TaskRule r = TaskRule.builder()
+                .taskName("taskName-.*")
+                .build();
 
         PolicyRules<TaskRule> rules = new PolicyRules<>(null, null, Collections.singletonList(r));
 
@@ -44,8 +46,13 @@ public class TaskPolicyTest {
 
     @Test
     public void testAllowByTaskName() {
-        TaskRule allowRule = new TaskRule(null, "taskName-1234", null, null, null);
-        TaskRule denyRule = new TaskRule(null, ".*", null, null, null);
+        TaskRule allowRule = TaskRule.builder()
+                .taskName("taskName-1234")
+                .build();
+
+        TaskRule denyRule = TaskRule.builder()
+                .taskName(".*")
+                .build();
 
         PolicyRules<TaskRule> rules = new PolicyRules<>(Collections.singletonList(allowRule), null, Collections.singletonList(denyRule));
 
@@ -57,7 +64,10 @@ public class TaskPolicyTest {
 
     @Test
     public void testDenyByMethodName() {
-        TaskRule r = new TaskRule(null, "taskName-.*", "foo", null, null);
+        TaskRule r = TaskRule.builder()
+                .taskName("taskName-.*")
+                .method("foo")
+                .build();
 
         PolicyRules<TaskRule> rules = new PolicyRules<>(null, null, Collections.singletonList(r));
 
@@ -69,8 +79,15 @@ public class TaskPolicyTest {
 
     @Test
     public void testAllowByMethodName() {
-        TaskRule allowRule = new TaskRule(null, "taskName-1234", "foo", null, null);
-        TaskRule denyRule = new TaskRule(null, ".*", ".*", null, null);
+        TaskRule allowRule = TaskRule.builder()
+                .taskName("taskName-1234")
+                .method("foo")
+                .build();
+
+        TaskRule denyRule = TaskRule.builder()
+                .taskName(".*")
+                .method(".*")
+                .build();
 
         PolicyRules<TaskRule> rules = new PolicyRules<>(Collections.singletonList(allowRule), null, Collections.singletonList(denyRule));
 
@@ -82,10 +99,23 @@ public class TaskPolicyTest {
 
     @Test
     public void testDenyByStringParams() {
-        TaskRule.Param p1 = new TaskRule.Param(1, null, false, Collections.singletonList("value-1"));
-        TaskRule.Param p2 = new TaskRule.Param(0, null, false, Collections.singletonList("value-2"));
+        TaskRule.Param p1 = TaskRule.Param.builder()
+                        .index(1)
+                        .protectedVariable(false)
+                        .addValues("value-1")
+                        .build();
 
-        TaskRule r = new TaskRule(null, "taskName-.*", "foo", Arrays.asList(p1, p2), null);
+        TaskRule.Param p2 = TaskRule.Param.builder()
+                .index(0)
+                .protectedVariable(false)
+                .addValues("value-2")
+                .build();
+
+        TaskRule r = TaskRule.builder()
+                .taskName("taskName-.*")
+                .method("foo")
+                .addParams(p1, p2)
+                .build();
 
         PolicyRules<TaskRule> rules = new PolicyRules<>(null, null, Collections.singletonList(r));
 
@@ -97,9 +127,18 @@ public class TaskPolicyTest {
 
     @Test
     public void testDenyByMapStringParam() {
-        TaskRule.Param p1 = new TaskRule.Param(1, "k", false, Collections.singletonList("v"));
+        TaskRule.Param p1 = TaskRule.Param.builder()
+                .index(1)
+                .name("k")
+                .protectedVariable(false)
+                .addValues("v")
+                .build();
 
-        TaskRule r = new TaskRule(null, "taskName-.*", "foo", Collections.singletonList(p1), null);
+        TaskRule r = TaskRule.builder()
+                .taskName("taskName-.*")
+                .method("foo")
+                .addParams(p1)
+                .build();
 
         PolicyRules<TaskRule> rules = new PolicyRules<>(null, null, Collections.singletonList(r));
 
@@ -111,9 +150,18 @@ public class TaskPolicyTest {
 
     @Test
     public void testDenyByMapMapStringParam() {
-        TaskRule.Param p1 = new TaskRule.Param(1, "k.kk", false, Collections.singletonList("v"));
+        TaskRule.Param p1 = TaskRule.Param.builder()
+                .index(1)
+                .name("k.kk")
+                .protectedVariable(false)
+                .addValues("v")
+                .build();
 
-        TaskRule r = new TaskRule(null, "taskName-.*", "foo", Collections.singletonList(p1), null);
+        TaskRule r = TaskRule.builder()
+                .taskName("taskName-.*")
+                .method("foo")
+                .addParams(p1)
+                .build();
 
         PolicyRules<TaskRule> rules = new PolicyRules<>(null, null, Collections.singletonList(r));
 
@@ -125,9 +173,18 @@ public class TaskPolicyTest {
 
     @Test
     public void testDenyByMapMapStringParamNull() {
-        TaskRule.Param p1 = new TaskRule.Param(1, "k.kk", false, Collections.singletonList(null));
+        TaskRule.Param p1 = TaskRule.Param.builder()
+                .index(1)
+                .name("k.kk")
+                .protectedVariable(false)
+                .values(Collections.singletonList(null))
+                .build();
 
-        TaskRule r = new TaskRule(null, "taskName-.*", "foo", Collections.singletonList(p1), null);
+        TaskRule r = TaskRule.builder()
+                .taskName("taskName-.*")
+                .method("foo")
+                .addParams(p1)
+                .build();
 
         PolicyRules<TaskRule> rules = new PolicyRules<>(null, null, Collections.singletonList(r));
 
@@ -139,9 +196,16 @@ public class TaskPolicyTest {
 
     @Test
     public void testDenyByTaskResultsSimpleObject() {
-        TaskRule.TaskResult tr1 = new TaskRule.TaskResult("taskName-12", null, Collections.singletonList("result1"));
+        TaskRule.TaskResult tr1 = TaskRule.TaskResult.builder()
+                .task("taskName-12")
+                .addValues("result1")
+                .build();
 
-        TaskRule r = new TaskRule(null, "taskName-.*", "foo", null, Collections.singletonList(tr1));
+        TaskRule r = TaskRule.builder()
+                .taskName("taskName-.*")
+                .method("foo")
+                .addTaskResults(tr1)
+                .build();
 
         PolicyRules<TaskRule> rules = new PolicyRules<>(null, null, Collections.singletonList(r));
 
@@ -153,9 +217,17 @@ public class TaskPolicyTest {
 
     @Test
     public void testDenyByTaskResultsMap() {
-        TaskRule.TaskResult tr1 = new TaskRule.TaskResult("taskName-12", "k.k1", Collections.singletonList("result1"));
+        TaskRule.TaskResult tr1 = TaskRule.TaskResult.builder()
+                .task("taskName-12")
+                .result("k.k1")
+                .addValues("result1")
+                .build();
 
-        TaskRule r = new TaskRule(null, "taskName-.*", "foo", null, Collections.singletonList(tr1));
+        TaskRule r = TaskRule.builder()
+                .taskName("taskName-.*")
+                .method("foo")
+                .addTaskResults(tr1)
+                .build();
 
         PolicyRules<TaskRule> rules = new PolicyRules<>(null, null, Collections.singletonList(r));
 

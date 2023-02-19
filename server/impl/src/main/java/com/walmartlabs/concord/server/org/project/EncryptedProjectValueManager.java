@@ -21,7 +21,7 @@ package com.walmartlabs.concord.server.org.project;
  */
 
 import com.walmartlabs.concord.server.cfg.SecretStoreConfiguration;
-import com.walmartlabs.concord.server.org.secret.SecretUtils;
+import com.walmartlabs.concord.common.secret.SecretUtils;
 
 import javax.crypto.BadPaddingException;
 import javax.crypto.IllegalBlockSizeException;

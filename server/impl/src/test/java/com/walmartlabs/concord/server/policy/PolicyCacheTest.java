@@ -66,9 +66,9 @@ public class PolicyCacheTest {
         assertEquals(1, merged.size());
 
         PolicyEngineRules actualRules = merged.values().iterator().next().rules();
-        assertEquals(1, actualRules.getEntityRules().getDeny().size());
+        assertEquals(1, actualRules.entityRules().getDeny().size());
 
-        EntityRule actualRule = actualRules.getEntityRules().getDeny().get(0);
-        assertEquals(conditions, actualRule.getConditions());
+        EntityRule actualRule = actualRules.entityRules().getDeny().get(0);
+        assertEquals(conditions, actualRule.conditions());
     }
 }

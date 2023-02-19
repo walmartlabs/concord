@@ -114,7 +114,7 @@ public class ConsoleService implements Resource {
     public UserResponse whoami() {
         UserPrincipal p = UserPrincipal.getCurrent();
         if (p == null) {
-            throw new ConcordApplicationException("Can't determine current user: pricipal not found",
+            throw new ConcordApplicationException("Can't determine current user: principal not found",
                     Status.INTERNAL_SERVER_ERROR);
         }
 

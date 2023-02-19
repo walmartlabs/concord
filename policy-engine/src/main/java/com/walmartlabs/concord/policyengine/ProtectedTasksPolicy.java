@@ -33,6 +33,6 @@ public class ProtectedTasksPolicy {
             return false;
         }
 
-        return rule.getNames().contains(taskName);
+        return rule.names().contains(taskName);
     }
 }

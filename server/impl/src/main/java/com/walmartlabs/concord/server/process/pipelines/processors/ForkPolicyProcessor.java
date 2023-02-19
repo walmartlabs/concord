@@ -38,6 +38,7 @@ import javax.inject.Inject;
 import javax.inject.Named;
 import java.text.MessageFormat;
 import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
 
 import static com.walmartlabs.concord.server.jooq.tables.ProcessQueue.PROCESS_QUEUE;
@@ -92,11 +93,11 @@ public class ForkPolicyProcessor implements PayloadProcessor {
         for (CheckResult.Item<ForkDepthRule, Integer> e : errors) {
             ForkDepthRule r = e.getRule();
 
-            String msg = r.getMsg() != null ? r.getMsg() : DEFAULT_POLICY_MESSAGE;
+            String msg = r.msg() != null ? r.msg() : DEFAULT_POLICY_MESSAGE;
             int actualCount = e.getEntity();
-            int limit = r.getMax();
+            int limit = r.max();
 
-            sb.append(MessageFormat.format(msg, actualCount, limit)).append(';');
+            sb.append(MessageFormat.format(Objects.requireNonNull(msg), actualCount, limit)).append(';');
         }
         return sb.toString();
     }

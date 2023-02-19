@@ -967,6 +967,8 @@ public class MainTest {
 
         assertLogAtLeast(allLogs, 2, ".*#3.*x=124.*");
         assertLogAtLeast(allLogs, 2, ".*#3.*y=345.*");
+
+        assertLog(allLogs, ".*Event Name: first.*");
     }
 
     @Test

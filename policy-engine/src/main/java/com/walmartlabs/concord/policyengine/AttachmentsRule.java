@@ -20,54 +20,30 @@ package com.walmartlabs.concord.policyengine;
  * =====
  */
 
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import org.immutables.value.Value;
 
+import javax.annotation.Nullable;
 import java.io.Serializable;
-import java.util.Objects;
 
-public class AttachmentsRule implements Serializable {
+@Value.Immutable
+@JsonInclude(JsonInclude.Include.NON_EMPTY)
+@JsonSerialize(as = ImmutableAttachmentsRule.class)
+@JsonDeserialize(as = ImmutableAttachmentsRule.class)
+public interface AttachmentsRule extends Serializable {
 
-    private static final long serialVersionUID = 1L;
+    long serialVersionUID = 1L;
 
-    private final String msg;
-    private final Long maxSizeInBytes;
+    @Nullable
+    @Value.Parameter
+    String msg();
 
-    @JsonCreator
-    public AttachmentsRule(@JsonProperty("msg") String msg,
-                           @JsonProperty("maxSizeInBytes") Long maxSizeInBytes) {
+    @Value.Parameter
+    long maxSizeInBytes();
 
-        this.msg = msg;
-        this.maxSizeInBytes = maxSizeInBytes;
-    }
-
-    public String getMsg() {
-        return msg;
-    }
-
-    public Long getMaxSizeInBytes() {
-        return maxSizeInBytes;
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        AttachmentsRule that = (AttachmentsRule) o;
-        return Objects.equals(msg, that.msg) &&
-                Objects.equals(maxSizeInBytes, that.maxSizeInBytes);
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(msg, maxSizeInBytes);
-    }
-
-    @Override
-    public String toString() {
-        return "AttachmentsRule{" +
-                "msg='" + msg + '\'' +
-                ", maxSizeInBytes=" + maxSizeInBytes +
-                '}';
+    static AttachmentsRule of(String msg, Long maxSizeInBytes) {
+        return ImmutableAttachmentsRule.of(msg, maxSizeInBytes);
     }
 }
