@@ -12,7 +12,8 @@ process arguments
 ([#715](https://github.com/walmartlabs/concord/pull/715)).
 
 ### Changed
-
+- runtime-v2: better loop items serialization
+([#714](https://github.com/walmartlabs/concord/pull/714));
 - concord-agent, queue-client: make more delays configurable
 ([#705](https://github.com/walmartlabs/concord/pull/705));
 - console2: single vertical scroll for process log page
