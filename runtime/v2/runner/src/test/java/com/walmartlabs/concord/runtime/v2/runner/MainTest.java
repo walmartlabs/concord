@@ -1190,6 +1190,17 @@ public class MainTest {
     }
 
     @Test
+    public void loopItemSerialization() throws Exception {
+        deploy("loopSerializationError");
+
+        save(ProcessConfiguration.builder()
+                .build());
+
+        byte[] log = run();
+        assertLog(log, ".*name=one.*");
+    }
+
+    @Test
     public void testThrowExpression() throws Exception {
         deploy("throwExpression");
 
