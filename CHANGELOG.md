@@ -1,14 +1,19 @@
 # Change log
 
-## [1.98.1] - Unreleased
+## [1.99.0] - Unreleased
 
 ### Added
+
 - policy-engine, server: initial support for the KV store
 policies
-([#702](https://github.com/walmartlabs/concord/pull/702)).
+([#702](https://github.com/walmartlabs/concord/pull/702));
+- concord-server: pass external trigger event ID via
+process arguments
+([#715](https://github.com/walmartlabs/concord/pull/715)).
 
 ### Changed
-concord-agent, queue-client: make more delays configurable
+
+- concord-agent, queue-client: make more delays configurable
 ([#705](https://github.com/walmartlabs/concord/pull/705));
 - console2: single vertical scroll for process log page
 ([#696](https://github.com/walmartlabs/concord/pull/696));
