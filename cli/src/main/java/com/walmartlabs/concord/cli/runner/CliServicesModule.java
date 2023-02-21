@@ -30,6 +30,7 @@ import com.walmartlabs.concord.runtime.v2.runner.checkpoints.CheckpointService;
 import com.walmartlabs.concord.runtime.v2.runner.guice.BaseRunnerModule;
 import com.walmartlabs.concord.runtime.v2.runner.logging.RunnerLogger;
 import com.walmartlabs.concord.runtime.v2.runner.logging.SimpleLogger;
+import com.walmartlabs.concord.runtime.v2.runner.remote.EventRecordingExecutionListener;
 import com.walmartlabs.concord.runtime.v2.sdk.DockerService;
 import com.walmartlabs.concord.runtime.v2.sdk.LockService;
 import com.walmartlabs.concord.runtime.v2.sdk.SecretService;
@@ -44,16 +45,19 @@ public class CliServicesModule extends AbstractModule {
     private final Path workDir;
     private final VaultProvider vaultProvider;
     private final DependencyManager dependencyManager;
+    private final boolean verbose;
 
     public CliServicesModule(Path secretStoreDir,
                              Path workDir,
                              VaultProvider vaultProvider,
-                             DependencyManager dependencyManager) {
+                             DependencyManager dependencyManager,
+                             boolean verbose) {
 
         this.secretStoreDir = secretStoreDir;
         this.workDir = workDir;
         this.vaultProvider = vaultProvider;
         this.dependencyManager = dependencyManager;
+        this.verbose = verbose;
     }
 
     @Override
@@ -76,7 +80,10 @@ public class CliServicesModule extends AbstractModule {
         bind(DependencyManager.class).toInstance(dependencyManager);
         bind(com.walmartlabs.concord.runtime.v2.sdk.DependencyManager.class).to(DefaultDependencyManager.class).in(Singleton.class);
 
-        Multibinder.newSetBinder(binder(), ExecutionListener.class);
+        Multibinder<ExecutionListener> executionListeners = Multibinder.newSetBinder(binder(), ExecutionListener.class);
+        if (verbose) {
+            executionListeners.addBinding().to(EventLoggerExecutionListener.class);
+        }
     }
 
     @SuppressWarnings("unchecked")

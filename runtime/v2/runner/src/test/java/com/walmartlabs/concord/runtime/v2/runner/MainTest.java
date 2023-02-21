@@ -1228,6 +1228,17 @@ public class MainTest {
         assertLog(log, ".*Hello, " + Pattern.quote("{k1=v1, k2=v1}") + ".*");
     }
 
+    @Test
+    public void loopItemSerialization() throws Exception {
+        deploy("loopSerializationError");
+
+        save(ProcessConfiguration.builder()
+                .build());
+
+        byte[] log = run();
+        assertLog(log, ".*name=one.*");
+    }
+
     private void deploy(String resource) throws URISyntaxException, IOException {
         Path src = Paths.get(MainTest.class.getResource(resource).toURI());
         IOUtils.copy(src, workDir);
