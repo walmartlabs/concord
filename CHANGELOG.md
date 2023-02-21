@@ -13,6 +13,9 @@ process arguments
 
 ### Changed
 
+- concord-server: refactor ConcordLdapContextFactory
+implementation
+([#695](https://github.com/walmartlabs/concord/pull/695));
 - runtime-v2: improve serialization of `loop` items
 ([#714](https://github.com/walmartlabs/concord/pull/714));
 - concord-agent, queue-client: make more delays configurable
