@@ -4,6 +4,9 @@
 
 ### Added
 
+- concord-server: added 'last updated at' field for kv
+records
+([#701])(https://github.com/walmartlabs/concord/pull/701));
 - policy-engine, server: initial support for the KV store
 policies
 ([#702](https://github.com/walmartlabs/concord/pull/702));
