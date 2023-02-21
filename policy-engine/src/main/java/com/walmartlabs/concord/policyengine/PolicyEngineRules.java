@@ -4,7 +4,7 @@ package com.walmartlabs.concord.policyengine;
  * *****
  * Concord
  * -----
- * Copyright (C) 2017 - 2018 Walmart Inc.
+ * Copyright (C) 2017 - 2023 Walmart Inc.
  * -----
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -30,10 +30,8 @@ import org.immutables.value.Value;
 
 import javax.annotation.Nullable;
 import java.io.Serializable;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 
 @Value.Immutable
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
@@ -117,6 +115,10 @@ public interface PolicyEngineRules extends Serializable {
     @JsonProperty("cronTrigger")
     @Nullable
     CronTriggerRule cronTriggerRule();
+
+    @JsonProperty("kv")
+    @Nullable
+    KvRule kvRule();
 
     static ImmutablePolicyEngineRules.Builder builder() {
         return ImmutablePolicyEngineRules.builder();

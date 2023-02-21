@@ -1706,7 +1706,7 @@ public class YamlErrorParserTest extends AbstractParserTest {
     @Test
     public void test1005() throws Exception {
         String msg =
-                "(005.yml): Error @ line: 6, col: 14. Invalid value type, expected: OBJECT, got: STRING\n" +
+                "(005.yml): Error @ line: 6, col: 14. Invalid value type, expected: OBJECT or EXPRESSION, got: ARRAY\n" +
                         "\twhile processing steps:\n" +
                         "\t'runAs' @ line: 6, col: 7\n" +
                         "\t\t'form' @ line: 3, col: 7\n" +
@@ -1719,7 +1719,7 @@ public class YamlErrorParserTest extends AbstractParserTest {
     @Test
     public void test1006() throws Exception {
         String msg =
-                "(006.yml): Error @ line: 10, col: 15. Invalid value type, expected: OBJECT, got: STRING\n" +
+                "(006.yml): Error @ line: 10, col: 15. Invalid value type, expected: OBJECT or EXPRESSION, got: ARRAY\n" +
                         "\twhile processing steps:\n" +
                         "\t'values' @ line: 10, col: 7\n" +
                         "\t\t'form' @ line: 3, col: 7\n" +

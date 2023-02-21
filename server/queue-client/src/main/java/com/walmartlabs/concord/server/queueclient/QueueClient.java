@@ -115,9 +115,6 @@ public class QueueClient {
             DISCONNECTING
         }
 
-        private static final long PROCESS_REQUEST_DELAY = 1000;
-        private static final long RECONNECT_DELAY = 10000;
-
         private final AtomicLong requestIdGenerator = new AtomicLong();
 
         private final String agentId;
@@ -129,6 +126,9 @@ public class QueueClient {
         private final long pingInterval;
         private final long maxNoActivityPeriod;
         private final long connectTimeout;
+
+        private final long processRequestDelay;
+        private final long reconnectDelay;
 
         private WebSocketClient client;
         private long lastRequestTimestamp;
@@ -147,6 +147,9 @@ public class QueueClient {
             this.pingInterval = cfg.getPingInterval();
             this.maxNoActivityPeriod = cfg.getMaxNoActivityPeriod();
             this.connectTimeout = cfg.getConnectTimeout();
+
+            this.processRequestDelay = cfg.getProcessRequestDelay();
+            this.reconnectDelay = cfg.getReconnectDelay();
 
             this.state = new AtomicReference<>(State.CONNECTING);
         }
@@ -169,14 +172,14 @@ public class QueueClient {
                         case CONNECTED: {
                             processRequests(session);
                             processPing(session);
-                            sleep(PROCESS_REQUEST_DELAY);
+                            sleep(processRequestDelay);
                             break;
                         }
                         case DISCONNECTING: {
                             close(session);
                             session = null;
                             state.set(State.CONNECTING);
-                            sleep(RECONNECT_DELAY);
+                            sleep(reconnectDelay);
                             break;
                         }
                     }
