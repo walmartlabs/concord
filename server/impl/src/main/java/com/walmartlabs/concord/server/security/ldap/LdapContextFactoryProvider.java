@@ -34,7 +34,7 @@ public class LdapContextFactoryProvider implements Provider<LdapContextFactory> 
     private final LdapConfiguration cfg;
 
     @Inject
-    public LdapContextFactoryProvider(LdapConfiguration cfg) throws NamingException {
+    public LdapContextFactoryProvider(LdapConfiguration cfg) {
         this.cfg = cfg;
     }
 
