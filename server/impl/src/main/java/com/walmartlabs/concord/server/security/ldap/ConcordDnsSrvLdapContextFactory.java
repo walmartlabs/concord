@@ -61,11 +61,8 @@ public class ConcordDnsSrvLdapContextFactory implements LdapContextFactory {
     3. while getContext check for communication exception and update context with next URL in SRV list
     4. on SRV list empty, call step 1.
      */
-    public ConcordDnsSrvLdapContextFactory(LdapConfiguration cfg) throws NamingException {
+    public ConcordDnsSrvLdapContextFactory(LdapConfiguration cfg) {
         this.cfg = cfg;
-
-        this.refreshSRVList();
-
         this.setLdapContextFactory(getNewContextInstance(resolveUrl()));
     }
 
@@ -121,7 +118,7 @@ public class ConcordDnsSrvLdapContextFactory implements LdapContextFactory {
         throw new IllegalStateException("Too deep, max retries limit reached with ldap url identifier");
     }
 
-    private void refreshSRVList() throws NamingException {
+    public void refreshSRVList() throws NamingException {
         if (cfg.getDnsSRVName() != null) {
             this.setLdapUrlIterator(getLdapServers(cfg.getDnsSRVName()).iterator());
         }
