@@ -1,0 +1,5 @@
+flows:
+  default:
+    - set:
+        items: [1, 2, 3]
+        filteredItems: ${items.stream().filter(i -> i == 42).findFirst().orElseGet(() -> throw('42 not found'))}
