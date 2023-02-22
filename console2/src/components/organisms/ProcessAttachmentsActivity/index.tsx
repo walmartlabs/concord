@@ -28,6 +28,7 @@ import RequestErrorActivity from '../RequestErrorActivity';
 import { useCallback } from 'react';
 import { usePolling } from '../../../api/usePolling';
 import { ConcordId } from '../../../api/common';
+import {attempt} from "lodash";
 
 interface ExternalProps {
     instanceId: ConcordId;
@@ -63,7 +64,9 @@ const ProcessAttachmentsActivity = ({
 };
 
 const makeAttachmentsList = (data: string[]): string[] => {
-    return data.filter((attachment) => attachment.indexOf('_state') < 0);
+    return data
+        .filter((attachment) => attachment.indexOf('_state') < 0)
+        .filter((attachment) => attachment.indexOf('_session_files') < 0);
 };
 
 export default ProcessAttachmentsActivity;
