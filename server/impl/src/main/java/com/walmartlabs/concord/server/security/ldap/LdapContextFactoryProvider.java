@@ -31,19 +31,25 @@ import javax.naming.NamingException;
 @Named
 public class LdapContextFactoryProvider implements Provider<LdapContextFactory> {
 
-    private final LdapContextFactory ldapContextFactory;
+    private final LdapConfiguration cfg;
 
     @Inject
     public LdapContextFactoryProvider(LdapConfiguration cfg) throws NamingException {
-        if (cfg.getDnsSRVName() != null) {
-            this.ldapContextFactory = new ConcordDnsSrvLdapContextFactory(cfg);
-        } else {
-            this.ldapContextFactory = new ConcordLdapContextFactory(cfg);
-        }
+        this.cfg = cfg;
     }
 
     @Override
     public LdapContextFactory get() {
-        return ldapContextFactory;
+        if (cfg.getDnsSRVName() != null) {
+            ConcordDnsSrvLdapContextFactory factory = new ConcordDnsSrvLdapContextFactory(cfg);
+            try {
+                factory.refreshSRVList();
+            } catch (NamingException e) {
+                throw new RuntimeException("ConcordDnsSrvLdapContextFactory init error", e);
+            }
+            return factory;
+        } else {
+            return new ConcordLdapContextFactory(cfg);
+        }
     }
 }
