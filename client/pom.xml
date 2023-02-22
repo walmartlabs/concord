@@ -171,6 +171,12 @@
                             <item>
                                 <code>java.field.serialVersionUIDUnchanged</code>
                             </item>
+                            <item>
+                                <code>java.method.parameterTypeParameterChanged</code>
+                            </item>
+                            <item>
+                                <code>java.method.returnTypeTypeParametersChanged</code>
+                            </item>
                         </revapi.ignore>
                     </analysisConfiguration>
                 </configuration>
