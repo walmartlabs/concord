@@ -24,19 +24,27 @@ import com.walmartlabs.concord.runtime.v2.runner.SensitiveDataHolder;
 import com.walmartlabs.concord.runtime.v2.sdk.SensitiveData;
 
 import java.lang.reflect.Method;
+import java.util.Arrays;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
 public class SensitiveDataProcessor {
 
     public static void process(Object value, Method method) {
-        if (method.getAnnotation(SensitiveData.class) == null) {
+        SensitiveData a = method.getAnnotation(SensitiveData.class);
+        if (a == null) {
             return;
         }
 
         if (value instanceof String) {
             SensitiveDataHolder.getInstance().add((String)value);
         } else if (value instanceof Map) {
-            for (Object v : ((Map<?, ?>) value).values()) {
+            Map<?, ?> m = (Map<?, ?>) value;
+            Set<?> keys = a.keys() != null && a.keys().length > 0 ? new HashSet<Object>(Arrays.asList(a.keys())) : m.keySet();
+
+            for (Object key : keys) {
+                Object v = m.get(key);
                 if (v instanceof String) {
                     SensitiveDataHolder.getInstance().add((String)v);
                 }

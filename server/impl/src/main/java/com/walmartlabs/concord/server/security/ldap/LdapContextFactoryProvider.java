@@ -4,7 +4,7 @@ package com.walmartlabs.concord.server.security.ldap;
  * *****
  * Concord
  * -----
- * Copyright (C) 2017 - 2019 Walmart Inc.
+ * Copyright (C) 2017 - 2022 Walmart Inc.
  * -----
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -26,29 +26,24 @@ import org.apache.shiro.realm.ldap.LdapContextFactory;
 import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Provider;
-import java.time.Duration;
+import javax.naming.NamingException;
 
 @Named
-public class LdapManagerProvider implements Provider<LdapManager> {
+public class LdapContextFactoryProvider implements Provider<LdapContextFactory> {
 
-    private final LdapManager ldapManager;
+    private final LdapContextFactory ldapContextFactory;
 
     @Inject
-    public LdapManagerProvider(LdapConfiguration cfg,
-                                 LdapContextFactory ctxFactory) {
-
-        LdapManager manager = new LdapManagerImpl(cfg, ctxFactory);
-
-        Duration cacheDuration = cfg.getCacheDuration();
-        if (cacheDuration != null) {
-            this.ldapManager = new CachingLdapManager(cacheDuration, manager);
+    public LdapContextFactoryProvider(LdapConfiguration cfg) throws NamingException {
+        if (cfg.getDnsSRVName() != null) {
+            this.ldapContextFactory = new ConcordDnsSrvLdapContextFactory(cfg);
         } else {
-            this.ldapManager = manager;
+            this.ldapContextFactory = new ConcordLdapContextFactory(cfg);
         }
     }
 
     @Override
-    public LdapManager get() {
-        return ldapManager;
+    public LdapContextFactory get() {
+        return ldapContextFactory;
     }
 }

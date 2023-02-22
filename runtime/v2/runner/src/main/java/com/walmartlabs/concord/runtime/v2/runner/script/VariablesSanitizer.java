@@ -20,10 +20,7 @@ package com.walmartlabs.concord.runtime.v2.runner.script;
  * =====
  */
 
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 public final class VariablesSanitizer {
@@ -42,7 +39,7 @@ public final class VariablesSanitizer {
                     .collect(Collectors.toList());
         } else if (scriptObj instanceof Map) {
             Map<Object, Object> m = (Map<Object, Object>) scriptObj;
-            Map<Object, Object> result = new HashMap<>();
+            Map<Object, Object> result = new LinkedHashMap<>();
             m.forEach((key, value) -> result.put(sanitize(key), sanitize(value)));
             return result;
         } else {

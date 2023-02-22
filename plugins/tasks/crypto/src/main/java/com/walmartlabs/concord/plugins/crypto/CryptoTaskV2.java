@@ -79,7 +79,7 @@ public class CryptoTaskV2 implements Task {
         return m;
     }
 
-    @SensitiveData
+    @SensitiveData(keys = {"password"})
     public Map<String, String> exportCredentials(String orgName, String name, @SensitiveData String password) throws Exception {
         UsernamePassword credentials = secretService.exportCredentials(orgName, name, password);
 
@@ -118,6 +118,7 @@ public class CryptoTaskV2 implements Task {
         return secretService.encryptString(orgName, projectName, value);
     }
 
+    @SensitiveData
     public String decryptString(String s) throws Exception {
         return secretService.decryptString(s);
     }

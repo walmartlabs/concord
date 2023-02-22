@@ -44,6 +44,7 @@ import com.walmartlabs.concord.runtime.v2.runner.logging.LoggerProvider;
 import com.walmartlabs.concord.runtime.v2.runner.logging.LoggingClient;
 import com.walmartlabs.concord.runtime.v2.runner.logging.LoggingConfigurator;
 import com.walmartlabs.concord.runtime.v2.runner.logging.RunnerLogger;
+import com.walmartlabs.concord.runtime.v2.runner.remote.EventRecordingExecutionListener;
 import com.walmartlabs.concord.runtime.v2.runner.tasks.TaskCallListener;
 import com.walmartlabs.concord.runtime.v2.runner.tasks.TaskCallPolicyChecker;
 import com.walmartlabs.concord.runtime.v2.runner.tasks.TaskResultListener;
@@ -134,7 +135,13 @@ public class MainTest {
                 taskCallListeners.addBinding().to(TaskCallPolicyChecker.class);
                 taskCallListeners.addBinding().to(TaskResultListener.class);
 
-                Multibinder.newSetBinder(binder(), ExecutionListener.class);
+                Multibinder<ExecutionListener> executionListeners = Multibinder.newSetBinder(binder(), ExecutionListener.class);
+                executionListeners.addBinding().toInstance(new ExecutionListener(){
+                    @Override
+                    public void beforeProcessStart() {
+                        SensitiveDataHolder.getInstance().get().clear();
+                    }
+                });
             }
         };
 
@@ -1190,6 +1197,32 @@ public class MainTest {
     }
 
     @Test
+    public void loopItemSerialization() throws Exception {
+        deploy("loopSerializationError");
+
+        save(ProcessConfiguration.builder()
+                .build());
+
+        byte[] log = run();
+        assertLog(log, ".*name=one.*");
+    }
+
+    @Test
+    public void testThrowExpression() throws Exception {
+        deploy("throwExpression");
+
+        save(ProcessConfiguration.builder()
+                .build());
+
+        try {
+            run();
+            fail("exception expected");
+        } catch (UserDefinedException e) {
+            assertEquals("42 not found", e.getMessage());
+        }
+    }
+
+    @Test
     public void testSensitiveData() throws Exception {
         deploy("sensitiveData");
 
@@ -1199,7 +1232,15 @@ public class MainTest {
         byte[] log = run();
         assertLog(log, ".*" + Pattern.quote("sensitive: ******") + ".*");
         assertLog(log, ".*" + Pattern.quote("log value: ******") + ".*");
+        assertLog(log, ".*" + Pattern.quote("hack: B O O M") + ".*");
+
+        assertLog(log, ".*" + Pattern.quote("map: {nonSecretButMasked=******, secret=******}") + ".*");
+        assertLog(log, ".*" + Pattern.quote("map: {nonSecret=non secret value, secret=******}") + ".*");
+
         assertLog(log, ".*" + Pattern.quote("plain: plain") + ".*");
+
+        log = resume("ev1", ProcessConfiguration.builder().build());
+        assertLog(log, ".*" + Pattern.quote("mySecret after suspend: ******") + ".*");
     }
 
     private void deploy(String resource) throws URISyntaxException, IOException {
@@ -1574,6 +1615,22 @@ public class MainTest {
         @SensitiveData
         public String getSensitive(String str) {
             return str;
+        }
+
+        @SensitiveData
+        public Map<String, String> getSensitiveMap(String str) {
+            Map<String, String> result = new LinkedHashMap<>();
+            result.put("nonSecretButMasked", "some value");
+            result.put("secret", str);
+            return result;
+        }
+
+        @SensitiveData(keys = {"secret"})
+        public Map<String, String> getSensitiveMapStrict(String str) {
+            Map<String, String> result = new LinkedHashMap<>();
+            result.put("nonSecret", "non secret value");
+            result.put("secret", str);
+            return result;
         }
 
         public String getPlain(String str) {

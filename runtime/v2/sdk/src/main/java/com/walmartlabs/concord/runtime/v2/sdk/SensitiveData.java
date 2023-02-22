@@ -48,4 +48,6 @@ import static java.lang.annotation.ElementType.PARAMETER;
 @Target({PARAMETER, METHOD})
 @Retention(RetentionPolicy.RUNTIME)
 public @interface SensitiveData {
+
+    String[] keys() default {};
 }

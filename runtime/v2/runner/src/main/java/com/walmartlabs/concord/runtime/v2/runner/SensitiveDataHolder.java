@@ -20,6 +20,7 @@ package com.walmartlabs.concord.runtime.v2.runner;
  * =====
  */
 
+import java.util.Collection;
 import java.util.Set;
 import java.util.concurrent.CopyOnWriteArraySet;
 
@@ -37,7 +38,15 @@ public class SensitiveDataHolder {
         return sensitiveData;
     }
 
+    public boolean empty() {
+        return sensitiveData.isEmpty();
+    }
+
     public void add(String sensitiveData) {
         this.sensitiveData.add(sensitiveData);
+    }
+
+    public void addAll(Collection<String> sensitiveData) {
+        this.sensitiveData.addAll(sensitiveData);
     }
 }

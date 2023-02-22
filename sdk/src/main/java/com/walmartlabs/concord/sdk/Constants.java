@@ -478,6 +478,11 @@ public class Constants {
          */
         @Deprecated
         public static final String DEPENDENCY_VERSIONS_FILE_NAME = "dependencyversions.properties";
+
+        /**
+         * File which contains sensitive data of process.
+         */
+        public static final String SENSITIVE_DATA_FILE_NAME = "sensitive_data.json";
     }
 
     public static class Flows {

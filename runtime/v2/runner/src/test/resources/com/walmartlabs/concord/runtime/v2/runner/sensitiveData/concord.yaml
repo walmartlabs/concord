@@ -7,4 +7,13 @@ flows:
 
     - log: "log value: ${mySecret}"
 
+    - log: "hack: ${mySecret.replaceAll('.', '$0 ')}"
+
+    - log: "map: ${sensitiveTask.getSensitiveMap('XXX-MAP')}"
+    - log: "map: ${sensitiveTask.getSensitiveMapStrict('XXX-MAP')}"
+
     - log: "plain: ${sensitiveTask.getPlain('plain')}"
+
+    - suspend: ev1
+
+    - log: "mySecret after suspend: ${mySecret}"
