@@ -24,21 +24,26 @@ import com.walmartlabs.concord.common.IOUtils;
 import com.walmartlabs.concord.common.TemporaryPath;
 import com.walmartlabs.concord.db.AbstractDao;
 import com.walmartlabs.concord.db.MainDB;
+import com.walmartlabs.concord.imports.ImportsListener;
+import com.walmartlabs.concord.process.loader.ImportsNormalizer;
+import com.walmartlabs.concord.process.loader.ProjectLoader;
+import com.walmartlabs.concord.process.loader.model.ProcessDefinition;
 import com.walmartlabs.concord.repository.Repository;
 import com.walmartlabs.concord.server.events.ExternalEventResource;
 import com.walmartlabs.concord.server.org.OrganizationManager;
 import com.walmartlabs.concord.server.org.ResourceAccessLevel;
 import com.walmartlabs.concord.server.org.project.*;
+import com.walmartlabs.concord.server.process.ImportsNormalizerFactory;
 import com.walmartlabs.concord.server.repository.listeners.RepositoryRefreshListener;
 import com.walmartlabs.concord.server.sdk.ConcordApplicationException;
 import org.jooq.Configuration;
-import org.jooq.DSLContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.sonatype.siesta.ValidationErrorsException;
 
 import javax.inject.Inject;
 import javax.inject.Named;
+import java.nio.file.Path;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -54,6 +59,8 @@ public class RepositoryRefresher extends AbstractDao {
     private final ExternalEventResource externalEventResource;
     private final RepositoryDao repositoryDao;
     private final ProjectDao projectDao;
+    private final ProjectLoader projectLoader;
+    private final ImportsNormalizerFactory importsNormalizerFactory;
 
     private final ProjectRepositoryManager projectRepositoryManager;
 
@@ -66,7 +73,9 @@ public class RepositoryRefresher extends AbstractDao {
                                ExternalEventResource externalEventResource,
                                RepositoryDao repositoryDao,
                                ProjectDao projectDao,
-                               ProjectRepositoryManager projectRepositoryManager) {
+                               ProjectRepositoryManager projectRepositoryManager,
+                               ProjectLoader projectLoader,
+                               ImportsNormalizerFactory importsNormalizerFactory) {
 
         super(cfg);
 
@@ -78,6 +87,8 @@ public class RepositoryRefresher extends AbstractDao {
         this.repositoryDao = repositoryDao;
         this.projectDao = projectDao;
         this.projectRepositoryManager = projectRepositoryManager;
+        this.projectLoader = projectLoader;
+        this.importsNormalizerFactory = importsNormalizerFactory;
     }
 
     public void refresh(List<UUID> repositoryIds) {
@@ -121,28 +132,26 @@ public class RepositoryRefresher extends AbstractDao {
         }
 
         try (TemporaryPath tmpRepoPath = IOUtils.tempDir("refreshRepo_")) {
+            Path path = tmpRepoPath.path();
+            ImportsNormalizer normalizer = importsNormalizerFactory.forProject(repositoryEntry.getProjectId());
+
             repositoryManager.withLock(repositoryEntry.getUrl(), () -> {
                 Repository repo = repositoryManager.fetch(projectEntry.getId(), repositoryEntry);
-                repo.export(tmpRepoPath.path());
+                repo.export(path);
                 return null;
             });
 
+            ProcessDefinition pd = projectLoader.loadProject(path, normalizer, ImportsListener.NOP_LISTENER)
+                    .projectDefinition();
+
             tx(tx -> {
                 for (RepositoryRefreshListener l : listeners) {
-                    callRefreshListener(tx, repositoryEntry, l, tmpRepoPath);
+                    l.onRefresh(tx, repositoryEntry, path, pd);
                 }
             });
         } catch (Exception e) {
             String errorMessage = e.getCause() != null ? e.getCause().getMessage() : e.getMessage();
             throw new ConcordApplicationException("Error while refreshing repository: \n" + errorMessage, e);
-        }
-    }
-
-    private void callRefreshListener(DSLContext tx, RepositoryEntry repositoryEntry, RepositoryRefreshListener l, TemporaryPath tmpRepo) throws Exception {
-        // copy base repo to a new path just for this listener. Imports may be re-processed
-        try (TemporaryPath listenerTmp = IOUtils.tempDir("refreshRepoListener_")) {
-            IOUtils.copy(tmpRepo.path(), listenerTmp.path());
-            l.onRefresh(tx, repositoryEntry, listenerTmp.path());
         }
     }
 
