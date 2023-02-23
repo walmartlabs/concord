@@ -12,4 +12,12 @@
         </addColumn>
     </changeSet>
 
+    <changeSet id="1990010" author="ybrigo@gmail.com">
+        <addColumn tableName="USERS">
+            <column name="DISABLED_DATE" type="timestamptz">
+                <constraints nullable="true"/>
+            </column>
+        </addColumn>
+    </changeSet>
+
 </databaseChangeLog>
