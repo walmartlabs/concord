@@ -4,6 +4,10 @@
 
 ### Added
 
+- concord-server: implement removal of disabled user
+accounts. Old accounts can now be automatically removed
+(the feature is disabled by default)
+([#716](https://github.com/walmartlabs/concord/pull/716));
 - runtime-v2: allow custom JS lang levels in scripts
 ([#709](https://github.com/walmartlabs/concord/pull/709));
 - runtime-v2: function for throw exception
