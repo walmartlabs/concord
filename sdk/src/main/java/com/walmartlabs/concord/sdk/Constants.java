@@ -395,7 +395,8 @@ public class Constants {
         public static final String JOB_CHECKPOINTS_DIR_NAME = "_checkpoints";
 
         /**
-         * Directory which contains job "attachments": reports, stats, etc.
+         * Directory which contains job "session files":
+         *  files that can be downloaded only with session key.
          */
         public static final String JOB_SESSION_FILES_DIR_NAME = "_session_files";
 
