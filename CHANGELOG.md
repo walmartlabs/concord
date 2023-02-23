@@ -4,6 +4,8 @@
 
 ### Added
 
+- runtime-v2: allow custom JS lang levels in scripts
+([#709](https://github.com/walmartlabs/concord/pull/709));
 - runtime-v2: function for throw exception
 ([#712](https://github.com/walmartlabs/concord/pull/712));
 - concord-server: added 'last updated at' field for kv
