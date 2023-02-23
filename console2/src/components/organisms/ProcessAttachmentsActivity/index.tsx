@@ -28,7 +28,6 @@ import RequestErrorActivity from '../RequestErrorActivity';
 import { useCallback } from 'react';
 import { usePolling } from '../../../api/usePolling';
 import { ConcordId } from '../../../api/common';
-import {attempt} from "lodash";
 
 interface ExternalProps {
     instanceId: ConcordId;
