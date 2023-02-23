@@ -1,0 +1,7 @@
+flows:
+  default:
+    - script: js
+      in:
+        esVersion: 1985
+      body: |
+        console.log("foo");
