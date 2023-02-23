@@ -1,0 +1,10 @@
+flows:
+  default:
+    - script: js
+      in:
+        # front load many KV pairs into the input map, assert all accepted
+        foo: foo
+        bar: bar
+        baz: baz
+        esVersion: 2022
+      body: console.log("ok")
