@@ -33,6 +33,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
+import java.util.function.Consumer;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
@@ -268,6 +269,33 @@ public class ExternalImportsIT extends AbstractServerIT {
 
         // ---
 
+        assertExternalImportValidation(userRepoUrl);
+    }
+
+    @Test
+    public void testExternalImportWithSymlink() throws Exception {
+        // Init repo and add symlink
+        String importRepoUrl = initRepo("externalImportSymlink", importRepo -> {
+            try {
+                Path target = importRepo.resolve("concord.txt");
+                Path linkDir = Files.createDirectory(importRepo.resolve("link_dir"));
+                Path link = linkDir.resolve("concord.yml");
+                Files.createSymbolicLink(link, linkDir.relativize(target));
+            } catch (IOException e) {
+                fail("Error while creating symlink");
+            }
+        });
+
+        String userRepoUrl = initRepo("externalImportTriggerReference");
+        replace(Paths.get(userRepoUrl, "concord.yml"), "{{gitUrl}}", importRepoUrl);
+        commit(Paths.get(userRepoUrl).toFile());
+
+        // ---
+
+        assertExternalImportValidation(userRepoUrl);
+    }
+
+    private void assertExternalImportValidation(String userRepoUrl) throws Exception {
         String orgName = "org_" + randomString();
         OrganizationsApi organizationsApi = new OrganizationsApi(getApiClient());
         organizationsApi.createOrUpdate(new OrganizationEntry().setName(orgName));
@@ -283,6 +311,8 @@ public class ExternalImportsIT extends AbstractServerIT {
                         .setBranch("master"))));
 
         RepositoriesApi repositoriesApi = new RepositoriesApi(getApiClient());
+        GenericOperationResult refreshResp = repositoriesApi.refreshRepository(orgName, projectName, repoName, true);
+        assertTrue(refreshResp.isOk());
         RepositoryValidationResponse resp = repositoriesApi.validateRepository(orgName, projectName, repoName);
         assertTrue(resp.isOk());
     }
@@ -520,11 +550,23 @@ public class ExternalImportsIT extends AbstractServerIT {
         return initRepo(resourceName, null, null, null);
     }
 
+    private static String initRepo(String resourceName, Consumer<Path> fileAdder) throws Exception {
+        return initRepo(resourceName, null, null, null, fileAdder);
+    }
+
     private static String initRepo(String resourceName, String path, String find, String replace) throws Exception {
+        return initRepo(resourceName, path, find, replace, p -> {});
+    }
+
+    private static String initRepo(String resourceName, String path, String find, String replace, Consumer<Path> fileAdder) throws Exception {
+
         Path tmpDir = createTempDir();
 
         File src = new File(ExternalImportsIT.class.getResource(resourceName).toURI());
         IOUtils.copy(src.toPath(), tmpDir);
+
+        // add more files
+        fileAdder.accept(tmpDir);
 
         if (path != null) {
             Path p = tmpDir.resolve(path);
