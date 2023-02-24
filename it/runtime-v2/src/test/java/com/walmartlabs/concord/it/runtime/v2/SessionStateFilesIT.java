@@ -41,6 +41,7 @@ import java.util.Collections;
 import java.util.UUID;
 
 import static com.walmartlabs.concord.it.common.ITUtils.randomString;
+import static com.walmartlabs.concord.it.runtime.v2.ConcordConfiguration.getServerUrlForAgent;
 import static org.junit.jupiter.api.Assertions.*;
 
 public class SessionStateFilesIT extends AbstractTest {
@@ -64,7 +65,7 @@ public class SessionStateFilesIT extends AbstractTest {
         // ---
         Payload payload = new Payload()
                 .archive(resource("sessionFileAccess"))
-                .arg("baseUrl", concord.apiBaseUrl());
+                .arg("baseUrl", getServerUrlForAgent(concord));
 
         ApiClient client = concord.apiClient().setApiKey(cakr.getKey());
         ConcordProcess proc = new Processes(client)
