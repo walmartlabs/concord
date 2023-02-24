@@ -20,6 +20,7 @@ package com.walmartlabs.concord.server.repository.listeners;
  * =====
  */
 
+import com.walmartlabs.concord.process.loader.model.ProcessDefinition;
 import com.walmartlabs.concord.server.org.project.RepositoryEntry;
 import org.jooq.DSLContext;
 
@@ -27,5 +28,5 @@ import java.nio.file.Path;
 
 public interface RepositoryRefreshListener {
 
-    void onRefresh(DSLContext ctx, RepositoryEntry repo, Path repoPath) throws Exception;
+    void onRefresh(DSLContext ctx, RepositoryEntry repo, Path repoPath, ProcessDefinition pd);
 }

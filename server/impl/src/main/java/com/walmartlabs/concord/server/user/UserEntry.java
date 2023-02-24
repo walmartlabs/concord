@@ -21,6 +21,7 @@ package com.walmartlabs.concord.server.user;
  */
 
 import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -28,6 +29,7 @@ import com.walmartlabs.concord.server.org.OrganizationEntry;
 
 import javax.validation.constraints.Size;
 import java.io.Serializable;
+import java.time.OffsetDateTime;
 import java.util.Set;
 import java.util.UUID;
 
@@ -63,6 +65,9 @@ public class UserEntry implements Serializable {
 
     private final boolean disabled;
 
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss.SSSX")
+    private final OffsetDateTime disabledDate;
+
     @JsonCreator
     public UserEntry(@JsonProperty("id") UUID id,
                      @JsonProperty("name") String name,
@@ -72,7 +77,8 @@ public class UserEntry implements Serializable {
                      @JsonProperty("type") UserType type,
                      @JsonProperty("email") String email,
                      @JsonProperty("roles") Set<RoleEntry> roles,
-                     @JsonProperty("disabled") boolean disabled) {
+                     @JsonProperty("disabled") boolean disabled,
+                     @JsonProperty("disabledDate") OffsetDateTime disabledDate) {
 
         this.id = id;
         this.name = name;
@@ -83,6 +89,7 @@ public class UserEntry implements Serializable {
         this.email = email;
         this.roles = roles;
         this.disabled = disabled;
+        this.disabledDate = disabledDate;
     }
 
     public UUID getId() {
@@ -121,6 +128,10 @@ public class UserEntry implements Serializable {
         return disabled;
     }
 
+    public OffsetDateTime getDisabledDate() {
+        return disabledDate;
+    }
+
     @Override
     public String toString() {
         return "UserEntry{" +
@@ -133,6 +144,7 @@ public class UserEntry implements Serializable {
                 ", email='" + email + '\'' +
                 ", roles=" + roles +
                 ", disabled=" + disabled +
+                ", disabledDate=" + disabledDate +
                 '}';
     }
 }
