@@ -24,6 +24,8 @@ process arguments
 
 ### Changed
 
+- server: use clean directory for each refresh listener
+([#707](https://github.com/walmartlabs/concord/pull/707));
 - concord-server: refactor ConcordLdapContextFactory
 implementation
 ([#695](https://github.com/walmartlabs/concord/pull/695));
