@@ -118,7 +118,6 @@ public class CustomFormServiceV2 {
     }
 
     private FormSessionResponse startSession(ProcessKey processKey, String formName) {
-
         // TODO locking
         Form form = assertForm(processKey, formName);
 

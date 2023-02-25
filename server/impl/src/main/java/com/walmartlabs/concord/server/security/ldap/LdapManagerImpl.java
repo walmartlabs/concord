@@ -47,7 +47,7 @@ public class LdapManagerImpl implements LdapManager {
     private final LdapContextFactory ctxFactory;
 
     public LdapManagerImpl(LdapConfiguration cfg,
-                           ConcordLdapContextFactory ctxFactory) {
+                           LdapContextFactory ctxFactory) {
 
         this.cfg = cfg;
         this.ctxFactory = ctxFactory;

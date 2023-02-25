@@ -21,12 +21,14 @@ package com.walmartlabs.concord.runtime.v2.runner.el;
  */
 
 import com.walmartlabs.concord.common.ConfigurationUtils;
+import com.walmartlabs.concord.common.ExceptionUtils;
 import com.walmartlabs.concord.runtime.v2.runner.el.functions.*;
 import com.walmartlabs.concord.runtime.v2.runner.el.resolvers.BeanELResolver;
 import com.walmartlabs.concord.runtime.v2.runner.el.resolvers.*;
 import com.walmartlabs.concord.runtime.v2.runner.tasks.TaskProviders;
 import com.walmartlabs.concord.runtime.v2.sdk.EvalContext;
 import com.walmartlabs.concord.runtime.v2.sdk.ExpressionEvaluator;
+import com.walmartlabs.concord.runtime.v2.sdk.UserDefinedException;
 
 import javax.el.*;
 import java.lang.reflect.Method;
@@ -143,6 +145,12 @@ public class LazyExpressionEvaluator implements ExpressionEvaluator {
             }
             throw new RuntimeException(String.format("Can't find the specified variable in '%s'. " +
                     "Check if it is defined in the current scope. Details: %s", expr, e.getMessage()));
+        } catch (ELException e) {
+            throw ExceptionUtils.getExceptionList(e).stream()
+                    .filter(i -> i instanceof UserDefinedException)
+                    .findAny()
+                    .map(i -> (RuntimeException)i)
+                    .orElse(e);
         }
     }
 
@@ -183,6 +191,7 @@ public class LazyExpressionEvaluator implements ExpressionEvaluator {
         functions.put("currentFlowName", CurrentFlowNameFunction.getMethod());
         functions.put("evalAsMap", EvalAsMapFunction.getMethod());
         functions.put("isDebug", IsDebugFunction.getMethod());
+        functions.put("throw", ThrowFunction.getMethod());
         return new FunctionMapper(functions);
     }
 

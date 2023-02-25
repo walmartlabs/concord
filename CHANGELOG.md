@@ -1,5 +1,53 @@
 # Change log
 
+## [1.99.0] - 2023-02-24
+
+### Added
+
+- concord-server: implement removal of disabled user
+accounts. Old accounts can now be automatically removed
+(the feature is disabled by default)
+([#716](https://github.com/walmartlabs/concord/pull/716));
+- runtime-v2: allow custom JS lang levels in scripts
+([#709](https://github.com/walmartlabs/concord/pull/709));
+- runtime-v2: function for throw exception
+([#712](https://github.com/walmartlabs/concord/pull/712));
+- concord-server: added 'last updated at' field for kv
+records
+([#701](https://github.com/walmartlabs/concord/pull/701));
+- policy-engine, server: initial support for the KV store
+policies
+([#702](https://github.com/walmartlabs/concord/pull/702));
+- concord-server: pass external trigger event ID via
+process arguments
+([#715](https://github.com/walmartlabs/concord/pull/715)).
+
+### Changed
+
+- server: use clean directory for each refresh listener
+([#707](https://github.com/walmartlabs/concord/pull/707));
+- concord-server: refactor ConcordLdapContextFactory
+implementation
+([#695](https://github.com/walmartlabs/concord/pull/695));
+- runtime-v2: improve serialization of `loop` items
+([#714](https://github.com/walmartlabs/concord/pull/714));
+- concord-agent, queue-client: make more delays configurable
+([#705](https://github.com/walmartlabs/concord/pull/705));
+- console2: single vertical scroll for process log page
+([#696](https://github.com/walmartlabs/concord/pull/696));
+- console2: allow expand all log segments
+([#698](https://github.com/walmartlabs/concord/pull/698));
+- dependency-manager: log exception
+([#700](https://github.com/walmartlabs/concord/pull/700));
+- cli: check that state is serializable in checkpoint service
+([#703](https://github.com/walmartlabs/concord/pull/703));
+- runtime-v2: allow expression for form call values and runAs
+([#704](https://github.com/walmartlabs/concord/pull/704));
+- runtime-v2: fix argument passing in forks
+([#708](https://github.com/walmartlabs/concord/pull/708)).
+
+
+
 ## [1.98.1] - 2022-12-22
 
 ### Changed

@@ -128,7 +128,7 @@ public class UserResource implements Resource {
             throw new ValidationErrorsException("User not found: " + id);
         }
 
-        userDao.delete(id);
+        userManager.delete(id);
         return new DeleteUserResponse();
     }
 

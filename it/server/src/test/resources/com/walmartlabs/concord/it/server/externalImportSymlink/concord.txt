@@ -1,0 +1,7 @@
+imports:
+  - git:
+      url: "{{gitUrl}}"
+
+triggers:
+  - test:
+      entryPoint: "flowFromTemplate"

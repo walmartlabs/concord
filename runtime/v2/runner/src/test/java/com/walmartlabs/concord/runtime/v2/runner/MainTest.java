@@ -435,6 +435,45 @@ public class MainTest {
     }
 
     @Test
+    public void testScriptVersion() throws Exception {
+        deploy("scriptEsVersion");
+
+        save(ProcessConfiguration.builder().build());
+
+        byte[] log = run();
+        assertLog(log, ".*\"charCountProduct\":9.*");
+    }
+
+    @Test
+    public void testScriptEsVersionInvalid() throws Exception {
+        deploy("scriptEsVersionInvalid");
+
+        save(ProcessConfiguration.builder()
+                .putArguments("kv", Collections.singletonMap("k", "v"))
+                .build());
+
+        try {
+            run();
+        } catch (Exception e) {
+            assertLog(e.toString().getBytes(), ".*unsupported.*");
+            return;
+        }
+        throw new Exception("invalid esVersion should have thrown");
+    }
+
+
+    @Test
+    public void testScriptUnboundedInputMapOk() throws Exception {
+        deploy("scriptUnboundedInputMapOk");
+
+        save(ProcessConfiguration.builder()
+                .build());
+
+        byte[] log = run();
+        assertLog(log, ".*ok.*");
+    }
+
+    @Test
     public void testScriptVariablesSanitize() throws Exception {
         deploy("scriptVariablesSanitize");
 
@@ -1187,6 +1226,32 @@ public class MainTest {
 
         byte[] log = run();
         assertLog(log, ".*Hello, " + Pattern.quote("{k1=v1, k2=v1}") + ".*");
+    }
+
+    @Test
+    public void loopItemSerialization() throws Exception {
+        deploy("loopSerializationError");
+
+        save(ProcessConfiguration.builder()
+                .build());
+
+        byte[] log = run();
+        assertLog(log, ".*name=one.*");
+    }
+
+    @Test
+    public void testThrowExpression() throws Exception {
+        deploy("throwExpression");
+
+        save(ProcessConfiguration.builder()
+                .build());
+
+        try {
+            run();
+            fail("exception expected");
+        } catch (UserDefinedException e) {
+            assertEquals("42 not found", e.getMessage());
+        }
     }
 
     private void deploy(String resource) throws URISyntaxException, IOException {

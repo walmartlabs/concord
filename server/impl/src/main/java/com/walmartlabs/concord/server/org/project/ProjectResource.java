@@ -132,11 +132,11 @@ public class ProjectResource implements Resource {
     @ApiOperation("list KV")
     @Path("/{orgName}/project/{projectName}/kv")
     @Produces(MediaType.APPLICATION_JSON)
-    public List<Map<String, Object>> findKV(@ApiParam @PathParam("orgName") @ConcordKey String orgName,
-                                            @ApiParam @PathParam("projectName") @ConcordKey String projectName,
-                                            @QueryParam("offset") int offset,
-                                            @QueryParam("limit") int limit,
-                                            @QueryParam("filter") String filter) {
+    public List<KvEntry> findKV(@ApiParam @PathParam("orgName") @ConcordKey String orgName,
+                                @ApiParam @PathParam("projectName") @ConcordKey String projectName,
+                                @QueryParam("offset") int offset,
+                                @QueryParam("limit") int limit,
+                                @QueryParam("filter") String filter) {
 
         OrganizationEntry org = orgManager.assertAccess(orgName, false);
 
