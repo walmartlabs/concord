@@ -21,6 +21,7 @@ package com.walmartlabs.concord.server.security.ldap;
  */
 
 import com.walmartlabs.concord.server.cfg.LdapConfiguration;
+import org.apache.shiro.realm.ldap.LdapContextFactory;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -34,7 +35,7 @@ public class LdapManagerProvider implements Provider<LdapManager> {
 
     @Inject
     public LdapManagerProvider(LdapConfiguration cfg,
-                                 ConcordLdapContextFactory ctxFactory) {
+                                 LdapContextFactory ctxFactory) {
 
         LdapManager manager = new LdapManagerImpl(cfg, ctxFactory);
 
