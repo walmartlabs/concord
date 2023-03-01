@@ -38,12 +38,16 @@ public class BackgroundTasks {
         this.tasks = tasks;
     }
 
-    public synchronized void start() {
-        tasks.forEach(BackgroundTask::start);
+    public void start() {
+        synchronized (tasks) {
+            tasks.forEach(BackgroundTask::start);
+        }
     }
 
-    public synchronized void stop() {
-        tasks.forEach(BackgroundTask::stop);
+    public void stop() {
+        synchronized (tasks) {
+            tasks.forEach(BackgroundTask::stop);
+        }
     }
 
     public int count() {
