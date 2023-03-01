@@ -31,7 +31,6 @@ import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.core.HttpHeaders;
 import java.io.IOException;
 
-@Named
 @Singleton
 @WebFilter({"/api/*", "/logs/*", "/forms/*", "/cfg.js"})
 public class NoCacheFilter implements Filter {

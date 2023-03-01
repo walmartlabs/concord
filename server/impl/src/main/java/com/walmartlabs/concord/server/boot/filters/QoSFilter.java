@@ -43,7 +43,6 @@ import java.util.regex.Pattern;
 /**
  * copy from {@link org.eclipse.jetty.servlets.QoSFilter} but with custom error code
  */
-@Named
 @Singleton
 @WebFilter(value = {"/api/v1/process/*", "/api/v1/org/*"})
 public class QoSFilter implements Filter {

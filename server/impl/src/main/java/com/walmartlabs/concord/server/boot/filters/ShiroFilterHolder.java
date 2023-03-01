@@ -30,7 +30,6 @@ import javax.servlet.annotation.WebFilter;
 /**
  * Binds {@link ShiroFilter} to Concord's API root path.
  */
-@Named
 @Singleton
 @WebFilter("/*")
 public class ShiroFilterHolder extends FilterHolder {

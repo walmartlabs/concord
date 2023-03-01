@@ -31,7 +31,6 @@ import javax.servlet.annotation.WebServlet;
 /**
  * Binds {@link SiestaServlet} to Concord's API paths.
  */
-@Named
 @Singleton
 @WebServlet({
         "/api/*",

@@ -33,8 +33,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
 import javax.servlet.*;
 import javax.servlet.annotation.WebFilter;
 import javax.servlet.annotation.WebListener;
@@ -44,8 +42,6 @@ import java.lang.management.ManagementFactory;
 import java.util.EnumSet;
 import java.util.Set;
 
-@Named
-@Singleton
 public class HttpServer {
 
     private static final Logger log = LoggerFactory.getLogger(HttpServlet.class);

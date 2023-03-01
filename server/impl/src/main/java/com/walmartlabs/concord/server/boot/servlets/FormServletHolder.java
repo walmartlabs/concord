@@ -29,7 +29,6 @@ import javax.inject.Named;
 import javax.inject.Singleton;
 import javax.servlet.annotation.WebServlet;
 
-@Named
 @Singleton
 @WebServlet("/forms/*")
 public class FormServletHolder extends ServletHolder {

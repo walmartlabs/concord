@@ -32,14 +32,11 @@ import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 import javax.inject.Named;
-import javax.inject.Singleton;
 import java.time.Duration;
 import java.time.OffsetDateTime;
 
 import static com.walmartlabs.concord.server.jooq.tables.AuditLog.AUDIT_LOG;
 
-@Named
-@Singleton
 public class AuditLogCleaner implements ScheduledTask {
 
     private static final Logger log = LoggerFactory.getLogger(AuditLogCleaner.class);
@@ -68,7 +65,6 @@ public class AuditLogCleaner implements ScheduledTask {
         cleanerDao.deleteOldLogs(cfg.getMaxLogAge());
     }
 
-    @Named
     private static class CleanerDao extends AbstractDao {
 
         @Inject

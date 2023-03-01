@@ -23,12 +23,8 @@ package com.walmartlabs.concord.server.boot;
 import com.walmartlabs.concord.server.sdk.BackgroundTask;
 
 import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
 import java.util.Set;
 
-@Named
-@Singleton
 public class BackgroundTasks {
 
     private final Set<BackgroundTask> tasks;

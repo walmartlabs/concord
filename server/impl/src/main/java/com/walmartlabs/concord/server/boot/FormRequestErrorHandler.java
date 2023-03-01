@@ -33,7 +33,6 @@ import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 import java.util.Map;
 
-@Named
 public class FormRequestErrorHandler implements RequestErrorHandler {
 
     private static final String FORM_PATH_PREFIX = "/forms/";

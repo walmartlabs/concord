@@ -29,7 +29,6 @@ import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
 
-@Named
 @Singleton
 public class ConcordFilterChainConfigurator implements FilterChainConfigurator {
 

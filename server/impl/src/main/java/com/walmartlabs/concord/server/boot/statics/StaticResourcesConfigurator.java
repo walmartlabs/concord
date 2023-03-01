@@ -32,7 +32,6 @@ import javax.inject.Singleton;
 /**
  * Configures Jetty's {@link org.eclipse.jetty.server.Handler} to serve Concord's static resources.
  */
-@Named
 @Singleton
 public class StaticResourcesConfigurator implements ContextHandlerConfigurator {
 
