@@ -28,7 +28,6 @@ import com.walmartlabs.concord.server.websocket.WebSocketChannelManager;
 import org.jooq.DSLContext;
 
 import javax.inject.Inject;
-import javax.inject.Named;
 import java.time.OffsetDateTime;
 import java.util.Collection;
 import java.util.List;
@@ -36,7 +35,6 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
-@Named
 public class AgentManager {
 
     private final AgentCommandsDao commandQueue;
