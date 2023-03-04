@@ -20,9 +20,9 @@ package com.walmartlabs.concord.server.boot.filters;
  * =====
  */
 
+import com.walmartlabs.concord.common.secret.SecretUtils;
 import com.walmartlabs.concord.sdk.Constants;
 import com.walmartlabs.concord.server.cfg.SecretStoreConfiguration;
-import com.walmartlabs.concord.common.secret.SecretUtils;
 import com.walmartlabs.concord.server.security.apikey.ApiKey;
 import com.walmartlabs.concord.server.security.apikey.ApiKeyDao;
 import com.walmartlabs.concord.server.security.apikey.ApiKeyEntry;
@@ -34,7 +34,6 @@ import org.apache.shiro.subject.support.DefaultSubjectContext;
 import org.apache.shiro.web.util.WebUtils;
 
 import javax.inject.Inject;
-import javax.inject.Singleton;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
@@ -48,7 +47,6 @@ import static com.walmartlabs.concord.sdk.Constants.Headers.ENABLE_HTTP_SESSION;
  * Default authentication handler. Handles basic authentication (username/password),
  * API keys and session tokens.
  */
-@Singleton
 public class ConcordAuthenticationHandler implements AuthenticationHandler {
 
     private static final String REMEMBER_ME_HEADER = "X-Concord-RememberMe";

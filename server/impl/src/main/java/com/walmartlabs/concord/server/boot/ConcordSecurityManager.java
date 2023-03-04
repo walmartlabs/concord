@@ -26,10 +26,8 @@ import org.apache.shiro.web.mgt.DefaultWebSecurityManager;
 import org.apache.shiro.web.session.mgt.ServletContainerSessionManager;
 
 import javax.inject.Inject;
-import javax.inject.Singleton;
 import java.util.Set;
 
-@Singleton
 public class ConcordSecurityManager extends DefaultWebSecurityManager {
 
     @Inject

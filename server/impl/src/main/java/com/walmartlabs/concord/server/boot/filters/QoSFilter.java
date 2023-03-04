@@ -26,8 +26,6 @@ import org.immutables.value.Value;
 
 import javax.annotation.Nullable;
 import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
 import javax.servlet.*;
 import javax.servlet.annotation.WebFilter;
 import javax.servlet.http.HttpServletRequest;
@@ -43,7 +41,6 @@ import java.util.regex.Pattern;
 /**
  * copy from {@link org.eclipse.jetty.servlets.QoSFilter} but with custom error code
  */
-@Singleton
 @WebFilter(value = {"/api/v1/process/*", "/api/v1/org/*"})
 public class QoSFilter implements Filter {
 

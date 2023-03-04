@@ -26,13 +26,9 @@ import org.eclipse.jetty.server.handler.ContextHandlerCollection;
 import org.eclipse.jetty.server.handler.ResourceHandler;
 import org.eclipse.jetty.util.resource.Resource;
 
-import javax.inject.Named;
-import javax.inject.Singleton;
-
 /**
  * Configures Jetty's {@link org.eclipse.jetty.server.Handler} to serve Concord's static resources.
  */
-@Singleton
 public class StaticResourcesConfigurator implements ContextHandlerConfigurator {
 
     @Override

@@ -29,6 +29,7 @@ import org.eclipse.jetty.servlet.ServletHolder;
 import org.sonatype.siesta.Component;
 import org.sonatype.siesta.Resource;
 
+import javax.servlet.Filter;
 import java.util.List;
 
 import static com.google.inject.Scopes.SINGLETON;
@@ -67,8 +68,14 @@ public final class Utils {
         return v.getValue();
     }
 
-    public static void bindServletHolder(Binder binder, Class<? extends ServletHolder> servletHolder) {
-        newSetBinder(binder, ServletHolder.class).addBinding().to(servletHolder);
+    public static void bindServletFilter(Binder binder, Class<? extends Filter> klass) {
+        binder.bind(klass).in(SINGLETON);
+        newSetBinder(binder, Filter.class).addBinding().to(klass);
+    }
+
+    public static void bindServletHolder(Binder binder, Class<? extends ServletHolder> klass) {
+        binder.bind(klass).in(SINGLETON);
+        newSetBinder(binder, ServletHolder.class).addBinding().to(klass);
     }
 
     public static void bindJaxRsResource(Binder binder, Class<? extends Resource> klass) {

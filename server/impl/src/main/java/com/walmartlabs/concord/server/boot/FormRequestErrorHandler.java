@@ -24,7 +24,6 @@ import com.walmartlabs.concord.server.console.ResponseTemplates;
 import org.eclipse.jetty.http.MimeTypes;
 
 import javax.inject.Inject;
-import javax.inject.Named;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;

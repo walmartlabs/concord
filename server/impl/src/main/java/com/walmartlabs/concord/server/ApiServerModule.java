@@ -32,14 +32,14 @@ import com.walmartlabs.concord.server.websocket.ConcordWebSocketServlet;
 import org.apache.shiro.mgt.SecurityManager;
 import org.apache.shiro.web.mgt.WebSecurityManager;
 import org.eclipse.jetty.servlet.FilterHolder;
-import org.eclipse.jetty.servlet.ServletHolder;
 
-import javax.servlet.Filter;
 import javax.servlet.ServletContextListener;
 import javax.servlet.http.HttpServlet;
 
 import static com.google.inject.Scopes.SINGLETON;
 import static com.google.inject.multibindings.Multibinder.newSetBinder;
+import static com.walmartlabs.concord.server.Utils.bindServletFilter;
+import static com.walmartlabs.concord.server.Utils.bindServletHolder;
 
 public class ApiServerModule implements Module {
 
@@ -50,27 +50,26 @@ public class ApiServerModule implements Module {
 
         // Filter
 
-        binder.bind(ConcordAuthenticatingFilter.class).in(SINGLETON);
-        newSetBinder(binder, Filter.class).addBinding().to(ConcordAuthenticatingFilter.class);
-        newSetBinder(binder, Filter.class).addBinding().to(CORSFilter.class);
-        newSetBinder(binder, Filter.class).addBinding().to(NoCacheFilter.class);
-        newSetBinder(binder, Filter.class).addBinding().to(QoSFilter.class);
-        newSetBinder(binder, Filter.class).addBinding().to(RequestContextFilter.class);
+        bindServletFilter(binder, ConcordAuthenticatingFilter.class);
+        bindServletFilter(binder, CORSFilter.class);
+        bindServletFilter(binder, NoCacheFilter.class);
+        bindServletFilter(binder, QoSFilter.class);
+        bindServletFilter(binder, RequestContextFilter.class);
 
         // FilterHolder
 
-        newSetBinder(binder, FilterHolder.class).addBinding().to(ShiroFilterHolder.class);
+        newSetBinder(binder, FilterHolder.class).addBinding().to(ShiroFilterHolder.class).in(SINGLETON);
 
         // HttpServlet
 
-        newSetBinder(binder, HttpServlet.class).addBinding().to(LogServlet.class);
-        newSetBinder(binder, HttpServlet.class).addBinding().to(ConcordWebSocketServlet.class);
+        newSetBinder(binder, HttpServlet.class).addBinding().to(LogServlet.class).in(SINGLETON);
+        newSetBinder(binder, HttpServlet.class).addBinding().to(ConcordWebSocketServlet.class).in(SINGLETON);
 
         // ServletHolder
 
-        newSetBinder(binder, ServletHolder.class).addBinding().to(ConsoleServletHolder.class);
-        newSetBinder(binder, ServletHolder.class).addBinding().to(FormServletHolder.class);
-        newSetBinder(binder, ServletHolder.class).addBinding().to(SiestaServletHolder.class);
+        bindServletHolder(binder, ConsoleServletHolder.class);
+        bindServletHolder(binder, FormServletHolder.class);
+        bindServletHolder(binder, SiestaServletHolder.class);
 
         // RequestErrorHandler
 
@@ -82,9 +81,9 @@ public class ApiServerModule implements Module {
 
         // shiro
 
-        newSetBinder(binder, ServletContextListener.class).addBinding().to(ShiroListener.class);
-        newSetBinder(binder, FilterChainConfigurator.class).addBinding().to(ConcordFilterChainConfigurator.class);
-        newSetBinder(binder, AuthenticationHandler.class).addBinding().to(ConcordAuthenticationHandler.class);
+        newSetBinder(binder, ServletContextListener.class).addBinding().to(ShiroListener.class).in(SINGLETON);
+        newSetBinder(binder, FilterChainConfigurator.class).addBinding().to(ConcordFilterChainConfigurator.class).in(SINGLETON);
+        newSetBinder(binder, AuthenticationHandler.class).addBinding().to(ConcordAuthenticationHandler.class).in(SINGLETON);
 
         binder.bind(ConcordSecurityManager.class).in(SINGLETON);
         binder.bind(SecurityManager.class).to(ConcordSecurityManager.class);
