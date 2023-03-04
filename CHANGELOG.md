@@ -4,6 +4,9 @@
 
 ### Added
 
+- runtime-v2: support for "session state" process attachments
+([#722](https://github.com/walmartlabs/concord/pull/722)).
+
 ### Changed
 
 
