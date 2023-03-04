@@ -9,6 +9,8 @@
 
 ### Changed
 
+- concord-server: remove more @Named usage
+([#650](https://github.com/walmartlabs/concord/pull/650)).
 
 
 ## [1.99.0] - 2023-02-24
