@@ -30,10 +30,8 @@ import org.slf4j.LoggerFactory;
 import org.sonatype.siesta.ValidationErrorsException;
 
 import javax.inject.Inject;
-import javax.inject.Named;
 import java.nio.file.Path;
 
-@Named
 public class TriggerRefreshListener implements RepositoryRefreshListener {
 
     private static final Logger log = LoggerFactory.getLogger(TriggerRefreshListener.class);

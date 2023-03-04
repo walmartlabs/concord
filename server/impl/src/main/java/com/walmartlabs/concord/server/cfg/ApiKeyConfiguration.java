@@ -24,16 +24,12 @@ import com.walmartlabs.ollie.config.Config;
 import org.eclipse.sisu.Nullable;
 
 import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
 import java.io.Serializable;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.Duration;
 import java.util.List;
 
-@Named
-@Singleton
 public class ApiKeyConfiguration implements Serializable {
 
     private static final long serialVersionUID = 1L;

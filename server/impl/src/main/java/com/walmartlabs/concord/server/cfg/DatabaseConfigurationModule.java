@@ -1,17 +1,17 @@
-package com.walmartlabs.concord.server;
+package com.walmartlabs.concord.server.cfg;
 
 /*-
  * *****
  * Concord
  * -----
- * Copyright (C) 2017 - 2018 Walmart Inc.
+ * Copyright (C) 2017 - 2022 Walmart Inc.
  * -----
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- *
+ * 
  *      http://www.apache.org/licenses/LICENSE-2.0
- *
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -20,15 +20,16 @@ package com.walmartlabs.concord.server;
  * =====
  */
 
-import com.google.inject.AbstractModule;
-import com.walmartlabs.concord.db.DatabaseModule;
-import com.walmartlabs.concord.server.metrics.MetricModule;
+import com.google.inject.Binder;
+import com.google.inject.Module;
 
-public class ServerModule extends AbstractModule {
+import static com.google.inject.Scopes.SINGLETON;
+
+public class DatabaseConfigurationModule implements Module {
 
     @Override
-    protected void configure() {
-        install(new MetricModule());
-        install(new DatabaseModule());
+    public void configure(Binder binder) {
+        binder.bind(MainDBConfiguration.class).in(SINGLETON);
+        binder.bind(JsonStorageDBConfiguration.class).in(SINGLETON);
     }
 }
