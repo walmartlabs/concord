@@ -1,10 +1,10 @@
-package com.walmartlabs.concord.server.boot;
+package com.walmartlabs.concord.server.plugins.noderoster;
 
 /*-
  * *****
  * Concord
  * -----
- * Copyright (C) 2017 - 2020 Walmart Inc.
+ * Copyright (C) 2017 - 2023 Walmart Inc.
  * -----
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,27 +20,20 @@ package com.walmartlabs.concord.server.boot;
  * =====
  */
 
-import com.google.inject.AbstractModule;
-import com.walmartlabs.concord.db.DatabaseModule;
-import com.walmartlabs.concord.server.boot.validation.ValidationModule;
-import com.walmartlabs.concord.server.metrics.MetricModule;
-import org.sonatype.siesta.server.resteasy.ResteasyModule;
+import com.google.inject.Binder;
+import com.google.inject.Module;
+import com.walmartlabs.concord.server.plugins.noderoster.processor.AnsibleEventsProcessor;
+import com.walmartlabs.concord.server.sdk.ScheduledTask;
 
 import javax.inject.Named;
 
+import static com.google.inject.multibindings.Multibinder.newSetBinder;
+
 @Named
-public class ConcordModule extends AbstractModule {
+public class NodeRosterModule implements Module {
 
     @Override
-    protected void configure() {
-        install(new ConfigurationModule());
-
-        install(new MetricModule());
-
-        install(new DatabaseModule());
-
-        install(new ResteasyModule());
-
-        install(new ValidationModule());
+    public void configure(Binder binder) {
+        newSetBinder(binder, ScheduledTask.class).addBinding().to(AnsibleEventsProcessor.class);
     }
 }

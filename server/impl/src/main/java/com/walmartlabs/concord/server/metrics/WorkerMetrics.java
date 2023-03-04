@@ -28,16 +28,12 @@ import com.walmartlabs.concord.server.sdk.BackgroundTask;
 import io.prometheus.client.Collector;
 import io.prometheus.client.CollectorRegistry;
 import io.prometheus.client.GaugeMetricFamily;
-import org.eclipse.sisu.EagerSingleton;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
-import javax.inject.Named;
 import java.util.*;
 
-@Named
-@EagerSingleton
 public class WorkerMetrics implements BackgroundTask {
 
     private static final Logger log = LoggerFactory.getLogger(WorkerMetrics.class);

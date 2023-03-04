@@ -20,9 +20,20 @@ package com.walmartlabs.concord.server;
  * =====
  */
 
-import java.sql.Timestamp;
-import java.util.Calendar;
+import com.google.inject.Binder;
+import com.walmartlabs.concord.server.metrics.MetricsRegistrator;
+import com.walmartlabs.concord.server.metrics.MetricsServletHolder;
+import com.walmartlabs.concord.server.sdk.BackgroundTask;
+import com.walmartlabs.concord.server.sdk.ScheduledTask;
+import org.eclipse.jetty.servlet.ServletHolder;
+import org.sonatype.siesta.Component;
+import org.sonatype.siesta.Resource;
+
+import javax.servlet.Filter;
 import java.util.List;
+
+import static com.google.inject.Scopes.SINGLETON;
+import static com.google.inject.multibindings.Multibinder.newSetBinder;
 
 public final class Utils {
 
@@ -49,21 +60,41 @@ public final class Utils {
         return s;
     }
 
-    public static Timestamp toTimestamp(IsoDateParam p) {
-        if (p == null) {
-            return null;
-        }
-
-        Calendar c = p.getValue();
-        return new Timestamp(c.getTimeInMillis());
-    }
-
     public static <T> T unwrap(WrappedValue<T> v) {
         if (v == null) {
             return null;
         }
 
         return v.getValue();
+    }
+
+    public static void bindServletFilter(Binder binder, Class<? extends Filter> klass) {
+        binder.bind(klass).in(SINGLETON);
+        newSetBinder(binder, Filter.class).addBinding().to(klass);
+    }
+
+    public static void bindServletHolder(Binder binder, Class<? extends ServletHolder> klass) {
+        binder.bind(klass).in(SINGLETON);
+        newSetBinder(binder, ServletHolder.class).addBinding().to(klass);
+    }
+
+    public static void bindJaxRsResource(Binder binder, Class<? extends Resource> klass) {
+        binder.bind(klass).in(SINGLETON);
+        newSetBinder(binder, Component.class).addBinding().to(klass);
+    }
+
+    public static void bindSingletonBackgroundTask(Binder binder, Class<? extends BackgroundTask> klass) {
+        binder.bind(klass).in(SINGLETON);
+        newSetBinder(binder, BackgroundTask.class).addBinding().to(klass);
+    }
+
+    public static void bindScheduledTask(Binder binder, Class<? extends ScheduledTask> klass) {
+        newSetBinder(binder, ScheduledTask.class).addBinding().to(klass);
+    }
+
+    public static void bindSingletonScheduledTask(Binder binder, Class<? extends ScheduledTask> klass) {
+        binder.bind(klass).in(SINGLETON);
+        newSetBinder(binder, ScheduledTask.class).addBinding().to(klass);
     }
 
     private Utils() {

@@ -24,11 +24,7 @@ import com.walmartlabs.ollie.config.Config;
 import org.eclipse.sisu.Nullable;
 
 import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
 
-@Named
-@Singleton
 public class GithubConfiguration {
 
     @Inject
