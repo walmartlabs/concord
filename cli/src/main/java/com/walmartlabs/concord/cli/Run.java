@@ -269,10 +269,6 @@ public class Run implements Callable<Integer> {
             processInfo = (Map<String, Object>) processInfoObject;
         }
 
-        System.out.println(">>>>>>>>>>" + args);
-        System.out.println(">>>>processInfoObject>>>>>>" + processInfoObject);
-        System.out.println(">>>>sessionToken>>>>>>" + MapUtils.getString(processInfo, "sessionToken"));
-
         return ProcessInfo.builder()
                 .sessionToken(MapUtils.getString(processInfo, "sessionToken"))
                 .build();
@@ -314,7 +310,7 @@ public class Run implements Callable<Integer> {
                 .projectInfo(projectInfo)
                 .out(cfg.out());
     }
-    
+
     private static Map<String, Object> fromExtraVars(String key, Map<String, Object> args) {
         Map<String, Object> result = new HashMap<>();
         for (String k : args.keySet()) {
