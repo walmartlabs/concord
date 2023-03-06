@@ -45,7 +45,6 @@ import java.util.UUID;
 import static com.walmartlabs.concord.server.jooq.tables.AuditLog.AUDIT_LOG;
 import static com.walmartlabs.concord.server.jooq.tables.Users.USERS;
 
-@Named
 public class AuditDao extends AbstractDao {
 
     private final ConcordObjectMapper objectMapper;

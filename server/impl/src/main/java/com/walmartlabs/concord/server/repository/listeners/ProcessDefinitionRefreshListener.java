@@ -28,12 +28,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
-import javax.inject.Named;
 import java.nio.file.Path;
 import java.util.*;
 import java.util.stream.Collectors;
 
-@Named
 public class ProcessDefinitionRefreshListener implements RepositoryRefreshListener {
 
     private static final Logger log = LoggerFactory.getLogger(ProcessDefinitionRefreshListener.class);

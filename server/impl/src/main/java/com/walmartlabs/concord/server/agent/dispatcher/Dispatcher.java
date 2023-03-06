@@ -44,7 +44,6 @@ import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 import javax.inject.Named;
-import javax.inject.Singleton;
 import java.io.IOException;
 import java.time.OffsetDateTime;
 import java.util.*;
@@ -55,8 +54,6 @@ import static com.walmartlabs.concord.server.jooq.tables.AgentCommands.AGENT_COM
 /**
  * Dispatches commands to agents.
  */
-@Named
-@Singleton
 public class Dispatcher extends PeriodicTask {
 
     private static final Logger log = LoggerFactory.getLogger(Dispatcher.class);
@@ -169,7 +166,6 @@ public class Dispatcher extends PeriodicTask {
         }
     }
 
-    @Named
     public static class DispatcherDao extends AbstractDao {
 
         private final ObjectMapper objectMapper;

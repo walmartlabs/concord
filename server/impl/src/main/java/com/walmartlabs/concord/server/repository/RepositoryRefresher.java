@@ -47,7 +47,6 @@ import java.nio.file.Path;
 import java.util.*;
 import java.util.stream.Collectors;
 
-@Named
 public class RepositoryRefresher extends AbstractDao {
 
     private static final Logger log = LoggerFactory.getLogger(RepositoryRefresher.class);
