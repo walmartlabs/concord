@@ -1,0 +1,8 @@
+flows:
+  default:
+    - log: "DONE"
+
+configuration:
+  arguments:
+    a: "${log.info('a-main')}"
+    bb: "${log.info('bb-main')}"
