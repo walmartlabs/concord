@@ -165,14 +165,14 @@ public class ProjectLoaderV2 {
             throw new IllegalArgumentException("Definitions is empty");
         }
 
-        Map<String, List<Step>> flows = new HashMap<>();
-        Map<String, Profile> profiles = new HashMap<>();
+        Map<String, List<Step>> flows = new LinkedHashMap<>();
+        Map<String, Profile> profiles = new LinkedHashMap<>();
         List<Trigger> triggers = new ArrayList<>();
         List<Import> imports = new ArrayList<>();
-        Map<String, Form> forms = new HashMap<>();
+        Map<String, Form> forms = new LinkedHashMap<>();
         Set<String> resources = new HashSet<>();
         Set<String> dependencies = new HashSet<>();
-        Map<String, Object> arguments = new HashMap<>();
+        Map<String, Object> arguments = new LinkedHashMap<>();
 
         for (ProcessDefinition pd : definitions) {
             flows.putAll(pd.flows());

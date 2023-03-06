@@ -47,6 +47,8 @@ public final class ConcordServer {
     @Inject
     private HttpServer server;
 
+    private final Object controlMutex = new Object();
+
     /**
      * Start ConcordServer by scanning the local class path for the implementations of
      * {@link HttpServer} or {@link BackgroundTasks}.
@@ -69,21 +71,25 @@ public final class ConcordServer {
         return instance;
     }
 
-    public synchronized ConcordServer start() throws Exception {
-        tasks.start();
-        server.start();
+    public ConcordServer start() throws Exception {
+        synchronized (controlMutex) {
+            tasks.start();
+            server.start();
+        }
         return this;
     }
 
-    public synchronized void stop() throws Exception {
-        if (server != null) {
-            server.stop();
-            server = null;
-        }
+    public void stop() throws Exception {
+        synchronized (controlMutex) {
+            if (server != null) {
+                server.stop();
+                server = null;
+            }
 
-        if (tasks != null) {
-            tasks.stop();
-            tasks = null;
+            if (tasks != null) {
+                tasks.stop();
+                tasks = null;
+            }
         }
     }
 
