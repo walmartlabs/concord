@@ -11,6 +11,8 @@
 
 ### Changed
 
+- runtime-v2: predictable order of process arguments 
+([#721](https://github.com/walmartlabs/concord/pull/721));
 - concord-server: remove more @Named usage
 ([#650](https://github.com/walmartlabs/concord/pull/650)).
 
