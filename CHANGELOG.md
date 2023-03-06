@@ -4,6 +4,8 @@
 
 ### Added
 
+- cli: process/project info from variables
+([#727](https://github.com/walmartlabs/concord/pull/727));
 - runtime-v2: support for "session state" process attachments
 ([#722](https://github.com/walmartlabs/concord/pull/722)).
 
