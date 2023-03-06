@@ -30,7 +30,6 @@ import javax.management.MBeanServer;
 import javax.management.ObjectName;
 import java.lang.management.ManagementFactory;
 
-@Named
 public class JettySessionMetricsModule extends AbstractModule {
 
     private static final String[] ATTRIBUTES = {

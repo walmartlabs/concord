@@ -48,9 +48,7 @@ import com.walmartlabs.concord.runtime.v2.runner.InjectorFactory;
 import com.walmartlabs.concord.runtime.v2.runner.Runner;
 import com.walmartlabs.concord.runtime.v2.runner.guice.ProcessDependenciesModule;
 import com.walmartlabs.concord.runtime.v2.runner.tasks.TaskProviders;
-import com.walmartlabs.concord.runtime.v2.sdk.ImmutableProcessConfiguration;
-import com.walmartlabs.concord.runtime.v2.sdk.ProcessConfiguration;
-import com.walmartlabs.concord.runtime.v2.sdk.WorkingDirectory;
+import com.walmartlabs.concord.runtime.v2.sdk.*;
 import com.walmartlabs.concord.sdk.Constants;
 import com.walmartlabs.concord.sdk.MapUtils;
 import picocli.CommandLine.Command;
@@ -182,26 +180,21 @@ public class Run implements Callable<Integer> {
             System.out.println("Active profiles: " + profiles);
         }
 
-        ProcessConfiguration cfg = from(processDefinition.configuration())
-                .entryPoint(entryPoint)
-                .instanceId(instanceId)
-                .build();
-
         Map<String, Object> overlayCfg = ProcessDefinitionUtils.getProfilesOverlayCfg(new ProcessDefinitionV2(processDefinition), profiles);
         List<String> overlayDeps = MapUtils.getList(overlayCfg, Constants.Request.DEPENDENCIES_KEY, Collections.emptyList());
 
         RunnerConfiguration runnerCfg = RunnerConfiguration.builder()
                 .dependencies(new DependencyResolver(dependencyManager, verbose).resolveDeps(overlayDeps))
-                .debug(cfg.debug())
+                .debug(processDefinition.configuration().debug())
                 .build();
 
         Map<String, Object> overlayArgs = MapUtils.getMap(overlayCfg, Constants.Request.ARGUMENTS_KEY, Collections.emptyMap());
-        Map<String, Object> args = ConfigurationUtils.deepMerge(cfg.arguments(), overlayArgs, extraVars);
+        Map<String, Object> args = ConfigurationUtils.deepMerge(processDefinition.configuration().arguments(), overlayArgs, extraVars);
+        args.put(Constants.Context.TX_ID_KEY, instanceId.toString());
+        args.put(Constants.Context.WORK_DIR_KEY, targetDir.toAbsolutePath().toString());
         if (verbose) {
             dumpArguments(args);
         }
-        args.put(Constants.Context.TX_ID_KEY, instanceId.toString());
-        args.put(Constants.Context.WORK_DIR_KEY, targetDir.toAbsolutePath().toString());
 
         if (effectiveYaml) {
             Map<String, List<Step>> flows = new HashMap<>(processDefinition.flows());
@@ -228,6 +221,11 @@ public class Run implements Callable<Integer> {
         }
 
         System.out.println("Starting...");
+
+        ProcessConfiguration cfg = from(processDefinition.configuration(), processInfo(args), projectInfo(args))
+                .entryPoint(entryPoint)
+                .instanceId(instanceId)
+                .build();
 
         Injector injector = new InjectorFactory(new WorkingDirectory(targetDir),
                 runnerCfg,
@@ -259,14 +257,68 @@ public class Run implements Callable<Integer> {
         return 0;
     }
 
-    private static ImmutableProcessConfiguration.Builder from(ProcessDefinitionConfiguration cfg) {
+    @SuppressWarnings("unchecked")
+    private static ProcessInfo processInfo(Map<String, Object> args) {
+        Object processInfoObject = args.get("processInfo");
+        if (processInfoObject == null) {
+            processInfoObject = fromExtraVars("processInfo", args);
+        }
+
+        Map<String, Object> processInfo = Collections.emptyMap();
+        if (processInfoObject instanceof Map) {
+            processInfo = (Map<String, Object>) processInfoObject;
+        }
+
+        return ProcessInfo.builder()
+                .sessionToken(MapUtils.getString(processInfo, "sessionToken"))
+                .build();
+    }
+
+    @SuppressWarnings("unchecked")
+    private static ProjectInfo projectInfo(Map<String, Object> args) {
+        Object projectInfoObject = args.get("projectInfo");
+        if (projectInfoObject == null) {
+            projectInfoObject = fromExtraVars("projectInfo", args);
+        }
+
+        Map<String, Object> projectInfo = Collections.emptyMap();
+        if (projectInfoObject instanceof Map) {
+            projectInfo = (Map<String, Object>) projectInfoObject;
+        }
+
+        return ProjectInfo.builder()
+                .orgName(MapUtils.getString(projectInfo, "orgName"))
+                .projectName(MapUtils.getString(projectInfo, "projectName"))
+                .repoName(MapUtils.getString(projectInfo, "repoName"))
+                .repoUrl(MapUtils.getString(projectInfo, "repoUrl"))
+                .repoBranch(MapUtils.getString(projectInfo, "repoBranch"))
+                .repoPath(MapUtils.getString(projectInfo, "repoPath"))
+                .repoCommitId(MapUtils.getString(projectInfo, "repoCommitId"))
+                .repoCommitAuthor(MapUtils.getString(projectInfo, "repoCommitAuthor"))
+                .repoCommitMessage(MapUtils.getString(projectInfo, "repoCommitMessage"))
+                .build();
+    }
+
+    private static ImmutableProcessConfiguration.Builder from(ProcessDefinitionConfiguration cfg, ProcessInfo processInfo, ProjectInfo projectInfo) {
         return ProcessConfiguration.builder()
                 .debug(cfg.debug())
                 .entryPoint(cfg.entryPoint())
                 .arguments(cfg.arguments())
                 .meta(cfg.meta())
                 .events(cfg.events())
+                .processInfo(processInfo)
+                .projectInfo(projectInfo)
                 .out(cfg.out());
+    }
+
+    private static Map<String, Object> fromExtraVars(String key, Map<String, Object> args) {
+        Map<String, Object> result = new HashMap<>();
+        for (String k : args.keySet()) {
+            if (k.startsWith(key + ".")) {
+                result.put(k.substring(key.length() + 1), args.get(k));
+            }
+        }
+        return result;
     }
 
     private static void copyDefaultCfg(Path targetDir, Path defaultCfg) throws IOException {

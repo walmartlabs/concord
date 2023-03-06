@@ -442,6 +442,45 @@ public class MainTest {
     }
 
     @Test
+    public void testScriptVersion() throws Exception {
+        deploy("scriptEsVersion");
+
+        save(ProcessConfiguration.builder().build());
+
+        byte[] log = run();
+        assertLog(log, ".*\"charCountProduct\":9.*");
+    }
+
+    @Test
+    public void testScriptEsVersionInvalid() throws Exception {
+        deploy("scriptEsVersionInvalid");
+
+        save(ProcessConfiguration.builder()
+                .putArguments("kv", Collections.singletonMap("k", "v"))
+                .build());
+
+        try {
+            run();
+        } catch (Exception e) {
+            assertLog(e.toString().getBytes(), ".*unsupported.*");
+            return;
+        }
+        throw new Exception("invalid esVersion should have thrown");
+    }
+
+
+    @Test
+    public void testScriptUnboundedInputMapOk() throws Exception {
+        deploy("scriptUnboundedInputMapOk");
+
+        save(ProcessConfiguration.builder()
+                .build());
+
+        byte[] log = run();
+        assertLog(log, ".*ok.*");
+    }
+
+    @Test
     public void testScriptVariablesSanitize() throws Exception {
         deploy("scriptVariablesSanitize");
 

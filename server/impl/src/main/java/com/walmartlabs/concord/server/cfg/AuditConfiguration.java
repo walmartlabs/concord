@@ -24,13 +24,9 @@ import com.walmartlabs.ollie.config.Config;
 
 import javax.annotation.Nullable;
 import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
 import java.io.Serializable;
 import java.time.Duration;
 
-@Named
-@Singleton
 public class AuditConfiguration implements Serializable {
 
     private static final long serialVersionUID = 1L;

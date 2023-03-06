@@ -25,10 +25,8 @@ import org.eclipse.jetty.websocket.servlet.WebSocketServlet;
 import org.eclipse.jetty.websocket.servlet.WebSocketServletFactory;
 
 import javax.inject.Inject;
-import javax.inject.Named;
 import javax.servlet.annotation.WebServlet;
 
-@Named
 @WebServlet("/websocket")
 public class ConcordWebSocketServlet extends WebSocketServlet {
 

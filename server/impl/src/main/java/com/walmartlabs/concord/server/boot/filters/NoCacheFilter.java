@@ -23,16 +23,12 @@ package com.walmartlabs.concord.server.boot.filters;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.inject.Named;
-import javax.inject.Singleton;
 import javax.servlet.*;
 import javax.servlet.annotation.WebFilter;
 import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.core.HttpHeaders;
 import java.io.IOException;
 
-@Named
-@Singleton
 @WebFilter({"/api/*", "/logs/*", "/forms/*", "/cfg.js"})
 public class NoCacheFilter implements Filter {
 

@@ -52,7 +52,6 @@ import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 import javax.inject.Named;
-import javax.inject.Singleton;
 import java.time.OffsetDateTime;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
@@ -69,8 +68,6 @@ import static org.jooq.impl.DSL.*;
 /**
  * Dispatches processes to agents.
  */
-@Named
-@Singleton
 public class Dispatcher extends PeriodicTask {
 
     private static final Logger log = LoggerFactory.getLogger(Dispatcher.class);
