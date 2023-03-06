@@ -44,6 +44,7 @@ class RunTest extends AbstractTest {
         }
 
         int exitCode = run("simple", args);
+        assertEquals(0, exitCode);
         assertLog(".*Hello, Concord.*");
         assertEquals(0, exitCode);
         // default dependencies should be added
