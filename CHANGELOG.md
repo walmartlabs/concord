@@ -11,6 +11,8 @@
 
 ### Changed
 
+- agent: log artifact resolve errors only in debug mode
+([#725](https://github.com/walmartlabs/concord/pull/725));
 - runtime-v2: predictable order of process arguments 
 ([#721](https://github.com/walmartlabs/concord/pull/721));
 - concord-server: remove more @Named usage
