@@ -47,14 +47,14 @@ public class SensitiveDataPersistenceService implements ExecutionListener {
             return;
         }
 
-        persistenceService.persistFile(Constants.Files.SENSITIVE_DATA_FILE_NAME,
+        persistenceService.persistSessionFile(Constants.Files.SENSITIVE_DATA_FILE_NAME,
                 out -> objectMapper.writeValue(out, SensitiveDataHolder.getInstance().get()));
     }
 
     @Override
     @SuppressWarnings("unchecked")
     public void beforeProcessResume() {
-        Set<String> sensitiveData = persistenceService.loadPersistedFile(Constants.Files.SENSITIVE_DATA_FILE_NAME, is -> objectMapper.readValue(is, Set.class));
+        Set<String> sensitiveData = persistenceService.loadPersistedSessionFile(Constants.Files.SENSITIVE_DATA_FILE_NAME, is -> objectMapper.readValue(is, Set.class));
         if (sensitiveData != null) {
             SensitiveDataHolder.getInstance().addAll(sensitiveData);
         }
