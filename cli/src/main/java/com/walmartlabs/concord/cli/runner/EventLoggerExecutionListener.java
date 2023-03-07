@@ -21,7 +21,10 @@ package com.walmartlabs.concord.cli.runner;
  */
 
 import com.walmartlabs.concord.runtime.v2.model.*;
+import com.walmartlabs.concord.runtime.v2.runner.context.ContextFactory;
+import com.walmartlabs.concord.runtime.v2.runner.logging.SegmentedLogger;
 import com.walmartlabs.concord.runtime.v2.runner.vm.StepCommand;
+import com.walmartlabs.concord.runtime.v2.sdk.Context;
 import com.walmartlabs.concord.svm.Runtime;
 import com.walmartlabs.concord.svm.*;
 
@@ -37,13 +40,27 @@ public class EventLoggerExecutionListener implements ExecutionListener {
 
         Location loc = s.getStep().getLocation();
 
-        System.out.println(">>> '" + getDescription(s.getStep()) + "' at " + loc.fileName() + ":" + loc.lineNum());
+        System.out.println(">>> '" + getDescription(runtime, state, threadId, s.getStep()) + "' @ " + loc.fileName() + ":" + loc.lineNum());
 
         return Result.CONTINUE;
     }
 
-    private static String getDescription(Step step) {
-        // TODO: add 'description' into step? so we will not miss description for new steps...
+    private static String getDescription(Runtime runtime, State state, ThreadId threadId, Step step) {
+        if (step instanceof AbstractStep) {
+            ContextFactory contextFactory = runtime.getService(ContextFactory.class);
+            Context ctx = contextFactory.create(runtime, state, threadId, step);
+
+            String rawSegmentName = SegmentedLogger.getSegmentName((AbstractStep<?>) step);
+            String segmentName = ctx.eval(rawSegmentName, String.class);
+            if (segmentName != null) {
+                return segmentName;
+            }
+        }
+
+        return getDefaultDescription(step);
+    }
+
+    private static String getDefaultDescription(Step step) {
         if (step instanceof FlowCall) {
             return "Flow call: " + ((FlowCall) step).getFlowName();
         } else if (step instanceof Expression) {
