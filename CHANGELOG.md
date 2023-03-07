@@ -11,6 +11,8 @@
 
 ### Changed
 
+- cli: log flow step name (if provided)
+([#724](https://github.com/walmartlabs/concord/pull/724));
 - agent: log artifact resolve errors only in debug mode
 ([#725](https://github.com/walmartlabs/concord/pull/725));
 - runtime-v2: predictable order of process arguments 
