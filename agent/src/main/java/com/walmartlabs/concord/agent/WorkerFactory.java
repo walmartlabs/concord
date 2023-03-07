@@ -36,6 +36,7 @@ public class WorkerFactory {
     private final StateFetcher stateFetcher;
     private final ProcessStatusUpdater statusUpdater;
     private final ProcessLog processLog;
+    private final PolicyEngineLoader policyEngineLoader;
 
     @Inject
     public WorkerFactory(RepositoryManager repositoryManager,
@@ -43,7 +44,8 @@ public class WorkerFactory {
                          JobExecutorFactory jobExecutorFactory,
                          StateFetcher stateFetcher,
                          ProcessStatusUpdater statusUpdater,
-                         ProcessLog processLog) {
+                         ProcessLog processLog,
+                         PolicyEngineLoader policyEngineLoader) {
 
         this.repositoryManager = repositoryManager;
         this.importManager = importManager;
@@ -51,11 +53,12 @@ public class WorkerFactory {
         this.stateFetcher = stateFetcher;
         this.statusUpdater = statusUpdater;
         this.processLog = processLog;
+        this.policyEngineLoader = policyEngineLoader;
     }
 
     public Worker create(JobRequest jobRequest, Worker.CompletionCallback completionCallback) {
         JobExecutor executor = jobExecutorFactory.create(jobRequest.getType());
 
-        return new Worker(repositoryManager, importManager, executor, completionCallback, stateFetcher, statusUpdater, processLog, jobRequest);
+        return new Worker(repositoryManager, importManager, executor, completionCallback, stateFetcher, statusUpdater, processLog, jobRequest, policyEngineLoader);
     }
 }

@@ -21,6 +21,8 @@ package com.walmartlabs.concord.agent;
  */
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.walmartlabs.concord.policyengine.PolicyEngine;
+import com.walmartlabs.concord.policyengine.PolicyEngineRules;
 import com.walmartlabs.concord.sdk.Constants;
 
 import java.io.IOException;
@@ -37,7 +39,7 @@ import java.util.Map;
 public class ConfiguredJobRequest extends JobRequest {
 
     @SuppressWarnings("unchecked")
-    public static ConfiguredJobRequest from(JobRequest req) throws ExecutionException {
+    public static ConfiguredJobRequest from(JobRequest req, PolicyEngineLoader policyEngineLoader) throws ExecutionException {
         Map<String, Object> cfg = Collections.emptyMap();
 
         Path p = req.getPayloadDir().resolve(Constants.Files.CONFIGURATION_FILE_NAME);
@@ -49,17 +51,23 @@ public class ConfiguredJobRequest extends JobRequest {
             }
         }
 
-        return new ConfiguredJobRequest(req, cfg);
+        return new ConfiguredJobRequest(req, cfg, policyEngineLoader.load(req.getPayloadDir()));
     }
 
     private final Map<String, Object> processCfg;
+    private final PolicyEngine policyEngine;
 
-    private ConfiguredJobRequest(JobRequest src, Map<String, Object> processCfg) {
+    private ConfiguredJobRequest(JobRequest src, Map<String, Object> processCfg, PolicyEngine policyEngine) {
         super(src);
         this.processCfg = processCfg;
+        this.policyEngine = policyEngine;
     }
 
     public Map<String, Object> getProcessCfg() {
         return processCfg;
+    }
+
+    public PolicyEngine getPolicyEngine() {
+        return policyEngine;
     }
 }
