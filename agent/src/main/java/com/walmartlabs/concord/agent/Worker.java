@@ -48,6 +48,7 @@ public class Worker implements Runnable {
     private final ProcessStatusUpdater processStatusUpdater;
     private final ProcessLog processLog;
     private final JobRequest jobRequest;
+    private final PolicyEngineLoader policyEngineLoader;
 
     private JobInstance jobInstance;
 
@@ -59,7 +60,8 @@ public class Worker implements Runnable {
                   StateFetcher stateFetcher,
                   ProcessStatusUpdater processStatusUpdater,
                   ProcessLog processLog,
-                  JobRequest jobRequest) {
+                  JobRequest jobRequest,
+                  PolicyEngineLoader policyEngineLoader) {
 
         this.repositoryManager = repositoryManager;
         this.importManager = importManager;
@@ -69,6 +71,7 @@ public class Worker implements Runnable {
         this.processStatusUpdater = processStatusUpdater;
         this.processLog = processLog;
         this.jobRequest = jobRequest;
+        this.policyEngineLoader = policyEngineLoader;
     }
 
     @Override
@@ -85,7 +88,7 @@ public class Worker implements Runnable {
             downloadState(jobRequest);
 
             // load the process' configuration
-            ConfiguredJobRequest configuredJobRequest = ConfiguredJobRequest.from(jobRequest);
+            ConfiguredJobRequest configuredJobRequest = ConfiguredJobRequest.from(jobRequest, policyEngineLoader);
 
             // execute the job
             jobInstance = executor.exec(configuredJobRequest);

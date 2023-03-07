@@ -34,8 +34,7 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
-import static com.walmartlabs.concord.agent.cfg.Utils.getOrCreatePath;
-import static com.walmartlabs.concord.agent.cfg.Utils.getStringOrDefault;
+import static com.walmartlabs.concord.agent.cfg.Utils.*;
 
 @Named
 @Singleton
@@ -62,6 +61,8 @@ public class AgentConfiguration {
     private final long pollInterval;
     private final int maintenanceModeListenerPort;
 
+    private final Path defaultPolicy;
+
     @Inject
     public AgentConfiguration(Config cfg) {
         this.agentId = getStringOrDefault(cfg, "id", () -> UUID.randomUUID().toString());
@@ -86,6 +87,8 @@ public class AgentConfiguration {
         this.maintenanceModeListenerPort = cfg.getInt("maintenanceModeListenerPort");
 
         this.pollInterval = cfg.getDuration("pollInterval", TimeUnit.MILLISECONDS);
+
+        this.defaultPolicy = getOptionalAbsolutePath(cfg, "defaultPolicy");
     }
 
     public String getAgentId() {
@@ -142,5 +145,9 @@ public class AgentConfiguration {
 
     public int getMaintenanceModeListenerPort() {
         return maintenanceModeListenerPort;
+    }
+
+    public Path getDefaultPolicy() {
+        return defaultPolicy;
     }
 }

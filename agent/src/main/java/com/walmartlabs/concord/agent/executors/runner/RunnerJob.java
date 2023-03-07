@@ -23,18 +23,15 @@ package com.walmartlabs.concord.agent.executors.runner;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.guava.GuavaModule;
 import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
+import com.walmartlabs.concord.agent.ConfiguredJobRequest;
 import com.walmartlabs.concord.agent.ExecutionException;
-import com.walmartlabs.concord.agent.JobRequest;
 import com.walmartlabs.concord.agent.executors.runner.RunnerJobExecutor.RunnerJobExecutorConfiguration;
 import com.walmartlabs.concord.agent.logging.ProcessLogFactory;
 import com.walmartlabs.concord.policyengine.PolicyEngine;
-import com.walmartlabs.concord.policyengine.PolicyEngineRules;
 import com.walmartlabs.concord.runtime.common.cfg.*;
 import com.walmartlabs.concord.sdk.Constants;
 
 import java.io.IOException;
-import java.io.InputStream;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Collection;
 import java.util.Collections;
@@ -43,22 +40,10 @@ import java.util.UUID;
 
 public class RunnerJob {
 
-    @SuppressWarnings("unchecked")
-    public static RunnerJob from(RunnerJobExecutorConfiguration runnerExecutorCfg, JobRequest jobRequest, ProcessLogFactory processLogFactory) throws ExecutionException, IOException {
-        Map<String, Object> cfg = Collections.emptyMap();
+    public static RunnerJob from(RunnerJobExecutorConfiguration runnerExecutorCfg,
+                                 ConfiguredJobRequest jobRequest,
+                                 ProcessLogFactory processLogFactory) throws ExecutionException {
 
-        Path payloadDir = jobRequest.getPayloadDir();
-
-        Path p = payloadDir.resolve(Constants.Files.CONFIGURATION_FILE_NAME);
-        if (Files.exists(p)) {
-            try (InputStream in = Files.newInputStream(p)) {
-                cfg = new ObjectMapper().readValue(in, Map.class);
-            } catch (IOException e) {
-                throw new ExecutionException("Error while reading process configuration", e);
-            }
-        }
-
-        RunnerConfiguration runnerCfg = createRunnerConfiguration(runnerExecutorCfg, cfg);
         RunnerLog log;
         try {
             log = new RunnerLog(
@@ -68,18 +53,10 @@ public class RunnerJob {
             throw new ExecutionException("Error while creating the runner's log: " + e.getMessage(), e);
         }
 
-        Path policyFile = payloadDir.resolve(Constants.Files.CONCORD_SYSTEM_DIR_NAME)
-                .resolve(Constants.Files.POLICY_FILE_NAME);
+        RunnerConfiguration runnerCfg = createRunnerConfiguration(runnerExecutorCfg, jobRequest.getProcessCfg());
 
-        PolicyEngine policyEngine = null;
-        if (Files.exists(policyFile)) {
-            PolicyEngineRules rules = createObjectMapper().readValue(policyFile.toFile(), PolicyEngineRules.class);
-            if (rules != null) {
-                policyEngine = new PolicyEngine(rules);
-            }
-        }
-
-        return new RunnerJob(jobRequest.getInstanceId(), payloadDir, cfg, runnerCfg, log, policyEngine);
+        return new RunnerJob(jobRequest.getInstanceId(), jobRequest.getPayloadDir(),
+                jobRequest.getProcessCfg(), runnerCfg, log, jobRequest.getPolicyEngine());
     }
 
     private final UUID instanceId;
@@ -90,7 +67,11 @@ public class RunnerJob {
     private final RunnerLog log;
     private final PolicyEngine policyEngine;
 
-    private RunnerJob(UUID instanceId, Path payloadDir, Map<String, Object> processCfg, RunnerConfiguration runnerCfg, RunnerLog log, PolicyEngine policyEngine) {
+    private RunnerJob(UUID instanceId, Path payloadDir,
+                      Map<String, Object> processCfg,
+                      RunnerConfiguration runnerCfg,
+                      RunnerLog log,
+                      PolicyEngine policyEngine) {
         this.instanceId = instanceId;
         this.payloadDir = payloadDir;
         this.processCfg = processCfg;
