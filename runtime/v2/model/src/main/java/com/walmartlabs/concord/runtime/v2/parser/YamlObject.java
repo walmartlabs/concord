@@ -23,7 +23,7 @@ package com.walmartlabs.concord.runtime.v2.parser;
 import com.walmartlabs.concord.runtime.v2.model.Location;
 
 import java.io.Serializable;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 import static com.walmartlabs.concord.runtime.v2.parser.GrammarV2.assertNotNull;
@@ -42,7 +42,7 @@ public class YamlObject extends YamlValue {
     @Override
     @SuppressWarnings("unchecked")
     public Map<String, Serializable> getValue() {
-        Map<String, Serializable> result = new HashMap<>();
+        Map<String, Serializable> result = new LinkedHashMap<>();
         for (Map.Entry<String, YamlValue> e : values.entrySet()) {
             result.put(e.getKey(), assertNotNull(e.getValue()).getValue());
         }
