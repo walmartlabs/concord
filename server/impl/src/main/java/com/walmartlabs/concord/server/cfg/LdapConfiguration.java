@@ -24,8 +24,6 @@ import com.walmartlabs.ollie.config.Config;
 import org.eclipse.sisu.Nullable;
 
 import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
 import java.io.Serializable;
 import java.time.Duration;
 import java.util.Collections;
@@ -33,8 +31,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-@Named
-@Singleton
 public class LdapConfiguration implements Serializable {
 
     private static final long serialVersionUID = 1L;

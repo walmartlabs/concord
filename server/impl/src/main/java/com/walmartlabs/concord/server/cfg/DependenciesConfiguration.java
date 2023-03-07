@@ -26,15 +26,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
 import java.io.IOException;
 import java.nio.file.Path;
 
 import static com.walmartlabs.concord.server.cfg.Utils.getPath;
 
-@Named
-@Singleton
 public class DependenciesConfiguration {
 
     private static final Logger log = LoggerFactory.getLogger(DependenciesConfiguration.class);
