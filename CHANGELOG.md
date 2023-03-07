@@ -10,7 +10,8 @@
 ([#722](https://github.com/walmartlabs/concord/pull/722)).
 
 ### Changed
-
+- cli: log errors from dependency resolver only in verbose mode
+([#723](https://github.com/walmartlabs/concord/pull/723));
 - cli: log flow step name (if provided)
 ([#724](https://github.com/walmartlabs/concord/pull/724));
 - agent: log artifact resolve errors only in debug mode
