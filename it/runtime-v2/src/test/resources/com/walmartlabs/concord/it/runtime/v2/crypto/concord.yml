@@ -3,8 +3,8 @@ configuration:
 
 flows:
   default:
-    - log: "String: ${crypto.exportAsString(myOrg, myStringSecret, mySecretPwd)}"
+    - log: "String: ${crypto.exportAsString(myOrg, myStringSecret, mySecretPwd).replaceAll('.', '$0 ')}"
     - log: "Keypair: ${crypto.exportKeyAsFile(myOrg, myKeypair, mySecretPwd)}"
-    - log: "Credentials: ${crypto.exportCredentials(myOrg, myCredentials, mySecretPwd)}"
+    - log: "Credentials: ${crypto.exportCredentials(myOrg, myCredentials, mySecretPwd).get('password').replaceAll('.', '$0 ')}"
     - log: "File: ${crypto.exportAsFile(myOrg, mySecretFile, mySecretPwd)}"
-    - log: "Encrypted string: ${crypto.decryptString(crypto.encryptString(myRawString))}"
+    - log: "Encrypted string: ${crypto.decryptString(crypto.encryptString(myRawString)).replaceAll('.', '$0 ')}"
