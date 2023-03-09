@@ -1,5 +1,32 @@
 # Change log
 
+## [1.100.0] - Unreleased
+
+### Added
+
+- runtime-v2: mask sensitive data in logs
+([#719](https://github.com/walmartlabs/concord/pull/719));
+- cli: process/project info from variables
+([#727](https://github.com/walmartlabs/concord/pull/727));
+- runtime-v2: support for "session state" process attachments
+([#722](https://github.com/walmartlabs/concord/pull/722)).
+
+### Changed
+
+- concord-console: fix v2 log segment spinner after interrupted process
+([#728](https://github.com/walmartlabs/concord/pull/728));
+- cli: log errors from dependency resolver only in verbose mode
+([#723](https://github.com/walmartlabs/concord/pull/723));
+- cli: log flow step name (if provided)
+([#724](https://github.com/walmartlabs/concord/pull/724));
+- agent: log artifact resolve errors only in debug mode
+([#725](https://github.com/walmartlabs/concord/pull/725));
+- runtime-v2: predictable order of process arguments 
+([#721](https://github.com/walmartlabs/concord/pull/721));
+- concord-server: remove more @Named usage
+([#650](https://github.com/walmartlabs/concord/pull/650)).
+
+
 ## [1.99.0] - 2023-02-24
 
 ### Added
