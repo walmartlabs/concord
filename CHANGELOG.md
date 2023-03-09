@@ -10,6 +10,9 @@
 ([#722](https://github.com/walmartlabs/concord/pull/722)).
 
 ### Changed
+
+- concord-console: fix v2 log segment spinner after interrupted process
+([#728](https://github.com/walmartlabs/concord/pull/728));
 - cli: log errors from dependency resolver only in verbose mode
 ([#723](https://github.com/walmartlabs/concord/pull/723));
 - cli: log flow step name (if provided)
