@@ -20,18 +20,16 @@ package com.walmartlabs.concord.server.boot;
  * =====
  */
 
-import com.google.inject.AbstractModule;
-import com.walmartlabs.ollie.config.ConfigurationProcessor;
-import com.walmartlabs.ollie.config.Environment;
-import com.walmartlabs.ollie.config.EnvironmentSelector;
-import com.walmartlabs.ollie.config.OllieConfigurationModule;
+import com.google.inject.Binder;
+import com.google.inject.Module;
+import com.walmartlabs.concord.server.boot.validation.ValidationModule;
+import org.sonatype.siesta.server.resteasy.ResteasyModule;
 
-public class ConfigurationModule extends AbstractModule {
+public class RestModule implements Module {
 
     @Override
-    protected void configure() {
-        Environment env = new EnvironmentSelector().select();
-        com.typesafe.config.Config config = new ConfigurationProcessor("concord-server", env, null, null).process();
-        install(new OllieConfigurationModule("com.walmartlabs.concord.server", config));
+    public void configure(Binder binder) {
+        binder.install(new ResteasyModule());
+        binder.install(new ValidationModule());
     }
 }

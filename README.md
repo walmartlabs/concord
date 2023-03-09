@@ -19,6 +19,7 @@ different systems together using scenarios and plugins created by users.
   * [Running tests](#running-tests)
 - [Examples](#examples)
 - [How To Release New Versions](#how-to-release-new-versions)
+- [Development Notes](#development-notes)
 
 ## Building
 
@@ -119,3 +120,7 @@ See the [examples](examples) directory.
   $ ./mvnw -f docker-images clean package -Pdocker
   $ ./docker-images/push.sh RELEASE_TAG
   ```
+
+## Development Notes
+
+See [NOTES.md](NOTES.md).

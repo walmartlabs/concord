@@ -53,8 +53,6 @@ import java.time.OffsetDateTime;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 
-@Named
-@Singleton
 public class TriggerScheduler implements ScheduledTask {
 
     private static final Logger log = LoggerFactory.getLogger(TriggerScheduler.class);

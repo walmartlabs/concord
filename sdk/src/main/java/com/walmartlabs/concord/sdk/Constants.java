@@ -395,6 +395,12 @@ public class Constants {
         public static final String JOB_CHECKPOINTS_DIR_NAME = "_checkpoints";
 
         /**
+         * Directory which contains job "session files":
+         *  files that can be downloaded only with session key.
+         */
+        public static final String JOB_SESSION_FILES_DIR_NAME = "_session_files";
+
+        /**
          * Directory which contains process' state.
          */
         public static final String JOB_STATE_DIR_NAME = "_state";
@@ -478,6 +484,11 @@ public class Constants {
          */
         @Deprecated
         public static final String DEPENDENCY_VERSIONS_FILE_NAME = "dependencyversions.properties";
+
+        /**
+         * File which contains sensitive data of process.
+         */
+        public static final String SENSITIVE_DATA_FILE_NAME = "sensitive_data.json";
     }
 
     public static class Flows {
