@@ -4,6 +4,8 @@
 
 ### Added
 
+- runtime-v2: mask sensitive data in logs
+([#719](https://github.com/walmartlabs/concord/pull/719));
 - cli: process/project info from variables
 ([#727](https://github.com/walmartlabs/concord/pull/727));
 - runtime-v2: support for "session state" process attachments
