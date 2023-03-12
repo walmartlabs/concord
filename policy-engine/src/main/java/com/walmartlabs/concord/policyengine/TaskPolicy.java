@@ -69,32 +69,32 @@ public class TaskPolicy {
         }
 
         Set<String> result = new HashSet<>();
-        rules.getAllow().forEach(r -> collectTaskNames(r.getTaskResults(), result));
-        rules.getDeny().forEach(r -> collectTaskNames(r.getTaskResults(), result));
-        rules.getWarn().forEach(r -> collectTaskNames(r.getTaskResults(), result));
+        rules.getAllow().forEach(r -> collectTaskNames(r.taskResults(), result));
+        rules.getDeny().forEach(r -> collectTaskNames(r.taskResults(), result));
+        rules.getWarn().forEach(r -> collectTaskNames(r.taskResults(), result));
         return result;
     }
 
     private static void collectTaskNames(List<TaskRule.TaskResult> taskResults, Set<String> result) {
         for (TaskRule.TaskResult tr : taskResults) {
-            result.add(tr.getTask());
+            result.add(tr.task());
         }
     }
 
     private boolean matchRule(String taskName, String methodName, Object[] params, Map<String, List<Serializable>> taskResults, TaskRule r) {
-        if (!matches(r.getTaskName(), taskName)) {
+        if (!matches(r.taskName(), taskName)) {
             return false;
         }
 
-        if (r.getMethod() != null && !matches(r.getMethod(), methodName)) {
+        if (r.method() != null && !matches(r.method(), methodName)) {
             return false;
         }
 
-        if (paramsMatches(r.getParams(), params)) {
+        if (paramsMatches(r.params(), params)) {
             return true;
         }
 
-        if (taskResultsMatches(r.getTaskResults(), taskResults)) {
+        if (taskResultsMatches(r.taskResults(), taskResults)) {
             return true;
         }
 
@@ -107,15 +107,15 @@ public class TaskPolicy {
         }
 
         for (TaskRule.Param p : r) {
-            if (p.getIndex() >= params.length) {
+            if (p.index() >= params.length) {
                 return false;
             }
 
             if (!paramMatches(
-                    Optional.ofNullable(p.getName()).map(n -> n.split("\\.")).orElse(null),
+                    Optional.ofNullable(p.name()).map(n -> n.split("\\.")).orElse(null),
                     0,
-                    p.getValues(), params[p.getIndex()],
-                    p.isProtected())) {
+                    p.values(), params[p.index()],
+                    p.protectedVariable())) {
                 return false;
             }
         }
@@ -177,14 +177,14 @@ public class TaskPolicy {
         }
 
         for (TaskRule.TaskResult tr : rule) {
-            String taskName = tr.getTask();
+            String taskName = tr.task();
             List<Serializable> results = taskResults.getOrDefault(taskName, Collections.emptyList());
-            String resultName = tr.getResult();
+            String resultName = tr.result();
 
             for (Object result : results) {
                 if (paramMatches(
                         Optional.ofNullable(resultName).map(n -> n.split("\\.")).orElse(null),
-                        0, tr.getValues(), result, false)) {
+                        0, tr.values(), result, false)) {
                     return true;
                 }
             }

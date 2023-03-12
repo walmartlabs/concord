@@ -37,12 +37,26 @@ import javax.script.*;
 import java.io.BufferedWriter;
 import java.io.Reader;
 import java.io.Writer;
-import java.util.Collections;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public class DefaultScriptEvaluator implements ScriptEvaluator {
+
+    // https://www.graalvm.org/latest/reference-manual/js/JavaScriptCompatibility/#ecmascript-language-compliance
+    static Integer[] GRAAL_ES_VERSIONS = new Integer[]{
+            3,
+            5,
+            6,
+            7,
+            2015,
+            2016,
+            2017,
+            2018,
+            2019,
+            2020,
+            2021,
+            2022,
+    };
+
 
     private static final Logger log = LoggerFactory.getLogger(DefaultScriptEvaluator.class);
 
@@ -60,7 +74,7 @@ public class DefaultScriptEvaluator implements ScriptEvaluator {
 
     @Override
     public ScriptResult eval(Context context, String language, Reader input, Map<String, Object> variables) {
-        ScriptEngine engine = getEngine(language);
+        ScriptEngine engine = getEngine(language, variables);
 
         if (engine == null) {
             throw new RuntimeException("Script engine not found: " + language);
@@ -115,20 +129,37 @@ public class DefaultScriptEvaluator implements ScriptEvaluator {
     }
 
     @SuppressWarnings({"rawtypes", "unchecked"})
-    private ScriptEngine getEngine(String language) {
+    private org.graalvm.polyglot.Context.Builder getGraalEngineContextBuilder(Map<String, Object> variables) {
+        HostAccess access = HostAccess.newBuilder(HostAccess.ALL)
+                .targetTypeMapping(Value.class, Object.class, Value::hasArrayElements, v -> new LinkedList<>(v.as(List.class))).build();
+        org.graalvm.polyglot.Context.Builder ctx = org.graalvm.polyglot.Context.newBuilder("js")
+                .allowHostAccess(access);
+        for (Map.Entry<String, Object> entry : variables.entrySet()) {
+            String key = entry.getKey();
+            Object value = entry.getValue();
+            if ("esVersion".equals(key)) {
+                Optional<Integer> esVersion = Arrays.stream(GRAAL_ES_VERSIONS)
+                        .filter(it -> it.equals(value))
+                        .findFirst();
+                if (!esVersion.isPresent()) {
+                    throw new RuntimeException("unsupported esVersion: " + value.toString());
+                }
+                ctx.option("js.ecmascript-version", esVersion.get().toString());
+            }
+        }
+        return ctx;
+    }
+
+    private ScriptEngine getEngine(String language, Map<String, Object> variables) {
         ScriptEngine engine;
         if (new GraalJSEngineFactory().getNames().contains(language)) {
             // Javascript array is converted in Java to an empty map #214 (https://github.com/oracle/graaljs/issues/214)
-            HostAccess access = HostAccess.newBuilder(HostAccess.ALL)
-                    .targetTypeMapping(Value.class, Object.class, Value::hasArrayElements, v -> new LinkedList<>(v.as(List.class))).build();
-
             engine = GraalJSScriptEngine.create(Engine.newBuilder()
                             .allowExperimentalOptions(true)
                             .option("engine.WarnInterpreterOnly", "false")
                             .option("js.nashorn-compat", "true")
                             .build(),
-                    org.graalvm.polyglot.Context.newBuilder("js")
-                            .allowHostAccess(access));
+                    getGraalEngineContextBuilder(variables));
         } else {
             ScriptEngineProperties.applyFor(language);
 

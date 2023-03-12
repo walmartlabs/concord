@@ -44,7 +44,6 @@ import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 import javax.inject.Named;
-import javax.inject.Singleton;
 import java.io.IOException;
 import java.time.OffsetDateTime;
 import java.util.*;
@@ -55,8 +54,6 @@ import static com.walmartlabs.concord.server.jooq.Tables.PROCESS_WAIT_CONDITIONS
  * Takes care of processes with wait conditions.
  * E.g. waiting for other processes to finish, locking, etc.
  */
-@Named("process-wait-watchdog")
-@Singleton
 public class ProcessWaitWatchdog implements ScheduledTask {
 
     private static final Logger log = LoggerFactory.getLogger(ProcessWaitWatchdog.class);
@@ -88,6 +85,11 @@ public class ProcessWaitWatchdog implements ScheduledTask {
 
         handlers.forEach(h -> this.processWaitHandlers.put(h.getType(), h));
         this.waitItemsHistogram = metricRegistry.histogram("process-wait-watchdog-items");
+    }
+
+    @Override
+    public String getId() {
+        return "process-wait-watchdog";
     }
 
     @Override

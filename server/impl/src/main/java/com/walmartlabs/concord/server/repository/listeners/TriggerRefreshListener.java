@@ -20,43 +20,31 @@ package com.walmartlabs.concord.server.repository.listeners;
  * =====
  */
 
-import com.walmartlabs.concord.imports.ImportsListener;
-import com.walmartlabs.concord.process.loader.ProjectLoader;
 import com.walmartlabs.concord.process.loader.model.ProcessDefinition;
 import com.walmartlabs.concord.server.org.project.ProjectValidator;
 import com.walmartlabs.concord.server.org.project.RepositoryEntry;
 import com.walmartlabs.concord.server.org.triggers.TriggerManager;
-import com.walmartlabs.concord.server.process.ImportsNormalizerFactory;
 import org.jooq.DSLContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.sonatype.siesta.ValidationErrorsException;
 
 import javax.inject.Inject;
-import javax.inject.Named;
 import java.nio.file.Path;
 
-@Named
 public class TriggerRefreshListener implements RepositoryRefreshListener {
 
     private static final Logger log = LoggerFactory.getLogger(TriggerRefreshListener.class);
 
     private final TriggerManager triggerManager;
-    private final ProjectLoader projectLoader;
-    private final ImportsNormalizerFactory importsNormalizer;
 
     @Inject
-    public TriggerRefreshListener(TriggerManager triggerManager,
-                                  ProjectLoader projectLoader,
-                                  ImportsNormalizerFactory importsNormalizer) {
-
+    public TriggerRefreshListener(TriggerManager triggerManager) {
         this.triggerManager = triggerManager;
-        this.projectLoader = projectLoader;
-        this.importsNormalizer = importsNormalizer;
     }
 
     @Override
-    public void onRefresh(DSLContext ctx, RepositoryEntry repo, Path repoPath) throws Exception {
+    public void onRefresh(DSLContext ctx, RepositoryEntry repo, Path repoPath, ProcessDefinition pd) {
         if (repo.isTriggersDisabled()) {
             triggerManager.clearTriggers(repo.getProjectId(), repo.getId());
             return;
@@ -64,9 +52,6 @@ public class TriggerRefreshListener implements RepositoryRefreshListener {
 
         log.info("refresh ['{}'] -> triggers", repo.getId());
 
-        ProjectLoader.Result result = projectLoader.loadProject(repoPath, importsNormalizer.forProject(repo.getProjectId()), ImportsListener.NOP_LISTENER);
-
-        ProcessDefinition pd = result.projectDefinition();
         ProjectValidator.Result validationResult = ProjectValidator.validate(pd);
         if (!validationResult.isValid()) {
             throw new ValidationErrorsException(String.join("\n", validationResult.getErrors()));

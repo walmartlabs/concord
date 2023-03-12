@@ -61,6 +61,7 @@ import com.walmartlabs.concord.server.sdk.ProcessStatus;
 import com.walmartlabs.concord.server.sdk.metrics.WithTimer;
 import com.walmartlabs.concord.server.security.Roles;
 import com.walmartlabs.concord.server.security.UserPrincipal;
+import com.walmartlabs.concord.server.security.sessionkey.SessionKeyPrincipal;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
@@ -662,6 +663,8 @@ public class ProcessResource implements Resource {
         }
 
         String resource = path(Constants.Files.JOB_ATTACHMENTS_DIR_NAME, attachmentName);
+        assertResourceAccess(processEntry, resource);
+
         Optional<Path> o = stateManager.get(processKey, resource, src -> {
             try {
                 Path tmp = IOUtils.createTempFile("attachment", ".bin");
@@ -860,11 +863,16 @@ public class ProcessResource implements Resource {
         ProcessEntry entry = assertProcess(PartialProcessKey.from(instanceId));
         ProcessKey processKey = new ProcessKey(entry.instanceId(), entry.createdAt());
 
-        assertProcessAccess(entry, "attachments");
+        assertProcessAccess(entry, "state");
 
         StreamingOutput out = output -> {
             try (ZipArchiveOutputStream dst = new ZipArchiveOutputStream(output)) {
-                stateManager.export(processKey, zipTo(dst));
+                stateManager.export(processKey, new ProcessStateManager.FilteringConsumer(zipTo(dst), s -> {
+                    if (!isSessionResource(s)) {
+                        return true;
+                    }
+                    return isSessionKeyAccess(instanceId);
+                }));
             }
         };
 
@@ -888,6 +896,7 @@ public class ProcessResource implements Resource {
         ProcessKey processKey = new ProcessKey(p.instanceId(), p.createdAt());
 
         assertProcessAccess(p, "state");
+        assertResourceAccess(p, fileName);
 
         StreamingOutput out = output -> {
             Path tmp = stateManager.get(processKey, fileName, ProcessResource::copyToTmp)
@@ -1023,7 +1032,7 @@ public class ProcessResource implements Resource {
     @Produces(MediaType.APPLICATION_JSON)
     @WithTimer
     public Response updateMetadata(@ApiParam @PathParam("id") UUID instanceId, @ApiParam Map<String, Object> meta) {
-        PartialProcessKey processKey = PartialProcessKey.from(instanceId);
+        ProcessKey processKey = assertProcessKey(instanceId);
 
         if (!queueDao.updateMeta(processKey, meta)) {
             throw new ConcordApplicationException("Process instance not found", Status.NOT_FOUND);
@@ -1076,6 +1085,27 @@ public class ProcessResource implements Resource {
 
         throw new UnauthorizedException("The current user (" + principal.getUsername() + ") doesn't have " +
                 "the necessary permissions to the download " + downloadEntity + " : " + pe.instanceId());
+    }
+
+    private void assertResourceAccess(ProcessEntry pe, String resource) {
+        if (!isSessionResource(resource)) {
+            return;
+        }
+
+        if (isSessionKeyAccess(pe.instanceId())) {
+            return;
+        }
+
+        throw new UnauthorizedException("Resource accessible with session process key only");
+    }
+
+    private boolean isSessionResource(String resource) {
+        return resource.startsWith(path(Constants.Files.JOB_ATTACHMENTS_DIR_NAME, Constants.Files.JOB_SESSION_FILES_DIR_NAME));
+    }
+
+    private boolean isSessionKeyAccess(UUID instanceId) {
+        SessionKeyPrincipal principal = SessionKeyPrincipal.getCurrent();
+        return principal != null && principal.getProcessKey().getInstanceId().equals(instanceId);
     }
 
     private ProcessEntry assertProcess(PartialProcessKey processKey) {
@@ -1154,11 +1184,11 @@ public class ProcessResource implements Resource {
         for (CheckResult.Item<AttachmentsRule, Long> e : errors) {
             AttachmentsRule r = e.getRule();
 
-            String msg = r.getMsg() != null ? r.getMsg() : defaultMessage;
+            String msg = r.msg() != null ? r.msg() : defaultMessage;
             long actualSize = e.getEntity();
-            long limit = r.getMaxSizeInBytes();
+            long limit = r.maxSizeInBytes();
 
-            sb.append(MessageFormat.format(msg, actualSize, limit)).append(';');
+            sb.append(MessageFormat.format(Objects.requireNonNull(msg), actualSize, limit)).append(';');
         }
         return sb.toString();
     }

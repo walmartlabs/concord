@@ -22,49 +22,46 @@ package com.walmartlabs.concord.server.agent;
 
 import com.walmartlabs.concord.db.AbstractDao;
 import com.walmartlabs.concord.db.MainDB;
+import com.walmartlabs.concord.db.PgUtils;
 import com.walmartlabs.concord.server.agent.AgentCommand.Status;
+import com.walmartlabs.concord.server.cfg.AgentConfiguration;
 import com.walmartlabs.concord.server.sdk.ScheduledTask;
 import org.jooq.Configuration;
 import org.jooq.Field;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
 import java.time.OffsetDateTime;
-import java.util.concurrent.TimeUnit;
 
 import static com.walmartlabs.concord.server.jooq.tables.AgentCommands.AGENT_COMMANDS;
-import static org.jooq.impl.DSL.currentOffsetDateTime;
-import static org.jooq.impl.DSL.field;
 
-@Named("agent-command-watchdog")
-@Singleton
 public class AgentCommandWatchdog implements ScheduledTask {
 
-    private static final Logger log = LoggerFactory.getLogger(AgentCommandWatchdog.class);
+    private final AgentConfiguration cfg;
 
     private final WatchdogDao watchdogDao;
 
     @Inject
-    public AgentCommandWatchdog(WatchdogDao watchdogDao) {
+    public AgentCommandWatchdog(AgentConfiguration cfg, WatchdogDao watchdogDao) {
+        this.cfg = cfg;
         this.watchdogDao = watchdogDao;
     }
 
     @Override
+    public String getId() {
+        return "agent-command-watchdog";
+    }
+
+    @Override
     public long getIntervalInSec() {
-        return TimeUnit.MINUTES.toSeconds(1);
+        return cfg.getWatchdogPeriod().getSeconds();
     }
 
     @Override
     public void performTask() {
-        Field<OffsetDateTime> cutoff = currentOffsetDateTime().minus(field("interval '10 minutes'"));
-        int n = watchdogDao.failStalled(cutoff);
-        log.info("run -> {} command(s) are timed out", n);
+        watchdogDao.failStalled(PgUtils.nowMinus(cfg.getMaxStalledAge()));
+        watchdogDao.cleanupOld(PgUtils.nowMinus(cfg.getMaxCommandAge()));
     }
 
-    @Named
     private static final class WatchdogDao extends AbstractDao {
 
         @Inject
@@ -76,6 +73,13 @@ public class AgentCommandWatchdog implements ScheduledTask {
             return txResult(tx -> tx.update(AGENT_COMMANDS)
                     .set(AGENT_COMMANDS.COMMAND_STATUS, Status.FAILED.toString())
                     .where(AGENT_COMMANDS.COMMAND_STATUS.in(Status.CREATED.toString())
+                            .and(AGENT_COMMANDS.CREATED_AT.lessThan(cutoff)))
+                    .execute());
+        }
+
+        public int cleanupOld(Field<OffsetDateTime> cutoff) {
+            return txResult(tx -> tx.deleteFrom(AGENT_COMMANDS)
+                    .where(AGENT_COMMANDS.COMMAND_STATUS.in(Status.SENT.toString(), Status.FAILED.toString())
                             .and(AGENT_COMMANDS.CREATED_AT.lessThan(cutoff)))
                     .execute());
         }

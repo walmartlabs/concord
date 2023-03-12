@@ -24,11 +24,16 @@ import com.walmartlabs.concord.common.IOUtils;
 import com.walmartlabs.concord.common.TemporaryPath;
 import com.walmartlabs.concord.db.AbstractDao;
 import com.walmartlabs.concord.db.MainDB;
+import com.walmartlabs.concord.imports.ImportsListener;
+import com.walmartlabs.concord.process.loader.ImportsNormalizer;
+import com.walmartlabs.concord.process.loader.ProjectLoader;
+import com.walmartlabs.concord.process.loader.model.ProcessDefinition;
 import com.walmartlabs.concord.repository.Repository;
 import com.walmartlabs.concord.server.events.ExternalEventResource;
 import com.walmartlabs.concord.server.org.OrganizationManager;
 import com.walmartlabs.concord.server.org.ResourceAccessLevel;
 import com.walmartlabs.concord.server.org.project.*;
+import com.walmartlabs.concord.server.process.ImportsNormalizerFactory;
 import com.walmartlabs.concord.server.repository.listeners.RepositoryRefreshListener;
 import com.walmartlabs.concord.server.sdk.ConcordApplicationException;
 import org.jooq.Configuration;
@@ -38,12 +43,10 @@ import org.sonatype.siesta.ValidationErrorsException;
 
 import javax.inject.Inject;
 import javax.inject.Named;
+import java.nio.file.Path;
 import java.util.*;
 import java.util.stream.Collectors;
 
-import static com.walmartlabs.concord.server.org.project.RepositoryUtils.assertRepository;
-
-@Named
 public class RepositoryRefresher extends AbstractDao {
 
     private static final Logger log = LoggerFactory.getLogger(RepositoryRefresher.class);
@@ -55,6 +58,10 @@ public class RepositoryRefresher extends AbstractDao {
     private final ExternalEventResource externalEventResource;
     private final RepositoryDao repositoryDao;
     private final ProjectDao projectDao;
+    private final ProjectLoader projectLoader;
+    private final ImportsNormalizerFactory importsNormalizerFactory;
+
+    private final ProjectRepositoryManager projectRepositoryManager;
 
     @Inject
     public RepositoryRefresher(@MainDB Configuration cfg,
@@ -64,7 +71,10 @@ public class RepositoryRefresher extends AbstractDao {
                                RepositoryManager repositoryManager,
                                ExternalEventResource externalEventResource,
                                RepositoryDao repositoryDao,
-                               ProjectDao projectDao) {
+                               ProjectDao projectDao,
+                               ProjectRepositoryManager projectRepositoryManager,
+                               ProjectLoader projectLoader,
+                               ImportsNormalizerFactory importsNormalizerFactory) {
 
         super(cfg);
 
@@ -75,6 +85,9 @@ public class RepositoryRefresher extends AbstractDao {
         this.externalEventResource = externalEventResource;
         this.repositoryDao = repositoryDao;
         this.projectDao = projectDao;
+        this.projectRepositoryManager = projectRepositoryManager;
+        this.projectLoader = projectLoader;
+        this.importsNormalizerFactory = importsNormalizerFactory;
     }
 
     public void refresh(List<UUID> repositoryIds) {
@@ -103,10 +116,8 @@ public class RepositoryRefresher extends AbstractDao {
 
     public void refresh(String orgName, String projectName, String repositoryName, boolean sync) {
         UUID orgId = orgManager.assertAccess(orgName, true).getId();
-        ProjectEntry projectEntry = assertProject(orgId, projectName, ResourceAccessLevel.READER, true);
-        UUID projectId = projectEntry.getId();
-
-        RepositoryEntry repositoryEntry = assertRepository(projectEntry, repositoryName);
+        ProjectEntry projectEntry = assertProject(orgId, projectName);
+        RepositoryEntry repositoryEntry = projectRepositoryManager.get(projectEntry.getId(), repositoryName);
 
         if (!sync) {
             Map<String, Object> event = new HashMap<>();
@@ -120,15 +131,21 @@ public class RepositoryRefresher extends AbstractDao {
         }
 
         try (TemporaryPath tmpRepoPath = IOUtils.tempDir("refreshRepo_")) {
+            Path path = tmpRepoPath.path();
+            ImportsNormalizer normalizer = importsNormalizerFactory.forProject(repositoryEntry.getProjectId());
+
             repositoryManager.withLock(repositoryEntry.getUrl(), () -> {
-                Repository repo = repositoryManager.fetch(projectId, repositoryEntry);
-                repo.export(tmpRepoPath.path());
+                Repository repo = repositoryManager.fetch(projectEntry.getId(), repositoryEntry);
+                repo.export(path);
                 return null;
             });
 
+            ProcessDefinition pd = projectLoader.loadProject(path, normalizer, ImportsListener.NOP_LISTENER)
+                    .projectDefinition();
+
             tx(tx -> {
                 for (RepositoryRefreshListener l : listeners) {
-                    l.onRefresh(tx, repositoryEntry, tmpRepoPath.path());
+                    l.onRefresh(tx, repositoryEntry, path, pd);
                 }
             });
         } catch (Exception e) {
@@ -137,11 +154,11 @@ public class RepositoryRefresher extends AbstractDao {
         }
     }
 
-    private ProjectEntry assertProject(UUID orgId, String projectName, ResourceAccessLevel accessLevel, boolean orgMembersOnly) {
+    private ProjectEntry assertProject(UUID orgId, String projectName) {
         if (projectName == null) {
             throw new ValidationErrorsException("Invalid project name");
         }
 
-        return projectAccessManager.assertAccess(orgId, null, projectName, accessLevel, orgMembersOnly);
+        return projectAccessManager.assertAccess(orgId, null, projectName, ResourceAccessLevel.READER, true);
     }
 }

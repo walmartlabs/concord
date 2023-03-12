@@ -20,67 +20,44 @@ package com.walmartlabs.concord.policyengine;
  * =====
  */
 
-import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import org.immutables.value.Value;
 
+import javax.annotation.Nullable;
 import java.io.Serializable;
-import java.util.Objects;
 
-public class QueueRule implements Serializable {
+@Value.Immutable
+@JsonInclude(JsonInclude.Include.NON_EMPTY)
+@JsonSerialize(as = ImmutableQueueRule.class)
+@JsonDeserialize(as = ImmutableQueueRule.class)
+public interface QueueRule extends Serializable {
 
-    private static final long serialVersionUID = 1L;
+    long serialVersionUID = 1L;
 
-    public static QueueRule empty() {
-        return new QueueRule(null, null, null);
+    static QueueRule empty() {
+        return QueueRule.of(null, null, null);
     }
 
-    private final ConcurrentProcessRule concurrent;
-    private final ForkDepthRule forkDepthRule;
-    private final ProcessTimeoutRule processTimeoutRule;
+    @Nullable
+    @JsonProperty("concurrent")
+    ConcurrentProcessRule concurrentRule();
 
-    @JsonCreator
-    public QueueRule(@JsonProperty("concurrent") ConcurrentProcessRule concurrent,
-                     @JsonProperty("forkDepth") ForkDepthRule forkDepthRule,
-                     @JsonProperty("processTimeout")  ProcessTimeoutRule processTimeoutRule) {
+    @Nullable
+    @JsonProperty("forkDepth")
+    ForkDepthRule forkDepthRule();
 
-        this.concurrent = concurrent;
-        this.forkDepthRule = forkDepthRule;
-        this.processTimeoutRule = processTimeoutRule;
-    }
+    @Nullable
+    @JsonProperty("processTimeout")
+    ProcessTimeoutRule processTimeoutRule();
 
-    public ConcurrentProcessRule getConcurrent() {
-        return concurrent;
-    }
-
-    public ForkDepthRule getForkDepthRule() {
-        return forkDepthRule;
-    }
-
-    public ProcessTimeoutRule getProcessTimeoutRule() {
-        return processTimeoutRule;
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        QueueRule queueRule = (QueueRule) o;
-        return Objects.equals(concurrent, queueRule.concurrent) &&
-                Objects.equals(forkDepthRule, queueRule.forkDepthRule) &&
-                Objects.equals(processTimeoutRule, queueRule.processTimeoutRule);
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(concurrent, forkDepthRule, processTimeoutRule);
-    }
-
-    @Override
-    public String toString() {
-        return "QueueRule{" +
-                "concurrent=" + concurrent +
-                ", forkDepthRule=" + forkDepthRule +
-                ", processTimeoutRule=" + processTimeoutRule +
-                '}';
+    static QueueRule of(ConcurrentProcessRule concurrentRule, ForkDepthRule forkDepthRule, ProcessTimeoutRule processTimeoutRule) {
+        return ImmutableQueueRule.builder()
+                .concurrentRule(concurrentRule)
+                .forkDepthRule(forkDepthRule)
+                .processTimeoutRule(processTimeoutRule)
+                .build();
     }
 }

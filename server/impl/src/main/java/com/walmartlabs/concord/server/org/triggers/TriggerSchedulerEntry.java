@@ -20,69 +20,22 @@ package com.walmartlabs.concord.server.org.triggers;
  * =====
  */
 
-import com.walmartlabs.concord.sdk.Constants;
-import com.walmartlabs.concord.sdk.MapUtils;
+import org.immutables.value.Value;
 
 import java.time.OffsetDateTime;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
 
-public class TriggerSchedulerEntry extends TriggerEntry {
+@Value.Immutable
+public interface TriggerSchedulerEntry {
 
-    private static final long serialVersionUID = 1L;
+    long serialVersionUID = 1L;
 
-    private final OffsetDateTime fireAt;
-    private final UUID triggerId;
+    OffsetDateTime fireAt();
 
-    public TriggerSchedulerEntry(OffsetDateTime fireAt, UUID triggerId, UUID orgId, String orgName, UUID projectId,
-                                 String projectName, UUID repositoryId, String repositoryName,
-                                 Map<String, Object> conditions, Map<String, Object> cfg, List<String> activeProfiles,
-                                 Map<String, Object> arguments, String eventSource) {
+    OffsetDateTime nextExecutionAt();
 
-        super(null, orgId, orgName, projectId, projectName, repositoryId,
-                repositoryName, eventSource, activeProfiles, arguments, conditions, cfg);
+    TriggerEntry trigger();
 
-        this.fireAt = fireAt;
-        this.triggerId = triggerId;
-    }
-
-    public OffsetDateTime getFireAt() {
-        return fireAt;
-    }
-
-    public UUID getTriggerId() {
-        return triggerId;
-    }
-
-    @Override
-    public Map<String, Object> getCfg() {
-        Map<String, Object> result = super.getCfg();
-        return result == null ? Collections.emptyMap() : result;
-    }
-
-    public String getEntryPoint() {
-        return (String) getCfg().get(Constants.Request.ENTRY_POINT_KEY);
-    }
-
-    public TriggerRunAs runAs() {
-        return TriggerRunAs.from(MapUtils.getMap(getCfg(), "runAs", Collections.emptyMap()));
-    }
-
-    @Override
-    public String toString() {
-        return "TriggerSchedulerEntry{" +
-                "fireAt=" + fireAt +
-                ", triggerId=" + triggerId +
-                ", orgId=" + this.getOrgId() +
-                ", projectId=" + this.getProjectId() +
-                ", repoId=" + this.getRepositoryId() +
-                ", eventSource=" + this.getEventSource() +
-                ", activeProfiles=" + this.getActiveProfiles() +
-                ", arguments=" + this.getArguments() +
-                ", conditions=" + this.getConditions() +
-                ", cfg=" + this.getCfg() +
-                '}';
+    static ImmutableTriggerSchedulerEntry.Builder builder() {
+        return ImmutableTriggerSchedulerEntry.builder();
     }
 }

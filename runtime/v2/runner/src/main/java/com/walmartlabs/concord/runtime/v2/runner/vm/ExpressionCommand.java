@@ -69,9 +69,4 @@ public class ExpressionCommand extends StepCommand<Expression> {
             ctx.variables().set(opts.out(), result);
         }
     }
-
-    @Override
-    protected String getDefaultSegmentName() {
-        return "expression";
-    }
 }

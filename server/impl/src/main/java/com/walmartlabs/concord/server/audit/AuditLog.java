@@ -38,7 +38,6 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
-@Named
 public class AuditLog {
 
     private static final Logger log = LoggerFactory.getLogger(AuditLog.class);

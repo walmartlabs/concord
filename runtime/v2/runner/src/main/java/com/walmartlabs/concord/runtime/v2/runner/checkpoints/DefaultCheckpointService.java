@@ -23,11 +23,10 @@ package com.walmartlabs.concord.runtime.v2.runner.checkpoints;
 import com.walmartlabs.concord.common.ObjectInputStreamWithClassLoader;
 import com.walmartlabs.concord.common.TemporaryPath;
 import com.walmartlabs.concord.runtime.v2.runner.ProcessSnapshot;
+import com.walmartlabs.concord.runtime.v2.runner.vm.VMUtils;
 import com.walmartlabs.concord.runtime.v2.sdk.WorkingDirectory;
+import com.walmartlabs.concord.svm.*;
 import com.walmartlabs.concord.svm.Runtime;
-import com.walmartlabs.concord.svm.State;
-import com.walmartlabs.concord.svm.ThreadId;
-import com.walmartlabs.concord.svm.ThreadStatus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -37,7 +36,11 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.util.Collections;
+import java.util.List;
 import java.util.UUID;
+
+import static com.walmartlabs.concord.sdk.Constants.Request.RESUME_EVENTS_KEY;
 
 public class DefaultCheckpointService implements CheckpointService {
 
@@ -73,6 +76,10 @@ public class DefaultCheckpointService implements CheckpointService {
             State state = clone(snapshot.vmState(), classLoader);
             state.setEventRef(threadId, resumeEventRef);
             state.setStatus(threadId, ThreadStatus.SUSPENDED);
+
+            List<Frame> frames = state.getFrames(state.getRootThreadId());
+            Frame rootFrame = frames.get(frames.size() - 1);
+            VMUtils.putLocal(rootFrame, RESUME_EVENTS_KEY, Collections.singletonList(name));
 
             archive.withResumeEvent(resumeEventRef)
                     .withProcessState(ProcessSnapshot.builder()

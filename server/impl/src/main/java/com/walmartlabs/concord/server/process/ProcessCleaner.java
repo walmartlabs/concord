@@ -32,7 +32,6 @@ import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 import javax.inject.Named;
-import javax.inject.Singleton;
 import java.time.OffsetDateTime;
 import java.util.UUID;
 
@@ -42,8 +41,6 @@ import static com.walmartlabs.concord.server.jooq.tables.ProcessEvents.PROCESS_E
 import static com.walmartlabs.concord.server.jooq.tables.ProcessQueue.PROCESS_QUEUE;
 import static com.walmartlabs.concord.server.jooq.tables.ProcessState.PROCESS_STATE;
 
-@Named("process-cleaner")
-@Singleton
 public class ProcessCleaner implements ScheduledTask {
 
     private static final Logger log = LoggerFactory.getLogger(ProcessCleaner.class);
@@ -61,6 +58,11 @@ public class ProcessCleaner implements ScheduledTask {
     public ProcessCleaner(ProcessConfiguration cfg, CleanerDao cleanerDao) {
         this.cfg = cfg;
         this.cleanerDao = cleanerDao;
+    }
+
+    @Override
+    public String getId() {
+        return "process-cleaner";
     }
 
     @Override

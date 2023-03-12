@@ -44,6 +44,7 @@ import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response.Status;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Named
 @Singleton
@@ -57,7 +58,10 @@ public class ProjectResource implements Resource {
     private final ProjectAccessManager accessManager;
     private final OrganizationDao orgDao;
     private final TeamDao teamDao;
+    private final KvDao kvDao;
     private final EncryptedProjectValueManager encryptedValueManager;
+
+    private final ProjectRepositoryManager projectRepositoryManager;
 
     @Inject
     public ProjectResource(OrganizationManager orgManager,
@@ -66,15 +70,19 @@ public class ProjectResource implements Resource {
                            ProjectAccessManager accessManager,
                            OrganizationDao orgDao,
                            TeamDao teamDao,
-                           EncryptedProjectValueManager encryptedValueManager) {
+                           KvDao kvDao,
+                           EncryptedProjectValueManager encryptedValueManager,
+                           ProjectRepositoryManager projectRepositoryManager) {
 
         this.orgManager = orgManager;
         this.projectDao = projectDao;
         this.projectManager = projectManager;
         this.accessManager = accessManager;
+        this.kvDao = kvDao;
         this.encryptedValueManager = encryptedValueManager;
         this.orgDao = orgDao;
         this.teamDao = teamDao;
+        this.projectRepositoryManager = projectRepositoryManager;
     }
 
     @POST
@@ -90,6 +98,10 @@ public class ProjectResource implements Resource {
         return new ProjectOperationResponse(result.projectId(), result.result());
     }
 
+    /**
+     * @deprecated use {@link ProjectResourceV2#get(String, String)}
+     */
+    @Deprecated
     @GET
     @ApiOperation("Get an existing project")
     @Path("/{orgName}/project/{projectName}")
@@ -98,7 +110,9 @@ public class ProjectResource implements Resource {
     public ProjectEntry get(@ApiParam @PathParam("orgName") @ConcordKey String orgName,
                             @ApiParam @PathParam("projectName") @ConcordKey String projectName) {
 
-        return projectManager.get(orgName, projectName);
+        ProjectEntry p = projectManager.get(orgName, projectName);
+        List<RepositoryEntry> repositories = projectRepositoryManager.list(p.getId());
+        return ProjectEntry.replace(p, repositories.stream().collect(Collectors.toMap(RepositoryEntry::getName, r -> r)));
     }
 
     @GET
@@ -112,6 +126,23 @@ public class ProjectResource implements Resource {
                                    @QueryParam("filter") String filter) {
         OrganizationEntry org = orgManager.assertAccess(orgName, false);
         return projectManager.list(org.getId(), offset, limit, filter);
+    }
+
+    @GET
+    @ApiOperation("list KV")
+    @Path("/{orgName}/project/{projectName}/kv")
+    @Produces(MediaType.APPLICATION_JSON)
+    public List<KvEntry> findKV(@ApiParam @PathParam("orgName") @ConcordKey String orgName,
+                                @ApiParam @PathParam("projectName") @ConcordKey String projectName,
+                                @QueryParam("offset") int offset,
+                                @QueryParam("limit") int limit,
+                                @QueryParam("filter") String filter) {
+
+        OrganizationEntry org = orgManager.assertAccess(orgName, false);
+
+        ProjectEntry project = accessManager.assertAccess(org.getId(), null, projectName, ResourceAccessLevel.READER, false);
+
+        return kvDao.list(project.getId(), offset, limit, filter);
     }
 
     @GET

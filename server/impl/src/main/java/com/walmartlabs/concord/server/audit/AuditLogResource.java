@@ -59,8 +59,6 @@ import java.util.stream.Collectors;
 
 import static com.walmartlabs.concord.server.Utils.unwrap;
 
-@Named
-@Singleton
 @Api(value = "Audit Log", authorizations = {@Authorization("api_key"), @Authorization("session_key"), @Authorization("ldap")})
 @Path("/api/v1/audit")
 public class AuditLogResource implements Resource {

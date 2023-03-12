@@ -21,6 +21,8 @@ package com.walmartlabs.concord.cli;
  */
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
+import com.fasterxml.jackson.dataformat.yaml.YAMLGenerator;
 import com.google.inject.Injector;
 import com.walmartlabs.concord.cli.runner.*;
 import com.walmartlabs.concord.common.ConfigurationUtils;
@@ -46,9 +48,7 @@ import com.walmartlabs.concord.runtime.v2.runner.InjectorFactory;
 import com.walmartlabs.concord.runtime.v2.runner.Runner;
 import com.walmartlabs.concord.runtime.v2.runner.guice.ProcessDependenciesModule;
 import com.walmartlabs.concord.runtime.v2.runner.tasks.TaskProviders;
-import com.walmartlabs.concord.runtime.v2.sdk.ImmutableProcessConfiguration;
-import com.walmartlabs.concord.runtime.v2.sdk.ProcessConfiguration;
-import com.walmartlabs.concord.runtime.v2.sdk.WorkingDirectory;
+import com.walmartlabs.concord.runtime.v2.sdk.*;
 import com.walmartlabs.concord.sdk.Constants;
 import com.walmartlabs.concord.sdk.MapUtils;
 import picocli.CommandLine.Command;
@@ -58,6 +58,7 @@ import picocli.CommandLine.Parameters;
 import picocli.CommandLine.Spec;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -76,6 +77,9 @@ public class Run implements Callable<Integer> {
 
     @Option(names = {"-e", "--extra-vars"}, description = "additional process variables")
     Map<String, Object> extraVars = new LinkedHashMap<>();
+
+    @Option(names = {"--default-cfg"}, description = "default Concord configuration file")
+    Path defaultCfg = Paths.get(System.getProperty("user.home")).resolve(".concord").resolve("defaultCfg.yml");
 
     @Option(names = {"--deps-cache-dir"}, description = "process dependencies cache dir")
     Path depsCacheDir = Paths.get(System.getProperty("user.home")).resolve(".concord").resolve("depsCache");
@@ -143,6 +147,8 @@ public class Run implements Callable<Integer> {
             throw new IllegalArgumentException("Not a directory or single Concord YAML file: " + sourceDir);
         }
 
+        copyDefaultCfg(targetDir, defaultCfg);
+
         DependencyManager dependencyManager = initDependencyManager();
         ImportManager importManager = new ImportManagerFactory(dependencyManager,
                 new CliRepositoryExporter(repoCacheDir), Collections.emptySet())
@@ -174,26 +180,21 @@ public class Run implements Callable<Integer> {
             System.out.println("Active profiles: " + profiles);
         }
 
-        ProcessConfiguration cfg = from(processDefinition.configuration())
-                .entryPoint(entryPoint)
-                .instanceId(instanceId)
-                .build();
-
         Map<String, Object> overlayCfg = ProcessDefinitionUtils.getProfilesOverlayCfg(new ProcessDefinitionV2(processDefinition), profiles);
         List<String> overlayDeps = MapUtils.getList(overlayCfg, Constants.Request.DEPENDENCIES_KEY, Collections.emptyList());
 
         RunnerConfiguration runnerCfg = RunnerConfiguration.builder()
                 .dependencies(new DependencyResolver(dependencyManager, verbose).resolveDeps(overlayDeps))
-                .debug(cfg.debug())
+                .debug(processDefinition.configuration().debug())
                 .build();
 
         Map<String, Object> overlayArgs = MapUtils.getMap(overlayCfg, Constants.Request.ARGUMENTS_KEY, Collections.emptyMap());
-        Map<String, Object> args = ConfigurationUtils.deepMerge(cfg.arguments(), overlayArgs, extraVars);
-        if (verbose) {
-            System.out.println("Process arguments: " + args);
-        }
+        Map<String, Object> args = ConfigurationUtils.deepMerge(processDefinition.configuration().arguments(), overlayArgs, extraVars);
         args.put(Constants.Context.TX_ID_KEY, instanceId.toString());
         args.put(Constants.Context.WORK_DIR_KEY, targetDir.toAbsolutePath().toString());
+        if (verbose) {
+            dumpArguments(args);
+        }
 
         if (effectiveYaml) {
             Map<String, List<Step>> flows = new HashMap<>(processDefinition.flows());
@@ -221,11 +222,16 @@ public class Run implements Callable<Integer> {
 
         System.out.println("Starting...");
 
+        ProcessConfiguration cfg = from(processDefinition.configuration(), processInfo(args), projectInfo(args))
+                .entryPoint(entryPoint)
+                .instanceId(instanceId)
+                .build();
+
         Injector injector = new InjectorFactory(new WorkingDirectory(targetDir),
                 runnerCfg,
                 () -> cfg,
                 new ProcessDependenciesModule(targetDir, runnerCfg.dependencies(), cfg.debug()),
-                new CliServicesModule(secretStoreDir, targetDir, new VaultProvider(vaultDir, vaultId), dependencyManager))
+                new CliServicesModule(secretStoreDir, targetDir, new VaultProvider(vaultDir, vaultId), dependencyManager, verbose))
                 .create();
 
         Runner runner = injector.getInstance(Runner.class);
@@ -251,14 +257,98 @@ public class Run implements Callable<Integer> {
         return 0;
     }
 
-    private static ImmutableProcessConfiguration.Builder from(ProcessDefinitionConfiguration cfg) {
+    @SuppressWarnings("unchecked")
+    private static ProcessInfo processInfo(Map<String, Object> args) {
+        Object processInfoObject = args.get("processInfo");
+        if (processInfoObject == null) {
+            processInfoObject = fromExtraVars("processInfo", args);
+        }
+
+        Map<String, Object> processInfo = Collections.emptyMap();
+        if (processInfoObject instanceof Map) {
+            processInfo = (Map<String, Object>) processInfoObject;
+        }
+
+        return ProcessInfo.builder()
+                .sessionToken(MapUtils.getString(processInfo, "sessionToken"))
+                .build();
+    }
+
+    @SuppressWarnings("unchecked")
+    private static ProjectInfo projectInfo(Map<String, Object> args) {
+        Object projectInfoObject = args.get("projectInfo");
+        if (projectInfoObject == null) {
+            projectInfoObject = fromExtraVars("projectInfo", args);
+        }
+
+        Map<String, Object> projectInfo = Collections.emptyMap();
+        if (projectInfoObject instanceof Map) {
+            projectInfo = (Map<String, Object>) projectInfoObject;
+        }
+
+        return ProjectInfo.builder()
+                .orgName(MapUtils.getString(projectInfo, "orgName"))
+                .projectName(MapUtils.getString(projectInfo, "projectName"))
+                .repoName(MapUtils.getString(projectInfo, "repoName"))
+                .repoUrl(MapUtils.getString(projectInfo, "repoUrl"))
+                .repoBranch(MapUtils.getString(projectInfo, "repoBranch"))
+                .repoPath(MapUtils.getString(projectInfo, "repoPath"))
+                .repoCommitId(MapUtils.getString(projectInfo, "repoCommitId"))
+                .repoCommitAuthor(MapUtils.getString(projectInfo, "repoCommitAuthor"))
+                .repoCommitMessage(MapUtils.getString(projectInfo, "repoCommitMessage"))
+                .build();
+    }
+
+    private static ImmutableProcessConfiguration.Builder from(ProcessDefinitionConfiguration cfg, ProcessInfo processInfo, ProjectInfo projectInfo) {
         return ProcessConfiguration.builder()
                 .debug(cfg.debug())
                 .entryPoint(cfg.entryPoint())
                 .arguments(cfg.arguments())
                 .meta(cfg.meta())
                 .events(cfg.events())
+                .processInfo(processInfo)
+                .projectInfo(projectInfo)
                 .out(cfg.out());
+    }
+
+    private static Map<String, Object> fromExtraVars(String key, Map<String, Object> args) {
+        Map<String, Object> result = new HashMap<>();
+        for (String k : args.keySet()) {
+            if (k.startsWith(key + ".")) {
+                result.put(k.substring(key.length() + 1), args.get(k));
+            }
+        }
+        return result;
+    }
+
+    private static void copyDefaultCfg(Path targetDir, Path defaultCfg) throws IOException {
+        final Path destDir = targetDir.resolve("concord");
+        final Path destFile = destDir.resolve("_defaultCfg.concord.yml");
+
+        // Don't overwrite existing file is given project dir
+        if (Files.exists(destFile)) {
+            System.err.println("Default configuration already exists: " + defaultCfg);
+            return;
+        }
+
+        if (!Files.exists(destDir)) {
+            Files.createDirectory(destDir);
+        }
+
+        if (Files.exists(defaultCfg)) {
+            if (Files.isRegularFile(defaultCfg)) {
+                Files.copy(defaultCfg, destFile);
+            } else {
+                System.err.println("Default configuration must be a file!");
+            }
+        } else {
+            try (InputStream in = Run.class.getClassLoader().getResourceAsStream("defaultCfg.yml")) {
+                if (in == null) {
+                    throw new IllegalStateException("Failed to load embedded default concord configuration.");
+                }
+                Files.copy(in, destFile);
+            }
+        }
     }
 
     private DependencyManager initDependencyManager() throws IOException {
@@ -271,6 +361,16 @@ public class Run implements Callable<Integer> {
             return DependencyManagerConfiguration.of(depsCacheDir, DependencyManagerRepositories.get(cfgFile));
         }
         return DependencyManagerConfiguration.of(depsCacheDir);
+    }
+
+    private static void dumpArguments(Map<String, Object> args) {
+        ObjectMapper om = new ObjectMapper(new YAMLFactory().disable(YAMLGenerator.Feature.WRITE_DOC_START_MARKER));
+        try {
+            System.out.println("Process arguments:");
+            System.out.println(om.writerWithDefaultPrettyPrinter().writeValueAsString(args));
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
     }
 
     private static class CopyNotifier implements FileVisitor {

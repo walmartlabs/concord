@@ -75,6 +75,20 @@ public final class ConcordConfiguration {
         return concord;
     }
 
+    // TODO: move to testcontainers
+    public static String getServerUrlForAgent(ConcordRule concord) {
+        switch (concord.mode()) {
+            case LOCAL:
+                return "http://localhost:8001";
+            case REMOTE:
+                return System.getProperty("it.remote.baseUrl");
+            case DOCKER:
+                return "http://server:8001";
+            default:
+                throw new IllegalArgumentException("Unknown mode: " + concord.mode());
+        }
+    }
+
     private ConcordConfiguration() {
     }
 }
