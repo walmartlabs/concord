@@ -27,14 +27,12 @@ import com.walmartlabs.concord.server.user.RoleEntry;
 import org.jooq.*;
 
 import javax.inject.Inject;
-import javax.inject.Named;
 import java.util.*;
 
 import static com.walmartlabs.concord.server.jooq.Tables.*;
 import static com.walmartlabs.concord.server.jooq.tables.Roles.ROLES;
 import static org.jooq.impl.DSL.*;
 
-@Named
 public class RoleDao extends AbstractDao {
 
     @Inject

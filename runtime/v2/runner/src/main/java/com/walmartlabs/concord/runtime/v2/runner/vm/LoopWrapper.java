@@ -78,7 +78,6 @@ public abstract class LoopWrapper implements Command {
     }
 
     @Override
-    @SuppressWarnings("unchecked")
     public void eval(Runtime runtime, State state, ThreadId threadId) {
         Frame frame = state.peekFrame(threadId);
         frame.pop();
@@ -104,32 +103,8 @@ public abstract class LoopWrapper implements Command {
 
         // prepare items
         // store items in an ArrayList because it is Serializable
-        ArrayList<Serializable> items;
-        if (value == null) {
-            // value is null, not going to run the wrapped command at all
-            return;
-        } else if (value instanceof Collection) {
-            Collection<Serializable> v = (Collection<Serializable>) value;
-            if (v.isEmpty()) {
-                // no items, nothing to do
-                return;
-            }
-
-            items = new ArrayList<>(v);
-        } else if (value instanceof Map) {
-            Map<Serializable, Serializable> m = (Map<Serializable, Serializable>) value;
-            items = m.entrySet().stream()
-                    .map(e -> new AbstractMap.SimpleImmutableEntry<>(e.getKey(), e.getValue()))
-                    .collect(Collectors.toCollection(ArrayList::new));
-        } else if (value.getClass().isArray()) {
-            items = new ArrayList<>(Arrays.asList((Serializable[]) value));
-        } else {
-            throw new IllegalArgumentException("'withItems' accepts only Lists of items, Java Maps or arrays of values. Got: " + value.getClass());
-        }
-
-        items.forEach(LoopWrapper::assertItem);
-
-        if (items.isEmpty()) {
+        ArrayList<Serializable> items = LoopItemSanitizer.sanitize(value);
+        if (items == null || items.isEmpty()) {
             return;
         }
 
@@ -137,18 +112,6 @@ public abstract class LoopWrapper implements Command {
     }
 
     protected abstract void eval(State state, ThreadId threadId, ArrayList<Serializable> items);
-
-    static void assertItem(Object item) {
-        if (item == null) {
-            return;
-        }
-
-        try (ObjectOutputStream oos = new ObjectOutputStream(new ByteArrayOutputStream())) {
-            oos.writeObject(item);
-        } catch (IOException e) {
-            throw new IllegalArgumentException("Can't use non-serializable values in 'withItems': " + item + " (" + item.getClass() + ")");
-        }
-    }
 
     static class ParallelWithItems extends LoopWrapper {
 

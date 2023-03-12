@@ -6,7 +6,7 @@
     <parent>
         <groupId>com.walmartlabs.concord</groupId>
         <artifactId>parent</artifactId>
-        <version>1.98.2-SNAPSHOT</version>
+        <version>1.100.1-SNAPSHOT</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
 
@@ -169,10 +169,13 @@
                     <analysisConfiguration>
                         <revapi.ignore>
                             <item>
-                                <code>java.field.enumConstantOrderChanged</code>
+                                <code>java.field.serialVersionUIDUnchanged</code>
                             </item>
                             <item>
-                                <code>java.class.externalClassExposedInAPI</code>
+                                <code>java.method.parameterTypeParameterChanged</code>
+                            </item>
+                            <item>
+                                <code>java.method.returnTypeTypeParametersChanged</code>
                             </item>
                         </revapi.ignore>
                     </analysisConfiguration>

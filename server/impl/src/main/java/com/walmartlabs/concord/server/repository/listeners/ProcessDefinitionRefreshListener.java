@@ -20,46 +20,31 @@ package com.walmartlabs.concord.server.repository.listeners;
  * =====
  */
 
-import com.walmartlabs.concord.imports.ImportsListener;
-import com.walmartlabs.concord.process.loader.ProjectLoader;
 import com.walmartlabs.concord.process.loader.model.ProcessDefinition;
 import com.walmartlabs.concord.server.org.project.RepositoryDao;
 import com.walmartlabs.concord.server.org.project.RepositoryEntry;
-import com.walmartlabs.concord.server.process.ImportsNormalizerFactory;
 import org.jooq.DSLContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
-import javax.inject.Named;
 import java.nio.file.Path;
 import java.util.*;
 import java.util.stream.Collectors;
 
-@Named
 public class ProcessDefinitionRefreshListener implements RepositoryRefreshListener {
 
     private static final Logger log = LoggerFactory.getLogger(ProcessDefinitionRefreshListener.class);
 
     private final RepositoryDao repositoryDao;
-    private final ProjectLoader projectLoader;
-    private final ImportsNormalizerFactory importsNormalizer;
 
     @Inject
-    public ProcessDefinitionRefreshListener(RepositoryDao repositoryDao,
-                                            ProjectLoader projectLoader,
-                                            ImportsNormalizerFactory importsNormalizer) {
-
+    public ProcessDefinitionRefreshListener(RepositoryDao repositoryDao) {
         this.repositoryDao = repositoryDao;
-        this.projectLoader = projectLoader;
-        this.importsNormalizer = importsNormalizer;
     }
 
     @Override
-    public void onRefresh(DSLContext ctx, RepositoryEntry repo, Path repoPath) throws Exception {
-        ProcessDefinition pd = projectLoader.loadProject(repoPath, importsNormalizer.forProject(repo.getProjectId()), ImportsListener.NOP_LISTENER)
-                .projectDefinition();
-
+    public void onRefresh(DSLContext ctx, RepositoryEntry repo, Path repoPath, ProcessDefinition pd) {
         Set<String> pf = pd.publicFlows();
         if (pf == null || pf.isEmpty()) {
             // all flows are public when no public flows defined

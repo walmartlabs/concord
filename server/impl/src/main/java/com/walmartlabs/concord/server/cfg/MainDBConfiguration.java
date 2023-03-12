@@ -25,13 +25,9 @@ import com.walmartlabs.concord.db.MainDB;
 import com.walmartlabs.ollie.config.Config;
 
 import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
 import java.time.Duration;
 import java.util.Map;
 
-@Named
-@Singleton
 @MainDB
 public class MainDBConfiguration implements DatabaseConfiguration {
 
