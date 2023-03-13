@@ -184,7 +184,7 @@ class NewSecretForm extends React.Component<InjectedFormikProps<Props, FormValue
                 <ProjectSearchFormField
                     orgName={orgName}
                     fieldName={'projects'}
-                    label="Project"
+                    label="Projects"
                     placeholder="any"
                 />
 
