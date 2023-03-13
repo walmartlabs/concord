@@ -28,7 +28,6 @@ import com.walmartlabs.concord.forms.FormUtils;
 import com.walmartlabs.concord.forms.ValidationError;
 import com.walmartlabs.concord.server.MultipartUtils;
 import com.walmartlabs.concord.server.cfg.CustomFormConfiguration;
-import com.walmartlabs.concord.server.process.form.ExternalFileFormValidatorLocaleV2;
 import com.walmartlabs.concord.server.process.form.FormServiceV1;
 import com.walmartlabs.concord.server.process.form.FormServiceV2;
 import com.walmartlabs.concord.server.process.form.FormSubmitResult;
@@ -45,8 +44,6 @@ import org.slf4j.LoggerFactory;
 import org.sonatype.siesta.Validate;
 
 import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.POST;
 import javax.ws.rs.PathParam;
@@ -65,8 +62,6 @@ import static com.walmartlabs.concord.server.console.CustomFormServiceV1.FormDat
 import static com.walmartlabs.concord.server.console.CustomFormServiceV1.FormDataDefinition;
 import static com.walmartlabs.concord.server.process.state.ProcessStateManager.copyTo;
 
-@Named
-@Singleton
 public class CustomFormServiceV2 {
 
     private static final Logger log = LoggerFactory.getLogger(CustomFormServiceV2.class);
