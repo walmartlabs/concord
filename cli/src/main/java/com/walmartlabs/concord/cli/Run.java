@@ -153,7 +153,7 @@ public class Run implements Callable<Integer> {
             throw new IllegalArgumentException("Not a directory or single Concord YAML file: " + sourceDir);
         }
 
-        copyDefaultCfg(targetDir, defaultCfg);
+        copyDefaultCfg(targetDir, defaultCfg, verbosity.verbose());
 
         DependencyManager dependencyManager = initDependencyManager();
         ImportManager importManager = new ImportManagerFactory(dependencyManager,
@@ -327,13 +327,15 @@ public class Run implements Callable<Integer> {
         return result;
     }
 
-    private static void copyDefaultCfg(Path targetDir, Path defaultCfg) throws IOException {
+    private static void copyDefaultCfg(Path targetDir, Path defaultCfg, boolean verbose) throws IOException {
         final Path destDir = targetDir.resolve("concord");
         final Path destFile = destDir.resolve("_defaultCfg.concord.yml");
 
         // Don't overwrite existing file is given project dir
         if (Files.exists(destFile)) {
-            System.err.println("Default configuration already exists: " + defaultCfg);
+            if (verbose) {
+                System.out.println("Default configuration already exists: " + defaultCfg);
+            }
             return;
         }
 
