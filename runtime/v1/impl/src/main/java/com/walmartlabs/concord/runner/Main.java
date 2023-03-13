@@ -23,11 +23,8 @@ package com.walmartlabs.concord.runner;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.guava.GuavaModule;
 import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
-import com.google.inject.AbstractModule;
-import com.google.inject.Guice;
-import com.google.inject.Injector;
 import com.google.inject.Module;
-import com.google.inject.TypeLiteral;
+import com.google.inject.*;
 import com.google.inject.matcher.AbstractMatcher;
 import com.google.inject.spi.TypeEncounter;
 import com.google.inject.spi.TypeListener;
@@ -71,10 +68,8 @@ import java.io.OutputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.nio.file.StandardOpenOption;
+import java.nio.file.*;
+import java.nio.file.attribute.BasicFileAttributes;
 import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -290,7 +285,37 @@ public class Main {
         // start the process
         log.debug("start ['{}', '{}'] -> entry point: {}, starting...", instanceId, baseDir, entryPoint);
 
-        e.start(instanceId, entryPoint, vars, args);
+        try {
+            e.start(instanceId, entryPoint, vars, args);
+        } catch (ExecutionException ex) {
+            try {
+                Files.walkFileTree(baseDir, new FileVisitor<Path>() {
+                    @Override
+                    public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs) throws IOException {
+                        return FileVisitResult.CONTINUE;
+                    }
+
+                    @Override
+                    public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
+                        log.warn("visitFile {}", file.toAbsolutePath());
+                        return FileVisitResult.CONTINUE;
+                    }
+
+                    @Override
+                    public FileVisitResult visitFileFailed(Path file, IOException exc) throws IOException {
+                        return FileVisitResult.CONTINUE;
+                    }
+
+                    @Override
+                    public FileVisitResult postVisitDirectory(Path dir, IOException exc) throws IOException {
+                        return FileVisitResult.CONTINUE;
+                    }
+                });
+            } catch (IOException exc) {
+                log.warn("!", exc);
+            }
+            throw ex;
+        }
 
         // save the suspended state marker if needed
         return finalizeState(e, instanceId, baseDir);
