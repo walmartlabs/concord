@@ -1,5 +1,15 @@
 # Change log
 
+## [1.101.0] - Unreleased
+
+### Added
+
+- server: update process policy on process resume
+([#731](https://github.com/walmartlabs/concord/pull/731)).
+
+### Changed
+
+
 ## [1.100.0] - 2023-03-09
 
 ### Added
