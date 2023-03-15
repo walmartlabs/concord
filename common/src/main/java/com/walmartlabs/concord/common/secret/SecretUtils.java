@@ -37,7 +37,6 @@ import java.security.SecureRandom;
 public final class SecretUtils {
 
     public static byte[] encrypt(byte[] input, byte[] password, byte[] salt) {
-
         return encrypt(input, password, salt, HashAlgorithm.LEGACY_MD5);
     }
 
@@ -50,7 +49,6 @@ public final class SecretUtils {
     }
 
     public static InputStream encrypt(InputStream input, byte[] password, byte[] salt) {
-
         return encrypt(input, password, salt, HashAlgorithm.LEGACY_MD5);
     }
 

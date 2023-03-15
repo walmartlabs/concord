@@ -172,5 +172,4 @@ public class SecretEntry implements Serializable {
                 ", owner=" + owner +
                 '}';
     }
-
 }
