@@ -25,6 +25,8 @@ import { updateSecretProject as apiUpdateSecretProject } from '../../../api/org/
 import { ProjectSearch, RequestErrorActivity } from '../index';
 import { Confirm, Form, Icon, Label } from 'semantic-ui-react';
 import { ProjectEntry } from '../../../api/org/project';
+import { useDispatch } from 'react-redux';
+import { actions } from '../../../state/data/secrets';
 
 interface ExternalProps {
     orgName: ConcordKey;
@@ -41,6 +43,8 @@ export default ({ orgName, projects, secretName }: Props) => {
     const [error, setError] = useState<RequestError>();
     const [existingProjects, setExistingProjects] = useState<Array<ProjectEntry>>(projects.slice(0));
     const [newProjects, setNewProjects] = useState<Array<ProjectEntry>>(projects.slice(0));
+    const dispatch = useDispatch();
+    const reloadSecret = () => { dispatch(actions.getSecret(orgName, secretName))};
 
     const [editMode, setEditMode] = useState<boolean>(false);
     const update = useCallback(async () => {
@@ -56,7 +60,7 @@ export default ({ orgName, projects, secretName }: Props) => {
 
     const onConfirmHandler = useCallback(async () => {
         await update();
-
+        reloadSecret();
         setShowConfirm(false);
         setDirty(false);
         setEditMode(false);
