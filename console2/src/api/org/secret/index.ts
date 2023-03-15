@@ -135,7 +135,6 @@ export const list = async (
     }
 
     return {
-        
         items: data,
         next: hasMoreElements
     };
@@ -178,7 +177,7 @@ export const updateSecretVisibility = (
         method: 'POST',
         body: data
     };
-    
+
     return fetchJson(`/api/v2/org/${orgName}/secret/${secretName}`, opts);
 };
 
@@ -188,10 +187,10 @@ export const updateSecretProject = (
     projectIds: String[]
 ): Promise<GenericOperationResult> => {
     const data = new FormData();
-    if(projectIds.length > 0) {
-        data.append("projectIds", projectIds.join(","));
+    if (projectIds.length > 0) {
+        data.append('projectIds', projectIds.join(','));
     } else {
-        data.append("removeProjectLink", "true");
+        data.append('removeProjectLink', 'true');
     }
     const opts = {
         method: 'POST',
@@ -254,7 +253,7 @@ export const create = (
     }
 
     if (entry.projects) {
-        data.append('projectIds', entry.projects.map(project => project.id).join(","));
+        data.append('projectIds', entry.projects.map((project) => project.id).join(','));
     }
 
     const opts = {

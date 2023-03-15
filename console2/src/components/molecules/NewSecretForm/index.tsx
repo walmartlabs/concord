@@ -303,7 +303,7 @@ export default withFormik<Props, FormValues>({
                 break;
             }
         }
-        
+
         bag.props.onSubmit(entry);
     },
     mapPropsToValues: (props) => ({

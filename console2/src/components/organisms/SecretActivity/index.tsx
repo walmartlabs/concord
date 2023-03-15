@@ -129,22 +129,24 @@ class SecretActivity extends React.PureComponent<Props> {
                             </Table.Row>
                             <Table.Row>
                                 <Table.Cell>Restricted to a project</Table.Cell>
-                                    <Table.Cell>
-                                    {(data.projects && data.projects.length > 0) ? (
-                                        data.projects.map((project, index) => (
-                                            <span key={index}>
-                                            <Link
-                                            to={`/org/${data.orgName}/project/${project.name}`}>
-                                            {project.name}
-                                            </Link>
-                                            <span>{(index !== data.projects.length-1)?", ":""}</span>
-                                            </span>
-                                            )
-                                        )
-                                    ) : (
-                                        ' - '
-                                    )}
-                                    </Table.Cell>
+                                <Table.Cell>
+                                    {data.projects && data.projects.length > 0
+                                        ? data.projects.map((project, index) => (
+                                              <span key={index}>
+                                                  <Link
+                                                      to={`/org/${data.orgName}/project/${project.name}`}
+                                                  >
+                                                      {project.name}
+                                                  </Link>
+                                                  <span>
+                                                      {index !== data.projects.length - 1
+                                                          ? ', '
+                                                          : ''}
+                                                  </span>
+                                              </span>
+                                          ))
+                                        : ' - '}
+                                </Table.Cell>
                             </Table.Row>
                         </Table.Body>
                     </Table>

@@ -41,16 +41,24 @@ export default ({ orgName, projects, secretName }: Props) => {
     const [showConfirm, setShowConfirm] = useState<boolean>(false);
     const [updating, setUpdating] = useState(false);
     const [error, setError] = useState<RequestError>();
-    const [existingProjects, setExistingProjects] = useState<Array<ProjectEntry>>(projects.slice(0));
+    const [existingProjects, setExistingProjects] = useState<Array<ProjectEntry>>(
+        projects.slice(0)
+    );
     const [newProjects, setNewProjects] = useState<Array<ProjectEntry>>(projects.slice(0));
     const dispatch = useDispatch();
-    const reloadSecret = () => { dispatch(actions.getSecret(orgName, secretName))};
+    const reloadSecret = () => {
+        dispatch(actions.getSecret(orgName, secretName));
+    };
 
     const [editMode, setEditMode] = useState<boolean>(false);
     const update = useCallback(async () => {
         try {
             setUpdating(true);
-            await apiUpdateSecretProject(orgName, secretName, newProjects.map(project => project.id));
+            await apiUpdateSecretProject(
+                orgName,
+                secretName,
+                newProjects.map((project) => project.id)
+            );
         } catch (e) {
             setError(e);
         } finally {
@@ -66,7 +74,7 @@ export default ({ orgName, projects, secretName }: Props) => {
         setEditMode(false);
         setExistingProjects(newProjects);
     }, [update, newProjects]);
- 
+
     const onCancelHandler = useCallback(() => {
         setShowConfirm(false);
         setNewProjects(existingProjects);
@@ -77,63 +85,81 @@ export default ({ orgName, projects, secretName }: Props) => {
             {error && <RequestErrorActivity error={error} />}
 
             <Form loading={updating}>
-                {editMode? (
+                {editMode ? (
                     <Form.Group widths={3}>
-                    <Form.Field>
-                        <ProjectSearch
-                            orgName={orgName}
-                            placeholder="Search for projects"
-                            fluid={true}
-                            onSelect={(project) => {
-                                if(!newProjects.map(project => project.id).includes(project.id)){
-                                    setNewProjects(newProjects.concat(project));
-                                }
-                            }}
-                            projectsToNotShow={newProjects}
-                            clearOnSelect={true}
-                        />
-                    </Form.Field>
-                </Form.Group>
-                ):null}
+                        <Form.Field>
+                            <ProjectSearch
+                                orgName={orgName}
+                                placeholder="Search for projects"
+                                fluid={true}
+                                onSelect={(project) => {
+                                    if (
+                                        !newProjects
+                                            .map((project) => project.id)
+                                            .includes(project.id)
+                                    ) {
+                                        setNewProjects(newProjects.concat(project));
+                                    }
+                                }}
+                                projectsToNotShow={newProjects}
+                                clearOnSelect={true}
+                            />
+                        </Form.Field>
+                    </Form.Group>
+                ) : null}
                 <Form.Group>
                     <Form.Field>
-                    {
-                        (newProjects && newProjects.length > 0) ? (newProjects.map((project, index) => (
-                            <Label key={index}>
-                                {project.name}
-                                { editMode ? (<Icon name='delete' onClick={ () => {
-                                    if(newProjects.map(project => project.id).includes(project.id)){
-                                        newProjects.splice(newProjects.map(p => p.id).indexOf(project.id),1);
-                                        setNewProjects(newProjects.slice(0));
-                                    }
-                                } }></Icon>): null }
-                            </Label>
-                        ))):((!editMode)?"No restriction on projects.":null)
-                    }
+                        {newProjects && newProjects.length > 0
+                            ? newProjects.map((project, index) => (
+                                  <Label key={index}>
+                                      {project.name}
+                                      {editMode ? (
+                                          <Icon
+                                              name="delete"
+                                              onClick={() => {
+                                                  if (
+                                                      newProjects
+                                                          .map((project) => project.id)
+                                                          .includes(project.id)
+                                                  ) {
+                                                      newProjects.splice(
+                                                          newProjects
+                                                              .map((p) => p.id)
+                                                              .indexOf(project.id),
+                                                          1
+                                                      );
+                                                      setNewProjects(newProjects.slice(0));
+                                                  }
+                                              }}
+                                          ></Icon>
+                                      ) : null}
+                                  </Label>
+                              ))
+                            : !editMode
+                            ? 'No restriction on projects.'
+                            : null}
                     </Form.Field>
                 </Form.Group>
                 <Form.Group>
                     <Form.Button
-                            primary={!editMode}
-                            negative={editMode}
-                            content={ (editMode ? "Update" : "Edit") }
-                            disabled={!editMode && dirty}
-                            onClick={ () => (editMode) ? setShowConfirm(true) : setEditMode(true) }
-                        />
-                    {
-                    (editMode)?(
+                        primary={!editMode}
+                        negative={editMode}
+                        content={editMode ? 'Update' : 'Edit'}
+                        disabled={!editMode && dirty}
+                        onClick={() => (editMode ? setShowConfirm(true) : setEditMode(true))}
+                    />
+                    {editMode ? (
                         <Form.Button
-                                primary={true}
-                                content="Cancel"
-                                onClick={()=>{
-                                    setEditMode(false);
-                                    setNewProjects(existingProjects);
-                                }}
-                            />
-                    ):null
-                    } 
-                    </Form.Group>
-                    
+                            primary={true}
+                            content="Cancel"
+                            onClick={() => {
+                                setEditMode(false);
+                                setNewProjects(existingProjects);
+                            }}
+                        />
+                    ) : null}
+                </Form.Group>
+
                 <Confirm
                     open={showConfirm}
                     header="Update the project?"

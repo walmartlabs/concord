@@ -64,7 +64,7 @@ export default ({
                             projectsToNotShow={projects}
                             clearOnSelect={true}
                             onSelect={(value) => {
-                                if(!projects.map(project => project.id).includes(value.id)) {
+                                if (!projects.map((project) => project.id).includes(value.id)) {
                                     let _projects = projects.concat(value);
                                     form.setFieldValue(fieldName, _projects);
                                     setProjects(_projects);
@@ -72,22 +72,25 @@ export default ({
                                 }
                             }}
                         />
-                        <br/>
+                        <br />
                         <LabelGroup>
-                        {
-                        (projects && projects.map((project, index) => (
-                            <Label key={index}>
-                                {project.name}
-                                <Icon name='delete' onClick={() => {
-                                    const index = projects.map(p => p.id).indexOf(project.id);
-                                    projects.splice(index,1);
-                                    setProjects(projects.slice(0));
-                                    form.setFieldValue(fieldName, projects);
-                                }}>
-                                </Icon>
-                            </Label>
-                            )))
-                        }
+                            {projects &&
+                                projects.map((project, index) => (
+                                    <Label key={index}>
+                                        {project.name}
+                                        <Icon
+                                            name="delete"
+                                            onClick={() => {
+                                                const index = projects
+                                                    .map((p) => p.id)
+                                                    .indexOf(project.id);
+                                                projects.splice(index, 1);
+                                                setProjects(projects.slice(0));
+                                                form.setFieldValue(fieldName, projects);
+                                            }}
+                                        ></Icon>
+                                    </Label>
+                                ))}
                         </LabelGroup>
                         {invalid && error && (
                             <Label basic={true} pointing={true} color="red">

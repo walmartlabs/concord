@@ -92,8 +92,11 @@ export default ({
             try {
                 const result = await apiList(orgName, 0, 10, value);
                 let projects = result.items;
-                if(projectsToNotShow != null) {
-                    projects = projects.filter(project => !projectsToNotShow.map(project => project.id).includes(project.id));
+                if (projectsToNotShow != null) {
+                    projects = projects.filter(
+                        (project) =>
+                            !projectsToNotShow.map((project) => project.id).includes(project.id)
+                    );
                 }
                 setItems(projects);
             } catch (e) {
@@ -184,8 +187,8 @@ export default ({
             onSearchChange={onChangeCallBack}
             onResultSelect={(ev, data) => {
                 const item = items.find((i) => i.id === data.result.key);
-                handleItemSelected(item || defaultItem);                
-                if(clearOnSelect === true){
+                handleItemSelected(item || defaultItem);
+                if (clearOnSelect === true) {
                     setValue('');
                 }
             }}
