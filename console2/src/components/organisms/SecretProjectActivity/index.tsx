@@ -46,9 +46,10 @@ export default ({ orgName, projects, secretName }: Props) => {
     );
     const [newProjects, setNewProjects] = useState<Array<ProjectEntry>>(projects.slice(0));
     const dispatch = useDispatch();
-    const reloadSecret = () => {
+
+    const reloadSecret = useCallback(async () => {
         dispatch(actions.getSecret(orgName, secretName));
-    };
+    },[dispatch, orgName, secretName]);
 
     const [editMode, setEditMode] = useState<boolean>(false);
     const update = useCallback(async () => {
@@ -73,7 +74,8 @@ export default ({ orgName, projects, secretName }: Props) => {
         setDirty(false);
         setEditMode(false);
         setExistingProjects(newProjects);
-    }, [update, newProjects]);
+        
+    }, [update, reloadSecret, newProjects]);
 
     const onCancelHandler = useCallback(() => {
         setShowConfirm(false);
