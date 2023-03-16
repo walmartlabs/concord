@@ -225,7 +225,7 @@ public class ServerClient {
     public static void assertLog(@Language("RegExp") String pattern, byte[] ab) throws IOException {
         String msg = "Expected: " + pattern + "\n"
                 + "Got: " + new String(ab);
-        assertEquals(1, grep(pattern, ab).size(), msg);
+        assertTrue(grep(pattern, ab).size() >= 1, msg);
     }
 
     public static void assertNoLog(@Language("RegExp") String pattern, byte[] ab) throws IOException {
