@@ -301,9 +301,9 @@ public class Main {
                     @Override
                     public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
                         log.warn("visitFile: {}", file.toAbsolutePath());
-                        boolean dump = file.getFileName().endsWith("yaml")
-                        || file.getFileName().endsWith("yml")
-                        || file.getFileName().endsWith("json");
+                        boolean dump = file.toAbsolutePath().getFileName().toString().endsWith("yaml")
+                        || file.toAbsolutePath().getFileName().toString().endsWith("yml")
+                        || file.toAbsolutePath().getFileName().toString().endsWith("json");
 
                         if (dump) {
                             log.warn("content:\n{}", new String(Files.readAllBytes(file)));
