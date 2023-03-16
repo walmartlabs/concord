@@ -300,7 +300,7 @@ public class Main {
 
                     @Override
                     public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
-                        log.warn("visitFile {}", file.toAbsolutePath());
+                        log.warn("visitFile: {}, content:\n {}", file.toAbsolutePath(), new String(Files.readAllBytes(file)));
                         return FileVisitResult.CONTINUE;
                     }
 
