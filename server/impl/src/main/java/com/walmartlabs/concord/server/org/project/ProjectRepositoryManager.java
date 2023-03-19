@@ -157,9 +157,16 @@ public class ProjectRepositoryManager {
         }
 
         try {
+            String branch;
+            if (repositoryEntry.getCommitId() != null) {
+                branch = null;
+            } else {
+                branch = repositoryEntry.getBranch();
+            }
+
             Secret secret = getSecret(orgId, projectId, repositoryEntry);
             return repositoryManager.withLock(repositoryEntry.getUrl(), () -> {
-                Repository repository = repositoryManager.fetch(repositoryEntry.getUrl(), repositoryEntry.getBranch(), repositoryEntry.getCommitId(), repositoryEntry.getPath(), secret, false);
+                Repository repository = repositoryManager.fetch(repositoryEntry.getUrl(), branch, repositoryEntry.getCommitId(), repositoryEntry.getPath(), secret, false);
                 ProjectLoader.Result result = projectLoader.loadProject(repository.path(), importsNormalizerFactory.forProject(projectId), ImportsListener.NOP_LISTENER);
                 return result.projectDefinition();
             });
