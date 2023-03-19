@@ -303,7 +303,8 @@ public class Main {
                         log.warn("visitFile: {}", file.toAbsolutePath());
                         boolean dump = file.toAbsolutePath().getFileName().toString().endsWith("yaml")
                         || file.toAbsolutePath().getFileName().toString().endsWith("yml")
-                        || file.toAbsolutePath().getFileName().toString().endsWith("json");
+                        || file.toAbsolutePath().getFileName().toString().endsWith("json")
+                        || file.toAbsolutePath().getFileName().toString().endsWith("_instanceId");
 
                         if (dump) {
                             log.warn("content:\n{}", new String(Files.readAllBytes(file)));

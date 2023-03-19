@@ -30,10 +30,13 @@ import com.walmartlabs.concord.server.process.*;
 import com.walmartlabs.concord.server.process.event.NewProcessEvent;
 import com.walmartlabs.concord.server.process.event.ProcessEventManager;
 import com.walmartlabs.concord.server.process.logs.ProcessLogManager;
+import com.walmartlabs.concord.server.process.state.ProcessStateManager;
 import com.walmartlabs.concord.server.sdk.PartialProcessKey;
 import com.walmartlabs.concord.server.sdk.ProcessKey;
 import com.walmartlabs.concord.server.sdk.ProcessStatus;
 import org.jooq.DSLContext;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -45,11 +48,14 @@ import java.util.*;
 @Named
 public class ProcessQueueManager {
 
+    private static final Logger log = LoggerFactory.getLogger(ProcessQueueManager.class);
+
     private final ProcessQueueDao queueDao;
     private final ProcessKeyCache keyCache;
     private final ProcessEventManager eventManager;
     private final ProcessLogManager processLogManager;
     private final Collection<ProcessStatusListener> statusListeners;
+    private final ProcessStateManager processStateManager;
 
     private static final Set<ProcessStatus> TO_ENQUEUED_STATUSES = new HashSet<>(Arrays.asList(
             ProcessStatus.PREPARING, ProcessStatus.RESUMING, ProcessStatus.SUSPENDED
@@ -60,13 +66,15 @@ public class ProcessQueueManager {
                                ProcessKeyCache keyCache,
                                ProcessEventManager eventManager,
                                ProcessLogManager processLogManager,
-                               Collection<ProcessStatusListener> statusListeners) {
+                               Collection<ProcessStatusListener> statusListeners,
+                               ProcessStateManager processStateManager) {
 
         this.queueDao = queueDao;
         this.eventManager = eventManager;
         this.keyCache = keyCache;
         this.processLogManager = processLogManager;
         this.statusListeners = statusListeners;
+        this.processStateManager = processStateManager;
     }
 
     /**
@@ -85,11 +93,18 @@ public class ProcessQueueManager {
         String branchOrTag = MapUtils.getString(cfg, Constants.Request.REPO_BRANCH_OR_TAG);
         String commitId = MapUtils.getString(cfg, Constants.Request.REPO_COMMIT_ID);
 
+        List<String> state = new ArrayList<>();
         queueDao.tx(tx -> {
             queueDao.insert(tx, processKey, status, kind, parentInstanceId, projectId, repoId, branchOrTag, commitId, initiatorId, meta, triggeredBy);
             notifyStatusChange(tx, processKey, status);
             processLogManager.createSystemSegment(tx, payload.getProcessKey());
+
+            processStateManager.export(tx, processKey, (name, unixMode, src) -> {
+                state.add(name);
+            });
         });
+
+        log.info(">>>>> {} -> {} state: {}", processKey, status, state);
     }
 
     /**
@@ -126,13 +141,24 @@ public class ProcessQueueManager {
         String runtime = payload.getHeader(Payload.RUNTIME);
         List<String> dependencies = payload.getHeader(Payload.DEPENDENCIES);
 
-        return queueDao.txResult(tx -> {
+        List<String> state = new ArrayList<>();
+
+        boolean result = queueDao.txResult(tx -> {
             boolean updated = queueDao.enqueue(tx, processKey, tags, startAt, requirements, processTimeout, handlers, meta, imports, exclusive, runtime, dependencies, suspendTimeout, TO_ENQUEUED_STATUSES);
             if (updated) {
                 notifyStatusChange(tx, processKey, ProcessStatus.ENQUEUED);
             }
+
+            processStateManager.export(tx, processKey, (name, unixMode, src) -> {
+                state.add(name);
+            });
+
             return updated;
         });
+
+        log.info(">>>>> {} ({}) -> {} state: {}", processKey, result, ProcessStatus.ENQUEUED, state);
+
+        return result;
     }
 
     /**

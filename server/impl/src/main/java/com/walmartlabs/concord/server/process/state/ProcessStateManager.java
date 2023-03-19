@@ -371,7 +371,10 @@ public class ProcessStateManager extends AbstractDao {
      */
     public boolean export(ProcessKey processKey, ItemConsumer consumer) {
         DSLContext tx = dsl();
+        return export(tx, processKey, consumer);
+    }
 
+    public boolean export(DSLContext tx, ProcessKey processKey, ItemConsumer consumer) {
         String sql = tx
                 .select(PROCESS_STATE.ITEM_PATH, PROCESS_STATE.UNIX_MODE, PROCESS_STATE.IS_ENCRYPTED, PROCESS_STATE.ITEM_DATA)
                 .from(PROCESS_STATE)
