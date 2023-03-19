@@ -262,7 +262,8 @@ class RepositoryForm extends React.Component<InjectedFormikProps<Props, FormValu
                     <Button
                         primary={true}
                         type="submit"
-                        disabled={!dirty || hasErrors || this.state.testRunning}>
+                        disabled={!dirty || hasErrors || this.state.testRunning || this.props.isSubmitting}
+                        loading={this.props.isSubmitting}>
                         {editMode ? 'Save' : 'Add'}
                     </Button>
 

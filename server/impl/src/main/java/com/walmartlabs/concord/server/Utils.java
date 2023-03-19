@@ -21,8 +21,6 @@ package com.walmartlabs.concord.server;
  */
 
 import com.google.inject.Binder;
-import com.walmartlabs.concord.server.metrics.MetricsRegistrator;
-import com.walmartlabs.concord.server.metrics.MetricsServletHolder;
 import com.walmartlabs.concord.server.sdk.BackgroundTask;
 import com.walmartlabs.concord.server.sdk.ScheduledTask;
 import org.eclipse.jetty.servlet.ServletHolder;

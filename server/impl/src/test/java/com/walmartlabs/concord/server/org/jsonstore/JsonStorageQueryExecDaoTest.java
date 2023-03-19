@@ -32,11 +32,10 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.*;
 
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
-
-import static org.junit.jupiter.api.Assertions.*;
 
 @Disabled("local DB connection required")
 public class JsonStorageQueryExecDaoTest extends AbstractDaoTest {

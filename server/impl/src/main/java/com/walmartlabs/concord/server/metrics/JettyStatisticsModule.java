@@ -25,7 +25,6 @@ import com.google.inject.AbstractModule;
 import com.google.inject.multibindings.Multibinder;
 import com.walmartlabs.concord.server.sdk.metrics.GaugeProvider;
 
-import javax.inject.Named;
 import javax.management.MBeanServer;
 import javax.management.ObjectName;
 import java.lang.management.ManagementFactory;

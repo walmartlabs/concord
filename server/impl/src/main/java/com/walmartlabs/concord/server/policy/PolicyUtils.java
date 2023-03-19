@@ -72,6 +72,12 @@ public final class PolicyUtils {
         return m;
     }
 
+    public static Map<String, Object> repositoryToMap(ProjectEntry project,
+                                                      RepositoryEntry repo,
+                                                      SecretEntry secret) {
+        return repositoryToMap(project.getOrgId(), project.getOrgName(), project.getId(), project.getName(), repo, secret);
+    }
+
     public static Map<String, Object> repositoryToMap(UUID orgId,
                                                       String orgName,
                                                       UUID projectId,

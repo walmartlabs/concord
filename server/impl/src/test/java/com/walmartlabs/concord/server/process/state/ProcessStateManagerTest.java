@@ -48,9 +48,9 @@ import java.util.Collections;
 import java.util.UUID;
 
 import static com.walmartlabs.concord.server.process.state.ProcessStateManager.copyTo;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
-
-import static org.junit.jupiter.api.Assertions.*;
 
 @Disabled("requires a local DB instance")
 public class ProcessStateManagerTest extends AbstractDaoTest {

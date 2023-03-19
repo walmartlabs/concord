@@ -28,7 +28,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
-import java.nio.file.Path;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -44,7 +43,7 @@ public class ProcessDefinitionRefreshListener implements RepositoryRefreshListen
     }
 
     @Override
-    public void onRefresh(DSLContext ctx, RepositoryEntry repo, Path repoPath, ProcessDefinition pd) {
+    public void onRefresh(DSLContext tx, RepositoryEntry repo, ProcessDefinition pd) {
         Set<String> pf = pd.publicFlows();
         if (pf == null || pf.isEmpty()) {
             // all flows are public when no public flows defined
@@ -61,9 +60,9 @@ public class ProcessDefinitionRefreshListener implements RepositoryRefreshListen
         Map<String, Object> meta = new HashMap<>();
         meta.put("entryPoints", emptyToNull(entryPoints));
         meta.put("profiles", emptyToNull(profiles));
-        repositoryDao.updateMeta(ctx, repo.getId(), meta);
+        repositoryDao.updateMeta(tx, repo.getId(), meta);
 
-        log.info("onRefresh ['{}', '{}'] -> done ({})", repo.getId(), repoPath, entryPoints);
+        log.info("onRefresh ['{}'] -> done ({})", repo.getId(), entryPoints);
     }
 
     private static <E extends Collection<?>> E emptyToNull(E items) {

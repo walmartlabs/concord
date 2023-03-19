@@ -36,7 +36,6 @@ import org.jooq.Record9;
 import org.jooq.SelectOnConditionStep;
 
 import javax.inject.Inject;
-import javax.inject.Named;
 import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Map;

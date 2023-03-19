@@ -39,7 +39,10 @@ import org.jooq.*;
 
 import javax.inject.Inject;
 import javax.inject.Named;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 import java.util.function.Supplier;
 
 import static com.walmartlabs.concord.server.jooq.Tables.V_USER_TEAMS;
@@ -47,8 +50,6 @@ import static com.walmartlabs.concord.server.jooq.tables.Organizations.ORGANIZAT
 import static com.walmartlabs.concord.server.jooq.tables.ProjectKvStore.PROJECT_KV_STORE;
 import static com.walmartlabs.concord.server.jooq.tables.ProjectTeamAccess.PROJECT_TEAM_ACCESS;
 import static com.walmartlabs.concord.server.jooq.tables.Projects.PROJECTS;
-import static com.walmartlabs.concord.server.jooq.tables.Repositories.REPOSITORIES;
-import static com.walmartlabs.concord.server.jooq.tables.Secrets.SECRETS;
 import static com.walmartlabs.concord.server.jooq.tables.Teams.TEAMS;
 import static com.walmartlabs.concord.server.jooq.tables.Users.USERS;
 import static org.jooq.impl.DSL.*;

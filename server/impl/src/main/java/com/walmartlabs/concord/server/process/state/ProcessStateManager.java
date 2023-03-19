@@ -22,6 +22,7 @@ package com.walmartlabs.concord.server.process.state;
 
 import com.walmartlabs.concord.common.IOUtils;
 import com.walmartlabs.concord.common.Posix;
+import com.walmartlabs.concord.common.secret.SecretUtils;
 import com.walmartlabs.concord.db.AbstractDao;
 import com.walmartlabs.concord.db.MainDB;
 import com.walmartlabs.concord.db.PgUtils;
@@ -31,7 +32,6 @@ import com.walmartlabs.concord.policyengine.StatePolicy;
 import com.walmartlabs.concord.policyengine.StateRule;
 import com.walmartlabs.concord.server.cfg.ProcessConfiguration;
 import com.walmartlabs.concord.server.cfg.SecretStoreConfiguration;
-import com.walmartlabs.concord.common.secret.SecretUtils;
 import com.walmartlabs.concord.server.policy.PolicyException;
 import com.walmartlabs.concord.server.policy.PolicyManager;
 import com.walmartlabs.concord.server.process.logs.ProcessLogManager;

@@ -30,7 +30,6 @@ import org.slf4j.LoggerFactory;
 import org.sonatype.siesta.ValidationErrorsException;
 
 import javax.inject.Inject;
-import java.nio.file.Path;
 
 public class TriggerRefreshListener implements RepositoryRefreshListener {
 
@@ -44,9 +43,9 @@ public class TriggerRefreshListener implements RepositoryRefreshListener {
     }
 
     @Override
-    public void onRefresh(DSLContext ctx, RepositoryEntry repo, Path repoPath, ProcessDefinition pd) {
-        if (repo.isTriggersDisabled()) {
-            triggerManager.clearTriggers(repo.getProjectId(), repo.getId());
+    public void onRefresh(DSLContext tx, RepositoryEntry repo, ProcessDefinition pd) {
+        if (repo.isTriggersDisabled() || repo.isDisabled()) {
+            triggerManager.clearTriggers(tx, repo.getProjectId(), repo.getId());
             return;
         }
 
@@ -57,6 +56,6 @@ public class TriggerRefreshListener implements RepositoryRefreshListener {
             throw new ValidationErrorsException(String.join("\n", validationResult.getErrors()));
         }
 
-        triggerManager.refresh(repo.getProjectId(), repo.getId(), pd);
+        triggerManager.refresh(tx, repo.getProjectId(), repo.getId(), pd);
     }
 }

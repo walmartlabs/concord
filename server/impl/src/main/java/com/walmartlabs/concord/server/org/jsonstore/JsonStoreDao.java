@@ -32,8 +32,8 @@ import com.walmartlabs.concord.server.org.EntityOwner;
 import com.walmartlabs.concord.server.org.ResourceAccessEntry;
 import com.walmartlabs.concord.server.org.ResourceAccessLevel;
 import com.walmartlabs.concord.server.user.UserType;
-import org.jooq.*;
 import org.jooq.Record;
+import org.jooq.*;
 
 import javax.inject.Inject;
 import javax.inject.Named;

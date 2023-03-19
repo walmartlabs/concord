@@ -52,7 +52,8 @@ import java.util.stream.Collectors;
 
 import static com.walmartlabs.concord.server.jooq.Tables.REPOSITORIES;
 import static com.walmartlabs.concord.server.jooq.tables.ProcessQueue.PROCESS_QUEUE;
-import static org.jooq.impl.DSL.*;
+import static org.jooq.impl.DSL.currentOffsetDateTime;
+import static org.jooq.impl.DSL.value;
 
 public class EnqueuedBatchTask extends PeriodicTask {
 

@@ -81,47 +81,49 @@ public class TriggerManager extends AbstractDao {
     }
 
     public void refresh(UUID projectId, UUID repoId, ProcessDefinition pd) {
+        tx(tx -> refresh(projectId, repoId, pd));
+    }
+
+    public void refresh(DSLContext tx, UUID projectId, UUID repoId, ProcessDefinition pd) {
         UUID orgId = projectDao.getOrgId(projectId);
         for (Trigger t : pd.triggers()) {
             policyManager.checkEntity(orgId, projectId, EntityType.TRIGGER, EntityAction.CREATE, null, PolicyUtils.triggerToMap(orgId, projectId, t));
         }
 
-        tx(tx -> {
-            List<TriggerEntry> currentTriggers = triggersDao.list(tx, projectId, repoId);
-            ListMultimap<String, TriggerEntry> triggerIds = toTriggerIds(currentTriggers);
+        List<TriggerEntry> currentTriggers = triggersDao.list(tx, projectId, repoId);
+        ListMultimap<String, TriggerEntry> triggerIds = toTriggerIds(currentTriggers);
 
-            pd.triggers().forEach(t -> {
-                t = enrichTriggerDefinition(tx, repoId, t);
+        pd.triggers().forEach(t -> {
+            t = enrichTriggerDefinition(tx, repoId, t);
 
-                String internalId = TriggerInternalIdCalculator.getId(t.name(), t.activeProfiles(), t.arguments(), t.conditions(), t.configuration());
-                List<TriggerEntry> triggers = triggerIds.get(internalId);
-                if (!triggers.isEmpty()) {
-                    triggers.remove(0);
-                    return;
-                }
-
-                UUID triggerId = triggersDao.insert(tx,
-                        projectId,
-                        repoId,
-                        t.name(),
-                        t.activeProfiles(),
-                        t.arguments(),
-                        t.conditions(),
-                        t.configuration());
-
-                postProcessTrigger(tx, triggerId, t);
-            });
-
-            if (!triggerIds.isEmpty()) {
-                triggersDao.delete(tx, triggerIds.values().stream().map(TriggerEntry::getId).collect(Collectors.toList()));
+            String internalId = TriggerInternalIdCalculator.getId(t.name(), t.activeProfiles(), t.arguments(), t.conditions(), t.configuration());
+            List<TriggerEntry> triggers = triggerIds.get(internalId);
+            if (!triggers.isEmpty()) {
+                triggers.remove(0);
+                return;
             }
+
+            UUID triggerId = triggersDao.insert(tx,
+                    projectId,
+                    repoId,
+                    t.name(),
+                    t.activeProfiles(),
+                    t.arguments(),
+                    t.conditions(),
+                    t.configuration());
+
+            postProcessTrigger(tx, triggerId, t);
         });
+
+        if (!triggerIds.isEmpty()) {
+            triggersDao.delete(tx, triggerIds.values().stream().map(TriggerEntry::getId).collect(Collectors.toList()));
+        }
 
         log.info("refresh ['{}', '{}'] -> done, triggers count: {}", projectId, repoId, pd.triggers().size());
     }
 
-    public void clearTriggers(UUID projectId, UUID repoId) {
-        tx(tx -> triggersDao.delete(tx, projectId, repoId));
+    public void clearTriggers(DSLContext tx, UUID projectId, UUID repoId) {
+        triggersDao.delete(tx, projectId, repoId);
     }
 
     private Trigger enrichTriggerDefinition(DSLContext tx, UUID repoId, Trigger t) {

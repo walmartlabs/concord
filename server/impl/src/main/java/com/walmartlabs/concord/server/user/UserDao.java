@@ -22,7 +22,6 @@ package com.walmartlabs.concord.server.user;
 
 import com.walmartlabs.concord.db.AbstractDao;
 import com.walmartlabs.concord.db.MainDB;
-import com.walmartlabs.concord.server.OffsetDateTimeParam;
 import com.walmartlabs.concord.server.jooq.tables.records.UsersRecord;
 import com.walmartlabs.concord.server.org.OrganizationEntry;
 import com.walmartlabs.concord.server.org.team.TeamRole;

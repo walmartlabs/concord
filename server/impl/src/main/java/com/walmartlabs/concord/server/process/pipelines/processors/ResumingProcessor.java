@@ -22,7 +22,6 @@ package com.walmartlabs.concord.server.process.pipelines.processors;
 
 import com.walmartlabs.concord.server.process.Payload;
 import com.walmartlabs.concord.server.process.queue.ProcessQueueManager;
-import com.walmartlabs.concord.server.sdk.ConcordApplicationException;
 import com.walmartlabs.concord.server.sdk.ProcessKey;
 import com.walmartlabs.concord.server.sdk.ProcessStatus;
 import com.walmartlabs.concord.server.sdk.metrics.WithTimer;

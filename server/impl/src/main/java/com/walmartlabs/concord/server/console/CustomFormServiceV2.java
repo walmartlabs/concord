@@ -28,7 +28,6 @@ import com.walmartlabs.concord.forms.FormUtils;
 import com.walmartlabs.concord.forms.ValidationError;
 import com.walmartlabs.concord.server.MultipartUtils;
 import com.walmartlabs.concord.server.cfg.CustomFormConfiguration;
-import com.walmartlabs.concord.server.process.form.ExternalFileFormValidatorLocaleV2;
 import com.walmartlabs.concord.server.process.form.FormServiceV1;
 import com.walmartlabs.concord.server.process.form.FormServiceV2;
 import com.walmartlabs.concord.server.process.form.FormSubmitResult;

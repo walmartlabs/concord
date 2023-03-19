@@ -45,8 +45,6 @@ import org.sonatype.siesta.Resource;
 import org.sonatype.siesta.ValidationErrorsException;
 
 import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
 import javax.ws.rs.*;
 import javax.ws.rs.core.*;
 import java.time.Duration;

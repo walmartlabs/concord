@@ -23,8 +23,7 @@ package com.walmartlabs.concord.server.org.triggers;
 import com.walmartlabs.concord.process.loader.model.Trigger;
 import com.walmartlabs.concord.sdk.Constants;
 import org.jooq.DSLContext;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.sonatype.siesta.ValidationErrorsException;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -38,8 +37,6 @@ import java.util.UUID;
 @Named
 public class CronTriggerProcessor {
 
-    private static final Logger log = LoggerFactory.getLogger(CronTriggerProcessor.class);
-
     private final TriggerScheduleDao schedulerDao;
 
     @Inject
@@ -50,23 +47,20 @@ public class CronTriggerProcessor {
     public void process(DSLContext tx, UUID triggerId, Trigger t) {
         Map<String, Object> conditions = t.conditions();
         if (conditions == null) {
-            log.warn("process ['{}'] -> cron trigger without params, ignore", triggerId);
-            return;
+            throw new ValidationErrorsException("cron trigger '" + triggerId + "' without params");
         }
 
         String spec = (String) conditions.get(Constants.Trigger.CRON_SPEC);
 
         if (spec == null) {
-            log.warn("process ['{}'] -> cron trigger without spec, ignore", triggerId);
-            return;
+            throw new ValidationErrorsException("cron trigger '" + triggerId + "' without spec");
         }
 
         ZoneId zoneId = null;
         String timezone = (String) conditions.get(Constants.Trigger.CRON_TIMEZONE);
         if (timezone != null) {
             if (!validTimeZone(timezone)) {
-                log.warn("process ['{}'] -> cron trigger invalid timezone '{}', ignore", triggerId, timezone);
-                return;
+                throw new ValidationErrorsException("cron trigger '" + triggerId + "' invalid timezone '" + timezone + "'");
             }
 
             zoneId = TimeZone.getTimeZone(timezone).toZoneId();
@@ -74,8 +68,7 @@ public class CronTriggerProcessor {
 
         OffsetDateTime fireAt = CronUtils.nextExecution(schedulerDao.now(), spec, zoneId);
         if (fireAt == null) {
-            log.warn("process ['{}'] -> cron spec empty", triggerId);
-            return;
+            throw new ValidationErrorsException("cron trigger '" + triggerId + "' spec is empty");
         }
 
         schedulerDao.insert(tx, triggerId, fireAt);
