@@ -152,18 +152,14 @@ public class ProjectRepositoryManager {
     }
 
     public ProcessDefinition processDefinition(UUID orgId, UUID projectId, RepositoryEntry repositoryEntry) {
-        return processDefinition(orgId, projectId, repositoryEntry.getUrl(), repositoryEntry.getBranch(), repositoryEntry.getCommitId(), repositoryEntry.getPath(), repositoryEntry.getSecretName());
-    }
-
-    public ProcessDefinition processDefinition(UUID orgId, UUID projectId, String repoUrl, String branch, String commitId, String path, String secretName) {
-        if (branch == null && commitId == null){
+        if (repositoryEntry.getBranch() == null && repositoryEntry.getCommitId() == null){
             throw new ValidationErrorsException("Branch or CommitId required");
         }
 
         try {
-            Secret secret = getSecret(orgId, projectId, secretName);
-            return repositoryManager.withLock(repoUrl, () -> {
-                Repository repository = repositoryManager.fetch(repoUrl, branch, commitId, path, secret, false);
+            Secret secret = getSecret(orgId, projectId, repositoryEntry);
+            return repositoryManager.withLock(repositoryEntry.getUrl(), () -> {
+                Repository repository = repositoryManager.fetch(repositoryEntry.getUrl(), repositoryEntry.getBranch(), repositoryEntry.getCommitId(), repositoryEntry.getPath(), secret, false);
                 ProjectLoader.Result result = projectLoader.loadProject(repository.path(), importsNormalizerFactory.forProject(projectId), ImportsListener.NOP_LISTENER);
                 return result.projectDefinition();
             });
@@ -222,14 +218,15 @@ public class ProjectRepositoryManager {
         return secretManager.assertAccess(orgId, entry.getSecretId(), entry.getSecretName(), ResourceAccessLevel.READER, false);
     }
 
-    private Secret getSecret(UUID orgId, UUID projectId, String secretName) {
-        if (secretName == null) {
+    private Secret getSecret(UUID orgId, UUID projectId, RepositoryEntry repositoryEntry) {
+        SecretEntry secretEntry = assertSecret(orgId, repositoryEntry);
+        if (secretEntry == null) {
             return null;
         }
 
-        SecretManager.DecryptedSecret s = secretManager.getSecret(SecretManager.AccessScope.project(projectId), orgId, secretName, null, null);
+        SecretManager.DecryptedSecret s = secretManager.getSecret(SecretManager.AccessScope.project(projectId), orgId, secretEntry.getName(), null, null);
         if (s == null) {
-            throw new RepositoryException("Secret not found: " + secretName);
+            throw new RepositoryException("Secret not found: " + secretEntry.getName());
         }
 
         return s.getSecret();
