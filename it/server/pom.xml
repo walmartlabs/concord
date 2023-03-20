@@ -518,6 +518,10 @@
                                 <image>
                                     <name>${server.image}</name>
                                     <alias>server</alias>
+                                    <log>
+                                        <prefix>SERVER: </prefix>
+                                        <color>cyan</color>
+                                    </log>
                                     <run>
                                         <ports>
                                             <port>it.server.port:8001</port>
