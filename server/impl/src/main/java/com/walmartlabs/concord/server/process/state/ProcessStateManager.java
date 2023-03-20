@@ -253,6 +253,8 @@ public class ProcessStateManager extends AbstractDao {
      */
     @WithTimer
     public void deleteDirectory(DSLContext tx, ProcessKey processKey, String path) {
+        log.info("deleteDirectory ['{}', '{}']", processKey, path);
+
         tx.deleteFrom(PROCESS_STATE)
                 .where(PROCESS_STATE.INSTANCE_ID.eq(processKey.getInstanceId())
                         .and(PROCESS_STATE.INSTANCE_CREATED_AT.eq(processKey.getCreatedAt())))
@@ -265,6 +267,8 @@ public class ProcessStateManager extends AbstractDao {
      * Replaces a single value.
      */
     public void replace(ProcessKey processKey, String path, byte[] data) {
+        log.info("replace ['{}', '{}']", processKey, path);
+
         tx(tx -> {
             deleteDirectory(tx, processKey, path);
             insert(tx, processKey, path, data);
@@ -275,6 +279,8 @@ public class ProcessStateManager extends AbstractDao {
      * Inserts a single value.
      */
     public void insert(DSLContext tx, ProcessKey processKey, String path, byte[] in) {
+        log.info("insert ['{}', '{}']", processKey, path);
+
         boolean needEncrypt = secureFiles.contains(path);
         byte[] data = in;
         if (needEncrypt) {
@@ -320,6 +326,7 @@ public class ProcessStateManager extends AbstractDao {
                 @Override
                 public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
                     if (!filter.apply(file, attrs)) {
+                        log.info("---> importPath [{}, {}] -> ignored", processKey, file);
                         return FileVisitResult.CONTINUE;
                     }
 
@@ -340,6 +347,8 @@ public class ProcessStateManager extends AbstractDao {
                     Set<PosixFilePermission> permissions = Files.getPosixFilePermissions(file);
                     int unixMode = Posix.unixMode(permissions);
                     boolean needsEncryption = secureFiles.contains(n);
+
+                    log.info("---> importPath [{}, {}] -> deleted", processKey, n);
 
                     tx.deleteFrom(PROCESS_STATE).where(PROCESS_STATE.INSTANCE_ID.eq(processKey.getInstanceId())
                             .and(PROCESS_STATE.INSTANCE_CREATED_AT.eq(processKey.getCreatedAt()))
@@ -497,6 +506,9 @@ public class ProcessStateManager extends AbstractDao {
     }
 
     private void insert(DSLContext tx, UUID instanceId, OffsetDateTime instanceCreatedAt, Collection<BatchItem> batch) {
+        log.info("---> importPath [{}, {}] -> insert", instanceId, batch);
+
+
         String sql = tx.insertInto(PROCESS_STATE)
                 .columns(PROCESS_STATE.INSTANCE_ID, PROCESS_STATE.INSTANCE_CREATED_AT, PROCESS_STATE.ITEM_PATH, PROCESS_STATE.UNIX_MODE, PROCESS_STATE.ITEM_DATA, PROCESS_STATE.IS_ENCRYPTED)
                 .values((UUID) null, null, null, null, null, null)
@@ -757,6 +769,11 @@ public class ProcessStateManager extends AbstractDao {
             this.path = path;
             this.unixMode = unixMode;
             this.needsEncryption = needsEncryption;
+        }
+
+        @Override
+        public String toString() {
+            return "itemPath: " + itemPath + ", path: " + path;
         }
     }
 }
