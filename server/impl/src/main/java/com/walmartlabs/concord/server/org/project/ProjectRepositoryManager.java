@@ -20,12 +20,7 @@ package com.walmartlabs.concord.server.org.project;
  * =====
  */
 
-import com.walmartlabs.concord.imports.ImportsListener;
-import com.walmartlabs.concord.process.loader.ProjectLoader;
 import com.walmartlabs.concord.process.loader.model.ProcessDefinition;
-import com.walmartlabs.concord.repository.Repository;
-import com.walmartlabs.concord.repository.RepositoryException;
-import com.walmartlabs.concord.sdk.Secret;
 import com.walmartlabs.concord.server.audit.AuditAction;
 import com.walmartlabs.concord.server.audit.AuditLog;
 import com.walmartlabs.concord.server.audit.AuditObject;
@@ -37,10 +32,7 @@ import com.walmartlabs.concord.server.policy.EntityAction;
 import com.walmartlabs.concord.server.policy.EntityType;
 import com.walmartlabs.concord.server.policy.PolicyManager;
 import com.walmartlabs.concord.server.policy.PolicyUtils;
-import com.walmartlabs.concord.server.process.ImportsNormalizerFactory;
-import com.walmartlabs.concord.server.repository.RepositoryManager;
 import com.walmartlabs.concord.server.repository.RepositoryRefresher;
-import com.walmartlabs.concord.server.sdk.ConcordApplicationException;
 import org.immutables.value.Value;
 import org.jooq.DSLContext;
 import org.sonatype.siesta.ValidationErrorsException;
@@ -57,32 +49,23 @@ public class ProjectRepositoryManager {
 
     private final ProjectAccessManager projectAccessManager;
     private final SecretManager secretManager;
-    private final RepositoryManager repositoryManager;
     private final RepositoryDao repositoryDao;
     private final AuditLog auditLog;
-    private final ProjectLoader projectLoader;
-    private final ImportsNormalizerFactory importsNormalizerFactory;
     private final PolicyManager policyManager;
     private final RepositoryRefresher repositoryRefresher;
 
     @Inject
     public ProjectRepositoryManager(ProjectAccessManager projectAccessManager,
                                     SecretManager secretManager,
-                                    RepositoryManager repositoryManager,
                                     RepositoryDao repositoryDao,
                                     AuditLog auditLog,
-                                    ProjectLoader projectLoader,
-                                    ImportsNormalizerFactory importsNormalizerFactory,
                                     PolicyManager policyManager,
                                     RepositoryRefresher repositoryRefresher) {
 
         this.projectAccessManager = projectAccessManager;
         this.secretManager = secretManager;
-        this.repositoryManager = repositoryManager;
         this.repositoryDao = repositoryDao;
         this.auditLog = auditLog;
-        this.projectLoader = projectLoader;
-        this.importsNormalizerFactory = importsNormalizerFactory;
         this.policyManager = policyManager;
         this.repositoryRefresher = repositoryRefresher;
     }
@@ -152,27 +135,7 @@ public class ProjectRepositoryManager {
     }
 
     public ProcessDefinition processDefinition(UUID orgId, UUID projectId, RepositoryEntry repositoryEntry) {
-        if (repositoryEntry.getBranch() == null && repositoryEntry.getCommitId() == null){
-            throw new ValidationErrorsException("Branch or CommitId required");
-        }
-
-        try {
-            String branch;
-            if (repositoryEntry.getCommitId() != null) {
-                branch = null;
-            } else {
-                branch = repositoryEntry.getBranch();
-            }
-
-            Secret secret = getSecret(orgId, projectId, repositoryEntry);
-            return repositoryManager.withLock(repositoryEntry.getUrl(), () -> {
-                Repository repository = repositoryManager.fetch(repositoryEntry.getUrl(), branch, repositoryEntry.getCommitId(), repositoryEntry.getPath(), secret, false);
-                ProjectLoader.Result result = projectLoader.loadProject(repository.path(), importsNormalizerFactory.forProject(projectId), ImportsListener.NOP_LISTENER);
-                return result.projectDefinition();
-            });
-        } catch (Exception e) {
-            throw new ConcordApplicationException("Error while loading process definition: \n" + e.getMessage(), e);
-        }
+        return repositoryRefresher.processDefinition(orgId, projectId, repositoryEntry);
     }
 
     @Value.Immutable
@@ -223,20 +186,6 @@ public class ProjectRepositoryManager {
             return null;
         }
         return secretManager.assertAccess(orgId, entry.getSecretId(), entry.getSecretName(), ResourceAccessLevel.READER, false);
-    }
-
-    private Secret getSecret(UUID orgId, UUID projectId, RepositoryEntry repositoryEntry) {
-        SecretEntry secretEntry = assertSecret(orgId, repositoryEntry);
-        if (secretEntry == null) {
-            return null;
-        }
-
-        SecretManager.DecryptedSecret s = secretManager.getSecret(SecretManager.AccessScope.project(projectId), orgId, secretEntry.getName(), null, null);
-        if (s == null) {
-            throw new RepositoryException("Secret not found: " + secretEntry.getName());
-        }
-
-        return s.getSecret();
     }
 
     private ProcessDefinition assertProcessDefinition(String name, Map<String, ProcessDefinition> processDefinitions) {
