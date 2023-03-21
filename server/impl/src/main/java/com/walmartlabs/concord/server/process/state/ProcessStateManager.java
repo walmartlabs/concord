@@ -383,6 +383,37 @@ public class ProcessStateManager extends AbstractDao {
         return export(tx, processKey, consumer);
     }
 
+    public boolean exportByInstanceId(DSLContext tx, UUID instanceId, ItemConsumer consumer) {
+        String sql = tx
+                .select(PROCESS_STATE.ITEM_PATH, PROCESS_STATE.UNIX_MODE, PROCESS_STATE.IS_ENCRYPTED, PROCESS_STATE.ITEM_DATA)
+                .from(PROCESS_STATE)
+                .where(PROCESS_STATE.INSTANCE_ID.eq((UUID) null))
+                .getSQL();
+
+        return tx.connectionResult(conn -> {
+            try (PreparedStatement ps = conn.prepareStatement(sql)) {
+                ps.setObject(1, instanceId);
+
+                boolean found = false;
+                try (ResultSet rs = ps.executeQuery()) {
+                    while (rs.next()) {
+                        found = true;
+
+                        String n = rs.getString(1);
+                        int unixMode = rs.getInt(2);
+                        boolean encrypted = rs.getBoolean(3);
+                        try (InputStream in = rs.getBinaryStream(4);
+                             InputStream processed = encrypted ? decrypt(in) : in) {
+                            consumer.accept(n, unixMode, processed);
+                        }
+                    }
+                }
+
+                return found;
+            }
+        });
+    }
+
     public boolean export(DSLContext tx, ProcessKey processKey, ItemConsumer consumer) {
         String sql = tx
                 .select(PROCESS_STATE.ITEM_PATH, PROCESS_STATE.UNIX_MODE, PROCESS_STATE.IS_ENCRYPTED, PROCESS_STATE.ITEM_DATA)

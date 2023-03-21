@@ -93,18 +93,24 @@ public class ProcessQueueManager {
         String branchOrTag = MapUtils.getString(cfg, Constants.Request.REPO_BRANCH_OR_TAG);
         String commitId = MapUtils.getString(cfg, Constants.Request.REPO_COMMIT_ID);
 
-        List<String> state = new ArrayList<>();
+        List<String> state1 = new ArrayList<>();
+        List<String> state2 = new ArrayList<>();
         queueDao.tx(tx -> {
             queueDao.insert(tx, processKey, status, kind, parentInstanceId, projectId, repoId, branchOrTag, commitId, initiatorId, meta, triggeredBy);
             notifyStatusChange(tx, processKey, status);
             processLogManager.createSystemSegment(tx, payload.getProcessKey());
 
             processStateManager.export(tx, processKey, (name, unixMode, src) -> {
-                state.add(name);
+                state1.add(name);
+            });
+
+            processStateManager.exportByInstanceId(tx, processKey.getInstanceId(), (name, unixMode, src) -> {
+                state2.add(name);
             });
         });
 
-        log.info(">>>>> {} -> {} state: {}", processKey, status, state);
+        log.info(">>>>> {} -> {} state1: {}", processKey, status, state1);
+        log.info(">>>>> {} -> {} state2: {}", processKey, status, state2);
     }
 
     /**
@@ -141,7 +147,8 @@ public class ProcessQueueManager {
         String runtime = payload.getHeader(Payload.RUNTIME);
         List<String> dependencies = payload.getHeader(Payload.DEPENDENCIES);
 
-        List<String> state = new ArrayList<>();
+        List<String> state1 = new ArrayList<>();
+        List<String> state2 = new ArrayList<>();
 
         boolean result = queueDao.txResult(tx -> {
             boolean updated = queueDao.enqueue(tx, processKey, tags, startAt, requirements, processTimeout, handlers, meta, imports, exclusive, runtime, dependencies, suspendTimeout, TO_ENQUEUED_STATUSES);
@@ -150,13 +157,17 @@ public class ProcessQueueManager {
             }
 
             processStateManager.export(tx, processKey, (name, unixMode, src) -> {
-                state.add(name);
+                state1.add(name);
+            });
+            processStateManager.exportByInstanceId(tx, processKey.getInstanceId(), (name, unixMode, src) -> {
+                state2.add(name);
             });
 
             return updated;
         });
 
-        log.info(">>>>> {} ({}) -> {} state: {}", processKey, result, ProcessStatus.ENQUEUED, state);
+        log.info(">>>>> {} ({}) -> {} state1: {}", processKey, result, ProcessStatus.ENQUEUED, state1);
+        log.info(">>>>> {} ({}) -> {} state2: {}", processKey, result, ProcessStatus.ENQUEUED, state2);
 
         return result;
     }
