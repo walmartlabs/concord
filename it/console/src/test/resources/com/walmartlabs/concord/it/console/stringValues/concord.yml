@@ -1,0 +1,13 @@
+flows:
+  default:
+    - set:
+        defaults: [ "first", "second" ]
+
+    - form: myForm
+      fields:
+        - field0: { label: "field0", type: "string*", allow: ["first", "second", "third"] }
+        - field1: { label: "field1", type: "string*", value: "${defaults}", allow: ["first", "second", "third"] }
+        - field2: { label: "field2", type: "string+", value: "${defaults}" }
+        - field3: { label: "field3", type: "string*" }
+        - field4: { label: "field4", type: "string" }
+    - log: "${resource.prettyPrintJson(myForm)}"
