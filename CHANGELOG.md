@@ -9,6 +9,8 @@
 
 ### Changed
 
+concord-console: fix rendering of multiple string values in process form
+([#735](https://github.com/walmartlabs/concord/pull/735)).
 
 ## [1.100.0] - 2023-03-09
 
