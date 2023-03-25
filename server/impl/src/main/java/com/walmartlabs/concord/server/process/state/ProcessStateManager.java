@@ -29,6 +29,7 @@ import com.walmartlabs.concord.policyengine.CheckResult;
 import com.walmartlabs.concord.policyengine.PolicyEngine;
 import com.walmartlabs.concord.policyengine.StatePolicy;
 import com.walmartlabs.concord.policyengine.StateRule;
+import com.walmartlabs.concord.server.OffsetDateTimeParam;
 import com.walmartlabs.concord.server.cfg.ProcessConfiguration;
 import com.walmartlabs.concord.server.cfg.SecretStoreConfiguration;
 import com.walmartlabs.concord.common.secret.SecretUtils;
@@ -88,7 +89,7 @@ public class ProcessStateManager extends AbstractDao {
     private final Set<String> secureFiles;
 
     @Inject
-    protected ProcessStateManager(@MainDB Configuration cfg,
+    public ProcessStateManager(@MainDB Configuration cfg,
                                   SecretStoreConfiguration secretCfg,
                                   ProcessConfiguration stateCfg,
                                   PolicyManager policyManager,
@@ -383,6 +384,29 @@ public class ProcessStateManager extends AbstractDao {
         return export(tx, processKey, consumer);
     }
 
+    public void dumpCreatedAt(DSLContext tx, UUID instanceId) {
+        String sql = tx
+                .select(PROCESS_STATE.INSTANCE_CREATED_AT)
+                .from(PROCESS_STATE)
+                .where(PROCESS_STATE.INSTANCE_ID.eq((UUID) null))
+                .getSQL();
+
+        tx.connection(conn -> {
+            try (PreparedStatement ps = conn.prepareStatement(sql)) {
+                ps.setObject(1, instanceId);
+
+                try (ResultSet rs = ps.executeQuery()) {
+                    while (rs.next()) {
+                        log.info("dumpCreatedAt: [{}, '{}']", instanceId, rs.getObject(1));
+                        OffsetDateTime dt = (OffsetDateTime)rs.getObject(2);
+
+                        log.info("dumpCreatedAt: [{}, '{}'] -> nano: {}", instanceId, rs.getObject(1), dt.getNano());
+                    }
+                }
+            }
+        });
+    }
+
     public boolean exportByInstanceId(DSLContext tx, UUID instanceId, ItemConsumer consumer) {
         String sql = tx
                 .select(PROCESS_STATE.ITEM_PATH, PROCESS_STATE.UNIX_MODE, PROCESS_STATE.IS_ENCRYPTED, PROCESS_STATE.ITEM_DATA)
@@ -538,7 +562,6 @@ public class ProcessStateManager extends AbstractDao {
 
     private void insert(DSLContext tx, UUID instanceId, OffsetDateTime instanceCreatedAt, Collection<BatchItem> batch) {
         log.info("---> importPath [{}, {}] -> insert", instanceId, batch);
-
 
         String sql = tx.insertInto(PROCESS_STATE)
                 .columns(PROCESS_STATE.INSTANCE_ID, PROCESS_STATE.INSTANCE_CREATED_AT, PROCESS_STATE.ITEM_PATH, PROCESS_STATE.UNIX_MODE, PROCESS_STATE.ITEM_DATA, PROCESS_STATE.IS_ENCRYPTED)

@@ -111,6 +111,15 @@ public class ProcessQueueManager {
 
         log.info(">>>>> {} -> {} state1: {}", processKey, status, state1);
         log.info(">>>>> {} -> {} state2: {}", processKey, status, state2);
+
+        if (state1.size() != state2.size()) {
+            queueDao.tx(tx -> {
+                processStateManager.dumpCreatedAt(tx, processKey.getInstanceId());
+            });
+            log.info("PROCESS_KEY: {}", processKey.getCreatedAt());
+            log.info("PROCESS_KEY: nano {}", processKey.getCreatedAt().getNano());
+            throw new RuntimeException("BOOM: " + processKey);
+        }
     }
 
     /**
@@ -168,6 +177,15 @@ public class ProcessQueueManager {
 
         log.info(">>>>> {} ({}) -> {} state1: {}", processKey, result, ProcessStatus.ENQUEUED, state1);
         log.info(">>>>> {} ({}) -> {} state2: {}", processKey, result, ProcessStatus.ENQUEUED, state2);
+
+        if (state1.size() != state2.size()) {
+            queueDao.tx(tx -> {
+                processStateManager.dumpCreatedAt(tx, processKey.getInstanceId());
+            });
+            log.info("PROCESS_KEY: {}", processKey.getCreatedAt());
+            log.info("PROCESS_KEY: nano {}", processKey.getCreatedAt().getNano());
+            throw new RuntimeException("BOOM2: " + processKey);
+        }
 
         return result;
     }
