@@ -112,6 +112,10 @@ public class ProcessQueueManager {
         log.info(">>>>> {} -> {} state1: {}", processKey, status, state1);
         log.info(">>>>> {} -> {} state2: {}", processKey, status, state2);
 
+        queueDao.tx(tx -> {
+            processStateManager.dumpCreatedAt(tx, processKey.getInstanceId());
+        });
+
         if (state1.size() != state2.size()) {
             queueDao.tx(tx -> {
                 processStateManager.dumpCreatedAt(tx, processKey.getInstanceId());

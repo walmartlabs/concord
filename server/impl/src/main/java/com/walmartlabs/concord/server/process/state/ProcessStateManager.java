@@ -58,6 +58,7 @@ import java.io.OutputStream;
 import java.nio.file.*;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.nio.file.attribute.PosixFilePermission;
+import java.security.Timestamp;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -398,9 +399,8 @@ public class ProcessStateManager extends AbstractDao {
                 try (ResultSet rs = ps.executeQuery()) {
                     while (rs.next()) {
                         log.info("dumpCreatedAt: [{}, '{}']", instanceId, rs.getObject(1));
-                        OffsetDateTime dt = (OffsetDateTime)rs.getObject(2);
-
-                        log.info("dumpCreatedAt: [{}, '{}'] -> nano: {}", instanceId, rs.getObject(1), dt.getNano());
+                        java.sql.Timestamp ts = rs.getTimestamp(1);
+                        log.info("dumpCreatedAt: [{}] -> ts: time: {}, nanos: {}", instanceId, ts.getTime(), ts.getNanos());
                     }
                 }
             }
