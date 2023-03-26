@@ -52,7 +52,12 @@ public final class PayloadBuilder {
     }
 
     public static PayloadBuilder start(PartialProcessKey processKey) {
-        ProcessKey pk = new ProcessKey(processKey.getInstanceId(), OffsetDateTime.now());
+        OffsetDateTime createdAt = OffsetDateTime.now();
+        if (createdAt.getNano() == 500) {
+            createdAt = createdAt.plusNanos(1);
+        }
+
+        ProcessKey pk = new ProcessKey(processKey.getInstanceId(), createdAt);
         return new PayloadBuilder(pk);
     }
 
