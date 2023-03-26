@@ -22,7 +22,7 @@ jobs:
     steps:
       - name: Clear /tmp
         run: |
-          find /tmp -ctime +2 -exec rm -rf '{}' + > /dev/null
+          sudo find /tmp -ctime +2 -exec rm -rf '{}' + > /dev/null
 
       - name: Clear old Docker resources
         run: |
