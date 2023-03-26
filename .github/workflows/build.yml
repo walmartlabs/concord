@@ -20,6 +20,10 @@ jobs:
     runs-on: self-hosted
 
     steps:
+      - name: Clear /tmp
+        run: |
+          find /tmp -ctime +2 -exec rm -rf '{}' + > /dev/null
+
       - name: Clear old Docker resources
         run: |
           docker rm -f $(docker ps -aq) || true
