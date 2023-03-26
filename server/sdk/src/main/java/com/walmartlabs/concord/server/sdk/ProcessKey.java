@@ -32,7 +32,7 @@ import static java.time.temporal.ChronoField.NANO_OF_SECOND;
 
 /**
  * Composite key of a process. Identifies process resources in partitioned tables.
- * @apiNote the "createdAt" portion of the key must be
+ * @apiNote the "createdAt" portion of the key must be truncated to microseconds.
  */
 public class ProcessKey extends PartialProcessKey {
 

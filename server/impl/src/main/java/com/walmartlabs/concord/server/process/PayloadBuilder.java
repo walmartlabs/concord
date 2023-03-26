@@ -57,6 +57,7 @@ public final class PayloadBuilder {
     public static PayloadBuilder start(PartialProcessKey processKey) {
         OffsetDateTime createdAt = OffsetDateTime.now();
 
+        // round up and truncate to microseconds
         if (createdAt.getNano() >= 500) {
             createdAt = createdAt.plus(1, MICROS)
                     .with(NANO_OF_SECOND, 0);
