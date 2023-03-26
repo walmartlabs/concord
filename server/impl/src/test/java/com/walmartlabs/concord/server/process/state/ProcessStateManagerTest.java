@@ -33,6 +33,7 @@ import com.walmartlabs.concord.server.process.logs.ProcessLogManager;
 import com.walmartlabs.concord.server.process.queue.ProcessKeyCache;
 import com.walmartlabs.concord.server.process.queue.ProcessQueueDao;
 import com.walmartlabs.concord.server.sdk.ProcessKey;
+import org.jooq.SQLDialect;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
@@ -144,6 +145,11 @@ public class ProcessStateManagerTest extends AbstractDaoTest {
         boolean result = stateManager.export(processKey, (name, unixMode, src) -> exported.add(name));
         assertTrue(result);
         // should be 4, but 2 because of createdAt rounded in postgresql JDBC and just truncated in jooq.
+        /**
+         *  see {@link org.postgresql.jdbc.TimestampUtils#toString(OffsetDateTime)}
+         *  and
+         *  {@link org.jooq.impl.DefaultBinding.format(OffsetDateTime val, SQLDialect family)
+          */
         assertEquals(4, exported.size());
     }
 
