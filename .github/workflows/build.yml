@@ -22,7 +22,7 @@ jobs:
     steps:
       - name: Clear /tmp
         run: |
-          docker run --rm -v /tmp:/data alpine find /data -ctime +2 -exec rm -rf '{}' + > /dev/null
+          docker run --rm -v /tmp:/data alpine find /data -ctime +2 -exec rm -rf '{}' + 2>&1 > /dev/null
 
       - name: Clear old Docker resources
         run: |
