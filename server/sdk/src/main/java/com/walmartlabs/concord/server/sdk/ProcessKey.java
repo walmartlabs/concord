@@ -24,7 +24,7 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 import java.time.OffsetDateTime;
-import java.time.temporal.ChronoField;
+import java.time.temporal.ChronoUnit;
 import java.util.Objects;
 import java.util.UUID;
 
@@ -41,7 +41,7 @@ public class ProcessKey extends PartialProcessKey {
     private final OffsetDateTime createdAt;
 
     public static ProcessKey random() {
-        return new ProcessKey(UUID.randomUUID(), OffsetDateTime.now().with(NANO_OF_SECOND, 0));
+        return new ProcessKey(UUID.randomUUID(), OffsetDateTime.now().truncatedTo(ChronoUnit.MICROS));
     }
 
     public ProcessKey(PartialProcessKey part, OffsetDateTime createdAt) {
@@ -54,7 +54,7 @@ public class ProcessKey extends PartialProcessKey {
 
         super(instanceId);
 
-        if (createdAt.getNano() != 0) {
+        if (createdAt.getNano() != createdAt.truncatedTo(ChronoUnit.MICROS).getNano()) {
             throw new IllegalArgumentException("The process' createdAt must be truncated to microseconds: " + createdAt);
         }
 
