@@ -18,7 +18,7 @@
  * =====
  */
 import * as React from 'react';
-import { Dropdown, DropdownProps } from 'semantic-ui-react';
+import { Dropdown, DropdownItemProps, DropdownProps } from 'semantic-ui-react';
 
 interface State {
     stateOptions: any[];
@@ -28,7 +28,7 @@ interface Props {
     name: string;
     required: boolean;
     value?: any;
-    options: any[];
+    options: DropdownItemProps[];
     multiple: boolean;
     allowAdditions: boolean;
     submitting?: boolean;
@@ -36,14 +36,14 @@ interface Props {
     onChange: (event: React.SyntheticEvent<HTMLElement>, data: DropdownProps) => void;
 }
 
-const toState = (options: any[]): State => {
+const toState = (value: any[], options: DropdownItemProps[]): State => {
     return { stateOptions: options };
 };
 
 class DropdownWithAddition extends React.Component<Props, State> {
     constructor(props: Props) {
         super(props);
-        this.state = toState(this.props.options);
+        this.state = toState(props.value, this.props.options);
 
         this.handleAddition = this.handleAddition.bind(this);
     }

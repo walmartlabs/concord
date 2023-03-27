@@ -33,7 +33,6 @@ import com.walmartlabs.concord.server.process.logs.ProcessLogManager;
 import com.walmartlabs.concord.server.process.queue.ProcessKeyCache;
 import com.walmartlabs.concord.server.process.queue.ProcessQueueDao;
 import com.walmartlabs.concord.server.sdk.ProcessKey;
-import org.jooq.SQLDialect;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
@@ -43,7 +42,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 import java.time.Duration;
-import java.time.OffsetDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
 
@@ -57,7 +55,7 @@ public class ProcessStateManagerTest extends AbstractDaoTest {
 
     @Test
     public void testUpdateState() throws Exception {
-        ProcessKey processKey = new ProcessKey(UUID.randomUUID(), OffsetDateTime.now());
+        ProcessKey processKey = ProcessKey.random();
 
         Path baseDir = Files.createTempDirectory("testImport");
 
@@ -91,7 +89,7 @@ public class ProcessStateManagerTest extends AbstractDaoTest {
 
     @Test
     public void testLargeImport() throws Exception {
-        ProcessKey processKey = new ProcessKey(UUID.randomUUID(), OffsetDateTime.now());
+        ProcessKey processKey = ProcessKey.random();
 
         int files = 100;
         int chunkSize = 1024 * 1024;
@@ -117,6 +115,7 @@ public class ProcessStateManagerTest extends AbstractDaoTest {
     }
 
     @Test
+    @Disabled("Used to reproduce the timestamp truncation issue when PG rounds up nanos while JOOQ truncates")
     public void testCreatedAtNanoTruncate() throws Exception {
         String createdAt = "2023-03-26T20:00:37.000000500Z";
         ProcessKey processKey = new ProcessKey(UUID.randomUUID(), DateTimeUtils.fromIsoString(createdAt));

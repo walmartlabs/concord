@@ -45,6 +45,9 @@ import java.time.OffsetDateTime;
 import java.util.*;
 import java.util.function.Function;
 
+import static java.time.temporal.ChronoField.NANO_OF_SECOND;
+import static java.time.temporal.ChronoUnit.MICROS;
+
 public final class PayloadBuilder {
 
     public static PayloadBuilder start(ProcessKey processKey) {
@@ -53,8 +56,13 @@ public final class PayloadBuilder {
 
     public static PayloadBuilder start(PartialProcessKey processKey) {
         OffsetDateTime createdAt = OffsetDateTime.now();
-        if (createdAt.getNano() == 500) {
-            createdAt = createdAt.plusNanos(1);
+
+        // round up and truncate to microseconds
+        if (createdAt.getNano() >= 500) {
+            createdAt = createdAt.plus(1, MICROS)
+                    .with(NANO_OF_SECOND, 0);
+        } else {
+            createdAt = createdAt.with(NANO_OF_SECOND, 0);
         }
 
         ProcessKey pk = new ProcessKey(processKey.getInstanceId(), createdAt);
