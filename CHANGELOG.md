@@ -9,7 +9,11 @@
 
 ### Changed
 
-concord-console: fix rendering of multiple string values in process form
+concord-server: truncate `createdAt` nanoseconds when
+creating new process keys
+([#736](https://github.com/walmartlabs/concord/pull/736);
+concord-console: fix rendering of multiple string values in
+forms
 ([#735](https://github.com/walmartlabs/concord/pull/735)).
 
 ## [1.100.0] - 2023-03-09
