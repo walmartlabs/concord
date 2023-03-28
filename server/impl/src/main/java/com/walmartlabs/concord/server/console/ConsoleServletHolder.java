@@ -1,4 +1,4 @@
-package com.walmartlabs.concord.server.boot.servlets;
+package com.walmartlabs.concord.server.console;
 
 /*-
  * *****

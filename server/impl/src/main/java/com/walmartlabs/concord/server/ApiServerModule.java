@@ -24,7 +24,6 @@ import com.google.inject.Binder;
 import com.google.inject.Module;
 import com.walmartlabs.concord.server.boot.*;
 import com.walmartlabs.concord.server.boot.filters.*;
-import com.walmartlabs.concord.server.boot.servlets.ConsoleServletHolder;
 import com.walmartlabs.concord.server.boot.servlets.FormServletHolder;
 import com.walmartlabs.concord.server.boot.servlets.SiestaServletHolder;
 import com.walmartlabs.concord.server.boot.statics.StaticResourcesConfigurator;
@@ -67,7 +66,6 @@ public class ApiServerModule implements Module {
 
         // ServletHolder
 
-        bindServletHolder(binder, ConsoleServletHolder.class);
         bindServletHolder(binder, FormServletHolder.class);
         bindServletHolder(binder, SiestaServletHolder.class);
 
