@@ -30,13 +30,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
 import java.util.Set;
 import java.util.UUID;
 
-@Named
-@Singleton
 public class LdapUserInfoProvider implements UserInfoProvider {
 
     private static final Logger log = LoggerFactory.getLogger(LdapUserInfoProvider.class);

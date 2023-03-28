@@ -28,14 +28,11 @@ import org.pac4j.oidc.client.OidcClient;
 
 import javax.inject.Inject;
 import javax.inject.Named;
-import javax.inject.Singleton;
 import javax.servlet.*;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 
-@Named
-@Singleton
 public class OidcAuthFilter implements Filter {
 
     public static final String URL = "/api/service/oidc/auth";
