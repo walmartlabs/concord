@@ -9,10 +9,12 @@
 
 ### Changed
 
-concord-server: truncate `createdAt` nanoseconds when
+- concord-server: remove more Named usage
+([#729](https://github.com/walmartlabs/concord/pull/729))
+- concord-server: truncate `createdAt` nanoseconds when
 creating new process keys
 ([#736](https://github.com/walmartlabs/concord/pull/736);
-concord-console: fix rendering of multiple string values in
+- concord-console: fix rendering of multiple string values in 
 forms
 ([#735](https://github.com/walmartlabs/concord/pull/735)).
 
