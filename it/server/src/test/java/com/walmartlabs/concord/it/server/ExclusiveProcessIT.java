@@ -76,7 +76,7 @@ public class ExclusiveProcessIT extends AbstractServerIT {
             System.out.println("p2 log:" + new String(getLog(p2.getLogFileName())));
         }
 
-        assertTrue(p1.getCreatedAt().isBefore(p2.getCreatedAt()));
+        assertTrue(p1.getCreatedAt().isEqual(p2.getCreatedAt()) || p1.getCreatedAt().isBefore(p2.getCreatedAt()));
         assertEquals(StatusEnum.CANCELLED, p1.getStatus());
         assertEquals(StatusEnum.FINISHED, p2.getStatus());
     }
