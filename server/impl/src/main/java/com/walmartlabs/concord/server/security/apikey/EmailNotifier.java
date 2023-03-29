@@ -25,7 +25,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
-import javax.inject.Named;
 import javax.mail.Message;
 import javax.mail.Session;
 import javax.mail.Transport;
@@ -33,7 +32,6 @@ import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeMessage;
 import java.util.Properties;
 
-@Named
 public class EmailNotifier {
 
     private static final Logger log = LoggerFactory.getLogger(EmailNotifier.class);

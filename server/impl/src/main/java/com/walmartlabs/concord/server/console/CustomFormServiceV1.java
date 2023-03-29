@@ -49,8 +49,6 @@ import org.slf4j.LoggerFactory;
 import org.sonatype.siesta.Validate;
 
 import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.POST;
 import javax.ws.rs.PathParam;
@@ -68,8 +66,6 @@ import java.util.stream.Collectors;
 
 import static com.walmartlabs.concord.server.process.state.ProcessStateManager.copyTo;
 
-@Named
-@Singleton
 public class CustomFormServiceV1 {
 
     private static final Logger log = LoggerFactory.getLogger(CustomFormServiceV1.class);

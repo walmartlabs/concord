@@ -98,7 +98,9 @@ public class ConcordAuthenticationHandler implements AuthenticationHandler {
                 h = h.substring(BEARER_AUTH_PREFIX.length());
             }
 
-            validateApiKey(h);
+            if (!isApiKeyValid(h)) {
+                return null;
+            }
 
             ApiKeyEntry apiKey = apiKeyDao.find(h);
             if (apiKey == null) {
@@ -129,11 +131,12 @@ public class ConcordAuthenticationHandler implements AuthenticationHandler {
         return UUID.fromString(new String(ab));
     }
 
-    private static void validateApiKey(String s) {
+    private static boolean isApiKeyValid(String s) {
         try {
             Base64.getDecoder().decode(s);
+            return true;
         } catch (IllegalArgumentException e) {
-            throw new AuthenticationException("Invalid API token: " + e.getMessage());
+            return false;
         }
     }
 
