@@ -9,6 +9,8 @@
 
 ### Changed
 
+- concord-server: allow auth plugins handle authorization
+token ([#737](https://github.com/walmartlabs/concord/pull/737));
 - concord-server: remove more Named usage
 ([#729](https://github.com/walmartlabs/concord/pull/729))
 - concord-server: truncate `createdAt` nanoseconds when
