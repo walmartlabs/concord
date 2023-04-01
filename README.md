@@ -41,8 +41,7 @@ Available Maven profiles:
 - `docker` - build Docker images;
 - `debian` - build Debian-based Docker images instead of the default CentOS base;
 - `it` - run integration tests;
-- `jdk11`, `jdk17`, `jdk8-aarch64`, `jdk17-aarch64` - use a different JDK version
-  for building artifacts and Docker images.
+- `jdk17-aarch64` - force JDK 17 for aarch64 (arm64).
 
 Profiles can be combined, e.g.
 
