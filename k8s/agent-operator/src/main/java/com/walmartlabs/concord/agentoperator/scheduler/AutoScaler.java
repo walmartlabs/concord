@@ -157,7 +157,11 @@ public class AutoScaler {
                 poolSize = cfg.getMaxSize();
                 log.info("['{}']: Incrementing to max size - {}", i.getName(), poolSize);
             } else if (enqueuedCount >= incrementThreshold) {
-                poolSize = (int) Math.round(podsCount * (1 + cfg.getPercentIncrement() / 100));
+                if (podsCount == 0) {
+                    poolSize = 1;
+                } else {
+                    poolSize = (int) Math.round(podsCount * (1 + cfg.getPercentIncrement() / 100));
+                }
 
                 // Limit to maximum pool size if the computed target size is more than the max size
                 if (poolSize > cfg.getMaxSize()) {
@@ -186,10 +190,10 @@ public class AutoScaler {
         scaleDownTimeStamp = System.currentTimeMillis();
 
         if (podsCount > cfg.getMinSize()) {
-            if (enqueuedCount < minPoolSizeThreshold) {
+            if (enqueuedCount < minPoolSizeThreshold || (enqueuedCount == 0 && minPoolSizeThreshold == 0) ) {
                 poolSize = (int) Math.floor(podsCount * (1 - cfg.getPercentDecrement() / 100));
 
-                log.info("['{}']: Scaling down - (enqueued count({}) < minimum threshold({})) for more than {} seconds...",
+                log.info("['{}']: Scaling down - (enqueued count({}), minimum threshold({})) for more than {} seconds...",
                         i.getName(), enqueuedCount, minPoolSizeThreshold,
                         (i.getResource().getSpec().getScaleDownDelayMs() / 1000));
 
