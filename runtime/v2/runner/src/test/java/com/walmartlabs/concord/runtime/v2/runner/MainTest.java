@@ -1282,6 +1282,18 @@ public class MainTest {
         assertLog(log, ".*" + Pattern.quote("mySecret after suspend: ******") + ".*");
     }
 
+    @Test
+    public void testIncVariable() throws Exception {
+        deploy("incVariable");
+
+        save(ProcessConfiguration.builder()
+                .putArguments("counter", 0)
+                .build());
+
+        byte[] log = run();
+        assertLog(log, ".*counter: 1.*");
+    }
+
     private void deploy(String resource) throws URISyntaxException, IOException {
         Path src = Paths.get(MainTest.class.getResource(resource).toURI());
         IOUtils.copy(src, workDir);

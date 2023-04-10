@@ -65,6 +65,9 @@ public class LazyEvalMap implements Map<String, Object> {
 
     @Override
     public boolean containsKey(Object key) {
+        if (inflightKeys.contains(key)) {
+            return false;
+        }
         return orderedKeys.contains(key);
     }
 
