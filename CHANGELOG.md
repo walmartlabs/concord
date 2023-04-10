@@ -1,5 +1,25 @@
 # Change log
 
+## [1.101.0] - 2023-03-29
+
+### Added
+
+- server: update process policy on process resume
+([#731](https://github.com/walmartlabs/concord/pull/731)).
+
+### Changed
+
+- concord-server: allow auth plugins handle authorization
+token ([#737](https://github.com/walmartlabs/concord/pull/737));
+- concord-server: remove more Named usage
+([#729](https://github.com/walmartlabs/concord/pull/729))
+- concord-server: truncate `createdAt` nanoseconds when
+creating new process keys
+([#736](https://github.com/walmartlabs/concord/pull/736);
+- concord-console: fix rendering of multiple string values in 
+forms
+([#735](https://github.com/walmartlabs/concord/pull/735)).
+
 ## [1.100.0] - 2023-03-09
 
 ### Added

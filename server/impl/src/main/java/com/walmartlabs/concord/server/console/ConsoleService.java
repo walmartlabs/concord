@@ -52,8 +52,6 @@ import org.sonatype.siesta.Resource;
 import org.sonatype.siesta.Validate;
 
 import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
 import javax.validation.constraints.Size;
 import javax.ws.rs.*;
 import javax.ws.rs.core.HttpHeaders;
@@ -62,8 +60,6 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 import java.util.*;
 
-@Named
-@Singleton
 @Path("/api/service/console")
 public class ConsoleService implements Resource {
 

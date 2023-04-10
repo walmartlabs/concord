@@ -28,6 +28,7 @@ import com.walmartlabs.concord.server.audit.AuditLogModule;
 import com.walmartlabs.concord.server.boot.BackgroundTasks;
 import com.walmartlabs.concord.server.cfg.ConfigurationModule;
 import com.walmartlabs.concord.server.cfg.DatabaseConfigurationModule;
+import com.walmartlabs.concord.server.console.ConsoleModule;
 import com.walmartlabs.concord.server.metrics.MetricModule;
 import com.walmartlabs.concord.server.org.triggers.TriggersModule;
 import com.walmartlabs.concord.server.policy.PolicyModule;
@@ -60,16 +61,17 @@ public class ConcordServerModule implements Module {
         binder.install(new TaskSchedulerModule());
         binder.bind(BackgroundTasks.class).in(SINGLETON);
 
-        binder.install(new RepositoryModule());
-        binder.install(new PolicyModule());
-        binder.install(new ApiServerModule());
         binder.install(new AgentModule());
         binder.install(new ApiKeyModule());
+        binder.install(new ConsoleModule());
+        binder.install(new ApiServerModule());
         binder.install(new AuditLogModule());
+        binder.install(new PolicyModule());
         binder.install(new ProcessModule());
-        binder.install(new TriggersModule());
+        binder.install(new RepositoryModule());
         binder.install(new RoleModule());
         binder.install(new TemplateModule());
+        binder.install(new TriggersModule());
 
         bindJaxRsResource(binder, ServerResource.class);
     }

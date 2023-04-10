@@ -43,7 +43,7 @@ public class SerializationTest {
 
         ProcessEvent ev = ProcessEvent.builder()
                 .eventSeq(123)
-                .processKey(new ProcessKey(UUID.randomUUID(), OffsetDateTime.now()))
+                .processKey(ProcessKey.random())
                 .eventType("TEST")
                 .eventDate(OffsetDateTime.now())
                 .data(Collections.singletonMap("x", "abc"))
@@ -61,7 +61,7 @@ public class SerializationTest {
         om.registerModule(new JavaTimeModule());
 
         ProcessLogEntry le = ProcessLogEntry.builder()
-                .processKey(new ProcessKey(UUID.randomUUID(), OffsetDateTime.now()))
+                .processKey(ProcessKey.random())
                 .msg("hello".getBytes())
                 .range(Range.builder()
                         .lowerMode(Range.Mode.INCLUSIVE).lower(0)
