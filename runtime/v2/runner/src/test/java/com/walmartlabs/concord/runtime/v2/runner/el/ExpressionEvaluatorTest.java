@@ -192,7 +192,7 @@ public class ExpressionEvaluatorTest {
             ee.evalAsMap(scope(vars), input);
             fail("exception expected");
         } catch (RuntimeException e) {
-            assertThat(e.getMessage(), containsString("Key 'x' already in evaluation"));
+            assertThat(e.getMessage(), containsString("variable in '${x}'"));
         }
     }
 
