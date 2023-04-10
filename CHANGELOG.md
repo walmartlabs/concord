@@ -1,5 +1,14 @@
 # Change log
 
+## [1.101.0] - Unreleased
+
+### Added
+
+### Changed
+
+- runtime-v2: allow increment variable in expression 
+([#740](https://github.com/walmartlabs/concord/pull/740)).
+
 ## [1.101.0] - 2023-03-29
 
 ### Added
