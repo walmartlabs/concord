@@ -21,13 +21,9 @@ package com.walmartlabs.concord.agentoperator.scheduler;
  */
 
 import com.walmartlabs.concord.agentoperator.crd.AgentPool;
-import com.walmartlabs.concord.agentoperator.crd.AgentPoolConfiguration;
 import com.walmartlabs.concord.agentoperator.planner.Change;
 import com.walmartlabs.concord.agentoperator.planner.Planner;
-import com.walmartlabs.concord.agentoperator.processqueue.ProcessQueueClient;
-import com.walmartlabs.concord.agentoperator.processqueue.ProcessQueueEntry;
 import com.walmartlabs.concord.agentoperator.resources.AgentPod;
-import com.walmartlabs.concord.common.ConfigurationUtils;
 import io.fabric8.kubernetes.api.model.Pod;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import org.slf4j.Logger;
@@ -43,15 +39,15 @@ public class Scheduler {
     private static final long POLL_DELAY = 5000;
     private static final long ERROR_DELAY = 10000;
 
+    private final AutoScalerFactory autoScalerFactory;
     private final KubernetesClient k8sClient;
-    private final ProcessQueueClient processQueueClient;
     private final Planner planner;
     private final Map<String, AgentPoolInstance> pools;
     private final List<Event> events;
 
-    public Scheduler(KubernetesClient k8sClient, Configuration cfg) {
+    public Scheduler(AutoScalerFactory autoScalerFactory, KubernetesClient k8sClient) {
+        this.autoScalerFactory = autoScalerFactory;
         this.k8sClient = k8sClient;
-        this.processQueueClient = new ProcessQueueClient(cfg.concordBaseUrl, cfg.concordApiToken);
         this.planner = new Planner(k8sClient);
         this.pools = new HashMap<>();
         this.events = new LinkedList<>();
@@ -154,19 +150,8 @@ public class Scheduler {
             return;
         }
 
-        int queueQueryLimit = i.getResource().getSpec().getQueueQueryLimit();
-        Map<String, Object> queueSelector = i.getResource().getSpec().getQueueSelector();
-        String flavor = (String) ConfigurationUtils.get(queueSelector, "agent", "flavor");
-        List<ProcessQueueEntry> queueEntries = processQueueClient.query("ENQUEUED", queueQueryLimit, flavor);
-
-        AgentPoolConfiguration spec = i.getResource().getSpec();
-        if (!spec.isAutoScale()) {
-            return;
-        }
-
-        AutoScaler autoScaler = new AutoScaler(n -> AgentPod.list(k8sClient, n).size());
         synchronized (pools) {
-            pools.put(i.getName(), autoScaler.apply(i, queueEntries));
+            pools.put(i.getName(), autoScalerFactory.create(i).apply(i));
         }
     }
 
@@ -230,6 +215,14 @@ public class Scheduler {
         public Configuration(String concordBaseUrl, String concordApiToken) {
             this.concordBaseUrl = concordBaseUrl;
             this.concordApiToken = concordApiToken;
+        }
+
+        public String getConcordApiToken() {
+            return concordApiToken;
+        }
+
+        public String getConcordBaseUrl() {
+            return concordBaseUrl;
         }
     }
 }

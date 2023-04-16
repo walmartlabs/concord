@@ -21,6 +21,8 @@ spec:
           properties:
             autoScale:
               type: boolean
+            autoScaleStrategy:
+                type: string
             maxSize:
               type: integer
             minSize:
@@ -42,9 +44,9 @@ spec:
             decrementThresholdFactor:
               type: number
             queueSelector:
-              additionalProperties:
-                type: object
               type: object
+            sizeIncrement:
+              type: number
             configMap:
               properties:
                 apiVersion:
