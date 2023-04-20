@@ -89,7 +89,8 @@ public class LinearAutoScaler implements AutoScaler {
         if (enqueuedCount > freePodsCount) {
             increment = cfg.getSizeIncrement();
             scaleUpTimeStamp = System.currentTimeMillis();
-        } else if (enqueuedCount < podsCount) {
+            scaleDownTimeStamp = System.currentTimeMillis();
+        } else if (enqueuedCount < freePodsCount) {
             increment = -cfg.getSizeIncrement();
             scaleDownTimeStamp = System.currentTimeMillis();
         }
