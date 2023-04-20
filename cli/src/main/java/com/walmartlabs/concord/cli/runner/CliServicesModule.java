@@ -4,7 +4,7 @@ package com.walmartlabs.concord.cli.runner;
  * *****
  * Concord
  * -----
- * Copyright (C) 2017 - 2020 Walmart Inc.
+ * Copyright (C) 2017 - 2023 Walmart Inc.
  * -----
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,13 +24,14 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.inject.AbstractModule;
 import com.google.inject.Singleton;
 import com.google.inject.multibindings.Multibinder;
+import com.walmartlabs.concord.cli.Verbosity;
 import com.walmartlabs.concord.dependencymanager.DependencyManager;
 import com.walmartlabs.concord.runtime.v2.runner.*;
 import com.walmartlabs.concord.runtime.v2.runner.checkpoints.CheckpointService;
 import com.walmartlabs.concord.runtime.v2.runner.guice.BaseRunnerModule;
 import com.walmartlabs.concord.runtime.v2.runner.logging.RunnerLogger;
 import com.walmartlabs.concord.runtime.v2.runner.logging.SimpleLogger;
-import com.walmartlabs.concord.runtime.v2.runner.remote.EventRecordingExecutionListener;
+import com.walmartlabs.concord.runtime.v2.runner.tasks.TaskCallListener;
 import com.walmartlabs.concord.runtime.v2.sdk.DockerService;
 import com.walmartlabs.concord.runtime.v2.sdk.LockService;
 import com.walmartlabs.concord.runtime.v2.sdk.SecretService;
@@ -45,19 +46,19 @@ public class CliServicesModule extends AbstractModule {
     private final Path workDir;
     private final VaultProvider vaultProvider;
     private final DependencyManager dependencyManager;
-    private final boolean verbose;
+    private final Verbosity verbosity;
 
     public CliServicesModule(Path secretStoreDir,
                              Path workDir,
                              VaultProvider vaultProvider,
                              DependencyManager dependencyManager,
-                             boolean verbose) {
+                             Verbosity verbosity) {
 
         this.secretStoreDir = secretStoreDir;
         this.workDir = workDir;
         this.vaultProvider = vaultProvider;
         this.dependencyManager = dependencyManager;
-        this.verbose = verbose;
+        this.verbosity = verbosity;
     }
 
     @Override
@@ -81,8 +82,13 @@ public class CliServicesModule extends AbstractModule {
         bind(com.walmartlabs.concord.runtime.v2.sdk.DependencyManager.class).to(DefaultDependencyManager.class).in(Singleton.class);
 
         Multibinder<ExecutionListener> executionListeners = Multibinder.newSetBinder(binder(), ExecutionListener.class);
-        if (verbose) {
-            executionListeners.addBinding().to(EventLoggerExecutionListener.class);
+        if (verbosity.logFlowSteps()) {
+            executionListeners.addBinding().to(FlowStepLogger.class);
+        }
+
+        if (verbosity.logTaskParams()) {
+            Multibinder<TaskCallListener> taskCallListeners = Multibinder.newSetBinder(binder(), TaskCallListener.class);
+            taskCallListeners.addBinding().toInstance(new TaskParamsLogger());
         }
     }
 
