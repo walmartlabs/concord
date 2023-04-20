@@ -64,6 +64,7 @@ public class LinearAutoScaler implements AutoScaler {
     @Override
     public AgentPoolInstance apply(AgentPoolInstance i) throws IOException {
         if (!canBeScaledUp.apply(i) && !canBeScaledDown.apply(i)) {
+            log.info("apply [{}] -> not a time. up: {}, down: {}, delay up: {}, delay down: {}", i.getName(), (System.currentTimeMillis() - i.getLastScaleUpTimestamp()), (System.currentTimeMillis() - i.getLastScaleDownTimeStamp()), i.getResource().getSpec().getScaleUpDelayMs(), i.getResource().getSpec().getScaleDownDelayMs());
             // was updated recently, skipping
             return i;
         }
@@ -81,19 +82,31 @@ public class LinearAutoScaler implements AutoScaler {
 
         // the number of processes waiting for an agent in the current pool
         int enqueuedCount = queueEntries.size();
+        int runningCount = processQueueClient.query("RUNNING", cfg.getMaxSize(), flavor).size();
+        int freePodsCount = podsCount - runningCount;
 
         int increment = 0;
-        if (enqueuedCount > podsCount) {
+        if (enqueuedCount > freePodsCount) {
             increment = cfg.getSizeIncrement();
             scaleUpTimeStamp = System.currentTimeMillis();
-        } if (enqueuedCount < podsCount) {
+        } else if (enqueuedCount < podsCount) {
             increment = -cfg.getSizeIncrement();
             scaleDownTimeStamp = System.currentTimeMillis();
         }
 
         int targetSize = Math.max(cfg.getMinSize(), podsCount + increment);
         if (i.getTargetSize() == targetSize) {
+            log.info("apply ['{}'] -> targetSize = {}, enqueuedCount = {}, increment = {}, podsCount = {}", i.getName(), targetSize, enqueuedCount, increment, podsCount);
             // no changes needed
+            return i;
+        }
+
+        if (increment > 0 && !canBeScaledUp.apply(i)) {
+            log.info("apply ['{}'] -> not a time to scale up to {}", i.getName(), targetSize);
+            return i;
+        }
+        if (increment < 0 && !canBeScaledDown.apply(i)) {
+            log.info("apply ['{}'] -> not a time to scale down to {}", i.getName(), targetSize);
             return i;
         }
 
@@ -102,7 +115,7 @@ public class LinearAutoScaler implements AutoScaler {
         }
 
         targetSize = Math.min(targetSize, cfg.getMaxSize());
-        log.info("apply ['{}'] -> updated to {}", i.getName(), targetSize);
+        log.info("apply ['{}'] -> updated to {}, pods: {}, free: {}, enqueued: {}, running: {}", i.getName(), targetSize, podsCount, freePodsCount, enqueuedCount, runningCount);
         return AgentPoolInstance.updateTargetSize(i, targetSize, scaleUpTimeStamp, scaleDownTimeStamp);
     }
 }

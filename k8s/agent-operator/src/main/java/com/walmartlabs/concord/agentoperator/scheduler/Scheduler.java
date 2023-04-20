@@ -156,11 +156,13 @@ public class Scheduler {
     }
 
     private void processActive(AgentPoolInstance i) throws IOException {
+        log.info("processActive ['{}']", i);
         List<Change> changes = planner.plan(i);
         apply(changes);
     }
 
     private void processDeleted(AgentPoolInstance i) throws IOException {
+        log.info("processDeleted ['{}']", i);
         String resourceName = i.getName();
 
         // remove all pool's pods

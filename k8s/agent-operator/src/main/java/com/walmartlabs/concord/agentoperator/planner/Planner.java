@@ -27,12 +27,18 @@ import com.walmartlabs.concord.agentoperator.scheduler.AgentPoolInstance;
 import io.fabric8.kubernetes.api.model.ConfigMap;
 import io.fabric8.kubernetes.api.model.Pod;
 import io.fabric8.kubernetes.client.KubernetesClient;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 public class Planner {
+
+    private static final Logger log = LoggerFactory.getLogger(Planner.class);
 
     private final KubernetesClient client;
 
@@ -70,6 +76,8 @@ public class Planner {
 
         int targetSize = poolInstance.getTargetSize();
 
+        log.info("plan ['{}'] -> currentSize = {}, targetSize= {}, configMap = {}", resourceName, currentSize, targetSize, m != null);
+
         AgentPoolInstance.Status poolStatus = poolInstance.getStatus();
         if (poolStatus == AgentPoolInstance.Status.DELETED) {
             targetSize = 0;
@@ -85,14 +93,18 @@ public class Planner {
         if (m == null) {
             if (targetSize > 0) {
                 changes.add(new CreateConfigMapChange(poolInstance, configMapName));
+                log.info("plan ['{}'] -> CreateConfigMapChange", resourceName);
                 recreateAllPods = true;
             }
         } else {
             if (targetSize <= 0 && currentSize == 0) {
                 changes.add(new DeleteConfigMapChange(configMapName));
+                log.info("plan ['{}'] -> DeleteConfigMapChange", resourceName);
             } else if (AgentConfigMap.hasChanges(client, poolInstance, m)) {
                 changes.add(new DeleteConfigMapChange(configMapName));
                 changes.add(new CreateConfigMapChange(poolInstance, configMapName));
+                log.info("plan ['{}'] -> DeleteConfigMapChange", resourceName);
+                log.info("plan ['{}'] -> CreateConfigMapChange", resourceName);
                 recreateAllPods = true;
             }
         }
@@ -114,6 +126,7 @@ public class Planner {
             String currentHash = p.getMetadata().getLabels().get(AgentPod.CONFIG_HASH_LABEL);
             if (!newHash.equals(currentHash)) {
                 changes.add(new TagForRemovalChange(p.getMetadata().getName()));
+                log.info("plan ['{}'] -> TagForRemovalChange ('{}')", resourceName, p.getMetadata().getName());
             }
         }
 
@@ -121,19 +134,18 @@ public class Planner {
 
         if (recreateAllPods) {
             pods.forEach(p -> changes.add(new TagForRemovalChange(p.getMetadata().getName())));
+            pods.forEach(p -> log.info("plan ['{}'] -> TagForRemovalChange ('{}')", resourceName, p.getMetadata().getName()));
         }
 
         // create or remove pods according to the configured pool size
-
-        for (int i = 0; i < targetSize; i++) {
-            String podName = podName(resourceName, i);
-
-            boolean exists = hasPod(pods, podName);
-            if (exists) {
-                continue;
+        if (targetSize > currentSize) {
+            Set<String> podNames = pods.stream().map(p -> p.getMetadata().getName()).collect(Collectors.toSet());
+            for (int i = 0; i < targetSize - currentSize; i++) {
+                String podName = generatePodName(resourceName, podNames);
+                changes.add(new CreatePodChange(poolInstance, podName, configMapName(resourceName), newHash));
+                podNames.add(podName);
+                log.info("plan ['{}'] -> CreatePodChange ('{}')", resourceName, podName);
             }
-
-            changes.add(new CreatePodChange(poolInstance, podName, configMapName(resourceName), newHash));
         }
 
         if (currentSize > targetSize) {
@@ -147,10 +159,23 @@ public class Planner {
 
                 changes.add(new TagForRemovalChange(podName));
                 changes.add(new TryToDeletePodChange(podName));
+                log.info("plan ['{}'] -> TagForRemovalChange('{}')", resourceName, podName);
+                log.info("plan ['{}'] -> TryToDeletePodChange('{}')", resourceName, podName);
             }
         }
 
         return changes;
+    }
+
+    private static String generatePodName(String resourceName, Set<String> podNames) {
+        for (int i = 0; i < podNames.size() + 1; i++) {
+            String podName = podName(resourceName, i);
+
+            if (!podNames.contains(podName)) {
+                return podName;
+            }
+        }
+        throw new RuntimeException("Can't generate pod name for '" + resourceName + "', current pods: " + podNames);
     }
 
     private static boolean hasPod(List<Pod> pods, String podName) {
