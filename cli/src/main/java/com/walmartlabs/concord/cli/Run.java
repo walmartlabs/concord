@@ -4,7 +4,7 @@ package com.walmartlabs.concord.cli;
  * *****
  * Concord
  * -----
- * Copyright (C) 2017 - 2019 Walmart Inc.
+ * Copyright (C) 2017 - 2023 Walmart Inc.
  * -----
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -108,8 +108,12 @@ public class Run implements Callable<Integer> {
     @Option(names = {"-c", "--clean"}, description = "remove the target directory before starting the process")
     boolean cleanup = false;
 
-    @Option(names = {"-v", "--verbose"}, description = "verbose output")
-    boolean verbose = false;
+    @Option(names = {"-v", "--verbose"}, description = {
+            "Specify multiple -v options to increase verbosity. For example, `-v -v -v` or `-vvv`",
+            "-v log flow steps",
+            "-vv log task input/output args",
+            "-vvv runner debug logs"})
+    boolean[] verbosity = new boolean[0];
 
     @Option(names = {"--effective-yaml"}, description = "generate the effective YAML (skips execution)")
     boolean effectiveYaml = false;
@@ -122,6 +126,8 @@ public class Run implements Callable<Integer> {
 
     @Override
     public Integer call() throws Exception {
+        Verbosity verbosity = new Verbosity(this.verbosity);
+
         sourceDir = sourceDir.normalize().toAbsolutePath();
         Path targetDir;
 
@@ -135,19 +141,19 @@ public class Run implements Callable<Integer> {
         } else if (Files.isDirectory(sourceDir)) {
             targetDir = sourceDir.resolve("target");
             if (cleanup && Files.exists(targetDir)) {
-                if (verbose) {
+                if (verbosity.verbose()) {
                     System.out.println("Cleaning target directory");
                 }
                 IOUtils.deleteRecursively(targetDir);
             }
 
             // copy everything into target except target
-            IOUtils.copy(sourceDir, targetDir, "^target$", new CopyNotifier(verbose ? 0 : 100), StandardCopyOption.REPLACE_EXISTING);
+            IOUtils.copy(sourceDir, targetDir, "^target$", new CopyNotifier(verbosity.verbose() ? 0 : 100), StandardCopyOption.REPLACE_EXISTING);
         } else {
             throw new IllegalArgumentException("Not a directory or single Concord YAML file: " + sourceDir);
         }
 
-        copyDefaultCfg(targetDir, defaultCfg);
+        copyDefaultCfg(targetDir, defaultCfg, verbosity.verbose());
 
         DependencyManager dependencyManager = initDependencyManager();
         ImportManager importManager = new ImportManagerFactory(dependencyManager,
@@ -157,7 +163,7 @@ public class Run implements Callable<Integer> {
         ProjectLoaderV2.Result loadResult;
         try {
             loadResult = new ProjectLoaderV2(importManager)
-                    .load(targetDir, new CliImportsNormalizer(importsSource, verbose, defaultVersion), verbose ? new CliImportsListener() : null);
+                    .load(targetDir, new CliImportsNormalizer(importsSource, verbosity.verbose(), defaultVersion), verbosity.verbose() ? new CliImportsListener() : null);
         } catch (ImportProcessingException e) {
             ObjectMapper om = new ObjectMapper();
             System.err.println("Error while processing import " + om.writeValueAsString(e.getImport()) + ": " + e.getMessage());
@@ -172,11 +178,11 @@ public class Run implements Callable<Integer> {
 
         UUID instanceId = UUID.randomUUID();
 
-        if (verbose && !extraVars.isEmpty()) {
+        if (verbosity.verbose() && !extraVars.isEmpty()) {
             System.out.println("Additional variables: " + extraVars);
         }
 
-        if (verbose && !profiles.isEmpty()) {
+        if (verbosity.verbose() && !profiles.isEmpty()) {
             System.out.println("Active profiles: " + profiles);
         }
 
@@ -184,7 +190,7 @@ public class Run implements Callable<Integer> {
         List<String> overlayDeps = MapUtils.getList(overlayCfg, Constants.Request.DEPENDENCIES_KEY, Collections.emptyList());
 
         RunnerConfiguration runnerCfg = RunnerConfiguration.builder()
-                .dependencies(new DependencyResolver(dependencyManager, verbose).resolveDeps(overlayDeps))
+                .dependencies(new DependencyResolver(dependencyManager, verbosity.verbose()).resolveDeps(overlayDeps))
                 .debug(processDefinition.configuration().debug())
                 .build();
 
@@ -192,7 +198,7 @@ public class Run implements Callable<Integer> {
         Map<String, Object> args = ConfigurationUtils.deepMerge(processDefinition.configuration().arguments(), overlayArgs, extraVars);
         args.put(Constants.Context.TX_ID_KEY, instanceId.toString());
         args.put(Constants.Context.WORK_DIR_KEY, targetDir.toAbsolutePath().toString());
-        if (verbose) {
+        if (verbosity.verbose()) {
             dumpArguments(args);
         }
 
@@ -231,7 +237,7 @@ public class Run implements Callable<Integer> {
                 runnerCfg,
                 () -> cfg,
                 new ProcessDependenciesModule(targetDir, runnerCfg.dependencies(), cfg.debug()),
-                new CliServicesModule(secretStoreDir, targetDir, new VaultProvider(vaultDir, vaultId), dependencyManager, verbose))
+                new CliServicesModule(secretStoreDir, targetDir, new VaultProvider(vaultDir, vaultId), dependencyManager, verbosity))
                 .create();
 
         Runner runner = injector.getInstance(Runner.class);
@@ -243,7 +249,7 @@ public class Run implements Callable<Integer> {
         try {
             runner.start(cfg, processDefinition, args);
         } catch (Exception e) {
-            if (verbose) {
+            if (verbosity.verbose()) {
                 System.err.print("Error: ");
                 e.printStackTrace(System.err);
             } else {
@@ -321,13 +327,15 @@ public class Run implements Callable<Integer> {
         return result;
     }
 
-    private static void copyDefaultCfg(Path targetDir, Path defaultCfg) throws IOException {
+    private static void copyDefaultCfg(Path targetDir, Path defaultCfg, boolean verbose) throws IOException {
         final Path destDir = targetDir.resolve("concord");
         final Path destFile = destDir.resolve("_defaultCfg.concord.yml");
 
         // Don't overwrite existing file is given project dir
         if (Files.exists(destFile)) {
-            System.err.println("Default configuration already exists: " + defaultCfg);
+            if (verbose) {
+                System.out.println("Default configuration already exists: " + defaultCfg);
+            }
             return;
         }
 
