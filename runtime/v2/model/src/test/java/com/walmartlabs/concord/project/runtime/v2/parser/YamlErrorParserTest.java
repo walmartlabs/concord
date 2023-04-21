@@ -4,7 +4,7 @@ package com.walmartlabs.concord.project.runtime.v2.parser;
  * *****
  * Concord
  * -----
- * Copyright (C) 2017 - 2018 Walmart Inc.
+ * Copyright (C) 2017 - 2023 Walmart Inc.
  * -----
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -874,7 +874,7 @@ public class YamlErrorParserTest extends AbstractParserTest {
     @Test
     public void test221() throws Exception {
         String msg =
-                "(021.yml): Error @ line: 7, col: 22. Invalid value type, expected: INT, got: STRING\n" +
+                "(021.yml): Error @ line: 7, col: 22. Invalid value type, expected: int or expression, got: STRING\n" +
                         "\twhile processing steps:\n" +
                         "\t'parallelism' @ line: 7, col: 9\n" +
                         "\t\t'loop' @ line: 5, col: 7\n" +
