@@ -24,5 +24,5 @@ import io.fabric8.kubernetes.client.KubernetesClient;
 
 public interface Change {
 
-    public void apply(KubernetesClient client);
+    void apply(KubernetesClient client);
 }

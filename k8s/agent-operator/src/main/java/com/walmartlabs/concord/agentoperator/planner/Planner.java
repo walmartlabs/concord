@@ -93,18 +93,14 @@ public class Planner {
         if (m == null) {
             if (targetSize > 0) {
                 changes.add(new CreateConfigMapChange(poolInstance, configMapName));
-                log.info("plan ['{}'] -> CreateConfigMapChange", resourceName);
                 recreateAllPods = true;
             }
         } else {
             if (targetSize <= 0 && currentSize == 0) {
                 changes.add(new DeleteConfigMapChange(configMapName));
-                log.info("plan ['{}'] -> DeleteConfigMapChange", resourceName);
             } else if (AgentConfigMap.hasChanges(client, poolInstance, m)) {
                 changes.add(new DeleteConfigMapChange(configMapName));
                 changes.add(new CreateConfigMapChange(poolInstance, configMapName));
-                log.info("plan ['{}'] -> DeleteConfigMapChange", resourceName);
-                log.info("plan ['{}'] -> CreateConfigMapChange", resourceName);
                 recreateAllPods = true;
             }
         }
@@ -126,7 +122,6 @@ public class Planner {
             String currentHash = p.getMetadata().getLabels().get(AgentPod.CONFIG_HASH_LABEL);
             if (!newHash.equals(currentHash)) {
                 changes.add(new TagForRemovalChange(p.getMetadata().getName()));
-                log.info("plan ['{}'] -> TagForRemovalChange ('{}')", resourceName, p.getMetadata().getName());
             }
         }
 
@@ -134,7 +129,6 @@ public class Planner {
 
         if (recreateAllPods) {
             pods.forEach(p -> changes.add(new TagForRemovalChange(p.getMetadata().getName())));
-            pods.forEach(p -> log.info("plan ['{}'] -> TagForRemovalChange ('{}')", resourceName, p.getMetadata().getName()));
         }
 
         // create or remove pods according to the configured pool size
@@ -144,24 +138,25 @@ public class Planner {
                 String podName = generatePodName(resourceName, podNames);
                 changes.add(new CreatePodChange(poolInstance, podName, configMapName(resourceName), newHash));
                 podNames.add(podName);
-                log.info("plan ['{}'] -> CreatePodChange ('{}')", resourceName, podName);
             }
         }
 
         if (currentSize > targetSize) {
-            for (int i = targetSize; i < currentSize; i++) {
-                String podName = podName(resourceName, i);
-
-                boolean exists = hasPod(pods, podName);
-                if (!exists) {
-                    continue;
-                }
-
+            int podsToDelete = currentSize - targetSize;
+            List<String> podNames = pods.stream().map(p -> p.getMetadata().getName()).collect(Collectors.toList());
+            for (String podName : podNames) {
                 changes.add(new TagForRemovalChange(podName));
                 changes.add(new TryToDeletePodChange(podName));
-                log.info("plan ['{}'] -> TagForRemovalChange('{}')", resourceName, podName);
-                log.info("plan ['{}'] -> TryToDeletePodChange('{}')", resourceName, podName);
+
+                podsToDelete--;
+                if (podsToDelete == 0) {
+                    break;
+                }
             }
+        }
+
+        if (!changes.isEmpty()) {
+            log.info("plan ['{}'] -> changes: {}", resourceName, changes);
         }
 
         return changes;
