@@ -83,7 +83,7 @@ public class LinearAutoScaler implements AutoScaler {
         // the number of processes waiting for an agent in the current pool
         int enqueuedCount = queueEntries.size();
         int runningCount = processQueueClient.query("RUNNING", cfg.getMaxSize(), flavor).size();
-        int freePodsCount = podsCount - runningCount;
+        int freePodsCount = Math.max(podsCount - runningCount, 0);
 
         int increment = 0;
         if (enqueuedCount > freePodsCount) {

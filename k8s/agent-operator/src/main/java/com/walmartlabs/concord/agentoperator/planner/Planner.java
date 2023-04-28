@@ -143,8 +143,12 @@ public class Planner {
 
         if (currentSize > targetSize) {
             int podsToDelete = currentSize - targetSize;
-            List<String> podNames = pods.stream().map(p -> p.getMetadata().getName()).collect(Collectors.toList());
-            for (String podName : podNames) {
+            for (Pod pod : pods) {
+                if (pod.getMetadata().getLabels().containsKey(AgentPod.TAGGED_FOR_REMOVAL_LABEL)) {
+                    continue;
+                }
+
+                String podName = pod.getMetadata().getName();
                 changes.add(new TagForRemovalChange(podName));
                 changes.add(new TryToDeletePodChange(podName));
 
