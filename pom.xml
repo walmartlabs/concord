@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 
     <modelVersion>4.0.0</modelVersion>
 
@@ -71,11 +72,6 @@
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
 
         <scm.connection>scm:git:https://github.com/walmartlabs/concord.git</scm.connection>
-
-        <jdk.version>17</jdk.version>
-        <failsafe.args>
-            --add-opens java.base/java.util=ALL-UNNAMED
-        </failsafe.args>
 
         <docker.plugin.version>0.38.1</docker.plugin.version>
         <jooq.version>3.13.4</jooq.version>
@@ -172,8 +168,8 @@
                 </executions>
                 <configuration>
                     <rules>
-                        <banDuplicatePomDependencyVersions />
-                        <requireUpperBoundDeps />
+                        <banDuplicatePomDependencyVersions/>
+                        <requireUpperBoundDeps/>
                         <requireMavenVersion>
                             <version>3.6.3</version>
                         </requireMavenVersion>
@@ -413,8 +409,31 @@
 
     <profiles>
         <profile>
+            <id>jdk17</id>
+            <activation>
+                <activeByDefault>true</activeByDefault>
+            </activation>
+            <properties>
+                <jdk.version>17</jdk.version>
+                <failsafe.args>
+                    --add-opens java.base/java.util=ALL-UNNAMED
+                </failsafe.args>
+            </properties>
+        </profile>
+        <profile>
+            <id>jdk17-aarch64</id>
+            <activation>
+                <activeByDefault>true</activeByDefault>
+            </activation>
+            <properties>
+                <jdk.version>17</jdk.version>
+                <failsafe.args>
+                    --add-opens java.base/java.util=ALL-UNNAMED
+                </failsafe.args>
+            </properties>
+        </profile>
+        <profile>
             <id>looper</id>
-
             <build>
                 <plugins>
                     <plugin>
