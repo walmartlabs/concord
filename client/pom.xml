@@ -177,6 +177,9 @@
                             <item>
                                 <code>java.method.returnTypeTypeParametersChanged</code>
                             </item>
+                            <item>
+                                <code>java.annotation.removed</code>
+                            </item>
                         </revapi.ignore>
                     </analysisConfiguration>
                 </configuration>
