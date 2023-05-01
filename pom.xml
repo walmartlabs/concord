@@ -6,7 +6,7 @@
     <parent>
         <groupId>io.takari</groupId>
         <artifactId>takari</artifactId>
-        <version>27</version>
+        <version>50</version>
     </parent>
 
     <groupId>com.walmartlabs.concord</groupId>
@@ -64,15 +64,18 @@
     </modules>
 
     <properties>
-        <maven.compiler.source>1.8</maven.compiler.source>
-        <maven.compiler.target>1.8</maven.compiler.target>
+        <maven.compiler.source>17</maven.compiler.source>
+        <maven.compiler.target>17</maven.compiler.target>
+
+        <takari.annotationProcessing></takari.annotationProcessing>
+        <takari.javaSourceVersion>17</takari.javaSourceVersion>
+        <takari.lifecycleVersion>2.1.1</takari.lifecycleVersion>
+
 
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
 
         <scm.connection>scm:git:https://github.com/walmartlabs/concord.git</scm.connection>
-
-        <jdk.version>1.8.0</jdk.version>
 
         <docker.plugin.version>0.38.1</docker.plugin.version>
         <jooq.version>3.13.4</jooq.version>
@@ -82,9 +85,6 @@
         <maven.dependency.plugin.version>3.1.2</maven.dependency.plugin.version>
         <node.version>16.13.1</node.version>
         <frontend.plugin.version>1.12.0</frontend.plugin.version>
-
-        <!-- used in profiles -->
-        <failsafe.args />
     </properties>
 
     <dependencyManagement>
@@ -142,10 +142,9 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-checkstyle-plugin</artifactId>
-                <version>3.1.1</version>
+                <version>3.2.1</version>
                 <configuration>
                     <configLocation>checkstyle.xml</configLocation>
-                    <encoding>UTF-8</encoding>
                     <consoleOutput>true</consoleOutput>
                     <failsOnError>true</failsOnError>
                     <linkXRef>false</linkXRef>
@@ -209,12 +208,19 @@
                 <plugin>
                     <groupId>io.takari.maven.plugins</groupId>
                     <artifactId>takari-lifecycle-plugin</artifactId>
-                    <version>2.0.8</version>
+                    <version>2.1.1</version>
                     <extensions>true</extensions>
                     <configuration>
                         <source>${maven.compiler.source}</source>
                         <target>${maven.compiler.target}</target>
                     </configuration>
+                    <dependencies>
+                        <dependency>
+                            <groupId>org.immutables</groupId>
+                            <artifactId>value</artifactId>
+                            <version>2.9.3</version>
+                        </dependency>
+                    </dependencies>
                 </plugin>
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
@@ -499,40 +505,10 @@
             </distributionManagement>
         </profile>
         <profile>
-            <id>jdk8</id>
+            <id>jdk17</id>
             <activation>
                 <activeByDefault>true</activeByDefault>
             </activation>
-            <properties>
-                <jdk.version>1.8</jdk.version>
-            </properties>
-        </profile>
-        <profile>
-            <id>jdk8-aarch64</id>
-            <properties>
-                <jdk.version>1.8</jdk.version>
-            </properties>
-        </profile>
-        <profile>
-            <id>jdk11</id>
-            <properties>
-                <jdk.version>11</jdk.version>
-                <failsafe.args>
-                    --add-opens java.base/java.util=ALL-UNNAMED
-                </failsafe.args>
-            </properties>
-        </profile>
-        <profile>
-            <id>jdk11-aarch64</id>
-            <properties>
-                <jdk.version>11</jdk.version>
-                <failsafe.args>
-                    --add-opens java.base/java.util=ALL-UNNAMED
-                </failsafe.args>
-            </properties>
-        </profile>
-        <profile>
-            <id>jdk17</id>
             <properties>
                 <jdk.version>17</jdk.version>
                 <failsafe.args>
@@ -542,6 +518,9 @@
         </profile>
         <profile>
             <id>jdk17-aarch64</id>
+            <activation>
+                <activeByDefault>false</activeByDefault>
+            </activation>
             <properties>
                 <jdk.version>17</jdk.version>
                 <failsafe.args>

@@ -61,17 +61,17 @@
         <dependency>
             <groupId>org.immutables</groupId>
             <artifactId>value</artifactId>
-            <scope>provided</scope>
+            <scope>compile</scope>
         </dependency>
         <dependency>
             <groupId>com.google.code.findbugs</groupId>
             <artifactId>jsr305</artifactId>
-            <scope>provided</scope>
+            <scope>compile</scope>
         </dependency>
         <dependency>
             <groupId>com.google.errorprone</groupId>
             <artifactId>error_prone_annotations</artifactId>
-            <scope>provided</scope>
+            <scope>compile</scope>
         </dependency>
 
         <!-- JDK9+ compatibility -->
@@ -162,25 +162,25 @@
                 </executions>
             </plugin>
 
-            <plugin>
-                <groupId>org.revapi</groupId>
-                <artifactId>revapi-maven-plugin</artifactId>
-                <configuration>
-                    <analysisConfiguration>
-                        <revapi.ignore>
-                            <item>
-                                <code>java.field.serialVersionUIDUnchanged</code>
-                            </item>
-                            <item>
-                                <code>java.method.parameterTypeParameterChanged</code>
-                            </item>
-                            <item>
-                                <code>java.method.returnTypeTypeParametersChanged</code>
-                            </item>
-                        </revapi.ignore>
-                    </analysisConfiguration>
-                </configuration>
-            </plugin>
+<!--            <plugin>-->
+<!--                <groupId>org.revapi</groupId>-->
+<!--                <artifactId>revapi-maven-plugin</artifactId>-->
+<!--                <configuration>-->
+<!--                    <analysisConfiguration>-->
+<!--                        <revapi.ignore>-->
+<!--                            <item>-->
+<!--                                <code>java.field.serialVersionUIDUnchanged</code>-->
+<!--                            </item>-->
+<!--                            <item>-->
+<!--                                <code>java.method.parameterTypeParameterChanged</code>-->
+<!--                            </item>-->
+<!--                            <item>-->
+<!--                                <code>java.method.returnTypeTypeParametersChanged</code>-->
+<!--                            </item>-->
+<!--                        </revapi.ignore>-->
+<!--                    </analysisConfiguration>-->
+<!--                </configuration>-->
+<!--            </plugin>-->
         </plugins>
     </build>
 </project>

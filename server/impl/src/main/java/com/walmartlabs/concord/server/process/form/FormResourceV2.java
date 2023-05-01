@@ -76,7 +76,7 @@ public class FormResourceV2 {
         }
 
         String name = form.name();
-        boolean yield = form.options().yield();
+        boolean yield = form.options().isYield();
         String resourcePath = FORMS_RESOURCES_PATH + "/" + name;
         boolean isCustomForm = formService.exists(processKey, resourcePath);
 
@@ -126,17 +126,12 @@ public class FormResourceV2 {
             return null;
         }
 
-        switch (c) {
-            case ANY:
-                return FormInstanceEntry.Cardinality.ANY;
-            case AT_LEAST_ONE:
-                return FormInstanceEntry.Cardinality.AT_LEAST_ONE;
-            case ONE_AND_ONLY_ONE:
-                return FormInstanceEntry.Cardinality.ONE_AND_ONLY_ONE;
-            case ONE_OR_NONE:
-                return FormInstanceEntry.Cardinality.ONE_OR_NONE;
-            default:
-                throw new IllegalArgumentException("Unsupported cardinality type: " + c);
-        }
+        return switch (c) {
+            case ANY -> FormInstanceEntry.Cardinality.ANY;
+            case AT_LEAST_ONE -> FormInstanceEntry.Cardinality.AT_LEAST_ONE;
+            case ONE_AND_ONLY_ONE -> FormInstanceEntry.Cardinality.ONE_AND_ONLY_ONE;
+            case ONE_OR_NONE -> FormInstanceEntry.Cardinality.ONE_OR_NONE;
+            default -> throw new IllegalArgumentException("Unsupported cardinality type: " + c);
+        };
     }
 }

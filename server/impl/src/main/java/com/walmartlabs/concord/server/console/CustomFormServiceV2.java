@@ -182,7 +182,7 @@ public class CustomFormServiceV2 {
         // TODO locking
         Form form = assertForm(processKey, formName);
 
-        boolean yield = form.options().yield();
+        boolean yield = form.options().isYield();
 
         Path dst = cfg.getBaseDir()
                 .resolve(processKey.toString())
@@ -323,18 +323,13 @@ public class CustomFormServiceV2 {
             return null;
         }
 
-        switch (c) {
-            case ANY:
-                return io.takari.bpm.model.form.FormField.Cardinality.ANY;
-            case AT_LEAST_ONE:
-                return io.takari.bpm.model.form.FormField.Cardinality.AT_LEAST_ONE;
-            case ONE_AND_ONLY_ONE:
-                return io.takari.bpm.model.form.FormField.Cardinality.ONE_AND_ONLY_ONE;
-            case ONE_OR_NONE:
-                return io.takari.bpm.model.form.FormField.Cardinality.ONE_OR_NONE;
-            default:
-                throw new IllegalArgumentException("Unsupported cardinality type: " + c);
-        }
+        return switch (c) {
+            case ANY -> io.takari.bpm.model.form.FormField.Cardinality.ANY;
+            case AT_LEAST_ONE -> io.takari.bpm.model.form.FormField.Cardinality.AT_LEAST_ONE;
+            case ONE_AND_ONLY_ONE -> io.takari.bpm.model.form.FormField.Cardinality.ONE_AND_ONLY_ONE;
+            case ONE_OR_NONE -> io.takari.bpm.model.form.FormField.Cardinality.ONE_OR_NONE;
+            default -> throw new IllegalArgumentException("Unsupported cardinality type: " + c);
+        };
     }
 
     private void writeData(Path baseDir, Object data) throws IOException {

@@ -79,6 +79,7 @@
             <plugin>
                 <groupId>io.takari.maven.plugins</groupId>
                 <artifactId>takari-lifecycle-plugin</artifactId>
+                <extensions>true</extensions>
                 <configuration>
                     <proc>proc</proc>
                 </configuration>
