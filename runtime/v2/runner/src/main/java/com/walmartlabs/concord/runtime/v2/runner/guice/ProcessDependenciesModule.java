@@ -23,8 +23,8 @@ package com.walmartlabs.concord.runtime.v2.runner.guice;
 import com.google.inject.AbstractModule;
 import com.google.inject.name.Names;
 import com.walmartlabs.concord.sdk.Constants;
+import com.walmartlabs.concord.sisu.SpaceModule_;
 import org.eclipse.sisu.space.BeanScanning;
-import org.eclipse.sisu.space.SpaceModule;
 import org.eclipse.sisu.space.URLClassSpace;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -65,7 +65,7 @@ public class ProcessDependenciesModule extends AbstractModule {
             // required to support ScriptEngines from external dependencies
             Thread.currentThread().setContextClassLoader(cl);
 
-            install(new SpaceModule(new URLClassSpace(cl), BeanScanning.GLOBAL_INDEX));
+            install(new SpaceModule_(new URLClassSpace(cl), BeanScanning.GLOBAL_INDEX));
             bind(ClassLoader.class).annotatedWith(Names.named("runtime")).toInstance(cl);
         } catch (IOException e) {
             addError(e);

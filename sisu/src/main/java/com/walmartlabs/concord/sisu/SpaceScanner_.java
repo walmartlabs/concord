@@ -8,7 +8,7 @@
  * Contributors:
  *   Stuart McCulloch (Sonatype, Inc.) - initial API and implementation
  *******************************************************************************/
-package com.walmartlabs.concord.runtime.v2.runner.guice;
+package com.walmartlabs.concord.sisu;
 
 import org.eclipse.sisu.inject.Logs;
 import org.eclipse.sisu.space.*;

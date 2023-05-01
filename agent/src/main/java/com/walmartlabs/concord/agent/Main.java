@@ -23,8 +23,8 @@ package com.walmartlabs.concord.agent;
 
 import com.google.inject.Guice;
 import com.google.inject.Injector;
+import com.walmartlabs.concord.sisu.SpaceModule_;
 import org.eclipse.sisu.space.BeanScanning;
-import org.eclipse.sisu.space.SpaceModule;
 import org.eclipse.sisu.space.URLClassSpace;
 import org.eclipse.sisu.wire.WireModule;
 
@@ -33,7 +33,7 @@ public class Main {
     public static void main(String[] args) {
         ClassLoader cl = Main.class.getClassLoader();
 
-        Injector injector = Guice.createInjector(new WireModule(new SpaceModule(new URLClassSpace(cl), BeanScanning.GLOBAL_INDEX)));
+        Injector injector = Guice.createInjector(new WireModule(new SpaceModule_(new URLClassSpace(cl), BeanScanning.GLOBAL_INDEX)));
 
         Agent a = injector.getInstance(Agent.class);
         a.start();

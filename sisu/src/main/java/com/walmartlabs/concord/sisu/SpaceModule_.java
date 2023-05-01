@@ -1,4 +1,4 @@
-package com.walmartlabs.concord.runtime.v2.runner.guice;
+package com.walmartlabs.concord.sisu;
 
 /*-
  * *****
@@ -71,7 +71,7 @@ public class SpaceModule_ implements Module
 
     private final ClassFinder finder;
 
-    private SpaceModule.Strategy strategy = SpaceModule.Strategy.DEFAULT;
+    private SpaceModule_.Strategy strategy = SpaceModule_.Strategy.DEFAULT;
 
     // ----------------------------------------------------------------------
     // Constructors
@@ -122,7 +122,7 @@ public class SpaceModule_ implements Module
      * @param _strategy The new strategy
      * @return Updated module
      */
-    public Module with( final SpaceModule.Strategy _strategy )
+    public Module with( final SpaceModule_.Strategy _strategy )
     {
         strategy = _strategy;
         return this;
@@ -162,7 +162,7 @@ public class SpaceModule_ implements Module
         /**
          * Default visitor strategy; scan and bind implementations with {@link Qualifier}s.
          */
-        SpaceModule.Strategy DEFAULT = new SpaceModule.Strategy()
+        SpaceModule_.Strategy DEFAULT = new SpaceModule_.Strategy()
         {
             public SpaceVisitor visitor( final Binder binder )
             {

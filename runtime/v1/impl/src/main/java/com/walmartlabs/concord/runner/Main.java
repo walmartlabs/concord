@@ -53,9 +53,9 @@ import com.walmartlabs.concord.sdk.Constants;
 import com.walmartlabs.concord.sdk.MapUtils;
 import com.walmartlabs.concord.sdk.Task;
 import com.walmartlabs.concord.sdk.UserDefinedException;
+import com.walmartlabs.concord.sisu.SpaceModule_;
 import io.takari.bpm.api.*;
 import org.eclipse.sisu.space.BeanScanning;
-import org.eclipse.sisu.space.SpaceModule;
 import org.eclipse.sisu.space.URLClassSpace;
 import org.eclipse.sisu.wire.WireModule;
 import org.slf4j.Logger;
@@ -666,8 +666,8 @@ public class Main {
                 cfg,
                 tasks,
                 taskCallModule,
-                new SpaceModule(new URLClassSpace(cl), runnerCfg.enableSisuIndex() ? BeanScanning.GLOBAL_INDEX : BeanScanning.CACHE),
-                new SpaceModule(new URLClassSpace(depsClassLoader), runnerCfg.enableSisuIndex() ? BeanScanning.GLOBAL_INDEX : BeanScanning.CACHE));
+                new SpaceModule_(new URLClassSpace(cl), runnerCfg.enableSisuIndex() ? BeanScanning.GLOBAL_INDEX : BeanScanning.CACHE),
+                new SpaceModule_(new URLClassSpace(depsClassLoader), runnerCfg.enableSisuIndex() ? BeanScanning.GLOBAL_INDEX : BeanScanning.CACHE));
 
         return Guice.createInjector(m);
     }
