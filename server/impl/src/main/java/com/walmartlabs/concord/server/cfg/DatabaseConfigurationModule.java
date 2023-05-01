@@ -22,6 +22,9 @@ package com.walmartlabs.concord.server.cfg;
 
 import com.google.inject.Binder;
 import com.google.inject.Module;
+import com.walmartlabs.concord.db.DatabaseConfiguration;
+import com.walmartlabs.concord.db.JsonStorageDB;
+import com.walmartlabs.concord.db.MainDB;
 
 import static com.google.inject.Scopes.SINGLETON;
 
@@ -29,7 +32,7 @@ public class DatabaseConfigurationModule implements Module {
 
     @Override
     public void configure(Binder binder) {
-        binder.bind(MainDBConfiguration.class).in(SINGLETON);
-        binder.bind(JsonStorageDBConfiguration.class).in(SINGLETON);
+        binder.bind(DatabaseConfiguration.class).annotatedWith(MainDB.class).to(MainDBConfiguration.class).in(SINGLETON);
+        binder.bind(DatabaseConfiguration.class).annotatedWith(JsonStorageDB.class).to(JsonStorageDBConfiguration.class).in(SINGLETON);
     }
 }
