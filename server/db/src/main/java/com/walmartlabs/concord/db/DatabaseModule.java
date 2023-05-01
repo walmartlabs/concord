@@ -44,6 +44,7 @@ public class DatabaseModule extends AbstractModule {
 
     @Override
     protected void configure() {
+        bind(DatabaseChangeLogProvider.class).annotatedWith(MainDB.class).to(MainDBChangeLogProvider.class);
     }
 
     @Provides
