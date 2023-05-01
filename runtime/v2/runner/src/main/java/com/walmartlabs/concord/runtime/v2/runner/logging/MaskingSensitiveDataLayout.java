@@ -33,7 +33,7 @@ public class MaskingSensitiveDataLayout extends PatternLayout {
         Collection<String> sensitiveData = SensitiveDataHolder.getInstance().get();
         String msg = super.doLayout(event);
         for (String d : sensitiveData) {
-            msg = msg.replace(d, "?????");
+            msg = msg.replace(d, "******");
         }
         return msg;
     }

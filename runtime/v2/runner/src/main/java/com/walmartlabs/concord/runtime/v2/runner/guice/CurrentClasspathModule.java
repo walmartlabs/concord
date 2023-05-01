@@ -30,6 +30,6 @@ public class CurrentClasspathModule extends AbstractModule {
     @Override
     protected void configure() {
         ClassLoader cl = this.getClass().getClassLoader();
-        install(new SpaceModule(new URLClassSpace(cl), BeanScanning.GLOBAL_INDEX));
+        install(new SpaceModule_(new URLClassSpace(cl), BeanScanning.GLOBAL_INDEX));
     }
 }
