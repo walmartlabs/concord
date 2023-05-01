@@ -11,7 +11,7 @@
     </parent>
 
     <artifactId>concord-tasks</artifactId>
-    <packaging>takari-jar</packaging>
+    <packaging>jar</packaging>
 
     <dependencies>
         <dependency>

@@ -10,7 +10,7 @@
     </parent>
 
     <artifactId>log-tasks</artifactId>
-    <packaging>takari-jar</packaging>
+    <packaging>jar</packaging>
 
     <dependencies>
         <dependency>

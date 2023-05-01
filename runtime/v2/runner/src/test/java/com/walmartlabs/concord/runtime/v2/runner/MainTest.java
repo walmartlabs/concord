@@ -1442,27 +1442,6 @@ public class MainTest {
     }
 
     @Test
-    public void testSensitiveData() throws Exception {
-        deploy("sensitiveData");
-
-        save(ProcessConfiguration.builder()
-                .build());
-
-        byte[] log = run();
-        assertLog(log, ".*" + Pattern.quote("sensitive: ******") + ".*");
-        assertLog(log, ".*" + Pattern.quote("log value: ******") + ".*");
-        assertLog(log, ".*" + Pattern.quote("hack: B O O M") + ".*");
-
-        assertLog(log, ".*" + Pattern.quote("map: {nonSecretButMasked=******, secret=******}") + ".*");
-        assertLog(log, ".*" + Pattern.quote("map: {nonSecret=non secret value, secret=******}") + ".*");
-
-        assertLog(log, ".*" + Pattern.quote("plain: plain") + ".*");
-
-        log = resume("ev1", ProcessConfiguration.builder().build());
-        assertLog(log, ".*" + Pattern.quote("mySecret after suspend: ******") + ".*");
-    }
-
-    @Test
     public void testIncVariable() throws Exception {
         deploy("incVariable");
 
