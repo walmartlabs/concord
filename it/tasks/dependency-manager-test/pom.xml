@@ -11,7 +11,7 @@
 
     <groupId>com.walmartlabs.concord.it.tasks</groupId>
     <artifactId>dependency-manager-test</artifactId>
-    <packaging>takari-jar</packaging>
+    <packaging>jar</packaging>
 
     <dependencies>
         <dependency>

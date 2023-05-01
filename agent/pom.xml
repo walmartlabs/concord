@@ -11,7 +11,7 @@
     </parent>
 
     <artifactId>concord-agent</artifactId>
-    <packaging>takari-jar</packaging>
+    <packaging>jar</packaging>
 
     <properties>
         <runnerV1.path>
@@ -203,13 +203,6 @@
         </resources>
 
         <plugins>
-            <plugin>
-                <groupId>io.takari.maven.plugins</groupId>
-                <artifactId>takari-lifecycle-plugin</artifactId>
-                <configuration>
-                    <proc>proc</proc>
-                </configuration>
-            </plugin>
             <plugin>
                 <groupId>org.eclipse.sisu</groupId>
                 <artifactId>sisu-maven-plugin</artifactId>

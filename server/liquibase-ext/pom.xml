@@ -11,7 +11,7 @@
     </parent>
 
     <artifactId>liquibase-ext</artifactId>
-    <packaging>takari-jar</packaging>
+    <packaging>jar</packaging>
 
     <dependencies>
         <dependency>
@@ -27,13 +27,4 @@
             <artifactId>concord-common</artifactId>
         </dependency>
     </dependencies>
-
-    <build>
-        <plugins>
-            <plugin>
-                <groupId>io.takari.maven.plugins</groupId>
-                <artifactId>takari-lifecycle-plugin</artifactId>
-            </plugin>
-        </plugins>
-    </build>
 </project>
