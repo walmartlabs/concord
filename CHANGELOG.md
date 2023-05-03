@@ -5,7 +5,8 @@
 ### Added
 
 ### Changed
-
+- server: created_at DB field to projects table
+([#744](https://github.com/walmartlabs/concord/pull/744));
 - runtime-v2: allow increment variable in expression 
 ([#740](https://github.com/walmartlabs/concord/pull/740)).
 
