@@ -559,6 +559,10 @@
                                             <concordTxId>${txId}</concordTxId>
                                             <com.walmartlabs.concord.it.name>server</com.walmartlabs.concord.it.name>
                                         </labels>
+                                        <log>
+                                            <prefix>SERVER</prefix>
+                                            <color>cyan</color>
+                                        </log>
                                     </run>
                                 </image>
                                 <!-- TODO start DIND? -->
