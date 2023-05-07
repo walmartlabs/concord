@@ -143,8 +143,19 @@ public class LazyExpressionEvaluator implements ExpressionEvaluator {
             if (ctx.undefinedVariableAsNull()) {
                 return null;
             }
-            throw new RuntimeException(String.format("Can't find the specified variable in '%s'. " +
-                    "Check if it is defined in the current scope. Details: %s", expr, e.getMessage()));
+
+            String errorMessage;
+
+            String propName = propertyNameFromException(e);
+            if (propName != null) {
+                errorMessage = String.format("Can't find variable %s in '%s'. " +
+                        "Check if it is defined in the current scope. Details: %s", propName, expr, e.getMessage());
+            } else {
+                errorMessage = String.format("Can't find the specified variable in '%s'. " +
+                        "Check if it is defined in the current scope. Details: %s", expr, e.getMessage());
+            }
+
+            throw new UserDefinedException(errorMessage);
         } catch (ELException e) {
             throw ExceptionUtils.getExceptionList(e).stream()
                     .filter(i -> i instanceof UserDefinedException)
@@ -229,5 +240,19 @@ public class LazyExpressionEvaluator implements ExpressionEvaluator {
             result.put(key, value);
         }
         return result;
+    }
+
+    private static final String PROP_NOT_FOUND_EL_MESSAGE = "ELResolver cannot handle a null base Object with identifier ";
+
+    private static String propertyNameFromException(PropertyNotFoundException e) {
+        if (e.getMessage() == null) {
+            return null;
+        }
+
+        if (e.getMessage().startsWith(PROP_NOT_FOUND_EL_MESSAGE)) {
+            return e.getMessage().substring(PROP_NOT_FOUND_EL_MESSAGE.length());
+        }
+
+        return null;
     }
 }
