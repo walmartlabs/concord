@@ -25,10 +25,6 @@
     <dependencies>
         <dependency>
             <groupId>com.walmartlabs.concord</groupId>
-            <artifactId>concord-sisu</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.walmartlabs.concord</groupId>
             <artifactId>concord-common</artifactId>
         </dependency>
         <dependency>

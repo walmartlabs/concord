@@ -21,8 +21,8 @@ package com.walmartlabs.concord.runtime.v2.runner.guice;
  */
 
 import com.google.inject.AbstractModule;
-import com.walmartlabs.concord.sisu.SpaceModule_;
 import org.eclipse.sisu.space.BeanScanning;
+import org.eclipse.sisu.space.SpaceModule;
 import org.eclipse.sisu.space.URLClassSpace;
 
 public class CurrentClasspathModule extends AbstractModule {
@@ -31,6 +31,6 @@ public class CurrentClasspathModule extends AbstractModule {
     protected void configure() {
         ClassLoader cl = this.getClass().getClassLoader();
         // use sisu impl when this one released: https://github.com/eclipse/sisu.inject/commit/4790d3e28987ee4c2472d576e544c07028a85f42
-        install(new SpaceModule_(new URLClassSpace(cl), BeanScanning.GLOBAL_INDEX));
+        install(new SpaceModule(new URLClassSpace(cl), BeanScanning.GLOBAL_INDEX));
     }
 }

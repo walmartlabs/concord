@@ -25,8 +25,8 @@ import com.google.inject.Injector;
 import com.google.inject.Module;
 import com.walmartlabs.concord.server.boot.BackgroundTasks;
 import com.walmartlabs.concord.server.boot.HttpServer;
-import com.walmartlabs.concord.sisu.SpaceModule_;
 import org.eclipse.sisu.space.BeanScanning;
+import org.eclipse.sisu.space.SpaceModule;
 import org.eclipse.sisu.space.URLClassSpace;
 import org.eclipse.sisu.wire.WireModule;
 import org.slf4j.Logger;
@@ -55,7 +55,7 @@ public final class ConcordServer {
      */
     public static ConcordServer withAutoWiring() throws Exception {
         ClassLoader cl = ConcordServer.class.getClassLoader();
-        return withModules(new WireModule(new SpaceModule_(new URLClassSpace(cl), BeanScanning.GLOBAL_INDEX)));
+        return withModules(new WireModule(new SpaceModule(new URLClassSpace(cl), BeanScanning.GLOBAL_INDEX)));
     }
 
     /**

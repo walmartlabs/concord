@@ -102,8 +102,7 @@
         <servlet.version>4.0.1</servlet.version>
         <shiro.version>1.10.1</shiro.version>
         <siesta.version>2.3.2</siesta.version>
-        <sisu.version>0.9.0.M1</sisu.version>
-<!--        <sisu.version>0.3.5</sisu.version>-->
+        <sisu.version>0.9.0.M2</sisu.version>
         <slf4j.version>1.7.36</slf4j.version>
         <snakeyaml.version>1.33</snakeyaml.version>
         <sshd.version>2.8.0</sshd.version>
@@ -161,11 +160,6 @@
             <dependency>
                 <groupId>com.walmartlabs.concord</groupId>
                 <artifactId>concord-sdk</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.walmartlabs.concord</groupId>
-                <artifactId>concord-sisu</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
