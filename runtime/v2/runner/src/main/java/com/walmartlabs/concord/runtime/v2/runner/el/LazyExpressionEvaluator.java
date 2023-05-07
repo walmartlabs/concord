@@ -148,7 +148,7 @@ public class LazyExpressionEvaluator implements ExpressionEvaluator {
 
             String propName = propertyNameFromException(e);
             if (propName != null) {
-                errorMessage = String.format("Can't find variable %s in '%s'. " +
+                errorMessage = String.format("Can't find a variable %s used in '%s'. " +
                         "Check if it is defined in the current scope. Details: %s", propName, expr, e.getMessage());
             } else {
                 errorMessage = String.format("Can't find the specified variable in '%s'. " +
