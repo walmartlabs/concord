@@ -5,6 +5,10 @@
 ### Added
 
 ### Changed
+
+- runtime-v2: hide stacktrace for peropertyNotFound exception, 
+better error message
+([#752](https://github.com/walmartlabs/concord/pull/752));
 - runtime-v2: allow expression in parallel loop parallelism
 ([#746](https://github.com/walmartlabs/concord/pull/746));
 - server: created_at DB field to projects table
