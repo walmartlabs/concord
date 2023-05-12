@@ -72,7 +72,7 @@ public final class TriggersGrammar {
                     with(ImmutableGithubTriggerExclusiveMode::builder,
                             o -> options(
                                     optional("group", stringVal.map(o::group)),
-                                    optional("groupBy", enumVal(GithubTriggerExclusiveMode.GroupBy.class).map(o::groupBy)),
+                                    optional("groupBy", stringVal.map(o::groupBy)),
                                     optional("mode", enumVal(ExclusiveMode.Mode.class).map(o::mode))))
                             .map(ImmutableGithubTriggerExclusiveMode.Builder::build)
                             .map(TriggersGrammar::validateGithubExclusiveMode));

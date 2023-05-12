@@ -46,11 +46,7 @@ public interface GithubTriggerExclusiveMode extends Serializable {
     @Nullable
     @Value.Parameter
     @JsonProperty(value = "groupBy")
-    GroupBy groupBy();
-
-    enum GroupBy {
-        branch
-    }
+    String groupBy();
 
     @Value.Parameter
     @Value.Default
