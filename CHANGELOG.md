@@ -6,14 +6,17 @@
 
 ### Changed
 
-- runtime-v2: hide stacktrace for peropertyNotFound exception, 
-better error message
+- runtime-v2, cli: hide parallel block stacktraces for
+UserDefinedExceptions
+([#751](https://github.com/walmartlabs/concord/pull/751));
+- runtime-v2: hide stacktraces in propertyNotFound exceptions,
+improve error messages
 ([#752](https://github.com/walmartlabs/concord/pull/752));
-- runtime-v2: allow expression in parallel loop parallelism
+- runtime-v2: allow expressions in `parallelism` values
 ([#746](https://github.com/walmartlabs/concord/pull/746));
-- server: created_at DB field to projects table
+- server: `created_at` DB field to projects table
 ([#744](https://github.com/walmartlabs/concord/pull/744));
-- runtime-v2: allow increment variable in expression 
+- runtime-v2: allow increment variables in expressions
 ([#740](https://github.com/walmartlabs/concord/pull/740)).
 
 ## [1.101.0] - 2023-03-29
