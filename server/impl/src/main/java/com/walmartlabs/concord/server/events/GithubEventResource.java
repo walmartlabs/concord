@@ -194,7 +194,7 @@ public class GithubEventResource implements Resource {
             }
 
             GithubTriggerExclusiveMode e = objectMapper.convertValue(exclusive, GithubTriggerExclusiveMode.class);
-            String groupBy = e.groupBy();
+            String groupBy = e.groupByProperty();
             if (groupBy== null) {
                 return exclusive;
             }
