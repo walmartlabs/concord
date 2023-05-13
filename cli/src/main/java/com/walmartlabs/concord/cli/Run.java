@@ -51,6 +51,7 @@ import com.walmartlabs.concord.runtime.v2.runner.tasks.TaskProviders;
 import com.walmartlabs.concord.runtime.v2.sdk.*;
 import com.walmartlabs.concord.sdk.Constants;
 import com.walmartlabs.concord.sdk.MapUtils;
+import com.walmartlabs.concord.svm.MultiException;
 import picocli.CommandLine.Command;
 import picocli.CommandLine.Model.CommandSpec;
 import picocli.CommandLine.Option;
@@ -248,6 +249,29 @@ public class Run implements Callable<Integer> {
 
         try {
             runner.start(cfg, processDefinition, args);
+        } catch (MultiException e) {
+            if (verbosity.verbose()) {
+                e.printStackTrace(System.err);
+            } else {
+                StringBuilder msg = new StringBuilder();
+                for (Exception c : e.getCauses()) {
+                    if (c instanceof UserDefinedException) {
+                        msg.append(c.getMessage());
+                    } else {
+                        msg.append(MultiException.stacktraceToString(c));
+                    }
+                    msg.append("\n");
+                }
+                System.err.print("Errors:\n" + msg);
+            }
+            return 1;
+        } catch (UserDefinedException e) {
+            if (verbosity.verbose()) {
+                System.err.print("Error: ");
+                e.printStackTrace(System.err);
+            } else {
+                System.err.print("Error:\n" + e.getMessage());
+            }
         } catch (Exception e) {
             if (verbosity.verbose()) {
                 System.err.print("Error: ");
