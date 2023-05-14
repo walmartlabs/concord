@@ -61,7 +61,7 @@ public final class TriggersGrammar {
             orError(githubTriggerRepositoryInfo, YamlValueType.ARRAY_OF_GITHUB_REPOSITORY_INFO);
 
     private static GithubTriggerExclusiveMode validateGithubExclusiveMode(GithubTriggerExclusiveMode e) {
-        if (e.groupBy() == null && e.group() == null) {
+        if (e.groupByProperty() == null && e.group() == null) {
             throw new OneOfMandatoryFieldsNotFoundException("group", "groupBy");
         }
         return e;
