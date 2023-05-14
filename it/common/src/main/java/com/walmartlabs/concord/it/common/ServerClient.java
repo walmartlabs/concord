@@ -296,12 +296,11 @@ public class ServerClient {
     }
 
     private static String envApiKey() {
-        return "eA/1PW2CdPEjj5tDSlfUeA";
-//        String s = System.getenv("IT_DEFAULT_API_KEY");
-//        if (s == null) {
-//            throw new IllegalStateException("The default (admin) API key must be configured via IT_DEFAULT_API_KEY environment variable. " +
-//                    "The value must match the db.changeLogParameters.defaultAdminToken value in the server's configuration file");
-//        }
-//        return s;
+        String s = System.getenv("IT_DEFAULT_API_KEY");
+        if (s == null) {
+            throw new IllegalStateException("The default (admin) API key must be configured via IT_DEFAULT_API_KEY environment variable. " +
+                    "The value must match the db.changeLogParameters.defaultAdminToken value in the server's configuration file");
+        }
+        return s;
     }
 }
