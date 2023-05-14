@@ -52,9 +52,9 @@ public interface RuntimeRule extends Serializable {
     @Nullable
     @Value.Parameter
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd")
-    LocalDate projectCreatedAtFrom();
+    LocalDate projectCreatedAfter();
 
-    static RuntimeRule of(String msg, Set<String> runtimes, LocalDate projectCreatedAtFrom) {
-        return ImmutableRuntimeRule.of(msg, runtimes, projectCreatedAtFrom);
+    static RuntimeRule of(String msg, Set<String> runtimes, LocalDate projectCreatedAfter) {
+        return ImmutableRuntimeRule.of(msg, runtimes, projectCreatedAfter);
     }
 }

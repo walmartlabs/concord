@@ -39,13 +39,13 @@ public class RuntimePolicy {
             return CheckResult.success();
         }
 
-        if (rule.projectCreatedAtFrom() != null) {
+        if (rule.projectCreatedAfter() != null) {
             OffsetDateTime createdAt = projectCreatedAt.get();
             if (createdAt == null) {
                 return CheckResult.success();
             }
 
-            if (createdAt.isBefore(OffsetDateTime.of(rule.projectCreatedAtFrom(), LocalTime.of(0, 0, 0), ZoneOffset.UTC))) {
+            if (createdAt.isBefore(OffsetDateTime.of(rule.projectCreatedAfter(), LocalTime.of(0, 0, 0), ZoneOffset.UTC))) {
                 return CheckResult.success();
             }
         }
