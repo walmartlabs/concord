@@ -4,7 +4,7 @@ package com.walmartlabs.concord.runtime.v2.runner;
  * *****
  * Concord
  * -----
- * Copyright (C) 2017 - 2019 Walmart Inc.
+ * Copyright (C) 2017 - 2023 Walmart Inc.
  * -----
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -101,8 +101,20 @@ public class Main {
             main.execute();
 
             System.exit(0);
-        } catch (MultiException | UserDefinedException e) {
+        } catch (UserDefinedException e) {
             log.error(e.getMessage());
+            System.exit(1);
+        } catch (MultiException e) {
+            StringBuilder msg = new StringBuilder();
+            for (Exception c : e.getCauses()) {
+                if (c instanceof UserDefinedException) {
+                    msg.append(c.getMessage());
+                } else {
+                    msg.append(MultiException.stacktraceToString(c));
+                }
+                msg.append("\n");
+            }
+            log.error("Errors: {}", msg);
             System.exit(1);
         } catch (Throwable t) {
             log.error("", t);
