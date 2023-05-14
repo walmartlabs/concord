@@ -205,7 +205,7 @@ public class GithubEventResource implements Resource {
             } else if (groupBy.startsWith("event")) {
                 String[] payloadPath = groupBy.split("\\.");
                 if (payloadPath.length == 1) {
-                    throw new IllegalArgumentException("Invalid groupBy: '" + e.groupBy() + "'");
+                    throw new IllegalArgumentException("Invalid groupBy: '" + groupBy + "'");
                 }
 
                 payloadPath = Arrays.copyOfRange(payloadPath, 1, payloadPath.length);
@@ -214,10 +214,10 @@ public class GithubEventResource implements Resource {
                     group = (String) maybeString;
                 } else {
                     String value = maybeString + " (class: " + maybeString.getClass() + ")";
-                    throw new IllegalArgumentException("Expected string value for groupBy: '" + e.groupBy() + "', got " + value);
+                    throw new IllegalArgumentException("Expected string value for groupBy: '" + groupBy + "', got " + value);
                 }
             } else {
-                throw new IllegalArgumentException("Unknown groupBy: '" + e.groupBy() + "'");
+                throw new IllegalArgumentException("Unknown groupBy: '" + groupBy + "'");
             }
 
             if (group == null) {
