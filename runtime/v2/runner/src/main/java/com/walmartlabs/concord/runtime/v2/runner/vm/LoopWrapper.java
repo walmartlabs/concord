@@ -4,7 +4,7 @@ package com.walmartlabs.concord.runtime.v2.runner.vm;
  * *****
  * Concord
  * -----
- * Copyright (C) 2017 - 2019 Walmart Inc.
+ * Copyright (C) 2017 - 2023 Walmart Inc.
  * -----
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,16 +24,13 @@ import com.walmartlabs.concord.runtime.v2.model.Loop;
 import com.walmartlabs.concord.runtime.v2.model.Step;
 import com.walmartlabs.concord.runtime.v2.runner.compiler.CompilerContext;
 import com.walmartlabs.concord.runtime.v2.runner.context.ContextFactory;
+import com.walmartlabs.concord.runtime.v2.sdk.Context;
+import com.walmartlabs.concord.runtime.v2.sdk.EvalContext;
 import com.walmartlabs.concord.runtime.v2.sdk.EvalContextFactory;
 import com.walmartlabs.concord.runtime.v2.sdk.ExpressionEvaluator;
-import com.walmartlabs.concord.runtime.v2.sdk.Context;
-import com.walmartlabs.concord.sdk.MapUtils;
 import com.walmartlabs.concord.svm.Runtime;
 import com.walmartlabs.concord.svm.*;
 
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.ObjectOutputStream;
 import java.io.Serializable;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
@@ -108,25 +105,40 @@ public abstract class LoopWrapper implements Command {
             return;
         }
 
-        eval(state, threadId, items);
+        eval(runtime, state, threadId, ctx, items);
     }
 
-    protected abstract void eval(State state, ThreadId threadId, ArrayList<Serializable> items);
+    protected abstract void eval(Runtime runtime, State state, ThreadId threadId, Context ctx, ArrayList<Serializable> items);
 
     static class ParallelWithItems extends LoopWrapper {
 
         private static final long serialVersionUID = 1L;
 
-        private final int batchSize;
+        private final Parallelism parallelism;
 
         protected ParallelWithItems(CompilerContext ctx, Command cmd, Loop loop, Collection<String> outVariables) {
             super(cmd, loop.items(), outVariables);
 
-            this.batchSize = batchSize(ctx, loop);
+            this.parallelism = processParallelism(ctx, loop);
+        }
+
+        private static Parallelism processParallelism(CompilerContext ctx, Loop loop) {
+            int defaultParallelism = ctx.processDefinition().configuration().parallelLoopParallelism();
+
+            Object parallelism = loop.options().get("parallelism");
+            if (parallelism == null) {
+                return new Parallelism(null, defaultParallelism);
+            } else if (parallelism instanceof String) {
+                return new Parallelism((String) parallelism, defaultParallelism);
+            } else if (parallelism instanceof Number) {
+                return new Parallelism(null, ((Number) parallelism).intValue());
+            }
+
+            throw new RuntimeException("Unknown loop parallelism value type: " + parallelism.getClass());
         }
 
         @Override
-        protected void eval(State state, ThreadId threadId, ArrayList<Serializable> items) {
+        protected void eval(Runtime runtime, State state, ThreadId threadId, Context ctx, ArrayList<Serializable> items) {
             // target frame for out variables
             Frame targetFrame = VMUtils.assertNearestRoot(state, threadId);
 
@@ -135,6 +147,8 @@ public abstract class LoopWrapper implements Command {
                     .commands(new SetVariablesCommand(outVarsAccumulator, targetFrame))
                     .nonRoot()
                     .build());
+
+            int batchSize = toBatchSize(runtime, ctx, parallelism);
 
             List<ArrayList<Serializable>> batches = batches(items, batchSize);
             for (ArrayList<Serializable> batch : batches) {
@@ -172,20 +186,28 @@ public abstract class LoopWrapper implements Command {
             frame.push(new JoinCommand(forks.stream().map(Map.Entry::getKey).collect(Collectors.toSet())));
         }
 
-        private static int batchSize(CompilerContext ctx, Loop loop) {
-            int result = MapUtils.getInt(loop.options(), "parallelism", -1);
-            if (result > 0) {
-                return result;
-            }
-            return ctx.processDefinition().configuration().parallelLoopParallelism();
-        }
-
         private static List<ArrayList<Serializable>> batches(ArrayList<Serializable> items, int batchSize) {
             List<ArrayList<Serializable>> result = new ArrayList<>();
             for (int i = 0; i < items.size(); i += batchSize) {
                 result.add(new ArrayList<>(items.subList(i, Math.min(items.size(), i + batchSize))));
             }
             return result;
+        }
+
+        private static int toBatchSize(Runtime runtime, Context ctx, Parallelism parallelism) {
+            if (parallelism.getExpression() == null) {
+                return parallelism.getValue();
+            }
+
+            EvalContextFactory ecf = runtime.getService(EvalContextFactory.class);
+            EvalContext evalContext = ecf.global(ctx);
+
+            ExpressionEvaluator ee = runtime.getService(ExpressionEvaluator.class);
+            Number result = ee.eval(evalContext, parallelism.getExpression(), Number.class);
+            if (result == null) {
+                return parallelism.getValue();
+            }
+            return result.intValue();
         }
     }
 
@@ -203,7 +225,7 @@ public abstract class LoopWrapper implements Command {
         }
 
         @Override
-        protected void eval(State state, ThreadId threadId, ArrayList<Serializable> items) {
+        protected void eval(Runtime runtime, State state, ThreadId threadId, Context ctx, ArrayList<Serializable> items) {
             Frame loop = Frame.builder()
                     .nonRoot()
                     .build();
@@ -345,6 +367,27 @@ public abstract class LoopWrapper implements Command {
                     return values;
                 });
             }
+        }
+    }
+
+    private static class Parallelism implements Serializable {
+
+        private static final long serialVersionUID = 1L;
+
+        private final String expression;
+        private final int value;
+
+        public Parallelism(String expression, int value) {
+            this.expression = expression;
+            this.value = value;
+        }
+
+        public String getExpression() {
+            return expression;
+        }
+
+        public int getValue() {
+            return value;
         }
     }
 }
