@@ -4,6 +4,10 @@
 
 ### Added
 
+- concord-server: allow any GH event attribute in
+`exclusive.groupBy`
+([#753](https://github.com/walmartlabs/concord/pull/753)).
+
 ### Changed
 
 - runtime-v2, cli: hide parallel block stacktraces for
