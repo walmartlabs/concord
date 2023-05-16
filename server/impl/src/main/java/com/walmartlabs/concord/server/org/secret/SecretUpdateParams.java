@@ -40,6 +40,14 @@ public interface SecretUpdateParams extends Serializable {
     @Nullable
     Set<UUID> newProjectIds();
 
+    @Nullable
+    @Deprecated
+    UUID newProjectId();
+
+    @Nullable
+    @Deprecated
+    String newProjectName();
+
     @Value.Default
     default boolean removeProjectLink() {
         return false;

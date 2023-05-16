@@ -26,7 +26,9 @@ import com.walmartlabs.concord.sdk.Secret;
 import com.walmartlabs.concord.server.GenericOperationResult;
 import com.walmartlabs.concord.server.MultipartUtils;
 import com.walmartlabs.concord.server.OperationResult;
-import com.walmartlabs.concord.server.org.*;
+import com.walmartlabs.concord.server.org.OrganizationEntry;
+import com.walmartlabs.concord.server.org.OrganizationManager;
+import com.walmartlabs.concord.server.org.ResourceAccessLevel;
 import com.walmartlabs.concord.server.org.project.ProjectDao;
 import com.walmartlabs.concord.server.sdk.ConcordApplicationException;
 import com.walmartlabs.concord.server.sdk.metrics.WithTimer;
@@ -44,7 +46,6 @@ import javax.inject.Named;
 import javax.inject.Singleton;
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response.Status;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.*;
@@ -59,7 +60,6 @@ public class SecretResourceV2 implements Resource {
     private final OrganizationManager orgManager;
     private final SecretManager secretManager;
     private final ProjectDao projectDao;
-    private final SecretDao secretDao;
 
     @Inject
     public SecretResourceV2(OrganizationManager orgManager,
@@ -70,7 +70,6 @@ public class SecretResourceV2 implements Resource {
         this.orgManager = orgManager;
         this.secretManager = secretManager;
         this.projectDao = projectDao;
-        this.secretDao = secretDao;
     }
 
     @GET
@@ -79,7 +78,7 @@ public class SecretResourceV2 implements Resource {
     @Produces(MediaType.APPLICATION_JSON)
     @WithTimer
     public SecretEntryV2 get(@ApiParam @PathParam("orgName") @ConcordKey String orgName,
-                           @ApiParam @PathParam("secretName") @ConcordKey String secretName) {
+                             @ApiParam @PathParam("secretName") @ConcordKey String secretName) {
 
         OrganizationEntry org = orgManager.assertAccess(orgName, false);
         return secretManager.assertAccess(org.getId(), null, secretName, ResourceAccessLevel.READER, false);
@@ -92,9 +91,9 @@ public class SecretResourceV2 implements Resource {
     @Produces(MediaType.APPLICATION_JSON)
     @Validate
     public List<SecretEntryV2> list(@ApiParam @PathParam("orgName") @ConcordKey String orgName,
-                                  @QueryParam("offset") int offset,
-                                  @QueryParam("limit") int limit,
-                                  @QueryParam("filter") String filter) {
+                                    @QueryParam("offset") int offset,
+                                    @QueryParam("limit") int limit,
+                                    @QueryParam("filter") String filter) {
         OrganizationEntry org = orgManager.assertAccess(orgName, false);
         return secretManager.list(org.getId(), offset, limit, filter);
     }
@@ -111,7 +110,7 @@ public class SecretResourceV2 implements Resource {
                                          @ApiParam MultipartInput input) {
 
         OrganizationEntry org = orgManager.assertAccess(orgName, true);
-        Set<UUID> projectIds =  getProjectIds(
+        Set<UUID> projectIds = getProjectIds(
                 org.getId(),
                 MultipartUtils.getUUIDList(input, Constants.Multipart.PROJECT_IDS),
                 MultipartUtils.getStringList(input, Constants.Multipart.PROJECT_NAMES),

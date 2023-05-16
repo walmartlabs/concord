@@ -88,7 +88,10 @@ public class ServerClient {
     public SecretOperationResponse postSecret(String orgName, Map<String, Object> input) throws ApiException {
         return request("/api/v1/org/" + orgName + "/secret", input, SecretOperationResponse.class);
     }
-    public SecretOperationResponse generateKeyPair(String orgName, String projectName, String name, boolean generatePassword, String storePassword) throws ApiException {
+
+    public SecretOperationResponse generateKeyPair(String orgName, String projectName, String name,
+                                                   boolean generatePassword,
+                                                   String storePassword) throws ApiException {
         Map<String, Object> m = new HashMap<>();
         m.put("name", name);
         m.put("generatePassword", generatePassword);
@@ -102,7 +105,10 @@ public class ServerClient {
         }
         return postSecret(orgName, m);
     }
-    public SecretOperationResponse generateKeyPair(String orgName, Set<String> projectNames, Set<UUID> projectIds, String name, boolean generatePassword, String storePassword) throws ApiException {
+
+    public SecretOperationResponse generateKeyPair(String orgName, Set<String> projectNames, Set<UUID> projectIds,
+                                                   String name, boolean generatePassword,
+                                                   String storePassword) throws ApiException {
         Map<String, Object> m = new HashMap<>();
         m.put("name", name);
         m.put("generatePassword", generatePassword);
@@ -118,7 +124,10 @@ public class ServerClient {
         }
         return postSecret(orgName, m);
     }
-    public SecretOperationResponse addPlainSecret(String orgName, String name, String projectName, boolean generatePassword, String storePassword, byte[] secret) throws ApiException {
+
+    public SecretOperationResponse addPlainSecret(String orgName, String name, String projectName,
+                                                  boolean generatePassword, String storePassword,
+                                                  byte[] secret) throws ApiException {
         Map<String, Object> m = new HashMap<>();
         m.put("name", name);
         m.put("type", SecretEntry.TypeEnum.DATA.toString());
@@ -135,7 +144,9 @@ public class ServerClient {
         return postSecret(orgName, m);
     }
 
-    public SecretOperationResponse addPlainSecret(String orgName, String name, Set<String> projectNames, Set<UUID> projectIds, boolean generatePassword, String storePassword, byte[] secret) throws ApiException {
+    public SecretOperationResponse addPlainSecret(String orgName, String name, Set<String> projectNames,
+                                                  Set<UUID> projectIds, boolean generatePassword, String storePassword,
+                                                  byte[] secret) throws ApiException {
         Map<String, Object> m = new HashMap<>();
         m.put("name", name);
         m.put("type", SecretEntry.TypeEnum.DATA.toString());
@@ -154,7 +165,9 @@ public class ServerClient {
         return postSecret(orgName, m);
     }
 
-    public SecretOperationResponse addUsernamePassword(String orgName, String projectName, String name, boolean generatePassword, String storePassword, String username, String password) throws ApiException {
+    public SecretOperationResponse addUsernamePassword(String orgName, String projectName, String name,
+                                                       boolean generatePassword, String storePassword, String username,
+                                                       String password) throws ApiException {
         Map<String, Object> m = new HashMap<>();
         m.put("name", name);
         m.put("type", SecretEntry.TypeEnum.USERNAME_PASSWORD.toString());
