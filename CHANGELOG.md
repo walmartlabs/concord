@@ -6,7 +6,11 @@
 
 - concord-server: allow any GH event attribute in
 `exclusive.groupBy`
-([#753](https://github.com/walmartlabs/concord/pull/753)).
+([#753](https://github.com/walmartlabs/concord/pull/753));
+- concord-server, concord-policy: ability to restrict
+`runtime` type for project processes created after set date
+(e.g. to forbid usage of older runtimes in new projects)
+([#745](https://github.com/walmartlabs/concord/pull/745)).
 
 ### Changed
 
