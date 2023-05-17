@@ -1,10 +1,10 @@
-package com.walmartlabs.concord.server.org.project;
+package com.walmartlabs.concord.cli;
 
 /*-
  * *****
  * Concord
  * -----
- * Copyright (C) 2017 - 2018 Walmart Inc.
+ * Copyright (C) 2017 - 2023 Walmart Inc.
  * -----
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,18 +20,23 @@ package com.walmartlabs.concord.server.org.project;
  * =====
  */
 
-import org.sonatype.siesta.ValidationErrorsException;
+public class Verbosity {
 
-public final class RepositoryUtils {
+    private final boolean[] verbosity;
 
-    public static RepositoryEntry assertRepository(RepositoryEntry entry) {
-        if (entry.getBranch() == null && entry.getCommitId() == null){
-            throw new ValidationErrorsException("Branch or CommitId required");
-        }
-
-        return entry;
+    public Verbosity(boolean[] verbosity) {
+        this.verbosity = verbosity;
     }
 
-    private RepositoryUtils() {
+    public boolean logFlowSteps() {
+        return verbosity.length > 0;
+    }
+
+    public boolean logTaskParams() {
+        return verbosity.length > 1;
+    }
+
+    public boolean verbose() {
+        return verbosity.length > 2;
     }
 }
