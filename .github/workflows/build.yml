@@ -20,6 +20,10 @@ jobs:
     runs-on: self-hosted
 
     steps:
+      - name: Clear /tmp
+        run: |
+          docker run --rm -v /tmp:/data alpine find /data -ctime +2 -exec rm -rf '{}' \; 2>&1 > /dev/null || true
+
       - name: Clear old Docker resources
         run: |
           docker rm -f $(docker ps -aq) || true

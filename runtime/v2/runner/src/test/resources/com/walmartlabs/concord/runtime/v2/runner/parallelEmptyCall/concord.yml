@@ -7,6 +7,7 @@ flows:
           - "one"
           - "two"
         mode: parallel
+        parallelism: "${2}"
 
     - log: "outVar: ${outVar}"
 

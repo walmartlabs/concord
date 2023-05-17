@@ -4,7 +4,7 @@ package com.walmartlabs.concord.runtime.v2.runner;
  * *****
  * Concord
  * -----
- * Copyright (C) 2017 - 2019 Walmart Inc.
+ * Copyright (C) 2017 - 2023 Walmart Inc.
  * -----
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -44,7 +44,6 @@ import com.walmartlabs.concord.runtime.v2.runner.logging.LoggerProvider;
 import com.walmartlabs.concord.runtime.v2.runner.logging.LoggingClient;
 import com.walmartlabs.concord.runtime.v2.runner.logging.LoggingConfigurator;
 import com.walmartlabs.concord.runtime.v2.runner.logging.RunnerLogger;
-import com.walmartlabs.concord.runtime.v2.runner.remote.EventRecordingExecutionListener;
 import com.walmartlabs.concord.runtime.v2.runner.tasks.TaskCallListener;
 import com.walmartlabs.concord.runtime.v2.runner.tasks.TaskCallPolicyChecker;
 import com.walmartlabs.concord.runtime.v2.runner.tasks.TaskResultListener;
@@ -1280,6 +1279,18 @@ public class MainTest {
 
         log = resume("ev1", ProcessConfiguration.builder().build());
         assertLog(log, ".*" + Pattern.quote("mySecret after suspend: ******") + ".*");
+    }
+
+    @Test
+    public void testIncVariable() throws Exception {
+        deploy("incVariable");
+
+        save(ProcessConfiguration.builder()
+                .putArguments("counter", 0)
+                .build());
+
+        byte[] log = run();
+        assertLog(log, ".*counter: 1.*");
     }
 
     private void deploy(String resource) throws URISyntaxException, IOException {
