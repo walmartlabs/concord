@@ -3,7 +3,8 @@
 ## [1.102.0] - Unreleased
 
 ### Added
-
+- server: synchronously refresh repo triggers on repo/project update
+([#734](https://github.com/walmartlabs/concord/pull/734));
 - concord-server: allow any GH event attribute in
 `exclusive.groupBy`
 ([#753](https://github.com/walmartlabs/concord/pull/753));
