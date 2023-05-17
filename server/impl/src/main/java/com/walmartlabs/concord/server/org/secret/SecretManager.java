@@ -791,6 +791,10 @@ public class SecretManager {
         return secretStoreProvider.getDefaultStoreType();
     }
 
+    public String getSecretName(UUID secretId) {
+        return secretDao.getName(secretId);
+    }
+
     public static class DecryptedSecret {
 
         private final UUID id;

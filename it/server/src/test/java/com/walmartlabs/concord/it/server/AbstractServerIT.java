@@ -24,9 +24,11 @@ import com.walmartlabs.concord.ApiClient;
 import com.walmartlabs.concord.ApiException;
 import com.walmartlabs.concord.client.SecretOperationResponse;
 import com.walmartlabs.concord.client.StartProcessResponse;
+import com.walmartlabs.concord.common.IOUtils;
 import com.walmartlabs.concord.it.common.ITUtils;
 import com.walmartlabs.concord.it.common.JGitUtils;
 import com.walmartlabs.concord.it.common.ServerClient;
+import org.eclipse.jgit.api.Git;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Timeout;
@@ -179,6 +181,20 @@ public abstract class AbstractServerIT {
         try (Reader r = new FileReader(f)) {
             return getApiClient().getJSON().getGson().fromJson(r, classOfT);
         }
+    }
+
+    protected String createRepo(String resource) throws Exception {
+        Path tmpDir = createTempDir();
+
+        File src = new File(AbstractServerIT.class.getResource(resource).toURI());
+        IOUtils.copy(src.toPath(), tmpDir);
+
+        try (Git repo = Git.init().setInitialBranch("master").setDirectory(tmpDir.toFile()).call()) {
+            repo.add().addFilepattern(".").call();
+            repo.commit().setMessage("import").call();
+        }
+
+        return tmpDir.toAbsolutePath().toString();
     }
 
     protected static String env(String k, String def) {
