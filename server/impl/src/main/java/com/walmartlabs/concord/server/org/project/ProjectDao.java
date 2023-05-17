@@ -39,6 +39,7 @@ import org.jooq.*;
 
 import javax.inject.Inject;
 import javax.inject.Named;
+import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -120,7 +121,7 @@ public class ProjectDao extends AbstractDao {
 
         Field<String> orgNameField = select(ORGANIZATIONS.ORG_NAME).from(ORGANIZATIONS).where(ORGANIZATIONS.ORG_ID.eq(p.ORG_ID)).asField();
 
-        Record15<UUID, String, String, UUID, String, JSONB, String, UUID, String, String, String, String, RawPayloadMode, JSONB, OutVariablesMode> r = tx.select(
+        Record16<UUID, String, String, UUID, String, JSONB, String, UUID, String, String, String, String, RawPayloadMode, JSONB, OutVariablesMode, OffsetDateTime> r = tx.select(
                 p.PROJECT_ID,
                 p.PROJECT_NAME,
                 p.DESCRIPTION,
@@ -135,7 +136,8 @@ public class ProjectDao extends AbstractDao {
                 u.DISPLAY_NAME,
                 p.RAW_PAYLOAD_MODE,
                 p.META,
-                p.OUT_VARIABLES_MODE)
+                p.OUT_VARIABLES_MODE,
+                p.CREATED_AT)
                 .from(p)
                 .leftJoin(u).on(u.USER_ID.eq(p.OWNER_ID))
                 .where(p.PROJECT_ID.eq(projectId))
@@ -159,7 +161,8 @@ public class ProjectDao extends AbstractDao {
                 r.get(p.RAW_PAYLOAD_MODE) != RawPayloadMode.DISABLED,
                 r.get(p.RAW_PAYLOAD_MODE),
                 objectMapper.fromJSONB(r.get(p.META)),
-                r.get(p.OUT_VARIABLES_MODE));
+                r.get(p.OUT_VARIABLES_MODE),
+                r.get(p.CREATED_AT));
     }
 
     public UUID insert(UUID orgId, String name, String description, UUID ownerId, Map<String, Object> cfg,
@@ -187,17 +190,19 @@ public class ProjectDao extends AbstractDao {
                         PROJECTS.RAW_PAYLOAD_MODE,
                         PROJECTS.SECRET_KEY,
                         PROJECTS.META,
-                        PROJECTS.OUT_VARIABLES_MODE)
-                .values(name,
-                        description,
-                        orgId,
-                        objectMapper.toJSONB(cfg),
-                        visibility.toString(),
-                        ownerId,
-                        rawPayloadMode != null ? rawPayloadMode : RawPayloadMode.DISABLED,
-                        encryptedKey,
-                        objectMapper.toJSONB(meta),
-                        outVariablesMode != null ? outVariablesMode : OutVariablesMode.DISABLED)
+                        PROJECTS.OUT_VARIABLES_MODE,
+                        PROJECTS.CREATED_AT)
+                .values(value(name),
+                        value(description),
+                        value(orgId),
+                        value(objectMapper.toJSONB(cfg)),
+                        value(visibility.toString()),
+                        value(ownerId),
+                        value(rawPayloadMode != null ? rawPayloadMode : RawPayloadMode.DISABLED),
+                        value(encryptedKey),
+                        value(objectMapper.toJSONB(meta)),
+                        value(outVariablesMode != null ? outVariablesMode : OutVariablesMode.DISABLED),
+                        currentOffsetDateTime())
                 .returning(PROJECTS.PROJECT_ID)
                 .fetchOne()
                 .getProjectId();
@@ -281,7 +286,7 @@ public class ProjectDao extends AbstractDao {
         sortField = p.field(sortField);
 
 
-        SelectOnConditionStep<Record13<UUID, String, String, UUID, String, String, UUID, String, String, String, String, RawPayloadMode, OutVariablesMode>> q = dsl().select(
+        SelectOnConditionStep<Record14<UUID, String, String, UUID, String, String, UUID, String, String, String, String, RawPayloadMode, OutVariablesMode, OffsetDateTime>> q = dsl().select(
                 p.PROJECT_ID,
                 p.PROJECT_NAME,
                 p.DESCRIPTION,
@@ -294,7 +299,8 @@ public class ProjectDao extends AbstractDao {
                 u.DISPLAY_NAME,
                 u.USER_TYPE,
                 p.RAW_PAYLOAD_MODE,
-                p.OUT_VARIABLES_MODE)
+                p.OUT_VARIABLES_MODE,
+                p.CREATED_AT)
                 .from(p)
                 .leftJoin(u).on(u.USER_ID.eq(p.OWNER_ID))
                 .leftJoin(o).on(o.ORG_ID.eq(p.ORG_ID));
@@ -447,7 +453,7 @@ public class ProjectDao extends AbstractDao {
                 .execute();
     }
 
-    private static ProjectEntry toEntry(Record13<UUID, String, String, UUID, String, String, UUID, String, String, String, String, RawPayloadMode, OutVariablesMode> r) {
+    private static ProjectEntry toEntry(Record14<UUID, String, String, UUID, String, String, UUID, String, String, String, String, RawPayloadMode, OutVariablesMode, OffsetDateTime> r) {
         return new ProjectEntry(r.get(PROJECTS.PROJECT_ID),
                 r.get(PROJECTS.PROJECT_NAME),
                 r.get(PROJECTS.DESCRIPTION),
@@ -460,7 +466,8 @@ public class ProjectDao extends AbstractDao {
                 r.get(PROJECTS.RAW_PAYLOAD_MODE) != RawPayloadMode.DISABLED,
                 r.get(PROJECTS.RAW_PAYLOAD_MODE),
                 null,
-                r.get(PROJECTS.OUT_VARIABLES_MODE));
+                r.get(PROJECTS.OUT_VARIABLES_MODE),
+                r.get(PROJECTS.CREATED_AT));
     }
 
     private static EntityOwner toOwner(UUID id, String username, String domain, String displayName, String userType) {

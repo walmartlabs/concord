@@ -20,6 +20,7 @@ package com.walmartlabs.concord.runtime.v2.model;
  * =====
  */
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
@@ -43,14 +44,18 @@ public interface GithubTriggerExclusiveMode extends Serializable {
     @JsonProperty(value = "group")
     String group();
 
+    // Unused, just for backward compatibility
     @Nullable
-    @Value.Parameter
-    @JsonProperty(value = "groupBy")
+    @JsonIgnore
     GroupBy groupBy();
-
     enum GroupBy {
         branch
     }
+
+    @Value.Parameter
+    @JsonProperty(value = "groupBy")
+    @Nullable
+    String groupByProperty();
 
     @Value.Parameter
     @Value.Default
