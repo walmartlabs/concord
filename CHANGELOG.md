@@ -14,6 +14,9 @@
 
 ### Changed
 
+- concord-server, concord-console2: handle empty process
+lists in wait condition
+([#756](https://github.com/walmartlabs/concord/pull/756));
 - concord-task: ignore suspend if no processes provided
 ([#755](https://github.com/walmartlabs/concord/pull/755));
 - concord-server: refresh repository triggers synchronously
