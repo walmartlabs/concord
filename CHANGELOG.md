@@ -14,7 +14,7 @@
 
 ### Changed
 
-- concord-server: refresh repository triggers synchroniously
+- concord-server: refresh repository triggers synchronously
 ([#734](https://github.com/walmartlabs/concord/pull/734));
 - runtime-v2, cli: hide parallel block stacktraces for
 UserDefinedExceptions
