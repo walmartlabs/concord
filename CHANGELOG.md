@@ -14,6 +14,8 @@
 
 ### Changed
 
+- concord-task: ignore suspend if no processes provided
+([#755](https://github.com/walmartlabs/concord/pull/755));
 - concord-server: refresh repository triggers synchronously
 ([#734](https://github.com/walmartlabs/concord/pull/734));
 - runtime-v2, cli: hide parallel block stacktraces for
