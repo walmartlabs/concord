@@ -3,8 +3,7 @@
 ## [1.102.0] - Unreleased
 
 ### Added
-- server: synchronously refresh repo triggers on repo/project update
-([#734](https://github.com/walmartlabs/concord/pull/734));
+
 - concord-server: allow any GH event attribute in
 `exclusive.groupBy`
 ([#753](https://github.com/walmartlabs/concord/pull/753));
@@ -15,6 +14,8 @@
 
 ### Changed
 
+- concord-server: refresh repository triggers synchroniously
+([#734](https://github.com/walmartlabs/concord/pull/734));
 - runtime-v2, cli: hide parallel block stacktraces for
 UserDefinedExceptions
 ([#751](https://github.com/walmartlabs/concord/pull/751));
