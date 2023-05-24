@@ -1,5 +1,39 @@
 # Change log
 
+## [1.102.0] - 2023-05-22
+
+### Added
+
+- concord-server: allow any GH event attribute in
+`exclusive.groupBy`
+([#753](https://github.com/walmartlabs/concord/pull/753));
+- concord-server, concord-policy: ability to restrict
+`runtime` type for project processes created after set date
+(e.g. to forbid usage of older runtimes in new projects)
+([#745](https://github.com/walmartlabs/concord/pull/745)).
+
+### Changed
+
+- concord-server, concord-console2: handle empty process
+lists in wait condition
+([#756](https://github.com/walmartlabs/concord/pull/756));
+- concord-task: ignore suspend if no processes provided
+([#755](https://github.com/walmartlabs/concord/pull/755));
+- concord-server: refresh repository triggers synchronously
+([#734](https://github.com/walmartlabs/concord/pull/734));
+- runtime-v2, cli: hide parallel block stacktraces for
+UserDefinedExceptions
+([#751](https://github.com/walmartlabs/concord/pull/751));
+- runtime-v2: hide stacktraces in propertyNotFound exceptions,
+improve error messages
+([#752](https://github.com/walmartlabs/concord/pull/752));
+- runtime-v2: allow expressions in `parallelism` values
+([#746](https://github.com/walmartlabs/concord/pull/746));
+- server: `created_at` DB field to projects table
+([#744](https://github.com/walmartlabs/concord/pull/744));
+- runtime-v2: allow increment variables in expressions
+([#740](https://github.com/walmartlabs/concord/pull/740)).
+
 ## [1.101.0] - 2023-03-29
 
 ### Added

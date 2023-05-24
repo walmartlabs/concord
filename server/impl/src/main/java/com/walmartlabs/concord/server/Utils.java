@@ -4,7 +4,7 @@ package com.walmartlabs.concord.server;
  * *****
  * Concord
  * -----
- * Copyright (C) 2017 - 2018 Walmart Inc.
+ * Copyright (C) 2017 - 2023 Walmart Inc.
  * -----
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,8 +21,6 @@ package com.walmartlabs.concord.server;
  */
 
 import com.google.inject.Binder;
-import com.walmartlabs.concord.server.metrics.MetricsRegistrator;
-import com.walmartlabs.concord.server.metrics.MetricsServletHolder;
 import com.walmartlabs.concord.server.sdk.BackgroundTask;
 import com.walmartlabs.concord.server.sdk.ScheduledTask;
 import org.eclipse.jetty.servlet.ServletHolder;
