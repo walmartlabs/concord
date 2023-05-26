@@ -190,8 +190,18 @@ public class Run implements Callable<Integer> {
         Map<String, Object> overlayCfg = ProcessDefinitionUtils.getProfilesOverlayCfg(new ProcessDefinitionV2(processDefinition), profiles);
         List<String> overlayDeps = MapUtils.getList(overlayCfg, Constants.Request.DEPENDENCIES_KEY, Collections.emptyList());
 
+        Collection<String> dependencies;
+
+        try {
+            dependencies = new DependencyResolver(dependencyManager, verbosity.verbose())
+                    .resolveDeps(overlayDeps);
+        } catch (Exception e) {
+            System.err.println(e.getMessage());
+            return -1;
+        }
+
         RunnerConfiguration runnerCfg = RunnerConfiguration.builder()
-                .dependencies(new DependencyResolver(dependencyManager, verbosity.verbose()).resolveDeps(overlayDeps))
+                .dependencies(dependencies)
                 .debug(processDefinition.configuration().debug())
                 .build();
 
