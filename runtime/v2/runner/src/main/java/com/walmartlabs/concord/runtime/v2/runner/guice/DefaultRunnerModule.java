@@ -75,5 +75,6 @@ public class DefaultRunnerModule extends AbstractModule {
         executionListeners.addBinding().to(MetadataProcessor.class);
         executionListeners.addBinding().to(OutVariablesProcessor.class);
         executionListeners.addBinding().to(SensitiveDataPersistenceService.class);
+        executionListeners.addBinding().to(StackTraceCollector.class);
     }
 }

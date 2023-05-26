@@ -43,6 +43,8 @@ public class FlowCallCommand extends StepCommand<FlowCall> {
 
     private static final long serialVersionUID = 1L;
 
+    private String flowName;
+
     public FlowCallCommand(FlowCall step) {
         super(step);
     }
@@ -60,7 +62,7 @@ public class FlowCallCommand extends StepCommand<FlowCall> {
         FlowCall call = getStep();
 
         // the called flow's name
-        String flowName = ee.eval(evalCtx, call.getFlowName(), String.class);
+        flowName = ee.eval(evalCtx, call.getFlowName(), String.class);
 
         // the called flow's steps
         Compiler compiler = runtime.getService(Compiler.class);
@@ -93,6 +95,10 @@ public class FlowCallCommand extends StepCommand<FlowCall> {
         // push the out handler first so it executes after the called flow's frame is done
         state.peekFrame(threadId).push(processOutVars);
         state.pushFrame(threadId, innerFrame);
+    }
+
+    public String getFlowName() {
+        return flowName;
     }
 
     private static class EvalVariablesCommand implements Command {

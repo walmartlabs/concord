@@ -42,6 +42,7 @@ public class InMemoryState implements Serializable, State {
     private final Map<ThreadId, Set<ThreadId>> children = new HashMap<>();
     private final Map<ThreadId, String> eventRefs = new HashMap<>();
     private final Map<ThreadId, Exception> threadErrors = new HashMap<>();
+    private final Map<ThreadId, List<StackTraceItem>> stackTrace = new HashMap<>();
 
     private final ThreadId rootThreadId;
 
@@ -213,6 +214,59 @@ public class InMemoryState implements Serializable, State {
     public Exception clearThreadError(ThreadId threadId) {
         synchronized (this) {
             return threadErrors.remove(threadId);
+        }
+    }
+
+    @Override
+    public List<StackTraceItem> getStackTrace(ThreadId threadId) {
+        synchronized (this) {
+            // for backward compatibility
+            if (stackTrace == null) {
+                return Collections.emptyList();
+            }
+            return Collections.unmodifiableList(stackTrace.getOrDefault(threadId, Collections.emptyList()));
+        }
+    }
+
+    @Override
+    public void pushStackTraceItem(ThreadId threadId, StackTraceItem item) {
+        synchronized (this) {
+            // for backward compatibility
+            if (stackTrace == null) {
+                return;
+            }
+
+            List<StackTraceItem> l = stackTrace.computeIfAbsent(threadId, key -> new LinkedList<>());
+            l.add(0, item);
+        }
+    }
+
+    @Override
+    public StackTraceItem popStackTraceItem(ThreadId threadId) {
+        synchronized (this) {
+            // for backward compatibility
+            if (stackTrace == null) {
+                return null;
+            }
+
+            List<StackTraceItem> l = stackTrace.get(threadId);
+            if (l == null || l.isEmpty()) {
+                return null;
+            }
+
+            return l.remove(0);
+        }
+    }
+
+    @Override
+    public void clearStackTrace(ThreadId threadId) {
+        synchronized (this) {
+            // for backward compatibility
+            if (stackTrace == null) {
+                return;
+            }
+
+            stackTrace.remove(threadId);
         }
     }
 

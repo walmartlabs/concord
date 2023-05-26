@@ -141,6 +141,7 @@ public class MainTest {
                         SensitiveDataHolder.getInstance().get().clear();
                     }
                 });
+                executionListeners.addBinding().to(StackTraceCollector.class);
             }
         };
 
@@ -170,6 +171,59 @@ public class MainTest {
         assertLog(log, ".*" + Pattern.quote("defaultsMap:{a=a-value}") + ".*");
 
         verify(processStatusCallback, times(1)).onRunning(instanceId);
+    }
+
+    @Test
+    public void testStackTrace() throws Exception {
+        deploy("stackTrace");
+
+        save(ProcessConfiguration.builder()
+                .build());
+
+        try {
+            run();
+            fail("must fail");
+        } catch (Exception e) {
+            // ignore
+        }
+        assertLog(lastLog, ".*" + Pattern.quote("(concord.yml) @ line: 9, col: 7, thread: 0, flow: flowB") + ".*");
+        assertLog(lastLog, ".*" + Pattern.quote("(concord.yml) @ line: 3, col: 7, thread: 0, flow: flowA") + ".*");
+    }
+
+    @Test
+    public void testStackTrace2() throws Exception {
+        deploy("stackTrace2");
+
+        save(ProcessConfiguration.builder()
+                .build());
+
+        try {
+            run();
+            fail("must fail");
+        } catch (Exception e) {
+            // ignore
+        }
+        assertLog(lastLog, ".*" + Pattern.quote("(concord.yml) @ line: 10, col: 7, thread: 1, flow: flowB") + ".*");
+        assertLog(lastLog, ".*" + Pattern.quote("(concord.yml) @ line: 4, col: 11, thread: 1, flow: flowA") + ".*");
+
+        assertLog(lastLog, ".*" + Pattern.quote("(concord.yml) @ line: 5, col: 11, thread: 2, flow: flowB") + ".*");
+    }
+
+    @Test
+    public void testStackTrace3() throws Exception {
+        deploy("stackTrace3");
+
+        save(ProcessConfiguration.builder()
+                .build());
+
+        try {
+            run();
+            fail("must fail");
+        } catch (Exception e) {
+            // ignore
+        }
+        assertLog(lastLog, ".*" + Pattern.quote("(concord.yml) @ line: 12, col: 7, thread: 0, flow: flowB") + ".*");
+        assertLog(lastLog, ".*" + Pattern.quote("(concord.yml) @ line: 3, col: 7, thread: 0, flow: flowA") + ".*");
     }
 
     @Test

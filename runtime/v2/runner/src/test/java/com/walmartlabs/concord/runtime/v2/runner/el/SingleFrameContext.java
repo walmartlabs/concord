@@ -147,6 +147,26 @@ public class SingleFrameContext extends DummyContext {
                     }
 
                     @Override
+                    public List<StackTraceItem> getStackTrace(ThreadId threadId) {
+                        throw new IllegalStateException("Not implemented");
+                    }
+
+                    @Override
+                    public StackTraceItem popStackTraceItem(ThreadId threadId) {
+                        throw new IllegalStateException("Not implemented");
+                    }
+
+                    @Override
+                    public void pushStackTraceItem(ThreadId threadId, StackTraceItem item) {
+                        throw new IllegalStateException("Not implemented");
+                    }
+
+                    @Override
+                    public void clearStackTrace(ThreadId threadId) {
+                        throw new IllegalStateException("Not implemented");
+                    }
+
+                    @Override
                     public void gc() {
                         throw new IllegalStateException("Not implemented");
                     }

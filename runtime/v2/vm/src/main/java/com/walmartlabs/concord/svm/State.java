@@ -116,6 +116,26 @@ public interface State extends Serializable {
     Exception clearThreadError(ThreadId threadId);
 
     /**
+     * Returns call stack trace for thread id.
+     */
+    List<StackTraceItem> getStackTrace(ThreadId threadId);
+
+    /**
+     * Removes the current stack trace element of the specified thread.
+     */
+    StackTraceItem popStackTraceItem(ThreadId threadId);
+
+    /**
+     * Adds a stack trace item to the specified thread.
+     */
+    void pushStackTraceItem(ThreadId threadId, StackTraceItem item);
+
+    /**
+     * Clears stack trace for the specific thread.
+     */
+    void clearStackTrace(ThreadId threadId);
+
+    /**
      * Performs state maintenance and cleanup.
      */
     void gc();
