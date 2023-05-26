@@ -458,7 +458,6 @@ public class DependencyManager {
             return RetryUtils.withRetry(DependencyManager.RETRY_COUNT, DependencyManager.RETRY_INTERVAL,
                     c, ResolveRetryStrategy.INSTANCE, notifier);
         } catch (Exception e) {
-            log.error("resolve exception: ", e);
             throw exceptionConverter.convert(e);
         }
     }
