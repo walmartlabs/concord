@@ -227,6 +227,32 @@ public class MainTest {
     }
 
     @Test
+    public void testStackTrace4() throws Exception {
+        deploy("stackTrace4");
+
+        save(ProcessConfiguration.builder()
+                .build());
+
+        try {
+            run();
+            fail("must fail");
+        } catch (Exception e) {
+            // ignore
+        }
+
+        String expected = "(concord.yml) @ line: 8, col: 7, thread: 0, flow: flowB\n" +
+                "(concord.yml) @ line: 3, col: 7, thread: 0, flow: flowA";
+
+        String expected1 = "(concord.yml) @ line: 16, col: 11, thread: 0, flow: flowThrow\n" +
+                "(concord.yml) @ line: 8, col: 7, thread: 0, flow: flowB\n" +
+                "(concord.yml) @ line: 3, col: 7, thread: 0, flow: flowA";
+
+        String logString = new String(lastLog);
+        assertTrue(logString.contains(expected), "expected log contains: " + expected + ", actual: " + logString);
+        assertTrue(logString.contains(expected1), "expected log contains: " + expected1 + ", actual: " + logString);
+    }
+
+    @Test
     public void testForm() throws Exception {
         deploy("form");
 
