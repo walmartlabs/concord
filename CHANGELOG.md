@@ -1,5 +1,14 @@
 # Change log
 
+## [1.103.0] - Unreleased
+
+### Added
+
+### Changed
+
+- concord-cli: reduce noise in dependency resolution errors
+([#757](https://github.com/walmartlabs/concord/pull/757)).
+
 ## [1.102.0] - 2023-05-22
 
 ### Added
