@@ -71,9 +71,4 @@ public class StackTraceCollector implements ExecutionListener {
             }
         }
     }
-
-//    @Override
-//    public Result onCommandError(Runtime runtime, VM vm, State state, ThreadId threadId, Command cmd) {
-        // clean stacktrace till exception handler (marker in before command for errorWrapper command);
-//    }
 }
