@@ -40,6 +40,8 @@ import java.util.Optional;
 
 public class OidcAuthenticationHandler implements AuthenticationHandler {
 
+    private static final String FORM_URL_PATTERN = "/forms/.*";
+
     private static final String AUTHORIZATION_HEADER = "Authorization";
     private static final String HEADER_PREFIX = "Bearer";
 
@@ -93,8 +95,14 @@ public class OidcAuthenticationHandler implements AuthenticationHandler {
             return false;
         }
 
+        HttpServletRequest req = WebUtils.toHttp(request);
         HttpServletResponse resp = WebUtils.toHttp(response);
-        resp.sendRedirect(OidcAuthFilter.URL);
-        return true;
+
+        if (req.getRequestURI().matches(FORM_URL_PATTERN)) {
+            resp.sendRedirect(resp.encodeRedirectURL(OidcAuthFilter.URL + "?from=" + req.getRequestURL()));
+            return true;
+        }
+
+        return false;
     }
 }

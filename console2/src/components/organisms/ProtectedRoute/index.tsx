@@ -31,6 +31,26 @@ interface ProtectedRouteStateProps {
 
 type ProtectedRouteProps = ProtectedRouteStateProps;
 
+function addQueryParamToUrl(url: string, key: string, value: string) {
+    const isAbsoluteUrl = url.startsWith('http') || url.startsWith('https');
+    const fakeBase = !isAbsoluteUrl ? 'http://fake-base.com' : undefined;
+    var modifiedUrl = new URL(url, fakeBase);
+
+    // add/update params
+    if (modifiedUrl.searchParams.has(key)) {
+        modifiedUrl.searchParams.set(key, value);
+    }
+    else {
+        modifiedUrl.searchParams.append(key, value);
+    }
+
+    if (isAbsoluteUrl) {
+        return modifiedUrl.toString();
+    } else {
+        return modifiedUrl.toString().replace(fakeBase!, '');
+    }
+}
+
 const renderRoute = (
     props: any,
     { loggingIn, userInfo }: UserSession,
@@ -50,9 +70,10 @@ const renderRoute = (
     if (!loggedIn) {
         const loginUrl = window.concord?.loginUrl;
         if (loginUrl) {
+            const requested = new URL(window.location.href).hash;
             // delay the redirect to avoid layout issues
             setTimeout(() => {
-                window.location.href = loginUrl + props.location.pathname;
+                window.location.href = addQueryParamToUrl(loginUrl, 'from', '/' + requested)
             }, 1000);
 
             return (
