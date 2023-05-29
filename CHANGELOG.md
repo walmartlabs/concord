@@ -6,6 +6,8 @@
 
 ### Changed
 
+- concord-cli: add no-default-cfg option
+([#763](https://github.com/walmartlabs/concord/pull/763))
 - concord-cli: reduce noise in dependency resolution errors
 ([#757](https://github.com/walmartlabs/concord/pull/757)).
 
