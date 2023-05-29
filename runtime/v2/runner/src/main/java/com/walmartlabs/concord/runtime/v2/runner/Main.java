@@ -86,7 +86,7 @@ public class Main {
     public static void main(String[] args) throws Exception {
         RunnerConfiguration runnerCfg = readRunnerConfiguration(args);
 
-        // create the inject with all dependencies and services available before
+        // create the injector with all dependencies and services available before
         // the actual process' working directory is ready. It allows us to load
         // all dependencies and have them available in "pre-fork" situations
         Injector injector = InjectorFactory.createDefault(runnerCfg);
