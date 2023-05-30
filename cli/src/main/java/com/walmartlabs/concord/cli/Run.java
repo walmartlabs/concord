@@ -122,6 +122,9 @@ public class Run implements Callable<Integer> {
     @Option(names = {"--default-import-version"}, description = "default import version or repo branch")
     String defaultVersion = "main";
 
+    @Option(names = {"--no-default-cfg"}, description = "Do not load default configuration (including standard dependencies)")
+    boolean noDefaultCfg = false;
+
     @Parameters(arity = "0..1", description = "Directory with Concord files or a path to a single Concord YAML file.")
     Path sourceDir = Paths.get(System.getProperty("user.dir"));
 
@@ -154,7 +157,9 @@ public class Run implements Callable<Integer> {
             throw new IllegalArgumentException("Not a directory or single Concord YAML file: " + sourceDir);
         }
 
-        copyDefaultCfg(targetDir, defaultCfg, verbosity.verbose());
+        if (!noDefaultCfg) {
+            copyDefaultCfg(targetDir, defaultCfg, verbosity.verbose());
+        }
 
         DependencyManager dependencyManager = initDependencyManager();
         ImportManager importManager = new ImportManagerFactory(dependencyManager,
@@ -190,8 +195,18 @@ public class Run implements Callable<Integer> {
         Map<String, Object> overlayCfg = ProcessDefinitionUtils.getProfilesOverlayCfg(new ProcessDefinitionV2(processDefinition), profiles);
         List<String> overlayDeps = MapUtils.getList(overlayCfg, Constants.Request.DEPENDENCIES_KEY, Collections.emptyList());
 
+        Collection<String> dependencies;
+
+        try {
+            dependencies = new DependencyResolver(dependencyManager, verbosity.verbose())
+                    .resolveDeps(overlayDeps);
+        } catch (Exception e) {
+            System.err.println(e.getMessage());
+            return -1;
+        }
+
         RunnerConfiguration runnerCfg = RunnerConfiguration.builder()
-                .dependencies(new DependencyResolver(dependencyManager, verbosity.verbose()).resolveDeps(overlayDeps))
+                .dependencies(dependencies)
                 .debug(processDefinition.configuration().debug())
                 .build();
 
