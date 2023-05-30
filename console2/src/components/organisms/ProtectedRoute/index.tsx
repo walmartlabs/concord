@@ -24,26 +24,13 @@ import { Redirect, Route, RouteComponentProps, RouteProps, withRouter } from 're
 import { Dimmer, Loader } from 'semantic-ui-react';
 
 import { UserSession, UserSessionContext } from '../../../session';
+import {setQueryParam} from "../../../utils";
 
 interface ProtectedRouteStateProps {
     component?: React.ComponentType<RouteComponentProps<{}>>;
 }
 
 type ProtectedRouteProps = ProtectedRouteStateProps;
-
-function setQueryParam(url: string, key: string, value: string) {
-    const isAbsoluteUrl = url.startsWith('http') || url.startsWith('https');
-    const fakeBase = !isAbsoluteUrl ? 'http://fake-base.com' : undefined;
-    var modifiedUrl = new URL(url, fakeBase);
-
-    modifiedUrl.searchParams.set(key, value);
-
-    if (isAbsoluteUrl) {
-        return modifiedUrl.toString();
-    } else {
-        return modifiedUrl.toString().replace(fakeBase!, '');
-    }
-}
 
 const renderRoute = (
     props: any,
