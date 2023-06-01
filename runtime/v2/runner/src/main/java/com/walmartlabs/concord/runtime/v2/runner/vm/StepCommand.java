@@ -102,14 +102,18 @@ public abstract class StepCommand<T extends Step> implements Command {
             try {
                 execute(runtime, state, threadId);
             } catch (Exception e) {
-                if (step.getLocation() == null) {
-                    throw e;
-                }
-
-                log.error("{} {}", Location.toErrorPrefix(step.getLocation()), e.getMessage());
+                logStepException(e);
                 throw e;
             }
         });
+    }
+
+    protected void logStepException(Exception e) {
+        if (step.getLocation() == null) {
+            return;
+        }
+
+        log.error("{} {}", Location.toErrorPrefix(step.getLocation()), e.getMessage());
     }
 
     protected abstract void execute(Runtime runtime, State state, ThreadId threadId);
@@ -134,9 +138,14 @@ public abstract class StepCommand<T extends Step> implements Command {
     protected String getSegmentName(Context ctx, T step) {
         if (step instanceof AbstractStep) {
             String rawSegmentName = SegmentedLogger.getSegmentName((AbstractStep<?>) step);
-            String segmentName = ctx.eval(rawSegmentName, String.class);
-            if (segmentName != null) {
-                return segmentName;
+            try {
+                String segmentName = ctx.eval(rawSegmentName, String.class);
+                if (segmentName != null) {
+                    return segmentName;
+                }
+            } catch (Exception e) {
+                logStepException(e);
+                throw e;
             }
         }
 

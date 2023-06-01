@@ -1189,6 +1189,54 @@ public class MainTest {
         assertLog(log, ".*Hello, " + Pattern.quote("{k1=v1, k2=v1}") + ".*");
     }
 
+    @Test
+    public void testUnresolvedVarInStepName() throws Exception {
+        deploy("unresolvedVarInStepName");
+
+        save(ProcessConfiguration.builder()
+                .build());
+
+        try {
+            run();
+            fail("exception expected");
+        } catch (Exception e) {
+        }
+
+        assertLog(lastLog, ".*" + quote("(concord.yml): Error @ line: 4, col: 7. Can't find the specified variable in '${undefined}'") + ".*");
+    }
+
+    @Test
+    public void testUnresolvedVarInLoop() throws Exception {
+        deploy("unresolvedVarInLoop");
+
+        save(ProcessConfiguration.builder()
+                .build());
+
+        try {
+            run();
+            fail("exception expected");
+        } catch (Exception e) {
+        }
+
+        assertLog(lastLog, ".*" + quote("(concord.yml): Error @ line: 6, col: 7. Can't find the specified variable in '${undefined}'") + ".*");
+    }
+
+    @Test
+    public void testUnresolvedVarInRetry() throws Exception {
+        deploy("unresolvedVarInRetry");
+
+        save(ProcessConfiguration.builder()
+                .build());
+
+        try {
+            run();
+            fail("exception expected");
+        } catch (Exception e) {
+        }
+
+        assertLog(lastLog, ".*" + quote("(concord.yml): Error @ line: 6, col: 7. Can't find the specified variable in '${undefined}'") + ".*");
+    }
+
     private void deploy(String resource) throws URISyntaxException, IOException {
         Path src = Paths.get(MainTest.class.getResource(resource).toURI());
         IOUtils.copy(src, workDir);

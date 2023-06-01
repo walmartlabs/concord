@@ -29,6 +29,8 @@ import java.util.Map;
 @Value.Style(jdkOnly = true)
 public interface SimpleOptions extends StepOptions {
 
+    long serialVersionUID = -8269676324702677451L;
+
     static SimpleOptions of(Map<String, Serializable> meta) {
         return ImmutableSimpleOptions.builder()
                 .meta(meta)

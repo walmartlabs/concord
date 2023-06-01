@@ -23,21 +23,17 @@ package com.walmartlabs.concord.runtime.v2.runner.vm;
 import com.walmartlabs.concord.runtime.v2.model.FlowCall;
 import com.walmartlabs.concord.runtime.v2.model.FlowCallOptions;
 import com.walmartlabs.concord.runtime.v2.model.ProcessDefinition;
-import com.walmartlabs.concord.runtime.v2.model.Step;
 import com.walmartlabs.concord.runtime.v2.runner.compiler.CompilerUtils;
-import com.walmartlabs.concord.runtime.v2.runner.context.ContextFactory;
-import com.walmartlabs.concord.runtime.v2.sdk.EvalContext;
-import com.walmartlabs.concord.runtime.v2.sdk.EvalContextFactory;
-import com.walmartlabs.concord.runtime.v2.sdk.ExpressionEvaluator;
+import com.walmartlabs.concord.runtime.v2.runner.logging.LogContext;
 import com.walmartlabs.concord.runtime.v2.sdk.Compiler;
-import com.walmartlabs.concord.runtime.v2.sdk.Context;
-import com.walmartlabs.concord.runtime.v2.sdk.ProcessConfiguration;
+import com.walmartlabs.concord.runtime.v2.sdk.*;
 import com.walmartlabs.concord.svm.Runtime;
 import com.walmartlabs.concord.svm.*;
 
 import java.io.Serializable;
 import java.util.Map;
 import java.util.Objects;
+import java.util.UUID;
 
 public class FlowCallCommand extends StepCommand<FlowCall> {
 
@@ -95,17 +91,19 @@ public class FlowCallCommand extends StepCommand<FlowCall> {
         state.pushFrame(threadId, innerFrame);
     }
 
-    private static class EvalVariablesCommand implements Command {
+    private static class EvalVariablesCommand extends StepCommand<FlowCall> {
 
         // for backward compatibility (java8 concord 1.92.0 version)
         private static final long serialVersionUID = -7294220776008029488L;
 
-        private final Step step;
+        // TODO: backward compatibility
+        private final FlowCall step;
 
         private final Map<String, Serializable> variables;
         private final Frame variablesFrame;
 
         private EvalVariablesCommand(FlowCall step, Map<String, Serializable> variables, Frame variablesFrame) {
+            super(step);
             this.step = step;
             this.variables = variables;
             this.variablesFrame = variablesFrame;
@@ -113,18 +111,29 @@ public class FlowCallCommand extends StepCommand<FlowCall> {
 
         @Override
         @SuppressWarnings({"unchecked", "rawtypes"})
-        public void eval(Runtime runtime, State state, ThreadId threadId) {
+        protected void execute(Runtime runtime, State state, ThreadId threadId) {
             Frame frame = state.peekFrame(threadId);
             frame.pop();
 
-            ContextFactory contextFactory = runtime.getService(ContextFactory.class);
-            Context ctx = contextFactory.create(runtime, state, threadId, step);
+            Context ctx = runtime.getService(Context.class);
 
             EvalContextFactory ecf = runtime.getService(EvalContextFactory.class);
             ExpressionEvaluator expressionEvaluator = runtime.getService(ExpressionEvaluator.class);
             Map<String, Object> vars = (Map)variablesFrame.getLocals();
             Map<String, Serializable> out = expressionEvaluator.evalAsMap(ecf.global(ctx, vars), variables);
             out.forEach((k, v) -> ctx.variables().set(k, v));
+        }
+
+        @Override
+        protected LogContext getLogContext(Runtime runtime, Context ctx, UUID correlationId) {
+            // TODO: return original FlowCall LogContext...
+            return null;
+        }
+
+        // TODO: backward compatibility
+        @Override
+        public FlowCall getStep() {
+            return step;
         }
     }
 }
