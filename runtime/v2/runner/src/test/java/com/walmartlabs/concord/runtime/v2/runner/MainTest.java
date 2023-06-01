@@ -1663,6 +1663,35 @@ public class MainTest {
         }
     }
 
+    @Named("sensitiveTask")
+    public static class TaskWithSensitiveData implements Task {
+
+        @SensitiveData
+        public String getSensitive(String str) {
+            return str;
+        }
+
+        @SensitiveData
+        public Map<String, String> getSensitiveMap(String str) {
+            Map<String, String> result = new LinkedHashMap<>();
+            result.put("nonSecretButMasked", "some value");
+            result.put("secret", str);
+            return result;
+        }
+
+        @SensitiveData(keys = {"secret"})
+        public Map<String, String> getSensitiveMapStrict(String str) {
+            Map<String, String> result = new LinkedHashMap<>();
+            result.put("nonSecret", "non secret value");
+            result.put("secret", str);
+            return result;
+        }
+
+        public String getPlain(String str) {
+            return str;
+        }
+    }
+
     @Named("reentrantTask")
     @SuppressWarnings("unused")
     static class ReentrantTaskExample implements ReentrantTask {
