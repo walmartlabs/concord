@@ -53,6 +53,11 @@ public class RepositoryDao extends AbstractDao {
         super.tx(t);
     }
 
+    @Override
+    protected <T> T txResult(TxResult<T> t) {
+        return super.txResult(t);
+    }
+
     public UUID getId(UUID projectId, String repoName) {
         return dsl().select(REPOSITORIES.REPO_ID)
                 .from(REPOSITORIES)

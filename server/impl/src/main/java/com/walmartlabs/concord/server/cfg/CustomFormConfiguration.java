@@ -25,17 +25,13 @@ import com.walmartlabs.ollie.config.Config;
 
 import javax.annotation.Nullable;
 import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
-@Named
-@Singleton
 public class CustomFormConfiguration {
 
-    private Path baseDir;
+    private final Path baseDir;
 
     @Inject
     public CustomFormConfiguration(@Nullable @Config("forms.baseDir") String baseDir) throws IOException {

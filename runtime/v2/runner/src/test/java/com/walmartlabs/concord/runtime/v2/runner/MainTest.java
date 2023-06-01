@@ -4,7 +4,7 @@ package com.walmartlabs.concord.runtime.v2.runner;
  * *****
  * Concord
  * -----
- * Copyright (C) 2017 - 2019 Walmart Inc.
+ * Copyright (C) 2017 - 2023 Walmart Inc.
  * -----
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -134,7 +134,13 @@ public class MainTest {
                 taskCallListeners.addBinding().to(TaskCallPolicyChecker.class);
                 taskCallListeners.addBinding().to(TaskResultListener.class);
 
-                Multibinder.newSetBinder(binder(), ExecutionListener.class);
+                Multibinder<ExecutionListener> executionListeners = Multibinder.newSetBinder(binder(), ExecutionListener.class);
+                executionListeners.addBinding().toInstance(new ExecutionListener(){
+                    @Override
+                    public void beforeProcessStart() {
+                        SensitiveDataHolder.getInstance().get().clear();
+                    }
+                });
             }
         };
 
@@ -432,6 +438,45 @@ public class MainTest {
 
         byte[] log = run();
         assertLog(log, ".*error occurred: java.lang.RuntimeException: Error: this is an error.*");
+    }
+
+    @Test
+    public void testScriptVersion() throws Exception {
+        deploy("scriptEsVersion");
+
+        save(ProcessConfiguration.builder().build());
+
+        byte[] log = run();
+        assertLog(log, ".*\"charCountProduct\":9.*");
+    }
+
+    @Test
+    public void testScriptEsVersionInvalid() throws Exception {
+        deploy("scriptEsVersionInvalid");
+
+        save(ProcessConfiguration.builder()
+                .putArguments("kv", Collections.singletonMap("k", "v"))
+                .build());
+
+        try {
+            run();
+        } catch (Exception e) {
+            assertLog(e.toString().getBytes(), ".*unsupported.*");
+            return;
+        }
+        throw new Exception("invalid esVersion should have thrown");
+    }
+
+
+    @Test
+    public void testScriptUnboundedInputMapOk() throws Exception {
+        deploy("scriptUnboundedInputMapOk");
+
+        save(ProcessConfiguration.builder()
+                .build());
+
+        byte[] log = run();
+        assertLog(log, ".*ok.*");
     }
 
     @Test
@@ -1190,6 +1235,65 @@ public class MainTest {
     }
 
     @Test
+    public void loopItemSerialization() throws Exception {
+        deploy("loopSerializationError");
+
+        save(ProcessConfiguration.builder()
+                .build());
+
+        byte[] log = run();
+        assertLog(log, ".*name=one.*");
+    }
+
+    @Test
+    public void testThrowExpression() throws Exception {
+        deploy("throwExpression");
+
+        save(ProcessConfiguration.builder()
+                .build());
+
+        try {
+            run();
+            fail("exception expected");
+        } catch (UserDefinedException e) {
+            assertEquals("42 not found", e.getMessage());
+        }
+    }
+
+    @Test
+    public void testSensitiveData() throws Exception {
+        deploy("sensitiveData");
+
+        save(ProcessConfiguration.builder()
+                .build());
+
+        byte[] log = run();
+        assertLog(log, ".*" + Pattern.quote("sensitive: ******") + ".*");
+        assertLog(log, ".*" + Pattern.quote("log value: ******") + ".*");
+        assertLog(log, ".*" + Pattern.quote("hack: B O O M") + ".*");
+
+        assertLog(log, ".*" + Pattern.quote("map: {nonSecretButMasked=******, secret=******}") + ".*");
+        assertLog(log, ".*" + Pattern.quote("map: {nonSecret=non secret value, secret=******}") + ".*");
+
+        assertLog(log, ".*" + Pattern.quote("plain: plain") + ".*");
+
+        log = resume("ev1", ProcessConfiguration.builder().build());
+        assertLog(log, ".*" + Pattern.quote("mySecret after suspend: ******") + ".*");
+    }
+
+    @Test
+    public void testIncVariable() throws Exception {
+        deploy("incVariable");
+
+        save(ProcessConfiguration.builder()
+                .putArguments("counter", 0)
+                .build());
+
+        byte[] log = run();
+        assertLog(log, ".*counter: 1.*");
+    }
+
+    @Test
     public void testUnresolvedVarInStepName() throws Exception {
         deploy("unresolvedVarInStepName");
 
@@ -1236,6 +1340,7 @@ public class MainTest {
 
         assertLog(lastLog, ".*" + quote("(concord.yml): Error @ line: 6, col: 7. Can't find the specified variable in '${undefined}'") + ".*");
     }
+
 
     private void deploy(String resource) throws URISyntaxException, IOException {
         Path src = Paths.get(MainTest.class.getResource(resource).toURI());

@@ -4,7 +4,7 @@ package com.walmartlabs.concord.server.org.project;
  * *****
  * Concord
  * -----
- * Copyright (C) 2017 - 2018 Walmart Inc.
+ * Copyright (C) 2017 - 2023 Walmart Inc.
  * -----
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,6 +20,7 @@ package com.walmartlabs.concord.server.org.project;
  * =====
  */
 
+import com.walmartlabs.concord.process.loader.model.ProcessDefinition;
 import com.walmartlabs.concord.server.OperationResult;
 import com.walmartlabs.concord.server.audit.AuditAction;
 import com.walmartlabs.concord.server.audit.AuditLog;
@@ -46,10 +47,7 @@ import org.sonatype.siesta.ValidationErrorsException;
 import javax.inject.Inject;
 import javax.inject.Named;
 import javax.ws.rs.core.Response;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 
 import static com.walmartlabs.concord.server.jooq.tables.Projects.PROJECTS;
 
@@ -121,10 +119,6 @@ public class ProjectManager {
      * and the visibility values.
      */
     public ProjectOperationResult createOrUpdate(String orgName, ProjectEntry entry) {
-        return projectDao.txResult(tx -> createOrUpdate(tx, orgName, entry));
-    }
-
-    public ProjectOperationResult createOrUpdate(DSLContext tx, String orgName, ProjectEntry entry) {
         entry = normalize(entry);
 
         OrganizationEntry org = orgManager.assertAccess(orgName, true);
@@ -132,17 +126,17 @@ public class ProjectManager {
         UUID projectId = entry.getId();
         if (projectId == null) {
             assertName(entry);
-            projectId = projectDao.getId(tx, org.getId(), entry.getName());
+            projectId = projectDao.getId(org.getId(), entry.getName());
         }
 
         if (projectId == null) {
-            projectId = insert(tx, org.getId(), org.getName(), entry);
+            projectId = insert(org.getId(), org.getName(), entry);
             return ProjectOperationResult.builder()
                     .result(OperationResult.CREATED)
                     .projectId(projectId)
                     .build();
         } else {
-            update(tx, projectId, entry);
+            update(projectId, entry);
             return ProjectOperationResult.builder()
                     .result(OperationResult.UPDATED)
                     .projectId(projectId)
@@ -150,49 +144,23 @@ public class ProjectManager {
         }
     }
 
-    public ProjectOperationResult createOrGet(UUID orgId, ProjectEntry entry) {
-        return projectDao.txResult(tx -> createOrGet(tx, orgId, entry));
-    }
-
-    public ProjectOperationResult createOrGet(DSLContext tx, UUID orgId, ProjectEntry entry) {
-        entry = normalize(entry);
-
-        OrganizationEntry org = orgManager.assertAccess(tx, orgId, true);
-
-        UUID projectId = projectDao.getId(tx, org.getId(), entry.getName());
-        if (projectId == null) {
-            projectId = insert(tx, org.getId(), org.getName(), entry);
-            return ProjectOperationResult.builder()
-                    .result(OperationResult.CREATED)
-                    .projectId(projectId)
-                    .build();
-        }
-
-        return ProjectOperationResult.builder()
-                .result(OperationResult.ALREADY_EXISTS)
-                .projectId(projectId)
-                .build();
-    }
-
-    private UUID insert(DSLContext tx, UUID orgId, String orgName, ProjectEntry entry) {
+    private UUID insert(UUID orgId, String orgName, ProjectEntry entry) {
         UserEntry owner = getOwner(entry.getOwner(), UserPrincipal.assertCurrent().getUser());
 
         policyManager.checkEntity(orgId, null, EntityType.PROJECT, EntityAction.CREATE, owner, PolicyUtils.projectToMap(orgId, orgName, entry));
 
         byte[] encryptedKey = encryptedValueManager.createEncryptedSecretKey();
 
-        RawPayloadMode rawPayloadMode = entry.getRawPayloadMode();
-        if (rawPayloadMode == null && entry.getAcceptsRawPayload() != null && entry.getAcceptsRawPayload()) {
+        RawPayloadMode rawPayloadMode;
+        if (entry.getRawPayloadMode() == null && entry.getAcceptsRawPayload() != null && entry.getAcceptsRawPayload()) {
             rawPayloadMode = RawPayloadMode.ORG_MEMBERS;
+        } else {
+            rawPayloadMode = entry.getRawPayloadMode();
         }
 
-        UUID id = projectDao.insert(tx, orgId, entry.getName(), entry.getDescription(), owner.getId(), entry.getCfg(),
-                entry.getVisibility(), rawPayloadMode, encryptedKey, entry.getMeta(), entry.getOutVariablesMode());
+        Map<String, ProcessDefinition> processDefinitions = loadProcessDefinitions(orgId, null, entry);
 
-        Map<String, RepositoryEntry> repos = entry.getRepositories();
-        if (repos != null) {
-            repos.forEach((k, v) -> projectRepositoryManager.insert(tx, orgId, orgName, id, entry.getName(), v, false));
-        }
+        UUID id = projectDao.txResult(tx -> insert(tx, orgId, owner, entry, rawPayloadMode, encryptedKey, processDefinitions));
 
         Map<String, Object> changes = DiffUtils.compare(null, entry);
         addAuditLog(
@@ -206,7 +174,31 @@ public class ProjectManager {
         return id;
     }
 
-    private void update(DSLContext tx, UUID projectId, ProjectEntry entry) {
+    private UUID insert(DSLContext tx, UUID orgId, UserEntry owner, ProjectEntry entry, RawPayloadMode rawPayloadMode, byte[] encryptedKey, Map<String, ProcessDefinition> processDefinitions) {
+        UUID id = projectDao.insert(tx, orgId, entry.getName(), entry.getDescription(), owner.getId(), entry.getCfg(),
+                entry.getVisibility(), rawPayloadMode, encryptedKey, entry.getMeta(), entry.getOutVariablesMode());
+
+        Map<String, RepositoryEntry> repos = entry.getRepositories();
+        if (repos != null) {
+            projectRepositoryManager.replace(tx, orgId, id, repos.values(), processDefinitions);
+        }
+        return id;
+    }
+
+    private Map<String, ProcessDefinition> loadProcessDefinitions(UUID orgId, UUID projectId, ProjectEntry projectEntry) {
+        if (projectEntry.getRepositories() == null || projectEntry.getRepositories().isEmpty()) {
+            return Collections.emptyMap();
+        }
+
+        Map<String, ProcessDefinition> result = new HashMap<>();
+        for (Map.Entry<String, RepositoryEntry> e : projectEntry.getRepositories().entrySet()) {
+            ProcessDefinition processDefinition = projectRepositoryManager.processDefinition(orgId, projectId, e.getValue());
+            result.put(e.getKey(), processDefinition);
+        }
+        return result;
+    }
+
+    private void update(UUID projectId, ProjectEntry entry) {
         ProjectEntry e = projectDao.get(projectId);
         if (e == null) {
             throw new ValidationErrorsException("Project not found: " + projectId);
@@ -236,26 +228,16 @@ public class ProjectManager {
 
         UUID orgIdUpdate = organizationEntry != null ? organizationEntry.getId() : orgId;
 
-        RawPayloadMode rawPayloadMode = entry.getRawPayloadMode();
-        if (rawPayloadMode == null && entry.getAcceptsRawPayload() != null && entry.getAcceptsRawPayload()) {
+        RawPayloadMode rawPayloadMode;
+        if (entry.getRawPayloadMode() == null && entry.getAcceptsRawPayload() != null && entry.getAcceptsRawPayload()) {
             rawPayloadMode = RawPayloadMode.ORG_MEMBERS;
+        } else {
+            rawPayloadMode = entry.getRawPayloadMode();
         }
 
-        if (!orgIdUpdate.equals(orgId)) {
-            secretDao.updateProjectScopeByProjectId(tx, orgId, projectId, null);
-            repositoryDao.clearSecretMappingByProjectId(tx, projectId);
-        }
+        Map<String, ProcessDefinition> processDefinitions = loadProcessDefinitions(e.getOrgId(), projectId, entry);
 
-        projectDao.update(tx, orgIdUpdate, projectId, entry.getVisibility(), entry.getName(),
-                entry.getDescription(), entry.getCfg(), rawPayloadMode, updatedOwnerId, entry.getMeta(), entry.getOutVariablesMode());
-
-        Map<String, RepositoryEntry> repos = entry.getRepositories();
-        if (repos != null) {
-            repositoryDao.deleteAll(tx, projectId);
-            repos.forEach((k, v) -> projectRepositoryManager.insert(tx, orgId, prevEntry.getOrgName(), projectId, prevEntry.getName(), v, false));
-        }
-
-        ProjectEntry newEntry = projectDao.get(tx, projectId);
+        ProjectEntry newEntry = projectDao.txResult(tx -> update(tx, orgIdUpdate, orgId, projectId, entry, updatedOwnerId, rawPayloadMode, processDefinitions));
 
         Map<String, Object> changes = DiffUtils.compare(prevEntry, newEntry);
         addAuditLog(
@@ -265,6 +247,23 @@ public class ProjectManager {
                 prevEntry.getId(),
                 prevEntry.getName(),
                 changes);
+    }
+
+    private ProjectEntry update(DSLContext tx, UUID orgIdUpdate, UUID orgIdPrev, UUID projectId, ProjectEntry entry, UUID updatedOwnerId, RawPayloadMode rawPayloadMode, Map<String, ProcessDefinition> processDefinitions) {
+        if (!orgIdUpdate.equals(orgIdPrev)) {
+            secretDao.updateProjectScopeByProjectId(tx, orgIdPrev, projectId, null);
+            repositoryDao.clearSecretMappingByProjectId(tx, projectId);
+        }
+
+        projectDao.update(tx, orgIdUpdate, projectId, entry.getVisibility(), entry.getName(),
+                entry.getDescription(), entry.getCfg(), rawPayloadMode, updatedOwnerId, entry.getMeta(), entry.getOutVariablesMode());
+
+        Map<String, RepositoryEntry> repos = entry.getRepositories();
+        if (repos != null) {
+            projectRepositoryManager.replace(tx, orgIdUpdate, projectId, entry.getRepositories().values(), processDefinitions);
+        }
+
+        return projectDao.get(tx, projectId);
     }
 
     public void delete(UUID projectId) {
@@ -322,20 +321,20 @@ public class ProjectManager {
 
     private static ProjectEntry normalize(ProjectEntry e) {
         Map<String, RepositoryEntry> repos = e.getRepositories();
-        if (repos != null) {
-            Map<String, RepositoryEntry> m = new HashMap<>(repos);
-
-            repos.forEach((k, v) -> {
-                if (v.getName() == null) {
-                    RepositoryEntry r = new RepositoryEntry(k, v);
-                    m.put(k, r);
-                }
-            });
-
-            e = ProjectEntry.replace(e, m);
+        if (repos == null) {
+            return e;
         }
 
-        return e;
+        Map<String, RepositoryEntry> m = new HashMap<>(repos);
+
+        repos.forEach((k, v) -> {
+            if (v.getName() == null) {
+                RepositoryEntry r = new RepositoryEntry(k, v);
+                m.put(k, r);
+            }
+        });
+
+        return ProjectEntry.replace(e, m);
     }
 
     private static void assertName(ProjectEntry p) {

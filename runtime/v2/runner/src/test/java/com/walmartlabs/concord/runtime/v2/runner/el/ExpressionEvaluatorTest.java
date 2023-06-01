@@ -73,7 +73,7 @@ public class ExpressionEvaluatorTest {
             ee.eval(ctx, "Hello ${name}", String.class);
             fail("exception expected");
         } catch (RuntimeException e) {
-            assertThat(e.getMessage(), containsString("variable in 'Hello ${name}'"));
+            assertThat(e.getMessage(), containsString("variable 'name' used in 'Hello ${name}'"));
         }
 
         // undef as null
@@ -155,7 +155,7 @@ public class ExpressionEvaluatorTest {
             ee.evalAsMap(global(vars), input);
             fail("exception expected");
         } catch (RuntimeException e) {
-            assertThat(e.getMessage(), containsString("variable in '${y}'"));
+            assertThat(e.getMessage(), containsString("variable 'y' used in '${y}'"));
         }
 
         // undef -> x = null, z = null, y ...y3 = null
@@ -183,7 +183,7 @@ public class ExpressionEvaluatorTest {
             ee.evalAsMap(global(vars), input);
             fail("exception expected");
         } catch (RuntimeException e) {
-            assertThat(e.getMessage(), containsString("variable in '${y}'"));
+            assertThat(e.getMessage(), containsString("variable 'y' used in '${y}'"));
         }
 
         // scope
@@ -192,7 +192,7 @@ public class ExpressionEvaluatorTest {
             ee.evalAsMap(scope(vars), input);
             fail("exception expected");
         } catch (RuntimeException e) {
-            assertThat(e.getMessage(), containsString("Key 'x' already in evaluation"));
+            assertThat(e.getMessage(), containsString("variable 'x' used in '${x}'"));
         }
     }
 
@@ -229,7 +229,7 @@ public class ExpressionEvaluatorTest {
             ee.evalAsMap(global(vars), input);
             fail("exception expected");
         } catch (Exception e) {
-            assertThat(e.getMessage(), containsString("variable in '${y}'"));
+            assertThat(e.getMessage(), containsString("variable 'y' used in '${y}'"));
         }
 
         verify(task, times(0)).foo(anyString());
@@ -298,7 +298,7 @@ public class ExpressionEvaluatorTest {
         try {
             ee.evalAsMap(scope(vars), input);
         } catch (RuntimeException e) {
-            assertThat(e.getMessage(), containsString("Can't find the specified variable in '${y1}'"));
+            assertThat(e.getMessage(), containsString("variable 'y1' used in '${y1}'"));
         }
     }
 

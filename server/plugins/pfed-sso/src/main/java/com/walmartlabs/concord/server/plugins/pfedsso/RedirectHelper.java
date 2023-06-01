@@ -30,8 +30,8 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.net.URL;
 
-@Named
 public class RedirectHelper {
+
     private static final Logger log = LoggerFactory.getLogger(RedirectHelper.class);
 
     private final String redirectHost;

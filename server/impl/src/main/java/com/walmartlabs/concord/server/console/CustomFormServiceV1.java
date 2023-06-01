@@ -49,8 +49,6 @@ import org.slf4j.LoggerFactory;
 import org.sonatype.siesta.Validate;
 
 import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.POST;
 import javax.ws.rs.PathParam;
@@ -68,8 +66,6 @@ import java.util.stream.Collectors;
 
 import static com.walmartlabs.concord.server.process.state.ProcessStateManager.copyTo;
 
-@Named
-@Singleton
 public class CustomFormServiceV1 {
 
     private static final Logger log = LoggerFactory.getLogger(CustomFormServiceV1.class);
@@ -80,7 +76,7 @@ public class CustomFormServiceV1 {
     private static final String FORMS_PATH_TEMPLATE = FORMS_PATH_PREFIX + "%s/%s/" + FORM_DIR_NAME + "/";
     private static final String DATA_FILE_TEMPLATE = "data = %s;";
 
-    private static final String NON_BRANDED_FORM_URL_TEMPLATE = "/#/process/%s/form/%s?fullScreen=true&wizard=true";
+    private static final String NON_BRANDED_FORM_URL_TEMPLATE = "/#/process/%s/form/%s/wizard?fullScreen=true";
     private static final String FORM_WIZARD_CONTINUE_URL_TEMPLATE = "/api/service/custom_form/%s/%s/continue";
 
     private static final long STATUS_REFRESH_DELAY = 250;

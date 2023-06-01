@@ -71,6 +71,10 @@ public class ConcordTaskV2 implements ReentrantTask {
     }
 
     public void suspendForCompletion(List<String> ids) throws Exception {
+        if (ids.isEmpty()) {
+            return;
+        }
+
         String eventName = delegate().suspendForCompletion(ids.stream()
                 .map(UUID::fromString)
                 .collect(Collectors.toList()));

@@ -33,12 +33,8 @@ import com.walmartlabs.concord.server.user.UserManager;
 import org.sonatype.siesta.ValidationErrorsException;
 
 import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
 import java.util.*;
 
-@Named
-@Singleton
 public class PolicyManager {
 
     private final PolicyCache policyCache;

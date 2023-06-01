@@ -1,5 +1,134 @@
 # Change log
 
+## [1.102.0] - 2023-05-22
+
+### Added
+
+- concord-server: allow any GH event attribute in
+`exclusive.groupBy`
+([#753](https://github.com/walmartlabs/concord/pull/753));
+- concord-server, concord-policy: ability to restrict
+`runtime` type for project processes created after set date
+(e.g. to forbid usage of older runtimes in new projects)
+([#745](https://github.com/walmartlabs/concord/pull/745)).
+
+### Changed
+
+- concord-server, concord-console2: handle empty process
+lists in wait condition
+([#756](https://github.com/walmartlabs/concord/pull/756));
+- concord-task: ignore suspend if no processes provided
+([#755](https://github.com/walmartlabs/concord/pull/755));
+- concord-server: refresh repository triggers synchronously
+([#734](https://github.com/walmartlabs/concord/pull/734));
+- runtime-v2, cli: hide parallel block stacktraces for
+UserDefinedExceptions
+([#751](https://github.com/walmartlabs/concord/pull/751));
+- runtime-v2: hide stacktraces in propertyNotFound exceptions,
+improve error messages
+([#752](https://github.com/walmartlabs/concord/pull/752));
+- runtime-v2: allow expressions in `parallelism` values
+([#746](https://github.com/walmartlabs/concord/pull/746));
+- server: `created_at` DB field to projects table
+([#744](https://github.com/walmartlabs/concord/pull/744));
+- runtime-v2: allow increment variables in expressions
+([#740](https://github.com/walmartlabs/concord/pull/740)).
+
+## [1.101.0] - 2023-03-29
+
+### Added
+
+- server: update process policy on process resume
+([#731](https://github.com/walmartlabs/concord/pull/731)).
+
+### Changed
+
+- concord-server: allow auth plugins handle authorization
+token ([#737](https://github.com/walmartlabs/concord/pull/737));
+- concord-server: remove more Named usage
+([#729](https://github.com/walmartlabs/concord/pull/729))
+- concord-server: truncate `createdAt` nanoseconds when
+creating new process keys
+([#736](https://github.com/walmartlabs/concord/pull/736);
+- concord-console: fix rendering of multiple string values in 
+forms
+([#735](https://github.com/walmartlabs/concord/pull/735)).
+
+## [1.100.0] - 2023-03-09
+
+### Added
+
+- runtime-v2: mask sensitive data in logs
+([#719](https://github.com/walmartlabs/concord/pull/719));
+- cli: process/project info from variables
+([#727](https://github.com/walmartlabs/concord/pull/727));
+- runtime-v2: support for "session state" process attachments
+([#722](https://github.com/walmartlabs/concord/pull/722)).
+
+### Changed
+
+- concord-console: fix v2 log segment spinner after interrupted process
+([#728](https://github.com/walmartlabs/concord/pull/728));
+- cli: log errors from dependency resolver only in verbose mode
+([#723](https://github.com/walmartlabs/concord/pull/723));
+- cli: log flow step name (if provided)
+([#724](https://github.com/walmartlabs/concord/pull/724));
+- agent: log artifact resolve errors only in debug mode
+([#725](https://github.com/walmartlabs/concord/pull/725));
+- runtime-v2: predictable order of process arguments 
+([#721](https://github.com/walmartlabs/concord/pull/721));
+- concord-server: remove more @Named usage
+([#650](https://github.com/walmartlabs/concord/pull/650)).
+
+
+## [1.99.0] - 2023-02-24
+
+### Added
+
+- concord-server: implement removal of disabled user
+accounts. Old accounts can now be automatically removed
+(the feature is disabled by default)
+([#716](https://github.com/walmartlabs/concord/pull/716));
+- runtime-v2: allow custom JS lang levels in scripts
+([#709](https://github.com/walmartlabs/concord/pull/709));
+- runtime-v2: function for throw exception
+([#712](https://github.com/walmartlabs/concord/pull/712));
+- concord-server: added 'last updated at' field for kv
+records
+([#701](https://github.com/walmartlabs/concord/pull/701));
+- policy-engine, server: initial support for the KV store
+policies
+([#702](https://github.com/walmartlabs/concord/pull/702));
+- concord-server: pass external trigger event ID via
+process arguments
+([#715](https://github.com/walmartlabs/concord/pull/715)).
+
+### Changed
+
+- server: use clean directory for each refresh listener
+([#707](https://github.com/walmartlabs/concord/pull/707));
+- concord-server: refactor ConcordLdapContextFactory
+implementation
+([#695](https://github.com/walmartlabs/concord/pull/695));
+- runtime-v2: improve serialization of `loop` items
+([#714](https://github.com/walmartlabs/concord/pull/714));
+- concord-agent, queue-client: make more delays configurable
+([#705](https://github.com/walmartlabs/concord/pull/705));
+- console2: single vertical scroll for process log page
+([#696](https://github.com/walmartlabs/concord/pull/696));
+- console2: allow expand all log segments
+([#698](https://github.com/walmartlabs/concord/pull/698));
+- dependency-manager: log exception
+([#700](https://github.com/walmartlabs/concord/pull/700));
+- cli: check that state is serializable in checkpoint service
+([#703](https://github.com/walmartlabs/concord/pull/703));
+- runtime-v2: allow expression for form call values and runAs
+([#704](https://github.com/walmartlabs/concord/pull/704));
+- runtime-v2: fix argument passing in forks
+([#708](https://github.com/walmartlabs/concord/pull/708)).
+
+
+
 ## [1.98.1] - 2022-12-22
 
 ### Changed

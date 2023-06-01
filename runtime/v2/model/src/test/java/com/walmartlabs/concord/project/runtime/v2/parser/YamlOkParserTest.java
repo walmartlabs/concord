@@ -570,6 +570,13 @@ public class YamlOkParserTest extends AbstractParserTest {
         assertTrue(p1.configuration().debug());
     }
 
+    @Test
+    public void testArgsOrder() throws Exception {
+        ProcessDefinition pd = load("args-order.concord.yml");
+        Map.Entry<String, Object> e = pd.configuration().arguments().entrySet().iterator().next();
+        assertEquals("a", e.getKey());
+    }
+
     private static void assertMeta(StepOptions o) {
         assertMeta(null, o);
     }

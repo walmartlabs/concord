@@ -365,6 +365,10 @@ public class ConcordTaskCommon {
     }
 
     private TaskResult suspend(ResumePayload payload, boolean resumeFromSameStep) throws ApiException {
+        if (payload.jobs().isEmpty()) {
+            throw new RuntimeException("Jobs is empty");
+        }
+
         String eventName = UUID.randomUUID().toString();
 
         Map<String, Object> condition = new HashMap<>();

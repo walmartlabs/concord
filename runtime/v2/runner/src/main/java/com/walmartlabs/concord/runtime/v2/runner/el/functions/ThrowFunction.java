@@ -1,4 +1,4 @@
-package com.walmartlabs.concord.server.boot;
+package com.walmartlabs.concord.runtime.v2.runner.el.functions;
 
 /*-
  * *****
@@ -20,27 +20,21 @@ package com.walmartlabs.concord.server.boot;
  * =====
  */
 
-import com.google.inject.AbstractModule;
-import com.walmartlabs.concord.db.DatabaseModule;
-import com.walmartlabs.concord.server.boot.validation.ValidationModule;
-import com.walmartlabs.concord.server.metrics.MetricModule;
-import org.sonatype.siesta.server.resteasy.ResteasyModule;
+import com.walmartlabs.concord.runtime.v2.sdk.UserDefinedException;
 
-import javax.inject.Named;
+import java.lang.reflect.Method;
 
-@Named
-public class ConcordModule extends AbstractModule {
+public final class ThrowFunction {
 
-    @Override
-    protected void configure() {
-        install(new ConfigurationModule());
+    public static Method getMethod() {
+        try {
+            return ThrowFunction.class.getMethod("throwError", String.class);
+        } catch (Exception e) {
+            throw new RuntimeException("Method not found");
+        }
+    }
 
-        install(new MetricModule());
-
-        install(new DatabaseModule());
-
-        install(new ResteasyModule());
-
-        install(new ValidationModule());
+    public static Object throwError(String message) {
+        throw new UserDefinedException(message);
     }
 }

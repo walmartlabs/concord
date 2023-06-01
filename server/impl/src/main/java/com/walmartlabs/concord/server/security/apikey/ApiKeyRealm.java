@@ -37,10 +37,8 @@ import org.apache.shiro.realm.AuthorizingRealm;
 import org.apache.shiro.subject.PrincipalCollection;
 
 import javax.inject.Inject;
-import javax.inject.Named;
 import java.util.Arrays;
 
-@Named
 public class ApiKeyRealm extends AuthorizingRealm {
 
     private static final String REALM_NAME = "apikey";
