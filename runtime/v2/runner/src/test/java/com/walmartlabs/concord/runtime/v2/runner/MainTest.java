@@ -1306,7 +1306,7 @@ public class MainTest {
         } catch (Exception e) {
         }
 
-        assertLog(lastLog, ".*" + quote("(concord.yml): Error @ line: 4, col: 7. Can't find the specified variable in '${undefined}'") + ".*");
+        assertLog(lastLog, ".*" + quote("(concord.yml): Error @ line: 4, col: 7. Can't find a variable 'undefined' used in '${undefined}'") + ".*");
     }
 
     @Test
@@ -1322,7 +1322,7 @@ public class MainTest {
         } catch (Exception e) {
         }
 
-        assertLog(lastLog, ".*" + quote("(concord.yml): Error @ line: 6, col: 7. Can't find the specified variable in '${undefined}'") + ".*");
+        assertLog(lastLog, ".*" + quote("(concord.yml): Error @ line: 6, col: 7. Can't find a variable 'undefined' used in '${undefined}'") + ".*");
     }
 
     @Test
@@ -1338,7 +1338,7 @@ public class MainTest {
         } catch (Exception e) {
         }
 
-        assertLog(lastLog, ".*" + quote("(concord.yml): Error @ line: 6, col: 7. Can't find the specified variable in '${undefined}'") + ".*");
+        assertLog(lastLog, ".*" + quote("(concord.yml): Error @ line: 6, col: 7. Can't find a variable 'undefined' used in '${undefined}'") + ".*");
     }
 
 
