@@ -50,7 +50,6 @@ import com.walmartlabs.concord.runtime.v2.runner.tasks.TaskCallPolicyChecker;
 import com.walmartlabs.concord.runtime.v2.runner.tasks.TaskResultListener;
 import com.walmartlabs.concord.runtime.v2.runner.tasks.TaskV2Provider;
 import com.walmartlabs.concord.runtime.v2.runner.vm.BlockCommand;
-import com.walmartlabs.concord.runtime.v2.runner.vm.ForkCommand;
 import com.walmartlabs.concord.runtime.v2.runner.vm.ParallelCommand;
 import com.walmartlabs.concord.runtime.v2.sdk.*;
 import com.walmartlabs.concord.sdk.Constants;
@@ -1821,7 +1820,7 @@ public class MainTest {
 
     @Named("injectorTestTask")
     static class InjectorTestTask implements Task {
-f
+
         private final Map<String, InjectorTestBean> testBeans;
 
         @Inject
