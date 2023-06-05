@@ -18,6 +18,7 @@ flows:
         result: "${item * 10}"
       out:
         x: "${result.ok ? result.result : 'oops'}"
+        y: "boom"
       withItems: [1, 2, 3]
 
     - log: "expression out x=${x}"

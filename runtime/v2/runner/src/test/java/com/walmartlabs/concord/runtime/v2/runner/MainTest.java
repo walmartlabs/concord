@@ -31,6 +31,7 @@ import com.walmartlabs.concord.common.ConfigurationUtils;
 import com.walmartlabs.concord.common.IOUtils;
 import com.walmartlabs.concord.forms.Form;
 import com.walmartlabs.concord.runtime.common.FormService;
+import com.walmartlabs.concord.runtime.common.SerializationUtils;
 import com.walmartlabs.concord.runtime.common.StateManager;
 import com.walmartlabs.concord.runtime.common.cfg.ApiConfiguration;
 import com.walmartlabs.concord.runtime.common.cfg.ImmutableRunnerConfiguration;
@@ -48,13 +49,18 @@ import com.walmartlabs.concord.runtime.v2.runner.tasks.TaskCallListener;
 import com.walmartlabs.concord.runtime.v2.runner.tasks.TaskCallPolicyChecker;
 import com.walmartlabs.concord.runtime.v2.runner.tasks.TaskResultListener;
 import com.walmartlabs.concord.runtime.v2.runner.tasks.TaskV2Provider;
+import com.walmartlabs.concord.runtime.v2.runner.vm.BlockCommand;
+import com.walmartlabs.concord.runtime.v2.runner.vm.ForkCommand;
+import com.walmartlabs.concord.runtime.v2.runner.vm.ParallelCommand;
 import com.walmartlabs.concord.runtime.v2.sdk.*;
 import com.walmartlabs.concord.sdk.Constants;
-import com.walmartlabs.concord.svm.ExecutionListener;
+import com.walmartlabs.concord.svm.Runtime;
+import com.walmartlabs.concord.svm.*;
 import org.immutables.value.Value;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestInfo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -63,6 +69,10 @@ import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
 import java.io.*;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 import java.net.URISyntaxException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -95,7 +105,7 @@ public class MainTest {
     private byte[] allLogs;
 
     @BeforeEach
-    public void setUp() throws IOException {
+    public void setUp(TestInfo testInfo) throws IOException {
         workDir = Files.createTempDirectory("test");
 
         instanceId = UUID.randomUUID();
@@ -142,6 +152,24 @@ public class MainTest {
                     }
                 });
                 executionListeners.addBinding().to(StackTraceCollector.class);
+
+                boolean ignoreSerializationAssert = testInfo.getTestMethod()
+                        .filter(m -> m.getAnnotation(IgnoreSerializationAssert.class) != null)
+                        .isPresent();
+                if (!ignoreSerializationAssert) {
+                    executionListeners.addBinding().toInstance(new ExecutionListener() {
+                        @Override
+                        public Result afterCommand(Runtime runtime, VM vm, State state, ThreadId threadId, Command cmd) {
+                            if (cmd instanceof BlockCommand
+                                    || cmd instanceof ParallelCommand) {
+                                return ExecutionListener.super.afterCommand(runtime, vm, state, threadId, cmd);
+                            }
+
+                            assertTrue(SerializationUtils.isSerializable(state), "Non serializable state after: " + cmd);
+                            return ExecutionListener.super.afterCommand(runtime, vm, state, threadId, cmd);
+                        }
+                    });
+                }
             }
         };
 
@@ -1315,6 +1343,7 @@ public class MainTest {
     }
 
     @Test
+    @IgnoreSerializationAssert
     public void loopItemSerialization() throws Exception {
         deploy("loopSerializationError");
 
@@ -1792,7 +1821,7 @@ public class MainTest {
 
     @Named("injectorTestTask")
     static class InjectorTestTask implements Task {
-
+f
         private final Map<String, InjectorTestBean> testBeans;
 
         @Inject
@@ -1806,5 +1835,10 @@ public class MainTest {
             return TaskResult.success()
                     .value("x", testBeans.size());
         }
+    }
+
+    @Target({ElementType.ANNOTATION_TYPE, ElementType.METHOD})
+    @Retention(RetentionPolicy.RUNTIME)
+    public @interface IgnoreSerializationAssert {
     }
 }
