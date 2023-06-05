@@ -6,6 +6,8 @@
 
 ### Changed
 
+- runtime-v2: serialization fix
+([#758](https://github.com/walmartlabs/concord/pull/758))
 - concord-cli: add no-default-cfg option
 ([#763](https://github.com/walmartlabs/concord/pull/763))
 - concord-cli: reduce noise in dependency resolution errors
