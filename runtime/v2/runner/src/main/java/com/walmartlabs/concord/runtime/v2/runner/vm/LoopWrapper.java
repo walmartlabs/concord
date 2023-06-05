@@ -41,7 +41,8 @@ public abstract class LoopWrapper implements Command {
     public static LoopWrapper of(CompilerContext ctx, Command cmd, Loop withItems, Collection<String> outVariables, Map<String, Serializable> outExpressions) {
         Collection<String> out = Collections.emptyList();
         if (!outExpressions.isEmpty()) {
-            out = outExpressions.keySet();
+            // serializable
+            out = new HashSet<>(outExpressions.keySet());
         } else if (!outVariables.isEmpty()) {
             out = outVariables;
         }
