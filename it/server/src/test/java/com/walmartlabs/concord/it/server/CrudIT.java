@@ -448,7 +448,7 @@ public class CrudIT extends AbstractServerIT {
         String orgName = "org_" + randomString();
 
         OrganizationsApi orgApi = new OrganizationsApi(getApiClient());
-        orgApi.createOrUpdate(new OrganizationEntry().setName(orgName));
+        CreateOrganizationResponse orgResponse = orgApi.createOrUpdate(new OrganizationEntry().setName(orgName));
 
         // ---
 
@@ -478,7 +478,7 @@ public class CrudIT extends AbstractServerIT {
         // --  Update secret project name
 
         updateReq = new SecretUpdateRequest();
-        updateReq.setProjectName(projectName);
+        updateReq.setProjectName(projectName).setOrgId(orgResponse.getId());
         secretsApi.update(orgName, secretName, updateReq);
         updateReq.setProjectName("");
         secretsApi.update(orgName, secretName, updateReq);
