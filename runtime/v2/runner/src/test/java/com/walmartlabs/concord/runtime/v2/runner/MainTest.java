@@ -249,8 +249,9 @@ public class MainTest {
         } catch (Exception e) {
             // ignore
         }
-        assertLog(lastLog, ".*" + Pattern.quote("(concord.yml) @ line: 12, col: 7, thread: 0, flow: flowB") + ".*");
-        assertLog(lastLog, ".*" + Pattern.quote("(concord.yml) @ line: 3, col: 7, thread: 0, flow: flowA") + ".*");
+        assertLog(lastLog, ".*" + Pattern.quote("in flowA") + ".*");
+        assertLog(lastLog, ".*" + Pattern.quote("(concord.yml) @ line: 13, col: 7, thread: 2, flow: flowB") + ".*");
+        assertLog(lastLog, ".*" + Pattern.quote("(concord.yml) @ line: 3, col: 7, thread: 2, flow: flowA") + ".*");
     }
 
     @Test
