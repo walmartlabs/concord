@@ -24,6 +24,7 @@
         <docker.skip>true</docker.skip>
         <docker.maintainer>ibodrov@gmail.com</docker.maintainer>
         <docker.namespace>walmartlabs</docker.namespace>
+        <docker.allowPull>true</docker.allowPull>
         <concord.baseDir>/opt/concord</concord.baseDir>
         <image.platforms>linux/amd64</image.platforms>
     </properties>
@@ -64,6 +65,9 @@
                                     <argument>host</argument>
 
                                     <argument>--platform=${image.platforms}</argument>
+
+                                    <argument>--load</argument>
+                                    <argument>--pull=${docker.allowPull}</argument>
 
                                     <argument>.</argument>
                                 </arguments>

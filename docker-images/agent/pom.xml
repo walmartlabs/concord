@@ -16,6 +16,7 @@
         <agent.image>${docker.namespace}/concord-agent</agent.image>
         <docker.tagbase>${agent.image}</docker.tagbase>
         <docker.file>oss/centos/Dockerfile</docker.file>
+        <docker.allowPull>false</docker.allowPull>
     </properties>
 
     <!-- default dependencies, will be copied into the agent's local .m2 -->
