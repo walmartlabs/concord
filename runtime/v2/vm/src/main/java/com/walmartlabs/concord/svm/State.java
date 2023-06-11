@@ -121,11 +121,6 @@ public interface State extends Serializable {
     List<StackTraceItem> getStackTrace(ThreadId threadId);
 
     /**
-     * Removes the current stack trace element of the specified thread.
-     */
-    StackTraceItem popStackTraceItem(ThreadId threadId);
-
-    /**
      * Adds a stack trace item to the specified thread.
      */
     void pushStackTraceItem(ThreadId threadId, StackTraceItem item);

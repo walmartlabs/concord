@@ -50,26 +50,6 @@ public class StackTraceCollector implements ExecutionListener {
             return ExecutionListener.super.afterCommand(runtime, vm, state, threadId, cmd);
         }
 
-        if (frame.peek() == null) {
-            state.getStackTrace(threadId).stream()
-                    .filter(i -> i.getFrameId() != null)
-                    .filter(i -> i.getFrameId().equals(frame.id()))
-                    .reduce((first, second) -> second)
-                    .ifPresent(item -> popStackTraceTill(state, threadId, item));
-        }
-
         return ExecutionListener.super.afterCommand(runtime, vm, state, threadId, cmd);
-    }
-
-    private void popStackTraceTill(State state, ThreadId threadId, StackTraceItem marker) {
-        while (true) {
-            StackTraceItem item = state.popStackTraceItem(threadId);
-            if (item == null) {
-                return;
-            }
-            if (item == marker) {
-                return;
-            }
-        }
     }
 }

@@ -250,8 +250,13 @@ public class MainTest {
             // ignore
         }
         assertLog(lastLog, ".*" + Pattern.quote("in flowA") + ".*");
-        assertLog(lastLog, ".*" + Pattern.quote("(concord.yml) @ line: 13, col: 7, thread: 2, flow: flowB") + ".*");
-        assertLog(lastLog, ".*" + Pattern.quote("(concord.yml) @ line: 3, col: 7, thread: 2, flow: flowA") + ".*");
+
+        String expected = "Call stack:\n" +
+                "(concord.yml) @ line: 13, col: 7, thread: 2, flow: flowB\n" +
+                "(concord.yml) @ line: 3, col: 7, thread: 2, flow: flowA";
+
+        String logString = new String(lastLog);
+        assertTrue(logString.contains(expected), "expected log contains: " + expected + ", actual: " + logString);
     }
 
     @Test
@@ -268,16 +273,75 @@ public class MainTest {
             // ignore
         }
 
-        String expected = "(concord.yml) @ line: 8, col: 7, thread: 0, flow: flowB\n" +
+        String expected = "Call stack:\n" +
+                "(concord.yml) @ line: 8, col: 7, thread: 0, flow: flowB\n" +
                 "(concord.yml) @ line: 3, col: 7, thread: 0, flow: flowA";
 
-        String expected1 = "(concord.yml) @ line: 16, col: 11, thread: 0, flow: flowThrow\n" +
+        String expected1 = "Call stack:\n" +
+                "(concord.yml) @ line: 16, col: 11, thread: 0, flow: flowThrow\n" +
                 "(concord.yml) @ line: 8, col: 7, thread: 0, flow: flowB\n" +
                 "(concord.yml) @ line: 3, col: 7, thread: 0, flow: flowA";
 
         String logString = new String(lastLog);
         assertTrue(logString.contains(expected), "expected log contains: " + expected + ", actual: " + logString);
         assertTrue(logString.contains(expected1), "expected log contains: " + expected1 + ", actual: " + logString);
+    }
+
+    @Test
+    public void testStackTrace5() throws Exception {
+        deploy("stackTrace5");
+
+        save(ProcessConfiguration.builder()
+                .build());
+
+        try {
+            run();
+            fail("must fail");
+        } catch (Exception e) {
+            // ignore
+        }
+
+        String expected = "Call stack:\n" +
+                "(concord.yml) @ line: 21, col: 7, thread: 4, flow: flowC\n" +
+                "(concord.yml) @ line: 11, col: 11, thread: 2, flow: flowB\n" +
+                "(concord.yml) @ line: 6, col: 7, thread: 0, flow: flowA\n" +
+                "(concord.yml) @ line: 3, col: 7, thread: 0, flow: flow0";
+
+        String logString = new String(lastLog);
+        assertTrue(logString.contains(expected), "expected log contains: " + expected + ", actual: " + logString);
+    }
+
+    @Test
+    public void testStackTrace6() throws Exception {
+        deploy("stackTrace6");
+
+        save(ProcessConfiguration.builder()
+                .build());
+
+        try {
+            run();
+            fail("must fail");
+        } catch (Exception e) {
+            // ignore
+        }
+
+        assertNoLog(lastLog, ".*" + Pattern.quote("[ERROR] Call stack:") + ".*");
+    }
+
+    @Test
+    public void testStackTrace7() throws Exception {
+        deploy("stackTrace7");
+
+        save(ProcessConfiguration.builder()
+                .build());
+
+        try {
+            run();
+            fail("must fail");
+        } catch (Exception e) {
+            // ignore
+        }
+        assertNoLog(lastLog, ".*" + Pattern.quote("[ERROR] Call stack:") + ".*");
     }
 
     @Test

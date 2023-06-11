@@ -1,0 +1,7 @@
+flows:
+  default:
+    - call: "flowA"
+    - throw: "qweq"
+
+  flowA:
+    - return

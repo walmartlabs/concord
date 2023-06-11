@@ -92,7 +92,8 @@ public class InMemoryState implements Serializable, State {
                 throw new IllegalStateException("Call frame doesn't exist: " + threadId);
             }
 
-            l.remove(0);
+            Frame removed = l.remove(0);
+            unwindStackTrace(threadId, removed);
         }
     }
 
@@ -224,7 +225,12 @@ public class InMemoryState implements Serializable, State {
             if (stackTrace == null) {
                 return Collections.emptyList();
             }
-            return Collections.unmodifiableList(stackTrace.getOrDefault(threadId, Collections.emptyList()));
+            List<ThreadId> threads = collectParents(threadId);
+            threads.add(0, threadId);
+
+            List<StackTraceItem> result = new ArrayList<>();
+            threads.forEach(tid -> result.addAll(stackTrace.getOrDefault(tid, Collections.emptyList())));
+            return result;
         }
     }
 
@@ -238,23 +244,6 @@ public class InMemoryState implements Serializable, State {
 
             List<StackTraceItem> l = stackTrace.computeIfAbsent(threadId, key -> new LinkedList<>());
             l.add(0, item);
-        }
-    }
-
-    @Override
-    public StackTraceItem popStackTraceItem(ThreadId threadId) {
-        synchronized (this) {
-            // for backward compatibility
-            if (stackTrace == null) {
-                return null;
-            }
-
-            List<StackTraceItem> l = stackTrace.get(threadId);
-            if (l == null || l.isEmpty()) {
-                return null;
-            }
-
-            return l.remove(0);
         }
     }
 
@@ -290,7 +279,60 @@ public class InMemoryState implements Serializable, State {
                         frames.remove(k);
                         eventRefs.remove(k);
                         children.remove(k);
+                        if (stackTrace != null) {
+                            stackTrace.remove(k);
+                        }
                     });
+        }
+    }
+
+    private List<ThreadId> collectParents(ThreadId threadId) {
+        List<ThreadId> result = new ArrayList<>();
+        ThreadId current = threadId;
+        while (true) {
+            ThreadId parent = findParent(current);
+            if (parent != null) {
+                result.add(parent);
+                current = parent;
+            } else {
+                break;
+            }
+        }
+        return result;
+    }
+
+    private ThreadId findParent(ThreadId threadId) {
+        return children.entrySet().stream()
+                .filter(e -> e.getValue().contains(threadId))
+                .map(Map.Entry::getKey)
+                .findFirst()
+                .orElse(null);
+    }
+
+    private void unwindStackTrace(ThreadId threadId, Frame removed) {
+        // for backward compatibility
+        if (stackTrace == null || removed.id() == null) {
+            return;
+        }
+        List<StackTraceItem> items = stackTrace.get(threadId);
+        if (items == null) {
+            return;
+        }
+
+        int itemIndex = -1;
+        for (int i = 0; i < items.size(); i++) {
+            StackTraceItem item = items.get(i);
+            if (removed.id().equals(item.getFrameId())) {
+                itemIndex = i;
+            }
+        }
+
+        if (itemIndex >= 0) {
+            if (itemIndex + 1 == items.size()) {
+                stackTrace.remove(threadId);
+            } else {
+                stackTrace.put(threadId, new LinkedList<>(items.subList(itemIndex + 1, items.size())));
+            }
         }
     }
 }

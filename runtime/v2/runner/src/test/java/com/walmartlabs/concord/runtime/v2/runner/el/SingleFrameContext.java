@@ -152,11 +152,6 @@ public class SingleFrameContext extends DummyContext {
                     }
 
                     @Override
-                    public StackTraceItem popStackTraceItem(ThreadId threadId) {
-                        throw new IllegalStateException("Not implemented");
-                    }
-
-                    @Override
                     public void pushStackTraceItem(ThreadId threadId, StackTraceItem item) {
                         throw new IllegalStateException("Not implemented");
                     }
