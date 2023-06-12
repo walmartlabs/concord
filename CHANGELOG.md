@@ -4,6 +4,9 @@
 
 ### Added
 
+- runtime-v2: log call stack on error
+([#761](https://github.com/walmartlabs/concord/pull/761))
+
 ### Changed
 
 - runtime-v2: serialization fix
