@@ -4,7 +4,7 @@ package com.walmartlabs.concord.runtime.v2.runner.vm;
  * *****
  * Concord
  * -----
- * Copyright (C) 2017 - 2019 Walmart Inc.
+ * Copyright (C) 2017 - 2023 Walmart Inc.
  * -----
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -31,14 +31,14 @@ import com.walmartlabs.concord.runtime.v2.runner.logging.RunnerLogger;
 import com.walmartlabs.concord.runtime.v2.runner.logging.SegmentedLogger;
 import com.walmartlabs.concord.runtime.v2.runner.tasks.ContextProvider;
 import com.walmartlabs.concord.runtime.v2.sdk.Context;
-import com.walmartlabs.concord.svm.Command;
+import com.walmartlabs.concord.svm.*;
 import com.walmartlabs.concord.svm.Runtime;
-import com.walmartlabs.concord.svm.State;
-import com.walmartlabs.concord.svm.ThreadId;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 /**
  * Base class for commands that were created from a flow {@link Step}.
@@ -107,6 +107,10 @@ public abstract class StepCommand<T extends Step> implements Command {
                 }
 
                 log.error("{} {}", Location.toErrorPrefix(step.getLocation()), e.getMessage());
+                List<StackTraceItem> stackTrace = state.getStackTrace(threadId);
+                if (!stackTrace.isEmpty()) {
+                    log.error("Call stack:\n{}", stackTrace.stream().map(StackTraceItem::toString).collect(Collectors.joining("\n")));
+                }
                 throw e;
             }
         });
