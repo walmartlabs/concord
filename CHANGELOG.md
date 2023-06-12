@@ -9,10 +9,12 @@
 
 ### Changed
 
+- docker-images: fix build for Debian 12 based images
+([#767](https://github.com/walmartlabs/concord/pull/767));
 - runtime-v2: serialization fix
-([#758](https://github.com/walmartlabs/concord/pull/758))
+([#758](https://github.com/walmartlabs/concord/pull/758));
 - concord-cli: add no-default-cfg option
-([#763](https://github.com/walmartlabs/concord/pull/763))
+([#763](https://github.com/walmartlabs/concord/pull/763));
 - concord-cli: reduce noise in dependency resolution errors
 ([#757](https://github.com/walmartlabs/concord/pull/757)).
 
