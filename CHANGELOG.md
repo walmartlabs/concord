@@ -8,7 +8,8 @@
 ([#761](https://github.com/walmartlabs/concord/pull/761))
 
 ### Changed
-
+- runtime-v2: fix timezone text case in DSL schema
+([#769](https://github.com/walmartlabs/concord/pull/769));
 - docker-images: fix build for Debian 12 based images
 ([#767](https://github.com/walmartlabs/concord/pull/767));
 - runtime-v2: serialization fix
