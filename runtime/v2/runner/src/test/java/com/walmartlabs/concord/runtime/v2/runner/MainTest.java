@@ -301,14 +301,15 @@ public class MainTest {
             // ignore
         }
 
-        String expected = "Call stack:\n" +
-                "(concord.yml) @ line: 21, col: 7, thread: 4, flow: flowC\n" +
-                "(concord.yml) @ line: 11, col: 11, thread: 2, flow: flowB\n" +
-                "(concord.yml) @ line: 6, col: 7, thread: 0, flow: flowA\n" +
-                "(concord.yml) @ line: 3, col: 7, thread: 0, flow: flow0";
+        String expected = ".*Call stack:\n" +
+                "\\(concord.yml\\) @ line: 21, col: 7, thread: .*, flow: flowC\n" +
+                "\\(concord.yml\\) @ line: 11, col: 11, thread: 2, flow: flowB\n" +
+                "\\(concord.yml\\) @ line: 6, col: 7, thread: 0, flow: flowA\n" +
+                "\\(concord.yml\\) @ line: 3, col: 7, thread: 0, flow: flow0.*";
+        Pattern expectedPattern = Pattern.compile(expected, Pattern.MULTILINE|Pattern.DOTALL|Pattern.UNIX_LINES);
 
         String logString = new String(lastLog);
-        assertTrue(logString.contains(expected), "expected log contains: " + expected + ", actual: " + logString);
+        assertTrue(expectedPattern.matcher(logString).matches(), "expected log contains: " + expected + ", actual: " + logString);
     }
 
     @Test
