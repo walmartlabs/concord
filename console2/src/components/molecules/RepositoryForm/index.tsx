@@ -2,7 +2,7 @@
  * *****
  * Concord
  * -----
- * Copyright (C) 2017 - 2018 Walmart Inc.
+ * Copyright (C) 2017 - 2023 Walmart Inc.
  * -----
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -262,7 +262,8 @@ class RepositoryForm extends React.Component<InjectedFormikProps<Props, FormValu
                     <Button
                         primary={true}
                         type="submit"
-                        disabled={!dirty || hasErrors || this.state.testRunning}>
+                        disabled={!dirty || hasErrors || this.state.testRunning || this.props.isSubmitting}
+                        loading={this.props.isSubmitting}>
                         {editMode ? 'Save' : 'Add'}
                     </Button>
 

@@ -45,7 +45,7 @@ public abstract class WithItemsWrapper implements Command {
     public static WithItemsWrapper of(Command cmd, WithItems withItems, Collection<String> outVariables, Map<String, Serializable> outExpressions) {
         Collection<String> out = Collections.emptyList();
         if (!outExpressions.isEmpty()) {
-            out = outExpressions.keySet();
+            out = new HashSet<>(outExpressions.keySet());
         } else if (!outVariables.isEmpty()) {
             out = outVariables;
         }

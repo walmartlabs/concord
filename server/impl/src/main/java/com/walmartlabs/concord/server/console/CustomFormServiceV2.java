@@ -4,7 +4,7 @@ package com.walmartlabs.concord.server.console;
  * *****
  * Concord
  * -----
- * Copyright (C) 2017 - 2018 Walmart Inc.
+ * Copyright (C) 2017 - 2023 Walmart Inc.
  * -----
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -72,7 +72,7 @@ public class CustomFormServiceV2 {
     private static final String FORMS_PATH_TEMPLATE = FORMS_PATH_PREFIX + "%s/%s/" + FORM_DIR_NAME + "/";
     private static final String DATA_FILE_TEMPLATE = "data = %s;";
 
-    private static final String NON_BRANDED_FORM_URL_TEMPLATE = "/#/process/%s/form/%s?fullScreen=true&wizard=true";
+    private static final String NON_BRANDED_FORM_URL_TEMPLATE = "/#/process/%s/form/%s/wizard?fullScreen=true";
     private static final String FORM_WIZARD_CONTINUE_URL_TEMPLATE = "/api/service/custom_form/%s/%s/continue";
 
     private static final long STATUS_REFRESH_DELAY = 250;

@@ -33,6 +33,9 @@ interface ExternalProps {
 
     fluid?: boolean;
     invalid?: boolean;
+    projectsToNotShow?: ProjectEntry[];
+
+    clearOnSelect?: boolean;
 
     onReset?: (value?: ProjectEntry) => void;
     onClear?: () => void;
@@ -61,6 +64,8 @@ const isEquals = (a?: ProjectEntry, b?: ProjectEntry): boolean => {
 export default ({
     orgName,
     defaultProjectName,
+    projectsToNotShow,
+    clearOnSelect,
     placeholder,
     fluid,
     invalid,
@@ -86,7 +91,14 @@ export default ({
             setLoading(true);
             try {
                 const result = await apiList(orgName, 0, 10, value);
-                setItems(result.items);
+                let projects = result.items;
+                if (projectsToNotShow != null) {
+                    projects = projects.filter(
+                        (project) =>
+                            !projectsToNotShow.map((project) => project.id).includes(project.id)
+                    );
+                }
+                setItems(projects);
             } catch (e) {
                 setError(e);
             } finally {
@@ -95,7 +107,7 @@ export default ({
         };
 
         fetchData();
-    }, [orgName, value]);
+    }, [orgName, value, projectsToNotShow]);
 
     // convert ProjectEntries into whatever <Search> accepts
     useEffect(() => {
@@ -129,7 +141,7 @@ export default ({
         };
 
         fetchData();
-    }, [orgName, defaultProjectName]);
+    }, [orgName, defaultProjectName, projectsToNotShow]);
 
     const onChangeCallBack = useCallback(
         (event: React.MouseEvent<HTMLElement>, data: SearchProps) => {
@@ -176,6 +188,9 @@ export default ({
             onResultSelect={(ev, data) => {
                 const item = items.find((i) => i.id === data.result.key);
                 handleItemSelected(item || defaultItem);
+                if (clearOnSelect === true) {
+                    setValue('');
+                }
             }}
         />
     );

@@ -4,7 +4,7 @@ package com.walmartlabs.concord.server.policy;
  * *****
  * Concord
  * -----
- * Copyright (C) 2017 - 2019 Walmart Inc.
+ * Copyright (C) 2017 - 2023 Walmart Inc.
  * -----
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -70,6 +70,12 @@ public final class PolicyUtils {
             m.put("cfg", entry.getCfg());
         }
         return m;
+    }
+
+    public static Map<String, Object> repositoryToMap(ProjectEntry project,
+                                                      RepositoryEntry repo,
+                                                      SecretEntry secret) {
+        return repositoryToMap(project.getOrgId(), project.getOrgName(), project.getId(), project.getName(), repo, secret);
     }
 
     public static Map<String, Object> repositoryToMap(UUID orgId,
