@@ -8,6 +8,8 @@
 ([#761](https://github.com/walmartlabs/concord/pull/761))
 
 ### Changed
+- console2: do not remove project after rename
+([#770](https://github.com/walmartlabs/concord/pull/770));
 - runtime-v2: fix timezone text case in DSL schema
 ([#769](https://github.com/walmartlabs/concord/pull/769));
 - docker-images: fix build for Debian 12 based images
