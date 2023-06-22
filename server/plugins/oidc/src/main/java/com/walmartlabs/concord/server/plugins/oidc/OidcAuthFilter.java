@@ -24,6 +24,7 @@ import org.apache.shiro.web.util.WebUtils;
 import org.pac4j.core.config.Config;
 import org.pac4j.core.context.JEEContext;
 import org.pac4j.core.exception.http.RedirectionAction;
+import org.pac4j.core.util.Pac4jConstants;
 import org.pac4j.oidc.client.OidcClient;
 
 import javax.inject.Inject;
@@ -53,6 +54,9 @@ public class OidcAuthFilter implements Filter {
         HttpServletResponse resp = WebUtils.toHttp(response);
 
         JEEContext context = new JEEContext(req, resp);
+
+        String redirectUrl = req.getParameter("from");
+        context.getSessionStore().set(context, Pac4jConstants.REQUESTED_URL, redirectUrl);
 
         RedirectionAction action = client.getRedirectionAction(context)
                 .orElseThrow(() -> new IllegalStateException("Can't get a redirection action for the request"));
