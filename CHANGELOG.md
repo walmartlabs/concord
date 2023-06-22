@@ -8,6 +8,8 @@
 ([#761](https://github.com/walmartlabs/concord/pull/761))
 
 ### Changed
+- console2, server: redirect to requested URL after oidc/sso auth
+([#764](https://github.com/walmartlabs/concord/pull/764)); 
 - console2: do not remove project after rename
 ([#770](https://github.com/walmartlabs/concord/pull/770));
 - runtime-v2: fix timezone text case in DSL schema
