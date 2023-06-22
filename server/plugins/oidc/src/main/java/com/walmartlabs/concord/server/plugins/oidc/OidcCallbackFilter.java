@@ -23,7 +23,9 @@ package com.walmartlabs.concord.server.plugins.oidc;
 import org.apache.shiro.web.util.WebUtils;
 import org.pac4j.core.config.Config;
 import org.pac4j.core.context.JEEContext;
+import org.pac4j.core.context.session.SessionStore;
 import org.pac4j.core.engine.CallbackLogic;
+import org.pac4j.core.util.Pac4jConstants;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -60,15 +62,33 @@ public class OidcCallbackFilter implements Filter {
 
         JEEContext context = new JEEContext(req, resp, pac4jConfig.getSessionStore());
 
+        String postLoginUrl = removeRequestedUrl(context);
+        if (postLoginUrl == null || postLoginUrl.trim().isEmpty()) {
+            postLoginUrl = cfg.getAfterLoginUrl();
+        }
+
         CallbackLogic<?, JEEContext> callback = pac4jConfig.getCallbackLogic();
-        callback.perform(context, pac4jConfig, pac4jConfig.getHttpActionAdapter(), cfg.getAfterLoginUrl(), true, false, true, PluginModule.CLIENT_NAME);
+        callback.perform(context, pac4jConfig, pac4jConfig.getHttpActionAdapter(), postLoginUrl, true, false, true, PluginModule.CLIENT_NAME);
     }
 
     @Override
     public void init(FilterConfig filterConfig) {
+        // do nothing
     }
 
     @Override
     public void destroy() {
+        // do nothing
+    }
+
+    @SuppressWarnings("unchecked")
+    private static String removeRequestedUrl(JEEContext context) {
+        SessionStore<JEEContext> sessionStore = context.getSessionStore();
+        Object result = sessionStore.get(context, Pac4jConstants.REQUESTED_URL).orElse(null);
+        sessionStore.set(context, Pac4jConstants.REQUESTED_URL, "");
+        if (result instanceof String) {
+            return (String) result;
+        }
+        return null;
     }
 }
