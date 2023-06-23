@@ -41,7 +41,8 @@ public abstract class LoopWrapper implements Command {
     public static LoopWrapper of(CompilerContext ctx, Command cmd, Loop withItems, Collection<String> outVariables, Map<String, Serializable> outExpressions) {
         Collection<String> out = Collections.emptyList();
         if (!outExpressions.isEmpty()) {
-            out = outExpressions.keySet();
+            // serializable
+            out = new HashSet<>(outExpressions.keySet());
         } else if (!outVariables.isEmpty()) {
             out = outVariables;
         }
@@ -80,13 +81,12 @@ public abstract class LoopWrapper implements Command {
             execute(runtime, state, threadId);
         } catch (Exception e) {
             if (cmd instanceof StepCommand) {
-                ((StepCommand<?>) cmd).logStepException(e);
+                ((StepCommand<?>) cmd).logStepException(e, state, threadId);
             }
             throw e;
         }
     }
 
-    @SuppressWarnings("unchecked")
     private void execute(Runtime runtime, State state, ThreadId threadId) {
         Frame frame = state.peekFrame(threadId);
         frame.pop();

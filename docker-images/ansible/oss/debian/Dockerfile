@@ -28,7 +28,7 @@ ENV PATH=/usr/local/bin/concord_venv/bin:${PATH}
 ENV VIRTUAL_ENV=/usr/local/bin/concord_venv
 
 RUN umask 0022 && \
-    pip3 install --no-cache-dir --upgrade --ignore-installed \
+    pip3 install --no-cache-dir --upgrade --break-system-packages --ignore-installed \
     "cryptography<=3.3.1" \
     "ansible>=2.8.0,<2.9.0" \
     "Appium-Python-Client<1.0" \

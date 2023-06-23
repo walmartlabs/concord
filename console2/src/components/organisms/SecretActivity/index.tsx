@@ -130,14 +130,22 @@ class SecretActivity extends React.PureComponent<Props> {
                             <Table.Row>
                                 <Table.Cell>Restricted to a project</Table.Cell>
                                 <Table.Cell>
-                                    {data.projectName ? (
-                                        <Link
-                                            to={`/org/${data.orgName}/project/${data.projectName}`}>
-                                            {data.projectName}
-                                        </Link>
-                                    ) : (
-                                        ' - '
-                                    )}
+                                    {data.projects && data.projects.length > 0
+                                        ? data.projects.map((project, index) => (
+                                              <span key={index}>
+                                                  <Link
+                                                      to={`/org/${data.orgName}/project/${project.name}`}
+                                                  >
+                                                      {project.name}
+                                                  </Link>
+                                                  <span>
+                                                      {index !== data.projects.length - 1
+                                                          ? ', '
+                                                          : ''}
+                                                  </span>
+                                              </span>
+                                          ))
+                                        : ' - '}
                                 </Table.Cell>
                             </Table.Row>
                         </Table.Body>
@@ -169,11 +177,11 @@ class SecretActivity extends React.PureComponent<Props> {
                 <Divider horizontal={true} content="Danger Zone" />
 
                 <Segment color="red">
-                    <Header as="h4">Project</Header>
+                    <Header as="h4">Projects</Header>
                     <SecretProjectActivity
                         orgName={data.orgName}
                         secretName={data.name}
-                        projectName={data.projectName}
+                        projects={data.projects}
                     />
 
                     <Header as="h4">Secret name</Header>

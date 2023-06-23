@@ -89,6 +89,7 @@ public class FlowCallCommand extends StepCommand<FlowCall> {
         // push the out handler first so it executes after the called flow's frame is done
         state.peekFrame(threadId).push(processOutVars);
         state.pushFrame(threadId, innerFrame);
+        VMUtils.putLocal(innerFrame, "flowName", flowName);
     }
 
     private static class EvalVariablesCommand extends StepCommand<FlowCall> {
@@ -125,7 +126,7 @@ public class FlowCallCommand extends StepCommand<FlowCall> {
         }
 
         @Override
-        protected LogContext getLogContext(Runtime runtime, Context ctx, UUID correlationId) {
+        protected LogContext getLogContext(Runtime runtime, Context ctx, State state, ThreadId threadId,UUID correlationId) {
             // TODO: return original FlowCall LogContext...
             return null;
         }

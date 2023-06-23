@@ -4,7 +4,7 @@ package com.walmartlabs.concord.runtime.v2.runner.vm;
  * *****
  * Concord
  * -----
- * Copyright (C) 2017 - 2019 Walmart Inc.
+ * Copyright (C) 2017 - 2023 Walmart Inc.
  * -----
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -31,21 +31,21 @@ import com.walmartlabs.concord.runtime.v2.runner.logging.RunnerLogger;
 import com.walmartlabs.concord.runtime.v2.runner.logging.SegmentedLogger;
 import com.walmartlabs.concord.runtime.v2.runner.tasks.ContextProvider;
 import com.walmartlabs.concord.runtime.v2.sdk.Context;
-import com.walmartlabs.concord.svm.Command;
+import com.walmartlabs.concord.svm.*;
 import com.walmartlabs.concord.svm.Runtime;
-import com.walmartlabs.concord.svm.State;
-import com.walmartlabs.concord.svm.ThreadId;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 /**
  * Base class for commands that were created from a flow {@link Step}.
  * <p/>
  * Subclasses must implement the {@link #execute(Runtime, State, ThreadId)} method.
  * <p/>
- * Subclasses can optionally implement {@link #getSegmentName(Context, Step)} to
+ * Subclasses can optionally implement {@link #getSegmentName(Context, Step, State, ThreadId)} to
  * enable "segmented logging" for the duration of their execution.
  */
 public abstract class StepCommand<T extends Step> implements Command {
@@ -80,7 +80,7 @@ public abstract class StepCommand<T extends Step> implements Command {
         UUID correlationId = getCorrelationId();
         Context ctx = contextFactory.create(runtime, state, threadId, step, correlationId);
 
-        LogContext logContext = getLogContext(runtime, ctx, correlationId);
+        LogContext logContext = getLogContext(runtime, ctx, state, threadId, correlationId);
         if (logContext == null) {
             executeWithContext(ctx, runtime, state, threadId);
         } else {
@@ -102,24 +102,28 @@ public abstract class StepCommand<T extends Step> implements Command {
             try {
                 execute(runtime, state, threadId);
             } catch (Exception e) {
-                logStepException(e);
+                logStepException(e, state, threadId);
                 throw e;
             }
         });
     }
 
-    protected void logStepException(Exception e) {
+    protected void logStepException(Exception e, State state, ThreadId threadId) {
         if (step.getLocation() == null) {
             return;
         }
 
         log.error("{} {}", Location.toErrorPrefix(step.getLocation()), e.getMessage());
+        List<StackTraceItem> stackTrace = state.getStackTrace(threadId);
+        if (!stackTrace.isEmpty()) {
+            log.error("Call stack:\n{}", stackTrace.stream().map(StackTraceItem::toString).collect(Collectors.joining("\n")));
+        }
     }
 
     protected abstract void execute(Runtime runtime, State state, ThreadId threadId);
 
-    protected LogContext getLogContext(Runtime runtime, Context ctx, UUID correlationId) {
-        String segmentName = getSegmentName(ctx, getStep());
+    protected LogContext getLogContext(Runtime runtime, Context ctx, State state, ThreadId threadId, UUID correlationId) {
+        String segmentName = getSegmentName(ctx, getStep(), state, threadId);
         if (segmentName == null) {
             return null;
         }
@@ -135,7 +139,7 @@ public abstract class StepCommand<T extends Step> implements Command {
                 .build();
     }
 
-    protected String getSegmentName(Context ctx, T step) {
+    protected String getSegmentName(Context ctx, T step, State state, ThreadId threadId) {
         if (step instanceof AbstractStep) {
             String rawSegmentName = SegmentedLogger.getSegmentName((AbstractStep<?>) step);
             try {
@@ -144,7 +148,7 @@ public abstract class StepCommand<T extends Step> implements Command {
                     return segmentName;
                 }
             } catch (Exception e) {
-                logStepException(e);
+                logStepException(e, state, threadId);
                 throw e;
             }
         }
