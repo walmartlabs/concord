@@ -5,9 +5,12 @@
 ### Added
 
 - runtime-v2: log call stack on error
-([#761](https://github.com/walmartlabs/concord/pull/761))
+([#761](https://github.com/walmartlabs/concord/pull/761));
+- concord-server: Allow restriction of secrets to multiple projects
+([#688](https://github.com/walmartlabs/concord/pull/688))
 
 ### Changed
+
 - console2, server: redirect to requested URL after oidc/sso auth
 ([#764](https://github.com/walmartlabs/concord/pull/764)); 
 - console2: do not remove project after rename
