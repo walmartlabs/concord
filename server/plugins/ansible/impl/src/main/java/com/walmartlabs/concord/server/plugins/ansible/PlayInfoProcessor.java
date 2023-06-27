@@ -83,6 +83,10 @@ public class PlayInfoProcessor implements EventProcessor {
                     continue;
                 }
 
+                if (playName.length() > 1024) {
+                    playName = playName.substring(0, 1024);
+                }
+
                 plays.add(ImmutablePlayInfoItem.builder()
                         .key(key)
                         .playName(playName)
