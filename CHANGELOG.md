@@ -7,7 +7,7 @@
 - runtime-v2: log call stack on error
 ([#761](https://github.com/walmartlabs/concord/pull/761));
 - concord-server: Allow restriction of secrets to multiple projects
-([#688](https://github.com/walmartlabs/concord/pull/688))
+([#688](https://github.com/walmartlabs/concord/pull/688)).
 
 ### Changed
 
@@ -24,7 +24,9 @@
 - concord-cli: add no-default-cfg option
 ([#763](https://github.com/walmartlabs/concord/pull/763));
 - concord-cli: reduce noise in dependency resolution errors
-([#757](https://github.com/walmartlabs/concord/pull/757)).
+([#757](https://github.com/walmartlabs/concord/pull/757));
+- console2: do not remove project after rename;
+([#770](https://github.com/walmartlabs/concord/pull/770)).
 
 ## [1.102.0] - 2023-05-22
 
