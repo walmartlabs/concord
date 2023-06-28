@@ -90,7 +90,7 @@ public class AnsibleEventProcessorIT extends AbstractServerIT {
 
         PlayInfo play = assertPlay(ansibleApi, pir.getInstanceId(), playbook.getId());
         TaskInfo task = assertTask(ansibleApi, pir.getInstanceId(), play.getPlayId());
-        assertTrue(play.getPlayName().matches("\\['my-inventory-host-001', 'my-inventory-host-002'.*"));
+        assertTrue(play.getPlayName().matches("\\['my-inventory-host-001', 'my-inventory-host-002'.*\\.\\.\\.$"));
         assertFalse(play.getPlayName().contains("my-inventory-host-048"));
         assertEquals(1L, play.getTaskCount().longValue());
         assertEquals(1024, play.getPlayName().length());

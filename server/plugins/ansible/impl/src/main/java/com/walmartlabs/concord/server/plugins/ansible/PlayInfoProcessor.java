@@ -20,6 +20,7 @@ package com.walmartlabs.concord.server.plugins.ansible;
  * =====
  */
 
+import com.walmartlabs.concord.common.StringUtils;
 import com.walmartlabs.concord.db.AbstractDao;
 import com.walmartlabs.concord.db.MainDB;
 import com.walmartlabs.concord.server.plugins.ansible.jooq.tables.AnsiblePlayStats;
@@ -46,7 +47,6 @@ import static org.jooq.impl.DSL.value;
 public class PlayInfoProcessor implements EventProcessor {
 
     private static final Set<String> FINISHED_TASK_STATUSES = new HashSet<>(Arrays.asList("SKIPPED", "OK", "UNREACHABLE", "FAILED"));
-    private static final int PLAY_NAME_MAX_LENGTH = ANSIBLE_PLAY_STATS.PLAY_NAME.getDataType().length();
 
     private final Dao dao;
 
@@ -78,14 +78,10 @@ public class PlayInfoProcessor implements EventProcessor {
                         .build();
                 Long finishedCount = finishedTasks.remove(key);
 
-                String playName = play.getName();
+                String playName = StringUtils.abbreviate(play.getName(), ANSIBLE_PLAY_STATS.PLAY_NAME.getDataType().length());
                 if (playName == null) {
                     // ignore invalid data (i.e. data produced by old ansible-task versions)
                     continue;
-                }
-
-                if (playName.length() > PLAY_NAME_MAX_LENGTH) {
-                    playName = playName.substring(0, PLAY_NAME_MAX_LENGTH);
                 }
 
                 plays.add(ImmutablePlayInfoItem.builder()
