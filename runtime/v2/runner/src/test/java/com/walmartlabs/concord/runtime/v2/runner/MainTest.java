@@ -1467,6 +1467,18 @@ public class MainTest {
         assertLog(log, ".*counter: 1.*");
     }
 
+    @Test
+    public void testHasNonNullVariable() throws Exception {
+        deploy("hasNonNullVariable");
+
+        save(ProcessConfiguration.builder()
+                .build());
+
+        byte[] log = run();
+        assertLog(log, ".*true == true.*");
+        assertLog(log, ".*false == false.*");
+    }
+
     private void deploy(String resource) throws URISyntaxException, IOException {
         Path src = Paths.get(MainTest.class.getResource(resource).toURI());
         IOUtils.copy(src, workDir);
