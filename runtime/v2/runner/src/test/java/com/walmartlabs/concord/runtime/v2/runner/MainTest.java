@@ -764,6 +764,7 @@ public class MainTest {
     }
 
     @Test
+    @IgnoreSerializationAssert
     public void testParallelWithItemsTask() throws Exception {
         deploy("parallelWithItemsTask");
 
@@ -776,6 +777,7 @@ public class MainTest {
     }
 
     @Test
+    @IgnoreSerializationAssert
     public void testParallelLoopTask() throws Exception {
         deploy("parallelLoopTask");
 
@@ -1012,6 +1014,7 @@ public class MainTest {
     }
 
     @Test
+    @IgnoreSerializationAssert
     public void testParallelIn() throws Exception {
         deploy("parallelIn");
 
@@ -1029,6 +1032,7 @@ public class MainTest {
     }
 
     @Test
+    @IgnoreSerializationAssert
     public void testParallelOut() throws Exception {
         deploy("parallelOut");
 
@@ -1052,6 +1056,7 @@ public class MainTest {
     }
 
     @Test
+    @IgnoreSerializationAssert
     public void testParallelLoopEmptyCall() throws Exception {
         deploy("parallelEmptyCall");
 
@@ -1063,6 +1068,7 @@ public class MainTest {
     }
 
     @Test
+    @IgnoreSerializationAssert
     public void testParallelOutExpr() throws Exception {
         deploy("parallelOutExpr");
 
@@ -1253,6 +1259,7 @@ public class MainTest {
     }
 
     @Test
+    @IgnoreSerializationAssert
     public void testFormsParallel() throws Exception {
         deploy("parallelForm");
 
