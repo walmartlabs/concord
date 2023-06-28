@@ -46,6 +46,8 @@ import static org.jooq.impl.DSL.*;
 @Singleton
 public class TaskInfoProcessor implements EventProcessor {
 
+    private static final int TASK_NAME_LENGTH = ANSIBLE_TASK_STATS.TASK_NAME.getDataType().length();
+
     private final Dao dao;
 
     @Inject
@@ -78,7 +80,7 @@ public class TaskInfoProcessor implements EventProcessor {
                     .build();
 
             String taskName = Optional.ofNullable(a.getTaskName())
-                    .map(name -> name.length() > 1024 ? name.substring(0, 1024) : name)
+                    .map(name -> name.length() > TASK_NAME_LENGTH ? name.substring(0, TASK_NAME_LENGTH) : name)
                     .orElse("[task name not found]");
             String status = a.getStatus();
             long taskOrder = a.isSetupTask() ? -1 : e.eventSeq();

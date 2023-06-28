@@ -46,6 +46,7 @@ import static org.jooq.impl.DSL.value;
 public class PlayInfoProcessor implements EventProcessor {
 
     private static final Set<String> FINISHED_TASK_STATUSES = new HashSet<>(Arrays.asList("SKIPPED", "OK", "UNREACHABLE", "FAILED"));
+    private static final int PLAY_NAME_MAX_LENGTH = ANSIBLE_PLAY_STATS.PLAY_NAME.getDataType().length();
 
     private final Dao dao;
 
@@ -83,8 +84,8 @@ public class PlayInfoProcessor implements EventProcessor {
                     continue;
                 }
 
-                if (playName.length() > 1024) {
-                    playName = playName.substring(0, 1024);
+                if (playName.length() > PLAY_NAME_MAX_LENGTH) {
+                    playName = playName.substring(0, PLAY_NAME_MAX_LENGTH);
                 }
 
                 plays.add(ImmutablePlayInfoItem.builder()
