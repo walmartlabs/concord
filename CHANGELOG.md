@@ -10,7 +10,8 @@
 ([#688](https://github.com/walmartlabs/concord/pull/688)).
 
 ### Changed
-
+- concord-ansible-plugin: fix handling of play and task names longer than 1024 chars
+([#772](https://github.com/walmartlabs/concord/pull/772));
 - console2, server: redirect to requested URL after oidc/sso auth
 ([#764](https://github.com/walmartlabs/concord/pull/764)); 
 - console2: do not remove project after rename
