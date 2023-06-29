@@ -4,6 +4,8 @@
 
 ### Added
 
+- runtime-v2: hasNonNullVariable function
+([#774](https://github.com/walmartlabs/concord/pull/774));
 - runtime-v2: log call stack on error
 ([#761](https://github.com/walmartlabs/concord/pull/761));
 - concord-server: Allow restriction of secrets to multiple projects
