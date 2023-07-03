@@ -12,6 +12,9 @@
 ([#688](https://github.com/walmartlabs/concord/pull/688)).
 
 ### Changed
+
+- runtime-v2: handle NPE in expressions
+([#776](https://github.com/walmartlabs/concord/pull/776));
 - concord-ansible-plugin: fix handling of play and task names longer than 1024 chars
 ([#772](https://github.com/walmartlabs/concord/pull/772));
 - console2, server: redirect to requested URL after oidc/sso auth
