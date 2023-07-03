@@ -165,7 +165,7 @@ public class LazyExpressionEvaluator implements ExpressionEvaluator {
         } catch (UserDefinedException e) {
             throw e;
         } catch (Exception e) {
-            throw new RuntimeException("Error while evaluating expression '" + expr + "'", e);
+            throw new RuntimeException("while evaluating expression '" + expr + "'", e);
         }
     }
 
