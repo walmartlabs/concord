@@ -63,6 +63,9 @@ export interface SecretEntry {
     id: ConcordId;
     name: ConcordKey;
 
+    createdAt: string;
+    lastUpdatedAt?: string;
+
     orgId: ConcordId;
     orgName: ConcordKey;
 
