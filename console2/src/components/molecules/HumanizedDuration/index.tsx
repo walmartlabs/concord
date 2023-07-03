@@ -49,7 +49,7 @@ export default class extends React.PureComponent<Props> {
         }
 
         return (
-            <Popup trigger={<span>{s}</span>}>
+            <Popup trigger={<span>{s}</span>} hoverable={true}>
                 <Popup.Content>
                     {children ? children : <HintFormat value={value} hint={hint}/>}
                 </Popup.Content>

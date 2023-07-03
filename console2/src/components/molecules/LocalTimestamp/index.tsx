@@ -36,7 +36,7 @@ export default class extends React.PureComponent<Props> {
         }
 
         return (
-            <Popup trigger={<span>{formatTimestamp(value)}</span>}>
+            <Popup trigger={<span>{formatTimestamp(value)}</span>} hoverable={true}>
                 Browser time. Original value: {value}
             </Popup>
         );
