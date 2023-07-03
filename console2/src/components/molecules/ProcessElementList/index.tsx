@@ -47,7 +47,7 @@ const renderDefinitionId = (
         return processDefinitionId;
     }
 
-    return <Popup content={fileName} trigger={<span>{processDefinitionId}</span>} />;
+    return <Popup content={fileName} trigger={<span>{processDefinitionId}</span>} hoverable={true}/>;
 };
 
 const renderTimestamp = (

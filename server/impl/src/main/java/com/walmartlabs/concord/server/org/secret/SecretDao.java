@@ -26,7 +26,6 @@ import com.walmartlabs.concord.db.AbstractDao;
 import com.walmartlabs.concord.db.MainDB;
 import com.walmartlabs.concord.server.Utils;
 import com.walmartlabs.concord.server.jooq.tables.Organizations;
-import com.walmartlabs.concord.server.jooq.tables.Projects;
 import com.walmartlabs.concord.server.jooq.tables.Secrets;
 import com.walmartlabs.concord.server.jooq.tables.Users;
 import com.walmartlabs.concord.server.jooq.tables.records.SecretsRecord;
@@ -40,6 +39,7 @@ import org.jooq.exception.DataAccessException;
 
 import javax.inject.Inject;
 import javax.inject.Named;
+import java.time.OffsetDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -264,7 +264,7 @@ public class SecretDao extends AbstractDao {
         sortField = s.field(sortField);
 
         DSLContext tx = dsl();
-        SelectOnConditionStep<Record15<UUID, String, UUID, String, String, String, String, String, UUID, String, String, String, String, byte[], String>> q = selectEntry(tx, o, s, u);
+        SelectOnConditionStep<Record17<UUID, String, UUID, String, String, String, String, String, UUID, String, String, String, String, byte[], String, OffsetDateTime, OffsetDateTime>> q = selectEntry(tx, o, s, u);
 
         if (currentUserId != null) {
             // public secrets are visible for anyone
@@ -379,14 +379,14 @@ public class SecretDao extends AbstractDao {
                 .execute();
     }
 
-    private static SelectOnConditionStep<Record15<UUID, String, UUID, String, String, String, String, String, UUID, String, String, String, String, byte[], String>> selectEntry(DSLContext tx) {
+    private static SelectOnConditionStep<Record17<UUID, String, UUID, String, String, String, String, String, UUID, String, String, String, String, byte[], String, OffsetDateTime, OffsetDateTime>> selectEntry(DSLContext tx) {
         return selectEntry(tx, ORGANIZATIONS, SECRETS, USERS);
     }
 
-    private static SelectOnConditionStep<Record15<UUID, String, UUID, String, String, String, String, String, UUID, String, String, String, String, byte[], String>> selectEntry(DSLContext tx,
-                                                                                                                                                                                 Organizations orgAlias,
-                                                                                                                                                                                 Secrets secretAlias,
-                                                                                                                                                                                 Users userAlias) {
+    private static SelectOnConditionStep<Record17<UUID, String, UUID, String, String, String, String, String, UUID, String, String, String, String, byte[], String, OffsetDateTime, OffsetDateTime>> selectEntry(
+            DSLContext tx,
+            Organizations orgAlias,
+            Secrets secretAlias, Users userAlias) {
         return tx.select(secretAlias.SECRET_ID,
                         secretAlias.SECRET_NAME,
                         secretAlias.ORG_ID,
@@ -401,7 +401,9 @@ public class SecretDao extends AbstractDao {
                         userAlias.DISPLAY_NAME,
                         userAlias.USER_TYPE,
                         secretAlias.SECRET_SALT,
-                        secretAlias.HASH_ALGORITHM
+                        secretAlias.HASH_ALGORITHM,
+                        secretAlias.CREATED_AT,
+                        secretAlias.LAST_UPDATED_AT
                 )
 
                 .from(secretAlias)
@@ -409,7 +411,7 @@ public class SecretDao extends AbstractDao {
                 .leftJoin(orgAlias).on(orgAlias.ORG_ID.eq(secretAlias.ORG_ID));
     }
 
-    private static SecretEntryV2 toEntry(DSLContext tx, Record15<UUID, String, UUID, String, String, String, String, String, UUID, String, String, String, String, byte[], String> r) {
+    private static SecretEntryV2 toEntry(DSLContext tx, Record17<UUID, String, UUID, String, String, String, String, String, UUID, String, String, String, String, byte[], String, OffsetDateTime, OffsetDateTime> r) {
         UUID secretId = r.get(SECRETS.SECRET_ID);
         Set<ProjectEntry> projects = tx.select(PROJECTS.PROJECT_ID, PROJECTS.PROJECT_NAME).from(PROJECTS).leftJoin(PROJECT_SECRETS).on(PROJECTS.PROJECT_ID.eq(PROJECT_SECRETS.PROJECT_ID))
                 .where(PROJECT_SECRETS.SECRET_ID.eq(secretId)).stream()
@@ -424,12 +426,14 @@ public class SecretDao extends AbstractDao {
                 r.get(SECRETS.STORE_TYPE),
                 SecretVisibility.valueOf(r.get(SECRETS.VISIBILITY)),
                 toOwner(r),
+                r.get(SECRETS.CREATED_AT),
+                r.get(SECRETS.LAST_UPDATED_AT),
                 r.get(SECRETS.SECRET_SALT),
                 HashAlgorithm.getByName(r.get(SECRETS.HASH_ALGORITHM))
         );
     }
 
-    private static EntityOwner toOwner(Record15<UUID, String, UUID, String, String, String, String, String, UUID, String, String, String, String, byte[], String> r) {
+    private static EntityOwner toOwner(Record17<UUID, String, UUID, String, String, String, String, String, UUID, String, String, String, String, byte[], String, OffsetDateTime, OffsetDateTime> r) {
 
         UUID id = r.get(USERS.USER_ID);
         if (id == null) {
@@ -452,14 +456,9 @@ public class SecretDao extends AbstractDao {
         private final byte[] data;
 
         public SecretDataEntry(SecretEntryV2 s, byte[] data) { // NOSONAR
-            this(s.getId(), s.getName(), s.getOrgId(), s.getOrgName(), s.getProjectId(), s.getProjectName(), s.getProjects(),
-                    s.getType(), s.getEncryptedBy(), s.getStoreType(), s.getVisibility(), s.getOwner(), s.getSecretSalt(), s.getHashAlgorithm(), data);
-        }
-
-        public SecretDataEntry(UUID id, String name, UUID orgId, String orgName, UUID projectId, String projectName, Set<ProjectEntry> projects, SecretType type,
-                               SecretEncryptedByType encryptedByType, String storeType, SecretVisibility visibility,
-                               EntityOwner owner, byte[] secretSalt, HashAlgorithm hashAlgorithm, byte[] data) { // NOSONAR
-            super(id, name, orgId, orgName, projects, type, encryptedByType, storeType, visibility, owner, secretSalt, hashAlgorithm);
+            super(s.getId(), s.getName(), s.getOrgId(), s.getOrgName(), s.getProjects(),
+                    s.getType(), s.getEncryptedBy(), s.getStoreType(), s.getVisibility(), s.getOwner(),
+                    s.getCreatedAt(), s.getLastUpdatedAt(), s.getSecretSalt(), s.getHashAlgorithm());
             this.data = data;
         }
 
