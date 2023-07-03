@@ -162,6 +162,8 @@ public class LazyExpressionEvaluator implements ExpressionEvaluator {
                     .findAny()
                     .map(i -> (RuntimeException)i)
                     .orElse(e);
+        } catch (Exception e) {
+            throw new RuntimeException("Error while evaluating expression '" + expr + "'", e);
         }
     }
 
