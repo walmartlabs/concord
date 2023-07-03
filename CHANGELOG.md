@@ -4,6 +4,8 @@
 
 ### Added
 
+- console-2: allow customizing columns in the main process table
+([#777](https://github.com/walmartlabs/concord/pull/777)); 
 - console2: added `last updated at` and `age` to the secret page
 ([#775](https://github.com/walmartlabs/concord/pull/775));
 - runtime-v2: hasNonNullVariable function
