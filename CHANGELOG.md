@@ -4,6 +4,8 @@
 
 ### Added
 
+- console2: added `last updated at` and `age` to the secret page
+([#775](https://github.com/walmartlabs/concord/pull/775));
 - runtime-v2: hasNonNullVariable function
 ([#774](https://github.com/walmartlabs/concord/pull/774));
 - runtime-v2: log call stack on error
