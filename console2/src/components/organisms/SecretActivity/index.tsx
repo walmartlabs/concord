@@ -24,6 +24,10 @@ import { AnyAction, Dispatch } from 'redux';
 import { Link, Redirect, Route, Switch } from 'react-router-dom';
 import { Divider, Grid, Header, Icon, Loader, Menu, Segment, Table } from 'semantic-ui-react';
 
+import {
+    parseISO as parseDate,
+} from 'date-fns';
+
 import { ConcordKey, Owner, RequestError } from '../../../api/common';
 import {
     SecretEncryptedByType,
@@ -33,7 +37,7 @@ import {
     typeToText
 } from '../../../api/org/secret';
 import { actions, selectors, State } from '../../../state/data/secrets';
-import { RequestErrorMessage, WithCopyToClipboard } from '../../molecules';
+import {HumanizedDuration, LocalTimestamp, RequestErrorMessage, WithCopyToClipboard} from '../../molecules';
 import {
     AuditLogActivity,
     PublicKeyPopup,
@@ -102,6 +106,10 @@ class SecretActivity extends React.PureComponent<Props> {
                                 <Table.Cell>{typeToText(data.type)}</Table.Cell>
                             </Table.Row>
                             <Table.Row>
+                                <Table.Cell>Visibility</Table.Cell>
+                                <Table.Cell>{visibilityToText(data.visibility)}</Table.Cell>
+                            </Table.Row>
+                            <Table.Row>
                                 <Table.Cell>Owner</Table.Cell>
                                 <Table.Cell>{data.owner ? renderUser(data.owner) : '-'}</Table.Cell>
                             </Table.Row>
@@ -119,10 +127,6 @@ class SecretActivity extends React.PureComponent<Props> {
                 <Grid.Column>
                     <Table definition={true}>
                         <Table.Body>
-                            <Table.Row>
-                                <Table.Cell>Visibility</Table.Cell>
-                                <Table.Cell>{visibilityToText(data.visibility)}</Table.Cell>
-                            </Table.Row>
                             <Table.Row>
                                 <Table.Cell>Protected by</Table.Cell>
                                 <Table.Cell>{encryptedByToText(data.encryptedBy)}</Table.Cell>
@@ -146,6 +150,22 @@ class SecretActivity extends React.PureComponent<Props> {
                                               </span>
                                           ))
                                         : ' - '}
+                                </Table.Cell>
+                            </Table.Row>
+                            <Table.Row>
+                                <Table.Cell>Age</Table.Cell>
+                                <Table.Cell>
+                                    <HumanizedDuration value={Date.now() - parseDate(data.createdAt).getTime()}>
+                                        <div>
+                                            created at:<div>{data.createdAt}</div>
+                                        </div>
+                                    </HumanizedDuration>
+                                </Table.Cell>
+                            </Table.Row>
+                            <Table.Row>
+                                <Table.Cell>Last updated at</Table.Cell>
+                                <Table.Cell>
+                                    {data.lastUpdatedAt ? <LocalTimestamp value={data.lastUpdatedAt}/> : '-'}
                                 </Table.Cell>
                             </Table.Row>
                         </Table.Body>
