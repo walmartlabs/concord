@@ -58,7 +58,7 @@ interface Props {
     initial: FormValues;
     submitting: boolean;
     editMode?: boolean;
-    onSubmit: (values: FormValues) => void;
+    onSubmit: (values: FormValues, setSubmitting: (isSubmitting: boolean) => void) => void;
     testRepository: (values: FormValues) => Promise<void>;
 }
 
@@ -366,7 +366,7 @@ const validator = async (values: FormValues, props: Props) => {
 
 export default withFormik<Props, FormValues>({
     handleSubmit: (values, bag) => {
-        bag.props.onSubmit(sanitize(values));
+        bag.props.onSubmit(sanitize(values), bag.setSubmitting);
     },
     mapPropsToValues: (props) => ({
         ...props.initial,
