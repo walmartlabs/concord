@@ -19,6 +19,8 @@
 
 ### Changed
 
+- console2: enable save button on repository submit error
+([#771](https://github.com/walmartlabs/concord/pull/771));
 - runtime-v2: handle NPE in expressions
 ([#776](https://github.com/walmartlabs/concord/pull/776));
 - concord-ansible-plugin: fix handling of play and task names
