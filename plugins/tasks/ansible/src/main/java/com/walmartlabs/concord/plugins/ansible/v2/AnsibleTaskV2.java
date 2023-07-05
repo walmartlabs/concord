@@ -21,6 +21,7 @@ package com.walmartlabs.concord.plugins.ansible.v2;
  */
 
 import com.walmartlabs.concord.ApiClient;
+import com.walmartlabs.concord.common.ConfigurationUtils;
 import com.walmartlabs.concord.plugins.ansible.*;
 import com.walmartlabs.concord.plugins.ansible.secrets.AnsibleSecretService;
 import com.walmartlabs.concord.runtime.v2.sdk.ProjectInfo;
@@ -32,6 +33,8 @@ import java.nio.file.Path;
 import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
+
+import static com.walmartlabs.concord.sdk.MapUtils.getBoolean;
 
 @Named("ansible")
 public class AnsibleTaskV2 implements Task {
@@ -63,6 +66,8 @@ public class AnsibleTaskV2 implements Task {
 
         ProjectInfo projectInfo = context.processConfiguration().projectInfo();
 
+        boolean debug = getBoolean(ConfigurationUtils.deepMerge(defaults, in), TaskParams.DEBUG_KEY.getKey(), false)
+                || context.processConfiguration().debug();
         AnsibleContext ctx = AnsibleContext.builder()
                 .apiBaseUrl(apiClient.getBasePath())
                 .instanceId(instanceId)
@@ -74,6 +79,7 @@ public class AnsibleTaskV2 implements Task {
                 .eventCorrelationId(context.execution().correlationId())
                 .orgName(projectInfo != null ? projectInfo.orgName() : null)
                 .retryCount(ContextUtils.getCurrentRetryAttemptNumber(context))
+                .debug(debug)
                 .build();
 
         TaskResult.SimpleResult result = task.run(ctx, runner);

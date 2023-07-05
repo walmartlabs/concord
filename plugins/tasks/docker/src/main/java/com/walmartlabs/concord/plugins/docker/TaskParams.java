@@ -64,8 +64,8 @@ public class TaskParams {
         return variables.getBoolean(FORCE_PULL_KEY, true);
     }
 
-    public boolean debug() {
-        return variables.getBoolean(DEBUG_KEY, false);
+    public boolean debug(boolean defaultValue) {
+        return variables.getBoolean(DEBUG_KEY, defaultValue);
     }
 
     public int pullRetryCount(){

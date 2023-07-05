@@ -47,7 +47,7 @@ public class SmtpTaskV2 implements Task {
         Map<String, Object> mail = getCfg(ctx, input, Constants.MAIL_PARAMS_KEY, Constants.MAIL_KEY);
         Path baseDir = ctx.workingDirectory();
         Object scope = getScope(ctx, mail);
-        boolean debug = input.getBoolean(Constants.DEBUG_KEY, false);
+        boolean debug = input.getBoolean(Constants.DEBUG_KEY, ctx.processConfiguration().debug());
 
         SmtpTaskUtils.send(smtp, mail, baseDir, scope, debug);
         return TaskResult.success();

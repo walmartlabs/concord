@@ -41,6 +41,7 @@ public interface AnsibleContext {
 
     Path tmpDir();
 
+    @Value.Default
     default boolean debug() {
         return getBoolean(argsWithDefaults(), TaskParams.DEBUG_KEY.getKey(), false);
     }

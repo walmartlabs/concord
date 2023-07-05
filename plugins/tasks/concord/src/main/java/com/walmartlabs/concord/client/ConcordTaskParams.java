@@ -213,8 +213,8 @@ public class ConcordTaskParams {
             return variables.getBoolean(SYNC_KEY, false);
         }
 
-        public boolean debug() {
-            return variables.getBoolean(DEBUG_KEY, false);
+        public boolean debug(boolean defaultValue) {
+            return variables.getBoolean(DEBUG_KEY, defaultValue);
         }
 
         public String org() {
