@@ -1458,6 +1458,8 @@ public class MainTest {
 
         assertLog(log, ".*" + Pattern.quote("plain: plain") + ".*");
 
+        assertLog(log, ".*" + Pattern.quote("secret from map: ******") + ".*");
+
         log = resume("ev1", ProcessConfiguration.builder().build());
         assertLog(log, ".*" + Pattern.quote("mySecret after suspend: ******") + ".*");
     }
@@ -1853,7 +1855,7 @@ public class MainTest {
     }
 
     @Named("sensitiveTask")
-    public static class TaskWithSensitiveData implements Task {
+    public static class TaskWithSensitiveData extends AbstractMap<String, String> implements Task {
 
         @SensitiveData
         public String getSensitive(String str) {
@@ -1878,6 +1880,17 @@ public class MainTest {
 
         public String getPlain(String str) {
             return str;
+        }
+
+        @Override
+        @SensitiveData
+        public String get(Object key) {
+            return key + "-value";
+        }
+
+        @Override
+        public Set<Entry<String, String>> entrySet() {
+            return null;
         }
     }
 

@@ -25,6 +25,7 @@ import com.walmartlabs.concord.common.ExceptionUtils;
 import com.walmartlabs.concord.runtime.v2.runner.el.functions.*;
 import com.walmartlabs.concord.runtime.v2.runner.el.resolvers.BeanELResolver;
 import com.walmartlabs.concord.runtime.v2.runner.el.resolvers.*;
+import com.walmartlabs.concord.runtime.v2.runner.el.resolvers.MapELResolver;
 import com.walmartlabs.concord.runtime.v2.runner.tasks.TaskProviders;
 import com.walmartlabs.concord.runtime.v2.sdk.EvalContext;
 import com.walmartlabs.concord.runtime.v2.sdk.ExpressionEvaluator;
