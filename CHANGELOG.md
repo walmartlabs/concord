@@ -80,7 +80,6 @@ forms
 - concord-server: remove more @Named usage
 ([#650](https://github.com/walmartlabs/concord/pull/650)).
 
-
 ## [1.99.0] - 2023-02-24
 
 ### Added
@@ -127,7 +126,12 @@ implementation
 - runtime-v2: fix argument passing in forks
 ([#708](https://github.com/walmartlabs/concord/pull/708)).
 
+## [1.98.2] - 2023-02-08
 
+### Changed
+
+- concord-server: clean nulls from trigger conditions, args, cfg
+([#713](https://github.com/walmartlabs/concord/pull/713));
 
 ## [1.98.1] - 2022-12-22
 
@@ -156,7 +160,6 @@ of processes
 ([#693](https://github.com/walmartlabs/concord/pull/693));
 - concord-server-db: pass secret salt as a base64 value
 ([#694][https://github.com/walmartlabs/concord/pull/689]).
-
 
 
 ## [1.98.0] - 2022-12-07

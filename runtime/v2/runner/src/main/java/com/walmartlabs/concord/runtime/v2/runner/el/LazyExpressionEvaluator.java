@@ -162,6 +162,10 @@ public class LazyExpressionEvaluator implements ExpressionEvaluator {
                     .findAny()
                     .map(i -> (RuntimeException)i)
                     .orElse(e);
+        } catch (UserDefinedException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new RuntimeException("while evaluating expression '" + expr + "'", e);
         }
     }
 
@@ -197,6 +201,7 @@ public class LazyExpressionEvaluator implements ExpressionEvaluator {
     private static FunctionMapper createFunctionMapper() {
         Map<String, Method> functions = new HashMap<>();
         functions.put("hasVariable", HasVariableFunction.getMethod());
+        functions.put("hasNonNullVariable", HasNonNullVariableFunction.getMethod());
         functions.put("orDefault", OrDefaultFunction.getMethod());
         functions.put("allVariables", AllVariablesFunction.getMethod());
         functions.put("currentFlowName", CurrentFlowNameFunction.getMethod());
