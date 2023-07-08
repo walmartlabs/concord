@@ -4,7 +4,7 @@ package com.walmartlabs.concord.client;
  * *****
  * Concord
  * -----
- * Copyright (C) 2017 - 2018 Walmart Inc.
+ * Copyright (C) 2017 - 2023 Walmart Inc.
  * -----
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -69,13 +69,15 @@ public class ConcordTaskCommon {
     private final UUID currentProcessId;
     private final String currentOrgName;
     private final Path workDir;
+    private final boolean globalDebug;
 
-    public ConcordTaskCommon(String sessionToken, ApiClientFactory apiClientFactory, UUID currentProcessId, String currentOrgName, Path workDir) {
+    public ConcordTaskCommon(String sessionToken, ApiClientFactory apiClientFactory, UUID currentProcessId, String currentOrgName, Path workDir, boolean globalDebug) {
         this.sessionToken = sessionToken;
         this.apiClientFactory = apiClientFactory;
         this.currentProcessId = currentProcessId;
         this.currentOrgName = currentOrgName;
         this.workDir = workDir;
+        this.globalDebug = globalDebug;
     }
 
     public TaskResult execute(ConcordTaskParams in) throws Exception {
@@ -240,7 +242,7 @@ public class ConcordTaskCommon {
         addIfNotNull(input, "parentInstanceId", parentInstanceId);
 
         boolean sync = in.sync();
-        boolean debug = in.debug();
+        boolean debug = in.debug(globalDebug);
         if (parentInstanceId != null) {
             if (debug) {
                 log.info("Starting a child process (org={}, project={}, repository={}, archive={}, sync={}, req={})",
@@ -500,7 +502,7 @@ public class ConcordTaskCommon {
 
         Map<String, Object> req = createRequest(in);
 
-        if (in.debug()) {
+        if (in.debug(globalDebug)) {
             log.info("Forking the current instance (sync={}, req={})...", in.sync(), req);
         }
 

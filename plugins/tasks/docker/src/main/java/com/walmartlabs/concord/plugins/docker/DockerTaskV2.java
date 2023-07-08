@@ -4,7 +4,7 @@ package com.walmartlabs.concord.plugins.docker;
  * *****
  * Concord
  * -----
- * Copyright (C) 2017 - 2020 Walmart Inc.
+ * Copyright (C) 2017 - 2023 Walmart Inc.
  * -----
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -46,11 +46,13 @@ public class DockerTaskV2 implements Task {
     private static final String SAVE_STD_OUT_KEY = "saveOut";
     private static final String SAVE_STD_ERR_KEY = "saveErr";
 
+    private final Context context;
     private final WorkingDirectory workDir;
     private final DockerService dockerService;
 
     @Inject
-    public DockerTaskV2(WorkingDirectory workDir, DockerService dockerService) {
+    public DockerTaskV2(Context context, WorkingDirectory workDir, DockerService dockerService) {
+        this.context = context;
         this.workDir = workDir;
         this.dockerService = dockerService;
     }
@@ -79,7 +81,7 @@ public class DockerTaskV2 implements Task {
                 .entryPoint(DockerTaskCommon.prepareEntryPoint(workDir, params))
                 .forcePull(params.forcePull())
                 .options(DockerContainerSpec.Options.builder().hosts(params.hosts()).build())
-                .debug(params.debug())
+                .debug(params.debug(context.processConfiguration().debug()))
                 .redirectErrorStream(redirectErrorStream)
                 .stdOutFilePath(stdOutFilePath)
                 .pullRetryCount(params.pullRetryCount())
