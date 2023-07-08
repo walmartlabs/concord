@@ -24,6 +24,7 @@ import com.icegreen.greenmail.junit5.GreenMailExtension;
 import com.icegreen.greenmail.util.ServerSetupTest;
 import com.walmartlabs.concord.runtime.v2.sdk.Context;
 import com.walmartlabs.concord.runtime.v2.sdk.MapBackedVariables;
+import com.walmartlabs.concord.runtime.v2.sdk.ProcessConfiguration;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -60,6 +61,7 @@ public class SmtpTaskV2Test {
         mail.put("message", "Default vars from policy.");
 
         Context ctx = mock(Context.class);
+        when(ctx.processConfiguration()).thenReturn(ProcessConfiguration.builder().build());
         when(ctx.workingDirectory()).thenReturn(Paths.get(System.getProperty("user.dir")));
         when(ctx.variables()).thenReturn(new MapBackedVariables(Collections.emptyMap()));
         when(ctx.defaultVariables()).thenReturn(new MapBackedVariables(smtpParams));
@@ -84,6 +86,7 @@ public class SmtpTaskV2Test {
         mail.put("message", "Default vars from process arguments.");
 
         Context ctx = mock(Context.class);
+        when(ctx.processConfiguration()).thenReturn(ProcessConfiguration.builder().build());
         when(ctx.workingDirectory()).thenReturn(Paths.get(System.getProperty("user.dir")));
         when(ctx.variables()).thenReturn(new MapBackedVariables(Collections.singletonMap("smtpParams", smtpParams)));
         when(ctx.defaultVariables()).thenReturn(new MapBackedVariables(Collections.emptyMap()));
@@ -113,6 +116,7 @@ public class SmtpTaskV2Test {
         mail.put("message", "Default vars from process arguments.");
 
         Context ctx = mock(Context.class);
+        when(ctx.processConfiguration()).thenReturn(ProcessConfiguration.builder().build());
         when(ctx.workingDirectory()).thenReturn(Paths.get(System.getProperty("user.dir")));
         when(ctx.variables()).thenReturn(new MapBackedVariables(Collections.singletonMap("smtpParams", processArgsDefaults)));
         when(ctx.defaultVariables()).thenReturn(new MapBackedVariables(policyDefaults));

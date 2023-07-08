@@ -4,7 +4,7 @@ package com.walmartlabs.concord.plugins.docker;
  * *****
  * Concord
  * -----
- * Copyright (C) 2017 - 2020 Walmart Inc.
+ * Copyright (C) 2017 - 2023 Walmart Inc.
  * -----
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -64,8 +64,8 @@ public class TaskParams {
         return variables.getBoolean(FORCE_PULL_KEY, true);
     }
 
-    public boolean debug() {
-        return variables.getBoolean(DEBUG_KEY, false);
+    public boolean debug(boolean defaultValue) {
+        return variables.getBoolean(DEBUG_KEY, defaultValue);
     }
 
     public int pullRetryCount(){
