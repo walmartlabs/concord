@@ -4,6 +4,8 @@
 
 ### Added
 
+- tasks-v2: use debug flag from process configuration
+([#780](https://github.com/walmartlabs/concord/pull/780));
 - concord-console2: show process duration on toolbar
 ([#779](https://github.com/walmartlabs/concord/pull/779));
 - concord-console2: allow customizing columns in the main process table
