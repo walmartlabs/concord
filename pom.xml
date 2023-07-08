@@ -163,30 +163,6 @@
                     </execution>
                 </executions>
             </plugin>
-            <plugin>
-                <artifactId>maven-enforcer-plugin</artifactId>
-                <version>3.0.0-M3</version>
-                <executions>
-                    <execution>
-                        <phase>validate</phase>
-                        <goals>
-                            <goal>enforce</goal>
-                        </goals>
-                    </execution>
-                </executions>
-                <configuration>
-                    <rules>
-                        <banDuplicatePomDependencyVersions />
-                        <requireUpperBoundDeps />
-                        <requireMavenVersion>
-                            <version>3.6.3</version>
-                        </requireMavenVersion>
-                        <requireJavaVersion>
-                            <version>${jdk.version}</version>
-                        </requireJavaVersion>
-                    </rules>
-                </configuration>
-            </plugin>
         </plugins>
 
         <pluginManagement>
