@@ -29,15 +29,8 @@ public class MultiException extends RuntimeException {
 
     private static final long serialVersionUID = 1L;
 
-    private final Collection<Exception> causes;
-
     public MultiException(Collection<Exception> causes) {
         super("Errors: \n" + toMessage(causes));
-        this.causes = causes;
-    }
-
-    public Collection<Exception> getCauses() {
-        return causes;
     }
 
     private static String toMessage(Collection<Exception> causes) {
@@ -46,7 +39,7 @@ public class MultiException extends RuntimeException {
                 .collect(Collectors.joining("\n"));
     }
 
-    public static String stacktraceToString(Exception e) {
+    private static String stacktraceToString(Exception e) {
         StringWriter sw = new StringWriter();
         e.printStackTrace(new PrintWriter(sw));
         return sw.toString();

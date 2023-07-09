@@ -105,16 +105,7 @@ public class Main {
             log.error(e.getMessage());
             System.exit(1);
         } catch (MultiException e) {
-            StringBuilder msg = new StringBuilder();
-            for (Exception c : e.getCauses()) {
-                if (c instanceof UserDefinedException) {
-                    msg.append(c.getMessage());
-                } else {
-                    msg.append(MultiException.stacktraceToString(c));
-                }
-                msg.append("\n");
-            }
-            log.error("Errors: {}", msg);
+            log.error("{}", e.getMessage());
             System.exit(1);
         } catch (Throwable t) {
             log.error("", t);
