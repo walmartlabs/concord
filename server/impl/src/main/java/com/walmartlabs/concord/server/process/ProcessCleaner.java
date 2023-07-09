@@ -95,17 +95,6 @@ public class ProcessCleaner implements ScheduledTask {
                         .where(PROCESS_QUEUE.LAST_UPDATED_AT.lessThan(cutoff)
                                 .and(PROCESS_QUEUE.CURRENT_STATUS.notIn(EXCLUDE_STATUSES)));
 
-                int queueEntries = 0;
-                if (jobCfg.isQueueCleanup()) {
-                    queueEntries = tx.deleteFrom(PROCESS_QUEUE)
-                            .where(PROCESS_QUEUE.INSTANCE_ID.in(ids))
-                            .execute();
-
-                    tx.deleteFrom(PROCESS_WAIT_CONDITIONS)
-                            .where(PROCESS_WAIT_CONDITIONS.INSTANCE_ID.in(ids))
-                            .execute();
-                }
-
                 int stateRecords = 0;
                 if (jobCfg.isStateCleanup()) {
                     stateRecords = tx.deleteFrom(PROCESS_STATE)
@@ -136,6 +125,17 @@ public class ProcessCleaner implements ScheduledTask {
                 if (jobCfg.isCheckpointCleanup()) {
                     checkpoints = tx.deleteFrom(PROCESS_CHECKPOINTS)
                             .where(PROCESS_CHECKPOINTS.INSTANCE_ID.in(ids))
+                            .execute();
+                }
+
+                int queueEntries = 0;
+                if (jobCfg.isQueueCleanup()) {
+                    tx.deleteFrom(PROCESS_WAIT_CONDITIONS)
+                            .where(PROCESS_WAIT_CONDITIONS.INSTANCE_ID.in(ids))
+                            .execute();
+
+                    queueEntries = tx.deleteFrom(PROCESS_QUEUE)
+                            .where(PROCESS_QUEUE.INSTANCE_ID.in(ids))
                             .execute();
                 }
 
@@ -174,8 +174,20 @@ public class ProcessCleaner implements ScheduledTask {
                             .execute();
                 }
 
-                log.info("deleteOrphans -> removed orphan data: {} state item(s), {} event(s), {} checkpoint(s)",
-                        stateRecords, events, checkpoints);
+                int logDataEntries = 0;
+                int logSegmentEntries = 0;
+                if (jobCfg.isLogsCleanup()) {
+                    logDataEntries = tx.deleteFrom(PROCESS_LOG_DATA)
+                            .where(PROCESS_LOG_DATA.INSTANCE_ID.notIn(alive))
+                            .execute();
+
+                    logSegmentEntries = tx.deleteFrom(PROCESS_LOG_SEGMENTS)
+                            .where(PROCESS_LOG_SEGMENTS.INSTANCE_ID.notIn(alive))
+                            .execute();
+                }
+
+                log.info("deleteOrphans -> removed orphan data: {} log data entries, {} log segments, {} state item(s), {} event(s), {} checkpoint(s)",
+                        logDataEntries, logSegmentEntries, stateRecords, events, checkpoints);
             });
 
             long t2 = System.currentTimeMillis();
