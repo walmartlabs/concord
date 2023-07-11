@@ -23,6 +23,8 @@
 
 ### Changed
 
+- server: fix DB cleanup job
+([#784](https://github.com/walmartlabs/concord/pull/784));
 - runtime-v2: hide stacktrace for UserDefinedException
 ([#782](https://github.com/walmartlabs/concord/pull/782));
 - console2: enable save button on repository submit error
