@@ -24,10 +24,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 public class CommentParser {
 
@@ -36,7 +33,7 @@ public class CommentParser {
 
     private static final ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
 
-    private static final Set<String> keys = Set.of("in:", "out:");
+    private static final Set<String> keys = new HashSet<>(Arrays.asList("in:", "out:"));
 
     @SuppressWarnings("unchecked")
     public FlowDefinition parse(List<String> commentLines) {
@@ -82,7 +79,7 @@ public class CommentParser {
             }
         }
 
-        StringBuilder inOut =  new StringBuilder();
+        StringBuilder inOut = new StringBuilder();
         for (int i = keyIndex; i < commentLines.size(); i++) {
             String line = trimStartChar(commentLines.get(i).trim(), '#');
             inOut.append(line).append('\n');
