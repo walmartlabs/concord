@@ -31,13 +31,11 @@ import com.walmartlabs.concord.common.IOUtils;
 import com.walmartlabs.concord.dependencymanager.DependencyManager;
 import com.walmartlabs.concord.dependencymanager.DependencyManagerConfiguration;
 import com.walmartlabs.concord.dependencymanager.DependencyManagerRepositories;
-import com.walmartlabs.concord.imports.ImportManager;
-import com.walmartlabs.concord.imports.ImportManagerFactory;
-import com.walmartlabs.concord.imports.ImportProcessingException;
-import com.walmartlabs.concord.imports.Imports;
+import com.walmartlabs.concord.imports.*;
 import com.walmartlabs.concord.process.loader.model.ProcessDefinitionUtils;
 import com.walmartlabs.concord.process.loader.v2.ProcessDefinitionV2;
 import com.walmartlabs.concord.runtime.common.cfg.RunnerConfiguration;
+import com.walmartlabs.concord.runtime.v2.NoopImportsNormalizer;
 import com.walmartlabs.concord.runtime.v2.ProjectLoaderV2;
 import com.walmartlabs.concord.runtime.v2.ProjectSerializerV2;
 import com.walmartlabs.concord.runtime.v2.model.ProcessDefinition;
@@ -45,6 +43,7 @@ import com.walmartlabs.concord.runtime.v2.model.ProcessDefinitionConfiguration;
 import com.walmartlabs.concord.runtime.v2.model.Profile;
 import com.walmartlabs.concord.runtime.v2.model.Step;
 import com.walmartlabs.concord.runtime.v2.runner.InjectorFactory;
+import com.walmartlabs.concord.runtime.v2.runner.ProjectLoadListeners;
 import com.walmartlabs.concord.runtime.v2.runner.Runner;
 import com.walmartlabs.concord.runtime.v2.runner.guice.ProcessDependenciesModule;
 import com.walmartlabs.concord.runtime.v2.runner.tasks.TaskProviders;
@@ -255,6 +254,11 @@ public class Run implements Callable<Integer> {
                 new ProcessDependenciesModule(targetDir, runnerCfg.dependencies(), cfg.debug()),
                 new CliServicesModule(secretStoreDir, targetDir, new VaultProvider(vaultDir, vaultId), dependencyManager, verbosity))
                 .create();
+
+        // Just to notify listeners
+        ProjectLoadListeners loadListeners = injector.getInstance(ProjectLoadListeners.class);
+        ProjectLoaderV2 loader = new ProjectLoaderV2(new NoopImportManager());
+        loader.load(targetDir, new NoopImportsNormalizer(), ImportsListener.NOP_LISTENER, loadListeners);
 
         Runner runner = injector.getInstance(Runner.class);
 
