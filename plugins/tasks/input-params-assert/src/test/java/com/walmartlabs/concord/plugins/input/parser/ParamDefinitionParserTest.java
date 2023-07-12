@@ -25,6 +25,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import org.junit.jupiter.api.Test;
 
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -42,7 +44,7 @@ public class ParamDefinitionParserTest {
 
         Map<String, ParamDefinition> result = ParamDefinitionParser.parse(toMap(input));
 
-        assertEquals(Map.of("stringParam", expected), result);
+        assertEquals(Collections.singletonMap("stringParam", expected), result);
     }
 
     @Test
@@ -65,7 +67,11 @@ public class ParamDefinitionParserTest {
 
         Map<String, ParamDefinition> result = ParamDefinitionParser.parse(toMap(input));
 
-        assertEquals(Map.of("stringParam", expectedString, "booleanParam", expectedBoolean), result);
+        Map<String, Object> expected = new HashMap<>();
+        expected.put("stringParam", expectedString);
+        expected.put("booleanParam", expectedBoolean);
+
+        assertEquals(expected, result);
     }
 
     @Test
@@ -87,7 +93,11 @@ public class ParamDefinitionParserTest {
 
         Map<String, ParamDefinition> result = ParamDefinitionParser.parse(toMap(input));
 
-        assertEquals(Map.of("objectParam", expected, "objectParam.stringParam", expectedValue), result);
+        Map<String, Object> expectedResult = new HashMap<>();
+        expectedResult.put("objectParam", expected);
+        expectedResult.put("objectParam.stringParam", expectedValue);
+
+        assertEquals(expectedResult, result);
     }
 
     @Test
@@ -109,7 +119,11 @@ public class ParamDefinitionParserTest {
 
         Map<String, ParamDefinition> result = ParamDefinitionParser.parse(toMap(input));
 
-        assertEquals(Map.of("arrayParam", expected, "arrayParam.stringParam", expectedValue), result);
+        Map<String, Object> expectedResult = new HashMap<>();
+        expectedResult.put("arrayParam", expected);
+        expectedResult.put("arrayParam.stringParam", expectedValue);
+
+        assertEquals(expectedResult, result);
     }
 
     private static final TypeReference<Map<String, String>> MAP_TYPE = new TypeReference<Map<String, String>>() {

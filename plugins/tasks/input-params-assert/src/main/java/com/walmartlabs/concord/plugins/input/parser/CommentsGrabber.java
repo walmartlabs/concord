@@ -34,25 +34,45 @@ public class CommentsGrabber {
     public Map<String, List<String>> grab(Path file) {
         Map<String, List<String>> result = new LinkedHashMap<>();
         try (BufferedReader reader = Files.newBufferedReader(file)) {
-            int lineNum = findKey(reader, "flows:");
-            if (lineNum == -1) {
+            String flowsLine = findKey(reader, "flows:");
+            if (flowsLine == null) {
                 return result;
             }
 
+            int flowsIndent = getIndentLevel(flowsLine);
+
+            int flowNameIndent = -1;
             List<String> lines = new ArrayList<>();
             String line;
             while ((line = reader.readLine()) != null) {
-                if (isNewYamlBlock(line)) {
-                    break;
-                } else if (line.trim().startsWith("#")) {
+                if (line.trim().isEmpty()) {
+                    continue;
+                }
+
+                if (line.trim().startsWith("#")) {
                     lines.add(line);
-                } else if (isFlowName(line)) {
+                    continue;
+                }
+
+                int lineIndentLevel = getIndentLevel(line);
+                if (lineIndentLevel <= flowsIndent) {
+                    // another tag (e.g. profiles ...)
+                    break;
+                }
+
+                if (flowNameIndent < 0) {
+                    flowNameIndent = lineIndentLevel;
+                }
+
+                if (flowNameIndent == lineIndentLevel) {
                     if (!lines.isEmpty()) {
                         line = line.trim();
                         String flowName = line.substring(0, line.length() - 1);
                         result.put(flowName, new ArrayList<>(lines));
                         lines.clear();
                     }
+                } else {
+                    lines.clear();
                 }
             }
 
@@ -62,31 +82,23 @@ public class CommentsGrabber {
         }
     }
 
-    private static int findKey(BufferedReader reader, String key) throws IOException {
+    private static String findKey(BufferedReader reader, String key) throws IOException {
         String line;
-        int lineNum = 0;
         while ((line = reader.readLine()) != null) {
-            lineNum++;
             if (key.equals(line.trim())) {
-                return lineNum;
+                return line;
             }
         }
-        return -1;
+        return null;
     }
 
-    private static boolean isNewYamlBlock(String line) {
-        if (line.trim().isEmpty() || line.trim().startsWith("#")) {
-            return false;
+    private static int getIndentLevel(String line) {
+        int count = 0;
+
+        while (count < line.length() && Character.isWhitespace(line.charAt(count))) {
+            count++;
         }
 
-        return !Character.isWhitespace(line.charAt(0));
-    }
-
-    private static boolean isFlowName(String line) {
-        if (line.trim().isEmpty() || line.trim().startsWith("#")) {
-            return false;
-        }
-
-        return Character.isWhitespace(line.charAt(0));
+        return count;
     }
 }
