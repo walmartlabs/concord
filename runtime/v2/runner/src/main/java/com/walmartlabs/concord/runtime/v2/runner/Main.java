@@ -211,10 +211,10 @@ public class Main {
         }
     }
 
-    private static ProcessSnapshot start(Runner runner, ProcessConfiguration cfg, Path workDir, Map<String, Object> args, ProjectLoadListener loadSourceListener) throws Exception {
+    private static ProcessSnapshot start(Runner runner, ProcessConfiguration cfg, Path workDir, Map<String, Object> args, ProjectLoadListener projectLoadListener) throws Exception {
         // assume all imports were processed by the agent
         ProjectLoaderV2 loader = new ProjectLoaderV2(new NoopImportManager());
-        ProcessDefinition processDefinition = loader.load(workDir, new NoopImportsNormalizer(), ImportsListener.NOP_LISTENER, loadSourceListener).getProjectDefinition();
+        ProcessDefinition processDefinition = loader.load(workDir, new NoopImportsNormalizer(), ImportsListener.NOP_LISTENER, projectLoadListener).getProjectDefinition();
 
         Map<String, Object> initiator = cfg.initiator();
         if (initiator != null) {
