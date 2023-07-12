@@ -4,7 +4,7 @@ package com.walmartlabs.concord.client.v2;
  * *****
  * Concord
  * -----
- * Copyright (C) 2017 - 2018 Walmart Inc.
+ * Copyright (C) 2017 - 2023 Walmart Inc.
  * -----
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -125,7 +125,8 @@ public class ConcordTaskV2 implements ReentrantTask {
         String sessionToken = context.processConfiguration().processInfo().sessionToken();
         UUID instanceId = context.processInstanceId();
         ProjectInfo projectInfo = context.processConfiguration().projectInfo();
-        return new ConcordTaskCommon(sessionToken, apiClientFactory, instanceId, projectInfo.orgName(), context.workingDirectory());
+        return new ConcordTaskCommon(sessionToken, apiClientFactory, instanceId, projectInfo.orgName(),
+                context.workingDirectory(), context.processConfiguration().debug());
     }
 
     private static List<UUID> toUUIDs(List<String> ids) {

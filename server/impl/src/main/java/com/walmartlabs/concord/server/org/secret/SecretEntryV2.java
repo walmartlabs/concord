@@ -21,18 +21,26 @@ package com.walmartlabs.concord.server.org.secret;
  */
 
 import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.walmartlabs.concord.common.secret.HashAlgorithm;
 import com.walmartlabs.concord.common.secret.SecretEncryptedByType;
 import com.walmartlabs.concord.server.org.EntityOwner;
 import com.walmartlabs.concord.server.org.project.ProjectEntry;
 
+import java.time.OffsetDateTime;
 import java.util.Set;
 import java.util.UUID;
 
 public class SecretEntryV2 extends SecretEntry {
 
-    private Set<ProjectEntry> projects;
+    private final Set<ProjectEntry> projects;
+
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss.SSSX")
+    private final OffsetDateTime createdAt;
+
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss.SSSX")
+    private final OffsetDateTime lastUpdatedAt;
 
     @JsonCreator
     public SecretEntryV2(@JsonProperty("id") UUID id,
@@ -45,6 +53,8 @@ public class SecretEntryV2 extends SecretEntry {
                          @JsonProperty("storeType") String storeType,
                          @JsonProperty("visibility") SecretVisibility visibility,
                          @JsonProperty("owner") EntityOwner owner,
+                         @JsonProperty("createdAt") OffsetDateTime createdAt,
+                         @JsonProperty("lastUpdatedAt") OffsetDateTime lastUpdatedAt,
                          byte[] secretSalt,
                          HashAlgorithm hashAlgorithm
     ) {
@@ -52,9 +62,19 @@ public class SecretEntryV2 extends SecretEntry {
                 projects.stream().map(ProjectEntry::getName).findFirst().orElse(null), type,
                 encryptedBy, storeType, visibility, owner, secretSalt, hashAlgorithm);
         this.projects = projects;
+        this.createdAt = createdAt;
+        this.lastUpdatedAt = lastUpdatedAt;
     }
 
     public Set<ProjectEntry> getProjects() {
         return projects;
+    }
+
+    public OffsetDateTime getCreatedAt() {
+        return createdAt;
+    }
+
+    public OffsetDateTime getLastUpdatedAt() {
+        return lastUpdatedAt;
     }
 }

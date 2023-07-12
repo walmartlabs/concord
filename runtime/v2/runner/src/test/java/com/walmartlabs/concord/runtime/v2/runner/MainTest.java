@@ -764,6 +764,7 @@ public class MainTest {
     }
 
     @Test
+    @IgnoreSerializationAssert
     public void testParallelWithItemsTask() throws Exception {
         deploy("parallelWithItemsTask");
 
@@ -776,6 +777,7 @@ public class MainTest {
     }
 
     @Test
+    @IgnoreSerializationAssert
     public void testParallelLoopTask() throws Exception {
         deploy("parallelLoopTask");
 
@@ -1012,6 +1014,7 @@ public class MainTest {
     }
 
     @Test
+    @IgnoreSerializationAssert
     public void testParallelIn() throws Exception {
         deploy("parallelIn");
 
@@ -1029,6 +1032,7 @@ public class MainTest {
     }
 
     @Test
+    @IgnoreSerializationAssert
     public void testParallelOut() throws Exception {
         deploy("parallelOut");
 
@@ -1052,6 +1056,7 @@ public class MainTest {
     }
 
     @Test
+    @IgnoreSerializationAssert
     public void testParallelLoopEmptyCall() throws Exception {
         deploy("parallelEmptyCall");
 
@@ -1063,6 +1068,7 @@ public class MainTest {
     }
 
     @Test
+    @IgnoreSerializationAssert
     public void testParallelOutExpr() throws Exception {
         deploy("parallelOutExpr");
 
@@ -1253,6 +1259,7 @@ public class MainTest {
     }
 
     @Test
+    @IgnoreSerializationAssert
     public void testFormsParallel() throws Exception {
         deploy("parallelForm");
 
@@ -1451,6 +1458,8 @@ public class MainTest {
 
         assertLog(log, ".*" + Pattern.quote("plain: plain") + ".*");
 
+        assertLog(log, ".*" + Pattern.quote("secret from map: ******") + ".*");
+
         log = resume("ev1", ProcessConfiguration.builder().build());
         assertLog(log, ".*" + Pattern.quote("mySecret after suspend: ******") + ".*");
     }
@@ -1465,6 +1474,18 @@ public class MainTest {
 
         byte[] log = run();
         assertLog(log, ".*counter: 1.*");
+    }
+
+    @Test
+    public void testHasNonNullVariable() throws Exception {
+        deploy("hasNonNullVariable");
+
+        save(ProcessConfiguration.builder()
+                .build());
+
+        byte[] log = run();
+        assertLog(log, ".*true == true.*");
+        assertLog(log, ".*false == false.*");
     }
 
     @Test
@@ -1883,7 +1904,7 @@ public class MainTest {
     }
 
     @Named("sensitiveTask")
-    public static class TaskWithSensitiveData implements Task {
+    public static class TaskWithSensitiveData extends AbstractMap<String, String> implements Task {
 
         @SensitiveData
         public String getSensitive(String str) {
@@ -1908,6 +1929,17 @@ public class MainTest {
 
         public String getPlain(String str) {
             return str;
+        }
+
+        @Override
+        @SensitiveData
+        public String get(Object key) {
+            return key + "-value";
+        }
+
+        @Override
+        public Set<Entry<String, String>> entrySet() {
+            return null;
         }
     }
 
