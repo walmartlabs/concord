@@ -1,0 +1,18 @@
+flows:
+  ##
+  #  in:
+  #    param1: string, mandatory, param1 description
+  #    param2: object, mandatory, param2 description
+  #    param2.arr: array, mandatory, arr description
+  #    param2.arr.key: object, mandatory, object in arr description
+  #    param2.arr.key.key2: string, mandatory, object object in arr description
+  ##
+  default:
+    - log: "default"
+
+
+  param1: "param1-value"
+  param2:
+    arr:
+      - key:
+          key2: "value"

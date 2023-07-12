@@ -1,0 +1,7 @@
+flows:
+  ##
+  #  in:
+  #    param1: string, mandatory, param1 description
+  ##
+  default:
+    - log: "default"
