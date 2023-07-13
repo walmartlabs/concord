@@ -395,16 +395,6 @@ public class MainTest {
     }
 
     @Test
-    public void testTaskErrorBlock2() throws Exception {
-        deploy("faultyTask2");
-
-        save(ProcessConfiguration.builder().build());
-
-        byte[] log = run();
-        assertLog(log, ".*error occurred:.*boom!.*");
-    }
-
-    @Test
     public void testTaskErrorOut() throws Exception {
         deploy("faultyTaskOut");
 
@@ -851,7 +841,7 @@ public class MainTest {
             fail("should fail");
         } catch (Exception e) {
             String msg = e.getMessage();
-            assertTrue(msg.contains("Can't find 'sayGoodbye()' method"));
+            assertTrue(msg.contains("Can't find 'sayGoodbye()' method"), msg);
             assertTrue(msg.contains("Did you mean: sayHello()"));
         }
     }
@@ -1488,6 +1478,144 @@ public class MainTest {
         assertLog(log, ".*false == false.*");
     }
 
+    @Test
+    public void testInvalidExpressionError() throws Exception {
+        deploy("invalidExpression");
+
+        save(ProcessConfiguration.builder()
+                .build());
+
+        try {
+            run();
+            fail("must fail");
+        } catch (Exception e) {
+            // ignore
+        }
+
+        String logString = new String(lastLog);
+        String expected = "[ERROR] (concord.yml): Error @ line: 9, col: 7. Error Parsing: ${str.split('\\n')}. Encountered \"\\'\\\\n\" at line 1, column 13.\n" +
+                "Was expecting one of:\n" +
+                "    \"{\" ...\n" +
+                "    <INTEGER_LITERAL> ...\n" +
+                "    <FLOATING_POINT_LITERAL> ...\n" +
+                "    <STRING_LITERAL> ...\n" +
+                "    \"true\" ...\n" +
+                "    \"false\" ...\n" +
+                "    \"null\" ...\n" +
+                "    \"(\" ...\n" +
+                "    \")\" ...\n" +
+                "    \"[\" ...\n" +
+                "    \"!\" ...\n" +
+                "    \"not\" ...\n" +
+                "    \"empty\" ...\n" +
+                "    \"-\" ...\n" +
+                "    <IDENTIFIER> ...";
+
+        assertTrue(logString.contains(expected), "expected log contains: " + expected + ", actual: " + logString);
+    }
+
+    @Test
+    public void testNPEInExpression() throws Exception {
+        deploy("npeInExpression");
+
+        save(ProcessConfiguration.builder()
+                .build());
+
+        try {
+            run();
+            fail("must fail");
+        } catch (Exception e) {
+            // ignore
+        }
+
+        String logString = new String(lastLog);
+        String expected = "[ERROR] (concord.yml): Error @ line: 7, col: 7. while evaluating expression '${'a' += m.n += 'b'}': null";
+
+        assertTrue(logString.contains(expected), "expected log contains: " + expected + ", actual: " + logString);
+    }
+
+    @Test
+    public void testExpressionThrowUserDefinedError() throws Exception {
+        deploy("faultyExpression");
+
+        save(ProcessConfiguration.builder()
+                .build());
+
+        try {
+            run();
+            fail("must fail");
+        } catch (Exception e) {
+            // ignore
+        }
+        assertLog(lastLog, ".*" + Pattern.quote("[ERROR] (concord.yml): Error @ line: 3, col: 7. BOOM"));
+    }
+
+    @Test
+    public void testExpressionThrowException() throws Exception {
+        deploy("exceptionFromExpression");
+
+        save(ProcessConfiguration.builder()
+                .build());
+
+        try {
+            run();
+            fail("must fail");
+        } catch (Exception e) {
+            // ignore
+        }
+
+        String expected = "[ERROR] (concord.yml): Error @ line: 3, col: 7. while evaluating expression '${faultyTask.exception('BOOM')}': javax.el.ELException: java.lang.Exception: BOOM";
+        assertLog(lastLog, ".*" + Pattern.quote(expected));
+    }
+
+    @Test
+    public void testTaskThrowUserDefinedError() throws Exception {
+        deploy("faultyTask2");
+
+        save(ProcessConfiguration.builder()
+                .build());
+
+        try {
+            run();
+            fail("must fail");
+        } catch (Exception e) {
+            // ignore
+        }
+        assertLog(lastLog, ".*" + Pattern.quote("[ERROR] (concord.yml): Error @ line: 3, col: 7. Error during execution of 'faultyTask' task: boom!"));
+    }
+
+    @Test
+    public void testTaskThrowRuntimeException() throws Exception {
+        deploy("faultyTask3");
+
+        save(ProcessConfiguration.builder()
+                .build());
+
+        try {
+            run();
+            fail("must fail");
+        } catch (Exception e) {
+            // ignore
+        }
+        assertLog(lastLog, ".*" + Pattern.quote("[ERROR] (concord.yml): Error @ line: 3, col: 7. boom!"));
+    }
+
+    @Test
+    public void testTaskThrowException() throws Exception {
+        deploy("faultyTask4");
+
+        save(ProcessConfiguration.builder()
+                .build());
+
+        try {
+            run();
+            fail("must fail");
+        } catch (Exception e) {
+            // ignore
+        }
+        assertLog(lastLog, ".*" + Pattern.quote("[ERROR] (concord.yml): Error @ line: 3, col: 7. boom!"));
+    }
+
     private void deploy(String resource) throws URISyntaxException, IOException {
         Path src = Paths.get(MainTest.class.getResource(resource).toURI());
         IOUtils.copy(src, workDir);
@@ -1738,12 +1866,20 @@ public class MainTest {
 
     @Named("faultyTask")
     @SuppressWarnings("unused")
-    static class FaultyTask implements Task {
+    public static class FaultyTask implements Task {
 
         @Override
         public TaskResult execute(Variables input) {
             return TaskResult.fail("boom!")
                     .value("key", "value");
+        }
+
+        public void fail(String msg) {
+            throw new UserDefinedException(msg);
+        }
+
+        public void exception(String msg) throws Exception {
+            throw new Exception(msg);
         }
     }
 
@@ -1754,6 +1890,16 @@ public class MainTest {
         @Override
         public TaskResult execute(Variables input) {
             throw new RuntimeException("boom!");
+        }
+    }
+
+    @Named("faultyTask3")
+    @SuppressWarnings("unused")
+    static class FaultyTask3 implements Task {
+
+        @Override
+        public TaskResult execute(Variables input) throws Exception {
+            throw new Exception("boom!");
         }
     }
 

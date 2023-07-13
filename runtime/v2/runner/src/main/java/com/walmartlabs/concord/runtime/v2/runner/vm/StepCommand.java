@@ -21,6 +21,7 @@ package com.walmartlabs.concord.runtime.v2.runner.vm;
  */
 
 import ch.qos.logback.classic.Level;
+import com.walmartlabs.concord.common.ExceptionUtils;
 import com.walmartlabs.concord.runtime.common.cfg.RunnerConfiguration;
 import com.walmartlabs.concord.runtime.v2.model.AbstractStep;
 import com.walmartlabs.concord.runtime.v2.model.Location;
@@ -31,11 +32,13 @@ import com.walmartlabs.concord.runtime.v2.runner.logging.RunnerLogger;
 import com.walmartlabs.concord.runtime.v2.runner.logging.SegmentedLogger;
 import com.walmartlabs.concord.runtime.v2.runner.tasks.ContextProvider;
 import com.walmartlabs.concord.runtime.v2.sdk.Context;
+import com.walmartlabs.concord.runtime.v2.sdk.UserDefinedException;
 import com.walmartlabs.concord.svm.*;
 import com.walmartlabs.concord.svm.Runtime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.el.ELException;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -106,7 +109,7 @@ public abstract class StepCommand<T extends Step> implements Command {
                     throw e;
                 }
 
-                log.error("{} {}", Location.toErrorPrefix(step.getLocation()), e.getMessage());
+                log.error("{} {}", Location.toErrorPrefix(step.getLocation()), getExceptionMessage(e));
                 List<StackTraceItem> stackTrace = state.getStackTrace(threadId);
                 if (!stackTrace.isEmpty()) {
                     log.error("Call stack:\n{}", stackTrace.stream().map(StackTraceItem::toString).collect(Collectors.joining("\n")));
@@ -157,5 +160,22 @@ public abstract class StepCommand<T extends Step> implements Command {
         }
 
         return Level.INFO;
+    }
+
+    private static String getExceptionMessage(Exception e) {
+        UserDefinedException u = ExceptionUtils.filterException(e, UserDefinedException.class);
+        if (u != null) {
+            return u.getMessage();
+        }
+
+        if (e instanceof ELException) {
+            return
+                ExceptionUtils.getExceptionList(e).stream()
+                .map(Throwable::getMessage)
+                .collect(Collectors.joining(". "));
+        }
+
+        List<Throwable> exceptions = ExceptionUtils.getExceptionList(e);
+        return exceptions.get(exceptions.size() - 1).getMessage();
     }
 }
