@@ -16,6 +16,7 @@
         <ansible.image>${docker.namespace}/concord-ansible</ansible.image>
         <docker.tagbase>${ansible.image}</docker.tagbase>
         <docker.file>oss/centos/Dockerfile</docker.file>
+        <docker.allowPull>false</docker.allowPull>
     </properties>
 
     <dependencies>
