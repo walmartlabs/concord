@@ -1900,7 +1900,7 @@ public class MainTest {
         private final AtomicLong id = new AtomicLong(1L);
 
         @Override
-        public long createSegment(UUID correlationId, String name) {
+        public long createSegment(UUID correlationId, String name, Long parentId, Map<String, Object> meta) {
             return id.getAndIncrement();
         }
     }
