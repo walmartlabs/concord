@@ -66,8 +66,6 @@
 
         <scm.connection>scm:git:https://github.com/walmartlabs/concord.git</scm.connection>
 
-        <jdk.version>1.8.0</jdk.version>
-
         <docker.plugin.version>0.38.1</docker.plugin.version>
         <jooq.version>3.13.4</jooq.version>
         <junit.version>5.8.2</junit.version>
@@ -468,40 +466,10 @@
             </distributionManagement>
         </profile>
         <profile>
-            <id>jdk8</id>
+            <id>jdk17</id>
             <activation>
                 <activeByDefault>true</activeByDefault>
             </activation>
-            <properties>
-                <jdk.version>1.8</jdk.version>
-            </properties>
-        </profile>
-        <profile>
-            <id>jdk8-aarch64</id>
-            <properties>
-                <jdk.version>1.8</jdk.version>
-            </properties>
-        </profile>
-        <profile>
-            <id>jdk11</id>
-            <properties>
-                <jdk.version>11</jdk.version>
-                <failsafe.args>
-                    --add-opens java.base/java.util=ALL-UNNAMED
-                </failsafe.args>
-            </properties>
-        </profile>
-        <profile>
-            <id>jdk11-aarch64</id>
-            <properties>
-                <jdk.version>11</jdk.version>
-                <failsafe.args>
-                    --add-opens java.base/java.util=ALL-UNNAMED
-                </failsafe.args>
-            </properties>
-        </profile>
-        <profile>
-            <id>jdk17</id>
             <properties>
                 <jdk.version>17</jdk.version>
                 <failsafe.args>
