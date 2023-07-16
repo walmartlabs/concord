@@ -33,6 +33,7 @@ import com.walmartlabs.concord.svm.State;
 import com.walmartlabs.concord.svm.ThreadId;
 
 import java.util.Collections;
+import java.util.Map;
 import java.util.Objects;
 
 import static com.walmartlabs.concord.runtime.v2.runner.tasks.TaskCallInterceptor.CallContext;
@@ -98,5 +99,10 @@ public class TaskCallCommand extends StepCommand<TaskCall> {
     @Override
     public String getDefaultSegmentName() {
         return "task: " + getStep().getName();
+    }
+
+    @Override
+    protected Map<String, Object> getLogMeta(Context ctx, TaskCall step) {
+        return Collections.singletonMap("type", "task");
     }
 }

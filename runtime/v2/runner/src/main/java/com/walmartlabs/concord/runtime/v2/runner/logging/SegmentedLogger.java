@@ -50,7 +50,7 @@ public class SegmentedLogger implements RunnerLogger {
     public void withContext(LogContext ctx, Runnable runnable) {
         Long segmentId = ctx.segmentId();
         if (segmentId == null) {
-            segmentId = loggingClient.createSegment(ctx.correlationId(), ctx.segmentName());
+            segmentId = loggingClient.createSegment(ctx.correlationId(), ctx.segmentName(), ctx.parentSegmentId(), ctx.meta());
         }
 
         LogContext context = LogContext.builder().from(ctx)

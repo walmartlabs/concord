@@ -28,6 +28,8 @@ import org.immutables.value.Value;
 
 import javax.annotation.Nullable;
 import java.time.OffsetDateTime;
+import java.util.Collections;
+import java.util.Map;
 import java.util.UUID;
 
 @Value.Immutable
@@ -58,6 +60,14 @@ public interface LogSegment {
 
     @Nullable
     Integer errors();
+
+    @Nullable
+    Boolean childHasErrors();
+
+    @Value.Default
+    default Map<String, Object> meta() {
+        return Collections.emptyMap();
+    }
 
     enum Status {
         OK,

@@ -25,6 +25,8 @@ import org.immutables.value.Value;
 
 import javax.annotation.Nullable;
 import java.io.Serializable;
+import java.util.Collections;
+import java.util.Map;
 import java.util.UUID;
 
 @Value.Immutable
@@ -36,6 +38,9 @@ public interface LogContext extends Serializable {
     @Nullable
     Long segmentId();
 
+    @Nullable
+    Long parentSegmentId();
+
     String segmentName();
 
     UUID correlationId();
@@ -45,6 +50,11 @@ public interface LogContext extends Serializable {
     @Value.Default
     default Level logLevel() {
         return Level.INFO;
+    }
+
+    @Value.Default
+    default Map<String, Object> meta() {
+        return Collections.emptyMap();
     }
 
     static ImmutableLogContext.Builder builder() {

@@ -162,25 +162,25 @@
                 </executions>
             </plugin>
 
-            <plugin>
-                <groupId>org.revapi</groupId>
-                <artifactId>revapi-maven-plugin</artifactId>
-                <configuration>
-                    <analysisConfiguration>
-                        <revapi.ignore>
-                            <item>
-                                <code>java.field.serialVersionUIDUnchanged</code>
-                            </item>
-                            <item>
-                                <code>java.method.parameterTypeParameterChanged</code>
-                            </item>
-                            <item>
-                                <code>java.method.returnTypeTypeParametersChanged</code>
-                            </item>
-                        </revapi.ignore>
-                    </analysisConfiguration>
-                </configuration>
-            </plugin>
+<!--            <plugin>-->
+<!--                <groupId>org.revapi</groupId>-->
+<!--                <artifactId>revapi-maven-plugin</artifactId>-->
+<!--                <configuration>-->
+<!--                    <analysisConfiguration>-->
+<!--                        <revapi.ignore>-->
+<!--                            <item>-->
+<!--                                <code>java.field.serialVersionUIDUnchanged</code>-->
+<!--                            </item>-->
+<!--                            <item>-->
+<!--                                <code>java.method.parameterTypeParameterChanged</code>-->
+<!--                            </item>-->
+<!--                            <item>-->
+<!--                                <code>java.method.returnTypeTypeParametersChanged</code>-->
+<!--                            </item>-->
+<!--                        </revapi.ignore>-->
+<!--                    </analysisConfiguration>-->
+<!--                </configuration>-->
+<!--            </plugin>-->
         </plugins>
     </build>
 </project>

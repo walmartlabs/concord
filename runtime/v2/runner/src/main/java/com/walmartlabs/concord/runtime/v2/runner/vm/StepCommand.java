@@ -36,7 +36,9 @@ import com.walmartlabs.concord.svm.Runtime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -118,6 +120,10 @@ public abstract class StepCommand<T extends Step> implements Command {
 
     protected abstract void execute(Runtime runtime, State state, ThreadId threadId);
 
+    protected Map<String, Object> getLogMeta(Context ctx, T step) {
+        return Collections.emptyMap();
+    }
+
     protected LogContext getLogContext(Runtime runtime, Context ctx, UUID correlationId) {
         String segmentName = getSegmentName(ctx, getStep());
         if (segmentName == null) {
@@ -128,10 +134,12 @@ public abstract class StepCommand<T extends Step> implements Command {
         boolean redirectSystemOutAndErr = runnerCfg.logging().sendSystemOutAndErrToSLF4J();
 
         return LogContext.builder()
+                .parentSegmentId((Long)ctx.variables().get("parentSegmentId"))
                 .segmentName(segmentName)
                 .correlationId(correlationId)
                 .redirectSystemOutAndErr(redirectSystemOutAndErr)
                 .logLevel(getLogLevel(step))
+                .meta(getLogMeta(ctx, getStep()))
                 .build();
     }
 

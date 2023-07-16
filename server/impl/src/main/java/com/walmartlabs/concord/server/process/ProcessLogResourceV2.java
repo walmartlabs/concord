@@ -26,7 +26,6 @@ import com.walmartlabs.concord.server.OperationResult;
 import com.walmartlabs.concord.server.cfg.ProcessConfiguration;
 import com.walmartlabs.concord.server.process.logs.ProcessLogAccessManager;
 import com.walmartlabs.concord.server.process.logs.ProcessLogManager;
-import com.walmartlabs.concord.server.process.queue.ProcessKeyCache;
 import com.walmartlabs.concord.server.sdk.ConcordApplicationException;
 import com.walmartlabs.concord.server.sdk.ProcessKey;
 import com.walmartlabs.concord.server.sdk.metrics.WithTimer;
@@ -61,19 +60,16 @@ import static com.walmartlabs.concord.server.process.logs.ProcessLogsDao.Process
 @Path("/api/v2/process")
 public class ProcessLogResourceV2 implements Resource {
 
-    private final ProcessKeyCache processKeyCache;
     private final ProcessManager processManager;
     private final ProcessLogManager logManager;
     private final ProcessLogAccessManager logAccessManager;
     private final ProcessConfiguration processCfg;
 
     @Inject
-    public ProcessLogResourceV2(ProcessKeyCache processKeyCache,
-                                ProcessManager processManager,
+    public ProcessLogResourceV2(ProcessManager processManager,
                                 ProcessLogManager logManager,
                                 ProcessLogAccessManager logAccessManager,
                                 ProcessConfiguration processCfg) {
-        this.processKeyCache = processKeyCache;
         this.processManager = processManager;
         this.logManager = logManager;
         this.logAccessManager = logAccessManager;
@@ -90,14 +86,17 @@ public class ProcessLogResourceV2 implements Resource {
     @WithTimer
     public List<LogSegment> segments(@ApiParam @PathParam("id") UUID instanceId,
                                      @ApiParam @QueryParam("limit") @DefaultValue("30") int limit,
-                                     @ApiParam @QueryParam("offset") @DefaultValue("0") int offset) {
+                                     @ApiParam @QueryParam("offset") @DefaultValue("0") int offset,
+                                     @ApiParam @QueryParam("parentId") Long parentId,
+                                     @ApiParam @QueryParam("rootOnly") @DefaultValue("false") boolean rootOnly,
+                                     @ApiParam @QueryParam("collectErrors") @DefaultValue("false") boolean collectErrors) {
 
         if (offset < 0) {
             throw new ValidationErrorsException("'offset' must be a positive number or zero");
         }
 
         ProcessKey processKey = logAccessManager.assertLogAccess(instanceId);
-        return logManager.listSegments(processKey, limit, offset);
+        return logManager.listSegments(processKey, limit, offset, parentId, rootOnly, collectErrors);
     }
 
     /**
@@ -113,7 +112,7 @@ public class ProcessLogResourceV2 implements Resource {
                                                @ApiParam LogSegmentRequest request) {
 
         ProcessKey processKey = logAccessManager.assertLogAccess(instanceId);
-        long segmentId = logManager.createSegment(processKey, request.correlationId(), request.name(), request.createdAt());
+        long segmentId = logManager.createSegment(processKey, request.correlationId(), request.name(), request.createdAt(), request.parentId(), request.meta());
         return new LogSegmentOperationResponse(segmentId, OperationResult.CREATED);
     }
 

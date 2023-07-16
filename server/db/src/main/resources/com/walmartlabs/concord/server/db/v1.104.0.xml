@@ -12,4 +12,25 @@
         </addColumn>
     </changeSet>
 
+    <changeSet id="1104100" author="ybrigo@gmail.com">
+        <addColumn tableName="PROCESS_LOG_SEGMENTS">
+            <column name="PARENT_SEGMENT_ID" type="bigserial">
+                <constraints nullable="true"/>
+            </column>
+        </addColumn>
+    </changeSet>
+
+    <changeSet id="1104200" author="ybrigo@gmail.com">
+        <addColumn tableName="PROCESS_LOG_SEGMENTS">
+            <column name="META" type="jsonb">
+                <constraints nullable="true"/>
+            </column>
+        </addColumn>
+    </changeSet>
+
+    <changeSet id="1104300" author="ybrigo@gmail.com">
+        <createIndex tableName="PROCESS_LOG_SEGMENTS" indexName="IDX_PROC_LOG_SEG_PAR_SEG_ID">
+            <column name="PARENT_SEGMENT_ID"/>
+        </createIndex>
+    </changeSet>
 </databaseChangeLog>

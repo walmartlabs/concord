@@ -36,6 +36,8 @@ const pathToTab = (s: string): TabLink => {
         return 'ansible';
     } else if (s.endsWith('/log')) {
         return 'log';
+    } else if (s.endsWith('/log2')) {
+        return 'log2';
     } else if (s.endsWith('/history')) {
         return 'history';
     } else if (s.endsWith('/children')) {
