@@ -16,6 +16,7 @@
         <server.image>${docker.namespace}/concord-server</server.image>
         <docker.tagbase>${server.image}</docker.tagbase>
         <docker.file>oss/Dockerfile</docker.file>
+        <docker.allowPull>false</docker.allowPull>
     </properties>
 
     <dependencies>

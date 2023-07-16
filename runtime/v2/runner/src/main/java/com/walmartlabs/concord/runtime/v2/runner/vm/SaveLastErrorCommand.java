@@ -28,7 +28,6 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.walmartlabs.concord.runtime.v2.runner.PersistenceService;
-import com.walmartlabs.concord.runtime.v2.sdk.UserDefinedException;
 import com.walmartlabs.concord.sdk.Constants;
 import com.walmartlabs.concord.svm.Runtime;
 import com.walmartlabs.concord.svm.*;
@@ -68,18 +67,6 @@ public class SaveLastErrorCommand implements Command {
     }
 
     private static Map<String, Object> serialize(Exception e) {
-        if (e instanceof MultiException) {
-            StringBuilder msg = new StringBuilder();
-            for (Exception c : ((MultiException)e).getCauses()) {
-                if (c instanceof UserDefinedException) {
-                    msg.append(c.getMessage());
-                } else {
-                    msg.append(MultiException.stacktraceToString(c));
-                }
-                msg.append("\n");
-            }
-            return Collections.singletonMap("message", msg);
-        }
         try {
             return createMapper().convertValue(e, MAP_TYPE);
         } catch (Exception ex) {
