@@ -21,13 +21,7 @@
 import * as React from 'react';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Button, Icon, SemanticCOLORS, SemanticICONS } from 'semantic-ui-react';
-import {
-    formatDistance,
-    formatDuration,
-    intervalToDuration,
-    parseISO as parseDate,
-} from 'date-fns';
-import { Link, useLocation } from 'react-router-dom';
+import { useLocation } from 'react-router-dom';
 
 import {LogSegmentEntry, SegmentStatus} from '../../../api/process/log';
 import { ConcordId } from '../../../api/common';
@@ -68,10 +62,8 @@ const LogSegmentV3 = ({
     instanceId,
     segmentId,
     name,
-    createdAt,
     processStatus,
     status,
-    statusUpdatedAt,
     lowRange,
     warnings,
     errors,
@@ -88,9 +80,6 @@ const LogSegmentV3 = ({
     const location = useLocation();
     const [isOpen, setOpen] = useState<boolean>(forceOpen);
     const [isLoadAll, setLoadAll] = useState<boolean>(false);
-    const [isAutoScroll, setAutoScroll] = useState<boolean>(false);
-
-    const baseUrl = `/process/${instanceId}/log`;
 
     const myRef = useRef<null | HTMLDivElement>(null);
 
@@ -121,12 +110,6 @@ const LogSegmentV3 = ({
         [onSegmentInfo]
     );
 
-    const autoscrollClickHandler = useCallback((ev: React.MouseEvent<any>) => {
-        ev.preventDefault();
-        ev.stopPropagation();
-        setAutoScroll((prevState) => !prevState);
-    }, []);
-
     useEffect(() => {
         setOpen(forceOpen);
     }, [forceOpen]);
@@ -138,30 +121,6 @@ const LogSegmentV3 = ({
             onStopLoading();
         }
     }, [isOpen, isLoadAll, name, onStartLoading, onStopLoading]);
-
-    useEffect(() => {
-        if (isAutoScroll && scrollAnchorRef.current !== null) {
-            scrollAnchorRef.current.scrollIntoView();
-        }
-    }, [isAutoScroll, data]);
-
-    const createdAtDate = parseDate(createdAt);
-
-    let beenRunningFor;
-    if (status === SegmentStatus.RUNNING && !isFinal(processStatus)) {
-        beenRunningFor = formatDistance(new Date(), createdAtDate);
-    }
-
-    let wasRunningFor;
-    if (status !== SegmentStatus.RUNNING && statusUpdatedAt) {
-        const statusUpdatedAtDate = parseDate(statusUpdatedAt);
-        wasRunningFor = formatDuration(
-            intervalToDuration({
-                start: createdAtDate,
-                end: statusUpdatedAtDate,
-            })
-        );
-    }
 
     return (
         <div className="LogSegment" id={`segmentId=${segmentId}`} ref={myRef}>
@@ -179,69 +138,24 @@ const LogSegmentV3 = ({
                     warnings={warnings}
                     errors={errors}
                     meta={meta}
+                    segmentInfoClickHandler={segmentInfoClickHandler}
                 />
 
                 <span className="Caption">{name}</span>
 
-                {beenRunningFor && <span className="RunningFor">running for {beenRunningFor}</span>}
-                {wasRunningFor && <span className="RunningFor">{wasRunningFor}</span>}
+                {/*{beenRunningFor && <span className="RunningFor">running for {beenRunningFor}</span>}*/}
+                {/*{wasRunningFor && <span className="RunningFor">{wasRunningFor}</span>}*/}
 
-                <Link
-                    to={`${baseUrl}#segmentId=${segmentId}`}
-                    className="AdditionalAction Anchor"
-                    data-tooltip="Hyperlink"
-                    data-inverted=""
-                >
-                    <Icon name="linkify" />
-                </Link>
+                {/*{onSegmentInfo !== undefined && (*/}
+                {/*    <div className={'AdditionalAction'} data-tooltip="Show Info" data-inverted="">*/}
+                {/*        <Icon*/}
+                {/*            name={'info circle'}*/}
+                {/*            title={'Show info'}*/}
+                {/*            onClick={segmentInfoClickHandler}*/}
+                {/*        />*/}
+                {/*    </div>*/}
+                {/*)}*/}
 
-                <a
-                    href={`/api/v2/process/${instanceId}/log/segment/${segmentId}/data`}
-                    onClick={(event) => event.stopPropagation()}
-                    rel="noopener noreferrer"
-                    target="_blank"
-                    className="AdditionalAction Last"
-                    data-tooltip="Download: InstanceId_SegmentId.log"
-                    data-inverted=""
-                >
-                    <Icon name="download" />
-                </a>
-
-                {onSegmentInfo !== undefined && (
-                    <div className={'AdditionalAction'} data-tooltip="Show Info" data-inverted="">
-                        <Icon
-                            name={'info circle'}
-                            title={'Show info'}
-                            onClick={segmentInfoClickHandler}
-                        />
-                    </div>
-                )}
-
-                {isOpen && (
-                    <>
-                        <div className="AdditionalAction">
-                            <div
-                                className={isAutoScroll ? 'on' : 'off'}
-                                data-tooltip="Auto Scroll"
-                                data-inverted=""
-                            >
-                                <Icon name={'angle double down'} onClick={autoscrollClickHandler} />
-                            </div>
-                        </div>
-                        <div className="AdditionalAction">
-                            <div
-                                className={isLoadAll ? 'on' : 'off'}
-                                data-tooltip="Show Full Log"
-                                data-inverted=""
-                            >
-                                <Icon
-                                    name={'arrows alternate vertical'}
-                                    onClick={loadAllClickHandler}
-                                />
-                            </div>
-                        </div>
-                    </>
-                )}
                 {loading && <div className="Loader" />}
             </Button>
 
@@ -304,9 +218,10 @@ interface StatusIconProps {
     warnings?: number;
     errors?: number;
     meta?: object;
+    segmentInfoClickHandler: (event: React.MouseEvent<any>) => void
 }
 
-const StatusIcon = ({ status, processStatus, warnings = 0, errors = 0, meta }: StatusIconProps) => {
+const StatusIcon = ({ status, processStatus, warnings = 0, errors = 0, meta, segmentInfoClickHandler }: StatusIconProps) => {
     if (!status) {
         return (
             <Icon
@@ -360,7 +275,13 @@ const StatusIcon = ({ status, processStatus, warnings = 0, errors = 0, meta }: S
             icon = 'exclamation circle';
         }
     }
-    return <Icon loading={spinning} name={icon} color={color} className="Status" />;
+    return (<span data-tooltip="Show Info" data-inverted="">
+        <Icon loading={spinning}
+              name={icon}
+              color={color}
+              title={'Show info'}
+              onClick={segmentInfoClickHandler}/>
+    </span>)
 };
 
 export default LogSegmentV3;
