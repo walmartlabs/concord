@@ -11,7 +11,7 @@
     </parent>
 
     <artifactId>concord-common-it</artifactId>
-    <packaging>takari-jar</packaging>
+    <packaging>jar</packaging>
 
     <dependencies>
         <dependency>
@@ -95,13 +95,4 @@
             <artifactId>annotations</artifactId>
         </dependency>
     </dependencies>
-
-    <build>
-        <plugins>
-            <plugin>
-                <groupId>io.takari.maven.plugins</groupId>
-                <artifactId>takari-lifecycle-plugin</artifactId>
-            </plugin>
-        </plugins>
-    </build>
 </project>
