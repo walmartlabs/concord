@@ -182,7 +182,7 @@ public class CustomFormServiceV2 {
         // TODO locking
         Form form = assertForm(processKey, formName);
 
-        boolean yield = form.options().yield();
+        boolean yield = form.options().isYield();
 
         Path dst = cfg.getBaseDir()
                 .resolve(processKey.toString())
