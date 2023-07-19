@@ -5,7 +5,7 @@
     <parent>
         <groupId>com.walmartlabs.concord.docker</groupId>
         <artifactId>parent</artifactId>
-        <version>1.102.1-SNAPSHOT</version>
+        <version>1.103.1-SNAPSHOT</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
 
@@ -16,6 +16,7 @@
         <agent.image>${docker.namespace}/concord-agent</agent.image>
         <docker.tagbase>${agent.image}</docker.tagbase>
         <docker.file>oss/centos/Dockerfile</docker.file>
+        <docker.allowPull>false</docker.allowPull>
     </properties>
 
     <!-- default dependencies, will be copied into the agent's local .m2 -->
