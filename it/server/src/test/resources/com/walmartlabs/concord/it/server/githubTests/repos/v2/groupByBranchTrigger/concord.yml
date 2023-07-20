@@ -1,0 +1,16 @@
+configuration:
+  runtime: concord-v2
+
+flows:
+  onPush:
+    - log: "onPush: ${event}"
+
+triggers:
+  - github:
+      entryPoint: "onPush"
+      version: 2
+      conditions:
+        type: "pull_request"
+      exclusive:
+        groupBy: branch
+        mode: cancelOld

@@ -33,15 +33,11 @@ import org.jooq.Configuration;
 import org.sonatype.siesta.Resource;
 
 import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
 import javax.validation.Valid;
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import java.util.List;
 
-@Named
-@Singleton
 @Api(value = "TemplateAlias", authorizations = {@Authorization("api_key"), @Authorization("session_key"), @Authorization("ldap")})
 @Path("/api/v1/template/alias")
 public class TemplateAliasResource extends AbstractDao implements Resource {

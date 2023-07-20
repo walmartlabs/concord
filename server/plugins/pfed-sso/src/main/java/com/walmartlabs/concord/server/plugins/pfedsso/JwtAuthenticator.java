@@ -34,14 +34,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
-import javax.inject.Named;
 import java.io.IOException;
 import java.text.ParseException;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
-@Named
 public class JwtAuthenticator {
 
     private static final Logger log = LoggerFactory.getLogger(JwtAuthenticator.class);

@@ -55,7 +55,7 @@ public class FormCallStepSerializer extends StdSerializer<FormCall> {
             return;
         }
 
-        gen.writeObjectField("yield", options.yield());
+        gen.writeObjectField("yield", options.isYield());
         gen.writeObjectField("saveSubmittedBy", options.saveSubmittedBy());
 
         if (!options.runAs().isEmpty()) {

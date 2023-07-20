@@ -450,6 +450,68 @@ public class GitHubTriggersV2IT extends AbstractGitHubTriggersIT {
         assertEquals(username, pe.getInitiator());
     }
 
+    @Test
+    public void testExclusiveGroupByBranch() throws Exception {
+        OrganizationsApi orgApi = new OrganizationsApi(getApiClient());
+
+        String orgXName = "orgX_" + randomString();
+        orgApi.createOrUpdate(new OrganizationEntry().setName(orgXName));
+
+        // Project A
+        // master branch + a default trigger
+        String projectAName = "projectA_" + randomString();
+        String repoAName = "repoA_" + randomString();
+        Path projectARepo = initProjectAndRepo(orgXName, projectAName, repoAName, null, initRepo("githubTests/repos/v2/groupByBranchTrigger"));
+        refreshRepo(orgXName, projectAName, repoAName);
+
+        // ---
+
+        sendEvent("githubTests/events/pr_open.json", "pull_request",
+                "_FULL_REPO_NAME", toRepoName(projectARepo),
+                "_USER_LDAP_DN", "",
+                "_REF", "refs/heads/master");
+
+        // A's trigger should be activated
+        ProcessEntry pe = waitForAProcess(orgXName, projectAName, "github", null);
+
+        assertLog(pe, ".*Process' exclusive group: master.*");
+
+        // ---
+
+        deleteOrg(orgXName);
+    }
+
+    @Test
+    public void testExclusiveGroupByEventAttr() throws Exception {
+        OrganizationsApi orgApi = new OrganizationsApi(getApiClient());
+
+        String orgXName = "orgX_" + randomString();
+        orgApi.createOrUpdate(new OrganizationEntry().setName(orgXName));
+
+        // Project A
+        // master branch + a default trigger
+        String projectAName = "projectA_" + randomString();
+        String repoAName = "repoA_" + randomString();
+        Path projectARepo = initProjectAndRepo(orgXName, projectAName, repoAName, null, initRepo("githubTests/repos/v2/groupByEventAttrTrigger"));
+        refreshRepo(orgXName, projectAName, repoAName);
+
+        // ---
+
+        sendEvent("githubTests/events/pr_open.json", "pull_request",
+                "_FULL_REPO_NAME", toRepoName(projectARepo),
+                "_USER_LDAP_DN", "",
+                "_REF", "refs/heads/master");
+
+        // A's trigger should be activated
+        ProcessEntry pe = waitForAProcess(orgXName, projectAName, "github", null);
+
+        assertLog(pe, ".*Process' exclusive group: pr-test-3.*");
+
+        // ---
+
+        deleteOrg(orgXName);
+    }
+
     private String createUser() throws Exception {
         assertNotNull(System.getenv("IT_LDAP_URL"));
 

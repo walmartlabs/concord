@@ -133,7 +133,7 @@ const SecretListActivity = ({ orgName, forceRefresh }: Props) => {
                         <Table.HeaderCell collapsing={true} />
                         <Table.HeaderCell>Name</Table.HeaderCell>
                         <Table.HeaderCell collapsing={true}>Type</Table.HeaderCell>
-                        <Table.HeaderCell>Project</Table.HeaderCell>
+                        <Table.HeaderCell>Projects</Table.HeaderCell>
                     </Table.Row>
                 </Table.Header>
                 <Table.Body>
@@ -154,7 +154,22 @@ const SecretListActivity = ({ orgName, forceRefresh }: Props) => {
                                 </Link>
                             </Table.Cell>
                             <Table.Cell singleLine={true}>{typeToText(secret.type)}</Table.Cell>
-                            <Table.Cell singleLine={true}>{secret.projectName}</Table.Cell>
+                            <Table.Cell singleLine={true}>
+                                {secret.projects && secret.projects.length > 0
+                                    ? secret.projects.map((project, index) => (
+                                          <span key={index}>
+                                              <Link
+                                                  to={`/org/${secret.orgName}/project/${project.name}`}
+                                              >
+                                                  {project.name}
+                                              </Link>
+                                              <span>
+                                                  {index !== secret.projects.length - 1 ? ', ' : ''}
+                                              </span>
+                                          </span>
+                                      ))
+                                    : ' - '}
+                            </Table.Cell>
                         </Table.Row>
                     ))}
                 </Table.Body>

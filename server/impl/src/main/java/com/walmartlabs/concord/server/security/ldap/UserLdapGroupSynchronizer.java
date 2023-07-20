@@ -36,7 +36,6 @@ import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 import javax.inject.Named;
-import javax.inject.Singleton;
 import java.time.OffsetDateTime;
 import java.util.Collections;
 import java.util.List;
@@ -50,8 +49,6 @@ import static org.jooq.impl.DSL.*;
  * Responsible for AD/LDAP group synchronization and enabling/disabling users
  * based on whether they have active groups or not.
  */
-@Named
-@Singleton
 public class UserLdapGroupSynchronizer implements ScheduledTask {
 
     private static final Logger log = LoggerFactory.getLogger(UserLdapGroupSynchronizer.class);

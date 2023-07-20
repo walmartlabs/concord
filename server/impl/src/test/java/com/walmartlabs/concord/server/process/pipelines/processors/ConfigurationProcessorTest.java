@@ -4,7 +4,7 @@ package com.walmartlabs.concord.server.process.pipelines.processors;
  * *****
  * Concord
  * -----
- * Copyright (C) 2017 - 2018 Walmart Inc.
+ * Copyright (C) 2017 - 2023 Walmart Inc.
  * -----
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -34,7 +34,6 @@ import org.mockito.stubbing.Answer;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.time.OffsetDateTime;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -79,7 +78,7 @@ public class ConfigurationProcessorTest {
         prjCfg.put("a", "a-prj");
         prjCfg.put("project", "prj-value");
 
-        ProjectEntry projectEntry = new ProjectEntry(prjId, null, null, null, null, null, prjCfg, null, null, null, null, null, null);
+        ProjectEntry projectEntry = new ProjectEntry(prjId, null, null, null, null, null, prjCfg, null, null, null, null, null, null, null); // nom-nom
 
         Map<String, Object> processCfgPolicy = new HashMap<>();
         processCfgPolicy.put("a", "a-process-cfg-policy");
@@ -98,7 +97,7 @@ public class ConfigurationProcessorTest {
         when(orgDao.getConfiguration(eq(orgId))).thenReturn(orgCfg);
         when(projectDao.get(eq(prjId))).thenReturn(projectEntry);
 
-        Payload payload = new Payload(new ProcessKey(instanceId, OffsetDateTime.now()));
+        Payload payload = new Payload(ProcessKey.random());
         payload = payload
                 .putHeader(Payload.CONFIGURATION, req)
                 .putHeader(Payload.ORGANIZATION_ID, orgId)
@@ -144,13 +143,13 @@ public class ConfigurationProcessorTest {
         prjCfg.put("a", "a-prj");
         prjCfg.put("project", "prj-value");
 
-        ProjectEntry projectEntry = new ProjectEntry(prjId, null, null, null, null, null, prjCfg, null, null, null, null, null, null);
+        ProjectEntry projectEntry = new ProjectEntry(prjId, null, null, null, null, null, prjCfg, null, null, null, null, null, null, null);
 
         // ---
         when(orgDao.getConfiguration(eq(orgId))).thenReturn(orgCfg);
         when(projectDao.get(eq(prjId))).thenReturn(projectEntry);
 
-        Payload payload = new Payload(new ProcessKey(instanceId, OffsetDateTime.now()));
+        Payload payload = new Payload(ProcessKey.random());
         payload = payload
                 .putHeader(Payload.CONFIGURATION, req)
                 .putHeader(Payload.ORGANIZATION_ID, orgId)

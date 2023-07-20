@@ -22,6 +22,9 @@ package com.walmartlabs.concord.server.plugins.oidc;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
+import com.walmartlabs.concord.server.boot.FilterChainConfigurator;
+import com.walmartlabs.concord.server.boot.filters.AuthenticationHandler;
+import org.apache.shiro.realm.Realm;
 import org.pac4j.core.client.Clients;
 import org.pac4j.core.config.Config;
 import org.pac4j.core.context.JEEContext;
@@ -35,10 +38,19 @@ import org.pac4j.oidc.config.OidcConfiguration;
 import javax.inject.Named;
 import javax.inject.Singleton;
 
+import static com.google.inject.multibindings.Multibinder.newSetBinder;
+
 @Named
 public class PluginModule extends AbstractModule {
 
     public static final String CLIENT_NAME = "oidc";
+
+    @Override
+    protected void configure() {
+        newSetBinder(binder(), AuthenticationHandler.class).addBinding().to(OidcAuthenticationHandler.class);
+        newSetBinder(binder(), FilterChainConfigurator.class).addBinding().to(OidcFilterChainConfigurator.class);
+        newSetBinder(binder(), Realm.class).addBinding().to(OidcRealm.class);
+    }
 
     @Provides
     public OidcConfiguration oidcConfiguration(PluginConfiguration cfg) {

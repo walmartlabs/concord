@@ -4,7 +4,7 @@ package com.walmartlabs.concord.plugins.http;
  * *****
  * Concord
  * -----
- * Copyright (C) 2017 - 2018 Walmart Inc.
+ * Copyright (C) 2017 - 2023 Walmart Inc.
  * -----
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -474,11 +474,11 @@ public class Configuration {
                 }
             }
 
-            return build(workDir, input);
+            return build(workDir, input, false);
         }
 
         @SuppressWarnings("unchecked")
-        public Configuration build(String workDir, Map<String, Object> input) throws Exception {
+        public Configuration build(String workDir, Map<String, Object> input, boolean globalDebug) throws Exception {
             validateMandatory(input);
 
             this.url = MapUtils.getString(input, URL_KEY);
@@ -557,7 +557,7 @@ public class Configuration {
                     .map(String::toCharArray)
                     .orElse(null);
 
-            this.debug = MapUtils.getBoolean(input, DEBUG_KEY, false);
+            this.debug = MapUtils.getBoolean(input, DEBUG_KEY, globalDebug);
 
             this.followRedirects = MapUtils.getBoolean(input, FOLLOW_REDIRECTS_KEY, true);
 

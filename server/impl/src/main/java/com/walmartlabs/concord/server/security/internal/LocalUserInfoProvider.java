@@ -25,13 +25,9 @@ import com.walmartlabs.concord.server.user.UserDao;
 import com.walmartlabs.concord.server.user.UserType;
 
 import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
 import java.util.Set;
 import java.util.UUID;
 
-@Named
-@Singleton
 public class LocalUserInfoProvider extends AbstractUserInfoProvider {
     
     @Inject

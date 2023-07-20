@@ -93,6 +93,7 @@ public class FlowCallCommand extends StepCommand<FlowCall> {
         // push the out handler first so it executes after the called flow's frame is done
         state.peekFrame(threadId).push(processOutVars);
         state.pushFrame(threadId, innerFrame);
+        VMUtils.putLocal(innerFrame, "flowName", flowName);
     }
 
     private static class EvalVariablesCommand implements Command {

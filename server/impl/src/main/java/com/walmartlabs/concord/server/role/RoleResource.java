@@ -39,8 +39,6 @@ import org.sonatype.siesta.Resource;
 import org.sonatype.siesta.ValidationErrorsException;
 
 import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
 import javax.validation.Valid;
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
@@ -50,8 +48,6 @@ import java.util.UUID;
 
 import static javax.ws.rs.core.Response.Status;
 
-@Named
-@Singleton
 @Api(value = "Roles", authorizations = {@Authorization("api_key"), @Authorization("session_key"), @Authorization("ldap")})
 @Path("/api/v1/role")
 public class RoleResource implements Resource {

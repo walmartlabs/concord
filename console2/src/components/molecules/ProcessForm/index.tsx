@@ -25,7 +25,7 @@ import { DateInput, DateTimeInput } from 'semantic-ui-calendar-react';
 import {
     Button,
     Checkbox,
-    CheckboxProps,
+    CheckboxProps, DropdownItemProps,
     DropdownProps,
     Form,
     Header,
@@ -196,18 +196,12 @@ class ProcessForm extends React.Component<Props, State> {
     renderDropdown(
         name: string,
         cardinality: Cardinality,
-        value: DropdownValue,
+        value: DropdownValue | DropdownValue[],
         allowedValue: DropdownAllowedValue,
         multiple: boolean,
         opts?: {}
     ) {
         const { submitting, completed } = this.props;
-
-        const options = allowedValue ? allowedValue.map((v) => ({ text: v, value: v })) : [];
-        const required =
-            cardinality === Cardinality.AT_LEAST_ONE ||
-            cardinality === Cardinality.ONE_AND_ONLY_ONE;
-        const allowAdditions = options.length === 0;
 
         if (value === null) {
             value = undefined;
@@ -216,6 +210,13 @@ class ProcessForm extends React.Component<Props, State> {
         if (multiple && value === undefined) {
             value = [];
         }
+
+        const allowedOptions: DropdownItemProps[] = this.toOpts(allowedValue);
+        const options: DropdownItemProps[] = allowedOptions.length > 0 ? allowedOptions : this.toOpts(value);
+        const required =
+            cardinality === Cardinality.AT_LEAST_ONE ||
+            cardinality === Cardinality.ONE_AND_ONLY_ONE;
+        const allowAdditions = allowedOptions.length === 0;
 
         return (
             <DropdownWithAddition
@@ -231,6 +232,18 @@ class ProcessForm extends React.Component<Props, State> {
                 {...opts}
             />
         );
+    }
+
+    toOpts(val: DropdownValue | DropdownValue[]) : DropdownItemProps[]  {
+        if (val === undefined) {
+            return [];
+        }
+
+        if (Array.isArray(val)) {
+            return val.map((v: DropdownValue) => ({text: v, value: v} as DropdownItemProps));
+        }
+
+        return [ { text: val, value: val } ]
     }
 
     renderStringField(

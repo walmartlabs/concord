@@ -86,7 +86,7 @@ public final class FormsGrammar {
     private static final Parser<Atom, FormCallOptions> formCallOptions =
             with(FormCallOptions::builder,
                     o -> options(
-                            optional("yield", booleanVal.map(o::yield)),
+                            optional("yield", booleanVal.map(o::isYield)),
                             optional("saveSubmittedBy", booleanVal.map(o::saveSubmittedBy)),
                             optional("runAs", formCallRunAsOption(o)),
                             optional("values", formCallValuesOption(o)),

@@ -128,7 +128,7 @@ const renderCondition = (condition: WaitCondition) => {
 };
 
 const renderProcessWaitDetails = (condition: ProcessWaitCondition) => {
-    if (condition.processes.length === 0) {
+    if (condition.processes === undefined || condition.processes.length === 0) {
         return <></>;
     } else if (condition.processes.length === 1) {
         return renderProcessLink(condition.processes[0]);

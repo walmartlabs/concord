@@ -1,10 +1,10 @@
-package com.walmartlabs.concord.server.org.project;
+package com.walmartlabs.concord.server.task;
 
 /*-
  * *****
  * Concord
  * -----
- * Copyright (C) 2017 - 2018 Walmart Inc.
+ * Copyright (C) 2017 - 2022 Walmart Inc.
  * -----
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,18 +20,18 @@ package com.walmartlabs.concord.server.org.project;
  * =====
  */
 
-import org.sonatype.siesta.ValidationErrorsException;
+import com.google.inject.Binder;
+import com.google.inject.Module;
+import com.walmartlabs.concord.server.sdk.BackgroundTask;
 
-public final class RepositoryUtils {
+import static com.google.inject.Scopes.SINGLETON;
+import static com.google.inject.multibindings.Multibinder.newSetBinder;
 
-    public static RepositoryEntry assertRepository(RepositoryEntry entry) {
-        if (entry.getBranch() == null && entry.getCommitId() == null){
-            throw new ValidationErrorsException("Branch or CommitId required");
-        }
+public class TaskSchedulerModule implements Module {
 
-        return entry;
-    }
-
-    private RepositoryUtils() {
+    @Override
+    public void configure(Binder binder) {
+        binder.bind(TaskScheduler.class).in(SINGLETON);
+        newSetBinder(binder, BackgroundTask.class).addBinding().to(TaskScheduler.class);
     }
 }

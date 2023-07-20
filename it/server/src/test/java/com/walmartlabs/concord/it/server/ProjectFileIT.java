@@ -141,7 +141,6 @@ public class ProjectFileIT extends AbstractServerIT {
 
         String projectName = "project_" + randomString();
         String repoName = "repo_" + randomString();
-        String repoUrl = "git@test_" + randomString();
         String secretName = "secret_" + randomString();
 
         generateKeyPair(orgName, secretName, false, null);
@@ -152,7 +151,7 @@ public class ProjectFileIT extends AbstractServerIT {
                 .setRawPayloadMode(ProjectEntry.RawPayloadModeEnum.EVERYONE)
                 .setRepositories(Collections.singletonMap(repoName, new RepositoryEntry()
                         .setName(repoName)
-                        .setUrl(repoUrl)
+                        .setUrl(createRepo("repositoryRefresh"))
                         .setBranch("master")
                         .setSecretName(secretName))));
 

@@ -66,6 +66,9 @@ public class WaitProcessFinishHandler implements ProcessWaitHandler<ProcessCompl
     public Result<ProcessCompletionCondition> process(ProcessKey processKey, ProcessCompletionCondition wait) {
         Set<ProcessStatus> finishedStatuses = wait.finalStatuses();
         Set<UUID> awaitProcesses = wait.processes();
+        if (awaitProcesses.isEmpty()) {
+            return Result.resume(wait.resumeEvent());
+        }
 
         Set<UUID> finishedProcesses = dao.findFinished(awaitProcesses, finishedStatuses);
         if (finishedProcesses.isEmpty()) {

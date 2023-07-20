@@ -25,6 +25,7 @@ import com.walmartlabs.concord.common.ExceptionUtils;
 import com.walmartlabs.concord.runtime.v2.runner.el.functions.*;
 import com.walmartlabs.concord.runtime.v2.runner.el.resolvers.BeanELResolver;
 import com.walmartlabs.concord.runtime.v2.runner.el.resolvers.*;
+import com.walmartlabs.concord.runtime.v2.runner.el.resolvers.MapELResolver;
 import com.walmartlabs.concord.runtime.v2.runner.tasks.TaskProviders;
 import com.walmartlabs.concord.runtime.v2.sdk.EvalContext;
 import com.walmartlabs.concord.runtime.v2.sdk.ExpressionEvaluator;
@@ -143,14 +144,29 @@ public class LazyExpressionEvaluator implements ExpressionEvaluator {
             if (ctx.undefinedVariableAsNull()) {
                 return null;
             }
-            throw new RuntimeException(String.format("Can't find the specified variable in '%s'. " +
-                    "Check if it is defined in the current scope. Details: %s", expr, e.getMessage()));
+
+            String errorMessage;
+
+            String propName = propertyNameFromException(e);
+            if (propName != null) {
+                errorMessage = String.format("Can't find a variable %s used in '%s'. " +
+                        "Check if it is defined in the current scope. Details: %s", propName, expr, e.getMessage());
+            } else {
+                errorMessage = String.format("Can't find the specified variable in '%s'. " +
+                        "Check if it is defined in the current scope. Details: %s", expr, e.getMessage());
+            }
+
+            throw new UserDefinedException(errorMessage);
         } catch (ELException e) {
             throw ExceptionUtils.getExceptionList(e).stream()
                     .filter(i -> i instanceof UserDefinedException)
                     .findAny()
                     .map(i -> (RuntimeException)i)
                     .orElse(e);
+        } catch (UserDefinedException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new RuntimeException("while evaluating expression '" + expr + "'", e);
         }
     }
 
@@ -186,6 +202,7 @@ public class LazyExpressionEvaluator implements ExpressionEvaluator {
     private static FunctionMapper createFunctionMapper() {
         Map<String, Method> functions = new HashMap<>();
         functions.put("hasVariable", HasVariableFunction.getMethod());
+        functions.put("hasNonNullVariable", HasNonNullVariableFunction.getMethod());
         functions.put("orDefault", OrDefaultFunction.getMethod());
         functions.put("allVariables", AllVariablesFunction.getMethod());
         functions.put("currentFlowName", CurrentFlowNameFunction.getMethod());
@@ -229,5 +246,19 @@ public class LazyExpressionEvaluator implements ExpressionEvaluator {
             result.put(key, value);
         }
         return result;
+    }
+
+    private static final String PROP_NOT_FOUND_EL_MESSAGE = "ELResolver cannot handle a null base Object with identifier ";
+
+    private static String propertyNameFromException(PropertyNotFoundException e) {
+        if (e.getMessage() == null) {
+            return null;
+        }
+
+        if (e.getMessage().startsWith(PROP_NOT_FOUND_EL_MESSAGE)) {
+            return e.getMessage().substring(PROP_NOT_FOUND_EL_MESSAGE.length());
+        }
+
+        return null;
     }
 }

@@ -94,7 +94,7 @@ public final class FormFieldParser {
     }
 
     private static Map<String, Serializable> convertOptions(String type, Location typeLocation, YamlObject options) {
-        Map<String, Serializable> result = new HashMap<>();
+        Map<String, Serializable> result = new LinkedHashMap<>();
         switch (type) {
             case StringField.TYPE: {
                 processOption(StringField.PATTERN, options, YamlValueType.STRING, result);

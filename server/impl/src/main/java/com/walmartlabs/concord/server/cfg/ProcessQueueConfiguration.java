@@ -23,13 +23,9 @@ package com.walmartlabs.concord.server.cfg;
 import com.walmartlabs.ollie.config.Config;
 
 import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
 import java.io.Serializable;
 import java.time.Duration;
 
-@Named
-@Singleton
 public class ProcessQueueConfiguration implements Serializable {
 
     private static final long serialVersionUID = 1L;

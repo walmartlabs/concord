@@ -24,11 +24,7 @@ import com.walmartlabs.concord.server.boot.FilterChainConfigurator;
 import org.apache.shiro.web.filter.mgt.FilterChainManager;
 
 import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
 
-@Named
-@Singleton
 public class OidcFilterChainConfigurator implements FilterChainConfigurator {
 
     private final OidcAuthFilter authFilter;

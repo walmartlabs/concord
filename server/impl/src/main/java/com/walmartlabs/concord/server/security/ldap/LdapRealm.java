@@ -41,13 +41,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
-import javax.inject.Named;
 import javax.naming.NamingException;
 import javax.naming.ldap.LdapContext;
 import java.util.Arrays;
 import java.util.UUID;
 
-@Named
 public class LdapRealm extends AbstractLdapRealm {
 
     private static final String REALM_NAME = "ldap";

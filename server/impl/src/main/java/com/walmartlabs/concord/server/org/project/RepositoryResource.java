@@ -4,7 +4,7 @@ package com.walmartlabs.concord.server.org.project;
  * *****
  * Concord
  * -----
- * Copyright (C) 2017 - 2018 Walmart Inc.
+ * Copyright (C) 2017 - 2023 Walmart Inc.
  * -----
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -155,7 +155,7 @@ public class RepositoryResource implements Resource {
                                                     @ApiParam @PathParam("repositoryName") @ConcordKey String repositoryName,
                                                     @ApiParam @QueryParam("sync") @DefaultValue("false") boolean sync) {
 
-        repositoryRefresher.refresh(orgName, projectName, repositoryName, sync);
+        repositoryRefresher.refresh(orgName, projectName, repositoryName);
         return new GenericOperationResult(OperationResult.UPDATED);
     }
 
@@ -178,12 +178,12 @@ public class RepositoryResource implements Resource {
 
         accessManager.assertAccess(projectId, ResourceAccessLevel.READER, true);
 
-        UUID repoId = repositoryDao.getId(projectId, repositoryName);
-        if (repoId == null) {
+        RepositoryEntry repo = repositoryDao.get(projectId, repositoryName);
+        if (repo == null) {
             throw new ConcordApplicationException("Repository not found: " + repositoryName, Status.NOT_FOUND);
         }
 
-        ProjectValidator.Result result = projectRepositoryManager.validateRepository(projectId, repositoryDao.get(projectId, repoId));
+        ProjectValidator.Result result = projectRepositoryManager.validateRepository(orgId, repo);
 
         return new RepositoryValidationResponse(result.isValid(), OperationResult.VALIDATED, result.getErrors(), result.getWarnings());
     }

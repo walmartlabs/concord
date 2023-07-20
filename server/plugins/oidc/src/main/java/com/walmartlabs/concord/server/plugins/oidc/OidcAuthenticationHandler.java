@@ -31,8 +31,6 @@ import org.pac4j.oidc.credentials.authenticator.UserInfoOidcAuthenticator;
 import org.pac4j.oidc.profile.OidcProfile;
 
 import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
@@ -40,9 +38,9 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.util.Optional;
 
-@Named
-@Singleton
 public class OidcAuthenticationHandler implements AuthenticationHandler {
+
+    private static final String FORM_URL_PATTERN = "/forms/.*";
 
     private static final String AUTHORIZATION_HEADER = "Authorization";
     private static final String HEADER_PREFIX = "Bearer";
@@ -97,8 +95,14 @@ public class OidcAuthenticationHandler implements AuthenticationHandler {
             return false;
         }
 
+        HttpServletRequest req = WebUtils.toHttp(request);
         HttpServletResponse resp = WebUtils.toHttp(response);
-        resp.sendRedirect(OidcAuthFilter.URL);
-        return true;
+
+        if (req.getRequestURI().matches(FORM_URL_PATTERN)) {
+            resp.sendRedirect(resp.encodeRedirectURL(OidcAuthFilter.URL + "?from=" + req.getRequestURL()));
+            return true;
+        }
+
+        return false;
     }
 }

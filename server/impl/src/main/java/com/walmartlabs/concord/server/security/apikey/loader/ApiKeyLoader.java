@@ -28,16 +28,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 
-@Named
-@Singleton
 public class ApiKeyLoader implements BackgroundTask {
 
     private static final Logger log = LoggerFactory.getLogger(ApiKeyLoader.class);

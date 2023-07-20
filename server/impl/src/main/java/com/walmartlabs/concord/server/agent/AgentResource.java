@@ -29,8 +29,6 @@ import org.sonatype.siesta.Resource;
 import org.sonatype.siesta.ValidationErrorsException;
 
 import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
@@ -41,8 +39,6 @@ import java.util.Collections;
 import java.util.Map;
 import java.util.stream.Stream;
 
-@Named
-@Singleton
 @Api(value = "Agents", authorizations = {@Authorization("api_key"), @Authorization("session_key"), @Authorization("ldap")})
 @Path("/api/v1/agent")
 public class AgentResource implements Resource {

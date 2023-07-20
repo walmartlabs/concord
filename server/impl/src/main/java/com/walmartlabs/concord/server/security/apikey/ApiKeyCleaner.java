@@ -30,14 +30,11 @@ import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 import javax.inject.Named;
-import javax.inject.Singleton;
 import java.util.concurrent.TimeUnit;
 
 import static com.walmartlabs.concord.server.jooq.Tables.API_KEYS;
 import static org.jooq.impl.DSL.currentOffsetDateTime;
 
-@Named
-@Singleton
 public class ApiKeyCleaner implements ScheduledTask {
 
     private static final Logger log = LoggerFactory.getLogger(ApiKeyCleaner.class);

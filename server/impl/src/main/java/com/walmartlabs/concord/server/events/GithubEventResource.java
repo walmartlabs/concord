@@ -23,6 +23,7 @@ package com.walmartlabs.concord.server.events;
 import com.codahale.metrics.Histogram;
 import com.codahale.metrics.MetricRegistry;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.walmartlabs.concord.common.ConfigurationUtils;
 import com.walmartlabs.concord.runtime.v2.model.GithubTriggerExclusiveMode;
 import com.walmartlabs.concord.sdk.Constants;
 import com.walmartlabs.concord.sdk.MapUtils;
@@ -193,18 +194,30 @@ public class GithubEventResource implements Resource {
             }
 
             GithubTriggerExclusiveMode e = objectMapper.convertValue(exclusive, GithubTriggerExclusiveMode.class);
-            if (e.groupBy() == null) {
+            String groupBy = e.groupByProperty();
+            if (groupBy== null) {
                 return exclusive;
             }
 
             String group;
-            switch (Objects.requireNonNull(e.groupBy())) {
-                case branch: {
-                    group = payload.getBranch();
-                    break;
+            if ("branch".equals(groupBy)) {
+                group = payload.getBranch();
+            } else if (groupBy.startsWith("event")) {
+                String[] payloadPath = groupBy.split("\\.");
+                if (payloadPath.length == 1) {
+                    throw new IllegalArgumentException("Invalid groupBy: '" + groupBy + "'");
                 }
-                default:
-                    throw new IllegalArgumentException("Unknown groupBy: '" + e.groupBy() + "'");
+
+                payloadPath = Arrays.copyOfRange(payloadPath, 1, payloadPath.length);
+                Object maybeString = ConfigurationUtils.get(payload.raw(), payloadPath);
+                if (maybeString == null || (maybeString instanceof String)) {
+                    group = (String) maybeString;
+                } else {
+                    String value = maybeString + " (class: " + maybeString.getClass() + ")";
+                    throw new IllegalArgumentException("Expected string value for groupBy: '" + groupBy + "', got " + value);
+                }
+            } else {
+                throw new IllegalArgumentException("Unknown groupBy: '" + groupBy + "'");
             }
 
             if (group == null) {

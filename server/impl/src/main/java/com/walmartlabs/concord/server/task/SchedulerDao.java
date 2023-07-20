@@ -31,7 +31,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
-import javax.inject.Named;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
@@ -45,7 +44,6 @@ import static com.walmartlabs.concord.server.jooq.Tables.TASKS;
 import static org.jooq.impl.DSL.currentOffsetDateTime;
 import static org.jooq.impl.DSL.value;
 
-@Named
 public final class SchedulerDao extends AbstractDao {
 
     private static final Logger log = LoggerFactory.getLogger(SchedulerDao.class);
