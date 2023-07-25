@@ -202,6 +202,10 @@ public class JsonStoreManager {
             }
         }
 
+        if (orgIdToUpdate != null) {
+            assertStoragePolicy(orgIdToUpdate);
+        }
+
         storeDao.update(prevStorage.id(), entry.name(), entry.visibility(), orgIdToUpdate, updatedOwnerId);
 
         JsonStoreEntry newStorage = storeDao.get(prevStorage.id());
