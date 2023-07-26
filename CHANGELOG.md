@@ -1,5 +1,65 @@
 # Change log
 
+## [2.0.0] - Unreleased
+
+# Breaking
+
+- project: drop support for JDK 8 and JDK 11. Make JDK 17
+the new default version.
+
+
+
+## [1.103.0] - 2023-07-16
+
+### Added
+
+- runtime-v2: hide sensitive data in MapELResolver
+([#781](https://github.com/walmartlabs/concord/pull/781));
+- tasks-v2: use debug flag from process configuration
+([#780](https://github.com/walmartlabs/concord/pull/780));
+- concord-console2: show process duration on toolbar
+([#779](https://github.com/walmartlabs/concord/pull/779));
+- concord-console2: allow customizing columns in the main process table
+([#777](https://github.com/walmartlabs/concord/pull/777)); 
+- console2: added `last updated at` and `age` to the secret page
+([#775](https://github.com/walmartlabs/concord/pull/775));
+- runtime-v2: hasNonNullVariable function
+([#774](https://github.com/walmartlabs/concord/pull/774));
+- runtime-v2: log call stack on error
+([#761](https://github.com/walmartlabs/concord/pull/761));
+- concord-server: Allow restriction of secrets to multiple projects
+([#688](https://github.com/walmartlabs/concord/pull/688)).
+
+### Changed
+
+- server: fix DB cleanup job
+([#784](https://github.com/walmartlabs/concord/pull/784));
+- runtime-v2: hide stacktrace for UserDefinedException
+([#782](https://github.com/walmartlabs/concord/pull/782));
+- console2: enable save button on repository submit error
+([#771](https://github.com/walmartlabs/concord/pull/771));
+- runtime-v2: handle NPE in expressions
+([#776](https://github.com/walmartlabs/concord/pull/776));
+- concord-ansible-plugin: fix handling of play and task names
+longer than 1024 chars
+([#772](https://github.com/walmartlabs/concord/pull/772));
+- console2, server: redirect to requested URL after oidc/sso
+auth ([#764](https://github.com/walmartlabs/concord/pull/764)); 
+- console2: do not remove project after rename
+([#770](https://github.com/walmartlabs/concord/pull/770));
+- runtime-v2: fix timezone text case in DSL schema
+([#769](https://github.com/walmartlabs/concord/pull/769));
+- docker-images: fix build for Debian 12 based images
+([#767](https://github.com/walmartlabs/concord/pull/767));
+- runtime-v2: serialization fix
+([#758](https://github.com/walmartlabs/concord/pull/758));
+- concord-cli: add no-default-cfg option
+([#763](https://github.com/walmartlabs/concord/pull/763));
+- concord-cli: reduce noise in dependency resolution errors
+([#757](https://github.com/walmartlabs/concord/pull/757));
+- console2: do not remove project after rename;
+([#770](https://github.com/walmartlabs/concord/pull/770)).
+
 ## [1.102.0] - 2023-05-22
 
 ### Added
