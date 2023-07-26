@@ -1479,6 +1479,55 @@ public class MainTest {
     }
 
     @Test
+    public void testUnresolvedVarInStepName() throws Exception {
+        deploy("unresolvedVarInStepName");
+
+        save(ProcessConfiguration.builder()
+                .build());
+
+        try {
+            run();
+            fail("exception expected");
+        } catch (Exception e) {
+        }
+
+        assertLog(lastLog, ".*" + quote("(concord.yml): Error @ line: 4, col: 7. Can't find a variable 'undefined' used in '${undefined}'") + ".*");
+    }
+
+    @Test
+    public void testUnresolvedVarInLoop() throws Exception {
+        deploy("unresolvedVarInLoop");
+
+        save(ProcessConfiguration.builder()
+                .build());
+
+        try {
+            run();
+            fail("exception expected");
+        } catch (Exception e) {
+        }
+
+        assertLog(lastLog, ".*" + quote("(concord.yml): Error @ line: 6, col: 7. Can't find a variable 'undefined' used in '${undefined}'") + ".*");
+    }
+
+    @Test
+    public void testUnresolvedVarInRetry() throws Exception {
+        deploy("unresolvedVarInRetry");
+
+        save(ProcessConfiguration.builder()
+                .build());
+
+        try {
+            run();
+            fail("exception expected");
+        } catch (Exception e) {
+        }
+
+        assertLog(lastLog, ".*" + quote("(concord.yml): Error @ line: 6, col: 7. Can't find a variable 'undefined' used in '${undefined}'") + ".*");
+    }
+
+
+    @Test
     public void testInvalidExpressionError() throws Exception {
         deploy("invalidExpression");
 

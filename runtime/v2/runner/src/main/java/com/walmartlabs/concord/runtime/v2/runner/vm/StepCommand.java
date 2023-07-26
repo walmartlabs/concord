@@ -48,7 +48,7 @@ import java.util.stream.Collectors;
  * <p/>
  * Subclasses must implement the {@link #execute(Runtime, State, ThreadId)} method.
  * <p/>
- * Subclasses can optionally implement {@link #getSegmentName(Context, Step)} to
+ * Subclasses can optionally implement {@link #getSegmentName(Context, Step, State, ThreadId)} to
  * enable "segmented logging" for the duration of their execution.
  */
 public abstract class StepCommand<T extends Step> implements Command {
@@ -83,7 +83,7 @@ public abstract class StepCommand<T extends Step> implements Command {
         UUID correlationId = getCorrelationId();
         Context ctx = contextFactory.create(runtime, state, threadId, step, correlationId);
 
-        LogContext logContext = getLogContext(runtime, ctx, correlationId);
+        LogContext logContext = getLogContext(runtime, ctx, state, threadId, correlationId);
         if (logContext == null) {
             executeWithContext(ctx, runtime, state, threadId);
         } else {
@@ -105,24 +105,28 @@ public abstract class StepCommand<T extends Step> implements Command {
             try {
                 execute(runtime, state, threadId);
             } catch (Exception e) {
-                if (step.getLocation() == null) {
-                    throw e;
-                }
-
-                log.error("{} {}", Location.toErrorPrefix(step.getLocation()), getExceptionMessage(e));
-                List<StackTraceItem> stackTrace = state.getStackTrace(threadId);
-                if (!stackTrace.isEmpty()) {
-                    log.error("Call stack:\n{}", stackTrace.stream().map(StackTraceItem::toString).collect(Collectors.joining("\n")));
-                }
+                logStepException(e, state, threadId);
                 throw e;
             }
         });
     }
 
+    protected void logStepException(Exception e, State state, ThreadId threadId) {
+        if (step.getLocation() == null) {
+            return;
+        }
+
+        log.error("{} {}", Location.toErrorPrefix(step.getLocation()), getExceptionMessage(e));
+        List<StackTraceItem> stackTrace = state.getStackTrace(threadId);
+        if (!stackTrace.isEmpty()) {
+            log.error("Call stack:\n{}", stackTrace.stream().map(StackTraceItem::toString).collect(Collectors.joining("\n")));
+        }
+    }
+
     protected abstract void execute(Runtime runtime, State state, ThreadId threadId);
 
-    protected LogContext getLogContext(Runtime runtime, Context ctx, UUID correlationId) {
-        String segmentName = getSegmentName(ctx, getStep());
+    protected LogContext getLogContext(Runtime runtime, Context ctx, State state, ThreadId threadId, UUID correlationId) {
+        String segmentName = getSegmentName(ctx, getStep(), state, threadId);
         if (segmentName == null) {
             return null;
         }
@@ -138,12 +142,17 @@ public abstract class StepCommand<T extends Step> implements Command {
                 .build();
     }
 
-    protected String getSegmentName(Context ctx, T step) {
+    protected String getSegmentName(Context ctx, T step, State state, ThreadId threadId) {
         if (step instanceof AbstractStep) {
             String rawSegmentName = SegmentedLogger.getSegmentName((AbstractStep<?>) step);
-            String segmentName = ctx.eval(rawSegmentName, String.class);
-            if (segmentName != null) {
-                return segmentName;
+            try {
+                String segmentName = ctx.eval(rawSegmentName, String.class);
+                if (segmentName != null) {
+                    return segmentName;
+                }
+            } catch (Exception e) {
+                logStepException(e, state, threadId);
+                throw e;
             }
         }
 

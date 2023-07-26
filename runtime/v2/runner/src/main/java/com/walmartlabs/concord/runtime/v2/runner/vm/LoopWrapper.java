@@ -77,6 +77,17 @@ public abstract class LoopWrapper implements Command {
 
     @Override
     public void eval(Runtime runtime, State state, ThreadId threadId) {
+        try {
+            execute(runtime, state, threadId);
+        } catch (Exception e) {
+            if (cmd instanceof StepCommand) {
+                ((StepCommand<?>) cmd).logStepException(e, state, threadId);
+            }
+            throw e;
+        }
+    }
+
+    private void execute(Runtime runtime, State state, ThreadId threadId) {
         Frame frame = state.peekFrame(threadId);
         frame.pop();
 
@@ -86,14 +97,9 @@ public abstract class LoopWrapper implements Command {
             return;
         }
 
-        Step currentStep = null;
-        if (cmd instanceof StepCommand) {
-            currentStep = ((StepCommand<?>) cmd).getStep();
-        }
-
         // create the context explicitly
         ContextFactory contextFactory = runtime.getService(ContextFactory.class);
-        Context ctx = contextFactory.create(runtime, state, threadId, currentStep);
+        Context ctx = contextFactory.create(runtime, state, threadId, getCurrentStep());
 
         EvalContextFactory ecf = runtime.getService(EvalContextFactory.class);
         ExpressionEvaluator ee = runtime.getService(ExpressionEvaluator.class);
@@ -110,6 +116,13 @@ public abstract class LoopWrapper implements Command {
     }
 
     protected abstract void eval(Runtime runtime, State state, ThreadId threadId, Context ctx, ArrayList<Serializable> items);
+
+    private Step getCurrentStep() {
+        if (cmd instanceof StepCommand) {
+            return ((StepCommand<?>) cmd).getStep();
+        }
+        return null;
+    }
 
     static class ParallelWithItems extends LoopWrapper {
 
