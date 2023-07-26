@@ -14,7 +14,7 @@
 
     <changeSet id="1104100" author="ybrigo@gmail.com">
         <addColumn tableName="PROCESS_LOG_SEGMENTS">
-            <column name="PARENT_SEGMENT_ID" type="bigserial">
+            <column name="PARENT_SEGMENT_ID" type="bigint">
                 <constraints nullable="true"/>
             </column>
         </addColumn>
