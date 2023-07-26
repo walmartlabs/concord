@@ -6,12 +6,12 @@
     <parent>
         <groupId>com.walmartlabs.concord.it</groupId>
         <artifactId>parent</artifactId>
-        <version>1.103.1-SNAPSHOT</version>
+        <version>2.0.0-SNAPSHOT</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
 
     <artifactId>concord-server-it</artifactId>
-    <packaging>takari-jar</packaging>
+    <packaging>jar</packaging>
 
     <properties>
         <agent.image>walmartlabs/concord-agent</agent.image>
@@ -251,10 +251,6 @@
             </resource>
         </resources>
         <plugins>
-            <plugin>
-                <groupId>io.takari.maven.plugins</groupId>
-                <artifactId>takari-lifecycle-plugin</artifactId>
-            </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-failsafe-plugin</artifactId>
@@ -563,6 +559,10 @@
                                             <concordTxId>${txId}</concordTxId>
                                             <com.walmartlabs.concord.it.name>server</com.walmartlabs.concord.it.name>
                                         </labels>
+                                        <log>
+                                            <prefix>SERVER</prefix>
+                                            <color>cyan</color>
+                                        </log>
                                     </run>
                                 </image>
                                 <!-- TODO start DIND? -->
