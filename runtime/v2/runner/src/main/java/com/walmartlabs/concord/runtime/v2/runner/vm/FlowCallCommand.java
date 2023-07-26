@@ -24,6 +24,11 @@ import com.walmartlabs.concord.runtime.v2.model.FlowCall;
 import com.walmartlabs.concord.runtime.v2.model.FlowCallOptions;
 import com.walmartlabs.concord.runtime.v2.model.ProcessDefinition;
 import com.walmartlabs.concord.runtime.v2.runner.compiler.CompilerUtils;
+import com.walmartlabs.concord.runtime.v2.runner.context.ContextFactory;
+import com.walmartlabs.concord.runtime.v2.runner.logging.LogUtils;
+import com.walmartlabs.concord.runtime.v2.sdk.EvalContext;
+import com.walmartlabs.concord.runtime.v2.sdk.EvalContextFactory;
+import com.walmartlabs.concord.runtime.v2.sdk.ExpressionEvaluator;
 import com.walmartlabs.concord.runtime.v2.runner.logging.LogContext;
 import com.walmartlabs.concord.runtime.v2.sdk.Compiler;
 import com.walmartlabs.concord.runtime.v2.sdk.*;
@@ -31,6 +36,8 @@ import com.walmartlabs.concord.svm.Runtime;
 import com.walmartlabs.concord.svm.*;
 
 import java.io.Serializable;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
@@ -68,6 +75,9 @@ public class FlowCallCommand extends StepCommand<FlowCall> {
         FlowCallOptions opts = Objects.requireNonNull(call.getOptions());
         Map<String, Object> input = VMUtils.prepareInput(ecf, ee, ctx, opts.input(), opts.inputExpression());
 
+        input = new HashMap<>(input);
+        input.put("parentSegmentId", LogUtils.getSegmentId());
+
         // the call's frame should be a "root" frame
         // all local variables will have this frame as their base
         Frame innerFrame = Frame.builder()
@@ -90,6 +100,29 @@ public class FlowCallCommand extends StepCommand<FlowCall> {
         state.peekFrame(threadId).push(processOutVars);
         state.pushFrame(threadId, innerFrame);
         VMUtils.putLocal(innerFrame, "flowName", flowName);
+    }
+
+    @Override
+    protected String getSegmentName(Context ctx, FlowCall step, State state, ThreadId threadId) {
+        String name = super.getSegmentName(ctx, step, state, threadId);
+        if (name != null) {
+            return name;
+        }
+
+        return ctx.eval(step.getFlowName(), String.class);
+    }
+
+    @Override
+    protected Map<String, Object> getLogMeta(Context ctx, FlowCall step) {
+        Map<String, Object> result = new HashMap<>();
+        result.put("type", "call");
+
+        String name = super.getSegmentName(ctx, step, ctx.execution().state(), ctx.execution().currentThreadId());
+        if (name == null) {
+            result.put("generated", true);
+        }
+
+        return result;
     }
 
     private static class EvalVariablesCommand extends StepCommand<FlowCall> {
