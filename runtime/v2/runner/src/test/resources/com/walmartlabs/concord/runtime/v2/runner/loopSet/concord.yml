@@ -4,6 +4,8 @@ flows:
         items: [1,2,3]
 
     - call: test
+      in:
+        item: ${item}
       loop:
         items: ${items}
 

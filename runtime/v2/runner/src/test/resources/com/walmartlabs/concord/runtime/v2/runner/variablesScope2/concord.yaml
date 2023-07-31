@@ -1,0 +1,27 @@
+flows:
+  default:
+    - set:
+        var1: "var1-value"
+
+    - call: myFlow
+      in:
+        var2: "var2-value"
+      meta:
+        variablesScope: true   # ignoring var1
+
+  myFlow:
+    - log: "myFlow: has var1: ${hasVariable('var1')}"  # false
+    - log: "myFlow: has var2: ${hasVariable('var2')}"  # true
+    - log: "myFlow: var2: ${var2}"
+
+    - set:
+        var3: "var3-value"
+
+    - call: myFlow2
+
+  myFlow2:
+    - log: "myFlow2: has var1: ${hasVariable('var1')}"  # false
+    - log: "myFlow2: has var2: ${hasVariable('var2')}"  # true
+    - log: "myFlow2: has var3: ${hasVariable('var3')}"  # true
+    - log: "myFlow2: var2: ${var2}"
+    - log: "myFlow2: var3: ${var3}"

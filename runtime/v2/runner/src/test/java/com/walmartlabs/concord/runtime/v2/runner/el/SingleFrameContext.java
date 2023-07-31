@@ -29,6 +29,7 @@ import com.walmartlabs.concord.svm.Runtime;
 import com.walmartlabs.concord.svm.*;
 
 import javax.annotation.Nullable;
+import java.io.Serializable;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -65,6 +66,16 @@ public class SingleFrameContext extends DummyContext {
                             .root()
                             .locals(variables)
                             .build());
+
+                    @Override
+                    public Map<String, Serializable> globalVariables() {
+                        return Collections.emptyMap();
+                    }
+
+                    @Override
+                    public void setGlobalVariables(Map<String, Serializable> variables) {
+                        throw new IllegalStateException("Not implemented");
+                    }
 
                     @Override
                     public void pushFrame(ThreadId threadId, Frame frame) {

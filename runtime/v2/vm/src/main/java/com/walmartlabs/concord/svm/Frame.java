@@ -47,6 +47,9 @@ public class Frame implements Serializable {
 
     private Command exceptionHandler;
 
+    // if true then tis is a root for variables, we do not need to get variables from "parent" frames.
+    private final boolean isLocalsScope;
+
     private Frame(Builder b) {
         this.id = new FrameId(UUID.randomUUID());
         this.type = b.type;
@@ -58,6 +61,7 @@ public class Frame implements Serializable {
             }
         }
 
+        this.isLocalsScope = b.isLocalsScope;
         this.locals = Collections.synchronizedMap(new LinkedHashMap<>(b.locals != null ? b.locals : Collections.emptyMap()));
 
         this.exceptionHandler = b.exceptionHandler;
@@ -111,6 +115,10 @@ public class Frame implements Serializable {
         return locals.get(k);
     }
 
+    public boolean isLocalsScope() {
+        return isLocalsScope;
+    }
+
     public Map<String, Serializable> getLocals() {
         return Collections.unmodifiableMap(locals);
     }
@@ -120,6 +128,7 @@ public class Frame implements Serializable {
         private FrameType type = FrameType.ROOT;
         private Command exceptionHandler;
         private List<Command> commands;
+        private boolean isLocalsScope;
         private Map<String, Serializable> locals;
 
         private Builder() {
@@ -137,6 +146,11 @@ public class Frame implements Serializable {
 
         public Builder exceptionHandler(Command exceptionHandler) {
             this.exceptionHandler = exceptionHandler;
+            return this;
+        }
+
+        public Builder localsScope(boolean isLocalsScope) {
+            this.isLocalsScope = isLocalsScope;
             return this;
         }
 
