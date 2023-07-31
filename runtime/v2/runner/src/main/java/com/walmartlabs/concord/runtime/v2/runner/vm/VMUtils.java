@@ -31,6 +31,7 @@ import com.walmartlabs.concord.svm.ThreadId;
 
 import java.io.Serializable;
 import java.util.*;
+import java.util.stream.IntStream;
 
 public final class VMUtils {
 
@@ -109,15 +110,18 @@ public final class VMUtils {
      */
     @SuppressWarnings("unchecked")
     public static <T> T getCombinedLocal(State state, ThreadId threadId, String key) {
-        List<Frame> frames = state.getFrames(threadId);
+        List<Frame> frames = filterFrameLocals(state, state.getFrames(threadId));
 
         for (Frame f : frames) {
             if (f.hasLocal(key)) {
                 return (T) f.getLocal(key);
             }
+            if (f.isLocalsScope()) {
+                break;
+            }
         }
 
-        return null;
+        return (T) state.globalVariables().get(key);
     }
 
     /**
@@ -126,15 +130,18 @@ public final class VMUtils {
      * The method scans all frames starting from the most recent one.
      */
     public static boolean hasCombinedLocal(State state, ThreadId threadId, String key) {
-        List<Frame> frames = state.getFrames(threadId);
+        List<Frame> frames = filterFrameLocals(state, state.getFrames(threadId));
 
         for (Frame f : frames) {
             if (f.hasLocal(key)) {
                 return true;
             }
+            if (f.isLocalsScope()) {
+                break;
+            }
         }
 
-        return false;
+        return state.globalVariables().containsKey(key);
     }
 
     /**
@@ -150,10 +157,15 @@ public final class VMUtils {
      * Returns a map of all variables combined, starting from the bottom of the stack.
      */
     public static Map<String, Object> getCombinedLocals(State state, ThreadId threadId) {
-        Map<String, Object> result = new LinkedHashMap<>();
+        Map<String, Object> result = new LinkedHashMap<>(state.globalVariables());
 
         List<Frame> frames = state.getFrames(threadId);
-        for (int i = frames.size() - 1; i >= 0; i--) {
+        int scopeFrameIndex = IntStream.range(0, frames.size())
+                .filter(i -> frames.get(i).isLocalsScope())
+                .findFirst()
+                .orElse(frames.size() - 1);
+
+        for (int i = scopeFrameIndex; i >= 0; i--) {
             Frame f = frames.get(i);
             result.putAll(f.getLocals());
         }
@@ -208,6 +220,24 @@ public final class VMUtils {
         }
 
         throw new IllegalStateException("Can't find a nearest ROOT frame. This is most likely a bug.");
+    }
+
+    private static List<Frame> filterFrameLocals(State state, List<Frame> frames) {
+        OptionalInt maybeFrameScopeIndex = IntStream.range(0, frames.size())
+                .filter(i -> frames.get(i).isLocalsScope())
+                .findFirst();
+
+        if (!maybeFrameScopeIndex.isPresent()) {
+            return frames;
+        }
+
+        int frameScopeIndex = maybeFrameScopeIndex.getAsInt();
+        List<Frame> result = new ArrayList<>(frames.subList(0, frameScopeIndex + 1));
+        // flow input args (global variables)
+        List<Frame> rootThreadFrames = state.getFrames(state.getRootThreadId());
+        result.add(rootThreadFrames.get(rootThreadFrames.size() - 1));
+
+        return result;
     }
 
     private VMUtils() {

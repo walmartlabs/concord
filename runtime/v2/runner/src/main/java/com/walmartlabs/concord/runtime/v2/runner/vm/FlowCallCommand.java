@@ -32,6 +32,7 @@ import com.walmartlabs.concord.runtime.v2.sdk.ExpressionEvaluator;
 import com.walmartlabs.concord.runtime.v2.sdk.Compiler;
 import com.walmartlabs.concord.runtime.v2.sdk.Context;
 import com.walmartlabs.concord.runtime.v2.sdk.ProcessConfiguration;
+import com.walmartlabs.concord.sdk.MapUtils;
 import com.walmartlabs.concord.svm.Runtime;
 import com.walmartlabs.concord.svm.*;
 
@@ -72,12 +73,15 @@ public class FlowCallCommand extends StepCommand<FlowCall> {
         FlowCallOptions opts = Objects.requireNonNull(call.getOptions());
         Map<String, Object> input = VMUtils.prepareInput(ecf, ee, ctx, opts.input(), opts.inputExpression());
 
+        boolean isLocalsScope = true;//MapUtils.getBoolean((Map)opts.meta(), "variablesScope", false);
+
         // the call's frame should be a "root" frame
         // all local variables will have this frame as their base
         Frame innerFrame = Frame.builder()
                 .root()
                 .commands(steps)
                 .locals(input)
+                .localsScope(isLocalsScope)
                 .build();
 
         // an "out" handler:

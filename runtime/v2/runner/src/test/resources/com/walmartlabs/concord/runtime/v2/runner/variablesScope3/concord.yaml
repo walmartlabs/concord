@@ -1,0 +1,16 @@
+flows:
+  default:
+    - log: "default: has arg1: ${hasVariable('arg1')}" # true
+    - log: "default: arg1: ${arg1}"
+
+    - set:
+        var1: "var1-value"
+
+    - call: myFlow
+      meta:
+        variablesScope: true   # ignoring var1
+
+  myFlow:
+    - log: "myFlow: has var1: ${hasVariable('var1')}"  # false
+    - log: "myFlow: has arg1: ${hasVariable('arg1')}"  # true
+    - log: "myFlow: arg1: ${arg1}"

@@ -7,6 +7,8 @@ flows:
         filteredItems: ${items.stream().filter(i -> i.name.equals('one')).toList()}
 
     - call: test
+      in:
+        item: ${item}
       loop:
         items: ${filteredItems}
 

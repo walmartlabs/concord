@@ -1,0 +1,15 @@
+flows:
+  default:
+    - set:
+        var1: "var1-value"
+
+    - call: myFlow
+      in:
+        var2: "var2-value"
+      meta:
+        variablesScope: true
+
+  myFlow:
+    - log: "has var1: ${hasVariable('var1')}"
+    - log: "has var2: ${hasVariable('var2')}"
+    - log: "var2: ${var2}"
