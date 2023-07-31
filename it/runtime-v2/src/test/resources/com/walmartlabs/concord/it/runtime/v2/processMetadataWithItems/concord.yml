@@ -6,6 +6,8 @@ configuration:
 flows:
   default:
     - call: anotherFlow
+      in:
+        item: ${item}
       out: var
       withItems:
         - a
