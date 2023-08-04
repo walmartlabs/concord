@@ -35,12 +35,16 @@ import org.apache.shiro.authz.AuthorizationInfo;
 import org.apache.shiro.realm.AuthorizingRealm;
 import org.apache.shiro.subject.PrincipalCollection;
 import org.pac4j.oidc.profile.OidcProfile;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 import java.util.*;
 import java.util.stream.Collectors;
 
 public class OidcRealm extends AuthorizingRealm {
+
+    private static final Logger log = LoggerFactory.getLogger(OidcRealm.class);
 
     private static final String REALM_NAME = "oidc";
 
@@ -80,6 +84,8 @@ public class OidcRealm extends AuthorizingRealm {
         OidcToken t = (OidcToken) token;
 
         OidcProfile profile = t.getProfile();
+        log.info("PROFILE: {}", profile);
+        log.info("PROFILE ATTRS: {}", profile.getAttributes());
 
         // TODO replace getOrCreate+update with a single method?
 
