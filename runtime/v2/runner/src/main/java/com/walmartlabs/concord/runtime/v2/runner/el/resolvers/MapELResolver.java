@@ -21,6 +21,7 @@ package com.walmartlabs.concord.runtime.v2.runner.el.resolvers;
  */
 
 import com.sun.el.util.ReflectionUtil;
+import com.walmartlabs.concord.runtime.v2.sdk.SensitiveData;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -35,7 +36,11 @@ public class MapELResolver extends javax.el.MapELResolver {
     public Object getValue(ELContext context, Object base, Object property) {
         Object result = super.getValue(context, base, property);
         if (result != null && context.isPropertyResolved()) {
+            for (Method m : base.getClass().getMethods()) {
+                log.info("method: {} -> {}", m, m.getAnnotation(SensitiveData.class));
+            }
             Method m = ReflectionUtil.findMethod(base.getClass(), "get", new Class[]{Object.class}, null);
+
             log.info("RESULT: {}, method: {}", result, m);
             if (m != null) {
                 SensitiveDataProcessor.process(result, m);
