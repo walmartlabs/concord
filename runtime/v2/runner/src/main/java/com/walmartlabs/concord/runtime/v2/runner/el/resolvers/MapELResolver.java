@@ -20,32 +20,47 @@ package com.walmartlabs.concord.runtime.v2.runner.el.resolvers;
  * =====
  */
 
-import com.sun.el.util.ReflectionUtil;
-import com.walmartlabs.concord.runtime.v2.sdk.SensitiveData;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import javax.el.ELContext;
 import java.lang.reflect.Method;
+import java.util.ArrayList;
+import java.util.List;
 
 public class MapELResolver extends javax.el.MapELResolver {
-
-    private static final Logger log = LoggerFactory.getLogger(MapELResolver.class);
 
     @Override
     public Object getValue(ELContext context, Object base, Object property) {
         Object result = super.getValue(context, base, property);
         if (result != null && context.isPropertyResolved()) {
-            for (Method m : base.getClass().getMethods()) {
-                log.info("method: {} -> {}", m, m.getAnnotation(SensitiveData.class));
-            }
-            Method m = ReflectionUtil.findMethod(base.getClass(), "get", new Class[]{Object.class}, null);
-
-            log.info("RESULT: {}, method: {}", result, m);
-            if (m != null) {
-                SensitiveDataProcessor.process(result, m);
-            }
+            List<Method> methods = findMapGetMethod(base.getClass(), result.getClass());
+            SensitiveDataProcessor.process(result, methods);
         }
         return result;
+    }
+
+    private static List<Method> findMapGetMethod(Class<?> clazz, Class<?> returnType) {
+        List<Method> foundMethods = new ArrayList<>();
+
+        if (clazz == null) {
+            return foundMethods;
+        }
+
+        Method[] methods = clazz.getDeclaredMethods();
+
+        for (Method method : methods) {
+            if (method.getName().equals("get")
+                    && method.getParameterCount() == 1
+                    && method.getParameterTypes()[0] == Object.class
+                    && returnType.isAssignableFrom(method.getReturnType())) {
+                foundMethods.add(method);
+            }
+        }
+
+        foundMethods.addAll(findMapGetMethod(clazz.getSuperclass(), returnType));
+
+        for (Class<?> iface : clazz.getInterfaces()) {
+            foundMethods.addAll(findMapGetMethod(iface, returnType));
+        }
+
+        return foundMethods;
     }
 }
