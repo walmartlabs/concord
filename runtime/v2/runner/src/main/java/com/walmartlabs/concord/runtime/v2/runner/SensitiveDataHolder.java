@@ -20,11 +20,16 @@ package com.walmartlabs.concord.runtime.v2.runner;
  * =====
  */
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.util.Collection;
 import java.util.Set;
 import java.util.concurrent.CopyOnWriteArraySet;
 
 public class SensitiveDataHolder {
+
+    private static final Logger log = LoggerFactory.getLogger(SensitiveDataHolder.class);
 
     private static final SensitiveDataHolder INSTANCE = new SensitiveDataHolder();
 
@@ -35,14 +40,18 @@ public class SensitiveDataHolder {
     private final Set<String> sensitiveData = new CopyOnWriteArraySet<>();
 
     public Set<String> get() {
+        log.info("get: {}", sensitiveData.size());
         return sensitiveData;
     }
 
     public boolean empty() {
+        log.info("empty");
         return sensitiveData.isEmpty();
     }
 
     public void add(String sensitiveData) {
+        log.info("add: {}", sensitiveData);
+
         this.sensitiveData.add(sensitiveData);
     }
 
