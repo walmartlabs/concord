@@ -22,6 +22,8 @@ package com.walmartlabs.concord.runtime.v2.runner.el.resolvers;
 
 import com.walmartlabs.concord.runtime.v2.runner.SensitiveDataHolder;
 import com.walmartlabs.concord.runtime.v2.sdk.SensitiveData;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.lang.reflect.Method;
 import java.util.Arrays;
@@ -31,10 +33,17 @@ import java.util.Set;
 
 public class SensitiveDataProcessor {
 
+    private static final Logger log = LoggerFactory.getLogger(SensitiveDataProcessor.class);
+
     public static void process(Object value, Method method) {
         SensitiveData a = method.getAnnotation(SensitiveData.class);
         if (a == null) {
+            log.info("process -> no annotation. annotations: {}", (Object[]) method.getAnnotations());
             return;
+        }
+
+        if (value != null) {
+            log.info("process -> adding value: {}", value.getClass());
         }
 
         if (value instanceof String) {
