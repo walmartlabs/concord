@@ -216,6 +216,7 @@
                         <tagNameFormat>@{project.version}</tagNameFormat>
                         <localCheckout>true</localCheckout>
                         <autoVersionSubmodules>true</autoVersionSubmodules>
+                        <preparationGoals>clean install</preparationGoals>
                     </configuration>
                 </plugin>
                 <plugin>
