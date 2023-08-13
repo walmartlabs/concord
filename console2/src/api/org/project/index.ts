@@ -99,8 +99,20 @@ export interface PaginatedProjectEntries {
     next: boolean;
 }
 
+export interface KVCapacity {
+    size: number;
+    maxSize?: number;
+}
+
 export const get = (orgName: ConcordKey, projectName: ConcordKey): Promise<ProjectEntry> => {
     return fetchJson<ProjectEntry>(`/api/v2/org/${orgName}/project/${projectName}`);
+};
+
+export const getCapacity = (
+    orgName: ConcordKey,
+    projectName: ConcordKey
+): Promise<KVCapacity> => {
+    return fetchJson(`/api/v1/org/${orgName}/project/${projectName}/kv/capacity`);
 };
 
 export const list = async (
