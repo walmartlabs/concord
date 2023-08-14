@@ -3,6 +3,8 @@ flows:
 
     # single out
     - call: myFlow
+      in:
+        item: ${item}
       out: x
       withItems:
         - 1

@@ -131,6 +131,16 @@ public interface State extends Serializable {
     void clearStackTrace(ThreadId threadId);
 
     /**
+     * Returns process global variables
+     */
+    Map<String, Serializable> globalVariables();
+
+    /**
+     * Set process global variables
+     */
+    void setGlobalVariables(Map<String, Serializable> variables);
+
+    /**
      * Performs state maintenance and cleanup.
      */
     void gc();

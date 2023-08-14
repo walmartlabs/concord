@@ -27,6 +27,7 @@ import com.walmartlabs.concord.runtime.common.injector.InstanceId;
 import com.walmartlabs.concord.runtime.v2.model.ProcessDefinition;
 import com.walmartlabs.concord.runtime.v2.runner.compiler.CompilerUtils;
 import com.walmartlabs.concord.runtime.v2.runner.vm.SaveLastErrorCommand;
+import com.walmartlabs.concord.runtime.v2.runner.vm.SetGlobalVariablesCommand;
 import com.walmartlabs.concord.runtime.v2.runner.vm.UpdateLocalsCommand;
 import com.walmartlabs.concord.runtime.v2.runner.vm.VMUtils;
 import com.walmartlabs.concord.runtime.v2.sdk.Compiler;
@@ -81,7 +82,7 @@ public class Runner {
 
         VM vm = createVM(processDefinition);
         // update the global variables using the input map by running a special command
-        vm.run(state, new UpdateLocalsCommand(input)); // TODO merge with the cfg's arguments
+        vm.run(state, new SetGlobalVariablesCommand(input)); // TODO merge with the cfg's arguments
         // start the normal execution
         vm.start(state);
 
@@ -127,7 +128,7 @@ public class Runner {
         State state = snapshot.vmState();
 
         VM vm = createVM(snapshot.processDefinition());
-        // update the global variables using the input map by running a special command
+        // update the local variables using the input map by running a special command
         vm.run(state, new UpdateLocalsCommand(input));
         // continue as usual
         vm.start(state);
