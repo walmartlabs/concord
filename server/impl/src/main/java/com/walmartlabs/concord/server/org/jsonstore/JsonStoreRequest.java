@@ -46,10 +46,12 @@ public interface JsonStoreRequest extends Serializable {
     @Nullable
     String name();
 
-    @Value.Default
-    default JsonStoreVisibility visibility() {
-        return JsonStoreVisibility.PRIVATE;
-    }
+    @Nullable
+    JsonStoreVisibility visibility();
+
+    @ConcordKey
+    @Nullable
+    String orgName();
 
     @Nullable
     EntityOwner owner();
