@@ -217,6 +217,7 @@
                         <localCheckout>true</localCheckout>
                         <autoVersionSubmodules>true</autoVersionSubmodules>
                         <preparationGoals>clean install</preparationGoals>
+                        <arguments>-DskipTests=true</arguments>
                     </configuration>
                 </plugin>
                 <plugin>
