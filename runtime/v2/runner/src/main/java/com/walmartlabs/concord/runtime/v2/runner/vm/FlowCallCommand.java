@@ -126,7 +126,7 @@ public class FlowCallCommand extends StepCommand<FlowCall> {
         }
 
         @Override
-        protected LogContext getLogContext(Runtime runtime, Context ctx, State state, ThreadId threadId,UUID correlationId) {
+        protected LogContext getLogContext(Runtime runtime, Context ctx, UUID correlationId) {
             // TODO: return original FlowCall LogContext...
             return null;
         }

@@ -94,7 +94,7 @@ public class TaskResumeCommand extends StepCommand<TaskCall> {
     }
 
     @Override
-    protected LogContext getLogContext(Runtime runtime, Context ctx, State state, ThreadId threadId, UUID correlationId) {
+    protected LogContext getLogContext(Runtime runtime, Context ctx, UUID correlationId) {
         return logContext;
     }
 }
