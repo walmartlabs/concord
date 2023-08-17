@@ -12,7 +12,8 @@
 - cli: active profiles fix
 ([#789](https://github.com/walmartlabs/concord/pull/789));
 
-## [2.0.0] - Unreleased
+## [2.0.0] - 2023-08-16
+
 
 # Breaking
 
