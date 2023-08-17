@@ -4,10 +4,13 @@
 
 ### Added
 
-- console2: allow changing JSON store org #
+- console2: allow changing JSON store org 
 ([#790](https://github.com/walmartlabs/concord/pull/790));
 
 ### Changed
+
+- cli: active profiles fix
+([#789](https://github.com/walmartlabs/concord/pull/789));
 
 ## [2.0.0] - Unreleased
 
