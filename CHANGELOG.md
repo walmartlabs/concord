@@ -4,8 +4,10 @@
 
 ### Added
 
+- runtime-v2: allow listen to project load events at runtime
+([#785](https://github.com/walmartlabs/concord/pull/785));
 - console2: allow changing JSON store org 
-([#790](https://github.com/walmartlabs/concord/pull/790));
+([#790](https://github.com/walmartlabs/concord/pull/790)).
 
 ### Changed
 
