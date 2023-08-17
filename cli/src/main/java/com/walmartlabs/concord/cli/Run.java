@@ -244,7 +244,7 @@ public class Run implements Callable<Integer> {
 
         System.out.println("Starting...");
 
-        ProcessConfiguration cfg = from(processDefinition.configuration(), processInfo(args), projectInfo(args))
+        ProcessConfiguration cfg = from(processDefinition.configuration(), processInfo(args, profiles), projectInfo(args))
                 .entryPoint(entryPoint)
                 .instanceId(instanceId)
                 .build();
@@ -283,7 +283,7 @@ public class Run implements Callable<Integer> {
     }
 
     @SuppressWarnings("unchecked")
-    private static ProcessInfo processInfo(Map<String, Object> args) {
+    private static ProcessInfo processInfo(Map<String, Object> args, List<String> profiles) {
         Object processInfoObject = args.get("processInfo");
         if (processInfoObject == null) {
             processInfoObject = fromExtraVars("processInfo", args);
@@ -296,6 +296,7 @@ public class Run implements Callable<Integer> {
 
         return ProcessInfo.builder()
                 .sessionToken(MapUtils.getString(processInfo, "sessionToken"))
+                .activeProfiles(profiles)
                 .build();
     }
 
