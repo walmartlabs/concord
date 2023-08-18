@@ -43,9 +43,7 @@ import com.walmartlabs.concord.server.security.ldap.LdapPrincipal;
 import com.walmartlabs.concord.server.user.UserEntry;
 import com.walmartlabs.concord.server.user.UserManager;
 import com.walmartlabs.concord.server.user.UserType;
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
-import io.swagger.annotations.ApiParam;
+import io.swagger.v3.oas.annotations.Parameter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.sonatype.siesta.Resource;
@@ -73,7 +71,7 @@ import static com.walmartlabs.concord.server.events.github.Constants.EVENT_SOURC
  */
 @Named
 @Singleton
-@Api(value = "GitHub Events", authorizations = {})
+//@Api(value = "GitHub Events", authorizations = {})
 @Path("/events/github")
 public class GithubEventResource implements Resource {
 
@@ -109,12 +107,12 @@ public class GithubEventResource implements Resource {
     }
 
     @POST
-    @ApiOperation("Handles GitHub repository level events")
+//    @ApiOperation("Handles GitHub repository level events")
     @Path("/webhook")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.TEXT_PLAIN)
     @WithTimer
-    public String onEvent(@ApiParam Map<String, Object> data,
+    public String onEvent(@Parameter Map<String, Object> data,
                           @HeaderParam("X-GitHub-Delivery") String deliveryId,
                           @HeaderParam("X-GitHub-Event") String eventName,
                           @Context UriInfo uriInfo) {

@@ -25,10 +25,7 @@ import com.walmartlabs.concord.server.OperationResult;
 import com.walmartlabs.concord.server.sdk.ConcordApplicationException;
 import com.walmartlabs.concord.server.security.Roles;
 import com.walmartlabs.concord.server.security.UserPrincipal;
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
-import io.swagger.annotations.ApiParam;
-import io.swagger.annotations.Authorization;
+import io.swagger.v3.oas.annotations.Parameter;
 import org.apache.shiro.authz.UnauthorizedException;
 import org.sonatype.siesta.Resource;
 import org.sonatype.siesta.Validate;
@@ -47,7 +44,7 @@ import java.util.UUID;
 
 @Named
 @Singleton
-@Api(value = "Users", authorizations = {@Authorization("api_key"), @Authorization("session_key"), @Authorization("ldap")})
+//@Api(value = "Users", authorizations = {@Authorization("api_key"), @Authorization("session_key"), @Authorization("ldap")})
 @Path("/api/v1/user")
 public class UserResource implements Resource {
 
@@ -67,11 +64,11 @@ public class UserResource implements Resource {
      * @return
      */
     @POST
-    @ApiOperation("Create a new user or update an existing one")
+//    @ApiOperation("Create a new user or update an existing one")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     @Validate
-    public CreateUserResponse createOrUpdate(@ApiParam @Valid CreateUserRequest req) {
+    public CreateUserResponse createOrUpdate(@Parameter @Valid CreateUserRequest req) {
         assertAdmin();
 
         String username = req.getUsername();
@@ -97,7 +94,7 @@ public class UserResource implements Resource {
      * @return
      */
     @GET
-    @ApiOperation("Find a user")
+//    @ApiOperation("Find a user")
     @Path("/{username}")
     @Produces(MediaType.APPLICATION_JSON)
     @Validate
@@ -117,11 +114,11 @@ public class UserResource implements Resource {
      * @return
      */
     @DELETE
-    @ApiOperation("Delete an existing user")
+//    @ApiOperation("Delete an existing user")
     @Path("/{id}")
     @Produces(MediaType.APPLICATION_JSON)
     // TODO use usernames instead of IDs?
-    public DeleteUserResponse delete(@ApiParam @PathParam("id") UUID id) {
+    public DeleteUserResponse delete(@Parameter @PathParam("id") UUID id) {
         assertAdmin();
 
         if (!userDao.existsById(id)) {
@@ -133,13 +130,13 @@ public class UserResource implements Resource {
     }
 
     @POST
-    @ApiOperation("Update the list of roles for the existing user")
+//    @ApiOperation("Update the list of roles for the existing user")
     @Path("/{username}/roles")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     @Validate
-    public GenericOperationResult updateUserRoles(@ApiParam @PathParam("username") @Size(max = UserEntry.MAX_USERNAME_LENGTH) String username,
-                                                  @ApiParam @Valid UpdateUserRolesRequest req) {
+    public GenericOperationResult updateUserRoles(@Parameter @PathParam("username") @Size(max = UserEntry.MAX_USERNAME_LENGTH) String username,
+                                                  @Parameter @Valid UpdateUserRolesRequest req) {
         assertAdmin();
 
         // TODO: type from request

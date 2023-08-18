@@ -28,10 +28,7 @@ import com.walmartlabs.concord.server.OperationResult;
 import com.walmartlabs.concord.server.org.*;
 import com.walmartlabs.concord.server.org.team.TeamDao;
 import com.walmartlabs.concord.server.sdk.ConcordApplicationException;
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
-import io.swagger.annotations.ApiParam;
-import io.swagger.annotations.Authorization;
+import io.swagger.v3.oas.annotations.Parameter;
 import org.sonatype.siesta.Resource;
 import org.sonatype.siesta.Validate;
 import org.sonatype.siesta.ValidationErrorsException;
@@ -48,7 +45,7 @@ import java.util.stream.Collectors;
 
 @Named
 @Singleton
-@Api(value = "Projects", authorizations = {@Authorization("api_key"), @Authorization("session_key"), @Authorization("ldap")})
+//@Api(value = "Projects", authorizations = {@Authorization("api_key"), @Authorization("session_key"), @Authorization("ldap")})
 @Path("/api/v1/org")
 public class ProjectResource implements Resource {
 
@@ -86,13 +83,13 @@ public class ProjectResource implements Resource {
     }
 
     @POST
-    @ApiOperation("Creates a new project or updates an existing one")
+//    @ApiOperation("Creates a new project or updates an existing one")
     @Path("/{orgName}/project")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     @Validate
-    public ProjectOperationResponse createOrUpdate(@ApiParam @PathParam("orgName") @ConcordKey String orgName,
-                                                   @ApiParam @Valid ProjectEntry entry) {
+    public ProjectOperationResponse createOrUpdate(@Parameter @PathParam("orgName") @ConcordKey String orgName,
+                                                   @Parameter @Valid ProjectEntry entry) {
 
         ProjectOperationResult result = projectManager.createOrUpdate(orgName, entry);
         return new ProjectOperationResponse(result.projectId(), result.result());
@@ -103,12 +100,12 @@ public class ProjectResource implements Resource {
      */
     @Deprecated
     @GET
-    @ApiOperation("Get an existing project")
+//    @ApiOperation("Get an existing project")
     @Path("/{orgName}/project/{projectName}")
     @Produces(MediaType.APPLICATION_JSON)
     @Validate
-    public ProjectEntry get(@ApiParam @PathParam("orgName") @ConcordKey String orgName,
-                            @ApiParam @PathParam("projectName") @ConcordKey String projectName) {
+    public ProjectEntry get(@Parameter @PathParam("orgName") @ConcordKey String orgName,
+                            @Parameter @PathParam("projectName") @ConcordKey String projectName) {
 
         ProjectEntry p = projectManager.get(orgName, projectName);
         List<RepositoryEntry> repositories = projectRepositoryManager.list(p.getId());
@@ -116,11 +113,11 @@ public class ProjectResource implements Resource {
     }
 
     @GET
-    @ApiOperation(value = "List existing projects", responseContainer = "list", response = ProjectEntry.class)
+//    @ApiOperation(value = "List existing projects", responseContainer = "list", response = ProjectEntry.class)
     @Path("/{orgName}/project")
     @Produces(MediaType.APPLICATION_JSON)
     @Validate
-    public List<ProjectEntry> find(@ApiParam @PathParam("orgName") @ConcordKey String orgName,
+    public List<ProjectEntry> find(@Parameter @PathParam("orgName") @ConcordKey String orgName,
                                    @QueryParam("offset") int offset,
                                    @QueryParam("limit") int limit,
                                    @QueryParam("filter") String filter) {
@@ -129,11 +126,11 @@ public class ProjectResource implements Resource {
     }
 
     @GET
-    @ApiOperation("list KV")
+//    @ApiOperation("list KV")
     @Path("/{orgName}/project/{projectName}/kv")
     @Produces(MediaType.APPLICATION_JSON)
-    public List<KvEntry> findKV(@ApiParam @PathParam("orgName") @ConcordKey String orgName,
-                                @ApiParam @PathParam("projectName") @ConcordKey String projectName,
+    public List<KvEntry> findKV(@Parameter @PathParam("orgName") @ConcordKey String orgName,
+                                @Parameter @PathParam("projectName") @ConcordKey String projectName,
                                 @QueryParam("offset") int offset,
                                 @QueryParam("limit") int limit,
                                 @QueryParam("filter") String filter) {
@@ -146,13 +143,13 @@ public class ProjectResource implements Resource {
     }
 
     @GET
-    @ApiOperation("Get a project's configuration")
+//    @ApiOperation("Get a project's configuration")
     @Path("/{orgName}/project/{projectName}/cfg{path: (.*)?}")
     @Produces(MediaType.APPLICATION_JSON)
     @Validate
-    public Object getConfiguration(@ApiParam @PathParam("orgName") @ConcordKey String orgName,
-                                   @ApiParam @PathParam("projectName") @ConcordKey String projectName,
-                                   @ApiParam @PathParam("path") String path) {
+    public Object getConfiguration(@Parameter @PathParam("orgName") @ConcordKey String orgName,
+                                   @Parameter @PathParam("projectName") @ConcordKey String projectName,
+                                   @Parameter @PathParam("path") String path) {
 
         OrganizationEntry org = orgManager.assertAccess(orgName, false);
 
@@ -179,16 +176,16 @@ public class ProjectResource implements Resource {
     }
 
     @PUT
-    @ApiOperation("Update a project's configuration parameter")
+//    @ApiOperation("Update a project's configuration parameter")
     @Path("/{orgName}/project/{projectName}/cfg{path: (.*)?}")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     @Validate
     @SuppressWarnings("unchecked")
-    public GenericOperationResult updateConfiguration(@ApiParam @PathParam("orgName") @ConcordKey String orgName,
-                                                      @ApiParam @PathParam("projectName") @ConcordKey String projectName,
-                                                      @ApiParam @PathParam("path") String path,
-                                                      @ApiParam Object data) {
+    public GenericOperationResult updateConfiguration(@Parameter @PathParam("orgName") @ConcordKey String orgName,
+                                                      @Parameter @PathParam("projectName") @ConcordKey String projectName,
+                                                      @Parameter @PathParam("path") String path,
+                                                      @Parameter Object data) {
 
         OrganizationEntry org = orgManager.assertAccess(orgName, false);
 
@@ -221,26 +218,26 @@ public class ProjectResource implements Resource {
     }
 
     @PUT
-    @ApiOperation("Update a project's configuration parameter")
+//    @ApiOperation("Update a project's configuration parameter")
     @Path("/{orgName}/project/{projectName}/cfg/")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     @Validate
-    public GenericOperationResult updateConfiguration(@ApiParam @PathParam("orgName") @ConcordKey String orgName,
-                                                      @ApiParam @PathParam("projectName") @ConcordKey String projectName,
-                                                      @ApiParam Object data) {
+    public GenericOperationResult updateConfiguration(@Parameter @PathParam("orgName") @ConcordKey String orgName,
+                                                      @Parameter @PathParam("projectName") @ConcordKey String projectName,
+                                                      @Parameter Object data) {
 
         return updateConfiguration(orgName, projectName, "/", data);
     }
 
     @DELETE
-    @ApiOperation("Delete a project's configuration parameter")
+//    @ApiOperation("Delete a project's configuration parameter")
     @Path("/{orgName}/project/{projectName}/cfg{path: (.*)?}")
     @Produces(MediaType.APPLICATION_JSON)
     @Validate
-    public GenericOperationResult deleteConfiguration(@ApiParam @PathParam("orgName") @ConcordKey String orgName,
-                                                      @ApiParam @PathParam("projectName") @ConcordKey String projectName,
-                                                      @ApiParam @PathParam("path") String path) {
+    public GenericOperationResult deleteConfiguration(@Parameter @PathParam("orgName") @ConcordKey String orgName,
+                                                      @Parameter @PathParam("projectName") @ConcordKey String projectName,
+                                                      @Parameter @PathParam("path") String path) {
 
         OrganizationEntry org = orgManager.assertAccess(orgName, false);
 
@@ -270,12 +267,12 @@ public class ProjectResource implements Resource {
     }
 
     @DELETE
-    @ApiOperation("Delete an existing project")
+//    @ApiOperation("Delete an existing project")
     @Path("/{orgName}/project/{projectName}")
     @Produces(MediaType.APPLICATION_JSON)
     @Validate
-    public GenericOperationResult delete(@ApiParam @PathParam("orgName") @ConcordKey String orgName,
-                                         @ApiParam @PathParam("projectName") @ConcordKey String projectName) {
+    public GenericOperationResult delete(@Parameter @PathParam("orgName") @ConcordKey String orgName,
+                                         @Parameter @PathParam("projectName") @ConcordKey String projectName) {
 
         OrganizationEntry org = orgManager.assertAccess(orgName, false);
 
@@ -289,12 +286,12 @@ public class ProjectResource implements Resource {
     }
 
     @GET
-    @ApiOperation("Get project team access")
+//    @ApiOperation("Get project team access")
     @Path("/{orgName}/project/{projectName}/access")
     @Produces(MediaType.APPLICATION_JSON)
     @Validate
-    public List<ResourceAccessEntry> getAccessLevel(@ApiParam @PathParam("orgName") @ConcordKey String orgName,
-                                                    @ApiParam @PathParam("projectName") @ConcordKey String projectName) {
+    public List<ResourceAccessEntry> getAccessLevel(@Parameter @PathParam("orgName") @ConcordKey String orgName,
+                                                    @Parameter @PathParam("projectName") @ConcordKey String projectName) {
 
         OrganizationEntry org = orgManager.assertAccess(orgName, false);
 
@@ -306,14 +303,14 @@ public class ProjectResource implements Resource {
     }
 
     @POST
-    @ApiOperation("Updates the access level for the specified project and team")
+//    @ApiOperation("Updates the access level for the specified project and team")
     @Path("/{orgName}/project/{projectName}/access")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     @Validate
-    public GenericOperationResult updateAccessLevel(@ApiParam @PathParam("orgName") @ConcordKey String orgName,
-                                                    @ApiParam @PathParam("projectName") @ConcordKey String projectName,
-                                                    @ApiParam @Valid ResourceAccessEntry entry) {
+    public GenericOperationResult updateAccessLevel(@Parameter @PathParam("orgName") @ConcordKey String orgName,
+                                                    @Parameter @PathParam("projectName") @ConcordKey String projectName,
+                                                    @Parameter @Valid ResourceAccessEntry entry) {
 
         OrganizationEntry org = orgManager.assertAccess(orgName, true);
 
@@ -329,14 +326,14 @@ public class ProjectResource implements Resource {
     }
 
     @POST
-    @ApiOperation("Updates the access level for the specified project and team")
+//    @ApiOperation("Updates the access level for the specified project and team")
     @Path("/{orgName}/project/{projectName}/access/bulk")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     @Validate
-    public GenericOperationResult updateAccessLevel(@ApiParam @PathParam("orgName") @ConcordKey String orgName,
-                                                    @ApiParam @PathParam("projectName") @ConcordKey String projectName,
-                                                    @ApiParam @Valid Collection<ResourceAccessEntry> entries) {
+    public GenericOperationResult updateAccessLevel(@Parameter @PathParam("orgName") @ConcordKey String orgName,
+                                                    @Parameter @PathParam("projectName") @ConcordKey String projectName,
+                                                    @Parameter @Valid Collection<ResourceAccessEntry> entries) {
 
         OrganizationEntry org = orgManager.assertAccess(orgName, true);
 
@@ -355,14 +352,14 @@ public class ProjectResource implements Resource {
     }
 
     @POST
-    @ApiOperation("Encrypts a string with the project's key")
+//    @ApiOperation("Encrypts a string with the project's key")
     @Path("/{orgName}/project/{projectName}/encrypt")
     @Consumes(MediaType.TEXT_PLAIN)
     @Produces(MediaType.APPLICATION_JSON)
     @Validate
-    public EncryptValueResponse encrypt(@ApiParam @PathParam("orgName") @ConcordKey String orgName,
-                                        @ApiParam @PathParam("projectName") @ConcordKey String projectName,
-                                        @ApiParam String value) {
+    public EncryptValueResponse encrypt(@Parameter @PathParam("orgName") @ConcordKey String orgName,
+                                        @Parameter @PathParam("projectName") @ConcordKey String projectName,
+                                        @Parameter String value) {
 
         if (value == null) {
             throw new ValidationErrorsException("Value is required");

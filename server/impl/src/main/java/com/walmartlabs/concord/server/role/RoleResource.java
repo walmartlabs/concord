@@ -30,10 +30,7 @@ import com.walmartlabs.concord.server.sdk.ConcordApplicationException;
 import com.walmartlabs.concord.server.sdk.metrics.WithTimer;
 import com.walmartlabs.concord.server.security.Roles;
 import com.walmartlabs.concord.server.user.RoleEntry;
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
-import io.swagger.annotations.ApiParam;
-import io.swagger.annotations.Authorization;
+import io.swagger.v3.oas.annotations.Parameter;
 import org.apache.shiro.authz.UnauthorizedException;
 import org.sonatype.siesta.Resource;
 import org.sonatype.siesta.ValidationErrorsException;
@@ -48,7 +45,7 @@ import java.util.UUID;
 
 import static javax.ws.rs.core.Response.Status;
 
-@Api(value = "Roles", authorizations = {@Authorization("api_key"), @Authorization("session_key"), @Authorization("ldap")})
+//@Api(value = "Roles", authorizations = {@Authorization("api_key"), @Authorization("session_key"), @Authorization("ldap")})
 @Path("/api/v1/role")
 public class RoleResource implements Resource {
 
@@ -62,11 +59,11 @@ public class RoleResource implements Resource {
     }
 
     @GET
-    @ApiOperation("Get a role's details")
+//    @ApiOperation("Get a role's details")
     @Path("/{roleName}")
     @Produces(MediaType.APPLICATION_JSON)
     @WithTimer
-    public RoleEntry get(@ApiParam @PathParam("roleName") String roleName) {
+    public RoleEntry get(@Parameter @PathParam("roleName") String roleName) {
         assertAdmin();
 
         UUID id = roleDao.getId(roleName);
@@ -78,7 +75,7 @@ public class RoleResource implements Resource {
     }
 
     @GET
-    @ApiOperation(value = "List roles", responseContainer = "list", response = RoleEntry.class)
+//    @ApiOperation(value = "List roles", responseContainer = "list", response = RoleEntry.class)
     @Produces(MediaType.APPLICATION_JSON)
     @WithTimer
     public List<RoleEntry> list() {
@@ -88,10 +85,10 @@ public class RoleResource implements Resource {
     }
 
     @POST
-    @ApiOperation("Create or update a role")
+//    @ApiOperation("Create or update a role")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    public RoleOperationResponse createOrUpdate(@ApiParam @Valid RoleEntry entry) {
+    public RoleOperationResponse createOrUpdate(@Parameter @Valid RoleEntry entry) {
         assertAdmin();
 
         UUID id = entry.getId();
@@ -123,10 +120,10 @@ public class RoleResource implements Resource {
     }
 
     @DELETE
-    @ApiOperation("Delete an existing role")
+//    @ApiOperation("Delete an existing role")
     @Path("/{roleName}")
     @Produces(MediaType.APPLICATION_JSON)
-    public GenericOperationResult delete(@ApiParam @PathParam("roleName") @ConcordKey String roleName) {
+    public GenericOperationResult delete(@Parameter @PathParam("roleName") @ConcordKey String roleName) {
         assertAdmin();
 
         UUID id = roleDao.getId(roleName);
@@ -152,13 +149,13 @@ public class RoleResource implements Resource {
      * @return result
      */
     @PUT
-    @ApiOperation("Add LDAP groups to a role")
+//    @ApiOperation("Add LDAP groups to a role")
     @Path("/{roleName}/ldapGroups")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    public GenericOperationResult addLdapGroups(@ApiParam @PathParam("roleName") @ConcordKey String roleName,
-                                                @ApiParam @QueryParam("replace") @DefaultValue("false") boolean replace,
-                                                @ApiParam @Valid Collection<String> groups) {
+    public GenericOperationResult addLdapGroups(@Parameter @PathParam("roleName") @ConcordKey String roleName,
+                                                @Parameter @QueryParam("replace") @DefaultValue("false") boolean replace,
+                                                @Parameter @Valid Collection<String> groups) {
         assertAdmin();
 
         boolean isEmptyGroups = groups == null || groups.isEmpty();
@@ -199,10 +196,10 @@ public class RoleResource implements Resource {
      * @return list of groups
      */
     @GET
-    @ApiOperation("List ldap groups of a role")
+//    @ApiOperation("List ldap groups of a role")
     @Path("/{roleName}/ldapGroups")
     @Produces(MediaType.APPLICATION_JSON)
-    public List<String> listLdapGroups(@ApiParam @PathParam("roleName") @ConcordKey String roleName) {
+    public List<String> listLdapGroups(@Parameter @PathParam("roleName") @ConcordKey String roleName) {
         assertAdmin();
 
         UUID id = roleDao.getId(roleName);

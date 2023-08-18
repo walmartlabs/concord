@@ -21,10 +21,7 @@ package com.walmartlabs.concord.server.org.project;
  */
 
 import com.walmartlabs.concord.common.validation.ConcordKey;
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
-import io.swagger.annotations.ApiParam;
-import io.swagger.annotations.Authorization;
+import io.swagger.v3.oas.annotations.Parameter;
 import org.sonatype.siesta.Resource;
 import org.sonatype.siesta.Validate;
 
@@ -39,7 +36,7 @@ import javax.ws.rs.core.MediaType;
 
 @Named
 @Singleton
-@Api(value = "Projects", authorizations = {@Authorization("api_key"), @Authorization("session_key"), @Authorization("ldap")})
+//@Api(value = "Projects", authorizations = {@Authorization("api_key"), @Authorization("session_key"), @Authorization("ldap")})
 @Path("/api/v2/org")
 public class ProjectResourceV2 implements Resource {
 
@@ -52,12 +49,12 @@ public class ProjectResourceV2 implements Resource {
     }
 
     @GET
-    @ApiOperation("Get an existing project")
+//    @ApiOperation("Get an existing project")
     @Path("/{orgName}/project/{projectName}")
     @Produces(MediaType.APPLICATION_JSON)
     @Validate
-    public ProjectEntry get(@ApiParam @PathParam("orgName") @ConcordKey String orgName,
-                            @ApiParam @PathParam("projectName") @ConcordKey String projectName) {
+    public ProjectEntry get(@Parameter @PathParam("orgName") @ConcordKey String orgName,
+                            @Parameter @PathParam("projectName") @ConcordKey String projectName) {
 
         return projectManager.get(orgName, projectName);
     }

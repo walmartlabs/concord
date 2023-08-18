@@ -22,9 +22,6 @@ package com.walmartlabs.concord.server.agent;
 
 import com.walmartlabs.concord.server.AgentWorkerUtils;
 import com.walmartlabs.concord.server.sdk.metrics.WithTimer;
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
-import io.swagger.annotations.Authorization;
 import org.sonatype.siesta.Resource;
 import org.sonatype.siesta.ValidationErrorsException;
 
@@ -39,7 +36,7 @@ import java.util.Collections;
 import java.util.Map;
 import java.util.stream.Stream;
 
-@Api(value = "Agents", authorizations = {@Authorization("api_key"), @Authorization("session_key"), @Authorization("ldap")})
+//@Api(value = "Agents", authorizations = {@Authorization("api_key"), @Authorization("session_key"), @Authorization("ldap")})
 @Path("/api/v1/agent")
 public class AgentResource implements Resource {
 
@@ -51,7 +48,7 @@ public class AgentResource implements Resource {
     }
 
     @GET
-    @ApiOperation(value = "List currently available agent workers", responseContainer = "list", response = AgentWorkerEntry.class)
+//    @ApiOperation(value = "List currently available agent workers", responseContainer = "list", response = AgentWorkerEntry.class)
     @Path("/all/workers")
     @Produces(MediaType.APPLICATION_JSON)
     @WithTimer
@@ -60,7 +57,7 @@ public class AgentResource implements Resource {
     }
 
     @GET
-    @ApiOperation(value = "Counts the currently connected workers based on the specified capabilities property")
+//    @ApiOperation(value = "Counts the currently connected workers based on the specified capabilities property")
     @Path("/all/workersCount")
     @Produces(MediaType.APPLICATION_JSON)
     public Map<Object, Long> aggregate(@QueryParam("capabilities") String capabilities) {

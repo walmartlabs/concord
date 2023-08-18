@@ -22,10 +22,7 @@ package com.walmartlabs.concord.server.org.jsonstore;
 
 import com.walmartlabs.concord.server.GenericOperationResult;
 import com.walmartlabs.concord.server.OperationResult;
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
-import io.swagger.annotations.ApiParam;
-import io.swagger.annotations.Authorization;
+import io.swagger.v3.oas.annotations.Parameter;
 import org.sonatype.siesta.Resource;
 
 import javax.inject.Inject;
@@ -37,7 +34,7 @@ import java.util.List;
 
 @Named
 @Singleton
-@Api(value = "JsonStoreData", authorizations = {@Authorization("api_key"), @Authorization("session_key"), @Authorization("ldap")})
+//@Api(value = "JsonStoreData", authorizations = {@Authorization("api_key"), @Authorization("session_key"), @Authorization("ldap")})
 @Path("/api/v1/org")
 public class JsonStoreDataResource implements Resource {
 
@@ -57,12 +54,12 @@ public class JsonStoreDataResource implements Resource {
      * @return
      */
     @GET
-    @ApiOperation("Get store data")
+//    @ApiOperation("Get store data")
     @Path("/{orgName}/jsonstore/{storeName}/item/{itemPath:.*}")
     @Produces(MediaType.APPLICATION_JSON)
-    public Object get(@ApiParam @PathParam("orgName") String orgName,
-                      @ApiParam @PathParam("storeName") String storeName,
-                      @ApiParam @PathParam("itemPath") String itemPath) {
+    public Object get(@Parameter @PathParam("orgName") String orgName,
+                      @Parameter @PathParam("storeName") String storeName,
+                      @Parameter @PathParam("itemPath") String itemPath) {
 
         return storeDataManager.getItem(orgName, storeName, itemPath);
     }
@@ -75,14 +72,14 @@ public class JsonStoreDataResource implements Resource {
      * @return
      */
     @GET
-    @ApiOperation("List items in a JSON store")
+//    @ApiOperation("List items in a JSON store")
     @Path("/{orgName}/jsonstore/{storeName}/item")
     @Produces(MediaType.APPLICATION_JSON)
-    public List<String> list(@ApiParam @PathParam("orgName") String orgName,
-                             @ApiParam @PathParam("storeName") String storeName,
-                             @ApiParam @QueryParam("offset") @DefaultValue("0") int offset,
-                             @ApiParam @QueryParam("limit") @DefaultValue("30") int limit,
-                             @ApiParam @QueryParam("filter") String filter) {
+    public List<String> list(@Parameter @PathParam("orgName") String orgName,
+                             @Parameter @PathParam("storeName") String storeName,
+                             @Parameter @QueryParam("offset") @DefaultValue("0") int offset,
+                             @Parameter @QueryParam("limit") @DefaultValue("30") int limit,
+                             @Parameter @QueryParam("filter") String filter) {
 
         return storeDataManager.listItems(orgName, storeName, offset, limit, filter);
     }
@@ -97,14 +94,14 @@ public class JsonStoreDataResource implements Resource {
      * @return
      */
     @PUT
-    @ApiOperation("Update an item in a store")
+//    @ApiOperation("Update an item in a store")
     @Path("/{orgName}/jsonstore/{storeName}/item/{itemPath:.*}")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    public GenericOperationResult data(@ApiParam @PathParam("orgName") String orgName,
-                                       @ApiParam @PathParam("storeName") String storeName,
-                                       @ApiParam @PathParam("itemPath") String itemPath,
-                                       @ApiParam Object data) {
+    public GenericOperationResult data(@Parameter @PathParam("orgName") String orgName,
+                                       @Parameter @PathParam("storeName") String storeName,
+                                       @Parameter @PathParam("itemPath") String itemPath,
+                                       @Parameter Object data) {
 
         OperationResult result = storeDataManager.createOrUpdate(orgName, storeName, itemPath, data);
 
@@ -118,10 +115,10 @@ public class JsonStoreDataResource implements Resource {
     @Path("/{orgName}/jsonstore/{storeName}/item/{itemPath:.*}")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    public GenericOperationResult update(@ApiParam @PathParam("orgName") String orgName,
-                                         @ApiParam @PathParam("storeName") String storeName,
-                                         @ApiParam @PathParam("itemPath") String itemPath,
-                                         @ApiParam Object data) {
+    public GenericOperationResult update(@Parameter @PathParam("orgName") String orgName,
+                                         @Parameter @PathParam("storeName") String storeName,
+                                         @Parameter @PathParam("itemPath") String itemPath,
+                                         @Parameter Object data) {
 
         return data(orgName, storeName, itemPath, data);
     }
@@ -135,12 +132,12 @@ public class JsonStoreDataResource implements Resource {
      * @return
      */
     @DELETE
-    @ApiOperation("Remove an item from a store")
+//    @ApiOperation("Remove an item from a store")
     @Path("/{orgName}/jsonstore/{storeName}/item/{itemPath:.*}")
     @Produces(MediaType.APPLICATION_JSON)
-    public GenericOperationResult delete(@ApiParam @PathParam("orgName") String orgName,
-                                         @ApiParam @PathParam("storeName") String storeName,
-                                         @ApiParam @PathParam("itemPath") String itemPath) {
+    public GenericOperationResult delete(@Parameter @PathParam("orgName") String orgName,
+                                         @Parameter @PathParam("storeName") String storeName,
+                                         @Parameter @PathParam("itemPath") String itemPath) {
 
         boolean deleted = storeDataManager.delete(orgName, storeName, itemPath);
         return new GenericOperationResult(deleted ? OperationResult.DELETED : OperationResult.NOT_FOUND);

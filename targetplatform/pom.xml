@@ -124,7 +124,7 @@
         <slf4j.version>1.7.36</slf4j.version>
         <snakeyaml.version>1.33</snakeyaml.version>
         <sshd.version>2.8.0</sshd.version>
-        <swagger.version>1.5.20</swagger.version>
+        <swagger.version>1.6.11</swagger.version>
         <sysoutslf4j.version>1.0.2</sysoutslf4j.version>
         <testcontainers.concord.version>0.0.40</testcontainers.concord.version>
         <testcontainers.version>1.16.3</testcontainers.version>
@@ -576,6 +576,14 @@
                 <artifactId>swagger-annotations</artifactId>
                 <version>${swagger.version}</version>
             </dependency>
+
+            <dependency>
+                <groupId>io.swagger.core.v3</groupId>
+                <artifactId>swagger-annotations</artifactId>
+                <version>2.2.15</version>
+            </dependency>
+
+
             <dependency>
                 <groupId>io.takari.bpm</groupId>
                 <artifactId>activiti-compat</artifactId>

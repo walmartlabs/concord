@@ -33,10 +33,7 @@ import com.walmartlabs.concord.server.process.ImportsNormalizerFactory;
 import com.walmartlabs.concord.server.repository.RepositoryManager;
 import com.walmartlabs.concord.server.sdk.ConcordApplicationException;
 import com.walmartlabs.concord.server.security.Roles;
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
-import io.swagger.annotations.ApiParam;
-import io.swagger.annotations.Authorization;
+import io.swagger.v3.oas.annotations.Parameter;
 import org.apache.shiro.authz.UnauthorizedException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -57,7 +54,7 @@ import java.util.UUID;
 
 @Named
 @Singleton
-@Api(value = "Triggers", authorizations = {@Authorization("api_key"), @Authorization("session_key"), @Authorization("ldap")})
+//@Api(value = "Triggers", authorizations = {@Authorization("api_key"), @Authorization("session_key"), @Authorization("ldap")})
 @javax.ws.rs.Path("/api/v1/org")
 public class TriggerResource implements Resource {
 
@@ -104,12 +101,12 @@ public class TriggerResource implements Resource {
      * @return
      */
     @GET
-    @ApiOperation(value = "List trigger definitions", responseContainer = "list", response = TriggerEntry.class)
+//    @ApiOperation(value = "List trigger definitions", responseContainer = "list", response = TriggerEntry.class)
     @javax.ws.rs.Path("/{orgName}/project/{projectName}/repo/{repositoryName}/trigger")
     @Produces(MediaType.APPLICATION_JSON)
-    public List<TriggerEntry> list(@ApiParam @PathParam("orgName") @ConcordKey String orgName,
-                                   @ApiParam @PathParam("projectName") @ConcordKey String projectName,
-                                   @ApiParam @PathParam("repositoryName") @ConcordKey String repositoryName) {
+    public List<TriggerEntry> list(@Parameter @PathParam("orgName") @ConcordKey String orgName,
+                                   @Parameter @PathParam("projectName") @ConcordKey String projectName,
+                                   @Parameter @PathParam("repositoryName") @ConcordKey String repositoryName) {
 
         OrganizationEntry org = orgManager.assertAccess(orgName, true);
         ProjectEntry p = assertProject(org.getId(), projectName, ResourceAccessLevel.READER, true);
@@ -126,7 +123,7 @@ public class TriggerResource implements Resource {
      * @return
      */
     @POST
-    @ApiOperation("Refresh trigger definitions for all projects")
+//    @ApiOperation("Refresh trigger definitions for all projects")
     @javax.ws.rs.Path("/trigger/refresh")
     public Response refreshAll() {
         assertAdmin();
@@ -148,11 +145,11 @@ public class TriggerResource implements Resource {
      * @return
      */
     @POST
-    @ApiOperation("Refresh trigger definitions for the specified project and repository")
+//    @ApiOperation("Refresh trigger definitions for the specified project and repository")
     @javax.ws.rs.Path("/{orgName}/project/{projectName}/repo/{repositoryName}/trigger")
-    public Response refresh(@ApiParam @PathParam("orgName") @ConcordKey String orgName,
-                            @ApiParam @PathParam("projectName") @ConcordKey String projectName,
-                            @ApiParam @PathParam("repositoryName") @ConcordKey String repositoryName) {
+    public Response refresh(@Parameter @PathParam("orgName") @ConcordKey String orgName,
+                            @Parameter @PathParam("projectName") @ConcordKey String projectName,
+                            @Parameter @PathParam("repositoryName") @ConcordKey String repositoryName) {
 
         OrganizationEntry org = orgManager.assertAccess(orgName, true);
 

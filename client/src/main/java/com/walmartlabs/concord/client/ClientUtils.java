@@ -29,6 +29,7 @@ import com.walmartlabs.concord.ApiException;
 import com.walmartlabs.concord.ApiResponse;
 import com.walmartlabs.concord.Pair;
 import com.walmartlabs.concord.auth.Authentication;
+import com.walmartlabs.concord.client.auth.Authentication;
 import okio.BufferedSink;
 import okio.Okio;
 import okio.Source;

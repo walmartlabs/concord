@@ -39,10 +39,7 @@ import com.walmartlabs.concord.server.sdk.ProcessKey;
 import com.walmartlabs.concord.server.sdk.ProcessStatus;
 import com.walmartlabs.concord.server.sdk.metrics.WithTimer;
 import com.walmartlabs.concord.server.security.UserPrincipal;
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
-import io.swagger.annotations.ApiParam;
-import io.swagger.annotations.Authorization;
+import io.swagger.v3.oas.annotations.Parameter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.sonatype.siesta.Resource;
@@ -68,7 +65,7 @@ import static javax.ws.rs.core.Response.Status;
 
 @Named
 @Singleton
-@Api(value = "Project Processes", authorizations = {@Authorization("api_key"), @Authorization("session_key"), @Authorization("ldap")})
+//@Api(value = "Project Processes", authorizations = {@Authorization("api_key"), @Authorization("session_key"), @Authorization("ldap")})
 @Path("/api/v1/org")
 public class ProjectProcessResource implements Resource {
 
@@ -115,18 +112,18 @@ public class ProjectProcessResource implements Resource {
     }
 
     @GET
-    @ApiOperation("List processes for the specified organization")
+//    @ApiOperation("List processes for the specified organization")
     @Path("/{orgName}/process")
     @Produces(MediaType.APPLICATION_JSON)
     @WithTimer
     @Deprecated
     // TODO replace with /api/v1/process?orgName=...&status=...
-    public List<ProcessEntry> list(@ApiParam @PathParam("orgName") @ConcordKey String orgName,
-                                   @ApiParam @QueryParam("status") ProcessStatus processStatus,
-                                   @ApiParam @QueryParam("afterCreatedAt") OffsetDateTimeParam afterCreatedAt,
-                                   @ApiParam @QueryParam("beforeCreatedAt") OffsetDateTimeParam beforeCreatedAt,
-                                   @ApiParam @QueryParam("limit") @DefaultValue(DEFAULT_LIST_LIMIT) int limit,
-                                   @ApiParam @QueryParam("offset") @DefaultValue("0") int offset) {
+    public List<ProcessEntry> list(@Parameter @PathParam("orgName") @ConcordKey String orgName,
+                                   @Parameter @QueryParam("status") ProcessStatus processStatus,
+                                   @Parameter @QueryParam("afterCreatedAt") OffsetDateTimeParam afterCreatedAt,
+                                   @Parameter @QueryParam("beforeCreatedAt") OffsetDateTimeParam beforeCreatedAt,
+                                   @Parameter @QueryParam("limit") @DefaultValue(DEFAULT_LIST_LIMIT) int limit,
+                                   @Parameter @QueryParam("offset") @DefaultValue("0") int offset) {
 
         OrganizationEntry org = orgManager.assertAccess(orgName, false);
         ProcessFilter filter = ProcessFilter.builder()
@@ -142,18 +139,18 @@ public class ProjectProcessResource implements Resource {
     }
 
     @GET
-    @ApiOperation("List processes for the specified project")
+//    @ApiOperation("List processes for the specified project")
     @Path("/{orgName}/project/{projectName}/process")
     @Produces(MediaType.APPLICATION_JSON)
     @WithTimer
     @Deprecated
-    public List<ProcessEntry> list(@ApiParam @PathParam("orgName") @ConcordKey String orgName,
-                                   @ApiParam @PathParam("projectName") @ConcordKey String projectName,
-                                   @ApiParam @QueryParam("status") ProcessStatus processStatus,
-                                   @ApiParam @QueryParam("afterCreatedAt") OffsetDateTimeParam afterCreatedAt,
-                                   @ApiParam @QueryParam("beforeCreatedAt") OffsetDateTimeParam beforeCreatedAt,
-                                   @ApiParam @QueryParam("limit") @DefaultValue(DEFAULT_LIST_LIMIT) int limit,
-                                   @ApiParam @QueryParam("offset") @DefaultValue("0") int offset) {
+    public List<ProcessEntry> list(@Parameter @PathParam("orgName") @ConcordKey String orgName,
+                                   @Parameter @PathParam("projectName") @ConcordKey String projectName,
+                                   @Parameter @QueryParam("status") ProcessStatus processStatus,
+                                   @Parameter @QueryParam("afterCreatedAt") OffsetDateTimeParam afterCreatedAt,
+                                   @Parameter @QueryParam("beforeCreatedAt") OffsetDateTimeParam beforeCreatedAt,
+                                   @Parameter @QueryParam("limit") @DefaultValue(DEFAULT_LIST_LIMIT) int limit,
+                                   @Parameter @QueryParam("offset") @DefaultValue("0") int offset) {
 
         OrganizationEntry org = orgManager.assertAccess(orgName, false);
 
@@ -178,16 +175,16 @@ public class ProjectProcessResource implements Resource {
      * Starts a new process instance.
      */
     @GET
-    @ApiOperation("Start a new process")
+//    @ApiOperation("Start a new process")
     @Path("/{orgName}/project/{projectName}/repo/{repoName}/start/{entryPoint}")
     @Validate
-    public Response start(@ApiParam @PathParam("orgName") String orgName,
-                          @ApiParam @PathParam("projectName") String projectName,
-                          @ApiParam @PathParam("repoName") String repoName,
-                          @ApiParam @QueryParam("repoBranchOrTag") String repoBranchOrTag,
-                          @ApiParam @QueryParam("repoCommitId") String repoCommitId,
-                          @ApiParam @PathParam("entryPoint") String entryPoint,
-                          @ApiParam @QueryParam("activeProfiles") String activeProfiles,
+    public Response start(@Parameter @PathParam("orgName") String orgName,
+                          @Parameter @PathParam("projectName") String projectName,
+                          @Parameter @PathParam("repoName") String repoName,
+                          @Parameter @QueryParam("repoBranchOrTag") String repoBranchOrTag,
+                          @Parameter @QueryParam("repoCommitId") String repoCommitId,
+                          @Parameter @PathParam("entryPoint") String entryPoint,
+                          @Parameter @QueryParam("activeProfiles") String activeProfiles,
                           @Context HttpServletRequest request) {
 
         try {
@@ -250,7 +247,7 @@ public class ProjectProcessResource implements Resource {
     }
 
     @POST
-    @ApiOperation("Proceed to next step for the process")
+//    @ApiOperation("Proceed to next step for the process")
     @Path("{processInstanceId}/next")
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
     @Produces(MediaType.APPLICATION_JSON)

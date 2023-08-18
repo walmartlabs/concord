@@ -62,10 +62,7 @@ import com.walmartlabs.concord.server.sdk.metrics.WithTimer;
 import com.walmartlabs.concord.server.security.Roles;
 import com.walmartlabs.concord.server.security.UserPrincipal;
 import com.walmartlabs.concord.server.security.sessionkey.SessionKeyPrincipal;
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
-import io.swagger.annotations.ApiParam;
-import io.swagger.annotations.Authorization;
+import io.swagger.v3.oas.annotations.Parameter;
 import org.apache.commons.compress.archivers.zip.ZipArchiveOutputStream;
 import org.apache.shiro.authz.UnauthorizedException;
 import org.jboss.resteasy.plugins.providers.multipart.MultipartInput;
@@ -97,7 +94,7 @@ import static com.walmartlabs.concord.server.process.state.ProcessStateManager.z
 
 @Named
 @Singleton
-@Api(value = "Process", authorizations = {@Authorization("api_key"), @Authorization("session_key"), @Authorization("ldap")})
+//@Api(value = "Process", authorizations = {@Authorization("api_key"), @Authorization("session_key"), @Authorization("ldap")})
 @javax.ws.rs.Path("/api/v1/process")
 public class ProcessResource implements Resource {
 
@@ -171,7 +168,7 @@ public class ProcessResource implements Resource {
      * @deprecated use {@link #start(MultipartInput, UUID, boolean, String[], HttpServletRequest)}
      */
     @POST
-    @ApiOperation(value = "Start a new process instance using the supplied payload archive", hidden = true)
+//    @ApiOperation(value = "Start a new process instance using the supplied payload archive", hidden = true)
     @Consumes(MediaType.APPLICATION_OCTET_STREAM)
     @Produces(MediaType.APPLICATION_JSON)
     @WithTimer(suffix = "_octetstream")
@@ -212,7 +209,7 @@ public class ProcessResource implements Resource {
      * @deprecated use {@link #start(MultipartInput, UUID, boolean, String[], HttpServletRequest)}
      */
     @POST
-    @ApiOperation(value = "Start a new process using the specified entry point", hidden = true)
+//    @ApiOperation(value = "Start a new process using the specified entry point", hidden = true)
     @javax.ws.rs.Path("/{entryPoint}")
     @Produces(MediaType.APPLICATION_JSON)
     @WithTimer(suffix = "_queryparams")
@@ -236,7 +233,7 @@ public class ProcessResource implements Resource {
      * @deprecated use {@link #start(MultipartInput, UUID, boolean, String[], HttpServletRequest)}
      */
     @POST
-    @ApiOperation(value = "Start a new process using the specified entry point and provided configuration", hidden = true)
+//    @ApiOperation(value = "Start a new process using the specified entry point and provided configuration", hidden = true)
     @javax.ws.rs.Path("/{entryPoint}")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
@@ -280,14 +277,14 @@ public class ProcessResource implements Resource {
      * @return
      */
     @POST
-    @ApiOperation("Start a new process using multipart request data")
+//    @ApiOperation(value = "Start a new process using multipart request data", hidden = true)
     @Consumes(MediaType.MULTIPART_FORM_DATA)
     @Produces(MediaType.APPLICATION_JSON)
     @WithTimer
-    public StartProcessResponse start(@ApiParam MultipartInput input,
-                                      @ApiParam @Deprecated @QueryParam("parentId") UUID parentInstanceId,
-                                      @ApiParam @Deprecated @DefaultValue("false") @QueryParam("sync") boolean sync,
-                                      @ApiParam @Deprecated @QueryParam("out") String[] out,
+    public StartProcessResponse start(@Parameter MultipartInput input,
+                                      @Parameter @Deprecated @QueryParam("parentId") UUID parentInstanceId,
+                                      @Parameter @Deprecated @DefaultValue("false") @QueryParam("sync") boolean sync,
+                                      @Parameter @Deprecated @QueryParam("out") String[] out,
                                       @Context HttpServletRequest request) {
 
         boolean sync2 = MultipartUtils.getBoolean(input, Constants.Multipart.SYNC, false);
@@ -323,7 +320,7 @@ public class ProcessResource implements Resource {
      * @deprecated use {@link #start(MultipartInput, UUID, boolean, String[], HttpServletRequest)}
      */
     @POST
-    @ApiOperation(value = "Start a new process using the specified entry point and multipart request data", hidden = true)
+//    @ApiOperation(value = "Start a new process using the specified entry point and multipart request data", hidden = true)
     @javax.ws.rs.Path("/{entryPoint}")
     @Consumes(MediaType.MULTIPART_FORM_DATA)
     @Produces(MediaType.APPLICATION_JSON)
@@ -369,7 +366,7 @@ public class ProcessResource implements Resource {
      * @deprecated use {@link #start(MultipartInput, UUID, boolean, String[], HttpServletRequest)}
      */
     @POST
-    @ApiOperation(value = "Start a new process using the specified entry point and payload archive", hidden = true)
+//    @ApiOperation(value = "Start a new process using the specified entry point and payload archive", hidden = true)
     @javax.ws.rs.Path("/{entryPoint}")
     @Consumes(MediaType.APPLICATION_OCTET_STREAM)
     @Produces(MediaType.APPLICATION_JSON)
@@ -413,15 +410,15 @@ public class ProcessResource implements Resource {
      * Resumes an existing process.
      */
     @POST
-    @ApiOperation("Resume a process")
+//    @ApiOperation("Resume a process")
     @javax.ws.rs.Path("/{id}/resume/{eventName}")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     @WithTimer
-    public ResumeProcessResponse resume(@ApiParam @PathParam("id") UUID instanceId,
-                                        @ApiParam @PathParam("eventName") @NotNull String eventName,
-                                        @ApiParam @QueryParam("saveAs") String saveAs,
-                                        @ApiParam Map<String, Object> req) {
+    public ResumeProcessResponse resume(@Parameter @PathParam("id") UUID instanceId,
+                                        @Parameter @PathParam("eventName") @NotNull String eventName,
+                                        @Parameter @QueryParam("saveAs") String saveAs,
+                                        @Parameter Map<String, Object> req) {
 
         PartialProcessKey processKey = PartialProcessKey.from(instanceId);
 
@@ -452,15 +449,15 @@ public class ProcessResource implements Resource {
      * @return
      */
     @POST
-    @ApiOperation("Fork a process")
+//    @ApiOperation("Fork a process")
     @javax.ws.rs.Path("/{id}/fork")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     @WithTimer
-    public StartProcessResponse fork(@ApiParam @PathParam("id") UUID parentInstanceId,
-                                     @ApiParam Map<String, Object> req,
-                                     @ApiParam @Deprecated @DefaultValue("false") @QueryParam("sync") boolean sync,
-                                     @ApiParam @QueryParam("out") String[] out) {
+    public StartProcessResponse fork(@Parameter @PathParam("id") UUID parentInstanceId,
+                                     @Parameter Map<String, Object> req,
+                                     @Parameter @Deprecated @DefaultValue("false") @QueryParam("sync") boolean sync,
+                                     @Parameter @QueryParam("out") String[] out) {
 
         if (sync) {
             throw syncIsForbidden();
@@ -499,11 +496,11 @@ public class ProcessResource implements Resource {
      * @return
      */
     @GET
-    @ApiOperation("Wait for a process to finish")
+//    @ApiOperation("Wait for a process to finish")
     @Produces(MediaType.APPLICATION_JSON)
     @javax.ws.rs.Path("/{id}/waitForCompletion")
-    public ProcessEntry waitForCompletion(@ApiParam @PathParam("id") UUID instanceId,
-                                          @ApiParam @QueryParam("timeout") @DefaultValue("-1") long timeout) {
+    public ProcessEntry waitForCompletion(@Parameter @PathParam("id") UUID instanceId,
+                                          @Parameter @QueryParam("timeout") @DefaultValue("-1") long timeout) {
 
         log.info("waitForCompletion ['{}', {}] -> waiting...", instanceId, timeout);
 
@@ -546,11 +543,11 @@ public class ProcessResource implements Resource {
      * @param disabled
      */
     @POST
-    @ApiOperation("Disable a process")
+//    @ApiOperation("Disable a process")
     @javax.ws.rs.Path("/{id}/disable/{disabled}")
     @WithTimer
-    public void disable(@ApiParam @PathParam("id") UUID instanceId,
-                        @ApiParam @PathParam("disabled") boolean disabled) {
+    public void disable(@Parameter @PathParam("id") UUID instanceId,
+                        @Parameter @PathParam("disabled") boolean disabled) {
         ProcessKey processKey = assertProcessKey(instanceId);
         processManager.disable(processKey, disabled);
     }
@@ -561,10 +558,10 @@ public class ProcessResource implements Resource {
      * @param instanceId
      */
     @DELETE
-    @ApiOperation("Forcefully stops a process")
+//    @ApiOperation("Forcefully stops a process")
     @javax.ws.rs.Path("/{id}")
     @WithTimer
-    public void kill(@ApiParam @PathParam("id") UUID instanceId) {
+    public void kill(@Parameter @PathParam("id") UUID instanceId) {
         ProcessKey processKey = assertProcessKey(instanceId);
         processManager.kill(processKey);
     }
@@ -575,10 +572,10 @@ public class ProcessResource implements Resource {
      * @param instanceIdList
      */
     @DELETE
-    @ApiOperation("Forcefully stop processes")
+//    @ApiOperation("Forcefully stop processes")
     @javax.ws.rs.Path("/bulk")
     @WithTimer
-    public void batchKill(@ApiParam List<UUID> instanceIdList) {
+    public void batchKill(@Parameter List<UUID> instanceIdList) {
         instanceIdList.forEach(this::kill);
     }
 
@@ -588,10 +585,10 @@ public class ProcessResource implements Resource {
      * @param instanceId
      */
     @DELETE
-    @ApiOperation("Forcefully stops a process and its all children")
+//    @ApiOperation("Forcefully stops a process and its all children")
     @javax.ws.rs.Path("/{id}/cascade")
     @WithTimer
-    public void killCascade(@ApiParam @PathParam("id") UUID instanceId) {
+    public void killCascade(@Parameter @PathParam("id") UUID instanceId) {
         PartialProcessKey processKey = PartialProcessKey.from(instanceId);
         processManager.killCascade(processKey);
     }
@@ -602,12 +599,12 @@ public class ProcessResource implements Resource {
      * @deprecated use {@link ProcessResourceV2#get(UUID, Set)}
      */
     @GET
-    @ApiOperation("Get a process' details")
+//    @ApiOperation("Get a process' details")
     @javax.ws.rs.Path("/{id}")
     @Produces(MediaType.APPLICATION_JSON)
     @WithTimer
     @Deprecated
-    public ProcessEntry get(@ApiParam @PathParam("id") UUID instanceId) {
+    public ProcessEntry get(@Parameter @PathParam("id") UUID instanceId) {
         PartialProcessKey processKey = PartialProcessKey.from(instanceId);
         ProcessEntry e = processQueueManager.get(processKey);
         if (e == null) {
@@ -621,11 +618,11 @@ public class ProcessResource implements Resource {
      * Returns a process status history.
      */
     @GET
-    @ApiOperation("Get process status history")
+//    @ApiOperation("Get process status history")
     @javax.ws.rs.Path("/{instanceId}/history")
     @Produces(MediaType.APPLICATION_JSON)
     @WithTimer
-    public List<ProcessStatusHistoryEntry> getStatusHistory(@ApiParam @PathParam("instanceId") UUID instanceId) throws IOException {
+    public List<ProcessStatusHistoryEntry> getStatusHistory(@Parameter @PathParam("instanceId") UUID instanceId) throws IOException {
         ProcessKey pk = assertKey(instanceId);
         return queueDao.getStatusHistory(pk);
     }
@@ -634,11 +631,11 @@ public class ProcessResource implements Resource {
      * Returns current process' wait conditions.
      */
     @GET
-    @ApiOperation("Get process' wait conditions")
+//    @ApiOperation("Get process' wait conditions")
     @javax.ws.rs.Path("/{instanceId}/waits")
     @Produces(MediaType.APPLICATION_JSON)
     @WithTimer
-    public ProcessWaitEntry getWait(@ApiParam @PathParam("instanceId") UUID instanceId) {
+    public ProcessWaitEntry getWait(@Parameter @PathParam("instanceId") UUID instanceId) {
         ProcessKey pk = assertKey(instanceId);
         return processWaitManager.getWait(pk);
     }
@@ -647,10 +644,10 @@ public class ProcessResource implements Resource {
      * Returns a process' attachment file.
      */
     @GET
-    @ApiOperation(value = "Download a process' attachment", response = File.class)
+//    @ApiOperation(value = "Download a process' attachment", response = File.class)
     @javax.ws.rs.Path("/{id}/attachment/{name:.*}")
     @Produces(MediaType.APPLICATION_OCTET_STREAM)
-    public Response downloadAttachment(@ApiParam @PathParam("id") UUID instanceId,
+    public Response downloadAttachment(@Parameter @PathParam("id") UUID instanceId,
                                        @PathParam("name") @NotNull @Size(min = 1) String attachmentName) {
 
         ProcessEntry processEntry = processManager.assertProcess(instanceId);
@@ -699,11 +696,11 @@ public class ProcessResource implements Resource {
      * @return
      */
     @GET
-    @ApiOperation(value = "List attachments", responseContainer = "list", response = String.class)
+//    @ApiOperation(value = "List attachments", responseContainer = "list", response = String.class)
     @javax.ws.rs.Path("/{id}/attachment")
     @Produces(MediaType.APPLICATION_JSON)
     @WithTimer
-    public List<String> listAttachments(@ApiParam @PathParam("id") UUID instanceId) {
+    public List<String> listAttachments(@Parameter @PathParam("id") UUID instanceId) {
 
         ProcessEntry processEntry = processManager.assertProcess(instanceId);
         assertProcessAccess(processEntry, "attachments");
@@ -730,21 +727,21 @@ public class ProcessResource implements Resource {
      * @deprecated use {@link ProcessResourceV2#list(UUID, String, UUID, String, UUID, String, OffsetDateTimeParam, OffsetDateTimeParam, Set, ProcessStatus, String, UUID, Set, int, int, UriInfo)}
      */
     @GET
-    @ApiOperation(value = "List processes for all user's organizations", responseContainer = "list", response = ProcessEntry.class)
+//    @ApiOperation(value = "List processes for all user's organizations", responseContainer = "list", response = ProcessEntry.class)
     @Produces(MediaType.APPLICATION_JSON)
     @WithTimer
     @Deprecated
-    public List<ProcessEntry> list(@ApiParam @QueryParam("org") String orgName,
-                                   @ApiParam @QueryParam("project") String projectName,
-                                   @ApiParam @QueryParam("projectId") UUID projectId,
-                                   @ApiParam @QueryParam("afterCreatedAt") OffsetDateTimeParam afterCreatedAt,
-                                   @ApiParam @QueryParam("beforeCreatedAt") OffsetDateTimeParam beforeCreatedAt,
-                                   @ApiParam @QueryParam("tags") Set<String> tags,
-                                   @ApiParam @QueryParam("status") ProcessStatus processStatus,
-                                   @ApiParam @QueryParam("initiator") String initiator,
-                                   @ApiParam @QueryParam("parentInstanceId") UUID parentId,
-                                   @ApiParam @QueryParam("limit") @DefaultValue("30") int limit,
-                                   @ApiParam @QueryParam("offset") @DefaultValue("0") int offset,
+    public List<ProcessEntry> list(@Parameter @QueryParam("org") String orgName,
+                                   @Parameter @QueryParam("project") String projectName,
+                                   @Parameter @QueryParam("projectId") UUID projectId,
+                                   @Parameter @QueryParam("afterCreatedAt") OffsetDateTimeParam afterCreatedAt,
+                                   @Parameter @QueryParam("beforeCreatedAt") OffsetDateTimeParam beforeCreatedAt,
+                                   @Parameter @QueryParam("tags") Set<String> tags,
+                                   @Parameter @QueryParam("status") ProcessStatus processStatus,
+                                   @Parameter @QueryParam("initiator") String initiator,
+                                   @Parameter @QueryParam("parentInstanceId") UUID parentId,
+                                   @Parameter @QueryParam("limit") @DefaultValue("30") int limit,
+                                   @Parameter @QueryParam("offset") @DefaultValue("0") int offset,
                                    @Context UriInfo uriInfo) {
 
         return v2.list(null, orgName, projectId, projectName, null, null, afterCreatedAt, beforeCreatedAt, tags,
@@ -760,12 +757,12 @@ public class ProcessResource implements Resource {
      * @return
      */
     @GET
-    @ApiOperation(value = "List subprocesses of a parent process", responseContainer = "list", response = ProcessEntry.class)
+//    @ApiOperation(value = "List subprocesses of a parent process", responseContainer = "list", response = ProcessEntry.class)
     @javax.ws.rs.Path("/{id}/subprocess")
     @Produces(MediaType.APPLICATION_JSON)
     @WithTimer
-    public List<ProcessEntry> listSubprocesses(@ApiParam @PathParam("id") UUID parentInstanceId,
-                                               @ApiParam @QueryParam("tags") Set<String> tags) {
+    public List<ProcessEntry> listSubprocesses(@Parameter @PathParam("id") UUID parentInstanceId,
+                                               @Parameter @QueryParam("tags") Set<String> tags) {
 
         assertPartialKey(parentInstanceId);
         return queueDao.list(ProcessFilter.builder()
@@ -781,13 +778,13 @@ public class ProcessResource implements Resource {
      * @param status
      */
     @POST
-    @ApiOperation("Update process status")
+//    @ApiOperation("Update process status")
     @javax.ws.rs.Path("{id}/status")
     @Consumes(MediaType.TEXT_PLAIN)
     @WithTimer
-    public void updateStatus(@ApiParam @PathParam("id") UUID instanceId,
-                             @ApiParam(required = true) @QueryParam("agentId") String agentId,
-                             @ApiParam(required = true) ProcessStatus status) {
+    public void updateStatus(@Parameter @PathParam("id") UUID instanceId,
+                             @Parameter(required = true) @QueryParam("agentId") String agentId,
+                             @Parameter(required = true) ProcessStatus status) {
 
         ProcessKey processKey = assertProcessKey(instanceId);
         processManager.updateStatus(processKey, agentId, status);
@@ -803,12 +800,12 @@ public class ProcessResource implements Resource {
      * @deprecated in favor of the /api/v2/process/{id}/log* endpoints
      */
     @GET
-    @ApiOperation(value = "Retrieve the log")
+//    @ApiOperation(value = "Retrieve the log")
     @javax.ws.rs.Path("/{id}/log")
     @Produces(MediaType.APPLICATION_OCTET_STREAM)
     @WithTimer
     @Deprecated
-    public Response getLog(@ApiParam @PathParam("id") UUID instanceId,
+    public Response getLog(@Parameter @PathParam("id") UUID instanceId,
                            @HeaderParam("range") String rangeHeader) {
 
         // check the permissions, logs can contain sensitive data
@@ -856,10 +853,10 @@ public class ProcessResource implements Resource {
      * Downloads the current state snapshot of a process.
      */
     @GET
-    @ApiOperation(value = "Download a process state snapshot", response = File.class)
+//    @ApiOperation(value = "Download a process state snapshot", response = File.class)
     @javax.ws.rs.Path("/{id}/state/snapshot")
     @Produces("application/zip")
-    public Response downloadState(@ApiParam @PathParam("id") UUID instanceId) {
+    public Response downloadState(@Parameter @PathParam("id") UUID instanceId) {
         ProcessEntry entry = assertProcess(PartialProcessKey.from(instanceId));
         ProcessKey processKey = new ProcessKey(entry.instanceId(), entry.createdAt());
 
@@ -885,12 +882,12 @@ public class ProcessResource implements Resource {
      * Downloads a single file from the current state snapshot of a process.
      */
     @GET
-    @ApiOperation(value = "Download a single file from a process state snapshot", response = File.class)
+//    @ApiOperation(value = "Download a single file from a process state snapshot", response = File.class)
     @javax.ws.rs.Path("/{id}/state/snapshot/{name:.*}")
     @Produces(MediaType.APPLICATION_OCTET_STREAM)
     @Validate
-    public Response downloadStateFile(@ApiParam @PathParam("id") UUID instanceId,
-                                      @ApiParam @PathParam("name") @NotNull @Size(min = 1) String fileName) {
+    public Response downloadStateFile(@Parameter @PathParam("id") UUID instanceId,
+                                      @Parameter @PathParam("name") @NotNull @Size(min = 1) String fileName) {
 
         ProcessEntry p = assertProcess(PartialProcessKey.from(instanceId));
         ProcessKey processKey = new ProcessKey(p.instanceId(), p.createdAt());
@@ -1026,12 +1023,12 @@ public class ProcessResource implements Resource {
      * @return
      */
     @POST
-    @ApiOperation(value = "Update process metadata")
+//    @ApiOperation(value = "Update process metadata")
     @javax.ws.rs.Path("{id}/meta")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     @WithTimer
-    public Response updateMetadata(@ApiParam @PathParam("id") UUID instanceId, @ApiParam Map<String, Object> meta) {
+    public Response updateMetadata(@Parameter @PathParam("id") UUID instanceId, @Parameter Map<String, Object> meta) {
         ProcessKey processKey = assertProcessKey(instanceId);
 
         if (!queueDao.updateMeta(processKey, meta)) {
@@ -1045,12 +1042,12 @@ public class ProcessResource implements Resource {
      * Set the process' wait condition.
      */
     @POST
-    @ApiOperation(value = "Set the process' wait condition")
+//    @ApiOperation(value = "Set the process' wait condition")
     @javax.ws.rs.Path("{id}/wait")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     @WithTimer
-    public Response setWaitCondition(@ApiParam @PathParam("id") UUID instanceId, @ApiParam Map<String, Object> waitCondition) {
+    public Response setWaitCondition(@Parameter @PathParam("id") UUID instanceId, @Parameter Map<String, Object> waitCondition) {
         ProcessKey processKey = assertProcessKey(instanceId);
         AbstractWaitCondition condition = objectMapper.convertValue(waitCondition, AbstractWaitCondition.class);
         processWaitManager.addWait(processKey, condition);

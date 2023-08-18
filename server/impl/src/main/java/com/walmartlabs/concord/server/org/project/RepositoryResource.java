@@ -29,10 +29,7 @@ import com.walmartlabs.concord.server.org.ResourceAccessLevel;
 import com.walmartlabs.concord.server.repository.RepositoryRefresher;
 import com.walmartlabs.concord.server.repository.RepositoryValidationResponse;
 import com.walmartlabs.concord.server.sdk.ConcordApplicationException;
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
-import io.swagger.annotations.ApiParam;
-import io.swagger.annotations.Authorization;
+import io.swagger.v3.oas.annotations.Parameter;
 import org.sonatype.siesta.Resource;
 import org.sonatype.siesta.Validate;
 
@@ -48,7 +45,7 @@ import java.util.UUID;
 
 @Named
 @Singleton
-@Api(value = "Repositories", authorizations = {@Authorization("api_key"), @Authorization("session_key"), @Authorization("ldap")})
+//@Api(value = "Repositories", authorizations = {@Authorization("api_key"), @Authorization("session_key"), @Authorization("ldap")})
 @Path("/api/v1/org")
 public class RepositoryResource implements Resource {
 
@@ -76,25 +73,25 @@ public class RepositoryResource implements Resource {
     }
 
     @GET
-    @ApiOperation("Get an existing repository")
+//    @ApiOperation("Get an existing repository")
     @Path("/{orgName}/project/{projectName}/repository/{repositoryName}")
     @Produces(MediaType.APPLICATION_JSON)
     @Validate
-    public RepositoryEntry get(@ApiParam @PathParam("orgName") @ConcordKey String orgName,
-                            @ApiParam @PathParam("projectName") @ConcordKey String projectName,
-                            @ApiParam @PathParam("repositoryName") @ConcordKey String repositoryName) {
+    public RepositoryEntry get(@Parameter @PathParam("orgName") @ConcordKey String orgName,
+                            @Parameter @PathParam("projectName") @ConcordKey String projectName,
+                            @Parameter @PathParam("repositoryName") @ConcordKey String repositoryName) {
 
         OrganizationEntry org = orgManager.assertAccess(orgName, false);
         return projectRepositoryManager.get(org.getId(), projectName, repositoryName);
     }
 
     @GET
-    @ApiOperation(value = "List existing repositories", responseContainer = "list", response = RepositoryEntry.class)
+//    @ApiOperation(value = "List existing repositories", responseContainer = "list", response = RepositoryEntry.class)
     @Path("/{orgName}/project/{projectName}/repository")
     @Produces(MediaType.APPLICATION_JSON)
     @Validate
-    public List<RepositoryEntry> find(@ApiParam @PathParam("orgName") @ConcordKey String orgName,
-                                      @ApiParam @PathParam("projectName") @ConcordKey String projectName,
+    public List<RepositoryEntry> find(@Parameter @PathParam("orgName") @ConcordKey String orgName,
+                                      @Parameter @PathParam("projectName") @ConcordKey String projectName,
                                       @QueryParam("offset") int offset,
                                       @QueryParam("limit") int limit,
                                       @QueryParam("filter") String filter) {
@@ -104,13 +101,13 @@ public class RepositoryResource implements Resource {
     }
 
     @POST
-    @ApiOperation("Creates a new repository or updates an existing one")
+//    @ApiOperation("Creates a new repository or updates an existing one")
     @Path("/{orgName}/project/{projectName}/repository")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    public GenericOperationResult createOrUpdate(@ApiParam @PathParam("orgName") @ConcordKey String orgName,
-                                                 @ApiParam @PathParam("projectName") @ConcordKey String projectName,
-                                                 @ApiParam @Valid RepositoryEntry entry) {
+    public GenericOperationResult createOrUpdate(@Parameter @PathParam("orgName") @ConcordKey String orgName,
+                                                 @Parameter @PathParam("projectName") @ConcordKey String projectName,
+                                                 @Parameter @Valid RepositoryEntry entry) {
 
         OrganizationEntry org = orgManager.assertAccess(orgName, true);
 
@@ -124,12 +121,12 @@ public class RepositoryResource implements Resource {
     }
 
     @DELETE
-    @ApiOperation("Delete an existing repository")
+//    @ApiOperation("Delete an existing repository")
     @Path("/{orgName}/project/{projectName}/repository/{repositoryName}")
     @Produces(MediaType.APPLICATION_JSON)
-    public GenericOperationResult delete(@ApiParam @PathParam("orgName") @ConcordKey String orgName,
-                                         @ApiParam @PathParam("projectName") @ConcordKey String projectName,
-                                         @ApiParam @PathParam("repositoryName") @ConcordKey String repositoryName) {
+    public GenericOperationResult delete(@Parameter @PathParam("orgName") @ConcordKey String orgName,
+                                         @Parameter @PathParam("projectName") @ConcordKey String projectName,
+                                         @Parameter @PathParam("repositoryName") @ConcordKey String repositoryName) {
 
         OrganizationEntry org = orgManager.assertAccess(orgName, true);
 
@@ -147,13 +144,13 @@ public class RepositoryResource implements Resource {
      * Refresh a local copy of the repository.
      */
     @POST
-    @ApiOperation("Refresh a local copy of the repository")
+//    @ApiOperation("Refresh a local copy of the repository")
     @Path("/{orgName}/project/{projectName}/repository/{repositoryName}/refresh")
     @Produces(MediaType.APPLICATION_JSON)
-    public GenericOperationResult refreshRepository(@ApiParam @PathParam("orgName") @ConcordKey String orgName,
-                                                    @ApiParam @PathParam("projectName") @ConcordKey String projectName,
-                                                    @ApiParam @PathParam("repositoryName") @ConcordKey String repositoryName,
-                                                    @ApiParam @QueryParam("sync") @DefaultValue("false") boolean sync) {
+    public GenericOperationResult refreshRepository(@Parameter @PathParam("orgName") @ConcordKey String orgName,
+                                                    @Parameter @PathParam("projectName") @ConcordKey String projectName,
+                                                    @Parameter @PathParam("repositoryName") @ConcordKey String repositoryName,
+                                                    @Parameter @QueryParam("sync") @DefaultValue("false") boolean sync) {
 
         repositoryRefresher.refresh(orgName, projectName, repositoryName);
         return new GenericOperationResult(OperationResult.UPDATED);
@@ -163,12 +160,12 @@ public class RepositoryResource implements Resource {
      * Validate a repository.
      */
     @POST
-    @ApiOperation("Validate an existing repository")
+//    @ApiOperation("Validate an existing repository")
     @Path("/{orgName}/project/{projectName}/repository/{repositoryName}/validate")
     @Produces(MediaType.APPLICATION_JSON)
-    public RepositoryValidationResponse validateRepository(@ApiParam @PathParam("orgName") @ConcordKey String orgName,
-                                                           @ApiParam @PathParam("projectName") @ConcordKey String projectName,
-                                                           @ApiParam @PathParam("repositoryName") @ConcordKey String repositoryName) {
+    public RepositoryValidationResponse validateRepository(@Parameter @PathParam("orgName") @ConcordKey String orgName,
+                                                           @Parameter @PathParam("projectName") @ConcordKey String projectName,
+                                                           @Parameter @PathParam("repositoryName") @ConcordKey String repositoryName) {
 
         UUID orgId = orgManager.assertAccess(orgName, true).getId();
         UUID projectId = projectDao.getId(orgId, projectName);

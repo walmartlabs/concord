@@ -21,10 +21,7 @@ package com.walmartlabs.concord.server.process;
  */
 
 import com.walmartlabs.concord.server.process.queue.ProcessQueueDao;
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
-import io.swagger.annotations.ApiParam;
-import io.swagger.annotations.Authorization;
+import io.swagger.v3.oas.annotations.Parameter;
 import org.sonatype.siesta.Resource;
 
 import javax.inject.Inject;
@@ -37,7 +34,7 @@ import java.util.UUID;
 
 @Named
 @Singleton
-@Api(value = "ProcessHeartbeat", authorizations = {@Authorization("api_key"), @Authorization("session_key")})
+//@Api(value = "ProcessHeartbeat", authorizations = {@Authorization("api_key"), @Authorization("session_key")})
 @Path("/api/v1/process")
 public class ProcessHeartbeatResource implements Resource {
 
@@ -50,9 +47,9 @@ public class ProcessHeartbeatResource implements Resource {
 
 
     @POST
-    @ApiOperation("Process heartbeat")
+//    @ApiOperation("Process heartbeat")
     @Path("{id}/ping")
-    public void ping(@ApiParam @PathParam("id") UUID instanceId) {
+    public void ping(@Parameter @PathParam("id") UUID instanceId) {
         if (!queueDao.touch(instanceId)) {
             throw new IllegalArgumentException("Process not found: " + instanceId);
         }

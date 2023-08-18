@@ -230,10 +230,18 @@
             <groupId>com.sun.mail</groupId>
             <artifactId>javax.mail</artifactId>
         </dependency>
+<!--        <dependency>-->
+<!--            <groupId>io.swagger</groupId>-->
+<!--            <artifactId>swagger-annotations</artifactId>-->
+<!--        </dependency>-->
+
         <dependency>
-            <groupId>io.swagger</groupId>
+            <groupId>io.swagger.core.v3</groupId>
             <artifactId>swagger-annotations</artifactId>
+            <version>2.2.15</version>
         </dependency>
+
+
         <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>
             <artifactId>jackson-core</artifactId>
@@ -381,43 +389,70 @@
                 <groupId>org.eclipse.sisu</groupId>
                 <artifactId>sisu-maven-plugin</artifactId>
             </plugin>
-            <plugin>
-                <groupId>com.github.kongchen</groupId>
-                <artifactId>swagger-maven-plugin</artifactId>
-                <executions>
-                    <execution>
-                        <id>generate-docs</id>
-                        <phase>compile</phase>
-                        <goals>
-                            <goal>generate</goal>
-                        </goals>
-                    </execution>
-                </executions>
-                <configuration>
-                    <apiSources>
-                        <apiSource>
-                            <springmvc>false</springmvc>
-                            <locations>com.walmartlabs.concord.server</locations>
-                            <schemes>http</schemes>
-                            <host>localhost:8001</host>
-                            <basePath>/</basePath>
-                            <info>
-                                <title>Concord Server API</title>
-                                <version>v1</version>
-                            </info>
-                            <securityDefinitions>
-                                <securityDefinition>
-                                    <json>/security.json</json>
-                                </securityDefinition>
-                            </securityDefinitions>
-                            <swaggerDirectory>
-                                ${project.build.directory}/classes/com/walmartlabs/concord/server/swagger
-                            </swaggerDirectory>
-                            <attachSwaggerArtifact>true</attachSwaggerArtifact>
-                        </apiSource>
-                    </apiSources>
-                </configuration>
-            </plugin>
+<!--            <plugin>-->
+<!--                <groupId>com.github.kongchen</groupId>-->
+<!--                <artifactId>swagger-maven-plugin</artifactId>-->
+<!--                <executions>-->
+<!--                    <execution>-->
+<!--                        <id>generate-docs</id>-->
+<!--                        <phase>compile</phase>-->
+<!--                        <goals>-->
+<!--                            <goal>generate</goal>-->
+<!--                        </goals>-->
+<!--                    </execution>-->
+<!--                </executions>-->
+<!--                <configuration>-->
+<!--                    <apiSources>-->
+<!--                        <apiSource>-->
+<!--                            <springmvc>false</springmvc>-->
+<!--                            <locations>com.walmartlabs.concord.server</locations>-->
+<!--                            <schemes>http</schemes>-->
+<!--                            <host>localhost:8001</host>-->
+<!--                            <basePath>/</basePath>-->
+<!--                            <info>-->
+<!--                                <title>Concord Server API</title>-->
+<!--                                <version>v1</version>-->
+<!--                            </info>-->
+<!--                            <securityDefinitions>-->
+<!--                                <securityDefinition>-->
+<!--                                    <json>/security.json</json>-->
+<!--                                </securityDefinition>-->
+<!--                            </securityDefinitions>-->
+<!--                            <swaggerDirectory>-->
+<!--                                ${project.build.directory}/classes/com/walmartlabs/concord/server/swagger-->
+<!--                            </swaggerDirectory>-->
+<!--                            <attachSwaggerArtifact>true</attachSwaggerArtifact>-->
+<!--                            <outputFormats>yaml</outputFormats>-->
+<!--                        </apiSource>-->
+<!--                    </apiSources>-->
+<!--                </configuration>-->
+<!--            </plugin>-->
+
+                    <plugin>
+                        <groupId>io.swagger.core.v3</groupId>
+                        <artifactId>swagger-maven-plugin</artifactId>
+                        <version>2.2.15</version>
+                        <configuration>
+                            <outputFileName>swagger</outputFileName>
+                            <outputPath>${project.build.directory}/classes/com/walmartlabs/concord/server/swagger</outputPath>
+                            <outputFormat>YAML</outputFormat>
+                            <readAllResources>false</readAllResources>
+                            <resourcePackages>
+                                <package>com.walmartlabs.concord.server</package>
+                            </resourcePackages>
+                            <configurationFilePath>${project.basedir}/swagger-config.yaml</configurationFilePath>
+                        </configuration>
+                        <executions>
+                            <execution>
+                                <phase>compile</phase>
+                                <goals>
+                                    <goal>resolve</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+
+
             <plugin>
                 <groupId>pl.project13.maven</groupId>
                 <artifactId>git-commit-id-plugin</artifactId>

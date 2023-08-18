@@ -23,10 +23,7 @@ package com.walmartlabs.concord.server.org.project;
 import com.walmartlabs.concord.server.GenericOperationResult;
 import com.walmartlabs.concord.server.OperationResult;
 import com.walmartlabs.concord.server.repository.RepositoryRefresher;
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
-import io.swagger.annotations.ApiParam;
-import io.swagger.annotations.Authorization;
+import io.swagger.v3.oas.annotations.Parameter;
 import org.sonatype.siesta.Resource;
 
 import javax.inject.Inject;
@@ -42,7 +39,7 @@ import java.util.UUID;
 
 @Named
 @Singleton
-@Api(value = "RepositoriesV2", authorizations = {@Authorization("api_key"), @Authorization("session_key"), @Authorization("ldap")})
+//@Api(value = "RepositoriesV2", authorizations = {@Authorization("api_key"), @Authorization("session_key"), @Authorization("ldap")})
 @Path("/api/v2/repository")
 public class RepositoryResourceV2 implements Resource {
 
@@ -57,10 +54,10 @@ public class RepositoryResourceV2 implements Resource {
      * Refresh repositories by their IDs.
      */
     @POST
-    @ApiOperation("Refresh repositories by their IDs")
+//    @ApiOperation("Refresh repositories by their IDs")
     @Path("/refresh")
     @Produces(MediaType.APPLICATION_JSON)
-    public GenericOperationResult refreshRepository(@ApiParam @QueryParam("ids") List<UUID> repositoryIds) {
+    public GenericOperationResult refreshRepository(@Parameter @QueryParam("ids") List<UUID> repositoryIds) {
         repositoryRefresher.refresh(repositoryIds);
         return new GenericOperationResult(OperationResult.UPDATED);
     }

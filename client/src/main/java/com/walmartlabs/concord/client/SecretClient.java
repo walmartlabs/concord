@@ -150,7 +150,7 @@ public class SecretClient {
         ApiResponse<EncryptValueResponse> r = ClientUtils.withRetry(retryCount, retryInterval,
                 () -> ClientUtils.postData(apiClient, path, input, headerParams, EncryptValueResponse.class));
 
-        if (r.getStatusCode() == 200 && r.getData().isOk()) {
+        if (r.getStatusCode() == 200 && r.getData().getOk()) {
             return r.getData().getData();
         }
 

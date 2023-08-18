@@ -30,10 +30,7 @@ import com.walmartlabs.concord.server.policy.PolicyManager;
 import com.walmartlabs.concord.server.policy.PolicyUtils;
 import com.walmartlabs.concord.server.security.UserPrincipal;
 import com.walmartlabs.concord.server.user.UserEntry;
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
-import io.swagger.annotations.ApiParam;
-import io.swagger.annotations.Authorization;
+import io.swagger.v3.oas.annotations.Parameter;
 import org.sonatype.siesta.Resource;
 import org.sonatype.siesta.Validate;
 import org.sonatype.siesta.ValidationErrorsException;
@@ -47,7 +44,7 @@ import java.util.UUID;
 
 @Named
 @Singleton
-@Api(value = "PolicyCheck", authorizations = {@Authorization("api_key"), @Authorization("session_key"), @Authorization("ldap")})
+//@Api(value = "PolicyCheck", authorizations = {@Authorization("api_key"), @Authorization("session_key"), @Authorization("ldap")})
 @Path("/api/v1")
 public class PolicyCheckResource implements Resource {
 
@@ -66,12 +63,12 @@ public class PolicyCheckResource implements Resource {
     }
 
     @GET
-    @ApiOperation("Check for new entity creation")
+//    @ApiOperation("Check for new entity creation")
     @Path("/{entityType}/canCreate")
     @Produces(MediaType.APPLICATION_JSON)
     @Validate
-    public boolean canCreate(@ApiParam @PathParam("entityType") EntityType type,
-                             @ApiParam @QueryParam("orgName") String orgName) {
+    public boolean canCreate(@Parameter @PathParam("entityType") EntityType type,
+                             @Parameter @QueryParam("orgName") String orgName) {
 
         OrganizationEntry org = orgManager.assertAccess(orgName, true);
         return isCreateEnabled(org.getId(), orgName, type);

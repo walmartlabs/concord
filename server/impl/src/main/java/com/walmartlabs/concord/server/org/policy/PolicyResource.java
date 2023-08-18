@@ -38,10 +38,7 @@ import com.walmartlabs.concord.server.security.Roles;
 import com.walmartlabs.concord.server.security.UserPrincipal;
 import com.walmartlabs.concord.server.user.UserManager;
 import com.walmartlabs.concord.server.user.UserType;
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
-import io.swagger.annotations.ApiParam;
-import io.swagger.annotations.Authorization;
+import io.swagger.v3.oas.annotations.Parameter;
 import org.apache.shiro.authz.AuthorizationException;
 import org.apache.shiro.authz.UnauthorizedException;
 import org.sonatype.siesta.Resource;
@@ -60,7 +57,7 @@ import java.util.UUID;
 
 @Named
 @Singleton
-@Api(value = "Policy", authorizations = {@Authorization("api_key"), @Authorization("session_key"), @Authorization("ldap")})
+//@Api(value = "Policy", authorizations = {@Authorization("api_key"), @Authorization("session_key"), @Authorization("ldap")})
 @Path("/api/v2/policy")
 public class PolicyResource implements Resource {
 
@@ -88,10 +85,10 @@ public class PolicyResource implements Resource {
     }
 
     @GET
-    @ApiOperation("Get an existing policy")
+//    @ApiOperation("Get an existing policy")
     @Path("/{policyName}")
     @Produces(MediaType.APPLICATION_JSON)
-    public PolicyEntry get(@ApiParam @PathParam("policyName") @ConcordKey String policyName) {
+    public PolicyEntry get(@Parameter @PathParam("policyName") @ConcordKey String policyName) {
         PolicyEntry p = policyManager.get(policyName);
         if (p == null) {
             throw new ConcordApplicationException("Policy not found: " + policyName, Status.NOT_FOUND);
@@ -101,10 +98,10 @@ public class PolicyResource implements Resource {
     }
 
     @POST
-    @ApiOperation("Create or update a policy")
+//    @ApiOperation("Create or update a policy")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    public PolicyOperationResponse createOrUpdate(@ApiParam @Valid PolicyEntry entry) {
+    public PolicyOperationResponse createOrUpdate(@Parameter @Valid PolicyEntry entry) {
         assertAdmin();
 
         UUID id = entry.id();
@@ -136,10 +133,10 @@ public class PolicyResource implements Resource {
     }
 
     @DELETE
-    @ApiOperation("Delete an existing policy")
+//    @ApiOperation("Delete an existing policy")
     @Path("/{policyName}")
     @Produces(MediaType.APPLICATION_JSON)
-    public GenericOperationResult delete(@ApiParam @PathParam("policyName") @ConcordKey String policyName) {
+    public GenericOperationResult delete(@Parameter @PathParam("policyName") @ConcordKey String policyName) {
         assertAdmin();
 
         UUID id = policyManager.getId(policyName);
@@ -158,12 +155,12 @@ public class PolicyResource implements Resource {
     }
 
     @PUT
-    @ApiOperation("Link an existing policy to an organization, a project or user")
+//    @ApiOperation("Link an existing policy to an organization, a project or user")
     @Path("/{policyName}/link")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    public GenericOperationResult link(@ApiParam @PathParam("policyName") @ConcordKey String policyName,
-                                       @ApiParam @Valid PolicyLinkEntry entry) {
+    public GenericOperationResult link(@Parameter @PathParam("policyName") @ConcordKey String policyName,
+                                       @Parameter @Valid PolicyLinkEntry entry) {
 
         assertAdmin();
 
@@ -183,15 +180,15 @@ public class PolicyResource implements Resource {
     }
 
     @DELETE
-    @ApiOperation("Unlink an existing policy")
+//    @ApiOperation("Unlink an existing policy")
     @Path("/{policyName}/link")
     @Produces(MediaType.APPLICATION_JSON)
-    public GenericOperationResult unlink(@ApiParam @PathParam("policyName") @ConcordKey String policyName,
-                                         @ApiParam @QueryParam("orgName") @ConcordKey String orgName,
-                                         @ApiParam @QueryParam("projectName") @ConcordKey String projectName,
-                                         @ApiParam @QueryParam("userName") @ConcordKey String userName,
-                                         @ApiParam @QueryParam("userDomain") String domain,
-                                         @ApiParam @QueryParam("userType") UserType userType) {
+    public GenericOperationResult unlink(@Parameter @PathParam("policyName") @ConcordKey String policyName,
+                                         @Parameter @QueryParam("orgName") @ConcordKey String orgName,
+                                         @Parameter @QueryParam("projectName") @ConcordKey String projectName,
+                                         @Parameter @QueryParam("userName") @ConcordKey String userName,
+                                         @Parameter @QueryParam("userDomain") String domain,
+                                         @Parameter @QueryParam("userType") UserType userType) {
 
         assertAdmin();
 
@@ -212,14 +209,14 @@ public class PolicyResource implements Resource {
     }
 
     @GET
-    @ApiOperation(value = "List policies, optionally filtering by organization, project and/or user links", responseContainer = "list", response = PolicyEntry.class)
+//    @ApiOperation(value = "List policies, optionally filtering by organization, project and/or user links", responseContainer = "list", response = PolicyEntry.class)
     @Path("/")
     @Produces(MediaType.APPLICATION_JSON)
-    public List<PolicyEntry> list(@ApiParam @QueryParam("orgName") @ConcordKey String orgName,
-                                  @ApiParam @QueryParam("projectName") @ConcordKey String projectName,
-                                  @ApiParam @QueryParam("userName") @ConcordKey String userName,
-                                  @ApiParam @QueryParam("userDomain") String userDomain,
-                                  @ApiParam @QueryParam("userType") UserType userType) {
+    public List<PolicyEntry> list(@Parameter @QueryParam("orgName") @ConcordKey String orgName,
+                                  @Parameter @QueryParam("projectName") @ConcordKey String projectName,
+                                  @Parameter @QueryParam("userName") @ConcordKey String userName,
+                                  @Parameter @QueryParam("userDomain") String userDomain,
+                                  @Parameter @QueryParam("userType") UserType userType) {
 
         if (orgName == null && projectName == null && userName == null) {
             return policyManager.list();

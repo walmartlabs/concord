@@ -27,8 +27,7 @@ import com.walmartlabs.concord.server.MultipartUtils;
 import com.walmartlabs.concord.server.process.form.FormUtils.ValidationException;
 import com.walmartlabs.concord.server.sdk.ConcordApplicationException;
 import com.walmartlabs.concord.server.sdk.PartialProcessKey;
-import io.swagger.annotations.ApiOperation;
-import io.swagger.annotations.ApiParam;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.takari.bpm.form.Form;
 import io.takari.bpm.model.form.FormDefinition;
 import io.takari.bpm.model.form.FormField;
@@ -58,10 +57,10 @@ public class FormResourceV1 {
     }
 
     @GET
-    @ApiOperation(value = "List the available forms", responseContainer = "list", response = FormListEntry.class)
+//    @ApiOperation(value = "List the available forms", responseContainer = "list", response = FormListEntry.class)
     @Path("/{processInstanceId}/form")
     @Produces(MediaType.APPLICATION_JSON)
-    public List<FormListEntry> list(@ApiParam @PathParam("processInstanceId") UUID processInstanceId) {
+    public List<FormListEntry> list(@Parameter @PathParam("processInstanceId") UUID processInstanceId) {
         PartialProcessKey processKey = PartialProcessKey.from(processInstanceId);
 
         try {
@@ -75,11 +74,11 @@ public class FormResourceV1 {
      * Return the current state of a form instance.
      */
     @GET
-    @ApiOperation("Get the current state of a form")
+//    @ApiOperation("Get the current state of a form")
     @Path("/{processInstanceId}/form/{formName}")
     @Produces(MediaType.APPLICATION_JSON)
-    public FormInstanceEntry get(@ApiParam @PathParam("processInstanceId") UUID processInstanceId,
-                                 @ApiParam @PathParam("formName") String formName) {
+    public FormInstanceEntry get(@Parameter @PathParam("processInstanceId") UUID processInstanceId,
+                                 @Parameter @PathParam("formName") String formName) {
 
         PartialProcessKey processKey = PartialProcessKey.from(processInstanceId);
 
@@ -122,13 +121,13 @@ public class FormResourceV1 {
      * Submit form instance's data, potentially resuming a suspended process.
      */
     @POST
-    @ApiOperation(value = "Submit JSON form data")
+//    @ApiOperation(value = "Submit JSON form data")
     @Path("/{processInstanceId}/form/{formName}")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    public FormSubmitResponse submit(@ApiParam @PathParam("processInstanceId") UUID processInstanceId,
-                                     @ApiParam @PathParam("formName") String formName,
-                                     @ApiParam Map<String, Object> data) {
+    public FormSubmitResponse submit(@Parameter @PathParam("processInstanceId") UUID processInstanceId,
+                                     @Parameter @PathParam("formName") String formName,
+                                     @Parameter Map<String, Object> data) {
 
         PartialProcessKey processKey = PartialProcessKey.from(processInstanceId);
 
@@ -156,7 +155,7 @@ public class FormResourceV1 {
      * conflicts in the Swagger spec/clients.
      */
     @POST
-    @ApiOperation(value = "Submit multipart form data")
+//    @ApiOperation(value = "Submit multipart form data")
     @Path("/{processInstanceId}/form/{formName}/multipart")
     @Consumes(MediaType.MULTIPART_FORM_DATA)
     @Produces(MediaType.APPLICATION_JSON)

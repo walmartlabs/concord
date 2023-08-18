@@ -29,10 +29,7 @@ import com.walmartlabs.concord.server.org.OrganizationManager;
 import com.walmartlabs.concord.server.security.UserPrincipal;
 import com.walmartlabs.concord.server.user.User;
 import com.walmartlabs.concord.server.user.UserType;
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
-import io.swagger.annotations.ApiParam;
-import io.swagger.annotations.Authorization;
+import io.swagger.v3.oas.annotations.Parameter;
 import org.sonatype.siesta.Resource;
 import org.sonatype.siesta.Validate;
 import org.sonatype.siesta.ValidationErrorsException;
@@ -49,7 +46,7 @@ import java.util.stream.Collectors;
 
 @Named
 @Singleton
-@Api(value = "Teams", authorizations = {@Authorization("api_key"), @Authorization("session_key"), @Authorization("ldap")})
+//@Api(value = "Teams", authorizations = {@Authorization("api_key"), @Authorization("session_key"), @Authorization("ldap")})
 @Path("/api/v1/org")
 public class TeamResource implements Resource {
 
@@ -75,12 +72,12 @@ public class TeamResource implements Resource {
      */
     @POST
     @Path("/{orgName}/team")
-    @ApiOperation("Create or update a team")
+//    @ApiOperation("Create or update a team")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     @Validate
-    public CreateTeamResponse createOrUpdate(@ApiParam @PathParam("orgName") @ConcordKey String orgName,
-                                             @ApiParam @Valid TeamEntry entry) {
+    public CreateTeamResponse createOrUpdate(@Parameter @PathParam("orgName") @ConcordKey String orgName,
+                                             @Parameter @Valid TeamEntry entry) {
 
         OrganizationEntry org = orgManager.assertAccess(orgName, true);
         UUID teamId = entry.getId();
@@ -103,11 +100,11 @@ public class TeamResource implements Resource {
      * @return
      */
     @GET
-    @ApiOperation("Get an existing team")
+//    @ApiOperation("Get an existing team")
     @Path("/{orgName}/team/{teamName}")
     @Produces(MediaType.APPLICATION_JSON)
-    public TeamEntry get(@ApiParam @PathParam("orgName") @ConcordKey String orgName,
-                         @ApiParam @PathParam("teamName") @ConcordKey String teamName) {
+    public TeamEntry get(@Parameter @PathParam("orgName") @ConcordKey String orgName,
+                         @Parameter @PathParam("teamName") @ConcordKey String teamName) {
         return assertTeam(orgName, teamName, null, true, false);
     }
 
@@ -115,11 +112,11 @@ public class TeamResource implements Resource {
      * Delete an existing team.
      */
     @DELETE
-    @ApiOperation("Delete an existing team")
+//    @ApiOperation("Delete an existing team")
     @Path("/{orgName}/team/{teamName}")
     @Produces(MediaType.APPLICATION_JSON)
-    public GenericOperationResult delete(@ApiParam @PathParam("orgName") @ConcordKey String orgName,
-                                         @ApiParam @PathParam("teamName") @ConcordKey String teamName) {
+    public GenericOperationResult delete(@Parameter @PathParam("orgName") @ConcordKey String orgName,
+                                         @Parameter @PathParam("teamName") @ConcordKey String teamName) {
 
         teamManager.delete(orgName, teamName);
         return new GenericOperationResult(OperationResult.DELETED);
@@ -132,9 +129,9 @@ public class TeamResource implements Resource {
      */
     @GET
     @Path("/{orgName}/team")
-    @ApiOperation(value = "List teams", responseContainer = "list", response = TeamEntry.class)
+//    @ApiOperation(value = "List teams", responseContainer = "list", response = TeamEntry.class)
     @Produces(MediaType.APPLICATION_JSON)
-    public List<TeamEntry> list(@ApiParam @PathParam("orgName") @ConcordKey String orgName) {
+    public List<TeamEntry> list(@Parameter @PathParam("orgName") @ConcordKey String orgName) {
         OrganizationEntry org = orgManager.assertAccess(orgName, false);
         return teamDao.list(org.getId());
     }
@@ -146,11 +143,11 @@ public class TeamResource implements Resource {
      * @return
      */
     @GET
-    @ApiOperation("List users of a team")
+//    @ApiOperation("List users of a team")
     @Path("/{orgName}/team/{teamName}/users")
     @Produces(MediaType.APPLICATION_JSON)
-    public List<TeamUserEntry> listUsers(@ApiParam @PathParam("orgName") @ConcordKey String orgName,
-                                         @ApiParam @PathParam("teamName") @ConcordKey String teamName) {
+    public List<TeamUserEntry> listUsers(@Parameter @PathParam("orgName") @ConcordKey String orgName,
+                                         @Parameter @PathParam("teamName") @ConcordKey String teamName) {
 
         TeamEntry t = assertTeam(orgName, teamName, TeamRole.MEMBER, true, false);
         return teamDao.listUsers(t.getId());
@@ -163,11 +160,11 @@ public class TeamResource implements Resource {
      * @return
      */
     @GET
-    @ApiOperation("List ldap roles of a team")
+//    @ApiOperation("List ldap roles of a team")
     @Path("/{orgName}/team/{teamName}/ldapGroups")
     @Produces(MediaType.APPLICATION_JSON)
-    public List<TeamLdapGroupEntry> listLdapGroups(@ApiParam @PathParam("orgName") @ConcordKey String orgName,
-                                                  @ApiParam @PathParam("teamName") @ConcordKey String teamName) {
+    public List<TeamLdapGroupEntry> listLdapGroups(@Parameter @PathParam("orgName") @ConcordKey String orgName,
+                                                  @Parameter @PathParam("teamName") @ConcordKey String teamName) {
 
         TeamEntry t = assertTeam(orgName, teamName, TeamRole.MEMBER, true, false);
         return teamDao.listLdapGroups(t.getId());
@@ -181,14 +178,14 @@ public class TeamResource implements Resource {
      * @return
      */
     @PUT
-    @ApiOperation("Add users to a team")
+//    @ApiOperation("Add users to a team")
     @Path("/{orgName}/team/{teamName}/users")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    public AddTeamUsersResponse addUsers(@ApiParam @PathParam("orgName") @ConcordKey String orgName,
-                                         @ApiParam @PathParam("teamName") @ConcordKey String teamName,
-                                         @ApiParam @QueryParam("replace") @DefaultValue("false") boolean replace,
-                                         @ApiParam @Valid Collection<TeamUserEntry> users) {
+    public AddTeamUsersResponse addUsers(@Parameter @PathParam("orgName") @ConcordKey String orgName,
+                                         @Parameter @PathParam("teamName") @ConcordKey String teamName,
+                                         @Parameter @QueryParam("replace") @DefaultValue("false") boolean replace,
+                                         @Parameter @Valid Collection<TeamUserEntry> users) {
 
         boolean isEmptyUsers = users == null || users.isEmpty();
         if (isEmptyUsers && !replace) {
@@ -207,14 +204,14 @@ public class TeamResource implements Resource {
      * @return
      */
     @PUT
-    @ApiOperation("Add LDAP groups to a team")
+//    @ApiOperation("Add LDAP groups to a team")
     @Path("/{orgName}/team/{teamName}/ldapGroups")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    public AddTeamLdapGroupsResponse addLdapGroups(@ApiParam @PathParam("orgName") @ConcordKey String orgName,
-                                                   @ApiParam @PathParam("teamName") @ConcordKey String teamName,
-                                                   @ApiParam @QueryParam("replace") @DefaultValue("false") boolean replace,
-                                                   @ApiParam @Valid Collection<TeamLdapGroupEntry> roles) {
+    public AddTeamLdapGroupsResponse addLdapGroups(@Parameter @PathParam("orgName") @ConcordKey String orgName,
+                                                   @Parameter @PathParam("teamName") @ConcordKey String teamName,
+                                                   @Parameter @QueryParam("replace") @DefaultValue("false") boolean replace,
+                                                   @Parameter @Valid Collection<TeamLdapGroupEntry> roles) {
 
         boolean isEmptyRoles = roles == null || roles.isEmpty();
         if (isEmptyRoles && !replace) {
@@ -233,13 +230,13 @@ public class TeamResource implements Resource {
      * @return
      */
     @DELETE
-    @ApiOperation("Remove users from a team")
+//    @ApiOperation("Remove users from a team")
     @Path("/{orgName}/team/{teamName}/users")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    public RemoveTeamUsersResponse removeUsers(@ApiParam @PathParam("orgName") @ConcordKey String orgName,
-                                               @ApiParam @PathParam("teamName") @ConcordKey String teamName,
-                                               @ApiParam Collection<String> usernames) {
+    public RemoveTeamUsersResponse removeUsers(@Parameter @PathParam("orgName") @ConcordKey String orgName,
+                                               @Parameter @PathParam("teamName") @ConcordKey String teamName,
+                                               @Parameter Collection<String> usernames) {
 
         if (usernames == null || usernames.isEmpty()) {
             throw new ValidationErrorsException("Empty user list");

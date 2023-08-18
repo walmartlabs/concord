@@ -27,10 +27,7 @@ import com.walmartlabs.concord.server.security.Roles;
 import com.walmartlabs.concord.server.user.UserInfoProvider;
 import com.walmartlabs.concord.server.user.UserManager;
 import com.walmartlabs.concord.server.user.UserType;
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
-import io.swagger.annotations.ApiParam;
-import io.swagger.annotations.Authorization;
+import io.swagger.v3.oas.annotations.Parameter;
 import org.apache.shiro.authz.UnauthorizedException;
 import org.sonatype.siesta.Resource;
 import org.sonatype.siesta.Validate;
@@ -52,7 +49,7 @@ import java.util.UUID;
 
 @Named
 @Singleton
-@Api(value = "UserLdapGroup", authorizations = {@Authorization("api_key"), @Authorization("session_key"), @Authorization("ldap")})
+//@Api(value = "UserLdapGroup", authorizations = {@Authorization("api_key"), @Authorization("session_key"), @Authorization("ldap")})
 @Path("/api/v1/userldapgroup")
 public class UserLdapGroup implements Resource {
 
@@ -76,12 +73,12 @@ public class UserLdapGroup implements Resource {
      * @return GenericOperationResult result
      */
     @POST
-    @ApiOperation("Sync ldap groups for a user")
+//    @ApiOperation("Sync ldap groups for a user")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     @Path("/sync")
     @Validate
-    public GenericOperationResult sync(@ApiParam @Valid SyncUserLdapGroupRequest req) {
+    public GenericOperationResult sync(@Parameter @Valid SyncUserLdapGroupRequest req) {
         assertAdmin();
 
         UUID id = userManager.getId(req.getUsername(), req.getUserDomain(), UserType.LDAP).orElse(null);

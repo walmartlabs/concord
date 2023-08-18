@@ -25,10 +25,7 @@ import com.walmartlabs.concord.server.GenericOperationResult;
 import com.walmartlabs.concord.server.OperationResult;
 import com.walmartlabs.concord.server.sdk.ConcordApplicationException;
 import com.walmartlabs.concord.server.sdk.metrics.WithTimer;
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
-import io.swagger.annotations.ApiParam;
-import io.swagger.annotations.Authorization;
+import io.swagger.v3.oas.annotations.Parameter;
 import org.sonatype.siesta.Resource;
 import org.sonatype.siesta.ValidationErrorsException;
 
@@ -43,7 +40,7 @@ import java.util.Map;
 
 @Named
 @Singleton
-@Api(value = "JsonStoreQuery", authorizations = {@Authorization("api_key"), @Authorization("session_key"), @Authorization("ldap")})
+//@Api(value = "JsonStoreQuery", authorizations = {@Authorization("api_key"), @Authorization("session_key"), @Authorization("ldap")})
 @Path("/api/v1/org")
 public class JsonStoreQueryResource implements Resource {
 
@@ -63,12 +60,12 @@ public class JsonStoreQueryResource implements Resource {
      * @return query text
      */
     @GET
-    @ApiOperation("Get an existing JSON store query")
+//    @ApiOperation("Get an existing JSON store query")
     @Path("/{orgName}/jsonstore/{storeName}/query/{queryName}")
     @Produces(MediaType.APPLICATION_JSON)
-    public JsonStoreQueryEntry get(@ApiParam @PathParam("orgName") @ConcordKey String orgName,
-                                   @ApiParam @PathParam("storeName") @ConcordKey String storeName,
-                                   @ApiParam @PathParam("queryName") @ConcordKey String queryName) {
+    public JsonStoreQueryEntry get(@Parameter @PathParam("orgName") @ConcordKey String orgName,
+                                   @Parameter @PathParam("storeName") @ConcordKey String storeName,
+                                   @Parameter @PathParam("queryName") @ConcordKey String queryName) {
 
         return storeQueryManager.get(orgName, storeName, queryName);
     }
@@ -82,13 +79,13 @@ public class JsonStoreQueryResource implements Resource {
      * @return
      */
     @POST
-    @ApiOperation("Create or update a JSON store query")
+//    @ApiOperation("Create or update a JSON store query")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     @Path("/{orgName}/jsonstore/{storeName}/query")
-    public GenericOperationResult createOrUpdate(@ApiParam @PathParam("orgName") @ConcordKey String orgName,
-                                                 @ApiParam @PathParam("storeName") @ConcordKey String storeName,
-                                                 @ApiParam @Valid JsonStoreQueryRequest entry) {
+    public GenericOperationResult createOrUpdate(@Parameter @PathParam("orgName") @ConcordKey String orgName,
+                                                 @Parameter @PathParam("storeName") @ConcordKey String storeName,
+                                                 @Parameter @Valid JsonStoreQueryRequest entry) {
 
         OperationResult result = storeQueryManager.createOrUpdate(orgName, storeName, entry);
         return new GenericOperationResult(result);
@@ -102,14 +99,14 @@ public class JsonStoreQueryResource implements Resource {
      * @return
      */
     @GET
-    @ApiOperation(value = "List JSON Store queries", responseContainer = "list", response = JsonStoreQueryEntry.class)
+//    @ApiOperation(value = "List JSON Store queries", responseContainer = "list", response = JsonStoreQueryEntry.class)
     @Path("/{orgName}/jsonstore/{storeName}/query")
     @Produces(MediaType.APPLICATION_JSON)
-    public List<JsonStoreQueryEntry> list(@ApiParam @PathParam("orgName") @ConcordKey String orgName,
-                                          @ApiParam @PathParam("storeName") @ConcordKey String storeName,
-                                          @ApiParam @QueryParam("offset") @DefaultValue("0") int offset,
-                                          @ApiParam @QueryParam("limit") @DefaultValue("30") int limit,
-                                          @ApiParam @QueryParam("filter") String filter) {
+    public List<JsonStoreQueryEntry> list(@Parameter @PathParam("orgName") @ConcordKey String orgName,
+                                          @Parameter @PathParam("storeName") @ConcordKey String storeName,
+                                          @Parameter @QueryParam("offset") @DefaultValue("0") int offset,
+                                          @Parameter @QueryParam("limit") @DefaultValue("30") int limit,
+                                          @Parameter @QueryParam("filter") String filter) {
 
         return storeQueryManager.list(orgName, storeName, offset, limit, filter);
     }
@@ -123,12 +120,12 @@ public class JsonStoreQueryResource implements Resource {
      * @return
      */
     @DELETE
-    @ApiOperation("Delete an existing JSON query query")
+//    @ApiOperation("Delete an existing JSON query query")
     @Path("/{orgName}/jsonstore/{storeName}/query/{queryName}")
     @Produces(MediaType.APPLICATION_JSON)
-    public GenericOperationResult delete(@ApiParam @PathParam("orgName") @ConcordKey String orgName,
-                                         @ApiParam @PathParam("storeName") @ConcordKey String storeName,
-                                         @ApiParam @PathParam("queryName") @ConcordKey String queryName) {
+    public GenericOperationResult delete(@Parameter @PathParam("orgName") @ConcordKey String orgName,
+                                         @Parameter @PathParam("storeName") @ConcordKey String storeName,
+                                         @Parameter @PathParam("queryName") @ConcordKey String queryName) {
 
         storeQueryManager.delete(orgName, storeName, queryName);
         return new GenericOperationResult(OperationResult.DELETED);
@@ -144,15 +141,15 @@ public class JsonStoreQueryResource implements Resource {
      * @return query result
      */
     @POST
-    @ApiOperation("Execute an existing JSON store query")
+//    @ApiOperation("Execute an existing JSON store query")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     @Path("/{orgName}/jsonstore/{storeName}/query/{queryName}/exec")
     @WithTimer
-    public List<Object> exec(@ApiParam @PathParam("orgName") @ConcordKey String orgName,
-                             @ApiParam @PathParam("storeName") @ConcordKey String storeName,
-                             @ApiParam @PathParam("queryName") @ConcordKey String queryName,
-                             @ApiParam @Valid Map<String, Object> params) {
+    public List<Object> exec(@Parameter @PathParam("orgName") @ConcordKey String orgName,
+                             @Parameter @PathParam("storeName") @ConcordKey String storeName,
+                             @Parameter @PathParam("queryName") @ConcordKey String queryName,
+                             @Parameter @Valid Map<String, Object> params) {
 
         try {
             return storeQueryManager.exec(orgName, storeName, queryName, params);

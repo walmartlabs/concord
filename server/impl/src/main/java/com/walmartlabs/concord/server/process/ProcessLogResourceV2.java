@@ -30,10 +30,7 @@ import com.walmartlabs.concord.server.process.queue.ProcessKeyCache;
 import com.walmartlabs.concord.server.sdk.ConcordApplicationException;
 import com.walmartlabs.concord.server.sdk.ProcessKey;
 import com.walmartlabs.concord.server.sdk.metrics.WithTimer;
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
-import io.swagger.annotations.ApiParam;
-import io.swagger.annotations.Authorization;
+import io.swagger.v3.oas.annotations.Parameter;
 import org.sonatype.siesta.Resource;
 import org.sonatype.siesta.ValidationErrorsException;
 
@@ -57,7 +54,7 @@ import static com.walmartlabs.concord.server.process.logs.ProcessLogsDao.Process
  */
 @Named
 @Singleton
-@Api(value = "ProcessLogV2", authorizations = {@Authorization("api_key"), @Authorization("session_key"), @Authorization("ldap")})
+//@Api(value = "ProcessLogV2", authorizations = {@Authorization("api_key"), @Authorization("session_key"), @Authorization("ldap")})
 @Path("/api/v2/process")
 public class ProcessLogResourceV2 implements Resource {
 
@@ -84,13 +81,13 @@ public class ProcessLogResourceV2 implements Resource {
      * List process log segments.
      */
     @GET
-    @ApiOperation(value = "List process log segments")
+//    @ApiOperation(value = "List process log segments")
     @Path("{id}/log/segment")
     @Produces(MediaType.APPLICATION_JSON)
     @WithTimer
-    public List<LogSegment> segments(@ApiParam @PathParam("id") UUID instanceId,
-                                     @ApiParam @QueryParam("limit") @DefaultValue("30") int limit,
-                                     @ApiParam @QueryParam("offset") @DefaultValue("0") int offset) {
+    public List<LogSegment> segments(@Parameter @PathParam("id") UUID instanceId,
+                                     @Parameter @QueryParam("limit") @DefaultValue("30") int limit,
+                                     @Parameter @QueryParam("offset") @DefaultValue("0") int offset) {
 
         if (offset < 0) {
             throw new ValidationErrorsException("'offset' must be a positive number or zero");
@@ -104,13 +101,13 @@ public class ProcessLogResourceV2 implements Resource {
      * Create a new process log segment.
      */
     @POST
-    @ApiOperation(value = "Create process log segment")
+//    @ApiOperation(value = "Create process log segment")
     @Path("{id}/log/segment")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     @WithTimer
-    public LogSegmentOperationResponse segment(@ApiParam @PathParam("id") UUID instanceId,
-                                               @ApiParam LogSegmentRequest request) {
+    public LogSegmentOperationResponse segment(@Parameter @PathParam("id") UUID instanceId,
+                                               @Parameter LogSegmentRequest request) {
 
         ProcessKey processKey = logAccessManager.assertLogAccess(instanceId);
         long segmentId = logManager.createSegment(processKey, request.correlationId(), request.name(), request.createdAt());
@@ -121,14 +118,14 @@ public class ProcessLogResourceV2 implements Resource {
      * Update a process log segment.
      */
     @POST
-    @ApiOperation(value = "Update process log segment")
+//    @ApiOperation(value = "Update process log segment")
     @Path("{id}/log/segment/{segmentId}")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     @WithTimer
-    public LogSegmentOperationResponse updateSegment(@ApiParam @PathParam("id") UUID instanceId,
-                                                     @ApiParam @PathParam("segmentId") long segmentId,
-                                                     @ApiParam LogSegmentUpdateRequest request) {
+    public LogSegmentOperationResponse updateSegment(@Parameter @PathParam("id") UUID instanceId,
+                                                     @Parameter @PathParam("segmentId") long segmentId,
+                                                     @Parameter LogSegmentUpdateRequest request) {
 
         ProcessKey processKey = logAccessManager.assertLogAccess(instanceId);
         logManager.updateSegment(processKey, segmentId, request.status(), request.warnings(), request.errors());
@@ -139,12 +136,12 @@ public class ProcessLogResourceV2 implements Resource {
      * Retrieves a log segment' data.
      */
     @GET
-    @ApiOperation(value = "Retrieve the log")
+//    @ApiOperation(value = "Retrieve the log")
     @Path("/{id}/log/segment/{segmentId}/data")
     @Produces(MediaType.APPLICATION_OCTET_STREAM)
     @WithTimer
-    public Response data(@ApiParam @PathParam("id") UUID instanceId,
-                         @ApiParam @PathParam("segmentId") long segmentId,
+    public Response data(@Parameter @PathParam("id") UUID instanceId,
+                         @Parameter @PathParam("segmentId") long segmentId,
                          @HeaderParam("range") String rangeHeader) {
 
         ProcessKey processKey = logAccessManager.assertLogAccess(instanceId);
@@ -160,8 +157,8 @@ public class ProcessLogResourceV2 implements Resource {
     @Path("{id}/log/segment/{segmentId}/data")
     @Consumes(MediaType.APPLICATION_OCTET_STREAM)
     @WithTimer
-    public void append(@ApiParam @PathParam("id") UUID instanceId,
-                       @ApiParam @PathParam("segmentId") long segmentId,
+    public void append(@Parameter @PathParam("id") UUID instanceId,
+                       @Parameter @PathParam("segmentId") long segmentId,
                        InputStream data) {
 
         ProcessKey processKey = logAccessManager.assertLogAccess(instanceId);

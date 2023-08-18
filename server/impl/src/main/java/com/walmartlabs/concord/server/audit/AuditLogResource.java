@@ -36,10 +36,7 @@ import com.walmartlabs.concord.server.sdk.ConcordApplicationException;
 import com.walmartlabs.concord.server.sdk.metrics.WithTimer;
 import com.walmartlabs.concord.server.security.Roles;
 import com.walmartlabs.concord.server.user.UserDao;
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
-import io.swagger.annotations.ApiParam;
-import io.swagger.annotations.Authorization;
+import io.swagger.v3.oas.annotations.Parameter;
 import org.apache.shiro.authz.UnauthorizedException;
 import org.sonatype.siesta.Resource;
 import org.sonatype.siesta.ValidationErrorsException;
@@ -57,7 +54,7 @@ import java.util.stream.Collectors;
 
 import static com.walmartlabs.concord.server.Utils.unwrap;
 
-@Api(value = "Audit Log", authorizations = {@Authorization("api_key"), @Authorization("session_key"), @Authorization("ldap")})
+//@Api(value = "Audit Log", authorizations = {@Authorization("api_key"), @Authorization("session_key"), @Authorization("ldap")})
 @Path("/api/v1/audit")
 public class AuditLogResource implements Resource {
 
@@ -121,17 +118,17 @@ public class AuditLogResource implements Resource {
      * are allowed.
      */
     @GET
-    @ApiOperation(value = "List audit log entries for the specified organization", responseContainer = "list", response = AuditLogEntry.class)
+//    @ApiOperation(value = "List audit log entries for the specified organization", responseContainer = "list", response = AuditLogEntry.class)
     @Produces(MediaType.APPLICATION_JSON)
     @WithTimer
-    public List<AuditLogEntry> list(@ApiParam @QueryParam("object") AuditObject object,
-                                    @ApiParam @QueryParam("action") AuditAction action,
-                                    @ApiParam @QueryParam("userId") UUID userId,
-                                    @ApiParam @QueryParam("username") String username,
-                                    @ApiParam @QueryParam("after") OffsetDateTimeParam afterTimestamp,
-                                    @ApiParam @QueryParam("before") OffsetDateTimeParam beforeTimestamp,
-                                    @ApiParam @QueryParam("offset") @DefaultValue("0") int offset,
-                                    @ApiParam @QueryParam("limit") @DefaultValue("30") int limit,
+    public List<AuditLogEntry> list(@Parameter @QueryParam("object") AuditObject object,
+                                    @Parameter @QueryParam("action") AuditAction action,
+                                    @Parameter @QueryParam("userId") UUID userId,
+                                    @Parameter @QueryParam("username") String username,
+                                    @Parameter @QueryParam("after") OffsetDateTimeParam afterTimestamp,
+                                    @Parameter @QueryParam("before") OffsetDateTimeParam beforeTimestamp,
+                                    @Parameter @QueryParam("offset") @DefaultValue("0") int offset,
+                                    @Parameter @QueryParam("limit") @DefaultValue("30") int limit,
                                     @Context UriInfo uriInfo) {
 
         Map<String, String> details = getDetails(uriInfo);

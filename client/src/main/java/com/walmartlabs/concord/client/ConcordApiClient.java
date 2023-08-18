@@ -20,19 +20,13 @@ package com.walmartlabs.concord.client;
  * =====
  */
 
-import com.squareup.okhttp.OkHttpClient;
 import com.walmartlabs.concord.ApiClient;
-import com.walmartlabs.concord.auth.ApiKeyAuth;
-import com.walmartlabs.concord.sdk.Constants;
+import com.walmartlabs.concord.client.auth.ApiKey;
+import com.walmartlabs.concord.client.auth.SessionToken;
 
 public class ConcordApiClient extends ApiClient {
 
     public ConcordApiClient(String baseUrl) {
-        this(baseUrl, new OkHttpClient());
-    }
-
-    public ConcordApiClient(String baseUrl, OkHttpClient ok) {
-        super(ok);
         setBasePath(baseUrl);
     }
 
@@ -41,31 +35,17 @@ public class ConcordApiClient extends ApiClient {
             return this;
         }
 
-        ApiKeyAuth auth = (ApiKeyAuth) getAuthentications().get("session_key");
-        if (auth == null) {
-            throw new RuntimeException("No session token authentication configured!");
-        }
-        auth.setApiKey(token);
-        // TODO: remove me when swagger-maven-plugin 3.1.8 is released (in 3.1.7 the param's name always 'session_key')
-        auth.setParamName(Constants.Headers.SESSION_TOKEN);
+        setAuth(new SessionToken(token));
 
         return this;
     }
 
-    @Override
     public ApiClient setApiKey(String key) {
         if (key == null) {
             return this;
         }
 
-        ApiKeyAuth auth = (ApiKeyAuth) getAuthentications().get("api_key");
-        if (auth == null) {
-            throw new RuntimeException("No API key authentication configured!");
-        }
-
-        auth.setApiKey(key);
-        // TODO: remove me when swagger-maven-plugin 3.1.8 is released (in 3.1.7 the param's name always 'api_key')
-        auth.setParamName("Authorization");
+        setAuth(new ApiKey(key));
 
         return this;
     }

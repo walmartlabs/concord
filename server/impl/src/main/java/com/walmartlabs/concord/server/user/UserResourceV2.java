@@ -21,10 +21,7 @@ package com.walmartlabs.concord.server.user;
  */
 
 import com.walmartlabs.concord.server.sdk.metrics.WithTimer;
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
-import io.swagger.annotations.ApiParam;
-import io.swagger.annotations.Authorization;
+import io.swagger.v3.oas.annotations.Parameter;
 import org.sonatype.siesta.Resource;
 import org.sonatype.siesta.ValidationErrorsException;
 
@@ -38,7 +35,7 @@ import java.util.UUID;
 
 @Named
 @Singleton
-@Api(value = "UserV2", authorizations = {@Authorization("api_key"), @Authorization("session_key"), @Authorization("ldap")})
+//@Api(value = "UserV2", authorizations = {@Authorization("api_key"), @Authorization("session_key"), @Authorization("ldap")})
 @Path("/api/v2/user")
 public class UserResourceV2 implements Resource {
 
@@ -50,12 +47,12 @@ public class UserResourceV2 implements Resource {
     }
 
     @GET
-    @ApiOperation("Returns a list of existing active users matching the supplied filter")
+//    @ApiOperation("Returns a list of existing active users matching the supplied filter")
     @Produces(MediaType.APPLICATION_JSON)
     @WithTimer
-    public List<UserEntry> list(@ApiParam @QueryParam("offset") @DefaultValue("0") int offset,
-                                @ApiParam @QueryParam("limit") @DefaultValue("10") int limit,
-                                @ApiParam @QueryParam("filter") String filter) {
+    public List<UserEntry> list(@Parameter @QueryParam("offset") @DefaultValue("0") int offset,
+                                @Parameter @QueryParam("limit") @DefaultValue("10") int limit,
+                                @Parameter @QueryParam("filter") String filter) {
 
         if (offset < 0) {
             throw new ValidationErrorsException("'offset' must be a positive number or zero");
@@ -69,7 +66,7 @@ public class UserResourceV2 implements Resource {
     }
 
     @GET
-    @ApiOperation("Get an existing user")
+//    @ApiOperation("Get an existing user")
     @Path("/{id}")
     @Produces(MediaType.APPLICATION_JSON)
     @WithTimer
