@@ -21,14 +21,13 @@ package com.walmartlabs.concord.runtime.v2.runner.el;
  */
 
 import com.walmartlabs.concord.runtime.v2.runner.tasks.TaskProviders;
+import com.walmartlabs.concord.runtime.v2.runner.vm.LoopItemSanitizer;
 import com.walmartlabs.concord.runtime.v2.sdk.EvalContext;
 import com.walmartlabs.concord.runtime.v2.sdk.ExpressionEvaluator;
 
 import javax.inject.Inject;
-import java.util.ArrayList;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+import java.util.stream.Collectors;
 
 public class DefaultExpressionEvaluator implements ExpressionEvaluator {
 
@@ -46,19 +45,35 @@ public class DefaultExpressionEvaluator implements ExpressionEvaluator {
     }
 
     private static <T> T initializeAll(Object value, Class<T> expectedType) {
-        if (value instanceof LazyEvalMap) {
-            LazyEvalMap m = (LazyEvalMap) value;
+        if (value instanceof Map) {
+            Map<?, ?> m = (Map<?, ?>) value;
             return expectedType.cast(initializeMap(m));
-        } else if (value instanceof LazyEvalList) {
-            LazyEvalList l = (LazyEvalList) value;
-            return expectedType.cast(initializeList(l));
+        } else if (value instanceof Collection) {
+            Collection<?> collection = (Collection<?>) value;
+            if (collection.isEmpty()) {
+                return expectedType.cast(collection);
+            }
+            return expectedType.cast(initializeList(collection));
+        } else if (value != null && value.getClass().isArray()) {
+            Object[] arr = (Object[])value;
+            if (arr.length == 0) {
+                return expectedType.cast(arr);
+            }
+            return expectedType.cast(initializeArray(arr));
         }
         return expectedType.cast(value);
     }
 
-    private static Map<Object, Object> initializeMap(Map<String, Object> value) {
+    private static Object[] initializeArray(Object[] arr) {
+        for (int i = 0; i < arr.length; i++) {
+            arr[i] = initializeAll(arr[i], Object.class);
+        }
+        return arr;
+    }
+
+    private static Map<Object, Object> initializeMap(Map<?, ?> value) {
         Map<Object, Object> result = new LinkedHashMap<>(value.size());
-        for (Map.Entry<String, Object> e : value.entrySet()) {
+        for (Map.Entry<?, ?> e : value.entrySet()) {
             Object kk = e.getKey();
             kk = initializeAll(kk, Object.class);
 
@@ -70,7 +85,7 @@ public class DefaultExpressionEvaluator implements ExpressionEvaluator {
         return result;
     }
 
-    private static List<Object> initializeList(List<Object> value) {
+    private static List<Object> initializeList(Collection<?> value) {
         List<Object> result = new ArrayList<>();
         for (Object o : value) {
             result.add(initializeAll(o, Object.class));
