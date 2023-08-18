@@ -11,6 +11,8 @@
 
 ### Changed
 
+- runtime-v2: fix initialize of array expression
+([#800](https://github.com/walmartlabs/concord/pull/800));
 - server: only admins can access policies
 ([#792](https://github.com/walmartlabs/concord/pull/792));
 - cli: active profiles fix
