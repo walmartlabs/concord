@@ -49,13 +49,13 @@ public class DefaultExpressionEvaluator implements ExpressionEvaluator {
         } else if (value instanceof Set) {
             Set<?> set = (Set<?>) value;
             if (set.isEmpty()) {
-                return expectedType.cast(set);
+                return expectedType.cast(new LinkedHashSet<>());
             }
             return expectedType.cast(initializeSet(set));
         } else if (value instanceof Collection) {
             Collection<?> collection = (Collection<?>) value;
             if (collection.isEmpty()) {
-                return expectedType.cast(collection);
+                return expectedType.cast(new ArrayList<>());
             }
             return expectedType.cast(initializeList(collection));
         } else if (value != null && value.getClass().isArray()) {
