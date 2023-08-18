@@ -21,13 +21,11 @@ package com.walmartlabs.concord.runtime.v2.runner.el;
  */
 
 import com.walmartlabs.concord.runtime.v2.runner.tasks.TaskProviders;
-import com.walmartlabs.concord.runtime.v2.runner.vm.LoopItemSanitizer;
 import com.walmartlabs.concord.runtime.v2.sdk.EvalContext;
 import com.walmartlabs.concord.runtime.v2.sdk.ExpressionEvaluator;
 
 import javax.inject.Inject;
 import java.util.*;
-import java.util.stream.Collectors;
 
 public class DefaultExpressionEvaluator implements ExpressionEvaluator {
 
@@ -48,6 +46,12 @@ public class DefaultExpressionEvaluator implements ExpressionEvaluator {
         if (value instanceof Map) {
             Map<?, ?> m = (Map<?, ?>) value;
             return expectedType.cast(initializeMap(m));
+        } else if (value instanceof Set) {
+            Set<?> set = (Set<?>) value;
+            if (set.isEmpty()) {
+                return expectedType.cast(set);
+            }
+            return expectedType.cast(initializeSet(set));
         } else if (value instanceof Collection) {
             Collection<?> collection = (Collection<?>) value;
             if (collection.isEmpty()) {
@@ -86,7 +90,15 @@ public class DefaultExpressionEvaluator implements ExpressionEvaluator {
     }
 
     private static List<Object> initializeList(Collection<?> value) {
-        List<Object> result = new ArrayList<>();
+        List<Object> result = new ArrayList<>(value.size());
+        for (Object o : value) {
+            result.add(initializeAll(o, Object.class));
+        }
+        return result;
+    }
+
+    private static Set<Object> initializeSet(Collection<?> value) {
+        Set<Object> result = new LinkedHashSet<>(value.size());
         for (Object o : value) {
             result.add(initializeAll(o, Object.class));
         }
