@@ -11,8 +11,10 @@
 
 ### Changed
 
+- server: only admins can access policies
+([#792](https://github.com/walmartlabs/concord/pull/792));
 - cli: active profiles fix
-([#789](https://github.com/walmartlabs/concord/pull/789));
+([#789](https://github.com/walmartlabs/concord/pull/789)).
 
 ## [2.0.0] - 2023-08-16
 
