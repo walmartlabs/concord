@@ -60,7 +60,7 @@ public interface UpdateSecretRequest {
     String newName();
 
     @Nullable
-    SecretEntry.VisibilityEnum newVisibility();
+    SecretEntryV2.VisibilityEnum newVisibility();
 
     @Nullable
     byte[] data();

@@ -171,7 +171,7 @@ public class SecretServiceImpl implements SecretService {
         return new String(r.getData());
     }
 
-    private <T extends Secret> T get(Context ctx, String orgName, String secretName, String password, SecretEntry.TypeEnum type) throws Exception {
+    private <T extends Secret> T get(Context ctx, String orgName, String secretName, String password, SecretEntryV2.TypeEnum type) throws Exception {
         try {
             return new SecretClient(clientFactory.create(ctx)).getData(assertOrgName(ctx, orgName), secretName, password, type);
         } catch (com.walmartlabs.concord.client.SecretNotFoundException e) {

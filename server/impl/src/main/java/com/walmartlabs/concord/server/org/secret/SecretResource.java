@@ -36,9 +36,6 @@ import com.walmartlabs.concord.server.user.UserType;
 import io.swagger.v3.oas.annotations.OpenAPIDefinition;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
-import io.swagger.v3.oas.annotations.media.Content;
-import io.swagger.v3.oas.annotations.media.Schema;
-import io.swagger.v3.oas.annotations.parameters.RequestBody;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.jboss.resteasy.plugins.providers.multipart.MultipartInput;
 import org.slf4j.Logger;
@@ -58,15 +55,13 @@ import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.core.StreamingOutput;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.util.*;
 import java.util.stream.Collectors;
 
 @Named
 @Singleton
-@OpenAPIDefinition()
-@Tag(name = "Secrets")
 @Path("/api/v1/org")
+@Tag(name = "Secrets")
 public class SecretResource implements Resource {
 
     private static final Logger log = LoggerFactory.getLogger(SecretResource.class);
@@ -102,17 +97,9 @@ public class SecretResource implements Resource {
     @Consumes(MediaType.MULTIPART_FORM_DATA)
     @Produces(MediaType.APPLICATION_JSON)
     @Validate
-    @Operation(
-            requestBody =
-                @RequestBody(
-                        content = @Content(
-                                mediaType = MediaType.MULTIPART_FORM_DATA,
-                                schema = @Schema(type = "object", implementation = CreateSecretRequest.class)
-                        )
-                )
-    )
+    @Operation(description = "Create secret")
     public SecretOperationResponse create(@PathParam("orgName") @ConcordKey String orgName,
-                                          @Parameter(schema = @Schema(name = "object")) MultipartInput input) {
+                                          @Parameter(hidden = true) MultipartInput input) {
 
         OrganizationEntry org = orgManager.assertAccess(orgName, true);
 
@@ -152,36 +139,35 @@ public class SecretResource implements Resource {
         }
     }
 
-    public static class CreateSecretRequest {
-
-        private final SecretType type;
-
-        private final String name;
-
-        @Schema(type = "string", format = "binary", description = "privateKey")
-        private final InputStream privateKey;
-
-        public CreateSecretRequest(SecretType type, String name, InputStream privateKey) {
-            this.type = type;
-            this.name = name;
-            this.privateKey = privateKey;
-        }
-
-        public SecretType getType() {
-            return type;
-        }
-
-        public String getName() {
-            return name;
-        }
-
-        public InputStream getPrivateKey() {
-            return privateKey;
-        }
-    }
+//    public static class CreateSecretRequest {
+//
+//        private final SecretType type;
+//
+//        private final String name;
+//
+//        @Schema(type = "string", format = "binary", description = "privateKey")
+//        private final InputStream privateKey;
+//
+//        public CreateSecretRequest(SecretType type, String name, InputStream privateKey) {
+//            this.type = type;
+//            this.name = name;
+//            this.privateKey = privateKey;
+//        }
+//
+//        public SecretType getType() {
+//            return type;
+//        }
+//
+//        public String getName() {
+//            return name;
+//        }
+//
+//        public InputStream getPrivateKey() {
+//            return privateKey;
+//        }
+//    }
 
     @POST
-//    @ApiOperation("Updates an existing secret") // weird URLs as a workaround for swagger-maven-plugin issue
     @Path("/{orgName}/secret/{secretName}")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
@@ -217,10 +203,10 @@ public class SecretResource implements Resource {
     }
 
     @GET
-//    @ApiOperation("Get an existing secret")
     @Path("/{orgName}/secret/{secretName}")
     @Produces(MediaType.APPLICATION_JSON)
     @WithTimer
+    @Deprecated
     public SecretEntry get(@PathParam("orgName") @ConcordKey String orgName,
                            @PathParam("secretName") @ConcordKey String secretName) {
 
@@ -238,6 +224,7 @@ public class SecretResource implements Resource {
     @Consumes(MediaType.MULTIPART_FORM_DATA)
     @Produces(MediaType.APPLICATION_OCTET_STREAM)
     @WithTimer
+    @Operation(description = "Get an existing secret's data", hidden = true)
     public Response getData(@PathParam("orgName") @ConcordKey String orgName,
                             @PathParam("secretName") @ConcordKey String secretName,
                             MultipartInput input) {
@@ -271,11 +258,11 @@ public class SecretResource implements Resource {
     }
 
     @GET
-//    @ApiOperation("Retrieves the public key of a key pair")
     @Path("/{orgName}/secret/{secretName}/public")
     @Produces(MediaType.APPLICATION_JSON)
     @Validate
     @WithTimer
+    @Operation(description = "Retrieves the public key of a key pair")
     public PublicKeyResponse getPublicKey(@PathParam("orgName") @ConcordKey String orgName,
                                           @PathParam("secretName") @ConcordKey String secretName) {
 
@@ -290,10 +277,10 @@ public class SecretResource implements Resource {
     }
 
     @GET
-//    @ApiOperation(value = "List secrets", responseContainer = "list", response = SecretEntry.class)
     @Path("/{orgName}/secret")
     @Produces(MediaType.APPLICATION_JSON)
     @Validate
+    @Deprecated
     public List<SecretEntry> list(@PathParam("orgName") @ConcordKey String orgName,
                                   @QueryParam("offset") int offset,
                                   @QueryParam("limit") int limit,
@@ -303,10 +290,10 @@ public class SecretResource implements Resource {
     }
 
     @DELETE
-//    @ApiOperation("Delete an existing secret")
     @Path("/{orgName}/secret/{secretName}")
     @Produces(MediaType.APPLICATION_JSON)
     @Validate
+    @Operation(description = "Delete an existing secret")
     public GenericOperationResult delete(@PathParam("orgName") @ConcordKey String orgName,
                                          @PathParam("secretName") @ConcordKey String secretName) {
 
@@ -316,11 +303,11 @@ public class SecretResource implements Resource {
     }
 
     @POST
-//    @ApiOperation("Updates the access level for the specified secret and team")
     @Path("/{orgName}/secret/{secretName}/access")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     @Validate
+    @Operation(description = "Updates the access level for the specified secret and team")
     public GenericOperationResult updateAccessLevel(@PathParam("orgName") @ConcordKey String orgName,
                                                     @PathParam("secretName") @ConcordKey String secretName,
                                                     @Valid ResourceAccessEntry entry) {
@@ -339,10 +326,10 @@ public class SecretResource implements Resource {
     }
 
     @GET
-//    @ApiOperation("Get secret team access")
     @Path("/{orgName}/secret/{secretName}/access")
     @Produces(MediaType.APPLICATION_JSON)
     @WithTimer
+    @Operation(description = "Get secret team access")
     public List<ResourceAccessEntry> getAccessLevel(@PathParam("orgName") @ConcordKey String orgName,
                                                     @PathParam("secretName") @ConcordKey String secretName) {
 
@@ -351,11 +338,11 @@ public class SecretResource implements Resource {
     }
 
     @POST
-//    @ApiOperation("Updates the access level for the specified secret and team")
     @Path("/{orgName}/secret/{secretName}/access/bulk")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     @Validate
+    @Operation(description = "Updates the access level for the specified secret and team")
     public GenericOperationResult updateAccessLevel(@PathParam("orgName") @ConcordKey String orgName,
                                                     @PathParam("secretName") @ConcordKey String secretName,
                                                     @Valid Collection<ResourceAccessEntry> entries) {

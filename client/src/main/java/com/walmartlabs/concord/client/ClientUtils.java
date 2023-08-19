@@ -20,6 +20,7 @@ package com.walmartlabs.concord.client;
  * =====
  */
 
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.google.gson.Gson;
 import com.squareup.okhttp.MediaType;
 import com.squareup.okhttp.*;
@@ -30,6 +31,9 @@ import com.walmartlabs.concord.ApiResponse;
 import com.walmartlabs.concord.Pair;
 import com.walmartlabs.concord.auth.Authentication;
 import com.walmartlabs.concord.client.auth.Authentication;
+import com.walmartlabs.concord.client.multipart.MultipartBodyBuilder;
+import com.walmartlabs.concord.client.multipart.MultipartBuilder;
+import com.walmartlabs.concord.client.multipart.MultipartFormBodyBuilder;
 import okio.BufferedSink;
 import okio.Okio;
 import okio.Source;
@@ -39,6 +43,9 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.Type;
+import java.net.URI;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
@@ -122,13 +129,58 @@ public final class ClientUtils {
         return postData(client, path, data, headerParams, returnType);
     }
 
-    public static <T> ApiResponse<T> postData(ApiClient client, String path, Object data, Map<String, String> headerParams, Type returnType) throws ApiException {
-        Set<String> auths = client.getAuthentications().keySet();
-        String[] authNames = auths.toArray(new String[0]);
+    public static <T> ApiResponse<T> postData(ApiClient client, String path, Object data, Map<String, String> headerParams, Class<T> returnType) throws ApiException {
+
+        HttpRequest.Builder req =  HttpRequest.newBuilder()
+                .uri(URI.create(client.getBaseUri() + path))
+                .POST();
+
 
         Call call = client.buildCall(path, "POST", new ArrayList<>(), new ArrayList<>(),
                 data, headerParams, new HashMap<>(), authNames, null);
         return client.execute(call, returnType);
+    }
+
+    private static <T> ApiResponse<T> execute(ApiClient client, String path, HttpRequest.Builder req, Class<T> returnType) throws ApiException {
+        client.getAuth().applyTo(req);
+
+        try {
+            HttpResponse<InputStream> response = client.getHttpClient().send(
+                    req.build(),
+                    HttpResponse.BodyHandlers.ofInputStream());
+
+            if (response.statusCode() / 100 != 2) {
+                throw getApiException(path, response);
+            }
+
+            try (InputStream is = response.body()) {
+                return new ApiResponse<>(
+                        response.statusCode(),
+                        response.headers().map(),
+                        is == null ? null : client.getObjectMapper().readValue(is, returnType)
+                );
+            }
+        } catch (IOException e) {
+            throw new ApiException(e);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new ApiException(e);
+        }
+    }
+
+    private static ApiException getApiException(String operationId, HttpResponse<InputStream> response) throws IOException {
+        try (InputStream is = response.body()) {
+            String body = is == null ? null : new String(is.readAllBytes());
+            String message = formatExceptionMessage(operationId, response.statusCode(), body);
+            return new ApiException(response.statusCode(), message, response.headers(), body);
+        }
+    }
+
+    private static String formatExceptionMessage(String operationId, int statusCode, String body) {
+        if (body == null || body.isEmpty()) {
+            body = "[no body]";
+        }
+        return operationId + " call failed with: " + statusCode + " - " + body;
     }
 
     public static <T> ApiResponse<T> postData(ApiClient client, String path, Map<String, Object> data, Class<T> returnType) throws ApiException {
@@ -155,12 +207,12 @@ public final class ClientUtils {
     }
 
     public static MultipartBuilder createMultipartBody(Map<String, Object> data) {
-        MultipartBuilder b = new MultipartBuilder().type(MultipartBuilder.FORM);
+        MultipartFormBodyBuilder b = new MultipartFormBodyBuilder();
         for (Map.Entry<String, Object> e : data.entrySet()) {
             String k = e.getKey();
             Object v = e.getValue();
             if (v instanceof InputStream) {
-                b.addFormDataPart(k, null, new InputStreamRequestBody((InputStream) v));
+                b.addPart(k, new InputStreamRequestBody((InputStream) v));
             } else if (v instanceof byte[]) {
                 b.addFormDataPart(k, null, RequestBody.create(APPLICATION_OCTET_STREAM_TYPE, (byte[]) v));
             } else if (v instanceof String) {

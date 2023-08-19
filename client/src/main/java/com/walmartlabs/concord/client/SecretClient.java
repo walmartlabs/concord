@@ -20,7 +20,6 @@ package com.walmartlabs.concord.client;
  * =====
  */
 
-import com.google.gson.reflect.TypeToken;
 import com.walmartlabs.concord.ApiClient;
 import com.walmartlabs.concord.ApiException;
 import com.walmartlabs.concord.ApiResponse;
@@ -60,7 +59,7 @@ public class SecretClient {
     /**
      * Fetches a decrypted Concord secret from the server.
      */
-    public <T extends Secret> T getData(String orgName, String secretName, String password, SecretEntry.TypeEnum expectedType) throws Exception {
+    public <T extends Secret> T getData(String orgName, String secretName, String password, SecretEntryV2.TypeEnum expectedType) throws Exception {
         String path = "/api/v1/org/" + orgName + "/secret/" + secretName + "/data";
 
         ApiResponse<File> r = null;
@@ -85,13 +84,13 @@ public class SecretClient {
                 throw new IllegalStateException("Can't determine the secret's expectedType. Server response: code=" + r.getStatusCode() + ", path=" + path);
             }
 
-            SecretEntry.TypeEnum actualSecretType = SecretEntry.TypeEnum.valueOf(secretType);
+            SecretEntryV2.TypeEnum actualSecretType = SecretEntryV2.TypeEnum.valueOf(secretType);
 
             if (expectedType != null && expectedType != actualSecretType) {
                 String msg = "Unexpected type of %s/%s. Expected %s, got %s. " +
                         "Check the secret's expectedType and its usage - some secrets can only be used for specific purposes " +
                         "(e.g. %s is typically used for key-based authentication).";
-                throw new IllegalArgumentException(String.format(msg, orgName, secretName, expectedType, actualSecretType, SecretEntry.TypeEnum.KEY_PAIR));
+                throw new IllegalArgumentException(String.format(msg, orgName, secretName, expectedType, actualSecretType, SecretEntryV2.TypeEnum.KEY_PAIR));
             }
 
             return readSecret(actualSecretType, Files.readAllBytes(r.getData().toPath()));
@@ -185,7 +184,7 @@ public class SecretClient {
             params.put(Constants.Multipart.STORE_PASSWORD, secretRequest.storePassword());
         }
 
-        SecretEntry.VisibilityEnum visibility = secretRequest.visibility();
+        SecretEntryV2.VisibilityEnum visibility = secretRequest.visibility();
         if (visibility != null) {
             params.put(Constants.Multipart.VISIBILITY, visibility.getValue());
         }
@@ -202,14 +201,14 @@ public class SecretClient {
         CreateSecretRequestV2.UsernamePassword usernamePassword = secretRequest.usernamePassword();
 
         if (data != null) {
-            params.put(Constants.Multipart.TYPE, SecretEntry.TypeEnum.DATA.getValue());
+            params.put(Constants.Multipart.TYPE, SecretEntryV2.TypeEnum.DATA.getValue());
             params.put(Constants.Multipart.DATA, data);
         } else if (keyPair != null) {
-            params.put(Constants.Multipart.TYPE, SecretEntry.TypeEnum.KEY_PAIR.getValue());
+            params.put(Constants.Multipart.TYPE, SecretEntryV2.TypeEnum.KEY_PAIR.getValue());
             params.put(Constants.Multipart.PUBLIC, readFile(keyPair.publicKey()));
             params.put(Constants.Multipart.PRIVATE, readFile(keyPair.privateKey()));
         } else if (usernamePassword != null) {
-            params.put(Constants.Multipart.TYPE, SecretEntry.TypeEnum.USERNAME_PASSWORD.getValue());
+            params.put(Constants.Multipart.TYPE, SecretEntryV2.TypeEnum.USERNAME_PASSWORD.getValue());
             params.put(Constants.Multipart.USERNAME, usernamePassword.username());
             params.put(Constants.Multipart.PASSWORD, usernamePassword.password());
         } else {
@@ -264,14 +263,14 @@ public class SecretClient {
         CreateSecretRequest.UsernamePassword usernamePassword = request.usernamePassword();
 
         if (data != null) {
-            params.put(Constants.Multipart.TYPE, SecretEntry.TypeEnum.DATA.getValue());
+            params.put(Constants.Multipart.TYPE, SecretEntryV2.TypeEnum.DATA.getValue());
             params.put(Constants.Multipart.DATA, data);
         } else if (keyPair != null) {
-            params.put(Constants.Multipart.TYPE, SecretEntry.TypeEnum.KEY_PAIR.getValue());
+            params.put(Constants.Multipart.TYPE, SecretEntryV2.TypeEnum.KEY_PAIR.getValue());
             params.put(Constants.Multipart.PUBLIC, readFile(keyPair.publicKey()));
             params.put(Constants.Multipart.PRIVATE, readFile(keyPair.privateKey()));
         } else if (usernamePassword != null) {
-            params.put(Constants.Multipart.TYPE, SecretEntry.TypeEnum.USERNAME_PASSWORD.getValue());
+            params.put(Constants.Multipart.TYPE, SecretEntryV2.TypeEnum.USERNAME_PASSWORD.getValue());
             params.put(Constants.Multipart.USERNAME, usernamePassword.username());
             params.put(Constants.Multipart.PASSWORD, usernamePassword.password());
         }
@@ -299,7 +298,7 @@ public class SecretClient {
     }
 
     @SuppressWarnings("unchecked")
-    private static <T> T readSecret(SecretEntry.TypeEnum type, byte[] bytes) {
+    private static <T> T readSecret(SecretEntryV2.TypeEnum type, byte[] bytes) {
         switch (type) {
             case DATA:
                 return (T) new BinaryDataSecret(bytes);

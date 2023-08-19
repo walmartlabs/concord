@@ -37,7 +37,9 @@ import com.walmartlabs.concord.server.security.Permission;
 import com.walmartlabs.concord.server.security.Roles;
 import com.walmartlabs.concord.server.security.UserPrincipal;
 import com.walmartlabs.concord.server.user.UserDao;
+import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.sonatype.siesta.Resource;
@@ -61,8 +63,8 @@ import static com.walmartlabs.concord.server.Utils.unwrap;
 
 @Named
 @Singleton
-//@Api(value = "ProcessV2", authorizations = {@Authorization("api_key"), @Authorization("session_key"), @Authorization("ldap")})
 @Path("/api/v2/process")
+@Tag(name = "ProcessV2")
 public class ProcessResourceV2 implements Resource {
 
     private static final Logger log = LoggerFactory.getLogger(ProcessResourceV2.class);
@@ -97,12 +99,12 @@ public class ProcessResourceV2 implements Resource {
      * Returns a process instance's details.
      */
     @GET
-//    @ApiOperation("Get a process' details")
     @Path("/{id}")
     @Produces(MediaType.APPLICATION_JSON)
     @WithTimer
-    public ProcessEntry get(@Parameter @PathParam("id") UUID instanceId,
-                            @Parameter @QueryParam("include") Set<ProcessDataInclude> includes) {
+    @Operation(description = "Get a process' details", operationId = "getProcess")
+    public ProcessEntry get(@PathParam("id") UUID instanceId,
+                            @QueryParam("include") Set<ProcessDataInclude> includes) {
 
         PartialProcessKey processKey = PartialProcessKey.from(instanceId);
 
@@ -123,24 +125,24 @@ public class ProcessResourceV2 implements Resource {
      * Returns a list of processes applying the specified filters.
      */
     @GET
-//    @ApiOperation(value = "List processes", responseContainer = "list", response = ProcessEntry.class)
     @Produces(MediaType.APPLICATION_JSON)
     @WithTimer
-    public List<ProcessEntry> list(@Parameter @QueryParam("orgId") UUID orgId,
-                                   @Parameter @QueryParam("orgName") String orgName,
-                                   @Parameter @QueryParam("projectId") UUID projectId,
-                                   @Parameter @QueryParam("projectName") String projectName,
-                                   @Parameter @QueryParam("repoId") UUID repoId,
-                                   @Parameter @QueryParam("repoName") String repoName,
-                                   @Parameter @QueryParam("afterCreatedAt") OffsetDateTimeParam afterCreatedAt,
-                                   @Parameter @QueryParam("beforeCreatedAt") OffsetDateTimeParam beforeCreatedAt,
-                                   @Parameter @QueryParam("tags") Set<String> tags,
-                                   @Parameter @QueryParam("status") ProcessStatus processStatus,
-                                   @Parameter @QueryParam("initiator") String initiator,
-                                   @Parameter @QueryParam("parentInstanceId") UUID parentId,
-                                   @Parameter @QueryParam("include") Set<ProcessDataInclude> processData,
-                                   @Parameter @QueryParam("limit") @DefaultValue("30") int limit,
-                                   @Parameter @QueryParam("offset") @DefaultValue("0") int offset,
+    @Operation(description = "List processes", operationId = "listProcesses")
+    public List<ProcessEntry> list(@QueryParam("orgId") UUID orgId,
+                                   @QueryParam("orgName") String orgName,
+                                   @QueryParam("projectId") UUID projectId,
+                                   @QueryParam("projectName") String projectName,
+                                   @QueryParam("repoId") UUID repoId,
+                                   @QueryParam("repoName") String repoName,
+                                   @QueryParam("afterCreatedAt") OffsetDateTimeParam afterCreatedAt,
+                                   @QueryParam("beforeCreatedAt") OffsetDateTimeParam beforeCreatedAt,
+                                   @QueryParam("tags") Set<String> tags,
+                                   @QueryParam("status") ProcessStatus processStatus,
+                                   @QueryParam("initiator") String initiator,
+                                   @QueryParam("parentInstanceId") UUID parentId,
+                                   @QueryParam("include") Set<ProcessDataInclude> processData,
+                                   @QueryParam("limit") @DefaultValue("30") int limit,
+                                   @QueryParam("offset") @DefaultValue("0") int offset,
                                    @Context UriInfo uriInfo) {
 
         if (limit <= 0) {
@@ -158,13 +160,13 @@ public class ProcessResourceV2 implements Resource {
     }
 
     @GET
-//    @ApiOperation(value = "List process requirements")
     @Path("/requirements")
     @Produces(MediaType.APPLICATION_JSON)
     @WithTimer
-    public List<ProcessRequirementsEntry> listRequirements(@Parameter @QueryParam("status") ProcessStatus processStatus,
-                                                           @Parameter @QueryParam("limit") @DefaultValue("30") int limit,
-                                                           @Parameter @QueryParam("offset") @DefaultValue("0") int offset,
+    @Operation(description = "List process requirements")
+    public List<ProcessRequirementsEntry> listRequirements(@QueryParam("status") ProcessStatus processStatus,
+                                                           @QueryParam("limit") @DefaultValue("30") int limit,
+                                                           @QueryParam("offset") @DefaultValue("0") int offset,
                                                            @Context UriInfo uriInfo) {
 
         if (limit <= 0) {
@@ -187,22 +189,22 @@ public class ProcessResourceV2 implements Resource {
      * Counts processes applying the specified filters.
      */
     @GET
-//    @ApiOperation(value = "Count processes")
     @Path("/count")
     @Produces(MediaType.APPLICATION_JSON)
     @WithTimer
-    public int count(@Parameter @QueryParam("orgId") UUID orgId,
-                     @Parameter @QueryParam("orgName") String orgName,
-                     @Parameter @QueryParam("projectId") UUID projectId,
-                     @Parameter @QueryParam("projectName") String projectName,
-                     @Parameter @QueryParam("repoId") UUID repoId,
-                     @Parameter @QueryParam("repoName") String repoName,
-                     @Parameter @QueryParam("afterCreatedAt") OffsetDateTimeParam afterCreatedAt,
-                     @Parameter @QueryParam("beforeCreatedAt") OffsetDateTimeParam beforeCreatedAt,
-                     @Parameter @QueryParam("tags") Set<String> tags,
-                     @Parameter @QueryParam("status") ProcessStatus processStatus,
-                     @Parameter @QueryParam("initiator") String initiator,
-                     @Parameter @QueryParam("parentInstanceId") UUID parentId,
+    @Operation(description = "Count processes", operationId = "countProcesses")
+    public int count(@QueryParam("orgId") UUID orgId,
+                     @QueryParam("orgName") String orgName,
+                     @QueryParam("projectId") UUID projectId,
+                     @QueryParam("projectName") String projectName,
+                     @QueryParam("repoId") UUID repoId,
+                     @QueryParam("repoName") String repoName,
+                     @QueryParam("afterCreatedAt") OffsetDateTimeParam afterCreatedAt,
+                     @QueryParam("beforeCreatedAt") OffsetDateTimeParam beforeCreatedAt,
+                     @QueryParam("tags") Set<String> tags,
+                     @QueryParam("status") ProcessStatus processStatus,
+                     @QueryParam("initiator") String initiator,
+                     @QueryParam("parentInstanceId") UUID parentId,
                      @Context UriInfo uriInfo) {
 
         ProcessFilter filter = createProcessFilter(orgId, orgName, projectId, projectName, repoId, repoName,

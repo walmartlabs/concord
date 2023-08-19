@@ -24,6 +24,7 @@ package com.walmartlabs.concord.client;
 import org.immutables.value.Value;
 
 import javax.annotation.Nullable;
+import java.io.Serializable;
 import java.nio.file.Path;
 
 @Value.Immutable
@@ -43,7 +44,7 @@ public interface CreateSecretRequest {
     String storePassword();
 
     @Nullable
-    SecretEntry.VisibilityEnum visibility();
+    SecretEntryV2.VisibilityEnum visibility();
 
     @Nullable
     String project();
@@ -63,7 +64,7 @@ public interface CreateSecretRequest {
 
     @Value.Immutable
     @Value.Style(jdkOnly = true)
-    interface KeyPair {
+    interface KeyPair extends Serializable {
 
         long serialVersionUID = 1L;
 
@@ -78,7 +79,7 @@ public interface CreateSecretRequest {
 
     @Value.Immutable
     @Value.Style(jdkOnly = true)
-    interface UsernamePassword {
+    interface UsernamePassword extends Serializable{
 
         long serialVersionUID = 1L;
 

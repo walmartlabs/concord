@@ -362,9 +362,7 @@ public class {{classname}} {
     {{#hasQueryParams}}
     {{javaUtilPrefix}}List<Pair> localVarQueryParams = new {{javaUtilPrefix}}ArrayList<>();
     {{javaUtilPrefix}}StringJoiner localVarQueryStringJoiner = new {{javaUtilPrefix}}StringJoiner("&");
-    String localVarQueryParameterBaseName;
     {{#queryParams}}
-    localVarQueryParameterBaseName = "{{{baseName}}}";
       {{#collectionFormat}}
     localVarQueryParams.addAll(ApiClient.parameterToPairs("{{{collectionFormat}}}", "{{baseName}}", {{paramName}}));
       {{/collectionFormat}}

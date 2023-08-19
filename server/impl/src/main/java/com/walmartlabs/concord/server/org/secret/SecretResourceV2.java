@@ -32,7 +32,10 @@ import com.walmartlabs.concord.server.org.ResourceAccessLevel;
 import com.walmartlabs.concord.server.org.project.ProjectDao;
 import com.walmartlabs.concord.server.sdk.ConcordApplicationException;
 import com.walmartlabs.concord.server.sdk.metrics.WithTimer;
+import io.swagger.v3.oas.annotations.OpenAPIDefinition;
+import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.jboss.resteasy.plugins.providers.multipart.MultipartInput;
 import org.sonatype.siesta.Resource;
 import org.sonatype.siesta.Validate;
@@ -50,8 +53,8 @@ import java.util.stream.Collectors;
 
 @Named
 @Singleton
-//@Api(value = "SecretsV2", authorizations = {@Authorization("api_key"), @Authorization("session_key"), @Authorization("ldap")})
 @Path("/api/v2/org")
+@Tag(name = "SecretsV2")
 public class SecretResourceV2 implements Resource {
 
     private final OrganizationManager orgManager;
@@ -70,12 +73,12 @@ public class SecretResourceV2 implements Resource {
     }
 
     @GET
-//    @ApiOperation("Get an existing secret")
     @Path("/{orgName}/secret/{secretName}")
     @Produces(MediaType.APPLICATION_JSON)
     @WithTimer
-    public SecretEntryV2 get(@Parameter @PathParam("orgName") @ConcordKey String orgName,
-                             @Parameter @PathParam("secretName") @ConcordKey String secretName) {
+    @Operation(description = "Get an existing secret")
+    public SecretEntryV2 get(@PathParam("orgName") @ConcordKey String orgName,
+                             @PathParam("secretName") @ConcordKey String secretName) {
 
         OrganizationEntry org = orgManager.assertAccess(orgName, false);
         return secretManager.assertAccess(org.getId(), null, secretName, ResourceAccessLevel.READER, false);
@@ -83,11 +86,11 @@ public class SecretResourceV2 implements Resource {
 
 
     @GET
-//    @ApiOperation(value = "List secrets", responseContainer = "list", response = SecretEntry.class)
     @Path("/{orgName}/secret")
     @Produces(MediaType.APPLICATION_JSON)
     @Validate
-    public List<SecretEntryV2> list(@Parameter @PathParam("orgName") @ConcordKey String orgName,
+    @Operation(description = "List secrets", operationId = "listSecrets")
+    public List<SecretEntryV2> list(@PathParam("orgName") @ConcordKey String orgName,
                                     @QueryParam("offset") int offset,
                                     @QueryParam("limit") int limit,
                                     @QueryParam("filter") String filter) {
@@ -95,16 +98,15 @@ public class SecretResourceV2 implements Resource {
         return secretManager.list(org.getId(), offset, limit, filter);
     }
 
-
     @POST
-//    @ApiOperation(value = "Updates an existing secret", hidden = true)
     @Path("/{orgName}/secret/{secretName}")
     @Consumes(MediaType.MULTIPART_FORM_DATA)
     @Produces(MediaType.APPLICATION_JSON)
     @Validate
-    public GenericOperationResult update(@Parameter @PathParam("orgName") @ConcordKey String orgName,
-                                         @Parameter @PathParam("secretName") @ConcordKey String secretName,
-                                         @Parameter MultipartInput input) {
+    @Operation(description = "Updates an existing secret", hidden = true)
+    public GenericOperationResult update(@PathParam("orgName") @ConcordKey String orgName,
+                                         @PathParam("secretName") @ConcordKey String secretName,
+                                         MultipartInput input) {
 
         OrganizationEntry org = orgManager.assertAccess(orgName, true);
         Set<UUID> projectIds = getProjectIds(
