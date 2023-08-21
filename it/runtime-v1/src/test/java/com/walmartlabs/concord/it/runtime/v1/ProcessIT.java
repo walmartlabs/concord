@@ -122,7 +122,7 @@ public class ProcessIT {
 
         proc.expectStatus(StatusEnum.FAILED);
 
-        proc.assertLog(".*gaaarbage.*");
+        proc.assertLogAtLeast(".*gaaarbage.*", 1);
     }
 
     @Test
