@@ -318,7 +318,7 @@
 //    public void testGroupVars() throws Exception {
 //        String orgName = "org_" + randomString();
 //        OrganizationsApi orgApi = new OrganizationsApi(getApiClient());
-//        orgApi.createOrUpdate(new OrganizationEntry().setName(orgName));
+//        orgApi.createOrUpdateProject(new OrganizationEntry().setName(orgName));
 //
 //        // ---
 //

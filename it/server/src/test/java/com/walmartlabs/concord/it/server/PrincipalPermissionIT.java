@@ -48,9 +48,9 @@
 //        String text = "select item_path from inventory_data where item_path like '%/testPath'";
 //
 //        InventoriesApi inventoryResource = new InventoriesApi(getApiClient());
-//        inventoryResource.createOrUpdate(orgName, new InventoryEntry().setName(inventoryName));
+//        inventoryResource.createOrUpdateProject(orgName, new InventoryEntry().setName(inventoryName));
 //
-//        CreateInventoryQueryResponse cqr = resource.createOrUpdate(orgName, inventoryName, queryName, text);
+//        CreateInventoryQueryResponse cqr = resource.createOrUpdateProject(orgName, inventoryName, queryName, text);
 //        assertTrue(cqr.isOk());
 //        assertNotNull(cqr.getId());
 //

@@ -119,7 +119,7 @@ public class ProcessIT extends AbstractServerIT {
         String projectName = "project_" + randomString();
 
         ProjectsApi projectsApi = new ProjectsApi(getApiClient());
-        ProjectOperationResponse por1 = projectsApi.createOrUpdate(orgName, new ProjectEntry()
+        ProjectOperationResponse por1 = projectsApi.createOrUpdateProject(orgName, new ProjectEntry()
                 .name(projectName)
                 .rawPayloadMode(ProjectEntry.RawPayloadModeEnum.EVERYONE));
 
@@ -142,7 +142,7 @@ public class ProcessIT extends AbstractServerIT {
         // ---
 
         String anotherProjectName = "another_" + randomString();
-        ProjectOperationResponse por2 = projectsApi.createOrUpdate(orgName, new ProjectEntry()
+        ProjectOperationResponse por2 = projectsApi.createOrUpdateProject(orgName, new ProjectEntry()
                 .name(anotherProjectName));
 
         ProcessV2Api processV2Api = new ProcessV2Api(getApiClient());
@@ -200,14 +200,14 @@ public class ProcessIT extends AbstractServerIT {
         String projectName = "project_" + randomString();
 
         ProjectsApi projectsApi = new ProjectsApi(getApiClient());
-        ProjectOperationResponse por = projectsApi.createOrUpdate(orgName, new ProjectEntry()
+        ProjectOperationResponse por = projectsApi.createOrUpdateProject(orgName, new ProjectEntry()
                 .name(projectName)
                 .visibility(ProjectEntry.VisibilityEnum.PRIVATE)
                 .rawPayloadMode(ProjectEntry.RawPayloadModeEnum.EVERYONE));
 
         // grant the team access to the project
 
-        projectsApi.updateAccessLevel(orgName, projectName, new ResourceAccessEntry()
+        projectsApi.updateProjectAccessLevel(orgName, projectName, new ResourceAccessEntry()
                 .teamId(ctr.getId())
                 .orgName(orgName)
                 .teamName(teamName)

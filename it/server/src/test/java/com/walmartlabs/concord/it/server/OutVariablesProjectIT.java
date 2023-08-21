@@ -41,7 +41,7 @@ public class OutVariablesProjectIT extends AbstractServerIT {
 
         String orgName = "Default";
         String projectName = "project_" + System.currentTimeMillis();
-        projectsApi.createOrUpdate(orgName, new ProjectEntry()
+        projectsApi.createOrUpdateProject(orgName, new ProjectEntry()
                 .acceptsRawPayload(true)
                 .outVariablesMode(ProjectEntry.OutVariablesModeEnum.EVERYONE)
                 .name(projectName));
@@ -72,7 +72,7 @@ public class OutVariablesProjectIT extends AbstractServerIT {
 
         String orgName = "Default";
         String projectName = "project_" + System.currentTimeMillis();
-        projectsApi.createOrUpdate(orgName, new ProjectEntry()
+        projectsApi.createOrUpdateProject(orgName, new ProjectEntry()
                 .acceptsRawPayload(true)
                 .name(projectName));
 
@@ -99,7 +99,7 @@ public class OutVariablesProjectIT extends AbstractServerIT {
 
         String orgName = "Default";
         String projectName = "project_" + System.currentTimeMillis();
-        projectsApi.createOrUpdate(orgName, new ProjectEntry()
+        projectsApi.createOrUpdateProject(orgName, new ProjectEntry()
                 .acceptsRawPayload(true)
                 .name(projectName));
 

@@ -96,13 +96,13 @@ public class AttachmentRbacIT extends AbstractServerIT {
         String projectName = "project_" + randomString();
 
         ProjectsApi projectsApi = new ProjectsApi(getApiClient());
-        projectsApi.createOrUpdate(orgName, new ProjectEntry()
+        projectsApi.createOrUpdateProject(orgName, new ProjectEntry()
                 .name(projectName)
                 .visibility(ProjectEntry.VisibilityEnum.PUBLIC)
                 .rawPayloadMode(ProjectEntry.RawPayloadModeEnum.EVERYONE));
 
         // grant the team access to the project
-        projectsApi.updateAccessLevel(orgName, projectName, new ResourceAccessEntry()
+        projectsApi.updateProjectAccessLevel(orgName, projectName, new ResourceAccessEntry()
                 .teamId(ctr.getId())
                 .orgName(orgName)
                 .teamName(teamName)
@@ -134,7 +134,7 @@ public class AttachmentRbacIT extends AbstractServerIT {
 
         setApiKey(apiKeyA.getKey());
 
-        ProjectEntry projectEntry = projectsApi.get(orgName, projectName);
+        ProjectEntry projectEntry = projectsApi.getProject(orgName, projectName);
 
         // Update userC as owner
         EntityOwner projectOwner = projectEntry.getOwner();
@@ -147,7 +147,7 @@ public class AttachmentRbacIT extends AbstractServerIT {
                 .displayName(projectOwner.getDisplayName());
 
         projectEntry.setOwner(entityOwner);
-        projectsApi.createOrUpdate(orgName, projectEntry);
+        projectsApi.createOrUpdateProject(orgName, projectEntry);
 
         log.info("The admin shall be able to list attachments");
         // Admin shall be also able to list the attachments

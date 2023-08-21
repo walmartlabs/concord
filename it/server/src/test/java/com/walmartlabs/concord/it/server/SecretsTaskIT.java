@@ -42,9 +42,9 @@ SecretsTaskIT extends AbstractServerIT {
         String projectName1 = "project_"+ randomString();
         String projectName2 = "project_" + randomString();
 
-        projectsApi.createOrUpdate(orgName, new ProjectEntry()
+        projectsApi.createOrUpdateProject(orgName, new ProjectEntry()
                 .name(projectName2).rawPayloadMode(ProjectEntry.RawPayloadModeEnum.EVERYONE));
-        projectsApi.createOrUpdate(orgName, new ProjectEntry()
+        projectsApi.createOrUpdateProject(orgName, new ProjectEntry()
                 .name(projectName1).rawPayloadMode(ProjectEntry.RawPayloadModeEnum.EVERYONE));
 
         String secretName = "secret_" + randomString();

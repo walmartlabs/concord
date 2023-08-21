@@ -96,7 +96,7 @@
 //        String orgName = "org_" + randomString();
 //        OrganizationsApi orgApi = new OrganizationsApi(getApiClient());
 //        try {
-//            orgApi.createOrUpdate(new OrganizationEntry().setName(orgName));
+//            orgApi.createOrUpdateProject(new OrganizationEntry().setName(orgName));
 //            consumer.accept(orgName);
 //        } finally {
 //            orgApi.delete(orgName, "yes");
@@ -107,7 +107,7 @@
 //        String projectName = "project_" + randomString();
 //        ProjectsApi projectsApi = new ProjectsApi(getApiClient());
 //        try {
-//            projectsApi.createOrUpdate(orgName, new ProjectEntry()
+//            projectsApi.createOrUpdateProject(orgName, new ProjectEntry()
 //                    .setName(projectName)
 //                    .setRawPayloadMode(ProjectEntry.RawPayloadModeEnum.EVERYONE));
 //            consumer.accept(projectName);
@@ -120,7 +120,7 @@
 //        String storageName = "storage_" + randomString();
 //        JsonStoreApi storageApi = new JsonStoreApi(getApiClient());
 //        try {
-//            storageApi.createOrUpdate(orgName, new JsonStoreRequest()
+//            storageApi.createOrUpdateProject(orgName, new JsonStoreRequest()
 //                    .setName(storageName)
 //                    .setVisibility(JsonStoreRequest.VisibilityEnum.PUBLIC));
 //            consumer.accept(storageName);

@@ -66,7 +66,7 @@ public class TemplateIT extends AbstractServerIT {
         ProjectsApi projectsApi = new ProjectsApi(getApiClient());
         Map<String, Object> cfg = new HashMap<>();
         cfg.put(Constants.Request.TEMPLATE_KEY, templateAlias);
-        projectsApi.createOrUpdate(orgName, new ProjectEntry()
+        projectsApi.createOrUpdateProject(orgName, new ProjectEntry()
                 .name(projectName)
                 .cfg(cfg)
                 .rawPayloadMode(ProjectEntry.RawPayloadModeEnum.EVERYONE));
@@ -113,7 +113,7 @@ public class TemplateIT extends AbstractServerIT {
         ProjectsApi projectsApi = new ProjectsApi(getApiClient());
         Map<String, Object> cfg = new HashMap<>();
         cfg.put(Constants.Request.TEMPLATE_KEY, templateAlias);
-        projectsApi.createOrUpdate(orgName, new ProjectEntry()
+        projectsApi.createOrUpdateProject(orgName, new ProjectEntry()
                 .name(projectName)
                 .cfg(cfg)
                 .rawPayloadMode(ProjectEntry.RawPayloadModeEnum.EVERYONE));
@@ -174,7 +174,7 @@ public class TemplateIT extends AbstractServerIT {
         organizationsApi.createOrUpdateOrg(new OrganizationEntry().name(orgName));
 
         ProjectsApi projectsApi = new ProjectsApi(getApiClient());
-        projectsApi.createOrUpdate(orgName, new ProjectEntry()
+        projectsApi.createOrUpdateProject(orgName, new ProjectEntry()
                 .name(projectName)
                 .repositories(Collections.singletonMap(repoName, new RepositoryEntry()
                         .url(gitUrl)

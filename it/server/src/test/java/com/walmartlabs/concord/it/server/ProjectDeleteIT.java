@@ -40,7 +40,7 @@ public class ProjectDeleteIT extends AbstractServerIT {
         String projectName = "project_" + randomString();
 
         ProjectsApi projectsApi = new ProjectsApi(getApiClient());
-        ProjectOperationResponse cpr = projectsApi.createOrUpdate(orgName, new ProjectEntry()
+        ProjectOperationResponse cpr = projectsApi.createOrUpdateProject(orgName, new ProjectEntry()
                 .name(projectName)
                 .rawPayloadMode(ProjectEntry.RawPayloadModeEnum.EVERYONE));
         assertTrue(cpr.getOk());
@@ -67,7 +67,7 @@ public class ProjectDeleteIT extends AbstractServerIT {
         assertTrue(dpr.getOk());
 
         try {
-            projectsApi.get(orgName, projectName);
+            projectsApi.getProject(orgName, projectName);
             fail("Should fail");
         } catch (ApiException e) {
         }

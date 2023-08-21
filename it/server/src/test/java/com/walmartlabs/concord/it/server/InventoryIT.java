@@ -40,7 +40,7 @@
 //
 //        String projectName = "project_" + randomString();
 //        ProjectsApi projectsApi = new ProjectsApi(getApiClient());
-//        projectsApi.createOrUpdate(orgName, new ProjectEntry()
+//        projectsApi.createOrUpdateProject(orgName, new ProjectEntry()
 //                .name(projectName)
 //                .rawPayloadMode(ProjectEntry.RawPayloadModeEnum.EVERYONE));
 //
@@ -52,7 +52,7 @@
 //
 //        String queryName = "query_" + randomString();
 //        InventoryQueriesApi queriesApi = new InventoryQueriesApi(getApiClient());
-//        queriesApi.createOrUpdate(orgName, inventoryName, queryName, "select cast(to_json(item_data) as varchar) from inventory_data where item_path like '%/testPath'");
+//        queriesApi.createOrUpdateProject(orgName, inventoryName, queryName, "select cast(to_json(item_data) as varchar) from inventory_data where item_path like '%/testPath'");
 //
 //        InventoryDataApi dataApi = new InventoryDataApi(getApiClient());
 //        dataApi.data(orgName, inventoryName, "/testPath", "{\"data\": \"testData\"}");

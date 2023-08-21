@@ -52,7 +52,7 @@ public class RequirementsIT extends AbstractServerIT {
         String projectName = "project_" + randomString();
 
         ProjectsApi projectsApi = new ProjectsApi(getApiClient());
-        projectsApi.createOrUpdate(orgName, new ProjectEntry()
+        projectsApi.createOrUpdateProject(orgName, new ProjectEntry()
                 .name(projectName)
                 .visibility(ProjectEntry.VisibilityEnum.PUBLIC)
                 .rawPayloadMode(ProjectEntry.RawPayloadModeEnum.EVERYONE));

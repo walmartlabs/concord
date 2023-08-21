@@ -85,7 +85,7 @@ public class TriggersRefreshIT extends AbstractServerIT {
                 .userType(TeamUserEntry.UserTypeEnum.LOCAL)));
 
         ProjectsApi projectsApi = new ProjectsApi(getApiClient());
-        projectsApi.createOrUpdate(orgName, new ProjectEntry()
+        projectsApi.createOrUpdateProject(orgName, new ProjectEntry()
                 .name(projectName)
                 .visibility(ProjectEntry.VisibilityEnum.PUBLIC)
                 .repositories(Collections.singletonMap(repoName, new RepositoryEntry()

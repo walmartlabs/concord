@@ -96,7 +96,7 @@ public class GitBranchesIT extends AbstractServerIT {
         assertEquals(SecretOperationResponse.ResultEnum.CREATED, sor.getResult());
 
         ProjectsApi projectsApi = new ProjectsApi(getApiClient());
-        projectsApi.createOrUpdate(orgName, new ProjectEntry()
+        projectsApi.createOrUpdateProject(orgName, new ProjectEntry()
                 .name(projectName)
                 .repositories(Collections.singletonMap(repoName, new RepositoryEntry()
                         .url(repoUrl)

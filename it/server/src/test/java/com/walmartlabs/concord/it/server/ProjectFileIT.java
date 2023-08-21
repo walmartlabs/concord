@@ -145,7 +145,7 @@ public class ProjectFileIT extends AbstractServerIT {
         generateKeyPair(orgName, secretName, false, null);
 
         ProjectsApi projectsApi = new ProjectsApi(getApiClient());
-        projectsApi.createOrUpdate(orgName, new ProjectEntry()
+        projectsApi.createOrUpdateProject(orgName, new ProjectEntry()
                 .name(projectName)
                 .rawPayloadMode(ProjectEntry.RawPayloadModeEnum.EVERYONE)
                 .repositories(Collections.singletonMap(repoName, new RepositoryEntry()

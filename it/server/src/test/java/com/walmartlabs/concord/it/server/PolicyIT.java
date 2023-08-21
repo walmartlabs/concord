@@ -39,17 +39,17 @@
 //    public void testCfg() throws Exception {
 //        String orgName = "org_" + randomString();
 //        OrganizationsApi organizationsApi = new OrganizationsApi(getApiClient());
-//        organizationsApi.createOrUpdate(new OrganizationEntry().setName(orgName));
+//        organizationsApi.createOrUpdateProject(new OrganizationEntry().setName(orgName));
 //
 //        String projectName = "project_" + randomString();
 //        ProjectsApi projectsApi = new ProjectsApi(getApiClient());
-//        projectsApi.createOrUpdate(orgName, new ProjectEntry()
+//        projectsApi.createOrUpdateProject(orgName, new ProjectEntry()
 //                .setName(projectName)
 //                .setRawPayloadMode(ProjectEntry.RawPayloadModeEnum.EVERYONE));
 //
 //        String policyName = "policy_" + randomString();
 //        PolicyApi policyApi = new PolicyApi(getApiClient());
-//        policyApi.createOrUpdate(new PolicyEntry()
+//        policyApi.createOrUpdateProject(new PolicyEntry()
 //                .setName(policyName)
 //                .setRules(singletonMap("processCfg",
 //                        singletonMap("arguments",
@@ -113,11 +113,11 @@
 //    public void testConcurrentProcess() throws Exception {
 //        String orgName = "org_" + randomString();
 //        OrganizationsApi organizationsApi = new OrganizationsApi(getApiClient());
-//        organizationsApi.createOrUpdate(new OrganizationEntry().setName(orgName));
+//        organizationsApi.createOrUpdateProject(new OrganizationEntry().setName(orgName));
 //
 //        String projectName = "project_" + randomString();
 //        ProjectsApi projectsApi = new ProjectsApi(getApiClient());
-//        projectsApi.createOrUpdate(orgName, new ProjectEntry()
+//        projectsApi.createOrUpdateProject(orgName, new ProjectEntry()
 //                .setName(projectName)
 //                .setRawPayloadMode(ProjectEntry.RawPayloadModeEnum.EVERYONE));
 //
@@ -127,7 +127,7 @@
 //        queueRules.put("concurrent", singletonMap("max", 1));
 //
 //        Map<String, Object> rules = singletonMap("queue", queueRules);
-//        policyApi.createOrUpdate(new PolicyEntry()
+//        policyApi.createOrUpdateProject(new PolicyEntry()
 //                .setName(policyName)
 //                .setRules(rules));
 //
@@ -170,11 +170,11 @@
 //    public void testConcurrentWithSuspendedProcess() throws Exception {
 //        String orgName = "org_" + randomString();
 //        OrganizationsApi organizationsApi = new OrganizationsApi(getApiClient());
-//        organizationsApi.createOrUpdate(new OrganizationEntry().setName(orgName));
+//        organizationsApi.createOrUpdateProject(new OrganizationEntry().setName(orgName));
 //
 //        String projectName = "project_" + randomString();
 //        ProjectsApi projectsApi = new ProjectsApi(getApiClient());
-//        projectsApi.createOrUpdate(orgName, new ProjectEntry()
+//        projectsApi.createOrUpdateProject(orgName, new ProjectEntry()
 //                .setName(projectName)
 //                .setRawPayloadMode(ProjectEntry.RawPayloadModeEnum.EVERYONE));
 //
@@ -184,7 +184,7 @@
 //        queueRules.put("concurrent", singletonMap("max", 1));
 //
 //        Map<String, Object> rules = singletonMap("queue", queueRules);
-//        policyApi.createOrUpdate(new PolicyEntry()
+//        policyApi.createOrUpdateProject(new PolicyEntry()
 //                .setName(policyName)
 //                .setRules(rules));
 //
@@ -258,7 +258,7 @@
 //        String orgName = "org_" + randomString();
 //
 //        OrganizationsApi organizationsApi = new OrganizationsApi(getApiClient());
-//        organizationsApi.createOrUpdate(new OrganizationEntry().setName(orgName));
+//        organizationsApi.createOrUpdateProject(new OrganizationEntry().setName(orgName));
 //
 //        return orgName;
 //    }
@@ -267,7 +267,7 @@
 //        String projectName = "project_" + randomString();
 //
 //        ProjectsApi projectsApi = new ProjectsApi(getApiClient());
-//        projectsApi.createOrUpdate(orgName, new ProjectEntry()
+//        projectsApi.createOrUpdateProject(orgName, new ProjectEntry()
 //                .setName(projectName)
 //                .setRawPayloadMode(ProjectEntry.RawPayloadModeEnum.EVERYONE));
 //
@@ -278,7 +278,7 @@
 //        String policyName = "policy_" + randomString();
 //
 //        PolicyApi policyApi = new PolicyApi(getApiClient());
-//        policyApi.createOrUpdate(new PolicyEntry()
+//        policyApi.createOrUpdateProject(new PolicyEntry()
 //                .setName(policyName)
 //                .setRules(rules));
 //

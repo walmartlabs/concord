@@ -87,11 +87,11 @@ public class TeamRbacIT extends AbstractServerIT {
 
         String projectAName = "projectA_" + randomString();
         ProjectsApi projectsApi = new ProjectsApi(getApiClient());
-        projectsApi.createOrUpdate(orgAName, new ProjectEntry().name(projectAName));
+        projectsApi.createOrUpdateProject(orgAName, new ProjectEntry().name(projectAName));
 
         try {
             String projectBName = "projectB_" + randomString();
-            projectsApi.createOrUpdate(orgBName, new ProjectEntry().name(projectBName));
+            projectsApi.createOrUpdateProject(orgBName, new ProjectEntry().name(projectBName));
             fail("should fail");
         } catch (ApiException e) {
         }
@@ -100,7 +100,7 @@ public class TeamRbacIT extends AbstractServerIT {
 
         projectsApi = new ProjectsApi(getApiClient());
         String projectBName = "projectB_" + randomString();
-        projectsApi.createOrUpdate(orgBName, new ProjectEntry().name(projectBName));
+        projectsApi.createOrUpdateProject(orgBName, new ProjectEntry().name(projectBName));
     }
 
     @Test
@@ -361,7 +361,7 @@ public class TeamRbacIT extends AbstractServerIT {
 
         String projectName = "projectA_" + randomString();
         try {
-            projectsApi.createOrUpdate(orgName, new ProjectEntry().name(projectName));
+            projectsApi.createOrUpdateProject(orgName, new ProjectEntry().name(projectName));
             fail("should fail");
         } catch (ApiException e) {
         }
@@ -376,14 +376,14 @@ public class TeamRbacIT extends AbstractServerIT {
         // ---
 
         setApiKey(apiKeyA.getKey());
-        projectsApi.createOrUpdate(orgName, new ProjectEntry().name(projectName));
+        projectsApi.createOrUpdateProject(orgName, new ProjectEntry().name(projectName));
 
         // ---
 
         setApiKey(apiKeyB.getKey());
 
         try {
-            projectsApi.createOrUpdate(orgName, new ProjectEntry()
+            projectsApi.createOrUpdateProject(orgName, new ProjectEntry()
                     .name(projectName)
                     .description("new description")
                     .rawPayloadMode(ProjectEntry.RawPayloadModeEnum.EVERYONE));
@@ -394,7 +394,7 @@ public class TeamRbacIT extends AbstractServerIT {
         // ---
 
         setApiKey(apiKeyA.getKey());
-        projectsApi.createOrUpdate(orgName, new ProjectEntry()
+        projectsApi.createOrUpdateProject(orgName, new ProjectEntry()
                 .name(projectName)
                 .description("new description")
                 .rawPayloadMode(ProjectEntry.RawPayloadModeEnum.EVERYONE));
@@ -402,7 +402,7 @@ public class TeamRbacIT extends AbstractServerIT {
         // ---
 
         setApiKey(apiKeyA.getKey());
-        projectsApi.updateAccessLevel(orgName, projectName, new ResourceAccessEntry()
+        projectsApi.updateProjectAccessLevel(orgName, projectName, new ResourceAccessEntry()
                 .teamId(ctr.getId())
                 .orgName(orgName)
                 .teamName(teamName)
@@ -413,7 +413,7 @@ public class TeamRbacIT extends AbstractServerIT {
         setApiKey(apiKeyB.getKey());
 
         try {
-            projectsApi.createOrUpdate(orgName, new ProjectEntry()
+            projectsApi.createOrUpdateProject(orgName, new ProjectEntry()
                     .name(projectName)
                     .description("another description")
                     .rawPayloadMode(ProjectEntry.RawPayloadModeEnum.EVERYONE));
@@ -431,7 +431,7 @@ public class TeamRbacIT extends AbstractServerIT {
         // ---
 
         setApiKey(apiKeyB.getKey());
-        projectsApi.createOrUpdate(orgName, new ProjectEntry()
+        projectsApi.createOrUpdateProject(orgName, new ProjectEntry()
                 .name(projectName)
                 .description("another description")
                 .rawPayloadMode(ProjectEntry.RawPayloadModeEnum.EVERYONE));
@@ -829,7 +829,7 @@ public class TeamRbacIT extends AbstractServerIT {
 
         String projectName = "project_" + randomString();
         ProjectsApi projectsApi = new ProjectsApi(getApiClient());
-        projectsApi.createOrUpdate(orgName, new ProjectEntry()
+        projectsApi.createOrUpdateProject(orgName, new ProjectEntry()
                 .name(projectName)
                 .visibility(ProjectEntry.VisibilityEnum.PRIVATE));
 

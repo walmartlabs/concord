@@ -34,7 +34,8 @@ import java.util.UUID;
 public final class MultipartRequestBodyHandler {
 
     public static HttpEntity handle(ObjectMapper objectMapper, Map<String, Object> data) {
-        MultipartEntityBuilder multiPartBuilder = MultipartEntityBuilder.create();
+        MultipartEntityBuilder multiPartBuilder = MultipartEntityBuilder.create()
+                .setMimeSubtype("form-data");
         for (Map.Entry<String, Object> e : data.entrySet()) {
             String k = e.getKey();
             Object v = e.getValue();

@@ -65,7 +65,7 @@ public class GitHubNonOrgEventIt extends AbstractServerIT {
                 .name(orgName));
 
         ProjectsApi projectsApi = new ProjectsApi(getApiClient());
-        projectsApi.createOrUpdate(orgName, new ProjectEntry()
+        projectsApi.createOrUpdateProject(orgName, new ProjectEntry()
                 .name(projectName)
                 .repositories(Collections.singletonMap(repoName, new RepositoryEntry()
                         .url(gitUrl))));

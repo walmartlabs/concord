@@ -38,14 +38,14 @@ public class ValidationIT extends AbstractServerIT {
 
         try {
             ProjectEntry req = new ProjectEntry().name("@123_123");
-            projectsApi.createOrUpdate("Default", req);
+            projectsApi.createOrUpdateProject("Default", req);
             fail("Should fail with a validation error");
         } catch (ApiException e) {
             assertInvalidRequest(e);
         }
 
         ProjectEntry req = new ProjectEntry().name("aProperName@" + System.currentTimeMillis());
-        projectsApi.createOrUpdate("Default", req);
+        projectsApi.createOrUpdateProject("Default", req);
     }
 
     @Test

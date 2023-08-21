@@ -62,7 +62,7 @@ public class GeneralTriggerV2IT extends AbstractGeneralTriggerIT {
         orgApi.createOrUpdateOrg(new OrganizationEntry().name(orgName));
 
         ProjectsApi projectsApi = new ProjectsApi(getApiClient());
-        projectsApi.createOrUpdate(orgName, new ProjectEntry()
+        projectsApi.createOrUpdateProject(orgName, new ProjectEntry()
                 .name(projectName)
                 .visibility(ProjectEntry.VisibilityEnum.PUBLIC)
                 .repositories(Collections.singletonMap(repoName, new RepositoryEntry()

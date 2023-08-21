@@ -26,7 +26,8 @@ import com.walmartlabs.concord.server.org.ResourceAccessLevel;
 import com.walmartlabs.concord.server.org.jsonstore.JsonStoreAccessManager;
 import com.walmartlabs.concord.server.org.jsonstore.JsonStoreEntry;
 import com.walmartlabs.concord.server.sdk.ConcordApplicationException;
-import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.sonatype.siesta.Resource;
 import org.sonatype.siesta.ValidationErrorsException;
 
@@ -42,9 +43,9 @@ import java.util.UUID;
 
 @Named
 @Singleton
-//@Api(value = "Inventory Data", authorizations = {@Authorization("api_key"), @Authorization("session_key"), @Authorization("ldap")})
 @Path("/api/v1/org")
 @Deprecated
+@Tag(name = "Inventory Data")
 public class InventoryDataResource implements Resource {
 
     private final OrganizationManager orgManager;
@@ -69,13 +70,13 @@ public class InventoryDataResource implements Resource {
      * @return
      */
     @GET
-//    @ApiOperation("Get inventory data")
     @Path("/{orgName}/inventory/{inventoryName}/data/{itemPath:.*}")
     @Produces(MediaType.APPLICATION_JSON)
-    public Object get(@Parameter @PathParam("orgName") String orgName,
-                      @Parameter @PathParam("inventoryName") String inventoryName,
-                      @Parameter @PathParam("itemPath") String itemPath,
-                      @Parameter @QueryParam("singleItem") @DefaultValue("false") boolean singleItem) {
+    @Operation(description = "Get inventory data", operationId = "getInventoryData")
+    public Object get(@PathParam("orgName") String orgName,
+                      @PathParam("inventoryName") String inventoryName,
+                      @PathParam("itemPath") String itemPath,
+                      @QueryParam("singleItem") @DefaultValue("false") boolean singleItem) {
 
         OrganizationEntry org = orgManager.assertAccess(orgName, true);
         JsonStoreEntry inventory = inventoryManager.assertAccess(org.getId(), null, inventoryName, ResourceAccessLevel.READER, true);
@@ -95,11 +96,11 @@ public class InventoryDataResource implements Resource {
      * @return
      */
     @GET
-//    @ApiOperation("List inventory data")
     @Path("/{orgName}/inventory/{inventoryName}/data")
     @Produces(MediaType.APPLICATION_JSON)
-    public List<Map<String, Object>> list(@Parameter @PathParam("orgName") String orgName,
-                                          @Parameter @PathParam("inventoryName") String inventoryName) {
+    @Operation(description = "List inventory data", operationId = "listInventoryData")
+    public List<Map<String, Object>> list(@PathParam("orgName") String orgName,
+                                          @PathParam("inventoryName") String inventoryName) {
 
         OrganizationEntry org = orgManager.assertAccess(orgName, true);
         JsonStoreEntry inventory = inventoryManager.assertAccess(org.getId(), null, inventoryName, ResourceAccessLevel.READER, true);
@@ -117,14 +118,14 @@ public class InventoryDataResource implements Resource {
      * @return full inventory data by path
      */
     @POST
-//    @ApiOperation("Modify inventory data")
     @Path("/{orgName}/inventory/{inventoryName}/data/{itemPath:.*}")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    public Object data(@Parameter @PathParam("orgName") String orgName,
-                       @Parameter @PathParam("inventoryName") String inventoryName,
-                       @Parameter @PathParam("itemPath") String itemPath,
-                       @Parameter Object data) {
+    @Operation(description = "Modify inventory data", operationId = "updateInventoryData")
+    public Object data(@PathParam("orgName") String orgName,
+                       @PathParam("inventoryName") String inventoryName,
+                       @PathParam("itemPath") String itemPath,
+                       Object data) {
 
         // we expect all top-level entries to be JSON objects
         if (!itemPath.contains("/") && !(data instanceof Map)) {
@@ -147,12 +148,12 @@ public class InventoryDataResource implements Resource {
      * @return
      */
     @DELETE
-//    @ApiOperation("Delete inventory data")
     @Path("/{orgName}/inventory/{inventoryName}/data/{itemPath:.*}")
     @Produces(MediaType.APPLICATION_JSON)
-    public DeleteInventoryDataResponse delete(@Parameter @PathParam("orgName") String orgName,
-                                              @Parameter @PathParam("inventoryName") String inventoryName,
-                                              @Parameter @PathParam("itemPath") String itemPath) {
+    @Operation(description = "Delete inventory data", operationId = "deleteInventoryData")
+    public DeleteInventoryDataResponse delete(@PathParam("orgName") String orgName,
+                                              @PathParam("inventoryName") String inventoryName,
+                                              @PathParam("itemPath") String itemPath) {
 
         OrganizationEntry org = orgManager.assertAccess(orgName, true);
         JsonStoreEntry inventory = inventoryManager.assertAccess(org.getId(), null, inventoryName, ResourceAccessLevel.WRITER, true);

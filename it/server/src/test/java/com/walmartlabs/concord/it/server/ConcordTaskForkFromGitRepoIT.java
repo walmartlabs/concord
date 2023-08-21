@@ -83,7 +83,7 @@
 //                .setSecretId(response.getId());
 //
 //        ProjectsApi projectsApi = new ProjectsApi(getApiClient());
-//        projectsApi.createOrUpdate(orgName, new ProjectEntry()
+//        projectsApi.createOrUpdateProject(orgName, new ProjectEntry()
 //                .setName(projectName)
 //                .setRepositories(singletonMap(repoName, repo)));
 //

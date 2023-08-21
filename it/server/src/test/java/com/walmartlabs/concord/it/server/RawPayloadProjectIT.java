@@ -40,7 +40,7 @@ public class RawPayloadProjectIT extends AbstractServerIT {
 
         String orgName = "Default";
         String projectName = "project_" + System.currentTimeMillis();
-        projectsApi.createOrUpdate(orgName, new ProjectEntry()
+        projectsApi.createOrUpdateProject(orgName, new ProjectEntry()
                 .name(projectName));
 
         // ---

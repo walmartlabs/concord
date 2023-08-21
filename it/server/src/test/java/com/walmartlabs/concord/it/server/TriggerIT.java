@@ -136,7 +136,7 @@ public class TriggerIT extends AbstractServerIT {
         // ---
 
         ProjectsApi projectsApi = new ProjectsApi(getApiClient());
-        return projectsApi.createOrUpdate(orgName, new ProjectEntry()
+        return projectsApi.createOrUpdateProject(orgName, new ProjectEntry()
                 .name(projectName)
                 .repositories(Collections.singletonMap(repoName, new RepositoryEntry()
                         .url(gitUrl)

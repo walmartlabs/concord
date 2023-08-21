@@ -89,12 +89,12 @@
 //    public void testInvalidKeys() throws Exception {
 //        OrganizationsApi organizationsApi = new OrganizationsApi(getApiClient());
 //        String orgName = "org_" + randomString();
-//        organizationsApi.createOrUpdate(new OrganizationEntry()
+//        organizationsApi.createOrUpdateProject(new OrganizationEntry()
 //                .setName(orgName));
 //
 //        ProjectsApi projectsApi = new ProjectsApi(getApiClient());
 //        String projectName = "project_" + randomString();
-//        projectsApi.createOrUpdate(orgName, new ProjectEntry()
+//        projectsApi.createOrUpdateProject(orgName, new ProjectEntry()
 //                .setName(projectName)
 //                .setRawPayloadMode(ProjectEntry.RawPayloadModeEnum.OWNERS));
 //
@@ -124,12 +124,12 @@
 //    public void testCallFromScript() throws Exception {
 //        OrganizationsApi organizationsApi = new OrganizationsApi(getApiClient());
 //        String orgName = "org_" + randomString();
-//        organizationsApi.createOrUpdate(new OrganizationEntry()
+//        organizationsApi.createOrUpdateProject(new OrganizationEntry()
 //                .setName(orgName));
 //
 //        ProjectsApi projectsApi = new ProjectsApi(getApiClient());
 //        String projectName = "project_" + randomString();
-//        projectsApi.createOrUpdate(orgName, new ProjectEntry()
+//        projectsApi.createOrUpdateProject(orgName, new ProjectEntry()
 //                .setName(projectName)
 //                .setRawPayloadMode(ProjectEntry.RawPayloadModeEnum.OWNERS));
 //

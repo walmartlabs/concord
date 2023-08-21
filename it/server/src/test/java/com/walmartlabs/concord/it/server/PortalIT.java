@@ -79,7 +79,7 @@
 //                .branch("master")
 //                .secretId(response.getId());
 //        ProjectsApi projectsApi = new ProjectsApi(getApiClient());
-//        ProjectOperationResponse por = projectsApi.createOrUpdate(orgName, new ProjectEntry()
+//        ProjectOperationResponse por = projectsApi.createOrUpdateProject(orgName, new ProjectEntry()
 //                .name(projectName)
 //                .repositories(singletonMap(repoName, repo)));
 //

@@ -43,7 +43,7 @@
 //        String projectName = "project_" + randomString();
 //
 //        ProjectsApi projectsApi = new ProjectsApi(getApiClient());
-//        projectsApi.createOrUpdate(orgName, new ProjectEntry()
+//        projectsApi.createOrUpdateProject(orgName, new ProjectEntry()
 //                .setName(projectName)
 //                .setRawPayloadMode(ProjectEntry.RawPayloadModeEnum.EVERYONE));
 //
@@ -55,7 +55,7 @@
 //                .setRules(readPolicy("ansiblePolicyTaskDeny/test-policy.json"));
 //
 //        PolicyApi policyApi = new PolicyApi(getApiClient());
-//        policyApi.createOrUpdate(policy);
+//        policyApi.createOrUpdateProject(policy);
 //        policyApi.link(policyName, new PolicyLinkEntry()
 //                .setOrgName(orgName)
 //                .setProjectName(projectName));

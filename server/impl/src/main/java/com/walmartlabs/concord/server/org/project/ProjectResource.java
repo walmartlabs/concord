@@ -88,7 +88,7 @@ public class ProjectResource implements Resource {
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     @Validate
-    @Operation(description = "Creates a new project or updates an existing one")
+    @Operation(description = "Creates a new project or updates an existing one", operationId = "createOrUpdateProject")
     public ProjectOperationResponse createOrUpdate(@PathParam("orgName") @ConcordKey String orgName,
                                                    @Valid ProjectEntry entry) {
 
@@ -128,7 +128,7 @@ public class ProjectResource implements Resource {
     @GET
     @Path("/{orgName}/project/{projectName}/kv")
     @Produces(MediaType.APPLICATION_JSON)
-    @Operation(description = "List KV")
+    @Operation(description = "List KV", operationId = "listProjectKv")
     public List<KvEntry> findKV(@PathParam("orgName") @ConcordKey String orgName,
                                 @PathParam("projectName") @ConcordKey String projectName,
                                 @QueryParam("offset") int offset,
@@ -146,7 +146,7 @@ public class ProjectResource implements Resource {
     @Path("/{orgName}/project/{projectName}/cfg{path: (.*)?}")
     @Produces(MediaType.APPLICATION_JSON)
     @Validate
-    @Operation(description = "Get a project's configuration")
+    @Operation(description = "Get a project's configuration", operationId = "getProjectConfiguration")
     public Object getConfiguration(@PathParam("orgName") @ConcordKey String orgName,
                                    @PathParam("projectName") @ConcordKey String projectName,
                                    @PathParam("path") String path) {
@@ -180,7 +180,7 @@ public class ProjectResource implements Resource {
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     @Validate
-    @Operation(description = "Update a project's configuration parameter")
+    @Operation(description = "Update a project's configuration parameter", operationId = "updateProjectConfiguration")
     @SuppressWarnings("unchecked")
     public GenericOperationResult updateConfiguration(@PathParam("orgName") @ConcordKey String orgName,
                                                       @PathParam("projectName") @ConcordKey String projectName,
@@ -222,7 +222,7 @@ public class ProjectResource implements Resource {
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     @Validate
-    @Operation(description = "Update a project's configuration parameter")
+    @Operation(description = "Update a project's configuration parameter", operationId = "updateProjectConfiguration")
     public GenericOperationResult updateConfiguration(@PathParam("orgName") @ConcordKey String orgName,
                                                       @PathParam("projectName") @ConcordKey String projectName,
                                                       Object data) {
@@ -234,7 +234,7 @@ public class ProjectResource implements Resource {
     @Path("/{orgName}/project/{projectName}/cfg{path: (.*)?}")
     @Produces(MediaType.APPLICATION_JSON)
     @Validate
-    @Operation(description = "Delete a project's configuration parameter")
+    @Operation(description = "Delete a project's configuration parameter", operationId = "deleteProjectConfiguration")
     public GenericOperationResult deleteConfiguration(@PathParam("orgName") @ConcordKey String orgName,
                                                       @PathParam("projectName") @ConcordKey String projectName,
                                                       @PathParam("path") String path) {
@@ -289,7 +289,7 @@ public class ProjectResource implements Resource {
     @Path("/{orgName}/project/{projectName}/access")
     @Produces(MediaType.APPLICATION_JSON)
     @Validate
-    @Operation(description = "Get project team access")
+    @Operation(description = "Get project team access", operationId = "getProjectAccessLevel")
     public List<ResourceAccessEntry> getAccessLevel(@PathParam("orgName") @ConcordKey String orgName,
                                                     @PathParam("projectName") @ConcordKey String projectName) {
 
@@ -307,7 +307,7 @@ public class ProjectResource implements Resource {
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     @Validate
-    @Operation(description = "Updates the access level for the specified project and team")
+    @Operation(description = "Updates the access level for the specified project and team", operationId = "updateProjectAccessLevel")
     public GenericOperationResult updateAccessLevel(@PathParam("orgName") @ConcordKey String orgName,
                                                     @PathParam("projectName") @ConcordKey String projectName,
                                                     @Valid ResourceAccessEntry entry) {
@@ -330,7 +330,7 @@ public class ProjectResource implements Resource {
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     @Validate
-    @Operation(description = "Updates the access level for the specified project and team")
+    @Operation(description = "Updates the access level for the specified project and team", operationId = "updateProjectAccessLevelBulk")
     public GenericOperationResult updateAccessLevel(@PathParam("orgName") @ConcordKey String orgName,
                                                     @PathParam("projectName") @ConcordKey String projectName,
                                                     @Valid Collection<ResourceAccessEntry> entries) {

@@ -47,9 +47,9 @@
 //                "WHERE item_data @> ?::jsonb";
 //
 //        InventoriesApi inventoryResource = new InventoriesApi(getApiClient());
-//        inventoryResource.createOrUpdate(orgName, new InventoryEntry().setName(inventoryName));
+//        inventoryResource.createOrUpdateProject(orgName, new InventoryEntry().setName(inventoryName));
 //
-//        CreateInventoryQueryResponse cqr = resource.createOrUpdate(orgName, inventoryName, queryName, text);
+//        CreateInventoryQueryResponse cqr = resource.createOrUpdateProject(orgName, inventoryName, queryName, text);
 //        assertTrue(cqr.isOk());
 //        assertNotNull(cqr.getId());
 //
@@ -64,13 +64,13 @@
 //        OrganizationsApi organizationsApi = new OrganizationsApi(getApiClient());
 //
 //        String orgName = "org_" + randomString();
-//        organizationsApi.createOrUpdate(new OrganizationEntry()
+//        organizationsApi.createOrUpdateProject(new OrganizationEntry()
 //                .setName(orgName));
 //
 //        InventoriesApi inventoriesApi = new InventoriesApi(getApiClient());
 //
 //        String inventoryName = "inventory_" + randomString();
-//        inventoriesApi.createOrUpdate(orgName, new InventoryEntry()
+//        inventoriesApi.createOrUpdateProject(orgName, new InventoryEntry()
 //                .setName(inventoryName));
 //
 //        // ---

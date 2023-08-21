@@ -44,7 +44,7 @@
 //    public void setup() throws Exception {
 //        orgApi = new OrganizationsApi(getApiClient());
 //        orgName = "org_" + randomString();
-//        orgApi.createOrUpdate(new OrganizationEntry().setName(orgName));
+//        orgApi.createOrUpdateProject(new OrganizationEntry().setName(orgName));
 //
 //        Path repo = initRepo("oneopsTests/trigger");
 //        projectName = "project_" + randomString();

@@ -54,10 +54,10 @@
 //        String repoName = "repo_" + randomString();
 //
 //        OrganizationsApi orgApi = new OrganizationsApi(getApiClient());
-//        orgApi.createOrUpdate(new OrganizationEntry().setName(orgName));
+//        orgApi.createOrUpdateProject(new OrganizationEntry().setName(orgName));
 //
 //        ProjectsApi projectsApi = new ProjectsApi(getApiClient());
-//        projectsApi.createOrUpdate(orgName, new ProjectEntry()
+//        projectsApi.createOrUpdateProject(orgName, new ProjectEntry()
 //                .setName(projectName)
 //                .setVisibility(ProjectEntry.VisibilityEnum.PUBLIC)
 //                .setRepositories(Collections.singletonMap(repoName, new RepositoryEntry()
@@ -109,10 +109,10 @@
 //        String repoName = "repo_" + randomString();
 //
 //        OrganizationsApi orgApi = new OrganizationsApi(getApiClient());
-//        orgApi.createOrUpdate(new OrganizationEntry().setName(orgName));
+//        orgApi.createOrUpdateProject(new OrganizationEntry().setName(orgName));
 //
 //        ProjectsApi projectsApi = new ProjectsApi(getApiClient());
-//        projectsApi.createOrUpdate(orgName, new ProjectEntry()
+//        projectsApi.createOrUpdateProject(orgName, new ProjectEntry()
 //                .setName(projectName)
 //                .setVisibility(ProjectEntry.VisibilityEnum.PUBLIC)
 //                .setRepositories(Collections.singletonMap(repoName, new RepositoryEntry()
@@ -165,10 +165,10 @@
 //        String repoName = "repo_" + randomString();
 //
 //        OrganizationsApi orgApi = new OrganizationsApi(getApiClient());
-//        orgApi.createOrUpdate(new OrganizationEntry().setName(orgName));
+//        orgApi.createOrUpdateProject(new OrganizationEntry().setName(orgName));
 //
 //        ProjectsApi projectsApi = new ProjectsApi(getApiClient());
-//        projectsApi.createOrUpdate(orgName, new ProjectEntry()
+//        projectsApi.createOrUpdateProject(orgName, new ProjectEntry()
 //                .setName(projectName)
 //                .setVisibility(ProjectEntry.VisibilityEnum.PUBLIC)
 //                .setRepositories(Collections.singletonMap(repoName, new RepositoryEntry()

@@ -69,7 +69,7 @@ public abstract class AbstractGitHubTriggersIT extends AbstractServerIT {
                 .branch(repoBranch != null ? repoBranch : "master")
                 .url(bareRepo.toAbsolutePath().toString());
 
-        projectsApi.createOrUpdate(orgName, new ProjectEntry()
+        projectsApi.createOrUpdateProject(orgName, new ProjectEntry()
                 .name(projectName)
                 .rawPayloadMode(ProjectEntry.RawPayloadModeEnum.EVERYONE)
                 .repositories(ImmutableMap.of(repoName, repo)));

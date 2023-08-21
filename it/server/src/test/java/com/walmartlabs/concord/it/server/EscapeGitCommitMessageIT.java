@@ -80,7 +80,7 @@ public class EscapeGitCommitMessageIT extends AbstractServerIT {
                 .branch("master")
                 .secretId(response.getId());
         ProjectsApi projectsApi = new ProjectsApi(getApiClient());
-        projectsApi.createOrUpdate(orgName, new ProjectEntry()
+        projectsApi.createOrUpdateProject(orgName, new ProjectEntry()
                 .name(projectName)
                 .repositories(singletonMap(repoName, repo)));
 

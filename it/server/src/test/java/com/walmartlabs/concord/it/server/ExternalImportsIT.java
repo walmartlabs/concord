@@ -298,13 +298,13 @@
 //    private void assertExternalImportValidation(String userRepoUrl) throws Exception {
 //        String orgName = "org_" + randomString();
 //        OrganizationsApi organizationsApi = new OrganizationsApi(getApiClient());
-//        organizationsApi.createOrUpdate(new OrganizationEntry().setName(orgName));
+//        organizationsApi.createOrUpdateProject(new OrganizationEntry().setName(orgName));
 //
 //        String projectName = "prj_" + randomString();
 //        String repoName = "repo_" + randomString();
 //
 //        ProjectsApi projectsApi = new ProjectsApi(getApiClient());
-//        projectsApi.createOrUpdate(orgName, new ProjectEntry()
+//        projectsApi.createOrUpdateProject(orgName, new ProjectEntry()
 //                .setName(projectName)
 //                .setRepositories(Collections.singletonMap(repoName, new RepositoryEntry()
 //                        .setUrl(userRepoUrl)
@@ -414,13 +414,13 @@
 //
 //        String orgName = "org_" + randomString();
 //        OrganizationsApi orgApi = new OrganizationsApi(getApiClient());
-//        orgApi.createOrUpdate(new OrganizationEntry().setName(orgName));
+//        orgApi.createOrUpdateProject(new OrganizationEntry().setName(orgName));
 //
 //        String projectName = "project_" + randomString();
 //        String repoName = "repo_" + randomString();
 //
 //        ProjectsApi projectsApi = new ProjectsApi(getApiClient());
-//        projectsApi.createOrUpdate(orgName, new ProjectEntry()
+//        projectsApi.createOrUpdateProject(orgName, new ProjectEntry()
 //                .setName(projectName)
 //                .setRepositories(Collections.singletonMap(repoName, new RepositoryEntry()
 //                        .setUrl(clientRepoUrl)

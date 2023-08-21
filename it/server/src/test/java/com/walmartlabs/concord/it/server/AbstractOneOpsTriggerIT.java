@@ -122,7 +122,7 @@
 //                .setBranch("master")
 //                .setUrl(bareRepo.toAbsolutePath().toString());
 //
-//        projectsApi.createOrUpdate(orgName, new ProjectEntry()
+//        projectsApi.createOrUpdateProject(orgName, new ProjectEntry()
 //                .setName(projectName)
 //                .setVisibility(ProjectEntry.VisibilityEnum.PUBLIC)
 //                .setRawPayloadMode(ProjectEntry.RawPayloadModeEnum.EVERYONE)

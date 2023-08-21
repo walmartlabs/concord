@@ -53,7 +53,7 @@ public class ProjectResourceV2 implements Resource {
     @Path("/{orgName}/project/{projectName}")
     @Produces(MediaType.APPLICATION_JSON)
     @Validate
-    @Operation(description = "Get an existing project")
+    @Operation(description = "Get an existing project", operationId = "getProject")
     public ProjectEntry get(@PathParam("orgName") @ConcordKey String orgName,
                             @PathParam("projectName") @ConcordKey String projectName) {
 

@@ -71,14 +71,14 @@ public class ProcessRbacIT extends AbstractServerIT {
         String projectName = "project_" + randomString();
 
         ProjectsApi projectsApi = new ProjectsApi(getApiClient());
-        projectsApi.createOrUpdate(orgName, new ProjectEntry()
+        projectsApi.createOrUpdateProject(orgName, new ProjectEntry()
                 .name(projectName)
                 .visibility(ProjectEntry.VisibilityEnum.PRIVATE)
                 .rawPayloadMode(ProjectEntry.RawPayloadModeEnum.EVERYONE));
 
         // grant the team access to the project
 
-        projectsApi.updateAccessLevel(orgName, projectName, new ResourceAccessEntry()
+        projectsApi.updateProjectAccessLevel(orgName, projectName, new ResourceAccessEntry()
                 .teamId(ctr.getId())
                 .orgName(orgName)
                 .teamName(teamName)

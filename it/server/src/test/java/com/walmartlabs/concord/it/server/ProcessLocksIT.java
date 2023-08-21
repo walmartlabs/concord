@@ -42,7 +42,7 @@ public class ProcessLocksIT extends AbstractServerIT {
         organizationsApi.createOrUpdateOrg(new OrganizationEntry().name(orgName));
 
         ProjectsApi projectsApi = new ProjectsApi(getApiClient());
-        projectsApi.createOrUpdate(orgName, new ProjectEntry().name(projectName)
+        projectsApi.createOrUpdateProject(orgName, new ProjectEntry().name(projectName)
                 .rawPayloadMode(ProjectEntry.RawPayloadModeEnum.EVERYONE));
 
         // ---

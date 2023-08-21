@@ -37,7 +37,7 @@
 //    public void testSecrets() throws Exception {
 //        String orgName = "org_" + randomString();
 //        OrganizationsApi orgApi = new OrganizationsApi(getApiClient());
-//        orgApi.createOrUpdate(new OrganizationEntry().setName(orgName));
+//        orgApi.createOrUpdateProject(new OrganizationEntry().setName(orgName));
 //
 //        String secretName = "mySecret";
 //        String secretValue = "value_" + randomString();
@@ -46,7 +46,7 @@
 //
 //        String projectName = "project_" + randomString();
 //        ProjectsApi projectsApi = new ProjectsApi(getApiClient());
-//        projectsApi.createOrUpdate(orgName, new ProjectEntry()
+//        projectsApi.createOrUpdateProject(orgName, new ProjectEntry()
 //                .setName(projectName)
 //                .setRawPayloadMode(ProjectEntry.RawPayloadModeEnum.EVERYONE));
 //
@@ -83,7 +83,7 @@
 //    public void testSecretData() throws Exception {
 //        String orgName = "org_" + randomString();
 //        OrganizationsApi orgApi = new OrganizationsApi(getApiClient());
-//        orgApi.createOrUpdate(new OrganizationEntry().setName(orgName));
+//        orgApi.createOrUpdateProject(new OrganizationEntry().setName(orgName));
 //
 //        String secretName = "mySecret";
 //        String secretValue = "value_" + randomString();
@@ -92,7 +92,7 @@
 //
 //        String projectName = "project_" + randomString();
 //        ProjectsApi projectsApi = new ProjectsApi(getApiClient());
-//        projectsApi.createOrUpdate(orgName, new ProjectEntry()
+//        projectsApi.createOrUpdateProject(orgName, new ProjectEntry()
 //                .setName(projectName)
 //                .setRawPayloadMode(ProjectEntry.RawPayloadModeEnum.EVERYONE));
 //
@@ -129,7 +129,7 @@
 //    public void testSecretDataNoPassword() throws Exception {
 //        String orgName = "org_" + randomString();
 //        OrganizationsApi orgApi = new OrganizationsApi(getApiClient());
-//        orgApi.createOrUpdate(new OrganizationEntry().setName(orgName));
+//        orgApi.createOrUpdateProject(new OrganizationEntry().setName(orgName));
 //
 //        String secretName = "mySecret";
 //        String secretValue = "value_" + randomString();
@@ -137,7 +137,7 @@
 //
 //        String projectName = "project_" + randomString();
 //        ProjectsApi projectsApi = new ProjectsApi(getApiClient());
-//        projectsApi.createOrUpdate(orgName, new ProjectEntry()
+//        projectsApi.createOrUpdateProject(orgName, new ProjectEntry()
 //                .setName(projectName)
 //                .setRawPayloadMode(ProjectEntry.RawPayloadModeEnum.EVERYONE));
 //
@@ -171,14 +171,14 @@
 //    public void testPublickey() throws Exception {
 //        String orgName = "org_" + randomString();
 //        OrganizationsApi orgApi = new OrganizationsApi(getApiClient());
-//        orgApi.createOrUpdate(new OrganizationEntry().setName(orgName));
+//        orgApi.createOrUpdateProject(new OrganizationEntry().setName(orgName));
 //
 //        String secretName = "mySecret_" + randomString();
 //        generateKeyPair(orgName, secretName, false, null);
 //
 //        String projectName = "project_" + randomString();
 //        ProjectsApi projectsApi = new ProjectsApi(getApiClient());
-//        projectsApi.createOrUpdate(orgName, new ProjectEntry()
+//        projectsApi.createOrUpdateProject(orgName, new ProjectEntry()
 //                .setName(projectName)
 //                .setRawPayloadMode(ProjectEntry.RawPayloadModeEnum.EVERYONE));
 //
@@ -218,7 +218,7 @@
 //    public void testSecretValue() throws Exception {
 //        String orgName = "org_" + randomString();
 //        OrganizationsApi orgApi = new OrganizationsApi(getApiClient());
-//        orgApi.createOrUpdate(new OrganizationEntry().setName(orgName));
+//        orgApi.createOrUpdateProject(new OrganizationEntry().setName(orgName));
 //
 //        String secretName = "mySecret_" + randomString();
 //        String secretValue = "hello_" + randomString();

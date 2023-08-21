@@ -49,7 +49,7 @@ public class ProcessEventsIT extends AbstractServerIT {
         ProjectsApi projectsApi = new ProjectsApi(getApiClient());
 
         String projectName = "project_" + randomString();
-        projectsApi.createOrUpdate(orgName, new ProjectEntry()
+        projectsApi.createOrUpdateProject(orgName, new ProjectEntry()
                 .name(projectName)
                 .rawPayloadMode(ProjectEntry.RawPayloadModeEnum.OWNERS));
 
@@ -125,7 +125,7 @@ public class ProcessEventsIT extends AbstractServerIT {
                 .userId(cur.getId())
                 .role(TeamUserEntry.RoleEnum.MEMBER)));
 
-        projectsApi.updateAccessLevel(orgName, projectName, new ResourceAccessEntry()
+        projectsApi.updateProjectAccessLevel(orgName, projectName, new ResourceAccessEntry()
                 .teamId(ctr.getId())
                 .level(ResourceAccessEntry.LevelEnum.WRITER));
 

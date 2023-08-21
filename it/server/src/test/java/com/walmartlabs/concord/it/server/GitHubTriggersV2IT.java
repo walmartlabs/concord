@@ -389,7 +389,7 @@ public class GitHubTriggersV2IT extends AbstractGitHubTriggersIT {
         // -- process log should indicate only one repo was refreshed
 
         ProjectsApi projectsApi = new ProjectsApi(getApiClient());
-        ProjectEntry p = projectsApi.get(orgName, projectName1);
+        ProjectEntry p = projectsApi.getProject(orgName, projectName1);
         RepositoryEntry repo = p.getRepositories().entrySet().stream()
                 .filter(e -> e.getKey().equals(repoNameShort))
                 .map(Map.Entry::getValue)

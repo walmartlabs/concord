@@ -39,7 +39,7 @@ public class ClasspathRepoIT extends AbstractServerIT {
         String repoName = "repo_" + randomString();
 
         ProjectsApi projectsApi = new ProjectsApi(getApiClient());
-        projectsApi.createOrUpdate("Default", new ProjectEntry()
+        projectsApi.createOrUpdateProject("Default", new ProjectEntry()
                 .name(projectName)
                 .acceptsRawPayload(false)
                 .repositories(Collections.singletonMap(repoName, new RepositoryEntry()

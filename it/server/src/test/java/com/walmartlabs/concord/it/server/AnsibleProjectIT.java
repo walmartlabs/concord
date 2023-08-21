@@ -107,7 +107,7 @@ public class AnsibleProjectIT extends AbstractServerIT {
                 .secretName(repoSecretName);
         ProjectsApi projectsApi = new ProjectsApi(getApiClient());
         Map<String, Object> cfg = Collections.singletonMap(Constants.Request.TEMPLATE_KEY, templatePath);
-        projectsApi.createOrUpdate(orgName, new ProjectEntry()
+        projectsApi.createOrUpdateProject(orgName, new ProjectEntry()
                 .name(projectName)
                 .repositories(singletonMap(repoName, repo))
                 .cfg(cfg)
@@ -166,7 +166,7 @@ public class AnsibleProjectIT extends AbstractServerIT {
                 .secretName(repoSecretName);
         ProjectsApi projectsApi = new ProjectsApi(getApiClient());
         Map<String, Object> cfg = Collections.singletonMap(Constants.Request.TEMPLATE_KEY, templatePath);
-        projectsApi.createOrUpdate(orgName, new ProjectEntry()
+        projectsApi.createOrUpdateProject(orgName, new ProjectEntry()
                 .name(projectName)
                 .repositories(singletonMap(repoName, repo))
                 .cfg(cfg));

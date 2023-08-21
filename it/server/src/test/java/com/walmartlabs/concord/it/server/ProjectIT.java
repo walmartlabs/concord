@@ -372,7 +372,7 @@
 //            String repoUrl = gitUrl;
 //
 //            ProjectsApi projectsApi = new ProjectsApi(getApiClient());
-//            projectsApi.createOrUpdate(orgName, new ProjectEntry()
+//            projectsApi.createOrUpdateProject(orgName, new ProjectEntry()
 //                    .setName(projectName)
 //                    .setRepositories(Collections.singletonMap(repoName, new RepositoryEntry()
 //                            .setName(repoName).setUrl(repoUrl)
@@ -393,21 +393,21 @@
 //        String orgName = "org_" + randomString();
 //
 //        OrganizationsApi orgApi = new OrganizationsApi(getApiClient());
-//        orgApi.createOrUpdate(new OrganizationEntry().setName(orgName));
+//        orgApi.createOrUpdateProject(new OrganizationEntry().setName(orgName));
 //
 //        // ---
 //
 //        String projectName = "project_" + randomString();
 //
 //        ProjectsApi projectsApi = new ProjectsApi(getApiClient());
-//        projectsApi.createOrUpdate(orgName, new ProjectEntry()
+//        projectsApi.createOrUpdateProject(orgName, new ProjectEntry()
 //                .setName(projectName));
 //
 //        // ---
 //
 //        String teamName = "team_" + randomString();
 //        TeamsApi teamsApi = new TeamsApi(getApiClient());
-//        CreateTeamResponse teamResp = teamsApi.createOrUpdate(orgName, new TeamEntry()
+//        CreateTeamResponse teamResp = teamsApi.createOrUpdateProject(orgName, new TeamEntry()
 //                .setName(teamName));
 //
 //        // --- Typical one-or-more teams bulk access update
@@ -482,7 +482,7 @@
 //                                        String tag) throws Exception {
 //
 //        UsersApi usersApi = new UsersApi(getApiClient());
-//        CreateUserResponse cur = usersApi.createOrUpdate(new CreateUserRequest()
+//        CreateUserResponse cur = usersApi.createOrUpdateProject(new CreateUserRequest()
 //                .setUsername(username)
 //                .setType(CreateUserRequest.TypeEnum.LOCAL));
 //        assertTrue(cur.isOk());
@@ -502,7 +502,7 @@
 //        setApiKey(apiKey);
 //
 //        ProjectsApi projectsApi = new ProjectsApi(getApiClient());
-//        ProjectOperationResponse cpr = projectsApi.createOrUpdate("Default", new ProjectEntry()
+//        ProjectOperationResponse cpr = projectsApi.createOrUpdateProject("Default", new ProjectEntry()
 //                .setName(projectName)
 //                .setRepositories(Collections.singletonMap(repoName,
 //                        new RepositoryEntry()

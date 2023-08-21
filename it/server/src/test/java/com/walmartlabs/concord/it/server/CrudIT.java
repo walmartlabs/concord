@@ -71,13 +71,13 @@ public class CrudIT extends AbstractServerIT {
 
         // --- create
 
-        ProjectOperationResponse createResp = projectsApi.createOrUpdate(orgName, new ProjectEntry().name(projectName));
+        ProjectOperationResponse createResp = projectsApi.createOrUpdateProject(orgName, new ProjectEntry().name(projectName));
         assertTrue(createResp.getOk());
         assertNotNull(createResp.getId());
 
         // --- update
 
-        ProjectOperationResponse updateResp = projectsApi.createOrUpdate(orgName, new ProjectEntry()
+        ProjectOperationResponse updateResp = projectsApi.createOrUpdateProject(orgName, new ProjectEntry()
                 .id(createResp.getId())
                 .name(updateProjectName));
         assertEquals(ProjectOperationResponse.ResultEnum.UPDATED, updateResp.getResult());
@@ -85,12 +85,12 @@ public class CrudIT extends AbstractServerIT {
 
         // --- get
 
-        ProjectEntry projectEntry = projectsApi.get(orgName, updateProjectName);
+        ProjectEntry projectEntry = projectsApi.getProject(orgName, updateProjectName);
         assertEquals(projectEntry.getId(), createResp.getId());
 
         // --- create
 
-        createResp = projectsApi.createOrUpdate(orgName, new ProjectEntry()
+        createResp = projectsApi.createOrUpdateProject(orgName, new ProjectEntry()
                 .name(projectName)
                 .repositories(Collections.emptyMap()));
         assertTrue(createResp.getOk());
@@ -110,7 +110,7 @@ public class CrudIT extends AbstractServerIT {
         assertTrue(createOrganizationResponse.getOk());
         assertNotNull(createOrganizationResponse.getId());
 
-        ProjectOperationResponse moveResp = projectsApi.createOrUpdate(orgName, new ProjectEntry()
+        ProjectOperationResponse moveResp = projectsApi.createOrUpdateProject(orgName, new ProjectEntry()
                 .id(createResp.getId())
                 .orgId(createOrganizationResponse.getId())
         );
@@ -120,8 +120,7 @@ public class CrudIT extends AbstractServerIT {
         // --- error - empty name
 
         try {
-            projectsApi.createOrUpdate(orgName, new ProjectEntry().name("!!!!")
-            );
+            projectsApi.createOrUpdateProject(orgName, new ProjectEntry().name(""));
             fail("Project name should not be empty string");
         } catch (ApiException e) {
             assertTrue(e.getMessage().contains("must match"), e::getMessage);
@@ -130,7 +129,7 @@ public class CrudIT extends AbstractServerIT {
         // --- error - null name and id
 
         try {
-            projectsApi.createOrUpdate(orgName, new ProjectEntry()
+            projectsApi.createOrUpdateProject(orgName, new ProjectEntry()
                     .name(null)
                     .id(null)
             );
@@ -141,7 +140,7 @@ public class CrudIT extends AbstractServerIT {
 
         // --- update project's organization name
 
-        moveResp = projectsApi.createOrUpdate(newOrgName, new ProjectEntry()
+        moveResp = projectsApi.createOrUpdateProject(newOrgName, new ProjectEntry()
                 .name(projectName)
                 .orgName(orgName)
         );
@@ -164,14 +163,14 @@ public class CrudIT extends AbstractServerIT {
         String repoName = "repo_" + randomString();
 
         ProjectsApi projectsApi = new ProjectsApi(getApiClient());
-        projectsApi.createOrUpdate(orgName, new ProjectEntry()
+        projectsApi.createOrUpdateProject(orgName, new ProjectEntry()
                 .name(projectName1)
                 .repositories(Collections.singletonMap(repoName, new RepositoryEntry()
                         .name(repoName)
                         .url(createRepo("repositoryRefresh"))
                         .branch("master"))));
 
-        projectsApi.createOrUpdate(orgName, new ProjectEntry()
+        projectsApi.createOrUpdateProject(orgName, new ProjectEntry()
                 .name(projectName2)
                 .repositories(Collections.singletonMap(repoName, new RepositoryEntry()
                         .name(repoName)
@@ -218,113 +217,113 @@ public class CrudIT extends AbstractServerIT {
         assertTrue(deleteInventoryResponse.getResult() == GenericOperationResult.ResultEnum.DELETED);
     }
 
-//    @Test
-//    public void testInventoryData() throws Exception {
-//        InventoryDataApi dataApi = new InventoryDataApi(getApiClient());
-//
-//        String orgName = "Default";
-//        String inventoryName = "inventory_" + randomString();
-//        String itemPath = "/a";
-//        Map<String, Object> data = Collections.singletonMap("k", "v");
-//
-//        InventoriesApi inventoriesApi = new InventoriesApi(getApiClient());
-//        inventoriesApi.createOrUpdateInventory(orgName, new InventoryEntry().name(inventoryName));
-//
-//        // --- create
-//
-//        @SuppressWarnings("unchecked")
-//        Map<String, Object> result = (Map<String, Object>) dataApi.data(orgName, inventoryName, itemPath, data);
-//        assertNotNull(result);
-//        assertEquals(Collections.singletonMap("a", data), result);
-//
-//        // --- get
-//
-//        @SuppressWarnings("unchecked")
-//        Map<String, Object> result2 = (Map<String, Object>) dataApi.get(orgName, inventoryName, itemPath, false);
-//        assertNotNull(result2);
-//        assertEquals(Collections.singletonMap("a", data), result);
-//
-//        // --- delete
-//
-//        DeleteInventoryDataResponse didr = dataApi.delete(orgName, inventoryName, itemPath);
-//        assertNotNull(didr);
-//        assertTrue(didr.getOk());
-//    }
-//
-//    @Test
-//    @SuppressWarnings("unchecked")
-//    public void testInventoryQuery() throws Exception {
-//        InventoryQueriesApi queriesApi = new InventoryQueriesApi(getApiClient());
-//
-//        String orgName = "Default";
-//        String inventoryName = "inventory_" + randomString();
-//        String queryName = "queryName_" + randomString();
-//        String text = "select * from test_" + randomString();
-//
-//        InventoriesApi inventoriesApi = new InventoriesApi(getApiClient());
-//        inventoriesApi.createOrUpdate(orgName, new InventoryEntry().name(inventoryName));
-//
-//        // ---
-//
-//        InventoryDataApi dataApi = new InventoryDataApi(getApiClient());
-//        dataApi.data(orgName, inventoryName, "/test", Collections.singletonMap("k", "v"));
-//
-//        // --- create
-//
-//        CreateInventoryQueryResponse cqr = queriesApi.createOrUpdate(orgName, inventoryName, queryName, text);
-//        assertTrue(cqr.getOk());
-//        assertNotNull(cqr.getId());
-//
-//        // --- update
-//        String updatedText = "select item_data::text from inventory_data";
-//        CreateInventoryQueryResponse uqr = queriesApi.createOrUpdate(orgName, inventoryName, queryName, updatedText);
-//        assertTrue(uqr.getOk());
-//        assertNotNull(uqr.getId());
-//
-//        // --- get
-//        InventoryQueryEntry e1 = queriesApi.get(orgName, inventoryName, queryName);
-//        assertNotNull(e1);
-//        assertNotNull(e1.getId());
-//        assertEquals(queryName, e1.getName());
-//        assertEquals(updatedText, e1.getText());
-//
-//        // --- list
-//        List<InventoryQueryEntry> list = queriesApi.list(orgName, inventoryName);
-//        assertTrue(list.stream().anyMatch(e -> queryName.equals(e.getName()) && updatedText.equals(e.getText())));
-//
-//        // --- exec
-//        @SuppressWarnings("unchecked")
-//        List<Object> result = queriesApi.exec(orgName, inventoryName, queryName, null);
-//        assertNotNull(result);
-//        Map<String, Object> m = (Map<String, Object>) result.get(0);
-//        assertEquals(Collections.singletonMap("k", "v"), m);
-//
-//        // --- delete
-//        DeleteInventoryQueryResponse dqr = queriesApi.delete(orgName, inventoryName, queryName);
-//        assertNotNull(dqr);
-//        assertTrue(dqr.getOk());
-//    }
-//
-//    @Test
-//    public void testInvalidQueryName() throws Exception {
-//        InventoryQueriesApi queriesApi = new InventoryQueriesApi(getApiClient());
-//
-//        String orgName = "Default";
-//        String inventoryName = "inventory_" + randomString();
-//        String queryName = "queryName_" + randomString();
-//
-//        InventoriesApi inventoriesApi = new InventoriesApi(getApiClient());
-//        inventoriesApi.createOrUpdateInventory(orgName, new InventoryEntry().name(inventoryName));
-//
-//        // ---
-//
-//        try {
-//            queriesApi.exec(orgName, inventoryName, queryName, null);
-//            fail("should fail");
-//        } catch (ApiException e) {
-//            assertTrue(e.getMessage().contains("not found") && e.getMessage().contains(queryName));
-//        }
-//    }
+    @Test
+    public void testInventoryData() throws Exception {
+        InventoryDataApi dataApi = new InventoryDataApi(getApiClient());
+
+        String orgName = "Default";
+        String inventoryName = "inventory_" + randomString();
+        String itemPath = "/a";
+        Map<String, Object> data = Collections.singletonMap("k", "v");
+
+        InventoriesApi inventoriesApi = new InventoriesApi(getApiClient());
+        inventoriesApi.createOrUpdateInventory(orgName, new InventoryEntry().name(inventoryName));
+
+        // --- create
+
+        @SuppressWarnings("unchecked")
+        Map<String, Object> result = (Map<String, Object>) dataApi.updateInventoryData(orgName, inventoryName, itemPath, data);
+        assertNotNull(result);
+        assertEquals(Collections.singletonMap("a", data), result);
+
+        // --- get
+
+        @SuppressWarnings("unchecked")
+        Map<String, Object> result2 = (Map<String, Object>) dataApi.getInventoryData(orgName, inventoryName, itemPath, false);
+        assertNotNull(result2);
+        assertEquals(Collections.singletonMap("a", data), result);
+
+        // --- delete
+
+        DeleteInventoryDataResponse didr = dataApi.deleteInventoryData(orgName, inventoryName, itemPath);
+        assertNotNull(didr);
+        assertTrue(didr.getOk());
+    }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    public void testInventoryQuery() throws Exception {
+        InventoryQueriesApi queriesApi = new InventoryQueriesApi(getApiClient());
+
+        String orgName = "Default";
+        String inventoryName = "inventory_" + randomString();
+        String queryName = "queryName_" + randomString();
+        String text = "select * from test_" + randomString();
+
+        InventoriesApi inventoriesApi = new InventoriesApi(getApiClient());
+        inventoriesApi.createOrUpdateInventory(orgName, new InventoryEntry().name(inventoryName));
+
+        // ---
+
+        InventoryDataApi dataApi = new InventoryDataApi(getApiClient());
+        dataApi.updateInventoryData(orgName, inventoryName, "/test", Collections.singletonMap("k", "v"));
+
+        // --- create
+
+        CreateInventoryQueryResponse cqr = queriesApi.createOrUpdateInventoryQuery(orgName, inventoryName, queryName, text);
+        assertTrue(cqr.getOk());
+        assertNotNull(cqr.getId());
+
+        // --- update
+        String updatedText = "select item_data::text from inventory_data";
+        CreateInventoryQueryResponse uqr = queriesApi.createOrUpdateInventoryQuery(orgName, inventoryName, queryName, updatedText);
+        assertTrue(uqr.getOk());
+        assertNotNull(uqr.getId());
+
+        // --- get
+        InventoryQueryEntry e1 = queriesApi.getInventoryQuery(orgName, inventoryName, queryName);
+        assertNotNull(e1);
+        assertNotNull(e1.getId());
+        assertEquals(queryName, e1.getName());
+        assertEquals(updatedText, e1.getText());
+
+        // --- list
+        List<InventoryQueryEntry> list = queriesApi.listInventoryQueries(orgName, inventoryName);
+        assertTrue(list.stream().anyMatch(e -> queryName.equals(e.getName()) && updatedText.equals(e.getText())));
+
+        // --- exec
+        @SuppressWarnings("unchecked")
+        List<Object> result = queriesApi.executeInventoryQuery(orgName, inventoryName, queryName, null);
+        assertNotNull(result);
+        Map<String, Object> m = (Map<String, Object>) result.get(0);
+        assertEquals(Collections.singletonMap("k", "v"), m);
+
+        // --- delete
+        DeleteInventoryQueryResponse dqr = queriesApi.deleteInventoryQuery(orgName, inventoryName, queryName);
+        assertNotNull(dqr);
+        assertTrue(dqr.getOk());
+    }
+
+    @Test
+    public void testInvalidQueryName() throws Exception {
+        InventoryQueriesApi queriesApi = new InventoryQueriesApi(getApiClient());
+
+        String orgName = "Default";
+        String inventoryName = "inventory_" + randomString();
+        String queryName = "queryName_" + randomString();
+
+        InventoriesApi inventoriesApi = new InventoriesApi(getApiClient());
+        inventoriesApi.createOrUpdateInventory(orgName, new InventoryEntry().name(inventoryName));
+
+        // ---
+
+        try {
+            queriesApi.executeInventoryQuery(orgName, inventoryName, queryName, null);
+            fail("should fail");
+        } catch (ApiException e) {
+            assertTrue(e.getMessage().contains("not found") && e.getMessage().contains(queryName));
+        }
+    }
 
     @Test
     public void testDashes() throws Exception {
@@ -349,9 +348,9 @@ public class CrudIT extends AbstractServerIT {
         String projectName = randomString() + "-test~";
 
         ProjectsApi projectsApi = new ProjectsApi(getApiClient());
-        projectsApi.createOrUpdate(orgName, new ProjectEntry().name(projectName));
+        projectsApi.createOrUpdateProject(orgName, new ProjectEntry().name(projectName));
 
-        projectsApi.get(orgName, projectName);
+        projectsApi.getProject(orgName, projectName);
 
         // ---
 
@@ -460,7 +459,7 @@ public class CrudIT extends AbstractServerIT {
         String repoName = "repo_" + randomString();
 
         ProjectsApi projectsApi = new ProjectsApi(getApiClient());
-        ProjectOperationResponse projectResp = projectsApi.createOrUpdate(orgName, new ProjectEntry()
+        ProjectOperationResponse projectResp = projectsApi.createOrUpdateProject(orgName, new ProjectEntry()
                 .name(projectName)
                 .repositories(Collections.singletonMap(repoName, new RepositoryEntry()
                         .name(repoName)
@@ -498,11 +497,13 @@ public class CrudIT extends AbstractServerIT {
 
         /// ---
 
-        ProjectEntry projectEntry = projectsApi.get(orgName, projectName);
-        Map<String, RepositoryEntry> repos = projectEntry.getRepositories();
+        ProjectEntry projectEntry = projectsApi.getProject(orgName, projectName);
+        assertEquals(0, projectEntry.getRepositories().size());
+
+        List<RepositoryEntry> repos = new RepositoriesApi(getApiClient()).listRepositories(orgName, projectName, null, null, null);
         assertEquals(1, repos.size());
 
-        RepositoryEntry repo = repos.get(repoName);
+        RepositoryEntry repo = repos.get(0);
         assertNotNull(repo);
         assertNull(repo.getSecretName());
     }
@@ -629,7 +630,7 @@ public class CrudIT extends AbstractServerIT {
         ProjectsApi projectsApi = new ProjectsApi(getApiClient());
 
         String projectName = "project_" + randomString();
-        projectsApi.createOrUpdate(orgName, new ProjectEntry().name(projectName));
+        projectsApi.createOrUpdateProject(orgName, new ProjectEntry().name(projectName));
 
         // ---
 
@@ -675,7 +676,7 @@ public class CrudIT extends AbstractServerIT {
         // ---
 
         policyResource.linkPolicy(policyName, new PolicyLinkEntry()
-                .userName(orgName)
+                .orgName(orgName)
                 .projectName(projectName));
 
         List<PolicyEntry> l = policyResource.listPolicies(orgName, projectName, null, null, null);
@@ -814,25 +815,25 @@ public class CrudIT extends AbstractServerIT {
         String projectName = "project_" + randomString();
 
         // create a project in Default org
-        ProjectOperationResponse createResp = projectsApi.createOrUpdate(orgName, new ProjectEntry().name(projectName));
+        ProjectOperationResponse createResp = projectsApi.createOrUpdateProject(orgName, new ProjectEntry().name(projectName));
         assertTrue(createResp.getOk());
         assertNotNull(createResp.getId());
 
         // -- move project to second organization by org Name
-        ProjectOperationResponse moveResponse = projectsApi.createOrUpdate(orgName, new ProjectEntry()
+        ProjectOperationResponse moveResponse = projectsApi.createOrUpdateProject(orgName, new ProjectEntry()
                 .name(projectName)
                 .orgName(secondOrgName));
         assertTrue(moveResponse.getOk());
         assertEquals("UPDATED", moveResponse.getResult().getValue());
-        assertNotNull(projectsApi.get(secondOrgName, projectName));
+        assertNotNull(projectsApi.getProject(secondOrgName, projectName));
 
         // -- move project back to Default organization by org Id
-        moveResponse = projectsApi.createOrUpdate(secondOrgName, new ProjectEntry()
+        moveResponse = projectsApi.createOrUpdateProject(secondOrgName, new ProjectEntry()
                 .name(projectName)
                 .orgId(defaultOrgId));
         assertTrue(moveResponse.getOk());
         assertEquals("UPDATED", moveResponse.getResult().getValue());
-        assertNotNull(projectsApi.get(orgName, projectName));
+        assertNotNull(projectsApi.getProject(orgName, projectName));
 
         // -- test change org for secret
         SecretsApi secretsApi = new SecretsApi(getApiClient());

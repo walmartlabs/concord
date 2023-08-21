@@ -44,14 +44,14 @@
 //        String orgName = "org_" + randomString();
 //
 //        OrganizationsApi orgApi = new OrganizationsApi(getApiClient());
-//        orgApi.createOrUpdate(new OrganizationEntry().setName(orgName));
+//        orgApi.createOrUpdateProject(new OrganizationEntry().setName(orgName));
 //
 //        // add the user A
 //
 //        UsersApi usersApi = new UsersApi(getApiClient());
 //
 //        String userAName = "userA_" + randomString();
-//        usersApi.createOrUpdate(new CreateUserRequest().setUsername(userAName).setType(CreateUserRequest.TypeEnum.LOCAL));
+//        usersApi.createOrUpdateProject(new CreateUserRequest().setUsername(userAName).setType(CreateUserRequest.TypeEnum.LOCAL));
 //
 //        ApiKeysApi apiKeyResource = new ApiKeysApi(getApiClient());
 //        CreateApiKeyResponse apiKeyA = apiKeyResource.create(new CreateApiKeyRequest().setUsername(userAName));
@@ -61,7 +61,7 @@
 //        String teamName = "team_" + randomString();
 //
 //        TeamsApi teamsApi = new TeamsApi(getApiClient());
-//        teamsApi.createOrUpdate(orgName, new TeamEntry().setName(teamName));
+//        teamsApi.createOrUpdateProject(orgName, new TeamEntry().setName(teamName));
 //
 //        teamsApi.addUsers(orgName, teamName, false, Collections.singletonList(new TeamUserEntry()
 //                .setUsername(userAName)
@@ -74,7 +74,7 @@
 //        String projectName = "project_" + randomString();
 //
 //        ProjectsApi projectsApi = new ProjectsApi(getApiClient());
-//        projectsApi.createOrUpdate(orgName, new ProjectEntry()
+//        projectsApi.createOrUpdateProject(orgName, new ProjectEntry()
 //                .setName(projectName)
 //                .setVisibility(ProjectEntry.VisibilityEnum.PRIVATE)
 //                .setRawPayloadMode(ProjectEntry.RawPayloadModeEnum.EVERYONE));
@@ -227,12 +227,12 @@
 //        String orgName = "org_" + randomString();
 //
 //        OrganizationsApi orgApi = new OrganizationsApi(getApiClient());
-//        orgApi.createOrUpdate(new OrganizationEntry().setName(orgName));
+//        orgApi.createOrUpdateProject(new OrganizationEntry().setName(orgName));
 //
 //        String projectName = "project_" + randomString();
 //
 //        ProjectsApi projectsApi = new ProjectsApi(getApiClient());
-//        projectsApi.createOrUpdate(orgName, new ProjectEntry()
+//        projectsApi.createOrUpdateProject(orgName, new ProjectEntry()
 //                .setName(projectName)
 //                .setVisibility(ProjectEntry.VisibilityEnum.PUBLIC)
 //                .setRawPayloadMode(ProjectEntry.RawPayloadModeEnum.EVERYONE));
@@ -259,12 +259,12 @@
 //        String orgName = "org_" + randomString();
 //
 //        OrganizationsApi orgApi = new OrganizationsApi(getApiClient());
-//        orgApi.createOrUpdate(new OrganizationEntry().setName(orgName));
+//        orgApi.createOrUpdateProject(new OrganizationEntry().setName(orgName));
 //
 //        String projectName = "project_" + randomString();
 //
 //        ProjectsApi projectsApi = new ProjectsApi(getApiClient());
-//        projectsApi.createOrUpdate(orgName, new ProjectEntry()
+//        projectsApi.createOrUpdateProject(orgName, new ProjectEntry()
 //                .setName(projectName)
 //                .setVisibility(ProjectEntry.VisibilityEnum.PUBLIC)
 //                .setRawPayloadMode(ProjectEntry.RawPayloadModeEnum.EVERYONE));
@@ -293,12 +293,12 @@
 //        String orgName = "org_" + randomString();
 //
 //        OrganizationsApi orgApi = new OrganizationsApi(getApiClient());
-//        orgApi.createOrUpdate(new OrganizationEntry().setName(orgName));
+//        orgApi.createOrUpdateProject(new OrganizationEntry().setName(orgName));
 //
 //        String projectName = "project_" + randomString();
 //
 //        ProjectsApi projectsApi = new ProjectsApi(getApiClient());
-//        projectsApi.createOrUpdate(orgName, new ProjectEntry()
+//        projectsApi.createOrUpdateProject(orgName, new ProjectEntry()
 //                .setName(projectName)
 //                .setVisibility(ProjectEntry.VisibilityEnum.PUBLIC)
 //                .setRawPayloadMode(ProjectEntry.RawPayloadModeEnum.EVERYONE));
@@ -327,7 +327,7 @@
 //        String username = "user_" + randomString();
 //
 //        UsersApi usersApi = new UsersApi(getApiClient());
-//        usersApi.createOrUpdate(new CreateUserRequest()
+//        usersApi.createOrUpdateProject(new CreateUserRequest()
 //                .setUsername(username)
 //                .setType(CreateUserRequest.TypeEnum.LOCAL));
 //
@@ -358,7 +358,7 @@
 //        String username = "user_" + randomString();
 //
 //        UsersApi usersApi = new UsersApi(getApiClient());
-//        usersApi.createOrUpdate(new CreateUserRequest()
+//        usersApi.createOrUpdateProject(new CreateUserRequest()
 //                .setUsername(username)
 //                .setType(CreateUserRequest.TypeEnum.LOCAL));
 //
@@ -413,12 +413,12 @@
 //        String orgName = "org_" + randomString();
 //
 //        OrganizationsApi orgApi = new OrganizationsApi(getApiClient());
-//        orgApi.createOrUpdate(new OrganizationEntry().setName(orgName));
+//        orgApi.createOrUpdateProject(new OrganizationEntry().setName(orgName));
 //
 //        String projectName = "project_" + randomString();
 //
 //        ProjectsApi projectsApi = new ProjectsApi(getApiClient());
-//        projectsApi.createOrUpdate(orgName, new ProjectEntry()
+//        projectsApi.createOrUpdateProject(orgName, new ProjectEntry()
 //                .setName(projectName)
 //                .setVisibility(ProjectEntry.VisibilityEnum.PUBLIC)
 //                .setRawPayloadMode(ProjectEntry.RawPayloadModeEnum.EVERYONE));
@@ -453,12 +453,12 @@
 //        String orgName = "org_" + randomString();
 //
 //        OrganizationsApi orgApi = new OrganizationsApi(getApiClient());
-//        orgApi.createOrUpdate(new OrganizationEntry().setName(orgName));
+//        orgApi.createOrUpdateProject(new OrganizationEntry().setName(orgName));
 //
 //        String projectName = "project_" + randomString();
 //
 //        ProjectsApi projectsApi = new ProjectsApi(getApiClient());
-//        projectsApi.createOrUpdate(orgName, new ProjectEntry()
+//        projectsApi.createOrUpdateProject(orgName, new ProjectEntry()
 //                .setName(projectName)
 //                .setVisibility(ProjectEntry.VisibilityEnum.PUBLIC)
 //                .setRawPayloadMode(ProjectEntry.RawPayloadModeEnum.EVERYONE));
@@ -512,12 +512,12 @@
 //        String orgName = "org_" + randomString();
 //
 //        OrganizationsApi orgApi = new OrganizationsApi(getApiClient());
-//        orgApi.createOrUpdate(new OrganizationEntry().setName(orgName));
+//        orgApi.createOrUpdateProject(new OrganizationEntry().setName(orgName));
 //
 //        String projectName = "project_" + randomString();
 //
 //        ProjectsApi projectsApi = new ProjectsApi(getApiClient());
-//        projectsApi.createOrUpdate(orgName, new ProjectEntry()
+//        projectsApi.createOrUpdateProject(orgName, new ProjectEntry()
 //                .setName(projectName)
 //                .setVisibility(ProjectEntry.VisibilityEnum.PUBLIC)
 //                .setRawPayloadMode(ProjectEntry.RawPayloadModeEnum.EVERYONE));

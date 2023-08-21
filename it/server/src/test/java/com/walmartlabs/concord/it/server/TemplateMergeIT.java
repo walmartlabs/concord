@@ -48,7 +48,7 @@ public class TemplateMergeIT extends AbstractServerIT {
         String projectName = "project_" + randomString();
 
         ProjectsApi projectsApi = new ProjectsApi(getApiClient());
-        projectsApi.createOrUpdate(orgName, new ProjectEntry()
+        projectsApi.createOrUpdateProject(orgName, new ProjectEntry()
                 .name(projectName)
                 .cfg(Collections.singletonMap(Constants.Request.TEMPLATE_KEY, template.toUri().toString()))
                 .rawPayloadMode(ProjectEntry.RawPayloadModeEnum.EVERYONE));

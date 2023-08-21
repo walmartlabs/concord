@@ -63,7 +63,7 @@
 //    public void testOrgCreation() throws Exception {
 //        // --- user
 //        UsersApi usersApi = new UsersApi(getApiClient());
-//        usersApi.createOrUpdate(new CreateUserRequest()
+//        usersApi.createOrUpdateProject(new CreateUserRequest()
 //                .setUsername(userOwner)
 //                .setEmail("owner@mail.com")
 //                .setDisplayName("Test Owner")
@@ -86,7 +86,7 @@
 //        owner.setUsername(userOwner);
 //
 //        try {
-//            orgApi.createOrUpdate(new OrganizationEntry().setOwner(owner).setName(orgName));
+//            orgApi.createOrUpdateProject(new OrganizationEntry().setOwner(owner).setName(orgName));
 //            fail("exception expected");
 //        } catch (ApiException e) {
 //            assertTrue(e.getResponseBody().contains("Action forbidden: test-rule"));
@@ -104,7 +104,7 @@
 //
 //    private String createPolicy(String orgName, String projectName, Map<String, Object> rules) throws ApiException {
 //        PolicyApi policyApi = new PolicyApi(getApiClient());
-//        policyApi.createOrUpdate(new PolicyEntry()
+//        policyApi.createOrUpdateProject(new PolicyEntry()
 //                .setName(policyName)
 //                .setRules(rules));
 //

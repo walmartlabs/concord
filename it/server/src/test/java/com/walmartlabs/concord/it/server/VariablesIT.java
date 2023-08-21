@@ -39,7 +39,7 @@ public class VariablesIT extends AbstractServerIT {
         String projectName = "project_" + randomString();
 
         ProjectsApi projectsApi = new ProjectsApi(getApiClient());
-        projectsApi.createOrUpdate(orgName, new ProjectEntry()
+        projectsApi.createOrUpdateProject(orgName, new ProjectEntry()
                 .name(projectName)
                 .cfg(ImmutableMap.of("arguments",
                         ImmutableMap.of("nested",
@@ -77,14 +77,14 @@ public class VariablesIT extends AbstractServerIT {
         String secretValue = "secret_" + randomString();
 
         ProjectsApi projectsApi = new ProjectsApi(getApiClient());
-        projectsApi.createOrUpdate(orgName, new ProjectEntry()
+        projectsApi.createOrUpdateProject(orgName, new ProjectEntry()
                 .name(projectName)
                 .rawPayloadMode(ProjectEntry.RawPayloadModeEnum.EVERYONE));
 
         EncryptValueResponse evr = projectsApi.encrypt(orgName, projectName, secretValue);
         String encryptedValue = evr.getData();
 
-        projectsApi.updateConfiguration(orgName, projectName,
+        projectsApi.updateProjectConfiguration(orgName, projectName,
                 ImmutableMap.of("arguments",
                         ImmutableMap.of("mySecret", encryptedValue)));
 
