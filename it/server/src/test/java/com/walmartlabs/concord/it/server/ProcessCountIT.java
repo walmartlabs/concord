@@ -58,7 +58,7 @@ public class ProcessCountIT extends AbstractServerIT {
         String orgName = "org_" + randomString();
 
         OrganizationsApi orgApi = new OrganizationsApi(getApiClient());
-        orgApi.createOrUpdate(new OrganizationEntry().setName(orgName));
+        orgApi.createOrUpdateOrg(new OrganizationEntry().name(orgName));
 
         String projectName = "project_" + randomString();
         String repoName = "repo_" + randomString();
@@ -67,10 +67,10 @@ public class ProcessCountIT extends AbstractServerIT {
 
         ProjectsApi projectsApi = new ProjectsApi(getApiClient());
         projectsApi.createOrUpdate(orgName, new ProjectEntry()
-                .setName(projectName)
-                .setRepositories(Collections.singletonMap(repoName, new RepositoryEntry()
-                        .setBranch("master")
-                        .setUrl(gitUrl))));
+                .name(projectName)
+                .repositories(Collections.singletonMap(repoName, new RepositoryEntry()
+                        .branch("master")
+                        .url(gitUrl))));
 
         // ---
 
@@ -82,35 +82,34 @@ public class ProcessCountIT extends AbstractServerIT {
 
         // ---
 
-        ProcessApi processApi = new ProcessApi(getApiClient());
-        ProcessEntry pe = waitForCompletion(processApi, spr.getInstanceId());
+        ProcessEntry pe = waitForCompletion(getApiClient(), spr.getInstanceId());
         assertEquals(ProcessEntry.StatusEnum.FINISHED, pe.getStatus());
 
-        byte[] ab = getLog(pe.getLogFileName());
+        byte[] ab = getLog(pe.getInstanceId());
         assertLog(".*Hello!.*", ab);
 
         // ---
 
         ProcessV2Api processV2Api = new ProcessV2Api(getApiClient());
-        List<ProcessEntry> l = processV2Api.list(null, orgName, null, projectName, null, repoName, null, null, null, null, null, null, null, null, null);
+        List<ProcessEntry> l = processV2Api.listProcesses(null, orgName, null, projectName, null, repoName, null, null, null, null, null, null, null, null, null);
         assertEquals(1, l.size());
         assertEquals(pe.getInstanceId(), l.get(0).getInstanceId());
 
         // specifying an invalid repository name should return a 404 response
         try {
-            processV2Api.list(null, orgName, null, projectName, null, repoName + randomString(), null, null, null, null, null, null, null, null, null);
+            processV2Api.listProcesses(null, orgName, null, projectName, null, repoName + randomString(), null, null, null, null, null, null, null, null, null);
         } catch (ApiException e) {
             assertEquals(404, e.getCode());
         }
 
         // ---
 
-        int i = processV2Api.count(null, orgName, null, projectName, null, repoName, null, null, null, null, null, null);
+        int i = processV2Api.countProcesses(null, orgName, null, projectName, null, repoName, null, null, null, null, null, null);
         assertEquals(1, i);
 
         // specifying an invalid repository name should return a 404 response
         try {
-            processV2Api.count(null, orgName, null, projectName, null, repoName + randomString(), null, null, null, null, null, null);
+            processV2Api.countProcesses(null, orgName, null, projectName, null, repoName + randomString(), null, null, null, null, null, null);
         } catch (ApiException e) {
             assertEquals(404, e.getCode());
         }

@@ -66,25 +66,24 @@ public class DependenciesIT extends AbstractServerIT {
         StartProcessResponse spr = start(payload);
         assertNotNull(spr.getInstanceId());
 
-        ProcessEntry psr = waitForCompletion(processApi, spr.getInstanceId());
+        ProcessEntry psr = waitForCompletion(getApiClient(), spr.getInstanceId());
         assertEquals(ProcessEntry.StatusEnum.FINISHED, psr.getStatus());
 
         // ---
 
-        byte[] ab = getLog(psr.getLogFileName());
+        byte[] ab = getLog(psr.getInstanceId());
         assertLog(".*Hello!.*", ab);
     }
 
     @Test
     public void testMaven() throws Exception {
-        byte[] payload = archive(ProcessIT.class.getResource("mvnDeps").toURI());
+        byte[] payload = archive(DependenciesIT.class.getResource("mvnDeps").toURI());
 
-        ProcessApi processApi = new ProcessApi(getApiClient());
         StartProcessResponse spr = start(payload);
         assertNotNull(spr.getInstanceId());
 
-        ProcessEntry pir = waitForCompletion(processApi, spr.getInstanceId());
-        byte[] ab = getLog(pir.getLogFileName());
+        ProcessEntry pir = waitForCompletion(getApiClient(), spr.getInstanceId());
+        byte[] ab = getLog(pir.getInstanceId());
 
         assertLog(".*Hello, Concord.*", ab);
     }

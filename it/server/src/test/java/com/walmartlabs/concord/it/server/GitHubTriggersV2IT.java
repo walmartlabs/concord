@@ -65,7 +65,7 @@ public class GitHubTriggersV2IT extends AbstractGitHubTriggersIT {
         OrganizationsApi orgApi = new OrganizationsApi(getApiClient());
 
         String orgXName = "orgX_" + randomString();
-        orgApi.createOrUpdate(new OrganizationEntry().setName(orgXName));
+        orgApi.createOrUpdateOrg(new OrganizationEntry().name(orgXName));
 
         Path repo = initRepo("githubTests/repos/v2/defaultTrigger");
         String branch = "branch_" + randomString();
@@ -138,7 +138,7 @@ public class GitHubTriggersV2IT extends AbstractGitHubTriggersIT {
         OrganizationsApi orgApi = new OrganizationsApi(getApiClient());
 
         String orgXName = "orgX_" + randomString();
-        orgApi.createOrUpdate(new OrganizationEntry().setName(orgXName));
+        orgApi.createOrUpdateOrg(new OrganizationEntry().name(orgXName));
 
         // Project A
         // master branch + a default trigger
@@ -167,7 +167,7 @@ public class GitHubTriggersV2IT extends AbstractGitHubTriggersIT {
         OrganizationsApi orgApi = new OrganizationsApi(getApiClient());
 
         String orgXName = "orgX_" + randomString();
-        orgApi.createOrUpdate(new OrganizationEntry().setName(orgXName));
+        orgApi.createOrUpdateOrg(new OrganizationEntry().name(orgXName));
 
         // Project A
         // master branch + a default trigger
@@ -197,7 +197,7 @@ public class GitHubTriggersV2IT extends AbstractGitHubTriggersIT {
         OrganizationsApi orgApi = new OrganizationsApi(getApiClient());
 
         String orgXName = "orgX_" + randomString();
-        orgApi.createOrUpdate(new OrganizationEntry().setName(orgXName));
+        orgApi.createOrUpdateOrg(new OrganizationEntry().name(orgXName));
 
         // Project A
         // master branch + a default trigger
@@ -230,7 +230,7 @@ public class GitHubTriggersV2IT extends AbstractGitHubTriggersIT {
         OrganizationsApi orgApi = new OrganizationsApi(getApiClient());
 
         String orgXName = "orgX_" + randomString();
-        orgApi.createOrUpdate(new OrganizationEntry().setName(orgXName));
+        orgApi.createOrUpdateOrg(new OrganizationEntry().name(orgXName));
 
         // Project A
         // master branch + a default trigger
@@ -261,7 +261,7 @@ public class GitHubTriggersV2IT extends AbstractGitHubTriggersIT {
         OrganizationsApi orgApi = new OrganizationsApi(getApiClient());
 
         String orgXName = "orgX_" + randomString();
-        orgApi.createOrUpdate(new OrganizationEntry().setName(orgXName));
+        orgApi.createOrUpdateOrg(new OrganizationEntry().name(orgXName));
 
         // Project A
         // master branch + a default trigger
@@ -293,7 +293,7 @@ public class GitHubTriggersV2IT extends AbstractGitHubTriggersIT {
         OrganizationsApi orgApi = new OrganizationsApi(getApiClient());
 
         String orgName = "org_" + randomString();
-        orgApi.createOrUpdate(new OrganizationEntry().setName(orgName));
+        orgApi.createOrUpdateOrg(new OrganizationEntry().name(orgName));
 
         String projectName = "project_" + randomString();
         String repoName = "repo_" + randomString();
@@ -310,8 +310,8 @@ public class GitHubTriggersV2IT extends AbstractGitHubTriggersIT {
         ProcessEntry pe = waitForAProcess(orgName, projectName, "github", null);
         assertLog(pe, ".*onEmpty: .*");
 
-        ProcessApi processApi = new ProcessApi(getApiClient());
-        List<ProcessEntry> list = processApi.list(orgName, projectName, null, null, null, null, null, null, null, null, null);
+        ProcessV2Api processApi = new ProcessV2Api(getApiClient());
+        List<ProcessEntry> list = processApi.listProcesses(null, orgName, null, projectName, null, null, null, null, null, null, null, null, null, null, null);
         assertEquals(1, list.size());
 
         // ---
@@ -322,7 +322,7 @@ public class GitHubTriggersV2IT extends AbstractGitHubTriggersIT {
                 "_USER_LDAP_DN", "");
 
         while (true) {
-            list = processApi.list(orgName, projectName, null, null, null, null, null, null, null, null, null);
+            list = processApi.listProcesses(null, orgName, null, projectName, null, null, null, null, null, null, null, null, null, null, null);
             if (list.size() == 3) {
                 break;
             }
@@ -338,7 +338,7 @@ public class GitHubTriggersV2IT extends AbstractGitHubTriggersIT {
         OrganizationsApi orgApi = new OrganizationsApi(getApiClient());
 
         String orgName = "org_" + randomString();
-        orgApi.createOrUpdate(new OrganizationEntry().setName(orgName));
+        orgApi.createOrUpdateOrg(new OrganizationEntry().name(orgName));
 
         // -- create two projects to hold two similarly named repos
 
@@ -369,7 +369,7 @@ public class GitHubTriggersV2IT extends AbstractGitHubTriggersIT {
         ProcessV2Api processApi = new ProcessV2Api(getApiClient());
         ProcessEntry refreshProc;
         while (true) {
-            refreshProc = processApi.list(null, "ConcordSystem", null,
+            refreshProc = processApi.listProcesses(null, "ConcordSystem", null,
                     "concordTriggers", null, null, null, null, null, null, null,
                     null, null, 1, 0).stream()
                     .filter(e -> e.getInitiator().equals("github"))
@@ -406,7 +406,7 @@ public class GitHubTriggersV2IT extends AbstractGitHubTriggersIT {
         OrganizationsApi orgApi = new OrganizationsApi(getApiClient());
 
         String orgName = "org_" + randomString();
-        orgApi.createOrUpdate(new OrganizationEntry().setName(orgName));
+        orgApi.createOrUpdateOrg(new OrganizationEntry().name(orgName));
 
         String projectName = "project_" + randomString();
         String repoName = "repo_" + randomString();
@@ -432,7 +432,7 @@ public class GitHubTriggersV2IT extends AbstractGitHubTriggersIT {
         OrganizationsApi orgApi = new OrganizationsApi(getApiClient());
 
         String orgName = "org_" + randomString();
-        orgApi.createOrUpdate(new OrganizationEntry().setName(orgName));
+        orgApi.createOrUpdateOrg(new OrganizationEntry().name(orgName));
 
         String projectName = "project_" + randomString();
         String repoName = "repo_" + randomString();
@@ -455,7 +455,7 @@ public class GitHubTriggersV2IT extends AbstractGitHubTriggersIT {
         OrganizationsApi orgApi = new OrganizationsApi(getApiClient());
 
         String orgXName = "orgX_" + randomString();
-        orgApi.createOrUpdate(new OrganizationEntry().setName(orgXName));
+        orgApi.createOrUpdateOrg(new OrganizationEntry().name(orgXName));
 
         // Project A
         // master branch + a default trigger
@@ -486,7 +486,7 @@ public class GitHubTriggersV2IT extends AbstractGitHubTriggersIT {
         OrganizationsApi orgApi = new OrganizationsApi(getApiClient());
 
         String orgXName = "orgX_" + randomString();
-        orgApi.createOrUpdate(new OrganizationEntry().setName(orgXName));
+        orgApi.createOrUpdateOrg(new OrganizationEntry().name(orgXName));
 
         // Project A
         // master branch + a default trigger
@@ -521,9 +521,9 @@ public class GitHubTriggersV2IT extends AbstractGitHubTriggersIT {
         createLdapUser(ldapCtx, username);
 
         UsersApi usersApi = new UsersApi(getApiClient());
-        usersApi.createOrUpdate(new CreateUserRequest()
-                .setUsername(username)
-                .setType(CreateUserRequest.TypeEnum.LDAP));
+        usersApi.createOrUpdateUser(new CreateUserRequest()
+                .username(username)
+                .type(CreateUserRequest.TypeEnum.LDAP));
         return username;
     }
 

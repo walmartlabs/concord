@@ -49,19 +49,19 @@ public class ForceSuspendIT extends AbstractServerIT {
 
         StartProcessResponse spr = start(input);
 
-        ProcessApi processApi = new ProcessApi(getApiClient());
-        ProcessEntry pir = waitForStatus(processApi, spr.getInstanceId(), ProcessEntry.StatusEnum.SUSPENDED);
-        byte[] ab = getLog(pir.getLogFileName());
+        ProcessEntry pir = waitForStatus(getApiClient(), spr.getInstanceId(), ProcessEntry.StatusEnum.SUSPENDED);
+        byte[] ab = getLog(pir.getInstanceId());
 
         assertLog(".*Requesting suspend.*", ab);
         assertLog(".*Whoa!.*", 0, ab);
 
         // ---
 
+        ProcessApi processApi = new ProcessApi(getApiClient());
         processApi.resume(pir.getInstanceId(), eventName, null, null);
-        pir = waitForCompletion(processApi, spr.getInstanceId());
+        pir = waitForCompletion(getApiClient(), spr.getInstanceId());
 
-        ab = getLog(pir.getLogFileName());
+        ab = getLog(pir.getInstanceId());
 
         assertLog(".*Whoa!.*", ab);
     }

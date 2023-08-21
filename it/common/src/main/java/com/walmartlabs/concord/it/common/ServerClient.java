@@ -20,17 +20,14 @@ package com.walmartlabs.concord.it.common;
  * =====
  */
 
-import com.google.gson.reflect.TypeToken;
-import com.squareup.okhttp.Call;
-import com.squareup.okhttp.OkHttpClient;
 import com.walmartlabs.concord.ApiClient;
 import com.walmartlabs.concord.ApiException;
-import com.walmartlabs.concord.ApiResponse;
 import com.walmartlabs.concord.client.*;
 import org.intellij.lang.annotations.Language;
 
 import java.io.IOException;
-import java.lang.reflect.Type;
+import java.io.InputStream;
+import java.time.Duration;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -67,26 +64,27 @@ public class ServerClient {
     }
 
     public StartProcessResponse start(Map<String, Object> input) throws ApiException {
-        return request("/api/v1/process", input, StartProcessResponse.class);
+        return new ProcessApi(client).startProcess(input);
     }
 
-    public <T> T request(String uri, Map<String, Object> input, Class<T> entityType) throws ApiException {
-        ApiResponse<T> resp = ClientUtils.postData(client, uri, input, entityType);
-
-        int code = resp.getStatusCode();
-        if (code < 200 || code >= 300) {
-            if (code == 403) {
-                throw new ForbiddenException("Forbidden!", resp.getData());
-            }
-
-            throw new ApiException("Request error: " + code);
-        }
-
-        return resp.getData();
-    }
+//    public <T> T request(String uri, Map<String, Object> input, Class<T> entityType) throws ApiException {
+//        ApiResponse<T> resp = ClientUtils.postData(client, uri, input, entityType);
+//
+//        int code = resp.getStatusCode();
+//        if (code < 200 || code >= 300) {
+//            if (code == 403) {
+//                throw new ForbiddenException("Forbidden!", resp.getData());
+//            }
+//
+//            throw new ApiException("Request error: " + code);
+//        }
+//
+//        return resp.getData();
+//    }
 
     public SecretOperationResponse postSecret(String orgName, Map<String, Object> input) throws ApiException {
-        return request("/api/v1/org/" + orgName + "/secret", input, SecretOperationResponse.class);
+        SecretsApi api = new SecretsApi(client);
+        return api.createSecret(orgName, input);
     }
 
     public SecretOperationResponse generateKeyPair(String orgName, String projectName, String name,
@@ -95,7 +93,7 @@ public class ServerClient {
         Map<String, Object> m = new HashMap<>();
         m.put("name", name);
         m.put("generatePassword", generatePassword);
-        m.put("type", SecretEntry.TypeEnum.KEY_PAIR.toString());
+        m.put("type", SecretEntryV2.TypeEnum.KEY_PAIR.toString());
         if (storePassword != null) {
             m.put("storePassword", storePassword);
         }
@@ -112,7 +110,7 @@ public class ServerClient {
         Map<String, Object> m = new HashMap<>();
         m.put("name", name);
         m.put("generatePassword", generatePassword);
-        m.put("type", SecretEntry.TypeEnum.KEY_PAIR.toString());
+        m.put("type", SecretEntryV2.TypeEnum.KEY_PAIR.toString());
         if (storePassword != null) {
             m.put("storePassword", storePassword);
         }
@@ -130,7 +128,7 @@ public class ServerClient {
                                                   byte[] secret) throws ApiException {
         Map<String, Object> m = new HashMap<>();
         m.put("name", name);
-        m.put("type", SecretEntry.TypeEnum.DATA.toString());
+        m.put("type", SecretEntryV2.TypeEnum.DATA.toString());
         m.put("generatePassword", generatePassword);
 
         if (projectName != null && !projectName.isEmpty()) {
@@ -149,7 +147,7 @@ public class ServerClient {
                                                   byte[] secret) throws ApiException {
         Map<String, Object> m = new HashMap<>();
         m.put("name", name);
-        m.put("type", SecretEntry.TypeEnum.DATA.toString());
+        m.put("type", SecretEntryV2.TypeEnum.DATA.toString());
         m.put("generatePassword", generatePassword);
 
         if (projectIds != null && !projectIds.isEmpty()) {
@@ -170,7 +168,7 @@ public class ServerClient {
                                                        String password) throws ApiException {
         Map<String, Object> m = new HashMap<>();
         m.put("name", name);
-        m.put("type", SecretEntry.TypeEnum.USERNAME_PASSWORD.toString());
+        m.put("type", SecretEntryV2.TypeEnum.USERNAME_PASSWORD.toString());
         m.put("generatePassword", generatePassword);
         m.put("username", username);
         m.put("password", password);
@@ -184,26 +182,24 @@ public class ServerClient {
         return postSecret(orgName, m);
     }
 
-    public byte[] getLog(String logFileName) throws ApiException {
-        Set<String> auths = client.getAuthentications().keySet();
-        String[] authNames = auths.toArray(new String[0]);
-
-        Call c = client.buildCall("/logs/" + logFileName, "GET", new ArrayList<>(), new ArrayList<>(),
-                null, new HashMap<>(), new HashMap<>(), authNames, null);
-
-        Type t = new TypeToken<byte[]>() {
-        }.getType();
-        return client.<byte[]>execute(c, t).getData();
+    public byte[] getLog(UUID instanceId) throws ApiException {
+        try (InputStream is = new ProcessApi(client).getProcessLog(instanceId, null)) {
+            return is.readAllBytes();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 
-    public static ProcessEntry waitForStatus(ProcessApi api, UUID instanceId,
+    public static ProcessEntry waitForStatus(ApiClient apiClient, UUID instanceId,
                                              ProcessEntry.StatusEnum status, ProcessEntry.StatusEnum... more) throws InterruptedException {
         int retries = 10;
+
+        ProcessV2Api apiV2 = new ProcessV2Api(apiClient);
 
         ProcessEntry pir;
         while (true) {
             try {
-                pir = api.get(instanceId);
+                pir = apiV2.getProcess(instanceId, Collections.singleton("childrenIds"));
                 if (pir.getStatus() == ProcessEntry.StatusEnum.FINISHED || pir.getStatus() == ProcessEntry.StatusEnum.FAILED || pir.getStatus() == ProcessEntry.StatusEnum.CANCELLED) {
                     return pir;
                 }
@@ -268,8 +264,8 @@ public class ServerClient {
         return null;
     }
 
-    public static ProcessEntry waitForCompletion(ProcessApi api, UUID instanceId) throws InterruptedException {
-        return waitForStatus(api, instanceId, ProcessEntry.StatusEnum.FAILED, ProcessEntry.StatusEnum.FINISHED);
+    public static ProcessEntry waitForCompletion(ApiClient apiClient, UUID instanceId) throws InterruptedException {
+        return waitForStatus(apiClient, instanceId, ProcessEntry.StatusEnum.FAILED, ProcessEntry.StatusEnum.FINISHED);
     }
 
     public static void assertLog(@Language("RegExp") String pattern, byte[] ab) throws IOException {
@@ -293,11 +289,11 @@ public class ServerClient {
         assertTrue(times <= matches, "Expected to find " + pattern + " at least " + times + " time(s), found only " + matches);
     }
 
-    public void waitForLog(String logFileName, @Language("RegExp") String pattern) throws ApiException, IOException, InterruptedException {
+    public void waitForLog(UUID instanceId, @Language("RegExp") String pattern) throws ApiException, IOException, InterruptedException {
         int retries = 5;
 
         while (true) {
-            byte[] ab = getLog(logFileName);
+            byte[] ab = getLog(instanceId);
             if (!grep(pattern, ab).isEmpty()) {
                 break;
             }
@@ -327,10 +323,10 @@ public class ServerClient {
     }
 
     private static ApiClient createClient(String baseUrl, String apiKey, String gitHubKey) {
-        ApiClient c = new ConcordApiClient(baseUrl, new OkHttpClient());
-        c.setReadTimeout(60000);
-        c.setConnectTimeout(10000);
-        c.setWriteTimeout(60000);
+        ApiClient c = new ConcordApiClient(baseUrl);
+        c.setReadTimeout(Duration.ofMillis(60000));
+        c.setConnectTimeout(Duration.ofMillis(10000));
+//        c.setWriteTimeout(60000);
 
         c.addDefaultHeader("X-Concord-Trace-Enabled", "true");
 

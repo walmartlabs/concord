@@ -66,7 +66,7 @@ public class SecretServiceImpl implements SecretService {
 
     @Override
     public String exportAsString(Context ctx, String instanceId, String orgName, String name, String password) throws Exception {
-        BinaryDataSecret s = get(ctx, orgName, name, password, SecretEntry.TypeEnum.DATA);
+        BinaryDataSecret s = get(ctx, orgName, name, password, SecretEntryV2.TypeEnum.DATA);
         return new String(s.getData());
     }
 
@@ -77,7 +77,7 @@ public class SecretServiceImpl implements SecretService {
 
     @Override
     public Map<String, String> exportKeyAsFile(Context ctx, String instanceId, String workDir, String orgName, String name, String password) throws Exception {
-        KeyPair kp = get(ctx, orgName, name, password, SecretEntry.TypeEnum.KEY_PAIR);
+        KeyPair kp = get(ctx, orgName, name, password, SecretEntryV2.TypeEnum.KEY_PAIR);
 
         Path baseDir = Paths.get(workDir);
         Path tmpDir = assertTempDir(baseDir);
@@ -102,7 +102,7 @@ public class SecretServiceImpl implements SecretService {
 
     @Override
     public Map<String, String> exportCredentials(Context ctx, String instanceId, String workDir, String orgName, String name, String password) throws Exception {
-        UsernamePassword up = get(ctx, orgName, name, password, SecretEntry.TypeEnum.USERNAME_PASSWORD);
+        UsernamePassword up = get(ctx, orgName, name, password, SecretEntryV2.TypeEnum.USERNAME_PASSWORD);
 
         Map<String, String> m = new HashMap<>();
         m.put("username", up.getUsername());
@@ -117,7 +117,7 @@ public class SecretServiceImpl implements SecretService {
 
     @Override
     public String exportAsFile(Context ctx, String instanceId, String workDir, String orgName, String name, String password) throws Exception {
-        BinaryDataSecret bds = get(ctx, orgName, name, password, SecretEntry.TypeEnum.DATA);
+        BinaryDataSecret bds = get(ctx, orgName, name, password, SecretEntryV2.TypeEnum.DATA);
 
         Path baseDir = Paths.get(workDir);
         Path tmpDir = assertTempDir(baseDir);
@@ -137,16 +137,8 @@ public class SecretServiceImpl implements SecretService {
 
         ApiClient c = clientFactory.create(cfg);
 
-        String path = "/api/v1/org/" + orgName + "/project/" + projectName + "/encrypt";
-        Map<String, String> headerParams = new HashMap<>();
-        headerParams.put("Content-Type", "text/plain;charset=UTF-8");
-        ApiResponse<EncryptValueResponse> r = ClientUtils.postData(c, path, value, headerParams, EncryptValueResponse.class);
-
-        if (r.getStatusCode() == 200 && r.getData().isOk()) {
-            return r.getData().getData();
-        }
-
-        throw new ApiException("Error encrypting string. Status code:" + r.getStatusCode() + " Data: " + r.getData());
+        ProjectsApi api = new ProjectsApi(c);
+        return api.encrypt(orgName, projectName, value).getData();
     }
 
     @Override
@@ -161,14 +153,8 @@ public class SecretServiceImpl implements SecretService {
 
         ApiClient c = clientFactory.create(ctx);
 
-        String path = "/api/v1/process/" + instanceId + "/decrypt";
-        ApiResponse<byte[]> r = ClientUtils.withRetry(RETRY_COUNT, RETRY_INTERVAL, () -> {
-            Type returnType = new TypeToken<byte[]>() {
-            }.getType();
-            return ClientUtils.postData(c, path, input, returnType);
-        });
-
-        return new String(r.getData());
+        ProcessApi api = new ProcessApi(c);
+        return new String(api.decryptString(UUID.fromString(instanceId), input));
     }
 
     private <T extends Secret> T get(Context ctx, String orgName, String secretName, String password, SecretEntryV2.TypeEnum type) throws Exception {

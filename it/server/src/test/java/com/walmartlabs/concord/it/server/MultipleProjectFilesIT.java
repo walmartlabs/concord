@@ -50,7 +50,7 @@ public class MultipleProjectFilesIT extends AbstractServerIT {
 
         // ---
 
-        byte[] payload = archive(ProcessIT.class.getResource("multiProjectTemplate/user").toURI());
+        byte[] payload = archive(MultipleProjectFilesIT.class.getResource("multiProjectTemplate/user").toURI());
 
         // ---
 
@@ -62,9 +62,9 @@ public class MultipleProjectFilesIT extends AbstractServerIT {
 
         // ---
 
-        ProcessEntry pir = waitForCompletion(processApi, spr.getInstanceId());
+        ProcessEntry pir = waitForCompletion(getApiClient(), spr.getInstanceId());
 
-        byte[] ab = getLog(pir.getLogFileName());
+        byte[] ab = getLog(pir.getInstanceId());
         assertLog(".*Hello, Concord!.*", ab);
     }
 

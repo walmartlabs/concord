@@ -50,13 +50,13 @@ public class DefaultSecretService implements SecretService {
 
     @Override
     public String exportAsString(String orgName, String secretName, String password) throws Exception {
-        BinaryDataSecret s = get(orgName, secretName, password, SecretEntry.TypeEnum.DATA);
+        BinaryDataSecret s = get(orgName, secretName, password, SecretEntryV2.TypeEnum.DATA);
         return new String(s.getData());
     }
 
     @Override
     public KeyPair exportKeyAsFile(String orgName, String secretName, String password) throws Exception {
-        com.walmartlabs.concord.common.secret.KeyPair kp = get(orgName, secretName, password, SecretEntry.TypeEnum.KEY_PAIR);
+        com.walmartlabs.concord.common.secret.KeyPair kp = get(orgName, secretName, password, SecretEntryV2.TypeEnum.KEY_PAIR);
 
         Path tmpDir = fileService.createTempDirectory("secret-service");
 
@@ -74,13 +74,13 @@ public class DefaultSecretService implements SecretService {
 
     @Override
     public UsernamePassword exportCredentials(String orgName, String secretName, String password) throws Exception {
-        com.walmartlabs.concord.common.secret.UsernamePassword up = get(orgName, secretName, password, SecretEntry.TypeEnum.USERNAME_PASSWORD);
+        com.walmartlabs.concord.common.secret.UsernamePassword up = get(orgName, secretName, password, SecretEntryV2.TypeEnum.USERNAME_PASSWORD);
         return UsernamePassword.of(up.getUsername(), new String(up.getPassword()));
     }
 
     @Override
     public Path exportAsFile(String orgName, String secretName, String password) throws Exception {
-        BinaryDataSecret bds = get(orgName, secretName, password, SecretEntry.TypeEnum.DATA);
+        BinaryDataSecret bds = get(orgName, secretName, password, SecretEntryV2.TypeEnum.DATA);
 
         Path p = fileService.createTempFile("secret-service-file", ".bin");
         Files.write(p, bds.getData());
@@ -137,7 +137,7 @@ public class DefaultSecretService implements SecretService {
                 .build();
     }
 
-    private <T extends Secret> T get(String orgName, String secretName, String password, SecretEntry.TypeEnum type) throws Exception {
+    private <T extends Secret> T get(String orgName, String secretName, String password, SecretEntryV2.TypeEnum type) throws Exception {
         try {
             return secretClient.getData(orgName, secretName, password, type);
         } catch (com.walmartlabs.concord.client.SecretNotFoundException e) {
@@ -152,7 +152,7 @@ public class DefaultSecretService implements SecretService {
                 .name(secret.secretName())
                 .generatePassword(secret.generatePassword())
                 .storePassword(secret.storePassword())
-                .visibility(visibility != null ? SecretEntry.VisibilityEnum.fromValue(visibility.name()) : null)
+                .visibility(visibility != null ? SecretEntryV2.VisibilityEnum.fromValue(visibility.name()) : null)
                 .project(secret.project());
     }
 }

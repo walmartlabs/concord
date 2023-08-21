@@ -31,6 +31,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
+import java.io.ByteArrayInputStream;
 import java.util.UUID;
 
 public class RemoteLogAppender implements LogAppender {
@@ -48,11 +49,9 @@ public class RemoteLogAppender implements LogAppender {
 
     @Override
     public void appendLog(UUID instanceId, byte[] ab) {
-        String path = "/api/v1/process/" + instanceId + "/log";
-
         try {
             ClientUtils.withRetry(AgentConstants.API_CALL_MAX_RETRIES, AgentConstants.API_CALL_RETRY_DELAY, () -> {
-                ClientUtils.postData(processApi.getApiClient(), path, ab);
+                processApi.appendProcessLog(instanceId, new ByteArrayInputStream(ab));
                 return null;
             });
         } catch (ApiException e) {
@@ -63,11 +62,9 @@ public class RemoteLogAppender implements LogAppender {
 
     @Override
     public boolean appendLog(UUID instanceId, long segmentId, byte[] ab) {
-        String path = "/api/v2/process/" + instanceId + "/log/segment/" + segmentId + "/data";
-
         try {
             ClientUtils.withRetry(AgentConstants.API_CALL_MAX_RETRIES, AgentConstants.API_CALL_RETRY_DELAY, () -> {
-                ClientUtils.postData(processApi.getApiClient(), path, ab);
+                processLogV2Api.appendProcessLogSegment(instanceId, segmentId, new ByteArrayInputStream(ab));
                 return null;
             });
             return true;
@@ -81,13 +78,13 @@ public class RemoteLogAppender implements LogAppender {
     @Override
     public boolean updateSegment(UUID instanceId, long segmentId, LogSegmentStats stats) {
         LogSegmentUpdateRequest request = new LogSegmentUpdateRequest()
-                .setStatus(stats.status())
-                .setWarnings(stats.warnings())
-                .setErrors(stats.errors());
+                .status(stats.status())
+                .warnings(stats.warnings())
+                .errors(stats.errors());
 
         try {
             ClientUtils.withRetry(AgentConstants.API_CALL_MAX_RETRIES, AgentConstants.API_CALL_RETRY_DELAY,
-                    () -> processLogV2Api.updateSegment(instanceId, segmentId, request));
+                    () -> processLogV2Api.updateProcessLogSegment(instanceId, segmentId, request));
             return true;
         } catch (Exception e) {
             log.warn("updateSegment ['{}', '{}', '{}'] -> error: {}", instanceId, segmentId, stats, e.getMessage());

@@ -23,7 +23,11 @@ package com.walmartlabs.concord.client;
 import com.github.tomakehurst.wiremock.junit5.WireMockRuntimeInfo;
 import com.github.tomakehurst.wiremock.junit5.WireMockTest;
 import com.walmartlabs.concord.ApiClient;
+import com.walmartlabs.concord.client.auth.ApiKey;
+import com.walmartlabs.concord.common.secret.BinaryDataSecret;
 import com.walmartlabs.concord.sdk.Constants;
+import com.walmartlabs.concord.sdk.Secret;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
@@ -40,16 +44,27 @@ public class SecretClientTest {
         stubFor(post(urlEqualTo("/api/v1/org/" + orgName + "/secret/" + secretName + "/data"))
                 .willReturn(aResponse()
                         .withStatus(200)
-                        .withHeader(Constants.Headers.SECRET_TYPE, SecretEntry.TypeEnum.DATA.name())
+                        .withHeader(Constants.Headers.SECRET_TYPE, SecretEntryV2.TypeEnum.DATA.name())
                         .withBody("Hello!")));
 
         ApiClient apiClient = new ConcordApiClient("http://localhost:" + wmRuntimeInfo.getHttpPort());
         SecretClient secretClient = new SecretClient(apiClient);
 
         try {
-            secretClient.getData(orgName, secretName, null, SecretEntry.TypeEnum.KEY_PAIR);
+            secretClient.getData(orgName, secretName, null, SecretEntryV2.TypeEnum.KEY_PAIR);
         } catch (IllegalArgumentException e) {
             assertTrue(e.getMessage().contains("Unexpected type of " + orgName + "/" + secretName));
         }
+    }
+
+    @Test
+    @Disabled
+    public void testGetSecret() throws Exception {
+        ApiClient apiClient = new ConcordApiClient("http://localhost:8001");
+        apiClient.setAuth(new ApiKey("cTFxMXExcTE"));
+        SecretClient secretClient = new SecretClient(apiClient);
+
+        BinaryDataSecret result = secretClient.getData("Default", "test", null, SecretEntryV2.TypeEnum.DATA);
+        System.out.println(">>> '" + new String(result.getData()) + "'");
     }
 }

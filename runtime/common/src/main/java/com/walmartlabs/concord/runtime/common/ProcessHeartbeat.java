@@ -57,7 +57,7 @@ public class ProcessHeartbeat {
             long lastSuccessPing = System.currentTimeMillis();
             while (!Thread.currentThread().isInterrupted()) {
                 try {
-                    processHeartbeatApi.ping(instanceId);
+                    processHeartbeatApi.pingProcess(instanceId);
                     lastSuccessPing = System.currentTimeMillis();
                     if (prevPingFailed) {
                         log.info("heartbeat: ok");

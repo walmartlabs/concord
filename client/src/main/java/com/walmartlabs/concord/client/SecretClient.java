@@ -29,9 +29,8 @@ import com.walmartlabs.concord.common.secret.UsernamePassword;
 import com.walmartlabs.concord.sdk.Constants;
 import com.walmartlabs.concord.sdk.Secret;
 
-import java.io.File;
 import java.io.IOException;
-import java.lang.reflect.Type;
+import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
@@ -60,20 +59,15 @@ public class SecretClient {
      * Fetches a decrypted Concord secret from the server.
      */
     public <T extends Secret> T getData(String orgName, String secretName, String password, SecretEntryV2.TypeEnum expectedType) throws Exception {
-        String path = "/api/v1/org/" + orgName + "/secret/" + secretName + "/data";
+        SecretsApi.GetSecretDataRequest req = new SecretsApi.GetSecretDataRequest()
+                .storePassword(password);
 
-        ApiResponse<File> r = null;
+        SecretsApi api = new SecretsApi(apiClient);
 
-        Map<String, Object> params = new HashMap<>();
-        String pwd = password;
-        if (password == null) {
-            pwd = ""; // NOSONAR
-        }
-        params.put("storePassword", pwd);
-
+        ApiResponse<InputStream> r = null;
         try {
             r = ClientUtils.withRetry(retryCount, retryInterval,
-                    () -> ClientUtils.postData(apiClient, path, params, File.class));
+                    () -> api.getSecretDataWithHttpInfo(orgName, secretName, req.asMap()));
 
             if (r.getData() == null) {
                 throw new SecretNotFoundException(orgName, secretName);
@@ -81,7 +75,7 @@ public class SecretClient {
 
             String secretType = ClientUtils.getHeader(Constants.Headers.SECRET_TYPE, r);
             if (secretType == null) {
-                throw new IllegalStateException("Can't determine the secret's expectedType. Server response: code=" + r.getStatusCode() + ", path=" + path);
+                throw new IllegalStateException("Can't determine the secret's expectedType. Server response: code=" + r.getStatusCode());
             }
 
             SecretEntryV2.TypeEnum actualSecretType = SecretEntryV2.TypeEnum.valueOf(secretType);
@@ -93,7 +87,9 @@ public class SecretClient {
                 throw new IllegalArgumentException(String.format(msg, orgName, secretName, expectedType, actualSecretType, SecretEntryV2.TypeEnum.KEY_PAIR));
             }
 
-            return readSecret(actualSecretType, Files.readAllBytes(r.getData().toPath()));
+            try (InputStream is = r.getData()) {
+                return readSecret(actualSecretType, is.readAllBytes());
+            }
         } catch (ApiException e) {
             if (e.getCode() == 404) {
                 throw new SecretNotFoundException(orgName, secretName);
@@ -101,7 +97,7 @@ public class SecretClient {
             throw e;
         } finally {
             if (r != null && r.getData() != null) {
-                Files.delete(r.getData().toPath());
+                r.getData().close();
             }
         }
     }
@@ -110,21 +106,8 @@ public class SecretClient {
      * Decrypt the provided string using the project's key.
      */
     public byte[] decryptString(UUID instanceId, byte[] input) throws Exception {
-        String path = "/api/v1/process/" + instanceId + "/decrypt";
-
-        try {
-            ApiResponse<byte[]> r = ClientUtils.withRetry(retryCount, retryInterval, () -> {
-                Type returnType = new TypeToken<byte[]>() {
-                }.getType();
-                return ClientUtils.postData(apiClient, path, input, returnType);
-            });
-            return r.getData();
-        } catch (ApiException e) {
-            if (e.getCode() == 400) {
-                throw new IllegalArgumentException("Can't decrypt the string: " + Base64.getEncoder().encodeToString(input));
-            }
-            throw e;
-        }
+        ProcessApi api = new ProcessApi(apiClient);
+        return ClientUtils.withRetry(retryCount, retryInterval, () -> api.decryptString(instanceId, input));
     }
 
     /**
@@ -143,17 +126,11 @@ public class SecretClient {
      */
     @Deprecated
     public String encryptString(UUID instanceId, String orgName, String projectName, String input) throws Exception {
-        String path = "/api/v1/org/" + orgName + "/project/" + projectName + "/encrypt";
-        Map<String, String> headerParams = new HashMap<>();
-        headerParams.put("Content-Type", "text/plain;charset=UTF-8");
-        ApiResponse<EncryptValueResponse> r = ClientUtils.withRetry(retryCount, retryInterval,
-                () -> ClientUtils.postData(apiClient, path, input, headerParams, EncryptValueResponse.class));
+        ProjectsApi api = new ProjectsApi(apiClient);
+        EncryptValueResponse r = ClientUtils.withRetry(retryCount, retryInterval,
+                () -> api.encrypt(orgName, projectName, input));
 
-        if (r.getStatusCode() == 200 && r.getData().getOk()) {
-            return r.getData().getData();
-        }
-
-        throw new ApiException("Error encrypting string. Status code:" + r.getStatusCode() + " Data: " + r.getData());
+        return r.getData();
     }
 
     public SecretOperationResponse createSecret(CreateSecretRequest secretRequest) throws ApiException {
@@ -195,7 +172,6 @@ public class SecretClient {
             params.put(Constants.Multipart.PROJECT_NAMES, String.join(",", secretRequest.projectNames()));
         }
 
-
         byte[] data = secretRequest.data();
         CreateSecretRequestV2.KeyPair keyPair = secretRequest.keyPair();
         CreateSecretRequestV2.UsernamePassword usernamePassword = secretRequest.usernamePassword();
@@ -215,9 +191,11 @@ public class SecretClient {
             throw new IllegalArgumentException("Secret data, a key pair or username/password must be specified.");
         }
 
-        ApiResponse<SecretOperationResponse> response = ClientUtils.withRetry(retryCount, retryInterval,
-                () -> ClientUtils.postData(apiClient, path, params, SecretOperationResponse.class));
-        return response.getData();
+        SecretsApi api = new SecretsApi(apiClient);
+
+        SecretOperationResponse response = ClientUtils.withRetry(retryCount, retryInterval,
+                () -> api.createSecret(secretRequest.org(), params));
+        return response;
     }
 
     public void updateSecret(String orgName, String secretName, UpdateSecretRequest request) throws ApiException {
@@ -277,8 +255,10 @@ public class SecretClient {
 
         params.values().removeIf(Objects::isNull);
 
+        SecretsV2Api api = new SecretsV2Api(apiClient);
+
         ClientUtils.withRetry(retryCount, retryInterval,
-                () -> ClientUtils.postData(apiClient, path, params, null));
+                () -> api.updateSecret(orgName, secretName, params));
     }
 
     private static byte[] readFile(Path file) {

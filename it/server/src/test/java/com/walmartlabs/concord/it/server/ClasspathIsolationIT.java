@@ -47,9 +47,8 @@ public class ClasspathIsolationIT extends AbstractServerIT {
 
         StartProcessResponse spr = start(input);
 
-        ProcessApi processApi = new ProcessApi(getApiClient());
-        ProcessEntry pir = waitForCompletion(processApi, spr.getInstanceId());
-        byte[] ab = getLog(pir.getLogFileName());
+        ProcessEntry pir = waitForCompletion(getApiClient(), spr.getInstanceId());
+        byte[] ab = getLog(pir.getInstanceId());
 
         assertLog(".*hello!.*", ab);
     }

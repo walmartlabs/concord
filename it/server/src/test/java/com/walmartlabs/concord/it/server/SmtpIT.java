@@ -64,13 +64,12 @@ public class SmtpIT extends AbstractServerIT {
 
         ProjectsApi projectsApi = new ProjectsApi(getApiClient());
         projectsApi.createOrUpdate(orgName, new ProjectEntry()
-                .setName(projectName)
-                .setCfg(cfg)
-                .setRawPayloadMode(ProjectEntry.RawPayloadModeEnum.EVERYONE));
+                .name(projectName)
+                .cfg(cfg)
+                .rawPayloadMode(ProjectEntry.RawPayloadModeEnum.EVERYONE));
 
         // --
 
-        ProcessApi processApi = new ProcessApi(getApiClient());
         Map<String, Object> input = new HashMap<>();
         input.put("org", orgName);
         input.put("project", projectName);
@@ -79,7 +78,7 @@ public class SmtpIT extends AbstractServerIT {
 
         // ---
 
-        ProcessEntry pir = waitForCompletion(processApi, spr.getInstanceId());
+        ProcessEntry pir = waitForCompletion(getApiClient(), spr.getInstanceId());
         assertEquals(ProcessEntry.StatusEnum.FINISHED, pir.getStatus());
 
         // ---

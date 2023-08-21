@@ -21,32 +21,10 @@ package com.walmartlabs.concord.client;
  */
 
 import com.walmartlabs.concord.ApiClient;
-import com.walmartlabs.concord.client.auth.ApiKey;
-import com.walmartlabs.concord.client.auth.SessionToken;
 
 public class ConcordApiClient extends ApiClient {
 
     public ConcordApiClient(String baseUrl) {
-        setBasePath(baseUrl);
-    }
-
-    public ConcordApiClient setSessionToken(String token) {
-        if (token == null) {
-            return this;
-        }
-
-        setAuth(new SessionToken(token));
-
-        return this;
-    }
-
-    public ApiClient setApiKey(String key) {
-        if (key == null) {
-            return this;
-        }
-
-        setAuth(new ApiKey(key));
-
-        return this;
+        updateBaseUri(baseUrl);
     }
 }

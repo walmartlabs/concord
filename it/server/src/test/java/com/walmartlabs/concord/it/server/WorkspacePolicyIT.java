@@ -40,7 +40,7 @@ public class WorkspacePolicyIT extends AbstractServerIT {
         String orgName = "org_" + randomString();
 
         OrganizationsApi orgApi = new OrganizationsApi(getApiClient());
-        orgApi.createOrUpdate(new OrganizationEntry().setName(orgName));
+        orgApi.createOrUpdateOrg(new OrganizationEntry().name(orgName));
 
         // ---
 
@@ -48,43 +48,41 @@ public class WorkspacePolicyIT extends AbstractServerIT {
 
         ProjectsApi projectsApi = new ProjectsApi(getApiClient());
         projectsApi.createOrUpdate(orgName, new ProjectEntry()
-                .setName(projectName)
-                .setRawPayloadMode(ProjectEntry.RawPayloadModeEnum.EVERYONE));
+                .name(projectName)
+                .rawPayloadMode(ProjectEntry.RawPayloadModeEnum.EVERYONE));
 
         // ---
 
         String policyName = "policy_" + randomString();
 
         PolicyApi policyResource = new PolicyApi(getApiClient());
-        policyResource.createOrUpdate(new PolicyEntry().setName(policyName).setRules(readPolicy("workspacePolicy/test-policy.json")));
-        policyResource.link(policyName, new PolicyLinkEntry().setOrgName(orgName));
+        policyResource.createOrUpdatePolicy(new PolicyEntry().name(policyName).rules(readPolicy("workspacePolicy/test-policy.json")));
+        policyResource.linkPolicy(policyName, new PolicyLinkEntry().orgName(orgName));
 
         // ---
 
-        byte[] payload = archive(ProcessIT.class.getResource("workspacePolicy").toURI());
+        byte[] payload = archive(WorkspacePolicyIT.class.getResource("workspacePolicy").toURI());
         Map<String, Object> input = new HashMap<>();
         input.put("org", orgName);
         input.put("project", projectName);
         input.put("archive", payload);
 
-        ProcessApi processApi = new ProcessApi(getApiClient());
-
         StartProcessResponse spr = start(input);
-        ProcessEntry pe = waitForCompletion(processApi, spr.getInstanceId());
+        ProcessEntry pe = waitForCompletion(getApiClient(), spr.getInstanceId());
         assertEquals(ProcessEntry.StatusEnum.FAILED, pe.getStatus());
 
-        byte[] ab = getLog(pe.getLogFileName());
+        byte[] ab = getLog(pe.getInstanceId());
         assertLog(".*Workspace policy violation.*", ab);
         // ---
 
-        policyResource.createOrUpdate(new PolicyEntry().setName(policyName).setRules(readPolicy("workspacePolicy/test-policy-relaxed.json")));
+        policyResource.createOrUpdatePolicy(new PolicyEntry().name(policyName).rules(readPolicy("workspacePolicy/test-policy-relaxed.json")));
 
         // ---
 
         spr = start(input);
 
-        ProcessEntry pir = waitForCompletion(processApi, spr.getInstanceId());
-        ab = getLog(pir.getLogFileName());
+        ProcessEntry pir = waitForCompletion(getApiClient(), spr.getInstanceId());
+        ab = getLog(pir.getInstanceId());
 
         assertLog(".*Hello!.*", ab);
     }

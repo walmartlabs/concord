@@ -75,14 +75,14 @@ public class EscapeGitCommitMessageIT extends AbstractServerIT {
         // ---
 
         RepositoryEntry repo = new RepositoryEntry()
-                .setName(repoName)
-                .setUrl(repoUrl)
-                .setBranch("master")
-                .setSecretId(response.getId());
+                .name(repoName)
+                .url(repoUrl)
+                .branch("master")
+                .secretId(response.getId());
         ProjectsApi projectsApi = new ProjectsApi(getApiClient());
         projectsApi.createOrUpdate(orgName, new ProjectEntry()
-                .setName(projectName)
-                .setRepositories(singletonMap(repoName, repo)));
+                .name(projectName)
+                .repositories(singletonMap(repoName, repo)));
 
         // ---
         Map<String, Object> input = new HashMap<>();
@@ -93,12 +93,11 @@ public class EscapeGitCommitMessageIT extends AbstractServerIT {
 
         // ---
 
-        ProcessApi processApi = new ProcessApi(getApiClient());
-        ProcessEntry psr = waitForCompletion(processApi, spr.getInstanceId());
+        ProcessEntry psr = waitForCompletion(getApiClient(), spr.getInstanceId());
 
         // ---
 
-        byte[] ab = getLog(psr.getLogFileName());
+        byte[] ab = getLog(psr.getInstanceId());
         assertLog(".*Hello, Vasia.*", ab);
     }
 }

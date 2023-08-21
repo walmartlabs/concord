@@ -26,41 +26,23 @@ import com.walmartlabs.concord.client.ApiClientConfiguration;
 import com.walmartlabs.concord.client.ApiClientFactory;
 import com.walmartlabs.concord.client.ConcordApiClient;
 import com.walmartlabs.concord.sdk.ApiConfiguration;
-import com.walmartlabs.concord.sdk.Constants;
 import com.walmartlabs.concord.sdk.Context;
 import com.walmartlabs.concord.sdk.ContextUtils;
 
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLSocketFactory;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.security.KeyManagementException;
 import java.security.NoSuchAlgorithmException;
+import java.time.Duration;
 import java.util.UUID;
-import java.util.concurrent.TimeUnit;
 
 public class ApiClientFactoryImpl implements ApiClientFactory {
 
     private final ApiConfiguration cfg;
-    private final Path tmpDir;
-    private final OkHttpClient httpClient;
 
     public ApiClientFactoryImpl(ApiConfiguration cfg, Path workDir) throws Exception {
         this.cfg = cfg;
-
-        Path tmpBase = Files.createDirectories(workDir.resolve(Constants.Files.CONCORD_TMP_DIR_NAME));
-        this.tmpDir = Files.createTempDirectory(tmpBase, "api-client");
-
-        OkHttpClient client = new OkHttpClient();
-
-        // init the SSL socket factory early to save time on the first request
-        client = withSslSocketFactory(client);
-
-        client.setConnectTimeout(cfg.connectTimeout(), TimeUnit.MILLISECONDS);
-        client.setReadTimeout(cfg.readTimeout(), TimeUnit.MILLISECONDS);
-        client.setWriteTimeout(30, TimeUnit.SECONDS);
-
-        this.httpClient = client;
     }
 
     @Override
@@ -86,11 +68,13 @@ public class ApiClientFactoryImpl implements ApiClientFactory {
             throw new IllegalArgumentException("Session token or an API key is required");
         }
 
-        ApiClient client = new ConcordApiClient(baseUrl, httpClient)
+        ApiClient client = new ConcordApiClient(baseUrl)
                 .setSessionToken(sessionToken)
                 .setApiKey(apiKey)
                 .addDefaultHeader("Accept", "*/*")
-                .setTempFolderPath(tmpDir.toString());
+                .setConnectTimeout(Duration.ofMillis(cfg.connectTimeout()))
+                .setReadTimeout(Duration.ofMillis(cfg.readTimeout()));
+        // TODO: brig: write timeout?
 
         UUID txId = getTxId(overrides);
 

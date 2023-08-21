@@ -41,11 +41,11 @@ public class RawPayloadProjectIT extends AbstractServerIT {
         String orgName = "Default";
         String projectName = "project_" + System.currentTimeMillis();
         projectsApi.createOrUpdate(orgName, new ProjectEntry()
-                .setName(projectName));
+                .name(projectName));
 
         // ---
 
-        byte[] payload = archive(ProcessIT.class.getResource("example").toURI());
+        byte[] payload = archive(RawPayloadProjectIT.class.getResource("example").toURI());
 
         try {
             Map<String, Object> input = new HashMap<>();

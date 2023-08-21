@@ -22,6 +22,7 @@ package com.walmartlabs.concord.runner;
 
 import com.walmartlabs.concord.ApiClient;
 import com.walmartlabs.concord.ApiException;
+import com.walmartlabs.concord.client.CheckpointApi;
 import com.walmartlabs.concord.client.ClientUtils;
 import com.walmartlabs.concord.client.ProcessApi;
 import com.walmartlabs.concord.client.ProcessEntry;
@@ -47,10 +48,10 @@ public class ProcessApiClient {
     }
 
     public void uploadCheckpoint(UUID instanceId, Map<String, Object> data) throws ApiException {
-        String path = "/api/v1/process/" + instanceId + "/checkpoint";
+        CheckpointApi api = new CheckpointApi(apiClient);
 
         ClientUtils.withRetry(retryCount, retryInterval, () -> {
-            ClientUtils.postData(apiClient, path, data, null);
+            api.uploadCheckpoint(instanceId, data);
             return null;
         });
     }

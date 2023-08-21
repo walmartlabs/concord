@@ -58,7 +58,7 @@ public class LockTaskCommon {
 
         LockResult lock = withRetry(() -> lockApi.tryLock(instanceId, lockName, checkScope(lockScope)));
 
-        boolean result = lock.isAcquired();
+        boolean result = lock.getAcquired();
         if (!result) {
             withRetry(() -> {
                 processApi.setWaitCondition(instanceId, createCondition(lock.getInfo()));

@@ -51,12 +51,12 @@ public class DefaultLoggingClient implements LoggingClient {
 
     public long createSegment(UUID correlationId, String name) {
         LogSegmentRequest request = new LogSegmentRequest()
-                .setCorrelationId(correlationId)
-                .setCreatedAt(OffsetDateTime.now(ZoneId.of("UTC")))
-                .setName(name);
+                .correlationId(correlationId)
+                .createdAt(OffsetDateTime.now(ZoneId.of("UTC")))
+                .name(name);
 
         try {
-            LogSegmentOperationResponse result = ClientUtils.withRetry(cfg.api().retryCount(), cfg.api().retryInterval(), () -> api.segment(instanceId, request));
+            LogSegmentOperationResponse result = ClientUtils.withRetry(cfg.api().retryCount(), cfg.api().retryInterval(), () -> api.createProcessLogSegment(instanceId, request));
             return result.getId();
         } catch (ApiException e) {
             throw new RuntimeException(e);

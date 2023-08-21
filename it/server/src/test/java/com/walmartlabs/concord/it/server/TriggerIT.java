@@ -52,16 +52,16 @@ public class TriggerIT extends AbstractServerIT {
         String policyName = "policy_" + randomString();
 
         PolicyApi policyApi = new PolicyApi(getApiClient());
-        policyApi.createOrUpdate(new PolicyEntry()
-                .setName(policyName)
-                .setRules(readPolicy("invalidTriggersBrokenProcess/policy.json")));
+        policyApi.createOrUpdatePolicy(new PolicyEntry()
+                .name(policyName)
+                .rules(readPolicy("invalidTriggersBrokenProcess/policy.json")));
 
-        policyApi.link(policyName, new PolicyLinkEntry().setOrgName(orgName));
+        policyApi.linkPolicy(policyName, new PolicyLinkEntry().orgName(orgName));
 
         // ---
 
         ExternalEventsApi eventResource = new ExternalEventsApi(getApiClient());
-        eventResource.event("testTrigger2", Collections.singletonMap("x", "abc"));
+        eventResource.externalEvent("testTrigger2", Collections.singletonMap("x", "abc"));
 
         // ---
 
@@ -78,21 +78,21 @@ public class TriggerIT extends AbstractServerIT {
         // ---
 
         ExternalEventsApi eventResource = new ExternalEventsApi(getApiClient());
-        eventResource.event("testTrigger", Collections.emptyMap());
+        eventResource.externalEvent("testTrigger", Collections.emptyMap());
 
         // ---
 
         List<ProcessEntry> l = waitForProcs(por.getId(), 1, StatusEnum.FINISHED);
         ProcessEntry pe = l.get(0);
 
-        byte[] ab = getLog(pe.getLogFileName());
+        byte[] ab = getLog(pe.getInstanceId());
         assertLog(".*Hello, Concord.*", ab);
     }
 
     private ProjectOperationResponse register(String orgName, String projectName, String repoResource, int expectedTriggerCount) throws Exception {
         OrganizationsApi orgApi = new OrganizationsApi(getApiClient());
-        if (orgApi.get(orgName) == null) {
-            orgApi.createOrUpdate(new OrganizationEntry().setName(orgName));
+        if (orgApi.getOrg(orgName) == null) {
+            orgApi.createOrUpdateOrg(new OrganizationEntry().name(orgName));
         }
 
         // ---
@@ -109,7 +109,7 @@ public class TriggerIT extends AbstractServerIT {
 
         TriggersApi triggerResource = new TriggersApi(getApiClient());
         while (true) {
-            List<TriggerEntry> triggers = triggerResource.list(orgName, projectName, repoName);
+            List<TriggerEntry> triggers = triggerResource.listTriggers(orgName, projectName, repoName);
             if (triggers != null && triggers.size() == expectedTriggerCount) {
                 break;
             }
@@ -137,22 +137,22 @@ public class TriggerIT extends AbstractServerIT {
 
         ProjectsApi projectsApi = new ProjectsApi(getApiClient());
         return projectsApi.createOrUpdate(orgName, new ProjectEntry()
-                .setName(projectName)
-                .setRepositories(Collections.singletonMap(repoName, new RepositoryEntry()
-                        .setUrl(gitUrl)
-                        .setBranch("master"))));
+                .name(projectName)
+                .repositories(Collections.singletonMap(repoName, new RepositoryEntry()
+                        .url(gitUrl)
+                        .branch("master"))));
     }
 
     private Map<String, Object> readPolicy(String file) throws Exception {
-        URL url = AnsiblePolicyIT.class.getResource(file);
+        URL url = TriggerIT.class.getResource(file);
         return fromJson(new File(url.toURI()));
     }
 
     private List<ProcessEntry> waitForProcs(UUID id, int expectedCount, StatusEnum expectedStatus) throws Exception {
-        ProcessApi processApi = new ProcessApi(getApiClient());
+        ProcessV2Api processApi = new ProcessV2Api(getApiClient());
 
         while (true) {
-            List<ProcessEntry> l = processApi.list(null, null, id, null, null, null, null, null, null, 10, 0);
+            List<ProcessEntry> l = processApi.listProcesses(null, null, id, null, null, null, null, null, null, null, null, null, null, 10, 0);
             if (l != null && l.size() == expectedCount && allHasStatus(l, expectedStatus)) {
                 return l;
             }

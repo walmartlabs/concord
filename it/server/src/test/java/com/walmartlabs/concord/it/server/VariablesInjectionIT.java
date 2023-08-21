@@ -20,7 +20,6 @@ package com.walmartlabs.concord.it.server;
  * =====
  */
 
-import com.walmartlabs.concord.client.ProcessApi;
 import com.walmartlabs.concord.client.ProcessEntry;
 import com.walmartlabs.concord.client.StartProcessResponse;
 import org.junit.jupiter.api.Test;
@@ -37,13 +36,12 @@ public class VariablesInjectionIT extends AbstractServerIT {
         byte[] payload = archive(VariablesInjectionIT.class.getResource("inject").toURI(),
                 ITConstants.DEPENDENCIES_DIR);
 
-        ProcessApi processApi = new ProcessApi(getApiClient());
         StartProcessResponse spr = start(payload);
         assertNotNull(spr.getInstanceId());
 
-        ProcessEntry pir = waitForCompletion(processApi, spr.getInstanceId());
+        ProcessEntry pir = waitForCompletion(getApiClient(), spr.getInstanceId());
 
-        byte[] ab = getLog(pir.getLogFileName());
+        byte[] ab = getLog(pir.getInstanceId());
 
         assertLog(".*Hello, Concord!.*", ab);
         assertLog(".*Hello, world!!!.*", ab);

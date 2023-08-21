@@ -43,9 +43,9 @@ SecretsTaskIT extends AbstractServerIT {
         String projectName2 = "project_" + randomString();
 
         projectsApi.createOrUpdate(orgName, new ProjectEntry()
-                .setName(projectName2).setRawPayloadMode(ProjectEntry.RawPayloadModeEnum.EVERYONE));
+                .name(projectName2).rawPayloadMode(ProjectEntry.RawPayloadModeEnum.EVERYONE));
         projectsApi.createOrUpdate(orgName, new ProjectEntry()
-                .setName(projectName1).setRawPayloadMode(ProjectEntry.RawPayloadModeEnum.EVERYONE));
+                .name(projectName1).rawPayloadMode(ProjectEntry.RawPayloadModeEnum.EVERYONE));
 
         String secretName = "secret_" + randomString();
 
@@ -62,11 +62,10 @@ SecretsTaskIT extends AbstractServerIT {
 
         StartProcessResponse spr = start(input);
 
-        ProcessApi processApi = new ProcessApi(getApiClient());
-        ProcessEntry pir = waitForCompletion(processApi, spr.getInstanceId());
+        ProcessEntry pir = waitForCompletion(getApiClient(), spr.getInstanceId());
         assertNotNull(pir.getLogFileName());
 
-        byte[] bytes = getLog(pir.getLogFileName());
+        byte[] bytes = getLog(pir.getInstanceId());
         // System.out.println(new String(bytes));
         assertLog(".* Delete secret2.*", bytes);
     }

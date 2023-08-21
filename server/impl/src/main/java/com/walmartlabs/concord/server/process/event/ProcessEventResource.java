@@ -32,7 +32,9 @@ import com.walmartlabs.concord.server.sdk.ProcessKey;
 import com.walmartlabs.concord.server.sdk.metrics.WithTimer;
 import com.walmartlabs.concord.server.security.Roles;
 import com.walmartlabs.concord.server.security.UserPrincipal;
+import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.apache.shiro.authz.UnauthorizedException;
 import org.sonatype.siesta.Resource;
 
@@ -49,8 +51,8 @@ import static com.walmartlabs.concord.server.Utils.unwrap;
 
 @Named
 @Singleton
-//@Api(value = "Process Events", authorizations = {@Authorization("api_key"), @Authorization("session_key"), @Authorization("ldap")})
 @Path("/api/v1/process")
+@Tag(name = "Process Events")
 public class ProcessEventResource implements Resource {
 
     // TODO this should be a common constant (in SDK maybe)
@@ -77,10 +79,10 @@ public class ProcessEventResource implements Resource {
      * Register a process event.
      */
     @POST
-//    @ApiOperation(value = "Register a process event", authorizations = {@Authorization("session_key"), @Authorization("api_key")})
     @Path("/{processInstanceId}/event")
     @Consumes(MediaType.APPLICATION_JSON)
     @WithTimer
+    @Operation(description = "Register a process event")
     public void event(@Parameter @PathParam("processInstanceId") UUID processInstanceId,
                       @Parameter ProcessEventRequest req) {
 
@@ -98,10 +100,10 @@ public class ProcessEventResource implements Resource {
      * Register multiple events for the specified process.
      */
     @POST
-//    @ApiOperation(value = "Register multiple events for the specified process", authorizations = {@Authorization("session_key"), @Authorization("api_key")})
     @Path("/{processInstanceId}/eventBatch")
     @Consumes(MediaType.APPLICATION_JSON)
     @WithTimer
+    @Operation(description = "Register multiple events for the specified process")
     public void batchEvent(@Parameter @PathParam("processInstanceId") UUID processInstanceId,
                            @Parameter List<ProcessEventRequest> data) {
 
@@ -123,10 +125,10 @@ public class ProcessEventResource implements Resource {
      * List process events.
      */
     @GET
-//    @ApiOperation(value = "List process events", responseContainer = "list", response = ProcessEventEntry.class)
     @Path("/{processInstanceId}/event")
     @Produces(MediaType.APPLICATION_JSON)
     @WithTimer
+    @Operation(description = "List process events", operationId = "listProcessEvents")
     public List<ProcessEventEntry> list(@Parameter @PathParam("processInstanceId") UUID processInstanceId,
                                         @Parameter @QueryParam("type") String eventType,
                                         @Parameter @QueryParam("after") OffsetDateTimeParam after,

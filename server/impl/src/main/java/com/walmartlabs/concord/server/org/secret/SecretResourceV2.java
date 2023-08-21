@@ -35,6 +35,9 @@ import com.walmartlabs.concord.server.sdk.metrics.WithTimer;
 import io.swagger.v3.oas.annotations.OpenAPIDefinition;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.parameters.RequestBody;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.jboss.resteasy.plugins.providers.multipart.MultipartInput;
 import org.sonatype.siesta.Resource;
@@ -76,7 +79,7 @@ public class SecretResourceV2 implements Resource {
     @Path("/{orgName}/secret/{secretName}")
     @Produces(MediaType.APPLICATION_JSON)
     @WithTimer
-    @Operation(description = "Get an existing secret")
+    @Operation(description = "Get an existing secret", operationId = "getSecret")
     public SecretEntryV2 get(@PathParam("orgName") @ConcordKey String orgName,
                              @PathParam("secretName") @ConcordKey String secretName) {
 
@@ -103,10 +106,10 @@ public class SecretResourceV2 implements Resource {
     @Consumes(MediaType.MULTIPART_FORM_DATA)
     @Produces(MediaType.APPLICATION_JSON)
     @Validate
-    @Operation(description = "Updates an existing secret", hidden = true)
+    @Operation(description = "Updates an existing secret", operationId = "updateSecret")
     public GenericOperationResult update(@PathParam("orgName") @ConcordKey String orgName,
                                          @PathParam("secretName") @ConcordKey String secretName,
-                                         MultipartInput input) {
+                                         @RequestBody(content = @Content(schema = @Schema(type = "object"))) MultipartInput input) {
 
         OrganizationEntry org = orgManager.assertAccess(orgName, true);
         Set<UUID> projectIds = getProjectIds(

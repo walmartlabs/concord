@@ -41,8 +41,8 @@ public class ProjectInfoIT extends AbstractServerIT {
 
         ProjectsApi projectsApi = new ProjectsApi(getApiClient());
         ProjectOperationResponse cpr = projectsApi.createOrUpdate(orgName, new ProjectEntry()
-                .setName(projectName)
-                .setRawPayloadMode(ProjectEntry.RawPayloadModeEnum.EVERYONE));
+                .name(projectName)
+                .rawPayloadMode(ProjectEntry.RawPayloadModeEnum.EVERYONE));
 
         // ---
 
@@ -50,15 +50,14 @@ public class ProjectInfoIT extends AbstractServerIT {
 
         // ---
 
-        ProcessApi processApi = new ProcessApi(getApiClient());
         StartProcessResponse spr = start(orgName, projectName, null, null, payload);
         assertNotNull(spr.getInstanceId());
 
-        ProcessEntry pir = waitForCompletion(processApi, spr.getInstanceId());
+        ProcessEntry pir = waitForCompletion(getApiClient(), spr.getInstanceId());
 
         // ---
 
-        byte[] ab = getLog(pir.getLogFileName());
+        byte[] ab = getLog(pir.getInstanceId());
         assertLog(".*Org ID:.*" + orgId + ".*", ab);
         assertLog(".*Project ID:.*" + cpr.getId() + ".*", ab);
     }

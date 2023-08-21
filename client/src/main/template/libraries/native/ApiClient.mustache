@@ -23,11 +23,17 @@ import java.time.format.DateTimeFormatter;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
+import java.util.HashMap;
 import java.util.StringJoiner;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 import com.walmartlabs.concord.client.auth.Authentication;
+import com.walmartlabs.concord.client.auth.ApiKey;
+import com.walmartlabs.concord.client.auth.SessionToken;
+import com.walmartlabs.concord.client.OffsetDateTimeDeserializer;
+import com.walmartlabs.concord.client.OffsetDateTimeSerializer;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 
@@ -59,6 +65,7 @@ public class ApiClient {
   private Duration readTimeout;
   private Duration connectTimeout;
   private Authentication auth;
+  private final Map<String, String> defaultHeaderMap = new HashMap<String, String>();
 
   public Authentication getAuth() {
     return auth;
@@ -68,12 +75,16 @@ public class ApiClient {
     this.auth = auth;
   }
 
+  public Map<String, String> defaultHeaderMap() {
+    return defaultHeaderMap;
+  }
+
   private static String valueToString(Object value) {
     if (value == null) {
       return "";
     }
     if (value instanceof OffsetDateTime) {
-      return ((OffsetDateTime) value).format(DateTimeFormatter.ISO_OFFSET_DATE_TIME);
+      return ((OffsetDateTime) value).format(OffsetDateTimeSerializer.FORMATTER);
     }
     return value.toString();
   }
@@ -199,15 +210,28 @@ public class ApiClient {
     mapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);
     mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
     mapper.configure(DeserializationFeature.FAIL_ON_INVALID_SUBTYPE, false);
+    mapper.configure(SerializationFeature.WRITE_EMPTY_JSON_ARRAYS, false);
     mapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
     mapper.enable(SerializationFeature.WRITE_ENUMS_USING_TO_STRING);
     mapper.enable(DeserializationFeature.READ_ENUMS_USING_TO_STRING);
     mapper.disable(DeserializationFeature.ADJUST_DATES_TO_CONTEXT_TIME_ZONE);
-    mapper.registerModule(new JavaTimeModule());
+    mapper.registerModule(new JavaTimeModule()
+                    .addDeserializer(OffsetDateTime.class, new OffsetDateTimeDeserializer())
+                    .addSerializer(OffsetDateTime.class, new OffsetDateTimeSerializer()));
     {{#openApiNullable}}
     mapper.registerModule(new JsonNullableModule());
     {{/openApiNullable}}
     return mapper;
+  }
+
+  public ApiClient setUserAgent(String userAgent) {
+    addDefaultHeader("User-Agent", userAgent);
+    return this;
+  }
+
+  public ApiClient addDefaultHeader(String key, String value) {
+    defaultHeaderMap.put(key, value);
+    return this;
   }
 
   protected String getDefaultBaseUri() {
@@ -215,7 +239,8 @@ public class ApiClient {
   }
 
   protected HttpClient.Builder createDefaultHttpClientBuilder() {
-    return HttpClient.newBuilder();
+    return HttpClient.newBuilder()
+                .version(HttpClient.Version.HTTP_1_1);
   }
 
   public void updateBaseUri(String baseUri) {
@@ -225,6 +250,27 @@ public class ApiClient {
     port = uri.getPort();
     basePath = uri.getRawPath();
   }
+
+  public ApiClient setSessionToken(String token) {
+    if (token == null) {
+        return this;
+    }
+
+    setAuth(new SessionToken(token));
+
+    return this;
+  }
+
+  public ApiClient setApiKey(String key) {
+    if (key == null) {
+        return this;
+    }
+
+    setAuth(new ApiKey(key));
+
+    return this;
+  }
+
 
   /**
    * Set a custom {@link HttpClient.Builder} object to use when creating the

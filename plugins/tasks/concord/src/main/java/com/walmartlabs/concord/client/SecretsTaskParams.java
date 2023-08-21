@@ -119,10 +119,10 @@ public class SecretsTaskParams {
             super(variables);
         }
 
-        public SecretEntry.TypeEnum secretType() {
-            String type = variables.getString(Constants.Multipart.TYPE, SecretEntry.TypeEnum.DATA.toString());
+        public SecretEntryV2.TypeEnum secretType() {
+            String type = variables.getString(Constants.Multipart.TYPE, SecretEntryV2.TypeEnum.DATA.toString());
             try {
-                return SecretEntry.TypeEnum.valueOf(type.trim().toUpperCase());
+                return SecretEntryV2.TypeEnum.valueOf(type.trim().toUpperCase());
             } catch (Exception e) {
                 String message = String.format("Invalid argument '%s', allowed values are: 'data' (default), 'key_pair' and 'username_password'", type);
                 throw new IllegalArgumentException(message);

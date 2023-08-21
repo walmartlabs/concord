@@ -59,7 +59,7 @@ public class NodeRosterIT extends AbstractServerIT {
 
         // run an Ansible playbook to get some events
 
-        byte[] payload = archive(ProcessIT.class.getResource("nodeRoster").toURI(), ITConstants.DEPENDENCIES_DIR);
+        byte[] payload = archive(NodeRosterIT.class.getResource("nodeRoster").toURI(), ITConstants.DEPENDENCIES_DIR);
 
         String artifactUrl = "http://" + env("IT_DOCKER_HOST_ADDR", "localhost") + ":" + rule.getPort() + "/test.txt";
 
@@ -70,11 +70,10 @@ public class NodeRosterIT extends AbstractServerIT {
         input.put("arguments.hostB", hostB);
         StartProcessResponse spr = start(input);
 
-        ProcessApi processApi = new ProcessApi(getApiClient());
-        ProcessEntry pir = waitForCompletion(processApi, spr.getInstanceId());
+        ProcessEntry pir = waitForCompletion(getApiClient(), spr.getInstanceId());
         assertEquals(ProcessEntry.StatusEnum.FINISHED, pir.getStatus());
 
-        byte[] ab = getLog(pir.getLogFileName());
+        byte[] ab = getLog(pir.getInstanceId());
         assertLog(".*" + hostA + ".*failed=0.*", ab);
         assertLog(".*" + hostB + ".*failed=0.*", ab);
 
@@ -110,17 +109,17 @@ public class NodeRosterIT extends AbstractServerIT {
 
         // let's test the task
 
-        payload = archive(ProcessIT.class.getResource("nodeRosterTask").toURI(), ITConstants.DEPENDENCIES_DIR);
+        payload = archive(NodeRosterIT.class.getResource("nodeRosterTask").toURI(), ITConstants.DEPENDENCIES_DIR);
 
         input = new HashMap<>();
         input.put("archive", payload);
         input.put("arguments.artifactUrl", artifactUrl);
         spr = start(input);
 
-        pir = waitForCompletion(processApi, spr.getInstanceId());
+        pir = waitForCompletion(getApiClient(), spr.getInstanceId());
         assertEquals(ProcessEntry.StatusEnum.FINISHED, pir.getStatus());
 
-        ab = getLog(pir.getLogFileName());
+        ab = getLog(pir.getInstanceId());
         assertLog(".*ok=true.*", ab);
         assertLog(".*name: " + hostA.toLowerCase() + ".*", ab);
         assertLog(".*name: " + hostB.toLowerCase() + ".*", ab);
@@ -128,7 +127,7 @@ public class NodeRosterIT extends AbstractServerIT {
 
     @Test
     public void testMultipleFactsPerHost() throws Exception {
-        byte[] payload = archive(ProcessIT.class.getResource("nodeRosterMultiFacts").toURI(), ITConstants.DEPENDENCIES_DIR);
+        byte[] payload = archive(NodeRosterIT.class.getResource("nodeRosterMultiFacts").toURI(), ITConstants.DEPENDENCIES_DIR);
 
         String host = "host_" + randomString();
 
@@ -137,11 +136,10 @@ public class NodeRosterIT extends AbstractServerIT {
         input.put("arguments.host", host);
         StartProcessResponse spr = start(input);
 
-        ProcessApi processApi = new ProcessApi(getApiClient());
-        ProcessEntry pir = waitForCompletion(processApi, spr.getInstanceId());
+        ProcessEntry pir = waitForCompletion(getApiClient(), spr.getInstanceId());
         assertEquals(ProcessEntry.StatusEnum.FINISHED, pir.getStatus());
 
-        byte[] ab = getLog(pir.getLogFileName());
+        byte[] ab = getLog(pir.getInstanceId());
         assertLog(".*" + host + ".*failed=0.*", ab);
 
         // ---

@@ -33,9 +33,12 @@ import com.walmartlabs.concord.server.sdk.ConcordApplicationException;
 import com.walmartlabs.concord.server.sdk.metrics.WithTimer;
 import com.walmartlabs.concord.server.user.UserManager;
 import com.walmartlabs.concord.server.user.UserType;
-import io.swagger.v3.oas.annotations.OpenAPIDefinition;
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.headers.Header;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.parameters.RequestBody;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.jboss.resteasy.plugins.providers.multipart.MultipartInput;
 import org.slf4j.Logger;
@@ -97,9 +100,9 @@ public class SecretResource implements Resource {
     @Consumes(MediaType.MULTIPART_FORM_DATA)
     @Produces(MediaType.APPLICATION_JSON)
     @Validate
-    @Operation(description = "Create secret")
+    @Operation(description = "Create secret", operationId = "createSecret")
     public SecretOperationResponse create(@PathParam("orgName") @ConcordKey String orgName,
-                                          @Parameter(hidden = true) MultipartInput input) {
+                                          @RequestBody(content = @Content(schema = @Schema(type = "object"))) MultipartInput input) {
 
         OrganizationEntry org = orgManager.assertAccess(orgName, true);
 
@@ -172,7 +175,7 @@ public class SecretResource implements Resource {
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     @Validate
-    @Deprecated
+    @Operation(description = "Update secret", operationId = "updateSecretV1")
     public GenericOperationResult update(@PathParam("orgName") @ConcordKey String orgName,
                                          @PathParam("secretName") @ConcordKey String secretName,
                                          @Valid SecretUpdateRequest req) {
@@ -214,23 +217,44 @@ public class SecretResource implements Resource {
         return secretManager.assertAccess(org.getId(), null, secretName, ResourceAccessLevel.READER, false);
     }
 
+    public static class GetDataRequest {
+
+        public static GetDataRequest from(MultipartInput input) {
+            return new GetDataRequest(input);
+        }
+
+        private final MultipartInput input;
+
+        private GetDataRequest(MultipartInput input) {
+            this.input = input;
+        }
+
+        @Schema(name = Constants.Multipart.STORE_PASSWORD)
+        public String getPassword() {
+            return MultipartUtils.getString(input, Constants.Multipart.STORE_PASSWORD);
+        }
+    }
+
     @POST
-//    @ApiOperation(value = "Get an existing secret's data", response = File.class, hidden = true)
-//    @ApiResponses(value = {
-//            @ApiResponse(code = 200, message = "OK",
-//                    response = File.class,
-//                    responseHeaders = @ResponseHeader(name = "X-Concord-SecretType", description = "Secret type", response = String.class))})
     @Path("/{orgName}/secret/{secretName}/data")
     @Consumes(MediaType.MULTIPART_FORM_DATA)
     @Produces(MediaType.APPLICATION_OCTET_STREAM)
     @WithTimer
-    @Operation(description = "Get an existing secret's data", hidden = true)
+    @Operation(description = "Get an existing secret's data", operationId = "getSecretData")
+    @ApiResponse(description = "Secret content",
+            headers = @Header(name = Constants.Headers.SECRET_TYPE, schema = @Schema(type = "string")),
+            content = @Content(mediaType = MediaType.APPLICATION_OCTET_STREAM,
+                    schema = @Schema(type = "string", format = "binary"))
+    )
     public Response getData(@PathParam("orgName") @ConcordKey String orgName,
                             @PathParam("secretName") @ConcordKey String secretName,
+                            @RequestBody(content = @Content(schema = @Schema(type = "object", implementation = GetDataRequest.class)))
                             MultipartInput input) {
 
+        GetDataRequest request = GetDataRequest.from(input);
+
         OrganizationEntry org = orgManager.assertAccess(orgName, false);
-        String password = MultipartUtils.getString(input, Constants.Multipart.STORE_PASSWORD);
+        String password = request.getPassword();
 
         SecretDao.SecretDataEntry entry;
         try {
@@ -307,7 +331,7 @@ public class SecretResource implements Resource {
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     @Validate
-    @Operation(description = "Updates the access level for the specified secret and team")
+    @Operation(description = "Updates the access level for the specified secret and team", operationId = "updateSecretAccessLevel")
     public GenericOperationResult updateAccessLevel(@PathParam("orgName") @ConcordKey String orgName,
                                                     @PathParam("secretName") @ConcordKey String secretName,
                                                     @Valid ResourceAccessEntry entry) {
@@ -329,7 +353,7 @@ public class SecretResource implements Resource {
     @Path("/{orgName}/secret/{secretName}/access")
     @Produces(MediaType.APPLICATION_JSON)
     @WithTimer
-    @Operation(description = "Get secret team access")
+    @Operation(description = "Get secret team access", operationId = "getSecretAccessLevel")
     public List<ResourceAccessEntry> getAccessLevel(@PathParam("orgName") @ConcordKey String orgName,
                                                     @PathParam("secretName") @ConcordKey String secretName) {
 
@@ -342,7 +366,7 @@ public class SecretResource implements Resource {
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     @Validate
-    @Operation(description = "Updates the access level for the specified secret and team")
+    @Operation(description = "Updates the access level for the specified secret and team", operationId = "updateSecretAccessLevelBulk")
     public GenericOperationResult updateAccessLevel(@PathParam("orgName") @ConcordKey String orgName,
                                                     @PathParam("secretName") @ConcordKey String secretName,
                                                     @Valid Collection<ResourceAccessEntry> entries) {

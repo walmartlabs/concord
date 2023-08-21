@@ -23,7 +23,9 @@ package com.walmartlabs.concord.server.process;
 import com.walmartlabs.concord.server.org.project.KvManager;
 import com.walmartlabs.concord.server.process.queue.ProcessQueueManager;
 import com.walmartlabs.concord.server.sdk.PartialProcessKey;
+import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.sonatype.siesta.Resource;
@@ -37,8 +39,8 @@ import java.util.UUID;
 
 @Named
 @Singleton
-//@Api(value = "Process KV store", authorizations = {@Authorization("api_key"), @Authorization("session_key"), @Authorization("ldap")})
 @Path("/api/v1/process")
+@Tag(name = "Process KV store")
 public class ProcessKvResource implements Resource {
 
     private static final Logger log = LoggerFactory.getLogger(ProcessKvResource.class);
@@ -55,8 +57,8 @@ public class ProcessKvResource implements Resource {
     }
 
     @DELETE
-//    @ApiOperation("Delete KV")
     @Path("{id}/kv/{key}")
+    @Operation(description = "Delete KV", operationId = "deleteKv")
     public void removeKey(@PathParam("id") UUID instanceId,
                           @PathParam("key") String key) {
 
@@ -65,9 +67,9 @@ public class ProcessKvResource implements Resource {
     }
 
     @PUT
-//    @ApiOperation("Put string KV")
     @Path("{id}/kv/{key}/string")
     @Consumes(MediaType.APPLICATION_JSON)
+    @Operation(description = "Put string KV", operationId = "putKvString")
     public void putString(@PathParam("id") UUID instanceId,
                           @PathParam("key") String key,
                           @Parameter(required = true) String value) {
@@ -77,9 +79,9 @@ public class ProcessKvResource implements Resource {
     }
 
     @GET
-//    @ApiOperation("Get string KV")
     @Path("{id}/kv/{key}/string")
     @Produces(MediaType.TEXT_PLAIN)
+    @Operation(description = "Get string KV", operationId = "getKvString")
     public String getString(@PathParam("id") UUID instanceId,
                             @PathParam("key") String key) {
 
@@ -88,9 +90,9 @@ public class ProcessKvResource implements Resource {
     }
 
     @PUT
-//    @ApiOperation("Put long KV")
     @Path("{id}/kv/{key}/long")
     @Consumes(MediaType.APPLICATION_JSON)
+    @Operation(description = "Put long KV", operationId = "putKvLong")
     public void putLong(@PathParam("id") UUID instanceId,
                         @PathParam("key") String key,
                         @Parameter(required = true) long value) {
@@ -100,9 +102,9 @@ public class ProcessKvResource implements Resource {
     }
 
     @GET
-//    @ApiOperation("Get long KV")
     @Path("{id}/kv/{key}/long")
     @Produces(MediaType.APPLICATION_JSON)
+    @Operation(description = "Get long KV", operationId = "getKvLong")
     public Long getLong(@PathParam("id") UUID instanceId,
                         @PathParam("key") String key) {
 
@@ -111,9 +113,9 @@ public class ProcessKvResource implements Resource {
     }
 
     @POST
-//    @ApiOperation("Inc long KV")
     @Path("{id}/kv/{key}/inc")
     @Produces(MediaType.APPLICATION_JSON)
+    @Operation(description = "Inc long KV", operationId = "incKvLong")
     public long incLong(@PathParam("id") UUID instanceId,
                         @PathParam("key") String key) {
 

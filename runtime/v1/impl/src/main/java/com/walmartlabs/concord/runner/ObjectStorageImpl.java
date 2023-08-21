@@ -63,12 +63,12 @@ public class ObjectStorageImpl implements ObjectStorage {
         }
 
         InventoryEntry entry = new InventoryEntry()
-                .setName(name)
-                .setOrgId(projectInfo.orgId())
-                .setVisibility(InventoryEntry.VisibilityEnum.PRIVATE);
+                .name(name)
+                .orgId(projectInfo.orgId())
+                .visibility(InventoryEntry.VisibilityEnum.PRIVATE);
 
         InventoriesApi api = new InventoriesApi(apiClientFactory.create(ctx));
-        CreateInventoryResponse resp = withRetry(() -> api.createOrUpdate(projectInfo.orgName(), entry));
+        CreateInventoryResponse resp = withRetry(() -> api.createOrUpdateInventory(projectInfo.orgName(), entry));
         log.info("createBucket ['{}', '{}'] -> done ({})", projectInfo.orgName(), name, resp.getId());
 
         String address = String.format("%s/api/v1/org/%s/inventory/%s/data/%s?singleItem=true",

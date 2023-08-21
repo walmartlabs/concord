@@ -36,18 +36,18 @@ public class SecretProjectsIT extends AbstractServerIT {
 
         OrganizationsApi orgApi = new OrganizationsApi(getApiClient());
         String orgName = "org_" + randomString();
-        orgApi.createOrUpdate(new OrganizationEntry().setName(orgName));
+        orgApi.createOrUpdateOrg(new OrganizationEntry().name(orgName));
 
         String projectName1 = "project_" + randomString();
         String projectName2 = "project_" + randomString();
         String projectName3 = "project_" + randomString();
         ProjectsApi projectsApi = new ProjectsApi(getApiClient());
         projectsApi.createOrUpdate(orgName, new ProjectEntry()
-                .setName(projectName1).setRawPayloadMode(ProjectEntry.RawPayloadModeEnum.EVERYONE));
+                .name(projectName1).rawPayloadMode(ProjectEntry.RawPayloadModeEnum.EVERYONE));
         projectsApi.createOrUpdate(orgName, new ProjectEntry()
-                .setName(projectName2).setRawPayloadMode(ProjectEntry.RawPayloadModeEnum.EVERYONE));
+                .name(projectName2).rawPayloadMode(ProjectEntry.RawPayloadModeEnum.EVERYONE));
         projectsApi.createOrUpdate(orgName, new ProjectEntry()
-                .setName(projectName3).setRawPayloadMode(ProjectEntry.RawPayloadModeEnum.EVERYONE));
+                .name(projectName3).rawPayloadMode(ProjectEntry.RawPayloadModeEnum.EVERYONE));
 
         String secretName = "secret_" + randomString();
         String storePassword = "St0rePassword1";
@@ -63,18 +63,18 @@ public class SecretProjectsIT extends AbstractServerIT {
         ApiKeysApi apiKeyResource = new ApiKeysApi(getApiClient());
 
         String userName = "userA_" + randomString();
-        CreateUserResponse userResponse = usersApi.createOrUpdate(new CreateUserRequest()
-                .setUsername(userName)
-                .setType(CreateUserRequest.TypeEnum.LOCAL));
-        CreateApiKeyResponse apiKeyResponse = apiKeyResource.create(new CreateApiKeyRequest()
-                .setUsername(userName)
-                .setUserType(CreateApiKeyRequest.UserTypeEnum.LOCAL));
+        CreateUserResponse userResponse = usersApi.createOrUpdateUser(new CreateUserRequest()
+                .username(userName)
+                .type(CreateUserRequest.TypeEnum.LOCAL));
+        CreateApiKeyResponse apiKeyResponse = apiKeyResource.createUserApiKey(new CreateApiKeyRequest()
+                .username(userName)
+                .userType(CreateApiKeyRequest.UserTypeEnum.LOCAL));
 
         String teamName = "team_" + randomString();
-        teamsApi.createOrUpdate(orgName, new TeamEntry().setName(teamName));
-        teamsApi.addUsers(orgName, teamName, false, Collections.singletonList(new TeamUserEntry()
-                .setUsername(userName)
-                .setRole(TeamUserEntry.RoleEnum.MEMBER)));
+        teamsApi.createOrUpdateTeam(orgName, new TeamEntry().name(teamName));
+        teamsApi.addUsersToTeam(orgName, teamName, false, Collections.singletonList(new TeamUserEntry()
+                .username(userName)
+                .role(TeamUserEntry.RoleEnum.MEMBER)));
 
         resetApiKey();
         setApiKey(apiKeyResponse.getKey());
@@ -89,45 +89,42 @@ public class SecretProjectsIT extends AbstractServerIT {
 
         StartProcessResponse spr = start(input);
 
-        ProcessApi processApi = new ProcessApi(getApiClient());
-        ProcessEntry pir = waitForCompletion(processApi, spr.getInstanceId());
+        ProcessEntry pir = waitForCompletion(getApiClient(), spr.getInstanceId());
         assertNotNull(pir.getLogFileName());
 
-        byte[] bytes = getLog(pir.getLogFileName());
+        byte[] bytes = getLog(pir.getInstanceId());
         assertLog(".*Project-scoped secrets can only be accessed within the project they belong to.*", 2, bytes);
 
         input.put("project", projectName2);
         spr = start(input);
 
-        processApi = new ProcessApi(getApiClient());
-        pir = waitForCompletion(processApi, spr.getInstanceId());
+        pir = waitForCompletion(getApiClient(), spr.getInstanceId());
         assertNotNull(pir.getLogFileName());
 
-        bytes = getLog(pir.getLogFileName());
+        bytes = getLog(pir.getInstanceId());
         assertLog(".*C0nC0rD.*", bytes);
 
         input.put("project", projectName1);
         spr = start(input);
 
-        processApi = new ProcessApi(getApiClient());
-        pir = waitForCompletion(processApi, spr.getInstanceId());
+        pir = waitForCompletion(getApiClient(), spr.getInstanceId());
         assertNotNull(pir.getLogFileName());
 
-        bytes = getLog(pir.getLogFileName());
+        bytes = getLog(pir.getInstanceId());
         assertLog(".*C0nC0rD.*", bytes);
 
         resetApiKey();
         setApiKey(DEFAULT_API_KEY);
-        projectsApi.delete(orgName, projectName1);
-        projectsApi.delete(orgName, projectName2);
-        projectsApi.delete(orgName, projectName3);
+        projectsApi.deleteProject(orgName, projectName1);
+        projectsApi.deleteProject(orgName, projectName2);
+        projectsApi.deleteProject(orgName, projectName3);
 
         SecretsApi secretsApi = new SecretsApi(getApiClient());
         secretsApi.delete(orgName, secretName);
 
-        usersApi.delete(userResponse.getId());
-        teamsApi.delete(orgName, teamName);
-        orgApi.delete(orgName, "yes");
+        usersApi.deleteUser(userResponse.getId());
+        teamsApi.deleteTeam(orgName, teamName);
+        orgApi.deleteOrg(orgName, "yes");
 
     }
 }

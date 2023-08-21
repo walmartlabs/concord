@@ -140,8 +140,8 @@ public abstract class AbstractServerIT {
         return serverClient.generateKeyPair(orgName, null, projectIds, name, generatePassword, storePassword);
     }
 
-    protected byte[] getLog(String logFileName) throws ApiException {
-        return serverClient.getLog(logFileName);
+    protected byte[] getLog(UUID instanceId) throws ApiException {
+        return serverClient.getLog(instanceId);
     }
 
     protected void resetApiKey() {
@@ -156,12 +156,8 @@ public abstract class AbstractServerIT {
         serverClient.setGithubKey(key);
     }
 
-    protected void waitForLog(String logFileName, String pattern) throws IOException, InterruptedException, ApiException {
-        serverClient.waitForLog(logFileName, pattern);
-    }
-
-    protected <T> T request(String uri, Map<String, Object> input, Class<T> entityType) throws ApiException {
-        return serverClient.request(uri, input, entityType);
+    protected void waitForLog(UUID instanceId, String pattern) throws IOException, InterruptedException, ApiException {
+        serverClient.waitForLog(instanceId, pattern);
     }
 
     protected static String randomString() {
@@ -187,10 +183,13 @@ public abstract class AbstractServerIT {
         return fromJson(f, Map.class);
     }
 
+    @SuppressWarnings("unchecked")
+    protected Map<String, Object> fromJson(InputStream is) throws IOException {
+        return getApiClient().getObjectMapper().readValue(is, Map.class);
+    }
+
     protected <T> T fromJson(File f, Class<T> classOfT) throws IOException {
-        try (Reader r = new FileReader(f)) {
-            return getApiClient().getJSON().getGson().fromJson(r, classOfT);
-        }
+        return getApiClient().getObjectMapper().readValue(f, classOfT);
     }
 
     protected String createRepo(String resource) throws Exception {

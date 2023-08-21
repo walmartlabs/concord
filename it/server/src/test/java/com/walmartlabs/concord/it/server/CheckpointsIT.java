@@ -9,9 +9,9 @@ package com.walmartlabs.concord.it.server;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -45,17 +45,16 @@ public class CheckpointsIT extends AbstractServerIT {
 
         // start the process
 
-        ProcessApi processApi = new ProcessApi(getApiClient());
         StartProcessResponse spr = start(payload);
         assertNotNull(spr.getInstanceId());
 
         // wait for completion
 
-        ProcessEntry pir = waitForCompletion(processApi, spr.getInstanceId());
+        ProcessEntry pir = waitForCompletion(getApiClient(), spr.getInstanceId());
 
         // check the logs
 
-        byte[] ab = getLog(pir.getLogFileName());
+        byte[] ab = getLog(pir.getInstanceId());
 
         assertLog(".*==Start.*", ab);
         assertLog(".*==Middle.*", ab);
@@ -64,9 +63,9 @@ public class CheckpointsIT extends AbstractServerIT {
         // restore from TWO checkpoint
         restoreFromCheckpoint(pir.getInstanceId(), "TWO");
 
-        waitForCompletion(processApi, spr.getInstanceId());
+        waitForCompletion(getApiClient(), spr.getInstanceId());
 
-        ab = getLog(pir.getLogFileName());
+        ab = getLog(pir.getInstanceId());
 
         assertLog(".*==Start.*", ab);
         assertLog(".*==Middle.*", ab);
@@ -75,8 +74,8 @@ public class CheckpointsIT extends AbstractServerIT {
         // restore from ONE checkpoint
         restoreFromCheckpoint(pir.getInstanceId(), "ONE");
 
-        waitForCompletion(processApi, spr.getInstanceId());
-        ab = getLog(pir.getLogFileName());
+        waitForCompletion(getApiClient(), spr.getInstanceId());
+        ab = getLog(pir.getInstanceId());
 
         assertLog(".*==Start.*", ab);
         assertLog(".*==Middle.*", 2, ab);
@@ -87,17 +86,16 @@ public class CheckpointsIT extends AbstractServerIT {
     public void testRestoreCheckpointWithGetByName() throws Exception {
         byte[] payload = archive(CheckpointsIT.class.getResource("oneCheckpoint").toURI());
 
-        ProcessApi processApi = new ProcessApi(getApiClient());
         StartProcessResponse spr = start(payload);
         assertNotNull(spr.getInstanceId());
 
         // ---
 
-        ProcessEntry pir = waitForCompletion(processApi, spr.getInstanceId());
+        ProcessEntry pir = waitForCompletion(getApiClient(), spr.getInstanceId());
 
         // ---
 
-        byte[] ab = getLog(pir.getLogFileName());
+        byte[] ab = getLog(pir.getInstanceId());
 
         assertLog(".*aaa before.*", ab);
         assertLog(".*bbb after.*", ab);
@@ -109,9 +107,9 @@ public class CheckpointsIT extends AbstractServerIT {
 
         // ---
 
-        waitForCompletion(processApi, spr.getInstanceId());
+        waitForCompletion(getApiClient(), spr.getInstanceId());
 
-        ab = getLog(pir.getLogFileName());
+        ab = getLog(pir.getInstanceId());
         assertLog(".*aaa before.*", ab);
         assertLog(".*bbb after.*", 2, ab);
     }
@@ -131,13 +129,12 @@ public class CheckpointsIT extends AbstractServerIT {
 
         byte[] payload = archive(CheckpointsIT.class.getResource(resource).toURI());
 
-        ProcessApi processApi = new ProcessApi(getApiClient());
         StartProcessResponse spr = start(payload);
         assertNotNull(spr.getInstanceId());
 
         // ---
 
-        ProcessEntry pir = waitForCompletion(processApi, spr.getInstanceId());
+        ProcessEntry pir = waitForCompletion(getApiClient(), spr.getInstanceId());
 
         // restore from first checkpoint
         CheckpointV2Api checkpointV2Api = new CheckpointV2Api(getApiClient());
@@ -145,17 +142,17 @@ public class CheckpointsIT extends AbstractServerIT {
 
         // ---
 
-        waitForCompletion(processApi, spr.getInstanceId());
+        waitForCompletion(getApiClient(), spr.getInstanceId());
 
-        byte[] ab = getLog(pir.getLogFileName());
+        byte[] ab = getLog(pir.getInstanceId());
 
         assertLog(".*Event Name: first*", ab);
 
         // restore from second checkpoint
         checkpointV2Api.processCheckpoint(pir.getInstanceId(), "second", "restore");
 
-        waitForCompletion(processApi, spr.getInstanceId());
-        ab = getLog(pir.getLogFileName());
+        waitForCompletion(getApiClient(), spr.getInstanceId());
+        ab = getLog(pir.getInstanceId());
         assertLog(".*Event Name: second.*", ab);
     }
 
@@ -167,18 +164,17 @@ public class CheckpointsIT extends AbstractServerIT {
 
         // start the process
 
-        ProcessApi processApi = new ProcessApi(getApiClient());
         StartProcessResponse spr = start(payload);
         assertNotNull(spr.getInstanceId());
 
-        waitForStatus(processApi, spr.getInstanceId(), ProcessEntry.StatusEnum.SUSPENDED);
+        waitForStatus(getApiClient(), spr.getInstanceId(), ProcessEntry.StatusEnum.SUSPENDED);
 
         // ---
         Map<String, Object> data = Collections.singletonMap("shouldFail", true);
         submitForm(spr.getInstanceId(), data);
 
         // ---
-        ProcessEntry pir = waitForStatus(processApi, spr.getInstanceId(), ProcessEntry.StatusEnum.FAILED);
+        ProcessEntry pir = waitForStatus(getApiClient(), spr.getInstanceId(), ProcessEntry.StatusEnum.FAILED);
 
         // check error message
         assertProcessErrorMessage(pir, "As you wish");
@@ -186,7 +182,7 @@ public class CheckpointsIT extends AbstractServerIT {
         // ---
         restoreFromCheckpoint(pir.getInstanceId(), "ONE");
 
-        pir = waitForStatus(processApi, spr.getInstanceId(), ProcessEntry.StatusEnum.SUSPENDED);
+        pir = waitForStatus(getApiClient(), spr.getInstanceId(), ProcessEntry.StatusEnum.SUSPENDED);
 
         // no error message after process restored
         assertNoProcessErrorMessage(pir);
@@ -195,9 +191,9 @@ public class CheckpointsIT extends AbstractServerIT {
         data = Collections.singletonMap("shouldFail", false);
         submitForm(spr.getInstanceId(), data);
 
-        waitForCompletion(processApi, spr.getInstanceId());
+        waitForCompletion(getApiClient(), spr.getInstanceId());
 
-        byte[] ab = getLog(pir.getLogFileName());
+        byte[] ab = getLog(pir.getInstanceId());
         assertLog(".*==Start.*", ab);
         assertLog(".*==Middle.*", ab);
         assertLog(".*==End.*", ab);
@@ -208,7 +204,7 @@ public class CheckpointsIT extends AbstractServerIT {
         String orgName = "org_" + randomString();
 
         OrganizationsApi orgApi = new OrganizationsApi(getApiClient());
-        orgApi.createOrUpdate(new OrganizationEntry().setName(orgName));
+        orgApi.createOrUpdateOrg(new OrganizationEntry().name(orgName));
 
         // ---
 
@@ -216,13 +212,13 @@ public class CheckpointsIT extends AbstractServerIT {
 
         ProjectsApi projectsApi = new ProjectsApi(getApiClient());
         projectsApi.createOrUpdate(orgName, new ProjectEntry()
-                .setName(projectName)
-                .setRawPayloadMode(ProjectEntry.RawPayloadModeEnum.EVERYONE));
+                .name(projectName)
+                .rawPayloadMode(ProjectEntry.RawPayloadModeEnum.EVERYONE));
 
         String value = "value_" + randomString();
 
         EncryptValueResponse evr = projectsApi.encrypt(orgName, projectName, value);
-        assertTrue(evr.isOk());
+        assertTrue(evr.getOk());
 
         // prepare the payload
 
@@ -230,7 +226,6 @@ public class CheckpointsIT extends AbstractServerIT {
 
         // start the process
 
-        ProcessApi processApi = new ProcessApi(getApiClient());
         StartProcessResponse spr = start(ImmutableMap.of(
                 "org", orgName,
                 "project", projectName,
@@ -238,9 +233,9 @@ public class CheckpointsIT extends AbstractServerIT {
                 "arguments.encrypted", evr.getData()));
         assertNotNull(spr.getInstanceId());
 
-        ProcessEntry pir = waitForCompletion(processApi, spr.getInstanceId());
+        ProcessEntry pir = waitForCompletion(getApiClient(), spr.getInstanceId());
 
-        byte[] ab = getLog(pir.getLogFileName());
+        byte[] ab = getLog(pir.getInstanceId());
 
         assertLog(".*hello, World.*", 2, ab);
         assertLog(".*" + value + ".*", 4, ab);
@@ -261,10 +256,9 @@ public class CheckpointsIT extends AbstractServerIT {
 
         // ---
 
-        ProcessApi processApi = new ProcessApi(getApiClient());
-        ProcessEntry pir = waitForCompletion(processApi, spr.getInstanceId());
+        ProcessEntry pir = waitForCompletion(getApiClient(), spr.getInstanceId());
 
-        byte[] ab = getLog(pir.getLogFileName());
+        byte[] ab = getLog(pir.getInstanceId());
         assertLog(".*checkpoint test " + xValue + ".*", 1, ab);
     }
 
@@ -277,15 +271,14 @@ public class CheckpointsIT extends AbstractServerIT {
 
         // ---
 
-        ProcessApi processApi = new ProcessApi(getApiClient());
         StartProcessResponse spr = start(payload);
         assertNotNull(spr.getInstanceId());
 
-        ProcessEntry pir = waitForCompletion(processApi, spr.getInstanceId());
+        ProcessEntry pir = waitForCompletion(getApiClient(), spr.getInstanceId());
 
         // ---
 
-        byte[] ab = getLog(pir.getLogFileName());
+        byte[] ab = getLog(pir.getInstanceId());
 
         assertLog(".*__logTag.*phase.*pre.*meta.*checkpointName.*ONE.*", ab);
         assertLog(".*__logTag.*phase.*post.*meta.*checkpointName.*ONE.*", ab);
@@ -296,14 +289,14 @@ public class CheckpointsIT extends AbstractServerIT {
     private void restoreFromCheckpoint(UUID instanceId, String name) throws ApiException {
         CheckpointApi checkpointApi = new CheckpointApi(getApiClient());
         ProcessEventsApi eventsApi = new ProcessEventsApi(getApiClient());
-        List<ProcessEventEntry> processEvents = eventsApi.list(instanceId, null, null, null, null, null, true, null);
+        List<ProcessEventEntry> processEvents = eventsApi.listProcessEvents(instanceId, null, null, null, null, null, true, null);
         assertNotNull(processEvents);
 
         // restore from ONE checkpoint
         String checkpointId = assertCheckpoint(name, processEvents);
 
         ResumeProcessResponse resp = checkpointApi.restore(instanceId,
-                new RestoreCheckpointRequest().setId(UUID.fromString(checkpointId)));
+                new RestoreCheckpointRequest().id(UUID.fromString(checkpointId)));
 
         assertNotNull(resp);
     }
@@ -311,12 +304,12 @@ public class CheckpointsIT extends AbstractServerIT {
     private void submitForm(UUID instanceId, Map<String, Object> data) throws ApiException {
         ProcessFormsApi formsApi = new ProcessFormsApi(getApiClient());
 
-        List<FormListEntry> forms = formsApi.list(instanceId);
+        List<FormListEntry> forms = formsApi.listProcessForms(instanceId);
         assertEquals(1, forms.size());
 
         FormListEntry f = forms.get(0);
-        FormSubmitResponse fsr = formsApi.submit(instanceId, f.getName(), data);
-        assertTrue(fsr.isOk());
+        FormSubmitResponse fsr = formsApi.submitForm(instanceId, f.getName(), data);
+        assertTrue(fsr.getOk());
     }
 
     @SuppressWarnings("unchecked")

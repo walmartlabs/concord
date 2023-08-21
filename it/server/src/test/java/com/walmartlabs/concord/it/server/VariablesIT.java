@@ -40,28 +40,27 @@ public class VariablesIT extends AbstractServerIT {
 
         ProjectsApi projectsApi = new ProjectsApi(getApiClient());
         projectsApi.createOrUpdate(orgName, new ProjectEntry()
-                .setName(projectName)
-                .setCfg(ImmutableMap.of("arguments",
+                .name(projectName)
+                .cfg(ImmutableMap.of("arguments",
                         ImmutableMap.of("nested",
                                 ImmutableMap.of(
                                         "y", "cba",
                                         "z", true))))
-                .setRawPayloadMode(ProjectEntry.RawPayloadModeEnum.EVERYONE));
+                .rawPayloadMode(ProjectEntry.RawPayloadModeEnum.EVERYONE));
 
         // ---
 
         byte[] payload = archive(VariablesIT.class.getResource("variables").toURI());
 
-        ProcessApi processApi = new ProcessApi(getApiClient());
         Map<String, Object> input = new HashMap<>();
         input.put("org", orgName);
         input.put("project", projectName);
         input.put("archive", payload);
         StartProcessResponse spr = start(payload);
 
-        ProcessEntry pir = waitForCompletion(processApi, spr.getInstanceId());
+        ProcessEntry pir = waitForCompletion(getApiClient(), spr.getInstanceId());
 
-        byte[] ab = getLog(pir.getLogFileName());
+        byte[] ab = getLog(pir.getInstanceId());
 
         assertLog(".*x=123.*", ab);
         assertLog(".*y=abc.*", ab);
@@ -79,8 +78,8 @@ public class VariablesIT extends AbstractServerIT {
 
         ProjectsApi projectsApi = new ProjectsApi(getApiClient());
         projectsApi.createOrUpdate(orgName, new ProjectEntry()
-                .setName(projectName)
-                .setRawPayloadMode(ProjectEntry.RawPayloadModeEnum.EVERYONE));
+                .name(projectName)
+                .rawPayloadMode(ProjectEntry.RawPayloadModeEnum.EVERYONE));
 
         EncryptValueResponse evr = projectsApi.encrypt(orgName, projectName, secretValue);
         String encryptedValue = evr.getData();
@@ -93,16 +92,15 @@ public class VariablesIT extends AbstractServerIT {
 
         byte[] payload = archive(VariablesIT.class.getResource("crypto").toURI());
 
-        ProcessApi processApi = new ProcessApi(getApiClient());
         Map<String, Object> input = new HashMap<>();
         input.put("org", orgName);
         input.put("project", projectName);
         input.put("archive", payload);
         StartProcessResponse spr = start(input);
 
-        ProcessEntry pir = waitForCompletion(processApi, spr.getInstanceId());
+        ProcessEntry pir = waitForCompletion(getApiClient(), spr.getInstanceId());
 
-        byte[] ab = getLog(pir.getLogFileName());
+        byte[] ab = getLog(pir.getInstanceId());
         assertLog(".*" + secretValue + ".*", ab);
     }
 
@@ -128,10 +126,9 @@ public class VariablesIT extends AbstractServerIT {
 
         // ---
 
-        ProcessApi processApi = new ProcessApi(getApiClient());
-        ProcessEntry pir = waitForCompletion(processApi, spr.getInstanceId());
+        ProcessEntry pir = waitForCompletion(getApiClient(), spr.getInstanceId());
 
-        byte[] ab = getLog(pir.getLogFileName());
+        byte[] ab = getLog(pir.getInstanceId());
         assertLog(".*" + varA + ".*" + varB + ".*", ab);
     }
 
@@ -146,10 +143,9 @@ public class VariablesIT extends AbstractServerIT {
 
         // ---
 
-        ProcessApi processApi = new ProcessApi(getApiClient());
-        ProcessEntry pir = waitForCompletion(processApi, spr.getInstanceId());
+        ProcessEntry pir = waitForCompletion(getApiClient(), spr.getInstanceId());
 
-        byte[] ab = getLog(pir.getLogFileName());
+        byte[] ab = getLog(pir.getInstanceId());
         assertLog(".*shouldBeNull: $", ab);
         assertLog(".*nested\\.var: nested\\.var.*", ab);
     }
@@ -165,10 +161,9 @@ public class VariablesIT extends AbstractServerIT {
 
         // ---
 
-        ProcessApi processApi = new ProcessApi(getApiClient());
-        ProcessEntry pir = waitForCompletion(processApi, spr.getInstanceId());
+        ProcessEntry pir = waitForCompletion(getApiClient(), spr.getInstanceId());
 
-        byte[] ab = getLog(pir.getLogFileName());
+        byte[] ab = getLog(pir.getInstanceId());
         assertLog(".*param1: 1$", ab);
         assertLog(".*defaultValue: 101$", ab);
         assertLog(".*defaultValueFromUnknown: 102$", ab);
@@ -186,10 +181,9 @@ public class VariablesIT extends AbstractServerIT {
 
         // ---
 
-        ProcessApi processApi = new ProcessApi(getApiClient());
-        ProcessEntry pir = waitForCompletion(processApi, spr.getInstanceId());
+        ProcessEntry pir = waitForCompletion(getApiClient(), spr.getInstanceId());
 
-        byte[] ab = getLog(pir.getLogFileName());
+        byte[] ab = getLog(pir.getInstanceId());
         assertLog(".*obj.x: 123$", ab);
         assertLog(".*obj.name: Concord$", ab);
         assertLog(".*obj.msg: Hello, Concord$", ab);
@@ -206,10 +200,9 @@ public class VariablesIT extends AbstractServerIT {
 
         // ---
 
-        ProcessApi processApi = new ProcessApi(getApiClient());
-        ProcessEntry pir = waitForCompletion(processApi, spr.getInstanceId());
+        ProcessEntry pir = waitForCompletion(getApiClient(), spr.getInstanceId());
 
-        byte[] ab = getLog(pir.getLogFileName());
+        byte[] ab = getLog(pir.getInstanceId());
         assertLog(".*event: \\{branch=master\\}$", ab);
         assertLog(".*commitEvent.event: push$", ab);
         assertLog(".*commitEvent.branch: master$", ab);

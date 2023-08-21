@@ -20,46 +20,18 @@ package com.walmartlabs.concord.client;
  * =====
  */
 
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.google.gson.Gson;
-import com.squareup.okhttp.MediaType;
-import com.squareup.okhttp.*;
-import com.squareup.okhttp.internal.Util;
-import com.walmartlabs.concord.ApiClient;
 import com.walmartlabs.concord.ApiException;
 import com.walmartlabs.concord.ApiResponse;
-import com.walmartlabs.concord.Pair;
-import com.walmartlabs.concord.auth.Authentication;
-import com.walmartlabs.concord.client.auth.Authentication;
-import com.walmartlabs.concord.client.multipart.MultipartBodyBuilder;
-import com.walmartlabs.concord.client.multipart.MultipartBuilder;
-import com.walmartlabs.concord.client.multipart.MultipartFormBodyBuilder;
-import okio.BufferedSink;
-import okio.Okio;
-import okio.Source;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.lang.reflect.Type;
-import java.net.URI;
-import java.net.http.HttpRequest;
-import java.net.http.HttpResponse;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.util.*;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.Callable;
 
 public final class ClientUtils {
 
     private static final Logger log = LoggerFactory.getLogger(ClientUtils.class);
-
-    private static final MediaType APPLICATION_OCTET_STREAM_TYPE = MediaType.parse("application/octet-stream");
-    private static final MediaType APPLICATION_JSON_TYPE = MediaType.parse("application/json");
-    private static final MediaType TEXT_PLAIN_TYPE = MediaType.parse("text/plain");
-
-    private static final Gson gson = new Gson();
 
     public static <T> T withRetry(int retryCount, long retryInterval, Callable<T> c) throws ApiException {
         Exception exception = null;
@@ -118,125 +90,6 @@ public final class ClientUtils {
         return null;
     }
 
-    public static <T> ApiResponse<T> postData(ApiClient client, String path, Object data) throws ApiException {
-        return postData(client, path, data, null);
-    }
-
-    public static <T> ApiResponse<T> postData(ApiClient client, String path, Object data, Type returnType) throws ApiException {
-        Map<String, String> headerParams = new HashMap<>();
-        headerParams.put("Content-Type", "application/octet-stream");
-
-        return postData(client, path, data, headerParams, returnType);
-    }
-
-    public static <T> ApiResponse<T> postData(ApiClient client, String path, Object data, Map<String, String> headerParams, Class<T> returnType) throws ApiException {
-
-        HttpRequest.Builder req =  HttpRequest.newBuilder()
-                .uri(URI.create(client.getBaseUri() + path))
-                .POST();
-
-
-        Call call = client.buildCall(path, "POST", new ArrayList<>(), new ArrayList<>(),
-                data, headerParams, new HashMap<>(), authNames, null);
-        return client.execute(call, returnType);
-    }
-
-    private static <T> ApiResponse<T> execute(ApiClient client, String path, HttpRequest.Builder req, Class<T> returnType) throws ApiException {
-        client.getAuth().applyTo(req);
-
-        try {
-            HttpResponse<InputStream> response = client.getHttpClient().send(
-                    req.build(),
-                    HttpResponse.BodyHandlers.ofInputStream());
-
-            if (response.statusCode() / 100 != 2) {
-                throw getApiException(path, response);
-            }
-
-            try (InputStream is = response.body()) {
-                return new ApiResponse<>(
-                        response.statusCode(),
-                        response.headers().map(),
-                        is == null ? null : client.getObjectMapper().readValue(is, returnType)
-                );
-            }
-        } catch (IOException e) {
-            throw new ApiException(e);
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-            throw new ApiException(e);
-        }
-    }
-
-    private static ApiException getApiException(String operationId, HttpResponse<InputStream> response) throws IOException {
-        try (InputStream is = response.body()) {
-            String body = is == null ? null : new String(is.readAllBytes());
-            String message = formatExceptionMessage(operationId, response.statusCode(), body);
-            return new ApiException(response.statusCode(), message, response.headers(), body);
-        }
-    }
-
-    private static String formatExceptionMessage(String operationId, int statusCode, String body) {
-        if (body == null || body.isEmpty()) {
-            body = "[no body]";
-        }
-        return operationId + " call failed with: " + statusCode + " - " + body;
-    }
-
-    public static <T> ApiResponse<T> postData(ApiClient client, String path, Map<String, Object> data, Class<T> returnType) throws ApiException {
-        List<Pair> queryParams = new ArrayList<>();
-        Map<String, String> headerParams = new HashMap<>();
-
-        Map<String, Authentication> auths = client.getAuthentications();
-        for (Map.Entry<String, Authentication> e : auths.entrySet()) {
-            Authentication a = e.getValue();
-            a.applyToParams(queryParams, headerParams);
-        }
-
-        String url = client.buildUrl(path, queryParams, null);
-        Request.Builder b = new Request.Builder().url(url);
-        client.processHeaderParams(headerParams, b);
-
-        RequestBody body = createMultipartBody(data).build();
-        Request request = b.method("POST", body).build();
-
-        OkHttpClient ok = client.getHttpClient();
-        Call c = ok.newCall(request);
-
-        return client.execute(c, returnType);
-    }
-
-    public static MultipartBuilder createMultipartBody(Map<String, Object> data) {
-        MultipartFormBodyBuilder b = new MultipartFormBodyBuilder();
-        for (Map.Entry<String, Object> e : data.entrySet()) {
-            String k = e.getKey();
-            Object v = e.getValue();
-            if (v instanceof InputStream) {
-                b.addPart(k, new InputStreamRequestBody((InputStream) v));
-            } else if (v instanceof byte[]) {
-                b.addFormDataPart(k, null, RequestBody.create(APPLICATION_OCTET_STREAM_TYPE, (byte[]) v));
-            } else if (v instanceof String) {
-                b.addFormDataPart(k, (String) v);
-            } else if (v instanceof Path) {
-                b.addFormDataPart(k, null, new PathRequestBody((Path) v));
-            } else if (v instanceof Map) {
-                String json = gson.toJson(v);
-                b.addFormDataPart(k, null, RequestBody.create(APPLICATION_JSON_TYPE, json));
-            } else if (v instanceof Boolean) {
-                b.addFormDataPart(k, null, RequestBody.create(TEXT_PLAIN_TYPE, v.toString()));
-            } else if (v instanceof String[]) {
-                b.addFormDataPart(k, null, RequestBody.create(TEXT_PLAIN_TYPE, String.join(",", (String[]) v)));
-            } else if (v instanceof UUID) {
-                b.addFormDataPart(k, v.toString());
-            } else if (v instanceof Enum<?>) {
-                b.addFormDataPart(k, ((Enum<?>)v).name());
-            } else {
-                throw new IllegalArgumentException("Unknown input type: " + k + "=" + v + (v != null ? " (" + v.getClass() + ")" : ""));
-            }
-        }
-        return b;
-    }
-
     private static void sleep(long t) {
         try {
             Thread.sleep(t);
@@ -251,55 +104,6 @@ public final class ClientUtils {
             error += ": " + e.getResponseBody();
         }
         return error;
-    }
-
-    public static final class InputStreamRequestBody extends RequestBody {
-
-        private final InputStream in;
-
-        public InputStreamRequestBody(InputStream in) {
-            this.in = in;
-        }
-
-        @Override
-        public com.squareup.okhttp.MediaType contentType() {
-            return APPLICATION_OCTET_STREAM_TYPE;
-        }
-
-        @Override
-        public void writeTo(BufferedSink sink) throws IOException {
-            sink.writeAll(Okio.source(in));
-        }
-    }
-
-    public static class PathRequestBody extends RequestBody {
-
-        private final Path path;
-
-        public PathRequestBody(Path path) {
-            this.path = path;
-        }
-
-        @Override
-        public MediaType contentType() {
-            return APPLICATION_OCTET_STREAM_TYPE;
-        }
-
-        @Override
-        public long contentLength() throws IOException {
-            return Files.size(path);
-        }
-
-        @Override
-        public void writeTo(BufferedSink sink) throws IOException {
-            Source source = null;
-            try {
-                source = Okio.source(path);
-                sink.writeAll(source);
-            } finally {
-                Util.closeQuietly(source);
-            }
-        }
     }
 
     private ClientUtils() {

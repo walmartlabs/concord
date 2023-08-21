@@ -120,16 +120,15 @@ public class ProjectFileIT extends AbstractServerIT {
 
         // send the request
 
-        ProcessApi processApi = new ProcessApi(getApiClient());
         StartProcessResponse spr = start(payload);
         assertNotNull(spr.getInstanceId());
 
-        ProcessEntry psr = waitForCompletion(processApi, spr.getInstanceId());
+        ProcessEntry psr = waitForCompletion(getApiClient(), spr.getInstanceId());
         assertEquals(ProcessEntry.StatusEnum.FINISHED, psr.getStatus());
 
         // ---
 
-        byte[] ab = getLog(psr.getLogFileName());
+        byte[] ab = getLog(psr.getInstanceId());
         assertLog(".*Hello!.*", ab);
     }
 
@@ -147,21 +146,20 @@ public class ProjectFileIT extends AbstractServerIT {
 
         ProjectsApi projectsApi = new ProjectsApi(getApiClient());
         projectsApi.createOrUpdate(orgName, new ProjectEntry()
-                .setName(projectName)
-                .setRawPayloadMode(ProjectEntry.RawPayloadModeEnum.EVERYONE)
-                .setRepositories(Collections.singletonMap(repoName, new RepositoryEntry()
-                        .setName(repoName)
-                        .setUrl(createRepo("repositoryRefresh"))
-                        .setBranch("master")
-                        .setSecretName(secretName))));
+                .name(projectName)
+                .rawPayloadMode(ProjectEntry.RawPayloadModeEnum.EVERYONE)
+                .repositories(Collections.singletonMap(repoName, new RepositoryEntry()
+                        .name(repoName)
+                        .url(createRepo("repositoryRefresh"))
+                        .branch("master")
+                        .secretName(secretName))));
 
         // ---
 
-        byte[] payload = archive(ProcessIT.class.getResource("projectfile/singleprofile").toURI());
+        byte[] payload = archive(ProjectFileIT.class.getResource("projectfile/singleprofile").toURI());
 
         // ---
 
-        ProcessApi processApi = new ProcessApi(getApiClient());
         Map<String, Object> input = new HashMap<>();
         input.put("archive", payload);
         input.put("org", orgName);
@@ -169,11 +167,11 @@ public class ProjectFileIT extends AbstractServerIT {
         StartProcessResponse spr = start(input);
         assertNotNull(spr.getInstanceId());
 
-        ProcessEntry pir = waitForCompletion(processApi, spr.getInstanceId());
+        ProcessEntry pir = waitForCompletion(getApiClient(), spr.getInstanceId());
 
         // ---
 
-        byte[] ab = getLog(pir.getLogFileName());
+        byte[] ab = getLog(pir.getInstanceId());
 
         assertLog(".*54321.*", ab);
     }
@@ -184,15 +182,14 @@ public class ProjectFileIT extends AbstractServerIT {
     }
 
     private void simpleTest(String resource, String... logPatterns) throws Exception {
-        byte[] payload = archive(ProcessIT.class.getResource(resource).toURI());
+        byte[] payload = archive(ProjectFileIT.class.getResource(resource).toURI());
 
         // ---
 
-        ProcessApi processApi = new ProcessApi(getApiClient());
         StartProcessResponse spr = start(payload);
         assertNotNull(spr.getInstanceId());
 
-        ProcessEntry pir = waitForCompletion(processApi, spr.getInstanceId());
+        ProcessEntry pir = waitForCompletion(getApiClient(), spr.getInstanceId());
 
         // ---
 
@@ -200,7 +197,7 @@ public class ProjectFileIT extends AbstractServerIT {
             return;
         }
 
-        byte[] ab = getLog(pir.getLogFileName());
+        byte[] ab = getLog(pir.getInstanceId());
 
         for (String p : logPatterns) {
             assertLog(p, ab);

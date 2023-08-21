@@ -27,6 +27,8 @@ import com.walmartlabs.concord.server.sdk.ConcordApplicationException;
 import com.walmartlabs.concord.server.sdk.PartialProcessKey;
 import com.walmartlabs.concord.server.sdk.ProcessKey;
 import com.walmartlabs.concord.server.sdk.metrics.WithTimer;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.sonatype.siesta.Resource;
 
 import javax.inject.Inject;
@@ -39,8 +41,8 @@ import java.util.UUID;
 
 @Named
 @Singleton
-//@Api(value = "Process Locks", authorizations = {@Authorization("session_key")})
 @Path("/api/v1/process")
+@Tag(name = "Process Locks")
 public class ProcessLocksResource implements Resource {
 
     private final ProcessQueueManager processQueueManager;
@@ -59,10 +61,10 @@ public class ProcessLocksResource implements Resource {
      * If the lock is not available then this method will return the LockResult.acquired = false.
      */
     @POST
-//    @ApiOperation("Try lock")
     @Path("/{processInstanceId}/lock/{lockName}")
     @Produces(MediaType.APPLICATION_JSON)
     @WithTimer
+    @Operation(description = "Try lock")
     public LockResult tryLock(@PathParam("processInstanceId") UUID instanceId,
                               @PathParam("lockName") String lockName,
                               @QueryParam("scope") @DefaultValue("PROJECT") ProcessLockScope scope) {
@@ -81,9 +83,9 @@ public class ProcessLocksResource implements Resource {
      * Releases the lock.
      */
     @POST
-//    @ApiOperation("Releases the lock")
     @Path("/{processInstanceId}/unlock/{lockName}")
     @WithTimer
+    @Operation(description = "Releases the lock")
     public void unlock(@PathParam("processInstanceId") UUID instanceId,
                        @PathParam("lockName") String lockName,
                        @QueryParam("scope") @DefaultValue("PROJECT") ProcessLockScope scope) {

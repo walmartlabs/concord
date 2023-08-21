@@ -15,13 +15,12 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import com.walmartlabs.concord.client.auth.Authentication;
 
-{{#hasFormParamsInSpec}}
-import org.apache.http.HttpEntity;
+import org.apache.hc.core5.http.HttpEntity;
 import org.apache.http.NameValuePair;
-import org.apache.http.entity.mime.MultipartEntityBuilder;
 import org.apache.http.message.BasicNameValuePair;
 import org.apache.http.client.entity.UrlEncodedFormEntity;
 
+{{#hasFormParamsInSpec}}
 {{/hasFormParamsInSpec}}
 import java.io.InputStream;
 import java.io.ByteArrayInputStream;
@@ -44,6 +43,7 @@ import java.util.StringJoiner;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.HashMap;
 import java.util.function.Consumer;
 {{/fullJavaUtil}}
 {{#asyncNative}}
@@ -61,8 +61,10 @@ public class {{classname}} {
   private final Duration memberVarReadTimeout;
   private final {{#fullJavaUtil}}java.util.function.{{/fullJavaUtil}}Consumer<HttpResponse<InputStream>> memberVarResponseInterceptor;
   private final {{#fullJavaUtil}}java.util.function.{{/fullJavaUtil}}Consumer<HttpResponse<String>> memberVarAsyncResponseInterceptor;
+  // private final Map<String, String> defaultHeaderMap;
 
-  private final Authentication auth;
+  // private final Authentication auth;
+  private final ApiClient apiClient;
 
   public {{classname}}() {
     this(new ApiClient());
@@ -76,8 +78,16 @@ public class {{classname}} {
     memberVarReadTimeout = apiClient.getReadTimeout();
     memberVarResponseInterceptor = apiClient.getResponseInterceptor();
     memberVarAsyncResponseInterceptor = apiClient.getAsyncResponseInterceptor();
-    this.auth = apiClient.getAuth();
+    // this.auth = apiClient.getAuth();
+    // this.defaultHeaderMap = apiClient.defaultHeaderMap();
+
+    this.apiClient = apiClient;
   }
+
+  public ApiClient getApiClient() {
+    return this.apiClient;
+  }
+
   {{#asyncNative}}
 
   private ApiException getApiException(String operationId, HttpResponse<String> response) {
@@ -164,9 +174,18 @@ public class {{classname}} {
   /**
    * {{summary}}
    * {{notes}}
-   {{#allParams}}
+   {{#isMultipart}}
+       {{#allParams}}
+           {{^isFormParam}}
    * @param {{paramName}} {{description}}{{#required}} (required){{/required}}{{^required}} (optional{{^isContainer}}{{#defaultValue}}, default to {{.}}{{/defaultValue}}){{/isContainer}}{{/required}}
-   {{/allParams}}
+           {{/isFormParam}}
+       {{/allParams}}
+   {{/isMultipart}}
+   {{^isMultipart}}
+       {{#allParams}}
+   * @param {{paramName}} {{description}}{{#required}} (required){{/required}}{{^required}} (optional{{^isContainer}}{{#defaultValue}}, default to {{.}}{{/defaultValue}}){{/isContainer}}{{/required}}
+       {{/allParams}}
+   {{/isMultipart}}
    {{#returnType}}
    * @return {{#asyncNative}}CompletableFuture&lt;{{/asyncNative}}{{returnType}}{{#asyncNative}}&gt;{{/asyncNative}}
    {{/returnType}}
@@ -187,9 +206,9 @@ public class {{classname}} {
   {{#isDeprecated}}
   @Deprecated
   {{/isDeprecated}}
-  public {{#returnType}}{{#asyncNative}}CompletableFuture<{{{returnType}}}>{{/asyncNative}}{{^asyncNative}}{{{returnType}}}{{/asyncNative}}{{/returnType}}{{^returnType}}{{#asyncNative}}CompletableFuture<Void>{{/asyncNative}}{{^asyncNative}}void{{/asyncNative}}{{/returnType}} {{operationId}}({{#allParams}}{{{dataType}}} {{paramName}}{{^-last}}, {{/-last}}{{/allParams}}) throws ApiException {
+  public {{#returnType}}{{#asyncNative}}CompletableFuture<{{{returnType}}}>{{/asyncNative}}{{^asyncNative}}{{{returnType}}}{{/asyncNative}}{{/returnType}}{{^returnType}}{{#asyncNative}}CompletableFuture<Void>{{/asyncNative}}{{^asyncNative}}void{{/asyncNative}}{{/returnType}} {{operationId}}({{#isMultipart}}{{#allParams}}{{^isFormParam}}{{{dataType}}} {{paramName}},{{/isFormParam}}{{/allParams}} Map<String, Object> multipartInput{{/isMultipart}}{{^isMultipart}}{{#allParams}} {{{dataType}}} {{paramName}}{{^-last}}, {{/-last}} {{/allParams}}{{/isMultipart}}) throws ApiException {
     {{^asyncNative}}
-    {{#returnType}}ApiResponse<{{{.}}}> localVarResponse = {{/returnType}}{{operationId}}WithHttpInfo({{#allParams}}{{paramName}}{{^-last}}, {{/-last}}{{/allParams}});
+    {{#returnType}}ApiResponse<{{{.}}}> localVarResponse = {{/returnType}}{{operationId}}WithHttpInfo({{#isMultipart}}{{#allParams}}{{^isFormParam}}{{paramName}},{{/isFormParam}}{{/allParams}} multipartInput{{/isMultipart}}{{^isMultipart}}{{#allParams}}{{paramName}}{{^-last}}, {{/-last}} {{/allParams}}{{/isMultipart}});
     {{#returnType}}
     return localVarResponse.getData();
     {{/returnType}}
@@ -227,9 +246,18 @@ public class {{classname}} {
   /**
    * {{summary}}
    * {{notes}}
-   {{#allParams}}
+   {{#isMultipart}}
+       {{#allParams}}
+           {{^isFormParam}}
    * @param {{paramName}} {{description}}{{#required}} (required){{/required}}{{^required}} (optional{{^isContainer}}{{#defaultValue}}, default to {{.}}{{/defaultValue}}){{/isContainer}}{{/required}}
-   {{/allParams}}
+           {{/isFormParam}}
+       {{/allParams}}
+   {{/isMultipart}}
+   {{^isMultipart}}
+       {{#allParams}}
+           * @param {{paramName}} {{description}}{{#required}} (required){{/required}}{{^required}} (optional{{^isContainer}}{{#defaultValue}}, default to {{.}}{{/defaultValue}}){{/isContainer}}{{/required}}
+       {{/allParams}}
+   {{/isMultipart}}
    * @return {{#asyncNative}}CompletableFuture&lt;{{/asyncNative}}ApiResponse&lt;{{returnType}}{{^returnType}}Void{{/returnType}}&gt;{{#asyncNative}}&gt;{{/asyncNative}}
    * @throws ApiException if fails to make API call
    {{#isDeprecated}}
@@ -243,11 +271,11 @@ public class {{classname}} {
   {{#isDeprecated}}
   @Deprecated
   {{/isDeprecated}}
-  public {{#asyncNative}}CompletableFuture<{{/asyncNative}}ApiResponse<{{{returnType}}}{{^returnType}}Void{{/returnType}}>{{#asyncNative}}>{{/asyncNative}} {{operationId}}WithHttpInfo({{#allParams}}{{{dataType}}} {{paramName}}{{^-last}}, {{/-last}}{{/allParams}}) throws ApiException {
+  public {{#asyncNative}}CompletableFuture<{{/asyncNative}}ApiResponse<{{{returnType}}}{{^returnType}}Void{{/returnType}}>{{#asyncNative}}>{{/asyncNative}} {{operationId}}WithHttpInfo({{#isMultipart}}{{#allParams}}{{^isFormParam}}{{{dataType}}} {{paramName}},{{/isFormParam}}{{/allParams}} Map<String, Object> multipartInput{{/isMultipart}}{{^isMultipart}}{{#allParams}} {{{dataType}}} {{paramName}}{{^-last}}, {{/-last}} {{/allParams}}{{/isMultipart}}) throws ApiException {
     {{^asyncNative}}
-    HttpRequest.Builder localVarRequestBuilder = {{operationId}}RequestBuilder({{#allParams}}{{paramName}}{{^-last}}, {{/-last}}{{/allParams}});
-    if (auth != null) {
-      localVarRequestBuilder = auth.applyTo(localVarRequestBuilder);
+    HttpRequest.Builder localVarRequestBuilder = {{operationId}}RequestBuilder({{#isMultipart}}{{#allParams}}{{^isFormParam}}{{paramName}},{{/isFormParam}}{{/allParams}} multipartInput{{/isMultipart}}{{^isMultipart}}{{#allParams}}{{paramName}}{{^-last}}, {{/-last}} {{/allParams}}{{/isMultipart}});
+    if (apiClient.getAuth() != null) {
+      localVarRequestBuilder = apiClient.getAuth().applyTo(localVarRequestBuilder);
     }
     try {
       HttpResponse<InputStream> localVarResponse = memberVarHttpClient.send(
@@ -280,7 +308,7 @@ public class {{classname}} {
           localVarResponse.statusCode(),
           localVarResponse.headers().map(),
           {{#returnType}}
-          localVarResponse.body() == null ? null : memberVarObjectMapper.readValue(localVarResponse.body(), new TypeReference<{{{returnType}}}>() {}) // closes the InputStream
+          ResponseBodyHandler.handle(memberVarObjectMapper, localVarResponse, new TypeReference<{{{returnType}}}>() {})
           {{/returnType}}
           {{^returnType}}
           null
@@ -323,7 +351,7 @@ public class {{classname}} {
                   new ApiResponse<{{{returnType}}}>(
                       localVarResponse.statusCode(),
                       localVarResponse.headers().map(),
-                      responseBody == null || responseBody.isBlank() ? null : memberVarObjectMapper.readValue(responseBody, new TypeReference<{{{returnType}}}>() {}))
+                      TODO:)
               );
             } catch (IOException e) {
               return CompletableFuture.failedFuture(new ApiException(e));
@@ -343,7 +371,8 @@ public class {{classname}} {
     {{/asyncNative}}
   }
 
-  private HttpRequest.Builder {{operationId}}RequestBuilder({{#allParams}}{{{dataType}}} {{paramName}}{{^-last}}, {{/-last}}{{/allParams}}) throws ApiException {
+
+  private HttpRequest.Builder {{operationId}}RequestBuilder({{#isMultipart}}{{#allParams}}{{^isFormParam}}{{{dataType}}} {{paramName}},{{/isFormParam}}{{/allParams}} Map<String, Object> multipartInput{{/isMultipart}}{{^isMultipart}}{{#allParams}} {{{dataType}}} {{paramName}}{{^-last}}, {{/-last}} {{/allParams}}{{/isMultipart}}) throws ApiException {
     {{#allParams}}
     {{#required}}
     // verify the required parameter '{{paramName}}' is set
@@ -387,7 +416,9 @@ public class {{classname}} {
     localVarQueryParams.addAll(ApiClient.parameterToPairs("multi", "{{baseName}}", {{paramName}}.{{getter}}()));
                         {{/isArray}}
                         {{^isArray}}
-    localVarQueryParams.addAll(ApiClient.parameterToPairs("{{baseName}}", {{paramName}}.{{getter}}()));
+    if ({{paramName}} != null) {
+        localVarQueryParams.addAll(ApiClient.parameterToPairs("{{baseName}}", {{paramName}}.{{getter}}()));
+    }
                         {{/isArray}}
                     {{/vars}}
                 {{/hasVars}}
@@ -422,6 +453,10 @@ public class {{classname}} {
     localVarRequestBuilder.uri(URI.create(memberVarBaseUri + localVarPath));
     {{/hasQueryParams}}
 
+    for (Map.Entry<String, String> e : apiClient.defaultHeaderMap().entrySet()) {
+      localVarRequestBuilder.header(e.getKey(), e.getValue());
+    }
+
     {{#headerParams}}
     if ({{paramName}} != null) {
       localVarRequestBuilder.header("{{baseName}}", {{paramName}}.toString());
@@ -430,43 +465,32 @@ public class {{classname}} {
     {{#bodyParam}}
     localVarRequestBuilder.header("Content-Type", "{{#hasConsumes}}{{#consumes}}{{#-first}}{{mediaType}}{{/-first}}{{/consumes}}{{/hasConsumes}}{{#hasConsumes}}{{^consumes}}application/json{{/consumes}}{{/hasConsumes}}{{^hasConsumes}}application/json{{/hasConsumes}}");
     {{/bodyParam}}
-    localVarRequestBuilder.header("Accept", "{{#hasProduces}}{{#produces}}{{mediaType}}{{^-last}}, {{/-last}}{{/produces}}{{/hasProduces}}{{#hasProduces}}{{^produces}}application/json{{/produces}}{{/hasProduces}}{{^hasProduces}}application/json{{/hasProduces}}");
-
+    String acceptHeaderValue = "{{#hasProduces}}{{#produces}}{{mediaType}}{{^-last}}, {{/-last}}{{/produces}}{{/hasProduces}}{{#hasProduces}}{{^produces}}application/json{{/produces}}{{/hasProduces}}{{^hasProduces}}application/json{{/hasProduces}}";
+    acceptHeaderValue += ",application/vnd.siesta-validation-errors-v1+json";
+    localVarRequestBuilder.header("Accept", acceptHeaderValue);
     {{#bodyParam}}
     {{#isString}}
     localVarRequestBuilder.method("{{httpMethod}}", HttpRequest.BodyPublishers.ofString({{paramName}}));
     {{/isString}}
     {{^isString}}
     try {
-      byte[] localVarPostBody = memberVarObjectMapper.writeValueAsBytes({{paramName}});
-      localVarRequestBuilder.method("{{httpMethod}}", HttpRequest.BodyPublishers.ofByteArray(localVarPostBody));
+      localVarRequestBuilder.method("{{httpMethod}}", RequestBodyHandler.handle(memberVarObjectMapper, {{paramName}}));
     } catch (IOException e) {
       throw new ApiException(e);
     }
     {{/isString}}
     {{/bodyParam}}
     {{^bodyParam}}
-    {{#hasFormParams}}
+
     {{#isMultipart}}
-    MultipartEntityBuilder multiPartBuilder = MultipartEntityBuilder.create();
     boolean hasFiles = false;
     {{#formParams}}
-    {{#isArray}}
-    for (int i=0; i < {{paramName}}.size(); i++) {
-        multiPartBuilder.addTextBody("{{{baseName}}}", {{paramName}}.get(i).toString());
-    }
-    {{/isArray}}
-    {{^isArray}}
     {{#isFile}}
-    multiPartBuilder.addBinaryBody("{{{baseName}}}", {{paramName}});
-    hasFiles = true;
+        hasFiles = true;
     {{/isFile}}
-    {{^isFile}}
-    multiPartBuilder.addTextBody("{{{baseName}}}", {{paramName}}.toString());
-    {{/isFile}}
-    {{/isArray}}
     {{/formParams}}
-    HttpEntity entity = multiPartBuilder.build();
+
+    HttpEntity entity = MultipartRequestBodyHandler.handle(memberVarObjectMapper, multipartInput);
     HttpRequest.BodyPublisher formDataPublisher;
     if (hasFiles) {
         Pipe pipe;
@@ -494,10 +518,11 @@ public class {{classname}} {
             .ofInputStream(() -> new ByteArrayInputStream(formOutputStream.toByteArray()));
     }
     localVarRequestBuilder
-        .header("Content-Type", entity.getContentType().getValue())
+        .header("Content-Type", entity.getContentType())
         .method("{{httpMethod}}", formDataPublisher);
     {{/isMultipart}}
     {{^isMultipart}}
+        {{#hasFormParams}}
     List<NameValuePair> formValues = new ArrayList<>();
     {{#formParams}}
     {{#isArray}}
@@ -524,11 +549,15 @@ public class {{classname}} {
         .header("Content-Type", entity.getContentType().getValue())
         .method("{{httpMethod}}", HttpRequest.BodyPublishers
             .ofInputStream(() -> new ByteArrayInputStream(formOutputStream.toByteArray())));
-    {{/isMultipart}}
-    {{/hasFormParams}}
-    {{^hasFormParams}}
+
+
+        {{/hasFormParams}}
+        {{^hasFormParams}}
     localVarRequestBuilder.method("{{httpMethod}}", HttpRequest.BodyPublishers.noBody());
-    {{/hasFormParams}}
+        {{/hasFormParams}}
+    {{/isMultipart}}
+
+
     {{/bodyParam}}
     if (memberVarReadTimeout != null) {
       localVarRequestBuilder.timeout(memberVarReadTimeout);
@@ -538,56 +567,42 @@ public class {{classname}} {
     }
     return localVarRequestBuilder;
   }
-  {{#vendorExtensions.x-group-parameters}}
+  {{#isMultipart}}
   {{#hasParams}}
 
-  public static final class API{{operationId}}Request {
-    {{#requiredParams}}
-    private {{{dataType}}} {{paramName}}; // {{description}} (required)
-    {{/requiredParams}}
-    {{#optionalParams}}
-    private {{{dataType}}} {{paramName}}; // {{description}} (optional{{^isContainer}}{{#defaultValue}}, default to {{.}}{{/defaultValue}}){{/isContainer}}
-    {{/optionalParams}}
-
-    private API{{operationId}}Request(Builder builder) {
-      {{#requiredParams}}
-      this.{{paramName}} = builder.{{paramName}};
-      {{/requiredParams}}
-      {{#optionalParams}}
-      this.{{paramName}} = builder.{{paramName}};
-      {{/optionalParams}}
-    }
+  public static final class {{#lambda.titlecase}}{{operationId}}{{/lambda.titlecase}}Request {
     {{#allParams}}
-    public {{{dataType}}} {{paramName}}() {
-      return {{paramName}};
-    }
+        {{#isFormParam}}
+    private {{{dataType}}} {{paramName}};
+        {{/isFormParam}}
     {{/allParams}}
-    public static Builder newBuilder() {
-      return new Builder();
-    }
 
-    public static class Builder {
-      {{#requiredParams}}
-      private {{{dataType}}} {{paramName}};
-      {{/requiredParams}}
-      {{#optionalParams}}
-      private {{{dataType}}} {{paramName}};
-      {{/optionalParams}}
+    {{#allParams}}
+        {{#isFormParam}}
+    public {{#lambda.titlecase}}{{operationId}}{{/lambda.titlecase}}Request {{paramName}}({{{dataType}}} {{paramName}}) {
+      this.{{paramName}} = {{paramName}};
+      return this;
+    }
+        {{/isFormParam}}
+    {{/allParams}}
+
+    public Map<String, Object> asMap() {
+        Map<String, Object> result = new HashMap<>();
 
       {{#allParams}}
-      public Builder {{paramName}}({{{dataType}}} {{paramName}}) {
-        this.{{paramName}} = {{paramName}};
-        return this;
-      }
+          {{#isFormParam}}
+        if ({{paramName}} != null) {
+          result.put("{{baseName}}", {{paramName}});
+        }
+          {{/isFormParam}}
       {{/allParams}}
-      public API{{operationId}}Request build() {
-        return new API{{operationId}}Request(this);
-      }
+
+        return result;
     }
   }
 
   {{/hasParams}}
-  {{/vendorExtensions.x-group-parameters}}
+  {{/isMultipart}}
   {{/operation}}
 }
 {{/operations}}

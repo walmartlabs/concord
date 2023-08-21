@@ -36,11 +36,11 @@ public class JsonStoreIT extends AbstractServerIT {
     public void testValidationJsonStoreRequest() throws Exception {
         String orgName = "org_" + randomString();
         OrganizationsApi organizationsApi = new OrganizationsApi(getApiClient());
-        organizationsApi.createOrUpdate(new OrganizationEntry().setName(orgName));
+        organizationsApi.createOrUpdateOrg(new OrganizationEntry().name(orgName));
 
         JsonStoreApi api = new JsonStoreApi(getApiClient());
         try {
-            api.createOrUpdate(orgName, new JsonStoreRequest().setName("<script></script>"));
+            api.createOrUpdateJsonStores(orgName, new JsonStoreRequest().name("<script></script>"));
             fail("exception expected");
         } catch (ApiException e) {
             assertEquals(400, e.getCode());
@@ -53,53 +53,53 @@ public class JsonStoreIT extends AbstractServerIT {
         String orgName = "org_" + randomString();
 
         OrganizationsApi orgApi = new OrganizationsApi(getApiClient());
-        orgApi.createOrUpdate(new OrganizationEntry().setName(orgName));
+        orgApi.createOrUpdateOrg(new OrganizationEntry().name(orgName));
 
         // ---
 
         String storeName = "store_" + randomString();
 
         JsonStoreApi jsonStoreApi = new JsonStoreApi(getApiClient());
-        jsonStoreApi.createOrUpdate(orgName, new JsonStoreRequest()
-                .setName(storeName));
+        jsonStoreApi.createOrUpdateJsonStores(orgName, new JsonStoreRequest()
+                .name(storeName));
 
         // ---
 
         String teamName = "team_" + randomString();
         TeamsApi teamsApi = new TeamsApi(getApiClient());
-        CreateTeamResponse teamResp = teamsApi.createOrUpdate(orgName, new TeamEntry()
-                .setName(teamName));
+        CreateTeamResponse teamResp = teamsApi.createOrUpdateTeam(orgName, new TeamEntry()
+                .name(teamName));
 
         // --- Typical one-or-more teams bulk access update
 
         List<ResourceAccessEntry> teams = new ArrayList<>(1);
         teams.add(new ResourceAccessEntry()
-                .setOrgName(orgName)
-                .setTeamId(teamResp.getId())
-                .setTeamName(teamName)
-                .setLevel(ResourceAccessEntry.LevelEnum.OWNER));
-        GenericOperationResult addTeamsResult = jsonStoreApi.updateAccessLevel_0(orgName, storeName, teams);
+                .orgName(orgName)
+                .teamId(teamResp.getId())
+                .teamName(teamName)
+                .level(ResourceAccessEntry.LevelEnum.OWNER));
+        GenericOperationResult addTeamsResult = jsonStoreApi.bulkUpdateJsonStoresAccessLevel(orgName, storeName, teams);
         assertNotNull(addTeamsResult);
-        assertTrue(addTeamsResult.isOk());
+        assertTrue(addTeamsResult.getOk());
 
-        List<ResourceAccessEntry> currentTeams = jsonStoreApi.getAccessLevel(orgName, storeName);
+        List<ResourceAccessEntry> currentTeams = jsonStoreApi.getJsonStoresAccessLevel(orgName, storeName);
         assertNotNull(currentTeams);
         assertEquals(1, currentTeams.size());
 
         // --- Empty teams list clears all
 
-        GenericOperationResult clearTeamsResult = jsonStoreApi.updateAccessLevel_0(orgName, storeName, Collections.emptyList());
+        GenericOperationResult clearTeamsResult = jsonStoreApi.bulkUpdateJsonStoresAccessLevel(orgName, storeName, Collections.emptyList());
         assertNotNull(clearTeamsResult);
-        assertTrue(clearTeamsResult.isOk());
+        assertTrue(clearTeamsResult.getOk());
 
-        currentTeams = jsonStoreApi.getAccessLevel(orgName, storeName);
+        currentTeams = jsonStoreApi.getJsonStoresAccessLevel(orgName, storeName);
         assertNotNull(currentTeams);
         assertEquals(0, currentTeams.size());
 
         // --- Null list not allowed, throws error
 
         try {
-            jsonStoreApi.updateAccessLevel_0(orgName, storeName, null);
+            jsonStoreApi.bulkUpdateJsonStoresAccessLevel(orgName, storeName, null);
         } catch (ApiException expected) {
             assertEquals(400, expected.getCode());
             assertTrue(expected.getResponseBody().contains("List of teams is null"));
@@ -109,8 +109,8 @@ public class JsonStoreIT extends AbstractServerIT {
 
         // ---
 
-        teamsApi.delete(orgName, teamName);
-        jsonStoreApi.delete(orgName, storeName);
-        orgApi.delete(orgName, "yes");
+        teamsApi.deleteTeam(orgName, teamName);
+        jsonStoreApi.deleteJsonStores(orgName, storeName);
+        orgApi.deleteOrg(orgName, "yes");
     }
 }

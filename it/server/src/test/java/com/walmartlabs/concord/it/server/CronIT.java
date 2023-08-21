@@ -57,17 +57,17 @@ public class CronIT extends AbstractServerIT {
         String repoName = "repo_" + randomString();
 
         OrganizationsApi orgApi = new OrganizationsApi(getApiClient());
-        if (orgApi.get(orgName) == null) {
-            orgApi.createOrUpdate(new OrganizationEntry().setName(orgName));
+        if (orgApi.getOrg(orgName) == null) {
+            orgApi.createOrUpdateOrg(new OrganizationEntry().name(orgName));
         }
 
         ProjectsApi projectsApi = new ProjectsApi(getApiClient());
         projectsApi.createOrUpdate(orgName, new ProjectEntry()
-                .setName(projectName)
-                .setVisibility(ProjectEntry.VisibilityEnum.PUBLIC)
-                .setRepositories(Collections.singletonMap(repoName, new RepositoryEntry()
-                        .setUrl(gitUrl)
-                        .setBranch("master"))));
+                .name(projectName)
+                .visibility(ProjectEntry.VisibilityEnum.PUBLIC)
+                .repositories(Collections.singletonMap(repoName, new RepositoryEntry()
+                        .url(gitUrl)
+                        .branch("master"))));
 
         // ---
 
@@ -112,7 +112,7 @@ public class CronIT extends AbstractServerIT {
 
         // --- clean up
 
-        projectsApi.delete(orgName, projectName);
+        projectsApi.deleteProject(orgName, projectName);
     }
 
     @Test
@@ -126,29 +126,29 @@ public class CronIT extends AbstractServerIT {
         String repoName = "repo_" + randomString();
 
         OrganizationsApi orgApi = new OrganizationsApi(getApiClient());
-        if (orgApi.get(orgName) == null) {
-            orgApi.createOrUpdate(new OrganizationEntry().setName(orgName));
+        if (orgApi.getOrg(orgName) == null) {
+            orgApi.createOrUpdateOrg(new OrganizationEntry().name(orgName));
         }
 
         ProjectsApi projectsApi = new ProjectsApi(getApiClient());
         projectsApi.createOrUpdate(orgName, new ProjectEntry()
-                .setName(projectName)
-                .setVisibility(ProjectEntry.VisibilityEnum.PUBLIC)
-                .setRepositories(Collections.singletonMap(repoName, new RepositoryEntry()
-                        .setUrl(gitUrl)
-                        .setBranch("master"))));
+                .name(projectName)
+                .visibility(ProjectEntry.VisibilityEnum.PUBLIC)
+                .repositories(Collections.singletonMap(repoName, new RepositoryEntry()
+                        .url(gitUrl)
+                        .branch("master"))));
 
         // ---
 
         String username = "user_" + randomString();
 
         UsersApi usersApi = new UsersApi(getApiClient());
-        CreateUserResponse cur = usersApi.createOrUpdate(new CreateUserRequest()
-                .setUsername(username)
-                .setType(CreateUserRequest.TypeEnum.LOCAL));
+        CreateUserResponse cur = usersApi.createOrUpdateUser(new CreateUserRequest()
+                .username(username)
+                .type(CreateUserRequest.TypeEnum.LOCAL));
 
         ApiKeysApi apiKeyResource = new ApiKeysApi(getApiClient());
-        CreateApiKeyResponse apiKeyResponse = apiKeyResource.create(new CreateApiKeyRequest().setUsername(username));
+        CreateApiKeyResponse apiKeyResponse = apiKeyResource.createUserApiKey(new CreateApiKeyRequest().username(username));
 
         SecretClient secretsApi = new SecretClient(getApiClient());
         CreateSecretRequest secret = CreateSecretRequest.builder()
@@ -163,12 +163,12 @@ public class CronIT extends AbstractServerIT {
 
         // ---
 
-        ProcessApi processApi = new ProcessApi(getApiClient());
+        ProcessV2Api processApi = new ProcessV2Api(getApiClient());
 
         while (true) {
             Thread.sleep(1000);
 
-            List<ProcessEntry> processes = processApi.list(orgName, projectName, null, null, null, null, null, null, null, null, null);
+            List<ProcessEntry> processes = processApi.listProcesses(null, orgName, null, projectName, null, null, null, null, null, null, null, null, null, null, null);
             if (processes.size() != 1) {
                 continue;
             }
@@ -182,7 +182,7 @@ public class CronIT extends AbstractServerIT {
 
         // ---
 
-        projectsApi.delete(orgName, projectName);
+        projectsApi.deleteProject(orgName, projectName);
     }
 
     private static String initRepo(String initResource) throws Exception {
@@ -201,14 +201,14 @@ public class CronIT extends AbstractServerIT {
     private List<ProcessEntry> listCronProcesses(String o, String p, String r, String tag) throws ApiException {
         ProcessV2Api processV2Api = new ProcessV2Api(getApiClient());
 
-        return processV2Api.list(null, o, null, p, null, r, null, null,
-                Collections.singletonList(tag), null, "cron", null, null, null, null);
+        return processV2Api.listProcesses(null, o, null, p, null, r, null, null,
+                Collections.singleton(tag), null, "cron", null, null, null, null);
     }
 
     private List<TriggerEntry> waitForTriggers(String orgName, String projectName, String repoName, int expectedCount) throws Exception {
         TriggersApi triggerResource = new TriggersApi(getApiClient());
         while (true) {
-            List<TriggerEntry> l = triggerResource.list(orgName, projectName, repoName);
+            List<TriggerEntry> l = triggerResource.listTriggers(orgName, projectName, repoName);
             if (l != null && l.size() == expectedCount) {
                 return l;
             }
@@ -218,7 +218,7 @@ public class CronIT extends AbstractServerIT {
     }
 
     private boolean hasLogEntry(ProcessEntry e, String pattern) throws Exception {
-        byte[] ab = getLog(e.getLogFileName());
+        byte[] ab = getLog(e.getInstanceId());
         List<String> l = grep(pattern, ab);
         return !l.isEmpty();
     }

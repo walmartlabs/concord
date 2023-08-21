@@ -20,8 +20,8 @@ package com.walmartlabs.concord.it.server;
  * =====
  */
 
-import com.walmartlabs.concord.client.ProcessApi;
 import com.walmartlabs.concord.client.ProcessEntry;
+import com.walmartlabs.concord.client.ProcessV2Api;
 import com.walmartlabs.concord.client.TriggerEntry;
 import com.walmartlabs.concord.client.TriggersApi;
 
@@ -37,11 +37,11 @@ public class AbstractGeneralTriggerIT extends AbstractServerIT {
 
     protected Map<ProcessEntry.StatusEnum, ProcessEntry> waitProcesses(
             String orgName, String projectName, ProcessEntry.StatusEnum first, ProcessEntry.StatusEnum... more) throws Exception {
-        ProcessApi processApi = new ProcessApi(getApiClient());
+        ProcessV2Api processApi = new ProcessV2Api(getApiClient());
 
         List<ProcessEntry> processes;
         while (true) {
-            processes = processApi.list(orgName, projectName, null, null, null, null, null, null, null, null, null);
+            processes = processApi.listProcesses(null, orgName, null, projectName, null, null, null, null, null, null, null, null, null, null, null);
 
             if (processes.size() == 1 + (more != null ? more.length : 0)) {
                 break;
@@ -51,7 +51,7 @@ public class AbstractGeneralTriggerIT extends AbstractServerIT {
 
         Map<ProcessEntry.StatusEnum, ProcessEntry> ps = new HashMap<>();
         for (ProcessEntry p : processes) {
-            ProcessEntry pir = waitForStatus(processApi, p.getInstanceId(), first, more);
+            ProcessEntry pir = waitForStatus(getApiClient(), p.getInstanceId(), first, more);
             ProcessEntry pe = ps.put(pir.getStatus(), pir);
             if (pe != null) {
                 throw new RuntimeException("already got process with '" + pe.getStatus() + "' status, id: " + pe.getInstanceId());
@@ -62,14 +62,14 @@ public class AbstractGeneralTriggerIT extends AbstractServerIT {
 
     protected void assertProcessLog(ProcessEntry pir, String log) throws Exception {
         assertNotNull(pir);
-        byte[] ab = getLog(pir.getLogFileName());
+        byte[] ab = getLog(pir.getInstanceId());
         assertLog(log, ab);
     }
 
     protected List<TriggerEntry> waitForTriggers(String orgName, String projectName, String repoName, int expectedCount) throws Exception {
         TriggersApi triggerResource = new TriggersApi(getApiClient());
         while (true) {
-            List<TriggerEntry> l = triggerResource.list(orgName, projectName, repoName);
+            List<TriggerEntry> l = triggerResource.listTriggers(orgName, projectName, repoName);
             if (l != null && l.size() == expectedCount) {
                 return l;
             }

@@ -28,7 +28,8 @@ import com.walmartlabs.concord.server.org.OrganizationEntry;
 import com.walmartlabs.concord.server.org.OrganizationManager;
 import com.walmartlabs.concord.server.org.ResourceAccessEntry;
 import com.walmartlabs.concord.server.org.jsonstore.*;
-import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.sonatype.siesta.Resource;
 import org.sonatype.siesta.Validate;
 
@@ -44,9 +45,9 @@ import java.util.stream.Collectors;
 
 @Named
 @Singleton
-//@Api(value = "Inventories", authorizations = {@Authorization("api_key"), @Authorization("session_key"), @Authorization("ldap")})
 @Path("/api/v1/org")
 @Deprecated
+@Tag(name = "Inventories")
 public class InventoryResource implements Resource {
 
     private final JsonStoreManager storageManager;
@@ -67,10 +68,10 @@ public class InventoryResource implements Resource {
      * @return
      */
     @GET
-//    @ApiOperation(value = "List existing inventories", responseContainer = "list", response = InventoryEntry.class)
     @Path("/{orgName}/inventory")
     @Produces(MediaType.APPLICATION_JSON)
-    public List<InventoryEntry> list(@Parameter @PathParam("orgName") String orgName) {
+    @Operation(description = "List existing inventories", operationId = "listInventories")
+    public List<InventoryEntry> list(@PathParam("orgName") String orgName) {
         List<JsonStoreEntry> result = storageManager.list(orgName, -1, -1, null);
         return result.stream()
                 .map(InventoryResource::convert)
@@ -85,11 +86,11 @@ public class InventoryResource implements Resource {
      * @return inventory
      */
     @GET
-//    @ApiOperation("Get existing inventory")
     @Path("/{orgName}/inventory/{inventoryName}")
     @Produces(MediaType.APPLICATION_JSON)
-    public InventoryEntry get(@Parameter @PathParam("orgName") String orgName,
-                              @Parameter @PathParam("inventoryName") String inventoryName) {
+    @Operation(description = "Get existing inventory", operationId = "getInventory")
+    public InventoryEntry get(@PathParam("orgName") String orgName,
+                              @PathParam("inventoryName") String inventoryName) {
         return convert(storageManager.get(orgName, inventoryName));
     }
 
@@ -101,13 +102,13 @@ public class InventoryResource implements Resource {
      * @return
      */
     @POST
-//    @ApiOperation("Create or update inventory")
     @Path("/{orgName}/inventory")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     @Validate
-    public CreateInventoryResponse createOrUpdate(@Parameter @PathParam("orgName") String orgName,
-                                                  @Parameter @Valid InventoryEntry entry) {
+    @Operation(description = "Create or update inventory", operationId = "createOrUpdateInventory")
+    public CreateInventoryResponse createOrUpdate(@PathParam("orgName") String orgName,
+                                                  @Valid InventoryEntry entry) {
 
         OrganizationEntry org = orgManager.assertAccess(orgName, true);
 
@@ -124,14 +125,14 @@ public class InventoryResource implements Resource {
     }
 
     @POST
-//    @ApiOperation("Updates the access level for the specified inventory")
     @Path("/{orgName}/inventory/{inventoryName}/access")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     @Validate
-    public GenericOperationResult updateAccessLevel(@Parameter @PathParam("orgName") @ConcordKey String orgName,
-                                                    @Parameter @PathParam("inventoryName") @ConcordKey String inventoryName,
-                                                    @Parameter @Valid ResourceAccessEntry entry) {
+    @Operation(description = "Updates the access level for the specified inventory", operationId = "updateInventoryAccessLevel")
+    public GenericOperationResult updateAccessLevel(@PathParam("orgName") @ConcordKey String orgName,
+                                                    @PathParam("inventoryName") @ConcordKey String inventoryName,
+                                                    @Valid ResourceAccessEntry entry) {
 
         storageManager.updateAccessLevel(orgName, inventoryName, entry);
 
@@ -146,11 +147,11 @@ public class InventoryResource implements Resource {
      * @return
      */
     @DELETE
-//    @ApiOperation("Delete inventory")
     @Path("/{orgName}/inventory/{inventoryName}")
     @Produces(MediaType.APPLICATION_JSON)
-    public GenericOperationResult delete(@Parameter @PathParam("orgName") String orgName,
-                                         @Parameter @PathParam("inventoryName") String inventoryName) {
+    @Operation(description = "Delete inventory", operationId = "deleteInventory")
+    public GenericOperationResult delete(@PathParam("orgName") String orgName,
+                                         @PathParam("inventoryName") String inventoryName) {
 
         storageManager.delete(orgName, inventoryName);
 

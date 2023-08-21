@@ -36,13 +36,13 @@ public class TimeoutHandlingIT extends AbstractServerIT {
 
         // prepare the payload
 
-        byte[] payload = archive(ProcessIT.class.getResource("timeoutHandling").toURI());
+        byte[] payload = archive(TimeoutHandlingIT.class.getResource("timeoutHandling").toURI());
 
         // start the process and wait for it to fail
 
         StartProcessResponse spr = start(payload);
 
-        waitForStatus(processApi, spr.getInstanceId(), ProcessEntry.StatusEnum.TIMED_OUT);
+        waitForStatus(getApiClient(), spr.getInstanceId(), ProcessEntry.StatusEnum.TIMED_OUT);
 
         // find the child processes
 
@@ -50,7 +50,7 @@ public class TimeoutHandlingIT extends AbstractServerIT {
 
         // check the handler's logs for expected messages
 
-        byte[] ab = getLog(child.getLogFileName());
+        byte[] ab = getLog(child.getInstanceId());
         assertLog(".*projectInfo: \\{.*orgName=Default.*\\}.*", ab);
         assertLog(".*processInfo: \\{.*sessionKey=.*\\}.*", ab);
         assertLog(".*initiator: \\{.*username=.*\\}.*", ab);

@@ -57,7 +57,7 @@ public class DefaultLockService implements LockService {
         // TODO: timeout
         while (!Thread.currentThread().isInterrupted()) {
             LockResult lock = withRetry(() -> api.tryLock(instanceId.getValue(), lockName, LockScope.PROJECT.name()));
-            if (lock.isAcquired()) {
+            if (lock.getAcquired()) {
                 log.info("successfully acquired lock '{}' in '{}' scope...", lockName, LockScope.PROJECT);
                 return;
             }

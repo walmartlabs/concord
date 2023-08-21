@@ -23,6 +23,7 @@ package com.walmartlabs.concord.server.process.checkpoint;
 import com.walmartlabs.concord.common.IOUtils;
 import com.walmartlabs.concord.common.TemporaryPath;
 import com.walmartlabs.concord.server.MultipartUtils;
+import com.walmartlabs.concord.server.org.secret.SecretResource;
 import com.walmartlabs.concord.server.process.ProcessEntry;
 import com.walmartlabs.concord.server.process.ProcessEntry.ProcessCheckpointEntry;
 import com.walmartlabs.concord.server.process.ProcessManager;
@@ -31,7 +32,11 @@ import com.walmartlabs.concord.server.process.state.ProcessCheckpointManager;
 import com.walmartlabs.concord.server.sdk.ConcordApplicationException;
 import com.walmartlabs.concord.server.sdk.ProcessKey;
 import com.walmartlabs.concord.server.sdk.metrics.WithTimer;
-import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.parameters.RequestBody;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.jboss.resteasy.plugins.providers.multipart.MultipartInput;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -53,11 +58,10 @@ import java.nio.file.StandardCopyOption;
 import java.util.List;
 import java.util.UUID;
 
-
 @Named
 @Singleton
-//@Api(value = "Checkpoint", authorizations = {@Authorization("api_key"), @Authorization("session_key"), @Authorization("ldap")})
 @javax.ws.rs.Path("/api/v1/process")
+@Tag(name = "Checkpoint")
 public class ProcessCheckpointResource implements Resource {
 
     private static final Logger log = LoggerFactory.getLogger(ProcessCheckpointResource.class);
@@ -73,11 +77,11 @@ public class ProcessCheckpointResource implements Resource {
     }
 
     @GET
-//    @ApiOperation(value = "List the process checkpoints", responseContainer = "list", response = ProcessCheckpointEntry.class)
     @javax.ws.rs.Path("{id}/checkpoint")
     @Produces(MediaType.APPLICATION_JSON)
     @WithTimer
-    public List<ProcessCheckpointEntry> list(@Parameter @PathParam("id") UUID instanceId) {
+    @Operation(description = "List the process checkpoints")
+    public List<ProcessCheckpointEntry> list(@PathParam("id") UUID instanceId) {
         ProcessEntry entry = processManager.assertProcess(instanceId);
         ProcessKey processKey = new ProcessKey(entry.instanceId(), entry.createdAt());
 
@@ -87,14 +91,14 @@ public class ProcessCheckpointResource implements Resource {
     }
 
     @POST
-//    @ApiOperation(value = "Restore process from checkpoint")
     @javax.ws.rs.Path("{id}/checkpoint/restore")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     @WithTimer
     @Validate
-    public ResumeProcessResponse restore(@Parameter @PathParam("id") UUID instanceId,
-                                         @Parameter @Valid RestoreCheckpointRequest request) {
+    @Operation(description = "Restore process from checkpoint")
+    public ResumeProcessResponse restore(@PathParam("id") UUID instanceId,
+                                         @Valid RestoreCheckpointRequest request) {
 
         UUID checkpointId = request.getId();
 
@@ -107,12 +111,13 @@ public class ProcessCheckpointResource implements Resource {
         return new ResumeProcessResponse();
     }
 
-//    @ApiOperation(value = "Upload checkpoint", hidden = true)
     @POST
     @javax.ws.rs.Path("{id}/checkpoint")
     @Consumes(MediaType.MULTIPART_FORM_DATA)
+    @Operation(description = "Upload checkpoint")
     public void uploadCheckpoint(@PathParam("id") UUID instanceId,
-                                 @Parameter MultipartInput input) {
+                                 @RequestBody(content = @Content(schema = @Schema(type = "object")))
+                                 MultipartInput input) {
 
         // TODO replace with ProcessKeyCache
         ProcessEntry entry = processManager.assertProcess(instanceId);

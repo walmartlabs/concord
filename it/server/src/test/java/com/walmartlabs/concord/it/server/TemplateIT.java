@@ -51,9 +51,9 @@ public class TemplateIT extends AbstractServerIT {
         Path templatePath = createTemplate(processYml, MAIN_JS);
 
         TemplateAliasApi templateAliasResource = new TemplateAliasApi(getApiClient());
-        templateAliasResource.createOrUpdate(new TemplateAliasEntry()
-                .setAlias(templateAlias)
-                .setUrl(templatePath.toUri().toString()));
+        templateAliasResource.createOrUpdateTemplate(new TemplateAliasEntry()
+                .alias(templateAlias)
+                .url(templatePath.toUri().toString()));
 
         // ---
 
@@ -67,13 +67,12 @@ public class TemplateIT extends AbstractServerIT {
         Map<String, Object> cfg = new HashMap<>();
         cfg.put(Constants.Request.TEMPLATE_KEY, templateAlias);
         projectsApi.createOrUpdate(orgName, new ProjectEntry()
-                .setName(projectName)
-                .setCfg(cfg)
-                .setRawPayloadMode(ProjectEntry.RawPayloadModeEnum.EVERYONE));
+                .name(projectName)
+                .cfg(cfg)
+                .rawPayloadMode(ProjectEntry.RawPayloadModeEnum.EVERYONE));
 
         // ---
 
-        ProcessApi processApi = new ProcessApi(getApiClient());
         Map<String, Object> input = new HashMap<>();
         input.put("org", orgName);
         input.put("project", projectName);
@@ -82,12 +81,12 @@ public class TemplateIT extends AbstractServerIT {
 
         // ---
 
-        ProcessEntry pir = waitForCompletion(processApi, spr.getInstanceId());
+        ProcessEntry pir = waitForCompletion(getApiClient(), spr.getInstanceId());
         assertEquals(ProcessEntry.StatusEnum.FINISHED, pir.getStatus());
 
         // ---
 
-        byte[] ab = getLog(pir.getLogFileName());
+        byte[] ab = getLog(pir.getInstanceId());
         assertLog(".*Hello, " + myName + ".*", ab);
     }
 
@@ -99,9 +98,9 @@ public class TemplateIT extends AbstractServerIT {
         Path templatePath = createTemplate(processYml, MAIN_JS);
 
         TemplateAliasApi templateAliasResource = new TemplateAliasApi(getApiClient());
-        templateAliasResource.createOrUpdate(new TemplateAliasEntry()
-                .setAlias(templateAlias)
-                .setUrl(templatePath.toUri().toString()));
+        templateAliasResource.createOrUpdateTemplate(new TemplateAliasEntry()
+                .alias(templateAlias)
+                .url(templatePath.toUri().toString()));
 
         // ---
 
@@ -115,15 +114,14 @@ public class TemplateIT extends AbstractServerIT {
         Map<String, Object> cfg = new HashMap<>();
         cfg.put(Constants.Request.TEMPLATE_KEY, templateAlias);
         projectsApi.createOrUpdate(orgName, new ProjectEntry()
-                .setName(projectName)
-                .setCfg(cfg)
-                .setRawPayloadMode(ProjectEntry.RawPayloadModeEnum.EVERYONE));
+                .name(projectName)
+                .cfg(cfg)
+                .rawPayloadMode(ProjectEntry.RawPayloadModeEnum.EVERYONE));
 
         // ---
         Map<String, Object> args = Collections.singletonMap(Constants.Request.ARGUMENTS_KEY,
                 Collections.singletonMap("xxx", "BOO"));
 
-        ProcessApi processApi = new ProcessApi(getApiClient());
         Map<String, Object> input = new HashMap<>();
         input.put("org", orgName);
         input.put("project", projectName);
@@ -133,12 +131,12 @@ public class TemplateIT extends AbstractServerIT {
 
         // ---
 
-        ProcessEntry pir = waitForCompletion(processApi, spr.getInstanceId());
+        ProcessEntry pir = waitForCompletion(getApiClient(), spr.getInstanceId());
         assertEquals(ProcessEntry.StatusEnum.FINISHED, pir.getStatus());
 
         // ---
 
-        byte[] ab = getLog(pir.getLogFileName());
+        byte[] ab = getLog(pir.getInstanceId());
         assertLog(".*BOO.*", ab);
     }
 
@@ -149,7 +147,7 @@ public class TemplateIT extends AbstractServerIT {
 
         Path tmpDir = createTempDir();
 
-        File src = new File(ProjectIT.class.getResource("repositoryValidationTemplateRef").toURI());
+        File src = new File(TemplateIT.class.getResource("repositoryValidationTemplateRef").toURI());
         IOUtils.copy(src.toPath(), tmpDir);
 
         Path concordYml = tmpDir.resolve("concord.yml");
@@ -173,20 +171,20 @@ public class TemplateIT extends AbstractServerIT {
         // ---
 
         OrganizationsApi organizationsApi = new OrganizationsApi(getApiClient());
-        organizationsApi.createOrUpdate(new OrganizationEntry().setName(orgName));
+        organizationsApi.createOrUpdateOrg(new OrganizationEntry().name(orgName));
 
         ProjectsApi projectsApi = new ProjectsApi(getApiClient());
         projectsApi.createOrUpdate(orgName, new ProjectEntry()
-                .setName(projectName)
-                .setRepositories(Collections.singletonMap(repoName, new RepositoryEntry()
-                        .setUrl(gitUrl)
-                        .setBranch("master"))));
+                .name(projectName)
+                .repositories(Collections.singletonMap(repoName, new RepositoryEntry()
+                        .url(gitUrl)
+                        .branch("master"))));
 
         // ---
 
         RepositoriesApi repositoriesApi = new RepositoriesApi(getApiClient());
         RepositoryValidationResponse resp = repositoriesApi.validateRepository(orgName, projectName, repoName);
-        assertTrue(resp.isOk());
+        assertTrue(resp.getOk());
         assertFalse(resp.getWarnings().isEmpty());
     }
 

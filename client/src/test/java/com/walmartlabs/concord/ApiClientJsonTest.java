@@ -20,27 +20,28 @@ package com.walmartlabs.concord;
  * =====
  */
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.walmartlabs.concord.client.ProjectEntry;
 import org.junit.jupiter.api.Test;
 
-import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.util.Date;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class ApiClientJsonTest {
 
     @Test
-    public void testParseDate() throws ParseException {
-        ApiClient apiClient = new ApiClient();
-        JSON json = apiClient.getJSON();
+    public void testParseDate() throws Exception {
+        ObjectMapper om = new ApiClient().getObjectMapper();
 
         Date date = new Date(1587500112000L);
         OffsetDateTime offsetDateTime = date.toInstant().atOffset(ZoneOffset.UTC);
 
-        String toParse = json.serialize(offsetDateTime);
+
+        String toParse = om.writeValueAsString(offsetDateTime);
         toParse = toParse.substring(1, toParse.length() - 1);
 
         // format like a sever entries
@@ -48,5 +49,15 @@ public class ApiClientJsonTest {
                 parse(toParse);
 
         assertEquals(date, parsed);
+    }
+
+    @Test
+    public void testObjectSerialize() throws Exception {
+        ProjectEntry project = new ProjectEntry()
+                .name("");
+
+        ApiClient apiClient = new ApiClient();
+        String str = apiClient.getObjectMapper().writeValueAsString(project);
+        assertEquals("{\"name\":\"\"}", str);
     }
 }
