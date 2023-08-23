@@ -65,7 +65,6 @@ import com.walmartlabs.concord.server.security.UserPrincipal;
 import com.walmartlabs.concord.server.security.sessionkey.SessionKeyPrincipal;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
-import io.swagger.v3.oas.annotations.headers.Header;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.parameters.RequestBody;
@@ -425,7 +424,7 @@ public class ProcessResource implements Resource {
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     @WithTimer
-    @Operation
+    @Operation(description = "Starts a new child process by forking the start of the specified parent process.")
     public StartProcessResponse fork(@PathParam("id") UUID parentInstanceId,
                                      Map<String, Object> req,
                                      @Deprecated @DefaultValue("false") @QueryParam("sync") boolean sync,

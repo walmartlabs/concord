@@ -22,7 +22,7 @@ package com.walmartlabs.concord.server.org.jsonstore;
 
 import com.walmartlabs.concord.server.GenericOperationResult;
 import com.walmartlabs.concord.server.OperationResult;
-import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.sonatype.siesta.Resource;
 
 import javax.inject.Inject;
@@ -34,8 +34,8 @@ import java.util.List;
 
 @Named
 @Singleton
-//@Api(value = "JsonStoreData", authorizations = {@Authorization("api_key"), @Authorization("session_key"), @Authorization("ldap")})
 @Path("/api/v1/org")
+@Tag(name = "JsonStoreData")
 public class JsonStoreDataResource implements Resource {
 
     private final JsonStoreDataManager storeDataManager;

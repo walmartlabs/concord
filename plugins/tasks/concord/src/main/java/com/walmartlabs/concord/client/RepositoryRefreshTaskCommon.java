@@ -41,7 +41,7 @@ public class RepositoryRefreshTaskCommon {
     public void execute(RepositoryRefreshTaskParams in) throws ApiException {
         List<UUID> repositoriesUUIDs = in.repositories();
         log.info("Repository ids to refresh: {}",repositoriesUUIDs);
-        api.refreshRepository(repositoriesUUIDs);
+        api.refreshRepositoryV2(repositoriesUUIDs);
         log.info("Repository refresh completed");
     }
 }

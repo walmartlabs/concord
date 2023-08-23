@@ -34,6 +34,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -108,8 +109,7 @@ public class ConcordTaskCommon {
         return withClient(client -> {
             ProcessApi api = new ProcessApi(client);
 
-            List<String> tl = tags != null ? new ArrayList<>(tags) : null;
-            return api.listSubprocesses(instanceId, tl);
+            return api.listSubprocesses(instanceId, tags);
         });
     }
 
@@ -133,7 +133,7 @@ public class ConcordTaskCommon {
                     ProcessEntry e = ClientUtils.withRetry(3, 1000,
                             () -> withClient(client -> {
                                 ProcessV2Api api = new ProcessV2Api(client);
-                                return api.get(id, Collections.emptyList());
+                                return api.getProcess(id, Collections.emptySet());
                             }));
 
                     ProcessEntry.StatusEnum s = e.getStatus();
@@ -340,7 +340,7 @@ public class ConcordTaskCommon {
         ProcessEntry e = ClientUtils.withRetry(3, 1000,
                 () -> withClient(baseUrl, apiKey, client -> {
                     ProcessV2Api api = new ProcessV2Api(client);
-                    return api.get(processId, Collections.emptyList());
+                    return api.getProcess(processId, Collections.emptySet());
                 }));
 
         ProcessEntry.StatusEnum s = e.getStatus();
@@ -436,19 +436,15 @@ public class ConcordTaskCommon {
         return withClient(baseUrl, apiKey, client -> {
             ProcessApi api = new ProcessApi(client);
 
-            File f = null;
-            try {
-                f = api.downloadAttachment(processId, "out.json");
+            try (InputStream is = api.downloadAttachment(processId, "out.json")) {
                 ObjectMapper om = new ObjectMapper();
-                return om.readValue(f, Map.class);
+                return om.readValue(is, Map.class);
             } catch (ApiException e) {
                 if (e.getCode() == 404) {
                     return Collections.emptyMap();
                 }
                 log.error("Error while reading the out variables", e);
                 throw e;
-            } finally {
-                IOUtils.delete(f);
             }
         });
     }
@@ -508,7 +504,7 @@ public class ConcordTaskCommon {
 
         return executor.submit(() -> withClient(in.apiKey(), client -> {
             ProcessApi api = new ProcessApi(client);
-            StartProcessResponse resp = api.fork(currentProcessId, req, false, null);
+            StartProcessResponse resp = api.fork(currentProcessId, false, null, req);
             log.info("Forked a child process: {}", LogTags.instanceId(resp.getInstanceId()));
             return resp.getInstanceId();
         }));

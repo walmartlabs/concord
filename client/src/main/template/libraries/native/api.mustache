@@ -288,22 +288,14 @@ public class {{classname}} {
         if (localVarResponse.statusCode()/ 100 != 2) {
           throw getApiException("{{operationId}}", localVarResponse);
         }
-        {{#vendorExtensions.x-java-text-plain-string}}
-        // for plain text response
-        if (localVarResponse.headers().map().containsKey("Content-Type") &&
-                "text/plain".equalsIgnoreCase(localVarResponse.headers().map().get("Content-Type").get(0))) {
-          java.util.Scanner s = new java.util.Scanner(localVarResponse.body()).useDelimiter("\\A");
-          String responseBodyText = s.hasNext() ? s.next() : "";
-          return new ApiResponse<String>(
-                  localVarResponse.statusCode(),
-                  localVarResponse.headers().map(),
-                  responseBodyText
-          );
-        } else {
-            throw new RuntimeException("Error! The response Content-Type is supposed to be `text/plain` but it's not: " + localVarResponse);
+        if (localVarResponse.statusCode() == 204) {
+            return new ApiResponse<{{{returnType}}}{{^returnType}}Void{{/returnType}}>(
+                localVarResponse.statusCode(),
+                localVarResponse.headers().map(),
+                null
+            );
         }
-        {{/vendorExtensions.x-java-text-plain-string}}
-        {{^vendorExtensions.x-java-text-plain-string}}
+
         return new ApiResponse<{{{returnType}}}{{^returnType}}Void{{/returnType}}>(
           localVarResponse.statusCode(),
           localVarResponse.headers().map(),
@@ -314,7 +306,6 @@ public class {{classname}} {
           null
           {{/returnType}}
         );
-        {{/vendorExtensions.x-java-text-plain-string}}
       } finally {
         {{^returnType}}
         // Drain the InputStream

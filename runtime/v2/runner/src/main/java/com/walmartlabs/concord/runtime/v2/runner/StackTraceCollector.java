@@ -34,7 +34,7 @@ public class StackTraceCollector implements ExecutionListener {
         if (cmd instanceof FlowCallCommand) {
             FlowCallCommand fcc = (FlowCallCommand) cmd;
             FlowCall step = fcc.getStep();
-            String flowName = VMUtils.getLocal(state, threadId, "flowName");
+            String flowName = VMUtils.getLocal(state, threadId, "__currentFlow");
             if (flowName == null) {
                 flowName = step.getFlowName();
             }

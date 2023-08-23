@@ -16,8 +16,8 @@
 
     <modules>
 <!--        <module>tasks/ansible</module>-->
-<!--        <module>tasks/concord</module>-->
-<!--        <module>tasks/crypto</module>-->
+        <module>tasks/concord</module>
+        <module>tasks/crypto</module>
 <!--        <module>tasks/docker</module>-->
 <!--        <module>tasks/dynamic-tasks</module>-->
 <!--        <module>tasks/example</module>-->

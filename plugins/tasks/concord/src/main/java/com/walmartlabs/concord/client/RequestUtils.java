@@ -39,37 +39,6 @@ public final class RequestUtils {
 
     private static final ObjectMapper objectMapper = new ObjectMapper();
 
-    public static <T> T request(ApiClient client, String uri, String method, Map<String, Object> input, Class<T> entityType) throws Exception {
-        RequestBody request = input != null ? ClientUtils.createMultipartBody(input).build() : null;
-
-        Request.Builder b = new Request.Builder()
-                .url(client.getBasePath() + uri)
-                .header("Accept", "*/*")
-                .method(method, request);
-
-        // we're going to use the "raw" OkHttpClient, so we need to set up the auth manually
-        ApiKeyAuth apiKeyAuth = (ApiKeyAuth) client.getAuthentications().get("api_key");
-        ApiKeyAuth sessionKeyAuth = (ApiKeyAuth) client.getAuthentications().get("session_key");
-
-        if (apiKeyAuth != null && apiKeyAuth.getApiKey() != null) {
-            b.header("Authorization", apiKeyAuth.getApiKey());
-        } else if (sessionKeyAuth != null && sessionKeyAuth.getApiKey() != null) {
-            b.header(Constants.Headers.SESSION_TOKEN, sessionKeyAuth.getApiKey());
-        }
-
-        OkHttpClient ok = client.getHttpClient();
-        Response resp = ok.newCall(b.build()).execute();
-        assertResponse(resp);
-
-        if (resp.code() == 204) { // HTTP "No Content"
-            return null;
-        }
-
-        try (ResponseBody body = resp.body()) {
-            return objectMapper.readValue(body.byteStream(), entityType);
-        }
-    }
-
     public static void assertResponse(Response resp) throws ApiException, IOException {
         int code = resp.code();
         if (code < 200 || code >= 400) {

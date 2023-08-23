@@ -54,7 +54,7 @@ public class JsonStoreTaskCommon {
         JsonStoreEntry entry = ClientUtils.withRetry(RETRY_COUNT, RETRY_INTERVAL, () -> {
             try {
                 JsonStoreApi api = new JsonStoreApi(apiClient);
-                return api.get(orgName, storeName);
+                return api.getJsonStores(orgName, storeName);
             } catch (ApiException e) {
                 if (e.getCode() == 404) {
                     return null;
@@ -92,7 +92,7 @@ public class JsonStoreTaskCommon {
     public void createOrUpdateStore(String orgName, JsonStoreRequest request) throws ApiException {
         ClientUtils.withRetry(RETRY_COUNT, RETRY_INTERVAL, () -> {
             JsonStoreApi api = new JsonStoreApi(apiClient);
-            GenericOperationResult result = api.createOrUpdate(orgName, request);
+            GenericOperationResult result = api.createOrUpdateJsonStores(orgName, request);
             log.info("The store '{}' has been successfully {}", request.getName(), result.getResult());
             return null;
         });
@@ -105,9 +105,9 @@ public class JsonStoreTaskCommon {
         ClientUtils.withRetry(RETRY_COUNT, RETRY_INTERVAL, () -> {
             JsonStoreQueryApi api = new JsonStoreQueryApi(apiClient);
             JsonStoreQueryRequest request = new JsonStoreQueryRequest()
-                    .setName(queryName)
-                    .setText(queryText);
-            GenericOperationResult result = api.createOrUpdate(orgName, storeName, request);
+                    .name(queryName)
+                    .text(queryText);
+            GenericOperationResult result = api.createOrUpdateJsonStore(orgName, storeName, request);
             log.info("The query '{}' in store '{}' has been successfully {}", queryName, storeName, result.getResult());
             return null;
         });
@@ -133,7 +133,7 @@ public class JsonStoreTaskCommon {
         assertNotEmpty("Item path", itemPath);
 
         if (createStore && !isStoreExists(orgName, storeName)) {
-            createOrUpdateStore(orgName, new JsonStoreRequest().setName(storeName));
+            createOrUpdateStore(orgName, new JsonStoreRequest().name(storeName));
         }
 
         log.info("Updating item '{}' (org={}, store={})", itemPath, orgName, storeName);
@@ -158,6 +158,7 @@ public class JsonStoreTaskCommon {
         // differences between two libraries (e.g. deserialization of integers/decimals)
         // hence we're using custom "request" method instead of the standard swagger-codegen client
         return ClientUtils.withRetry(RETRY_COUNT, RETRY_INTERVAL, () ->
+                new JsonStoreApi(apiClient).get
                 RequestUtils.request(apiClient, "/api/v1/org/" + orgName + "/jsonstore/" + storeName + "/item/" + itemPath, "GET", null, Map.class));
     }
 
@@ -188,10 +189,8 @@ public class JsonStoreTaskCommon {
 
         log.info("Executing query '{}' (org='{}', store='{}') with parameters '{}'", queryName, orgName, storeName, params);
 
-        return ClientUtils.withRetry(RETRY_COUNT, RETRY_INTERVAL, () -> {
-            JsonStoreQueryApi api = new JsonStoreQueryApi(apiClient);
-            return api.exec(orgName, storeName, queryName, params);
-        });
+        JsonStoreQueryApi api = new JsonStoreQueryApi(apiClient);
+        return ClientUtils.withRetry(RETRY_COUNT, RETRY_INTERVAL, () -> api.execJsonStoreQuery(orgName, storeName, queryName, params));
     }
 
     private static void assertNotEmpty(String what, String s) {

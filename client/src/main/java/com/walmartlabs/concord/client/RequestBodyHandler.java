@@ -37,6 +37,9 @@ public final class RequestBodyHandler {
     }
 
     public static HttpRequest.BodyPublisher handle(ObjectMapper objectMapper, Object param) throws IOException {
+        if (param instanceof String) {
+            return HttpRequest.BodyPublishers.ofString((String) param);
+        }
         byte[] localVarPostBody = objectMapper.writeValueAsBytes(param);
         return HttpRequest.BodyPublishers.ofByteArray(localVarPostBody);
     }

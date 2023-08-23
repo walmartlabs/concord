@@ -55,7 +55,7 @@ public class ProjectTaskCommon {
         entry.setName(in.projectName());
         entry.setRepositories(in.repositories());
 
-        ProjectOperationResponse resp = api.createOrUpdate(in.orgName(defaultOrg), entry);
+        ProjectOperationResponse resp = api.createOrUpdateProject(in.orgName(defaultOrg), entry);
         log.info("The project was created (or updated): {}", resp);
     }
 }

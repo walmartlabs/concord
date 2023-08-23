@@ -57,7 +57,7 @@ public class RepositoryResourceV2 implements Resource {
     @POST
     @Path("/refresh")
     @Produces(MediaType.APPLICATION_JSON)
-    @Operation(description = "Refresh repositories by their IDs")
+    @Operation(description = "Refresh repositories by their IDs", operationId = "refreshRepositoryV2")
     public GenericOperationResult refreshRepository(@QueryParam("ids") List<UUID> repositoryIds) {
         repositoryRefresher.refresh(repositoryIds);
         return new GenericOperationResult(OperationResult.UPDATED);
