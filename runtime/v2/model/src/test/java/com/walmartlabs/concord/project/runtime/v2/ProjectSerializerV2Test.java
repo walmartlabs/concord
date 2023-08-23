@@ -122,7 +122,7 @@ public class ProjectSerializerV2Test extends AbstractParserTest {
                 .build();
 
         FormCallOptions opts = FormCallOptions.builder()
-                .yield(true)
+                .isYield(true)
                 .saveSubmittedBy(true)
                 .putRunAs("user", "u1")
                 .putValues("k", "v")

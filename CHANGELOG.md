@@ -1,6 +1,15 @@
 # Change log
 
-## [1.103.0] - Unreleased
+## [2.0.0] - 2023-08-16
+
+# Breaking
+
+- project: drop support for JDK 8 and JDK 11. Make JDK 17
+the new default version.
+
+
+
+## [1.103.0] - 2023-07-16
 
 ### Added
 

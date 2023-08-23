@@ -85,7 +85,7 @@ public class FormCallCommand extends StepCommand<FormCall> {
         Map<String, Serializable> runAs = getFormRunAs(expressionEvaluator, ctx, formCall);
 
         return FormOptions.builder()
-                .yield(options.yield())
+                .isYield(options.isYield())
                 .saveSubmittedBy(options.saveSubmittedBy())
                 .runAs(runAs)
                 .extraValues(values)
