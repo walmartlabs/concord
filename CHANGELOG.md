@@ -12,7 +12,7 @@ the new default version.
 ### Changed
 
 - runtime-v2: do not use `flowName` variable for internal use
-  ([#801](https://github.com/walmartlabs/concord/pull/801));
+  ([#804](https://github.com/walmartlabs/concord/pull/804));
 
 
 ## [1.103.0] - 2023-07-16
