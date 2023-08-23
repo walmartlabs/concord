@@ -7,6 +7,12 @@
 - project: drop support for JDK 8 and JDK 11. Make JDK 17
 the new default version.
 
+## [1.103.1] - 2023-08-23
+
+### Changed
+
+- runtime-v2: do not use `flowName` variable for internal use
+  ([#801](https://github.com/walmartlabs/concord/pull/801));
 
 
 ## [1.103.0] - 2023-07-16
