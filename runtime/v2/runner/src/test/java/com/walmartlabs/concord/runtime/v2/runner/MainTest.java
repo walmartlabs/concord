@@ -1501,6 +1501,17 @@ public class MainTest {
         assertLog(log, ".*false == false.*");
     }
 
+    @Test
+    public void testArrayEvalSerialize() throws Exception {
+        deploy("lazyEvalMapInArgs");
+
+        save(ProcessConfiguration.builder()
+                .build());
+
+        byte[] log = run();
+        assertLog(log, ".*" + Pattern.quote("{dev=dev-cloud1}, {prod=prod-cloud1}, {test=test-cloud1}, {perf=perf-cloud2}, {ci=perf-ci}") + ".*");
+    }
+
     private void deploy(String resource) throws URISyntaxException, IOException {
         Path src = Paths.get(MainTest.class.getResource(resource).toURI());
         IOUtils.copy(src, workDir);

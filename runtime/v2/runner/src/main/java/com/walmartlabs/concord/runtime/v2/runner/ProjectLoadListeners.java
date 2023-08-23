@@ -1,4 +1,4 @@
-package com.walmartlabs.concord.runtime.v2.runner.logging;
+package com.walmartlabs.concord.runtime.v2.runner;
 
 /*-
  * *****
@@ -20,21 +20,29 @@ package com.walmartlabs.concord.runtime.v2.runner.logging;
  * =====
  */
 
-import ch.qos.logback.classic.PatternLayout;
-import ch.qos.logback.classic.spi.ILoggingEvent;
-import com.walmartlabs.concord.runtime.v2.runner.SensitiveDataHolder;
+import com.walmartlabs.concord.runtime.v2.ProjectLoadListener;
 
+import javax.inject.Inject;
+import java.nio.file.Path;
 import java.util.Collection;
+import java.util.Set;
 
-public class MaskingSensitiveDataLayout extends PatternLayout {
+public class ProjectLoadListeners implements ProjectLoadListener {
+
+    private final Collection<ProjectLoadListener> listeners;
+
+    @Inject
+    public ProjectLoadListeners(Set<ProjectLoadListener> listeners) {
+        this.listeners = listeners;
+    }
 
     @Override
-    public String doLayout(ILoggingEvent event) {
-        Collection<String> sensitiveData = SensitiveDataHolder.getInstance().get();
-        String msg = super.doLayout(event);
-        for (String d : sensitiveData) {
-            msg = msg.replace(d, "******");
-        }
-        return msg;
+    public void afterFlowDefinitionLoaded(Path filename) {
+        listeners.forEach(l -> l.afterFlowDefinitionLoaded(filename));
+    }
+
+    @Override
+    public void afterProjectLoaded() {
+        listeners.forEach(ProjectLoadListener::afterProjectLoaded);
     }
 }
