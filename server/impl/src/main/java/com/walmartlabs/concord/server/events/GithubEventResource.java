@@ -44,6 +44,7 @@ import com.walmartlabs.concord.server.user.UserEntry;
 import com.walmartlabs.concord.server.user.UserManager;
 import com.walmartlabs.concord.server.user.UserType;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -114,8 +115,8 @@ public class GithubEventResource implements Resource {
     @WithTimer
     @Operation(description = "Handles GitHub repository level events")
     public String onEvent(Map<String, Object> data,
-                          @HeaderParam("X-GitHub-Delivery") String deliveryId,
-                          @HeaderParam("X-GitHub-Event") String eventName,
+                          @Parameter @HeaderParam("X-GitHub-Delivery") String deliveryId,
+                          @Parameter @HeaderParam("X-GitHub-Event") String eventName,
                           @Context UriInfo uriInfo) {
 
         log.info("onEvent ['{}', '{}'] -> processing...", deliveryId, eventName);

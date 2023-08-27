@@ -72,7 +72,7 @@ public class FormIT extends AbstractTest {
         // ---
 
         FormListEntry myForm = forms.get(0);
-        assertFalse(myForm.isCustom());
+        assertFalse(myForm.getCustom());
 
         String formName = myForm.getName();
 
@@ -86,7 +86,7 @@ public class FormIT extends AbstractTest {
         data.put("age", age);
 
         FormSubmitResponse fsr = proc.submitForm(formName, data);
-        assertTrue(fsr.isOk());
+        assertTrue(fsr.getOk());
         assertTrue(fsr.getErrors() == null || fsr.getErrors().isEmpty());
 
         assertEquals(0, proc.forms().size());
@@ -128,7 +128,7 @@ public class FormIT extends AbstractTest {
         data.put("age", age);
 
         FormSubmitResponse fsr = proc.submitForm(myForm.getName(), data);
-        assertTrue(fsr.isOk());
+        assertTrue(fsr.getOk());
 
         // ---
 
@@ -238,13 +238,13 @@ public class FormIT extends AbstractTest {
         assertEquals(1, forms.size());
 
         FormListEntry myForm = forms.get(0);
-        assertFalse(myForm.isCustom());
+        assertFalse(myForm.getCustom());
 
         String formName = myForm.getName();
         assertEquals("myForm", formName);
 
         FormSubmitResponse fsr = proc.submitForm(formName, data);
-        assertTrue(fsr.isOk());
+        assertTrue(fsr.getOk());
         assertTrue(fsr.getErrors() == null || fsr.getErrors().isEmpty());
 
         expectStatus(proc, ProcessEntry.StatusEnum.FINISHED);

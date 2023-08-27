@@ -402,7 +402,7 @@ public class ProcessIT {
 
         ProcessEntry pe = proc.disable();
 
-        assertTrue(pe.isDisabled());
+        assertTrue(pe.getDisabled());
     }
 
     @Test

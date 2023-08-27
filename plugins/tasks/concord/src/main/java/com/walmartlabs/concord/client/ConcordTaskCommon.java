@@ -261,7 +261,7 @@ public class ConcordTaskCommon {
         }
 
         StartProcessResponse resp = withClient(in.baseUrl(), in.apiKey(),
-                client -> RequestUtils.request(client, "/api/v1/process", "POST", input, StartProcessResponse.class));
+                client -> new ProcessApi(client).startProcess(input));
 
         UUID processId = resp.getInstanceId();
 

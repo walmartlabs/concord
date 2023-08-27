@@ -79,9 +79,9 @@ public class TemplateIT extends AbstractTest {
         String templateAlias = "template_" + randomString();
 
         TemplateAliasApi templateAliasResource = new TemplateAliasApi(concord.apiClient());
-        templateAliasResource.createOrUpdate(new TemplateAliasEntry()
-                .setAlias(templateAlias)
-                .setUrl(templateUrl));
+        templateAliasResource.createOrUpdateTemplate(new TemplateAliasEntry()
+                .alias(templateAlias)
+                .url(templateUrl));
 
         // ---
 
@@ -94,10 +94,10 @@ public class TemplateIT extends AbstractTest {
         ProjectsApi projectsApi = new ProjectsApi(concord.apiClient());
         Map<String, Object> cfg = new HashMap<>();
         cfg.put(Constants.Request.TEMPLATE_KEY, templateAlias);
-        projectsApi.createOrUpdate(orgName, new ProjectEntry()
-                .setName(projectName)
-                .setCfg(cfg)
-                .setRawPayloadMode(ProjectEntry.RawPayloadModeEnum.EVERYONE));
+        projectsApi.createOrUpdateProject(orgName, new ProjectEntry()
+                .name(projectName)
+                .cfg(cfg)
+                .rawPayloadMode(ProjectEntry.RawPayloadModeEnum.EVERYONE));
 
         // ---
 

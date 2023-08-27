@@ -143,7 +143,7 @@ public class ProcessIT extends AbstractTest {
         data.put("action", "Reject");
 
         FormSubmitResponse fsr = proc.submitForm(forms.get(0).getName(), data);
-        assertTrue(fsr.isOk());
+        assertTrue(fsr.getOk());
 
         pe = expectStatus(proc, ProcessEntry.StatusEnum.FINISHED);
 
@@ -351,7 +351,7 @@ public class ProcessIT extends AbstractTest {
         assertEquals(1, children.size());
 
         ProcessEntry fork = children.get(0);
-        assertEquals(fork.getTags().get(0), forkTag);
+        assertEquals(fork.getTags().iterator().next(), forkTag);
 
         // ---
 

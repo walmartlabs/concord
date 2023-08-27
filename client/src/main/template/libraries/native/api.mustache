@@ -61,9 +61,7 @@ public class {{classname}} {
   private final Duration memberVarReadTimeout;
   private final {{#fullJavaUtil}}java.util.function.{{/fullJavaUtil}}Consumer<HttpResponse<InputStream>> memberVarResponseInterceptor;
   private final {{#fullJavaUtil}}java.util.function.{{/fullJavaUtil}}Consumer<HttpResponse<String>> memberVarAsyncResponseInterceptor;
-  // private final Map<String, String> defaultHeaderMap;
 
-  // private final Authentication auth;
   private final ApiClient apiClient;
 
   public {{classname}}() {
@@ -78,8 +76,6 @@ public class {{classname}} {
     memberVarReadTimeout = apiClient.getReadTimeout();
     memberVarResponseInterceptor = apiClient.getResponseInterceptor();
     memberVarAsyncResponseInterceptor = apiClient.getAsyncResponseInterceptor();
-    // this.auth = apiClient.getAuth();
-    // this.defaultHeaderMap = apiClient.defaultHeaderMap();
 
     this.apiClient = apiClient;
   }

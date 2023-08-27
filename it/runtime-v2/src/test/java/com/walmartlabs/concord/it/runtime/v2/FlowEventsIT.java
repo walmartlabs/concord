@@ -50,7 +50,7 @@ public class FlowEventsIT extends AbstractTest {
         // ---
 
         ProcessEventsApi processEventsApi = new ProcessEventsApi(concord.apiClient());
-        List<ProcessEventEntry> events = processEventsApi.list(proc.instanceId(), "ELEMENT", null, null, null, null, null, null);
+        List<ProcessEventEntry> events = processEventsApi.listProcessEvents(proc.instanceId(), "ELEMENT", null, null, null, null, null, null);
         assertNotNull(events);
 
         // ---

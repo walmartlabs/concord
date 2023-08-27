@@ -89,7 +89,7 @@ public class ProfilesIT extends AbstractTest {
         data.put("firstName", firstName);
 
         FormSubmitResponse fsr = proc.submitForm(myForm.getName(), data);
-        assertTrue(fsr.isOk());
+        assertTrue(fsr.getOk());
         assertTrue(fsr.getErrors() == null || fsr.getErrors().isEmpty());
 
         expectStatus(proc, ProcessEntry.StatusEnum.FINISHED);

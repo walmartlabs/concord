@@ -31,12 +31,14 @@ import com.walmartlabs.concord.it.common.GitUtils;
 import com.walmartlabs.concord.it.common.ITUtils;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
+import org.testcontainers.shaded.com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.OffsetDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
+import java.util.Map;
 
 import static com.walmartlabs.concord.it.common.ITUtils.randomString;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -215,13 +217,13 @@ public class GitHubTriggersV2IT extends AbstractTest {
         ProjectsApi projectsApi = new ProjectsApi(apiClient());
 
         RepositoryEntry repo = new RepositoryEntry()
-                .setBranch(repoBranch != null ? repoBranch : "master")
-                .setUrl(bareRepo.toAbsolutePath().toString());
+                .branch(repoBranch != null ? repoBranch : "master")
+                .url(bareRepo.toAbsolutePath().toString());
 
-        projectsApi.createOrUpdate(orgName, new ProjectEntry()
-                .setName(projectName)
-                .setRawPayloadMode(ProjectEntry.RawPayloadModeEnum.EVERYONE)
-                .setRepositories(ImmutableMap.of(repoName, repo)));
+        projectsApi.createOrUpdateProject(orgName, new ProjectEntry()
+                .name(projectName)
+                .rawPayloadMode(ProjectEntry.RawPayloadModeEnum.EVERYONE)
+                .repositories(ImmutableMap.of(repoName, repo)));
 
         return bareRepo;
     }
@@ -231,6 +233,7 @@ public class GitHubTriggersV2IT extends AbstractTest {
         repoApi.refreshRepository(orgName, projectName, repoName, true);
     }
 
+    @SuppressWarnings("unchecked")
     private static void sendEvent(String resource, String event, String... params) throws Exception {
         String payload = resourceToString(resource);
         if (params != null) {
@@ -245,7 +248,7 @@ public class GitHubTriggersV2IT extends AbstractTest {
         client.addDefaultHeader("X-Hub-Signature", "sha1=" + GitHubUtils.sign(payload));
 
         GitHubEventsApi eventsApi = new GitHubEventsApi(client);
-        eventsApi.onEvent(payload, "abc", event);
+        eventsApi.onEvent( "abc", event, new ObjectMapper().readValue(payload, Map.class));
     }
 
     private static String resourceToString(String resource) throws Exception {

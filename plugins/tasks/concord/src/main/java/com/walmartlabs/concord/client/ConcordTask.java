@@ -356,7 +356,7 @@ public class ConcordTask extends AbstractConcordTask {
             }
         }
 
-        StartProcessResponse resp = request(ctx, "/api/v1/process", "POST", input, StartProcessResponse.class);
+        StartProcessResponse resp = withClient(ctx, apiClient -> new ProcessApi(apiClient).startProcess(input));
 
         UUID processId = resp.getInstanceId();
 

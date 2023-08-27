@@ -35,10 +35,12 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Collections;
 import java.util.UUID;
+import java.util.stream.IntStream;
 
 import static com.walmartlabs.concord.it.common.ITUtils.randomString;
 import static com.walmartlabs.concord.it.runtime.v2.ConcordConfiguration.getServerUrlForAgent;
@@ -54,13 +56,13 @@ public class SessionStateFilesIT extends AbstractTest {
         String username = "user_" + randomString();
 
         UsersApi usersApi = new UsersApi(concord.apiClient());
-        CreateUserResponse user = usersApi.createOrUpdate(new CreateUserRequest()
-                .setUsername(username)
-                .setType(CreateUserRequest.TypeEnum.LOCAL));
+        CreateUserResponse user = usersApi.createOrUpdateUser(new CreateUserRequest()
+                .username(username)
+                .type(CreateUserRequest.TypeEnum.LOCAL));
 
         ApiKeysApi apiKeysApi = new ApiKeysApi(concord.apiClient());
-        CreateApiKeyResponse cakr = apiKeysApi.create(new CreateApiKeyRequest()
-                        .setUserId(user.getId()));
+        CreateApiKeyResponse cakr = apiKeysApi.createUserApiKey(new CreateApiKeyRequest()
+                        .userId(user.getId()));
 
         // ---
         Payload payload = new Payload()
@@ -107,8 +109,9 @@ public class SessionStateFilesIT extends AbstractTest {
         String fullFileName = Constants.Files.JOB_ATTACHMENTS_DIR_NAME + "/" + Constants.Files.JOB_SESSION_FILES_DIR_NAME + "/" + file;
 
         // ---
-        File state = processApi.downloadState(instanceId);
-        assertNoFileInState(fullFileName, state);
+        try (InputStream state = processApi.downloadState(instanceId)) {
+            assertNoFileInState(fullFileName, state);
+        }
 
         // ---
         try {
@@ -119,9 +122,9 @@ public class SessionStateFilesIT extends AbstractTest {
         }
     }
 
-    private static void assertNoFileInState(String file, File state) throws IOException  {
+    private static void assertNoFileInState(String file, InputStream state) throws IOException  {
         Path target = Files.createTempDirectory("state-unzip");
-        IOUtils.unzip(state.toPath(), target, false, (sourceFile, dstFile) -> {
+        IOUtils.unzip(state, target, false, (sourceFile, dstFile) -> {
             assertNotEquals(file, target.relativize(dstFile).toString());
         });
     }

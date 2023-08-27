@@ -63,13 +63,13 @@ public class ConcordTaskIT extends AbstractTest {
         String username = "user_" + randomString();
 
         UsersApi usersApi = new UsersApi(concord.apiClient());
-        usersApi.createOrUpdate(new CreateUserRequest()
-                .setUsername(username)
-                .setType(CreateUserRequest.TypeEnum.LOCAL));
+        usersApi.createOrUpdateUser(new CreateUserRequest()
+                .username(username)
+                .type(CreateUserRequest.TypeEnum.LOCAL));
 
         ApiKeysApi apiKeysApi = new ApiKeysApi(concord.apiClient());
-        CreateApiKeyResponse cakr = apiKeysApi.create(new CreateApiKeyRequest()
-                .setUsername(username));
+        CreateApiKeyResponse cakr = apiKeysApi.createUserApiKey(new CreateApiKeyRequest()
+                .username(username));
 
         // ---
         Payload payload = new Payload()
@@ -117,7 +117,7 @@ public class ConcordTaskIT extends AbstractTest {
         // ---
         assertEquals(1, processEntry.getChildrenIds().size());
 
-        ConcordProcess child = concord.processes().get(processEntry.getChildrenIds().get(0));
+        ConcordProcess child = concord.processes().get(processEntry.getChildrenIds().iterator().next());
 
         // ---
         assertNotNull(child);

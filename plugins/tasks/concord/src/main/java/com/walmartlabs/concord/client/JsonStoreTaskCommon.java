@@ -140,7 +140,7 @@ public class JsonStoreTaskCommon {
 
         ClientUtils.withRetry(RETRY_COUNT, RETRY_INTERVAL, () -> {
             JsonStoreDataApi api = new JsonStoreDataApi(apiClient);
-            return api.data(orgName, storeName, itemPath, data);
+            return api.updateJsonStoreData(orgName, storeName, itemPath, data);
         });
     }
 
@@ -158,8 +158,7 @@ public class JsonStoreTaskCommon {
         // differences between two libraries (e.g. deserialization of integers/decimals)
         // hence we're using custom "request" method instead of the standard swagger-codegen client
         return ClientUtils.withRetry(RETRY_COUNT, RETRY_INTERVAL, () ->
-                new JsonStoreApi(apiClient).get
-                RequestUtils.request(apiClient, "/api/v1/org/" + orgName + "/jsonstore/" + storeName + "/item/" + itemPath, "GET", null, Map.class));
+                new JsonStoreDataApi(apiClient).getJsonStoreData(orgName, storeName, itemPath));
     }
 
     /**
@@ -174,7 +173,7 @@ public class JsonStoreTaskCommon {
 
         return ClientUtils.withRetry(RETRY_COUNT, RETRY_INTERVAL, () -> {
             JsonStoreDataApi api = new JsonStoreDataApi(apiClient);
-            GenericOperationResult result = api.delete(orgName, storeName, itemPath);
+            GenericOperationResult result = api.deleteJsonStoreDataItem(orgName, storeName, itemPath);
             return result != null && result.getResult() == GenericOperationResult.ResultEnum.DELETED;
         });
     }
