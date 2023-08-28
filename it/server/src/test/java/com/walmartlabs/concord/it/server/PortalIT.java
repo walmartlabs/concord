@@ -86,7 +86,7 @@
 //        // ---
 //
 //        ProjectProcessesApi portalService = new ProjectProcessesApi(getApiClient());
-//        portalService.start(orgName, projectName, repoName, "main", null, null, "test1,test2");
+//        portalService.startProjectProcess(orgName, projectName, repoName, "main", null, null, "test1,test2");
 //
 //        // ---
 //

@@ -39,7 +39,9 @@ import com.walmartlabs.concord.server.sdk.ProcessKey;
 import com.walmartlabs.concord.server.sdk.ProcessStatus;
 import com.walmartlabs.concord.server.sdk.metrics.WithTimer;
 import com.walmartlabs.concord.server.security.UserPrincipal;
+import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.sonatype.siesta.Resource;
@@ -65,8 +67,8 @@ import static javax.ws.rs.core.Response.Status;
 
 @Named
 @Singleton
-//@Api(value = "Project Processes", authorizations = {@Authorization("api_key"), @Authorization("session_key"), @Authorization("ldap")})
 @Path("/api/v1/org")
+@Tag(name = "Project Processes")
 public class ProjectProcessResource implements Resource {
 
     private static final Logger log = LoggerFactory.getLogger(ProjectProcessResource.class);
@@ -175,9 +177,9 @@ public class ProjectProcessResource implements Resource {
      * Starts a new process instance.
      */
     @GET
-//    @ApiOperation("Start a new process")
     @Path("/{orgName}/project/{projectName}/repo/{repoName}/start/{entryPoint}")
     @Validate
+    @Operation(description = "Start a new process", operationId = "startProjectProcess")
     public Response start(@Parameter @PathParam("orgName") String orgName,
                           @Parameter @PathParam("projectName") String projectName,
                           @Parameter @PathParam("repoName") String repoName,

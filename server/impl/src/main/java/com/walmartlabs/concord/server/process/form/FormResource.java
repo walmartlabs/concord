@@ -24,6 +24,9 @@ import com.walmartlabs.concord.sdk.Constants;
 import com.walmartlabs.concord.server.process.state.ProcessStateManager;
 import com.walmartlabs.concord.server.sdk.PartialProcessKey;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.parameters.RequestBody;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.jboss.resteasy.plugins.providers.multipart.MultipartInput;
 import org.sonatype.siesta.Resource;
@@ -113,9 +116,10 @@ public class FormResource implements Resource {
     @Path("/{processInstanceId}/form/{formName}/multipart")
     @Consumes(MediaType.MULTIPART_FORM_DATA)
     @Produces(MediaType.APPLICATION_JSON)
+    @Operation(description = "Submit JSON form data", operationId = "submitFormAsMultipart")
     public FormSubmitResponse submit(@PathParam("processInstanceId") UUID processInstanceId,
                                      @PathParam("formName") String formName,
-                                     MultipartInput data) {
+                                     @RequestBody(content = @Content(schema = @Schema(type = "object"))) MultipartInput data) {
 
         if (isV2(processInstanceId)) {
             return formResourceV2.submit(processInstanceId, formName, data);

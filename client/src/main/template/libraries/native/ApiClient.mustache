@@ -243,6 +243,17 @@ public class ApiClient {
                 .version(HttpClient.Version.HTTP_1_1);
   }
 
+  public HttpRequest.Builder requestBuilder() {
+    HttpRequest.Builder result = HttpRequest.newBuilder();
+    for (Map.Entry<String, String> e : defaultHeaderMap.entrySet()) {
+        result.header(e.getKey(), e.getValue());
+    }
+    if (getAuth() != null) {
+        result = getAuth().applyTo(result);
+    }
+    return result;
+  }
+
   public void updateBaseUri(String baseUri) {
     URI uri = URI.create(baseUri);
     scheme = uri.getScheme();

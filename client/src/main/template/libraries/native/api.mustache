@@ -270,9 +270,6 @@ public class {{classname}} {
   public {{#asyncNative}}CompletableFuture<{{/asyncNative}}ApiResponse<{{{returnType}}}{{^returnType}}Void{{/returnType}}>{{#asyncNative}}>{{/asyncNative}} {{operationId}}WithHttpInfo({{#isMultipart}}{{#allParams}}{{^isFormParam}}{{{dataType}}} {{paramName}},{{/isFormParam}}{{/allParams}} Map<String, Object> multipartInput{{/isMultipart}}{{^isMultipart}}{{#allParams}} {{{dataType}}} {{paramName}}{{^-last}}, {{/-last}} {{/allParams}}{{/isMultipart}}) throws ApiException {
     {{^asyncNative}}
     HttpRequest.Builder localVarRequestBuilder = {{operationId}}RequestBuilder({{#isMultipart}}{{#allParams}}{{^isFormParam}}{{paramName}},{{/isFormParam}}{{/allParams}} multipartInput{{/isMultipart}}{{^isMultipart}}{{#allParams}}{{paramName}}{{^-last}}, {{/-last}} {{/allParams}}{{/isMultipart}});
-    if (apiClient.getAuth() != null) {
-      localVarRequestBuilder = apiClient.getAuth().applyTo(localVarRequestBuilder);
-    }
     try {
       HttpResponse<InputStream> localVarResponse = memberVarHttpClient.send(
           localVarRequestBuilder.build(),
@@ -369,7 +366,7 @@ public class {{classname}} {
     {{/required}}
     {{/allParams}}
 
-    HttpRequest.Builder localVarRequestBuilder = HttpRequest.newBuilder();
+    HttpRequest.Builder localVarRequestBuilder = apiClient.requestBuilder();
 
     {{! Switch delimiters for baseName so we can write constants like "{query}" }}
     String localVarPath = "{{{path}}}"{{#pathParams}}
@@ -439,10 +436,6 @@ public class {{classname}} {
     {{^hasQueryParams}}
     localVarRequestBuilder.uri(URI.create(memberVarBaseUri + localVarPath));
     {{/hasQueryParams}}
-
-    for (Map.Entry<String, String> e : apiClient.defaultHeaderMap().entrySet()) {
-      localVarRequestBuilder.header(e.getKey(), e.getValue());
-    }
 
     {{#headerParams}}
     if ({{paramName}} != null) {
