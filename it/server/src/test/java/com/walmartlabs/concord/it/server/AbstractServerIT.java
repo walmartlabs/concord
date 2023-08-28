@@ -192,6 +192,10 @@ public abstract class AbstractServerIT {
         return getApiClient().getObjectMapper().readValue(f, classOfT);
     }
 
+    protected <T> T fromJson(InputStream is, Class<T> classOfT) throws IOException {
+        return getApiClient().getObjectMapper().readValue(is, classOfT);
+    }
+
     protected String createRepo(String resource) throws Exception {
         Path tmpDir = createTempDir();
 
