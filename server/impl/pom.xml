@@ -384,29 +384,29 @@
                 <groupId>org.eclipse.sisu</groupId>
                 <artifactId>sisu-maven-plugin</artifactId>
             </plugin>
-                <plugin>
-                    <groupId>io.swagger.core.v3</groupId>
-                    <artifactId>swagger-maven-plugin</artifactId>
-                    <version>2.2.15</version>
-                    <configuration>
-                        <outputFileName>swagger</outputFileName>
-                        <outputPath>${project.build.directory}/classes/com/walmartlabs/concord/server/swagger</outputPath>
-                        <outputFormat>YAML</outputFormat>
-                        <readAllResources>false</readAllResources>
-                        <resourcePackages>
-                            <package>com.walmartlabs.concord.server</package>
-                        </resourcePackages>
-                        <configurationFilePath>${project.basedir}/swagger-config.yaml</configurationFilePath>
-                    </configuration>
-                    <executions>
-                        <execution>
-                            <phase>compile</phase>
-                            <goals>
-                                <goal>resolve</goal>
-                            </goals>
-                        </execution>
-                    </executions>
-                </plugin>
+            <plugin>
+                <groupId>io.swagger.core.v3</groupId>
+                <artifactId>swagger-maven-plugin</artifactId>
+                <version>2.2.15</version>
+                <configuration>
+                    <outputFileName>swagger</outputFileName>
+                    <outputPath>${project.build.directory}/classes/com/walmartlabs/concord/server/swagger</outputPath>
+                    <outputFormat>YAML</outputFormat>
+                    <readAllResources>false</readAllResources>
+                    <resourcePackages>
+                        <package>com.walmartlabs.concord.server</package>
+                    </resourcePackages>
+                    <configurationFilePath>${project.basedir}/swagger-config.yaml</configurationFilePath>
+                </configuration>
+                <executions>
+                    <execution>
+                        <phase>compile</phase>
+                        <goals>
+                            <goal>resolve</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
             <plugin>
                 <groupId>pl.project13.maven</groupId>
                 <artifactId>git-commit-id-plugin</artifactId>

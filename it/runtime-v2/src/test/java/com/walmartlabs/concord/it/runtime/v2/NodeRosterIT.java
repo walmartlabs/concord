@@ -58,7 +58,7 @@ public class NodeRosterIT extends AbstractTest {
 
         NodeRosterHostsApi hostsApi = new NodeRosterHostsApi(concord.apiClient());
         while (true) {
-            List<HostEntry> l = hostsApi.list(null, null, pe.getInstanceId(), null, 10, 0);
+            List<HostEntry> l = hostsApi.listKnownHosts(null, null, pe.getInstanceId(), null, 10, 0);
             if (!l.isEmpty()) {
                 break;
             }

@@ -88,7 +88,7 @@ public class NodeRosterIT extends AbstractServerIT {
 
         NodeRosterArtifactsApi artifactsApi = new NodeRosterArtifactsApi(getApiClient());
         while (true) {
-            List<ArtifactEntry> artifactHostsA = artifactsApi.list(hostAId, null, artifactUrl, 1000, 0); // TODO might require paging
+            List<ArtifactEntry> artifactHostsA = artifactsApi.listHostArtifacts(hostAId, null, artifactUrl, 1000, 0); // TODO might require paging
             if (artifactHostsA != null && artifactHostsA.size() == 1) {
                 break;
             }
@@ -152,7 +152,7 @@ public class NodeRosterIT extends AbstractServerIT {
 
     private static UUID findHost(String host, NodeRosterHostsApi hostsApi) throws InterruptedException, ApiException {
         while (true) {
-            List<HostEntry> l = hostsApi.list(host, null, null, null, 10, 0);
+            List<HostEntry> l = hostsApi.listKnownHosts(host, null, null, null, 10, 0);
             HostEntry e = l.stream().filter(h -> h.getName().equalsIgnoreCase(host)).findFirst().orElse(null);
 
             if (e != null) {
@@ -166,7 +166,7 @@ public class NodeRosterIT extends AbstractServerIT {
     private List<ProcessEntry> listHostProcesses(UUID hostAId) throws Exception {
         NodeRosterProcessesApi nrProcessApi = new NodeRosterProcessesApi(getApiClient());
         while (true) {
-            List<ProcessEntry> result = nrProcessApi.list(hostAId, null, 1000, 0);
+            List<ProcessEntry> result = nrProcessApi.listHosts(hostAId, null, 1000, 0);
             if (!result.isEmpty()) {
                 return result;
             }
