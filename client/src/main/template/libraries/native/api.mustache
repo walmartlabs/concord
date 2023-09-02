@@ -13,12 +13,7 @@ import {{import}};
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import com.walmartlabs.concord.client.auth.Authentication;
-
-import org.apache.hc.core5.http.HttpEntity;
-import org.apache.hc.core5.http.NameValuePair;
-import org.apache.hc.core5.http.message.BasicNameValuePair;
-import org.apache.hc.client5.http.entity.UrlEncodedFormEntity;
+import com.walmartlabs.concord.client.impl.*;
 
 {{#hasFormParamsInSpec}}
 {{/hasFormParamsInSpec}}
@@ -508,13 +503,13 @@ public class {{classname}} {
     {{#isArray}}
     for (int i=0; i < {{paramName}}.size(); i++) {
         if ({{paramName}}.get(i) != null) {
-            formValues.add(new BasicNameValuePair("{{{baseName}}}", {{paramName}}.get(i).toString()));
+            formValues.add(new NameValuePair("{{{baseName}}}", {{paramName}}.get(i).toString()));
         }
     }
     {{/isArray}}
     {{^isArray}}
     if ({{paramName}} != null) {
-        formValues.add(new BasicNameValuePair("{{{baseName}}}", {{paramName}}.toString()));
+        formValues.add(new NameValuePair("{{{baseName}}}", {{paramName}}.toString()));
     }
     {{/isArray}}
     {{/formParams}}
@@ -529,7 +524,6 @@ public class {{classname}} {
         .header("Content-Type", entity.getContentType().getValue())
         .method("{{httpMethod}}", HttpRequest.BodyPublishers
             .ofInputStream(() -> new ByteArrayInputStream(formOutputStream.toByteArray())));
-
 
         {{/hasFormParams}}
         {{^hasFormParams}}

@@ -1,4 +1,4 @@
-package com.walmartlabs.concord.client;
+package com.walmartlabs.concord.client.impl;
 
 /*-
  * *****

@@ -1,4 +1,4 @@
-package com.walmartlabs.concord.client.auth;
+package com.walmartlabs.concord.client.impl;
 
 /*-
  * *****
@@ -20,18 +20,12 @@ package com.walmartlabs.concord.client.auth;
  * =====
  */
 
-import java.net.http.HttpRequest;
+import java.io.IOException;
+import java.io.OutputStream;
 
-public class ApiKey implements Authentication {
+public interface HttpEntity {
 
-    private final String key;
+    String getContentType();
 
-    public ApiKey(String key) {
-        this.key = key;
-    }
-
-    @Override
-    public HttpRequest.Builder applyTo(HttpRequest.Builder requesBuilder) {
-        return requesBuilder.setHeader("Authorization", key);
-    }
+    void writeTo(OutputStream out) throws IOException;
 }

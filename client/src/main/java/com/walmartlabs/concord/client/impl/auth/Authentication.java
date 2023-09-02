@@ -1,4 +1,4 @@
-package com.walmartlabs.concord.client.auth;
+package com.walmartlabs.concord.client.impl.auth;
 
 /*-
  * *****

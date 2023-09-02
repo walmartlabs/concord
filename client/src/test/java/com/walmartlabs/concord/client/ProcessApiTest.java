@@ -21,12 +21,11 @@ package com.walmartlabs.concord.client;
  */
 
 import com.walmartlabs.concord.ApiClient;
-import com.walmartlabs.concord.client.auth.ApiKey;
+import com.walmartlabs.concord.client.impl.auth.ApiKey;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import javax.xml.bind.DatatypeConverter;
-import java.util.Arrays;
 import java.util.UUID;
 
 public class ProcessApiTest {
