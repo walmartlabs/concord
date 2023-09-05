@@ -37,6 +37,7 @@ export interface VariableMapping {
 // TODO find which properties are always defined
 export interface ProcessElementEvent {
     processDefinitionId: string;
+    threadId?: number;
     fileName?: string;
     elementId: string;
     line: number;
