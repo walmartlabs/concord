@@ -10,7 +10,8 @@
 ([#790](https://github.com/walmartlabs/concord/pull/790)).
 
 ### Changed
-
+- console2: handle procesess with commitId, but without repoUrl
+([#807](https://github.com/walmartlabs/concord/pull/807));
 - runtime-v2: fix initialize of array expression
 ([#800](https://github.com/walmartlabs/concord/pull/800));
 - server: only admins can access policies
