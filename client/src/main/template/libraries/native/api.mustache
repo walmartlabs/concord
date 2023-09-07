@@ -493,7 +493,7 @@ public class {{classname}} {
             .ofInputStream(() -> new ByteArrayInputStream(formOutputStream.toByteArray()));
     }
     localVarRequestBuilder
-        .header("Content-Type", entity.getContentType())
+        .header("Content-Type", entity.contentType().toString())
         .method("{{httpMethod}}", formDataPublisher);
     {{/isMultipart}}
     {{^isMultipart}}
@@ -521,7 +521,7 @@ public class {{classname}} {
         throw new RuntimeException(e);
     }
     localVarRequestBuilder
-        .header("Content-Type", entity.getContentType().getValue())
+        .header("Content-Type", entity.getContentType().toString())
         .method("{{httpMethod}}", HttpRequest.BodyPublishers
             .ofInputStream(() -> new ByteArrayInputStream(formOutputStream.toByteArray())));
 

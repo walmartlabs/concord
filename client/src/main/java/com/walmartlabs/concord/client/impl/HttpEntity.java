@@ -25,7 +25,9 @@ import java.io.OutputStream;
 
 public interface HttpEntity {
 
-    String getContentType();
+    ContentType contentType();
+
+    long contentLength() throws IOException;
 
     void writeTo(OutputStream out) throws IOException;
 }

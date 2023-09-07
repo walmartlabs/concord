@@ -22,6 +22,8 @@ package com.walmartlabs.concord.client.impl;
 
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
+import java.util.List;
+import java.util.stream.Collectors;
 
 public class ContentType {
 
@@ -34,8 +36,7 @@ public class ContentType {
     public static final ContentType APPLICATION_OCTET_STREAM = create(
             "application/octet-stream");
 
-    public static final ContentType TEXT_PLAIN = create(
-            "text/plain", StandardCharsets.ISO_8859_1);
+    public static final ContentType TEXT_PLAIN = create("text/plain");
 
     public static final ContentType MULTIPART_FORM = create("multipart/form-data");
 
@@ -50,14 +51,24 @@ public class ContentType {
 
     private final String mimeType;
     private final Charset charset;
+    private final List<NameValuePair> params;
 
     public ContentType(String mimeType, Charset charset) {
+        this(mimeType, charset, null);
+    }
+
+    public ContentType(String mimeType, Charset charset, List<NameValuePair> params) {
         this.mimeType = mimeType;
         this.charset = charset;
+        this.params = params;
     }
 
     public ContentType withCharset(Charset charset) {
         return create(getMimeType(), charset);
+    }
+
+    public ContentType withParameters(List<NameValuePair> params) {
+        return new ContentType(getMimeType(), charset, params);
     }
 
     public String getMimeType() {
@@ -71,11 +82,22 @@ public class ContentType {
     @Override
     public String toString() {
         StringBuilder buf = new StringBuilder();
-        buf.append(mimeType);
-        if (this.charset != null) {
+        buf.append(this.mimeType);
+        if (this.params != null) {
+            buf.append("; ");
+            formatParameters(buf, this.params);
+        } else if (this.charset != null) {
             buf.append("; charset=");
-            buf.append(this.charset.name());
+            buf.append(this.charset.name().toLowerCase());
         }
         return buf.toString();
+    }
+
+    private static void formatParameters(StringBuilder buf, List<NameValuePair> params) {
+        String s = params.stream()
+                .map(nvp -> nvp.getName() + "=" + nvp.getValue())
+                .collect(Collectors.joining("; "));
+
+        buf.append(s);
     }
 }

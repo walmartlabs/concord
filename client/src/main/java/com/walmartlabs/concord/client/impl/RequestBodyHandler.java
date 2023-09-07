@@ -28,11 +28,11 @@ import java.net.http.HttpRequest;
 
 public final class RequestBodyHandler {
 
-    public static HttpRequest.BodyPublisher handle(ObjectMapper objectMapper, byte[] param) throws IOException {
+    public static HttpRequest.BodyPublisher handle(ObjectMapper ignoredObjectMapper, byte[] param) throws IOException {
         return HttpRequest.BodyPublishers.ofByteArray(param);
     }
 
-    public static HttpRequest.BodyPublisher handle(ObjectMapper objectMapper, InputStream param) throws IOException {
+    public static HttpRequest.BodyPublisher handle(ObjectMapper ignoredObjectMapper, InputStream param) throws IOException {
         return HttpRequest.BodyPublishers.ofInputStream(() -> param);
     }
 

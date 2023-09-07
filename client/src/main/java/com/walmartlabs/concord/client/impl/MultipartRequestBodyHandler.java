@@ -22,31 +22,35 @@ package com.walmartlabs.concord.client.impl;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.apache.hc.client5.http.entity.mime.MultipartEntityBuilder;
-import org.apache.hc.core5.http.ContentType;
-import org.apache.hc.core5.http.HttpEntity;
 
+import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Map;
 import java.util.UUID;
 
+import static com.walmartlabs.concord.client.impl.ContentType.*;
+
 public final class MultipartRequestBodyHandler {
 
     public static HttpEntity handle(ObjectMapper objectMapper, Map<String, Object> data) {
-        MultipartEntityBuilder multiPartBuilder = MultipartEntityBuilder.create()
-                .setMimeSubtype("form-data");
+        return handle(new MultipartBuilder(), objectMapper, data);
+    }
+
+    public static HttpEntity handle(MultipartBuilder b, ObjectMapper objectMapper, Map<String, Object> data) {
         for (Map.Entry<String, Object> e : data.entrySet()) {
             String k = e.getKey();
             Object v = e.getValue();
             if (v instanceof InputStream) {
-                multiPartBuilder.addBinaryBody(k, (InputStream) v);
+                b.addFormDataPart(k, null, new InputStreamRequestBody((InputStream) v));
             } else if (v instanceof byte[]) {
-                multiPartBuilder.addBinaryBody(k, (byte[]) v);
+                b.addFormDataPart(k, null, RequestBody.create(APPLICATION_OCTET_STREAM, (byte[]) v));
             } else if (v instanceof String) {
-                multiPartBuilder.addTextBody(k, (String) v);
+                b.addFormDataPart(k, (String) v);
             } else if (v instanceof Path) {
-                multiPartBuilder.addBinaryBody(k, ((Path) v).toFile());
+                b.addFormDataPart(k, null, new PathRequestBody((Path) v));
             } else if (v instanceof Map) {
                 String json;
                 try {
@@ -54,23 +58,86 @@ public final class MultipartRequestBodyHandler {
                 } catch (JsonProcessingException ex) {
                     throw new RuntimeException(ex);
                 }
-                multiPartBuilder.addTextBody(k, json, ContentType.APPLICATION_JSON);
+                b.addFormDataPart(k, null, RequestBody.create(APPLICATION_JSON, json));
             } else if (v instanceof Boolean) {
-                multiPartBuilder.addTextBody(k, v.toString());
+                b.addFormDataPart(k, null, RequestBody.create(TEXT_PLAIN, v.toString()));
             } else if (v instanceof String[]) {
-                multiPartBuilder.addTextBody(k, String.join(",", (String[]) v));
+                b.addFormDataPart(k, null, RequestBody.create(TEXT_PLAIN, String.join(",", (String[]) v)));
             } else if (v instanceof UUID) {
-                multiPartBuilder.addTextBody(k, v.toString());
+                b.addFormDataPart(k, v.toString());
             } else if (v instanceof Enum<?>) {
-                multiPartBuilder.addTextBody(k, ((Enum<?>)v).name());
+                b.addFormDataPart(k, ((Enum<?>)v).name());
             } else {
                 throw new IllegalArgumentException("Unknown input type: " + k + "=" + v + (v != null ? " (" + v.getClass() + ")" : ""));
             }
         }
-
-        return multiPartBuilder.build();
+        return b.build();
     }
 
     private MultipartRequestBodyHandler() {
+    }
+
+    public static final class InputStreamRequestBody extends RequestBody {
+
+        private final InputStream in;
+
+        public InputStreamRequestBody(InputStream in) {
+            this.in = in;
+        }
+
+        @Override
+        public ContentType contentType() {
+            return APPLICATION_OCTET_STREAM;
+        }
+
+        @Override
+        public long contentLength() {
+            return -1;
+        }
+
+        @Override
+        public void writeTo(OutputStream out) throws IOException {
+            try {
+                final byte[] tmp = new byte[4096];
+                int l;
+                while ((l = this.in.read(tmp)) != -1) {
+                    out.write(tmp, 0, l);
+                }
+                out.flush();
+            } finally {
+                this.in.close();
+            }
+        }
+    }
+
+    public static class PathRequestBody extends RequestBody {
+
+        private final Path path;
+
+        public PathRequestBody(Path path) {
+            this.path = path;
+        }
+
+        @Override
+        public ContentType contentType() {
+            return APPLICATION_OCTET_STREAM;
+        }
+
+        @Override
+        public long contentLength() throws IOException {
+            return Files.size(path);
+        }
+
+        @Override
+        public void writeTo(OutputStream out) throws IOException {
+            try (InputStream in = Files.newInputStream(this.path)) {
+                byte[] tmp = new byte[4096];
+                int l;
+                while ((l = in.read(tmp)) != -1) {
+                    out.write(tmp, 0, l);
+                }
+                out.flush();
+            }
+        }
     }
 }
