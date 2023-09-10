@@ -21,6 +21,7 @@ package com.walmartlabs.concord.client.impl;
  */
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
 
 public interface HttpEntity {
@@ -30,4 +31,6 @@ public interface HttpEntity {
     long contentLength() throws IOException;
 
     void writeTo(OutputStream out) throws IOException;
+
+    InputStream getContent() throws IOException;
 }

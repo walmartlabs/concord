@@ -20,8 +20,7 @@ package com.walmartlabs.concord.client.impl;
  * =====
  */
 
-import java.io.IOException;
-import java.io.OutputStream;
+import java.io.*;
 import java.nio.ByteBuffer;
 import java.nio.CharBuffer;
 import java.nio.charset.Charset;
@@ -133,8 +132,58 @@ public class MultipartBuilder {
         }
 
         @Override
-        public long contentLength() throws IOException {
+        public long contentLength() {
             return -1;
+        }
+
+        @Override
+        public InputStream getContent() throws IOException {
+            SequenceInputStreamBuilder result = new SequenceInputStreamBuilder();
+            try {
+                write(result);
+                return result.build();
+            } catch (Exception e) {
+                result.close();
+                throw e;
+            }
+        }
+
+        private void write(SequenceInputStreamBuilder result) throws IOException {
+            ByteArrayBuffer boundaryEncoded = encode(StandardCharsets.US_ASCII, this.boundary);
+
+            for (int p = 0, partCount = partHeaders.size(); p < partCount; p++) {
+                Headers headers = partHeaders.get(p);
+                RequestBody body = partBodies.get(p);
+
+                result.write(DASHDASH);
+                result.write(boundaryEncoded);
+                result.write(CRLF);
+
+                if (headers != null) {
+                    for (int h = 0, headerCount = headers.size(); h < headerCount; h++) {
+                        writeHeader(headers.name(h), headers.value(h), result);
+                    }
+                }
+
+                ContentType contentType = body.contentType();
+                if (contentType != null) {
+                    writeHeader("Content-Type", contentType.toString(), result);
+                }
+
+                long contentLength = body.contentLength();
+                if (contentLength != -1) {
+                    writeHeader("Content-Length", String.valueOf(contentLength), result);
+                }
+
+                result.write(CRLF);
+                result.write(body.getContent());
+                result.write(CRLF);
+            }
+
+            result.write(DASHDASH);
+            result.write(boundaryEncoded);
+            result.write(DASHDASH);
+            result.write(CRLF);
         }
 
         @Override
@@ -178,6 +227,13 @@ public class MultipartBuilder {
             out.write(CRLF);
         }
 
+        private void writeHeader(String name, String value, SequenceInputStreamBuilder out) throws IOException {
+            out.write(encodeHeader(name));
+            out.write(COLONSPACE);
+            out.write(encodeHeader(value));
+            out.write(CRLF);
+        }
+
         private void writeHeader(String name, String value, OutputStream out) throws IOException {
             write(encodeHeader(name), out);
             out.write(COLONSPACE);
@@ -198,6 +254,57 @@ public class MultipartBuilder {
 
         private static void write(ByteArrayBuffer buff, OutputStream out) throws IOException {
             out.write(buff.array(), 0, buff.length());
+        }
+    }
+
+    static class SequenceInputStreamBuilder {
+
+        private final Vector<InputStream> streams = new Vector<>();
+        private final ByteArrayBuffer currentBuffer = new ByteArrayBuffer(1024);
+
+        public void write(byte[] buff) {
+            currentBuffer.append(buff);
+        }
+
+        public void write(ByteArrayBuffer buff) {
+            currentBuffer.append(buff.array(), 0, buff.length());
+        }
+
+        public void write(InputStream stream) {
+            flushCurrentBuffer();
+
+            streams.add(stream);
+        }
+
+        public void close() throws IOException {
+            IOException ioe = null;
+            for (InputStream in : streams) {
+                try {
+                    in.close();
+                } catch (IOException e) {
+                    if (ioe == null) {
+                        ioe = e;
+                    } else {
+                        ioe.addSuppressed(e);
+                    }
+                }
+            }
+            if (ioe != null) {
+                throw ioe;
+            }
+        }
+
+        public InputStream build() {
+            flushCurrentBuffer();
+
+            return new SequenceInputStream(streams.elements());
+        }
+
+        private void flushCurrentBuffer() {
+            if (currentBuffer.length() > 0) {
+                streams.add(new ByteArrayInputStream(currentBuffer.toByteArray(), 0, currentBuffer.length()));
+                currentBuffer.clear();
+            }
         }
     }
 }

@@ -25,6 +25,7 @@ import org.junit.jupiter.api.Test;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 import java.util.LinkedHashMap;
@@ -56,6 +57,28 @@ public class MultipartRequestBodyHandlerTest {
 
         assertEquals(body, str);
         assertEquals("multipart/form-data; boundary=e572b648-941a-4648-97ed-0e3c5350f0ad", entity.contentType().toString());
+    }
+
+    @Test
+    public void test2() throws Exception {
+        Map<String, Object> data = new LinkedHashMap<>();
+        data.put("string-field", "this stuff");
+        data.put("byte[]-field", "byte array".getBytes());
+        data.put("inputstream-field", new ByteArrayInputStream("my input stream".getBytes()));
+        data.put("boolean-field", true);
+        data.put("json-field", Collections.singletonMap("k", "v"));
+        data.put("string[]-field", new String[] {"one", "two"});
+        data.put("uuid-field", UUID.fromString("f8d30c37-4c84-4817-9cb8-23b27a54c459"));
+
+        MultipartBuilder mpb = new MultipartBuilder("e572b648-941a-4648-97ed-0e3c5350f0ad");
+        HttpEntity entity = MultipartRequestBodyHandler.handle(mpb, new ObjectMapper(), data);
+
+        try (InputStream is = entity.getContent()) {
+            String str = new String(is.readAllBytes(), StandardCharsets.UTF_8);
+
+            assertEquals(body, str);
+            assertEquals("multipart/form-data; boundary=e572b648-941a-4648-97ed-0e3c5350f0ad", entity.contentType().toString());
+        }
     }
 
     private static final String body = "--e572b648-941a-4648-97ed-0e3c5350f0ad\r\n" +

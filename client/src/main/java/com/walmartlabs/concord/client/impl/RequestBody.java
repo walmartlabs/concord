@@ -20,7 +20,9 @@ package com.walmartlabs.concord.client.impl;
  * =====
  */
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
@@ -62,6 +64,11 @@ public abstract class RequestBody implements HttpEntity {
             @Override
             public void writeTo(OutputStream out) throws IOException {
                 out.write(content, offset, byteCount);
+            }
+
+            @Override
+            public InputStream getContent() {
+                return new ByteArrayInputStream(content, offset, byteCount);
             }
         };
     }

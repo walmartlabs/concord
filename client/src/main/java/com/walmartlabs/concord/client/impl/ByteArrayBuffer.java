@@ -30,7 +30,11 @@ public class ByteArrayBuffer {
         this.array = new byte[capacity];
     }
 
-    public void append(final byte[] b, final int off, final int len) {
+    public void append(byte[] b) {
+        append(b, 0, b.length);
+    }
+
+    public void append(byte[] b, int off, int len) {
         if (b == null) {
             return;
         }
@@ -41,7 +45,7 @@ public class ByteArrayBuffer {
         if (len == 0) {
             return;
         }
-        final int newlen = this.len + len;
+        int newlen = this.len + len;
         if (newlen > this.array.length) {
             expand(newlen);
         }
@@ -49,8 +53,8 @@ public class ByteArrayBuffer {
         this.len = newlen;
     }
 
-    private void expand(final int newlen) {
-        final byte[] newArray = new byte[Math.max(this.array.length << 1, newlen)];
+    private void expand(int newlen) {
+        byte[] newArray = new byte[Math.max(this.array.length << 1, newlen)];
         System.arraycopy(this.array, 0, newArray, 0, this.len);
         this.array = newArray;
     }
@@ -59,7 +63,19 @@ public class ByteArrayBuffer {
         return this.array;
     }
 
+    public byte[] toByteArray() {
+        final byte[] b = new byte[this.len];
+        if (this.len > 0) {
+            System.arraycopy(this.array, 0, b, 0, this.len);
+        }
+        return b;
+    }
+
     public int length() {
         return this.len;
+    }
+
+    public void clear() {
+        this.len = 0;
     }
 }

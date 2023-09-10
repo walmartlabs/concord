@@ -96,6 +96,11 @@ public final class MultipartRequestBodyHandler {
         }
 
         @Override
+        public InputStream getContent() {
+            return in;
+        }
+
+        @Override
         public void writeTo(OutputStream out) throws IOException {
             try {
                 final byte[] tmp = new byte[4096];
@@ -126,6 +131,11 @@ public final class MultipartRequestBodyHandler {
         @Override
         public long contentLength() throws IOException {
             return Files.size(path);
+        }
+
+        @Override
+        public InputStream getContent() throws IOException {
+            return Files.newInputStream(this.path);
         }
 
         @Override
