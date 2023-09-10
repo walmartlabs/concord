@@ -64,7 +64,7 @@ const renderCard = (card: ProcessCardEntry) => {
 
             <Card.Content extra>
                 <div className='ui two buttons'>
-                    <Button basic color='green' href={"/api/v1/org/Default/project/test/repo/test-process-start/start/test"} target="_blank" rel="noopener noreferrer">Start process</Button>
+                    <Button basic color='green' href={`/api/v1/org/${card.orgName}/project/${card.projectName}/repo/${card.repoName}/start/${card.entryPoint}`} target="_blank" rel="noopener noreferrer">Start process</Button>
                 </div>
             </Card.Content>
         </Card>
