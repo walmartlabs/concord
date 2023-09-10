@@ -169,6 +169,9 @@
                             <item>
                                 <code>java.method.returnTypeTypeParametersChanged</code>
                             </item>
+                            <item>
+                                <code>java.method.numberOfParametersChanged</code>
+                            </item>
                         </revapi.ignore>
                     </analysisConfiguration>
                 </configuration>
