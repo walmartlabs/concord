@@ -35,7 +35,7 @@ public interface PersistenceService {
 
     void persistSessionFile(String name, Writer writer);
 
-    <T> T loadPersistedFile (String name, Converter<InputStream, T> converter);
+    <T> T loadPersistedFile(String name, Converter<InputStream, T> converter);
 
     <T> T loadPersistedSessionFile(String name, Converter<InputStream, T> converter);
 

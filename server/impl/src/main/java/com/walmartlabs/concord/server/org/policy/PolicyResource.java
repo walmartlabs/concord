@@ -92,6 +92,8 @@ public class PolicyResource implements Resource {
     @Path("/{policyName}")
     @Produces(MediaType.APPLICATION_JSON)
     public PolicyEntry get(@ApiParam @PathParam("policyName") @ConcordKey String policyName) {
+        assertAdmin();
+
         PolicyEntry p = policyManager.get(policyName);
         if (p == null) {
             throw new ConcordApplicationException("Policy not found: " + policyName, Status.NOT_FOUND);
@@ -220,6 +222,8 @@ public class PolicyResource implements Resource {
                                   @ApiParam @QueryParam("userName") @ConcordKey String userName,
                                   @ApiParam @QueryParam("userDomain") String userDomain,
                                   @ApiParam @QueryParam("userType") UserType userType) {
+
+        assertAdmin();
 
         if (orgName == null && projectName == null && userName == null) {
             return policyManager.list();
