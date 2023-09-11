@@ -24,6 +24,8 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.walmartlabs.concord.forms.ValidationError;
 import com.walmartlabs.concord.server.MultipartUtils;
 import com.walmartlabs.concord.server.cfg.CustomFormConfiguration;
@@ -43,11 +45,13 @@ import io.takari.bpm.form.Form;
 import io.takari.bpm.model.form.FormDefinition;
 import io.takari.bpm.model.form.FormField;
 import io.takari.bpm.model.form.FormField.Cardinality;
+import org.immutables.value.Value;
 import org.jboss.resteasy.plugins.providers.multipart.MultipartInput;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.sonatype.siesta.Validate;
 
+import javax.annotation.Nullable;
 import javax.inject.Inject;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.POST;
@@ -334,7 +338,17 @@ public class CustomFormServiceV1 {
             }
         }
 
-        return new FormData(success, processFailed, submitUrl, fields, _definitions, _values, _errors);
+        return FormData.builder()
+                .txId(processInstanceId)
+                .formName(formName)
+                .success(success)
+                .processFailed(processFailed)
+                .submitUrl(submitUrl)
+                .fields(fields)
+                .definitions(_definitions)
+                .values(_values)
+                .errors(_errors)
+                .build();
     }
 
     private void writeData(Path baseDir, Object data) throws IOException {
@@ -396,56 +410,36 @@ public class CustomFormServiceV1 {
         return String.format(FORMS_PATH_TEMPLATE, processKey, formName);
     }
 
-    @JsonInclude(Include.NON_EMPTY)
-    public static class FormData implements Serializable {
+    @Value.Immutable
+    @JsonInclude(JsonInclude.Include.NON_EMPTY)
+    @JsonSerialize(as = ImmutableFormData.class)
+    @JsonDeserialize(as = ImmutableFormData.class)
+    public interface FormData extends Serializable {
 
-        private static final long serialVersionUID = -1591440785695774602L;
+        long serialVersionUID = -1591440785695774602L;
 
-        private final boolean success;
-        private final boolean processFailed;
-        private final String submitUrl;
-        private final List<String> fields;
-        private final Map<String, FormDataDefinition> definitions;
-        private final Map<String, Object> values;
-        private final Map<String, String> errors;
+        String txId();
 
-        public FormData(boolean success, boolean processFailed, String submitUrl,
-                        List<String> fields, Map<String, FormDataDefinition> definitions, Map<String, Object> values,
-                        Map<String, String> errors) {
+        String formName();
 
-            this.success = success;
-            this.processFailed = processFailed;
-            this.submitUrl = submitUrl;
-            this.fields = fields;
-            this.definitions = definitions;
-            this.values = values;
-            this.errors = errors;
-        }
+        boolean success();
 
-        public boolean isSuccess() {
-            return success;
-        }
+        boolean processFailed();
 
-        public boolean isProcessFailed() {
-            return processFailed;
-        }
+        String submitUrl();
 
-        public String getSubmitUrl() {
-            return submitUrl;
-        }
+        List<String> fields();
 
-        public List<String> getFields() { return fields; }
+        Map<String, FormDataDefinition> definitions();
 
-        public Map<String, FormDataDefinition> getDefinitions() {
-            return definitions;
-        }
+        @Nullable
+        Map<String, Object> values();
 
-        public Map<String, Object> getValues() {
-            return values;
-        }
+        @Nullable
+        Map<String, String> errors();
 
-        public Map<String, String> getErrors() {
-            return errors;
+        static ImmutableFormData.Builder builder() {
+            return ImmutableFormData.builder();
         }
     }
 
