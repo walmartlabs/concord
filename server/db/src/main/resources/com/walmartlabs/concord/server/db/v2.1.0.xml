@@ -93,4 +93,14 @@
                                  onDelete="CASCADE"/>
     </changeSet>
 
+    <changeSet id="2001001" author="ybrigo@gmail.com">
+        <addColumn tableName="UI_PROCESS_CARDS">
+            <column name="FORM" type="bytea">
+                <constraints nullable="true"/>
+            </column>
+            <column name="DATA" type="jsonb">
+                <constraints nullable="true"/>
+            </column>
+        </addColumn>
+    </changeSet>
 </databaseChangeLog>

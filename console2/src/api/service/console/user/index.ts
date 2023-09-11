@@ -34,6 +34,7 @@ export interface ProcessCardEntry {
     name: string;
     description?: string;
     icon?: string;
+    isCustomForm: boolean;
 }
 
 export const getActivity = (
