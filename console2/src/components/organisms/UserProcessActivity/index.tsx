@@ -24,7 +24,7 @@ import {
     getActivity as apiGetActivity,
     listProcessCards as apiListProcessCards, ProcessCardEntry
 } from '../../../api/service/console/user';
-import { Button, Card, CardGroup, Header, Icon, Image } from 'semantic-ui-react';
+import { Button, Card, CardGroup, Embed, Header, Icon, Image, Modal } from 'semantic-ui-react';
 import { ProcessList } from '../../molecules/index';
 import { ProcessEntry } from '../../../api/process';
 import {
@@ -64,7 +64,20 @@ const renderCard = (card: ProcessCardEntry) => {
 
             <Card.Content extra>
                 <div className='ui two buttons'>
-                    <Button basic color='green' href={`/api/v1/org/${card.orgName}/project/${card.projectName}/repo/${card.repoName}/start/${card.entryPoint}`} target="_blank" rel="noopener noreferrer">Start process</Button>
+                    {card.isCustomForm &&
+                        <Modal trigger={<Button basic color='green'>Start process</Button>}>
+                            <Modal.Content>
+                                <Embed
+                                    url={`/api/v2/service/console/user/process-card/${card.id}/form`}
+                                    active={true}
+                                />
+                            </Modal.Content>
+                        </Modal>
+                    }
+
+                    {!card.isCustomForm &&
+                        <Button basic color='green' href={`/api/v1/org/${card.orgName}/project/${card.projectName}/repo/${card.repoName}/start/${card.entryPoint}`} target="_blank" rel="noopener noreferrer">Start process</Button>
+                    }
                 </div>
             </Card.Content>
         </Card>

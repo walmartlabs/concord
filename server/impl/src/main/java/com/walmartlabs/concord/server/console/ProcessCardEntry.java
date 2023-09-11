@@ -64,6 +64,8 @@ public interface ProcessCardEntry extends Serializable {
     @Nullable
     String icon();
 
+    boolean isCustomForm();
+
     static ImmutableProcessCardEntry.Builder builder() {
         return ImmutableProcessCardEntry.builder();
     }
