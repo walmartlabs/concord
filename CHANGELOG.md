@@ -10,6 +10,9 @@
 ([#790](https://github.com/walmartlabs/concord/pull/790)).
 
 ### Changed
+
+- runtime-v2: fix global vars update after resume
+([#809](https://github.com/walmartlabs/concord/pull/809));
 - console2: handle procesess with commitId, but without repoUrl
 ([#807](https://github.com/walmartlabs/concord/pull/807));
 - runtime-v2: fix initialize of array expression
