@@ -22,7 +22,7 @@ package com.walmartlabs.concord.server.org.project;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import io.swagger.annotations.ApiModelProperty;
+import io.swagger.v3.oas.annotations.media.Schema;
 
 import java.io.Serializable;
 import java.util.Arrays;
@@ -33,7 +33,7 @@ public class EncryptValueResponse implements Serializable {
 
     private final boolean ok = true;
 
-    @ApiModelProperty(dataType = "string")
+    @Schema(type = "string", format = "string")
     private final byte[] data;
 
     @JsonCreator
