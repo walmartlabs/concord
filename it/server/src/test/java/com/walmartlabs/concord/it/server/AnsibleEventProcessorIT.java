@@ -21,6 +21,10 @@ package com.walmartlabs.concord.it.server;
  */
 
 import com.walmartlabs.concord.client.*;
+import com.walmartlabs.concord.client2.AnsibleProcessApi;
+import com.walmartlabs.concord.client2.PlayInfo;
+import com.walmartlabs.concord.client2.PlaybookEntry;
+import com.walmartlabs.concord.client2.TaskInfo;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
