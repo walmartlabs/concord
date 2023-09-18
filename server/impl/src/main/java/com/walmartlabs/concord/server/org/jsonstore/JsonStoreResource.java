@@ -25,10 +25,8 @@ import com.walmartlabs.concord.server.GenericOperationResult;
 import com.walmartlabs.concord.server.OperationResult;
 import com.walmartlabs.concord.server.org.ResourceAccessEntry;
 import com.walmartlabs.concord.server.sdk.ConcordApplicationException;
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
-import io.swagger.annotations.ApiParam;
-import io.swagger.annotations.Authorization;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.sonatype.siesta.Resource;
 import org.sonatype.siesta.Validate;
 
@@ -44,8 +42,8 @@ import java.util.List;
 
 @Named
 @Singleton
-@Api(value = "JsonStore", authorizations = {@Authorization("api_key"), @Authorization("session_key"), @Authorization("ldap")})
 @Path("/api/v1/org")
+@Tag(name = "JsonStore")
 public class JsonStoreResource implements Resource {
 
     private final JsonStoreManager storeManager;
@@ -62,13 +60,13 @@ public class JsonStoreResource implements Resource {
      * @return list of stores
      */
     @GET
-    @ApiOperation(value = "List existing stores", responseContainer = "list", response = JsonStoreEntry.class)
     @Path("/{orgName}/jsonstore")
     @Produces(MediaType.APPLICATION_JSON)
-    public List<JsonStoreEntry> list(@ApiParam @PathParam("orgName") @ConcordKey String orgName,
-                                     @ApiParam @QueryParam("offset") @DefaultValue("0") int offset,
-                                     @ApiParam @QueryParam("limit") @DefaultValue("30") int limit,
-                                     @ApiParam @QueryParam("filter") String filter) {
+    @Operation(description = "List existing stores", operationId = "listJsonStores")
+    public List<JsonStoreEntry> list(@PathParam("orgName") @ConcordKey String orgName,
+                                     @QueryParam("offset") @DefaultValue("0") int offset,
+                                     @QueryParam("limit") @DefaultValue("30") int limit,
+                                     @QueryParam("filter") String filter) {
 
         return storeManager.list(orgName, offset, limit, filter);
     }
@@ -81,11 +79,11 @@ public class JsonStoreResource implements Resource {
      * @return store
      */
     @GET
-    @ApiOperation("Get an existing store")
     @Path("/{orgName}/jsonstore/{storeName}")
     @Produces(MediaType.APPLICATION_JSON)
-    public JsonStoreEntry get(@ApiParam @PathParam("orgName") @ConcordKey String orgName,
-                              @ApiParam @PathParam("storeName") @ConcordKey String storeName) {
+    @Operation(description = "Get an existing store", operationId = "getJsonStores")
+    public JsonStoreEntry get(@PathParam("orgName") @ConcordKey String orgName,
+                              @PathParam("storeName") @ConcordKey String storeName) {
 
         return storeManager.get(orgName, storeName);
     }
@@ -97,13 +95,13 @@ public class JsonStoreResource implements Resource {
      * @return
      */
     @POST
-    @ApiOperation("Create or update a store")
     @Path("/{orgName}/jsonstore")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     @Validate
-    public GenericOperationResult createOrUpdate(@ApiParam @PathParam("orgName") @ConcordKey String orgName,
-                                                 @ApiParam @Valid JsonStoreRequest entry) {
+    @Operation(description = "Create or update a store", operationId = "createOrUpdateJsonStores")
+    public GenericOperationResult createOrUpdate(@PathParam("orgName") @ConcordKey String orgName,
+                                                 @Valid JsonStoreRequest entry) {
 
         OperationResult result = storeManager.createOrUpdate(orgName, entry);
         return new GenericOperationResult(result);
@@ -116,11 +114,11 @@ public class JsonStoreResource implements Resource {
      * @return
      */
     @DELETE
-    @ApiOperation("Delete an existing store")
     @Path("/{orgName}/jsonstore/{storeName}")
     @Produces(MediaType.APPLICATION_JSON)
-    public GenericOperationResult delete(@ApiParam @PathParam("orgName") @ConcordKey String orgName,
-                                         @ApiParam @PathParam("storeName") @ConcordKey String storeName) {
+    @Operation(description = "Delete an existing store", operationId = "deleteJsonStores")
+    public GenericOperationResult delete(@PathParam("orgName") @ConcordKey String orgName,
+                                         @PathParam("storeName") @ConcordKey String storeName) {
 
         storeManager.delete(orgName, storeName);
         return new GenericOperationResult(OperationResult.DELETED);
@@ -135,32 +133,33 @@ public class JsonStoreResource implements Resource {
     @GET
     @Path("/{orgName}/jsonstore/{storeName}/capacity")
     @Produces(MediaType.APPLICATION_JSON)
-    public JsonStoreCapacity getCapacity(@ApiParam @PathParam("orgName") @ConcordKey String orgName,
-                                         @ApiParam @PathParam("storeName") @ConcordKey String storeName) {
+    @Operation(description = "Get an existing store capacity", operationId = "getJsonStoreCapacity")
+    public JsonStoreCapacity getCapacity(@PathParam("orgName") @ConcordKey String orgName,
+                                         @PathParam("storeName") @ConcordKey String storeName) {
 
         return storeManager.getCapacity(orgName, storeName);
     }
 
     @GET
-    @ApiOperation("Get a store's team access parameters")
     @Path("/{orgName}/jsonstore/{storeName}/access")
     @Produces(MediaType.APPLICATION_JSON)
     @Validate
-    public List<ResourceAccessEntry> getAccessLevel(@ApiParam @PathParam("orgName") @ConcordKey String orgName,
-                                                    @ApiParam @PathParam("storeName") @ConcordKey String storeName) {
+    @Operation(description = "Get a store's team access parameters", operationId = "getJsonStoresAccessLevel")
+    public List<ResourceAccessEntry> getAccessLevel(@PathParam("orgName") @ConcordKey String orgName,
+                                                    @PathParam("storeName") @ConcordKey String storeName) {
 
         return storeManager.getResourceAccess(orgName, storeName);
     }
 
     @POST
-    @ApiOperation("Updates the access level for the specified store and team")
     @Path("/{orgName}/jsonstore/{storeName}/access/bulk")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     @Validate
-    public GenericOperationResult updateAccessLevel(@ApiParam @PathParam("orgName") @ConcordKey String orgName,
-                                                    @ApiParam @PathParam("storeName") @ConcordKey String storeName,
-                                                    @ApiParam @Valid Collection<ResourceAccessEntry> entries) {
+    @Operation(description = "Updates the access level for the specified store and team", operationId = "bulkUpdateJsonStoresAccessLevel")
+    public GenericOperationResult updateAccessLevel(@PathParam("orgName") @ConcordKey String orgName,
+                                                    @PathParam("storeName") @ConcordKey String storeName,
+                                                    @Valid Collection<ResourceAccessEntry> entries) {
 
         if (entries == null) {
             throw new ConcordApplicationException("List of teams is null.", Response.Status.BAD_REQUEST);
@@ -172,14 +171,15 @@ public class JsonStoreResource implements Resource {
 
 
     @POST
-    @ApiOperation("Updates the access level for the specified store")
+//    @ApiOperation("Updates the access level for the specified store")
     @Path("/{orgName}/jsonstore/{storeName}/access")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     @Validate
-    public GenericOperationResult updateAccessLevel(@ApiParam @PathParam("orgName") @ConcordKey String orgName,
-                                                    @ApiParam @PathParam("storeName") @ConcordKey String storeName,
-                                                    @ApiParam @Valid ResourceAccessEntry entry) {
+    @Operation(description = "Updates the access level for the specified store and team", operationId = "updateJsonStoresAccessLevel")
+    public GenericOperationResult updateAccessLevel(@PathParam("orgName") @ConcordKey String orgName,
+                                                    @PathParam("storeName") @ConcordKey String storeName,
+                                                    @Valid ResourceAccessEntry entry) {
 
         storeManager.updateAccessLevel(orgName, storeName, entry);
         return new GenericOperationResult(OperationResult.UPDATED);

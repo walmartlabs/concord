@@ -124,7 +124,6 @@
         <slf4j.version>1.7.36</slf4j.version>
         <snakeyaml.version>1.33</snakeyaml.version>
         <sshd.version>2.8.0</sshd.version>
-        <swagger.version>1.5.20</swagger.version>
         <sysoutslf4j.version>1.0.2</sysoutslf4j.version>
         <testcontainers.concord.version>0.0.40</testcontainers.concord.version>
         <testcontainers.version>1.16.3</testcontainers.version>
@@ -138,6 +137,11 @@
             <dependency>
                 <groupId>com.walmartlabs.concord</groupId>
                 <artifactId>concord-client</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.walmartlabs.concord</groupId>
+                <artifactId>concord-client2</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
@@ -570,11 +574,6 @@
                 <groupId>io.dropwizard.metrics</groupId>
                 <artifactId>metrics-jvm</artifactId>
                 <version>${metrics.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>io.swagger</groupId>
-                <artifactId>swagger-annotations</artifactId>
-                <version>${swagger.version}</version>
             </dependency>
             <dependency>
                 <groupId>io.takari.bpm</groupId>

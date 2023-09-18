@@ -13,6 +13,10 @@
     <artifactId>concord-client</artifactId>
     <packaging>jar</packaging>
 
+    <properties>
+        <swagger.version>1.5.20</swagger.version>
+    </properties>
+
     <dependencies>
         <dependency>
             <groupId>com.walmartlabs.concord.server</groupId>
@@ -51,6 +55,7 @@
         <dependency>
             <groupId>io.swagger</groupId>
             <artifactId>swagger-annotations</artifactId>
+            <version>${swagger.version}</version>
         </dependency>
         <dependency>
             <groupId>org.slf4j</groupId>
@@ -131,7 +136,7 @@
                         </goals>
                         <configuration>
                             <inputSpec>
-                                ${project.basedir}/../server/impl/target/classes/com/walmartlabs/concord/server/swagger/swagger.json
+                                ${project.basedir}/swagger.json
                             </inputSpec>
                             <language>java</language>
                             <languageSpecificPrimitives>
