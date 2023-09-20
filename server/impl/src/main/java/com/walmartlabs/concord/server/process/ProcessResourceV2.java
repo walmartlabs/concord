@@ -39,7 +39,15 @@ import com.walmartlabs.concord.server.security.UserPrincipal;
 import com.walmartlabs.concord.server.user.UserDao;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.Parameters;
+import io.swagger.v3.oas.annotations.enums.ParameterIn;
+import io.swagger.v3.oas.annotations.extensions.Extension;
+import io.swagger.v3.oas.annotations.extensions.ExtensionProperty;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.parameters.RequestBody;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import org.jboss.resteasy.plugins.providers.multipart.MultipartInput;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.sonatype.siesta.Resource;
@@ -54,10 +62,7 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.core.UriInfo;
-import java.util.Collections;
-import java.util.List;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 
 import static com.walmartlabs.concord.server.Utils.unwrap;
 
@@ -127,7 +132,14 @@ public class ProcessResourceV2 implements Resource {
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     @WithTimer
-    @Operation(description = "List processes", operationId = "listProcesses")
+    @Operation(description = "List processes", operationId = "listProcesses",
+            extensions = @Extension(name = "concord",
+                    properties = {
+                            @ExtensionProperty(name = "groupParams", value = "true"),
+                            @ExtensionProperty(name = "groupName", value = "ProcessListFilter")
+                    }))
+    @Parameters()
+    @Parameter(name = "meta", in = ParameterIn.QUERY, schema = @Schema(implementation = Map.class), extensions = @Extension(name = "concord", properties = @ExtensionProperty(name = "customQueryParams", value = "true")))
     public List<ProcessEntry> list(@QueryParam("orgId") UUID orgId,
                                    @QueryParam("orgName") String orgName,
                                    @QueryParam("projectId") UUID projectId,

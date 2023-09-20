@@ -80,7 +80,7 @@ public class ProcessCheckpointResource implements Resource {
     @Path("{id}/checkpoint")
     @Produces(MediaType.APPLICATION_JSON)
     @WithTimer
-    @Operation(description = "List the process checkpoints")
+    @Operation(description = "List the process checkpoints", operationId = "listCheckpoints")
     public List<ProcessCheckpointEntry> list(@PathParam("id") UUID instanceId) {
         ProcessEntry entry = processManager.assertProcess(instanceId);
         ProcessKey processKey = new ProcessKey(entry.instanceId(), entry.createdAt());
