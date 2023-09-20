@@ -22,7 +22,7 @@ package com.walmartlabs.concord.client2.impl;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.walmartlabs.concord.ApiException;
+import com.walmartlabs.concord.client2.ApiException;
 
 import java.io.IOException;
 import java.io.InputStream;

@@ -20,8 +20,6 @@ package com.walmartlabs.concord.client2;
  * =====
  */
 
-import com.walmartlabs.concord.ApiException;
-import com.walmartlabs.concord.ApiResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

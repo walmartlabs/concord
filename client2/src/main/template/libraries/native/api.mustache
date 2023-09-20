@@ -197,6 +197,13 @@ public class {{classname}} {
   {{#isDeprecated}}
   @Deprecated
   {{/isDeprecated}}
+
+  {{#vendorExtensions.x-concord.groupParams}}
+  public {{#returnType}}{{#asyncNative}}CompletableFuture<{{{returnType}}}>{{/asyncNative}}{{^asyncNative}}{{{returnType}}}{{/asyncNative}}{{/returnType}}{{^returnType}}{{#asyncNative}}CompletableFuture<Void>{{/asyncNative}}{{^asyncNative}}void{{/asyncNative}}{{/returnType}} {{operationId}}({{vendorExtensions.x-concord.groupName}} in) throws ApiException {
+      return {{operationId}}({{#isMultipart}}{{#allParams}}{{^isFormParam}}in.{{paramName}}(),{{/isFormParam}}{{/allParams}} multipartInput{{/isMultipart}}{{^isMultipart}}{{#allParams}}in.{{paramName}}(){{^-last}}, {{/-last}} {{/allParams}}{{/isMultipart}});
+  }
+  {{/vendorExtensions.x-concord.groupParams}}
+
   public {{#returnType}}{{#asyncNative}}CompletableFuture<{{{returnType}}}>{{/asyncNative}}{{^asyncNative}}{{{returnType}}}{{/asyncNative}}{{/returnType}}{{^returnType}}{{#asyncNative}}CompletableFuture<Void>{{/asyncNative}}{{^asyncNative}}void{{/asyncNative}}{{/returnType}} {{operationId}}({{#isMultipart}}{{#allParams}}{{^isFormParam}}{{{dataType}}} {{paramName}},{{/isFormParam}}{{/allParams}} Map<String, Object> multipartInput{{/isMultipart}}{{^isMultipart}}{{#allParams}} {{{dataType}}} {{paramName}}{{^-last}}, {{/-last}} {{/allParams}}{{/isMultipart}}) throws ApiException {
     {{^asyncNative}}
     {{#returnType}}ApiResponse<{{{.}}}> localVarResponse = {{/returnType}}{{operationId}}WithHttpInfo({{#isMultipart}}{{#allParams}}{{^isFormParam}}{{paramName}},{{/isFormParam}}{{/allParams}} multipartInput{{/isMultipart}}{{^isMultipart}}{{#allParams}}{{paramName}}{{^-last}}, {{/-last}} {{/allParams}}{{/isMultipart}});
@@ -371,6 +378,13 @@ public class {{classname}} {
     {{javaUtilPrefix}}List<Pair> localVarQueryParams = new {{javaUtilPrefix}}ArrayList<>();
     {{javaUtilPrefix}}StringJoiner localVarQueryStringJoiner = new {{javaUtilPrefix}}StringJoiner("&");
     {{#queryParams}}
+         {{#vendorExtensions.x-concord.customQueryParams}}
+    if ({{paramName}} != null) {
+        for (Map.Entry<String, Object> e : {{paramName}}.entrySet()) {
+            localVarQueryParams.addAll(ApiClient.parameterToPairs(e.getKey(), e.getValue()));
+        }
+    }
+         {{/vendorExtensions.x-concord.customQueryParams}}
       {{#collectionFormat}}
     localVarQueryParams.addAll(ApiClient.parameterToPairs("{{{collectionFormat}}}", "{{baseName}}", {{paramName}}));
       {{/collectionFormat}}
@@ -406,7 +420,9 @@ public class {{classname}} {
     localVarQueryStringJoiner.add({{paramName}}.toUrlQueryString());
                 {{/isModel}}
                 {{^isModel}}
+    {{^vendorExtensions.x-concord.customQueryParams}}
     localVarQueryParams.addAll(ApiClient.parameterToPairs("{{baseName}}", {{paramName}}));
+    {{/vendorExtensions.x-concord.customQueryParams}}
                 {{/isModel}}
                 {{/hasVars}}
             {{/isExplode}}

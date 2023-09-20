@@ -21,8 +21,6 @@ package com.walmartlabs.concord.client2;
  */
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.walmartlabs.concord.ApiClient;
-import com.walmartlabs.concord.client2.ProjectEntry;
 import org.junit.jupiter.api.Test;
 
 import java.text.SimpleDateFormat;

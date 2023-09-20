@@ -20,8 +20,6 @@ package com.walmartlabs.concord.client2;
  * =====
  */
 
-import com.walmartlabs.concord.ApiClient;
-
 public interface ApiClientFactory {
 
     ApiClient create(ApiClientConfiguration cfg);
