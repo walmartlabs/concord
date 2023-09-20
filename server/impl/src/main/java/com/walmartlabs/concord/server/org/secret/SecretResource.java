@@ -142,33 +142,6 @@ public class SecretResource implements Resource {
         }
     }
 
-//    public static class CreateSecretRequest {
-//
-//        private final SecretType type;
-//
-//        private final String name;
-//
-//        @Schema(type = "string", format = "binary", description = "privateKey")
-//        private final InputStream privateKey;
-//
-//        public CreateSecretRequest(SecretType type, String name, InputStream privateKey) {
-//            this.type = type;
-//            this.name = name;
-//            this.privateKey = privateKey;
-//        }
-//
-//        public SecretType getType() {
-//            return type;
-//        }
-//
-//        public String getName() {
-//            return name;
-//        }
-//
-//        public InputStream getPrivateKey() {
-//            return privateKey;
-//        }
-//    }
 
     @POST
     @Path("/{orgName}/secret/{secretName}")
