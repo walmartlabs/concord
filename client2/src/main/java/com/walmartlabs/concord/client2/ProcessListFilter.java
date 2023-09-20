@@ -20,51 +20,92 @@ package com.walmartlabs.concord.client2;
  * =====
  */
 
-import com.walmartlabs.concord.server.OffsetDateTimeParam;
-import com.walmartlabs.concord.server.process.ProcessDataInclude;
-import com.walmartlabs.concord.server.sdk.ProcessStatus;
-import io.swagger.v3.oas.annotations.Parameter;
-import io.swagger.v3.oas.annotations.enums.ParameterIn;
-import io.swagger.v3.oas.annotations.extensions.Extension;
-import io.swagger.v3.oas.annotations.extensions.ExtensionProperty;
+import com.walmartlabs.concord.client2.ImmutableProcessListFilter;
+import com.walmartlabs.concord.client2.ProcessDataInclude;
 import org.immutables.value.Value;
 
+import javax.annotation.Nullable;
+import java.time.OffsetDateTime;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
 @Value.Immutable
-public interface ListProcessFilter {
+@Value.Style(jdkOnly = true)
+public interface ProcessListFilter {
 
+    @Nullable
     UUID orgId();
 
+    @Nullable
     String orgName();
 
+    @Nullable
     UUID projectId();
 
+    @Nullable
     String projectName();
 
+    @Nullable
     UUID repoId();
 
+    @Nullable
     String repoName();
 
+    @Nullable
     OffsetDateTimeParam afterCreatedAt();
 
+    @Nullable
     OffsetDateTimeParam beforeCreatedAt();
 
+    @Nullable
     Set<String> tags();
 
-    ProcessStatus status();
+    @Nullable
+    String status();
 
+    @Nullable
     String initiator();
 
+    @Nullable
     UUID parentInstanceId();
 
-    Set<ProcessDataInclude> include();
+    @Nullable
+    Set<String> include();
 
+    @Nullable
     Integer limit();
 
+    @Nullable
     Integer offset();
 
-    Map<String, String> meta();
+    @Nullable
+    Map<String, Object> meta();
+
+    class Builder extends ImmutableProcessListFilter.Builder {
+
+        public Builder status(ProcessEntry.StatusEnum status) {
+            return status(status.getValue());
+        }
+
+        public Builder addInclude(ProcessDataInclude... elements) {
+            for (ProcessDataInclude e : elements) {
+                addInclude(e.getValue());
+            }
+            return this;
+        }
+
+        public Builder afterCreatedAt(OffsetDateTime afterCreatedAt) {
+            if (afterCreatedAt == null) {
+                return this;
+            }
+
+            afterCreatedAt(new OffsetDateTimeParam().value(afterCreatedAt));
+            return this;
+        }
+    }
+
+    static ImmutableProcessListFilter.Builder builder() {
+        return new Builder();
+    }
 }

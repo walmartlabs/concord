@@ -20,11 +20,56 @@ package com.walmartlabs.concord.client2;
  * =====
  */
 
-import com.walmartlabs.concord.ApiClient;
+import javax.net.ssl.*;
+import java.net.http.HttpClient;
+import java.security.GeneralSecurityException;
+import java.security.SecureRandom;
+import java.security.cert.X509Certificate;
 
 public class ConcordApiClient extends ApiClient {
 
+    private boolean verifyingSsl = true;
+    private SSLContext sslContext;
+
     public ConcordApiClient(String baseUrl) {
         updateBaseUri(baseUrl);
+    }
+
+    public ApiClient setVerifyingSsl(boolean verifyingSsl) {
+        this.verifyingSsl = verifyingSsl;
+        applySslSettings();
+        return this;
+    }
+
+    @Override
+    protected HttpClient.Builder createDefaultHttpClientBuilder() {
+        HttpClient.Builder result = super.createDefaultHttpClientBuilder();
+        if (sslContext != null) {
+            result.sslContext(sslContext);
+        }
+        return result;
+    }
+
+    private void applySslSettings() {
+        try {
+            TrustManager[] trustManagers;
+            if (!verifyingSsl) {
+                TrustManager trustAll = new X509TrustManager() {
+                    @Override
+                    public void checkClientTrusted(X509Certificate[] chain, String authType) {}
+                    @Override
+                    public void checkServerTrusted(X509Certificate[] chain, String authType) {}
+                    @Override
+                    public X509Certificate[] getAcceptedIssuers() { return null; }
+                };
+                SSLContext sslContext = SSLContext.getInstance("TLS");
+                trustManagers = new TrustManager[]{ trustAll };
+                System.getProperties().setProperty("jdk.internal.httpclient.disableHostnameVerification", Boolean.TRUE.toString());
+
+                sslContext.init(null, trustManagers, new SecureRandom());
+            }
+        } catch (GeneralSecurityException e) {
+            throw new RuntimeException(e);
+        }
     }
 }

@@ -124,6 +124,8 @@
                             <generatorName>java</generatorName>
                             <apiPackage>com.walmartlabs.concord.client2</apiPackage>
                             <modelPackage>com.walmartlabs.concord.client2</modelPackage>
+                            <packageName>com.walmartlabs.concord.client2</packageName>
+                            <invokerPackage>com.walmartlabs.concord.client2</invokerPackage>
                             <configOptions>
                                 <sourceFolder>src/gen/java/main</sourceFolder>
                                 <dateLibrary>java8</dateLibrary>

@@ -2,4 +2,4 @@ openAPI:
   info:
     version: '2.0'
     title: Concord Ansible API
-    description: Concord Server API
+    description: Concord Ansible API

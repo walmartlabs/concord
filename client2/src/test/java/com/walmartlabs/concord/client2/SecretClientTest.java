@@ -22,7 +22,6 @@ package com.walmartlabs.concord.client2;
 
 import com.github.tomakehurst.wiremock.junit5.WireMockRuntimeInfo;
 import com.github.tomakehurst.wiremock.junit5.WireMockTest;
-import com.walmartlabs.concord.ApiClient;
 import com.walmartlabs.concord.client2.impl.auth.ApiKey;
 import com.walmartlabs.concord.common.secret.BinaryDataSecret;
 import com.walmartlabs.concord.sdk.Constants;
