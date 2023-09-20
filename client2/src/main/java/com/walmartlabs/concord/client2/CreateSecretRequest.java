@@ -21,6 +21,9 @@ package com.walmartlabs.concord.client2;
  */
 
 
+import com.walmartlabs.concord.client2.ImmutableCreateSecretRequest;
+import com.walmartlabs.concord.client2.ImmutableKeyPair;
+import com.walmartlabs.concord.client2.ImmutableUsernamePassword;
 import org.immutables.value.Value;
 
 import javax.annotation.Nullable;

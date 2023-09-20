@@ -20,7 +20,6 @@ package com.walmartlabs.concord.client2;
  * =====
  */
 
-import com.walmartlabs.concord.ApiClient;
 import com.walmartlabs.concord.client2.impl.auth.ApiKey;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
