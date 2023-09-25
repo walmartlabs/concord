@@ -80,7 +80,6 @@ public class SsoHandler implements AuthenticationHandler {
             return new SsoToken(as[0], as[1], profile.displayName(), profile.mail(), profile.userPrincipalName(), profile.nameInNamespace(), profile.groups());
 
         } catch (IOException e) {
-
             return null;
         }
     }
