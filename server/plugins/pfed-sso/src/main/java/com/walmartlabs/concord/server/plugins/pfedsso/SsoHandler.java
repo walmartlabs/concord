@@ -56,29 +56,34 @@ public class SsoHandler implements AuthenticationHandler {
 
         HttpServletRequest req = WebUtils.toHttp(request);
 
-        String token = SsoCookies.getTokenCookie(req);
-        if (token == null) {
+        String bearerToken = extractTokenFromRequest(req);
+        String incomingToken = bearerToken != null ? bearerToken : SsoCookies.getTokenCookie(req);
+
+        if (incomingToken == null) {
             return null;
         }
 
-        String login = jwtAuthenticator.validateTokenAndGetLogin(token);
+        //TODO: If token comes in from bearer token, then this should be an access_token.
+        // Use this directly to get the user profile i.e. ssoClient.getProfile(accessToken);
+
+        String login = jwtAuthenticator.validateTokenAndGetLogin(incomingToken);
         if (login == null) {
             return null;
         }
 
-        String[] as = parseDomain(login);
+        String[] as = parseDomain(login); //TODO: Can we not get this info from userInfo endpoint? i.e. SsoClient.Profile
 
-        String refreshToken = SsoCookies.getRefreshCookie(req);
-        // get userprofile send the response as null if refreshToken is expired or used
         SsoClient.Profile profile;
         try {
-            profile = ssoClient.getUserProfile(refreshToken);
+            profile = bearerToken != null ? ssoClient.getProfile(bearerToken) : ssoClient.getUserProfileFromRefreshToken(incomingToken);
+
         } catch (IOException e) {
             return null;
         }
         if (profile == null) {
             return null;
         }
+        //TODO: User name and domain should be returned by the userInfo endpoint(profile) "sub". Do we really need these two? as[0], as[1]
         return new SsoToken(as[0], as[1], profile.displayName(), profile.mail(), profile.userPrincipalName(), profile.nameInNamespace(), profile.groups());
     }
 
@@ -111,5 +116,21 @@ public class SsoHandler implements AuthenticationHandler {
         String username = s.substring(0, pos);
         String domain = s.substring(pos + 1);
         return new String[]{username, domain};
+    }
+
+    private String extractTokenFromRequest(HttpServletRequest request) {
+        final String value = request.getHeader("Authorization");
+
+        if (value == null || !value.toLowerCase().startsWith("bearer")) {
+            return null;
+        }
+
+        String[] parts = value.split(" ");
+
+        if (parts.length < 2) {
+            return null;
+        }
+
+        return parts[1].trim();
     }
 }
