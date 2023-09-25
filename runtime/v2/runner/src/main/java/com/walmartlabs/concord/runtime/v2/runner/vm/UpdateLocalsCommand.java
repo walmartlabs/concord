@@ -29,11 +29,12 @@ import com.walmartlabs.concord.svm.*;
 
 import java.util.Collection;
 import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 
 /**
  * Takes the input, interpolates its values and sets the result
- * as the current frame's local variables.
+ * to all root frame's local variables.
  * <p/>
  * Optionally takes a list of threads which root frames should be
  * updated with provided variables.
@@ -86,8 +87,13 @@ public class UpdateLocalsCommand implements Command {
         Map<String, Object> m = ee.evalAsMap(ecf.scope(ctx), input);
 
         for (ThreadId tid : threads) {
-            Frame root = VMUtils.assertNearestRoot(state, tid);
-            VMUtils.putLocals(root, m);
+            List<Frame> frames = state.getFrames(tid);
+
+            for (Frame f : frames) {
+                if (f.getType() == FrameType.ROOT) {
+                    VMUtils.putLocals(f, m);
+                }
+            }
         }
     }
 }
