@@ -113,22 +113,7 @@ public class JwtAuthenticator {
         }
     }
 
-    /**
-     * Validates the token and returns the corresponding user login.
-     *
-     * @param token the JWT
-     * @return corresponding user login or <code>null</code> if the JWT is invalid
-     */
-    public String validateTokenAndGetLogin(String token) {
-        Map<String, Object> claims = validateTokenAndGetClaims(token);
-        if (claims == null) {
-            return null;
-        }
-        return (String) claims.get("sub");
-    }
-
-    private Map<String, Object> validateTokenAndGetClaims(String token) {
-
+    public Map<String, Object> validateTokenAndGetClaims(String token) {
         try {
             JWT jwt = validateToken(token);
             if (jwt == null) {

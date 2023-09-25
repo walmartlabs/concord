@@ -57,30 +57,32 @@ public class SsoHandler implements AuthenticationHandler {
         HttpServletRequest req = WebUtils.toHttp(request);
 
         String bearerToken = extractTokenFromRequest(req);
-        String incomingToken = bearerToken != null ? bearerToken : SsoCookies.getTokenCookie(req);
+        String token = bearerToken != null ? bearerToken : SsoCookies.getTokenCookie(req);
 
-        if (incomingToken == null) {
+        if (token == null) {
             return null;
         }
 
-        String login = jwtAuthenticator.validateTokenAndGetLogin(incomingToken);
-        if (login == null) {
+        if (!jwtAuthenticator.isTokenValid(token)) {
             return null;
         }
 
-        String[] as = parseDomain(login);
-
-        SsoClient.Profile profile;
         try {
-            profile = bearerToken != null ? ssoClient.getProfile(bearerToken) : ssoClient.getUserProfileFromRefreshToken(incomingToken);
+            SsoClient.Profile profile = bearerToken != null ? ssoClient.getProfile(bearerToken) :
+                    ssoClient.getUserProfileByRefreshToken(SsoCookies.getRefreshCookie(req));
+
+            if (profile == null) {
+                return null;
+            }
+
+            String[] as = parseDomain(profile.sub());
+
+            return new SsoToken(as[0], as[1], profile.displayName(), profile.mail(), profile.userPrincipalName(), profile.nameInNamespace(), profile.groups());
 
         } catch (IOException e) {
+
             return null;
         }
-        if (profile == null) {
-            return null;
-        }
-        return new SsoToken(as[0], as[1], profile.displayName(), profile.mail(), profile.userPrincipalName(), profile.nameInNamespace(), profile.groups());
     }
 
     @Override

@@ -126,7 +126,7 @@ public class SsoClient {
         }
     }
 
-    public Profile getUserProfileFromRefreshToken(String refreshToken) throws IOException {
+    public Profile getUserProfileByRefreshToken(String refreshToken) throws IOException {
         Token token = getTokenByRefreshToken(refreshToken);
         return getProfile(token.accessToken());
     }
@@ -239,6 +239,9 @@ public class SsoClient {
     @JsonDeserialize(as = ImmutableProfile.class)
     @JsonIgnoreProperties(ignoreUnknown = true)
     public interface Profile {
+
+        @JsonProperty("sub")
+        String sub();
 
         @JsonProperty("sAMAccountName")
         String userId();
