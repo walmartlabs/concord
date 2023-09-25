@@ -63,15 +63,12 @@ public class SsoHandler implements AuthenticationHandler {
             return null;
         }
 
-        //TODO: If token comes in from bearer token, then this should be an access_token.
-        // Use this directly to get the user profile i.e. ssoClient.getProfile(accessToken);
-
         String login = jwtAuthenticator.validateTokenAndGetLogin(incomingToken);
         if (login == null) {
             return null;
         }
 
-        String[] as = parseDomain(login); //TODO: Can we not get this info from userInfo endpoint? i.e. SsoClient.Profile
+        String[] as = parseDomain(login);
 
         SsoClient.Profile profile;
         try {
@@ -83,7 +80,6 @@ public class SsoHandler implements AuthenticationHandler {
         if (profile == null) {
             return null;
         }
-        //TODO: User name and domain should be returned by the userInfo endpoint(profile) "sub". Do we really need these two? as[0], as[1]
         return new SsoToken(as[0], as[1], profile.displayName(), profile.mail(), profile.userPrincipalName(), profile.nameInNamespace(), profile.groups());
     }
 
