@@ -53,8 +53,9 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 {{>generatedAnnotation}}
 public class ApiClient {
 
-  private HttpClient.Builder builder;
+  private final HttpClient httpClient;
   private ObjectMapper mapper;
+  private String baseUri;
   private String scheme;
   private String host;
   private int port;
@@ -176,8 +177,8 @@ public class ApiClient {
   /**
    * Create an instance of ApiClient.
    */
-  public ApiClient() {
-    this.builder = createDefaultHttpClientBuilder();
+  public ApiClient(HttpClient httpClient) {
+    this.httpClient = httpClient;
     this.mapper = createDefaultObjectMapper();
     updateBaseUri(getDefaultBaseUri());
     interceptor = null;
@@ -187,25 +188,7 @@ public class ApiClient {
     asyncResponseInterceptor = null;
   }
 
-  /**
-   * Create an instance of ApiClient.
-   *
-   * @param builder Http client builder.
-   * @param mapper Object mapper.
-   * @param baseUri Base URI
-   */
-  public ApiClient(HttpClient.Builder builder, ObjectMapper mapper, String baseUri) {
-    this.builder = builder;
-    this.mapper = mapper;
-    updateBaseUri(baseUri != null ? baseUri : getDefaultBaseUri());
-    interceptor = null;
-    readTimeout = null;
-    connectTimeout = null;
-    responseInterceptor = null;
-    asyncResponseInterceptor = null;
-  }
-
-  protected ObjectMapper createDefaultObjectMapper() {
+  public static ObjectMapper createDefaultObjectMapper() {
     ObjectMapper mapper = new ObjectMapper();
     mapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);
     mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
@@ -238,11 +221,6 @@ public class ApiClient {
     return "{{{basePath}}}";
   }
 
-  protected HttpClient.Builder createDefaultHttpClientBuilder() {
-    return HttpClient.newBuilder()
-                .version(HttpClient.Version.HTTP_1_1);
-  }
-
   public HttpRequest.Builder requestBuilder() {
     HttpRequest.Builder result = HttpRequest.newBuilder();
     for (Map.Entry<String, String> e : defaultHeaderMap.entrySet()) {
@@ -255,11 +233,22 @@ public class ApiClient {
   }
 
   public void updateBaseUri(String baseUri) {
+    this.baseUri = baseUri;
+
     URI uri = URI.create(baseUri);
     scheme = uri.getScheme();
     host = uri.getHost();
     port = uri.getPort();
     basePath = uri.getRawPath();
+  }
+
+  public ApiClient setBaseUrl(String baseUrl) {
+    updateBaseUri(baseUrl);
+    return this;
+  }
+
+  public String getBaseUrl() {
+    return this.baseUri;
   }
 
   public ApiClient setSessionToken(String token) {
@@ -282,19 +271,6 @@ public class ApiClient {
     return this;
   }
 
-
-  /**
-   * Set a custom {@link HttpClient.Builder} object to use when creating the
-   * {@link HttpClient} that is used by the API client.
-   *
-   * @param builder Custom client builder.
-   * @return This object.
-   */
-  public ApiClient setHttpClientBuilder(HttpClient.Builder builder) {
-    this.builder = builder;
-    return this;
-  }
-
   /**
    * Get an {@link HttpClient} based on the current {@link HttpClient.Builder}.
    *
@@ -303,7 +279,7 @@ public class ApiClient {
    * @return The HTTP client.
    */
   public HttpClient getHttpClient() {
-    return builder.build();
+    return httpClient;
   }
 
   /**
@@ -482,36 +458,5 @@ public class ApiClient {
    */
   public Duration getReadTimeout() {
     return readTimeout;
-  }
-  /**
-   * Sets the connect timeout (in milliseconds) for the http client.
-   *
-   * <p> In the case where a new connection needs to be established, if
-   * the connection cannot be established within the given {@code
-   * duration}, then {@link HttpClient#send(HttpRequest,BodyHandler)
-   * HttpClient::send} throws an {@link HttpConnectTimeoutException}, or
-   * {@link HttpClient#sendAsync(HttpRequest,BodyHandler)
-   * HttpClient::sendAsync} completes exceptionally with an
-   * {@code HttpConnectTimeoutException}. If a new connection does not
-   * need to be established, for example if a connection can be reused
-   * from a previous request, then this timeout duration has no effect.
-   *
-   * @param connectTimeout connection timeout in milliseconds
-   *
-   * @return This object.
-   */
-  public ApiClient setConnectTimeout(Duration connectTimeout) {
-    this.connectTimeout = connectTimeout;
-    this.builder.connectTimeout(connectTimeout);
-    return this;
-  }
-
-  /**
-   * Get connection timeout (in milliseconds).
-   *
-   * @return Timeout in milliseconds
-   */
-  public Duration getConnectTimeout() {
-    return connectTimeout;
   }
 }

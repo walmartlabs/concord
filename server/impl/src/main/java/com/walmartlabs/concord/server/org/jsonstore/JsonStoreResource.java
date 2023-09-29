@@ -81,7 +81,7 @@ public class JsonStoreResource implements Resource {
     @GET
     @Path("/{orgName}/jsonstore/{storeName}")
     @Produces(MediaType.APPLICATION_JSON)
-    @Operation(description = "Get an existing store", operationId = "getJsonStores")
+    @Operation(description = "Get an existing store", operationId = "getJsonStore")
     public JsonStoreEntry get(@PathParam("orgName") @ConcordKey String orgName,
                               @PathParam("storeName") @ConcordKey String storeName) {
 
@@ -99,7 +99,7 @@ public class JsonStoreResource implements Resource {
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     @Validate
-    @Operation(description = "Create or update a store", operationId = "createOrUpdateJsonStores")
+    @Operation(description = "Create or update a store", operationId = "createOrUpdateJsonStore")
     public GenericOperationResult createOrUpdate(@PathParam("orgName") @ConcordKey String orgName,
                                                  @Valid JsonStoreRequest entry) {
 
@@ -116,7 +116,7 @@ public class JsonStoreResource implements Resource {
     @DELETE
     @Path("/{orgName}/jsonstore/{storeName}")
     @Produces(MediaType.APPLICATION_JSON)
-    @Operation(description = "Delete an existing store", operationId = "deleteJsonStores")
+    @Operation(description = "Delete an existing store", operationId = "deleteJsonStore")
     public GenericOperationResult delete(@PathParam("orgName") @ConcordKey String orgName,
                                          @PathParam("storeName") @ConcordKey String storeName) {
 
@@ -144,7 +144,7 @@ public class JsonStoreResource implements Resource {
     @Path("/{orgName}/jsonstore/{storeName}/access")
     @Produces(MediaType.APPLICATION_JSON)
     @Validate
-    @Operation(description = "Get a store's team access parameters", operationId = "getJsonStoresAccessLevel")
+    @Operation(description = "Get a store's team access parameters", operationId = "getJsonStoreAccessLevel")
     public List<ResourceAccessEntry> getAccessLevel(@PathParam("orgName") @ConcordKey String orgName,
                                                     @PathParam("storeName") @ConcordKey String storeName) {
 
@@ -156,7 +156,7 @@ public class JsonStoreResource implements Resource {
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     @Validate
-    @Operation(description = "Updates the access level for the specified store and team", operationId = "bulkUpdateJsonStoresAccessLevel")
+    @Operation(description = "Updates the access level for the specified store and team", operationId = "bulkUpdateJsonStoreAccessLevel")
     public GenericOperationResult updateAccessLevel(@PathParam("orgName") @ConcordKey String orgName,
                                                     @PathParam("storeName") @ConcordKey String storeName,
                                                     @Valid Collection<ResourceAccessEntry> entries) {
@@ -176,7 +176,7 @@ public class JsonStoreResource implements Resource {
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     @Validate
-    @Operation(description = "Updates the access level for the specified store and team", operationId = "updateJsonStoresAccessLevel")
+    @Operation(description = "Updates the access level for the specified store and team", operationId = "updateJsonStoreAccessLevel")
     public GenericOperationResult updateAccessLevel(@PathParam("orgName") @ConcordKey String orgName,
                                                     @PathParam("storeName") @ConcordKey String storeName,
                                                     @Valid ResourceAccessEntry entry) {

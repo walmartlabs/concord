@@ -63,7 +63,7 @@ public class JsonStoreQueryResource implements Resource {
     @GET
     @Path("/{orgName}/jsonstore/{storeName}/query/{queryName}")
     @Produces(MediaType.APPLICATION_JSON)
-    @Operation(description = "Get an existing JSON store query", operationId = "getJsonStore")
+    @Operation(description = "Get an existing JSON store query", operationId = "getJsonStoreQuery")
     public JsonStoreQueryEntry get(@PathParam("orgName") @ConcordKey String orgName,
                                    @PathParam("storeName") @ConcordKey String storeName,
                                    @PathParam("queryName") @ConcordKey String queryName) {
@@ -83,7 +83,7 @@ public class JsonStoreQueryResource implements Resource {
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     @Path("/{orgName}/jsonstore/{storeName}/query")
-    @Operation(description = "Create or update a JSON store query", operationId = "createOrUpdateJsonStore")
+    @Operation(description = "Create or update a JSON store query", operationId = "createOrUpdateJsonStoreQuery")
     public GenericOperationResult createOrUpdate(@PathParam("orgName") @ConcordKey String orgName,
                                                  @PathParam("storeName") @ConcordKey String storeName,
                                                  @Valid JsonStoreQueryRequest entry) {
