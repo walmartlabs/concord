@@ -45,7 +45,7 @@ public class SecretClientTest {
                         .withHeader(Constants.Headers.SECRET_TYPE, SecretEntryV2.TypeEnum.DATA.name())
                         .withBody("Hello!")));
 
-        ApiClient apiClient = new ConcordApiClient("http://localhost:" + wmRuntimeInfo.getHttpPort());
+        ApiClient apiClient = new DefaultApiClientFactory("http://localhost:" + wmRuntimeInfo.getHttpPort()).create();
         SecretClient secretClient = new SecretClient(apiClient);
 
         try {
@@ -58,7 +58,7 @@ public class SecretClientTest {
     @Test
     @Disabled
     public void testGetSecret() throws Exception {
-        ApiClient apiClient = new ConcordApiClient("http://localhost:8001");
+        ApiClient apiClient = new DefaultApiClientFactory("http://localhost:8001").create();
         apiClient.setAuth(new ApiKey("cTFxMXExcTE"));
         SecretClient secretClient = new SecretClient(apiClient);
 

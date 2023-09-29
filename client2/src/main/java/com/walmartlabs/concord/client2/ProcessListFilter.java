@@ -80,7 +80,7 @@ public interface ProcessListFilter {
     Integer offset();
 
     @Nullable
-    Map<String, Object> meta();
+    Map<String, String> meta();
 
     class Builder extends ImmutableProcessListFilter.Builder {
 

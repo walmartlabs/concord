@@ -34,7 +34,7 @@ public class ApiClientJsonTest {
 
     @Test
     public void testParseDate() throws Exception {
-        ObjectMapper om = new ApiClient().getObjectMapper();
+        ObjectMapper om = ApiClient.createDefaultObjectMapper();
 
         Date date = new Date(1587500112000L);
         OffsetDateTime offsetDateTime = date.toInstant().atOffset(ZoneOffset.UTC);
@@ -55,8 +55,7 @@ public class ApiClientJsonTest {
         ProjectEntry project = new ProjectEntry()
                 .name("");
 
-        ApiClient apiClient = new ApiClient();
-        String str = apiClient.getObjectMapper().writeValueAsString(project);
+        String str = ApiClient.createDefaultObjectMapper().writeValueAsString(project);
         assertEquals("{\"name\":\"\"}", str);
     }
 }

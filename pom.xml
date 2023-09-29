@@ -383,9 +383,9 @@
                     <version>3.0.2</version>
                 </plugin>
                 <plugin>
-                    <groupId>io.swagger</groupId>
-                    <artifactId>swagger-codegen-maven-plugin</artifactId>
-                    <version>2.3.1</version>
+                    <groupId>org.openapitools</groupId>
+                    <artifactId>openapi-generator-maven-plugin</artifactId>
+                    <version>7.0.1</version>
                 </plugin>
                 <plugin>
                     <groupId>pl.project13.maven</groupId>
