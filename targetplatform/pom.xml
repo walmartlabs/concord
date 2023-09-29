@@ -54,8 +54,6 @@
         <graalvm.version>22.0.0.2</graalvm.version>
         <greenmail.version>1.6.5</greenmail.version>
         <groovy.version>2.5.17</groovy.version>
-        <gson.fire.version>1.8.3</gson.fire.version>
-        <gson.version>2.10</gson.version>
         <guava.version>31.1-jre</guava.version>
         <guice.version>5.1.0</guice.version>
         <hibernate.validator.version>6.1.5.Final</hibernate.validator.version>
@@ -106,9 +104,6 @@
         <mockito.version>4.9.0</mockito.version>
         <mustache.version>0.9.10</mustache.version>
         <nimbus.jwt.version>8.8</nimbus.jwt.version>
-        <okhttp.version>2.7.5</okhttp.version>
-        <okhttp3.version>3.14.9</okhttp3.version>
-        <okio.version>1.17.2</okio.version>
         <ollie.version>0.0.37</ollie.version>
         <pac4j.version>4.0.0-RC3</pac4j.version>
         <parc.version>0.1.2</parc.version>
@@ -134,6 +129,7 @@
     <dependencyManagement>
         <dependencies>
             <!-- Concord -->
+            <!-- deprecated -->
             <dependency>
                 <groupId>com.walmartlabs.concord</groupId>
                 <artifactId>concord-client</artifactId>
@@ -339,9 +335,15 @@
                 <artifactId>concord-oneops-plugin</artifactId>
                 <version>${project.version}</version>
             </dependency>
+            <!-- deprecated -->
             <dependency>
                 <groupId>com.walmartlabs.concord.server.plugins.ansible</groupId>
                 <artifactId>concord-ansible-plugin-client</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.walmartlabs.concord.server.plugins.ansible</groupId>
+                <artifactId>concord-ansible-plugin-client2</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
@@ -367,6 +369,11 @@
             <dependency>
                 <groupId>com.walmartlabs.concord.server.plugins.noderoster</groupId>
                 <artifactId>concord-noderoster-plugin-client</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.walmartlabs.concord.server.plugins.noderoster</groupId>
+                <artifactId>concord-noderoster-plugin-client2</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
@@ -468,16 +475,6 @@
                 <groupId>io.prometheus</groupId>
                 <artifactId>simpleclient_hotspot</artifactId>
                 <version>${prometheus.simpleclient.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.google.code.gson</groupId>
-                <artifactId>gson</artifactId>
-                <version>${gson.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>io.gsonfire</groupId>
-                <artifactId>gson-fire</artifactId>
-                <version>${gson.fire.version}</version>
             </dependency>
             <dependency>
                 <groupId>ch.qos.logback</groupId>
@@ -993,26 +990,6 @@
                 <groupId>com.typesafe</groupId>
                 <artifactId>config</artifactId>
                 <version>${config.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.squareup.okio</groupId>
-                <artifactId>okio</artifactId>
-                <version>${okio.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.squareup.okhttp</groupId>
-                <artifactId>okhttp</artifactId>
-                <version>${okhttp.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.squareup.okhttp</groupId>
-                <artifactId>logging-interceptor</artifactId>
-                <version>${okhttp.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.squareup.okhttp3</groupId>
-                <artifactId>okhttp</artifactId>
-                <version>${okhttp3.version}</version>
             </dependency>
             <dependency>
                 <groupId>org.ini4j</groupId>
