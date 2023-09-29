@@ -15,29 +15,38 @@
 
     <properties>
         <swagger.version>1.5.20</swagger.version>
+        <gson.version>2.10</gson.version>
+        <gson.fire.version>1.8.3</gson.fire.version>
+        <okhttp.version>2.7.5</okhttp.version>
+        <okio.version>1.17.2</okio.version>
     </properties>
 
     <dependencies>
         <dependency>
             <groupId>com.walmartlabs.concord</groupId>
             <artifactId>concord-client</artifactId>
+            <version>${project.version}</version>
         </dependency>
 
         <dependency>
             <groupId>com.squareup.okhttp</groupId>
             <artifactId>okhttp</artifactId>
+            <version>${okhttp.version}</version>
         </dependency>
         <dependency>
             <groupId>com.squareup.okhttp</groupId>
             <artifactId>logging-interceptor</artifactId>
+            <version>${okhttp.version}</version>
         </dependency>
         <dependency>
             <groupId>com.squareup.okio</groupId>
             <artifactId>okio</artifactId>
+            <version>${okio.version}</version>
         </dependency>
         <dependency>
             <groupId>com.google.code.gson</groupId>
             <artifactId>gson</artifactId>
+            <version>${gson.version}</version>
         </dependency>
         <dependency>
             <groupId>io.swagger</groupId>
@@ -47,6 +56,7 @@
         <dependency>
             <groupId>io.gsonfire</groupId>
             <artifactId>gson-fire</artifactId>
+            <version>${gson.fire.version}</version>
         </dependency>
 
         <!-- JDK9+ compatibility -->
