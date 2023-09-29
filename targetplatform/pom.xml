@@ -1162,6 +1162,12 @@
                 <groupId>ca.ibodrov.concord</groupId>
                 <artifactId>testcontainers-concord-core</artifactId>
                 <version>${testcontainers.concord.version}</version>
+                <exclusions>
+                    <exclusion>
+                        <groupId>com.google.code.gson</groupId>
+                        <artifactId>gson</artifactId>
+                    </exclusion>
+                </exclusions>
             </dependency>
             <dependency>
                 <groupId>ca.ibodrov.concord</groupId>
