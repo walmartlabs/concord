@@ -59,10 +59,6 @@ public class {{classname}} {
 
   private final ApiClient apiClient;
 
-  public {{classname}}() {
-    this(new ApiClient());
-  }
-
   public {{classname}}(ApiClient apiClient) {
     memberVarHttpClient = apiClient.getHttpClient();
     memberVarObjectMapper = apiClient.getObjectMapper();
@@ -204,7 +200,7 @@ public class {{classname}} {
   }
   {{/vendorExtensions.x-concord.groupParams}}
 
-  public {{#returnType}}{{#asyncNative}}CompletableFuture<{{{returnType}}}>{{/asyncNative}}{{^asyncNative}}{{{returnType}}}{{/asyncNative}}{{/returnType}}{{^returnType}}{{#asyncNative}}CompletableFuture<Void>{{/asyncNative}}{{^asyncNative}}void{{/asyncNative}}{{/returnType}} {{operationId}}({{#isMultipart}}{{#allParams}}{{^isFormParam}}{{{dataType}}} {{paramName}},{{/isFormParam}}{{/allParams}} Map<String, Object> multipartInput{{/isMultipart}}{{^isMultipart}}{{#allParams}} {{{dataType}}} {{paramName}}{{^-last}}, {{/-last}} {{/allParams}}{{/isMultipart}}) throws ApiException {
+  public {{#returnType}}{{#asyncNative}}CompletableFuture<{{{returnType}}}>{{/asyncNative}}{{^asyncNative}}{{{returnType}}}{{/asyncNative}}{{/returnType}}{{^returnType}}{{#asyncNative}}CompletableFuture<Void>{{/asyncNative}}{{^asyncNative}}void{{/asyncNative}}{{/returnType}} {{operationId}}({{#isMultipart}}{{#allParams}}{{^isFormParam}}{{#vendorExtensions.x-concord.customQueryParams}}Map<String, String>{{/vendorExtensions.x-concord.customQueryParams}}{{^vendorExtensions.x-concord.customQueryParams}}{{{dataType}}}{{/vendorExtensions.x-concord.customQueryParams}} {{paramName}},{{/isFormParam}}{{/allParams}} Map<String, Object> multipartInput{{/isMultipart}}{{^isMultipart}}{{#allParams}} {{#vendorExtensions.x-concord.customQueryParams}}Map<String, String>{{/vendorExtensions.x-concord.customQueryParams}}{{^vendorExtensions.x-concord.customQueryParams}}{{{dataType}}}{{/vendorExtensions.x-concord.customQueryParams}} {{paramName}}{{^-last}}, {{/-last}} {{/allParams}}{{/isMultipart}}) throws ApiException {
     {{^asyncNative}}
     {{#returnType}}ApiResponse<{{{.}}}> localVarResponse = {{/returnType}}{{operationId}}WithHttpInfo({{#isMultipart}}{{#allParams}}{{^isFormParam}}{{paramName}},{{/isFormParam}}{{/allParams}} multipartInput{{/isMultipart}}{{^isMultipart}}{{#allParams}}{{paramName}}{{^-last}}, {{/-last}} {{/allParams}}{{/isMultipart}});
     {{#returnType}}
@@ -269,7 +265,7 @@ public class {{classname}} {
   {{#isDeprecated}}
   @Deprecated
   {{/isDeprecated}}
-  public {{#asyncNative}}CompletableFuture<{{/asyncNative}}ApiResponse<{{{returnType}}}{{^returnType}}Void{{/returnType}}>{{#asyncNative}}>{{/asyncNative}} {{operationId}}WithHttpInfo({{#isMultipart}}{{#allParams}}{{^isFormParam}}{{{dataType}}} {{paramName}},{{/isFormParam}}{{/allParams}} Map<String, Object> multipartInput{{/isMultipart}}{{^isMultipart}}{{#allParams}} {{{dataType}}} {{paramName}}{{^-last}}, {{/-last}} {{/allParams}}{{/isMultipart}}) throws ApiException {
+  public {{#asyncNative}}CompletableFuture<{{/asyncNative}}ApiResponse<{{{returnType}}}{{^returnType}}Void{{/returnType}}>{{#asyncNative}}>{{/asyncNative}} {{operationId}}WithHttpInfo({{#isMultipart}}{{#allParams}}{{^isFormParam}}{{#vendorExtensions.x-concord.customQueryParams}}Map<String, String>{{/vendorExtensions.x-concord.customQueryParams}}{{^vendorExtensions.x-concord.customQueryParams}}{{{dataType}}}{{/vendorExtensions.x-concord.customQueryParams}} {{paramName}},{{/isFormParam}}{{/allParams}} Map<String, Object> multipartInput{{/isMultipart}}{{^isMultipart}}{{#allParams}} {{#vendorExtensions.x-concord.customQueryParams}}Map<String, String>{{/vendorExtensions.x-concord.customQueryParams}}{{^vendorExtensions.x-concord.customQueryParams}}{{{dataType}}}{{/vendorExtensions.x-concord.customQueryParams}} {{paramName}}{{^-last}}, {{/-last}} {{/allParams}}{{/isMultipart}}) throws ApiException {
     {{^asyncNative}}
     HttpRequest.Builder localVarRequestBuilder = {{operationId}}RequestBuilder({{#isMultipart}}{{#allParams}}{{^isFormParam}}{{paramName}},{{/isFormParam}}{{/allParams}} multipartInput{{/isMultipart}}{{^isMultipart}}{{#allParams}}{{paramName}}{{^-last}}, {{/-last}} {{/allParams}}{{/isMultipart}});
     try {
@@ -358,7 +354,7 @@ public class {{classname}} {
   }
 
 
-  private HttpRequest.Builder {{operationId}}RequestBuilder({{#isMultipart}}{{#allParams}}{{^isFormParam}}{{{dataType}}} {{paramName}},{{/isFormParam}}{{/allParams}} Map<String, Object> multipartInput{{/isMultipart}}{{^isMultipart}}{{#allParams}} {{{dataType}}} {{paramName}}{{^-last}}, {{/-last}} {{/allParams}}{{/isMultipart}}) throws ApiException {
+  private HttpRequest.Builder {{operationId}}RequestBuilder({{#isMultipart}}{{#allParams}}{{^isFormParam}}{{#vendorExtensions.x-concord.customQueryParams}}Map<String, String>{{/vendorExtensions.x-concord.customQueryParams}}{{^vendorExtensions.x-concord.customQueryParams}}{{{dataType}}}{{/vendorExtensions.x-concord.customQueryParams}} {{paramName}},{{/isFormParam}}{{/allParams}} Map<String, Object> multipartInput{{/isMultipart}}{{^isMultipart}}{{#allParams}} {{#vendorExtensions.x-concord.customQueryParams}}Map<String, String>{{/vendorExtensions.x-concord.customQueryParams}}{{^vendorExtensions.x-concord.customQueryParams}}{{{dataType}}}{{/vendorExtensions.x-concord.customQueryParams}} {{paramName}}{{^-last}}, {{/-last}} {{/allParams}}{{/isMultipart}}) throws ApiException {
     {{#allParams}}
     {{#required}}
     // verify the required parameter '{{paramName}}' is set
@@ -380,7 +376,7 @@ public class {{classname}} {
     {{#queryParams}}
          {{#vendorExtensions.x-concord.customQueryParams}}
     if ({{paramName}} != null) {
-        for (Map.Entry<String, Object> e : {{paramName}}.entrySet()) {
+        for (Map.Entry<String, String> e : {{paramName}}.entrySet()) {
             localVarQueryParams.addAll(ApiClient.parameterToPairs(e.getKey(), e.getValue()));
         }
     }
@@ -410,7 +406,7 @@ public class {{classname}} {
                         {{/isArray}}
                         {{^isArray}}
     if ({{paramName}} != null) {
-        localVarQueryParams.addAll(ApiClient.parameterToPairs("{{baseName}}", {{paramName}}.{{getter}}()));
+        localVarQueryParams.addAll(ApiClient.parameterToPairs("{{paramName}}", {{paramName}}.{{getter}}()));
     }
                         {{/isArray}}
                     {{/vars}}

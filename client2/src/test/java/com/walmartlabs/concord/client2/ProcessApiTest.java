@@ -32,9 +32,8 @@ public class ProcessApiTest {
     @Test
     @Disabled
     public void testDecrypt() throws Exception {
-        ApiClient apiClient = new ApiClient();
+        ApiClient apiClient = new DefaultApiClientFactory("http://localhost:8001").create();
         apiClient.setAuth(new ApiKey("cTFxMXExcTE="));
-        apiClient.updateBaseUri("http://localhost:8001");
 
         ProjectsApi projectsApi = new ProjectsApi(apiClient);
         EncryptValueResponse encrypted = projectsApi.encrypt("org_1692633472807_3d32f7", "project_1692633472833_a1a531", "123qwe");
