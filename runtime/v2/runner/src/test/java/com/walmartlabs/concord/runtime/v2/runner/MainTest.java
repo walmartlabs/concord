@@ -1708,6 +1708,17 @@ public class MainTest {
     }
 
     @Test
+    public void testEntrySetSerialization() throws Exception {
+        deploy("entrySetSerialization");
+
+        save(ProcessConfiguration.builder()
+                .build());
+
+        byte[] log = run();
+        assertLog(log, ".*myList: \\[k=v\\].*");
+    }
+
+    @Test
     public void testUuidFunc() throws Exception {
         deploy("uuid");
 
