@@ -1,0 +1,10 @@
+flows:
+  default:
+    - set:
+        myMap:
+          k: v
+
+    - expr: ${myMap.entrySet().stream().toList()}
+      out: myList
+
+    - log: "myList: ${myList}"

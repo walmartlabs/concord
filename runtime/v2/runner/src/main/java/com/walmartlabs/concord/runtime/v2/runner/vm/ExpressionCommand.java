@@ -22,6 +22,7 @@ package com.walmartlabs.concord.runtime.v2.runner.vm;
 
 import com.walmartlabs.concord.runtime.v2.model.Expression;
 import com.walmartlabs.concord.runtime.v2.model.ExpressionOptions;
+import com.walmartlabs.concord.runtime.v2.runner.script.VariablesSanitizer;
 import com.walmartlabs.concord.runtime.v2.sdk.EvalContextFactory;
 import com.walmartlabs.concord.runtime.v2.sdk.ExpressionEvaluator;
 import com.walmartlabs.concord.runtime.v2.sdk.Context;
@@ -58,6 +59,7 @@ public class ExpressionCommand extends StepCommand<Expression> {
         EvalContextFactory ecf = runtime.getService(EvalContextFactory.class);
         ExpressionEvaluator ee = runtime.getService(ExpressionEvaluator.class);
         Object result = ee.eval(ecf.global(ctx), expr, Object.class);
+        result = VariablesSanitizer.sanitize(result);
 
         ExpressionOptions opts = Objects.requireNonNull(step.getOptions());
         if (!opts.outExpr().isEmpty()) {
