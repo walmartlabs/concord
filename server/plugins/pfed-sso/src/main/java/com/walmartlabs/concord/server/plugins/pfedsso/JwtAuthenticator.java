@@ -39,6 +39,7 @@ import java.text.ParseException;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 
 public class JwtAuthenticator {
 
@@ -78,8 +79,8 @@ public class JwtAuthenticator {
      * @param token the JWT
      * @return <code>true</code> if token valid and not expired
      */
-    public boolean isTokenValid(String token) {
-        return isTokenValid(token, null);
+    public boolean isTokenValid(String token, boolean restrictOnClientId) {
+        return isTokenValid(token, null, restrictOnClientId);
     }
 
     /**
@@ -89,11 +90,20 @@ public class JwtAuthenticator {
      * @param nonce nonce
      * @return <code>true</code> if token valid, correct nonce and not expired
      */
-    public boolean isTokenValid(String token, String nonce) {
+    public boolean isTokenValid(String token, String nonce, boolean restrictOnClientId) {
         try {
             Map<String, Object> claims = validateTokenAndGetClaims(token);
             if (claims == null) {
                 return false;
+            }
+
+            if (restrictOnClientId) {
+                Set<String> allowedClientIds = cfg.getAllowedClientIds();
+                String clientId = (String) claims.get("client_id");
+                if(!allowedClientIds.contains(clientId)) {
+                    log.warn("isTokenValid ['{}', '{}'] -> clientId not in allowed list for bearer tokens", token, clientId);
+                    return false;
+                }
             }
 
             if (nonce == null) {

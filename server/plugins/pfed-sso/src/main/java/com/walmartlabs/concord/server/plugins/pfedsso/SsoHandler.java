@@ -56,14 +56,16 @@ public class SsoHandler implements AuthenticationHandler {
 
         HttpServletRequest req = WebUtils.toHttp(request);
 
-        String bearerToken = extractTokenFromRequest(req);
+        String bearerToken = cfg.getEnableBearerTokens() ? extractTokenFromRequest(req) : null;
         String token = bearerToken != null ? bearerToken : SsoCookies.getTokenCookie(req);
 
         if (token == null) {
             return null;
         }
 
-        if (!jwtAuthenticator.isTokenValid(token)) {
+        boolean restrictOnClientId = (bearerToken != null) && (!cfg.getAllowAllClientIds());
+
+        if (!jwtAuthenticator.isTokenValid(token, restrictOnClientId)) {
             return null;
         }
 
