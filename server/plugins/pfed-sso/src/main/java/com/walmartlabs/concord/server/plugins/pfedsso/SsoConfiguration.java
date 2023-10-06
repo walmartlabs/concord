@@ -26,6 +26,10 @@ import org.eclipse.sisu.Nullable;
 import javax.inject.Inject;
 import java.io.Serializable;
 import java.time.Duration;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 public class SsoConfiguration implements Serializable {
 
@@ -62,6 +66,14 @@ public class SsoConfiguration implements Serializable {
     @Inject
     @Config("sso.clientSecret")
     private String clientSecret;
+
+    @Inject
+    @Config("sso.pfed.bearerToken.enableBearerTokens")
+    private boolean enableBearerTokens;
+
+    @Inject
+    @Config("sso.pfed.bearerToken.allowAllClientIds")
+    private boolean allowAllClientIds;
 
     @Inject
     @Nullable
@@ -103,6 +115,10 @@ public class SsoConfiguration implements Serializable {
     @Config("sso.autoCreateUsers")
     private boolean autoCreateUsers;
 
+    @Inject
+    @Config("sso.pfed.bearerToken.allowedClientIds")
+    private Set<String> allowedClientIds;
+
     public boolean isAutoCreateUsers() {
         return autoCreateUsers;
     }
@@ -133,6 +149,14 @@ public class SsoConfiguration implements Serializable {
 
     public String getClientSecret() {
         return clientSecret;
+    }
+
+    public boolean getEnableBearerTokens() {
+        return enableBearerTokens;
+    }
+
+    public boolean getAllowAllClientIds() {
+        return allowAllClientIds;
     }
 
     public String getTokenEncryptionKey() {
@@ -170,4 +194,9 @@ public class SsoConfiguration implements Serializable {
     public String getUserInfoEndpointUrl() {
         return userInfoEndpointUrl;
     }
+
+    public Set<String> getAllowedClientIds() {
+        return allowedClientIds;
+    }
+
 }
