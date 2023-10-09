@@ -33,10 +33,8 @@ import com.walmartlabs.concord.server.process.ImportsNormalizerFactory;
 import com.walmartlabs.concord.server.repository.RepositoryManager;
 import com.walmartlabs.concord.server.sdk.ConcordApplicationException;
 import com.walmartlabs.concord.server.security.Roles;
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
-import io.swagger.annotations.ApiParam;
-import io.swagger.annotations.Authorization;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.apache.shiro.authz.UnauthorizedException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -57,8 +55,8 @@ import java.util.UUID;
 
 @Named
 @Singleton
-@Api(value = "Triggers", authorizations = {@Authorization("api_key"), @Authorization("session_key"), @Authorization("ldap")})
 @javax.ws.rs.Path("/api/v1/org")
+@Tag(name = "Triggers")
 public class TriggerResource implements Resource {
 
     private static final Logger log = LoggerFactory.getLogger(TriggerResource.class);
@@ -98,18 +96,14 @@ public class TriggerResource implements Resource {
 
     /**
      * List process trigger definitions for the specified project and repository.
-     *
-     * @param projectName
-     * @param repositoryName
-     * @return
      */
     @GET
-    @ApiOperation(value = "List trigger definitions", responseContainer = "list", response = TriggerEntry.class)
     @javax.ws.rs.Path("/{orgName}/project/{projectName}/repo/{repositoryName}/trigger")
     @Produces(MediaType.APPLICATION_JSON)
-    public List<TriggerEntry> list(@ApiParam @PathParam("orgName") @ConcordKey String orgName,
-                                   @ApiParam @PathParam("projectName") @ConcordKey String projectName,
-                                   @ApiParam @PathParam("repositoryName") @ConcordKey String repositoryName) {
+    @Operation(description = "List trigger definitions", operationId = "listTriggers")
+    public List<TriggerEntry> list(@PathParam("orgName") @ConcordKey String orgName,
+                                   @PathParam("projectName") @ConcordKey String projectName,
+                                   @PathParam("repositoryName") @ConcordKey String repositoryName) {
 
         OrganizationEntry org = orgManager.assertAccess(orgName, true);
         ProjectEntry p = assertProject(org.getId(), projectName, ResourceAccessLevel.READER, true);
@@ -122,12 +116,10 @@ public class TriggerResource implements Resource {
 
     /**
      * Refresh process trigger definitions for all projects.
-     *
-     * @return
      */
     @POST
-    @ApiOperation("Refresh trigger definitions for all projects")
     @javax.ws.rs.Path("/trigger/refresh")
+    @Operation(description = "Refresh trigger definitions for all projects", operationId = "refreshAllTriggers")
     public Response refreshAll() {
         assertAdmin();
         repositoryDao.list().parallelStream().forEach(r -> {
@@ -142,17 +134,13 @@ public class TriggerResource implements Resource {
 
     /**
      * Refresh process trigger definitions for the specified project and repository.
-     *
-     * @param projectName
-     * @param repositoryName
-     * @return
      */
     @POST
-    @ApiOperation("Refresh trigger definitions for the specified project and repository")
+    @Operation(description = "Refresh trigger definitions for the specified project and repository", operationId = "refreshTriggers")
     @javax.ws.rs.Path("/{orgName}/project/{projectName}/repo/{repositoryName}/trigger")
-    public Response refresh(@ApiParam @PathParam("orgName") @ConcordKey String orgName,
-                            @ApiParam @PathParam("projectName") @ConcordKey String projectName,
-                            @ApiParam @PathParam("repositoryName") @ConcordKey String repositoryName) {
+    public Response refresh(@PathParam("orgName") @ConcordKey String orgName,
+                            @PathParam("projectName") @ConcordKey String projectName,
+                            @PathParam("repositoryName") @ConcordKey String repositoryName) {
 
         OrganizationEntry org = orgManager.assertAccess(orgName, true);
 
