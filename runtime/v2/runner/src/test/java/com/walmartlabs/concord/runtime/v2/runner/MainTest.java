@@ -1530,6 +1530,17 @@ public class MainTest {
         assertLog(log, ".*" + Pattern.quote("{dev=dev-cloud1}, {prod=prod-cloud1}, {test=test-cloud1}, {perf=perf-cloud2}, {ci=perf-ci}") + ".*");
     }
 
+    @Test
+    public void testUuidFunc() throws Exception {
+        deploy("uuid");
+
+        save(ProcessConfiguration.builder()
+                .build());
+
+        byte[] log = run();
+        assertLog(log, ".*uuid: [0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}.*");
+    }
+
     private void deploy(String resource) throws URISyntaxException, IOException {
         Path src = Paths.get(MainTest.class.getResource(resource).toURI());
         IOUtils.copy(src, workDir);
