@@ -17,6 +17,8 @@
 
 ### Changed
 
+- server: return 404 when repository is not found
+([#806](https://github.com/walmartlabs/concord/pull/806));
 - runtime-v2: fix global vars update after resume
 ([#809](https://github.com/walmartlabs/concord/pull/809));
 - console2: handle procesess with commitId, but without repoUrl
