@@ -18,5 +18,6 @@
         <module>db</module>
         <module>impl</module>
         <module>client</module>
+        <module>client2</module>
     </modules>
 </project>

@@ -1541,6 +1541,29 @@ public class MainTest {
         assertLog(log, ".*myList: \\[k=v\\].*");
     }
 
+    @Test
+    public void testHasFlow() throws Exception {
+        deploy("hasFlow");
+
+        save(ProcessConfiguration.builder()
+                .build());
+
+        byte[] log = run();
+        assertLog(log, ".*123: false.*");
+        assertLog(log, ".*myFlow: true.*");
+    }
+
+    @Test
+    public void testUuidFunc() throws Exception {
+        deploy("uuid");
+
+        save(ProcessConfiguration.builder()
+                .build());
+
+        byte[] log = run();
+        assertLog(log, ".*uuid: [0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}.*");
+    }
+
     private void deploy(String resource) throws URISyntaxException, IOException {
         Path src = Paths.get(MainTest.class.getResource(resource).toURI());
         IOUtils.copy(src, workDir);

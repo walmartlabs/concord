@@ -40,7 +40,7 @@ public class EventFetcher extends AbstractEventProcessor<EventProcessor.Event> {
     private static final String PROCESSOR_NAME = "ansible-event-processor";
 
     private final AnsibleEventsConfiguration cfg;
-    private final EventFetcher.AnsibleEventDao dao;
+    private final AnsibleEventDao dao;
     private final List<EventProcessor> processors;
 
     @Inject

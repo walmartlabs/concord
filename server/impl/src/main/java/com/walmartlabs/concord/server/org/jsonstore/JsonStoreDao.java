@@ -58,7 +58,7 @@ public class JsonStoreDao extends AbstractDao {
     }
 
     @Override
-    public void tx(AbstractDao.Tx t) {
+    public void tx(Tx t) {
         super.tx(t);
     }
 
