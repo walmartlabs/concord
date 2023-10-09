@@ -1531,6 +1531,18 @@ public class MainTest {
     }
 
     @Test
+    public void testHasFlow() throws Exception {
+        deploy("hasFlow");
+
+        save(ProcessConfiguration.builder()
+                .build());
+
+        byte[] log = run();
+        assertLog(log, ".*123: false.*");
+        assertLog(log, ".*myFlow: true.*");
+    }
+
+    @Test
     public void testUuidFunc() throws Exception {
         deploy("uuid");
 
