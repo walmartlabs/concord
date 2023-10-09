@@ -4,6 +4,8 @@
 
 ### Added
 
+- runtime-v2: uuid function
+([#812](https://github.com/walmartlabs/concord/pull/812));
 - runtime-v2: allow listen to project load events at runtime
 ([#785](https://github.com/walmartlabs/concord/pull/785));
 - console2: allow changing JSON store org 
