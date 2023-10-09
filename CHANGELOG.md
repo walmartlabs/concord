@@ -4,6 +4,8 @@
 
 ### Added
 
+- new concord-client-v2
+([#810](https://github.com/walmartlabs/concord/pull/810));
 - runtime-v2: hasFlow function
 ([#813](https://github.com/walmartlabs/concord/pull/813));
 - runtime-v2: uuid function
