@@ -65,21 +65,6 @@ public class ServerClient {
         return new ProcessApi(client).startProcess(input);
     }
 
-//    public <T> T request(String uri, Map<String, Object> input, Class<T> entityType) throws ApiException {
-//        ApiResponse<T> resp = ClientUtils.postData(client, uri, input, entityType);
-//
-//        int code = resp.getStatusCode();
-//        if (code < 200 || code >= 300) {
-//            if (code == 403) {
-//                throw new ForbiddenException("Forbidden!", resp.getData());
-//            }
-//
-//            throw new ApiException("Request error: " + code);
-//        }
-//
-//        return resp.getData();
-//    }
-
     public SecretOperationResponse postSecret(String orgName, Map<String, Object> input) throws ApiException {
         SecretsApi api = new SecretsApi(client);
         return api.createSecret(orgName, input);

@@ -38,16 +38,16 @@ public final class ConcordConfiguration {
                 .useLocalMavenRepository(true)
                 .extraConfigurationSupplier(() -> "concord-agent { prefork { enabled = true } }");
 
-//        boolean localMode = Boolean.parseBoolean(System.getProperty("it.local.mode"));
-//        if (localMode) {
-//            concord.mode(ConcordRule.Mode.LOCAL);
-//        } else if (Boolean.parseBoolean(System.getProperty("it.remote.mode"))) {
+        boolean localMode = Boolean.parseBoolean(System.getProperty("it.local.mode"));
+        if (localMode) {
+            concord.mode(ConcordRule.Mode.LOCAL);
+        } else if (Boolean.parseBoolean(System.getProperty("it.remote.mode"))) {
             concord.mode(ConcordRule.Mode.REMOTE);
-            concord.apiToken("9V+FJT4cwTVP6Hs9r37yoQ");
-            concord.apiBaseUrl("http://localhost:8001");
-//        } else {
-//            concord.mode(ConcordRule.Mode.DOCKER);
-//        }
+            concord.apiToken(System.getProperty("it.remote.token"));
+            concord.apiBaseUrl(System.getProperty("it.remote.baseUrl"));
+        } else {
+            concord.mode(ConcordRule.Mode.DOCKER);
+        }
 
         return concord;
     }

@@ -164,8 +164,6 @@ public abstract class AbstractGitHubTriggersIT extends AbstractServerIT {
                 .build();
 
         List<ProcessEntry> l = processApi.listProcesses(filter);
-        System.out.println(">>>>" + l);
-        System.out.println(">>now>>" + afterCreatedAt);
         assertEquals(0, l.size());
     }
 
