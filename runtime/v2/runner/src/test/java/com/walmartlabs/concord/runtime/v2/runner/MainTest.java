@@ -232,6 +232,19 @@ public class MainTest {
     }
 
     @Test
+    public void testFlowNameVariable() throws Exception {
+        deploy("doNotTouchFlowNameVariable");
+
+        save(ProcessConfiguration.builder()
+                .build());
+
+        byte[] log = run();
+        assertLog(log, ".*flowName in inner flow: 'This is MY variable'.*");
+
+        verify(processStatusCallback, times(1)).onRunning(instanceId);
+    }
+
+    @Test
     public void testStackTrace() throws Exception {
         deploy("stackTrace");
 
