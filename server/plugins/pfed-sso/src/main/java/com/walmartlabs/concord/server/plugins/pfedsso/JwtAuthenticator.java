@@ -36,10 +36,7 @@ import org.slf4j.LoggerFactory;
 import javax.inject.Inject;
 import java.io.IOException;
 import java.text.ParseException;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 public class JwtAuthenticator {
 
@@ -98,7 +95,7 @@ public class JwtAuthenticator {
             }
 
             if (restrictOnClientId) {
-                Set<String> allowedClientIds = cfg.getAllowedClientIds();
+                List<String> allowedClientIds = cfg.getAllowedClientIds();
                 String clientId = (String) claims.get("client_id");
                 if(!allowedClientIds.contains(clientId)) {
                     log.warn("isTokenValid ['{}', '{}'] -> clientId not in allowed list for bearer tokens", token, clientId);

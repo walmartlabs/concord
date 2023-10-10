@@ -117,7 +117,7 @@ public class SsoConfiguration implements Serializable {
 
     @Inject
     @Config("sso.pfed.bearerToken.allowedClientIds")
-    private Set<String> allowedClientIds;
+    private List<String> allowedClientIds;
 
     public boolean isAutoCreateUsers() {
         return autoCreateUsers;
@@ -195,7 +195,7 @@ public class SsoConfiguration implements Serializable {
         return userInfoEndpointUrl;
     }
 
-    public Set<String> getAllowedClientIds() {
+    public List<String> getAllowedClientIds() {
         return allowedClientIds;
     }
 
