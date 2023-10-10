@@ -253,6 +253,7 @@ public class ProcessIT extends AbstractServerIT {
         ProcessListFilter filter = ProcessListFilter.builder()
                 .projectId(por.getId())
                 .limit(10)
+                .addInclude(ProcessDataInclude.CHILDREN_IDS)
                 .build();
         List<ProcessEntry> processEntry = new ProcessV2Api(getApiClient()).listProcesses(filter);
         for (ProcessEntry pe : processEntry) {

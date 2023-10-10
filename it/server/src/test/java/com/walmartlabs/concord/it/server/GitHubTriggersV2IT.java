@@ -401,9 +401,12 @@ public class GitHubTriggersV2IT extends AbstractGitHubTriggersIT {
 
         ProjectsApi projectsApi = new ProjectsApi(getApiClient());
         ProjectEntry p = projectsApi.getProject(orgName, projectName1);
-        RepositoryEntry repo = p.getRepositories().entrySet().stream()
-                .filter(e -> e.getKey().equals(repoNameShort))
-                .map(Map.Entry::getValue)
+
+        RepositoriesApi repositoriesApi = new RepositoriesApi(getApiClient());
+        List<RepositoryEntry> repos = repositoriesApi.listRepositories(orgName, projectName1, null, null, null);
+
+        RepositoryEntry repo = repos.stream()
+                .filter(e -> e.getName().equals(repoNameShort))
                 .findFirst()
                 .orElseThrow(() -> new Exception("Unable to locate repository"));
 
