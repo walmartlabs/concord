@@ -16,7 +16,8 @@
 ([#790](https://github.com/walmartlabs/concord/pull/790)).
 
 ### Changed
-
+- runtime-v2: automatically convert non serializable map.entry to serializable in exp
+([#815](https://github.com/walmartlabs/concord/pull/815)); 
 - server: return 404 when repository is not found
 ([#806](https://github.com/walmartlabs/concord/pull/806));
 - runtime-v2: fix global vars update after resume
