@@ -19,7 +19,7 @@ package com.walmartlabs.concord.it.server;
  * =====
  */
 
-import com.walmartlabs.concord.client.*;
+import com.walmartlabs.concord.client2.*;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
@@ -65,30 +65,29 @@ public class LdapIT extends AbstractServerIT {
         createLdapGroupWithUser(groupName, username);
 
         UsersApi usersApi = new UsersApi(getApiClient());
-        usersApi.createOrUpdate(new CreateUserRequest()
-                .setUsername(username)
-                .setType(CreateUserRequest.TypeEnum.LDAP));
+        usersApi.createOrUpdateUser(new CreateUserRequest()
+                .username(username)
+                .type(CreateUserRequest.TypeEnum.LDAP));
         ApiKeysApi apiKeyResource = new ApiKeysApi(getApiClient());
-        CreateApiKeyResponse cakr = apiKeyResource.create(new CreateApiKeyRequest()
-                .setUsername(username)
-                .setUserType(CreateApiKeyRequest.UserTypeEnum.LDAP));
+        CreateApiKeyResponse cakr = apiKeyResource.createUserApiKey(new CreateApiKeyRequest()
+                .username(username)
+                .userType(CreateApiKeyRequest.UserTypeEnum.LDAP));
 
         setApiKey(cakr.getKey());
 
         // ---
 
         byte[] payload = archive(LdapIT.class.getResource("ldapInitiator").toURI());
-        ProcessApi processApi = new ProcessApi(getApiClient());
         StartProcessResponse spr = start(payload);
         assertNotNull(spr.getInstanceId());
 
         // ---
 
-        ProcessEntry pir = waitForCompletion(processApi, spr.getInstanceId());
+        ProcessEntry pir = waitForCompletion(getApiClient(), spr.getInstanceId());
 
         // ---
 
-        byte[] ab = getLog(pir.getLogFileName());
+        byte[] ab = getLog(pir.getInstanceId());
         String groupDn = "cn=" + groupName + "," + GROUP_OU;
         assertLog(".*" + groupDn + ".*", ab);
 
@@ -100,9 +99,9 @@ public class LdapIT extends AbstractServerIT {
         createLdapUser(username);
 
         UsersApi usersApi = new UsersApi(getApiClient());
-        usersApi.createOrUpdate(new CreateUserRequest()
-                .setUsername(username)
-                .setType(CreateUserRequest.TypeEnum.LDAP));
+        usersApi.createOrUpdateUser(new CreateUserRequest()
+                .username(username)
+                .type(CreateUserRequest.TypeEnum.LDAP));
 
         UserEntry ue = usersApi.findByUsername(username.toLowerCase());
         assertNotNull(ue);

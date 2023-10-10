@@ -20,7 +20,7 @@ package com.walmartlabs.concord.it.server;
  * =====
  */
 
-import com.walmartlabs.concord.client.*;
+import com.walmartlabs.concord.client2.*;
 import org.junit.jupiter.api.Test;
 
 import java.util.Collections;
@@ -39,28 +39,27 @@ public class ClasspathRepoIT extends AbstractServerIT {
         String repoName = "repo_" + randomString();
 
         ProjectsApi projectsApi = new ProjectsApi(getApiClient());
-        projectsApi.createOrUpdate("Default", new ProjectEntry()
-                .setName(projectName)
-                .setAcceptsRawPayload(false)
-                .setRepositories(Collections.singletonMap(repoName, new RepositoryEntry()
-                        .setName(repoName)
-                        .setUrl(url)
-                        .setBranch("master"))));
+        projectsApi.createOrUpdateProject("Default", new ProjectEntry()
+                .name(projectName)
+                .acceptsRawPayload(false)
+                .repositories(Collections.singletonMap(repoName, new RepositoryEntry()
+                        .name(repoName)
+                        .url(url)
+                        .branch("master"))));
 
         // ---
 
-        ProcessApi processApi = new ProcessApi(getApiClient());
         StartProcessResponse spr = start("Default", projectName, repoName, null, null);
-        assertTrue(spr.isOk());
+        assertTrue(spr.getOk());
 
         // ---
 
-        ProcessEntry pe = waitForCompletion(processApi, spr.getInstanceId());
+        ProcessEntry pe = waitForCompletion(getApiClient(), spr.getInstanceId());
         assertEquals(ProcessEntry.StatusEnum.FINISHED, pe.getStatus());
 
         // ---
 
-        byte[] ab = getLog(pe.getLogFileName());
+        byte[] ab = getLog(pe.getInstanceId());
         assertLog(".*OK.*", ab);
     }
 }
