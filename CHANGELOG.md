@@ -1,13 +1,43 @@
 # Change log
 
+## [2.1.0] - Unreleased
+
+### Added
+
+- new concord-client-v2
+([#810](https://github.com/walmartlabs/concord/pull/810));
+- runtime-v2: hasFlow function
+([#813](https://github.com/walmartlabs/concord/pull/813));
+- runtime-v2: uuid function
+([#812](https://github.com/walmartlabs/concord/pull/812));
+- runtime-v2: allow listen to project load events at runtime
+([#785](https://github.com/walmartlabs/concord/pull/785));
+- console2: allow changing JSON store org 
+([#790](https://github.com/walmartlabs/concord/pull/790)).
+
+### Changed
+- runtime-v2: automatically convert non serializable map.entry to serializable in exp
+([#815](https://github.com/walmartlabs/concord/pull/815)); 
+- server: return 404 when repository is not found
+([#806](https://github.com/walmartlabs/concord/pull/806));
+- runtime-v2: fix global vars update after resume
+([#809](https://github.com/walmartlabs/concord/pull/809));
+- console2: handle procesess with commitId, but without repoUrl
+([#807](https://github.com/walmartlabs/concord/pull/807));
+- runtime-v2: fix initialize of array expression
+([#800](https://github.com/walmartlabs/concord/pull/800));
+- server: only admins can access policies
+([#792](https://github.com/walmartlabs/concord/pull/792));
+- cli: active profiles fix
+([#789](https://github.com/walmartlabs/concord/pull/789)).
+
 ## [2.0.0] - 2023-08-16
+
 
 # Breaking
 
 - project: drop support for JDK 8 and JDK 11. Make JDK 17
 the new default version.
-
-
 
 ## [1.103.0] - 2023-07-16
 
