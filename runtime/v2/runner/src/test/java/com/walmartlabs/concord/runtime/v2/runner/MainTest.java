@@ -185,6 +185,37 @@ public class MainTest {
     }
 
     @Test
+    public void testVariablesAfterResume() throws Exception {
+        deploy("variablesAfterResume");
+
+        save(ProcessConfiguration.builder()
+                .build());
+
+        byte[] log = run();
+        assertLog(log, ".*workDir1: " + workDir.toAbsolutePath() + ".*");
+        assertLog(log, ".*workDir3: " + workDir.toAbsolutePath() + ".*");
+
+        List<Form> forms = formService.list();
+        assertEquals(1, forms.size());
+
+        Form myForm = forms.get(0);
+        assertEquals("myForm", myForm.name());
+
+        // resume the process using the saved form
+
+        Map<String, Object> data = new HashMap<>();
+        data.put("fullName", "John Smith");
+
+        Path newWorkDir = Files.createTempDirectory("test-new");
+        IOUtils.copy(workDir, newWorkDir);
+        workDir = newWorkDir;
+
+        log = resume(myForm.eventName(), ProcessConfiguration.builder().arguments(Collections.singletonMap("myForm", data)).build());
+        assertLog(log, ".*workDir4: " + workDir.toAbsolutePath() + ".*");
+        assertLog(log, ".*workDir2: " + workDir.toAbsolutePath() + ".*");
+    }
+
+    @Test
     public void test() throws Exception {
         deploy("hello");
 
@@ -196,6 +227,19 @@ public class MainTest {
         byte[] log = run();
         assertLog(log, ".*Hello, Concord!.*");
         assertLog(log, ".*" + Pattern.quote("defaultsMap:{a=a-value}") + ".*");
+
+        verify(processStatusCallback, times(1)).onRunning(instanceId);
+    }
+
+    @Test
+    public void testFlowNameVariable() throws Exception {
+        deploy("doNotTouchFlowNameVariable");
+
+        save(ProcessConfiguration.builder()
+                .build());
+
+        byte[] log = run();
+        assertLog(log, ".*flowName in inner flow: 'This is MY variable'.*");
 
         verify(processStatusCallback, times(1)).onRunning(instanceId);
     }
@@ -1497,6 +1541,40 @@ public class MainTest {
 
         byte[] log = run();
         assertLog(log, ".*" + Pattern.quote("{dev=dev-cloud1}, {prod=prod-cloud1}, {test=test-cloud1}, {perf=perf-cloud2}, {ci=perf-ci}") + ".*");
+    }
+
+    @Test
+    public void testEntrySetSerialization() throws Exception {
+        deploy("entrySetSerialization");
+
+        save(ProcessConfiguration.builder()
+                .build());
+
+        byte[] log = run();
+        assertLog(log, ".*myList: \\[k=v\\].*");
+    }
+
+    @Test
+    public void testHasFlow() throws Exception {
+        deploy("hasFlow");
+
+        save(ProcessConfiguration.builder()
+                .build());
+
+        byte[] log = run();
+        assertLog(log, ".*123: false.*");
+        assertLog(log, ".*myFlow: true.*");
+    }
+
+    @Test
+    public void testUuidFunc() throws Exception {
+        deploy("uuid");
+
+        save(ProcessConfiguration.builder()
+                .build());
+
+        byte[] log = run();
+        assertLog(log, ".*uuid: [0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}.*");
     }
 
     private void deploy(String resource) throws URISyntaxException, IOException {

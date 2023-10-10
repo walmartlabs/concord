@@ -191,7 +191,7 @@ public final class FilterUtils {
             return null;
         }
 
-        for (FilterUtils.SuffixMapping m : FilterUtils.SUFFIX_MAPPINGS) {
+        for (SuffixMapping m : FilterUtils.SUFFIX_MAPPINGS) {
             if (key.endsWith(m.suffix())) {
                 return m.filterType();
             }

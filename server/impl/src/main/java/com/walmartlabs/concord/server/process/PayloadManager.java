@@ -289,7 +289,7 @@ public class PayloadManager {
             }
         }
 
-        return new PayloadManager.EntryPoint(orgId, projectId, repoId, flow);
+        return new EntryPoint(orgId, projectId, repoId, flow);
     }
 
     private UUID getOrg(MultipartInput input) {
