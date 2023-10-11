@@ -232,7 +232,7 @@ public class GitHubTriggersV2IT extends AbstractTest {
     }
 
     @SuppressWarnings("unchecked")
-    private static void sendEvent(String resource, String event, String... params) throws Exception {
+    private static void sendEvent(String resource, String eventName, String... params) throws Exception {
         String payload = resourceToString(resource);
         if (params != null) {
             for (int i = 0; i < params.length; i += 2) {
@@ -242,11 +242,14 @@ public class GitHubTriggersV2IT extends AbstractTest {
             }
         }
 
+        Map<String, Object> event = apiClient().getObjectMapper().readValue(payload, Map.class);
+        payload = apiClient().getObjectMapper().writeValueAsString(event);
+
         ApiClient client = apiClient();
         client.addDefaultHeader("X-Hub-Signature", "sha1=" + GitHubUtils.sign(payload));
 
         GitHubEventsApi eventsApi = new GitHubEventsApi(client);
-        eventsApi.onEvent( null, "abc", event, new ObjectMapper().readValue(payload, Map.class));
+        eventsApi.onEvent( null, "abc", eventName, new ObjectMapper().readValue(payload, Map.class));
     }
 
     private static String resourceToString(String resource) throws Exception {
