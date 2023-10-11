@@ -497,7 +497,7 @@ public class CrudIT extends AbstractServerIT {
         /// ---
 
         ProjectEntry projectEntry = projectsApi.getProject(orgName, projectName);
-        assertEquals(0, projectEntry.getRepositories().size());
+        assertNull(projectEntry.getRepositories());
 
         List<RepositoryEntry> repos = new RepositoriesApi(getApiClient()).listRepositories(orgName, projectName, null, null, null);
         assertEquals(1, repos.size());
