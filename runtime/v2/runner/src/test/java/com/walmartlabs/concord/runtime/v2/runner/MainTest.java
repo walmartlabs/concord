@@ -232,6 +232,19 @@ public class MainTest {
     }
 
     @Test
+    public void testFlowNameVariable() throws Exception {
+        deploy("doNotTouchFlowNameVariable");
+
+        save(ProcessConfiguration.builder()
+                .build());
+
+        byte[] log = run();
+        assertLog(log, ".*flowName in inner flow: 'This is MY variable'.*");
+
+        verify(processStatusCallback, times(1)).onRunning(instanceId);
+    }
+
+    @Test
     public void testStackTrace() throws Exception {
         deploy("stackTrace");
 
@@ -1528,6 +1541,40 @@ public class MainTest {
 
         byte[] log = run();
         assertLog(log, ".*" + Pattern.quote("{dev=dev-cloud1}, {prod=prod-cloud1}, {test=test-cloud1}, {perf=perf-cloud2}, {ci=perf-ci}") + ".*");
+    }
+
+    @Test
+    public void testEntrySetSerialization() throws Exception {
+        deploy("entrySetSerialization");
+
+        save(ProcessConfiguration.builder()
+                .build());
+
+        byte[] log = run();
+        assertLog(log, ".*myList: \\[k=v\\].*");
+    }
+
+    @Test
+    public void testHasFlow() throws Exception {
+        deploy("hasFlow");
+
+        save(ProcessConfiguration.builder()
+                .build());
+
+        byte[] log = run();
+        assertLog(log, ".*123: false.*");
+        assertLog(log, ".*myFlow: true.*");
+    }
+
+    @Test
+    public void testUuidFunc() throws Exception {
+        deploy("uuid");
+
+        save(ProcessConfiguration.builder()
+                .build());
+
+        byte[] log = run();
+        assertLog(log, ".*uuid: [0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}.*");
     }
 
     private void deploy(String resource) throws URISyntaxException, IOException {
