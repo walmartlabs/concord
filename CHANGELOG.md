@@ -1,5 +1,12 @@
 # Change log
 
+## [2.2.0] - 
+
+### Changed
+
+- console2: do not drop secrets form values on error/password check fail
+([#798](https://github.com/walmartlabs/concord/pull/798));
+
 ## [2.1.0] - 2023-10-10
 
 ### Added
