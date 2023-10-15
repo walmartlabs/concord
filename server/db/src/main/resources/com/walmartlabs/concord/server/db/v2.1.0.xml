@@ -13,13 +13,13 @@
                 <constraints nullable="false"/>
             </column>
             <column name="REPO_ID" type="uuid">
-                <constraints nullable="false"/>
+                <constraints nullable="true"/>
             </column>
             <column name="NAME" type="varchar(128)">
                 <constraints nullable="false"/>
             </column>
             <column name="ENTRY_POINT" type="varchar(256)">
-                <constraints nullable="false"/>
+                <constraints nullable="true"/>
             </column>
             <column name="DESCRIPTION" type="varchar(512)">
                 <constraints nullable="true"/>
@@ -103,4 +103,5 @@
             </column>
         </addColumn>
     </changeSet>
+
 </databaseChangeLog>
