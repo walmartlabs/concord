@@ -28,10 +28,8 @@ import io.prometheus.client.dropwizard.DropwizardExports;
 import io.prometheus.client.hotspot.DefaultExports;
 
 import javax.inject.Inject;
-import javax.inject.Named;
 import java.util.Set;
 
-@Named
 public class MetricsRegistrator implements BackgroundTask {
 
     private final MetricRegistry registry;

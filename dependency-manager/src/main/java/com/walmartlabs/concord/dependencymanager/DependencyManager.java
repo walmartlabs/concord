@@ -93,7 +93,7 @@ public class DependencyManager {
     public Collection<DependencyEntity> resolve(Collection<URI> items, ProgressListener listener) throws IOException {
         ResolveExceptionConverter exceptionConverter = new ResolveExceptionConverter(items);
         ProgressNotifier progressNotifier = new ProgressNotifier(listener, exceptionConverter);
-        return withRetry(RETRY_COUNT, RETRY_INTERVAL, () -> tryResolve(items, progressNotifier), exceptionConverter, progressNotifier);
+        return withRetry(() -> tryResolve(items, progressNotifier), exceptionConverter, progressNotifier);
     }
 
     public DependencyEntity resolveSingle(URI item) throws IOException {
@@ -103,7 +103,7 @@ public class DependencyManager {
     public DependencyEntity resolveSingle(URI item, ProgressListener listener) throws IOException {
         ResolveExceptionConverter exceptionConverter = new ResolveExceptionConverter(item);
         ProgressNotifier progressNotifier = new ProgressNotifier(listener, exceptionConverter);
-        return withRetry(RETRY_COUNT, RETRY_INTERVAL, () -> tryResolveSingle(item, progressNotifier), exceptionConverter, progressNotifier);
+        return withRetry(() -> tryResolveSingle(item, progressNotifier), exceptionConverter, progressNotifier);
     }
 
     private Collection<DependencyEntity> tryResolve(Collection<URI> items, ProgressNotifier progressNotifier) throws IOException {
@@ -294,18 +294,6 @@ public class DependencyManager {
             }
         });
 
-        session.setRepositoryListener(new AbstractRepositoryListener() {
-            @Override
-            public void artifactResolving(RepositoryEvent event) {
-                log.debug("artifactResolving -> {}", event);
-            }
-
-            @Override
-            public void artifactResolved(RepositoryEvent event) {
-                log.debug("artifactResolved -> {}", event);
-            }
-        });
-
         return session;
     }
 
@@ -445,28 +433,31 @@ public class DependencyManager {
 
         @Override
         public void onRetry(int tryCount, int retryCount, long retryInterval, Exception e) {
-            if (listener != null) {
-                DependencyManagerException ex = exceptionConverter.convert(e);
-                listener.onRetry(tryCount, retryCount, retryInterval, ex.getMessage());
+            if (listener == null) {
+                return;
             }
+
+            DependencyManagerException ex = exceptionConverter.convert(e);
+            listener.onRetry(tryCount, retryCount, retryInterval, ex.getMessage());
         }
 
         public void transferFailed(TransferEvent event) {
-            log.error("transferFailed -> {}. error: {}", event, Optional.ofNullable(event).map(TransferEvent::getException).map(Throwable::toString).orElse("n/a"));
-
-            if (event != null && listener != null) {
-                listener.onTransferFailed(event + ". error: " + Optional.ofNullable(event.getException()).map(Throwable::toString).orElse("n/a"));
+            if (listener == null || event == null) {
+                return;
             }
+
+            String error = Optional.ofNullable(event.getException()).map(Throwable::toString).orElse("n/a");
+            listener.onTransferFailed(event + ", error: " + error);
         }
     }
 
-    public static <T> T withRetry(int retryCount, long retryInterval, Callable<T> c,
-                                  ResolveExceptionConverter exceptionConverter,
-                                  ProgressNotifier notifier) throws IOException {
+    private static <T> T withRetry(Callable<T> c,
+                                   ResolveExceptionConverter exceptionConverter,
+                                   ProgressNotifier notifier) throws IOException {
         try {
-            return RetryUtils.withRetry(retryCount, retryInterval, c, ResolveRetryStrategy.INSTANCE, notifier);
+            return RetryUtils.withRetry(DependencyManager.RETRY_COUNT, DependencyManager.RETRY_INTERVAL,
+                    c, ResolveRetryStrategy.INSTANCE, notifier);
         } catch (Exception e) {
-            log.error("resolve exception: ", e);
             throw exceptionConverter.convert(e);
         }
     }

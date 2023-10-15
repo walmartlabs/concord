@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.3.xsd">
+
+    <changeSet id="1103000" author="g0h04k0@walmart.com">
+        <createTable tableName="PROJECT_SECRETS">
+            <column name="SECRET_ID" type="uuid">
+                <constraints nullable="false"/>
+            </column>
+            <column name="PROJECT_ID" type="uuid">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+        <addForeignKeyConstraint baseTableName="PROJECT_SECRETS"
+                                 baseColumnNames="SECRET_ID"
+                                 constraintName="FK_PROJECT_SECRETS_SECRET"
+                                 referencedTableName="SECRETS"
+                                 referencedColumnNames="SECRET_ID"
+                                 onDelete="CASCADE"/>
+        <addForeignKeyConstraint baseTableName="PROJECT_SECRETS"
+                                 baseColumnNames="PROJECT_ID"
+                                 constraintName="FK_PROJECT_SECRETS_PROJECT"
+                                 referencedTableName="PROJECTS"
+                                 referencedColumnNames="PROJECT_ID"
+                                 onDelete="CASCADE"/>
+        <addUniqueConstraint tableName="PROJECT_SECRETS" columnNames="SECRET_ID,PROJECT_ID"/>
+        <createIndex tableName="PROJECT_SECRETS" indexName="PROJECT_SECRETS_SECRET_IDX">
+            <column name="SECRET_ID"/>
+        </createIndex>
+        <createIndex tableName="PROJECT_SECRETS" indexName="PROJECT_SECRETS_PROJECT_IDX">
+            <column name="PROJECT_ID"/>
+        </createIndex>
+        <sql>
+            insert into PROJECT_SECRETS (secret_id, project_id) select secret_id, project_id from secrets where project_id is not null
+        </sql>
+        <dropColumn  tableName="SECRETS">
+            <column  name="PROJECT_ID"/>
+        </dropColumn>
+    </changeSet>
+
+</databaseChangeLog>

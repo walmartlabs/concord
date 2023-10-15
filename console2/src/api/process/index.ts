@@ -129,7 +129,7 @@ export interface AbstractWaitCondition {
 }
 
 export interface ProcessWaitCondition extends AbstractWaitCondition {
-    processes: ConcordId[];
+    processes?: ConcordId[];
 }
 
 export interface ProcessLockCondition extends AbstractWaitCondition {

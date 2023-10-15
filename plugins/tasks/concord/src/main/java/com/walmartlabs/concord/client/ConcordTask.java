@@ -458,6 +458,10 @@ public class ConcordTask extends AbstractConcordTask {
     }
 
     private void suspend(Context ctx, List<String> jobs, boolean resumeFromSameStep) throws ApiException {
+        if (jobs.isEmpty()) {
+            return;
+        }
+
         Map<String, Object> condition = new HashMap<>();
         condition.put("type", "PROCESS_COMPLETION");
         condition.put("reason", "Waiting for a child process to end");

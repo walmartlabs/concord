@@ -37,11 +37,9 @@ import org.apache.shiro.subject.PrincipalCollection;
 import org.pac4j.oidc.profile.OidcProfile;
 
 import javax.inject.Inject;
-import javax.inject.Named;
 import java.util.*;
 import java.util.stream.Collectors;
 
-@Named
 public class OidcRealm extends AuthorizingRealm {
 
     private static final String REALM_NAME = "oidc";

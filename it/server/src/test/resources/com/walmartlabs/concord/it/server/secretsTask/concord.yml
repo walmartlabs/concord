@@ -3,6 +3,7 @@ flows:
     - call: delete-secret
     - call: validate-secret-NOT_FOUND
     - call: create-secret
+    - call: update-secret-projects
     - call: validate-secret
     - call: get-secret
     - call: validate-secret-INVALID_REQUEST
@@ -21,6 +22,9 @@ flows:
         name: ${secretName}
         data: anders-test-value
         storePassword: Dingo1234
+        projects:
+          - "${projectName1}"
+          - "${projectName2}"
     - log: "Create Result: ${result}"
 
   get-secret:
@@ -124,3 +128,13 @@ flows:
       in:
         action: delete
         name: ${secretName}2
+
+  update-secret-projects:
+    - log: "Update secret projects"
+    - task: concordSecrets
+      in:
+        action: update
+        name: "${secretName}"
+        projects:
+          - "${projectName1}"
+

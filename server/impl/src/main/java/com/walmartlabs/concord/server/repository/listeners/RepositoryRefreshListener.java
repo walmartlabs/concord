@@ -4,7 +4,7 @@ package com.walmartlabs.concord.server.repository.listeners;
  * *****
  * Concord
  * -----
- * Copyright (C) 2017 - 2019 Walmart Inc.
+ * Copyright (C) 2017 - 2023 Walmart Inc.
  * -----
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,12 +20,11 @@ package com.walmartlabs.concord.server.repository.listeners;
  * =====
  */
 
+import com.walmartlabs.concord.process.loader.model.ProcessDefinition;
 import com.walmartlabs.concord.server.org.project.RepositoryEntry;
 import org.jooq.DSLContext;
 
-import java.nio.file.Path;
-
 public interface RepositoryRefreshListener {
 
-    void onRefresh(DSLContext ctx, RepositoryEntry repo, Path repoPath) throws Exception;
+    void onRefresh(DSLContext tx, RepositoryEntry repo, ProcessDefinition pd);
 }

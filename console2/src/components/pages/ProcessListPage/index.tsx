@@ -45,6 +45,7 @@ export default () => {
                 showInitiatorFilter={true}
                 usePagination={true}
                 forceRefresh={refresh}
+                columns={window.concord.processListColumns}
             />
         </>
     );

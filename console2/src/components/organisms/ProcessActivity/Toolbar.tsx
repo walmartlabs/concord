@@ -45,6 +45,7 @@ import { CancelProcessPopup, DisableProcessPopup } from '../../organisms';
 import { ConcordId } from '../../../api/common';
 
 import './styles.css';
+import { formatDuration } from '../../../utils';
 
 interface ExternalProps {
     stickyRef: any;
@@ -143,9 +144,16 @@ const renderProcessStatus = (process?: ProcessEntry) => {
         return;
     }
 
+    let duration;
+    if (process.status === ProcessStatus.RUNNING) {
+        duration = formatDuration(new Date().getTime() - parseDate(process.createdAt).getTime());
+    }
     return (
         <>
-            <Label color={getStatusColor(process.status)}>{process.status}</Label>
+            <Label color={getStatusColor(process.status)}>
+                {process.status}
+                {duration && <Label.Detail>{duration}</Label.Detail>}
+            </Label>
             {process.status === ProcessStatus.FAILED && (
                 <>
                     &nbsp;

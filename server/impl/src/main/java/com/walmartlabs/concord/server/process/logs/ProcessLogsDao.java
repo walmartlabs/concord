@@ -174,7 +174,7 @@ public class ProcessLogsDao extends AbstractDao {
                 .fetchOptional(upperRange)
                 .orElse(0);
 
-        return new ProcessLogsDao.ProcessLog(size, chunks);
+        return new ProcessLog(size, chunks);
     }
 
     public ProcessLog data(ProcessKey processKey, Integer start, Integer end) {

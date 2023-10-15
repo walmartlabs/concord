@@ -22,14 +22,14 @@ package com.walmartlabs.concord.runtime.v2.runner.logging;
 
 import ch.qos.logback.classic.ClassicConstants;
 import ch.qos.logback.classic.Level;
-import ch.qos.logback.classic.encoder.PatternLayoutEncoder;
 import ch.qos.logback.classic.spi.ILoggingEvent;
+import ch.qos.logback.core.encoder.LayoutWrappingEncoder;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-public class ConcordLogEncoder extends PatternLayoutEncoder {
+public class ConcordLogEncoder extends LayoutWrappingEncoder<ILoggingEvent> {
 
     public static boolean SEGMENTED = false;
 

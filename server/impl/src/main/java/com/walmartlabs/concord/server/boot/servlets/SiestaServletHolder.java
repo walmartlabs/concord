@@ -24,15 +24,11 @@ import org.eclipse.jetty.servlet.ServletHolder;
 import org.sonatype.siesta.server.SiestaServlet;
 
 import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
 import javax.servlet.annotation.WebServlet;
 
 /**
  * Binds {@link SiestaServlet} to Concord's API paths.
  */
-@Named
-@Singleton
 @WebServlet({
         "/api/*",
         "/events/github/*"

@@ -33,7 +33,6 @@ import javax.inject.Singleton;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.Properties;
-import java.util.UUID;
 
 @Named
 @Singleton

@@ -37,8 +37,6 @@ import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nullable;
 import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
 import java.util.*;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReadWriteLock;
@@ -48,8 +46,6 @@ import java.util.stream.Collectors;
 import static com.walmartlabs.concord.server.jooq.Tables.POLICIES;
 import static com.walmartlabs.concord.server.jooq.Tables.POLICY_LINKS;
 
-@Named
-@Singleton
 public class PolicyCache implements BackgroundTask {
 
     private static final Logger log = LoggerFactory.getLogger(PolicyCache.class);
@@ -293,7 +289,6 @@ public class PolicyCache implements BackgroundTask {
         return result;
     }
 
-    @Named
     static class Dao extends AbstractDao {
 
         private final ConcordObjectMapper objectMapper;

@@ -22,7 +22,7 @@ import * as React from 'react';
 import {ConcordKey, GenericOperationResult} from '../../../api/common';
 import { ButtonWithConfirmation } from '../../molecules';
 import { RequestErrorActivity } from '../index';
-import {useCallback, useState} from "react";
+import {useCallback} from "react";
 import {deleteProject as apiDelete} from "../../../api/org/project";
 import {useApi} from "../../../hooks/useApi";
 import {Redirect} from "react-router";
@@ -36,23 +36,24 @@ interface ExternalProps {
 const ProjectDeleteActivity = (props: ExternalProps) => {
     const {orgName, projectName, disabled} = props;
 
-    const [forceRequest, toggleForceRequest] = useState<boolean>(false);
-
     const deleteData = useCallback(async () => {
         return await apiDelete(orgName, projectName);
     }, [orgName, projectName]);
 
-    const { data, error, isLoading } = useApi<GenericOperationResult>(deleteData, {
+    const { data, error, isLoading, fetch, clearState } = useApi<GenericOperationResult>(deleteData, {
         fetchOnMount: false,
-        forceRequest
+        requestByFetch: true
     });
 
     const confirmHandler = useCallback(() => {
-        toggleForceRequest((prevState) => !prevState);
-    }, []);
+            clearState();
+            fetch();
+        },
+        [clearState, fetch]
+    );
 
     if (data) {
-        return <Redirect to={`/org/${orgName}/jsonstore`} />;
+        return <Redirect to={`/org/${orgName}/project`} />;
     }
 
     return (

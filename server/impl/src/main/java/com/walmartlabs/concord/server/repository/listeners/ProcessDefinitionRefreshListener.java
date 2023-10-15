@@ -4,7 +4,7 @@ package com.walmartlabs.concord.server.repository.listeners;
  * *****
  * Concord
  * -----
- * Copyright (C) 2017 - 2019 Walmart Inc.
+ * Copyright (C) 2017 - 2023 Walmart Inc.
  * -----
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,46 +20,30 @@ package com.walmartlabs.concord.server.repository.listeners;
  * =====
  */
 
-import com.walmartlabs.concord.imports.ImportsListener;
-import com.walmartlabs.concord.process.loader.ProjectLoader;
 import com.walmartlabs.concord.process.loader.model.ProcessDefinition;
 import com.walmartlabs.concord.server.org.project.RepositoryDao;
 import com.walmartlabs.concord.server.org.project.RepositoryEntry;
-import com.walmartlabs.concord.server.process.ImportsNormalizerFactory;
 import org.jooq.DSLContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
-import javax.inject.Named;
-import java.nio.file.Path;
 import java.util.*;
 import java.util.stream.Collectors;
 
-@Named
 public class ProcessDefinitionRefreshListener implements RepositoryRefreshListener {
 
     private static final Logger log = LoggerFactory.getLogger(ProcessDefinitionRefreshListener.class);
 
     private final RepositoryDao repositoryDao;
-    private final ProjectLoader projectLoader;
-    private final ImportsNormalizerFactory importsNormalizer;
 
     @Inject
-    public ProcessDefinitionRefreshListener(RepositoryDao repositoryDao,
-                                            ProjectLoader projectLoader,
-                                            ImportsNormalizerFactory importsNormalizer) {
-
+    public ProcessDefinitionRefreshListener(RepositoryDao repositoryDao) {
         this.repositoryDao = repositoryDao;
-        this.projectLoader = projectLoader;
-        this.importsNormalizer = importsNormalizer;
     }
 
     @Override
-    public void onRefresh(DSLContext ctx, RepositoryEntry repo, Path repoPath) throws Exception {
-        ProcessDefinition pd = projectLoader.loadProject(repoPath, importsNormalizer.forProject(repo.getProjectId()), ImportsListener.NOP_LISTENER)
-                .projectDefinition();
-
+    public void onRefresh(DSLContext tx, RepositoryEntry repo, ProcessDefinition pd) {
         Set<String> pf = pd.publicFlows();
         if (pf == null || pf.isEmpty()) {
             // all flows are public when no public flows defined
@@ -76,9 +60,9 @@ public class ProcessDefinitionRefreshListener implements RepositoryRefreshListen
         Map<String, Object> meta = new HashMap<>();
         meta.put("entryPoints", emptyToNull(entryPoints));
         meta.put("profiles", emptyToNull(profiles));
-        repositoryDao.updateMeta(ctx, repo.getId(), meta);
+        repositoryDao.updateMeta(tx, repo.getId(), meta);
 
-        log.info("onRefresh ['{}', '{}'] -> done ({})", repo.getId(), repoPath, entryPoints);
+        log.info("onRefresh ['{}'] -> done ({})", repo.getId(), entryPoints);
     }
 
     private static <E extends Collection<?>> E emptyToNull(E items) {

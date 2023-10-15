@@ -114,7 +114,7 @@ public class FormServiceV2 {
             boolean branding = stateManager.exists(processKey, s);
             Map runAs = f.options().runAs();
 
-            result.add(new FormListEntry(name, branding, f.options().yield(), runAs));
+            result.add(new FormListEntry(name, branding, f.options().isYield(), runAs));
         }
         return result;
     }

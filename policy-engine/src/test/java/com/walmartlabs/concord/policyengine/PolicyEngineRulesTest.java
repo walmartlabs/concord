@@ -188,7 +188,7 @@ public class PolicyEngineRulesTest {
                         .toVersion("versionTo")
                         .value(new URI("value"))
                         .build());
-        RuntimeRule runtimeRule = RuntimeRule.of(null, Collections.singleton("concord-v2"));
+        RuntimeRule runtimeRule = RuntimeRule.of(null, Collections.singleton("concord-v2"), null);
 
         PolicyEngineRules r = PolicyEngineRules.builder()
                 .dependencyRules(dependencyRules)

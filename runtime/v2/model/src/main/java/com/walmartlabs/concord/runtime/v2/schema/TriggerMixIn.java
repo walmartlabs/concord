@@ -72,8 +72,8 @@ public interface TriggerMixIn extends Trigger {
             @JsonProperty(value = "spec", required = true)
             String spec();
 
-            @JsonProperty("timeZone")
-            String timeZone();
+            @JsonProperty("timezone")
+            String timezone();
 
             @JsonProperty("runAs")
             RunAs runAs();

@@ -33,7 +33,6 @@ import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nullable;
 import javax.inject.Inject;
-import javax.inject.Named;
 import java.io.BufferedReader;
 import java.io.DataOutputStream;
 import java.io.IOException;
@@ -44,8 +43,8 @@ import java.nio.charset.StandardCharsets;
 import java.util.Base64;
 import java.util.Set;
 
-@Named
 public class SsoClient {
+
     private static final Logger log = LoggerFactory.getLogger(SsoClient.class);
 
     private static final String USER_AGENT_HEADER = "Mozilla/5.0";

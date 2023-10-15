@@ -14,7 +14,8 @@ flows:
 
     - log: "result.ok: ${result.ok}"
     - log: "result.password: ${result.password}"
-    - log: "credentials: ${crypto.exportCredentials(org, secretName, 'pAss123qweasd')}"
+    - log: "credentials: password=${crypto.exportCredentials(org, secretName, 'pAss123qweasd').get('password').replaceAll('.', '$0 ')}"
+    - log: "credentials-masked: ${crypto.exportCredentials(org, secretName, 'pAss123qweasd')}"
 
 configuration:
   runtime: concord-v2

@@ -26,11 +26,7 @@ import com.walmartlabs.concord.server.security.LocalRequestFilter;
 import org.apache.shiro.web.filter.mgt.FilterChainManager;
 
 import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
 
-@Named
-@Singleton
 public class ConcordFilterChainConfigurator implements FilterChainConfigurator {
 
     private final ConcordAuthenticatingFilter concordAuthenticatingFilter;

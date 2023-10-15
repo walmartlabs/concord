@@ -27,14 +27,11 @@ import org.pac4j.core.engine.LogoutLogic;
 
 import javax.inject.Inject;
 import javax.inject.Named;
-import javax.inject.Singleton;
 import javax.servlet.*;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 
-@Named
-@Singleton
 public class OidcLogoutFilter implements Filter {
 
     public static final String URL = "/api/service/oidc/logout";

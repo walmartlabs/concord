@@ -4,7 +4,7 @@ package com.walmartlabs.concord.server.audit;
  * *****
  * Concord
  * -----
- * Copyright (C) 2017 - 2018 Walmart Inc.
+ * Copyright (C) 2017 - 2023 Walmart Inc.
  * -----
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -36,7 +36,6 @@ import org.jooq.Record9;
 import org.jooq.SelectOnConditionStep;
 
 import javax.inject.Inject;
-import javax.inject.Named;
 import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Map;
@@ -45,7 +44,6 @@ import java.util.UUID;
 import static com.walmartlabs.concord.server.jooq.tables.AuditLog.AUDIT_LOG;
 import static com.walmartlabs.concord.server.jooq.tables.Users.USERS;
 
-@Named
 public class AuditDao extends AbstractDao {
 
     private final ConcordObjectMapper objectMapper;

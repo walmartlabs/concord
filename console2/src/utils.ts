@@ -190,3 +190,17 @@ export const highlight = (value: string, props: HighlighterProps): string => {
 
     return txt;
 };
+
+export const setQueryParam = (url: string, key: string, value: string): string => {
+    const isAbsoluteUrl = url.startsWith('http') || url.startsWith('https');
+    const fakeBase = !isAbsoluteUrl ? 'http://fake-base.com' : undefined;
+    var modifiedUrl = new URL(url, fakeBase);
+
+    modifiedUrl.searchParams.set(key, value);
+
+    if (isAbsoluteUrl) {
+        return modifiedUrl.toString();
+    } else {
+        return modifiedUrl.toString().replace(fakeBase!, '');
+    }
+}

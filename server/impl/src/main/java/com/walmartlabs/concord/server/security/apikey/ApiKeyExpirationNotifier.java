@@ -35,7 +35,6 @@ import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 import javax.inject.Named;
-import javax.inject.Singleton;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.StringWriter;
@@ -49,8 +48,6 @@ import static com.walmartlabs.concord.server.jooq.Tables.API_KEYS;
 import static org.jooq.impl.DSL.currentOffsetDateTime;
 import static org.jooq.impl.DSL.trunc;
 
-@Named
-@Singleton
 public class ApiKeyExpirationNotifier implements ScheduledTask {
 
     private static final Logger log = LoggerFactory.getLogger(ApiKeyExpirationNotifier.class);

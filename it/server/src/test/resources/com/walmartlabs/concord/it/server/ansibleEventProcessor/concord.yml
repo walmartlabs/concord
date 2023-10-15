@@ -11,3 +11,67 @@ flows:
             ansible_connection: "local"
       extraVars:
         msg: "Hi there!"
+
+  emitLongNames:
+  - set:
+      localHosts:
+        - my-inventory-host-001
+        - my-inventory-host-002
+        - my-inventory-host-003
+        - my-inventory-host-004
+        - my-inventory-host-005
+        - my-inventory-host-006
+        - my-inventory-host-007
+        - my-inventory-host-008
+        - my-inventory-host-009
+        - my-inventory-host-010
+        - my-inventory-host-011
+        - my-inventory-host-012
+        - my-inventory-host-013
+        - my-inventory-host-014
+        - my-inventory-host-015
+        - my-inventory-host-016
+        - my-inventory-host-017
+        - my-inventory-host-018
+        - my-inventory-host-019
+        - my-inventory-host-020
+        - my-inventory-host-021
+        - my-inventory-host-022
+        - my-inventory-host-023
+        - my-inventory-host-024
+        - my-inventory-host-025
+        - my-inventory-host-026
+        - my-inventory-host-027
+        - my-inventory-host-028
+        - my-inventory-host-029
+        - my-inventory-host-030
+        - my-inventory-host-031
+        - my-inventory-host-032
+        - my-inventory-host-033
+        - my-inventory-host-034
+        - my-inventory-host-035
+        - my-inventory-host-036
+        - my-inventory-host-037
+        - my-inventory-host-038
+        - my-inventory-host-039
+        - my-inventory-host-040
+        - my-inventory-host-041
+        - my-inventory-host-042
+        - my-inventory-host-043
+        - my-inventory-host-044
+        - my-inventory-host-045
+        - my-inventory-host-046
+        - my-inventory-host-047
+        - my-inventory-host-048
+        - my-inventory-host-049
+        - my-inventory-host-050
+  - task: ansible
+    in:
+      playbook: playbook/large_play_and_task_names.yml
+      inventory:
+        local:
+          hosts: "${localHosts}"
+          vars:
+            ansible_connection: "local"
+      extraVars:
+        msg: "Hi there!"

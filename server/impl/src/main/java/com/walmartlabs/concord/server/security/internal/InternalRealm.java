@@ -29,9 +29,6 @@ import org.apache.shiro.authz.AuthorizationInfo;
 import org.apache.shiro.realm.AuthorizingRealm;
 import org.apache.shiro.subject.PrincipalCollection;
 
-import javax.inject.Named;
-
-@Named
 public class InternalRealm extends AuthorizingRealm {
 
     public static final String REALM_NAME = "internal";

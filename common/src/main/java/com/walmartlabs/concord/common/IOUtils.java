@@ -150,6 +150,13 @@ public final class IOUtils {
         unzip(in, targetDir, skipExisting, null, options);
     }
 
+    public static void unzip(InputStream in, Path targetDir, boolean skipExisting, FileVisitor visitor, CopyOption... options) throws IOException {
+        try (TemporaryPath tmpZip = new TemporaryPath(IOUtils.createTempFile("unzip", "zip"))) {
+            Files.copy(in, tmpZip.path(), StandardCopyOption.REPLACE_EXISTING);
+            IOUtils.unzip(tmpZip.path(), targetDir, skipExisting, visitor, options);
+        }
+    }
+
     public static void unzip(Path in, Path targetDir, boolean skipExisting, FileVisitor visitor, CopyOption... options) throws IOException {
         targetDir = targetDir.normalize().toAbsolutePath();
 

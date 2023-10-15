@@ -4,7 +4,7 @@ package com.walmartlabs.concord.server.process.pipelines.processors;
  * *****
  * Concord
  * -----
- * Copyright (C) 2017 - 2018 Walmart Inc.
+ * Copyright (C) 2017 - 2023 Walmart Inc.
  * -----
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,7 +22,6 @@ package com.walmartlabs.concord.server.process.pipelines.processors;
 
 import com.walmartlabs.concord.server.process.Payload;
 import com.walmartlabs.concord.server.process.queue.ProcessQueueManager;
-import com.walmartlabs.concord.server.sdk.ConcordApplicationException;
 import com.walmartlabs.concord.server.sdk.ProcessKey;
 import com.walmartlabs.concord.server.sdk.ProcessStatus;
 import com.walmartlabs.concord.server.sdk.metrics.WithTimer;

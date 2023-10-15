@@ -54,6 +54,8 @@ BASE_RESOURCE_PATH=/path/to/repository/concord/console2/build
 
 The UI will be accessible on http://localhost:8080
 
+**Note:** avoid using symlinks in BASE_RESOURCE_PATH.
+
 ## Custom Server URL
 
 The `proxy` property in the [package.json](./package.json) file is used to

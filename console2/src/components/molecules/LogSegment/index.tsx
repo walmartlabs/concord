@@ -25,13 +25,18 @@ import {
     formatDistance,
     formatDuration,
     intervalToDuration,
-    parseISO as parseDate
+    parseISO as parseDate,
 } from 'date-fns';
 import { Link, useLocation } from 'react-router-dom';
 
 import { SegmentStatus } from '../../../api/process/log';
 import { ConcordId } from '../../../api/common';
-import { getStatusSemanticColor, getStatusSemanticIcon, ProcessStatus } from '../../../api/process';
+import {
+    getStatusSemanticColor,
+    getStatusSemanticIcon,
+    isFinal,
+    ProcessStatus,
+} from '../../../api/process';
 
 import './styles.css';
 
@@ -70,7 +75,7 @@ const LogSegment = ({
     onStopLoading,
     onSegmentInfo,
     loading,
-    forceOpen
+    forceOpen,
 }: Props) => {
     const scrollAnchorRef = useRef<HTMLDivElement>(null);
     const location = useLocation();
@@ -87,7 +92,7 @@ const LogSegment = ({
             myRef.current.scrollIntoView({
                 behavior: 'smooth',
                 block: 'end',
-                inline: 'nearest'
+                inline: 'nearest',
             });
             setOpen(true);
         }
@@ -117,7 +122,7 @@ const LogSegment = ({
 
     useEffect(() => {
         setOpen(forceOpen);
-    }, [forceOpen])
+    }, [forceOpen]);
 
     useEffect(() => {
         if (isOpen) {
@@ -139,7 +144,7 @@ const LogSegment = ({
     const createdAtDate = parseDate(createdAt);
 
     let beenRunningFor;
-    if (status === SegmentStatus.RUNNING) {
+    if (status === SegmentStatus.RUNNING && !isFinal(processStatus)) {
         beenRunningFor = formatDistance(new Date(), createdAtDate);
     }
 
@@ -149,7 +154,7 @@ const LogSegment = ({
         wasRunningFor = formatDuration(
             intervalToDuration({
                 start: createdAtDate,
-                end: statusUpdatedAtDate
+                end: statusUpdatedAtDate,
             })
         );
     }
@@ -160,7 +165,8 @@ const LogSegment = ({
                 fluid={true}
                 size="medium"
                 className="Segment"
-                onClick={() => setOpen((prevState) => !prevState)}>
+                onClick={() => setOpen((prevState) => !prevState)}
+            >
                 <Icon name={isOpen ? 'caret down' : 'caret right'} className="State" />
 
                 <StatusIcon
@@ -186,7 +192,8 @@ const LogSegment = ({
                     to={`${baseUrl}#segmentId=${segmentId}`}
                     className="AdditionalAction Anchor"
                     data-tooltip="Hyperlink"
-                    data-inverted="">
+                    data-inverted=""
+                >
                     <Icon name="linkify" />
                 </Link>
 
@@ -197,7 +204,8 @@ const LogSegment = ({
                     target="_blank"
                     className="AdditionalAction Last"
                     data-tooltip="Download: InstanceId_SegmentId.log"
-                    data-inverted="">
+                    data-inverted=""
+                >
                     <Icon name="download" />
                 </a>
 
@@ -217,7 +225,8 @@ const LogSegment = ({
                             <div
                                 className={isAutoScroll ? 'on' : 'off'}
                                 data-tooltip="Auto Scroll"
-                                data-inverted="">
+                                data-inverted=""
+                            >
                                 <Icon name={'angle double down'} onClick={autoscrollClickHandler} />
                             </div>
                         </div>
@@ -225,7 +234,8 @@ const LogSegment = ({
                             <div
                                 className={isLoadAll ? 'on' : 'off'}
                                 data-tooltip="Show Full Log"
-                                data-inverted="">
+                                data-inverted=""
+                            >
                                 <Icon
                                     name={'arrows alternate vertical'}
                                     onClick={loadAllClickHandler}
@@ -293,7 +303,10 @@ const StatusIcon = ({ status, processStatus, warnings = 0, errors = 0 }: StatusI
     let icon: SemanticICONS = 'circle';
     let spinning = false;
 
-    if (status === SegmentStatus.RUNNING) {
+    if (status === SegmentStatus.RUNNING && isFinal(processStatus)) {
+        color = 'yellow';
+        icon = 'question circle';
+    } else if (status === SegmentStatus.RUNNING) {
         color = 'teal';
         icon = 'spinner';
         spinning = true;

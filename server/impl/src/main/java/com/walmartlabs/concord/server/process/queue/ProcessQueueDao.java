@@ -4,7 +4,7 @@ package com.walmartlabs.concord.server.process.queue;
  * *****
  * Concord
  * -----
- * Copyright (C) 2017 - 2018 Walmart Inc.
+ * Copyright (C) 2017 - 2023 Walmart Inc.
  * -----
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -35,14 +35,14 @@ import com.walmartlabs.concord.server.jooq.tables.ProcessEvents;
 import com.walmartlabs.concord.server.jooq.tables.ProcessQueue;
 import com.walmartlabs.concord.server.jooq.tables.records.ProcessQueueRecord;
 import com.walmartlabs.concord.server.process.*;
+import com.walmartlabs.concord.server.process.ProcessEntry.CheckpointRestoreHistoryEntry;
 import com.walmartlabs.concord.server.process.ProcessEntry.ProcessCheckpointEntry;
 import com.walmartlabs.concord.server.process.ProcessEntry.ProcessStatusHistoryEntry;
-import com.walmartlabs.concord.server.process.ProcessEntry.CheckpointRestoreHistoryEntry;
 import com.walmartlabs.concord.server.sdk.PartialProcessKey;
 import com.walmartlabs.concord.server.sdk.ProcessKey;
 import com.walmartlabs.concord.server.sdk.ProcessStatus;
-import org.jooq.*;
 import org.jooq.Record;
+import org.jooq.*;
 import org.jooq.exception.DataAccessException;
 import org.jooq.impl.DSL;
 import org.jooq.util.postgres.PostgresDSL;
@@ -54,7 +54,6 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 import static com.walmartlabs.concord.db.PgUtils.*;
-import static com.walmartlabs.concord.db.PgUtils.toJsonDate;
 import static com.walmartlabs.concord.server.jooq.Tables.*;
 import static com.walmartlabs.concord.server.jooq.tables.Organizations.ORGANIZATIONS;
 import static com.walmartlabs.concord.server.jooq.tables.ProcessCheckpoints.PROCESS_CHECKPOINTS;

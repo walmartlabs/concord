@@ -1,0 +1,5 @@
+openAPI:
+  info:
+    version: '2.0'
+    title: Concord Server API
+    description: Concord Server API

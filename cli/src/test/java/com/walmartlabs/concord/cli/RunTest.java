@@ -44,8 +44,9 @@ class RunTest extends AbstractTest {
         }
 
         int exitCode = run("simple", args);
-        assertEquals(0, exitCode);
+        assertExitCode(0, exitCode);
         assertLog(".*Hello, Concord.*");
+        assertEquals(0, exitCode);
         // default dependencies should be added
         assertLog(".*concord-tasks-" + Version.getVersion() + ".jar.*");
         assertLog(".*http-tasks-" + Version.getVersion() + ".jar.*");
@@ -55,29 +56,51 @@ class RunTest extends AbstractTest {
     @Test
     void testResourceTask() throws Exception {
         int exitCode = run("resourceTask", Collections.emptyList());
-        assertEquals(0, exitCode);
+        assertExitCode(0, exitCode);
         assertLog(".*\"k\" : \"v\".*");
     }
 
     @Test
     void testDepsFromProfile() throws Exception {
         int exitCode = run("profileDeps", Arrays.asList("-p", "test"));
-        assertEquals(0, exitCode);
+        assertExitCode(0, exitCode);
         assertLog(".*exists=true.*");
     }
 
     @Test
     void testCliCheckpointService() throws Exception {
         int exitCode = run("cliCheckpointService", Collections.emptyList());
-        assertEquals(0, exitCode);
+        assertExitCode(0, exitCode);
         assertLog(".*Checkpoint.*ignored.*", 2);
     }
 
     @Test
     void testCustomDefaultConfig() throws Exception {
         int exitCode = run("defaultCfg", Collections.emptyList(), "defaults.yml");
-        assertEquals(0, exitCode);
+        assertExitCode(0, exitCode);
         assertLog(".*file-tasks-" + Version.getVersion() + ".jar.*");
+    }
+
+    @Test
+    void testProcessProjectInfo() throws Exception {
+        Map<String, Object> extraVars = new HashMap<>();
+        extraVars.put("processInfo.sessionToken", "test-token");
+        extraVars.put("projectInfo.orgName", "test-org");
+
+        List<String> args = new ArrayList<>();
+        for (Map.Entry<String, Object> e : extraVars.entrySet()) {
+            args.add("-e");
+            args.add(e.getKey() + "=" + e.getValue());
+        }
+
+        int exitCode = run("processProjectInfo", args);
+        assertExitCode(0, exitCode);
+        assertLog(".*processInfo: \\{sessionToken=test-token}.*");
+        assertLog(".*projectInfo: \\{orgName=test-org}.*");
+    }
+
+    private void assertExitCode(int expected, int current) {
+        assertEquals(expected, current, () -> "out:\n" + stdOut() + "\n\n" + "err:\n" + stdErr());
     }
 
     private static int run(String payload, List<String> args) throws Exception {

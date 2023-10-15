@@ -76,7 +76,7 @@ public class FormResourceV2 {
         }
 
         String name = form.name();
-        boolean yield = form.options().yield();
+        boolean yield = form.options().isYield();
         String resourcePath = FORMS_RESOURCES_PATH + "/" + name;
         boolean isCustomForm = formService.exists(processKey, resourcePath);
 

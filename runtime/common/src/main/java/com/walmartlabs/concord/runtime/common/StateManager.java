@@ -31,7 +31,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 import java.util.HashSet;
-import java.util.Map;
 import java.util.Set;
 
 import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
@@ -71,6 +70,10 @@ public final class StateManager {
                 .resolve(Constants.Files.JOB_STATE_DIR_NAME);
 
         IOUtils.deleteRecursively(stateDir);
+
+        Path sessionFilesDir = baseDir.resolve(Constants.Files.JOB_ATTACHMENTS_DIR_NAME)
+                .resolve(Constants.Files.JOB_SESSION_FILES_DIR_NAME);
+        IOUtils.deleteRecursively(sessionFilesDir);
     }
 
     public static void saveResumeEvent(Path baseDir, String eventName) {

@@ -277,7 +277,7 @@ public class YamlOkParserTest extends AbstractParserTest {
         assertNotNull(t.getLocation());
         assertEquals("myForm", t.getName());
         assertNotNull(t.getOptions());
-        assertTrue(t.getOptions().yield());
+        assertTrue(t.getOptions().isYield());
         assertTrue(t.getOptions().saveSubmittedBy());
         assertEquals(Collections.singletonMap("username", Arrays.asList("userA", "userB")), t.getOptions().runAs());
         assertEquals(Collections.singletonMap("myField", "a different value"), t.getOptions().values());
@@ -295,7 +295,7 @@ public class YamlOkParserTest extends AbstractParserTest {
 
         assertNotNull(t2.getOptions());
         assertNotNull(t2.getOptions().valuesExpression());
-        assertFalse(t2.getOptions().yield());
+        assertFalse(t2.getOptions().isYield());
         assertFalse(t2.getOptions().saveSubmittedBy());
         assertEquals("${{ 'fieldA': 'valueA' }}", t2.getOptions().valuesExpression());
         assertEquals("${{ 'username': [ 'userA', 'userB' ] }}", t2.getOptions().runAsExpression());
@@ -568,6 +568,13 @@ public class YamlOkParserTest extends AbstractParserTest {
         assertEquals(2, p1.forms().get("myForm").fields().size());
 
         assertTrue(p1.configuration().debug());
+    }
+
+    @Test
+    public void testArgsOrder() throws Exception {
+        ProcessDefinition pd = load("args-order.concord.yml");
+        Map.Entry<String, Object> e = pd.configuration().arguments().entrySet().iterator().next();
+        assertEquals("a", e.getKey());
     }
 
     private static void assertMeta(StepOptions o) {

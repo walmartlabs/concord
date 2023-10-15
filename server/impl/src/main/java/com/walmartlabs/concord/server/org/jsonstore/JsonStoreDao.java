@@ -4,7 +4,7 @@ package com.walmartlabs.concord.server.org.jsonstore;
  * *****
  * Concord
  * -----
- * Copyright (C) 2017 - 2019 Walmart Inc.
+ * Copyright (C) 2017 - 2023 Walmart Inc.
  * -----
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -32,8 +32,8 @@ import com.walmartlabs.concord.server.org.EntityOwner;
 import com.walmartlabs.concord.server.org.ResourceAccessEntry;
 import com.walmartlabs.concord.server.org.ResourceAccessLevel;
 import com.walmartlabs.concord.server.user.UserType;
-import org.jooq.*;
 import org.jooq.Record;
+import org.jooq.*;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -58,7 +58,7 @@ public class JsonStoreDao extends AbstractDao {
     }
 
     @Override
-    public void tx(AbstractDao.Tx t) {
+    public void tx(Tx t) {
         super.tx(t);
     }
 
@@ -133,8 +133,8 @@ public class JsonStoreDao extends AbstractDao {
         return txResult(tx -> insert(tx, orgId, name, visibility, ownerId));
     }
 
-    public void update(UUID storeId, String name, JsonStoreVisibility visibility, UUID ownerId) {
-        tx(tx -> update(tx, storeId, name, visibility, ownerId));
+    public void update(UUID storeId, String name, JsonStoreVisibility visibility, UUID orgId, UUID ownerId) {
+        tx(tx -> update(tx, storeId, name, visibility, orgId, ownerId));
     }
 
     public void delete(UUID id) {
@@ -208,7 +208,7 @@ public class JsonStoreDao extends AbstractDao {
     }
 
     @SuppressWarnings("unchecked")
-    private void update(DSLContext tx, UUID storeId, String name, JsonStoreVisibility visibility, UUID ownerId) {
+    private void update(DSLContext tx, UUID storeId, String name, JsonStoreVisibility visibility, UUID orgId, UUID ownerId) {
         UpdateSetFirstStep<JsonStoresRecord> s = tx.update(JSON_STORES);
 
         if (name != null) {
@@ -221,6 +221,9 @@ public class JsonStoreDao extends AbstractDao {
 
         if (ownerId != null) {
             s.set(JSON_STORES.OWNER_ID, ownerId);
+        }
+        if (orgId != null) {
+            s.set(JSON_STORES.ORG_ID, orgId);
         }
 
         ((UpdateSetMoreStep<JsonStoresRecord>) s)

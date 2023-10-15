@@ -4,7 +4,7 @@ package com.walmartlabs.concord.svm;
  * *****
  * Concord
  * -----
- * Copyright (C) 2017 - 2019 Walmart Inc.
+ * Copyright (C) 2017 - 2023 Walmart Inc.
  * -----
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -114,6 +114,21 @@ public interface State extends Serializable {
      * Clears the thread's error returning it.
      */
     Exception clearThreadError(ThreadId threadId);
+
+    /**
+     * Returns call stack trace for thread id.
+     */
+    List<StackTraceItem> getStackTrace(ThreadId threadId);
+
+    /**
+     * Adds a stack trace item to the specified thread.
+     */
+    void pushStackTraceItem(ThreadId threadId, StackTraceItem item);
+
+    /**
+     * Clears stack trace for the specific thread.
+     */
+    void clearStackTrace(ThreadId threadId);
 
     /**
      * Performs state maintenance and cleanup.

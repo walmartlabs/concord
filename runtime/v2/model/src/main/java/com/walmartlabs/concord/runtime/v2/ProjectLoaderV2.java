@@ -45,11 +45,15 @@ public class ProjectLoaderV2 {
     }
 
     public Result load(Path baseDir, ImportsNormalizer importsNormalizer, ImportsListener listener) throws Exception {
+        return load(baseDir, importsNormalizer, listener, new NopProjectLoadListener());
+    }
+
+    public Result load(Path baseDir, ImportsNormalizer importsNormalizer, ImportsListener listener, ProjectLoadListener loadListener) throws Exception {
         YamlParserV2 parser = new YamlParserV2();
 
         // load the initial ProcessDefinition from the root concord.yml file
         // it will be used to determine whether we need to load other resources (e.g. imports)
-        ProcessDefinition root = loadRoot(parser, baseDir);
+        ProcessDefinition root = loadRoot(parser, baseDir, loadListener);
 
         List<Snapshot> snapshots = Collections.emptyList();
         if (root != null) {
@@ -62,7 +66,9 @@ public class ProjectLoaderV2 {
 
         List<ProcessDefinition> definitions = new ArrayList<>();
         for (Path p : files) {
-            definitions.add(parser.parse(baseDir, p));
+            ProcessDefinition pd = parser.parse(baseDir, p);
+            loadListener.afterFlowDefinitionLoaded(p);
+            definitions.add(pd);
         }
 
         if (root != null) {
@@ -73,13 +79,15 @@ public class ProjectLoaderV2 {
             throw new IllegalStateException("Can't find any Concord process definition files in '" + baseDir + "'");
         }
 
+        loadListener.afterProjectLoaded();
+
         return new Result(snapshots, merge(definitions));
     }
 
     public void export(Path baseDir, Path destDir, ImportsNormalizer importsNormalizer, ImportsListener listener, CopyOption... options) throws Exception {
         YamlParserV2 parser = new YamlParserV2();
 
-        ProcessDefinition root = loadRoot(parser, baseDir);
+        ProcessDefinition root = loadRoot(parser, baseDir, new NopProjectLoadListener());
 
         Resources resources = root != null ? root.resources() : Resources.builder().build();
         boolean hasImports = root != null && root.imports() != null && !root.imports().isEmpty();
@@ -104,11 +112,13 @@ public class ProjectLoaderV2 {
         }
     }
 
-    private ProcessDefinition loadRoot(YamlParserV2 parser, Path baseDir) throws IOException {
+    private ProcessDefinition loadRoot(YamlParserV2 parser, Path baseDir, ProjectLoadListener loadListener) throws IOException {
         for (String fileName : Constants.Files.PROJECT_ROOT_FILE_NAMES) {
             Path p = baseDir.resolve(fileName);
             if (Files.exists(p)) {
-                return parser.parse(baseDir, p);
+                ProcessDefinition result = parser.parse(baseDir, p);
+                loadListener.afterFlowDefinitionLoaded(p);
+                return result;
             }
         }
         return null;
@@ -165,14 +175,14 @@ public class ProjectLoaderV2 {
             throw new IllegalArgumentException("Definitions is empty");
         }
 
-        Map<String, List<Step>> flows = new HashMap<>();
-        Map<String, Profile> profiles = new HashMap<>();
+        Map<String, List<Step>> flows = new LinkedHashMap<>();
+        Map<String, Profile> profiles = new LinkedHashMap<>();
         List<Trigger> triggers = new ArrayList<>();
         List<Import> imports = new ArrayList<>();
-        Map<String, Form> forms = new HashMap<>();
+        Map<String, Form> forms = new LinkedHashMap<>();
         Set<String> resources = new HashSet<>();
         Set<String> dependencies = new HashSet<>();
-        Map<String, Object> arguments = new HashMap<>();
+        Map<String, Object> arguments = new LinkedHashMap<>();
 
         for (ProcessDefinition pd : definitions) {
             flows.putAll(pd.flows());
