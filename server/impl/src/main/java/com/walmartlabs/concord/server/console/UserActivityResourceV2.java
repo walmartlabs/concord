@@ -265,7 +265,7 @@ public class UserActivityResourceV2 implements Resource {
                             UI_PROCESS_CARDS.ICON,
                             isCustomForm.as("isCustomForm"))
                     .from(UI_PROCESS_CARDS)
-                    .join(REPOSITORIES, JoinType.JOIN).on(REPOSITORIES.REPO_ID.eq(UI_PROCESS_CARDS.REPO_ID))
+                    .leftJoin(REPOSITORIES).on(REPOSITORIES.REPO_ID.eq(UI_PROCESS_CARDS.REPO_ID))
                     .join(PROJECTS, JoinType.JOIN).on(PROJECTS.PROJECT_ID.eq(UI_PROCESS_CARDS.PROJECT_ID))
                     .join(ORGANIZATIONS, JoinType.JOIN).on(ORGANIZATIONS.ORG_ID.eq(PROJECTS.ORG_ID));
         }
