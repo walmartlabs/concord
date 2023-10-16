@@ -1,6 +1,11 @@
 # Change log
 
-## [2.2.0] - 
+## [2.2.0] - Unreleased
+
+### Added
+
+- pfed-sso: enable bearer token authentication
+([#811](https://github.com/walmartlabs/concord/pull/811)).
 
 ### Changed
 
