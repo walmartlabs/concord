@@ -1,0 +1,44 @@
+configuration:
+  runtime: concord-v2
+  arguments:
+    concordUrl: "http://localhost:8001"
+
+flows:
+  default:
+    - set:
+        callbackUrlTemplate: "%s/api/v1/process/%s/resume/%s?saveAs=arguments.%s"
+        eventName: "myEvent"
+        callbackResultVariable: "callbackResult"
+
+    - name: "Prepare variables for callback url"
+      script: js
+      body: |
+        // session token
+        const URLEncoder = Java.type('java.net.URLEncoder');
+        const sessionToken = URLEncoder.encode(context.processConfiguration().processInfo().sessionToken());
+
+        // url with session token
+        const URL = Java.type('java.net.URL');
+        const url = new URL(concordUrl);
+
+        const concordUrlWithAuth = url.protocol + '://' +  sessionToken + '@' + url.host + (url.port != -1 ? (":" + url.port) : "") + url.path;
+
+        result.set('sessionToken', sessionToken);
+        result.set('concordUrlWithAuth', concordUrlWithAuth);
+      out:
+        sessionToken: ${result.sessionToken}
+        concordUrlWithAuth: ${result.concordUrlWithAuth}
+
+    - expr: "${String.format(callbackUrlTemplate, concordUrlWithAuth, txId, eventName, callbackResultVariable)}"
+      out: callbackUrl
+
+    - log: |
+        to resume process:
+        curl -H 'Content-type: application/json' -X POST -d '{"param1":"value1","param2":"value2"}' "${callbackUrl}"
+
+    - name: "suspend"
+      script: js
+      body: |
+        context.suspend('myEvent');
+
+    - log: "after suspend: ${callbackResult}"
