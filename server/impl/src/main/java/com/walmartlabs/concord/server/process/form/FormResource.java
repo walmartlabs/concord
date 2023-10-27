@@ -23,10 +23,11 @@ package com.walmartlabs.concord.server.process.form;
 import com.walmartlabs.concord.sdk.Constants;
 import com.walmartlabs.concord.server.process.state.ProcessStateManager;
 import com.walmartlabs.concord.server.sdk.PartialProcessKey;
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
-import io.swagger.annotations.ApiParam;
-import io.swagger.annotations.Authorization;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.parameters.RequestBody;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.jboss.resteasy.plugins.providers.multipart.MultipartInput;
 import org.sonatype.siesta.Resource;
 
@@ -43,8 +44,8 @@ import static com.walmartlabs.concord.server.process.state.ProcessStateManager.p
 
 @Named
 @Singleton
-@Api(value = "Process Forms", authorizations = {@Authorization("api_key"), @Authorization("session_key"), @Authorization("ldap")})
 @Path("/api/v1/process")
+@Tag(name = "Process Forms")
 public class FormResource implements Resource {
 
     private final ProcessStateManager stateManager;
@@ -59,10 +60,10 @@ public class FormResource implements Resource {
     }
 
     @GET
-    @ApiOperation(value = "List the available forms", responseContainer = "list", response = FormListEntry.class)
     @Path("/{processInstanceId}/form")
     @Produces(MediaType.APPLICATION_JSON)
-    public List<FormListEntry> list(@ApiParam @PathParam("processInstanceId") UUID processInstanceId) {
+    @Operation(description = "List the available forms", operationId = "listProcessForms")
+    public List<FormListEntry> list(@PathParam("processInstanceId") UUID processInstanceId) {
         if (isV2(processInstanceId)) {
             return formResourceV2.list(processInstanceId);
         } else {
@@ -74,11 +75,11 @@ public class FormResource implements Resource {
      * Return the current state of a form instance.
      */
     @GET
-    @ApiOperation("Get the current state of a form")
     @Path("/{processInstanceId}/form/{formName}")
     @Produces(MediaType.APPLICATION_JSON)
-    public FormInstanceEntry get(@ApiParam @PathParam("processInstanceId") UUID processInstanceId,
-                                 @ApiParam @PathParam("formName") String formName) {
+    @Operation(description = "Get the current state of a form", operationId = "getProcessForm")
+    public FormInstanceEntry get(@PathParam("processInstanceId") UUID processInstanceId,
+                                 @PathParam("formName") String formName) {
 
         if (isV2(processInstanceId)) {
             return formResourceV2.get(processInstanceId, formName);
@@ -91,13 +92,13 @@ public class FormResource implements Resource {
      * Submit form instance's data, potentially resuming a suspended process.
      */
     @POST
-    @ApiOperation(value = "Submit JSON form data")
     @Path("/{processInstanceId}/form/{formName}")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    public FormSubmitResponse submit(@ApiParam @PathParam("processInstanceId") UUID processInstanceId,
-                                     @ApiParam @PathParam("formName") String formName,
-                                     @ApiParam Map<String, Object> data) {
+    @Operation(description = "Submit JSON form data", operationId = "submitForm")
+    public FormSubmitResponse submit(@PathParam("processInstanceId") UUID processInstanceId,
+                                     @PathParam("formName") String formName,
+                                     Map<String, Object> data) {
 
         if (isV2(processInstanceId)) {
             return formResourceV2.submit(processInstanceId, formName, data);
@@ -112,13 +113,13 @@ public class FormResource implements Resource {
      * conflicts in the Swagger spec/clients.
      */
     @POST
-    @ApiOperation(value = "Submit multipart form data")
     @Path("/{processInstanceId}/form/{formName}/multipart")
     @Consumes(MediaType.MULTIPART_FORM_DATA)
     @Produces(MediaType.APPLICATION_JSON)
+    @Operation(description = "Submit JSON form data", operationId = "submitFormAsMultipart")
     public FormSubmitResponse submit(@PathParam("processInstanceId") UUID processInstanceId,
                                      @PathParam("formName") String formName,
-                                     MultipartInput data) {
+                                     @RequestBody(content = @Content(schema = @Schema(type = "object"))) MultipartInput data) {
 
         if (isV2(processInstanceId)) {
             return formResourceV2.submit(processInstanceId, formName, data);

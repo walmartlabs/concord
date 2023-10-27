@@ -1,0 +1,5 @@
+openAPI:
+  info:
+    version: '2.0'
+    title: Concord Node Roster API
+    description: Concord Node Roster API

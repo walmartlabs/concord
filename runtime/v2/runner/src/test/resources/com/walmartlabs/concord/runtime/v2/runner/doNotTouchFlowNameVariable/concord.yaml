@@ -1,0 +1,13 @@
+flows:
+  default:
+    - set:
+        testvar1: "test123"
+        flowName: "This is MY variable"
+    - log: "flowName: ${flowName}"
+    - call: innerFlow
+
+  innerFlow:
+    - log: "flowName in inner flow: '${flowName}'"
+    - if: "${flowName != 'This is MY variable'}"
+      then:
+        - throw: "Hands off my variable!!!!"

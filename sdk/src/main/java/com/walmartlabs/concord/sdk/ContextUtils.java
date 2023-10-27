@@ -216,12 +216,20 @@ public final class ContextUtils {
     }
 
     public static String getSessionToken(Context ctx) {
-        Map<String, Object> processInfo = assertMap(ctx, Constants.Request.PROCESS_INFO_KEY);
-        String result = (String) processInfo.get("sessionKey");
+        String result = sessionTokenOrNull(ctx);
         if (result == null) {
-            throw new IllegalArgumentException("Session key not found in the process info: " + processInfo);
+            throw new IllegalArgumentException("Session key not found in the process info: " + ctx.getVariable(Constants.Request.PROCESS_INFO_KEY));
         }
         return result;
+    }
+
+    @SuppressWarnings("unchecked")
+    public static String sessionTokenOrNull(Context ctx) {
+        Map<String, Object> processInfo = (Map<String, Object>) ctx.getVariable(Constants.Request.PROCESS_INFO_KEY);
+        if (processInfo == null) {
+            return null;
+        }
+        return (String) processInfo.get("sessionKey");
     }
 
     private ContextUtils() {

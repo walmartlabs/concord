@@ -194,8 +194,8 @@ public class AnsibleHostProcessor implements EventProcessor {
     private static HostStatus getHostStatus(AnsibleEvent e) {
         boolean ignoreErrors = e.ignoreErrors();
         String status = e.getStatus();
-        if (ignoreErrors && AnsibleHostProcessor.HostStatus.FAILED.name().equals(status)) {
-            return AnsibleHostProcessor.HostStatus.OK;
+        if (ignoreErrors && HostStatus.FAILED.name().equals(status)) {
+            return HostStatus.OK;
         }
         return HostStatus.of(status);
     }
@@ -264,7 +264,7 @@ public class AnsibleHostProcessor implements EventProcessor {
 
         static HostItem from(AnsibleEvent event) {
             return ImmutableHostItem.builder()
-                    .key(HostItem.Key.from(event))
+                    .key(Key.from(event))
                     .status(getHostStatus(event))
                     .duration(event.duration())
                     .eventSeq(event.eventSeq())
