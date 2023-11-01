@@ -9,6 +9,8 @@
 
 ### Changed
 
+- console2: calculate process duration from process last running timestamp
+([#794](https://github.com/walmartlabs/concord/pull/794));
 - console2: do not drop secrets form values on error/password check fail
 ([#798](https://github.com/walmartlabs/concord/pull/798));
 
