@@ -23,6 +23,8 @@ package com.walmartlabs.concord.it.runtime.v1;
 import ca.ibodrov.concord.testcontainers.ConcordProcess;
 import ca.ibodrov.concord.testcontainers.Payload;
 import ca.ibodrov.concord.testcontainers.junit5.ConcordRule;
+import com.google.common.base.Charsets;
+import com.google.common.io.Resources;
 import com.walmartlabs.concord.client2.FormListEntry;
 import com.walmartlabs.concord.client2.FormSubmitResponse;
 import com.walmartlabs.concord.client2.ProcessEntry;
@@ -35,8 +37,10 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.Timeout;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
+import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.net.URL;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -517,6 +521,22 @@ public class ProcessIT {
         proc.assertLog(".*Invalid exclusive mode.*");
     }
 
+    @Test
+    public void testTaskWithClient1() throws Exception {
+        String concordYml = resourceToString(ProcessIT.class.getResource("client1Task/concord.yml"))
+                .replaceAll("PROJECT_VERSION", ITConstants.PROJECT_VERSION);
+
+        Payload payload = new Payload().concordYml(concordYml);
+
+        ConcordProcess proc = concord.processes().start(payload);
+        proc.expectStatus(StatusEnum.FINISHED);
+
+        // ---
+
+        proc.assertLog(".*process entry: RUNNING.*");
+        proc.assertLog(".*Works!.*");
+    }
+
     @SuppressWarnings("unchecked")
     private static void assertProcessErrorMessage(ProcessEntry p, String expected) {
         assertNotNull(p);
@@ -535,5 +555,9 @@ public class ProcessIT {
 
     private static URI resource(String name) throws URISyntaxException {
         return ProcessIT.class.getResource(name).toURI();
+    }
+
+    private static String resourceToString(URL resource) throws IOException {
+        return Resources.toString(resource, Charsets.UTF_8);
     }
 }
