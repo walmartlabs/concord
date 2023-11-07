@@ -13,6 +13,10 @@
 ([#794](https://github.com/walmartlabs/concord/pull/794));
 - console2: do not drop secrets form values on error/password check fail
 ([#798](https://github.com/walmartlabs/concord/pull/798));
+- project: attach javadoc jars only on release
+([#823](https://github.com/walmartlabs/concord/pull/823)).
+
+
 
 ## [2.1.0] - 2023-10-10
 
@@ -45,8 +49,9 @@
 - cli: active profiles fix
 ([#789](https://github.com/walmartlabs/concord/pull/789)).
 
-## [2.0.0] - 2023-08-16
 
+
+## [2.0.0] - 2023-08-16
 
 # Breaking
 
@@ -104,6 +109,8 @@ auth ([#764](https://github.com/walmartlabs/concord/pull/764));
 - console2: do not remove project after rename;
 ([#770](https://github.com/walmartlabs/concord/pull/770)).
 
+
+
 ## [1.102.0] - 2023-05-22
 
 ### Added
@@ -137,6 +144,8 @@ improve error messages
 ([#744](https://github.com/walmartlabs/concord/pull/744));
 - runtime-v2: allow increment variables in expressions
 ([#740](https://github.com/walmartlabs/concord/pull/740)).
+
+
 
 ## [1.101.0] - 2023-03-29
 
@@ -183,6 +192,8 @@ forms
 ([#721](https://github.com/walmartlabs/concord/pull/721));
 - concord-server: remove more @Named usage
 ([#650](https://github.com/walmartlabs/concord/pull/650)).
+
+
 
 ## [1.99.0] - 2023-02-24
 
@@ -390,6 +401,7 @@ to support k8s 1.22+
 ([#639](https://github.com/walmartlabs/concord/pull/639)).
 
 
+
 ## [1.95.0] - 2022-04-16
 
 ### Added
@@ -430,6 +442,8 @@ files ([#593](https://github.com/walmartlabs/concord/pull/593)).
 ([#584](https://github.com/walmartlabs/concord/pull/584));
 - it: explicitly specify initialBranch for git tests
 ([#582](https://github.com/walmartlabs/concord/pull/582)).
+
+
 
 ## [1.93.3] - 2022-03-11
 
