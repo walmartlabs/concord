@@ -25,6 +25,7 @@ import com.walmartlabs.concord.server.OperationResult;
 import com.walmartlabs.concord.server.audit.AuditAction;
 import com.walmartlabs.concord.server.audit.AuditLog;
 import com.walmartlabs.concord.server.audit.AuditObject;
+import com.walmartlabs.concord.server.boot.validation.ValidationErrorsException;
 import com.walmartlabs.concord.server.jooq.enums.RawPayloadMode;
 import com.walmartlabs.concord.server.org.EntityOwner;
 import com.walmartlabs.concord.server.org.OrganizationEntry;
@@ -42,7 +43,6 @@ import com.walmartlabs.concord.server.user.UserEntry;
 import com.walmartlabs.concord.server.user.UserManager;
 import com.walmartlabs.concord.server.user.UserType;
 import org.jooq.DSLContext;
-import org.sonatype.siesta.ValidationErrorsException;
 
 import javax.inject.Inject;
 import javax.ws.rs.core.Response;

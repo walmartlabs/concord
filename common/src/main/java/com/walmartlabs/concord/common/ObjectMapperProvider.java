@@ -38,7 +38,7 @@ public class ObjectMapperProvider implements Provider<ObjectMapper> {
 
     @Override
     public ObjectMapper get() {
-        log.info("Using concord-common's ObjectMapper...");
+        log.debug("Using concord-common's ObjectMapper...");
 
         ObjectMapper mapper = new ObjectMapper()
                 .registerModule(new Jdk8Module())

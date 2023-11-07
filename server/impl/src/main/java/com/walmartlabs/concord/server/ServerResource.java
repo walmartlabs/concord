@@ -30,14 +30,13 @@ import org.sonatype.siesta.Resource;
 
 import javax.inject.Inject;
 import javax.inject.Named;
-import javax.inject.Singleton;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
+import java.time.OffsetDateTime;
 
-@Singleton
 @Path("/api/v1/server")
 public class ServerResource implements Resource {
 
@@ -83,6 +82,13 @@ public class ServerResource implements Resource {
         taskScheduler.stop();
     }
 
+    @GET
+    @Path("/test")
+    @Produces(MediaType.APPLICATION_JSON)
+    public TestBean test() {
+        return new TestBean(OffsetDateTime.now());
+    }
+
     @Named
     public static class PingDao extends AbstractDao {
 
@@ -94,5 +100,8 @@ public class ServerResource implements Resource {
         public void ping() {
             dsl().selectOne().execute();
         }
+    }
+
+    public record TestBean(OffsetDateTime now) {
     }
 }

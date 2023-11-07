@@ -22,8 +22,8 @@ package com.walmartlabs.concord.server.org.triggers;
 
 import com.walmartlabs.concord.process.loader.model.Trigger;
 import com.walmartlabs.concord.sdk.Constants;
+import com.walmartlabs.concord.server.boot.validation.ValidationErrorsException;
 import org.jooq.DSLContext;
-import org.sonatype.siesta.ValidationErrorsException;
 
 import javax.inject.Inject;
 import java.time.OffsetDateTime;
