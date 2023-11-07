@@ -26,6 +26,8 @@ import org.eclipse.aether.*;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.artifact.DefaultArtifact;
 import org.eclipse.aether.collection.CollectRequest;
+import org.eclipse.aether.collection.DependencyCollectionContext;
+import org.eclipse.aether.collection.DependencySelector;
 import org.eclipse.aether.graph.Dependency;
 import org.eclipse.aether.repository.LocalRepository;
 import org.eclipse.aether.repository.Proxy;
@@ -37,6 +39,9 @@ import org.eclipse.aether.transfer.ArtifactNotFoundException;
 import org.eclipse.aether.transfer.TransferEvent;
 import org.eclipse.aether.util.artifact.JavaScopes;
 import org.eclipse.aether.util.filter.ExclusionsDependencyFilter;
+import org.eclipse.aether.util.graph.selector.AndDependencySelector;
+import org.eclipse.aether.util.graph.selector.ExclusionDependencySelector;
+import org.eclipse.aether.util.graph.selector.OptionalDependencySelector;
 import org.eclipse.aether.util.repository.AuthenticationBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -157,8 +162,8 @@ public class DependencyManager {
                 Artifact artifact = new DefaultArtifact(id);
 
                 Map<String, List<String>> cfg = splitQuery(item);
-                String scope = getSingleValue(cfg,"scope", JavaScopes.COMPILE);
-                boolean transitive = Boolean.parseBoolean(getSingleValue(cfg,"transitive", "true"));
+                String scope = getSingleValue(cfg, "scope", JavaScopes.COMPILE);
+                boolean transitive = Boolean.parseBoolean(getSingleValue(cfg, "transitive", "true"));
 
                 if (transitive) {
                     mavenTransitiveDependencies.add(new MavenDependency(artifact, scope));
@@ -285,6 +290,13 @@ public class DependencyManager {
         session.setChecksumPolicy(RepositoryPolicy.CHECKSUM_POLICY_IGNORE);
         session.setIgnoreArtifactDescriptorRepositories(strictRepositories);
 
+        DependencySelector selector = new AndDependencySelector(
+                new ClientDepSelector(),
+                new OptionalDependencySelector(),
+                new ExclusionDependencySelector());
+
+        session.setDependencySelector(selector);
+
         LocalRepository localRepo = new LocalRepository(localCacheDir.toFile());
         session.setLocalRepositoryManager(system.newLocalRepositoryManager(session, localRepo));
         session.setTransferListener(new AbstractTransferListener() {
@@ -387,6 +399,45 @@ public class DependencyManager {
             m.put(k, vv);
         }
         return m;
+    }
+
+    private static class ClientDepSelector implements DependencySelector {
+
+        private final boolean transitive;
+        private final Collection<String> excluded;
+
+        public ClientDepSelector() {
+            this(false, Arrays.asList("test", "provided"));
+        }
+
+        public ClientDepSelector(boolean transitive, Collection<String> excluded) {
+            this.transitive = transitive;
+            this.excluded = excluded;
+        }
+
+        @Override
+        public boolean selectDependency(Dependency dependency) {
+            if ("com.walmartlabs.concord".equals(dependency.getArtifact().getGroupId()) &&
+                    "concord-client".equals(dependency.getArtifact().getArtifactId())) {
+                return true;
+            }
+
+            if (!transitive) {
+                return true;
+            }
+
+            String scope = dependency.getScope();
+            return !excluded.contains(scope);
+        }
+
+        @Override
+        public DependencySelector deriveChildSelector(DependencyCollectionContext context) {
+            if (this.transitive || context.getDependency() == null) {
+                return this;
+            }
+
+            return new ClientDepSelector(true, excluded);
+        }
     }
 
     private static final class DependencyList {
