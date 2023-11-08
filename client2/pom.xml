@@ -17,12 +17,7 @@
         <dependency>
             <groupId>com.walmartlabs.concord.server</groupId>
             <artifactId>concord-server</artifactId>
-            <scope>provided</scope>
-        </dependency>
-        <dependency>
-            <groupId>com.walmartlabs.concord</groupId>
-            <artifactId>concord-common</artifactId>
-            <scope>provided</scope>
+            <scope>compile</scope>
         </dependency>
         <dependency>
             <groupId>org.slf4j</groupId>
@@ -51,17 +46,7 @@
         <dependency>
             <groupId>org.immutables</groupId>
             <artifactId>value</artifactId>
-            <scope>provided</scope>
-        </dependency>
-        <dependency>
-            <groupId>com.google.code.findbugs</groupId>
-            <artifactId>jsr305</artifactId>
-            <scope>provided</scope>
-        </dependency>
-        <dependency>
-            <groupId>com.google.errorprone</groupId>
-            <artifactId>error_prone_annotations</artifactId>
-            <scope>provided</scope>
+            <scope>compile</scope>
         </dependency>
 
         <!-- JDK9+ compatibility -->
@@ -153,17 +138,10 @@
                 <groupId>org.revapi</groupId>
                 <artifactId>revapi-maven-plugin</artifactId>
                 <configuration>
-                    <skip>true</skip>
                     <analysisConfiguration>
                         <revapi.ignore>
                             <item>
-                                <code>java.field.serialVersionUIDUnchanged</code>
-                            </item>
-                            <item>
-                                <code>java.method.parameterTypeParameterChanged</code>
-                            </item>
-                            <item>
-                                <code>java.method.returnTypeTypeParametersChanged</code>
+                                <code>java.class.nonPublicPartOfAPI</code>
                             </item>
                         </revapi.ignore>
                     </analysisConfiguration>
