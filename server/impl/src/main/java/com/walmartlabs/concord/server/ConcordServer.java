@@ -55,7 +55,8 @@ public final class ConcordServer {
      */
     public static ConcordServer withAutoWiring() throws Exception {
         ClassLoader cl = ConcordServer.class.getClassLoader();
-        return withModules(new WireModule(new SpaceModule(new URLClassSpace(cl), BeanScanning.GLOBAL_INDEX)));
+        return withModules(
+                new WireModule(new SpaceModule(new URLClassSpace(cl), BeanScanning.GLOBAL_INDEX)));
     }
 
     /**
