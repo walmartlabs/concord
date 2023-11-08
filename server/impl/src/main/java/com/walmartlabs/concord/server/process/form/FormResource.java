@@ -24,6 +24,7 @@ import com.walmartlabs.concord.sdk.Constants;
 import com.walmartlabs.concord.server.process.state.ProcessStateManager;
 import com.walmartlabs.concord.server.sdk.PartialProcessKey;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.parameters.RequestBody;
@@ -119,7 +120,7 @@ public class FormResource implements Resource {
     @Operation(description = "Submit JSON form data", operationId = "submitFormAsMultipart")
     public FormSubmitResponse submit(@PathParam("processInstanceId") UUID processInstanceId,
                                      @PathParam("formName") String formName,
-                                     @RequestBody(content = @Content(schema = @Schema(type = "object"))) MultipartInput data) {
+                                     @Parameter(schema = @Schema(type = "object", implementation = Object.class)) MultipartInput data) {
 
         if (isV2(processInstanceId)) {
             return formResourceV2.submit(processInstanceId, formName, data);

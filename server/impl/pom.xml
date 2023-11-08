@@ -388,7 +388,6 @@
                 <groupId>io.swagger.core.v3</groupId>
                 <artifactId>swagger-maven-plugin</artifactId>
                 <configuration>
-<!--                    <openapi31>true</openapi31>-->
                     <outputFileName>swagger</outputFileName>
                     <outputPath>${project.build.directory}/classes/com/walmartlabs/concord/server/swagger</outputPath>
                     <outputFormat>YAML</outputFormat>

@@ -143,6 +143,9 @@
                             <item>
                                 <code>java.class.nonPublicPartOfAPI</code>
                             </item>
+                            <item>
+                                <code>java.class.removed</code>
+                            </item>
                         </revapi.ignore>
                     </analysisConfiguration>
                 </configuration>
