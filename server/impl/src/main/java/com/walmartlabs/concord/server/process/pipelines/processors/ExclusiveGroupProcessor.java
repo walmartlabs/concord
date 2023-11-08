@@ -262,11 +262,11 @@ public class ExclusiveGroupProcessor implements PayloadProcessor {
 
         public boolean exists(DSLContext tx, UUID currentInstanceId, UUID parentInstanceId, UUID projectId, String exclusiveGroup) {
             SelectConditionStep<Record1<Integer>> s = tx.selectOne()
-                    .from(PROCESS_QUEUE)
-                    .where(jsonbText(PROCESS_QUEUE.EXCLUSIVE, "group").eq(exclusiveGroup)
-                            .and(PROCESS_QUEUE.PROJECT_ID.eq(projectId)
-                                    .and(PROCESS_QUEUE.INSTANCE_ID.notEqual(currentInstanceId)
-                                            .and(PROCESS_QUEUE.CURRENT_STATUS.in(RUNNING_STATUSES)))));
+                            .from(PROCESS_QUEUE)
+                            .where(jsonbText(PROCESS_QUEUE.EXCLUSIVE, "group").eq(exclusiveGroup)
+                                    .and(PROCESS_QUEUE.PROJECT_ID.eq(projectId)
+                                            .and(PROCESS_QUEUE.INSTANCE_ID.notEqual(currentInstanceId)
+                                                    .and(PROCESS_QUEUE.CURRENT_STATUS.in(RUNNING_STATUSES)))));
 
             // parent's
             if (parentInstanceId != null) {
@@ -326,14 +326,14 @@ public class ExclusiveGroupProcessor implements PayloadProcessor {
                                             .and(PROCESS_QUEUE.CURRENT_STATUS.in(CANCELLABLE_STATUSES)))));
 
             SelectJoinStep<Record1<UUID>> children = tx.withRecursive("children").as(
-                            select(ProcessQueue.PROCESS_QUEUE.INSTANCE_ID, ProcessQueue.PROCESS_QUEUE.PARENT_INSTANCE_ID).from(ProcessQueue.PROCESS_QUEUE)
-                                    .where(ProcessQueue.PROCESS_QUEUE.INSTANCE_ID.eq(currentProcessKey.getInstanceId()))
-                                    .unionAll(
-                                            select(ProcessQueue.PROCESS_QUEUE.INSTANCE_ID, ProcessQueue.PROCESS_QUEUE.PARENT_INSTANCE_ID)
-                                                    .from(ProcessQueue.PROCESS_QUEUE)
-                                                    .join(name("children"))
-                                                    .on(ProcessQueue.PROCESS_QUEUE.PARENT_INSTANCE_ID.eq(
-                                                            field(name("children", "INSTANCE_ID"), UUID.class)))))
+                    select(ProcessQueue.PROCESS_QUEUE.INSTANCE_ID, ProcessQueue.PROCESS_QUEUE.PARENT_INSTANCE_ID).from(ProcessQueue.PROCESS_QUEUE)
+                            .where(ProcessQueue.PROCESS_QUEUE.INSTANCE_ID.eq(currentProcessKey.getInstanceId()))
+                            .unionAll(
+                                    select(ProcessQueue.PROCESS_QUEUE.INSTANCE_ID, ProcessQueue.PROCESS_QUEUE.PARENT_INSTANCE_ID)
+                                            .from(ProcessQueue.PROCESS_QUEUE)
+                                            .join(name("children"))
+                                            .on(ProcessQueue.PROCESS_QUEUE.PARENT_INSTANCE_ID.eq(
+                                                    field(name("children", "INSTANCE_ID"), UUID.class)))))
                     .select(field("children.INSTANCE_ID", UUID.class))
                     .from(name("children"));
 
@@ -346,14 +346,14 @@ public class ExclusiveGroupProcessor implements PayloadProcessor {
 
     private static SelectJoinStep<Record1<UUID>> parents(DSLContext tx, UUID parentInstanceId) {
         return tx.withRecursive("parents").as(
-                        select(ProcessQueue.PROCESS_QUEUE.INSTANCE_ID, ProcessQueue.PROCESS_QUEUE.PARENT_INSTANCE_ID).from(ProcessQueue.PROCESS_QUEUE)
-                                .where(ProcessQueue.PROCESS_QUEUE.INSTANCE_ID.eq(parentInstanceId))
-                                .unionAll(
-                                        select(ProcessQueue.PROCESS_QUEUE.INSTANCE_ID, ProcessQueue.PROCESS_QUEUE.PARENT_INSTANCE_ID)
-                                                .from(ProcessQueue.PROCESS_QUEUE)
-                                                .join(name("parents"))
-                                                .on(ProcessQueue.PROCESS_QUEUE.INSTANCE_ID.eq(
-                                                        field(name("parents", "PARENT_INSTANCE_ID"), UUID.class)))))
+                select(ProcessQueue.PROCESS_QUEUE.INSTANCE_ID, ProcessQueue.PROCESS_QUEUE.PARENT_INSTANCE_ID).from(ProcessQueue.PROCESS_QUEUE)
+                        .where(ProcessQueue.PROCESS_QUEUE.INSTANCE_ID.eq(parentInstanceId))
+                        .unionAll(
+                                select(ProcessQueue.PROCESS_QUEUE.INSTANCE_ID, ProcessQueue.PROCESS_QUEUE.PARENT_INSTANCE_ID)
+                                        .from(ProcessQueue.PROCESS_QUEUE)
+                                        .join(name("parents"))
+                                        .on(ProcessQueue.PROCESS_QUEUE.INSTANCE_ID.eq(
+                                                field(name("parents", "PARENT_INSTANCE_ID"), UUID.class)))))
                 .select(field("parents.INSTANCE_ID", UUID.class))
                 .from(name("parents"));
     }
