@@ -31,10 +31,8 @@ import com.walmartlabs.concord.server.sdk.ProcessKey;
 import com.walmartlabs.concord.server.sdk.metrics.InjectCounter;
 
 import javax.inject.Inject;
-import javax.inject.Named;
 import java.nio.file.Path;
 
-@Named
 public class FilePolicyApplier implements PolicyApplier {
 
     private final ProcessLogManager logManager;

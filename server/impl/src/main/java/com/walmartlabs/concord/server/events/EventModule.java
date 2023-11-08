@@ -1,4 +1,4 @@
-package com.walmartlabs.concord.server.audit;
+package com.walmartlabs.concord.server.events;
 
 /*-
  * *****
@@ -22,18 +22,14 @@ package com.walmartlabs.concord.server.audit;
 
 import com.google.inject.Binder;
 import com.google.inject.Module;
-import com.walmartlabs.concord.server.sdk.audit.AuditLogListener;
+import com.walmartlabs.concord.server.sdk.events.ProcessEventListener;
 
 import static com.google.inject.multibindings.Multibinder.newSetBinder;
-import static com.walmartlabs.concord.server.Utils.bindJaxRsResource;
-import static com.walmartlabs.concord.server.Utils.bindSingletonScheduledTask;
 
-public class AuditLogModule implements Module {
+public class EventModule implements Module {
 
     @Override
     public void configure(Binder binder) {
-        newSetBinder(binder, AuditLogListener.class);
-        bindSingletonScheduledTask(binder, AuditLogCleaner.class);
-        bindJaxRsResource(binder, AuditLogResource.class);
+        newSetBinder(binder, ProcessEventListener.class);
     }
 }
