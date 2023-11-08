@@ -14,7 +14,9 @@
 - console2: do not drop secrets form values on error/password check fail
 ([#798](https://github.com/walmartlabs/concord/pull/798));
 - project: attach javadoc jars only on release
-([#823](https://github.com/walmartlabs/concord/pull/823)).
+([#823](https://github.com/walmartlabs/concord/pull/823));
+- project: upgrade to source level 17
+([#824](https://github.com/walmartlabs/concord/pull/824)).
 
 
 
