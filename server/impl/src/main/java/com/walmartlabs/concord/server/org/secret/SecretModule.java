@@ -1,4 +1,4 @@
-package com.walmartlabs.concord.server.audit;
+package com.walmartlabs.concord.server.org.secret;
 
 /*-
  * *****
@@ -9,9 +9,9 @@ package com.walmartlabs.concord.server.audit;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -22,18 +22,15 @@ package com.walmartlabs.concord.server.audit;
 
 import com.google.inject.Binder;
 import com.google.inject.Module;
-import com.walmartlabs.concord.server.sdk.audit.AuditLogListener;
+import com.walmartlabs.concord.server.org.secret.store.SecretStore;
+import com.walmartlabs.concord.server.org.secret.store.concord.ConcordSecretStore;
 
 import static com.google.inject.multibindings.Multibinder.newSetBinder;
-import static com.walmartlabs.concord.server.Utils.bindJaxRsResource;
-import static com.walmartlabs.concord.server.Utils.bindSingletonScheduledTask;
 
-public class AuditLogModule implements Module {
+public class SecretModule implements Module {
 
     @Override
     public void configure(Binder binder) {
-        newSetBinder(binder, AuditLogListener.class);
-        bindSingletonScheduledTask(binder, AuditLogCleaner.class);
-        bindJaxRsResource(binder, AuditLogResource.class);
+        newSetBinder(binder, SecretStore.class).addBinding().to(ConcordSecretStore.class);
     }
 }
