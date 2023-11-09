@@ -33,6 +33,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
+import java.util.Collection;
+import java.util.List;
 
 public final class ConcordServer {
 
@@ -59,10 +61,14 @@ public final class ConcordServer {
                 new WireModule(new SpaceModule(new URLClassSpace(cl), BeanScanning.GLOBAL_INDEX)));
     }
 
+    public static ConcordServer withModules(Module... modules) throws Exception {
+        return withModules(List.of(modules));
+    }
+
     /**
      * Start ConcordServer using the provided modules.
      */
-    public static ConcordServer withModules(Module... modules) throws Exception {
+    public static ConcordServer withModules(Collection<Module> modules) throws Exception {
         Injector injector = Guice.createInjector(modules);
 
         ConcordServer instance = new ConcordServer();

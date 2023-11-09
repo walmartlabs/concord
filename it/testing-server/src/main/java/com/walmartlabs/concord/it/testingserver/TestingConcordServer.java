@@ -20,6 +20,7 @@ package com.walmartlabs.concord.it.testingserver;
  * =====
  */
 
+import com.google.inject.Module;
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
 import com.typesafe.config.ConfigParseOptions;
@@ -30,25 +31,44 @@ import org.testcontainers.containers.PostgreSQLContainer;
 
 import java.security.SecureRandom;
 import java.util.Base64;
+import java.util.List;
 import java.util.Map;
+import java.util.function.Function;
+import java.util.stream.Stream;
+
+import static java.util.Objects.requireNonNull;
 
 public class TestingConcordServer implements AutoCloseable {
 
     private PostgreSQLContainer<?> db;
     private ConcordServer server;
+    private Map<String, String> extraConfiguration;
+    private List<Function<Config, Module>> extraModules;
 
-    public TestingConcordServer start() throws Exception {
+    public TestingConcordServer(Map<String, String> extraConfiguration, List<Function<Config, Module>> extraModules) {
+        this.extraConfiguration = requireNonNull(extraConfiguration);
+        this.extraModules = requireNonNull(extraModules);
+    }
+
+    public TestingConcordServer() {
+        this(Map.of(), List.of());
+    }
+
+    public synchronized TestingConcordServer start() throws Exception {
         db = new PostgreSQLContainer<>("postgres:15-alpine");
         db.start();
 
-        server = ConcordServer.withModules(new ConcordServerModule(prepareConfig(db)))
+        var config = prepareConfig(db);
+        var system = new ConcordServerModule(config);
+        var allModules = Stream.concat(extraModules.stream().map(f -> f.apply(config)), Stream.of(system)).toList();
+        server = ConcordServer.withModules(allModules)
                 .start();
 
         return this;
     }
 
     @Override
-    public void close() throws Exception {
+    public synchronized void close() throws Exception {
         this.stop();
     }
 
@@ -64,8 +84,14 @@ public class TestingConcordServer implements AutoCloseable {
         }
     }
 
-    private static Config prepareConfig(PostgreSQLContainer<?> db) {
-        Config testConfig = ConfigFactory.parseMap(Map.of(
+    public PostgreSQLContainer<?> getDb() {
+        return db;
+    }
+
+    private Config prepareConfig(PostgreSQLContainer<?> db) {
+        var extraConfig = ConfigFactory.parseMap(this.extraConfiguration);
+
+        var testConfig = ConfigFactory.parseMap(Map.of(
                 "db.url", db.getJdbcUrl(),
                 "db.appUsername", db.getUsername(),
                 "db.appPassword", db.getPassword(),
@@ -77,10 +103,10 @@ public class TestingConcordServer implements AutoCloseable {
                 "secretStore.projectSecretSalt", randomString()
         ));
 
-        Config defaultConfig = ConfigFactory.load("concord-server.conf", ConfigParseOptions.defaults(), ConfigResolveOptions.defaults().setAllowUnresolved(true))
+        var defaultConfig = ConfigFactory.load("concord-server.conf", ConfigParseOptions.defaults(), ConfigResolveOptions.defaults().setAllowUnresolved(true))
                 .getConfig("concord-server");
 
-        return testConfig.withFallback(defaultConfig).resolve();
+        return extraConfig.withFallback(testConfig.withFallback(defaultConfig)).resolve();
     }
 
     private static String randomString() {
@@ -90,8 +116,9 @@ public class TestingConcordServer implements AutoCloseable {
     }
 
     public static void main(String[] args) throws Exception {
-        TestingConcordServer server = new TestingConcordServer().start();
-        Thread.sleep(100000);
-        server.stop();
+        try (TestingConcordServer server = new TestingConcordServer(Map.of("process.watchdogPeriod", "10 seconds"), List.of())) {
+            server.start();
+            Thread.sleep(100000);
+        }
     }
 }
