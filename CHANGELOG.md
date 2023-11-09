@@ -16,7 +16,9 @@
 - project: attach javadoc jars only on release
 ([#823](https://github.com/walmartlabs/concord/pull/823));
 - project: upgrade to source level 17
-([#824](https://github.com/walmartlabs/concord/pull/824)).
+([#824](https://github.com/walmartlabs/concord/pull/824));
+- project: remove more @Named usage
+([#828](https://github.com/walmartlabs/concord/pull/828)).
 
 
 
