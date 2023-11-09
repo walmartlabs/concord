@@ -36,6 +36,8 @@ public class ConfigurationModule implements Module {
 
     @Override
     public void configure(Binder binder) {
+        binder.bind(Config.class).toInstance(config);
+
         binder.install(new com.walmartlabs.ollie.config.OllieConfigurationModule("com.walmartlabs.concord.server", config));
 
         binder.bind(AgentConfiguration.class).in(SINGLETON);
