@@ -9,6 +9,8 @@
 
 ### Changed
 
+- runtime-v2: fix exit from parallel loop #830
+([#830](https://github.com/walmartlabs/concord/pull/830));
 - console2: calculate process duration from process last running timestamp
 ([#794](https://github.com/walmartlabs/concord/pull/794));
 - console2: do not drop secrets form values on error/password check fail
@@ -19,8 +21,6 @@
 ([#824](https://github.com/walmartlabs/concord/pull/824));
 - project: remove more @Named usage
 ([#828](https://github.com/walmartlabs/concord/pull/828)).
-
-
 
 ## [2.1.0] - 2023-10-10
 
