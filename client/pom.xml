@@ -6,12 +6,20 @@
     <parent>
         <groupId>com.walmartlabs.concord</groupId>
         <artifactId>parent</artifactId>
-        <version>2.0.1-SNAPSHOT</version>
+        <version>2.1.1-SNAPSHOT</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
 
     <artifactId>concord-client</artifactId>
     <packaging>jar</packaging>
+
+    <properties>
+        <swagger.version>1.5.20</swagger.version>
+        <gson.version>2.10</gson.version>
+        <gson.fire.version>1.8.3</gson.fire.version>
+        <okhttp.version>2.7.5</okhttp.version>
+        <okio.version>1.17.2</okio.version>
+    </properties>
 
     <dependencies>
         <dependency>
@@ -31,27 +39,40 @@
         <dependency>
             <groupId>com.squareup.okhttp</groupId>
             <artifactId>okhttp</artifactId>
+            <version>${okhttp.version}</version>
         </dependency>
         <dependency>
             <groupId>com.squareup.okhttp</groupId>
             <artifactId>logging-interceptor</artifactId>
+            <version>${okhttp.version}</version>
         </dependency>
         <dependency>
             <groupId>com.squareup.okio</groupId>
             <artifactId>okio</artifactId>
+            <version>${okio.version}</version>
         </dependency>
         <dependency>
             <groupId>com.google.code.gson</groupId>
             <artifactId>gson</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>io.gsonfire</groupId>
-            <artifactId>gson-fire</artifactId>
+            <version>${gson.version}</version>
         </dependency>
         <dependency>
             <groupId>io.swagger</groupId>
             <artifactId>swagger-annotations</artifactId>
+            <version>${swagger.version}</version>
         </dependency>
+        <dependency>
+            <groupId>io.gsonfire</groupId>
+            <artifactId>gson-fire</artifactId>
+            <version>${gson.fire.version}</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>com.google.code.gson</groupId>
+                    <artifactId>gson</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+
         <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-api</artifactId>
@@ -123,6 +144,7 @@
             <plugin>
                 <groupId>io.swagger</groupId>
                 <artifactId>swagger-codegen-maven-plugin</artifactId>
+                <version>2.3.1</version>
                 <executions>
                     <execution>
                         <id>server</id>
@@ -131,7 +153,7 @@
                         </goals>
                         <configuration>
                             <inputSpec>
-                                ${project.basedir}/../server/impl/target/classes/com/walmartlabs/concord/server/swagger/swagger.json
+                                ${project.basedir}/swagger.json
                             </inputSpec>
                             <language>java</language>
                             <languageSpecificPrimitives>

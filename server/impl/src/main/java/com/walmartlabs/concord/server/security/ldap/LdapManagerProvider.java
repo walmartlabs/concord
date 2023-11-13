@@ -24,18 +24,16 @@ import com.walmartlabs.concord.server.cfg.LdapConfiguration;
 import org.apache.shiro.realm.ldap.LdapContextFactory;
 
 import javax.inject.Inject;
-import javax.inject.Named;
 import javax.inject.Provider;
 import java.time.Duration;
 
-@Named
 public class LdapManagerProvider implements Provider<LdapManager> {
 
     private final LdapManager ldapManager;
 
     @Inject
     public LdapManagerProvider(LdapConfiguration cfg,
-                                 LdapContextFactory ctxFactory) {
+                               LdapContextFactory ctxFactory) {
 
         LdapManager manager = new LdapManagerImpl(cfg, ctxFactory);
 

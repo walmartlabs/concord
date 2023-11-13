@@ -32,10 +32,13 @@ import com.walmartlabs.concord.server.org.ResourceAccessLevel;
 import com.walmartlabs.concord.server.org.project.ProjectDao;
 import com.walmartlabs.concord.server.sdk.ConcordApplicationException;
 import com.walmartlabs.concord.server.sdk.metrics.WithTimer;
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
-import io.swagger.annotations.ApiParam;
-import io.swagger.annotations.Authorization;
+import io.swagger.v3.oas.annotations.OpenAPIDefinition;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.parameters.RequestBody;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.jboss.resteasy.plugins.providers.multipart.MultipartInput;
 import org.sonatype.siesta.Resource;
 import org.sonatype.siesta.Validate;
@@ -53,8 +56,8 @@ import java.util.stream.Collectors;
 
 @Named
 @Singleton
-@Api(value = "SecretsV2", authorizations = {@Authorization("api_key"), @Authorization("session_key"), @Authorization("ldap")})
 @Path("/api/v2/org")
+@Tag(name = "SecretsV2")
 public class SecretResourceV2 implements Resource {
 
     private final OrganizationManager orgManager;
@@ -73,12 +76,12 @@ public class SecretResourceV2 implements Resource {
     }
 
     @GET
-    @ApiOperation("Get an existing secret")
     @Path("/{orgName}/secret/{secretName}")
     @Produces(MediaType.APPLICATION_JSON)
     @WithTimer
-    public SecretEntryV2 get(@ApiParam @PathParam("orgName") @ConcordKey String orgName,
-                             @ApiParam @PathParam("secretName") @ConcordKey String secretName) {
+    @Operation(description = "Get an existing secret", operationId = "getSecret")
+    public SecretEntryV2 get(@PathParam("orgName") @ConcordKey String orgName,
+                             @PathParam("secretName") @ConcordKey String secretName) {
 
         OrganizationEntry org = orgManager.assertAccess(orgName, false);
         return secretManager.assertAccess(org.getId(), null, secretName, ResourceAccessLevel.READER, false);
@@ -86,11 +89,11 @@ public class SecretResourceV2 implements Resource {
 
 
     @GET
-    @ApiOperation(value = "List secrets", responseContainer = "list", response = SecretEntry.class)
     @Path("/{orgName}/secret")
     @Produces(MediaType.APPLICATION_JSON)
     @Validate
-    public List<SecretEntryV2> list(@ApiParam @PathParam("orgName") @ConcordKey String orgName,
+    @Operation(description = "List secrets", operationId = "listSecrets")
+    public List<SecretEntryV2> list(@PathParam("orgName") @ConcordKey String orgName,
                                     @QueryParam("offset") int offset,
                                     @QueryParam("limit") int limit,
                                     @QueryParam("filter") String filter) {
@@ -98,16 +101,15 @@ public class SecretResourceV2 implements Resource {
         return secretManager.list(org.getId(), offset, limit, filter);
     }
 
-
     @POST
-    @ApiOperation("Updates an existing secret")
     @Path("/{orgName}/secret/{secretName}")
     @Consumes(MediaType.MULTIPART_FORM_DATA)
     @Produces(MediaType.APPLICATION_JSON)
     @Validate
-    public GenericOperationResult update(@ApiParam @PathParam("orgName") @ConcordKey String orgName,
-                                         @ApiParam @PathParam("secretName") @ConcordKey String secretName,
-                                         @ApiParam MultipartInput input) {
+    @Operation(description = "Updates an existing secret", operationId = "updateSecret")
+    public GenericOperationResult update(@PathParam("orgName") @ConcordKey String orgName,
+                                         @PathParam("secretName") @ConcordKey String secretName,
+                                         @RequestBody(content = @Content(schema = @Schema(type = "object"))) MultipartInput input) {
 
         OrganizationEntry org = orgManager.assertAccess(orgName, true);
         Set<UUID> projectIds = getProjectIds(
