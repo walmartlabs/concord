@@ -22,12 +22,21 @@ package com.walmartlabs.concord.server.process;
 
 import com.google.inject.Binder;
 import com.google.inject.Module;
+import com.walmartlabs.concord.imports.ImportManager;
 import com.walmartlabs.concord.server.process.locks.ProcessLocksWatchdog;
+import com.walmartlabs.concord.server.process.pipelines.processors.ExclusiveGroupProcessor;
+import com.walmartlabs.concord.server.process.pipelines.processors.policy.*;
 import com.walmartlabs.concord.server.process.queue.EnqueuedTaskProvider;
+import com.walmartlabs.concord.server.process.queue.ExternalProcessListenerHandler;
 import com.walmartlabs.concord.server.process.queue.ProcessQueueWatchdog;
+import com.walmartlabs.concord.server.process.queue.ProcessStatusListener;
+import com.walmartlabs.concord.server.process.queue.dispatcher.ConcurrentProcessFilter;
 import com.walmartlabs.concord.server.process.queue.dispatcher.Dispatcher;
-import com.walmartlabs.concord.server.process.waits.ProcessWaitWatchdog;
+import com.walmartlabs.concord.server.process.queue.dispatcher.ExclusiveProcessFilter;
+import com.walmartlabs.concord.server.process.queue.dispatcher.Filter;
+import com.walmartlabs.concord.server.process.waits.*;
 import com.walmartlabs.concord.server.sdk.BackgroundTask;
+import com.walmartlabs.concord.server.sdk.log.ProcessLogListener;
 
 import static com.google.inject.Scopes.SINGLETON;
 import static com.google.inject.multibindings.Multibinder.newSetBinder;
@@ -37,6 +46,8 @@ public class ProcessModule implements Module {
 
     @Override
     public void configure(Binder binder) {
+        binder.bind(ImportManager.class).toProvider(ImportManagerProvider.class);
+
         bindSingletonScheduledTask(binder, ProcessCleaner.class);
         bindSingletonScheduledTask(binder, ProcessLocksWatchdog.class);
         bindSingletonScheduledTask(binder, ProcessQueueWatchdog.class);
@@ -46,5 +57,25 @@ public class ProcessModule implements Module {
         newSetBinder(binder, BackgroundTask.class).addBinding().to(Dispatcher.class);
 
         newSetBinder(binder, BackgroundTask.class).addBinding().toProvider(EnqueuedTaskProvider.class).in(SINGLETON);
+
+        newSetBinder(binder, ProcessStatusListener.class).addBinding().to(WaitProcessStatusListener.class);
+        newSetBinder(binder, ProcessStatusListener.class).addBinding().to(ExternalProcessListenerHandler.class);
+
+        newSetBinder(binder, Filter.class).addBinding().to(ConcurrentProcessFilter.class);
+        newSetBinder(binder, Filter.class).addBinding().to(ExclusiveProcessFilter.class);
+
+        newSetBinder(binder, ProcessWaitHandler.class).addBinding().to(WaitProcessFinishHandler.class);
+        newSetBinder(binder, ProcessWaitHandler.class).addBinding().to(WaitProcessLockHandler.class);
+        newSetBinder(binder, ProcessWaitHandler.class).addBinding().to(WaitProcessSleepHandler.class);
+
+        newSetBinder(binder, ProcessLogListener.class);
+
+        binder.install(new ExclusiveGroupProcessor.ModeProcessorModule());
+
+        newSetBinder(binder, PolicyApplier.class).addBinding().to(ContainerPolicyApplier.class);
+        newSetBinder(binder, PolicyApplier.class).addBinding().to(FilePolicyApplier.class);
+        newSetBinder(binder, PolicyApplier.class).addBinding().to(ProcessRuntimePolicyApplier.class);
+        newSetBinder(binder, PolicyApplier.class).addBinding().to(ProcessTimeoutPolicyApplier.class);
+        newSetBinder(binder, PolicyApplier.class).addBinding().to(WorkspacePolicyApplier.class);
     }
 }

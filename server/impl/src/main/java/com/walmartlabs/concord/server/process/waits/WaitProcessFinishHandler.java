@@ -43,7 +43,6 @@ import static com.walmartlabs.concord.server.process.waits.ProcessCompletionCond
 /**
  * Handles the processes that are waiting for other processes to finish.
  */
-@Named
 @Singleton
 public class WaitProcessFinishHandler implements ProcessWaitHandler<ProcessCompletionCondition> {
 

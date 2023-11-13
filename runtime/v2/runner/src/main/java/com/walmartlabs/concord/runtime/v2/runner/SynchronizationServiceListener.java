@@ -23,6 +23,8 @@ package com.walmartlabs.concord.runtime.v2.runner;
 import com.walmartlabs.concord.svm.Runtime;
 import com.walmartlabs.concord.svm.*;
 
+import java.util.Map;
+
 public class SynchronizationServiceListener implements ExecutionListener {
 
     private final SynchronizationService delegate;
@@ -33,7 +35,7 @@ public class SynchronizationServiceListener implements ExecutionListener {
 
     @Override
     public Result afterCommand(Runtime runtime, VM vm, State state, ThreadId threadId, Command cmd) {
-        if (delegate.hasPoint()) {
+        if (delegate.hasPoint() || delegate.hasStop()) {
             state.setStatus(threadId, ThreadStatus.SUSPENDED);
             return Result.BREAK;
         }
@@ -43,6 +45,13 @@ public class SynchronizationServiceListener implements ExecutionListener {
 
     @Override
     public Result afterEval(Runtime runtime, VM vm, State state) {
+        if (delegate.hasStop()) {
+            for (Map.Entry<ThreadId, ThreadStatus> e : state.threadStatus().entrySet()) {
+                state.setStatus(e.getKey(), ThreadStatus.DONE);
+            }
+            return Result.BREAK;
+        }
+
         if (!delegate.hasPoint()) {
             return Result.BREAK;
         }

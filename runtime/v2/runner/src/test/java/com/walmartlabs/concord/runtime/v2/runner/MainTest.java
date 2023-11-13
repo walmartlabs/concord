@@ -1742,6 +1742,18 @@ public class MainTest {
     }
 
     @Test
+    public void testHasFlow() throws Exception {
+        deploy("hasFlow");
+
+        save(ProcessConfiguration.builder()
+                .build());
+
+        byte[] log = run();
+        assertLog(log, ".*123: false.*");
+        assertLog(log, ".*myFlow: true.*");
+    }
+
+    @Test
     public void testUuidFunc() throws Exception {
         deploy("uuid");
 
@@ -1753,15 +1765,40 @@ public class MainTest {
     }
 
     @Test
-    public void testHasFlow() throws Exception {
-        deploy("hasFlow");
+    public void testExitFromParallelLoop() throws Exception {
+        deploy("parallelLoopExit");
 
         save(ProcessConfiguration.builder()
                 .build());
 
         byte[] log = run();
-        assertLog(log, ".*123: false.*");
-        assertLog(log, ".*myFlow: true.*");
+
+        assertNoLog(log, ".*should not reach here.*");
+
+        // thread in loop should execute at least one step
+        assertLog(log, ".*inner start: one.*");
+        assertLog(log, ".*inner start: two.*");
+        assertLog(log, ".*inner start: three.*");
+    }
+
+    @Test
+    public void testExitFromSerialLoop() throws Exception {
+        deploy("serialLoopExit");
+
+        save(ProcessConfiguration.builder()
+                .build());
+
+        byte[] log = run();
+
+        assertNoLog(log, ".*should not reach here.*");
+
+        assertLog(log, ".*inner start: one.*");
+        assertLog(log, ".*inner end: one.*");
+        assertLog(log, ".*inner start: two.*");
+
+        assertNoLog(log, ".*inner end: two.*");
+        assertNoLog(log, ".*inner start: three.*");
+        assertNoLog(log, ".*inner start: four.*");
     }
 
     private void deploy(String resource) throws URISyntaxException, IOException {

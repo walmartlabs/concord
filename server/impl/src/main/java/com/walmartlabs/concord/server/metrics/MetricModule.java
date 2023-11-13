@@ -24,9 +24,11 @@ import com.codahale.metrics.MetricRegistry;
 import com.google.inject.Binder;
 import com.google.inject.Module;
 import com.google.inject.matcher.Matchers;
+import com.walmartlabs.concord.server.sdk.metrics.GaugeProvider;
 import com.walmartlabs.concord.server.sdk.metrics.WithTimer;
 
 import static com.google.inject.Scopes.SINGLETON;
+import static com.google.inject.multibindings.Multibinder.newSetBinder;
 import static com.walmartlabs.concord.server.Utils.bindServletHolder;
 import static com.walmartlabs.concord.server.Utils.bindSingletonBackgroundTask;
 import static com.walmartlabs.concord.server.metrics.NoSyntheticMethodMatcher.INSTANCE;
@@ -35,6 +37,10 @@ public class MetricModule implements Module {
 
     @Override
     public void configure(Binder binder) {
+        // common
+
+        newSetBinder(binder, GaugeProvider.class);
+
         // registry
 
         binder.bind(MetricRegistry.class).toProvider(MetricRegistryProvider.class).in(SINGLETON);
@@ -50,9 +56,9 @@ public class MetricModule implements Module {
 
         // tasks
 
-        bindSingletonBackgroundTask(binder, MetricsRegistrator.class);
         bindSingletonBackgroundTask(binder, FailedTaskMetrics.class);
         bindSingletonBackgroundTask(binder, WorkerMetrics.class);
+        bindSingletonBackgroundTask(binder, MetricsRegistrator.class);
 
         // the /metrics endpoint
 

@@ -27,16 +27,17 @@ import javax.inject.Inject;
 import javax.inject.Named;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Set;
 
 @Named
 public class SecretStoreProvider {
 
-    private final Collection<SecretStore> stores;
+    private final Set<SecretStore> stores;
     private final int maxSecretDataSize;
     private final String defaultSecretStoreType;
 
     @Inject
-    public SecretStoreProvider(Collection<SecretStore> stores,
+    public SecretStoreProvider(Set<SecretStore> stores,
                                @Config("secretStore.maxSecretDataSize") int maxSecretDataSize,
                                @Config("secretStore.default") String defaultStore) {
         this.stores = stores;
