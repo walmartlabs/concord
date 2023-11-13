@@ -43,9 +43,11 @@ public interface ProcessCardEntry extends Serializable {
     UUID id();
 
     @ConcordKey
+    @Nullable
     String orgName();
 
     @ConcordKey
+    @Nullable
     String projectName();
 
     @ConcordKey

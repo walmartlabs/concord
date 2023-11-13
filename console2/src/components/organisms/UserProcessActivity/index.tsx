@@ -67,10 +67,14 @@ const renderCard = (card: ProcessCardEntry) => {
                     {card.isCustomForm &&
                         <Modal trigger={<Button basic color='green'>Start process</Button>}>
                             <Modal.Content>
-                                <Embed
-                                    url={`/api/v2/service/console/user/process-card/${card.id}/form`}
-                                    active={true}
-                                />
+                                <div className={"ui active embed"}>
+                                    <iframe title={card.id}
+                                            src={`/api/v2/service/console/user/process-card/${card.id}/form`}
+                                            height={"100%"}
+                                            width={"100%"}
+                                            frameBorder={0}
+                                            allowFullScreen={true}/>
+                                </div>
                             </Modal.Content>
                         </Modal>
                     }
