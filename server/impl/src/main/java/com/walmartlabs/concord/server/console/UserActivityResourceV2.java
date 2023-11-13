@@ -227,9 +227,9 @@ public class UserActivityResourceV2 implements Resource {
 
         public List<ProcessCardEntry> listCards(DSLContext tx, UUID userId) {
             // TODO: V_USER_TEAMS
-            SelectConditionStep<Record1<UUID>> userTeams = tx.select(USER_TEAMS.TEAM_ID)
-                    .from(USER_TEAMS)
-                    .where(USER_TEAMS.USER_ID.eq(userId));
+            SelectConditionStep<Record1<UUID>> userTeams = tx.select(V_USER_TEAMS.TEAM_ID)
+                    .from(V_USER_TEAMS)
+                    .where(V_USER_TEAMS.USER_ID.eq(userId));
 
             SelectConditionStep<Record1<UUID>> byUserFilter = tx.select(USER_UI_PROCESS_CARDS.UI_PROCESS_CARD_ID)
                     .from(USER_UI_PROCESS_CARDS)
@@ -239,12 +239,18 @@ public class UserActivityResourceV2 implements Resource {
                     .from(TEAM_UI_PROCESS_CARDS)
                     .where(TEAM_UI_PROCESS_CARDS.TEAM_ID.in(userTeams));
 
+            SelectOrderByStep<Record1<UUID>> userCards = byUserFilter.unionAll(byTeamFilter);
+
+            SelectJoinStep<Record1<UUID>> userCardsFilter = tx.select(userCards.field(TEAM_UI_PROCESS_CARDS.UI_PROCESS_CARD_ID))
+                    .from(userCards);
+
             SelectConditionStep<Record12<UUID, UUID, String, UUID, String, UUID, String, String, String, String, byte[], Boolean>> query =
                     buildSelect(tx)
-                    .where(UI_PROCESS_CARDS.UI_PROCESS_CARD_ID.in(byUserFilter)
-                            .or(UI_PROCESS_CARDS.UI_PROCESS_CARD_ID.in(byTeamFilter)));
+                    .where(UI_PROCESS_CARDS.UI_PROCESS_CARD_ID.in(userCardsFilter));
 
-            return query.fetch(this::toEntry);
+            return query
+                    .orderBy(UI_PROCESS_CARDS.UI_PROCESS_CARD_ID)
+                    .fetch(this::toEntry);
         }
 
         private static SelectOnConditionStep<Record12<UUID, UUID, String, UUID, String, UUID, String, String, String, String, byte[], Boolean>> buildSelect(DSLContext tx) {
@@ -265,9 +271,9 @@ public class UserActivityResourceV2 implements Resource {
                             UI_PROCESS_CARDS.ICON,
                             isCustomForm.as("isCustomForm"))
                     .from(UI_PROCESS_CARDS)
-                    .join(REPOSITORIES, JoinType.JOIN).on(REPOSITORIES.REPO_ID.eq(UI_PROCESS_CARDS.REPO_ID))
-                    .join(PROJECTS, JoinType.JOIN).on(PROJECTS.PROJECT_ID.eq(UI_PROCESS_CARDS.PROJECT_ID))
-                    .join(ORGANIZATIONS, JoinType.JOIN).on(ORGANIZATIONS.ORG_ID.eq(PROJECTS.ORG_ID));
+                    .leftJoin(REPOSITORIES).on(REPOSITORIES.REPO_ID.eq(UI_PROCESS_CARDS.REPO_ID))
+                    .leftJoin(PROJECTS).on(PROJECTS.PROJECT_ID.eq(UI_PROCESS_CARDS.PROJECT_ID))
+                    .leftJoin(ORGANIZATIONS).on(ORGANIZATIONS.ORG_ID.eq(PROJECTS.ORG_ID));
         }
 
         private ProcessCardEntry toEntry(Record12<UUID, UUID, String, UUID, String, UUID, String, String, String, String, byte[], Boolean> r) {
