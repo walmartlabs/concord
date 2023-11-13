@@ -24,10 +24,8 @@ import com.walmartlabs.ollie.config.Config;
 
 import javax.annotation.Nullable;
 import javax.inject.Inject;
-import javax.inject.Named;
 import java.io.Serializable;
 
-@Named
 public class KafkaEventSinkConfiguration implements Serializable {
 
     private static final long serialVersionUID = 1L;

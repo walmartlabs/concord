@@ -24,12 +24,10 @@ import { all, call, put, takeLatest } from 'redux-saga/effects';
 
 import { ConcordId, ConcordKey, GenericOperationResult } from '../../../api/common';
 import {
-    create as apiCreate,
     deleteSecret as apiDelete,
     getSecretAccess,
     get as apiGet,
     list as apiList,
-    NewSecretEntry,
     renameSecret as apiRenameSecret,
     updateSecretAccess,
     updateSecretVisibility as apiUpdateSecretVisibility,
@@ -46,8 +44,6 @@ import {
     nullReducer
 } from '../common';
 import {
-    CreateSecretRequest,
-    CreateSecretState,
     DeleteSecretRequest,
     DeleteSecretState,
     GetSecretRequest,
@@ -64,8 +60,7 @@ import {
     UpdateSecretVisibilityResponse,
     UpdateSecretVisibilityRequest,
     UpdateSecretVisiblityState,
-    SecretTeamAccessState,
-    CreateSecretResponse
+    SecretTeamAccessState
 } from './types';
 import { UpdateSecretTeamAccessRequest } from './types';
 import { ResourceAccessEntry } from '../../../api/org';
@@ -79,9 +74,6 @@ const actionTypes = {
     GET_SECRET_REQUEST: `${NAMESPACE}/get/request`,
     LIST_SECRETS_REQUEST: `${NAMESPACE}/list/request`,
     SECRET_DATA_RESPONSE: `${NAMESPACE}/data/response`,
-
-    CREATE_SECRET_REQUEST: `${NAMESPACE}/create/request`,
-    CREATE_SECRET_RESPONSE: `${NAMESPACE}/create/response`,
 
     DELETE_SECRET_REQUEST: `${NAMESPACE}/delete/request`,
     DELETE_SECRET_RESPONSE: `${NAMESPACE}/delete/response`,
@@ -117,12 +109,6 @@ export const actions = {
         orgName,
         pagination,
         filter
-    }),
-
-    createSecret: (orgName: ConcordKey, entry: NewSecretEntry): CreateSecretRequest => ({
-        type: actionTypes.CREATE_SECRET_REQUEST,
-        orgName,
-        entry
     }),
 
     deleteSecret: (orgName: ConcordKey, secretName: ConcordKey): DeleteSecretRequest => ({
@@ -227,18 +213,6 @@ const listSecretsReducer = combineReducers<ListSecretsState>({
     response: nullReducer()
 });
 
-const createSecretReducer = combineReducers<CreateSecretState>({
-    running: makeLoadingReducer(
-        [actionTypes.CREATE_SECRET_REQUEST],
-        [actionTypes.RESET_SECRET, actionTypes.CREATE_SECRET_RESPONSE]
-    ),
-    error: makeErrorReducer(
-        [actionTypes.RESET_SECRET, actionTypes.CREATE_SECRET_REQUEST],
-        [actionTypes.CREATE_SECRET_RESPONSE]
-    ),
-    response: makeResponseReducer(actionTypes.CREATE_SECRET_RESPONSE, actionTypes.RESET_SECRET)
-});
-
 const deleteSecretReducers = combineReducers<DeleteSecretState>({
     running: makeLoadingReducer(
         [actionTypes.DELETE_SECRET_REQUEST],
@@ -306,7 +280,6 @@ export const reducers = combineReducers<State>({
     secretById, // TODO use makeEntityByIdReducer
 
     listSecrets: listSecretsReducer,
-    createSecret: createSecretReducer,
     deleteSecret: deleteSecretReducers,
     renameSecret: renameSecretReducers,
     updateSecretVisibility: updateSecretVisibilityReducers,
@@ -363,21 +336,6 @@ function* onList({ orgName, pagination, filter }: ListSecretsRequest) {
         });
     } catch (e) {
         yield handleErrors(actionTypes.SECRET_DATA_RESPONSE, e);
-    }
-}
-
-function* onCreate({ orgName, entry }: CreateSecretRequest) {
-    try {
-        const response: CreateSecretResponse = yield call(apiCreate, orgName, entry);
-        yield put({
-            type: actionTypes.CREATE_SECRET_RESPONSE,
-            orgName,
-            name: entry.name,
-            password: response.password,
-            publicKey: response.publicKey
-        });
-    } catch (e) {
-        yield handleErrors(actionTypes.CREATE_SECRET_RESPONSE, e);
     }
 }
 
@@ -454,7 +412,6 @@ export const sagas = function*() {
     yield all([
         takeLatest(actionTypes.LIST_SECRETS_REQUEST, onList),
         takeLatest(actionTypes.GET_SECRET_REQUEST, onGet),
-        takeLatest(actionTypes.CREATE_SECRET_REQUEST, onCreate),
         takeLatest(actionTypes.DELETE_SECRET_REQUEST, onDelete),
         takeLatest(actionTypes.RENAME_SECRET_REQUEST, onRename),
         takeLatest(actionTypes.UPDATE_SECRET_VISIBLITY_REQUEST, onUpdateVisibility),
