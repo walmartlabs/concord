@@ -1,5 +1,19 @@
 # Change log
 
+## [2.3.0] - Unreleased
+
+### Added
+
+- testing-concord-server: add getter for the server instance
+([#832](https://github.com/walmartlabs/concord/pull/832)).
+
+### Changed
+
+- project: attach source jars only on release
+([#832](https://github.com/walmartlabs/concord/pull/832)).
+
+
+
 ## [2.2.0] - 2023-11-13
 
 ### Added
