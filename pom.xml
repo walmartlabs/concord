@@ -295,6 +295,9 @@
                             </goals>
                         </execution>
                     </executions>
+                    <configuration>
+                        <skipSource>true</skipSource>
+                    </configuration>
                 </plugin>
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
@@ -468,6 +471,21 @@
                         <configuration>
                             <quiet>true</quiet>
                             <doclint>none</doclint>
+                        </configuration>
+                    </plugin>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-source-plugin</artifactId>
+                        <executions>
+                            <execution>
+                                <id>attach-sources</id>
+                                <goals>
+                                    <goal>jar-no-fork</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                        <configuration>
+                            <skipSource>false</skipSource>
                         </configuration>
                     </plugin>
                 </plugins>
