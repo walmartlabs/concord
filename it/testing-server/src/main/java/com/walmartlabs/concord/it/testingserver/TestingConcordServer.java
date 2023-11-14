@@ -84,6 +84,10 @@ public class TestingConcordServer implements AutoCloseable {
         }
     }
 
+    public ConcordServer getServer() {
+        return server;
+    }
+
     public PostgreSQLContainer<?> getDb() {
         return db;
     }
