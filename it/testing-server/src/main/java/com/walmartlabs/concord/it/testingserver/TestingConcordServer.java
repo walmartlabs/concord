@@ -9,9 +9,9 @@ package com.walmartlabs.concord.it.testingserver;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -40,10 +40,11 @@ import static java.util.Objects.requireNonNull;
 
 public class TestingConcordServer implements AutoCloseable {
 
+    private final Map<String, String> extraConfiguration;
+    private final List<Function<Config, Module>> extraModules;
+
     private PostgreSQLContainer<?> db;
     private ConcordServer server;
-    private Map<String, String> extraConfiguration;
-    private List<Function<Config, Module>> extraModules;
 
     public TestingConcordServer(Map<String, String> extraConfiguration, List<Function<Config, Module>> extraModules) {
         this.extraConfiguration = requireNonNull(extraConfiguration);
@@ -119,10 +120,24 @@ public class TestingConcordServer implements AutoCloseable {
         return Base64.getEncoder().encodeToString(ab);
     }
 
+    /**
+     * Just an example.
+     */
     public static void main(String[] args) throws Exception {
         try (TestingConcordServer server = new TestingConcordServer(Map.of("process.watchdogPeriod", "10 seconds"), List.of())) {
             server.start();
-            Thread.sleep(100000);
+
+            System.out.println("""
+                    ==============================================================
+                                        
+                      UI: http://localhost:8001/
+                      DB:
+                        JDBC URL: %s
+                        username: %s
+                        password: %s
+                    """.formatted(server.getDb().getJdbcUrl(), server.getDb().getUsername(), server.getDb().getPassword()));
+
+            Thread.currentThread().join();
         }
     }
 }
