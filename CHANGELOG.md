@@ -10,7 +10,10 @@
 ### Changed
 
 - project: attach source jars only on release
-([#832](https://github.com/walmartlabs/concord/pull/832)).
+([#832](https://github.com/walmartlabs/concord/pull/832));
+- concord-server: auto-wire modules in concord-server/dist
+instead of impl
+([#834](https://github.com/walmartlabs/concord/pull/834)).
 
 
 
