@@ -39,8 +39,6 @@ import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import java.util.UUID;
 
-@Named
-@Singleton
 @Path("/api/v2/process")
 @Tag(name = "CheckpointV2")
 public class ProcessCheckpointV2Resource implements Resource {
