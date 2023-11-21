@@ -4,7 +4,7 @@ package com.walmartlabs.concord.server;
  * *****
  * Concord
  * -----
- * Copyright (C) 2017 - 2018 Walmart Inc.
+ * Copyright (C) 2017 - 2023 Walmart Inc.
  * -----
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,24 +20,24 @@ package com.walmartlabs.concord.server;
  * =====
  */
 
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.guava.GuavaModule;
 import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
-import org.eclipse.sisu.EagerSingleton;
 
-import javax.inject.Inject;
-import javax.inject.Named;
+import javax.inject.Provider;
 
-@Named
-@EagerSingleton
-public class ObjectMapperInitializer {
+public class ObjectMapperProvider implements Provider<ObjectMapper> {
 
-    @Inject
-    public ObjectMapperInitializer(@Named("siesta") javax.inject.Provider<ObjectMapper> mapperProvider) {
-        ObjectMapper om = mapperProvider.get();
-        om.registerModule(new GuavaModule());
-        om.registerModule(new Jdk8Module());
-        om.registerModule(new JavaTimeModule());
+    @Override
+    public ObjectMapper get() {
+        return new ObjectMapper()
+                .registerModule(new GuavaModule())
+                .registerModule(new Jdk8Module())
+                .registerModule(new JavaTimeModule())
+                .setSerializationInclusion(JsonInclude.Include.NON_NULL)
+                .disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
     }
 }
