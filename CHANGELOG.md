@@ -5,7 +5,9 @@
 ### Added
 
 - testing-concord-server: add getter for the server instance
-([#832](https://github.com/walmartlabs/concord/pull/832)).
+([#832](https://github.com/walmartlabs/concord/pull/832));
+- testing-concord-server: add agent wrapper, simple test
+([835](https://github.com/walmartlabs/concord/pull/835)).
 
 ### Changed
 
