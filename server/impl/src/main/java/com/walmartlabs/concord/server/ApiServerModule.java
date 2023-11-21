@@ -20,8 +20,10 @@ package com.walmartlabs.concord.server;
  * =====
  */
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.inject.Binder;
 import com.google.inject.Module;
+import com.google.inject.name.Names;
 import com.walmartlabs.concord.server.boot.*;
 import com.walmartlabs.concord.server.boot.filters.*;
 import com.walmartlabs.concord.server.boot.servlets.FormServletHolder;
@@ -31,6 +33,8 @@ import com.walmartlabs.concord.server.websocket.ConcordWebSocketServlet;
 import org.apache.shiro.mgt.SecurityManager;
 import org.apache.shiro.web.mgt.WebSecurityManager;
 import org.eclipse.jetty.servlet.FilterHolder;
+import org.sonatype.siesta.Component;
+import org.sonatype.siesta.jackson2.ObjectMapperResolver;
 
 import javax.servlet.ServletContextListener;
 import javax.servlet.http.HttpServlet;
@@ -44,7 +48,14 @@ public class ApiServerModule implements Module {
 
     @Override
     public void configure(Binder binder) {
+        // Jackson
+
+        binder.bind(ObjectMapper.class).toProvider(ObjectMapperProvider.class).in(SINGLETON);
+        binder.bind(ObjectMapper.class).annotatedWith(Names.named("siesta")).toProvider(ObjectMapperProvider.class).in(SINGLETON);
+        newSetBinder(binder, Component.class).addBinding().to(ObjectMapperResolver.class);
+
         // Jetty
+
         binder.bind(HttpServer.class).in(SINGLETON);
 
         // Filter
