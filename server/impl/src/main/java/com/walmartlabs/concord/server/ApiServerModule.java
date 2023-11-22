@@ -24,6 +24,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.inject.Binder;
 import com.google.inject.Module;
 import com.google.inject.name.Names;
+import com.walmartlabs.concord.common.ObjectMapperProvider;
 import com.walmartlabs.concord.server.boot.*;
 import com.walmartlabs.concord.server.boot.filters.*;
 import com.walmartlabs.concord.server.boot.servlets.FormServletHolder;
