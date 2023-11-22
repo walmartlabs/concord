@@ -29,6 +29,7 @@ import com.walmartlabs.concord.agent.executors.runner.DefaultDependencies;
 import com.walmartlabs.concord.agent.executors.runner.ProcessPool;
 import com.walmartlabs.concord.agent.remote.ApiClientFactory;
 import com.walmartlabs.concord.agent.remote.QueueClientProvider;
+import com.walmartlabs.concord.common.ObjectMapperProvider;
 import com.walmartlabs.concord.server.queueclient.QueueClient;
 import com.walmartlabs.ollie.config.ConfigurationProcessor;
 import com.walmartlabs.ollie.config.Environment;
