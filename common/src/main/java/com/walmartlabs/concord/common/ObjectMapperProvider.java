@@ -27,13 +27,19 @@ import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.guava.GuavaModule;
 import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.inject.Provider;
 
 public class ObjectMapperProvider implements Provider<ObjectMapper> {
 
+    private static final Logger log = LoggerFactory.getLogger(ObjectMapperProvider.class);
+
     @Override
     public ObjectMapper get() {
+        log.info("Using concord-common's ObjectMapper...");
+
         ObjectMapper mapper = new ObjectMapper()
                 .registerModule(new Jdk8Module())
                 .registerModule(new GuavaModule())
