@@ -126,9 +126,9 @@ public class SsoClient {
         }
     }
 
-    public Profile getUserProfile(String refreshToken) throws IOException {
+    public Profile getUserProfileByRefreshToken(String refreshToken) throws IOException {
         Token token = getTokenByRefreshToken(refreshToken);
-        return getProfile(token);
+        return getProfile(token.accessToken());
     }
 
     private Token getToken(String urlParameters) throws IOException {
@@ -178,7 +178,7 @@ public class SsoClient {
         }
     }
 
-    private Profile getProfile(Token token) throws IOException {
+    public Profile getProfile(String accessToken) throws IOException {
         if (cfg.getUserInfoEndpointUrl() == null) {
             return null;
         }
@@ -186,7 +186,7 @@ public class SsoClient {
         try {
             URL url = new URL(cfg.getUserInfoEndpointUrl());
             con = (HttpURLConnection) url.openConnection();
-            String authzHeaderValue = String.format("Bearer %s", token.accessToken());
+            String authzHeaderValue = String.format("Bearer %s", accessToken);
             con.setRequestProperty(HttpHeaders.AUTHORIZATION, authzHeaderValue);
             con.setRequestProperty(HttpHeaders.CONTENT_TYPE, CONTENT_TYPE_HEADER);
             con.setRequestMethod("GET");
@@ -239,6 +239,9 @@ public class SsoClient {
     @JsonDeserialize(as = ImmutableProfile.class)
     @JsonIgnoreProperties(ignoreUnknown = true)
     public interface Profile {
+
+        @JsonProperty("sub")
+        String sub();
 
         @JsonProperty("sAMAccountName")
         String userId();

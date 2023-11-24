@@ -62,6 +62,14 @@ public abstract class AbstractTest {
         }
     }
 
+    protected String stdOut() {
+        return out.toString();
+    }
+
+    protected String stdErr() {
+        return err.toString();
+    }
+
     private static int grep(String str, String pattern) {
         int cnt = 0;
 

@@ -119,8 +119,8 @@ public interface ProcessFilter {
     interface DateFilter {
 
         @Value.Default
-        default ProcessFilter.FilterType type() {
-            return ProcessFilter.FilterType.EQUALS;
+        default FilterType type() {
+            return FilterType.EQUALS;
         }
 
         @Nullable

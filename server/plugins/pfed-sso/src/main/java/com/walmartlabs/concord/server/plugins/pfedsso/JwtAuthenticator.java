@@ -39,6 +39,8 @@ import java.text.ParseException;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.List;
+
 
 public class JwtAuthenticator {
 
@@ -78,8 +80,8 @@ public class JwtAuthenticator {
      * @param token the JWT
      * @return <code>true</code> if token valid and not expired
      */
-    public boolean isTokenValid(String token) {
-        return isTokenValid(token, null);
+    public boolean isTokenValid(String token, boolean restrictOnClientId) {
+        return isTokenValid(token, null, restrictOnClientId);
     }
 
     /**
@@ -89,11 +91,20 @@ public class JwtAuthenticator {
      * @param nonce nonce
      * @return <code>true</code> if token valid, correct nonce and not expired
      */
-    public boolean isTokenValid(String token, String nonce) {
+    public boolean isTokenValid(String token, String nonce, boolean restrictOnClientId) {
         try {
             Map<String, Object> claims = validateTokenAndGetClaims(token);
             if (claims == null) {
                 return false;
+            }
+
+            if (restrictOnClientId) {
+                List<String> allowedClientIds = cfg.getAllowedClientIds();
+                String clientId = (String) claims.get("client_id");
+                if(!allowedClientIds.contains(clientId)) {
+                    log.warn("isTokenValid ['{}', '{}'] -> clientId not in allowed list for bearer tokens", token, clientId);
+                    return false;
+                }
             }
 
             if (nonce == null) {
@@ -113,22 +124,7 @@ public class JwtAuthenticator {
         }
     }
 
-    /**
-     * Validates the token and returns the corresponding user login.
-     *
-     * @param token the JWT
-     * @return corresponding user login or <code>null</code> if the JWT is invalid
-     */
-    public String validateTokenAndGetLogin(String token) {
-        Map<String, Object> claims = validateTokenAndGetClaims(token);
-        if (claims == null) {
-            return null;
-        }
-        return (String) claims.get("sub");
-    }
-
-    private Map<String, Object> validateTokenAndGetClaims(String token) {
-
+    public Map<String, Object> validateTokenAndGetClaims(String token) {
         try {
             JWT jwt = validateToken(token);
             if (jwt == null) {

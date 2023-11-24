@@ -68,7 +68,7 @@ public class OidcCallbackFilter implements Filter {
         }
 
         CallbackLogic<?, JEEContext> callback = pac4jConfig.getCallbackLogic();
-        callback.perform(context, pac4jConfig, pac4jConfig.getHttpActionAdapter(), postLoginUrl, true, false, true, PluginModule.CLIENT_NAME);
+        callback.perform(context, pac4jConfig, pac4jConfig.getHttpActionAdapter(), postLoginUrl, true, false, true, OidcPluginModule.CLIENT_NAME);
     }
 
     @Override

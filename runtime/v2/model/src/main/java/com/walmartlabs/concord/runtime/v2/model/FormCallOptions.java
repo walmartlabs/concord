@@ -37,7 +37,7 @@ public interface FormCallOptions extends StepOptions {
     long serialVersionUID = 1L;
 
     @Value.Default
-    default boolean yield() {
+    default boolean isYield() {
         return false;
     }
 

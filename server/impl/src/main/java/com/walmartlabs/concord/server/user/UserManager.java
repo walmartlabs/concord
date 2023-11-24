@@ -269,7 +269,7 @@ public class UserManager {
     }
 
     /**
-     * {@link com.walmartlabs.concord.server.org.project.DiffUtils#compare(Object, Object)}
+     * {@link DiffUtils#compare(Object, Object)}
      * doesn't work for top-level Maps. So we have to create a temporary bean with a single
      * field in order to record the user account's status change using the existing
      * {@link AuditLog.EntryBuilder#changes(Object, Object)} mechanism w/o pulling

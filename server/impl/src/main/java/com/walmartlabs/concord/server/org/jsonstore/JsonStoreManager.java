@@ -146,7 +146,12 @@ public class JsonStoreManager {
             update(orgName, storeId, entry);
             return OperationResult.UPDATED;
         } else {
-            insert(orgName, entry.name(), entry.visibility(), entry.owner());
+            JsonStoreVisibility visibility = entry.visibility();
+            if (visibility == null) {
+                visibility = JsonStoreVisibility.PRIVATE;
+            }
+
+            insert(orgName, entry.name(), visibility, entry.owner());
             return OperationResult.CREATED;
         }
     }
@@ -189,7 +194,19 @@ public class JsonStoreManager {
             throw new ValidationErrorsException("Can't find a JSON store '" + prevStoreName + "' in organization '" + org.getName() + "'");
         }
 
-        storeDao.update(prevStorage.id(), entry.name(), entry.visibility(), updatedOwnerId);
+        UUID orgIdToUpdate = null;
+        if (entry.orgName() != null) {
+            OrganizationEntry organizationEntry = orgManager.assertAccess(entry.orgName(), true);
+            if (organizationEntry.getId() != prevStorage.orgId()) {
+                orgIdToUpdate = organizationEntry.getId();
+            }
+        }
+
+        if (orgIdToUpdate != null) {
+            assertStoragePolicy(orgIdToUpdate);
+        }
+
+        storeDao.update(prevStorage.id(), entry.name(), entry.visibility(), orgIdToUpdate, updatedOwnerId);
 
         JsonStoreEntry newStorage = storeDao.get(prevStorage.id());
         addAuditLog(AuditAction.UPDATE, prevStorage.orgId(), prevStorage.id(), prevStoreName, prevStorage, newStorage);

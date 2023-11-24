@@ -325,7 +325,7 @@ public class CryptoIT extends AbstractServerIT {
         // ---
 
         pir = waitForCompletion(processApi, spr.getInstanceId());
-        assertEquals(ProcessEntry.StatusEnum.FAILED, pir.getStatus());
+        assertEquals(ProcessEntry.StatusEnum.FAILED, pir.getStatus(), "Process logs: " + new String(getLog(pir.getLogFileName())));
     }
 
     @Test

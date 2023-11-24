@@ -41,7 +41,7 @@ import javax.inject.Singleton;
 import static com.google.inject.multibindings.Multibinder.newSetBinder;
 
 @Named
-public class PluginModule extends AbstractModule {
+public class OidcPluginModule extends AbstractModule {
 
     public static final String CLIENT_NAME = "oidc";
 

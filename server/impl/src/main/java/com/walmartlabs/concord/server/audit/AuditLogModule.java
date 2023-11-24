@@ -22,7 +22,9 @@ package com.walmartlabs.concord.server.audit;
 
 import com.google.inject.Binder;
 import com.google.inject.Module;
+import com.walmartlabs.concord.server.sdk.audit.AuditLogListener;
 
+import static com.google.inject.multibindings.Multibinder.newSetBinder;
 import static com.walmartlabs.concord.server.Utils.bindJaxRsResource;
 import static com.walmartlabs.concord.server.Utils.bindSingletonScheduledTask;
 
@@ -30,6 +32,7 @@ public class AuditLogModule implements Module {
 
     @Override
     public void configure(Binder binder) {
+        newSetBinder(binder, AuditLogListener.class);
         bindSingletonScheduledTask(binder, AuditLogCleaner.class);
         bindJaxRsResource(binder, AuditLogResource.class);
     }
