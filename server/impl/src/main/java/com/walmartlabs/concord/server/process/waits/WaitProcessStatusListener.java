@@ -29,7 +29,6 @@ import javax.inject.Named;
 
 import static com.walmartlabs.concord.server.jooq.Tables.PROCESS_WAIT_CONDITIONS;
 
-@Named
 public class WaitProcessStatusListener implements ProcessStatusListener {
 
     @Override

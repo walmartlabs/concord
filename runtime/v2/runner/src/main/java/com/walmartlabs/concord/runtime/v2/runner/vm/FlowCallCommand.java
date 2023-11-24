@@ -44,6 +44,8 @@ import java.util.Objects;
 
 public class FlowCallCommand extends StepCommand<FlowCall> {
 
+    private static final String FLOW_NAME_VARIABLE = "__flowName__b6bc6c58-c2bc-434c-9a6b-b0092237720b";
+
     private static final long serialVersionUID = 1L;
 
     public FlowCallCommand(FlowCall step) {
@@ -99,7 +101,11 @@ public class FlowCallCommand extends StepCommand<FlowCall> {
         // push the out handler first so it executes after the called flow's frame is done
         state.peekFrame(threadId).push(processOutVars);
         state.pushFrame(threadId, innerFrame);
-        VMUtils.putLocal(innerFrame, "flowName", flowName);
+        VMUtils.putLocal(innerFrame, FLOW_NAME_VARIABLE, flowName);
+    }
+
+    public static String getFlowName(State state, ThreadId threadId) {
+        return VMUtils.getLocal(state, threadId, FLOW_NAME_VARIABLE);
     }
 
     @Override

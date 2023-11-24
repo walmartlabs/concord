@@ -307,7 +307,7 @@ public class ProcessManager {
     public ProcessEntry assertProcess(UUID instanceId) {
         ProcessEntry p = queueManager.get(PartialProcessKey.from(instanceId));
         if (p == null) {
-            throw new ConcordApplicationException("Process instance not found", Response.Status.NOT_FOUND);
+            throw new ConcordApplicationException("Process instance not found", Status.NOT_FOUND);
         }
         return p;
     }

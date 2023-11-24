@@ -6,12 +6,12 @@
     <parent>
         <groupId>com.walmartlabs.concord.it</groupId>
         <artifactId>parent</artifactId>
-        <version>1.102.1-SNAPSHOT</version>
+        <version>2.1.1-SNAPSHOT</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
 
     <artifactId>concord-common-it</artifactId>
-    <packaging>takari-jar</packaging>
+    <packaging>jar</packaging>
 
     <dependencies>
         <dependency>
@@ -49,10 +49,12 @@
         <dependency>
             <groupId>com.squareup.okhttp</groupId>
             <artifactId>okhttp</artifactId>
+            <version>2.7.5</version>
         </dependency>
         <dependency>
             <groupId>com.google.code.gson</groupId>
             <artifactId>gson</artifactId>
+            <version>2.10</version>
         </dependency>
         <dependency>
             <groupId>org.apache.sshd</groupId>
@@ -95,13 +97,4 @@
             <artifactId>annotations</artifactId>
         </dependency>
     </dependencies>
-
-    <build>
-        <plugins>
-            <plugin>
-                <groupId>io.takari.maven.plugins</groupId>
-                <artifactId>takari-lifecycle-plugin</artifactId>
-            </plugin>
-        </plugins>
-    </build>
 </project>

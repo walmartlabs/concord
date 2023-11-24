@@ -27,7 +27,6 @@ import com.walmartlabs.concord.server.process.waits.ProcessWaitManager;
 import org.jooq.DSLContext;
 
 import javax.inject.Inject;
-import javax.inject.Named;
 import java.util.*;
 
 /**
@@ -35,7 +34,6 @@ import java.util.*;
  * Exclusive processes can't be executed when there is another process
  * running in the same project and group.
  */
-@Named
 public class ExclusiveProcessFilter extends WaitProcessFinishFilter {
 
     private final ExclusiveProcessFilterDao dao;
