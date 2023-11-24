@@ -165,6 +165,43 @@ export const listLogSegmentsV3 = async (
     };
 };
 
+export const listLogSegmentsV4 = async (
+    instanceId: ConcordId,
+    offset: number,
+    limit: number,
+    rootOnly: boolean,
+    parentId?: number
+): Promise<PaginatedLogSegmentEntry> => {
+    const limitParam = limit > 0 ? limit + 1 : limit;
+
+    const data: LogSegmentEntry[] = await fetchJson(
+        `/api/v2/process/${instanceId}/log/segment?${queryParams({
+            offset,
+            limit: limitParam,
+            parentId,
+            rootOnly,
+            collectErrors: true,
+            onlyNamedSegments: true
+        })}`
+    );
+
+    const hasMoreElements: boolean = limit > 0 && data.length > limit;
+
+    if (limit > 0 && hasMoreElements) {
+        data.pop();
+    }
+
+    return {
+        items: data.map(i => {
+            if (i.childHasErrors) {
+                i.errors = (i.errors ? i.errors : 0) + 1;
+            }
+            return i;
+        }),
+        next: hasMoreElements
+    };
+};
+
 export const getSegmentLog = async (
     instanceId: ConcordId,
     segmentId: number,
