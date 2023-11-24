@@ -25,6 +25,7 @@ import com.walmartlabs.concord.client.ProcessEntry;
 import com.walmartlabs.concord.client.StartProcessResponse;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.DisabledIf;
+import org.junit.jupiter.api.condition.DisabledIfEnvironmentVariable;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -33,7 +34,7 @@ import static com.walmartlabs.concord.it.common.ITUtils.archive;
 import static com.walmartlabs.concord.it.common.ServerClient.*;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
-@DisabledIf(value = "shouldSkipDockerTests", disabledReason = "Requires dockerd listening on a tcp socket. Not available in a typical CI environment")
+@DisabledIfEnvironmentVariable(named = "SKIP_DOCKER_TESTS", matches = "true", disabledReason = "Requires dockerd listening on a tcp socket. Not available in a typical CI environment")
 public class DockerIT extends AbstractServerIT {
 
     @Test
