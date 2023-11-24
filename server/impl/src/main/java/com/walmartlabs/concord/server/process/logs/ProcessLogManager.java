@@ -83,8 +83,8 @@ public class ProcessLogManager {
         return log(processKey, SYSTEM_SEGMENT_ID, msg);
     }
 
-    public List<LogSegment> listSegments(ProcessKey processKey, int limit, int offset, Long parentId, boolean rootSegments, boolean collectErrors) {
-        return logsDao.listSegments(processKey, limit, offset, parentId, rootSegments, collectErrors);
+    public List<LogSegment> listSegments(ProcessKey processKey, int limit, int offset, Long parentId, boolean rootSegments, boolean collectErrors, boolean onlyNamedSegments) {
+        return logsDao.listSegments(processKey, limit, offset, parentId, rootSegments, collectErrors, onlyNamedSegments);
     }
 
     public void createSystemSegment(DSLContext tx, ProcessKey processKey) {

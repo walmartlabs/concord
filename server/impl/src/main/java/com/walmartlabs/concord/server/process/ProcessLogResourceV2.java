@@ -89,14 +89,15 @@ public class ProcessLogResourceV2 implements Resource {
                                      @ApiParam @QueryParam("offset") @DefaultValue("0") int offset,
                                      @ApiParam @QueryParam("parentId") Long parentId,
                                      @ApiParam @QueryParam("rootOnly") @DefaultValue("false") boolean rootOnly,
-                                     @ApiParam @QueryParam("collectErrors") @DefaultValue("false") boolean collectErrors) {
+                                     @ApiParam @QueryParam("collectErrors") @DefaultValue("false") boolean collectErrors,
+                                     @ApiParam @QueryParam("onlyNamedSegments") @DefaultValue("false") boolean onlyNamedSegments) {
 
         if (offset < 0) {
             throw new ValidationErrorsException("'offset' must be a positive number or zero");
         }
 
         ProcessKey processKey = logAccessManager.assertLogAccess(instanceId);
-        return logManager.listSegments(processKey, limit, offset, parentId, rootOnly, collectErrors);
+        return logManager.listSegments(processKey, limit, offset, parentId, rootOnly, collectErrors, onlyNamedSegments);
     }
 
     /**

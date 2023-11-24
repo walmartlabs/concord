@@ -24,6 +24,7 @@ import com.walmartlabs.concord.db.AbstractDao;
 import com.walmartlabs.concord.db.MainDB;
 import com.walmartlabs.concord.db.PgIntRange;
 import com.walmartlabs.concord.server.ConcordObjectMapper;
+import com.walmartlabs.concord.server.jooq.tables.NamedProcessLogSegments;
 import com.walmartlabs.concord.server.jooq.tables.ProcessLogSegments;
 import com.walmartlabs.concord.server.jooq.tables.ProcessQueue;
 import com.walmartlabs.concord.server.jooq.tables.records.ProcessLogDataRecord;
@@ -43,10 +44,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
+import static com.walmartlabs.concord.db.PgUtils.jsonbText;
 import static com.walmartlabs.concord.db.PgUtils.upperRange;
 import static com.walmartlabs.concord.server.jooq.Routines.*;
-import static com.walmartlabs.concord.server.jooq.Tables.PROCESS_LOG_DATA;
-import static com.walmartlabs.concord.server.jooq.Tables.PROCESS_LOG_SEGMENTS;
+import static com.walmartlabs.concord.server.jooq.Tables.*;
 import static com.walmartlabs.concord.server.jooq.tables.ProcessQueue.PROCESS_QUEUE;
 import static org.jooq.impl.DSL.*;
 
@@ -145,16 +146,18 @@ public class ProcessLogsDao extends AbstractDao {
         q.execute();
     }
 
-    public List<LogSegment> listSegments(ProcessKey processKey, int limit, int offset, Long parentId, boolean rootSegments, boolean collectErrors) {
+    public List<LogSegment> listSegments(ProcessKey processKey, int limit, int offset,
+                                         Long parentId, boolean rootSegments, boolean collectErrors,
+                                         boolean onlyNamedSegments) {
         UUID instanceId = processKey.getInstanceId();
         OffsetDateTime createdAt = processKey.getCreatedAt();
 
         ProcessLogSegments pls = PROCESS_LOG_SEGMENTS.as("pls");
 
-        ProcessLogSegments t = PROCESS_LOG_SEGMENTS.as("t");
-
         Field<BigDecimal> errorsSumField = field(value(BigDecimal.ZERO));
         if (collectErrors) {
+            ProcessLogSegments t = PROCESS_LOG_SEGMENTS.as("t");
+
             errorsSumField = dsl().withRecursive("parents").as(
                             select(PROCESS_LOG_SEGMENTS.INSTANCE_ID, PROCESS_LOG_SEGMENTS.INSTANCE_CREATED_AT, PROCESS_LOG_SEGMENTS.SEGMENT_ID, PROCESS_LOG_SEGMENTS.PARENT_SEGMENT_ID, PROCESS_LOG_SEGMENTS.SEGMENT_ERRORS)
                                     .from(PROCESS_LOG_SEGMENTS)
@@ -173,27 +176,47 @@ public class ProcessLogsDao extends AbstractDao {
                     .from(name("parents")).asField();
         }
 
-        SelectConditionStep<Record10<Long, UUID, String, OffsetDateTime, String, OffsetDateTime, Integer, Integer, JSONB, BigDecimal>> q = dsl()
-                .select(pls.SEGMENT_ID,
-                        pls.CORRELATION_ID,
-                        pls.SEGMENT_NAME,
-                        pls.SEGMENT_TS,
-                        pls.SEGMENT_STATUS,
-                        pls.STATUS_UPDATED_AT,
-                        pls.SEGMENT_WARN,
-                        pls.SEGMENT_ERRORS,
-                        pls.META,
-                        errorsSumField.as("totalErrors"))
-                .from(pls)
-                .where(pls.INSTANCE_ID.eq(instanceId)
-                                .and(pls.INSTANCE_CREATED_AT.eq(createdAt)));
+        SelectConditionStep<Record10<Long, UUID, String, OffsetDateTime, String, OffsetDateTime, Integer, Integer, JSONB, BigDecimal>> q = null;
 
-        if (parentId != null) {
-            q.and(and(pls.PARENT_SEGMENT_ID.eq(parentId)));
-        }
+        if (onlyNamedSegments) {
+            NamedProcessLogSegments npls = NAMED_PROCESS_LOG_SEGMENTS.as("pls");
+            q = dsl()
+                    .select(npls.SEGMENT_ID,
+                            npls.CORRELATION_ID,
+                            npls.SEGMENT_NAME,
+                            npls.SEGMENT_TS,
+                            npls.SEGMENT_STATUS,
+                            npls.STATUS_UPDATED_AT,
+                            npls.SEGMENT_WARN,
+                            npls.SEGMENT_ERRORS,
+                            npls.META,
+                            errorsSumField.as("totalErrors"))
+                    .from(namedProcessLogSegments(instanceId, createdAt, parentId).as("pls"))
+                    .where(npls.SEGMENT_ID.eq(npls.SEGMENT_ID));
 
-        if (rootSegments) {
-            q.and(and(pls.PARENT_SEGMENT_ID.isNull()));
+        } else {
+            q = dsl()
+                    .select(pls.SEGMENT_ID,
+                            pls.CORRELATION_ID,
+                            pls.SEGMENT_NAME,
+                            pls.SEGMENT_TS,
+                            pls.SEGMENT_STATUS,
+                            pls.STATUS_UPDATED_AT,
+                            pls.SEGMENT_WARN,
+                            pls.SEGMENT_ERRORS,
+                            pls.META,
+                            errorsSumField.as("totalErrors"))
+                    .from(pls)
+                    .where(pls.INSTANCE_ID.eq(instanceId)
+                            .and(pls.INSTANCE_CREATED_AT.eq(createdAt)));
+
+            if (parentId != null) {
+                q.and(and(pls.PARENT_SEGMENT_ID.eq(parentId)));
+            }
+
+            if (rootSegments) {
+                q.and(and(pls.PARENT_SEGMENT_ID.isNull()));
+            }
         }
 
         q.orderBy(pls.SEGMENT_TS, pls.SEGMENT_ID);
