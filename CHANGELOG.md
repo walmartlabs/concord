@@ -1,5 +1,21 @@
 # Change log
 
+## [2.4.0] - Unreleased
+
+### Added
+
+- concord-server: add `EXTRA_CLASSPATH` to start script 
+([#836](https://github.com/walmartlabs/concord/pull/836));
+
+### Changed
+
+- concord-agent-operator: use JDK 17 base image
+([#836](https://github.com/walmartlabs/concord/pull/836));
+- concord-common: shared ObjectMapperProvider
+([#836](https://github.com/walmartlabs/concord/pull/836)).
+
+
+
 ## [2.3.0] - 2023-11-21
 
 ### Added
