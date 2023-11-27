@@ -198,7 +198,7 @@ public class ServerClient {
 
     public static ProcessEntry waitForStatus(ProcessApi api, UUID instanceId,
                                              ProcessEntry.StatusEnum status, ProcessEntry.StatusEnum... more) throws InterruptedException {
-        int retries = 10;
+        int retries = 60;
 
         ProcessEntry pir;
         while (true) {
@@ -220,7 +220,7 @@ public class ServerClient {
                 }
             }
 
-            Thread.sleep(500);
+            Thread.sleep(1000);
         }
     }
 
@@ -228,7 +228,7 @@ public class ServerClient {
                                             UUID parentInstanceId, ProcessEntry.KindEnum kind,
                                             ProcessEntry.StatusEnum status, ProcessEntry.StatusEnum... more) throws InterruptedException, ApiException {
 
-        int retries = 10;
+        int retries = 20;
         while (true) {
             List<ProcessEntry> l = api.listSubprocesses(parentInstanceId, null);
             ProcessEntry e = findByKindAndStatus(l, kind, status, more);
