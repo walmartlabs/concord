@@ -1,5 +1,25 @@
 package com.walmartlabs.concord.server.process.pipelines.processors;
 
+/*-
+ * *****
+ * Concord
+ * -----
+ * Copyright (C) 2017 - 2023 Walmart Inc.
+ * -----
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ * 
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ * =====
+ */
+
 import com.walmartlabs.concord.sdk.Constants;
 import com.walmartlabs.concord.server.process.Payload;
 import com.walmartlabs.concord.server.process.logs.ProcessLogManager;
@@ -10,8 +30,10 @@ import com.walmartlabs.concord.server.sdk.ProcessKey;
 
 import javax.inject.Inject;
 import javax.ws.rs.core.Response;
-import java.io.*;
-import java.nio.file.Path;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Optional;
@@ -46,17 +68,16 @@ public class AssertResumeEventsProcessor implements PayloadProcessor {
 
         if (!unexpectedEvents.isEmpty()) {
             logManager.warn(processKey, "Unexpected resuming events: {}, expected: {}", unexpectedEvents, expectedEvents);
-            throw new ConcordApplicationException("Unexpected 'resume' events: " + unexpectedEvents, Response.Status.BAD_REQUEST);
+            throw new InvalidProcessStateException("Unexpected 'resume' events: " + unexpectedEvents);
         }
 
         return chain.process(payload);
     }
 
     private Set<String> getResumeEvents(PartialProcessKey processKey) {
-        String path = Path.of(Constants.Files.JOB_ATTACHMENTS_DIR_NAME)
-                .resolve(Constants.Files.JOB_STATE_DIR_NAME)
-                .resolve(Constants.Files.SUSPEND_MARKER_FILE_NAME)
-                .toString();
+        String path = ProcessStateManager.path(Constants.Files.JOB_ATTACHMENTS_DIR_NAME,
+                        Constants.Files.JOB_STATE_DIR_NAME,
+                        Constants.Files.SUSPEND_MARKER_FILE_NAME);
 
         return stateManager.get(processKey, path, AssertResumeEventsProcessor::deserialize)
                 .orElse(Set.of());
