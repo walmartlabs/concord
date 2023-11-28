@@ -39,6 +39,7 @@ public class ResumePipeline extends Pipeline {
     public ResumePipeline(Injector injector) {
         super(injector,
                 LoggingMDCProcessor.class,
+                AssertResumeEventsProcessor.class,
                 ChangeUserProcessor.class,
                 ResumingProcessor.class,
                 ResumingHooksProcessor.class,
