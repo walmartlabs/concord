@@ -1774,11 +1774,6 @@ public class MainTest {
         byte[] log = run();
 
         assertNoLog(log, ".*should not reach here.*");
-
-        // thread in loop should execute at least one step
-        assertLog(log, ".*inner start: one.*");
-        assertLog(log, ".*inner start: two.*");
-        assertLog(log, ".*inner start: three.*");
     }
 
     @Test

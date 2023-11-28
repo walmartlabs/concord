@@ -31,14 +31,10 @@ import org.slf4j.LoggerFactory;
 import org.sonatype.siesta.Resource;
 
 import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import java.util.UUID;
 
-@Named
-@Singleton
 @Path("/api/v1/process")
 @Tag(name = "Process KV store")
 public class ProcessKvResource implements Resource {

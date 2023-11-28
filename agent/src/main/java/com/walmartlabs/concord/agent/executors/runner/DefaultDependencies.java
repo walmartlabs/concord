@@ -23,8 +23,6 @@ package com.walmartlabs.concord.agent.executors.runner;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.inject.Named;
-import javax.inject.Singleton;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
@@ -37,8 +35,6 @@ import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-@Named
-@Singleton
 public class DefaultDependencies {
 
     private static final Logger log = LoggerFactory.getLogger(DefaultDependencies.class);

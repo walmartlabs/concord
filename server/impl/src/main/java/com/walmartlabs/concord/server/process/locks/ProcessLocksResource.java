@@ -39,8 +39,6 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.util.UUID;
 
-@Named
-@Singleton
 @Path("/api/v1/process")
 @Tag(name = "Process Locks")
 public class ProcessLocksResource implements Resource {

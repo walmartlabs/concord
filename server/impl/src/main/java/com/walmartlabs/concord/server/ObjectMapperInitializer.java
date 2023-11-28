@@ -29,6 +29,9 @@ import org.eclipse.sisu.EagerSingleton;
 import javax.inject.Inject;
 import javax.inject.Named;
 
+/**
+ * Until Siesta is removed, we need to make sure its ObjectMapper is configured correctly.
+ */
 @Named
 @EagerSingleton
 public class ObjectMapperInitializer {

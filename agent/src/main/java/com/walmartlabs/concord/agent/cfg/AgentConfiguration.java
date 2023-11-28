@@ -25,8 +25,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
 import java.nio.file.Path;
 import java.time.Duration;
 import java.util.List;
@@ -37,8 +35,6 @@ import java.util.concurrent.TimeUnit;
 import static com.walmartlabs.concord.agent.cfg.Utils.getOrCreatePath;
 import static com.walmartlabs.concord.agent.cfg.Utils.getStringOrDefault;
 
-@Named
-@Singleton
 public class AgentConfiguration {
 
     private static final Logger log = LoggerFactory.getLogger(AgentConfiguration.class);

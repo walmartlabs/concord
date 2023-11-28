@@ -25,14 +25,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
 import java.util.concurrent.TimeUnit;
 
 import static com.walmartlabs.concord.agent.cfg.Utils.getStringOrDefault;
 
-@Named
-@Singleton
 public class ServerConfiguration {
 
     private static final Logger log = LoggerFactory.getLogger(ServerConfiguration.class);

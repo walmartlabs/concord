@@ -9,9 +9,9 @@ package com.walmartlabs.concord.server.process;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -23,6 +23,11 @@ package com.walmartlabs.concord.server.process;
 import com.google.inject.Binder;
 import com.google.inject.Module;
 import com.walmartlabs.concord.imports.ImportManager;
+import com.walmartlabs.concord.server.process.checkpoint.ProcessCheckpointResource;
+import com.walmartlabs.concord.server.process.checkpoint.ProcessCheckpointV2Resource;
+import com.walmartlabs.concord.server.process.event.ProcessEventResource;
+import com.walmartlabs.concord.server.process.form.FormResource;
+import com.walmartlabs.concord.server.process.locks.ProcessLocksResource;
 import com.walmartlabs.concord.server.process.locks.ProcessLocksWatchdog;
 import com.walmartlabs.concord.server.process.pipelines.processors.ExclusiveGroupProcessor;
 import com.walmartlabs.concord.server.process.pipelines.processors.policy.*;
@@ -40,6 +45,7 @@ import com.walmartlabs.concord.server.sdk.log.ProcessLogListener;
 
 import static com.google.inject.Scopes.SINGLETON;
 import static com.google.inject.multibindings.Multibinder.newSetBinder;
+import static com.walmartlabs.concord.server.Utils.bindJaxRsResource;
 import static com.walmartlabs.concord.server.Utils.bindSingletonScheduledTask;
 
 public class ProcessModule implements Module {
@@ -77,5 +83,16 @@ public class ProcessModule implements Module {
         newSetBinder(binder, PolicyApplier.class).addBinding().to(ProcessRuntimePolicyApplier.class);
         newSetBinder(binder, PolicyApplier.class).addBinding().to(ProcessTimeoutPolicyApplier.class);
         newSetBinder(binder, PolicyApplier.class).addBinding().to(WorkspacePolicyApplier.class);
+
+        bindJaxRsResource(binder, FormResource.class);
+        bindJaxRsResource(binder, ProcessCheckpointResource.class);
+        bindJaxRsResource(binder, ProcessCheckpointV2Resource.class);
+        bindJaxRsResource(binder, ProcessEventResource.class);
+        bindJaxRsResource(binder, ProcessHeartbeatResource.class);
+        bindJaxRsResource(binder, ProcessKvResource.class);
+        bindJaxRsResource(binder, ProcessLocksResource.class);
+        bindJaxRsResource(binder, ProcessLogResourceV2.class);
+        bindJaxRsResource(binder, ProcessResource.class);
+        bindJaxRsResource(binder, ProcessResourceV2.class);
     }
 }

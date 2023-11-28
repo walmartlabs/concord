@@ -29,8 +29,6 @@ import java.time.Duration;
 
 import static com.walmartlabs.concord.agent.cfg.Utils.getStringOrDefault;
 
-@Named
-@Singleton
 public class GitConfiguration {
 
     private final String token;
