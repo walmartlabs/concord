@@ -53,10 +53,9 @@ public class AssertResumeEventsProcessor implements PayloadProcessor {
     }
 
     private Set<String> getResumeEvents(PartialProcessKey processKey) {
-        String path = Path.of(Constants.Files.JOB_ATTACHMENTS_DIR_NAME)
-                .resolve(Constants.Files.JOB_STATE_DIR_NAME)
-                .resolve(Constants.Files.SUSPEND_MARKER_FILE_NAME)
-                .toString();
+        String path = ProcessStateManager.path(Constants.Files.JOB_ATTACHMENTS_DIR_NAME,
+                        Constants.Files.JOB_STATE_DIR_NAME,
+                        Constants.Files.SUSPEND_MARKER_FILE_NAME);
 
         return stateManager.get(processKey, path, AssertResumeEventsProcessor::deserialize)
                 .orElse(Set.of());
