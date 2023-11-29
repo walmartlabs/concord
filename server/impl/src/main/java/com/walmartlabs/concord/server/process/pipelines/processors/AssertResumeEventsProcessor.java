@@ -30,8 +30,10 @@ import com.walmartlabs.concord.server.sdk.ProcessKey;
 
 import javax.inject.Inject;
 import javax.ws.rs.core.Response;
-import java.io.*;
-import java.nio.file.Path;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Optional;
@@ -66,7 +68,7 @@ public class AssertResumeEventsProcessor implements PayloadProcessor {
 
         if (!unexpectedEvents.isEmpty()) {
             logManager.warn(processKey, "Unexpected resuming events: {}, expected: {}", unexpectedEvents, expectedEvents);
-            throw new ConcordApplicationException("Unexpected 'resume' events: " + unexpectedEvents, Response.Status.BAD_REQUEST);
+            throw new InvalidProcessStateException("Unexpected 'resume' events: " + unexpectedEvents);
         }
 
         return chain.process(payload);
