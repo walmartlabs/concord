@@ -321,7 +321,7 @@ public class ProcessManager {
         unexpectedEvents.removeAll(expectedEvents);
 
         if (!unexpectedEvents.isEmpty()) {
-            logManager.warn(processKey, "Unexpected resuming events: {}, expected: {}", unexpectedEvents, expectedEvents);
+            logManager.warn(processKey, "Unexpected 'resume' events: {}, expected: {}", unexpectedEvents, expectedEvents);
             throw new ConcordApplicationException("Unexpected 'resume' events: " + unexpectedEvents, Status.BAD_REQUEST);
         }
     }
