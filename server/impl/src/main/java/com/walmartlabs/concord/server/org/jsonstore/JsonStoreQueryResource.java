@@ -31,16 +31,12 @@ import org.sonatype.siesta.Resource;
 import org.sonatype.siesta.ValidationErrorsException;
 
 import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
 import javax.validation.Valid;
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import java.util.List;
 import java.util.Map;
 
-@Named
-@Singleton
 @Path("/api/v1/org")
 @Tag(name = "JsonStoreQuery")
 public class JsonStoreQueryResource implements Resource {

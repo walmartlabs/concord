@@ -40,14 +40,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
-import javax.inject.Named;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
-@Named
 public class TriggerManager extends AbstractDao {
 
     private static final Logger log = LoggerFactory.getLogger(TriggerManager.class);

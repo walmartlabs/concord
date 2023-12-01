@@ -45,8 +45,6 @@ import org.apache.shiro.authz.UnauthorizedException;
 import org.sonatype.siesta.Resource;
 
 import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
 import javax.validation.Valid;
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
@@ -56,8 +54,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 
-@Named
-@Singleton
 @Path("/api/v2/policy")
 @Tag(name = "Policy")
 public class PolicyResource implements Resource {
