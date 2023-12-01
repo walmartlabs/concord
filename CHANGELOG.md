@@ -1,5 +1,13 @@
 # Change log
 
+## [2.5.0] - Unreleased
+
+### Added
+
+
+### Changed
+
+
 ## [2.4.0] - 2023-11-26
 
 ### Added
