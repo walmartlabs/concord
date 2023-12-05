@@ -76,6 +76,8 @@ public class DependencyManager {
 
     private final List<String> defaultExclusions;
 
+    private final boolean explicitlyResolveV1Client;
+
     @Inject
     public DependencyManager(DependencyManagerConfiguration cfg) throws IOException {
         this.cacheDir = cfg.cacheDir();
@@ -89,6 +91,7 @@ public class DependencyManager {
         this.maven = RepositorySystemFactory.create();
         this.strictRepositories = cfg.strictRepositories();
         this.defaultExclusions = cfg.exclusions();
+        this.explicitlyResolveV1Client = cfg.explicitlyResolveV1Client();
     }
 
     public Collection<DependencyEntity> resolve(Collection<URI> items) throws IOException {
@@ -290,12 +293,14 @@ public class DependencyManager {
         session.setChecksumPolicy(RepositoryPolicy.CHECKSUM_POLICY_IGNORE);
         session.setIgnoreArtifactDescriptorRepositories(strictRepositories);
 
-        DependencySelector selector = new AndDependencySelector(
-                new ClientDepSelector(),
-                new OptionalDependencySelector(),
-                new ExclusionDependencySelector());
+        if (explicitlyResolveV1Client) {
+            DependencySelector selector = new AndDependencySelector(
+                    new ClientDepSelector(),
+                    new OptionalDependencySelector(),
+                    new ExclusionDependencySelector());
 
-        session.setDependencySelector(selector);
+            session.setDependencySelector(selector);
+        }
 
         LocalRepository localRepo = new LocalRepository(localCacheDir.toFile());
         session.setLocalRepositoryManager(system.newLocalRepositoryManager(session, localRepo));
@@ -403,6 +408,9 @@ public class DependencyManager {
 
     private static class ClientDepSelector implements DependencySelector {
 
+        private static final String CONCORD_CLIENT_GROUP_ID = "com.walmartlabs.concord";
+        private static final String CONCORD_CLIENT_ARTIFACT_ID = "concord-client";
+
         private final boolean transitive;
         private final Collection<String> excluded;
 
@@ -417,8 +425,8 @@ public class DependencyManager {
 
         @Override
         public boolean selectDependency(Dependency dependency) {
-            if ("com.walmartlabs.concord".equals(dependency.getArtifact().getGroupId()) &&
-                    "concord-client".equals(dependency.getArtifact().getArtifactId())) {
+            if (CONCORD_CLIENT_GROUP_ID.equals(dependency.getArtifact().getGroupId()) &&
+                    CONCORD_CLIENT_ARTIFACT_ID.equals(dependency.getArtifact().getArtifactId())) {
                 return true;
             }
 
