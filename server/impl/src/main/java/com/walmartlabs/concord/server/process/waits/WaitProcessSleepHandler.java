@@ -23,7 +23,6 @@ package com.walmartlabs.concord.server.process.waits;
 import com.walmartlabs.concord.server.sdk.ProcessKey;
 import com.walmartlabs.concord.server.sdk.metrics.WithTimer;
 
-import javax.inject.Named;
 import javax.inject.Singleton;
 import java.util.Date;
 
@@ -31,7 +30,6 @@ import java.util.Date;
  * Handles the processes that are waiting for some timeout. Resumes a suspended process
  * if the timeout exceeded.
  */
-@Named
 @Singleton
 public class WaitProcessSleepHandler implements ProcessWaitHandler<ProcessSleepCondition> {
 

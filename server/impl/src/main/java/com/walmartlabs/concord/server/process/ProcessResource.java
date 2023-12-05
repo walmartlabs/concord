@@ -79,15 +79,16 @@ import org.sonatype.siesta.Validate;
 import org.sonatype.siesta.ValidationErrorsException;
 
 import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
 import javax.servlet.http.HttpServletRequest;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 import javax.ws.rs.*;
 import javax.ws.rs.core.*;
 import javax.ws.rs.core.Response.Status;
-import java.io.*;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
@@ -98,8 +99,6 @@ import java.util.stream.Collectors;
 import static com.walmartlabs.concord.server.process.state.ProcessStateManager.path;
 import static com.walmartlabs.concord.server.process.state.ProcessStateManager.zipTo;
 
-@Named
-@Singleton
 @javax.ws.rs.Path("/api/v1/process")
 @Tag(name = "Process")
 public class ProcessResource implements Resource {
@@ -260,7 +259,6 @@ public class ProcessResource implements Resource {
 
     /**
      * Starts a new process instance.
-     *
      */
     @POST
     @Consumes(MediaType.MULTIPART_FORM_DATA)
@@ -394,7 +392,9 @@ public class ProcessResource implements Resource {
                                         @QueryParam("saveAs") String saveAs,
                                         Map<String, Object> req) {
 
-        PartialProcessKey processKey = PartialProcessKey.from(instanceId);
+        ProcessKey processKey = assertProcessKey(instanceId);
+
+        processManager.assertResumeEvents(processKey, Set.of(eventName));
 
         if (saveAs != null && !saveAs.isEmpty() && req != null) {
             req = ConfigurationUtils.toNested(saveAs, req);
@@ -477,9 +477,9 @@ public class ProcessResource implements Resource {
 
             ProcessStatus s = r.status();
             if (s == ProcessStatus.FINISHED ||
-                    s == ProcessStatus.FAILED ||
-                    s == ProcessStatus.CANCELLED ||
-                    s == ProcessStatus.TIMED_OUT) {
+                s == ProcessStatus.FAILED ||
+                s == ProcessStatus.CANCELLED ||
+                s == ProcessStatus.TIMED_OUT) {
                 return r;
             }
 
@@ -757,6 +757,7 @@ public class ProcessResource implements Resource {
 
     /**
      * Appends a process' log.
+     *
      * @deprecated in favor of the /api/v2/process/{id}/log* endpoints
      */
     @POST
@@ -1032,7 +1033,7 @@ public class ProcessResource implements Resource {
         }
 
         throw new UnauthorizedException("The current user (" + principal.getUsername() + ") doesn't have " +
-                "the necessary permissions to the download " + downloadEntity + " : " + pe.instanceId());
+                                        "the necessary permissions to the download " + downloadEntity + " : " + pe.instanceId());
     }
 
     private void assertResourceAccess(ProcessEntry pe, String resource) {
@@ -1108,7 +1109,7 @@ public class ProcessResource implements Resource {
 
     private static RuntimeException syncIsForbidden() {
         return new ConcordApplicationException("The 'sync' mode is no longer available. " +
-                "Please use sync=false and poll for the status updates.", Status.BAD_REQUEST);
+                                               "Please use sync=false and poll for the status updates.", Status.BAD_REQUEST);
     }
 
     private void assertAttachmentsPolicy(Path tmpDir, ProcessEntry entry) throws IOException {

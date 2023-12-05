@@ -217,4 +217,8 @@ public abstract class AbstractServerIT {
         }
         return v;
     }
+
+    public static boolean shouldSkipDockerTests() {
+        return Boolean.parseBoolean(System.getenv("IT_SKIP_DOCKER_TESTS"));
+    }
 }

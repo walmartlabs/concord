@@ -24,8 +24,6 @@ import com.walmartlabs.concord.client2.*;
 import com.walmartlabs.concord.agent.cfg.ServerConfiguration;
 
 import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
 import java.io.IOException;
 import java.time.Duration;
 import java.time.temporal.ChronoUnit;
@@ -33,8 +31,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-@Named
-@Singleton
 public class ApiClientFactory {
 
     private static final String SESSION_COOKIE_NAME = "JSESSIONID";

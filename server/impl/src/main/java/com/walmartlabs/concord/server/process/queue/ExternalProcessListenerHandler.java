@@ -28,14 +28,12 @@ import com.walmartlabs.concord.server.sdk.ProcessStatus;
 import org.jooq.DSLContext;
 
 import javax.inject.Inject;
-import javax.inject.Named;
 import java.util.Collections;
 
 /**
  * Sends {@link EventType#PROCESS_STATUS} events to registered {@link com.walmartlabs.concord.server.sdk.events.ProcessEventListener}
  * instances.
  */
-@Named
 public class ExternalProcessListenerHandler implements ProcessStatusListener {
 
     private final ProcessEventManager eventManager;

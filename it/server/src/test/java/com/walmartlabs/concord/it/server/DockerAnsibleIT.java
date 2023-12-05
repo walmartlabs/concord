@@ -24,6 +24,7 @@ import com.walmartlabs.concord.client2.ProcessApi;
 import com.walmartlabs.concord.client2.ProcessEntry;
 import com.walmartlabs.concord.client2.StartProcessResponse;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.condition.DisabledIfEnvironmentVariable;
 
 import java.io.InputStream;
 import java.util.HashMap;
@@ -35,6 +36,7 @@ import static com.walmartlabs.concord.it.common.ServerClient.waitForCompletion;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
+@DisabledIfEnvironmentVariable(named = "SKIP_DOCKER_TESTS", matches = "true", disabledReason = "Requires dockerd listening on a tcp socket. Not available in a typical CI environment")
 public class DockerAnsibleIT extends AbstractServerIT {
 
     @Test

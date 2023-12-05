@@ -39,8 +39,6 @@ import org.sonatype.siesta.Resource;
 import org.sonatype.siesta.ValidationErrorsException;
 
 import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
@@ -56,8 +54,6 @@ import static com.walmartlabs.concord.server.process.logs.ProcessLogsDao.Process
 /**
  * API to work with segmented process logs.
  */
-@Named
-@Singleton
 @Path("/api/v2/process")
 @Tag(name = "ProcessLogV2")
 public class ProcessLogResourceV2 implements Resource {

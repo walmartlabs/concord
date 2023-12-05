@@ -1,10 +1,10 @@
-package com.walmartlabs.concord.agent;
+package com.walmartlabs.concord.server.events;
 
 /*-
  * *****
  * Concord
  * -----
- * Copyright (C) 2017 - 2019 Walmart Inc.
+ * Copyright (C) 2017 - 2023 Walmart Inc.
  * -----
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,18 +20,16 @@ package com.walmartlabs.concord.agent;
  * =====
  */
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.inject.Binder;
+import com.google.inject.Module;
+import com.walmartlabs.concord.server.sdk.events.ProcessEventListener;
 
-import javax.inject.Named;
-import javax.inject.Provider;
-import javax.inject.Singleton;
+import static com.google.inject.multibindings.Multibinder.newSetBinder;
 
-@Named
-@Singleton
-public class ObjectMapperProvider implements Provider<ObjectMapper> {
+public class EventModule implements Module {
 
     @Override
-    public ObjectMapper get() {
-        return new ObjectMapper();
+    public void configure(Binder binder) {
+        newSetBinder(binder, ProcessEventListener.class);
     }
 }
