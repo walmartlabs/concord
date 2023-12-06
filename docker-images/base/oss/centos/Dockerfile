@@ -19,14 +19,19 @@ RUN rpm --import /etc/pki/rpm-gpg/RPM-GPG-KEY-centosofficial && \
            which \
            libtool-ltdl \
            strace \
-           python3 \
-           python3-virtualenv \
+           python39 \
+           python39-devel \
            git \
            coreutils-single  \
            glibc-all-langpacks && \
     dnf clean all && \
-    alternatives --set python /usr/bin/python3 && \
-    alternatives --install /usr/bin/pip pip /usr/bin/pip2 0
+    alternatives --set python /usr/bin/python3.9 && \
+    alternatives --set python3 /usr/bin/python3.9 && \
+    alternatives --install /usr/bin/pip3 pip3 /usr/bin/pip3.9 0 && \
+    alternatives --install /usr/bin/pip pip /usr/bin/pip3.9 0
+
+RUN umask 0022 && \
+    pip3 install --no-cache-dir --upgrade --ignore-installed "virtualenv"
 
 ADD --chmod=755 ./get_jdk_url.sh /tmp/
 ARG jdk_version
