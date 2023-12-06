@@ -4,12 +4,17 @@
 
 ### Added
 
+- concord-server: support @Priority annotation when binding
+Jetty components
+([#841](https://github.com/walmartlabs/concord/pull/841));
 
 ### Changed
 
-- server: BAD_REQUEST to resume process response
-if process is not waiting such event
-([#838](https://github.com/walmartlabs/concord/pull/838));
+- concord-server: resume process now returns BAD_REQUEST
+if no event found
+([#838](https://github.com/walmartlabs/concord/pull/838)).
+
+
 
 ## [2.4.0] - 2023-11-26
 
