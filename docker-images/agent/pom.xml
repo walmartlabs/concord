@@ -117,12 +117,4 @@
             </plugin>
         </plugins>
     </build>
-    <profiles>
-        <profile>
-            <id>centos</id>
-            <properties>
-                <docker.file>oss/centos/Dockerfile</docker.file>
-            </properties>
-        </profile>
-    </profiles>
 </project>
