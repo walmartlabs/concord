@@ -39,14 +39,13 @@ cd concord
 Available Maven profiles:
 
 - `docker` - build Docker images;
-- `debian` - build Debian-based Docker images instead of the default CentOS base;
 - `it` - run integration tests;
-- ``jdk17-aarch64` - use a different JDK version for building artifacts and Docker images.
+- `jdk17-aarch64` - use a different JDK version for building artifacts and Docker images.
 
 Profiles can be combined, e.g.
 
 ```
-./mvnw clean install -Pdocker -Pdebian -Pit -Pjdk17-aarch64
+./mvnw clean install -Pdocker -Pit -Pjdk17-aarch64
 ```
 
 ## Console
