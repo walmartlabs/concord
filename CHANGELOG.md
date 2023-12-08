@@ -10,6 +10,8 @@ Jetty components
 
 ### Changed
 
+- ansible-plugin: callback compatibility for Ansible 2.14
+([#842](https://github.com/walmartlabs/concord/pull/842));
 - concord-server: resume process now returns BAD_REQUEST
 if no event found
 ([#838](https://github.com/walmartlabs/concord/pull/838)).
