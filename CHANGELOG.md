@@ -10,8 +10,10 @@ Jetty components
 
 ### Changed
 
+- runtime-v2: allow "true|false" string in if expression
+([#844](https://github.com/walmartlabs/concord/pull/844));
 - docker-images: Upgrade default Ansible installation to 2.14
-  ([#843](https://github.com/walmartlabs/concord/pull/843));
+([#843](https://github.com/walmartlabs/concord/pull/843));
 - ansible-plugin: callback compatibility for Ansible 2.14
 ([#842](https://github.com/walmartlabs/concord/pull/842));
 - concord-server: resume process now returns BAD_REQUEST
