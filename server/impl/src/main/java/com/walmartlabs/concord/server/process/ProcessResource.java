@@ -393,7 +393,9 @@ public class ProcessResource implements Resource {
                                         @QueryParam("saveAs") String saveAs,
                                         Map<String, Object> req) {
 
-        PartialProcessKey processKey = PartialProcessKey.from(instanceId);
+        ProcessKey processKey = assertProcessKey(instanceId);
+
+        processManager.assertResumeEvents(processKey, Set.of(eventName));
 
         if (saveAs != null && !saveAs.isEmpty() && req != null) {
             req = ConfigurationUtils.toNested(saveAs, req);
