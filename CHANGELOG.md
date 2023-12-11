@@ -1,6 +1,6 @@
 # Change log
 
-## [2.5.0] - Unreleased
+## [2.5.0] - 2023-12-10
 
 ### Added
 
@@ -19,7 +19,12 @@ Jetty components
 - concord-server: resume process now returns BAD_REQUEST
 if no event found
 ([#838](https://github.com/walmartlabs/concord/pull/838)).
-  
+
+### Breaking
+
+- docker-images: drop CentOS-based images, use Debian by default
+([#843](https://github.com/walmartlabs/concord/pull/843).
+
 
 
 ## [2.4.0] - 2023-11-26
