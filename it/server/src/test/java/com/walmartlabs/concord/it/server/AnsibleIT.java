@@ -98,7 +98,9 @@ public class AnsibleIT extends AbstractServerIT {
         // ---
 
         ProcessEntry pir = waitForCompletion(processApi, spr.getInstanceId());
-        assertEquals(ProcessEntry.StatusEnum.FINISHED, pir.getStatus());
+
+        assertEquals(ProcessEntry.StatusEnum.FINISHED, pir.getStatus(),
+                new String(getLog(pir.getLogFileName())));
 
         // ---
 
