@@ -7,6 +7,8 @@
 
 ### Changed
 
+- client2: allow serialize collections
+([#846](https://github.com/walmartlabs/concord/pull/846));
 - runtime-v2: skip annotations for varargs
 ([#845](https://github.com/walmartlabs/concord/pull/845)).
 
