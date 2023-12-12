@@ -60,7 +60,7 @@ public final class MultipartRequestBodyHandler {
                 b.addFormDataPart(k, null, RequestBody.create(ContentType.APPLICATION_JSON, json));
             } else if (v instanceof Boolean) {
                 b.addFormDataPart(k, null, RequestBody.create(ContentType.TEXT_PLAIN, v.toString()));
-            } else if (v instanceof String[] || v instanceof Collection<?>) {
+            } else if (v instanceof String[]) {
                 b.addFormDataPart(k, null, RequestBody.create(ContentType.TEXT_PLAIN, String.join(",", (String[]) v)));
             } else if (v instanceof Collection<?>) {
                 b.addFormDataPart(k, null, RequestBody.create(ContentType.TEXT_PLAIN, String.join(",", (Collection) v)));
