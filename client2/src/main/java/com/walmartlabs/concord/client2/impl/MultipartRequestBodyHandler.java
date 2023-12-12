@@ -37,6 +37,7 @@ public final class MultipartRequestBodyHandler {
         return handle(new MultipartBuilder(), objectMapper, data);
     }
 
+    @SuppressWarnings("unchecked")
     public static HttpEntity handle(MultipartBuilder b, ObjectMapper objectMapper, Map<String, Object> data) {
         for (Map.Entry<String, Object> e : data.entrySet()) {
             String k = e.getKey();
@@ -61,6 +62,8 @@ public final class MultipartRequestBodyHandler {
                 b.addFormDataPart(k, null, RequestBody.create(ContentType.TEXT_PLAIN, v.toString()));
             } else if (v instanceof String[] || v instanceof Collection<?>) {
                 b.addFormDataPart(k, null, RequestBody.create(ContentType.TEXT_PLAIN, String.join(",", (String[]) v)));
+            } else if (v instanceof Collection<?>) {
+                b.addFormDataPart(k, null, RequestBody.create(ContentType.TEXT_PLAIN, String.join(",", (Collection) v)));
             } else if (v instanceof UUID) {
                 b.addFormDataPart(k, v.toString());
             } else if (v instanceof Enum<?>) {
