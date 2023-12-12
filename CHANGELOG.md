@@ -7,6 +7,8 @@
 
 ### Changed
 
+- runtime-v2: skip annotations for varargs
+([#845](https://github.com/walmartlabs/concord/pull/845)).
 
 ## [2.5.0] - 2023-12-10
 
