@@ -162,7 +162,7 @@ public class LazyExpressionEvaluator implements ExpressionEvaluator {
             if (u != null) {
                 throw u;
             }
-            throw new RuntimeException("while evaluating expression '" + expr + "': " + e.getMessage());
+            throw new RuntimeException("while evaluating expression '" + expr + "': " + e.getMessage(), e);
         }
     }
 
