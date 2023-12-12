@@ -230,6 +230,11 @@ public class TaskCallEventRecordingListener implements TaskCallListener {
             return input;
         }
 
+        if (annotations.size() != input.size()) {
+            log.warn("hideSensitiveData ['{}', '{}'] -> args size != annotations size", input, annotations);
+            return input;
+        }
+
         List<Object> result = new ArrayList<>(input);
         for (int i = 0; i < result.size(); i++) {
             List<Annotation> a = annotations.get(i);
