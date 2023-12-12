@@ -27,6 +27,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Collection;
 import java.util.Map;
 import java.util.UUID;
 
@@ -58,7 +59,7 @@ public final class MultipartRequestBodyHandler {
                 b.addFormDataPart(k, null, RequestBody.create(ContentType.APPLICATION_JSON, json));
             } else if (v instanceof Boolean) {
                 b.addFormDataPart(k, null, RequestBody.create(ContentType.TEXT_PLAIN, v.toString()));
-            } else if (v instanceof String[]) {
+            } else if (v instanceof String[] || v instanceof Collection<?>) {
                 b.addFormDataPart(k, null, RequestBody.create(ContentType.TEXT_PLAIN, String.join(",", (String[]) v)));
             } else if (v instanceof UUID) {
                 b.addFormDataPart(k, v.toString());
