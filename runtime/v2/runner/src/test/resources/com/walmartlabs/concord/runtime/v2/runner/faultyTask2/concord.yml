@@ -1,3 +1,5 @@
 flows:
   default:
     - task: faultyTask
+      error:
+        - log: "error occurred: ${lastError}"

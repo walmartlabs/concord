@@ -25,6 +25,7 @@ import java.util.UUID;
 public final class LogTags {
 
     private static final String INSTANCE_ID_TAG = "<concord:instanceId>%s</concord:instanceId>";
+    private static final String EXTERNAL_LINK_TAG = "<concord:instanceId>%s</concord:instanceId>";
 
     public static String instanceId(UUID instanceId) {
         if (instanceId == null) {

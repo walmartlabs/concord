@@ -109,8 +109,8 @@ public class FlowCallCommand extends StepCommand<FlowCall> {
     }
 
     @Override
-    protected String getSegmentName(Context ctx, FlowCall step, State state, ThreadId threadId) {
-        String name = super.getSegmentName(ctx, step, state, threadId);
+    protected String getSegmentName(Context ctx, FlowCall step) {
+        String name = super.getSegmentName(ctx, step);
         if (name != null) {
             return name;
         }
@@ -123,7 +123,7 @@ public class FlowCallCommand extends StepCommand<FlowCall> {
         Map<String, Object> result = new HashMap<>();
         result.put("type", "call");
 
-        String name = super.getSegmentName(ctx, step, ctx.execution().state(), ctx.execution().currentThreadId());
+        String name = super.getSegmentName(ctx, step);
         if (name == null) {
             result.put("generated", true);
         }

@@ -85,7 +85,7 @@ public abstract class StepCommand<T extends Step> implements Command {
         UUID correlationId = getCorrelationId();
         Context ctx = contextFactory.create(runtime, state, threadId, step, correlationId);
 
-        LogContext logContext = getLogContext(runtime, ctx, state, threadId, correlationId);
+        LogContext logContext = getLogContext(runtime, ctx, correlationId);
         if (logContext == null) {
             executeWithContext(ctx, runtime, state, threadId);
         } else {
@@ -131,7 +131,7 @@ public abstract class StepCommand<T extends Step> implements Command {
         return Collections.emptyMap();
     }
 
-    protected LogContext getLogContext(Runtime runtime, Context ctx, State state, ThreadId threadId, UUID correlationId) {
+    protected LogContext getLogContext(Runtime runtime, Context ctx, UUID correlationId) {
         String segmentName = getSegmentName(ctx, getStep());
         if (segmentName == null) {
             return null;

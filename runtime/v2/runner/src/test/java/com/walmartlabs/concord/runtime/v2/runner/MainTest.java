@@ -1629,12 +1629,8 @@ public class MainTest {
         save(ProcessConfiguration.builder()
                 .build());
 
-        try {
-            run();
-            fail("must fail");
-        } catch (Exception e) {
-            // ignore
-        }
+        run();
+
         assertLog(lastLog, ".*" + Pattern.quote("[ERROR] (concord.yml): Error @ line: 3, col: 7. Error during execution of 'faultyTask' task: boom!"));
     }
 
