@@ -50,7 +50,7 @@ import java.util.stream.Collectors;
  * <p/>
  * Subclasses must implement the {@link #execute(Runtime, State, ThreadId)} method.
  * <p/>
- * Subclasses can optionally implement {@link #getSegmentName(Context, Step, State, ThreadId)} to
+ * Subclasses can optionally implement {@link #getSegmentName(Context, Step)} to
  * enable "segmented logging" for the duration of their execution.
  */
 public abstract class StepCommand<T extends Step> implements Command {
@@ -132,7 +132,7 @@ public abstract class StepCommand<T extends Step> implements Command {
     }
 
     protected LogContext getLogContext(Runtime runtime, Context ctx, State state, ThreadId threadId, UUID correlationId) {
-        String segmentName = getSegmentName(ctx, getStep(), state, threadId);
+        String segmentName = getSegmentName(ctx, getStep());
         if (segmentName == null) {
             return null;
         }
@@ -150,7 +150,7 @@ public abstract class StepCommand<T extends Step> implements Command {
                 .build();
     }
 
-    protected String getSegmentName(Context ctx, T step, State state, ThreadId threadId) {
+    protected String getSegmentName(Context ctx, T step) {
         if (step instanceof AbstractStep) {
             String rawSegmentName = SegmentedLogger.getSegmentName((AbstractStep<?>) step);
             try {
@@ -159,7 +159,7 @@ public abstract class StepCommand<T extends Step> implements Command {
                     return segmentName;
                 }
             } catch (Exception e) {
-                logStepException(e, state, threadId);
+                logStepException(e, ctx.execution().state(), ctx.execution().currentThreadId());
                 throw e;
             }
         }

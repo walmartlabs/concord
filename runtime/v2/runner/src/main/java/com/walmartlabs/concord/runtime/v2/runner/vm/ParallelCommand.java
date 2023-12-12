@@ -129,7 +129,7 @@ public class ParallelCommand extends StepCommand<ParallelBlock> {
         }
 
         @Override
-        protected LogContext getLogContext(Runtime runtime, Context ctx, State state, ThreadId threadId,UUID correlationId) {
+        protected LogContext getLogContext(Runtime runtime, Context ctx, UUID correlationId) {
             // TODO: return original ParallelBlock LogContext...
             return null;
         }
