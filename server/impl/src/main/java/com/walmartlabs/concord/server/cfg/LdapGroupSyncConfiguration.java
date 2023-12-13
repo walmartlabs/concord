@@ -52,6 +52,10 @@ public class LdapGroupSyncConfiguration  implements Serializable {
     @Config("ldapGroupSync.disabledAge")
     private Duration disabledAge;
 
+    @Inject
+    @Config("ldapGroupSync.concordOrgOwnersGroup")
+    private String concordOrgOwnersGroup;
+
     public Duration getInterval() {
         return interval;
     }
@@ -70,5 +74,9 @@ public class LdapGroupSyncConfiguration  implements Serializable {
 
     public Duration getDisabledAge() {
         return disabledAge;
+    }
+
+    public String getConcordOrgOwnersGroup() {
+        return concordOrgOwnersGroup;
     }
 }
