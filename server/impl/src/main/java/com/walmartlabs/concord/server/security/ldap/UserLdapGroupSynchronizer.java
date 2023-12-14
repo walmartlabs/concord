@@ -34,6 +34,7 @@ import org.jooq.Configuration;
 import org.jooq.Field;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import scala.Tuple2;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -104,8 +105,9 @@ public class UserLdapGroupSynchronizer implements ScheduledTask {
             usersCount += users.size();
         } while (users.size() >= cfg.getFetchLimit());
 
-        //TODO: Check concordOrgOwners against all owners in DB. Send discrepancy report on slack or email
-        checkOrgOwnerDiscrepancies(users, dao.listOrgOwners());
+        if(cfg.getConcordOrgOwnersGroup() != null) {
+            checkOrgOwnerDiscrepancies(users, dao.listOrgOwners());
+        }
 
         log.info("performTask -> done, {} user(s) synchronized", usersCount);
     }
@@ -123,7 +125,7 @@ public class UserLdapGroupSynchronizer implements ScheduledTask {
             } else {
                 enableUser(u.userId);
                 ldapGroupsDao.update(u.userId, groups);
-                if(groups.contains(cfg.getConcordOrgOwnersGroup())) {
+                if(cfg.getConcordOrgOwnersGroup() != null && groups.contains(cfg.getConcordOrgOwnersGroup())) {
                     concordOrgOwners.add(u);
                 }
             }
@@ -148,7 +150,7 @@ public class UserLdapGroupSynchronizer implements ScheduledTask {
     }
 
     @Named
-    private static final class Dao extends AbstractDao {
+    static class Dao extends AbstractDao {
 
         @Inject
         public Dao(@MainDB Configuration cfg) {
@@ -174,7 +176,13 @@ public class UserLdapGroupSynchronizer implements ScheduledTask {
         }
     }
 
-    private void checkOrgOwnerDiscrepancies(List<UserItem> ldapGroupUsers, List<UserItem> ownerRoleUsers) {
+    /***
+     * Check concordOrgOwners against all owners in DB. Send discrepancy report on slack or email
+     *
+     * @param ldapGroupUsers
+     * @param ownerRoleUsers
+     */
+    Tuple2<List, List> checkOrgOwnerDiscrepancies(List<UserItem> ldapGroupUsers, List<UserItem> ownerRoleUsers) {
         List<UserItem> diffUsersOnlyInLdapGroup = ldapGroupUsers.stream()
                 .filter(item -> !ownerRoleUsers.contains(item))
                 .toList();
@@ -185,18 +193,19 @@ public class UserLdapGroupSynchronizer implements ScheduledTask {
 
 
         log.info("checkOrgOwnerDiscrepancies -> done, {} user(s) only in ldapGroup not registered as owners", diffUsersOnlyInLdapGroup.stream().map(Object::toString).collect(Collectors.joining(", ")));
-        log.info("checkOrgOwnerDiscrepancies -> done, {} user(s) only registered as owners not in ldapGroup", ldapGroupUsers.stream().map(Object::toString).collect(Collectors.joining(", ")));
+        log.info("checkOrgOwnerDiscrepancies -> done, {} user(s) only registered as owners not in ldapGroup", diffUsersWithOwnerRoleAndNotInLdap.stream().map(Object::toString).collect(Collectors.joining(", ")));
 
+        return new Tuple2<>(diffUsersOnlyInLdapGroup, diffUsersWithOwnerRoleAndNotInLdap);
     }
 
-    private static class UserItem implements Comparable<UserItem> {
+    static class UserItem implements Comparable<UserItem> {
 
         private final UUID userId;
         private final String username;
         private final String domain;
         private final boolean expired;
 
-        private UserItem(UUID userId, String username, String domain, boolean expired) {
+        UserItem(UUID userId, String username, String domain, boolean expired) {
             this.userId = userId;
             this.username = username;
             this.domain = domain;
@@ -205,10 +214,20 @@ public class UserLdapGroupSynchronizer implements ScheduledTask {
 
         @Override
         public int compareTo(UserItem o) {
-            if(userId==o.userId)
+            if (userId == o.userId)
                 return 0;
             else
                 return userId.compareTo(o.userId);
+        }
+
+        @Override
+        public String toString() {
+            return "UserItem{" +
+                    "userId=" + userId +
+                    ", username='" + username + '\'' +
+                    ", domain='" + domain + '\'' +
+                    ", expired=" + expired +
+                    '}';
         }
     }
 }

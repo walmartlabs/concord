@@ -53,6 +53,7 @@ public class LdapGroupSyncConfiguration  implements Serializable {
     private Duration disabledAge;
 
     @Inject
+    @Nullable
     @Config("ldapGroupSync.concordOrgOwnersGroup")
     private String concordOrgOwnersGroup;
 
