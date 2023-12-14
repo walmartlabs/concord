@@ -182,20 +182,14 @@ public class UserLdapGroupSynchronizer implements ScheduledTask {
      * @param ldapGroupUsers
      * @param ownerRoleUsers
      */
-    Tuple2<List, List> checkOrgOwnerDiscrepancies(List<UserItem> ldapGroupUsers, List<UserItem> ownerRoleUsers) {
-        List<UserItem> diffUsersOnlyInLdapGroup = ldapGroupUsers.stream()
-                .filter(item -> !ownerRoleUsers.contains(item))
-                .toList();
-
+    List<UserItem> checkOrgOwnerDiscrepancies(List<UserItem> ldapGroupUsers, List<UserItem> ownerRoleUsers) {
         List<UserItem> diffUsersWithOwnerRoleAndNotInLdap = ownerRoleUsers.stream()
                 .filter(item -> !ldapGroupUsers.contains(item))
                 .toList();
 
-
-        log.info("checkOrgOwnerDiscrepancies -> done, {} user(s) only in ldapGroup not registered as owners", diffUsersOnlyInLdapGroup.stream().map(Object::toString).collect(Collectors.joining(", ")));
         log.info("checkOrgOwnerDiscrepancies -> done, {} user(s) only registered as owners not in ldapGroup", diffUsersWithOwnerRoleAndNotInLdap.stream().map(Object::toString).collect(Collectors.joining(", ")));
 
-        return new Tuple2<>(diffUsersOnlyInLdapGroup, diffUsersWithOwnerRoleAndNotInLdap);
+        return diffUsersWithOwnerRoleAndNotInLdap;
     }
 
     static class UserItem implements Comparable<UserItem> {
