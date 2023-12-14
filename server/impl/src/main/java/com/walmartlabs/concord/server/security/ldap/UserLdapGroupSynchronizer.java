@@ -172,15 +172,6 @@ public class UserLdapGroupSynchronizer implements ScheduledTask {
                     .where(USER_TEAMS.TEAM_ROLE.eq(TeamRole.OWNER.toString()))
                     .fetch(r -> new UserItem(r.value1(), r.value2(), r.value3(), false)));
         }
-
-       /* public List<UserItem> listOrgOwners(int limit, Field<OffsetDateTime> cutoff, Field<OffsetDateTime> disabledAge) {
-            Field<Boolean> expiredFiled = disabledAge == null ? inline(false) : field(nvl(USERS.DISABLED_DATE, currentOffsetDateTime()).lessThan(disabledAge));
-            return txResult(tx -> tx.select(USERS.USER_ID, USERS.USERNAME, USERS.DOMAIN, expiredFiled)
-                    .from(USER_LDAP_GROUPS.join(USERS).on(USER_LDAP_GROUPS.USER_ID.eq(USERS.USER_ID)))
-                    .where(USER_LDAP_GROUPS.LDAP_GROUP.eq("concord-org-admins"))
-                    .limit(limit)
-                    .fetch(r -> new UserItem(r.value1(), r.value2(), r.value3(), r.value4())));
-        } */
     }
 
     private void checkOrgOwnerDiscrepancies(List<UserItem> ldapGroupUsers, List<UserItem> ownerRoleUsers) {
@@ -213,7 +204,7 @@ public class UserLdapGroupSynchronizer implements ScheduledTask {
         }
 
         @Override
-        public int compareTo(UserLdapGroupSynchronizer.UserItem o) {
+        public int compareTo(UserItem o) {
             if(userId==o.userId)
                 return 0;
             else
