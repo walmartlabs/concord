@@ -21,6 +21,7 @@ package com.walmartlabs.concord.client.v2;
  */
 
 import com.walmartlabs.concord.client.*;
+import com.walmartlabs.concord.client2.*;
 import com.walmartlabs.concord.runtime.v2.sdk.*;
 
 import javax.inject.Inject;

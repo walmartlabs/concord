@@ -192,6 +192,9 @@
                                 <code>java.method.returnTypeTypeParametersChanged</code>
                             </item>
                             <item>
+                                <code>java.class.externalClassExposedInAPI</code>
+                            </item>
+                            <item>
                                 <code>java.method.numberOfParametersChanged</code>
                             </item>
                         </revapi.ignore>

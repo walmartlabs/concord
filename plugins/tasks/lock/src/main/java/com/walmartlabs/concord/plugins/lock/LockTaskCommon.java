@@ -20,9 +20,7 @@ package com.walmartlabs.concord.plugins.lock;
  * =====
  */
 
-import com.walmartlabs.concord.ApiClient;
-import com.walmartlabs.concord.ApiException;
-import com.walmartlabs.concord.client.*;
+import com.walmartlabs.concord.client2.*;
 import com.walmartlabs.concord.runtime.v2.sdk.TaskResult;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -58,7 +56,7 @@ public class LockTaskCommon {
 
         LockResult lock = withRetry(() -> lockApi.tryLock(instanceId, lockName, checkScope(lockScope)));
 
-        boolean result = lock.isAcquired();
+        boolean result = lock.getAcquired();
         if (!result) {
             withRetry(() -> {
                 processApi.setWaitCondition(instanceId, createCondition(lock.getInfo()));

@@ -29,7 +29,7 @@
         </dependency>
         <dependency>
             <groupId>com.walmartlabs.concord</groupId>
-            <artifactId>concord-client</artifactId>
+            <artifactId>concord-client2</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>

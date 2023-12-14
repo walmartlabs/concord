@@ -20,8 +20,7 @@ package com.walmartlabs.concord.it.console;
  * =====
  */
 
-import com.walmartlabs.concord.ApiClient;
-import com.walmartlabs.concord.client.*;
+import com.walmartlabs.concord.client2.*;
 import com.walmartlabs.concord.it.common.ITUtils;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.Timeout;
@@ -66,17 +65,17 @@ public class CustomFormsIT {
         String orgName = "org_" + ITUtils.randomString();
 
         OrganizationsApi organizationsApi = new OrganizationsApi(client);
-        organizationsApi.createOrUpdate(new OrganizationEntry().setName(orgName));
+        organizationsApi.createOrUpdateOrg(new OrganizationEntry().name(orgName));
 
         String projectName = "project_" + ITUtils.randomString();
         String repoName = "test";
 
         ProjectsApi projectsApi = new ProjectsApi(client);
-        projectsApi.createOrUpdate(orgName, new ProjectEntry()
-                .setName(projectName)
-                .setRepositories(Collections.singletonMap(repoName, new RepositoryEntry()
-                        .setUrl(gitUrl)
-                        .setBranch("master"))));
+        projectsApi.createOrUpdateProject(orgName, new ProjectEntry()
+                .name(projectName)
+                .repositories(Collections.singletonMap(repoName, new RepositoryEntry()
+                        .url(gitUrl)
+                        .branch("master"))));
 
         // ---
 
@@ -92,11 +91,10 @@ public class CustomFormsIT {
         input.put("repo", repoName);
         input.put("arguments.testValue", testValue);
 
-        ProcessApi processApi = new ProcessApi(client);
         StartProcessResponse spr = serverRule.start(input);
         assertNotNull(spr.getInstanceId());
 
-        ProcessEntry pir = waitForStatus(processApi, spr.getInstanceId(), ProcessEntry.StatusEnum.SUSPENDED);
+        ProcessEntry pir = waitForStatus(client, spr.getInstanceId(), ProcessEntry.StatusEnum.SUSPENDED);
 
         String url = "/#/process/" + spr.getInstanceId() + "/wizard";
         consoleRule.navigateToRelative(url);
@@ -117,9 +115,9 @@ public class CustomFormsIT {
 
         //  -- validate log output
 
-        pir = waitForCompletion(processApi, pir.getInstanceId());
+        pir = waitForCompletion(client, pir.getInstanceId());
 
-        byte[] ab = serverRule.getLog(pir.getLogFileName());
+        byte[] ab = serverRule.getLog(pir.getInstanceId());
         assertLog(".*uploaded contents: \\{hello=world\\}.*", ab);
     }
 }

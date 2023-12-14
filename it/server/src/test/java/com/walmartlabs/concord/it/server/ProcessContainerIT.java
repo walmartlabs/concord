@@ -20,9 +20,8 @@ package com.walmartlabs.concord.it.server;
  * =====
  */
 
-import com.walmartlabs.concord.client.ProcessApi;
-import com.walmartlabs.concord.client.ProcessEntry;
-import com.walmartlabs.concord.client.StartProcessResponse;
+import com.walmartlabs.concord.client2.ProcessEntry;
+import com.walmartlabs.concord.client2.StartProcessResponse;
 import com.walmartlabs.concord.common.IOUtils;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
@@ -42,7 +41,7 @@ public class ProcessContainerIT extends AbstractServerIT {
 
     @Test
     public void test() throws Exception {
-        Path src = Paths.get(DockerIT.class.getResource("processContainer").toURI());
+        Path src = Paths.get(ProcessContainerIT.class.getResource("processContainer").toURI());
         Path dst = IOUtils.createTempDir("test");
         IOUtils.copy(src, dst);
 
@@ -59,12 +58,11 @@ public class ProcessContainerIT extends AbstractServerIT {
 
         // --
 
-        ProcessApi processApi = new ProcessApi(getApiClient());
-        ProcessEntry pir = waitForCompletion(processApi, spr.getInstanceId());
+        ProcessEntry pir = waitForCompletion(getApiClient(), spr.getInstanceId());
         assertNotNull(pir.getLogFileName());
         assertEquals(ProcessEntry.StatusEnum.FINISHED, pir.getStatus());
 
-        byte[] ab = getLog(pir.getLogFileName());
+        byte[] ab = getLog(pir.getInstanceId());
         assertLog(".*Hello from Docker!.*", ab);
     }
 }

@@ -23,9 +23,9 @@ package com.walmartlabs.concord.it.runtime.v2;
 import ca.ibodrov.concord.testcontainers.ConcordProcess;
 import ca.ibodrov.concord.testcontainers.Payload;
 import ca.ibodrov.concord.testcontainers.junit5.ConcordRule;
-import com.walmartlabs.concord.client.FormListEntry;
-import com.walmartlabs.concord.client.FormSubmitResponse;
-import com.walmartlabs.concord.client.ProcessEntry;
+import com.walmartlabs.concord.client2.FormListEntry;
+import com.walmartlabs.concord.client2.FormSubmitResponse;
+import com.walmartlabs.concord.client2.ProcessEntry;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
@@ -89,7 +89,7 @@ public class ProfilesIT extends AbstractTest {
         data.put("firstName", firstName);
 
         FormSubmitResponse fsr = proc.submitForm(myForm.getName(), data);
-        assertTrue(fsr.isOk());
+        assertTrue(fsr.getOk());
         assertTrue(fsr.getErrors() == null || fsr.getErrors().isEmpty());
 
         expectStatus(proc, ProcessEntry.StatusEnum.FINISHED);

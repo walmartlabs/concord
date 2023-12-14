@@ -21,7 +21,7 @@ package com.walmartlabs.concord.it.server;
  */
 
 
-import com.walmartlabs.concord.client.*;
+import com.walmartlabs.concord.client2.*;
 import org.junit.jupiter.api.Test;
 
 import java.util.Collections;
@@ -43,36 +43,35 @@ public class SerializationIT extends AbstractServerIT {
 
         // ---
 
-        ProcessApi processApi = new ProcessApi(getApiClient());
         StartProcessResponse spr = start(payload);
         assertNotNull(spr.getInstanceId());
 
         // ---
 
-        ProcessEntry pe = waitForStatus(processApi, spr.getInstanceId(), ProcessEntry.StatusEnum.SUSPENDED);
+        ProcessEntry pe = waitForStatus(getApiClient(), spr.getInstanceId(), ProcessEntry.StatusEnum.SUSPENDED);
         assertEquals(ProcessEntry.StatusEnum.SUSPENDED, pe.getStatus());
 
         // ---
 
         ProcessFormsApi formsApi = new ProcessFormsApi(getApiClient());
-        List<FormListEntry> forms = formsApi.list(spr.getInstanceId());
+        List<FormListEntry> forms = formsApi.listProcessForms(spr.getInstanceId());
         assertEquals(1, forms.size());
 
         FormListEntry f = forms.get(0);
-        formsApi.submit(spr.getInstanceId(), f.getName(),
+        formsApi.submitForm(spr.getInstanceId(), f.getName(),
                 Collections.singletonMap("y", "hello"));
 
         // ---
 
-        pe = waitForCompletion(processApi, spr.getInstanceId());
-        byte[] ab = getLog(pe.getLogFileName());
+        pe = waitForCompletion(getApiClient(), spr.getInstanceId());
+        byte[] ab = getLog(pe.getInstanceId());
 
         assertLog(".*hello.*", ab);
     }
 
     @Test
     public void testNonSerializable() throws Exception {
-        byte[] payload = archive(DependencyManagerIT.class.getResource("nonSerializableTest").toURI());
+        byte[] payload = archive(SerializationIT.class.getResource("nonSerializableTest").toURI());
 
         Map<String, Object> input = new HashMap<>();
         input.put("archive", payload);
@@ -83,9 +82,8 @@ public class SerializationIT extends AbstractServerIT {
 
         // ---
 
-        ProcessApi processApi = new ProcessApi(getApiClient());
-        ProcessEntry pir = waitForStatus(processApi, spr.getInstanceId(), ProcessEntry.StatusEnum.FAILED);
-        byte[] ab = getLog(pir.getLogFileName());
+        ProcessEntry pir = waitForStatus(getApiClient(), spr.getInstanceId(), ProcessEntry.StatusEnum.FAILED);
+        byte[] ab = getLog(pir.getInstanceId());
 
         assertLog(".*Not serializable value: test.*", ab);
     }

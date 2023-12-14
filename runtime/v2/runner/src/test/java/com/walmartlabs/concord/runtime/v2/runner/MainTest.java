@@ -27,6 +27,7 @@ import com.google.inject.Injector;
 import com.google.inject.Module;
 import com.google.inject.multibindings.Multibinder;
 import com.google.inject.name.Names;
+import com.walmartlabs.concord.client2.ApiClient;
 import com.walmartlabs.concord.common.ConfigurationUtils;
 import com.walmartlabs.concord.common.IOUtils;
 import com.walmartlabs.concord.forms.Form;
@@ -135,6 +136,7 @@ public class MainTest {
                 bind(PersistenceService.class).toInstance(mock(PersistenceService.class));
                 bind(ProcessStatusCallback.class).toInstance(processStatusCallback);
                 bind(SecretService.class).to(DefaultSecretService.class);
+                bind(ApiClient.class).toInstance(mock(ApiClient.class));
 
                 Multibinder<TaskProvider> taskProviders = Multibinder.newSetBinder(binder(), TaskProvider.class);
                 taskProviders.addBinding().to(TaskV2Provider.class);
@@ -1583,7 +1585,7 @@ public class MainTest {
         }
 
         String logString = new String(lastLog);
-        String expected = "[ERROR] (concord.yml): Error @ line: 7, col: 7. while evaluating expression '${'a' += m.n += 'b'}': ";
+        String expected = "[ERROR] (concord.yml): Error @ line: 7, col: 7.";
 
         assertTrue(logString.contains(expected), "expected log contains: " + expected + ", actual: " + logString);
     }
@@ -1618,7 +1620,7 @@ public class MainTest {
             // ignore
         }
 
-        String expected = "[ERROR] (concord.yml): Error @ line: 3, col: 7. while evaluating expression '${faultyTask.exception('BOOM')}': javax.el.ELException: java.lang.Exception: BOOM";
+        String expected = "[ERROR] (concord.yml): Error @ line: 3, col: 7. BOOM";
         assertLog(lastLog, ".*" + Pattern.quote(expected));
     }
 

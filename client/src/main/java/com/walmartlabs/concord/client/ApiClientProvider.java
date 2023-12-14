@@ -1,4 +1,4 @@
-package com.walmartlabs.concord.runtime.v2.runner.remote;
+package com.walmartlabs.concord.client;
 
 /*-
  * *****
@@ -20,14 +20,14 @@ package com.walmartlabs.concord.runtime.v2.runner.remote;
  * =====
  */
 
-import com.walmartlabs.concord.client2.ApiClient;
-import com.walmartlabs.concord.client2.ApiClientConfiguration;
-import com.walmartlabs.concord.client2.ApiClientFactory;
+import com.walmartlabs.concord.ApiClient;
 import com.walmartlabs.concord.runtime.v2.sdk.ProcessConfiguration;
 
 import javax.inject.Inject;
+import javax.inject.Named;
 import javax.inject.Provider;
 
+@Named
 public class ApiClientProvider implements Provider<ApiClient> {
 
     private final ApiClientFactory clientFactory;

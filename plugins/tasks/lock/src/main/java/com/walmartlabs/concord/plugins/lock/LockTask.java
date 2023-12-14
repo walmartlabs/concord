@@ -20,13 +20,12 @@ package com.walmartlabs.concord.plugins.lock;
  * =====
  */
 
-import com.walmartlabs.concord.ApiClient;
-import com.walmartlabs.concord.client.ApiClientFactory;
+import com.walmartlabs.concord.client2.ApiClient;
+import com.walmartlabs.concord.client2.ApiClientConfiguration;
+import com.walmartlabs.concord.client2.ApiClientFactory;
 import com.walmartlabs.concord.runtime.v2.sdk.TaskResult;
+import com.walmartlabs.concord.sdk.*;
 import com.walmartlabs.concord.sdk.Constants;
-import com.walmartlabs.concord.sdk.Context;
-import com.walmartlabs.concord.sdk.InjectVariable;
-import com.walmartlabs.concord.sdk.Task;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -47,7 +46,9 @@ public class LockTask implements Task {
     }
 
     public void lock(@InjectVariable("txId") String instanceId, String lockName, String scope) throws Exception {
-        ApiClient apiClient = apiClientFactory.create(context);
+        ApiClient apiClient = apiClientFactory.create(ApiClientConfiguration.builder()
+                .sessionToken(ContextUtils.getSessionToken(context))
+                .build());
 
         TaskResult taskResult = new LockTaskCommon(apiClient, UUID.fromString(instanceId))
                 .lock(lockName, scope);
@@ -57,7 +58,9 @@ public class LockTask implements Task {
     }
 
     public void unlock(@InjectVariable("txId") String instanceId, String lockName, String scope) throws Exception {
-        ApiClient apiClient = apiClientFactory.create(context);
+        ApiClient apiClient = apiClientFactory.create(ApiClientConfiguration.builder()
+                .sessionToken(ContextUtils.getSessionToken(context))
+                .build());
 
         new LockTaskCommon(apiClient, UUID.fromString(instanceId))
                 .unlock(lockName, scope);

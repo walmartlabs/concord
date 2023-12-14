@@ -109,7 +109,7 @@ public class SecretResourceV2 implements Resource {
     @Operation(description = "Updates an existing secret", operationId = "updateSecret")
     public GenericOperationResult update(@PathParam("orgName") @ConcordKey String orgName,
                                          @PathParam("secretName") @ConcordKey String secretName,
-                                         @RequestBody(content = @Content(schema = @Schema(type = "object"))) MultipartInput input) {
+                                         @Parameter(schema = @Schema(type = "object", implementation = Object.class)) MultipartInput input) {
 
         OrganizationEntry org = orgManager.assertAccess(orgName, true);
         Set<UUID> projectIds = getProjectIds(

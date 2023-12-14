@@ -23,7 +23,7 @@ package com.walmartlabs.concord.runtime.v2.runner;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
-import com.walmartlabs.concord.ApiClient;
+import com.walmartlabs.concord.client2.ApiClient;
 import com.walmartlabs.concord.imports.ImportsListener;
 import com.walmartlabs.concord.imports.NoopImportManager;
 import com.walmartlabs.concord.runtime.common.ProcessHeartbeat;

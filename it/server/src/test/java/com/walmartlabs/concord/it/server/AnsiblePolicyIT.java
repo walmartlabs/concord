@@ -9,9 +9,9 @@ package com.walmartlabs.concord.it.server;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -20,7 +20,7 @@ package com.walmartlabs.concord.it.server;
  * =====
  */
 
-import com.walmartlabs.concord.client.*;
+import com.walmartlabs.concord.client2.*;
 import org.junit.jupiter.api.Test;
 
 import java.io.File;
@@ -43,22 +43,22 @@ public class AnsiblePolicyIT extends AbstractServerIT {
         String projectName = "project_" + randomString();
 
         ProjectsApi projectsApi = new ProjectsApi(getApiClient());
-        projectsApi.createOrUpdate(orgName, new ProjectEntry()
-                .setName(projectName)
-                .setRawPayloadMode(ProjectEntry.RawPayloadModeEnum.EVERYONE));
+        projectsApi.createOrUpdateProject(orgName, new ProjectEntry()
+                .name(projectName)
+                .rawPayloadMode(ProjectEntry.RawPayloadModeEnum.EVERYONE));
 
         // ---
 
         String policyName = "test_policy_" + randomString();
         PolicyEntry policy = new PolicyEntry()
-                .setName(policyName)
-                .setRules(readPolicy("ansiblePolicyTaskDeny/test-policy.json"));
+                .name(policyName)
+                .rules(readPolicy("ansiblePolicyTaskDeny/test-policy.json"));
 
         PolicyApi policyApi = new PolicyApi(getApiClient());
-        policyApi.createOrUpdate(policy);
-        policyApi.link(policyName, new PolicyLinkEntry()
-                .setOrgName(orgName)
-                .setProjectName(projectName));
+        policyApi.createOrUpdatePolicy(policy);
+        policyApi.linkPolicy(policyName, new PolicyLinkEntry()
+                .orgName(orgName)
+                .projectName(projectName));
 
         URI dir = AnsiblePolicyIT.class.getResource("ansiblePolicyTaskDeny").toURI();
         byte[] payload = archive(dir, ITConstants.DEPENDENCIES_DIR);
@@ -70,12 +70,12 @@ public class AnsiblePolicyIT extends AbstractServerIT {
 
         // ---
 
-        ProcessEntry pir = waitForCompletion(processApi, spr.getInstanceId());
+        ProcessEntry pir = waitForCompletion(getApiClient(), spr.getInstanceId());
         assertEquals(ProcessEntry.StatusEnum.FAILED, pir.getStatus());
 
         // ---
 
-        byte[] ab = getLog(pir.getLogFileName());
+        byte[] ab = getLog(pir.getInstanceId());
         assertLog(".*Task 'Copy a local file \\(copy\\)' is forbidden by the task policy.*", ab);
     }
 

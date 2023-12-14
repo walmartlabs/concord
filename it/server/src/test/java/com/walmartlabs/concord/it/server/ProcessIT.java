@@ -22,15 +22,15 @@ package com.walmartlabs.concord.it.server;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
-import com.walmartlabs.concord.ApiException;
-import com.walmartlabs.concord.client.*;
-import com.walmartlabs.concord.client.ProcessEntry.StatusEnum;
+import com.walmartlabs.concord.client2.*;
+import com.walmartlabs.concord.client2.ProcessEntry.StatusEnum;
+import com.walmartlabs.concord.client2.ProcessListFilter;
 import com.walmartlabs.concord.common.ConfigurationUtils;
 import com.walmartlabs.concord.common.IOUtils;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
-import java.io.File;
+import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -68,7 +68,7 @@ public class ProcessIT extends AbstractServerIT {
             fail("should fail");
         } catch (ApiException e) {
             String s = e.getResponseBody();
-            ProcessEntry pir = getApiClient().getJSON().deserialize(s, ProcessEntry.class);
+            ProcessEntry pir = getApiClient().getObjectMapper().readValue(s, ProcessEntry.class);
             assertTrue(StatusEnum.RUNNING.equals(pir.getStatus())
                     || StatusEnum.ENQUEUED.equals(pir.getStatus())
                     || StatusEnum.PREPARING.equals(pir.getStatus())
@@ -78,23 +78,22 @@ public class ProcessIT extends AbstractServerIT {
 
         processApi.kill(spr.getInstanceId());
 
-        waitForStatus(processApi, spr.getInstanceId(), StatusEnum.CANCELLED, StatusEnum.FAILED, StatusEnum.FINISHED);
+        waitForStatus(getApiClient(), spr.getInstanceId(), StatusEnum.CANCELLED, StatusEnum.FAILED, StatusEnum.FINISHED);
     }
 
     @Test
     public void testTaskOut() throws Exception {
         byte[] payload = archive(ProcessIT.class.getResource("taskOut").toURI(), ITConstants.DEPENDENCIES_DIR);
 
-        ProcessApi processApi = new ProcessApi(getApiClient());
         StartProcessResponse spr = start(payload);
 
         // ---
 
-        ProcessEntry pir = waitForCompletion(processApi, spr.getInstanceId());
+        ProcessEntry pir = waitForCompletion(getApiClient(), spr.getInstanceId());
 
         // ---
 
-        byte[] ab = getLog(pir.getLogFileName());
+        byte[] ab = getLog(pir.getInstanceId());
         assertLog(".*I said: Hello!.*", ab);
     }
 
@@ -102,16 +101,15 @@ public class ProcessIT extends AbstractServerIT {
     public void testDelegateOut() throws Exception {
         byte[] payload = archive(ProcessIT.class.getResource("delegateOut").toURI(), ITConstants.DEPENDENCIES_DIR);
 
-        ProcessApi processApi = new ProcessApi(getApiClient());
         StartProcessResponse spr = start(payload);
 
         // ---
 
-        ProcessEntry pir = waitForCompletion(processApi, spr.getInstanceId());
+        ProcessEntry pir = waitForCompletion(getApiClient(), spr.getInstanceId());
 
         // ---
 
-        byte[] ab = getLog(pir.getLogFileName());
+        byte[] ab = getLog(pir.getInstanceId());
         assertLog(".*I said: Hello!.*", ab);
     }
 
@@ -121,40 +119,54 @@ public class ProcessIT extends AbstractServerIT {
         String projectName = "project_" + randomString();
 
         ProjectsApi projectsApi = new ProjectsApi(getApiClient());
-        ProjectOperationResponse por1 = projectsApi.createOrUpdate(orgName, new ProjectEntry()
-                .setName(projectName)
-                .setRawPayloadMode(ProjectEntry.RawPayloadModeEnum.EVERYONE));
+        ProjectOperationResponse por1 = projectsApi.createOrUpdateProject(orgName, new ProjectEntry()
+                .name(projectName)
+                .rawPayloadMode(ProjectEntry.RawPayloadModeEnum.EVERYONE));
 
         // ---
 
         byte[] payload = archive(ProcessIT.class.getResource("example").toURI());
 
-        ProcessApi processApi = new ProcessApi(getApiClient());
         Map<String, Object> input = new HashMap<>();
         input.put("org", orgName);
         input.put("project", projectName);
         input.put("archive", payload);
         StartProcessResponse sprA = start(input);
-        waitForCompletion(processApi, sprA.getInstanceId());
+        waitForCompletion(getApiClient(), sprA.getInstanceId());
 
         // ---
 
         StartProcessResponse sprB = start(payload);
-        waitForCompletion(processApi, sprB.getInstanceId());
+        waitForCompletion(getApiClient(), sprB.getInstanceId());
 
         // ---
 
         String anotherProjectName = "another_" + randomString();
-        ProjectOperationResponse por2 = projectsApi.createOrUpdate(orgName, new ProjectEntry()
-                .setName(anotherProjectName));
+        ProjectOperationResponse por2 = projectsApi.createOrUpdateProject(orgName, new ProjectEntry()
+                .name(anotherProjectName));
 
-        List<ProcessEntry> l = processApi.list(null, null, por2.getId(), null, null, null, null, null, null, 30, 0);
+        ProcessV2Api processV2Api = new ProcessV2Api(getApiClient());
+        ProcessListFilter filter = ProcessListFilter.builder()
+                .projectId(por2.getId())
+                .limit(30)
+                .build();
+
+        List<ProcessEntry> l = processV2Api.listProcesses(filter);
         assertTrue(l.isEmpty());
 
-        l = processApi.list(null, null, por1.getId(), null, null, null, null, null, null, 30, 0);
+        filter = ProcessListFilter.builder()
+                .projectId(por1.getId())
+                .limit(30)
+                .build();
+
+        l = processV2Api.listProcesses(filter);
         assertEquals(1, l.size());
 
-        l = processApi.list(null, null, null, null, null, null, null, null, null, 30, 0);
+        filter = ProcessListFilter.builder()
+                .limit(30)
+                .build();
+
+        l = processV2Api.listProcesses(filter);
         ProcessEntry p = null;
         for (ProcessEntry e : l) {
             if (e.getInstanceId().equals(sprB.getInstanceId())) {
@@ -172,28 +184,28 @@ public class ProcessIT extends AbstractServerIT {
         String orgName = "org_" + randomString();
 
         OrganizationsApi orgApi = new OrganizationsApi(getApiClient());
-        orgApi.createOrUpdate(new OrganizationEntry().setName(orgName));
+        orgApi.createOrUpdateOrg(new OrganizationEntry().name(orgName));
 
         // add the user A
 
         UsersApi usersApi = new UsersApi(getApiClient());
 
         String userAName = "userA_" + randomString();
-        usersApi.createOrUpdate(new CreateUserRequest().setUsername(userAName).setType(CreateUserRequest.TypeEnum.LOCAL));
+        usersApi.createOrUpdateUser(new CreateUserRequest().username(userAName).type(CreateUserRequest.TypeEnum.LOCAL));
 
         ApiKeysApi apiKeyResource = new ApiKeysApi(getApiClient());
-        CreateApiKeyResponse apiKeyA = apiKeyResource.create(new CreateApiKeyRequest().setUsername(userAName));
+        CreateApiKeyResponse apiKeyA = apiKeyResource.createUserApiKey(new CreateApiKeyRequest().username(userAName));
 
         // create the user A's team
 
         String teamName = "team_" + randomString();
 
         TeamsApi teamsApi = new TeamsApi(getApiClient());
-        CreateTeamResponse ctr = teamsApi.createOrUpdate(orgName, new TeamEntry().setName(teamName));
+        CreateTeamResponse ctr = teamsApi.createOrUpdateTeam(orgName, new TeamEntry().name(teamName));
 
-        teamsApi.addUsers(orgName, teamName, false, Collections.singletonList(new TeamUserEntry()
-                .setUsername(userAName)
-                .setRole(TeamUserEntry.RoleEnum.MEMBER)));
+        teamsApi.addUsersToTeam(orgName, teamName, false, Collections.singletonList(new TeamUserEntry()
+                .username(userAName)
+                .role(TeamUserEntry.RoleEnum.MEMBER)));
 
         // switch to the user A and create a new private project
 
@@ -202,18 +214,18 @@ public class ProcessIT extends AbstractServerIT {
         String projectName = "project_" + randomString();
 
         ProjectsApi projectsApi = new ProjectsApi(getApiClient());
-        ProjectOperationResponse por = projectsApi.createOrUpdate(orgName, new ProjectEntry()
-                .setName(projectName)
-                .setVisibility(ProjectEntry.VisibilityEnum.PRIVATE)
-                .setRawPayloadMode(ProjectEntry.RawPayloadModeEnum.EVERYONE));
+        ProjectOperationResponse por = projectsApi.createOrUpdateProject(orgName, new ProjectEntry()
+                .name(projectName)
+                .visibility(ProjectEntry.VisibilityEnum.PRIVATE)
+                .rawPayloadMode(ProjectEntry.RawPayloadModeEnum.EVERYONE));
 
         // grant the team access to the project
 
-        projectsApi.updateAccessLevel(orgName, projectName, new ResourceAccessEntry()
-                .setTeamId(ctr.getId())
-                .setOrgName(orgName)
-                .setTeamName(teamName)
-                .setLevel(ResourceAccessEntry.LevelEnum.READER));
+        projectsApi.updateProjectAccessLevel(orgName, projectName, new ResourceAccessEntry()
+                .teamId(ctr.getId())
+                .orgName(orgName)
+                .teamName(teamName)
+                .level(ResourceAccessEntry.LevelEnum.READER));
 
         //Start a process with zero child
 
@@ -224,8 +236,7 @@ public class ProcessIT extends AbstractServerIT {
         input.put("project", projectName);
 
         StartProcessResponse singleNodeProcess = start(input);
-        ProcessApi processApi = new ProcessApi(getApiClient());
-        waitForCompletion(processApi, singleNodeProcess.getInstanceId());
+        waitForCompletion(getApiClient(), singleNodeProcess.getInstanceId());
 
         // Start a process with children
 
@@ -236,11 +247,15 @@ public class ProcessIT extends AbstractServerIT {
         input.put("project", projectName);
 
         StartProcessResponse parentSpr = start(input);
-        waitForCompletion(processApi, parentSpr.getInstanceId());
+        waitForCompletion(getApiClient(), parentSpr.getInstanceId());
 
         // ---
-
-        List<ProcessEntry> processEntry = processApi.list(null, null, por.getId(), null, null, null, null, null, null, 10, 0);
+        ProcessListFilter filter = ProcessListFilter.builder()
+                .projectId(por.getId())
+                .limit(10)
+                .addInclude(ProcessDataInclude.CHILDREN_IDS)
+                .build();
+        List<ProcessEntry> processEntry = new ProcessV2Api(getApiClient()).listProcesses(filter);
         for (ProcessEntry pe : processEntry) {
             if (pe.getInstanceId().equals(singleNodeProcess.getInstanceId())) {
                 assertTrue(pe.getChildrenIds() == null || pe.getChildrenIds().isEmpty());
@@ -256,10 +271,10 @@ public class ProcessIT extends AbstractServerIT {
         UsersApi usersApi = new UsersApi(getApiClient());
 
         String userAName = "userA_" + randomString();
-        usersApi.createOrUpdate(new CreateUserRequest().setUsername(userAName).setType(CreateUserRequest.TypeEnum.LOCAL));
+        usersApi.createOrUpdateUser(new CreateUserRequest().username(userAName).type(CreateUserRequest.TypeEnum.LOCAL));
 
         ApiKeysApi apiKeyResource = new ApiKeysApi(getApiClient());
-        CreateApiKeyResponse apiKeyA = apiKeyResource.create(new CreateApiKeyRequest().setUsername(userAName));
+        CreateApiKeyResponse apiKeyA = apiKeyResource.createUserApiKey(new CreateApiKeyRequest().username(userAName));
 
         String yaml = new String(Files.readAllBytes(Paths.get(ProcessIT.class.getResource("forkInitiator").toURI()).resolve("concord.yml")));
         yaml = yaml.replace("{{apiKey}}", apiKeyA.getKey());
@@ -275,21 +290,25 @@ public class ProcessIT extends AbstractServerIT {
 
         StartProcessResponse parentSpr = start(input);
 
-        ProcessApi processApi = new ProcessApi(getApiClient());
-
-        ProcessEntry processEntry = waitForCompletion(processApi, parentSpr.getInstanceId());
-        assertEquals(ProcessEntry.StatusEnum.FINISHED, processEntry.getStatus());
+        ProcessEntry processEntry = waitForCompletion(getApiClient(), parentSpr.getInstanceId());
+        assertEquals(StatusEnum.FINISHED, processEntry.getStatus(), () -> {
+            try {
+                return new String(getLog(processEntry.getInstanceId()));
+            } catch (ApiException e) {
+                throw new RuntimeException(e);
+            }
+        });
         assertEquals(1, processEntry.getChildrenIds().size());
 
-        ProcessEntry child = waitForCompletion(processApi, processEntry.getChildrenIds().get(0));
-        assertEquals(ProcessEntry.StatusEnum.FINISHED, child.getStatus());
+        ProcessEntry child = waitForCompletion(getApiClient(), processEntry.getChildrenIds().iterator().next());
+        assertEquals(StatusEnum.FINISHED, child.getStatus());
 
         {
-            byte[] ab = getLog(processEntry.getLogFileName());
+            byte[] ab = getLog(processEntry.getInstanceId());
             assertLog(".*initiator: .*admin.*", ab);
         }
         {
-            byte[] ab = getLog(child.getLogFileName());
+            byte[] ab = getLog(child.getInstanceId());
             assertLog(".*initiator: .*" + userAName.toLowerCase() + ".*", ab);
         }
     }
@@ -304,14 +323,15 @@ public class ProcessIT extends AbstractServerIT {
 
         // ---
 
-        ProcessEntry pir = waitForCompletion(processApi, spr.getInstanceId());
-        assertEquals(ProcessEntry.StatusEnum.FINISHED, pir.getStatus());
+        ProcessEntry pir = waitForCompletion(getApiClient(), spr.getInstanceId());
+        assertEquals(StatusEnum.FINISHED, pir.getStatus());
 
-        File effectiveYaml = processApi.downloadStateFile(pir.getInstanceId(), ".concord/effective.concord.yml");
-        assertNotNull(effectiveYaml);
+        try (InputStream effectiveYaml = processApi.downloadStateFile(pir.getInstanceId(), ".concord/effective.concord.yml")) {
+            assertNotNull(effectiveYaml);
 
-        Map<String, Object> m = new ObjectMapper(new YAMLFactory()).readValue(effectiveYaml, Map.class);
-        String entryPoint = (String) ConfigurationUtils.get(m, "configuration", "entryPoint");
-        assertEquals("test", entryPoint);
+            Map<String, Object> m = new ObjectMapper(new YAMLFactory()).readValue(effectiveYaml, Map.class);
+            String entryPoint = (String) ConfigurationUtils.get(m, "configuration", "entryPoint");
+            assertEquals("test", entryPoint);
+        }
     }
 }

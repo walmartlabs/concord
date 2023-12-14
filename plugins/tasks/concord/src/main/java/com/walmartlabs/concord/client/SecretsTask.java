@@ -21,6 +21,8 @@ package com.walmartlabs.concord.client;
  */
 
 import com.walmartlabs.concord.client.v1.ContextBackedVariables;
+import com.walmartlabs.concord.client2.ApiClientConfiguration;
+import com.walmartlabs.concord.client2.ApiClientFactory;
 import com.walmartlabs.concord.runtime.v2.sdk.TaskResult;
 import com.walmartlabs.concord.sdk.Constants;
 import com.walmartlabs.concord.sdk.Context;
@@ -46,8 +48,12 @@ public class SecretsTask implements Task {
 
     @Override
     public void execute(Context ctx) throws Exception {
+        ApiClientConfiguration c = ApiClientConfiguration.builder()
+                .sessionToken(ContextUtils.getSessionToken(ctx))
+                .build();
+
         SecretsTaskParams in = SecretsTaskParams.of(new ContextBackedVariables(ctx));
-        TaskResult.SimpleResult result = new SecretsTaskCommon(clientFactory.create(ctx), getProcessOrgName(ctx))
+        TaskResult.SimpleResult result = new SecretsTaskCommon(clientFactory.create(c), getProcessOrgName(ctx))
                 .execute(in);
         ctx.setVariable(RESULT_KEY, result.toMap());
     }

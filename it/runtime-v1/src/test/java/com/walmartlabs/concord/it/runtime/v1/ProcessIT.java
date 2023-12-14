@@ -22,15 +22,14 @@ package com.walmartlabs.concord.it.runtime.v1;
 
 import ca.ibodrov.concord.testcontainers.ConcordProcess;
 import ca.ibodrov.concord.testcontainers.Payload;
-import ca.ibodrov.concord.testcontainers.ProcessListQuery;
 import ca.ibodrov.concord.testcontainers.junit5.ConcordRule;
 import com.google.common.base.Charsets;
 import com.google.common.io.Resources;
-import com.walmartlabs.concord.client.FormListEntry;
-import com.walmartlabs.concord.client.FormSubmitResponse;
-import com.walmartlabs.concord.client.ProcessCheckpointEntry;
-import com.walmartlabs.concord.client.ProcessEntry;
-import com.walmartlabs.concord.client.ProcessEntry.StatusEnum;
+import com.walmartlabs.concord.client2.FormListEntry;
+import com.walmartlabs.concord.client2.FormSubmitResponse;
+import com.walmartlabs.concord.client2.ProcessEntry;
+import com.walmartlabs.concord.client2.ProcessEntry.StatusEnum;
+import com.walmartlabs.concord.client2.ProcessListFilter;
 import com.walmartlabs.concord.it.common.JGitUtils;
 import com.walmartlabs.concord.sdk.Constants;
 import org.junit.jupiter.api.BeforeAll;
@@ -238,10 +237,10 @@ public class ProcessIT {
 
         // ---
 
-        l = concord.processes().list(ProcessListQuery.builder().addTags("xyz").build());
+        l = concord.processes().list(ProcessListFilter.builder().addTags("xyz").build());
         assertTrue(l.isEmpty());
 
-        l = concord.processes().list(ProcessListQuery.builder().addTags("IT").build());
+        l = concord.processes().list(ProcessListFilter.builder().addTags("IT").build());
         assertEquals(1, l.size());
 
         e = l.get(0);
@@ -407,7 +406,7 @@ public class ProcessIT {
 
         ProcessEntry pe = proc.disable();
 
-        assertTrue(pe.isDisabled());
+        assertTrue(pe.getDisabled());
     }
 
     @Test

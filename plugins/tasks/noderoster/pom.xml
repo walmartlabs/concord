@@ -26,12 +26,12 @@
         </dependency>
         <dependency>
             <groupId>com.walmartlabs.concord</groupId>
-            <artifactId>concord-client</artifactId>
+            <artifactId>concord-client2</artifactId>
             <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>com.walmartlabs.concord.server.plugins.noderoster</groupId>
-            <artifactId>concord-noderoster-plugin-client</artifactId>
+            <artifactId>concord-noderoster-plugin-client2</artifactId>
         </dependency>
 
         <dependency>
