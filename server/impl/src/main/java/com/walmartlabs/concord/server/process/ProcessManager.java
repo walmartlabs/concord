@@ -168,6 +168,9 @@ public class ProcessManager {
         queueDao.tx(tx -> {
             boolean updated = queueManager.updateExpectedStatus(tx, rootProcessKey, e.status(), ProcessStatus.NEW);
             if (updated) {
+                List<ProcessKey> allProcesses = queueDao.getCascade(tx, rootProcessKey);
+                kill(tx, allProcesses);
+
                 stateManager.delete(tx, rootProcessKey);
             }
         });

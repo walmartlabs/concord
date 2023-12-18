@@ -449,8 +449,12 @@ public class ProcessQueueDao extends AbstractDao {
     }
 
     public List<ProcessKey> getCascade(PartialProcessKey parentKey) {
+        return txResult(tx -> getCascade(tx, parentKey));
+    }
+
+    public List<ProcessKey> getCascade(DSLContext tx, PartialProcessKey parentKey) {
         UUID parentInstanceId = parentKey.getInstanceId();
-        return dsl().withRecursive("children").as(
+        return tx.withRecursive("children").as(
                 select(PROCESS_QUEUE.INSTANCE_ID, PROCESS_QUEUE.CREATED_AT).from(PROCESS_QUEUE)
                         .where(PROCESS_QUEUE.INSTANCE_ID.eq(parentInstanceId))
                         .unionAll(
