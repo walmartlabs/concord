@@ -96,8 +96,13 @@ public class ProcessCleaner implements ScheduledTask {
                                 .and(PROCESS_QUEUE.CURRENT_STATUS.notIn(EXCLUDE_STATUSES)));
 
                 int stateRecords = 0;
+                int initialStateRecords = 0;
                 if (jobCfg.isStateCleanup()) {
                     stateRecords = tx.deleteFrom(PROCESS_STATE)
+                            .where(PROCESS_STATE.INSTANCE_ID.in(ids))
+                            .execute();
+
+                    initialStateRecords = tx.deleteFrom(PROCESS_INITIAL_STATE)
                             .where(PROCESS_STATE.INSTANCE_ID.in(ids))
                             .execute();
                 }
@@ -139,8 +144,8 @@ public class ProcessCleaner implements ScheduledTask {
                             .execute();
                 }
 
-                log.info("deleteOldState -> removed older than {}: {} queue entries, {} log data entries, {} log segments, {} state item(s), {} event(s), {} checkpoint(s)",
-                        jobCfg.getMaxStateAge(), queueEntries, logDataEntries, logSegmentEntries, stateRecords, events, checkpoints);
+                log.info("deleteOldState -> removed older than {}: {} queue entries, {} log data entries, {} log segments, {} state item(s), {} initial state item(s), {} event(s), {} checkpoint(s)",
+                        jobCfg.getMaxStateAge(), queueEntries, logDataEntries, logSegmentEntries, stateRecords, initialStateRecords, events, checkpoints);
             });
 
             long t2 = System.currentTimeMillis();
