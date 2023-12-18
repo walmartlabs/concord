@@ -67,11 +67,17 @@ public class ProcessSecurityContext {
                 .build();
     }
 
+    // TODO: invalidate cache for processKey?
     public void storeCurrentSubject(ProcessKey processKey) {
         Subject s = SecurityUtils.getSubject();
 
         PrincipalCollection src = s.getPrincipals();
 
+        storeSubject(processKey, src);
+    }
+
+    // TODO: invalidate cache for processKey?
+    public void storeSubject(ProcessKey processKey, PrincipalCollection src) {
         // filter out transient principals
         SimplePrincipalCollection dst = new SimplePrincipalCollection();
         for (String realm : src.getRealmNames()) {

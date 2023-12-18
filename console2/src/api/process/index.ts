@@ -97,6 +97,12 @@ export const canBeCancelled = (s: ProcessStatus) =>
     s === ProcessStatus.WAITING ||
     s === ProcessStatus.SUSPENDED;
 
+export const canBeRestarted = (s: ProcessStatus) =>
+    s === ProcessStatus.CANCELLED ||
+    s === ProcessStatus.FAILED ||
+    s === ProcessStatus.FINISHED ||
+    s === ProcessStatus.TIMED_OUT;
+
 export interface ProcessCheckpointEntry {
     id: string;
     name: string;
@@ -263,6 +269,9 @@ export const disable = (instanceId: ConcordId, disabled: boolean): Promise<{}> =
 
 export const kill = (instanceId: ConcordId): Promise<{}> =>
     managedFetch(`/api/v1/process/${instanceId}`, { method: 'DELETE' });
+
+export const restart = (instanceId: ConcordId): Promise<{}> =>
+    managedFetch(`/api/v1/process/${instanceId}/restart`, { method: 'POST' });
 
 export const killBulk = (instanceIds: ConcordId[]): Promise<{}> => {
     const opts = {

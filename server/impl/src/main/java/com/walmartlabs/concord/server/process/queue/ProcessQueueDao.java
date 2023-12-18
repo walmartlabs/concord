@@ -463,6 +463,28 @@ public class ProcessQueueDao extends AbstractDao {
                 .fetch(r -> new ProcessKey(r.get(0, UUID.class), r.get(1, OffsetDateTime.class)));
     }
 
+    public ProcessKey getRootId(PartialProcessKey processKey) {
+        UUID instanceId = processKey.getInstanceId();
+
+        Name cteName = name("parent");
+        Field<UUID> cteParentId = field(name("parent", PROCESS_QUEUE.PARENT_INSTANCE_ID.getName()), UUID.class);
+
+        return dsl()
+                .withRecursive(cteName).as(
+                        select(PROCESS_QUEUE.INSTANCE_ID, PROCESS_QUEUE.CREATED_AT, PROCESS_QUEUE.PARENT_INSTANCE_ID)
+                                .from(PROCESS_QUEUE)
+                                .where(PROCESS_QUEUE.INSTANCE_ID.eq(instanceId))
+                                .unionAll(
+                                        select(PROCESS_QUEUE.INSTANCE_ID, PROCESS_QUEUE.CREATED_AT, PROCESS_QUEUE.PARENT_INSTANCE_ID).
+                                                from(PROCESS_QUEUE)
+                                                .join(cteName)
+                                                .on(PROCESS_QUEUE.INSTANCE_ID.eq(cteParentId))))
+                .select()
+                .from(cteName)
+                .where(cteParentId.isNull())
+                .fetchOne(r -> new ProcessKey(r.get(0, UUID.class), r.get(1, OffsetDateTime.class)));
+    }
+
     public ProcessInitiatorEntry getInitiator(PartialProcessKey processKey) {
         return dsl().select(PROCESS_QUEUE.INSTANCE_ID, PROCESS_QUEUE.CREATED_AT, PROCESS_QUEUE.CURRENT_STATUS, PROCESS_QUEUE.INITIATOR_ID)
                 .from(PROCESS_QUEUE)

@@ -372,11 +372,21 @@ public class ProcessResource implements Resource {
         try {
             payload = payloadManager.createPayload(processKey, parentInstanceId, userPrincipal.getId(), userPrincipal.getUsername(), ep, in, out);
         } catch (IOException e) {
-            log.error("start ['{}'] -> error creating a payload: {}", entryPoint, e);
+            log.error("start ['{}'] -> error creating a payload: {}", entryPoint, e.getMessage());
             throw new ConcordApplicationException("Error creating a payload", e);
         }
 
         return toResponse(processManager.start(payload));
+    }
+
+    @POST
+    @javax.ws.rs.Path("/{id}/restart")
+    @Produces(MediaType.APPLICATION_JSON)
+    @Operation
+    public StartProcessResponse restart(@PathParam("id") UUID instanceId) {
+        ProcessKey processKey = assertProcessKey(instanceId);
+        processManager.restart(processKey);
+        return new StartProcessResponse(instanceId);
     }
 
     /**

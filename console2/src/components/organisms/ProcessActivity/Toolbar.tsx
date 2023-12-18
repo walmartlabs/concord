@@ -21,6 +21,7 @@ import * as React from 'react';
 import { memo, useCallback, useState } from 'react';
 import {
     canBeCancelled,
+    canBeRestarted,
     hasState,
     isFinal,
     ProcessEntry,
@@ -46,6 +47,7 @@ import { ConcordId } from '../../../api/common';
 
 import './styles.css';
 import { formatDuration } from '../../../utils';
+import RestartProcessPopup from "../RestartProcessPopup";
 
 interface ExternalProps {
     stickyRef: any;
@@ -183,7 +185,7 @@ const renderProcessMainActions = (refresh: () => void, process?: ProcessEntry) =
             <Button.Group>
                 <Button
                     attached={false}
-                    negative={true}
+                    negative={false}
                     icon="delete"
                     content="Cancel"
                     disabled={true}
@@ -192,6 +194,20 @@ const renderProcessMainActions = (refresh: () => void, process?: ProcessEntry) =
             </Button.Group>
         );
     }
+
+    const renderRestartProcessTrigger = (onClick: () => void) => {
+        return (
+            <Button
+                attached={false}
+                negative={false}
+                icon="sync"
+                content="Restart"
+                disabled={!canBeRestarted(process.status)}
+                size={'small'}
+                onClick={onClick}
+            />
+        );
+    };
 
     const renderCancelProcessTrigger = (onClick: () => void) => {
         return (
@@ -209,11 +225,20 @@ const renderProcessMainActions = (refresh: () => void, process?: ProcessEntry) =
 
     return (
         <Button.Group>
-            <CancelProcessPopup
-                instanceId={process.instanceId}
-                refresh={refresh}
-                trigger={renderCancelProcessTrigger}
-            />
+            {!canBeRestarted(process.status) &&
+                <CancelProcessPopup
+                    instanceId={process.instanceId}
+                    refresh={refresh}
+                    trigger={renderCancelProcessTrigger}
+                />
+            }
+            {canBeRestarted(process.status) && process.runtime === 'concord-v2' &&
+                <RestartProcessPopup
+                    instanceId={process.instanceId}
+                    refresh={refresh}
+                    trigger={renderRestartProcessTrigger}
+                />
+            }
         </Button.Group>
     );
 };

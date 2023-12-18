@@ -24,10 +24,9 @@ import ca.ibodrov.concord.testcontainers.ConcordProcess;
 import ca.ibodrov.concord.testcontainers.Payload;
 import ca.ibodrov.concord.testcontainers.ProcessListQuery;
 import ca.ibodrov.concord.testcontainers.junit5.ConcordRule;
-import com.walmartlabs.concord.client.FormListEntry;
-import com.walmartlabs.concord.client.FormSubmitResponse;
-import com.walmartlabs.concord.client.ProcessCheckpointEntry;
-import com.walmartlabs.concord.client.ProcessEntry;
+import com.walmartlabs.concord.ApiClient;
+import com.walmartlabs.concord.client.*;
+import com.walmartlabs.concord.sdk.MapUtils;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
@@ -91,7 +90,6 @@ public class ProcessIT extends AbstractTest {
 
         proc.assertLog(".*matches: true.*");
     }
-
 
     /**
      * Ruby script execution.
@@ -511,5 +509,38 @@ public class ProcessIT extends AbstractTest {
 
         proc.assertLog(".*process entry: RUNNING.*");
         proc.assertLog(".*Works!.*");
+    }
+
+    @Test
+    public void testRestart() throws Exception {
+        Payload payload = new Payload()
+                .archive(resource("args"))
+                .arg("name", "Concord");
+
+        ConcordProcess proc = concord.processes().start(payload);
+        expectStatus(proc, ProcessEntry.StatusEnum.FINISHED);
+
+        // ---
+
+        proc.assertLog(".*Runtime: concord-v2.*");
+        proc.assertLog(".*Hello, Concord!.*");
+
+        // restart
+        ApiClient apiClient = concord.apiClient();
+        ClientUtils.postData(apiClient, "/api/v1/process/" + proc.instanceId() + "/restart", null);
+
+        expectStatus(proc, ProcessEntry.StatusEnum.FINISHED);
+
+        proc.assertLogAtLeast(".*Runtime: concord-v2.*", 2);
+        proc.assertLogAtLeast(".*Hello, Concord!.*", 2);
+
+        // ---
+        ProcessEventsApi processEventsApi = new ProcessEventsApi(concord.apiClient());
+        List<ProcessEventEntry> events = processEventsApi.list(proc.instanceId(), "PROCESS_STATUS", null, null, null, null, null, null);
+        assertNotNull(events);
+
+        // 2 NEW events
+        long eventsCount = events.stream().filter(e -> "NEW".equals(MapUtils.assertString(e.getData(), "status"))).count();
+        assertEquals(2, eventsCount, "" + events);
     }
 }

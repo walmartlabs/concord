@@ -28,6 +28,8 @@ import com.walmartlabs.concord.server.process.Payload;
 import com.walmartlabs.concord.server.process.state.ProcessStateManager;
 import com.walmartlabs.concord.server.sdk.ProcessKey;
 import com.walmartlabs.concord.server.sdk.metrics.WithTimer;
+import com.walmartlabs.concord.server.security.PrincipalUtils;
+import org.apache.shiro.SecurityUtils;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -77,8 +79,9 @@ public class PayloadStoreProcessor implements PayloadProcessor {
         String serializedHeaders = serialize(headers);
 
         stateManager.tx(tx -> {
-            stateManager.insert(tx, processKey, "_initial/payload.json", serializedHeaders.getBytes());
-            stateManager.importPath(tx, processKey, "_initial/attachments/", payload.getHeader(Payload.BASE_DIR), (path, basicFileAttributes) -> payload.getAttachments().containsValue(path));
+            stateManager.insertInitial(tx, processKey, "payload.json", serializedHeaders.getBytes());
+            stateManager.insertInitial(tx, processKey, "initiator", PrincipalUtils.serialize(SecurityUtils.getSubject().getPrincipals()));
+            stateManager.importPathInitial(tx, processKey, "attachments/", payload.getHeader(Payload.BASE_DIR), (path, basicFileAttributes) -> payload.getAttachments().containsValue(path));
         });
 
         return chain.process(payload);
