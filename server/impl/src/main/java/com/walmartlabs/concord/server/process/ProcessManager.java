@@ -166,9 +166,9 @@ public class ProcessManager {
         // put new attemptNO somewhere
 
         queueDao.tx(tx -> {
-            boolean updated = queueManager.updateExpectedStatus(tx, processKey, e.status(), ProcessStatus.NEW);
+            boolean updated = queueManager.updateExpectedStatus(tx, rootProcessKey, e.status(), ProcessStatus.NEW);
             if (updated) {
-                stateManager.delete(tx, processKey);
+                stateManager.delete(tx, rootProcessKey);
             }
         });
     }
