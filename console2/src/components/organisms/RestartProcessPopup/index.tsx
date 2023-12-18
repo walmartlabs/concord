@@ -25,9 +25,11 @@ import { SingleOperationPopup } from '../../molecules';
 import { memo, useCallback } from 'react';
 import { restart as apiRestart } from '../../../api/process';
 import { useState } from 'react';
+import {Message} from "semantic-ui-react";
 
 interface ExternalProps {
     instanceId: ConcordId;
+    parentInstanceId?: ConcordId;
     refresh: () => void;
     trigger: (onClick: () => void) => React.ReactNode;
 }
@@ -38,6 +40,7 @@ const RestartProcessPopup = memo((props: ExternalProps) => {
     const [success, setSuccess] = useState(false);
 
     const instanceId = props.instanceId;
+    const parentInstanceId = props.parentInstanceId;
 
     const cancelProcess = useCallback(async () => {
         setRestarting(true);
@@ -64,7 +67,15 @@ const RestartProcessPopup = memo((props: ExternalProps) => {
         <SingleOperationPopup
             trigger={trigger}
             title="Restart the process?"
-            introMsg={<p>Are you sure you want to restart the selected process?</p>}
+            introMsg={
+            <>
+                <p>Are you sure you want to restart the selected process?</p>
+                {parentInstanceId && <Message warning>
+                    <Message.Header>Warning!</Message.Header>
+                    <p>The root process will be restarted</p>
+                </Message>}
+            </>
+            }
             running={restarting}
             runningMsg={<p>Restarting...</p>}
             success={success}

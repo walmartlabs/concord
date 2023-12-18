@@ -235,6 +235,7 @@ const renderProcessMainActions = (refresh: () => void, process?: ProcessEntry) =
             {canBeRestarted(process.status) && process.runtime === 'concord-v2' &&
                 <RestartProcessPopup
                     instanceId={process.instanceId}
+                    parentInstanceId={process.parentInstanceId}
                     refresh={refresh}
                     trigger={renderRestartProcessTrigger}
                 />
