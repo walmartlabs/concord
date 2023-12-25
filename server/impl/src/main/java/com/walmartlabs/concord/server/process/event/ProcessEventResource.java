@@ -49,8 +49,6 @@ import java.util.stream.Collectors;
 
 import static com.walmartlabs.concord.server.Utils.unwrap;
 
-@Named
-@Singleton
 @Path("/api/v1/process")
 @Tag(name = "Process Events")
 public class ProcessEventResource implements Resource {

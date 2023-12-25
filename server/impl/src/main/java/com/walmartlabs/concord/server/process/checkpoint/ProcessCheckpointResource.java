@@ -23,7 +23,6 @@ package com.walmartlabs.concord.server.process.checkpoint;
 import com.walmartlabs.concord.common.IOUtils;
 import com.walmartlabs.concord.common.TemporaryPath;
 import com.walmartlabs.concord.server.MultipartUtils;
-import com.walmartlabs.concord.server.org.secret.SecretResource;
 import com.walmartlabs.concord.server.process.ProcessEntry;
 import com.walmartlabs.concord.server.process.ProcessEntry.ProcessCheckpointEntry;
 import com.walmartlabs.concord.server.process.ProcessManager;
@@ -45,8 +44,6 @@ import org.sonatype.siesta.Validate;
 import org.sonatype.siesta.ValidationErrorsException;
 
 import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
 import javax.validation.Valid;
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
@@ -58,8 +55,6 @@ import java.nio.file.StandardCopyOption;
 import java.util.List;
 import java.util.UUID;
 
-@Named
-@Singleton
 @Path("/api/v1/process")
 @Tag(name = "Checkpoint")
 public class ProcessCheckpointResource implements Resource {

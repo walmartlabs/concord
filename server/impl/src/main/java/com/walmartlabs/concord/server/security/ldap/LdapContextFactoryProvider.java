@@ -28,7 +28,6 @@ import javax.inject.Named;
 import javax.inject.Provider;
 import javax.naming.NamingException;
 
-@Named
 public class LdapContextFactoryProvider implements Provider<LdapContextFactory> {
 
     private final LdapConfiguration cfg;
