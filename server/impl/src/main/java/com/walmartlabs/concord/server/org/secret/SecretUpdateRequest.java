@@ -25,7 +25,7 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.walmartlabs.concord.common.validation.ConcordKey;
 import com.walmartlabs.concord.server.org.EntityOwner;
-import io.swagger.annotations.ApiModelProperty;
+import io.swagger.v3.oas.annotations.media.Schema;
 import org.immutables.value.Value;
 
 import javax.annotation.Nullable;
@@ -70,6 +70,6 @@ public interface SecretUpdateRequest extends Serializable {
     String orgName();
 
     @Nullable
-    @ApiModelProperty(dataType = "string")
+    @Schema(type = "string")
     byte[] data();
 }

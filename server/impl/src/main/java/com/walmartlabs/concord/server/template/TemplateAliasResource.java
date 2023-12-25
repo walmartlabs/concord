@@ -24,10 +24,8 @@ import com.walmartlabs.concord.common.validation.ConcordKey;
 import com.walmartlabs.concord.db.AbstractDao;
 import com.walmartlabs.concord.db.MainDB;
 import com.walmartlabs.concord.server.security.Roles;
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
-import io.swagger.annotations.ApiParam;
-import io.swagger.annotations.Authorization;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.apache.shiro.authz.UnauthorizedException;
 import org.jooq.Configuration;
 import org.sonatype.siesta.Resource;
@@ -38,8 +36,8 @@ import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import java.util.List;
 
-@Api(value = "TemplateAlias", authorizations = {@Authorization("api_key"), @Authorization("session_key"), @Authorization("ldap")})
 @Path("/api/v1/template/alias")
+@Tag(name = "TemplateAlias")
 public class TemplateAliasResource extends AbstractDao implements Resource {
 
     private final TemplateAliasDao aliasDao;
@@ -51,10 +49,10 @@ public class TemplateAliasResource extends AbstractDao implements Resource {
     }
 
     @POST
-    @ApiOperation("Create or update a template alias")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    public TemplateAliasResponse createOrUpdate(@ApiParam @Valid TemplateAliasEntry request) {
+    @Operation(description = "Create or update a template alias", operationId = "createOrUpdateTemplate")
+    public TemplateAliasResponse createOrUpdate(@Valid TemplateAliasEntry request) {
         assertAdmin();
 
         tx(tx -> {
@@ -66,15 +64,15 @@ public class TemplateAliasResource extends AbstractDao implements Resource {
     }
 
     @GET
-    @ApiOperation("List current template aliases")
     @Produces(MediaType.APPLICATION_JSON)
+    @Operation(description = "List current template aliases", operationId = "listTemplates")
     public List<TemplateAliasEntry> list() {
         return aliasDao.list();
     }
 
     @DELETE
-    @ApiOperation("Delete existing template alias")
     @Path("/{alias}")
+    @Operation(description = "Delete existing template alias", operationId = "deleteTemplate")
     public TemplateAliasResponse delete(@PathParam("alias") @ConcordKey String alias) {
 
         assertAdmin();
