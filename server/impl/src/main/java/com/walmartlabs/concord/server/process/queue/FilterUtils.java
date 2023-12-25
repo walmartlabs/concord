@@ -57,7 +57,7 @@ public final class FilterUtils {
             SuffixMapping.of(".ge", ProcessFilter.FilterType.GREATER_OR_EQUALS),
             SuffixMapping.of(".len", ProcessFilter.FilterType.LESS_OR_EQUALS_OR_NULL),
 
-            SuffixMapping.of(".rm", ProcessFilter.FilterType.REGEXP_MATCH)
+            SuffixMapping.of(".regexp", ProcessFilter.FilterType.REGEXP_MATCH)
     };
 
     public static List<ProcessFilter.DateFilter> parseDate(String paramName, UriInfo uriInfo) {

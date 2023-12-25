@@ -37,7 +37,7 @@ public class FilterUtilsTest {
     @Test
     public void testRegularExpressionMatch() {
         MultivaluedHashMap<String, String> m = new MultivaluedHashMap<>();
-        m.put("test.rm", Collections.singletonList("myValue"));
+        m.put("test.regexp", Collections.singletonList("myValue"));
 
         UriInfo uriInfo = mock(UriInfo.class);
         when(uriInfo.getQueryParameters()).thenReturn(m);
