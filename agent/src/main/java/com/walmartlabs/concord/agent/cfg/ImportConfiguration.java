@@ -23,14 +23,10 @@ package com.walmartlabs.concord.agent.cfg;
 import com.typesafe.config.Config;
 
 import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 
-@Named
-@Singleton
 public class ImportConfiguration {
 
     private final Set<String> disabledProcessors;

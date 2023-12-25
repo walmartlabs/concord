@@ -1,4 +1,4 @@
-package com.walmartlabs.concord.server;
+package com.walmartlabs.concord.server.process;
 
 /*-
  * *****
@@ -35,13 +35,11 @@ import com.walmartlabs.concord.server.org.secret.SecretManager;
 import com.walmartlabs.concord.server.repository.RepositoryManager;
 
 import javax.inject.Inject;
-import javax.inject.Named;
 import javax.inject.Provider;
 import java.nio.file.Path;
 import java.util.Objects;
 import java.util.UUID;
 
-@Named
 public class ImportManagerProvider implements Provider<ImportManager> {
 
     private final ImportManagerFactory factory;

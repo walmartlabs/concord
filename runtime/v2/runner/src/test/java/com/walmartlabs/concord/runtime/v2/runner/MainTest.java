@@ -1577,6 +1577,50 @@ public class MainTest {
         assertLog(log, ".*uuid: [0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}.*");
     }
 
+    @Test
+    public void testExitFromParallelLoop() throws Exception {
+        deploy("parallelLoopExit");
+
+        save(ProcessConfiguration.builder()
+                .build());
+
+        byte[] log = run();
+
+        assertNoLog(log, ".*should not reach here.*");
+    }
+
+    @Test
+    public void testExitFromSerialLoop() throws Exception {
+        deploy("serialLoopExit");
+
+        save(ProcessConfiguration.builder()
+                .build());
+
+        byte[] log = run();
+
+        assertNoLog(log, ".*should not reach here.*");
+
+        assertLog(log, ".*inner start: one.*");
+        assertLog(log, ".*inner end: one.*");
+        assertLog(log, ".*inner start: two.*");
+
+        assertNoLog(log, ".*inner end: two.*");
+        assertNoLog(log, ".*inner start: three.*");
+        assertNoLog(log, ".*inner start: four.*");
+    }
+
+    @Test
+    public void testStringIfExpression() throws Exception {
+        deploy("ifExpressionAsString");
+
+        save(ProcessConfiguration.builder()
+                .putArguments("myVar", Collections.singletonMap("str", "true"))
+                .build());
+
+        byte[] log = run();
+        assertLog(log, ".*it's true.*");
+    }
+
     private void deploy(String resource) throws URISyntaxException, IOException {
         Path src = Paths.get(MainTest.class.getResource(resource).toURI());
         IOUtils.copy(src, workDir);

@@ -21,6 +21,7 @@ package com.walmartlabs.concord.runtime.v2.runner.vm;
  */
 
 import com.walmartlabs.concord.runtime.v2.model.ExitStep;
+import com.walmartlabs.concord.runtime.v2.runner.SynchronizationService;
 import com.walmartlabs.concord.svm.Runtime;
 import com.walmartlabs.concord.svm.State;
 import com.walmartlabs.concord.svm.ThreadId;
@@ -35,6 +36,6 @@ public class ExitCommand extends StepCommand<ExitStep> {
 
     @Override
     protected void execute(Runtime runtime, State state, ThreadId threadId) {
-        state.dropAllFrames();
+        runtime.getService(SynchronizationService.class).stop();
     }
 }

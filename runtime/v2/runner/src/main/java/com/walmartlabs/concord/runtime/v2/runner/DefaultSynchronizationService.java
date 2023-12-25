@@ -29,6 +29,8 @@ public class DefaultSynchronizationService implements SynchronizationService {
 
     private final List<Runnable> callbacks = new ArrayList<>();
 
+    private boolean stop;
+
     @Override
     public boolean hasPoint() {
         synchronized (this) {
@@ -43,6 +45,7 @@ public class DefaultSynchronizationService implements SynchronizationService {
         }
 
         callbacks.clear();
+        stop = false;
     }
 
     @Override
@@ -50,5 +53,15 @@ public class DefaultSynchronizationService implements SynchronizationService {
         synchronized (this) {
             callbacks.add(callback);
         }
+    }
+
+    @Override
+    public void stop() {
+        this.stop = true;
+    }
+
+    @Override
+    public boolean hasStop() {
+        return stop;
     }
 }
