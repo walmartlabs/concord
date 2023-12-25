@@ -146,7 +146,7 @@ const renderProcessStatus = (process?: ProcessEntry) => {
 
     let duration;
     if (process.status === ProcessStatus.RUNNING) {
-        duration = formatDuration(new Date().getTime() - parseDate(process.createdAt).getTime());
+        duration = formatDuration(new Date().getTime() - parseDate(process.lastRunAt || process.createdAt).getTime());
     }
     return (
         <>

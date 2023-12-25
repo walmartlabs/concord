@@ -42,8 +42,6 @@ import java.util.UUID;
 
 import static com.walmartlabs.concord.server.process.state.ProcessStateManager.path;
 
-@Named
-@Singleton
 @Path("/api/v1/process")
 @Tag(name = "Process Forms")
 public class FormResource implements Resource {

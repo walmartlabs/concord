@@ -49,7 +49,7 @@ public class ProcessQueueManager {
     private final ProcessKeyCache keyCache;
     private final ProcessEventManager eventManager;
     private final ProcessLogManager processLogManager;
-    private final Collection<ProcessStatusListener> statusListeners;
+    private final Set<ProcessStatusListener> statusListeners;
 
     private static final Set<ProcessStatus> TO_ENQUEUED_STATUSES = new HashSet<>(Arrays.asList(
             ProcessStatus.PREPARING, ProcessStatus.RESUMING, ProcessStatus.SUSPENDED
@@ -60,7 +60,7 @@ public class ProcessQueueManager {
                                ProcessKeyCache keyCache,
                                ProcessEventManager eventManager,
                                ProcessLogManager processLogManager,
-                               Collection<ProcessStatusListener> statusListeners) {
+                               Set<ProcessStatusListener> statusListeners) {
 
         this.queueDao = queueDao;
         this.eventManager = eventManager;
