@@ -147,12 +147,12 @@ public class ProcessManager {
     public void restart(ProcessKey processKey) {
         ProcessKey rootProcessKey = queueDao.getRootId(processKey);
         if (rootProcessKey == null) {
-            throw new ProcessException(null, "Process not found: " + processKey, Status.NOT_FOUND);
+            throw new ProcessException(processKey, "Process not found: " + processKey, Status.NOT_FOUND);
         }
 
         ProcessEntry e = queueDao.get(rootProcessKey);
         if (e == null) {
-            throw new ProcessException(null, "Process not found: " + processKey, Status.NOT_FOUND);
+            throw new ProcessException(processKey, "Process not found: " + processKey, Status.NOT_FOUND);
         }
 
         // TODO: rename to assertProcessOperationRights or something
@@ -160,7 +160,7 @@ public class ProcessManager {
 
         ProcessStatus s = e.status();
         if (!TERMINATED_PROCESS_STATUSES.contains(s)) {
-            throw new ProcessException(null, "Can't restart running process: " + processKey, Status.CONFLICT);
+            throw new ProcessException(rootProcessKey, "Can't restart running process: " + processKey, Status.CONFLICT);
         }
 
         // put new attemptNO somewhere
@@ -168,7 +168,10 @@ public class ProcessManager {
         queueDao.tx(tx -> {
             boolean updated = queueManager.updateExpectedStatus(tx, rootProcessKey, e.status(), ProcessStatus.NEW);
             if (updated) {
-                List<ProcessKey> allProcesses = queueDao.getCascade(tx, rootProcessKey);
+                List<ProcessKey> allProcesses = queueDao.getCascade(tx, rootProcessKey)
+                        .stream()
+                        .filter(p -> !p.equals(rootProcessKey))
+                        .toList();
                 kill(tx, allProcesses);
 
                 stateManager.delete(tx, rootProcessKey);
@@ -185,7 +188,7 @@ public class ProcessManager {
     public void disable(ProcessKey processKey, boolean disabled) {
         ProcessEntry e = queueDao.get(processKey);
         if (e == null) {
-            throw new ProcessException(null, "Process not found: " + processKey, Status.NOT_FOUND);
+            throw new ProcessException(processKey, "Process not found: " + processKey, Status.NOT_FOUND);
         }
 
         assertKillOrDisableOrRestartRights(e);
@@ -268,7 +271,7 @@ public class ProcessManager {
     public void killCascade(PartialProcessKey processKey) {
         ProcessEntry e = queueManager.get(processKey);
         if (e == null) {
-            throw new ProcessException(null, "Process not found: " + processKey, Status.NOT_FOUND);
+            throw new ProcessException(processKey, "Process not found: " + processKey, Status.NOT_FOUND);
         }
 
         assertKillOrDisableOrRestartRights(e);
@@ -367,7 +370,7 @@ public class ProcessManager {
         if (process != null) {
             return process;
         }
-        throw new ProcessException(null, "Process not found: " + processKey, Status.NOT_FOUND);
+        throw new ProcessException(processKey, "Process not found: " + processKey, Status.NOT_FOUND);
     }
 
     private boolean isSuspended(ProcessKey processKey) {
