@@ -104,6 +104,10 @@ public class LoggingTaskV2 implements Task {
     }
 
     private static Object formatMessage(String format, Object msg) {
+        if (format == null || format.trim().isEmpty()) {
+            return msg;
+        }
+
         if ("yaml".equalsIgnoreCase(format)) {
             try {
                 return "\n" + yamlObjectMapper.writerWithDefaultPrettyPrinter()
@@ -113,7 +117,7 @@ public class LoggingTaskV2 implements Task {
             }
         }
 
-        return msg;
+        throw new IllegalArgumentException("Unknown format '" + format + "'");
     }
 
     private static ObjectMapper createYamlObjectMapper() {
