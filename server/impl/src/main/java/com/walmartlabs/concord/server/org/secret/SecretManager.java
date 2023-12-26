@@ -58,7 +58,6 @@ import org.jooq.DSLContext;
 import org.sonatype.siesta.ValidationErrorsException;
 
 import javax.inject.Inject;
-import javax.inject.Named;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Response.Status;
 import java.io.IOException;
@@ -72,7 +71,6 @@ import java.util.stream.Collectors;
 import static com.walmartlabs.concord.server.jooq.Tables.SECRETS;
 import static com.walmartlabs.concord.server.org.secret.SecretDao.InsertMode.INSERT;
 
-@Named
 public class SecretManager {
 
     private final PolicyManager policyManager;

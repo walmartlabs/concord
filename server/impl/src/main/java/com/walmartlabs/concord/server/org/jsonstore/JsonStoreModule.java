@@ -1,4 +1,4 @@
-package com.walmartlabs.concord.server.org.triggers;
+package com.walmartlabs.concord.server.org.jsonstore;
 
 /*-
  * *****
@@ -25,21 +25,23 @@ import com.google.inject.Module;
 
 import static com.google.inject.Scopes.SINGLETON;
 import static com.walmartlabs.concord.server.Utils.bindJaxRsResource;
-import static com.walmartlabs.concord.server.Utils.bindSingletonScheduledTask;
 
-public class TriggersModule implements Module {
+public class JsonStoreModule implements Module {
 
     @Override
     public void configure(Binder binder) {
-        binder.bind(CronTriggerProcessor.class).in(SINGLETON);
-        binder.bind(GithubTriggerEnricher.class).in(SINGLETON);
-        binder.bind(TriggerManager.class).in(SINGLETON);
-        binder.bind(TriggerScheduleDao.class).in(SINGLETON);
-        binder.bind(TriggersDao.class).in(SINGLETON);
+        binder.bind(JsonStoreDao.class).in(SINGLETON);
+        binder.bind(JsonStoreManager.class).in(SINGLETON);
+        binder.bind(JsonStoreAccessManager.class).in(SINGLETON);
+        binder.bind(JsonStoreDataDao.class).in(SINGLETON);
+        binder.bind(JsonStoreDataManager.class).in(SINGLETON);
+        binder.bind(JsonStoreQueryDao.class).in(SINGLETON);
+        binder.bind(JsonStoreQueryExecDao.class).in(SINGLETON);
+        binder.bind(JsonStoreQueryManager.class).in(SINGLETON);
 
-        bindJaxRsResource(binder, TriggerResource.class);
-        bindJaxRsResource(binder, TriggerV2Resource.class);
 
-        bindSingletonScheduledTask(binder, TriggerScheduler.class);
+        bindJaxRsResource(binder, JsonStoreResource.class);
+        bindJaxRsResource(binder, JsonStoreDataResource.class);
+        bindJaxRsResource(binder, JsonStoreQueryResource.class);
     }
 }

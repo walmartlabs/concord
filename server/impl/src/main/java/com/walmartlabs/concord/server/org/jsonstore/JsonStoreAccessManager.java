@@ -31,11 +31,9 @@ import com.walmartlabs.concord.server.user.UserManager;
 import org.apache.shiro.authz.UnauthorizedException;
 
 import javax.inject.Inject;
-import javax.inject.Named;
 import javax.ws.rs.core.Response;
 import java.util.UUID;
 
-@Named
 public class JsonStoreAccessManager {
 
     private final UserManager userManager;

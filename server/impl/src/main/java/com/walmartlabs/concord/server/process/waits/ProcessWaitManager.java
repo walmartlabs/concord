@@ -38,8 +38,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-@Named
-@Singleton
 public class ProcessWaitManager {
 
     private final ProcessWaitDao processWaitDao;
