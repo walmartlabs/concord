@@ -26,8 +26,6 @@ import com.walmartlabs.concord.server.process.state.ProcessStateManager;
 import com.walmartlabs.concord.server.sdk.ProcessKey;
 
 import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.ObjectInputStream;
@@ -39,8 +37,6 @@ import java.util.function.Function;
 
 import static com.walmartlabs.concord.server.process.state.ProcessStateManager.path;
 
-@Named
-@Singleton
 public class FormManager {
 
     private final ProcessStateManager stateManager;

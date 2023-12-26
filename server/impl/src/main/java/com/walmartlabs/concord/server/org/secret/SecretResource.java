@@ -49,8 +49,6 @@ import org.sonatype.siesta.Validate;
 import org.sonatype.siesta.ValidationErrorsException;
 
 import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
 import javax.validation.Valid;
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
@@ -62,8 +60,6 @@ import java.io.IOException;
 import java.util.*;
 import java.util.stream.Collectors;
 
-@Named
-@Singleton
 @Path("/api/v1/org")
 @Tag(name = "Secrets")
 public class SecretResource implements Resource {

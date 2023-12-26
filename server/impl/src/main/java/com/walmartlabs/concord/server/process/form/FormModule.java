@@ -1,4 +1,4 @@
-package com.walmartlabs.concord.server.org.triggers;
+package com.walmartlabs.concord.server.process.form;
 
 /*-
  * *****
@@ -25,21 +25,19 @@ import com.google.inject.Module;
 
 import static com.google.inject.Scopes.SINGLETON;
 import static com.walmartlabs.concord.server.Utils.bindJaxRsResource;
-import static com.walmartlabs.concord.server.Utils.bindSingletonScheduledTask;
 
-public class TriggersModule implements Module {
+public class FormModule implements Module {
 
     @Override
     public void configure(Binder binder) {
-        binder.bind(CronTriggerProcessor.class).in(SINGLETON);
-        binder.bind(GithubTriggerEnricher.class).in(SINGLETON);
-        binder.bind(TriggerManager.class).in(SINGLETON);
-        binder.bind(TriggerScheduleDao.class).in(SINGLETON);
-        binder.bind(TriggersDao.class).in(SINGLETON);
+        binder.bind(FormAccessManager.class).in(SINGLETON);
+        binder.bind(FormManager.class).in(SINGLETON);
+        binder.bind(FormResourceV1.class).in(SINGLETON);
+        binder.bind(FormResourceV2.class).in(SINGLETON);
+        binder.bind(FormServiceV1.class).in(SINGLETON);
+        binder.bind(FormServiceV1.class).in(SINGLETON);
+        binder.bind(FormServiceV2.class).in(SINGLETON);
 
-        bindJaxRsResource(binder, TriggerResource.class);
-        bindJaxRsResource(binder, TriggerV2Resource.class);
-
-        bindSingletonScheduledTask(binder, TriggerScheduler.class);
+        bindJaxRsResource(binder, FormResource.class);
     }
 }
