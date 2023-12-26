@@ -158,6 +158,8 @@ public interface ProcessFilter {
         NOT_STARTS_WITH,
 
         GREATER_OR_EQUALS,
-        LESS_OR_EQUALS_OR_NULL
+        LESS_OR_EQUALS_OR_NULL,
+
+        REGEXP_MATCH
     }
 }
