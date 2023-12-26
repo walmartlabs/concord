@@ -1,10 +1,10 @@
-package com.walmartlabs.concord.server.org.secret;
+package com.walmartlabs.concord.server.org.inventory;
 
 /*-
  * *****
  * Concord
  * -----
- * Copyright (C) 2017 - 2018 Walmart Inc.
+ * Copyright (C) 2017 - 2023 Walmart Inc.
  * -----
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,19 +20,21 @@ package com.walmartlabs.concord.server.org.secret;
  * =====
  */
 
-import org.sonatype.siesta.ExceptionMapperSupport;
+import com.google.inject.Binder;
+import com.google.inject.Module;
 
-import javax.ws.rs.core.Context;
-import javax.ws.rs.core.HttpHeaders;
-import javax.ws.rs.core.Response;
+import static com.google.inject.Scopes.SINGLETON;
+import static com.walmartlabs.concord.server.Utils.bindJaxRsResource;
 
-public class SecretExceptionMapper extends ExceptionMapperSupport<SecretException> {
-
-    @Context
-    HttpHeaders headers;
+@Deprecated
+public class InventoryModule implements Module {
 
     @Override
-    protected Response convert(SecretException e, String id) {
-        return Response.status(Response.Status.BAD_REQUEST).entity(e.getMessage()).build();
+    public void configure(Binder binder) {
+        binder.bind(InventoryDataDao.class).in(SINGLETON);
+
+        bindJaxRsResource(binder, InventoryResource.class);
+        bindJaxRsResource(binder, InventoryDataResource.class);
+        bindJaxRsResource(binder, InventoryQueryResource.class);
     }
 }

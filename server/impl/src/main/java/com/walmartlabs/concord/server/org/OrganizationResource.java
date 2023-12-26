@@ -31,8 +31,6 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import org.sonatype.siesta.Resource;
 
 import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
 import javax.validation.Valid;
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
@@ -40,8 +38,6 @@ import javax.ws.rs.core.Response;
 import java.util.List;
 import java.util.UUID;
 
-@Named
-@Singleton
 @Path("/api/v1/org")
 @Tag(name ="Organizations")
 public class OrganizationResource implements Resource {

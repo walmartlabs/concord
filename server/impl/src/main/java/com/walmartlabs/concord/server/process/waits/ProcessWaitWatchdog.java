@@ -43,7 +43,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
-import javax.inject.Named;
 import java.io.IOException;
 import java.time.OffsetDateTime;
 import java.util.*;
@@ -69,7 +68,8 @@ public class ProcessWaitWatchdog implements ScheduledTask {
     @Inject
     @SuppressWarnings({"unchecked", "rawtypes"})
     public ProcessWaitWatchdog(ProcessWaitWatchdogConfiguration cfg,
-                               WatchdogDao dao,
+                               @MainDB Configuration dbCfg,
+                               ConcordObjectMapper objectMapper,
                                ProcessWaitManager processWaitManager,
                                ProcessManager processManager,
                                PayloadManager payloadManager,
@@ -77,7 +77,7 @@ public class ProcessWaitWatchdog implements ScheduledTask {
                                MetricRegistry metricRegistry) {
 
         this.cfg = cfg;
-        this.dao = dao;
+        this.dao = new WatchdogDao(dbCfg, objectMapper);
         this.processWaitManager = processWaitManager;
         this.processManager = processManager;
         this.payloadManager = payloadManager;
@@ -137,7 +137,7 @@ public class ProcessWaitWatchdog implements ScheduledTask {
             }
 
             if (result != null) {
-                if (result.waitCondition() != null){
+                if (result.waitCondition() != null) {
                     resultWaits.add(result.waitCondition());
                 } else if (result.resumeEvent() != null) {
                     resumeEvents.add(result.resumeEvent());
@@ -216,16 +216,14 @@ public class ProcessWaitWatchdog implements ScheduledTask {
         }
     }
 
-    @Named
-    static class WatchdogDao extends AbstractDao {
+    private static class WatchdogDao extends AbstractDao {
 
         private static final TypeReference<List<AbstractWaitCondition>> WAIT_LIST = new TypeReference<List<AbstractWaitCondition>>() {
         };
 
         private final ConcordObjectMapper objectMapper;
 
-        @Inject
-        public WatchdogDao(@MainDB Configuration cfg, ConcordObjectMapper objectMapper) {
+        private WatchdogDao(@MainDB Configuration cfg, ConcordObjectMapper objectMapper) {
             super(cfg);
 
             this.objectMapper = objectMapper;
@@ -237,11 +235,11 @@ public class ProcessWaitWatchdog implements ScheduledTask {
                 ProcessWaitConditions w = PROCESS_WAIT_CONDITIONS.as("w");
 
                 SelectConditionStep<Record5<UUID, OffsetDateTime, Long, JSONB, Long>> s = tx.select(
-                        w.INSTANCE_ID,
-                        w.INSTANCE_CREATED_AT,
-                        w.ID_SEQ,
-                        w.WAIT_CONDITIONS,
-                        w.VERSION)
+                                w.INSTANCE_ID,
+                                w.INSTANCE_CREATED_AT,
+                                w.ID_SEQ,
+                                w.WAIT_CONDITIONS,
+                                w.VERSION)
                         .from(w)
                         .where(w.IS_WAITING.eq(true));
 

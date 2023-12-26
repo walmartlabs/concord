@@ -37,14 +37,10 @@ import org.sonatype.siesta.Validate;
 import org.sonatype.siesta.ValidationErrorsException;
 
 import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import java.util.UUID;
 
-@Named
-@Singleton
 @Path("/api/v1")
 @Tag(name = "PolicyCheck")
 public class PolicyCheckResource implements Resource {

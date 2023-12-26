@@ -43,8 +43,6 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response.Status;
 import java.util.*;
 
-@Named
-@Singleton
 @Tag(name = "FormsV1")
 public class FormResourceV1 {
 

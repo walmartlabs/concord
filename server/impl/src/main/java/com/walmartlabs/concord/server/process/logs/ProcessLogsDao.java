@@ -43,7 +43,6 @@ import static com.walmartlabs.concord.server.jooq.Tables.PROCESS_LOG_DATA;
 import static com.walmartlabs.concord.server.jooq.Tables.PROCESS_LOG_SEGMENTS;
 import static org.jooq.impl.DSL.*;
 
-@Named
 public class ProcessLogsDao extends AbstractDao {
 
     @Inject
