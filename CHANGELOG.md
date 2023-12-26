@@ -4,6 +4,8 @@
 
 ### Added
 
+- server: allow regexp in meta filters
+([#852](https://github.com/walmartlabs/concord/pull/852)).
 
 ### Changed
 
