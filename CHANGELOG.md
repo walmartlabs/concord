@@ -9,6 +9,8 @@
 
 ### Changed
 
+- project: switch to concord-client2
+([#821](https://github.com/walmartlabs/concord/pull/821));
 - concord-server: remove more @Named
 ([#839](https://github.com/walmartlabs/concord/pull/839));
 - client2: allow serialize collections
