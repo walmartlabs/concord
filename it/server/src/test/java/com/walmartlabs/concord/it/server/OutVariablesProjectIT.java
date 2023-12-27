@@ -20,8 +20,7 @@ package com.walmartlabs.concord.it.server;
  * =====
  */
 
-import com.walmartlabs.concord.ApiException;
-import com.walmartlabs.concord.client.*;
+import com.walmartlabs.concord.client2.*;
 import org.junit.jupiter.api.Test;
 
 import java.util.Collections;
@@ -41,14 +40,14 @@ public class OutVariablesProjectIT extends AbstractServerIT {
 
         String orgName = "Default";
         String projectName = "project_" + System.currentTimeMillis();
-        projectsApi.createOrUpdate(orgName, new ProjectEntry()
-                .setAcceptsRawPayload(true)
-                .setOutVariablesMode(ProjectEntry.OutVariablesModeEnum.EVERYONE)
-                .setName(projectName));
+        projectsApi.createOrUpdateProject(orgName, new ProjectEntry()
+                .acceptsRawPayload(true)
+                .outVariablesMode(ProjectEntry.OutVariablesModeEnum.EVERYONE)
+                .name(projectName));
 
         // ---
 
-        byte[] payload = archive(ProcessIT.class.getResource("example").toURI());
+        byte[] payload = archive(OutVariablesProjectIT.class.getResource("example").toURI());
 
         Map<String, Object> input = new HashMap<>();
         input.put("org", orgName);
@@ -60,7 +59,7 @@ public class OutVariablesProjectIT extends AbstractServerIT {
         input.put("request", cfg);
         StartProcessResponse spr = start(input);
 
-        ProcessEntry pe = waitForCompletion(new ProcessApi(getApiClient()), spr.getInstanceId());
+        ProcessEntry pe = waitForCompletion(getApiClient(), spr.getInstanceId());
         Map<String, Object> out = (Map<String, Object>) pe.getMeta().get("out");
         assertEquals("world", out.get("myName"));
         assertEquals(true, out.get("myBool"));
@@ -72,13 +71,13 @@ public class OutVariablesProjectIT extends AbstractServerIT {
 
         String orgName = "Default";
         String projectName = "project_" + System.currentTimeMillis();
-        projectsApi.createOrUpdate(orgName, new ProjectEntry()
-                .setAcceptsRawPayload(true)
-                .setName(projectName));
+        projectsApi.createOrUpdateProject(orgName, new ProjectEntry()
+                .acceptsRawPayload(true)
+                .name(projectName));
 
         // ---
 
-        byte[] payload = archive(ProcessIT.class.getResource("example").toURI());
+        byte[] payload = archive(OutVariablesProjectIT.class.getResource("example").toURI());
 
         try {
             Map<String, Object> input = new HashMap<>();
@@ -99,12 +98,12 @@ public class OutVariablesProjectIT extends AbstractServerIT {
 
         String orgName = "Default";
         String projectName = "project_" + System.currentTimeMillis();
-        projectsApi.createOrUpdate(orgName, new ProjectEntry()
-                .setAcceptsRawPayload(true)
-                .setName(projectName));
+        projectsApi.createOrUpdateProject(orgName, new ProjectEntry()
+                .acceptsRawPayload(true)
+                .name(projectName));
 
         // ---
-        byte[] payload = archive(ProcessIT.class.getResource("example").toURI());
+        byte[] payload = archive(OutVariablesProjectIT.class.getResource("example").toURI());
         try {
             Map<String, Object> input = new HashMap<>();
             input.put("org", orgName);
@@ -116,10 +115,10 @@ public class OutVariablesProjectIT extends AbstractServerIT {
             start(input);
 
             StartProcessResponse spr = start(input);
-            ProcessEntry pe = waitForCompletion(new ProcessApi(getApiClient()), spr.getInstanceId());
+            ProcessEntry pe = waitForCompletion(getApiClient(), spr.getInstanceId());
 
             assertEquals(ProcessEntry.StatusEnum.FAILED, pe.getStatus());
-            byte[] ab = getLog(pe.getLogFileName());
+            byte[] ab = getLog(pe.getInstanceId());
             assertLog(".*The project is not accepting custom out variables.*", ab);
 
         } catch (ApiException e) {

@@ -21,7 +21,7 @@ package com.walmartlabs.concord.it.server;
  */
 
 import com.google.common.collect.ImmutableMap;
-import com.walmartlabs.concord.client.*;
+import com.walmartlabs.concord.client2.*;
 import com.walmartlabs.concord.common.IOUtils;
 import com.walmartlabs.concord.sdk.Constants;
 import org.apache.commons.compress.archivers.zip.ZipArchiveOutputStream;
@@ -89,14 +89,14 @@ public class KvServiceIT extends AbstractServerIT {
     public void testInvalidKeys() throws Exception {
         OrganizationsApi organizationsApi = new OrganizationsApi(getApiClient());
         String orgName = "org_" + randomString();
-        organizationsApi.createOrUpdate(new OrganizationEntry()
-                .setName(orgName));
+        organizationsApi.createOrUpdateOrg(new OrganizationEntry()
+                .name(orgName));
 
         ProjectsApi projectsApi = new ProjectsApi(getApiClient());
         String projectName = "project_" + randomString();
-        projectsApi.createOrUpdate(orgName, new ProjectEntry()
-                .setName(projectName)
-                .setRawPayloadMode(ProjectEntry.RawPayloadModeEnum.OWNERS));
+        projectsApi.createOrUpdateProject(orgName, new ProjectEntry()
+                .name(projectName)
+                .rawPayloadMode(ProjectEntry.RawPayloadModeEnum.OWNERS));
 
         // ---
 
@@ -111,12 +111,12 @@ public class KvServiceIT extends AbstractServerIT {
         // ---
 
         ProcessApi processApi = new ProcessApi(getApiClient());
-        ProcessEntry pe = waitForCompletion(processApi, spr.getInstanceId());
+        ProcessEntry pe = waitForCompletion(getApiClient(), spr.getInstanceId());
         assertEquals(ProcessEntry.StatusEnum.FAILED, pe.getStatus());
 
         // ---
 
-        byte[] ab = getLog(pe.getLogFileName());
+        byte[] ab = getLog(pe.getInstanceId());
         assertLogAtLeast(".*Keys cannot be empty or null.*", 1, ab);
     }
 
@@ -124,14 +124,14 @@ public class KvServiceIT extends AbstractServerIT {
     public void testCallFromScript() throws Exception {
         OrganizationsApi organizationsApi = new OrganizationsApi(getApiClient());
         String orgName = "org_" + randomString();
-        organizationsApi.createOrUpdate(new OrganizationEntry()
-                .setName(orgName));
+        organizationsApi.createOrUpdateOrg(new OrganizationEntry()
+                .name(orgName));
 
         ProjectsApi projectsApi = new ProjectsApi(getApiClient());
         String projectName = "project_" + randomString();
-        projectsApi.createOrUpdate(orgName, new ProjectEntry()
-                .setName(projectName)
-                .setRawPayloadMode(ProjectEntry.RawPayloadModeEnum.OWNERS));
+        projectsApi.createOrUpdateProject(orgName, new ProjectEntry()
+                .name(projectName)
+                .rawPayloadMode(ProjectEntry.RawPayloadModeEnum.OWNERS));
 
         // ---
 
@@ -145,12 +145,11 @@ public class KvServiceIT extends AbstractServerIT {
 
         // ---
 
-        ProcessApi processApi = new ProcessApi(getApiClient());
-        ProcessEntry pe = waitForCompletion(processApi, spr.getInstanceId());
+        ProcessEntry pe = waitForCompletion(getApiClient(), spr.getInstanceId());
 
         // ---
 
-        byte[] ab = getLog(pe.getLogFileName());
+        byte[] ab = getLog(pe.getInstanceId());
         assertLog(".*got myKey: myValue*", ab);
     }
 
@@ -158,13 +157,12 @@ public class KvServiceIT extends AbstractServerIT {
         Map<String, Object> args = ImmutableMap.of("testKey", testKey);
         byte[] payload = createPayload(process, entryPoint, args);
 
-        ProcessApi processApi = new ProcessApi(getApiClient());
         StartProcessResponse spr = start(payload);
         assertNotNull(spr.getInstanceId());
 
-        ProcessEntry pir = waitForCompletion(processApi, spr.getInstanceId());
+        ProcessEntry pir = waitForCompletion(getApiClient(), spr.getInstanceId());
 
-        return getLog(pir.getLogFileName());
+        return getLog(pir.getInstanceId());
     }
 
     private byte[] createPayload(String process, String entryPoint, Map<String, Object> args) throws Exception {
@@ -178,7 +176,7 @@ public class KvServiceIT extends AbstractServerIT {
 
         Path reqFile = tmpDir.resolve(Constants.Files.CONFIGURATION_FILE_NAME);
         try (Writer w = new FileWriter(reqFile.toFile())) {
-            getApiClient().getJSON().getGson().toJson(req, w);
+            getApiClient().getObjectMapper().writeValue(w, req);
         }
 
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
