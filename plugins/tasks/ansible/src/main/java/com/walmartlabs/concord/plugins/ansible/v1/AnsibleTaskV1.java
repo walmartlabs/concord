@@ -20,7 +20,7 @@ package com.walmartlabs.concord.plugins.ansible.v1;
  * =====
  */
 
-import com.walmartlabs.concord.client.ApiClientFactory;
+import com.walmartlabs.concord.client2.ApiClientFactory;
 import com.walmartlabs.concord.sdk.ApiConfiguration;
 import com.walmartlabs.concord.sdk.DockerService;
 import com.walmartlabs.concord.sdk.SecretService;

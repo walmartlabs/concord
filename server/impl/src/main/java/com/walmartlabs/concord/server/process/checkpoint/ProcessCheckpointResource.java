@@ -32,9 +32,8 @@ import com.walmartlabs.concord.server.sdk.ConcordApplicationException;
 import com.walmartlabs.concord.server.sdk.ProcessKey;
 import com.walmartlabs.concord.server.sdk.metrics.WithTimer;
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Schema;
-import io.swagger.v3.oas.annotations.parameters.RequestBody;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.jboss.resteasy.plugins.providers.multipart.MultipartInput;
 import org.slf4j.Logger;
@@ -111,8 +110,7 @@ public class ProcessCheckpointResource implements Resource {
     @Consumes(MediaType.MULTIPART_FORM_DATA)
     @Operation(description = "Upload checkpoint")
     public void uploadCheckpoint(@PathParam("id") UUID instanceId,
-                                 @RequestBody(content = @Content(schema = @Schema(type = "object")))
-                                 MultipartInput input) {
+                                 @Parameter(schema = @Schema(type = "object", implementation = Object.class)) MultipartInput input) {
 
         // TODO replace with ProcessKeyCache
         ProcessEntry entry = processManager.assertProcess(instanceId);

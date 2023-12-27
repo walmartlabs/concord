@@ -20,11 +20,8 @@ package com.walmartlabs.concord.agent.remote;
  * =====
  */
 
-import com.walmartlabs.concord.ApiException;
 import com.walmartlabs.concord.agent.AgentConstants;
-import com.walmartlabs.concord.client.ClientUtils;
-import com.walmartlabs.concord.client.ProcessApi;
-import com.walmartlabs.concord.client.ProcessEntry;
+import com.walmartlabs.concord.client2.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

@@ -31,7 +31,6 @@ import com.walmartlabs.concord.server.sdk.Range;
 import org.jooq.*;
 
 import javax.inject.Inject;
-import javax.inject.Named;
 import java.io.Serializable;
 import java.time.OffsetDateTime;
 import java.util.List;

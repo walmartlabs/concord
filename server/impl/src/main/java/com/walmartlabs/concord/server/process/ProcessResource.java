@@ -265,8 +265,7 @@ public class ProcessResource implements Resource {
     @Produces(MediaType.APPLICATION_JSON)
     @WithTimer
     @Operation(description = "Start new process", operationId = "startProcess")
-    public StartProcessResponse start(@RequestBody(content = @Content(schema = @Schema(type = "object")))
-                                      MultipartInput input,
+    public StartProcessResponse start(@Parameter(schema = @Schema(type = "object", implementation = Object.class)) MultipartInput input,
                                       @Parameter(hidden = true) @Deprecated @QueryParam("parentId") UUID parentInstanceId,
                                       @Parameter(hidden = true) @Deprecated @DefaultValue("false") @QueryParam("sync") boolean sync,
                                       @Parameter(hidden = true) @Deprecated @QueryParam("out") String[] out,
