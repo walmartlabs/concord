@@ -23,8 +23,7 @@ package com.walmartlabs.concord.it.runtime.v2;
 import ca.ibodrov.concord.testcontainers.ConcordProcess;
 import ca.ibodrov.concord.testcontainers.Payload;
 import ca.ibodrov.concord.testcontainers.junit5.ConcordRule;
-import com.walmartlabs.concord.ApiException;
-import com.walmartlabs.concord.client.ProcessEntry;
+import com.walmartlabs.concord.client2.*;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 

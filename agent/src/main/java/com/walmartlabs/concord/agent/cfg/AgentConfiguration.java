@@ -58,6 +58,8 @@ public class AgentConfiguration {
     private final long pollInterval;
     private final int maintenanceModeListenerPort;
 
+    private final boolean explicitlyResolveV1Client;
+
     @Inject
     public AgentConfiguration(Config cfg) {
         this.agentId = getStringOrDefault(cfg, "id", () -> UUID.randomUUID().toString());
@@ -82,6 +84,8 @@ public class AgentConfiguration {
         this.maintenanceModeListenerPort = cfg.getInt("maintenanceModeListenerPort");
 
         this.pollInterval = cfg.getDuration("pollInterval", TimeUnit.MILLISECONDS);
+
+        this.explicitlyResolveV1Client = cfg.getBoolean("explicitlyResolveV1Client");
     }
 
     public String getAgentId() {
@@ -138,5 +142,9 @@ public class AgentConfiguration {
 
     public int getMaintenanceModeListenerPort() {
         return maintenanceModeListenerPort;
+    }
+
+    public boolean isExplicitlyResolveV1Client() {
+        return explicitlyResolveV1Client;
     }
 }

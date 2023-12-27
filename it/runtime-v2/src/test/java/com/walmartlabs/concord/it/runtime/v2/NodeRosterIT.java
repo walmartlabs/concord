@@ -23,9 +23,9 @@ package com.walmartlabs.concord.it.runtime.v2;
 import ca.ibodrov.concord.testcontainers.ConcordProcess;
 import ca.ibodrov.concord.testcontainers.Payload;
 import ca.ibodrov.concord.testcontainers.junit5.ConcordRule;
-import com.walmartlabs.concord.client.HostEntry;
-import com.walmartlabs.concord.client.NodeRosterHostsApi;
-import com.walmartlabs.concord.client.ProcessEntry;
+import com.walmartlabs.concord.client2.HostEntry;
+import com.walmartlabs.concord.client2.NodeRosterHostsApi;
+import com.walmartlabs.concord.client2.ProcessEntry;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
@@ -58,7 +58,7 @@ public class NodeRosterIT extends AbstractTest {
 
         NodeRosterHostsApi hostsApi = new NodeRosterHostsApi(concord.apiClient());
         while (true) {
-            List<HostEntry> l = hostsApi.list(null, null, pe.getInstanceId(), null, 10, 0);
+            List<HostEntry> l = hostsApi.listKnownHosts(null, null, pe.getInstanceId(), null, 10, 0);
             if (!l.isEmpty()) {
                 break;
             }
