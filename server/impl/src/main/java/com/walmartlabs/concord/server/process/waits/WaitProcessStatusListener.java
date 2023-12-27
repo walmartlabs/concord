@@ -25,8 +25,6 @@ import com.walmartlabs.concord.server.sdk.ProcessKey;
 import com.walmartlabs.concord.server.sdk.ProcessStatus;
 import org.jooq.DSLContext;
 
-import javax.inject.Named;
-
 import static com.walmartlabs.concord.server.jooq.Tables.PROCESS_WAIT_CONDITIONS;
 
 public class WaitProcessStatusListener implements ProcessStatusListener {
