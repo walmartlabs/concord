@@ -4,6 +4,8 @@
 
 ### Added
 
+- concord-server: expose fetch with version
+([#853](https://github.com/walmartlabs/concord/pull/853));
 - server: allow regexp in meta filters
 ([#852](https://github.com/walmartlabs/concord/pull/852)).
 
