@@ -23,8 +23,6 @@ package com.walmartlabs.concord.server.org.project;
 import com.walmartlabs.concord.server.process.ErrorMessage;
 import org.sonatype.siesta.ExceptionMapperSupport;
 
-import javax.inject.Named;
-import javax.inject.Singleton;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
@@ -32,8 +30,6 @@ import javax.ws.rs.core.Response;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 
-@Named
-@Singleton
 public class RepositoryValidationExceptionMapper extends ExceptionMapperSupport<RepositoryValidationException> {
 
     private static final int MAX_CAUSE_DEPTH = 5;

@@ -30,7 +30,6 @@ import org.jooq.Record;
 import org.sonatype.siesta.ValidationErrorsException;
 
 import javax.inject.Inject;
-import javax.inject.Named;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -44,7 +43,6 @@ import java.util.UUID;
 
 import static com.walmartlabs.concord.server.jooq.tables.ProcessCheckpoints.PROCESS_CHECKPOINTS;
 
-@Named
 public class ProcessCheckpointDao extends AbstractDao {
 
     @Inject

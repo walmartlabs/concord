@@ -40,16 +40,12 @@ import com.walmartlabs.concord.server.security.UserPrincipal;
 import org.sonatype.siesta.ValidationErrorsException;
 
 import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
 import java.text.MessageFormat;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
 
-@Named
-@Singleton
 public class JsonStoreDataManager {
 
     private static final String DEFAULT_POLICY_MESSAGE = "Maximum data size in the JSON store exceeded: current {0}, limit {1}";

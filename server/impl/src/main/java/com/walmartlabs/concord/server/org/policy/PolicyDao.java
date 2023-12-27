@@ -27,7 +27,6 @@ import com.walmartlabs.concord.server.jooq.tables.records.PolicyLinksRecord;
 import org.jooq.*;
 
 import javax.inject.Inject;
-import javax.inject.Named;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -35,7 +34,6 @@ import java.util.UUID;
 import static com.walmartlabs.concord.server.jooq.Tables.POLICIES;
 import static com.walmartlabs.concord.server.jooq.Tables.POLICY_LINKS;
 
-@Named
 public class PolicyDao extends AbstractDao {
 
     private final ConcordObjectMapper objectMapper;
