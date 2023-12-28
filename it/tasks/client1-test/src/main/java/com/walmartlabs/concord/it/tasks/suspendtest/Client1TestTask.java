@@ -20,7 +20,6 @@ package com.walmartlabs.concord.it.tasks.suspendtest;
  * =====
  */
 
-import com.walmartlabs.concord.ApiClient;
 import com.walmartlabs.concord.client.ApiClientConfiguration;
 import com.walmartlabs.concord.client.ApiClientFactory;
 import com.walmartlabs.concord.client.ProcessApi;

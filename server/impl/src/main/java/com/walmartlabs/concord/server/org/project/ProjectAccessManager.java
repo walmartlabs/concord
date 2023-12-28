@@ -34,7 +34,6 @@ import org.jooq.DSLContext;
 import org.sonatype.siesta.ValidationErrorsException;
 
 import javax.inject.Inject;
-import javax.inject.Named;
 import java.io.Serializable;
 import java.util.Collection;
 import java.util.Collections;
@@ -42,7 +41,6 @@ import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
-@Named
 public class ProjectAccessManager {
 
     private final OrganizationManager orgManager;

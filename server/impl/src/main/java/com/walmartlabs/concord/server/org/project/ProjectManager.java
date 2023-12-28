@@ -45,13 +45,11 @@ import org.jooq.DSLContext;
 import org.sonatype.siesta.ValidationErrorsException;
 
 import javax.inject.Inject;
-import javax.inject.Named;
 import javax.ws.rs.core.Response;
 import java.util.*;
 
 import static com.walmartlabs.concord.server.jooq.tables.Projects.PROJECTS;
 
-@Named
 public class ProjectManager {
 
     private final OrganizationManager orgManager;

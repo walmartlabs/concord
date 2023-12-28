@@ -31,7 +31,6 @@ import com.walmartlabs.concord.server.jooq.tables.Repositories;
 import org.jooq.*;
 
 import javax.inject.Inject;
-import javax.inject.Named;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
@@ -43,7 +42,6 @@ import static com.walmartlabs.concord.server.jooq.tables.Triggers.TRIGGERS;
 import static org.jooq.impl.DSL.select;
 import static org.jooq.impl.DSL.value;
 
-@Named
 public class TriggersDao extends AbstractDao {
 
     private final ConcordObjectMapper objectMapper;

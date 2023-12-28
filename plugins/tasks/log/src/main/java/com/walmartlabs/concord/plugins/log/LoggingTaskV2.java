@@ -25,7 +25,6 @@ import com.walmartlabs.concord.runtime.v2.sdk.TaskResult;
 import com.walmartlabs.concord.runtime.v2.sdk.Variables;
 
 import javax.inject.Named;
-import java.io.Serializable;
 
 @Named("log")
 public class LoggingTaskV2 implements Task {

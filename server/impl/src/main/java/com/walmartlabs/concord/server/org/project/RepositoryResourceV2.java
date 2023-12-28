@@ -28,8 +28,6 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import org.sonatype.siesta.Resource;
 
 import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
@@ -38,8 +36,6 @@ import javax.ws.rs.core.MediaType;
 import java.util.List;
 import java.util.UUID;
 
-@Named
-@Singleton
 @Path("/api/v2/repository")
 @Tag(name = "RepositoriesV2")
 public class RepositoryResourceV2 implements Resource {

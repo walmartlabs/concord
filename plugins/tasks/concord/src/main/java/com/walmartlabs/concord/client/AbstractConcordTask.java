@@ -20,7 +20,6 @@ package com.walmartlabs.concord.client;
  * =====
  */
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.walmartlabs.concord.client2.*;
 import com.walmartlabs.concord.sdk.ApiConfiguration;
 import com.walmartlabs.concord.sdk.Context;
@@ -35,8 +34,6 @@ import java.util.Map;
 import static com.walmartlabs.concord.client.Keys.SESSION_TOKEN_KEY;
 
 public abstract class AbstractConcordTask implements Task {
-
-    private final ObjectMapper objectMapper = new ObjectMapper();
 
     protected static final String API_KEY = "apiKey";
 
@@ -63,56 +60,6 @@ public abstract class AbstractConcordTask implements Task {
 
         return f.apply(apiClientFactory.create(cfg));
     }
-
-//    protected <T> T request(Context ctx, String uri, String method, Map<String, Object> input, Class<T> entityType) throws Exception {
-//        return withClient(ctx, client -> {
-//            RequestBody request = input != null ? ClientUtils.createMultipartBody(input).build() : null;
-//
-//            Request.Builder b = new Request.Builder()
-//                    .url(client.getBasePath() + uri)
-//                    .header("Accept", "*/*")
-//                    .method(method, request);
-//
-//            // we're going to use the "raw" OkHttpClient, so we need to set up the auth manually
-//            String apiKey = getApiKey(ctx);
-//            if (apiKey != null) {
-//                b.header("Authorization", apiKey);
-//            } else {
-//                b.header(Constants.Headers.SESSION_TOKEN, apiCfg.getSessionToken(ctx));
-//            }
-//
-//            OkHttpClient ok = client.getHttpClient();
-//            Response resp = ok.newCall(b.build()).execute();
-//            assertResponse(resp);
-//
-//            if (resp.code() == 204) { // HTTP "No Content"
-//                return null;
-//            }
-//
-//            try (ResponseBody body = resp.body()) {
-//                return objectMapper.readValue(body.byteStream(), entityType);
-//            }
-//        });
-//    }
-//
-//    protected void assertResponse(Response resp) throws IOException {
-//        int code = resp.code();
-//        if (code < 200 || code >= 400) {
-//            try (ResponseBody body = resp.body()) {
-//                if (isJson(resp)) {
-//                    Object details = objectMapper.readValue(body.byteStream(), Object.class);
-//                    String msg = extractMessage(details);
-//                    throw new IOException(msg);
-//                } else {
-//                    if (code == 401) {
-//                        throw new IOException("Request error: " + code + ", please verify the credentials used");
-//                    } else {
-//                        throw new IOException("Request error: " + code);
-//                    }
-//                }
-//            }
-//        }
-//    }
 
     private String getApiKey(Context ctx) {
         return (String) ctx.getVariable(API_KEY);

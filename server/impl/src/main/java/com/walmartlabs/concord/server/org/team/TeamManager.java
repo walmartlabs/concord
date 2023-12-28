@@ -38,7 +38,6 @@ import org.jooq.DSLContext;
 import org.sonatype.siesta.ValidationErrorsException;
 
 import javax.inject.Inject;
-import javax.inject.Named;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
@@ -46,7 +45,6 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-@Named
 public class TeamManager {
 
     /**

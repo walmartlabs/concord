@@ -29,7 +29,6 @@ import org.jooq.Record;
 import org.jooq.*;
 
 import javax.inject.Inject;
-import javax.inject.Named;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -39,7 +38,6 @@ import static com.walmartlabs.concord.server.jooq.Tables.JSON_STORES;
 import static com.walmartlabs.concord.server.jooq.Tables.JSON_STORE_DATA;
 import static org.jooq.impl.DSL.*;
 
-@Named
 @Deprecated
 public class InventoryDataDao extends AbstractDao {
 

@@ -53,7 +53,10 @@ public class AttachmentsUploader {
             }
 
             ProcessApi api = new ProcessApi(apiClient);
-            api.uploadProcessAttachments(instanceId, Files.newInputStream(tmp.path()));
+            ClientUtils.withRetry(AgentConstants.API_CALL_MAX_RETRIES, AgentConstants.API_CALL_RETRY_DELAY, () -> {
+                api.uploadProcessAttachments(instanceId, Files.newInputStream(tmp.path()));
+                return null;
+            });
         }
     }
 }

@@ -31,7 +31,6 @@ import org.jooq.SelectJoinStep;
 import org.jooq.exception.DataAccessException;
 
 import javax.inject.Inject;
-import javax.inject.Named;
 import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.UUID;
@@ -40,7 +39,6 @@ import static com.walmartlabs.concord.server.jooq.tables.ProjectKvStore.PROJECT_
 import static org.jooq.impl.DSL.currentOffsetDateTime;
 import static org.jooq.impl.DSL.value;
 
-@Named
 public class KvDao extends AbstractDao {
 
     private final Locks locks;

@@ -27,14 +27,10 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import org.sonatype.siesta.Resource;
 
 import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import java.util.List;
 
-@Named
-@Singleton
 @Path("/api/v1/org")
 @Tag(name = "JsonStoreData")
 public class JsonStoreDataResource implements Resource {

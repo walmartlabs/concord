@@ -34,7 +34,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
-import javax.inject.Named;
 import java.util.UUID;
 
 import static com.walmartlabs.concord.server.jooq.Tables.PROCESS_LOCKS;
@@ -51,8 +50,8 @@ public class ProcessLocksWatchdog implements ScheduledTask {
     private final WatchdogDao dao;
 
     @Inject
-    public ProcessLocksWatchdog(WatchdogDao dao) {
-        this.dao = dao;
+    public ProcessLocksWatchdog(@MainDB Configuration cfg) {
+        this.dao = new WatchdogDao(cfg);
     }
 
     @Override
@@ -72,7 +71,6 @@ public class ProcessLocksWatchdog implements ScheduledTask {
         log.debug("performTask -> {} locks deleted", count);
     }
 
-    @Named
     private static final class WatchdogDao extends AbstractDao {
 
         private static final ProcessStatus[] FINISHED_STATUSES = {
@@ -82,7 +80,6 @@ public class ProcessLocksWatchdog implements ScheduledTask {
                 ProcessStatus.TIMED_OUT
         };
 
-        @Inject
         public WatchdogDao(@MainDB Configuration cfg) {
             super(cfg);
         }

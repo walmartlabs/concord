@@ -43,8 +43,6 @@ import io.takari.bpm.form.FormValidator;
 import io.takari.bpm.form.FormValidatorLocale;
 
 import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.ObjectInputStream;
@@ -54,8 +52,6 @@ import java.util.stream.Collectors;
 
 import static com.walmartlabs.concord.server.process.state.ProcessStateManager.path;
 
-@Named
-@Singleton
 public class FormServiceV1 {
 
     public static final String FORMS_RESOURCES_PATH = "forms";

@@ -20,9 +20,8 @@ package com.walmartlabs.concord.client;
  * =====
  */
 
-import com.walmartlabs.concord.common.IOUtils;
+import com.walmartlabs.concord.runtime.v2.sdk.WorkingDirectory;
 import com.walmartlabs.concord.sdk.ApiConfiguration;
-import com.walmartlabs.concord.sdk.Context;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -34,18 +33,18 @@ import javax.inject.Singleton;
 public class ApiClientFactoryProvider implements Provider<ApiClientFactory> {
 
     private final ApiConfiguration cfg;
-//    private final WorkingDirectory workDir;
+    private final WorkingDirectory workDir;
 
     @Inject
-    public ApiClientFactoryProvider(ApiConfiguration cfg/*, WorkingDirectory workDir*/) {
+    public ApiClientFactoryProvider(ApiConfiguration cfg, WorkingDirectory workDir) {
         this.cfg = cfg;
-//        this.workDir = workDir;
+        this.workDir = workDir;
     }
 
     @Override
     public ApiClientFactory get() {
         try {
-            return new ApiClientFactoryImpl(cfg, IOUtils.createTempDir("test")/*, workDir.getValue()*/);
+            return new ApiClientFactoryImpl(cfg, workDir.getValue());
         } catch (RuntimeException e) {
             throw e;
         } catch (Exception e) {

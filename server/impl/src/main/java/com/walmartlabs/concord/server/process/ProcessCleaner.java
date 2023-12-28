@@ -31,7 +31,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
-import javax.inject.Named;
 import java.time.OffsetDateTime;
 import java.util.UUID;
 
@@ -55,9 +54,9 @@ public class ProcessCleaner implements ScheduledTask {
     private final CleanerDao cleanerDao;
 
     @Inject
-    public ProcessCleaner(ProcessConfiguration cfg, CleanerDao cleanerDao) {
+    public ProcessCleaner(ProcessConfiguration cfg, @MainDB Configuration dbCfg) {
         this.cfg = cfg;
-        this.cleanerDao = cleanerDao;
+        this.cleanerDao = new CleanerDao(dbCfg);
     }
 
     @Override
@@ -76,11 +75,9 @@ public class ProcessCleaner implements ScheduledTask {
         cleanerDao.deleteOrphans(cfg);
     }
 
-    @Named
     private static class CleanerDao extends AbstractDao {
 
-        @Inject
-        protected CleanerDao(@MainDB Configuration cfg) {
+        private CleanerDao(@MainDB Configuration cfg) {
             super(cfg);
         }
 

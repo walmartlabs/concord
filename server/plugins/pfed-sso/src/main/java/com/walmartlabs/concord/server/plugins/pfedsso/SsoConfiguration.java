@@ -26,10 +26,7 @@ import org.eclipse.sisu.Nullable;
 import javax.inject.Inject;
 import java.io.Serializable;
 import java.time.Duration;
-import java.util.Collections;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
 public class SsoConfiguration implements Serializable {
 

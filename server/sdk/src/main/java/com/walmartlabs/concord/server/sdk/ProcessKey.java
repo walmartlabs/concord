@@ -28,8 +28,6 @@ import java.time.temporal.ChronoUnit;
 import java.util.Objects;
 import java.util.UUID;
 
-import static java.time.temporal.ChronoField.NANO_OF_SECOND;
-
 /**
  * Composite key of a process. Identifies process resources in partitioned tables.
  * @apiNote the "createdAt" portion of the key must be truncated to microseconds.

@@ -48,8 +48,6 @@ import org.sonatype.siesta.Validate;
 import org.sonatype.siesta.ValidationErrorsException;
 
 import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.*;
 import javax.ws.rs.core.Context;
@@ -64,8 +62,6 @@ import static com.walmartlabs.concord.server.Utils.unwrap;
 import static com.walmartlabs.concord.server.process.state.ProcessStateManager.path;
 import static javax.ws.rs.core.Response.Status;
 
-@Named
-@Singleton
 @Path("/api/v1/org")
 @Tag(name = "Project Processes")
 public class ProjectProcessResource implements Resource {

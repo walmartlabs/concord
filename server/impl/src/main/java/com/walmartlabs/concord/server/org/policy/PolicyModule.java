@@ -1,10 +1,10 @@
-package com.walmartlabs.concord.runner;
+package com.walmartlabs.concord.server.org.policy;
 
 /*-
  * *****
  * Concord
  * -----
- * Copyright (C) 2017 - 2020 Walmart Inc.
+ * Copyright (C) 2017 - 2023 Walmart Inc.
  * -----
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,17 +20,19 @@ package com.walmartlabs.concord.runner;
  * =====
  */
 
-import java.nio.file.Path;
+import com.google.inject.Binder;
+import com.google.inject.Module;
 
-public class WorkingDirectory {
+import static com.google.inject.Scopes.SINGLETON;
+import static com.walmartlabs.concord.server.Utils.bindJaxRsResource;
 
-    private final Path value;
+public class PolicyModule implements Module {
 
-    public WorkingDirectory(Path value) {
-        this.value = value;
-    }
+    @Override
+    public void configure(Binder binder) {
+        binder.bind(PolicyDao.class).in(SINGLETON);
 
-    public Path getValue() {
-        return value;
+        bindJaxRsResource(binder, PolicyResource.class);
+        bindJaxRsResource(binder, PolicyCheckResource.class);
     }
 }

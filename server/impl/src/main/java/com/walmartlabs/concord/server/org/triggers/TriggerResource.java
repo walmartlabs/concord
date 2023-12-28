@@ -42,8 +42,6 @@ import org.sonatype.siesta.Resource;
 import org.sonatype.siesta.ValidationErrorsException;
 
 import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.PathParam;
@@ -53,8 +51,6 @@ import javax.ws.rs.core.Response;
 import java.util.List;
 import java.util.UUID;
 
-@Named
-@Singleton
 @javax.ws.rs.Path("/api/v1/org")
 @Tag(name = "Triggers")
 public class TriggerResource implements Resource {

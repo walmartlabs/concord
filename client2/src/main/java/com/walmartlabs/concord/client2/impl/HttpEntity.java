@@ -22,7 +22,6 @@ package com.walmartlabs.concord.client2.impl;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStream;
 
 public interface HttpEntity {
 

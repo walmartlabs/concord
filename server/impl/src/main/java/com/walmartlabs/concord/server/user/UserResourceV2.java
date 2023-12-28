@@ -22,7 +22,6 @@ package com.walmartlabs.concord.server.user;
 
 import com.walmartlabs.concord.server.sdk.metrics.WithTimer;
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.sonatype.siesta.Resource;
 import org.sonatype.siesta.ValidationErrorsException;

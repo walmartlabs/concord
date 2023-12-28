@@ -38,7 +38,6 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.headers.Header;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
-import io.swagger.v3.oas.annotations.parameters.RequestBody;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.jboss.resteasy.plugins.providers.multipart.MultipartInput;
@@ -49,8 +48,6 @@ import org.sonatype.siesta.Validate;
 import org.sonatype.siesta.ValidationErrorsException;
 
 import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
 import javax.validation.Valid;
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
@@ -62,8 +59,6 @@ import java.io.IOException;
 import java.util.*;
 import java.util.stream.Collectors;
 
-@Named
-@Singleton
 @Path("/api/v1/org")
 @Tag(name = "Secrets")
 public class SecretResource implements Resource {

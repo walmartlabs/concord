@@ -27,7 +27,6 @@ import org.jooq.*;
 import org.jooq.exception.DataAccessException;
 
 import javax.inject.Inject;
-import javax.inject.Named;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -36,7 +35,6 @@ import static com.walmartlabs.concord.server.jooq.tables.Repositories.REPOSITORI
 import static com.walmartlabs.concord.server.jooq.tables.Secrets.SECRETS;
 import static org.jooq.impl.DSL.*;
 
-@Named
 public class RepositoryDao extends AbstractDao {
 
     private final ConcordObjectMapper objectMapper;

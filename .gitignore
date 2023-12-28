@@ -30,3 +30,4 @@ target/
 yarn.lock
 .mvn/wrapper/maven-wrapper.jar
 .java-version
+.attach_pid*

@@ -31,8 +31,6 @@ import org.sonatype.siesta.Resource;
 import org.sonatype.siesta.Validate;
 
 import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
 import javax.validation.Valid;
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
@@ -40,8 +38,6 @@ import javax.ws.rs.core.Response;
 import java.util.Collection;
 import java.util.List;
 
-@Named
-@Singleton
 @Path("/api/v1/org")
 @Tag(name = "JsonStore")
 public class JsonStoreResource implements Resource {
