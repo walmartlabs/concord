@@ -1,5 +1,29 @@
 # Change log
 
+## [2.6.0] - Unreleased
+
+### Added
+
+- concord-server: expose fetch with version
+([#853](https://github.com/walmartlabs/concord/pull/853));
+- server: allow regexp in meta filters
+([#852](https://github.com/walmartlabs/concord/pull/852)).
+
+### Changed
+
+- project: switch to concord-client2
+([#821](https://github.com/walmartlabs/concord/pull/821));
+- concord-server: remove more @Named
+([#839](https://github.com/walmartlabs/concord/pull/839));
+- client2: allow serialize collections
+([#846](https://github.com/walmartlabs/concord/pull/846));
+- runtime-v2: skip annotations for varargs
+([#845](https://github.com/walmartlabs/concord/pull/845));
+- concord-repository: fetch with quiet option
+([#851](https://github.com/walmartlabs/concord/pull/851)).
+
+
+
 ## [2.5.0] - 2023-12-10
 
 ### Added
