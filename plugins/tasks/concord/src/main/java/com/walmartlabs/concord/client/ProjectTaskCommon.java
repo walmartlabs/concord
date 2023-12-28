@@ -20,7 +20,7 @@ package com.walmartlabs.concord.client;
  * =====
  */
 
-import com.walmartlabs.concord.ApiClient;
+import com.walmartlabs.concord.client2.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -55,7 +55,7 @@ public class ProjectTaskCommon {
         entry.setName(in.projectName());
         entry.setRepositories(in.repositories());
 
-        ProjectOperationResponse resp = api.createOrUpdate(in.orgName(defaultOrg), entry);
+        ProjectOperationResponse resp = api.createOrUpdateProject(in.orgName(defaultOrg), entry);
         log.info("The project was created (or updated): {}", resp);
     }
 }

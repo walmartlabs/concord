@@ -25,9 +25,11 @@ import com.walmartlabs.concord.server.sdk.BackgroundTask;
 import com.walmartlabs.concord.server.sdk.ScheduledTask;
 import org.eclipse.jetty.servlet.ServletHolder;
 import org.sonatype.siesta.Component;
+import org.sonatype.siesta.ExceptionMapperSupport;
 import org.sonatype.siesta.Resource;
 
 import javax.servlet.Filter;
+import javax.ws.rs.ext.ExceptionMapper;
 import java.util.List;
 
 import static com.google.inject.Scopes.SINGLETON;
@@ -93,6 +95,12 @@ public final class Utils {
     public static void bindSingletonScheduledTask(Binder binder, Class<? extends ScheduledTask> klass) {
         binder.bind(klass).in(SINGLETON);
         newSetBinder(binder, ScheduledTask.class).addBinding().to(klass);
+    }
+
+    public static void bindExceptionMapper(Binder binder, Class<? extends ExceptionMapperSupport<?>> klass) {
+        binder.bind(klass).in(SINGLETON);
+        newSetBinder(binder, Component.class).addBinding().to(klass);
+        newSetBinder(binder, ExceptionMapper.class).addBinding().to(klass);
     }
 
     private Utils() {

@@ -34,12 +34,8 @@ import com.walmartlabs.concord.server.policy.PolicyUtils;
 import org.sonatype.siesta.ValidationErrorsException;
 
 import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
 import java.util.*;
 
-@Named
-@Singleton
 public class JsonStoreQueryManager {
 
     private final PolicyManager policyManager;

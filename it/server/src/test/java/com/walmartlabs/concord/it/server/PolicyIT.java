@@ -20,9 +20,8 @@ package com.walmartlabs.concord.it.server;
  * =====
  */
 
-import com.walmartlabs.concord.ApiException;
-import com.walmartlabs.concord.client.*;
-import com.walmartlabs.concord.client.ProcessEntry.StatusEnum;
+import com.walmartlabs.concord.client2.*;
+import com.walmartlabs.concord.client2.ProcessEntry.StatusEnum;
 import org.junit.jupiter.api.Test;
 
 import java.util.HashMap;
@@ -39,26 +38,26 @@ public class PolicyIT extends AbstractServerIT {
     public void testCfg() throws Exception {
         String orgName = "org_" + randomString();
         OrganizationsApi organizationsApi = new OrganizationsApi(getApiClient());
-        organizationsApi.createOrUpdate(new OrganizationEntry().setName(orgName));
+        organizationsApi.createOrUpdateOrg(new OrganizationEntry().name(orgName));
 
         String projectName = "project_" + randomString();
         ProjectsApi projectsApi = new ProjectsApi(getApiClient());
-        projectsApi.createOrUpdate(orgName, new ProjectEntry()
-                .setName(projectName)
-                .setRawPayloadMode(ProjectEntry.RawPayloadModeEnum.EVERYONE));
+        projectsApi.createOrUpdateProject(orgName, new ProjectEntry()
+                .name(projectName)
+                .rawPayloadMode(ProjectEntry.RawPayloadModeEnum.EVERYONE));
 
         String policyName = "policy_" + randomString();
         PolicyApi policyApi = new PolicyApi(getApiClient());
-        policyApi.createOrUpdate(new PolicyEntry()
-                .setName(policyName)
-                .setRules(singletonMap("processCfg",
+        policyApi.createOrUpdatePolicy(new PolicyEntry()
+                .name(policyName)
+                .rules(singletonMap("processCfg",
                         singletonMap("arguments",
                                 singletonMap("x",
                                         singletonMap("name", "Concord"))))));
 
-        policyApi.link(policyName, new PolicyLinkEntry()
-                .setOrgName(orgName)
-                .setProjectName(projectName));
+        policyApi.linkPolicy(policyName, new PolicyLinkEntry()
+                .orgName(orgName)
+                .projectName(projectName));
 
         // ---
 
@@ -66,23 +65,22 @@ public class PolicyIT extends AbstractServerIT {
 
         StartProcessResponse spr = start(payload);
 
-        ProcessApi processApi = new ProcessApi(getApiClient());
-        ProcessEntry pir = waitForCompletion(processApi, spr.getInstanceId());
+        ProcessEntry pir = waitForCompletion(getApiClient(), spr.getInstanceId());
 
         // ---
 
-        byte[] ab = getLog(pir.getLogFileName());
+        byte[] ab = getLog(pir.getInstanceId());
         assertLog(".*Hello, Stranger.*", ab);
 
         // ---
 
         spr = start(orgName, projectName, null, null, payload);
 
-        pir = waitForCompletion(processApi, spr.getInstanceId());
+        pir = waitForCompletion(getApiClient(), spr.getInstanceId());
 
         // ---
 
-        ab = getLog(pir.getLogFileName());
+        ab = getLog(pir.getInstanceId());
         assertLog(".*Hello, Concord.*", ab);
     }
 
@@ -103,23 +101,22 @@ public class PolicyIT extends AbstractServerIT {
 
         StartProcessResponse spr = start(orgName, projectName, null, null, payload);
 
-        ProcessApi processApi = new ProcessApi(getApiClient());
-        waitForStatus(processApi, spr.getInstanceId(), ProcessEntry.StatusEnum.RUNNING);
+        waitForStatus(getApiClient(), spr.getInstanceId(), StatusEnum.RUNNING);
 
-        waitForCompletion(processApi, spr.getInstanceId());
+        waitForCompletion(getApiClient(), spr.getInstanceId());
     }
 
     @Test
     public void testConcurrentProcess() throws Exception {
         String orgName = "org_" + randomString();
         OrganizationsApi organizationsApi = new OrganizationsApi(getApiClient());
-        organizationsApi.createOrUpdate(new OrganizationEntry().setName(orgName));
+        organizationsApi.createOrUpdateOrg(new OrganizationEntry().name(orgName));
 
         String projectName = "project_" + randomString();
         ProjectsApi projectsApi = new ProjectsApi(getApiClient());
-        projectsApi.createOrUpdate(orgName, new ProjectEntry()
-                .setName(projectName)
-                .setRawPayloadMode(ProjectEntry.RawPayloadModeEnum.EVERYONE));
+        projectsApi.createOrUpdateProject(orgName, new ProjectEntry()
+                .name(projectName)
+                .rawPayloadMode(ProjectEntry.RawPayloadModeEnum.EVERYONE));
 
         String policyName = "policy_" + randomString();
         PolicyApi policyApi = new PolicyApi(getApiClient());
@@ -127,13 +124,13 @@ public class PolicyIT extends AbstractServerIT {
         queueRules.put("concurrent", singletonMap("max", 1));
 
         Map<String, Object> rules = singletonMap("queue", queueRules);
-        policyApi.createOrUpdate(new PolicyEntry()
-                .setName(policyName)
-                .setRules(rules));
+        policyApi.createOrUpdatePolicy(new PolicyEntry()
+                .name(policyName)
+                .rules(rules));
 
-        policyApi.link(policyName, new PolicyLinkEntry()
-                .setOrgName(orgName)
-                .setProjectName(projectName));
+        policyApi.linkPolicy(policyName, new PolicyLinkEntry()
+                .orgName(orgName)
+                .projectName(projectName));
 
         // ---
 
@@ -147,8 +144,7 @@ public class PolicyIT extends AbstractServerIT {
 
         StartProcessResponse spr1 = start(input1);
 
-        ProcessApi processApi = new ProcessApi(getApiClient());
-        waitForStatus(processApi, spr1.getInstanceId(), StatusEnum.RUNNING);
+        waitForStatus(getApiClient(), spr1.getInstanceId(), StatusEnum.RUNNING);
 
         // --- start second process
 
@@ -159,24 +155,24 @@ public class PolicyIT extends AbstractServerIT {
 
         // ---
 
-        waitForCompletion(processApi, spr1.getInstanceId());
+        waitForCompletion(getApiClient(), spr1.getInstanceId());
 
         // ---
 
-        waitForCompletion(processApi, spr2.getInstanceId());
+        waitForCompletion(getApiClient(), spr2.getInstanceId());
     }
 
     @Test
     public void testConcurrentWithSuspendedProcess() throws Exception {
         String orgName = "org_" + randomString();
         OrganizationsApi organizationsApi = new OrganizationsApi(getApiClient());
-        organizationsApi.createOrUpdate(new OrganizationEntry().setName(orgName));
+        organizationsApi.createOrUpdateOrg(new OrganizationEntry().name(orgName));
 
         String projectName = "project_" + randomString();
         ProjectsApi projectsApi = new ProjectsApi(getApiClient());
-        projectsApi.createOrUpdate(orgName, new ProjectEntry()
-                .setName(projectName)
-                .setRawPayloadMode(ProjectEntry.RawPayloadModeEnum.EVERYONE));
+        projectsApi.createOrUpdateProject(orgName, new ProjectEntry()
+                .name(projectName)
+                .rawPayloadMode(ProjectEntry.RawPayloadModeEnum.EVERYONE));
 
         String policyName = "policy_" + randomString();
         PolicyApi policyApi = new PolicyApi(getApiClient());
@@ -184,13 +180,13 @@ public class PolicyIT extends AbstractServerIT {
         queueRules.put("concurrent", singletonMap("max", 1));
 
         Map<String, Object> rules = singletonMap("queue", queueRules);
-        policyApi.createOrUpdate(new PolicyEntry()
-                .setName(policyName)
-                .setRules(rules));
+        policyApi.createOrUpdatePolicy(new PolicyEntry()
+                .name(policyName)
+                .rules(rules));
 
-        policyApi.link(policyName, new PolicyLinkEntry()
-                .setOrgName(orgName)
-                .setProjectName(projectName));
+        policyApi.linkPolicy(policyName, new PolicyLinkEntry()
+                .orgName(orgName)
+                .projectName(projectName));
 
         // ---
 
@@ -204,8 +200,7 @@ public class PolicyIT extends AbstractServerIT {
 
         StartProcessResponse spr1 = start(input1);
 
-        ProcessApi processApi = new ProcessApi(getApiClient());
-        waitForStatus(processApi, spr1.getInstanceId(), StatusEnum.RUNNING);
+        waitForStatus(getApiClient(), spr1.getInstanceId(), StatusEnum.RUNNING);
 
         // --- start the second process
 
@@ -220,7 +215,7 @@ public class PolicyIT extends AbstractServerIT {
 
         // ---
 
-        waitForCompletion(processApi, spr2.getInstanceId());
+        waitForCompletion(getApiClient(), spr2.getInstanceId());
     }
 
     @Test
@@ -245,12 +240,11 @@ public class PolicyIT extends AbstractServerIT {
         input.put("request", singletonMap("processTimeout", "PT10M"));
 
         StartProcessResponse spr = start(input);
-        ProcessApi processApi = new ProcessApi(getApiClient());
 
-        ProcessEntry pe = waitForCompletion(processApi, spr.getInstanceId());
+        ProcessEntry pe = waitForCompletion(getApiClient(), spr.getInstanceId());
         assertEquals(StatusEnum.FAILED, pe.getStatus());
 
-        byte[] ab = getLog(pe.getLogFileName());
+        byte[] ab = getLog(pe.getInstanceId());
         assertLog(".*Maximum processTimeout value exceeded.*", ab);
     }
 
@@ -258,7 +252,7 @@ public class PolicyIT extends AbstractServerIT {
         String orgName = "org_" + randomString();
 
         OrganizationsApi organizationsApi = new OrganizationsApi(getApiClient());
-        organizationsApi.createOrUpdate(new OrganizationEntry().setName(orgName));
+        organizationsApi.createOrUpdateOrg(new OrganizationEntry().name(orgName));
 
         return orgName;
     }
@@ -267,9 +261,9 @@ public class PolicyIT extends AbstractServerIT {
         String projectName = "project_" + randomString();
 
         ProjectsApi projectsApi = new ProjectsApi(getApiClient());
-        projectsApi.createOrUpdate(orgName, new ProjectEntry()
-                .setName(projectName)
-                .setRawPayloadMode(ProjectEntry.RawPayloadModeEnum.EVERYONE));
+        projectsApi.createOrUpdateProject(orgName, new ProjectEntry()
+                .name(projectName)
+                .rawPayloadMode(ProjectEntry.RawPayloadModeEnum.EVERYONE));
 
         return projectName;
     }
@@ -278,13 +272,13 @@ public class PolicyIT extends AbstractServerIT {
         String policyName = "policy_" + randomString();
 
         PolicyApi policyApi = new PolicyApi(getApiClient());
-        policyApi.createOrUpdate(new PolicyEntry()
-                .setName(policyName)
-                .setRules(rules));
+        policyApi.createOrUpdatePolicy(new PolicyEntry()
+                .name(policyName)
+                .rules(rules));
 
-        policyApi.link(policyName, new PolicyLinkEntry()
-                .setOrgName(orgName)
-                .setProjectName(projectName));
+        policyApi.linkPolicy(policyName, new PolicyLinkEntry()
+                .orgName(orgName)
+                .projectName(projectName));
 
         return policyName;
     }

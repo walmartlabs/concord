@@ -30,7 +30,6 @@ import com.walmartlabs.concord.server.user.UserType;
 import org.jooq.*;
 
 import javax.inject.Inject;
-import javax.inject.Named;
 import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
@@ -44,7 +43,6 @@ import static com.walmartlabs.concord.server.jooq.tables.Users.USERS;
 import static org.jooq.impl.DSL.select;
 import static org.jooq.impl.DSL.selectFrom;
 
-@Named
 public class TeamDao extends AbstractDao {
 
     @Inject

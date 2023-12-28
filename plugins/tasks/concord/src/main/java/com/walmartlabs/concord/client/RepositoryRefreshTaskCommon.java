@@ -20,8 +20,7 @@ package com.walmartlabs.concord.client;
  * =====
  */
 
-import com.walmartlabs.concord.ApiClient;
-import com.walmartlabs.concord.ApiException;
+import com.walmartlabs.concord.client2.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -41,7 +40,7 @@ public class RepositoryRefreshTaskCommon {
     public void execute(RepositoryRefreshTaskParams in) throws ApiException {
         List<UUID> repositoriesUUIDs = in.repositories();
         log.info("Repository ids to refresh: {}",repositoriesUUIDs);
-        api.refreshRepository(repositoriesUUIDs);
+        api.refreshRepositoryV2(repositoriesUUIDs);
         log.info("Repository refresh completed");
     }
 }

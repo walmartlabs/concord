@@ -43,13 +43,11 @@ import com.walmartlabs.concord.server.user.UserType;
 import org.sonatype.siesta.ValidationErrorsException;
 
 import javax.inject.Inject;
-import javax.inject.Named;
 import java.io.Serializable;
 import java.text.MessageFormat;
 import java.util.*;
 import java.util.stream.Collectors;
 
-@Named
 public class JsonStoreManager {
 
     private static final String DEFAULT_POLICY_MESSAGE = "Maximum number of JSON stores exceeded: current {0}, limit {1}";
