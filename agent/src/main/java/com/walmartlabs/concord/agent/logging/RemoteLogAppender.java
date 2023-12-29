@@ -9,9 +9,9 @@ package com.walmartlabs.concord.agent.logging;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -20,17 +20,13 @@ package com.walmartlabs.concord.agent.logging;
  * =====
  */
 
-import com.walmartlabs.concord.ApiClient;
-import com.walmartlabs.concord.ApiException;
 import com.walmartlabs.concord.agent.AgentConstants;
-import com.walmartlabs.concord.client.ClientUtils;
-import com.walmartlabs.concord.client.LogSegmentUpdateRequest;
-import com.walmartlabs.concord.client.ProcessApi;
-import com.walmartlabs.concord.client.ProcessLogV2Api;
+import com.walmartlabs.concord.client2.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
+import java.io.ByteArrayInputStream;
 import java.util.UUID;
 
 public class RemoteLogAppender implements LogAppender {
@@ -48,11 +44,9 @@ public class RemoteLogAppender implements LogAppender {
 
     @Override
     public void appendLog(UUID instanceId, byte[] ab) {
-        String path = "/api/v1/process/" + instanceId + "/log";
-
         try {
             ClientUtils.withRetry(AgentConstants.API_CALL_MAX_RETRIES, AgentConstants.API_CALL_RETRY_DELAY, () -> {
-                ClientUtils.postData(processApi.getApiClient(), path, ab);
+                processApi.appendProcessLog(instanceId, new ByteArrayInputStream(ab));
                 return null;
             });
         } catch (ApiException e) {
@@ -63,11 +57,9 @@ public class RemoteLogAppender implements LogAppender {
 
     @Override
     public boolean appendLog(UUID instanceId, long segmentId, byte[] ab) {
-        String path = "/api/v2/process/" + instanceId + "/log/segment/" + segmentId + "/data";
-
         try {
             ClientUtils.withRetry(AgentConstants.API_CALL_MAX_RETRIES, AgentConstants.API_CALL_RETRY_DELAY, () -> {
-                ClientUtils.postData(processApi.getApiClient(), path, ab);
+                processLogV2Api.appendProcessLogSegment(instanceId, segmentId, new ByteArrayInputStream(ab));
                 return null;
             });
             return true;
@@ -81,13 +73,13 @@ public class RemoteLogAppender implements LogAppender {
     @Override
     public boolean updateSegment(UUID instanceId, long segmentId, LogSegmentStats stats) {
         LogSegmentUpdateRequest request = new LogSegmentUpdateRequest()
-                .setStatus(stats.status())
-                .setWarnings(stats.warnings())
-                .setErrors(stats.errors());
+                .status(stats.status())
+                .warnings(stats.warnings())
+                .errors(stats.errors());
 
         try {
             ClientUtils.withRetry(AgentConstants.API_CALL_MAX_RETRIES, AgentConstants.API_CALL_RETRY_DELAY,
-                    () -> processLogV2Api.updateSegment(instanceId, segmentId, request));
+                    () -> processLogV2Api.updateProcessLogSegment(instanceId, segmentId, request));
             return true;
         } catch (Exception e) {
             log.warn("updateSegment ['{}', '{}', '{}'] -> error: {}", instanceId, segmentId, stats, e.getMessage());

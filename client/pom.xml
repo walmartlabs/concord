@@ -6,7 +6,7 @@
     <parent>
         <groupId>com.walmartlabs.concord</groupId>
         <artifactId>parent</artifactId>
-        <version>2.5.1-SNAPSHOT</version>
+        <version>2.6.1-SNAPSHOT</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
 
@@ -26,6 +26,12 @@
             <groupId>com.walmartlabs.concord.server</groupId>
             <artifactId>concord-server</artifactId>
             <scope>provided</scope>
+            <exclusions>
+                <exclusion>
+                    <groupId>commons-logging</groupId>
+                    <artifactId>commons-logging</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
         <dependency>
             <groupId>com.walmartlabs.concord</groupId>
@@ -35,6 +41,10 @@
         <dependency>
             <groupId>com.walmartlabs.concord</groupId>
             <artifactId>concord-sdk</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.walmartlabs.concord.runtime.v2</groupId>
+            <artifactId>concord-runtime-sdk-v2</artifactId>
         </dependency>
         <dependency>
             <groupId>com.squareup.okhttp</groupId>
@@ -190,6 +200,9 @@
                             </item>
                             <item>
                                 <code>java.method.returnTypeTypeParametersChanged</code>
+                            </item>
+                            <item>
+                                <code>java.class.externalClassExposedInAPI</code>
                             </item>
                         </revapi.ignore>
                     </analysisConfiguration>

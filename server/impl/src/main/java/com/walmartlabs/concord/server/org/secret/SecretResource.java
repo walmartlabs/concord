@@ -34,10 +34,10 @@ import com.walmartlabs.concord.server.sdk.metrics.WithTimer;
 import com.walmartlabs.concord.server.user.UserManager;
 import com.walmartlabs.concord.server.user.UserType;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.headers.Header;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
-import io.swagger.v3.oas.annotations.parameters.RequestBody;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.jboss.resteasy.plugins.providers.multipart.MultipartInput;
@@ -48,8 +48,6 @@ import org.sonatype.siesta.Validate;
 import org.sonatype.siesta.ValidationErrorsException;
 
 import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
 import javax.validation.Valid;
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
@@ -61,8 +59,6 @@ import java.io.IOException;
 import java.util.*;
 import java.util.stream.Collectors;
 
-@Named
-@Singleton
 @Path("/api/v1/org")
 @Tag(name = "Secrets")
 public class SecretResource implements Resource {
@@ -102,7 +98,7 @@ public class SecretResource implements Resource {
     @Validate
     @Operation(description = "Create secret", operationId = "createSecret")
     public SecretOperationResponse create(@PathParam("orgName") @ConcordKey String orgName,
-                                          @RequestBody(content = @Content(schema = @Schema(type = "object"))) MultipartInput input) {
+                                          @Parameter(schema = @Schema(type = "object", implementation = Object.class)) MultipartInput input) {
 
         OrganizationEntry org = orgManager.assertAccess(orgName, true);
 
@@ -203,8 +199,7 @@ public class SecretResource implements Resource {
     )
     public Response getData(@PathParam("orgName") @ConcordKey String orgName,
                             @PathParam("secretName") @ConcordKey String secretName,
-                            @RequestBody(content = @Content(schema = @Schema(type = "object", implementation = GetDataRequest.class)))
-                            MultipartInput input) {
+                            @Parameter(schema = @Schema(type = "object", implementation = GetDataRequest.class)) MultipartInput input) {
 
         GetDataRequest request = GetDataRequest.from(input);
 

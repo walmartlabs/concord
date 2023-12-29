@@ -22,14 +22,10 @@ package com.walmartlabs.concord.server.org.secret;
 
 import org.sonatype.siesta.ExceptionMapperSupport;
 
-import javax.inject.Named;
-import javax.inject.Singleton;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.Response;
 
-@Named
-@Singleton
 public class SecretExceptionMapper extends ExceptionMapperSupport<SecretException> {
 
     @Context

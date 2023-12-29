@@ -20,7 +20,7 @@ package com.walmartlabs.concord.it.server;
  * =====
  */
 
-import com.walmartlabs.concord.client.*;
+import com.walmartlabs.concord.client2.*;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
@@ -64,14 +64,13 @@ public class RepositoryRefreshIT extends AbstractServerIT {
 
         // ---
 
-        ProcessApi processApi = new ProcessApi(getApiClient());
-        ProcessEntry pir = waitForCompletion(processApi, spr.getInstanceId());
+        ProcessEntry pir = waitForCompletion(getApiClient(), spr.getInstanceId());
         assertEquals(ProcessEntry.StatusEnum.FINISHED, pir.getStatus());
 
         // ---
 
         TriggersApi triggerResource = new TriggersApi(getApiClient());
-        List<TriggerEntry> list = triggerResource.list(orgName, projectName, repoName);
+        List<TriggerEntry> list = triggerResource.listTriggers(orgName, projectName, repoName);
         assertFalse(list.isEmpty());
     }
 }

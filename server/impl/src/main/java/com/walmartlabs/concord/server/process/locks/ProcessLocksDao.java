@@ -31,12 +31,10 @@ import org.jooq.DSLContext;
 import org.jooq.SelectConditionStep;
 
 import javax.inject.Inject;
-import javax.inject.Named;
 import java.util.UUID;
 
 import static com.walmartlabs.concord.server.jooq.Tables.PROCESS_LOCKS;
 
-@Named
 public class ProcessLocksDao extends AbstractDao {
 
     @Inject

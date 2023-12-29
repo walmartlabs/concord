@@ -27,7 +27,6 @@ import com.walmartlabs.concord.server.security.apikey.ApiKey;
 import com.walmartlabs.concord.server.security.apikey.ApiKeyDao;
 import com.walmartlabs.concord.server.security.apikey.ApiKeyEntry;
 import com.walmartlabs.concord.server.security.sessionkey.SessionKey;
-import org.apache.shiro.authc.AuthenticationException;
 import org.apache.shiro.authc.AuthenticationToken;
 import org.apache.shiro.authc.UsernamePasswordToken;
 import org.apache.shiro.subject.support.DefaultSubjectContext;

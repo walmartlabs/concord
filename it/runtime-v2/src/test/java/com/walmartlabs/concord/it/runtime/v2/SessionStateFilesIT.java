@@ -24,17 +24,15 @@ import ca.ibodrov.concord.testcontainers.ConcordProcess;
 import ca.ibodrov.concord.testcontainers.Payload;
 import ca.ibodrov.concord.testcontainers.Processes;
 import ca.ibodrov.concord.testcontainers.junit5.ConcordRule;
-import com.walmartlabs.concord.ApiClient;
-import com.walmartlabs.concord.ApiException;
-import com.walmartlabs.concord.client.*;
+import com.walmartlabs.concord.client2.*;
 import com.walmartlabs.concord.common.IOUtils;
 import com.walmartlabs.concord.sdk.Constants;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Collections;
@@ -54,13 +52,13 @@ public class SessionStateFilesIT extends AbstractTest {
         String username = "user_" + randomString();
 
         UsersApi usersApi = new UsersApi(concord.apiClient());
-        CreateUserResponse user = usersApi.createOrUpdate(new CreateUserRequest()
-                .setUsername(username)
-                .setType(CreateUserRequest.TypeEnum.LOCAL));
+        CreateUserResponse user = usersApi.createOrUpdateUser(new CreateUserRequest()
+                .username(username)
+                .type(CreateUserRequest.TypeEnum.LOCAL));
 
         ApiKeysApi apiKeysApi = new ApiKeysApi(concord.apiClient());
-        CreateApiKeyResponse cakr = apiKeysApi.create(new CreateApiKeyRequest()
-                        .setUserId(user.getId()));
+        CreateApiKeyResponse cakr = apiKeysApi.createUserApiKey(new CreateApiKeyRequest()
+                        .userId(user.getId()));
 
         // ---
         Payload payload = new Payload()
@@ -107,8 +105,9 @@ public class SessionStateFilesIT extends AbstractTest {
         String fullFileName = Constants.Files.JOB_ATTACHMENTS_DIR_NAME + "/" + Constants.Files.JOB_SESSION_FILES_DIR_NAME + "/" + file;
 
         // ---
-        File state = processApi.downloadState(instanceId);
-        assertNoFileInState(fullFileName, state);
+        try (InputStream state = processApi.downloadState(instanceId)) {
+            assertNoFileInState(fullFileName, state);
+        }
 
         // ---
         try {
@@ -119,9 +118,9 @@ public class SessionStateFilesIT extends AbstractTest {
         }
     }
 
-    private static void assertNoFileInState(String file, File state) throws IOException  {
+    private static void assertNoFileInState(String file, InputStream state) throws IOException  {
         Path target = Files.createTempDirectory("state-unzip");
-        IOUtils.unzip(state.toPath(), target, false, (sourceFile, dstFile) -> {
+        IOUtils.unzip(state, target, false, (sourceFile, dstFile) -> {
             assertNotEquals(file, target.relativize(dstFile).toString());
         });
     }

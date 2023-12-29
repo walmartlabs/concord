@@ -27,16 +27,12 @@ import org.sonatype.siesta.Resource;
 import org.sonatype.siesta.Validate;
 
 import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 
-@Named
-@Singleton
 @Path("/api/v2/org")
 @Tag(name = "Projects")
 public class ProjectResourceV2 implements Resource {
