@@ -102,7 +102,6 @@ public class LockTaskCommon {
         condition.put("projectId", lock.getProjectId());
         condition.put("scope", lock.getScope());
         condition.put("name", lock.getName());
-        condition.put("resumeEvent", UUID.randomUUID().toString());
         return condition;
     }
 

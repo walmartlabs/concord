@@ -143,7 +143,8 @@ public class ResourceTaskCommon {
         Path tmpFile = fileService.createTempFile(RESOURCE_PREFIX, YAML_FILE_SUFFIX);
         writeToFile(tmpFile, p -> {
             try (OutputStream out = Files.newOutputStream(p)) {
-                createObjectMapper(new YAMLFactory()).writerWithDefaultPrettyPrinter()
+                createObjectMapper(new YAMLFactory().disable(YAMLGenerator.Feature.SPLIT_LINES))
+                        .writerWithDefaultPrettyPrinter()
                         .writeValue(out, content);
             }
         });
