@@ -4,11 +4,15 @@
 
 ### Added
 
+- concord-cli: Add option for default task variables
+([#848](https://github.com/walmartlabs/concord/pull/848)).
 
 ### Changed
 
 - resource-task: writeYaml: do not split YAML into multiple lines
 ([#854](https://github.com/walmartlabs/concord/pull/854)).
+
+
 
 ## [2.6.0] - 2023-12-28
 
