@@ -81,6 +81,9 @@ public class Run implements Callable<Integer> {
     @Option(names = {"--default-cfg"}, description = "default Concord configuration file")
     Path defaultCfg = Paths.get(System.getProperty("user.home")).resolve(".concord").resolve("defaultCfg.yml");
 
+    @Option(names = {"--default-task-vars"}, description = "default task variables configuration file")
+    Path defaultTaskVars = Paths.get(System.getProperty("user.home")).resolve(".concord").resolve("defaultTaskVars.json");
+
     @Option(names = {"--deps-cache-dir"}, description = "process dependencies cache dir")
     Path depsCacheDir = Paths.get(System.getProperty("user.home")).resolve(".concord").resolve("depsCache");
 
@@ -252,7 +255,7 @@ public class Run implements Callable<Integer> {
                 runnerCfg,
                 () -> cfg,
                 new ProcessDependenciesModule(targetDir, runnerCfg.dependencies(), cfg.debug()),
-                new CliServicesModule(secretStoreDir, targetDir, new VaultProvider(vaultDir, vaultId), dependencyManager, verbosity))
+                new CliServicesModule(secretStoreDir, targetDir, defaultTaskVars, new VaultProvider(vaultDir, vaultId), dependencyManager, verbosity))
                 .create();
 
         // Just to notify listeners
