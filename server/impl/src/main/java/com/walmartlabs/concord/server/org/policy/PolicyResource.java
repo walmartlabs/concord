@@ -35,6 +35,7 @@ import com.walmartlabs.concord.server.org.project.ProjectDao;
 import com.walmartlabs.concord.server.policy.PolicyManager;
 import com.walmartlabs.concord.server.sdk.ConcordApplicationException;
 import com.walmartlabs.concord.server.sdk.rest.Resource;
+import com.walmartlabs.concord.server.sdk.validation.Validate;
 import com.walmartlabs.concord.server.security.Roles;
 import com.walmartlabs.concord.server.security.UserPrincipal;
 import com.walmartlabs.concord.server.user.UserManager;
@@ -98,6 +99,7 @@ public class PolicyResource implements Resource {
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
+    @Validate
     @Operation(description = "Create or update a policy", operationId = "createOrUpdatePolicy")
     public PolicyOperationResponse createOrUpdate(@Valid PolicyEntry entry) {
         assertAdmin();
@@ -156,6 +158,7 @@ public class PolicyResource implements Resource {
     @Path("/{policyName}/link")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
+    @Validate
     @Operation(description = "Link an existing policy to an organization, a project or user", operationId = "linkPolicy")
     public GenericOperationResult link(@PathParam("policyName") @ConcordKey String policyName,
                                        @Valid PolicyLinkEntry entry) {

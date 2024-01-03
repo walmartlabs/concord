@@ -45,7 +45,7 @@ public class ValidationModule implements Module {
 
     @Override
     public void configure(Binder binder) {
-        final MethodInterceptor interceptor = new ValidationInterceptor();
+        MethodInterceptor interceptor = new ValidationInterceptor();
         binder.bindInterceptor(Matchers.any(), Matchers.annotatedWith(Validate.class), interceptor);
         binder.requestInjection(interceptor);
 

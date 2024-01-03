@@ -167,7 +167,6 @@ public class JsonStoreResource implements Resource {
 
 
     @POST
-//    @ApiOperation("Updates the access level for the specified store")
     @Path("/{orgName}/jsonstore/{storeName}/access")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)

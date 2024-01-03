@@ -160,6 +160,7 @@ public class TeamResource implements Resource {
     @Path("/{orgName}/team/{teamName}/users")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
+    @Validate
     @Operation(description = "Add users to a team", operationId = "addUsersToTeam")
     public AddTeamUsersResponse addUsers(@PathParam("orgName") @ConcordKey String orgName,
                                          @PathParam("teamName") @ConcordKey String teamName,
@@ -182,6 +183,7 @@ public class TeamResource implements Resource {
     @Path("/{orgName}/team/{teamName}/ldapGroups")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
+    @Validate
     @Operation(description = "Add LDAP groups to a team")
     public AddTeamLdapGroupsResponse addLdapGroups(@PathParam("orgName") @ConcordKey String orgName,
                                                    @PathParam("teamName") @ConcordKey String teamName,
