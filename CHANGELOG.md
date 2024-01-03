@@ -9,6 +9,8 @@
 
 ### Changed
 
+- project: drop siesta-server dependency
+([#826](https://github.com/walmartlabs/concord/pull/826));
 - resource-task: writeYaml: do not split YAML into multiple lines
 ([#854](https://github.com/walmartlabs/concord/pull/854)).
 
