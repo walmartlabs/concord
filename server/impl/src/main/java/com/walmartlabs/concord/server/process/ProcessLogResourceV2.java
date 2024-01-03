@@ -29,6 +29,7 @@ import com.walmartlabs.concord.server.process.logs.ProcessLogManager;
 import com.walmartlabs.concord.server.sdk.ConcordApplicationException;
 import com.walmartlabs.concord.server.sdk.ProcessKey;
 import com.walmartlabs.concord.server.sdk.metrics.WithTimer;
+import com.walmartlabs.concord.server.sdk.rest.Resource;
 import com.walmartlabs.concord.server.sdk.validation.ValidationErrorsException;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -36,7 +37,6 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.parameters.RequestBody;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import org.sonatype.siesta.Resource;
 
 import javax.inject.Inject;
 import javax.ws.rs.*;

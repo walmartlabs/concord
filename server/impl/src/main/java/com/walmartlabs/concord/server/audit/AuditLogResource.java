@@ -34,13 +34,13 @@ import com.walmartlabs.concord.server.org.secret.SecretManager;
 import com.walmartlabs.concord.server.org.team.TeamDao;
 import com.walmartlabs.concord.server.sdk.ConcordApplicationException;
 import com.walmartlabs.concord.server.sdk.metrics.WithTimer;
+import com.walmartlabs.concord.server.sdk.rest.Resource;
 import com.walmartlabs.concord.server.sdk.validation.ValidationErrorsException;
 import com.walmartlabs.concord.server.security.Roles;
 import com.walmartlabs.concord.server.user.UserDao;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.apache.shiro.authz.UnauthorizedException;
-import org.sonatype.siesta.Resource;
 
 import javax.inject.Inject;
 import javax.ws.rs.*;

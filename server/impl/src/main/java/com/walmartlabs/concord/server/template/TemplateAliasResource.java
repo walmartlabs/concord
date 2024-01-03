@@ -23,12 +23,12 @@ package com.walmartlabs.concord.server.template;
 import com.walmartlabs.concord.common.validation.ConcordKey;
 import com.walmartlabs.concord.db.AbstractDao;
 import com.walmartlabs.concord.db.MainDB;
+import com.walmartlabs.concord.server.sdk.rest.Resource;
 import com.walmartlabs.concord.server.security.Roles;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.apache.shiro.authz.UnauthorizedException;
 import org.jooq.Configuration;
-import org.sonatype.siesta.Resource;
 
 import javax.inject.Inject;
 import javax.validation.Valid;

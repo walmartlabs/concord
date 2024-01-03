@@ -23,9 +23,9 @@ package com.walmartlabs.concord.server.console;
 import com.walmartlabs.concord.sdk.Constants;
 import com.walmartlabs.concord.server.process.state.ProcessStateManager;
 import com.walmartlabs.concord.server.sdk.PartialProcessKey;
+import com.walmartlabs.concord.server.sdk.rest.Resource;
 import com.walmartlabs.concord.server.sdk.validation.Validate;
 import org.jboss.resteasy.plugins.providers.multipart.MultipartInput;
-import org.sonatype.siesta.Resource;
 
 import javax.inject.Inject;
 import javax.ws.rs.Consumes;

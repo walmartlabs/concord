@@ -22,7 +22,7 @@ package com.walmartlabs.concord.server.boot.resteasy;
 
 import com.google.inject.Binder;
 import com.google.inject.Module;
-import org.sonatype.siesta.Component;
+import com.walmartlabs.concord.server.sdk.rest.Component;
 
 import javax.servlet.ServletContextListener;
 

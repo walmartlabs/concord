@@ -23,12 +23,12 @@ package com.walmartlabs.concord.server.process;
 import com.walmartlabs.concord.server.org.project.KvManager;
 import com.walmartlabs.concord.server.process.queue.ProcessQueueManager;
 import com.walmartlabs.concord.server.sdk.PartialProcessKey;
+import com.walmartlabs.concord.server.sdk.rest.Resource;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.sonatype.siesta.Resource;
 
 import javax.inject.Inject;
 import javax.ws.rs.*;
