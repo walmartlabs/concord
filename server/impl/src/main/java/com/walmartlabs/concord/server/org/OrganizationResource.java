@@ -25,6 +25,7 @@ import com.walmartlabs.concord.server.GenericOperationResult;
 import com.walmartlabs.concord.server.OperationResult;
 import com.walmartlabs.concord.server.sdk.ConcordApplicationException;
 import com.walmartlabs.concord.server.sdk.rest.Resource;
+import com.walmartlabs.concord.server.sdk.validation.Validate;
 import com.walmartlabs.concord.server.security.Roles;
 import com.walmartlabs.concord.server.security.UserPrincipal;
 import io.swagger.v3.oas.annotations.Operation;
@@ -54,6 +55,7 @@ public class OrganizationResource implements Resource {
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
+    @Validate
     @Operation(description = "Create or update an organization", operationId = "createOrUpdateOrg")
     public CreateOrganizationResponse createOrUpdate(@Valid OrganizationEntry entry) {
         OrganizationOperationResult result = orgManager.createOrUpdate(entry);
