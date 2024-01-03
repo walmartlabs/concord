@@ -20,11 +20,8 @@ package com.walmartlabs.concord.server;
  * =====
  */
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.inject.Binder;
 import com.google.inject.Module;
-import com.google.inject.name.Names;
-import com.walmartlabs.concord.common.ObjectMapperProvider;
 import com.walmartlabs.concord.server.boot.*;
 import com.walmartlabs.concord.server.boot.filters.*;
 import com.walmartlabs.concord.server.boot.resteasy.ResteasyModule;
@@ -47,11 +44,6 @@ public class ApiServerModule implements Module {
 
     @Override
     public void configure(Binder binder) {
-        // Jackson
-
-        binder.bind(ObjectMapper.class).toProvider(ObjectMapperProvider.class).in(SINGLETON);
-        binder.bind(ObjectMapper.class).annotatedWith(Names.named("siesta")).toProvider(ObjectMapperProvider.class).in(SINGLETON);
-
         // Jetty
 
         binder.bind(HttpServer.class).in(SINGLETON);
