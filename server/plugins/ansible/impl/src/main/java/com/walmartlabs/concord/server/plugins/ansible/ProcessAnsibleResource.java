@@ -33,12 +33,12 @@ import com.walmartlabs.concord.server.plugins.ansible.jooq.tables.AnsibleTaskSta
 import com.walmartlabs.concord.server.sdk.ProcessKey;
 import com.walmartlabs.concord.server.sdk.ProcessKeyCache;
 import com.walmartlabs.concord.server.sdk.metrics.WithTimer;
+import com.walmartlabs.concord.server.sdk.rest.Resource;
 import com.walmartlabs.concord.server.sdk.validation.ValidationErrorsException;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.immutables.value.Value;
 import org.jooq.*;
-import org.sonatype.siesta.Resource;
 
 import javax.annotation.Nullable;
 import javax.inject.Inject;
