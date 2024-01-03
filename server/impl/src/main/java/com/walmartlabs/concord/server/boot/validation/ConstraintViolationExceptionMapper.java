@@ -30,6 +30,8 @@
  */
 package com.walmartlabs.concord.server.boot.validation;
 
+import com.walmartlabs.concord.server.sdk.validation.ValidationErrorXO;
+
 import javax.validation.ConstraintViolation;
 import javax.validation.ConstraintViolationException;
 import javax.validation.ElementKind;

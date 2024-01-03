@@ -21,10 +21,10 @@ package com.walmartlabs.concord.server.plugins.noderoster;
  */
 
 import com.walmartlabs.concord.server.plugins.noderoster.dao.ArtifactsDao;
+import com.walmartlabs.concord.server.sdk.validation.ValidationErrorsException;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.sonatype.siesta.Resource;
-import org.sonatype.siesta.ValidationErrorsException;
 
 import javax.inject.Inject;
 import javax.inject.Named;
