@@ -98,10 +98,6 @@
             <artifactId>bpm-engine-impl</artifactId>
         </dependency>
         <dependency>
-            <groupId>io.takari.siesta</groupId>
-            <artifactId>siesta-api</artifactId>
-        </dependency>
-        <dependency>
             <groupId>org.jboss.resteasy</groupId>
             <artifactId>resteasy-guice</artifactId>
         </dependency>
