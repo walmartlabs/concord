@@ -21,11 +21,11 @@ package com.walmartlabs.concord.server;
  */
 
 import com.google.inject.Binder;
+import com.walmartlabs.concord.server.boot.resteasy.ExceptionMapperSupport;
 import com.walmartlabs.concord.server.sdk.BackgroundTask;
 import com.walmartlabs.concord.server.sdk.ScheduledTask;
 import org.eclipse.jetty.servlet.ServletHolder;
 import org.sonatype.siesta.Component;
-import org.sonatype.siesta.ExceptionMapperSupport;
 import org.sonatype.siesta.Resource;
 
 import javax.servlet.Filter;
