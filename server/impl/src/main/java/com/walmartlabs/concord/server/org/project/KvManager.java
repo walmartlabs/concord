@@ -23,8 +23,8 @@ package com.walmartlabs.concord.server.org.project;
 import com.walmartlabs.concord.policyengine.CheckResult;
 import com.walmartlabs.concord.policyengine.KvRule;
 import com.walmartlabs.concord.policyengine.PolicyEngine;
-import com.walmartlabs.concord.server.boot.validation.ValidationErrorsException;
 import com.walmartlabs.concord.server.policy.PolicyManager;
+import com.walmartlabs.concord.server.sdk.validation.ValidationErrorsException;
 import com.walmartlabs.concord.server.security.UserPrincipal;
 
 import javax.inject.Inject;

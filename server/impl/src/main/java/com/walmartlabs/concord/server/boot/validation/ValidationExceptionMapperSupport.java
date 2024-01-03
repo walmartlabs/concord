@@ -32,6 +32,7 @@ package com.walmartlabs.concord.server.boot.validation;
  */
 
 import com.walmartlabs.concord.server.boot.resteasy.ExceptionMapperSupport;
+import com.walmartlabs.concord.server.sdk.validation.ValidationErrorXO;
 
 import javax.ws.rs.core.*;
 import javax.ws.rs.core.Response.ResponseBuilder;
