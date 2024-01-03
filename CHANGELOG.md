@@ -12,7 +12,9 @@
 - project: drop siesta-server dependency
 ([#826](https://github.com/walmartlabs/concord/pull/826));
 - resource-task: writeYaml: do not split YAML into multiple lines
-([#854](https://github.com/walmartlabs/concord/pull/854)).
+([#854](https://github.com/walmartlabs/concord/pull/854));
+- concord-server: logout any session on login failure
+([#858](https://github.com/walmartlabs/concord/pull/858)).
 
 
 
