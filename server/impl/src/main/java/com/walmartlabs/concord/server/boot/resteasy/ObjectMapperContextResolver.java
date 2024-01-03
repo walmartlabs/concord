@@ -1,17 +1,17 @@
-package com.walmartlabs.concord.server.org.secret;
+package com.walmartlabs.concord.server.boot.resteasy;
 
 /*-
  * *****
  * Concord
  * -----
- * Copyright (C) 2017 - 2018 Walmart Inc.
+ * Copyright (C) 2017 - 2023 Walmart Inc.
  * -----
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -20,21 +20,26 @@ package com.walmartlabs.concord.server.org.secret;
  * =====
  */
 
-import com.walmartlabs.concord.server.boot.resteasy.ExceptionMapperSupport;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.walmartlabs.concord.common.ObjectMapperProvider;
+import org.sonatype.siesta.Component;
 
-import javax.ws.rs.core.Context;
-import javax.ws.rs.core.HttpHeaders;
-import javax.ws.rs.core.Response;
+import javax.inject.Inject;
+import javax.ws.rs.ext.ContextResolver;
 import javax.ws.rs.ext.Provider;
 
 @Provider
-public class SecretExceptionMapper extends ExceptionMapperSupport<SecretException> {
+public class ObjectMapperContextResolver implements ContextResolver<ObjectMapper>, Component {
 
-    @Context
-    HttpHeaders headers;
+    private final ObjectMapperProvider delegate;
+
+    @Inject
+    public ObjectMapperContextResolver(ObjectMapperProvider delegate) {
+        this.delegate = delegate;
+    }
 
     @Override
-    protected Response convert(SecretException e) {
-        return Response.status(Response.Status.BAD_REQUEST).entity(e.getMessage()).build();
+    public ObjectMapper getContext(Class<?> type) {
+        return delegate.get();
     }
 }

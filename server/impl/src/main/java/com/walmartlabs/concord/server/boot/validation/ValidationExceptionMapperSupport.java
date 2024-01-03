@@ -31,13 +31,14 @@ package com.walmartlabs.concord.server.boot.validation;
  * =====
  */
 
-import org.sonatype.siesta.ExceptionMapperSupport;
-import org.sonatype.siesta.ValidationErrorXO;
+import com.walmartlabs.concord.server.boot.resteasy.ExceptionMapperSupport;
 
 import javax.ws.rs.core.*;
+import javax.ws.rs.core.Response.ResponseBuilder;
 import javax.ws.rs.core.Response.Status;
 import java.util.List;
 
+import static java.util.Objects.requireNonNull;
 import static org.sonatype.siesta.MediaTypes.VND_VALIDATION_ERRORS_V1_JSON_TYPE;
 import static org.sonatype.siesta.MediaTypes.VND_VALIDATION_ERRORS_V1_XML_TYPE;
 
@@ -56,16 +57,16 @@ public abstract class ValidationExceptionMapperSupport<E extends Throwable> exte
     }
 
     @Override
-    protected Response convert(final E exception, final String id) {
-        final Response.ResponseBuilder builder = Response.status(getStatus(exception));
+    protected Response convert(E exception) {
+        ResponseBuilder builder = Response.status(getStatus(exception));
 
-        final List<ValidationErrorXO> errors = getValidationErrors(exception);
+        List<ValidationErrorXO> errors = getValidationErrors(exception);
         if (errors != null && !errors.isEmpty()) {
-            final Variant variant = getRequest().selectVariant(variants);
+            Variant variant = getRequest().selectVariant(variants);
             if (variant != null) {
                 builder.type(variant.getMediaType())
                         .entity(
-                                new GenericEntity<List<ValidationErrorXO>>(errors) {
+                                new GenericEntity<>(errors) {
                                     @Override
                                     public String toString() {
                                         return getEntity().toString();
@@ -78,26 +79,20 @@ public abstract class ValidationExceptionMapperSupport<E extends Throwable> exte
         return builder.build();
     }
 
-    protected Status getStatus(final E exception) {
+    protected Status getStatus(E exception) {
         return Status.BAD_REQUEST;
     }
 
-    protected abstract List<ValidationErrorXO> getValidationErrors(final E exception);
+    protected abstract List<ValidationErrorXO> getValidationErrors(E exception);
 
     private Request request;
 
     @Context
-    public void setRequest(final Request request) {
-        if (request == null) {
-            throw new NullPointerException();
-        }
-        this.request = request;
+    public void setRequest(Request request) {
+        this.request = requireNonNull(request);
     }
 
     protected Request getRequest() {
-        if (request == null) {
-            throw new IllegalStateException();
-        }
-        return request;
+        return requireNonNull(request);
     }
 }
