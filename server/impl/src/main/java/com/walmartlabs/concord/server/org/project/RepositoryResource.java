@@ -101,6 +101,7 @@ public class RepositoryResource implements Resource {
     @Path("/{orgName}/project/{projectName}/repository")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
+    @Validate
     @Operation(description = "Creates a new repository or updates an existing one", operationId = "createOrUpdateRepository")
     public GenericOperationResult createOrUpdate(@PathParam("orgName") @ConcordKey String orgName,
                                                  @PathParam("projectName") @ConcordKey String projectName,
