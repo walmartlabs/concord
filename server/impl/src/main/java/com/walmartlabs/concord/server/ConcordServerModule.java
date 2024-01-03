@@ -20,9 +20,11 @@ package com.walmartlabs.concord.server;
  * =====
  */
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.inject.Binder;
 import com.google.inject.Module;
 import com.typesafe.config.Config;
+import com.walmartlabs.concord.common.ObjectMapperProvider;
 import com.walmartlabs.concord.db.DatabaseModule;
 import com.walmartlabs.concord.dependencymanager.DependencyManagerConfiguration;
 import com.walmartlabs.concord.server.agent.AgentModule;
@@ -69,6 +71,8 @@ public class ConcordServerModule implements Module {
 
     @Override
     public void configure(Binder binder) {
+        binder.bind(ObjectMapper.class).toProvider(ObjectMapperProvider.class);
+
         binder.install(new ConfigurationModule(config));
         binder.install(new MetricModule());
 
