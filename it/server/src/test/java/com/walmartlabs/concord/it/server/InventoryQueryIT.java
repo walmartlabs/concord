@@ -95,7 +95,7 @@ public class InventoryQueryIT extends AbstractServerIT {
 
         requestBuilder.header("Content-Type", contentType);
         String acceptHeaderValue = "application/json";
-        acceptHeaderValue += ",application/vnd.siesta-validation-errors-v1+json";
+        acceptHeaderValue += ",application/vnd.concord-validation-errors-v1+json";
         requestBuilder.header("Accept", acceptHeaderValue);
         requestBuilder.method("POST", HttpRequest.BodyPublishers.ofString(data));
 
