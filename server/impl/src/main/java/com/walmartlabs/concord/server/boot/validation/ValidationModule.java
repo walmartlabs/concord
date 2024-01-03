@@ -24,11 +24,11 @@ import com.google.inject.Binder;
 import com.google.inject.Module;
 import com.google.inject.Provides;
 import com.google.inject.matcher.Matchers;
+import com.walmartlabs.concord.server.sdk.validation.Validate;
 import org.aopalliance.intercept.MethodInterceptor;
 import org.hibernate.validator.HibernateValidator;
 import org.hibernate.validator.spi.properties.ConstrainableExecutable;
 import org.hibernate.validator.spi.properties.GetterPropertySelectionStrategy;
-import org.sonatype.siesta.Validate;
 
 import javax.inject.Singleton;
 import javax.validation.Validation;

@@ -28,11 +28,11 @@ import com.walmartlabs.concord.server.OperationResult;
 import com.walmartlabs.concord.server.org.*;
 import com.walmartlabs.concord.server.org.team.TeamDao;
 import com.walmartlabs.concord.server.sdk.ConcordApplicationException;
+import com.walmartlabs.concord.server.sdk.validation.Validate;
 import com.walmartlabs.concord.server.sdk.validation.ValidationErrorsException;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.sonatype.siesta.Resource;
-import org.sonatype.siesta.Validate;
 
 import javax.inject.Inject;
 import javax.validation.Valid;
