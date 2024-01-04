@@ -23,6 +23,7 @@ package com.walmartlabs.concord.server.org;
 import com.walmartlabs.concord.common.validation.ConcordKey;
 import com.walmartlabs.concord.sdk.Constants;
 import com.walmartlabs.concord.server.OffsetDateTimeParam;
+import com.walmartlabs.concord.server.boot.validation.ValidationErrorsException;
 import com.walmartlabs.concord.server.console.ResponseTemplates;
 import com.walmartlabs.concord.server.org.project.ProjectDao;
 import com.walmartlabs.concord.server.org.project.RepositoryDao;
@@ -45,7 +46,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.sonatype.siesta.Resource;
 import org.sonatype.siesta.Validate;
-import org.sonatype.siesta.ValidationErrorsException;
 
 import javax.inject.Inject;
 import javax.servlet.http.HttpServletRequest;
@@ -345,7 +345,7 @@ public class ProjectProcessResource implements Resource {
 
     private Response processFinished(PartialProcessKey processKey) {
         return responseTemplates.processFinished(Response.ok(),
-                Collections.singletonMap("instanceId", processKey.getInstanceId()))
+                        Collections.singletonMap("instanceId", processKey.getInstanceId()))
                 .build();
     }
 

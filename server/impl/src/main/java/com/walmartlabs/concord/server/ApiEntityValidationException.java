@@ -20,7 +20,7 @@ package com.walmartlabs.concord.server;
  * =====
  */
 
-import org.sonatype.siesta.ValidationErrorsException;
+import com.walmartlabs.concord.server.boot.validation.ValidationErrorsException;
 
 public class ApiEntityValidationException extends ValidationErrorsException {
 

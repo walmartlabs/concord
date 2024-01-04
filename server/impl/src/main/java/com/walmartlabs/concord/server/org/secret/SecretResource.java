@@ -25,6 +25,7 @@ import com.walmartlabs.concord.sdk.Constants;
 import com.walmartlabs.concord.server.GenericOperationResult;
 import com.walmartlabs.concord.server.MultipartUtils;
 import com.walmartlabs.concord.server.OperationResult;
+import com.walmartlabs.concord.server.boot.validation.ValidationErrorsException;
 import com.walmartlabs.concord.server.org.*;
 import com.walmartlabs.concord.server.org.project.ProjectDao;
 import com.walmartlabs.concord.server.org.secret.SecretManager.DecryptedKeyPair;
@@ -45,7 +46,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.sonatype.siesta.Resource;
 import org.sonatype.siesta.Validate;
-import org.sonatype.siesta.ValidationErrorsException;
 
 import javax.inject.Inject;
 import javax.validation.Valid;
@@ -113,7 +113,7 @@ public class SecretResource implements Resource {
             String storePwd = SecretResourceUtils.getOrGenerateStorePassword(input, generatePwd);
             SecretVisibility visibility = SecretResourceUtils.getVisibility(input);
 
-            Set<UUID> projectIds =  getProjectIds(
+            Set<UUID> projectIds = getProjectIds(
                     org.getId(),
                     MultipartUtils.getUUIDList(input, Constants.Multipart.PROJECT_IDS),
                     MultipartUtils.getStringList(input, Constants.Multipart.PROJECT_NAMES),
@@ -359,8 +359,9 @@ public class SecretResource implements Resource {
         }
         return id;
     }
+
     private UUID getProject(UUID orgId, UUID id, String name) {
-        if (id == null && ( name != null && !name.trim().isEmpty()) ) {
+        if (id == null && (name != null && !name.trim().isEmpty())) {
             id = projectDao.getId(orgId, name);
             if (id == null) {
                 throw new ValidationErrorsException("Project not found: " + name);

@@ -21,8 +21,8 @@ package com.walmartlabs.concord.cli;
  */
 
 import com.walmartlabs.concord.common.IOUtils;
-import com.walmartlabs.concord.common.TemporaryPath;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 import picocli.CommandLine;
 
 import java.net.URI;
@@ -33,6 +33,9 @@ import java.util.*;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 class RunTest extends AbstractTest {
+
+    @TempDir
+    private Path tempDir;
 
     @Test
     void runTest() throws Exception {
@@ -82,6 +85,13 @@ class RunTest extends AbstractTest {
     }
 
     @Test
+    void testCustomDefaultTaskVars() throws Exception {
+        int exitCode = run("defaultTaskVars", List.of("--default-task-vars", tempDir.resolve("defaultTaskVars.json").toString()));
+        assertExitCode(0, exitCode);
+        assertLog(".*Unknown action: 'customInvalidAction'. Available actions.*");
+    }
+
+    @Test
     void testProcessProjectInfo() throws Exception {
         Map<String, Object> extraVars = new HashMap<>();
         extraVars.put("processInfo.sessionToken", "test-token");
@@ -103,31 +113,29 @@ class RunTest extends AbstractTest {
         assertEquals(expected, current, () -> "out:\n" + stdOut() + "\n\n" + "err:\n" + stdErr());
     }
 
-    private static int run(String payload, List<String> args) throws Exception {
+    private int run(String payload, List<String> args) throws Exception {
         return run(payload, args, null);
     }
 
-    private static int run(String payload, List<String> args, String defaultCfg) throws Exception {
+    private int run(String payload, List<String> args, String defaultCfg) throws Exception {
         URI uri = RunTest.class.getResource(payload).toURI();
         Path source = Paths.get(uri);
 
-        try (TemporaryPath dst = IOUtils.tempDir("cli-tests")) {
-            IOUtils.copy(source, dst.path());
+        IOUtils.copy(source, tempDir);
 
-            App app = new App();
-            CommandLine cmd = new CommandLine(app);
+        App app = new App();
+        CommandLine cmd = new CommandLine(app);
 
-            List<String> effectiveArgs = new ArrayList<>();
-            effectiveArgs.add("run");
-            effectiveArgs.addAll(args);
-            effectiveArgs.add(dst.path().toString());
+        List<String> effectiveArgs = new ArrayList<>();
+        effectiveArgs.add("run");
+        effectiveArgs.addAll(args);
+        effectiveArgs.add(tempDir.toString());
 
-            if (defaultCfg != null) {
-                effectiveArgs.add("--default-cfg");
-                effectiveArgs.add(dst.path().resolve(defaultCfg).toString());
-            }
-
-            return cmd.execute(effectiveArgs.toArray(new String[0]));
+        if (defaultCfg != null) {
+            effectiveArgs.add("--default-cfg");
+            effectiveArgs.add(tempDir.resolve(defaultCfg).toString());
         }
+
+        return cmd.execute(effectiveArgs.toArray(new String[0]));
     }
 }

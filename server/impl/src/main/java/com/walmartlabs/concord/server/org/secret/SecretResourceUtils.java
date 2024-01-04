@@ -24,15 +24,16 @@ import com.walmartlabs.concord.common.validation.ConcordKey;
 import com.walmartlabs.concord.sdk.Constants;
 import com.walmartlabs.concord.server.MultipartUtils;
 import com.walmartlabs.concord.server.OperationResult;
+import com.walmartlabs.concord.server.boot.validation.ValidationErrorsException;
 import com.walmartlabs.concord.server.sdk.ConcordApplicationException;
 import org.jboss.resteasy.plugins.providers.multipart.MultipartInput;
-import org.sonatype.siesta.ValidationErrorsException;
 
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Response;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.*;
+import java.util.Set;
+import java.util.UUID;
 
 public final class SecretResourceUtils {
 

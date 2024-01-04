@@ -31,6 +31,7 @@ import org.apache.shiro.authc.AuthenticationToken;
 import org.apache.shiro.authc.UsernamePasswordToken;
 import org.apache.shiro.subject.PrincipalCollection;
 import org.apache.shiro.subject.Subject;
+import org.apache.shiro.util.ThreadContext;
 import org.apache.shiro.web.filter.authc.AuthenticatingFilter;
 import org.apache.shiro.web.util.WebUtils;
 import org.slf4j.Logger;
@@ -141,8 +142,8 @@ public class ConcordAuthenticatingFilter extends AuthenticatingFilter {
         log.warn("onLoginFailure ['{}'] -> login failed ({}): {}", token, request.getRemoteAddr(), e.getMessage());
         failedAuths.mark();
 
-        Subject s = SecurityUtils.getSubject();
-        if (s.isRemembered()) {
+        Subject s = ThreadContext.getSubject();
+        if (s != null) {
             s.logout();
         }
 

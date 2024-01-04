@@ -31,6 +31,7 @@ import com.walmartlabs.concord.sdk.Constants;
 import com.walmartlabs.concord.server.HttpUtils;
 import com.walmartlabs.concord.server.MultipartUtils;
 import com.walmartlabs.concord.server.OffsetDateTimeParam;
+import com.walmartlabs.concord.server.boot.validation.ValidationErrorsException;
 import com.walmartlabs.concord.server.cfg.ProcessConfiguration;
 import com.walmartlabs.concord.server.cfg.SecretStoreConfiguration;
 import com.walmartlabs.concord.server.events.ExpressionUtils;
@@ -76,7 +77,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.sonatype.siesta.Resource;
 import org.sonatype.siesta.Validate;
-import org.sonatype.siesta.ValidationErrorsException;
 
 import javax.inject.Inject;
 import javax.servlet.http.HttpServletRequest;

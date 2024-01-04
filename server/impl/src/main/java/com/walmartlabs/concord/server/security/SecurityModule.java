@@ -34,6 +34,7 @@ import org.apache.shiro.realm.ldap.LdapContextFactory;
 
 import static com.google.inject.Scopes.SINGLETON;
 import static com.google.inject.multibindings.Multibinder.newSetBinder;
+import static com.walmartlabs.concord.server.Utils.bindExceptionMapper;
 import static com.walmartlabs.concord.server.Utils.bindSingletonScheduledTask;
 
 public class SecurityModule implements Module {
@@ -56,5 +57,8 @@ public class SecurityModule implements Module {
 
         binder.bind(LdapUserInfoProvider.class).in(SINGLETON);
         newSetBinder(binder, UserInfoProvider.class).addBinding().to(LdapUserInfoProvider.class);
+
+        bindExceptionMapper(binder, UnauthorizedExceptionMapper.class);
+        bindExceptionMapper(binder, UnauthenticatedExceptionMapper.class);
     }
 }

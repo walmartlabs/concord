@@ -39,7 +39,7 @@ import java.util.List;
 import java.util.UUID;
 
 @Path("/api/v1/org")
-@Tag(name ="Organizations")
+@Tag(name = "Organizations")
 public class OrganizationResource implements Resource {
 
     private final OrganizationDao orgDao;

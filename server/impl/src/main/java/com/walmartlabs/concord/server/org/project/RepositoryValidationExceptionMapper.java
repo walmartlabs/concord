@@ -20,8 +20,8 @@ package com.walmartlabs.concord.server.org.project;
  * =====
  */
 
+import com.walmartlabs.concord.server.boot.resteasy.ExceptionMapperSupport;
 import com.walmartlabs.concord.server.process.ErrorMessage;
-import org.sonatype.siesta.ExceptionMapperSupport;
 
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.HttpHeaders;
@@ -40,7 +40,7 @@ public class RepositoryValidationExceptionMapper extends ExceptionMapperSupport<
     HttpHeaders headers;
 
     @Override
-    protected Response convert(RepositoryValidationException e, String id) {
+    protected Response convert(RepositoryValidationException e) {
         String details = getDetails(e.getCause());
 
         String stacktrace = null;

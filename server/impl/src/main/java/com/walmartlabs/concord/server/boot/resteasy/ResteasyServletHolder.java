@@ -1,10 +1,10 @@
-package com.walmartlabs.concord.server.boot.servlets;
+package com.walmartlabs.concord.server.boot.resteasy;
 
 /*-
  * *****
  * Concord
  * -----
- * Copyright (C) 2017 - 2020 Walmart Inc.
+ * Copyright (C) 2017 - 2023 Walmart Inc.
  * -----
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,25 +21,17 @@ package com.walmartlabs.concord.server.boot.servlets;
  */
 
 import org.eclipse.jetty.servlet.ServletHolder;
-import org.sonatype.siesta.server.SiestaServlet;
+import org.jboss.resteasy.plugins.server.servlet.HttpServletDispatcher;
 
-import javax.inject.Inject;
 import javax.servlet.annotation.WebServlet;
 
-/**
- * Binds {@link SiestaServlet} to Concord's API paths.
- */
 @WebServlet({
         "/api/*",
         "/events/github/*"
 })
-public class SiestaServletHolder extends ServletHolder {
+public class ResteasyServletHolder extends ServletHolder {
 
-    @Inject
-    public SiestaServletHolder(SiestaServlet siestaServlet) {
-        super(siestaServlet);
-
-        // necessary to support multiple API roots
-        setInitParameter("resteasy.servlet.mapping.prefix", "/");
+    public ResteasyServletHolder() {
+        super(HttpServletDispatcher.class);
     }
 }

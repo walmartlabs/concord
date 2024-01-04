@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 
     <modelVersion>4.0.0</modelVersion>
 
@@ -101,22 +102,8 @@
             <artifactId>siesta-api</artifactId>
         </dependency>
         <dependency>
-            <groupId>io.takari.siesta</groupId>
-            <artifactId>siesta-server</artifactId>
-            <exclusions>
-                <exclusion>
-                    <groupId>javax.validation</groupId>
-                    <artifactId>validation-api</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>org.hibernate</groupId>
-                    <artifactId>hibernate-validator</artifactId>
-                </exclusion>
-            </exclusions>
-        </dependency>
-        <dependency>
-            <groupId>io.takari.siesta</groupId>
-            <artifactId>siesta-jackson2</artifactId>
+            <groupId>org.jboss.resteasy</groupId>
+            <artifactId>resteasy-guice</artifactId>
         </dependency>
         <dependency>
             <groupId>org.jboss.resteasy</groupId>
@@ -395,7 +382,8 @@
                     <resourcePackages>
                         <package>com.walmartlabs.concord.server</package>
                     </resourcePackages>
-                    <configurationFilePath>${project.build.directory}/classes/openapi-server-config.yaml</configurationFilePath>
+                    <configurationFilePath>${project.build.directory}/classes/openapi-server-config.yaml
+                    </configurationFilePath>
                 </configuration>
                 <executions>
                     <execution>

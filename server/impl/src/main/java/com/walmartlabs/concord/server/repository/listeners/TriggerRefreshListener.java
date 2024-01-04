@@ -21,13 +21,13 @@ package com.walmartlabs.concord.server.repository.listeners;
  */
 
 import com.walmartlabs.concord.process.loader.model.ProcessDefinition;
+import com.walmartlabs.concord.server.boot.validation.ValidationErrorsException;
 import com.walmartlabs.concord.server.org.project.ProjectValidator;
 import com.walmartlabs.concord.server.org.project.RepositoryEntry;
 import com.walmartlabs.concord.server.org.triggers.TriggerManager;
 import org.jooq.DSLContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.sonatype.siesta.ValidationErrorsException;
 
 import javax.inject.Inject;
 

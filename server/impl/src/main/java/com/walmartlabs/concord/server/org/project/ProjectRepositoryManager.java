@@ -24,6 +24,7 @@ import com.walmartlabs.concord.process.loader.model.ProcessDefinition;
 import com.walmartlabs.concord.server.audit.AuditAction;
 import com.walmartlabs.concord.server.audit.AuditLog;
 import com.walmartlabs.concord.server.audit.AuditObject;
+import com.walmartlabs.concord.server.boot.validation.ValidationErrorsException;
 import com.walmartlabs.concord.server.jooq.Tables;
 import com.walmartlabs.concord.server.org.ResourceAccessLevel;
 import com.walmartlabs.concord.server.org.secret.SecretEntry;
@@ -36,7 +37,6 @@ import com.walmartlabs.concord.server.repository.RepositoryRefresher;
 import com.walmartlabs.concord.server.sdk.ConcordApplicationException;
 import org.immutables.value.Value;
 import org.jooq.DSLContext;
-import org.sonatype.siesta.ValidationErrorsException;
 
 import javax.annotation.Nullable;
 import javax.inject.Inject;
