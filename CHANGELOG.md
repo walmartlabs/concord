@@ -16,6 +16,11 @@
 - concord-server: logout any session on login failure
 ([#858](https://github.com/walmartlabs/concord/pull/858)).
 
+### Breaking
+
+- project: drop siesta-api dependency
+([#857](https://github.com/walmartlabs/concord/pull/857)).
+
 
 
 ## [2.6.0] - 2023-12-28
