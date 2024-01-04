@@ -31,7 +31,7 @@ import com.walmartlabs.concord.server.sdk.ConcordApplicationException;
 import com.walmartlabs.concord.server.sdk.metrics.WithTimer;
 import com.walmartlabs.concord.server.security.UserPrincipal;
 import org.jooq.*;
-import org.sonatype.siesta.Resource;
+import com.walmartlabs.concord.server.sdk.rest.Resource;
 
 import javax.inject.Inject;
 import javax.ws.rs.*;

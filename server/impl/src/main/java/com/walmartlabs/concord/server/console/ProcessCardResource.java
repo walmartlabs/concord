@@ -33,12 +33,12 @@ import com.walmartlabs.concord.server.jooq.tables.records.UiProcessCardsRecord;
 import com.walmartlabs.concord.server.org.OrganizationDao;
 import com.walmartlabs.concord.server.org.project.ProjectDao;
 import com.walmartlabs.concord.server.org.project.RepositoryDao;
+import com.walmartlabs.concord.server.sdk.validation.ValidationErrorsException;
 import org.jboss.resteasy.plugins.providers.multipart.MultipartInput;
 import org.jooq.Configuration;
 import org.jooq.DSLContext;
 import org.jooq.UpdateSetFirstStep;
-import org.sonatype.siesta.Resource;
-import org.sonatype.siesta.ValidationErrorsException;
+import com.walmartlabs.concord.server.sdk.rest.Resource;
 
 import javax.inject.Inject;
 import javax.inject.Named;
