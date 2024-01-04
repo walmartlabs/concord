@@ -9,6 +9,8 @@
 
 ### Changed
 
+- runtime-v2: resume event to json serialization fix
+([#860](https://github.com/walmartlabs/concord/pull/860));
 - project: drop siesta-server dependency
 ([#826](https://github.com/walmartlabs/concord/pull/826));
 - resource-task: writeYaml: do not split YAML into multiple lines
