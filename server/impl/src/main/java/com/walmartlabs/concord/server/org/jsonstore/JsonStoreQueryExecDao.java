@@ -24,7 +24,7 @@ import com.fasterxml.jackson.core.JsonParseException;
 import com.walmartlabs.concord.db.AbstractDao;
 import com.walmartlabs.concord.db.JsonStorageDB;
 import com.walmartlabs.concord.server.ConcordObjectMapper;
-import com.walmartlabs.concord.server.boot.validation.ValidationErrorsException;
+import com.walmartlabs.concord.server.sdk.validation.ValidationErrorsException;
 import org.jooq.Configuration;
 import org.jooq.DSLContext;
 import org.jooq.QueryPart;

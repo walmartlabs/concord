@@ -20,11 +20,14 @@ package com.walmartlabs.concord.runtime.v2.runner.context;
  * =====
  */
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.walmartlabs.concord.runtime.v2.sdk.ResumeEvent;
 
 import java.io.Serializable;
 import java.util.Map;
 
+@JsonPropertyOrder({"eventName", "state"})
 public class ResumeEventImpl implements ResumeEvent {
 
     // for backward compatibility (java8 concord 1.92.0 version)
@@ -40,11 +43,13 @@ public class ResumeEventImpl implements ResumeEvent {
     }
 
     @Override
+    @JsonProperty("eventName")
     public String eventName() {
         return eventName;
     }
 
     @Override
+    @JsonProperty("state")
     public Map<String, Serializable> state() {
         return state;
     }

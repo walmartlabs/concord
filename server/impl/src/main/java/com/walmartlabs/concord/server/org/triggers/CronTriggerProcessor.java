@@ -22,7 +22,7 @@ package com.walmartlabs.concord.server.org.triggers;
 
 import com.walmartlabs.concord.process.loader.model.Trigger;
 import com.walmartlabs.concord.sdk.Constants;
-import com.walmartlabs.concord.server.boot.validation.ValidationErrorsException;
+import com.walmartlabs.concord.server.sdk.validation.ValidationErrorsException;
 import org.jooq.DSLContext;
 
 import javax.inject.Inject;

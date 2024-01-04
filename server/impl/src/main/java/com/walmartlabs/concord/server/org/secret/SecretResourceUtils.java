@@ -24,8 +24,8 @@ import com.walmartlabs.concord.common.validation.ConcordKey;
 import com.walmartlabs.concord.sdk.Constants;
 import com.walmartlabs.concord.server.MultipartUtils;
 import com.walmartlabs.concord.server.OperationResult;
-import com.walmartlabs.concord.server.boot.validation.ValidationErrorsException;
 import com.walmartlabs.concord.server.sdk.ConcordApplicationException;
+import com.walmartlabs.concord.server.sdk.validation.ValidationErrorsException;
 import org.jboss.resteasy.plugins.providers.multipart.MultipartInput;
 
 import javax.ws.rs.WebApplicationException;

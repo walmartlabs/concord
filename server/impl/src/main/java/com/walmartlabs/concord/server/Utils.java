@@ -24,9 +24,9 @@ import com.google.inject.Binder;
 import com.walmartlabs.concord.server.boot.resteasy.ExceptionMapperSupport;
 import com.walmartlabs.concord.server.sdk.BackgroundTask;
 import com.walmartlabs.concord.server.sdk.ScheduledTask;
+import com.walmartlabs.concord.server.sdk.rest.Component;
+import com.walmartlabs.concord.server.sdk.rest.Resource;
 import org.eclipse.jetty.servlet.ServletHolder;
-import org.sonatype.siesta.Component;
-import org.sonatype.siesta.Resource;
 
 import javax.servlet.Filter;
 import javax.ws.rs.ext.ExceptionMapper;

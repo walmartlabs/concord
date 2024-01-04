@@ -23,10 +23,10 @@ package com.walmartlabs.concord.server;
 import com.walmartlabs.concord.db.AbstractDao;
 import com.walmartlabs.concord.db.MainDB;
 import com.walmartlabs.concord.server.boot.BackgroundTasks;
+import com.walmartlabs.concord.server.sdk.rest.Resource;
 import com.walmartlabs.concord.server.task.TaskScheduler;
 import com.walmartlabs.concord.server.websocket.WebSocketChannelManager;
 import org.jooq.Configuration;
-import org.sonatype.siesta.Resource;
 
 import javax.inject.Inject;
 import javax.inject.Named;

@@ -22,10 +22,10 @@ package com.walmartlabs.concord.server.process.state;
 
 import com.walmartlabs.concord.db.AbstractDao;
 import com.walmartlabs.concord.db.MainDB;
-import com.walmartlabs.concord.server.boot.validation.ValidationErrorsException;
 import com.walmartlabs.concord.server.process.ImmutableProcessCheckpointEntry;
 import com.walmartlabs.concord.server.process.ProcessEntry.ProcessCheckpointEntry;
 import com.walmartlabs.concord.server.sdk.ProcessKey;
+import com.walmartlabs.concord.server.sdk.validation.ValidationErrorsException;
 import org.jooq.Configuration;
 import org.jooq.Record;
 

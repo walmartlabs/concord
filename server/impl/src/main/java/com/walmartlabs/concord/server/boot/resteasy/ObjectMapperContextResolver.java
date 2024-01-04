@@ -22,7 +22,7 @@ package com.walmartlabs.concord.server.boot.resteasy;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.walmartlabs.concord.common.ObjectMapperProvider;
-import org.sonatype.siesta.Component;
+import com.walmartlabs.concord.server.sdk.rest.Component;
 
 import javax.inject.Inject;
 import javax.ws.rs.ext.ContextResolver;
