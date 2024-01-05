@@ -25,12 +25,12 @@ import ca.ibodrov.concord.testcontainers.ContainerListener;
 import ca.ibodrov.concord.testcontainers.ContainerType;
 import ca.ibodrov.concord.testcontainers.junit5.ConcordRule;
 import com.github.tomakehurst.wiremock.client.WireMock;
-import com.github.tomakehurst.wiremock.extension.responsetemplating.ResponseTemplateTransformer;
 import com.github.tomakehurst.wiremock.junit5.WireMockExtension;
 import com.walmartlabs.concord.client2.*;
 import com.walmartlabs.concord.common.IOUtils;
 import com.walmartlabs.concord.sdk.Constants;
 import org.apache.commons.compress.archivers.zip.ZipArchiveOutputStream;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.testcontainers.Testcontainers;
@@ -51,13 +51,14 @@ import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMoc
 import static com.walmartlabs.concord.common.IOUtils.createTempFile;
 import static com.walmartlabs.concord.it.common.ITUtils.randomString;
 
+@Disabled("due to wiremock compatibility issues with jetty 12")
 public class TemplateIT extends AbstractTest {
 
     @RegisterExtension
     public static WireMockExtension rule = WireMockExtension.newInstance()
             .options(wireMockConfig()
                     .dynamicPort()
-                    .extensions(new ResponseTemplateTransformer(false)))
+                    .globalTemplating(true))
             .build();
 
     @RegisterExtension

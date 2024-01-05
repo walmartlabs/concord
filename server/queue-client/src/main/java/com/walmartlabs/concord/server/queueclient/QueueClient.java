@@ -23,12 +23,13 @@ package com.walmartlabs.concord.server.queueclient;
 import com.google.common.util.concurrent.SettableFuture;
 import com.walmartlabs.concord.server.queueclient.message.Message;
 import com.walmartlabs.concord.server.queueclient.message.MessageType;
+import org.eclipse.jetty.client.HttpClient;
+import org.eclipse.jetty.ee8.websocket.api.Session;
+import org.eclipse.jetty.ee8.websocket.api.WebSocketListener;
+import org.eclipse.jetty.ee8.websocket.api.WebSocketPingPongListener;
+import org.eclipse.jetty.ee8.websocket.client.ClientUpgradeRequest;
+import org.eclipse.jetty.ee8.websocket.client.WebSocketClient;
 import org.eclipse.jetty.util.ssl.SslContextFactory;
-import org.eclipse.jetty.websocket.api.Session;
-import org.eclipse.jetty.websocket.api.WebSocketListener;
-import org.eclipse.jetty.websocket.api.WebSocketPingPongListener;
-import org.eclipse.jetty.websocket.client.ClientUpgradeRequest;
-import org.eclipse.jetty.websocket.client.WebSocketClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -404,12 +405,15 @@ public class QueueClient {
     }
 
     private static WebSocketClient createWebSocketClient(long connectTimeout) {
-        SslContextFactory scf = new SslContextFactory();
+        SslContextFactory.Client scf = new SslContextFactory.Client();
         scf.setValidateCerts(false);
         scf.setValidatePeerCerts(false);
         scf.setTrustAll(true);
 
-        WebSocketClient c = new WebSocketClient(scf);
+        HttpClient httpClient = new HttpClient();
+        httpClient.setSslContextFactory(scf);
+
+        WebSocketClient c = new WebSocketClient(httpClient);
         c.setStopAtShutdown(false);
         c.setConnectTimeout(connectTimeout);
         return c;

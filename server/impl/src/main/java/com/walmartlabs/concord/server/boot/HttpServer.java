@@ -21,14 +21,16 @@ package com.walmartlabs.concord.server.boot;
  */
 
 import com.walmartlabs.concord.server.cfg.ServerConfiguration;
+import org.eclipse.jetty.ee8.nested.SessionHandler;
+import org.eclipse.jetty.ee8.servlet.FilterHolder;
+import org.eclipse.jetty.ee8.servlet.ServletContextHandler;
+import org.eclipse.jetty.ee8.servlet.ServletHolder;
+import org.eclipse.jetty.ee8.websocket.server.config.JettyWebSocketServletContainerInitializer;
+import org.eclipse.jetty.http.UriCompliance;
 import org.eclipse.jetty.jmx.MBeanContainer;
 import org.eclipse.jetty.server.*;
 import org.eclipse.jetty.server.handler.ContextHandlerCollection;
 import org.eclipse.jetty.server.handler.StatisticsHandler;
-import org.eclipse.jetty.server.session.SessionHandler;
-import org.eclipse.jetty.servlet.FilterHolder;
-import org.eclipse.jetty.servlet.ServletContextHandler;
-import org.eclipse.jetty.servlet.ServletHolder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -80,6 +82,10 @@ public class HttpServer {
         ServerConnector http = new ServerConnector(server, acceptors, selectors, new HttpConnectionFactory(httpCfg));
         http.setName("http");
         http.setPort(cfg.getPort());
+        // TODO remove once the '/' escaping is fixed in clients
+        http.getConnectionFactory(HttpConnectionFactory.class)
+                .getHttpConfiguration()
+                .setUriCompliance(UriCompliance.LEGACY);
         server.addConnector(http);
 
         // servlets, filters, etc...
@@ -164,6 +170,8 @@ public class HttpServer {
                 contextHandler.addFilter(holder, pathSpec, EnumSet.allOf(DispatcherType.class));
             }
         });
+
+        JettyWebSocketServletContainerInitializer.configure(contextHandler, null);
 
         ContextHandlerCollection contextHandlerCollection = new ContextHandlerCollection();
         contextHandlerCollection.addHandler(contextHandler);
