@@ -21,7 +21,7 @@
         <server.image>walmartlabs/concord-server</server.image>
         <prev.agent.image>walmartlabs/concord-agent:${prev.concord.version}</prev.agent.image>
 
-        <ryuk.image>quay.io/testcontainers/ryuk:0.2.3</ryuk.image>
+        <ryuk.image>testcontainers/ryuk:0.6.0</ryuk.image>
     </properties>
 
     <dependencies>
