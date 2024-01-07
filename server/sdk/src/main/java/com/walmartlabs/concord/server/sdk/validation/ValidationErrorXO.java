@@ -1,4 +1,4 @@
-package com.walmartlabs.concord.server.boot.validation;
+package com.walmartlabs.concord.server.sdk.validation;
 
 /*
  * Copyright (c) 2007-2014 Sonatype, Inc. All rights reserved.

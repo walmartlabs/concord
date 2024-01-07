@@ -29,10 +29,10 @@ import com.walmartlabs.concord.server.org.ResourceAccessLevel;
 import com.walmartlabs.concord.server.repository.RepositoryRefresher;
 import com.walmartlabs.concord.server.repository.RepositoryValidationResponse;
 import com.walmartlabs.concord.server.sdk.ConcordApplicationException;
+import com.walmartlabs.concord.server.sdk.rest.Resource;
+import com.walmartlabs.concord.server.sdk.validation.Validate;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import org.sonatype.siesta.Resource;
-import org.sonatype.siesta.Validate;
 
 import javax.inject.Inject;
 import javax.validation.Valid;
@@ -101,6 +101,7 @@ public class RepositoryResource implements Resource {
     @Path("/{orgName}/project/{projectName}/repository")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
+    @Validate
     @Operation(description = "Creates a new repository or updates an existing one", operationId = "createOrUpdateRepository")
     public GenericOperationResult createOrUpdate(@PathParam("orgName") @ConcordKey String orgName,
                                                  @PathParam("projectName") @ConcordKey String projectName,

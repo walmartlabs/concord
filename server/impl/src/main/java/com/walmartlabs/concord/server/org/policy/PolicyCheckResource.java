@@ -20,7 +20,6 @@ package com.walmartlabs.concord.server.org.policy;
  * =====
  */
 
-import com.walmartlabs.concord.server.boot.validation.ValidationErrorsException;
 import com.walmartlabs.concord.server.org.OrganizationEntry;
 import com.walmartlabs.concord.server.org.OrganizationManager;
 import com.walmartlabs.concord.server.org.project.ProjectEntry;
@@ -29,12 +28,13 @@ import com.walmartlabs.concord.server.policy.EntityAction;
 import com.walmartlabs.concord.server.policy.EntityType;
 import com.walmartlabs.concord.server.policy.PolicyManager;
 import com.walmartlabs.concord.server.policy.PolicyUtils;
+import com.walmartlabs.concord.server.sdk.rest.Resource;
+import com.walmartlabs.concord.server.sdk.validation.Validate;
+import com.walmartlabs.concord.server.sdk.validation.ValidationErrorsException;
 import com.walmartlabs.concord.server.security.UserPrincipal;
 import com.walmartlabs.concord.server.user.UserEntry;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import org.sonatype.siesta.Resource;
-import org.sonatype.siesta.Validate;
 
 import javax.inject.Inject;
 import javax.ws.rs.*;

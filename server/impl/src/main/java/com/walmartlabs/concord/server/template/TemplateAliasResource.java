@@ -23,12 +23,13 @@ package com.walmartlabs.concord.server.template;
 import com.walmartlabs.concord.common.validation.ConcordKey;
 import com.walmartlabs.concord.db.AbstractDao;
 import com.walmartlabs.concord.db.MainDB;
+import com.walmartlabs.concord.server.sdk.rest.Resource;
+import com.walmartlabs.concord.server.sdk.validation.Validate;
 import com.walmartlabs.concord.server.security.Roles;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.apache.shiro.authz.UnauthorizedException;
 import org.jooq.Configuration;
-import org.sonatype.siesta.Resource;
 
 import javax.inject.Inject;
 import javax.validation.Valid;
@@ -51,6 +52,7 @@ public class TemplateAliasResource extends AbstractDao implements Resource {
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
+    @Validate
     @Operation(description = "Create or update a template alias", operationId = "createOrUpdateTemplate")
     public TemplateAliasResponse createOrUpdate(@Valid TemplateAliasEntry request) {
         assertAdmin();

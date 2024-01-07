@@ -32,6 +32,7 @@ package com.walmartlabs.concord.server.boot.validation;
  */
 
 import com.walmartlabs.concord.server.boot.resteasy.ExceptionMapperSupport;
+import com.walmartlabs.concord.server.sdk.validation.ValidationErrorXO;
 
 import javax.ws.rs.core.*;
 import javax.ws.rs.core.Response.ResponseBuilder;
@@ -39,8 +40,6 @@ import javax.ws.rs.core.Response.Status;
 import java.util.List;
 
 import static java.util.Objects.requireNonNull;
-import static org.sonatype.siesta.MediaTypes.VND_VALIDATION_ERRORS_V1_JSON_TYPE;
-import static org.sonatype.siesta.MediaTypes.VND_VALIDATION_ERRORS_V1_XML_TYPE;
 
 /**
  * Based on the original {@link org.sonatype.siesta.server.validation.ValidationExceptionMapperSupport}.
@@ -51,8 +50,7 @@ public abstract class ValidationExceptionMapperSupport<E extends Throwable> exte
 
     public ValidationExceptionMapperSupport() {
         this.variants = Variant.mediaTypes(
-                VND_VALIDATION_ERRORS_V1_JSON_TYPE,
-                VND_VALIDATION_ERRORS_V1_XML_TYPE
+                new MediaType("application", "vnd.concord-validation-errors-v1+json")
         ).add().build();
     }
 

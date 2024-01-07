@@ -23,12 +23,13 @@ package com.walmartlabs.concord.server.org.jsonstore;
 import com.walmartlabs.concord.common.validation.ConcordKey;
 import com.walmartlabs.concord.server.GenericOperationResult;
 import com.walmartlabs.concord.server.OperationResult;
-import com.walmartlabs.concord.server.boot.validation.ValidationErrorsException;
 import com.walmartlabs.concord.server.sdk.ConcordApplicationException;
 import com.walmartlabs.concord.server.sdk.metrics.WithTimer;
+import com.walmartlabs.concord.server.sdk.rest.Resource;
+import com.walmartlabs.concord.server.sdk.validation.Validate;
+import com.walmartlabs.concord.server.sdk.validation.ValidationErrorsException;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import org.sonatype.siesta.Resource;
 
 import javax.inject.Inject;
 import javax.validation.Valid;
@@ -79,6 +80,7 @@ public class JsonStoreQueryResource implements Resource {
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     @Path("/{orgName}/jsonstore/{storeName}/query")
+    @Validate
     @Operation(description = "Create or update a JSON store query", operationId = "createOrUpdateJsonStoreQuery")
     public GenericOperationResult createOrUpdate(@PathParam("orgName") @ConcordKey String orgName,
                                                  @PathParam("storeName") @ConcordKey String storeName,
@@ -142,6 +144,7 @@ public class JsonStoreQueryResource implements Resource {
     @Produces(MediaType.APPLICATION_JSON)
     @Path("/{orgName}/jsonstore/{storeName}/query/{queryName}/exec")
     @WithTimer
+    @Validate
     @Operation(description = "Execute an existing JSON store query", operationId = "execJsonStoreQuery")
     public List<Object> exec(@PathParam("orgName") @ConcordKey String orgName,
                              @PathParam("storeName") @ConcordKey String storeName,
