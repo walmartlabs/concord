@@ -1,5 +1,30 @@
 # Change log
 
+## [2.7.0] - Unreleased
+
+### Added
+
+- concord-cli: Add option for default task variables
+([#848](https://github.com/walmartlabs/concord/pull/848)).
+
+### Changed
+
+- runtime-v2: resume event to json serialization fix
+([#860](https://github.com/walmartlabs/concord/pull/860));
+- project: drop siesta-server dependency
+([#826](https://github.com/walmartlabs/concord/pull/826));
+- resource-task: writeYaml: do not split YAML into multiple lines
+([#854](https://github.com/walmartlabs/concord/pull/854));
+- concord-server: logout any session on login failure
+([#858](https://github.com/walmartlabs/concord/pull/858)).
+
+### Breaking
+
+- project: drop siesta-api dependency
+([#857](https://github.com/walmartlabs/concord/pull/857)).
+
+
+
 ## [2.6.0] - 2023-12-28
 
 ### Added
