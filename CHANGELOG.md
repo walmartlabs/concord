@@ -1,5 +1,13 @@
 # Change log
 
+## [2.8.0] - Unreleased
+
+### Added
+
+
+### Changed
+
+
 ## [2.7.0] - 2024-01-08
 
 ### Added
