@@ -1182,6 +1182,19 @@ public class MainTest {
     }
 
     @Test
+    public void testSetMapVariableOverride() throws Exception {
+        deploy("setVariableOverride");
+        save(ProcessConfiguration.builder()
+                .build());
+
+        byte[] log = run();
+        assertLog(log, ".*myMap1: .*\\{y=2\\}.*");
+        assertLog(log, ".*myMap2: .*\\{y=2, z=3\\}.*");
+        assertLog(log, ".*myMap3: .*\\{z=4\\}.*");
+        assertLog(log, ".*myMap4: .*\\{k=v\\}.*");
+    }
+
+    @Test
     public void testRetry() throws Exception {
         deploy("retry");
 
