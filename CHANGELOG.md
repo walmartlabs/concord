@@ -7,6 +7,8 @@
 
 ### Changed
 
+- runtime-v2: fix incorrect variable merging for set variables step
+([#862](https://github.com/walmartlabs/concord/pull/862)).
 
 ## [2.7.0] - 2024-01-08
 
