@@ -100,7 +100,7 @@ public class ProcessCleaner implements ScheduledTask {
                             .execute();
 
                     initialStateRecords = tx.deleteFrom(PROCESS_INITIAL_STATE)
-                            .where(PROCESS_STATE.INSTANCE_ID.in(ids))
+                            .where(PROCESS_INITIAL_STATE.INSTANCE_ID.in(ids))
                             .execute();
                 }
 
