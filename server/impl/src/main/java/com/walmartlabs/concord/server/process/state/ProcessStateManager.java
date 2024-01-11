@@ -47,8 +47,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -70,8 +68,6 @@ import static com.walmartlabs.concord.server.jooq.tables.ProcessState.PROCESS_ST
 import static com.walmartlabs.concord.server.jooq.tables.Projects.PROJECTS;
 import static org.jooq.impl.DSL.*;
 
-@Named
-@Singleton
 public class ProcessStateManager extends AbstractDao {
 
     private static final Logger log = LoggerFactory.getLogger(ProcessStateManager.class);

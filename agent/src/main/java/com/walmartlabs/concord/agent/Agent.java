@@ -28,7 +28,7 @@ import com.walmartlabs.concord.agent.docker.OrphanSweeper;
 import com.walmartlabs.concord.agent.guice.WorkerModule;
 import com.walmartlabs.concord.agent.mmode.MaintenanceModeListener;
 import com.walmartlabs.concord.agent.mmode.MaintenanceModeNotifier;
-import com.walmartlabs.concord.client.ProcessEntry.StatusEnum;
+import com.walmartlabs.concord.client2.ProcessEntry.StatusEnum;
 import com.walmartlabs.concord.common.IOUtils;
 import com.walmartlabs.concord.server.queueclient.QueueClient;
 import com.walmartlabs.concord.server.queueclient.message.ProcessRequest;

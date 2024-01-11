@@ -1,5 +1,54 @@
 # Change log
 
+## [2.7.0] - 2024-01-08
+
+### Added
+
+- concord-cli: Add option for default task variables
+([#848](https://github.com/walmartlabs/concord/pull/848)).
+
+### Changed
+
+- runtime-v2: resume event to json serialization fix
+([#860](https://github.com/walmartlabs/concord/pull/860));
+- project: drop siesta-server dependency
+([#826](https://github.com/walmartlabs/concord/pull/826));
+- resource-task: writeYaml: do not split YAML into multiple lines
+([#854](https://github.com/walmartlabs/concord/pull/854));
+- concord-server: logout any session on login failure
+([#858](https://github.com/walmartlabs/concord/pull/858)).
+
+### Breaking
+
+- project: drop siesta-api dependency
+([#857](https://github.com/walmartlabs/concord/pull/857)).
+
+
+
+## [2.6.0] - 2023-12-28
+
+### Added
+
+- concord-server: expose fetch with version
+([#853](https://github.com/walmartlabs/concord/pull/853));
+- server: allow regexp in meta filters
+([#852](https://github.com/walmartlabs/concord/pull/852)).
+
+### Changed
+
+- project: switch to concord-client2
+([#821](https://github.com/walmartlabs/concord/pull/821));
+- concord-server: remove more @Named
+([#839](https://github.com/walmartlabs/concord/pull/839));
+- client2: allow serialize collections
+([#846](https://github.com/walmartlabs/concord/pull/846));
+- runtime-v2: skip annotations for varargs
+([#845](https://github.com/walmartlabs/concord/pull/845));
+- concord-repository: fetch with quiet option
+([#851](https://github.com/walmartlabs/concord/pull/851)).
+
+
+
 ## [2.5.0] - 2023-12-10
 
 ### Added

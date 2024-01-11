@@ -20,7 +20,7 @@ package com.walmartlabs.concord.plugins.sleep.v2;
  * =====
  */
 
-import com.walmartlabs.concord.ApiClient;
+import com.walmartlabs.concord.client2.ApiClient;
 import com.walmartlabs.concord.plugins.sleep.SleepTaskCommon;
 import com.walmartlabs.concord.plugins.sleep.Suspender;
 import com.walmartlabs.concord.plugins.sleep.TaskParams;

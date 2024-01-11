@@ -1,10 +1,10 @@
-package com.walmartlabs.concord.server.boot;
+package com.walmartlabs.concord.server.org.inventory;
 
 /*-
  * *****
  * Concord
  * -----
- * Copyright (C) 2017 - 2020 Walmart Inc.
+ * Copyright (C) 2017 - 2023 Walmart Inc.
  * -----
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,14 +22,19 @@ package com.walmartlabs.concord.server.boot;
 
 import com.google.inject.Binder;
 import com.google.inject.Module;
-import com.walmartlabs.concord.server.boot.validation.ValidationModule;
-import org.sonatype.siesta.server.resteasy.ResteasyModule;
 
-public class RestModule implements Module {
+import static com.google.inject.Scopes.SINGLETON;
+import static com.walmartlabs.concord.server.Utils.bindJaxRsResource;
+
+@Deprecated
+public class InventoryModule implements Module {
 
     @Override
     public void configure(Binder binder) {
-        binder.install(new ResteasyModule());
-        binder.install(new ValidationModule());
+        binder.bind(InventoryDataDao.class).in(SINGLETON);
+
+        bindJaxRsResource(binder, InventoryResource.class);
+        bindJaxRsResource(binder, InventoryDataResource.class);
+        bindJaxRsResource(binder, InventoryQueryResource.class);
     }
 }

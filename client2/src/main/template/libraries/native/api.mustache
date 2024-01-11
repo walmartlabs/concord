@@ -101,27 +101,6 @@ public class {{classname}} {
   {{#operation}}
   {{#vendorExtensions.x-group-parameters}}
   {{#hasParams}}
-  /**
-   * {{summary}}
-   * {{notes}}
-   * @param apiRequest {@link API{{operationId}}Request}
-   {{#returnType}}
-   * @return {{#asyncNative}}CompletableFuture&lt;{{/asyncNative}}{{returnType}}{{#asyncNative}}&gt;{{/asyncNative}}
-   {{/returnType}}
-   {{^returnType}}
-   {{#asyncNative}}
-   * @return CompletableFuture&lt;Void&gt;
-   {{/asyncNative}}
-   {{/returnType}}
-   * @throws ApiException if fails to make API call
-   {{#isDeprecated}}
-   * @deprecated
-   {{/isDeprecated}}
-   {{#externalDocs}}
-   * {{description}}
-   * @see <a href="{{url}}">{{summary}} Documentation</a>
-   {{/externalDocs}}
-   */
   {{#isDeprecated}}
   @Deprecated
   {{/isDeprecated}}
@@ -132,20 +111,6 @@ public class {{classname}} {
     {{#returnType}}return {{/returnType}}{{^returnType}}{{#asyncNative}}return {{/asyncNative}}{{/returnType}}{{operationId}}({{#allParams}}{{paramName}}{{^-last}}, {{/-last}}{{/allParams}});
   }
 
-  /**
-   * {{summary}}
-   * {{notes}}
-   * @param apiRequest {@link API{{operationId}}Request}
-   * @return {{#asyncNative}}CompletableFuture&lt;{{/asyncNative}}ApiResponse&lt;{{returnType}}{{^returnType}}Void{{/returnType}}&gt;{{#asyncNative}}&gt;{{/asyncNative}}
-   * @throws ApiException if fails to make API call
-   {{#isDeprecated}}
-   * @deprecated
-   {{/isDeprecated}}
-   {{#externalDocs}}
-   * {{description}}
-   * @see <a href="{{url}}">{{summary}} Documentation</a>
-   {{/externalDocs}}
-   */
   {{#isDeprecated}}
   @Deprecated
   {{/isDeprecated}}
@@ -158,38 +123,6 @@ public class {{classname}} {
 
   {{/hasParams}}
   {{/vendorExtensions.x-group-parameters}}
-  /**
-   * {{summary}}
-   * {{notes}}
-   {{#isMultipart}}
-       {{#allParams}}
-           {{^isFormParam}}
-   * @param {{paramName}} {{description}}{{#required}} (required){{/required}}{{^required}} (optional{{^isContainer}}{{#defaultValue}}, default to {{.}}{{/defaultValue}}){{/isContainer}}{{/required}}
-           {{/isFormParam}}
-       {{/allParams}}
-   {{/isMultipart}}
-   {{^isMultipart}}
-       {{#allParams}}
-   * @param {{paramName}} {{description}}{{#required}} (required){{/required}}{{^required}} (optional{{^isContainer}}{{#defaultValue}}, default to {{.}}{{/defaultValue}}){{/isContainer}}{{/required}}
-       {{/allParams}}
-   {{/isMultipart}}
-   {{#returnType}}
-   * @return {{#asyncNative}}CompletableFuture&lt;{{/asyncNative}}{{returnType}}{{#asyncNative}}&gt;{{/asyncNative}}
-   {{/returnType}}
-   {{^returnType}}
-   {{#asyncNative}}
-   * @return CompletableFuture&lt;Void&gt;
-   {{/asyncNative}}
-   {{/returnType}}
-   * @throws ApiException if fails to make API call
-   {{#isDeprecated}}
-   * @deprecated
-   {{/isDeprecated}}
-   {{#externalDocs}}
-   * {{description}}
-   * @see <a href="{{url}}">{{summary}} Documentation</a>
-   {{/externalDocs}}
-   */
   {{#isDeprecated}}
   @Deprecated
   {{/isDeprecated}}
@@ -237,31 +170,6 @@ public class {{classname}} {
     {{/asyncNative}}
   }
 
-  /**
-   * {{summary}}
-   * {{notes}}
-   {{#isMultipart}}
-       {{#allParams}}
-           {{^isFormParam}}
-   * @param {{paramName}} {{description}}{{#required}} (required){{/required}}{{^required}} (optional{{^isContainer}}{{#defaultValue}}, default to {{.}}{{/defaultValue}}){{/isContainer}}{{/required}}
-           {{/isFormParam}}
-       {{/allParams}}
-   {{/isMultipart}}
-   {{^isMultipart}}
-       {{#allParams}}
-           * @param {{paramName}} {{description}}{{#required}} (required){{/required}}{{^required}} (optional{{^isContainer}}{{#defaultValue}}, default to {{.}}{{/defaultValue}}){{/isContainer}}{{/required}}
-       {{/allParams}}
-   {{/isMultipart}}
-   * @return {{#asyncNative}}CompletableFuture&lt;{{/asyncNative}}ApiResponse&lt;{{returnType}}{{^returnType}}Void{{/returnType}}&gt;{{#asyncNative}}&gt;{{/asyncNative}}
-   * @throws ApiException if fails to make API call
-   {{#isDeprecated}}
-   * @deprecated
-   {{/isDeprecated}}
-   {{#externalDocs}}
-   * {{description}}
-   * @see <a href="{{url}}">{{summary}} Documentation</a>
-   {{/externalDocs}}
-   */
   {{#isDeprecated}}
   @Deprecated
   {{/isDeprecated}}

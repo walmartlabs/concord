@@ -59,6 +59,9 @@ import com.walmartlabs.concord.server.sdk.PartialProcessKey;
 import com.walmartlabs.concord.server.sdk.ProcessKey;
 import com.walmartlabs.concord.server.sdk.ProcessStatus;
 import com.walmartlabs.concord.server.sdk.metrics.WithTimer;
+import com.walmartlabs.concord.server.sdk.rest.Resource;
+import com.walmartlabs.concord.server.sdk.validation.Validate;
+import com.walmartlabs.concord.server.sdk.validation.ValidationErrorsException;
 import com.walmartlabs.concord.server.security.Roles;
 import com.walmartlabs.concord.server.security.UserPrincipal;
 import com.walmartlabs.concord.server.security.sessionkey.SessionKeyPrincipal;
@@ -74,9 +77,6 @@ import org.apache.shiro.authz.UnauthorizedException;
 import org.jboss.resteasy.plugins.providers.multipart.MultipartInput;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.sonatype.siesta.Resource;
-import org.sonatype.siesta.Validate;
-import org.sonatype.siesta.ValidationErrorsException;
 
 import javax.inject.Inject;
 import javax.servlet.http.HttpServletRequest;
@@ -265,8 +265,7 @@ public class ProcessResource implements Resource {
     @Produces(MediaType.APPLICATION_JSON)
     @WithTimer
     @Operation(description = "Start new process", operationId = "startProcess")
-    public StartProcessResponse start(@RequestBody(content = @Content(schema = @Schema(type = "object")))
-                                      MultipartInput input,
+    public StartProcessResponse start(@Parameter(schema = @Schema(type = "object", implementation = Object.class)) MultipartInput input,
                                       @Parameter(hidden = true) @Deprecated @QueryParam("parentId") UUID parentInstanceId,
                                       @Parameter(hidden = true) @Deprecated @DefaultValue("false") @QueryParam("sync") boolean sync,
                                       @Parameter(hidden = true) @Deprecated @QueryParam("out") String[] out,
@@ -382,7 +381,7 @@ public class ProcessResource implements Resource {
     @POST
     @javax.ws.rs.Path("/{id}/restart")
     @Produces(MediaType.APPLICATION_JSON)
-    @Operation
+    @Operation(description = "Restart process", operationId = "restartProcess")
     public StartProcessResponse restart(@PathParam("id") UUID instanceId) {
         ProcessKey processKey = assertProcessKey(instanceId);
         processManager.restart(processKey);

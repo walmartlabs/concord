@@ -22,10 +22,8 @@ package com.walmartlabs.concord.it.runtime.v2;
 
 import ca.ibodrov.concord.testcontainers.ConcordProcess;
 import ca.ibodrov.concord.testcontainers.Payload;
-import ca.ibodrov.concord.testcontainers.ProcessListQuery;
 import ca.ibodrov.concord.testcontainers.junit5.ConcordRule;
-import com.walmartlabs.concord.ApiClient;
-import com.walmartlabs.concord.client.*;
+import com.walmartlabs.concord.client2.*;
 import com.walmartlabs.concord.sdk.MapUtils;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -141,7 +139,7 @@ public class ProcessIT extends AbstractTest {
         data.put("action", "Reject");
 
         FormSubmitResponse fsr = proc.submitForm(forms.get(0).getName(), data);
-        assertTrue(fsr.isOk());
+        assertTrue(fsr.getOk());
 
         pe = expectStatus(proc, ProcessEntry.StatusEnum.FINISHED);
 
@@ -341,7 +339,7 @@ public class ProcessIT extends AbstractTest {
 
         // ---
 
-        List<ProcessEntry> children = concord.processes().list(ProcessListQuery.builder()
+        List<ProcessEntry> children = concord.processes().list(ProcessListFilter.builder()
                 .parentInstanceId(parent.instanceId())
                 .limit(10)
                 .build());
@@ -349,7 +347,7 @@ public class ProcessIT extends AbstractTest {
         assertEquals(1, children.size());
 
         ProcessEntry fork = children.get(0);
-        assertEquals(fork.getTags().get(0), forkTag);
+        assertEquals(fork.getTags().iterator().next(), forkTag);
 
         // ---
 
@@ -361,7 +359,7 @@ public class ProcessIT extends AbstractTest {
 
         // ---
 
-        children = concord.processes().list(ProcessListQuery.builder()
+        children = concord.processes().list(ProcessListFilter.builder()
                 .parentInstanceId(parent.instanceId())
                 .limit(10)
                 .build());
@@ -526,8 +524,8 @@ public class ProcessIT extends AbstractTest {
         proc.assertLog(".*Hello, Concord!.*");
 
         // restart
-        ApiClient apiClient = concord.apiClient();
-        ClientUtils.postData(apiClient, "/api/v1/process/" + proc.instanceId() + "/restart", null);
+        ProcessApi processApi = new ProcessApi(concord.apiClient());
+        processApi.restartProcess(proc.instanceId());
 
         expectStatus(proc, ProcessEntry.StatusEnum.FINISHED);
 
@@ -536,7 +534,7 @@ public class ProcessIT extends AbstractTest {
 
         // ---
         ProcessEventsApi processEventsApi = new ProcessEventsApi(concord.apiClient());
-        List<ProcessEventEntry> events = processEventsApi.list(proc.instanceId(), "PROCESS_STATUS", null, null, null, null, null, null);
+        List<ProcessEventEntry> events = processEventsApi.listProcessEvents(proc.instanceId(), "PROCESS_STATUS", null, null, null, null, null, null);
         assertNotNull(events);
 
         // 2 NEW events

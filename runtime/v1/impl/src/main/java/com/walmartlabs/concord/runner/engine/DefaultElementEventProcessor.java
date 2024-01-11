@@ -20,10 +20,10 @@ package com.walmartlabs.concord.runner.engine;
  * =====
  */
 
-import com.walmartlabs.concord.client.ApiClientConfiguration;
-import com.walmartlabs.concord.client.ApiClientFactory;
-import com.walmartlabs.concord.client.ProcessEventRequest;
-import com.walmartlabs.concord.client.ProcessEventsApi;
+import com.walmartlabs.concord.client2.ApiClientConfiguration;
+import com.walmartlabs.concord.client2.ApiClientFactory;
+import com.walmartlabs.concord.client2.ProcessEventRequest;
+import com.walmartlabs.concord.client2.ProcessEventsApi;
 import io.takari.bpm.ProcessDefinitionProvider;
 import io.takari.bpm.ProcessDefinitionUtils;
 import io.takari.bpm.api.ExecutionException;
@@ -99,7 +99,6 @@ public class DefaultElementEventProcessor implements ElementEventProcessor {
             ProcessEventsApi client = new ProcessEventsApi(apiClientFactory.create(
                     ApiClientConfiguration.builder()
                             .sessionToken(event.getSessionToken())
-                            .txId(UUID.fromString(event.getInstanceId()))
                             .build()));
             client.event(UUID.fromString(event.getInstanceId()), req);
         } catch (Exception e) {
