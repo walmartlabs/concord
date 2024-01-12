@@ -20,9 +20,9 @@ package com.walmartlabs.concord.plugins.noderoster;
  * =====
  */
 
-import com.walmartlabs.concord.ApiClient;
-import com.walmartlabs.concord.client.*;
+import com.walmartlabs.concord.client2.*;
 import com.walmartlabs.concord.sdk.Context;
+import com.walmartlabs.concord.sdk.ContextUtils;
 import com.walmartlabs.concord.sdk.Task;
 
 import javax.inject.Inject;
@@ -105,7 +105,7 @@ public class NodeRosterTask implements Task {
         return apiClientFactory.create(ApiClientConfiguration.builder()
                 .baseUrl(getBaseUrl(paramsCfg))
                 .apiKey(getApiKey(paramsCfg))
-                .context(ctx)
+                .sessionToken(ContextUtils.sessionTokenOrNull(ctx))
                 .build());
     }
 

@@ -37,22 +37,20 @@ import com.walmartlabs.concord.server.policy.EntityType;
 import com.walmartlabs.concord.server.policy.PolicyManager;
 import com.walmartlabs.concord.server.policy.PolicyUtils;
 import com.walmartlabs.concord.server.sdk.ConcordApplicationException;
+import com.walmartlabs.concord.server.sdk.validation.ValidationErrorsException;
 import com.walmartlabs.concord.server.security.Roles;
 import com.walmartlabs.concord.server.security.UserPrincipal;
 import com.walmartlabs.concord.server.user.UserEntry;
 import com.walmartlabs.concord.server.user.UserManager;
 import com.walmartlabs.concord.server.user.UserType;
 import org.jooq.DSLContext;
-import org.sonatype.siesta.ValidationErrorsException;
 
 import javax.inject.Inject;
-import javax.inject.Named;
 import javax.ws.rs.core.Response;
 import java.util.*;
 
 import static com.walmartlabs.concord.server.jooq.tables.Projects.PROJECTS;
 
-@Named
 public class ProjectManager {
 
     private final OrganizationManager orgManager;

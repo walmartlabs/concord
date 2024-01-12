@@ -26,20 +26,17 @@ import com.walmartlabs.concord.server.security.apikey.ApiKeyRealm;
 import com.walmartlabs.concord.server.security.github.GithubRealm;
 import com.walmartlabs.concord.server.security.internal.InternalRealm;
 import com.walmartlabs.concord.server.security.internal.LocalUserInfoProvider;
-import com.walmartlabs.concord.server.security.ldap.LdapRealm;
-import com.walmartlabs.concord.server.security.ldap.LdapUserInfoProvider;
-import com.walmartlabs.concord.server.security.ldap.UserLdapGroupSynchronizer;
+import com.walmartlabs.concord.server.security.ldap.*;
 import com.walmartlabs.concord.server.security.sessionkey.SessionKeyRealm;
 import com.walmartlabs.concord.server.user.UserInfoProvider;
 import org.apache.shiro.realm.Realm;
-
-import javax.inject.Named;
+import org.apache.shiro.realm.ldap.LdapContextFactory;
 
 import static com.google.inject.Scopes.SINGLETON;
 import static com.google.inject.multibindings.Multibinder.newSetBinder;
+import static com.walmartlabs.concord.server.Utils.bindExceptionMapper;
 import static com.walmartlabs.concord.server.Utils.bindSingletonScheduledTask;
 
-@Named
 public class SecurityModule implements Module {
 
     @Override
@@ -50,6 +47,9 @@ public class SecurityModule implements Module {
         newSetBinder(binder, Realm.class).addBinding().to(LdapRealm.class);
         newSetBinder(binder, Realm.class).addBinding().to(SessionKeyRealm.class);
 
+        binder.bind(LdapManager.class).toProvider(LdapManagerProvider.class);
+        binder.bind(LdapContextFactory.class).toProvider(LdapContextFactoryProvider.class);
+
         bindSingletonScheduledTask(binder, UserLdapGroupSynchronizer.class);
 
         binder.bind(LocalUserInfoProvider.class).in(SINGLETON);
@@ -57,5 +57,8 @@ public class SecurityModule implements Module {
 
         binder.bind(LdapUserInfoProvider.class).in(SINGLETON);
         newSetBinder(binder, UserInfoProvider.class).addBinding().to(LdapUserInfoProvider.class);
+
+        bindExceptionMapper(binder, UnauthorizedExceptionMapper.class);
+        bindExceptionMapper(binder, UnauthenticatedExceptionMapper.class);
     }
 }

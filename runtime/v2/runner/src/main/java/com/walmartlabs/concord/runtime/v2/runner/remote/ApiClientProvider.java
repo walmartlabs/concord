@@ -20,9 +20,9 @@ package com.walmartlabs.concord.runtime.v2.runner.remote;
  * =====
  */
 
-import com.walmartlabs.concord.ApiClient;
-import com.walmartlabs.concord.client.ApiClientConfiguration;
-import com.walmartlabs.concord.client.ApiClientFactory;
+import com.walmartlabs.concord.client2.ApiClient;
+import com.walmartlabs.concord.client2.ApiClientConfiguration;
+import com.walmartlabs.concord.client2.ApiClientFactory;
 import com.walmartlabs.concord.runtime.v2.sdk.ProcessConfiguration;
 
 import javax.inject.Inject;

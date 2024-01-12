@@ -20,8 +20,8 @@ package com.walmartlabs.concord.it.server;
  * =====
  */
 
-import com.walmartlabs.concord.client.*;
-import com.walmartlabs.concord.client.ProcessEntry.StatusEnum;
+import com.walmartlabs.concord.client2.*;
+import com.walmartlabs.concord.client2.ProcessEntry.StatusEnum;
 import org.junit.jupiter.api.Test;
 
 import java.util.HashMap;
@@ -39,27 +39,26 @@ public class ProcessLocksIT extends AbstractServerIT {
         String projectName = "project_" + randomString();
 
         OrganizationsApi organizationsApi = new OrganizationsApi(getApiClient());
-        organizationsApi.createOrUpdate(new OrganizationEntry().setName(orgName));
+        organizationsApi.createOrUpdateOrg(new OrganizationEntry().name(orgName));
 
         ProjectsApi projectsApi = new ProjectsApi(getApiClient());
-        projectsApi.createOrUpdate(orgName, new ProjectEntry().setName(projectName)
-                .setRawPayloadMode(ProjectEntry.RawPayloadModeEnum.EVERYONE));
+        projectsApi.createOrUpdateProject(orgName, new ProjectEntry().name(projectName)
+                .rawPayloadMode(ProjectEntry.RawPayloadModeEnum.EVERYONE));
 
         // ---
 
-        byte[] payload = archive(ProcessIT.class.getResource("processLocks").toURI());
+        byte[] payload = archive(ProcessLocksIT.class.getResource("processLocks").toURI());
 
         Map<String, Object> input = new HashMap<>();
         input.put("org", orgName);
         input.put("project", projectName);
         input.put("archive", payload);
 
-        ProcessApi processApi = new ProcessApi(getApiClient());
         StartProcessResponse sprA = start(input);
 
-        ProcessEntry pirA = waitForStatus(processApi, sprA.getInstanceId(), StatusEnum.FAILED, StatusEnum.RUNNING);
+        ProcessEntry pirA = waitForStatus(getApiClient(), sprA.getInstanceId(), StatusEnum.FAILED, StatusEnum.RUNNING);
         assertEquals(StatusEnum.RUNNING, pirA.getStatus());
-        waitForLog(pirA.getLogFileName(), ".*locked!.*");
+        waitForLog(pirA.getInstanceId(), ".*locked!.*");
 
         // ---
 
@@ -70,15 +69,15 @@ public class ProcessLocksIT extends AbstractServerIT {
 
         StartProcessResponse sprB = start(input);
 
-        ProcessEntry pirB = waitForStatus(processApi, sprB.getInstanceId(), StatusEnum.FAILED, StatusEnum.SUSPENDED);
+        ProcessEntry pirB = waitForStatus(getApiClient(), sprB.getInstanceId(), StatusEnum.FAILED, StatusEnum.SUSPENDED);
         assertEquals(StatusEnum.SUSPENDED, pirB.getStatus());
 
         // ---
 
-        pirA = waitForStatus(processApi, sprA.getInstanceId(), StatusEnum.FAILED, StatusEnum.FINISHED);
+        pirA = waitForStatus(getApiClient(), sprA.getInstanceId(), StatusEnum.FAILED, StatusEnum.FINISHED);
         assertEquals(StatusEnum.FINISHED, pirA.getStatus());
 
-        pirB = waitForStatus(processApi, sprB.getInstanceId(), StatusEnum.FAILED, StatusEnum.FINISHED);
+        pirB = waitForStatus(getApiClient(), sprB.getInstanceId(), StatusEnum.FAILED, StatusEnum.FINISHED);
         assertEquals(StatusEnum.FINISHED, pirB.getStatus());
     }
 }

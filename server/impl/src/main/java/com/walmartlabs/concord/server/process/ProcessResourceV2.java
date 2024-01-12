@@ -33,39 +33,35 @@ import com.walmartlabs.concord.server.sdk.ConcordApplicationException;
 import com.walmartlabs.concord.server.sdk.PartialProcessKey;
 import com.walmartlabs.concord.server.sdk.ProcessStatus;
 import com.walmartlabs.concord.server.sdk.metrics.WithTimer;
+import com.walmartlabs.concord.server.sdk.rest.Resource;
+import com.walmartlabs.concord.server.sdk.validation.ValidationErrorsException;
 import com.walmartlabs.concord.server.security.Permission;
 import com.walmartlabs.concord.server.security.Roles;
 import com.walmartlabs.concord.server.security.UserPrincipal;
 import com.walmartlabs.concord.server.user.UserDao;
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
-import io.swagger.annotations.ApiParam;
-import io.swagger.annotations.Authorization;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.Parameters;
+import io.swagger.v3.oas.annotations.enums.ParameterIn;
+import io.swagger.v3.oas.annotations.extensions.Extension;
+import io.swagger.v3.oas.annotations.extensions.ExtensionProperty;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.sonatype.siesta.Resource;
-import org.sonatype.siesta.ValidationErrorsException;
 
 import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
 import javax.ws.rs.*;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.core.UriInfo;
-import java.util.Collections;
-import java.util.List;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 
 import static com.walmartlabs.concord.server.Utils.unwrap;
 
-@Named
-@Singleton
-@Api(value = "ProcessV2", authorizations = {@Authorization("api_key"), @Authorization("session_key"), @Authorization("ldap")})
 @Path("/api/v2/process")
+@Tag(name = "ProcessV2")
 public class ProcessResourceV2 implements Resource {
 
     private static final Logger log = LoggerFactory.getLogger(ProcessResourceV2.class);
@@ -100,12 +96,12 @@ public class ProcessResourceV2 implements Resource {
      * Returns a process instance's details.
      */
     @GET
-    @ApiOperation("Get a process' details")
     @Path("/{id}")
     @Produces(MediaType.APPLICATION_JSON)
     @WithTimer
-    public ProcessEntry get(@ApiParam @PathParam("id") UUID instanceId,
-                            @ApiParam @QueryParam("include") Set<ProcessDataInclude> includes) {
+    @Operation(description = "Get a process' details", operationId = "getProcess")
+    public ProcessEntry get(@PathParam("id") UUID instanceId,
+                            @QueryParam("include") Set<ProcessDataInclude> includes) {
 
         PartialProcessKey processKey = PartialProcessKey.from(instanceId);
 
@@ -126,24 +122,31 @@ public class ProcessResourceV2 implements Resource {
      * Returns a list of processes applying the specified filters.
      */
     @GET
-    @ApiOperation(value = "List processes", responseContainer = "list", response = ProcessEntry.class)
     @Produces(MediaType.APPLICATION_JSON)
     @WithTimer
-    public List<ProcessEntry> list(@ApiParam @QueryParam("orgId") UUID orgId,
-                                   @ApiParam @QueryParam("orgName") String orgName,
-                                   @ApiParam @QueryParam("projectId") UUID projectId,
-                                   @ApiParam @QueryParam("projectName") String projectName,
-                                   @ApiParam @QueryParam("repoId") UUID repoId,
-                                   @ApiParam @QueryParam("repoName") String repoName,
-                                   @ApiParam @QueryParam("afterCreatedAt") OffsetDateTimeParam afterCreatedAt,
-                                   @ApiParam @QueryParam("beforeCreatedAt") OffsetDateTimeParam beforeCreatedAt,
-                                   @ApiParam @QueryParam("tags") Set<String> tags,
-                                   @ApiParam @QueryParam("status") ProcessStatus processStatus,
-                                   @ApiParam @QueryParam("initiator") String initiator,
-                                   @ApiParam @QueryParam("parentInstanceId") UUID parentId,
-                                   @ApiParam @QueryParam("include") Set<ProcessDataInclude> processData,
-                                   @ApiParam @QueryParam("limit") @DefaultValue("30") int limit,
-                                   @ApiParam @QueryParam("offset") @DefaultValue("0") int offset,
+    @Operation(description = "List processes", operationId = "listProcesses",
+            extensions = @Extension(name = "concord",
+                    properties = {
+                            @ExtensionProperty(name = "groupParams", value = "true"),
+                            @ExtensionProperty(name = "groupName", value = "ProcessListFilter")
+                    }))
+    @Parameters()
+    @Parameter(name = "meta", in = ParameterIn.QUERY, schema = @Schema(implementation = Map.class), extensions = @Extension(name = "concord", properties = @ExtensionProperty(name = "customQueryParams", value = "true")))
+    public List<ProcessEntry> list(@QueryParam("orgId") UUID orgId,
+                                   @QueryParam("orgName") String orgName,
+                                   @QueryParam("projectId") UUID projectId,
+                                   @QueryParam("projectName") String projectName,
+                                   @QueryParam("repoId") UUID repoId,
+                                   @QueryParam("repoName") String repoName,
+                                   @QueryParam("afterCreatedAt") OffsetDateTimeParam afterCreatedAt,
+                                   @QueryParam("beforeCreatedAt") OffsetDateTimeParam beforeCreatedAt,
+                                   @QueryParam("tags") Set<String> tags,
+                                   @QueryParam("status") ProcessStatus processStatus,
+                                   @QueryParam("initiator") String initiator,
+                                   @QueryParam("parentInstanceId") UUID parentId,
+                                   @QueryParam("include") Set<ProcessDataInclude> processData,
+                                   @QueryParam("limit") @DefaultValue("30") int limit,
+                                   @QueryParam("offset") @DefaultValue("0") int offset,
                                    @Context UriInfo uriInfo) {
 
         if (limit <= 0) {
@@ -161,13 +164,13 @@ public class ProcessResourceV2 implements Resource {
     }
 
     @GET
-    @ApiOperation(value = "List process requirements")
     @Path("/requirements")
     @Produces(MediaType.APPLICATION_JSON)
     @WithTimer
-    public List<ProcessRequirementsEntry> listRequirements(@ApiParam @QueryParam("status") ProcessStatus processStatus,
-                                                           @ApiParam @QueryParam("limit") @DefaultValue("30") int limit,
-                                                           @ApiParam @QueryParam("offset") @DefaultValue("0") int offset,
+    @Operation(description = "List process requirements")
+    public List<ProcessRequirementsEntry> listRequirements(@QueryParam("status") ProcessStatus processStatus,
+                                                           @QueryParam("limit") @DefaultValue("30") int limit,
+                                                           @QueryParam("offset") @DefaultValue("0") int offset,
                                                            @Context UriInfo uriInfo) {
 
         if (limit <= 0) {
@@ -190,22 +193,22 @@ public class ProcessResourceV2 implements Resource {
      * Counts processes applying the specified filters.
      */
     @GET
-    @ApiOperation(value = "Count processes")
     @Path("/count")
     @Produces(MediaType.APPLICATION_JSON)
     @WithTimer
-    public int count(@ApiParam @QueryParam("orgId") UUID orgId,
-                     @ApiParam @QueryParam("orgName") String orgName,
-                     @ApiParam @QueryParam("projectId") UUID projectId,
-                     @ApiParam @QueryParam("projectName") String projectName,
-                     @ApiParam @QueryParam("repoId") UUID repoId,
-                     @ApiParam @QueryParam("repoName") String repoName,
-                     @ApiParam @QueryParam("afterCreatedAt") OffsetDateTimeParam afterCreatedAt,
-                     @ApiParam @QueryParam("beforeCreatedAt") OffsetDateTimeParam beforeCreatedAt,
-                     @ApiParam @QueryParam("tags") Set<String> tags,
-                     @ApiParam @QueryParam("status") ProcessStatus processStatus,
-                     @ApiParam @QueryParam("initiator") String initiator,
-                     @ApiParam @QueryParam("parentInstanceId") UUID parentId,
+    @Operation(description = "Count processes", operationId = "countProcesses")
+    public int count(@QueryParam("orgId") UUID orgId,
+                     @QueryParam("orgName") String orgName,
+                     @QueryParam("projectId") UUID projectId,
+                     @QueryParam("projectName") String projectName,
+                     @QueryParam("repoId") UUID repoId,
+                     @QueryParam("repoName") String repoName,
+                     @QueryParam("afterCreatedAt") OffsetDateTimeParam afterCreatedAt,
+                     @QueryParam("beforeCreatedAt") OffsetDateTimeParam beforeCreatedAt,
+                     @QueryParam("tags") Set<String> tags,
+                     @QueryParam("status") ProcessStatus processStatus,
+                     @QueryParam("initiator") String initiator,
+                     @QueryParam("parentInstanceId") UUID parentId,
                      @Context UriInfo uriInfo) {
 
         ProcessFilter filter = createProcessFilter(orgId, orgName, projectId, projectName, repoId, repoName,
@@ -265,7 +268,7 @@ public class ProcessResourceV2 implements Resource {
 
             effectiveProjectId = projectDao.getId(effectiveOrgId, projectName);
             if (effectiveProjectId == null) {
-                throw new ConcordApplicationException("Project not found: " + projectName, Response.Status.NOT_FOUND);
+                throw new ConcordApplicationException("Project not found: " + projectName, Status.NOT_FOUND);
             }
         }
 

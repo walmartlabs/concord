@@ -45,6 +45,7 @@ import com.walmartlabs.concord.server.process.ProcessEntry;
 import com.walmartlabs.concord.server.process.queue.ProcessQueueManager;
 import com.walmartlabs.concord.server.sdk.ConcordApplicationException;
 import com.walmartlabs.concord.server.sdk.metrics.WithTimer;
+import com.walmartlabs.concord.server.sdk.validation.ValidationErrorsException;
 import com.walmartlabs.concord.server.security.Roles;
 import com.walmartlabs.concord.server.security.UserPrincipal;
 import com.walmartlabs.concord.server.security.apikey.ApiKeyDao;
@@ -55,10 +56,8 @@ import com.walmartlabs.concord.server.user.UserEntry;
 import com.walmartlabs.concord.server.user.UserManager;
 import org.apache.shiro.authz.UnauthorizedException;
 import org.jooq.DSLContext;
-import org.sonatype.siesta.ValidationErrorsException;
 
 import javax.inject.Inject;
-import javax.inject.Named;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Response.Status;
 import java.io.IOException;
@@ -72,7 +71,6 @@ import java.util.stream.Collectors;
 import static com.walmartlabs.concord.server.jooq.Tables.SECRETS;
 import static com.walmartlabs.concord.server.org.secret.SecretDao.InsertMode.INSERT;
 
-@Named
 public class SecretManager {
 
     private final PolicyManager policyManager;

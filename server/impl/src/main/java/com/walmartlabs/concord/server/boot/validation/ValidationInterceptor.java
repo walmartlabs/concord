@@ -31,9 +31,9 @@ package com.walmartlabs.concord.server.boot.validation;
  * =====
  */
 
+import com.walmartlabs.concord.server.sdk.validation.Validate;
 import org.aopalliance.intercept.MethodInterceptor;
 import org.aopalliance.intercept.MethodInvocation;
-import org.sonatype.siesta.Validate;
 
 import javax.inject.Inject;
 import javax.validation.ConstraintViolation;

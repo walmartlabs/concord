@@ -53,10 +53,8 @@ import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 import javax.inject.Named;
-import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
-import java.io.IOException;
-import java.io.Serializable;
+import java.io.*;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -307,9 +305,25 @@ public class ProcessManager {
     public ProcessEntry assertProcess(UUID instanceId) {
         ProcessEntry p = queueManager.get(PartialProcessKey.from(instanceId));
         if (p == null) {
-            throw new ConcordApplicationException("Process instance not found", Response.Status.NOT_FOUND);
+            throw new ConcordApplicationException("Process instance not found", Status.NOT_FOUND);
         }
         return p;
+    }
+
+    public void assertResumeEvents(ProcessKey processKey, Set<String> events) {
+        if (events.isEmpty()) {
+            throw new ConcordApplicationException("Empty resume events", Status.BAD_REQUEST);
+        }
+
+        Set<String> expectedEvents = getResumeEvents(processKey);
+
+        Set<String> unexpectedEvents = new HashSet<>(events);
+        unexpectedEvents.removeAll(expectedEvents);
+
+        if (!unexpectedEvents.isEmpty()) {
+            logManager.warn(processKey, "Unexpected 'resume' events: {}, expected: {}", unexpectedEvents, expectedEvents);
+            throw new ConcordApplicationException("Unexpected 'resume' events: " + unexpectedEvents, Status.BAD_REQUEST);
+        }
     }
 
     public void updateExclusive(DSLContext tx, ProcessKey processKey, ExclusiveMode exclusive) {
@@ -417,6 +431,28 @@ public class ProcessManager {
                 .field("orgId", p.orgId())
                 .field("projectId", p.projectId())
                 .log();
+    }
+
+    private Set<String> getResumeEvents(ProcessKey processKey) {
+        String path = ProcessStateManager.path(Constants.Files.JOB_ATTACHMENTS_DIR_NAME,
+                Constants.Files.JOB_STATE_DIR_NAME,
+                Constants.Files.SUSPEND_MARKER_FILE_NAME);
+
+        return stateManager.get(processKey, path, ProcessManager::deserialize)
+                .orElse(Set.of());
+    }
+
+    private static Optional<Set<String>> deserialize(InputStream in) {
+        Set<String> result = new HashSet<>();
+        try (BufferedReader reader = new BufferedReader(new InputStreamReader(in))) {
+            String line;
+            while ((line = reader.readLine()) != null) {
+                result.add(line);
+            }
+            return Optional.of(result);
+        } catch (IOException e) {
+            throw new RuntimeException("Error while deserializing a resume events: " + e.getMessage(), e);
+        }
     }
 
     private static List<ProcessEntry> filterProcesses(List<ProcessEntry> l, List<ProcessStatus> expected) {

@@ -23,13 +23,9 @@ package com.walmartlabs.concord.agent.cfg;
 import com.typesafe.config.Config;
 
 import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
-@Named
-@Singleton
 public class DockerConfiguration {
 
     private final String dockerHost;

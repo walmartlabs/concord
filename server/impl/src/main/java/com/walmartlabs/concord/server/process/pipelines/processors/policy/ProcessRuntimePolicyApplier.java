@@ -32,7 +32,6 @@ import com.walmartlabs.concord.server.process.logs.ProcessLogManager;
 import com.walmartlabs.concord.server.sdk.metrics.InjectCounter;
 
 import javax.inject.Inject;
-import javax.inject.Named;
 import java.text.MessageFormat;
 import java.time.OffsetDateTime;
 import java.util.Objects;
@@ -40,7 +39,6 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.function.Supplier;
 
-@Named
 public class ProcessRuntimePolicyApplier implements PolicyApplier {
 
     private static final String DEFAULT_PROCESS_TIMEOUT_MSG = "{0} runtime version is not allowed";

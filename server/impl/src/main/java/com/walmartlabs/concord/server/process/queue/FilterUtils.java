@@ -55,7 +55,9 @@ public final class FilterUtils {
             SuffixMapping.of(".notEndsWith", ProcessFilter.FilterType.NOT_ENDS_WITH),
 
             SuffixMapping.of(".ge", ProcessFilter.FilterType.GREATER_OR_EQUALS),
-            SuffixMapping.of(".len", ProcessFilter.FilterType.LESS_OR_EQUALS_OR_NULL)
+            SuffixMapping.of(".len", ProcessFilter.FilterType.LESS_OR_EQUALS_OR_NULL),
+
+            SuffixMapping.of(".regexp", ProcessFilter.FilterType.REGEXP_MATCH)
     };
 
     public static List<ProcessFilter.DateFilter> parseDate(String paramName, UriInfo uriInfo) {
@@ -152,6 +154,10 @@ public final class FilterUtils {
                     q.addConditions(jsonbTextNotExistsByPath(column, f.path(), f.value()));
                     break;
                 }
+                case REGEXP_MATCH: {
+                    q.addConditions(jsonbTextMatch(column, f.path(), f.value()));
+                    break;
+                }
                 case STARTS_WITH: {
                     q.addConditions(jsonbTextByPath(column, f.path()).startsWith(f.value()));
                     break;
@@ -191,7 +197,7 @@ public final class FilterUtils {
             return null;
         }
 
-        for (FilterUtils.SuffixMapping m : FilterUtils.SUFFIX_MAPPINGS) {
+        for (SuffixMapping m : FilterUtils.SUFFIX_MAPPINGS) {
             if (key.endsWith(m.suffix())) {
                 return m.filterType();
             }

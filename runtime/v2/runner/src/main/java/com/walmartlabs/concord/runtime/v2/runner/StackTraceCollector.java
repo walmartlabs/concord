@@ -23,7 +23,6 @@ package com.walmartlabs.concord.runtime.v2.runner;
 import com.walmartlabs.concord.runtime.v2.model.FlowCall;
 import com.walmartlabs.concord.runtime.v2.model.Location;
 import com.walmartlabs.concord.runtime.v2.runner.vm.FlowCallCommand;
-import com.walmartlabs.concord.runtime.v2.runner.vm.VMUtils;
 import com.walmartlabs.concord.svm.Runtime;
 import com.walmartlabs.concord.svm.*;
 
@@ -34,7 +33,7 @@ public class StackTraceCollector implements ExecutionListener {
         if (cmd instanceof FlowCallCommand) {
             FlowCallCommand fcc = (FlowCallCommand) cmd;
             FlowCall step = fcc.getStep();
-            String flowName = VMUtils.getLocal(state, threadId, "flowName");
+            String flowName = FlowCallCommand.getFlowName(state, threadId);
             if (flowName == null) {
                 flowName = step.getFlowName();
             }

@@ -36,7 +36,6 @@ import org.jooq.Record;
 import org.jooq.*;
 
 import javax.inject.Inject;
-import javax.inject.Named;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -49,7 +48,6 @@ import static com.walmartlabs.concord.server.jooq.tables.Users.USERS;
 import static com.walmartlabs.concord.server.jooq.tables.VUserTeams.V_USER_TEAMS;
 import static org.jooq.impl.DSL.*;
 
-@Named
 public class JsonStoreDao extends AbstractDao {
 
     @Inject
@@ -58,7 +56,7 @@ public class JsonStoreDao extends AbstractDao {
     }
 
     @Override
-    public void tx(AbstractDao.Tx t) {
+    public void tx(Tx t) {
         super.tx(t);
     }
 
@@ -133,8 +131,8 @@ public class JsonStoreDao extends AbstractDao {
         return txResult(tx -> insert(tx, orgId, name, visibility, ownerId));
     }
 
-    public void update(UUID storeId, String name, JsonStoreVisibility visibility, UUID ownerId) {
-        tx(tx -> update(tx, storeId, name, visibility, ownerId));
+    public void update(UUID storeId, String name, JsonStoreVisibility visibility, UUID orgId, UUID ownerId) {
+        tx(tx -> update(tx, storeId, name, visibility, orgId, ownerId));
     }
 
     public void delete(UUID id) {
@@ -208,7 +206,7 @@ public class JsonStoreDao extends AbstractDao {
     }
 
     @SuppressWarnings("unchecked")
-    private void update(DSLContext tx, UUID storeId, String name, JsonStoreVisibility visibility, UUID ownerId) {
+    private void update(DSLContext tx, UUID storeId, String name, JsonStoreVisibility visibility, UUID orgId, UUID ownerId) {
         UpdateSetFirstStep<JsonStoresRecord> s = tx.update(JSON_STORES);
 
         if (name != null) {
@@ -221,6 +219,9 @@ public class JsonStoreDao extends AbstractDao {
 
         if (ownerId != null) {
             s.set(JSON_STORES.OWNER_ID, ownerId);
+        }
+        if (orgId != null) {
+            s.set(JSON_STORES.ORG_ID, orgId);
         }
 
         ((UpdateSetMoreStep<JsonStoresRecord>) s)

@@ -26,25 +26,19 @@ import com.walmartlabs.concord.server.process.state.ProcessCheckpointManager;
 import com.walmartlabs.concord.server.sdk.ConcordApplicationException;
 import com.walmartlabs.concord.server.sdk.ProcessKey;
 import com.walmartlabs.concord.server.sdk.metrics.WithTimer;
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
-import io.swagger.annotations.ApiParam;
-import io.swagger.annotations.Authorization;
+import com.walmartlabs.concord.server.sdk.rest.Resource;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.sonatype.siesta.Resource;
 
 import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import java.util.UUID;
 
-@Named
-@Singleton
-@Api(value = "CheckpointV2", authorizations = {@Authorization("api_key"), @Authorization("session_key"), @Authorization("ldap")})
-@javax.ws.rs.Path("/api/v2/process")
+@Path("/api/v2/process")
+@Tag(name = "CheckpointV2")
 public class ProcessCheckpointV2Resource implements Resource {
     private static final Logger log = LoggerFactory.getLogger(ProcessCheckpointV2Resource.class);
 
@@ -62,14 +56,14 @@ public class ProcessCheckpointV2Resource implements Resource {
     }
 
     @GET
-    @ApiOperation(value = "Process checkpoint")
-    @javax.ws.rs.Path("{id}/checkpoint")
+    @Path("{id}/checkpoint")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     @WithTimer
-    public GenericCheckpointResponse processCheckpoint(@ApiParam @PathParam("id") UUID instanceId,
-                                                       @ApiParam @QueryParam("name") String checkpointName,
-                                                       @ApiParam @QueryParam("action") String action) {
+    @Operation(description = "Process checkpoint")
+    public GenericCheckpointResponse processCheckpoint(@PathParam("id") UUID instanceId,
+                                                       @QueryParam("name") String checkpointName,
+                                                       @QueryParam("action") String action) {
 
         ProcessEntry entry = processManager.assertProcess(instanceId);
         ProcessKey processKey = new ProcessKey(entry.instanceId(), entry.createdAt());

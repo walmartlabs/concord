@@ -31,10 +31,10 @@ import com.google.inject.TypeLiteral;
 import com.google.inject.matcher.AbstractMatcher;
 import com.google.inject.spi.TypeEncounter;
 import com.google.inject.spi.TypeListener;
-import com.walmartlabs.concord.ApiClient;
-import com.walmartlabs.concord.client.ApiClientConfiguration;
-import com.walmartlabs.concord.client.ApiClientFactory;
-import com.walmartlabs.concord.client.ProcessEntry;
+import com.walmartlabs.concord.client2.ApiClient;
+import com.walmartlabs.concord.client2.ApiClientConfiguration;
+import com.walmartlabs.concord.client2.ApiClientFactory;
+import com.walmartlabs.concord.client2.ProcessEntry;
 import com.walmartlabs.concord.common.IOUtils;
 import com.walmartlabs.concord.imports.ImportsListener;
 import com.walmartlabs.concord.imports.NoopImportManager;
@@ -49,6 +49,7 @@ import com.walmartlabs.concord.runner.engine.ProcessErrorProcessor;
 import com.walmartlabs.concord.runtime.common.ProcessHeartbeat;
 import com.walmartlabs.concord.runtime.common.StateManager;
 import com.walmartlabs.concord.runtime.common.cfg.RunnerConfiguration;
+import com.walmartlabs.concord.runtime.v2.sdk.WorkingDirectory;
 import com.walmartlabs.concord.sdk.Constants;
 import com.walmartlabs.concord.sdk.MapUtils;
 import com.walmartlabs.concord.sdk.Task;
@@ -106,6 +107,8 @@ public class Main {
 
         Path idPath = baseDir.resolve(Constants.Files.INSTANCE_ID_FILE_NAME);
         UUID instanceId = readInstanceId(idPath);
+        ((ApiClientFactoryImpl)apiClientFactory).setTxId(instanceId);
+
         long t2 = System.currentTimeMillis();
         if (runnerCfg.debug()) {
             log.info("Spent {}ms waiting for the payload", (t2 - t1));
@@ -125,7 +128,6 @@ public class Main {
         String sessionToken = getSessionToken(processCfg);
         ApiClient apiClient = apiClientFactory.create(ApiClientConfiguration.builder()
                 .sessionToken(sessionToken)
-                .txId(instanceId)
                 .build());
 
         ProcessHeartbeat heartbeat = new ProcessHeartbeat(apiClient, instanceId, runnerCfg.api().maxNoHeartbeatInterval());

@@ -27,6 +27,7 @@ import com.google.inject.Injector;
 import com.google.inject.Module;
 import com.google.inject.multibindings.Multibinder;
 import com.google.inject.name.Names;
+import com.walmartlabs.concord.client2.ApiClient;
 import com.walmartlabs.concord.common.ConfigurationUtils;
 import com.walmartlabs.concord.common.IOUtils;
 import com.walmartlabs.concord.forms.Form;
@@ -135,6 +136,7 @@ public class MainTest {
                 bind(PersistenceService.class).toInstance(mock(PersistenceService.class));
                 bind(ProcessStatusCallback.class).toInstance(processStatusCallback);
                 bind(SecretService.class).to(DefaultSecretService.class);
+                bind(ApiClient.class).toInstance(mock(ApiClient.class));
 
                 Multibinder<TaskProvider> taskProviders = Multibinder.newSetBinder(binder(), TaskProvider.class);
                 taskProviders.addBinding().to(TaskV2Provider.class);
@@ -185,6 +187,37 @@ public class MainTest {
     }
 
     @Test
+    public void testVariablesAfterResume() throws Exception {
+        deploy("variablesAfterResume");
+
+        save(ProcessConfiguration.builder()
+                .build());
+
+        byte[] log = run();
+        assertLog(log, ".*workDir1: " + workDir.toAbsolutePath() + ".*");
+        assertLog(log, ".*workDir3: " + workDir.toAbsolutePath() + ".*");
+
+        List<Form> forms = formService.list();
+        assertEquals(1, forms.size());
+
+        Form myForm = forms.get(0);
+        assertEquals("myForm", myForm.name());
+
+        // resume the process using the saved form
+
+        Map<String, Object> data = new HashMap<>();
+        data.put("fullName", "John Smith");
+
+        Path newWorkDir = Files.createTempDirectory("test-new");
+        IOUtils.copy(workDir, newWorkDir);
+        workDir = newWorkDir;
+
+        log = resume(myForm.eventName(), ProcessConfiguration.builder().arguments(Collections.singletonMap("myForm", data)).build());
+        assertLog(log, ".*workDir4: " + workDir.toAbsolutePath() + ".*");
+        assertLog(log, ".*workDir2: " + workDir.toAbsolutePath() + ".*");
+    }
+
+    @Test
     public void test() throws Exception {
         deploy("hello");
 
@@ -196,6 +229,19 @@ public class MainTest {
         byte[] log = run();
         assertLog(log, ".*Hello, Concord!.*");
         assertLog(log, ".*" + Pattern.quote("defaultsMap:{a=a-value}") + ".*");
+
+        verify(processStatusCallback, times(1)).onRunning(instanceId);
+    }
+
+    @Test
+    public void testFlowNameVariable() throws Exception {
+        deploy("doNotTouchFlowNameVariable");
+
+        save(ProcessConfiguration.builder()
+                .build());
+
+        byte[] log = run();
+        assertLog(log, ".*flowName in inner flow: 'This is MY variable'.*");
 
         verify(processStatusCallback, times(1)).onRunning(instanceId);
     }
@@ -1136,6 +1182,19 @@ public class MainTest {
     }
 
     @Test
+    public void testSetMapVariableOverride() throws Exception {
+        deploy("setVariableOverride");
+        save(ProcessConfiguration.builder()
+                .build());
+
+        byte[] log = run();
+        assertLog(log, ".*myMap1: .*\\{y=2\\}.*");
+        assertLog(log, ".*myMap2: .*\\{y=2, z=3\\}.*");
+        assertLog(log, ".*myMap3: .*\\{z=4\\}.*");
+        assertLog(log, ".*myMap4: .*\\{k=v\\}.*");
+    }
+
+    @Test
     public void testRetry() throws Exception {
         deploy("retry");
 
@@ -1486,6 +1545,95 @@ public class MainTest {
         byte[] log = run();
         assertLog(log, ".*true == true.*");
         assertLog(log, ".*false == false.*");
+    }
+
+    @Test
+    public void testArrayEvalSerialize() throws Exception {
+        deploy("lazyEvalMapInArgs");
+
+        save(ProcessConfiguration.builder()
+                .build());
+
+        byte[] log = run();
+        assertLog(log, ".*" + Pattern.quote("{dev=dev-cloud1}, {prod=prod-cloud1}, {test=test-cloud1}, {perf=perf-cloud2}, {ci=perf-ci}") + ".*");
+    }
+
+    @Test
+    public void testEntrySetSerialization() throws Exception {
+        deploy("entrySetSerialization");
+
+        save(ProcessConfiguration.builder()
+                .build());
+
+        byte[] log = run();
+        assertLog(log, ".*myList: \\[k=v\\].*");
+    }
+
+    @Test
+    public void testHasFlow() throws Exception {
+        deploy("hasFlow");
+
+        save(ProcessConfiguration.builder()
+                .build());
+
+        byte[] log = run();
+        assertLog(log, ".*123: false.*");
+        assertLog(log, ".*myFlow: true.*");
+    }
+
+    @Test
+    public void testUuidFunc() throws Exception {
+        deploy("uuid");
+
+        save(ProcessConfiguration.builder()
+                .build());
+
+        byte[] log = run();
+        assertLog(log, ".*uuid: [0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}.*");
+    }
+
+    @Test
+    public void testExitFromParallelLoop() throws Exception {
+        deploy("parallelLoopExit");
+
+        save(ProcessConfiguration.builder()
+                .build());
+
+        byte[] log = run();
+
+        assertNoLog(log, ".*should not reach here.*");
+    }
+
+    @Test
+    public void testExitFromSerialLoop() throws Exception {
+        deploy("serialLoopExit");
+
+        save(ProcessConfiguration.builder()
+                .build());
+
+        byte[] log = run();
+
+        assertNoLog(log, ".*should not reach here.*");
+
+        assertLog(log, ".*inner start: one.*");
+        assertLog(log, ".*inner end: one.*");
+        assertLog(log, ".*inner start: two.*");
+
+        assertNoLog(log, ".*inner end: two.*");
+        assertNoLog(log, ".*inner start: three.*");
+        assertNoLog(log, ".*inner start: four.*");
+    }
+
+    @Test
+    public void testStringIfExpression() throws Exception {
+        deploy("ifExpressionAsString");
+
+        save(ProcessConfiguration.builder()
+                .putArguments("myVar", Collections.singletonMap("str", "true"))
+                .build());
+
+        byte[] log = run();
+        assertLog(log, ".*it's true.*");
     }
 
     private void deploy(String resource) throws URISyntaxException, IOException {

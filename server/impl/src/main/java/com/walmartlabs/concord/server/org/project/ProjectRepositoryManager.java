@@ -33,18 +33,17 @@ import com.walmartlabs.concord.server.policy.EntityType;
 import com.walmartlabs.concord.server.policy.PolicyManager;
 import com.walmartlabs.concord.server.policy.PolicyUtils;
 import com.walmartlabs.concord.server.repository.RepositoryRefresher;
+import com.walmartlabs.concord.server.sdk.ConcordApplicationException;
+import com.walmartlabs.concord.server.sdk.validation.ValidationErrorsException;
 import org.immutables.value.Value;
 import org.jooq.DSLContext;
-import org.sonatype.siesta.ValidationErrorsException;
 
 import javax.annotation.Nullable;
 import javax.inject.Inject;
-import javax.inject.Named;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Response;
 import java.util.*;
 
-@Named
 public class ProjectRepositoryManager {
 
     private final ProjectAccessManager projectAccessManager;
@@ -71,7 +70,13 @@ public class ProjectRepositoryManager {
     }
 
     public RepositoryEntry get(UUID projectId, String repositoryName) {
-        return repositoryDao.get(projectId, repositoryName);
+        RepositoryEntry r = repositoryDao.get(projectId, repositoryName);
+
+        if (r == null) {
+            throw new ConcordApplicationException("Repository not found: " + repositoryName, Response.Status.NOT_FOUND);
+        }
+
+        return r;
     }
 
     public RepositoryEntry get(UUID orgId, String projectName, String repositoryName) {

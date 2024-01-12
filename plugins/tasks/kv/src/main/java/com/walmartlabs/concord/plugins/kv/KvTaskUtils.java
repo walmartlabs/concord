@@ -20,8 +20,8 @@ package com.walmartlabs.concord.plugins.kv;
  * =====
  */
 
-import com.walmartlabs.concord.client.ClientUtils;
-import com.walmartlabs.concord.client.ProcessKvStoreApi;
+import com.walmartlabs.concord.client2.ClientUtils;
+import com.walmartlabs.concord.client2.ProcessKvStoreApi;
 
 import java.util.UUID;
 
@@ -30,7 +30,7 @@ public final class KvTaskUtils {
     public static void remove(ProcessKvStoreApi api, UUID txId, String key) throws Exception {
         assertValidKey(key);
         ClientUtils.withRetry(Constants.RETRY_COUNT, Constants.RETRY_INTERVAL, () -> {
-            api.removeKey(txId, key);
+            api.deleteKv(txId, key);
             return null;
         });
     }
@@ -38,7 +38,7 @@ public final class KvTaskUtils {
     public static void putString(ProcessKvStoreApi api, UUID txId, String key, String value) throws Exception {
         assertValidKey(key);
         ClientUtils.withRetry(Constants.RETRY_COUNT, Constants.RETRY_INTERVAL, () -> {
-            api.putString(txId, key, value);
+            api.putKvString(txId, key, value);
             return null;
         });
     }
@@ -46,13 +46,13 @@ public final class KvTaskUtils {
     public static String getString(ProcessKvStoreApi api, UUID txId, String key) throws Exception {
         assertValidKey(key);
         return ClientUtils.withRetry(Constants.RETRY_COUNT, Constants.RETRY_INTERVAL, () ->
-                api.getString(txId, key));
+                api.getKvString(txId, key));
     }
 
     public static void putLong(ProcessKvStoreApi api, UUID txId, String key, Long value) throws Exception {
         assertValidKey(key);
         ClientUtils.withRetry(Constants.RETRY_COUNT, Constants.RETRY_INTERVAL, () -> {
-            api.putLong(txId, key, value);
+            api.putKvLong(txId, key, value);
             return null;
         });
     }
@@ -60,13 +60,13 @@ public final class KvTaskUtils {
     public static Long getLong(ProcessKvStoreApi api, UUID txId, String key) throws Exception {
         assertValidKey(key);
         return ClientUtils.withRetry(Constants.RETRY_COUNT, Constants.RETRY_INTERVAL, () ->
-                api.getLong(txId, key));
+                api.getKvLong(txId, key));
     }
 
     public static long incLong(ProcessKvStoreApi api, UUID txId, String key) throws Exception {
         assertValidKey(key);
         return ClientUtils.withRetry(Constants.RETRY_COUNT, Constants.RETRY_INTERVAL, () ->
-                api.incLong(txId, key));
+                api.incKvLong(txId, key));
     }
 
     private static void assertValidKey(String s) {

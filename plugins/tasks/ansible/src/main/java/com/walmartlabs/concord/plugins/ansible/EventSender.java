@@ -22,9 +22,9 @@ package com.walmartlabs.concord.plugins.ansible;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
-import com.walmartlabs.concord.ApiException;
-import com.walmartlabs.concord.client.ProcessEventRequest;
-import com.walmartlabs.concord.client.ProcessEventsApi;
+import com.walmartlabs.concord.client2.ApiException;
+import com.walmartlabs.concord.client2.ProcessEventRequest;
+import com.walmartlabs.concord.client2.ProcessEventsApi;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
