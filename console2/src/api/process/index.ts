@@ -264,6 +264,12 @@ export const get = (
     return fetchJson(`/api/v2/process/${instanceId}?${params.toString()}`);
 };
 
+export const getRoot = (
+    instanceId: ConcordId
+): Promise<ProcessEntry> => {
+    return fetchJson(`/api/v1/process/${instanceId}/root`);
+};
+
 export const disable = (instanceId: ConcordId, disabled: boolean): Promise<{}> =>
     managedFetch(`/api/v1/process/${instanceId}/disable/${disabled}`, { method: 'POST' });
 

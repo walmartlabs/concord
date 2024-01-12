@@ -54,11 +54,12 @@ interface ExternalProps {
     loading: boolean;
     instanceId: ConcordId;
     process?: ProcessEntry;
+    rootInstanceId?: ConcordId;
     refresh: () => void;
 }
 
 const ProcessToolbar = memo((props: ExternalProps) => {
-    const { stickyRef, loading, refresh, process, instanceId } = props;
+    const { stickyRef, loading, refresh, process, instanceId, rootInstanceId } = props;
 
     const [isFixed, setFixed] = useState(false);
 
@@ -87,7 +88,7 @@ const ProcessToolbar = memo((props: ExternalProps) => {
 
                 <MenuItem>{renderStartAt(process)}</MenuItem>
 
-                <MenuItem position={'right'}>{renderProcessMainActions(refresh, process)}</MenuItem>
+                <MenuItem position={'right'}>{renderProcessMainActions(refresh, process, rootInstanceId)}</MenuItem>
 
                 <MenuItem>{renderProcessSecondaryActions(refresh, process)}</MenuItem>
             </Menu>
@@ -179,7 +180,7 @@ const renderStartAt = (process?: ProcessEntry) => {
     return;
 };
 
-const renderProcessMainActions = (refresh: () => void, process?: ProcessEntry) => {
+const renderProcessMainActions = (refresh: () => void, process?: ProcessEntry, rootInstanceId?: ConcordId) => {
     if (!process) {
         return (
             <Button.Group>
@@ -235,7 +236,7 @@ const renderProcessMainActions = (refresh: () => void, process?: ProcessEntry) =
             {canBeRestarted(process.status) && process.runtime === 'concord-v2' &&
                 <RestartProcessPopup
                     instanceId={process.instanceId}
-                    parentInstanceId={process.parentInstanceId}
+                    rootInstanceId={rootInstanceId}
                     refresh={refresh}
                     trigger={renderRestartProcessTrigger}
                 />

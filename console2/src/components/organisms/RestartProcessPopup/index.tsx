@@ -25,11 +25,11 @@ import { SingleOperationPopup } from '../../molecules';
 import { memo, useCallback } from 'react';
 import { restart as apiRestart } from '../../../api/process';
 import { useState } from 'react';
-import {Message} from "semantic-ui-react";
+import { Message } from "semantic-ui-react";
 
 interface ExternalProps {
     instanceId: ConcordId;
-    parentInstanceId?: ConcordId;
+    rootInstanceId?: ConcordId;
     refresh: () => void;
     trigger: (onClick: () => void) => React.ReactNode;
 }
@@ -40,9 +40,9 @@ const RestartProcessPopup = memo((props: ExternalProps) => {
     const [success, setSuccess] = useState(false);
 
     const instanceId = props.instanceId;
-    const parentInstanceId = props.parentInstanceId;
+    const rootInstanceId = props.rootInstanceId;
 
-    const cancelProcess = useCallback(async () => {
+    const restartProcess = useCallback(async () => {
         setRestarting(true);
 
         try {
@@ -68,13 +68,30 @@ const RestartProcessPopup = memo((props: ExternalProps) => {
             trigger={trigger}
             title="Restart the process?"
             introMsg={
-            <>
-                <p>Are you sure you want to restart the selected process?</p>
-                {parentInstanceId && <Message warning>
-                    <Message.Header>Warning!</Message.Header>
-                    <p>The root process will be restarted</p>
-                </Message>}
-            </>
+                <>
+                    {!rootInstanceId && <p>Are you sure you want to restart the selected process?</p>}
+                    {rootInstanceId &&
+                        <>
+                        <Message warning>
+                            <Message.Header>You are about to restart a child process. Please note:</Message.Header>
+                            <Message.List style={{marginTop: "10px"}}>
+                                <Message.Item>
+                                    Only the <a href={`#/process/${rootInstanceId}/log`} target="_blank"
+                                                   rel="noopener noreferrer">parent (root) process</a> will be restarted.
+                                </Message.Item>
+                                <Message.Item>
+                                    Restarting the parent process may also re-run this and other child processes.
+                                </Message.Item>
+                                <Message.Item>
+                                    Ensure that this is the desired action before proceeding.
+                                </Message.Item>
+                            </Message.List>
+                        </Message>
+
+                        <p>Do you want to continue with restarting the parent process?</p>
+                        </>
+                    }
+                </>
             }
             running={restarting}
             runningMsg={<p>Restarting...</p>}
@@ -83,7 +100,7 @@ const RestartProcessPopup = memo((props: ExternalProps) => {
             error={error}
             reset={reset}
             onDone={refresh}
-            onConfirm={cancelProcess}
+            onConfirm={restartProcess}
         />
     );
 });
