@@ -725,6 +725,22 @@ public class ProcessResource implements Resource {
                 .build());
     }
 
+    @GET
+    @javax.ws.rs.Path("/{id}/root")
+    @Produces(MediaType.APPLICATION_JSON)
+    @WithTimer
+    @Operation(description = "Get super parent for a process")
+    public ProcessEntry getRoot(@PathParam("id") UUID instanceId) {
+        PartialProcessKey processKey = assertPartialKey(instanceId);
+
+        ProcessKey rootId = queueDao.getRootId(processKey);
+        if (rootId == null) {
+            return null;
+        }
+
+        return queueDao.get(rootId, Set.of());
+    }
+
     /**
      * Updates a process' status
      */
