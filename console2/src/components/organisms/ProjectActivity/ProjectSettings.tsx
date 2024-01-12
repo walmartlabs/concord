@@ -37,8 +37,6 @@ import { useCallback } from 'react';
 import {get as apiGet, getCapacity as apiGetCapacity, KVCapacity, ProjectEntry} from '../../../api/org/project';
 import {Divider, Header, Icon, Progress, Segment} from 'semantic-ui-react';
 import EntityId from '../../molecules/EntityId';
-import {Link} from "react-router-dom";
-import {da} from "date-fns/locale";
 
 interface ExternalProps {
     orgName: ConcordKey;
