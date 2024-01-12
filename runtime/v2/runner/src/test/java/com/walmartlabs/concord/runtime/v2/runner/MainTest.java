@@ -27,6 +27,7 @@ import com.google.inject.Injector;
 import com.google.inject.Module;
 import com.google.inject.multibindings.Multibinder;
 import com.google.inject.name.Names;
+import com.walmartlabs.concord.client2.ApiClient;
 import com.walmartlabs.concord.common.ConfigurationUtils;
 import com.walmartlabs.concord.common.IOUtils;
 import com.walmartlabs.concord.forms.Form;
@@ -135,6 +136,7 @@ public class MainTest {
                 bind(PersistenceService.class).toInstance(mock(PersistenceService.class));
                 bind(ProcessStatusCallback.class).toInstance(processStatusCallback);
                 bind(SecretService.class).to(DefaultSecretService.class);
+                bind(ApiClient.class).toInstance(mock(ApiClient.class));
 
                 Multibinder<TaskProvider> taskProviders = Multibinder.newSetBinder(binder(), TaskProvider.class);
                 taskProviders.addBinding().to(TaskV2Provider.class);
@@ -1170,6 +1172,19 @@ public class MainTest {
     }
 
     @Test
+    public void testSetMapVariableOverride() throws Exception {
+        deploy("setVariableOverride");
+        save(ProcessConfiguration.builder()
+                .build());
+
+        byte[] log = run();
+        assertLog(log, ".*myMap1: .*\\{y=2\\}.*");
+        assertLog(log, ".*myMap2: .*\\{y=2, z=3\\}.*");
+        assertLog(log, ".*myMap3: .*\\{z=4\\}.*");
+        assertLog(log, ".*myMap4: .*\\{k=v\\}.*");
+    }
+
+    @Test
     public void testRetry() throws Exception {
         deploy("retry");
 
@@ -1752,6 +1767,50 @@ public class MainTest {
 
         byte[] log = run();
         assertLog(log, ".*uuid: [0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}.*");
+    }
+
+    @Test
+    public void testExitFromParallelLoop() throws Exception {
+        deploy("parallelLoopExit");
+
+        save(ProcessConfiguration.builder()
+                .build());
+
+        byte[] log = run();
+
+        assertNoLog(log, ".*should not reach here.*");
+    }
+
+    @Test
+    public void testExitFromSerialLoop() throws Exception {
+        deploy("serialLoopExit");
+
+        save(ProcessConfiguration.builder()
+                .build());
+
+        byte[] log = run();
+
+        assertNoLog(log, ".*should not reach here.*");
+
+        assertLog(log, ".*inner start: one.*");
+        assertLog(log, ".*inner end: one.*");
+        assertLog(log, ".*inner start: two.*");
+
+        assertNoLog(log, ".*inner end: two.*");
+        assertNoLog(log, ".*inner start: three.*");
+        assertNoLog(log, ".*inner start: four.*");
+    }
+
+    @Test
+    public void testStringIfExpression() throws Exception {
+        deploy("ifExpressionAsString");
+
+        save(ProcessConfiguration.builder()
+                .putArguments("myVar", Collections.singletonMap("str", "true"))
+                .build());
+
+        byte[] log = run();
+        assertLog(log, ".*it's true.*");
     }
 
     private void deploy(String resource) throws URISyntaxException, IOException {

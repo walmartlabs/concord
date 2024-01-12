@@ -24,7 +24,6 @@ package com.walmartlabs.concord.client;
 import org.immutables.value.Value;
 
 import javax.annotation.Nullable;
-import java.nio.file.Path;
 import java.util.List;
 import java.util.UUID;
 

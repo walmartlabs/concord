@@ -22,12 +22,8 @@ package com.walmartlabs.concord.it.runtime.v2;
 
 import ca.ibodrov.concord.testcontainers.ConcordProcess;
 import ca.ibodrov.concord.testcontainers.Payload;
-import ca.ibodrov.concord.testcontainers.ProcessListQuery;
 import ca.ibodrov.concord.testcontainers.junit5.ConcordRule;
-import com.walmartlabs.concord.client.FormListEntry;
-import com.walmartlabs.concord.client.FormSubmitResponse;
-import com.walmartlabs.concord.client.ProcessCheckpointEntry;
-import com.walmartlabs.concord.client.ProcessEntry;
+import com.walmartlabs.concord.client2.*;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
@@ -143,7 +139,7 @@ public class ProcessIT extends AbstractTest {
         data.put("action", "Reject");
 
         FormSubmitResponse fsr = proc.submitForm(forms.get(0).getName(), data);
-        assertTrue(fsr.isOk());
+        assertTrue(fsr.getOk());
 
         pe = expectStatus(proc, ProcessEntry.StatusEnum.FINISHED);
 
@@ -343,7 +339,7 @@ public class ProcessIT extends AbstractTest {
 
         // ---
 
-        List<ProcessEntry> children = concord.processes().list(ProcessListQuery.builder()
+        List<ProcessEntry> children = concord.processes().list(ProcessListFilter.builder()
                 .parentInstanceId(parent.instanceId())
                 .limit(10)
                 .build());
@@ -351,7 +347,7 @@ public class ProcessIT extends AbstractTest {
         assertEquals(1, children.size());
 
         ProcessEntry fork = children.get(0);
-        assertEquals(fork.getTags().get(0), forkTag);
+        assertEquals(fork.getTags().iterator().next(), forkTag);
 
         // ---
 
@@ -363,7 +359,7 @@ public class ProcessIT extends AbstractTest {
 
         // ---
 
-        children = concord.processes().list(ProcessListQuery.builder()
+        children = concord.processes().list(ProcessListFilter.builder()
                 .parentInstanceId(parent.instanceId())
                 .limit(10)
                 .build());
@@ -495,5 +491,21 @@ public class ProcessIT extends AbstractTest {
 
         fork.assertLog(".*parentInstanceId: " + proc.instanceId() + ".*");
         fork.assertLog(".*txId: " + fork.instanceId() + ".*");
+    }
+
+    @Test
+    public void testTaskWithClient1() throws Exception {
+        String concordYml = resourceToString(ProcessIT.class.getResource("client1Task/concord.yml"))
+                .replaceAll("PROJECT_VERSION", ITConstants.PROJECT_VERSION);
+
+        Payload payload = new Payload().concordYml(concordYml);
+
+        ConcordProcess proc = concord.processes().start(payload);
+        expectStatus(proc, ProcessEntry.StatusEnum.FINISHED);
+
+        // ---
+
+        proc.assertLog(".*process entry: RUNNING.*");
+        proc.assertLog(".*Works!.*");
     }
 }

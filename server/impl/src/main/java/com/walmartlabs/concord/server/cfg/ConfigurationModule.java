@@ -22,20 +22,23 @@ package com.walmartlabs.concord.server.cfg;
 
 import com.google.inject.Binder;
 import com.google.inject.Module;
-import com.walmartlabs.ollie.config.ConfigurationProcessor;
-import com.walmartlabs.ollie.config.Environment;
-import com.walmartlabs.ollie.config.EnvironmentSelector;
-import com.walmartlabs.ollie.config.OllieConfigurationModule;
+import com.typesafe.config.Config;
 
 import static com.google.inject.Scopes.SINGLETON;
 
 public class ConfigurationModule implements Module {
 
+    private final Config config;
+
+    public ConfigurationModule(Config config) {
+        this.config = config;
+    }
+
     @Override
     public void configure(Binder binder) {
-        Environment env = new EnvironmentSelector().select();
-        com.typesafe.config.Config config = new ConfigurationProcessor("concord-server", env, null, null).process();
-        binder.install(new OllieConfigurationModule("com.walmartlabs.concord.server", config));
+        binder.bind(Config.class).toInstance(config);
+
+        binder.install(new com.walmartlabs.ollie.config.OllieConfigurationModule("com.walmartlabs.concord.server", config));
 
         binder.bind(AgentConfiguration.class).in(SINGLETON);
         binder.bind(ApiKeyConfiguration.class).in(SINGLETON);

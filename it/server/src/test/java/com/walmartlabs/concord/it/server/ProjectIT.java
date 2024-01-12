@@ -20,8 +20,7 @@ package com.walmartlabs.concord.it.server;
  * =====
  */
 
-import com.walmartlabs.concord.ApiException;
-import com.walmartlabs.concord.client.*;
+import com.walmartlabs.concord.client2.*;
 import com.walmartlabs.concord.common.IOUtils;
 import com.walmartlabs.concord.sdk.Constants;
 import org.eclipse.jgit.api.Git;
@@ -69,7 +68,7 @@ public class ProjectIT extends AbstractServerIT {
 
         ProcessEntry psr = doTest(projectName, username, permissions, repoName, repoUrl, entryPoint, args, false);
 
-        byte[] ab = getLog(psr.getLogFileName());
+        byte[] ab = getLog(psr.getInstanceId());
         assertLog(".*" + greeting + ".*", ab);
     }
 
@@ -103,7 +102,7 @@ public class ProjectIT extends AbstractServerIT {
 
         ProcessEntry psr = doTest(projectName, username, permissions, repoName, repoUrl, null, Collections.emptyMap(), false);
 
-        byte[] ab = getLog(psr.getLogFileName());
+        byte[] ab = getLog(psr.getInstanceId());
         assertLog(".*Hello, Concord.*", ab);
     }
 
@@ -155,7 +154,7 @@ public class ProjectIT extends AbstractServerIT {
             // ---
             ProcessEntry psr = doTest(projectName, username, permissions, repoName, repoUrl, entryPoint, args, commitId, null, false);
 
-            byte[] ab = getLog(psr.getLogFileName());
+            byte[] ab = getLog(psr.getInstanceId());
             assertLog(".*test-commit-1.*" + greeting + ".*", ab);
         }
     }
@@ -206,7 +205,7 @@ public class ProjectIT extends AbstractServerIT {
         // ---
         ProcessEntry psr = doTest(projectName, username, permissions, repoName, repoUrl, entryPoint, args, null, tag, false);
 
-        byte[] ab = getLog(psr.getLogFileName());
+        byte[] ab = getLog(psr.getInstanceId());
         assertLog(".*test-commit-1.*" + greeting + ".*", ab);
     }
 
@@ -236,7 +235,7 @@ public class ProjectIT extends AbstractServerIT {
 
         TriggersApi triggersApi = new TriggersApi(getApiClient());
         while (true) {
-            List<TriggerEntry> triggers = triggersApi.list("Default", projectName, repoName);
+            List<TriggerEntry> triggers = triggersApi.listTriggers("Default", projectName, repoName);
             if (hasCondition("github", "branch", "foo", triggers) &&
                     hasCondition("github", "branch", "foo2", triggers) &&
                     hasCondition("oneops", "org", "myOrg", triggers)) {
@@ -277,7 +276,7 @@ public class ProjectIT extends AbstractServerIT {
 
         RepositoriesApi repositoriesApi = new RepositoriesApi(getApiClient());
         RepositoryValidationResponse result = repositoriesApi.validateRepository("Default", projectName, repoName);
-        assertTrue(result.isOk());
+        assertTrue(result.getOk());
     }
 
     @Test
@@ -311,7 +310,7 @@ public class ProjectIT extends AbstractServerIT {
 
             RepositoriesApi repositoriesApi = new RepositoriesApi(getApiClient());
             RepositoryValidationResponse resp = repositoriesApi.validateRepository("Default", projectName, repoName);
-            assertTrue(resp.isOk());
+            assertTrue(resp.getOk());
         });
     }
 
@@ -346,7 +345,7 @@ public class ProjectIT extends AbstractServerIT {
 
             RepositoriesApi repositoriesApi = new RepositoriesApi(getApiClient());
             RepositoryValidationResponse resp = repositoriesApi.validateRepository("Default", projectName, repoName);
-            assertTrue(resp.isOk());
+            assertTrue(resp.getOk());
         });
     }
 
@@ -372,11 +371,11 @@ public class ProjectIT extends AbstractServerIT {
             String repoUrl = gitUrl;
 
             ProjectsApi projectsApi = new ProjectsApi(getApiClient());
-            projectsApi.createOrUpdate(orgName, new ProjectEntry()
-                    .setName(projectName)
-                    .setRepositories(Collections.singletonMap(repoName, new RepositoryEntry()
-                            .setName(repoName).setUrl(repoUrl)
-                            .setDisabled(true))));
+            projectsApi.createOrUpdateProject(orgName, new ProjectEntry()
+                    .name(projectName)
+                    .repositories(Collections.singletonMap(repoName, new RepositoryEntry()
+                            .name(repoName).url(repoUrl)
+                            .disabled(true))));
 
             // ---
             Map<String, Object> input = new HashMap<>();
@@ -393,53 +392,53 @@ public class ProjectIT extends AbstractServerIT {
         String orgName = "org_" + randomString();
 
         OrganizationsApi orgApi = new OrganizationsApi(getApiClient());
-        orgApi.createOrUpdate(new OrganizationEntry().setName(orgName));
+        orgApi.createOrUpdateOrg(new OrganizationEntry().name(orgName));
 
         // ---
 
         String projectName = "project_" + randomString();
 
         ProjectsApi projectsApi = new ProjectsApi(getApiClient());
-        projectsApi.createOrUpdate(orgName, new ProjectEntry()
-                .setName(projectName));
+        projectsApi.createOrUpdateProject(orgName, new ProjectEntry()
+                .name(projectName));
 
         // ---
 
         String teamName = "team_" + randomString();
         TeamsApi teamsApi = new TeamsApi(getApiClient());
-        CreateTeamResponse teamResp = teamsApi.createOrUpdate(orgName, new TeamEntry()
-                .setName(teamName));
+        CreateTeamResponse teamResp = teamsApi.createOrUpdateTeam(orgName, new TeamEntry()
+                .name(teamName));
 
         // --- Typical one-or-more teams bulk access update
 
         List<ResourceAccessEntry> teams = new ArrayList<>(1);
         teams.add(new ResourceAccessEntry()
-                .setOrgName(orgName)
-                .setTeamId(teamResp.getId())
-                .setTeamName(teamName)
-                .setLevel(ResourceAccessEntry.LevelEnum.OWNER));
-        GenericOperationResult addTeamsResult = projectsApi.updateAccessLevel_0(orgName, projectName, teams);
+                .orgName(orgName)
+                .teamId(teamResp.getId())
+                .teamName(teamName)
+                .level(ResourceAccessEntry.LevelEnum.OWNER));
+        GenericOperationResult addTeamsResult = projectsApi.updateProjectAccessLevelBulk(orgName, projectName, teams);
         assertNotNull(addTeamsResult);
-        assertTrue(addTeamsResult.isOk());
+        assertTrue(addTeamsResult.getOk());
 
-        List<ResourceAccessEntry> currentTeams = projectsApi.getAccessLevel(orgName, projectName);
+        List<ResourceAccessEntry> currentTeams = projectsApi.getProjectAccessLevel(orgName, projectName);
         assertNotNull(currentTeams);
         assertEquals(1, currentTeams.size());
 
         // --- Empty teams list clears all
 
-        GenericOperationResult clearTeamsResult = projectsApi.updateAccessLevel_0(orgName, projectName, Collections.emptyList());
+        GenericOperationResult clearTeamsResult = projectsApi.updateProjectAccessLevelBulk(orgName, projectName, Collections.emptyList());
         assertNotNull(clearTeamsResult);
-        assertTrue(clearTeamsResult.isOk());
+        assertTrue(clearTeamsResult.getOk());
 
-        currentTeams = projectsApi.getAccessLevel(orgName, projectName);
+        currentTeams = projectsApi.getProjectAccessLevel(orgName, projectName);
         assertNotNull(currentTeams);
         assertEquals(0, currentTeams.size());
 
         // --- Null list not allowed, throws error
 
         try {
-            projectsApi.updateAccessLevel_0(orgName, projectName, null);
+            projectsApi.updateProjectAccessLevelBulk(orgName, projectName, null);
         } catch (ApiException expected) {
             assertEquals(400, expected.getCode());
             assertTrue(expected.getResponseBody().contains("List of teams is null"));
@@ -449,11 +448,10 @@ public class ProjectIT extends AbstractServerIT {
 
         // ---
 
-        teamsApi.delete(orgName, teamName);
-        projectsApi.delete(orgName, projectName);
-        orgApi.delete(orgName, "yes");
+        teamsApi.deleteTeam(orgName, teamName);
+        projectsApi.deleteProject(orgName, projectName);
+        orgApi.deleteOrg(orgName, "yes");
     }
-
 
     private static boolean hasCondition(String src, String k, Object v, Collection<TriggerEntry> entries) {
         for (TriggerEntry e : entries) {
@@ -482,18 +480,18 @@ public class ProjectIT extends AbstractServerIT {
                                         String tag) throws Exception {
 
         UsersApi usersApi = new UsersApi(getApiClient());
-        CreateUserResponse cur = usersApi.createOrUpdate(new CreateUserRequest()
-                .setUsername(username)
-                .setType(CreateUserRequest.TypeEnum.LOCAL));
-        assertTrue(cur.isOk());
+        CreateUserResponse cur = usersApi.createOrUpdateUser(new CreateUserRequest()
+                .username(username)
+                .type(CreateUserRequest.TypeEnum.LOCAL));
+        assertTrue(cur.getOk());
 
         UUID userId = cur.getId();
 
         ApiKeysApi apiKeyResource = new ApiKeysApi(getApiClient());
-        CreateApiKeyResponse cakr = apiKeyResource.create(new CreateApiKeyRequest()
-                .setUserId(userId)
-                .setUserType(CreateApiKeyRequest.UserTypeEnum.LOCAL));
-        assertTrue(cakr.isOk());
+        CreateApiKeyResponse cakr = apiKeyResource.createUserApiKey(new CreateApiKeyRequest()
+                .userId(userId)
+                .userType(CreateApiKeyRequest.UserTypeEnum.LOCAL));
+        assertTrue(cakr.getOk());
 
         String apiKey = cakr.getKey();
 
@@ -502,15 +500,15 @@ public class ProjectIT extends AbstractServerIT {
         setApiKey(apiKey);
 
         ProjectsApi projectsApi = new ProjectsApi(getApiClient());
-        ProjectOperationResponse cpr = projectsApi.createOrUpdate("Default", new ProjectEntry()
-                .setName(projectName)
-                .setRepositories(Collections.singletonMap(repoName,
+        ProjectOperationResponse cpr = projectsApi.createOrUpdateProject("Default", new ProjectEntry()
+                .name(projectName)
+                .repositories(Collections.singletonMap(repoName,
                         new RepositoryEntry()
-                                .setName(repoName)
-                                .setUrl(repoUrl)
-                                .setBranch(tag != null ? tag : "master")
-                                .setCommitId(commitId))));
-        assertTrue(cpr.isOk());
+                                .name(repoName)
+                                .url(repoUrl)
+                                .branch(tag != null ? tag : "master")
+                                .commitId(commitId))));
+        assertTrue(cpr.getOk());
     }
 
     protected ProcessEntry doTest(String projectName,
@@ -550,13 +548,13 @@ public class ProjectIT extends AbstractServerIT {
         input.put("request", args);
         input.put("sync", sync);
         StartProcessResponse spr = start(input);
-        assertTrue(spr.isOk());
+        assertTrue(spr.getOk());
 
         UUID instanceId = spr.getInstanceId();
 
         // ---
 
-        ProcessEntry psr = waitForCompletion(processApi, instanceId);
+        ProcessEntry psr = waitForCompletion(getApiClient(), instanceId);
         assertEquals(ProcessEntry.StatusEnum.FINISHED, psr.getStatus());
 
         // ---

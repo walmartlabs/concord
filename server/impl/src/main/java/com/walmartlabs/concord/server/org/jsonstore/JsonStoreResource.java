@@ -25,14 +25,12 @@ import com.walmartlabs.concord.server.GenericOperationResult;
 import com.walmartlabs.concord.server.OperationResult;
 import com.walmartlabs.concord.server.org.ResourceAccessEntry;
 import com.walmartlabs.concord.server.sdk.ConcordApplicationException;
+import com.walmartlabs.concord.server.sdk.rest.Resource;
+import com.walmartlabs.concord.server.sdk.validation.Validate;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import org.sonatype.siesta.Resource;
-import org.sonatype.siesta.Validate;
 
 import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
 import javax.validation.Valid;
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
@@ -40,8 +38,6 @@ import javax.ws.rs.core.Response;
 import java.util.Collection;
 import java.util.List;
 
-@Named
-@Singleton
 @Path("/api/v1/org")
 @Tag(name = "JsonStore")
 public class JsonStoreResource implements Resource {
@@ -171,7 +167,6 @@ public class JsonStoreResource implements Resource {
 
 
     @POST
-//    @ApiOperation("Updates the access level for the specified store")
     @Path("/{orgName}/jsonstore/{storeName}/access")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)

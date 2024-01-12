@@ -20,22 +20,20 @@ package com.walmartlabs.concord.server.security;
  * =====
  */
 
+import com.walmartlabs.concord.server.boot.resteasy.ExceptionMapperSupport;
 import org.apache.shiro.authz.UnauthenticatedException;
-import org.sonatype.siesta.ExceptionMapperSupport;
 
-import javax.inject.Named;
-import javax.inject.Singleton;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
+import javax.ws.rs.ext.Provider;
 
-@Named
-@Singleton
+@Provider
 public class UnauthenticatedExceptionMapper extends ExceptionMapperSupport<UnauthenticatedException> {
 
     @Override
-    protected Response convert(UnauthenticatedException exception, String id) {
+    protected Response convert(UnauthenticatedException exception) {
         return Response.status(Status.UNAUTHORIZED)
                 .header(HttpHeaders.CONTENT_TYPE, MediaType.TEXT_PLAIN_TYPE)
                 .entity(exception.getMessage())

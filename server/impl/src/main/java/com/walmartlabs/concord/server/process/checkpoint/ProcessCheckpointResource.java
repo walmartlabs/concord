@@ -23,7 +23,6 @@ package com.walmartlabs.concord.server.process.checkpoint;
 import com.walmartlabs.concord.common.IOUtils;
 import com.walmartlabs.concord.common.TemporaryPath;
 import com.walmartlabs.concord.server.MultipartUtils;
-import com.walmartlabs.concord.server.org.secret.SecretResource;
 import com.walmartlabs.concord.server.process.ProcessEntry;
 import com.walmartlabs.concord.server.process.ProcessEntry.ProcessCheckpointEntry;
 import com.walmartlabs.concord.server.process.ProcessManager;
@@ -32,21 +31,18 @@ import com.walmartlabs.concord.server.process.state.ProcessCheckpointManager;
 import com.walmartlabs.concord.server.sdk.ConcordApplicationException;
 import com.walmartlabs.concord.server.sdk.ProcessKey;
 import com.walmartlabs.concord.server.sdk.metrics.WithTimer;
+import com.walmartlabs.concord.server.sdk.rest.Resource;
+import com.walmartlabs.concord.server.sdk.validation.Validate;
+import com.walmartlabs.concord.server.sdk.validation.ValidationErrorsException;
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Schema;
-import io.swagger.v3.oas.annotations.parameters.RequestBody;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.jboss.resteasy.plugins.providers.multipart.MultipartInput;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.sonatype.siesta.Resource;
-import org.sonatype.siesta.Validate;
-import org.sonatype.siesta.ValidationErrorsException;
 
 import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
 import javax.validation.Valid;
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
@@ -58,8 +54,6 @@ import java.nio.file.StandardCopyOption;
 import java.util.List;
 import java.util.UUID;
 
-@Named
-@Singleton
 @Path("/api/v1/process")
 @Tag(name = "Checkpoint")
 public class ProcessCheckpointResource implements Resource {
@@ -116,8 +110,7 @@ public class ProcessCheckpointResource implements Resource {
     @Consumes(MediaType.MULTIPART_FORM_DATA)
     @Operation(description = "Upload checkpoint")
     public void uploadCheckpoint(@PathParam("id") UUID instanceId,
-                                 @RequestBody(content = @Content(schema = @Schema(type = "object")))
-                                 MultipartInput input) {
+                                 @Parameter(schema = @Schema(type = "object", implementation = Object.class)) MultipartInput input) {
 
         // TODO replace with ProcessKeyCache
         ProcessEntry entry = processManager.assertProcess(instanceId);
