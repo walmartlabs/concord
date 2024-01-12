@@ -142,11 +142,11 @@ public class ProjectResource implements Resource {
      * Get the KV capacity.
      */
     @GET
-    @ApiOperation("Get KV Capacity")
     @Path("/{orgName}/project/{projectName}/kv/capacity")
     @Produces(MediaType.APPLICATION_JSON)
-    public ProjectKvCapacity getCapacity(@ApiParam @PathParam("orgName") @ConcordKey String orgName,
-                                         @ApiParam @PathParam("projectName") @ConcordKey String projectName) {
+    @Operation(description = "Get a project's KV capacity", operationId = "getProjectKVCapacity")
+    public ProjectKvCapacity getCapacity(@PathParam("orgName") @ConcordKey String orgName,
+                                         @PathParam("projectName") @ConcordKey String projectName) {
 
         return projectManager.getKvCapacity(orgName, projectName);
     }
