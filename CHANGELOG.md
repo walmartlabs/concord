@@ -4,6 +4,8 @@
 
 ### Added
 
+- console2: kv capacity
+([#795](https://github.com/walmartlabs/concord/pull/795)).
 
 ### Changed
 
