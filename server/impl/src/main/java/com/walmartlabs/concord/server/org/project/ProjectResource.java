@@ -4,7 +4,7 @@ package com.walmartlabs.concord.server.org.project;
  * *****
  * Concord
  * -----
- * Copyright (C) 2017 - 2018 Walmart Inc.
+ * Copyright (C) 2017 - 2023 Walmart Inc.
  * -----
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -136,6 +136,19 @@ public class ProjectResource implements Resource {
         ProjectEntry project = accessManager.assertAccess(org.getId(), null, projectName, ResourceAccessLevel.READER, false);
 
         return kvDao.list(project.getId(), offset, limit, filter);
+    }
+
+    /**
+     * Get the KV capacity.
+     */
+    @GET
+    @Path("/{orgName}/project/{projectName}/kv/capacity")
+    @Produces(MediaType.APPLICATION_JSON)
+    @Operation(description = "Get a project's KV capacity", operationId = "getProjectKVCapacity")
+    public ProjectKvCapacity getCapacity(@PathParam("orgName") @ConcordKey String orgName,
+                                         @PathParam("projectName") @ConcordKey String projectName) {
+
+        return projectManager.getKvCapacity(orgName, projectName);
     }
 
     @GET
