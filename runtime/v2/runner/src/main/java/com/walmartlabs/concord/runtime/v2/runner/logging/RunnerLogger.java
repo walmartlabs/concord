@@ -28,5 +28,5 @@ public interface RunnerLogger {
     void withContext(LogContext context, Runnable runnable);
 
     @Nullable
-    Long createSegmentId(String segmentName, UUID correlationId);
+    Long createSegment(String segmentName, UUID correlationId);
 }

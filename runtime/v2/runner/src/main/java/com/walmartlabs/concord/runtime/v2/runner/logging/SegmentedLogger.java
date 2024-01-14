@@ -48,7 +48,7 @@ public class SegmentedLogger implements RunnerLogger {
     }
 
     @Override
-    public Long createSegmentId(String segmentName, UUID correlationId) {
+    public Long createSegment(String segmentName, UUID correlationId) {
         return loggingClient.createSegment(correlationId, segmentName);
     }
 

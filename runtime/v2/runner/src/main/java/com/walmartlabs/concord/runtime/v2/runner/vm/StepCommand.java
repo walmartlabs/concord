@@ -160,7 +160,7 @@ public abstract class StepCommand<T extends Step> implements Command {
                 .correlationId(correlationId)
                 .redirectSystemOutAndErr(redirectSystemOutAndErr)
                 .logLevel(getLogLevel(step))
-                .segmentId(runtime.getService(RunnerLogger.class).createSegmentId(segmentName, correlationId))
+                .segmentId(runtime.getService(RunnerLogger.class).createSegment(segmentName, correlationId))
                 .build();
     }
 
