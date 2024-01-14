@@ -1251,7 +1251,7 @@ public class MainTest {
         save(ProcessConfiguration.builder()
                 .build());
 
-        checkpointService.put("first", Paths.get(MainTest.class.getResource("checkpointRestore2/first_1.93.0.zip").toURI()));
+        checkpointService.put("first", Paths.get(MainTest.class.getResource("checkpointRestore2/first_1.103.1.zip").toURI()));
         checkpointService.restore("first", workDir);
 
         run();

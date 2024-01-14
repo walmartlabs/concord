@@ -64,10 +64,18 @@ public class SegmentedLogger implements RunnerLogger {
                 SysOutOverSLF4J.sendSystemOutAndErrToSLF4J(LogLevel.INFO, LogLevel.ERROR);
             }
 
+            boolean exceptionOccurred = false;
             try {
                 runnable.run();
+            } catch (Exception e) {
+                exceptionOccurred = true;
+                throw e;
             } finally {
-                log.info(FINALIZE_SESSION_MARKER, "<<finalize>>");
+                if (exceptionOccurred) {
+                    log.error(FINALIZE_SESSION_MARKER, "<<finalize>>");
+                } else {
+                    log.info(FINALIZE_SESSION_MARKER, "<<finalize>>");
+                }
             }
         });
     }

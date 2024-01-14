@@ -60,14 +60,12 @@ public class RetryWrapper implements Command {
 
     @Override
     public void eval(Runtime runtime, State state, ThreadId threadId) {
-        try {
-            execute(runtime, state, threadId);
-        } catch (Exception e) {
-            if (cmd instanceof StepCommand) {
-                ((StepCommand<?>) cmd).logStepException(e, state, threadId);
-            }
-            throw e;
-        }
+        execute(runtime, state, threadId);
+    }
+
+    @Override
+    public void onException(Runtime runtime, Exception e, State state, ThreadId threadId) {
+        cmd.onException(runtime, e, state, threadId);
     }
 
     private void execute(Runtime runtime, State state, ThreadId threadId) {

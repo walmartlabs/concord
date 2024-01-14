@@ -28,6 +28,7 @@ import com.walmartlabs.concord.runtime.v2.model.Location;
 import com.walmartlabs.concord.runtime.v2.model.Step;
 import com.walmartlabs.concord.runtime.v2.runner.context.ContextFactory;
 import com.walmartlabs.concord.runtime.v2.runner.logging.LogContext;
+import com.walmartlabs.concord.runtime.v2.runner.logging.LogUtils;
 import com.walmartlabs.concord.runtime.v2.runner.logging.RunnerLogger;
 import com.walmartlabs.concord.runtime.v2.runner.logging.SegmentedLogger;
 import com.walmartlabs.concord.runtime.v2.runner.tasks.ContextProvider;
@@ -59,8 +60,9 @@ public abstract class StepCommand<T extends Step> implements Command {
 
     private final T step;
 
-    // TODO: make final after there is no state of the processes of the previous version.
-    private UUID correlationId;
+    private final UUID correlationId;
+
+    private LogContext logContext;
 
     protected StepCommand(T step) {
         this(UUID.randomUUID(), step);
@@ -83,7 +85,7 @@ public abstract class StepCommand<T extends Step> implements Command {
         UUID correlationId = getCorrelationId();
         Context ctx = contextFactory.create(runtime, state, threadId, step, correlationId);
 
-        LogContext logContext = getLogContext(runtime, ctx, correlationId);
+        logContext = getLogContext(runtime, ctx, correlationId);
         if (logContext == null) {
             executeWithContext(ctx, runtime, state, threadId);
         } else {
@@ -93,29 +95,31 @@ public abstract class StepCommand<T extends Step> implements Command {
     }
 
     public UUID getCorrelationId() {
-        // backward compatibility with old process state
-        if (correlationId == null) {
-            correlationId = UUID.randomUUID();
-        }
         return correlationId;
     }
 
     private void executeWithContext(Context ctx, Runtime runtime, State state, ThreadId threadId) {
         ContextProvider.withContext(ctx, () -> {
-            try {
-                execute(runtime, state, threadId);
-            } catch (Exception e) {
-                logStepException(e, state, threadId);
-                throw e;
-            }
+            logContext = LogUtils.getContext();
+            execute(runtime, state, threadId);
         });
     }
 
-    protected void logStepException(Exception e, State state, ThreadId threadId) {
+    @Override
+    public void onException(Runtime runtime, Exception e, State state, ThreadId threadId) {
         if (step.getLocation() == null) {
             return;
         }
 
+        if (logContext == null) {
+            logException(e, state, threadId);
+        } else {
+            runtime.getService(RunnerLogger.class).withContext(logContext,
+                    () -> logException(e, state, threadId));
+        }
+    }
+
+    private void logException(Exception e, State state, ThreadId threadId) {
         log.error("{} {}", Location.toErrorPrefix(step.getLocation()), getExceptionMessage(e));
         List<StackTraceItem> stackTrace = state.getStackTrace(threadId);
         if (!stackTrace.isEmpty()) {
@@ -145,14 +149,9 @@ public abstract class StepCommand<T extends Step> implements Command {
     protected String getSegmentName(Context ctx, T step) {
         if (step instanceof AbstractStep) {
             String rawSegmentName = SegmentedLogger.getSegmentName((AbstractStep<?>) step);
-            try {
-                String segmentName = ctx.eval(rawSegmentName, String.class);
-                if (segmentName != null) {
-                    return segmentName;
-                }
-            } catch (Exception e) {
-                logStepException(e, ctx.execution().state(), ctx.execution().currentThreadId());
-                throw e;
+            String segmentName = ctx.eval(rawSegmentName, String.class);
+            if (segmentName != null) {
+                return segmentName;
             }
         }
 

@@ -25,6 +25,7 @@ import com.walmartlabs.concord.runtime.v2.model.FlowCallOptions;
 import com.walmartlabs.concord.runtime.v2.model.ProcessDefinition;
 import com.walmartlabs.concord.runtime.v2.runner.compiler.CompilerUtils;
 import com.walmartlabs.concord.runtime.v2.runner.logging.LogContext;
+import com.walmartlabs.concord.runtime.v2.runner.logging.LogUtils;
 import com.walmartlabs.concord.runtime.v2.sdk.Compiler;
 import com.walmartlabs.concord.runtime.v2.sdk.*;
 import com.walmartlabs.concord.svm.Runtime;
@@ -83,7 +84,7 @@ public class FlowCallCommand extends StepCommand<FlowCall> {
         // and put it into the callee's frame
         Command processOutVars;
         if (!opts.outExpr().isEmpty()) {
-            processOutVars = new EvalVariablesCommand(getStep(), opts.outExpr(), innerFrame);
+            processOutVars = new EvalVariablesCommand(getStep(), opts.outExpr(), innerFrame, LogUtils.getContext());
         } else {
             processOutVars = new CopyVariablesCommand(opts.out(), innerFrame, VMUtils::assertNearestRoot);
         }
@@ -103,17 +104,19 @@ public class FlowCallCommand extends StepCommand<FlowCall> {
         // for backward compatibility (java8 concord 1.92.0 version)
         private static final long serialVersionUID = -7294220776008029488L;
 
-        // TODO: backward compatibility
+        // TODO: only for backward compatibility
         private final FlowCall step;
 
         private final Map<String, Serializable> variables;
         private final Frame variablesFrame;
+        private final LogContext logContext;
 
-        private EvalVariablesCommand(FlowCall step, Map<String, Serializable> variables, Frame variablesFrame) {
+        private EvalVariablesCommand(FlowCall step, Map<String, Serializable> variables, Frame variablesFrame, LogContext logContext) {
             super(step);
             this.step = step;
             this.variables = variables;
             this.variablesFrame = variablesFrame;
+            this.logContext = logContext;
         }
 
         @Override
@@ -133,11 +136,10 @@ public class FlowCallCommand extends StepCommand<FlowCall> {
 
         @Override
         protected LogContext getLogContext(Runtime runtime, Context ctx, UUID correlationId) {
-            // TODO: return original FlowCall LogContext...
-            return null;
+            return logContext;
         }
 
-        // TODO: backward compatibility
+        // TODO: only for backward compatibility
         @Override
         public FlowCall getStep() {
             return step;
