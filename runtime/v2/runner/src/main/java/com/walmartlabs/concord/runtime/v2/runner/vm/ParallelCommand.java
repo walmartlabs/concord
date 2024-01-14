@@ -23,10 +23,9 @@ package com.walmartlabs.concord.runtime.v2.runner.vm;
 import com.walmartlabs.concord.runtime.v2.model.ParallelBlock;
 import com.walmartlabs.concord.runtime.v2.model.ParallelBlockOptions;
 import com.walmartlabs.concord.runtime.v2.runner.logging.LogContext;
-import com.walmartlabs.concord.runtime.v2.runner.logging.LogUtils;
+import com.walmartlabs.concord.runtime.v2.sdk.Context;
 import com.walmartlabs.concord.runtime.v2.sdk.EvalContextFactory;
 import com.walmartlabs.concord.runtime.v2.sdk.ExpressionEvaluator;
-import com.walmartlabs.concord.runtime.v2.sdk.Context;
 import com.walmartlabs.concord.svm.Runtime;
 import com.walmartlabs.concord.svm.*;
 
@@ -65,7 +64,7 @@ public class ParallelCommand extends StepCommand<ParallelBlock> {
             Map<String, Object> accumulator = new ConcurrentHashMap<>();
             outVarsCommand = new CollectVariablesCommand(accumulator);
 
-            frame.push(new EvalVariablesCommand(getStep(), accumulator, opts.outExpr(), frame, LogUtils.getContext()));
+            frame.push(new EvalVariablesCommand(getStep(), accumulator, opts.outExpr(), frame, getLogContext()));
         } else {
             outVarsCommand = new CopyVariablesCommand(opts.out(), State::peekFrame, frame);
         }
@@ -108,15 +107,13 @@ public class ParallelCommand extends StepCommand<ParallelBlock> {
         private final Map<String, Object> allVars;
         private final Map<String, Serializable> variables;
         private final Frame target;
-        private final LogContext logContext;
 
         public EvalVariablesCommand(ParallelBlock step, Map<String, Object> allVars, Map<String, Serializable> variables, Frame target, LogContext logContext) {
-            super(step);
+            super(step, logContext);
 
             this.allVars = allVars;
             this.variables = variables;
             this.target = target;
-            this.logContext = logContext;
         }
 
         @Override
@@ -129,11 +126,6 @@ public class ParallelCommand extends StepCommand<ParallelBlock> {
             ExpressionEvaluator expressionEvaluator = runtime.getService(ExpressionEvaluator.class);
             Map<String, Serializable> out = expressionEvaluator.evalAsMap(ecf.global(ctx, allVars), variables);
             out.forEach((k, v) -> VMUtils.putLocal(target, k, v));
-        }
-
-        @Override
-        protected LogContext getLogContext(Runtime runtime, Context ctx, UUID correlationId) {
-            return logContext;
         }
     }
 }

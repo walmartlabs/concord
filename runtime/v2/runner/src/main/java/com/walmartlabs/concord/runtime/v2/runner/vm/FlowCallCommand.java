@@ -25,7 +25,6 @@ import com.walmartlabs.concord.runtime.v2.model.FlowCallOptions;
 import com.walmartlabs.concord.runtime.v2.model.ProcessDefinition;
 import com.walmartlabs.concord.runtime.v2.runner.compiler.CompilerUtils;
 import com.walmartlabs.concord.runtime.v2.runner.logging.LogContext;
-import com.walmartlabs.concord.runtime.v2.runner.logging.LogUtils;
 import com.walmartlabs.concord.runtime.v2.sdk.Compiler;
 import com.walmartlabs.concord.runtime.v2.sdk.*;
 import com.walmartlabs.concord.svm.Runtime;
@@ -34,7 +33,6 @@ import com.walmartlabs.concord.svm.*;
 import java.io.Serializable;
 import java.util.Map;
 import java.util.Objects;
-import java.util.UUID;
 
 public class FlowCallCommand extends StepCommand<FlowCall> {
 
@@ -84,7 +82,7 @@ public class FlowCallCommand extends StepCommand<FlowCall> {
         // and put it into the callee's frame
         Command processOutVars;
         if (!opts.outExpr().isEmpty()) {
-            processOutVars = new EvalVariablesCommand(getStep(), opts.outExpr(), innerFrame, LogUtils.getContext());
+            processOutVars = new EvalVariablesCommand(getStep(), opts.outExpr(), innerFrame, getLogContext());
         } else {
             processOutVars = new CopyVariablesCommand(opts.out(), innerFrame, VMUtils::assertNearestRoot);
         }
@@ -109,14 +107,12 @@ public class FlowCallCommand extends StepCommand<FlowCall> {
 
         private final Map<String, Serializable> variables;
         private final Frame variablesFrame;
-        private final LogContext logContext;
 
         private EvalVariablesCommand(FlowCall step, Map<String, Serializable> variables, Frame variablesFrame, LogContext logContext) {
-            super(step);
+            super(step, logContext);
             this.step = step;
             this.variables = variables;
             this.variablesFrame = variablesFrame;
-            this.logContext = logContext;
         }
 
         @Override
@@ -132,11 +128,6 @@ public class FlowCallCommand extends StepCommand<FlowCall> {
             Map<String, Object> vars = (Map)variablesFrame.getLocals();
             Map<String, Serializable> out = expressionEvaluator.evalAsMap(ecf.global(ctx, vars), variables);
             out.forEach((k, v) -> ctx.variables().set(k, v));
-        }
-
-        @Override
-        protected LogContext getLogContext(Runtime runtime, Context ctx, UUID correlationId) {
-            return logContext;
         }
 
         // TODO: only for backward compatibility

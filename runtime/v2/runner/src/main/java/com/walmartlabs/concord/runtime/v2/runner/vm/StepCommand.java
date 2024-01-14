@@ -28,14 +28,13 @@ import com.walmartlabs.concord.runtime.v2.model.Location;
 import com.walmartlabs.concord.runtime.v2.model.Step;
 import com.walmartlabs.concord.runtime.v2.runner.context.ContextFactory;
 import com.walmartlabs.concord.runtime.v2.runner.logging.LogContext;
-import com.walmartlabs.concord.runtime.v2.runner.logging.LogUtils;
 import com.walmartlabs.concord.runtime.v2.runner.logging.RunnerLogger;
 import com.walmartlabs.concord.runtime.v2.runner.logging.SegmentedLogger;
 import com.walmartlabs.concord.runtime.v2.runner.tasks.ContextProvider;
 import com.walmartlabs.concord.runtime.v2.sdk.Context;
 import com.walmartlabs.concord.runtime.v2.sdk.UserDefinedException;
-import com.walmartlabs.concord.svm.*;
 import com.walmartlabs.concord.svm.Runtime;
+import com.walmartlabs.concord.svm.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -68,9 +67,18 @@ public abstract class StepCommand<T extends Step> implements Command {
         this(UUID.randomUUID(), step);
     }
 
+    protected StepCommand(T step, LogContext logContext) {
+        this(UUID.randomUUID(), step, logContext);
+    }
+
     protected StepCommand(UUID correlationId, T step) {
+        this(correlationId, step, null);
+    }
+
+    protected StepCommand(UUID correlationId, T step, LogContext logContext) {
         this.step = step;
         this.correlationId = correlationId;
+        this.logContext = logContext;
     }
 
     public T getStep() {
@@ -99,10 +107,7 @@ public abstract class StepCommand<T extends Step> implements Command {
     }
 
     private void executeWithContext(Context ctx, Runtime runtime, State state, ThreadId threadId) {
-        ContextProvider.withContext(ctx, () -> {
-            logContext = LogUtils.getContext();
-            execute(runtime, state, threadId);
-        });
+        ContextProvider.withContext(ctx, () -> execute(runtime, state, threadId));
     }
 
     @Override
@@ -129,12 +134,24 @@ public abstract class StepCommand<T extends Step> implements Command {
 
     protected abstract void execute(Runtime runtime, State state, ThreadId threadId);
 
-    protected LogContext getLogContext(Runtime runtime, Context ctx, UUID correlationId) {
+    protected LogContext getLogContext() {
+        return logContext;
+    }
+
+    private LogContext getLogContext(Runtime runtime, Context ctx, UUID correlationId) {
+        if (logContext != null) {
+            return logContext;
+        }
+
         String segmentName = getSegmentName(ctx, getStep());
         if (segmentName == null) {
             return null;
         }
 
+        return buildLogContext(runtime, segmentName, correlationId);
+    }
+
+    private LogContext buildLogContext(Runtime runtime, String segmentName, UUID correlationId) {
         RunnerConfiguration runnerCfg = runtime.getService(RunnerConfiguration.class);
         boolean redirectSystemOutAndErr = runnerCfg.logging().sendSystemOutAndErrToSLF4J();
 
@@ -143,6 +160,7 @@ public abstract class StepCommand<T extends Step> implements Command {
                 .correlationId(correlationId)
                 .redirectSystemOutAndErr(redirectSystemOutAndErr)
                 .logLevel(getLogLevel(step))
+                .segmentId(runtime.getService(RunnerLogger.class).createSegmentId(segmentName, correlationId))
                 .build();
     }
 

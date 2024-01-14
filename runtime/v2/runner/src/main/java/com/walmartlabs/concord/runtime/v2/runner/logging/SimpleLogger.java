@@ -20,7 +20,14 @@ package com.walmartlabs.concord.runtime.v2.runner.logging;
  * =====
  */
 
+import java.util.UUID;
+
 public class SimpleLogger implements RunnerLogger {
+
+    @Override
+    public Long createSegmentId(String segmentName, UUID correlationId) {
+        return null;
+    }
 
     @Override
     public void withContext(LogContext context, Runnable runnable) {
