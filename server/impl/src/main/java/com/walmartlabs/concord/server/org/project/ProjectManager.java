@@ -20,6 +20,7 @@ package com.walmartlabs.concord.server.org.project;
  * =====
  */
 
+import com.walmartlabs.concord.policyengine.PolicyEngine;
 import com.walmartlabs.concord.process.loader.model.ProcessDefinition;
 import com.walmartlabs.concord.server.OperationResult;
 import com.walmartlabs.concord.server.audit.AuditAction;
@@ -57,6 +58,7 @@ public class ProjectManager {
     private final ProjectDao projectDao;
     private final RepositoryDao repositoryDao;
     private final SecretDao secretDao;
+    private final KvDao kvDao;
     private final ProjectRepositoryManager projectRepositoryManager;
     private final ProjectAccessManager accessManager;
     private final AuditLog auditLog;
@@ -69,6 +71,7 @@ public class ProjectManager {
                           ProjectDao projectDao,
                           RepositoryDao repositoryDao,
                           SecretDao secretDao,
+                          KvDao kvDao,
                           ProjectRepositoryManager projectRepositoryManager,
                           ProjectAccessManager accessManager,
                           AuditLog auditLog,
@@ -79,6 +82,7 @@ public class ProjectManager {
         this.projectDao = projectDao;
         this.repositoryDao = repositoryDao;
         this.secretDao = secretDao;
+        this.kvDao = kvDao;
         this.projectRepositoryManager = projectRepositoryManager;
         this.accessManager = accessManager;
         this.auditLog = auditLog;
@@ -140,6 +144,25 @@ public class ProjectManager {
                     .projectId(projectId)
                     .build();
         }
+    }
+
+    public ProjectKvCapacity getKvCapacity(String orgName, String projectName) {
+        OrganizationEntry org = orgManager.assertAccess(orgName, false);
+
+        ProjectEntry project = accessManager.assertAccess(org.getId(), null, projectName, ResourceAccessLevel.READER, false);
+
+        long currentSize = kvDao.count(project.getId());
+
+        PolicyEngine policy = policyManager.get(org.getId(), project.getId(), UserPrincipal.assertCurrent().getId());
+        Integer maxEntries = null;
+        if (policy != null) {
+            maxEntries = policy.getKvPolicy().getMaxEntries();
+        }
+
+        return ProjectKvCapacity.builder()
+                .size(currentSize)
+                .maxSize(maxEntries)
+                .build();
     }
 
     private UUID insert(UUID orgId, String orgName, ProjectEntry entry) {
