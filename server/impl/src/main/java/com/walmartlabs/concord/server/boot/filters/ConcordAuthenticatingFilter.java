@@ -42,6 +42,7 @@ import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 import java.io.IOException;
@@ -139,12 +140,21 @@ public class ConcordAuthenticatingFilter extends AuthenticatingFilter {
 
     @Override
     protected boolean onLoginFailure(AuthenticationToken token, AuthenticationException e, ServletRequest request, ServletResponse response) {
-        log.warn("onLoginFailure ['{}'] -> login failed ({}): {}", token, request.getRemoteAddr(), e.getMessage());
+        log.debug("onLoginFailure ['{}'] -> login failed ({}): {}", token, request.getRemoteAddr(), e.getMessage());
         failedAuths.mark();
 
         Subject s = ThreadContext.getSubject();
         if (s != null) {
             s.logout();
+        }
+
+        HttpSession session = ((HttpServletRequest) request).getSession(false);
+        if (session != null) {
+            session.invalidate();
+
+            // remove JSESSIONID cookie
+            HttpServletResponse resp = WebUtils.toHttp(response);
+            resp.addHeader("Set-Cookie", "JSESSIONID=; Path=/; HttpOnly");
         }
 
         return super.onLoginFailure(token, e, request, response);
