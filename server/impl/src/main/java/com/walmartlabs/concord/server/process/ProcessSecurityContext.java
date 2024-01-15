@@ -65,11 +65,7 @@ public class ProcessSecurityContext {
                 .build();
     }
 
-    public void storeCurrentSubject(ProcessKey processKey) {
-        Subject s = SecurityUtils.getSubject();
-
-        PrincipalCollection src = s.getPrincipals();
-
+    public byte[] serializePrincipals(PrincipalCollection src) {
         // filter out transient principals
         SimplePrincipalCollection dst = new SimplePrincipalCollection();
         for (String realm : src.getRealmNames()) {
@@ -82,8 +78,21 @@ public class ProcessSecurityContext {
                 dst.add(p, realm);
             }
         }
+        return PrincipalUtils.serialize(dst);
+    }
 
-        stateManager.replace(processKey, PRINCIPAL_FILE_PATH, PrincipalUtils.serialize(dst));
+    // TODO: invalidate cache for processKey?
+    public void storeCurrentSubject(ProcessKey processKey) {
+        Subject s = SecurityUtils.getSubject();
+
+        PrincipalCollection src = s.getPrincipals();
+
+        storeSubject(processKey, src);
+    }
+
+    // TODO: invalidate cache for processKey?
+    public void storeSubject(ProcessKey processKey, PrincipalCollection src) {
+        stateManager.replace(processKey, PRINCIPAL_FILE_PATH, serializePrincipals(src));
     }
 
     public PrincipalCollection getPrincipals(PartialProcessKey processKey) {

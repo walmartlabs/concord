@@ -1,10 +1,10 @@
-package com.walmartlabs.concord.runtime.v2.parser;
+package com.walmartlabs.concord.server.org.project;
 
 /*-
  * *****
  * Concord
  * -----
- * Copyright (C) 2017 - 2019 Walmart Inc.
+ * Copyright (C) 2017 - 2023 Walmart Inc.
  * -----
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,22 +20,25 @@ package com.walmartlabs.concord.runtime.v2.parser;
  * =====
  */
 
-import org.immutables.serial.Serial;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import org.immutables.value.Value;
 
-import java.io.Serializable;
-import java.util.Map;
+import javax.annotation.Nullable;
 
 @Value.Immutable
-@Value.Style(jdkOnly = true)
-@Serial.Version(-8269676324702677451L)
-public interface SimpleOptions extends StepOptions {
+@JsonSerialize(as = ImmutableProjectKvCapacity.class)
+@JsonDeserialize(as = ImmutableProjectKvCapacity.class)
+@JsonInclude(JsonInclude.Include.NON_NULL)
+public interface ProjectKvCapacity {
 
-    long serialVersionUID = -8269676324702677451L;
+    long size();
 
-    static SimpleOptions of(Map<String, Serializable> meta) {
-        return ImmutableSimpleOptions.builder()
-                .meta(meta)
-                .build();
+    @Nullable
+    Integer maxSize();
+
+    static ImmutableProjectKvCapacity.Builder builder() {
+        return ImmutableProjectKvCapacity.builder();
     }
 }
