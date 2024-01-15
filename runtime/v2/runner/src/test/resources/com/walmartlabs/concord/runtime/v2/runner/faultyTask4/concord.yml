@@ -1,0 +1,3 @@
+flows:
+  default:
+    - task: faultyTask3
