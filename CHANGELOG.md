@@ -4,8 +4,11 @@
 
 ### Added
 
-- console2: kv capacity
-([#795](https://github.com/walmartlabs/concord/pull/795)).
+- concord-console2: kv capacity
+([#795](https://github.com/walmartlabs/concord/pull/795));
+- concord-server, concord-console2: ability to restart runtime-v2
+processes
+([#850](https://github.com/walmartlabs/concord/pull/850)).
 
 ### Changed
 
@@ -13,6 +16,8 @@
 ([#865](https://github.com/walmartlabs/concord/pull/865)).
 - runtime-v2: fix incorrect variable merging for set variables step
 ([#862](https://github.com/walmartlabs/concord/pull/862)).
+
+
 
 ## [2.7.0] - 2024-01-08
 
