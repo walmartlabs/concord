@@ -41,9 +41,9 @@ public class EnqueueProcessPipeline extends Pipeline {
     @Inject
     public EnqueueProcessPipeline(Injector injector) {
         super(injector,
-                RunAsCurrentProcessUserProcessor.class,
                 LoggingMDCProcessor.class,
                 PayloadRestoreProcessor.class,
+                RunAsCurrentProcessUserProcessor.class,
                 PolicyExportProcessor.class,
                 WorkspaceArchiveProcessor.class,
                 RepositoryProcessor.class,
