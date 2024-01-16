@@ -1,6 +1,6 @@
 # Change log
 
-## [2.8.0] - Unreleased
+## [2.8.0] - 2024-01-15
 
 ### Added
 
