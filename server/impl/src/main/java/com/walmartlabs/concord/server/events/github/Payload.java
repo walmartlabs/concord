@@ -51,7 +51,8 @@ public class Payload {
             "release",
             "team",
             "team_add",
-            "repository"
+            "repository",
+            "workflow_run"
         );
 
     /**
