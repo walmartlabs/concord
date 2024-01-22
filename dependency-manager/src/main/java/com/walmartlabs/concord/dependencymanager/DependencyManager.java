@@ -51,6 +51,7 @@ import javax.xml.bind.DatatypeConverter;
 import java.io.*;
 import java.net.URI;
 import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.*;
 import java.security.MessageDigest;
 import java.util.*;
@@ -131,11 +132,11 @@ public class DependencyManager {
 
         result.addAll(resolveMavenTransitiveDependencies(deps.mavenTransitiveDependencies, deps.mavenExclusions, progressNotifier).stream()
                 .map(DependencyManager::toDependency)
-                .collect(Collectors.toList()));
+                .toList());
 
         result.addAll(resolveMavenSingleDependencies(deps.mavenSingleDependencies, progressNotifier).stream()
                 .map(DependencyManager::toDependency)
-                .collect(Collectors.toList()));
+                .toList());
 
         return result;
     }
@@ -275,6 +276,9 @@ public class DependencyManager {
         excludes.addAll(defaultExclusions);
 
         DependencyRequest dependencyRequest = new DependencyRequest(req, new ExclusionsDependencyFilter(excludes));
+        if (explicitlyResolveV1Client) {
+            dependencyRequest.getCollectRequest().addManagedDependency(new Dependency(ClientDepSelector.CLIENT1_ARTIFACT, ""));
+        }
 
         synchronized (mutex) {
             try {
@@ -396,8 +400,8 @@ public class DependencyManager {
         String[] pairs = query.split("&");
         for (String pair : pairs) {
             int idx = pair.indexOf("=");
-            String k = URLDecoder.decode(pair.substring(0, idx), "UTF-8");
-            String v = URLDecoder.decode(pair.substring(idx + 1), "UTF-8");
+            String k = URLDecoder.decode(pair.substring(0, idx), StandardCharsets.UTF_8);
+            String v = URLDecoder.decode(pair.substring(idx + 1), StandardCharsets.UTF_8);
 
             List<String> vv = m.computeIfAbsent(k, s -> new ArrayList<>());
             vv.add(v);
@@ -410,6 +414,8 @@ public class DependencyManager {
 
         private static final String CONCORD_CLIENT_GROUP_ID = "com.walmartlabs.concord";
         private static final String CONCORD_CLIENT_ARTIFACT_ID = "concord-client";
+
+        public static final Artifact CLIENT1_ARTIFACT = new DefaultArtifact(CONCORD_CLIENT_GROUP_ID, CONCORD_CLIENT_ARTIFACT_ID, "jar", Version.get());
 
         private final boolean transitive;
         private final Collection<String> excluded;
