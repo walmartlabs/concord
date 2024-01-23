@@ -118,7 +118,7 @@ public class ApiTokenCreator implements CustomSqlChange, CustomSqlRollback {
 
     @Override
     public void setUp() {
-        if (this.skip.equals("true")) {
+        if ("true".equals(this.skip)) {
             this.token = null;
             return;
         }
