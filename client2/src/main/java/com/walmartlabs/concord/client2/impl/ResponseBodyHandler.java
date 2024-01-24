@@ -77,7 +77,7 @@ public final class ResponseBodyHandler {
 
     private static boolean isJsonMime(String mime) {
         String jsonMime = "(?i)^(application/json|[^;/ \t]+/[^;/ \t]+[+]json)[ \t]*(;.*)?$";
-        return mime != null && (mime.matches(jsonMime) || "*/*".equals(mime));
+        return mime != null && (mime.matches(jsonMime) || mime.equals("*/*"));
     }
 
     private static String toString(InputStream input, Charset charset) throws IOException {
