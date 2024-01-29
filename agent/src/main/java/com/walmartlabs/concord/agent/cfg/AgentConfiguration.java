@@ -59,6 +59,7 @@ public class AgentConfiguration {
     private final int maintenanceModeListenerPort;
 
     private final boolean explicitlyResolveV1Client;
+    private final boolean mavenOfflineMode;
 
     @Inject
     public AgentConfiguration(Config cfg) {
@@ -86,6 +87,7 @@ public class AgentConfiguration {
         this.pollInterval = cfg.getDuration("pollInterval", TimeUnit.MILLISECONDS);
 
         this.explicitlyResolveV1Client = cfg.getBoolean("explicitlyResolveV1Client");
+        this.mavenOfflineMode = cfg.getBoolean("mavenOfflineMode");
     }
 
     public String getAgentId() {
@@ -146,5 +148,9 @@ public class AgentConfiguration {
 
     public boolean isExplicitlyResolveV1Client() {
         return explicitlyResolveV1Client;
+    }
+
+    public boolean isMavenOfflineMode() {
+        return mavenOfflineMode;
     }
 }
