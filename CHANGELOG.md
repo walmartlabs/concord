@@ -4,7 +4,11 @@
 
 ### Added
 
+concord-agent, dependency-manager: support for Maven offline mode
+([#869](https://github.com/walmartlabs/concord/pull/869))
+
 ### Changed
+
 
 
 ## [2.8.0] - 2024-01-15
