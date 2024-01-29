@@ -22,7 +22,9 @@ package com.walmartlabs.concord.dependencymanager;
 
 import com.walmartlabs.concord.common.ExceptionUtils;
 import org.apache.maven.repository.internal.MavenRepositorySystemUtils;
-import org.eclipse.aether.*;
+import org.eclipse.aether.DefaultRepositorySystemSession;
+import org.eclipse.aether.RepositorySystem;
+import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.artifact.DefaultArtifact;
 import org.eclipse.aether.collection.CollectRequest;
@@ -36,6 +38,7 @@ import org.eclipse.aether.repository.RepositoryPolicy;
 import org.eclipse.aether.resolution.*;
 import org.eclipse.aether.transfer.AbstractTransferListener;
 import org.eclipse.aether.transfer.ArtifactNotFoundException;
+import org.eclipse.aether.transfer.RepositoryOfflineException;
 import org.eclipse.aether.transfer.TransferEvent;
 import org.eclipse.aether.util.artifact.JavaScopes;
 import org.eclipse.aether.util.filter.ExclusionsDependencyFilter;
@@ -48,7 +51,10 @@ import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 import javax.xml.bind.DatatypeConverter;
-import java.io.*;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.io.UnsupportedEncodingException;
 import java.net.URI;
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
@@ -78,6 +84,7 @@ public class DependencyManager {
     private final List<String> defaultExclusions;
 
     private final boolean explicitlyResolveV1Client;
+    private final boolean offlineMode;
 
     @Inject
     public DependencyManager(DependencyManagerConfiguration cfg) throws IOException {
@@ -93,6 +100,7 @@ public class DependencyManager {
         this.strictRepositories = cfg.strictRepositories();
         this.defaultExclusions = cfg.exclusions();
         this.explicitlyResolveV1Client = cfg.explicitlyResolveV1Client();
+        this.offlineMode = cfg.offlineMode();
     }
 
     public Collection<DependencyEntity> resolve(Collection<URI> items) throws IOException {
@@ -315,6 +323,8 @@ public class DependencyManager {
             }
         });
 
+        session.setOffline(offlineMode);
+
         return session;
     }
 
@@ -432,7 +442,7 @@ public class DependencyManager {
         @Override
         public boolean selectDependency(Dependency dependency) {
             if (CONCORD_CLIENT_GROUP_ID.equals(dependency.getArtifact().getGroupId()) &&
-                    CONCORD_CLIENT_ARTIFACT_ID.equals(dependency.getArtifact().getArtifactId())) {
+                CONCORD_CLIENT_ARTIFACT_ID.equals(dependency.getArtifact().getArtifactId())) {
                 return true;
             }
 
@@ -535,7 +545,7 @@ public class DependencyManager {
         public boolean canRetry(Exception e) {
             List<Throwable> exceptions = ExceptionUtils.getExceptionList(e);
             Throwable last = exceptions.get(exceptions.size() - 1);
-            return !(last instanceof ArtifactNotFoundException);
+            return !((last instanceof RepositoryOfflineException) || (last instanceof ArtifactNotFoundException));
         }
     }
 }
