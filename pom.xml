@@ -61,7 +61,7 @@
 
     <properties>
         <maven.compiler.release>17</maven.compiler.release>
-        <maven.compiler.source>${maven.compiler.release</maven.compiler.source>
+        <maven.compiler.source>${maven.compiler.release}</maven.compiler.source>
         <maven.compiler.target>${maven.compiler.release}</maven.compiler.target>
 
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
