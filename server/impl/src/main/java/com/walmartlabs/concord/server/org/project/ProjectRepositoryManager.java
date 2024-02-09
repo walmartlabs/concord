@@ -178,7 +178,9 @@ public class ProjectRepositoryManager {
                     entry.isTriggersDisabled());
         }
 
-        repositoryRefresher.refresh(tx, projectId, entry.getName(), processDefinition);
+        if (!entry.isDisabled()) {
+            repositoryRefresher.refresh(tx, projectId, entry.getName(), processDefinition);
+        }
 
         return ImmutableInsertUpdateResult.builder()
                 .prevEntry(prevEntry)
