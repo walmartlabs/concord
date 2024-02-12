@@ -2,7 +2,7 @@
  * *****
  * Concord
  * -----
- * Copyright (C) 2017 - 2024 Walmart Inc.
+ * Copyright (C) 2017 - 2018 Walmart Inc.
  * -----
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,3 +17,12 @@
  * limitations under the License.
  * =====
  */
+.ui.cards>.card {
+    border: 1px solid #D4D4ED;
+    box-shadow: none;
+    border-radius: 0;
+}
+
+.no-margin-top {
+    margin-top: 0 !important;
+}
