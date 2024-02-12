@@ -95,6 +95,7 @@ public class TaskCallInterceptor {
     private static ImmutableTaskCallEvent.Builder eventBuilder(Phase phase, Method method, CallContext ctx) {
         return TaskCallEvent.builder()
                 .phase(phase)
+                .threadId(ctx.threadId())
                 .correlationId(ctx.correlationId())
                 .currentStep(ctx.currentStep())
                 .input(method.arguments())
