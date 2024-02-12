@@ -71,6 +71,7 @@ public class TaskCallCommand extends StepCommand<TaskCall> {
         TaskCallInterceptor interceptor = runtime.getService(TaskCallInterceptor.class);
 
         CallContext callContext = CallContext.builder()
+                .threadId(threadId)
                 .taskName(taskName)
                 .correlationId(ctx.execution().correlationId())
                 .currentStep(getStep())
