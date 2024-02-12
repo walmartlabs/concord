@@ -67,6 +67,7 @@ public class TaskResumeCommand extends StepCommand<TaskCall> {
         }
 
         TaskCallInterceptor.CallContext callContext = TaskCallInterceptor.CallContext.builder()
+                .threadId(threadId)
                 .taskName(taskName)
                 .correlationId(ctx.execution().correlationId())
                 .currentStep(getStep())

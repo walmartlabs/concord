@@ -26,8 +26,10 @@ import com.walmartlabs.concord.runtime.v2.model.AbstractStep;
 import com.walmartlabs.concord.runtime.v2.model.ProcessDefinition;
 import com.walmartlabs.concord.runtime.v2.model.Step;
 import com.walmartlabs.concord.runtime.v2.runner.tasks.TaskCallEvent.Phase;
+import com.walmartlabs.concord.svm.ThreadId;
 import org.immutables.value.Value;
 
+import javax.annotation.Nullable;
 import javax.inject.Inject;
 import java.io.Serializable;
 import java.lang.annotation.Annotation;
@@ -149,6 +151,8 @@ public class TaskCallInterceptor {
         Step currentStep();
 
         ProcessDefinition processDefinition();
+
+        ThreadId threadId();
 
         static ImmutableCallContext.Builder builder() {
             return ImmutableCallContext.builder();
