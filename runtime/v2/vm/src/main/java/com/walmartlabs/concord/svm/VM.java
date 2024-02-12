@@ -48,12 +48,26 @@ public class VM {
     public void start(State state) throws Exception {
         log.debug("start -> start");
 
-        listeners.fireBeforeProcessStart();
-
         Runtime runtime = runtimeFactory.create(this);
-        EvalResult result = execute(runtime, state);
 
-        listeners.fireAfterProcessEnds(runtime, state, result.lastFrame);
+        listeners.fireBeforeProcessStart(runtime, state);
+
+        EvalResult result;
+        try {
+            result = execute(runtime, state);
+        } catch (Exception e) {
+            listeners.fireProcessError(runtime, state);
+            throw e;
+        }
+
+        boolean suspended = state.threadStatus().entrySet().stream()
+                .anyMatch(e -> e.getValue() == ThreadStatus.SUSPENDED);
+
+        if (suspended) {
+            listeners.fireAfterProcessSuspended(runtime, state, result.lastFrame);
+        } else {
+            listeners.fireAfterProcessEnds(runtime, state, result.lastFrame);
+        }
 
         log.debug("start -> done");
     }
@@ -73,12 +87,26 @@ public class VM {
 
         wakeSuspended(state);
 
-        listeners.fireBeforeProcessResume();
-
         Runtime runtime = runtimeFactory.create(this);
-        EvalResult result = execute(runtime, state);
 
-        listeners.fireAfterProcessEnds(runtime, state, result.lastFrame);
+        listeners.fireBeforeProcessResume(runtime, state);
+
+        EvalResult result;
+        try {
+            result = execute(runtime, state);
+        } catch (Exception e) {
+            listeners.fireProcessError(runtime, state);
+            throw e;
+        }
+
+        boolean suspended = state.threadStatus().entrySet().stream()
+                .anyMatch(e -> e.getValue() == ThreadStatus.SUSPENDED);
+
+        if (suspended) {
+            listeners.fireAfterProcessSuspended(runtime, state, result.lastFrame);
+        } else {
+            listeners.fireAfterProcessEnds(runtime, state, result.lastFrame);
+        }
 
         log.debug("resume ['{}'] -> done", eventRefs);
     }
@@ -147,6 +175,10 @@ public class VM {
                     }
                 } catch (Exception e) {
                     cmd.onException(runtime, e, state, threadId);
+
+                    if (listeners.fireCommandError(runtime, state, threadId, cmd) == BREAK) {
+                        break;
+                    }
 
                     unwind(state, threadId, e);
                 }
@@ -232,7 +264,7 @@ public class VM {
         }
     }
 
-    private static class EvalResult implements Serializable {
+    public static class EvalResult implements Serializable {
 
         private static final long serialVersionUID = 1L;
 

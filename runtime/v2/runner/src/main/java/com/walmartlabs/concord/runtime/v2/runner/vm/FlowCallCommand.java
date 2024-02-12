@@ -33,10 +33,11 @@ import com.walmartlabs.concord.svm.*;
 import java.io.Serializable;
 import java.util.Map;
 import java.util.Objects;
+import java.util.UUID;
 
 public class FlowCallCommand extends StepCommand<FlowCall> {
 
-    private static final String FLOW_NAME_VARIABLE = "__flowName__b6bc6c58-c2bc-434c-9a6b-b0092237720b";
+    public static final String FLOW_NAME_VARIABLE = "__flowName__b6bc6c58-c2bc-434c-9a6b-b0092237720b";
 
     private static final long serialVersionUID = 1L;
 
@@ -88,6 +89,7 @@ public class FlowCallCommand extends StepCommand<FlowCall> {
         }
 
         // push the out handler first so it executes after the called flow's frame is done
+        state.peekFrame(threadId).push(new FlowCallEnded(getCorrelationId(), getStep()));
         state.peekFrame(threadId).push(processOutVars);
         state.pushFrame(threadId, innerFrame);
         VMUtils.putLocal(innerFrame, FLOW_NAME_VARIABLE, flowName);
@@ -95,6 +97,19 @@ public class FlowCallCommand extends StepCommand<FlowCall> {
 
     public static String getFlowName(State state, ThreadId threadId) {
         return VMUtils.getLocal(state, threadId, FLOW_NAME_VARIABLE);
+    }
+
+    public static class FlowCallEnded extends StepCommand<FlowCall> {
+
+        protected FlowCallEnded(UUID correlationId, FlowCall step) {
+            super(correlationId, step);
+        }
+
+        @Override
+        protected void execute(Runtime runtime, State state, ThreadId threadId) {
+            Frame frame = state.peekFrame(threadId);
+            frame.pop();
+        }
     }
 
     private static class EvalVariablesCommand extends StepCommand<FlowCall> {

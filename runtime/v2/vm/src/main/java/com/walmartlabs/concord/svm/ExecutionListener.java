@@ -42,6 +42,13 @@ public interface ExecutionListener {
     }
 
     /**
+     * Called when command evaluation throws exception.
+     */
+    default Result commandError(Runtime runtime, VM vm, State state, ThreadId threadId, Command cmd) {
+        return Result.CONTINUE;
+    }
+
+    /**
      * Called after each eval loop iteration.
      */
     default Result afterEval(Runtime runtime, VM vm, State state) {
@@ -58,23 +65,25 @@ public interface ExecutionListener {
     /**
      * Called before the process executes its first step.
      */
-    default void beforeProcessStart() {
+    default void beforeProcessStart(Runtime runtime, State state) {
     }
 
     /**
      * Called before the process resumes the execution.
      */
-    default void beforeProcessResume() {
+    default void beforeProcessResume(Runtime runtime, State state) {
+    }
+
+    default void afterProcessSuspended(Runtime runtime, State state, Frame lastFrame) {
     }
 
     /**
      * Called after the process calls the last step.
-     *
-     * @param runtime
-     * @param state
-     * @param lastFrame
      */
     default void afterProcessEnds(Runtime runtime, State state, Frame lastFrame) {
+    }
+
+    default void processError(Runtime runtime, State state) {
     }
 
     enum Result {

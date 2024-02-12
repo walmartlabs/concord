@@ -43,6 +43,7 @@ public class InMemoryState implements Serializable, State {
     private final Map<ThreadId, String> eventRefs = new HashMap<>();
     private final Map<ThreadId, Exception> threadErrors = new HashMap<>();
     private final Map<ThreadId, List<StackTraceItem>> stackTrace = new HashMap<>();
+    private final Map<String, Serializable> globalVariables = new LinkedHashMap<>();
 
     private final ThreadId rootThreadId;
 
@@ -257,6 +258,16 @@ public class InMemoryState implements Serializable, State {
 
             stackTrace.remove(threadId);
         }
+    }
+
+    @Override
+    public Map<String, Serializable> globalVariables() {
+        return globalVariables;
+    }
+
+    @Override
+    public void setGlobalVariables(Map<String, Serializable> vars) {
+        globalVariables.putAll(vars);
     }
 
     @Override

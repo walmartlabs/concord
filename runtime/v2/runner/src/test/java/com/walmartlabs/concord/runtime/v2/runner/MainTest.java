@@ -148,7 +148,7 @@ public class MainTest {
                 Multibinder<ExecutionListener> executionListeners = Multibinder.newSetBinder(binder(), ExecutionListener.class);
                 executionListeners.addBinding().toInstance(new ExecutionListener(){
                     @Override
-                    public void beforeProcessStart() {
+                    public void beforeProcessStart(Runtime runtime, State state) {
                         SensitiveDataHolder.getInstance().get().clear();
                     }
                 });
