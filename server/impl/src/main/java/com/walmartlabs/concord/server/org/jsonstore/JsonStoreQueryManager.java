@@ -31,15 +31,11 @@ import com.walmartlabs.concord.server.policy.EntityAction;
 import com.walmartlabs.concord.server.policy.EntityType;
 import com.walmartlabs.concord.server.policy.PolicyManager;
 import com.walmartlabs.concord.server.policy.PolicyUtils;
-import org.sonatype.siesta.ValidationErrorsException;
+import com.walmartlabs.concord.server.sdk.validation.ValidationErrorsException;
 
 import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
 import java.util.*;
 
-@Named
-@Singleton
 public class JsonStoreQueryManager {
 
     private final PolicyManager policyManager;

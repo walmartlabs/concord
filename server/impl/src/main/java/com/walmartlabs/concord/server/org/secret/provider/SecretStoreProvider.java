@@ -24,12 +24,10 @@ import com.walmartlabs.concord.server.org.secret.store.SecretStore;
 import com.walmartlabs.ollie.config.Config;
 
 import javax.inject.Inject;
-import javax.inject.Named;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Set;
 
-@Named
 public class SecretStoreProvider {
 
     private final Set<SecretStore> stores;

@@ -1,5 +1,159 @@
 # Change log
 
+## [2.8.0] - 2024-01-15
+
+### Added
+
+- concord-console2: kv capacity
+([#795](https://github.com/walmartlabs/concord/pull/795));
+- concord-server, concord-console2: ability to restart runtime-v2
+processes
+([#850](https://github.com/walmartlabs/concord/pull/850)).
+
+### Changed
+
+- concord-server: invalidate session on failed login
+([#859](https://github.com/walmartlabs/concord/pull/859));
+- runtime-v2: error location for loop, call, parallel, retry commands (v2)
+([#865](https://github.com/walmartlabs/concord/pull/865));
+- runtime-v2: fix incorrect variable merging for set variables step
+([#862](https://github.com/walmartlabs/concord/pull/862)).
+
+
+
+## [2.7.0] - 2024-01-08
+
+### Added
+
+- concord-cli: Add option for default task variables
+([#848](https://github.com/walmartlabs/concord/pull/848)).
+
+### Changed
+
+- runtime-v2: resume event to json serialization fix
+([#860](https://github.com/walmartlabs/concord/pull/860));
+- project: drop siesta-server dependency
+([#826](https://github.com/walmartlabs/concord/pull/826));
+- resource-task: writeYaml: do not split YAML into multiple lines
+([#854](https://github.com/walmartlabs/concord/pull/854));
+- concord-server: logout any session on login failure
+([#858](https://github.com/walmartlabs/concord/pull/858)).
+
+### Breaking
+
+- project: drop siesta-api dependency
+([#857](https://github.com/walmartlabs/concord/pull/857)).
+
+
+
+## [2.6.0] - 2023-12-28
+
+### Added
+
+- concord-server: expose fetch with version
+([#853](https://github.com/walmartlabs/concord/pull/853));
+- server: allow regexp in meta filters
+([#852](https://github.com/walmartlabs/concord/pull/852)).
+
+### Changed
+
+- project: switch to concord-client2
+([#821](https://github.com/walmartlabs/concord/pull/821));
+- concord-server: remove more @Named
+([#839](https://github.com/walmartlabs/concord/pull/839));
+- client2: allow serialize collections
+([#846](https://github.com/walmartlabs/concord/pull/846));
+- runtime-v2: skip annotations for varargs
+([#845](https://github.com/walmartlabs/concord/pull/845));
+- concord-repository: fetch with quiet option
+([#851](https://github.com/walmartlabs/concord/pull/851)).
+
+
+
+## [2.5.0] - 2023-12-10
+
+### Added
+
+- concord-server: support @Priority annotation when binding
+Jetty components
+([#841](https://github.com/walmartlabs/concord/pull/841));
+
+### Changed
+
+- runtime-v2: allow "true|false" string in if expression
+([#844](https://github.com/walmartlabs/concord/pull/844));
+- docker-images: Upgrade default Ansible installation to 2.14
+([#843](https://github.com/walmartlabs/concord/pull/843));
+- ansible-plugin: callback compatibility for Ansible 2.14
+([#842](https://github.com/walmartlabs/concord/pull/842));
+- concord-server: resume process now returns BAD_REQUEST
+if no event found
+([#838](https://github.com/walmartlabs/concord/pull/838)).
+
+### Breaking
+
+- docker-images: drop CentOS-based images, use Debian by default
+([#843](https://github.com/walmartlabs/concord/pull/843).
+
+
+
+## [2.4.0] - 2023-11-26
+
+### Added
+
+- concord-server: add `EXTRA_CLASSPATH` to start script 
+([#836](https://github.com/walmartlabs/concord/pull/836));
+
+### Changed
+
+- concord-agent-operator: use JDK 17 base image
+([#836](https://github.com/walmartlabs/concord/pull/836));
+- concord-common: shared ObjectMapperProvider
+([#836](https://github.com/walmartlabs/concord/pull/836)).
+
+
+
+## [2.3.0] - 2023-11-21
+
+### Added
+
+- testing-concord-server: add getter for the server instance
+([#832](https://github.com/walmartlabs/concord/pull/832));
+- testing-concord-server: add agent wrapper, simple test
+([835](https://github.com/walmartlabs/concord/pull/835)).
+
+### Changed
+
+- project: attach source jars only on release
+([#832](https://github.com/walmartlabs/concord/pull/832));
+- concord-server: auto-wire modules in concord-server/dist
+instead of impl
+([#834](https://github.com/walmartlabs/concord/pull/834)).
+
+
+
+## [2.2.0] - 2023-11-13
+
+### Added
+
+- pfed-sso: enable bearer token authentication
+([#811](https://github.com/walmartlabs/concord/pull/811)).
+
+### Changed
+
+- runtime-v2: fix exit from parallel loop #830
+([#830](https://github.com/walmartlabs/concord/pull/830));
+- console2: calculate process duration from process last running timestamp
+([#794](https://github.com/walmartlabs/concord/pull/794));
+- console2: do not drop secrets form values on error/password check fail
+([#798](https://github.com/walmartlabs/concord/pull/798));
+- project: attach javadoc jars only on release
+([#823](https://github.com/walmartlabs/concord/pull/823));
+- project: upgrade to source level 17
+([#824](https://github.com/walmartlabs/concord/pull/824));
+- project: remove more @Named usage
+([#828](https://github.com/walmartlabs/concord/pull/828)).
+
 ## [2.1.0] - 2023-10-10
 
 ### Added
@@ -31,8 +185,9 @@
 - cli: active profiles fix
 ([#789](https://github.com/walmartlabs/concord/pull/789)).
 
-## [2.0.0] - 2023-08-16
 
+
+## [2.0.0] - 2023-08-16
 
 # Breaking
 
@@ -90,6 +245,8 @@ auth ([#764](https://github.com/walmartlabs/concord/pull/764));
 - console2: do not remove project after rename;
 ([#770](https://github.com/walmartlabs/concord/pull/770)).
 
+
+
 ## [1.102.0] - 2023-05-22
 
 ### Added
@@ -123,6 +280,8 @@ improve error messages
 ([#744](https://github.com/walmartlabs/concord/pull/744));
 - runtime-v2: allow increment variables in expressions
 ([#740](https://github.com/walmartlabs/concord/pull/740)).
+
+
 
 ## [1.101.0] - 2023-03-29
 
@@ -169,6 +328,8 @@ forms
 ([#721](https://github.com/walmartlabs/concord/pull/721));
 - concord-server: remove more @Named usage
 ([#650](https://github.com/walmartlabs/concord/pull/650)).
+
+
 
 ## [1.99.0] - 2023-02-24
 
@@ -376,6 +537,7 @@ to support k8s 1.22+
 ([#639](https://github.com/walmartlabs/concord/pull/639)).
 
 
+
 ## [1.95.0] - 2022-04-16
 
 ### Added
@@ -416,6 +578,8 @@ files ([#593](https://github.com/walmartlabs/concord/pull/593)).
 ([#584](https://github.com/walmartlabs/concord/pull/584));
 - it: explicitly specify initialBranch for git tests
 ([#582](https://github.com/walmartlabs/concord/pull/582)).
+
+
 
 ## [1.93.3] - 2022-03-11
 

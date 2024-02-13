@@ -53,10 +53,8 @@ import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 import javax.inject.Named;
-import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
-import java.io.IOException;
-import java.io.Serializable;
+import java.io.*;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -146,6 +144,41 @@ public class ProcessManager {
         return start(forkPipeline, payload);
     }
 
+    public void restart(ProcessKey processKey) {
+        ProcessKey rootProcessKey = queueDao.getRootId(processKey);
+        if (rootProcessKey == null) {
+            throw new ProcessException(processKey, "Process not found: " + processKey, Status.NOT_FOUND);
+        }
+
+        ProcessEntry e = queueDao.get(rootProcessKey);
+        if (e == null) {
+            throw new ProcessException(processKey, "Process not found: " + processKey, Status.NOT_FOUND);
+        }
+
+        // TODO: rename to assertProcessOperationRights or something
+        assertKillOrDisableOrRestartRights(e);
+
+        ProcessStatus s = e.status();
+        if (!TERMINATED_PROCESS_STATUSES.contains(s)) {
+            throw new ProcessException(rootProcessKey, "Can't restart running process: " + processKey, Status.CONFLICT);
+        }
+
+        // put new attemptNO somewhere
+
+        queueDao.tx(tx -> {
+            boolean updated = queueManager.updateExpectedStatus(tx, rootProcessKey, e.status(), ProcessStatus.NEW);
+            if (updated) {
+                List<ProcessKey> allProcesses = queueDao.getCascade(tx, rootProcessKey)
+                        .stream()
+                        .filter(p -> !p.equals(rootProcessKey))
+                        .toList();
+                kill(tx, allProcesses);
+
+                stateManager.delete(tx, rootProcessKey);
+            }
+        });
+    }
+
     public void resume(Payload payload) {
         log.info("resume ['{}']", payload.getProcessKey());
         resumePipeline.process(payload);
@@ -155,10 +188,10 @@ public class ProcessManager {
     public void disable(ProcessKey processKey, boolean disabled) {
         ProcessEntry e = queueDao.get(processKey);
         if (e == null) {
-            throw new ProcessException(null, "Process not found: " + processKey, Status.NOT_FOUND);
+            throw new ProcessException(processKey, "Process not found: " + processKey, Status.NOT_FOUND);
         }
 
-        assertKillOrDisableRights(e);
+        assertKillOrDisableOrRestartRights(e);
 
         ProcessStatus s = e.status();
         if (TERMINATED_PROCESS_STATUSES.contains(s)) {
@@ -173,7 +206,7 @@ public class ProcessManager {
     public void kill(DSLContext tx, ProcessKey processKey) {
         ProcessEntry process = assertProcess(tx, processKey);
 
-        assertKillOrDisableRights(process);
+        assertKillOrDisableOrRestartRights(process);
 
         boolean cancelled = false;
         while (!cancelled) {
@@ -238,10 +271,10 @@ public class ProcessManager {
     public void killCascade(PartialProcessKey processKey) {
         ProcessEntry e = queueManager.get(processKey);
         if (e == null) {
-            throw new ProcessException(null, "Process not found: " + processKey, Status.NOT_FOUND);
+            throw new ProcessException(processKey, "Process not found: " + processKey, Status.NOT_FOUND);
         }
 
-        assertKillOrDisableRights(e);
+        assertKillOrDisableOrRestartRights(e);
 
         List<ProcessKey> allProcesses = queueDao.getCascade(processKey);
         queueDao.tx(tx -> kill(tx, allProcesses));
@@ -312,6 +345,22 @@ public class ProcessManager {
         return p;
     }
 
+    public void assertResumeEvents(ProcessKey processKey, Set<String> events) {
+        if (events.isEmpty()) {
+            throw new ConcordApplicationException("Empty resume events", Status.BAD_REQUEST);
+        }
+
+        Set<String> expectedEvents = getResumeEvents(processKey);
+
+        Set<String> unexpectedEvents = new HashSet<>(events);
+        unexpectedEvents.removeAll(expectedEvents);
+
+        if (!unexpectedEvents.isEmpty()) {
+            logManager.warn(processKey, "Unexpected 'resume' events: {}, expected: {}", unexpectedEvents, expectedEvents);
+            throw new ConcordApplicationException("Unexpected 'resume' events: " + unexpectedEvents, Status.BAD_REQUEST);
+        }
+    }
+
     public void updateExclusive(DSLContext tx, ProcessKey processKey, ExclusiveMode exclusive) {
         queueDao.updateExclusive(tx, processKey, exclusive);
     }
@@ -321,7 +370,7 @@ public class ProcessManager {
         if (process != null) {
             return process;
         }
-        throw new ProcessException(null, "Process not found: " + processKey, Status.NOT_FOUND);
+        throw new ProcessException(processKey, "Process not found: " + processKey, Status.NOT_FOUND);
     }
 
     private boolean isSuspended(ProcessKey processKey) {
@@ -371,7 +420,7 @@ public class ProcessManager {
         }
     }
 
-    private void assertKillOrDisableRights(ProcessEntry e) {
+    private void assertKillOrDisableOrRestartRights(ProcessEntry e) {
         if (Roles.isAdmin()) {
             return;
         }
@@ -384,7 +433,7 @@ public class ProcessManager {
 
         UUID projectId = e.projectId();
         if (projectId != null) {
-            // only org members with WRITER rights can kill or disable the process
+            // only org members with WRITER rights can kill/disable/restart the process
             projectAccessManager.assertAccess(projectId, ResourceAccessLevel.WRITER, true);
             return;
         }
@@ -417,6 +466,28 @@ public class ProcessManager {
                 .field("orgId", p.orgId())
                 .field("projectId", p.projectId())
                 .log();
+    }
+
+    private Set<String> getResumeEvents(ProcessKey processKey) {
+        String path = ProcessStateManager.path(Constants.Files.JOB_ATTACHMENTS_DIR_NAME,
+                Constants.Files.JOB_STATE_DIR_NAME,
+                Constants.Files.SUSPEND_MARKER_FILE_NAME);
+
+        return stateManager.get(processKey, path, ProcessManager::deserialize)
+                .orElse(Set.of());
+    }
+
+    private static Optional<Set<String>> deserialize(InputStream in) {
+        Set<String> result = new HashSet<>();
+        try (BufferedReader reader = new BufferedReader(new InputStreamReader(in))) {
+            String line;
+            while ((line = reader.readLine()) != null) {
+                result.add(line);
+            }
+            return Optional.of(result);
+        } catch (IOException e) {
+            throw new RuntimeException("Error while deserializing a resume events: " + e.getMessage(), e);
+        }
     }
 
     private static List<ProcessEntry> filterProcesses(List<ProcessEntry> l, List<ProcessStatus> expected) {

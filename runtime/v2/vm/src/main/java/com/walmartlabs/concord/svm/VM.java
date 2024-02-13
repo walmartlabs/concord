@@ -93,7 +93,12 @@ public class VM {
 
         Runtime rt = runtimeFactory.create(this);
         ThreadId threadId = state.getRootThreadId();
-        cmd.eval(rt, state, threadId);
+        try {
+            cmd.eval(rt, state, threadId);
+        } catch (Exception e) {
+            cmd.onException(rt, e, state, threadId);
+            throw e;
+        }
 
         log.debug("run ['{}'] -> done", cmd);
     }
@@ -141,6 +146,8 @@ public class VM {
                         stop = true;
                     }
                 } catch (Exception e) {
+                    cmd.onException(runtime, e, state, threadId);
+
                     unwind(state, threadId, e);
                 }
 

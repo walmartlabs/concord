@@ -25,10 +25,6 @@ import com.google.inject.Injector;
 import com.google.inject.Module;
 import com.walmartlabs.concord.server.boot.BackgroundTasks;
 import com.walmartlabs.concord.server.boot.HttpServer;
-import org.eclipse.sisu.space.BeanScanning;
-import org.eclipse.sisu.space.SpaceModule;
-import org.eclipse.sisu.space.URLClassSpace;
-import org.eclipse.sisu.wire.WireModule;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -50,16 +46,6 @@ public final class ConcordServer {
     private HttpServer server;
 
     private final Object controlMutex = new Object();
-
-    /**
-     * Start ConcordServer by scanning the local class path for the implementations of
-     * {@link HttpServer} or {@link BackgroundTasks}.
-     */
-    public static ConcordServer withAutoWiring() throws Exception {
-        ClassLoader cl = ConcordServer.class.getClassLoader();
-        return withModules(
-                new WireModule(new SpaceModule(new URLClassSpace(cl), BeanScanning.GLOBAL_INDEX)));
-    }
 
     public static ConcordServer withModules(Module... modules) throws Exception {
         return withModules(List.of(modules));

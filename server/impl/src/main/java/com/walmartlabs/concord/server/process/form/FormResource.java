@@ -23,17 +23,14 @@ package com.walmartlabs.concord.server.process.form;
 import com.walmartlabs.concord.sdk.Constants;
 import com.walmartlabs.concord.server.process.state.ProcessStateManager;
 import com.walmartlabs.concord.server.sdk.PartialProcessKey;
+import com.walmartlabs.concord.server.sdk.rest.Resource;
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Schema;
-import io.swagger.v3.oas.annotations.parameters.RequestBody;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.jboss.resteasy.plugins.providers.multipart.MultipartInput;
-import org.sonatype.siesta.Resource;
 
 import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import java.util.List;
@@ -42,8 +39,6 @@ import java.util.UUID;
 
 import static com.walmartlabs.concord.server.process.state.ProcessStateManager.path;
 
-@Named
-@Singleton
 @Path("/api/v1/process")
 @Tag(name = "Process Forms")
 public class FormResource implements Resource {
@@ -119,7 +114,7 @@ public class FormResource implements Resource {
     @Operation(description = "Submit JSON form data", operationId = "submitFormAsMultipart")
     public FormSubmitResponse submit(@PathParam("processInstanceId") UUID processInstanceId,
                                      @PathParam("formName") String formName,
-                                     @RequestBody(content = @Content(schema = @Schema(type = "object"))) MultipartInput data) {
+                                     @Parameter(schema = @Schema(type = "object", implementation = Object.class)) MultipartInput data) {
 
         if (isV2(processInstanceId)) {
             return formResourceV2.submit(processInstanceId, formName, data);

@@ -20,9 +20,8 @@ package com.walmartlabs.concord.it.server;
  * =====
  */
 
-import com.walmartlabs.concord.client.ProcessApi;
-import com.walmartlabs.concord.client.ProcessEntry;
-import com.walmartlabs.concord.client.StartProcessResponse;
+import com.walmartlabs.concord.client2.ProcessEntry;
+import com.walmartlabs.concord.client2.StartProcessResponse;
 import com.walmartlabs.concord.common.IOUtils;
 import com.walmartlabs.concord.it.common.MockGitSshServer;
 import org.eclipse.jgit.api.Git;
@@ -88,7 +87,7 @@ public class ProjectTaskIT extends AbstractServerIT {
 
         // ---
 
-        byte[] payload = archive(ProcessIT.class.getResource("projectTask").toURI());
+        byte[] payload = archive(ProjectTaskIT.class.getResource("projectTask").toURI());
 
         Map<String, Object> input = new HashMap<>();
         input.put("archive", payload);
@@ -105,12 +104,11 @@ public class ProjectTaskIT extends AbstractServerIT {
 
         StartProcessResponse spr = start(input);
 
-        ProcessApi processApi = new ProcessApi(getApiClient());
-        ProcessEntry pir = waitForCompletion(processApi, spr.getInstanceId());
+        ProcessEntry pir = waitForCompletion(getApiClient(), spr.getInstanceId());
 
         // ---
 
-        byte[] ab = getLog(pir.getLogFileName());
+        byte[] ab = getLog(pir.getInstanceId());
 
         assertLog(".*CREATED.*", ab);
         assertLog(".*Done!.*", ab);

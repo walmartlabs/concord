@@ -22,10 +22,14 @@ package com.walmartlabs.concord.dependencymanager;
 
 import com.walmartlabs.concord.common.ExceptionUtils;
 import org.apache.maven.repository.internal.MavenRepositorySystemUtils;
-import org.eclipse.aether.*;
+import org.eclipse.aether.DefaultRepositorySystemSession;
+import org.eclipse.aether.RepositorySystem;
+import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.artifact.DefaultArtifact;
 import org.eclipse.aether.collection.CollectRequest;
+import org.eclipse.aether.collection.DependencyCollectionContext;
+import org.eclipse.aether.collection.DependencySelector;
 import org.eclipse.aether.graph.Dependency;
 import org.eclipse.aether.repository.LocalRepository;
 import org.eclipse.aether.repository.Proxy;
@@ -34,18 +38,26 @@ import org.eclipse.aether.repository.RepositoryPolicy;
 import org.eclipse.aether.resolution.*;
 import org.eclipse.aether.transfer.AbstractTransferListener;
 import org.eclipse.aether.transfer.ArtifactNotFoundException;
+import org.eclipse.aether.transfer.RepositoryOfflineException;
 import org.eclipse.aether.transfer.TransferEvent;
 import org.eclipse.aether.util.artifact.JavaScopes;
 import org.eclipse.aether.util.filter.ExclusionsDependencyFilter;
+import org.eclipse.aether.util.graph.selector.AndDependencySelector;
+import org.eclipse.aether.util.graph.selector.ExclusionDependencySelector;
+import org.eclipse.aether.util.graph.selector.OptionalDependencySelector;
 import org.eclipse.aether.util.repository.AuthenticationBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 import javax.xml.bind.DatatypeConverter;
-import java.io.*;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.io.UnsupportedEncodingException;
 import java.net.URI;
 import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.*;
 import java.security.MessageDigest;
 import java.util.*;
@@ -71,6 +83,9 @@ public class DependencyManager {
 
     private final List<String> defaultExclusions;
 
+    private final boolean explicitlyResolveV1Client;
+    private final boolean offlineMode;
+
     @Inject
     public DependencyManager(DependencyManagerConfiguration cfg) throws IOException {
         this.cacheDir = cfg.cacheDir();
@@ -84,6 +99,8 @@ public class DependencyManager {
         this.maven = RepositorySystemFactory.create();
         this.strictRepositories = cfg.strictRepositories();
         this.defaultExclusions = cfg.exclusions();
+        this.explicitlyResolveV1Client = cfg.explicitlyResolveV1Client();
+        this.offlineMode = cfg.offlineMode();
     }
 
     public Collection<DependencyEntity> resolve(Collection<URI> items) throws IOException {
@@ -123,11 +140,11 @@ public class DependencyManager {
 
         result.addAll(resolveMavenTransitiveDependencies(deps.mavenTransitiveDependencies, deps.mavenExclusions, progressNotifier).stream()
                 .map(DependencyManager::toDependency)
-                .collect(Collectors.toList()));
+                .toList());
 
         result.addAll(resolveMavenSingleDependencies(deps.mavenSingleDependencies, progressNotifier).stream()
                 .map(DependencyManager::toDependency)
-                .collect(Collectors.toList()));
+                .toList());
 
         return result;
     }
@@ -157,8 +174,8 @@ public class DependencyManager {
                 Artifact artifact = new DefaultArtifact(id);
 
                 Map<String, List<String>> cfg = splitQuery(item);
-                String scope = getSingleValue(cfg,"scope", JavaScopes.COMPILE);
-                boolean transitive = Boolean.parseBoolean(getSingleValue(cfg,"transitive", "true"));
+                String scope = getSingleValue(cfg, "scope", JavaScopes.COMPILE);
+                boolean transitive = Boolean.parseBoolean(getSingleValue(cfg, "transitive", "true"));
 
                 if (transitive) {
                     mavenTransitiveDependencies.add(new MavenDependency(artifact, scope));
@@ -267,6 +284,9 @@ public class DependencyManager {
         excludes.addAll(defaultExclusions);
 
         DependencyRequest dependencyRequest = new DependencyRequest(req, new ExclusionsDependencyFilter(excludes));
+        if (explicitlyResolveV1Client) {
+            dependencyRequest.getCollectRequest().addManagedDependency(new Dependency(ClientDepSelector.CLIENT1_ARTIFACT, ""));
+        }
 
         synchronized (mutex) {
             try {
@@ -285,6 +305,15 @@ public class DependencyManager {
         session.setChecksumPolicy(RepositoryPolicy.CHECKSUM_POLICY_IGNORE);
         session.setIgnoreArtifactDescriptorRepositories(strictRepositories);
 
+        if (explicitlyResolveV1Client) {
+            DependencySelector selector = new AndDependencySelector(
+                    new ClientDepSelector(),
+                    new OptionalDependencySelector(),
+                    new ExclusionDependencySelector());
+
+            session.setDependencySelector(selector);
+        }
+
         LocalRepository localRepo = new LocalRepository(localCacheDir.toFile());
         session.setLocalRepositoryManager(system.newLocalRepositoryManager(session, localRepo));
         session.setTransferListener(new AbstractTransferListener() {
@@ -293,6 +322,8 @@ public class DependencyManager {
                 progressNotifier.transferFailed(event);
             }
         });
+
+        session.setOffline(offlineMode);
 
         return session;
     }
@@ -379,14 +410,58 @@ public class DependencyManager {
         String[] pairs = query.split("&");
         for (String pair : pairs) {
             int idx = pair.indexOf("=");
-            String k = URLDecoder.decode(pair.substring(0, idx), "UTF-8");
-            String v = URLDecoder.decode(pair.substring(idx + 1), "UTF-8");
+            String k = URLDecoder.decode(pair.substring(0, idx), StandardCharsets.UTF_8);
+            String v = URLDecoder.decode(pair.substring(idx + 1), StandardCharsets.UTF_8);
 
             List<String> vv = m.computeIfAbsent(k, s -> new ArrayList<>());
             vv.add(v);
             m.put(k, vv);
         }
         return m;
+    }
+
+    private static class ClientDepSelector implements DependencySelector {
+
+        private static final String CONCORD_CLIENT_GROUP_ID = "com.walmartlabs.concord";
+        private static final String CONCORD_CLIENT_ARTIFACT_ID = "concord-client";
+
+        public static final Artifact CLIENT1_ARTIFACT = new DefaultArtifact(CONCORD_CLIENT_GROUP_ID, CONCORD_CLIENT_ARTIFACT_ID, "jar", Version.get());
+
+        private final boolean transitive;
+        private final Collection<String> excluded;
+
+        public ClientDepSelector() {
+            this(false, Arrays.asList("test", "provided"));
+        }
+
+        public ClientDepSelector(boolean transitive, Collection<String> excluded) {
+            this.transitive = transitive;
+            this.excluded = excluded;
+        }
+
+        @Override
+        public boolean selectDependency(Dependency dependency) {
+            if (CONCORD_CLIENT_GROUP_ID.equals(dependency.getArtifact().getGroupId()) &&
+                CONCORD_CLIENT_ARTIFACT_ID.equals(dependency.getArtifact().getArtifactId())) {
+                return true;
+            }
+
+            if (!transitive) {
+                return true;
+            }
+
+            String scope = dependency.getScope();
+            return !excluded.contains(scope);
+        }
+
+        @Override
+        public DependencySelector deriveChildSelector(DependencyCollectionContext context) {
+            if (this.transitive || context.getDependency() == null) {
+                return this;
+            }
+
+            return new ClientDepSelector(true, excluded);
+        }
     }
 
     private static final class DependencyList {
@@ -470,7 +545,7 @@ public class DependencyManager {
         public boolean canRetry(Exception e) {
             List<Throwable> exceptions = ExceptionUtils.getExceptionList(e);
             Throwable last = exceptions.get(exceptions.size() - 1);
-            return !(last instanceof ArtifactNotFoundException);
+            return !((last instanceof RepositoryOfflineException) || (last instanceof ArtifactNotFoundException));
         }
     }
 }

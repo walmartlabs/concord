@@ -21,20 +21,16 @@ package com.walmartlabs.concord.server.process;
  */
 
 import com.walmartlabs.concord.server.process.queue.ProcessQueueDao;
+import com.walmartlabs.concord.server.sdk.rest.Resource;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import org.sonatype.siesta.Resource;
 
 import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import java.util.UUID;
 
-@Named
-@Singleton
 @Path("/api/v1/process")
 @Tag(name = "ProcessHeartbeat")
 public class ProcessHeartbeatResource implements Resource {
@@ -45,7 +41,6 @@ public class ProcessHeartbeatResource implements Resource {
     public ProcessHeartbeatResource(ProcessQueueDao queueDao) {
         this.queueDao = queueDao;
     }
-
 
     @POST
     @Path("{id}/ping")

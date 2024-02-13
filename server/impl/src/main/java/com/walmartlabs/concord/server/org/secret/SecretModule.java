@@ -22,15 +22,29 @@ package com.walmartlabs.concord.server.org.secret;
 
 import com.google.inject.Binder;
 import com.google.inject.Module;
+import com.walmartlabs.concord.server.org.secret.provider.SecretStoreProvider;
 import com.walmartlabs.concord.server.org.secret.store.SecretStore;
 import com.walmartlabs.concord.server.org.secret.store.concord.ConcordSecretStore;
 
+import static com.google.inject.Scopes.SINGLETON;
 import static com.google.inject.multibindings.Multibinder.newSetBinder;
+import static com.walmartlabs.concord.server.Utils.bindExceptionMapper;
+import static com.walmartlabs.concord.server.Utils.bindJaxRsResource;
 
 public class SecretModule implements Module {
 
     @Override
     public void configure(Binder binder) {
+        binder.bind(SecretManager.class).in(SINGLETON);
+        binder.bind(SecretDao.class).in(SINGLETON);
+        binder.bind(SecretStoreProvider.class).in(SINGLETON);
+
         newSetBinder(binder, SecretStore.class).addBinding().to(ConcordSecretStore.class);
+
+        bindJaxRsResource(binder, SecretStoreResource.class);
+        bindJaxRsResource(binder, SecretResource.class);
+        bindJaxRsResource(binder, SecretResourceV2.class);
+
+        bindExceptionMapper(binder, SecretExceptionMapper.class);
     }
 }

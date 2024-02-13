@@ -20,8 +20,8 @@ package com.walmartlabs.concord.plugins.kv;
  * =====
  */
 
-import com.walmartlabs.concord.ApiClient;
-import com.walmartlabs.concord.client.ProcessKvStoreApi;
+import com.walmartlabs.concord.client2.ApiClient;
+import com.walmartlabs.concord.client2.ProcessKvStoreApi;
 import com.walmartlabs.concord.runtime.v2.sdk.Context;
 import com.walmartlabs.concord.runtime.v2.sdk.Task;
 

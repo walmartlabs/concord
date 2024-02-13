@@ -19,13 +19,13 @@
  */
 
 import * as React from 'react';
-import { useCallback, useRef, useState } from 'react';
+import { useCallback, useRef, useState, useEffect } from 'react';
 
 import { Link, Redirect, Route, Switch } from 'react-router-dom';
 import { Icon, Menu } from 'semantic-ui-react';
 
 import { ConcordId } from '../../../api/common';
-import { get as apiGet, isFinal, ProcessEntry } from '../../../api/process';
+import { get as apiGet, getRoot as apiGetRoot, isFinal, ProcessEntry } from '../../../api/process';
 import { NotFoundPage } from '../../pages';
 import {
     ProcessAnsibleActivity,
@@ -120,11 +120,21 @@ const ProcessActivity = (props: ExternalProps) => {
     }, []);
 
     const [process, setProcess] = useState<ProcessEntry>();
+    const rootProcessRef = useRef<ProcessEntry | null>(null);
 
     const fetchData = useCallback(async () => {
         const process = await apiGet(props.instanceId, []);
         setProcess(process);
+
+        if (process.parentInstanceId && !rootProcessRef.current) {
+            rootProcessRef.current = await apiGetRoot(process.parentInstanceId);
+        }
+
         return !isFinal(process.status);
+    }, [props.instanceId]);
+
+    useEffect(() => {
+        rootProcessRef.current = null;
     }, [props.instanceId]);
 
     useStatusFavicon(process);
@@ -149,6 +159,7 @@ const ProcessActivity = (props: ExternalProps) => {
                 loading={loading}
                 instanceId={instanceId}
                 process={process}
+                rootInstanceId={rootProcessRef.current?.instanceId}
                 refresh={refreshHandler}
                 stickyRef={stickyRef}
             />

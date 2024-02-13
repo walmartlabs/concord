@@ -38,11 +38,11 @@ import com.walmartlabs.concord.server.org.secret.SecretManager;
 import com.walmartlabs.concord.server.process.ImportsNormalizerFactory;
 import com.walmartlabs.concord.server.repository.listeners.RepositoryRefreshListener;
 import com.walmartlabs.concord.server.sdk.ConcordApplicationException;
+import com.walmartlabs.concord.server.sdk.validation.ValidationErrorsException;
 import org.jooq.Configuration;
 import org.jooq.DSLContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.sonatype.siesta.ValidationErrorsException;
 
 import javax.inject.Inject;
 import java.nio.file.Path;
