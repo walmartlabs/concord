@@ -141,15 +141,31 @@
                     <analysisConfiguration>
                         <revapi.ignore>
                             <item>
-                                <code>java.class.nonPublicPartOfAPI</code>
+                                <code>java.field.serialVersionUIDUnchanged</code>
                             </item>
                             <item>
-                                <code>java.class.removed</code>
+                                <code>java.method.parameterTypeParameterChanged</code>
+                            </item>
+                            <item>
+                                <code>java.method.returnTypeTypeParametersChanged</code>
+                            </item>
+                            <item>
+                                <code>java.class.externalClassExposedInAPI</code>
+                            </item>
+                            <item>
+                                <code>java.annotation.attributeValueChanged</code>
+                            </item>
+                            <item>
+                                <code>java.method.numberOfParametersChanged</code>
+                            </item>
+                            <item>
+                                <code>java.class.nonPublicPartOfAPI</code>
                             </item>
                         </revapi.ignore>
                     </analysisConfiguration>
                 </configuration>
             </plugin>
+
         </plugins>
     </build>
 </project>
