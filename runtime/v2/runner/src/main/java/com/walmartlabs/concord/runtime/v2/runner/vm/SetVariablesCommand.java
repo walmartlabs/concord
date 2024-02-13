@@ -30,8 +30,6 @@ import com.walmartlabs.concord.svm.ThreadId;
 
 import java.util.Map;
 
-import static com.walmartlabs.concord.common.ConfigurationUtils.deepMerge;
-
 public class SetVariablesCommand extends StepCommand<SetVariablesStep> {
 
     private static final long serialVersionUID = 1L;
@@ -41,7 +39,6 @@ public class SetVariablesCommand extends StepCommand<SetVariablesStep> {
     }
 
     @Override
-    @SuppressWarnings("unchecked")
     protected void execute(Runtime runtime, State state, ThreadId threadId) {
         state.peekFrame(threadId).pop();
 
@@ -55,10 +52,6 @@ public class SetVariablesCommand extends StepCommand<SetVariablesStep> {
         Map<String, Object> vars = ee.evalAsMap(ecf.scope(ctx), step.getVars());
 
         vars.forEach((k, v) -> {
-            Object o = ctx.variables().get(k);
-            if (o instanceof Map && v instanceof Map) {
-                v = deepMerge((Map<String, Object>)o, (Map<String, Object>)v);
-            }
             ctx.variables().set(k, v);
         });
     }

@@ -22,6 +22,10 @@ package com.walmartlabs.concord.server.dist;
 
 import com.walmartlabs.concord.server.ConcordServer;
 import com.walmartlabs.concord.server.Version;
+import org.eclipse.sisu.space.BeanScanning;
+import org.eclipse.sisu.space.SpaceModule;
+import org.eclipse.sisu.space.URLClassSpace;
+import org.eclipse.sisu.wire.WireModule;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.bridge.SLF4JBridgeHandler;
@@ -38,10 +42,15 @@ public class Main {
 
         long t1 = System.currentTimeMillis();
 
-        ConcordServer.withAutoWiring()
-                .start();
+        autoWire().start();
 
         long t2 = System.currentTimeMillis();
         log.info("main -> started in {}ms", (t2 - t1));
+    }
+
+    public static ConcordServer autoWire() throws Exception {
+        // works as a plugin system by automatically wiring all @Named modules and beans in the classpath
+        ClassLoader cl = ConcordServer.class.getClassLoader();
+        return ConcordServer.withModules(new WireModule(new SpaceModule(new URLClassSpace(cl), BeanScanning.GLOBAL_INDEX)));
     }
 }

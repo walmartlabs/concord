@@ -20,26 +20,17 @@ package com.walmartlabs.concord.it.console;
  * =====
  */
 
-import com.google.gson.reflect.TypeToken;
-import com.squareup.okhttp.Call;
-import com.walmartlabs.concord.ApiClient;
-import com.walmartlabs.concord.ApiException;
-import com.walmartlabs.concord.ApiResponse;
-import com.walmartlabs.concord.client.ClientUtils;
-import com.walmartlabs.concord.client.ConcordApiClient;
-import com.walmartlabs.concord.client.StartProcessResponse;
-import com.walmartlabs.concord.it.common.ForbiddenException;
+import com.walmartlabs.concord.client2.*;
 import com.walmartlabs.concord.it.common.JGitUtils;
 import org.junit.jupiter.api.extension.BeforeEachCallback;
 import org.junit.jupiter.api.extension.ExtensionContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.lang.reflect.Type;
-import java.util.ArrayList;
-import java.util.HashMap;
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.Map;
-import java.util.Set;
+import java.util.UUID;
 
 import static com.walmartlabs.concord.it.console.Utils.env;
 
@@ -63,43 +54,24 @@ public class ConcordServerRule implements BeforeEachCallback {
     }
 
     public StartProcessResponse start(Map<String, Object> input) throws ApiException {
-        return request("/api/v1/process", input, StartProcessResponse.class);
+        return new ProcessApi(client).startProcess(input);
     }
 
-    public <T> T request(String uri, Map<String, Object> input, Class<T> entityType) throws ApiException {
-        ApiResponse<T> resp = ClientUtils.postData(client, uri, input, entityType);
-
-        int code = resp.getStatusCode();
-        if (code < 200 || code >= 300) {
-            if (code == 403) {
-                throw new ForbiddenException("Forbidden!", resp.getData());
-            }
-
-            throw new ApiException("Request error: " + code);
+    public byte[] getLog(UUID instanceId) throws ApiException {
+        try (InputStream is = new ProcessApi(client).getProcessLog(instanceId, null)) {
+            return is.readAllBytes();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
         }
-
-        return resp.getData();
-    }
-
-    public byte[] getLog(String logFileName) throws ApiException {
-        Set<String> auths = client.getAuthentications().keySet();
-        String[] authNames = auths.toArray(new String[0]);
-
-        Call c = client.buildCall("/logs/" + logFileName, "GET", new ArrayList<>(), new ArrayList<>(),
-                null, new HashMap<>(), new HashMap<>(), authNames, null);
-
-        Type t = new TypeToken<byte[]>() {
-        }.getType();
-        return client.<byte[]>execute(c, t).getData();
     }
 
     @Override
-    public void beforeEach(ExtensionContext context) throws Exception {
+    public void beforeEach(ExtensionContext context) {
         setUp();
     }
 
     private void setUp() {
-        this.client = new ConcordApiClient(baseUrl)
-                .setApiKey(Concord.ADMIN_API_KEY);
+        this.client = new DefaultApiClientFactory(baseUrl)
+                .create(ApiClientConfiguration.builder().apiKey(Concord.ADMIN_API_KEY).build());
     }
 }

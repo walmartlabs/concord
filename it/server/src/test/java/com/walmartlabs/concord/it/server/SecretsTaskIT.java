@@ -20,7 +20,7 @@ package com.walmartlabs.concord.it.server;
  * =====
  */
 
-import com.walmartlabs.concord.client.*;
+import com.walmartlabs.concord.client2.*;
 import org.junit.jupiter.api.Test;
 
 import java.util.HashMap;
@@ -42,10 +42,10 @@ SecretsTaskIT extends AbstractServerIT {
         String projectName1 = "project_"+ randomString();
         String projectName2 = "project_" + randomString();
 
-        projectsApi.createOrUpdate(orgName, new ProjectEntry()
-                .setName(projectName2).setRawPayloadMode(ProjectEntry.RawPayloadModeEnum.EVERYONE));
-        projectsApi.createOrUpdate(orgName, new ProjectEntry()
-                .setName(projectName1).setRawPayloadMode(ProjectEntry.RawPayloadModeEnum.EVERYONE));
+        projectsApi.createOrUpdateProject(orgName, new ProjectEntry()
+                .name(projectName2).rawPayloadMode(ProjectEntry.RawPayloadModeEnum.EVERYONE));
+        projectsApi.createOrUpdateProject(orgName, new ProjectEntry()
+                .name(projectName1).rawPayloadMode(ProjectEntry.RawPayloadModeEnum.EVERYONE));
 
         String secretName = "secret_" + randomString();
 
@@ -62,11 +62,10 @@ SecretsTaskIT extends AbstractServerIT {
 
         StartProcessResponse spr = start(input);
 
-        ProcessApi processApi = new ProcessApi(getApiClient());
-        ProcessEntry pir = waitForCompletion(processApi, spr.getInstanceId());
+        ProcessEntry pir = waitForCompletion(getApiClient(), spr.getInstanceId());
         assertNotNull(pir.getLogFileName());
 
-        byte[] bytes = getLog(pir.getLogFileName());
+        byte[] bytes = getLog(pir.getInstanceId());
         // System.out.println(new String(bytes));
         assertLog(".* Delete secret2.*", bytes);
     }

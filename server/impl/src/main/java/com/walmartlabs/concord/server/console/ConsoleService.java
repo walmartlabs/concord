@@ -39,6 +39,8 @@ import com.walmartlabs.concord.server.repository.InvalidRepositoryPathException;
 import com.walmartlabs.concord.server.repository.RepositoryManager;
 import com.walmartlabs.concord.server.sdk.ConcordApplicationException;
 import com.walmartlabs.concord.server.sdk.metrics.WithTimer;
+import com.walmartlabs.concord.server.sdk.rest.Resource;
+import com.walmartlabs.concord.server.sdk.validation.Validate;
 import com.walmartlabs.concord.server.security.UserPrincipal;
 import com.walmartlabs.concord.server.security.apikey.ApiKeyDao;
 import com.walmartlabs.concord.server.security.ldap.LdapGroupSearchResult;
@@ -48,8 +50,6 @@ import com.walmartlabs.concord.server.user.UserManager;
 import org.apache.shiro.SecurityUtils;
 import org.apache.shiro.authz.UnauthorizedException;
 import org.apache.shiro.subject.Subject;
-import org.sonatype.siesta.Resource;
-import org.sonatype.siesta.Validate;
 
 import javax.inject.Inject;
 import javax.validation.constraints.Size;

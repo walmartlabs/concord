@@ -41,7 +41,6 @@ jobs:
         uses: actions/checkout@v3
 
       - name: Build and test with Maven
+        env:
+          SKIP_DOCKER_TESTS: "true"
         run: ./mvnw -s .github/settings.xml -B clean install -Pgha -Pdocker -Pit -Pjdk${{ matrix.jdk_version }}
-
-      - name: Build with debian docker images
-        run: ./mvnw -s .github/settings.xml -C -B -f docker-images install -DskipTests -Pgha -Pdocker -Pdebian -Pjdk${{ matrix.jdk_version }}

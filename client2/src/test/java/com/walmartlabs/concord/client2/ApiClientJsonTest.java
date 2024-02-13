@@ -26,6 +26,7 @@ import org.junit.jupiter.api.Test;
 import java.text.SimpleDateFormat;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
+import java.util.Collections;
 import java.util.Date;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -57,5 +58,15 @@ public class ApiClientJsonTest {
 
         String str = ApiClient.createDefaultObjectMapper().writeValueAsString(project);
         assertEquals("{\"name\":\"\"}", str);
+    }
+
+    @Test
+    public void testEmptyCollectionSerialize() throws Exception {
+        CreateUserRequest user = new CreateUserRequest()
+                .username("test")
+                .roles(Collections.emptySet());
+
+        String str = ApiClient.createDefaultObjectMapper().writeValueAsString(user);
+        assertEquals("{\"username\":\"test\",\"roles\":[]}", str);
     }
 }

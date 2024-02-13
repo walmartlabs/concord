@@ -20,11 +20,13 @@ package com.walmartlabs.concord.server.plugins.oidc;
  * =====
  */
 
+import org.apache.shiro.authz.AuthorizationException;
 import org.apache.shiro.web.util.WebUtils;
 import org.pac4j.core.config.Config;
 import org.pac4j.core.context.JEEContext;
 import org.pac4j.core.context.session.SessionStore;
 import org.pac4j.core.engine.CallbackLogic;
+import org.pac4j.core.exception.TechnicalException;
 import org.pac4j.core.util.Pac4jConstants;
 
 import javax.inject.Inject;
@@ -51,7 +53,7 @@ public class OidcCallbackFilter implements Filter {
 
     @Override
     @SuppressWarnings("unchecked")
-    public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) throws IOException, ServletException {
+    public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) throws IOException {
         HttpServletRequest req = WebUtils.toHttp(request);
         HttpServletResponse resp = WebUtils.toHttp(response);
 
@@ -67,8 +69,12 @@ public class OidcCallbackFilter implements Filter {
             postLoginUrl = cfg.getAfterLoginUrl();
         }
 
-        CallbackLogic<?, JEEContext> callback = pac4jConfig.getCallbackLogic();
-        callback.perform(context, pac4jConfig, pac4jConfig.getHttpActionAdapter(), postLoginUrl, true, false, true, OidcPluginModule.CLIENT_NAME);
+        try {
+            CallbackLogic<?, JEEContext> callback = pac4jConfig.getCallbackLogic();
+            callback.perform(context, pac4jConfig, pac4jConfig.getHttpActionAdapter(), postLoginUrl, true, false, true, OidcPluginModule.CLIENT_NAME);
+        } catch (TechnicalException e) {
+            throw new AuthorizationException("OIDC callback error: " + e.getMessage());
+        }
     }
 
     @Override

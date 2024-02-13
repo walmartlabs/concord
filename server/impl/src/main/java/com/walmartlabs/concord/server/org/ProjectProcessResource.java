@@ -38,18 +38,16 @@ import com.walmartlabs.concord.server.sdk.PartialProcessKey;
 import com.walmartlabs.concord.server.sdk.ProcessKey;
 import com.walmartlabs.concord.server.sdk.ProcessStatus;
 import com.walmartlabs.concord.server.sdk.metrics.WithTimer;
+import com.walmartlabs.concord.server.sdk.rest.Resource;
+import com.walmartlabs.concord.server.sdk.validation.Validate;
+import com.walmartlabs.concord.server.sdk.validation.ValidationErrorsException;
 import com.walmartlabs.concord.server.security.UserPrincipal;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.sonatype.siesta.Resource;
-import org.sonatype.siesta.Validate;
-import org.sonatype.siesta.ValidationErrorsException;
 
 import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.*;
 import javax.ws.rs.core.Context;
@@ -64,8 +62,6 @@ import static com.walmartlabs.concord.server.Utils.unwrap;
 import static com.walmartlabs.concord.server.process.state.ProcessStateManager.path;
 import static javax.ws.rs.core.Response.Status;
 
-@Named
-@Singleton
 @Path("/api/v1/org")
 @Tag(name = "Project Processes")
 public class ProjectProcessResource implements Resource {
@@ -349,7 +345,7 @@ public class ProjectProcessResource implements Resource {
 
     private Response processFinished(PartialProcessKey processKey) {
         return responseTemplates.processFinished(Response.ok(),
-                Collections.singletonMap("instanceId", processKey.getInstanceId()))
+                        Collections.singletonMap("instanceId", processKey.getInstanceId()))
                 .build();
     }
 

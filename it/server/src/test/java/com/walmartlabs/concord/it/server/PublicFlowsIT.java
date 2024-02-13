@@ -20,9 +20,8 @@ package com.walmartlabs.concord.it.server;
  * =====
  */
 
-import com.walmartlabs.concord.client.ProcessApi;
-import com.walmartlabs.concord.client.ProcessEntry;
-import com.walmartlabs.concord.client.StartProcessResponse;
+import com.walmartlabs.concord.client2.ProcessEntry;
+import com.walmartlabs.concord.client2.StartProcessResponse;
 import org.junit.jupiter.api.Test;
 
 import java.util.HashMap;
@@ -40,16 +39,15 @@ public class PublicFlowsIT extends AbstractServerIT {
      */
     @Test
     public void testProfiles() throws Exception {
-        byte[] payload = archive(ProcessIT.class.getResource("publicFlowsInProfiles").toURI());
+        byte[] payload = archive(PublicFlowsIT.class.getResource("publicFlowsInProfiles").toURI());
 
         Map<String, Object> input = new HashMap<>();
         input.put("archive", payload);
 
         StartProcessResponse spr = start(input);
 
-        ProcessApi processApi = new ProcessApi(getApiClient());
-        ProcessEntry pe = waitForCompletion(processApi, spr.getInstanceId());
-        byte[] ab = getLog(pe.getLogFileName());
+        ProcessEntry pe = waitForCompletion(getApiClient(), spr.getInstanceId());
+        byte[] ab = getLog(pe.getInstanceId());
 
         assertLog(".*Hello A.*", ab);
         assertLog(".*Hello B.*", ab);
@@ -64,8 +62,8 @@ public class PublicFlowsIT extends AbstractServerIT {
 
         spr = start(input);
 
-        pe = waitForCompletion(processApi, spr.getInstanceId());
-        ab = getLog(pe.getLogFileName());
+        pe = waitForCompletion(getApiClient(), spr.getInstanceId());
+        ab = getLog(pe.getInstanceId());
 
         assertLog(".*Hello A.*", ab);
         assertNoLog(".*Hello B.*", ab);
@@ -79,10 +77,10 @@ public class PublicFlowsIT extends AbstractServerIT {
 
         spr = start(input);
 
-        pe = waitForCompletion(processApi, spr.getInstanceId());
+        pe = waitForCompletion(getApiClient(), spr.getInstanceId());
         assertEquals(ProcessEntry.StatusEnum.FAILED, pe.getStatus());
 
-        ab = getLog(pe.getLogFileName());
+        ab = getLog(pe.getInstanceId());
 
         assertLogAtLeast(".*not a public flow.*", 1, ab);
     }

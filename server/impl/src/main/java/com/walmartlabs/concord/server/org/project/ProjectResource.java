@@ -4,7 +4,7 @@ package com.walmartlabs.concord.server.org.project;
  * *****
  * Concord
  * -----
- * Copyright (C) 2017 - 2018 Walmart Inc.
+ * Copyright (C) 2017 - 2023 Walmart Inc.
  * -----
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -28,15 +28,13 @@ import com.walmartlabs.concord.server.OperationResult;
 import com.walmartlabs.concord.server.org.*;
 import com.walmartlabs.concord.server.org.team.TeamDao;
 import com.walmartlabs.concord.server.sdk.ConcordApplicationException;
+import com.walmartlabs.concord.server.sdk.rest.Resource;
+import com.walmartlabs.concord.server.sdk.validation.Validate;
+import com.walmartlabs.concord.server.sdk.validation.ValidationErrorsException;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import org.sonatype.siesta.Resource;
-import org.sonatype.siesta.Validate;
-import org.sonatype.siesta.ValidationErrorsException;
 
 import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
 import javax.validation.Valid;
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
@@ -44,8 +42,6 @@ import javax.ws.rs.core.Response.Status;
 import java.util.*;
 import java.util.stream.Collectors;
 
-@Named
-@Singleton
 @Path("/api/v1/org")
 @Tag(name = "Projects")
 public class ProjectResource implements Resource {
@@ -140,6 +136,19 @@ public class ProjectResource implements Resource {
         ProjectEntry project = accessManager.assertAccess(org.getId(), null, projectName, ResourceAccessLevel.READER, false);
 
         return kvDao.list(project.getId(), offset, limit, filter);
+    }
+
+    /**
+     * Get the KV capacity.
+     */
+    @GET
+    @Path("/{orgName}/project/{projectName}/kv/capacity")
+    @Produces(MediaType.APPLICATION_JSON)
+    @Operation(description = "Get a project's KV capacity", operationId = "getProjectKVCapacity")
+    public ProjectKvCapacity getCapacity(@PathParam("orgName") @ConcordKey String orgName,
+                                         @PathParam("projectName") @ConcordKey String projectName) {
+
+        return projectManager.getKvCapacity(orgName, projectName);
     }
 
     @GET

@@ -20,7 +20,7 @@ package com.walmartlabs.concord.it.server;
  * =====
  */
 
-import com.walmartlabs.concord.client.*;
+import com.walmartlabs.concord.client2.*;
 import org.junit.jupiter.api.Test;
 
 import java.util.HashMap;
@@ -40,44 +40,43 @@ public class DynamicFormIT extends AbstractServerIT {
 
         // ---
 
-        byte[] payload = archive(ProcessIT.class.getResource("dynamicFormWithGroovy").toURI());
+        byte[] payload = archive(DynamicFormIT.class.getResource("dynamicFormWithGroovy").toURI());
 
-        ProcessApi processApi = new ProcessApi(getApiClient());
         StartProcessResponse spr = start(payload);
         assertNotNull(spr.getInstanceId());
 
         // ---
 
-        ProcessEntry pir = waitForStatus(processApi, spr.getInstanceId(), ProcessEntry.StatusEnum.SUSPENDED);
+        ProcessEntry pir = waitForStatus(getApiClient(), spr.getInstanceId(), ProcessEntry.StatusEnum.SUSPENDED);
 
         // ---
 
         ProcessFormsApi formsApi = new ProcessFormsApi(getApiClient());
 
-        List<FormListEntry> forms = formsApi.list(spr.getInstanceId());
+        List<FormListEntry> forms = formsApi.listProcessForms(spr.getInstanceId());
         assertEquals(1, forms.size());
 
         // ---
 
         FormListEntry f0 = forms.get(0);
-        assertFalse(f0.isCustom());
+        assertFalse(f0.getCustom());
 
         String formName = f0.getName();
 
         Map<String, Object> data = new HashMap<>();
         data.put("firstName", firstName);
         data.put("lastName", lastName);
-        FormSubmitResponse fsr = formsApi.submit(pir.getInstanceId(), formName, data);
-        assertTrue(fsr.isOk());
+        FormSubmitResponse fsr = formsApi.submitForm(pir.getInstanceId(), formName, data);
+        assertTrue(fsr.getOk());
 
         // ---
 
-        pir = waitForCompletion(processApi, spr.getInstanceId());
+        pir = waitForCompletion(getApiClient(), spr.getInstanceId());
         assertEquals(ProcessEntry.StatusEnum.FINISHED, pir.getStatus());
 
         // --
 
-        byte[] ab = getLog(pir.getLogFileName());
+        byte[] ab = getLog(pir.getInstanceId());
         assertLog(".*firstName.*", ab);
     }
 }

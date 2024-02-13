@@ -37,7 +37,6 @@ import org.immutables.value.Value;
 
 import javax.annotation.Nullable;
 import javax.inject.Inject;
-import javax.inject.Named;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -48,7 +47,6 @@ import java.util.UUID;
 
 import static com.walmartlabs.concord.sdk.Constants.Files.CHECKPOINT_META_FILE_NAME;
 
-@Named
 public class ProcessCheckpointManager {
 
     private final ProcessCheckpointDao checkpointDao;

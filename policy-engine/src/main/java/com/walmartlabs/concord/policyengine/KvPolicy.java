@@ -53,4 +53,12 @@ public class KvPolicy {
 
         return CheckResult.error(new CheckResult.Item<>(rule, count));
     }
+
+    public Integer getMaxEntries() {
+        if (rule == null) {
+            return null;
+        }
+
+        return rule.maxEntries();
+    }
 }

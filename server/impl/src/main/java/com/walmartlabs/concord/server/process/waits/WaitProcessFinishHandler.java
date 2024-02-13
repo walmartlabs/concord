@@ -30,7 +30,6 @@ import com.walmartlabs.concord.server.sdk.metrics.WithTimer;
 import org.jooq.Configuration;
 
 import javax.inject.Inject;
-import javax.inject.Named;
 import javax.inject.Singleton;
 import java.util.ArrayList;
 import java.util.List;
@@ -50,8 +49,8 @@ public class WaitProcessFinishHandler implements ProcessWaitHandler<ProcessCompl
     private final ProcessQueueManager processQueueManager;
 
     @Inject
-    public WaitProcessFinishHandler(Dao dao, ProcessQueueManager processQueueManager) {
-        this.dao = dao;
+    public WaitProcessFinishHandler(@MainDB Configuration dbCfg, ProcessQueueManager processQueueManager) {
+        this.dao = new Dao(dbCfg);
         this.processQueueManager = processQueueManager;
     }
 
@@ -106,11 +105,9 @@ public class WaitProcessFinishHandler implements ProcessWaitHandler<ProcessCompl
         }
     }
 
-    @Named
     private static final class Dao extends AbstractDao {
 
-        @Inject
-        public Dao(@MainDB Configuration cfg) {
+        private Dao(@MainDB Configuration cfg) {
             super(cfg);
         }
 

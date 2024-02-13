@@ -35,7 +35,6 @@ import com.walmartlabs.concord.server.sdk.Range;
 import org.jooq.*;
 
 import javax.inject.Inject;
-import javax.inject.Named;
 import java.io.Serializable;
 import java.math.BigDecimal;
 import java.time.OffsetDateTime;
@@ -51,7 +50,6 @@ import static com.walmartlabs.concord.server.jooq.Tables.*;
 import static com.walmartlabs.concord.server.jooq.tables.ProcessQueue.PROCESS_QUEUE;
 import static org.jooq.impl.DSL.*;
 
-@Named
 public class ProcessLogsDao extends AbstractDao {
 
     private final ConcordObjectMapper objectMapper;

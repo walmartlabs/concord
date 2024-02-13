@@ -20,23 +20,21 @@ package com.walmartlabs.concord.server.org.team;
  * =====
  */
 
-import com.google.inject.Singleton;
 import com.walmartlabs.concord.common.validation.ConcordKey;
 import com.walmartlabs.concord.server.GenericOperationResult;
 import com.walmartlabs.concord.server.OperationResult;
 import com.walmartlabs.concord.server.org.OrganizationEntry;
 import com.walmartlabs.concord.server.org.OrganizationManager;
+import com.walmartlabs.concord.server.sdk.rest.Resource;
+import com.walmartlabs.concord.server.sdk.validation.Validate;
+import com.walmartlabs.concord.server.sdk.validation.ValidationErrorsException;
 import com.walmartlabs.concord.server.security.UserPrincipal;
 import com.walmartlabs.concord.server.user.User;
 import com.walmartlabs.concord.server.user.UserType;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import org.sonatype.siesta.Resource;
-import org.sonatype.siesta.Validate;
-import org.sonatype.siesta.ValidationErrorsException;
 
 import javax.inject.Inject;
-import javax.inject.Named;
 import javax.validation.Valid;
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
@@ -45,8 +43,6 @@ import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
-@Named
-@Singleton
 @Path("/api/v1/org")
 @Tag(name = "Teams")
 public class TeamResource implements Resource {
@@ -164,6 +160,7 @@ public class TeamResource implements Resource {
     @Path("/{orgName}/team/{teamName}/users")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
+    @Validate
     @Operation(description = "Add users to a team", operationId = "addUsersToTeam")
     public AddTeamUsersResponse addUsers(@PathParam("orgName") @ConcordKey String orgName,
                                          @PathParam("teamName") @ConcordKey String teamName,
@@ -186,6 +183,7 @@ public class TeamResource implements Resource {
     @Path("/{orgName}/team/{teamName}/ldapGroups")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
+    @Validate
     @Operation(description = "Add LDAP groups to a team")
     public AddTeamLdapGroupsResponse addLdapGroups(@PathParam("orgName") @ConcordKey String orgName,
                                                    @PathParam("teamName") @ConcordKey String teamName,

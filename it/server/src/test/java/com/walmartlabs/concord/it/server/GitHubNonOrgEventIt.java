@@ -20,8 +20,8 @@ package com.walmartlabs.concord.it.server;
  * =====
  */
 
-import com.walmartlabs.concord.ApiClient;
-import com.walmartlabs.concord.client.*;
+import com.walmartlabs.concord.client2.*;
+import com.walmartlabs.concord.client2.ProcessListFilter;
 import com.walmartlabs.concord.common.IOUtils;
 import com.walmartlabs.concord.it.common.GitHubUtils;
 import org.eclipse.jgit.api.Git;
@@ -33,6 +33,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
 import static com.walmartlabs.concord.it.common.ServerClient.assertLog;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -60,21 +61,21 @@ public class GitHubNonOrgEventIt extends AbstractServerIT {
         String repoName = "repo_" + randomString();
 
         OrganizationsApi organizationsApi = new OrganizationsApi(getApiClient());
-        organizationsApi.createOrUpdate(new OrganizationEntry()
-                .setName(orgName));
+        organizationsApi.createOrUpdateOrg(new OrganizationEntry()
+                .name(orgName));
 
         ProjectsApi projectsApi = new ProjectsApi(getApiClient());
-        projectsApi.createOrUpdate(orgName, new ProjectEntry()
-                .setName(projectName)
-                .setRepositories(Collections.singletonMap(repoName, new RepositoryEntry()
-                        .setUrl(gitUrl))));
+        projectsApi.createOrUpdateProject(orgName, new ProjectEntry()
+                .name(projectName)
+                .repositories(Collections.singletonMap(repoName, new RepositoryEntry()
+                        .url(gitUrl))));
 
         // ---
 
         TriggersApi triggersApi = new TriggersApi(getApiClient());
 
         while (!Thread.currentThread().isInterrupted()) {
-            List<TriggerEntry> triggers = triggersApi.list(orgName, projectName, repoName);
+            List<TriggerEntry> triggers = triggersApi.listTriggers(orgName, projectName, repoName);
             if (!triggers.isEmpty()) {
                 break;
             }
@@ -89,9 +90,15 @@ public class GitHubNonOrgEventIt extends AbstractServerIT {
         List<ProcessEntry> processes;
 
         ProcessV2Api processV2Api = new ProcessV2Api(getApiClient());
+        ProcessListFilter filter = ProcessListFilter.builder()
+                .orgName(orgName)
+                .projectName(projectName)
+                .status(ProcessEntry.StatusEnum.FINISHED)
+                .build();
+
         while (true) {
-            processes = processV2Api.list(null, orgName, null, projectName, null, null, null, null, null, ProcessEntry.StatusEnum.FINISHED.getValue(), null, null, null, null, null);
-            if (processes.size() > 0) {
+            processes = processV2Api.listProcesses(filter);
+            if (!processes.isEmpty()) {
                 break;
             }
 
@@ -104,22 +111,26 @@ public class GitHubNonOrgEventIt extends AbstractServerIT {
 
         ProcessEntry pe = processes.get(0);
 
-        byte[] ab = getLog(pe.getLogFileName());
+        byte[] ab = getLog(pe.getInstanceId());
         assertLog(".*EVENT:.*added_to_repository.*", ab);
     }
 
+    @SuppressWarnings("unchecked")
     private void githubEvent(String eventFile, String repoName, String eventName) throws Exception {
-        String event = new String(Files.readAllBytes(Paths.get(GitHubNonOrgEventIt.class.getResource(eventFile).toURI())));
+        String eventStr = new String(Files.readAllBytes(Paths.get(GitHubNonOrgEventIt.class.getResource(eventFile).toURI())));
         if (repoName != null) {
-            event = event.replace("org-repo", repoName);
+            eventStr = eventStr.replace("org-repo", repoName);
         }
 
+        Map<String, Object> event = getApiClient().getObjectMapper().readValue(eventStr, Map.class);
+        eventStr = getApiClient().getObjectMapper().writeValueAsString(event);
+
         ApiClient client = getApiClient();
-        client.addDefaultHeader("X-Hub-Signature", "sha1=" + GitHubUtils.sign(event));
+        client.addDefaultHeader("X-Hub-Signature", "sha1=" + GitHubUtils.sign(eventStr));
 
         GitHubEventsApi gitHubEvents = new GitHubEventsApi(client);
 
-        String result = gitHubEvents.onEvent(event, "abc", eventName);
+        String result = gitHubEvents.onEvent(null, "abc", eventName, event);
         assertEquals("ok", result);
     }
 }

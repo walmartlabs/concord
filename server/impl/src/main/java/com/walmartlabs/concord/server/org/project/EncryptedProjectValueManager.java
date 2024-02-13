@@ -26,11 +26,9 @@ import com.walmartlabs.concord.server.cfg.SecretStoreConfiguration;
 import javax.crypto.BadPaddingException;
 import javax.crypto.IllegalBlockSizeException;
 import javax.inject.Inject;
-import javax.inject.Named;
 import java.security.SecureRandom;
 import java.util.UUID;
 
-@Named
 public class EncryptedProjectValueManager {
 
     private static final int PROJECT_SECRET_KEY_LENGTH = 128;

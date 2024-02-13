@@ -32,7 +32,7 @@ import java.util.function.BiFunction;
  */
 public class CopyVariablesCommand implements Command {
 
-    public interface FrameProducer extends BiFunction<State, ThreadId, Frame>, Serializable {};
+    public interface FrameProducer extends BiFunction<State, ThreadId, Frame>, Serializable {}
 
     private static final long serialVersionUID = 1L;
 

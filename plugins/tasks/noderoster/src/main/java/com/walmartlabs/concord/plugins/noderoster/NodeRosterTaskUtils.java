@@ -20,7 +20,7 @@ package com.walmartlabs.concord.plugins.noderoster;
  * =====
  */
 
-import com.walmartlabs.concord.client.*;
+import com.walmartlabs.concord.client2.*;
 import com.walmartlabs.concord.sdk.MapUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -102,7 +102,7 @@ public class NodeRosterTaskUtils {
                 "(limit: {}, offset: {})...", artifactPattern, limit, offset);
 
         return ClientUtils.withRetry(Constants.RETRY_COUNT, Constants.RETRY_INTERVAL, () ->
-                api.list(null, artifactPattern, null, null, limit, offset));
+                api.listKnownHosts(null, artifactPattern, null, null, limit, offset));
     }
 
     /**
@@ -123,6 +123,6 @@ public class NodeRosterTaskUtils {
         log.info("Finding artifacts deployed on a host (hostName: {}, hostId: {})...", hostName, hostId);
 
         return ClientUtils.withRetry(Constants.RETRY_COUNT, Constants.RETRY_INTERVAL, () ->
-                api.list(hostId, hostName, null, limit, offset));
+                api.listHostArtifacts(hostId, hostName, null, limit, offset));
     }
 }

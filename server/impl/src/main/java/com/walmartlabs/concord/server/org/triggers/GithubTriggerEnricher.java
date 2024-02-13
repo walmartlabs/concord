@@ -28,7 +28,6 @@ import com.walmartlabs.concord.server.org.project.RepositoryEntry;
 import org.jooq.DSLContext;
 
 import javax.inject.Inject;
-import javax.inject.Named;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
@@ -40,7 +39,6 @@ import static com.walmartlabs.concord.server.events.github.Constants.*;
  * definitions in the DB so they can be used later to match with external events
  * (GitHub push notifications, for example).
  */
-@Named
 public class GithubTriggerEnricher {
 
     private final RepositoryDao repositoryDao;

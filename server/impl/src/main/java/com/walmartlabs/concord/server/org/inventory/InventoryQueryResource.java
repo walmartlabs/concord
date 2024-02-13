@@ -26,13 +26,12 @@ import com.walmartlabs.concord.server.org.OrganizationEntry;
 import com.walmartlabs.concord.server.org.OrganizationManager;
 import com.walmartlabs.concord.server.org.jsonstore.*;
 import com.walmartlabs.concord.server.sdk.metrics.WithTimer;
+import com.walmartlabs.concord.server.sdk.rest.Resource;
+import com.walmartlabs.concord.server.sdk.validation.Validate;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import org.sonatype.siesta.Resource;
 
 import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
 import javax.validation.Valid;
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
@@ -41,8 +40,6 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
-@Named
-@Singleton
 @Path("/api/v1/org")
 @Deprecated
 @Tag(name = "Inventory Queries")
@@ -165,6 +162,7 @@ public class InventoryQueryResource implements Resource {
     @Produces(MediaType.APPLICATION_JSON)
     @Path("/{orgName}/inventory/{inventoryName}/query/{queryName}/exec")
     @WithTimer
+    @Validate
     @Operation(description = "Execute inventory query", operationId = "executeInventoryQuery")
     public List<Object> exec(@PathParam("orgName") @ConcordKey String orgName,
                              @PathParam("inventoryName") @ConcordKey String inventoryName,

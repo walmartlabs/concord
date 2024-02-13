@@ -22,6 +22,7 @@ package com.walmartlabs.concord.common;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 public final class ExceptionUtils {
 
@@ -32,6 +33,15 @@ public final class ExceptionUtils {
             e = e.getCause();
         }
         return list;
+    }
+
+    @SuppressWarnings("unchecked")
+    public static <T> T filterException(Exception e, Class<T> clazz) {
+        return getExceptionList(e).stream()
+                .filter(clazz::isInstance)
+                .map(c -> (T)c)
+                .findAny()
+                .orElse(null);
     }
 
     private ExceptionUtils() {

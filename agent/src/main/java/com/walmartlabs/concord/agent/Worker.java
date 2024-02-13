@@ -24,7 +24,7 @@ import com.walmartlabs.concord.agent.executors.JobExecutor;
 import com.walmartlabs.concord.agent.guice.AgentImportManager;
 import com.walmartlabs.concord.agent.logging.ProcessLog;
 import com.walmartlabs.concord.agent.remote.ProcessStatusUpdater;
-import com.walmartlabs.concord.client.ProcessEntry.StatusEnum;
+import com.walmartlabs.concord.client2.ProcessEntry.StatusEnum;
 import com.walmartlabs.concord.common.IOUtils;
 import com.walmartlabs.concord.imports.Import.SecretDefinition;
 import org.slf4j.Logger;

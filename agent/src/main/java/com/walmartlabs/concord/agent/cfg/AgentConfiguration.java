@@ -25,8 +25,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
 import java.nio.file.Path;
 import java.time.Duration;
 import java.util.List;
@@ -37,8 +35,6 @@ import java.util.concurrent.TimeUnit;
 import static com.walmartlabs.concord.agent.cfg.Utils.getOrCreatePath;
 import static com.walmartlabs.concord.agent.cfg.Utils.getStringOrDefault;
 
-@Named
-@Singleton
 public class AgentConfiguration {
 
     private static final Logger log = LoggerFactory.getLogger(AgentConfiguration.class);
@@ -61,6 +57,9 @@ public class AgentConfiguration {
     private final int workersCount;
     private final long pollInterval;
     private final int maintenanceModeListenerPort;
+
+    private final boolean explicitlyResolveV1Client;
+    private final boolean mavenOfflineMode;
 
     @Inject
     public AgentConfiguration(Config cfg) {
@@ -86,6 +85,9 @@ public class AgentConfiguration {
         this.maintenanceModeListenerPort = cfg.getInt("maintenanceModeListenerPort");
 
         this.pollInterval = cfg.getDuration("pollInterval", TimeUnit.MILLISECONDS);
+
+        this.explicitlyResolveV1Client = cfg.getBoolean("explicitlyResolveV1Client");
+        this.mavenOfflineMode = cfg.getBoolean("mavenOfflineMode");
     }
 
     public String getAgentId() {
@@ -142,5 +144,13 @@ public class AgentConfiguration {
 
     public int getMaintenanceModeListenerPort() {
         return maintenanceModeListenerPort;
+    }
+
+    public boolean isExplicitlyResolveV1Client() {
+        return explicitlyResolveV1Client;
+    }
+
+    public boolean isMavenOfflineMode() {
+        return mavenOfflineMode;
     }
 }

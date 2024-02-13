@@ -124,7 +124,7 @@ public class TaskCallInterceptor {
         static Method of(Object base, String methodName, List<Object> params) {
             List<List<Annotation>> annotations = Collections.emptyList();
             java.lang.reflect.Method m = ReflectionUtil.findMethod(base.getClass(), methodName, null, params.toArray());
-            if (m != null) {
+            if (m != null && !m.isVarArgs()) {
                 annotations = Arrays.stream(m.getParameterAnnotations())
                         .map(Arrays::asList)
                         .collect(Collectors.toList());

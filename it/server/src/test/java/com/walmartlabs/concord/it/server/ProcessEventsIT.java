@@ -20,8 +20,7 @@ package com.walmartlabs.concord.it.server;
  * =====
  */
 
-import com.walmartlabs.concord.ApiException;
-import com.walmartlabs.concord.client.*;
+import com.walmartlabs.concord.client2.*;
 import org.junit.jupiter.api.Test;
 
 import java.util.Collections;
@@ -41,17 +40,17 @@ public class ProcessEventsIT extends AbstractServerIT {
         OrganizationsApi organizationsApi = new OrganizationsApi(getApiClient());
 
         String orgName = "org_" + randomString();
-        organizationsApi.createOrUpdate(new OrganizationEntry()
-                .setName(orgName));
+        organizationsApi.createOrUpdateOrg(new OrganizationEntry()
+                .name(orgName));
 
         // ---
 
         ProjectsApi projectsApi = new ProjectsApi(getApiClient());
 
         String projectName = "project_" + randomString();
-        projectsApi.createOrUpdate(orgName, new ProjectEntry()
-                .setName(projectName)
-                .setRawPayloadMode(ProjectEntry.RawPayloadModeEnum.OWNERS));
+        projectsApi.createOrUpdateProject(orgName, new ProjectEntry()
+                .name(projectName)
+                .rawPayloadMode(ProjectEntry.RawPayloadModeEnum.OWNERS));
 
         // ---
 
@@ -65,20 +64,19 @@ public class ProcessEventsIT extends AbstractServerIT {
 
         // ---
 
-        ProcessApi processApi = new ProcessApi(getApiClient());
-        ProcessEntry pe = waitForCompletion(processApi, spr.getInstanceId());
+        ProcessEntry pe = waitForCompletion(getApiClient(), spr.getInstanceId());
         assertEquals(ProcessEntry.StatusEnum.FINISHED, pe.getStatus());
 
         // ---
 
-        byte[] ab = getLog(pe.getLogFileName());
+        byte[] ab = getLog(pe.getInstanceId());
         assertLog(".*Hello!.*", ab);
 
         // ---
 
         ProcessEventsApi eventsApi = new ProcessEventsApi(getApiClient());
 
-        List<ProcessEventEntry> events = eventsApi.list(pe.getInstanceId(), "ELEMENT", null, null, null, "pre", true, 10);
+        List<ProcessEventEntry> events = eventsApi.listProcessEvents(pe.getInstanceId(), "ELEMENT", null, null, null, "pre", true, 10);
         assertEquals(1, events.size());
 
         ProcessEventEntry ev = events.get(0);
@@ -89,13 +87,13 @@ public class ProcessEventsIT extends AbstractServerIT {
         UsersApi usersApi = new UsersApi(getApiClient());
 
         String userName = "user_" + randomString();
-        CreateUserResponse cur = usersApi.createOrUpdate(new CreateUserRequest()
-                .setUsername(userName)
-                .setType(CreateUserRequest.TypeEnum.LOCAL));
+        CreateUserResponse cur = usersApi.createOrUpdateUser(new CreateUserRequest()
+                .username(userName)
+                .type(CreateUserRequest.TypeEnum.LOCAL));
 
         ApiKeysApi apiKeysApi = new ApiKeysApi(getApiClient());
-        CreateApiKeyResponse car = apiKeysApi.create(new CreateApiKeyRequest()
-                .setUserId(cur.getId()));
+        CreateApiKeyResponse car = apiKeysApi.createUserApiKey(new CreateApiKeyRequest()
+                .userId(cur.getId()));
 
         // ---
 
@@ -104,7 +102,7 @@ public class ProcessEventsIT extends AbstractServerIT {
         // ---
 
         try {
-            eventsApi.list(pe.getInstanceId(), "ELEMENT", null, null, null, "pre", true, 10);
+            eventsApi.listProcessEvents(pe.getInstanceId(), "ELEMENT", null, null, null, "pre", true, 10);
             fail("should fail");
         } catch (ApiException e) {
             assertEquals(403, e.getCode());
@@ -119,22 +117,22 @@ public class ProcessEventsIT extends AbstractServerIT {
         TeamsApi teamsApi = new TeamsApi(getApiClient());
 
         String teamName = "team_" + randomString();
-        CreateTeamResponse ctr = teamsApi.createOrUpdate(orgName, new TeamEntry()
-                .setName(teamName));
+        CreateTeamResponse ctr = teamsApi.createOrUpdateTeam(orgName, new TeamEntry()
+                .name(teamName));
 
-        teamsApi.addUsers(orgName, teamName, false, Collections.singletonList(new TeamUserEntry()
-                .setUserId(cur.getId())
-                .setRole(TeamUserEntry.RoleEnum.MEMBER)));
+        teamsApi.addUsersToTeam(orgName, teamName, false, Collections.singletonList(new TeamUserEntry()
+                .userId(cur.getId())
+                .role(TeamUserEntry.RoleEnum.MEMBER)));
 
-        projectsApi.updateAccessLevel(orgName, projectName, new ResourceAccessEntry()
-                .setTeamId(ctr.getId())
-                .setLevel(ResourceAccessEntry.LevelEnum.WRITER));
+        projectsApi.updateProjectAccessLevel(orgName, projectName, new ResourceAccessEntry()
+                .teamId(ctr.getId())
+                .level(ResourceAccessEntry.LevelEnum.WRITER));
 
         // ---
 
         setApiKey(car.getKey());
 
-        events = eventsApi.list(pe.getInstanceId(), "ELEMENT", null, null, null, "pre", true, 10);
+        events = eventsApi.listProcessEvents(pe.getInstanceId(), "ELEMENT", null, null, null, "pre", true, 10);
         assertEquals(1, events.size());
 
         ev = events.get(0);

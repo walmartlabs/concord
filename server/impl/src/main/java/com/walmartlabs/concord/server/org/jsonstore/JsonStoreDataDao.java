@@ -27,7 +27,6 @@ import com.walmartlabs.concord.server.jooq.tables.JsonStoreData;
 import org.jooq.*;
 
 import javax.inject.Inject;
-import javax.inject.Named;
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.UUID;
@@ -36,7 +35,6 @@ import static com.walmartlabs.concord.server.jooq.tables.JsonStoreData.JSON_STOR
 import static org.jooq.impl.DSL.coalesce;
 import static org.jooq.impl.DSL.sum;
 
-@Named
 public class JsonStoreDataDao extends AbstractDao {
 
     private final ConcordObjectMapper objectMapper;

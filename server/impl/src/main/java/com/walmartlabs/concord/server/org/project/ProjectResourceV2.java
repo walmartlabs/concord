@@ -21,22 +21,18 @@ package com.walmartlabs.concord.server.org.project;
  */
 
 import com.walmartlabs.concord.common.validation.ConcordKey;
+import com.walmartlabs.concord.server.sdk.rest.Resource;
+import com.walmartlabs.concord.server.sdk.validation.Validate;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import org.sonatype.siesta.Resource;
-import org.sonatype.siesta.Validate;
 
 import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 
-@Named
-@Singleton
 @Path("/api/v2/org")
 @Tag(name = "Projects")
 public class ProjectResourceV2 implements Resource {

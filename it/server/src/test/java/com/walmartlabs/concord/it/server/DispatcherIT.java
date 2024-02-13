@@ -20,11 +20,13 @@ package com.walmartlabs.concord.it.server;
  * =====
  */
 
-import com.walmartlabs.concord.client.ProcessApi;
-import com.walmartlabs.concord.client.ProcessEntry;
-import com.walmartlabs.concord.client.StartProcessResponse;
+import com.walmartlabs.concord.client2.ProcessApi;
+import com.walmartlabs.concord.client2.ProcessEntry;
+import com.walmartlabs.concord.client2.ProcessV2Api;
+import com.walmartlabs.concord.client2.StartProcessResponse;
 import org.junit.jupiter.api.Test;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -40,7 +42,7 @@ public class DispatcherIT extends AbstractServerIT {
      */
     @Test
     public void testUnknownFlavor() throws Exception {
-        byte[] payload = archive(ProcessIT.class.getResource("unknownFlavor").toURI());
+        byte[] payload = archive(DispatcherIT.class.getResource("unknownFlavor").toURI());
 
         Map<String, Object> input = new HashMap<>();
         input.put("requirements.agent.type", randomString());
@@ -54,15 +56,15 @@ public class DispatcherIT extends AbstractServerIT {
 
         StartProcessResponse knownFlavor = start(input);
 
-        ProcessApi processApi = new ProcessApi(getApiClient());
-        ProcessEntry pe = waitForCompletion(processApi, knownFlavor.getInstanceId());
+        ProcessEntry pe = waitForCompletion(getApiClient(), knownFlavor.getInstanceId());
         assertEquals(ProcessEntry.StatusEnum.FINISHED, pe.getStatus());
 
         // ---
 
-        pe = processApi.get(unknownFlavor.getInstanceId());
+        ProcessV2Api processApi = new ProcessV2Api(getApiClient());
+        pe = processApi.getProcess(unknownFlavor.getInstanceId(), Collections.emptySet());
         assertEquals(ProcessEntry.StatusEnum.ENQUEUED, pe.getStatus());
 
-        processApi.kill(pe.getInstanceId());
+        new ProcessApi(getApiClient()).kill(pe.getInstanceId());
     }
 }

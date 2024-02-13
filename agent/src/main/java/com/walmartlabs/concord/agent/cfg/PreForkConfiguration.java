@@ -23,12 +23,8 @@ package com.walmartlabs.concord.agent.cfg;
 import com.typesafe.config.Config;
 
 import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
 import java.util.concurrent.TimeUnit;
 
-@Named
-@Singleton
 public class PreForkConfiguration {
 
     private final boolean enabled;

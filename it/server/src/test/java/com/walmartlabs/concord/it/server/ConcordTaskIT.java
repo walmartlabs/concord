@@ -21,13 +21,11 @@ package com.walmartlabs.concord.it.server;
  */
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.walmartlabs.concord.ApiException;
-import com.walmartlabs.concord.client.*;
-import com.walmartlabs.concord.common.IOUtils;
+import com.walmartlabs.concord.client2.*;
 import org.junit.jupiter.api.Test;
 
 import javax.xml.bind.DatatypeConverter;
-import java.io.File;
+import java.io.InputStream;
 import java.util.*;
 
 import static com.walmartlabs.concord.common.IOUtils.grep;
@@ -44,28 +42,28 @@ public class ConcordTaskIT extends AbstractServerIT {
         String orgName = "org_" + randomString();
 
         OrganizationsApi orgApi = new OrganizationsApi(getApiClient());
-        orgApi.createOrUpdate(new OrganizationEntry().setName(orgName));
+        orgApi.createOrUpdateOrg(new OrganizationEntry().name(orgName));
 
         // add the user A
 
         UsersApi usersApi = new UsersApi(getApiClient());
 
         String userAName = "userA_" + randomString();
-        usersApi.createOrUpdate(new CreateUserRequest().setUsername(userAName).setType(CreateUserRequest.TypeEnum.LOCAL));
+        usersApi.createOrUpdateUser(new CreateUserRequest().username(userAName).type(CreateUserRequest.TypeEnum.LOCAL));
 
         ApiKeysApi apiKeyResource = new ApiKeysApi(getApiClient());
-        CreateApiKeyResponse apiKeyA = apiKeyResource.create(new CreateApiKeyRequest().setUsername(userAName));
+        CreateApiKeyResponse apiKeyA = apiKeyResource.createUserApiKey(new CreateApiKeyRequest().username(userAName));
 
         // create the user A's team
 
         String teamName = "team_" + randomString();
 
         TeamsApi teamsApi = new TeamsApi(getApiClient());
-        teamsApi.createOrUpdate(orgName, new TeamEntry().setName(teamName));
+        teamsApi.createOrUpdateTeam(orgName, new TeamEntry().name(teamName));
 
-        teamsApi.addUsers(orgName, teamName, false, Collections.singletonList(new TeamUserEntry()
-                .setUsername(userAName)
-                .setRole(TeamUserEntry.RoleEnum.MEMBER)));
+        teamsApi.addUsersToTeam(orgName, teamName, false, Collections.singletonList(new TeamUserEntry()
+                .username(userAName)
+                .role(TeamUserEntry.RoleEnum.MEMBER)));
 
         // switch to the user A and create a new private project
 
@@ -74,17 +72,17 @@ public class ConcordTaskIT extends AbstractServerIT {
         String projectName = "project_" + randomString();
 
         ProjectsApi projectsApi = new ProjectsApi(getApiClient());
-        projectsApi.createOrUpdate(orgName, new ProjectEntry()
-                .setName(projectName)
-                .setVisibility(ProjectEntry.VisibilityEnum.PRIVATE)
-                .setRawPayloadMode(ProjectEntry.RawPayloadModeEnum.EVERYONE));
+        projectsApi.createOrUpdateProject(orgName, new ProjectEntry()
+                .name(projectName)
+                .visibility(ProjectEntry.VisibilityEnum.PRIVATE)
+                .rawPayloadMode(ProjectEntry.RawPayloadModeEnum.EVERYONE));
 
         // grant the team access to the project
 
-        projectsApi.updateAccessLevel(orgName, projectName, new ResourceAccessEntry()
-                .setOrgName(orgName)
-                .setTeamName(teamName)
-                .setLevel(ResourceAccessEntry.LevelEnum.READER));
+        projectsApi.updateProjectAccessLevel(orgName, projectName, new ResourceAccessEntry()
+                .orgName(orgName)
+                .teamName(teamName)
+                .level(ResourceAccessEntry.LevelEnum.READER));
 
         // start a new process using the project as the user A
 
@@ -96,12 +94,11 @@ public class ConcordTaskIT extends AbstractServerIT {
 
         StartProcessResponse spr = start(input);
 
-        ProcessApi processApi = new ProcessApi(getApiClient());
-        ProcessEntry pir = waitForStatus(processApi, spr.getInstanceId(), ProcessEntry.StatusEnum.FINISHED);
+        ProcessEntry pir = waitForStatus(getApiClient(), spr.getInstanceId(), ProcessEntry.StatusEnum.FINISHED);
 
         // ---
 
-        byte[] ab = getLog(pir.getLogFileName());
+        byte[] ab = getLog(pir.getInstanceId());
         assertLog(".*Done!.*", ab);
     }
 
@@ -113,13 +110,12 @@ public class ConcordTaskIT extends AbstractServerIT {
 
         StartProcessResponse spr = start(input);
 
-        ProcessApi processApi = new ProcessApi(getApiClient());
-        ProcessEntry pir = waitForCompletion(processApi, spr.getInstanceId());
+        ProcessEntry pir = waitForCompletion(getApiClient(), spr.getInstanceId());
         assertEquals(ProcessEntry.StatusEnum.FINISHED, pir.getStatus());
 
         // ---
 
-        byte[] ab = getLog(pir.getLogFileName());
+        byte[] ab = getLog(pir.getInstanceId());
         assertLog(".*Done! Hello! Good Bye.*", ab);
     }
 
@@ -135,13 +131,12 @@ public class ConcordTaskIT extends AbstractServerIT {
 
         StartProcessResponse spr = start(input);
 
-        ProcessApi processApi = new ProcessApi(getApiClient());
-        ProcessEntry pir = waitForCompletion(processApi, spr.getInstanceId());
+        ProcessEntry pir = waitForCompletion(getApiClient(), spr.getInstanceId());
         assertEquals(ProcessEntry.StatusEnum.FINISHED, pir.getStatus());
 
         // ---
 
-        byte[] ab = getLog(pir.getLogFileName());
+        byte[] ab = getLog(pir.getInstanceId());
         assertLog(".*Done!.*", ab);
     }
 
@@ -157,13 +152,12 @@ public class ConcordTaskIT extends AbstractServerIT {
 
         StartProcessResponse spr = start(input);
 
-        ProcessApi processApi = new ProcessApi(getApiClient());
-        ProcessEntry pir = waitForCompletion(processApi, spr.getInstanceId());
+        ProcessEntry pir = waitForCompletion(getApiClient(), spr.getInstanceId());
         assertEquals(ProcessEntry.StatusEnum.FINISHED, pir.getStatus());
 
         // ---
 
-        byte[] ab = getLog(pir.getLogFileName());
+        byte[] ab = getLog(pir.getInstanceId());
         assertLog(".*Done! Hello!.*", ab);
     }
 
@@ -175,13 +169,12 @@ public class ConcordTaskIT extends AbstractServerIT {
 
         StartProcessResponse spr = start(input);
 
-        ProcessApi processApi = new ProcessApi(getApiClient());
-        ProcessEntry pir = waitForCompletion(processApi, spr.getInstanceId());
+        ProcessEntry pir = waitForCompletion(getApiClient(), spr.getInstanceId());
         assertEquals(ProcessEntry.StatusEnum.FINISHED, pir.getStatus());
 
         // ---
 
-        byte[] ab = getLog(pir.getLogFileName());
+        byte[] ab = getLog(pir.getInstanceId());
         assertLog(".*Done!.*", ab);
     }
 
@@ -193,13 +186,12 @@ public class ConcordTaskIT extends AbstractServerIT {
 
         StartProcessResponse spr = start(input);
 
-        ProcessApi processApi = new ProcessApi(getApiClient());
-        ProcessEntry pir = waitForCompletion(processApi, spr.getInstanceId());
+        ProcessEntry pir = waitForCompletion(getApiClient(), spr.getInstanceId());
         assertEquals(ProcessEntry.StatusEnum.FINISHED, pir.getStatus());
 
         // ---
 
-        byte[] ab = getLog(pir.getLogFileName());
+        byte[] ab = getLog(pir.getInstanceId());
         assertLog(".*Fail!.*", ab);
         assertNoLog(".*Done!.*", ab);
     }
@@ -213,12 +205,12 @@ public class ConcordTaskIT extends AbstractServerIT {
         StartProcessResponse spr = start(input);
 
         ProcessApi processApi = new ProcessApi(getApiClient());
-        ProcessEntry pir = waitForCompletion(processApi, spr.getInstanceId());
+        ProcessEntry pir = waitForCompletion(getApiClient(), spr.getInstanceId());
         assertEquals(ProcessEntry.StatusEnum.FINISHED, pir.getStatus());
 
         // ---
 
-        byte[] ab = getLog(pir.getLogFileName());
+        byte[] ab = getLog(pir.getInstanceId());
         assertLog(".*Done!.*", ab);
     }
 
@@ -227,15 +219,15 @@ public class ConcordTaskIT extends AbstractServerIT {
         String orgName = "org_" + randomString();
 
         OrganizationsApi orgApi = new OrganizationsApi(getApiClient());
-        orgApi.createOrUpdate(new OrganizationEntry().setName(orgName));
+        orgApi.createOrUpdateOrg(new OrganizationEntry().name(orgName));
 
         String projectName = "project_" + randomString();
 
         ProjectsApi projectsApi = new ProjectsApi(getApiClient());
-        projectsApi.createOrUpdate(orgName, new ProjectEntry()
-                .setName(projectName)
-                .setVisibility(ProjectEntry.VisibilityEnum.PUBLIC)
-                .setRawPayloadMode(ProjectEntry.RawPayloadModeEnum.EVERYONE));
+        projectsApi.createOrUpdateProject(orgName, new ProjectEntry()
+                .name(projectName)
+                .visibility(ProjectEntry.VisibilityEnum.PUBLIC)
+                .rawPayloadMode(ProjectEntry.RawPayloadModeEnum.EVERYONE));
 
         byte[] payload = archive(ConcordTaskIT.class.getResource("concordTaskFailChild").toURI());
         Map<String, Object> input = new HashMap<>();
@@ -245,12 +237,11 @@ public class ConcordTaskIT extends AbstractServerIT {
 
         StartProcessResponse spr = start(input);
 
-        ProcessApi processApi = new ProcessApi(getApiClient());
-        ProcessEntry pir = waitForStatus(processApi, spr.getInstanceId(), ProcessEntry.StatusEnum.FAILED);
+        ProcessEntry pir = waitForStatus(getApiClient(), spr.getInstanceId(), ProcessEntry.StatusEnum.FAILED);
 
         // ---
 
-        byte[] ab = getLog(pir.getLogFileName());
+        byte[] ab = getLog(pir.getInstanceId());
         assertLog(".*Child process.*FAILED.*BOOOM.*", ab);
     }
 
@@ -259,15 +250,15 @@ public class ConcordTaskIT extends AbstractServerIT {
         String orgName = "org_" + randomString();
 
         OrganizationsApi orgApi = new OrganizationsApi(getApiClient());
-        orgApi.createOrUpdate(new OrganizationEntry().setName(orgName));
+        orgApi.createOrUpdateOrg(new OrganizationEntry().name(orgName));
 
         String projectName = "project_" + randomString();
 
         ProjectsApi projectsApi = new ProjectsApi(getApiClient());
-        projectsApi.createOrUpdate(orgName, new ProjectEntry()
-                .setName(projectName)
-                .setVisibility(ProjectEntry.VisibilityEnum.PUBLIC)
-                .setRawPayloadMode(ProjectEntry.RawPayloadModeEnum.EVERYONE));
+        projectsApi.createOrUpdateProject(orgName, new ProjectEntry()
+                .name(projectName)
+                .visibility(ProjectEntry.VisibilityEnum.PUBLIC)
+                .rawPayloadMode(ProjectEntry.RawPayloadModeEnum.EVERYONE));
 
         byte[] payload = archive(ConcordTaskIT.class.getResource("concordTaskForkWithItemsWithOut").toURI());
         Map<String, Object> input = new HashMap<>();
@@ -278,11 +269,11 @@ public class ConcordTaskIT extends AbstractServerIT {
         StartProcessResponse spr = start(input);
 
         ProcessApi processApi = new ProcessApi(getApiClient());
-        ProcessEntry pir = waitForStatus(processApi, spr.getInstanceId(), ProcessEntry.StatusEnum.FAILED);
+        ProcessEntry pir = waitForStatus(getApiClient(), spr.getInstanceId(), ProcessEntry.StatusEnum.FAILED);
 
         // ---
 
-        byte[] ab = getLog(pir.getLogFileName());
+        byte[] ab = getLog(pir.getInstanceId());
         assertLog(".*color=RED.*", ab);
         assertLog(".*color=WHITE.*", ab);
         assertLog(".*Done.*\\[\\[.*\\], \\[.*\\]\\] is completed.*", ab);
@@ -293,15 +284,15 @@ public class ConcordTaskIT extends AbstractServerIT {
         String orgName = "org_" + randomString();
 
         OrganizationsApi orgApi = new OrganizationsApi(getApiClient());
-        orgApi.createOrUpdate(new OrganizationEntry().setName(orgName));
+        orgApi.createOrUpdateOrg(new OrganizationEntry().name(orgName));
 
         String projectName = "project_" + randomString();
 
         ProjectsApi projectsApi = new ProjectsApi(getApiClient());
-        projectsApi.createOrUpdate(orgName, new ProjectEntry()
-                .setName(projectName)
-                .setVisibility(ProjectEntry.VisibilityEnum.PUBLIC)
-                .setRawPayloadMode(ProjectEntry.RawPayloadModeEnum.EVERYONE));
+        projectsApi.createOrUpdateProject(orgName, new ProjectEntry()
+                .name(projectName)
+                .visibility(ProjectEntry.VisibilityEnum.PUBLIC)
+                .rawPayloadMode(ProjectEntry.RawPayloadModeEnum.EVERYONE));
 
         byte[] payload = archive(ConcordTaskIT.class.getResource("concordTaskForkWithItems").toURI());
         Map<String, Object> input = new HashMap<>();
@@ -311,12 +302,11 @@ public class ConcordTaskIT extends AbstractServerIT {
 
         StartProcessResponse spr = start(input);
 
-        ProcessApi processApi = new ProcessApi(getApiClient());
-        ProcessEntry pir = waitForStatus(processApi, spr.getInstanceId(), ProcessEntry.StatusEnum.FAILED);
+        ProcessEntry pir = waitForStatus(getApiClient(), spr.getInstanceId(), ProcessEntry.StatusEnum.FAILED);
 
         // ---
 
-        byte[] ab = getLog(pir.getLogFileName());
+        byte[] ab = getLog(pir.getInstanceId());
         assertLog(".*color=RED.*", ab);
         assertLog(".*color=WHITE.*", ab);
         assertLog(".*Done.*\\[\\[.*\\], \\[.*\\]\\] is completed.*", ab);
@@ -327,13 +317,13 @@ public class ConcordTaskIT extends AbstractServerIT {
         String username = "user_" + randomString();
 
         UsersApi usersApi = new UsersApi(getApiClient());
-        usersApi.createOrUpdate(new CreateUserRequest()
-                .setUsername(username)
-                .setType(CreateUserRequest.TypeEnum.LOCAL));
+        usersApi.createOrUpdateUser(new CreateUserRequest()
+                .username(username)
+                .type(CreateUserRequest.TypeEnum.LOCAL));
 
         ApiKeysApi apiKeysApi = new ApiKeysApi(getApiClient());
-        CreateApiKeyResponse cakr = apiKeysApi.create(new CreateApiKeyRequest()
-                .setUsername(username));
+        CreateApiKeyResponse cakr = apiKeysApi.createUserApiKey(new CreateApiKeyRequest()
+                .username(username));
 
         // ---
 
@@ -344,12 +334,11 @@ public class ConcordTaskIT extends AbstractServerIT {
 
         StartProcessResponse spr = start(input);
 
-        ProcessApi processApi = new ProcessApi(getApiClient());
-        ProcessEntry pe = waitForCompletion(processApi, spr.getInstanceId());
+        ProcessEntry pe = waitForCompletion(getApiClient(), spr.getInstanceId());
 
         // ---
 
-        byte[] ab = getLog(pe.getLogFileName());
+        byte[] ab = getLog(pe.getInstanceId());
         assertLog(".*Hello, Concord!.*", ab);
     }
 
@@ -358,13 +347,13 @@ public class ConcordTaskIT extends AbstractServerIT {
         String username = "user_" + randomString();
 
         UsersApi usersApi = new UsersApi(getApiClient());
-        usersApi.createOrUpdate(new CreateUserRequest()
-                .setUsername(username)
-                .setType(CreateUserRequest.TypeEnum.LOCAL));
+        usersApi.createOrUpdateUser(new CreateUserRequest()
+                .username(username)
+                .type(CreateUserRequest.TypeEnum.LOCAL));
 
         ApiKeysApi apiKeysApi = new ApiKeysApi(getApiClient());
-        CreateApiKeyResponse cakr = apiKeysApi.create(new CreateApiKeyRequest()
-                .setUsername(username));
+        CreateApiKeyResponse cakr = apiKeysApi.createUserApiKey(new CreateApiKeyRequest()
+                .username(username));
 
         // ---
 
@@ -375,12 +364,11 @@ public class ConcordTaskIT extends AbstractServerIT {
 
         StartProcessResponse spr = start(input);
 
-        ProcessApi processApi = new ProcessApi(getApiClient());
-        ProcessEntry pe = waitForCompletion(processApi, spr.getInstanceId());
+        ProcessEntry pe = waitForCompletion(getApiClient(), spr.getInstanceId());
 
         // ---
 
-        byte[] ab = getLog(pe.getLogFileName());
+        byte[] ab = getLog(pe.getInstanceId());
         assertLog(".*Hello, Concord!.*", ab);
     }
 
@@ -390,19 +378,19 @@ public class ConcordTaskIT extends AbstractServerIT {
 
         StartProcessResponse parentSpr = start(payload);
 
-        ProcessApi processApi = new ProcessApi(getApiClient());
-        waitForCompletion(processApi, parentSpr.getInstanceId());
+        ProcessV2Api processApi = new ProcessV2Api(getApiClient());
+        waitForCompletion(getApiClient(), parentSpr.getInstanceId());
 
-        ProcessEntry processEntry = processApi.get(parentSpr.getInstanceId());
+        ProcessEntry processEntry = processApi.getProcess(parentSpr.getInstanceId(), Collections.singleton("childrenIds"));
         assertEquals(1, processEntry.getChildrenIds().size());
 
-        ProcessEntry child = processApi.get(processEntry.getChildrenIds().get(0));
+        ProcessEntry child = processApi.getProcess(processEntry.getChildrenIds().iterator().next(), Collections.singleton("childrenIds"));
         assertNotNull(child);
         assertEquals(ProcessEntry.StatusEnum.FINISHED, child.getStatus());
 
         // ---
 
-        byte[] ab = getLog(child.getLogFileName());
+        byte[] ab = getLog(child.getInstanceId());
         assertLog(".*Child process, nullValue: ''.*", ab);
         assertLog(".*Child process, nullValue == null: 'true'.*", ab);
         assertLog(".*Child process, hasVariable\\('nullValue'\\): true.*", ab);
@@ -413,15 +401,15 @@ public class ConcordTaskIT extends AbstractServerIT {
         String orgName = "org_" + randomString();
 
         OrganizationsApi orgApi = new OrganizationsApi(getApiClient());
-        orgApi.createOrUpdate(new OrganizationEntry().setName(orgName));
+        orgApi.createOrUpdateOrg(new OrganizationEntry().name(orgName));
 
         String projectName = "project_" + randomString();
 
         ProjectsApi projectsApi = new ProjectsApi(getApiClient());
-        projectsApi.createOrUpdate(orgName, new ProjectEntry()
-                .setName(projectName)
-                .setVisibility(ProjectEntry.VisibilityEnum.PUBLIC)
-                .setRawPayloadMode(ProjectEntry.RawPayloadModeEnum.EVERYONE));
+        projectsApi.createOrUpdateProject(orgName, new ProjectEntry()
+                .name(projectName)
+                .visibility(ProjectEntry.VisibilityEnum.PUBLIC)
+                .rawPayloadMode(ProjectEntry.RawPayloadModeEnum.EVERYONE));
 
         byte[] payload = archive(ConcordTaskIT.class.getResource("concordTaskForkWithArguments").toURI());
         Map<String, Object> input = new HashMap<>();
@@ -431,19 +419,19 @@ public class ConcordTaskIT extends AbstractServerIT {
 
         StartProcessResponse parentSpr = start(input);
 
-        ProcessApi processApi = new ProcessApi(getApiClient());
-        waitForCompletion(processApi, parentSpr.getInstanceId());
+        ProcessV2Api processApi = new ProcessV2Api(getApiClient());
+        waitForCompletion(getApiClient(), parentSpr.getInstanceId());
 
-        ProcessEntry processEntry = processApi.get(parentSpr.getInstanceId());
+        ProcessEntry processEntry = processApi.getProcess(parentSpr.getInstanceId(), Collections.singleton("childrenIds"));
         assertEquals(1, processEntry.getChildrenIds().size());
 
-        ProcessEntry child = processApi.get(processEntry.getChildrenIds().get(0));
+        ProcessEntry child = processApi.getProcess(processEntry.getChildrenIds().iterator().next(), Collections.singleton("childrenIds"));
         assertNotNull(child);
         assertEquals(ProcessEntry.StatusEnum.FINISHED, child.getStatus());
 
         // ---
 
-        byte[] ab = getLog(child.getLogFileName());
+        byte[] ab = getLog(child.getInstanceId());
         assertLog(".*Hello from a subprocess.*", ab);
         assertLog(".*Concord Fork Process 123.*", ab);
     }
@@ -453,15 +441,15 @@ public class ConcordTaskIT extends AbstractServerIT {
         String orgName = "org_" + randomString();
 
         OrganizationsApi orgApi = new OrganizationsApi(getApiClient());
-        orgApi.createOrUpdate(new OrganizationEntry().setName(orgName));
+        orgApi.createOrUpdateOrg(new OrganizationEntry().name(orgName));
 
         String projectName = "project_" + randomString();
 
         ProjectsApi projectsApi = new ProjectsApi(getApiClient());
-        projectsApi.createOrUpdate(orgName, new ProjectEntry()
-                .setName(projectName)
-                .setVisibility(ProjectEntry.VisibilityEnum.PUBLIC)
-                .setRawPayloadMode(ProjectEntry.RawPayloadModeEnum.EVERYONE));
+        projectsApi.createOrUpdateProject(orgName, new ProjectEntry()
+                .name(projectName)
+                .visibility(ProjectEntry.VisibilityEnum.PUBLIC)
+                .rawPayloadMode(ProjectEntry.RawPayloadModeEnum.EVERYONE));
 
         byte[] payload = archive(ConcordTaskIT.class.getResource("concordTaskForkWithForm").toURI());
         Map<String, Object> input = new HashMap<>();
@@ -472,35 +460,36 @@ public class ConcordTaskIT extends AbstractServerIT {
         StartProcessResponse parentSpr = start(input);
 
         // ---
-        ProcessApi processApi = new ProcessApi(getApiClient());
 
-        ProcessEntry pir = waitForStatus(processApi, parentSpr.getInstanceId(), ProcessEntry.StatusEnum.SUSPENDED);
+        ProcessEntry pir = waitForStatus(getApiClient(), parentSpr.getInstanceId(), ProcessEntry.StatusEnum.SUSPENDED);
 
         // ---
 
         ProcessFormsApi formsApi = new ProcessFormsApi(getApiClient());
 
-        List<FormListEntry> forms = formsApi.list(parentSpr.getInstanceId());
+        List<FormListEntry> forms = formsApi.listProcessForms(parentSpr.getInstanceId());
         assertEquals(1, forms.size());
 
         Map<String, Object> data = new HashMap<>();
         data.put("firstName", "Boo");
-        FormSubmitResponse fsr = formsApi.submit(pir.getInstanceId(), "myForm", data);
-        assertTrue(fsr.isOk());
+        FormSubmitResponse fsr = formsApi.submitForm(pir.getInstanceId(), "myForm", data);
+        assertTrue(fsr.getOk());
 
-        waitForCompletion(processApi, parentSpr.getInstanceId());
+        waitForCompletion(getApiClient(), parentSpr.getInstanceId());
 
         // ---
-        ProcessEntry processEntry = processApi.get(parentSpr.getInstanceId());
+        ProcessV2Api processApi = new ProcessV2Api(getApiClient());
+
+        ProcessEntry processEntry = processApi.getProcess(parentSpr.getInstanceId(), Collections.singleton("childrenIds"));
         assertEquals(1, processEntry.getChildrenIds().size());
 
-        ProcessEntry child = processApi.get(processEntry.getChildrenIds().get(0));
+        ProcessEntry child = processApi.getProcess(processEntry.getChildrenIds().iterator().next(), Collections.singleton("childrenIds"));
         assertNotNull(child);
         assertEquals(ProcessEntry.StatusEnum.FINISHED, child.getStatus());
 
         // ---
 
-        byte[] ab = getLog(child.getLogFileName());
+        byte[] ab = getLog(child.getInstanceId());
         assertLog(".*Hello from a subprocess.*", ab);
         assertLog(".*Concord Fork Process 234.*", ab);
     }
@@ -512,15 +501,15 @@ public class ConcordTaskIT extends AbstractServerIT {
         String orgName = "org_" + randomString();
 
         OrganizationsApi orgApi = new OrganizationsApi(getApiClient());
-        orgApi.createOrUpdate(new OrganizationEntry().setName(orgName));
+        orgApi.createOrUpdateOrg(new OrganizationEntry().name(orgName));
 
         String projectName = "project_" + randomString();
 
         ProjectsApi projectsApi = new ProjectsApi(getApiClient());
-        projectsApi.createOrUpdate(orgName, new ProjectEntry()
-                .setName(projectName)
-                .setVisibility(ProjectEntry.VisibilityEnum.PUBLIC)
-                .setRawPayloadMode(ProjectEntry.RawPayloadModeEnum.EVERYONE));
+        projectsApi.createOrUpdateProject(orgName, new ProjectEntry()
+                .name(projectName)
+                .visibility(ProjectEntry.VisibilityEnum.PUBLIC)
+                .rawPayloadMode(ProjectEntry.RawPayloadModeEnum.EVERYONE));
 
         byte[] payload = archive(ConcordTaskIT.class.getResource("concordTaskForkSuspend").toURI());
         Map<String, Object> input = new HashMap<>();
@@ -533,12 +522,11 @@ public class ConcordTaskIT extends AbstractServerIT {
 
         // ---
 
-        ProcessApi processApi = new ProcessApi(getApiClient());
-        ProcessEntry pe = waitForCompletion(processApi, spr.getInstanceId());
+        ProcessEntry pe = waitForCompletion(getApiClient(), spr.getInstanceId());
 
         // ---
 
-        byte[] ab = getLog(pe.getLogFileName());
+        byte[] ab = getLog(pe.getInstanceId());
         assertLog(".*\\{varFromFork=Hello, " + nameVar + "\\}.*", ab);
         assertLog(".*\\{varFromFork=Bye, " + nameVar + "\\}.*", ab);
     }
@@ -552,15 +540,15 @@ public class ConcordTaskIT extends AbstractServerIT {
         // ---
 
         ProcessApi processApi = new ProcessApi(getApiClient());
-        ProcessEntry pe = waitForCompletion(processApi, spr.getInstanceId());
+        ProcessEntry pe = waitForCompletion(getApiClient(), spr.getInstanceId());
 
         // ---
-        byte[] ab = getLog(pe.getLogFileName());
+        byte[] ab = getLog(pe.getInstanceId());
         if (grep(".*\\{x=1, y=2, z=3\\}.*", ab).isEmpty()
                 || grep(".*\\{a=4, b=5, c=6\\}.*", ab).isEmpty()) {
 
             for (UUID id : pe.getChildrenIds()) {
-                ProcessEntry pp = processApi.get(id);
+                ProcessEntry pp = new ProcessV2Api(getApiClient()).getProcess(id, Collections.singleton("childrenIds"));
                 System.out.println("process: " + pp.getInstanceId() + ", status: " + pp.getStatus() + ", out: " + getOutVars(id, processApi));
                 System.out.println(">>>");
             }
@@ -571,18 +559,14 @@ public class ConcordTaskIT extends AbstractServerIT {
 
     @SuppressWarnings("unchecked")
     private static Map<String, Object> getOutVars(UUID id, ProcessApi processApi) throws Exception {
-        File f = null;
-        try {
-            f = processApi.downloadAttachment(id, "out.json");
+        try (InputStream is = processApi.downloadAttachment(id, "out.json")) {
             ObjectMapper om = new ObjectMapper();
-            return om.readValue(f, Map.class);
+            return om.readValue(is, Map.class);
         } catch (ApiException e) {
             if (e.getCode() == 404) {
                 return null;
             }
             throw e;
-        } finally {
-            IOUtils.delete(f);
         }
     }
 
@@ -594,17 +578,20 @@ public class ConcordTaskIT extends AbstractServerIT {
 
         // ---
 
-        ProcessApi processApi = new ProcessApi(getApiClient());
-        ProcessEntry pe = waitForCompletion(processApi, spr.getInstanceId());
+        ProcessEntry pe = waitForCompletion(getApiClient(), spr.getInstanceId());
 
         // ---
 
         ProcessV2Api processV2Api = new ProcessV2Api(getApiClient());
-        List<ProcessEntry> l = processV2Api.list(null, null, null, null, null, null, null, null, null, null, null, pe.getInstanceId(), null, null, null);
+        ProcessListFilter filter = ProcessListFilter.builder()
+                .parentInstanceId(pe.getInstanceId())
+                .build();
+
+        List<ProcessEntry> l = processV2Api.listProcesses(filter);
         assertEquals(2, l.size());
 
         for (ProcessEntry e : l) {
-            byte[] ab = getLog(e.getLogFileName());
+            byte[] ab = getLog(e.getInstanceId());
             assertLog(".*parentInstanceId: " + pe.getInstanceId() + ".*", ab);
         }
     }

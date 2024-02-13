@@ -28,6 +28,9 @@ import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 import javax.servlet.annotation.WebServlet;
+import java.io.IOException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 
 @WebServlet("/*")
 public class ConsoleServletHolder extends ServletHolder {
@@ -44,10 +47,19 @@ public class ConsoleServletHolder extends ServletHolder {
             return;
         }
 
-        log.info("Serving {} as /...", path);
+        Path realPath;
+        try {
+            realPath = Paths.get(path)
+                    .normalize()
+                    .toAbsolutePath()
+                    .toRealPath();
+        } catch (IOException e) {
+            throw new RuntimeException("Can't determine the realpath of BASE_RESOURCE_PATH: " + path, e);
+        }
+        log.info("Serving {} as /...", realPath);
 
         setInitParameter("dirAllowed", "false");
-        setInitParameter("resourceBase", path);
+        setInitParameter("resourceBase", realPath.toString());
         setInitParameter("pathInfoOnly", "true");
         setInitParameter("redirectWelcome", "false");
     }

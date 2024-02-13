@@ -36,7 +36,6 @@ import org.jooq.Record;
 import org.jooq.*;
 
 import javax.inject.Inject;
-import javax.inject.Named;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -49,7 +48,6 @@ import static com.walmartlabs.concord.server.jooq.tables.Users.USERS;
 import static com.walmartlabs.concord.server.jooq.tables.VUserTeams.V_USER_TEAMS;
 import static org.jooq.impl.DSL.*;
 
-@Named
 public class JsonStoreDao extends AbstractDao {
 
     @Inject

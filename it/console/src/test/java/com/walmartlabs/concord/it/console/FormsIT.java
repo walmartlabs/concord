@@ -20,10 +20,8 @@ package com.walmartlabs.concord.it.console;
  * =====
  */
 
-import com.walmartlabs.concord.client.ProcessApi;
-import com.walmartlabs.concord.client.ProcessEntry;
-import com.walmartlabs.concord.client.StartProcessResponse;
-import org.junit.jupiter.api.BeforeEach;
+import com.walmartlabs.concord.client2.ProcessEntry;
+import com.walmartlabs.concord.client2.StartProcessResponse;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.Timeout;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -49,13 +47,6 @@ class FormsIT {
 
     @RegisterExtension
     public static ConcordConsoleRule consoleRule = new ConcordConsoleRule();
-
-    private ProcessApi processApi;
-
-    @BeforeEach
-    void setup() {
-        processApi = new ProcessApi(serverRule.getClient());
-    }
 
     @Test
     void testDateTimeField() throws Exception {
@@ -87,9 +78,9 @@ class FormsIT {
 
         // ---
 
-        pir = waitForCompletion(processApi, pir.getInstanceId());
+        pir = waitForCompletion(serverRule.getClient(), pir.getInstanceId());
 
-        byte[] ab = serverRule.getLog(pir.getLogFileName());
+        byte[] ab = serverRule.getLog(pir.getInstanceId());
         assertLog(".*dateField=2019-09-04.*", ab);
         assertLog(".*dateTimeField=2019-09-04T05:05:00.000Z.*", ab);
     }
@@ -151,9 +142,9 @@ class FormsIT {
 
         // ---
 
-        pir = waitForCompletion(processApi, pir.getInstanceId());
+        pir = waitForCompletion(serverRule.getClient(), pir.getInstanceId());
 
-        byte[] ab = serverRule.getLog(pir.getLogFileName());
+        byte[] ab = serverRule.getLog(pir.getInstanceId());
         assertLog(".*\"field0\" : \\[ \"second\", \"third\" ].*", ab);
         assertLog(".*\"field1\" : \\[ \"first\", \"second\", \"third\" ].*", ab);
         assertLog(".*\"field2\" : \\[ \"first\", \"third\", \"fourth\" ].*", ab);
@@ -169,6 +160,6 @@ class FormsIT {
         StartProcessResponse spr = serverRule.start(input);
         assertNotNull(spr.getInstanceId());
 
-        return waitForStatus(processApi, spr.getInstanceId(), ProcessEntry.StatusEnum.SUSPENDED);
+        return waitForStatus(serverRule.getClient(), spr.getInstanceId(), ProcessEntry.StatusEnum.SUSPENDED);
     }
 }

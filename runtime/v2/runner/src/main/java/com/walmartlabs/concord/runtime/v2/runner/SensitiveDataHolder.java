@@ -43,6 +43,10 @@ public class SensitiveDataHolder {
     }
 
     public void add(String sensitiveData) {
+        if (sensitiveData == null || sensitiveData.isBlank()) {
+            return;
+        }
+
         this.sensitiveData.add(sensitiveData);
     }
 

@@ -1,0 +1,12 @@
+flows:
+  default:
+    - set:
+        str: |
+          a
+          b
+          c
+
+    - expr: ${str.split('\n')}
+      out: lines
+
+    - log: ${lines}

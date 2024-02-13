@@ -38,7 +38,6 @@ import com.walmartlabs.concord.server.user.UserType;
 import org.jooq.*;
 
 import javax.inject.Inject;
-import javax.inject.Named;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -55,7 +54,6 @@ import static com.walmartlabs.concord.server.jooq.tables.Teams.TEAMS;
 import static com.walmartlabs.concord.server.jooq.tables.Users.USERS;
 import static org.jooq.impl.DSL.*;
 
-@Named
 public class ProjectDao extends AbstractDao {
 
     private final ConcordObjectMapper objectMapper;

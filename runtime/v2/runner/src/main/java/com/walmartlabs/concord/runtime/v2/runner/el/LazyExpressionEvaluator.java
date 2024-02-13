@@ -24,8 +24,8 @@ import com.walmartlabs.concord.common.ConfigurationUtils;
 import com.walmartlabs.concord.common.ExceptionUtils;
 import com.walmartlabs.concord.runtime.v2.runner.el.functions.*;
 import com.walmartlabs.concord.runtime.v2.runner.el.resolvers.BeanELResolver;
-import com.walmartlabs.concord.runtime.v2.runner.el.resolvers.*;
 import com.walmartlabs.concord.runtime.v2.runner.el.resolvers.MapELResolver;
+import com.walmartlabs.concord.runtime.v2.runner.el.resolvers.*;
 import com.walmartlabs.concord.runtime.v2.runner.tasks.TaskProviders;
 import com.walmartlabs.concord.runtime.v2.sdk.EvalContext;
 import com.walmartlabs.concord.runtime.v2.sdk.ExpressionEvaluator;
@@ -157,16 +157,12 @@ public class LazyExpressionEvaluator implements ExpressionEvaluator {
             }
 
             throw new UserDefinedException(errorMessage);
-        } catch (ELException e) {
-            throw ExceptionUtils.getExceptionList(e).stream()
-                    .filter(i -> i instanceof UserDefinedException)
-                    .findAny()
-                    .map(i -> (RuntimeException)i)
-                    .orElse(e);
-        } catch (UserDefinedException e) {
-            throw e;
         } catch (Exception e) {
-            throw new RuntimeException("while evaluating expression '" + expr + "'", e);
+            UserDefinedException u = ExceptionUtils.filterException(e, UserDefinedException.class);
+            if (u != null) {
+                throw u;
+            }
+            throw new RuntimeException("while evaluating expression '" + expr + "': " + e.getMessage());
         }
     }
 

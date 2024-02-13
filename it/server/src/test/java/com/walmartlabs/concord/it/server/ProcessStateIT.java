@@ -20,12 +20,12 @@ package com.walmartlabs.concord.it.server;
  * =====
  */
 
-import com.walmartlabs.concord.client.ProcessApi;
-import com.walmartlabs.concord.client.ProcessEntry;
-import com.walmartlabs.concord.client.StartProcessResponse;
+import com.walmartlabs.concord.client2.ProcessApi;
+import com.walmartlabs.concord.client2.ProcessEntry;
+import com.walmartlabs.concord.client2.StartProcessResponse;
 import org.junit.jupiter.api.Test;
 
-import java.io.File;
+import java.io.InputStream;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -38,7 +38,7 @@ public class ProcessStateIT extends AbstractServerIT {
 
     @Test
     public void testSingleFile() throws Exception {
-        byte[] payload = archive(ProcessIT.class.getResource("stateSingleFile").toURI());
+        byte[] payload = archive(ProcessStateIT.class.getResource("stateSingleFile").toURI());
 
         // ---
 
@@ -49,12 +49,13 @@ public class ProcessStateIT extends AbstractServerIT {
         // ---
 
         ProcessApi processApi = new ProcessApi(getApiClient());
-        ProcessEntry pe = waitForCompletion(processApi, spr.getInstanceId());
+        ProcessEntry pe = waitForCompletion(getApiClient(), spr.getInstanceId());
         assertEquals(ProcessEntry.StatusEnum.FINISHED, pe.getStatus());
 
         // ---
 
-        File resp = processApi.downloadStateFile(spr.getInstanceId(), "concord.yml");
-        assertNotNull(resp);
+        try (InputStream resp = processApi.downloadStateFile(spr.getInstanceId(), "concord.yml")) {
+            assertNotNull(resp);
+        }
     }
 }

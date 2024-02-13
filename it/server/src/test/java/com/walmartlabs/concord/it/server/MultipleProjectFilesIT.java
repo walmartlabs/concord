@@ -20,9 +20,9 @@ package com.walmartlabs.concord.it.server;
  * =====
  */
 
-import com.walmartlabs.concord.client.ProcessApi;
-import com.walmartlabs.concord.client.ProcessEntry;
-import com.walmartlabs.concord.client.StartProcessResponse;
+import com.walmartlabs.concord.client2.ProcessApi;
+import com.walmartlabs.concord.client2.ProcessEntry;
+import com.walmartlabs.concord.client2.StartProcessResponse;
 import com.walmartlabs.concord.common.IOUtils;
 import org.apache.commons.compress.archivers.zip.ZipArchiveOutputStream;
 import org.junit.jupiter.api.Test;
@@ -50,7 +50,7 @@ public class MultipleProjectFilesIT extends AbstractServerIT {
 
         // ---
 
-        byte[] payload = archive(ProcessIT.class.getResource("multiProjectTemplate/user").toURI());
+        byte[] payload = archive(MultipleProjectFilesIT.class.getResource("multiProjectTemplate/user").toURI());
 
         // ---
 
@@ -62,9 +62,9 @@ public class MultipleProjectFilesIT extends AbstractServerIT {
 
         // ---
 
-        ProcessEntry pir = waitForCompletion(processApi, spr.getInstanceId());
+        ProcessEntry pir = waitForCompletion(getApiClient(), spr.getInstanceId());
 
-        byte[] ab = getLog(pir.getLogFileName());
+        byte[] ab = getLog(pir.getInstanceId());
         assertLog(".*Hello, Concord!.*", ab);
     }
 

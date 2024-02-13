@@ -20,7 +20,7 @@ package com.walmartlabs.concord.agent.logging;
  * =====
  */
 
-import com.walmartlabs.concord.client.LogSegmentUpdateRequest;
+import com.walmartlabs.concord.client2.LogSegmentUpdateRequest;
 
 import java.util.*;
 import java.util.function.Consumer;
