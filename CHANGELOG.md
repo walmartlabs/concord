@@ -9,8 +9,10 @@ mode ([#869](https://github.com/walmartlabs/concord/pull/869)).
 
 ### Changed
 
+- ansible: add module_defaults callback, remove deprecated gather_subset in config
+ ([#873](https://github.com/walmartlabs/concord/pull/873));
 - runtime-v2: ignore empty string as sensitive data
- ([#871](https://github.com/walmartlabs/concord/pull/871))
+ ([#871](https://github.com/walmartlabs/concord/pull/871));
 - project: fix maven compiler source version in parent pom
 ([#870](https://github.com/walmartlabs/concord/pull/870)).
 
