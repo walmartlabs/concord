@@ -59,6 +59,7 @@ public class TaskMethodResolver extends javax.el.BeanELResolver {
         }
 
         CallContext callContext = TaskCallInterceptor.CallContext.builder()
+                .threadId(context.execution().currentThreadId())
                 .taskName(taskName)
                 .correlationId(context.execution().correlationId())
                 .currentStep(step)
