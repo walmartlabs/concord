@@ -5,7 +5,9 @@
 ### Added
 
 - concord-agent, dependency-manager: support for Maven offline
-mode ([#869](https://github.com/walmartlabs/concord/pull/869)).
+mode ([#869](https://github.com/walmartlabs/concord/pull/869));
+- runtime-v2: threadId to task details
+([#874](https://github.com/walmartlabs/concord/pull/874)).
 
 ### Changed
 
