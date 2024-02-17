@@ -65,6 +65,8 @@ public class UserEntry implements Serializable {
 
     private final boolean disabled;
 
+    private final boolean permanentlyDisabled;
+
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss.SSSX")
     private final OffsetDateTime disabledDate;
 
@@ -78,7 +80,8 @@ public class UserEntry implements Serializable {
                      @JsonProperty("email") String email,
                      @JsonProperty("roles") Set<RoleEntry> roles,
                      @JsonProperty("disabled") boolean disabled,
-                     @JsonProperty("disabledDate") OffsetDateTime disabledDate) {
+                     @JsonProperty("disabledDate") OffsetDateTime disabledDate,
+                     @JsonProperty("permanentlyDisabled") boolean permanentlyDisabled) {
 
         this.id = id;
         this.name = name;
@@ -90,6 +93,7 @@ public class UserEntry implements Serializable {
         this.roles = roles;
         this.disabled = disabled;
         this.disabledDate = disabledDate;
+        this.permanentlyDisabled = permanentlyDisabled;
     }
 
     public UUID getId() {
@@ -132,6 +136,10 @@ public class UserEntry implements Serializable {
         return disabledDate;
     }
 
+    public boolean isPermanentlyDisabled() {
+        return permanentlyDisabled;
+    }
+
     @Override
     public String toString() {
         return "UserEntry{" +
@@ -145,6 +153,7 @@ public class UserEntry implements Serializable {
                 ", roles=" + roles +
                 ", disabled=" + disabled +
                 ", disabledDate=" + disabledDate +
+                ", permanentlyDisabled=" + permanentlyDisabled +
                 '}';
     }
 }

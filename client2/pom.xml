@@ -139,6 +139,22 @@
                 <artifactId>revapi-maven-plugin</artifactId>
                 <configuration>
                     <analysisConfiguration>
+                        <revapi.differences>
+                            <differences>
+                                <item>
+                                    <ignore>true</ignore>
+                                    <code>java.annotation.attributeValueChanged</code>
+                                    <old>class com.walmartlabs.concord.client2.UserEntry</old>
+                                    <justification>Adding field to json-serializable class</justification>
+                                </item>
+                                <item>
+                                    <ignore>true</ignore>
+                                    <code>java.field.serialVersionUIDUnchanged</code>
+                                    <old>field com.walmartlabs.concord.client2.UserEntry.serialVersionUID</old>
+                                    <justification>Adding field to json-serializable class</justification>
+                                </item>
+                            </differences>
+                        </revapi.differences>
                         <revapi.ignore>
                             <item>
                                 <code>java.class.nonPublicPartOfAPI</code>
