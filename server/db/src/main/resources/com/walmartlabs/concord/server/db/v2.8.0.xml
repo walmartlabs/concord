@@ -27,12 +27,4 @@
         </createTable>
     </changeSet>
 
-    <changeSet id="280010" author="benjamin.broadaway@walmart.com">
-        <addColumn tableName="USERS">
-            <column name="IS_PERMANENTLY_DISABLED" type="boolean" defaultValueComputed="false">
-                <constraints nullable="false"/>
-            </column>
-        </addColumn>
-    </changeSet>
-
 </databaseChangeLog>
