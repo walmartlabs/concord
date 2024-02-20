@@ -4,7 +4,7 @@
 
 ### Added
 
-- tasks: new asserts
+- tasks: asserts
   ([#876](https://github.com/walmartlabs/concord/pull/876));
 - concord-agent, dependency-manager: support for Maven offline
 mode ([#869](https://github.com/walmartlabs/concord/pull/869));
