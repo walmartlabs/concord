@@ -31,7 +31,6 @@ import javax.inject.Named;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.nio.file.Files;
-import java.nio.file.Path;
 import java.nio.file.Paths;
 
 @Named("asserts")
@@ -59,7 +58,7 @@ public class AssertsTask implements Task {
         }
 
         if (value instanceof String) {
-            if (((String) value).trim().isEmpty()) {
+            if (((String) value).isBlank()) {
                 throw new UserDefinedException("Variable '" + name + "' is empty");
             }
         }
