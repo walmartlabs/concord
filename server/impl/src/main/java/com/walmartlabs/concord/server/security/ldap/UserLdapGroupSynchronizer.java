@@ -26,6 +26,7 @@ import com.walmartlabs.concord.db.PgUtils;
 import com.walmartlabs.concord.server.audit.ActionSource;
 import com.walmartlabs.concord.server.audit.AuditLog;
 import com.walmartlabs.concord.server.cfg.LdapGroupSyncConfiguration;
+import com.walmartlabs.concord.server.org.team.TeamRole;
 import com.walmartlabs.concord.server.sdk.ScheduledTask;
 import com.walmartlabs.concord.server.user.UserManager;
 import com.walmartlabs.concord.server.user.UserType;
@@ -33,16 +34,21 @@ import org.jooq.Configuration;
 import org.jooq.Field;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import scala.Tuple2;
 
 import javax.inject.Inject;
 import javax.inject.Named;
 import java.time.OffsetDateTime;
 import java.util.Collections;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
+import java.util.stream.Collectors;
+
 import static com.walmartlabs.concord.server.jooq.Tables.USERS;
+import static com.walmartlabs.concord.server.jooq.Tables.USER_TEAMS;
 import static org.jooq.impl.DSL.*;
 
 /**
@@ -87,18 +93,26 @@ public class UserLdapGroupSynchronizer implements ScheduledTask {
         Field<OffsetDateTime> cutoff = PgUtils.nowMinus(cfg.getMinAgeSync());
         Field<OffsetDateTime> disabledAge = cfg.getDisabledAge() != null ? PgUtils.nowMinus(cfg.getDisabledAge()) : null;
 
+        List<UserItem> concordOrgOwners = new ArrayList<>();
+
         long usersCount = 0;
         List<UserItem> users;
         do {
             users = dao.list(cfg.getFetchLimit(), cutoff, disabledAge);
-            users.forEach(this::processUser);
+            users.forEach(user -> {
+                processUser(user, concordOrgOwners);
+            });
             usersCount += users.size();
         } while (users.size() >= cfg.getFetchLimit());
+
+        if(cfg.getConcordOrgOwnersGroup() != null) {
+            checkOrgOwnerDiscrepancies(users, dao.listOrgOwners());
+        }
 
         log.info("performTask -> done, {} user(s) synchronized", usersCount);
     }
 
-    private void processUser(UserItem u) {
+    private void processUser(UserItem u, List<UserItem> concordOrgOwners) {
         try {
             Set<String> groups = ldapManager.getGroups(u.username, u.domain);
             if (groups == null) {
@@ -111,6 +125,9 @@ public class UserLdapGroupSynchronizer implements ScheduledTask {
             } else {
                 enableUser(u.userId);
                 ldapGroupsDao.update(u.userId, groups);
+                if(cfg.getConcordOrgOwnersGroup() != null && groups.contains(cfg.getConcordOrgOwnersGroup())) {
+                    concordOrgOwners.add(u);
+                }
             }
         } catch (Exception e) {
             log.error("processUser ['{}'] -> error", u.username, e);
@@ -133,7 +150,7 @@ public class UserLdapGroupSynchronizer implements ScheduledTask {
     }
 
     @Named
-    private static final class Dao extends AbstractDao {
+    static class Dao extends AbstractDao {
 
         @Inject
         public Dao(@MainDB Configuration cfg) {
@@ -149,20 +166,62 @@ public class UserLdapGroupSynchronizer implements ScheduledTask {
                     .limit(limit)
                     .fetch(r -> new UserItem(r.value1(), r.value2(), r.value3(), r.value4())));
         }
+
+         public List<UserItem> listOrgOwners() {
+            // Expired users already handled at this stage
+            return txResult(tx -> tx.select(USERS.USER_ID, USERS.USERNAME, USERS.DOMAIN)
+                    .from(USER_TEAMS.join(USERS).on(USER_TEAMS.USER_ID.eq(USERS.USER_ID)))
+                    .where(USER_TEAMS.TEAM_ROLE.eq(TeamRole.OWNER.toString()))
+                    .fetch(r -> new UserItem(r.value1(), r.value2(), r.value3(), false)));
+        }
     }
 
-    private static class UserItem {
+    /***
+     * Check concordOrgOwners against all owners in DB. Send discrepancy report on slack or email
+     *
+     * @param ldapGroupUsers
+     * @param ownerRoleUsers
+     */
+    List<UserItem> checkOrgOwnerDiscrepancies(List<UserItem> ldapGroupUsers, List<UserItem> ownerRoleUsers) {
+        List<UserItem> diffUsersWithOwnerRoleAndNotInLdap = ownerRoleUsers.stream()
+                .filter(item -> !ldapGroupUsers.contains(item))
+                .toList();
+
+        log.info("checkOrgOwnerDiscrepancies -> done, {} user(s) only registered as owners not in ldapGroup", diffUsersWithOwnerRoleAndNotInLdap.stream().map(Object::toString).collect(Collectors.joining(", ")));
+
+        return diffUsersWithOwnerRoleAndNotInLdap;
+    }
+
+    static class UserItem implements Comparable<UserItem> {
 
         private final UUID userId;
         private final String username;
         private final String domain;
         private final boolean expired;
 
-        private UserItem(UUID userId, String username, String domain, boolean expired) {
+        UserItem(UUID userId, String username, String domain, boolean expired) {
             this.userId = userId;
             this.username = username;
             this.domain = domain;
             this.expired = expired;
+        }
+
+        @Override
+        public int compareTo(UserItem o) {
+            if (userId == o.userId)
+                return 0;
+            else
+                return userId.compareTo(o.userId);
+        }
+
+        @Override
+        public String toString() {
+            return "UserItem{" +
+                    "userId=" + userId +
+                    ", username='" + username + '\'' +
+                    ", domain='" + domain + '\'' +
+                    ", expired=" + expired +
+                    '}';
         }
     }
 }
