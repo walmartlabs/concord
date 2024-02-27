@@ -33,15 +33,15 @@ interface ExternalProps {
     loadingHandler: (inc: number) => void;
     processStatus?: ProcessStatus;
     forceRefresh: boolean;
+    dataFetchInterval: number;
 }
-
-const DATA_FETCH_INTERVAL = 5000;
 
 const ProcessWaitActivity = ({
     instanceId,
     processStatus,
     loadingHandler,
-    forceRefresh
+    forceRefresh,
+    dataFetchInterval
 }: ExternalProps) => {
     const [waitConditions, setWaitConditions] = useState<WaitCondition[] | undefined>(undefined);
 
@@ -52,7 +52,7 @@ const ProcessWaitActivity = ({
         return !isFinal(processStatus);
     }, [instanceId, processStatus]);
 
-    const error = usePolling(fetchData, DATA_FETCH_INTERVAL, loadingHandler, forceRefresh);
+    const error = usePolling(fetchData, dataFetchInterval, loadingHandler, forceRefresh);
 
     if (error) {
         return <RequestErrorActivity error={error} />;
