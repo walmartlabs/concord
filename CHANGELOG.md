@@ -10,10 +10,12 @@
 ([#876](https://github.com/walmartlabs/concord/pull/876));
 - concord-agent, dependency-manager: support for Maven offline
 mode ([#869](https://github.com/walmartlabs/concord/pull/869));
+- concord-server: skip repository refresh when repo is disabled
+([#872](https://github.com/walmartlabs/concord/pull/872));
 - runtime-v2: threadId to task details
 ([#874](https://github.com/walmartlabs/concord/pull/874));
 - concord-console2: add more details to trigger list
-([#878](https://github.com/walmartlabs/concord/pull/878)).
+([#878](https://github.com/walmartlabs/concord/pull/878));
 
 ### Changed
 
