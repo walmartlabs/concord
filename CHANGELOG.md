@@ -15,6 +15,8 @@ mode ([#869](https://github.com/walmartlabs/concord/pull/869));
 
 ### Changed
 
+- runtime-v1: fix for resume from same step (bpm version up)
+([#879](https://github.com/walmartlabs/concord/pull/879));
 - cli: api client provider for cli (just to load tasks)
 ([#877](https://github.com/walmartlabs/concord/pull/877));
 - ansible: add module_defaults callback, remove deprecated gather_subset in config
