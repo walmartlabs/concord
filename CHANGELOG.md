@@ -5,7 +5,7 @@
 ### Added
 
 - tasks: asserts
-  ([#876](https://github.com/walmartlabs/concord/pull/876));
+([#876](https://github.com/walmartlabs/concord/pull/876));
 - concord-agent, dependency-manager: support for Maven offline
 mode ([#869](https://github.com/walmartlabs/concord/pull/869));
 - runtime-v2: threadId to task details
@@ -15,10 +15,12 @@ mode ([#869](https://github.com/walmartlabs/concord/pull/869));
 
 ### Changed
 
+- cli: api client provider for cli (just to load tasks)
+([#877](https://github.com/walmartlabs/concord/pull/877));
 - ansible: add module_defaults callback, remove deprecated gather_subset in config
- ([#873](https://github.com/walmartlabs/concord/pull/873));
+([#873](https://github.com/walmartlabs/concord/pull/873));
 - runtime-v2: ignore empty string as sensitive data
- ([#871](https://github.com/walmartlabs/concord/pull/871));
+([#871](https://github.com/walmartlabs/concord/pull/871));
 - project: fix maven compiler source version in parent pom
 ([#870](https://github.com/walmartlabs/concord/pull/870)).
 
