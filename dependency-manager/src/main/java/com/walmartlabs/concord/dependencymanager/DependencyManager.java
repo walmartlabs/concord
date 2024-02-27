@@ -22,7 +22,9 @@ package com.walmartlabs.concord.dependencymanager;
 
 import com.walmartlabs.concord.common.ExceptionUtils;
 import org.apache.maven.repository.internal.MavenRepositorySystemUtils;
-import org.eclipse.aether.*;
+import org.eclipse.aether.DefaultRepositorySystemSession;
+import org.eclipse.aether.RepositorySystem;
+import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.artifact.DefaultArtifact;
 import org.eclipse.aether.collection.CollectRequest;
@@ -36,6 +38,7 @@ import org.eclipse.aether.repository.RepositoryPolicy;
 import org.eclipse.aether.resolution.*;
 import org.eclipse.aether.transfer.AbstractTransferListener;
 import org.eclipse.aether.transfer.ArtifactNotFoundException;
+import org.eclipse.aether.transfer.RepositoryOfflineException;
 import org.eclipse.aether.transfer.TransferEvent;
 import org.eclipse.aether.util.artifact.JavaScopes;
 import org.eclipse.aether.util.filter.ExclusionsDependencyFilter;
@@ -48,9 +51,13 @@ import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 import javax.xml.bind.DatatypeConverter;
-import java.io.*;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.io.UnsupportedEncodingException;
 import java.net.URI;
 import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.*;
 import java.security.MessageDigest;
 import java.util.*;
@@ -77,6 +84,7 @@ public class DependencyManager {
     private final List<String> defaultExclusions;
 
     private final boolean explicitlyResolveV1Client;
+    private final boolean offlineMode;
 
     @Inject
     public DependencyManager(DependencyManagerConfiguration cfg) throws IOException {
@@ -92,6 +100,7 @@ public class DependencyManager {
         this.strictRepositories = cfg.strictRepositories();
         this.defaultExclusions = cfg.exclusions();
         this.explicitlyResolveV1Client = cfg.explicitlyResolveV1Client();
+        this.offlineMode = cfg.offlineMode();
     }
 
     public Collection<DependencyEntity> resolve(Collection<URI> items) throws IOException {
@@ -131,11 +140,11 @@ public class DependencyManager {
 
         result.addAll(resolveMavenTransitiveDependencies(deps.mavenTransitiveDependencies, deps.mavenExclusions, progressNotifier).stream()
                 .map(DependencyManager::toDependency)
-                .collect(Collectors.toList()));
+                .toList());
 
         result.addAll(resolveMavenSingleDependencies(deps.mavenSingleDependencies, progressNotifier).stream()
                 .map(DependencyManager::toDependency)
-                .collect(Collectors.toList()));
+                .toList());
 
         return result;
     }
@@ -275,6 +284,9 @@ public class DependencyManager {
         excludes.addAll(defaultExclusions);
 
         DependencyRequest dependencyRequest = new DependencyRequest(req, new ExclusionsDependencyFilter(excludes));
+        if (explicitlyResolveV1Client) {
+            dependencyRequest.getCollectRequest().addManagedDependency(new Dependency(ClientDepSelector.CLIENT1_ARTIFACT, ""));
+        }
 
         synchronized (mutex) {
             try {
@@ -310,6 +322,8 @@ public class DependencyManager {
                 progressNotifier.transferFailed(event);
             }
         });
+
+        session.setOffline(offlineMode);
 
         return session;
     }
@@ -396,8 +410,8 @@ public class DependencyManager {
         String[] pairs = query.split("&");
         for (String pair : pairs) {
             int idx = pair.indexOf("=");
-            String k = URLDecoder.decode(pair.substring(0, idx), "UTF-8");
-            String v = URLDecoder.decode(pair.substring(idx + 1), "UTF-8");
+            String k = URLDecoder.decode(pair.substring(0, idx), StandardCharsets.UTF_8);
+            String v = URLDecoder.decode(pair.substring(idx + 1), StandardCharsets.UTF_8);
 
             List<String> vv = m.computeIfAbsent(k, s -> new ArrayList<>());
             vv.add(v);
@@ -410,6 +424,8 @@ public class DependencyManager {
 
         private static final String CONCORD_CLIENT_GROUP_ID = "com.walmartlabs.concord";
         private static final String CONCORD_CLIENT_ARTIFACT_ID = "concord-client";
+
+        public static final Artifact CLIENT1_ARTIFACT = new DefaultArtifact(CONCORD_CLIENT_GROUP_ID, CONCORD_CLIENT_ARTIFACT_ID, "jar", Version.get());
 
         private final boolean transitive;
         private final Collection<String> excluded;
@@ -426,7 +442,7 @@ public class DependencyManager {
         @Override
         public boolean selectDependency(Dependency dependency) {
             if (CONCORD_CLIENT_GROUP_ID.equals(dependency.getArtifact().getGroupId()) &&
-                    CONCORD_CLIENT_ARTIFACT_ID.equals(dependency.getArtifact().getArtifactId())) {
+                CONCORD_CLIENT_ARTIFACT_ID.equals(dependency.getArtifact().getArtifactId())) {
                 return true;
             }
 
@@ -529,7 +545,7 @@ public class DependencyManager {
         public boolean canRetry(Exception e) {
             List<Throwable> exceptions = ExceptionUtils.getExceptionList(e);
             Throwable last = exceptions.get(exceptions.size() - 1);
-            return !(last instanceof ArtifactNotFoundException);
+            return !((last instanceof RepositoryOfflineException) || (last instanceof ArtifactNotFoundException));
         }
     }
 }

@@ -65,6 +65,11 @@ public interface DependencyManagerConfiguration {
         return false;
     }
 
+    @Value.Default
+    default boolean offlineMode() {
+        return false;
+    }
+
     static ImmutableDependencyManagerConfiguration.Builder builder() {
         return ImmutableDependencyManagerConfiguration.builder();
     }
