@@ -4,6 +4,8 @@
 
 ### Added
 
+- concord-server: option to permanently disable a user
+([#875](https://github.com/walmartlabs/concord/pull/875));
 - tasks: asserts
 ([#876](https://github.com/walmartlabs/concord/pull/876));
 - concord-agent, dependency-manager: support for Maven offline
