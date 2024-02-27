@@ -1,3 +1,5 @@
+import {ColumnDefinition} from "./src/api/org";
+
 export {};
 
 export interface ConcordEnvironment {
@@ -8,6 +10,7 @@ export interface ConcordEnvironment {
     extraProcessMenuLinks?: ExtraProcessMenuLinks;
     lastUpdated?: string;
     customResources?: CustomResources;
+    processListColumns?: ColumnDefinition[];
 }
 
 export interface TopBarMeta {

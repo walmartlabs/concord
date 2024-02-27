@@ -47,7 +47,7 @@ public class LdapManagerImpl implements LdapManager {
     private final LdapContextFactory ctxFactory;
 
     public LdapManagerImpl(LdapConfiguration cfg,
-                           ConcordLdapContextFactory ctxFactory) {
+                           LdapContextFactory ctxFactory) {
 
         this.cfg = cfg;
         this.ctxFactory = ctxFactory;
@@ -118,7 +118,7 @@ public class LdapManagerImpl implements LdapManager {
         LdapContext ctx = null;
         try {
             ctx = ctxFactory.getSystemLdapContext();
-            return getPrincipal(new LdapManagerImpl.SearchFn(ctx) {
+            return getPrincipal(new SearchFn(ctx) {
 
                 @Override
                 public NamingEnumeration<SearchResult> lookup(SearchControls ctls) throws NamingException {
@@ -154,7 +154,7 @@ public class LdapManagerImpl implements LdapManager {
         LdapContext ctx = null;
         try {
             ctx = ctxFactory.getSystemLdapContext();
-            return getPrincipal(new LdapManagerImpl.SearchFn(ctx) {
+            return getPrincipal(new SearchFn(ctx) {
                 @Override
                 public NamingEnumeration<SearchResult> lookup(SearchControls ctls) throws NamingException {
                     return ctx.search(baseDn, searchDn, ctls);
@@ -174,7 +174,7 @@ public class LdapManagerImpl implements LdapManager {
         }
     }
 
-    private LdapPrincipal getPrincipal(LdapManagerImpl.SearchFn searchFn) throws NamingException {
+    private LdapPrincipal getPrincipal(SearchFn searchFn) throws NamingException {
         SearchControls ctls = new SearchControls();
         ctls.setSearchScope(SearchControls.SUBTREE_SCOPE);
         if (cfg.getReturningAttributes() != null && !cfg.getReturningAttributes().isEmpty()) {
@@ -186,7 +186,7 @@ public class LdapManagerImpl implements LdapManager {
             return null;
         }
 
-        LdapManagerImpl.LdapPrincipalBuilder b = new LdapManagerImpl.LdapPrincipalBuilder();
+        LdapPrincipalBuilder b = new LdapPrincipalBuilder();
 
         SearchResult sr = answer.next();
         b.nameInNamespace(sr.getNameInNamespace());
@@ -251,7 +251,7 @@ public class LdapManagerImpl implements LdapManager {
         }
     }
 
-    private void processAttribute(LdapManagerImpl.LdapPrincipalBuilder b, Attribute attr) throws NamingException {
+    private void processAttribute(LdapPrincipalBuilder b, Attribute attr) throws NamingException {
         String id = attr.getID();
         Object v = attr.get();
 
@@ -355,37 +355,37 @@ public class LdapManagerImpl implements LdapManager {
         private Set<String> groups;
         private Map<String, Object> attributes;
 
-        public LdapManagerImpl.LdapPrincipalBuilder username(String username) {
+        public LdapPrincipalBuilder username(String username) {
             this.username = username;
             return this;
         }
 
-        public LdapManagerImpl.LdapPrincipalBuilder domain(String domain) {
+        public LdapPrincipalBuilder domain(String domain) {
             this.domain = domain;
             return this;
         }
 
-        public LdapManagerImpl.LdapPrincipalBuilder nameInNamespace(String nameInNamespace) {
+        public LdapPrincipalBuilder nameInNamespace(String nameInNamespace) {
             this.nameInNamespace = nameInNamespace;
             return this;
         }
 
-        public LdapManagerImpl.LdapPrincipalBuilder userPrincipalName(String userPrincipalName) {
+        public LdapPrincipalBuilder userPrincipalName(String userPrincipalName) {
             this.userPrincipalName = userPrincipalName;
             return this;
         }
 
-        public LdapManagerImpl.LdapPrincipalBuilder displayName(String displayName) {
+        public LdapPrincipalBuilder displayName(String displayName) {
             this.displayName = displayName;
             return this;
         }
 
-        public LdapManagerImpl.LdapPrincipalBuilder email(String email) {
+        public LdapPrincipalBuilder email(String email) {
             this.email = email;
             return this;
         }
 
-        public LdapManagerImpl.LdapPrincipalBuilder addGroups(Collection<String> names) {
+        public LdapPrincipalBuilder addGroups(Collection<String> names) {
             if (groups == null) {
                 groups = new HashSet<>();
             }
@@ -393,7 +393,7 @@ public class LdapManagerImpl implements LdapManager {
             return this;
         }
 
-        public LdapManagerImpl.LdapPrincipalBuilder addAttribute(String k, Object v) {
+        public LdapPrincipalBuilder addAttribute(String k, Object v) {
             if (attributes == null) {
                 attributes = new HashMap<>();
             }

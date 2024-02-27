@@ -20,6 +20,7 @@ package com.walmartlabs.concord.client;
  * =====
  */
 
+import com.walmartlabs.concord.client2.*;
 import com.walmartlabs.concord.sdk.Constants;
 import com.walmartlabs.concord.sdk.Context;
 import com.walmartlabs.concord.sdk.InjectVariable;
@@ -146,7 +147,7 @@ public class InventoryTask extends AbstractConcordTask {
     private List<Object> execQuery(Context ctx, String orgName, String inventoryName, String queryName, Map<String, Object> params) throws Exception {
         return ClientUtils.withRetry(RETRY_COUNT, RETRY_INTERVAL, () -> withClient(ctx, client -> {
             InventoryQueriesApi api = new InventoryQueriesApi(client);
-            return api.exec(orgName, inventoryName, queryName, params);
+            return api.executeInventoryQuery(orgName, inventoryName, queryName, params);
         }));
     }
 

@@ -4,7 +4,7 @@ package com.walmartlabs.concord.server.sdk;
  * *****
  * Concord
  * -----
- * Copyright (C) 2017 - 2020 Walmart Inc.
+ * Copyright (C) 2017 - 2023 Walmart Inc.
  * -----
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -31,7 +31,8 @@ import java.time.OffsetDateTime;
 import java.util.Collections;
 import java.util.UUID;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class SerializationTest {
 
@@ -42,7 +43,7 @@ public class SerializationTest {
 
         ProcessEvent ev = ProcessEvent.builder()
                 .eventSeq(123)
-                .processKey(new ProcessKey(UUID.randomUUID(), OffsetDateTime.now()))
+                .processKey(ProcessKey.random())
                 .eventType("TEST")
                 .eventDate(OffsetDateTime.now())
                 .data(Collections.singletonMap("x", "abc"))
@@ -60,7 +61,7 @@ public class SerializationTest {
         om.registerModule(new JavaTimeModule());
 
         ProcessLogEntry le = ProcessLogEntry.builder()
-                .processKey(new ProcessKey(UUID.randomUUID(), OffsetDateTime.now()))
+                .processKey(ProcessKey.random())
                 .msg("hello".getBytes())
                 .range(Range.builder()
                         .lowerMode(Range.Mode.INCLUSIVE).lower(0)

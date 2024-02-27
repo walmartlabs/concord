@@ -22,7 +22,7 @@ package com.walmartlabs.concord.runtime.v2.runner.vm;
 
 import com.walmartlabs.concord.runtime.v2.model.TaskCall;
 import com.walmartlabs.concord.runtime.v2.model.TaskCallOptions;
-import com.walmartlabs.concord.runtime.v2.runner.el.ExpressionEvaluator;
+import com.walmartlabs.concord.runtime.v2.sdk.ExpressionEvaluator;
 import com.walmartlabs.concord.runtime.v2.runner.tasks.TaskCallInterceptor;
 import com.walmartlabs.concord.runtime.v2.runner.tasks.TaskException;
 import com.walmartlabs.concord.runtime.v2.runner.tasks.TaskProviders;
@@ -58,18 +58,20 @@ public class TaskCallCommand extends StepCommand<TaskCall> {
         Context ctx = runtime.getService(Context.class);
 
         TaskProviders taskProviders = runtime.getService(TaskProviders.class);
+        EvalContextFactory ecf = runtime.getService(EvalContextFactory.class);
         ExpressionEvaluator expressionEvaluator = runtime.getService(ExpressionEvaluator.class);
 
         TaskCall call = getStep();
         String taskName = call.getName();
         Task t = taskProviders.createTask(ctx, taskName);
         if (t == null) {
-            throw new IllegalStateException("Task not found: '" + taskName + "'");
+            throw new UserDefinedException("Task not found: '" + taskName + "'");
         }
 
         TaskCallInterceptor interceptor = runtime.getService(TaskCallInterceptor.class);
 
         CallContext callContext = CallContext.builder()
+                .threadId(threadId)
                 .taskName(taskName)
                 .correlationId(ctx.execution().correlationId())
                 .currentStep(getStep())
@@ -77,7 +79,7 @@ public class TaskCallCommand extends StepCommand<TaskCall> {
                 .build();
 
         TaskCallOptions opts = Objects.requireNonNull(call.getOptions());
-        Variables input = new MapBackedVariables(VMUtils.prepareInput(expressionEvaluator, ctx, opts.input(), opts.inputExpression()));
+        Variables input = new MapBackedVariables(VMUtils.prepareInput(ecf, expressionEvaluator, ctx, opts.input(), opts.inputExpression()));
 
         TaskResult result;
         try {

@@ -4,7 +4,7 @@ package com.walmartlabs.concord.server.org.project;
  * *****
  * Concord
  * -----
- * Copyright (C) 2017 - 2018 Walmart Inc.
+ * Copyright (C) 2017 - 2023 Walmart Inc.
  * -----
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,6 +21,7 @@ package com.walmartlabs.concord.server.org.project;
  */
 
 import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -32,6 +33,7 @@ import com.walmartlabs.concord.server.org.EntityOwner;
 import javax.validation.Valid;
 import javax.validation.constraints.Size;
 import java.io.Serializable;
+import java.time.OffsetDateTime;
 import java.util.Map;
 import java.util.UUID;
 
@@ -42,7 +44,7 @@ public class ProjectEntry implements Serializable {
 
     public static ProjectEntry replace(ProjectEntry e, Map<String, RepositoryEntry> repos) {
         return new ProjectEntry(e.id, e.name, e.description, e.orgId, e.orgName, repos,
-                e.cfg, e.visibility, e.owner, e.acceptsRawPayload, e.rawPayloadMode, e.meta, e.outVariablesMode);
+                e.cfg, e.visibility, e.owner, e.acceptsRawPayload, e.rawPayloadMode, e.meta, e.outVariablesMode, e.createdAt);
     }
 
     private final UUID id;
@@ -59,6 +61,7 @@ public class ProjectEntry implements Serializable {
     @ConcordKey
     private final String orgName;
 
+    @Deprecated
     @Valid
     private final Map<String, RepositoryEntry> repositories;
 
@@ -80,20 +83,23 @@ public class ProjectEntry implements Serializable {
 
     private final Map<String, Object> meta;
 
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss.SSSX")
+    private final OffsetDateTime createdAt;
+
     public ProjectEntry(String name) {
-        this(null, name, null, null, null, null, null, null, null, false, RawPayloadMode.DISABLED, null, OutVariablesMode.DISABLED);
+        this(null, name, null, null, null, null, null, null, null, false, RawPayloadMode.DISABLED, null, OutVariablesMode.DISABLED, null);
     }
 
     public ProjectEntry(String name, ProjectVisibility visibility) {
-        this(null, name, null, null, null, null, null, visibility, null, false, RawPayloadMode.DISABLED, null, OutVariablesMode.DISABLED);
+        this(null, name, null, null, null, null, null, visibility, null, false, RawPayloadMode.DISABLED, null, OutVariablesMode.DISABLED, null);
     }
 
     public ProjectEntry(String name, Map<String, RepositoryEntry> repositories) {
-        this(null, name, null, null, null, repositories, null, null, null, false, RawPayloadMode.DISABLED, null, OutVariablesMode.DISABLED);
+        this(null, name, null, null, null, repositories, null, null, null, false, RawPayloadMode.DISABLED, null, OutVariablesMode.DISABLED, null);
     }
 
     public ProjectEntry(String name, UUID id) {
-        this(id, name, null, null, null, null, null, null, null, false, RawPayloadMode.DISABLED, null, OutVariablesMode.DISABLED);
+        this(id, name, null, null, null, null, null, null, null, false, RawPayloadMode.DISABLED, null, OutVariablesMode.DISABLED, null);
     }
 
     @JsonCreator
@@ -109,7 +115,8 @@ public class ProjectEntry implements Serializable {
                         @JsonProperty("acceptsRawPayload") Boolean acceptsRawPayload,
                         @JsonProperty("rawPayloadMode") RawPayloadMode rawPayloadMode,
                         @JsonProperty("meta") Map<String, Object> meta,
-                        @JsonProperty("outVariablesMode") OutVariablesMode outVariablesMode) {
+                        @JsonProperty("outVariablesMode") OutVariablesMode outVariablesMode,
+                        @JsonProperty("createdAt") OffsetDateTime createdAt) {
 
         this.id = id;
         this.name = name;
@@ -124,6 +131,7 @@ public class ProjectEntry implements Serializable {
         this.rawPayloadMode = rawPayloadMode;
         this.meta = meta;
         this.outVariablesMode = outVariablesMode;
+        this.createdAt = createdAt;
     }
 
     public UUID getId() {
@@ -183,6 +191,10 @@ public class ProjectEntry implements Serializable {
         return meta;
     }
 
+    public OffsetDateTime getCreatedAt() {
+        return createdAt;
+    }
+
     @Override
     public String toString() {
         return "ProjectEntry{" +
@@ -197,8 +209,9 @@ public class ProjectEntry implements Serializable {
                 ", owner=" + owner +
                 ", acceptsRawPayload=" + acceptsRawPayload +
                 ", rawPayloadMode=" + rawPayloadMode +
-                ", meta=" + meta +
                 ", outVariablesMode=" + outVariablesMode +
+                ", meta=" + meta +
+                ", createdAt=" + createdAt +
                 '}';
     }
 }

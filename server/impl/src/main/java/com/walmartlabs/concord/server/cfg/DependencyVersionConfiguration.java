@@ -24,8 +24,6 @@ import com.walmartlabs.ollie.config.Config;
 import org.eclipse.sisu.Nullable;
 
 import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
 import java.io.Serializable;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -34,8 +32,6 @@ import java.nio.file.Paths;
  * @deprecated replaced with the "dependencyVersions" policy.
  * @see com.walmartlabs.concord.policyengine.DependencyVersionsPolicy
  */
-@Named
-@Singleton
 @Deprecated
 public class DependencyVersionConfiguration implements Serializable {
 

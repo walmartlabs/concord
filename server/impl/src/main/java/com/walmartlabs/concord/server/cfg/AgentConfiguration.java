@@ -23,13 +23,9 @@ package com.walmartlabs.concord.server.cfg;
 import com.walmartlabs.ollie.config.Config;
 
 import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
 import java.io.Serializable;
 import java.time.Duration;
 
-@Named
-@Singleton
 public class AgentConfiguration implements Serializable {
 
     private static final long serialVersionUID = 1L;
@@ -38,7 +34,31 @@ public class AgentConfiguration implements Serializable {
     @Config("agent.commandPollDelay")
     private Duration commandPollDelay;
 
+    @Inject
+    @Config("agent.watchdogPeriod")
+    private Duration watchdogPeriod;
+
+    @Inject
+    @Config("agent.maxCommandAge")
+    private Duration maxCommandAge;
+
+    @Inject
+    @Config("agent.maxStalledAge")
+    private Duration maxStalledAge;
+
     public Duration getCommandPollDelay() {
         return commandPollDelay;
+    }
+
+    public Duration getWatchdogPeriod() {
+        return watchdogPeriod;
+    }
+
+    public Duration getMaxCommandAge() {
+        return maxCommandAge;
+    }
+
+    public Duration getMaxStalledAge() {
+        return maxStalledAge;
     }
 }

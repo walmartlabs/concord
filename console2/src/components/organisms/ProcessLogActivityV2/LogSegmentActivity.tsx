@@ -56,6 +56,7 @@ interface ExternalProps {
     errors?: number;
     opts: LogProcessorOptions;
     forceRefresh: boolean;
+    forceOpen: boolean;
 }
 
 interface FetchResponse {
@@ -75,7 +76,8 @@ const LogSegmentActivity = ({
     warnings,
     errors,
     opts,
-    forceRefresh
+    forceRefresh,
+    forceOpen
 }: ExternalProps) => {
     const range = useRef<LogRange>(DEFAULT_RANGE);
     const rangeInit = useRef<LogRange>(DEFAULT_RANGE);
@@ -182,6 +184,7 @@ const LogSegmentActivity = ({
                 data={visibleData}
                 lowRange={loadedRange.low}
                 loading={loading}
+                forceOpen={forceOpen}
             />
 
             {correlationId && (

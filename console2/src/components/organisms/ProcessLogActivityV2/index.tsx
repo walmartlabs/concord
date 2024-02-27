@@ -42,11 +42,13 @@ const DEFAULT_SEGMENT_OPTS: LogProcessorOptions = {
 };
 
 const DEFAULT_OPTS: LogOptions = {
+    expandAllSegments: false,
     showSystemSegment: true,
     segmentOptions: DEFAULT_SEGMENT_OPTS
 };
 
 interface LogOptions {
+    expandAllSegments: boolean;
     showSystemSegment: boolean;
     segmentOptions: LogProcessorOptions;
 }
@@ -140,6 +142,20 @@ const ProcessLogActivityV2 = ({
                     on="click">
                     <div>
                         <Radio
+                            label="Expand all segments"
+                            toggle={true}
+                            checked={logOpts.expandAllSegments}
+                            onChange={(ev, data) =>
+                                logOptsHandler({
+                                    ...logOpts,
+                                    expandAllSegments: data.checked as boolean
+                                })
+                            }
+                        />
+                    </div>
+
+                    <div>
+                        <Radio
                             label="Show system logs"
                             toggle={true}
                             checked={logOpts.showSystemSegment}
@@ -213,6 +229,7 @@ const ProcessLogActivityV2 = ({
                             opts={logOpts.segmentOptions}
                             forceRefresh={forceRefresh}
                             key={s.id}
+                            forceOpen={logOpts.expandAllSegments}
                         />
                     );
                 })}

@@ -27,9 +27,9 @@ import com.walmartlabs.concord.sdk.Constants;
 import com.walmartlabs.concord.server.MultipartUtils;
 import com.walmartlabs.concord.server.sdk.PartialProcessKey;
 import com.walmartlabs.concord.server.sdk.ProcessKey;
+import com.walmartlabs.concord.server.sdk.validation.ValidationErrorsException;
 import org.jboss.resteasy.plugins.providers.multipart.InputPart;
 import org.jboss.resteasy.plugins.providers.multipart.MultipartInput;
-import org.sonatype.siesta.ValidationErrorsException;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.core.MediaType;
@@ -45,6 +45,8 @@ import java.time.OffsetDateTime;
 import java.util.*;
 import java.util.function.Function;
 
+import static java.time.temporal.ChronoUnit.MICROS;
+
 public final class PayloadBuilder {
 
     public static PayloadBuilder start(ProcessKey processKey) {
@@ -52,7 +54,16 @@ public final class PayloadBuilder {
     }
 
     public static PayloadBuilder start(PartialProcessKey processKey) {
-        ProcessKey pk = new ProcessKey(processKey.getInstanceId(), OffsetDateTime.now());
+        OffsetDateTime createdAt = OffsetDateTime.now();
+        // round up and truncate to microseconds
+        if (createdAt.getNano() >= 500) {
+            createdAt = createdAt.plus(1, MICROS)
+                    .truncatedTo(MICROS);
+        } else {
+            createdAt = createdAt.truncatedTo(MICROS);
+        }
+
+        ProcessKey pk = new ProcessKey(processKey.getInstanceId(), createdAt);
         return new PayloadBuilder(pk);
     }
 

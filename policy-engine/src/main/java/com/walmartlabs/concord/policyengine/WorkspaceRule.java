@@ -20,64 +20,40 @@ package com.walmartlabs.concord.policyengine;
  * =====
  */
 
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import org.immutables.value.Value;
 
+import javax.annotation.Nullable;
 import java.io.Serializable;
-import java.util.Objects;
+import java.util.Collections;
 import java.util.Set;
 
-public class WorkspaceRule implements Serializable {
+@Value.Immutable
+@JsonInclude(JsonInclude.Include.NON_EMPTY)
+@JsonSerialize(as = ImmutableWorkspaceRule.class)
+@JsonDeserialize(as = ImmutableWorkspaceRule.class)
+public interface WorkspaceRule extends Serializable {
 
-    private static final long serialVersionUID = 1L;
+    long serialVersionUID = 1L;
 
-    private final String msg;
-    private final Long maxSizeInBytes;
-    private final Set<String> ignoredFiles;
+    @Nullable
+    String msg();
 
-    @JsonCreator
-    public WorkspaceRule(@JsonProperty("msg") String msg,
-                         @JsonProperty("maxSizeInBytes") Long maxSizeInBytes,
-                         @JsonProperty("ignoredFiles") Set<String> ignoredFiles) {
+    @Nullable
+    Long maxSizeInBytes();
 
-        this.msg = msg;
-        this.maxSizeInBytes = maxSizeInBytes;
-        this.ignoredFiles = ignoredFiles;
+    @Value.Default
+    default Set<String> ignoredFiles() {
+        return Collections.emptySet();
     }
 
-    public String getMsg() {
-        return msg;
-    }
-
-    public Long getMaxSizeInBytes() {
-        return maxSizeInBytes;
-    }
-
-    public Set<String> getIgnoredFiles() {
-        return ignoredFiles;
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        WorkspaceRule that = (WorkspaceRule) o;
-        return Objects.equals(msg, that.msg) &&
-                Objects.equals(maxSizeInBytes, that.maxSizeInBytes) &&
-                Objects.equals(ignoredFiles, that.ignoredFiles);
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(msg, maxSizeInBytes, ignoredFiles);
-    }
-
-    @Override
-    public String toString() {
-        return "WorkspaceRule{" +
-                "msg='" + msg + '\'' +
-                ", maxSizeInBytes=" + maxSizeInBytes +
-                ", ignoredFiles=" + ignoredFiles +
-                '}';
+    static WorkspaceRule of(String msg, Long maxSizeInBytes, Set<String> ignoredFiles) {
+        return ImmutableWorkspaceRule.builder()
+                .msg(msg)
+                .maxSizeInBytes(maxSizeInBytes)
+                .ignoredFiles(ignoredFiles != null ? ignoredFiles : Collections.emptySet())
+                .build();
     }
 }

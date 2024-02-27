@@ -9,9 +9,9 @@ package com.walmartlabs.concord.it.server;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -20,7 +20,7 @@ package com.walmartlabs.concord.it.server;
  * =====
  */
 
-import com.walmartlabs.concord.client.*;
+import com.walmartlabs.concord.client2.*;
 import org.junit.jupiter.api.Test;
 
 import java.util.HashMap;
@@ -48,10 +48,10 @@ public class PrincipalPermissionIT extends AbstractServerIT {
         String text = "select item_path from inventory_data where item_path like '%/testPath'";
 
         InventoriesApi inventoryResource = new InventoriesApi(getApiClient());
-        inventoryResource.createOrUpdate(orgName, new InventoryEntry().setName(inventoryName));
+        inventoryResource.createOrUpdateInventory(orgName, new InventoryEntry().name(inventoryName));
 
-        CreateInventoryQueryResponse cqr = resource.createOrUpdate(orgName, inventoryName, queryName, text);
-        assertTrue(cqr.isOk());
+        CreateInventoryQueryResponse cqr = resource.createOrUpdateInventoryQuery(orgName, inventoryName, queryName, text);
+        assertTrue(cqr.getOk());
         assertNotNull(cqr.getId());
 
         Map<String, Object> input = new HashMap<>();
@@ -62,7 +62,7 @@ public class PrincipalPermissionIT extends AbstractServerIT {
         StartProcessResponse spr = start(input);
 
         ProcessApi processApi = new ProcessApi(getApiClient());
-        ProcessEntry pir = waitForCompletion(processApi, spr.getInstanceId());
+        ProcessEntry pir = waitForCompletion(getApiClient(), spr.getInstanceId());
         assertEquals(ProcessEntry.StatusEnum.FINISHED, pir.getStatus());
 
         List<ProcessEntry> processEntryList = processApi.listSubprocesses(spr.getInstanceId(), null);
@@ -70,7 +70,7 @@ public class PrincipalPermissionIT extends AbstractServerIT {
             assertEquals(ProcessEntry.StatusEnum.FINISHED, pe.getStatus());
         }
 
-        byte[] ab = getLog(pir.getLogFileName());
+        byte[] ab = getLog(pir.getInstanceId());
         assertLog(".*Done!.*", ab);
     }
 }

@@ -9,9 +9,9 @@ package com.walmartlabs.concord.server.metrics;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -28,17 +28,15 @@ import io.prometheus.client.dropwizard.DropwizardExports;
 import io.prometheus.client.hotspot.DefaultExports;
 
 import javax.inject.Inject;
-import javax.inject.Named;
 import java.util.Set;
 
-@Named
 public class MetricsRegistrator implements BackgroundTask {
 
     private final MetricRegistry registry;
-    private final Set<GaugeProvider<?>> gauges;
+    private final Set<GaugeProvider> gauges;
 
     @Inject
-    public MetricsRegistrator(MetricRegistry registry, Set<GaugeProvider<?>> gauges) {
+    public MetricsRegistrator(MetricRegistry registry, Set<GaugeProvider> gauges) {
         this.registry = registry;
         this.gauges = gauges;
     }

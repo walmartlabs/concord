@@ -73,6 +73,8 @@ public final class Matcher {
             return compareArrayNodes((Collection) data, (Collection) conditions);
         } else if (conditions instanceof Collection) {
             return matchAny((Collection) conditions, data);
+        } else if (data instanceof Collection) {
+            return matchAny(conditions, (Collection)data);
         } else {
             return compareValues(data, conditions);
         }

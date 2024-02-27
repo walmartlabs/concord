@@ -75,13 +75,21 @@ public final class FormsGrammar {
         return orError(or(formFieldsArray.map(o::fields), maybeExpression.map(o::fieldsExpression)), YamlValueType.FORM_CALL_FIELDS);
     }
 
+    private static Parser<Atom, ImmutableFormCallOptions.Builder> formCallValuesOption(ImmutableFormCallOptions.Builder o) {
+        return orError(or(maybeMap.map(o::values), maybeExpression.map(o::valuesExpression)), YamlValueType.FORM_CALL_VALUES);
+    }
+
+    private static Parser<Atom, ImmutableFormCallOptions.Builder> formCallRunAsOption(ImmutableFormCallOptions.Builder o) {
+        return orError(or(maybeMap.map(o::runAs), maybeExpression.map(o::runAsExpression)), YamlValueType.FORM_CALL_RUN_AS);
+    }
+
     private static final Parser<Atom, FormCallOptions> formCallOptions =
             with(FormCallOptions::builder,
                     o -> options(
-                            optional("yield", booleanVal.map(o::yield)),
+                            optional("yield", booleanVal.map(o::isYield)),
                             optional("saveSubmittedBy", booleanVal.map(o::saveSubmittedBy)),
-                            optional("runAs", mapVal.map(o::runAs)),
-                            optional("values", mapVal.map(o::values)),
+                            optional("runAs", formCallRunAsOption(o)),
+                            optional("values", formCallValuesOption(o)),
                             optional("fields", formCallFieldsOption(o))
                     ))
                     .map(ImmutableFormCallOptions.Builder::build);

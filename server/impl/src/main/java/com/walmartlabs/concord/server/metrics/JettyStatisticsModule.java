@@ -4,7 +4,7 @@ package com.walmartlabs.concord.server.metrics;
  * *****
  * Concord
  * -----
- * Copyright (C) 2017 - 2018 Walmart Inc.
+ * Copyright (C) 2017 - 2023 Walmart Inc.
  * -----
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -25,12 +25,10 @@ import com.google.inject.AbstractModule;
 import com.google.inject.multibindings.Multibinder;
 import com.walmartlabs.concord.server.sdk.metrics.GaugeProvider;
 
-import javax.inject.Named;
 import javax.management.MBeanServer;
 import javax.management.ObjectName;
 import java.lang.management.ManagementFactory;
 
-@Named
 public class JettyStatisticsModule extends AbstractModule {
 
     private static final String[] ATTRIBUTES = {

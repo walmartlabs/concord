@@ -21,12 +21,10 @@ package com.walmartlabs.concord.server.plugins.noderoster;
  */
 
 import com.walmartlabs.concord.server.plugins.noderoster.dao.HostsDao;
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
-import io.swagger.annotations.ApiParam;
-import io.swagger.annotations.Authorization;
-import org.sonatype.siesta.Resource;
-import org.sonatype.siesta.ValidationErrorsException;
+import com.walmartlabs.concord.server.sdk.rest.Resource;
+import com.walmartlabs.concord.server.sdk.validation.ValidationErrorsException;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -40,7 +38,7 @@ import java.util.UUID;
 @Named
 @Singleton
 @Path("/api/v1/noderoster/hosts")
-@Api(value = "Node Roster Hosts", authorizations = {@Authorization("api_key"), @Authorization("session_key"), @Authorization("ldap")})
+@Tag(name = "Node Roster Hosts")
 public class HostsResource implements Resource {
 
     private static final String DEFAULT_LIMIT = "30";
@@ -55,14 +53,14 @@ public class HostsResource implements Resource {
 
     @GET
     @Path("/")
-    @ApiOperation(value = "List all known hosts", responseContainer = "list", response = HostEntry.class)
+    @Operation(description = "List all known hosts", operationId = "listKnownHosts")
     @Produces(MediaType.APPLICATION_JSON)
-    public List<HostEntry> list(@ApiParam @QueryParam("host") String host,
-                                @ApiParam @QueryParam("artifact") String artifact,
-                                @ApiParam @QueryParam("processInstanceId") UUID processInstanceId,
-                                @ApiParam @QueryParam("include") Set<HostsDataInclude> includes,
-                                @ApiParam @QueryParam("limit") @DefaultValue(DEFAULT_LIMIT) int limit,
-                                @ApiParam @QueryParam("offset") @DefaultValue(DEFAULT_OFFSET) int offset) {
+    public List<HostEntry> list(@QueryParam("host") String host,
+                                @QueryParam("artifact") String artifact,
+                                @QueryParam("processInstanceId") UUID processInstanceId,
+                                @QueryParam("include") Set<HostsDataInclude> includes,
+                                @QueryParam("limit") @DefaultValue(DEFAULT_LIMIT) int limit,
+                                @QueryParam("offset") @DefaultValue(DEFAULT_OFFSET) int offset) {
 
         assertLimitAndOffset(limit, offset);
 
@@ -77,9 +75,9 @@ public class HostsResource implements Resource {
 
     @GET
     @Path("/{hostId}")
-    @ApiOperation(value = "Get a host")
+    @Operation(description = "Get a host", operationId = "getHost")
     @Produces(MediaType.APPLICATION_JSON)
-    public HostEntry get(@ApiParam @PathParam("hostId") UUID hostId) {
+    public HostEntry get(@PathParam("hostId") UUID hostId) {
         return hostsDao.get(hostId);
     }
 

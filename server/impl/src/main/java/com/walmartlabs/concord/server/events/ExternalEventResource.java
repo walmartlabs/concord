@@ -27,14 +27,12 @@ import com.walmartlabs.concord.server.cfg.ExternalEventsConfiguration;
 import com.walmartlabs.concord.server.events.externalevent.ExternalEventTriggerProcessor;
 import com.walmartlabs.concord.server.sdk.PartialProcessKey;
 import com.walmartlabs.concord.server.sdk.metrics.WithTimer;
+import com.walmartlabs.concord.server.sdk.rest.Resource;
 import com.walmartlabs.concord.server.user.UserManager;
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
-import io.swagger.annotations.ApiParam;
-import io.swagger.annotations.Authorization;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.sonatype.siesta.Resource;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -56,8 +54,8 @@ import static com.walmartlabs.concord.common.MemoSupplier.memo;
  */
 @Named
 @Singleton
-@Api(value = "External Events", authorizations = {@Authorization("api_key"), @Authorization("ldap")})
 @Path("/api/v1/events")
+@Tag(name = "External Events")
 public class ExternalEventResource implements Resource {
 
     private static final Logger log = LoggerFactory.getLogger(ExternalEventResource.class);
@@ -86,12 +84,12 @@ public class ExternalEventResource implements Resource {
     }
 
     @POST
-    @ApiOperation("Handles an external event")
     @Path("/{eventName:.*}")
     @Consumes(MediaType.APPLICATION_JSON)
     @WithTimer
-    public Response event(@ApiParam @PathParam("eventName") String eventName,
-                          @ApiParam Map<String, Object> data) {
+    @Operation(description = "Handles an external event", operationId = "externalEvent")
+    public Response event(@PathParam("eventName") String eventName,
+                          Map<String, Object> data) {
 
         if (executor.isDisabled(eventName)) {
             log.warn("event ['{}'] disabled", eventName);

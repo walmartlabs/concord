@@ -90,7 +90,7 @@ public class RunnerJobExecutor implements JobExecutor {
 
     private final ObjectMapper objectMapper;
 
-    private int majorJavaVersion;
+    private final int majorJavaVersion;
 
     public RunnerJobExecutor(RunnerJobExecutorConfiguration cfg,
                              DependencyManager dependencyManager,
@@ -179,9 +179,9 @@ public class RunnerJobExecutor implements JobExecutor {
 
             pe = buildProcessEntry(job);
         } catch (Throwable e) {
-            log.warn("exec ['{}'] -> process error: {}", job.getInstanceId(), e.getMessage());
+            log.warn("exec ['{}'] -> process error: {}", job.getInstanceId(), e.getMessage(), e);
 
-            job.getLog().error("Process startup error: {}", e.getMessage());
+            job.getLog().error("Process startup error: {}", e.getMessage(), e);
 
             cleanup(job);
 
@@ -243,17 +243,19 @@ public class RunnerJobExecutor implements JobExecutor {
             // therefore, we need to make all files readable by all users
             // and that's why runner.persistentWorkDir shouldn't be used in prod
 
-            Files.walk(dst).forEach(f -> {
-                try {
-                    if (Files.isDirectory(f)) {
-                        Files.setPosixFilePermissions(f, Posix.posix(0755));
-                    } else if (Files.isRegularFile(f)) {
-                        Files.setPosixFilePermissions(f, Posix.posix(0644));
+            try(Stream<Path> walk = Files.walk(dst)) {
+                walk.forEach(f -> {
+                    try {
+                        if (Files.isDirectory(f)) {
+                            Files.setPosixFilePermissions(f, Posix.posix(0755));
+                        } else if (Files.isRegularFile(f)) {
+                            Files.setPosixFilePermissions(f, Posix.posix(0644));
+                        }
+                    } catch (IOException e) {
+                        log.warn("persistWorkDir -> can't update permissions for {}: {}", f, e.getMessage());
                     }
-                } catch (IOException e) {
-                    log.warn("persistWorkDir -> can't update permissions for {}: {}", f, e.getMessage());
-                }
-            });
+                });
+            }
         } catch (IOException e) {
             log.warn("persistWorkDir -> failed to copy {} into {}: {}", src, dst, e.getMessage());
         }
@@ -354,15 +356,28 @@ public class RunnerJobExecutor implements JobExecutor {
         uris = rewriteDependencies(job, uris);
 
         Collection<DependencyEntity> deps = dependencyManager.resolve(uris, new ProgressListener() {
+
+            private final List<String> errors = Collections.synchronizedList(new ArrayList<>());
+
             @Override
             public void onRetry(int retryCount, int maxRetry, long interval, String cause) {
+                synchronized (errors) {
+                    for (String error : errors) {
+                        job.getLog().warn(error);
+                    }
+                }
+
                 job.getLog().warn("Error while downloading dependencies: {}", cause);
                 job.getLog().info("Retrying in {}ms", interval);
             }
 
             @Override
             public void onTransferFailed(String error) {
-                job.getLog().error(error);
+                if (job.isDebugMode()) {
+                    job.getLog().warn(error);
+                } else {
+                    errors.add(error);
+                }
             }
         });
 
@@ -415,9 +430,9 @@ public class RunnerJobExecutor implements JobExecutor {
 
         CheckResult<DependencyRule, DependencyEntity> result = policyEngine.getDependencyPolicy().check(resolvedDepEntities);
         result.getWarn().forEach(d ->
-                processLog.warn("Potentially restricted artifact '{}' (dependency policy: {})", d.getEntity(), d.getRule().getMsg()));
+                processLog.warn("Potentially restricted artifact '{}' (dependency policy: {})", d.getEntity(), d.getRule().msg()));
         result.getDeny().forEach(d ->
-                processLog.warn("Artifact '{}' is forbidden by the dependency policy {}", d.getEntity(), d.getRule().getMsg()));
+                processLog.warn("Artifact '{}' is forbidden by the dependency policy {}", d.getEntity(), d.getRule().msg()));
 
         if (!result.getDeny().isEmpty()) {
             throw new ExecutionException("Found restricted dependencies");

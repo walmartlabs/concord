@@ -20,10 +20,11 @@ package com.walmartlabs.concord.client;
  * =====
  */
 
+import com.walmartlabs.concord.client2.SecretEntryV2;
 import com.walmartlabs.concord.runtime.v2.sdk.Variables;
 import com.walmartlabs.concord.sdk.Constants;
 
-import java.util.Arrays;
+import java.util.*;
 
 public class SecretsTaskParams {
 
@@ -112,15 +113,17 @@ public class SecretsTaskParams {
         static final String GENERATE_PASSWORD_KEY = "generatePassword"; // NOSONAR
         static final String VISIBILITY_KEY = "visibility";
         static final String PROJECT_NAME_KEY = "project";
+        static final String PROJECT_NAMES_KEY = "projects";
+        static final String PROJECT_IDS_KEY = "projectIds";
 
         private CreateParams(Variables variables) {
             super(variables);
         }
 
-        public SecretEntry.TypeEnum secretType() {
-            String type = variables.getString(Constants.Multipart.TYPE, SecretEntry.TypeEnum.DATA.toString());
+        public SecretEntryV2.TypeEnum secretType() {
+            String type = variables.getString(Constants.Multipart.TYPE, SecretEntryV2.TypeEnum.DATA.toString());
             try {
-                return SecretEntry.TypeEnum.valueOf(type.trim().toUpperCase());
+                return SecretEntryV2.TypeEnum.valueOf(type.trim().toUpperCase());
             } catch (Exception e) {
                 String message = String.format("Invalid argument '%s', allowed values are: 'data' (default), 'key_pair' and 'username_password'", type);
                 throw new IllegalArgumentException(message);
@@ -162,6 +165,14 @@ public class SecretsTaskParams {
         public String projectName() {
             return variables.getString(PROJECT_NAME_KEY);
         }
+
+        public List<String> projectNames() {
+            return variables.getList(PROJECT_NAMES_KEY, null);
+        }
+
+        public List<UUID> projectIds() {
+            return variables.getList(PROJECT_IDS_KEY, null);
+        }
     }
 
     static class UpdateParams extends CreateParams {
@@ -180,6 +191,7 @@ public class SecretsTaskParams {
         public boolean createIfMissing() {
             return variables.getBoolean(CREATE_IF_MISSING_KEY, false);
         }
+
     }
 
     public enum Action {

@@ -20,7 +20,7 @@ package com.walmartlabs.concord.it.server;
  * =====
  */
 
-import com.walmartlabs.concord.client.*;
+import com.walmartlabs.concord.client2.*;
 import org.junit.jupiter.api.Test;
 
 import java.net.URI;
@@ -37,23 +37,22 @@ public class AnsibleEventIT extends AbstractServerIT {
     @Test
     @SuppressWarnings("unchecked")
     public void testEvent() throws Exception {
-        URI uri = ProcessIT.class.getResource("ansibleEvent").toURI();
+        URI uri = AnsibleEventIT.class.getResource("ansibleEvent").toURI();
         byte[] payload = archive(uri, ITConstants.DEPENDENCIES_DIR);
 
         // ---
 
-        ProcessApi processApi = new ProcessApi(getApiClient());
         StartProcessResponse spr = start(payload);
 
         // ---
 
-        ProcessEntry pir = waitForCompletion(processApi, spr.getInstanceId());
+        ProcessEntry pir = waitForCompletion(getApiClient(), spr.getInstanceId());
         assertEquals(ProcessEntry.StatusEnum.FINISHED, pir.getStatus());
 
         // ---
 
         ProcessEventsApi eventsApi = new ProcessEventsApi(getApiClient());
-        List<ProcessEventEntry> l = eventsApi.list(pir.getInstanceId(), null, null, null, null, null, null, -1);
+        List<ProcessEventEntry> l = eventsApi.listProcessEvents(pir.getInstanceId(), null, null, null, null, null, null, -1);
         assertFalse(l.isEmpty());
 
         long cnt = l.stream().filter(e -> {
@@ -81,23 +80,22 @@ public class AnsibleEventIT extends AbstractServerIT {
 
     @Test
     public void testIgnoredFailures() throws Exception {
-        URI uri = ProcessIT.class.getResource("ansibleIgnoredFailures").toURI();
+        URI uri = AnsibleEventIT.class.getResource("ansibleIgnoredFailures").toURI();
         byte[] payload = archive(uri, ITConstants.DEPENDENCIES_DIR);
 
         // ---
 
-        ProcessApi processApi = new ProcessApi(getApiClient());
         StartProcessResponse spr = start(payload);
 
         // ---
 
-        ProcessEntry pir = waitForCompletion(processApi, spr.getInstanceId());
+        ProcessEntry pir = waitForCompletion(getApiClient(), spr.getInstanceId());
         assertEquals(ProcessEntry.StatusEnum.FINISHED, pir.getStatus());
 
         // ---
 
         ProcessEventsApi eventsApi = new ProcessEventsApi(getApiClient());
-        List<ProcessEventEntry> l = eventsApi.list(pir.getInstanceId(), null, null, null, null, null, null, -1);
+        List<ProcessEventEntry> l = eventsApi.listProcessEvents(pir.getInstanceId(), null, null, null, null, null, null, -1);
         assertFalse(l.isEmpty());
 
         long cnt = l.stream().filter(e -> {
@@ -124,26 +122,25 @@ public class AnsibleEventIT extends AbstractServerIT {
      */
     @Test
     public void testFailedHosts() throws Exception {
-        URI uri = ProcessIT.class.getResource("ansibleFailedHosts").toURI();
+        URI uri = AnsibleEventIT.class.getResource("ansibleFailedHosts").toURI();
         byte[] payload = archive(uri, ITConstants.DEPENDENCIES_DIR);
 
         // ---
 
         StartProcessResponse spr = start(payload);
 
-        ProcessApi processApi = new ProcessApi(getApiClient());
-        ProcessEntry pe = waitForCompletion(processApi, spr.getInstanceId());
+        ProcessEntry pe = waitForCompletion(getApiClient(), spr.getInstanceId());
         assertEquals(ProcessEntry.StatusEnum.FAILED, pe.getStatus());
 
         // ---
 
-        byte[] ab = getLog(pe.getLogFileName());
+        byte[] ab = getLog(pe.getInstanceId());
         assertLog(".*'msg' is undefined.*", ab);
 
         // ---
 
         ProcessEventsApi eventsApi = new ProcessEventsApi(getApiClient());
-        List<ProcessEventEntry> l = eventsApi.list(pe.getInstanceId(), "ANSIBLE", null, null, null, "post", null, -1);
+        List<ProcessEventEntry> l = eventsApi.listProcessEvents(pe.getInstanceId(), "ANSIBLE", null, null, null, "post", null, -1);
         assertFalse(l.isEmpty());
 
         for (ProcessEventEntry e : l) {

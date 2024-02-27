@@ -21,12 +21,13 @@ package com.walmartlabs.concord.server.plugins.noderoster;
  */
 
 import com.walmartlabs.concord.server.plugins.noderoster.dao.HostsDao;
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
-import io.swagger.annotations.ApiParam;
-import io.swagger.annotations.Authorization;
-import org.sonatype.siesta.Resource;
-import org.sonatype.siesta.ValidationErrorsException;
+import com.walmartlabs.concord.server.sdk.rest.Resource;
+import com.walmartlabs.concord.server.sdk.validation.ValidationErrorsException;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.tags.Tag;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -42,7 +43,7 @@ import java.util.UUID;
 @Named
 @Singleton
 @Path("/api/v1/noderoster/facts")
-@Api(value = "Node Roster Facts", authorizations = {@Authorization("api_key"), @Authorization("session_key"), @Authorization("ldap")})
+@Tag(name = "Node Roster Facts")
 public class FactsResource implements Resource {
 
     private final HostManager hostManager;
@@ -56,10 +57,13 @@ public class FactsResource implements Resource {
 
     @GET
     @Path("/last")
-    @ApiOperation(value = "Get last known Ansible facts for a host", response = Object.class)
+    @Operation(description = "Get last known Ansible facts for a host")
     @Produces(MediaType.APPLICATION_JSON)
-    public Response getFacts(@ApiParam @QueryParam("hostId") UUID hostId,
-                             @ApiParam @QueryParam("hostName") String hostName) {
+    @ApiResponse(description = "Facts content",
+            content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(type = "object"))
+    )
+    public Response getFacts(@QueryParam("hostId") UUID hostId,
+                             @QueryParam("hostName") String hostName) {
 
         if (hostName == null && hostId == null) {
             throw new ValidationErrorsException("A 'hostName' or 'hostId' value is required");

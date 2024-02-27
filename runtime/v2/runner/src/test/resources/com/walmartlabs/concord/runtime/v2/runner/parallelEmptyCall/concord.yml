@@ -1,0 +1,15 @@
+flows:
+  default:
+    - call: EmptyFlow
+      out: outVar
+      loop:
+        items:
+          - "one"
+          - "two"
+        mode: parallel
+        parallelism: "${2}"
+
+    - log: "outVar: ${outVar}"
+
+  EmptyFlow:
+    - return

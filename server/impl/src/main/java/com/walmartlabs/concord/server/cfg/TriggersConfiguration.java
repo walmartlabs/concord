@@ -23,13 +23,9 @@ package com.walmartlabs.concord.server.cfg;
 import com.walmartlabs.ollie.config.Config;
 
 import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
 import java.util.List;
 import java.util.Map;
 
-@Named
-@Singleton
 public class TriggersConfiguration {
 
     @Inject

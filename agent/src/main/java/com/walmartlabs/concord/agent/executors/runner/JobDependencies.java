@@ -159,6 +159,7 @@ public final class JobDependencies {
                     .collect(Collectors.toMap(Dependency::getArtifact, Dependency::getVersion)));
         }
 
+
         return result;
     }
 

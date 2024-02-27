@@ -20,6 +20,8 @@ package com.walmartlabs.concord.runtime.v2.runner.el;
  * =====
  */
 
+import com.walmartlabs.concord.runtime.v2.sdk.EvalContext;
+
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -63,6 +65,9 @@ public class LazyEvalMap implements Map<String, Object> {
 
     @Override
     public boolean containsKey(Object key) {
+        if (inflightKeys.contains(key)) {
+            return false;
+        }
         return orderedKeys.contains(key);
     }
 

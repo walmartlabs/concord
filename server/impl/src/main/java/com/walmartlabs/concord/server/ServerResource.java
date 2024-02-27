@@ -23,22 +23,20 @@ package com.walmartlabs.concord.server;
 import com.walmartlabs.concord.db.AbstractDao;
 import com.walmartlabs.concord.db.MainDB;
 import com.walmartlabs.concord.server.boot.BackgroundTasks;
+import com.walmartlabs.concord.server.sdk.rest.Resource;
 import com.walmartlabs.concord.server.task.TaskScheduler;
 import com.walmartlabs.concord.server.websocket.WebSocketChannelManager;
 import org.jooq.Configuration;
-import org.sonatype.siesta.Resource;
 
 import javax.inject.Inject;
 import javax.inject.Named;
-import javax.inject.Singleton;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
+import java.time.OffsetDateTime;
 
-@Named
-@Singleton
 @Path("/api/v1/server")
 public class ServerResource implements Resource {
 
@@ -84,6 +82,13 @@ public class ServerResource implements Resource {
         taskScheduler.stop();
     }
 
+    @GET
+    @Path("/test")
+    @Produces(MediaType.APPLICATION_JSON)
+    public TestBean test() {
+        return new TestBean(OffsetDateTime.now());
+    }
+
     @Named
     public static class PingDao extends AbstractDao {
 
@@ -95,5 +100,8 @@ public class ServerResource implements Resource {
         public void ping() {
             dsl().selectOne().execute();
         }
+    }
+
+    public record TestBean(OffsetDateTime now) {
     }
 }

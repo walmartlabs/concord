@@ -9,9 +9,9 @@ package com.walmartlabs.concord.server.process;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -20,8 +20,8 @@ package com.walmartlabs.concord.server.process;
  * =====
  */
 
+import com.walmartlabs.concord.server.boot.resteasy.ExceptionMapperSupport;
 import com.walmartlabs.concord.server.sdk.PartialProcessKey;
-import org.sonatype.siesta.ExceptionMapperSupport;
 
 import javax.inject.Named;
 import javax.inject.Singleton;
@@ -29,12 +29,14 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import javax.ws.rs.ext.Provider;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.UUID;
 
 @Named
 @Singleton
+@Provider
 public class ProcessExceptionMapper extends ExceptionMapperSupport<ProcessException> {
 
     private static final int MAX_CAUSE_DEPTH = 5;
@@ -45,7 +47,7 @@ public class ProcessExceptionMapper extends ExceptionMapperSupport<ProcessExcept
     HttpHeaders headers;
 
     @Override
-    protected Response convert(ProcessException e, String id) {
+    protected Response convert(ProcessException e) {
         String details = getDetails(e.getCause());
 
         String stacktrace = null;

@@ -88,8 +88,12 @@ public class ResourceTaskV2 implements Task {
         return delegate.writeAsYaml(content);
     }
 
-    public String prettyPrintJson(Object json) throws IOException {
-        return ResourceTaskCommon.prettyPrintJson(json);
+    public String printJson(Object value) throws IOException {
+        return ResourceTaskCommon.printJson(value);
+    }
+
+    public String prettyPrintJson(Object value) throws IOException {
+        return ResourceTaskCommon.prettyPrintJson(value);
     }
 
     public String prettyPrintYaml(Object value) throws IOException {

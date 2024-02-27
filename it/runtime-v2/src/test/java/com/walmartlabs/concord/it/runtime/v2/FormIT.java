@@ -24,10 +24,10 @@ import ca.ibodrov.concord.testcontainers.ConcordProcess;
 import ca.ibodrov.concord.testcontainers.Payload;
 import ca.ibodrov.concord.testcontainers.junit5.ConcordRule;
 import com.google.common.io.CharStreams;
-import com.walmartlabs.concord.client.FormListEntry;
-import com.walmartlabs.concord.client.FormSubmitResponse;
-import com.walmartlabs.concord.client.ProcessApi;
-import com.walmartlabs.concord.client.ProcessEntry;
+import com.walmartlabs.concord.client2.FormListEntry;
+import com.walmartlabs.concord.client2.FormSubmitResponse;
+import com.walmartlabs.concord.client2.ProcessApi;
+import com.walmartlabs.concord.client2.ProcessEntry;
 import com.walmartlabs.concord.sdk.MapUtils;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -72,7 +72,7 @@ public class FormIT extends AbstractTest {
         // ---
 
         FormListEntry myForm = forms.get(0);
-        assertFalse(myForm.isCustom());
+        assertFalse(myForm.getCustom());
 
         String formName = myForm.getName();
 
@@ -86,7 +86,7 @@ public class FormIT extends AbstractTest {
         data.put("age", age);
 
         FormSubmitResponse fsr = proc.submitForm(formName, data);
-        assertTrue(fsr.isOk());
+        assertTrue(fsr.getOk());
         assertTrue(fsr.getErrors() == null || fsr.getErrors().isEmpty());
 
         assertEquals(0, proc.forms().size());
@@ -128,7 +128,7 @@ public class FormIT extends AbstractTest {
         data.put("age", age);
 
         FormSubmitResponse fsr = proc.submitForm(myForm.getName(), data);
-        assertTrue(fsr.isOk());
+        assertTrue(fsr.getOk());
 
         // ---
 
@@ -148,6 +148,21 @@ public class FormIT extends AbstractTest {
 
         // ---
 
+        assertFormValues(payload);
+    }
+
+    @Test
+    public void testFormExpressionValues() throws Exception {
+        Payload payload = new Payload()
+                .entryPoint("callExpressions")
+                .archive(resource("customFormValues"));
+
+        // ---
+
+        assertFormValues(payload);
+    }
+
+    private void assertFormValues(Payload payload) throws Exception {
         ConcordProcess proc = concord.processes().start(payload);
         ProcessEntry pe = expectStatus(proc, ProcessEntry.StatusEnum.SUSPENDED);
 
@@ -157,8 +172,14 @@ public class FormIT extends AbstractTest {
         assertEquals(1, forms.size());
 
         // ---
-        String formName = forms.get(0).getName();
+        FormListEntry form = forms.get(0);
+        String formName = form.getName();
         assertEquals("myForm", formName);
+
+        // runAs username from expression
+        Map<String, Object> runAs = form.getRunAs();
+        assertNotNull(runAs);
+        assertEquals("admin", runAs.get("username"));
 
         // start session
         startCustomFormSession(concord, pe.getInstanceId(), formName);
@@ -217,13 +238,13 @@ public class FormIT extends AbstractTest {
         assertEquals(1, forms.size());
 
         FormListEntry myForm = forms.get(0);
-        assertFalse(myForm.isCustom());
+        assertFalse(myForm.getCustom());
 
         String formName = myForm.getName();
         assertEquals("myForm", formName);
 
         FormSubmitResponse fsr = proc.submitForm(formName, data);
-        assertTrue(fsr.isOk());
+        assertTrue(fsr.getOk());
         assertTrue(fsr.getErrors() == null || fsr.getErrors().isEmpty());
 
         expectStatus(proc, ProcessEntry.StatusEnum.FINISHED);

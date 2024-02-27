@@ -4,7 +4,7 @@ package com.walmartlabs.concord.runtime.v2.runner;
  * *****
  * Concord
  * -----
- * Copyright (C) 2017 - 2019 Walmart Inc.
+ * Copyright (C) 2017 - 2023 Walmart Inc.
  * -----
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -27,9 +27,12 @@ import com.google.inject.Injector;
 import com.google.inject.Module;
 import com.google.inject.multibindings.Multibinder;
 import com.google.inject.name.Names;
+import com.walmartlabs.concord.client2.ApiClient;
+import com.walmartlabs.concord.common.ConfigurationUtils;
 import com.walmartlabs.concord.common.IOUtils;
 import com.walmartlabs.concord.forms.Form;
 import com.walmartlabs.concord.runtime.common.FormService;
+import com.walmartlabs.concord.runtime.common.SerializationUtils;
 import com.walmartlabs.concord.runtime.common.StateManager;
 import com.walmartlabs.concord.runtime.common.cfg.ApiConfiguration;
 import com.walmartlabs.concord.runtime.common.cfg.ImmutableRunnerConfiguration;
@@ -47,13 +50,17 @@ import com.walmartlabs.concord.runtime.v2.runner.tasks.TaskCallListener;
 import com.walmartlabs.concord.runtime.v2.runner.tasks.TaskCallPolicyChecker;
 import com.walmartlabs.concord.runtime.v2.runner.tasks.TaskResultListener;
 import com.walmartlabs.concord.runtime.v2.runner.tasks.TaskV2Provider;
+import com.walmartlabs.concord.runtime.v2.runner.vm.BlockCommand;
+import com.walmartlabs.concord.runtime.v2.runner.vm.ParallelCommand;
 import com.walmartlabs.concord.runtime.v2.sdk.*;
 import com.walmartlabs.concord.sdk.Constants;
-import com.walmartlabs.concord.svm.ExecutionListener;
+import com.walmartlabs.concord.svm.Runtime;
+import com.walmartlabs.concord.svm.*;
 import org.immutables.value.Value;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestInfo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -62,6 +69,10 @@ import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
 import java.io.*;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 import java.net.URISyntaxException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -94,7 +105,7 @@ public class MainTest {
     private byte[] allLogs;
 
     @BeforeEach
-    public void setUp() throws IOException {
+    public void setUp(TestInfo testInfo) throws IOException {
         workDir = Files.createTempDirectory("test");
 
         instanceId = UUID.randomUUID();
@@ -125,6 +136,7 @@ public class MainTest {
                 bind(PersistenceService.class).toInstance(mock(PersistenceService.class));
                 bind(ProcessStatusCallback.class).toInstance(processStatusCallback);
                 bind(SecretService.class).to(DefaultSecretService.class);
+                bind(ApiClient.class).toInstance(mock(ApiClient.class));
 
                 Multibinder<TaskProvider> taskProviders = Multibinder.newSetBinder(binder(), TaskProvider.class);
                 taskProviders.addBinding().to(TaskV2Provider.class);
@@ -133,7 +145,32 @@ public class MainTest {
                 taskCallListeners.addBinding().to(TaskCallPolicyChecker.class);
                 taskCallListeners.addBinding().to(TaskResultListener.class);
 
-                Multibinder.newSetBinder(binder(), ExecutionListener.class);
+                Multibinder<ExecutionListener> executionListeners = Multibinder.newSetBinder(binder(), ExecutionListener.class);
+                executionListeners.addBinding().toInstance(new ExecutionListener(){
+                    @Override
+                    public void beforeProcessStart() {
+                        SensitiveDataHolder.getInstance().get().clear();
+                    }
+                });
+                executionListeners.addBinding().to(StackTraceCollector.class);
+
+                boolean ignoreSerializationAssert = testInfo.getTestMethod()
+                        .filter(m -> m.getAnnotation(IgnoreSerializationAssert.class) != null)
+                        .isPresent();
+                if (!ignoreSerializationAssert) {
+                    executionListeners.addBinding().toInstance(new ExecutionListener() {
+                        @Override
+                        public Result afterCommand(Runtime runtime, VM vm, State state, ThreadId threadId, Command cmd) {
+                            if (cmd instanceof BlockCommand
+                                    || cmd instanceof ParallelCommand) {
+                                return ExecutionListener.super.afterCommand(runtime, vm, state, threadId, cmd);
+                            }
+
+                            assertTrue(SerializationUtils.isSerializable(state), "Non serializable state after: " + cmd);
+                            return ExecutionListener.super.afterCommand(runtime, vm, state, threadId, cmd);
+                        }
+                    });
+                }
             }
         };
 
@@ -150,6 +187,37 @@ public class MainTest {
     }
 
     @Test
+    public void testVariablesAfterResume() throws Exception {
+        deploy("variablesAfterResume");
+
+        save(ProcessConfiguration.builder()
+                .build());
+
+        byte[] log = run();
+        assertLog(log, ".*workDir1: " + workDir.toAbsolutePath() + ".*");
+        assertLog(log, ".*workDir3: " + workDir.toAbsolutePath() + ".*");
+
+        List<Form> forms = formService.list();
+        assertEquals(1, forms.size());
+
+        Form myForm = forms.get(0);
+        assertEquals("myForm", myForm.name());
+
+        // resume the process using the saved form
+
+        Map<String, Object> data = new HashMap<>();
+        data.put("fullName", "John Smith");
+
+        Path newWorkDir = Files.createTempDirectory("test-new");
+        IOUtils.copy(workDir, newWorkDir);
+        workDir = newWorkDir;
+
+        log = resume(myForm.eventName(), ProcessConfiguration.builder().arguments(Collections.singletonMap("myForm", data)).build());
+        assertLog(log, ".*workDir4: " + workDir.toAbsolutePath() + ".*");
+        assertLog(log, ".*workDir2: " + workDir.toAbsolutePath() + ".*");
+    }
+
+    @Test
     public void test() throws Exception {
         deploy("hello");
 
@@ -163,6 +231,164 @@ public class MainTest {
         assertLog(log, ".*" + Pattern.quote("defaultsMap:{a=a-value}") + ".*");
 
         verify(processStatusCallback, times(1)).onRunning(instanceId);
+    }
+
+    @Test
+    public void testFlowNameVariable() throws Exception {
+        deploy("doNotTouchFlowNameVariable");
+
+        save(ProcessConfiguration.builder()
+                .build());
+
+        byte[] log = run();
+        assertLog(log, ".*flowName in inner flow: 'This is MY variable'.*");
+
+        verify(processStatusCallback, times(1)).onRunning(instanceId);
+    }
+
+    @Test
+    public void testStackTrace() throws Exception {
+        deploy("stackTrace");
+
+        save(ProcessConfiguration.builder()
+                .build());
+
+        try {
+            run();
+            fail("must fail");
+        } catch (Exception e) {
+            // ignore
+        }
+        assertLog(lastLog, ".*" + Pattern.quote("(concord.yml) @ line: 9, col: 7, thread: 0, flow: flowB") + ".*");
+        assertLog(lastLog, ".*" + Pattern.quote("(concord.yml) @ line: 3, col: 7, thread: 0, flow: flowA") + ".*");
+    }
+
+    @Test
+    public void testStackTrace2() throws Exception {
+        deploy("stackTrace2");
+
+        save(ProcessConfiguration.builder()
+                .build());
+
+        try {
+            run();
+            fail("must fail");
+        } catch (Exception e) {
+            // ignore
+        }
+        assertLog(lastLog, ".*" + Pattern.quote("(concord.yml) @ line: 10, col: 7, thread: 1, flow: flowB") + ".*");
+        assertLog(lastLog, ".*" + Pattern.quote("(concord.yml) @ line: 4, col: 11, thread: 1, flow: flowA") + ".*");
+
+        assertLog(lastLog, ".*" + Pattern.quote("(concord.yml) @ line: 5, col: 11, thread: 2, flow: flowB") + ".*");
+    }
+
+    @Test
+    public void testStackTrace3() throws Exception {
+        deploy("stackTrace3");
+
+        save(ProcessConfiguration.builder()
+                .build());
+
+        try {
+            run();
+            fail("must fail");
+        } catch (Exception e) {
+            // ignore
+        }
+        assertLog(lastLog, ".*" + Pattern.quote("in flowA") + ".*");
+
+        String expected = "Call stack:\n" +
+                "(concord.yml) @ line: 13, col: 7, thread: 2, flow: flowB\n" +
+                "(concord.yml) @ line: 3, col: 7, thread: 2, flow: flowA";
+
+        String logString = new String(lastLog);
+        assertTrue(logString.contains(expected), "expected log contains: " + expected + ", actual: " + logString);
+    }
+
+    @Test
+    public void testStackTrace4() throws Exception {
+        deploy("stackTrace4");
+
+        save(ProcessConfiguration.builder()
+                .build());
+
+        try {
+            run();
+            fail("must fail");
+        } catch (Exception e) {
+            // ignore
+        }
+
+        String expected = "Call stack:\n" +
+                "(concord.yml) @ line: 8, col: 7, thread: 0, flow: flowB\n" +
+                "(concord.yml) @ line: 3, col: 7, thread: 0, flow: flowA";
+
+        String expected1 = "Call stack:\n" +
+                "(concord.yml) @ line: 16, col: 11, thread: 0, flow: flowThrow\n" +
+                "(concord.yml) @ line: 8, col: 7, thread: 0, flow: flowB\n" +
+                "(concord.yml) @ line: 3, col: 7, thread: 0, flow: flowA";
+
+        String logString = new String(lastLog);
+        assertTrue(logString.contains(expected), "expected log contains: " + expected + ", actual: " + logString);
+        assertTrue(logString.contains(expected1), "expected log contains: " + expected1 + ", actual: " + logString);
+    }
+
+    @Test
+    public void testStackTrace5() throws Exception {
+        deploy("stackTrace5");
+
+        save(ProcessConfiguration.builder()
+                .build());
+
+        try {
+            run();
+            fail("must fail");
+        } catch (Exception e) {
+            // ignore
+        }
+
+        String expected = ".*Call stack:\n" +
+                "\\(concord.yml\\) @ line: 21, col: 7, thread: .*, flow: flowC\n" +
+                "\\(concord.yml\\) @ line: 11, col: 11, thread: 2, flow: flowB\n" +
+                "\\(concord.yml\\) @ line: 6, col: 7, thread: 0, flow: flowA\n" +
+                "\\(concord.yml\\) @ line: 3, col: 7, thread: 0, flow: flow0.*";
+        Pattern expectedPattern = Pattern.compile(expected, Pattern.MULTILINE|Pattern.DOTALL|Pattern.UNIX_LINES);
+
+        String logString = new String(lastLog);
+        assertTrue(expectedPattern.matcher(logString).matches(), "expected log contains: " + expected + ", actual: " + logString);
+    }
+
+    @Test
+    public void testStackTrace6() throws Exception {
+        deploy("stackTrace6");
+
+        save(ProcessConfiguration.builder()
+                .build());
+
+        try {
+            run();
+            fail("must fail");
+        } catch (Exception e) {
+            // ignore
+        }
+
+        assertNoLog(lastLog, ".*" + Pattern.quote("[ERROR] Call stack:") + ".*");
+    }
+
+    @Test
+    public void testStackTrace7() throws Exception {
+        deploy("stackTrace7");
+
+        save(ProcessConfiguration.builder()
+                .build());
+
+        try {
+            run();
+            fail("must fail");
+        } catch (Exception e) {
+            // ignore
+        }
+        assertNoLog(lastLog, ".*" + Pattern.quote("[ERROR] Call stack:") + ".*");
     }
 
     @Test
@@ -207,16 +433,6 @@ public class MainTest {
     @Test
     public void testTaskErrorBlock() throws Exception {
         deploy("faultyTask");
-
-        save(ProcessConfiguration.builder().build());
-
-        byte[] log = run();
-        assertLog(log, ".*error occurred:.*boom!.*");
-    }
-
-    @Test
-    public void testTaskErrorBlock2() throws Exception {
-        deploy("faultyTask2");
 
         save(ProcessConfiguration.builder().build());
 
@@ -434,6 +650,45 @@ public class MainTest {
     }
 
     @Test
+    public void testScriptVersion() throws Exception {
+        deploy("scriptEsVersion");
+
+        save(ProcessConfiguration.builder().build());
+
+        byte[] log = run();
+        assertLog(log, ".*\"charCountProduct\":9.*");
+    }
+
+    @Test
+    public void testScriptEsVersionInvalid() throws Exception {
+        deploy("scriptEsVersionInvalid");
+
+        save(ProcessConfiguration.builder()
+                .putArguments("kv", Collections.singletonMap("k", "v"))
+                .build());
+
+        try {
+            run();
+        } catch (Exception e) {
+            assertLog(e.toString().getBytes(), ".*unsupported.*");
+            return;
+        }
+        throw new Exception("invalid esVersion should have thrown");
+    }
+
+
+    @Test
+    public void testScriptUnboundedInputMapOk() throws Exception {
+        deploy("scriptUnboundedInputMapOk");
+
+        save(ProcessConfiguration.builder()
+                .build());
+
+        byte[] log = run();
+        assertLog(log, ".*ok.*");
+    }
+
+    @Test
     public void testScriptVariablesSanitize() throws Exception {
         deploy("scriptVariablesSanitize");
 
@@ -545,6 +800,7 @@ public class MainTest {
     }
 
     @Test
+    @IgnoreSerializationAssert
     public void testParallelWithItemsTask() throws Exception {
         deploy("parallelWithItemsTask");
 
@@ -557,6 +813,7 @@ public class MainTest {
     }
 
     @Test
+    @IgnoreSerializationAssert
     public void testParallelLoopTask() throws Exception {
         deploy("parallelLoopTask");
 
@@ -630,7 +887,7 @@ public class MainTest {
             fail("should fail");
         } catch (Exception e) {
             String msg = e.getMessage();
-            assertTrue(msg.contains("Can't find 'sayGoodbye()' method"));
+            assertTrue(msg.contains("Can't find 'sayGoodbye()' method"), msg);
             assertTrue(msg.contains("Did you mean: sayHello()"));
         }
     }
@@ -755,6 +1012,9 @@ public class MainTest {
         assertLog(log, ".*" + quote("single out a=a-value") + ".*");
         assertLog(log, ".*" + quote("array out a=a-value, b=b-value") + ".*");
         assertLog(log, ".*" + quote("expression out a=a-value, xx=123, zz=10000") + ".*");
+        assertLog(log, ".*" + quote("out after suspend: a=aaa-value") + ".*");
+
+        verify(checkpointService, times(1)).upload(any(), any(), eq("A"), any());
     }
 
     @Test
@@ -790,6 +1050,7 @@ public class MainTest {
     }
 
     @Test
+    @IgnoreSerializationAssert
     public void testParallelIn() throws Exception {
         deploy("parallelIn");
 
@@ -807,6 +1068,7 @@ public class MainTest {
     }
 
     @Test
+    @IgnoreSerializationAssert
     public void testParallelOut() throws Exception {
         deploy("parallelOut");
 
@@ -819,6 +1081,30 @@ public class MainTest {
     }
 
     @Test
+    public void testSerialLoopEmptyCall() throws Exception {
+        deploy("serialEmptyCall");
+
+        save(ProcessConfiguration.builder()
+                .build());
+
+        byte[] log = run();
+        assertLog(log, ".*" + Pattern.quote("outVar: [null, null]") + ".*");
+    }
+
+    @Test
+    @IgnoreSerializationAssert
+    public void testParallelLoopEmptyCall() throws Exception {
+        deploy("parallelEmptyCall");
+
+        save(ProcessConfiguration.builder()
+                .build());
+
+        byte[] log = run();
+        assertLog(log, ".*" + Pattern.quote("outVar: [null, null]") + ".*");
+    }
+
+    @Test
+    @IgnoreSerializationAssert
     public void testParallelOutExpr() throws Exception {
         deploy("parallelOutExpr");
 
@@ -886,6 +1172,19 @@ public class MainTest {
     }
 
     @Test
+    public void testSetMapVariableOverride() throws Exception {
+        deploy("setVariableOverride");
+        save(ProcessConfiguration.builder()
+                .build());
+
+        byte[] log = run();
+        assertLog(log, ".*myMap1: .*\\{y=2\\}.*");
+        assertLog(log, ".*myMap2: .*\\{y=2, z=3\\}.*");
+        assertLog(log, ".*myMap3: .*\\{z=4\\}.*");
+        assertLog(log, ".*myMap4: .*\\{k=v\\}.*");
+    }
+
+    @Test
     public void testRetry() throws Exception {
         deploy("retry");
 
@@ -941,6 +1240,8 @@ public class MainTest {
 
         assertLogAtLeast(allLogs, 2, ".*#3.*x=124.*");
         assertLogAtLeast(allLogs, 2, ".*#3.*y=345.*");
+
+        assertLog(allLogs, ".*Event Name: first.*");
     }
 
     @Test
@@ -950,7 +1251,7 @@ public class MainTest {
         save(ProcessConfiguration.builder()
                 .build());
 
-        checkpointService.put("first", Paths.get(MainTest.class.getResource("checkpointRestore2/first_1.93.0.zip").toURI()));
+        checkpointService.put("first", Paths.get(MainTest.class.getResource("checkpointRestore2/first_1.103.1.zip").toURI()));
         checkpointService.restore("first", workDir);
 
         run();
@@ -1007,6 +1308,7 @@ public class MainTest {
     }
 
     @Test
+    @IgnoreSerializationAssert
     public void testFormsParallel() throws Exception {
         deploy("parallelForm");
 
@@ -1143,6 +1445,372 @@ public class MainTest {
 
         log = run();
         assertLog(log, ".*isDebug: true.*");
+    }
+
+    @Test
+    public void argsFromArgs() throws Exception {
+        deploy("argsFromArgs");
+
+        Map<String, Object> args = new LinkedHashMap<>();
+        args.put("k1", "v1");
+        args.put("k2", "${resultTask.get('args.k1')}");
+
+        save(ProcessConfiguration.builder()
+                .putArguments("args", args)
+                .build());
+
+        byte[] log = run();
+        assertLog(log, ".*Hello, " + Pattern.quote("{k1=v1, k2=v1}") + ".*");
+    }
+
+    @Test
+    @IgnoreSerializationAssert
+    public void loopItemSerialization() throws Exception {
+        deploy("loopSerializationError");
+
+        save(ProcessConfiguration.builder()
+                .build());
+
+        byte[] log = run();
+        assertLog(log, ".*name=one.*");
+    }
+
+    @Test
+    public void testThrowExpression() throws Exception {
+        deploy("throwExpression");
+
+        save(ProcessConfiguration.builder()
+                .build());
+
+        try {
+            run();
+            fail("exception expected");
+        } catch (UserDefinedException e) {
+            assertEquals("42 not found", e.getMessage());
+        }
+    }
+
+    @Test
+    public void testSensitiveData() throws Exception {
+        deploy("sensitiveData");
+
+        save(ProcessConfiguration.builder()
+                .build());
+
+        byte[] log = run();
+        assertLog(log, ".*" + Pattern.quote("sensitive: ******") + ".*");
+        assertLog(log, ".*" + Pattern.quote("log value: ******") + ".*");
+        assertLog(log, ".*" + Pattern.quote("hack: B O O M") + ".*");
+
+        assertLog(log, ".*" + Pattern.quote("map: {nonSecretButMasked=******, secret=******}") + ".*");
+        assertLog(log, ".*" + Pattern.quote("map: {nonSecret=non secret value, secret=******}") + ".*");
+
+        assertLog(log, ".*" + Pattern.quote("plain: plain") + ".*");
+
+        assertLog(log, ".*" + Pattern.quote("secret from map: ******") + ".*");
+
+        log = resume("ev1", ProcessConfiguration.builder().build());
+        assertLog(log, ".*" + Pattern.quote("mySecret after suspend: ******") + ".*");
+    }
+
+    @Test
+    public void testIncVariable() throws Exception {
+        deploy("incVariable");
+
+        save(ProcessConfiguration.builder()
+                .putArguments("counter", 0)
+                .build());
+
+        byte[] log = run();
+        assertLog(log, ".*counter: 1.*");
+    }
+
+    @Test
+    public void testHasNonNullVariable() throws Exception {
+        deploy("hasNonNullVariable");
+
+        save(ProcessConfiguration.builder()
+                .build());
+
+        byte[] log = run();
+        assertLog(log, ".*true == true.*");
+        assertLog(log, ".*false == false.*");
+    }
+
+    @Test
+    public void testInvalidExpressionError() throws Exception {
+        deploy("invalidExpression");
+
+        save(ProcessConfiguration.builder()
+                .build());
+
+        try {
+            run();
+            fail("must fail");
+        } catch (Exception e) {
+            // ignore
+        }
+
+        String logString = new String(lastLog);
+        String expected = "[ERROR] (concord.yml): Error @ line: 9, col: 7. Error Parsing: ${str.split('\\n')}. Encountered \"\\'\\\\n\" at line 1, column 13.\n" +
+                "Was expecting one of:\n" +
+                "    \"{\" ...\n" +
+                "    <INTEGER_LITERAL> ...\n" +
+                "    <FLOATING_POINT_LITERAL> ...\n" +
+                "    <STRING_LITERAL> ...\n" +
+                "    \"true\" ...\n" +
+                "    \"false\" ...\n" +
+                "    \"null\" ...\n" +
+                "    \"(\" ...\n" +
+                "    \")\" ...\n" +
+                "    \"[\" ...\n" +
+                "    \"!\" ...\n" +
+                "    \"not\" ...\n" +
+                "    \"empty\" ...\n" +
+                "    \"-\" ...\n" +
+                "    <IDENTIFIER> ...";
+
+        assertTrue(logString.contains(expected), "expected log contains: " + expected + ", actual: " + logString);
+    }
+
+    @Test
+    public void testNPEInExpression() throws Exception {
+        deploy("npeInExpression");
+
+        save(ProcessConfiguration.builder()
+                .build());
+
+        try {
+            run();
+            fail("must fail");
+        } catch (Exception e) {
+            // ignore
+        }
+
+        String logString = new String(lastLog);
+        String expected = "[ERROR] (concord.yml): Error @ line: 7, col: 7. while evaluating expression '${'a' += m.n += 'b'}': ";
+
+        assertTrue(logString.contains(expected), "expected log contains: " + expected + ", actual: " + logString);
+    }
+
+    @Test
+    public void testExpressionThrowUserDefinedError() throws Exception {
+        deploy("faultyExpression");
+
+        save(ProcessConfiguration.builder()
+                .build());
+
+        try {
+            run();
+            fail("must fail");
+        } catch (Exception e) {
+            // ignore
+        }
+        assertLog(lastLog, ".*" + Pattern.quote("[ERROR] (concord.yml): Error @ line: 3, col: 7. BOOM"));
+    }
+
+    @Test
+    public void testExpressionThrowException() throws Exception {
+        deploy("exceptionFromExpression");
+
+        save(ProcessConfiguration.builder()
+                .build());
+
+        try {
+            run();
+            fail("must fail");
+        } catch (Exception e) {
+            // ignore
+        }
+
+        String expected = "[ERROR] (concord.yml): Error @ line: 3, col: 7. while evaluating expression '${faultyTask.exception('BOOM')}': javax.el.ELException: java.lang.Exception: BOOM";
+        assertLog(lastLog, ".*" + Pattern.quote(expected));
+    }
+
+    @Test
+    public void testTaskThrowUserDefinedError() throws Exception {
+        deploy("faultyTask2");
+
+        save(ProcessConfiguration.builder()
+                .build());
+
+        try {
+            run();
+            fail("must fail");
+        } catch (Exception e) {
+            // ignore
+        }
+        assertLog(lastLog, ".*" + Pattern.quote("[ERROR] (concord.yml): Error @ line: 3, col: 7. Error during execution of 'faultyTask' task: boom!"));
+    }
+
+    @Test
+    public void testTaskThrowRuntimeException() throws Exception {
+        deploy("faultyTask3");
+
+        save(ProcessConfiguration.builder()
+                .build());
+
+        try {
+            run();
+            fail("must fail");
+        } catch (Exception e) {
+            // ignore
+        }
+        assertLog(lastLog, ".*" + Pattern.quote("[ERROR] (concord.yml): Error @ line: 3, col: 7. boom!"));
+    }
+
+    @Test
+    public void testTaskThrowException() throws Exception {
+        deploy("faultyTask4");
+
+        save(ProcessConfiguration.builder()
+                .build());
+
+        try {
+            run();
+            fail("must fail");
+        } catch (Exception e) {
+            // ignore
+        }
+        assertLog(lastLog, ".*" + Pattern.quote("[ERROR] (concord.yml): Error @ line: 3, col: 7. boom!"));
+    }
+
+    @Test
+    public void testUnresolvedVarInStepName() throws Exception {
+        deploy("unresolvedVarInStepName");
+
+        save(ProcessConfiguration.builder()
+                .build());
+
+        try {
+            run();
+            fail("exception expected");
+        } catch (Exception e) {
+        }
+
+        assertLog(lastLog, ".*" + quote("(concord.yml): Error @ line: 4, col: 7. Can't find a variable 'undefined' used in '${undefined}'") + ".*");
+    }
+
+    @Test
+    public void testUnresolvedVarInLoop() throws Exception {
+        deploy("unresolvedVarInLoop");
+
+        save(ProcessConfiguration.builder()
+                .build());
+
+        try {
+            run();
+            fail("exception expected");
+        } catch (Exception e) {
+        }
+
+        assertLog(lastLog, ".*" + quote("(concord.yml): Error @ line: 6, col: 7. Can't find a variable 'undefined' used in '${undefined}'") + ".*");
+    }
+
+    @Test
+    public void testUnresolvedVarInRetry() throws Exception {
+        deploy("unresolvedVarInRetry");
+
+        save(ProcessConfiguration.builder()
+                .build());
+
+        try {
+            run();
+            fail("exception expected");
+        } catch (Exception e) {
+        }
+
+        assertLog(lastLog, ".*" + quote("(concord.yml): Error @ line: 6, col: 7. Can't find a variable 'undefined' used in '${undefined}'") + ".*");
+    }
+
+
+    @Test
+    public void testArrayEvalSerialize() throws Exception {
+        deploy("lazyEvalMapInArgs");
+
+        save(ProcessConfiguration.builder()
+                .build());
+
+        byte[] log = run();
+        assertLog(log, ".*" + Pattern.quote("{dev=dev-cloud1}, {prod=prod-cloud1}, {test=test-cloud1}, {perf=perf-cloud2}, {ci=perf-ci}") + ".*");
+    }
+
+    @Test
+    public void testEntrySetSerialization() throws Exception {
+        deploy("entrySetSerialization");
+
+        save(ProcessConfiguration.builder()
+                .build());
+
+        byte[] log = run();
+        assertLog(log, ".*myList: \\[k=v\\].*");
+    }
+
+    @Test
+    public void testHasFlow() throws Exception {
+        deploy("hasFlow");
+
+        save(ProcessConfiguration.builder()
+                .build());
+
+        byte[] log = run();
+        assertLog(log, ".*123: false.*");
+        assertLog(log, ".*myFlow: true.*");
+    }
+
+    @Test
+    public void testUuidFunc() throws Exception {
+        deploy("uuid");
+
+        save(ProcessConfiguration.builder()
+                .build());
+
+        byte[] log = run();
+        assertLog(log, ".*uuid: [0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}.*");
+    }
+
+    @Test
+    public void testExitFromParallelLoop() throws Exception {
+        deploy("parallelLoopExit");
+
+        save(ProcessConfiguration.builder()
+                .build());
+
+        byte[] log = run();
+
+        assertNoLog(log, ".*should not reach here.*");
+    }
+
+    @Test
+    public void testExitFromSerialLoop() throws Exception {
+        deploy("serialLoopExit");
+
+        save(ProcessConfiguration.builder()
+                .build());
+
+        byte[] log = run();
+
+        assertNoLog(log, ".*should not reach here.*");
+
+        assertLog(log, ".*inner start: one.*");
+        assertLog(log, ".*inner end: one.*");
+        assertLog(log, ".*inner start: two.*");
+
+        assertNoLog(log, ".*inner end: two.*");
+        assertNoLog(log, ".*inner start: three.*");
+        assertNoLog(log, ".*inner start: four.*");
+    }
+
+    @Test
+    public void testStringIfExpression() throws Exception {
+        deploy("ifExpressionAsString");
+
+        save(ProcessConfiguration.builder()
+                .putArguments("myVar", Collections.singletonMap("str", "true"))
+                .build());
+
+        byte[] log = run();
+        assertLog(log, ".*it's true.*");
     }
 
     private void deploy(String resource) throws URISyntaxException, IOException {
@@ -1331,12 +1999,26 @@ public class MainTest {
 
     @Named("resultTask")
     @SuppressWarnings("unused")
-    static class ResultTask implements Task {
+    public static class ResultTask implements Task {
+
+        private final Context context;
+
+        @Inject
+        public ResultTask(Context context) {
+            this.context = context;
+        }
 
         @Override
         public TaskResult execute(Variables input) {
             return TaskResult.success()
                     .value("result", input.get("result"));
+        }
+
+        public Object get(String path) {
+            String[] p = path.split("\\.");
+            Map<String, Object> m = context.variables().getMap(p[0], Collections.emptyMap());
+            p = Arrays.copyOfRange(p, 1, p.length);
+            return ConfigurationUtils.get(m, p);
         }
     }
 
@@ -1381,12 +2063,20 @@ public class MainTest {
 
     @Named("faultyTask")
     @SuppressWarnings("unused")
-    static class FaultyTask implements Task {
+    public static class FaultyTask implements Task {
 
         @Override
         public TaskResult execute(Variables input) {
             return TaskResult.fail("boom!")
                     .value("key", "value");
+        }
+
+        public void fail(String msg) {
+            throw new UserDefinedException(msg);
+        }
+
+        public void exception(String msg) throws Exception {
+            throw new Exception(msg);
         }
     }
 
@@ -1397,6 +2087,16 @@ public class MainTest {
         @Override
         public TaskResult execute(Variables input) {
             throw new RuntimeException("boom!");
+        }
+    }
+
+    @Named("faultyTask3")
+    @SuppressWarnings("unused")
+    static class FaultyTask3 implements Task {
+
+        @Override
+        public TaskResult execute(Variables input) throws Exception {
+            throw new Exception("boom!");
         }
     }
 
@@ -1497,6 +2197,46 @@ public class MainTest {
         }
     }
 
+    @Named("sensitiveTask")
+    public static class TaskWithSensitiveData extends AbstractMap<String, String> implements Task {
+
+        @SensitiveData
+        public String getSensitive(String str) {
+            return str;
+        }
+
+        @SensitiveData
+        public Map<String, String> getSensitiveMap(String str) {
+            Map<String, String> result = new LinkedHashMap<>();
+            result.put("nonSecretButMasked", "some value");
+            result.put("secret", str);
+            return result;
+        }
+
+        @SensitiveData(keys = {"secret"})
+        public Map<String, String> getSensitiveMapStrict(String str) {
+            Map<String, String> result = new LinkedHashMap<>();
+            result.put("nonSecret", "non secret value");
+            result.put("secret", str);
+            return result;
+        }
+
+        public String getPlain(String str) {
+            return str;
+        }
+
+        @Override
+        @SensitiveData
+        public String get(Object key) {
+            return key + "-value";
+        }
+
+        @Override
+        public Set<Entry<String, String>> entrySet() {
+            return null;
+        }
+    }
+
     @Singleton
     static class TestLoggingClient implements LoggingClient {
 
@@ -1535,5 +2275,10 @@ public class MainTest {
             return TaskResult.success()
                     .value("x", testBeans.size());
         }
+    }
+
+    @Target({ElementType.ANNOTATION_TYPE, ElementType.METHOD})
+    @Retention(RetentionPolicy.RUNTIME)
+    public @interface IgnoreSerializationAssert {
     }
 }

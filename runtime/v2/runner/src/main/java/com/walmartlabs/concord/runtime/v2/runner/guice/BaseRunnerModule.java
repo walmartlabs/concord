@@ -25,19 +25,18 @@ import com.google.inject.multibindings.Multibinder;
 import com.walmartlabs.concord.dependencymanager.DependencyManagerConfiguration;
 import com.walmartlabs.concord.policyengine.PolicyEngine;
 import com.walmartlabs.concord.runtime.common.FormService;
+import com.walmartlabs.concord.runtime.v2.ProjectLoadListener;
 import com.walmartlabs.concord.runtime.v2.runner.*;
 import com.walmartlabs.concord.runtime.v2.runner.compiler.DefaultCompiler;
 import com.walmartlabs.concord.runtime.v2.runner.context.ContextFactory;
 import com.walmartlabs.concord.runtime.v2.runner.context.DefaultContextFactory;
 import com.walmartlabs.concord.runtime.v2.runner.el.DefaultExpressionEvaluator;
-import com.walmartlabs.concord.runtime.v2.runner.el.ExpressionEvaluator;
+import com.walmartlabs.concord.runtime.v2.runner.el.EvalContextFactoryImpl;
+import com.walmartlabs.concord.runtime.v2.sdk.*;
 import com.walmartlabs.concord.runtime.v2.runner.script.DefaultScriptEvaluator;
 import com.walmartlabs.concord.runtime.v2.runner.script.ScriptEvaluator;
 import com.walmartlabs.concord.runtime.v2.runner.tasks.*;
 import com.walmartlabs.concord.runtime.v2.sdk.Compiler;
-import com.walmartlabs.concord.runtime.v2.sdk.Context;
-import com.walmartlabs.concord.runtime.v2.sdk.FileService;
-import com.walmartlabs.concord.runtime.v2.sdk.TaskProvider;
 
 /**
  * Contains basic services that can work in anyenvironment (unit tests, actual runtime, CLI, etc).
@@ -52,6 +51,7 @@ public class BaseRunnerModule extends AbstractModule {
         bind(PolicyEngine.class).toProvider(PolicyEngineProvider.class);
         bind(SynchronizationService.class).to(DefaultSynchronizationService.class);
         bind(ExpressionEvaluator.class).to(DefaultExpressionEvaluator.class);
+        bind(EvalContextFactory.class).to(EvalContextFactoryImpl.class);
         bind(ScriptEvaluator.class).to(DefaultScriptEvaluator.class);
         bind(ResourceResolver.class).to(DefaultResourceResolver.class);
         bind(TaskResultService.class);
@@ -66,5 +66,7 @@ public class BaseRunnerModule extends AbstractModule {
         Multibinder<TaskCallListener> taskCallListeners = Multibinder.newSetBinder(binder(), TaskCallListener.class);
         taskCallListeners.addBinding().to(TaskCallPolicyChecker.class);
         taskCallListeners.addBinding().to(TaskResultListener.class);
+
+        Multibinder.newSetBinder(binder(), ProjectLoadListener.class);
     }
 }

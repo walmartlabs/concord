@@ -58,7 +58,7 @@ public class ForkRepositoryInfoProcessor implements PayloadProcessor {
             throw new ProcessException(payload.getProcessKey(), "Parent process '" + parentInstanceId + "' not found");
         }
 
-        RepositoryProcessor.CommitInfo ci = new RepositoryProcessor.CommitInfo(parent.commitId(), parent.commitBranch(), null, parent.commitMsg());
+        RepositoryProcessor.CommitInfo ci = new RepositoryProcessor.CommitInfo(parent.commitId(), parent.commitBranch(), null, null);
         RepositoryProcessor.RepositoryInfo i = new RepositoryProcessor.RepositoryInfo(
                 parent.repoId(), parent.repoName(), parent.repoUrl(),
                 parent.repoPath(), parent.commitBranch(), parent.commitId(), ci);

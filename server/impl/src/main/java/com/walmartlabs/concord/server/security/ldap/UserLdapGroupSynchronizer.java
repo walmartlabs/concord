@@ -36,7 +36,6 @@ import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 import javax.inject.Named;
-import javax.inject.Singleton;
 import java.time.OffsetDateTime;
 import java.util.Collections;
 import java.util.List;
@@ -44,17 +43,17 @@ import java.util.Set;
 import java.util.UUID;
 
 import static com.walmartlabs.concord.server.jooq.Tables.USERS;
+import static org.jooq.impl.DSL.*;
 
 /**
  * Responsible for AD/LDAP group synchronization and enabling/disabling users
  * based on whether they have active groups or not.
  */
-@Named("user-ldap-group-sync")
-@Singleton
 public class UserLdapGroupSynchronizer implements ScheduledTask {
 
     private static final Logger log = LoggerFactory.getLogger(UserLdapGroupSynchronizer.class);
 
+    private static final String TASK_NAME = "user-ldap-group-sync";
     private final Dao dao;
     private final LdapGroupSyncConfiguration cfg;
     private final LdapManager ldapManager;
@@ -75,6 +74,11 @@ public class UserLdapGroupSynchronizer implements ScheduledTask {
     }
 
     @Override
+    public String getId() {
+        return TASK_NAME;
+    }
+
+    @Override
     public long getIntervalInSec() {
         return cfg.getInterval().getSeconds();
     }
@@ -82,10 +86,12 @@ public class UserLdapGroupSynchronizer implements ScheduledTask {
     @Override
     public void performTask() {
         Field<OffsetDateTime> cutoff = PgUtils.nowMinus(cfg.getMinAgeSync());
+        Field<OffsetDateTime> disabledAge = cfg.getDisabledAge() != null ? PgUtils.nowMinus(cfg.getDisabledAge()) : null;
+
         long usersCount = 0;
         List<UserItem> users;
         do {
-            users = dao.list(cfg.getFetchLimit(), cutoff);
+            users = dao.list(cfg.getFetchLimit(), cutoff, disabledAge);
             users.forEach(this::processUser);
             usersCount += users.size();
         } while (users.size() >= cfg.getFetchLimit());
@@ -97,10 +103,14 @@ public class UserLdapGroupSynchronizer implements ScheduledTask {
         try {
             Set<String> groups = ldapManager.getGroups(u.username, u.domain);
             if (groups == null) {
-                ldapGroupsDao.update(u.userId, Collections.emptySet());
-                disableUser(u);
-            } else {
-                enableUser(u);
+                if (u.expired) {
+                    deleteUser(u.userId);
+                } else {
+                    ldapGroupsDao.update(u.userId, Collections.emptySet());
+                    disableUser(u.userId);
+                }
+            } else if (!u.permanentlyDisabled) {
+                enableUser(u.userId);
                 ldapGroupsDao.update(u.userId, groups);
             }
         } catch (Exception e) {
@@ -108,37 +118,37 @@ public class UserLdapGroupSynchronizer implements ScheduledTask {
         }
     }
 
-    private void enableUser(UserItem u) {
-        if (u.isDisabled) {
-            AuditLog.withActionSource(ActionSource.SYSTEM, Collections.singletonMap("task", "user-ldap-group-sync"),
-                    () -> userManager.enable(u.userId));
-            log.info("enableUser ['{}'] -> user found active in LDAP", u.username);
-        }
+    private void enableUser(UUID userId) {
+        AuditLog.withActionSource(ActionSource.SYSTEM, Collections.singletonMap("task", TASK_NAME),
+                () -> userManager.enable(userId));
     }
 
-    private void disableUser(UserItem u) {
-        if (!u.isDisabled) {
-            AuditLog.withActionSource(ActionSource.SYSTEM, Collections.singletonMap("task", "user-ldap-group-sync"),
-                    () -> userManager.disable(u.userId));
-            log.info("disableUser ['{}'] -> not found in LDAP, user is disabled", u.username);
-        }
+    private void disableUser(UUID userId) {
+        AuditLog.withActionSource(ActionSource.SYSTEM, Collections.singletonMap("task", TASK_NAME),
+                () -> userManager.disable(userId));
+    }
+
+    private void deleteUser(UUID userId) {
+        AuditLog.withActionSource(ActionSource.SYSTEM, Collections.singletonMap("task", TASK_NAME),
+                () -> userManager.delete(userId));
     }
 
     @Named
-    private static final class Dao extends AbstractDao {
+    public static final class Dao extends AbstractDao {
 
         @Inject
         public Dao(@MainDB Configuration cfg) {
             super(cfg);
         }
 
-        public List<UserItem> list(int limit, Field<OffsetDateTime> cutoff) {
-            return txResult(tx -> tx.select(USERS.USER_ID, USERS.USERNAME, USERS.DOMAIN, USERS.IS_DISABLED)
+        List<UserItem> list(int limit, Field<OffsetDateTime> cutoff, Field<OffsetDateTime> disabledAge) {
+            Field<Boolean> expiredFiled = disabledAge == null ? inline(false) : field(nvl(USERS.DISABLED_DATE, currentOffsetDateTime()).lessThan(disabledAge));
+            return txResult(tx -> tx.select(USERS.USER_ID, USERS.USERNAME, USERS.DOMAIN, USERS.IS_PERMANENTLY_DISABLED, expiredFiled)
                     .from(USERS)
                     .where(USERS.USER_TYPE.eq(UserType.LDAP.name()))
                     .and(USERS.LAST_GROUP_SYNC_DT.isNull().or(USERS.LAST_GROUP_SYNC_DT.lessThan(cutoff)))
                     .limit(limit)
-                    .fetch(r -> new UserItem(r.value1(), r.value2(), r.value3(), r.value4())));
+                    .fetch(r -> new UserItem(r.value1(), r.value2(), r.value3(), r.value4(), r.value5())));
         }
     }
 
@@ -147,13 +157,15 @@ public class UserLdapGroupSynchronizer implements ScheduledTask {
         private final UUID userId;
         private final String username;
         private final String domain;
-        private final boolean isDisabled;
+        private final boolean permanentlyDisabled;
+        private final boolean expired;
 
-        private UserItem(UUID userId, String username, String domain, Boolean isDisabled) {
+        private UserItem(UUID userId, String username, String domain, boolean expired, boolean permanentlyDisabled) {
             this.userId = userId;
             this.username = username;
             this.domain = domain;
-            this.isDisabled = isDisabled;
+            this.expired = expired;
+            this.permanentlyDisabled = permanentlyDisabled;
         }
     }
 }

@@ -27,14 +27,12 @@ import com.walmartlabs.concord.server.process.queue.ProcessFilter;
 import com.walmartlabs.concord.server.process.queue.ProcessQueueDao;
 import com.walmartlabs.concord.server.sdk.ProcessStatus;
 import com.walmartlabs.concord.server.sdk.metrics.WithTimer;
+import com.walmartlabs.concord.server.sdk.rest.Resource;
 import com.walmartlabs.concord.server.security.UserPrincipal;
 import com.walmartlabs.concord.server.user.UserDao;
 import org.jooq.*;
-import org.sonatype.siesta.Resource;
 
 import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import java.math.BigDecimal;
@@ -52,8 +50,6 @@ import static com.walmartlabs.concord.server.jooq.tables.Projects.PROJECTS;
 import static com.walmartlabs.concord.server.sdk.ProcessStatus.*;
 import static org.jooq.impl.DSL.*;
 
-@Named
-@Singleton
 @Path("/api/service/console/user")
 public class UserActivityResource implements Resource {
 
@@ -101,7 +97,6 @@ public class UserActivityResource implements Resource {
         return startOfDay.atZone(ZoneId.systemDefault()).toOffsetDateTime();
     }
 
-    @Named
     private static class ProcessStatsDao extends AbstractDao {
 
         @Inject

@@ -25,19 +25,16 @@ import com.walmartlabs.concord.policyengine.EntityRule;
 import com.walmartlabs.concord.policyengine.PolicyEngine;
 import com.walmartlabs.concord.server.org.policy.PolicyDao;
 import com.walmartlabs.concord.server.org.policy.PolicyEntry;
+import com.walmartlabs.concord.server.process.Payload;
+import com.walmartlabs.concord.server.sdk.validation.ValidationErrorsException;
 import com.walmartlabs.concord.server.security.UserPrincipal;
 import com.walmartlabs.concord.server.user.UserEntry;
 import com.walmartlabs.concord.server.user.UserInfoProvider;
 import com.walmartlabs.concord.server.user.UserManager;
-import org.sonatype.siesta.ValidationErrorsException;
 
 import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
 import java.util.*;
 
-@Named
-@Singleton
 public class PolicyManager {
 
     private final PolicyCache policyCache;
@@ -116,8 +113,12 @@ public class PolicyManager {
         });
 
         if (!result.getDeny().isEmpty()) {
-            throw new ValidationErrorsException("Action forbidden: " + result.getDeny().get(0).getRule().getMsg());
+            throw new ValidationErrorsException("Action forbidden: " + result.getDeny().get(0).getRule().msg());
         }
+    }
+
+    public PolicyEngine getPolicyEngine(Payload payload) {
+        return get(payload.getHeader(Payload.ORGANIZATION_ID), payload.getHeader(Payload.PROJECT_ID), payload.getHeader(Payload.INITIATOR_ID));
     }
 
     private Map<String, Object> getOwnerAttrs(UserEntry owner) {
@@ -138,7 +139,7 @@ public class PolicyManager {
         attrs.put("email", userInfo.email());
         attrs.put("displayName", userInfo.displayName());
         if (userInfo.attributes() != null) {
-            attrs.putAll(userInfo.attributes());
+            attrs.putAll(Objects.requireNonNull(userInfo.attributes()));
         }
 
         return attrs;

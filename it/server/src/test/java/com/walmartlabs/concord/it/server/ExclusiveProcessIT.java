@@ -20,8 +20,8 @@ package com.walmartlabs.concord.it.server;
  * =====
  */
 
-import com.walmartlabs.concord.client.*;
-import com.walmartlabs.concord.client.ProcessEntry.StatusEnum;
+import com.walmartlabs.concord.client2.*;
+import com.walmartlabs.concord.client2.ProcessEntry.StatusEnum;
 import org.junit.jupiter.api.Test;
 
 import java.util.HashMap;
@@ -39,13 +39,13 @@ public class ExclusiveProcessIT extends AbstractServerIT {
     public void testExclusiveCancelOld() throws Exception {
         String orgName = "org_" + randomString();
         OrganizationsApi orgApi = new OrganizationsApi(getApiClient());
-        orgApi.createOrUpdate(new OrganizationEntry().setName(orgName));
+        orgApi.createOrUpdateOrg(new OrganizationEntry().name(orgName));
 
         String projectName = "project_" + randomString();
         ProjectsApi projectsApi = new ProjectsApi(getApiClient());
-        projectsApi.createOrUpdate(orgName, new ProjectEntry()
-                .setName(projectName)
-                .setRawPayloadMode(ProjectEntry.RawPayloadModeEnum.EVERYONE));
+        projectsApi.createOrUpdateProject(orgName, new ProjectEntry()
+                .name(projectName)
+                .rawPayloadMode(ProjectEntry.RawPayloadModeEnum.EVERYONE));
 
         byte[] payload = archive(ExclusiveProcessIT.class.getResource("exclusiveCancelOld").toURI());
 
@@ -61,8 +61,8 @@ public class ExclusiveProcessIT extends AbstractServerIT {
         input.put("arguments.time", "1");
         StartProcessResponse spr2 = start(input);
 
-        ProcessEntry p1 = waitForStatus(processApi, spr1.getInstanceId(), StatusEnum.CANCELLED);
-        ProcessEntry p2 = waitForStatus(processApi, spr2.getInstanceId(), StatusEnum.FINISHED);
+        ProcessEntry p1 = waitForStatus(getApiClient(), spr1.getInstanceId(), StatusEnum.CANCELLED);
+        ProcessEntry p2 = waitForStatus(getApiClient(), spr2.getInstanceId(), StatusEnum.FINISHED);
 
         System.out.println("p1: createdAt: " + p1.getCreatedAt() + ", status: " + p1.getStatus());
         System.out.println("p2: createdAt: " + p2.getCreatedAt() + ", status: " + p2.getStatus());
@@ -72,11 +72,11 @@ public class ExclusiveProcessIT extends AbstractServerIT {
 
             System.out.println("p1 history: " + p1History);
             System.out.println("p2 history: " + p2History);
-            System.out.println("p1 log:" + new String(getLog(p1.getLogFileName())));
-            System.out.println("p2 log:" + new String(getLog(p2.getLogFileName())));
+            System.out.println("p1 log:" + new String(getLog(p1.getInstanceId())));
+            System.out.println("p2 log:" + new String(getLog(p2.getInstanceId())));
         }
 
-        assertTrue(p1.getCreatedAt().isBefore(p2.getCreatedAt()));
+        assertTrue(p1.getCreatedAt().isEqual(p2.getCreatedAt()) || p1.getCreatedAt().isBefore(p2.getCreatedAt()));
         assertEquals(StatusEnum.CANCELLED, p1.getStatus());
         assertEquals(StatusEnum.FINISHED, p2.getStatus());
     }

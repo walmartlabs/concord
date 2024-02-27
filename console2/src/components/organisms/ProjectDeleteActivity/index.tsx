@@ -19,12 +19,13 @@
  */
 
 import * as React from 'react';
-import { connect } from 'react-redux';
-import { AnyAction, Dispatch } from 'redux';
-import { ConcordKey, RequestError } from '../../../api/common';
-import { actions, State } from '../../../state/data/projects';
+import {ConcordKey, GenericOperationResult} from '../../../api/common';
 import { ButtonWithConfirmation } from '../../molecules';
 import { RequestErrorActivity } from '../index';
+import {useCallback} from "react";
+import {deleteProject as apiDelete} from "../../../api/org/project";
+import {useApi} from "../../../hooks/useApi";
+import {Redirect} from "react-router";
 
 interface ExternalProps {
     orgName: ConcordKey;
@@ -32,46 +33,44 @@ interface ExternalProps {
     disabled?: boolean;
 }
 
-interface StateProps {
-    deleting: boolean;
-    error: RequestError;
-}
+const ProjectDeleteActivity = (props: ExternalProps) => {
+    const {orgName, projectName, disabled} = props;
 
-interface DispatchProps {
-    deleteProject: (orgName: ConcordKey, projectName: ConcordKey) => void;
-}
+    const deleteData = useCallback(async () => {
+        return await apiDelete(orgName, projectName);
+    }, [orgName, projectName]);
 
-type Props = ExternalProps & StateProps & DispatchProps;
+    const { data, error, isLoading, fetch, clearState } = useApi<GenericOperationResult>(deleteData, {
+        fetchOnMount: false,
+        requestByFetch: true
+    });
 
-class ProjectDeleteActivity extends React.PureComponent<Props> {
-    render() {
-        const { error, deleting, orgName, projectName, deleteProject, disabled } = this.props;
+    const confirmHandler = useCallback(() => {
+            clearState();
+            fetch();
+        },
+        [clearState, fetch]
+    );
 
-        return (
-            <>
-                {error && <RequestErrorActivity error={error} />}
-                <ButtonWithConfirmation
-                    primary={true}
-                    negative={true}
-                    content="Delete"
-                    loading={deleting}
-                    disabled={disabled}
-                    confirmationHeader="Delete the project?"
-                    confirmationContent="Are you sure you want to delete the project?"
-                    onConfirm={() => deleteProject(orgName, projectName)}
-                />
-            </>
-        );
+    if (data) {
+        return <Redirect to={`/org/${orgName}/project`} />;
     }
-}
 
-const mapStateToProps = ({ projects }: { projects: State }): StateProps => ({
-    deleting: projects.deleteProject.running,
-    error: projects.deleteProject.error
-});
+    return (
+        <>
+            {error && <RequestErrorActivity error={error} />}
+            <ButtonWithConfirmation
+                primary={true}
+                negative={true}
+                content="Delete"
+                loading={isLoading}
+                disabled={disabled}
+                confirmationHeader="Delete the project?"
+                confirmationContent="Are you sure you want to delete the project?"
+                onConfirm={confirmHandler}
+            />
+        </>
+    );
+};
 
-const mapDispatchToProps = (dispatch: Dispatch<AnyAction>): DispatchProps => ({
-    deleteProject: (orgName, projectName) => dispatch(actions.deleteProject(orgName, projectName))
-});
-
-export default connect(mapStateToProps, mapDispatchToProps)(ProjectDeleteActivity);
+export default ProjectDeleteActivity;

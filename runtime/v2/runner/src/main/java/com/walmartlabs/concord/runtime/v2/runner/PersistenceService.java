@@ -33,7 +33,11 @@ public interface PersistenceService {
 
     void persistFile(String name, Writer writer);
 
-    <T> T loadPersistedFile (String name, Converter<InputStream, T> converter);
+    void persistSessionFile(String name, Writer writer);
+
+    <T> T loadPersistedFile(String name, Converter<InputStream, T> converter);
+
+    <T> T loadPersistedSessionFile(String name, Converter<InputStream, T> converter);
 
     interface Writer {
 

@@ -4,7 +4,7 @@ package com.walmartlabs.concord.runtime.v2.runner.guice;
  * *****
  * Concord
  * -----
- * Copyright (C) 2017 - 2020 Walmart Inc.
+ * Copyright (C) 2017 - 2023 Walmart Inc.
  * -----
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,7 +22,7 @@ package com.walmartlabs.concord.runtime.v2.runner.guice;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.multibindings.Multibinder;
-import com.walmartlabs.concord.ApiClient;
+import com.walmartlabs.concord.client2.ApiClient;
 import com.walmartlabs.concord.runtime.v2.runner.*;
 import com.walmartlabs.concord.runtime.v2.runner.checkpoints.CheckpointService;
 import com.walmartlabs.concord.runtime.v2.runner.checkpoints.CheckpointUploader;
@@ -74,5 +74,7 @@ public class DefaultRunnerModule extends AbstractModule {
         executionListeners.addBinding().to(EventRecordingExecutionListener.class);
         executionListeners.addBinding().to(MetadataProcessor.class);
         executionListeners.addBinding().to(OutVariablesProcessor.class);
+        executionListeners.addBinding().to(SensitiveDataPersistenceService.class);
+        executionListeners.addBinding().to(StackTraceCollector.class);
     }
 }

@@ -30,7 +30,6 @@ import com.walmartlabs.concord.server.sdk.metrics.WithTimer;
 import org.jooq.Configuration;
 
 import javax.inject.Inject;
-import javax.inject.Named;
 import javax.inject.Singleton;
 import java.util.ArrayList;
 import java.util.List;
@@ -43,7 +42,6 @@ import static com.walmartlabs.concord.server.process.waits.ProcessCompletionCond
 /**
  * Handles the processes that are waiting for other processes to finish.
  */
-@Named
 @Singleton
 public class WaitProcessFinishHandler implements ProcessWaitHandler<ProcessCompletionCondition> {
 
@@ -51,8 +49,8 @@ public class WaitProcessFinishHandler implements ProcessWaitHandler<ProcessCompl
     private final ProcessQueueManager processQueueManager;
 
     @Inject
-    public WaitProcessFinishHandler(Dao dao, ProcessQueueManager processQueueManager) {
-        this.dao = dao;
+    public WaitProcessFinishHandler(@MainDB Configuration dbCfg, ProcessQueueManager processQueueManager) {
+        this.dao = new Dao(dbCfg);
         this.processQueueManager = processQueueManager;
     }
 
@@ -66,6 +64,9 @@ public class WaitProcessFinishHandler implements ProcessWaitHandler<ProcessCompl
     public Result<ProcessCompletionCondition> process(ProcessKey processKey, ProcessCompletionCondition wait) {
         Set<ProcessStatus> finishedStatuses = wait.finalStatuses();
         Set<UUID> awaitProcesses = wait.processes();
+        if (awaitProcesses.isEmpty()) {
+            return Result.resume(wait.resumeEvent());
+        }
 
         Set<UUID> finishedProcesses = dao.findFinished(awaitProcesses, finishedStatuses);
         if (finishedProcesses.isEmpty()) {
@@ -104,11 +105,9 @@ public class WaitProcessFinishHandler implements ProcessWaitHandler<ProcessCompl
         }
     }
 
-    @Named
     private static final class Dao extends AbstractDao {
 
-        @Inject
-        public Dao(@MainDB Configuration cfg) {
+        private Dao(@MainDB Configuration cfg) {
             super(cfg);
         }
 
