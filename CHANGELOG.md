@@ -19,6 +19,9 @@ mode ([#869](https://github.com/walmartlabs/concord/pull/869));
 
 ### Changed
 
+- concord-console: adjust polling frequency based on client
+activity
+([#634](https://github.com/walmartlabs/concord/pull/634));
 - runtime-v1: fix for resume from same step (bpm version up)
 ([#879](https://github.com/walmartlabs/concord/pull/879));
 - cli: api client provider for cli (just to load tasks)
