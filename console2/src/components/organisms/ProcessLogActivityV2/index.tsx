@@ -35,8 +35,6 @@ import { LogProcessorOptions } from '../../../state/data/processes/logs/processo
 import { Route } from 'react-router';
 import { FormListEntry, list as apiListForms } from '../../../api/process/form';
 
-const SEGMENT_FETCH_INTERVAL = 5000;
-
 const DEFAULT_SEGMENT_OPTS: LogProcessorOptions = {
     useLocalTime: true,
     showDate: false,
@@ -60,15 +58,15 @@ interface ExternalProps {
     processStatus?: ProcessStatus;
     loadingHandler: (inc: number) => void;
     forceRefresh: boolean;
+    dataFetchInterval: number;
 }
-
-const FORM_FETCH_INTERVAL = 5000;
 
 const ProcessLogActivityV2 = ({
     instanceId,
     processStatus,
     loadingHandler,
-    forceRefresh
+    forceRefresh,
+    dataFetchInterval
 }: ExternalProps) => {
     const [segments, setSegments] = useState<LogSegmentEntry[]>([]);
     const [logOpts, setLogOptions] = useState<LogOptions>(getStoredOpts());
@@ -106,9 +104,9 @@ const ProcessLogActivityV2 = ({
         return !isFinal(processStatus);
     }, [instanceId, processStatus]);
 
-    const formError = usePolling(fetchForm, FORM_FETCH_INTERVAL, loadingHandler, forceRefresh);
+    const formError = usePolling(fetchForm, dataFetchInterval, loadingHandler, forceRefresh);
 
-    const error = usePolling(fetchSegments, SEGMENT_FETCH_INTERVAL, loadingHandler, forceRefresh);
+    const error = usePolling(fetchSegments, dataFetchInterval, loadingHandler, forceRefresh);
 
     if (error) {
         return <RequestErrorActivity error={error} />;

@@ -39,15 +39,15 @@ interface ExternalProps {
     forceRefresh: boolean;
     loadingHandler: (inc: number) => void;
     refreshHandler: () => void;
+    dataFetchInterval: number;
 }
-
-const DATA_FETCH_INTERVAL = 5000;
 
 const ProcessStatusActivity = ({
     instanceId,
     loadingHandler,
     forceRefresh,
-    refreshHandler
+    refreshHandler,
+    dataFetchInterval
 }: ExternalProps) => {
     const [process, setProcess] = useState<ProcessEntry>();
     const [forms, setForms] = useState<FormListEntry[]>([]);
@@ -62,7 +62,7 @@ const ProcessStatusActivity = ({
         return !isFinal(process.status);
     }, [instanceId]);
 
-    const error = usePolling(fetchData, DATA_FETCH_INTERVAL, loadingHandler, forceRefresh);
+    const error = usePolling(fetchData, dataFetchInterval, loadingHandler, forceRefresh);
 
     if (error) {
         return <RequestErrorActivity error={error} />;
