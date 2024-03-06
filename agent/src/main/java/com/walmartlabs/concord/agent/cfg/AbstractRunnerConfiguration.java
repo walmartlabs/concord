@@ -39,6 +39,7 @@ public abstract class AbstractRunnerConfiguration {
     private final String mainClass;
     private final boolean securityManagerEnabled;
     private final Path persistentWorkDir;
+    private final boolean cleanRunnerDescendants;
 
     public AbstractRunnerConfiguration(String prefix, Config cfg) {
         String path = getStringOrDefault(cfg, prefix + ".path", () -> {
@@ -58,6 +59,7 @@ public abstract class AbstractRunnerConfiguration {
         this.mainClass = cfg.getString(prefix + ".mainClass");
         this.securityManagerEnabled = cfg.getBoolean(prefix + ".securityManagerEnabled");
         this.persistentWorkDir = getOptionalAbsolutePath(cfg, prefix + ".persistentWorkDir");
+        this.cleanRunnerDescendants = cfg.getBoolean(prefix + ".cleanRunnerDescendants");
     }
 
     public Path getPath() {
@@ -88,6 +90,10 @@ public abstract class AbstractRunnerConfiguration {
 
     public Path getPersistentWorkDir() {
         return persistentWorkDir;
+    }
+
+    public boolean getCleanRunnerDescendants() {
+        return cleanRunnerDescendants;
     }
 
     private static String getJavaCmd(Config cfg, String prefix) {
