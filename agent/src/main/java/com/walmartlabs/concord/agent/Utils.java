@@ -34,7 +34,7 @@ public final class Utils {
     }
 
     public static boolean kill(Process proc, boolean killDescendants) {
-        List<ProcessHandle> children = killDescendants ? List.of() : proc.children().toList();
+        List<ProcessHandle> children = killDescendants ? proc.children().toList() : List.of();
 
         // kill parent first which may gracefully clean up all descendents
         boolean killed = kill(proc.toHandle());
