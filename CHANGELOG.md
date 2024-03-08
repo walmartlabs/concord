@@ -1,5 +1,14 @@
 # Change log
 
+## [2.10.0] - Unreleased
+
+### Added
+
+- concord-agent: kill runner child PIDs
+([#880](https://github.com/walmartlabs/concord/pull/880)).
+
+
+
 ## [2.9.0] - 2024-02-28
 
 ### Added
