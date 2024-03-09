@@ -25,14 +25,21 @@ import com.walmartlabs.concord.common.validation.ConcordKey;
 import com.walmartlabs.concord.db.AbstractDao;
 import com.walmartlabs.concord.db.MainDB;
 import com.walmartlabs.concord.sdk.Constants;
+import com.walmartlabs.concord.sdk.MapUtils;
 import com.walmartlabs.concord.server.ConcordObjectMapper;
 import com.walmartlabs.concord.server.GenericOperationResult;
 import com.walmartlabs.concord.server.MultipartUtils;
 import com.walmartlabs.concord.server.OperationResult;
 import com.walmartlabs.concord.server.jooq.tables.records.UiProcessCardsRecord;
+import com.walmartlabs.concord.server.org.EntityOwner;
 import com.walmartlabs.concord.server.org.OrganizationDao;
+import com.walmartlabs.concord.server.org.OrganizationManager;
+import com.walmartlabs.concord.server.org.ResourceAccessUtils;
 import com.walmartlabs.concord.server.org.project.ProjectDao;
 import com.walmartlabs.concord.server.org.project.RepositoryDao;
+import com.walmartlabs.concord.server.security.Roles;
+import com.walmartlabs.concord.server.security.UserPrincipal;
+import org.apache.shiro.authz.UnauthorizedException;
 import org.jboss.resteasy.plugins.providers.multipart.MultipartInput;
 import org.jooq.Configuration;
 import org.jooq.DSLContext;
@@ -53,6 +60,7 @@ import java.util.UUID;
 
 import static com.walmartlabs.concord.server.jooq.Tables.TEAM_UI_PROCESS_CARDS;
 import static com.walmartlabs.concord.server.jooq.Tables.UI_PROCESS_CARDS;
+import static org.jooq.impl.DSL.or;
 import static org.jooq.impl.DSL.value;
 
 @Named
@@ -60,16 +68,19 @@ import static org.jooq.impl.DSL.value;
 @javax.ws.rs.Path("/api/v1/org/")
 public class ProcessCardResource implements Resource {
 
+    private final OrganizationManager organizationManager;
     private final OrganizationDao orgDao;
     private final ProjectDao projectDao;
     private final RepositoryDao repositoryDao;
     private final Dao dao;
 
     @Inject
-    public ProcessCardResource(OrganizationDao orgDao,
+    public ProcessCardResource(OrganizationManager organizationManager,
+                               OrganizationDao orgDao,
                                ProjectDao projectDao,
                                RepositoryDao repositoryDao,
                                Dao dao) {
+        this.organizationManager = organizationManager;
 
         this.orgDao = orgDao;
         this.projectDao = projectDao;
@@ -77,14 +88,24 @@ public class ProcessCardResource implements Resource {
         this.dao = dao;
     }
 
+    @DELETE
+    @Path("/process-card/{id}")
+    public GenericOperationResult delete(@PathParam("id") UUID id) throws IOException {
+
+        assertAccess(id);
+
+        dao.delete(id);
+
+        return new GenericOperationResult(OperationResult.DELETED);
+    }
+
     @POST
-    @Path("/{orgName}/process-card")
+    @Path("/process-card")
     @Consumes(MediaType.MULTIPART_FORM_DATA)
     @Produces(MediaType.APPLICATION_JSON)
-    public GenericOperationResult createOrUpdate(@PathParam("orgName") @ConcordKey String orgName,
-                                                 MultipartInput input) throws IOException {
-        UUID orgId = assertOrg(orgName);
-        UUID projectId = getProject(input, orgId);
+    public GenericOperationResult createOrUpdate(MultipartInput input) throws IOException {
+        UUID orgId = organizationManager.assertAccess(MultipartUtils.assertString(input, Constants.Multipart.ORG_NAME), false).getId();
+        UUID projectId = assertProject(input, orgId);
         UUID repoId = getRepo(input, projectId);
         String name = MultipartUtils.getString(input, "name");
         String entryPoint = MultipartUtils.getString(input, "entryPoint");
@@ -112,6 +133,8 @@ public class ProcessCardResource implements Resource {
             });
             return new GenericOperationResult(OperationResult.CREATED);
         } else {
+            assertAccess(id);
+
             dao.tx(tx -> {
                 dao.update(id, projectId, repoId, name, entryPoint, description, icon, form, data);
                 for (UUID teamId : teamIds) {
@@ -140,15 +163,7 @@ public class ProcessCardResource implements Resource {
         return null;
     }
 
-    private UUID assertOrg(String name) {
-        UUID result = orgDao.getId(name);
-        if (result != null) {
-            return result;
-        }
-        throw new ValidationErrorsException("Organization not found: " + name);
-    }
-
-    private UUID getProject(MultipartInput input, UUID orgId) {
+    private UUID assertProject(MultipartInput input, UUID orgId) {
         UUID id = MultipartUtils.getUuid(input, Constants.Multipart.PROJECT_ID);
         String name = MultipartUtils.getString(input, Constants.Multipart.PROJECT_NAME);
         if (id == null && name != null) {
@@ -178,6 +193,25 @@ public class ProcessCardResource implements Resource {
             }
         }
         return id;
+    }
+
+    private static void assertAccess(UUID cardId) {
+        if (Roles.isAdmin()) {
+            // an admin can access any card
+            return;
+        }
+
+        UserPrincipal principal = UserPrincipal.assertCurrent();
+
+//        EntityOwner owner = project.getOwner();
+//        if (ResourceAccessUtils.isSame(principal, owner)) {
+//             the owner can do anything with his cards
+//            return;
+//        }
+
+
+        throw new UnauthorizedException("The current user (" + principal.getUsername() + ") doesn't have " +
+            "access to the process card: " + cardId);
     }
 
     public static class Dao extends AbstractDao {
@@ -268,6 +302,10 @@ public class ProcessCardResource implements Resource {
             q.set(UI_PROCESS_CARDS.UI_PROCESS_CARD_ID, UI_PROCESS_CARDS.UI_PROCESS_CARD_ID)
                     .where(UI_PROCESS_CARDS.UI_PROCESS_CARD_ID.eq(cardId))
                     .execute();
+        }
+
+        public void delete(UUID id) {
+            tx(tx -> tx.delete(UI_PROCESS_CARDS).where(UI_PROCESS_CARDS.UI_PROCESS_CARD_ID.eq(id)).execute());
         }
 
         public boolean exists(UUID id) {

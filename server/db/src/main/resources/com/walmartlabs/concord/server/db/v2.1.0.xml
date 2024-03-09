@@ -103,4 +103,21 @@
             </column>
         </addColumn>
     </changeSet>
+
+    <changeSet id="2001002" author="ybrigo@gmail.com">
+        <addColumn tableName="UI_PROCESS_CARDS">
+            <column name="OWNER_ID" type="uuid">
+                <constraints nullable="true"/>
+            </column>
+        </addColumn>
+
+
+        <addForeignKeyConstraint baseTableName="UI_PROCESS_CARDS"
+                                 baseColumnNames="OWNER_ID"
+                                 constraintName="FK_UI_PROCESS_CARDS_OWNER_ID"
+                                 referencedTableName="USERS"
+                                 referencedColumnNames="USER_ID"
+                                 onDelete="SET NULL"/>
+    </changeSet>
+
 </databaseChangeLog>
