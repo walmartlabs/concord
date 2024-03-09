@@ -25,6 +25,7 @@ import org.junit.jupiter.api.Test;
 import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
 
 public class TriggerInternalIdCalculatorTest {
 
@@ -60,5 +61,46 @@ public class TriggerInternalIdCalculatorTest {
         String id1 = TriggerInternalIdCalculator.getId(name, activeProfiles, arguments, conditions, cfg1);
         String id2 = TriggerInternalIdCalculator.getId(name, activeProfiles, arguments, conditions, cfg2);
         assertEquals(id1, id2);
+    }
+
+    @Test
+    public void testArrayOfObjects() {
+        String name = "trigger";
+        List<String> activeProfiles = Collections.emptyList();
+        Map<String, Object> arguments = new HashMap<>();
+        arguments.put("listOfMaps", Arrays.asList(Collections.singletonMap("name", "one"), Collections.singletonMap("name", "two")));
+        arguments.put("anotherProblem", Arrays.asList("a", 2, false));
+
+        Map<String, Object> conditions = Collections.emptyMap();
+
+        Map<String, Object> configuration = new HashMap<>();
+        configuration.put("name", "MyTrigger");
+        configuration.put("entryPoint", "default");
+
+        String id1 = TriggerInternalIdCalculator.getId(name, activeProfiles, arguments, conditions, configuration);
+        String id2 = TriggerInternalIdCalculator.getId(name, activeProfiles, arguments, conditions, configuration);
+        assertEquals(id1, id2);
+    }
+
+    @Test
+    public void testNotEquals() {
+        String name = "trigger";
+        List<String> activeProfiles = new ArrayList<>();
+        Map<String, Object> arguments = new HashMap<>();
+        Map<String, Object> conditions = new HashMap<>();
+
+        Map<String, Object> cfg1 = new HashMap<>();
+        cfg1.put("a", "a-value");
+        cfg1.put("b", Collections.singletonMap("k", "v"));
+        cfg1.put("c", "c-value");
+
+        Map<String, Object> cfg2 = new HashMap<>();
+        cfg2.put("c", "c-value");
+        cfg2.put("a", "a-value");
+        cfg2.put("boom", Collections.singletonMap("k", "v"));
+
+        String id1 = TriggerInternalIdCalculator.getId(name, activeProfiles, arguments, conditions, cfg1);
+        String id2 = TriggerInternalIdCalculator.getId(name, activeProfiles, arguments, conditions, cfg2);
+        assertNotEquals(id1, id2);
     }
 }
