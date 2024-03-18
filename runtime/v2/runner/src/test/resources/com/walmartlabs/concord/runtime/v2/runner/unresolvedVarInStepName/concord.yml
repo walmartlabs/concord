@@ -1,0 +1,6 @@
+flows:
+  default:
+    - name: "${undefined}"
+      task: log
+      in:
+        msg: "test"

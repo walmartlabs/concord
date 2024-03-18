@@ -23,12 +23,23 @@ package com.walmartlabs.concord.server.org.triggers;
 import com.google.inject.Binder;
 import com.google.inject.Module;
 
+import static com.google.inject.Scopes.SINGLETON;
+import static com.walmartlabs.concord.server.Utils.bindJaxRsResource;
 import static com.walmartlabs.concord.server.Utils.bindSingletonScheduledTask;
 
 public class TriggersModule implements Module {
 
     @Override
     public void configure(Binder binder) {
+        binder.bind(CronTriggerProcessor.class).in(SINGLETON);
+        binder.bind(GithubTriggerEnricher.class).in(SINGLETON);
+        binder.bind(TriggerManager.class).in(SINGLETON);
+        binder.bind(TriggerScheduleDao.class).in(SINGLETON);
+        binder.bind(TriggersDao.class).in(SINGLETON);
+
+        bindJaxRsResource(binder, TriggerResource.class);
+        bindJaxRsResource(binder, TriggerV2Resource.class);
+
         bindSingletonScheduledTask(binder, TriggerScheduler.class);
     }
 }

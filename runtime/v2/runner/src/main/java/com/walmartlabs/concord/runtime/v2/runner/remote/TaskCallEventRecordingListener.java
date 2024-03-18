@@ -20,10 +20,10 @@ package com.walmartlabs.concord.runtime.v2.runner.remote;
  * =====
  */
 
-import com.walmartlabs.concord.ApiClient;
-import com.walmartlabs.concord.ApiException;
-import com.walmartlabs.concord.client.ProcessEventRequest;
-import com.walmartlabs.concord.client.ProcessEventsApi;
+import com.walmartlabs.concord.client2.ApiClient;
+import com.walmartlabs.concord.client2.ApiException;
+import com.walmartlabs.concord.client2.ProcessEventRequest;
+import com.walmartlabs.concord.client2.ProcessEventsApi;
 import com.walmartlabs.concord.common.ConfigurationUtils;
 import com.walmartlabs.concord.runtime.common.ObjectTruncater;
 import com.walmartlabs.concord.runtime.common.injector.InstanceId;
@@ -124,6 +124,10 @@ public class TaskCallEventRecordingListener implements TaskCallListener {
         String taskName = event.taskName();
         m.put("description", "Task: " + taskName);
         m.put("name", taskName);
+
+        if (event.threadId().id() != 0) {
+            m.put("threadId", event.threadId().id());
+        }
 
         m.put("correlationId", event.correlationId());
         if (event.error() != null) {

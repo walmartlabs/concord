@@ -22,11 +22,10 @@ package com.walmartlabs.concord.server.org.triggers;
 
 import com.walmartlabs.concord.process.loader.model.Trigger;
 import com.walmartlabs.concord.sdk.Constants;
+import com.walmartlabs.concord.server.sdk.validation.ValidationErrorsException;
 import org.jooq.DSLContext;
-import org.sonatype.siesta.ValidationErrorsException;
 
 import javax.inject.Inject;
-import javax.inject.Named;
 import java.time.OffsetDateTime;
 import java.time.ZoneId;
 import java.util.Arrays;
@@ -34,7 +33,6 @@ import java.util.Map;
 import java.util.TimeZone;
 import java.util.UUID;
 
-@Named
 public class CronTriggerProcessor {
 
     private final TriggerScheduleDao schedulerDao;

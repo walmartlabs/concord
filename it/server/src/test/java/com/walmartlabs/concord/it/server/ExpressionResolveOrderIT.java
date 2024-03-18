@@ -20,9 +20,8 @@ package com.walmartlabs.concord.it.server;
  * =====
  */
 
-import com.walmartlabs.concord.client.ProcessApi;
-import com.walmartlabs.concord.client.ProcessEntry;
-import com.walmartlabs.concord.client.StartProcessResponse;
+import com.walmartlabs.concord.client2.ProcessEntry;
+import com.walmartlabs.concord.client2.StartProcessResponse;
 import org.junit.jupiter.api.Test;
 
 import static com.walmartlabs.concord.it.common.ITUtils.archive;
@@ -36,17 +35,16 @@ public class ExpressionResolveOrderIT extends AbstractServerIT {
     public void test() throws Exception {
         // prepare the payload
 
-        byte[] payload = archive(ProcessIT.class.getResource("resolveOrder").toURI());
+        byte[] payload = archive(ExpressionResolveOrderIT.class.getResource("resolveOrder").toURI());
 
         // start the process
 
-        ProcessApi processApi = new ProcessApi(getApiClient());
         StartProcessResponse spr = start(payload);
         assertNotNull(spr.getInstanceId());
 
         // wait for completion
 
-        ProcessEntry pir = waitForCompletion(processApi, spr.getInstanceId());
+        ProcessEntry pir = waitForCompletion(getApiClient(), spr.getInstanceId());
 
         // get the name of the agent's log file
 
@@ -54,7 +52,7 @@ public class ExpressionResolveOrderIT extends AbstractServerIT {
 
         // check the logs
 
-        byte[] ab = getLog(pir.getLogFileName());
+        byte[] ab = getLog(pir.getInstanceId());
 
         assertLog(".*sleep time: 1 hour.*", ab);
     }

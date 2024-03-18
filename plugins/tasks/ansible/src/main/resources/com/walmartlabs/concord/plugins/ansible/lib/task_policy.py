@@ -36,7 +36,13 @@ class TaskPolicy:
         ansible_rules = self.policy_rules['ansible']
 
         action = task.action
-        args = self._enrich_args(action, task._attributes.get('args'))
+
+        if not hasattr(task, 'args'):
+            return False
+
+        task_args = getattr(task, 'args', None)
+        
+        args = self._enrich_args(action, task_args)
 
         if 'allow' in ansible_rules:
             for r in ansible_rules['allow']:

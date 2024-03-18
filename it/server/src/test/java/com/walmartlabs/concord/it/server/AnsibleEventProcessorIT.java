@@ -20,7 +20,7 @@ package com.walmartlabs.concord.it.server;
  * =====
  */
 
-import com.walmartlabs.concord.client.*;
+import com.walmartlabs.concord.client2.*;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
@@ -37,17 +37,16 @@ public class AnsibleEventProcessorIT extends AbstractServerIT {
 
     @Test
     public void test() throws Exception {
-        URI uri = ProcessIT.class.getResource("ansibleEventProcessor").toURI();
+        URI uri = AnsibleEventProcessorIT.class.getResource("ansibleEventProcessor").toURI();
         byte[] payload = archive(uri, ITConstants.DEPENDENCIES_DIR);
 
         // ---
 
-        ProcessApi processApi = new ProcessApi(getApiClient());
         StartProcessResponse spr = start(payload);
 
         // ---
 
-        ProcessEntry pir = waitForCompletion(processApi, spr.getInstanceId());
+        ProcessEntry pir = waitForCompletion(getApiClient(), spr.getInstanceId());
         Assertions.assertEquals(ProcessEntry.StatusEnum.FINISHED, pir.getStatus());
 
         // ---
@@ -66,17 +65,16 @@ public class AnsibleEventProcessorIT extends AbstractServerIT {
 
     @Test
     public void testLongNames() throws Exception {
-        URI uri = ProcessIT.class.getResource("ansibleEventProcessor").toURI();
+        URI uri = AnsibleEventProcessorIT.class.getResource("ansibleEventProcessor").toURI();
         byte[] payload = archive(uri, ITConstants.DEPENDENCIES_DIR);
 
         // ---
 
-        ProcessApi processApi = new ProcessApi(getApiClient());
         StartProcessResponse spr = start("emitLongNames", payload);
 
         // ---
 
-        ProcessEntry pir = waitForCompletion(processApi, spr.getInstanceId());
+        ProcessEntry pir = waitForCompletion(getApiClient(), spr.getInstanceId());
         Assertions.assertEquals(ProcessEntry.StatusEnum.FINISHED, pir.getStatus());
 
         // ---

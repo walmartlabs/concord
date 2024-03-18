@@ -23,14 +23,14 @@ package com.walmartlabs.concord.server.user;
 import com.walmartlabs.concord.server.GenericOperationResult;
 import com.walmartlabs.concord.server.OperationResult;
 import com.walmartlabs.concord.server.sdk.ConcordApplicationException;
+import com.walmartlabs.concord.server.sdk.rest.Resource;
+import com.walmartlabs.concord.server.sdk.validation.Validate;
+import com.walmartlabs.concord.server.sdk.validation.ValidationErrorsException;
 import com.walmartlabs.concord.server.security.Roles;
 import com.walmartlabs.concord.server.security.UserPrincipal;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.apache.shiro.authz.UnauthorizedException;
-import org.sonatype.siesta.Resource;
-import org.sonatype.siesta.Validate;
-import org.sonatype.siesta.ValidationErrorsException;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -92,7 +92,7 @@ public class UserResource implements Resource {
      * Finds an existing user by username.
      *
      * @param username
-     * @return
+     * @return user details
      */
     @GET
     @Path("/{username}")
@@ -109,9 +109,33 @@ public class UserResource implements Resource {
     }
 
     /**
+     * Disables an existing user. Optionally allows permanent disabling of the user.
+     *
+     * @param id ID of user to disable
+     * @param permanent When <code>true</code>, user cannot be automatically re-enabled on login
+     * @return updated user details
+     */
+    @PUT
+    @Path("/{id}/disable")
+    @Produces(MediaType.APPLICATION_JSON)
+    @Validate
+    @Operation(description = "Disable a user")
+    public UserEntry disableUser(@PathParam("id") UUID id, @QueryParam("permanent") boolean permanent) {
+        assertAdmin();
+
+        if (permanent) {
+            userManager.permanentlyDisable(id);
+        } else {
+            userManager.disable(id);
+        }
+
+        return userDao.get(id);
+    }
+
+    /**
      * Removes an existing user.
      *
-     * @param id
+     * @param id User's database ID
      * @return
      */
     @DELETE

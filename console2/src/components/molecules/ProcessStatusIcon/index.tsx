@@ -31,7 +31,7 @@ enum AdditionalProcessStatus {
     SCHEDULED = 'SCHEDULED'
 }
 
-const statusToIcon: {
+export const statusToIcon: {
     [status: string]: { name: SemanticICONS; color?: SemanticCOLORS; loading?: boolean };
 } = {
     NEW: { name: 'inbox', color: 'grey' },

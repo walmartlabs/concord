@@ -25,6 +25,7 @@ import com.walmartlabs.concord.runtime.v2.model.Expression;
 import com.walmartlabs.concord.runtime.v2.model.Step;
 import com.walmartlabs.concord.runtime.v2.runner.el.MethodNotFoundException;
 import com.walmartlabs.concord.runtime.v2.runner.tasks.TaskCallInterceptor;
+import com.walmartlabs.concord.runtime.v2.runner.tasks.TaskException;
 import com.walmartlabs.concord.runtime.v2.sdk.Context;
 import com.walmartlabs.concord.runtime.v2.sdk.Task;
 
@@ -58,6 +59,7 @@ public class TaskMethodResolver extends javax.el.BeanELResolver {
         }
 
         CallContext callContext = TaskCallInterceptor.CallContext.builder()
+                .threadId(context.execution().currentThreadId())
                 .taskName(taskName)
                 .correlationId(context.execution().correlationId())
                 .currentStep(step)
@@ -77,6 +79,8 @@ public class TaskMethodResolver extends javax.el.BeanELResolver {
             throw e;
         } catch (RuntimeException e) {
             throw e;
+        } catch (TaskException e) {
+            throw new RuntimeException(e.getCause());
         } catch (Exception e) {
             throw new RuntimeException(e);
         }

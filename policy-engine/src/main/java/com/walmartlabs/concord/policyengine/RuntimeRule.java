@@ -30,7 +30,6 @@ import org.immutables.value.Value;
 import javax.annotation.Nullable;
 import java.io.Serializable;
 import java.time.LocalDate;
-import java.time.OffsetDateTime;
 import java.util.Set;
 
 @Value.Immutable

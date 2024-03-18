@@ -20,7 +20,7 @@ package com.walmartlabs.concord.plugins.ansible;
  * =====
  */
 
-import com.walmartlabs.concord.client.ProcessEventsApi;
+import com.walmartlabs.concord.client2.ProcessEventsApi;
 import com.walmartlabs.concord.sdk.MapUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -66,6 +66,9 @@ public class AnsibleCallbacks {
     private static final String[] LOG_FILTERING_CALLBACKS = new String[]{
             "concord_protectdata.py"
     };
+    private static final String[] MODULE_DEFAULTS_CALLBACKS = new String[]{
+            "concord_default_module_args.py"
+    };
 
     private final boolean debug;
     private final Path workDir;
@@ -77,6 +80,7 @@ public class AnsibleCallbacks {
     private boolean eventsEnabled = false;
     private boolean statsEnabled = false;
     private boolean outVarsEnabled = false;
+    private boolean moduleDefaultsEnabled = false;
 
     private Path eventsFile;
     private EventSender eventSender;
@@ -95,7 +99,8 @@ public class AnsibleCallbacks {
 
         this.eventsEnabled = MapUtils.getBoolean(args, TaskParams.ENABLE_EVENTS, true);
         this.statsEnabled = MapUtils.getBoolean(args, TaskParams.ENABLE_STATS, true);
-        this.outVarsEnabled= MapUtils.getBoolean(args, TaskParams.ENABLE_OUT_VARS, true);
+        this.outVarsEnabled = MapUtils.getBoolean(args, TaskParams.ENABLE_OUT_VARS, true);
+        this.moduleDefaultsEnabled = MapUtils.getBoolean(args, TaskParams.ENABLE_MODULE_DEFAULTS, true);
 
         return this;
     }
@@ -124,6 +129,10 @@ public class AnsibleCallbacks {
 
             if (outVarsEnabled) {
                 Resources.copy(CALLBACK_LOCATION, OUTVARS_CALLBACKS, getDir());
+            }
+
+            if (moduleDefaultsEnabled) {
+                Resources.copy(CALLBACK_LOCATION, MODULE_DEFAULTS_CALLBACKS, getDir());
             }
         } catch (IOException e) {
             log.error("Error while adding Concord callback plugins: {}", e.getMessage(), e);

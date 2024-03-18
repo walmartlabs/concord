@@ -23,9 +23,9 @@ package com.walmartlabs.concord.it.runtime.v2;
 import ca.ibodrov.concord.testcontainers.ConcordProcess;
 import ca.ibodrov.concord.testcontainers.Payload;
 import ca.ibodrov.concord.testcontainers.junit5.ConcordRule;
-import com.walmartlabs.concord.client.ProcessEntry;
-import com.walmartlabs.concord.client.ProcessEventEntry;
-import com.walmartlabs.concord.client.ProcessEventsApi;
+import com.walmartlabs.concord.client2.ProcessEntry;
+import com.walmartlabs.concord.client2.ProcessEventEntry;
+import com.walmartlabs.concord.client2.ProcessEventsApi;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
@@ -50,7 +50,7 @@ public class FlowEventsIT extends AbstractTest {
         // ---
 
         ProcessEventsApi processEventsApi = new ProcessEventsApi(concord.apiClient());
-        List<ProcessEventEntry> events = processEventsApi.list(proc.instanceId(), "ELEMENT", null, null, null, null, null, null);
+        List<ProcessEventEntry> events = processEventsApi.listProcessEvents(proc.instanceId(), "ELEMENT", null, null, null, null, null, null);
         assertNotNull(events);
 
         // ---

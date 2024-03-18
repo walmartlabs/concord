@@ -31,6 +31,8 @@ import java.util.Map;
 @Serial.Version(-8269676324702677451L)
 public interface SimpleOptions extends StepOptions {
 
+    long serialVersionUID = -8269676324702677451L;
+
     static SimpleOptions of(Map<String, Serializable> meta) {
         return ImmutableSimpleOptions.builder()
                 .meta(meta)

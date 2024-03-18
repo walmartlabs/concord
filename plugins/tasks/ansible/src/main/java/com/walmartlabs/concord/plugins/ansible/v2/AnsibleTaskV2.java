@@ -20,7 +20,7 @@ package com.walmartlabs.concord.plugins.ansible.v2;
  * =====
  */
 
-import com.walmartlabs.concord.ApiClient;
+import com.walmartlabs.concord.client2.ApiClient;
 import com.walmartlabs.concord.common.ConfigurationUtils;
 import com.walmartlabs.concord.plugins.ansible.*;
 import com.walmartlabs.concord.plugins.ansible.secrets.AnsibleSecretService;
@@ -69,7 +69,7 @@ public class AnsibleTaskV2 implements Task {
         boolean debug = getBoolean(ConfigurationUtils.deepMerge(defaults, in), TaskParams.DEBUG_KEY.getKey(), false)
                 || context.processConfiguration().debug();
         AnsibleContext ctx = AnsibleContext.builder()
-                .apiBaseUrl(apiClient.getBasePath())
+                .apiBaseUrl(apiClient.getBaseUrl())
                 .instanceId(instanceId)
                 .workDir(workDir)
                 .tmpDir(tmpDir)

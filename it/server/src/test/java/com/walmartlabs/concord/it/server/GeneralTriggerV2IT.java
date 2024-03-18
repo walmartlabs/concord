@@ -20,8 +20,7 @@ package com.walmartlabs.concord.it.server;
  * =====
  */
 
-import com.walmartlabs.concord.ApiException;
-import com.walmartlabs.concord.client.*;
+import com.walmartlabs.concord.client2.*;
 import com.walmartlabs.concord.common.IOUtils;
 import org.eclipse.jgit.api.Git;
 import org.junit.jupiter.api.Test;
@@ -59,19 +58,19 @@ public class GeneralTriggerV2IT extends AbstractGeneralTriggerIT {
         repoName = "repo_" + randomString();
 
         orgApi = new OrganizationsApi(getApiClient());
-        orgApi.createOrUpdate(new OrganizationEntry().setName(orgName));
+        orgApi.createOrUpdateOrg(new OrganizationEntry().name(orgName));
 
         ProjectsApi projectsApi = new ProjectsApi(getApiClient());
-        projectsApi.createOrUpdate(orgName, new ProjectEntry()
-                .setName(projectName)
-                .setVisibility(ProjectEntry.VisibilityEnum.PUBLIC)
-                .setRepositories(Collections.singletonMap(repoName, new RepositoryEntry()
-                        .setUrl(gitUrl)
-                        .setBranch("master"))));
+        projectsApi.createOrUpdateProject(orgName, new ProjectEntry()
+                .name(projectName)
+                .visibility(ProjectEntry.VisibilityEnum.PUBLIC)
+                .repositories(Collections.singletonMap(repoName, new RepositoryEntry()
+                        .url(gitUrl)
+                        .branch("master"))));
     }
 
     private void cleanup() throws ApiException {
-        orgApi.delete(orgName, "yes");
+        orgApi.deleteOrg(orgName, "yes");
     }
 
     @Test
@@ -85,10 +84,10 @@ public class GeneralTriggerV2IT extends AbstractGeneralTriggerIT {
         eventParam.put("key1", "value2");
 
         // first process
-        eea.event("testTriggerv2", eventParam);
+        eea.externalEvent("testTriggerv2", eventParam);
 
         // second process
-        eea.event("testTriggerv2", eventParam);
+        eea.externalEvent("testTriggerv2", eventParam);
 
         Map<ProcessEntry.StatusEnum, ProcessEntry> ps = waitProcesses(orgName, projectName, ProcessEntry.StatusEnum.FINISHED, ProcessEntry.StatusEnum.CANCELLED);
         assertProcessLog(ps.get(ProcessEntry.StatusEnum.FINISHED), ".*Hello from exclusive trigger v2.*");
@@ -110,10 +109,10 @@ public class GeneralTriggerV2IT extends AbstractGeneralTriggerIT {
         eventParam.put("key1", "value2");
 
         // first process
-        eea.event("testTriggerv2", eventParam);
+        eea.externalEvent("testTriggerv2", eventParam);
 
         // second process
-        eea.event("testTriggerv2", eventParam);
+        eea.externalEvent("testTriggerv2", eventParam);
 
         Map<ProcessEntry.StatusEnum, ProcessEntry> ps = waitProcesses(orgName, projectName, ProcessEntry.StatusEnum.FINISHED, ProcessEntry.StatusEnum.CANCELLED);
         assertProcessLog(ps.get(ProcessEntry.StatusEnum.FINISHED), ".*Hello from exclusive trigger v2.*");
@@ -137,10 +136,10 @@ public class GeneralTriggerV2IT extends AbstractGeneralTriggerIT {
         eventParam.put("key1", "value2");
 
         // first process
-        eea.event("testTriggerv2", eventParam);
+        eea.externalEvent("testTriggerv2", eventParam);
 
         // second process
-        eea.event("testTriggerv2", eventParam);
+        eea.externalEvent("testTriggerv2", eventParam);
 
         Map<ProcessEntry.StatusEnum, ProcessEntry> ps = waitProcesses(orgName, projectName, ProcessEntry.StatusEnum.FINISHED, ProcessEntry.StatusEnum.CANCELLED);
         assertProcessLog(ps.get(ProcessEntry.StatusEnum.FINISHED), ".*Hello from exclusive trigger v2.*");

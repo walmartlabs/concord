@@ -28,14 +28,12 @@ import org.jooq.Record4;
 import org.jooq.SelectJoinStep;
 
 import javax.inject.Inject;
-import javax.inject.Named;
 import java.util.List;
 import java.util.UUID;
 
 import static com.walmartlabs.concord.server.jooq.tables.JsonStoreQueries.JSON_STORE_QUERIES;
 import static org.jooq.impl.DSL.value;
 
-@Named
 public class JsonStoreQueryDao extends AbstractDao {
 
     @Inject

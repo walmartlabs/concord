@@ -31,7 +31,6 @@ import com.walmartlabs.concord.server.jooq.tables.Triggers;
 import org.jooq.*;
 
 import javax.inject.Inject;
-import javax.inject.Named;
 import java.time.OffsetDateTime;
 import java.time.ZoneId;
 import java.util.*;
@@ -42,7 +41,6 @@ import static com.walmartlabs.concord.server.jooq.tables.TriggerSchedule.TRIGGER
 import static com.walmartlabs.concord.server.jooq.tables.Triggers.TRIGGERS;
 import static org.jooq.impl.DSL.*;
 
-@Named
 public class TriggerScheduleDao extends AbstractDao {
 
     private final ConcordObjectMapper objectMapper;

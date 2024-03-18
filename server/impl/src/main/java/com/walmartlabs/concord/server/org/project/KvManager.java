@@ -24,17 +24,15 @@ import com.walmartlabs.concord.policyengine.CheckResult;
 import com.walmartlabs.concord.policyengine.KvRule;
 import com.walmartlabs.concord.policyengine.PolicyEngine;
 import com.walmartlabs.concord.server.policy.PolicyManager;
+import com.walmartlabs.concord.server.sdk.validation.ValidationErrorsException;
 import com.walmartlabs.concord.server.security.UserPrincipal;
-import org.sonatype.siesta.ValidationErrorsException;
 
 import javax.inject.Inject;
-import javax.inject.Named;
 import java.text.MessageFormat;
 import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
 
-@Named
 public class KvManager {
 
     private static final String DEFAULT_POLICY_MESSAGE = "Maximum KV entries exceeded: current {0}, limit {1}";
