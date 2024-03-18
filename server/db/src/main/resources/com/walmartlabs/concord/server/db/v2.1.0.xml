@@ -111,7 +111,6 @@
             </column>
         </addColumn>
 
-
         <addForeignKeyConstraint baseTableName="UI_PROCESS_CARDS"
                                  baseColumnNames="OWNER_ID"
                                  constraintName="FK_UI_PROCESS_CARDS_OWNER_ID"

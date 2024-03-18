@@ -21,29 +21,23 @@ package com.walmartlabs.concord.server.console;
  */
 
 import com.walmartlabs.concord.common.IOUtils;
-import com.walmartlabs.concord.common.validation.ConcordKey;
-import com.walmartlabs.concord.db.AbstractDao;
-import com.walmartlabs.concord.db.MainDB;
 import com.walmartlabs.concord.sdk.Constants;
-import com.walmartlabs.concord.sdk.MapUtils;
 import com.walmartlabs.concord.server.ConcordObjectMapper;
 import com.walmartlabs.concord.server.GenericOperationResult;
 import com.walmartlabs.concord.server.MultipartUtils;
 import com.walmartlabs.concord.server.OperationResult;
-import com.walmartlabs.concord.server.jooq.tables.records.UiProcessCardsRecord;
-import com.walmartlabs.concord.server.org.EntityOwner;
-import com.walmartlabs.concord.server.org.OrganizationDao;
 import com.walmartlabs.concord.server.org.OrganizationManager;
-import com.walmartlabs.concord.server.org.ResourceAccessUtils;
 import com.walmartlabs.concord.server.org.project.ProjectDao;
 import com.walmartlabs.concord.server.org.project.RepositoryDao;
-import com.walmartlabs.concord.server.security.Roles;
+import com.walmartlabs.concord.server.sdk.ConcordApplicationException;
+import com.walmartlabs.concord.server.sdk.metrics.WithTimer;
 import com.walmartlabs.concord.server.security.UserPrincipal;
-import org.apache.shiro.authz.UnauthorizedException;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.parameters.RequestBody;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.jboss.resteasy.plugins.providers.multipart.MultipartInput;
-import org.jooq.Configuration;
-import org.jooq.DSLContext;
-import org.jooq.UpdateSetFirstStep;
 import org.sonatype.siesta.Resource;
 import org.sonatype.siesta.ValidationErrorsException;
 
@@ -52,58 +46,91 @@ import javax.inject.Named;
 import javax.inject.Singleton;
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
+import javax.ws.rs.core.StreamingOutput;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
-
-import static com.walmartlabs.concord.server.jooq.Tables.TEAM_UI_PROCESS_CARDS;
-import static com.walmartlabs.concord.server.jooq.Tables.UI_PROCESS_CARDS;
-import static org.jooq.impl.DSL.or;
-import static org.jooq.impl.DSL.value;
+import java.nio.file.Files;
+import java.nio.file.StandardCopyOption;
+import java.util.*;
 
 @Named
 @Singleton
 @javax.ws.rs.Path("/api/v1/org/")
+@Tag(name = "ProcessCards")
 public class ProcessCardResource implements Resource {
 
+    private static final String DATA_FILE_TEMPLATE = "data = %s;";
+
+    private final ProcessCardManager processCardManager;
     private final OrganizationManager organizationManager;
-    private final OrganizationDao orgDao;
     private final ProjectDao projectDao;
     private final RepositoryDao repositoryDao;
-    private final Dao dao;
+    private final ConcordObjectMapper objectMapper;
 
     @Inject
     public ProcessCardResource(OrganizationManager organizationManager,
-                               OrganizationDao orgDao,
+                               ProcessCardManager processCardManager,
                                ProjectDao projectDao,
-                               RepositoryDao repositoryDao,
-                               Dao dao) {
+                               RepositoryDao repositoryDao, ConcordObjectMapper objectMapper) {
         this.organizationManager = organizationManager;
+        this.processCardManager = processCardManager;
 
-        this.orgDao = orgDao;
         this.projectDao = projectDao;
         this.repositoryDao = repositoryDao;
-        this.dao = dao;
+        this.objectMapper = objectMapper;
+    }
+
+    @GET
+    @Path("/process-card")
+    @Consumes(MediaType.MULTIPART_FORM_DATA)
+    @Produces(MediaType.APPLICATION_JSON)
+    @Operation(description = "List user process cards", operationId = "listUserProcessCards")
+    public List<ProcessCardEntry> list() {
+
+        UserPrincipal user = UserPrincipal.assertCurrent();
+
+        return processCardManager.listUserCards(user.getId());
     }
 
     @DELETE
     @Path("/process-card/{id}")
-    public GenericOperationResult delete(@PathParam("id") UUID id) throws IOException {
+    @Operation(description = "Delete process card", operationId = "deleteProcessCard")
+    public GenericOperationResult delete(@PathParam("id") UUID cardId) throws IOException {
 
-        assertAccess(id);
+        assertCard(cardId);
+        processCardManager.assertAccess(cardId);
 
-        dao.delete(id);
+        processCardManager.delete(cardId);
 
         return new GenericOperationResult(OperationResult.DELETED);
+    }
+
+    @POST
+    @Path("/process-card/{id}/access")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    @Operation(description = "Process cards access", operationId = "processCardAccess")
+    public GenericOperationResult access(
+            @PathParam("id") UUID cardId,
+            ProcessCardAccessEntry entry) throws IOException {
+
+        assertCard(cardId);
+        processCardManager.assertAccess(cardId);
+
+        processCardManager.updateAccess(cardId, entry.teamIds(), entry.userIds());
+
+        return new GenericOperationResult(OperationResult.UPDATED);
     }
 
     @POST
     @Path("/process-card")
     @Consumes(MediaType.MULTIPART_FORM_DATA)
     @Produces(MediaType.APPLICATION_JSON)
-    public GenericOperationResult createOrUpdate(MultipartInput input) throws IOException {
+    @Operation(description = "Create or update process card", operationId = "createOrUpdateProcessCard")
+    public ProcessCardOperationResponse createOrUpdate(
+            @RequestBody(content = @Content(schema = @Schema(type = "object"))) MultipartInput input) throws IOException {
+
         UUID orgId = organizationManager.assertAccess(MultipartUtils.assertString(input, Constants.Multipart.ORG_NAME), false).getId();
         UUID projectId = assertProject(input, orgId);
         UUID repoId = getRepo(input, projectId);
@@ -111,56 +138,68 @@ public class ProcessCardResource implements Resource {
         String entryPoint = MultipartUtils.getString(input, "entryPoint");
         String description = MultipartUtils.getString(input, "description");
 
-        byte[] icon = getIcon(input);
-        byte[] form = getForm(input);
-
         Map<String, Object> data = MultipartUtils.getMap(input, "data");
 
         UUID id = MultipartUtils.getUuid(input, "id");
-        boolean exists = false;
-        if (id != null) {
-            exists = dao.exists(id);
-        }
 
-        List<UUID> teamIds = MultipartUtils.getUUIDList(input, "teamIds");
-
-        if (!exists) {
-            dao.tx(tx -> {
-                UUID resultId = dao.insert(tx, id, projectId, repoId, name, entryPoint, description, icon, form, data);
-                for (UUID teamId : teamIds) {
-                    dao.upsertTeamAccess(tx, resultId, teamId);
-                }
-            });
-            return new GenericOperationResult(OperationResult.CREATED);
-        } else {
-            assertAccess(id);
-
-            dao.tx(tx -> {
-                dao.update(id, projectId, repoId, name, entryPoint, description, icon, form, data);
-                for (UUID teamId : teamIds) {
-                    dao.upsertTeamAccess(tx, id, teamId);
-                }
-            });
-            return new GenericOperationResult(OperationResult.UPDATED);
+        try (InputStream icon = MultipartUtils.getStream(input, "icon");
+             InputStream form = MultipartUtils.getStream(input, "form")) {
+            return processCardManager.createOrUpdate(id, projectId, repoId, name, entryPoint, description, icon, form, data);
         }
     }
 
-    private byte[] getIcon(MultipartInput input) throws IOException {
-        try (InputStream is = MultipartUtils.getStream(input, "icon")) {
-            if (is != null) {
-                return IOUtils.toByteArray(is);
+    @GET
+    @Path("/process-card/{cardId}/form")
+    @Produces(MediaType.TEXT_HTML)
+    @WithTimer
+    @Operation(description = "Get process card form", operationId = "getProcessCardForm")
+    public Response getForm(@PathParam("cardId") UUID cardId) {
+
+        assertCard(cardId);
+
+        Optional<java.nio.file.Path> o = processCardManager.getForm(cardId, src -> {
+            try {
+                java.nio.file.Path tmp = IOUtils.createTempFile("process-form", ".html");
+                Files.copy(src, tmp, StandardCopyOption.REPLACE_EXISTING);
+                return Optional.of(tmp);
+            } catch (IOException e) {
+                throw new ConcordApplicationException("Error while downloading custom process start form: " + cardId, e);
             }
+        });
+
+        if (!o.isPresent()) {
+            return Response.status(Response.Status.NOT_FOUND).build();
         }
-        return null;
+
+        return toBinaryResponse(o.get());
     }
 
-    private byte[] getForm(MultipartInput input) throws IOException {
-        try (InputStream is = MultipartUtils.getStream(input, "form")) {
-            if (is != null) {
-                return IOUtils.toByteArray(is);
-            }
+    @GET
+    @Path("/process-card/{cardId}/data.js")
+    @Produces("text/javascript")
+    @WithTimer
+    @Operation(description = "Get process card form data", operationId = "getProcessCardFormData")
+    public Response getFormData(@PathParam("cardId") UUID cardId) {
+        ProcessCardEntry card = assertCard(cardId);
+
+        Map<String, Object> customData = processCardManager.getFormData(cardId);
+
+        Map<String, Object> resultData = new HashMap<>(customData != null ? customData : Collections.emptyMap());
+        resultData.put("org", card.orgName());
+        resultData.put("project", card.projectName());
+        resultData.put("repo", card.repoName());
+        resultData.put("entryPoint", card.entryPoint());
+
+        return Response.ok(formatData(resultData))
+                .build();
+    }
+
+    private ProcessCardEntry assertCard(UUID id) {
+        ProcessCardEntry e = processCardManager.get(id);
+        if (e == null) {
+            throw new ConcordApplicationException("Process card not found: " + id, Response.Status.NOT_FOUND);
         }
-        return null;
+        return e;
     }
 
     private UUID assertProject(MultipartInput input, UUID orgId) {
@@ -195,136 +234,19 @@ public class ProcessCardResource implements Resource {
         return id;
     }
 
-    private static void assertAccess(UUID cardId) {
-        if (Roles.isAdmin()) {
-            // an admin can access any card
-            return;
-        }
 
-        UserPrincipal principal = UserPrincipal.assertCurrent();
-
-//        EntityOwner owner = project.getOwner();
-//        if (ResourceAccessUtils.isSame(principal, owner)) {
-//             the owner can do anything with his cards
-//            return;
-//        }
-
-
-        throw new UnauthorizedException("The current user (" + principal.getUsername() + ") doesn't have " +
-            "access to the process card: " + cardId);
+    private String formatData(Map<String, Object> data) {
+        return String.format(DATA_FILE_TEMPLATE, objectMapper.toString(data));
     }
 
-    public static class Dao extends AbstractDao {
-
-        private final ConcordObjectMapper objectMapper;
-
-        @Inject
-        protected Dao(@MainDB Configuration cfg, ConcordObjectMapper objectMapper) {
-            super(cfg);
-            this.objectMapper = objectMapper;
-        }
-
-        protected void tx(Tx t) {
-            super.tx(t);
-        }
-
-        public UUID insert(UUID cardId, UUID projectId, UUID repoId, String name, String entryPoint, String description, byte[] icon, byte[] form, Map<String, Object> data) {
-            return txResult(tx -> insert(tx, cardId, projectId, repoId, name, entryPoint, description, icon, form, data));
-        }
-
-        private UUID insert(DSLContext tx, UUID cardId, UUID projectId, UUID repoId, String name, String entryPoint, String description, byte[] icon, byte[] form, Map<String, Object> data) {
-            return tx.insertInto(UI_PROCESS_CARDS)
-                    .columns(UI_PROCESS_CARDS.UI_PROCESS_CARD_ID,
-                            UI_PROCESS_CARDS.PROJECT_ID,
-                            UI_PROCESS_CARDS.REPO_ID,
-                            UI_PROCESS_CARDS.NAME,
-                            UI_PROCESS_CARDS.ENTRY_POINT,
-                            UI_PROCESS_CARDS.DESCRIPTION,
-                            UI_PROCESS_CARDS.ICON,
-                            UI_PROCESS_CARDS.FORM,
-                            UI_PROCESS_CARDS.DATA)
-                    .values(value(cardId == null ? UUID.randomUUID() : cardId),
-                            value(projectId),
-                            value(repoId),
-                            value(name),
-                            value(entryPoint),
-                            value(description),
-                            value(icon),
-                            value(form),
-                            value(objectMapper.toJSONB(data)))
-                    .returning(UI_PROCESS_CARDS.UI_PROCESS_CARD_ID)
-                    .fetchOne()
-                    .getUiProcessCardId();
-        }
-
-        public void update(UUID cardId, UUID projectId, UUID repoId, String name,
-                           String entryPoint, String description, byte[] icon, byte[] form, Map<String, Object> data) {
-            tx(tx -> update(tx, cardId, projectId, repoId, name, entryPoint, description, icon, form, data));
-        }
-
-        public void update(DSLContext tx, UUID cardId, UUID projectId, UUID repoId, String name,
-                           String entryPoint, String description, byte[] icon, byte[] form, Map<String, Object> data) {
-
-            UpdateSetFirstStep<UiProcessCardsRecord> q = tx.update(UI_PROCESS_CARDS);
-
-            if (projectId != null) {
-                q.set(UI_PROCESS_CARDS.PROJECT_ID, projectId);
+    private static Response toBinaryResponse(java.nio.file.Path file) {
+        return Response.ok((StreamingOutput) out -> {
+            try (InputStream in = Files.newInputStream(file)) {
+                IOUtils.copy(in, out);
+            } finally {
+                Files.delete(file);
             }
-
-            if (repoId != null) {
-                q.set(UI_PROCESS_CARDS.REPO_ID, repoId);
-            }
-
-            if (name != null) {
-                q.set(UI_PROCESS_CARDS.NAME, name);
-            }
-
-            if (entryPoint != null) {
-                q.set(UI_PROCESS_CARDS.ENTRY_POINT, entryPoint);
-            }
-
-            if (description != null) {
-                q.set(UI_PROCESS_CARDS.DESCRIPTION, description);
-            }
-
-            if (icon != null) {
-                q.set(UI_PROCESS_CARDS.ICON, icon);
-            }
-
-            if (form != null) {
-                q.set(UI_PROCESS_CARDS.FORM, form);
-            }
-
-            if (data != null) {
-                q.set(UI_PROCESS_CARDS.DATA, objectMapper.toJSONB(data));
-            }
-
-            q.set(UI_PROCESS_CARDS.UI_PROCESS_CARD_ID, UI_PROCESS_CARDS.UI_PROCESS_CARD_ID)
-                    .where(UI_PROCESS_CARDS.UI_PROCESS_CARD_ID.eq(cardId))
-                    .execute();
-        }
-
-        public void delete(UUID id) {
-            tx(tx -> tx.delete(UI_PROCESS_CARDS).where(UI_PROCESS_CARDS.UI_PROCESS_CARD_ID.eq(id)).execute());
-        }
-
-        public boolean exists(UUID id) {
-            return txResult(tx -> tx.select(UI_PROCESS_CARDS.UI_PROCESS_CARD_ID)
-                    .from(UI_PROCESS_CARDS)
-                    .where(UI_PROCESS_CARDS.UI_PROCESS_CARD_ID.eq(id))
-                    .fetchOne(UI_PROCESS_CARDS.UI_PROCESS_CARD_ID)) != null;
-        }
-
-        public void upsertTeamAccess(UUID id, UUID teamId) {
-            tx(tx -> upsertTeamAccess(tx, id, teamId));
-        }
-
-        public void upsertTeamAccess(DSLContext tx, UUID id, UUID teamId) {
-            tx.insertInto(TEAM_UI_PROCESS_CARDS)
-                    .columns(TEAM_UI_PROCESS_CARDS.TEAM_ID, TEAM_UI_PROCESS_CARDS.UI_PROCESS_CARD_ID)
-                    .values(teamId, id)
-                    .onDuplicateKeyIgnore()
-                    .execute();
-        }
+        }).build();
     }
+
 }
