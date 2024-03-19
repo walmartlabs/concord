@@ -21,25 +21,24 @@ package com.walmartlabs.concord.server.console;
  */
 
 import com.walmartlabs.concord.common.IOUtils;
-import com.walmartlabs.concord.sdk.Constants;
 import com.walmartlabs.concord.server.ConcordObjectMapper;
 import com.walmartlabs.concord.server.GenericOperationResult;
-import com.walmartlabs.concord.server.MultipartUtils;
 import com.walmartlabs.concord.server.OperationResult;
 import com.walmartlabs.concord.server.org.OrganizationManager;
 import com.walmartlabs.concord.server.org.project.ProjectDao;
 import com.walmartlabs.concord.server.org.project.RepositoryDao;
 import com.walmartlabs.concord.server.sdk.ConcordApplicationException;
 import com.walmartlabs.concord.server.sdk.metrics.WithTimer;
+import com.walmartlabs.concord.server.sdk.rest.Resource;
+import com.walmartlabs.concord.server.sdk.validation.ValidationErrorsException;
 import com.walmartlabs.concord.server.security.UserPrincipal;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
-import io.swagger.v3.oas.annotations.parameters.RequestBody;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.jboss.resteasy.plugins.providers.multipart.MultipartInput;
-import org.sonatype.siesta.Resource;
-import org.sonatype.siesta.ValidationErrorsException;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -93,8 +92,17 @@ public class ProcessCardResource implements Resource {
         return processCardManager.listUserCards(user.getId());
     }
 
+    @GET
+    @Path("/process-card/{id}")
+    @Produces(MediaType.APPLICATION_JSON)
+    @Operation(description = "Get process card", operationId = "getProcessCard")
+    public ProcessCardEntry get(@PathParam("id") UUID cardId) throws IOException {
+        return assertCard(cardId);
+    }
+
     @DELETE
     @Path("/process-card/{id}")
+    @Produces(MediaType.APPLICATION_JSON)
     @Operation(description = "Delete process card", operationId = "deleteProcessCard")
     public GenericOperationResult delete(@PathParam("id") UUID cardId) throws IOException {
 
@@ -129,21 +137,21 @@ public class ProcessCardResource implements Resource {
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(description = "Create or update process card", operationId = "createOrUpdateProcessCard")
     public ProcessCardOperationResponse createOrUpdate(
-            @RequestBody(content = @Content(schema = @Schema(type = "object"))) MultipartInput input) throws IOException {
+            @Parameter(schema = @Schema(type = "object", implementation = ProcessCardRequest.class)) MultipartInput input) throws IOException {
 
-        UUID orgId = organizationManager.assertAccess(MultipartUtils.assertString(input, Constants.Multipart.ORG_NAME), false).getId();
-        UUID projectId = assertProject(input, orgId);
-        UUID repoId = getRepo(input, projectId);
-        String name = MultipartUtils.getString(input, "name");
-        String entryPoint = MultipartUtils.getString(input, "entryPoint");
-        String description = MultipartUtils.getString(input, "description");
+        ProcessCardRequest r = ProcessCardRequest.from(input);
 
-        Map<String, Object> data = MultipartUtils.getMap(input, "data");
+        UUID orgId = organizationManager.assertAccess(r.getOrgId(), r.getOrgName(), false).getId();
+        UUID projectId = assertProject(orgId, r);
+        UUID repoId = getRepo(projectId, r);
+        String name = r.getName();
+        String entryPoint = r.getEntryPoint();
+        String description = r.getDescription();
+        Map<String, Object> data = r.getData();
+        UUID id = r.getId();
 
-        UUID id = MultipartUtils.getUuid(input, "id");
-
-        try (InputStream icon = MultipartUtils.getStream(input, "icon");
-             InputStream form = MultipartUtils.getStream(input, "form")) {
+        try (InputStream icon = r.getIcon();
+             InputStream form = r.getForm()) {
             return processCardManager.createOrUpdate(id, projectId, repoId, name, entryPoint, description, icon, form, data);
         }
     }
@@ -153,6 +161,8 @@ public class ProcessCardResource implements Resource {
     @Produces(MediaType.TEXT_HTML)
     @WithTimer
     @Operation(description = "Get process card form", operationId = "getProcessCardForm")
+    @ApiResponse(responseCode = "200", description = "Process form content",
+            content = @Content(mediaType = "text/html", schema = @Schema(type = "string", format = "binary")))
     public Response getForm(@PathParam("cardId") UUID cardId) {
 
         assertCard(cardId);
@@ -167,7 +177,7 @@ public class ProcessCardResource implements Resource {
             }
         });
 
-        if (!o.isPresent()) {
+        if (o.isEmpty()) {
             return Response.status(Response.Status.NOT_FOUND).build();
         }
 
@@ -179,6 +189,8 @@ public class ProcessCardResource implements Resource {
     @Produces("text/javascript")
     @WithTimer
     @Operation(description = "Get process card form data", operationId = "getProcessCardFormData")
+    @ApiResponse(responseCode = "200", description = "Process form data content",
+            content = @Content(mediaType = "text/javascript", schema = @Schema(type = "string", format = "binary")))
     public Response getFormData(@PathParam("cardId") UUID cardId) {
         ProcessCardEntry card = assertCard(cardId);
 
@@ -202,9 +214,9 @@ public class ProcessCardResource implements Resource {
         return e;
     }
 
-    private UUID assertProject(MultipartInput input, UUID orgId) {
-        UUID id = MultipartUtils.getUuid(input, Constants.Multipart.PROJECT_ID);
-        String name = MultipartUtils.getString(input, Constants.Multipart.PROJECT_NAME);
+    private UUID assertProject(UUID orgId, ProcessCardRequest request) {
+        UUID id = request.getProjectId();
+        String name = request.getProjectName();
         if (id == null && name != null) {
             if (orgId == null) {
                 throw new ValidationErrorsException("Organization ID or name is required");
@@ -218,9 +230,9 @@ public class ProcessCardResource implements Resource {
         return id;
     }
 
-    private UUID getRepo(MultipartInput input, UUID projectId) {
-        UUID id = MultipartUtils.getUuid(input, Constants.Multipart.REPO_ID);
-        String name = MultipartUtils.getString(input, Constants.Multipart.REPO_NAME);
+    private UUID getRepo(UUID projectId, ProcessCardRequest request) {
+        UUID id = request.getRepoId();
+        String name = request.getRepoName();
         if (id == null && name != null) {
             if (projectId == null) {
                 throw new ValidationErrorsException("Project ID or name is required");
@@ -233,7 +245,6 @@ public class ProcessCardResource implements Resource {
         }
         return id;
     }
-
 
     private String formatData(Map<String, Object> data) {
         return String.format(DATA_FILE_TEMPLATE, objectMapper.toString(data));

@@ -157,8 +157,9 @@ public class ProcessCardManager {
                             UI_PROCESS_CARDS.DESCRIPTION,
                             UI_PROCESS_CARDS.ICON,
                             UI_PROCESS_CARDS.FORM,
-                            UI_PROCESS_CARDS.DATA)
-                    .values((UUID)null, null, null, null, null, null, null, null, null)
+                            UI_PROCESS_CARDS.DATA,
+                            UI_PROCESS_CARDS.OWNER_ID)
+                    .values((UUID)null, null, null, null, null, null, null, null, null, null)
                     .returning(UI_PROCESS_CARDS.UI_PROCESS_CARD_ID)
                     .getSQL();
 
@@ -172,7 +173,8 @@ public class ProcessCardManager {
                     ps.setString(6, description);
                     ps.setBinaryStream(7, icon);
                     ps.setBinaryStream(8, form);
-                    ps.setObject(8, objectMapper.toJSONB(data));
+                    ps.setObject(9, data != null ? objectMapper.toJSONB(data).data() : null);
+                    ps.setObject(10, UserPrincipal.assertCurrent().getId());
 
                     try (ResultSet rs = ps.executeQuery()) {
                         if (!rs.next()) {
@@ -235,7 +237,7 @@ public class ProcessCardManager {
 
             if (data != null) {
                 q.set(UI_PROCESS_CARDS.DATA, (JSONB)null);
-                params.add(objectMapper.toJSONB(data));
+                params.add(objectMapper.toJSONB(data).data());
             }
 
             if (params.isEmpty()) {
@@ -323,26 +325,31 @@ public class ProcessCardManager {
         }
 
         private List<ProcessCardEntry> listCards(DSLContext tx, UUID userId) {
-            SelectConditionStep<Record1<UUID>> userTeams = tx.select(V_USER_TEAMS.TEAM_ID)
+            var userTeams = tx.select(V_USER_TEAMS.TEAM_ID)
                     .from(V_USER_TEAMS)
                     .where(V_USER_TEAMS.USER_ID.eq(userId));
 
-            SelectConditionStep<Record1<UUID>> byUserFilter = tx.select(USER_UI_PROCESS_CARDS.UI_PROCESS_CARD_ID)
+            var byUserFilter = tx.select(USER_UI_PROCESS_CARDS.UI_PROCESS_CARD_ID)
                     .from(USER_UI_PROCESS_CARDS)
                     .where(USER_UI_PROCESS_CARDS.USER_ID.eq(userId));
 
-            SelectConditionStep<Record1<UUID>> byTeamFilter = tx.select(TEAM_UI_PROCESS_CARDS.UI_PROCESS_CARD_ID)
+            var byTeamFilter = tx.select(TEAM_UI_PROCESS_CARDS.UI_PROCESS_CARD_ID)
                     .from(TEAM_UI_PROCESS_CARDS)
                     .where(TEAM_UI_PROCESS_CARDS.TEAM_ID.in(userTeams));
 
-            SelectOrderByStep<Record1<UUID>> userCards = byUserFilter.unionAll(byTeamFilter);
+            var byOwnerFilter = tx.select(UI_PROCESS_CARDS.UI_PROCESS_CARD_ID)
+                    .from(UI_PROCESS_CARDS)
+                    .where(UI_PROCESS_CARDS.OWNER_ID.isNotNull().and(UI_PROCESS_CARDS.OWNER_ID.eq(userId)));
 
-            SelectJoinStep<Record1<UUID>> userCardsFilter = tx.select(userCards.field(TEAM_UI_PROCESS_CARDS.UI_PROCESS_CARD_ID))
+            var userCards = byUserFilter
+                    .unionAll(byTeamFilter)
+                    .unionAll(byOwnerFilter);
+
+            var userCardsFilter = tx.select(userCards.field(TEAM_UI_PROCESS_CARDS.UI_PROCESS_CARD_ID))
                     .from(userCards);
 
-            SelectConditionStep<Record12<UUID, UUID, String, UUID, String, UUID, String, String, String, String, byte[], Boolean>> query =
-                    buildSelect(tx)
-                            .where(UI_PROCESS_CARDS.UI_PROCESS_CARD_ID.in(userCardsFilter));
+            var query = buildSelect(tx)
+                    .where(UI_PROCESS_CARDS.UI_PROCESS_CARD_ID.in(userCardsFilter));
 
             return query
                     .orderBy(UI_PROCESS_CARDS.UI_PROCESS_CARD_ID)
@@ -392,7 +399,6 @@ public class ProcessCardManager {
         }
 
         private static SelectOnConditionStep<Record12<UUID, UUID, String, UUID, String, UUID, String, String, String, String, byte[], Boolean>> buildSelect(DSLContext tx) {
-
             Field<Boolean> isCustomForm = when(field(UI_PROCESS_CARDS.FORM).isNotNull(), true).otherwise(false);
 
             return tx.select(
