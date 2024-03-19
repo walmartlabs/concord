@@ -55,7 +55,7 @@ import java.util.*;
 
 @Named
 @Singleton
-@javax.ws.rs.Path("/api/v1/org/")
+@javax.ws.rs.Path("/api/v1/")
 @Tag(name = "ProcessCards")
 public class ProcessCardResource implements Resource {
 
