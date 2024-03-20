@@ -84,6 +84,7 @@ public class ProcessModule implements Module {
 
         newSetBinder(binder, ProcessStatusListener.class).addBinding().to(WaitProcessStatusListener.class);
         newSetBinder(binder, ProcessStatusListener.class).addBinding().to(ExternalProcessListenerHandler.class);
+        newSetBinder(binder, ProcessStatusListener.class).addBinding().to(XYZProcessStatusListener.class);
 
         newSetBinder(binder, Filter.class).addBinding().to(ConcurrentProcessFilter.class);
         newSetBinder(binder, Filter.class).addBinding().to(ExclusiveProcessFilter.class);
