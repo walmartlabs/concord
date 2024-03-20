@@ -69,7 +69,7 @@ const renderCard = (card: ProcessCardEntry) => {
                             <Modal.Content>
                                 <div className={"ui active embed"}>
                                     <iframe title={card.id}
-                                            src={`/api/v1/process-card/${card.id}/form`}
+                                            src={`/api/v1/processcard/${card.id}/form`}
                                             height={"100%"}
                                             width={"100%"}
                                             frameBorder={0}

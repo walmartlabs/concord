@@ -22,7 +22,7 @@ Steps:
   -F name=foobar \
   -F description=Test \
   -F form=@index.html \
-  http://localhost:8001/api/v1/process-card
+  http://localhost:8001/api/v1/processcard
   ```
 - log into the Concord UI and check the Activity page:
   ![Process Card](images/card.png)

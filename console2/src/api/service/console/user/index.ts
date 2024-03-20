@@ -47,5 +47,5 @@ export const getActivity = (
 export const listProcessCards = (
 ): Promise<ProcessCardEntry[]> =>
     fetchJson(
-        `/api/v1/process-card`
+        `/api/v1/processcard`
     );

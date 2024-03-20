@@ -81,7 +81,7 @@ public class ProcessCardResource implements Resource {
     }
 
     @GET
-    @Path("/process-card")
+    @Path("/processcard")
     @Consumes(MediaType.MULTIPART_FORM_DATA)
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(description = "List user process cards", operationId = "listUserProcessCards")
@@ -93,7 +93,7 @@ public class ProcessCardResource implements Resource {
     }
 
     @GET
-    @Path("/process-card/{id}")
+    @Path("/processcard/{id}")
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(description = "Get process card", operationId = "getProcessCard")
     public ProcessCardEntry get(@PathParam("id") UUID cardId) throws IOException {
@@ -101,7 +101,7 @@ public class ProcessCardResource implements Resource {
     }
 
     @DELETE
-    @Path("/process-card/{id}")
+    @Path("/processcard/{id}")
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(description = "Delete process card", operationId = "deleteProcessCard")
     public GenericOperationResult delete(@PathParam("id") UUID cardId) throws IOException {
@@ -115,7 +115,7 @@ public class ProcessCardResource implements Resource {
     }
 
     @POST
-    @Path("/process-card/{id}/access")
+    @Path("/processcard/{id}/access")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(description = "Process cards access", operationId = "processCardAccess")
@@ -132,7 +132,7 @@ public class ProcessCardResource implements Resource {
     }
 
     @POST
-    @Path("/process-card")
+    @Path("/processcard")
     @Consumes(MediaType.MULTIPART_FORM_DATA)
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(description = "Create or update process card", operationId = "createOrUpdateProcessCard")
@@ -157,7 +157,7 @@ public class ProcessCardResource implements Resource {
     }
 
     @GET
-    @Path("/process-card/{cardId}/form")
+    @Path("/processcard/{cardId}/form")
     @Produces(MediaType.TEXT_HTML)
     @WithTimer
     @Operation(description = "Get process card form", operationId = "getProcessCardForm")
@@ -185,7 +185,7 @@ public class ProcessCardResource implements Resource {
     }
 
     @GET
-    @Path("/process-card/{cardId}/data.js")
+    @Path("/processcard/{cardId}/data.js")
     @Produces("text/javascript")
     @WithTimer
     @Operation(description = "Get process card form data", operationId = "getProcessCardFormData")
