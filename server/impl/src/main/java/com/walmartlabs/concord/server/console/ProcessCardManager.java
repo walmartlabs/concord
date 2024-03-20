@@ -247,6 +247,8 @@ public class ProcessCardManager {
             String sql = q.set(UI_PROCESS_CARDS.UI_PROCESS_CARD_ID, cardId)
                     .where(UI_PROCESS_CARDS.UI_PROCESS_CARD_ID.eq(cardId))
                     .getSQL();
+            params.add(cardId);
+            params.add(cardId);
 
             tx.connection(conn -> {
                 try (PreparedStatement ps = conn.prepareStatement(sql)) {
