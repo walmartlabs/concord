@@ -85,6 +85,7 @@ public class ProcessCardIT extends AbstractServerIT {
                         .form("hello world")
                         .icon("test icon");
 
+                // create card
                 UUID cardId = api.createOrUpdateProcessCard(r.asMap()).getId();
 
                 ProcessCardEntry entry = api.getProcessCard(cardId);
@@ -93,6 +94,7 @@ public class ProcessCardIT extends AbstractServerIT {
                 assertEquals("test", entry.getName());
                 assertEquals("test description", entry.getDescription());
 
+                // -- list cards
                 List<ProcessCardEntry> cards = api.listUserProcessCards();
                 assertEquals(1, cards.size());
 
@@ -107,6 +109,24 @@ public class ProcessCardIT extends AbstractServerIT {
                     assertTrue(data.contains("myValue"), data);
                 }
 
+                // update card
+                r = new ProcessCardsApi.CreateOrUpdateProcessCardRequest()
+                        .id(cardId)
+                        .org(orgName)
+                        .project(projectName)
+                        .name("test update")
+                        .description("test description update");
+
+                UUID cardIdAfterUpdate = api.createOrUpdateProcessCard(r.asMap()).getId();
+                assertEquals(cardId, cardIdAfterUpdate);
+
+                entry = api.getProcessCard(cardId);
+                assertEquals(orgName, entry.getOrgName());
+                assertEquals(projectName, entry.getProjectName());
+                assertEquals("test update", entry.getName());
+                assertEquals("test description update", entry.getDescription());
+
+                // delete card
                 api.deleteProcessCard(cardId);
             });
         });
