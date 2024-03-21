@@ -29,7 +29,7 @@ import com.walmartlabs.concord.process.loader.model.ProcessDefinition;
 import com.walmartlabs.concord.process.loader.model.SourceMap;
 import com.walmartlabs.concord.process.loader.model.Trigger;
 import com.walmartlabs.concord.sdk.Constants;
-import org.sonatype.siesta.ValidationErrorsException;
+import com.walmartlabs.concord.server.sdk.validation.ValidationErrorsException;
 
 import java.io.Serializable;
 import java.util.*;

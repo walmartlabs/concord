@@ -27,6 +27,7 @@ import com.google.inject.Injector;
 import com.google.inject.Module;
 import com.google.inject.multibindings.Multibinder;
 import com.google.inject.name.Names;
+import com.walmartlabs.concord.client2.ApiClient;
 import com.walmartlabs.concord.common.ConfigurationUtils;
 import com.walmartlabs.concord.common.IOUtils;
 import com.walmartlabs.concord.forms.Form;
@@ -135,6 +136,7 @@ public class MainTest {
                 bind(PersistenceService.class).toInstance(mock(PersistenceService.class));
                 bind(ProcessStatusCallback.class).toInstance(processStatusCallback);
                 bind(SecretService.class).to(DefaultSecretService.class);
+                bind(ApiClient.class).toInstance(mock(ApiClient.class));
 
                 Multibinder<TaskProvider> taskProviders = Multibinder.newSetBinder(binder(), TaskProvider.class);
                 taskProviders.addBinding().to(TaskV2Provider.class);
@@ -432,16 +434,6 @@ public class MainTest {
     @Test
     public void testTaskErrorBlock() throws Exception {
         deploy("faultyTask");
-
-        save(ProcessConfiguration.builder().build());
-
-        byte[] log = run();
-        assertLog(log, ".*error occurred:.*boom!.*");
-    }
-
-    @Test
-    public void testTaskErrorBlock2() throws Exception {
-        deploy("faultyTask2");
 
         save(ProcessConfiguration.builder().build());
 
@@ -896,7 +888,7 @@ public class MainTest {
             fail("should fail");
         } catch (Exception e) {
             String msg = e.getMessage();
-            assertTrue(msg.contains("Can't find 'sayGoodbye()' method"));
+            assertTrue(msg.contains("Can't find 'sayGoodbye()' method"), msg);
             assertTrue(msg.contains("Did you mean: sayHello()"));
         }
     }
@@ -1181,6 +1173,19 @@ public class MainTest {
     }
 
     @Test
+    public void testSetMapVariableOverride() throws Exception {
+        deploy("setVariableOverride");
+        save(ProcessConfiguration.builder()
+                .build());
+
+        byte[] log = run();
+        assertLog(log, ".*myMap1: .*\\{y=2\\}.*");
+        assertLog(log, ".*myMap2: .*\\{y=2, z=3\\}.*");
+        assertLog(log, ".*myMap3: .*\\{z=4\\}.*");
+        assertLog(log, ".*myMap4: .*\\{k=v\\}.*");
+    }
+
+    @Test
     public void testRetry() throws Exception {
         deploy("retry");
 
@@ -1247,7 +1252,7 @@ public class MainTest {
         save(ProcessConfiguration.builder()
                 .build());
 
-        checkpointService.put("first", Paths.get(MainTest.class.getResource("checkpointRestore2/first_1.93.0.zip").toURI()));
+        checkpointService.put("first", Paths.get(MainTest.class.getResource("checkpointRestore2/first_1.103.1.zip").toURI()));
         checkpointService.restore("first", workDir);
 
         run();
@@ -1532,6 +1537,193 @@ public class MainTest {
         assertLog(log, ".*true == true.*");
         assertLog(log, ".*false == false.*");
     }
+
+    @Test
+    public void testInvalidExpressionError() throws Exception {
+        deploy("invalidExpression");
+
+        save(ProcessConfiguration.builder()
+                .build());
+
+        try {
+            run();
+            fail("must fail");
+        } catch (Exception e) {
+            // ignore
+        }
+
+        String logString = new String(lastLog);
+        String expected = "[ERROR] (concord.yml): Error @ line: 9, col: 7. Error Parsing: ${str.split('\\n')}. Encountered \"\\'\\\\n\" at line 1, column 13.\n" +
+                "Was expecting one of:\n" +
+                "    \"{\" ...\n" +
+                "    <INTEGER_LITERAL> ...\n" +
+                "    <FLOATING_POINT_LITERAL> ...\n" +
+                "    <STRING_LITERAL> ...\n" +
+                "    \"true\" ...\n" +
+                "    \"false\" ...\n" +
+                "    \"null\" ...\n" +
+                "    \"(\" ...\n" +
+                "    \")\" ...\n" +
+                "    \"[\" ...\n" +
+                "    \"!\" ...\n" +
+                "    \"not\" ...\n" +
+                "    \"empty\" ...\n" +
+                "    \"-\" ...\n" +
+                "    <IDENTIFIER> ...";
+
+        assertTrue(logString.contains(expected), "expected log contains: " + expected + ", actual: " + logString);
+    }
+
+    @Test
+    public void testNPEInExpression() throws Exception {
+        deploy("npeInExpression");
+
+        save(ProcessConfiguration.builder()
+                .build());
+
+        try {
+            run();
+            fail("must fail");
+        } catch (Exception e) {
+            // ignore
+        }
+
+        String logString = new String(lastLog);
+        String expected = "[ERROR] (concord.yml): Error @ line: 7, col: 7. while evaluating expression '${'a' += m.n += 'b'}': ";
+
+        assertTrue(logString.contains(expected), "expected log contains: " + expected + ", actual: " + logString);
+    }
+
+    @Test
+    public void testExpressionThrowUserDefinedError() throws Exception {
+        deploy("faultyExpression");
+
+        save(ProcessConfiguration.builder()
+                .build());
+
+        try {
+            run();
+            fail("must fail");
+        } catch (Exception e) {
+            // ignore
+        }
+        assertLog(lastLog, ".*" + Pattern.quote("[ERROR] (concord.yml): Error @ line: 3, col: 7. BOOM"));
+    }
+
+    @Test
+    public void testExpressionThrowException() throws Exception {
+        deploy("exceptionFromExpression");
+
+        save(ProcessConfiguration.builder()
+                .build());
+
+        try {
+            run();
+            fail("must fail");
+        } catch (Exception e) {
+            // ignore
+        }
+
+        String expected = "[ERROR] (concord.yml): Error @ line: 3, col: 7. while evaluating expression '${faultyTask.exception('BOOM')}': javax.el.ELException: java.lang.Exception: BOOM";
+        assertLog(lastLog, ".*" + Pattern.quote(expected));
+    }
+
+    @Test
+    public void testTaskThrowUserDefinedError() throws Exception {
+        deploy("faultyTask2");
+
+        save(ProcessConfiguration.builder()
+                .build());
+
+        try {
+            run();
+            fail("must fail");
+        } catch (Exception e) {
+            // ignore
+        }
+        assertLog(lastLog, ".*" + Pattern.quote("[ERROR] (concord.yml): Error @ line: 3, col: 7. Error during execution of 'faultyTask' task: boom!"));
+    }
+
+    @Test
+    public void testTaskThrowRuntimeException() throws Exception {
+        deploy("faultyTask3");
+
+        save(ProcessConfiguration.builder()
+                .build());
+
+        try {
+            run();
+            fail("must fail");
+        } catch (Exception e) {
+            // ignore
+        }
+        assertLog(lastLog, ".*" + Pattern.quote("[ERROR] (concord.yml): Error @ line: 3, col: 7. boom!"));
+    }
+
+    @Test
+    public void testTaskThrowException() throws Exception {
+        deploy("faultyTask4");
+
+        save(ProcessConfiguration.builder()
+                .build());
+
+        try {
+            run();
+            fail("must fail");
+        } catch (Exception e) {
+            // ignore
+        }
+        assertLog(lastLog, ".*" + Pattern.quote("[ERROR] (concord.yml): Error @ line: 3, col: 7. boom!"));
+    }
+
+    @Test
+    public void testUnresolvedVarInStepName() throws Exception {
+        deploy("unresolvedVarInStepName");
+
+        save(ProcessConfiguration.builder()
+                .build());
+
+        try {
+            run();
+            fail("exception expected");
+        } catch (Exception e) {
+        }
+
+        assertLog(lastLog, ".*" + quote("(concord.yml): Error @ line: 4, col: 7. Can't find a variable 'undefined' used in '${undefined}'") + ".*");
+    }
+
+    @Test
+    public void testUnresolvedVarInLoop() throws Exception {
+        deploy("unresolvedVarInLoop");
+
+        save(ProcessConfiguration.builder()
+                .build());
+
+        try {
+            run();
+            fail("exception expected");
+        } catch (Exception e) {
+        }
+
+        assertLog(lastLog, ".*" + quote("(concord.yml): Error @ line: 6, col: 7. Can't find a variable 'undefined' used in '${undefined}'") + ".*");
+    }
+
+    @Test
+    public void testUnresolvedVarInRetry() throws Exception {
+        deploy("unresolvedVarInRetry");
+
+        save(ProcessConfiguration.builder()
+                .build());
+
+        try {
+            run();
+            fail("exception expected");
+        } catch (Exception e) {
+        }
+
+        assertLog(lastLog, ".*" + quote("(concord.yml): Error @ line: 6, col: 7. Can't find a variable 'undefined' used in '${undefined}'") + ".*");
+    }
+
 
     @Test
     public void testArrayEvalSerialize() throws Exception {
@@ -1872,12 +2064,20 @@ public class MainTest {
 
     @Named("faultyTask")
     @SuppressWarnings("unused")
-    static class FaultyTask implements Task {
+    public static class FaultyTask implements Task {
 
         @Override
         public TaskResult execute(Variables input) {
             return TaskResult.fail("boom!")
                     .value("key", "value");
+        }
+
+        public void fail(String msg) {
+            throw new UserDefinedException(msg);
+        }
+
+        public void exception(String msg) throws Exception {
+            throw new Exception(msg);
         }
     }
 
@@ -1888,6 +2088,16 @@ public class MainTest {
         @Override
         public TaskResult execute(Variables input) {
             throw new RuntimeException("boom!");
+        }
+    }
+
+    @Named("faultyTask3")
+    @SuppressWarnings("unused")
+    static class FaultyTask3 implements Task {
+
+        @Override
+        public TaskResult execute(Variables input) throws Exception {
+            throw new Exception("boom!");
         }
     }
 

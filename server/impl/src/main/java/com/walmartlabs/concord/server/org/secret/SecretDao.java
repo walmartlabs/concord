@@ -38,7 +38,6 @@ import org.jooq.*;
 import org.jooq.exception.DataAccessException;
 
 import javax.inject.Inject;
-import javax.inject.Named;
 import java.time.OffsetDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -53,7 +52,6 @@ import static com.walmartlabs.concord.server.jooq.tables.Teams.TEAMS;
 import static com.walmartlabs.concord.server.jooq.tables.Users.USERS;
 import static org.jooq.impl.DSL.*;
 
-@Named
 public class SecretDao extends AbstractDao {
 
     public enum InsertMode {

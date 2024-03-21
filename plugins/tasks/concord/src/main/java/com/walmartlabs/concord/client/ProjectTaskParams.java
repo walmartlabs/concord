@@ -21,6 +21,7 @@ package com.walmartlabs.concord.client;
  */
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.walmartlabs.concord.client2.RepositoryEntry;
 import com.walmartlabs.concord.runtime.v2.sdk.Variables;
 import com.walmartlabs.concord.sdk.MapUtils;
 

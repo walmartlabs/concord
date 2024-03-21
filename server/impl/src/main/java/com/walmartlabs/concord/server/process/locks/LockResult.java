@@ -22,7 +22,6 @@ package com.walmartlabs.concord.server.process.locks;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
-import io.swagger.v3.oas.annotations.media.Schema;
 import org.immutables.value.Value;
 
 @Value.Immutable
@@ -32,7 +31,6 @@ public interface LockResult {
 
     LockEntry info();
 
-//    @Schema(description = "is lock acquired?", required = true)
     boolean acquired();
 
     static ImmutableLockResult.Builder builder() {

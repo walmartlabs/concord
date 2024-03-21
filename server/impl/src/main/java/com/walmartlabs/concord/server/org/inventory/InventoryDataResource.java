@@ -26,14 +26,12 @@ import com.walmartlabs.concord.server.org.ResourceAccessLevel;
 import com.walmartlabs.concord.server.org.jsonstore.JsonStoreAccessManager;
 import com.walmartlabs.concord.server.org.jsonstore.JsonStoreEntry;
 import com.walmartlabs.concord.server.sdk.ConcordApplicationException;
+import com.walmartlabs.concord.server.sdk.rest.Resource;
+import com.walmartlabs.concord.server.sdk.validation.ValidationErrorsException;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import org.sonatype.siesta.Resource;
-import org.sonatype.siesta.ValidationErrorsException;
 
 import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import java.io.IOException;
@@ -41,8 +39,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
-@Named
-@Singleton
 @Path("/api/v1/org")
 @Deprecated
 @Tag(name = "Inventory Data")

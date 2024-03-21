@@ -20,25 +20,18 @@ package com.walmartlabs.concord.runtime.v2.runner.sdk;
  * =====
  */
 
-import com.squareup.okhttp.OkHttpClient;
-import com.walmartlabs.concord.ApiClient;
-import com.walmartlabs.concord.client.ApiClientConfiguration;
-import com.walmartlabs.concord.client.ApiClientFactory;
-import com.walmartlabs.concord.client.ConcordApiClient;
+import com.walmartlabs.concord.client2.ApiClient;
+import com.walmartlabs.concord.client2.ApiClientConfiguration;
+import com.walmartlabs.concord.client2.ApiClientFactory;
+import com.walmartlabs.concord.client2.DefaultApiClientFactory;
 import com.walmartlabs.concord.runtime.common.injector.InstanceId;
 import com.walmartlabs.concord.runtime.v2.sdk.ApiConfiguration;
-import com.walmartlabs.concord.runtime.v2.sdk.FileService;
 
 import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
-import javax.net.ssl.SSLContext;
-import javax.net.ssl.SSLSocketFactory;
-import java.nio.file.Path;
-import java.security.KeyManagementException;
-import java.security.NoSuchAlgorithmException;
+import java.time.Duration;
 import java.util.UUID;
-import java.util.concurrent.TimeUnit;
 
 @Named
 @Singleton
@@ -47,50 +40,19 @@ public class ApiClientFactoryImpl implements ApiClientFactory {
     private final ApiConfiguration cfg;
     private final InstanceId instanceId;
 
-    private final Path tmpDir;
-    private final OkHttpClient httpClient;
+    private final DefaultApiClientFactory clientFactory;
 
     @Inject
-    public ApiClientFactoryImpl(ApiConfiguration cfg, InstanceId instanceId, FileService fileService) throws Exception {
+    public ApiClientFactoryImpl(ApiConfiguration cfg, InstanceId instanceId) {
         this.cfg = cfg;
         this.instanceId = instanceId;
-        this.tmpDir = fileService.createTempDirectory("api-client");
-
-        OkHttpClient client = new OkHttpClient();
-
-        // init the SSL socket factory early to save time on the first request
-        client = withSslSocketFactory(client);
-
-        client.setConnectTimeout(cfg.connectTimeout(), TimeUnit.MILLISECONDS);
-        client.setReadTimeout(cfg.readTimeout(), TimeUnit.MILLISECONDS);
-        client.setWriteTimeout(30, TimeUnit.SECONDS);
-
-        this.httpClient = client;
+        this.clientFactory = new DefaultApiClientFactory(cfg.baseUrl(), Duration.ofMillis(cfg.connectTimeout()));
     }
 
     @Override
     public ApiClient create(ApiClientConfiguration overrides) {
-        String baseUrl = overrides.baseUrl() != null ? overrides.baseUrl() : cfg.baseUrl();
-
-        String sessionToken = null;
-        if (overrides.apiKey() == null) {
-            sessionToken = overrides.sessionToken();
-        }
-
-        String apiKey = overrides.apiKey();
-        if (apiKey != null) {
-            sessionToken = null;
-        }
-
-        if (sessionToken == null && apiKey == null) {
-            throw new IllegalArgumentException("Session token or an API key is required");
-        }
-
-        ApiClient client = new ConcordApiClient(baseUrl, httpClient)
-                .setSessionToken(sessionToken)
-                .setApiKey(apiKey)
-                .addDefaultHeader("Accept", "*/*")
-                .setTempFolderPath(tmpDir.toString());
+        ApiClient client = this.clientFactory.create(overrides)
+                .setReadTimeout(Duration.ofMillis(cfg.readTimeout()));
 
         UUID txId = instanceId.getValue();
         if (txId != null) {
@@ -98,12 +60,5 @@ public class ApiClientFactoryImpl implements ApiClientFactory {
         }
 
         return client;
-    }
-
-    private static OkHttpClient withSslSocketFactory(OkHttpClient client) throws NoSuchAlgorithmException, KeyManagementException {
-        SSLContext sslContext = SSLContext.getInstance("TLS");
-        sslContext.init(null, null, null);
-        SSLSocketFactory sslSocketFactory = sslContext.getSocketFactory();
-        return client.setSslSocketFactory(sslSocketFactory);
     }
 }

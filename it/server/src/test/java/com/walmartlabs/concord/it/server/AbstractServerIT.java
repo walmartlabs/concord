@@ -20,10 +20,7 @@ package com.walmartlabs.concord.it.server;
  * =====
  */
 
-import com.walmartlabs.concord.ApiClient;
-import com.walmartlabs.concord.ApiException;
-import com.walmartlabs.concord.client.SecretOperationResponse;
-import com.walmartlabs.concord.client.StartProcessResponse;
+import com.walmartlabs.concord.client2.*;
 import com.walmartlabs.concord.common.IOUtils;
 import com.walmartlabs.concord.it.common.ITUtils;
 import com.walmartlabs.concord.it.common.JGitUtils;
@@ -140,8 +137,8 @@ public abstract class AbstractServerIT {
         return serverClient.generateKeyPair(orgName, null, projectIds, name, generatePassword, storePassword);
     }
 
-    protected byte[] getLog(String logFileName) throws ApiException {
-        return serverClient.getLog(logFileName);
+    protected byte[] getLog(UUID instanceId) throws ApiException {
+        return serverClient.getLog(instanceId);
     }
 
     protected void resetApiKey() {
@@ -156,12 +153,8 @@ public abstract class AbstractServerIT {
         serverClient.setGithubKey(key);
     }
 
-    protected void waitForLog(String logFileName, String pattern) throws IOException, InterruptedException, ApiException {
-        serverClient.waitForLog(logFileName, pattern);
-    }
-
-    protected <T> T request(String uri, Map<String, Object> input, Class<T> entityType) throws ApiException {
-        return serverClient.request(uri, input, entityType);
+    protected void waitForLog(UUID instanceId, String pattern) throws IOException, InterruptedException, ApiException {
+        serverClient.waitForLog(instanceId, pattern);
     }
 
     protected static String randomString() {
@@ -187,10 +180,17 @@ public abstract class AbstractServerIT {
         return fromJson(f, Map.class);
     }
 
+    @SuppressWarnings("unchecked")
+    protected Map<String, Object> fromJson(InputStream is) throws IOException {
+        return getApiClient().getObjectMapper().readValue(is, Map.class);
+    }
+
     protected <T> T fromJson(File f, Class<T> classOfT) throws IOException {
-        try (Reader r = new FileReader(f)) {
-            return getApiClient().getJSON().getGson().fromJson(r, classOfT);
-        }
+        return getApiClient().getObjectMapper().readValue(f, classOfT);
+    }
+
+    protected <T> T fromJson(InputStream is, Class<T> classOfT) throws IOException {
+        return getApiClient().getObjectMapper().readValue(is, classOfT);
     }
 
     protected String createRepo(String resource) throws Exception {
@@ -217,5 +217,34 @@ public abstract class AbstractServerIT {
 
     public static boolean shouldSkipDockerTests() {
         return Boolean.parseBoolean(System.getenv("IT_SKIP_DOCKER_TESTS"));
+    }
+
+    protected void withOrg(Consumer<String> consumer) throws Exception {
+        String orgName = "org_" + randomString();
+        OrganizationsApi orgApi = new OrganizationsApi(getApiClient());
+        try {
+            orgApi.createOrUpdateOrg(new OrganizationEntry().name(orgName));
+            consumer.accept(orgName);
+        } finally {
+            orgApi.deleteOrg(orgName, "yes");
+        }
+    }
+
+    protected void withProject(String orgName, Consumer<String> consumer) throws Exception {
+        String projectName = "project_" + randomString();
+        ProjectsApi projectsApi = new ProjectsApi(getApiClient());
+        try {
+            projectsApi.createOrUpdateProject(orgName, new ProjectEntry()
+                    .name(projectName)
+                    .rawPayloadMode(ProjectEntry.RawPayloadModeEnum.EVERYONE));
+            consumer.accept(projectName);
+        } finally {
+            projectsApi.deleteProject(orgName, projectName);
+        }
+    }
+
+    @FunctionalInterface
+    public interface Consumer<T> {
+        void accept(T t) throws Exception;
     }
 }

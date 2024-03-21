@@ -28,24 +28,23 @@ import com.walmartlabs.concord.server.jooq.Tables;
 import com.walmartlabs.concord.server.org.ResourceAccessLevel;
 import com.walmartlabs.concord.server.org.secret.SecretEntry;
 import com.walmartlabs.concord.server.org.secret.SecretManager;
+import com.walmartlabs.concord.server.org.triggers.TriggerManager;
 import com.walmartlabs.concord.server.policy.EntityAction;
 import com.walmartlabs.concord.server.policy.EntityType;
 import com.walmartlabs.concord.server.policy.PolicyManager;
 import com.walmartlabs.concord.server.policy.PolicyUtils;
 import com.walmartlabs.concord.server.repository.RepositoryRefresher;
 import com.walmartlabs.concord.server.sdk.ConcordApplicationException;
+import com.walmartlabs.concord.server.sdk.validation.ValidationErrorsException;
 import org.immutables.value.Value;
 import org.jooq.DSLContext;
-import org.sonatype.siesta.ValidationErrorsException;
 
 import javax.annotation.Nullable;
 import javax.inject.Inject;
-import javax.inject.Named;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Response;
 import java.util.*;
 
-@Named
 public class ProjectRepositoryManager {
 
     private final ProjectAccessManager projectAccessManager;
@@ -54,6 +53,7 @@ public class ProjectRepositoryManager {
     private final AuditLog auditLog;
     private final PolicyManager policyManager;
     private final RepositoryRefresher repositoryRefresher;
+    private final TriggerManager triggerManager;
 
     @Inject
     public ProjectRepositoryManager(ProjectAccessManager projectAccessManager,
@@ -61,7 +61,8 @@ public class ProjectRepositoryManager {
                                     RepositoryDao repositoryDao,
                                     AuditLog auditLog,
                                     PolicyManager policyManager,
-                                    RepositoryRefresher repositoryRefresher) {
+                                    RepositoryRefresher repositoryRefresher,
+                                    TriggerManager triggerManager) {
 
         this.projectAccessManager = projectAccessManager;
         this.secretManager = secretManager;
@@ -69,6 +70,7 @@ public class ProjectRepositoryManager {
         this.auditLog = auditLog;
         this.policyManager = policyManager;
         this.repositoryRefresher = repositoryRefresher;
+        this.triggerManager = triggerManager;
     }
 
     public RepositoryEntry get(UUID projectId, String repositoryName) {
@@ -105,7 +107,9 @@ public class ProjectRepositoryManager {
         policyManager.checkEntity(project.getOrgId(), project.getId(), EntityType.REPOSITORY, repoId == null ? EntityAction.CREATE : EntityAction.UPDATE,
                 null, PolicyUtils.repositoryToMap(project, entry, secret));
 
-        ProcessDefinition processDefinition = processDefinition(project.getOrgId(), projectId, entry);
+        ProcessDefinition processDefinition = entry.isDisabled()
+                ? null
+                : processDefinition(project.getOrgId(), projectId, entry);
 
         InsertUpdateResult result = repositoryDao.txResult(tx -> insertOrUpdate(tx, projectId, repoId, entry, secret, processDefinition));
         addAuditLog(project, result.prevEntry(), result.newEntry());
@@ -155,6 +159,12 @@ public class ProjectRepositoryManager {
     }
 
     private InsertUpdateResult insertOrUpdate(DSLContext tx, UUID projectId, UUID repoId, RepositoryEntry entry, SecretEntry secret, ProcessDefinition processDefinition) {
+        if (!entry.isDisabled() && processDefinition == null) {
+            // should have already thrown and exception by this point, but just in case
+            // something went wrong cloning/loading process definition
+            throw new ConcordApplicationException("Error while loading process definition", Response.Status.INTERNAL_SERVER_ERROR);
+        }
+
         RepositoryEntry prevEntry = null;
         if (repoId == null) {
             repoId = repositoryDao.insert(tx, projectId,
@@ -180,7 +190,11 @@ public class ProjectRepositoryManager {
                     entry.isTriggersDisabled());
         }
 
-        repositoryRefresher.refresh(tx, projectId, entry.getName(), processDefinition);
+        if (entry.isDisabled()) {
+            triggerManager.clearTriggers(tx, projectId, repoId);
+        } else {
+            repositoryRefresher.refresh(tx, projectId, entry.getName(), processDefinition);
+        }
 
         return ImmutableInsertUpdateResult.builder()
                 .prevEntry(prevEntry)

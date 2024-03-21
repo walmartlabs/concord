@@ -32,18 +32,16 @@ import com.walmartlabs.concord.server.org.project.*;
 import com.walmartlabs.concord.server.process.ImportsNormalizerFactory;
 import com.walmartlabs.concord.server.repository.RepositoryManager;
 import com.walmartlabs.concord.server.sdk.ConcordApplicationException;
+import com.walmartlabs.concord.server.sdk.rest.Resource;
+import com.walmartlabs.concord.server.sdk.validation.ValidationErrorsException;
 import com.walmartlabs.concord.server.security.Roles;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.apache.shiro.authz.UnauthorizedException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.sonatype.siesta.Resource;
-import org.sonatype.siesta.ValidationErrorsException;
 
 import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.PathParam;
@@ -53,8 +51,6 @@ import javax.ws.rs.core.Response;
 import java.util.List;
 import java.util.UUID;
 
-@Named
-@Singleton
 @javax.ws.rs.Path("/api/v1/org")
 @Tag(name = "Triggers")
 public class TriggerResource implements Resource {

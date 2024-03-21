@@ -25,37 +25,45 @@ import com.google.inject.AbstractModule;
 import com.google.inject.Singleton;
 import com.google.inject.multibindings.Multibinder;
 import com.walmartlabs.concord.cli.Verbosity;
+import com.walmartlabs.concord.client2.ApiClient;
 import com.walmartlabs.concord.dependencymanager.DependencyManager;
 import com.walmartlabs.concord.runtime.v2.runner.*;
 import com.walmartlabs.concord.runtime.v2.runner.checkpoints.CheckpointService;
 import com.walmartlabs.concord.runtime.v2.runner.guice.BaseRunnerModule;
 import com.walmartlabs.concord.runtime.v2.runner.logging.RunnerLogger;
 import com.walmartlabs.concord.runtime.v2.runner.logging.SimpleLogger;
+import com.walmartlabs.concord.runtime.v2.runner.remote.ApiClientProvider;
 import com.walmartlabs.concord.runtime.v2.runner.tasks.TaskCallListener;
 import com.walmartlabs.concord.runtime.v2.sdk.DockerService;
 import com.walmartlabs.concord.runtime.v2.sdk.LockService;
 import com.walmartlabs.concord.runtime.v2.sdk.SecretService;
 import com.walmartlabs.concord.svm.ExecutionListener;
 
+import java.io.InputStream;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Map;
+import java.util.function.Supplier;
 
 public class CliServicesModule extends AbstractModule {
 
     private final Path secretStoreDir;
     private final Path workDir;
+    private final Path defaultTaskVars;
     private final VaultProvider vaultProvider;
     private final DependencyManager dependencyManager;
     private final Verbosity verbosity;
 
     public CliServicesModule(Path secretStoreDir,
                              Path workDir,
+                             Path defaultTaskVars,
                              VaultProvider vaultProvider,
                              DependencyManager dependencyManager,
                              Verbosity verbosity) {
 
         this.secretStoreDir = secretStoreDir;
         this.workDir = workDir;
+        this.defaultTaskVars = defaultTaskVars;
         this.vaultProvider = vaultProvider;
         this.dependencyManager = dependencyManager;
         this.verbosity = verbosity;
@@ -74,7 +82,10 @@ public class CliServicesModule extends AbstractModule {
         bind(ProcessStatusCallback.class).toInstance(instanceId -> {
         });
 
-        bind(DefaultTaskVariablesService.class).toInstance(new MapBackedDefaultTaskVariablesService(readDefaultVars()));
+        bind(ApiClient.class).toProvider(ApiClientProvider.class);
+
+        bind(DefaultTaskVariablesService.class)
+                .toInstance(new MapBackedDefaultTaskVariablesService(readDefaultVars(defaultTaskVars)));
 
         bind(LockService.class).to(CliLockService.class);
 
@@ -92,10 +103,26 @@ public class CliServicesModule extends AbstractModule {
         }
     }
 
+    private static Map<String, Map<String, Object>> readDefaultVars(Path defaultTaskVars) {
+        if (Files.exists(defaultTaskVars)) {
+            try (InputStream is = Files.newInputStream(defaultTaskVars)) {
+                return parseDefaultVars(() -> is);
+            } catch (Exception e) {
+                System.out.println("Error parsing default variables in '" + defaultTaskVars + "': " + e.getMessage());
+            }
+        }
+
+        return parseDefaultVars(() -> CliServicesModule.class.getResourceAsStream("/default-vars.json"));
+    }
+
     @SuppressWarnings("unchecked")
-    private static Map<String, Map<String, Object>> readDefaultVars() {
-        try {
-            return new ObjectMapper().readValue(CliServicesModule.class.getResourceAsStream("/default-vars.json"), Map.class);
+    private static Map<String, Map<String, Object>> parseDefaultVars(Supplier<InputStream> isSupplier) {
+        try (InputStream is = isSupplier.get()) {
+            if (is == null) {
+                throw new IllegalStateException("Default variables input stream is null.");
+            }
+
+            return new ObjectMapper().readValue(is, Map.class);
         } catch (Exception e) {
             throw new RuntimeException(e.getMessage());
         }

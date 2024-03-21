@@ -144,6 +144,41 @@ public class ProcessManager {
         return start(forkPipeline, payload);
     }
 
+    public void restart(ProcessKey processKey) {
+        ProcessKey rootProcessKey = queueDao.getRootId(processKey);
+        if (rootProcessKey == null) {
+            throw new ProcessException(processKey, "Process not found: " + processKey, Status.NOT_FOUND);
+        }
+
+        ProcessEntry e = queueDao.get(rootProcessKey);
+        if (e == null) {
+            throw new ProcessException(processKey, "Process not found: " + processKey, Status.NOT_FOUND);
+        }
+
+        // TODO: rename to assertProcessOperationRights or something
+        assertKillOrDisableOrRestartRights(e);
+
+        ProcessStatus s = e.status();
+        if (!TERMINATED_PROCESS_STATUSES.contains(s)) {
+            throw new ProcessException(rootProcessKey, "Can't restart running process: " + processKey, Status.CONFLICT);
+        }
+
+        // put new attemptNO somewhere
+
+        queueDao.tx(tx -> {
+            boolean updated = queueManager.updateExpectedStatus(tx, rootProcessKey, e.status(), ProcessStatus.NEW);
+            if (updated) {
+                List<ProcessKey> allProcesses = queueDao.getCascade(tx, rootProcessKey)
+                        .stream()
+                        .filter(p -> !p.equals(rootProcessKey))
+                        .toList();
+                kill(tx, allProcesses);
+
+                stateManager.delete(tx, rootProcessKey);
+            }
+        });
+    }
+
     public void resume(Payload payload) {
         log.info("resume ['{}']", payload.getProcessKey());
         resumePipeline.process(payload);
@@ -153,10 +188,10 @@ public class ProcessManager {
     public void disable(ProcessKey processKey, boolean disabled) {
         ProcessEntry e = queueDao.get(processKey);
         if (e == null) {
-            throw new ProcessException(null, "Process not found: " + processKey, Status.NOT_FOUND);
+            throw new ProcessException(processKey, "Process not found: " + processKey, Status.NOT_FOUND);
         }
 
-        assertKillOrDisableRights(e);
+        assertKillOrDisableOrRestartRights(e);
 
         ProcessStatus s = e.status();
         if (TERMINATED_PROCESS_STATUSES.contains(s)) {
@@ -171,7 +206,7 @@ public class ProcessManager {
     public void kill(DSLContext tx, ProcessKey processKey) {
         ProcessEntry process = assertProcess(tx, processKey);
 
-        assertKillOrDisableRights(process);
+        assertKillOrDisableOrRestartRights(process);
 
         boolean cancelled = false;
         while (!cancelled) {
@@ -236,10 +271,10 @@ public class ProcessManager {
     public void killCascade(PartialProcessKey processKey) {
         ProcessEntry e = queueManager.get(processKey);
         if (e == null) {
-            throw new ProcessException(null, "Process not found: " + processKey, Status.NOT_FOUND);
+            throw new ProcessException(processKey, "Process not found: " + processKey, Status.NOT_FOUND);
         }
 
-        assertKillOrDisableRights(e);
+        assertKillOrDisableOrRestartRights(e);
 
         List<ProcessKey> allProcesses = queueDao.getCascade(processKey);
         queueDao.tx(tx -> kill(tx, allProcesses));
@@ -335,7 +370,7 @@ public class ProcessManager {
         if (process != null) {
             return process;
         }
-        throw new ProcessException(null, "Process not found: " + processKey, Status.NOT_FOUND);
+        throw new ProcessException(processKey, "Process not found: " + processKey, Status.NOT_FOUND);
     }
 
     private boolean isSuspended(ProcessKey processKey) {
@@ -385,7 +420,7 @@ public class ProcessManager {
         }
     }
 
-    private void assertKillOrDisableRights(ProcessEntry e) {
+    private void assertKillOrDisableOrRestartRights(ProcessEntry e) {
         if (Roles.isAdmin()) {
             return;
         }
@@ -398,7 +433,7 @@ public class ProcessManager {
 
         UUID projectId = e.projectId();
         if (projectId != null) {
-            // only org members with WRITER rights can kill or disable the process
+            // only org members with WRITER rights can kill/disable/restart the process
             projectAccessManager.assertAccess(projectId, ResourceAccessLevel.WRITER, true);
             return;
         }

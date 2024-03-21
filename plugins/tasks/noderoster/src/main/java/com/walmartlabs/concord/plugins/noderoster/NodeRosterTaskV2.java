@@ -20,8 +20,7 @@ package com.walmartlabs.concord.plugins.noderoster;
  * =====
  */
 
-import com.walmartlabs.concord.ApiClient;
-import com.walmartlabs.concord.client.*;
+import com.walmartlabs.concord.client2.*;
 import com.walmartlabs.concord.runtime.v2.sdk.Task;
 import com.walmartlabs.concord.runtime.v2.sdk.TaskResult;
 import com.walmartlabs.concord.runtime.v2.sdk.Variables;

@@ -1,5 +1,110 @@
 # Change log
 
+## [2.9.0] - 2024-02-28
+
+### Added
+
+- concord-server: option to permanently disable a user
+([#875](https://github.com/walmartlabs/concord/pull/875));
+- tasks: asserts
+([#876](https://github.com/walmartlabs/concord/pull/876));
+- concord-agent, dependency-manager: support for Maven offline
+mode ([#869](https://github.com/walmartlabs/concord/pull/869));
+- concord-server: skip repository refresh when repo is disabled
+([#872](https://github.com/walmartlabs/concord/pull/872));
+- runtime-v2: threadId to task details
+([#874](https://github.com/walmartlabs/concord/pull/874));
+- concord-console2: add more details to trigger list
+([#878](https://github.com/walmartlabs/concord/pull/878));
+
+### Changed
+
+- concord-console: adjust polling frequency based on client
+activity
+([#634](https://github.com/walmartlabs/concord/pull/634));
+- runtime-v1: fix for resume from same step (bpm version up)
+([#879](https://github.com/walmartlabs/concord/pull/879));
+- cli: api client provider for cli (just to load tasks)
+([#877](https://github.com/walmartlabs/concord/pull/877));
+- ansible: add module_defaults callback, remove deprecated gather_subset in config
+([#873](https://github.com/walmartlabs/concord/pull/873));
+- runtime-v2: ignore empty string as sensitive data
+([#871](https://github.com/walmartlabs/concord/pull/871));
+- project: fix maven compiler source version in parent pom
+([#870](https://github.com/walmartlabs/concord/pull/870)).
+
+
+
+## [2.8.0] - 2024-01-15
+
+### Added
+
+- concord-console2: kv capacity
+([#795](https://github.com/walmartlabs/concord/pull/795));
+- concord-server, concord-console2: ability to restart runtime-v2
+processes
+([#850](https://github.com/walmartlabs/concord/pull/850)).
+
+### Changed
+
+- concord-server: invalidate session on failed login
+([#859](https://github.com/walmartlabs/concord/pull/859));
+- runtime-v2: error location for loop, call, parallel, retry commands (v2)
+([#865](https://github.com/walmartlabs/concord/pull/865));
+- runtime-v2: fix incorrect variable merging for set variables step
+([#862](https://github.com/walmartlabs/concord/pull/862)).
+
+
+
+## [2.7.0] - 2024-01-08
+
+### Added
+
+- concord-cli: Add option for default task variables
+([#848](https://github.com/walmartlabs/concord/pull/848)).
+
+### Changed
+
+- runtime-v2: resume event to json serialization fix
+([#860](https://github.com/walmartlabs/concord/pull/860));
+- project: drop siesta-server dependency
+([#826](https://github.com/walmartlabs/concord/pull/826));
+- resource-task: writeYaml: do not split YAML into multiple lines
+([#854](https://github.com/walmartlabs/concord/pull/854));
+- concord-server: logout any session on login failure
+([#858](https://github.com/walmartlabs/concord/pull/858)).
+
+### Breaking
+
+- project: drop siesta-api dependency
+([#857](https://github.com/walmartlabs/concord/pull/857)).
+
+
+
+## [2.6.0] - 2023-12-28
+
+### Added
+
+- concord-server: expose fetch with version
+([#853](https://github.com/walmartlabs/concord/pull/853));
+- server: allow regexp in meta filters
+([#852](https://github.com/walmartlabs/concord/pull/852)).
+
+### Changed
+
+- project: switch to concord-client2
+([#821](https://github.com/walmartlabs/concord/pull/821));
+- concord-server: remove more @Named
+([#839](https://github.com/walmartlabs/concord/pull/839));
+- client2: allow serialize collections
+([#846](https://github.com/walmartlabs/concord/pull/846));
+- runtime-v2: skip annotations for varargs
+([#845](https://github.com/walmartlabs/concord/pull/845));
+- concord-repository: fetch with quiet option
+([#851](https://github.com/walmartlabs/concord/pull/851)).
+
+
+
 ## [2.5.0] - 2023-12-10
 
 ### Added

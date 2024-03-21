@@ -20,8 +20,7 @@ package com.walmartlabs.concord.runtime.v2.runner.checkpoints;
  * =====
  */
 
-import com.walmartlabs.concord.ApiClient;
-import com.walmartlabs.concord.client.ClientUtils;
+import com.walmartlabs.concord.client2.*;
 import com.walmartlabs.concord.runtime.common.cfg.ApiConfiguration;
 import com.walmartlabs.concord.runtime.common.cfg.RunnerConfiguration;
 import com.walmartlabs.concord.runtime.common.injector.InstanceId;
@@ -56,7 +55,7 @@ public class DefaultCheckpointUploader implements CheckpointUploader {
         data.put("data", path);
 
         ClientUtils.withRetry(apiConfiguration.retryCount(), apiConfiguration.retryInterval(), () -> {
-            ClientUtils.postData(apiClient, "/api/v1/process/" + instanceId.getValue() + "/checkpoint", data, null);
+            new CheckpointApi(apiClient).uploadCheckpoint(instanceId.getValue(), data);
             return null;
         });
     }
