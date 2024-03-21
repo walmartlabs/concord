@@ -119,4 +119,10 @@
                                  onDelete="SET NULL"/>
     </changeSet>
 
+    <changeSet id="210000" author="ybrigo@gmail.com" runInTransaction="false">
+        <sql>
+            create index concurrently IDX_WAIT_CONDITIONS on PROCESS_WAIT_CONDITIONS using gin (WAIT_CONDITIONS)
+        </sql>
+    </changeSet>
+
 </databaseChangeLog>
