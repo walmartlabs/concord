@@ -2,7 +2,7 @@
  * *****
  * Concord
  * -----
- * Copyright (C) 2017 - 2018 Walmart Inc.
+ * Copyright (C) 2023 - 2018 Walmart Inc.
  * -----
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,30 +18,34 @@
  * =====
  */
 
-import { ConcordKey, fetchJson, queryParams } from '../../../common';
-import { ProcessEntry, ProcessStatus } from '../../../process';
-
-export interface ProjectProcesses {
-    projectName: ConcordKey;
-    running: number;
-}
+import {ConcordId, ConcordKey, fetchJson, queryParams} from '../../../common';
+import { ProcessEntry } from '../../../process';
 
 export interface UserActivity {
-    processStats: {
-        status: ProcessStatus;
-        count: number;
-    };
-    orgProcesses?: {
-        orgName: ConcordKey;
-        processes: ProjectProcesses[];
-    };
     processes: ProcessEntry[];
 }
 
+export interface ProcessCardEntry {
+    id: ConcordId;
+    orgName: ConcordKey;
+    projectName: ConcordKey;
+    repoName: ConcordKey;
+    entryPoint: string;
+    name: string;
+    description?: string;
+    icon?: string;
+    isCustomForm: boolean;
+}
+
 export const getActivity = (
-    maxProjectsPerOrg: number,
     maxOwnProcesses: number
 ): Promise<UserActivity> =>
     fetchJson(
-        `/api/service/console/user/activity?${queryParams({ maxProjectsPerOrg, maxOwnProcesses })}`
+        `/api/v2/service/console/user/activity?${queryParams({ maxOwnProcesses })}`
+    );
+
+export const listProcessCards = (
+): Promise<ProcessCardEntry[]> =>
+    fetchJson(
+        `/api/v1/processcard`
     );

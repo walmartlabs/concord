@@ -4,7 +4,7 @@ package com.walmartlabs.concord.server.console;
  * *****
  * Concord
  * -----
- * Copyright (C) 2017 - 2018 Walmart Inc.
+ * Copyright (C) 2017 - 2023 Walmart Inc.
  * -----
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,30 +20,30 @@ package com.walmartlabs.concord.server.console;
  * =====
  */
 
-import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.annotation.JsonInclude.Include;
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.walmartlabs.concord.server.process.ProcessEntry;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import org.immutables.value.Value;
 
-import java.io.Serial;
 import java.io.Serializable;
 import java.util.List;
+import java.util.UUID;
 
-@JsonInclude(Include.NON_EMPTY)
-public final class UserActivityResponse implements Serializable {
+@Value.Immutable
+@JsonInclude(JsonInclude.Include.NON_EMPTY)
+@JsonSerialize(as = ImmutableProcessCardAccessEntry.class)
+@JsonDeserialize(as = ImmutableProcessCardAccessEntry.class)
+public interface ProcessCardAccessEntry extends Serializable {
 
-    @Serial
-    private static final long serialVersionUID = 1L;
+    long serialVersionUID = 1L;
 
-    private final List<ProcessEntry> processes;
-
-    @JsonCreator
-    public UserActivityResponse(@JsonProperty("processes") List<ProcessEntry> processes) {
-        this.processes = processes;
+    @Value.Default
+    default List<UUID> userIds() {
+        return List.of();
     }
 
-    public List<ProcessEntry> processes() {
-        return processes;
+    @Value.Default
+    default List<UUID> teamIds() {
+        return List.of();
     }
 }
