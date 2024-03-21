@@ -229,9 +229,9 @@ public final class MultipartUtils {
         }
     }
     public static List<UUID> getUUIDList(MultipartInput input, String key) {
-        List<String> projects = getStringList(input,key);
+        List<String> result = getStringList(input, key);
         try {
-            return projects.stream().map(UUID::fromString).collect(Collectors.toList());
+            return result.stream().map(UUID::fromString).collect(Collectors.toList());
         } catch (IllegalArgumentException e) {
             throw new ConcordApplicationException("Error parsing the request", e);
         }
