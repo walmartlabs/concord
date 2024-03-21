@@ -4,12 +4,15 @@
 
 ### Added
 
+- concord-server, concord-console2: add "process cards"
+([#808](https://github.com/walmartlabs/concord/pull/808));
 - concord-agent: kill runner child PIDs
 ([#880](https://github.com/walmartlabs/concord/pull/880)).
 
 ### Changed
 
-- server: fix trigger id calculation for complex args: heterogeneous lists, list of maps
+- server: fix trigger id calculation for complex args:
+heterogeneous lists, list of maps
 ([#882](https://github.com/walmartlabs/concord/pull/882)).
 
 ## [2.9.0] - 2024-02-28
