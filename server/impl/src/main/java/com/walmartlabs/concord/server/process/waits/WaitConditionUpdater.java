@@ -25,7 +25,7 @@ import com.walmartlabs.concord.server.sdk.ProcessKey;
 import com.walmartlabs.concord.server.sdk.ProcessStatus;
 import org.jooq.DSLContext;
 
-public class XYZProcessStatusListener implements ProcessStatusListener {
+public class WaitConditionUpdater implements ProcessStatusListener {
 
     @Override
     public void onStatusChange(DSLContext tx, ProcessKey processKey, ProcessStatus status) {
