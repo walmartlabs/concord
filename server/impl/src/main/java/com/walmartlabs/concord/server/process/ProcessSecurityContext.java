@@ -40,14 +40,12 @@ import org.apache.shiro.subject.Subject;
 import org.apache.shiro.util.ThreadContext;
 
 import javax.inject.Inject;
-import javax.inject.Named;
 import java.util.Collection;
 import java.util.UUID;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 
-@Named
 public class ProcessSecurityContext {
 
     private static final String PRINCIPAL_FILE_PATH = ".concord/current_user";
@@ -67,11 +65,7 @@ public class ProcessSecurityContext {
                 .build();
     }
 
-    public void storeCurrentSubject(ProcessKey processKey) {
-        Subject s = SecurityUtils.getSubject();
-
-        PrincipalCollection src = s.getPrincipals();
-
+    public byte[] serializePrincipals(PrincipalCollection src) {
         // filter out transient principals
         SimplePrincipalCollection dst = new SimplePrincipalCollection();
         for (String realm : src.getRealmNames()) {
@@ -84,8 +78,21 @@ public class ProcessSecurityContext {
                 dst.add(p, realm);
             }
         }
+        return PrincipalUtils.serialize(dst);
+    }
 
-        stateManager.replace(processKey, PRINCIPAL_FILE_PATH, PrincipalUtils.serialize(dst));
+    // TODO: invalidate cache for processKey?
+    public void storeCurrentSubject(ProcessKey processKey) {
+        Subject s = SecurityUtils.getSubject();
+
+        PrincipalCollection src = s.getPrincipals();
+
+        storeSubject(processKey, src);
+    }
+
+    // TODO: invalidate cache for processKey?
+    public void storeSubject(ProcessKey processKey, PrincipalCollection src) {
+        stateManager.replace(processKey, PRINCIPAL_FILE_PATH, serializePrincipals(src));
     }
 
     public PrincipalCollection getPrincipals(PartialProcessKey processKey) {

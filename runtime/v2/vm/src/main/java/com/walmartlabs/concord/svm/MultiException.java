@@ -4,7 +4,7 @@ package com.walmartlabs.concord.svm;
  * *****
  * Concord
  * -----
- * Copyright (C) 2017 - 2019 Walmart Inc.
+ * Copyright (C) 2017 - 2023 Walmart Inc.
  * -----
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -29,15 +29,8 @@ public class MultiException extends RuntimeException {
 
     private static final long serialVersionUID = 1L;
 
-    private final Collection<Exception> causes;
-
     public MultiException(Collection<Exception> causes) {
         super("Errors: \n" + toMessage(causes));
-        this.causes = causes;
-    }
-
-    public Collection<Exception> getCauses() {
-        return causes;
     }
 
     private static String toMessage(Collection<Exception> causes) {

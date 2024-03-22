@@ -21,6 +21,7 @@ import * as React from 'react';
 import { memo, useCallback, useState } from 'react';
 import {
     canBeCancelled,
+    canBeRestarted,
     hasState,
     isFinal,
     ProcessEntry,
@@ -45,17 +46,20 @@ import { CancelProcessPopup, DisableProcessPopup } from '../../organisms';
 import { ConcordId } from '../../../api/common';
 
 import './styles.css';
+import { formatDuration } from '../../../utils';
+import RestartProcessPopup from "../RestartProcessPopup";
 
 interface ExternalProps {
     stickyRef: any;
     loading: boolean;
     instanceId: ConcordId;
     process?: ProcessEntry;
+    rootInstanceId?: ConcordId;
     refresh: () => void;
 }
 
 const ProcessToolbar = memo((props: ExternalProps) => {
-    const { stickyRef, loading, refresh, process, instanceId } = props;
+    const { stickyRef, loading, refresh, process, instanceId, rootInstanceId } = props;
 
     const [isFixed, setFixed] = useState(false);
 
@@ -84,7 +88,7 @@ const ProcessToolbar = memo((props: ExternalProps) => {
 
                 <MenuItem>{renderStartAt(process)}</MenuItem>
 
-                <MenuItem position={'right'}>{renderProcessMainActions(refresh, process)}</MenuItem>
+                <MenuItem position={'right'}>{renderProcessMainActions(refresh, process, rootInstanceId)}</MenuItem>
 
                 <MenuItem>{renderProcessSecondaryActions(refresh, process)}</MenuItem>
             </Menu>
@@ -143,9 +147,16 @@ const renderProcessStatus = (process?: ProcessEntry) => {
         return;
     }
 
+    let duration;
+    if (process.status === ProcessStatus.RUNNING) {
+        duration = formatDuration(new Date().getTime() - parseDate(process.lastRunAt || process.createdAt).getTime());
+    }
     return (
         <>
-            <Label color={getStatusColor(process.status)}>{process.status}</Label>
+            <Label color={getStatusColor(process.status)}>
+                {process.status}
+                {duration && <Label.Detail>{duration}</Label.Detail>}
+            </Label>
             {process.status === ProcessStatus.FAILED && (
                 <>
                     &nbsp;
@@ -169,13 +180,13 @@ const renderStartAt = (process?: ProcessEntry) => {
     return;
 };
 
-const renderProcessMainActions = (refresh: () => void, process?: ProcessEntry) => {
+const renderProcessMainActions = (refresh: () => void, process?: ProcessEntry, rootInstanceId?: ConcordId) => {
     if (!process) {
         return (
             <Button.Group>
                 <Button
                     attached={false}
-                    negative={true}
+                    negative={false}
                     icon="delete"
                     content="Cancel"
                     disabled={true}
@@ -184,6 +195,20 @@ const renderProcessMainActions = (refresh: () => void, process?: ProcessEntry) =
             </Button.Group>
         );
     }
+
+    const renderRestartProcessTrigger = (onClick: () => void) => {
+        return (
+            <Button
+                attached={false}
+                negative={false}
+                icon="sync"
+                content="Restart"
+                disabled={!canBeRestarted(process.status)}
+                size={'small'}
+                onClick={onClick}
+            />
+        );
+    };
 
     const renderCancelProcessTrigger = (onClick: () => void) => {
         return (
@@ -201,11 +226,21 @@ const renderProcessMainActions = (refresh: () => void, process?: ProcessEntry) =
 
     return (
         <Button.Group>
-            <CancelProcessPopup
-                instanceId={process.instanceId}
-                refresh={refresh}
-                trigger={renderCancelProcessTrigger}
-            />
+            {!canBeRestarted(process.status) &&
+                <CancelProcessPopup
+                    instanceId={process.instanceId}
+                    refresh={refresh}
+                    trigger={renderCancelProcessTrigger}
+                />
+            }
+            {canBeRestarted(process.status) && process.runtime === 'concord-v2' &&
+                <RestartProcessPopup
+                    instanceId={process.instanceId}
+                    rootInstanceId={rootInstanceId}
+                    refresh={refresh}
+                    trigger={renderRestartProcessTrigger}
+                />
+            }
         </Button.Group>
     );
 };

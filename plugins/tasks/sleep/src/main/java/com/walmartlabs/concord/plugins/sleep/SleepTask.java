@@ -20,9 +20,9 @@ package com.walmartlabs.concord.plugins.sleep;
  * =====
  */
 
-import com.walmartlabs.concord.ApiClient;
-import com.walmartlabs.concord.client.ApiClientConfiguration;
-import com.walmartlabs.concord.client.ApiClientFactory;
+import com.walmartlabs.concord.client2.ApiClient;
+import com.walmartlabs.concord.client2.ApiClientConfiguration;
+import com.walmartlabs.concord.client2.ApiClientFactory;
 import com.walmartlabs.concord.runtime.v2.sdk.TaskResult;
 import com.walmartlabs.concord.sdk.Context;
 import com.walmartlabs.concord.sdk.ContextUtils;
@@ -53,7 +53,7 @@ public class SleepTask implements Task {
     public void execute(Context ctx) throws Exception {
         Supplier<Suspender> suspender = () -> {
             ApiClient apiClient = apiClientFactory.create(ApiClientConfiguration.builder()
-                    .context(ctx)
+                    .sessionToken(ContextUtils.getSessionToken(ctx))
                     .build());
 
             return new Suspender(apiClient, ContextUtils.getTxId(ctx));

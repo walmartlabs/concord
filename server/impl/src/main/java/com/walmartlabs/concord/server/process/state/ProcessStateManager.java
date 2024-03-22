@@ -4,7 +4,7 @@ package com.walmartlabs.concord.server.process.state;
  * *****
  * Concord
  * -----
- * Copyright (C) 2017 - 2018 Walmart Inc.
+ * Copyright (C) 2017 - 2023 Walmart Inc.
  * -----
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,6 +22,7 @@ package com.walmartlabs.concord.server.process.state;
 
 import com.walmartlabs.concord.common.IOUtils;
 import com.walmartlabs.concord.common.Posix;
+import com.walmartlabs.concord.common.secret.SecretUtils;
 import com.walmartlabs.concord.db.AbstractDao;
 import com.walmartlabs.concord.db.MainDB;
 import com.walmartlabs.concord.db.PgUtils;
@@ -31,7 +32,6 @@ import com.walmartlabs.concord.policyengine.StatePolicy;
 import com.walmartlabs.concord.policyengine.StateRule;
 import com.walmartlabs.concord.server.cfg.ProcessConfiguration;
 import com.walmartlabs.concord.server.cfg.SecretStoreConfiguration;
-import com.walmartlabs.concord.common.secret.SecretUtils;
 import com.walmartlabs.concord.server.policy.PolicyException;
 import com.walmartlabs.concord.server.policy.PolicyManager;
 import com.walmartlabs.concord.server.process.logs.ProcessLogManager;
@@ -41,16 +41,12 @@ import com.walmartlabs.concord.server.sdk.ProcessKey;
 import com.walmartlabs.concord.server.sdk.metrics.WithTimer;
 import org.apache.commons.compress.archivers.zip.ZipArchiveEntry;
 import org.apache.commons.compress.archivers.zip.ZipArchiveOutputStream;
-import org.jooq.Configuration;
-import org.jooq.DSLContext;
-import org.jooq.Field;
+import org.jooq.*;
 import org.jooq.impl.DSL;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -66,13 +62,12 @@ import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.stream.Stream;
 
+import static com.walmartlabs.concord.server.jooq.Tables.PROCESS_INITIAL_STATE;
 import static com.walmartlabs.concord.server.jooq.tables.ProcessQueue.PROCESS_QUEUE;
 import static com.walmartlabs.concord.server.jooq.tables.ProcessState.PROCESS_STATE;
 import static com.walmartlabs.concord.server.jooq.tables.Projects.PROJECTS;
 import static org.jooq.impl.DSL.*;
 
-@Named
-@Singleton
 public class ProcessStateManager extends AbstractDao {
 
     private static final Logger log = LoggerFactory.getLogger(ProcessStateManager.class);
@@ -121,11 +116,23 @@ public class ProcessStateManager extends AbstractDao {
     }
 
     private <T> Optional<T> get(DSLContext tx, ProcessKey processKey, String path, Function<InputStream, Optional<T>> converter) {
-        String sql = tx.select(PROCESS_STATE.IS_ENCRYPTED, PROCESS_STATE.ITEM_DATA)
-                .from(PROCESS_STATE)
-                .where(PROCESS_STATE.INSTANCE_ID.eq((UUID) null)
-                        .and(PROCESS_STATE.INSTANCE_CREATED_AT.eq((OffsetDateTime) null))
-                        .and(PROCESS_STATE.ITEM_PATH.eq((String) null)))
+        return doGet(tx, CurrentProcessStateTable.INSTANCE, processKey, path, converter);
+    }
+
+    public <T> Optional<T> getInitial(ProcessKey processKey, String path, Function<InputStream, Optional<T>> converter) {
+        return getInitial(dsl(), processKey, path, converter);
+    }
+
+    private <T> Optional<T> getInitial(DSLContext tx, ProcessKey processKey, String path, Function<InputStream, Optional<T>> converter) {
+        return doGet(tx, InitialProcessStateTable.INSTANCE, processKey, path, converter);
+    }
+
+    private <T> Optional<T> doGet(DSLContext tx, ProcessStateTable table, ProcessKey processKey, String path, Function<InputStream, Optional<T>> converter) {
+        String sql = tx.select(table.IS_ENCRYPTED(), table.ITEM_DATA())
+                .from(table.table())
+                .where(table.INSTANCE_ID().eq((UUID) null)
+                        .and(table.INSTANCE_CREATED_AT().eq((OffsetDateTime) null))
+                        .and(table.ITEM_PATH().eq((String) null)))
                 .getSQL();
 
         return tx.connectionResult(conn -> {
@@ -245,7 +252,11 @@ public class ProcessStateManager extends AbstractDao {
     }
 
     public void delete(ProcessKey processKey) {
-        tx(tx -> delete(tx, processKey.getInstanceId(), processKey.getCreatedAt()));
+        tx(tx -> delete(tx, processKey));
+    }
+
+    public void delete(DSLContext tx, ProcessKey processKey) {
+        delete(tx, processKey.getInstanceId(), processKey.getCreatedAt());
     }
 
     /**
@@ -275,13 +286,21 @@ public class ProcessStateManager extends AbstractDao {
      * Inserts a single value.
      */
     public void insert(DSLContext tx, ProcessKey processKey, String path, byte[] in) {
+        doInsert(tx, CurrentProcessStateTable.INSTANCE, processKey, path, in);
+    }
+
+    public void insertInitial(DSLContext tx, ProcessKey processKey, String path, byte[] in) {
+        doInsert(tx, InitialProcessStateTable.INSTANCE, processKey, path, in);
+    }
+
+    private void doInsert(DSLContext tx, ProcessStateTable table, ProcessKey processKey, String path, byte[] in) {
         boolean needEncrypt = secureFiles.contains(path);
         byte[] data = in;
         if (needEncrypt) {
             data = encrypt(in);
         }
-        tx.insertInto(PROCESS_STATE)
-                .columns(PROCESS_STATE.INSTANCE_ID, PROCESS_STATE.INSTANCE_CREATED_AT, PROCESS_STATE.ITEM_PATH, PROCESS_STATE.ITEM_DATA, PROCESS_STATE.IS_ENCRYPTED)
+        tx.insertInto(table.table())
+                .columns(table.INSTANCE_ID(), table.INSTANCE_CREATED_AT(), table.ITEM_PATH(), table.ITEM_DATA(), table.IS_ENCRYPTED())
                 .values(processKey.getInstanceId(), processKey.getCreatedAt(), path, data, needEncrypt)
                 .execute();
     }
@@ -310,6 +329,15 @@ public class ProcessStateManager extends AbstractDao {
 
     @WithTimer
     public void importPath(DSLContext tx, ProcessKey processKey, String path, Path src, BiFunction<Path, BasicFileAttributes, Boolean> filter) {
+        doImportPath(tx, CurrentProcessStateTable.INSTANCE, processKey, path, src, filter);
+    }
+
+    @WithTimer
+    public void importPathInitial(DSLContext tx, ProcessKey processKey, String path, Path src, BiFunction<Path, BasicFileAttributes, Boolean> filter) {
+        doImportPath(tx, InitialProcessStateTable.INSTANCE, processKey, path, src, filter);
+    }
+
+    private void doImportPath(DSLContext tx, ProcessStateTable table, ProcessKey processKey, String path, Path src, BiFunction<Path, BasicFileAttributes, Boolean> filter) {
         PolicyEngine policyEngine = assertPolicy(tx, processKey, src, filter);
 
         String prefix = fixPath(path);
@@ -341,14 +369,14 @@ public class ProcessStateManager extends AbstractDao {
                     int unixMode = Posix.unixMode(permissions);
                     boolean needsEncryption = secureFiles.contains(n);
 
-                    tx.deleteFrom(PROCESS_STATE).where(PROCESS_STATE.INSTANCE_ID.eq(processKey.getInstanceId())
-                            .and(PROCESS_STATE.INSTANCE_CREATED_AT.eq(processKey.getCreatedAt()))
-                            .and(PROCESS_STATE.ITEM_PATH.eq(n)))
+                    tx.deleteFrom(table.table()).where(table.INSTANCE_ID().eq(processKey.getInstanceId())
+                                    .and(table.INSTANCE_CREATED_AT().eq(processKey.getCreatedAt()))
+                                    .and(table.ITEM_PATH().eq(n)))
                             .execute();
 
                     batch.add(new BatchItem(n, file, unixMode, needsEncryption));
                     if (batch.size() >= INSERT_BATCH_SIZE) {
-                        insert(tx, processKey.getInstanceId(), processKey.getCreatedAt(), batch);
+                        doInsert(tx, table, processKey.getInstanceId(), processKey.getCreatedAt(), batch);
                         batch.clear();
                     }
 
@@ -357,7 +385,7 @@ public class ProcessStateManager extends AbstractDao {
             });
 
             if (!batch.isEmpty()) {
-                insert(tx, processKey.getInstanceId(), processKey.getCreatedAt(), batch);
+                doInsert(tx, table, processKey.getInstanceId(), processKey.getCreatedAt(), batch);
             }
         } catch (IOException e) {
             throw new RuntimeException(e);
@@ -407,16 +435,24 @@ public class ProcessStateManager extends AbstractDao {
      * Exports elements whose path begins with the specified value.
      */
     public boolean exportDirectory(ProcessKey processKey, String path, ItemConsumer consumer) {
+        return doExportDirectory(CurrentProcessStateTable.INSTANCE, processKey, path, consumer);
+    }
+
+    public boolean exportDirectoryInitial(ProcessKey processKey, String path, ItemConsumer consumer) {
+        return doExportDirectory(InitialProcessStateTable.INSTANCE, processKey, path, consumer);
+    }
+
+    public boolean doExportDirectory(ProcessStateTable table, ProcessKey processKey, String path, ItemConsumer consumer) {
         String dir = fixPath(path);
 
         DSLContext tx = dsl();
 
         String sql = tx
-                .select(PROCESS_STATE.ITEM_PATH, PROCESS_STATE.UNIX_MODE, PROCESS_STATE.IS_ENCRYPTED, PROCESS_STATE.ITEM_DATA)
-                .from(PROCESS_STATE)
-                .where(PROCESS_STATE.INSTANCE_ID.eq((UUID) null)
-                        .and(PROCESS_STATE.INSTANCE_CREATED_AT.eq((OffsetDateTime) null))
-                        .and(PROCESS_STATE.ITEM_PATH.startsWith((String) null)))
+                .select(table.ITEM_PATH(), table.UNIX_MODE(), table.IS_ENCRYPTED(), table.ITEM_DATA())
+                .from(table.table())
+                .where(table.INSTANCE_ID().eq((UUID) null)
+                        .and(table.INSTANCE_CREATED_AT().eq((OffsetDateTime) null))
+                        .and(table.ITEM_PATH().startsWith((String) null)))
                 .getSQL();
 
         return tx.connectionResult(conn -> {
@@ -496,6 +532,55 @@ public class ProcessStateManager extends AbstractDao {
     private void insert(DSLContext tx, UUID instanceId, OffsetDateTime instanceCreatedAt, Collection<BatchItem> batch) {
         String sql = tx.insertInto(PROCESS_STATE)
                 .columns(PROCESS_STATE.INSTANCE_ID, PROCESS_STATE.INSTANCE_CREATED_AT, PROCESS_STATE.ITEM_PATH, PROCESS_STATE.UNIX_MODE, PROCESS_STATE.ITEM_DATA, PROCESS_STATE.IS_ENCRYPTED)
+                .values((UUID) null, null, null, null, null, null)
+                .getSQL();
+
+        List<InputStream> streams = new LinkedList<>();
+        try {
+            tx.connection(conn -> {
+                try (PreparedStatement ps = conn.prepareStatement(sql)) {
+                    for (BatchItem item : batch) {
+                        // INSTANCE_ID
+                        ps.setObject(1, instanceId);
+
+                        // INSTANCE_CREATED_AT
+                        ps.setObject(2, instanceCreatedAt);
+
+                        // ITEM_PATH
+                        ps.setString(3, item.itemPath);
+
+                        // UNIX_MODE
+                        ps.setInt(4, item.unixMode);
+
+                        InputStream in = Files.newInputStream(item.path);
+                        streams.add(in); // keep the streams open until the batch is committed
+
+                        if (item.needsEncryption) {
+                            in = encrypt(in);
+                        }
+
+                        // ITEM_DATA
+                        ps.setBinaryStream(5, in);
+
+                        // IS_ENCRYPTED
+                        ps.setBoolean(6, item.needsEncryption);
+
+                        ps.addBatch();
+                    }
+
+                    ps.executeBatch();
+                } catch (SQLException e) {
+                    throw new RuntimeException(e);
+                }
+            });
+        } finally {
+            streams.forEach(ProcessStateManager::closeSilently);
+        }
+    }
+
+    private void doInsert(DSLContext tx, ProcessStateTable table, UUID instanceId, OffsetDateTime instanceCreatedAt, Collection<BatchItem> batch) {
+        String sql = tx.insertInto(table.table())
+                .columns(table.INSTANCE_ID(), table.INSTANCE_CREATED_AT(), table.ITEM_PATH(), table.UNIX_MODE(), table.ITEM_DATA(), table.IS_ENCRYPTED())
                 .values((UUID) null, null, null, null, null, null)
                 .getSQL();
 
@@ -754,6 +839,104 @@ public class ProcessStateManager extends AbstractDao {
             this.path = path;
             this.unixMode = unixMode;
             this.needsEncryption = needsEncryption;
+        }
+    }
+
+    private interface ProcessStateTable {
+
+        Table<?> table();
+
+        TableField<?, UUID> INSTANCE_ID();
+
+        TableField<?, OffsetDateTime> INSTANCE_CREATED_AT();
+
+        TableField<?, String> ITEM_PATH();
+
+        TableField<?, byte[]> ITEM_DATA();
+
+        TableField<?, Short> UNIX_MODE();
+
+        TableField<?, Boolean> IS_ENCRYPTED();
+    }
+
+
+    static class InitialProcessStateTable implements ProcessStateTable {
+
+        public static InitialProcessStateTable INSTANCE = new InitialProcessStateTable();
+
+        @Override
+        public Table<?> table() {
+            return PROCESS_INITIAL_STATE;
+        }
+
+        @Override
+        public TableField<?, UUID> INSTANCE_ID() {
+            return PROCESS_INITIAL_STATE.INSTANCE_ID;
+        }
+
+        @Override
+        public TableField<?, OffsetDateTime> INSTANCE_CREATED_AT() {
+            return PROCESS_INITIAL_STATE.INSTANCE_CREATED_AT;
+        }
+
+        @Override
+        public TableField<?, String> ITEM_PATH() {
+            return PROCESS_INITIAL_STATE.ITEM_PATH;
+        }
+
+        @Override
+        public TableField<?, byte[]> ITEM_DATA() {
+            return PROCESS_INITIAL_STATE.ITEM_DATA;
+        }
+
+        @Override
+        public TableField<?, Short> UNIX_MODE() {
+            return PROCESS_INITIAL_STATE.UNIX_MODE;
+        }
+
+        @Override
+        public TableField<?, Boolean> IS_ENCRYPTED() {
+            return PROCESS_INITIAL_STATE.IS_ENCRYPTED;
+        }
+    }
+
+    static class CurrentProcessStateTable implements ProcessStateTable {
+
+        public static CurrentProcessStateTable INSTANCE = new CurrentProcessStateTable();
+
+        @Override
+        public Table<?> table() {
+            return PROCESS_STATE;
+        }
+
+        @Override
+        public TableField<?, UUID> INSTANCE_ID() {
+            return PROCESS_STATE.INSTANCE_ID;
+        }
+
+        @Override
+        public TableField<?, OffsetDateTime> INSTANCE_CREATED_AT() {
+            return PROCESS_STATE.INSTANCE_CREATED_AT;
+        }
+
+        @Override
+        public TableField<?, String> ITEM_PATH() {
+            return PROCESS_STATE.ITEM_PATH;
+        }
+
+        @Override
+        public TableField<?, byte[]> ITEM_DATA() {
+            return PROCESS_STATE.ITEM_DATA;
+        }
+
+        @Override
+        public TableField<?, Short> UNIX_MODE() {
+            return PROCESS_STATE.UNIX_MODE;
+        }
+
+        @Override
+        public TableField<?, Boolean> IS_ENCRYPTED() {
+            return PROCESS_STATE.IS_ENCRYPTED;
         }
     }
 }

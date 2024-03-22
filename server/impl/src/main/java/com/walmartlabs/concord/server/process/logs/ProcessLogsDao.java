@@ -31,7 +31,6 @@ import com.walmartlabs.concord.server.sdk.Range;
 import org.jooq.*;
 
 import javax.inject.Inject;
-import javax.inject.Named;
 import java.io.Serializable;
 import java.time.OffsetDateTime;
 import java.util.List;
@@ -43,7 +42,6 @@ import static com.walmartlabs.concord.server.jooq.Tables.PROCESS_LOG_DATA;
 import static com.walmartlabs.concord.server.jooq.Tables.PROCESS_LOG_SEGMENTS;
 import static org.jooq.impl.DSL.*;
 
-@Named
 public class ProcessLogsDao extends AbstractDao {
 
     @Inject
@@ -174,7 +172,7 @@ public class ProcessLogsDao extends AbstractDao {
                 .fetchOptional(upperRange)
                 .orElse(0);
 
-        return new ProcessLogsDao.ProcessLog(size, chunks);
+        return new ProcessLog(size, chunks);
     }
 
     public ProcessLog data(ProcessKey processKey, Integer start, Integer end) {

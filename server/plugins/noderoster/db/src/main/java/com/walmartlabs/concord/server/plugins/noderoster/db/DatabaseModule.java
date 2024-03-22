@@ -36,6 +36,11 @@ import javax.sql.DataSource;
 @Named
 public class DatabaseModule extends AbstractModule {
 
+    @Override
+    protected void configure() {
+        bind(DatabaseChangeLogProvider.class).annotatedWith(NodeRosterDB.class).to(NodeRosterDBChangeLogProvider.class);
+    }
+
     @Provides
     @NodeRosterDB
     @Singleton

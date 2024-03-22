@@ -61,7 +61,7 @@ public final class TriggersGrammar {
             orError(githubTriggerRepositoryInfo, YamlValueType.ARRAY_OF_GITHUB_REPOSITORY_INFO);
 
     private static GithubTriggerExclusiveMode validateGithubExclusiveMode(GithubTriggerExclusiveMode e) {
-        if (e.groupBy() == null && e.group() == null) {
+        if (e.groupByProperty() == null && e.group() == null) {
             throw new OneOfMandatoryFieldsNotFoundException("group", "groupBy");
         }
         return e;
@@ -72,7 +72,7 @@ public final class TriggersGrammar {
                     with(ImmutableGithubTriggerExclusiveMode::builder,
                             o -> options(
                                     optional("group", stringVal.map(o::group)),
-                                    optional("groupBy", enumVal(GithubTriggerExclusiveMode.GroupBy.class).map(o::groupBy)),
+                                    optional("groupBy", stringVal.map(o::groupByProperty)),
                                     optional("mode", enumVal(ExclusiveMode.Mode.class).map(o::mode))))
                             .map(ImmutableGithubTriggerExclusiveMode.Builder::build)
                             .map(TriggersGrammar::validateGithubExclusiveMode));

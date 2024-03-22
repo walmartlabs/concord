@@ -4,7 +4,7 @@ package com.walmartlabs.concord.server.org.jsonstore;
  * *****
  * Concord
  * -----
- * Copyright (C) 2017 - 2018 Walmart Inc.
+ * Copyright (C) 2017 - 2023 Walmart Inc.
  * -----
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -32,11 +32,10 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.*;
 
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
-
-import static org.junit.jupiter.api.Assertions.*;
 
 @Disabled("local DB connection required")
 public class JsonStorageQueryExecDaoTest extends AbstractDaoTest {

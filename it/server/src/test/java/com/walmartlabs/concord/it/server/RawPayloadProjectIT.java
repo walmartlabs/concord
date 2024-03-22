@@ -20,10 +20,7 @@ package com.walmartlabs.concord.it.server;
  * =====
  */
 
-import com.walmartlabs.concord.ApiException;
-import com.walmartlabs.concord.client.ProjectEntry;
-import com.walmartlabs.concord.client.ProjectsApi;
-import com.walmartlabs.concord.client.StartProcessResponse;
+import com.walmartlabs.concord.client2.*;
 import org.junit.jupiter.api.Test;
 
 import java.util.HashMap;
@@ -40,12 +37,12 @@ public class RawPayloadProjectIT extends AbstractServerIT {
 
         String orgName = "Default";
         String projectName = "project_" + System.currentTimeMillis();
-        projectsApi.createOrUpdate(orgName, new ProjectEntry()
-                .setName(projectName));
+        projectsApi.createOrUpdateProject(orgName, new ProjectEntry()
+                .name(projectName));
 
         // ---
 
-        byte[] payload = archive(ProcessIT.class.getResource("example").toURI());
+        byte[] payload = archive(RawPayloadProjectIT.class.getResource("example").toURI());
 
         try {
             Map<String, Object> input = new HashMap<>();

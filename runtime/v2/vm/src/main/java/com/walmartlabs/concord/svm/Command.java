@@ -25,4 +25,6 @@ import java.io.Serializable;
 public interface Command extends Serializable {
 
     void eval(Runtime runtime, State state, ThreadId threadId) throws Exception;
+
+    default void onException(Runtime runtime, Exception e, State state, ThreadId threadId) {}
 }

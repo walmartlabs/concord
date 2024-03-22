@@ -1,0 +1,475 @@
+{{>licenseInfo}}
+package {{package}};
+
+import {{invokerPackage}}.ApiClient;
+import {{invokerPackage}}.ApiException;
+import {{invokerPackage}}.ApiResponse;
+import {{invokerPackage}}.Pair;
+
+{{#imports}}
+import {{import}};
+{{/imports}}
+
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
+import com.walmartlabs.concord.client2.impl.*;
+
+{{#hasFormParamsInSpec}}
+{{/hasFormParamsInSpec}}
+import java.io.InputStream;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.net.http.HttpRequest;
+import java.nio.channels.Channels;
+import java.nio.channels.Pipe;
+import java.net.URI;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
+import java.time.Duration;
+
+{{^fullJavaUtil}}
+import java.util.ArrayList;
+import java.util.StringJoiner;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.HashMap;
+import java.util.function.Consumer;
+{{/fullJavaUtil}}
+{{#asyncNative}}
+
+import java.util.concurrent.CompletableFuture;
+{{/asyncNative}}
+
+{{>generatedAnnotation}}
+{{#operations}}
+public class {{classname}} {
+  private final HttpClient memberVarHttpClient;
+  private final ObjectMapper memberVarObjectMapper;
+  private final String memberVarBaseUri;
+  private final {{#fullJavaUtil}}java.util.function.{{/fullJavaUtil}}Consumer<HttpRequest.Builder> memberVarInterceptor;
+  private final Duration memberVarReadTimeout;
+  private final {{#fullJavaUtil}}java.util.function.{{/fullJavaUtil}}Consumer<HttpResponse<InputStream>> memberVarResponseInterceptor;
+  private final {{#fullJavaUtil}}java.util.function.{{/fullJavaUtil}}Consumer<HttpResponse<String>> memberVarAsyncResponseInterceptor;
+
+  private final ApiClient apiClient;
+
+  public {{classname}}(ApiClient apiClient) {
+    memberVarHttpClient = apiClient.getHttpClient();
+    memberVarObjectMapper = apiClient.getObjectMapper();
+    memberVarBaseUri = apiClient.getBaseUri();
+    memberVarInterceptor = apiClient.getRequestInterceptor();
+    memberVarReadTimeout = apiClient.getReadTimeout();
+    memberVarResponseInterceptor = apiClient.getResponseInterceptor();
+    memberVarAsyncResponseInterceptor = apiClient.getAsyncResponseInterceptor();
+
+    this.apiClient = apiClient;
+  }
+
+  public ApiClient getApiClient() {
+    return this.apiClient;
+  }
+
+  {{#asyncNative}}
+
+  private ApiException getApiException(String operationId, HttpResponse<String> response) {
+    String message = formatExceptionMessage(operationId, response.statusCode(), response.body());
+    return new ApiException(response.statusCode(), message, response.headers(), response.body());
+  }
+  {{/asyncNative}}
+  {{^asyncNative}}
+
+  protected ApiException getApiException(String operationId, HttpResponse<InputStream> response) throws IOException {
+    String body = response.body() == null ? null : new String(response.body().readAllBytes());
+    String message = formatExceptionMessage(operationId, response.statusCode(), body);
+    return new ApiException(response.statusCode(), message, response.headers(), body);
+  }
+  {{/asyncNative}}
+
+  private String formatExceptionMessage(String operationId, int statusCode, String body) {
+    if (body == null || body.isEmpty()) {
+      body = "[no body]";
+    }
+    return operationId + " call failed with: " + statusCode + " - " + body;
+  }
+
+  {{#operation}}
+  {{#vendorExtensions.x-group-parameters}}
+  {{#hasParams}}
+  {{#isDeprecated}}
+  @Deprecated
+  {{/isDeprecated}}
+  public {{#returnType}}{{#asyncNative}}CompletableFuture<{{{returnType}}}>{{/asyncNative}}{{^asyncNative}}{{{returnType}}}{{/asyncNative}}{{/returnType}}{{^returnType}}{{#asyncNative}}CompletableFuture<Void>{{/asyncNative}}{{^asyncNative}}void{{/asyncNative}}{{/returnType}} {{operationId}}(API{{operationId}}Request apiRequest) throws ApiException {
+    {{#allParams}}
+    {{{dataType}}} {{paramName}} = apiRequest.{{paramName}}();
+    {{/allParams}}
+    {{#returnType}}return {{/returnType}}{{^returnType}}{{#asyncNative}}return {{/asyncNative}}{{/returnType}}{{operationId}}({{#allParams}}{{paramName}}{{^-last}}, {{/-last}}{{/allParams}});
+  }
+
+  {{#isDeprecated}}
+  @Deprecated
+  {{/isDeprecated}}
+  public {{#asyncNative}}CompletableFuture<{{/asyncNative}}ApiResponse<{{{returnType}}}{{^returnType}}Void{{/returnType}}>{{#asyncNative}}>{{/asyncNative}} {{operationId}}WithHttpInfo(API{{operationId}}Request apiRequest) throws ApiException {
+    {{#allParams}}
+    {{{dataType}}} {{paramName}} = apiRequest.{{paramName}}();
+    {{/allParams}}
+    return {{operationId}}WithHttpInfo({{#allParams}}{{paramName}}{{^-last}}, {{/-last}}{{/allParams}});
+  }
+
+  {{/hasParams}}
+  {{/vendorExtensions.x-group-parameters}}
+  {{#isDeprecated}}
+  @Deprecated
+  {{/isDeprecated}}
+
+  {{#vendorExtensions.x-concord.groupParams}}
+  public {{#returnType}}{{#asyncNative}}CompletableFuture<{{{returnType}}}>{{/asyncNative}}{{^asyncNative}}{{{returnType}}}{{/asyncNative}}{{/returnType}}{{^returnType}}{{#asyncNative}}CompletableFuture<Void>{{/asyncNative}}{{^asyncNative}}void{{/asyncNative}}{{/returnType}} {{operationId}}({{vendorExtensions.x-concord.groupName}} in) throws ApiException {
+      return {{operationId}}({{#isMultipart}}{{#allParams}}{{^isFormParam}}in.{{paramName}}(),{{/isFormParam}}{{/allParams}} multipartInput{{/isMultipart}}{{^isMultipart}}{{#allParams}}in.{{paramName}}(){{^-last}}, {{/-last}} {{/allParams}}{{/isMultipart}});
+  }
+  {{/vendorExtensions.x-concord.groupParams}}
+
+  public {{#returnType}}{{#asyncNative}}CompletableFuture<{{{returnType}}}>{{/asyncNative}}{{^asyncNative}}{{{returnType}}}{{/asyncNative}}{{/returnType}}{{^returnType}}{{#asyncNative}}CompletableFuture<Void>{{/asyncNative}}{{^asyncNative}}void{{/asyncNative}}{{/returnType}} {{operationId}}({{#isMultipart}}{{#allParams}}{{^isFormParam}}{{#vendorExtensions.x-concord.customQueryParams}}Map<String, String>{{/vendorExtensions.x-concord.customQueryParams}}{{^vendorExtensions.x-concord.customQueryParams}}{{{dataType}}}{{/vendorExtensions.x-concord.customQueryParams}} {{paramName}},{{/isFormParam}}{{/allParams}} Map<String, Object> multipartInput{{/isMultipart}}{{^isMultipart}}{{#allParams}} {{#vendorExtensions.x-concord.customQueryParams}}Map<String, String>{{/vendorExtensions.x-concord.customQueryParams}}{{^vendorExtensions.x-concord.customQueryParams}}{{{dataType}}}{{/vendorExtensions.x-concord.customQueryParams}} {{paramName}}{{^-last}}, {{/-last}} {{/allParams}}{{/isMultipart}}) throws ApiException {
+    {{^asyncNative}}
+    {{#returnType}}ApiResponse<{{{.}}}> localVarResponse = {{/returnType}}{{operationId}}WithHttpInfo({{#isMultipart}}{{#allParams}}{{^isFormParam}}{{paramName}},{{/isFormParam}}{{/allParams}} multipartInput{{/isMultipart}}{{^isMultipart}}{{#allParams}}{{paramName}}{{^-last}}, {{/-last}} {{/allParams}}{{/isMultipart}});
+    {{#returnType}}
+    return localVarResponse.getData();
+    {{/returnType}}
+    {{/asyncNative}}
+    {{#asyncNative}}
+    try {
+      HttpRequest.Builder localVarRequestBuilder = {{operationId}}RequestBuilder({{#allParams}}{{paramName}}{{^-last}}, {{/-last}}{{/allParams}});
+      return memberVarHttpClient.sendAsync(
+          localVarRequestBuilder.build(),
+          HttpResponse.BodyHandlers.ofString()).thenComposeAsync(localVarResponse -> {
+            if (localVarResponse.statusCode()/ 100 != 2) {
+              return CompletableFuture.failedFuture(getApiException("{{operationId}}", localVarResponse));
+            }
+            {{#returnType}}
+            try {
+              String responseBody = localVarResponse.body();
+              return CompletableFuture.completedFuture(
+                  responseBody == null || responseBody.isBlank() ? null : memberVarObjectMapper.readValue(responseBody, new TypeReference<{{{returnType}}}>() {})
+              );
+            } catch (IOException e) {
+              return CompletableFuture.failedFuture(new ApiException(e));
+            }
+            {{/returnType}}
+            {{^returnType}}
+            return CompletableFuture.completedFuture(null);
+            {{/returnType}}
+      });
+    }
+    catch (ApiException e) {
+      return CompletableFuture.failedFuture(e);
+    }
+    {{/asyncNative}}
+  }
+
+  {{#isDeprecated}}
+  @Deprecated
+  {{/isDeprecated}}
+  public {{#asyncNative}}CompletableFuture<{{/asyncNative}}ApiResponse<{{{returnType}}}{{^returnType}}Void{{/returnType}}>{{#asyncNative}}>{{/asyncNative}} {{operationId}}WithHttpInfo({{#isMultipart}}{{#allParams}}{{^isFormParam}}{{#vendorExtensions.x-concord.customQueryParams}}Map<String, String>{{/vendorExtensions.x-concord.customQueryParams}}{{^vendorExtensions.x-concord.customQueryParams}}{{{dataType}}}{{/vendorExtensions.x-concord.customQueryParams}} {{paramName}},{{/isFormParam}}{{/allParams}} Map<String, Object> multipartInput{{/isMultipart}}{{^isMultipart}}{{#allParams}} {{#vendorExtensions.x-concord.customQueryParams}}Map<String, String>{{/vendorExtensions.x-concord.customQueryParams}}{{^vendorExtensions.x-concord.customQueryParams}}{{{dataType}}}{{/vendorExtensions.x-concord.customQueryParams}} {{paramName}}{{^-last}}, {{/-last}} {{/allParams}}{{/isMultipart}}) throws ApiException {
+    {{^asyncNative}}
+    HttpRequest.Builder localVarRequestBuilder = {{operationId}}RequestBuilder({{#isMultipart}}{{#allParams}}{{^isFormParam}}{{paramName}},{{/isFormParam}}{{/allParams}} multipartInput{{/isMultipart}}{{^isMultipart}}{{#allParams}}{{paramName}}{{^-last}}, {{/-last}} {{/allParams}}{{/isMultipart}});
+    try {
+      HttpResponse<InputStream> localVarResponse = memberVarHttpClient.send(
+          localVarRequestBuilder.build(),
+          HttpResponse.BodyHandlers.ofInputStream());
+      if (memberVarResponseInterceptor != null) {
+        memberVarResponseInterceptor.accept(localVarResponse);
+      }
+      try {
+        if (localVarResponse.statusCode()/ 100 != 2) {
+          throw getApiException("{{operationId}}", localVarResponse);
+        }
+        if (localVarResponse.statusCode() == 204) {
+            return new ApiResponse<{{{returnType}}}{{^returnType}}Void{{/returnType}}>(
+                localVarResponse.statusCode(),
+                localVarResponse.headers().map(),
+                null
+            );
+        }
+
+        return new ApiResponse<{{{returnType}}}{{^returnType}}Void{{/returnType}}>(
+          localVarResponse.statusCode(),
+          localVarResponse.headers().map(),
+          {{#returnType}}
+          ResponseBodyHandler.handle(memberVarObjectMapper, localVarResponse, new TypeReference<{{{returnType}}}>() {})
+          {{/returnType}}
+          {{^returnType}}
+          null
+          {{/returnType}}
+        );
+      } finally {
+        {{^returnType}}
+        // Drain the InputStream
+        while (localVarResponse.body().read() != -1) {
+            // Ignore
+        }
+        localVarResponse.body().close();
+        {{/returnType}}
+      }
+    } catch (IOException e) {
+      throw new ApiException(e);
+    }
+    catch (InterruptedException e) {
+      Thread.currentThread().interrupt();
+      throw new ApiException(e);
+    }
+    {{/asyncNative}}
+    {{#asyncNative}}
+    try {
+      HttpRequest.Builder localVarRequestBuilder = {{operationId}}RequestBuilder({{#allParams}}{{paramName}}{{^-last}}, {{/-last}}{{/allParams}});
+      return memberVarHttpClient.sendAsync(
+          localVarRequestBuilder.build(),
+          HttpResponse.BodyHandlers.ofString()).thenComposeAsync(localVarResponse -> {
+            if (memberVarAsyncResponseInterceptor != null) {
+              memberVarAsyncResponseInterceptor.accept(localVarResponse);
+            }
+            if (localVarResponse.statusCode()/ 100 != 2) {
+              return CompletableFuture.failedFuture(getApiException("{{operationId}}", localVarResponse));
+            }
+            {{#returnType}}
+            try {
+              String responseBody = localVarResponse.body();
+              return CompletableFuture.completedFuture(
+                  new ApiResponse<{{{returnType}}}>(
+                      localVarResponse.statusCode(),
+                      localVarResponse.headers().map(),
+                      TODO:)
+              );
+            } catch (IOException e) {
+              return CompletableFuture.failedFuture(new ApiException(e));
+            }
+            {{/returnType}}
+            {{^returnType}}
+            return CompletableFuture.completedFuture(
+                new ApiResponse<Void>(localVarResponse.statusCode(), localVarResponse.headers().map(), null)
+            );
+            {{/returnType}}
+        }
+      );
+    }
+    catch (ApiException e) {
+      return CompletableFuture.failedFuture(e);
+    }
+    {{/asyncNative}}
+  }
+
+
+  private HttpRequest.Builder {{operationId}}RequestBuilder({{#isMultipart}}{{#allParams}}{{^isFormParam}}{{#vendorExtensions.x-concord.customQueryParams}}Map<String, String>{{/vendorExtensions.x-concord.customQueryParams}}{{^vendorExtensions.x-concord.customQueryParams}}{{{dataType}}}{{/vendorExtensions.x-concord.customQueryParams}} {{paramName}},{{/isFormParam}}{{/allParams}} Map<String, Object> multipartInput{{/isMultipart}}{{^isMultipart}}{{#allParams}} {{#vendorExtensions.x-concord.customQueryParams}}Map<String, String>{{/vendorExtensions.x-concord.customQueryParams}}{{^vendorExtensions.x-concord.customQueryParams}}{{{dataType}}}{{/vendorExtensions.x-concord.customQueryParams}} {{paramName}}{{^-last}}, {{/-last}} {{/allParams}}{{/isMultipart}}) throws ApiException {
+    {{#allParams}}
+    {{#required}}
+    // verify the required parameter '{{paramName}}' is set
+    if ({{paramName}} == null) {
+      throw new ApiException(400, "Missing the required parameter '{{paramName}}' when calling {{operationId}}");
+    }
+    {{/required}}
+    {{/allParams}}
+
+    HttpRequest.Builder localVarRequestBuilder = apiClient.requestBuilder();
+
+    {{! Switch delimiters for baseName so we can write constants like "{query}" }}
+    String localVarPath = "{{{path}}}"{{#pathParams}}
+        .replace({{=<% %>=}}"{<%baseName%>}"<%={{ }}=%>, ApiClient.urlEncode({{{paramName}}}.toString())){{/pathParams}};
+
+    {{#hasQueryParams}}
+    {{javaUtilPrefix}}List<Pair> localVarQueryParams = new {{javaUtilPrefix}}ArrayList<>();
+    {{javaUtilPrefix}}StringJoiner localVarQueryStringJoiner = new {{javaUtilPrefix}}StringJoiner("&");
+    {{#queryParams}}
+         {{#vendorExtensions.x-concord.customQueryParams}}
+    if ({{paramName}} != null) {
+        for (Map.Entry<String, String> e : {{paramName}}.entrySet()) {
+            localVarQueryParams.addAll(ApiClient.parameterToPairs(e.getKey(), e.getValue()));
+        }
+    }
+         {{/vendorExtensions.x-concord.customQueryParams}}
+      {{#collectionFormat}}
+    localVarQueryParams.addAll(ApiClient.parameterToPairs("{{{collectionFormat}}}", "{{baseName}}", {{paramName}}));
+      {{/collectionFormat}}
+      {{^collectionFormat}}
+        {{#isDeepObject}}
+    if ({{paramName}} != null) {
+            {{#isArray}}
+      for (int i=0; i < {{paramName}}.size(); i++) {
+        localVarQueryStringJoiner.add({{paramName}}.get(i).toUrlQueryString(String.format("{{baseName}}[%d]", i)));
+      }
+            {{/isArray}}
+            {{^isArray}}
+      localVarQueryStringJoiner.add({{paramName}}.toUrlQueryString("{{baseName}}"));
+            {{/isArray}}
+    }
+        {{/isDeepObject}}
+        {{^isDeepObject}}
+            {{#isExplode}}
+                {{#hasVars}}
+                    {{#vars}}
+                        {{#isArray}}
+    localVarQueryParams.addAll(ApiClient.parameterToPairs("multi", "{{baseName}}", {{paramName}}.{{getter}}()));
+                        {{/isArray}}
+                        {{^isArray}}
+    if ({{paramName}} != null) {
+        localVarQueryParams.addAll(ApiClient.parameterToPairs("{{paramName}}", {{paramName}}.{{getter}}()));
+    }
+                        {{/isArray}}
+                    {{/vars}}
+                {{/hasVars}}
+                {{^hasVars}}
+                {{#isModel}}
+    localVarQueryStringJoiner.add({{paramName}}.toUrlQueryString());
+                {{/isModel}}
+                {{^isModel}}
+    {{^vendorExtensions.x-concord.customQueryParams}}
+    localVarQueryParams.addAll(ApiClient.parameterToPairs("{{baseName}}", {{paramName}}));
+    {{/vendorExtensions.x-concord.customQueryParams}}
+                {{/isModel}}
+                {{/hasVars}}
+            {{/isExplode}}
+            {{^isExplode}}
+    localVarQueryParams.addAll(ApiClient.parameterToPairs("{{baseName}}", {{paramName}}));
+            {{/isExplode}}
+        {{/isDeepObject}}
+      {{/collectionFormat}}
+    {{/queryParams}}
+
+    if (!localVarQueryParams.isEmpty() || localVarQueryStringJoiner.length() != 0) {
+      {{javaUtilPrefix}}StringJoiner queryJoiner = new {{javaUtilPrefix}}StringJoiner("&");
+      localVarQueryParams.forEach(p -> queryJoiner.add(p.getName() + '=' + p.getValue()));
+      if (localVarQueryStringJoiner.length() != 0) {
+        queryJoiner.add(localVarQueryStringJoiner.toString());
+      }
+      localVarRequestBuilder.uri(URI.create(memberVarBaseUri + localVarPath + '?' + queryJoiner.toString()));
+    } else {
+      localVarRequestBuilder.uri(URI.create(memberVarBaseUri + localVarPath));
+    }
+    {{/hasQueryParams}}
+    {{^hasQueryParams}}
+    localVarRequestBuilder.uri(URI.create(memberVarBaseUri + localVarPath));
+    {{/hasQueryParams}}
+
+    {{#headerParams}}
+    if ({{paramName}} != null) {
+      localVarRequestBuilder.header("{{baseName}}", {{paramName}}.toString());
+    }
+    {{/headerParams}}
+    {{#bodyParam}}
+    localVarRequestBuilder.header("Content-Type", "{{#hasConsumes}}{{#consumes}}{{#-first}}{{mediaType}}{{/-first}}{{/consumes}}{{/hasConsumes}}{{#hasConsumes}}{{^consumes}}application/json{{/consumes}}{{/hasConsumes}}{{^hasConsumes}}application/json{{/hasConsumes}}");
+    {{/bodyParam}}
+    String acceptHeaderValue = "{{#hasProduces}}{{#produces}}{{mediaType}}{{^-last}}, {{/-last}}{{/produces}}{{/hasProduces}}{{#hasProduces}}{{^produces}}application/json{{/produces}}{{/hasProduces}}{{^hasProduces}}application/json{{/hasProduces}}";
+    acceptHeaderValue += ",application/vnd.siesta-validation-errors-v1+json";
+    localVarRequestBuilder.header("Accept", acceptHeaderValue);
+    {{#bodyParam}}
+    {{#isString}}
+    localVarRequestBuilder.method("{{httpMethod}}", HttpRequest.BodyPublishers.ofString({{paramName}}));
+    {{/isString}}
+    {{^isString}}
+    try {
+      localVarRequestBuilder.method("{{httpMethod}}", RequestBodyHandler.handle(memberVarObjectMapper, {{paramName}}));
+    } catch (IOException e) {
+      throw new ApiException(e);
+    }
+    {{/isString}}
+    {{/bodyParam}}
+    {{^bodyParam}}
+
+    {{#isMultipart}}
+    HttpEntity entity = MultipartRequestBodyHandler.handle(memberVarObjectMapper, multipartInput);
+    localVarRequestBuilder
+        .header("Content-Type", entity.contentType().toString())
+        .method("{{httpMethod}}", HttpRequest.BodyPublishers.ofInputStream(() -> {
+            try {
+            return entity.getContent();
+            } catch (IOException e) {
+            throw new RuntimeException(e);
+            }
+            }));
+    {{/isMultipart}}
+    {{^isMultipart}}
+        {{#hasFormParams}}
+    List<NameValuePair> formValues = new ArrayList<>();
+    {{#formParams}}
+    {{#isArray}}
+    for (int i=0; i < {{paramName}}.size(); i++) {
+        if ({{paramName}}.get(i) != null) {
+            formValues.add(new NameValuePair("{{{baseName}}}", {{paramName}}.get(i).toString()));
+        }
+    }
+    {{/isArray}}
+    {{^isArray}}
+    if ({{paramName}} != null) {
+        formValues.add(new NameValuePair("{{{baseName}}}", {{paramName}}.toString()));
+    }
+    {{/isArray}}
+    {{/formParams}}
+    HttpEntity entity = new UrlEncodedFormEntity(formValues, java.nio.charset.StandardCharsets.UTF_8);
+    ByteArrayOutputStream formOutputStream = new ByteArrayOutputStream();
+    try {
+        entity.writeTo(formOutputStream);
+    } catch (IOException e) {
+        throw new RuntimeException(e);
+    }
+    localVarRequestBuilder
+        .header("Content-Type", entity.getContentType().toString())
+        .method("{{httpMethod}}", HttpRequest.BodyPublishers
+            .ofInputStream(() -> new ByteArrayInputStream(formOutputStream.toByteArray())));
+
+        {{/hasFormParams}}
+        {{^hasFormParams}}
+    localVarRequestBuilder.method("{{httpMethod}}", HttpRequest.BodyPublishers.noBody());
+        {{/hasFormParams}}
+    {{/isMultipart}}
+
+
+    {{/bodyParam}}
+    if (memberVarReadTimeout != null) {
+      localVarRequestBuilder.timeout(memberVarReadTimeout);
+    }
+    if (memberVarInterceptor != null) {
+      memberVarInterceptor.accept(localVarRequestBuilder);
+    }
+    return localVarRequestBuilder;
+  }
+  {{#isMultipart}}
+  {{#hasParams}}
+
+  public static final class {{#lambda.titlecase}}{{operationId}}{{/lambda.titlecase}}Request {
+    {{#allParams}}
+        {{#isFormParam}}
+    private {{{dataType}}} {{paramName}};
+        {{/isFormParam}}
+    {{/allParams}}
+
+    {{#allParams}}
+        {{#isFormParam}}
+    public {{#lambda.titlecase}}{{operationId}}{{/lambda.titlecase}}Request {{paramName}}({{{dataType}}} {{paramName}}) {
+      this.{{paramName}} = {{paramName}};
+      return this;
+    }
+        {{/isFormParam}}
+    {{/allParams}}
+
+    public Map<String, Object> asMap() {
+        Map<String, Object> result = new HashMap<>();
+
+      {{#allParams}}
+          {{#isFormParam}}
+        if ({{paramName}} != null) {
+          result.put("{{baseName}}", {{paramName}});
+        }
+          {{/isFormParam}}
+      {{/allParams}}
+
+        return result;
+    }
+  }
+
+  {{/hasParams}}
+  {{/isMultipart}}
+  {{/operation}}
+}
+{{/operations}}

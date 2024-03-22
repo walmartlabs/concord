@@ -35,21 +35,19 @@ import com.walmartlabs.concord.server.policy.EntityType;
 import com.walmartlabs.concord.server.policy.PolicyManager;
 import com.walmartlabs.concord.server.policy.PolicyUtils;
 import com.walmartlabs.concord.server.sdk.ConcordApplicationException;
+import com.walmartlabs.concord.server.sdk.validation.ValidationErrorsException;
 import com.walmartlabs.concord.server.security.Roles;
 import com.walmartlabs.concord.server.security.UserPrincipal;
 import com.walmartlabs.concord.server.user.UserEntry;
 import com.walmartlabs.concord.server.user.UserManager;
 import com.walmartlabs.concord.server.user.UserType;
-import org.sonatype.siesta.ValidationErrorsException;
 
 import javax.inject.Inject;
-import javax.inject.Named;
 import java.io.Serializable;
 import java.text.MessageFormat;
 import java.util.*;
 import java.util.stream.Collectors;
 
-@Named
 public class JsonStoreManager {
 
     private static final String DEFAULT_POLICY_MESSAGE = "Maximum number of JSON stores exceeded: current {0}, limit {1}";
@@ -146,7 +144,12 @@ public class JsonStoreManager {
             update(orgName, storeId, entry);
             return OperationResult.UPDATED;
         } else {
-            insert(orgName, entry.name(), entry.visibility(), entry.owner());
+            JsonStoreVisibility visibility = entry.visibility();
+            if (visibility == null) {
+                visibility = JsonStoreVisibility.PRIVATE;
+            }
+
+            insert(orgName, entry.name(), visibility, entry.owner());
             return OperationResult.CREATED;
         }
     }
@@ -189,7 +192,19 @@ public class JsonStoreManager {
             throw new ValidationErrorsException("Can't find a JSON store '" + prevStoreName + "' in organization '" + org.getName() + "'");
         }
 
-        storeDao.update(prevStorage.id(), entry.name(), entry.visibility(), updatedOwnerId);
+        UUID orgIdToUpdate = null;
+        if (entry.orgName() != null) {
+            OrganizationEntry organizationEntry = orgManager.assertAccess(entry.orgName(), true);
+            if (organizationEntry.getId() != prevStorage.orgId()) {
+                orgIdToUpdate = organizationEntry.getId();
+            }
+        }
+
+        if (orgIdToUpdate != null) {
+            assertStoragePolicy(orgIdToUpdate);
+        }
+
+        storeDao.update(prevStorage.id(), entry.name(), entry.visibility(), orgIdToUpdate, updatedOwnerId);
 
         JsonStoreEntry newStorage = storeDao.get(prevStorage.id());
         addAuditLog(AuditAction.UPDATE, prevStorage.orgId(), prevStorage.id(), prevStoreName, prevStorage, newStorage);

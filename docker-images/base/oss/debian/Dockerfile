@@ -7,11 +7,10 @@ ENTRYPOINT ["/usr/local/bin/concord_venv/bin/dumb-init", "--"]
 
 RUN apt-get update && \
     apt-get -y upgrade && \
-    apt-get -y install openssh-client libltdl-dev wget unzip diffutils strace git gdebi-core && \
-    apt-get -y install python3 python3-pip coreutils locales locales-all curl && \
+    apt-get -y install openssh-client libltdl-dev wget unzip diffutils strace git gdebi-core \
+               python3 python3-pip python-is-python3 coreutils locales locales-all curl && \
     apt-get clean && \
-    ln -f -s /usr/bin/python3 /usr/bin/python && \
-    pip3 install --no-cache-dir dumb-init virtualenv
+    pip3 install --no-cache-dir --break-system-packages dumb-init virtualenv
     
 
 ADD --chmod=755 ./get_jdk_url.sh /tmp/

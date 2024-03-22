@@ -23,15 +23,11 @@ package com.walmartlabs.concord.agent.cfg;
 import com.typesafe.config.Config;
 
 import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
 import java.nio.file.Path;
 import java.time.Duration;
 
 import static com.walmartlabs.concord.agent.cfg.Utils.getOrCreatePath;
 
-@Named
-@Singleton
 public class RepositoryCacheConfiguration {
 
     private final Path cacheDir;

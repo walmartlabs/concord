@@ -26,15 +26,12 @@ import com.walmartlabs.concord.server.org.OrganizationEntry;
 import com.walmartlabs.concord.server.org.OrganizationManager;
 import com.walmartlabs.concord.server.org.jsonstore.*;
 import com.walmartlabs.concord.server.sdk.metrics.WithTimer;
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
-import io.swagger.annotations.ApiParam;
-import io.swagger.annotations.Authorization;
-import org.sonatype.siesta.Resource;
+import com.walmartlabs.concord.server.sdk.rest.Resource;
+import com.walmartlabs.concord.server.sdk.validation.Validate;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 
 import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
 import javax.validation.Valid;
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
@@ -43,11 +40,9 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
-@Named
-@Singleton
-@Api(value = "Inventory Queries", authorizations = {@Authorization("api_key"), @Authorization("session_key"), @Authorization("ldap")})
 @Path("/api/v1/org")
 @Deprecated
+@Tag(name = "Inventory Queries")
 public class InventoryQueryResource implements Resource {
 
     private final JsonStoreQueryResource storageQueryResource;
@@ -72,12 +67,12 @@ public class InventoryQueryResource implements Resource {
      * @return query text
      */
     @GET
-    @ApiOperation("Get inventory query")
     @Path("/{orgName}/inventory/{inventoryName}/query/{queryName}")
     @Produces(MediaType.APPLICATION_JSON)
-    public InventoryQueryEntry get(@ApiParam @PathParam("orgName") @ConcordKey String orgName,
-                                   @ApiParam @PathParam("inventoryName") @ConcordKey String inventoryName,
-                                   @ApiParam @PathParam("queryName") @ConcordKey String queryName) {
+    @Operation(description = "Get inventory query", operationId = "getInventoryQuery")
+    public InventoryQueryEntry get(@PathParam("orgName") @ConcordKey String orgName,
+                                   @PathParam("inventoryName") @ConcordKey String inventoryName,
+                                   @PathParam("queryName") @ConcordKey String queryName) {
 
         return convert(storageQueryResource.get(orgName, inventoryName, queryName));
     }
@@ -92,14 +87,14 @@ public class InventoryQueryResource implements Resource {
      * @return
      */
     @POST
-    @ApiOperation("Create or update inventory query")
     @Consumes({MediaType.APPLICATION_JSON, MediaType.TEXT_PLAIN})
     @Produces(MediaType.APPLICATION_JSON)
     @Path("/{orgName}/inventory/{inventoryName}/query/{queryName}")
-    public CreateInventoryQueryResponse createOrUpdate(@ApiParam @PathParam("orgName") @ConcordKey String orgName,
-                                                       @ApiParam @PathParam("inventoryName") @ConcordKey String inventoryName,
-                                                       @ApiParam @PathParam("queryName") @ConcordKey String queryName,
-                                                       @ApiParam String text) {
+    @Operation(description = "Create or update inventory query", operationId = "createOrUpdateInventoryQuery")
+    public CreateInventoryQueryResponse createOrUpdate(@PathParam("orgName") @ConcordKey String orgName,
+                                                       @PathParam("inventoryName") @ConcordKey String inventoryName,
+                                                       @PathParam("queryName") @ConcordKey String queryName,
+                                                       String text) {
 
         GenericOperationResult res = storageQueryResource.createOrUpdate(orgName, inventoryName, JsonStoreQueryRequest.builder()
                 .name(queryName)
@@ -121,11 +116,11 @@ public class InventoryQueryResource implements Resource {
      * @return
      */
     @GET
-    @ApiOperation(value = "List inventory queries", responseContainer = "list", response = InventoryQueryEntry.class)
     @Path("/{orgName}/inventory/{inventoryName}/query")
     @Produces(MediaType.APPLICATION_JSON)
-    public List<InventoryQueryEntry> list(@ApiParam @PathParam("orgName") @ConcordKey String orgName,
-                                          @ApiParam @PathParam("inventoryName") @ConcordKey String inventoryName) {
+    @Operation(description = "List inventory queries", operationId = "listInventoryQueries")
+    public List<InventoryQueryEntry> list(@PathParam("orgName") @ConcordKey String orgName,
+                                          @PathParam("inventoryName") @ConcordKey String inventoryName) {
 
         return storageQueryResource.list(orgName, inventoryName, -1, -1, null)
                 .stream()
@@ -142,12 +137,12 @@ public class InventoryQueryResource implements Resource {
      * @return
      */
     @DELETE
-    @ApiOperation("Delete inventory query")
     @Path("/{orgName}/inventory/{inventoryName}/query/{queryName}")
     @Produces(MediaType.APPLICATION_JSON)
-    public DeleteInventoryQueryResponse delete(@ApiParam @PathParam("orgName") @ConcordKey String orgName,
-                                               @ApiParam @PathParam("inventoryName") @ConcordKey String inventoryName,
-                                               @ApiParam @PathParam("queryName") @ConcordKey String queryName) {
+    @Operation(description = "Delete inventory query", operationId = "deleteInventoryQuery")
+    public DeleteInventoryQueryResponse delete(@PathParam("orgName") @ConcordKey String orgName,
+                                               @PathParam("inventoryName") @ConcordKey String inventoryName,
+                                               @PathParam("queryName") @ConcordKey String queryName) {
 
         storageQueryResource.delete(orgName, inventoryName, queryName);
         return new DeleteInventoryQueryResponse();
@@ -163,15 +158,16 @@ public class InventoryQueryResource implements Resource {
      * @return query result
      */
     @POST
-    @ApiOperation("Execute inventory query")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     @Path("/{orgName}/inventory/{inventoryName}/query/{queryName}/exec")
     @WithTimer
-    public List<Object> exec(@ApiParam @PathParam("orgName") @ConcordKey String orgName,
-                             @ApiParam @PathParam("inventoryName") @ConcordKey String inventoryName,
-                             @ApiParam @PathParam("queryName") @ConcordKey String queryName,
-                             @ApiParam @Valid Map<String, Object> params) {
+    @Validate
+    @Operation(description = "Execute inventory query", operationId = "executeInventoryQuery")
+    public List<Object> exec(@PathParam("orgName") @ConcordKey String orgName,
+                             @PathParam("inventoryName") @ConcordKey String inventoryName,
+                             @PathParam("queryName") @ConcordKey String queryName,
+                             @Valid Map<String, Object> params) {
 
         return storageQueryResource.exec(orgName, inventoryName, queryName, params);
     }

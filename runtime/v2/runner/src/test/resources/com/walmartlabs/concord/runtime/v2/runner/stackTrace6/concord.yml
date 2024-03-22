@@ -1,0 +1,10 @@
+flows:
+  default:
+    - call: "flowA"
+    - throw: "qweq"
+
+  flowA:
+    - try:
+      - log: "flowA"
+      error:
+        - log: "ignore"

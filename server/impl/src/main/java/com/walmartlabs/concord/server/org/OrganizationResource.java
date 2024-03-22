@@ -24,17 +24,14 @@ import com.walmartlabs.concord.common.validation.ConcordKey;
 import com.walmartlabs.concord.server.GenericOperationResult;
 import com.walmartlabs.concord.server.OperationResult;
 import com.walmartlabs.concord.server.sdk.ConcordApplicationException;
+import com.walmartlabs.concord.server.sdk.rest.Resource;
+import com.walmartlabs.concord.server.sdk.validation.Validate;
 import com.walmartlabs.concord.server.security.Roles;
 import com.walmartlabs.concord.server.security.UserPrincipal;
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
-import io.swagger.annotations.ApiParam;
-import io.swagger.annotations.Authorization;
-import org.sonatype.siesta.Resource;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 
 import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
 import javax.validation.Valid;
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
@@ -42,10 +39,8 @@ import javax.ws.rs.core.Response;
 import java.util.List;
 import java.util.UUID;
 
-@Named
-@Singleton
-@Api(value = "Organizations", authorizations = {@Authorization("api_key"), @Authorization("session_key"), @Authorization("ldap")})
 @Path("/api/v1/org")
+@Tag(name = "Organizations")
 public class OrganizationResource implements Resource {
 
     private final OrganizationDao orgDao;
@@ -58,25 +53,26 @@ public class OrganizationResource implements Resource {
     }
 
     @POST
-    @ApiOperation("Create or update an organization")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    public CreateOrganizationResponse createOrUpdate(@ApiParam @Valid OrganizationEntry entry) {
+    @Validate
+    @Operation(description = "Create or update an organization", operationId = "createOrUpdateOrg")
+    public CreateOrganizationResponse createOrUpdate(@Valid OrganizationEntry entry) {
         OrganizationOperationResult result = orgManager.createOrUpdate(entry);
         return new CreateOrganizationResponse(result.orgId(), result.result());
     }
 
     @GET
     @Path("/{orgName}")
-    @ApiOperation("Get an existing organization")
     @Produces(MediaType.APPLICATION_JSON)
-    public OrganizationEntry get(@ApiParam @PathParam("orgName") @ConcordKey String orgName) {
+    @Operation(description = "Get an existing organization", operationId = "getOrg")
+    public OrganizationEntry get(@PathParam("orgName") @ConcordKey String orgName) {
         return orgDao.getByName(orgName);
     }
 
     @GET
-    @ApiOperation(value = "List organizations", responseContainer = "list", response = OrganizationEntry.class)
     @Produces(MediaType.APPLICATION_JSON)
+    @Operation(description = "List organizations", operationId = "listOrgs")
     public List<OrganizationEntry> find(@QueryParam("onlyCurrent") @DefaultValue("false") boolean onlyCurrent,
                                         @QueryParam("offset") int offset,
                                         @QueryParam("limit") int limit,
@@ -95,10 +91,10 @@ public class OrganizationResource implements Resource {
 
     @DELETE
     @Path("/{orgName}")
-    @ApiOperation("Remove an existing organization")
     @Produces(MediaType.APPLICATION_JSON)
-    public GenericOperationResult delete(@ApiParam @PathParam("orgName") @ConcordKey String orgName,
-                                         @ApiParam @QueryParam("confirmation") String confirmation) {
+    @Operation(description = "Remove an existing organization", operationId = "deleteOrg")
+    public GenericOperationResult delete(@PathParam("orgName") @ConcordKey String orgName,
+                                         @QueryParam("confirmation") String confirmation) {
 
         if (!"yes".equalsIgnoreCase(confirmation)) {
             throw new ConcordApplicationException("Operation must be confirmed", Response.Status.BAD_REQUEST);

@@ -20,11 +20,11 @@ package com.walmartlabs.concord.runner.engine;
  * =====
  */
 
-import com.walmartlabs.concord.ApiException;
-import com.walmartlabs.concord.client.ApiClientConfiguration;
-import com.walmartlabs.concord.client.ApiClientFactory;
-import com.walmartlabs.concord.client.ClientUtils;
-import com.walmartlabs.concord.client.ProcessApi;
+import com.walmartlabs.concord.client2.ApiException;
+import com.walmartlabs.concord.client2.ApiClientConfiguration;
+import com.walmartlabs.concord.client2.ApiClientFactory;
+import com.walmartlabs.concord.client2.ClientUtils;
+import com.walmartlabs.concord.client2.ProcessApi;
 import com.walmartlabs.concord.common.ConfigurationUtils;
 import com.walmartlabs.concord.runner.ContextUtils;
 import io.takari.bpm.api.Variables;
@@ -64,7 +64,6 @@ public class ProcessMetadataProcessor {
         ProcessApi client = new ProcessApi(apiClientFactory.create(
                 ApiClientConfiguration.builder()
                         .sessionToken(ContextUtils.getSessionToken(variables))
-                        .txId(instanceId)
                         .build()));
         try {
             ClientUtils.withRetry(RETRY_COUNT, RETRY_INTERVAL, () -> {

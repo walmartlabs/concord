@@ -56,30 +56,34 @@ public class SsoHandler implements AuthenticationHandler {
 
         HttpServletRequest req = WebUtils.toHttp(request);
 
-        String token = SsoCookies.getTokenCookie(req);
+        String bearerToken = cfg.getEnableBearerTokens() ? extractTokenFromRequest(req) : null;
+        String token = bearerToken != null ? bearerToken : SsoCookies.getTokenCookie(req);
+
         if (token == null) {
             return null;
         }
 
-        String login = jwtAuthenticator.validateTokenAndGetLogin(token);
-        if (login == null) {
+        boolean restrictOnClientId = (bearerToken != null) && (!cfg.getAllowAllClientIds());
+
+        if (!jwtAuthenticator.isTokenValid(token, restrictOnClientId)) {
             return null;
         }
 
-        String[] as = parseDomain(login);
-
-        String refreshToken = SsoCookies.getRefreshCookie(req);
-        // get userprofile send the response as null if refreshToken is expired or used
-        SsoClient.Profile profile;
         try {
-            profile = ssoClient.getUserProfile(refreshToken);
+            SsoClient.Profile profile = bearerToken != null ? ssoClient.getProfile(bearerToken) :
+                    ssoClient.getUserProfileByRefreshToken(SsoCookies.getRefreshCookie(req));
+
+            if (profile == null) {
+                return null;
+            }
+
+            String[] as = parseDomain(profile.sub());
+
+            return new SsoToken(as[0], as[1], profile.displayName(), profile.mail(), profile.userPrincipalName(), profile.nameInNamespace(), profile.groups());
+
         } catch (IOException e) {
             return null;
         }
-        if (profile == null) {
-            return null;
-        }
-        return new SsoToken(as[0], as[1], profile.displayName(), profile.mail(), profile.userPrincipalName(), profile.nameInNamespace(), profile.groups());
     }
 
     @Override
@@ -111,5 +115,21 @@ public class SsoHandler implements AuthenticationHandler {
         String username = s.substring(0, pos);
         String domain = s.substring(pos + 1);
         return new String[]{username, domain};
+    }
+
+    private String extractTokenFromRequest(HttpServletRequest request) {
+        final String value = request.getHeader("Authorization");
+
+        if (value == null || !value.toLowerCase().startsWith("bearer")) {
+            return null;
+        }
+
+        String[] parts = value.split(" ");
+
+        if (parts.length < 2) {
+            return null;
+        }
+
+        return parts[1].trim();
     }
 }

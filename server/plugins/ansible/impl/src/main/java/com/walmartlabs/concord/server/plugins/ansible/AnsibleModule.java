@@ -22,6 +22,9 @@ package com.walmartlabs.concord.server.plugins.ansible;
 
 import com.google.inject.Binder;
 import com.google.inject.Module;
+import com.walmartlabs.concord.db.DatabaseChangeLogProvider;
+import com.walmartlabs.concord.db.MainDB;
+import com.walmartlabs.concord.server.plugins.ansible.db.AnsibleDBChangeLogProvider;
 import com.walmartlabs.concord.server.sdk.ScheduledTask;
 
 import javax.inject.Named;
@@ -34,6 +37,7 @@ public class AnsibleModule implements Module {
 
     @Override
     public void configure(Binder binder) {
+        binder.bind(DatabaseChangeLogProvider.class).annotatedWith(MainDB.class).to(AnsibleDBChangeLogProvider.class);
         binder.bind(EventFetcher.class).in(SINGLETON);
         newSetBinder(binder, ScheduledTask.class).addBinding().to(EventFetcher.class);
     }

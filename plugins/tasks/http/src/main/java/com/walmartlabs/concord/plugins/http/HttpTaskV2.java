@@ -4,7 +4,7 @@ package com.walmartlabs.concord.plugins.http;
  * *****
  * Concord
  * -----
- * Copyright (C) 2017 - 2020 Walmart Inc.
+ * Copyright (C) 2017 - 2023 Walmart Inc.
  * -----
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -27,23 +27,22 @@ import com.walmartlabs.concord.runtime.v2.sdk.Variables;
 
 import javax.inject.Inject;
 import javax.inject.Named;
-import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.Map;
 
 @Named("http")
 public class HttpTaskV2 implements Task {
 
-    private final Path workDir;
+    private final Context context;
 
     @Inject
     public HttpTaskV2(Context context) {
-        this.workDir = context.workingDirectory();
+        this.context = context;
     }
 
     @Override
     public TaskResult execute(Variables input) throws Exception {
-        Configuration config = Configuration.custom().build(workDir.toString(), input.toMap());
+        Configuration config = Configuration.custom().build(context.workingDirectory().toString(), input.toMap(), context.processConfiguration().debug());
 
         Map<String, Object> response = new HashMap<>(SimpleHttpClient.create(config).execute().getResponse());
         return TaskResult.of((boolean)response.remove("success"), (String)response.remove("errorString"), response);

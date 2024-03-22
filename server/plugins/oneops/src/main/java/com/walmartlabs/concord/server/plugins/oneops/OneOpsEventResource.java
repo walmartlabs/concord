@@ -31,12 +31,10 @@ import com.walmartlabs.concord.server.events.TriggerProcessExecutor;
 import com.walmartlabs.concord.server.sdk.ConcordApplicationException;
 import com.walmartlabs.concord.server.sdk.PartialProcessKey;
 import com.walmartlabs.concord.server.sdk.metrics.WithTimer;
+import com.walmartlabs.concord.server.sdk.rest.Resource;
 import com.walmartlabs.concord.server.user.UserManager;
-import io.swagger.annotations.Api;
-import io.swagger.annotations.Authorization;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.sonatype.siesta.Resource;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -62,7 +60,6 @@ import static com.walmartlabs.concord.common.MemoSupplier.memo;
  */
 @Named
 @Singleton
-@Api(value = "Events", authorizations = {@Authorization("api_key"), @Authorization("ldap")})
 @Path("/api/v1/events")
 public class OneOpsEventResource implements Resource {
 

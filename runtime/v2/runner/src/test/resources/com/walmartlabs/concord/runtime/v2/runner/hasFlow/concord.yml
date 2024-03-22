@@ -1,0 +1,7 @@
+flows:
+  default:
+    - log: "123: ${hasFlow('123')}"
+    - log: "myFlow: ${hasFlow('myFlow')}"
+
+  myFlow:
+    - log: "my"

@@ -28,7 +28,9 @@ import { ConcordKey, RequestError } from '../../../api/common';
 import { TriggerEntry } from '../../../api/org/project/repository';
 import { actions, ListTriggersResponse, State } from '../../../state/data/triggers';
 import { comparators } from '../../../utils';
-import { RequestErrorMessage } from '../../molecules';
+import {LocalTimestamp, RequestErrorMessage} from '../../molecules';
+
+import * as cronjsMatcher from '@datasert/cronjs-matcher';
 
 interface ExternalProps {
     orgName: ConcordKey;
@@ -90,22 +92,80 @@ class RepositoryTriggersActivity extends React.Component<Props, OwnState> {
             );
         }
 
+        const cronTriggers = data?.filter((t) => t.eventSource === 'cron');
+        const otherTriggers = data?.filter((t) => t.eventSource !== 'cron');
+
         return (
             <>
-                <Table celled={true} striped={true}>
-                    <Table.Header>
-                        <Table.Row>
-                            <Table.HeaderCell collapsing={true}>Source</Table.HeaderCell>
-                            <Table.HeaderCell>Conditions</Table.HeaderCell>
-                            <Table.HeaderCell collapsing={true}>Entry Point</Table.HeaderCell>
-                            <Table.HeaderCell>Configuration</Table.HeaderCell>
-                            <Table.HeaderCell>Arguments</Table.HeaderCell>
-                        </Table.Row>
-                    </Table.Header>
+                {cronTriggers && <>
+                    <h3>Cron Triggers</h3>
+                    <Table celled={true} striped={true}>
+                        <Table.Header>
+                            <Table.Row>
+                                <Table.HeaderCell width={3}>Conditions</Table.HeaderCell>
+                                <Table.HeaderCell collapsing={true}>Entry Point</Table.HeaderCell>
+                                <Table.HeaderCell width={5}>Configuration</Table.HeaderCell>
+                                <Table.HeaderCell width={5}>Arguments</Table.HeaderCell>
+                            </Table.Row>
+                        </Table.Header>
 
-                    <Table.Body>
-                        {data &&
-                            data.map((t, idx) => (
+                        <Table.Body>
+                            {cronTriggers.map((t, idx) => (
+                                <Table.Row key={idx}>
+                                    <Table.Cell>
+                                        {t.conditions?.spec !== undefined && (
+                                            <pre>
+                                            Expression: <b>{t.conditions?.spec}</b>
+                                            <br/>
+                                            Next run: <LocalTimestamp value={cronjsMatcher.getFutureMatches(t.conditions?.spec, {matchCount: 1})[0]}/>
+                                        </pre>)}
+                                    </Table.Cell>
+                                    <Table.Cell>
+                                        <pre>{t.cfg.entryPoint}</pre>
+                                    </Table.Cell>
+                                    <Table.Cell>
+                                        <ReactJson
+                                            src={t.cfg}
+                                            collapsed={true}
+                                            name={null}
+                                            enableClipboard={false}
+                                        />
+                                    </Table.Cell>
+                                    <Table.Cell>
+                                        {t.arguments && (
+                                            <ReactJson
+                                                src={t.arguments}
+                                                collapsed={true}
+                                                name={null}
+                                                enableClipboard={false}
+                                            />
+                                        )}
+                                    </Table.Cell>
+                                </Table.Row>
+                            ))}
+                            {cronTriggers.length === 0 && (
+                                <Table.Row>
+                                    <Table.Cell colSpan={5}>No other triggers</Table.Cell>
+                                </Table.Row>
+                            )}
+                        </Table.Body>
+                    </Table>
+                </>}
+                {otherTriggers && <>
+                    <h3>Other Triggers</h3>
+                    <Table celled={true} striped={true}>
+                        <Table.Header>
+                            <Table.Row>
+                                <Table.HeaderCell collapsing={true}>Source</Table.HeaderCell>
+                                <Table.HeaderCell>Conditions</Table.HeaderCell>
+                                <Table.HeaderCell collapsing={true}>Entry Point</Table.HeaderCell>
+                                <Table.HeaderCell>Configuration</Table.HeaderCell>
+                                <Table.HeaderCell>Arguments</Table.HeaderCell>
+                            </Table.Row>
+                        </Table.Header>
+
+                        <Table.Body>
+                            {otherTriggers.map((t, idx) => (
                                 <Table.Row key={idx}>
                                     <Table.Cell>{t.eventSource}</Table.Cell>
                                     <Table.Cell>
@@ -139,8 +199,14 @@ class RepositoryTriggersActivity extends React.Component<Props, OwnState> {
                                     </Table.Cell>
                                 </Table.Row>
                             ))}
-                    </Table.Body>
-                </Table>
+                            {otherTriggers.length === 0 && (
+                                <Table.Row>
+                                    <Table.Cell colSpan={5}>No other triggers</Table.Cell>
+                                </Table.Row>
+                            )}
+                        </Table.Body>
+                    </Table>
+                </>}
             </>
         );
     }

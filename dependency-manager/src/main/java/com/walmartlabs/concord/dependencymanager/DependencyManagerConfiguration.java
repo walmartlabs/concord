@@ -60,6 +60,16 @@ public interface DependencyManagerConfiguration {
         return Collections.emptyList();
     }
 
+    @Value.Default
+    default boolean explicitlyResolveV1Client() {
+        return false;
+    }
+
+    @Value.Default
+    default boolean offlineMode() {
+        return false;
+    }
+
     static ImmutableDependencyManagerConfiguration.Builder builder() {
         return ImmutableDependencyManagerConfiguration.builder();
     }

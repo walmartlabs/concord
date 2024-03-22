@@ -31,13 +31,11 @@ import com.walmartlabs.concord.common.IOUtils;
 import com.walmartlabs.concord.dependencymanager.DependencyManager;
 import com.walmartlabs.concord.dependencymanager.DependencyManagerConfiguration;
 import com.walmartlabs.concord.dependencymanager.DependencyManagerRepositories;
-import com.walmartlabs.concord.imports.ImportManager;
-import com.walmartlabs.concord.imports.ImportManagerFactory;
-import com.walmartlabs.concord.imports.ImportProcessingException;
-import com.walmartlabs.concord.imports.Imports;
+import com.walmartlabs.concord.imports.*;
 import com.walmartlabs.concord.process.loader.model.ProcessDefinitionUtils;
 import com.walmartlabs.concord.process.loader.v2.ProcessDefinitionV2;
 import com.walmartlabs.concord.runtime.common.cfg.RunnerConfiguration;
+import com.walmartlabs.concord.runtime.v2.NoopImportsNormalizer;
 import com.walmartlabs.concord.runtime.v2.ProjectLoaderV2;
 import com.walmartlabs.concord.runtime.v2.ProjectSerializerV2;
 import com.walmartlabs.concord.runtime.v2.model.ProcessDefinition;
@@ -45,12 +43,14 @@ import com.walmartlabs.concord.runtime.v2.model.ProcessDefinitionConfiguration;
 import com.walmartlabs.concord.runtime.v2.model.Profile;
 import com.walmartlabs.concord.runtime.v2.model.Step;
 import com.walmartlabs.concord.runtime.v2.runner.InjectorFactory;
+import com.walmartlabs.concord.runtime.v2.runner.ProjectLoadListeners;
 import com.walmartlabs.concord.runtime.v2.runner.Runner;
 import com.walmartlabs.concord.runtime.v2.runner.guice.ProcessDependenciesModule;
 import com.walmartlabs.concord.runtime.v2.runner.tasks.TaskProviders;
 import com.walmartlabs.concord.runtime.v2.sdk.*;
 import com.walmartlabs.concord.sdk.Constants;
 import com.walmartlabs.concord.sdk.MapUtils;
+import com.walmartlabs.concord.svm.MultiException;
 import picocli.CommandLine.Command;
 import picocli.CommandLine.Model.CommandSpec;
 import picocli.CommandLine.Option;
@@ -80,6 +80,9 @@ public class Run implements Callable<Integer> {
 
     @Option(names = {"--default-cfg"}, description = "default Concord configuration file")
     Path defaultCfg = Paths.get(System.getProperty("user.home")).resolve(".concord").resolve("defaultCfg.yml");
+
+    @Option(names = {"--default-task-vars"}, description = "default task variables configuration file")
+    Path defaultTaskVars = Paths.get(System.getProperty("user.home")).resolve(".concord").resolve("defaultTaskVars.json");
 
     @Option(names = {"--deps-cache-dir"}, description = "process dependencies cache dir")
     Path depsCacheDir = Paths.get(System.getProperty("user.home")).resolve(".concord").resolve("depsCache");
@@ -121,6 +124,9 @@ public class Run implements Callable<Integer> {
     @Option(names = {"--default-import-version"}, description = "default import version or repo branch")
     String defaultVersion = "main";
 
+    @Option(names = {"--no-default-cfg"}, description = "Do not load default configuration (including standard dependencies)")
+    boolean noDefaultCfg = false;
+
     @Parameters(arity = "0..1", description = "Directory with Concord files or a path to a single Concord YAML file.")
     Path sourceDir = Paths.get(System.getProperty("user.dir"));
 
@@ -153,7 +159,9 @@ public class Run implements Callable<Integer> {
             throw new IllegalArgumentException("Not a directory or single Concord YAML file: " + sourceDir);
         }
 
-        copyDefaultCfg(targetDir, defaultCfg, verbosity.verbose());
+        if (!noDefaultCfg) {
+            copyDefaultCfg(targetDir, defaultCfg, verbosity.verbose());
+        }
 
         DependencyManager dependencyManager = initDependencyManager();
         ImportManager importManager = new ImportManagerFactory(dependencyManager,
@@ -189,8 +197,18 @@ public class Run implements Callable<Integer> {
         Map<String, Object> overlayCfg = ProcessDefinitionUtils.getProfilesOverlayCfg(new ProcessDefinitionV2(processDefinition), profiles);
         List<String> overlayDeps = MapUtils.getList(overlayCfg, Constants.Request.DEPENDENCIES_KEY, Collections.emptyList());
 
+        Collection<String> dependencies;
+
+        try {
+            dependencies = new DependencyResolver(dependencyManager, verbosity.verbose())
+                    .resolveDeps(overlayDeps);
+        } catch (Exception e) {
+            System.err.println(e.getMessage());
+            return -1;
+        }
+
         RunnerConfiguration runnerCfg = RunnerConfiguration.builder()
-                .dependencies(new DependencyResolver(dependencyManager, verbosity.verbose()).resolveDeps(overlayDeps))
+                .dependencies(dependencies)
                 .debug(processDefinition.configuration().debug())
                 .build();
 
@@ -228,7 +246,7 @@ public class Run implements Callable<Integer> {
 
         System.out.println("Starting...");
 
-        ProcessConfiguration cfg = from(processDefinition.configuration(), processInfo(args), projectInfo(args))
+        ProcessConfiguration cfg = from(processDefinition.configuration(), processInfo(args, profiles), projectInfo(args))
                 .entryPoint(entryPoint)
                 .instanceId(instanceId)
                 .build();
@@ -237,8 +255,13 @@ public class Run implements Callable<Integer> {
                 runnerCfg,
                 () -> cfg,
                 new ProcessDependenciesModule(targetDir, runnerCfg.dependencies(), cfg.debug()),
-                new CliServicesModule(secretStoreDir, targetDir, new VaultProvider(vaultDir, vaultId), dependencyManager, verbosity))
+                new CliServicesModule(secretStoreDir, targetDir, defaultTaskVars, new VaultProvider(vaultDir, vaultId), dependencyManager, verbosity))
                 .create();
+
+        // Just to notify listeners
+        ProjectLoadListeners loadListeners = injector.getInstance(ProjectLoadListeners.class);
+        ProjectLoaderV2 loader = new ProjectLoaderV2(new NoopImportManager());
+        loader.load(targetDir, new NoopImportsNormalizer(), ImportsListener.NOP_LISTENER, loadListeners);
 
         Runner runner = injector.getInstance(Runner.class);
 
@@ -248,6 +271,9 @@ public class Run implements Callable<Integer> {
 
         try {
             runner.start(cfg, processDefinition, args);
+        } catch (MultiException e) {
+            System.err.println(e.getMessage());
+            return -1;
         } catch (Exception e) {
             if (verbosity.verbose()) {
                 System.err.print("Error: ");
@@ -264,7 +290,7 @@ public class Run implements Callable<Integer> {
     }
 
     @SuppressWarnings("unchecked")
-    private static ProcessInfo processInfo(Map<String, Object> args) {
+    private static ProcessInfo processInfo(Map<String, Object> args, List<String> profiles) {
         Object processInfoObject = args.get("processInfo");
         if (processInfoObject == null) {
             processInfoObject = fromExtraVars("processInfo", args);
@@ -276,7 +302,8 @@ public class Run implements Callable<Integer> {
         }
 
         return ProcessInfo.builder()
-                .sessionToken(MapUtils.getString(processInfo, "sessionToken"))
+                .sessionToken(MapUtils.getString(processInfo, "sessionToken", "<undefined>"))
+                .activeProfiles(profiles)
                 .build();
     }
 

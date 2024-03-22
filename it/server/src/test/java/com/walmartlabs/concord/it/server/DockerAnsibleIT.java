@@ -20,12 +20,13 @@ package com.walmartlabs.concord.it.server;
  * =====
  */
 
-import com.walmartlabs.concord.client.ProcessApi;
-import com.walmartlabs.concord.client.ProcessEntry;
-import com.walmartlabs.concord.client.StartProcessResponse;
+import com.walmartlabs.concord.client2.ProcessApi;
+import com.walmartlabs.concord.client2.ProcessEntry;
+import com.walmartlabs.concord.client2.StartProcessResponse;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.condition.DisabledIfEnvironmentVariable;
 
-import java.io.File;
+import java.io.InputStream;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -35,11 +36,12 @@ import static com.walmartlabs.concord.it.common.ServerClient.waitForCompletion;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
+@DisabledIfEnvironmentVariable(named = "SKIP_DOCKER_TESTS", matches = "true", disabledReason = "Requires dockerd listening on a tcp socket. Not available in a typical CI environment")
 public class DockerAnsibleIT extends AbstractServerIT {
 
     @Test
     public void test() throws Exception {
-        byte[] payload = archive(DockerIT.class.getResource("dockerAnsible").toURI(),
+        byte[] payload = archive(DockerAnsibleIT.class.getResource("dockerAnsible").toURI(),
                 ITConstants.DEPENDENCIES_DIR);
 
         Map<String, Object> input = new HashMap<>();
@@ -49,17 +51,18 @@ public class DockerAnsibleIT extends AbstractServerIT {
 
         // --
 
-        ProcessApi processApi = new ProcessApi(getApiClient());
-        ProcessEntry pir = waitForCompletion(processApi, spr.getInstanceId());
+        ProcessEntry pir = waitForCompletion(getApiClient(), spr.getInstanceId());
         assertNotNull(pir.getLogFileName());
         assertEquals(ProcessEntry.StatusEnum.FINISHED, pir.getStatus());
 
-        byte[] ab = getLog(pir.getLogFileName());
+        byte[] ab = getLog(pir.getInstanceId());
         assertLog(".*\"msg\": \"Hello from Docker!\".*", ab);
 
         // --
 
-        File resp = processApi.downloadAttachment(pir.getInstanceId(), "ansible_stats.json");
-        assertNotNull(resp);
+        ProcessApi processApi = new ProcessApi(getApiClient());
+        try (InputStream is = processApi.downloadAttachment(pir.getInstanceId(), "ansible_stats.json")) {
+            assertNotNull(is);
+        }
     }
 }

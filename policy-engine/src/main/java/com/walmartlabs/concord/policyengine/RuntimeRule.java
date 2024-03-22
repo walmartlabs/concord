@@ -4,7 +4,7 @@ package com.walmartlabs.concord.policyengine;
  * *****
  * Concord
  * -----
- * Copyright (C) 2017 - 2018 Walmart Inc.
+ * Copyright (C) 2017 - 2023 Walmart Inc.
  * -----
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,6 +20,7 @@ package com.walmartlabs.concord.policyengine;
  * =====
  */
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
@@ -28,6 +29,7 @@ import org.immutables.value.Value;
 
 import javax.annotation.Nullable;
 import java.io.Serializable;
+import java.time.LocalDate;
 import java.util.Set;
 
 @Value.Immutable
@@ -46,7 +48,12 @@ public interface RuntimeRule extends Serializable {
     @JsonProperty("runtimes")
     Set<String> allowedRuntimes();
 
-    static RuntimeRule of(String msg, Set<String> runtimes) {
-        return ImmutableRuntimeRule.of(msg, runtimes);
+    @Nullable
+    @Value.Parameter
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd")
+    LocalDate projectCreatedAfter();
+
+    static RuntimeRule of(String msg, Set<String> runtimes, LocalDate projectCreatedAfter) {
+        return ImmutableRuntimeRule.of(msg, runtimes, projectCreatedAfter);
     }
 }

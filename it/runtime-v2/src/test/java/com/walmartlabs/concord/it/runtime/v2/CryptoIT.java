@@ -24,8 +24,7 @@ import ca.ibodrov.concord.testcontainers.ConcordProcess;
 import ca.ibodrov.concord.testcontainers.NewSecretQuery;
 import ca.ibodrov.concord.testcontainers.Payload;
 import ca.ibodrov.concord.testcontainers.junit5.ConcordRule;
-import com.walmartlabs.concord.ApiClient;
-import com.walmartlabs.concord.client.*;
+import com.walmartlabs.concord.client2.*;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
@@ -50,12 +49,12 @@ public class CryptoIT extends AbstractTest {
         String projectName = "project_" + randomString();
 
         OrganizationsApi orgApi = new OrganizationsApi(apiClient);
-        orgApi.createOrUpdate(new OrganizationEntry().setName(orgName));
+        orgApi.createOrUpdateOrg(new OrganizationEntry().name(orgName));
 
         ProjectsApi projectsApi = new ProjectsApi(apiClient);
-        projectsApi.createOrUpdate(orgName, new ProjectEntry()
-                .setName(projectName)
-                .setRawPayloadMode(ProjectEntry.RawPayloadModeEnum.OWNERS));
+        projectsApi.createOrUpdateProject(orgName, new ProjectEntry()
+                .name(projectName)
+                .rawPayloadMode(ProjectEntry.RawPayloadModeEnum.OWNERS));
 
         // ---
 
@@ -125,7 +124,7 @@ public class CryptoIT extends AbstractTest {
     public void testCreate() throws Exception {
         String orgName = "org_" + randomString();
         OrganizationsApi orgApi = new OrganizationsApi(concord.apiClient());
-        orgApi.createOrUpdate(new OrganizationEntry().setName(orgName));
+        orgApi.createOrUpdateOrg(new OrganizationEntry().name(orgName));
 
         Payload payload = new Payload()
                 .arg("org", orgName)
@@ -149,12 +148,12 @@ public class CryptoIT extends AbstractTest {
         String projectName = "project_" + randomString();
 
         OrganizationsApi orgApi = new OrganizationsApi(apiClient);
-        orgApi.createOrUpdate(new OrganizationEntry().setName(orgName));
+        orgApi.createOrUpdateOrg(new OrganizationEntry().name(orgName));
 
         ProjectsApi projectsApi = new ProjectsApi(apiClient);
-        projectsApi.createOrUpdate(orgName, new ProjectEntry()
-                .setName(projectName)
-                .setRawPayloadMode(ProjectEntry.RawPayloadModeEnum.OWNERS));
+        projectsApi.createOrUpdateProject(orgName, new ProjectEntry()
+                .name(projectName)
+                .rawPayloadMode(ProjectEntry.RawPayloadModeEnum.OWNERS));
 
         // ---
 

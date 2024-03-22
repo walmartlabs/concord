@@ -28,15 +28,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.Properties;
-import java.util.UUID;
 
-@Named
-@Singleton
 public class KafkaConnector implements BackgroundTask {
 
     private static final Logger log = LoggerFactory.getLogger(KafkaConnector.class);

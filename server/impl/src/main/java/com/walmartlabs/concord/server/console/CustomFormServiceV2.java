@@ -4,7 +4,7 @@ package com.walmartlabs.concord.server.console;
  * *****
  * Concord
  * -----
- * Copyright (C) 2017 - 2018 Walmart Inc.
+ * Copyright (C) 2017 - 2023 Walmart Inc.
  * -----
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -38,10 +38,10 @@ import com.walmartlabs.concord.server.sdk.ConcordApplicationException;
 import com.walmartlabs.concord.server.sdk.PartialProcessKey;
 import com.walmartlabs.concord.server.sdk.ProcessKey;
 import com.walmartlabs.concord.server.sdk.ProcessStatus;
+import com.walmartlabs.concord.server.sdk.validation.Validate;
 import org.jboss.resteasy.plugins.providers.multipart.MultipartInput;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.sonatype.siesta.Validate;
 
 import javax.inject.Inject;
 import javax.ws.rs.Consumes;
@@ -182,7 +182,7 @@ public class CustomFormServiceV2 {
         // TODO locking
         Form form = assertForm(processKey, formName);
 
-        boolean yield = form.options().yield();
+        boolean yield = form.options().isYield();
 
         Path dst = cfg.getBaseDir()
                 .resolve(processKey.toString())
@@ -315,7 +315,18 @@ public class CustomFormServiceV2 {
         }
 
         String submitUrl = String.format(FORM_WIZARD_CONTINUE_URL_TEMPLATE, processInstanceId, form.name());
-        return new FormData(success, processFailed, submitUrl, fields, _definitions, _values, _errors);
+
+        return FormData.builder()
+                .txId(processInstanceId.toString())
+                .formName(form.name())
+                .success(success)
+                .processFailed(processFailed)
+                .submitUrl(submitUrl)
+                .fields(fields)
+                .definitions(_definitions)
+                .values(_values)
+                .errors(_errors)
+                .build();
     }
 
     private io.takari.bpm.model.form.FormField.Cardinality convert(FormField.Cardinality c) {

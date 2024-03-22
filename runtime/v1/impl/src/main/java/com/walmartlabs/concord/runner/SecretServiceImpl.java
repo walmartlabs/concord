@@ -20,22 +20,19 @@ package com.walmartlabs.concord.runner;
  * =====
  */
 
-import com.google.gson.reflect.TypeToken;
-import com.walmartlabs.concord.ApiClient;
-import com.walmartlabs.concord.ApiException;
-import com.walmartlabs.concord.ApiResponse;
-import com.walmartlabs.concord.client.*;
+import com.walmartlabs.concord.client2.*;
 import com.walmartlabs.concord.common.secret.BinaryDataSecret;
 import com.walmartlabs.concord.common.secret.KeyPair;
 import com.walmartlabs.concord.common.secret.UsernamePassword;
-import com.walmartlabs.concord.sdk.SecretNotFoundException;
-import com.walmartlabs.concord.sdk.*;
+import com.walmartlabs.concord.sdk.Constants;
+import com.walmartlabs.concord.sdk.Context;
+import com.walmartlabs.concord.sdk.Secret;
+import com.walmartlabs.concord.sdk.SecretService;
 
 import javax.inject.Inject;
 import javax.inject.Named;
 import javax.xml.bind.DatatypeConverter;
 import java.io.IOException;
-import java.lang.reflect.Type;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -46,9 +43,6 @@ import java.util.UUID;
 
 @Named
 public class SecretServiceImpl implements SecretService {
-
-    private static final int RETRY_COUNT = 3;
-    private static final long RETRY_INTERVAL = 5000;
 
     private final ApiClientFactory clientFactory;
 
@@ -64,7 +58,7 @@ public class SecretServiceImpl implements SecretService {
 
     @Override
     public String exportAsString(Context ctx, String instanceId, String orgName, String name, String password) throws Exception {
-        BinaryDataSecret s = get(ctx, orgName, name, password, SecretEntry.TypeEnum.DATA);
+        BinaryDataSecret s = get(ctx, orgName, name, password, SecretEntryV2.TypeEnum.DATA);
         return new String(s.getData());
     }
 
@@ -75,7 +69,7 @@ public class SecretServiceImpl implements SecretService {
 
     @Override
     public Map<String, String> exportKeyAsFile(Context ctx, String instanceId, String workDir, String orgName, String name, String password) throws Exception {
-        KeyPair kp = get(ctx, orgName, name, password, SecretEntry.TypeEnum.KEY_PAIR);
+        KeyPair kp = get(ctx, orgName, name, password, SecretEntryV2.TypeEnum.KEY_PAIR);
 
         Path baseDir = Paths.get(workDir);
         Path tmpDir = assertTempDir(baseDir);
@@ -100,7 +94,7 @@ public class SecretServiceImpl implements SecretService {
 
     @Override
     public Map<String, String> exportCredentials(Context ctx, String instanceId, String workDir, String orgName, String name, String password) throws Exception {
-        UsernamePassword up = get(ctx, orgName, name, password, SecretEntry.TypeEnum.USERNAME_PASSWORD);
+        UsernamePassword up = get(ctx, orgName, name, password, SecretEntryV2.TypeEnum.USERNAME_PASSWORD);
 
         Map<String, String> m = new HashMap<>();
         m.put("username", up.getUsername());
@@ -115,7 +109,7 @@ public class SecretServiceImpl implements SecretService {
 
     @Override
     public String exportAsFile(Context ctx, String instanceId, String workDir, String orgName, String name, String password) throws Exception {
-        BinaryDataSecret bds = get(ctx, orgName, name, password, SecretEntry.TypeEnum.DATA);
+        BinaryDataSecret bds = get(ctx, orgName, name, password, SecretEntryV2.TypeEnum.DATA);
 
         Path baseDir = Paths.get(workDir);
         Path tmpDir = assertTempDir(baseDir);
@@ -128,23 +122,7 @@ public class SecretServiceImpl implements SecretService {
 
     @Override
     public String encryptString(Context ctx, String instanceId, String orgName, String projectName, String value) throws Exception {
-        ApiClientConfiguration cfg = ApiClientConfiguration.builder()
-                .sessionToken(ContextUtils.getSessionToken(ctx))
-                .txId(UUID.fromString(instanceId))
-                .build();
-
-        ApiClient c = clientFactory.create(cfg);
-
-        String path = "/api/v1/org/" + orgName + "/project/" + projectName + "/encrypt";
-        Map<String, String> headerParams = new HashMap<>();
-        headerParams.put("Content-Type", "text/plain;charset=UTF-8");
-        ApiResponse<EncryptValueResponse> r = ClientUtils.postData(c, path, value, headerParams, EncryptValueResponse.class);
-
-        if (r.getStatusCode() == 200 && r.getData().isOk()) {
-            return r.getData().getData();
-        }
-
-        throw new ApiException("Error encrypting string. Status code:" + r.getStatusCode() + " Data: " + r.getData());
+        return new SecretClient(apiClient(ctx)).encryptString(orgName, projectName, value);
     }
 
     @Override
@@ -157,22 +135,13 @@ public class SecretServiceImpl implements SecretService {
             throw new IllegalArgumentException("Invalid encrypted string value, please verify that it was specified/copied correctly: " + e.getMessage());
         }
 
-        ApiClient c = clientFactory.create(ctx);
-
-        String path = "/api/v1/process/" + instanceId + "/decrypt";
-        ApiResponse<byte[]> r = ClientUtils.withRetry(RETRY_COUNT, RETRY_INTERVAL, () -> {
-            Type returnType = new TypeToken<byte[]>() {
-            }.getType();
-            return ClientUtils.postData(c, path, input, returnType);
-        });
-
-        return new String(r.getData());
+        return new String(new SecretClient(apiClient(ctx)).decryptString(UUID.fromString(instanceId), input));
     }
 
-    private <T extends Secret> T get(Context ctx, String orgName, String secretName, String password, SecretEntry.TypeEnum type) throws Exception {
+    private <T extends Secret> T get(Context ctx, String orgName, String secretName, String password, SecretEntryV2.TypeEnum type) throws Exception {
         try {
-            return new SecretClient(clientFactory.create(ctx)).getData(assertOrgName(ctx, orgName), secretName, password, type);
-        } catch (com.walmartlabs.concord.client.SecretNotFoundException e) {
+            return new SecretClient(apiClient(ctx)).getData(assertOrgName(ctx, orgName), secretName, password, type);
+        } catch (com.walmartlabs.concord.client2.SecretNotFoundException e) {
             throw new SecretNotFoundException(e.getOrgName(), e.getSecretName());
         }
     }
@@ -187,6 +156,14 @@ public class SecretServiceImpl implements SecretService {
         return Optional.ofNullable(pi)
                 .map(p -> (String) p.get("orgName"))
                 .orElseThrow(() -> new IllegalArgumentException("Organization name not specified"));
+    }
+
+    private ApiClient apiClient(Context ctx) {
+        ApiClientConfiguration cfg = ApiClientConfiguration.builder()
+                .sessionToken(ContextUtils.getSessionToken(ctx))
+                .build();
+
+        return clientFactory.create(cfg);
     }
 
     private static Path assertTempDir(Path baseDir) throws IOException {

@@ -27,25 +27,27 @@ import com.walmartlabs.concord.server.MultipartUtils;
 import com.walmartlabs.concord.server.OperationResult;
 import com.walmartlabs.concord.server.org.*;
 import com.walmartlabs.concord.server.org.project.ProjectDao;
-import com.walmartlabs.concord.server.org.secret.SecretManager.DecryptedBinaryData;
 import com.walmartlabs.concord.server.org.secret.SecretManager.DecryptedKeyPair;
-import com.walmartlabs.concord.server.org.secret.SecretManager.DecryptedUsernamePassword;
 import com.walmartlabs.concord.server.org.team.TeamDao;
 import com.walmartlabs.concord.server.sdk.ConcordApplicationException;
 import com.walmartlabs.concord.server.sdk.metrics.WithTimer;
+import com.walmartlabs.concord.server.sdk.rest.Resource;
+import com.walmartlabs.concord.server.sdk.validation.Validate;
+import com.walmartlabs.concord.server.sdk.validation.ValidationErrorsException;
 import com.walmartlabs.concord.server.user.UserManager;
 import com.walmartlabs.concord.server.user.UserType;
-import io.swagger.annotations.*;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.headers.Header;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.jboss.resteasy.plugins.providers.multipart.MultipartInput;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.sonatype.siesta.Resource;
-import org.sonatype.siesta.Validate;
-import org.sonatype.siesta.ValidationErrorsException;
 
 import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
 import javax.validation.Valid;
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
@@ -53,18 +55,12 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.core.StreamingOutput;
 import java.io.ByteArrayInputStream;
-import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
-import java.util.Collection;
-import java.util.List;
-import java.util.Objects;
-import java.util.UUID;
+import java.util.*;
+import java.util.stream.Collectors;
 
-@Named
-@Singleton
-@Api(value = "Secrets", authorizations = {@Authorization("api_key"), @Authorization("session_key"), @Authorization("ldap")})
 @Path("/api/v1/org")
+@Tag(name = "Secrets")
 public class SecretResource implements Resource {
 
     private static final Logger log = LoggerFactory.getLogger(SecretResource.class);
@@ -96,38 +92,43 @@ public class SecretResource implements Resource {
     }
 
     @POST
-    @ApiOperation("Creates a new secret")
     @Path("/{orgName}/secret")
     @Consumes(MediaType.MULTIPART_FORM_DATA)
     @Produces(MediaType.APPLICATION_JSON)
     @Validate
-    public SecretOperationResponse create(@ApiParam @PathParam("orgName") @ConcordKey String orgName,
-                                          @ApiParam MultipartInput input) {
+    @Operation(description = "Create secret", operationId = "createSecret")
+    public SecretOperationResponse create(@PathParam("orgName") @ConcordKey String orgName,
+                                          @Parameter(schema = @Schema(type = "object", implementation = Object.class)) MultipartInput input) {
 
         OrganizationEntry org = orgManager.assertAccess(orgName, true);
 
         try {
-            SecretType type = assertType(input);
-            String storeType = assertStoreType(input);
+            SecretType type = SecretResourceUtils.assertType(input);
+            String storeType = SecretResourceUtils.assertStoreType(secretManager, input);
 
-            String name = assertName(input);
-            assertUnique(org.getId(), name);
+            String name = SecretResourceUtils.assertName(input);
+            SecretResourceUtils.assertUnique(secretDao, org.getId(), name);
 
             boolean generatePwd = MultipartUtils.getBoolean(input, Constants.Multipart.GENERATE_PASSWORD, false);
-            String storePwd = getOrGenerateStorePassword(input, generatePwd);
-            SecretVisibility visibility = getVisibility(input);
+            String storePwd = SecretResourceUtils.getOrGenerateStorePassword(input, generatePwd);
+            SecretVisibility visibility = SecretResourceUtils.getVisibility(input);
 
-            UUID projectId = getProject(input, org.getId());
-
+            Set<UUID> projectIds = getProjectIds(
+                    org.getId(),
+                    MultipartUtils.getUUIDList(input, Constants.Multipart.PROJECT_IDS),
+                    MultipartUtils.getStringList(input, Constants.Multipart.PROJECT_NAMES),
+                    MultipartUtils.getUuid(input, Constants.Multipart.PROJECT_ID),
+                    MultipartUtils.getString(input, Constants.Multipart.PROJECT_NAME)
+            );
             switch (type) {
                 case KEY_PAIR: {
-                    return createKeyPair(org.getId(), projectId, name, storePwd, visibility, input, storeType);
+                    return SecretResourceUtils.createKeyPair(secretManager, org.getId(), projectIds, name, storePwd, visibility, input, storeType);
                 }
                 case USERNAME_PASSWORD: {
-                    return createUsernamePassword(org.getId(), projectId, name, storePwd, visibility, input, storeType);
+                    return SecretResourceUtils.createUsernamePassword(secretManager, org.getId(), projectIds, name, storePwd, visibility, input, storeType);
                 }
                 case DATA: {
-                    return createData(org.getId(), projectId, name, storePwd, visibility, input, storeType);
+                    return SecretResourceUtils.createData(secretManager, org.getId(), projectIds, name, storePwd, visibility, input, storeType);
                 }
                 default:
                     throw new ValidationErrorsException("Unsupported secret type: " + type);
@@ -137,25 +138,25 @@ public class SecretResource implements Resource {
         }
     }
 
+
     @POST
-    @ApiOperation("Updates an existing secret") // weird URLs as a workaround for swagger-maven-plugin issue
     @Path("/{orgName}/secret/{secretName}")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     @Validate
-    @Deprecated
-    public GenericOperationResult update(@ApiParam @PathParam("orgName") @ConcordKey String orgName,
-                                         @ApiParam @PathParam("secretName") @ConcordKey String secretName,
-                                         @ApiParam @Valid SecretUpdateRequest req) {
+    @Operation(description = "Update secret", operationId = "updateSecretV1")
+    public GenericOperationResult update(@PathParam("orgName") @ConcordKey String orgName,
+                                         @PathParam("secretName") @ConcordKey String secretName,
+                                         @Valid SecretUpdateRequest req) {
 
         OrganizationEntry org = orgManager.assertAccess(orgName, true);
 
         try {
+            UUID projectId = getProject(req.orgId(), req.projectId(), req.projectName());
             SecretUpdateParams newSecretParams = SecretUpdateParams.builder()
                     .newOrgId(req.orgId())
                     .newOrgName(req.orgName())
-                    .newProjectId(req.projectId())
-                    .newProjectName(req.projectName())
+                    .newProjectIds(projectId == null ? null : Collections.singletonList(projectId))
                     .removeProjectLink(req.projectName() != null && req.projectName().trim().isEmpty())
                     .newOwnerId(getOwnerId(req.owner()))
                     .currentPassword(req.storePassword())
@@ -174,33 +175,36 @@ public class SecretResource implements Resource {
     }
 
     @GET
-    @ApiOperation("Get an existing secret")
     @Path("/{orgName}/secret/{secretName}")
     @Produces(MediaType.APPLICATION_JSON)
     @WithTimer
-    public SecretEntry get(@ApiParam @PathParam("orgName") @ConcordKey String orgName,
-                           @ApiParam @PathParam("secretName") @ConcordKey String secretName) {
+    @Deprecated
+    public SecretEntry get(@PathParam("orgName") @ConcordKey String orgName,
+                           @PathParam("secretName") @ConcordKey String secretName) {
 
         OrganizationEntry org = orgManager.assertAccess(orgName, false);
         return secretManager.assertAccess(org.getId(), null, secretName, ResourceAccessLevel.READER, false);
     }
 
     @POST
-    @ApiOperation(value = "Get an existing secret's data", response = File.class)
-    @ApiResponses(value = {
-            @ApiResponse(code = 200, message = "OK",
-                    response = File.class,
-                    responseHeaders = @ResponseHeader(name = "X-Concord-SecretType", description = "Secret type", response = String.class))})
     @Path("/{orgName}/secret/{secretName}/data")
     @Consumes(MediaType.MULTIPART_FORM_DATA)
     @Produces(MediaType.APPLICATION_OCTET_STREAM)
     @WithTimer
-    public Response getData(@ApiParam @PathParam("orgName") @ConcordKey String orgName,
-                            @ApiParam @PathParam("secretName") @ConcordKey String secretName,
-                            @ApiParam MultipartInput input) {
+    @Operation(description = "Get an existing secret's data", operationId = "getSecretData")
+    @ApiResponse(description = "Secret content",
+            headers = @Header(name = Constants.Headers.SECRET_TYPE, schema = @Schema(type = "string")),
+            content = @Content(mediaType = MediaType.APPLICATION_OCTET_STREAM,
+                    schema = @Schema(type = "string", format = "binary"))
+    )
+    public Response getData(@PathParam("orgName") @ConcordKey String orgName,
+                            @PathParam("secretName") @ConcordKey String secretName,
+                            @Parameter(schema = @Schema(type = "object", implementation = GetDataRequest.class)) MultipartInput input) {
+
+        GetDataRequest request = GetDataRequest.from(input);
 
         OrganizationEntry org = orgManager.assertAccess(orgName, false);
-        String password = MultipartUtils.getString(input, Constants.Multipart.STORE_PASSWORD);
+        String password = request.getPassword();
 
         SecretDao.SecretDataEntry entry;
         try {
@@ -218,7 +222,7 @@ public class SecretResource implements Resource {
 
         try {
             return Response.ok((StreamingOutput) output -> output.write(entry.getData()),
-                    MediaType.APPLICATION_OCTET_STREAM)
+                            MediaType.APPLICATION_OCTET_STREAM)
                     .header(Constants.Headers.SECRET_TYPE, entry.getType().name())
                     .build();
         } catch (Exception e) {
@@ -228,13 +232,13 @@ public class SecretResource implements Resource {
     }
 
     @GET
-    @ApiOperation("Retrieves the public key of a key pair")
     @Path("/{orgName}/secret/{secretName}/public")
     @Produces(MediaType.APPLICATION_JSON)
     @Validate
     @WithTimer
-    public PublicKeyResponse getPublicKey(@ApiParam @PathParam("orgName") @ConcordKey String orgName,
-                                          @ApiParam @PathParam("secretName") @ConcordKey String secretName) {
+    @Operation(description = "Retrieves the public key of a key pair")
+    public PublicKeyResponse getPublicKey(@PathParam("orgName") @ConcordKey String orgName,
+                                          @PathParam("secretName") @ConcordKey String secretName) {
 
         OrganizationEntry org = orgManager.assertAccess(orgName, false);
         try {
@@ -247,25 +251,25 @@ public class SecretResource implements Resource {
     }
 
     @GET
-    @ApiOperation(value = "List secrets", responseContainer = "list", response = SecretEntry.class)
     @Path("/{orgName}/secret")
     @Produces(MediaType.APPLICATION_JSON)
     @Validate
-    public List<SecretEntry> list(@ApiParam @PathParam("orgName") @ConcordKey String orgName,
+    @Deprecated
+    public List<SecretEntry> list(@PathParam("orgName") @ConcordKey String orgName,
                                   @QueryParam("offset") int offset,
                                   @QueryParam("limit") int limit,
                                   @QueryParam("filter") String filter) {
         OrganizationEntry org = orgManager.assertAccess(orgName, false);
-        return secretManager.list(org.getId(), offset, limit, filter);
+        return secretManager.list(org.getId(), offset, limit, filter).stream().map(e -> (SecretEntry) e).collect(Collectors.toList());
     }
 
     @DELETE
-    @ApiOperation("Delete an existing secret")
     @Path("/{orgName}/secret/{secretName}")
     @Produces(MediaType.APPLICATION_JSON)
     @Validate
-    public GenericOperationResult delete(@ApiParam @PathParam("orgName") @ConcordKey String orgName,
-                                         @ApiParam @PathParam("secretName") @ConcordKey String secretName) {
+    @Operation(description = "Delete an existing secret")
+    public GenericOperationResult delete(@PathParam("orgName") @ConcordKey String orgName,
+                                         @PathParam("secretName") @ConcordKey String secretName) {
 
         OrganizationEntry org = orgManager.assertAccess(orgName, true);
         secretManager.delete(org.getId(), secretName);
@@ -273,14 +277,14 @@ public class SecretResource implements Resource {
     }
 
     @POST
-    @ApiOperation("Updates the access level for the specified secret and team")
     @Path("/{orgName}/secret/{secretName}/access")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     @Validate
-    public GenericOperationResult updateAccessLevel(@ApiParam @PathParam("orgName") @ConcordKey String orgName,
-                                                    @ApiParam @PathParam("secretName") @ConcordKey String secretName,
-                                                    @ApiParam @Valid ResourceAccessEntry entry) {
+    @Operation(description = "Updates the access level for the specified secret and team", operationId = "updateSecretAccessLevel")
+    public GenericOperationResult updateAccessLevel(@PathParam("orgName") @ConcordKey String orgName,
+                                                    @PathParam("secretName") @ConcordKey String secretName,
+                                                    @Valid ResourceAccessEntry entry) {
 
         OrganizationEntry org = orgManager.assertAccess(orgName, true);
 
@@ -296,26 +300,26 @@ public class SecretResource implements Resource {
     }
 
     @GET
-    @ApiOperation("Get secret team access")
     @Path("/{orgName}/secret/{secretName}/access")
     @Produces(MediaType.APPLICATION_JSON)
     @WithTimer
-    public List<ResourceAccessEntry> getAccessLevel(@ApiParam @PathParam("orgName") @ConcordKey String orgName,
-                                                    @ApiParam @PathParam("secretName") @ConcordKey String secretName) {
+    @Operation(description = "Get secret team access", operationId = "getSecretAccessLevel")
+    public List<ResourceAccessEntry> getAccessLevel(@PathParam("orgName") @ConcordKey String orgName,
+                                                    @PathParam("secretName") @ConcordKey String secretName) {
 
         OrganizationEntry org = orgManager.assertAccess(orgName, false);
         return secretManager.getAccessLevel(org.getId(), secretName);
     }
 
     @POST
-    @ApiOperation("Updates the access level for the specified secret and team")
     @Path("/{orgName}/secret/{secretName}/access/bulk")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     @Validate
-    public GenericOperationResult updateAccessLevel(@ApiParam @PathParam("orgName") @ConcordKey String orgName,
-                                                    @ApiParam @PathParam("secretName") @ConcordKey String secretName,
-                                                    @ApiParam @Valid Collection<ResourceAccessEntry> entries) {
+    @Operation(description = "Updates the access level for the specified secret and team", operationId = "updateSecretAccessLevelBulk")
+    public GenericOperationResult updateAccessLevel(@PathParam("orgName") @ConcordKey String orgName,
+                                                    @PathParam("secretName") @ConcordKey String secretName,
+                                                    @Valid Collection<ResourceAccessEntry> entries) {
 
         OrganizationEntry org = orgManager.assertAccess(orgName, true);
 
@@ -333,141 +337,31 @@ public class SecretResource implements Resource {
         return new GenericOperationResult(OperationResult.UPDATED);
     }
 
-    private PublicKeyResponse createKeyPair(UUID orgId, UUID projectId, String name, String storePassword, SecretVisibility visibility, MultipartInput input, String storeType) throws IOException {
-        DecryptedKeyPair k;
-
-        InputStream publicKey = MultipartUtils.getStream(input, Constants.Multipart.PUBLIC);
-        if (publicKey != null) {
-            InputStream privateKey = MultipartUtils.assertStream(input, Constants.Multipart.PRIVATE);
-            try {
-                k = secretManager.createKeyPair(orgId, projectId, name, storePassword, publicKey, privateKey, visibility, storeType);
-            } catch (IllegalArgumentException e) {
-                throw new ValidationErrorsException(e.getMessage());
-            }
-        } else {
-            k = secretManager.createKeyPair(orgId, projectId, name, storePassword, visibility, storeType);
-        }
-
-        return new PublicKeyResponse(k.getId(), OperationResult.CREATED, storePassword, new String(k.getData()));
-    }
-
-    private SecretOperationResponse createUsernamePassword(UUID orgId, UUID projectId, String name, String storePassword,
-                                                           SecretVisibility visibility, MultipartInput input,
-                                                           String storeType) {
-
-        String username = MultipartUtils.assertString(input, Constants.Multipart.USERNAME);
-        String password = MultipartUtils.assertString(input, Constants.Multipart.PASSWORD);
-
-        DecryptedUsernamePassword e = secretManager.createUsernamePassword(orgId, projectId, name, storePassword, username, password.toCharArray(), visibility, storeType);
-        return new SecretOperationResponse(e.getId(), OperationResult.CREATED, storePassword);
-    }
-
-    private SecretOperationResponse createData(UUID orgId, UUID projectId, String name, String storePassword,
-                                               SecretVisibility visibility, MultipartInput input,
-                                               String storeType) throws IOException {
-
-        InputStream data = MultipartUtils.assertStream(input, Constants.Multipart.DATA);
-        DecryptedBinaryData e = secretManager.createBinaryData(orgId, projectId, name, storePassword, data, visibility, storeType);
-        return new SecretOperationResponse(e.getId(), OperationResult.CREATED, storePassword);
-    }
-
-    private void assertUnique(UUID orgId, String name) {
-        if (secretDao.getId(orgId, name) != null) {
-            throw new ValidationErrorsException("Secret already exists: " + name);
-        }
-    }
-
-    private String getOrGenerateStorePassword(MultipartInput input, boolean generatePassword) {
-        String password;
-        try {
-            password = MultipartUtils.getString(input, Constants.Multipart.STORE_PASSWORD);
-        } catch (WebApplicationException e) {
-            throw new ConcordApplicationException("Can't get a password from the request", e);
-        }
-
-        if (password != null) {
-            try {
-                PasswordChecker.check(password);
-            } catch (PasswordChecker.CheckerException e) {
-                throw new ConcordApplicationException("Invalid password: " + e.getMessage(), Status.BAD_REQUEST);
+    private Set<UUID> getProjectIds(UUID orgId, List<UUID> projectIds, List<String> projectNames, UUID projectId, String projectName) {
+        if (projectIds == null || projectIds.isEmpty()) {
+            if (projectNames != null && !projectNames.isEmpty()) {
+                projectIds = projectNames.stream().map(name -> getProjectIdFromName(orgId, name)).collect(Collectors.toList());
+            } else {
+                if (projectId != null) {
+                    projectIds = Collections.singletonList(projectId);
+                } else if (projectName != null) {
+                    projectIds = Collections.singletonList(getProjectIdFromName(orgId, projectName));
+                }
             }
         }
-
-        if (password == null && generatePassword) {
-            return PasswordGenerator.generate();
-        }
-
-        return password;
+        return (projectIds == null) ? null : new HashSet<>(projectIds.stream().filter(Objects::nonNull).collect(Collectors.toSet()));
     }
 
-    private String assertName(MultipartInput input) {
-        String s = MultipartUtils.assertString(input, Constants.Multipart.NAME);
-        if (s.trim().isEmpty()) {
-            throw new ValidationErrorsException("'name' is required");
+    private UUID getProjectIdFromName(UUID orgId, String projectName) {
+        UUID id = projectDao.getId(orgId, projectName);
+        if (id == null) {
+            throw new ValidationErrorsException("Project not found: " + projectName);
         }
-
-        if (!s.matches(ConcordKey.PATTERN)) {
-            throw new ValidationErrorsException("Invalid secret name: " + s + ". " + ConcordKey.MESSAGE);
-        }
-
-        return s;
+        return id;
     }
 
-    private static SecretType assertType(MultipartInput input) {
-        SecretType type = getType(input);
-        if (type == null) {
-            throw new ValidationErrorsException("'type' is required");
-        }
-        return type;
-    }
-
-    private static SecretType getType(MultipartInput input) {
-        String s = MultipartUtils.getString(input, Constants.Multipart.TYPE);
-        if (s == null) {
-            return null;
-        }
-
-        try {
-            return SecretType.valueOf(s.toUpperCase());
-        } catch (IllegalArgumentException e) {
-            throw new ValidationErrorsException("Unsupported secret type: " + s);
-        }
-    }
-
-    private String assertStoreType(MultipartInput input) {
-        String s = MultipartUtils.getString(input, Constants.Multipart.STORE_TYPE);
-        if (s == null) {
-            return secretManager.getDefaultSecretStoreType();
-        }
-
-        // check if the given secret source type is enabled or not
-        boolean isStoreActive = secretManager.getActiveSecretStores().stream()
-                .anyMatch(store -> store.getType().equalsIgnoreCase(s));
-
-        if (!isStoreActive) {
-            throw new ValidationErrorsException("Secret store of type " + s + " is not available!");
-        }
-
-        return s;
-    }
-
-    private static SecretVisibility getVisibility(MultipartInput input) {
-        String s = MultipartUtils.getString(input, Constants.Multipart.VISIBILITY);
-        if (s == null) {
-            return SecretVisibility.PUBLIC;
-        }
-
-        try {
-            return SecretVisibility.valueOf(s);
-        } catch (IllegalArgumentException e) {
-            throw new ConcordApplicationException("Invalid visibility value: " + s, Status.BAD_REQUEST);
-        }
-    }
-
-    private UUID getProject(MultipartInput input, UUID orgId) {
-        UUID id = MultipartUtils.getUuid(input, Constants.Multipart.PROJECT_ID);
-        String name = MultipartUtils.getString(input, Constants.Multipart.PROJECT_NAME);
-        if (id == null && name != null) {
+    private UUID getProject(UUID orgId, UUID id, String name) {
+        if (id == null && (name != null && !name.trim().isEmpty())) {
             id = projectDao.getId(orgId, name);
             if (id == null) {
                 throw new ValidationErrorsException("Project not found: " + name);
