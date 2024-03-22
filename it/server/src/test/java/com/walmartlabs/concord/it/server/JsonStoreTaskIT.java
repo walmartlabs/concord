@@ -90,30 +90,6 @@ public class JsonStoreTaskIT extends AbstractServerIT {
 
     }
 
-    private void withOrg(Consumer<String> consumer) throws Exception {
-        String orgName = "org_" + randomString();
-        OrganizationsApi orgApi = new OrganizationsApi(getApiClient());
-        try {
-            orgApi.createOrUpdateOrg(new OrganizationEntry().name(orgName));
-            consumer.accept(orgName);
-        } finally {
-            orgApi.deleteOrg(orgName, "yes");
-        }
-    }
-
-    private void withProject(String orgName, Consumer<String> consumer) throws Exception {
-        String projectName = "project_" + randomString();
-        ProjectsApi projectsApi = new ProjectsApi(getApiClient());
-        try {
-            projectsApi.createOrUpdateProject(orgName, new ProjectEntry()
-                    .name(projectName)
-                    .rawPayloadMode(ProjectEntry.RawPayloadModeEnum.EVERYONE));
-            consumer.accept(projectName);
-        } finally {
-            projectsApi.deleteProject(orgName, projectName);
-        }
-    }
-
     private void withStore(String orgName, Consumer<String> consumer) throws Exception {
         String storageName = "storage_" + randomString();
         JsonStoreApi storageApi = new JsonStoreApi(getApiClient());
@@ -125,10 +101,5 @@ public class JsonStoreTaskIT extends AbstractServerIT {
         } finally {
             storageApi.deleteJsonStore(orgName, storageName);
         }
-    }
-
-    @FunctionalInterface
-    public interface Consumer<T> {
-        void accept(T t) throws Exception;
     }
 }

@@ -21,29 +21,45 @@ package com.walmartlabs.concord.server.console;
  */
 
 import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.walmartlabs.concord.server.process.ProcessEntry;
+import com.walmartlabs.concord.server.OperationResult;
 
-import java.io.Serial;
 import java.io.Serializable;
-import java.util.List;
+import java.util.UUID;
 
-@JsonInclude(Include.NON_EMPTY)
-public final class UserActivityResponse implements Serializable {
+public class ProcessCardOperationResponse implements Serializable {
 
-    @Serial
     private static final long serialVersionUID = 1L;
 
-    private final List<ProcessEntry> processes;
+    private final boolean ok = true;
+    private final UUID id;
+    private final OperationResult result;
 
     @JsonCreator
-    public UserActivityResponse(@JsonProperty("processes") List<ProcessEntry> processes) {
-        this.processes = processes;
+    public ProcessCardOperationResponse(@JsonProperty("id") UUID id,
+                                        @JsonProperty("result") OperationResult result) {
+        this.id = id;
+        this.result = result;
     }
 
-    public List<ProcessEntry> processes() {
-        return processes;
+    public boolean isOk() {
+        return ok;
+    }
+
+    public UUID getId() {
+        return id;
+    }
+
+    public OperationResult getResult() {
+        return result;
+    }
+
+    @Override
+    public String toString() {
+        return "ProcessCardOperationResponse{" +
+                "ok=" + ok +
+                ", id=" + id +
+                ", result=" + result +
+                '}';
     }
 }
