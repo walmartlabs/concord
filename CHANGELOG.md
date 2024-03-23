@@ -14,6 +14,9 @@
 - server: fix trigger id calculation for complex args:
 heterogeneous lists, list of maps
 ([#882](https://github.com/walmartlabs/concord/pull/882));
+- concord-server: skip validation of disabled repos during
+project creation
+([#883](https://github.com/walmartlabs/concord/pull/883));
 - concord-server: process wait conditions synchronously
 ([#884](https://github.com/walmartlabs/concord/pull/884)).
 
