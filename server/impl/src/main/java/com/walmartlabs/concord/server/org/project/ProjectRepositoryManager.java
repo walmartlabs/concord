@@ -41,7 +41,6 @@ import org.jooq.DSLContext;
 
 import javax.annotation.Nullable;
 import javax.inject.Inject;
-import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Response;
 import java.util.*;
 
@@ -120,7 +119,7 @@ public class ProjectRepositoryManager {
 
         for (RepositoryEntry re : repos) {
             SecretEntry secret = assertSecret(orgId, re);
-            insertOrUpdate(tx, projectId, null, re, secret, assertProcessDefinition(re.getName(), processDefinitions));
+            insertOrUpdate(tx, projectId, null, re, secret, processDefinitions.get(re.getName()));
         }
     }
 
@@ -207,14 +206,6 @@ public class ProjectRepositoryManager {
             return null;
         }
         return secretManager.assertAccess(orgId, entry.getSecretId(), entry.getSecretName(), ResourceAccessLevel.READER, false);
-    }
-
-    private ProcessDefinition assertProcessDefinition(String name, Map<String, ProcessDefinition> processDefinitions) {
-        ProcessDefinition result = processDefinitions.get(name);
-        if (result != null) {
-            return result;
-        }
-        throw new WebApplicationException("Process definition not found: " + name, Response.Status.INTERNAL_SERVER_ERROR);
     }
 
     private static String trim(String s) {
