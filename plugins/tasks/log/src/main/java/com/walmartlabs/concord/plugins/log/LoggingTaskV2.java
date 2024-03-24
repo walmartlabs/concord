@@ -121,7 +121,9 @@ public class LoggingTaskV2 implements Task {
     }
 
     private static ObjectMapper createYamlObjectMapper() {
-        return defaultObjectMapper(new YAMLFactory().disable(YAMLGenerator.Feature.WRITE_DOC_START_MARKER));
+        return defaultObjectMapper(new YAMLFactory()
+                                   .disable(YAMLGenerator.Feature.WRITE_DOC_START_MARKER)
+                                   .disable(YAMLGenerator.Feature.SPLIT_LINES));
     }
 
     private static ObjectMapper defaultObjectMapper(JsonFactory jf) {
