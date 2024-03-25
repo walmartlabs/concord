@@ -25,12 +25,14 @@ import com.google.inject.AbstractModule;
 import com.google.inject.Singleton;
 import com.google.inject.multibindings.Multibinder;
 import com.walmartlabs.concord.cli.Verbosity;
+import com.walmartlabs.concord.client2.ApiClient;
 import com.walmartlabs.concord.dependencymanager.DependencyManager;
 import com.walmartlabs.concord.runtime.v2.runner.*;
 import com.walmartlabs.concord.runtime.v2.runner.checkpoints.CheckpointService;
 import com.walmartlabs.concord.runtime.v2.runner.guice.BaseRunnerModule;
 import com.walmartlabs.concord.runtime.v2.runner.logging.RunnerLogger;
 import com.walmartlabs.concord.runtime.v2.runner.logging.SimpleLogger;
+import com.walmartlabs.concord.runtime.v2.runner.remote.ApiClientProvider;
 import com.walmartlabs.concord.runtime.v2.runner.tasks.TaskCallListener;
 import com.walmartlabs.concord.runtime.v2.sdk.DockerService;
 import com.walmartlabs.concord.runtime.v2.sdk.LockService;
@@ -79,6 +81,8 @@ public class CliServicesModule extends AbstractModule {
         bind(PersistenceService.class).to(DefaultPersistenceService.class);
         bind(ProcessStatusCallback.class).toInstance(instanceId -> {
         });
+
+        bind(ApiClient.class).toProvider(ApiClientProvider.class);
 
         bind(DefaultTaskVariablesService.class)
                 .toInstance(new MapBackedDefaultTaskVariablesService(readDefaultVars(defaultTaskVars)));

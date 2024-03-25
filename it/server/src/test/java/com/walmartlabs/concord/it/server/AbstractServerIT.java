@@ -20,10 +20,7 @@ package com.walmartlabs.concord.it.server;
  * =====
  */
 
-import com.walmartlabs.concord.client2.ApiClient;
-import com.walmartlabs.concord.client2.ApiException;
-import com.walmartlabs.concord.client2.SecretOperationResponse;
-import com.walmartlabs.concord.client2.StartProcessResponse;
+import com.walmartlabs.concord.client2.*;
 import com.walmartlabs.concord.common.IOUtils;
 import com.walmartlabs.concord.it.common.ITUtils;
 import com.walmartlabs.concord.it.common.JGitUtils;
@@ -220,5 +217,34 @@ public abstract class AbstractServerIT {
 
     public static boolean shouldSkipDockerTests() {
         return Boolean.parseBoolean(System.getenv("IT_SKIP_DOCKER_TESTS"));
+    }
+
+    protected void withOrg(Consumer<String> consumer) throws Exception {
+        String orgName = "org_" + randomString();
+        OrganizationsApi orgApi = new OrganizationsApi(getApiClient());
+        try {
+            orgApi.createOrUpdateOrg(new OrganizationEntry().name(orgName));
+            consumer.accept(orgName);
+        } finally {
+            orgApi.deleteOrg(orgName, "yes");
+        }
+    }
+
+    protected void withProject(String orgName, Consumer<String> consumer) throws Exception {
+        String projectName = "project_" + randomString();
+        ProjectsApi projectsApi = new ProjectsApi(getApiClient());
+        try {
+            projectsApi.createOrUpdateProject(orgName, new ProjectEntry()
+                    .name(projectName)
+                    .rawPayloadMode(ProjectEntry.RawPayloadModeEnum.EVERYONE));
+            consumer.accept(projectName);
+        } finally {
+            projectsApi.deleteProject(orgName, projectName);
+        }
+    }
+
+    @FunctionalInterface
+    public interface Consumer<T> {
+        void accept(T t) throws Exception;
     }
 }

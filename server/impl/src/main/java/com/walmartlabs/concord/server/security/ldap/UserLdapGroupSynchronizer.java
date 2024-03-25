@@ -53,6 +53,7 @@ public class UserLdapGroupSynchronizer implements ScheduledTask {
 
     private static final Logger log = LoggerFactory.getLogger(UserLdapGroupSynchronizer.class);
 
+    private static final String TASK_NAME = "user-ldap-group-sync";
     private final Dao dao;
     private final LdapGroupSyncConfiguration cfg;
     private final LdapManager ldapManager;
@@ -74,7 +75,7 @@ public class UserLdapGroupSynchronizer implements ScheduledTask {
 
     @Override
     public String getId() {
-        return "user-ldap-group-sync";
+        return TASK_NAME;
     }
 
     @Override
@@ -108,7 +109,7 @@ public class UserLdapGroupSynchronizer implements ScheduledTask {
                     ldapGroupsDao.update(u.userId, Collections.emptySet());
                     disableUser(u.userId);
                 }
-            } else {
+            } else if (!u.permanentlyDisabled) {
                 enableUser(u.userId);
                 ldapGroupsDao.update(u.userId, groups);
             }
@@ -118,36 +119,36 @@ public class UserLdapGroupSynchronizer implements ScheduledTask {
     }
 
     private void enableUser(UUID userId) {
-        AuditLog.withActionSource(ActionSource.SYSTEM, Collections.singletonMap("task", "user-ldap-group-sync"),
+        AuditLog.withActionSource(ActionSource.SYSTEM, Collections.singletonMap("task", TASK_NAME),
                 () -> userManager.enable(userId));
     }
 
     private void disableUser(UUID userId) {
-        AuditLog.withActionSource(ActionSource.SYSTEM, Collections.singletonMap("task", "user-ldap-group-sync"),
+        AuditLog.withActionSource(ActionSource.SYSTEM, Collections.singletonMap("task", TASK_NAME),
                 () -> userManager.disable(userId));
     }
 
     private void deleteUser(UUID userId) {
-        AuditLog.withActionSource(ActionSource.SYSTEM, Collections.singletonMap("task", "user-ldap-group-sync"),
+        AuditLog.withActionSource(ActionSource.SYSTEM, Collections.singletonMap("task", TASK_NAME),
                 () -> userManager.delete(userId));
     }
 
     @Named
-    private static final class Dao extends AbstractDao {
+    public static final class Dao extends AbstractDao {
 
         @Inject
         public Dao(@MainDB Configuration cfg) {
             super(cfg);
         }
 
-        public List<UserItem> list(int limit, Field<OffsetDateTime> cutoff, Field<OffsetDateTime> disabledAge) {
+        List<UserItem> list(int limit, Field<OffsetDateTime> cutoff, Field<OffsetDateTime> disabledAge) {
             Field<Boolean> expiredFiled = disabledAge == null ? inline(false) : field(nvl(USERS.DISABLED_DATE, currentOffsetDateTime()).lessThan(disabledAge));
-            return txResult(tx -> tx.select(USERS.USER_ID, USERS.USERNAME, USERS.DOMAIN, expiredFiled)
+            return txResult(tx -> tx.select(USERS.USER_ID, USERS.USERNAME, USERS.DOMAIN, USERS.IS_PERMANENTLY_DISABLED, expiredFiled)
                     .from(USERS)
                     .where(USERS.USER_TYPE.eq(UserType.LDAP.name()))
                     .and(USERS.LAST_GROUP_SYNC_DT.isNull().or(USERS.LAST_GROUP_SYNC_DT.lessThan(cutoff)))
                     .limit(limit)
-                    .fetch(r -> new UserItem(r.value1(), r.value2(), r.value3(), r.value4())));
+                    .fetch(r -> new UserItem(r.value1(), r.value2(), r.value3(), r.value4(), r.value5())));
         }
     }
 
@@ -156,13 +157,15 @@ public class UserLdapGroupSynchronizer implements ScheduledTask {
         private final UUID userId;
         private final String username;
         private final String domain;
+        private final boolean permanentlyDisabled;
         private final boolean expired;
 
-        private UserItem(UUID userId, String username, String domain, boolean expired) {
+        private UserItem(UUID userId, String username, String domain, boolean expired, boolean permanentlyDisabled) {
             this.userId = userId;
             this.username = username;
             this.domain = domain;
             this.expired = expired;
+            this.permanentlyDisabled = permanentlyDisabled;
         }
     }
 }

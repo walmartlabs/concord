@@ -92,7 +92,7 @@ public class UserResource implements Resource {
      * Finds an existing user by username.
      *
      * @param username
-     * @return
+     * @return user details
      */
     @GET
     @Path("/{username}")
@@ -109,9 +109,33 @@ public class UserResource implements Resource {
     }
 
     /**
+     * Disables an existing user. Optionally allows permanent disabling of the user.
+     *
+     * @param id ID of user to disable
+     * @param permanent When <code>true</code>, user cannot be automatically re-enabled on login
+     * @return updated user details
+     */
+    @PUT
+    @Path("/{id}/disable")
+    @Produces(MediaType.APPLICATION_JSON)
+    @Validate
+    @Operation(description = "Disable a user")
+    public UserEntry disableUser(@PathParam("id") UUID id, @QueryParam("permanent") boolean permanent) {
+        assertAdmin();
+
+        if (permanent) {
+            userManager.permanentlyDisable(id);
+        } else {
+            userManager.disable(id);
+        }
+
+        return userDao.get(id);
+    }
+
+    /**
      * Removes an existing user.
      *
-     * @param id
+     * @param id User's database ID
      * @return
      */
     @DELETE

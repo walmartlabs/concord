@@ -2594,6 +2594,31 @@ public class YamlParserTest extends AbstractYamlParserTest {
         assertThrows(RuntimeException.class, () -> deploy("old.yml"));
     }
 
+
+    @Test
+    public void test113() throws Exception {
+        deploy("113.yml");
+
+        MyLogger logger = spy(new MyLogger());
+        register("myLogger", logger);
+
+        TestTaskWithResume testTask = spy(new TestTaskWithResume());
+        register("testTask", testTask);
+
+        // ---
+
+        String key = UUID.randomUUID().toString();
+        start(key, "main");
+
+        resume(key, "myEvent");
+
+        resume(key, "myEvent");
+
+        // ---
+        verify(logger, times(1)).log(eq("RESUME1"));
+        verify(logger, times(1)).log(eq("RESUME2"));
+    }
+
     private ProcessDefinition findSubprocess(ProcessDefinition pd) {
         return pd.getChildren().stream()
                 .filter(e -> e instanceof ProcessDefinition)
@@ -2701,6 +2726,25 @@ public class YamlParserTest extends AbstractYamlParserTest {
         }
 
         public void call(Object arg1, Object arg2) {
+        }
+    }
+
+    private static class TestTaskWithResume implements JavaDelegate {
+
+        public static final String SUSPEND_MARKER = "TestTaskWithResumeSuspend";
+
+        @Override
+        public void execute(ExecutionContext ctx) {
+            Object in = ctx.getVariable("num");
+
+            if (ctx.getVariable(SUSPEND_MARKER) != null && (Boolean) ctx.getVariable(SUSPEND_MARKER)) {
+                ctx.setVariable("TestTaskWithResumeResult", "RESUME" + in);
+            } else {
+                ctx.setVariable(SUSPEND_MARKER, true);
+                ctx.suspend("myEvent", null, true);
+
+                ctx.setVariable("TestTaskWithResumeResult", "SUSPEND" + in);
+            }
         }
     }
 

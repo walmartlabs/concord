@@ -32,7 +32,9 @@ import static com.walmartlabs.concord.it.common.ITUtils.archive;
 import static com.walmartlabs.concord.it.common.ServerClient.assertLog;
 import static com.walmartlabs.concord.it.common.ServerClient.waitForCompletion;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 public class LdapIT extends AbstractServerIT {
@@ -106,6 +108,32 @@ public class LdapIT extends AbstractServerIT {
         UserEntry ue = usersApi.findByUsername(username.toLowerCase());
         assertNotNull(ue);
         assertEquals(ue.getName(), username.toLowerCase());
+    }
+
+    @Test
+    void testDisableLdapUser() throws Exception {
+        String username = "tester_" + randomString();
+        createLdapUser(username);
+
+        UsersApi usersApi = new UsersApi(getApiClient());
+        usersApi.createOrUpdateUser(new CreateUserRequest()
+                .username(username)
+                .type(CreateUserRequest.TypeEnum.LDAP));
+
+        UserEntry ue = usersApi.findByUsername(username);
+        assertNotNull(ue);
+        assertFalse(ue.getDisabled());
+        assertFalse(ue.getPermanentlyDisabled());
+
+        ue = usersApi.disableUser(ue.getId(), false);
+        assertNotNull(ue);
+        assertTrue(ue.getDisabled());
+        assertFalse(ue.getPermanentlyDisabled());
+
+        ue = usersApi.disableUser(ue.getId(), true);
+        assertNotNull(ue);
+        assertTrue(ue.getDisabled());
+        assertTrue(ue.getPermanentlyDisabled());
     }
 
     public static DirContext createContext() throws Exception {

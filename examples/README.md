@@ -52,6 +52,8 @@
 * [imports](imports) - how to use external GIT/http/mvn resources as project files;
 * [juel_java_steams](juel_java_steams) - using expressions, Groovy and Java Streams;
 * [profiles](profiles) - how to use profiles;
+* [process_card_htmx](process_card_htmx) - how to use "process cards" and [HTMX](https://htmx.org/) to implement custom forms to start processes;
+* [process_card_jquery](process_card_jquery) - how to use "process cards" and [jQuery](https://jquery.com/) to implement custom forms to start processes;
 * [python_script](python_script) - running a Python script from a flow;
 * [ruby](ruby) - running a Ruby snippet from a flow;
 * [script_url](script_url) - running an external script file;

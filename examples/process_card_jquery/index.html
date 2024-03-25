@@ -1,0 +1,159 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>Process start form example</title>
+    <script src="data.js"></script>
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/semantic-ui/2.5.0/semantic.min.css" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js" crossorigin="anonymous"></script>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/semantic-ui/2.5.0/semantic.min.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+
+</head>
+<body>
+    <h1>Deployment info</h1>
+
+    <form id="myForm" class="ui form" enctype="multipart/form-data">
+        <div class="ui error message"></div>
+
+        <div class="field required">
+            <label for="release">Release version</label>
+            <input id="release" type="text" name="arguments.release" placeholder="Release version">
+            <div class="ui pointing red basic label release-error" style="display: none;">Please enter value</div>
+        </div>
+
+        <div class="field required">
+            <label for="field1">field1</label>
+            <input id="field1" type="text" name="arguments.field1" placeholder="field1">
+            <div class="ui pointing red basic label field1-error" style="display: none;">Please enter value</div>
+        </div>
+
+        <div class="field required">
+            <label for="field2">field1</label>
+            <input id="field2" type="text" name="arguments.field1" placeholder="field2">
+            <div class="ui pointing red basic label field2-error" style="display: none;">Please enter value</div>
+        </div>
+
+        <div class="field required">
+            <label for="field3">field1</label>
+            <input id="field3" type="text" name="arguments.field3" placeholder="field3">
+            <div class="ui pointing red basic label field3-error" style="display: none;">Please enter value</div>
+        </div>
+
+
+        <input id="org" name="org" type="hidden"/>
+        <input id="project" name="project" type="hidden"/>
+        <input id="repo" name="repo" type="hidden"/>
+        <input id="entryPoint" name="entryPoint" type="hidden"/>
+
+        <button id="submitButton" type="button" class="ui primary submit button">Submit</button>
+    </form>
+
+<script>
+    const myForm = $('#myForm');
+    myForm
+        .form('set values', data.values)
+        .form('set values', data);
+
+    $('#submitButton').on('click', function() {
+        clearError();
+
+        let isValid = true;
+
+        const releaseField = $('#release');
+        if (releaseField.val() === '') {
+            releaseField.parent().addClass('error');
+            $('.release-error').show();
+            isValid = false;
+        } else {
+            releaseField.removeClass('error');
+            $('.release-error').hide();
+        }
+
+        const field1Field = $('#field1');
+        if (field1Field.val() === '') {
+            field1Field.parent().addClass('error');
+            $('.field1-error').show();
+            isValid = false;
+        } else {
+            field1Field.removeClass('error');
+            $('.field1-error').hide();
+        }
+
+        if (!isValid) {
+            return;
+        }
+
+        formLoading(true);
+
+        $.ajax({
+            type: 'POST',
+            url: `/api/v1/process`,
+            data: new FormData(myForm[0]),
+            processData: false,
+            contentType: false,
+            success: function(response) {
+                console.log(response);
+
+                if (response.ok) {
+                    window.parent.window.location.href = `${window.location.origin}/#/process/${response.instanceId}/log`;
+                    // window.parent.window.location.href = `http://localhost:3000/#/process/${response.instanceId}/log`;
+                } else {
+                    formLoading(false);
+
+                    let ul = $('<ul>');
+                    $.each(response.errors, function(index, err) {
+                        ul.append($('<li>').text(err));
+                    });
+
+                    $('.ui.error.message')
+                        .empty()
+                        .append(ul)
+                        .show();
+                }
+            },
+            error: function(error) {
+                console.log(error)
+
+                showError('Error starting process', '[' + error.status + ']: ' + error.responseText);
+
+                formLoading(false);
+            }
+        });
+    });
+
+    $('#release').on('input', function() {
+        $(this).parent().removeClass('error');
+        $('.release-error').hide();
+    });
+
+    $('#field1').on('input', function() {
+        $(this).parent().removeClass('error');
+        $('.field1-error').hide();
+    });
+
+    const formLoading = (loading) => {
+        const myForm = $('#myForm');
+        if (loading) {
+            myForm.addClass('loading')
+        } else {
+            myForm.removeClass('loading')
+        }
+    };
+
+    const clearError = () => {
+        $('.ui.error.message')
+            .hide()
+            .empty();
+    };
+
+    const showError = (header, err) => {
+        $('.ui.error.message')
+            .show()
+            .text(header + ': ' + err);
+    };
+</script>
+
+</body>
+</html>

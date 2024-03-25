@@ -25,16 +25,17 @@ import org.junit.jupiter.api.Test;
 import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
 
 public class TriggerInternalIdCalculatorTest {
 
     @Test
     public void testEmpty() {
         String name = "trigger";
-        List<String> activeProfiles = new ArrayList<>();
-        Map<String, Object> arguments = new HashMap<>();
-        Map<String, Object> conditions = new HashMap<>();
-        Map<String, Object> cfg = new HashMap<>();
+        List<String> activeProfiles = List.of();
+        Map<String, Object> arguments = Map.of();
+        Map<String, Object> conditions = Map.of();
+        Map<String, Object> cfg = Map.of();
 
         String id1 = TriggerInternalIdCalculator.getId(name, activeProfiles, arguments, conditions, cfg);
         String id2 = TriggerInternalIdCalculator.getId(name, activeProfiles, arguments, conditions, cfg);
@@ -44,15 +45,16 @@ public class TriggerInternalIdCalculatorTest {
     @Test
     public void test1() {
         String name = "trigger";
-        List<String> activeProfiles = new ArrayList<>();
-        Map<String, Object> arguments = new HashMap<>();
-        Map<String, Object> conditions = new HashMap<>();
+        List<String> activeProfiles = List.of();
+        Map<String, Object> arguments = Map.of();
+        Map<String, Object> conditions = Map.of();
 
-        Map<String, Object> cfg1 = new HashMap<>();
-        cfg1.put("a", "a-value");
-        cfg1.put("b", Collections.singletonMap("k", "v"));
-        cfg1.put("c", "c-value");
-        Map<String, Object> cfg2 = new HashMap<>();
+        Map<String, Object> cfg1 = Map.of(
+                "a", "a-value",
+                "b", Collections.singletonMap("k", "v"),
+                "c", "c-value");
+
+        Map<String, Object> cfg2 = new LinkedHashMap<>();
         cfg2.put("c", "c-value");
         cfg2.put("a", "a-value");
         cfg2.put("b", Collections.singletonMap("k", "v"));
@@ -60,5 +62,47 @@ public class TriggerInternalIdCalculatorTest {
         String id1 = TriggerInternalIdCalculator.getId(name, activeProfiles, arguments, conditions, cfg1);
         String id2 = TriggerInternalIdCalculator.getId(name, activeProfiles, arguments, conditions, cfg2);
         assertEquals(id1, id2);
+    }
+
+    @Test
+    public void testArrayOfObjects() {
+        String name = "trigger";
+        List<String> activeProfiles = List.of();
+
+        Map<String, Object> arguments = Map.of(
+                "listOfMaps", List.of(Map.of("name", "one"), Map.of("name", "two")),
+                "anotherProblem", Arrays.asList("a", 2, false));
+
+        Map<String, Object> conditions = Map.of();
+
+        Map<String, Object> configuration = Map.of(
+                "name", "MyTrigger",
+                "entryPoint", "default");
+
+        String id1 = TriggerInternalIdCalculator.getId(name, activeProfiles, arguments, conditions, configuration);
+        String id2 = TriggerInternalIdCalculator.getId(name, activeProfiles, arguments, conditions, configuration);
+        assertEquals(id1, id2);
+    }
+
+    @Test
+    public void testNotEquals() {
+        String name = "trigger";
+        List<String> activeProfiles = List.of();
+        Map<String, Object> arguments = Map.of();
+        Map<String, Object> conditions = Map.of();
+
+        Map<String, Object> cfg1 = Map.of(
+                "a", "a-value",
+                "b", Map.of("k", "v"),
+                "c", "c-value");
+
+        Map<String, Object> cfg2 = Map.of(
+                "c", "c-value",
+                "a", "a-value",
+                "boom", Map.of("k", "v"));
+
+        String id1 = TriggerInternalIdCalculator.getId(name, activeProfiles, arguments, conditions, cfg1);
+        String id2 = TriggerInternalIdCalculator.getId(name, activeProfiles, arguments, conditions, cfg2);
+        assertNotEquals(id1, id2);
     }
 }

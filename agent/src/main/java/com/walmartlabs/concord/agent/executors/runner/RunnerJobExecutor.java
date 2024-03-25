@@ -216,7 +216,7 @@ public class RunnerJobExecutor implements JobExecutor {
         });
 
         // return a handle that can be used to cancel the process or wait for its completion
-        return new JobInstanceImpl(f, pe.getProcess());
+        return new JobInstanceImpl(f, pe.getProcess(), cfg.cleanRunnerDescendants());
     }
 
     private void persistWorkDir(UUID instanceId, Path src) {
@@ -776,6 +776,8 @@ public class RunnerJobExecutor implements JobExecutor {
 
         boolean preforkEnabled();
 
+        boolean cleanRunnerDescendants();
+
         static ImmutableRunnerJobExecutorConfiguration.Builder builder() {
             return ImmutableRunnerJobExecutorConfiguration.builder();
         }
@@ -785,12 +787,14 @@ public class RunnerJobExecutor implements JobExecutor {
 
         private final Future<?> f;
         private final Process proc;
+        private final boolean cleanRunnerDescendants;
 
         private transient boolean cancelled = false;
 
-        private JobInstanceImpl(Future<?> f, Process proc) {
+        private JobInstanceImpl(Future<?> f, Process proc, boolean cleanRunnerDescendants) {
             this.f = f;
             this.proc = proc;
+            this.cleanRunnerDescendants = cleanRunnerDescendants;
         }
 
         @Override
@@ -806,7 +810,7 @@ public class RunnerJobExecutor implements JobExecutor {
 
             cancelled = true;
 
-            Utils.kill(proc);
+            Utils.kill(proc, cleanRunnerDescendants);
         }
 
         @Override

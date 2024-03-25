@@ -75,6 +75,10 @@ public class SsoRealm extends AuthorizingRealm {
             u = userManager.create(t.getUsername(), t.getDomain(), t.getDisplayName(), t.getMail(), UserType.SSO, null);
         }
 
+        if (!u.isPermanentlyDisabled()) {
+            return null;
+        }
+
         // we consider the account active if the authentication was successful
         userManager.enable(u.getId());
 

@@ -26,15 +26,23 @@ import io.takari.parc.Parser;
 import static com.walmartlabs.concord.runtime.v2.parser.GrammarMisc.namedStep;
 import static com.walmartlabs.concord.runtime.v2.parser.GrammarOptions.namedOptions;
 import static com.walmartlabs.concord.runtime.v2.parser.GrammarV2.anyVal;
-import static com.walmartlabs.concord.runtime.v2.parser.TaskGrammar.optionsWithStepName;
 
 public final class LogGrammar {
 
     public static final Parser<Atom, TaskCall> logStep =
             namedStep("log", YamlValueType.TASK, (stepName, a) ->
                     anyVal.bind(msg ->
-                            namedOptions.map(options -> new TaskCall(a.location, "log", optionsWithStepName(stepName)
+                            namedOptions.map(options -> new TaskCall(a.location, "log", TaskGrammar.optionsWithStepName(stepName)
                                     .putInput("msg", msg)
+                                    .putAllMeta(options.meta())
+                                    .build()))));
+
+    public static final Parser<Atom, TaskCall> logYamlStep =
+            namedStep("logYaml", YamlValueType.TASK, (stepName, a) ->
+                    anyVal.bind(msg ->
+                            namedOptions.map(options -> new TaskCall(a.location, "log", TaskGrammar.optionsWithStepName(stepName)
+                                    .putInput("msg", msg)
+                                    .putInput("format", "yaml")
                                     .putAllMeta(options.meta())
                                     .build()))));
 

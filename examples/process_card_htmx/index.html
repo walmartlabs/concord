@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>Process start form example</title>
+    <script src="data.js"></script>
+    <script src="https://unpkg.com/htmx.org@1.9.11"></script>
+    <script src="https://unpkg.com/htmx.org@1.9.11/dist/ext/client-side-templates.js"></script>
+    <script src="https://unpkg.com/mustache@latest"></script>
+    <style>
+        body {
+            background-color: white;
+            font-family: sans-serif;
+        }
+    </style>
+</head>
+<body hx-ext="client-side-templates">
+
+<form id='form'
+      hx-encoding='multipart/form-data'
+      hx-post='/api/v1/process'
+      hx-swap="innerHTML"
+      mustache-template="response-template">
+    <div style="display: flex; flex-direction: column">
+        <div style="padding: 10px">
+            <label for="name">Name</label>
+            <input id="name" name="arguments.name" type="text" required/>
+        </div>
+        <input type="hidden" name="org"/>
+        <input type="hidden" name="project"/>
+        <input type="hidden" name="repo"/>
+        <input type="hidden" name="entryPoint"/>
+        <button style="padding: 10px" type="submit">Run process</button>
+    </div>
+</form>
+
+<template id="response-template">
+    <div>
+        The process has been started, see <a href="/#/process/{{instanceId}}/log" target="_parent">the log</a> for
+        details.
+    </div>
+</template>
+
+<script>
+    document.getElementsByName('org')[0].value = data.org;
+    document.getElementsByName('project')[0].value = data.project;
+    document.getElementsByName('repo')[0].value = data.repo;
+    document.getElementsByName('entryPoint')[0].value = data.entryPoint;
+</script>
+
+</body>
+</html>

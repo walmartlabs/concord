@@ -70,11 +70,16 @@ export interface TriggerCfg {
     name?: string;
 }
 
+export interface TriggerConditions {
+    spec?: string;
+    version?: string;
+}
+
 export interface TriggerEntry {
     id: ConcordId;
     eventSource: ConcordKey;
     arguments?: object;
-    conditions?: object;
+    conditions?: TriggerConditions;
     activeProfiles?: string[];
     cfg: TriggerCfg;
 }

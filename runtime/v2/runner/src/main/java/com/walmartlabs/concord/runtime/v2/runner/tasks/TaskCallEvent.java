@@ -23,6 +23,7 @@ package com.walmartlabs.concord.runtime.v2.runner.tasks;
 import com.walmartlabs.concord.common.AllowNulls;
 import com.walmartlabs.concord.runtime.v2.model.ProcessDefinition;
 import com.walmartlabs.concord.runtime.v2.model.Step;
+import com.walmartlabs.concord.svm.ThreadId;
 import org.immutables.value.Value;
 
 import javax.annotation.Nullable;
@@ -46,6 +47,8 @@ public interface TaskCallEvent {
     String taskName();
 
     String methodName();
+
+    ThreadId threadId();
 
     @AllowNulls
     @Value.Default

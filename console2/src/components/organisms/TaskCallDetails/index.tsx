@@ -240,7 +240,7 @@ const TaskCallDetails = (props: Props) => {
                                 <Table.Body>
                                     <Table.Row>
                                         <Table.Cell collapsing={true}>Flow</Table.Cell>
-                                        <Table.Cell>{details.processDefinitionId}</Table.Cell>
+                                        <Table.Cell>{details.processDefinitionId}@{details.threadId || 0}</Table.Cell>
                                     </Table.Row>
                                 </Table.Body>
                             </Table>

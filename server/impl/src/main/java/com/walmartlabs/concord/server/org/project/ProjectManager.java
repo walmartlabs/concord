@@ -213,6 +213,9 @@ public class ProjectManager {
 
         Map<String, ProcessDefinition> result = new HashMap<>();
         for (Map.Entry<String, RepositoryEntry> e : projectEntry.getRepositories().entrySet()) {
+            if (e.getValue().isDisabled()) {
+                continue;
+            }
             ProcessDefinition processDefinition = projectRepositoryManager.processDefinition(orgId, projectId, e.getValue());
             result.put(e.getKey(), processDefinition);
         }

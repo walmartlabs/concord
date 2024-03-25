@@ -43,7 +43,7 @@ public class ApiClientFactoryImpl implements ApiClientFactory {
     private final DefaultApiClientFactory clientFactory;
 
     @Inject
-    public ApiClientFactoryImpl(ApiConfiguration cfg, InstanceId instanceId) throws Exception {
+    public ApiClientFactoryImpl(ApiConfiguration cfg, InstanceId instanceId) {
         this.cfg = cfg;
         this.instanceId = instanceId;
         this.clientFactory = new DefaultApiClientFactory(cfg.baseUrl(), Duration.ofMillis(cfg.connectTimeout()));

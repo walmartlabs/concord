@@ -60,6 +60,8 @@ public enum TaskParams implements HasKey {
 
     ENABLE_OUT_VARS("enableOutsVars"),
 
+    ENABLE_MODULE_DEFAULTS("enableModuleDefaults"),
+
     EXIT_CODE_KEY("exitCode"),
 
     EXTRA_ENV_KEY("extraEnv"),

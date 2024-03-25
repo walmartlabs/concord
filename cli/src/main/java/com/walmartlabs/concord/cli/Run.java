@@ -302,7 +302,7 @@ public class Run implements Callable<Integer> {
         }
 
         return ProcessInfo.builder()
-                .sessionToken(MapUtils.getString(processInfo, "sessionToken"))
+                .sessionToken(MapUtils.getString(processInfo, "sessionToken", "<undefined>"))
                 .activeProfiles(profiles)
                 .build();
     }

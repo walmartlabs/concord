@@ -175,6 +175,18 @@ public class RepositoryEntry implements Serializable {
         return triggersDisabled;
     }
 
+    public RepositoryEntry withBranch(String branch) {
+        return new RepositoryEntry(id, projectId, name, url, branch, commitId, path, disabled, secretId, secretName, secretStoreType, meta, triggersDisabled);
+    }
+
+    public RepositoryEntry withPath(String path) {
+        return new RepositoryEntry(id, projectId, name, url, branch, commitId, path, disabled, secretId, secretName, secretStoreType, meta, triggersDisabled);
+    }
+
+    public RepositoryEntry withDisabled(boolean disabled) {
+        return new RepositoryEntry(id, projectId, name, url, branch, commitId, path, disabled, secretId, secretName, secretStoreType, meta, triggersDisabled);
+    }
+
     @Override
     public String toString() {
         return "RepositoryEntry{" +
