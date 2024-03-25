@@ -1,5 +1,40 @@
 # Change log
 
+## [2.9.0] - 2024-02-28
+
+### Added
+
+- concord-server: option to permanently disable a user
+([#875](https://github.com/walmartlabs/concord/pull/875));
+- tasks: asserts
+([#876](https://github.com/walmartlabs/concord/pull/876));
+- concord-agent, dependency-manager: support for Maven offline
+mode ([#869](https://github.com/walmartlabs/concord/pull/869));
+- concord-server: skip repository refresh when repo is disabled
+([#872](https://github.com/walmartlabs/concord/pull/872));
+- runtime-v2: threadId to task details
+([#874](https://github.com/walmartlabs/concord/pull/874));
+- concord-console2: add more details to trigger list
+([#878](https://github.com/walmartlabs/concord/pull/878));
+
+### Changed
+
+- concord-console: adjust polling frequency based on client
+activity
+([#634](https://github.com/walmartlabs/concord/pull/634));
+- runtime-v1: fix for resume from same step (bpm version up)
+([#879](https://github.com/walmartlabs/concord/pull/879));
+- cli: api client provider for cli (just to load tasks)
+([#877](https://github.com/walmartlabs/concord/pull/877));
+- ansible: add module_defaults callback, remove deprecated gather_subset in config
+([#873](https://github.com/walmartlabs/concord/pull/873));
+- runtime-v2: ignore empty string as sensitive data
+([#871](https://github.com/walmartlabs/concord/pull/871));
+- project: fix maven compiler source version in parent pom
+([#870](https://github.com/walmartlabs/concord/pull/870)).
+
+
+
 ## [2.8.0] - 2024-01-15
 
 ### Added

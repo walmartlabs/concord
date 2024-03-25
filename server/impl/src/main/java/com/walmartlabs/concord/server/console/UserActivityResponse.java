@@ -26,61 +26,24 @@ import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.walmartlabs.concord.server.process.ProcessEntry;
 
+import java.io.Serial;
 import java.io.Serializable;
 import java.util.List;
-import java.util.Map;
 
 @JsonInclude(Include.NON_EMPTY)
-public class UserActivityResponse implements Serializable {
+public final class UserActivityResponse implements Serializable {
 
+    @Serial
     private static final long serialVersionUID = 1L;
 
-    public static class ProjectProcesses implements Serializable {
-
-        private static final long serialVersionUID = 1L;
-
-        private final String projectName;
-        private final int running;
-
-        @JsonCreator
-        public ProjectProcesses(@JsonProperty("projectName") String projectName,
-                                @JsonProperty("running") int running) {
-            this.projectName = projectName;
-            this.running = running;
-        }
-
-        public String getProjectName() {
-            return projectName;
-        }
-
-        public int getRunning() {
-            return running;
-        }
-    }
-
-    private final Map<String, Integer> processStats;
-    private final Map<String, List<ProjectProcesses>> orgProcesses;
     private final List<ProcessEntry> processes;
 
     @JsonCreator
-    public UserActivityResponse(@JsonProperty("processStats") Map<String, Integer> processStats,
-                                @JsonProperty("orgProcesses") Map<String, List<ProjectProcesses>> orgProcesses,
-                                @JsonProperty("processes") List<ProcessEntry> processes) {
-
-        this.processStats = processStats;
-        this.orgProcesses = orgProcesses;
+    public UserActivityResponse(@JsonProperty("processes") List<ProcessEntry> processes) {
         this.processes = processes;
     }
 
-    public Map<String, Integer> getProcessStats() {
-        return processStats;
-    }
-
-    public Map<String, List<ProjectProcesses>> getOrgProcesses() {
-        return orgProcesses;
-    }
-
-    public List<ProcessEntry> getProcesses() {
+    public List<ProcessEntry> processes() {
         return processes;
     }
 }

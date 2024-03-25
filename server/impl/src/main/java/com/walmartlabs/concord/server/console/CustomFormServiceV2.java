@@ -315,7 +315,18 @@ public class CustomFormServiceV2 {
         }
 
         String submitUrl = String.format(FORM_WIZARD_CONTINUE_URL_TEMPLATE, processInstanceId, form.name());
-        return new FormData(success, processFailed, submitUrl, fields, _definitions, _values, _errors);
+
+        return FormData.builder()
+                .txId(processInstanceId.toString())
+                .formName(form.name())
+                .success(success)
+                .processFailed(processFailed)
+                .submitUrl(submitUrl)
+                .fields(fields)
+                .definitions(_definitions)
+                .values(_values)
+                .errors(_errors)
+                .build();
     }
 
     private io.takari.bpm.model.form.FormField.Cardinality convert(FormField.Cardinality c) {

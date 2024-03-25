@@ -229,6 +229,7 @@ public class MainTest {
         byte[] log = run();
         assertLog(log, ".*Hello, Concord!.*");
         assertLog(log, ".*" + Pattern.quote("defaultsMap:{a=a-value}") + ".*");
+        assertLog(log, ".*k: \"value\".*");
 
         verify(processStatusCallback, times(1)).onRunning(instanceId);
     }
