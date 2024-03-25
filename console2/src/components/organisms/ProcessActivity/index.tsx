@@ -35,6 +35,8 @@ import {
     ProcessHistoryActivity,
     ProcessLogActivity,
     ProcessLogActivityV2,
+    ProcessLogActivityV3,
+    ProcessLogActivityV4,
     ProcessStatusActivity,
     ProcessWaitActivity
 } from '../index';
@@ -49,6 +51,8 @@ export type TabLink =
     | 'status'
     | 'ansible'
     | 'log'
+    | 'log2'
+    | 'log3'
     | 'events'
     | 'history'
     | 'wait'
@@ -269,6 +273,22 @@ const ProcessActivity = (props: ExternalProps) => {
                             dataFetchInterval={dataFetchInterval}
                         />
                     )}
+                </Route>
+                <Route path={`${baseUrl}/log2`} exact={true}>
+                    <ProcessLogActivityV3
+                        instanceId={instanceId}
+                        processStatus={process ? process.status : undefined}
+                        loadingHandler={loadingHandler}
+                        forceRefresh={refresh}
+                    />
+                </Route>
+                <Route path={`${baseUrl}/log3`} exact={true}>
+                    <ProcessLogActivityV4
+                        instanceId={instanceId}
+                        processStatus={process ? process.status : undefined}
+                        loadingHandler={loadingHandler}
+                        forceRefresh={refresh}
+                    />
                 </Route>
                 <Route path={`${baseUrl}/history`} exact={true}>
                     <ProcessHistoryActivity
