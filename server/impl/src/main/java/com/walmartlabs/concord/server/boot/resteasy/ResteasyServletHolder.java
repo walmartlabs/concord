@@ -20,7 +20,7 @@ package com.walmartlabs.concord.server.boot.resteasy;
  * =====
  */
 
-import org.eclipse.jetty.servlet.ServletHolder;
+import org.eclipse.jetty.ee8.servlet.ServletHolder;
 import org.jboss.resteasy.plugins.server.servlet.HttpServletDispatcher;
 
 import javax.servlet.annotation.WebServlet;

@@ -23,7 +23,7 @@ package com.walmartlabs.concord.server.websocket;
 import com.walmartlabs.concord.server.queueclient.MessageSerializer;
 import com.walmartlabs.concord.server.queueclient.message.Message;
 import com.walmartlabs.concord.server.queueclient.message.MessageType;
-import org.eclipse.jetty.websocket.api.Session;
+import org.eclipse.jetty.ee8.websocket.api.Session;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
