@@ -80,6 +80,20 @@ public class UserEntry implements Serializable {
                      @JsonProperty("email") String email,
                      @JsonProperty("roles") Set<RoleEntry> roles,
                      @JsonProperty("disabled") boolean disabled,
+                     @JsonProperty("disabledDate") OffsetDateTime disabledDate) {
+        this(id, name, domain, displayName, orgs, type, email, roles, disabled, disabledDate, false);
+    }
+
+    @JsonCreator
+    public UserEntry(@JsonProperty("id") UUID id,
+                     @JsonProperty("name") String name,
+                     @JsonProperty("domain") String domain,
+                     @JsonProperty("displayName") String displayName,
+                     @JsonProperty("orgs") Set<OrganizationEntry> orgs,
+                     @JsonProperty("type") UserType type,
+                     @JsonProperty("email") String email,
+                     @JsonProperty("roles") Set<RoleEntry> roles,
+                     @JsonProperty("disabled") boolean disabled,
                      @JsonProperty("disabledDate") OffsetDateTime disabledDate,
                      @JsonProperty("permanentlyDisabled") boolean permanentlyDisabled) {
 
