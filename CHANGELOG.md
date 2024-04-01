@@ -4,6 +4,8 @@
 
 ### Added
 
+- plugins: add new mock-tasks plugin
+([#754](https://github.com/walmartlabs/concord/pull/754));
 - runtime-v2: logYaml step
 ([#816](https://github.com/walmartlabs/concord/pull/816));
 - concord-server, concord-console2: add "process cards"
