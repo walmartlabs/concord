@@ -6,6 +6,9 @@
 
 ### Changed
 
+- server: fix json serialization of UserActivityResponse
+([#885](https://github.com/walmartlabs/concord/pull/885)).
+
 ## [2.10.0] - 2024-04-01
 
 ### Added
