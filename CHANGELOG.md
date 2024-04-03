@@ -1,5 +1,11 @@
 # Change log
 
+## [2.10.1] - Unreleased
+
+### Added
+
+### Changed
+
 ## [2.10.0] - 2024-04-01
 
 ### Added
