@@ -20,30 +20,26 @@ package com.walmartlabs.concord.server.console;
  * =====
  */
 
-import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
-import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.walmartlabs.concord.server.process.ProcessEntry;
+import org.immutables.value.Value;
 
-import java.io.Serial;
 import java.io.Serializable;
 import java.util.List;
 
+@Value.Immutable
 @JsonInclude(Include.NON_EMPTY)
-public final class UserActivityResponse implements Serializable {
+@JsonSerialize(as = ImmutableUserActivityResponse.class)
+@JsonDeserialize(as = ImmutableUserActivityResponse.class)
+public interface UserActivityResponse extends Serializable {
 
-    @Serial
-    private static final long serialVersionUID = 1L;
+    long serialVersionUID = 1L;
 
-    private final List<ProcessEntry> processes;
-
-    @JsonCreator
-    public UserActivityResponse(@JsonProperty("processes") List<ProcessEntry> processes) {
-        this.processes = processes;
-    }
-
-    public List<ProcessEntry> processes() {
-        return processes;
+    @Value.Default
+    default List<ProcessEntry> processes() {
+        return List.of();
     }
 }
