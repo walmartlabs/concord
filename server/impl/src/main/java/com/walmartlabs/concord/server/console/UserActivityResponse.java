@@ -27,7 +27,6 @@ import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.walmartlabs.concord.server.process.ProcessEntry;
 import org.immutables.value.Value;
 
-import java.io.Serial;
 import java.io.Serializable;
 import java.util.List;
 
