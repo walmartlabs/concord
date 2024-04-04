@@ -1,13 +1,13 @@
 # Change log
 
-## [2.10.1] - Unreleased
-
-### Added
+## [2.10.1] - 2024-04-04 
 
 ### Changed
 
-- server: fix json serialization of UserActivityResponse
+- concord-server: fix json serialization of UserActivityResponse
 ([#885](https://github.com/walmartlabs/concord/pull/885)).
+
+
 
 ## [2.10.0] - 2024-04-01
 
