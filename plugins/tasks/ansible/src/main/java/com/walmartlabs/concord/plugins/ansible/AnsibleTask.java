@@ -116,6 +116,8 @@ public class AnsibleTask {
 
         Virtualenv virtualenv = Virtualenv.create(context);
 
+        boolean skipCheckBinary = getBoolean(context.args(), TaskParams.SKIP_CHECK_BINARY.getKey(), false);
+
         try {
             Path workDir = context.workDir();
             Path attachmentsPath = workDir.relativize(workDir.resolve(Constants.Files.JOB_ATTACHMENTS_DIR_NAME));
@@ -131,7 +133,8 @@ public class AnsibleTask {
                     .withCheck(checkMode)
                     .withSyntaxCheck(syntaxCheck)
                     .withEnv(env.get())
-                    .withVirtualenv(virtualenv);
+                    .withVirtualenv(virtualenv)
+                    .withSkipCheckBinary(skipCheckBinary);
 
             auth.prepare();
 
