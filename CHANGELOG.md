@@ -1,5 +1,16 @@
 # Change log
 
+## [2.11.0] - Unreleased
+
+### Changed
+
+- ansible-tasks: be more helpful when commands are missing.
+Check if `ansible-playbook` or `virtualenv` exist before
+running.
+([#887](https://github.com/walmartlabs/concord/pull/887)).
+
+
+
 ## [2.10.1] - 2024-04-04 
 
 ### Changed
