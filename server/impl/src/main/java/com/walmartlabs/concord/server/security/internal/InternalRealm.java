@@ -20,9 +20,9 @@ package com.walmartlabs.concord.server.security.internal;
  * =====
  */
 
+import com.walmartlabs.concord.server.sdk.security.AuthenticationException;
 import com.walmartlabs.concord.server.security.PrincipalUtils;
 import com.walmartlabs.concord.server.security.UserPrincipal;
-import org.apache.shiro.authc.AuthenticationException;
 import org.apache.shiro.authc.AuthenticationInfo;
 import org.apache.shiro.authc.AuthenticationToken;
 import org.apache.shiro.authz.AuthorizationInfo;

@@ -21,10 +21,10 @@ package com.walmartlabs.concord.server.security.github;
  */
 
 import com.walmartlabs.concord.server.sdk.metrics.WithTimer;
+import com.walmartlabs.concord.server.sdk.security.AuthenticationException;
 import com.walmartlabs.concord.server.security.PrincipalUtils;
 import com.walmartlabs.concord.server.security.UserPrincipal;
 import com.walmartlabs.concord.server.user.UserManager;
-import org.apache.shiro.authc.AuthenticationException;
 import org.apache.shiro.authc.AuthenticationInfo;
 import org.apache.shiro.authc.AuthenticationToken;
 import org.apache.shiro.authc.SimpleAccount;
