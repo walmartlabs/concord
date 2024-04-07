@@ -20,7 +20,7 @@ package com.walmartlabs.concord.server.security;
  * =====
  */
 
-import org.apache.shiro.SecurityUtils;
+
 import org.apache.shiro.subject.Subject;
 
 public final class Roles {
@@ -41,17 +41,17 @@ public final class Roles {
     public static final String SYSTEM_WRITER = "concordSystemWriter";
 
     public static boolean isAdmin() {
-        Subject s = SecurityUtils.getSubject();
+        Subject s = PrincipalUtils.getSubject();
         return s.hasRole(ADMIN);
     }
 
     public static boolean isGlobalReader() {
-        Subject s = SecurityUtils.getSubject();
+        Subject s = PrincipalUtils.getSubject();
         return s.hasRole(SYSTEM_READER);
     }
 
     public static boolean isGlobalWriter() {
-        Subject s = SecurityUtils.getSubject();
+        Subject s = PrincipalUtils.getSubject();
         return s.hasRole(SYSTEM_WRITER);
     }
 

@@ -23,7 +23,6 @@ package com.walmartlabs.concord.server.security;
 import com.walmartlabs.concord.server.sdk.security.AuthenticationException;
 import com.walmartlabs.concord.server.user.RoleEntry;
 import com.walmartlabs.concord.server.user.UserEntry;
-import org.apache.shiro.SecurityUtils;
 import org.apache.shiro.authz.AuthorizationInfo;
 import org.apache.shiro.authz.SimpleAuthorizationInfo;
 import org.apache.shiro.mgt.SecurityManager;
@@ -38,13 +37,22 @@ import java.util.Set;
 
 public final class PrincipalUtils {
 
+    public static Subject getSubject() {
+        Subject subject = ThreadContext.getSubject();
+        if (subject == null) {
+            subject = (new Subject.Builder()).buildSubject();
+            ThreadContext.bind(subject);
+        }
+        return subject;
+    }
+
     public static <T> T getCurrent(Class<T> type) {
         SecurityManager securityManager = ThreadContext.getSecurityManager();
         if (securityManager == null) {
             return null;
         }
 
-        Subject subject = SecurityUtils.getSubject();
+        Subject subject = getSubject();
         if (subject == null) {
             return null;
         }

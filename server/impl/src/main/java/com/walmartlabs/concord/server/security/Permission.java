@@ -20,7 +20,7 @@ package com.walmartlabs.concord.server.security;
  * =====
  */
 
-import org.apache.shiro.SecurityUtils;
+
 import org.apache.shiro.subject.Subject;
 
 public enum Permission {
@@ -55,7 +55,7 @@ public enum Permission {
     }
 
     public static boolean isPermitted(Permission p) {
-        Subject s = SecurityUtils.getSubject();
+        Subject s = PrincipalUtils.getSubject();
         return s.isPermitted(p.key);
     }
 }

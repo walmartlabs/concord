@@ -32,7 +32,6 @@ import com.walmartlabs.concord.server.security.internal.InternalRealm;
 import com.walmartlabs.concord.server.security.sessionkey.SessionKeyPrincipal;
 import com.walmartlabs.concord.server.user.UserEntry;
 import com.walmartlabs.concord.server.user.UserManager;
-import org.apache.shiro.SecurityUtils;
 import org.apache.shiro.mgt.SecurityManager;
 import org.apache.shiro.subject.PrincipalCollection;
 import org.apache.shiro.subject.SimplePrincipalCollection;
@@ -69,7 +68,7 @@ public class ProcessSecurityContext {
         // filter out transient principals
         SimplePrincipalCollection dst = new SimplePrincipalCollection();
         for (String realm : src.getRealmNames()) {
-            Collection ps = src.fromRealm(realm);
+            Collection<?> ps = src.fromRealm(realm);
             for (Object p : ps) {
                 if (p instanceof SessionKeyPrincipal) {
                     continue;
@@ -83,10 +82,8 @@ public class ProcessSecurityContext {
 
     // TODO: invalidate cache for processKey?
     public void storeCurrentSubject(ProcessKey processKey) {
-        Subject s = SecurityUtils.getSubject();
-
+        Subject s = PrincipalUtils.getSubject();
         PrincipalCollection src = s.getPrincipals();
-
         storeSubject(processKey, src);
     }
 
