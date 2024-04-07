@@ -21,8 +21,6 @@ package com.walmartlabs.concord.server.security;
  */
 
 
-import org.apache.shiro.subject.Subject;
-
 public enum Permission {
 
     /**
@@ -46,7 +44,7 @@ public enum Permission {
 
     private final String key;
 
-    private Permission(String key) {
+    Permission(String key) {
         this.key = key;
     }
 
@@ -55,7 +53,6 @@ public enum Permission {
     }
 
     public static boolean isPermitted(Permission p) {
-        Subject s = PrincipalUtils.getSubject();
-        return s.isPermitted(p.key);
+        return SecurityUtils.isPermitted(p.getKey());
     }
 }

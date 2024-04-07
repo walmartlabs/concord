@@ -35,7 +35,29 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
-public final class PrincipalUtils {
+/**
+ * Utility methods for working with Shiro's security context.
+ * Should be the only place where Shiro's API is used directly except for
+ * the security filters.
+ */
+public final class SecurityUtils {
+
+    public static void logout() {
+        Subject subject = getSubject();
+        if (subject != null) {
+            subject.logout();
+        }
+    }
+
+    public static boolean hasRole(String role) {
+        Subject s = getSubject();
+        return s.hasRole(role);
+    }
+
+    public static boolean isPermitted(String permission) {
+        Subject s = getSubject();
+        return s.isPermitted(permission);
+    }
 
     public static Subject getSubject() {
         Subject subject = ThreadContext.getSubject();
@@ -128,6 +150,6 @@ public final class PrincipalUtils {
         return i;
     }
 
-    private PrincipalUtils() {
+    private SecurityUtils() {
     }
 }

@@ -24,7 +24,7 @@ import com.codahale.metrics.Meter;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.walmartlabs.concord.server.RequestUtils;
 import com.walmartlabs.concord.server.sdk.metrics.InjectMeter;
-import com.walmartlabs.concord.server.security.PrincipalUtils;
+import com.walmartlabs.concord.server.security.SecurityUtils;
 import com.walmartlabs.concord.server.security.apikey.ApiKey;
 import org.apache.shiro.authc.AuthenticationException;
 import org.apache.shiro.authc.AuthenticationToken;
@@ -79,7 +79,7 @@ public class ConcordAuthenticatingFilter extends AuthenticatingFilter {
 
     @Override
     protected AuthenticationToken createToken(ServletRequest request, ServletResponse response) {
-        Subject subject = PrincipalUtils.getSubject();
+        Subject subject = SecurityUtils.getSubject();
         if (subject != null && subject.isRemembered()) {
             AuthenticationToken t = getFirstToken(subject);
             if (t != null) {

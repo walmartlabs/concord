@@ -25,7 +25,7 @@ import com.walmartlabs.concord.server.audit.AuditLog;
 import com.walmartlabs.concord.server.audit.AuditObject;
 import com.walmartlabs.concord.server.sdk.metrics.WithTimer;
 import com.walmartlabs.concord.server.sdk.security.AuthenticationException;
-import com.walmartlabs.concord.server.security.PrincipalUtils;
+import com.walmartlabs.concord.server.security.SecurityUtils;
 import com.walmartlabs.concord.server.security.UserPrincipal;
 import com.walmartlabs.concord.server.user.UserEntry;
 import com.walmartlabs.concord.server.user.UserManager;
@@ -88,6 +88,6 @@ public class ApiKeyRealm extends AuthorizingRealm {
             return null;
         }
 
-        return PrincipalUtils.toAuthorizationInfo(principals);
+        return SecurityUtils.toAuthorizationInfo(principals);
     }
 }
