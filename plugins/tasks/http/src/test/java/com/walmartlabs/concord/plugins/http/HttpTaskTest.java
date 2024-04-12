@@ -131,7 +131,7 @@ public class HttpTaskTest extends AbstractHttpTaskTest {
 
     @Test
     public void testExecuteForException(WireMockRuntimeInfo wmRuntimeInfo) throws Exception {
-        assertThrows(Exception.class,  () -> {
+        assertThrows(Exception.class, () -> {
             initCxtForRequest(mockContext, "GET", "string", "string",
                     "http://localhost:" + wmRuntimeInfo.getHttpPort() + "/fault", false, 0, true);
             task.execute(mockContext);
@@ -181,7 +181,7 @@ public class HttpTaskTest extends AbstractHttpTaskTest {
 
     @Test
     public void testIllegalArgumentExceptionForRequest() {
-        assertThrows(IllegalArgumentException.class,  () -> {
+        assertThrows(IllegalArgumentException.class, () -> {
             task.execute(mockContext);
         });
     }
@@ -226,7 +226,7 @@ public class HttpTaskTest extends AbstractHttpTaskTest {
 
     @Test
     public void testForMissingWorkDirForFileGetRequest(WireMockRuntimeInfo wmRuntimeInfo) {
-        assertThrows(IllegalArgumentException.class,  () -> {
+        assertThrows(IllegalArgumentException.class, () -> {
             // Working directory is mandatory for response type file
             initCxtForRequest(mockContext, "GET", "json", "file",
                     "http://localhost:" + wmRuntimeInfo.getHttpPort() + "/stringFile", false, 0, true);
@@ -277,7 +277,7 @@ public class HttpTaskTest extends AbstractHttpTaskTest {
 
     @Test
     public void testPostJsonRequestForIncompatibleBody(WireMockRuntimeInfo wmRuntimeInfo) {
-        assertThrows(IllegalArgumentException.class,  () -> {
+        assertThrows(IllegalArgumentException.class, () -> {
             initCxtForRequest(mockContext, "POST", "json", "string",
                     "http://localhost:" + wmRuntimeInfo.getHttpPort() + "/post", false, 0, true);
             when(mockContext.getVariable("body")).thenReturn("src/test/resources/__files/file.bin");
@@ -287,7 +287,7 @@ public class HttpTaskTest extends AbstractHttpTaskTest {
 
     @Test
     public void testPostStringRequestForIncompatibleComplexBody(WireMockRuntimeInfo wmRuntimeInfo) {
-        assertThrows(IllegalArgumentException.class,  () -> {
+        assertThrows(IllegalArgumentException.class, () -> {
             initCxtForRequest(mockContext, "POST", "string", "string",
                     "http://localhost:" + wmRuntimeInfo.getHttpPort() + "/post", false, 0, true);
             when(mockContext.getVariable("body")).thenReturn(new HashMap<>());
@@ -297,7 +297,7 @@ public class HttpTaskTest extends AbstractHttpTaskTest {
 
     @Test
     public void testPostFileRequestForIncompatibleComplexBody(WireMockRuntimeInfo wmRuntimeInfo) {
-        assertThrows(IllegalArgumentException.class,  () -> {
+        assertThrows(IllegalArgumentException.class, () -> {
             initCxtForRequest(mockContext, "POST", "file", "string",
                     "http://localhost:" + wmRuntimeInfo.getHttpPort() + "/post", false, 0, true);
             when(mockContext.getVariable("body")).thenReturn(new HashMap<>());
@@ -307,7 +307,7 @@ public class HttpTaskTest extends AbstractHttpTaskTest {
 
     @Test
     public void testInvalidRequestMethodType(WireMockRuntimeInfo wmRuntimeInfo) {
-        assertThrows(IllegalArgumentException.class,  () -> {
+        assertThrows(IllegalArgumentException.class, () -> {
             initCxtForRequest(mockContext, "GET1", "json", "file",
                     "http://localhost:" + wmRuntimeInfo.getHttpPort() + "/file", false, 0, true);
             task.execute(mockContext);
@@ -316,7 +316,7 @@ public class HttpTaskTest extends AbstractHttpTaskTest {
 
     @Test
     public void testInvalidRequestType(WireMockRuntimeInfo wmRuntimeInfo) {
-        assertThrows(IllegalArgumentException.class,  () -> {
+        assertThrows(IllegalArgumentException.class, () -> {
             initCxtForRequest(mockContext, "GET", "json1", "file",
                     "http://localhost:" + wmRuntimeInfo.getHttpPort() + "/file", false, 0, true);
             task.execute(mockContext);
@@ -325,7 +325,7 @@ public class HttpTaskTest extends AbstractHttpTaskTest {
 
     @Test
     public void testInvalidResponseType(WireMockRuntimeInfo wmRuntimeInfo) {
-        assertThrows(IllegalArgumentException.class,  () -> {
+        assertThrows(IllegalArgumentException.class, () -> {
             initCxtForRequest(mockContext, "GET", "json", "file1",
                     "http://localhost:" + wmRuntimeInfo.getHttpPort() + "/file", false, 0, true);
             task.execute(mockContext);
@@ -364,7 +364,7 @@ public class HttpTaskTest extends AbstractHttpTaskTest {
 
     @Test
     public void testRequestTimeoutException(WireMockRuntimeInfo wmRuntimeInfo) {
-        assertThrows(RequestTimeoutException.class,  () -> {
+        assertThrows(RequestTimeoutException.class, () -> {
             initCxtForRequest(mockContext, "GET", "string", "string",
                     "http://localhost:" + wmRuntimeInfo.getHttpPort() + "/requestTimeout", false, 5000, true);
             task.execute(mockContext);
@@ -373,7 +373,7 @@ public class HttpTaskTest extends AbstractHttpTaskTest {
 
     @Test
     public void testInvalidJsonResponse(WireMockRuntimeInfo wmRuntimeInfo) {
-        assertThrows(RuntimeException.class,  () -> {
+        assertThrows(RuntimeException.class, () -> {
             initCxtForRequest(mockContext, "GET", "json", "json",
                     "http://localhost:" + wmRuntimeInfo.getHttpPort() + "/invalid/json", false, 0, true);
             task.execute(mockContext);
@@ -382,7 +382,7 @@ public class HttpTaskTest extends AbstractHttpTaskTest {
 
     @Test
     public void testInvalidRequestMethod(WireMockRuntimeInfo wmRuntimeInfo) {
-        assertThrows(IllegalArgumentException.class,  () -> {
+        assertThrows(IllegalArgumentException.class, () -> {
             initCxtForRequest(mockContext, 123, "json", "json",
                     "http://localhost:" + wmRuntimeInfo.getHttpPort() + "/json", false, 0, true);
             task.execute(mockContext);
@@ -391,7 +391,7 @@ public class HttpTaskTest extends AbstractHttpTaskTest {
 
     @Test
     public void testInvalidRequest(WireMockRuntimeInfo wmRuntimeInfo) {
-        assertThrows(IllegalArgumentException.class,  () -> {
+        assertThrows(IllegalArgumentException.class, () -> {
             initCxtForRequest(mockContext, "GET", 123, "json",
                     "http://localhost:" + wmRuntimeInfo.getHttpPort() + "/json", false, 0, true);
             task.execute(mockContext);
@@ -400,7 +400,7 @@ public class HttpTaskTest extends AbstractHttpTaskTest {
 
     @Test
     public void testInvalidResponse(WireMockRuntimeInfo wmRuntimeInfo) {
-        assertThrows(IllegalArgumentException.class,  () -> {
+        assertThrows(IllegalArgumentException.class, () -> {
             initCxtForRequest(mockContext, "GET", "json", 123,
                     "http://localhost:" + wmRuntimeInfo.getHttpPort() + "/json", false, 0, true);
             task.execute(mockContext);

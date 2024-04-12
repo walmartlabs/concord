@@ -24,15 +24,12 @@ import com.github.tomakehurst.wiremock.client.ResponseDefinitionBuilder;
 import com.github.tomakehurst.wiremock.common.FileSource;
 import com.github.tomakehurst.wiremock.extension.Parameters;
 import com.github.tomakehurst.wiremock.extension.ResponseDefinitionTransformer;
-import com.github.tomakehurst.wiremock.extension.responsetemplating.ResponseTemplateTransformer;
 import com.github.tomakehurst.wiremock.http.HttpHeader;
 import com.github.tomakehurst.wiremock.http.Request;
 import com.github.tomakehurst.wiremock.http.ResponseDefinition;
 import com.github.tomakehurst.wiremock.junit5.WireMockExtension;
-import com.walmartlabs.concord.client2.ProcessApi;
 import com.walmartlabs.concord.client2.ProcessEntry;
 import com.walmartlabs.concord.client2.StartProcessResponse;
-import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -77,7 +74,8 @@ public class HttpTaskIT extends AbstractServerIT {
     final WireMockExtension rule = WireMockExtension.newInstance()
             .options(wireMockConfig()
                     .dynamicPort()
-                    .extensions(new RequestHeaders(), new ResponseTemplateTransformer(false)))
+                    .globalTemplating(true)
+                    .extensions(new RequestHeaders()))
             .build();
 
     @BeforeEach
@@ -105,8 +103,6 @@ public class HttpTaskIT extends AbstractServerIT {
     public void testGetAsString() throws Exception {
         URI dir = HttpTaskIT.class.getResource("httpGetAsString").toURI();
         byte[] payload = archive(dir);
-
-        ProcessApi processApi = new ProcessApi(getApiClient());
 
         Map<String, Object> input = new HashMap<>();
         input.put("archive", payload);
@@ -435,8 +431,8 @@ public class HttpTaskIT extends AbstractServerIT {
                 .willReturn(aResponse()
                         .withStatus(200)
                         .withBody("{\n" +
-                                "  \"Success\": \"true\"\n" +
-                                "}"))
+                                  "  \"Success\": \"true\"\n" +
+                                  "}"))
         );
     }
 
@@ -446,10 +442,10 @@ public class HttpTaskIT extends AbstractServerIT {
                 .willReturn(aResponse()
                         .withStatus(200)
                         .withBody("{\n" +
-                                " \"message\": \"{{request.requestLine.query.message}}\", " +
-                                " \"multiValue1\": \"{{request.requestLine.query.multiValue.[0]}}\", " +
-                                " \"multiValue2\": \"{{request.requestLine.query.multiValue.[1]}}\"" +
-                                "}")
+                                  " \"message\": \"{{request.requestLine.query.message}}\", " +
+                                  " \"multiValue1\": \"{{request.requestLine.query.multiValue.[0]}}\", " +
+                                  " \"multiValue2\": \"{{request.requestLine.query.multiValue.[1]}}\"" +
+                                  "}")
                         .withTransformers("response-template"))
         );
 
@@ -461,8 +457,8 @@ public class HttpTaskIT extends AbstractServerIT {
                 .willReturn(aResponse()
                         .withStatus(200)
                         .withBody("{\n" +
-                                "  \"Authorized\": \"true\"\n" +
-                                "}"))
+                                  "  \"Authorized\": \"true\"\n" +
+                                  "}"))
         );
     }
 
@@ -472,8 +468,8 @@ public class HttpTaskIT extends AbstractServerIT {
                 .willReturn(aResponse()
                         .withStatus(200)
                         .withBody("{\n" +
-                                "  \"Authorized\": \"true\"\n" +
-                                "}"))
+                                  "  \"Authorized\": \"true\"\n" +
+                                  "}"))
         );
     }
 
@@ -483,8 +479,8 @@ public class HttpTaskIT extends AbstractServerIT {
                 .willReturn(aResponse()
                         .withStatus(200)
                         .withBody("{\n" +
-                                "  \"Authorized\": \"true\"\n" +
-                                "}"))
+                                  "  \"Authorized\": \"true\"\n" +
+                                  "}"))
         );
     }
 
@@ -494,8 +490,8 @@ public class HttpTaskIT extends AbstractServerIT {
                 .willReturn(aResponse()
                         .withStatus(200)
                         .withBody("{\n" +
-                                "  \"Authorized\": \"true\"\n" +
-                                "}"))
+                                  "  \"Authorized\": \"true\"\n" +
+                                  "}"))
         );
     }
 
@@ -505,8 +501,8 @@ public class HttpTaskIT extends AbstractServerIT {
                 .willReturn(aResponse()
                         .withStatus(200)
                         .withBody("{\n" +
-                                "  \"Authorized\": \"true\"\n" +
-                                "}"))
+                                  "  \"Authorized\": \"true\"\n" +
+                                  "}"))
         );
     }
 
@@ -522,8 +518,8 @@ public class HttpTaskIT extends AbstractServerIT {
                 .willReturn(aResponse()
                         .withStatus(401)
                         .withBody("{\n" +
-                                "  \"Authorized\": \"false\"\n" +
-                                "}"))
+                                  "  \"Authorized\": \"false\"\n" +
+                                  "}"))
         );
     }
 
@@ -540,8 +536,8 @@ public class HttpTaskIT extends AbstractServerIT {
                 .willReturn(aResponse()
                         .withStatus(200)
                         .withBody("{\n" +
-                                "  \"Success\": \"true\"\n" +
-                                "}")));
+                                  "  \"Success\": \"true\"\n" +
+                                  "}")));
     }
 
     private void stubForRedirects(String url) {
