@@ -7,7 +7,10 @@
 - ansible-tasks: be more helpful when commands are missing.
 Check if `ansible-playbook` or `virtualenv` exist before
 running.
-([#887](https://github.com/walmartlabs/concord/pull/887)).
+([#887](https://github.com/walmartlabs/concord/pull/887));
+- project: upgrade dependencies - Jackson to 2.17.0, Jetty
+to 12.0.7, Wiremock to 3.5.2 and others.
+([#861](https://github.com/walmartlabs/concord/pull/861)).
 
 
 
