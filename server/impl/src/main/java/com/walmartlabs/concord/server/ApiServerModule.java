@@ -31,7 +31,7 @@ import com.walmartlabs.concord.server.boot.validation.ValidationModule;
 import com.walmartlabs.concord.server.websocket.ConcordWebSocketServlet;
 import org.apache.shiro.mgt.SecurityManager;
 import org.apache.shiro.web.mgt.WebSecurityManager;
-import org.eclipse.jetty.servlet.FilterHolder;
+import org.eclipse.jetty.ee8.servlet.FilterHolder;
 
 import javax.servlet.ServletContextListener;
 import javax.servlet.http.HttpServlet;

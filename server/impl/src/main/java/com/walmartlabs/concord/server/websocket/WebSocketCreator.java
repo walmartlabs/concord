@@ -23,8 +23,9 @@ package com.walmartlabs.concord.server.websocket;
 import com.walmartlabs.concord.server.queueclient.QueueClient;
 import com.walmartlabs.concord.server.security.apikey.ApiKeyDao;
 import com.walmartlabs.concord.server.security.apikey.ApiKeyEntry;
-import org.eclipse.jetty.websocket.servlet.ServletUpgradeRequest;
-import org.eclipse.jetty.websocket.servlet.ServletUpgradeResponse;
+import org.eclipse.jetty.ee8.websocket.server.JettyServerUpgradeRequest;
+import org.eclipse.jetty.ee8.websocket.server.JettyServerUpgradeResponse;
+import org.eclipse.jetty.ee8.websocket.server.JettyWebSocketCreator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -34,7 +35,7 @@ import java.io.IOException;
 import java.util.Base64;
 import java.util.UUID;
 
-public class WebSocketCreator implements org.eclipse.jetty.websocket.servlet.WebSocketCreator {
+public class WebSocketCreator implements JettyWebSocketCreator {
 
     private static final Logger log = LoggerFactory.getLogger(WebSocketCreator.class);
 
@@ -47,7 +48,7 @@ public class WebSocketCreator implements org.eclipse.jetty.websocket.servlet.Web
     }
 
     @Override
-    public Object createWebSocket(ServletUpgradeRequest req, ServletUpgradeResponse resp) {
+    public Object createWebSocket(JettyServerUpgradeRequest req, JettyServerUpgradeResponse resp) {
         if (channelManager.isShutdown()) {
             sendError(HttpServletResponse.SC_SERVICE_UNAVAILABLE, "Server is in the maintenance mode", resp);
             return null;
@@ -85,7 +86,7 @@ public class WebSocketCreator implements org.eclipse.jetty.websocket.servlet.Web
         }
     }
 
-    private void sendError(int statusCode, String message, ServletUpgradeResponse resp) {
+    private void sendError(int statusCode, String message, JettyServerUpgradeResponse resp) {
         try {
             resp.sendError(statusCode, message);
         } catch (IOException e) {

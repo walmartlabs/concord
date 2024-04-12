@@ -21,15 +21,15 @@ package com.walmartlabs.concord.server.websocket;
  */
 
 import com.walmartlabs.concord.server.queueclient.MessageSerializer;
-import org.eclipse.jetty.websocket.api.Session;
-import org.eclipse.jetty.websocket.api.WebSocketPingPongListener;
+import org.eclipse.jetty.ee8.websocket.api.Session;
+import org.eclipse.jetty.ee8.websocket.api.WebSocketPingPongListener;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.nio.ByteBuffer;
 import java.util.UUID;
 
-public class WebSocketListener implements org.eclipse.jetty.websocket.api.WebSocketListener, WebSocketPingPongListener {
+public class WebSocketListener implements org.eclipse.jetty.ee8.websocket.api.WebSocketListener, WebSocketPingPongListener {
 
     private static final Logger log = LoggerFactory.getLogger(WebSocketListener.class);
 
