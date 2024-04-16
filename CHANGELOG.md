@@ -1,5 +1,40 @@
 # Change log
 
+## [2.10.1] - 2024-04-04 
+
+### Changed
+
+- concord-server: fix json serialization of UserActivityResponse
+([#885](https://github.com/walmartlabs/concord/pull/885)).
+
+
+
+## [2.10.0] - 2024-04-01
+
+### Added
+
+- plugins: add new mock-tasks plugin
+([#754](https://github.com/walmartlabs/concord/pull/754));
+- runtime-v2: logYaml step
+([#816](https://github.com/walmartlabs/concord/pull/816));
+- concord-server, concord-console2: add "process cards"
+([#808](https://github.com/walmartlabs/concord/pull/808));
+- concord-agent: kill runner child PIDs
+([#880](https://github.com/walmartlabs/concord/pull/880)).
+
+### Changed
+
+- server: fix trigger id calculation for complex args:
+heterogeneous lists, list of maps
+([#882](https://github.com/walmartlabs/concord/pull/882));
+- concord-server: skip validation of disabled repos during
+project creation
+([#883](https://github.com/walmartlabs/concord/pull/883));
+- concord-server: process wait conditions synchronously
+([#884](https://github.com/walmartlabs/concord/pull/884)).
+
+
+
 ## [2.9.0] - 2024-02-28
 
 ### Added

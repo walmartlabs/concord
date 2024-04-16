@@ -35,6 +35,18 @@ public class PlaybookScriptBuilder {
     private static final Logger log = LoggerFactory.getLogger(PlaybookScriptBuilder.class);
 
     private static final String ANSIBLE_CMD = "ansible-playbook";
+    private static final String MISSING_ANSIBLE_CHECK =
+            "command -v " + ANSIBLE_CMD + " >/dev/null 2>&1 || { echo \"" +
+            "Can't find ansible-playbook binary in \\$PATH. Install a local copy or use " +
+            "'" + TaskParams.DOCKER_IMAGE_KEY.getKey() + "' or '" + TaskParams.VIRTUALENV_KEY.getKey() + "' options." +
+            "\" ; exit 1; }";
+
+    private static final String VIRTUALENV_CMD = "virtualenv";
+    private static final String MISSING_VIRTUALENV_CHECK =
+            "command -v " + VIRTUALENV_CMD + " >/dev/null 2>&1 || { echo \"" +
+            "Can't find virtualenv binary in \\$PATH. Install a local copy or use " +
+            "'" + TaskParams.DOCKER_IMAGE_KEY.getKey() + "' option." +
+            "\" ; exit 1; }";
 
     private final String playbook;
     private List<String> inventories;
@@ -55,6 +67,7 @@ public class PlaybookScriptBuilder {
     private String limit;
     private boolean check;
     private boolean syntaxCheck;
+    private boolean skipCheckBinary;
     private int verboseLevel = 0;
     private Virtualenv virtualenv;
 
@@ -149,6 +162,11 @@ public class PlaybookScriptBuilder {
         return this;
     }
 
+    public PlaybookScriptBuilder withSkipCheckBinary(boolean skipCheckBinary) {
+        this.skipCheckBinary = skipCheckBinary;
+        return this;
+    }
+
     private List<String> buildAnsibleArgs() throws IOException {
         List<String> l = new ArrayList<>();
         l.add(ANSIBLE_CMD);
@@ -236,6 +254,10 @@ public class PlaybookScriptBuilder {
                 .append("set -e").append("\n");
 
         if (virtualenv.isEnabled()) {
+            if (!skipCheckBinary) {
+                sb.append(MISSING_VIRTUALENV_CHECK).append("\n");
+            }
+
             String virtualenvDir = workDir.relativize(virtualenv.getTargetDir()).toString();
 
             sb.append("virtualenv --no-download --system-site-packages ")
@@ -258,6 +280,10 @@ public class PlaybookScriptBuilder {
 
                 sb.append("\n");
             }
+        }
+
+        if (!skipCheckBinary) {
+            sb.append(MISSING_ANSIBLE_CHECK).append("\n");
         }
 
         if (debug) {
