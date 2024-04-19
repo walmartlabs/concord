@@ -10,7 +10,7 @@
     </parent>
 
     <artifactId>concord-console2</artifactId>
-    <packaging>pom</packaging>
+    <packaging>jar</packaging>
 
     <properties>
         <skipNpm>false</skipNpm>
@@ -77,6 +77,58 @@
                     <nodeVersion>v${node.version}</nodeVersion>
                     <workingDirectory>${basedir}</workingDirectory>
                 </configuration>
+            </plugin>
+            <plugin>
+                <groupId>net.nicoulaj.maven.plugins</groupId>
+                <artifactId>checksum-maven-plugin</artifactId>
+                <version>1.11</version>
+                <executions>
+                    <execution>
+                        <id>create-checksum-file</id>
+                        <phase>prepare-package</phase>
+                        <goals>
+                            <goal>files</goal>
+                        </goals>
+                        <configuration>
+                            <fileSets>
+                                <fileSet>
+                                    <directory>${project.build.directory}/classes/META-INF/console2</directory>
+                                    <includes>
+                                        <include>**/*.*</include>
+                                    </includes>
+                                </fileSet>
+                            </fileSets>
+                            <algorithms>
+                                <algorithm>SHA-1</algorithm>
+                            </algorithms>
+                            <csvSummaryFile>classes/META-INF/console2.checksums.cvs</csvSummaryFile>
+                            <includeRelativePath>true</includeRelativePath>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <artifactId>maven-resources-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>copy-resource-one</id>
+                        <phase>generate-sources</phase>
+                        <goals>
+                            <goal>copy-resources</goal>
+                        </goals>
+                        <configuration>
+                            <outputDirectory>${basedir}/target/classes</outputDirectory>
+                            <resources>
+                                <resource>
+                                    <directory>package</directory>
+                                    <includes>
+                                        <include>**/*</include>
+                                    </includes>
+                                </resource>
+                            </resources>
+                        </configuration>
+                    </execution>
+                </executions>
             </plugin>
             <plugin>
                 <artifactId>maven-assembly-plugin</artifactId>
