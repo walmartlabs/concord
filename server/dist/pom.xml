@@ -18,6 +18,10 @@
             <groupId>com.walmartlabs.concord.server</groupId>
             <artifactId>concord-server-impl</artifactId>
         </dependency>
+        <dependency>
+            <groupId></groupId>
+            <artifactId></artifactId>
+        </dependency>
 
         <!-- plugins -->
         <dependency>
