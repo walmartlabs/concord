@@ -23,7 +23,6 @@ package com.walmartlabs.concord.agentoperator.scheduler;
 import com.walmartlabs.concord.agentoperator.crd.AgentPoolConfiguration;
 import com.walmartlabs.concord.agentoperator.processqueue.ProcessQueueClient;
 import com.walmartlabs.concord.agentoperator.processqueue.ProcessQueueEntry;
-import com.walmartlabs.concord.common.ConfigurationUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -53,8 +52,8 @@ public class LinearAutoScaler implements AutoScaler {
     }
 
     public LinearAutoScaler(ProcessQueueClient processQueueClient,
-                             Function<String, Integer> podCounter, Function<AgentPoolInstance, Boolean> canBeScaledUp,
-                             Function<AgentPoolInstance, Boolean> canBeScaledDown) {
+                            Function<String, Integer> podCounter, Function<AgentPoolInstance, Boolean> canBeScaledUp,
+                            Function<AgentPoolInstance, Boolean> canBeScaledDown) {
         this.processQueueClient = processQueueClient;
         this.podCounter = podCounter;
         this.canBeScaledUp = canBeScaledUp;
@@ -74,16 +73,15 @@ public class LinearAutoScaler implements AutoScaler {
 
         AgentPoolConfiguration cfg = i.getResource().getSpec();
 
-        String flavor = (String) ConfigurationUtils.get(cfg.getQueueSelector(), "agent", "flavor");
-        String clusterAlias = (String) ConfigurationUtils.get(cfg.getQueueSelector(), "agent", "clusterAlias");
-        List<ProcessQueueEntry> queueEntries = processQueueClient.query("ENQUEUED", cfg.getMaxSize(), flavor, clusterAlias);
+        QueueSelector queueSelector = QueueSelector.parse(cfg.getQueueSelector());
+        List<ProcessQueueEntry> queueEntries = processQueueClient.query("ENQUEUED", cfg.getMaxSize(), queueSelector);
 
         // count the currently running pods
         int podsCount = podCounter.apply(i.getName());
 
         // the number of processes waiting for an agent in the current pool
         int enqueuedCount = queueEntries.size();
-        int runningCount = processQueueClient.query("RUNNING", cfg.getMaxSize(), flavor, clusterAlias).size();
+        int runningCount = processQueueClient.query("RUNNING", cfg.getMaxSize(), queueSelector).size();
         int freePodsCount = Math.max(podsCount - runningCount, 0);
 
         int increment = 0;

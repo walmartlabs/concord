@@ -23,7 +23,6 @@ package com.walmartlabs.concord.agentoperator.scheduler;
 import com.walmartlabs.concord.agentoperator.crd.AgentPoolConfiguration;
 import com.walmartlabs.concord.agentoperator.processqueue.ProcessQueueClient;
 import com.walmartlabs.concord.agentoperator.processqueue.ProcessQueueEntry;
-import com.walmartlabs.concord.common.ConfigurationUtils;
 import com.walmartlabs.concord.common.Matcher;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -86,9 +85,8 @@ public class DefaultAutoScaler implements AutoScaler {
      */
     public AgentPoolInstance apply(AgentPoolInstance i) throws IOException {
         int queueQueryLimit = i.getResource().getSpec().getQueueQueryLimit();
-        Map<String, Object> queueSelector = i.getResource().getSpec().getQueueSelector();
-        String flavor = (String) ConfigurationUtils.get(queueSelector, "agent", "flavor");
-        List<ProcessQueueEntry> queueEntries = processQueueClient.query("ENQUEUED", queueQueryLimit, flavor, null);
+        QueueSelector queueSelector = QueueSelector.parse(i.getResource().getSpec().getQueueSelector());
+        List<ProcessQueueEntry> queueEntries = processQueueClient.query("ENQUEUED", queueQueryLimit, queueSelector);
 
         scaleUpTimeStamp = i.getLastScaleUpTimestamp();
         scaleDownTimeStamp = i.getLastScaleDownTimeStamp();

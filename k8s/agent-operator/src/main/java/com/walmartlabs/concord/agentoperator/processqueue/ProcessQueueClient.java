@@ -22,6 +22,7 @@ package com.walmartlabs.concord.agentoperator.processqueue;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.walmartlabs.concord.agentoperator.scheduler.QueueSelector;
 import okhttp3.*;
 
 import javax.net.ssl.SSLContext;
@@ -50,13 +51,17 @@ public class ProcessQueueClient {
         this.objectMapper = new ObjectMapper();
     }
 
-    public List<ProcessQueueEntry> query(String processStatus, int limit, String flavor) throws IOException {
-        String queryUrl = baseUrl + "/api/v2/process/requirements?status=" + processStatus + "&limit=" + limit + "&startAt.len=";
+    public List<ProcessQueueEntry> query(String processStatus, int limit, QueueSelector queueSelector) throws IOException {
+        StringBuilder queryUrl = new StringBuilder(baseUrl + "/api/v2/process/requirements?status=" + processStatus + "&limit=" + limit + "&startAt.len=");
+        String flavor = queueSelector.getFlavor();
         if (flavor != null) {
-            queryUrl = queryUrl + "&requirements.agent.flavor.eq=" + flavor;
+            queryUrl.append("&requirements.agent.flavor.eq=").append(flavor);
+        }
+        for (String queryParam : queueSelector.getQueryParams()) {
+            queryUrl.append("&").append(queryParam);
         }
         Request req = new Request.Builder()
-                .url(queryUrl)
+                .url(queryUrl.toString())
                 .header("Authorization", apiToken)
                 .addHeader("User-Agent", "k8s-agent-operator")
                 .build();

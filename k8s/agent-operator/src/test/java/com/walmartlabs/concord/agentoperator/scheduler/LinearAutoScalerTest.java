@@ -100,7 +100,7 @@ public class LinearAutoScalerTest {
     private ProcessQueueClient mockProcessQueueClient(List<ProcessQueueEntry> queue) {
         return new ProcessQueueClient("test", "test") {
             @Override
-            public List<ProcessQueueEntry> query(String processStatus, int limit, String flavor, String clusterAlias) throws IOException {
+            public List<ProcessQueueEntry> query(String processStatus, int limit, QueueSelector queueSelector) throws IOException {
                 return queue;
             }
         };
