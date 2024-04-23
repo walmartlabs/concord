@@ -23,6 +23,7 @@ package com.walmartlabs.concord.agentoperator;
 
 import com.walmartlabs.concord.agentoperator.crd.AgentPool;
 import com.walmartlabs.concord.agentoperator.crd.AgentPoolList;
+import com.walmartlabs.concord.agentoperator.scheduler.AutoScalerFactory;
 import com.walmartlabs.concord.agentoperator.scheduler.Event;
 import com.walmartlabs.concord.agentoperator.scheduler.Scheduler;
 import io.fabric8.kubernetes.client.DefaultKubernetesClient;
@@ -54,7 +55,8 @@ public class Operator {
 
         // TODO use secrets for the token?
         Scheduler.Configuration cfg = new Scheduler.Configuration(baseUrl, apiToken);
-        Scheduler scheduler = new Scheduler(client, cfg);
+        AutoScalerFactory autoScalerFactory = new AutoScalerFactory(cfg, client);
+        Scheduler scheduler = new Scheduler(autoScalerFactory, client);
         scheduler.start();
 
         // TODO retries
@@ -74,7 +76,7 @@ public class Operator {
         });
     }
 
-    private static final Event.Type actionToEvent(Watcher.Action action) {
+    private static Event.Type actionToEvent(Watcher.Action action) {
         switch (action) {
             case ADDED:
             case MODIFIED: {
