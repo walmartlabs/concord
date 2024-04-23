@@ -49,4 +49,11 @@ public class DeleteConfigMapChange implements Change {
             log.info("apply -> removed a configmap {}", configMapName);
         }
     }
+
+    @Override
+    public String toString() {
+        return "DeleteConfigMapChange{" +
+                "configMapName='" + configMapName + '\'' +
+                '}';
+    }
 }
