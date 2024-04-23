@@ -21,13 +21,9 @@ package com.walmartlabs.concord.agentoperator.scheduler;
  */
 
 import com.walmartlabs.concord.agentoperator.crd.AgentPool;
-import com.walmartlabs.concord.agentoperator.crd.AgentPoolConfiguration;
 import com.walmartlabs.concord.agentoperator.planner.Change;
 import com.walmartlabs.concord.agentoperator.planner.Planner;
-import com.walmartlabs.concord.agentoperator.processqueue.ProcessQueueClient;
-import com.walmartlabs.concord.agentoperator.processqueue.ProcessQueueEntry;
 import com.walmartlabs.concord.agentoperator.resources.AgentPod;
-import com.walmartlabs.concord.common.ConfigurationUtils;
 import io.fabric8.kubernetes.api.model.Pod;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import org.slf4j.Logger;
@@ -43,15 +39,15 @@ public class Scheduler {
     private static final long POLL_DELAY = 5000;
     private static final long ERROR_DELAY = 10000;
 
+    private final AutoScalerFactory autoScalerFactory;
     private final KubernetesClient k8sClient;
-    private final ProcessQueueClient processQueueClient;
     private final Planner planner;
     private final Map<String, AgentPoolInstance> pools;
     private final List<Event> events;
 
-    public Scheduler(KubernetesClient k8sClient, Configuration cfg) {
+    public Scheduler(AutoScalerFactory autoScalerFactory, KubernetesClient k8sClient) {
+        this.autoScalerFactory = autoScalerFactory;
         this.k8sClient = k8sClient;
-        this.processQueueClient = new ProcessQueueClient(cfg.concordBaseUrl, cfg.concordApiToken);
         this.planner = new Planner(k8sClient);
         this.pools = new HashMap<>();
         this.events = new LinkedList<>();
@@ -112,8 +108,8 @@ public class Scheduler {
             try {
                 switch (i.getStatus()) {
                     case ACTIVE: {
-                        updateTargetSize(i);
-                        processActive(i);
+                        AgentPoolInstance updated = updateTargetSize(i);
+                        processActive(updated);
                         break;
                     }
                     case DELETED: {
@@ -149,33 +145,28 @@ public class Scheduler {
         }
     }
 
-    private void updateTargetSize(AgentPoolInstance i) throws IOException {
+    private AgentPoolInstance updateTargetSize(AgentPoolInstance i) throws IOException {
         if (!i.getResource().getSpec().isAutoScale()) {
-            return;
+            return i;
         }
 
-        int queueQueryLimit = i.getResource().getSpec().getQueueQueryLimit();
-        Map<String, Object> queueSelector = i.getResource().getSpec().getQueueSelector();
-        String flavor = (String) ConfigurationUtils.get(queueSelector, "agent", "flavor");
-        List<ProcessQueueEntry> queueEntries = processQueueClient.query("ENQUEUED", queueQueryLimit, flavor);
+        AgentPoolInstance result = autoScalerFactory.create(i).apply(i);
 
-        AgentPoolConfiguration spec = i.getResource().getSpec();
-        if (!spec.isAutoScale()) {
-            return;
-        }
-
-        AutoScaler autoScaler = new AutoScaler(n -> AgentPod.list(k8sClient, n).size());
         synchronized (pools) {
-            pools.put(i.getName(), autoScaler.apply(i, queueEntries));
+            pools.put(i.getName(), result);
         }
+
+        return result;
     }
 
     private void processActive(AgentPoolInstance i) throws IOException {
+        log.info("processActive ['{}']", i);
         List<Change> changes = planner.plan(i);
         apply(changes);
     }
 
     private void processDeleted(AgentPoolInstance i) throws IOException {
+        log.info("processDeleted ['{}']", i);
         String resourceName = i.getName();
 
         // remove all pool's pods
@@ -230,6 +221,14 @@ public class Scheduler {
         public Configuration(String concordBaseUrl, String concordApiToken) {
             this.concordBaseUrl = concordBaseUrl;
             this.concordApiToken = concordApiToken;
+        }
+
+        public String getConcordApiToken() {
+            return concordApiToken;
+        }
+
+        public String getConcordBaseUrl() {
+            return concordBaseUrl;
         }
     }
 }
