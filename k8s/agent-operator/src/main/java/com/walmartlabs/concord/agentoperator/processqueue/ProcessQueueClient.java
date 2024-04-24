@@ -22,6 +22,9 @@ package com.walmartlabs.concord.agentoperator.processqueue;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.annotations.VisibleForTesting;
+import com.google.common.escape.Escaper;
+import com.google.common.net.UrlEscapers;
 import com.walmartlabs.concord.agentoperator.scheduler.QueueSelector;
 import okhttp3.*;
 
@@ -58,7 +61,7 @@ public class ProcessQueueClient {
             queryUrl.append("&requirements.agent.flavor.eq=").append(flavor);
         }
         for (String queryParam : queueSelector.getQueryParams()) {
-            queryUrl.append("&").append(queryParam);
+            queryUrl.append("&").append(escapeQueryParam(queryParam));
         }
         Request req = new Request.Builder()
                 .url(queryUrl.toString())
@@ -164,5 +167,17 @@ public class ProcessQueueClient {
 
             return resp;
         }
+    }
+
+    @VisibleForTesting
+    static String escapeQueryParam(String s) {
+        Escaper escaper = UrlEscapers.urlPathSegmentEscaper();
+        int i = s.indexOf("=");
+        if (i < 0) {
+            return escaper.escape(s);
+        }
+        String key = s.substring(0, i);
+        String value = s.substring(i + 1);
+        return escaper.escape(key) + "=" + escaper.escape(value);
     }
 }
