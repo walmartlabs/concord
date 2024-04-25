@@ -20,7 +20,9 @@ package com.walmartlabs.concord.server.events.github;
  * =====
  */
 
+import com.walmartlabs.concord.sdk.Constants.Trigger;
 import com.walmartlabs.concord.sdk.MapUtils;
+import com.walmartlabs.concord.server.cfg.GithubConfiguration;
 import com.walmartlabs.concord.server.events.DefaultEventFilter;
 import com.walmartlabs.concord.server.org.project.RepositoryDao;
 import com.walmartlabs.concord.server.org.project.RepositoryEntry;
@@ -28,6 +30,8 @@ import com.walmartlabs.concord.server.org.triggers.TriggerEntry;
 import com.walmartlabs.concord.server.org.triggers.TriggersDao;
 import com.walmartlabs.concord.server.sdk.metrics.WithTimer;
 import com.walmartlabs.concord.server.security.github.GithubKey;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -43,14 +47,19 @@ import static com.walmartlabs.concord.server.events.github.Constants.*;
 public class GithubTriggerV2Processor implements GithubTriggerProcessor {
 
     private static final int VERSION_ID = 2;
+    private static final Logger log = LoggerFactory.getLogger(GithubTriggerV2Processor.class);
 
-    private final TriggersDao dao;
+    private final TriggersDao triggersDao;
+    private final RepositoryDao repoDao;
     private final List<EventEnricher> eventEnrichers;
+    private final boolean isDisableReposOnDeletedRef;
 
     @Inject
-    public GithubTriggerV2Processor(TriggersDao dao, List<EventEnricher> eventEnrichers) {
-        this.dao = dao;
+    public GithubTriggerV2Processor(TriggersDao triggersDao, RepositoryDao repoDao, List<EventEnricher> eventEnrichers, GithubConfiguration githubCfg) {
+        this.triggersDao = triggersDao;
+        this.repoDao = repoDao;
         this.eventEnrichers = eventEnrichers;
+        this.isDisableReposOnDeletedRef = githubCfg.isDisableReposOnDeletedRef();
     }
 
     @Override
@@ -58,6 +67,18 @@ public class GithubTriggerV2Processor implements GithubTriggerProcessor {
     public void process(String eventName, Payload payload, UriInfo uriInfo, List<Result> result) {
         GithubKey githubKey = GithubKey.getCurrent();
         UUID projectId = githubKey.getProjectId();
+
+        if (isDisableReposOnDeletedRef
+                && "push".equals(payload.eventName())
+                && isRefDeleted(payload)) {
+
+            List<RepositoryEntry> repositories = findRepos(repoDao, payload.getFullRepoName());
+            // disable repos configured with the event branch
+            repositories.stream()
+                    .filter(r -> !r.isDisabled())
+                    .filter(r -> r.getBranch().equals(payload.getBranch()))
+                    .forEach(r -> disableRepo(r, payload));
+        }
 
         List<TriggerEntry> triggers = listTriggers(projectId, payload.getOrg(), payload.getRepo());
         for (TriggerEntry t : triggers) {
@@ -81,6 +102,26 @@ public class GithubTriggerV2Processor implements GithubTriggerProcessor {
         }
     }
 
+    private void disableRepo(RepositoryEntry repo, Payload payload) {
+        log.info("disable repo ['{}', '{}'] -> ref deleted", repo.getId(), payload.getBranch());
+        repoDao.disable(repo.getId());
+        triggersDao.delete(repo.getProjectId(), repo.getId());
+    }
+
+    private static boolean isRefDeleted(Payload payload) {
+        Object val = payload.raw().get("deleted");
+
+        if (val == null) {
+            return false;
+        }
+
+        if (val instanceof String str) {
+            return Boolean.parseBoolean(str);
+        }
+
+        return Boolean.TRUE.equals(val);
+    }
+
     @WithTimer
     List<TriggerEntry> listTriggers(UUID projectId, String org, String repo) {
         Map<String, String> conditions = new HashMap<>();
@@ -93,7 +134,7 @@ public class GithubTriggerV2Processor implements GithubTriggerProcessor {
             conditions.put(GITHUB_REPO_KEY, repo);
         }
 
-        return dao.list(projectId, EVENT_SOURCE, VERSION_ID, conditions);
+        return triggersDao.list(projectId, EVENT_SOURCE, VERSION_ID, conditions);
     }
 
     private Map<String, Object> buildEvent(String eventName, UriInfo uriInfo, Payload payload) {
@@ -141,14 +182,19 @@ public class GithubTriggerV2Processor implements GithubTriggerProcessor {
         return result;
     }
 
-    interface EventEnricher {
+    public interface EventEnricher {
 
         void enrich(Payload payload, TriggerEntry trigger, Map<String, Object> result);
     }
 
+    private static List<RepositoryEntry> findRepos(RepositoryDao dao, String repoOrgAndName) {
+        String sshAndHttpPattern = "%[/:]" + repoOrgAndName + "(.git)?/?";
+        return dao.findSimilar(sshAndHttpPattern);
+    }
+
     /**
-     * Adds {@link com.walmartlabs.concord.sdk.Constants.Trigger#REPOSITORY_INFO} property to
-     * the event, but only if the trigger's conditions contained the clause with the same key.
+     * Adds {@link Trigger#REPOSITORY_INFO} property to the event, but only if
+     * the trigger's conditions contained the clause with the same key.
      */
     @Named
     private static class RepositoryInfoEnricher implements EventEnricher {
@@ -163,30 +209,33 @@ public class GithubTriggerV2Processor implements GithubTriggerProcessor {
         @Override
         @WithTimer
         public void enrich(Payload payload, TriggerEntry trigger, Map<String, Object> result) {
-            Object projectInfoConditions =
-                    trigger.getConditions().get(com.walmartlabs.concord.sdk.Constants.Trigger.REPOSITORY_INFO);
+            Object projectInfoConditions = trigger.getConditions().get(Trigger.REPOSITORY_INFO);
             if (projectInfoConditions == null || payload.getFullRepoName() == null) {
                 return;
             }
 
             List<Map<String, Object>> repositoryInfos = new ArrayList<>();
-            List<RepositoryEntry> repositories =
-                    repositoryDao.findSimilar("%[/:]" + payload.getFullRepoName() + "(.git)?/?");
+            List<RepositoryEntry> repositories = findRepos(repositoryDao, payload.getFullRepoName());
 
             for (RepositoryEntry r : repositories) {
+                if (r.isDisabled()) {
+                    continue;
+                }
+
                 Map<String, Object> repositoryInfo = new HashMap<>();
                 repositoryInfo.put(REPO_ID_KEY, r.getId());
                 repositoryInfo.put(REPO_NAME_KEY, r.getName());
                 repositoryInfo.put(PROJECT_ID_KEY, r.getProjectId());
-                if(r.getBranch() != null)
+                if (r.getBranch() != null) {
                     repositoryInfo.put(REPO_BRANCH_KEY, r.getBranch());
+                }
                 repositoryInfo.put(REPO_ENABLED_KEY, !r.isDisabled());
 
                 repositoryInfos.add(repositoryInfo);
             }
 
             if (!repositoryInfos.isEmpty()) {
-                result.put(com.walmartlabs.concord.sdk.Constants.Trigger.REPOSITORY_INFO, repositoryInfos);
+                result.put(Trigger.REPOSITORY_INFO, repositoryInfos);
             }
         }
     }
