@@ -13,7 +13,9 @@ to 12.0.7, Wiremock to 3.5.2 and others.
 ([#861](https://github.com/walmartlabs/concord/pull/861));
 - concord-server: minor improvements to the remember me
 cookie logic
-([#892](https://github.com/walmartlabs/concord/pull/892)).
+([#892](https://github.com/walmartlabs/concord/pull/892));
+- concord-server: tone down websocket errors
+([#895])(https://github.com/walmartlabs/concord/pull/895)).
 
 
 
