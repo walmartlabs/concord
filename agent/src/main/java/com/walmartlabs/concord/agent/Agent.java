@@ -77,16 +77,59 @@ public class Agent {
     }
 
     public void start() {
-        executor.submit(() -> {
-            run();
-            return null;
-        });
+        log.info("start -> mode={}", agentCfg.getMode());
+        if ("daemon".equalsIgnoreCase(agentCfg.getMode())) {
+            executor.submit(() -> {
+                run();
+                return null;
+            });
+        } else if ("job".equalsIgnoreCase(agentCfg.getMode())) {
+            try {
+                runJob();
+            } catch (Exception e) {
+                log.error("start -> error: {}", e.getMessage(), e);
+                System.exit(1);
+            } finally {
+                stop();
+            }
+            System.exit(0);
+        } else {
+            throw new IllegalArgumentException("Unsupported \"mode\": " + agentCfg.getMode());
+        }
     }
 
     @SuppressWarnings("unused")
     public void stop() {
         queueClient.stop();
         executor.shutdownNow();
+    }
+
+    private void runJob() throws Exception {
+        if (dockerCfg.isOrphanSweeperEnabled()) {
+            executor.submit(new OrphanSweeper(this::isAlive, dockerCfg.getOrphanSweeperPeriod()));
+        }
+
+        // start the command handler in a separate thread
+        CommandHandler commandHandler = new CommandHandler(agentCfg.getAgentId(), queueClient, agentCfg.getPollInterval(), this::cancel);
+        executor.submit(commandHandler);
+
+        JobRequest jobRequest = take(queueClient);
+        if (jobRequest == null) {
+            return;
+        }
+
+        UUID instanceId = jobRequest.getInstanceId();
+
+        // worker will handle the process' lifecycle
+        Worker w = injector.createChildInjector(new WorkerModule(agentCfg.getAgentId(), instanceId, jobRequest.getSessionToken()))
+                .getInstance(WorkerFactory.class)
+                .create(jobRequest, createStatusCallback(instanceId, workersAvailable));
+
+        // register the worker so we can cancel it later
+        activeWorkers.put(instanceId, w);
+
+        // start a new thread to process the job
+        executor.submit(w);
     }
 
     private void run() throws Exception {
