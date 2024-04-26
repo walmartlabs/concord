@@ -39,6 +39,8 @@ public class AgentConfiguration {
 
     private static final Logger log = LoggerFactory.getLogger(AgentConfiguration.class);
 
+    private final String mode;
+
     private final String agentId;
     private final Map<String, Object> capabilities;
 
@@ -63,6 +65,8 @@ public class AgentConfiguration {
 
     @Inject
     public AgentConfiguration(Config cfg) {
+        this.mode = getStringOrDefault(cfg, "mode", () -> "daemon");
+
         this.agentId = getStringOrDefault(cfg, "id", () -> UUID.randomUUID().toString());
         log.info("Using agent ID: {}", this.agentId);
 
@@ -88,6 +92,10 @@ public class AgentConfiguration {
 
         this.explicitlyResolveV1Client = cfg.getBoolean("explicitlyResolveV1Client");
         this.mavenOfflineMode = cfg.getBoolean("mavenOfflineMode");
+    }
+
+    public String getMode() {
+        return mode;
     }
 
     public String getAgentId() {
