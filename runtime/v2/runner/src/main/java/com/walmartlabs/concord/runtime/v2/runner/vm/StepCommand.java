@@ -39,7 +39,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.el.ELException;
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -134,6 +136,10 @@ public abstract class StepCommand<T extends Step> implements Command {
 
     protected abstract void execute(Runtime runtime, State state, ThreadId threadId);
 
+    protected Map<String, Object> getLogMeta(Context ctx, T step) {
+        return Collections.emptyMap();
+    }
+
     protected LogContext getLogContext() {
         return logContext;
     }
@@ -148,19 +154,19 @@ public abstract class StepCommand<T extends Step> implements Command {
             return null;
         }
 
-        return buildLogContext(runtime, segmentName, correlationId);
+        return buildLogContext(runtime, ctx, segmentName, correlationId);
     }
 
-    private LogContext buildLogContext(Runtime runtime, String segmentName, UUID correlationId) {
+    private LogContext buildLogContext(Runtime runtime, Context ctx, String segmentName, UUID correlationId) {
         RunnerConfiguration runnerCfg = runtime.getService(RunnerConfiguration.class);
         boolean redirectSystemOutAndErr = runnerCfg.logging().sendSystemOutAndErrToSLF4J();
 
         return LogContext.builder()
+                .segmentId(runtime.getService(RunnerLogger.class).createSegment(segmentName, correlationId, (Long)ctx.variables().get("parentSegmentId"), getLogMeta(ctx, getStep())))
                 .segmentName(segmentName)
                 .correlationId(correlationId)
                 .redirectSystemOutAndErr(redirectSystemOutAndErr)
                 .logLevel(getLogLevel(step))
-                .segmentId(runtime.getService(RunnerLogger.class).createSegment(segmentName, correlationId))
                 .build();
     }
 

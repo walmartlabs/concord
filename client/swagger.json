@@ -8376,6 +8376,16 @@
           "type" : "string",
           "format" : "date-time",
           "readOnly" : true
+        },
+        "parentId" : {
+          "type" : "integer",
+          "format" : "int64"
+        },
+        "meta" : {
+          "type" : "object",
+          "additionalProperties" : {
+            "type" : "object"
+          }
         }
       }
     },
