@@ -43,7 +43,7 @@ public class WebSocketListener implements org.eclipse.jetty.ee8.websocket.api.We
         this.channelManager = channelManager;
         this.channelId = channelId;
         this.agentId = agentId;
-        this.userAgent = userAgent;
+        this.userAgent = sanitize(userAgent);
     }
 
     @Override
@@ -82,6 +82,16 @@ public class WebSocketListener implements org.eclipse.jetty.ee8.websocket.api.We
 
     @Override
     public void onWebSocketError(Throwable cause) {
-        log.error("onWebSocketError ['{}'] -> error", channelId, cause);
+        log.warn("onWebSocketError ['{}', '{}'] -> error: {}", channelId, userAgent, cause.getMessage());
+    }
+
+    private static String sanitize(String log) {
+        if (log == null || log.isEmpty()) {
+            return log;
+        }
+        if (log.length() > 128) {
+            log = log.substring(0, 128) + "...cut";
+        }
+        return log.replace("\n", "\\n");
     }
 }

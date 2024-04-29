@@ -144,7 +144,7 @@ public class ConcordAuthenticatingFilter extends AuthenticatingFilter {
         failedAuths.mark();
 
         Subject s = ThreadContext.getSubject();
-        if (s != null) {
+        if (s != null && (s.isRemembered() || s.isAuthenticated())) {
             s.logout();
         }
 
