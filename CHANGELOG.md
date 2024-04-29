@@ -11,8 +11,11 @@ running.
 - project: upgrade dependencies - Jackson to 2.17.0, Jetty
 to 12.0.7, Wiremock to 3.5.2 and others.
 ([#861](https://github.com/walmartlabs/concord/pull/861));
+- concord-server: allow plugins to supply their own top-level
+API endpoints
+([#891)(https://github.com/walmartlabs/concord/pull/891));
 - concord-server: minor improvements to the remember me
-cookie logic
+cookie logic 
 ([#892](https://github.com/walmartlabs/concord/pull/892));
 - concord-server: tone down websocket errors
 ([#895])(https://github.com/walmartlabs/concord/pull/895)).
