@@ -18,7 +18,10 @@ API endpoints
 cookie logic 
 ([#892](https://github.com/walmartlabs/concord/pull/892));
 - concord-server: tone down websocket errors
-([#895])(https://github.com/walmartlabs/concord/pull/895)).
+([#895])(https://github.com/walmartlabs/concord/pull/895));
+- concord-server: do not invalidate sessions in
+onFailedLogin
+([#896](https://github.com/walmartlabs/concord/pull/896)).
 
 
 
