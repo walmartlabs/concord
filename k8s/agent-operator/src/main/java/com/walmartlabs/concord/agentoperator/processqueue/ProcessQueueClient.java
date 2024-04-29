@@ -60,8 +60,11 @@ public class ProcessQueueClient {
         if (flavor != null) {
             queryUrl.append("&requirements.agent.flavor.eq=").append(flavor);
         }
-        for (String queryParam : queueSelector.getQueryParams()) {
-            queryUrl.append("&").append(escapeQueryParam(queryParam));
+        List<String> queryParams = queueSelector.getQueryParams();
+        if (queryParams != null) {
+            for (String queryParam : queryParams) {
+                queryUrl.append("&").append(escapeQueryParam(queryParam));
+            }
         }
         Request req = new Request.Builder()
                 .url(queryUrl.toString())
