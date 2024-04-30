@@ -20,6 +20,8 @@ package com.walmartlabs.concord.server.events.github;
  * =====
  */
 
+import com.walmartlabs.concord.db.AbstractDao;
+import com.walmartlabs.concord.db.MainDB;
 import com.walmartlabs.concord.sdk.Constants.Trigger;
 import com.walmartlabs.concord.sdk.MapUtils;
 import com.walmartlabs.concord.server.cfg.GithubConfiguration;
@@ -30,6 +32,7 @@ import com.walmartlabs.concord.server.org.triggers.TriggerEntry;
 import com.walmartlabs.concord.server.org.triggers.TriggersDao;
 import com.walmartlabs.concord.server.sdk.metrics.WithTimer;
 import com.walmartlabs.concord.server.security.github.GithubKey;
+import org.jooq.Configuration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -49,15 +52,15 @@ public class GithubTriggerV2Processor implements GithubTriggerProcessor {
     private static final int VERSION_ID = 2;
     private static final Logger log = LoggerFactory.getLogger(GithubTriggerV2Processor.class);
 
-    private final TriggersDao triggersDao;
-    private final RepositoryDao repoDao;
+    private final RepoTriggersDao repoTriggersDao;
     private final List<EventEnricher> eventEnrichers;
     private final boolean isDisableReposOnDeletedRef;
 
     @Inject
-    public GithubTriggerV2Processor(TriggersDao triggersDao, RepositoryDao repoDao, List<EventEnricher> eventEnrichers, GithubConfiguration githubCfg) {
-        this.triggersDao = triggersDao;
-        this.repoDao = repoDao;
+    public GithubTriggerV2Processor(RepoTriggersDao repoTriggersDao,
+                                    List<EventEnricher> eventEnrichers,
+                                    GithubConfiguration githubCfg) {
+        this.repoTriggersDao = repoTriggersDao;
         this.eventEnrichers = eventEnrichers;
         this.isDisableReposOnDeletedRef = githubCfg.isDisableReposOnDeletedRef();
     }
@@ -72,7 +75,7 @@ public class GithubTriggerV2Processor implements GithubTriggerProcessor {
                 && "push".equals(payload.eventName())
                 && isRefDeleted(payload)) {
 
-            List<RepositoryEntry> repositories = findRepos(repoDao, payload.getFullRepoName());
+            List<RepositoryEntry> repositories = repoTriggersDao.findRepos(payload.getFullRepoName());
             // disable repos configured with the event branch
             repositories.stream()
                     .filter(r -> !r.isDisabled() && null != r.getBranch())
@@ -104,7 +107,7 @@ public class GithubTriggerV2Processor implements GithubTriggerProcessor {
 
     private void disableRepo(RepositoryEntry repo, Payload payload) {
         log.info("disable repo ['{}', '{}'] -> ref deleted", repo.getId(), payload.getBranch());
-        repoDao.disable(repo.getProjectId(), repo.getId());
+        repoTriggersDao.disable(repo.getProjectId(), repo.getId());
     }
 
     private static boolean isRefDeleted(Payload payload) {
@@ -123,17 +126,7 @@ public class GithubTriggerV2Processor implements GithubTriggerProcessor {
 
     @WithTimer
     List<TriggerEntry> listTriggers(UUID projectId, String org, String repo) {
-        Map<String, String> conditions = new HashMap<>();
-
-        if (org != null) {
-            conditions.put(GITHUB_ORG_KEY, org);
-        }
-
-        if (repo != null) {
-            conditions.put(GITHUB_REPO_KEY, repo);
-        }
-
-        return triggersDao.list(projectId, EVENT_SOURCE, VERSION_ID, conditions);
+        return repoTriggersDao.listTriggers(projectId, org, repo);
     }
 
     private Map<String, Object> buildEvent(String eventName, UriInfo uriInfo, Payload payload) {
@@ -186,11 +179,6 @@ public class GithubTriggerV2Processor implements GithubTriggerProcessor {
         void enrich(Payload payload, TriggerEntry trigger, Map<String, Object> result);
     }
 
-    private static List<RepositoryEntry> findRepos(RepositoryDao dao, String repoOrgAndName) {
-        String sshAndHttpPattern = "%[/:]" + repoOrgAndName + "(.git)?/?";
-        return dao.findSimilar(sshAndHttpPattern);
-    }
-
     /**
      * Adds {@link Trigger#REPOSITORY_INFO} property to the event, but only if
      * the trigger's conditions contained the clause with the same key.
@@ -198,11 +186,11 @@ public class GithubTriggerV2Processor implements GithubTriggerProcessor {
     @Named
     private static class RepositoryInfoEnricher implements EventEnricher {
 
-        private final RepositoryDao repositoryDao;
+        private final RepoTriggersDao repoTriggersDao;
 
         @Inject
-        public RepositoryInfoEnricher(RepositoryDao repositoryDao) {
-            this.repositoryDao = repositoryDao;
+        public RepositoryInfoEnricher(RepoTriggersDao repoTriggersDao) {
+            this.repoTriggersDao = repoTriggersDao;
         }
 
         @Override
@@ -214,7 +202,7 @@ public class GithubTriggerV2Processor implements GithubTriggerProcessor {
             }
 
             List<Map<String, Object>> repositoryInfos = new ArrayList<>();
-            List<RepositoryEntry> repositories = findRepos(repositoryDao, payload.getFullRepoName());
+            List<RepositoryEntry> repositories = repoTriggersDao.findRepos(payload.getFullRepoName());
 
             for (RepositoryEntry r : repositories) {
                 if (r.isDisabled()) {
@@ -236,6 +224,48 @@ public class GithubTriggerV2Processor implements GithubTriggerProcessor {
             if (!repositoryInfos.isEmpty()) {
                 result.put(Trigger.REPOSITORY_INFO, repositoryInfos);
             }
+        }
+    }
+
+    @Named
+    @Singleton
+    public static class RepoTriggersDao extends AbstractDao {
+        private final RepositoryDao repoDao;
+        private final TriggersDao triggersDao;
+
+        @Inject
+        public RepoTriggersDao(@MainDB Configuration cfg,
+                               RepositoryDao repoDao,
+                               TriggersDao triggersDao) {
+            super(cfg);
+            this.triggersDao = triggersDao;
+            this.repoDao = repoDao;
+        }
+
+        private List<RepositoryEntry> findRepos(String repoOrgAndName) {
+            String sshAndHttpPattern = "%[/:]" + repoOrgAndName + "(.git)?/?";
+            return repoDao.findSimilar(sshAndHttpPattern);
+        }
+
+        List<TriggerEntry> listTriggers(UUID projectId, String org, String repo) {
+            Map<String, String> conditions = new HashMap<>();
+
+            if (org != null) {
+                conditions.put(GITHUB_ORG_KEY, org);
+            }
+
+            if (repo != null) {
+                conditions.put(GITHUB_REPO_KEY, repo);
+            }
+
+            return triggersDao.list(projectId, EVENT_SOURCE, VERSION_ID, conditions);
+        }
+
+        void disable(UUID projectId, UUID repoId) {
+            tx(tx -> {
+                repoDao.disable(tx, repoId);
+                triggersDao.delete(tx, projectId, repoId);
+            });
         }
     }
 }

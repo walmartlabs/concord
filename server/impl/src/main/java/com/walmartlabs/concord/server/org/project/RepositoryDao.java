@@ -39,15 +39,12 @@ import static org.jooq.impl.DSL.*;
 public class RepositoryDao extends AbstractDao {
 
     private final ConcordObjectMapper objectMapper;
-    private final TriggersDao triggersDao;
 
     @Inject
     public RepositoryDao(@MainDB Configuration cfg,
-                         ConcordObjectMapper objectMapper,
-                         TriggersDao triggersDao) {
+                         ConcordObjectMapper objectMapper) {
         super(cfg);
         this.objectMapper = objectMapper;
-        this.triggersDao = triggersDao;
     }
 
     @Override
@@ -142,15 +139,11 @@ public class RepositoryDao extends AbstractDao {
         }
     }
 
-    public void disable(UUID projectId, UUID repoId) {
-        tx(tx -> {
-            tx.update(REPOSITORIES)
-                .set(REPOSITORIES.IS_DISABLED, true)
-                .where(REPOSITORIES.REPO_ID.eq(repoId))
-                .execute();
-
-            triggersDao.delete(tx, projectId, repoId);
-        });
+    public void disable(DSLContext tx, UUID repoId) {
+        tx.update(REPOSITORIES)
+            .set(REPOSITORIES.IS_DISABLED, true)
+            .where(REPOSITORIES.REPO_ID.eq(repoId))
+            .execute();
     }
 
     public void clearSecretMappingBySecretId(DSLContext tx, UUID secretId) {
