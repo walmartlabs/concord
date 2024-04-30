@@ -23,6 +23,7 @@ package com.walmartlabs.concord.server.org.project;
 import com.walmartlabs.concord.db.AbstractDao;
 import com.walmartlabs.concord.db.MainDB;
 import com.walmartlabs.concord.server.ConcordObjectMapper;
+import com.walmartlabs.concord.server.org.triggers.TriggersDao;
 import org.jooq.*;
 import org.jooq.exception.DataAccessException;
 
@@ -38,12 +39,15 @@ import static org.jooq.impl.DSL.*;
 public class RepositoryDao extends AbstractDao {
 
     private final ConcordObjectMapper objectMapper;
+    private final TriggersDao triggersDao;
 
     @Inject
     public RepositoryDao(@MainDB Configuration cfg,
-                         ConcordObjectMapper objectMapper) {
+                         ConcordObjectMapper objectMapper,
+                         TriggersDao triggersDao) {
         super(cfg);
         this.objectMapper = objectMapper;
+        this.triggersDao = triggersDao;
     }
 
     @Override
@@ -138,11 +142,15 @@ public class RepositoryDao extends AbstractDao {
         }
     }
 
-    public void disable(UUID repoId) {
-        tx(tx -> tx.update(REPOSITORIES)
+    public void disable(UUID projectId, UUID repoId) {
+        tx(tx -> {
+            tx.update(REPOSITORIES)
                 .set(REPOSITORIES.IS_DISABLED, true)
                 .where(REPOSITORIES.REPO_ID.eq(repoId))
-                .execute());
+                .execute();
+
+            triggersDao.delete(tx, projectId, repoId);
+        });
     }
 
     public void clearSecretMappingBySecretId(DSLContext tx, UUID secretId) {

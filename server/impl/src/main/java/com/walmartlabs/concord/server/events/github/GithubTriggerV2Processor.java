@@ -75,7 +75,7 @@ public class GithubTriggerV2Processor implements GithubTriggerProcessor {
             List<RepositoryEntry> repositories = findRepos(repoDao, payload.getFullRepoName());
             // disable repos configured with the event branch
             repositories.stream()
-                    .filter(r -> !r.isDisabled())
+                    .filter(r -> !r.isDisabled() && null != r.getBranch())
                     .filter(r -> r.getBranch().equals(payload.getBranch()))
                     .forEach(r -> disableRepo(r, payload));
         }
@@ -104,8 +104,7 @@ public class GithubTriggerV2Processor implements GithubTriggerProcessor {
 
     private void disableRepo(RepositoryEntry repo, Payload payload) {
         log.info("disable repo ['{}', '{}'] -> ref deleted", repo.getId(), payload.getBranch());
-        repoDao.disable(repo.getId());
-        triggersDao.delete(repo.getProjectId(), repo.getId());
+        repoDao.disable(repo.getProjectId(), repo.getId());
     }
 
     private static boolean isRefDeleted(Payload payload) {
