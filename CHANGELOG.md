@@ -1,5 +1,14 @@
 # Change log
 
+## [2.12.0] - Unreleased
+
+### Changed
+
+- runtime-v2: fix sensitive data masking in maps
+([#897](https://github.com/walmartlabs/concord/pull/893)).
+
+
+
 ## [2.11.0] - 2024-04-30 
 
 ### Added
