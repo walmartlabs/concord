@@ -22,6 +22,10 @@ package com.walmartlabs.concord.agentoperator.processqueue;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.annotations.VisibleForTesting;
+import com.google.common.escape.Escaper;
+import com.google.common.net.UrlEscapers;
+import com.walmartlabs.concord.agentoperator.scheduler.QueueSelector;
 import okhttp3.*;
 
 import javax.net.ssl.SSLContext;
@@ -50,13 +54,20 @@ public class ProcessQueueClient {
         this.objectMapper = new ObjectMapper();
     }
 
-    public List<ProcessQueueEntry> query(String processStatus, int limit, String flavor) throws IOException {
-        String queryUrl = baseUrl + "/api/v2/process/requirements?status=" + processStatus + "&limit=" + limit + "&startAt.len=";
+    public List<ProcessQueueEntry> query(String processStatus, int limit, QueueSelector queueSelector) throws IOException {
+        StringBuilder queryUrl = new StringBuilder(baseUrl + "/api/v2/process/requirements?status=" + processStatus + "&limit=" + limit + "&startAt.len=");
+        String flavor = queueSelector.getFlavor();
         if (flavor != null) {
-            queryUrl = queryUrl + "&requirements.agent.flavor.eq=" + flavor;
+            queryUrl.append("&requirements.agent.flavor.eq=").append(flavor);
+        }
+        List<String> queryParams = queueSelector.getQueryParams();
+        if (queryParams != null) {
+            for (String queryParam : queryParams) {
+                queryUrl.append("&").append(escapeQueryParam(queryParam));
+            }
         }
         Request req = new Request.Builder()
-                .url(queryUrl)
+                .url(queryUrl.toString())
                 .header("Authorization", apiToken)
                 .addHeader("User-Agent", "k8s-agent-operator")
                 .build();
@@ -159,5 +170,17 @@ public class ProcessQueueClient {
 
             return resp;
         }
+    }
+
+    @VisibleForTesting
+    static String escapeQueryParam(String s) {
+        Escaper escaper = UrlEscapers.urlPathSegmentEscaper();
+        int i = s.indexOf("=");
+        if (i < 0) {
+            return escaper.escape(s);
+        }
+        String key = s.substring(0, i);
+        String value = s.substring(i + 1);
+        return escaper.escape(key) + "=" + escaper.escape(value);
     }
 }

@@ -29,13 +29,12 @@ import javax.servlet.ServletContextListener;
 import static com.google.inject.Scopes.SINGLETON;
 import static com.google.inject.multibindings.Multibinder.newSetBinder;
 import static com.walmartlabs.concord.server.Utils.bindExceptionMapper;
-import static com.walmartlabs.concord.server.Utils.bindServletHolder;
 
 public class ResteasyModule implements Module {
 
     @Override
     public void configure(Binder binder) {
-        bindServletHolder(binder, ResteasyServletHolder.class);
+        newSetBinder(binder, ApiDescriptor.class).addBinding().to(ConcordApiDescriptor.class);
 
         newSetBinder(binder, ServletContextListener.class).addBinding().to(ResteasyListener.class);
 

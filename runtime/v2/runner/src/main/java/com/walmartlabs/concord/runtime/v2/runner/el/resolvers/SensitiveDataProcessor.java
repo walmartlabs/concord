@@ -24,12 +24,18 @@ import com.walmartlabs.concord.runtime.v2.runner.SensitiveDataHolder;
 import com.walmartlabs.concord.runtime.v2.sdk.SensitiveData;
 
 import java.lang.reflect.Method;
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 public class SensitiveDataProcessor {
+
+    public static void process(Object value, List<Method> methods) {
+        Method method = methods.stream().filter(SensitiveDataProcessor::isSensitiveData).findFirst().orElse(null);
+        if (method == null) {
+            return;
+        }
+
+        process(value, method);
+    }
 
     public static void process(Object value, Method method) {
         SensitiveData a = method.getAnnotation(SensitiveData.class);
@@ -50,5 +56,9 @@ public class SensitiveDataProcessor {
                 }
             }
         }
+    }
+
+    private static boolean isSensitiveData(Method method) {
+        return method.getAnnotation(SensitiveData.class) != null;
     }
 }

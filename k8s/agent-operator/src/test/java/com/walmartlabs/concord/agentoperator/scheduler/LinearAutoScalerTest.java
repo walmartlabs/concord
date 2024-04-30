@@ -22,9 +22,11 @@ package com.walmartlabs.concord.agentoperator.scheduler;
 
 import com.walmartlabs.concord.agentoperator.crd.AgentPool;
 import com.walmartlabs.concord.agentoperator.crd.AgentPoolConfiguration;
+import com.walmartlabs.concord.agentoperator.processqueue.ProcessQueueClient;
 import com.walmartlabs.concord.agentoperator.processqueue.ProcessQueueEntry;
 import org.junit.jupiter.api.Test;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -32,19 +34,16 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-public class AutoScalerTest {
+public class LinearAutoScalerTest {
 
     @Test
-    public void testStill() {
+    public void testStill() throws Exception {
         AtomicInteger podCount = new AtomicInteger(1);
+        List<ProcessQueueEntry> queue = new ArrayList<>();
 
-        AutoScaler as = new AutoScaler(n -> podCount.get(), i -> true, i -> true);
+        LinearAutoScaler as = new LinearAutoScaler(mockProcessQueueClient(queue), n -> podCount.get(), i -> true, i -> true);
 
         AgentPoolConfiguration spec = new AgentPoolConfiguration();
-        spec.setPercentIncrement(50);
-        spec.setDecrementThresholdFactor(1.0);
-        spec.setIncrementThresholdFactor(1.5);
-        spec.setPercentDecrement(10);
         spec.setQueueSelector(Collections.singletonMap("test", 123));
 
         AgentPool resource = new AgentPool();
@@ -52,89 +51,101 @@ public class AutoScalerTest {
 
         AgentPoolInstance pool = new AgentPoolInstance("test", resource, AgentPoolInstance.Status.ACTIVE, 1, 0, 0, 0);
 
-        List<ProcessQueueEntry> queue = new ArrayList<>();
-
         // ---
 
-        pool = as.apply(pool, queue);
+        pool = as.apply(pool);
         assertEquals(1, pool.getTargetSize());
 
-        pool = as.apply(pool, queue);
+        pool = as.apply(pool);
         assertEquals(1, pool.getTargetSize());
     }
 
     @Test
-    public void testZeroStart() {
+    public void testZeroStart() throws IOException {
         AtomicInteger podCount = new AtomicInteger(0);
+        List<ProcessQueueEntry> queue = new ArrayList<>();
 
-        AutoScaler as = new AutoScaler(n -> podCount.get(), i -> true, i -> true);
+        AutoScaler as = new LinearAutoScaler(mockProcessQueueClient(queue), n -> podCount.get(), i -> true, i -> true);
 
         AgentPoolConfiguration spec = new AgentPoolConfiguration();
-        spec.setPercentIncrement(50);
-        spec.setDecrementThresholdFactor(1.0);
-        spec.setIncrementThresholdFactor(1.5);
-        spec.setPercentDecrement(10);
+        spec.setMinSize(0);
+        spec.setSize(0);
         spec.setQueueSelector(Collections.singletonMap("test", 123));
 
         AgentPool resource = new AgentPool();
         resource.setSpec(spec);
 
-        AgentPoolInstance pool = new AgentPoolInstance("test", resource, AgentPoolInstance.Status.ACTIVE, 1, 0, 0, 0);
-
-        List<ProcessQueueEntry> queue = new ArrayList<>();
+        AgentPoolInstance pool = new AgentPoolInstance("test", resource, AgentPoolInstance.Status.ACTIVE, 0, 0, 0, 0);
 
         // ---
 
-        pool = as.apply(pool, queue);
+        pool = as.apply(pool);
+        assertEquals(0, pool.getTargetSize());
+
+        // 1 enqueued process -> inc pods count
+        queue.add(new ProcessQueueEntry(Collections.singletonMap("test", 123)));
+
+        pool = as.apply(pool);
         assertEquals(1, pool.getTargetSize());
 
-        podCount.set(2);
+        podCount.set(1);
 
-        pool = as.apply(pool, queue);
-        assertEquals(1, pool.getTargetSize());
+        // no processes -> 0 pods
+        queue.clear();
+
+        pool = as.apply(pool);
+        assertEquals(0, pool.getTargetSize());
+    }
+
+    private ProcessQueueClient mockProcessQueueClient(List<ProcessQueueEntry> queue) {
+        return new ProcessQueueClient("test", "test") {
+            @Override
+            public List<ProcessQueueEntry> query(String processStatus, int limit, QueueSelector queueSelector) throws IOException {
+                return queue;
+            }
+        };
     }
 
     @Test
-    public void testQueue() {
+    public void testQueue() throws IOException {
         AtomicInteger podCount = new AtomicInteger(1);
-
-        AutoScaler as = new AutoScaler(n -> podCount.get(), i -> true, i -> true);
-
-        AgentPoolConfiguration spec = new AgentPoolConfiguration();
-        spec.setPercentIncrement(50);
-        spec.setDecrementThresholdFactor(1.0);
-        spec.setIncrementThresholdFactor(1.5);
-        spec.setPercentDecrement(10);
-        spec.setQueueSelector(Collections.singletonMap("test", 123));
-
-        AgentPool resource = new AgentPool();
-        resource.setSpec(spec);
-
-        AgentPoolInstance pool = new AgentPoolInstance("test", resource, AgentPoolInstance.Status.ACTIVE, 1, 0, 0, 0);
-
         List<ProcessQueueEntry> queue = new ArrayList<>();
         for (int i = 0; i < 10; i++) {
             queue.add(new ProcessQueueEntry(Collections.singletonMap("test", 123)));
         }
 
+        DefaultAutoScaler as = new DefaultAutoScaler(mockProcessQueueClient(queue), n -> podCount.get(), i -> true, i -> true);
+
+        AgentPoolConfiguration spec = new AgentPoolConfiguration();
+        spec.setPercentIncrement(50);
+        spec.setDecrementThresholdFactor(1.0);
+        spec.setIncrementThresholdFactor(1.5);
+        spec.setPercentDecrement(10);
+        spec.setQueueSelector(Collections.singletonMap("test", 123));
+
+        AgentPool resource = new AgentPool();
+        resource.setSpec(spec);
+
+        AgentPoolInstance pool = new AgentPoolInstance("test", resource, AgentPoolInstance.Status.ACTIVE, 1, 0, 0, 0);
+
         // ---
 
-        pool = as.apply(pool, queue);
+        pool = as.apply(pool);
         assertEquals(2, pool.getTargetSize());
 
         podCount.set(2);
 
-        pool = as.apply(pool, queue);
+        pool = as.apply(pool);
         assertEquals(3, pool.getTargetSize());
 
         podCount.set(3);
 
-        pool = as.apply(pool, queue);
+        pool = as.apply(pool);
         assertEquals(5, pool.getTargetSize());
 
         podCount.set(5);
 
-        pool = as.apply(pool, queue);
+        pool = as.apply(pool);
         assertEquals(8, pool.getTargetSize());
 
         podCount.set(8);
@@ -143,12 +154,12 @@ public class AutoScalerTest {
 
         queue.clear();
 
-        pool = as.apply(pool, queue);
+        pool = as.apply(pool);
         assertEquals(7, pool.getTargetSize());
 
         podCount.set(7);
 
-        pool = as.apply(pool, queue);
+        pool = as.apply(pool);
         assertEquals(6, pool.getTargetSize());
     }
 }
