@@ -40,4 +40,11 @@ public class TagForRemovalChange implements Change {
     public static void apply(KubernetesClient client, String podName) {
         PodUtils.applyTag(client, podName, AgentPod.TAGGED_FOR_REMOVAL_LABEL, "true");
     }
+
+    @Override
+    public String toString() {
+        return "TagForRemovalChange{" +
+                "podName='" + podName + '\'' +
+                '}';
+    }
 }

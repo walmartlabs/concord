@@ -133,8 +133,12 @@
             <artifactId>jetty-server</artifactId>
         </dependency>
         <dependency>
-            <groupId>org.eclipse.jetty</groupId>
-            <artifactId>jetty-servlet</artifactId>
+            <groupId>org.eclipse.jetty.ee8</groupId>
+            <artifactId>jetty-ee8-servlets</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.eclipse.jetty.ee8</groupId>
+            <artifactId>jetty-ee8-servlet</artifactId>
         </dependency>
         <dependency>
             <groupId>org.eclipse.jetty</groupId>
@@ -280,15 +284,23 @@
         <!-- websockets -->
         <dependency>
             <groupId>org.eclipse.jetty.websocket</groupId>
-            <artifactId>websocket-api</artifactId>
+            <artifactId>jetty-websocket-jetty-api</artifactId>
         </dependency>
         <dependency>
             <groupId>org.eclipse.jetty.websocket</groupId>
-            <artifactId>websocket-server</artifactId>
+            <artifactId>jetty-websocket-jetty-server</artifactId>
         </dependency>
         <dependency>
-            <groupId>org.eclipse.jetty.websocket</groupId>
-            <artifactId>websocket-servlet</artifactId>
+            <groupId>org.eclipse.jetty.ee8.websocket</groupId>
+            <artifactId>jetty-ee8-websocket-servlet</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.eclipse.jetty.ee8.websocket</groupId>
+            <artifactId>jetty-ee8-websocket-jetty-server</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.eclipse.jetty.ee8.websocket</groupId>
+            <artifactId>jetty-ee8-websocket-javax-server</artifactId>
         </dependency>
         <dependency>
             <groupId>com.walmartlabs.concord.server</groupId>

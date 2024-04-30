@@ -21,7 +21,7 @@ package com.walmartlabs.concord.server.boot.filters;
  */
 
 import org.apache.shiro.web.servlet.ShiroFilter;
-import org.eclipse.jetty.servlet.FilterHolder;
+import org.eclipse.jetty.ee8.servlet.FilterHolder;
 
 import javax.servlet.annotation.WebFilter;
 

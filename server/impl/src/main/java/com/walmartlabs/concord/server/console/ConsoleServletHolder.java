@@ -21,8 +21,8 @@ package com.walmartlabs.concord.server.console;
  */
 
 import com.walmartlabs.concord.server.cfg.ServerConfiguration;
-import org.eclipse.jetty.servlet.DefaultServlet;
-import org.eclipse.jetty.servlet.ServletHolder;
+import org.eclipse.jetty.ee8.servlet.DefaultServlet;
+import org.eclipse.jetty.ee8.servlet.ServletHolder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
