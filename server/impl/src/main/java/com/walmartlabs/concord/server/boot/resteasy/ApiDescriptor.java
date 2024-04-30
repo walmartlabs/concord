@@ -4,7 +4,7 @@ package com.walmartlabs.concord.server.boot.resteasy;
  * *****
  * Concord
  * -----
- * Copyright (C) 2017 - 2023 Walmart Inc.
+ * Copyright (C) 2017 - 2024 Walmart Inc.
  * -----
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,18 +20,13 @@ package com.walmartlabs.concord.server.boot.resteasy;
  * =====
  */
 
-import org.eclipse.jetty.ee8.servlet.ServletHolder;
-import org.jboss.resteasy.plugins.server.servlet.HttpServletDispatcher;
+/**
+ * Declares an API.
+ */
+public interface ApiDescriptor {
 
-import javax.servlet.annotation.WebServlet;
-
-@WebServlet({
-        "/api/*",
-        "/events/github/*"
-})
-public class ResteasyServletHolder extends ServletHolder {
-
-    public ResteasyServletHolder() {
-        super(HttpServletDispatcher.class);
-    }
+    /**
+     * Path patterns of the API. E.g. {@code "/api/**"} or {@code "/events/foo"}.
+     */
+    String[] paths();
 }

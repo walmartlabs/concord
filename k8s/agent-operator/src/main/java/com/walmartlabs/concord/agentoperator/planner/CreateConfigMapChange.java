@@ -49,4 +49,11 @@ public class CreateConfigMapChange implements Change {
             log.error("apply -> error while creating a configmap {}: {}", configMapName, e.getMessage());
         }
     }
+
+    @Override
+    public String toString() {
+        return "CreateConfigMapChange{" +
+                "configMapName='" + configMapName + '\'' +
+                '}';
+    }
 }

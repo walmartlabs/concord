@@ -79,4 +79,11 @@ public class TryToDeletePodChange implements Change {
         PodUtils.applyTag(client, podName, AgentPod.PRE_STOP_HOOK_TERMINATION_LABEL, "true");
         log.info("apply ['{}'] -> Marked for termination (former phase: {})", podName, pod.getStatus().getPhase());
     }
+
+    @Override
+    public String toString() {
+        return "TryToDeletePodChange{" +
+                "podName='" + podName + '\'' +
+                '}';
+    }
 }
