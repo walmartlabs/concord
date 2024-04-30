@@ -32,7 +32,7 @@ public class MapELResolver extends javax.el.MapELResolver {
         Object result = super.getValue(context, base, property);
         if (result != null && context.isPropertyResolved()) {
             List<Method> methods = findMapGetMethods(base.getClass(), result.getClass());
-            SensitiveDataProcessor.process(result, methods);
+            SensitiveDataProcessor.processFirstMatch(result, methods);
         }
         return result;
     }
