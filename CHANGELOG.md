@@ -5,7 +5,7 @@
 ### Added
 
 -  agent-operator: scaling strategies and configurable requirements
-([#893])(https://github.com/walmartlabs/concord/pull/893).
+([#893](https://github.com/walmartlabs/concord/pull/893)).
 
 ### Changed
 
