@@ -58,6 +58,8 @@ public class SensitiveDataHolder {
     }
 
     public void addAll(Collection<String> sensitiveData) {
+        log.info("sensitiveData [{}] -> addAll ['{}']", this, sensitiveData);
+
         this.sensitiveData.addAll(sensitiveData);
     }
 }
