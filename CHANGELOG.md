@@ -2,6 +2,11 @@
 
 ## [2.11.0] - Unreleased
 
+### Added
+
+-  agent-operator: scaling strategies and configurable requirements
+([#893])(https://github.com/walmartlabs/concord/pull/893).
+
 ### Changed
 
 - ansible-tasks: be more helpful when commands are missing.
