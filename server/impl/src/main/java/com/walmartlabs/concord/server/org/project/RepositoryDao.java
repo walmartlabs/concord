@@ -23,7 +23,6 @@ package com.walmartlabs.concord.server.org.project;
 import com.walmartlabs.concord.db.AbstractDao;
 import com.walmartlabs.concord.db.MainDB;
 import com.walmartlabs.concord.server.ConcordObjectMapper;
-import com.walmartlabs.concord.server.org.triggers.TriggersDao;
 import org.jooq.*;
 import org.jooq.exception.DataAccessException;
 
