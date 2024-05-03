@@ -63,7 +63,7 @@ public abstract class StepCommand<T extends Step> implements Command {
 
     private final UUID correlationId;
 
-    private LogContext logContext;
+    private final LogContext logContext;
 
     protected StepCommand(T step) {
         this(UUID.randomUUID(), step);
@@ -95,7 +95,7 @@ public abstract class StepCommand<T extends Step> implements Command {
         UUID correlationId = getCorrelationId();
         Context ctx = contextFactory.create(runtime, state, threadId, step, correlationId);
 
-        logContext = getLogContext(runtime, ctx, correlationId);
+        LogContext logContext = getLogContext(runtime, ctx, correlationId);
         if (logContext == null) {
             executeWithContext(ctx, runtime, state, threadId);
         } else {
