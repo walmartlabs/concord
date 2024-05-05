@@ -138,6 +138,13 @@ public class RepositoryDao extends AbstractDao {
         }
     }
 
+    public void disable(DSLContext tx, UUID repoId) {
+        tx.update(REPOSITORIES)
+            .set(REPOSITORIES.IS_DISABLED, true)
+            .where(REPOSITORIES.REPO_ID.eq(repoId))
+            .execute();
+    }
+
     public void clearSecretMappingBySecretId(DSLContext tx, UUID secretId) {
         tx.update(REPOSITORIES)
                 .setNull(REPOSITORIES.SECRET_ID)
