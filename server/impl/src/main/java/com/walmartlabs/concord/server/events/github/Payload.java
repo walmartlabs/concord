@@ -135,6 +135,10 @@ public class Payload {
         return repo;
     }
 
+    public String eventName() {
+        return eventName;
+    }
+
     public String getBranch() {
         switch (eventName.toLowerCase()) {
             case PUSH_EVENT:
