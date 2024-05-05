@@ -1,0 +1,14 @@
+configuration:
+  runtime: "concord-v2"
+  requirements:
+    agent:
+      flavor: "kvm"
+triggers:
+  - github:
+      version: 2
+      entryPoint: onPush
+      conditions:
+        type: push
+flows:
+  onPush:
+    - log: "Hello, ${event}"
