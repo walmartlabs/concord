@@ -47,6 +47,7 @@ import com.walmartlabs.concord.server.sdk.ConcordApplicationException;
 import com.walmartlabs.concord.server.sdk.metrics.WithTimer;
 import com.walmartlabs.concord.server.sdk.validation.ValidationErrorsException;
 import com.walmartlabs.concord.server.security.Roles;
+import com.walmartlabs.concord.server.security.UnauthorizedException;
 import com.walmartlabs.concord.server.security.UserPrincipal;
 import com.walmartlabs.concord.server.security.apikey.ApiKeyDao;
 import com.walmartlabs.concord.server.security.apikey.ApiKeyEntry;
@@ -54,7 +55,6 @@ import com.walmartlabs.concord.server.security.sessionkey.SessionKeyPrincipal;
 import com.walmartlabs.concord.server.user.UserDao;
 import com.walmartlabs.concord.server.user.UserEntry;
 import com.walmartlabs.concord.server.user.UserManager;
-import org.apache.shiro.authz.UnauthorizedException;
 import org.jooq.DSLContext;
 
 import javax.inject.Inject;
