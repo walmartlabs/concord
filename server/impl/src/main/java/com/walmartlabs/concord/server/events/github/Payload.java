@@ -35,7 +35,8 @@ public class Payload {
     /**
      * List of supported repository-level events.
      */
-    private static final Set<String> REPOSITORY_EVENTS = asSet(
+    private static final Set<String> REPOSITORY_EVENTS = Set.of(
+            "check_run",
             "commit_comment",
             "create",
             "delete",
@@ -49,15 +50,18 @@ public class Payload {
             "pull_request_review_comment",
             "push",
             "release",
+            "repository",
+            "status",
             "team",
             "team_add",
-            "repository"
-        );
+            "workflow_job",
+            "workflow_run"
+    );
 
     /**
      * List of supported organization-level events.
      */
-    private static final Set<String> ORGANIZATION_EVENTS = asSet(
+    private static final Set<String> ORGANIZATION_EVENTS = Set.of(
             "membership",
             "organization",
             "org_block"
@@ -229,10 +233,6 @@ public class Payload {
         Map<String, Object> pr = MapUtils.getMap(event, PULL_REQUEST_EVENT, Collections.emptyMap());
         Map<String, Object> base = MapUtils.getMap(pr, "base", Collections.emptyMap());
         return MapUtils.getString(base, "ref");
-    }
-
-    private static Set<String> asSet(String... as) {
-        return Collections.unmodifiableSet(new HashSet<>(Arrays.asList(as)));
     }
 
     @Override
