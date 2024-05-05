@@ -1,10 +1,10 @@
-package com.walmartlabs.concord.server.security.sessionkey;
+package com.walmartlabs.concord.server.sdk.security;
 
 /*-
  * *****
  * Concord
  * -----
- * Copyright (C) 2017 - 2018 Walmart Inc.
+ * Copyright (C) 2017 - 2024 Walmart Inc.
  * -----
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,22 +20,17 @@ package com.walmartlabs.concord.server.security.sessionkey;
  * =====
  */
 
-import com.walmartlabs.concord.server.sdk.PartialProcessKey;
-import com.walmartlabs.concord.server.security.SecurityUtils;
+import com.walmartlabs.concord.server.sdk.ConcordApplicationException;
 
-public class SessionKeyPrincipal {
+import static javax.ws.rs.core.Response.Status.UNAUTHORIZED;
 
-    public static SessionKeyPrincipal getCurrent() {
-        return SecurityUtils.getCurrent(SessionKeyPrincipal.class);
+public class AuthenticationException extends ConcordApplicationException {
+
+    public AuthenticationException(String message, Throwable cause) {
+        super(message, cause, UNAUTHORIZED);
     }
 
-    private final PartialProcessKey processKey;
-
-    public SessionKeyPrincipal(PartialProcessKey processKey) {
-        this.processKey = processKey;
-    }
-
-    public PartialProcessKey getProcessKey() {
-        return processKey;
+    public AuthenticationException(String message) {
+        super(message, UNAUTHORIZED);
     }
 }
