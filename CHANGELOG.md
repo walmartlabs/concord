@@ -7,7 +7,10 @@
 - runtime-v2: fix sensitive data masking in maps
 ([#897](https://github.com/walmartlabs/concord/pull/893));
 - concord-server: fix Jetty metrics
-([#899](https://github.com/walmartlabs/concord/pull/899)).
+([#899](https://github.com/walmartlabs/concord/pull/899));
+- concord-server: add some missing GHA event types
+(repository, status, workflow_job, workflow_run)
+([#900](https://github.com/walmartlabs/concord/pull/900)).
 
 
 
