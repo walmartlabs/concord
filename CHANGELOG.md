@@ -8,6 +8,9 @@
 ([#889](https://github.com/walmartlabs/concord/pull/889));
 - runtime-v2: fix sensitive data masking in maps
 ([#897](https://github.com/walmartlabs/concord/pull/893));
+- concord-server, tasks: disable repos on deleted ref, only
+refresh repos matching event branch
+([#894](https://github.com/walmartlabs/concord/pull/894));
 - concord-server: fix Jetty metrics
 ([#899](https://github.com/walmartlabs/concord/pull/899));
 - concord-server: add some missing GHA event types
