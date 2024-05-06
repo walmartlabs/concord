@@ -15,7 +15,9 @@ refresh repos matching event branch
 ([#899](https://github.com/walmartlabs/concord/pull/899));
 - concord-server: add some missing GHA event types
 (repository, status, workflow_job, workflow_run)
-([#900](https://github.com/walmartlabs/concord/pull/900)).
+([#900](https://github.com/walmartlabs/concord/pull/900));
+- dependency-manager: make it a singleton
+([#901](https://github.com/walmartlabs/concord/pull/901)).
 
 
 
