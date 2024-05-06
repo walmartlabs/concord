@@ -215,6 +215,6 @@ public class ContextImpl implements Context {
         }
 
         state.peekFrame(currentThreadId)
-                .push(new TaskSuspendCommand(correlationId, LogUtils.getContext(), eventName, (TaskCall) step, taskState));
+                .push(new TaskSuspendCommand(correlationId, eventName, (TaskCall) step, taskState));
     }
 }
