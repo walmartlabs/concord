@@ -30,7 +30,7 @@ public class SimpleLogger implements RunnerLogger {
     }
 
     @Override
-    public void withContext(LogContext context, Runnable runnable) {
+    public void withLogContext(LogContext context, Runnable runnable) {
         try {
             runnable.run();
         } catch (RuntimeException e) {

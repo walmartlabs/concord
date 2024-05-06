@@ -25,7 +25,7 @@ import java.util.UUID;
 
 public interface RunnerLogger {
 
-    void withContext(LogContext context, Runnable runnable);
+    void withLogContext(LogContext context, Runnable runnable);
 
     @Nullable
     Long createSegment(String segmentName, UUID correlationId);

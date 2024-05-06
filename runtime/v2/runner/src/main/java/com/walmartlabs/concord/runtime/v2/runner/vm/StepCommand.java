@@ -95,19 +95,15 @@ public abstract class StepCommand<T extends Step> implements Command {
 
         logContext = getLogContext(runtime, ctx, correlationId);
         if (logContext == null) {
-            executeWithContext(ctx, runtime, state, threadId);
+            ContextProvider.withContext(ctx, () -> execute(runtime, state, threadId));
         } else {
-            runtime.getService(RunnerLogger.class).withContext(logContext,
-                    () -> executeWithContext(ctx, runtime, state, threadId));
+            runtime.getService(RunnerLogger.class).withLogContext(logContext,
+                    () -> ContextProvider.withContext(ctx, () -> execute(runtime, state, threadId)));
         }
     }
 
     public UUID getCorrelationId() {
         return correlationId;
-    }
-
-    private void executeWithContext(Context ctx, Runtime runtime, State state, ThreadId threadId) {
-        ContextProvider.withContext(ctx, () -> execute(runtime, state, threadId));
     }
 
     @Override
@@ -119,7 +115,7 @@ public abstract class StepCommand<T extends Step> implements Command {
         if (logContext == null) {
             logException(e, state, threadId);
         } else {
-            runtime.getService(RunnerLogger.class).withContext(logContext,
+            runtime.getService(RunnerLogger.class).withLogContext(logContext,
                     () -> logException(e, state, threadId));
         }
     }

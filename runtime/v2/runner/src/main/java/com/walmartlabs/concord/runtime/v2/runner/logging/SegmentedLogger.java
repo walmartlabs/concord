@@ -53,7 +53,7 @@ public class SegmentedLogger implements RunnerLogger {
     }
 
     @Override
-    public void withContext(LogContext context, Runnable runnable) {
+    public void withLogContext(LogContext context, Runnable runnable) {
         ThreadGroup threadGroup = new LogContextThreadGroup(context);
         executeInThreadGroup(threadGroup, "thread-" + context.segmentName(), () -> {
             // make sure the redirection is enabled in the current thread
@@ -99,7 +99,7 @@ public class SegmentedLogger implements RunnerLogger {
 
     /**
      * Executes the {@link Callable} in the specified {@link ThreadGroup}.
-     * A bit expensive as it is creates a new thread.
+     * A bit expensive as it is creating a new thread.
      */
     private static void executeInThreadGroup(ThreadGroup group, String threadName, Runnable runnable) {
         ExecutorService executor = Executors.newSingleThreadExecutor(new ThreadGroupAwareThreadFactory(group, threadName));

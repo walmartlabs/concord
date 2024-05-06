@@ -23,6 +23,7 @@ package com.walmartlabs.concord.svm;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.Serial;
 import java.io.Serializable;
 import java.util.Collection;
 import java.util.Map;
@@ -91,12 +92,12 @@ public class VM {
     public void run(State state, Command cmd) throws Exception {
         log.debug("run ['{}'] -> start", cmd);
 
-        Runtime rt = runtimeFactory.create(this);
+        Runtime runtime = runtimeFactory.create(this);
         ThreadId threadId = state.getRootThreadId();
         try {
-            cmd.eval(rt, state, threadId);
+            cmd.eval(runtime, state, threadId);
         } catch (Exception e) {
-            cmd.onException(rt, e, state, threadId);
+            cmd.onException(runtime, e, state, threadId);
             throw e;
         }
 
@@ -166,7 +167,7 @@ public class VM {
         EvalResult result;
 
         while (true) {
-            // if we're restoring from a previously saved state or we had new threads created
+            // if we're restoring from a previously saved state, or we had new threads created
             // on the previous iteration we need to spawn all READY threads
             for (Map.Entry<ThreadId, ThreadStatus> e : state.threadStatus().entrySet()) {
                 if (e.getKey() != state.getRootThreadId() && e.getValue() == ThreadStatus.READY) {
@@ -232,8 +233,9 @@ public class VM {
         }
     }
 
-    private static class EvalResult implements Serializable {
+    public static class EvalResult implements Serializable {
 
+        @Serial
         private static final long serialVersionUID = 1L;
 
         private final Frame lastFrame;
