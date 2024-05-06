@@ -20,10 +20,9 @@ package com.walmartlabs.concord.server.security;
  * =====
  */
 
+import com.walmartlabs.concord.server.sdk.security.AuthenticationException;
 import com.walmartlabs.concord.server.user.RoleEntry;
 import com.walmartlabs.concord.server.user.UserEntry;
-import org.apache.shiro.SecurityUtils;
-import org.apache.shiro.authc.AuthenticationException;
 import org.apache.shiro.authz.AuthorizationInfo;
 import org.apache.shiro.authz.SimpleAuthorizationInfo;
 import org.apache.shiro.mgt.SecurityManager;
@@ -36,7 +35,38 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
-public final class PrincipalUtils {
+/**
+ * Utility methods for working with Shiro's security context.
+ * Should be the only place where Shiro's API is used directly except for
+ * the security filters.
+ */
+public final class SecurityUtils {
+
+    public static void logout() {
+        Subject subject = getSubject();
+        if (subject != null) {
+            subject.logout();
+        }
+    }
+
+    public static boolean hasRole(String role) {
+        Subject s = getSubject();
+        return s.hasRole(role);
+    }
+
+    public static boolean isPermitted(String permission) {
+        Subject s = getSubject();
+        return s.isPermitted(permission);
+    }
+
+    public static Subject getSubject() {
+        Subject subject = ThreadContext.getSubject();
+        if (subject == null) {
+            subject = (new Subject.Builder()).buildSubject();
+            ThreadContext.bind(subject);
+        }
+        return subject;
+    }
 
     public static <T> T getCurrent(Class<T> type) {
         SecurityManager securityManager = ThreadContext.getSecurityManager();
@@ -44,7 +74,7 @@ public final class PrincipalUtils {
             return null;
         }
 
-        Subject subject = SecurityUtils.getSubject();
+        Subject subject = getSubject();
         if (subject == null) {
             return null;
         }
@@ -120,6 +150,6 @@ public final class PrincipalUtils {
         return i;
     }
 
-    private PrincipalUtils() {
+    private SecurityUtils() {
     }
 }

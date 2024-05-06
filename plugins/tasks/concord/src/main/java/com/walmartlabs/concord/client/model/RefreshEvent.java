@@ -1,10 +1,10 @@
-package com.walmartlabs.concord.server.security.sessionkey;
+package com.walmartlabs.concord.client.model;
 
 /*-
  * *****
  * Concord
  * -----
- * Copyright (C) 2017 - 2018 Walmart Inc.
+ * Copyright (C) 2017 - 2024 Walmart Inc.
  * -----
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,22 +20,26 @@ package com.walmartlabs.concord.server.security.sessionkey;
  * =====
  */
 
-import com.walmartlabs.concord.server.sdk.PartialProcessKey;
-import com.walmartlabs.concord.server.security.SecurityUtils;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import org.immutables.value.Value;
 
-public class SessionKeyPrincipal {
+import java.util.List;
 
-    public static SessionKeyPrincipal getCurrent() {
-        return SecurityUtils.getCurrent(SessionKeyPrincipal.class);
-    }
+@Value.Immutable
+@Value.Style(jdkOnly = true)
+@JsonIgnoreProperties(ignoreUnknown = true)
+@JsonDeserialize(as = ImmutableRefreshEvent.class)
+public interface RefreshEvent {
 
-    private final PartialProcessKey processKey;
+    String type();
 
-    public SessionKeyPrincipal(PartialProcessKey processKey) {
-        this.processKey = processKey;
-    }
+    String  branch();
 
-    public PartialProcessKey getProcessKey() {
-        return processKey;
+    PushEvent payload();
+
+    @Value.Default
+    default List<EventRepository> repositoryInfo() {
+        return List.of();
     }
 }
