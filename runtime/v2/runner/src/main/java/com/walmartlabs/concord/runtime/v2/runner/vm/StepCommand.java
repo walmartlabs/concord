@@ -40,6 +40,7 @@ import org.slf4j.LoggerFactory;
 
 import javax.el.ELException;
 import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -93,7 +94,7 @@ public abstract class StepCommand<T extends Step> implements Command {
         UUID correlationId = getCorrelationId();
         Context ctx = contextFactory.create(runtime, state, threadId, step, correlationId);
 
-        logContext = getLogContext(runtime, ctx, correlationId);
+        logContext = initLogContext(runtime, ctx, correlationId);
         if (logContext == null) {
             ContextProvider.withContext(ctx, () -> execute(runtime, state, threadId));
         } else {
@@ -131,11 +132,18 @@ public abstract class StepCommand<T extends Step> implements Command {
     protected abstract void execute(Runtime runtime, State state, ThreadId threadId);
 
     protected LogContext getLogContext() {
+        if (logContext == null) {
+            log.warn("getLogContext -> not initialized yet");
+        }
         return logContext;
     }
 
-    private LogContext getLogContext(Runtime runtime, Context ctx, UUID correlationId) {
+    // TODO create logContext outside of StepCommand
+    private synchronized LogContext initLogContext(Runtime runtime, Context ctx, UUID correlationId) {
         if (logContext != null) {
+            if (!Objects.equals(correlationId, this.logContext.correlationId())) {
+                log.warn("initLogContext -> correlationId mismatch, requested: {}, current: {}", correlationId, this.logContext.correlationId());
+            }
             return logContext;
         }
 
@@ -144,14 +152,10 @@ public abstract class StepCommand<T extends Step> implements Command {
             return null;
         }
 
-        return buildLogContext(runtime, segmentName, correlationId);
-    }
-
-    private LogContext buildLogContext(Runtime runtime, String segmentName, UUID correlationId) {
         RunnerConfiguration runnerCfg = runtime.getService(RunnerConfiguration.class);
         boolean redirectSystemOutAndErr = runnerCfg.logging().sendSystemOutAndErrToSLF4J();
 
-        return LogContext.builder()
+        return logContext = LogContext.builder()
                 .segmentName(segmentName)
                 .correlationId(correlationId)
                 .redirectSystemOutAndErr(redirectSystemOutAndErr)
@@ -192,9 +196,9 @@ public abstract class StepCommand<T extends Step> implements Command {
 
         if (e instanceof ELException) {
             return
-                ExceptionUtils.getExceptionList(e).stream()
-                .map(Throwable::getMessage)
-                .collect(Collectors.joining(". "));
+                    ExceptionUtils.getExceptionList(e).stream()
+                            .map(Throwable::getMessage)
+                            .collect(Collectors.joining(". "));
         }
 
         List<Throwable> exceptions = ExceptionUtils.getExceptionList(e);
