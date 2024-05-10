@@ -17,7 +17,10 @@ refresh repos matching event branch
 (repository, status, workflow_job, workflow_run)
 ([#900](https://github.com/walmartlabs/concord/pull/900));
 - dependency-manager: make it a singleton
-([#901](https://github.com/walmartlabs/concord/pull/901)).
+([#901](https://github.com/walmartlabs/concord/pull/901));
+- concord-server: fix initialization of wait conditions
+after process restart
+([#903](https://github.com/walmartlabs/concord/pull/903)).
 
 
 
