@@ -8,9 +8,8 @@ flows:
         prefix: "serial"
       out: x
       loop:
-        mode: parallel
+        mode: serial
         items: ['one', 'two', 'three', 'four', 'five']
-        parallelism: 2
 
     # parallel
     - call: main
