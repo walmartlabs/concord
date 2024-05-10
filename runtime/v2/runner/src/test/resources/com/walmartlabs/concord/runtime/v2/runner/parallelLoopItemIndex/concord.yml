@@ -1,0 +1,28 @@
+flows:
+  default:
+    # serial
+    - call: main
+      in:
+        item: "${item}"
+        index: "${itemIndex}"
+        prefix: "serial"
+      out: x
+      loop:
+        mode: parallel
+        items: ['one', 'two', 'three', 'four', 'five']
+        parallelism: 2
+
+    # parallel
+    - call: main
+      in:
+        item: "${item}"
+        index: "${itemIndex}"
+        prefix: "parallel"
+      out: x
+      loop:
+        mode: parallel
+        items: ['one', 'two', 'three', 'four', 'five']
+        parallelism: 2
+
+  main:
+    - log: "${prefix += ': ' += item += '==' += (itemIndex+1)}"
