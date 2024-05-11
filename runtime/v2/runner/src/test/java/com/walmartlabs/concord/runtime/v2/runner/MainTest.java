@@ -1814,6 +1814,27 @@ public class MainTest {
         assertLog(log, ".*it's true.*");
     }
 
+    @Test
+    public void testParallelLoopItemIndex() throws Exception {
+        deploy("parallelLoopItemIndex");
+
+        save(ProcessConfiguration.builder()
+                .build());
+
+        byte[] log = run();
+        assertLog(log, ".*serial: five==5.*");
+        assertLog(log, ".*serial: four==4.*");
+        assertLog(log, ".*serial: three==3.*");
+        assertLog(log, ".*serial: two==2.*");
+        assertLog(log, ".*serial: one==1.*");
+
+        assertLog(log, ".*parallel: five==5.*");
+        assertLog(log, ".*parallel: four==4.*");
+        assertLog(log, ".*parallel: three==3.*");
+        assertLog(log, ".*parallel: two==2.*");
+        assertLog(log, ".*parallel: one==1.*");
+    }
+
     private void deploy(String resource) throws URISyntaxException, IOException {
         Path src = Paths.get(MainTest.class.getResource(resource).toURI());
         IOUtils.copy(src, workDir);
