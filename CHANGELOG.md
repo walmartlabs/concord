@@ -20,7 +20,9 @@ refresh repos matching event branch
 ([#901](https://github.com/walmartlabs/concord/pull/901));
 - concord-server: fix initialization of wait conditions
 after process restart
-([#903](https://github.com/walmartlabs/concord/pull/903)).
+([#903](https://github.com/walmartlabs/concord/pull/903));
+- runtime-v2: fix itemIndex in parallel loops
+([#904](https://github.com/walmartlabs/concord/pull/904)).
 
 
 
