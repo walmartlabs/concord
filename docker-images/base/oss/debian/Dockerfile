@@ -8,7 +8,7 @@ ENTRYPOINT ["/usr/local/bin/concord_venv/bin/dumb-init", "--"]
 RUN apt-get update && \
     apt-get -y upgrade && \
     apt-get -y install openssh-client libltdl-dev wget unzip diffutils strace git gdebi-core \
-               python3 python3-pip python-is-python3 coreutils locales locales-all curl && \
+               python3 python3-pip python-is-python3 coreutils locales locales-all curl bash && \
     apt-get clean && \
     pip3 install --no-cache-dir --break-system-packages dumb-init virtualenv
     
