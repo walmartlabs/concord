@@ -163,12 +163,14 @@ public abstract class LoopWrapper implements Command {
             int batchSize = toBatchSize(runtime, ctx, parallelism);
 
             List<ArrayList<Serializable>> batches = batches(items, batchSize);
+            int itemIndexStart = 0;
             for (ArrayList<Serializable> batch : batches) {
-                evalBatch(state, threadId, batch, outVarsAccumulator);
+                evalBatch(itemIndexStart, state, threadId, batch, outVarsAccumulator);
+                itemIndexStart += batch.size();
             }
         }
 
-        private void evalBatch(State state, ThreadId threadId, ArrayList<Serializable> items, Map<String, List<Serializable>> outVarsAccumulator) {
+        private void evalBatch(int itemIndexStart, State state, ThreadId threadId, ArrayList<Serializable> items, Map<String, List<Serializable>> outVarsAccumulator) {
             Frame frame = state.peekFrame(threadId);
 
             List<Map.Entry<ThreadId, Serializable>> forks = items.stream()
@@ -177,13 +179,12 @@ public abstract class LoopWrapper implements Command {
 
             for (int i = 0; i < forks.size(); i++) {
                 Map.Entry<ThreadId, Serializable> f = forks.get(i);
-
                 Frame cmdFrame = Frame.builder()
                         .nonRoot()
                         .build();
 
                 cmdFrame.setLocal(CURRENT_ITEMS, items);
-                cmdFrame.setLocal(CURRENT_INDEX, i);
+                cmdFrame.setLocal(CURRENT_INDEX, itemIndexStart + i);
                 cmdFrame.setLocal(CURRENT_ITEM, f.getValue());
 
                 // fork will create rootFrame for forked commands

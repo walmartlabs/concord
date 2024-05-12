@@ -31,7 +31,6 @@ import org.apache.shiro.authc.UsernamePasswordToken;
 import org.apache.shiro.codec.Hex;
 import org.apache.shiro.util.StringUtils;
 import org.apache.shiro.web.filter.authc.AuthenticatingFilter;
-import org.apache.shiro.web.util.WebUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -76,7 +75,7 @@ public class GithubAuthenticatingFilter extends AuthenticatingFilter {
 
     @Override
     public void doFilterInternal(ServletRequest request, ServletResponse response, FilterChain filterChain) throws ServletException, IOException {
-        HttpServletRequest req = WebUtils.toHttp(request);
+        HttpServletRequest req = (HttpServletRequest) request;
         super.doFilterInternal(new CachingRequestWrapper(req), response, filterChain);
     }
 
@@ -163,7 +162,7 @@ public class GithubAuthenticatingFilter extends AuthenticatingFilter {
         boolean loggedId = executeLogin(request, response);
 
         if (!loggedId) {
-            HttpServletResponse resp = WebUtils.toHttp(response);
+            HttpServletResponse resp = (HttpServletResponse) response;
             resp.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
         }
 

@@ -28,9 +28,9 @@ import com.walmartlabs.concord.server.org.*;
 import com.walmartlabs.concord.server.sdk.metrics.WithTimer;
 import com.walmartlabs.concord.server.sdk.validation.ValidationErrorsException;
 import com.walmartlabs.concord.server.security.Roles;
+import com.walmartlabs.concord.server.security.UnauthorizedException;
 import com.walmartlabs.concord.server.security.UserPrincipal;
 import com.walmartlabs.concord.server.user.UserDao;
-import org.apache.shiro.authz.UnauthorizedException;
 import org.jooq.DSLContext;
 
 import javax.inject.Inject;
