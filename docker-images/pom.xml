@@ -18,6 +18,7 @@
         <module>ansible</module>
         <module>agent</module>
         <module>server</module>
+        <module>agent-operator</module>
     </modules>
 
     <properties>
