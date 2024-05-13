@@ -10,7 +10,7 @@
         <relativePath>../pom.xml</relativePath>
     </parent>
 
-    <artifactId>concord-compati-it</artifactId>
+    <artifactId>concord-compat-it</artifactId>
     <packaging>jar</packaging>
 
     <properties>
