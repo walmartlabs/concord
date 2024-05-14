@@ -6,8 +6,8 @@
     <parent>
         <groupId>com.walmartlabs.concord</groupId>
         <artifactId>parent</artifactId>
-        <version>2.11.1-SNAPSHOT</version>
-        <relativePath>../../pom.xml</relativePath>
+        <version>2.11.2-SNAPSHOT</version>
+        <relativePath>../pom.xml</relativePath>
     </parent>
 
     <groupId>com.walmartlabs.concord.k8s</groupId>

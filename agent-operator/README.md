@@ -30,7 +30,7 @@ Make sure the API token used in the `operator.yml` is valid and working.
 2. Build the operator's image:
   ```
   $ eval $(minikube docker-env)
-  $ cd concord/k8s/agent-operator
+  $ cd concord/agent-operator
   $ docker build . -t walmartlabs/concord-agent-operator:latest
   ```
 3. Build the app's images (might take a while, depending on cached layers

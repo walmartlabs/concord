@@ -21,7 +21,7 @@ package com.walmartlabs.concord.server.security.rememberme;
  */
 
 import com.walmartlabs.concord.server.cfg.RememberMeConfiguration;
-import com.walmartlabs.concord.server.security.PrincipalUtils;
+import com.walmartlabs.concord.server.security.SecurityUtils;
 import com.walmartlabs.concord.server.security.apikey.ApiKey;
 import org.apache.shiro.authc.UsernamePasswordToken;
 import org.apache.shiro.io.SerializationException;
@@ -95,12 +95,12 @@ public class ConcordRememberMeManager extends CookieRememberMeManager {
     private static class PrincipalCollectionSerializer implements Serializer<PrincipalCollection> {
         @Override
         public byte[] serialize(PrincipalCollection principalCollection) throws SerializationException {
-            return PrincipalUtils.serialize(principalCollection);
+            return SecurityUtils.serialize(principalCollection);
         }
 
         @Override
         public PrincipalCollection deserialize(byte[] bytes) throws SerializationException {
-            return PrincipalUtils.deserialize(bytes).orElse(null);
+            return SecurityUtils.deserialize(bytes).orElse(null);
         }
     }
 }

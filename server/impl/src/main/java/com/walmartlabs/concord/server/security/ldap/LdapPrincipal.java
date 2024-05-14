@@ -20,7 +20,7 @@ package com.walmartlabs.concord.server.security.ldap;
  * =====
  */
 
-import com.walmartlabs.concord.server.security.PrincipalUtils;
+import com.walmartlabs.concord.server.security.SecurityUtils;
 
 import java.io.Serializable;
 import java.util.Map;
@@ -63,7 +63,7 @@ public class LdapPrincipal implements Serializable {
     }
 
     public static LdapPrincipal getCurrent() {
-        return PrincipalUtils.getCurrent(LdapPrincipal.class);
+        return SecurityUtils.getCurrent(LdapPrincipal.class);
     }
 
     public String getUsername() {

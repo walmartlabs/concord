@@ -20,7 +20,7 @@ package com.walmartlabs.concord.server.security.github;
  * =====
  */
 
-import com.walmartlabs.concord.server.security.PrincipalUtils;
+import com.walmartlabs.concord.server.security.SecurityUtils;
 import org.apache.shiro.authc.AuthenticationToken;
 
 import java.util.UUID;
@@ -28,7 +28,7 @@ import java.util.UUID;
 public class GithubKey implements AuthenticationToken {
 
     public static GithubKey getCurrent() {
-        return PrincipalUtils.getCurrent(GithubKey.class);
+        return SecurityUtils.getCurrent(GithubKey.class);
     }
 
     private static final long serialVersionUID = 1L;

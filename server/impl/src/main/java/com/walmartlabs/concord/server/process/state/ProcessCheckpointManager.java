@@ -31,8 +31,8 @@ import com.walmartlabs.concord.server.process.ProcessEntry.ProcessCheckpointEntr
 import com.walmartlabs.concord.server.process.queue.ProcessQueueDao;
 import com.walmartlabs.concord.server.sdk.ProcessKey;
 import com.walmartlabs.concord.server.security.Roles;
+import com.walmartlabs.concord.server.security.UnauthorizedException;
 import com.walmartlabs.concord.server.security.UserPrincipal;
-import org.apache.shiro.authz.UnauthorizedException;
 import org.immutables.value.Value;
 
 import javax.annotation.Nullable;

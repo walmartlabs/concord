@@ -20,8 +20,6 @@ package com.walmartlabs.concord.server.plugins.pfedsso;
  * =====
  */
 
-import org.apache.shiro.web.util.WebUtils;
-
 import javax.servlet.*;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -36,8 +34,8 @@ public abstract class AbstractHttpFilter implements Filter {
 
     @Override
     public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) throws IOException, ServletException {
-        HttpServletResponse resp = WebUtils.toHttp(response);
-        HttpServletRequest req = WebUtils.toHttp(request);
+        HttpServletResponse resp = (HttpServletResponse) response;
+        HttpServletRequest req = (HttpServletRequest) request;
 
         doFilter(req, resp, chain);
     }

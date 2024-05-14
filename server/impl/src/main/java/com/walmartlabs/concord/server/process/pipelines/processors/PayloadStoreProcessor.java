@@ -29,8 +29,7 @@ import com.walmartlabs.concord.server.process.ProcessSecurityContext;
 import com.walmartlabs.concord.server.process.state.ProcessStateManager;
 import com.walmartlabs.concord.server.sdk.ProcessKey;
 import com.walmartlabs.concord.server.sdk.metrics.WithTimer;
-import com.walmartlabs.concord.server.security.PrincipalUtils;
-import org.apache.shiro.SecurityUtils;
+import com.walmartlabs.concord.server.security.SecurityUtils;
 
 import javax.inject.Inject;
 import javax.inject.Named;

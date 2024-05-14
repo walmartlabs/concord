@@ -54,16 +54,16 @@ public class WaitProcessStatusListener implements ProcessStatusListener {
 
     private static void init(DSLContext tx, ProcessKey processKey) {
         tx.insertInto(PROCESS_WAIT_CONDITIONS, PROCESS_WAIT_CONDITIONS.INSTANCE_ID, PROCESS_WAIT_CONDITIONS.INSTANCE_CREATED_AT)
-            .select(
-                select(value(processKey.getInstanceId()), value(processKey.getCreatedAt()))
-                    .whereNotExists(
-                        selectOne()
-                        .from(PROCESS_WAIT_CONDITIONS)
-                        .where(PROCESS_WAIT_CONDITIONS.INSTANCE_ID.eq(processKey.getInstanceId())
-                                .and(PROCESS_WAIT_CONDITIONS.INSTANCE_CREATED_AT.eq(processKey.getCreatedAt())))
-                    )
-            )
-            .execute();
+                .select(
+                        select(value(processKey.getInstanceId()), value(processKey.getCreatedAt()))
+                                .whereNotExists(
+                                        selectOne()
+                                                .from(PROCESS_WAIT_CONDITIONS)
+                                                .where(PROCESS_WAIT_CONDITIONS.INSTANCE_ID.eq(processKey.getInstanceId())
+                                                        .and(PROCESS_WAIT_CONDITIONS.INSTANCE_CREATED_AT.eq(processKey.getCreatedAt())))
+                                )
+                )
+                .execute();
     }
 
     private static void waiting(DSLContext tx, ProcessKey processKey) {

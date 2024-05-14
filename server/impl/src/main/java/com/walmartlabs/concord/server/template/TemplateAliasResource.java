@@ -26,9 +26,9 @@ import com.walmartlabs.concord.db.MainDB;
 import com.walmartlabs.concord.server.sdk.rest.Resource;
 import com.walmartlabs.concord.server.sdk.validation.Validate;
 import com.walmartlabs.concord.server.security.Roles;
+import com.walmartlabs.concord.server.security.UnauthorizedException;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import org.apache.shiro.authz.UnauthorizedException;
 import org.jooq.Configuration;
 
 import javax.inject.Inject;

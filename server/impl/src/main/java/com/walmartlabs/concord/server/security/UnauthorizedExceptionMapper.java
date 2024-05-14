@@ -21,7 +21,6 @@ package com.walmartlabs.concord.server.security;
  */
 
 import com.walmartlabs.concord.server.boot.resteasy.ExceptionMapperSupport;
-import org.apache.shiro.authz.UnauthorizedException;
 
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
