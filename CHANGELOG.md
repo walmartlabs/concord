@@ -1,5 +1,14 @@
 # Change log
 
+## [2.12.0] - Unreleased
+
+### Changed
+
+- project: agent-operator module re-organization
+([906](https://github.com/walmartlabs/concord/pull/906)). 
+
+
+
 ## [2.11.1] - 2024-05-12
 
 ### Changed
