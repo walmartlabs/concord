@@ -5,7 +5,9 @@
 ### Changed
 
 - project: agent-operator module re-organization
-([906](https://github.com/walmartlabs/concord/pull/906)). 
+([#906](https://github.com/walmartlabs/concord/pull/906));
+- concord-server: fix process metadata values after resume
+([#907](https://github.com/walmartlabs/concord/pull/907)).
 
 
 
