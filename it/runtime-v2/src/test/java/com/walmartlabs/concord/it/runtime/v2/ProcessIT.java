@@ -546,4 +546,17 @@ public class ProcessIT extends AbstractTest {
         assertFalse(waitConditions.getIsWaiting());
         assertNull(waitConditions.getWaits());
     }
+
+    @Test
+    public void metaAfterSuspend() throws Exception {
+        Payload payload = new Payload()
+                .archive(resource("metaAfterSuspend"));
+
+        ConcordProcess proc = concord.processes().start(payload);
+        ProcessEntry pe = expectStatus(proc, ProcessEntry.StatusEnum.FAILED);
+
+        // ---
+        Object myMetaValue = pe.getMeta().get("myMetaVar");
+        assertEquals("myMetaVarValue", myMetaValue);
+    }
 }
