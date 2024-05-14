@@ -1,0 +1,128 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.3.xsd">
+
+    <changeSet id="2001000" author="ybrigo@gmail.com">
+        <createTable tableName="UI_PROCESS_CARDS">
+            <column name="UI_PROCESS_CARD_ID" type="uuid" defaultValueComputed="uuid_generate_v1()">
+                <constraints nullable="false" primaryKey="true"/>
+            </column>
+            <column name="PROJECT_ID" type="uuid">
+                <constraints nullable="false"/>
+            </column>
+            <column name="REPO_ID" type="uuid">
+                <constraints nullable="true"/>
+            </column>
+            <column name="NAME" type="varchar(128)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="ENTRY_POINT" type="varchar(256)">
+                <constraints nullable="true"/>
+            </column>
+            <column name="DESCRIPTION" type="varchar(512)">
+                <constraints nullable="true"/>
+            </column>
+            <column name="ICON" type="bytea">
+                <constraints nullable="true"/>
+            </column>
+        </createTable>
+
+        <addForeignKeyConstraint baseTableName="UI_PROCESS_CARDS"
+                                 baseColumnNames="PROJECT_ID"
+                                 constraintName="FK_UI_PROCESS_CARDS_P_ID"
+                                 referencedTableName="PROJECTS"
+                                 referencedColumnNames="PROJECT_ID"
+                                 onDelete="CASCADE"/>
+        <addForeignKeyConstraint baseTableName="UI_PROCESS_CARDS"
+                                 baseColumnNames="REPO_ID"
+                                 constraintName="FK_UI_PROCESS_CARDS_R_ID"
+                                 referencedTableName="REPOSITORIES"
+                                 referencedColumnNames="REPO_ID"
+                                 onDelete="CASCADE"/>
+
+        <createTable tableName="USER_UI_PROCESS_CARDS">
+            <column name="USER_ID" type="uuid">
+                <constraints nullable="false"/>
+            </column>
+            <column name="UI_PROCESS_CARD_ID" type="uuid">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <addPrimaryKey tableName="USER_UI_PROCESS_CARDS" columnNames="USER_ID, UI_PROCESS_CARD_ID"/>
+
+        <addForeignKeyConstraint baseTableName="USER_UI_PROCESS_CARDS"
+                                 baseColumnNames="USER_ID"
+                                 constraintName="FK_USER_UI_PROCESS_CARDS_U_ID"
+                                 referencedTableName="USERS"
+                                 referencedColumnNames="USER_ID"
+                                 onDelete="CASCADE"/>
+
+        <addForeignKeyConstraint baseTableName="USER_UI_PROCESS_CARDS"
+                                 baseColumnNames="UI_PROCESS_CARD_ID"
+                                 constraintName="FK_USER_UI_PROCESS_CARDS_UI_P_C_ID"
+                                 referencedTableName="UI_PROCESS_CARDS"
+                                 referencedColumnNames="UI_PROCESS_CARD_ID"
+                                 onDelete="CASCADE"/>
+
+        <createTable tableName="TEAM_UI_PROCESS_CARDS">
+            <column name="TEAM_ID" type="uuid">
+                <constraints nullable="false"/>
+            </column>
+            <column name="UI_PROCESS_CARD_ID" type="uuid">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <addPrimaryKey tableName="TEAM_UI_PROCESS_CARDS" columnNames="TEAM_ID, UI_PROCESS_CARD_ID"/>
+
+        <addForeignKeyConstraint baseTableName="TEAM_UI_PROCESS_CARDS"
+                                 baseColumnNames="TEAM_ID"
+                                 constraintName="FK_TEAM_UI_P_CARDS_T_ID"
+                                 referencedTableName="TEAMS"
+                                 referencedColumnNames="TEAM_ID"
+                                 onDelete="CASCADE"/>
+
+        <addForeignKeyConstraint baseTableName="USER_UI_PROCESS_CARDS"
+                                 baseColumnNames="UI_PROCESS_CARD_ID"
+                                 constraintName="FK_TEAM_UI_PROCESS_CARDS_UI_P_C_ID"
+                                 referencedTableName="UI_PROCESS_CARDS"
+                                 referencedColumnNames="UI_PROCESS_CARD_ID"
+                                 onDelete="CASCADE"/>
+    </changeSet>
+
+    <changeSet id="2001001" author="ybrigo@gmail.com">
+        <addColumn tableName="UI_PROCESS_CARDS">
+            <column name="FORM" type="bytea">
+                <constraints nullable="true"/>
+            </column>
+            <column name="DATA" type="jsonb">
+                <constraints nullable="true"/>
+            </column>
+        </addColumn>
+    </changeSet>
+
+    <changeSet id="2001002" author="ybrigo@gmail.com">
+        <addColumn tableName="UI_PROCESS_CARDS">
+            <column name="OWNER_ID" type="uuid">
+                <constraints nullable="true"/>
+            </column>
+        </addColumn>
+
+        <addForeignKeyConstraint baseTableName="UI_PROCESS_CARDS"
+                                 baseColumnNames="OWNER_ID"
+                                 constraintName="FK_UI_PROCESS_CARDS_OWNER_ID"
+                                 referencedTableName="USERS"
+                                 referencedColumnNames="USER_ID"
+                                 onDelete="SET NULL"/>
+    </changeSet>
+
+    <changeSet id="210000" author="ybrigo@gmail.com" runInTransaction="false">
+        <sql>
+            create index concurrently IDX_WAIT_CONDITIONS on PROCESS_WAIT_CONDITIONS using gin (WAIT_CONDITIONS)
+        </sql>
+    </changeSet>
+
+</databaseChangeLog>

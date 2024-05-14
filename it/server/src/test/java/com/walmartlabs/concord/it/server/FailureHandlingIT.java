@@ -9,9 +9,9 @@ package com.walmartlabs.concord.it.server;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -21,8 +21,8 @@ package com.walmartlabs.concord.it.server;
  */
 
 
-import com.walmartlabs.concord.client.*;
-import com.walmartlabs.concord.client.ProcessEntry.StatusEnum;
+import com.walmartlabs.concord.client2.*;
+import com.walmartlabs.concord.client2.ProcessEntry.StatusEnum;
 import org.junit.jupiter.api.Test;
 
 import java.util.Collections;
@@ -49,24 +49,24 @@ public class FailureHandlingIT extends AbstractServerIT {
 
         StartProcessResponse spr = start(payload);
 
-        waitForStatus(processApi, spr.getInstanceId(), StatusEnum.SUSPENDED);
+        waitForStatus(getApiClient(), spr.getInstanceId(), StatusEnum.SUSPENDED);
 
         // ---
 
         ProcessFormsApi formsApi = new ProcessFormsApi(getApiClient());
 
-        List<FormListEntry> forms = formsApi.list(spr.getInstanceId());
+        List<FormListEntry> forms = formsApi.listProcessForms(spr.getInstanceId());
         assertEquals(1, forms.size());
 
         Map<String, Object> data = Collections.singletonMap("firstName", "first-name");
-        FormSubmitResponse fsr = formsApi.submit(spr.getInstanceId(), forms.get(0).getName(), data);
-        assertTrue(fsr.isOk());
+        FormSubmitResponse fsr = formsApi.submitFormAsMultipart(spr.getInstanceId(), forms.get(0).getName(), data);
+        assertTrue(fsr.getOk());
 
-        ProcessEntry pir = waitForStatus(processApi, spr.getInstanceId(), StatusEnum.FAILED);
+        ProcessEntry pir = waitForStatus(getApiClient(), spr.getInstanceId(), StatusEnum.FAILED);
 
         // check the logs for the error message
 
-        byte[] ab = getLog(pir.getLogFileName());
+        byte[] ab = getLog(pir.getInstanceId());
         assertLogAtLeast(".*boom!.*", 1, ab);
 
         // find the child processes
@@ -75,7 +75,7 @@ public class FailureHandlingIT extends AbstractServerIT {
 
         // check the logs for the successful message
 
-        ab = getLog(child.getLogFileName());
+        ab = getLog(child.getInstanceId());
         assertLog(".*lastError:.*boom.*", ab);
         assertLog(".*projectInfo: \\{.*orgName=Default.*\\}.*", ab);
         assertLog(".*processInfo: \\{.*sessionKey=.*\\}.*", ab);
@@ -88,7 +88,7 @@ public class FailureHandlingIT extends AbstractServerIT {
         byte[] payload = archive(ProcessIT.class.getResource("failureHandlingError").toURI());
 
         StartProcessResponse spr = start(payload);
-        waitForStatus(processApi, spr.getInstanceId(), StatusEnum.FAILED);
+        waitForStatus(getApiClient(), spr.getInstanceId(), StatusEnum.FAILED);
 
         // find the child processes
 
@@ -109,11 +109,11 @@ public class FailureHandlingIT extends AbstractServerIT {
         // ---
 
         ProcessApi processApi = new ProcessApi(getApiClient());
-        ProcessEntry pe = waitForStatus(processApi, spr.getInstanceId(), StatusEnum.FAILED);
+        ProcessEntry pe = waitForStatus(getApiClient(), spr.getInstanceId(), StatusEnum.FAILED);
 
         // ---
 
-        byte[] ab = getLog(pe.getLogFileName());
+        byte[] ab = getLog(pe.getInstanceId());
         assertLogAtLeast(".*" + msg + ".*", 1, ab);
 
         // ---
@@ -123,7 +123,7 @@ public class FailureHandlingIT extends AbstractServerIT {
 
         // check the logs for the successful message
 
-        ab = getLog(child.getLogFileName());
+        ab = getLog(child.getInstanceId());
         assertLog(".*Hello!", ab);
     }
 
@@ -133,12 +133,12 @@ public class FailureHandlingIT extends AbstractServerIT {
 
         ProcessApi processApi = new ProcessApi(getApiClient());
         StartProcessResponse spr = start(payload);
-        waitForStatus(processApi, spr.getInstanceId(), StatusEnum.RUNNING);
+        waitForStatus(getApiClient(), spr.getInstanceId(), StatusEnum.RUNNING);
 
         // cancel the running process
 
         processApi.kill(spr.getInstanceId());
-        waitForStatus(processApi, spr.getInstanceId(), StatusEnum.CANCELLED);
+        waitForStatus(getApiClient(), spr.getInstanceId(), StatusEnum.CANCELLED);
 
         // find the child processes
 
@@ -146,7 +146,7 @@ public class FailureHandlingIT extends AbstractServerIT {
 
         // check the logs for the successful message
 
-        byte[] ab = getLog(child.getLogFileName());
+        byte[] ab = getLog(child.getInstanceId());
         assertLog(".*initiator is admin.*", ab);
     }
 
@@ -163,17 +163,17 @@ public class FailureHandlingIT extends AbstractServerIT {
         input.put("archive", payload);
         input.put("arguments.aValue", aValue);
         StartProcessResponse spr = start(input);
-        waitForStatus(processApi, spr.getInstanceId(), StatusEnum.SUSPENDED);
+        waitForStatus(getApiClient(), spr.getInstanceId(), StatusEnum.SUSPENDED);
 
         // check if the form is there
         ProcessFormsApi processFormsApi = new ProcessFormsApi(getApiClient());
-        List<FormListEntry> forms = processFormsApi.list(spr.getInstanceId());
+        List<FormListEntry> forms = processFormsApi.listProcessForms(spr.getInstanceId());
         assertEquals(1, forms.size());
 
         // cancel the suspended process
 
         processApi.kill(spr.getInstanceId());
-        waitForStatus(processApi, spr.getInstanceId(), StatusEnum.CANCELLED);
+        waitForStatus(getApiClient(), spr.getInstanceId(), StatusEnum.CANCELLED);
 
         // find the child processes
 
@@ -181,7 +181,7 @@ public class FailureHandlingIT extends AbstractServerIT {
 
         // check the logs for the successful message
 
-        byte[] ab = getLog(child.getLogFileName());
+        byte[] ab = getLog(child.getInstanceId());
         assertLog(".*" + aValue + " still here.*", ab);
     }
 
@@ -192,21 +192,21 @@ public class FailureHandlingIT extends AbstractServerIT {
         // start the process
         ProcessApi processApi = new ProcessApi(getApiClient());
         StartProcessResponse spr = start(payload);
-        waitForStatus(processApi, spr.getInstanceId(), StatusEnum.SUSPENDED);
+        waitForStatus(getApiClient(), spr.getInstanceId(), StatusEnum.SUSPENDED);
 
         // check if the first form is there
         ProcessFormsApi formsApi = new ProcessFormsApi(getApiClient());
-        List<FormListEntry> forms = formsApi.list(spr.getInstanceId());
+        List<FormListEntry> forms = formsApi.listProcessForms(spr.getInstanceId());
         assertEquals(1, forms.size());
 
         // submit the first form
-        formsApi.submit(spr.getInstanceId(), "myForm1", Collections.singletonMap("x", "123"));
+        formsApi.submitForm(spr.getInstanceId(), "myForm1", Collections.singletonMap("x", "123"));
 
         // wait for the process to suspend
-        waitForStatus(processApi, spr.getInstanceId(), StatusEnum.SUSPENDED);
+        waitForStatus(getApiClient(), spr.getInstanceId(), StatusEnum.SUSPENDED);
 
         // check if the second form's ready
-        forms = formsApi.list(spr.getInstanceId());
+        forms = formsApi.listProcessForms(spr.getInstanceId());
         assertEquals(1, forms.size());
 
         // cancel the process
@@ -218,7 +218,7 @@ public class FailureHandlingIT extends AbstractServerIT {
         assertEquals(StatusEnum.FINISHED, child.getStatus());
 
         // check the logs for the successful message
-        byte[] ab = getLog(child.getLogFileName());
+        byte[] ab = getLog(child.getInstanceId());
         assertLog(".*Hello!.*", ab);
     }
 
@@ -233,7 +233,7 @@ public class FailureHandlingIT extends AbstractServerIT {
         // ---
 
         ProcessApi processApi = new ProcessApi(getApiClient());
-        ProcessEntry pe = waitForCompletion(processApi, spr.getInstanceId());
+        ProcessEntry pe = waitForCompletion(getApiClient(), spr.getInstanceId());
 
         // ---
 
@@ -249,7 +249,7 @@ public class FailureHandlingIT extends AbstractServerIT {
         // ---
 
         ProcessEntry onFailureProc = waitForChild(processApi, childWithOnFailure.getInstanceId(), ProcessEntry.KindEnum.FAILURE_HANDLER, StatusEnum.FINISHED);
-        byte[] ab = getLog(onFailureProc.getLogFileName());
+        byte[] ab = getLog(onFailureProc.getInstanceId());
         assertLog(".*Got.*aFork!.*", ab);
 
         // ---

@@ -33,10 +33,7 @@ import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Properties;
+import java.util.*;
 
 public class ResourceTaskCommon {
 
@@ -146,7 +143,8 @@ public class ResourceTaskCommon {
         Path tmpFile = fileService.createTempFile(RESOURCE_PREFIX, YAML_FILE_SUFFIX);
         writeToFile(tmpFile, p -> {
             try (OutputStream out = Files.newOutputStream(p)) {
-                createObjectMapper(new YAMLFactory()).writerWithDefaultPrettyPrinter()
+                createObjectMapper(new YAMLFactory().disable(YAMLGenerator.Feature.SPLIT_LINES))
+                        .writerWithDefaultPrettyPrinter()
                         .writeValue(out, content);
             }
         });

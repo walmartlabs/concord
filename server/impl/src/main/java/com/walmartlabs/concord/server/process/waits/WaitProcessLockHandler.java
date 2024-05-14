@@ -26,14 +26,12 @@ import com.walmartlabs.concord.server.sdk.ProcessKey;
 import com.walmartlabs.concord.server.sdk.metrics.WithTimer;
 
 import javax.inject.Inject;
-import javax.inject.Named;
 import javax.inject.Singleton;
 
 /**
  * Handles the processes that are waiting for locks. Resumes a suspended process
  * if the lock was acquired successfully.
  */
-@Named
 @Singleton
 public class WaitProcessLockHandler implements ProcessWaitHandler<ProcessLockCondition> {
 

@@ -23,9 +23,6 @@ package com.walmartlabs.concord.server.plugins.ansible.db;
 import com.walmartlabs.concord.db.DatabaseChangeLogProvider;
 import com.walmartlabs.concord.db.MainDB;
 
-import javax.inject.Named;
-
-@Named
 @MainDB
 public class AnsibleDBChangeLogProvider implements DatabaseChangeLogProvider {
 

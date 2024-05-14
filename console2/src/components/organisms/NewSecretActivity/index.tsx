@@ -18,88 +18,69 @@
  * =====
  */
 
-import * as copyToClipboard from 'copy-to-clipboard';
+import copyToClipboard from 'copy-to-clipboard';
 import * as React from 'react';
-import { connect } from 'react-redux';
-import { AnyAction, Dispatch } from 'redux';
-import { push as pushHistory } from 'connected-react-router';
-import { Button, Message, Modal, TextArea } from 'semantic-ui-react';
+import {Button, Message, TextArea} from 'semantic-ui-react';
 
-import { ConcordKey, RequestError } from '../../../api/common';
+import {ConcordKey} from '../../../api/common';
 import {
-    NewSecretEntry,
     SecretStoreType,
     SecretTypeExt,
     SecretVisibility
 } from '../../../api/org/secret';
-import { validatePassword } from '../../../api/service/console';
-import { actions, State } from '../../../state/data/secrets';
-import { CreateSecretResponse } from '../../../state/data/secrets';
-import { passwordTooWeakError } from '../../../validation';
-import { NewSecretForm, NewSecretFormValues, RequestErrorMessage } from '../../molecules';
+import {CreateSecretResponse} from '../../../state/data/secrets';
+import {
+    NewSecretFormValues
+} from '../../molecules';
 
 import './styles.css';
-import { RequestErrorActivity } from '../index';
-
-interface OwnState {
-    showPasswordConfirm: boolean;
-    currentEntry?: NewSecretEntry;
-}
+import {RequestErrorActivity} from '../index';
+import NewSecretForm from '../../molecules/NewSecretForm';
+import {LoadingDispatch} from "../../../App";
+import {useCallback, useState} from "react";
+import {create as apiCreate} from "../../../api/org/secret";
+import {useApi} from "../../../hooks/useApi";
+import {useHistory} from "react-router";
 
 interface ExternalProps {
     orgName: ConcordKey;
 }
 
-interface StateProps {
-    submitting: boolean;
-    error: RequestError;
-    response?: CreateSecretResponse;
+const INIT_VALUES: NewSecretFormValues = {
+    name: '',
+    visibility: SecretVisibility.PRIVATE,
+    type: SecretTypeExt.NEW_KEY_PAIR,
+    storeType: SecretStoreType.CONCORD
 }
 
-interface DispatchProps {
-    submit: (values: NewSecretFormValues) => void;
-    reset: () => void;
-    done: (secretName: ConcordKey) => void;
-}
+const NewSecretActivity = (props: ExternalProps) => {
+    const history = useHistory();
 
-type Props = ExternalProps & StateProps & DispatchProps;
+    const {orgName} = props;
 
-class NewSecretActivity extends React.Component<Props, OwnState> {
-    constructor(props: Props) {
-        super(props);
-        this.state = { showPasswordConfirm: false };
-    }
+    const dispatch = React.useContext(LoadingDispatch);
+    const [values, setValues] = useState(INIT_VALUES);
 
-    componentDidMount() {
-        this.props.reset();
-    }
+    const postQuery = useCallback(() => {
+        return apiCreate(orgName, values);
+    }, [orgName, values]);
 
-    async handleSubmit(entry: NewSecretEntry, confirm?: boolean) {
-        if (confirm) {
-            this.setState({ showPasswordConfirm: false });
-        } else if (entry.type === SecretTypeExt.USERNAME_PASSWORD && entry.password) {
-            const valid = await validatePassword(entry.password);
-            if (!valid) {
-                this.setState({ showPasswordConfirm: true, currentEntry: entry });
-                return;
-            }
-        }
+    const {error, isLoading, data, fetch} = useApi<CreateSecretResponse>(postQuery, {
+        fetchOnMount: false,
+        requestByFetch: true,
+        dispatch: dispatch
+    });
 
-        this.props.submit(entry);
-    }
+    const handleSubmit = useCallback(
+        (values: NewSecretFormValues) => {
+            setValues(values);
+            fetch();
+        },
+        [fetch]
+    );
 
-    renderResponse() {
-        const { response, done, error } = this.props;
-
-        if (!response) {
-            return;
-        }
-
-        if (error) {
-            return <RequestErrorMessage error={error} />;
-        }
-
-        const { name: secretName, publicKey, password } = response;
+    if (data) {
+        const {publicKey, password} = data;
 
         return (
             <>
@@ -115,7 +96,7 @@ class NewSecretActivity extends React.Component<Props, OwnState> {
                                 basic={true}
                                 onClick={() => (copyToClipboard as any)(publicKey)}
                             />
-                            <TextArea className="secretData" value={publicKey} rows={5} />
+                            <TextArea className="secretData" value={publicKey} rows={5}/>
                         </div>
                     )}
 
@@ -128,86 +109,29 @@ class NewSecretActivity extends React.Component<Props, OwnState> {
                                 basic={true}
                                 onClick={() => (copyToClipboard as any)(password)}
                             />
-                            <TextArea className="secretData" value={password} rows={2} />
+                            <TextArea className="secretData" value={password} rows={2}/>
                         </div>
                     )}
                 </Message>
 
-                <Button primary={true} content={'Done'} onClick={() => done(secretName)} />
-            </>
-        );
+                <Button primary={true} content={'Done'}
+                        onClick={() => history.push(`/org/${orgName}/secret/${values.name}`)}/>
+            </>);
     }
 
-    renderPasswordWarning() {
-        return (
-            <Modal open={this.state.showPasswordConfirm} dimmer="inverted">
-                <Modal.Content>{passwordTooWeakError()}</Modal.Content>
-                <Modal.Actions>
-                    <Button
-                        color="grey"
-                        onClick={() => this.setState({ showPasswordConfirm: false })}
-                        content="Cancel"
-                    />
-                    <Button
-                        color="yellow"
-                        onClick={() => this.handleSubmit(this.state.currentEntry!, true)}
-                        content="Ignore"
-                    />
-                </Modal.Actions>
-            </Modal>
-        );
-    }
+    return (
+        <>
+            {error && <RequestErrorActivity error={error}/>}
 
-    render() {
-        const { error, submitting, orgName, response } = this.props;
+            <NewSecretForm
+                orgName={orgName}
+                submitting={isLoading}
+                onSubmit={handleSubmit}
+                initial={INIT_VALUES}
+            />
+        </>
+    );
 
-        if (!error && response) {
-            return this.renderResponse();
-        }
+};
 
-        return (
-            <>
-                {error && <RequestErrorActivity error={error} />}
-
-                {this.renderPasswordWarning()}
-
-                <NewSecretForm
-                    orgName={orgName}
-                    submitting={submitting}
-                    onSubmit={(entry) => this.handleSubmit(entry)}
-                    initial={{
-                        name: '',
-                        visibility: SecretVisibility.PRIVATE,
-                        type: SecretTypeExt.NEW_KEY_PAIR,
-                        storeType: SecretStoreType.CONCORD
-                    }}
-                />
-            </>
-        );
-    }
-}
-
-const mapStateToProps = ({ secrets }: { secrets: State }): StateProps => ({
-    submitting: secrets.createSecret.running,
-    error: secrets.createSecret.error,
-    response: secrets.createSecret.response as CreateSecretResponse
-});
-
-const mapDispatchToProps = (
-    dispatch: Dispatch<AnyAction>,
-    { orgName }: ExternalProps
-): DispatchProps => ({
-    submit: (entry: NewSecretEntry) => {
-        dispatch(actions.createSecret(orgName, entry));
-    },
-
-    reset: () => {
-        dispatch(actions.reset());
-    },
-
-    done: (secretName: ConcordKey) => {
-        dispatch(pushHistory(`/org/${orgName}/secret/${secretName}`));
-    }
-});
-
-export default connect(mapStateToProps, mapDispatchToProps)(NewSecretActivity);
+export default NewSecretActivity;

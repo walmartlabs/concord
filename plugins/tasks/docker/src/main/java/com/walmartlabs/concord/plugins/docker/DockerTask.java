@@ -85,7 +85,7 @@ public class DockerTask implements Task {
                 .entryPoint(DockerTaskCommon.prepareEntryPoint(workDir, params))
                 .forcePull(params.forcePull())
                 .options(DockerContainerSpec.Options.builder().hosts(params.hosts()).build())
-                .debug(params.debug())
+                .debug(params.debug(false))
                 .redirectErrorStream(redirectErrorStream)
                 .stdOutFilePath(stdOutFilePath)
                 .pullRetryCount(params.pullRetryCount())

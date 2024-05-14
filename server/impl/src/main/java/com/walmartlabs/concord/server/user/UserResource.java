@@ -23,16 +23,14 @@ package com.walmartlabs.concord.server.user;
 import com.walmartlabs.concord.server.GenericOperationResult;
 import com.walmartlabs.concord.server.OperationResult;
 import com.walmartlabs.concord.server.sdk.ConcordApplicationException;
+import com.walmartlabs.concord.server.sdk.rest.Resource;
+import com.walmartlabs.concord.server.sdk.validation.Validate;
+import com.walmartlabs.concord.server.sdk.validation.ValidationErrorsException;
 import com.walmartlabs.concord.server.security.Roles;
+import com.walmartlabs.concord.server.security.UnauthorizedException;
 import com.walmartlabs.concord.server.security.UserPrincipal;
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
-import io.swagger.annotations.ApiParam;
-import io.swagger.annotations.Authorization;
-import org.apache.shiro.authz.UnauthorizedException;
-import org.sonatype.siesta.Resource;
-import org.sonatype.siesta.Validate;
-import org.sonatype.siesta.ValidationErrorsException;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -47,8 +45,8 @@ import java.util.UUID;
 
 @Named
 @Singleton
-@Api(value = "Users", authorizations = {@Authorization("api_key"), @Authorization("session_key"), @Authorization("ldap")})
 @Path("/api/v1/user")
+@Tag(name = "Users")
 public class UserResource implements Resource {
 
     private final UserManager userManager;
@@ -67,11 +65,11 @@ public class UserResource implements Resource {
      * @return
      */
     @POST
-    @ApiOperation("Create a new user or update an existing one")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     @Validate
-    public CreateUserResponse createOrUpdate(@ApiParam @Valid CreateUserRequest req) {
+    @Operation(description = "Create a new user or update an existing one", operationId = "createOrUpdateUser")
+    public CreateUserResponse createOrUpdate(@Valid CreateUserRequest req) {
         assertAdmin();
 
         String username = req.getUsername();
@@ -94,13 +92,13 @@ public class UserResource implements Resource {
      * Finds an existing user by username.
      *
      * @param username
-     * @return
+     * @return user details
      */
     @GET
-    @ApiOperation("Find a user")
     @Path("/{username}")
     @Produces(MediaType.APPLICATION_JSON)
     @Validate
+    @Operation(description = "Find a user")
     public UserEntry findByUsername(@PathParam("username") @Size(max = UserEntry.MAX_USERNAME_LENGTH) @NotNull String username) {
         assertAdmin();
 
@@ -111,35 +109,59 @@ public class UserResource implements Resource {
     }
 
     /**
+     * Disables an existing user. Optionally allows permanent disabling of the user.
+     *
+     * @param id ID of user to disable
+     * @param permanent When <code>true</code>, user cannot be automatically re-enabled on login
+     * @return updated user details
+     */
+    @PUT
+    @Path("/{id}/disable")
+    @Produces(MediaType.APPLICATION_JSON)
+    @Validate
+    @Operation(description = "Disable a user")
+    public UserEntry disableUser(@PathParam("id") UUID id, @QueryParam("permanent") boolean permanent) {
+        assertAdmin();
+
+        if (permanent) {
+            userManager.permanentlyDisable(id);
+        } else {
+            userManager.disable(id);
+        }
+
+        return userDao.get(id);
+    }
+
+    /**
      * Removes an existing user.
      *
-     * @param id
+     * @param id User's database ID
      * @return
      */
     @DELETE
-    @ApiOperation("Delete an existing user")
     @Path("/{id}")
     @Produces(MediaType.APPLICATION_JSON)
     // TODO use usernames instead of IDs?
-    public DeleteUserResponse delete(@ApiParam @PathParam("id") UUID id) {
+    @Operation(description = "Delete an existing user", operationId = "deleteUser")
+    public DeleteUserResponse delete(@PathParam("id") UUID id) {
         assertAdmin();
 
         if (!userDao.existsById(id)) {
             throw new ValidationErrorsException("User not found: " + id);
         }
 
-        userDao.delete(id);
+        userManager.delete(id);
         return new DeleteUserResponse();
     }
 
     @POST
-    @ApiOperation("Update the list of roles for the existing user")
     @Path("/{username}/roles")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     @Validate
-    public GenericOperationResult updateUserRoles(@ApiParam @PathParam("username") @Size(max = UserEntry.MAX_USERNAME_LENGTH) String username,
-                                                  @ApiParam @Valid UpdateUserRolesRequest req) {
+    @Operation(description = "Update the list of roles for the existing user")
+    public GenericOperationResult updateUserRoles(@PathParam("username") @Size(max = UserEntry.MAX_USERNAME_LENGTH) String username,
+                                                  @Valid UpdateUserRolesRequest req) {
         assertAdmin();
 
         // TODO: type from request

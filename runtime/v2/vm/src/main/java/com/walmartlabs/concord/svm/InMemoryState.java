@@ -4,7 +4,7 @@ package com.walmartlabs.concord.svm;
  * *****
  * Concord
  * -----
- * Copyright (C) 2017 - 2019 Walmart Inc.
+ * Copyright (C) 2017 - 2023 Walmart Inc.
  * -----
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -42,6 +42,7 @@ public class InMemoryState implements Serializable, State {
     private final Map<ThreadId, Set<ThreadId>> children = new HashMap<>();
     private final Map<ThreadId, String> eventRefs = new HashMap<>();
     private final Map<ThreadId, Exception> threadErrors = new HashMap<>();
+    private final Map<ThreadId, List<StackTraceItem>> stackTrace = new HashMap<>();
 
     private final ThreadId rootThreadId;
 
@@ -91,7 +92,8 @@ public class InMemoryState implements Serializable, State {
                 throw new IllegalStateException("Call frame doesn't exist: " + threadId);
             }
 
-            l.remove(0);
+            Frame removed = l.remove(0);
+            unwindStackTrace(threadId, removed);
         }
     }
 
@@ -217,6 +219,47 @@ public class InMemoryState implements Serializable, State {
     }
 
     @Override
+    public List<StackTraceItem> getStackTrace(ThreadId threadId) {
+        synchronized (this) {
+            // for backward compatibility
+            if (stackTrace == null) {
+                return Collections.emptyList();
+            }
+            List<ThreadId> threads = collectParents(threadId);
+            threads.add(0, threadId);
+
+            List<StackTraceItem> result = new ArrayList<>();
+            threads.forEach(tid -> result.addAll(stackTrace.getOrDefault(tid, Collections.emptyList())));
+            return result;
+        }
+    }
+
+    @Override
+    public void pushStackTraceItem(ThreadId threadId, StackTraceItem item) {
+        synchronized (this) {
+            // for backward compatibility
+            if (stackTrace == null) {
+                return;
+            }
+
+            List<StackTraceItem> l = stackTrace.computeIfAbsent(threadId, key -> new LinkedList<>());
+            l.add(0, item);
+        }
+    }
+
+    @Override
+    public void clearStackTrace(ThreadId threadId) {
+        synchronized (this) {
+            // for backward compatibility
+            if (stackTrace == null) {
+                return;
+            }
+
+            stackTrace.remove(threadId);
+        }
+    }
+
+    @Override
     public void gc() {
         synchronized (this) {
             Stream<ThreadId> done = threadStatus.entrySet().stream()
@@ -236,7 +279,60 @@ public class InMemoryState implements Serializable, State {
                         frames.remove(k);
                         eventRefs.remove(k);
                         children.remove(k);
+                        if (stackTrace != null) {
+                            stackTrace.remove(k);
+                        }
                     });
+        }
+    }
+
+    private List<ThreadId> collectParents(ThreadId threadId) {
+        List<ThreadId> result = new ArrayList<>();
+        ThreadId current = threadId;
+        while (true) {
+            ThreadId parent = findParent(current);
+            if (parent != null) {
+                result.add(parent);
+                current = parent;
+            } else {
+                break;
+            }
+        }
+        return result;
+    }
+
+    private ThreadId findParent(ThreadId threadId) {
+        return children.entrySet().stream()
+                .filter(e -> e.getValue().contains(threadId))
+                .map(Map.Entry::getKey)
+                .findFirst()
+                .orElse(null);
+    }
+
+    private void unwindStackTrace(ThreadId threadId, Frame removed) {
+        // for backward compatibility
+        if (stackTrace == null || removed.id() == null) {
+            return;
+        }
+        List<StackTraceItem> items = stackTrace.get(threadId);
+        if (items == null) {
+            return;
+        }
+
+        int itemIndex = -1;
+        for (int i = 0; i < items.size(); i++) {
+            StackTraceItem item = items.get(i);
+            if (removed.id().equals(item.getFrameId())) {
+                itemIndex = i;
+            }
+        }
+
+        if (itemIndex >= 0) {
+            if (itemIndex + 1 == items.size()) {
+                stackTrace.remove(threadId);
+            } else {
+                stackTrace.put(threadId, new LinkedList<>(items.subList(itemIndex + 1, items.size())));
+            }
         }
     }
 }

@@ -26,7 +26,10 @@ import com.walmartlabs.concord.server.sdk.events.ProcessEventListener;
 import org.junit.jupiter.api.Test;
 
 import java.time.OffsetDateTime;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -43,7 +46,7 @@ public class ListenersTest {
 
         Listeners listeners = new Listeners(processEventListeners, Collections.emptySet(), Collections.emptySet());
         listeners.onProcessEvent(Collections.singletonList(ProcessEvent.builder()
-                .processKey(new ProcessKey(UUID.randomUUID(), OffsetDateTime.now()))
+                .processKey(ProcessKey.random())
                 .eventSeq(0)
                 .eventDate(OffsetDateTime.now())
                 .eventType("TEST")

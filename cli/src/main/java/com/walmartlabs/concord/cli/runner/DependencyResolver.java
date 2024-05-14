@@ -4,7 +4,7 @@ package com.walmartlabs.concord.cli.runner;
  * *****
  * Concord
  * -----
- * Copyright (C) 2017 - 2020 Walmart Inc.
+ * Copyright (C) 2017 - 2023 Walmart Inc.
  * -----
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,7 +23,6 @@ package com.walmartlabs.concord.cli.runner;
 import com.walmartlabs.concord.dependencymanager.DependencyEntity;
 import com.walmartlabs.concord.dependencymanager.DependencyManager;
 import com.walmartlabs.concord.dependencymanager.ProgressListener;
-import com.walmartlabs.concord.runtime.v2.model.ProcessDefinition;
 
 import java.io.IOException;
 import java.net.*;
@@ -60,6 +59,7 @@ public class DependencyResolver {
                 .collect(Collectors.toList());
 
         Collection<DependencyEntity> deps = dependencyManager.resolve(uris, new ProgressListener() {
+
             @Override
             public void onRetry(int retryCount, int maxRetry, long interval, String cause) {
                 System.err.println("Error while downloading dependencies: " + cause);
@@ -68,7 +68,11 @@ public class DependencyResolver {
 
             @Override
             public void onTransferFailed(String error) {
-                System.err.println("Transfer failed: " + error);
+                // when we have more than one repo in mvn.json we can get transfer error for one repo
+                // but artifact will be resolved with second repo...
+                if (verbose) {
+                    System.err.println("Transfer failed: " + error);
+                }
             }
         });
 

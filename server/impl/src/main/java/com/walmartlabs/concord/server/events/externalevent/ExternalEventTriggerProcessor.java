@@ -48,7 +48,7 @@ public abstract class ExternalEventTriggerProcessor {
 
         for (TriggerEntry t : triggers) {
             if (DefaultEventFilter.filter(updatedEvent, t)) {
-                result.add(ExternalEventTriggerProcessor.Result.from(updatedEvent, t));
+                result.add(Result.from(updatedEvent, t));
             }
         }
     }

@@ -21,12 +21,10 @@ package com.walmartlabs.concord.server.plugins.noderoster;
  */
 
 import com.walmartlabs.concord.server.plugins.noderoster.dao.ArtifactsDao;
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
-import io.swagger.annotations.ApiParam;
-import io.swagger.annotations.Authorization;
-import org.sonatype.siesta.Resource;
-import org.sonatype.siesta.ValidationErrorsException;
+import com.walmartlabs.concord.server.sdk.rest.Resource;
+import com.walmartlabs.concord.server.sdk.validation.ValidationErrorsException;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -40,7 +38,7 @@ import java.util.UUID;
 @Named
 @Singleton
 @Path("/api/v1/noderoster/artifacts")
-@Api(value = "Node Roster Artifacts", authorizations = {@Authorization("api_key"), @Authorization("session_key"), @Authorization("ldap")})
+@Tag(name = "Node Roster Artifacts")
 public class ArtifactsResource implements Resource {
 
     private static final String DEFAULT_LIMIT = "30";
@@ -57,13 +55,13 @@ public class ArtifactsResource implements Resource {
 
     @GET
     @Path("/")
-    @ApiOperation(value = "List artifacts deployed on a host", responseContainer = "list", response = ArtifactEntry.class)
+    @Operation(description = "List artifacts deployed on a host", operationId = "listHostArtifacts")
     @Produces(MediaType.APPLICATION_JSON)
-    public List<ArtifactEntry> list(@ApiParam @QueryParam("hostId") UUID hostId,
-                                    @ApiParam @QueryParam("hostName") String hostName,
-                                    @ApiParam @QueryParam("filter") String filter,
-                                    @ApiParam @QueryParam("limit") @DefaultValue(DEFAULT_LIMIT) int limit,
-                                    @ApiParam @QueryParam("offset") @DefaultValue(DEFAULT_OFFSET) int offset) {
+    public List<ArtifactEntry> list(@QueryParam("hostId") UUID hostId,
+                                    @QueryParam("hostName") String hostName,
+                                    @QueryParam("filter") String filter,
+                                    @QueryParam("limit") @DefaultValue(DEFAULT_LIMIT) int limit,
+                                    @QueryParam("offset") @DefaultValue(DEFAULT_OFFSET) int offset) {
 
         if (hostName == null && hostId == null) {
             throw new ValidationErrorsException("A 'hostName' or 'hostId' value is required");

@@ -1,0 +1,37 @@
+flows:
+  default:
+    - set:
+        myMap:
+          x: 1
+
+    - set:
+        myMap:
+          y: 2
+
+    - log: "myMap1: ${myMap}" # _must_ print "{y=2}"
+
+    - set:
+        myMap.z: 3
+
+    - log: "myMap2: ${myMap}" # _must_ print "{y=2, z=3}"
+
+    - set:
+        myMap:
+          z: 4
+
+    - log: "myMap3: ${myMap}" # _must_ print "{z=4}"
+
+    - call: inner
+      in:
+        myMap: "${myMap}"
+
+  ##
+  #  in:
+  #    myMap: object, mandatory, my map
+  ##
+  inner:
+    - set:
+        myMap:
+          k: "v"
+
+    - log: "myMap4: ${myMap}" # _must_ print "{k=v}"

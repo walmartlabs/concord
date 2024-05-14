@@ -20,7 +20,13 @@ package com.walmartlabs.concord.runtime.v2.runner.logging;
  * =====
  */
 
+import javax.annotation.Nullable;
+import java.util.UUID;
+
 public interface RunnerLogger {
 
     void withContext(LogContext context, Runnable runnable);
+
+    @Nullable
+    Long createSegment(String segmentName, UUID correlationId);
 }

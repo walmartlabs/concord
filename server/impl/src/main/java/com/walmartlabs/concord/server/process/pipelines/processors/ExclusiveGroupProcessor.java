@@ -9,9 +9,9 @@ package com.walmartlabs.concord.server.process.pipelines.processors;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -20,6 +20,8 @@ package com.walmartlabs.concord.server.process.pipelines.processors;
  * =====
  */
 
+import com.google.inject.Binder;
+import com.google.inject.Module;
 import com.walmartlabs.concord.db.AbstractDao;
 import com.walmartlabs.concord.db.MainDB;
 import com.walmartlabs.concord.runtime.v2.model.ExclusiveMode;
@@ -37,12 +39,10 @@ import org.jooq.*;
 import javax.inject.Inject;
 import javax.inject.Named;
 import java.time.OffsetDateTime;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 import java.util.stream.Collectors;
 
+import static com.google.inject.multibindings.Multibinder.newSetBinder;
 import static com.walmartlabs.concord.db.PgUtils.jsonbText;
 import static com.walmartlabs.concord.server.jooq.Tables.PROCESS_QUEUE;
 import static org.jooq.impl.DSL.*;
@@ -60,7 +60,7 @@ public class ExclusiveGroupProcessor implements PayloadProcessor {
 
     @Inject
     public ExclusiveGroupProcessor(ProcessLogManager logManager,
-                                   List<ModeProcessor> processors) {
+                                   Set<ModeProcessor> processors) {
 
         this.logManager = logManager;
         this.processors = processors.stream().collect(Collectors.toMap(ModeProcessor::mode, v -> v));
@@ -94,6 +94,15 @@ public class ExclusiveGroupProcessor implements PayloadProcessor {
         return payload;
     }
 
+    public static class ModeProcessorModule implements Module {
+
+        @Override
+        public void configure(Binder binder) {
+            newSetBinder(binder, ModeProcessor.class).addBinding().to(CancelModeProcessor.class);
+            newSetBinder(binder, ModeProcessor.class).addBinding().to(CancelOldModeProcessor.class);
+        }
+    }
+
     interface ModeProcessor {
 
         boolean process(Payload payload, ExclusiveMode exclusive);
@@ -101,7 +110,6 @@ public class ExclusiveGroupProcessor implements PayloadProcessor {
         ExclusiveMode.Mode mode();
     }
 
-    @Named
     static class CancelModeProcessor implements ModeProcessor {
 
         private static final long LOCK_KEY = 1562319227723L;
@@ -152,7 +160,6 @@ public class ExclusiveGroupProcessor implements PayloadProcessor {
         }
     }
 
-    @Named
     static class CancelOldModeProcessor implements ModeProcessor {
 
         private static final long LOCK_KEY = 1562319227723L;
@@ -231,7 +238,7 @@ public class ExclusiveGroupProcessor implements PayloadProcessor {
     }
 
     @Named
-    static class CancelModeDao extends AbstractDao  {
+    static class CancelModeDao extends AbstractDao {
 
         private static final List<ProcessStatus> RUNNING_STATUSES = Arrays.asList(
                 ProcessStatus.NEW,
@@ -271,7 +278,7 @@ public class ExclusiveGroupProcessor implements PayloadProcessor {
     }
 
     @Named
-    static class CancelOldModeDao extends AbstractDao  {
+    static class CancelOldModeDao extends AbstractDao {
 
         private static final List<ProcessStatus> CANCELLABLE_STATUSES = Arrays.asList(
                 ProcessStatus.NEW,

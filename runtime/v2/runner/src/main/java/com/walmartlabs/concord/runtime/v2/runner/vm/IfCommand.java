@@ -54,11 +54,29 @@ public class IfCommand extends StepCommand<IfStep> {
         EvalContext evalContext = ecf.global(ctx);
 
         ExpressionEvaluator ee = runtime.getService(ExpressionEvaluator.class);
-        Boolean ifResult = ee.eval(evalContext, expr, Boolean.class);
-        if (ifResult != null && ifResult) {
+        Object ifResult = ee.eval(evalContext, expr, Object.class);
+        if (isTrue(ifResult)) {
             frame.push(thenCommand);
         } else if (elseCommand != null) {
             frame.push(elseCommand);
         }
+    }
+
+    private static boolean isTrue(Object value) {
+        if (value == null) {
+            return false;
+        }
+
+        if (value instanceof Boolean b) {
+            return b;
+        } else if (value instanceof String s) {
+            if ("true".equalsIgnoreCase(s)) {
+                return true;
+            } else if ("false".equalsIgnoreCase(s)) {
+                return false;
+            }
+        }
+
+        throw new RuntimeException(String.format("Expected boolean value or string 'true'/'false', got: '%s', type: %s", value, value.getClass()));
     }
 }

@@ -19,12 +19,13 @@ different systems together using scenarios and plugins created by users.
   * [Running tests](#running-tests)
 - [Examples](#examples)
 - [How To Release New Versions](#how-to-release-new-versions)
+- [Development Notes](#development-notes)
 
 ## Building
 
 Dependencies:
 - [Git](https://git-scm.com/) 2.18+
-- [Java 8](https://adoptium.net/)
+- [Java 17](https://adoptium.net/)
 - [Docker Community Edition](https://www.docker.com/community-edition)
 - [Docker Buildx](https://docs.docker.com/build/buildx/install/)
 - (Optional) [NodeJS and NPM](https://nodejs.org/en/download/) (Node 16 or greater)
@@ -38,15 +39,13 @@ cd concord
 Available Maven profiles:
 
 - `docker` - build Docker images;
-- `debian` - build Debian-based Docker images instead of the default CentOS base;
 - `it` - run integration tests;
-- `jdk11`, `jdk17`, `jdk8-aarch64`, `jdk17-aarch64` - use a different JDK version
-  for building artifacts and Docker images.
+- `jdk17-aarch64` - use a different JDK version for building artifacts and Docker images.
 
 Profiles can be combined, e.g.
 
 ```
-./mvnw clean install -Pdocker -Pdebian -Pit -Pjdk17-aarch64
+./mvnw clean install -Pdocker -Pit -Pjdk17-aarch64
 ```
 
 ## Console
@@ -119,3 +118,7 @@ See the [examples](examples) directory.
   $ ./mvnw -f docker-images clean package -Pdocker
   $ ./docker-images/push.sh RELEASE_TAG
   ```
+
+## Development Notes
+
+See [NOTES.md](NOTES.md).

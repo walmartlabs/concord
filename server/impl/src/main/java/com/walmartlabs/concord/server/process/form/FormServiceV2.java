@@ -35,14 +35,10 @@ import com.walmartlabs.concord.server.user.UserInfoProvider.UserInfo;
 import com.walmartlabs.concord.server.user.UserManager;
 
 import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.*;
 
-@Named
-@Singleton
 public class FormServiceV2 {
 
     public static final String FORMS_RESOURCES_PATH = "forms";
@@ -114,7 +110,7 @@ public class FormServiceV2 {
             boolean branding = stateManager.exists(processKey, s);
             Map runAs = f.options().runAs();
 
-            result.add(new FormListEntry(name, branding, f.options().yield(), runAs));
+            result.add(new FormListEntry(name, branding, f.options().isYield(), runAs));
         }
         return result;
     }

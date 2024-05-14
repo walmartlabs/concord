@@ -20,8 +20,7 @@ package com.walmartlabs.concord.server.security;
  * =====
  */
 
-import org.apache.shiro.authc.AuthenticationException;
-import org.apache.shiro.web.util.WebUtils;
+import com.walmartlabs.concord.server.sdk.security.AuthenticationException;
 
 import javax.servlet.*;
 import javax.servlet.http.HttpServletRequest;
@@ -38,8 +37,8 @@ public class LocalRequestFilter implements Filter {
 
     @Override
     public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) throws IOException, ServletException {
-        HttpServletRequest r = WebUtils.toHttp(request);
-        if (isLocalRequest(r)) {
+        HttpServletRequest req = (HttpServletRequest) request;
+        if (isLocalRequest(req)) {
             chain.doFilter(request, response);
         } else {
             throw new AuthenticationException("Only localhost requests are allowed");

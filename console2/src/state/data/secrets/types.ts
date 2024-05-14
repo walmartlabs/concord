@@ -119,7 +119,6 @@ export interface State {
     secretById: PaginatedSecrets;
 
     listSecrets: ListSecretsState;
-    createSecret: CreateSecretState;
     deleteSecret: DeleteSecretState;
     renameSecret: RenameSecretState;
     secretTeamAccess: SecretTeamAccessState;

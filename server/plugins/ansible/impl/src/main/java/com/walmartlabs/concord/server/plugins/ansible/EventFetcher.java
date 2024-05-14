@@ -28,7 +28,6 @@ import org.jooq.*;
 
 import javax.inject.Inject;
 import javax.inject.Named;
-import javax.inject.Singleton;
 import java.io.IOException;
 import java.time.OffsetDateTime;
 import java.util.*;
@@ -36,14 +35,12 @@ import java.util.*;
 import static com.walmartlabs.concord.server.jooq.Tables.PROCESS_EVENTS;
 import static org.jooq.impl.DSL.*;
 
-@Named
-@Singleton
 public class EventFetcher extends AbstractEventProcessor<EventProcessor.Event> {
 
     private static final String PROCESSOR_NAME = "ansible-event-processor";
 
     private final AnsibleEventsConfiguration cfg;
-    private final EventFetcher.AnsibleEventDao dao;
+    private final AnsibleEventDao dao;
     private final List<EventProcessor> processors;
 
     @Inject

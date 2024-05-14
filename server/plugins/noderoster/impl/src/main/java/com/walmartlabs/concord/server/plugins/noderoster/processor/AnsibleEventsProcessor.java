@@ -45,7 +45,6 @@ import static org.jooq.impl.DSL.function;
  * Scans the process_events table for new Ansible events and hands
  * the data off to individual processors.
  */
-@Named
 public class AnsibleEventsProcessor extends AbstractEventProcessor<AnsibleEvent> {
 
     private static final String NAME = "noderoster/ansible-events-processor";

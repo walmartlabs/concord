@@ -24,11 +24,9 @@ import com.walmartlabs.concord.dependencymanager.DependencyManagerConfiguration;
 import com.walmartlabs.concord.server.cfg.DependenciesConfiguration;
 
 import javax.inject.Inject;
-import javax.inject.Named;
 import javax.inject.Provider;
 import javax.inject.Singleton;
 
-@Named
 @Singleton
 public class DependencyManagerConfigurationProvider implements Provider<DependencyManagerConfiguration> {
 

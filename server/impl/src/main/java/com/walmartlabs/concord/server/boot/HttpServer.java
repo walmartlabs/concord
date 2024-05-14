@@ -20,32 +20,34 @@ package com.walmartlabs.concord.server.boot;
  * =====
  */
 
+import com.walmartlabs.concord.server.boot.resteasy.ApiDescriptor;
 import com.walmartlabs.concord.server.cfg.ServerConfiguration;
+import org.eclipse.jetty.ee8.nested.SessionHandler;
+import org.eclipse.jetty.ee8.servlet.FilterHolder;
+import org.eclipse.jetty.ee8.servlet.ServletContextHandler;
+import org.eclipse.jetty.ee8.servlet.ServletHolder;
+import org.eclipse.jetty.ee8.websocket.server.config.JettyWebSocketServletContainerInitializer;
+import org.eclipse.jetty.http.UriCompliance;
 import org.eclipse.jetty.jmx.MBeanContainer;
 import org.eclipse.jetty.server.*;
 import org.eclipse.jetty.server.handler.ContextHandlerCollection;
 import org.eclipse.jetty.server.handler.StatisticsHandler;
-import org.eclipse.jetty.server.session.SessionHandler;
-import org.eclipse.jetty.servlet.FilterHolder;
-import org.eclipse.jetty.servlet.ServletContextHandler;
-import org.eclipse.jetty.servlet.ServletHolder;
+import org.jboss.resteasy.plugins.server.servlet.HttpServletDispatcher;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.annotation.Priority;
 import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
 import javax.servlet.*;
 import javax.servlet.annotation.WebFilter;
 import javax.servlet.annotation.WebListener;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import java.lang.management.ManagementFactory;
+import java.util.Comparator;
 import java.util.EnumSet;
 import java.util.Set;
 
-@Named
-@Singleton
 public class HttpServer {
 
     private static final Logger log = LoggerFactory.getLogger(HttpServlet.class);
@@ -56,6 +58,7 @@ public class HttpServer {
     public HttpServer(ServerConfiguration cfg,
                       Set<RequestErrorHandler> requestErrorHandlers,
                       Set<ServletContextListener> contextListeners,
+                      Set<ApiDescriptor> apiDescriptors,
                       Set<HttpServlet> servlets,
                       Set<ServletHolder> servletHolders,
                       Set<Filter> filters,
@@ -82,6 +85,10 @@ public class HttpServer {
         ServerConnector http = new ServerConnector(server, acceptors, selectors, new HttpConnectionFactory(httpCfg));
         http.setName("http");
         http.setPort(cfg.getPort());
+        // TODO remove once the '/' escaping is fixed in clients
+        http.getConnectionFactory(HttpConnectionFactory.class)
+                .getHttpConfiguration()
+                .setUriCompliance(UriCompliance.LEGACY);
         server.addConnector(http);
 
         // servlets, filters, etc...
@@ -105,21 +112,30 @@ public class HttpServer {
         }
 
         // init all @WebListeners
-        for (ServletContextListener listener : contextListeners) {
+        contextListeners.stream().sorted(byPriority()).forEachOrdered(listener -> {
             WebListener annotation = listener.getClass().getAnnotation(WebListener.class);
             if (annotation == null) {
-                continue;
+                return;
             }
 
             log.info("Event listener -> {}", listener.getClass());
             contextHandler.addEventListener(listener);
-        }
+        });
+
+        // init all Resteasy endpoints
+        apiDescriptors.forEach(api -> {
+            ServletHolder holder = new ServletHolder(HttpServletDispatcher.class);
+            for (String pathSpec : api.paths()) {
+                log.info("Serving API endpoints @ {}", pathSpec);
+                contextHandler.addServlet(holder, pathSpec);
+            }
+        });
 
         // init all @WebServlets
-        for (HttpServlet servlet : servlets) {
+        servlets.stream().sorted(byPriority()).forEachOrdered(servlet -> {
             WebServlet annotation = servlet.getClass().getAnnotation(WebServlet.class);
             if (annotation == null) {
-                continue;
+                return;
             }
 
             ServletHolder holder = new ServletHolder(servlet);
@@ -127,54 +143,56 @@ public class HttpServer {
                 log.info("Servlet -> {} @ {}", servlet.getClass(), pathSpec);
                 contextHandler.addServlet(holder, pathSpec);
             }
-        }
+        });
 
-        for (ServletHolder holder : servletHolders) {
+        servletHolders.stream().sorted(byPriority()).forEachOrdered(holder -> {
             WebServlet annotation = holder.getClass().getAnnotation(WebServlet.class);
             if (annotation == null) {
-                continue;
+                return;
             }
 
             for (String pathSpec : annotation.value()) {
                 log.info("Servlet -> {} @ {}", holder.getClass(), pathSpec);
                 contextHandler.addServlet(holder, pathSpec);
             }
-        }
+        });
 
         // init all @WebFilters
-        for (Filter filter : filters) {
+        filters.stream().sorted(byPriority()).forEachOrdered(filter -> {
             WebFilter annotation = filter.getClass().getAnnotation(WebFilter.class);
             if (annotation == null) {
-                continue;
+                return;
             }
 
             FilterHolder holder = new FilterHolder(filter);
             for (String pathSpec : annotation.value()) {
-                log.info("Servlet -> {} @ {}", filter.getClass(), pathSpec);
+                log.info("Filter -> {} @ {}", filter.getClass(), pathSpec);
                 contextHandler.addFilter(holder, pathSpec, EnumSet.allOf(DispatcherType.class));
             }
-        }
+        });
 
-        for (FilterHolder holder : filterHolders) {
+        filterHolders.stream().sorted(byPriority()).forEachOrdered(holder -> {
             WebFilter annotation = holder.getClass().getAnnotation(WebFilter.class);
             if (annotation == null) {
-                continue;
+                return;
             }
 
             for (String pathSpec : annotation.value()) {
                 log.info("Filter -> {} @ {}", holder.getClass(), pathSpec);
-                contextHandler.addFilter(holder, pathSpec, EnumSet.of(DispatcherType.REQUEST, DispatcherType.FORWARD, DispatcherType.INCLUDE, DispatcherType.ERROR));
+                contextHandler.addFilter(holder, pathSpec, EnumSet.allOf(DispatcherType.class));
             }
-        }
+        });
+
+        JettyWebSocketServletContainerInitializer.configure(contextHandler, null);
 
         ContextHandlerCollection contextHandlerCollection = new ContextHandlerCollection();
         contextHandlerCollection.addHandler(contextHandler);
 
         // additional handlers
-        for (ContextHandlerConfigurator configurator : contextHandlerConfigurators) {
+        contextHandlerConfigurators.stream().sorted(byPriority()).forEachOrdered(configurator -> {
             log.info("Configuring additional context handlers {}...", configurator.getClass());
             configurator.configure(contextHandlerCollection);
-        }
+        });
 
         StatisticsHandler statisticsHandler = new StatisticsHandler();
         statisticsHandler.setHandler(contextHandlerCollection);
@@ -205,5 +223,12 @@ public class HttpServer {
         writer.setRetainDays(cfg.getAccessLogRetainDays());
 
         return new CustomRequestLog(writer, ServerConfiguration.ACCESS_LOG_FORMAT);
+    }
+
+    private static Comparator<Object> byPriority() {
+        return Comparator.comparingInt(o -> {
+            var a = o.getClass().getAnnotation(Priority.class);
+            return a != null ? a.value() : 0;
+        });
     }
 }

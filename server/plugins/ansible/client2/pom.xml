@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>com.walmartlabs.concord.server.plugins.ansible</groupId>
+        <artifactId>parent</artifactId>
+        <version>2.11.2-SNAPSHOT</version>
+        <relativePath>../pom.xml</relativePath>
+    </parent>
+
+    <artifactId>concord-ansible-plugin-client2</artifactId>
+    <packaging>jar</packaging>
+
+    <dependencies>
+        <dependency>
+            <groupId>com.walmartlabs.concord</groupId>
+            <artifactId>concord-client2</artifactId>
+        </dependency>
+
+        <!-- JDK9+ compatibility -->
+        <dependency>
+            <groupId>javax.annotation</groupId>
+            <artifactId>javax.annotation-api</artifactId>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.openapitools</groupId>
+                <artifactId>openapi-generator-maven-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>generate</goal>
+                        </goals>
+                        <configuration>
+                            <inputSpec>${project.basedir}/../impl/target/classes/com/walmartlabs/concord/server/plugins/ansible/swagger/swagger.yaml</inputSpec>
+                            <generatorName>java</generatorName>
+                            <apiPackage>com.walmartlabs.concord.client2</apiPackage>
+                            <modelPackage>com.walmartlabs.concord.client2</modelPackage>
+                            <packageName>com.walmartlabs.concord.client2</packageName>
+                            <invokerPackage>com.walmartlabs.concord.client2</invokerPackage>
+                            <configOptions>
+                                <sourceFolder>src/gen/java/main</sourceFolder>
+                                <dateLibrary>java8</dateLibrary>
+                                <serializableModel>true</serializableModel>
+                                <openApiNullable>false</openApiNullable>
+                                <supportUrlQuery>false</supportUrlQuery>
+                            </configOptions>
+                            <skipValidateSpec>false</skipValidateSpec>
+                            <library>native</library>
+                            <generateApiTests>false</generateApiTests>
+                            <generateModelTests>false</generateModelTests>
+                            <generateApiDocumentation>false</generateApiDocumentation>
+                            <generateModelDocumentation>false</generateModelDocumentation>
+                            <generateSupportingFiles>true</generateSupportingFiles>
+                            <supportingFilesToGenerate>ApiClient.java,ApiResponse.java,ApiException.java,Pair.java</supportingFilesToGenerate>
+                            <templateDirectory>../../../../client2/src/main/template</templateDirectory>
+                            <cleanupOutput>true</cleanupOutput>
+                            <typeMappings>string+binary=InputStream</typeMappings>
+                            <importMappings>InputStream=java.io.InputStream</importMappings>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
+</project>

@@ -20,67 +20,26 @@ package com.walmartlabs.concord.server.console;
  * =====
  */
 
-import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
-import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.walmartlabs.concord.server.process.ProcessEntry;
+import org.immutables.value.Value;
 
 import java.io.Serializable;
 import java.util.List;
-import java.util.Map;
 
+@Value.Immutable
 @JsonInclude(Include.NON_EMPTY)
-public class UserActivityResponse implements Serializable {
+@JsonSerialize(as = ImmutableUserActivityResponse.class)
+@JsonDeserialize(as = ImmutableUserActivityResponse.class)
+public interface UserActivityResponse extends Serializable {
 
-    private static final long serialVersionUID = 1L;
+    long serialVersionUID = 1L;
 
-    public static class ProjectProcesses implements Serializable {
-
-        private static final long serialVersionUID = 1L;
-
-        private final String projectName;
-        private final int running;
-
-        @JsonCreator
-        public ProjectProcesses(@JsonProperty("projectName") String projectName,
-                                @JsonProperty("running") int running) {
-            this.projectName = projectName;
-            this.running = running;
-        }
-
-        public String getProjectName() {
-            return projectName;
-        }
-
-        public int getRunning() {
-            return running;
-        }
-    }
-
-    private final Map<String, Integer> processStats;
-    private final Map<String, List<ProjectProcesses>> orgProcesses;
-    private final List<ProcessEntry> processes;
-
-    @JsonCreator
-    public UserActivityResponse(@JsonProperty("processStats") Map<String, Integer> processStats,
-                                @JsonProperty("orgProcesses") Map<String, List<ProjectProcesses>> orgProcesses,
-                                @JsonProperty("processes") List<ProcessEntry> processes) {
-
-        this.processStats = processStats;
-        this.orgProcesses = orgProcesses;
-        this.processes = processes;
-    }
-
-    public Map<String, Integer> getProcessStats() {
-        return processStats;
-    }
-
-    public Map<String, List<ProjectProcesses>> getOrgProcesses() {
-        return orgProcesses;
-    }
-
-    public List<ProcessEntry> getProcesses() {
-        return processes;
+    @Value.Default
+    default List<ProcessEntry> processes() {
+        return List.of();
     }
 }

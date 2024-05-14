@@ -26,7 +26,6 @@ import org.jooq.Configuration;
 import org.jooq.Record4;
 
 import javax.inject.Inject;
-import javax.inject.Named;
 import java.security.SecureRandom;
 import java.time.OffsetDateTime;
 import java.util.Base64;
@@ -39,7 +38,6 @@ import static com.walmartlabs.concord.server.security.apikey.ApiKeyUtils.hash;
 import static org.jooq.impl.DSL.currentOffsetDateTime;
 import static org.jooq.impl.DSL.selectFrom;
 
-@Named
 public class ApiKeyDao extends AbstractDao {
 
     private final SecureRandom rnd;

@@ -22,11 +22,6 @@ package com.walmartlabs.concord.server.plugins.noderoster.db;
 
 import com.walmartlabs.concord.db.DatabaseChangeLogProvider;
 
-import javax.inject.Named;
-import javax.inject.Singleton;
-
-@Named
-@Singleton
 @NodeRosterDB
 public class NodeRosterDBChangeLogProvider implements DatabaseChangeLogProvider {
 

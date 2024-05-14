@@ -1,0 +1,7 @@
+configuration:
+  debug: true
+
+flows:
+  default:
+    - log: "processInfo: ${processInfo}"
+    - log: "projectInfo: ${projectInfo}"

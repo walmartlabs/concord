@@ -4,14 +4,14 @@ package com.walmartlabs.concord.policyengine;
  * *****
  * Concord
  * -----
- * Copyright (C) 2017 - 2019 Walmart Inc.
+ * Copyright (C) 2017 - 2023 Walmart Inc.
  * -----
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- *
+ * 
  *      http://www.apache.org/licenses/LICENSE-2.0
- *
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -188,7 +188,7 @@ public class PolicyEngineRulesTest {
                         .toVersion("versionTo")
                         .value(new URI("value"))
                         .build());
-        RuntimeRule runtimeRule = RuntimeRule.of(null, Collections.singleton("concord-v2"));
+        RuntimeRule runtimeRule = RuntimeRule.of(null, Collections.singleton("concord-v2"), null);
 
         PolicyEngineRules r = PolicyEngineRules.builder()
                 .dependencyRules(dependencyRules)
@@ -210,6 +210,7 @@ public class PolicyEngineRulesTest {
                 .runtimeRule(runtimeRule)
                 .putCustomRule("ansible", Collections.singletonMap("k", "v"))
                 .cronTriggerRule(CronTriggerRule.of("msg", 1000))
+                .kvRule(KvRule.of("msg", 123))
                 .build();
 
         String s = om.writeValueAsString(r);

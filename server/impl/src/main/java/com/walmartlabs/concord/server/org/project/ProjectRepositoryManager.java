@@ -4,7 +4,7 @@ package com.walmartlabs.concord.server.org.project;
  * *****
  * Concord
  * -----
- * Copyright (C) 2017 - 2018 Walmart Inc.
+ * Copyright (C) 2017 - 2023 Walmart Inc.
  * -----
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,72 +20,66 @@ package com.walmartlabs.concord.server.org.project;
  * =====
  */
 
-import com.walmartlabs.concord.imports.ImportsListener;
-import com.walmartlabs.concord.process.loader.ProjectLoader;
 import com.walmartlabs.concord.process.loader.model.ProcessDefinition;
-import com.walmartlabs.concord.repository.Repository;
 import com.walmartlabs.concord.server.audit.AuditAction;
 import com.walmartlabs.concord.server.audit.AuditLog;
 import com.walmartlabs.concord.server.audit.AuditObject;
-import com.walmartlabs.concord.server.events.Events;
-import com.walmartlabs.concord.server.events.ExternalEventResource;
 import com.walmartlabs.concord.server.jooq.Tables;
 import com.walmartlabs.concord.server.org.ResourceAccessLevel;
 import com.walmartlabs.concord.server.org.secret.SecretEntry;
 import com.walmartlabs.concord.server.org.secret.SecretManager;
+import com.walmartlabs.concord.server.org.triggers.TriggerManager;
 import com.walmartlabs.concord.server.policy.EntityAction;
 import com.walmartlabs.concord.server.policy.EntityType;
 import com.walmartlabs.concord.server.policy.PolicyManager;
 import com.walmartlabs.concord.server.policy.PolicyUtils;
-import com.walmartlabs.concord.server.process.ImportsNormalizerFactory;
-import com.walmartlabs.concord.server.repository.RepositoryManager;
+import com.walmartlabs.concord.server.repository.RepositoryRefresher;
+import com.walmartlabs.concord.server.sdk.ConcordApplicationException;
+import com.walmartlabs.concord.server.sdk.validation.ValidationErrorsException;
+import org.immutables.value.Value;
 import org.jooq.DSLContext;
-import org.sonatype.siesta.ValidationErrorsException;
 
+import javax.annotation.Nullable;
 import javax.inject.Inject;
-import javax.inject.Named;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import javax.ws.rs.core.Response;
+import java.util.*;
 
-@Named
 public class ProjectRepositoryManager {
 
     private final ProjectAccessManager projectAccessManager;
     private final SecretManager secretManager;
-    private final RepositoryManager repositoryManager;
     private final RepositoryDao repositoryDao;
-    private final ExternalEventResource externalEventResource;
     private final AuditLog auditLog;
-    private final ProjectLoader projectLoader;
-    private final ImportsNormalizerFactory importsNormalizerFactory;
     private final PolicyManager policyManager;
+    private final RepositoryRefresher repositoryRefresher;
+    private final TriggerManager triggerManager;
 
     @Inject
     public ProjectRepositoryManager(ProjectAccessManager projectAccessManager,
                                     SecretManager secretManager,
-                                    RepositoryManager repositoryManager,
                                     RepositoryDao repositoryDao,
-                                    ExternalEventResource externalEventResource,
                                     AuditLog auditLog,
-                                    ProjectLoader projectLoader,
-                                    ImportsNormalizerFactory importsNormalizerFactory,
-                                    PolicyManager policyManager) {
+                                    PolicyManager policyManager,
+                                    RepositoryRefresher repositoryRefresher,
+                                    TriggerManager triggerManager) {
 
         this.projectAccessManager = projectAccessManager;
         this.secretManager = secretManager;
-        this.repositoryManager = repositoryManager;
         this.repositoryDao = repositoryDao;
-        this.externalEventResource = externalEventResource;
         this.auditLog = auditLog;
-        this.projectLoader = projectLoader;
-        this.importsNormalizerFactory = importsNormalizerFactory;
         this.policyManager = policyManager;
+        this.repositoryRefresher = repositoryRefresher;
+        this.triggerManager = triggerManager;
     }
 
     public RepositoryEntry get(UUID projectId, String repositoryName) {
-        return repositoryDao.get(projectId, repositoryName);
+        RepositoryEntry r = repositoryDao.get(projectId, repositoryName);
+
+        if (r == null) {
+            throw new ConcordApplicationException("Repository not found: " + repositoryName, Response.Status.NOT_FOUND);
+        }
+
+        return r;
     }
 
     public RepositoryEntry get(UUID orgId, String projectName, String repositoryName) {
@@ -103,21 +97,29 @@ public class ProjectRepositoryManager {
     }
 
     public void createOrUpdate(UUID projectId, RepositoryEntry entry) {
-        repositoryDao.tx(tx -> createOrUpdate(tx, projectId, entry));
-    }
-
-    public void createOrUpdate(DSLContext tx, UUID projectId, RepositoryEntry entry) {
         ProjectEntry project = projectAccessManager.assertAccess(projectId, ResourceAccessLevel.WRITER, true);
 
-        UUID repoId = entry.getId();
-        if (repoId == null) {
-            repoId = repositoryDao.getId(projectId, entry.getName());
-        }
+        UUID repoId = entry.getId() != null ? entry.getId() : repositoryDao.getId(projectId, entry.getName());
 
-        if (repoId == null) {
-            insert(tx, project.getOrgId(), project.getOrgName(), projectId, project.getName(), entry, true);
-        } else {
-            update(tx, project.getOrgId(), project.getOrgName(), projectId, project.getName(), repoId, entry);
+        SecretEntry secret = assertSecret(project.getOrgId(), entry);
+
+        policyManager.checkEntity(project.getOrgId(), project.getId(), EntityType.REPOSITORY, repoId == null ? EntityAction.CREATE : EntityAction.UPDATE,
+                null, PolicyUtils.repositoryToMap(project, entry, secret));
+
+        ProcessDefinition processDefinition = entry.isDisabled()
+                ? null
+                : processDefinition(project.getOrgId(), projectId, entry);
+
+        InsertUpdateResult result = repositoryDao.txResult(tx -> insertOrUpdate(tx, projectId, repoId, entry, secret, processDefinition));
+        addAuditLog(project, result.prevEntry(), result.newEntry());
+    }
+
+    public void replace(DSLContext tx, UUID orgId, UUID projectId, Collection<RepositoryEntry> repos, Map<String, ProcessDefinition> processDefinitions) {
+        repositoryDao.deleteAll(tx, projectId);
+
+        for (RepositoryEntry re : repos) {
+            SecretEntry secret = assertSecret(orgId, re);
+            insertOrUpdate(tx, projectId, null, re, secret, processDefinitions.get(re.getName()));
         }
     }
 
@@ -130,97 +132,73 @@ public class ProjectRepositoryManager {
         }
 
         repositoryDao.delete(r.getId());
-        addAuditLog(
-                projEntry.getOrgId(),
-                projEntry.getOrgName(),
-                projEntry.getId(),
-                projEntry.getName(),
-                r,
-                null);
+        addAuditLog(projEntry, r, null);
     }
 
-    public void insert(DSLContext tx, UUID orgId, String orgName, UUID projectId, String projectName, RepositoryEntry entry, boolean doAuditLog) {
-        RepositoryUtils.assertRepository(entry);
-
-        SecretEntry secret = assertSecret(orgId, entry);
-
-        policyManager.checkEntity(orgId, projectId, EntityType.REPOSITORY, EntityAction.CREATE, null,
-                PolicyUtils.repositoryToMap(orgId, orgName, projectId, projectName, entry, secret));
-
-        UUID repoId = repositoryDao.insert(tx, projectId,
-                entry.getName(), entry.getUrl(),
-                trim(entry.getBranch()),
-                trim(entry.getCommitId()),
-                trim(entry.getPath()),
-                secret == null ? null : secret.getId(),
-                entry.isDisabled(),
-                entry.getMeta(),
-                entry.isTriggersDisabled());
-
-        Map<String, Object> ev = Events.Repository.repositoryCreated(projectId, repoId, entry.getName(), !entry.isDisabled());
-        externalEventResource.event(Events.CONCORD_EVENT, ev);
-
-        if (doAuditLog) {
-            RepositoryEntry newEntry = repositoryDao.get(tx, projectId, repoId);
-            addAuditLog(
-                    orgId,
-                    orgName,
-                    projectId,
-                    projectName,
-                    null,
-                    newEntry
-            );
-        }
-    }
-
-    private void update(DSLContext tx, UUID orgId, String orgName, UUID projectId, String projectName, UUID repoId, RepositoryEntry entry) {
-        RepositoryUtils.assertRepository(entry);
-
-        RepositoryEntry prevEntry = repositoryDao.get(tx, projectId, repoId);
-
-        SecretEntry secret = assertSecret(orgId, entry);
-        policyManager.checkEntity(orgId, projectId, EntityType.REPOSITORY, EntityAction.UPDATE, null,
-                PolicyUtils.repositoryToMap(orgId, orgName, projectId, projectName, entry, secret));
-
-        repositoryDao.update(tx, repoId,
-                entry.getName(),
-                entry.getUrl(),
-                trim(entry.getBranch()),
-                trim(entry.getCommitId()),
-                trim(entry.getPath()),
-                secret == null ? null : secret.getId(),
-                entry.isDisabled(),
-                entry.isTriggersDisabled());
-
-        Map<String, Object> ev = Events.Repository.repositoryUpdated(projectId,
-                repoId,
-                entry.getName(),
-                !entry.isDisabled());
-        externalEventResource.event(Events.CONCORD_EVENT, ev);
-
-        RepositoryEntry newEntry = repositoryDao.get(tx, projectId, repoId);
-        addAuditLog(
-                orgId,
-                orgName,
-                projectId,
-                projectName,
-                prevEntry,
-                newEntry
-        );
-    }
-
-    public ProjectValidator.Result validateRepository(UUID projectId, RepositoryEntry repo) {
+    public ProjectValidator.Result validateRepository(UUID orgId, RepositoryEntry repo) {
         try {
-            ProcessDefinition pd = repositoryManager.withLock(repo.getUrl(), () -> {
-                Repository repository = repositoryManager.fetch(projectId, repo);
-                ProjectLoader.Result result = projectLoader.loadProject(repository.path(), importsNormalizerFactory.forProject(repo.getProjectId()), ImportsListener.NOP_LISTENER);
-                return result.projectDefinition();
-            });
-
+            ProcessDefinition pd = processDefinition(orgId, repo.getProjectId(), repo);
             return ProjectValidator.validate(pd);
         } catch (Exception e) {
             throw new RepositoryValidationException("Validation failed: " + repo.getName(), e);
         }
+    }
+
+    public ProcessDefinition processDefinition(UUID orgId, UUID projectId, RepositoryEntry repositoryEntry) {
+        return repositoryRefresher.processDefinition(orgId, projectId, repositoryEntry);
+    }
+
+    @Value.Immutable
+    interface InsertUpdateResult {
+
+        @Nullable
+        RepositoryEntry prevEntry();
+
+        RepositoryEntry newEntry();
+    }
+
+    private InsertUpdateResult insertOrUpdate(DSLContext tx, UUID projectId, UUID repoId, RepositoryEntry entry, SecretEntry secret, ProcessDefinition processDefinition) {
+        if (!entry.isDisabled() && processDefinition == null) {
+            // should have already thrown and exception by this point, but just in case
+            // something went wrong cloning/loading process definition
+            throw new ConcordApplicationException("Error while loading process definition", Response.Status.INTERNAL_SERVER_ERROR);
+        }
+
+        RepositoryEntry prevEntry = null;
+        if (repoId == null) {
+            repoId = repositoryDao.insert(tx, projectId,
+                    entry.getName(), entry.getUrl(),
+                    trim(entry.getBranch()),
+                    trim(entry.getCommitId()),
+                    trim(entry.getPath()),
+                    secret == null ? null : secret.getId(),
+                    entry.isDisabled(),
+                    entry.getMeta(),
+                    entry.isTriggersDisabled());
+        } else {
+            prevEntry = repositoryDao.get(tx, projectId, repoId);
+
+            repositoryDao.update(tx, repoId,
+                    entry.getName(),
+                    entry.getUrl(),
+                    trim(entry.getBranch()),
+                    trim(entry.getCommitId()),
+                    trim(entry.getPath()),
+                    secret == null ? null : secret.getId(),
+                    entry.isDisabled(),
+                    entry.isTriggersDisabled());
+        }
+
+        if (entry.isDisabled()) {
+            triggerManager.clearTriggers(tx, projectId, repoId);
+        } else {
+            repositoryRefresher.refresh(tx, projectId, entry.getName(), processDefinition);
+        }
+
+        return ImmutableInsertUpdateResult.builder()
+                .prevEntry(prevEntry)
+                .newEntry(repositoryDao.get(tx, projectId, repoId))
+                .build();
     }
 
     private SecretEntry assertSecret(UUID orgId, RepositoryEntry entry) {
@@ -244,7 +222,7 @@ public class ProjectRepositoryManager {
         return s;
     }
 
-    private void addAuditLog(UUID orgId, String orgName, UUID projectId, String projectName, RepositoryEntry prevRepoEntry, RepositoryEntry newRepoEntry) {
+    private void addAuditLog(ProjectEntry project, RepositoryEntry prevRepoEntry, RepositoryEntry newRepoEntry) {
         ProjectEntry prevEntry = new ProjectEntry(null, new HashMap<>());
         if (prevRepoEntry != null) {
             prevEntry.getRepositories().put(prevRepoEntry.getName(), prevRepoEntry);
@@ -258,10 +236,10 @@ public class ProjectRepositoryManager {
         Map<String, Object> changes = DiffUtils.compare(prevEntry, newEntry);
 
         auditLog.add(AuditObject.PROJECT, AuditAction.UPDATE)
-                .field("orgId", orgId)
-                .field("orgName", orgName)
-                .field("projectId", projectId)
-                .field("name", projectName)
+                .field("orgId", project.getOrgId())
+                .field("orgName", project.getOrgName())
+                .field("projectId", project.getId())
+                .field("name", project.getName())
                 .field("changes", changes)
                 .log();
     }

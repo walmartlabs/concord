@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>com.walmartlabs.concord.it</groupId>
+        <artifactId>parent</artifactId>
+        <version>2.11.2-SNAPSHOT</version>
+        <relativePath>../pom.xml</relativePath>
+    </parent>
+
+    <artifactId>testing-concord-server</artifactId>
+    <packaging>jar</packaging>
+
+    <dependencies>
+        <dependency>
+            <groupId>com.walmartlabs.concord.server</groupId>
+            <artifactId>concord-server</artifactId>
+            <exclusions>
+                <exclusion>
+                    <groupId>com.walmartlabs.concord.server.plugins.ansible</groupId>
+                    <artifactId>concord-ansible-plugin</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>com.walmartlabs.concord.server.plugins</groupId>
+                    <artifactId>concord-oneops-plugin</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>com.walmartlabs.concord.server.plugins.noderoster</groupId>
+                    <artifactId>concord-noderoster-plugin</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>com.walmartlabs.concord.server.plugins</groupId>
+                    <artifactId>pfed-sso</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        <dependency>
+            <groupId>com.walmartlabs.concord</groupId>
+            <artifactId>concord-agent</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.testcontainers</groupId>
+            <artifactId>postgresql</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.typesafe</groupId>
+            <artifactId>config</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>com.walmartlabs.concord</groupId>
+            <artifactId>concord-client2</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter-api</artifactId>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+</project>

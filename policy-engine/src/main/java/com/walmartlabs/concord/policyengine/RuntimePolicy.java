@@ -4,7 +4,7 @@ package com.walmartlabs.concord.policyengine;
  * *****
  * Concord
  * -----
- * Copyright (C) 2017 - 2018 Walmart Inc.
+ * Copyright (C) 2017 - 2023 Walmart Inc.
  * -----
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,6 +20,11 @@ package com.walmartlabs.concord.policyengine;
  * =====
  */
 
+import java.time.LocalTime;
+import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
+import java.util.function.Supplier;
+
 public class RuntimePolicy {
 
     private final RuntimeRule rule;
@@ -28,9 +33,20 @@ public class RuntimePolicy {
         this.rule = rule;
     }
 
-    public CheckResult<RuntimeRule, String> check(String processRuntime) {
+    public CheckResult<RuntimeRule, String> check(String processRuntime, Supplier<OffsetDateTime> projectCreatedAt) {
         if (rule == null || processRuntime == null) {
             return CheckResult.success();
+        }
+
+        if (rule.projectCreatedAfter() != null) {
+            OffsetDateTime createdAt = projectCreatedAt.get();
+            if (createdAt == null) {
+                return CheckResult.success();
+            }
+
+            if (createdAt.isBefore(OffsetDateTime.of(rule.projectCreatedAfter(), LocalTime.of(0, 0, 0), ZoneOffset.UTC))) {
+                return CheckResult.success();
+            }
         }
 
         if (!rule.allowedRuntimes().contains(processRuntime)) {

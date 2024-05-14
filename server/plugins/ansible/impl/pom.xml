@@ -6,12 +6,12 @@
     <parent>
         <groupId>com.walmartlabs.concord.server.plugins.ansible</groupId>
         <artifactId>parent</artifactId>
-        <version>1.98.2-SNAPSHOT</version>
+        <version>2.11.2-SNAPSHOT</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
 
     <artifactId>concord-ansible-plugin</artifactId>
-    <packaging>takari-jar</packaging>
+    <packaging>jar</packaging>
 
     <dependencies>
         <dependency>
@@ -75,16 +75,13 @@
             <artifactId>guice</artifactId>
         </dependency>
         <dependency>
-            <groupId>io.swagger</groupId>
+            <groupId>io.swagger.core.v3</groupId>
             <artifactId>swagger-annotations</artifactId>
+            <version>2.2.15</version>
         </dependency>
         <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>
             <artifactId>jackson-core</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>io.takari.siesta</groupId>
-            <artifactId>siesta-api</artifactId>
         </dependency>
 
         <!-- Immutables -->
@@ -116,52 +113,31 @@
     <build>
         <plugins>
             <plugin>
-                <groupId>io.takari.maven.plugins</groupId>
-                <artifactId>takari-lifecycle-plugin</artifactId>
-                <configuration>
-                    <proc>proc</proc>
-                </configuration>
-            </plugin>
-            <plugin>
                 <groupId>org.eclipse.sisu</groupId>
                 <artifactId>sisu-maven-plugin</artifactId>
             </plugin>
+
             <plugin>
-                <groupId>com.github.kongchen</groupId>
+                <groupId>io.swagger.core.v3</groupId>
                 <artifactId>swagger-maven-plugin</artifactId>
+                <configuration>
+                    <outputFileName>swagger</outputFileName>
+                    <outputPath>${project.build.directory}/classes/com/walmartlabs/concord/server/plugins/ansible/swagger</outputPath>
+                    <outputFormat>YAML</outputFormat>
+                    <readAllResources>false</readAllResources>
+                    <resourcePackages>
+                        <package>com.walmartlabs.concord.server.plugins.ansible</package>
+                    </resourcePackages>
+                    <configurationFilePath>${project.build.directory}/classes/openapi-ansible-config.yaml</configurationFilePath>
+                </configuration>
                 <executions>
                     <execution>
-                        <id>generate-docs</id>
                         <phase>compile</phase>
                         <goals>
-                            <goal>generate</goal>
+                            <goal>resolve</goal>
                         </goals>
                     </execution>
                 </executions>
-                <configuration>
-                    <apiSources>
-                        <apiSource>
-                            <springmvc>false</springmvc>
-                            <locations>com.walmartlabs.concord.server.plugins.ansible</locations>
-                            <schemes>http</schemes>
-                            <host>localhost:8001</host>
-                            <basePath>/</basePath>
-                            <info>
-                                <title>Concord Ansible API</title>
-                                <version>v1</version>
-                            </info>
-                            <securityDefinitions>
-                                <securityDefinition>
-                                    <jsonPath>${project.basedir}/../../../impl/src/main/resources/security.json</jsonPath>
-                                </securityDefinition>
-                            </securityDefinitions>
-                            <swaggerDirectory>
-                                ${project.build.directory}/classes/com/walmartlabs/concord/server/plugins/ansible/swagger
-                            </swaggerDirectory>
-                            <attachSwaggerArtifact>true</attachSwaggerArtifact>
-                        </apiSource>
-                    </apiSources>
-                </configuration>
             </plugin>
         </plugins>
     </build>

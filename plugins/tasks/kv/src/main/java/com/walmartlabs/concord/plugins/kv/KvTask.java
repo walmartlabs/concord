@@ -20,9 +20,9 @@ package com.walmartlabs.concord.plugins.kv;
  * =====
  */
 
-import com.walmartlabs.concord.client.ApiClientConfiguration;
-import com.walmartlabs.concord.client.ApiClientFactory;
-import com.walmartlabs.concord.client.ProcessKvStoreApi;
+import com.walmartlabs.concord.client2.ApiClientConfiguration;
+import com.walmartlabs.concord.client2.ApiClientFactory;
+import com.walmartlabs.concord.client2.ProcessKvStoreApi;
 import com.walmartlabs.concord.sdk.Constants;
 import com.walmartlabs.concord.sdk.*;
 
@@ -142,7 +142,7 @@ public class KvTask implements Task {
 
     private ProcessKvStoreApi getApi(Context ctx) {
         return new ProcessKvStoreApi(apiClientFactory.create(ApiClientConfiguration.builder()
-                .context(ctx)
+                .sessionToken(ContextUtils.getSessionToken(ctx))
                 .build()));
     }
 }

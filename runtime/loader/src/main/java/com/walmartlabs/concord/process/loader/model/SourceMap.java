@@ -20,7 +20,6 @@ package com.walmartlabs.concord.process.loader.model;
  * =====
  */
 
-import com.fasterxml.jackson.core.JsonLocation;
 import com.walmartlabs.concord.runtime.v2.model.Location;
 import org.immutables.serial.Serial;
 import org.immutables.value.Value;

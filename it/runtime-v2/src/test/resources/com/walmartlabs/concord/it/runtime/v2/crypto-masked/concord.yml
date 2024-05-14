@@ -1,0 +1,16 @@
+configuration:
+  runtime: "concord-v2"
+
+flows:
+  default:
+    - set:
+        s: "${crypto.exportAsString(myOrg, myStringSecret, mySecretPwd)}"
+    - log: "String: ${s}"
+
+    - form: myForm
+
+    - log: "String after suspend: ${s}"
+
+forms:
+  myForm:
+    - firstName: { label: "First name", type: "string", value: "John" }

@@ -49,6 +49,7 @@ public class ResumePipeline extends Pipeline {
                 ClearStartAtProcessor.class,
                 ConfigurationStoringProcessor.class,
                 DependencyVersionsExportProcessor.class,
+                PolicyExportProcessor.class,
                 StateImportingProcessor.class,
                 EnqueueingProcessor.class);
 

@@ -20,6 +20,7 @@ package com.walmartlabs.concord.runtime.v2.parser;
  * =====
  */
 
+import org.immutables.serial.Serial;
 import org.immutables.value.Value;
 
 import java.io.Serializable;
@@ -27,7 +28,10 @@ import java.util.Map;
 
 @Value.Immutable
 @Value.Style(jdkOnly = true)
+@Serial.Version(-8269676324702677451L)
 public interface SimpleOptions extends StepOptions {
+
+    long serialVersionUID = -8269676324702677451L;
 
     static SimpleOptions of(Map<String, Serializable> meta) {
         return ImmutableSimpleOptions.builder()

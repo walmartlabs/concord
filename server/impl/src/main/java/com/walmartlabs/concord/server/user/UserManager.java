@@ -34,6 +34,7 @@ import org.jooq.DSLContext;
 
 import javax.inject.Inject;
 import javax.inject.Named;
+import javax.ws.rs.core.Response;
 import java.util.*;
 
 import static com.walmartlabs.concord.server.user.UserInfoProvider.UserInfo;
@@ -115,6 +116,14 @@ public class UserManager {
             return Optional.empty();
         }
 
+        if (prevEntry.isPermanentlyDisabled()) {
+            throw new ConcordApplicationException("User is permanently disabled");
+        }
+
+        if (prevEntry.isPermanentlyDisabled() && isDisabled) {
+            return Optional.empty();
+        }
+
         UserEntry newEntry = userDao.update(userId, displayName, email, userType, isDisabled, roles);
         if (newEntry == null) {
             return Optional.empty();
@@ -187,34 +196,78 @@ public class UserManager {
     }
 
     public void enable(UUID userId) {
-        if (!userDao.isDisabled(userId)
-                .orElseThrow(() -> new ConcordApplicationException("User not found: " + userId))) {
+        UserEntry user = userDao.get(userId);
 
+        if (user == null) {
+            throw new ConcordApplicationException("User not found: " + userId);
+        }
+
+        if (!user.isDisabled()) {
             // the account is already enabled, nothing to do
             return;
+        }
+
+        if (user.isPermanentlyDisabled()) {
+            throw new ConcordApplicationException("User is permanently disabled");
         }
 
         userDao.enable(userId);
 
         auditLog.add(AuditObject.USER, AuditAction.UPDATE)
                 .field("userId", userId)
-                .changes(describeStatusChange(true), describeStatusChange(false))
+                .changes(describeStatusChange(true, false), describeStatusChange(false, false))
                 .log();
     }
 
     public void disable(UUID userId) {
-        if (userDao.isDisabled(userId)
-                .orElseThrow(() -> new ConcordApplicationException("User not found: " + userId))) {
+        UserEntry user = userDao.get(userId);
+        if (user == null) {
+            throw new ConcordApplicationException("User not found: " + userId, Response.Status.NOT_FOUND);
+        }
 
+        if (user.isDisabled() && user.getDisabledDate() != null) {
             // the account is already disabled, nothing to do
             return;
         }
 
-        userDao.disable(userId);
+        userDao.disable(userId, false);
 
         auditLog.add(AuditObject.USER, AuditAction.UPDATE)
                 .field("userId", userId)
-                .changes(describeStatusChange(false), describeStatusChange(true))
+                .changes(describeStatusChange(user.isDisabled(), user.isPermanentlyDisabled()), describeStatusChange(true, false))
+                .log();
+    }
+
+    public void permanentlyDisable(UUID userId) {
+        UserEntry user = userDao.get(userId);
+        if (user == null) {
+            throw new ConcordApplicationException("User not found: " + userId, Response.Status.NOT_FOUND);
+        }
+
+        if (user.isPermanentlyDisabled() && user.isDisabled() && user.getDisabledDate() != null) {
+            // nothing to do
+            return;
+        }
+
+        userDao.disable(userId, true);
+
+        auditLog.add(AuditObject.USER, AuditAction.UPDATE)
+                .field("userId", userId)
+                .changes(describeStatusChange(user.isDisabled(), user.isPermanentlyDisabled()), describeStatusChange(true, true))
+                .log();
+    }
+
+    public void delete(UUID userId) {
+        UserEntry user = userDao.get(userId);
+        if (user == null) {
+            return;
+        }
+
+        userDao.delete(userId);
+
+        auditLog.add(AuditObject.USER, AuditAction.DELETE)
+                .field("userId", userId)
+                .field("name", user.getName())
                 .log();
     }
 
@@ -252,26 +305,16 @@ public class UserManager {
     }
 
     /**
-     * {@link com.walmartlabs.concord.server.org.project.DiffUtils#compare(Object, Object)}
+     * {@link DiffUtils#compare(Object, Object)}
      * doesn't work for top-level Maps. So we have to create a temporary bean with a single
      * field in order to record the user account's status change using the existing
      * {@link AuditLog.EntryBuilder#changes(Object, Object)} mechanism w/o pulling
      * the {@link UserEntry} before and after the change.
      */
-    private static StatusChange describeStatusChange(boolean disabled) {
-        return new StatusChange(disabled);
+    private static StatusChange describeStatusChange(boolean disabled, boolean permanentlyDisabled) {
+        return new StatusChange(disabled, permanentlyDisabled);
     }
 
-    private static class StatusChange {
-
-        private final boolean disabled;
-
-        private StatusChange(boolean disabled) {
-            this.disabled = disabled;
-        }
-
-        public boolean isDisabled() {
-            return disabled;
-        }
+    private record StatusChange(boolean disabled, boolean permanentlyDisabled) {
     }
 }

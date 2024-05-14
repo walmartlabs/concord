@@ -25,6 +25,7 @@ import { RequestError } from '../../../api/common';
 import { RequestErrorMessage } from '../../molecules';
 import { useLocation } from 'react-router-dom';
 import { Dimmer, Loader } from 'semantic-ui-react';
+import {setQueryParam} from "../../../utils";
 
 interface Props {
     error: RequestError;
@@ -36,9 +37,10 @@ export default ({ error }: Props) => {
     if (error && error.status === 401) {
         const loginUrl = window.concord?.loginUrl;
         if (loginUrl) {
+            const requested = new URL(window.location.href).hash;
             // delay the redirect to avoid layout issues
             setTimeout(() => {
-                window.location.href = loginUrl + location.pathname;
+                window.location.href = setQueryParam(loginUrl, 'from', '/' + requested)
             }, 1000);
 
             return (

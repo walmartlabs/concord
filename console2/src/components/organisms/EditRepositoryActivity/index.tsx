@@ -30,8 +30,7 @@ import {
     RepositoryEntry
 } from "../../../api/org/project/repository";
 import {useApi} from "../../../hooks/useApi";
-import {ConcordKey, GenericOperationResult} from "../../../api/common";
-import {LoadingDispatch} from "../../../App";
+import {ConcordKey, RequestError} from "../../../api/common";
 import {Redirect} from "react-router";
 
 interface ExternalProps {
@@ -55,8 +54,9 @@ const INITIAL_VALUES:RepositoryFormValues = {
 const EditRepositoryActivity = (props: ExternalProps) => {
     const {orgName, projectName, repoName, forceRefresh} = props;
 
-    const dispatch = React.useContext(LoadingDispatch);
-    const [repo, setRepo] = useState<RepositoryFormValues>(INITIAL_VALUES);
+    const [success, setSuccess] = useState<boolean>(false);
+    const [error, setError] = useState<RequestError>();
+    const [isLoading, setLoading] = useState<boolean>(false);
 
     const loadRepo = useCallback(() => {
         return apiGetRepo(orgName, projectName, repoName!);
@@ -74,25 +74,24 @@ const EditRepositoryActivity = (props: ExternalProps) => {
         loadRepoFetch();
     }, [loadRepoFetch, loadRepoClearState, forceRefresh, repoName]);
 
-    const postData = useCallback(() => {
-        return apiCreateOrUpdate(orgName, projectName, toEditRepositoryEntry(repo));
-    }, [orgName, projectName, repo]);
-
-    const { error, isLoading, data, fetch } = useApi<GenericOperationResult>(postData, {
-        fetchOnMount: false,
-        requestByFetch: true,
-        dispatch
-    });
-
     const handleSubmit = useCallback(
-        (values: RepositoryFormValues) => {
-            setRepo(values);
-            fetch();
+        async (values: RepositoryFormValues, setSubmitting: (isSubmitting: boolean) => void) => {
+            setLoading(true);
+
+            try {
+                const result= await apiCreateOrUpdate(orgName, projectName, toEditRepositoryEntry(values));
+                setSuccess(result.ok);
+            } catch (e) {
+                setError(e);
+            } finally {
+                setLoading(false);
+                setSubmitting(false);
+            }
         },
-        [fetch]
+        [orgName, projectName]
     );
 
-    if (data) {
+    if (success) {
         return <Redirect to={`/org/${orgName}/project/${projectName}/repository`} />;
     }
 

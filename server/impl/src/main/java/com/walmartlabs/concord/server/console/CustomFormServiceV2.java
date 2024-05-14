@@ -4,7 +4,7 @@ package com.walmartlabs.concord.server.console;
  * *****
  * Concord
  * -----
- * Copyright (C) 2017 - 2018 Walmart Inc.
+ * Copyright (C) 2017 - 2023 Walmart Inc.
  * -----
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -28,7 +28,6 @@ import com.walmartlabs.concord.forms.FormUtils;
 import com.walmartlabs.concord.forms.ValidationError;
 import com.walmartlabs.concord.server.MultipartUtils;
 import com.walmartlabs.concord.server.cfg.CustomFormConfiguration;
-import com.walmartlabs.concord.server.process.form.ExternalFileFormValidatorLocaleV2;
 import com.walmartlabs.concord.server.process.form.FormServiceV1;
 import com.walmartlabs.concord.server.process.form.FormServiceV2;
 import com.walmartlabs.concord.server.process.form.FormSubmitResult;
@@ -39,14 +38,12 @@ import com.walmartlabs.concord.server.sdk.ConcordApplicationException;
 import com.walmartlabs.concord.server.sdk.PartialProcessKey;
 import com.walmartlabs.concord.server.sdk.ProcessKey;
 import com.walmartlabs.concord.server.sdk.ProcessStatus;
+import com.walmartlabs.concord.server.sdk.validation.Validate;
 import org.jboss.resteasy.plugins.providers.multipart.MultipartInput;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.sonatype.siesta.Validate;
 
 import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.POST;
 import javax.ws.rs.PathParam;
@@ -65,8 +62,6 @@ import static com.walmartlabs.concord.server.console.CustomFormServiceV1.FormDat
 import static com.walmartlabs.concord.server.console.CustomFormServiceV1.FormDataDefinition;
 import static com.walmartlabs.concord.server.process.state.ProcessStateManager.copyTo;
 
-@Named
-@Singleton
 public class CustomFormServiceV2 {
 
     private static final Logger log = LoggerFactory.getLogger(CustomFormServiceV2.class);
@@ -77,7 +72,7 @@ public class CustomFormServiceV2 {
     private static final String FORMS_PATH_TEMPLATE = FORMS_PATH_PREFIX + "%s/%s/" + FORM_DIR_NAME + "/";
     private static final String DATA_FILE_TEMPLATE = "data = %s;";
 
-    private static final String NON_BRANDED_FORM_URL_TEMPLATE = "/#/process/%s/form/%s?fullScreen=true&wizard=true";
+    private static final String NON_BRANDED_FORM_URL_TEMPLATE = "/#/process/%s/form/%s/wizard?fullScreen=true";
     private static final String FORM_WIZARD_CONTINUE_URL_TEMPLATE = "/api/service/custom_form/%s/%s/continue";
 
     private static final long STATUS_REFRESH_DELAY = 250;
@@ -118,7 +113,6 @@ public class CustomFormServiceV2 {
     }
 
     private FormSessionResponse startSession(ProcessKey processKey, String formName) {
-
         // TODO locking
         Form form = assertForm(processKey, formName);
 
@@ -188,7 +182,7 @@ public class CustomFormServiceV2 {
         // TODO locking
         Form form = assertForm(processKey, formName);
 
-        boolean yield = form.options().yield();
+        boolean yield = form.options().isYield();
 
         Path dst = cfg.getBaseDir()
                 .resolve(processKey.toString())
@@ -321,7 +315,18 @@ public class CustomFormServiceV2 {
         }
 
         String submitUrl = String.format(FORM_WIZARD_CONTINUE_URL_TEMPLATE, processInstanceId, form.name());
-        return new FormData(success, processFailed, submitUrl, fields, _definitions, _values, _errors);
+
+        return FormData.builder()
+                .txId(processInstanceId.toString())
+                .formName(form.name())
+                .success(success)
+                .processFailed(processFailed)
+                .submitUrl(submitUrl)
+                .fields(fields)
+                .definitions(_definitions)
+                .values(_values)
+                .errors(_errors)
+                .build();
     }
 
     private io.takari.bpm.model.form.FormField.Cardinality convert(FormField.Cardinality c) {

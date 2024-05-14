@@ -21,21 +21,13 @@ package com.walmartlabs.concord.server.boot;
  */
 
 import com.walmartlabs.concord.server.security.rememberme.ConcordRememberMeManager;
-import org.apache.shiro.mgt.SecurityManager;
 import org.apache.shiro.realm.Realm;
 import org.apache.shiro.web.mgt.DefaultWebSecurityManager;
-import org.apache.shiro.web.mgt.WebSecurityManager;
 import org.apache.shiro.web.session.mgt.ServletContainerSessionManager;
-import org.eclipse.sisu.Typed;
 
 import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
 import java.util.Set;
 
-@Named
-@Typed({SecurityManager.class, WebSecurityManager.class})
-@Singleton
 public class ConcordSecurityManager extends DefaultWebSecurityManager {
 
     @Inject

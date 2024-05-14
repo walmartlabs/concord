@@ -60,6 +60,15 @@ public class RetryWrapper implements Command {
 
     @Override
     public void eval(Runtime runtime, State state, ThreadId threadId) {
+        execute(runtime, state, threadId);
+    }
+
+    @Override
+    public void onException(Runtime runtime, Exception e, State state, ThreadId threadId) {
+        cmd.onException(runtime, e, state, threadId);
+    }
+
+    private void execute(Runtime runtime, State state, ThreadId threadId) {
         Frame frame = state.peekFrame(threadId);
         frame.pop();
 

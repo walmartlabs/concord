@@ -4,7 +4,7 @@ package com.walmartlabs.concord.server.plugins.noderoster.dao;
  * *****
  * Concord
  * -----
- * Copyright (C) 2017 - 2019 Walmart Inc.
+ * Copyright (C) 2017 - 2023 Walmart Inc.
  * -----
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -31,8 +31,8 @@ import com.walmartlabs.concord.server.plugins.noderoster.jooq.tables.NodeRosterH
 import com.walmartlabs.concord.server.plugins.noderoster.jooq.tables.NodeRosterProcessHosts;
 import com.walmartlabs.concord.server.sdk.ProcessKey;
 import com.walmartlabs.concord.server.sdk.ProcessKeyCache;
-import org.jooq.*;
 import org.jooq.Record;
+import org.jooq.*;
 
 import javax.inject.Inject;
 import java.time.OffsetDateTime;

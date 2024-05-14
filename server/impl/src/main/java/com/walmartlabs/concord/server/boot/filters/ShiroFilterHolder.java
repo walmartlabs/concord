@@ -21,17 +21,13 @@ package com.walmartlabs.concord.server.boot.filters;
  */
 
 import org.apache.shiro.web.servlet.ShiroFilter;
-import org.eclipse.jetty.servlet.FilterHolder;
+import org.eclipse.jetty.ee8.servlet.FilterHolder;
 
-import javax.inject.Named;
-import javax.inject.Singleton;
 import javax.servlet.annotation.WebFilter;
 
 /**
  * Binds {@link ShiroFilter} to Concord's API root path.
  */
-@Named
-@Singleton
 @WebFilter("/*")
 public class ShiroFilterHolder extends FilterHolder {
 

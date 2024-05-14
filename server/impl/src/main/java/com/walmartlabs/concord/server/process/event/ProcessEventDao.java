@@ -30,7 +30,6 @@ import com.walmartlabs.concord.server.sdk.events.ProcessEvent;
 import org.jooq.*;
 
 import javax.inject.Inject;
-import javax.inject.Named;
 import java.sql.PreparedStatement;
 import java.time.OffsetDateTime;
 import java.util.*;
@@ -38,7 +37,6 @@ import java.util.*;
 import static com.walmartlabs.concord.server.jooq.Tables.PROCESS_EVENTS;
 import static org.jooq.impl.DSL.*;
 
-@Named
 public class ProcessEventDao extends AbstractDao {
 
     private final ConcordObjectMapper objectMapper;

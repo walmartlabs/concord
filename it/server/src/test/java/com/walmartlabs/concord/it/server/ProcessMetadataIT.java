@@ -1,4 +1,4 @@
-package com.walmartlabs.concord.it.server;
+package com.walmartlabs.concord.it.server;//package com.walmartlabs.concord.it.server;
 
 /*-
  * *****
@@ -9,9 +9,9 @@ package com.walmartlabs.concord.it.server;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -20,16 +20,8 @@ package com.walmartlabs.concord.it.server;
  * =====
  */
 
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.squareup.okhttp.HttpUrl;
-import com.squareup.okhttp.OkHttpClient;
-import com.squareup.okhttp.Request;
-import com.squareup.okhttp.Response;
-import com.walmartlabs.concord.ApiClient;
-import com.walmartlabs.concord.client.*;
-import com.walmartlabs.concord.it.common.ServerClient;
-import com.walmartlabs.concord.it.common.ServerCompatModule;
+import com.walmartlabs.concord.client2.*;
+import com.walmartlabs.concord.client2.ProcessListFilter;
 import org.junit.jupiter.api.Test;
 
 import java.util.HashMap;
@@ -42,18 +34,15 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class ProcessMetadataIT extends AbstractServerIT {
 
-    private static final TypeReference<List<ProcessEntry>> LIST_OF_PROCESS_ENTRIES = new TypeReference<List<ProcessEntry>>() {
-    };
-
     @Test
     public void test() throws Exception {
         String orgName = "Default";
         String projectName = "project_" + randomString();
 
         ProjectsApi projectsApi = new ProjectsApi(getApiClient());
-        projectsApi.createOrUpdate(orgName, new ProjectEntry()
-                .setName(projectName)
-                .setRawPayloadMode(ProjectEntry.RawPayloadModeEnum.EVERYONE));
+        projectsApi.createOrUpdateProject(orgName, new ProjectEntry()
+                .name(projectName)
+                .rawPayloadMode(ProjectEntry.RawPayloadModeEnum.EVERYONE));
         // ---
 
         String randomStringA = "randomA_" + randomString();
@@ -64,9 +53,8 @@ public class ProcessMetadataIT extends AbstractServerIT {
 
         // ---
 
-        ProcessApi processApi = new ProcessApi(getApiClient());
-        waitForCompletion(processApi, sprA.getInstanceId());
-        waitForCompletion(processApi, sprB.getInstanceId());
+        waitForCompletion(getApiClient(), sprA.getInstanceId());
+        waitForCompletion(getApiClient(), sprB.getInstanceId());
 
         // ---
 
@@ -113,36 +101,18 @@ public class ProcessMetadataIT extends AbstractServerIT {
     }
 
     private List<ProcessEntry> list(String orgName, String projectName, String... kv) throws Exception {
-        ApiClient apiClient = getApiClient();
-        HttpUrl.Builder b = HttpUrl.parse(apiClient.getBasePath() + "/api/v2/process")
-                .newBuilder()
-                .addQueryParameter("orgName", orgName)
-                .addQueryParameter("projectName", projectName);
+        Map<String, String> meta = new HashMap<>();
 
         for (int i = 0; i < kv.length - 1; i += 2) {
-            b.addQueryParameter(kv[i], kv[i + 1]);
+            meta.put(kv[i], kv[i + 1]);
         }
 
-        Request req = new Request.Builder()
-                .url(b.build())
-                .header("Authorization", ServerClient.DEFAULT_API_KEY)
+        ProcessListFilter filter = ProcessListFilter.builder()
+                .orgName(orgName)
+                .projectName(projectName)
+                .meta(meta)
                 .build();
 
-        OkHttpClient httpClient = apiClient.getHttpClient();
-        Response resp = null;
-        try {
-            resp = httpClient.newCall(req).execute();
-            if (!resp.isSuccessful()) {
-                throw new RuntimeException("Request failed: " + resp);
-            }
-
-            ObjectMapper om = new ObjectMapper();
-            om.registerModule(new ServerCompatModule()); // to parse timestamps
-            return om.readValue(resp.body().byteStream(), LIST_OF_PROCESS_ENTRIES);
-        } finally {
-            if (resp != null && resp.body() != null) {
-                resp.body().close();
-            }
-        }
+        return new ProcessV2Api(getApiClient()).listProcesses(filter);
     }
 }

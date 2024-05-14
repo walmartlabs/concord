@@ -20,12 +20,12 @@ package com.walmartlabs.concord.it.server;
  * =====
  */
 
-import com.walmartlabs.concord.client.ProcessApi;
-import com.walmartlabs.concord.client.ProcessEntry;
-import com.walmartlabs.concord.client.StartProcessResponse;
+import com.walmartlabs.concord.client2.ProcessApi;
+import com.walmartlabs.concord.client2.ProcessEntry;
+import com.walmartlabs.concord.client2.StartProcessResponse;
 import org.junit.jupiter.api.Test;
 
-import java.io.File;
+import java.io.InputStream;
 import java.net.URI;
 
 import static com.walmartlabs.concord.it.common.ITUtils.archive;
@@ -47,12 +47,13 @@ public class AnsibleRetryIT extends AbstractServerIT {
 
         // wait for completion
 
-        ProcessEntry pir = waitForCompletion(processApi, spr.getInstanceId());
+        ProcessEntry pir = waitForCompletion(getApiClient(), spr.getInstanceId());
         assertEquals(ProcessEntry.StatusEnum.FAILED, pir.getStatus());
 
         // retrieve the retry file
 
-        File r = processApi.downloadAttachment(pir.getInstanceId(), "hello.retry");
-        assertNotNull(r);
+        try (InputStream is = processApi.downloadAttachment(pir.getInstanceId(), "hello.retry")) {
+            assertNotNull(is);
+        }
     }
 }

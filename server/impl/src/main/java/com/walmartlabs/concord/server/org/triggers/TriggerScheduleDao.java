@@ -31,17 +31,16 @@ import com.walmartlabs.concord.server.jooq.tables.Triggers;
 import org.jooq.*;
 
 import javax.inject.Inject;
-import javax.inject.Named;
 import java.time.OffsetDateTime;
 import java.time.ZoneId;
 import java.util.*;
 
+import static com.walmartlabs.concord.db.PgUtils.jsonbStripNulls;
 import static com.walmartlabs.concord.server.jooq.Tables.*;
 import static com.walmartlabs.concord.server.jooq.tables.TriggerSchedule.TRIGGER_SCHEDULE;
 import static com.walmartlabs.concord.server.jooq.tables.Triggers.TRIGGERS;
 import static org.jooq.impl.DSL.*;
 
-@Named
 public class TriggerScheduleDao extends AbstractDao {
 
     private final ConcordObjectMapper objectMapper;
@@ -88,9 +87,9 @@ public class TriggerScheduleDao extends AbstractDao {
                     t.REPO_ID,
                     r.REPO_NAME,
                     t.ACTIVE_PROFILES,
-                    t.ARGUMENTS,
-                    t.TRIGGER_CFG,
-                    t.CONDITIONS,
+                    jsonbStripNulls(t.ARGUMENTS),
+                    jsonbStripNulls(t.TRIGGER_CFG),
+                    jsonbStripNulls(t.CONDITIONS),
                     currentOffsetDateTime(),
                     t.EVENT_SOURCE)
                     .from(t, p, r, o)

@@ -31,8 +31,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
 import javax.servlet.ServletContext;
 import javax.servlet.ServletContextEvent;
 import javax.servlet.ServletContextListener;
@@ -44,8 +42,6 @@ import java.util.Set;
  * Initializes Shiro's {@link org.apache.shiro.env.Environment}.
  * Responsible for applying all available {@link FilterChainConfigurator}.
  */
-@Named
-@Singleton
 @WebListener
 public class ShiroListener implements ServletContextListener {
 

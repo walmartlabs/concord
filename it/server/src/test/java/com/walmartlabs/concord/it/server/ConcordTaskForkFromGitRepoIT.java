@@ -20,7 +20,7 @@ package com.walmartlabs.concord.it.server;
  * =====
  */
 
-import com.walmartlabs.concord.client.*;
+import com.walmartlabs.concord.client2.*;
 import com.walmartlabs.concord.it.common.GitUtils;
 import com.walmartlabs.concord.it.common.MockGitSshServer;
 import org.junit.jupiter.api.AfterEach;
@@ -29,6 +29,7 @@ import org.junit.jupiter.api.Test;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -45,7 +46,7 @@ public class ConcordTaskForkFromGitRepoIT extends AbstractServerIT {
 
     @BeforeEach
     public void setUp() throws Exception {
-        Path data = Paths.get(PortalIT.class.getResource("concordTaskFork").toURI());
+        Path data = Paths.get(ConcordTaskForkFromGitRepoIT.class.getResource("concordTaskFork").toURI());
         Path repo = GitUtils.createBareRepository(data);
 
         gitServer = new MockGitSshServer(0, repo);
@@ -77,15 +78,15 @@ public class ConcordTaskForkFromGitRepoIT extends AbstractServerIT {
         // ---
 
         RepositoryEntry repo = new RepositoryEntry()
-                .setName(repoName)
-                .setUrl(repoUrl)
-                .setBranch("master")
-                .setSecretId(response.getId());
+                .name(repoName)
+                .url(repoUrl)
+                .branch("master")
+                .secretId(response.getId());
 
         ProjectsApi projectsApi = new ProjectsApi(getApiClient());
-        projectsApi.createOrUpdate(orgName, new ProjectEntry()
-                .setName(projectName)
-                .setRepositories(singletonMap(repoName, repo)));
+        projectsApi.createOrUpdateProject(orgName, new ProjectEntry()
+                .name(projectName)
+                .repositories(singletonMap(repoName, repo)));
 
         // ---
 
@@ -97,20 +98,20 @@ public class ConcordTaskForkFromGitRepoIT extends AbstractServerIT {
 
         // ---
 
-        ProcessApi processApi = new ProcessApi(getApiClient());
-        ProcessEntry parentProcessEntry = waitForCompletion(processApi, parentSpr.getInstanceId());
+        ProcessV2Api processApi = new ProcessV2Api(getApiClient());
+        ProcessEntry parentProcessEntry = waitForCompletion(getApiClient(), parentSpr.getInstanceId());
 
-        byte[] ab = getLog(parentProcessEntry.getLogFileName());
+        byte[] ab = getLog(parentProcessEntry.getInstanceId());
         assertLog(".*repoCommitMessage: initial message.*", ab);
 
-        ProcessEntry processEntry = processApi.get(parentSpr.getInstanceId());
+        ProcessEntry processEntry = processApi.getProcess(parentSpr.getInstanceId(), Collections.singleton("childrenIds"));
         assertEquals(1, processEntry.getChildrenIds().size());
 
-        ProcessEntry child = processApi.get(processEntry.getChildrenIds().get(0));
+        ProcessEntry child = processApi.getProcess(processEntry.getChildrenIds().iterator().next(), Collections.singleton("childrenIds"));
         assertNotNull(child);
         assertEquals(ProcessEntry.StatusEnum.FINISHED, child.getStatus());
 
-        ab = getLog(child.getLogFileName());
+        ab = getLog(child.getInstanceId());
         assertLog(".*repoCommitMessage: initial message.*", ab);
     }
 }

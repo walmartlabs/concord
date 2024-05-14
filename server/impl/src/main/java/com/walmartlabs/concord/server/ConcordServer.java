@@ -25,14 +25,12 @@ import com.google.inject.Injector;
 import com.google.inject.Module;
 import com.walmartlabs.concord.server.boot.BackgroundTasks;
 import com.walmartlabs.concord.server.boot.HttpServer;
-import org.eclipse.sisu.space.BeanScanning;
-import org.eclipse.sisu.space.SpaceModule;
-import org.eclipse.sisu.space.URLClassSpace;
-import org.eclipse.sisu.wire.WireModule;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
+import java.util.Collection;
+import java.util.List;
 
 public final class ConcordServer {
 
@@ -47,19 +45,16 @@ public final class ConcordServer {
     @Inject
     private HttpServer server;
 
-    /**
-     * Start ConcordServer by scanning the local class path for the implementations of
-     * {@link HttpServer} or {@link BackgroundTasks}.
-     */
-    public static ConcordServer withAutoWiring() throws Exception {
-        ClassLoader cl = ConcordServer.class.getClassLoader();
-        return withModules(new WireModule(new SpaceModule(new URLClassSpace(cl), BeanScanning.GLOBAL_INDEX)));
+    private final Object controlMutex = new Object();
+
+    public static ConcordServer withModules(Module... modules) throws Exception {
+        return withModules(List.of(modules));
     }
 
     /**
      * Start ConcordServer using the provided modules.
      */
-    public static ConcordServer withModules(Module... modules) throws Exception {
+    public static ConcordServer withModules(Collection<Module> modules) throws Exception {
         Injector injector = Guice.createInjector(modules);
 
         ConcordServer instance = new ConcordServer();
@@ -69,21 +64,25 @@ public final class ConcordServer {
         return instance;
     }
 
-    public synchronized ConcordServer start() throws Exception {
-        tasks.start();
-        server.start();
+    public ConcordServer start() throws Exception {
+        synchronized (controlMutex) {
+            tasks.start();
+            server.start();
+        }
         return this;
     }
 
-    public synchronized void stop() throws Exception {
-        if (server != null) {
-            server.stop();
-            server = null;
-        }
+    public void stop() throws Exception {
+        synchronized (controlMutex) {
+            if (server != null) {
+                server.stop();
+                server = null;
+            }
 
-        if (tasks != null) {
-            tasks.stop();
-            tasks = null;
+            if (tasks != null) {
+                tasks.stop();
+                tasks = null;
+            }
         }
     }
 

@@ -34,8 +34,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
 import java.util.UUID;
 
 import static com.walmartlabs.concord.server.jooq.Tables.PROCESS_LOCKS;
@@ -45,7 +43,6 @@ import static com.walmartlabs.concord.server.jooq.tables.ProcessQueue.PROCESS_QU
  * Takes care of processes dead process locks.
  * E.g. removes locks for finished processes.
  */
-@Named
 public class ProcessLocksWatchdog implements ScheduledTask {
 
     private static final Logger log = LoggerFactory.getLogger(ProcessLocksWatchdog.class);
@@ -53,8 +50,8 @@ public class ProcessLocksWatchdog implements ScheduledTask {
     private final WatchdogDao dao;
 
     @Inject
-    public ProcessLocksWatchdog(WatchdogDao dao) {
-        this.dao = dao;
+    public ProcessLocksWatchdog(@MainDB Configuration cfg) {
+        this.dao = new WatchdogDao(cfg);
     }
 
     @Override
@@ -74,7 +71,6 @@ public class ProcessLocksWatchdog implements ScheduledTask {
         log.debug("performTask -> {} locks deleted", count);
     }
 
-    @Named
     private static final class WatchdogDao extends AbstractDao {
 
         private static final ProcessStatus[] FINISHED_STATUSES = {
@@ -84,7 +80,6 @@ public class ProcessLocksWatchdog implements ScheduledTask {
                 ProcessStatus.TIMED_OUT
         };
 
-        @Inject
         public WatchdogDao(@MainDB Configuration cfg) {
             super(cfg);
         }

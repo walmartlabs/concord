@@ -53,4 +53,13 @@ public class CreatePodChange implements Change {
             log.error("apply -> error while creating a pod {}/{}: {}", poolInstance.getName(), podName, e.getMessage());
         }
     }
+
+    @Override
+    public String toString() {
+        return "CreatePodChange{" +
+                "podName='" + podName + '\'' +
+                ", configMapName='" + configMapName + '\'' +
+                ", hash='" + hash + '\'' +
+                '}';
+    }
 }

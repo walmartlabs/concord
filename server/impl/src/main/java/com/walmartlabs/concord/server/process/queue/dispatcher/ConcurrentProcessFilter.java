@@ -33,7 +33,6 @@ import com.walmartlabs.concord.server.sdk.ProcessStatus;
 import org.jooq.DSLContext;
 
 import javax.inject.Inject;
-import javax.inject.Named;
 import java.util.*;
 
 /**
@@ -41,7 +40,6 @@ import java.util.*;
  * The process won't be scheduled for execution until the number of currently running
  * processes in the same project exceeds the configured value.
  */
-@Named
 public class ConcurrentProcessFilter extends WaitProcessFinishFilter {
 
     private static final Set<ProcessStatus> FINAL_STATUSES = ImmutableSet.of(

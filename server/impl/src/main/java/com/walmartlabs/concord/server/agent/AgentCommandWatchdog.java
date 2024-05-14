@@ -30,14 +30,10 @@ import org.jooq.Configuration;
 import org.jooq.Field;
 
 import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
 import java.time.OffsetDateTime;
 
 import static com.walmartlabs.concord.server.jooq.tables.AgentCommands.AGENT_COMMANDS;
 
-@Named
-@Singleton
 public class AgentCommandWatchdog implements ScheduledTask {
 
     private final AgentConfiguration cfg;
@@ -66,7 +62,6 @@ public class AgentCommandWatchdog implements ScheduledTask {
         watchdogDao.cleanupOld(PgUtils.nowMinus(cfg.getMaxCommandAge()));
     }
 
-    @Named
     private static final class WatchdogDao extends AbstractDao {
 
         @Inject

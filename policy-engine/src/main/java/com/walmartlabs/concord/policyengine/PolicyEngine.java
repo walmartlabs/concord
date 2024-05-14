@@ -4,7 +4,7 @@ package com.walmartlabs.concord.policyengine;
  * *****
  * Concord
  * -----
- * Copyright (C) 2017 - 2018 Walmart Inc.
+ * Copyright (C) 2017 - 2023 Walmart Inc.
  * -----
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -48,6 +48,7 @@ public class PolicyEngine {
     private final RawPayloadPolicy rawPayloadPolicy;
     private final RuntimePolicy runtimePolicy;
     private final CronTriggerPolicy cronTriggerPolicy;
+    private final KvPolicy kvPolicy;
 
     public PolicyEngine(PolicyEngineRules rules) {
         this(Collections.emptyList(), rules);
@@ -83,6 +84,7 @@ public class PolicyEngine {
         this.statePolicy = new StatePolicy(rules.stateRules());
         this.runtimePolicy = new RuntimePolicy(rules.runtimeRule());
         this.cronTriggerPolicy = new CronTriggerPolicy(rules.cronTriggerRule());
+        this.kvPolicy = new KvPolicy(rules.kvRule());
     }
 
     public List<String> policyNames() {
@@ -171,6 +173,10 @@ public class PolicyEngine {
 
     public CronTriggerPolicy getCronTriggerPolicy() {
         return cronTriggerPolicy;
+    }
+
+    public KvPolicy getKvPolicy() {
+        return kvPolicy;
     }
 
     @Override

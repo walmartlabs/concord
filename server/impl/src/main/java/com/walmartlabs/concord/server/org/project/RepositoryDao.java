@@ -27,7 +27,6 @@ import org.jooq.*;
 import org.jooq.exception.DataAccessException;
 
 import javax.inject.Inject;
-import javax.inject.Named;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -36,7 +35,6 @@ import static com.walmartlabs.concord.server.jooq.tables.Repositories.REPOSITORI
 import static com.walmartlabs.concord.server.jooq.tables.Secrets.SECRETS;
 import static org.jooq.impl.DSL.*;
 
-@Named
 public class RepositoryDao extends AbstractDao {
 
     private final ConcordObjectMapper objectMapper;
@@ -51,6 +49,11 @@ public class RepositoryDao extends AbstractDao {
     @Override
     protected void tx(Tx t) {
         super.tx(t);
+    }
+
+    @Override
+    protected <T> T txResult(TxResult<T> t) {
+        return super.txResult(t);
     }
 
     public UUID getId(UUID projectId, String repoName) {
@@ -133,6 +136,13 @@ public class RepositoryDao extends AbstractDao {
         if (i != 1) {
             throw new DataAccessException("Invalid number of rows: " + i);
         }
+    }
+
+    public void disable(DSLContext tx, UUID repoId) {
+        tx.update(REPOSITORIES)
+            .set(REPOSITORIES.IS_DISABLED, true)
+            .where(REPOSITORIES.REPO_ID.eq(repoId))
+            .execute();
     }
 
     public void clearSecretMappingBySecretId(DSLContext tx, UUID secretId) {

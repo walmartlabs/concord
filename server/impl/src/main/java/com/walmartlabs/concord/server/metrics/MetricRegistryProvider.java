@@ -24,12 +24,8 @@ import com.codahale.metrics.LockFreeExponentiallyDecayingReservoir;
 import com.codahale.metrics.MetricRegistry;
 import com.codahale.metrics.Timer;
 
-import javax.inject.Named;
 import javax.inject.Provider;
-import javax.inject.Singleton;
 
-@Named
-@Singleton
 public class MetricRegistryProvider implements Provider<MetricRegistry> {
 
     @Override

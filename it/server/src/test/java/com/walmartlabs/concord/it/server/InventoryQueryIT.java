@@ -20,13 +20,15 @@ package com.walmartlabs.concord.it.server;
  * =====
  */
 
-import com.squareup.okhttp.Call;
-import com.walmartlabs.concord.ApiClient;
-import com.walmartlabs.concord.ApiResponse;
-import com.walmartlabs.concord.client.*;
+import com.walmartlabs.concord.client2.*;
 import org.junit.jupiter.api.Test;
 
-import java.util.*;
+import java.io.InputStream;
+import java.net.URI;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
+import java.util.HashMap;
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -47,13 +49,13 @@ public class InventoryQueryIT extends AbstractServerIT {
                 "WHERE item_data @> ?::jsonb";
 
         InventoriesApi inventoryResource = new InventoriesApi(getApiClient());
-        inventoryResource.createOrUpdate(orgName, new InventoryEntry().setName(inventoryName));
+        inventoryResource.createOrUpdateInventory(orgName, new InventoryEntry().name(inventoryName));
 
-        CreateInventoryQueryResponse cqr = resource.createOrUpdate(orgName, inventoryName, queryName, text);
-        assertTrue(cqr.isOk());
+        CreateInventoryQueryResponse cqr = resource.createOrUpdateInventoryQuery(orgName, inventoryName, queryName, text);
+        assertTrue(cqr.getOk());
         assertNotNull(cqr.getId());
 
-        List<Object> resp = resource.exec(orgName, inventoryName, queryName, new HashMap<>());
+        List<Object> resp = resource.executeInventoryQuery(orgName, inventoryName, queryName, new HashMap<>());
         assertNotNull(resp);
     }
 
@@ -64,14 +66,14 @@ public class InventoryQueryIT extends AbstractServerIT {
         OrganizationsApi organizationsApi = new OrganizationsApi(getApiClient());
 
         String orgName = "org_" + randomString();
-        organizationsApi.createOrUpdate(new OrganizationEntry()
-                .setName(orgName));
+        organizationsApi.createOrUpdateOrg(new OrganizationEntry()
+                .name(orgName));
 
         InventoriesApi inventoriesApi = new InventoriesApi(getApiClient());
 
         String inventoryName = "inventory_" + randomString();
-        inventoriesApi.createOrUpdate(orgName, new InventoryEntry()
-                .setName(inventoryName));
+        inventoriesApi.createOrUpdateInventory(orgName, new InventoryEntry()
+                .name(inventoryName));
 
         // ---
 
@@ -80,17 +82,29 @@ public class InventoryQueryIT extends AbstractServerIT {
     }
 
     private static void assertQuery(ApiClient client, String orgName, String inventoryName, String queryName, String contentType) throws Exception {
-        Set<String> auths = client.getAuthentications().keySet();
-        String[] authNames = auths.toArray(new String[0]);
-
         String data = "select * from inventory_data";
-        Map<String, String> headerParams = new HashMap<>(Collections.singletonMap("Content-Type", contentType));
 
-        Call call = client.buildCall("/api/v1/org/" + orgName + "/inventory/" + inventoryName + "/query/" + queryName,
-                "POST", new ArrayList<>(), new ArrayList<>(),
-                data, headerParams, new HashMap<>(), authNames, null);
+        HttpRequest.Builder requestBuilder = client.requestBuilder();
 
-        ApiResponse<Object> response = client.execute(call, CreateInventoryQueryResponse.class);
-        assertEquals(200, response.getStatusCode());
+        String localVarPath = "/api/v1/org/{orgName}/inventory/{inventoryName}/query/{queryName}"
+                .replace("{orgName}", ApiClient.urlEncode(orgName))
+                .replace("{inventoryName}", ApiClient.urlEncode(inventoryName))
+                .replace("{queryName}", ApiClient.urlEncode(queryName));
+
+        requestBuilder.uri(URI.create(client.getBaseUri() + localVarPath));
+
+        requestBuilder.header("Content-Type", contentType);
+        String acceptHeaderValue = "application/json";
+        acceptHeaderValue += ",application/vnd.concord-validation-errors-v1+json";
+        requestBuilder.header("Accept", acceptHeaderValue);
+        requestBuilder.method("POST", HttpRequest.BodyPublishers.ofString(data));
+
+        HttpResponse<InputStream> response = client.getHttpClient().send(
+                requestBuilder.build(),
+                HttpResponse.BodyHandlers.ofInputStream());
+
+        assertEquals(200, response.statusCode());
+
+        new InventoryQueriesApi(client).createOrUpdateInventoryQuery(orgName, inventoryName, queryName, data);
     }
 }

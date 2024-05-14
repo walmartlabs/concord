@@ -23,12 +23,8 @@ package com.walmartlabs.concord.server.repository;
 import com.walmartlabs.concord.server.PeriodicTask;
 
 import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
 import java.util.concurrent.TimeUnit;
 
-@Named
-@Singleton
 public class RepositoryCacheCleanupTask extends PeriodicTask {
 
     private static final long ERROR_DELAY = TimeUnit.SECONDS.toMillis(30);

@@ -48,13 +48,13 @@ const kindToDescription = (k: ProcessKind): string => {
 
 class ProcessStatusTable extends React.PureComponent<Props> {
     static renderCommitId(process?: ProcessEntry) {
-        if (!process || !process.commitId) {
+        if (!process || !process.commitId || !process.repoUrl) {
             return ' - ';
         }
 
         return (
             <GitHubLink
-                url={process.repoUrl!}
+                url={process.repoUrl}
                 commitId={process.commitId}
                 text={process.commitId}
             />
@@ -217,7 +217,7 @@ class ProcessStatusTable extends React.PureComponent<Props> {
     }
 
     static renderRepoPath(process?: ProcessEntry) {
-        if (!process || !process.commitId) {
+        if (!process || !process.commitId || !process.repoUrl) {
             return '-';
         }
 

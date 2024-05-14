@@ -24,13 +24,12 @@ import com.walmartlabs.concord.sdk.Constants;
 import com.walmartlabs.concord.server.process.state.ProcessStateManager;
 import com.walmartlabs.concord.server.sdk.ProcessKey;
 import com.walmartlabs.concord.server.security.Roles;
+import com.walmartlabs.concord.server.security.UnauthorizedException;
 import com.walmartlabs.concord.server.security.UserPrincipal;
 import com.walmartlabs.concord.server.security.ldap.LdapPrincipal;
 import io.takari.bpm.form.Form;
-import org.apache.shiro.authz.UnauthorizedException;
 
 import javax.inject.Inject;
-import javax.inject.Named;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.ObjectInputStream;
@@ -43,7 +42,6 @@ import java.util.regex.Pattern;
 
 import static com.walmartlabs.concord.server.process.state.ProcessStateManager.path;
 
-@Named
 public class FormAccessManager {
 
     private static final Pattern GROUP_PATTERN = Pattern.compile("CN=(.*?),", Pattern.CASE_INSENSITIVE);

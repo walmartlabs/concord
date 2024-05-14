@@ -24,15 +24,14 @@ import com.fasterxml.jackson.core.JsonParseException;
 import com.walmartlabs.concord.db.AbstractDao;
 import com.walmartlabs.concord.db.JsonStorageDB;
 import com.walmartlabs.concord.server.ConcordObjectMapper;
+import com.walmartlabs.concord.server.sdk.validation.ValidationErrorsException;
 import org.jooq.Configuration;
 import org.jooq.DSLContext;
 import org.jooq.QueryPart;
 import org.jooq.Record;
 import org.jooq.impl.DSL;
-import org.sonatype.siesta.ValidationErrorsException;
 
 import javax.inject.Inject;
-import javax.inject.Named;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -46,7 +45,6 @@ import static org.jooq.impl.DSL.val;
  * more fine-tuned security configuration.
  * @see #execSql(UUID, String, Map, Integer)
  */
-@Named
 public class JsonStoreQueryExecDao extends AbstractDao {
 
     private final ConcordObjectMapper objectMapper;

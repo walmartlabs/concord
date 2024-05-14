@@ -90,7 +90,7 @@ public class RunnerJobExecutor implements JobExecutor {
 
     private final ObjectMapper objectMapper;
 
-    private int majorJavaVersion;
+    private final int majorJavaVersion;
 
     public RunnerJobExecutor(RunnerJobExecutorConfiguration cfg,
                              DependencyManager dependencyManager,
@@ -179,9 +179,9 @@ public class RunnerJobExecutor implements JobExecutor {
 
             pe = buildProcessEntry(job);
         } catch (Throwable e) {
-            log.warn("exec ['{}'] -> process error: {}", job.getInstanceId(), e.getMessage());
+            log.warn("exec ['{}'] -> process error: {}", job.getInstanceId(), e.getMessage(), e);
 
-            job.getLog().error("Process startup error: {}", e.getMessage());
+            job.getLog().error("Process startup error: {}", e.getMessage(), e);
 
             cleanup(job);
 
@@ -216,7 +216,7 @@ public class RunnerJobExecutor implements JobExecutor {
         });
 
         // return a handle that can be used to cancel the process or wait for its completion
-        return new JobInstanceImpl(f, pe.getProcess());
+        return new JobInstanceImpl(f, pe.getProcess(), cfg.cleanRunnerDescendants());
     }
 
     private void persistWorkDir(UUID instanceId, Path src) {
@@ -243,17 +243,19 @@ public class RunnerJobExecutor implements JobExecutor {
             // therefore, we need to make all files readable by all users
             // and that's why runner.persistentWorkDir shouldn't be used in prod
 
-            Files.walk(dst).forEach(f -> {
-                try {
-                    if (Files.isDirectory(f)) {
-                        Files.setPosixFilePermissions(f, Posix.posix(0755));
-                    } else if (Files.isRegularFile(f)) {
-                        Files.setPosixFilePermissions(f, Posix.posix(0644));
+            try(Stream<Path> walk = Files.walk(dst)) {
+                walk.forEach(f -> {
+                    try {
+                        if (Files.isDirectory(f)) {
+                            Files.setPosixFilePermissions(f, Posix.posix(0755));
+                        } else if (Files.isRegularFile(f)) {
+                            Files.setPosixFilePermissions(f, Posix.posix(0644));
+                        }
+                    } catch (IOException e) {
+                        log.warn("persistWorkDir -> can't update permissions for {}: {}", f, e.getMessage());
                     }
-                } catch (IOException e) {
-                    log.warn("persistWorkDir -> can't update permissions for {}: {}", f, e.getMessage());
-                }
-            });
+                });
+            }
         } catch (IOException e) {
             log.warn("persistWorkDir -> failed to copy {} into {}: {}", src, dst, e.getMessage());
         }
@@ -354,15 +356,28 @@ public class RunnerJobExecutor implements JobExecutor {
         uris = rewriteDependencies(job, uris);
 
         Collection<DependencyEntity> deps = dependencyManager.resolve(uris, new ProgressListener() {
+
+            private final List<String> errors = Collections.synchronizedList(new ArrayList<>());
+
             @Override
             public void onRetry(int retryCount, int maxRetry, long interval, String cause) {
+                synchronized (errors) {
+                    for (String error : errors) {
+                        job.getLog().warn(error);
+                    }
+                }
+
                 job.getLog().warn("Error while downloading dependencies: {}", cause);
                 job.getLog().info("Retrying in {}ms", interval);
             }
 
             @Override
             public void onTransferFailed(String error) {
-                job.getLog().error(error);
+                if (job.isDebugMode()) {
+                    job.getLog().warn(error);
+                } else {
+                    errors.add(error);
+                }
             }
         });
 
@@ -761,6 +776,8 @@ public class RunnerJobExecutor implements JobExecutor {
 
         boolean preforkEnabled();
 
+        boolean cleanRunnerDescendants();
+
         static ImmutableRunnerJobExecutorConfiguration.Builder builder() {
             return ImmutableRunnerJobExecutorConfiguration.builder();
         }
@@ -770,12 +787,14 @@ public class RunnerJobExecutor implements JobExecutor {
 
         private final Future<?> f;
         private final Process proc;
+        private final boolean cleanRunnerDescendants;
 
         private transient boolean cancelled = false;
 
-        private JobInstanceImpl(Future<?> f, Process proc) {
+        private JobInstanceImpl(Future<?> f, Process proc, boolean cleanRunnerDescendants) {
             this.f = f;
             this.proc = proc;
+            this.cleanRunnerDescendants = cleanRunnerDescendants;
         }
 
         @Override
@@ -791,7 +810,7 @@ public class RunnerJobExecutor implements JobExecutor {
 
             cancelled = true;
 
-            Utils.kill(proc);
+            Utils.kill(proc, cleanRunnerDescendants);
         }
 
         @Override

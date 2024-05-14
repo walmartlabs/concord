@@ -65,12 +65,13 @@ public class TaskCallCommand extends StepCommand<TaskCall> {
         String taskName = call.getName();
         Task t = taskProviders.createTask(ctx, taskName);
         if (t == null) {
-            throw new IllegalStateException("Task not found: '" + taskName + "'");
+            throw new UserDefinedException("Task not found: '" + taskName + "'");
         }
 
         TaskCallInterceptor interceptor = runtime.getService(TaskCallInterceptor.class);
 
         CallContext callContext = CallContext.builder()
+                .threadId(threadId)
                 .taskName(taskName)
                 .correlationId(ctx.execution().correlationId())
                 .currentStep(getStep())

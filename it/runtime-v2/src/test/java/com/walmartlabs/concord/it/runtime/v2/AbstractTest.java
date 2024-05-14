@@ -21,8 +21,7 @@ package com.walmartlabs.concord.it.runtime.v2;
  */
 
 import ca.ibodrov.concord.testcontainers.ConcordProcess;
-import com.walmartlabs.concord.ApiException;
-import com.walmartlabs.concord.client.ProcessEntry;
+import com.walmartlabs.concord.client2.*;
 import com.walmartlabs.concord.it.common.JGitUtils;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Timeout;

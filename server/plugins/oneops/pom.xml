@@ -5,12 +5,12 @@
     <parent>
         <groupId>com.walmartlabs.concord.server.plugins</groupId>
         <artifactId>parent</artifactId>
-        <version>1.98.2-SNAPSHOT</version>
+        <version>2.11.2-SNAPSHOT</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
 
     <artifactId>concord-oneops-plugin</artifactId>
-    <packaging>takari-jar</packaging>
+    <packaging>jar</packaging>
 
     <dependencies>
         <dependency>
@@ -63,15 +63,6 @@
         </dependency>
 
         <dependency>
-            <groupId>io.swagger</groupId>
-            <artifactId>swagger-annotations</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>io.takari.siesta</groupId>
-            <artifactId>siesta-api</artifactId>
-        </dependency>
-
-        <dependency>
             <groupId>com.walmartlabs.ollie</groupId>
             <artifactId>ollie-config</artifactId>
             <scope>provided</scope>
@@ -93,13 +84,6 @@
 
     <build>
         <plugins>
-            <plugin>
-                <groupId>io.takari.maven.plugins</groupId>
-                <artifactId>takari-lifecycle-plugin</artifactId>
-                <configuration>
-                    <proc>proc</proc>
-                </configuration>
-            </plugin>
             <plugin>
                 <groupId>org.eclipse.sisu</groupId>
                 <artifactId>sisu-maven-plugin</artifactId>

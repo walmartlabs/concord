@@ -31,12 +31,10 @@ import com.walmartlabs.concord.server.sdk.ProcessKey;
 import com.walmartlabs.concord.server.sdk.metrics.InjectCounter;
 
 import javax.inject.Inject;
-import javax.inject.Named;
 import java.nio.file.Path;
 
 import static com.walmartlabs.concord.server.process.pipelines.processors.policy.PolicyApplier.appendMsg;
 
-@Named
 public class WorkspacePolicyApplier implements PolicyApplier {
 
     private final ProcessLogManager logManager;

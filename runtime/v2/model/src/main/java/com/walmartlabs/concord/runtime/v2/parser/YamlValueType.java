@@ -4,7 +4,7 @@ package com.walmartlabs.concord.runtime.v2.parser;
  * *****
  * Concord
  * -----
- * Copyright (C) 2017 - 2019 Walmart Inc.
+ * Copyright (C) 2017 - 2023 Walmart Inc.
  * -----
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -70,6 +70,8 @@ public final class YamlValueType<T> {
     public static final YamlValueType<List<FormField>> ARRAY_OF_FORM_FIELD = array("ARRAY_OF_FORM_FIELD", FORM_FIELD);
     public static final YamlValueType<FormCall> FORM_CALL = type("FORM_CALL");
     public static final YamlValueType<ImmutableFormCallOptions.Builder> FORM_CALL_FIELDS = type("ARRAY_OF_FORM_FIELD or EXPRESSION");
+    public static final YamlValueType<ImmutableFormCallOptions.Builder> FORM_CALL_RUN_AS = type("OBJECT or EXPRESSION");
+    public static final YamlValueType<ImmutableFormCallOptions.Builder> FORM_CALL_VALUES = type("OBJECT or EXPRESSION");
     public static final YamlValueType<ImmutableRetry.Builder> RETRY_TIMES = type("INT or EXPRESSION");
     public static final YamlValueType<ImmutableRetry.Builder> RETRY_DELAY = type("INT or EXPRESSION");
     public static final YamlValueType<Imports> IMPORTS = type("IMPORTS");
@@ -109,6 +111,7 @@ public final class YamlValueType<T> {
     public static final YamlValueType<Map<String, Object>> GITHUB_REPOSITORY_INFO = type("GITHUB_REPOSITORY_INFO");
     public static final YamlValueType<List<Map<String, Object>>> ARRAY_OF_GITHUB_REPOSITORY_INFO = array("REPOSITORY_INFO", GITHUB_REPOSITORY_INFO);
     public static final YamlValueType<Loop> LOOP = type("LOOP");
+    public static final YamlValueType<ImmutableLoop.Builder> LOOP_PARALLELISM = type("int or expression");
 
     private final String name;
 

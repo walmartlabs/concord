@@ -27,8 +27,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
 import java.time.OffsetDateTime;
 import java.util.*;
 import java.util.concurrent.ExecutorService;
@@ -39,8 +37,6 @@ import static com.walmartlabs.concord.db.PgUtils.interval;
 import static java.util.stream.Collectors.toMap;
 import static org.jooq.impl.DSL.currentOffsetDateTime;
 
-@Named
-@Singleton
 public class TaskScheduler extends PeriodicTask {
 
     private static final Logger log = LoggerFactory.getLogger(TaskScheduler.class);

@@ -20,9 +20,7 @@ package com.walmartlabs.concord.plugins.ansible.v1;
  * =====
  */
 
-import com.walmartlabs.concord.ApiClient;
-import com.walmartlabs.concord.client.ApiClientConfiguration;
-import com.walmartlabs.concord.client.ApiClientFactory;
+import com.walmartlabs.concord.client2.*;
 import com.walmartlabs.concord.plugins.ansible.*;
 import com.walmartlabs.concord.runtime.v2.sdk.TaskResult;
 import com.walmartlabs.concord.sdk.*;
@@ -96,7 +94,7 @@ public class RunPlaybookTask2 implements Task {
 
     private void run(Context ctx, Path workDir, Map<String, Object> args) throws Exception {
         ApiClient apiClient = apiClientFactory.create(ApiClientConfiguration.builder()
-                .context(context)
+                .sessionToken(ContextUtils.getSessionToken(context))
                 .build());
 
         AnsibleSecretServiceV1 ansibleSecretService = new AnsibleSecretServiceV1(context, secretService);
@@ -109,7 +107,7 @@ public class RunPlaybookTask2 implements Task {
         String orgName = projectInfo != null ? (String) projectInfo.get("orgName") : null;
 
         AnsibleContext context = AnsibleContext.builder()
-                .apiBaseUrl(apiClient.getBasePath())
+                .apiBaseUrl(apiClient.getBaseUrl())
                 .instanceId(UUID.fromString(txId))
                 .workDir(workDir)
                 .tmpDir(createTmpDir(workDir))

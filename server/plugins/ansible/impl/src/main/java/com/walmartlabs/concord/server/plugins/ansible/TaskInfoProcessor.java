@@ -36,10 +36,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.time.OffsetDateTime;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import static com.walmartlabs.concord.server.plugins.ansible.jooq.Tables.ANSIBLE_TASK_STATS;
@@ -80,9 +77,12 @@ public class TaskInfoProcessor implements EventProcessor {
                     .taskId(a.getTaskId())
                     .build();
 
-            String taskName = a.getTaskName();
+            String taskName = Optional.ofNullable(a.getTaskName())
+                    .map(name -> StringUtils.abbreviate(name, ANSIBLE_TASK_STATS.TASK_NAME.getDataType().length()))
+                    .orElse("[task name not found]");
             String status = a.getStatus();
             long taskOrder = a.isSetupTask() ? -1 : e.eventSeq();
+
             stats.compute(key, (k, v) -> (v == null) ? TaskDetails.builder()
                     .taskName(taskName)
                     .stats(new TaskStats().inc(status))

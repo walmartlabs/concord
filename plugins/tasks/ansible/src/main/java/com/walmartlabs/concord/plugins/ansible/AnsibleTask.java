@@ -22,8 +22,7 @@ package com.walmartlabs.concord.plugins.ansible;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
-import com.walmartlabs.concord.ApiClient;
-import com.walmartlabs.concord.client.ProcessEventsApi;
+import com.walmartlabs.concord.client2.*;
 import com.walmartlabs.concord.plugins.ansible.secrets.AnsibleSecretService;
 import com.walmartlabs.concord.runtime.v2.sdk.TaskResult;
 import com.walmartlabs.concord.sdk.Constants;
@@ -117,6 +116,8 @@ public class AnsibleTask {
 
         Virtualenv virtualenv = Virtualenv.create(context);
 
+        boolean skipCheckBinary = getBoolean(context.args(), TaskParams.SKIP_CHECK_BINARY.getKey(), false);
+
         try {
             Path workDir = context.workDir();
             Path attachmentsPath = workDir.relativize(workDir.resolve(Constants.Files.JOB_ATTACHMENTS_DIR_NAME));
@@ -132,7 +133,8 @@ public class AnsibleTask {
                     .withCheck(checkMode)
                     .withSyntaxCheck(syntaxCheck)
                     .withEnv(env.get())
-                    .withVirtualenv(virtualenv);
+                    .withVirtualenv(virtualenv)
+                    .withSkipCheckBinary(skipCheckBinary);
 
             auth.prepare();
 

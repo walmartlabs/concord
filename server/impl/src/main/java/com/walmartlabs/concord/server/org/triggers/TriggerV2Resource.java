@@ -24,16 +24,12 @@ import com.walmartlabs.concord.common.validation.ConcordKey;
 import com.walmartlabs.concord.server.org.OrganizationDao;
 import com.walmartlabs.concord.server.org.ResourceAccessLevel;
 import com.walmartlabs.concord.server.org.project.*;
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
-import io.swagger.annotations.ApiParam;
-import io.swagger.annotations.Authorization;
-import org.sonatype.siesta.Resource;
-import org.sonatype.siesta.ValidationErrorsException;
+import com.walmartlabs.concord.server.sdk.rest.Resource;
+import com.walmartlabs.concord.server.sdk.validation.ValidationErrorsException;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 
 import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
@@ -42,10 +38,8 @@ import javax.ws.rs.core.MediaType;
 import java.util.List;
 import java.util.UUID;
 
-@Named
-@Singleton
-@Api(value = "TriggersV2", authorizations = {@Authorization("api_key"), @Authorization("session_key"), @Authorization("ldap")})
 @Path("/api/v2/trigger")
+@Tag(name = "TriggersV2")
 public class TriggerV2Resource implements Resource {
 
     private final OrganizationDao orgDao;
@@ -73,15 +67,15 @@ public class TriggerV2Resource implements Resource {
      * List process trigger definitions for the specified type.
      */
     @GET
-    @ApiOperation(value = "List trigger definitions", responseContainer = "list", response = TriggerEntry.class)
     @Produces(MediaType.APPLICATION_JSON)
-    public List<TriggerEntry> list(@ApiParam @QueryParam("type") @ConcordKey String type,
-                                   @ApiParam @QueryParam("orgId") UUID orgId,
-                                   @ApiParam @QueryParam("orgName") @ConcordKey String orgName,
-                                   @ApiParam @QueryParam("projectId") UUID projectId,
-                                   @ApiParam @QueryParam("projectName") @ConcordKey String projectName,
-                                   @ApiParam @QueryParam("repoId") UUID repoId,
-                                   @ApiParam @QueryParam("repoName") @ConcordKey String repoName) {
+    @Operation(description = "List trigger definitions", operationId = "listTriggersV2")
+    public List<TriggerEntry> list(@QueryParam("type") @ConcordKey String type,
+                                   @QueryParam("orgId") UUID orgId,
+                                   @QueryParam("orgName") @ConcordKey String orgName,
+                                   @QueryParam("projectId") UUID projectId,
+                                   @QueryParam("projectName") @ConcordKey String projectName,
+                                   @QueryParam("repoId") UUID repoId,
+                                   @QueryParam("repoName") @ConcordKey String repoName) {
 
         // TODO: assert org/project access
 

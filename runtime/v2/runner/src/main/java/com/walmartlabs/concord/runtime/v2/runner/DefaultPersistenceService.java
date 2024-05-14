@@ -57,6 +57,19 @@ public class DefaultPersistenceService implements PersistenceService {
         Path storeDir = workingDirectory.getValue()
                 .resolve(Constants.Files.JOB_ATTACHMENTS_DIR_NAME);
 
+        persistFile(storeDir, name, writer);
+    }
+
+    @Override
+    public void persistSessionFile(String name, Writer writer) {
+        Path storeDir = workingDirectory.getValue()
+                .resolve(Constants.Files.JOB_ATTACHMENTS_DIR_NAME)
+                .resolve(Constants.Files.JOB_SESSION_FILES_DIR_NAME);
+
+        persistFile(storeDir, name, writer);
+    }
+
+    private void persistFile(Path storeDir, String name, Writer writer) {
         try {
             if (!Files.exists(storeDir)) {
                 Files.createDirectories(storeDir);
@@ -77,6 +90,20 @@ public class DefaultPersistenceService implements PersistenceService {
                 .resolve(Constants.Files.JOB_ATTACHMENTS_DIR_NAME)
                 .resolve(name);
 
+        return loadPersistedFile(file, name, converter);
+    }
+
+    @Override
+    public <T> T loadPersistedSessionFile(String name, Converter<InputStream, T> converter) {
+        Path file = workingDirectory.getValue()
+                .resolve(Constants.Files.JOB_ATTACHMENTS_DIR_NAME)
+                .resolve(Constants.Files.JOB_SESSION_FILES_DIR_NAME)
+                .resolve(name);
+
+        return loadPersistedFile(file, name, converter);
+    }
+
+    private <T> T loadPersistedFile(Path file, String name, Converter<InputStream, T> converter) {
         try {
             if (!Files.exists(file)) {
                 return null;

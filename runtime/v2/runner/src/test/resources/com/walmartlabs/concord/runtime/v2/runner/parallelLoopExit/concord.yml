@@ -1,0 +1,33 @@
+configuration:
+  debug: true
+  runtime: concord-v2
+
+flows:
+  default:
+    - call: "inner"
+      loop:
+        items:
+          - "one"
+          - "two"
+          - "three"
+          - "four"
+        mode: parallel
+
+    - log: "should not reach here"
+
+  inner:
+    - log: "inner start: ${item}"
+
+    - if: ${item == "four"}
+      then:
+        - checkpoint: "${item}"
+
+    - if: ${item == "two"}
+      then:
+        - exit
+
+    - if: ${item == "three"}
+      then:
+        - expr: ${sleep.ms(1000)}
+
+    - log: "inner end: ${item}"

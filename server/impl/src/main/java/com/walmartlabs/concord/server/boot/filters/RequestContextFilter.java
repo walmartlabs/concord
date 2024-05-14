@@ -23,8 +23,6 @@ package com.walmartlabs.concord.server.boot.filters;
 import com.walmartlabs.concord.server.RequestContext;
 import com.walmartlabs.concord.server.RequestUtils;
 
-import javax.inject.Named;
-import javax.inject.Singleton;
 import javax.servlet.*;
 import javax.servlet.annotation.WebFilter;
 import javax.servlet.http.HttpServletRequest;
@@ -36,8 +34,6 @@ import java.util.UUID;
 /**
  * Handles the initialization of {@link RequestContext} for each request.
  */
-@Named
-@Singleton
 @WebFilter({"/api/*", "/logs/*", "/forms/*"})
 public class RequestContextFilter implements Filter {
 

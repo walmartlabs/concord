@@ -4,6 +4,7 @@
     "private": true,
     "devDependencies": {
         "@babel/preset-react": "7.16.0",
+        "@datasert/cronjs-matcher": "^1.4.0",
         "@testing-library/react": "12.1.2",
         "@types/jest": "27.0.3",
         "@types/lodash": "4.14.178",
@@ -47,6 +48,7 @@
         "react": "17.0.2",
         "react-dom": "17.0.2",
         "react-hook-form": "7.21.2",
+        "react-idle-timer": "5.4.1",
         "react-json-view": "1.21.3",
         "react-redux": "7.2.6",
         "react-router": "5.2.0",
@@ -60,8 +62,8 @@
         "semantic-ui-calendar-react": "0.15.3",
         "semantic-ui-css": "2.4.1",
         "semantic-ui-react": "2.0.4",
-        "styled-tools": "1.7.2",
         "styled-components": "5.3.3",
+        "styled-tools": "1.7.2",
         "typeface-lato": "1.1.13",
         "url-search-params-polyfill": "8.1.1"
     },

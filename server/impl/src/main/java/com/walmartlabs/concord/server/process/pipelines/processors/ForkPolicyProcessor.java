@@ -21,6 +21,7 @@ package com.walmartlabs.concord.server.process.pipelines.processors;
  */
 
 import com.walmartlabs.concord.db.AbstractDao;
+import com.walmartlabs.concord.db.MainDB;
 import com.walmartlabs.concord.policyengine.CheckResult;
 import com.walmartlabs.concord.policyengine.ForkDepthRule;
 import com.walmartlabs.concord.policyengine.PolicyEngine;
@@ -106,7 +107,7 @@ public class ForkPolicyProcessor implements PayloadProcessor {
     private static class ForkDepthDao extends AbstractDao {
 
         @Inject
-        public ForkDepthDao(Configuration cfg) {
+        public ForkDepthDao(@MainDB Configuration cfg) {
             super(cfg);
         }
 

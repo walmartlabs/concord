@@ -32,6 +32,7 @@ import uk.org.lidalia.sysoutslf4j.context.SysOutOverSLF4J;
 import java.io.Serializable;
 import java.util.Collections;
 import java.util.Map;
+import java.util.UUID;
 import java.util.concurrent.*;
 
 import static ch.qos.logback.classic.ClassicConstants.FINALIZE_SESSION_MARKER;
@@ -47,16 +48,12 @@ public class SegmentedLogger implements RunnerLogger {
     }
 
     @Override
-    public void withContext(LogContext ctx, Runnable runnable) {
-        Long segmentId = ctx.segmentId();
-        if (segmentId == null) {
-            segmentId = loggingClient.createSegment(ctx.correlationId(), ctx.segmentName());
-        }
+    public Long createSegment(String segmentName, UUID correlationId) {
+        return loggingClient.createSegment(correlationId, segmentName);
+    }
 
-        LogContext context = LogContext.builder().from(ctx)
-                .segmentId(segmentId)
-                .build();
-
+    @Override
+    public void withContext(LogContext context, Runnable runnable) {
         ThreadGroup threadGroup = new LogContextThreadGroup(context);
         executeInThreadGroup(threadGroup, "thread-" + context.segmentName(), () -> {
             // make sure the redirection is enabled in the current thread
@@ -64,10 +61,18 @@ public class SegmentedLogger implements RunnerLogger {
                 SysOutOverSLF4J.sendSystemOutAndErrToSLF4J(LogLevel.INFO, LogLevel.ERROR);
             }
 
+            boolean exceptionOccurred = false;
             try {
                 runnable.run();
+            } catch (Exception e) {
+                exceptionOccurred = true;
+                throw e;
             } finally {
-                log.info(FINALIZE_SESSION_MARKER, "<<finalize>>");
+                if (exceptionOccurred) {
+                    log.error(FINALIZE_SESSION_MARKER, "<<finalize>>");
+                } else {
+                    log.info(FINALIZE_SESSION_MARKER, "<<finalize>>");
+                }
             }
         });
     }
@@ -117,15 +122,7 @@ public class SegmentedLogger implements RunnerLogger {
         }
     }
 
-    private static final class ThreadGroupAwareThreadFactory implements ThreadFactory {
-
-        private final ThreadGroup group;
-        private final String threadName;
-
-        private ThreadGroupAwareThreadFactory(ThreadGroup group, String threadName) {
-            this.group = group;
-            this.threadName = threadName;
-        }
+    private record ThreadGroupAwareThreadFactory(ThreadGroup group, String threadName) implements ThreadFactory {
 
         @Override
         public Thread newThread(Runnable r) {

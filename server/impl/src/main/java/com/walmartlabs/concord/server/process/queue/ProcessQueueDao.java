@@ -4,7 +4,7 @@ package com.walmartlabs.concord.server.process.queue;
  * *****
  * Concord
  * -----
- * Copyright (C) 2017 - 2018 Walmart Inc.
+ * Copyright (C) 2017 - 2023 Walmart Inc.
  * -----
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -35,14 +35,14 @@ import com.walmartlabs.concord.server.jooq.tables.ProcessEvents;
 import com.walmartlabs.concord.server.jooq.tables.ProcessQueue;
 import com.walmartlabs.concord.server.jooq.tables.records.ProcessQueueRecord;
 import com.walmartlabs.concord.server.process.*;
+import com.walmartlabs.concord.server.process.ProcessEntry.CheckpointRestoreHistoryEntry;
 import com.walmartlabs.concord.server.process.ProcessEntry.ProcessCheckpointEntry;
 import com.walmartlabs.concord.server.process.ProcessEntry.ProcessStatusHistoryEntry;
-import com.walmartlabs.concord.server.process.ProcessEntry.CheckpointRestoreHistoryEntry;
 import com.walmartlabs.concord.server.sdk.PartialProcessKey;
 import com.walmartlabs.concord.server.sdk.ProcessKey;
 import com.walmartlabs.concord.server.sdk.ProcessStatus;
-import org.jooq.*;
 import org.jooq.Record;
+import org.jooq.*;
 import org.jooq.exception.DataAccessException;
 import org.jooq.impl.DSL;
 import org.jooq.util.postgres.PostgresDSL;
@@ -54,7 +54,6 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 import static com.walmartlabs.concord.db.PgUtils.*;
-import static com.walmartlabs.concord.db.PgUtils.toJsonDate;
 import static com.walmartlabs.concord.server.jooq.Tables.*;
 import static com.walmartlabs.concord.server.jooq.tables.Organizations.ORGANIZATIONS;
 import static com.walmartlabs.concord.server.jooq.tables.ProcessCheckpoints.PROCESS_CHECKPOINTS;
@@ -429,8 +428,12 @@ public class ProcessQueueDao extends AbstractDao {
     }
 
     public List<ProcessKey> getCascade(PartialProcessKey parentKey) {
+        return txResult(tx -> getCascade(tx, parentKey));
+    }
+
+    public List<ProcessKey> getCascade(DSLContext tx, PartialProcessKey parentKey) {
         UUID parentInstanceId = parentKey.getInstanceId();
-        return dsl().withRecursive("children").as(
+        return tx.withRecursive("children").as(
                 select(PROCESS_QUEUE.INSTANCE_ID, PROCESS_QUEUE.CREATED_AT).from(PROCESS_QUEUE)
                         .where(PROCESS_QUEUE.INSTANCE_ID.eq(parentInstanceId))
                         .unionAll(
@@ -441,6 +444,28 @@ public class ProcessQueueDao extends AbstractDao {
                 .select()
                 .from(name("children"))
                 .fetch(r -> new ProcessKey(r.get(0, UUID.class), r.get(1, OffsetDateTime.class)));
+    }
+
+    public ProcessKey getRootId(PartialProcessKey processKey) {
+        UUID instanceId = processKey.getInstanceId();
+
+        Name cteName = name("parent");
+        Field<UUID> cteParentId = field(name("parent", PROCESS_QUEUE.PARENT_INSTANCE_ID.getName()), UUID.class);
+
+        return dsl()
+                .withRecursive(cteName).as(
+                        select(PROCESS_QUEUE.INSTANCE_ID, PROCESS_QUEUE.CREATED_AT, PROCESS_QUEUE.PARENT_INSTANCE_ID)
+                                .from(PROCESS_QUEUE)
+                                .where(PROCESS_QUEUE.INSTANCE_ID.eq(instanceId))
+                                .unionAll(
+                                        select(PROCESS_QUEUE.INSTANCE_ID, PROCESS_QUEUE.CREATED_AT, PROCESS_QUEUE.PARENT_INSTANCE_ID).
+                                                from(PROCESS_QUEUE)
+                                                .join(cteName)
+                                                .on(PROCESS_QUEUE.INSTANCE_ID.eq(cteParentId))))
+                .select()
+                .from(cteName)
+                .where(cteParentId.isNull())
+                .fetchOne(r -> new ProcessKey(r.get(0, UUID.class), r.get(1, OffsetDateTime.class)));
     }
 
     public ProcessInitiatorEntry getInitiator(PartialProcessKey processKey) {

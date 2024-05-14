@@ -20,79 +20,30 @@ package com.walmartlabs.concord.runner;
  * =====
  */
 
-import com.squareup.okhttp.OkHttpClient;
-import com.walmartlabs.concord.ApiClient;
-import com.walmartlabs.concord.client.ApiClientConfiguration;
-import com.walmartlabs.concord.client.ApiClientFactory;
-import com.walmartlabs.concord.client.ConcordApiClient;
+import com.walmartlabs.concord.client2.ApiClient;
+import com.walmartlabs.concord.client2.ApiClientConfiguration;
+import com.walmartlabs.concord.client2.ApiClientFactory;
+import com.walmartlabs.concord.client2.DefaultApiClientFactory;
 import com.walmartlabs.concord.sdk.ApiConfiguration;
-import com.walmartlabs.concord.sdk.Constants;
-import com.walmartlabs.concord.sdk.Context;
-import com.walmartlabs.concord.sdk.ContextUtils;
 
-import javax.net.ssl.SSLContext;
-import javax.net.ssl.SSLSocketFactory;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.security.KeyManagementException;
-import java.security.NoSuchAlgorithmException;
+import java.time.Duration;
 import java.util.UUID;
-import java.util.concurrent.TimeUnit;
 
 public class ApiClientFactoryImpl implements ApiClientFactory {
 
     private final ApiConfiguration cfg;
-    private final Path tmpDir;
-    private final OkHttpClient httpClient;
+    private final DefaultApiClientFactory clientFactory;
+    private UUID txId;
 
-    public ApiClientFactoryImpl(ApiConfiguration cfg, Path workDir) throws Exception {
+    public ApiClientFactoryImpl(ApiConfiguration cfg) throws Exception {
         this.cfg = cfg;
-
-        Path tmpBase = Files.createDirectories(workDir.resolve(Constants.Files.CONCORD_TMP_DIR_NAME));
-        this.tmpDir = Files.createTempDirectory(tmpBase, "api-client");
-
-        OkHttpClient client = new OkHttpClient();
-
-        // init the SSL socket factory early to save time on the first request
-        client = withSslSocketFactory(client);
-
-        client.setConnectTimeout(cfg.connectTimeout(), TimeUnit.MILLISECONDS);
-        client.setReadTimeout(cfg.readTimeout(), TimeUnit.MILLISECONDS);
-        client.setWriteTimeout(30, TimeUnit.SECONDS);
-
-        this.httpClient = client;
+        this.clientFactory = new DefaultApiClientFactory(cfg.getBaseUrl(), Duration.ofMillis(cfg.connectTimeout()));
     }
 
     @Override
     public ApiClient create(ApiClientConfiguration overrides) {
-        String baseUrl = overrides.baseUrl() != null ? overrides.baseUrl() : cfg.getBaseUrl();
-
-        String sessionToken = null;
-        if (overrides.apiKey() == null) {
-            sessionToken = overrides.sessionToken();
-
-            Context ctx = overrides.context();
-            if (sessionToken == null && ctx != null) {
-                sessionToken = cfg.getSessionToken(ctx);
-            }
-        }
-
-        String apiKey = overrides.apiKey();
-        if (apiKey != null) {
-            sessionToken = null;
-        }
-
-        if (sessionToken == null && apiKey == null) {
-            throw new IllegalArgumentException("Session token or an API key is required");
-        }
-
-        ApiClient client = new ConcordApiClient(baseUrl, httpClient)
-                .setSessionToken(sessionToken)
-                .setApiKey(apiKey)
-                .addDefaultHeader("Accept", "*/*")
-                .setTempFolderPath(tmpDir.toString());
-
-        UUID txId = getTxId(overrides);
+        ApiClient client = this.clientFactory.create(overrides)
+                .setReadTimeout(Duration.ofMillis(cfg.readTimeout()));
 
         if (txId != null) {
             client = client.setUserAgent("Concord-Runner: txId=" + txId);
@@ -101,23 +52,7 @@ public class ApiClientFactoryImpl implements ApiClientFactory {
         return client;
     }
 
-    @Deprecated
-    private static UUID getTxId(ApiClientConfiguration cfg) {
-        if (cfg.txId() != null) {
-            return cfg.txId();
-        }
-
-        if (cfg.context() != null) {
-            return ContextUtils.getTxId(cfg.context());
-        }
-
-        return null;
-    }
-
-    private static OkHttpClient withSslSocketFactory(OkHttpClient client) throws NoSuchAlgorithmException, KeyManagementException {
-        SSLContext sslContext = SSLContext.getInstance("TLS");
-        sslContext.init(null, null, null);
-        SSLSocketFactory sslSocketFactory = sslContext.getSocketFactory();
-        return client.setSslSocketFactory(sslSocketFactory);
+    public void setTxId(UUID instanceId) {
+        this.txId = instanceId;
     }
 }

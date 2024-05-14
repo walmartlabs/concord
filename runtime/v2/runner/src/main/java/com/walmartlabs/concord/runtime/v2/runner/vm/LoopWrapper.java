@@ -4,7 +4,7 @@ package com.walmartlabs.concord.runtime.v2.runner.vm;
  * *****
  * Concord
  * -----
- * Copyright (C) 2017 - 2019 Walmart Inc.
+ * Copyright (C) 2017 - 2023 Walmart Inc.
  * -----
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,16 +24,13 @@ import com.walmartlabs.concord.runtime.v2.model.Loop;
 import com.walmartlabs.concord.runtime.v2.model.Step;
 import com.walmartlabs.concord.runtime.v2.runner.compiler.CompilerContext;
 import com.walmartlabs.concord.runtime.v2.runner.context.ContextFactory;
+import com.walmartlabs.concord.runtime.v2.sdk.Context;
+import com.walmartlabs.concord.runtime.v2.sdk.EvalContext;
 import com.walmartlabs.concord.runtime.v2.sdk.EvalContextFactory;
 import com.walmartlabs.concord.runtime.v2.sdk.ExpressionEvaluator;
-import com.walmartlabs.concord.runtime.v2.sdk.Context;
-import com.walmartlabs.concord.sdk.MapUtils;
 import com.walmartlabs.concord.svm.Runtime;
 import com.walmartlabs.concord.svm.*;
 
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.ObjectOutputStream;
 import java.io.Serializable;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
@@ -44,7 +41,8 @@ public abstract class LoopWrapper implements Command {
     public static LoopWrapper of(CompilerContext ctx, Command cmd, Loop withItems, Collection<String> outVariables, Map<String, Serializable> outExpressions) {
         Collection<String> out = Collections.emptyList();
         if (!outExpressions.isEmpty()) {
-            out = outExpressions.keySet();
+            // serializable
+            out = new HashSet<>(outExpressions.keySet());
         } else if (!outVariables.isEmpty()) {
             out = outVariables;
         }
@@ -78,8 +76,16 @@ public abstract class LoopWrapper implements Command {
     }
 
     @Override
-    @SuppressWarnings("unchecked")
     public void eval(Runtime runtime, State state, ThreadId threadId) {
+        execute(runtime, state, threadId);
+    }
+
+    @Override
+    public void onException(Runtime runtime, Exception e, State state, ThreadId threadId) {
+        cmd.onException(runtime, e, state, threadId);
+    }
+
+    private void execute(Runtime runtime, State state, ThreadId threadId) {
         Frame frame = state.peekFrame(threadId);
         frame.pop();
 
@@ -89,14 +95,9 @@ public abstract class LoopWrapper implements Command {
             return;
         }
 
-        Step currentStep = null;
-        if (cmd instanceof StepCommand) {
-            currentStep = ((StepCommand<?>) cmd).getStep();
-        }
-
         // create the context explicitly
         ContextFactory contextFactory = runtime.getService(ContextFactory.class);
-        Context ctx = contextFactory.create(runtime, state, threadId, currentStep);
+        Context ctx = contextFactory.create(runtime, state, threadId, getCurrentStep());
 
         EvalContextFactory ecf = runtime.getService(EvalContextFactory.class);
         ExpressionEvaluator ee = runtime.getService(ExpressionEvaluator.class);
@@ -104,66 +105,52 @@ public abstract class LoopWrapper implements Command {
 
         // prepare items
         // store items in an ArrayList because it is Serializable
-        ArrayList<Serializable> items;
-        if (value == null) {
-            // value is null, not going to run the wrapped command at all
-            return;
-        } else if (value instanceof Collection) {
-            Collection<Serializable> v = (Collection<Serializable>) value;
-            if (v.isEmpty()) {
-                // no items, nothing to do
-                return;
-            }
-
-            items = new ArrayList<>(v);
-        } else if (value instanceof Map) {
-            Map<Serializable, Serializable> m = (Map<Serializable, Serializable>) value;
-            items = m.entrySet().stream()
-                    .map(e -> new AbstractMap.SimpleImmutableEntry<>(e.getKey(), e.getValue()))
-                    .collect(Collectors.toCollection(ArrayList::new));
-        } else if (value.getClass().isArray()) {
-            items = new ArrayList<>(Arrays.asList((Serializable[]) value));
-        } else {
-            throw new IllegalArgumentException("'withItems' accepts only Lists of items, Java Maps or arrays of values. Got: " + value.getClass());
-        }
-
-        items.forEach(LoopWrapper::assertItem);
-
-        if (items.isEmpty()) {
+        ArrayList<Serializable> items = LoopItemSanitizer.sanitize(value);
+        if (items == null || items.isEmpty()) {
             return;
         }
 
-        eval(state, threadId, items);
+        eval(runtime, state, threadId, ctx, items);
     }
 
-    protected abstract void eval(State state, ThreadId threadId, ArrayList<Serializable> items);
+    protected abstract void eval(Runtime runtime, State state, ThreadId threadId, Context ctx, ArrayList<Serializable> items);
 
-    static void assertItem(Object item) {
-        if (item == null) {
-            return;
+    private Step getCurrentStep() {
+        if (cmd instanceof StepCommand) {
+            return ((StepCommand<?>) cmd).getStep();
         }
-
-        try (ObjectOutputStream oos = new ObjectOutputStream(new ByteArrayOutputStream())) {
-            oos.writeObject(item);
-        } catch (IOException e) {
-            throw new IllegalArgumentException("Can't use non-serializable values in 'withItems': " + item + " (" + item.getClass() + ")");
-        }
+        return null;
     }
 
     static class ParallelWithItems extends LoopWrapper {
 
         private static final long serialVersionUID = 1L;
 
-        private final int batchSize;
+        private final Parallelism parallelism;
 
         protected ParallelWithItems(CompilerContext ctx, Command cmd, Loop loop, Collection<String> outVariables) {
             super(cmd, loop.items(), outVariables);
 
-            this.batchSize = batchSize(ctx, loop);
+            this.parallelism = processParallelism(ctx, loop);
+        }
+
+        private static Parallelism processParallelism(CompilerContext ctx, Loop loop) {
+            int defaultParallelism = ctx.processDefinition().configuration().parallelLoopParallelism();
+
+            Object parallelism = loop.options().get("parallelism");
+            if (parallelism == null) {
+                return new Parallelism(null, defaultParallelism);
+            } else if (parallelism instanceof String) {
+                return new Parallelism((String) parallelism, defaultParallelism);
+            } else if (parallelism instanceof Number) {
+                return new Parallelism(null, ((Number) parallelism).intValue());
+            }
+
+            throw new RuntimeException("Unknown loop parallelism value type: " + parallelism.getClass());
         }
 
         @Override
-        protected void eval(State state, ThreadId threadId, ArrayList<Serializable> items) {
+        protected void eval(Runtime runtime, State state, ThreadId threadId, Context ctx, ArrayList<Serializable> items) {
             // target frame for out variables
             Frame targetFrame = VMUtils.assertNearestRoot(state, threadId);
 
@@ -173,13 +160,17 @@ public abstract class LoopWrapper implements Command {
                     .nonRoot()
                     .build());
 
+            int batchSize = toBatchSize(runtime, ctx, parallelism);
+
             List<ArrayList<Serializable>> batches = batches(items, batchSize);
+            int itemIndexStart = 0;
             for (ArrayList<Serializable> batch : batches) {
-                evalBatch(state, threadId, batch, outVarsAccumulator);
+                evalBatch(itemIndexStart, state, threadId, batch, outVarsAccumulator);
+                itemIndexStart += batch.size();
             }
         }
 
-        private void evalBatch(State state, ThreadId threadId, ArrayList<Serializable> items, Map<String, List<Serializable>> outVarsAccumulator) {
+        private void evalBatch(int itemIndexStart, State state, ThreadId threadId, ArrayList<Serializable> items, Map<String, List<Serializable>> outVarsAccumulator) {
             Frame frame = state.peekFrame(threadId);
 
             List<Map.Entry<ThreadId, Serializable>> forks = items.stream()
@@ -188,13 +179,12 @@ public abstract class LoopWrapper implements Command {
 
             for (int i = 0; i < forks.size(); i++) {
                 Map.Entry<ThreadId, Serializable> f = forks.get(i);
-
                 Frame cmdFrame = Frame.builder()
                         .nonRoot()
                         .build();
 
                 cmdFrame.setLocal(CURRENT_ITEMS, items);
-                cmdFrame.setLocal(CURRENT_INDEX, i);
+                cmdFrame.setLocal(CURRENT_INDEX, itemIndexStart + i);
                 cmdFrame.setLocal(CURRENT_ITEM, f.getValue());
 
                 // fork will create rootFrame for forked commands
@@ -209,20 +199,28 @@ public abstract class LoopWrapper implements Command {
             frame.push(new JoinCommand(forks.stream().map(Map.Entry::getKey).collect(Collectors.toSet())));
         }
 
-        private static int batchSize(CompilerContext ctx, Loop loop) {
-            int result = MapUtils.getInt(loop.options(), "parallelism", -1);
-            if (result > 0) {
-                return result;
-            }
-            return ctx.processDefinition().configuration().parallelLoopParallelism();
-        }
-
         private static List<ArrayList<Serializable>> batches(ArrayList<Serializable> items, int batchSize) {
             List<ArrayList<Serializable>> result = new ArrayList<>();
             for (int i = 0; i < items.size(); i += batchSize) {
                 result.add(new ArrayList<>(items.subList(i, Math.min(items.size(), i + batchSize))));
             }
             return result;
+        }
+
+        private static int toBatchSize(Runtime runtime, Context ctx, Parallelism parallelism) {
+            if (parallelism.getExpression() == null) {
+                return parallelism.getValue();
+            }
+
+            EvalContextFactory ecf = runtime.getService(EvalContextFactory.class);
+            EvalContext evalContext = ecf.global(ctx);
+
+            ExpressionEvaluator ee = runtime.getService(ExpressionEvaluator.class);
+            Number result = ee.eval(evalContext, parallelism.getExpression(), Number.class);
+            if (result == null) {
+                return parallelism.getValue();
+            }
+            return result.intValue();
         }
     }
 
@@ -240,7 +238,7 @@ public abstract class LoopWrapper implements Command {
         }
 
         @Override
-        protected void eval(State state, ThreadId threadId, ArrayList<Serializable> items) {
+        protected void eval(Runtime runtime, State state, ThreadId threadId, Context ctx, ArrayList<Serializable> items) {
             Frame loop = Frame.builder()
                     .nonRoot()
                     .build();
@@ -382,6 +380,27 @@ public abstract class LoopWrapper implements Command {
                     return values;
                 });
             }
+        }
+    }
+
+    private static class Parallelism implements Serializable {
+
+        private static final long serialVersionUID = 1L;
+
+        private final String expression;
+        private final int value;
+
+        public Parallelism(String expression, int value) {
+            this.expression = expression;
+            this.value = value;
+        }
+
+        public String getExpression() {
+            return expression;
+        }
+
+        public int getValue() {
+            return value;
         }
     }
 }

@@ -20,6 +20,7 @@ package com.walmartlabs.concord.agentoperator.crd;
  * =====
  */
 
+import com.walmartlabs.concord.agentoperator.scheduler.DefaultAutoScaler;
 import io.fabric8.kubernetes.api.model.ConfigMap;
 import io.fabric8.kubernetes.api.model.Pod;
 
@@ -43,6 +44,8 @@ public class AgentPoolConfiguration implements Serializable {
     private static final int DEFAULT_MAX_SIZE = 10;
     private static final int DEFAULT_MIN_SIZE = 1;
     private static final int DEFAULT_SIZE = 1;
+    private static final int DEFAULT_SIZE_INCREMENT = 1;
+
     private static final double DEFAULT_INCREMENT_THRESHOLD_FACTOR = 1.5;
     private static final double DEFAULT_DECREMENT_THRESHOLD_FACTOR = 1.0;
     private static final double DEFAULT_INCREMENT_PERCENTAGE = 50;
@@ -54,6 +57,9 @@ public class AgentPoolConfiguration implements Serializable {
     private int maxSize = DEFAULT_MAX_SIZE;
     private int minSize = DEFAULT_MIN_SIZE;
     private int size = DEFAULT_SIZE;
+
+    private String autoScaleStrategy = DefaultAutoScaler.NAME;
+    private int sizeIncrement = DEFAULT_SIZE_INCREMENT;
 
     private int queueQueryLimit = DEFAULT_QUEUE_QUERY_LIMIT;
 
@@ -98,8 +104,24 @@ public class AgentPoolConfiguration implements Serializable {
         return autoScale;
     }
 
+    public int getSizeIncrement() {
+        return sizeIncrement;
+    }
+
+    public void setSizeIncrement(int sizeIncrement) {
+        this.sizeIncrement = sizeIncrement;
+    }
+
     public void setAutoScale(boolean autoScale) {
         this.autoScale = autoScale;
+    }
+
+    public String getAutoScaleStrategy() {
+        return autoScaleStrategy;
+    }
+
+    public void setAutoScaleStrategy(String autoScaleStrategy) {
+        this.autoScaleStrategy = autoScaleStrategy;
     }
 
     public long getScaleUpDelayMs() {
@@ -214,5 +236,10 @@ public class AgentPoolConfiguration implements Serializable {
     private static double getDoubleFromEnv(String key, double defaultValue) {
         String envValue = System.getenv(key);
         return envValue != null ? Double.parseDouble(envValue) : defaultValue;
+    }
+
+    private static String getStringFromEnv(String key, String defaultValue) {
+        String envValue = System.getenv(key);
+        return envValue != null ? envValue : defaultValue;
     }
 }

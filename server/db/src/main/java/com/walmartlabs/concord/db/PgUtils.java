@@ -85,6 +85,10 @@ public final class PgUtils {
         return DSL.condition("not {0} #> {1} ?? {2}", field, inline(toPath(path)), DSL.value(value));
     }
 
+    public static Condition jsonbTextMatch(Field<JSONB> field, List<String> path, String value) {
+        return DSL.condition("{0} #>> {1} ~ {2}", field, inline(toPath(path)), DSL.value(value));
+    }
+
     /**
      * Returns a JOOQ field "now - d" where "d" is the specified duration.
      * The result is rounded down to seconds.

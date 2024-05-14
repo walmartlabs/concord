@@ -30,13 +30,9 @@ import com.walmartlabs.concord.server.sdk.metrics.WithTimer;
 import org.jooq.DSLContext;
 
 import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
 import java.util.Collections;
 import java.util.List;
 
-@Named
-@Singleton
 public class ProcessEventManager {
 
     private final ProcessEventDao eventDao;

@@ -1,0 +1,13 @@
+flows:
+  default:
+    - set:
+        cloud1:
+          - dev: "dev-cloud1"
+          - prod: "prod-cloud1"
+          - test: "test-cloud1"
+        cloud2:
+          - perf: "perf-cloud2"
+          - ci: "perf-ci"
+        allClouds: ${[cloud1, cloud2].stream().flatMap(p -> p.stream()).toList()}
+
+    - log: "all: ${allClouds}"

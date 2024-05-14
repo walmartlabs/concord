@@ -19,12 +19,13 @@
  */
 
 import * as React from 'react';
-import { Form, Label } from 'semantic-ui-react';
+import { Form, Icon, Label, LabelGroup } from 'semantic-ui-react';
 
 import { ConcordKey } from '../../../api/common';
 import { FieldProps } from 'formik/dist/Field';
 import { Field, getIn } from 'formik';
 import { ProjectSearch } from '../index';
+import { ProjectEntry } from '../../../api/org/project';
 
 interface ExternalProps {
     fieldName: string;
@@ -49,6 +50,7 @@ export default ({
                 const touched = getIn(form.touched, fieldName);
                 const error = getIn(form.errors, fieldName);
                 const invalid = !!(touched && error);
+                const [projects, setProjects] = React.useState<ProjectEntry[]>([]);
 
                 return (
                     <Form.Field error={invalid}>
@@ -59,20 +61,37 @@ export default ({
                             fluid={true}
                             defaultProjectName={defaultProjectName}
                             invalid={invalid}
-                            onReset={(value) => {
-                                form.setFieldValue(fieldName, value?.name);
-                                onChange?.(value?.name);
-                            }}
-                            onClear={() => {
-                                form.setFieldValue(fieldName, undefined);
-                                onChange?.(undefined);
-                            }}
+                            projectsToNotShow={projects}
+                            clearOnSelect={true}
                             onSelect={(value) => {
-                                form.setFieldValue(fieldName, value.name);
-                                onChange?.(value.name);
+                                if (!projects.map((project) => project.id).includes(value.id)) {
+                                    let _projects = projects.concat(value);
+                                    form.setFieldValue(fieldName, _projects);
+                                    setProjects(_projects);
+                                    onChange?.(value.name);
+                                }
                             }}
                         />
-
+                        <br />
+                        <LabelGroup>
+                            {projects &&
+                                projects.map((project, index) => (
+                                    <Label key={index}>
+                                        {project.name}
+                                        <Icon
+                                            name="delete"
+                                            onClick={() => {
+                                                const index = projects
+                                                    .map((p) => p.id)
+                                                    .indexOf(project.id);
+                                                projects.splice(index, 1);
+                                                setProjects(projects.slice(0));
+                                                form.setFieldValue(fieldName, projects);
+                                            }}
+                                        ></Icon>
+                                    </Label>
+                                ))}
+                        </LabelGroup>
                         {invalid && error && (
                             <Label basic={true} pointing={true} color="red">
                                 {error}

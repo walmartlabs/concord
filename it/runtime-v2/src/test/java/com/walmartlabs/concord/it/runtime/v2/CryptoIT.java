@@ -24,10 +24,11 @@ import ca.ibodrov.concord.testcontainers.ConcordProcess;
 import ca.ibodrov.concord.testcontainers.NewSecretQuery;
 import ca.ibodrov.concord.testcontainers.Payload;
 import ca.ibodrov.concord.testcontainers.junit5.ConcordRule;
-import com.walmartlabs.concord.ApiClient;
-import com.walmartlabs.concord.client.*;
+import com.walmartlabs.concord.client2.*;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
+
+import java.util.Collections;
 
 import static com.walmartlabs.concord.it.common.ITUtils.randomPwd;
 import static com.walmartlabs.concord.it.common.ITUtils.randomString;
@@ -48,12 +49,12 @@ public class CryptoIT extends AbstractTest {
         String projectName = "project_" + randomString();
 
         OrganizationsApi orgApi = new OrganizationsApi(apiClient);
-        orgApi.createOrUpdate(new OrganizationEntry().setName(orgName));
+        orgApi.createOrUpdateOrg(new OrganizationEntry().name(orgName));
 
         ProjectsApi projectsApi = new ProjectsApi(apiClient);
-        projectsApi.createOrUpdate(orgName, new ProjectEntry()
-                .setName(projectName)
-                .setRawPayloadMode(ProjectEntry.RawPayloadModeEnum.OWNERS));
+        projectsApi.createOrUpdateProject(orgName, new ProjectEntry()
+                .name(projectName)
+                .rawPayloadMode(ProjectEntry.RawPayloadModeEnum.OWNERS));
 
         // ---
 
@@ -112,18 +113,18 @@ public class CryptoIT extends AbstractTest {
         ConcordProcess proc = concord.processes().start(payload);
         expectStatus(proc, ProcessEntry.StatusEnum.FINISHED);
 
-        proc.assertLog(".*String: " + myStringSecretValue + ".*");
+        proc.assertLog(".*String: " + myStringSecretValue.replaceAll(".", "$0 ") + ".*");
         proc.assertLog(".*Keypair: \\{.*private.*}.*");
-        proc.assertLog(".*Credentials: .*" + myPassword + ".*");
+        proc.assertLog(".*Credentials: .*" + myPassword.replaceAll(".", "$0 ") + ".*");
         proc.assertLog(".*File: .*");
-        proc.assertLog(".*Encrypted string: " + myRawString + ".*");
+        proc.assertLog(".*Encrypted string: " + myRawString.replaceAll(".", "$0 ") + ".*");
     }
 
     @Test
     public void testCreate() throws Exception {
         String orgName = "org_" + randomString();
         OrganizationsApi orgApi = new OrganizationsApi(concord.apiClient());
-        orgApi.createOrUpdate(new OrganizationEntry().setName(orgName));
+        orgApi.createOrUpdateOrg(new OrganizationEntry().name(orgName));
 
         Payload payload = new Payload()
                 .arg("org", orgName)
@@ -135,6 +136,57 @@ public class CryptoIT extends AbstractTest {
 
         proc.assertLog(".*result.ok: true.*");
         proc.assertLog(".*result.password: pAss123qweasd.*");
-        proc.assertLog(".*credentials: .*password=123.*");
+        proc.assertLog(".*credentials-masked: .*password=\\*\\*\\*\\*\\*\\*.*");
+        proc.assertLog(".*credentials: .*password=" + "123".replaceAll(".", "$0 ") + ".*");
+    }
+
+    @Test
+    public void testMasked() throws Exception {
+        ApiClient apiClient = concord.apiClient();
+
+        String orgName = "org_" + randomString();
+        String projectName = "project_" + randomString();
+
+        OrganizationsApi orgApi = new OrganizationsApi(apiClient);
+        orgApi.createOrUpdateOrg(new OrganizationEntry().name(orgName));
+
+        ProjectsApi projectsApi = new ProjectsApi(apiClient);
+        projectsApi.createOrUpdateProject(orgName, new ProjectEntry()
+                .name(projectName)
+                .rawPayloadMode(ProjectEntry.RawPayloadModeEnum.OWNERS));
+
+        // ---
+
+        String mySecretPwd = "pwd_" + randomPwd();
+
+        String myStringSecretName = "secret_" + randomString();
+        String myStringSecretValue = "value_" + randomString();
+        concord.secrets().createSecret(NewSecretQuery.builder()
+                        .org(orgName)
+                        .name(myStringSecretName)
+                        .storePassword(mySecretPwd)
+                        .build(),
+                myStringSecretValue.getBytes());
+
+        // ---
+
+        Payload payload = new Payload()
+                .org(orgName)
+                .project(projectName)
+                .archive(resource("crypto-masked"))
+                .arg("myOrg", orgName)
+                .arg("mySecretPwd", mySecretPwd)
+                .arg("myStringSecret", myStringSecretName);
+
+        ConcordProcess proc = concord.processes().start(payload);
+        expectStatus(proc, ProcessEntry.StatusEnum.SUSPENDED);
+
+        proc.assertLog(".*String: \\*\\*\\*\\*\\*\\*.*");
+
+        proc.submitForm("myForm", Collections.singletonMap("name", "test"));
+
+        proc.expectStatus(ProcessEntry.StatusEnum.FINISHED);
+
+        proc.assertLog(".*String after suspend: \\*\\*\\*\\*\\*\\*.*");
     }
 }

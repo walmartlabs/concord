@@ -27,4 +27,8 @@ public interface SynchronizationService {
     void maintain();
 
     void point(Runnable callback);
+
+    void stop();
+
+    boolean hasStop();
 }

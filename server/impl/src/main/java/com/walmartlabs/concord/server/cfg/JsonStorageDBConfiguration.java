@@ -25,12 +25,8 @@ import com.walmartlabs.concord.db.JsonStorageDB;
 import com.walmartlabs.ollie.config.Config;
 
 import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
 import java.time.Duration;
 
-@Named
-@Singleton
 @JsonStorageDB
 public class JsonStorageDBConfiguration implements DatabaseConfiguration {
 

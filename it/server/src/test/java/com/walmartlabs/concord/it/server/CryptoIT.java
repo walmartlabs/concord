@@ -21,7 +21,7 @@ package com.walmartlabs.concord.it.server;
  */
 
 import com.google.common.collect.ImmutableMap;
-import com.walmartlabs.concord.client.*;
+import com.walmartlabs.concord.client2.*;
 import org.intellij.lang.annotations.Language;
 import org.junit.jupiter.api.Test;
 
@@ -96,7 +96,7 @@ public class CryptoIT extends AbstractServerIT {
         String orgName = "org@" + randomString();
 
         OrganizationsApi orgApi = new OrganizationsApi(getApiClient());
-        orgApi.createOrUpdate(new OrganizationEntry().setName(orgName));
+        orgApi.createOrUpdateOrg(new OrganizationEntry().name(orgName));
 
         // ---
 
@@ -108,7 +108,7 @@ public class CryptoIT extends AbstractServerIT {
 
         // ---
 
-        byte[] payload = archive(ProcessIT.class.getResource("cryptoFileWithOrg").toURI());
+        byte[] payload = archive(CryptoIT.class.getResource("cryptoFileWithOrg").toURI());
 
         StartProcessResponse spr = start(ImmutableMap.of(
                 "archive", payload,
@@ -118,10 +118,9 @@ public class CryptoIT extends AbstractServerIT {
 
         // ---
 
-        ProcessApi processApi = new ProcessApi(getApiClient());
-        ProcessEntry pir = waitForCompletion(processApi, spr.getInstanceId());
+        ProcessEntry pir = waitForCompletion(getApiClient(), spr.getInstanceId());
 
-        byte[] ab = getLog(pir.getLogFileName());
+        byte[] ab = getLog(pir.getInstanceId());
         assertLog(".*We got " + secretValue + ".*", ab);
     }
 
@@ -130,7 +129,7 @@ public class CryptoIT extends AbstractServerIT {
         String orgName = "org@" + randomString();
 
         OrganizationsApi orgApi = new OrganizationsApi(getApiClient());
-        orgApi.createOrUpdate(new OrganizationEntry().setName(orgName));
+        orgApi.createOrUpdateOrg(new OrganizationEntry().name(orgName));
 
         // ---
 
@@ -141,7 +140,7 @@ public class CryptoIT extends AbstractServerIT {
 
         // ---
 
-        byte[] payload = archive(ProcessIT.class.getResource("cryptoWithoutPassword").toURI());
+        byte[] payload = archive(CryptoIT.class.getResource("cryptoWithoutPassword").toURI());
 
         StartProcessResponse spr = start(ImmutableMap.of(
                 "archive", payload,
@@ -150,10 +149,9 @@ public class CryptoIT extends AbstractServerIT {
 
         // ---
 
-        ProcessApi processApi = new ProcessApi(getApiClient());
-        ProcessEntry pir = waitForCompletion(processApi, spr.getInstanceId());
+        ProcessEntry pir = waitForCompletion(getApiClient(), spr.getInstanceId());
 
-        byte[] ab = getLog(pir.getLogFileName());
+        byte[] ab = getLog(pir.getInstanceId());
         assertLog(".*We got " + secretValue + ".*", ab);
     }
 
@@ -162,27 +160,27 @@ public class CryptoIT extends AbstractServerIT {
         String orgName = "org_" + randomString();
 
         OrganizationsApi orgApi = new OrganizationsApi(getApiClient());
-        orgApi.createOrUpdate(new OrganizationEntry().setName(orgName));
+        orgApi.createOrUpdateOrg(new OrganizationEntry().name(orgName));
 
         // ---
 
         String projectName = "project_" + randomString();
 
         ProjectsApi projectsApi = new ProjectsApi(getApiClient());
-        projectsApi.createOrUpdate(orgName, new ProjectEntry()
-                .setName(projectName)
-                .setRawPayloadMode(ProjectEntry.RawPayloadModeEnum.EVERYONE));
+        projectsApi.createOrUpdateProject(orgName, new ProjectEntry()
+                .name(projectName)
+                .rawPayloadMode(ProjectEntry.RawPayloadModeEnum.EVERYONE));
 
         // ---
 
         String value = "value_" + randomString();
 
         EncryptValueResponse evr = projectsApi.encrypt(orgName, projectName, value);
-        assertTrue(evr.isOk());
+        assertTrue(evr.getOk());
 
         // ---
 
-        byte[] payload = archive(ProcessIT.class.getResource("encryptString").toURI());
+        byte[] payload = archive(CryptoIT.class.getResource("encryptString").toURI());
 
         StartProcessResponse spr = start(ImmutableMap.of(
                 "org", orgName,
@@ -192,10 +190,9 @@ public class CryptoIT extends AbstractServerIT {
 
         // ---
 
-        ProcessApi processApi = new ProcessApi(getApiClient());
-        ProcessEntry pir = waitForCompletion(processApi, spr.getInstanceId());
+        ProcessEntry pir = waitForCompletion(getApiClient(), spr.getInstanceId());
 
-        byte[] ab = getLog(pir.getLogFileName());
+        byte[] ab = getLog(pir.getInstanceId());
         assertLog(".*We got " + Pattern.quote(evr.getData()) + ".*", ab);
     }
 
@@ -204,27 +201,27 @@ public class CryptoIT extends AbstractServerIT {
         String orgName = "org_" + randomString();
 
         OrganizationsApi orgApi = new OrganizationsApi(getApiClient());
-        orgApi.createOrUpdate(new OrganizationEntry().setName(orgName));
+        orgApi.createOrUpdateOrg(new OrganizationEntry().name(orgName));
 
         // ---
 
         String projectName = "project_" + randomString();
 
         ProjectsApi projectsApi = new ProjectsApi(getApiClient());
-        projectsApi.createOrUpdate(orgName, new ProjectEntry()
-                .setName(projectName)
-                .setRawPayloadMode(ProjectEntry.RawPayloadModeEnum.EVERYONE));
+        projectsApi.createOrUpdateProject(orgName, new ProjectEntry()
+                .name(projectName)
+                .rawPayloadMode(ProjectEntry.RawPayloadModeEnum.EVERYONE));
 
         // ---
 
         String value = "value_" + randomString();
 
         EncryptValueResponse evr = projectsApi.encrypt(orgName, projectName, value);
-        assertTrue(evr.isOk());
+        assertTrue(evr.getOk());
 
         // ---
 
-        byte[] payload = archive(ProcessIT.class.getResource("decryptString").toURI());
+        byte[] payload = archive(CryptoIT.class.getResource("decryptString").toURI());
 
         StartProcessResponse spr = start(ImmutableMap.of(
                 "org", orgName,
@@ -234,10 +231,9 @@ public class CryptoIT extends AbstractServerIT {
 
         // ---
 
-        ProcessApi processApi = new ProcessApi(getApiClient());
-        ProcessEntry pir = waitForCompletion(processApi, spr.getInstanceId());
+        ProcessEntry pir = waitForCompletion(getApiClient(), spr.getInstanceId());
 
-        byte[] ab = getLog(pir.getLogFileName());
+        byte[] ab = getLog(pir.getInstanceId());
         assertLog(".*We got " + value + ".*", ab);
     }
 
@@ -246,27 +242,27 @@ public class CryptoIT extends AbstractServerIT {
         String orgName = "org_" + randomString();
 
         OrganizationsApi orgApi = new OrganizationsApi(getApiClient());
-        orgApi.createOrUpdate(new OrganizationEntry().setName(orgName));
+        orgApi.createOrUpdateOrg(new OrganizationEntry().name(orgName));
 
         // ---
 
         String projectName = "project_" + randomString();
 
         ProjectsApi projectsApi = new ProjectsApi(getApiClient());
-        projectsApi.createOrUpdate(orgName, new ProjectEntry()
-                .setName(projectName)
-                .setRawPayloadMode(ProjectEntry.RawPayloadModeEnum.EVERYONE));
+        projectsApi.createOrUpdateProject(orgName, new ProjectEntry()
+                .name(projectName)
+                .rawPayloadMode(ProjectEntry.RawPayloadModeEnum.EVERYONE));
 
         // ---
 
         String value = "value_" + randomString();
 
         EncryptValueResponse evr = projectsApi.encrypt(orgName, projectName, value);
-        assertTrue(evr.isOk());
+        assertTrue(evr.getOk());
 
         // ---
 
-        byte[] payload = archive(ProcessIT.class.getResource("decryptStringTooBig").toURI());
+        byte[] payload = archive(CryptoIT.class.getResource("decryptStringTooBig").toURI());
 
         StartProcessResponse spr = start(ImmutableMap.of(
                 "org", orgName,
@@ -275,10 +271,9 @@ public class CryptoIT extends AbstractServerIT {
 
         // ---
 
-        ProcessApi processApi = new ProcessApi(getApiClient());
-        ProcessEntry pir = waitForStatus(processApi, spr.getInstanceId(), ProcessEntry.StatusEnum.FAILED);
+        ProcessEntry pir = waitForStatus(getApiClient(), spr.getInstanceId(), ProcessEntry.StatusEnum.FAILED);
 
-        byte[] ab = getLog(pir.getLogFileName());
+        byte[] ab = getLog(pir.getInstanceId());
         assertLogAtLeast(".*too big.*", 1, ab);
     }
 
@@ -287,20 +282,20 @@ public class CryptoIT extends AbstractServerIT {
         String orgName = "org_" + randomString();
 
         OrganizationsApi orgApi = new OrganizationsApi(getApiClient());
-        orgApi.createOrUpdate(new OrganizationEntry().setName(orgName));
+        orgApi.createOrUpdateOrg(new OrganizationEntry().name(orgName));
 
         // ---
 
         String projectName = "project_" + randomString();
 
         ProjectsApi projectsApi = new ProjectsApi(getApiClient());
-        projectsApi.createOrUpdate(orgName, new ProjectEntry()
-                .setName(projectName)
-                .setRawPayloadMode(ProjectEntry.RawPayloadModeEnum.EVERYONE));
+        projectsApi.createOrUpdateProject(orgName, new ProjectEntry()
+                .name(projectName)
+                .rawPayloadMode(ProjectEntry.RawPayloadModeEnum.EVERYONE));
 
         // ---
 
-        byte[] payload = archive(ProcessIT.class.getResource("decryptString").toURI());
+        byte[] payload = archive(CryptoIT.class.getResource("decryptString").toURI());
 
         StartProcessResponse spr = start(ImmutableMap.of(
                 "org", orgName,
@@ -310,8 +305,7 @@ public class CryptoIT extends AbstractServerIT {
 
         // ---
 
-        ProcessApi processApi = new ProcessApi(getApiClient());
-        ProcessEntry pir = waitForCompletion(processApi, spr.getInstanceId());
+        ProcessEntry pir = waitForCompletion(getApiClient(), spr.getInstanceId());
         assertEquals(ProcessEntry.StatusEnum.FAILED, pir.getStatus());
 
         // ---
@@ -324,8 +318,9 @@ public class CryptoIT extends AbstractServerIT {
 
         // ---
 
-        pir = waitForCompletion(processApi, spr.getInstanceId());
-        assertEquals(ProcessEntry.StatusEnum.FAILED, pir.getStatus());
+        pir = waitForCompletion(getApiClient(), spr.getInstanceId());
+        assertEquals(ProcessEntry.StatusEnum.FAILED, pir.getStatus(),
+                "Process logs: " + new String(getLog(pir.getInstanceId())));
     }
 
     @Test
@@ -337,9 +332,9 @@ public class CryptoIT extends AbstractServerIT {
         String projectName = "project_" + randomString();
 
         ProjectsApi projectsApi = new ProjectsApi(getApiClient());
-        projectsApi.createOrUpdate(orgName, new ProjectEntry()
-                .setName(projectName)
-                .setRawPayloadMode(ProjectEntry.RawPayloadModeEnum.EVERYONE));
+        projectsApi.createOrUpdateProject(orgName, new ProjectEntry()
+                .name(projectName)
+                .rawPayloadMode(ProjectEntry.RawPayloadModeEnum.EVERYONE));
 
         // ---
 
@@ -355,13 +350,13 @@ public class CryptoIT extends AbstractServerIT {
         String username = "user_" + randomString();
 
         UsersApi usersApi = new UsersApi(getApiClient());
-        usersApi.createOrUpdate(new CreateUserRequest()
-                .setUsername(username)
-                .setType(CreateUserRequest.TypeEnum.LOCAL));
+        usersApi.createOrUpdateUser(new CreateUserRequest()
+                .username(username)
+                .type(CreateUserRequest.TypeEnum.LOCAL));
 
         ApiKeysApi apiKeysApi = new ApiKeysApi(getApiClient());
-        CreateApiKeyResponse cakr = apiKeysApi.create(new CreateApiKeyRequest()
-                .setUsername(username));
+        CreateApiKeyResponse cakr = apiKeysApi.createUserApiKey(new CreateApiKeyRequest()
+                .username(username));
 
         // ---
 
@@ -383,14 +378,13 @@ public class CryptoIT extends AbstractServerIT {
     public void testCurrentOrg() throws Exception {
         String orgName = "org_" + randomString();
         OrganizationsApi organizationsApi = new OrganizationsApi(getApiClient());
-        organizationsApi.createOrUpdate(new OrganizationEntry()
-                .setName(orgName));
+        organizationsApi.createOrUpdateOrg(new OrganizationEntry().name(orgName));
 
         String projectName = "project_" + randomString();
         ProjectsApi projectsApi = new ProjectsApi(getApiClient());
-        projectsApi.createOrUpdate(orgName, new ProjectEntry()
-                .setName(projectName)
-                .setRawPayloadMode(ProjectEntry.RawPayloadModeEnum.OWNERS));
+        projectsApi.createOrUpdateProject(orgName, new ProjectEntry()
+                .name(projectName)
+                .rawPayloadMode(ProjectEntry.RawPayloadModeEnum.OWNERS));
 
         String secretName = "secret_" + randomString();
 
@@ -402,7 +396,7 @@ public class CryptoIT extends AbstractServerIT {
 
         // ---
 
-        byte[] payload = archive(ProcessIT.class.getResource("currentOrgCrypto").toURI());
+        byte[] payload = archive(CryptoIT.class.getResource("currentOrgCrypto").toURI());
 
         Map<String, Object> input = new HashMap<>();
         input.put("archive", payload);
@@ -411,31 +405,30 @@ public class CryptoIT extends AbstractServerIT {
         input.put("project", projectName);
         StartProcessResponse spr = start(input);
 
-        ProcessApi processApi = new ProcessApi(getApiClient());
-        ProcessEntry pe = waitForStatus(processApi, spr.getInstanceId(), ProcessEntry.StatusEnum.SUSPENDED);
+        ProcessEntry pe = waitForStatus(getApiClient(), spr.getInstanceId(), ProcessEntry.StatusEnum.SUSPENDED);
         assertEquals(ProcessEntry.StatusEnum.SUSPENDED, pe.getStatus());
 
         // ---
 
         ProcessFormsApi processFormsApi = new ProcessFormsApi(getApiClient());
-        List<FormListEntry> forms = processFormsApi.list(pe.getInstanceId());
+        List<FormListEntry> forms = processFormsApi.listProcessForms(pe.getInstanceId());
         assertEquals(1, forms.size());
 
         FormListEntry form = forms.get(0);
-        processFormsApi.submit(pe.getInstanceId(), form.getName(), Collections.singletonMap("x", "123"));
+        processFormsApi.submitForm(pe.getInstanceId(), form.getName(), Collections.singletonMap("x", "123"));
 
-        pe = waitForCompletion(processApi, spr.getInstanceId());
+        pe = waitForCompletion(getApiClient(), spr.getInstanceId());
         assertEquals(ProcessEntry.StatusEnum.FINISHED, pe.getStatus());
 
         // ---
 
-        byte[] ab = getLog(pe.getLogFileName());
+        byte[] ab = getLog(pe.getInstanceId());
         assertLog(".*Before form: " + orgSecretValue + ".*", ab);
         assertLog(".*After form: " + orgSecretValue + ".*", ab);
     }
 
     private void test(String project, String secretName, String storePassword, @Language("RegExp") String log) throws Exception {
-        byte[] payload = archive(ProcessIT.class.getResource(project).toURI());
+        byte[] payload = archive(CryptoIT.class.getResource(project).toURI());
 
         StartProcessResponse spr = start(ImmutableMap.of(
                 "archive", payload,
@@ -444,10 +437,9 @@ public class CryptoIT extends AbstractServerIT {
 
         // ---
 
-        ProcessApi processApi = new ProcessApi(getApiClient());
-        ProcessEntry pir = waitForCompletion(processApi, spr.getInstanceId());
+        ProcessEntry pir = waitForCompletion(getApiClient(), spr.getInstanceId());
 
-        byte[] ab = getLog(pir.getLogFileName());
+        byte[] ab = getLog(pir.getInstanceId());
         assertLogAtLeast(log, 1, ab);
     }
 }

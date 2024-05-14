@@ -1,0 +1,7 @@
+flows:
+  default:
+    - set:
+        counter: ${counter + 1}
+
+    - log: "counter: ${counter}"
+

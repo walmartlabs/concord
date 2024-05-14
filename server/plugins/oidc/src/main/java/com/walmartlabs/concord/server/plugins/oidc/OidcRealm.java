@@ -24,10 +24,10 @@ import com.walmartlabs.concord.common.Matcher;
 import com.walmartlabs.concord.server.org.team.TeamDao;
 import com.walmartlabs.concord.server.org.team.TeamRole;
 import com.walmartlabs.concord.server.sdk.ConcordApplicationException;
-import com.walmartlabs.concord.server.security.PrincipalUtils;
+import com.walmartlabs.concord.server.sdk.security.AuthenticationException;
+import com.walmartlabs.concord.server.security.SecurityUtils;
 import com.walmartlabs.concord.server.security.UserPrincipal;
 import com.walmartlabs.concord.server.user.*;
-import org.apache.shiro.authc.AuthenticationException;
 import org.apache.shiro.authc.AuthenticationInfo;
 import org.apache.shiro.authc.AuthenticationToken;
 import org.apache.shiro.authc.SimpleAccount;
@@ -37,11 +37,9 @@ import org.apache.shiro.subject.PrincipalCollection;
 import org.pac4j.oidc.profile.OidcProfile;
 
 import javax.inject.Inject;
-import javax.inject.Named;
 import java.util.*;
 import java.util.stream.Collectors;
 
-@Named
 public class OidcRealm extends AuthorizingRealm {
 
     private static final String REALM_NAME = "oidc";
@@ -130,7 +128,7 @@ public class OidcRealm extends AuthorizingRealm {
                 roles.add(e.getKey());
             }
         }
-        return PrincipalUtils.toAuthorizationInfo(principals, roles);
+        return SecurityUtils.toAuthorizationInfo(principals, roles);
     }
 
     private static boolean match(OidcProfile profile, List<PluginConfiguration.Source> sources) {

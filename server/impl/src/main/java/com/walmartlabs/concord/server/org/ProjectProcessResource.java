@@ -38,20 +38,16 @@ import com.walmartlabs.concord.server.sdk.PartialProcessKey;
 import com.walmartlabs.concord.server.sdk.ProcessKey;
 import com.walmartlabs.concord.server.sdk.ProcessStatus;
 import com.walmartlabs.concord.server.sdk.metrics.WithTimer;
+import com.walmartlabs.concord.server.sdk.rest.Resource;
+import com.walmartlabs.concord.server.sdk.validation.Validate;
+import com.walmartlabs.concord.server.sdk.validation.ValidationErrorsException;
 import com.walmartlabs.concord.server.security.UserPrincipal;
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
-import io.swagger.annotations.ApiParam;
-import io.swagger.annotations.Authorization;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.sonatype.siesta.Resource;
-import org.sonatype.siesta.Validate;
-import org.sonatype.siesta.ValidationErrorsException;
 
 import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.*;
 import javax.ws.rs.core.Context;
@@ -66,10 +62,8 @@ import static com.walmartlabs.concord.server.Utils.unwrap;
 import static com.walmartlabs.concord.server.process.state.ProcessStateManager.path;
 import static javax.ws.rs.core.Response.Status;
 
-@Named
-@Singleton
-@Api(value = "Project Processes", authorizations = {@Authorization("api_key"), @Authorization("session_key"), @Authorization("ldap")})
 @Path("/api/v1/org")
+@Tag(name = "Project Processes")
 public class ProjectProcessResource implements Resource {
 
     private static final Logger log = LoggerFactory.getLogger(ProjectProcessResource.class);
@@ -115,18 +109,18 @@ public class ProjectProcessResource implements Resource {
     }
 
     @GET
-    @ApiOperation("List processes for the specified organization")
+//    @ApiOperation("List processes for the specified organization")
     @Path("/{orgName}/process")
     @Produces(MediaType.APPLICATION_JSON)
     @WithTimer
     @Deprecated
     // TODO replace with /api/v1/process?orgName=...&status=...
-    public List<ProcessEntry> list(@ApiParam @PathParam("orgName") @ConcordKey String orgName,
-                                   @ApiParam @QueryParam("status") ProcessStatus processStatus,
-                                   @ApiParam @QueryParam("afterCreatedAt") OffsetDateTimeParam afterCreatedAt,
-                                   @ApiParam @QueryParam("beforeCreatedAt") OffsetDateTimeParam beforeCreatedAt,
-                                   @ApiParam @QueryParam("limit") @DefaultValue(DEFAULT_LIST_LIMIT) int limit,
-                                   @ApiParam @QueryParam("offset") @DefaultValue("0") int offset) {
+    public List<ProcessEntry> list(@PathParam("orgName") @ConcordKey String orgName,
+                                   @QueryParam("status") ProcessStatus processStatus,
+                                   @QueryParam("afterCreatedAt") OffsetDateTimeParam afterCreatedAt,
+                                   @QueryParam("beforeCreatedAt") OffsetDateTimeParam beforeCreatedAt,
+                                   @QueryParam("limit") @DefaultValue(DEFAULT_LIST_LIMIT) int limit,
+                                   @QueryParam("offset") @DefaultValue("0") int offset) {
 
         OrganizationEntry org = orgManager.assertAccess(orgName, false);
         ProcessFilter filter = ProcessFilter.builder()
@@ -142,24 +136,24 @@ public class ProjectProcessResource implements Resource {
     }
 
     @GET
-    @ApiOperation("List processes for the specified project")
+//    @ApiOperation("List processes for the specified project")
     @Path("/{orgName}/project/{projectName}/process")
     @Produces(MediaType.APPLICATION_JSON)
     @WithTimer
     @Deprecated
-    public List<ProcessEntry> list(@ApiParam @PathParam("orgName") @ConcordKey String orgName,
-                                   @ApiParam @PathParam("projectName") @ConcordKey String projectName,
-                                   @ApiParam @QueryParam("status") ProcessStatus processStatus,
-                                   @ApiParam @QueryParam("afterCreatedAt") OffsetDateTimeParam afterCreatedAt,
-                                   @ApiParam @QueryParam("beforeCreatedAt") OffsetDateTimeParam beforeCreatedAt,
-                                   @ApiParam @QueryParam("limit") @DefaultValue(DEFAULT_LIST_LIMIT) int limit,
-                                   @ApiParam @QueryParam("offset") @DefaultValue("0") int offset) {
+    public List<ProcessEntry> list(@PathParam("orgName") @ConcordKey String orgName,
+                                   @PathParam("projectName") @ConcordKey String projectName,
+                                   @QueryParam("status") ProcessStatus processStatus,
+                                   @QueryParam("afterCreatedAt") OffsetDateTimeParam afterCreatedAt,
+                                   @QueryParam("beforeCreatedAt") OffsetDateTimeParam beforeCreatedAt,
+                                   @QueryParam("limit") @DefaultValue(DEFAULT_LIST_LIMIT) int limit,
+                                   @QueryParam("offset") @DefaultValue("0") int offset) {
 
         OrganizationEntry org = orgManager.assertAccess(orgName, false);
 
         UUID projectId = projectDao.getId(org.getId(), projectName);
         if (projectId == null) {
-            throw new ConcordApplicationException("Project not found: " + projectName, Response.Status.NOT_FOUND);
+            throw new ConcordApplicationException("Project not found: " + projectName, Status.NOT_FOUND);
         }
 
         ProcessFilter filter = ProcessFilter.builder()
@@ -178,16 +172,16 @@ public class ProjectProcessResource implements Resource {
      * Starts a new process instance.
      */
     @GET
-    @ApiOperation("Start a new process")
     @Path("/{orgName}/project/{projectName}/repo/{repoName}/start/{entryPoint}")
     @Validate
-    public Response start(@ApiParam @PathParam("orgName") String orgName,
-                          @ApiParam @PathParam("projectName") String projectName,
-                          @ApiParam @PathParam("repoName") String repoName,
-                          @ApiParam @QueryParam("repoBranchOrTag") String repoBranchOrTag,
-                          @ApiParam @QueryParam("repoCommitId") String repoCommitId,
-                          @ApiParam @PathParam("entryPoint") String entryPoint,
-                          @ApiParam @QueryParam("activeProfiles") String activeProfiles,
+    @Operation(description = "Start a new process", operationId = "startProjectProcess")
+    public Response start(@PathParam("orgName") String orgName,
+                          @PathParam("projectName") String projectName,
+                          @PathParam("repoName") String repoName,
+                          @QueryParam("repoBranchOrTag") String repoBranchOrTag,
+                          @QueryParam("repoCommitId") String repoCommitId,
+                          @PathParam("entryPoint") String entryPoint,
+                          @QueryParam("activeProfiles") String activeProfiles,
                           @Context HttpServletRequest request) {
 
         try {
@@ -250,7 +244,7 @@ public class ProjectProcessResource implements Resource {
     }
 
     @POST
-    @ApiOperation("Proceed to next step for the process")
+//    @ApiOperation("Proceed to next step for the process")
     @Path("{processInstanceId}/next")
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
     @Produces(MediaType.APPLICATION_JSON)
@@ -351,7 +345,7 @@ public class ProjectProcessResource implements Resource {
 
     private Response processFinished(PartialProcessKey processKey) {
         return responseTemplates.processFinished(Response.ok(),
-                Collections.singletonMap("instanceId", processKey.getInstanceId()))
+                        Collections.singletonMap("instanceId", processKey.getInstanceId()))
                 .build();
     }
 

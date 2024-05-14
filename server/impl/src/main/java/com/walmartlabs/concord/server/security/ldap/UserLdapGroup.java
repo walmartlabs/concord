@@ -23,17 +23,15 @@ package com.walmartlabs.concord.server.security.ldap;
 import com.walmartlabs.concord.server.GenericOperationResult;
 import com.walmartlabs.concord.server.OperationResult;
 import com.walmartlabs.concord.server.sdk.ConcordApplicationException;
+import com.walmartlabs.concord.server.sdk.rest.Resource;
+import com.walmartlabs.concord.server.sdk.validation.Validate;
 import com.walmartlabs.concord.server.security.Roles;
+import com.walmartlabs.concord.server.security.UnauthorizedException;
 import com.walmartlabs.concord.server.user.UserInfoProvider;
 import com.walmartlabs.concord.server.user.UserManager;
 import com.walmartlabs.concord.server.user.UserType;
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
-import io.swagger.annotations.ApiParam;
-import io.swagger.annotations.Authorization;
-import org.apache.shiro.authz.UnauthorizedException;
-import org.sonatype.siesta.Resource;
-import org.sonatype.siesta.Validate;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -52,8 +50,8 @@ import java.util.UUID;
 
 @Named
 @Singleton
-@Api(value = "UserLdapGroup", authorizations = {@Authorization("api_key"), @Authorization("session_key"), @Authorization("ldap")})
 @Path("/api/v1/userldapgroup")
+@Tag(name = "UserLdapGroup")
 public class UserLdapGroup implements Resource {
 
     private final UserManager userManager;
@@ -76,12 +74,12 @@ public class UserLdapGroup implements Resource {
      * @return GenericOperationResult result
      */
     @POST
-    @ApiOperation("Sync ldap groups for a user")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     @Path("/sync")
     @Validate
-    public GenericOperationResult sync(@ApiParam @Valid SyncUserLdapGroupRequest req) {
+    @Operation(description = "Sync ldap groups for a user", operationId = "syncLdapGroups")
+    public GenericOperationResult sync(@Valid SyncUserLdapGroupRequest req) {
         assertAdmin();
 
         UUID id = userManager.getId(req.getUsername(), req.getUserDomain(), UserType.LDAP).orElse(null);

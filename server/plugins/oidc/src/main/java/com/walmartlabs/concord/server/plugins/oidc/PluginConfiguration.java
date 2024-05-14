@@ -26,12 +26,8 @@ import com.walmartlabs.ollie.config.Config;
 import org.eclipse.sisu.Nullable;
 
 import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
 import java.util.*;
 
-@Named
-@Singleton
 public class PluginConfiguration {
 
     @Inject

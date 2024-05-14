@@ -20,8 +20,7 @@ package com.walmartlabs.concord.it.server;
  * =====
  */
 
-import com.walmartlabs.concord.ApiException;
-import com.walmartlabs.concord.client.*;
+import com.walmartlabs.concord.client2.*;
 import org.junit.jupiter.api.Test;
 
 import java.util.*;
@@ -60,11 +59,11 @@ public class RunAsIT extends AbstractServerIT {
         // grant the team access to the project
 
         ProjectsApi projectsApi = new ProjectsApi(getApiClient());
-        projectsApi.updateAccessLevel(orgName, projectName, new ResourceAccessEntry()
-                .setTeamId(teamId)
-                .setOrgName(orgName)
-                .setTeamName(teamName)
-                .setLevel(ResourceAccessEntry.LevelEnum.READER));
+        projectsApi.updateProjectAccessLevel(orgName, projectName, new ResourceAccessEntry()
+                .teamId(teamId)
+                .orgName(orgName)
+                .teamName(teamName)
+                .level(ResourceAccessEntry.LevelEnum.READER));
 
         // Start a process
 
@@ -76,9 +75,9 @@ public class RunAsIT extends AbstractServerIT {
 
         StartProcessResponse p = start(input);
         ProcessApi processApi = new ProcessApi(getApiClient());
-        ProcessEntry pe = waitForStatus(processApi, p.getInstanceId(), ProcessEntry.StatusEnum.SUSPENDED);
+        ProcessEntry pe = waitForStatus(getApiClient(), p.getInstanceId(), ProcessEntry.StatusEnum.SUSPENDED);
 
-        byte[] ab = getLog(pe.getLogFileName());
+        byte[] ab = getLog(pe.getInstanceId());
         // assume Concord forces all user/domain names to lower case
         assertLog(".*username=" + userAName.toLowerCase() + ".*==.*username=" + userAName.toLowerCase() + ".*", ab);
 
@@ -91,7 +90,7 @@ public class RunAsIT extends AbstractServerIT {
         // try submit as a wrong user
 
         try {
-            formsApi.submit(p.getInstanceId(), formName, data);
+            formsApi.submitForm(p.getInstanceId(), formName, data);
             fail("exception expected");
         } catch (ApiException e) {
             // ignore
@@ -101,13 +100,13 @@ public class RunAsIT extends AbstractServerIT {
 
         resetApiKey();
 
-        FormSubmitResponse fsr = formsApi.submit(p.getInstanceId(), formName, data);
-        assertTrue(fsr.isOk());
+        FormSubmitResponse fsr = formsApi.submitForm(p.getInstanceId(), formName, data);
+        assertTrue(fsr.getOk());
 
-        pe = waitForCompletion(processApi, p.getInstanceId());
+        pe = waitForCompletion(getApiClient(), p.getInstanceId());
         assertEquals(ProcessEntry.StatusEnum.FINISHED, pe.getStatus());
 
-        ab = getLog(pe.getLogFileName());
+        ab = getLog(pe.getInstanceId());
         assertLog(".*Now we are running as admin. Initiator: " + userAName.toLowerCase() + ".*", ab);
     }
 
@@ -143,11 +142,11 @@ public class RunAsIT extends AbstractServerIT {
         // grant the team access to the project
 
         ProjectsApi projectsApi = new ProjectsApi(getApiClient());
-        projectsApi.updateAccessLevel(orgName, projectName, new ResourceAccessEntry()
-                .setTeamId(teamId)
-                .setOrgName(orgName)
-                .setTeamName(teamName)
-                .setLevel(ResourceAccessEntry.LevelEnum.READER));
+        projectsApi.updateProjectAccessLevel(orgName, projectName, new ResourceAccessEntry()
+                .teamId(teamId)
+                .orgName(orgName)
+                .teamName(teamName)
+                .level(ResourceAccessEntry.LevelEnum.READER));
 
         // Start a process
 
@@ -160,9 +159,9 @@ public class RunAsIT extends AbstractServerIT {
 
         StartProcessResponse p = start(input);
         ProcessApi processApi = new ProcessApi(getApiClient());
-        ProcessEntry pe = waitForStatus(processApi, p.getInstanceId(), ProcessEntry.StatusEnum.SUSPENDED);
+        ProcessEntry pe = waitForStatus(getApiClient(), p.getInstanceId(), ProcessEntry.StatusEnum.SUSPENDED);
 
-        byte[] ab = getLog(pe.getLogFileName());
+        byte[] ab = getLog(pe.getInstanceId());
         // assume Concord forces all user/domain names to lower case
         assertLog(".*username=" + userAName.toLowerCase() + ".*==.*username=" + userAName.toLowerCase() + ".*", ab);
 
@@ -175,7 +174,7 @@ public class RunAsIT extends AbstractServerIT {
         // try submit as a wrong user
 
         try {
-            formsApi.submit(p.getInstanceId(), formName, data);
+            formsApi.submitForm(p.getInstanceId(), formName, data);
             fail("exception expected");
         } catch (ApiException e) {
             // ignore
@@ -184,16 +183,16 @@ public class RunAsIT extends AbstractServerIT {
         // switch to the user B and submit the form
         setApiKey(apiKeyB.getKey());
 
-        FormSubmitResponse fsr = formsApi.submit(p.getInstanceId(), formName, data);
-        assertTrue(fsr.isOk());
+        FormSubmitResponse fsr = formsApi.submitForm(p.getInstanceId(), formName, data);
+        assertTrue(fsr.getOk());
 
-        pe = waitForCompletion(processApi, p.getInstanceId());
+        pe = waitForCompletion(getApiClient(), p.getInstanceId());
         assertEquals(ProcessEntry.StatusEnum.FINISHED, pe.getStatus());
 
         // starting from 1.39.0 the log endpoint performs additional RBAC checks
         // in this case user B doesn't have permissions to access the log
         try {
-            getLog(pe.getLogFileName());
+            getLog(pe.getInstanceId());
             fail("should fail");
         } catch (ApiException e) {
             assertEquals(403, e.getCode());
@@ -202,7 +201,7 @@ public class RunAsIT extends AbstractServerIT {
         // switch to the user A and fetch the log again
 
         setApiKey(apiKeyA.getKey());
-        ab = getLog(pe.getLogFileName());
+        ab = getLog(pe.getInstanceId());
 
         assertLog(".*Now we are running as " + userBName.toLowerCase() + ".*", ab);
     }
@@ -232,10 +231,9 @@ public class RunAsIT extends AbstractServerIT {
         input.put("arguments.sudoUser", userBName.toLowerCase());
         StartProcessResponse spr = start(input);
 
-        ProcessApi processApi = new ProcessApi(getApiClient());
-        ProcessEntry pe = waitForStatus(processApi, spr.getInstanceId(), ProcessEntry.StatusEnum.SUSPENDED);
+        ProcessEntry pe = waitForStatus(getApiClient(), spr.getInstanceId(), ProcessEntry.StatusEnum.SUSPENDED);
 
-        byte[] ab = getLog(pe.getLogFileName());
+        byte[] ab = getLog(pe.getInstanceId());
         // assume Concord forces all user/domain names to lower case
         assertLog(".*AAA: " + userAName.toLowerCase() + ".*", ab);
 
@@ -247,17 +245,17 @@ public class RunAsIT extends AbstractServerIT {
 
         ProcessFormsApi formsApi = new ProcessFormsApi(getApiClient());
         Map<String, Object> data = Collections.singletonMap("msg", "Hello!");
-        formsApi.submit(pe.getInstanceId(), formName, data);
+        formsApi.submitForm(pe.getInstanceId(), formName, data);
 
         // wait for the process to finish
 
-        pe = waitForCompletion(processApi, spr.getInstanceId());
+        pe = waitForCompletion(getApiClient(), spr.getInstanceId());
 
         // check the logs
 
         resetApiKey();
 
-        ab = getLog(pe.getLogFileName());
+        ab = getLog(pe.getInstanceId());
         assertLog(".*BBB: Hello!.*", ab);
         // assume Concord forces all user/domain names to lower case
         assertLog(".*CCC: " + userAName.toLowerCase() + ".*", ab);
@@ -265,18 +263,18 @@ public class RunAsIT extends AbstractServerIT {
 
     private void createOrg(String orgName) throws Exception {
         OrganizationsApi orgApi = new OrganizationsApi(getApiClient());
-        CreateOrganizationResponse r = orgApi.createOrUpdate(new OrganizationEntry().setName(orgName));
-        assertTrue(r.isOk());
+        CreateOrganizationResponse r = orgApi.createOrUpdateOrg(new OrganizationEntry().name(orgName));
+        assertTrue(r.getOk());
     }
 
     private UUID createTeam(String orgName, String teamName, String... username) throws Exception {
         TeamsApi teamsApi = new TeamsApi(getApiClient());
-        CreateTeamResponse ctr = teamsApi.createOrUpdate(orgName, new TeamEntry().setName(teamName));
+        CreateTeamResponse ctr = teamsApi.createOrUpdateTeam(orgName, new TeamEntry().name(teamName));
 
-        teamsApi.addUsers(orgName, teamName, false, Arrays.stream(username)
+        teamsApi.addUsersToTeam(orgName, teamName, false, Arrays.stream(username)
                 .map(u -> new TeamUserEntry()
-                        .setUsername(u)
-                        .setRole(TeamUserEntry.RoleEnum.MEMBER))
+                        .username(u)
+                        .role(TeamUserEntry.RoleEnum.MEMBER))
                 .collect(Collectors.toList()));
 
         return ctr.getId();
@@ -285,31 +283,32 @@ public class RunAsIT extends AbstractServerIT {
     private CreateApiKeyResponse addUser(String userAName) throws ApiException {
         UsersApi usersApi = new UsersApi(getApiClient());
 
-        usersApi.createOrUpdate(new CreateUserRequest().setUsername(userAName).setType(CreateUserRequest.TypeEnum.LOCAL));
+        usersApi.createOrUpdateUser(new CreateUserRequest().username(userAName)
+                .type(CreateUserRequest.TypeEnum.LOCAL));
 
         ApiKeysApi apiKeyResource = new ApiKeysApi(getApiClient());
-        return apiKeyResource.create(new CreateApiKeyRequest().setUsername(userAName));
+        return apiKeyResource.createUserApiKey(new CreateApiKeyRequest().username(userAName));
     }
 
     private void createProject(String orgName, String projectName) throws ApiException {
         ProjectsApi projectsApi = new ProjectsApi(getApiClient());
-        ProjectOperationResponse por = projectsApi.createOrUpdate(orgName, new ProjectEntry()
-                .setName(projectName)
-                .setVisibility(ProjectEntry.VisibilityEnum.PRIVATE)
-                .setRawPayloadMode(ProjectEntry.RawPayloadModeEnum.EVERYONE));
-        assertTrue(por.isOk());
+        ProjectOperationResponse por = projectsApi.createOrUpdateProject(orgName, new ProjectEntry()
+                .name(projectName)
+                .visibility(ProjectEntry.VisibilityEnum.PRIVATE)
+                .rawPayloadMode(ProjectEntry.RawPayloadModeEnum.EVERYONE));
+        assertTrue(por.getOk());
     }
 
     private String findForm(UUID instanceId) throws Exception {
         ProcessFormsApi formsApi = new ProcessFormsApi(getApiClient());
 
-        List<FormListEntry> forms = formsApi.list(instanceId);
+        List<FormListEntry> forms = formsApi.listProcessForms(instanceId);
         assertEquals(1, forms.size());
 
         // ---
 
         FormListEntry f0 = forms.get(0);
-        assertFalse(f0.isCustom());
+        assertFalse(f0.getCustom());
 
         return f0.getName();
     }

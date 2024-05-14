@@ -1,0 +1,13 @@
+flows:
+  default:
+    # execute some task that looks for default (policy-provide) variables
+    # obviously this won't successfully send a message in an IT, however
+    # the error messages are useful enough to make sure the vars work
+    - task: slack
+      in:
+        # action is given via default variables
+        text: mock-message
+      error:
+        - if: "${not lastError.message.contains('Unknown action')}"
+          then:
+            - throw: "Unexpected error: ${lastError}"

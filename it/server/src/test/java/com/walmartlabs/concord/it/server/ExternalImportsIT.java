@@ -20,8 +20,8 @@ package com.walmartlabs.concord.it.server;
  * =====
  */
 
-import com.walmartlabs.concord.ApiException;
-import com.walmartlabs.concord.client.*;
+import com.walmartlabs.concord.client2.*;
+import com.walmartlabs.concord.client2.ProcessListFilter;
 import com.walmartlabs.concord.common.IOUtils;
 import org.eclipse.jgit.api.Git;
 import org.junit.jupiter.api.Test;
@@ -33,6 +33,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
+import java.util.function.Consumer;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
@@ -58,16 +59,16 @@ public class ExternalImportsIT extends AbstractServerIT {
 
         // wait for suspend
 
-        ProcessEntry pir = waitForStatus(processApi, spr.getInstanceId(), ProcessEntry.StatusEnum.SUSPENDED);
+        ProcessEntry pir = waitForStatus(getApiClient(), spr.getInstanceId(), ProcessEntry.StatusEnum.SUSPENDED);
 
         ProcessFormsApi formsApi = new ProcessFormsApi(getApiClient());
-        List<FormListEntry> forms = formsApi.list(pir.getInstanceId());
+        List<FormListEntry> forms = formsApi.listProcessForms(pir.getInstanceId());
         assertEquals(1, forms.size());
 
-        formsApi.submit(pir.getInstanceId(), forms.get(0).getName(), Collections.singletonMap("name", "boo"));
+        formsApi.submitForm(pir.getInstanceId(), forms.get(0).getName(), Collections.singletonMap("name", "boo"));
 
         // wait process finished
-        pir = waitForCompletion(processApi, spr.getInstanceId());
+        pir = waitForCompletion(getApiClient(), spr.getInstanceId());
 
         // get the name of the agent's log file
 
@@ -75,7 +76,7 @@ public class ExternalImportsIT extends AbstractServerIT {
 
         // check the logs
 
-        byte[] ab = getLog(pir.getLogFileName());
+        byte[] ab = getLog(pir.getInstanceId());
 
         assertLog(".*Hello, Concord!.*", ab);
         assertLog(".*Hello from Template, Concord!.*", ab);
@@ -98,7 +99,7 @@ public class ExternalImportsIT extends AbstractServerIT {
 
         // wait for completion
 
-        ProcessEntry pir = waitForCompletion(processApi, spr.getInstanceId());
+        ProcessEntry pir = waitForCompletion(getApiClient(), spr.getInstanceId());
 
         // get the name of the agent's log file
 
@@ -106,7 +107,7 @@ public class ExternalImportsIT extends AbstractServerIT {
 
         // check the logs
 
-        byte[] ab = getLog(pir.getLogFileName());
+        byte[] ab = getLog(pir.getInstanceId());
 
         assertLog(".*Hello, Concord!.*", ab);
         assertLog(".*Hello from Template, Concord!.*", ab);
@@ -128,7 +129,7 @@ public class ExternalImportsIT extends AbstractServerIT {
 
         // wait for completion
 
-        ProcessEntry pir = waitForCompletion(processApi, spr.getInstanceId());
+        ProcessEntry pir = waitForCompletion(getApiClient(), spr.getInstanceId());
 
         // get the name of the agent's log file
 
@@ -136,7 +137,7 @@ public class ExternalImportsIT extends AbstractServerIT {
 
         // check the logs
 
-        byte[] ab = getLog(pir.getLogFileName());
+        byte[] ab = getLog(pir.getInstanceId());
 
         assertLog(".*Hello, Concord!.*", ab);
         assertLog(".*Hello from Template DIR, Concord!.*", ab);
@@ -158,7 +159,7 @@ public class ExternalImportsIT extends AbstractServerIT {
 
         // wait for completion
 
-        ProcessEntry pir = waitForCompletion(processApi, spr.getInstanceId());
+        ProcessEntry pir = waitForCompletion(getApiClient(), spr.getInstanceId());
 
         // get the name of the agent's log file
 
@@ -166,7 +167,7 @@ public class ExternalImportsIT extends AbstractServerIT {
 
         // check the logs
 
-        byte[] ab = getLog(pir.getLogFileName());
+        byte[] ab = getLog(pir.getInstanceId());
 
         assertLog(".*Hello, Concord!.*", ab);
         assertLog(".*Hello from Template, Concord!.*", ab);
@@ -190,7 +191,7 @@ public class ExternalImportsIT extends AbstractServerIT {
 
         // wait for completion
 
-        ProcessEntry pir = waitForCompletion(processApi, spr.getInstanceId());
+        ProcessEntry pir = waitForCompletion(getApiClient(), spr.getInstanceId());
 
         // get the name of the agent's log file
 
@@ -198,7 +199,7 @@ public class ExternalImportsIT extends AbstractServerIT {
 
         // check the logs
 
-        byte[] ab = getLog(pir.getLogFileName());
+        byte[] ab = getLog(pir.getInstanceId());
 
         assertLog(".*Hello from Template, Concord!.*", ab);
     }
@@ -219,13 +220,13 @@ public class ExternalImportsIT extends AbstractServerIT {
 
         // wait for completion
 
-        ProcessEntry pir = waitForStatus(processApi, spr.getInstanceId(), ProcessEntry.StatusEnum.FAILED);
+        ProcessEntry pir = waitForStatus(getApiClient(), spr.getInstanceId(), ProcessEntry.StatusEnum.FAILED);
 
         ProcessEntry child = waitForChild(processApi, spr.getInstanceId(), ProcessEntry.KindEnum.FAILURE_HANDLER, ProcessEntry.StatusEnum.FINISHED);
 
         // check the logs
 
-        byte[] ab = getLog(child.getLogFileName());
+        byte[] ab = getLog(child.getInstanceId());
 
         assertLog(".*oh, handled.*", ab);
     }
@@ -246,13 +247,13 @@ public class ExternalImportsIT extends AbstractServerIT {
 
         // wait for completion
 
-        ProcessEntry pir = waitForCompletion(processApi, spr.getInstanceId());
+        ProcessEntry pir = waitForCompletion(getApiClient(), spr.getInstanceId());
         ProcessEntry child = waitForChild(processApi, pir.getInstanceId(), ProcessEntry.KindEnum.DEFAULT, ProcessEntry.StatusEnum.FINISHED);
 
         // check the logs
 
-        byte[] ab = getLog(pir.getLogFileName());
-        byte[] cd = getLog(child.getLogFileName());
+        byte[] ab = getLog(pir.getInstanceId());
+        byte[] cd = getLog(child.getInstanceId());
 
         assertLog(".*Hello, Concord!.*", ab);
         assertLog(".*Hello from Concord, imports!.*", cd);
@@ -268,23 +269,52 @@ public class ExternalImportsIT extends AbstractServerIT {
 
         // ---
 
+        assertExternalImportValidation(userRepoUrl);
+    }
+
+    @Test
+    public void testExternalImportWithSymlink() throws Exception {
+        // Init repo and add symlink
+        String importRepoUrl = initRepo("externalImportSymlink", importRepo -> {
+            try {
+                Path target = importRepo.resolve("concord.txt");
+                Path linkDir = Files.createDirectory(importRepo.resolve("link_dir"));
+                Path link = linkDir.resolve("concord.yml");
+                Files.createSymbolicLink(link, linkDir.relativize(target));
+            } catch (IOException e) {
+                fail("Error while creating symlink");
+            }
+        });
+
+        String userRepoUrl = initRepo("externalImportTriggerReference");
+        replace(Paths.get(userRepoUrl, "concord.yml"), "{{gitUrl}}", importRepoUrl);
+        commit(Paths.get(userRepoUrl).toFile());
+
+        // ---
+
+        assertExternalImportValidation(userRepoUrl);
+    }
+
+    private void assertExternalImportValidation(String userRepoUrl) throws Exception {
         String orgName = "org_" + randomString();
         OrganizationsApi organizationsApi = new OrganizationsApi(getApiClient());
-        organizationsApi.createOrUpdate(new OrganizationEntry().setName(orgName));
+        organizationsApi.createOrUpdateOrg(new OrganizationEntry().name(orgName));
 
         String projectName = "prj_" + randomString();
         String repoName = "repo_" + randomString();
 
         ProjectsApi projectsApi = new ProjectsApi(getApiClient());
-        projectsApi.createOrUpdate(orgName, new ProjectEntry()
-                .setName(projectName)
-                .setRepositories(Collections.singletonMap(repoName, new RepositoryEntry()
-                        .setUrl(userRepoUrl)
-                        .setBranch("master"))));
+        projectsApi.createOrUpdateProject(orgName, new ProjectEntry()
+                .name(projectName)
+                .repositories(Collections.singletonMap(repoName, new RepositoryEntry()
+                        .url(userRepoUrl)
+                        .branch("master"))));
 
         RepositoriesApi repositoriesApi = new RepositoriesApi(getApiClient());
+        GenericOperationResult refreshResp = repositoriesApi.refreshRepository(orgName, projectName, repoName, true);
+        assertTrue(refreshResp.getOk());
         RepositoryValidationResponse resp = repositoriesApi.validateRepository(orgName, projectName, repoName);
-        assertTrue(resp.isOk());
+        assertTrue(resp.getOk());
     }
 
     @Test
@@ -303,7 +333,7 @@ public class ExternalImportsIT extends AbstractServerIT {
 
         // wait for completion
 
-        ProcessEntry pir = waitForCompletion(processApi, spr.getInstanceId());
+        ProcessEntry pir = waitForCompletion(getApiClient(), spr.getInstanceId());
 
         // get the name of the agent's log file
 
@@ -311,7 +341,7 @@ public class ExternalImportsIT extends AbstractServerIT {
 
         // check the logs
 
-        byte[] ab = getLog(pir.getLogFileName());
+        byte[] ab = getLog(pir.getInstanceId());
 
         assertLog(".*Hello, Concord!.*", ab);
         assertLog(".*Hello from Template, Concord!.*", ab);
@@ -333,7 +363,7 @@ public class ExternalImportsIT extends AbstractServerIT {
 
         // wait for completion
 
-        ProcessEntry pir = waitForCompletion(processApi, spr.getInstanceId());
+        ProcessEntry pir = waitForCompletion(getApiClient(), spr.getInstanceId());
 
         // get the name of the agent's log file
 
@@ -341,7 +371,7 @@ public class ExternalImportsIT extends AbstractServerIT {
 
         // check the logs
 
-        byte[] ab = getLog(pir.getLogFileName());
+        byte[] ab = getLog(pir.getInstanceId());
 
         assertLog(".*Hello, Concord!.*", ab);
         assertLog(".*Hello from Template, Concord!.*", ab);
@@ -363,7 +393,7 @@ public class ExternalImportsIT extends AbstractServerIT {
 
         // wait for completion
 
-        ProcessEntry pir = waitForCompletion(processApi, spr.getInstanceId());
+        ProcessEntry pir = waitForCompletion(getApiClient(), spr.getInstanceId());
 
         // get the name of the agent's log file
 
@@ -371,7 +401,7 @@ public class ExternalImportsIT extends AbstractServerIT {
 
         // check the logs
 
-        byte[] ab = getLog(pir.getLogFileName());
+        byte[] ab = getLog(pir.getInstanceId());
 
         assertLog(".*Hello, Concord!.*", ab);
         assertLog(".*Hello from Template DIR, Concord!.*", ab);
@@ -384,23 +414,23 @@ public class ExternalImportsIT extends AbstractServerIT {
 
         String orgName = "org_" + randomString();
         OrganizationsApi orgApi = new OrganizationsApi(getApiClient());
-        orgApi.createOrUpdate(new OrganizationEntry().setName(orgName));
+        orgApi.createOrUpdateOrg(new OrganizationEntry().name(orgName));
 
         String projectName = "project_" + randomString();
         String repoName = "repo_" + randomString();
 
         ProjectsApi projectsApi = new ProjectsApi(getApiClient());
-        projectsApi.createOrUpdate(orgName, new ProjectEntry()
-                .setName(projectName)
-                .setRepositories(Collections.singletonMap(repoName, new RepositoryEntry()
-                        .setUrl(clientRepoUrl)
-                        .setBranch("master"))));
+        projectsApi.createOrUpdateProject(orgName, new ProjectEntry()
+                .name(projectName)
+                .repositories(Collections.singletonMap(repoName, new RepositoryEntry()
+                        .url(clientRepoUrl)
+                        .branch("master"))));
 
         // ---
 
         TriggersApi triggersApi = new TriggersApi(getApiClient());
         while (true) {
-            List<TriggerEntry> triggers = triggersApi.list(orgName, projectName, repoName);
+            List<TriggerEntry> triggers = triggersApi.listTriggers(orgName, projectName, repoName);
             if (triggers != null && triggers.size() == 1 && triggers.get(0).getEventSource().equals("test")) {
                 break;
             }
@@ -411,15 +441,20 @@ public class ExternalImportsIT extends AbstractServerIT {
         // ---
 
         ExternalEventsApi externalEventsApi = new ExternalEventsApi(getApiClient());
-        externalEventsApi.event("test", Collections.emptyMap());
+        externalEventsApi.externalEvent("test", Collections.emptyMap());
 
         // ---
 
         ProcessEntry pe;
 
         ProcessV2Api processApi = new ProcessV2Api(getApiClient());
+        ProcessListFilter filter = ProcessListFilter.builder()
+                .orgName(orgName)
+                .projectName(projectName)
+                .build();
+
         while (true) {
-            List<ProcessEntry> l = processApi.list(null, orgName, null, projectName, null, null, null, null, null, null, null, null, null, null, null);
+            List<ProcessEntry> l = processApi.listProcesses(filter);
 
             Optional<ProcessEntry> o = l.stream().filter(e -> e.getTriggeredBy().getTrigger().getEventSource().equals("test")).findFirst();
             if (o.isPresent()) {
@@ -432,9 +467,9 @@ public class ExternalImportsIT extends AbstractServerIT {
 
         // ---
 
-        waitForCompletion(new ProcessApi(getApiClient()), pe.getInstanceId());
+        waitForCompletion(getApiClient(), pe.getInstanceId());
 
-        byte[] ab = getLog(pe.getLogFileName());
+        byte[] ab = getLog(pe.getInstanceId());
         assertLog(".*Hello, Concord.*", ab);
     }
 
@@ -449,12 +484,11 @@ public class ExternalImportsIT extends AbstractServerIT {
 
         StartProcessResponse spr = start(payload);
 
-        ProcessApi processApi = new ProcessApi(getApiClient());
-        ProcessEntry pir = waitForCompletion(processApi, spr.getInstanceId());
+        ProcessEntry pir = waitForCompletion(getApiClient(), spr.getInstanceId());
 
         // ---
 
-        byte[] ab = getLog(pir.getLogFileName());
+        byte[] ab = getLog(pir.getInstanceId());
 
         assertLog(".*Hello from Groovy!.*", ab);
         assertLog(".*Hello from Python!.*", ab);
@@ -473,7 +507,7 @@ public class ExternalImportsIT extends AbstractServerIT {
         ProcessApi processApi = new ProcessApi(getApiClient());
         StartProcessResponse spr = start(payload);
         assertNotNull(spr.getInstanceId());
-        waitForStatus(processApi, spr.getInstanceId(), ProcessEntry.StatusEnum.ENQUEUED);
+        waitForStatus(getApiClient(), spr.getInstanceId(), ProcessEntry.StatusEnum.ENQUEUED);
 
         try {
             processApi.downloadStateFile(spr.getInstanceId(), "import_data/concord.yml");
@@ -506,12 +540,11 @@ public class ExternalImportsIT extends AbstractServerIT {
 
         StartProcessResponse spr = start(payload);
 
-        ProcessApi processApi = new ProcessApi(getApiClient());
-        ProcessEntry pir = waitForCompletion(processApi, spr.getInstanceId());
+        ProcessEntry pir = waitForCompletion(getApiClient(), spr.getInstanceId());
 
         // ---
 
-        byte[] ab = getLog(pir.getLogFileName());
+        byte[] ab = getLog(pir.getInstanceId());
 
         assertLog(".*Hello from Template, Concord!.*", ab);
     }
@@ -520,11 +553,23 @@ public class ExternalImportsIT extends AbstractServerIT {
         return initRepo(resourceName, null, null, null);
     }
 
+    private static String initRepo(String resourceName, Consumer<Path> fileAdder) throws Exception {
+        return initRepo(resourceName, null, null, null, fileAdder);
+    }
+
     private static String initRepo(String resourceName, String path, String find, String replace) throws Exception {
+        return initRepo(resourceName, path, find, replace, p -> {});
+    }
+
+    private static String initRepo(String resourceName, String path, String find, String replace, Consumer<Path> fileAdder) throws Exception {
+
         Path tmpDir = createTempDir();
 
         File src = new File(ExternalImportsIT.class.getResource(resourceName).toURI());
         IOUtils.copy(src.toPath(), tmpDir);
+
+        // add more files
+        fileAdder.accept(tmpDir);
 
         if (path != null) {
             Path p = tmpDir.resolve(path);

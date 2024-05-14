@@ -43,8 +43,6 @@ import RequestErrorActivity from '../RequestErrorActivity';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { usePolling } from '../../../api/usePolling';
 
-const DATA_FETCH_INTERVAL = 5000;
-
 const COLUMNS = [
     STATUS_COLUMN,
     INSTANCE_ID_COLUMN,
@@ -58,13 +56,15 @@ interface ExternalProps {
     loadingHandler: (inc: number) => void;
     processStatus?: ProcessStatus;
     forceRefresh: boolean;
+    dataFetchInterval: number;
 }
 
 const ProcessChildrenActivity = ({
     instanceId,
     loadingHandler,
     processStatus,
-    forceRefresh
+    forceRefresh,
+    dataFetchInterval
 }: ExternalProps) => {
     const isInitialMount = useRef(true);
     const location = useLocation();
@@ -94,7 +94,7 @@ const ProcessChildrenActivity = ({
         return !isFinal(processStatus);
     }, [instanceId, searchFilter, processStatus]);
 
-    const error = usePolling(fetchData, DATA_FETCH_INTERVAL, loadingHandler, forceRefresh);
+    const error = usePolling(fetchData, dataFetchInterval, loadingHandler, forceRefresh);
 
     const onRefresh = useCallback(
         (processFilters?: ProcessFilters, paginationFilters?: Pagination) => {

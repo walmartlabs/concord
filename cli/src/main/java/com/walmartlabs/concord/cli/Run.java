@@ -4,7 +4,7 @@ package com.walmartlabs.concord.cli;
  * *****
  * Concord
  * -----
- * Copyright (C) 2017 - 2019 Walmart Inc.
+ * Copyright (C) 2017 - 2023 Walmart Inc.
  * -----
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,6 +21,8 @@ package com.walmartlabs.concord.cli;
  */
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
+import com.fasterxml.jackson.dataformat.yaml.YAMLGenerator;
 import com.google.inject.Injector;
 import com.walmartlabs.concord.cli.runner.*;
 import com.walmartlabs.concord.common.ConfigurationUtils;
@@ -29,13 +31,11 @@ import com.walmartlabs.concord.common.IOUtils;
 import com.walmartlabs.concord.dependencymanager.DependencyManager;
 import com.walmartlabs.concord.dependencymanager.DependencyManagerConfiguration;
 import com.walmartlabs.concord.dependencymanager.DependencyManagerRepositories;
-import com.walmartlabs.concord.imports.ImportManager;
-import com.walmartlabs.concord.imports.ImportManagerFactory;
-import com.walmartlabs.concord.imports.ImportProcessingException;
-import com.walmartlabs.concord.imports.Imports;
+import com.walmartlabs.concord.imports.*;
 import com.walmartlabs.concord.process.loader.model.ProcessDefinitionUtils;
 import com.walmartlabs.concord.process.loader.v2.ProcessDefinitionV2;
 import com.walmartlabs.concord.runtime.common.cfg.RunnerConfiguration;
+import com.walmartlabs.concord.runtime.v2.NoopImportsNormalizer;
 import com.walmartlabs.concord.runtime.v2.ProjectLoaderV2;
 import com.walmartlabs.concord.runtime.v2.ProjectSerializerV2;
 import com.walmartlabs.concord.runtime.v2.model.ProcessDefinition;
@@ -43,14 +43,14 @@ import com.walmartlabs.concord.runtime.v2.model.ProcessDefinitionConfiguration;
 import com.walmartlabs.concord.runtime.v2.model.Profile;
 import com.walmartlabs.concord.runtime.v2.model.Step;
 import com.walmartlabs.concord.runtime.v2.runner.InjectorFactory;
+import com.walmartlabs.concord.runtime.v2.runner.ProjectLoadListeners;
 import com.walmartlabs.concord.runtime.v2.runner.Runner;
 import com.walmartlabs.concord.runtime.v2.runner.guice.ProcessDependenciesModule;
 import com.walmartlabs.concord.runtime.v2.runner.tasks.TaskProviders;
-import com.walmartlabs.concord.runtime.v2.sdk.ImmutableProcessConfiguration;
-import com.walmartlabs.concord.runtime.v2.sdk.ProcessConfiguration;
-import com.walmartlabs.concord.runtime.v2.sdk.WorkingDirectory;
+import com.walmartlabs.concord.runtime.v2.sdk.*;
 import com.walmartlabs.concord.sdk.Constants;
 import com.walmartlabs.concord.sdk.MapUtils;
+import com.walmartlabs.concord.svm.MultiException;
 import picocli.CommandLine.Command;
 import picocli.CommandLine.Model.CommandSpec;
 import picocli.CommandLine.Option;
@@ -81,6 +81,9 @@ public class Run implements Callable<Integer> {
     @Option(names = {"--default-cfg"}, description = "default Concord configuration file")
     Path defaultCfg = Paths.get(System.getProperty("user.home")).resolve(".concord").resolve("defaultCfg.yml");
 
+    @Option(names = {"--default-task-vars"}, description = "default task variables configuration file")
+    Path defaultTaskVars = Paths.get(System.getProperty("user.home")).resolve(".concord").resolve("defaultTaskVars.json");
+
     @Option(names = {"--deps-cache-dir"}, description = "process dependencies cache dir")
     Path depsCacheDir = Paths.get(System.getProperty("user.home")).resolve(".concord").resolve("depsCache");
 
@@ -108,8 +111,12 @@ public class Run implements Callable<Integer> {
     @Option(names = {"-c", "--clean"}, description = "remove the target directory before starting the process")
     boolean cleanup = false;
 
-    @Option(names = {"-v", "--verbose"}, description = "verbose output")
-    boolean verbose = false;
+    @Option(names = {"-v", "--verbose"}, description = {
+            "Specify multiple -v options to increase verbosity. For example, `-v -v -v` or `-vvv`",
+            "-v log flow steps",
+            "-vv log task input/output args",
+            "-vvv runner debug logs"})
+    boolean[] verbosity = new boolean[0];
 
     @Option(names = {"--effective-yaml"}, description = "generate the effective YAML (skips execution)")
     boolean effectiveYaml = false;
@@ -117,11 +124,16 @@ public class Run implements Callable<Integer> {
     @Option(names = {"--default-import-version"}, description = "default import version or repo branch")
     String defaultVersion = "main";
 
+    @Option(names = {"--no-default-cfg"}, description = "Do not load default configuration (including standard dependencies)")
+    boolean noDefaultCfg = false;
+
     @Parameters(arity = "0..1", description = "Directory with Concord files or a path to a single Concord YAML file.")
     Path sourceDir = Paths.get(System.getProperty("user.dir"));
 
     @Override
     public Integer call() throws Exception {
+        Verbosity verbosity = new Verbosity(this.verbosity);
+
         sourceDir = sourceDir.normalize().toAbsolutePath();
         Path targetDir;
 
@@ -135,19 +147,21 @@ public class Run implements Callable<Integer> {
         } else if (Files.isDirectory(sourceDir)) {
             targetDir = sourceDir.resolve("target");
             if (cleanup && Files.exists(targetDir)) {
-                if (verbose) {
+                if (verbosity.verbose()) {
                     System.out.println("Cleaning target directory");
                 }
                 IOUtils.deleteRecursively(targetDir);
             }
 
             // copy everything into target except target
-            IOUtils.copy(sourceDir, targetDir, "^target$", new CopyNotifier(verbose ? 0 : 100), StandardCopyOption.REPLACE_EXISTING);
+            IOUtils.copy(sourceDir, targetDir, "^target$", new CopyNotifier(verbosity.verbose() ? 0 : 100), StandardCopyOption.REPLACE_EXISTING);
         } else {
             throw new IllegalArgumentException("Not a directory or single Concord YAML file: " + sourceDir);
         }
 
-        copyDefaultCfg(targetDir, defaultCfg);
+        if (!noDefaultCfg) {
+            copyDefaultCfg(targetDir, defaultCfg, verbosity.verbose());
+        }
 
         DependencyManager dependencyManager = initDependencyManager();
         ImportManager importManager = new ImportManagerFactory(dependencyManager,
@@ -157,7 +171,7 @@ public class Run implements Callable<Integer> {
         ProjectLoaderV2.Result loadResult;
         try {
             loadResult = new ProjectLoaderV2(importManager)
-                    .load(targetDir, new CliImportsNormalizer(importsSource, verbose, defaultVersion), verbose ? new CliImportsListener() : null);
+                    .load(targetDir, new CliImportsNormalizer(importsSource, verbosity.verbose(), defaultVersion), verbosity.verbose() ? new CliImportsListener() : null);
         } catch (ImportProcessingException e) {
             ObjectMapper om = new ObjectMapper();
             System.err.println("Error while processing import " + om.writeValueAsString(e.getImport()) + ": " + e.getMessage());
@@ -172,34 +186,39 @@ public class Run implements Callable<Integer> {
 
         UUID instanceId = UUID.randomUUID();
 
-        if (verbose && !extraVars.isEmpty()) {
+        if (verbosity.verbose() && !extraVars.isEmpty()) {
             System.out.println("Additional variables: " + extraVars);
         }
 
-        if (verbose && !profiles.isEmpty()) {
+        if (verbosity.verbose() && !profiles.isEmpty()) {
             System.out.println("Active profiles: " + profiles);
         }
-
-        ProcessConfiguration cfg = from(processDefinition.configuration())
-                .entryPoint(entryPoint)
-                .instanceId(instanceId)
-                .build();
 
         Map<String, Object> overlayCfg = ProcessDefinitionUtils.getProfilesOverlayCfg(new ProcessDefinitionV2(processDefinition), profiles);
         List<String> overlayDeps = MapUtils.getList(overlayCfg, Constants.Request.DEPENDENCIES_KEY, Collections.emptyList());
 
+        Collection<String> dependencies;
+
+        try {
+            dependencies = new DependencyResolver(dependencyManager, verbosity.verbose())
+                    .resolveDeps(overlayDeps);
+        } catch (Exception e) {
+            System.err.println(e.getMessage());
+            return -1;
+        }
+
         RunnerConfiguration runnerCfg = RunnerConfiguration.builder()
-                .dependencies(new DependencyResolver(dependencyManager, verbose).resolveDeps(overlayDeps))
-                .debug(cfg.debug())
+                .dependencies(dependencies)
+                .debug(processDefinition.configuration().debug())
                 .build();
 
         Map<String, Object> overlayArgs = MapUtils.getMap(overlayCfg, Constants.Request.ARGUMENTS_KEY, Collections.emptyMap());
-        Map<String, Object> args = ConfigurationUtils.deepMerge(cfg.arguments(), overlayArgs, extraVars);
-        if (verbose) {
-            System.out.println("Process arguments: " + args);
-        }
+        Map<String, Object> args = ConfigurationUtils.deepMerge(processDefinition.configuration().arguments(), overlayArgs, extraVars);
         args.put(Constants.Context.TX_ID_KEY, instanceId.toString());
         args.put(Constants.Context.WORK_DIR_KEY, targetDir.toAbsolutePath().toString());
+        if (verbosity.verbose()) {
+            dumpArguments(args);
+        }
 
         if (effectiveYaml) {
             Map<String, List<Step>> flows = new HashMap<>(processDefinition.flows());
@@ -227,12 +246,22 @@ public class Run implements Callable<Integer> {
 
         System.out.println("Starting...");
 
+        ProcessConfiguration cfg = from(processDefinition.configuration(), processInfo(args, profiles), projectInfo(args))
+                .entryPoint(entryPoint)
+                .instanceId(instanceId)
+                .build();
+
         Injector injector = new InjectorFactory(new WorkingDirectory(targetDir),
                 runnerCfg,
                 () -> cfg,
                 new ProcessDependenciesModule(targetDir, runnerCfg.dependencies(), cfg.debug()),
-                new CliServicesModule(secretStoreDir, targetDir, new VaultProvider(vaultDir, vaultId), dependencyManager))
+                new CliServicesModule(secretStoreDir, targetDir, defaultTaskVars, new VaultProvider(vaultDir, vaultId), dependencyManager, verbosity))
                 .create();
+
+        // Just to notify listeners
+        ProjectLoadListeners loadListeners = injector.getInstance(ProjectLoadListeners.class);
+        ProjectLoaderV2 loader = new ProjectLoaderV2(new NoopImportManager());
+        loader.load(targetDir, new NoopImportsNormalizer(), ImportsListener.NOP_LISTENER, loadListeners);
 
         Runner runner = injector.getInstance(Runner.class);
 
@@ -242,8 +271,11 @@ public class Run implements Callable<Integer> {
 
         try {
             runner.start(cfg, processDefinition, args);
+        } catch (MultiException e) {
+            System.err.println(e.getMessage());
+            return -1;
         } catch (Exception e) {
-            if (verbose) {
+            if (verbosity.verbose()) {
                 System.err.print("Error: ");
                 e.printStackTrace(System.err);
             } else {
@@ -257,23 +289,80 @@ public class Run implements Callable<Integer> {
         return 0;
     }
 
-    private static ImmutableProcessConfiguration.Builder from(ProcessDefinitionConfiguration cfg) {
+    @SuppressWarnings("unchecked")
+    private static ProcessInfo processInfo(Map<String, Object> args, List<String> profiles) {
+        Object processInfoObject = args.get("processInfo");
+        if (processInfoObject == null) {
+            processInfoObject = fromExtraVars("processInfo", args);
+        }
+
+        Map<String, Object> processInfo = Collections.emptyMap();
+        if (processInfoObject instanceof Map) {
+            processInfo = (Map<String, Object>) processInfoObject;
+        }
+
+        return ProcessInfo.builder()
+                .sessionToken(MapUtils.getString(processInfo, "sessionToken", "<undefined>"))
+                .activeProfiles(profiles)
+                .build();
+    }
+
+    @SuppressWarnings("unchecked")
+    private static ProjectInfo projectInfo(Map<String, Object> args) {
+        Object projectInfoObject = args.get("projectInfo");
+        if (projectInfoObject == null) {
+            projectInfoObject = fromExtraVars("projectInfo", args);
+        }
+
+        Map<String, Object> projectInfo = Collections.emptyMap();
+        if (projectInfoObject instanceof Map) {
+            projectInfo = (Map<String, Object>) projectInfoObject;
+        }
+
+        return ProjectInfo.builder()
+                .orgName(MapUtils.getString(projectInfo, "orgName"))
+                .projectName(MapUtils.getString(projectInfo, "projectName"))
+                .repoName(MapUtils.getString(projectInfo, "repoName"))
+                .repoUrl(MapUtils.getString(projectInfo, "repoUrl"))
+                .repoBranch(MapUtils.getString(projectInfo, "repoBranch"))
+                .repoPath(MapUtils.getString(projectInfo, "repoPath"))
+                .repoCommitId(MapUtils.getString(projectInfo, "repoCommitId"))
+                .repoCommitAuthor(MapUtils.getString(projectInfo, "repoCommitAuthor"))
+                .repoCommitMessage(MapUtils.getString(projectInfo, "repoCommitMessage"))
+                .build();
+    }
+
+    private static ImmutableProcessConfiguration.Builder from(ProcessDefinitionConfiguration cfg, ProcessInfo processInfo, ProjectInfo projectInfo) {
         return ProcessConfiguration.builder()
                 .debug(cfg.debug())
                 .entryPoint(cfg.entryPoint())
                 .arguments(cfg.arguments())
                 .meta(cfg.meta())
                 .events(cfg.events())
+                .processInfo(processInfo)
+                .projectInfo(projectInfo)
                 .out(cfg.out());
     }
 
-    private static void copyDefaultCfg(Path targetDir, Path defaultCfg) throws IOException {
+    private static Map<String, Object> fromExtraVars(String key, Map<String, Object> args) {
+        Map<String, Object> result = new HashMap<>();
+        for (String k : args.keySet()) {
+            if (k.startsWith(key + ".")) {
+                result.put(k.substring(key.length() + 1), args.get(k));
+            }
+        }
+        return result;
+    }
+
+    private static void copyDefaultCfg(Path targetDir, Path defaultCfg, boolean verbose) throws IOException {
         final Path destDir = targetDir.resolve("concord");
         final Path destFile = destDir.resolve("_defaultCfg.concord.yml");
 
         // Don't overwrite existing file is given project dir
         if (Files.exists(destFile)) {
-            System.err.println("Default configuration already exists: " + defaultCfg);
+            if (verbose) {
+                System.out.println("Default configuration already exists: " + defaultCfg);
+            }
             return;
         }
 
@@ -307,6 +396,16 @@ public class Run implements Callable<Integer> {
             return DependencyManagerConfiguration.of(depsCacheDir, DependencyManagerRepositories.get(cfgFile));
         }
         return DependencyManagerConfiguration.of(depsCacheDir);
+    }
+
+    private static void dumpArguments(Map<String, Object> args) {
+        ObjectMapper om = new ObjectMapper(new YAMLFactory().disable(YAMLGenerator.Feature.WRITE_DOC_START_MARKER));
+        try {
+            System.out.println("Process arguments:");
+            System.out.println(om.writerWithDefaultPrettyPrinter().writeValueAsString(args));
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
     }
 
     private static class CopyNotifier implements FileVisitor {

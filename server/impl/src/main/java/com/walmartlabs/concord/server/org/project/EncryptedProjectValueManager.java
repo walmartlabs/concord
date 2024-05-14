@@ -4,7 +4,7 @@ package com.walmartlabs.concord.server.org.project;
  * *****
  * Concord
  * -----
- * Copyright (C) 2017 - 2018 Walmart Inc.
+ * Copyright (C) 2017 - 2023 Walmart Inc.
  * -----
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,17 +20,15 @@ package com.walmartlabs.concord.server.org.project;
  * =====
  */
 
-import com.walmartlabs.concord.server.cfg.SecretStoreConfiguration;
 import com.walmartlabs.concord.common.secret.SecretUtils;
+import com.walmartlabs.concord.server.cfg.SecretStoreConfiguration;
 
 import javax.crypto.BadPaddingException;
 import javax.crypto.IllegalBlockSizeException;
 import javax.inject.Inject;
-import javax.inject.Named;
 import java.security.SecureRandom;
 import java.util.UUID;
 
-@Named
 public class EncryptedProjectValueManager {
 
     private static final int PROJECT_SECRET_KEY_LENGTH = 128;

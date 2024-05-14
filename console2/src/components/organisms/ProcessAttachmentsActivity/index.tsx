@@ -34,15 +34,15 @@ interface ExternalProps {
     loadingHandler: (inc: number) => void;
     processStatus?: ProcessStatus;
     forceRefresh: boolean;
+    dataFetchInterval: number;
 }
-
-const DATA_FETCH_INTERVAL = 5000;
 
 const ProcessAttachmentsActivity = ({
     instanceId,
     processStatus,
     loadingHandler,
-    forceRefresh
+    forceRefresh,
+    dataFetchInterval
 }: ExternalProps) => {
     const [data, setData] = useState<string[]>();
 
@@ -53,7 +53,7 @@ const ProcessAttachmentsActivity = ({
         return !isFinal(processStatus);
     }, [instanceId, processStatus]);
 
-    const error = usePolling(fetchData, DATA_FETCH_INTERVAL, loadingHandler, forceRefresh);
+    const error = usePolling(fetchData, dataFetchInterval, loadingHandler, forceRefresh);
 
     if (error) {
         return <RequestErrorActivity error={error} />;
@@ -63,7 +63,9 @@ const ProcessAttachmentsActivity = ({
 };
 
 const makeAttachmentsList = (data: string[]): string[] => {
-    return data.filter((attachment) => attachment.indexOf('_state') < 0);
+    return data
+        .filter((attachment) => attachment.indexOf('_state') < 0)
+        .filter((attachment) => attachment.indexOf('_session_files') < 0);
 };
 
 export default ProcessAttachmentsActivity;

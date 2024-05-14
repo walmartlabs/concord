@@ -4,7 +4,7 @@ package com.walmartlabs.concord.runtime.v2.runner;
  * *****
  * Concord
  * -----
- * Copyright (C) 2017 - 2019 Walmart Inc.
+ * Copyright (C) 2017 - 2023 Walmart Inc.
  * -----
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,13 +23,14 @@ package com.walmartlabs.concord.runtime.v2.runner;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
-import com.walmartlabs.concord.ApiClient;
+import com.walmartlabs.concord.client2.ApiClient;
 import com.walmartlabs.concord.imports.ImportsListener;
 import com.walmartlabs.concord.imports.NoopImportManager;
 import com.walmartlabs.concord.runtime.common.ProcessHeartbeat;
 import com.walmartlabs.concord.runtime.common.StateManager;
 import com.walmartlabs.concord.runtime.common.cfg.RunnerConfiguration;
 import com.walmartlabs.concord.runtime.v2.NoopImportsNormalizer;
+import com.walmartlabs.concord.runtime.v2.ProjectLoadListener;
 import com.walmartlabs.concord.runtime.v2.ProjectLoaderV2;
 import com.walmartlabs.concord.runtime.v2.model.ProcessDefinition;
 import com.walmartlabs.concord.runtime.v2.runner.guice.ObjectMapperProvider;
@@ -66,6 +67,7 @@ public class Main {
     private final WorkingDirectory workDir;
     private final TaskProviders taskProviders;
     private final ClassLoader classLoader;
+    private final ProjectLoadListeners projectLoadListeners;
 
     @Inject
     public Main(Runner runner,
@@ -73,7 +75,8 @@ public class Main {
                 ProcessConfiguration processCfg,
                 WorkingDirectory workDir,
                 TaskProviders taskProviders,
-                @Named("runtime") ClassLoader classLoader) {
+                @Named("runtime") ClassLoader classLoader,
+                ProjectLoadListeners projectLoadListeners) {
 
         this.runner = runner;
         this.runnerCfg = runnerCfg;
@@ -81,12 +84,13 @@ public class Main {
         this.workDir = workDir;
         this.taskProviders = taskProviders;
         this.classLoader = classLoader;
+        this.projectLoadListeners = projectLoadListeners;
     }
 
     public static void main(String[] args) throws Exception {
         RunnerConfiguration runnerCfg = readRunnerConfiguration(args);
 
-        // create the inject with all dependencies and services available before
+        // create the injector with all dependencies and services available before
         // the actual process' working directory is ready. It allows us to load
         // all dependencies and have them available in "pre-fork" situations
         Injector injector = InjectorFactory.createDefault(runnerCfg);
@@ -101,8 +105,11 @@ public class Main {
             main.execute();
 
             System.exit(0);
-        } catch (MultiException | UserDefinedException e) {
+        } catch (UserDefinedException e) {
             log.error(e.getMessage());
+            System.exit(1);
+        } catch (MultiException e) {
+            log.error("{}", e.getMessage());
             System.exit(1);
         } catch (Throwable t) {
             log.error("", t);
@@ -134,7 +141,6 @@ public class Main {
         }
 
         Path workDir = this.workDir.getValue();
-        Map<String, Object> processArgs = prepareProcessArgs(processCfg);
 
         // three modes:
         //  - regular start "from scratch" (or running a "handler" process)
@@ -147,15 +153,19 @@ public class Main {
         Action action = currentAction(events);
         switch (action) {
             case START: {
+                Map<String, Object> processArgs = new LinkedHashMap<>();
                 if (snapshot != null) {
                     // grab top-level variables from the snapshot and use them as process arguments
                     processArgs.putAll(getTopLevelVariables(snapshot));
                 }
+                processArgs.putAll(prepareProcessArgs(processCfg));
 
-                snapshot = start(runner, processCfg, workDir, processArgs);
+                snapshot = start(runner, processCfg, workDir, processArgs, projectLoadListeners);
                 break;
             }
             case RESUME: {
+                Map<String, Object> processArgs = prepareProcessArgs(processCfg);
+
                 snapshot = resume(runner, processCfg, snapshot, processArgs, events);
                 break;
             }
@@ -201,10 +211,10 @@ public class Main {
         }
     }
 
-    private static ProcessSnapshot start(Runner runner, ProcessConfiguration cfg, Path workDir, Map<String, Object> args) throws Exception {
+    private static ProcessSnapshot start(Runner runner, ProcessConfiguration cfg, Path workDir, Map<String, Object> args, ProjectLoadListener projectLoadListener) throws Exception {
         // assume all imports were processed by the agent
         ProjectLoaderV2 loader = new ProjectLoaderV2(new NoopImportManager());
-        ProcessDefinition processDefinition = loader.load(workDir, new NoopImportsNormalizer(), ImportsListener.NOP_LISTENER).getProjectDefinition();
+        ProcessDefinition processDefinition = loader.load(workDir, new NoopImportsNormalizer(), ImportsListener.NOP_LISTENER, projectLoadListener).getProjectDefinition();
 
         Map<String, Object> initiator = cfg.initiator();
         if (initiator != null) {

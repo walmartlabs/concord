@@ -44,6 +44,7 @@ interface ExternalProps {
     processStatus?: ProcessStatus;
     loadingHandler: (inc: number) => void;
     forceRefresh: boolean;
+    dataFetchInterval: number;
 }
 
 interface FetchResponse {
@@ -51,14 +52,14 @@ interface FetchResponse {
     range: LogRange;
 }
 
-const DATA_FETCH_INTERVAL = 5000;
 const DEFAULT_RANGE: LogRange = { low: undefined, high: 2048 };
 
 const ProcessLogActivity = ({
     instanceId,
     processStatus,
     loadingHandler,
-    forceRefresh
+    forceRefresh,
+    dataFetchInterval
 }: ExternalProps) => {
     const location = useLocation();
     const didMountRef = useRef(false);
@@ -140,7 +141,7 @@ const ProcessLogActivity = ({
         [instanceId, opts]
     );
 
-    const error = usePolling(fetchData, range, setData, loadingHandler, refresh, stopPolling);
+    const error = usePolling(fetchData, range, setData, loadingHandler, refresh, stopPolling, dataFetchInterval);
 
     if (error) {
         return <RequestErrorActivity error={error} />;
@@ -186,7 +187,8 @@ const usePolling = (
     setData: Dispatch<SetStateAction<LogSegment[]>>,
     loadingHandler: (inc: number) => void,
     refresh: boolean,
-    stopPollingIndicator: boolean
+    stopPollingIndicator: boolean,
+    dataFetchInterval: number
 ): RequestError | undefined => {
     const poll = useRef<number | undefined>(undefined);
     const [error, setError] = useState<RequestError>();
@@ -213,7 +215,7 @@ const usePolling = (
                 setError(e);
             } finally {
                 if (!stopPollingIndicator && !cancelled) {
-                    poll.current = window.setTimeout(() => fetchData(r), DATA_FETCH_INTERVAL);
+                    poll.current = window.setTimeout(() => fetchData(r), dataFetchInterval);
                 } else {
                     stopPolling();
                 }
@@ -228,7 +230,7 @@ const usePolling = (
             cancelled = true;
             stopPolling();
         };
-    }, [request, setData, rangeRef, refresh, loadingHandler, stopPollingIndicator]);
+    }, [request, setData, rangeRef, refresh, loadingHandler, stopPollingIndicator, dataFetchInterval]);
 
     const stopPolling = () => {
         if (poll.current) {

@@ -26,11 +26,7 @@ import com.walmartlabs.concord.server.cfg.EnqueueWorkersConfiguration;
 import com.walmartlabs.concord.server.sdk.BackgroundTask;
 
 import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
 
-@Named
-@Singleton
 public class EnqueuedTaskProvider implements Provider<BackgroundTask> {
 
     private final BackgroundTask task;
