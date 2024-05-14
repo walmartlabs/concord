@@ -164,6 +164,7 @@ public class ProcessWaitWatchdog implements ScheduledTask {
             });
 
             if (updated && !resumeEvents.isEmpty()) {
+                log.info("processWaits ['{}', '{}', {}] -> resume", p.processKey(), resultWaits, p.version());
                 resumeProcess(p.processKey(), resumeEvents);
             }
         } catch (Exception e) {

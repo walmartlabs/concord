@@ -24,8 +24,12 @@ import com.walmartlabs.concord.server.process.queue.ProcessStatusListener;
 import com.walmartlabs.concord.server.sdk.ProcessKey;
 import com.walmartlabs.concord.server.sdk.ProcessStatus;
 import org.jooq.DSLContext;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class WaitConditionUpdater implements ProcessStatusListener {
+
+    private static final Logger log = LoggerFactory.getLogger(WaitConditionUpdater.class);
 
     @Override
     public void onStatusChange(DSLContext tx, ProcessKey processKey, ProcessStatus status) {
@@ -62,6 +66,7 @@ public class WaitConditionUpdater implements ProcessStatusListener {
 
         String jsonMatch = String.format("[{\"type\": \"PROCESS_COMPLETION\", \"finalStatuses\": [\"%s\"],  \"processes\": [\"%s\"]}]", status.name(), processKey.getInstanceId().toString());
 
-        tx.execute(sql, processKey.getInstanceId().toString(), processKey.getInstanceId().toString(), jsonMatch);
+        int rows = tx.execute(sql, processKey.getInstanceId().toString(), processKey.getInstanceId().toString(), jsonMatch);
+        log.info("updateWaitConditions ['{}'] -> {} updated", processKey.getInstanceId(), rows);
     }
 }
