@@ -23,10 +23,10 @@ package com.walmartlabs.concord.runtime.v2.runner.vm;
 import com.walmartlabs.concord.runtime.v2.model.Retry;
 import com.walmartlabs.concord.runtime.v2.model.Step;
 import com.walmartlabs.concord.runtime.v2.runner.context.ContextFactory;
-import com.walmartlabs.concord.runtime.v2.sdk.EvalContextFactory;
-import com.walmartlabs.concord.runtime.v2.sdk.ExpressionEvaluator;
 import com.walmartlabs.concord.runtime.v2.sdk.Constants;
 import com.walmartlabs.concord.runtime.v2.sdk.Context;
+import com.walmartlabs.concord.runtime.v2.sdk.EvalContextFactory;
+import com.walmartlabs.concord.runtime.v2.sdk.ExpressionEvaluator;
 import com.walmartlabs.concord.svm.Runtime;
 import com.walmartlabs.concord.svm.*;
 import org.slf4j.Logger;
@@ -56,6 +56,11 @@ public class RetryWrapper implements Command {
     public RetryWrapper(Command cmd, Retry retry) {
         this.cmd = cmd;
         this.retry = retry;
+    }
+
+    @Override
+    public Command copy() {
+        return new RetryWrapper(cmd.copy(), retry);
     }
 
     @Override
@@ -126,6 +131,11 @@ public class RetryWrapper implements Command {
 
         public NextRetry(Command cmd) {
             this.cmd = cmd;
+        }
+
+        @Override
+        public Command copy() {
+            return new NextRetry(cmd.copy());
         }
 
         @Override

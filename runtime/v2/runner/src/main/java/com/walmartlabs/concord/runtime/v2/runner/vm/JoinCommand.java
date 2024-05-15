@@ -41,6 +41,11 @@ public class JoinCommand implements Command {
     }
 
     @Override
+    public Command copy() {
+        return new JoinCommand(ids);
+    }
+
+    @Override
     public void eval(Runtime runtime, State state, ThreadId threadId) {
         // Here's a very dumb but working solution to the problem
         // of monitoring the child "threads" state - just a loop

@@ -91,6 +91,7 @@ import static org.mockito.Mockito.*;
 
 public class MainTest {
 
+    private static final Logger log = LoggerFactory.getLogger(MainTest.class);
     private Path workDir;
     private UUID instanceId;
     private FormService formService;
@@ -166,7 +167,7 @@ public class MainTest {
                                 return ExecutionListener.super.afterCommand(runtime, vm, state, threadId, cmd);
                             }
 
-                            assertTrue(SerializationUtils.isSerializable(state), "Non serializable state after: " + cmd);
+                            assertTrue(isSerializable(state), "Non serializable state after: " + cmd);
                             return ExecutionListener.super.afterCommand(runtime, vm, state, threadId, cmd);
                         }
                     });
@@ -175,6 +176,17 @@ public class MainTest {
         };
 
         allLogs = null;
+    }
+
+    private static boolean isSerializable(Object o) {
+        try (ObjectOutputStream oos = new ObjectOutputStream(new ByteArrayOutputStream())) {
+            oos.writeObject(o);
+        } catch (IOException e) {
+            log.warn("Serialization error: {}", e.getMessage(), e);
+            return false;
+        }
+
+        return true;
     }
 
     @AfterEach
@@ -769,6 +781,59 @@ public class MainTest {
         byte[] log = run(runnerCfg);
         assertLog(log, "^This goes directly into the stdout$");
         assertLog(log, ".*This is a processLog entry.*");
+    }
+
+    @Test
+    public void throwStepShouldContainErrorDescription() throws Exception {
+        deploy("logSegments1");
+
+        save(ProcessConfiguration.builder()
+                .build());
+
+        RunnerConfiguration runnerCfg = RunnerConfiguration.builder()
+                .logging(LoggingConfiguration.builder()
+                        .segmentedLogs(true)
+                        .build())
+                .build();
+
+        try {
+            run(runnerCfg);
+            fail("exception expected");
+        } catch (Exception e) {
+            // ignore
+        }
+
+        // 83 log message length, 1 - segment id
+        assertLog(lastLog, ".*" + Pattern.quote("|83|1|") + ".*" + Pattern.quote("[ERROR] (concord.yaml): Error @ line: 3, col: 7. BOOM"));
+    }
+
+    @Test
+    public void loopStepShouldLogErrorInProperLogSegment() throws Exception {
+        deploy("logSegments2");
+
+        save(ProcessConfiguration.builder()
+                .build());
+
+        RunnerConfiguration runnerCfg = RunnerConfiguration.builder()
+                .logging(LoggingConfiguration.builder()
+                        .segmentedLogs(true)
+                        .build())
+                .build();
+
+        try {
+            run(runnerCfg);
+            fail("exception expected");
+        } catch (Exception e) {
+            // ignore
+        }
+
+        // 129 log message length, 1, 2, 3, 4, 5, 6 - segment ids
+        assertLog(lastLog, ".*" + Pattern.quote("|129|1|") + ".*" + Pattern.quote("[ERROR] (concord.yaml): Error @ line: 3, col: 7. Error during execution of 'faultyTask' task: boom!"));
+        assertLog(lastLog, ".*" + Pattern.quote("|129|2|") + ".*" + Pattern.quote("[ERROR] (concord.yaml): Error @ line: 3, col: 7. Error during execution of 'faultyTask' task: boom!"));
+        assertLog(lastLog, ".*" + Pattern.quote("|129|3|") + ".*" + Pattern.quote("[ERROR] (concord.yaml): Error @ line: 3, col: 7. Error during execution of 'faultyTask' task: boom!"));
+        assertLog(lastLog, ".*" + Pattern.quote("|129|4|") + ".*" + Pattern.quote("[ERROR] (concord.yaml): Error @ line: 3, col: 7. Error during execution of 'faultyTask' task: boom!"));
+        assertLog(lastLog, ".*" + Pattern.quote("|129|5|") + ".*" + Pattern.quote("[ERROR] (concord.yaml): Error @ line: 3, col: 7. Error during execution of 'faultyTask' task: boom!"));
+        assertLog(lastLog, ".*" + Pattern.quote("|129|6|") + ".*" + Pattern.quote("[ERROR] (concord.yaml): Error @ line: 3, col: 7. Error during execution of 'faultyTask' task: boom!"));
     }
 
     @Test

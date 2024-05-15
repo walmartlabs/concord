@@ -25,15 +25,9 @@ import com.walmartlabs.concord.forms.FormOptions;
 import com.walmartlabs.concord.runtime.common.FormService;
 import com.walmartlabs.concord.runtime.v2.model.*;
 import com.walmartlabs.concord.runtime.v2.parser.FormFieldParser;
-import com.walmartlabs.concord.runtime.v2.sdk.EvalContext;
-import com.walmartlabs.concord.runtime.v2.sdk.EvalContextFactory;
-import com.walmartlabs.concord.runtime.v2.sdk.ExpressionEvaluator;
-import com.walmartlabs.concord.runtime.v2.sdk.Context;
-import com.walmartlabs.concord.runtime.v2.sdk.ProcessConfiguration;
+import com.walmartlabs.concord.runtime.v2.sdk.*;
 import com.walmartlabs.concord.svm.Runtime;
-import com.walmartlabs.concord.svm.State;
-import com.walmartlabs.concord.svm.ThreadId;
-import com.walmartlabs.concord.svm.ThreadStatus;
+import com.walmartlabs.concord.svm.*;
 
 import java.io.Serializable;
 import java.util.*;
@@ -44,6 +38,11 @@ public class FormCallCommand extends StepCommand<FormCall> {
 
     public FormCallCommand(FormCall formCall) {
         super(formCall);
+    }
+
+    @Override
+    public Command copy() {
+        return new FormCallCommand(getStep());
     }
 
     @Override
