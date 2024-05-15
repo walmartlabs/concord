@@ -91,6 +91,7 @@ import static org.mockito.Mockito.*;
 
 public class MainTest {
 
+    private static final Logger log = LoggerFactory.getLogger(MainTest.class);
     private Path workDir;
     private UUID instanceId;
     private FormService formService;
@@ -166,7 +167,7 @@ public class MainTest {
                                 return ExecutionListener.super.afterCommand(runtime, vm, state, threadId, cmd);
                             }
 
-                            assertTrue(SerializationUtils.isSerializable(state), "Non serializable state after: " + cmd);
+                            assertTrue(isSerializable(state), "Non serializable state after: " + cmd);
                             return ExecutionListener.super.afterCommand(runtime, vm, state, threadId, cmd);
                         }
                     });
@@ -175,6 +176,17 @@ public class MainTest {
         };
 
         allLogs = null;
+    }
+
+    private static boolean isSerializable(Object o) {
+        try (ObjectOutputStream oos = new ObjectOutputStream(new ByteArrayOutputStream())) {
+            oos.writeObject(o);
+        } catch (IOException e) {
+            log.warn("Serialization error: {}", e.getMessage(), e);
+            return false;
+        }
+
+        return true;
     }
 
     @AfterEach
