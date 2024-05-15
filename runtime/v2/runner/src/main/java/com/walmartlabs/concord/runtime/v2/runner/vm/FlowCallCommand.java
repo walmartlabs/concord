@@ -33,6 +33,7 @@ import com.walmartlabs.concord.svm.*;
 import java.io.Serializable;
 import java.util.Map;
 import java.util.Objects;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class FlowCallCommand extends StepCommand<FlowCall> {
 
@@ -42,6 +43,11 @@ public class FlowCallCommand extends StepCommand<FlowCall> {
 
     public FlowCallCommand(FlowCall step) {
         super(step);
+    }
+
+    @Override
+    public Command copy() {
+        return new FlowCallCommand(getStep());
     }
 
     @Override
@@ -116,6 +122,11 @@ public class FlowCallCommand extends StepCommand<FlowCall> {
         }
 
         @Override
+        public Command copy() {
+            return new EvalVariablesCommand(getStep(), new ConcurrentHashMap<>(variables), variablesFrame, getLogContext());
+        }
+
+        @Override
         @SuppressWarnings({"unchecked", "rawtypes"})
         protected void execute(Runtime runtime, State state, ThreadId threadId) {
             Frame frame = state.peekFrame(threadId);
@@ -125,7 +136,7 @@ public class FlowCallCommand extends StepCommand<FlowCall> {
 
             EvalContextFactory ecf = runtime.getService(EvalContextFactory.class);
             ExpressionEvaluator expressionEvaluator = runtime.getService(ExpressionEvaluator.class);
-            Map<String, Object> vars = (Map)variablesFrame.getLocals();
+            Map<String, Object> vars = (Map) variablesFrame.getLocals();
             Map<String, Serializable> out = expressionEvaluator.evalAsMap(ecf.global(ctx, vars), variables);
             out.forEach((k, v) -> ctx.variables().set(k, v));
         }
