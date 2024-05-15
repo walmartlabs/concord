@@ -4,6 +4,9 @@
 
 ### Changed
 
+- runtime-v2: fix log segment assigment during parallel
+execution
+([#905](https://github.com/walmartlabs/concord/pull/905));
 - project: agent-operator module re-organization
 ([#906](https://github.com/walmartlabs/concord/pull/906));
 - concord-server: fix process metadata values after resume
