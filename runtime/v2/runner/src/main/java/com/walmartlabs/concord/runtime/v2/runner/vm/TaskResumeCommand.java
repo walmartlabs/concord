@@ -26,10 +26,8 @@ import com.walmartlabs.concord.runtime.v2.runner.tasks.TaskCallInterceptor;
 import com.walmartlabs.concord.runtime.v2.runner.tasks.TaskException;
 import com.walmartlabs.concord.runtime.v2.runner.tasks.TaskProviders;
 import com.walmartlabs.concord.runtime.v2.sdk.*;
-import com.walmartlabs.concord.svm.Frame;
 import com.walmartlabs.concord.svm.Runtime;
-import com.walmartlabs.concord.svm.State;
-import com.walmartlabs.concord.svm.ThreadId;
+import com.walmartlabs.concord.svm.*;
 
 import java.util.Collections;
 import java.util.UUID;
@@ -44,6 +42,11 @@ public class TaskResumeCommand extends StepCommand<TaskCall> {
         super(correlationId, step, logContext);
 
         this.event = event;
+    }
+
+    @Override
+    public Command copy() {
+        return new TaskResumeCommand(null, null, getStep(), event);
     }
 
     @Override

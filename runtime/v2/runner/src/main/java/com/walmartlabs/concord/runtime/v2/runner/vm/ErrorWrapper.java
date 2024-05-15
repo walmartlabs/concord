@@ -25,18 +25,23 @@ import com.walmartlabs.concord.svm.*;
 
 /**
  * Wraps the specified command into a new frame with an exception handler
- * consisting of a {@link ExposeLastErrorCommand} and the provided {@link #errorSteps}.
+ * consisting of a {@link ExposeLastErrorCommand} and the provided {@link #errorHandlingCommand}.
  */
 public class ErrorWrapper implements Command {
 
     private static final long serialVersionUID = 1L;
 
     private final Command cmd;
-    private final Command errorSteps;
+    private final Command errorHandlingCommand;
 
-    public ErrorWrapper(Command cmd, Command errorSteps) {
+    public ErrorWrapper(Command cmd, Command errorHandlingCommand) {
         this.cmd = cmd;
-        this.errorSteps = errorSteps;
+        this.errorHandlingCommand = errorHandlingCommand;
+    }
+
+    @Override
+    public Command copy() {
+        return new ErrorWrapper(cmd, errorHandlingCommand.copy());
     }
 
     @Override
@@ -48,7 +53,7 @@ public class ErrorWrapper implements Command {
         //  block:
         //    - ExposeLastErrorCommand
         //    - ...compiled steps from the "error" block...
-        BlockCommand exceptionHandler = new BlockCommand(new ExposeLastErrorCommand(), errorSteps);
+        BlockCommand exceptionHandler = new BlockCommand(new ExposeLastErrorCommand(), errorHandlingCommand);
 
         Frame inner = Frame.builder()
                 .nonRoot()
