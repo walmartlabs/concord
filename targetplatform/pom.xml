@@ -111,7 +111,7 @@
         <pac4j.version>4.0.0-RC3</pac4j.version>
         <parc.version>0.1.2</parc.version>
         <picocli.version>4.7.0</picocli.version>
-        <postgres.version>42.5.0</postgres.version>
+        <postgres.version>42.7.3</postgres.version>
         <prometheus.simpleclient.version>0.16.0</prometheus.simpleclient.version>
         <reactive.streams.version>1.0.3</reactive.streams.version>
         <reflections.version>0.9.11</reflections.version>
