@@ -30,7 +30,6 @@ import com.walmartlabs.concord.server.security.sessionkey.SessionKey;
 import org.apache.shiro.authc.AuthenticationToken;
 import org.apache.shiro.authc.UsernamePasswordToken;
 import org.apache.shiro.subject.support.DefaultSubjectContext;
-import org.apache.shiro.web.util.WebUtils;
 
 import javax.inject.Inject;
 import javax.servlet.ServletRequest;
@@ -64,7 +63,7 @@ public class ConcordAuthenticationHandler implements AuthenticationHandler {
 
     @Override
     public AuthenticationToken createToken(ServletRequest request, ServletResponse response) {
-        HttpServletRequest req = WebUtils.toHttp(request);
+        HttpServletRequest req = (HttpServletRequest) request;
 
         // check for a session token next
         if (req.getHeader(Constants.Headers.SESSION_TOKEN) != null) {

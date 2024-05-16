@@ -23,11 +23,12 @@ package com.walmartlabs.concord.runtime.v2.runner.vm;
 import com.walmartlabs.concord.runtime.v2.model.ScriptCall;
 import com.walmartlabs.concord.runtime.v2.model.ScriptCallOptions;
 import com.walmartlabs.concord.runtime.v2.runner.ResourceResolver;
-import com.walmartlabs.concord.runtime.v2.sdk.EvalContextFactory;
-import com.walmartlabs.concord.runtime.v2.sdk.ExpressionEvaluator;
 import com.walmartlabs.concord.runtime.v2.runner.script.ScriptEvaluator;
 import com.walmartlabs.concord.runtime.v2.runner.script.ScriptResult;
 import com.walmartlabs.concord.runtime.v2.sdk.Context;
+import com.walmartlabs.concord.runtime.v2.sdk.EvalContextFactory;
+import com.walmartlabs.concord.runtime.v2.sdk.ExpressionEvaluator;
+import com.walmartlabs.concord.svm.Command;
 import com.walmartlabs.concord.svm.Runtime;
 import com.walmartlabs.concord.svm.State;
 import com.walmartlabs.concord.svm.ThreadId;
@@ -49,6 +50,11 @@ public class ScriptCallCommand extends StepCommand<ScriptCall> {
 
     public ScriptCallCommand(ScriptCall step) {
         super(step);
+    }
+
+    @Override
+    public Command copy() {
+        return new ScriptCallCommand(getStep());
     }
 
     @Override

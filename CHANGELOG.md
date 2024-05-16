@@ -1,5 +1,62 @@
 # Change log
 
+## [2.11.1] - 2024-05-12
+
+### Changed
+
+- concord-server: reduce Shiro usage
+([#889](https://github.com/walmartlabs/concord/pull/889));
+- runtime-v2: fix sensitive data masking in maps
+([#897](https://github.com/walmartlabs/concord/pull/893));
+- concord-server, tasks: disable repos on deleted ref, only
+refresh repos matching event branch
+([#894](https://github.com/walmartlabs/concord/pull/894));
+- concord-server: fix Jetty metrics
+([#899](https://github.com/walmartlabs/concord/pull/899));
+- concord-server: add some missing GHA event types
+(repository, status, workflow_job, workflow_run)
+([#900](https://github.com/walmartlabs/concord/pull/900));
+- dependency-manager: make it a singleton
+([#901](https://github.com/walmartlabs/concord/pull/901));
+- concord-server: fix initialization of wait conditions
+after process restart
+([#903](https://github.com/walmartlabs/concord/pull/903));
+- runtime-v2: fix itemIndex in parallel loops
+([#904](https://github.com/walmartlabs/concord/pull/904)).
+
+
+
+## [2.11.0] - 2024-04-30 
+
+### Added
+
+- agent-operator: scaling strategies and configurable
+requirements
+([#893](https://github.com/walmartlabs/concord/pull/893)).
+
+### Changed
+
+- ansible-tasks: be more helpful when commands are missing.
+Check if `ansible-playbook` or `virtualenv` exist before
+running.
+([#887](https://github.com/walmartlabs/concord/pull/887));
+- project: upgrade dependencies - Jackson to 2.17.0, Jetty
+to 12.0.7, Wiremock to 3.5.2 and others.
+([#861](https://github.com/walmartlabs/concord/pull/861));
+- concord-server: allow plugins to supply their own top-level
+API endpoints
+([#891](https://github.com/walmartlabs/concord/pull/891));
+- concord-server: minor improvements to the remember me
+cookie logic 
+([#892](https://github.com/walmartlabs/concord/pull/892));
+- concord-server: tone down websocket errors
+([#895](https://github.com/walmartlabs/concord/pull/895));
+- concord-server: do not invalidate sessions in
+onFailedLogin
+([#896](https://github.com/walmartlabs/concord/pull/896)).
+
+
+
 ## [2.10.1] - 2024-04-04 
 
 ### Changed

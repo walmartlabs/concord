@@ -46,6 +46,11 @@ public class BlockCommand implements Command {
     }
 
     @Override
+    public Command copy() {
+        return new BlockCommand(commands.stream().map(Command::copy).toList());
+    }
+
+    @Override
     public void eval(Runtime runtime, State state, ThreadId threadId) {
         Frame frame = state.peekFrame(threadId);
         frame.pop();

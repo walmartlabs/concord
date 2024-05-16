@@ -134,6 +134,16 @@ public abstract class LoopWrapper implements Command {
             this.parallelism = processParallelism(ctx, loop);
         }
 
+        private ParallelWithItems(Command cmd, Serializable items, Collection<String> outVariables, Parallelism parallelism) {
+            super(cmd, items, outVariables);
+            this.parallelism = parallelism;
+        }
+
+        @Override
+        public Command copy() {
+            return new ParallelWithItems(cmd.copy(), items, outVariables, parallelism);
+        }
+
         private static Parallelism processParallelism(CompilerContext ctx, Loop loop) {
             int defaultParallelism = ctx.processDefinition().configuration().parallelLoopParallelism();
 
@@ -163,12 +173,14 @@ public abstract class LoopWrapper implements Command {
             int batchSize = toBatchSize(runtime, ctx, parallelism);
 
             List<ArrayList<Serializable>> batches = batches(items, batchSize);
+            int itemIndexStart = 0;
             for (ArrayList<Serializable> batch : batches) {
-                evalBatch(state, threadId, batch, outVarsAccumulator);
+                evalBatch(itemIndexStart, state, threadId, batch, outVarsAccumulator);
+                itemIndexStart += batch.size();
             }
         }
 
-        private void evalBatch(State state, ThreadId threadId, ArrayList<Serializable> items, Map<String, List<Serializable>> outVarsAccumulator) {
+        private void evalBatch(int itemIndexStart, State state, ThreadId threadId, ArrayList<Serializable> items, Map<String, List<Serializable>> outVarsAccumulator) {
             Frame frame = state.peekFrame(threadId);
 
             List<Map.Entry<ThreadId, Serializable>> forks = items.stream()
@@ -177,19 +189,18 @@ public abstract class LoopWrapper implements Command {
 
             for (int i = 0; i < forks.size(); i++) {
                 Map.Entry<ThreadId, Serializable> f = forks.get(i);
-
                 Frame cmdFrame = Frame.builder()
                         .nonRoot()
                         .build();
 
                 cmdFrame.setLocal(CURRENT_ITEMS, items);
-                cmdFrame.setLocal(CURRENT_INDEX, i);
+                cmdFrame.setLocal(CURRENT_INDEX, itemIndexStart + i);
                 cmdFrame.setLocal(CURRENT_ITEM, f.getValue());
 
                 // fork will create rootFrame for forked commands
                 Command itemCmd = new ForkCommand(f.getKey(),
                         new CollectVariablesCommand(outVariables, null, outVarsAccumulator),
-                        cmd);
+                        cmd.copy());
                 cmdFrame.push(itemCmd);
 
                 state.pushFrame(threadId, cmdFrame);
@@ -232,8 +243,16 @@ public abstract class LoopWrapper implements Command {
 
         private static final long serialVersionUID = 1L;
 
+        private final Loop loop;
+
         protected SerialWithItems(Command cmd, Loop loop, Collection<String> outVariables) {
             super(cmd, loop.items(), outVariables);
+            this.loop = loop;
+        }
+
+        @Override
+        public Command copy() {
+            return new SerialWithItems(cmd, loop, outVariables);
         }
 
         @Override
@@ -280,6 +299,11 @@ public abstract class LoopWrapper implements Command {
         }
 
         @Override
+        public Command copy() {
+            return new WithItemsNext(outVariables, new ConcurrentHashMap<>(variablesAccumulator), cmd);
+        }
+
+        @Override
         public void eval(Runtime runtime, State state, ThreadId threadId) {
             Frame loop = state.peekFrame(threadId);
             loop.pop();
@@ -323,6 +347,11 @@ public abstract class LoopWrapper implements Command {
         }
 
         @Override
+        public Command copy() {
+            return new SetVariablesCommand(new ConcurrentHashMap<>(variables), targetFrame);
+        }
+
+        @Override
         public void eval(Runtime runtime, State state, ThreadId threadId) throws Exception {
             Frame frame = state.peekFrame(threadId);
             frame.pop();
@@ -354,6 +383,11 @@ public abstract class LoopWrapper implements Command {
             this.variables = variables;
             this.sourceFrame = sourceFrame;
             this.variablesAccumulator = variablesAccumulator;
+        }
+
+        @Override
+        public Command copy() {
+            return new CollectVariablesCommand(variables, sourceFrame, new ConcurrentHashMap<>(variablesAccumulator));
         }
 
         @Override
