@@ -41,6 +41,7 @@
         <bpm.version>1.0.2</bpm.version>
         <bytebuddy.version>1.14.9</bytebuddy.version>
         <commons.beanutils.version>1.9.4</commons.beanutils.version>
+        <commons.codec.version>1.15</commons.codec.version>
         <commons.collections.version>3.2.2</commons.collections.version>
         <commons.compress.version>1.24.0</commons.compress.version>
         <commons.email.version>1.5</commons.email.version>
@@ -75,7 +76,7 @@
         <javax.validation.version>2.0.1.Final</javax.validation.version>
         <javax.ws.rs.version>1.0.1.Final</javax.ws.rs.version>
         <javers.version>6.6.2</javers.version>
-        <jboss.logging>3.3.2.Final</jboss.logging>
+        <jboss.logging>3.4.1.Final</jboss.logging>
         <jcl-over-slf4j.version>1.7.35</jcl-over-slf4j.version>
         <jetbrain.annotations.version>23.0.0</jetbrain.annotations.version>
         <jetty.version>12.0.7</jetty.version>
@@ -112,8 +113,9 @@
         <picocli.version>4.7.0</picocli.version>
         <postgres.version>42.5.0</postgres.version>
         <prometheus.simpleclient.version>0.16.0</prometheus.simpleclient.version>
+        <reactive.streams.version>1.0.3</reactive.streams.version>
         <reflections.version>0.9.11</reflections.version>
-        <resteasy.version>3.1.4.Final</resteasy.version>
+        <resteasy.version>3.15.6.Final</resteasy.version>
         <selenium.version>3.141.59</selenium.version>
         <servlet.version>4.0.1</servlet.version>
         <shiro.version>1.10.1</shiro.version>
@@ -1268,6 +1270,16 @@
                 <groupId>org.reflections</groupId>
                 <artifactId>reflections</artifactId>
                 <version>${reflections.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>commons-codec</groupId>
+                <artifactId>commons-codec</artifactId>
+                <version>${commons.codec.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.reactivestreams</groupId>
+                <artifactId>reactive-streams</artifactId>
+                <version>${reactive.streams.version}</version>
             </dependency>
         </dependencies>
     </dependencyManagement>
