@@ -74,7 +74,7 @@
         <javax.inject.version>1</javax.inject.version>
         <javax.mail.version>1.6.2</javax.mail.version>
         <javax.validation.version>2.0.1.Final</javax.validation.version>
-        <javax.ws.rs.version>1.0.1.Final</javax.ws.rs.version>
+        <javax.ws.rs.version>2.0.1.Final</javax.ws.rs.version>
         <javers.version>6.6.2</javers.version>
         <jboss.logging>3.4.1.Final</jboss.logging>
         <jcl-over-slf4j.version>1.7.35</jcl-over-slf4j.version>
@@ -872,7 +872,7 @@
             </dependency>
             <dependency>
                 <groupId>org.jboss.spec.javax.ws.rs</groupId>
-                <artifactId>jboss-jaxrs-api_2.0_spec</artifactId>
+                <artifactId>jboss-jaxrs-api_2.1_spec</artifactId>
                 <version>${javax.ws.rs.version}</version>
             </dependency>
             <dependency>
