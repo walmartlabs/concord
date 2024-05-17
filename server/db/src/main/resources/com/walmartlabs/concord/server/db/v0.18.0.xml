@@ -5,8 +5,10 @@
         xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.3.xsd">
 
     <changeSet id="18000" author="ibodrov@gmail.com">
+        <validCheckSum>8:1f438bcabb92d2e075e3d80256cebec7</validCheckSum>
+        <validCheckSum>7:23585689b24b220fb101b371a4124952</validCheckSum>
         <addColumn tableName="PROJECTS">
-            <column name="PROJECT_CFG" type="blob">
+            <column name="PROJECT_CFG" type="longblob"> <!-- "longblob" to force liquibase 3.5.x+ to use "bytea" here -->
                 <constraints nullable="true"/>
             </column>
         </addColumn>

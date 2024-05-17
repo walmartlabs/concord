@@ -43,13 +43,14 @@
     </changeSet>
 
     <changeSet id="1981030" author="g0h04k0@walmart.com">
+        <validCheckSum>7:bc92a99fabceb83a0e43e3fb6190c30d</validCheckSum>
         <addColumn tableName="SECRETS">
             <column name="LAST_UPDATED_AT" type="timestamptz">
                 <constraints nullable="true"/>
             </column>
         </addColumn>
         <addColumn tableName="SECRETS">
-            <column name="SECRET_SALT" type="blob">
+            <column name="SECRET_SALT" type="longblob">
                 <constraints nullable="true"/>
             </column>
         </addColumn>

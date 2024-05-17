@@ -52,6 +52,7 @@
     </changeSet>
 
     <changeSet id="1490020" author="ybrigo@gmail.com">
+        <validCheckSum>7:99d9858515f12b793572e5b88b2550e6</validCheckSum>
         <createTable tableName="PROCESS_LOG_DATA">
             <column name="INSTANCE_ID" type="uuid">
                 <constraints nullable="false"/>
@@ -68,7 +69,7 @@
             <column name="SEGMENT_RANGE" type="int4range">
                 <constraints nullable="false"/>
             </column>
-            <column name="CHUNK_DATA" type="blob">
+            <column name="CHUNK_DATA" type="longblob">
                 <constraints nullable="false"/>
             </column>
             <column name="LOG_SEQ" type="bigserial">

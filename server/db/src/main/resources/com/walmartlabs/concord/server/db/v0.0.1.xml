@@ -43,7 +43,7 @@
             <column name="DEFINITION_TYPE" type="varchar(128)" remarks="Type of data">
                 <constraints nullable="false"/>
             </column>
-            <column name="DEFINITION_DATA" type="blob" remarks="Source file">
+            <column name="DEFINITION_DATA" type="longblob" remarks="Source file">
                 <constraints nullable="false"/>
             </column>
         </createTable>
@@ -148,6 +148,7 @@
     <!-- SECRETS -->
 
     <changeSet id="1500" author="ibodrov@gmail.com">
+        <validCheckSum>7:85e7d9c068eb963a250712db421e04ba</validCheckSum>
         <createTable tableName="SECRETS">
             <column name="SECRET_NAME" type="varchar(128)" remarks="Name (key) of a secret">
                 <constraints primaryKey="true" nullable="false"/>
@@ -155,7 +156,7 @@
             <column name="SECRET_TYPE" type="varchar(32)" remarks="Type: SSH_KEY, HTTP_BASIC">
                 <constraints nullable="false"/>
             </column>
-            <column name="SECRET_DATA" type="blob">
+            <column name="SECRET_DATA" type="longblob">
                 <constraints nullable="false"/>
             </column>
         </createTable>
@@ -213,7 +214,7 @@
             <column name="TEMPLATE_NAME" type="varchar(128)" remarks="Name (key) of a project template">
                 <constraints primaryKey="true" nullable="false"/>
             </column>
-            <column name="TEMPLATE_DATA" type="blob">
+            <column name="TEMPLATE_DATA" type="longblob">
                 <constraints nullable="false"/>
             </column>
         </createTable>
@@ -249,7 +250,7 @@
             <column name="ATTACHMENT_NAME" type="varchar(128)">
                 <constraints primaryKey="true" nullable="false"/>
             </column>
-            <column name="ATTACHMENT_DATA" type="blob">
+            <column name="ATTACHMENT_DATA" type="longblob">
                 <constraints nullable="false"/>
             </column>
         </createTable>

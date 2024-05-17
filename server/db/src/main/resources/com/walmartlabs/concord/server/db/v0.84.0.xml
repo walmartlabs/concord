@@ -5,6 +5,7 @@
         xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.3.xsd">
 
     <changeSet id="84000" author="ybrigo@gmail.com">
+        <validCheckSum>7:3eef780cd96bb43b6005272baa83c9b8</validCheckSum>
         <createTable tableName="PROCESS_CHECKPOINTS">
             <column name="CHECKPOINT_ID" type="uuid">
                 <constraints primaryKey="true" nullable="false"/>
@@ -12,7 +13,7 @@
             <column name="INSTANCE_ID" type="uuid">
                 <constraints nullable="false"/>
             </column>
-            <column name="CHECKPOINT_DATA" type="blob">
+            <column name="CHECKPOINT_DATA" type="longblob">
                 <constraints nullable="false"/>
             </column>
         </createTable>
