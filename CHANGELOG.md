@@ -4,6 +4,8 @@
 
 ### Changed
 
+- concord-console2: upgrade node version
+([#890](https://github.com/walmartlabs/concord/pull/890));
 - runtime-v2: fix log segment assigment during parallel
 execution
 ([#905](https://github.com/walmartlabs/concord/pull/905));
