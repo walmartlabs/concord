@@ -48,6 +48,11 @@ public class SaveLastErrorCommand implements Command {
     };
 
     @Override
+    public Command copy() {
+        return new SaveLastErrorCommand();
+    }
+
+    @Override
     public void eval(Runtime runtime, State state, ThreadId threadId) throws Exception {
         Frame frame = state.peekFrame(threadId);
         frame.pop();

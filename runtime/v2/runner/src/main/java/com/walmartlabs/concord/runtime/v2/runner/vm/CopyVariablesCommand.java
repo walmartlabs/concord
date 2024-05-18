@@ -40,10 +40,6 @@ public class CopyVariablesCommand implements Command {
     private final FrameProducer sourceFrameProducer;
     private final FrameProducer targetFrameProducer;
 
-    public CopyVariablesCommand(List<String> variables, Frame sourceFrame, Frame targetFrame) {
-        this(variables, (state, threadId) -> sourceFrame, (state, threadId) -> targetFrame);
-    }
-
     public CopyVariablesCommand(List<String> variables, Frame sourceFrame, FrameProducer targetFrameProducer) {
         this(variables, (state, threadId) -> sourceFrame, targetFrameProducer);
     }
@@ -56,6 +52,11 @@ public class CopyVariablesCommand implements Command {
         this.variables = variables;
         this.sourceFrameProducer = sourceFrameProducer;
         this.targetFrameProducer = targetFrameProducer;
+    }
+
+    @Override
+    public Command copy() {
+        return new CopyVariablesCommand(variables, sourceFrameProducer, targetFrameProducer);
     }
 
     @Override

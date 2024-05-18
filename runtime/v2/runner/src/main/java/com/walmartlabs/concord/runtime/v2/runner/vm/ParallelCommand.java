@@ -46,6 +46,11 @@ public class ParallelCommand extends StepCommand<ParallelBlock> {
     }
 
     @Override
+    public Command copy() {
+        return new ParallelCommand(getStep(), commands.stream().map(Command::copy).collect(Collectors.toList()));
+    }
+
+    @Override
     protected void execute(Runtime runtime, State state, ThreadId threadId) {
         Frame frame = state.peekFrame(threadId);
         frame.pop();
@@ -91,6 +96,11 @@ public class ParallelCommand extends StepCommand<ParallelBlock> {
         }
 
         @Override
+        public Command copy() {
+            return new CollectVariablesCommand(new ConcurrentHashMap<>(accumulator));
+        }
+
+        @Override
         public void eval(Runtime runtime, State state, ThreadId threadId) {
             Frame frame = state.peekFrame(threadId);
             frame.pop();
@@ -114,6 +124,11 @@ public class ParallelCommand extends StepCommand<ParallelBlock> {
             this.allVars = allVars;
             this.variables = variables;
             this.target = target;
+        }
+
+        @Override
+        public Command copy() {
+            return new EvalVariablesCommand(getStep(), allVars, new HashMap<>(variables), target, getLogContext());
         }
 
         @Override

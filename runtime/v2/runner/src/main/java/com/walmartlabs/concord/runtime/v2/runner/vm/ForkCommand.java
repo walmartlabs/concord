@@ -23,6 +23,7 @@ package com.walmartlabs.concord.runtime.v2.runner.vm;
 import com.walmartlabs.concord.svm.Runtime;
 import com.walmartlabs.concord.svm.*;
 
+import java.util.Arrays;
 import java.util.Map;
 
 public class ForkCommand implements Command {
@@ -35,6 +36,12 @@ public class ForkCommand implements Command {
     public ForkCommand(ThreadId childThreadId, Command... cmds) {
         this.childThreadId = childThreadId;
         this.cmds = cmds;
+    }
+
+    @Override
+    public Command copy() {
+        return new ForkCommand(childThreadId,
+                Arrays.stream(cmds).map(Command::copy).toArray(Command[]::new));
     }
 
     @Override

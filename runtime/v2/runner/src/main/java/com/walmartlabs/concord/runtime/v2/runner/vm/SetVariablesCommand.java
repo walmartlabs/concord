@@ -21,9 +21,10 @@ package com.walmartlabs.concord.runtime.v2.runner.vm;
  */
 
 import com.walmartlabs.concord.runtime.v2.model.SetVariablesStep;
+import com.walmartlabs.concord.runtime.v2.sdk.Context;
 import com.walmartlabs.concord.runtime.v2.sdk.EvalContextFactory;
 import com.walmartlabs.concord.runtime.v2.sdk.ExpressionEvaluator;
-import com.walmartlabs.concord.runtime.v2.sdk.Context;
+import com.walmartlabs.concord.svm.Command;
 import com.walmartlabs.concord.svm.Runtime;
 import com.walmartlabs.concord.svm.State;
 import com.walmartlabs.concord.svm.ThreadId;
@@ -36,6 +37,11 @@ public class SetVariablesCommand extends StepCommand<SetVariablesStep> {
 
     public SetVariablesCommand(SetVariablesStep step) {
         super(step);
+    }
+
+    @Override
+    public Command copy() {
+        return new SetVariablesCommand(getStep());
     }
 
     @Override
