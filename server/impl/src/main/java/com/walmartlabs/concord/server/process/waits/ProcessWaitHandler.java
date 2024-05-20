@@ -25,15 +25,39 @@ import org.immutables.value.Value;
 import org.jooq.DSLContext;
 
 import javax.annotation.Nullable;
+import java.util.List;
 
 public interface ProcessWaitHandler<T extends AbstractWaitCondition> {
 
     WaitType getType();
 
-    Result<T> process(ProcessKey processKey, T waits);
+    List<Result<T>> processBatch(List<WaitConditionItem<T>> waits);
+
+    @Value.Immutable
+    interface WaitConditionItem<T extends AbstractWaitCondition> {
+
+        @Value.Parameter
+        ProcessKey processKey();
+
+        @Value.Parameter
+        int waitConditionId();
+
+        @Value.Parameter
+        T waitCondition();
+
+        static <T extends AbstractWaitCondition> WaitConditionItem<T> of(ProcessKey processKey, int waitConditionId, T waitCondition) {
+            return ImmutableWaitConditionItem.of(processKey, waitConditionId, waitCondition);
+        }
+    }
 
     @Value.Immutable
     interface Result<T extends AbstractWaitCondition> {
+
+        @Value.Parameter
+        ProcessKey processKey();
+
+        @Value.Parameter
+        int waitConditionId();
 
         /**
          * return null if the process doesn't have any wait conditions.
@@ -53,16 +77,20 @@ public interface ProcessWaitHandler<T extends AbstractWaitCondition> {
         @Nullable
         Action action();
 
-        static <T extends AbstractWaitCondition> Result<T> of(T waitCondition) {
-            return ImmutableResult.of(waitCondition, null, null);
+        static <T extends AbstractWaitCondition> Result<T> of(ProcessKey processKey, int waitConditionId, T waitCondition) {
+            return ImmutableResult.of(processKey, waitConditionId, waitCondition, null, null);
         }
 
-        static <T extends AbstractWaitCondition> Result<T> resume(String resumeEvent) {
-            return ImmutableResult.of(null, resumeEvent, null);
+        static <T extends AbstractWaitCondition> Result<T> resume(WaitConditionItem<?> wait, String resumeEvent) {
+            return ImmutableResult.of(wait.processKey(), wait.waitConditionId(), null, resumeEvent, null);
         }
 
-        static <T extends AbstractWaitCondition> Result<T> action(Action action) {
-            return ImmutableResult.of(null, null, action);
+        static <T extends AbstractWaitCondition> Result<T> resume(ProcessKey processKey, int waitConditionId, String resumeEvent) {
+            return ImmutableResult.of(processKey, waitConditionId, null, resumeEvent, null);
+        }
+
+        static <T extends AbstractWaitCondition> Result<T> action(WaitConditionItem<?> wait, Action action) {
+            return ImmutableResult.of(wait.processKey(), wait.waitConditionId(), null, null, action);
         }
     }
 

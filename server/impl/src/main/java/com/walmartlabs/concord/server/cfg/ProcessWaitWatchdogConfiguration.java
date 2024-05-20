@@ -38,11 +38,19 @@ public class ProcessWaitWatchdogConfiguration implements Serializable {
     @Config("process.waitCheckPollLimit")
     private int pollLimit;
 
+    @Inject
+    @Config("process.waitProcessLimitForStatusQuery")
+    private int processLimitForStatusQuery;
+
     public Duration getPeriod() {
         return period;
     }
 
     public int getPollLimit() {
         return pollLimit;
+    }
+
+    public int getProcessLimitForStatusQuery() {
+        return processLimitForStatusQuery;
     }
 }
