@@ -41,6 +41,7 @@ import java.util.stream.Collectors;
 
 import static com.walmartlabs.concord.server.jooq.tables.ProcessQueue.PROCESS_QUEUE;
 import static com.walmartlabs.concord.server.process.waits.ProcessCompletionCondition.CompleteCondition;
+import static org.jooq.impl.DSL.any;
 
 /**
  * Handles the processes that are waiting for other processes to finish.
@@ -189,7 +190,7 @@ public class WaitProcessFinishHandler implements ProcessWaitHandler<ProcessCompl
                 ProcessQueue q = PROCESS_QUEUE.as("q");
                 return tx.select(q.INSTANCE_ID, q.CURRENT_STATUS)
                         .from(q)
-                        .where(q.INSTANCE_ID.in(processes))
+                        .where(q.INSTANCE_ID.equal(any(processes.toArray(UUID[]::new))))
                         .fetchMap(q.INSTANCE_ID, r -> r.get(q.CURRENT_STATUS, new EnumConverter<>(String.class, ProcessStatus.class)));
             });
             for (UUID key : processes) {
