@@ -31,6 +31,7 @@ import java.util.Set;
 import java.util.UUID;
 
 @Value.Immutable
+@Value.Modifiable
 @JsonSerialize(as = ImmutableProcessCompletionCondition.class)
 @JsonDeserialize(as = ImmutableProcessCompletionCondition.class)
 public abstract class ProcessCompletionCondition extends AbstractWaitCondition {
