@@ -46,8 +46,12 @@ import javax.inject.Inject;
 import java.io.IOException;
 import java.time.OffsetDateTime;
 import java.util.*;
+import java.util.stream.Collectors;
 
 import static com.walmartlabs.concord.server.jooq.Tables.PROCESS_WAIT_CONDITIONS;
+import static com.walmartlabs.concord.server.process.waits.ProcessWaitHandler.WaitConditionItem;
+import static com.walmartlabs.concord.server.process.waits.ProcessWaitHandler.Result;
+import static com.walmartlabs.concord.server.process.waits.ProcessWaitHandler.Action;
 
 /**
  * Takes care of processes with wait conditions.
@@ -109,10 +113,9 @@ public class ProcessWaitWatchdog implements ScheduledTask {
                 return;
             }
 
-            for (WaitingProcess p : processes) {
-                processWaits(p);
-                lastId = p.id();
-            }
+            processWaits(processes);
+
+            lastId = processes.get(processes.size() - 1).id();
 
             if (processes.size() < cfg.getPollLimit()) {
                 return;
@@ -121,69 +124,73 @@ public class ProcessWaitWatchdog implements ScheduledTask {
     }
 
     @WithTimer
-    void processWaits(WaitingProcess p) {
-        Set<String> resumeEvents = new HashSet<>();
-        List<AbstractWaitCondition> resultWaits = new ArrayList<>();
-        List<ProcessWaitHandler.Action> resultActions = new ArrayList<>();
+    void processWaits(List<WaitingProcess> processes) {
+        Map<WaitType, List<WaitConditionItem<AbstractWaitCondition>>> batches = toBatches(processes);
 
-        boolean hasExclusive = p.waits().stream().anyMatch(AbstractWaitCondition::exclusive);
-
-        for (AbstractWaitCondition w : p.waits()) {
-            ProcessWaitHandler.Result<AbstractWaitCondition> result;
-            if (!hasExclusive || w.exclusive()) {
-                result = processWait(w, p);
-            } else {
-                result = ProcessWaitHandler.Result.of(w);
-            }
-
-            if (result != null) {
-                if (result.waitCondition() != null) {
-                    resultWaits.add(result.waitCondition());
-                } else if (result.resumeEvent() != null) {
-                    resumeEvents.add(result.resumeEvent());
-                }
-
-                if (result.action() != null) {
-                    resultActions.add(result.action());
-                }
+        Map<UUID, List<Result<AbstractWaitCondition>>> results = new HashMap<>();
+        for (var e : batches.entrySet()) {
+            List<Result<AbstractWaitCondition>> batchResult = processBatch(e.getKey(), e.getValue());
+            for (var r : batchResult) {
+                var resultsForProcess = results.computeIfAbsent(r.processKey().getInstanceId(), k -> new ArrayList<>());
+                resultsForProcess.add(r);
             }
         }
 
-        if (p.waits().equals(resultWaits)) {
-            return;
-        }
-
-        try {
-            boolean updated = processWaitManager.txResult(tx -> {
-                boolean isWaiting = !resultWaits.isEmpty() && resumeEvents.isEmpty();
-                boolean up = processWaitManager.setWait(tx, p.processKey(), resultWaits, isWaiting, p.version());
-                if (up) {
-                    resultActions.forEach(a -> a.execute(tx));
-                }
-                return up;
-            });
-
-            if (updated && !resumeEvents.isEmpty()) {
-                resumeProcess(p.processKey(), resumeEvents);
+        for (WaitingProcess p : processes) {
+            List<Result<AbstractWaitCondition>> resultForProcess = results.get(p.processKey().getInstanceId());
+            if (resultForProcess == null) {
+                continue;
             }
-        } catch (Exception e) {
-            log.info("processWaits ['{}'] -> error", p, e);
+
+            Set<String> resumeEvents = resultForProcess.stream()
+                    .map(Result::resumeEvent)
+                    .filter(Objects::nonNull)
+                    .collect(Collectors.toSet());
+            List<Action> resultActions = resultForProcess.stream()
+                    .map(Result::action)
+                    .filter(Objects::nonNull)
+                    .toList();
+            List<AbstractWaitCondition> resultWaits = buildWaitConditions(p.waits(), resultForProcess);
+
+            if (p.waits().equals(resultWaits)) {
+                continue;
+            }
+
+            try {
+                boolean updated = processWaitManager.txResult(tx -> {
+                    boolean isWaiting = !resultWaits.isEmpty() && resumeEvents.isEmpty();
+                    boolean up = processWaitManager.setWait(tx, p.processKey(), resultWaits, isWaiting, p.version());
+                    if (up) {
+                        resultActions.forEach(a -> a.execute(tx));
+                    }
+                    return up;
+                });
+
+                if (updated && !resumeEvents.isEmpty()) {
+                    log.info("processWaits ['{}', '{}', {}] -> resume", p.processKey(), resultWaits, p.version());
+                    resumeProcess(p.processKey(), resumeEvents);
+                }
+            } catch (Exception e) {
+                log.info("processWaits ['{}'] -> error", p, e);
+            }
         }
     }
 
     @WithTimer
-    ProcessWaitHandler.Result<AbstractWaitCondition> processWait(AbstractWaitCondition w, WaitingProcess p) {
-        ProcessWaitHandler<AbstractWaitCondition> handler = processWaitHandlers.get(w.type());
+    List<Result<AbstractWaitCondition>> processBatch(WaitType type, List<WaitConditionItem<AbstractWaitCondition>> waitConditions) {
+        ProcessWaitHandler<AbstractWaitCondition> handler = processWaitHandlers.get(type);
         if (handler == null) {
-            log.warn("processHandler ['{}'] -> handler '{}' not found", p.processKey(), w.type());
-            return null;
+            log.warn("processBatch ['{}'] -> handler not found", type);
+            return waitConditions.stream()
+                    .map(w -> Result.of(w.processKey(), w.waitConditionId(), null))
+                    .collect(Collectors.toList());
         }
 
         try {
-            return handler.process(p.processKey(), w);
+            return handler.processBatch(waitConditions);
         } catch (Exception e) {
-            log.info("processHandler ['{}', '{}'] -> error", w.type(), p, e);
-            return ProcessWaitHandler.Result.of(w);
+            log.info("processHandler ['{}'] -> error",type, e);
+            return List.of();
         }
     }
 
@@ -198,6 +205,35 @@ public class ProcessWaitWatchdog implements ScheduledTask {
 
         processManager.resume(payload);
         log.info("resumeProcess ['{}', '{}'] -> done", key, events);
+    }
+
+    private static Map<WaitType, List<WaitConditionItem<AbstractWaitCondition>>> toBatches(List<WaitingProcess> processes) {
+        Map<WaitType, List<WaitConditionItem<AbstractWaitCondition>>> result = new HashMap<>();
+
+        for (WaitingProcess p : processes) {
+            boolean hasExclusive = p.waits().stream().anyMatch(AbstractWaitCondition::exclusive);
+            List<AbstractWaitCondition> waits = p.waits();
+            for (int i = 0; i < waits.size(); i++) {
+                AbstractWaitCondition w = waits.get(i);
+                if (!hasExclusive || w.exclusive()) {
+                    var r = result.computeIfAbsent(w.type(), k -> new ArrayList<>());
+                    r.add(WaitConditionItem.of(p.processKey(), i, w));
+                }
+            }
+        }
+        return result;
+    }
+
+    private static List<AbstractWaitCondition> buildWaitConditions(List<AbstractWaitCondition> originalWaits,
+                                                                   List<Result<AbstractWaitCondition>> newWaits) {
+
+        List<AbstractWaitCondition> result = new ArrayList<>(originalWaits);
+        for (Result<AbstractWaitCondition> w : newWaits) {
+            result.set(w.waitConditionId(), w.waitCondition());
+        }
+        return result.stream()
+                .filter(Objects::nonNull)
+                .collect(Collectors.toList());
     }
 
     @Value.Immutable
