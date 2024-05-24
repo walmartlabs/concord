@@ -156,9 +156,8 @@ public class DependencyManager {
         String scheme = item.getScheme();
         if (MAVEN_SCHEME.equalsIgnoreCase(scheme)) {
             String id = item.getAuthority();
-
-            Artifact artifactResult = resolveMavenSingle(new MavenDependency(new DefaultArtifact(id), JavaScopes.COMPILE), progressNotifier);
-            return toDependency(artifactResult);
+            Artifact artifact = resolveMavenSingle(new MavenDependency(new DefaultArtifact(id), JavaScopes.COMPILE), progressNotifier);
+            return toDependency(artifact);
         } else {
             return new DependencyEntity(resolveFile(item), item);
         }
