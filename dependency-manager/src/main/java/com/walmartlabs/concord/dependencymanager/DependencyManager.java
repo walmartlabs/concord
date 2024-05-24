@@ -126,7 +126,7 @@ public class DependencyManager {
         return withRetry(() -> tryResolveSingle(item, progressNotifier), exceptionConverter, progressNotifier);
     }
 
-    private Collection<DependencyEntity> tryResolve(Collection<URI> items, ProgressNotifier progressNotifier) throws IOException, VersionRangeResolutionException {
+    private Collection<DependencyEntity> tryResolve(Collection<URI> items, ProgressNotifier progressNotifier) throws IOException {
         if (items == null || items.isEmpty()) {
             return Collections.emptySet();
         }
@@ -135,7 +135,7 @@ public class DependencyManager {
         List<URI> uris = new ArrayList<>(items);
         Collections.sort(uris);
 
-        DependencyList deps = categorize(uris, progressNotifier);
+        DependencyList deps = categorize(uris);
 
         Collection<DependencyEntity> result = new HashSet<>();
 
@@ -165,7 +165,7 @@ public class DependencyManager {
         }
     }
 
-    private DependencyList categorize(List<URI> items, ProgressNotifier progressNotifier) throws IOException, VersionRangeResolutionException {
+    private DependencyList categorize(List<URI> items) throws IOException {
         List<MavenDependency> mavenTransitiveDependencies = new ArrayList<>();
         List<MavenDependency> mavenSingleDependencies = new ArrayList<>();
         List<String> mavenExclusions = new ArrayList<>();
