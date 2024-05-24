@@ -27,6 +27,8 @@ import com.walmartlabs.concord.server.sdk.metrics.WithTimer;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
+import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * Handles the processes that are waiting for locks. Resumes a suspended process
@@ -49,12 +51,19 @@ public class WaitProcessLockHandler implements ProcessWaitHandler<ProcessLockCon
 
     @Override
     @WithTimer
-    public Result<ProcessLockCondition> process(ProcessKey key, ProcessLockCondition wait) {
+    public List<Result<ProcessLockCondition>> processBatch(List<WaitConditionItem<ProcessLockCondition>> waits) {
+        return waits.stream()
+                .map(w -> process(w.processKey(), w.waitConditionId(), w.waitCondition()))
+                .collect(Collectors.toList());
+    }
+
+    @WithTimer
+    public Result<ProcessLockCondition> process(ProcessKey key, int waitConditionId, ProcessLockCondition wait) {
         LockEntry lock = locksDao.tryLock(key, wait.orgId(), wait.projectId(), wait.scope(), wait.name());
         if (lock.instanceId().equals(key.getInstanceId())) {
-            return Result.resume(wait.name());
+            return Result.resume(key, waitConditionId, wait.name());
         }
 
-        return Result.of(ProcessLockCondition.from(lock));
+        return Result.of(key, waitConditionId, ProcessLockCondition.from(lock));
     }
 }
