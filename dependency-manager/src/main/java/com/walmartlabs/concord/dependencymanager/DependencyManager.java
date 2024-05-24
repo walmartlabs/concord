@@ -152,14 +152,12 @@ public class DependencyManager {
         return result;
     }
 
-    private DependencyEntity tryResolveSingle(URI item, ProgressNotifier progressNotifier) throws IOException, VersionRangeResolutionException {
+    private DependencyEntity tryResolveSingle(URI item, ProgressNotifier progressNotifier) throws IOException {
         String scheme = item.getScheme();
         if (MAVEN_SCHEME.equalsIgnoreCase(scheme)) {
             String id = item.getAuthority();
-
-            Artifact artifact = new DefaultArtifact(id);
-            Artifact artifactResult = resolveMavenSingle(new MavenDependency(artifact, JavaScopes.COMPILE), progressNotifier);
-            return toDependency(artifactResult);
+            Artifact artifact = resolveMavenSingle(new MavenDependency(new DefaultArtifact(id), JavaScopes.COMPILE), progressNotifier);
+            return toDependency(artifact);
         } else {
             return new DependencyEntity(resolveFile(item), item);
         }
