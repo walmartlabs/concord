@@ -27,7 +27,6 @@ import com.walmartlabs.concord.db.AbstractDao;
 import com.walmartlabs.concord.db.MainDB;
 import com.walmartlabs.concord.server.ConcordObjectMapper;
 import com.walmartlabs.concord.server.cfg.ProcessWaitWatchdogConfiguration;
-import com.walmartlabs.concord.server.jooq.tables.ProcessWaitConditions;
 import com.walmartlabs.concord.server.process.Payload;
 import com.walmartlabs.concord.server.process.PayloadManager;
 import com.walmartlabs.concord.server.process.ProcessManager;
@@ -36,22 +35,19 @@ import com.walmartlabs.concord.server.sdk.ScheduledTask;
 import com.walmartlabs.concord.server.sdk.metrics.WithTimer;
 import org.immutables.value.Value;
 import org.jooq.Configuration;
-import org.jooq.JSONB;
-import org.jooq.Record5;
-import org.jooq.SelectConditionStep;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 import java.io.IOException;
-import java.time.OffsetDateTime;
 import java.util.*;
-import java.util.stream.Collectors;
 
 import static com.walmartlabs.concord.server.jooq.Tables.PROCESS_WAIT_CONDITIONS;
-import static com.walmartlabs.concord.server.process.waits.ProcessWaitHandler.WaitConditionItem;
 import static com.walmartlabs.concord.server.process.waits.ProcessWaitHandler.Result;
-import static com.walmartlabs.concord.server.process.waits.ProcessWaitHandler.Action;
+import static com.walmartlabs.concord.server.process.waits.ProcessWaitHandler.WaitConditionItem;
+import static java.util.Comparator.comparing;
+import static java.util.stream.Collectors.groupingBy;
+import static java.util.stream.Collectors.toSet;
 
 /**
  * Takes care of processes with wait conditions.
@@ -106,7 +102,7 @@ public class ProcessWaitWatchdog implements ScheduledTask {
     public void performTask() {
         Long lastId = null;
         while (true) {
-            List<WaitingProcess> processes = dao.nextWaitItems(lastId, cfg.getPollLimit());
+            var processes = dao.nextWaitItems(lastId, cfg.getPollLimit());
             waitItemsHistogram.update(processes.size());
 
             if (processes.isEmpty()) {
@@ -125,43 +121,46 @@ public class ProcessWaitWatchdog implements ScheduledTask {
 
     @WithTimer
     void processWaits(List<WaitingProcess> processes) {
-        Map<WaitType, List<WaitConditionItem<AbstractWaitCondition>>> batches = toBatches(processes);
+        // split waiting processes by their WaitType
+        // "exclusive" wait conditions are processed first
+        var batches = toBatches(processes);
 
-        Map<UUID, List<Result<AbstractWaitCondition>>> results = new HashMap<>();
-        for (var e : batches.entrySet()) {
-            List<Result<AbstractWaitCondition>> batchResult = processBatch(e.getKey(), e.getValue());
-            for (var r : batchResult) {
-                var resultsForProcess = results.computeIfAbsent(r.processKey().getInstanceId(), k -> new ArrayList<>());
-                resultsForProcess.add(r);
-            }
-        }
+        // process each batch
+        var results = batches.stream()
+                .map(this::processBatch)
+                .flatMap(Collection::stream)
+                .collect(groupingBy(Result::processKey));
 
         for (WaitingProcess p : processes) {
-            List<Result<AbstractWaitCondition>> resultForProcess = results.get(p.processKey().getInstanceId());
+            var resultForProcess = results.get(p.processKey());
             if (resultForProcess == null) {
+                // no results for this process on this iteration
                 continue;
             }
 
-            Set<String> resumeEvents = resultForProcess.stream()
-                    .map(Result::resumeEvent)
-                    .filter(Objects::nonNull)
-                    .collect(Collectors.toSet());
-            List<Action> resultActions = resultForProcess.stream()
-                    .map(Result::action)
-                    .filter(Objects::nonNull)
+            var resultWaits = resultForProcess.stream()
+                    .sorted(comparing(Result::waitConditionId))
+                    .map(Result::waitCondition)
                     .toList();
-            List<AbstractWaitCondition> resultWaits = buildWaitConditions(p.waits(), resultForProcess);
 
             if (p.waits().equals(resultWaits)) {
                 continue;
             }
+
+            var resumeEvents = resultForProcess.stream()
+                    .map(Result::resumeEvent)
+                    .filter(Objects::nonNull)
+                    .collect(toSet());
 
             try {
                 boolean updated = processWaitManager.txResult(tx -> {
                     boolean isWaiting = !resultWaits.isEmpty() && resumeEvents.isEmpty();
                     boolean up = processWaitManager.setWait(tx, p.processKey(), resultWaits, isWaiting, p.version());
                     if (up) {
-                        resultActions.forEach(a -> a.execute(tx));
+                        resultForProcess.stream()
+                                .map(Result::action)
+                                .filter(Objects::nonNull)
+                                .forEach(a -> a.execute(tx));
                     }
                     return up;
                 });
@@ -177,19 +176,22 @@ public class ProcessWaitWatchdog implements ScheduledTask {
     }
 
     @WithTimer
-    List<Result<AbstractWaitCondition>> processBatch(WaitType type, List<WaitConditionItem<AbstractWaitCondition>> waitConditions) {
-        ProcessWaitHandler<AbstractWaitCondition> handler = processWaitHandlers.get(type);
+    private List<Result<AbstractWaitCondition>> processBatch(Batch batch) {
+        var type = batch.type();
+        var waitConditions = batch.items();
+
+        var handler = processWaitHandlers.get(type);
         if (handler == null) {
             log.warn("processBatch ['{}'] -> handler not found", type);
             return waitConditions.stream()
                     .map(w -> Result.of(w.processKey(), w.waitConditionId(), null))
-                    .collect(Collectors.toList());
+                    .toList();
         }
 
         try {
             return handler.processBatch(waitConditions);
         } catch (Exception e) {
-            log.info("processHandler ['{}'] -> error",type, e);
+            log.info("processHandler ['{}'] -> error", type, e);
             return List.of();
         }
     }
@@ -207,33 +209,27 @@ public class ProcessWaitWatchdog implements ScheduledTask {
         log.info("resumeProcess ['{}', '{}'] -> done", key, events);
     }
 
-    private static Map<WaitType, List<WaitConditionItem<AbstractWaitCondition>>> toBatches(List<WaitingProcess> processes) {
-        Map<WaitType, List<WaitConditionItem<AbstractWaitCondition>>> result = new HashMap<>();
+    private record Batch(WaitType type, List<WaitConditionItem<AbstractWaitCondition>> items) {
+    }
+
+    private static List<Batch> toBatches(List<WaitingProcess> processes) {
+        var result = new HashMap<WaitType, List<WaitConditionItem<AbstractWaitCondition>>>();
 
         for (WaitingProcess p : processes) {
             boolean hasExclusive = p.waits().stream().anyMatch(AbstractWaitCondition::exclusive);
-            List<AbstractWaitCondition> waits = p.waits();
+            var waits = p.waits();
             for (int i = 0; i < waits.size(); i++) {
-                AbstractWaitCondition w = waits.get(i);
-                if (!hasExclusive || w.exclusive()) {
-                    var r = result.computeIfAbsent(w.type(), k -> new ArrayList<>());
-                    r.add(WaitConditionItem.of(p.processKey(), i, w));
+                var waitCondition = waits.get(i);
+                if (!hasExclusive || waitCondition.exclusive()) {
+                    result.computeIfAbsent(waitCondition.type(), k -> new ArrayList<>())
+                            .add(WaitConditionItem.of(p.processKey(), i, waitCondition));
                 }
             }
         }
-        return result;
-    }
 
-    private static List<AbstractWaitCondition> buildWaitConditions(List<AbstractWaitCondition> originalWaits,
-                                                                   List<Result<AbstractWaitCondition>> newWaits) {
-
-        List<AbstractWaitCondition> result = new ArrayList<>(originalWaits);
-        for (Result<AbstractWaitCondition> w : newWaits) {
-            result.set(w.waitConditionId(), w.waitCondition());
-        }
-        return result.stream()
-                .filter(Objects::nonNull)
-                .collect(Collectors.toList());
+        return result.entrySet().stream()
+                .map(e -> new Batch(e.getKey(), e.getValue()))
+                .toList();
     }
 
     @Value.Immutable
@@ -268,22 +264,21 @@ public class ProcessWaitWatchdog implements ScheduledTask {
         @WithTimer
         public List<WaitingProcess> nextWaitItems(Long lastId, int pollLimit) {
             return txResult(tx -> {
-                ProcessWaitConditions w = PROCESS_WAIT_CONDITIONS.as("w");
-
-                SelectConditionStep<Record5<UUID, OffsetDateTime, Long, JSONB, Long>> s = tx.select(
-                                w.INSTANCE_ID,
-                                w.INSTANCE_CREATED_AT,
-                                w.ID_SEQ,
-                                w.WAIT_CONDITIONS,
-                                w.VERSION)
-                        .from(w)
-                        .where(w.IS_WAITING.eq(true));
+                var PWC = PROCESS_WAIT_CONDITIONS.as("w");
+                var query = tx.select(
+                                PWC.INSTANCE_ID,
+                                PWC.INSTANCE_CREATED_AT,
+                                PWC.ID_SEQ,
+                                PWC.WAIT_CONDITIONS,
+                                PWC.VERSION)
+                        .from(PWC)
+                        .where(PWC.IS_WAITING.eq(true));
 
                 if (lastId != null) {
-                    s.and(w.ID_SEQ.greaterThan(lastId));
+                    query.and(PWC.ID_SEQ.greaterThan(lastId));
                 }
 
-                return s.orderBy(w.ID_SEQ)
+                return query.orderBy(PWC.ID_SEQ)
                         .limit(pollLimit)
                         .fetch(r -> WaitingProcess.builder()
                                 .processKey(new ProcessKey(r.value1(), r.value2()))
