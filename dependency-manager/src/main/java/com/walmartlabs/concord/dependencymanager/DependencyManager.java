@@ -158,10 +158,6 @@ public class DependencyManager {
             String id = item.getAuthority();
 
             Artifact artifact = new DefaultArtifact(id);
-            if (artifact.getVersion().equals(LATEST)) {
-                artifact.setVersion(getLatestVersion(artifact, progressNotifier));
-            }
-
             Artifact artifactResult = resolveMavenSingle(new MavenDependency(artifact, JavaScopes.COMPILE), progressNotifier);
             return toDependency(artifactResult);
         } else {
@@ -181,10 +177,6 @@ public class DependencyManager {
                 String id = item.getAuthority();
 
                 Artifact artifact = new DefaultArtifact(id);
-
-                if (artifact.getVersion().equals(LATEST)) {
-                    artifact.setVersion(getLatestVersion(artifact, progressNotifier));
-                }
 
                 Map<String, List<String>> cfg = splitQuery(item);
                 String scope = getSingleValue(cfg, "scope", JavaScopes.COMPILE);
@@ -258,16 +250,39 @@ public class DependencyManager {
     }
 
     private Artifact resolveMavenSingle(MavenDependency dep, ProgressNotifier progressNotifier) throws IOException {
+        if (dep.artifact.getVersion().equals(LATEST)) {
+            return resolveLatestMavenSingle(dep.artifact, progressNotifier);
+        }
+
         RepositorySystemSession session = newRepositorySystemSession(maven, progressNotifier);
-
-        ArtifactRequest req = new ArtifactRequest();
-        req.setArtifact(dep.artifact);
-        req.setRepositories(repositories);
-
         synchronized (mutex) {
             try {
-                ArtifactResult r = maven.resolveArtifact(session, req);
-                return r.getArtifact();
+                return resolveMavenSingle(session, dep.artifact);
+            } catch (ArtifactResolutionException e) {
+                throw new IOException(e);
+            }
+        }
+    }
+
+    private Artifact resolveMavenSingle(RepositorySystemSession session, Artifact artifact) throws ArtifactResolutionException {
+        ArtifactRequest req = new ArtifactRequest();
+        req.setArtifact(artifact);
+        req.setRepositories(repositories);
+
+        ArtifactResult r = maven.resolveArtifact(session, req);
+        return r.getArtifact();
+    }
+
+    private Artifact resolveLatestMavenSingle(Artifact artifact, ProgressNotifier progressNotifier) throws IOException {
+        RepositorySystemSession session = newRepositorySystemSession(maven, progressNotifier, true);
+        synchronized (mutex) {
+            try {
+                String latestVersion = getLatestVersion(session, artifact);
+                artifact.setVersion(latestVersion);
+
+                return resolveMavenSingle(session, artifact);
+            } catch (VersionRangeResolutionException e) {
+                throw new IllegalArgumentException(e);
             } catch (ArtifactResolutionException e) {
                 throw new IOException(e);
             }
@@ -348,20 +363,17 @@ public class DependencyManager {
         return session;
     }
 
-    private String getLatestVersion(Artifact artifact, ProgressNotifier progressNotifier) throws VersionRangeResolutionException {
-        RepositorySystemSession session = newRepositorySystemSession(maven, progressNotifier, true);
-
+    private String getLatestVersion(RepositorySystemSession session, Artifact artifact) throws VersionRangeResolutionException {
         VersionRangeRequest req = new VersionRangeRequest();
         req.setRepositories(repositories);
         req.setArtifact(new DefaultArtifact(artifact.getGroupId(), artifact.getArtifactId(), artifact.getExtension(), "[0,)"));
 
-        synchronized (mutex) {
-            VersionRangeResult versionRange = maven.resolveVersionRange(session, req);
-            if (versionRange.getVersions().isEmpty()) {
-                throw new VersionRangeResolutionException(versionRange, "versions list is empty for " + artifact.getGroupId() + ":" + artifact.getArtifactId());
-            }
-            return versionRange.getHighestVersion().toString();
+        VersionRangeResult versionRange = maven.resolveVersionRange(session, req);
+        if (versionRange.getVersions().isEmpty()) {
+            throw new VersionRangeResolutionException(versionRange, "versions list is empty for " + artifact.getGroupId() + ":" + artifact.getArtifactId());
         }
+
+        return versionRange.getHighestVersion().toString();
     }
 
     private static DependencyEntity toDependency(Artifact artifact) {
