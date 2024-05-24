@@ -126,7 +126,7 @@ public class DependencyManager {
         return withRetry(() -> tryResolveSingle(item, progressNotifier), exceptionConverter, progressNotifier);
     }
 
-    private Collection<DependencyEntity> tryResolve(Collection<URI> items, ProgressNotifier progressNotifier) throws IOException, VersionRangeResolutionException {
+    private Collection<DependencyEntity> tryResolve(Collection<URI> items, ProgressNotifier progressNotifier) throws IOException {
         if (items == null || items.isEmpty()) {
             return Collections.emptySet();
         }
@@ -135,7 +135,7 @@ public class DependencyManager {
         List<URI> uris = new ArrayList<>(items);
         Collections.sort(uris);
 
-        DependencyList deps = categorize(uris, progressNotifier);
+        DependencyList deps = categorize(uris);
 
         Collection<DependencyEntity> result = new HashSet<>();
 
@@ -152,24 +152,19 @@ public class DependencyManager {
         return result;
     }
 
-    private DependencyEntity tryResolveSingle(URI item, ProgressNotifier progressNotifier) throws IOException, VersionRangeResolutionException {
+    private DependencyEntity tryResolveSingle(URI item, ProgressNotifier progressNotifier) throws IOException {
         String scheme = item.getScheme();
         if (MAVEN_SCHEME.equalsIgnoreCase(scheme)) {
             String id = item.getAuthority();
 
-            Artifact artifact = new DefaultArtifact(id);
-            if (artifact.getVersion().equals(LATEST)) {
-                artifact.setVersion(getLatestVersion(artifact, progressNotifier));
-            }
-
-            Artifact artifactResult = resolveMavenSingle(new MavenDependency(artifact, JavaScopes.COMPILE), progressNotifier);
+            Artifact artifactResult = resolveMavenSingle(new MavenDependency(new DefaultArtifact(id), JavaScopes.COMPILE), progressNotifier);
             return toDependency(artifactResult);
         } else {
             return new DependencyEntity(resolveFile(item), item);
         }
     }
 
-    private DependencyList categorize(List<URI> items, ProgressNotifier progressNotifier) throws IOException, VersionRangeResolutionException {
+    private DependencyList categorize(List<URI> items) throws IOException {
         List<MavenDependency> mavenTransitiveDependencies = new ArrayList<>();
         List<MavenDependency> mavenSingleDependencies = new ArrayList<>();
         List<String> mavenExclusions = new ArrayList<>();
@@ -181,10 +176,6 @@ public class DependencyManager {
                 String id = item.getAuthority();
 
                 Artifact artifact = new DefaultArtifact(id);
-
-                if (artifact.getVersion().equals(LATEST)) {
-                    artifact.setVersion(getLatestVersion(artifact, progressNotifier));
-                }
 
                 Map<String, List<String>> cfg = splitQuery(item);
                 String scope = getSingleValue(cfg, "scope", JavaScopes.COMPILE);
@@ -258,7 +249,7 @@ public class DependencyManager {
     }
 
     private Artifact resolveMavenSingle(MavenDependency dep, ProgressNotifier progressNotifier) throws IOException {
-        RepositorySystemSession session = newRepositorySystemSession(maven, progressNotifier);
+        RepositorySystemSession session = getRepositorySession(Collections.singletonList(dep), maven, progressNotifier);
 
         ArtifactRequest req = new ArtifactRequest();
         req.setArtifact(dep.artifact);
@@ -274,6 +265,18 @@ public class DependencyManager {
         }
     }
 
+    private RepositorySystemSession getRepositorySession(Collection<MavenDependency> mavenDependencies, RepositorySystem system, ProgressNotifier progressNotifier) {
+        boolean isLatest = mavenDependencies.stream()
+                .map(d -> d.artifact.getVersion())
+                .anyMatch(a -> a.equals(LATEST));
+
+        if (isLatest) {
+            return newRepositorySystemSession(system, progressNotifier, true);
+        }
+
+        return newRepositorySystemSession(system, progressNotifier);
+    }
+
     private Collection<Artifact> resolveMavenSingleDependencies(Collection<MavenDependency> deps, ProgressNotifier progressNotifier) throws IOException {
         Collection<Artifact> paths = new HashSet<>();
         for (MavenDependency dep : deps) {
@@ -285,7 +288,7 @@ public class DependencyManager {
     private Collection<Artifact> resolveMavenTransitiveDependencies(Collection<MavenDependency> deps, List<String> exclusions, ProgressNotifier progressNotifier) throws IOException {
         // TODO: why we need new RepositorySystem?
         RepositorySystem system = RepositorySystemFactory.create();
-        RepositorySystemSession session = newRepositorySystemSession(system, progressNotifier);
+        RepositorySystemSession session = getRepositorySession(deps, system, progressNotifier);
 
         CollectRequest req = new CollectRequest();
         req.setDependencies(deps.stream()
@@ -346,22 +349,6 @@ public class DependencyManager {
         }
 
         return session;
-    }
-
-    private String getLatestVersion(Artifact artifact, ProgressNotifier progressNotifier) throws VersionRangeResolutionException {
-        RepositorySystemSession session = newRepositorySystemSession(maven, progressNotifier, true);
-
-        VersionRangeRequest req = new VersionRangeRequest();
-        req.setRepositories(repositories);
-        req.setArtifact(new DefaultArtifact(artifact.getGroupId(), artifact.getArtifactId(), artifact.getExtension(), "[0,)"));
-
-        synchronized (mutex) {
-            VersionRangeResult versionRange = maven.resolveVersionRange(session, req);
-            if (versionRange.getVersions().isEmpty()) {
-                throw new VersionRangeResolutionException(versionRange, "versions list is empty for " + artifact.getGroupId() + ":" + artifact.getArtifactId());
-            }
-            return versionRange.getHighestVersion().toString();
-        }
     }
 
     private static DependencyEntity toDependency(Artifact artifact) {
