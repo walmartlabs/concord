@@ -29,6 +29,7 @@
         <validCheckSum>7:79a6d80f1acc2473d9de8080c1b9a20d</validCheckSum>
         <addColumn tableName="AUDIT_LOG">
             <column name="ENTRY_SEQ" type="bigserial"
+                    autoIncrement="true"
                     remarks="Add sequences to enable forwarding">
                 <constraints nullable="false"/>
             </column>
