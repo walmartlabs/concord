@@ -17,6 +17,7 @@
     -->
 
     <changeSet id="67100" author="matthew.kunkel@walmartlabs.com">
+        <validCheckSum>7:b4f3446d4438acc4201a76cf9ab37959</validCheckSum>
         <addColumn tableName="PROCESS_EVENTS">
             <column name="EVENT_SEQ" type="bigserial"
                     remarks="Add sequences to enable forwarding">

@@ -38,6 +38,7 @@
     </changeSet>
 
     <changeSet id="1560050" author="ybrigo@gmail.com">
+        <validCheckSum>7:814490917fd400b881b94490dc4912e1</validCheckSum>
         <addColumn tableName="PROCESS_QUEUE">
             <column name="ID_SEQ" type="bigserial">
                 <constraints nullable="false"/>
