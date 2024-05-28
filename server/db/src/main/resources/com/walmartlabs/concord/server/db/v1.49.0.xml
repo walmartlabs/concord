@@ -21,7 +21,7 @@
             <column name="INSTANCE_CREATED_AT" type="timestamp">
                 <constraints nullable="false"/>
             </column>
-            <column name="SEGMENT_ID" type="bigserial">
+            <column name="SEGMENT_ID" type="bigserial" autoIncrement="true">
                 <constraints nullable="false"/>
             </column>
             <column name="SEGMENT_NAME" type="text">
@@ -61,7 +61,7 @@
             <column name="INSTANCE_CREATED_AT" type="timestamp">
                 <constraints nullable="false"/>
             </column>
-            <column name="SEGMENT_ID" type="bigserial">
+            <column name="SEGMENT_ID" type="bigserial" autoIncrement="true">
                 <constraints nullable="false"/>
             </column>
             <column name="LOG_RANGE" type="int4range">
@@ -73,7 +73,7 @@
             <column name="CHUNK_DATA" type="longblob">
                 <constraints nullable="false"/>
             </column>
-            <column name="LOG_SEQ" type="bigserial">
+            <column name="LOG_SEQ" type="bigserial" autoIncrement="true">
                 <constraints nullable="false"/>
             </column>
         </createTable>
