@@ -4,6 +4,8 @@
 
 ### Changed
 
+- docker: fix image build on aarch64 hosts
+([#717](https://github.com/walmartlabs/concord/pull/717));
 - concord-console2: upgrade node version
 ([#890](https://github.com/walmartlabs/concord/pull/890));
 - runtime-v2: fix log segment assigment during parallel
