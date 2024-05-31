@@ -23,10 +23,12 @@ package com.walmartlabs.concord.db;
 import com.codahale.metrics.MetricRegistry;
 import com.zaxxer.hikari.HikariDataSource;
 import liquibase.Liquibase;
+import liquibase.Scope;
 import liquibase.database.Database;
 import liquibase.database.DatabaseFactory;
 import liquibase.database.jvm.JdbcConnection;
 import liquibase.resource.ClassLoaderResourceAccessor;
+import liquibase.ui.LoggerUIService;
 import org.jooq.Configuration;
 import org.jooq.SQLDialect;
 import org.jooq.conf.RenderNameStyle;
@@ -133,6 +135,7 @@ public final class DataSourceUtils {
             params.forEach(lb::setChangeLogParameter);
         }
 
+        Scope.enter(Map.of(Scope.Attr.ui.name(), new LoggerUIService()));
         lb.update((String) null);
     }
 
