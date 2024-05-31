@@ -6,6 +6,7 @@
 
     <changeSet id="280000" author="ybrigo@gmail.com">
         <validCheckSum>7:3c18749b7f0a18dbf28ea1682c821138</validCheckSum>
+        <validCheckSum>7:1f544d2b211d758be8b7cec91502f84b</validCheckSum>
         <createTable tableName="PROCESS_INITIAL_STATE">
             <column name="INSTANCE_ID" type="uuid" remarks="Unique process ID">
                 <constraints primaryKey="true" nullable="false"/>

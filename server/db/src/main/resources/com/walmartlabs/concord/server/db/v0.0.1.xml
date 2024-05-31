@@ -149,6 +149,7 @@
 
     <changeSet id="1500" author="ibodrov@gmail.com">
         <validCheckSum>7:85e7d9c068eb963a250712db421e04ba</validCheckSum>
+        <validCheckSum>7:a9c6beedd779af780cc8045ebf515bb9</validCheckSum>
         <createTable tableName="SECRETS">
             <column name="SECRET_NAME" type="varchar(128)" remarks="Name (key) of a secret">
                 <constraints primaryKey="true" nullable="false"/>

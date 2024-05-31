@@ -6,6 +6,7 @@
 
     <changeSet id="20000" author="ibodrov@gmail.com">
         <validCheckSum>7:6319e50c991241cbd35987dd32834a4e</validCheckSum>
+        <validCheckSum>7:b3d65d57ff394117447433f1912ce0ec</validCheckSum>
         <createTable tableName="PROCESS_STATE">
             <column name="INSTANCE_ID" type="varchar(36)">
                 <constraints primaryKey="true" nullable="false"/>

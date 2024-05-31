@@ -28,6 +28,7 @@
 
     <changeSet id="67200" author="ibodrov@gmail.com">
         <validCheckSum>7:79a6d80f1acc2473d9de8080c1b9a20d</validCheckSum>
+        <validCheckSum>7:148f09276f67cb16502d0df0b9f4796c</validCheckSum>
         <addColumn tableName="AUDIT_LOG">
             <column name="ENTRY_SEQ" type="bigserial" autoIncrement="true"
                     remarks="Add sequences to enable forwarding">

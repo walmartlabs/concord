@@ -6,6 +6,7 @@
 
     <changeSet id="84000" author="ybrigo@gmail.com">
         <validCheckSum>7:3eef780cd96bb43b6005272baa83c9b8</validCheckSum>
+        <validCheckSum>7:a8f71a204534c7b933683b7c35e434b9</validCheckSum>
         <createTable tableName="PROCESS_CHECKPOINTS">
             <column name="CHECKPOINT_ID" type="uuid">
                 <constraints primaryKey="true" nullable="false"/>

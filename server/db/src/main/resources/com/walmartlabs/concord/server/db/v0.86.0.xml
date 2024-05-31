@@ -6,6 +6,7 @@
 
     <changeSet id="86000" author="ibodrov@gmail.com">
         <validCheckSum>7:c24cac0e183b9520896b9e93207e3c49</validCheckSum>
+        <validCheckSum>7:0bd22f258406490fd222f5b634c16ce5</validCheckSum>
         <addColumn tableName="PROJECTS">
             <column name="SECRET_KEY" type="longblob">
                 <constraints nullable="true"/>
