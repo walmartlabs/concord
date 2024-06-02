@@ -4,6 +4,8 @@
 
 ### Changed
 
+- server: exception mapper for InvalidProcessStateException
+([#916](https://github.com/walmartlabs/concord/pull/916));
 - docker: fix image build on aarch64 hosts
 ([#717](https://github.com/walmartlabs/concord/pull/717));
 - concord-console2: upgrade node version
