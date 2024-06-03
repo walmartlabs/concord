@@ -4,8 +4,6 @@
 
 ### Changed
 
-- server: exception mapper for InvalidProcessStateException
-([#916](https://github.com/walmartlabs/concord/pull/916));
 - docker: fix image build on aarch64 hosts
 ([#717](https://github.com/walmartlabs/concord/pull/717));
 - concord-console2: upgrade node version
@@ -18,7 +16,11 @@ execution
 - concord-server: fix process metadata values after resume
 ([#907](https://github.com/walmartlabs/concord/pull/907));
 - concord-server: process wait conditions in batch mode
-([#910](https://github.com/walmartlabs/concord/pull/910)).
+([#910](https://github.com/walmartlabs/concord/pull/910));
+- server: exception mapper for InvalidProcessStateException
+([#916](https://github.com/walmartlabs/concord/pull/916));
+- runtime-v2: allow double (floating point) values in YAML
+([#917](https://github.com/walmartlabs/concord/pull/917)).
 
 
 
