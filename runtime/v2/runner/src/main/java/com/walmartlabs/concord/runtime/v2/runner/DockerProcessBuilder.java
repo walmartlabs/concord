@@ -148,9 +148,9 @@ public class DockerProcessBuilder {
 
     private String[] buildCmd() throws IOException {
         if (forcePull) {
-            return new String[]{"/bin/sh", "-c", "docker pull " + q(image) + " && " + buildDockerCmd()};
+            return new String[]{"/bin/bash", "-c", "docker pull " + q(image) + " && " + buildDockerCmd()};
         } else {
-            return new String[]{"/bin/sh", "-c", buildDockerCmd()};
+            return new String[]{"/bin/bash", "-c", buildDockerCmd()};
         }
     }
 
