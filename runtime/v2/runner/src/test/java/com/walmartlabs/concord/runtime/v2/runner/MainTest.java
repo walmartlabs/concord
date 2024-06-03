@@ -1900,6 +1900,18 @@ public class MainTest {
         assertLog(log, ".*parallel: one==1.*");
     }
 
+    @Test
+    public void testDoubleValues() throws Exception {
+        deploy("doubleValues");
+
+        save(ProcessConfiguration.builder()
+                .build());
+
+        byte[] log = run();
+        assertLog(log, ".*PI1=3.14159264.*");
+        assertLog(log, ".*PI2=3.14159264.*");
+    }
+
     private void deploy(String resource) throws URISyntaxException, IOException {
         Path src = Paths.get(MainTest.class.getResource(resource).toURI());
         IOUtils.copy(src, workDir);
