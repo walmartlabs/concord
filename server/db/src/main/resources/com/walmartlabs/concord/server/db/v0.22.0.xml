@@ -35,7 +35,7 @@
             <column name="CHUNK_RANGE" type="int4range">
                 <constraints nullable="false"/>
             </column>
-            <column name="CHUNK_DATA" type="blob">
+            <column name="CHUNK_DATA" type="longblob">
                 <constraints nullable="false"/>
             </column>
         </createTable>

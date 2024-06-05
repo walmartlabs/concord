@@ -5,6 +5,7 @@
         xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.3.xsd">
 
     <changeSet id="1830000" author="ybrigo@gmail.com">
+        <validCheckSum>7:a08819b929a9488573c3ea5d8f2f67a9</validCheckSum>
         <createTable tableName="PROCESS_WAIT_CONDITIONS">
             <column name="INSTANCE_ID" type="uuid">
                 <constraints nullable="false"/>
@@ -18,7 +19,7 @@
             <column name="WAIT_CONDITIONS" type="jsonb">
                 <constraints nullable="true"/>
             </column>
-            <column name="ID_SEQ" type="bigserial">
+            <column name="ID_SEQ" type="bigserial" autoIncrement="true">
                 <constraints nullable="false"/>
             </column>
         </createTable>

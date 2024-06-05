@@ -17,8 +17,9 @@
     -->
 
     <changeSet id="67100" author="matthew.kunkel@walmartlabs.com">
+        <validCheckSum>7:b4f3446d4438acc4201a76cf9ab37959</validCheckSum>
         <addColumn tableName="PROCESS_EVENTS">
-            <column name="EVENT_SEQ" type="bigserial"
+            <column name="EVENT_SEQ" type="bigserial" autoIncrement="true"
                     remarks="Add sequences to enable forwarding">
                 <constraints primaryKey="true" nullable="false"/>
             </column>
@@ -26,13 +27,17 @@
     </changeSet>
 
     <changeSet id="67200" author="ibodrov@gmail.com">
+        <validCheckSum>7:79a6d80f1acc2473d9de8080c1b9a20d</validCheckSum>
+        <validCheckSum>7:148f09276f67cb16502d0df0b9f4796c</validCheckSum>
         <addColumn tableName="AUDIT_LOG">
-            <column name="ENTRY_SEQ" type="bigserial"
+            <column name="ENTRY_SEQ" type="bigserial" autoIncrement="true"
                     remarks="Add sequences to enable forwarding">
                 <constraints nullable="false"/>
             </column>
         </addColumn>
 
+        <!-- replaced in 1.58.0 -->
+        <!--
         <createView viewName="V_AUDIT_LOG" replaceIfExists="true">
             select
                 ENTRY_SEQ,
@@ -44,6 +49,7 @@
                 ENTRY_DETAILS
             from AUDIT_LOG a
         </createView>
+        -->
 
         <dropColumn tableName="AUDIT_LOG">
             <column name="ENTRY_ID"/>
