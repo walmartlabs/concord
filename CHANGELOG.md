@@ -17,6 +17,8 @@ execution
 ([#907](https://github.com/walmartlabs/concord/pull/907));
 - concord-server: process wait conditions in batch mode
 ([#910](https://github.com/walmartlabs/concord/pull/910));
+- project: update Liquibase to 4.8.0
+([#912](https://github.com/walmartlabs/concord/pull/912));
 - server: exception mapper for InvalidProcessStateException
 ([#916](https://github.com/walmartlabs/concord/pull/916));
 - runtime-v2: allow double (floating point) values in YAML
