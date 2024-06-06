@@ -40,11 +40,6 @@ public class SetVariablesCommand extends StepCommand<SetVariablesStep> {
     }
 
     @Override
-    public Command copy() {
-        return new SetVariablesCommand(getStep());
-    }
-
-    @Override
     protected void execute(Runtime runtime, State state, ThreadId threadId) {
         state.peekFrame(threadId).pop();
 

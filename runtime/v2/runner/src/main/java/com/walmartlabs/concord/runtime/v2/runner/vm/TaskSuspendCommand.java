@@ -35,22 +35,15 @@ public class TaskSuspendCommand implements Command {
     private static final long serialVersionUID = 1L;
 
     private final UUID correlationId;
-    private final LogContext logContext;
     private final String eventName;
     private final TaskCall step;
     private final Map<String, Serializable> taskState;
 
-    public TaskSuspendCommand(UUID correlationId, LogContext logContext, String eventName, TaskCall step, Map<String, Serializable> taskState) {
+    public TaskSuspendCommand(UUID correlationId, String eventName, TaskCall step, Map<String, Serializable> taskState) {
         this.correlationId = correlationId;
-        this.logContext = logContext;
         this.eventName = eventName;
         this.step = step;
         this.taskState = taskState;
-    }
-
-    @Override
-    public Command copy() {
-        return new TaskSuspendCommand(correlationId, logContext, eventName, step, taskState);
     }
 
     @Override
@@ -58,7 +51,7 @@ public class TaskSuspendCommand implements Command {
         Frame frame = state.peekFrame(threadId);
         frame.pop();
 
-        frame.push(new TaskResumeCommand(correlationId, logContext, step, new ResumeEventImpl(eventName, taskState)));
+        frame.push(new TaskResumeCommand(correlationId, step, new ResumeEventImpl(eventName, taskState)));
         frame.push(new SuspendCommand(eventName));
     }
 }

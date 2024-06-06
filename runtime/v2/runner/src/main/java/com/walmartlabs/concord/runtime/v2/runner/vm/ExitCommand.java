@@ -27,17 +27,13 @@ import com.walmartlabs.concord.svm.Runtime;
 import com.walmartlabs.concord.svm.State;
 import com.walmartlabs.concord.svm.ThreadId;
 
+// BRIG: TODO: notify finalizers (close log segments)
 public class ExitCommand extends StepCommand<ExitStep> {
 
     private static final long serialVersionUID = 1L;
 
     public ExitCommand(ExitStep step) {
         super(step);
-    }
-
-    @Override
-    public Command copy() {
-        return new ExitCommand(getStep());
     }
 
     @Override

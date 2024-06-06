@@ -25,6 +25,7 @@ import com.walmartlabs.concord.agent.logging.LogAppender;
 import com.walmartlabs.concord.agent.logging.LogSegmentStats;
 import com.walmartlabs.concord.agent.logging.SegmentHeaderParser;
 import com.walmartlabs.concord.agent.logging.SegmentedLogsConsumer;
+import com.walmartlabs.concord.client2.LogSegmentUpdateRequest;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -161,7 +162,7 @@ public class SegmentedLogsConsumerTest {
                 .length(ab.length)
                 .warnCount(warnCount)
                 .errorCount(errorCount)
-                .done(false)
+                .status(LogSegmentUpdateRequest.StatusEnum.RUNNING)
                 .build());
 
         return Bytes.concat(header, ab);

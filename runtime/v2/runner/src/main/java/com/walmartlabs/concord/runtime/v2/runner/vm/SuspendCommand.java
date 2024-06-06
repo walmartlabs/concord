@@ -20,8 +20,11 @@ package com.walmartlabs.concord.runtime.v2.runner.vm;
  * =====
  */
 
+import com.walmartlabs.concord.runtime.v2.runner.logging.RunnerLogger;
 import com.walmartlabs.concord.svm.Runtime;
 import com.walmartlabs.concord.svm.*;
+
+import java.util.Objects;
 
 public class SuspendCommand implements Command {
 
@@ -34,14 +37,18 @@ public class SuspendCommand implements Command {
     }
 
     @Override
-    public Command copy() {
-        return new SuspendCommand(eventRef);
-    }
-
-    @Override
     public void eval(Runtime runtime, State state, ThreadId threadId) {
         state.peekFrame(threadId).pop();
         state.setEventRef(threadId, eventRef);
         state.setStatus(threadId, ThreadStatus.SUSPENDED);
+
+        // SUSPEND log segments
+        RunnerLogger logger = runtime.getService(RunnerLogger.class);
+        LogSegmentUtils.getLogContexts(threadId, state).stream()
+                .filter(Objects::nonNull)
+                .filter(c -> c.segmentId() != null)
+                .forEach(c -> logger.setSegmentStatus(c.segmentId(), RunnerLogger.SegmentStatus.SUSPENDED));
+
+        state.peekFrame(threadId).push(new ResumeLogSegmentsCommand());
     }
 }

@@ -96,7 +96,7 @@ public class SegmentedLogsConsumer implements Consumer<RedirectedProcessLog.Chun
                     .segmentId(0)
                     .errorCount(0)
                     .warnCount(0)
-                    .done(false)
+                    .status(LogSegmentUpdateRequest.StatusEnum.RUNNING)
                     .length(s.end() - s.start())
                     .build();
             segments.add(Segment.of(header, s.start()));
@@ -140,14 +140,16 @@ public class SegmentedLogsConsumer implements Consumer<RedirectedProcessLog.Chun
     }
 
     private static LogSegmentStats findStats(List<Segment> segments) {
-        boolean done = false;
         int errorCount = 0;
         int warnCount = 0;
+        boolean done = false;
+        LogSegmentUpdateRequest.StatusEnum status = null;
         ListIterator<Segment> it = segments.listIterator(segments.size());
         while (it.hasPrevious()) {
             Segment segment = it.previous();
-            if (segment.header().done()) {
-                done = segment.header().done();
+            if (isFinal(segment.header().status())) {
+                done = true;
+                status = segment.header().status();
             }
             if (warnCount == 0 && segment.header().warnCount() > 0) {
                 warnCount = segment.header().warnCount();
@@ -159,11 +161,15 @@ public class SegmentedLogsConsumer implements Consumer<RedirectedProcessLog.Chun
 
         if (done || errorCount > 0 || warnCount > 0) {
             return LogSegmentStats.builder()
-                    .status(done ? LogSegmentUpdateRequest.StatusEnum.OK : null)
+                    .status(status)
                     .errors(errorCount)
                     .warnings(warnCount)
                     .build();
         }
         return null;
+    }
+
+    private static boolean isFinal(LogSegmentUpdateRequest.StatusEnum status) {
+        return status != LogSegmentUpdateRequest.StatusEnum.RUNNING;
     }
 }

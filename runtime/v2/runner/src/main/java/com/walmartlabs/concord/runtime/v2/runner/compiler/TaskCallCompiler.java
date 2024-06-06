@@ -25,10 +25,7 @@ import com.walmartlabs.concord.runtime.v2.runner.vm.*;
 import com.walmartlabs.concord.svm.Command;
 
 import javax.inject.Named;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 
 @Named
 public final class TaskCallCompiler implements StepCompiler<TaskCall> {
@@ -40,13 +37,18 @@ public final class TaskCallCompiler implements StepCompiler<TaskCall> {
 
     @Override
     public Command compile(CompilerContext context, TaskCall step) {
-        Command cmd = new TaskCallCommand(step);
+        UUID correlationId = UUID.randomUUID();
+
+        Command cmd = new BlockCommand(
+                new CreateLogSegmentCommand(correlationId, step),
+                new TaskCallCommand(correlationId, step),
+                new CloseLogSegmentCommand(correlationId));
 
         TaskCallOptions options = Objects.requireNonNull(step.getOptions());
 
         Retry retry = options.retry();
         if (retry != null) {
-            cmd = new RetryWrapper(cmd, retry);
+            cmd = new RetryWrapper(cmd, retry, step);
         }
 
         WithItems withItems = options.withItems();
@@ -64,7 +66,7 @@ public final class TaskCallCompiler implements StepCompiler<TaskCall> {
             if (options.out() != null) {
                 out = Collections.singletonList(options.out());
             }
-            cmd = LoopWrapper.of(context, cmd, loop, out, options.outExpr());
+            cmd = LoopWrapper.of(context, cmd, loop, out, options.outExpr(), step);
         }
 
         List<Step> errorSteps = options.errorSteps();

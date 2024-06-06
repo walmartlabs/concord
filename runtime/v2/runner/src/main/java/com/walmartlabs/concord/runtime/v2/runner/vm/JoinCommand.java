@@ -29,6 +29,7 @@ import java.util.Collection;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+// BRIG: TODO: pass step and log exception with step info?
 public class JoinCommand implements Command {
 
     private static final Logger log = LoggerFactory.getLogger(JoinCommand.class);
@@ -38,11 +39,6 @@ public class JoinCommand implements Command {
 
     public JoinCommand(Collection<ThreadId> ids) {
         this.ids = ids;
-    }
-
-    @Override
-    public Command copy() {
-        return new JoinCommand(ids);
     }
 
     @Override

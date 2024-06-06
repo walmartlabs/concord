@@ -43,7 +43,7 @@ public interface State extends Serializable {
      * Removes the current frame of the specified thread. The next frame becomes the current frame
      * of the thread.
      */
-    void popFrame(ThreadId threadId);
+    void popFrame(ThreadId threadId, FinalCommandHandler finalCommandHandler);
 
     /**
      * Returns an unmodifiable list of frames for the specified thread.
@@ -134,4 +134,10 @@ public interface State extends Serializable {
      * Performs state maintenance and cleanup.
      */
     void gc();
+
+    void setThreadLocal(ThreadId threadId, String key, Serializable value);
+
+   <T extends Serializable> T getThreadLocal(ThreadId threadId, String key);
+
+    void removeThreadLocal(ThreadId threadId, String key);
 }

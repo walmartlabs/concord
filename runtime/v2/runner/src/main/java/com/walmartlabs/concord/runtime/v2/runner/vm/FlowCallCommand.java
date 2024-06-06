@@ -25,6 +25,7 @@ import com.walmartlabs.concord.runtime.v2.model.FlowCallOptions;
 import com.walmartlabs.concord.runtime.v2.model.ProcessDefinition;
 import com.walmartlabs.concord.runtime.v2.runner.compiler.CompilerUtils;
 import com.walmartlabs.concord.runtime.v2.runner.logging.LogContext;
+import com.walmartlabs.concord.runtime.v2.runner.logging.LogUtils;
 import com.walmartlabs.concord.runtime.v2.sdk.Compiler;
 import com.walmartlabs.concord.runtime.v2.sdk.*;
 import com.walmartlabs.concord.svm.Runtime;
@@ -33,6 +34,7 @@ import com.walmartlabs.concord.svm.*;
 import java.io.Serializable;
 import java.util.Map;
 import java.util.Objects;
+import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class FlowCallCommand extends StepCommand<FlowCall> {
@@ -41,13 +43,8 @@ public class FlowCallCommand extends StepCommand<FlowCall> {
 
     private static final long serialVersionUID = 1L;
 
-    public FlowCallCommand(FlowCall step) {
-        super(step);
-    }
-
-    @Override
-    public Command copy() {
-        return new FlowCallCommand(getStep());
+    public FlowCallCommand(UUID correlationId, FlowCall step) {
+        super(correlationId, step);
     }
 
     @Override
@@ -88,7 +85,7 @@ public class FlowCallCommand extends StepCommand<FlowCall> {
         // and put it into the callee's frame
         Command processOutVars;
         if (!opts.outExpr().isEmpty()) {
-            processOutVars = new EvalVariablesCommand(getStep(), opts.outExpr(), innerFrame, getLogContext());
+            processOutVars = new EvalVariablesCommand(getStep(), opts.outExpr(), innerFrame);
         } else {
             processOutVars = new CopyVariablesCommand(opts.out(), innerFrame, VMUtils::assertNearestRoot);
         }
@@ -114,16 +111,11 @@ public class FlowCallCommand extends StepCommand<FlowCall> {
         private final Map<String, Serializable> variables;
         private final Frame variablesFrame;
 
-        private EvalVariablesCommand(FlowCall step, Map<String, Serializable> variables, Frame variablesFrame, LogContext logContext) {
-            super(step, logContext);
+        private EvalVariablesCommand(FlowCall step, Map<String, Serializable> variables, Frame variablesFrame) {
+            super(step);
             this.step = step;
             this.variables = variables;
             this.variablesFrame = variablesFrame;
-        }
-
-        @Override
-        public Command copy() {
-            return new EvalVariablesCommand(getStep(), new ConcurrentHashMap<>(variables), variablesFrame, getLogContext());
         }
 
         @Override

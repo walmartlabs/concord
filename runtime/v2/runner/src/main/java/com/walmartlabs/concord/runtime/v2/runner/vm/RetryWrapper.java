@@ -52,25 +52,22 @@ public class RetryWrapper implements Command {
 
     private final Command cmd;
     private final Retry retry;
+    private final Step step;
 
-    public RetryWrapper(Command cmd, Retry retry) {
+    public RetryWrapper(Command cmd, Retry retry, Step step) {
         this.cmd = cmd;
         this.retry = retry;
-    }
-
-    @Override
-    public Command copy() {
-        return new RetryWrapper(cmd.copy(), retry);
+        this.step = step;
     }
 
     @Override
     public void eval(Runtime runtime, State state, ThreadId threadId) {
-        execute(runtime, state, threadId);
-    }
-
-    @Override
-    public void onException(Runtime runtime, Exception e, State state, ThreadId threadId) {
-        cmd.onException(runtime, e, state, threadId);
+        try {
+            execute(runtime, state, threadId);
+        } catch (Exception e) {
+            StepCommand.logException(step, state, threadId, e);
+            throw new LoggedException(e);
+        }
     }
 
     private void execute(Runtime runtime, State state, ThreadId threadId) {
@@ -131,11 +128,6 @@ public class RetryWrapper implements Command {
 
         public NextRetry(Command cmd) {
             this.cmd = cmd;
-        }
-
-        @Override
-        public Command copy() {
-            return new NextRetry(cmd.copy());
         }
 
         @Override

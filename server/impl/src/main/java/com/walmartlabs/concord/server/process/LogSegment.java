@@ -62,7 +62,8 @@ public interface LogSegment {
     enum Status {
         OK,
         FAILED,
-        RUNNING
+        RUNNING,
+        SUSPENDED
     }
 
     static ImmutableLogSegment.Builder builder() {

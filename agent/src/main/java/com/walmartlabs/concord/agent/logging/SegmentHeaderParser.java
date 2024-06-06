@@ -20,6 +20,7 @@ package com.walmartlabs.concord.agent.logging;
  * =====
  */
 
+import com.walmartlabs.concord.client2.LogSegmentUpdateRequest;
 import org.immutables.value.Value;
 
 import java.nio.ByteBuffer;
@@ -29,7 +30,7 @@ public class SegmentHeaderParser {
 
     private static final int MAX_FIELD_BYTES = String.valueOf(Long.MAX_VALUE).getBytes().length;
 
-    // msgLength|segmentId|DONE?|warnings|errors|msg
+    // msgLength|segmentId|status|warnings|errors|msg
 
     public static int parse(byte[] ab, List<Segment> segments, List<Position> invalidSegments) {
         Field field = Field.MSG_LENGTH;
@@ -88,7 +89,7 @@ public class SegmentHeaderParser {
                 }
                 case END_FIELD: {
                     String fieldValue = fieldData.toString();
-                    if (fieldData.length() == 0) {
+                    if (fieldData.isEmpty()) {
                         // reset
                         field = Field.MSG_LENGTH;
                         state = State.FIND_HEADER;
@@ -138,7 +139,30 @@ public class SegmentHeaderParser {
     }
 
     public static byte[] serialize(Header header) {
-        return String.format("|%d|%d|%s|%d|%d|", header.length(), header.segmentId(), (header.done() ? '1' : '0'), header.warnCount(), header.errorCount()).getBytes();
+        return String.format("|%d|%d|%d|%d|%d|",
+                header.length(),
+                header.segmentId(),
+                serializeStatus(header.status()),
+                header.warnCount(), header.errorCount()).getBytes();
+    }
+
+    public static int serializeStatus(LogSegmentUpdateRequest.StatusEnum status) {
+        return switch (status) {
+            case RUNNING -> 0;
+            case OK -> 1;
+            case SUSPENDED -> 2;
+            case FAILED -> 3;
+        };
+    }
+
+    public static LogSegmentUpdateRequest.StatusEnum deserializeStatus(String status) {
+        return switch (status) {
+            case "0" -> LogSegmentUpdateRequest.StatusEnum.RUNNING;
+            case "1" -> LogSegmentUpdateRequest.StatusEnum.OK;
+            case "2" -> LogSegmentUpdateRequest.StatusEnum.SUSPENDED;
+            case "3" -> LogSegmentUpdateRequest.StatusEnum.FAILED;
+            default -> throw new IllegalStateException("Unexpected value: " + status);
+        };
     }
 
     @Value.Immutable
@@ -183,7 +207,7 @@ public class SegmentHeaderParser {
 
         int errorCount();
 
-        boolean done();
+        LogSegmentUpdateRequest.StatusEnum status();
 
         static ImmutableHeader.Builder builder() {
             return ImmutableHeader.builder();
@@ -212,7 +236,7 @@ public class SegmentHeaderParser {
         SEGMENT_ID {
             @Override
             public Field next() {
-                return DONE;
+                return STATUS;
             }
 
             @Override
@@ -221,7 +245,7 @@ public class SegmentHeaderParser {
             }
         },
 
-        DONE {
+        STATUS {
             @Override
             public Field next() {
                 return WARNINGS;
@@ -229,7 +253,7 @@ public class SegmentHeaderParser {
 
             @Override
             public void process(String fieldValue, ImmutableHeader.Builder headerBuilder) {
-                headerBuilder.done("1".equals(fieldValue));
+                headerBuilder.status(deserializeStatus(fieldValue));
             }
         },
 

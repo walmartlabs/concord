@@ -25,6 +25,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.Serializable;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -43,6 +44,7 @@ public class InMemoryState implements Serializable, State {
     private final Map<ThreadId, String> eventRefs = new HashMap<>();
     private final Map<ThreadId, Exception> threadErrors = new HashMap<>();
     private final Map<ThreadId, List<StackTraceItem>> stackTrace = new HashMap<>();
+    private final Map<ThreadId, Map<String, Serializable>> threadLocals = new ConcurrentHashMap<>();
 
     private final ThreadId rootThreadId;
 
@@ -83,8 +85,29 @@ public class InMemoryState implements Serializable, State {
     }
 
     @Override
-    public void popFrame(ThreadId threadId) {
+    public void popFrame(ThreadId threadId, FinalCommandHandler handler) {
         log.trace("popFrame {}", threadId);
+
+        Frame currentFrame = peekFrame(threadId);
+
+        // finalizers
+        Collection<Exception> causes = new ArrayList<>();
+
+        currentFrame.getCommands()
+                .stream()
+                .filter(c -> c instanceof FinalCommand)
+                .map(c -> (FinalCommand) c)
+                .forEach(c -> {
+                    try {
+                        handler.handle(c);
+                    } catch (Exception e) {
+                        causes.add(e);
+                    }
+                });
+
+        if (!causes.isEmpty()) {
+            throw new MultiException(causes);
+        }
 
         synchronized (this) {
             List<Frame> l = frames.get(threadId);
@@ -95,6 +118,7 @@ public class InMemoryState implements Serializable, State {
             Frame removed = l.remove(0);
             unwindStackTrace(threadId, removed);
         }
+
     }
 
     @Override
@@ -282,7 +306,52 @@ public class InMemoryState implements Serializable, State {
                         if (stackTrace != null) {
                             stackTrace.remove(k);
                         }
+                        if (threadLocals != null) {
+                            threadLocals.remove(k);
+                        }
                     });
+        }
+    }
+
+    @Override
+    public void setThreadLocal(ThreadId threadId, String key, Serializable value) {
+        synchronized (this) {
+            if (threadLocals == null) {
+                return;
+            }
+
+            Map<String, Serializable> locals = threadLocals.computeIfAbsent(threadId, v -> new HashMap<>());
+            locals.put(key, value);
+        }
+    }
+
+    @Override
+    public <T extends Serializable> T getThreadLocal(ThreadId threadId, String key) {
+        synchronized (this) {
+            if (threadLocals == null) {
+                return null;
+            }
+
+            Map<String, Serializable> locals = threadLocals.get(threadId);
+            if (locals == null) {
+                return null;
+            }
+            return (T) locals.get(key);
+        }
+    }
+
+    @Override
+    public void removeThreadLocal(ThreadId threadId, String key) {
+        synchronized (this) {
+            if (threadLocals == null) {
+                return;
+            }
+
+            Map<String, Serializable> locals = threadLocals.get(threadId);
+            locals.remove(key);
+            if (locals.isEmpty()) {
+                threadLocals.remove(threadId);
+            }
         }
     }
 

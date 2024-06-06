@@ -22,10 +22,11 @@ package com.walmartlabs.concord.runtime.v2.runner.compiler;
 
 import com.walmartlabs.concord.runtime.v2.model.Expression;
 import com.walmartlabs.concord.runtime.v2.model.Step;
-import com.walmartlabs.concord.runtime.v2.runner.vm.ExpressionCommand;
+import com.walmartlabs.concord.runtime.v2.runner.vm.*;
 import com.walmartlabs.concord.svm.Command;
 
 import javax.inject.Named;
+import java.util.UUID;
 
 @Named
 public class ExpressionCompiler implements StepCompiler<Expression> {
@@ -37,6 +38,11 @@ public class ExpressionCompiler implements StepCompiler<Expression> {
 
     @Override
     public Command compile(CompilerContext context, Expression step) {
-        return new ExpressionCommand(step);
+        UUID correlationId = UUID.randomUUID();
+
+        return new BlockCommand(
+                new CreateLogSegmentCommand(correlationId, step),
+                new ExpressionCommand(correlationId, step),
+                new CloseLogSegmentCommand(correlationId));
     }
 }

@@ -48,15 +48,6 @@ public class SwitchCommand extends StepCommand<SwitchStep> {
     }
 
     @Override
-    public Command copy() {
-        List<Map.Entry<String, Command>> newCaseCommands = caseCommands.stream()
-                .map(kv -> (Map.Entry<String, Command>) new SimpleEntry<>(kv.getKey(), kv.getValue().copy()))
-                .toList();
-        Command newDefaultCommand = defaultCommand != null ? defaultCommand.copy() : null;
-        return new SwitchCommand(getStep(), newCaseCommands, newDefaultCommand);
-    }
-
-    @Override
     protected void execute(Runtime runtime, State state, ThreadId threadId) {
         Frame frame = state.peekFrame(threadId);
         frame.pop();
