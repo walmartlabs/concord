@@ -100,7 +100,7 @@
         <maven.prj.version>2.2.1</maven.prj.version>
         <maven.resolver.provider.version>3.8.4</maven.resolver.provider.version>
         <maven.model.builder.version>3.8.4</maven.model.builder.version>
-        <maven.resolver.version>1.7.3</maven.resolver.version>
+        <maven.resolver.version>1.9.20</maven.resolver.version>
         <maven.resolver.version.concord>0.0.4</maven.resolver.version.concord>
         <metrics.version>4.2.25</metrics.version>
         <mockito.version>4.9.0</mockito.version>

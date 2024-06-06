@@ -75,6 +75,7 @@ public class DependencyManager {
 
     private static final String FILES_CACHE_DIR = "files";
     public static final String MAVEN_SCHEME = "mvn";
+    private static final String LATEST = "LATEST";
 
     private final Path cacheDir;
     private final Path localCacheDir;
@@ -247,7 +248,7 @@ public class DependencyManager {
     }
 
     private Artifact resolveMavenSingle(MavenDependency dep, ProgressNotifier progressNotifier) throws IOException {
-        RepositorySystemSession session = newRepositorySystemSession(maven, progressNotifier);
+        RepositorySystemSession session = getRepositorySession(Collections.singletonList(dep), maven, progressNotifier);
 
         ArtifactRequest req = new ArtifactRequest();
         req.setArtifact(dep.artifact);
@@ -263,6 +264,18 @@ public class DependencyManager {
         }
     }
 
+    private RepositorySystemSession getRepositorySession(Collection<MavenDependency> mavenDependencies, RepositorySystem system, ProgressNotifier progressNotifier) {
+        boolean isLatest = mavenDependencies.stream()
+                .map(d -> d.artifact.getVersion())
+                .anyMatch(a -> a.equals(LATEST));
+
+        if (isLatest) {
+            return newRepositorySystemSession(system, progressNotifier, true);
+        }
+
+        return newRepositorySystemSession(system, progressNotifier);
+    }
+
     private Collection<Artifact> resolveMavenSingleDependencies(Collection<MavenDependency> deps, ProgressNotifier progressNotifier) throws IOException {
         Collection<Artifact> paths = new HashSet<>();
         for (MavenDependency dep : deps) {
@@ -274,7 +287,7 @@ public class DependencyManager {
     private Collection<Artifact> resolveMavenTransitiveDependencies(Collection<MavenDependency> deps, List<String> exclusions, ProgressNotifier progressNotifier) throws IOException {
         // TODO: why we need new RepositorySystem?
         RepositorySystem system = RepositorySystemFactory.create();
-        RepositorySystemSession session = newRepositorySystemSession(system, progressNotifier);
+        RepositorySystemSession session = getRepositorySession(deps, system, progressNotifier);
 
         CollectRequest req = new CollectRequest();
         req.setDependencies(deps.stream()
@@ -303,10 +316,13 @@ public class DependencyManager {
     }
 
     private DefaultRepositorySystemSession newRepositorySystemSession(RepositorySystem system, ProgressNotifier progressNotifier) {
+        return newRepositorySystemSession(system, progressNotifier, false);
+    }
+
+    private DefaultRepositorySystemSession newRepositorySystemSession(RepositorySystem system, ProgressNotifier progressNotifier, boolean updatePolicy) {
         DefaultRepositorySystemSession session = MavenRepositorySystemUtils.newSession();
         session.setChecksumPolicy(RepositoryPolicy.CHECKSUM_POLICY_IGNORE);
         session.setIgnoreArtifactDescriptorRepositories(strictRepositories);
-
         if (explicitlyResolveV1Client) {
             DependencySelector selector = new AndDependencySelector(
                     new ClientDepSelector(),
@@ -326,6 +342,10 @@ public class DependencyManager {
         });
 
         session.setOffline(offlineMode);
+
+        if (updatePolicy) {
+            session.setUpdatePolicy(RepositoryPolicy.UPDATE_POLICY_ALWAYS);
+        }
 
         return session;
     }
