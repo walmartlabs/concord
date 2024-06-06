@@ -20,14 +20,15 @@ package com.walmartlabs.concord.agent.logging;
  * =====
  */
 
-import com.walmartlabs.concord.client2.LogSegmentUpdateRequest;
+import com.walmartlabs.concord.runtime.common.logger.LogSegmentHeader;
+import com.walmartlabs.concord.runtime.common.logger.LogSegmentSerializer;
+import com.walmartlabs.concord.runtime.common.logger.LogSegmentStatus;
 
 import java.util.*;
 import java.util.function.Consumer;
 
 import static com.walmartlabs.concord.agent.logging.SegmentHeaderParser.Position;
 import static com.walmartlabs.concord.agent.logging.SegmentHeaderParser.Segment;
-import static com.walmartlabs.concord.agent.logging.SegmentHeaderParser.Header;
 
 public class SegmentedLogsConsumer implements Consumer<RedirectedProcessLog.Chunk> {
 
@@ -76,9 +77,8 @@ public class SegmentedLogsConsumer implements Consumer<RedirectedProcessLog.Chun
 
         Segment partialSegment = findPartialSegment(segments, ab.length);
         if (partialSegment != null) {
-            unparsed = SegmentHeaderParser.serialize(Header.builder().from(partialSegment.header())
-                    .length(partialSegment.header().length() - actualLength(partialSegment, ab.length))
-                    .build());
+            unparsed = LogSegmentSerializer.serializeHeader(
+                    partialSegment.header(), partialSegment.header().length() - actualLength(partialSegment, ab.length));
         }
 
         if (pos < ab.length) {
@@ -92,11 +92,10 @@ public class SegmentedLogsConsumer implements Consumer<RedirectedProcessLog.Chun
 
     private void invalidSegmentsToSystemSegments(List<Position> invalidSegments, List<Segment> segments) {
         for (Position s : invalidSegments) {
-            Header header = Header.builder()
+            LogSegmentHeader header = LogSegmentHeader.builder()
                     .segmentId(0)
                     .errorCount(0)
                     .warnCount(0)
-                    .done(false)
                     .length(s.end() - s.start())
                     .build();
             segments.add(Segment.of(header, s.start()));
@@ -141,13 +140,15 @@ public class SegmentedLogsConsumer implements Consumer<RedirectedProcessLog.Chun
 
     private static LogSegmentStats findStats(List<Segment> segments) {
         boolean done = false;
+        LogSegmentStatus status = null;
         int errorCount = 0;
         int warnCount = 0;
         ListIterator<Segment> it = segments.listIterator(segments.size());
         while (it.hasPrevious()) {
             Segment segment = it.previous();
-            if (segment.header().done()) {
-                done = segment.header().done();
+            if (segment.header().status() != LogSegmentStatus.RUNNING) {
+                done = true;
+                status = segment.header().status();
             }
             if (warnCount == 0 && segment.header().warnCount() > 0) {
                 warnCount = segment.header().warnCount();
@@ -159,7 +160,7 @@ public class SegmentedLogsConsumer implements Consumer<RedirectedProcessLog.Chun
 
         if (done || errorCount > 0 || warnCount > 0) {
             return LogSegmentStats.builder()
-                    .status(done ? LogSegmentUpdateRequest.StatusEnum.OK : null)
+                    .status(status)
                     .errors(errorCount)
                     .warnings(warnCount)
                     .build();

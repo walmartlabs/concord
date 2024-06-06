@@ -1,10 +1,10 @@
-package com.walmartlabs.concord.runtime.v2.runner.logging;
+package com.walmartlabs.concord.runtime.common.logger;
 
 /*-
  * *****
  * Concord
  * -----
- * Copyright (C) 2017 - 2020 Walmart Inc.
+ * Copyright (C) 2017 - 2024 Walmart Inc.
  * -----
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,17 +20,23 @@ package com.walmartlabs.concord.runtime.v2.runner.logging;
  * =====
  */
 
-import com.walmartlabs.concord.runtime.common.logger.LogSegmentStatus;
+import org.immutables.value.Value;
 
-import javax.annotation.Nullable;
-import java.util.UUID;
+@Value.Immutable
+@Value.Style(jdkOnly = true)
+public interface LogSegmentHeader {
 
-public interface RunnerLogger {
+    int length();
 
-    void withContext(LogContext context, Runnable runnable);
+    long segmentId();
 
-    @Nullable
-    Long createSegment(String segmentName, UUID correlationId);
+    int warnCount();
 
-    void setSegmentStatus(long segmentId, LogSegmentStatus segmentStatus);
+    int errorCount();
+
+    LogSegmentStatus status();
+
+    static ImmutableLogSegmentHeader.Builder builder() {
+        return ImmutableLogSegmentHeader.builder();
+    }
 }
