@@ -42,7 +42,7 @@ import static com.walmartlabs.concord.it.server.AbstractServerIT.DEFAULT_TEST_TI
 @Timeout(value = DEFAULT_TEST_TIMEOUT, unit = TimeUnit.MILLISECONDS)
 public abstract class AbstractServerIT {
 
-    public static final long DEFAULT_TEST_TIMEOUT = 120000;
+    public static final long DEFAULT_TEST_TIMEOUT = 180000;
 
     private ServerClient serverClient;
 

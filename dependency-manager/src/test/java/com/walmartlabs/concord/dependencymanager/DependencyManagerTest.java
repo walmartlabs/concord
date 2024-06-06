@@ -98,4 +98,36 @@ public class DependencyManagerTest {
             m.resolveSingle(new URI("mvn://com.walmartlabs.concord:concord-sdk:1.54.0"));
         });
     }
+
+    @Test
+    @Disabled
+    public void testLatest() {
+        assertTimeout(Duration.ofMillis(30000), () -> {
+            Path tmpDir = Files.createTempDirectory("test");
+            URI uriA = new URI("mvn://com.walmartlabs.concord:concord-sdk:2.8.0");
+            URI uriB = new URI("mvn://com.walmartlabs.concord:concord-policy-engine:LATEST");
+            URI uriC = new URI("mvn://com.walmartlabs.concord:concord-agent:LATEST");
+            List<MavenRepository> repositories = Collections.singletonList(
+                    MavenRepository.builder()
+                            .id("test")
+                            .url("https://repo.maven.apache.org/maven2/")
+                            .build()
+            );
+
+            DependencyManager m = new DependencyManager(DependencyManagerConfiguration
+                    .builder()
+                    .repositories(repositories)
+                    .cacheDir(tmpDir)
+                    .build());
+            Collection<DependencyEntity> paths = m.resolve(Arrays.asList(uriA, uriB));
+
+            assertEquals("2.11.1", paths.stream()
+                    .filter(a -> a.getArtifact().getGroupId().equals("com.walmartlabs.concord")
+                            && a.getArtifact().getArtifactId().equals("concord-policy-engine"))
+                    .findFirst().get().getArtifact().getVersion());
+
+            DependencyEntity deps = m.resolveSingle(uriC);
+            assertEquals("2.11.1", deps.getArtifact().getVersion());
+        });
+    }
 }

@@ -1,0 +1,7 @@
+flows:
+  default:
+  - set:
+      pi1: 3.14159264
+      pi2: ${3.14159264}
+  - log: "PI1=${pi1}"
+  - log: "PI2=${pi2}"

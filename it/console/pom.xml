@@ -16,7 +16,7 @@
     <properties>
         <!-- pin down the version of DB and Selenium images -->
         <db.image>library/postgres:10.4-alpine</db.image>
-        <selenium.image>selenium/standalone-chrome:3.141.59</selenium.image>
+        <selenium.image>seleniarm/standalone-chromium:110.0</selenium.image>
 
         <!-- use the latest locally built Concord images -->
         <server.image>walmartlabs/concord-server</server.image>
@@ -69,6 +69,11 @@
         <dependency>
             <groupId>org.seleniumhq.selenium</groupId>
             <artifactId>selenium-chrome-driver</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.seleniumhq.selenium</groupId>
+            <artifactId>selenium-chromium-driver</artifactId>
             <scope>test</scope>
         </dependency>
         <dependency>
@@ -249,7 +254,7 @@
                                 </image>
                                 <image>
                                     <name>${selenium.image}</name>
-                                    <alias>selenium-chrome</alias>
+                                    <alias>selenium-chromium</alias>
                                     <run>
                                         <ports>
                                             <port>it.selenium.port:4444</port>
@@ -265,7 +270,7 @@
                                             </bind>
                                         </volumes>
                                         <wait>
-                                            <log>(?s).*Selenium Server is up and running.*</log>
+                                            <log>(?s).*Started Selenium Standalone.*</log>
                                             <time>60000</time>
                                         </wait>
                                     </run>
