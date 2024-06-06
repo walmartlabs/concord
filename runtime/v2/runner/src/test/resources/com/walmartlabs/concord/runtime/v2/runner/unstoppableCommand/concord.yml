@@ -1,0 +1,9 @@
+flows:
+  default:
+    - task: addUnstoppableCommand
+
+    - log: "before return"
+
+    - return
+
+    - expr: "${we shouldn't be here}"

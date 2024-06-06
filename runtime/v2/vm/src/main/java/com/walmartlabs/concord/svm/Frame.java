@@ -67,6 +67,12 @@ public class Frame implements Serializable {
         return id;
     }
 
+    public List<Command> getCommands() {
+        List<Command> result = new ArrayList<>(commandStack);
+        Collections.reverse(result);
+        return result;
+    }
+
     public Command peek() {
         if (commandStack.isEmpty()) {
             return null;

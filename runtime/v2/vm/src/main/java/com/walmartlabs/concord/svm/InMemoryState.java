@@ -83,8 +83,29 @@ public class InMemoryState implements Serializable, State {
     }
 
     @Override
-    public void popFrame(ThreadId threadId) {
+    public void popFrame(ThreadId threadId, UnstoppableCommandHandler handler) {
         log.trace("popFrame {}", threadId);
+
+        Frame currentFrame = peekFrame(threadId);
+
+        // finalizers
+        Collection<Exception> causes = new ArrayList<>();
+
+        currentFrame.getCommands()
+                .stream()
+                .filter(c -> c instanceof UnstoppableCommand)
+                .map(c -> (UnstoppableCommand) c)
+                .forEach(c -> {
+                    try {
+                        handler.handle(c);
+                    } catch (Exception e) {
+                        causes.add(e);
+                    }
+                });
+
+        if (!causes.isEmpty()) {
+            throw new MultiException(causes);
+        }
 
         synchronized (this) {
             List<Frame> l = frames.get(threadId);

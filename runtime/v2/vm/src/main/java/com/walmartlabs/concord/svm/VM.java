@@ -130,7 +130,7 @@ public class VM {
                 Command cmd = frame.peek();
                 if (cmd == null) {
                     log.trace("eval [{}] -> the frame is complete", threadId);
-                    state.popFrame(threadId);
+                    state.popFrame(threadId, c -> c.eval(runtime, state, threadId));
                     continue;
                 }
 
@@ -148,7 +148,7 @@ public class VM {
                 } catch (Exception e) {
                     cmd.onException(runtime, e, state, threadId);
 
-                    unwind(state, threadId, e);
+                    unwind(runtime, state, threadId, e);
                 }
 
                 if (stop) {
@@ -190,7 +190,7 @@ public class VM {
         return result;
     }
 
-    private void unwind(State state, ThreadId threadId, Exception cause) throws Exception {
+    private void unwind(Runtime runtime, State state, ThreadId threadId, Exception cause) throws Exception {
         while (true) {
             Frame frame = state.peekFrame(threadId);
             if (frame == null) {
@@ -219,7 +219,7 @@ public class VM {
             }
 
             // unwinding
-            state.popFrame(threadId);
+            state.popFrame(threadId, cmd -> cmd.onError(runtime, state, threadId, cause));
         }
     }
 

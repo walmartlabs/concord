@@ -41,6 +41,6 @@ public class ReturnCommand extends StepCommand<ReturnStep> {
 
     @Override
     protected void execute(Runtime runtime, State state, ThreadId threadId) {
-        state.popFrame(threadId);
+        state.popFrame(threadId, cmd -> cmd.eval(runtime, state, threadId));
     }
 }

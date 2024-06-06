@@ -77,7 +77,7 @@ public class SingleFrameContext extends DummyContext {
                     }
 
                     @Override
-                    public void popFrame(ThreadId threadId) {
+                    public void popFrame(ThreadId threadId, UnstoppableCommandHandler handler) {
                         throw new IllegalStateException("Not implemented");
                     }
 

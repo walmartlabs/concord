@@ -56,6 +56,7 @@ import com.walmartlabs.concord.runtime.v2.sdk.*;
 import com.walmartlabs.concord.sdk.Constants;
 import com.walmartlabs.concord.svm.Runtime;
 import com.walmartlabs.concord.svm.*;
+import org.immutables.serial.Serial;
 import org.immutables.value.Value;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -73,6 +74,7 @@ import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
+import java.lang.reflect.Field;
 import java.net.URISyntaxException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -1912,6 +1914,19 @@ public class MainTest {
         assertLog(log, ".*PI2=3.14159264.*");
     }
 
+    @Test
+    @IgnoreSerializationAssert
+    public void testUnstoppableCommand() throws Exception {
+        deploy("unstoppableCommand");
+
+        save(ProcessConfiguration.builder()
+                .build());
+
+        byte[] log = run();
+        assertLog(log, ".*before return.*");
+        assertLog(log, ".*unstoppable: eval.*");
+    }
+
     private void deploy(String resource) throws URISyntaxException, IOException {
         Path src = Paths.get(MainTest.class.getResource(resource).toURI());
         IOUtils.copy(src, workDir);
@@ -2373,6 +2388,44 @@ public class MainTest {
             testBeans.forEach((k, v) -> v.ctx.workingDirectory());
             return TaskResult.success()
                     .value("x", testBeans.size());
+        }
+    }
+
+    @Named("addUnstoppableCommand")
+    static class AddUnstoppableCommandTask implements Task {
+
+        private final Context context;
+
+        @Inject
+        public AddUnstoppableCommandTask(Context context) {
+            this.context = context;
+        }
+
+        @Override
+        public TaskResult execute(Variables input) throws Exception {
+            Frame frame = context.execution().state().peekFrame(context.execution().currentThreadId());
+
+            Field f = frame.getClass().getDeclaredField("commandStack");
+            f.setAccessible(true);
+            List<Command> commandStack = (List<Command>) f.get(frame);
+            commandStack.add(new UnstoppableCommand() {
+                @Override
+                public void eval(Runtime runtime, State state, ThreadId threadId) throws Exception {
+                    log.info("unstoppable: eval");
+                }
+
+                @Override
+                public void onError(Runtime runtime, State state, ThreadId threadId, Throwable error) {
+                    log.info("unstoppable: onError: {}", error.getMessage());
+                }
+
+                @Override
+                public Command copy() {
+                    return null;
+                }
+            });
+
+            return TaskResult.success();
         }
     }
 

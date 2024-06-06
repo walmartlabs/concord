@@ -43,7 +43,7 @@ public interface State extends Serializable {
      * Removes the current frame of the specified thread. The next frame becomes the current frame
      * of the thread.
      */
-    void popFrame(ThreadId threadId);
+    void popFrame(ThreadId threadId, UnstoppableCommandHandler handler);
 
     /**
      * Returns an unmodifiable list of frames for the specified thread.
