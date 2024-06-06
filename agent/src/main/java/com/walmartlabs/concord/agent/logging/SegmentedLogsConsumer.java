@@ -93,6 +93,7 @@ public class SegmentedLogsConsumer implements Consumer<RedirectedProcessLog.Chun
     private void invalidSegmentsToSystemSegments(List<Position> invalidSegments, List<Segment> segments) {
         for (Position s : invalidSegments) {
             LogSegmentHeader header = LogSegmentHeader.builder()
+                    .status(LogSegmentStatus.RUNNING)
                     .segmentId(0)
                     .errorCount(0)
                     .warnCount(0)
