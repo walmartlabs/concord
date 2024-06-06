@@ -24,6 +24,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.Serializable;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.nio.file.StandardOpenOption;
 import java.util.Collection;
 import java.util.Map;
 import java.util.Set;
@@ -93,12 +96,7 @@ public class VM {
 
         Runtime rt = runtimeFactory.create(this);
         ThreadId threadId = state.getRootThreadId();
-        try {
-            cmd.eval(rt, state, threadId);
-        } catch (Exception e) {
-            cmd.onException(rt, e, state, threadId);
-            throw e;
-        }
+        cmd.eval(rt, state, threadId);
 
         log.debug("run ['{}'] -> done", cmd);
     }
@@ -109,13 +107,14 @@ public class VM {
         try {
             while (true) {
                 ThreadStatus status = state.getStatus(threadId);
+
                 if (status == ThreadStatus.DONE) {
                     throw new IllegalStateException("The thread is already complete: " + threadId);
                 } else if (status == ThreadStatus.SUSPENDED) {
                     log.trace("eval [{}] -> the thread is suspended, stopping the execution", threadId);
                     break;
                 } else if (status == ThreadStatus.FAILED) {
-                    throw new IllegalStateException("The thread has failed, can't continue the exection: " + threadId);
+                    throw new IllegalStateException("The thread has failed, can't continue the execution: " + threadId);
                 }
 
                 Frame frame = state.peekFrame(threadId);
@@ -130,7 +129,7 @@ public class VM {
                 Command cmd = frame.peek();
                 if (cmd == null) {
                     log.trace("eval [{}] -> the frame is complete", threadId);
-                    state.popFrame(threadId);
+                    state.popFrame(threadId, cmd1 -> {});
                     continue;
                 }
 
@@ -146,9 +145,7 @@ public class VM {
                         stop = true;
                     }
                 } catch (Exception e) {
-                    cmd.onException(runtime, e, state, threadId);
-
-                    unwind(state, threadId, e);
+                    unwind(runtime, state, threadId, e);
                 }
 
                 if (stop) {
@@ -190,7 +187,7 @@ public class VM {
         return result;
     }
 
-    private void unwind(State state, ThreadId threadId, Exception cause) throws Exception {
+    private void unwind(Runtime runtime, State state, ThreadId threadId, Exception cause) throws Exception {
         while (true) {
             Frame frame = state.peekFrame(threadId);
             if (frame == null) {
@@ -219,7 +216,7 @@ public class VM {
             }
 
             // unwinding
-            state.popFrame(threadId);
+            state.popFrame(threadId, cmd -> cmd.onError(runtime, state, threadId, cause));
         }
     }
 
@@ -232,7 +229,7 @@ public class VM {
         }
     }
 
-    private static class EvalResult implements Serializable {
+    public static class EvalResult implements Serializable {
 
         private static final long serialVersionUID = 1L;
 

@@ -20,7 +20,6 @@ package com.walmartlabs.concord.runtime.v2.runner.logging;
  * =====
  */
 
-import ch.qos.logback.classic.ClassicConstants;
 import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.core.encoder.LayoutWrappingEncoder;
@@ -43,31 +42,45 @@ public class ConcordLogEncoder extends LayoutWrappingEncoder<ILoggingEvent> {
             return super.encode(event);
         }
 
-        boolean done = isDone(event);
+        SegmentMarker marker = segmentMarker(event);
+        boolean done = marker != null && marker.getStatus() != null;
         byte[] msgBytes = EMPTY_AB;
         if (!done) {
             String msg = layout.doLayout(event);
             msgBytes = convertToBytes(msg);
         }
-        byte[] header = header(event, msgBytes);
+        byte[] header = header(event, marker, msgBytes);
         return concat(header, msgBytes);
     }
 
-    private byte[] header(ILoggingEvent event, byte[] msgBytes) {
-        Long segmentId = LogUtils.getSegmentId();
+    private byte[] header(ILoggingEvent event, SegmentMarker marker, byte[] msgBytes) {
+        Long segmentId;
+        if (marker != null) {
+            segmentId = marker.getSegmentId();
+        } else {
+            segmentId = LogUtils.getSegmentId();
+        }
+
         if (segmentId == null) {
             segmentId = 0L;
         }
 
-        Stats stats = processStats(segmentId, event);
-        return String.format("|%d|%d|%s|%d|%d|", msgBytes.length, segmentId, (isDone(event) ? '1' : '0'), stats.warnings(), stats.errors()).getBytes();
+        Stats stats = processStats(segmentId, event, marker != null && marker.getStatus() != null);
+        return String.format("|%d|%d|%d|%d|%d|",
+                msgBytes.length, segmentId, status(marker), stats.warnings(), stats.errors()).getBytes();
     }
 
-    private static boolean isDone(ILoggingEvent event) {
-        return event.getMarker() != null && event.getMarker().contains(ClassicConstants.FINALIZE_SESSION_MARKER);
+    public static SegmentMarker segmentMarker(ILoggingEvent event) {
+        if (event.getMarkerList() == null) {
+            return null;
+        }
+
+        return (SegmentMarker) event.getMarkerList().stream()
+                .filter(m -> m instanceof SegmentMarker)
+                .findFirst().orElse(null);
     }
 
-    private static Stats processStats(long segmentId, ILoggingEvent event) {
+    private static Stats processStats(long segmentId, ILoggingEvent event, boolean closeSegment) {
         Stats stats = EMPTY_STATS;
         if (event.getLevel() == Level.ERROR) {
             stats = statsHolder.computeIfAbsent(segmentId, s -> new Stats())
@@ -77,7 +90,7 @@ public class ConcordLogEncoder extends LayoutWrappingEncoder<ILoggingEvent> {
                     .incWarn();
         }
 
-        if (isDone(event)) {
+        if (closeSegment) {
             stats = statsHolder.remove(segmentId);
             if (stats == null) {
                 stats = EMPTY_STATS;
@@ -85,6 +98,14 @@ public class ConcordLogEncoder extends LayoutWrappingEncoder<ILoggingEvent> {
         }
 
         return stats;
+    }
+
+    private static int status(SegmentMarker marker) {
+        if (marker == null || marker.getStatus() == null) {
+            return 0;
+        }
+
+        return marker.getStatus().id();
     }
 
     private static byte[] convertToBytes(String s) {

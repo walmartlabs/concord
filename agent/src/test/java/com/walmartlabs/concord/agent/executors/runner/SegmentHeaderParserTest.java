@@ -22,6 +22,7 @@ package com.walmartlabs.concord.agent.executors.runner;
 
 import com.google.common.primitives.Bytes;
 import com.walmartlabs.concord.agent.logging.SegmentHeaderParser;
+import com.walmartlabs.concord.client2.LogSegmentUpdateRequest;
 import org.junit.jupiter.api.Test;
 
 import java.nio.charset.StandardCharsets;
@@ -203,7 +204,7 @@ public class SegmentHeaderParserTest {
         assertEquals(1, segments.size());
         Segment s = segments.get(0);
         assertEquals(0, s.header().length());
-        assertTrue(s.header().done());
+        assertEquals(LogSegmentUpdateRequest.StatusEnum.OK, s.header().status());
     }
 
     private static String msg(byte[] ab, Segment segment) {
@@ -219,7 +220,7 @@ public class SegmentHeaderParserTest {
                 .length(ab.length)
                 .warnCount(1)
                 .errorCount(2)
-                .done(false)
+                .status(LogSegmentUpdateRequest.StatusEnum.RUNNING)
                 .build());
 
         return Bytes.concat(header, ab);

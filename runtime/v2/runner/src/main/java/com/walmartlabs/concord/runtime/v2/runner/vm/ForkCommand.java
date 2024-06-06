@@ -26,6 +26,7 @@ import com.walmartlabs.concord.svm.*;
 import java.util.Arrays;
 import java.util.Map;
 
+// BRIG: TODO: pass step and log exception with step info?
 public class ForkCommand implements Command {
 
     private static final long serialVersionUID = 1L;
@@ -36,12 +37,6 @@ public class ForkCommand implements Command {
     public ForkCommand(ThreadId childThreadId, Command... cmds) {
         this.childThreadId = childThreadId;
         this.cmds = cmds;
-    }
-
-    @Override
-    public Command copy() {
-        return new ForkCommand(childThreadId,
-                Arrays.stream(cmds).map(Command::copy).toArray(Command[]::new));
     }
 
     @Override

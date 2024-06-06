@@ -35,12 +35,7 @@ public class ReturnCommand extends StepCommand<ReturnStep> {
     }
 
     @Override
-    public Command copy() {
-        return new ReturnCommand(getStep());
-    }
-
-    @Override
     protected void execute(Runtime runtime, State state, ThreadId threadId) {
-        state.popFrame(threadId);
+        state.popFrame(threadId, finalCommand -> finalCommand.eval(runtime, state, threadId));
     }
 }

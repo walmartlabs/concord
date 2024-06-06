@@ -33,17 +33,13 @@ import com.walmartlabs.concord.svm.Runtime;
 import com.walmartlabs.concord.svm.State;
 import com.walmartlabs.concord.svm.ThreadId;
 
+// BRIG: TODO: proper error in runtime.getService(SynchronizationService.class).point(()?
 public class CheckpointCommand extends StepCommand<Checkpoint> {
 
     private static final long serialVersionUID = 1L;
 
     public CheckpointCommand(Checkpoint step) {
         super(step);
-    }
-
-    @Override
-    public Command copy() {
-        return new CheckpointCommand(getStep());
     }
 
     @Override

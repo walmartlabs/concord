@@ -28,6 +28,7 @@ import javax.inject.Named;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
+import java.util.UUID;
 
 @Named
 public final class ScriptCallCompiler implements StepCompiler<ScriptCall> {
@@ -39,13 +40,18 @@ public final class ScriptCallCompiler implements StepCompiler<ScriptCall> {
 
     @Override
     public Command compile(CompilerContext context, ScriptCall step) {
-        Command cmd = new ScriptCallCommand(step);
+        UUID correlationId = UUID.randomUUID();
+
+        Command cmd = new BlockCommand(
+                new CreateLogSegmentCommand(correlationId, step),
+                new ScriptCallCommand(correlationId, step),
+                new CloseLogSegmentCommand(correlationId));
 
         ScriptCallOptions options = Objects.requireNonNull(step.getOptions());
 
         Retry retry = options.retry();
         if (retry != null) {
-            cmd = new RetryWrapper(cmd, retry);
+            cmd = new RetryWrapper(cmd, retry, step);
         }
 
         WithItems withItems = options.withItems();
@@ -55,7 +61,7 @@ public final class ScriptCallCompiler implements StepCompiler<ScriptCall> {
 
         Loop loop = options.loop();
         if (loop != null) {
-            cmd = LoopWrapper.of(context, cmd, loop, Collections.emptyList(), Collections.emptyMap());
+            cmd = LoopWrapper.of(context, cmd, loop, Collections.emptyList(), Collections.emptyMap(), step);
         }
 
         List<Step> errorSteps = options.errorSteps();

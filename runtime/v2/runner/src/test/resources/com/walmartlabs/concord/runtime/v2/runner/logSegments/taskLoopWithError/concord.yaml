@@ -1,0 +1,8 @@
+flows:
+  default:
+    - task: "conditionallyFailTask"
+      in:
+        fail: "${item == 2}"
+      loop:
+        items: [1, 2, 3]
+        mode: serial

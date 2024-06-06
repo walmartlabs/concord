@@ -22,8 +22,8 @@ package com.walmartlabs.concord.runtime.v2.runner.compiler;
 
 import com.walmartlabs.concord.runtime.v2.model.ReturnStep;
 import com.walmartlabs.concord.runtime.v2.model.Step;
-import com.walmartlabs.concord.runtime.v2.runner.vm.ReturnCommand;
 import com.walmartlabs.concord.svm.Command;
+import com.walmartlabs.concord.svm.PopFrameCommand;
 
 import javax.inject.Named;
 
@@ -37,6 +37,6 @@ public final class ReturnCompiler implements StepCompiler<ReturnStep> {
 
     @Override
     public Command compile(CompilerContext context, ReturnStep step) {
-        return new ReturnCommand(step);
+        return new PopFrameCommand();
     }
 }

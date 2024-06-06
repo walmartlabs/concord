@@ -36,6 +36,7 @@ import com.walmartlabs.concord.runtime.v2.model.ProcessDefinition;
 import com.walmartlabs.concord.runtime.v2.runner.guice.ObjectMapperProvider;
 import com.walmartlabs.concord.runtime.v2.runner.logging.LoggingConfigurator;
 import com.walmartlabs.concord.runtime.v2.runner.tasks.TaskProviders;
+import com.walmartlabs.concord.runtime.v2.runner.vm.LoggedException;
 import com.walmartlabs.concord.runtime.v2.sdk.ProcessConfiguration;
 import com.walmartlabs.concord.runtime.v2.sdk.UserDefinedException;
 import com.walmartlabs.concord.runtime.v2.sdk.WorkingDirectory;
@@ -105,6 +106,8 @@ public class Main {
             main.execute();
 
             System.exit(0);
+        } catch (LoggedException e) {
+            System.exit(1);
         } catch (UserDefinedException e) {
             log.error(e.getMessage());
             System.exit(1);

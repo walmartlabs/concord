@@ -81,7 +81,8 @@ export const getLog = async (instanceId: ConcordId, range: LogRange): Promise<Lo
 export enum SegmentStatus {
     OK = 'OK',
     FAILED = 'FAILED',
-    RUNNING = 'RUNNING'
+    RUNNING = 'RUNNING',
+    SUSPENDED = 'SUSPENDED'
 }
 
 export interface LogSegmentEntry {

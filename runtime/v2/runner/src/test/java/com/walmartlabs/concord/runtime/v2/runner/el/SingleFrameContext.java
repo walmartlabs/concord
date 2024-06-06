@@ -29,6 +29,7 @@ import com.walmartlabs.concord.svm.Runtime;
 import com.walmartlabs.concord.svm.*;
 
 import javax.annotation.Nullable;
+import java.io.Serializable;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -77,7 +78,7 @@ public class SingleFrameContext extends DummyContext {
                     }
 
                     @Override
-                    public void popFrame(ThreadId threadId) {
+                    public void popFrame(ThreadId threadId, FinalCommandHandler handler) {
                         throw new IllegalStateException("Not implemented");
                     }
 
@@ -163,6 +164,21 @@ public class SingleFrameContext extends DummyContext {
 
                     @Override
                     public void gc() {
+                        throw new IllegalStateException("Not implemented");
+                    }
+
+                    @Override
+                    public void setThreadLocal(ThreadId threadId, String key, Serializable value) {
+                        throw new IllegalStateException("Not implemented");
+                    }
+
+                    @Override
+                    public <T extends Serializable> T getThreadLocal(ThreadId threadId, String key) {
+                        throw new IllegalStateException("Not implemented");
+                    }
+
+                    @Override
+                    public void removeThreadLocal(ThreadId threadId, String key) {
                         throw new IllegalStateException("Not implemented");
                     }
                 };

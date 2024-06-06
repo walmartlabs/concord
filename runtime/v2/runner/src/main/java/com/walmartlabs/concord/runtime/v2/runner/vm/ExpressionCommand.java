@@ -35,6 +35,7 @@ import java.io.Serializable;
 import java.util.Collections;
 import java.util.Map;
 import java.util.Objects;
+import java.util.UUID;
 
 /**
  * Evaluates the specified {@link Expression} step and (optionally) saves
@@ -44,13 +45,8 @@ public class ExpressionCommand extends StepCommand<Expression> {
 
     private static final long serialVersionUID = 1L;
 
-    public ExpressionCommand(Expression step) {
-        super(step);
-    }
-
-    @Override
-    public Command copy() {
-        return new ExpressionCommand(getStep());
+    public ExpressionCommand(UUID correlationId, Expression step) {
+        super(correlationId, step);
     }
 
     @Override

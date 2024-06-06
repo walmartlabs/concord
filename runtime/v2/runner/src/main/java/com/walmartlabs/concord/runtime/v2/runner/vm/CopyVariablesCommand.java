@@ -30,6 +30,7 @@ import java.util.function.BiFunction;
 /**
  * Copies the specified list of variables from the source frame to the target frame.
  */
+// BRIG: TODO: save original command location?
 public class CopyVariablesCommand implements Command {
 
     public interface FrameProducer extends BiFunction<State, ThreadId, Frame>, Serializable {}
@@ -52,11 +53,6 @@ public class CopyVariablesCommand implements Command {
         this.variables = variables;
         this.sourceFrameProducer = sourceFrameProducer;
         this.targetFrameProducer = targetFrameProducer;
-    }
-
-    @Override
-    public Command copy() {
-        return new CopyVariablesCommand(variables, sourceFrameProducer, targetFrameProducer);
     }
 
     @Override

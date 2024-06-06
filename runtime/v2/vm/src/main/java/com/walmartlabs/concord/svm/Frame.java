@@ -22,6 +22,7 @@ package com.walmartlabs.concord.svm;
 
 import java.io.Serializable;
 import java.util.*;
+import java.util.stream.Stream;
 
 /**
  * Frame or "call frame" represents a scope with a list of commands, local
@@ -113,6 +114,12 @@ public class Frame implements Serializable {
 
     public Map<String, Serializable> getLocals() {
         return Collections.unmodifiableMap(locals);
+    }
+
+    public List<Command> getCommands() {
+        List<Command> result = new ArrayList<>(commandStack);
+        Collections.reverse(result);
+        return result;
     }
 
     public static class Builder {

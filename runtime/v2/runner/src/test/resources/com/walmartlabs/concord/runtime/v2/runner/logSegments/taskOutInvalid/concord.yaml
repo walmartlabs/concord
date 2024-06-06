@@ -1,0 +1,7 @@
+flows:
+  default:
+    - task: "log"
+      in:
+        msg: "test"
+      out:
+        k: "${undefined}"

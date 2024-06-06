@@ -25,12 +25,7 @@ public class PopFrameCommand implements Command {
     private static final long serialVersionUID = 1L;
 
     @Override
-    public Command copy() {
-        return new PopFrameCommand();
-    }
-
-    @Override
-    public void eval(Runtime runtime, State state, ThreadId threadId) {
-        state.popFrame(threadId);
+    public void eval(Runtime runtime, State state, ThreadId threadId) throws Exception {
+        state.popFrame(threadId, finalCommand -> finalCommand.eval(runtime, state, threadId));
     }
 }

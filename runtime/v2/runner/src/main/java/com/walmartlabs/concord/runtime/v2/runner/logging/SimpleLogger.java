@@ -30,6 +30,10 @@ public class SimpleLogger implements RunnerLogger {
     }
 
     @Override
+    public void setSegmentStatus(long segmentId, SegmentStatus segmentStatus) {
+    }
+
+    @Override
     public void withContext(LogContext context, Runnable runnable) {
         try {
             runnable.run();

@@ -33,11 +33,6 @@ public class SuspendStepCommand extends StepCommand<SuspendStep> {
     }
 
     @Override
-    public Command copy() {
-        return new SuspendStepCommand(getStep());
-    }
-
-    @Override
     protected void execute(Runtime runtime, State state, ThreadId threadId) {
         Frame frame = state.peekFrame(threadId);
         frame.pop();

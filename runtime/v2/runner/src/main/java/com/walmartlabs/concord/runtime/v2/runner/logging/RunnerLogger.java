@@ -29,4 +29,23 @@ public interface RunnerLogger {
 
     @Nullable
     Long createSegment(String segmentName, UUID correlationId);
+
+    void setSegmentStatus(long segmentId, SegmentStatus segmentStatus);
+
+    enum SegmentStatus {
+        RUNNING (0),
+        OK (1),
+        SUSPENDED (2),
+        ERROR (3);
+
+        private final int id;
+
+        SegmentStatus(int id) {
+            this.id = id;
+        }
+
+        public int id() {
+            return id;
+        }
+    }
 }
