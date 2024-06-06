@@ -139,33 +139,6 @@ public class SegmentHeaderParser {
 
         return result;
     }
-//
-//    public static byte[] serialize(Header header) {
-//        return String.format("|%d|%d|%d|%d|%d|",
-//                header.length(),
-//                header.segmentId(),
-//                serializeStatus(header.status()),
-//                header.warnCount(), header.errorCount()).getBytes();
-//    }
-//
-//    public static int serializeStatus(LogSegmentUpdateRequest.StatusEnum status) {
-//        return switch (status) {
-//            case RUNNING -> 0;
-//            case OK -> 1;
-//            case SUSPENDED -> 2;
-//            case FAILED -> 3;
-//        };
-//    }
-//
-//    public static LogSegmentUpdateRequest.StatusEnum deserializeStatus(String status) {
-//        return switch (status) {
-//            case "0" -> LogSegmentUpdateRequest.StatusEnum.RUNNING;
-//            case "1" -> LogSegmentUpdateRequest.StatusEnum.OK;
-//            case "2" -> LogSegmentUpdateRequest.StatusEnum.SUSPENDED;
-//            case "3" -> LogSegmentUpdateRequest.StatusEnum.FAILED;
-//            default -> throw new IllegalStateException("Unexpected value: " + status);
-//        };
-//    }
 
     @Value.Immutable
     @Value.Style(jdkOnly = true)

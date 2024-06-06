@@ -24,7 +24,7 @@ public enum LogSegmentStatus {
 
     RUNNING (0),
     OK (1),
-    SUSPENDED (2),
+    SUSPENDED (2), // unused now...
     ERROR (3);
 
     private final int id;
