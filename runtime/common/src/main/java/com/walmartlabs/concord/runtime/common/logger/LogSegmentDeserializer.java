@@ -23,7 +23,7 @@ package com.walmartlabs.concord.runtime.common.logger;
 public final class LogSegmentDeserializer {
 
     public static LogSegmentStatus deserializeStatus(String status) {
-        return LogSegmentStatus.fromString(status);
+        return LogSegmentStatus.fromId(Integer.parseInt(status));
     }
 
     private LogSegmentDeserializer() {

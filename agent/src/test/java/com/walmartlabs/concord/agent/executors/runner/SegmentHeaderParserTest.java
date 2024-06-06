@@ -22,7 +22,6 @@ package com.walmartlabs.concord.agent.executors.runner;
 
 import com.google.common.primitives.Bytes;
 import com.walmartlabs.concord.agent.logging.SegmentHeaderParser;
-import com.walmartlabs.concord.client2.LogSegmentUpdateRequest;
 import com.walmartlabs.concord.runtime.common.logger.LogSegmentHeader;
 import com.walmartlabs.concord.runtime.common.logger.LogSegmentSerializer;
 import com.walmartlabs.concord.runtime.common.logger.LogSegmentStatus;
@@ -205,7 +204,7 @@ public class SegmentHeaderParserTest {
         assertEquals(1, segments.size());
         Segment s = segments.get(0);
         assertEquals(0, s.header().length());
-        assertEquals(LogSegmentUpdateRequest.StatusEnum.OK, s.header().status());
+        assertEquals(LogSegmentStatus.OK, s.header().status());
     }
 
     private static String msg(byte[] ab, Segment segment) {

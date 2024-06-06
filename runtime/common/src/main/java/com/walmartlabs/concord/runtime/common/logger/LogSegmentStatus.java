@@ -37,9 +37,9 @@ public enum LogSegmentStatus {
         return id;
     }
 
-    public static LogSegmentStatus fromString(String status) {
+    public static LogSegmentStatus fromId(int status) {
         for (LogSegmentStatus s : LogSegmentStatus.values()) {
-            if (s.name().equals(status)) {
+            if (s.id() == status) {
                 return s;
             }
         }
