@@ -2,6 +2,12 @@
 
 ## [2.12.0] - Unreleased
 
+### Added
+
+- dependency-manager: allow `LATEST` to pull latest version
+from remote repositories
+([#913](https://github.com/walmartlabs/concord/pull/913)).
+
 ### Changed
 
 - docker: fix image build on aarch64 hosts
