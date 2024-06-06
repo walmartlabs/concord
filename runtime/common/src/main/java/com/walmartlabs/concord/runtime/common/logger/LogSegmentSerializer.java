@@ -40,10 +40,10 @@ public final class LogSegmentSerializer {
     public static byte[] serializeHeader(LogSegmentHeader header, int messageLength) {
         return String.format("|%d|%d|%d|%d|%d|",
                         messageLength,
-                header.segmentId(),
-                header.status().id(),
-                header.warnCount(),
-                header.errorCount())
+                        header.segmentId(),
+                        header.status().id(),
+                        header.warnCount(),
+                        header.errorCount())
                 .getBytes();
     }
 
