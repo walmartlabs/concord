@@ -92,8 +92,7 @@
         <kerby.version>2.0.1</kerby.version>
         <kubernetes.client.version>5.7.0</kubernetes.client.version>
         <launcher.version>0.128</launcher.version>
-        <liquibase.version>3.5.1
-        </liquibase.version> <!-- the newer versions (up to 3.5.3) have incorrect mappings for PG's blob/bytea -->
+        <liquibase.version>4.8.0</liquibase.version>
         <logback.version>1.4.14</logback.version>
         <maven.annotation.version>3.5</maven.annotation.version>
         <maven.api.version>3.0.5</maven.api.version>
@@ -101,7 +100,7 @@
         <maven.prj.version>2.2.1</maven.prj.version>
         <maven.resolver.provider.version>3.8.4</maven.resolver.provider.version>
         <maven.model.builder.version>3.8.4</maven.model.builder.version>
-        <maven.resolver.version>1.7.3</maven.resolver.version>
+        <maven.resolver.version>1.9.20</maven.resolver.version>
         <maven.resolver.version.concord>0.0.4</maven.resolver.version.concord>
         <metrics.version>4.2.25</metrics.version>
         <mockito.version>4.9.0</mockito.version>
@@ -116,7 +115,7 @@
         <reactive.streams.version>1.0.3</reactive.streams.version>
         <reflections.version>0.9.11</reflections.version>
         <resteasy.version>3.15.6.Final</resteasy.version>
-        <selenium.version>3.141.59</selenium.version>
+        <selenium.version>4.8.1</selenium.version>
         <servlet.version>4.0.1</servlet.version>
         <shiro.version>1.13.0</shiro.version>
         <siesta.version>2.3.2</siesta.version>
@@ -1080,6 +1079,11 @@
             <dependency>
                 <groupId>org.seleniumhq.selenium</groupId>
                 <artifactId>selenium-chrome-driver</artifactId>
+                <version>${selenium.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.seleniumhq.selenium</groupId>
+                <artifactId>selenium-chromium-driver</artifactId>
                 <version>${selenium.version}</version>
             </dependency>
             <dependency>

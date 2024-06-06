@@ -1749,4 +1749,16 @@ public class MainTest extends AbstractTest {
         assertLog(log, ".*parallel: two==2.*");
         assertLog(log, ".*parallel: one==1.*");
     }
+
+    @Test
+    public void testDoubleValues() throws Exception {
+        deploy("doubleValues");
+
+        save(ProcessConfiguration.builder()
+                .build());
+
+        byte[] log = run();
+        assertLog(log, ".*PI1=3.14159264.*");
+        assertLog(log, ".*PI2=3.14159264.*");
+    }
 }
