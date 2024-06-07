@@ -45,6 +45,7 @@ public class Frame implements Serializable {
     private final FrameType type;
     private final List<Command> commandStack;
     private final Map<String, Serializable> locals;
+    private final Command finallyHandler;
 
     private Command exceptionHandler;
 
@@ -62,6 +63,7 @@ public class Frame implements Serializable {
         this.locals = Collections.synchronizedMap(new LinkedHashMap<>(b.locals != null ? b.locals : Collections.emptyMap()));
 
         this.exceptionHandler = b.exceptionHandler;
+        this.finallyHandler = b.finallyHandler;
     }
 
     public FrameId id() {
@@ -90,6 +92,10 @@ public class Frame implements Serializable {
 
     public Command getExceptionHandler() {
         return exceptionHandler;
+    }
+
+    public Command getFinallyHandler() {
+        return finallyHandler;
     }
 
     public void setExceptionHandler(Command exceptionHandler) {
@@ -128,6 +134,7 @@ public class Frame implements Serializable {
         private Command exceptionHandler;
         private List<Command> commands;
         private Map<String, Serializable> locals;
+        private Command finallyHandler;
 
         private Builder() {
         }
@@ -139,6 +146,11 @@ public class Frame implements Serializable {
 
         public Builder nonRoot() {
             this.type = FrameType.NON_ROOT;
+            return this;
+        }
+
+        public Builder finallyHandler(Command finallyHandler) {
+            this.finallyHandler = finallyHandler;
             return this;
         }
 

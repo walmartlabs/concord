@@ -50,8 +50,18 @@ public class CloseLogSegmentCommand implements FinalCommand {
 
         assert correlationId == logContext.correlationId();
 
+//        runtime.getService(RunnerLogger.class)
+//                .setSegmentStatus(logContext.segmentId(), getStatus(state, threadId));
         runtime.getService(RunnerLogger.class)
                 .setSegmentStatus(logContext.segmentId(), RunnerLogger.SegmentStatus.OK);
+    }
+
+    private static RunnerLogger.SegmentStatus getStatus(State state, ThreadId threadId) {
+        if (VMUtils.getLocal(state, threadId, Frame.LAST_EXCEPTION_KEY) != null) {
+            return RunnerLogger.SegmentStatus.ERROR;
+        } else {
+            return RunnerLogger.SegmentStatus.OK;
+        }
     }
 
     @Override

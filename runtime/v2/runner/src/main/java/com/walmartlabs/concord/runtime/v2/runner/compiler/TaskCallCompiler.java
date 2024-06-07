@@ -39,7 +39,11 @@ public final class TaskCallCompiler implements StepCompiler<TaskCall> {
     public Command compile(CompilerContext context, TaskCall step) {
         UUID correlationId = UUID.randomUUID();
 
-        Command cmd = new BlockCommand(
+        Command cmd =
+//                new LogSegmentScopeCommand<>(correlationId,
+//                        new TaskCallCommand(correlationId, step), step);
+
+                new BlockCommand(
                 new CreateLogSegmentCommand(correlationId, step),
                 new TaskCallCommand(correlationId, step),
                 new CloseLogSegmentCommand(correlationId));
