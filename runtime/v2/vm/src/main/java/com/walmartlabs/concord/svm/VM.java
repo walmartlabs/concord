@@ -130,7 +130,7 @@ public class VM {
                 Command cmd = frame.peek();
                 if (cmd == null) {
                     log.trace("eval [{}] -> the frame is complete", threadId);
-                    state.popFrame(threadId);
+                    frame.push(new PopFrameCommand());
                     continue;
                 }
 
@@ -191,10 +191,11 @@ public class VM {
     }
 
     private void unwind(State state, ThreadId threadId, Exception cause) throws Exception {
+        // go through the frames and find the first exception handler
         while (true) {
             Frame frame = state.peekFrame(threadId);
             if (frame == null) {
-                // no more frames to unwind, looks like there was no exception handler
+                // no more frames to unwind, looks like there is no exception handler
                 state.setStatus(threadId, ThreadStatus.FAILED);
                 state.setThreadError(threadId, cause);
                 throw cause;
@@ -215,7 +216,7 @@ public class VM {
                 // and run the error handler next
                 frame.push(handler);
 
-                break;
+                return;
             }
 
             // unwinding

@@ -42,6 +42,8 @@ public interface State extends Serializable {
     /**
      * Removes the current frame of the specified thread. The next frame becomes the current frame
      * of the thread.
+     * @apiNote Prefer using {@link PopFrameCommand} instead of calling this method
+     * directly -- the command supports proper "finally" semantics.
      */
     void popFrame(ThreadId threadId);
 
