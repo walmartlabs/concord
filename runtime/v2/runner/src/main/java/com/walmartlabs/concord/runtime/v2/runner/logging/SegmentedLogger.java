@@ -21,6 +21,7 @@ package com.walmartlabs.concord.runtime.v2.runner.logging;
  */
 
 import ch.qos.logback.classic.Level;
+import com.walmartlabs.concord.runtime.common.logger.LogSegmentStatus;
 import com.walmartlabs.concord.runtime.v2.Constants;
 import com.walmartlabs.concord.runtime.v2.model.AbstractStep;
 import com.walmartlabs.concord.runtime.v2.parser.StepOptions;
@@ -53,6 +54,11 @@ public class SegmentedLogger implements RunnerLogger {
     }
 
     @Override
+    public void setSegmentStatus(long segmentId, LogSegmentStatus segmentStatus) {
+        log.info(new SegmentStatusMarker(segmentId, segmentStatus), segmentStatus.name());
+    }
+
+    @Override
     public void withContext(LogContext context, Runnable runnable) {
         ThreadGroup threadGroup = new LogContextThreadGroup(context);
         executeInThreadGroup(threadGroup, "thread-" + context.segmentName(), () -> {
@@ -68,10 +74,13 @@ public class SegmentedLogger implements RunnerLogger {
                 exceptionOccurred = true;
                 throw e;
             } finally {
-                if (exceptionOccurred) {
-                    log.error(FINALIZE_SESSION_MARKER, "<<finalize>>");
-                } else {
-                    log.info(FINALIZE_SESSION_MARKER, "<<finalize>>");
+                Long segmentId = context.segmentId();
+                if (segmentId != null) {
+                    if (exceptionOccurred) {
+                        log.info(new SegmentStatusMarker(segmentId, LogSegmentStatus.ERROR), "");
+                    } else {
+                        log.info(new SegmentStatusMarker(segmentId, LogSegmentStatus.OK), "");
+                    }
                 }
             }
         });

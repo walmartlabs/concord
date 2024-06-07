@@ -20,6 +20,9 @@ package com.walmartlabs.concord.agent.logging;
  * =====
  */
 
+import com.walmartlabs.concord.runtime.common.logger.ImmutableLogSegmentHeader;
+import com.walmartlabs.concord.runtime.common.logger.LogSegmentDeserializer;
+import com.walmartlabs.concord.runtime.common.logger.LogSegmentHeader;
 import org.immutables.value.Value;
 
 import java.nio.ByteBuffer;
@@ -29,13 +32,13 @@ public class SegmentHeaderParser {
 
     private static final int MAX_FIELD_BYTES = String.valueOf(Long.MAX_VALUE).getBytes().length;
 
-    // msgLength|segmentId|DONE?|warnings|errors|msg
+    // msgLength|segmentId|status|warnings|errors|msg
 
     public static int parse(byte[] ab, List<Segment> segments, List<Position> invalidSegments) {
         Field field = Field.MSG_LENGTH;
         StringBuilder fieldData = new StringBuilder();
         int mark = -1;
-        ImmutableHeader.Builder headerBuilder = Header.builder();
+        ImmutableLogSegmentHeader.Builder headerBuilder = LogSegmentHeader.builder();
 
         boolean continueParse = true;
         State state = State.FIND_HEADER;
@@ -88,7 +91,7 @@ public class SegmentHeaderParser {
                 }
                 case END_FIELD: {
                     String fieldValue = fieldData.toString();
-                    if (fieldData.length() == 0) {
+                    if (fieldData.isEmpty()) {
                         // reset
                         field = Field.MSG_LENGTH;
                         state = State.FIND_HEADER;
@@ -100,7 +103,7 @@ public class SegmentHeaderParser {
 
                     field = field.next();
                     if (field == null) {
-                        Header h = headerBuilder.build();
+                        LogSegmentHeader h = headerBuilder.build();
                         segments.add(Segment.of(h, bb.position()));
 
                         int actualLength = Math.min(h.length(), bb.remaining());
@@ -137,10 +140,6 @@ public class SegmentHeaderParser {
         return result;
     }
 
-    public static byte[] serialize(Header header) {
-        return String.format("|%d|%d|%s|%d|%d|", header.length(), header.segmentId(), (header.done() ? '1' : '0'), header.warnCount(), header.errorCount()).getBytes();
-    }
-
     @Value.Immutable
     @Value.Style(jdkOnly = true)
     public interface Position {
@@ -161,32 +160,13 @@ public class SegmentHeaderParser {
     public interface Segment {
 
         @Value.Parameter
-        Header header();
+        LogSegmentHeader header();
 
         @Value.Parameter
         int msgStart();
 
-        static Segment of(Header header, int msgStart) {
+        static Segment of(LogSegmentHeader header, int msgStart) {
             return ImmutableSegment.of(header, msgStart);
-        }
-    }
-
-    @Value.Immutable
-    @Value.Style(jdkOnly = true)
-    public interface Header {
-
-        int length();
-
-        long segmentId();
-
-        int warnCount();
-
-        int errorCount();
-
-        boolean done();
-
-        static ImmutableHeader.Builder builder() {
-            return ImmutableHeader.builder();
         }
     }
 
@@ -204,7 +184,7 @@ public class SegmentHeaderParser {
             }
 
             @Override
-            public void process(String fieldValue, ImmutableHeader.Builder headerBuilder) {
+            public void process(String fieldValue, ImmutableLogSegmentHeader.Builder headerBuilder) {
                 headerBuilder.length(Integer.parseInt(fieldValue));
             }
         },
@@ -212,24 +192,24 @@ public class SegmentHeaderParser {
         SEGMENT_ID {
             @Override
             public Field next() {
-                return DONE;
+                return STATUS;
             }
 
             @Override
-            public void process(String fieldValue, ImmutableHeader.Builder headerBuilder) {
+            public void process(String fieldValue, ImmutableLogSegmentHeader.Builder headerBuilder) {
                 headerBuilder.segmentId(Long.parseLong(fieldValue));
             }
         },
 
-        DONE {
+        STATUS {
             @Override
             public Field next() {
                 return WARNINGS;
             }
 
             @Override
-            public void process(String fieldValue, ImmutableHeader.Builder headerBuilder) {
-                headerBuilder.done("1".equals(fieldValue));
+            public void process(String fieldValue, ImmutableLogSegmentHeader.Builder headerBuilder) {
+                headerBuilder.status(LogSegmentDeserializer.deserializeStatus(fieldValue));
             }
         },
 
@@ -240,7 +220,7 @@ public class SegmentHeaderParser {
             }
 
             @Override
-            public void process(String fieldValue, ImmutableHeader.Builder headerBuilder) {
+            public void process(String fieldValue, ImmutableLogSegmentHeader.Builder headerBuilder) {
                 headerBuilder.warnCount(Integer.parseInt(fieldValue));
             }
         },
@@ -252,13 +232,13 @@ public class SegmentHeaderParser {
             }
 
             @Override
-            public void process(String fieldValue, ImmutableHeader.Builder headerBuilder) {
+            public void process(String fieldValue, ImmutableLogSegmentHeader.Builder headerBuilder) {
                 headerBuilder.errorCount(Integer.parseInt(fieldValue));
             }
         };
 
         public abstract Field next();
 
-        public abstract void process(String fieldValue, ImmutableHeader.Builder headerBuilder);
+        public abstract void process(String fieldValue, ImmutableLogSegmentHeader.Builder headerBuilder);
     }
 }

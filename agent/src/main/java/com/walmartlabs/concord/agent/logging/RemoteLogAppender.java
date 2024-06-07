@@ -22,6 +22,7 @@ package com.walmartlabs.concord.agent.logging;
 
 import com.walmartlabs.concord.agent.AgentConstants;
 import com.walmartlabs.concord.client2.*;
+import com.walmartlabs.concord.runtime.common.logger.LogSegmentStatus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -73,7 +74,7 @@ public class RemoteLogAppender implements LogAppender {
     @Override
     public boolean updateSegment(UUID instanceId, long segmentId, LogSegmentStats stats) {
         LogSegmentUpdateRequest request = new LogSegmentUpdateRequest()
-                .status(stats.status())
+                .status(convertStatus(stats.status()))
                 .warnings(stats.warnings())
                 .errors(stats.errors());
 
@@ -85,5 +86,17 @@ public class RemoteLogAppender implements LogAppender {
             log.warn("updateSegment ['{}', '{}', '{}'] -> error: {}", instanceId, segmentId, stats, e.getMessage());
         }
         return false;
+    }
+
+    private static LogSegmentUpdateRequest.StatusEnum convertStatus(LogSegmentStatus status) {
+        if (status == null) {
+            return null;
+        }
+        return switch (status) {
+            case ERROR -> LogSegmentUpdateRequest.StatusEnum.FAILED;
+            case OK -> LogSegmentUpdateRequest.StatusEnum.OK;
+            case RUNNING -> LogSegmentUpdateRequest.StatusEnum.RUNNING;
+            case SUSPENDED -> LogSegmentUpdateRequest.StatusEnum.SUSPENDED;
+        };
     }
 }
