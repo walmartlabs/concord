@@ -7,6 +7,9 @@
 - dependency-manager: allow `LATEST` to pull latest version
 from remote repositories
 ([#913](https://github.com/walmartlabs/concord/pull/913));
+- runtime-v2: additional log segment statuses for error and
+suspended states
+([#918](https://github.com/walmartlabs/concord/pull/918));
 - runtime-v2: initial support for thread local variables
 ([#920](https://github.com/walmartlabs/concord/pull/920)).
 
