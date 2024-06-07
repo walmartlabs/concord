@@ -1912,6 +1912,20 @@ public class MainTest {
         assertLog(log, ".*PI2=3.14159264.*");
     }
 
+    @Test
+    @IgnoreSerializationAssert
+    public void testThreadLocals() throws Exception {
+        deploy("threadLocals");
+
+        save(ProcessConfiguration.builder()
+                .build());
+
+        byte[] log = run();
+        assertLog(log, ".*value: myValue1.*");
+        assertLog(log, ".*value: myValue2.*");
+        assertLog(log, ".*value: myValue3.*");
+    }
+
     private void deploy(String resource) throws URISyntaxException, IOException {
         Path src = Paths.get(MainTest.class.getResource(resource).toURI());
         IOUtils.copy(src, workDir);
@@ -2373,6 +2387,29 @@ public class MainTest {
             testBeans.forEach((k, v) -> v.ctx.workingDirectory());
             return TaskResult.success()
                     .value("x", testBeans.size());
+        }
+    }
+
+    @Named("threadLocals")
+    public static class ThreadLocalsTask implements Task {
+
+        private final Context ctx;
+
+        @Inject
+        public ThreadLocalsTask(Context ctx) {
+            this.ctx = ctx;
+        }
+
+        public void put(String key, Object value) {
+            ctx.execution().state().setThreadLocal(ctx.execution().currentThreadId(), key, (Serializable) value);
+        }
+
+        public Serializable get(String key) {
+            return ctx.execution().state().getThreadLocal(ctx.execution().currentThreadId(), key);
+        }
+
+        public void remove(String key) {
+            ctx.execution().state().removeThreadLocal(ctx.execution().currentThreadId(), key);
         }
     }
 

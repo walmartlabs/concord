@@ -131,6 +131,21 @@ public interface State extends Serializable {
     void clearStackTrace(ThreadId threadId);
 
     /**
+     * Sets a thread-local variable for the specified thread.
+     */
+    void setThreadLocal(ThreadId threadId, String key, Serializable value);
+
+    /**
+     * Retrieves the value of a thread-local variable for the specified thread.
+     */
+    <T extends Serializable> T getThreadLocal(ThreadId threadId, String key);
+
+    /**
+     * Removes a thread-local variable for the specified thread.
+     */
+    void removeThreadLocal(ThreadId threadId, String key);
+
+    /**
      * Performs state maintenance and cleanup.
      */
     void gc();
