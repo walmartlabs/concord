@@ -129,7 +129,7 @@ public class VM {
                 Command cmd = frame.peek();
                 if (cmd == null) {
                     log.trace("eval [{}] -> the frame is complete", threadId);
-                    state.popFrame(threadId, cmd1 -> {});
+                    frame.push(new PopFrameCommand());
                     continue;
                 }
 
@@ -216,6 +216,11 @@ public class VM {
             }
 
             // unwinding
+            if (frame.getFinallyHandler() != null) {
+                frame.setLocal(Frame.LAST_EXCEPTION_KEY, cause);
+                frame.push(frame.getFinallyHandler());
+                frame.getFinallyHandler().eval(runtime, state, threadId);
+            }
             state.popFrame(threadId, cmd -> cmd.onError(runtime, state, threadId, cause));
         }
     }

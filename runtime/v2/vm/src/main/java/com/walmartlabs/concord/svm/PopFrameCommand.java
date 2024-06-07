@@ -24,8 +24,36 @@ public class PopFrameCommand implements Command {
 
     private static final long serialVersionUID = 1L;
 
+    private final boolean skipFinallyHandler;
+
+    public PopFrameCommand() {
+        this(false);
+    }
+
+    private PopFrameCommand(boolean ignoreFinallyHandler) {
+        this.skipFinallyHandler = ignoreFinallyHandler;
+    }
+
     @Override
     public void eval(Runtime runtime, State state, ThreadId threadId) throws Exception {
-        state.popFrame(threadId, finalCommand -> finalCommand.eval(runtime, state, threadId));
+        if (skipFinallyHandler) {
+            state.popFrame(threadId, cmd -> {});
+            return;
+        }
+
+        Frame frame = state.peekFrame(threadId);
+        Command finallyHandler = frame.getFinallyHandler();
+
+        if (finallyHandler == null) {
+            // no 'finally' block, just pop the frame
+            state.popFrame(threadId, finalCommand -> finalCommand.eval(runtime, state, threadId));
+            return;
+        }
+
+        // actually pop the frame
+        frame.push(new PopFrameCommand(true));
+
+        // execute the 'finally' block
+        frame.push(finallyHandler);
     }
 }
