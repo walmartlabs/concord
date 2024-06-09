@@ -125,7 +125,7 @@
         <sshd.version>2.8.0</sshd.version>
         <sysoutslf4j.version>1.0.2</sysoutslf4j.version>
         <testcontainers.concord.version>2.0.1</testcontainers.concord.version>
-        <testcontainers.version>1.19.7</testcontainers.version>
+        <testcontainers.version>1.19.8</testcontainers.version>
         <threetenbp.version>1.3.5</threetenbp.version>
         <wiremock.version>3.5.2</wiremock.version>
     </properties>
