@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 
     <modelVersion>4.0.0</modelVersion>
 
@@ -35,6 +36,7 @@
     <properties>
         <scm.connection>scm:git:https://github.com/walmartlabs/concord.git</scm.connection>
 
+        <activation.api.version>1.2.2</activation.api.version>
         <aopalliance.version>1.0</aopalliance.version>
         <aws.version>1.11.475</aws.version>
         <bouncycastle.version>1.70</bouncycastle.version>
@@ -76,7 +78,7 @@
         <javax.validation.version>2.0.1.Final</javax.validation.version>
         <javax.ws.rs.version>2.0.1.Final</javax.ws.rs.version>
         <javers.version>6.6.2</javers.version>
-        <jboss.logging>3.4.1.Final</jboss.logging>
+        <jboss.logging>3.4.2.Final</jboss.logging>
         <jcl-over-slf4j.version>1.7.35</jcl-over-slf4j.version>
         <jetbrain.annotations.version>23.0.0</jetbrain.annotations.version>
         <jetty.version>12.0.7</jetty.version>
@@ -114,7 +116,7 @@
         <prometheus.simpleclient.version>0.16.0</prometheus.simpleclient.version>
         <reactive.streams.version>1.0.3</reactive.streams.version>
         <reflections.version>0.9.11</reflections.version>
-        <resteasy.version>3.15.6.Final</resteasy.version>
+        <resteasy.version>4.7.9.Final</resteasy.version>
         <selenium.version>4.8.1</selenium.version>
         <servlet.version>4.0.1</servlet.version>
         <shiro.version>1.13.0</shiro.version>
@@ -841,23 +843,11 @@
                 <groupId>org.jboss.resteasy</groupId>
                 <artifactId>resteasy-jackson2-provider</artifactId>
                 <version>${resteasy.version}</version>
-                <exclusions>
-                    <exclusion>
-                        <groupId>jakarta.activation</groupId>
-                        <artifactId>jakarta.activation-api</artifactId>
-                    </exclusion>
-                </exclusions>
             </dependency>
             <dependency>
                 <groupId>org.jboss.resteasy</groupId>
-                <artifactId>resteasy-jaxrs</artifactId>
+                <artifactId>resteasy-core</artifactId>
                 <version>${resteasy.version}</version>
-                <exclusions>
-                    <exclusion>
-                        <groupId>javax.activation</groupId>
-                        <artifactId>activation</artifactId>
-                    </exclusion>
-                </exclusions>
             </dependency>
             <dependency>
                 <groupId>org.jboss.resteasy</groupId>
@@ -1284,6 +1274,11 @@
                 <groupId>org.reactivestreams</groupId>
                 <artifactId>reactive-streams</artifactId>
                 <version>${reactive.streams.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>jakarta.activation</groupId>
+                <artifactId>jakarta.activation-api</artifactId>
+                <version>${activation.api.version}</version>
             </dependency>
         </dependencies>
     </dependencyManagement>
