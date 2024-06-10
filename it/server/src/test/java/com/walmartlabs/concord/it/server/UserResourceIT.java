@@ -52,13 +52,13 @@ public class UserResourceIT extends AbstractServerIT {
         List<UserEntry> result = userApi.listUsersWithFilter(0, 2, "testUserList_");
         assertEquals(2, result.size());
         result.sort(Comparator.comparing(UserEntry::getName));
-        assertEquals(userAName, result.get(0).getName());
-        assertEquals(userBName, result.get(1).getName());
+        assertEquals(userAName.toLowerCase(), result.get(0).getName());
+        assertEquals(userBName.toLowerCase(), result.get(1).getName());
     }
 
-    private void addUser(String userAName) throws ApiException {
+    private void addUser(String userName) throws ApiException {
         UsersApi usersApi = new UsersApi(getApiClient());
-        usersApi.createOrUpdateUser(new CreateUserRequest().username(userAName)
+        usersApi.createOrUpdateUser(new CreateUserRequest().username(userName)
                 .type(CreateUserRequest.TypeEnum.LOCAL));
     }
 }
