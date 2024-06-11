@@ -29,7 +29,6 @@
         <it.ldap.addr>ldap-node:389</it.ldap.addr>
         <it.server.network.mode>custom</it.server.network.mode>
         <it.server.port>8001</it.server.port>
-        <it.skipDocker>false</it.skipDocker>
         <local.repository.src.mount>${settings.localRepository}</local.repository.src.mount>
         <network>net-server-it</network>
         <oldap.image>osixia/openldap</oldap.image>
@@ -252,7 +251,6 @@
                         <IT_LDAP_URL>ldap://localhost:${it.ldap.port}</IT_LDAP_URL>
                         <IT_PROJECT_VERSION>${project.version}</IT_PROJECT_VERSION>
                         <IT_SERVER_PORT>${it.server.port}</IT_SERVER_PORT>
-                        <IT_SKIP_DOCKER_TESTS>${it.skipDocker}</IT_SKIP_DOCKER_TESTS>
                     </environmentVariables>
                     <systemProperties>
                         <java.io.tmpdir>${tmp.dir}</java.io.tmpdir>

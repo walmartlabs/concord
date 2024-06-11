@@ -19,7 +19,7 @@
         <server.image>walmartlabs/concord-server</server.image>
         <agent.image>walmartlabs/concord-agent</agent.image>
         <ryuk.image>testcontainers/ryuk:0.6.0</ryuk.image>
-        <sshd.image>testcontainers/sshd:latest</sshd.image>
+        <sshd.image>testcontainers/sshd:1.2.0</sshd.image>
     </properties>
 
     <dependencies>
