@@ -4,9 +4,6 @@
     <profiles>
         <profile>
             <id>gha</id>
-            <properties>
-                <it.skipDocker>true</it.skipDocker>
-            </properties>
         </profile>
     </profiles>
 </settings>

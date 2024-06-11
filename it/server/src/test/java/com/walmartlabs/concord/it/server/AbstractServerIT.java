@@ -30,7 +30,9 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Timeout;
 
-import java.io.*;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.attribute.PosixFilePermissions;
@@ -213,10 +215,6 @@ public abstract class AbstractServerIT {
             return def;
         }
         return v;
-    }
-
-    public static boolean shouldSkipDockerTests() {
-        return Boolean.parseBoolean(System.getenv("IT_SKIP_DOCKER_TESTS"));
     }
 
     protected void withOrg(Consumer<String> consumer) throws Exception {
