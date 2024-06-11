@@ -35,7 +35,9 @@ execution
 - server: exception mapper for InvalidProcessStateException
 ([#916](https://github.com/walmartlabs/concord/pull/916));
 - runtime-v2: allow double (floating point) values in YAML
-([#917](https://github.com/walmartlabs/concord/pull/917)).
+([#917](https://github.com/walmartlabs/concord/pull/917));
+- project: build both x86 and aarch64 versions
+([#921](https://github.com/walmartlabs/concord/pull/921)).
 
 
 
