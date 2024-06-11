@@ -120,9 +120,40 @@ public class VM {
 
                 Frame frame = state.peekFrame(threadId);
                 if (frame == null) {
+                    if (status == ThreadStatus.UNWIND_ERROR) {
+                        // no more frames to unwind, looks like there is no exception handler
+                        state.setStatus(threadId, ThreadStatus.FAILED);
+                        Exception cause = state.clearThreadError(threadId); // TODO: getThreadError
+                        state.setThreadError(threadId, cause);
+                        throw cause;
+                    }
+
                     log.trace("eval [{}] -> the thread is done, stopping the execution", threadId);
                     state.setStatus(threadId, ThreadStatus.DONE);
                     break;
+                }
+
+                if (status == ThreadStatus.UNWIND_ERROR) {
+                    Command handler = frame.getExceptionHandler();
+                    if (handler != null) {
+                        Exception cause = state.clearThreadError(threadId);
+                        state.setStatus(threadId, ThreadStatus.READY);
+
+                        // avoid issues with exceptions throws in exception handlers
+                        frame.clearExceptionHandler();
+
+                        // save the exception as a local frame variable, so it can be retrieved
+                        // by the error handling core
+                        frame.setLocal(Frame.LAST_EXCEPTION_KEY, cause);
+
+                        // remove the current frame after the error handling code is done
+                        frame.push(new PopFrameCommand());
+
+                        // and run the error handler next
+                        frame.push(handler);
+                    } else {
+                        frame.push(new PopFrameCommand());
+                    }
                 }
 
                 lastFrame = frame;
@@ -148,7 +179,10 @@ public class VM {
                 } catch (Exception e) {
                     cmd.onException(runtime, e, state, threadId);
 
-                    unwind(state, threadId, e);
+                    state.setStatus(threadId, ThreadStatus.UNWIND_ERROR);
+                    state.setThreadError(threadId, e);
+
+//                    unwind(state, threadId, e);
                 }
 
                 if (stop) {
@@ -188,40 +222,6 @@ public class VM {
         }
 
         return result;
-    }
-
-    private void unwind(State state, ThreadId threadId, Exception cause) throws Exception {
-        // go through the frames and find the first exception handler
-        while (true) {
-            Frame frame = state.peekFrame(threadId);
-            if (frame == null) {
-                // no more frames to unwind, looks like there is no exception handler
-                state.setStatus(threadId, ThreadStatus.FAILED);
-                state.setThreadError(threadId, cause);
-                throw cause;
-            }
-
-            Command handler = frame.getExceptionHandler();
-            if (handler != null) {
-                // avoid issues with exceptions throws in exception handlers
-                frame.clearExceptionHandler();
-
-                // save the exception as a local frame variable, so it can be retrieved
-                // by the error handling core
-                frame.setLocal(Frame.LAST_EXCEPTION_KEY, cause);
-
-                // remove the current frame after the error handling code is done
-                frame.push(new PopFrameCommand());
-
-                // and run the error handler next
-                frame.push(handler);
-
-                return;
-            }
-
-            // unwinding
-            state.popFrame(threadId);
-        }
     }
 
     private static void wakeSuspended(State state) {

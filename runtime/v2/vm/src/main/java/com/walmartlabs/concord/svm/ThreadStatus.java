@@ -32,6 +32,8 @@ public enum ThreadStatus {
      */
     SUSPENDED,
 
+    UNWIND_ERROR,
+
     /**
      * Completed successfully.
      */
