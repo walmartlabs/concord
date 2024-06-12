@@ -1,5 +1,52 @@
 # Change log
 
+## [2.12.0] - Unreleased
+
+### Added
+
+- dependency-manager: allow `LATEST` to pull latest version
+from remote repositories
+([#913](https://github.com/walmartlabs/concord/pull/913));
+- runtime-v2: additional log segment statuses for error and
+suspended states
+([#918](https://github.com/walmartlabs/concord/pull/918));
+- runtime-v2: initial support for thread local variables
+([#920](https://github.com/walmartlabs/concord/pull/920));
+-  project: add mock task to parent pom
+([#925](https://github.com/walmartlabs/concord/pull/925));
+- runtime-v2: initial support for finalizers
+([#926](https://github.com/walmartlabs/concord/pull/926)).
+
+### Changed
+
+- docker: fix image build on aarch64 hosts
+([#717](https://github.com/walmartlabs/concord/pull/717));
+- concord-console2: upgrade node version
+([#890](https://github.com/walmartlabs/concord/pull/890));
+- runtime-v2: fix log segment assigment during parallel
+execution
+([#905](https://github.com/walmartlabs/concord/pull/905));
+- project: agent-operator module re-organization
+([#906](https://github.com/walmartlabs/concord/pull/906));
+- concord-server: fix process metadata values after resume
+([#907](https://github.com/walmartlabs/concord/pull/907));
+- concord-server: process wait conditions in batch mode
+([#910](https://github.com/walmartlabs/concord/pull/910));
+- project: update Liquibase to 4.8.0
+([#912](https://github.com/walmartlabs/concord/pull/912));
+- project: update resteasy to latest 4.x
+([#914](https://github.com/walmartlabs/concord/pull/914));
+- server: exception mapper for InvalidProcessStateException
+([#916](https://github.com/walmartlabs/concord/pull/916));
+- runtime-v2: allow double (floating point) values in YAML
+([#917](https://github.com/walmartlabs/concord/pull/917));
+- project: build both x86 and aarch64 versions
+([#921](https://github.com/walmartlabs/concord/pull/921));
+- concord-server: fix UserDao list method
+([#924](https://github.com/walmartlabs/concord/pull/924)).
+
+
+
 ## [2.11.1] - 2024-05-12
 
 ### Changed
