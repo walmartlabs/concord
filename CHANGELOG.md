@@ -13,7 +13,9 @@ suspended states
 - runtime-v2: initial support for thread local variables
 ([#920](https://github.com/walmartlabs/concord/pull/920));
 -  project: add mock task to parent pom
-([#925](https://github.com/walmartlabs/concord/pull/925)).
+([#925](https://github.com/walmartlabs/concord/pull/925));
+- runtime-v2: initial support for finalizers
+([#926](https://github.com/walmartlabs/concord/pull/926)).
 
 ### Changed
 
