@@ -34,6 +34,11 @@ public class SuspendCommand implements Command {
     }
 
     @Override
+    public Command copy() {
+        return new SuspendCommand(eventRef);
+    }
+
+    @Override
     public void eval(Runtime runtime, State state, ThreadId threadId) {
         state.peekFrame(threadId).pop();
         state.setEventRef(threadId, eventRef);

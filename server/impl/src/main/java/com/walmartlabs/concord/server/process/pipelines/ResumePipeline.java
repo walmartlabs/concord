@@ -51,7 +51,7 @@ public class ResumePipeline extends Pipeline {
                 DependencyVersionsExportProcessor.class,
                 PolicyExportProcessor.class,
                 StateImportingProcessor.class,
-                EnqueueingProcessor.class);
+                ResumeProcessor.class);
 
         this.exceptionProcessor = injector.getInstance(FailProcessor.class);
         this.finalizerProcessor = injector.getInstance(CleanupProcessor.class);

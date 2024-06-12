@@ -28,7 +28,7 @@ public class LogLevelFilter extends Filter<ILoggingEvent> {
 
     @Override
     public FilterReply decide(ILoggingEvent event) {
-        if (event.getMarker() == ch.qos.logback.classic.ClassicConstants.FINALIZE_SESSION_MARKER) {
+        if (ConcordLogEncoder.segmentMarker(event) != null) {
             return FilterReply.NEUTRAL;
         }
 

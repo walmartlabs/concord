@@ -20,6 +20,8 @@ package com.walmartlabs.concord.runtime.v2.runner.logging;
  * =====
  */
 
+import com.walmartlabs.concord.runtime.common.logger.LogSegmentStatus;
+
 import javax.annotation.Nullable;
 import java.util.UUID;
 
@@ -29,4 +31,6 @@ public interface RunnerLogger {
 
     @Nullable
     Long createSegment(String segmentName, UUID correlationId);
+
+    void setSegmentStatus(long segmentId, LogSegmentStatus segmentStatus);
 }

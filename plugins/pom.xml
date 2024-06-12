@@ -28,6 +28,7 @@
         <module>tasks/lock</module>
         <module>tasks/log</module>
         <module>tasks/misc</module>
+        <module>tasks/mock</module>
         <module>tasks/noderoster</module>
         <module>tasks/resource</module>
         <module>tasks/slack</module>

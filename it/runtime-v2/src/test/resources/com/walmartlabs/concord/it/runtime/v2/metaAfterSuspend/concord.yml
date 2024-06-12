@@ -1,0 +1,18 @@
+configuration:
+  runtime: "concord-v2"
+  meta:
+    myMetaVar: "n/a"
+
+flows:
+  default:
+    - set:
+        myMetaVar: "myMetaVarValue"
+
+    - task: concord
+      in:
+        action: start
+        payload: payload
+        sync: true
+        suspend: true
+        arguments:
+          name: "Concord"
