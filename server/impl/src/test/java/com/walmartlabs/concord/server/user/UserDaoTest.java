@@ -29,8 +29,10 @@ import org.junit.jupiter.api.Test;
 
 import java.time.OffsetDateTime;
 import java.util.Base64;
+import java.util.List;
 import java.util.UUID;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 
 @Disabled("requires a local DB instance")
@@ -46,7 +48,7 @@ public class UserDaoTest extends AbstractDaoTest {
     }
 
     @Test
-    public void testInsertDelete() {
+    public void testInsertListDelete() {
         String username = "user#" + System.currentTimeMillis();
 
         UUID userId = userDao.insertOrUpdate(username, null, null, null, UserType.LOCAL, null);
@@ -55,6 +57,12 @@ public class UserDaoTest extends AbstractDaoTest {
         String name = "name#" + System.currentTimeMillis();
         String apiKey = Base64.getEncoder().encodeToString(s.getBytes());
         apiKeyDao.insert(userId, apiKey, name, OffsetDateTime.now());
+
+        // ---
+
+        List<UserEntry> result = userDao.list(username, 0, 1);
+        assertEquals(1, result.size());
+        assertEquals(userId, result.get(0).getId());
 
         // ---
 
