@@ -28,11 +28,14 @@ public enum ThreadStatus {
     READY,
 
     /**
-     * Suspended, waiting for {@link VM#resume(State, String)}.
+     * Suspended, waiting for {@link VM#resume(State, java.util.Set)}.
      */
     SUSPENDED,
 
-    UNWIND_ERROR,
+    /**
+     * The thread is being terminated and is currently unwinding the stack.
+     */
+    UNWINDING,
 
     /**
      * Completed successfully.

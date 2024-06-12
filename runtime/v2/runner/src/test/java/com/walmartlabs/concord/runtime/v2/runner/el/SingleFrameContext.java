@@ -138,6 +138,11 @@ public class SingleFrameContext extends DummyContext {
                     }
 
                     @Override
+                    public Exception getThreadError(ThreadId threadId) {
+                        throw new IllegalStateException("Not implemented");
+                    }
+
+                    @Override
                     public void setThreadError(ThreadId threadId, Exception error) {
                         throw new IllegalStateException("Not implemented");
                     }

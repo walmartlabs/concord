@@ -107,13 +107,18 @@ public interface State extends Serializable {
     Map<ThreadId, String> getEventRefs();
 
     /**
+     * @return the error for the specified thread. Returns {@code null} if no error was set.
+     */
+    Exception getThreadError(ThreadId threadId);
+
+    /**
      * Sets an error for the specified thread. Those errors are used to propagate unhandled
      * exceptions from child threads to the parent thread with a {@link com.walmartlabs.concord.svm.commands.Join}.
      */
     void setThreadError(ThreadId threadId, Exception error);
 
     /**
-     * Clears the thread's error returning it.
+     * Clears and returns the thread's error. Null if no error was set.
      */
     Exception clearThreadError(ThreadId threadId);
 
