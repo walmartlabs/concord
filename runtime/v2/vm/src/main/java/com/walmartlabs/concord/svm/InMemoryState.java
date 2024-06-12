@@ -206,6 +206,13 @@ public class InMemoryState implements Serializable, State {
     }
 
     @Override
+    public Exception getThreadError(ThreadId threadId) {
+        synchronized (this) {
+            return threadErrors.get(threadId);
+        }
+    }
+
+    @Override
     public void setThreadError(ThreadId threadId, Exception error) {
         synchronized (this) {
             threadErrors.put(threadId, error);
