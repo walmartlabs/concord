@@ -11,7 +11,9 @@ from remote repositories
 suspended states
 ([#918](https://github.com/walmartlabs/concord/pull/918));
 - runtime-v2: initial support for thread local variables
-([#920](https://github.com/walmartlabs/concord/pull/920)).
+([#920](https://github.com/walmartlabs/concord/pull/920));
+-  project: add mock task to parent pom
+([#925](https://github.com/walmartlabs/concord/pull/925)).
 
 ### Changed
 
