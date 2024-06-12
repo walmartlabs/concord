@@ -39,7 +39,9 @@ execution
 - runtime-v2: allow double (floating point) values in YAML
 ([#917](https://github.com/walmartlabs/concord/pull/917));
 - project: build both x86 and aarch64 versions
-([#921](https://github.com/walmartlabs/concord/pull/921)).
+([#921](https://github.com/walmartlabs/concord/pull/921));
+- concord-server: fix UserDao list method
+([#924](https://github.com/walmartlabs/concord/pull/924)).
 
 
 
