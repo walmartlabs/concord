@@ -60,7 +60,7 @@ public class ConcordSecurityManager extends SecurityManager {
             String path = perm.getName();
 
             // allow all local paths
-            if (!path.startsWith("/") && !path.equals(ALL_FILES_TOKEN)) {
+            if (!path.startsWith("/") && !ALL_FILES_TOKEN.equals(path)) {
                 return;
             }
 

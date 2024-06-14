@@ -278,7 +278,7 @@ public interface StepConverter<T extends YamlStep> {
             result.add(new VariableMapping(null, sourceExpr, sourceValue, target, true));
         }
 
-        if (key.equals("in") && getWithItems(options) != null) {
+        if ("in".equals(key) && getWithItems(options) != null) {
             result = appendWithItemsVar(result);
         }
         return result;
