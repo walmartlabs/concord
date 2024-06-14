@@ -21,8 +21,6 @@ package com.walmartlabs.concord.server.process.pipelines;
  */
 
 import com.google.inject.Injector;
-import com.walmartlabs.concord.server.ansible.InventoryProcessor;
-import com.walmartlabs.concord.server.ansible.PrivateKeyProcessor;
 import com.walmartlabs.concord.server.process.pipelines.processors.*;
 
 import javax.inject.Inject;
@@ -48,7 +46,6 @@ public class EnqueueProcessPipeline extends Pipeline {
                 WorkspaceArchiveProcessor.class,
                 RepositoryProcessor.class,
                 RepositoryInfoUpdateProcessor.class,
-                InventoryProcessor.class,
                 AttachmentStoringProcessor.class,
                 ProcessDefinitionProcessor.class,
                 SessionTokenProcessor.class,
@@ -57,7 +54,6 @@ public class EnqueueProcessPipeline extends Pipeline {
                 ExclusiveGroupProcessor.class,
                 EntryPointProcessor.class,
                 TagsExtractingProcessor.class,
-                PrivateKeyProcessor.class,
                 TemplateFilesProcessor.class,
                 TemplateScriptProcessor.class,
                 DependenciesProcessor.class,
@@ -67,6 +63,7 @@ public class EnqueueProcessPipeline extends Pipeline {
                 ConfigurationStoringProcessor.class,
                 PolicyProcessor.class,
                 DependencyVersionsExportProcessor.class,
+                CustomEnqueueProcessorExecutor.class,
                 StateImportingProcessor.class,
                 ProcessHandlersProcessor.class,
                 EffectiveProcessDefinitionProcessor.class,

@@ -108,6 +108,10 @@
             <artifactId>error_prone_annotations</artifactId>
             <scope>provided</scope>
         </dependency>
+        <dependency>
+            <groupId>com.walmartlabs.concord.server</groupId>
+            <artifactId>concord-server-impl</artifactId>
+        </dependency>
     </dependencies>
 
     <build>
