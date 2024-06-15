@@ -20,33 +20,34 @@ package com.walmartlabs.concord.runtime.v2.runner.script;
  * =====
  */
 
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Set;
+import java.io.Serializable;
+import java.util.*;
 import java.util.stream.Collectors;
 
 public final class VariablesSanitizer {
 
     @SuppressWarnings("unchecked")
-    public static Object sanitize(Object scriptObj) {
-        if (scriptObj instanceof Set) {
-            Set<Object> c = (Set<Object>) scriptObj;
+    public static Object sanitize(Object obj) {
+        if (obj instanceof Set) {
+            Set<Object> c = (Set<Object>) obj;
             return c.stream()
                     .map(VariablesSanitizer::sanitize)
                     .collect(Collectors.toSet());
-        } else if (scriptObj instanceof Collection) {
-            Collection<Object> c = (Collection<Object>) scriptObj;
+        } else if (obj instanceof Collection) {
+            Collection<Object> c = (Collection<Object>) obj;
             return c.stream()
                     .map(VariablesSanitizer::sanitize)
                     .collect(Collectors.toList());
-        } else if (scriptObj instanceof Map) {
-            Map<Object, Object> m = (Map<Object, Object>) scriptObj;
-            Map<Object, Object> result = new HashMap<>();
+        } else if (obj instanceof Map) {
+            Map<Object, Object> m = (Map<Object, Object>) obj;
+            Map<Object, Object> result = new LinkedHashMap<>();
             m.forEach((key, value) -> result.put(sanitize(key), sanitize(value)));
             return result;
+        } else if (obj instanceof Map.Entry && !(obj instanceof Serializable)) {
+            Map.Entry<?, ?> e = (Map.Entry<?, ?>) obj;
+            return new AbstractMap.SimpleEntry<>(e.getKey(), e.getValue());
         } else {
-            return scriptObj;
+            return obj;
         }
     }
 

@@ -1,0 +1,3 @@
+flows:
+  default:
+    - log: "Hello, world!"

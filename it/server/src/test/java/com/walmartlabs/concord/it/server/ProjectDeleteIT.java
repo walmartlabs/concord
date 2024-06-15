@@ -20,10 +20,10 @@ package com.walmartlabs.concord.it.server;
  * =====
  */
 
-import com.walmartlabs.concord.ApiException;
-import com.walmartlabs.concord.client.*;
+import com.walmartlabs.concord.client2.*;
 import org.junit.jupiter.api.Test;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -39,16 +39,15 @@ public class ProjectDeleteIT extends AbstractServerIT {
         String projectName = "project_" + randomString();
 
         ProjectsApi projectsApi = new ProjectsApi(getApiClient());
-        ProjectOperationResponse cpr = projectsApi.createOrUpdate(orgName, new ProjectEntry()
-                .setName(projectName)
-                .setRawPayloadMode(ProjectEntry.RawPayloadModeEnum.EVERYONE));
-        assertTrue(cpr.isOk());
+        ProjectOperationResponse cpr = projectsApi.createOrUpdateProject(orgName, new ProjectEntry()
+                .name(projectName)
+                .rawPayloadMode(ProjectEntry.RawPayloadModeEnum.EVERYONE));
+        assertTrue(cpr.getOk());
 
         // ---
 
         byte[] payload = archive(ProjectDeleteIT.class.getResource("simple").toURI());
 
-        ProcessApi processApi = new ProcessApi(getApiClient());
         Map<String, Object> input = new HashMap<>();
         input.put("archive", payload);
         input.put("org", orgName);
@@ -57,24 +56,25 @@ public class ProjectDeleteIT extends AbstractServerIT {
 
         // ---
 
-        ProcessEntry pe = waitForCompletion(processApi, spr.getInstanceId());
+        ProcessEntry pe = waitForCompletion(getApiClient(), spr.getInstanceId());
         assertEquals(ProcessEntry.StatusEnum.FINISHED, pe.getStatus());
         assertEquals(cpr.getId(), pe.getProjectId());
 
         // ---
 
-        GenericOperationResult dpr = projectsApi.delete(orgName, projectName);
-        assertTrue(dpr.isOk());
+        GenericOperationResult dpr = projectsApi.deleteProject(orgName, projectName);
+        assertTrue(dpr.getOk());
 
         try {
-            projectsApi.get(orgName, projectName);
+            projectsApi.getProject(orgName, projectName);
             fail("Should fail");
         } catch (ApiException e) {
         }
 
         // ---
 
-        pe = processApi.get(spr.getInstanceId());
+        ProcessV2Api processApi = new ProcessV2Api(getApiClient());
+        pe = processApi.getProcess(spr.getInstanceId(), Collections.emptySet());
         assertNull(pe.getProjectId());
     }
 }

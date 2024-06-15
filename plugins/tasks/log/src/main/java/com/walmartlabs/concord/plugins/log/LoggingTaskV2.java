@@ -20,40 +20,48 @@ package com.walmartlabs.concord.plugins.log;
  * =====
  */
 
+import com.fasterxml.jackson.core.JsonFactory;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
+import com.fasterxml.jackson.dataformat.yaml.YAMLGenerator;
+import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
 import com.walmartlabs.concord.runtime.v2.sdk.Task;
 import com.walmartlabs.concord.runtime.v2.sdk.TaskResult;
 import com.walmartlabs.concord.runtime.v2.sdk.Variables;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 
 import javax.inject.Named;
-import java.io.Serializable;
 
 @Named("log")
 public class LoggingTaskV2 implements Task {
 
+    private static final ObjectMapper yamlObjectMapper = createYamlObjectMapper();
+
     @Override
     public TaskResult execute(Variables variables) {
         Object msg = variables.get("msg");
+        String format = variables.getString("format");
 
         String logLevel = variables.getString("level", "INFO");
         switch (logLevel.toUpperCase()) {
             case "DEBUG": {
-                LogUtils.debug(msg);
+                LogUtils.debug(formatMessage(format, msg));
                 break;
             }
             case "INFO": {
-                LogUtils.info(msg);
+                LogUtils.info(formatMessage(format, msg));
                 break;
             }
             case "WARN": {
-                LogUtils.warn(msg);
+                LogUtils.warn(formatMessage(format, msg));
                 break;
             }
             case "ERROR": {
-                LogUtils.error(msg);
+                LogUtils.error(formatMessage(format, msg));
                 break;
             }
             default:
-                LogUtils.info(msg);
+                LogUtils.info(formatMessage(format, msg));
         }
 
         return TaskResult.success();
@@ -93,5 +101,35 @@ public class LoggingTaskV2 implements Task {
 
     public void call(String s) {
         LogUtils.info(s);
+    }
+
+    private static Object formatMessage(String format, Object msg) {
+        if (format == null || format.trim().isEmpty()) {
+            return msg;
+        }
+
+        if ("yaml".equalsIgnoreCase(format)) {
+            try {
+                return "\n" + yamlObjectMapper.writerWithDefaultPrettyPrinter()
+                        .writeValueAsString(msg);
+            } catch (Exception e) {
+                throw new RuntimeException("Invalid yaml:" + e.getMessage());
+            }
+        }
+
+        throw new IllegalArgumentException("Unknown format '" + format + "'");
+    }
+
+    private static ObjectMapper createYamlObjectMapper() {
+        return defaultObjectMapper(new YAMLFactory()
+                                   .disable(YAMLGenerator.Feature.WRITE_DOC_START_MARKER)
+                                   .disable(YAMLGenerator.Feature.SPLIT_LINES));
+    }
+
+    private static ObjectMapper defaultObjectMapper(JsonFactory jf) {
+        ObjectMapper om = new ObjectMapper(jf);
+        om.registerModule(new Jdk8Module());
+        om.registerModule(new JavaTimeModule());
+        return om;
     }
 }

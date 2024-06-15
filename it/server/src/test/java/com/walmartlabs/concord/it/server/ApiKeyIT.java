@@ -20,8 +20,7 @@ package com.walmartlabs.concord.it.server;
  * =====
  */
 
-import com.walmartlabs.concord.ApiException;
-import com.walmartlabs.concord.client.*;
+import com.walmartlabs.concord.client2.*;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -35,32 +34,32 @@ public class ApiKeyIT extends AbstractServerIT {
         String userBName = "userB_" + randomString();
 
         UsersApi usersApi = new UsersApi(getApiClient());
-        usersApi.createOrUpdate(new CreateUserRequest()
-                .setUsername(userAName)
-                .setType(CreateUserRequest.TypeEnum.LOCAL));
-        usersApi.createOrUpdate(new CreateUserRequest()
-                .setUsername(userBName)
-                .setType(CreateUserRequest.TypeEnum.LOCAL));
+        usersApi.createOrUpdateUser(new CreateUserRequest()
+                .username(userAName)
+                .type(CreateUserRequest.TypeEnum.LOCAL));
+        usersApi.createOrUpdateUser(new CreateUserRequest()
+                .username(userBName)
+                .type(CreateUserRequest.TypeEnum.LOCAL));
 
         // ---
 
         ApiKeysApi apiKeyResource = new ApiKeysApi(getApiClient());
-        CreateApiKeyResponse cakr = apiKeyResource.create(new CreateApiKeyRequest().setUsername(userAName));
-        assertTrue(cakr.isOk());
+        CreateApiKeyResponse cakr = apiKeyResource.createUserApiKey(new CreateApiKeyRequest().username(userAName));
+        assertTrue(cakr.getOk());
 
         // ---
 
         setApiKey(cakr.getKey());
 
         try {
-            apiKeyResource.create(new CreateApiKeyRequest().setUsername(userBName));
+            apiKeyResource.createUserApiKey(new CreateApiKeyRequest().username(userBName));
             fail("Should fail");
         } catch (ApiException e) {
         }
 
         // ---
 
-        cakr = apiKeyResource.create(new CreateApiKeyRequest().setUsername(userAName));
-        assertTrue(cakr.isOk());
+        cakr = apiKeyResource.createUserApiKey(new CreateApiKeyRequest().username(userAName));
+        assertTrue(cakr.getOk());
     }
 }

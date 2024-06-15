@@ -25,10 +25,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
 import java.nio.file.Path;
 import java.time.Duration;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
@@ -36,8 +35,6 @@ import java.util.concurrent.TimeUnit;
 import static com.walmartlabs.concord.agent.cfg.Utils.getOrCreatePath;
 import static com.walmartlabs.concord.agent.cfg.Utils.getStringOrDefault;
 
-@Named
-@Singleton
 public class AgentConfiguration {
 
     private static final Logger log = LoggerFactory.getLogger(AgentConfiguration.class);
@@ -49,6 +46,7 @@ public class AgentConfiguration {
     private final Path dependencyListsDir;
     private final Duration dependencyResolveTimeout;
     private final boolean dependencyStrictRepositories;
+    private final List<String> dependencyExclusions;
 
     private final Path payloadDir;
     private final Path workDirBase;
@@ -59,6 +57,9 @@ public class AgentConfiguration {
     private final int workersCount;
     private final long pollInterval;
     private final int maintenanceModeListenerPort;
+
+    private final boolean explicitlyResolveV1Client;
+    private final boolean mavenOfflineMode;
 
     @Inject
     public AgentConfiguration(Config cfg) {
@@ -72,6 +73,7 @@ public class AgentConfiguration {
         this.dependencyListsDir = getOrCreatePath(cfg, "dependencyListsDir");
         this.dependencyResolveTimeout = cfg.hasPath("dependencyResolveTimeout") ? cfg.getDuration("dependencyResolveTimeout") : null;
         this.dependencyStrictRepositories = cfg.hasPath("dependencyStrictRepositories") && cfg.getBoolean("dependencyStrictRepositories");
+        this.dependencyExclusions = cfg.getStringList("dependencyExclusions");
 
         this.payloadDir = getOrCreatePath(cfg, "payloadDir");
         this.workDirBase = getOrCreatePath(cfg, "workDirBase");
@@ -83,6 +85,9 @@ public class AgentConfiguration {
         this.maintenanceModeListenerPort = cfg.getInt("maintenanceModeListenerPort");
 
         this.pollInterval = cfg.getDuration("pollInterval", TimeUnit.MILLISECONDS);
+
+        this.explicitlyResolveV1Client = cfg.getBoolean("explicitlyResolveV1Client");
+        this.mavenOfflineMode = cfg.getBoolean("mavenOfflineMode");
     }
 
     public String getAgentId() {
@@ -107,6 +112,10 @@ public class AgentConfiguration {
 
     public boolean dependencyStrictRepositories() {
         return dependencyStrictRepositories;
+    }
+
+    public List<String> dependencyExclusions() {
+        return dependencyExclusions;
     }
 
     public Path getPayloadDir() {
@@ -135,5 +144,13 @@ public class AgentConfiguration {
 
     public int getMaintenanceModeListenerPort() {
         return maintenanceModeListenerPort;
+    }
+
+    public boolean isExplicitlyResolveV1Client() {
+        return explicitlyResolveV1Client;
+    }
+
+    public boolean isMavenOfflineMode() {
+        return mavenOfflineMode;
     }
 }

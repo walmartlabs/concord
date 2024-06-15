@@ -32,9 +32,9 @@ import com.walmartlabs.concord.server.process.state.ProcessStateManager;
 import com.walmartlabs.concord.server.sdk.PartialProcessKey;
 import com.walmartlabs.concord.server.sdk.ProcessKey;
 import com.walmartlabs.concord.server.sdk.metrics.WithTimer;
+import com.walmartlabs.concord.server.sdk.validation.ValidationErrorsException;
 import com.walmartlabs.concord.server.security.UserPrincipal;
 import org.jboss.resteasy.plugins.providers.multipart.MultipartInput;
-import org.sonatype.siesta.ValidationErrorsException;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -289,7 +289,7 @@ public class PayloadManager {
             }
         }
 
-        return new PayloadManager.EntryPoint(orgId, projectId, repoId, flow);
+        return new EntryPoint(orgId, projectId, repoId, flow);
     }
 
     private UUID getOrg(MultipartInput input) {

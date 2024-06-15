@@ -25,9 +25,8 @@ import ca.ibodrov.concord.testcontainers.ContainerListener;
 import ca.ibodrov.concord.testcontainers.ContainerType;
 import ca.ibodrov.concord.testcontainers.junit5.ConcordRule;
 import com.github.tomakehurst.wiremock.client.WireMock;
-import com.github.tomakehurst.wiremock.extension.responsetemplating.ResponseTemplateTransformer;
 import com.github.tomakehurst.wiremock.junit5.WireMockExtension;
-import com.walmartlabs.concord.client.*;
+import com.walmartlabs.concord.client2.*;
 import com.walmartlabs.concord.common.IOUtils;
 import com.walmartlabs.concord.sdk.Constants;
 import org.apache.commons.compress.archivers.zip.ZipArchiveOutputStream;
@@ -57,7 +56,7 @@ public class TemplateIT extends AbstractTest {
     public static WireMockExtension rule = WireMockExtension.newInstance()
             .options(wireMockConfig()
                     .dynamicPort()
-                    .extensions(new ResponseTemplateTransformer(false)))
+                    .globalTemplating(true))
             .build();
 
     @RegisterExtension
@@ -79,9 +78,9 @@ public class TemplateIT extends AbstractTest {
         String templateAlias = "template_" + randomString();
 
         TemplateAliasApi templateAliasResource = new TemplateAliasApi(concord.apiClient());
-        templateAliasResource.createOrUpdate(new TemplateAliasEntry()
-                .setAlias(templateAlias)
-                .setUrl(templateUrl));
+        templateAliasResource.createOrUpdateTemplate(new TemplateAliasEntry()
+                .alias(templateAlias)
+                .url(templateUrl));
 
         // ---
 
@@ -94,10 +93,10 @@ public class TemplateIT extends AbstractTest {
         ProjectsApi projectsApi = new ProjectsApi(concord.apiClient());
         Map<String, Object> cfg = new HashMap<>();
         cfg.put(Constants.Request.TEMPLATE_KEY, templateAlias);
-        projectsApi.createOrUpdate(orgName, new ProjectEntry()
-                .setName(projectName)
-                .setCfg(cfg)
-                .setRawPayloadMode(ProjectEntry.RawPayloadModeEnum.EVERYONE));
+        projectsApi.createOrUpdateProject(orgName, new ProjectEntry()
+                .name(projectName)
+                .cfg(cfg)
+                .rawPayloadMode(ProjectEntry.RawPayloadModeEnum.EVERYONE));
 
         // ---
 

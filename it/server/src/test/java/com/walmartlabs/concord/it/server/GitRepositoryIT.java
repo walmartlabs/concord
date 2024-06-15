@@ -20,7 +20,7 @@ package com.walmartlabs.concord.it.server;
  * =====
  */
 
-import com.walmartlabs.concord.client.*;
+import com.walmartlabs.concord.client2.*;
 import com.walmartlabs.concord.common.IOUtils;
 import com.walmartlabs.concord.it.common.MockGitSshServer;
 import org.eclipse.jgit.api.Git;
@@ -45,21 +45,23 @@ public class GitRepositoryIT extends AbstractServerIT {
     @BeforeEach
     public void setUp() throws Exception {
         Path bareRepo = createTempDir();
-        Git.init().setInitialBranch("master").setBare(true).setDirectory(bareRepo.toFile()).call();
+        try (Git git = Git.init().setInitialBranch("master").setBare(true).setDirectory(bareRepo.toFile()).call()) {
+        }
 
         Path workdir = createTempDir();
-        Git git = Git.cloneRepository()
+        try (Git git = Git.cloneRepository()
                 .setDirectory(workdir.toFile())
                 .setURI("file://" + bareRepo.toString())
-                .call();
+                .call()) {
 
-        Path initialData = Paths.get(GitRepositoryIT.class.getResource("gitRepository").toURI());
-        IOUtils.copy(initialData, workdir);
+            Path initialData = Paths.get(GitRepositoryIT.class.getResource("gitRepository").toURI());
+            IOUtils.copy(initialData, workdir);
 
-        git.add().addFilepattern(".").call();
-        git.commit().setMessage("initial commit").call();
+            git.add().addFilepattern(".").call();
+            git.commit().setMessage("initial commit").call();
 
-        git.push().call();
+            git.push().call();
+        }
 
         gitServer = new MockGitSshServer(0, bareRepo);
         gitServer.start();
@@ -84,12 +86,12 @@ public class GitRepositoryIT extends AbstractServerIT {
         assertEquals(SecretOperationResponse.ResultEnum.CREATED, sor.getResult());
 
         ProjectsApi projectsApi = new ProjectsApi(getApiClient());
-        projectsApi.createOrUpdate(orgName, new ProjectEntry()
-                .setName(projectName)
-                .setRepositories(Collections.singletonMap(repoName, new RepositoryEntry()
-                        .setUrl(repoUrl)
-                        .setBranch("master")
-                        .setSecretId(sor.getId())
+        projectsApi.createOrUpdateProject(orgName, new ProjectEntry()
+                .name(projectName)
+                .repositories(Collections.singletonMap(repoName, new RepositoryEntry()
+                        .url(repoUrl)
+                        .branch("master")
+                        .secretId(sor.getId())
                 )));
 
         // ---
@@ -102,11 +104,10 @@ public class GitRepositoryIT extends AbstractServerIT {
 
         // ---
 
-        ProcessApi processApi = new ProcessApi(getApiClient());
-        ProcessEntry pe = waitForCompletion(processApi, spr.getInstanceId());
+        ProcessEntry pe = waitForCompletion(getApiClient(), spr.getInstanceId());
         assertEquals(ProcessEntry.StatusEnum.FINISHED, pe.getStatus());
 
-        byte[] ab = getLog(pe.getLogFileName());
+        byte[] ab = getLog(pe.getInstanceId());
         assertLog(".*Hello Concord!.*", ab);
     }
 }

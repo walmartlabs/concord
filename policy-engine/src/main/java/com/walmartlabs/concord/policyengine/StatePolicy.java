@@ -87,8 +87,8 @@ public class StatePolicy {
             return CheckResult.success();
         }
 
-        List<StateRule> warnRules = rules.getWarn().stream().filter(r -> !r.getPatterns().isEmpty()).collect(Collectors.toList());
-        List<StateRule> denyRules = rules.getDeny().stream().filter(r -> !r.getPatterns().isEmpty()).collect(Collectors.toList());
+        List<StateRule> warnRules = rules.getWarn().stream().filter(r -> !r.patterns().isEmpty()).collect(Collectors.toList());
+        List<StateRule> denyRules = rules.getDeny().stream().filter(r -> !r.patterns().isEmpty()).collect(Collectors.toList());
         if (warnRules.isEmpty() && denyRules.isEmpty()) {
             return CheckResult.success();
         }
@@ -119,26 +119,26 @@ public class StatePolicy {
 
     private static void checkStats(List<StateRule> rules, StateStats stats, List<CheckResult.Item<StateRule, StateStats>> result) {
         for (StateRule r : rules) {
-            if (r.getMaxFilesCount() != null && stats.getFilesCount() > r.getMaxFilesCount()) {
-                result.add(new CheckResult.Item<>(r, stats, "Max files count exceeded. Actual: " + stats.getFilesCount() + " limit: " + r.getMaxFilesCount()));
+            if (r.maxFilesCount() != null && stats.getFilesCount() > r.maxFilesCount()) {
+                result.add(new CheckResult.Item<>(r, stats, "Max files count exceeded. Actual: " + stats.getFilesCount() + " limit: " + r.maxFilesCount()));
             }
 
-            if (r.getMaxSizeInBytes() != null && stats.getSize() > r.getMaxSizeInBytes()) {
-                result.add(new CheckResult.Item<>(r, stats, "Max state size exceeded. Actual: " + stats.getSize() + " limit: " + r.getMaxSizeInBytes()));
+            if (r.maxSizeInBytes() != null && stats.getSize() > r.maxSizeInBytes()) {
+                result.add(new CheckResult.Item<>(r, stats, "Max state size exceeded. Actual: " + stats.getSize() + " limit: " + r.maxSizeInBytes()));
             }
         }
     }
 
     private static void checkPatterns(List<StateRule> rules, Path file, List<CheckResult.Item<StateRule, Path>> result) {
         for (StateRule r : rules) {
-            if (matchPattern(r.getPatterns(), file.toString())) {
+            if (matchPattern(r.patterns(), file.toString())) {
                 result.add(new CheckResult.Item<>(r, file));
             }
         }
     }
 
     private static boolean hasStats(StateRule rule) {
-        return rule.getMaxFilesCount() != null || rule.getMaxSizeInBytes() != null;
+        return rule.maxFilesCount() != null || rule.maxSizeInBytes() != null;
     }
 
     private static boolean matchPattern(List<String> patterns, String fileName) {

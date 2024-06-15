@@ -1,0 +1,15 @@
+{
+  "queue": {
+    "processTimeout": {
+      "max": "PT2H"
+    }
+  },
+  "processCfg": {
+    "requirements": {
+      "agent": {
+        "flavor": "xxx-tunr"
+      }
+    },
+    "processTimeout": "PT1H"
+  }
+}

@@ -20,63 +20,36 @@ package com.walmartlabs.concord.policyengine;
  * =====
  */
 
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import org.immutables.value.Value;
 
+import javax.annotation.Nullable;
 import java.io.Serializable;
-import java.util.Objects;
 
-public class ContainerRule implements Serializable {
+@Value.Immutable
+@JsonInclude(JsonInclude.Include.NON_EMPTY)
+@JsonSerialize(as = ImmutableContainerRule.class)
+@JsonDeserialize(as = ImmutableContainerRule.class)
+public interface ContainerRule extends Serializable {
 
-    private static final long serialVersionUID = 1L;
+    long serialVersionUID = 1L;
 
-    private final String msg;
-    private final String maxRam;
-    private final Integer maxCpu;
+    @Nullable
+    String msg();
 
-    @JsonCreator
-    public ContainerRule(@JsonProperty("msg") String msg,
-                         @JsonProperty("maxRam") String maxRam,
-                         @JsonProperty("maxCpu") Integer maxCpu) {
+    @Nullable
+    String maxRam();
 
-        this.msg = msg;
-        this.maxRam = maxRam;
-        this.maxCpu = maxCpu;
-    }
+    @Nullable
+    Integer maxCpu();
 
-    public String getMsg() {
-        return msg;
-    }
-
-    public String getMaxRam() {
-        return maxRam;
-    }
-
-    public Integer getMaxCpu() {
-        return maxCpu;
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        ContainerRule that = (ContainerRule) o;
-        return Objects.equals(msg, that.msg) &&
-                Objects.equals(maxRam, that.maxRam) &&
-                Objects.equals(maxCpu, that.maxCpu);
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(msg, maxRam, maxCpu);
-    }
-
-    @Override
-    public String toString() {
-        return "ContainerRule{" +
-                "msg='" + msg + '\'' +
-                ", maxRam='" + maxRam + '\'' +
-                ", maxCpu=" + maxCpu +
-                '}';
+    static ContainerRule of(String msg, String maxRam, Integer maxCpu) {
+        return ImmutableContainerRule.builder()
+                .msg(msg)
+                .maxRam(maxRam)
+                .maxCpu(maxCpu)
+                .build();
     }
 }

@@ -21,19 +21,20 @@ package com.walmartlabs.concord.runtime.v2.runner.vm;
  */
 
 import com.walmartlabs.concord.runtime.v2.runner.context.ContextFactory;
-import com.walmartlabs.concord.runtime.v2.runner.el.EvalContextFactory;
-import com.walmartlabs.concord.runtime.v2.runner.el.ExpressionEvaluator;
 import com.walmartlabs.concord.runtime.v2.sdk.Context;
+import com.walmartlabs.concord.runtime.v2.sdk.EvalContextFactory;
+import com.walmartlabs.concord.runtime.v2.sdk.ExpressionEvaluator;
 import com.walmartlabs.concord.svm.Runtime;
 import com.walmartlabs.concord.svm.*;
 
 import java.util.Collection;
 import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 
 /**
  * Takes the input, interpolates its values and sets the result
- * as the current frame's local variables.
+ * to all root frame's local variables.
  * <p/>
  * Optionally takes a list of threads which root frames should be
  * updated with provided variables.
@@ -55,6 +56,11 @@ public class UpdateLocalsCommand implements Command {
     }
 
     @Override
+    public Command copy() {
+        return new UpdateLocalsCommand(input, threadIds);
+    }
+
+    @Override
     public void eval(Runtime runtime, State state, ThreadId threadId) {
         // don't "pop" the stack, this command is a special case and evaluated separately
 
@@ -63,17 +69,36 @@ public class UpdateLocalsCommand implements Command {
         ContextFactory contextFactory = runtime.getService(ContextFactory.class);
         Context ctx = contextFactory.create(runtime, state, threadId, null);
 
-        ExpressionEvaluator ee = runtime.getService(ExpressionEvaluator.class);
-        Map<String, Object> m = ee.evalAsMap(EvalContextFactory.scope(ctx), input);
-
         Collection<ThreadId> threads = threadIds;
         if (threads.isEmpty()) {
             threads = Collections.singletonList(threadId);
         }
 
+        // allow access to arguments from arguments:
+        /* e.g.
+           configuration:
+             arguments:
+               args:
+                 k1: v1
+                 k2: ${context.variables().get('args.k1')}
+         */
         for (ThreadId tid : threads) {
             Frame root = VMUtils.assertNearestRoot(state, tid);
-            VMUtils.putLocals(root, m);
+            VMUtils.putLocals(root, input);
+        }
+
+        EvalContextFactory ecf = runtime.getService(EvalContextFactory.class);
+        ExpressionEvaluator ee = runtime.getService(ExpressionEvaluator.class);
+        Map<String, Object> m = ee.evalAsMap(ecf.scope(ctx), input);
+
+        for (ThreadId tid : threads) {
+            List<Frame> frames = state.getFrames(tid);
+
+            for (Frame f : frames) {
+                if (f.getType() == FrameType.ROOT) {
+                    VMUtils.putLocals(f, m);
+                }
+            }
         }
     }
 }

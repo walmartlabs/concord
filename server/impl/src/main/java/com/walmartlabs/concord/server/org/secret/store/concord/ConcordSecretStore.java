@@ -26,12 +26,8 @@ import com.walmartlabs.concord.server.org.secret.store.SecretStore;
 import org.jooq.DSLContext;
 
 import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
 import java.util.UUID;
 
-@Named("concordSecretStore")
-@Singleton
 public class ConcordSecretStore implements SecretStore {
 
     private static final String TYPE = "concord";

@@ -33,12 +33,12 @@ import com.walmartlabs.concord.server.plugins.ansible.jooq.tables.AnsibleTaskSta
 import com.walmartlabs.concord.server.sdk.ProcessKey;
 import com.walmartlabs.concord.server.sdk.ProcessKeyCache;
 import com.walmartlabs.concord.server.sdk.metrics.WithTimer;
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
-import io.swagger.annotations.Authorization;
+import com.walmartlabs.concord.server.sdk.rest.Resource;
+import com.walmartlabs.concord.server.sdk.validation.ValidationErrorsException;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.immutables.value.Value;
 import org.jooq.*;
-import org.sonatype.siesta.Resource;
 
 import javax.annotation.Nullable;
 import javax.inject.Inject;
@@ -59,8 +59,8 @@ import static org.jooq.impl.DSL.*;
 
 @Named
 @Singleton
-@Api(value = "Ansible Process", authorizations = {@Authorization("api_key"), @Authorization("session_key"), @Authorization("ldap")})
 @Path("/api/v1/process")
+@Tag(name = "Ansible Process")
 public class ProcessAnsibleResource implements Resource {
 
     private final ProcessKeyCache processKeyCache;
@@ -75,7 +75,7 @@ public class ProcessAnsibleResource implements Resource {
     }
 
     @GET
-    @ApiOperation("List Ansible playbooks of a specific process")
+    @Operation(description = "List Ansible playbooks of a specific process", operationId = "listPlaybooks")
     @Path("/{processInstanceId}/ansible/playbooks")
     @Produces(MediaType.APPLICATION_JSON)
     public List<PlaybookEntry> listPlaybooks(@PathParam("processInstanceId") UUID processInstanceId) {
@@ -88,7 +88,7 @@ public class ProcessAnsibleResource implements Resource {
     }
 
     @GET
-    @ApiOperation("List Ansible plays of a specific process")
+    @Operation(description = "List Ansible plays of a specific process", operationId = "listPlays")
     @Path("/{processInstanceId}/ansible/{playbookId}/plays")
     @Produces(MediaType.APPLICATION_JSON)
     public List<PlayInfo> listPlays(@PathParam("processInstanceId") UUID processInstanceId,
@@ -102,7 +102,7 @@ public class ProcessAnsibleResource implements Resource {
     }
 
     @GET
-    @ApiOperation("List Ansible plays of a specific process")
+    @Operation(description = "List Ansible plays of a specific process", operationId = "listTasks")
     @Path("/{processInstanceId}/ansible/tasks")
     @Produces(MediaType.APPLICATION_JSON)
     public List<TaskInfo> listTasks(@PathParam("processInstanceId") UUID processInstanceId,
@@ -120,10 +120,9 @@ public class ProcessAnsibleResource implements Resource {
      * Lists Ansible hosts of a specific process.
      */
     @GET
-    @ApiOperation("List Ansible hosts of a specific process")
+    @Operation(description = "List Ansible hosts of a specific process", operationId = "listAnsibleHosts")
     @Path("/{processInstanceId}/ansible/hosts")
     @Produces(MediaType.APPLICATION_JSON)
-//    @WithTimer
     public AnsibleHostListResponse list(@PathParam("processInstanceId") UUID processInstanceId,
                                         @QueryParam("host") String host,
                                         @QueryParam("hostGroup") String hostGroup,
@@ -131,7 +130,9 @@ public class ProcessAnsibleResource implements Resource {
                                         @QueryParam("statuses") List<AnsibleHostStatus> statuses,
                                         @QueryParam("playbookId") UUID playbookId,
                                         @QueryParam("limit") @DefaultValue("30") int limit,
-                                        @QueryParam("offset") @DefaultValue("0") int offset) {
+                                        @QueryParam("offset") @DefaultValue("0") int offset,
+                                        @QueryParam("sortField") SortField sortField,
+                                        @QueryParam("sortBy") SortBy sortBy) {
 
         ProcessKey key = processKeyCache.get(processInstanceId);
         if (key == null) {
@@ -145,7 +146,7 @@ public class ProcessAnsibleResource implements Resource {
             statuses.add(status);
         }
 
-        List<AnsibleHostEntry> hosts = ansibleDao.list(key.getInstanceId(), key.getCreatedAt(), host, hostGroup, statuses, playbookId, limit, offset);
+        List<AnsibleHostEntry> hosts = ansibleDao.list(key.getInstanceId(), key.getCreatedAt(), host, hostGroup, statuses, playbookId, limit, offset, sortField, sortBy);
         List<String> hostGroups = ansibleDao.listHostGroups(key.getInstanceId(), key.getCreatedAt(), playbookId);
         return ImmutableAnsibleHostListResponse.builder()
                 .items(hosts)
@@ -157,7 +158,7 @@ public class ProcessAnsibleResource implements Resource {
      * Lists Ansible events of a specific process.
      */
     @GET
-    @ApiOperation("List Ansible events of a specific process")
+    @Operation(description = "List Ansible events of a specific process", operationId = "listEvents")
     @Path("/{processInstanceId}/ansible/events")
     @Produces(MediaType.APPLICATION_JSON)
     @WithTimer
@@ -299,7 +300,10 @@ public class ProcessAnsibleResource implements Resource {
                                            String host, String hostGroup,
                                            List<AnsibleHostStatus> statuses,
                                            UUID playbookId,
-                                           int limit, int offset) {
+                                           int limit, int offset, SortField sortField, SortBy sortBy) {
+            
+            Field<String> orderField = assertSortField(sortField);
+            
             return txResult(tx -> {
                 AnsibleHosts a = ANSIBLE_HOSTS.as("a");
                 SelectConditionStep<Record4<String, String, Long, String>> q =
@@ -327,12 +331,34 @@ public class ProcessAnsibleResource implements Resource {
                 if (playbookId != null) {
                     q.and(a.PLAYBOOK_ID.eq(playbookId));
                 }
-
-                return q.orderBy(a.HOST)
-                        .limit(limit)
+                
+                if (orderField != null) {
+                    if (sortBy != null && sortBy.equals(SortBy.DESC)) {
+                        q.orderBy(orderField.desc());
+                    }
+                    q.orderBy(orderField.asc());
+                }
+                else {
+                    q.orderBy(a.HOST);
+                }
+                
+                return q.limit(limit)
                         .offset(offset)
                         .fetch(AnsibleDao::toHostEntity);
             });
+        }
+
+        private static Field<String> assertSortField(SortField sortField) { 
+            if (sortField == null) {
+                return null;
+            }
+            
+            Field<String> orderField = (Field<String>) ANSIBLE_HOSTS.as("a").field(sortField.name().toLowerCase());
+            if (orderField == null) {
+                throw new ValidationErrorsException("Invalid sort field: " + sortField.name());
+            }
+            
+            return orderField;
         }
 
         public List<PlaybookEntry> listPlaybooks(UUID instanceId, OffsetDateTime createdAt) {
@@ -546,5 +572,17 @@ public class ProcessAnsibleResource implements Resource {
         TASK,
         SETUP,
         HANDLER
+    }
+    
+    public enum SortField {
+        HOST,
+        DURATION,
+        STATUS,
+        HOST_GROUP
+    }
+    
+    public enum SortBy {
+        ASC,
+        DESC
     }
 }

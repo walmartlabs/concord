@@ -20,18 +20,50 @@ package com.walmartlabs.concord.it.server;
  * =====
  */
 
-import com.walmartlabs.concord.ApiException;
-import com.walmartlabs.concord.client.ProjectEntry;
-import com.walmartlabs.concord.client.ProjectsApi;
+import com.walmartlabs.concord.client2.*;
 import org.junit.jupiter.api.Test;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
 import static com.walmartlabs.concord.it.common.ITUtils.archive;
-import static org.junit.jupiter.api.Assertions.fail;
+import static com.walmartlabs.concord.it.common.ServerClient.assertLog;
+import static com.walmartlabs.concord.it.common.ServerClient.waitForCompletion;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class OutVariablesProjectIT extends AbstractServerIT {
+
+    @Test
+    public void testOutVars() throws Exception {
+        ProjectsApi projectsApi = new ProjectsApi(getApiClient());
+
+        String orgName = "Default";
+        String projectName = "project_" + System.currentTimeMillis();
+        projectsApi.createOrUpdateProject(orgName, new ProjectEntry()
+                .acceptsRawPayload(true)
+                .outVariablesMode(ProjectEntry.OutVariablesModeEnum.EVERYONE)
+                .name(projectName));
+
+        // ---
+
+        byte[] payload = archive(OutVariablesProjectIT.class.getResource("example").toURI());
+
+        Map<String, Object> input = new HashMap<>();
+        input.put("org", orgName);
+        input.put("project", projectName);
+        input.put("archive", payload);
+        input.put("out", "myName");
+        Map<String, Object> cfg = new HashMap<>();
+        cfg.put("out", Collections.singletonList("myBool"));
+        input.put("request", cfg);
+        StartProcessResponse spr = start(input);
+
+        ProcessEntry pe = waitForCompletion(getApiClient(), spr.getInstanceId());
+        Map<String, Object> out = (Map<String, Object>) pe.getMeta().get("out");
+        assertEquals("world", out.get("myName"));
+        assertEquals(true, out.get("myBool"));
+    }
 
     @Test
     public void testReject() throws Exception {
@@ -39,22 +71,58 @@ public class OutVariablesProjectIT extends AbstractServerIT {
 
         String orgName = "Default";
         String projectName = "project_" + System.currentTimeMillis();
-        projectsApi.createOrUpdate(orgName, new ProjectEntry()
-                .setName(projectName));
+        projectsApi.createOrUpdateProject(orgName, new ProjectEntry()
+                .acceptsRawPayload(true)
+                .name(projectName));
 
         // ---
 
-        byte[] payload = archive(ProcessIT.class.getResource("example").toURI());
+        byte[] payload = archive(OutVariablesProjectIT.class.getResource("example").toURI());
 
         try {
             Map<String, Object> input = new HashMap<>();
             input.put("org", orgName);
             input.put("project", projectName);
             input.put("archive", payload);
-            input.put("out", "x,y,z");
+            input.put("out", "myName,myBool");
             start(input);
             fail("should fail");
         } catch (ApiException e) {
+            assertTrue(e.getMessage().contains("The project is not accepting custom out variables"));
+        }
+    }
+
+    @Test
+    public void testRejectFromRequest() throws Exception {
+        ProjectsApi projectsApi = new ProjectsApi(getApiClient());
+
+        String orgName = "Default";
+        String projectName = "project_" + System.currentTimeMillis();
+        projectsApi.createOrUpdateProject(orgName, new ProjectEntry()
+                .acceptsRawPayload(true)
+                .name(projectName));
+
+        // ---
+        byte[] payload = archive(OutVariablesProjectIT.class.getResource("example").toURI());
+        try {
+            Map<String, Object> input = new HashMap<>();
+            input.put("org", orgName);
+            input.put("project", projectName);
+            input.put("archive", payload);
+            Map<String, Object> cfg = new HashMap<>();
+            cfg.put("out", Collections.singletonList("myName"));
+            input.put("request", cfg);
+            start(input);
+
+            StartProcessResponse spr = start(input);
+            ProcessEntry pe = waitForCompletion(getApiClient(), spr.getInstanceId());
+
+            assertEquals(ProcessEntry.StatusEnum.FAILED, pe.getStatus());
+            byte[] ab = getLog(pe.getInstanceId());
+            assertLog(".*The project is not accepting custom out variables.*", ab);
+
+        } catch (ApiException e) {
+            assertTrue(e.getMessage().contains("The project is not accepting custom out variables"));
         }
     }
 }

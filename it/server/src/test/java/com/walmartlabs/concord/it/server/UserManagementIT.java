@@ -20,8 +20,7 @@ package com.walmartlabs.concord.it.server;
  * =====
  */
 
-import com.walmartlabs.concord.ApiException;
-import com.walmartlabs.concord.client.*;
+import com.walmartlabs.concord.client2.*;
 import org.junit.jupiter.api.Test;
 
 import java.util.Collections;
@@ -36,20 +35,20 @@ public class UserManagementIT extends AbstractServerIT {
 
         String username = "user_" + randomString();
 
-        CreateUserResponse cur = usersApi.createOrUpdate(new CreateUserRequest()
-                .setUsername(username)
-                .setType(CreateUserRequest.TypeEnum.LOCAL));
-        assertTrue(cur.isOk());
+        CreateUserResponse cur = usersApi.createOrUpdateUser(new CreateUserRequest()
+                .username(username)
+                .type(CreateUserRequest.TypeEnum.LOCAL));
+        assertTrue(cur.getOk());
 
         // ---
 
         ApiKeysApi apiKeyResource = new ApiKeysApi(getApiClient());
-        CreateApiKeyResponse cakr = apiKeyResource.create(new CreateApiKeyRequest().setUsername(username));
-        assertTrue(cakr.isOk());
+        CreateApiKeyResponse cakr = apiKeyResource.createUserApiKey(new CreateApiKeyRequest().username(username));
+        assertTrue(cakr.getOk());
 
         // ---
 
-        usersApi.delete(cur.getId());
+        usersApi.deleteUser(cur.getId());
     }
 
     @Test
@@ -57,14 +56,14 @@ public class UserManagementIT extends AbstractServerIT {
         UsersApi usersApi = new UsersApi(getApiClient());
 
         String userAName = "userA_" + randomString();
-        usersApi.createOrUpdate(new CreateUserRequest()
-                .setUsername(userAName)
-                .setType(CreateUserRequest.TypeEnum.LOCAL));
+        usersApi.createOrUpdateUser(new CreateUserRequest()
+                .username(userAName)
+                .type(CreateUserRequest.TypeEnum.LOCAL));
 
         // ---
 
         ApiKeysApi apiKeyResource = new ApiKeysApi(getApiClient());
-        CreateApiKeyResponse apiKey = apiKeyResource.create(new CreateApiKeyRequest().setUsername(userAName));
+        CreateApiKeyResponse apiKey = apiKeyResource.createUserApiKey(new CreateApiKeyRequest().username(userAName));
 
         // ---
 
@@ -72,9 +71,9 @@ public class UserManagementIT extends AbstractServerIT {
 
         String userBName = "userB_" + randomString();
         try {
-            usersApi.createOrUpdate(new CreateUserRequest()
-                    .setUsername(userBName)
-                    .setType(CreateUserRequest.TypeEnum.LOCAL));
+            usersApi.createOrUpdateUser(new CreateUserRequest()
+                    .username(userBName)
+                    .type(CreateUserRequest.TypeEnum.LOCAL));
             fail("should fail");
         } catch (ApiException e) {
         }
@@ -82,19 +81,19 @@ public class UserManagementIT extends AbstractServerIT {
         // ---
 
         resetApiKey();
-        usersApi.createOrUpdate(new CreateUserRequest()
-                .setUsername(userAName)
-                .setType(CreateUserRequest.TypeEnum.LOCAL));
+        usersApi.createOrUpdateUser(new CreateUserRequest()
+                .username(userAName)
+                .type(CreateUserRequest.TypeEnum.LOCAL));
 
         usersApi.updateUserRoles(userAName, new UpdateUserRolesRequest()
-                .setRoles(Collections.singletonList("concordAdmin")));
+                .roles(Collections.singleton("concordAdmin")));
 
         // ---
 
         setApiKey(apiKey.getKey());
-        usersApi.createOrUpdate(new CreateUserRequest()
-                .setUsername(userBName)
-                .setType(CreateUserRequest.TypeEnum.LOCAL));
+        usersApi.createOrUpdateUser(new CreateUserRequest()
+                .username(userBName)
+                .type(CreateUserRequest.TypeEnum.LOCAL));
     }
 
     @Test
@@ -105,25 +104,25 @@ public class UserManagementIT extends AbstractServerIT {
         String username = "user_" + randomString();
 
         RolesApi rolesApi = new RolesApi(getApiClient());
-        RoleOperationResponse ror = rolesApi.createOrUpdate(new RoleEntry().setName(roleName));
+        RoleOperationResponse ror = rolesApi.createOrUpdateRole(new RoleEntry().name(roleName));
         assertEquals(RoleOperationResponse.ResultEnum.CREATED, ror.getResult());
 
-        CreateUserResponse cur = usersApi.createOrUpdate(new CreateUserRequest()
-                .setUsername(username)
-                .setType(CreateUserRequest.TypeEnum.LOCAL)
-                .setRoles(Collections.singletonList(roleName)));
-        assertTrue(cur.isOk());
+        CreateUserResponse cur = usersApi.createOrUpdateUser(new CreateUserRequest()
+                .username(username)
+                .type(CreateUserRequest.TypeEnum.LOCAL)
+                .roles(Collections.singleton(roleName)));
+        assertTrue(cur.getOk());
 
         UserEntry userEntry = usersApi.findByUsername(username);
         assertNotNull(userEntry);
-        assertEquals(roleName, userEntry.getRoles().get(0).getName());
+        assertEquals(roleName, userEntry.getRoles().iterator().next().getName());
 
         // ---
 
-        DeleteUserResponse dur = usersApi.delete(cur.getId());
-        assertTrue(dur.isOk());
+        DeleteUserResponse dur = usersApi.deleteUser(cur.getId());
+        assertTrue(dur.getOk());
 
-        GenericOperationResult delete = rolesApi.delete(roleName);
+        GenericOperationResult delete = rolesApi.deleteRole(roleName);
         assertEquals(GenericOperationResult.ResultEnum.DELETED, delete.getResult());
     }
 
@@ -132,9 +131,9 @@ public class UserManagementIT extends AbstractServerIT {
         String userName = "usEr_" + randomString() + "@domain.local";
 
         UsersApi usersApi = new UsersApi(getApiClient());
-        CreateUserResponse cur = usersApi.createOrUpdate(new CreateUserRequest()
-                .setUsername(userName)
-                .setType(CreateUserRequest.TypeEnum.LOCAL));
+        CreateUserResponse cur = usersApi.createOrUpdateUser(new CreateUserRequest()
+                .username(userName)
+                .type(CreateUserRequest.TypeEnum.LOCAL));
         assertNotNull(cur.getId());
 
         UserEntry e = usersApi.findByUsername(userName);

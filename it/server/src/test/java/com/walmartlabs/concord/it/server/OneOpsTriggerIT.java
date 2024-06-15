@@ -9,9 +9,9 @@ package com.walmartlabs.concord.it.server;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -20,10 +20,9 @@ package com.walmartlabs.concord.it.server;
  * =====
  */
 
-import com.walmartlabs.concord.ApiException;
-import com.walmartlabs.concord.client.OrganizationEntry;
-import com.walmartlabs.concord.client.OrganizationsApi;
-import com.walmartlabs.concord.client.ProcessEntry;
+import com.walmartlabs.concord.client2.*;
+import com.walmartlabs.concord.client2.OrganizationsApi;
+import com.walmartlabs.concord.client2.ProcessEntry;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -32,8 +31,6 @@ import java.nio.file.Path;
 import java.util.Map;
 
 public class OneOpsTriggerIT extends AbstractOneOpsTriggerIT {
-
-    protected static final long DEFAULT_TEST_TIMEOUT = 120000;
 
     private OrganizationsApi orgApi;
     private String orgName;
@@ -44,7 +41,7 @@ public class OneOpsTriggerIT extends AbstractOneOpsTriggerIT {
     public void setup() throws Exception {
         orgApi = new OrganizationsApi(getApiClient());
         orgName = "org_" + randomString();
-        orgApi.createOrUpdate(new OrganizationEntry().setName(orgName));
+        orgApi.createOrUpdateOrg(new OrganizationEntry().name(orgName));
 
         Path repo = initRepo("oneopsTests/trigger");
         projectName = "project_" + randomString();
@@ -55,7 +52,7 @@ public class OneOpsTriggerIT extends AbstractOneOpsTriggerIT {
 
     @AfterEach
     public void tearDown() throws ApiException {
-        orgApi.delete(orgName, "yes");
+        orgApi.deleteOrg(orgName, "yes");
     }
 
     @Test
@@ -66,6 +63,5 @@ public class OneOpsTriggerIT extends AbstractOneOpsTriggerIT {
 
         Map<ProcessEntry.StatusEnum, ProcessEntry> ps = waitProcesses(orgName, projectName, ProcessEntry.StatusEnum.FINISHED);
         assertProcessLog(ps.get(ProcessEntry.StatusEnum.FINISHED), ".*Oneops has completed a deployment trigger version 1*");
-
     }
 }

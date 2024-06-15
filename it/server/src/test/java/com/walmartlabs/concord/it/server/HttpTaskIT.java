@@ -24,15 +24,12 @@ import com.github.tomakehurst.wiremock.client.ResponseDefinitionBuilder;
 import com.github.tomakehurst.wiremock.common.FileSource;
 import com.github.tomakehurst.wiremock.extension.Parameters;
 import com.github.tomakehurst.wiremock.extension.ResponseDefinitionTransformer;
-import com.github.tomakehurst.wiremock.extension.responsetemplating.ResponseTemplateTransformer;
 import com.github.tomakehurst.wiremock.http.HttpHeader;
 import com.github.tomakehurst.wiremock.http.Request;
 import com.github.tomakehurst.wiremock.http.ResponseDefinition;
 import com.github.tomakehurst.wiremock.junit5.WireMockExtension;
-import com.walmartlabs.concord.client.ProcessApi;
-import com.walmartlabs.concord.client.ProcessEntry;
-import com.walmartlabs.concord.client.StartProcessResponse;
-import org.junit.jupiter.api.AfterAll;
+import com.walmartlabs.concord.client2.ProcessEntry;
+import com.walmartlabs.concord.client2.StartProcessResponse;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -77,7 +74,8 @@ public class HttpTaskIT extends AbstractServerIT {
     final WireMockExtension rule = WireMockExtension.newInstance()
             .options(wireMockConfig()
                     .dynamicPort()
-                    .extensions(new RequestHeaders(), new ResponseTemplateTransformer(false)))
+                    .globalTemplating(true)
+                    .extensions(new RequestHeaders()))
             .build();
 
     @BeforeEach
@@ -106,18 +104,16 @@ public class HttpTaskIT extends AbstractServerIT {
         URI dir = HttpTaskIT.class.getResource("httpGetAsString").toURI();
         byte[] payload = archive(dir);
 
-        ProcessApi processApi = new ProcessApi(getApiClient());
-
         Map<String, Object> input = new HashMap<>();
         input.put("archive", payload);
         input.put("arguments.url", SERVER_URL + mockHttpPathPing);
 
         StartProcessResponse spr = start(input);
 
-        ProcessEntry pir = waitForCompletion(processApi, spr.getInstanceId());
+        ProcessEntry pir = waitForCompletion(getApiClient(), spr.getInstanceId());
         assertEquals(ProcessEntry.StatusEnum.FINISHED, pir.getStatus());
 
-        byte[] ab = getLog(pir.getLogFileName());
+        byte[] ab = getLog(pir.getInstanceId());
         assertLog(".*Success response.*", ab);
     }
 
@@ -126,18 +122,16 @@ public class HttpTaskIT extends AbstractServerIT {
         URI dir = HttpTaskIT.class.getResource("httpGet").toURI();
         byte[] payload = archive(dir);
 
-        ProcessApi processApi = new ProcessApi(getApiClient());
-
         Map<String, Object> input = new HashMap<>();
         input.put("archive", payload);
         input.put("arguments.url", SERVER_URL + mockHttpPathPing);
 
         StartProcessResponse spr = start(input);
 
-        ProcessEntry pir = waitForCompletion(processApi, spr.getInstanceId());
+        ProcessEntry pir = waitForCompletion(getApiClient(), spr.getInstanceId());
         assertEquals(ProcessEntry.StatusEnum.FINISHED, pir.getStatus());
 
-        byte[] ab = getLog(pir.getLogFileName());
+        byte[] ab = getLog(pir.getInstanceId());
         assertLog(".*Success response.*", ab);
         assertLog(".*Out Response: true*", ab);
     }
@@ -147,18 +141,16 @@ public class HttpTaskIT extends AbstractServerIT {
         URI dir = HttpTaskIT.class.getResource("httpGetAsDefaultMethod").toURI();
         byte[] payload = archive(dir);
 
-        ProcessApi processApi = new ProcessApi(getApiClient());
-
         Map<String, Object> input = new HashMap<>();
         input.put("archive", payload);
         input.put("arguments.url", SERVER_URL + mockHttpPathPing);
 
         StartProcessResponse spr = start(input);
 
-        ProcessEntry pir = waitForCompletion(processApi, spr.getInstanceId());
+        ProcessEntry pir = waitForCompletion(getApiClient(), spr.getInstanceId());
         assertEquals(ProcessEntry.StatusEnum.FINISHED, pir.getStatus());
 
-        byte[] ab = getLog(pir.getLogFileName());
+        byte[] ab = getLog(pir.getInstanceId());
         assertLog(".*Request method: GET*", ab);
         assertLog(".*Success response.*", ab);
         assertLog(".*Out Response: true*", ab);
@@ -169,18 +161,16 @@ public class HttpTaskIT extends AbstractServerIT {
         URI dir = HttpTaskIT.class.getResource("httpGetWithQueryParams").toURI();
         byte[] payload = archive(dir);
 
-        ProcessApi processApi = new ProcessApi(getApiClient());
-
         Map<String, Object> input = new HashMap<>();
         input.put("archive", payload);
         input.put("arguments.url", mockHttpBaseUrl + rule.getPort() + mockHttpPathQueryParams);
 
         StartProcessResponse spr = start(input);
 
-        ProcessEntry pir = waitForCompletion(processApi, spr.getInstanceId());
+        ProcessEntry pir = waitForCompletion(getApiClient(), spr.getInstanceId());
         assertEquals(ProcessEntry.StatusEnum.FINISHED, pir.getStatus());
 
-        byte[] ab = getLog(pir.getLogFileName());
+        byte[] ab = getLog(pir.getInstanceId());
         assertLog(".*Success response.*", ab);
         assertLog(".*message: hello concord!*", ab);
         assertLog(".*multi-value-1: value1*", ab);
@@ -200,12 +190,10 @@ public class HttpTaskIT extends AbstractServerIT {
         input.put("arguments.url", mockHttpBaseUrl + rule.getPort() + mockHttpPathPassword);
         StartProcessResponse spr = start(input);
 
-        ProcessApi processApi = new ProcessApi(getApiClient());
-
-        ProcessEntry pir = waitForCompletion(processApi, spr.getInstanceId());
+        ProcessEntry pir = waitForCompletion(getApiClient(), spr.getInstanceId());
         assertEquals(ProcessEntry.StatusEnum.FINISHED, pir.getStatus());
 
-        byte[] ab = getLog(pir.getLogFileName());
+        byte[] ab = getLog(pir.getInstanceId());
         assertLog(".*Success response.*", ab);
         assertLog(".*Out Response: true*", ab);
     }
@@ -221,12 +209,10 @@ public class HttpTaskIT extends AbstractServerIT {
         input.put("arguments.url", mockHttpBaseUrl + rule.getPort() + mockHttpPathToken);
         StartProcessResponse spr = start(input);
 
-        ProcessApi processApi = new ProcessApi(getApiClient());
-
-        ProcessEntry pir = waitForCompletion(processApi, spr.getInstanceId());
+        ProcessEntry pir = waitForCompletion(getApiClient(), spr.getInstanceId());
         assertEquals(ProcessEntry.StatusEnum.FINISHED, pir.getStatus());
 
-        byte[] ab = getLog(pir.getLogFileName());
+        byte[] ab = getLog(pir.getInstanceId());
         assertLog(".*Success response.*", ab);
         assertLog(".*Out Response: true*", ab);
     }
@@ -243,12 +229,30 @@ public class HttpTaskIT extends AbstractServerIT {
         input.put("arguments.url", mockHttpBaseUrl + rule.getPort() + mockHttpPathPassword);
         StartProcessResponse spr = start(input);
 
-        ProcessApi processApi = new ProcessApi(getApiClient());
-
-        ProcessEntry pir = waitForCompletion(processApi, spr.getInstanceId());
+        ProcessEntry pir = waitForCompletion(getApiClient(), spr.getInstanceId());
         assertEquals(ProcessEntry.StatusEnum.FINISHED, pir.getStatus());
 
-        byte[] ab = getLog(pir.getLogFileName());
+        byte[] ab = getLog(pir.getInstanceId());
+        assertLog(".*Success response.*", ab);
+        assertLog(".*Out Response: true*", ab);
+    }
+
+    @Test
+    public void testPostWithArrayBody() throws Exception {
+        URI dir = HttpTaskIT.class.getResource("httpPostArray").toURI();
+        byte[] payload = archive(dir);
+
+        Map<String, Object> input = new HashMap<>();
+        input.put("archive", payload);
+        input.put("arguments.user", mockHttpAuthUser);
+        input.put("arguments.password", mockHttpAuthPassword);
+        input.put("arguments.url", mockHttpBaseUrl + rule.getPort() + mockHttpPathPassword);
+        StartProcessResponse spr = start(input);
+
+        ProcessEntry pir = waitForCompletion(getApiClient(), spr.getInstanceId());
+        assertEquals(ProcessEntry.StatusEnum.FINISHED, pir.getStatus());
+
+        byte[] ab = getLog(pir.getInstanceId());
         assertLog(".*Success response.*", ab);
         assertLog(".*Out Response: true*", ab);
     }
@@ -265,12 +269,10 @@ public class HttpTaskIT extends AbstractServerIT {
         input.put("arguments.url", mockHttpBaseUrl + rule.getPort() + mockHttpPathPassword);
         StartProcessResponse spr = start(input);
 
-        ProcessApi processApi = new ProcessApi(getApiClient());
-
-        ProcessEntry pir = waitForCompletion(processApi, spr.getInstanceId());
+        ProcessEntry pir = waitForCompletion(getApiClient(), spr.getInstanceId());
         assertEquals(ProcessEntry.StatusEnum.FINISHED, pir.getStatus());
 
-        byte[] ab = getLog(pir.getLogFileName());
+        byte[] ab = getLog(pir.getInstanceId());
         assertLog(".*requestInfo.*", ab);
         assertLog(".*responseInfo.*", ab);
     }
@@ -285,12 +287,10 @@ public class HttpTaskIT extends AbstractServerIT {
         input.put("arguments.url", mockHttpBaseUrl + rule.getPort() + mockHttpPathFormUrlEncoded);
         StartProcessResponse spr = start(input);
 
-        ProcessApi processApi = new ProcessApi(getApiClient());
-
-        ProcessEntry pir = waitForCompletion(processApi, spr.getInstanceId());
+        ProcessEntry pir = waitForCompletion(getApiClient(), spr.getInstanceId());
         assertEquals(ProcessEntry.StatusEnum.FINISHED, pir.getStatus());
 
-        byte[] ab = getLog(pir.getLogFileName());
+        byte[] ab = getLog(pir.getInstanceId());
         assertLog(".*Success response.*", ab);
         assertLog(".*Out Response: true*", ab);
     }
@@ -307,12 +307,10 @@ public class HttpTaskIT extends AbstractServerIT {
         input.put("arguments.url", mockHttpBaseUrl + rule.getPort() + mockHttpPathPassword);
         StartProcessResponse spr = start(input);
 
-        ProcessApi processApi = new ProcessApi(getApiClient());
-
-        ProcessEntry pir = waitForCompletion(processApi, spr.getInstanceId());
+        ProcessEntry pir = waitForCompletion(getApiClient(), spr.getInstanceId());
         assertEquals(ProcessEntry.StatusEnum.FINISHED, pir.getStatus());
 
-        byte[] ab = getLog(pir.getLogFileName());
+        byte[] ab = getLog(pir.getInstanceId());
         assertLog(".*Success response.*", ab);
         assertLog(".*Out Response: true*", ab);
     }
@@ -328,12 +326,10 @@ public class HttpTaskIT extends AbstractServerIT {
         input.put("arguments.url", mockHttpBaseUrl + rule.getPort() + mockHttpPathToken);
         StartProcessResponse spr = start(input);
 
-        ProcessApi processApi = new ProcessApi(getApiClient());
-
-        ProcessEntry pir = waitForCompletion(processApi, spr.getInstanceId());
+        ProcessEntry pir = waitForCompletion(getApiClient(), spr.getInstanceId());
         assertEquals(ProcessEntry.StatusEnum.FINISHED, pir.getStatus());
 
-        byte[] ab = getLog(pir.getLogFileName());
+        byte[] ab = getLog(pir.getInstanceId());
         assertLog(".*Success response.*", ab);
         assertLog(".*Out Response: true*", ab);
     }
@@ -343,13 +339,12 @@ public class HttpTaskIT extends AbstractServerIT {
         URI dir = HttpTaskIT.class.getResource("httpGetWithInvalidUrl").toURI();
         byte[] payload = archive(dir);
 
-        ProcessApi processApi = new ProcessApi(getApiClient());
         StartProcessResponse spr = start(payload);
 
-        ProcessEntry pir = waitForCompletion(processApi, spr.getInstanceId());
+        ProcessEntry pir = waitForCompletion(getApiClient(), spr.getInstanceId());
         assertEquals(ProcessEntry.StatusEnum.FAILED, pir.getStatus());
 
-        byte[] ab = getLog(pir.getLogFileName());
+        byte[] ab = getLog(pir.getInstanceId());
         assertLog(".*server not exists.*", ab);
     }
 
@@ -364,12 +359,10 @@ public class HttpTaskIT extends AbstractServerIT {
         input.put("arguments.url", mockHttpBaseUrl + rule.getPort() + mockHttpPathHeaders);
         StartProcessResponse spr = start(input);
 
-        ProcessApi processApi = new ProcessApi(getApiClient());
-
-        ProcessEntry pir = waitForCompletion(processApi, spr.getInstanceId());
+        ProcessEntry pir = waitForCompletion(getApiClient(), spr.getInstanceId());
         assertEquals(ProcessEntry.StatusEnum.FINISHED, pir.getStatus());
 
-        byte[] ab = getLog(pir.getLogFileName());
+        byte[] ab = getLog(pir.getInstanceId());
         assertLog(".*Success response.*", ab);
         assertLog(".*Out Response: true*", ab);
         assertLog(".*Response content: request headers:.*h1=v1.*", ab);
@@ -388,12 +381,10 @@ public class HttpTaskIT extends AbstractServerIT {
         input.put("arguments.url", mockHttpBaseUrl + rule.getPort() + mockHttpPathUnauthorized);
         StartProcessResponse spr = start(input);
 
-        ProcessApi processApi = new ProcessApi(getApiClient());
-
-        ProcessEntry pir = waitForCompletion(processApi, spr.getInstanceId());
+        ProcessEntry pir = waitForCompletion(getApiClient(), spr.getInstanceId());
         assertEquals(ProcessEntry.StatusEnum.FINISHED, pir.getStatus());
 
-        byte[] ab = getLog(pir.getLogFileName());
+        byte[] ab = getLog(pir.getInstanceId());
         assertLog(".*statusCode: 401*", ab);
         assertLog(".*Success response: false*", ab);
     }
@@ -403,18 +394,16 @@ public class HttpTaskIT extends AbstractServerIT {
         URI dir = HttpTaskIT.class.getResource("httpGetEmpty").toURI();
         byte[] payload = archive(dir);
 
-        ProcessApi processApi = new ProcessApi(getApiClient());
-
         Map<String, Object> input = new HashMap<>();
         input.put("archive", payload);
         input.put("arguments.url", mockHttpBaseUrl + rule.getPort() + mockHttpPathEmpty);
 
         StartProcessResponse spr = start(input);
 
-        ProcessEntry pir = waitForCompletion(processApi, spr.getInstanceId());
+        ProcessEntry pir = waitForCompletion(getApiClient(), spr.getInstanceId());
         assertEquals(ProcessEntry.StatusEnum.FINISHED, pir.getStatus());
 
-        byte[] ab = getLog(pir.getLogFileName());
+        byte[] ab = getLog(pir.getInstanceId());
         assertLog(".*Success response: true.*", ab);
         assertLog(".*Content is NULL: true.*", ab);
     }
@@ -430,12 +419,10 @@ public class HttpTaskIT extends AbstractServerIT {
         input.put("arguments.url", mockHttpBaseUrl + rule.getPort() + mockHttpPathFollowRedirects);
         StartProcessResponse spr = start(input);
 
-        ProcessApi processApi = new ProcessApi(getApiClient());
-
-        ProcessEntry pir = waitForCompletion(processApi, spr.getInstanceId());
+        ProcessEntry pir = waitForCompletion(getApiClient(), spr.getInstanceId());
         assertEquals(ProcessEntry.StatusEnum.FINISHED, pir.getStatus());
 
-        byte[] ab = getLog(pir.getLogFileName());
+        byte[] ab = getLog(pir.getInstanceId());
         assertLog(".*Response status code: 302.*", ab);
     }
 
@@ -444,8 +431,8 @@ public class HttpTaskIT extends AbstractServerIT {
                 .willReturn(aResponse()
                         .withStatus(200)
                         .withBody("{\n" +
-                                "  \"Success\": \"true\"\n" +
-                                "}"))
+                                  "  \"Success\": \"true\"\n" +
+                                  "}"))
         );
     }
 
@@ -455,10 +442,10 @@ public class HttpTaskIT extends AbstractServerIT {
                 .willReturn(aResponse()
                         .withStatus(200)
                         .withBody("{\n" +
-                                " \"message\": \"{{request.requestLine.query.message}}\", " +
-                                " \"multiValue1\": \"{{request.requestLine.query.multiValue.[0]}}\", " +
-                                " \"multiValue2\": \"{{request.requestLine.query.multiValue.[1]}}\"" +
-                                "}")
+                                  " \"message\": \"{{request.requestLine.query.message}}\", " +
+                                  " \"multiValue1\": \"{{request.requestLine.query.multiValue.[0]}}\", " +
+                                  " \"multiValue2\": \"{{request.requestLine.query.multiValue.[1]}}\"" +
+                                  "}")
                         .withTransformers("response-template"))
         );
 
@@ -470,8 +457,8 @@ public class HttpTaskIT extends AbstractServerIT {
                 .willReturn(aResponse()
                         .withStatus(200)
                         .withBody("{\n" +
-                                "  \"Authorized\": \"true\"\n" +
-                                "}"))
+                                  "  \"Authorized\": \"true\"\n" +
+                                  "}"))
         );
     }
 
@@ -481,8 +468,8 @@ public class HttpTaskIT extends AbstractServerIT {
                 .willReturn(aResponse()
                         .withStatus(200)
                         .withBody("{\n" +
-                                "  \"Authorized\": \"true\"\n" +
-                                "}"))
+                                  "  \"Authorized\": \"true\"\n" +
+                                  "}"))
         );
     }
 
@@ -492,8 +479,8 @@ public class HttpTaskIT extends AbstractServerIT {
                 .willReturn(aResponse()
                         .withStatus(200)
                         .withBody("{\n" +
-                                "  \"Authorized\": \"true\"\n" +
-                                "}"))
+                                  "  \"Authorized\": \"true\"\n" +
+                                  "}"))
         );
     }
 
@@ -503,8 +490,8 @@ public class HttpTaskIT extends AbstractServerIT {
                 .willReturn(aResponse()
                         .withStatus(200)
                         .withBody("{\n" +
-                                "  \"Authorized\": \"true\"\n" +
-                                "}"))
+                                  "  \"Authorized\": \"true\"\n" +
+                                  "}"))
         );
     }
 
@@ -514,8 +501,8 @@ public class HttpTaskIT extends AbstractServerIT {
                 .willReturn(aResponse()
                         .withStatus(200)
                         .withBody("{\n" +
-                                "  \"Authorized\": \"true\"\n" +
-                                "}"))
+                                  "  \"Authorized\": \"true\"\n" +
+                                  "}"))
         );
     }
 
@@ -531,8 +518,8 @@ public class HttpTaskIT extends AbstractServerIT {
                 .willReturn(aResponse()
                         .withStatus(401)
                         .withBody("{\n" +
-                                "  \"Authorized\": \"false\"\n" +
-                                "}"))
+                                  "  \"Authorized\": \"false\"\n" +
+                                  "}"))
         );
     }
 
@@ -549,8 +536,8 @@ public class HttpTaskIT extends AbstractServerIT {
                 .willReturn(aResponse()
                         .withStatus(200)
                         .withBody("{\n" +
-                                "  \"Success\": \"true\"\n" +
-                                "}")));
+                                  "  \"Success\": \"true\"\n" +
+                                  "}")));
     }
 
     private void stubForRedirects(String url) {

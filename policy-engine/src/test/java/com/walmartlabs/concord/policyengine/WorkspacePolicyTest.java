@@ -27,7 +27,8 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class WorkspacePolicyTest {
 
@@ -36,8 +37,8 @@ public class WorkspacePolicyTest {
         Path p = Files.createTempDirectory("test1");
         Files.write(p.resolve("test.bin"), new byte[]{0, 1, 2, 3, 4, 5}, StandardOpenOption.CREATE_NEW);
 
-        WorkspacePolicy fiveBytes = new WorkspacePolicy(new WorkspaceRule("5 bytes", 5L, null));
-        WorkspacePolicy tenBytes = new WorkspacePolicy(new WorkspaceRule("10 bytes", 10L, null));
+        WorkspacePolicy fiveBytes = new WorkspacePolicy(WorkspaceRule.of("5 bytes", 5L, null));
+        WorkspacePolicy tenBytes = new WorkspacePolicy(WorkspaceRule.of("10 bytes", 10L, null));
 
         // ---
 

@@ -6,18 +6,32 @@
     <parent>
         <groupId>com.walmartlabs.concord</groupId>
         <artifactId>parent</artifactId>
-        <version>1.94.1-SNAPSHOT</version>
+        <version>2.12.1-SNAPSHOT</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
 
     <artifactId>concord-client</artifactId>
-    <packaging>takari-jar</packaging>
+    <packaging>jar</packaging>
+
+    <properties>
+        <swagger.version>1.5.20</swagger.version>
+        <gson.version>2.10</gson.version>
+        <gson.fire.version>1.8.3</gson.fire.version>
+        <okhttp.version>2.7.5</okhttp.version>
+        <okio.version>1.17.2</okio.version>
+    </properties>
 
     <dependencies>
         <dependency>
             <groupId>com.walmartlabs.concord.server</groupId>
             <artifactId>concord-server</artifactId>
             <scope>provided</scope>
+            <exclusions>
+                <exclusion>
+                    <groupId>commons-logging</groupId>
+                    <artifactId>commons-logging</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
         <dependency>
             <groupId>com.walmartlabs.concord</groupId>
@@ -29,29 +43,46 @@
             <artifactId>concord-sdk</artifactId>
         </dependency>
         <dependency>
+            <groupId>com.walmartlabs.concord.runtime.v2</groupId>
+            <artifactId>concord-runtime-sdk-v2</artifactId>
+        </dependency>
+        <dependency>
             <groupId>com.squareup.okhttp</groupId>
             <artifactId>okhttp</artifactId>
+            <version>${okhttp.version}</version>
         </dependency>
         <dependency>
             <groupId>com.squareup.okhttp</groupId>
             <artifactId>logging-interceptor</artifactId>
+            <version>${okhttp.version}</version>
         </dependency>
         <dependency>
             <groupId>com.squareup.okio</groupId>
             <artifactId>okio</artifactId>
+            <version>${okio.version}</version>
         </dependency>
         <dependency>
             <groupId>com.google.code.gson</groupId>
             <artifactId>gson</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>io.gsonfire</groupId>
-            <artifactId>gson-fire</artifactId>
+            <version>${gson.version}</version>
         </dependency>
         <dependency>
             <groupId>io.swagger</groupId>
             <artifactId>swagger-annotations</artifactId>
+            <version>${swagger.version}</version>
         </dependency>
+        <dependency>
+            <groupId>io.gsonfire</groupId>
+            <artifactId>gson-fire</artifactId>
+            <version>${gson.fire.version}</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>com.google.code.gson</groupId>
+                    <artifactId>gson</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+
         <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-api</artifactId>
@@ -91,8 +122,8 @@
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>com.github.tomakehurst</groupId>
-            <artifactId>wiremock-jre8</artifactId>
+            <groupId>org.wiremock</groupId>
+            <artifactId>wiremock-jetty12</artifactId>
             <scope>test</scope>
         </dependency>
     </dependencies>
@@ -117,20 +148,13 @@
 
         <plugins>
             <plugin>
-                <groupId>io.takari.maven.plugins</groupId>
-                <artifactId>takari-lifecycle-plugin</artifactId>
-                <configuration>
-                    <privatePackageReference>ignore</privatePackageReference>
-                    <proc>proc</proc>
-                </configuration>
-            </plugin>
-            <plugin>
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>cobertura-maven-plugin</artifactId>
             </plugin>
             <plugin>
                 <groupId>io.swagger</groupId>
                 <artifactId>swagger-codegen-maven-plugin</artifactId>
+                <version>2.3.1</version>
                 <executions>
                     <execution>
                         <id>server</id>
@@ -139,7 +163,7 @@
                         </goals>
                         <configuration>
                             <inputSpec>
-                                ${project.basedir}/../server/impl/target/classes/com/walmartlabs/concord/server/swagger/swagger.json
+                                ${project.basedir}/swagger.json
                             </inputSpec>
                             <language>java</language>
                             <languageSpecificPrimitives>
@@ -172,7 +196,16 @@
                                 <code>java.field.serialVersionUIDUnchanged</code>
                             </item>
                             <item>
-                                <code>java.annotation.added</code>
+                                <code>java.method.parameterTypeParameterChanged</code>
+                            </item>
+                            <item>
+                                <code>java.method.returnTypeTypeParametersChanged</code>
+                            </item>
+                            <item>
+                                <code>java.class.externalClassExposedInAPI</code>
+                            </item>
+                            <item>
+                                <code>java.method.numberOfParametersChanged</code>
                             </item>
                         </revapi.ignore>
                     </analysisConfiguration>

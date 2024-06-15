@@ -29,7 +29,6 @@ import org.jooq.Configuration;
 import org.jooq.DSLContext;
 
 import javax.inject.Inject;
-import javax.inject.Named;
 import java.io.IOException;
 import java.sql.Timestamp;
 import java.util.List;
@@ -40,7 +39,6 @@ import static com.walmartlabs.concord.server.jooq.tables.AgentCommands.AGENT_COM
 import static org.jooq.impl.DSL.currentOffsetDateTime;
 import static org.jooq.impl.DSL.value;
 
-@Named
 public class AgentCommandsDao extends AbstractDao {
 
     private final ObjectMapper objectMapper;

@@ -5,13 +5,13 @@
     <parent>
         <groupId>com.walmartlabs.concord.it</groupId>
         <artifactId>parent</artifactId>
-        <version>1.94.1-SNAPSHOT</version>
+        <version>2.12.1-SNAPSHOT</version>
         <relativePath>../../pom.xml</relativePath>
     </parent>
 
     <groupId>com.walmartlabs.concord.it.tasks</groupId>
     <artifactId>suspend-test</artifactId>
-    <packaging>takari-jar</packaging>
+    <packaging>jar</packaging>
 
     <dependencies>
         <dependency>

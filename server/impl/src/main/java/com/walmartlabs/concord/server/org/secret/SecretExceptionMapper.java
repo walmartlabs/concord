@@ -20,23 +20,21 @@ package com.walmartlabs.concord.server.org.secret;
  * =====
  */
 
-import org.sonatype.siesta.ExceptionMapperSupport;
+import com.walmartlabs.concord.server.boot.resteasy.ExceptionMapperSupport;
 
-import javax.inject.Named;
-import javax.inject.Singleton;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.Response;
+import javax.ws.rs.ext.Provider;
 
-@Named
-@Singleton
+@Provider
 public class SecretExceptionMapper extends ExceptionMapperSupport<SecretException> {
 
     @Context
     HttpHeaders headers;
 
     @Override
-    protected Response convert(SecretException e, String id) {
+    protected Response convert(SecretException e) {
         return Response.status(Response.Status.BAD_REQUEST).entity(e.getMessage()).build();
     }
 }

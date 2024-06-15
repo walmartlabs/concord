@@ -21,13 +21,11 @@ package com.walmartlabs.concord.server.metrics;
  */
 
 import io.prometheus.client.exporter.MetricsServlet;
-import org.eclipse.jetty.servlet.ServletHolder;
+import org.eclipse.jetty.ee8.servlet.ServletHolder;
 
-import javax.inject.Named;
 import javax.inject.Singleton;
 import javax.servlet.annotation.WebServlet;
 
-@Named
 @Singleton
 @WebServlet("/metrics")
 public class MetricsServletHolder extends ServletHolder {

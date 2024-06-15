@@ -27,7 +27,7 @@ import java.util.*;
 public final class YamlObjectConverter {
 
     public static YamlObject from(Map<String, Object> value, Location location) {
-        Map<String, YamlValue> values = new HashMap<>();
+        Map<String, YamlValue> values = new LinkedHashMap<>();
 
         for (Map.Entry<String, Object> e : value.entrySet()) {
             YamlValue v = fromObject(e.getValue(), location);

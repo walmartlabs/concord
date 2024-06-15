@@ -22,9 +22,7 @@ package com.walmartlabs.concord.common;
 
 import org.junit.jupiter.api.Test;
 
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
@@ -250,6 +248,14 @@ public class MatcherTest {
 
         //! [] == [null, []]
         assertFalse(Matcher.matches(emptyList(), asList(null, emptyList())));
+    }
+
+    @Test
+    public void testArrayMatch() {
+        List<String> data = Arrays.asList("one", "two");
+
+        assertTrue(Matcher.matches(data, "on.*"));
+        assertFalse(Matcher.matches(data, "ono"));
     }
 
     // null == null, "", ".*", [null]

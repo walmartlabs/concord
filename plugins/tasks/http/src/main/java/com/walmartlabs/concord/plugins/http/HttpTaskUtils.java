@@ -125,7 +125,7 @@ public final class HttpTaskUtils {
                 if (isValidJSON(strBody)) {
                     return new StringEntity(strBody, StandardCharsets.UTF_8);
                 }
-            } else if (body instanceof Map) {
+            } else {
                 return new StringEntity(new ObjectMapper().writeValueAsString(body), StandardCharsets.UTF_8);
             }
         } else if ((RequestType.STRING == requestType) && (body instanceof String)) {

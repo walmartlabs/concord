@@ -20,8 +20,7 @@ package com.walmartlabs.concord.it.server;
  * =====
  */
 
-import com.walmartlabs.concord.ApiException;
-import com.walmartlabs.concord.client.*;
+import com.walmartlabs.concord.client2.*;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.parallel.Execution;
 import org.junit.jupiter.api.parallel.ExecutionMode;
@@ -39,24 +38,24 @@ public class CrudIT extends AbstractServerIT {
         Map<String, Object> meta = Collections.singletonMap("x", "123");
 
         OrganizationsApi orgApi = new OrganizationsApi(getApiClient());
-        orgApi.createOrUpdate(new OrganizationEntry()
-                .setName(orgName)
-                .setMeta(meta)
-                .setVisibility(OrganizationEntry.VisibilityEnum.PUBLIC));
+        orgApi.createOrUpdateOrg(new OrganizationEntry()
+                .name(orgName)
+                .meta(meta)
+                .visibility(OrganizationEntry.VisibilityEnum.PUBLIC));
 
         // ---
 
-        OrganizationEntry e = orgApi.get(orgName);
+        OrganizationEntry e = orgApi.getOrg(orgName);
         assertNotNull(e.getMeta());
         assertEquals("123", e.getMeta().get("x"));
 
         // ---
 
-        orgApi.createOrUpdate(e.setMeta(Collections.singletonMap("x", "234")));
+        orgApi.createOrUpdateOrg(e.meta(Collections.singletonMap("x", "234")));
 
         // ---
 
-        e = orgApi.get(orgName);
+        e = orgApi.getOrg(orgName);
         assertNotNull(e.getMeta());
         assertEquals("234", e.getMeta().get("x"));
     }
@@ -71,33 +70,33 @@ public class CrudIT extends AbstractServerIT {
 
         // --- create
 
-        ProjectOperationResponse createResp = projectsApi.createOrUpdate(orgName, new ProjectEntry().setName(projectName));
-        assertTrue(createResp.isOk());
+        ProjectOperationResponse createResp = projectsApi.createOrUpdateProject(orgName, new ProjectEntry().name(projectName));
+        assertTrue(createResp.getOk());
         assertNotNull(createResp.getId());
 
         // --- update
 
-        ProjectOperationResponse updateResp = projectsApi.createOrUpdate(orgName, new ProjectEntry()
-                .setId(createResp.getId())
-                .setName(updateProjectName));
+        ProjectOperationResponse updateResp = projectsApi.createOrUpdateProject(orgName, new ProjectEntry()
+                .id(createResp.getId())
+                .name(updateProjectName));
         assertEquals(ProjectOperationResponse.ResultEnum.UPDATED, updateResp.getResult());
         assertEquals(createResp.getId(), updateResp.getId());
 
         // --- get
 
-        ProjectEntry projectEntry = projectsApi.get(orgName, updateProjectName);
+        ProjectEntry projectEntry = projectsApi.getProject(orgName, updateProjectName);
         assertEquals(projectEntry.getId(), createResp.getId());
 
         // --- create
 
-        createResp = projectsApi.createOrUpdate(orgName, new ProjectEntry()
-                .setName(projectName)
-                .setRepositories(Collections.emptyMap()));
-        assertTrue(createResp.isOk());
+        createResp = projectsApi.createOrUpdateProject(orgName, new ProjectEntry()
+                .name(projectName)
+                .repositories(Collections.emptyMap()));
+        assertTrue(createResp.getOk());
 
         // --- list
 
-        List<ProjectEntry> projectList = projectsApi.find(orgName, null, null, null);
+        List<ProjectEntry> projectList = projectsApi.findProjects(orgName, null, null, null);
         projectEntry = findProject(projectList, projectName);
         assertNotNull(projectEntry);
 
@@ -106,34 +105,32 @@ public class CrudIT extends AbstractServerIT {
         String newOrgName = "org_" + randomString();
         OrganizationsApi orgApi = new OrganizationsApi(getApiClient());
         CreateOrganizationResponse createOrganizationResponse =
-                orgApi.createOrUpdate(new OrganizationEntry().setName(newOrgName));
-        assertTrue(createOrganizationResponse.isOk());
+                orgApi.createOrUpdateOrg(new OrganizationEntry().name(newOrgName));
+        assertTrue(createOrganizationResponse.getOk());
         assertNotNull(createOrganizationResponse.getId());
 
-        ProjectOperationResponse moveResp = projectsApi.createOrUpdate(orgName, new ProjectEntry()
-                .setId(createResp.getId())
-                .setOrgId(createOrganizationResponse.getId())
+        ProjectOperationResponse moveResp = projectsApi.createOrUpdateProject(orgName, new ProjectEntry()
+                .id(createResp.getId())
+                .orgId(createOrganizationResponse.getId())
         );
-        assertTrue(moveResp.isOk());
+        assertTrue(moveResp.getOk());
         assertEquals(ProjectOperationResponse.ResultEnum.UPDATED, moveResp.getResult());
 
         // --- error - empty name
 
         try {
-            projectsApi.createOrUpdate(orgName, new ProjectEntry()
-                    .setName("")
-            );
+            projectsApi.createOrUpdateProject(orgName, new ProjectEntry().name(""));
             fail("Project name should not be empty string");
         } catch (ApiException e) {
-            assertTrue(e.getMessage().contains("must match"));
+            assertTrue(e.getMessage().contains("must match"), e::getMessage);
         }
 
         // --- error - null name and id
 
         try {
-            projectsApi.createOrUpdate(orgName, new ProjectEntry()
-                    .setName(null)
-                    .setId(null)
+            projectsApi.createOrUpdateProject(orgName, new ProjectEntry()
+                    .name(null)
+                    .id(null)
             );
             fail("Project name should not be empty string");
         } catch (ApiException e) {
@@ -142,17 +139,17 @@ public class CrudIT extends AbstractServerIT {
 
         // --- update project's organization name
 
-        moveResp = projectsApi.createOrUpdate(newOrgName, new ProjectEntry()
-                .setName(projectName)
-                .setOrgName(orgName)
+        moveResp = projectsApi.createOrUpdateProject(newOrgName, new ProjectEntry()
+                .name(projectName)
+                .orgName(orgName)
         );
-        assertTrue(moveResp.isOk());
+        assertTrue(moveResp.getOk());
         assertEquals(ProjectOperationResponse.ResultEnum.UPDATED, moveResp.getResult());
 
         // --- delete
 
-        GenericOperationResult deleteResp = projectsApi.delete(orgName, projectName);
-        assertTrue(deleteResp.isOk());
+        GenericOperationResult deleteResp = projectsApi.deleteProject(orgName, projectName);
+        assertTrue(deleteResp.getOk());
     }
 
     @Test
@@ -165,19 +162,19 @@ public class CrudIT extends AbstractServerIT {
         String repoName = "repo_" + randomString();
 
         ProjectsApi projectsApi = new ProjectsApi(getApiClient());
-        projectsApi.createOrUpdate(orgName, new ProjectEntry()
-                .setName(projectName1)
-                .setRepositories(Collections.singletonMap(repoName, new RepositoryEntry()
-                        .setName(repoName)
-                        .setUrl("n/a")
-                        .setBranch("n/a"))));
+        projectsApi.createOrUpdateProject(orgName, new ProjectEntry()
+                .name(projectName1)
+                .repositories(Collections.singletonMap(repoName, new RepositoryEntry()
+                        .name(repoName)
+                        .url(createRepo("repositoryRefresh"))
+                        .branch("master"))));
 
-        projectsApi.createOrUpdate(orgName, new ProjectEntry()
-                .setName(projectName2)
-                .setRepositories(Collections.singletonMap(repoName, new RepositoryEntry()
-                        .setName(repoName)
-                        .setUrl("n/a")
-                        .setBranch("n/a"))));
+        projectsApi.createOrUpdateProject(orgName, new ProjectEntry()
+                .name(projectName2)
+                .repositories(Collections.singletonMap(repoName, new RepositoryEntry()
+                        .name(repoName)
+                        .url(createRepo("repositoryRefresh"))
+                        .branch("master"))));
     }
 
     @Test
@@ -190,32 +187,32 @@ public class CrudIT extends AbstractServerIT {
 
         // --- create
 
-        CreateInventoryResponse cir = inventoriesApi.createOrUpdate(orgName, new InventoryEntry().setName(inventoryName));
-        assertTrue(cir.isOk());
+        CreateInventoryResponse cir = inventoriesApi.createOrUpdateInventory(orgName, new InventoryEntry().name(inventoryName));
+        assertTrue(cir.getOk());
         assertNotNull(cir.getId());
 
         // --- update
 
-        CreateInventoryResponse updateInventoryResponse = inventoriesApi.createOrUpdate(orgName,
+        CreateInventoryResponse updateInventoryResponse = inventoriesApi.createOrUpdateInventory(orgName,
                 new InventoryEntry()
-                        .setId(cir.getId())
-                        .setName(updatedInventoryName));
+                        .id(cir.getId())
+                        .name(updatedInventoryName));
         assertEquals(updateInventoryResponse.getResult(), CreateInventoryResponse.ResultEnum.UPDATED);
         assertEquals(updateInventoryResponse.getId(), cir.getId());
 
         // --- get
 
-        InventoryEntry inventoryEntry = inventoriesApi.get(orgName, updatedInventoryName);
+        InventoryEntry inventoryEntry = inventoriesApi.getInventory(orgName, updatedInventoryName);
         assertNotNull(inventoryEntry);
 
         // -- list
 
-        List<InventoryEntry> l = inventoriesApi.list(orgName);
+        List<InventoryEntry> l = inventoriesApi.listInventories(orgName);
         assertTrue(l.stream().anyMatch(e -> updatedInventoryName.equals(e.getName()) && orgName.equals(e.getOrgName())));
 
         // --- delete
 
-        GenericOperationResult deleteInventoryResponse = inventoriesApi.delete(orgName, updatedInventoryName);
+        GenericOperationResult deleteInventoryResponse = inventoriesApi.deleteInventory(orgName, updatedInventoryName);
         assertTrue(deleteInventoryResponse.getResult() == GenericOperationResult.ResultEnum.DELETED);
     }
 
@@ -229,27 +226,27 @@ public class CrudIT extends AbstractServerIT {
         Map<String, Object> data = Collections.singletonMap("k", "v");
 
         InventoriesApi inventoriesApi = new InventoriesApi(getApiClient());
-        inventoriesApi.createOrUpdate(orgName, new InventoryEntry().setName(inventoryName));
+        inventoriesApi.createOrUpdateInventory(orgName, new InventoryEntry().name(inventoryName));
 
         // --- create
 
         @SuppressWarnings("unchecked")
-        Map<String, Object> result = (Map<String, Object>) dataApi.data(orgName, inventoryName, itemPath, data);
+        Map<String, Object> result = (Map<String, Object>) dataApi.updateInventoryData(orgName, inventoryName, itemPath, data);
         assertNotNull(result);
         assertEquals(Collections.singletonMap("a", data), result);
 
         // --- get
 
         @SuppressWarnings("unchecked")
-        Map<String, Object> result2 = (Map<String, Object>) dataApi.get(orgName, inventoryName, itemPath, false);
+        Map<String, Object> result2 = (Map<String, Object>) dataApi.getInventoryData(orgName, inventoryName, itemPath, false);
         assertNotNull(result2);
         assertEquals(Collections.singletonMap("a", data), result);
 
         // --- delete
 
-        DeleteInventoryDataResponse didr = dataApi.delete(orgName, inventoryName, itemPath);
+        DeleteInventoryDataResponse didr = dataApi.deleteInventoryData(orgName, inventoryName, itemPath);
         assertNotNull(didr);
-        assertTrue(didr.isOk());
+        assertTrue(didr.getOk());
     }
 
     @Test
@@ -263,47 +260,47 @@ public class CrudIT extends AbstractServerIT {
         String text = "select * from test_" + randomString();
 
         InventoriesApi inventoriesApi = new InventoriesApi(getApiClient());
-        inventoriesApi.createOrUpdate(orgName, new InventoryEntry().setName(inventoryName));
+        inventoriesApi.createOrUpdateInventory(orgName, new InventoryEntry().name(inventoryName));
 
         // ---
 
         InventoryDataApi dataApi = new InventoryDataApi(getApiClient());
-        dataApi.data(orgName, inventoryName, "/test", Collections.singletonMap("k", "v"));
+        dataApi.updateInventoryData(orgName, inventoryName, "/test", Collections.singletonMap("k", "v"));
 
         // --- create
 
-        CreateInventoryQueryResponse cqr = queriesApi.createOrUpdate(orgName, inventoryName, queryName, text);
-        assertTrue(cqr.isOk());
+        CreateInventoryQueryResponse cqr = queriesApi.createOrUpdateInventoryQuery(orgName, inventoryName, queryName, text);
+        assertTrue(cqr.getOk());
         assertNotNull(cqr.getId());
 
         // --- update
         String updatedText = "select item_data::text from inventory_data";
-        CreateInventoryQueryResponse uqr = queriesApi.createOrUpdate(orgName, inventoryName, queryName, updatedText);
-        assertTrue(uqr.isOk());
+        CreateInventoryQueryResponse uqr = queriesApi.createOrUpdateInventoryQuery(orgName, inventoryName, queryName, updatedText);
+        assertTrue(uqr.getOk());
         assertNotNull(uqr.getId());
 
         // --- get
-        InventoryQueryEntry e1 = queriesApi.get(orgName, inventoryName, queryName);
+        InventoryQueryEntry e1 = queriesApi.getInventoryQuery(orgName, inventoryName, queryName);
         assertNotNull(e1);
         assertNotNull(e1.getId());
         assertEquals(queryName, e1.getName());
         assertEquals(updatedText, e1.getText());
 
         // --- list
-        List<InventoryQueryEntry> list = queriesApi.list(orgName, inventoryName);
+        List<InventoryQueryEntry> list = queriesApi.listInventoryQueries(orgName, inventoryName);
         assertTrue(list.stream().anyMatch(e -> queryName.equals(e.getName()) && updatedText.equals(e.getText())));
 
         // --- exec
         @SuppressWarnings("unchecked")
-        List<Object> result = queriesApi.exec(orgName, inventoryName, queryName, null);
+        List<Object> result = queriesApi.executeInventoryQuery(orgName, inventoryName, queryName, null);
         assertNotNull(result);
         Map<String, Object> m = (Map<String, Object>) result.get(0);
         assertEquals(Collections.singletonMap("k", "v"), m);
 
         // --- delete
-        DeleteInventoryQueryResponse dqr = queriesApi.delete(orgName, inventoryName, queryName);
+        DeleteInventoryQueryResponse dqr = queriesApi.deleteInventoryQuery(orgName, inventoryName, queryName);
         assertNotNull(dqr);
-        assertTrue(dqr.isOk());
+        assertTrue(dqr.getOk());
     }
 
     @Test
@@ -315,12 +312,12 @@ public class CrudIT extends AbstractServerIT {
         String queryName = "queryName_" + randomString();
 
         InventoriesApi inventoriesApi = new InventoriesApi(getApiClient());
-        inventoriesApi.createOrUpdate(orgName, new InventoryEntry().setName(inventoryName));
+        inventoriesApi.createOrUpdateInventory(orgName, new InventoryEntry().name(inventoryName));
 
         // ---
 
         try {
-            queriesApi.exec(orgName, inventoryName, queryName, null);
+            queriesApi.executeInventoryQuery(orgName, inventoryName, queryName, null);
             fail("should fail");
         } catch (ApiException e) {
             assertTrue(e.getMessage().contains("not found") && e.getMessage().contains(queryName));
@@ -332,27 +329,27 @@ public class CrudIT extends AbstractServerIT {
         String orgName = randomString() + "-test~";
 
         OrganizationsApi orgApi = new OrganizationsApi(getApiClient());
-        orgApi.createOrUpdate(new OrganizationEntry().setName(orgName));
+        orgApi.createOrUpdateOrg(new OrganizationEntry().name(orgName));
 
-        orgApi.get(orgName);
+        orgApi.getOrg(orgName);
 
         // ---
 
         String teamName = randomString() + "-test~";
 
         TeamsApi teamsApi = new TeamsApi(getApiClient());
-        teamsApi.createOrUpdate(orgName, new TeamEntry().setName(teamName));
+        teamsApi.createOrUpdateTeam(orgName, new TeamEntry().name(teamName));
 
-        teamsApi.get(orgName, teamName);
+        teamsApi.getTeam(orgName, teamName);
 
         // ---
 
         String projectName = randomString() + "-test~";
 
         ProjectsApi projectsApi = new ProjectsApi(getApiClient());
-        projectsApi.createOrUpdate(orgName, new ProjectEntry().setName(projectName));
+        projectsApi.createOrUpdateProject(orgName, new ProjectEntry().name(projectName));
 
-        projectsApi.get(orgName, projectName);
+        projectsApi.getProject(orgName, projectName);
 
         // ---
 
@@ -370,29 +367,29 @@ public class CrudIT extends AbstractServerIT {
         TeamsApi teamsApi = new TeamsApi(getApiClient());
 
         // Create
-        CreateTeamResponse teamResponse = teamsApi.createOrUpdate(orgName, new TeamEntry().setName(teamName));
-        assertTrue(teamResponse.isOk());
+        CreateTeamResponse teamResponse = teamsApi.createOrUpdateTeam(orgName, new TeamEntry().name(teamName));
+        assertTrue(teamResponse.getOk());
         assertNotNull(teamResponse.getId());
         assertEquals(teamResponse.getResult(), CreateTeamResponse.ResultEnum.CREATED);
 
         // Update Team by Name
-        CreateTeamResponse updateTeamResponse = teamsApi.createOrUpdate(orgName, new TeamEntry()
-                .setName(teamName)
-                .setDescription("Update Description"));
+        CreateTeamResponse updateTeamResponse = teamsApi.createOrUpdateTeam(orgName, new TeamEntry()
+                .name(teamName)
+                .description("Update Description"));
         assertEquals(updateTeamResponse.getId(), teamResponse.getId());
         assertEquals(updateTeamResponse.getResult(), CreateTeamResponse.ResultEnum.UPDATED);
 
         // Update Team by ID
         String updatedTeamName = "UpdatedName_" + randomString();
-        CreateTeamResponse updateTeamById = teamsApi.createOrUpdate(orgName, new TeamEntry()
-                .setId(teamResponse.getId())
-                .setName(updatedTeamName)
-                .setDescription("Name is updated"));
+        CreateTeamResponse updateTeamById = teamsApi.createOrUpdateTeam(orgName, new TeamEntry()
+                .id(teamResponse.getId())
+                .name(updatedTeamName)
+                .description("Name is updated"));
         assertEquals(teamResponse.getId(), updateTeamById.getId());
         assertEquals(updateTeamResponse.getResult(), CreateTeamResponse.ResultEnum.UPDATED);
 
         // Get
-        TeamEntry teamEntry = teamsApi.get(orgName, updatedTeamName);
+        TeamEntry teamEntry = teamsApi.getTeam(orgName, updatedTeamName);
         assertEquals(teamResponse.getId(), teamEntry.getId());
         assertEquals(updatedTeamName, teamEntry.getName());
     }
@@ -402,42 +399,42 @@ public class CrudIT extends AbstractServerIT {
         OrganizationsApi organizationsApi = new OrganizationsApi(getApiClient());
 
         String orgName = "org_" + randomString();
-        organizationsApi.createOrUpdate(new OrganizationEntry()
-                .setName(orgName));
+        organizationsApi.createOrUpdateOrg(new OrganizationEntry()
+                .name(orgName));
 
         UsersApi usersApi = new UsersApi(getApiClient());
 
         String userAName = "userA_" + randomString();
-        CreateUserResponse curA = usersApi.createOrUpdate(new CreateUserRequest()
-                .setType(CreateUserRequest.TypeEnum.LOCAL)
-                .setUsername(userAName));
+        CreateUserResponse curA = usersApi.createOrUpdateUser(new CreateUserRequest()
+                .type(CreateUserRequest.TypeEnum.LOCAL)
+                .username(userAName));
 
         String userBName = "userB_" + randomString();
-        CreateUserResponse curB = usersApi.createOrUpdate(new CreateUserRequest()
-                .setType(CreateUserRequest.TypeEnum.LOCAL)
-                .setUsername(userBName));
+        CreateUserResponse curB = usersApi.createOrUpdateUser(new CreateUserRequest()
+                .type(CreateUserRequest.TypeEnum.LOCAL)
+                .username(userBName));
 
         TeamsApi teamsApi = new TeamsApi(getApiClient());
 
         String teamName = "team_" + randomString();
-        teamsApi.createOrUpdate(orgName, new TeamEntry()
-                .setName(teamName));
+        teamsApi.createOrUpdateTeam(orgName, new TeamEntry()
+                .name(teamName));
 
         // ---
 
-        List<TeamUserEntry> l = teamsApi.listUsers(orgName, teamName);
+        List<TeamUserEntry> l = teamsApi.listUserTeams(orgName, teamName);
         assertEquals(1, l.size());
         assertEquals("admin", l.get(0).getUsername());
 
         // ---
 
-        teamsApi.addUsers(orgName, teamName, true, Arrays.asList(
-                new TeamUserEntry().setUserId(curA.getId()),
-                new TeamUserEntry().setUserId(curB.getId())));
+        teamsApi.addUsersToTeam(orgName, teamName, true, Arrays.asList(
+                new TeamUserEntry().userId(curA.getId()),
+                new TeamUserEntry().userId(curB.getId())));
 
         // ---
 
-        l = teamsApi.listUsers(orgName, teamName);
+        l = teamsApi.listUserTeams(orgName, teamName);
         assertEquals(2, l.size());
         assertEquals(userAName.toLowerCase(), l.get(0).getUsername());
         assertEquals(userBName.toLowerCase(), l.get(1).getUsername());
@@ -448,12 +445,12 @@ public class CrudIT extends AbstractServerIT {
         String orgName = "org_" + randomString();
 
         OrganizationsApi orgApi = new OrganizationsApi(getApiClient());
-        orgApi.createOrUpdate(new OrganizationEntry().setName(orgName));
+        CreateOrganizationResponse orgResponse = orgApi.createOrUpdateOrg(new OrganizationEntry().name(orgName));
 
         // ---
 
         String secretName = "secret_" + randomString();
-        addPlainSecret(orgName, secretName, false, null, "hey".getBytes());
+        addUsernamePassword(orgName, secretName, false, null, "username", "password");
 
         // ---
 
@@ -461,13 +458,13 @@ public class CrudIT extends AbstractServerIT {
         String repoName = "repo_" + randomString();
 
         ProjectsApi projectsApi = new ProjectsApi(getApiClient());
-        ProjectOperationResponse projectResp = projectsApi.createOrUpdate(orgName, new ProjectEntry()
-                .setName(projectName)
-                .setRepositories(Collections.singletonMap(repoName, new RepositoryEntry()
-                        .setName(repoName)
-                        .setUrl("git@test:/test")
-                        .setBranch("master")
-                        .setSecretName(secretName))));
+        ProjectOperationResponse projectResp = projectsApi.createOrUpdateProject(orgName, new ProjectEntry()
+                .name(projectName)
+                .repositories(Collections.singletonMap(repoName, new RepositoryEntry()
+                        .name(repoName)
+                        .url(createRepo("repositoryRefresh"))
+                        .branch("master")
+                        .secretName(secretName))));
         UUID projectId = projectResp.getId();
 
         // ---
@@ -478,20 +475,20 @@ public class CrudIT extends AbstractServerIT {
         // --  Update secret project name
 
         updateReq = new SecretUpdateRequest();
-        updateReq.setProjectName(projectName);
-        secretsApi.update(orgName, secretName, updateReq);
+        updateReq.projectName(projectName).orgId(orgResponse.getId());
+        secretsApi.updateSecretV1(orgName, secretName, updateReq);
         updateReq.setProjectName("");
-        secretsApi.update(orgName, secretName, updateReq);
+        secretsApi.updateSecretV1(orgName, secretName, updateReq);
         updateReq.setProjectName(null);
-        secretsApi.update(orgName, secretName, updateReq);
+        secretsApi.updateSecretV1(orgName, secretName, updateReq);
 
         // --  Update secret project ID
 
         updateReq = new SecretUpdateRequest();
         updateReq.setProjectId(projectId);
-        secretsApi.update(orgName, secretName, updateReq);
+        secretsApi.updateSecretV1(orgName, secretName, updateReq);
         updateReq.setProjectId(null);
-        secretsApi.update(orgName, secretName, updateReq);
+        secretsApi.updateSecretV1(orgName, secretName, updateReq);
 
         // --  Delete secret
 
@@ -499,11 +496,13 @@ public class CrudIT extends AbstractServerIT {
 
         /// ---
 
-        ProjectEntry projectEntry = projectsApi.get(orgName, projectName);
-        Map<String, RepositoryEntry> repos = projectEntry.getRepositories();
+        ProjectEntry projectEntry = projectsApi.getProject(orgName, projectName);
+        assertNull(projectEntry.getRepositories());
+
+        List<RepositoryEntry> repos = new RepositoriesApi(getApiClient()).listRepositories(orgName, projectName, null, null, null);
         assertEquals(1, repos.size());
 
-        RepositoryEntry repo = repos.get(repoName);
+        RepositoryEntry repo = repos.get(0);
         assertNotNull(repo);
         assertNull(repo.getSecretName());
     }
@@ -521,27 +520,27 @@ public class CrudIT extends AbstractServerIT {
 
         // --- create
 
-        CreateOrganizationResponse createOrganizationResponse = orgApi.createOrUpdate(new OrganizationEntry().setName(orgName));
-        assertTrue(createOrganizationResponse.isOk());
+        CreateOrganizationResponse createOrganizationResponse = orgApi.createOrUpdateOrg(new OrganizationEntry().name(orgName));
+        assertTrue(createOrganizationResponse.getOk());
         assertNotNull(createOrganizationResponse.getId());
 
         // --- update
 
-        CreateOrganizationResponse updateOrganizationResponse = orgApi.createOrUpdate(new OrganizationEntry()
-                .setId(createOrganizationResponse.getId())
-                .setName(updatedOrgName));
+        CreateOrganizationResponse updateOrganizationResponse = orgApi.createOrUpdateOrg(new OrganizationEntry()
+                .id(createOrganizationResponse.getId())
+                .name(updatedOrgName));
         assertEquals(updateOrganizationResponse.getResult(), CreateOrganizationResponse.ResultEnum.UPDATED);
         assertEquals(updateOrganizationResponse.getId(), createOrganizationResponse.getId());
 
         // --- get
 
-        OrganizationEntry organizationEntry = orgApi.get(updatedOrgName);
+        OrganizationEntry organizationEntry = orgApi.getOrg(updatedOrgName);
         assertNotNull(organizationEntry);
         assertEquals(createOrganizationResponse.getId(), organizationEntry.getId());
 
         // --- list
 
-        List<OrganizationEntry> organizationEntryList = orgApi.find(true, null, null, null);
+        List<OrganizationEntry> organizationEntryList = orgApi.listOrgs(true, null, null, null);
         assertNotNull(organizationEntryList);
         organizationEntry = findOrganization(organizationEntryList, updatedOrgName);
         assertNotNull(organizationEntry);
@@ -555,15 +554,15 @@ public class CrudIT extends AbstractServerIT {
 
         // create private org
 
-        CreateOrganizationResponse createOrganizationResponse = orgApi.createOrUpdate(new OrganizationEntry()
-                .setName(orgName)
-                .setVisibility(OrganizationEntry.VisibilityEnum.PRIVATE));
-        assertTrue(createOrganizationResponse.isOk());
+        CreateOrganizationResponse createOrganizationResponse = orgApi.createOrUpdateOrg(new OrganizationEntry()
+                .name(orgName)
+                .visibility(OrganizationEntry.VisibilityEnum.PRIVATE));
+        assertTrue(createOrganizationResponse.getOk());
         assertNotNull(createOrganizationResponse.getId());
 
         // --- private org available for admin
 
-        List<OrganizationEntry> orgs = orgApi.find(false, null, null, null);
+        List<OrganizationEntry> orgs = orgApi.listOrgs(false, null, null, null);
         assertTrue(orgs.stream().anyMatch(e -> e.getId().equals(createOrganizationResponse.getId())));
 
         // add the user A
@@ -571,14 +570,14 @@ public class CrudIT extends AbstractServerIT {
         UsersApi usersApi = new UsersApi(getApiClient());
 
         String userAName = "userA_" + randomString();
-        usersApi.createOrUpdate(new CreateUserRequest().setUsername(userAName).setType(CreateUserRequest.TypeEnum.LOCAL));
+        usersApi.createOrUpdateUser(new CreateUserRequest().username(userAName).type(CreateUserRequest.TypeEnum.LOCAL));
 
         ApiKeysApi apiKeyResource = new ApiKeysApi(getApiClient());
-        CreateApiKeyResponse apiKeyA = apiKeyResource.create(new CreateApiKeyRequest().setUsername(userAName));
+        CreateApiKeyResponse apiKeyA = apiKeyResource.createUserApiKey(new CreateApiKeyRequest().username(userAName));
 
         setApiKey(apiKeyA.getKey());
 
-        orgs = orgApi.find(true, null, null, null);
+        orgs = orgApi.listOrgs(true, null, null, null);
         assertTrue(orgs.stream().noneMatch(e -> e.getId().equals(createOrganizationResponse.getId())));
     }
 
@@ -589,13 +588,13 @@ public class CrudIT extends AbstractServerIT {
         String orgName = "org_" + randomString();
         Map<String, Object> meta = Collections.singletonMap("x", true);
 
-        CreateOrganizationResponse cor = orgApi.createOrUpdate(new OrganizationEntry()
-                .setName(orgName)
-                .setMeta(meta));
+        CreateOrganizationResponse cor = orgApi.createOrUpdateOrg(new OrganizationEntry()
+                .name(orgName)
+                .meta(meta));
 
         // ---
 
-        OrganizationEntry e = orgApi.get(orgName);
+        OrganizationEntry e = orgApi.getOrg(orgName);
         assertNotNull(e);
 
         Map<String, Object> meta2 = e.getMeta();
@@ -605,11 +604,11 @@ public class CrudIT extends AbstractServerIT {
         // ---
 
         meta = Collections.singletonMap("y", 123.0);
-        orgApi.createOrUpdate(new OrganizationEntry()
-                .setId(cor.getId())
-                .setMeta(meta));
+        orgApi.createOrUpdateOrg(new OrganizationEntry()
+                .id(cor.getId())
+                .meta(meta));
 
-        e = orgApi.get(orgName);
+        e = orgApi.getOrg(orgName);
         assertNotNull(e);
 
         Map<String, Object> meta3 = e.getMeta();
@@ -623,23 +622,23 @@ public class CrudIT extends AbstractServerIT {
         OrganizationsApi orgApi = new OrganizationsApi(getApiClient());
 
         String orgName = "org_" + randomString();
-        orgApi.createOrUpdate(new OrganizationEntry().setName(orgName));
+        orgApi.createOrUpdateOrg(new OrganizationEntry().name(orgName));
 
         // ---
 
         ProjectsApi projectsApi = new ProjectsApi(getApiClient());
 
         String projectName = "project_" + randomString();
-        projectsApi.createOrUpdate(orgName, new ProjectEntry().setName(projectName));
+        projectsApi.createOrUpdateProject(orgName, new ProjectEntry().name(projectName));
 
         // ---
 
         String userName = "user_" + randomString();
 
         UsersApi usersApi = new UsersApi(getApiClient());
-        CreateUserResponse createUserResponse = usersApi.createOrUpdate(new CreateUserRequest()
-                .setUsername(userName)
-                .setType(CreateUserRequest.TypeEnum.LOCAL));
+        CreateUserResponse createUserResponse = usersApi.createOrUpdateUser(new CreateUserRequest()
+                .username(userName)
+                .type(CreateUserRequest.TypeEnum.LOCAL));
 
         // ---
 
@@ -648,113 +647,113 @@ public class CrudIT extends AbstractServerIT {
         String policyName = "policy_" + randomString();
         Map<String, Object> policyRules = Collections.singletonMap("x", 123);
 
-        PolicyOperationResponse por = policyResource.createOrUpdate(new PolicyEntry()
-                .setName(policyName)
-                .setRules(policyRules));
+        PolicyOperationResponse por = policyResource.createOrUpdatePolicy(new PolicyEntry()
+                .name(policyName)
+                .rules(policyRules));
 
         String newPolicyName = "policy2_" + randomString();
-        policyResource.createOrUpdate(new PolicyEntry()
-                .setId(por.getId())
-                .setName(newPolicyName)
-                .setRules(policyRules));
+        policyResource.createOrUpdatePolicy(new PolicyEntry()
+                .id(por.getId())
+                .name(newPolicyName)
+                .rules(policyRules));
 
         String policyForUser = "policy3_" + randomString();
-        policyResource.createOrUpdate(new PolicyEntry()
-                .setName(policyForUser)
-                .setRules(policyRules));
+        policyResource.createOrUpdatePolicy(new PolicyEntry()
+                .name(policyForUser)
+                .rules(policyRules));
 
-        policyResource.createOrUpdate(new PolicyEntry()
-                .setId(por.getId())
-                .setName(policyName)
-                .setRules(policyRules));
+        policyResource.createOrUpdatePolicy(new PolicyEntry()
+                .id(por.getId())
+                .name(policyName)
+                .rules(policyRules));
 
         // ---
 
-        PolicyEntry pe = policyResource.get(policyName);
+        PolicyEntry pe = policyResource.getPolicy(policyName);
         assertNotNull(pe);
 
         // ---
 
-        policyResource.link(policyName, new PolicyLinkEntry()
-                .setOrgName(orgName)
-                .setProjectName(projectName));
+        policyResource.linkPolicy(policyName, new PolicyLinkEntry()
+                .orgName(orgName)
+                .projectName(projectName));
 
-        List<PolicyEntry> l = policyResource.list(orgName, projectName, null, null, null);
+        List<PolicyEntry> l = policyResource.listPolicies(orgName, projectName, null, null, null);
         assertEquals(1, l.size());
         assertEquals(policyName, l.get(0).getName());
 
         // ---
 
-        policyResource.link(policyName, new PolicyLinkEntry().setOrgName(orgName));
+        policyResource.linkPolicy(policyName, new PolicyLinkEntry().orgName(orgName));
 
-        l = policyResource.list(orgName, null, null, null, null);
+        l = policyResource.listPolicies(orgName, null, null, null, null);
         assertEquals(1, l.size());
         assertEquals(policyName, l.get(0).getName());
 
         // ---
 
-        policyResource.link(policyName, new PolicyLinkEntry().setUserName(userName));
+        policyResource.linkPolicy(policyName, new PolicyLinkEntry().userName(userName));
 
-        l = policyResource.list(null, null, userName, null, null);
+        l = policyResource.listPolicies(null, null, userName, null, null);
         assertEquals(1, l.size());
         assertEquals(policyName, l.get(0).getName());
 
         // ---
 
-        policyResource.link(policyForUser, new PolicyLinkEntry()
-                .setOrgName(orgName)
-                .setProjectName(projectName)
-                .setUserName(userName));
+        policyResource.linkPolicy(policyForUser, new PolicyLinkEntry()
+                .orgName(orgName)
+                .projectName(projectName)
+                .userName(userName));
 
-        l = policyResource.list(orgName, projectName, userName, null, null);
+        l = policyResource.listPolicies(orgName, projectName, userName, null, null);
         assertEquals(1, l.size());
         assertEquals(policyForUser, l.get(0).getName());
 
         // ---
 
-        policyResource.unlink(policyName, orgName, projectName, null, null, null);
-        l = policyResource.list(orgName, projectName, null, null, null);
+        policyResource.unlinkPolicy(policyName, orgName, projectName, null, null, null);
+        l = policyResource.listPolicies(orgName, projectName, null, null, null);
         assertEquals(1, l.size());
-        l = policyResource.list(orgName, null, null, null, null);
+        l = policyResource.listPolicies(orgName, null, null, null, null);
         assertEquals(1, l.size());
 
         // ---
 
-        policyResource.unlink(policyName, orgName, null, null, null, null);
-        l = policyResource.list(orgName, projectName, null, null, null);
+        policyResource.unlinkPolicy(policyName, orgName, null, null, null, null);
+        l = policyResource.listPolicies(orgName, projectName, null, null, null);
         assertEquals(0, l.size());
-        l = policyResource.list(orgName, null, null, null, null);
-        assertEquals(0, l.size());
-
-        // ---
-
-        policyResource.unlink(policyName, null, null, userName, null, null);
-        l = policyResource.list(null, null, userName, null, null);
-        assertEquals(0, l.size());
-        l = policyResource.list(orgName, null, null, null, null);
+        l = policyResource.listPolicies(orgName, null, null, null, null);
         assertEquals(0, l.size());
 
         // ---
 
-        policyResource.unlink(policyForUser, orgName, projectName, userName, null, null);
-        l = policyResource.list(orgName, projectName, userName, null, null);
+        policyResource.unlinkPolicy(policyName, null, null, userName, null, null);
+        l = policyResource.listPolicies(null, null, userName, null, null);
         assertEquals(0, l.size());
-        l = policyResource.list(orgName, null, null, null, null);
+        l = policyResource.listPolicies(orgName, null, null, null, null);
         assertEquals(0, l.size());
 
         // ---
 
-        policyResource.delete(policyName);
-        l = policyResource.list(null, null, null, null, null);
+        policyResource.unlinkPolicy(policyForUser, orgName, projectName, userName, null, null);
+        l = policyResource.listPolicies(orgName, projectName, userName, null, null);
+        assertEquals(0, l.size());
+        l = policyResource.listPolicies(orgName, null, null, null, null);
+        assertEquals(0, l.size());
+
+        // ---
+
+        policyResource.deletePolicy(policyName);
+        l = policyResource.listPolicies(null, null, null, null, null);
         for (PolicyEntry e : l) {
             if (policyName.equals(e.getName())) {
                 fail("Should've been removed: " + e.getName());
             }
         }
 
-        usersApi.delete(createUserResponse.getId());
+        usersApi.deleteUser(createUserResponse.getId());
 
-        policyResource.delete(policyForUser);
+        policyResource.deletePolicy(policyForUser);
     }
 
     @Test
@@ -765,31 +764,31 @@ public class CrudIT extends AbstractServerIT {
 
         // --- create
 
-        RoleOperationResponse createRoleResponse = rolesApi.createOrUpdate(new RoleEntry().setName(roleName));
+        RoleOperationResponse createRoleResponse = rolesApi.createOrUpdateRole(new RoleEntry().name(roleName));
         assertEquals(RoleOperationResponse.ResultEnum.CREATED, createRoleResponse.getResult());
         assertNotNull(createRoleResponse.getId());
 
         // --- update
 
-        RoleOperationResponse updateRoleResponse = rolesApi.createOrUpdate(new RoleEntry()
-                .setId(createRoleResponse.getId())
-                .setName(roleName)
-                .setPermissions(Collections.singletonList("getProcessQueueAllOrgs")));
+        RoleOperationResponse updateRoleResponse = rolesApi.createOrUpdateRole(new RoleEntry()
+                .id(createRoleResponse.getId())
+                .name(roleName)
+                .permissions(Collections.singleton("getProcessQueueAllOrgs")));
         assertEquals(RoleOperationResponse.ResultEnum.UPDATED, updateRoleResponse.getResult());
 
         // --- get
 
-        RoleEntry roleEntry = rolesApi.get(roleName);
+        RoleEntry roleEntry = rolesApi.getRole(roleName);
         assertNotNull(roleEntry);
         assertEquals(createRoleResponse.getId(), roleEntry.getId());
-        assertEquals("getProcessQueueAllOrgs", roleEntry.getPermissions().get(0));
+        assertEquals("getProcessQueueAllOrgs", roleEntry.getPermissions().iterator().next());
 
         // --- list
 
-        List<RoleEntry> roleEntryList = rolesApi.list();
+        List<RoleEntry> roleEntryList = rolesApi.listRoles();
         assertNotNull(roleEntryList);
 
-        GenericOperationResult r = rolesApi.delete(roleName);
+        GenericOperationResult r = rolesApi.deleteRole(roleName);
         assertEquals(GenericOperationResult.ResultEnum.DELETED, r.getResult());
     }
 
@@ -801,13 +800,13 @@ public class CrudIT extends AbstractServerIT {
 
         OrganizationsApi organizationsApi = new OrganizationsApi(getApiClient());
 
-        UUID defaultOrgId = organizationsApi.get(orgName).getId();
+        UUID defaultOrgId = organizationsApi.getOrg(orgName).getId();
 
         // create a second organization
-        CreateOrganizationResponse createOrgResponse = organizationsApi.createOrUpdate(new OrganizationEntry()
-                .setName(secondOrgName)
-                .setVisibility(OrganizationEntry.VisibilityEnum.PUBLIC));
-        assertTrue(createOrgResponse.isOk());
+        CreateOrganizationResponse createOrgResponse = organizationsApi.createOrUpdateOrg(new OrganizationEntry()
+                .name(secondOrgName)
+                .visibility(OrganizationEntry.VisibilityEnum.PUBLIC));
+        assertTrue(createOrgResponse.getOk());
         assertNotNull(createOrgResponse.getId());
 
         // -- test change org for project
@@ -815,25 +814,25 @@ public class CrudIT extends AbstractServerIT {
         String projectName = "project_" + randomString();
 
         // create a project in Default org
-        ProjectOperationResponse createResp = projectsApi.createOrUpdate(orgName, new ProjectEntry().setName(projectName));
-        assertTrue(createResp.isOk());
+        ProjectOperationResponse createResp = projectsApi.createOrUpdateProject(orgName, new ProjectEntry().name(projectName));
+        assertTrue(createResp.getOk());
         assertNotNull(createResp.getId());
 
         // -- move project to second organization by org Name
-        ProjectOperationResponse moveResponse = projectsApi.createOrUpdate(orgName, new ProjectEntry()
-                .setName(projectName)
-                .setOrgName(secondOrgName));
-        assertTrue(moveResponse.isOk());
+        ProjectOperationResponse moveResponse = projectsApi.createOrUpdateProject(orgName, new ProjectEntry()
+                .name(projectName)
+                .orgName(secondOrgName));
+        assertTrue(moveResponse.getOk());
         assertEquals("UPDATED", moveResponse.getResult().getValue());
-        assertNotNull(projectsApi.get(secondOrgName, projectName));
+        assertNotNull(projectsApi.getProject(secondOrgName, projectName));
 
         // -- move project back to Default organization by org Id
-        moveResponse = projectsApi.createOrUpdate(secondOrgName, new ProjectEntry()
-                .setName(projectName)
-                .setOrgId(defaultOrgId));
-        assertTrue(moveResponse.isOk());
+        moveResponse = projectsApi.createOrUpdateProject(secondOrgName, new ProjectEntry()
+                .name(projectName)
+                .orgId(defaultOrgId));
+        assertTrue(moveResponse.getOk());
         assertEquals("UPDATED", moveResponse.getResult().getValue());
-        assertNotNull(projectsApi.get(orgName, projectName));
+        assertNotNull(projectsApi.getProject(orgName, projectName));
 
         // -- test change org for secret
         SecretsApi secretsApi = new SecretsApi(getApiClient());
@@ -843,17 +842,17 @@ public class CrudIT extends AbstractServerIT {
         addPlainSecret(orgName, secretName, false, null, "hey".getBytes());
 
         // -- move secret to second organization by org Name
-        GenericOperationResult moveSecretResponse = secretsApi.update(orgName, secretName,
-                new SecretUpdateRequest().setOrgName(secondOrgName));
-        assertTrue(moveSecretResponse.isOk());
+        GenericOperationResult moveSecretResponse = secretsApi.updateSecretV1(orgName, secretName,
+                new SecretUpdateRequest().orgName(secondOrgName));
+        assertTrue(moveSecretResponse.getOk());
         assertEquals("UPDATED", moveSecretResponse.getResult().getValue());
-        assertNotNull(secretsApi.get(secondOrgName, secretName));
+        assertNotNull(new SecretsV2Api(getApiClient()).getSecret(secondOrgName, secretName));
 
         // -- move secret back to Default organization by org Id
-        moveSecretResponse = secretsApi.update(secondOrgName, secretName, new SecretUpdateRequest().setOrgId(defaultOrgId));
-        assertTrue(moveSecretResponse.isOk());
+        moveSecretResponse = secretsApi.updateSecretV1(secondOrgName, secretName, new SecretUpdateRequest().orgId(defaultOrgId));
+        assertTrue(moveSecretResponse.getOk());
         assertEquals("UPDATED", moveSecretResponse.getResult().getValue());
-        assertNotNull(secretsApi.get(orgName, secretName));
+        assertNotNull(new SecretsV2Api(getApiClient()).getSecret(orgName, secretName));
     }
 
     private static OrganizationEntry findOrganization(List<OrganizationEntry> l, String name) {

@@ -1,0 +1,12 @@
+configuration:
+  runtime: concord-v2
+  dependencies:
+  - "mvn://org.python:jython-standalone:2.7.0"
+  arguments:
+    x: 2
+
+flows:
+  default:
+  - script: example.py
+  - log: "The result: ${y}"
+  - log: "The result2: ${y2}"

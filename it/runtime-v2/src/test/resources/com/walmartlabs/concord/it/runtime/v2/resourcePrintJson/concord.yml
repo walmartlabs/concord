@@ -1,0 +1,15 @@
+configuration:
+  runtime: concord-v2
+  out:
+    - condensedResult
+    - prettyResult
+
+flows:
+  default:
+    - set:
+        m:
+          x: 123
+          y: "hello"
+    - set:
+        condensedResult: "${resource.printJson(m)}"
+        prettyResult: "${resource.prettyPrintJson(m)}"

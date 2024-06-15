@@ -20,91 +20,41 @@ package com.walmartlabs.concord.policyengine;
  * =====
  */
 
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import org.immutables.value.Value;
 
+import javax.annotation.Nullable;
 import java.io.Serializable;
-import java.util.Objects;
 
-public class DependencyRule implements Serializable {
+@Value.Immutable
+@JsonInclude(JsonInclude.Include.NON_EMPTY)
+@JsonSerialize(as = ImmutableDependencyRule.class)
+@JsonDeserialize(as = ImmutableDependencyRule.class)
+public interface DependencyRule extends Serializable {
 
-    private static final long serialVersionUID = 1L;
+    long serialVersionUID = 1L;
 
-    private final String msg;
-    private final String scheme;
-    private final String groupId;
-    private final String artifactId;
-    private final String fromVersion;
-    private final String toVersion;
+    @Nullable
+    String msg();
 
-    @JsonCreator
-    public DependencyRule(
-            @JsonProperty("msg") String msg,
-            @JsonProperty("scheme") String scheme,
-            @JsonProperty("groupId") String groupId,
-            @JsonProperty("artifactId") String artifactId,
-            @JsonProperty("fromVersion") String fromVersion,
-            @JsonProperty("toVersion") String toVersion) {
+    @Nullable
+    String scheme();
 
-        this.msg = msg;
-        this.scheme = scheme;
-        this.groupId = groupId;
-        this.artifactId = artifactId;
-        this.fromVersion = fromVersion;
-        this.toVersion = toVersion;
-    }
+    @Nullable
+    String groupId();
 
-    public String getMsg() {
-        return msg;
-    }
+    @Nullable
+    String artifactId();
 
-    public String getScheme() {
-        return scheme;
-    }
+    @Nullable
+    String fromVersion();
 
-    public String getGroupId() {
-        return groupId;
-    }
+    @Nullable
+    String toVersion();
 
-    public String getArtifactId() {
-        return artifactId;
-    }
-
-    public String getFromVersion() {
-        return fromVersion;
-    }
-
-    public String getToVersion() {
-        return toVersion;
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        DependencyRule that = (DependencyRule) o;
-        return Objects.equals(msg, that.msg) &&
-                Objects.equals(scheme, that.scheme) &&
-                Objects.equals(groupId, that.groupId) &&
-                Objects.equals(artifactId, that.artifactId) &&
-                Objects.equals(fromVersion, that.fromVersion) &&
-                Objects.equals(toVersion, that.toVersion);
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(msg, scheme, groupId, artifactId, fromVersion, toVersion);
-    }
-
-    @Override
-    public String toString() {
-        return "DependencyRule{" +
-                "msg='" + msg + '\'' +
-                ", scheme='" + scheme + '\'' +
-                ", groupId='" + groupId + '\'' +
-                ", artifactId='" + artifactId + '\'' +
-                ", fromVersion='" + fromVersion + '\'' +
-                ", toVersion='" + toVersion + '\'' +
-                '}';
+    static ImmutableDependencyRule.Builder builder() {
+        return ImmutableDependencyRule.builder();
     }
 }

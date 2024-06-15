@@ -34,6 +34,8 @@ import java.io.InputStream;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public final class MultipartUtils {
 
@@ -212,6 +214,27 @@ public final class MultipartUtils {
             throw new ConcordApplicationException("Error parsing the request", e);
         }
         return null;
+    }
+
+    public static List<String> getStringList(MultipartInput input, String key) {
+        String projectString = getString(input,key);
+        if(projectString == null) {
+            return new ArrayList<>();
+        }
+        try {
+            String[] projects = projectString.split(",");
+            return Stream.of(projects).map(String::trim).collect(Collectors.toList());
+        } catch (IllegalArgumentException e) {
+            throw new ConcordApplicationException("Error parsing the request", e);
+        }
+    }
+    public static List<UUID> getUUIDList(MultipartInput input, String key) {
+        List<String> result = getStringList(input, key);
+        try {
+            return result.stream().map(UUID::fromString).collect(Collectors.toList());
+        } catch (IllegalArgumentException e) {
+            throw new ConcordApplicationException("Error parsing the request", e);
+        }
     }
 
     private MultipartUtils() {

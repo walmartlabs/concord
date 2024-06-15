@@ -19,61 +19,66 @@
  */
 
 import * as React from 'react';
-import { connect } from 'react-redux';
-import { AnyAction, Dispatch } from 'redux';
 
-import { ConcordKey, RequestError } from '../../../api/common';
+import {ConcordKey, GenericOperationResult} from '../../../api/common';
 import { ProjectVisibility } from '../../../api/org/project';
-import { actions, State } from '../../../state/data/projects';
-import { NewProjectForm, NewProjectFormValues, RequestErrorMessage } from '../../molecules';
+import {NewProjectForm, NewProjectFormValues} from '../../molecules';
+import {RequestErrorActivity} from "../index";
+import {useCallback, useState} from "react";
+import {createOrUpdate as apiCreate} from "../../../api/org/project";
+import {useApi} from "../../../hooks/useApi";
+import {LoadingDispatch} from "../../../App";
+import {Redirect} from "react-router";
 
 interface ExternalProps {
     orgName: ConcordKey;
 }
 
-interface StateProps {
-    submitting: boolean;
-    error: RequestError;
+const INIT_VALUES : NewProjectFormValues = {
+    name: '',
+    visibility: ProjectVisibility.PRIVATE,
+    description: ''
 }
 
-interface DispatchProps {
-    submit: (values: NewProjectFormValues) => void;
-}
+const NewProjectActivity = (props: ExternalProps) => {
+    const {orgName} = props;
 
-type Props = ExternalProps & StateProps & DispatchProps;
+    const dispatch = React.useContext(LoadingDispatch);
+    const [values, setValues] = useState(INIT_VALUES);
 
-class NewProjectActivity extends React.PureComponent<Props> {
-    render() {
-        const { error, submitting, submit, orgName } = this.props;
+    const postQuery = useCallback(() => {
+        return apiCreate(orgName, values);
+    }, [orgName, values]);
 
-        return (
-            <>
-                {error && <RequestErrorMessage error={error} />}
-                <NewProjectForm
-                    orgName={orgName}
-                    submitting={submitting}
-                    onSubmit={submit}
-                    initial={{
-                        name: '',
-                        visibility: ProjectVisibility.PRIVATE,
-                        description: ''
-                    }}
-                />
-            </>
-        );
+    const { error, isLoading, data, fetch } = useApi<GenericOperationResult>(postQuery, {
+        fetchOnMount: false,
+        requestByFetch: true,
+        dispatch: dispatch
+    });
+
+    const handleSubmit = useCallback(
+        (values: NewProjectFormValues) => {
+            setValues(values);
+            fetch();
+        },
+        [fetch]
+    );
+
+    if (data) {
+        return <Redirect to={`/org/${orgName}/project/${values.name}`} />;
     }
-}
 
-const mapStateToProps = ({ projects }: { projects: State }): StateProps => ({
-    submitting: projects.loading,
-    error: projects.error
-});
+    return (
+        <>
+            {error && <RequestErrorActivity error={error} />}
+            <NewProjectForm
+                orgName={orgName}
+                submitting={isLoading}
+                onSubmit={handleSubmit}
+                initial={INIT_VALUES}
+            />
+        </>
+    );
+};
 
-const mapDispatchToProps = (
-    dispatch: Dispatch<AnyAction>,
-    { orgName }: ExternalProps
-): DispatchProps => ({
-    submit: (values: NewProjectFormValues) => dispatch(actions.createProject(orgName, values))
-});
-
-export default connect(mapStateToProps, mapDispatchToProps)(NewProjectActivity);
+export default NewProjectActivity;

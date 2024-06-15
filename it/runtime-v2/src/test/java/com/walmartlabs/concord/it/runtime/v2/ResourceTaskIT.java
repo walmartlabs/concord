@@ -23,46 +23,70 @@ package com.walmartlabs.concord.it.runtime.v2;
 import ca.ibodrov.concord.testcontainers.ConcordProcess;
 import ca.ibodrov.concord.testcontainers.Payload;
 import ca.ibodrov.concord.testcontainers.junit5.ConcordRule;
-import com.walmartlabs.concord.client.ProcessEntry;
+import com.walmartlabs.concord.client2.*;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-public class ResourceTaskIT extends AbstractTest {
+import java.util.Map;
+
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
+class ResourceTaskIT extends AbstractTest {
 
     @RegisterExtension
     public static final ConcordRule concord = ConcordConfiguration.configure();
 
     @Test
-    public void testReadAsJson() throws Exception {
-        test("resourceReadAsJson");
+    void testReadAsJson() throws Exception {
+        basicAssert(test("resourceReadAsJson"));
     }
 
     @Test
-    public void testFromJsonString() throws Exception {
-        test("resourceReadFromJsonString");
+    void testFromJsonString() throws Exception {
+        basicAssert(test("resourceReadFromJsonString"));
     }
 
     @Test
-    public void testReadAsString() throws Exception {
-        test("resourceReadAsString");
+    void testReadAsString() throws Exception {
+        basicAssert(test("resourceReadAsString"));
     }
 
     @Test
-    public void testWriteAsJson() throws Exception {
-        test("resourceWriteAsJson");
+    void testWriteAsJson() throws Exception {
+        basicAssert(test("resourceWriteAsJson"));
     }
 
     @Test
-    public void testWriteAsString() throws Exception {
-        test("resourceWriteAsString");
+    void testWriteAsString() throws Exception {
+        basicAssert(test("resourceWriteAsString"));
     }
 
     @Test
-    public void testWriteAsYaml() throws Exception {
-        test("resourceWriteAsYaml");
+    void testWriteAsYaml() throws Exception {
+        basicAssert(test("resourceWriteAsYaml"));
     }
 
-    private void test(String resource) throws Exception {
+    @Test
+    void testPrintJson() throws Exception {
+        ConcordProcess proc = test("resourcePrintJson");
+
+        // ---
+
+        Map<String, Object> out = proc.getOutVariables();
+
+        String condensedResult = (String) out.get("condensedResult");
+        assertFalse(condensedResult.contains("\n"));
+        assertTrue(condensedResult.contains("\"x\":123"));
+        assertTrue(condensedResult.contains("\"y\":\"hello"));
+
+        String prettyResult = (String) out.get("prettyResult");
+        assertTrue(prettyResult.contains("\n"));
+        assertTrue(prettyResult.contains("\"x\" : 123"));
+        assertTrue(prettyResult.contains("\"y\" : \"hello\""));
+    }
+
+    private ConcordProcess test(String resource) throws Exception {
         Payload payload = new Payload()
                 .archive(resource(resource));
 
@@ -70,8 +94,10 @@ public class ResourceTaskIT extends AbstractTest {
 
         expectStatus(proc, ProcessEntry.StatusEnum.FINISHED);
 
-        // ---
+        return proc;
+    }
 
+    private void basicAssert(ConcordProcess proc) throws ApiException {
         proc.assertLog(".*Runtime: concord-v2.*");
         proc.assertLog(".*Hello Concord!.*");
     }

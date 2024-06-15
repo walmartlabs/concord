@@ -21,12 +21,12 @@ package com.walmartlabs.concord.server.security.sessionkey;
  */
 
 import com.walmartlabs.concord.server.sdk.PartialProcessKey;
-import com.walmartlabs.concord.server.security.PrincipalUtils;
+import com.walmartlabs.concord.server.security.SecurityUtils;
 
 public class SessionKeyPrincipal {
 
     public static SessionKeyPrincipal getCurrent() {
-        return PrincipalUtils.getCurrent(SessionKeyPrincipal.class);
+        return SecurityUtils.getCurrent(SessionKeyPrincipal.class);
     }
 
     private final PartialProcessKey processKey;

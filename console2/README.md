@@ -4,8 +4,8 @@ Uses https://github.com/facebook/create-react-app/ as the boilerplate.
 
 ## Prerequisites
 
-- Node 10 or greater, available in `$PATH`;
-- Java 8, available in `$PATH`. Necessary only to build the package.
+- Node 20 or greater, available in `$PATH`;
+- Java 17, available in `$PATH`. Necessary only to build the package.
 
 ## Dependencies
 
@@ -53,6 +53,8 @@ BASE_RESOURCE_PATH=/path/to/repository/concord/console2/build
 ```
 
 The UI will be accessible on http://localhost:8080
+
+**Note:** avoid using symlinks in BASE_RESOURCE_PATH.
 
 ## Custom Server URL
 

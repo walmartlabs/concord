@@ -20,8 +20,9 @@ package com.walmartlabs.concord.it.server;
  * =====
  */
 
-import com.walmartlabs.concord.ApiException;
-import com.walmartlabs.concord.client.*;
+import com.walmartlabs.concord.client2.*;
+import com.walmartlabs.concord.client2.CreateSecretRequest;
+import com.walmartlabs.concord.client2.ProcessListFilter;
 import com.walmartlabs.concord.common.IOUtils;
 import org.eclipse.jgit.api.Git;
 import org.junit.jupiter.api.Test;
@@ -57,17 +58,17 @@ public class CronIT extends AbstractServerIT {
         String repoName = "repo_" + randomString();
 
         OrganizationsApi orgApi = new OrganizationsApi(getApiClient());
-        if (orgApi.get(orgName) == null) {
-            orgApi.createOrUpdate(new OrganizationEntry().setName(orgName));
+        if (orgApi.getOrg(orgName) == null) {
+            orgApi.createOrUpdateOrg(new OrganizationEntry().name(orgName));
         }
 
         ProjectsApi projectsApi = new ProjectsApi(getApiClient());
-        projectsApi.createOrUpdate(orgName, new ProjectEntry()
-                .setName(projectName)
-                .setVisibility(ProjectEntry.VisibilityEnum.PUBLIC)
-                .setRepositories(Collections.singletonMap(repoName, new RepositoryEntry()
-                        .setUrl(gitUrl)
-                        .setBranch("master"))));
+        projectsApi.createOrUpdateProject(orgName, new ProjectEntry()
+                .name(projectName)
+                .visibility(ProjectEntry.VisibilityEnum.PUBLIC)
+                .repositories(Collections.singletonMap(repoName, new RepositoryEntry()
+                        .url(gitUrl)
+                        .branch("master"))));
 
         // ---
 
@@ -112,7 +113,7 @@ public class CronIT extends AbstractServerIT {
 
         // --- clean up
 
-        projectsApi.delete(orgName, projectName);
+        projectsApi.deleteProject(orgName, projectName);
     }
 
     @Test
@@ -126,34 +127,34 @@ public class CronIT extends AbstractServerIT {
         String repoName = "repo_" + randomString();
 
         OrganizationsApi orgApi = new OrganizationsApi(getApiClient());
-        if (orgApi.get(orgName) == null) {
-            orgApi.createOrUpdate(new OrganizationEntry().setName(orgName));
+        if (orgApi.getOrg(orgName) == null) {
+            orgApi.createOrUpdateOrg(new OrganizationEntry().name(orgName));
         }
 
         ProjectsApi projectsApi = new ProjectsApi(getApiClient());
-        projectsApi.createOrUpdate(orgName, new ProjectEntry()
-                .setName(projectName)
-                .setVisibility(ProjectEntry.VisibilityEnum.PUBLIC)
-                .setRepositories(Collections.singletonMap(repoName, new RepositoryEntry()
-                        .setUrl(gitUrl)
-                        .setBranch("master"))));
+        projectsApi.createOrUpdateProject(orgName, new ProjectEntry()
+                .name(projectName)
+                .visibility(ProjectEntry.VisibilityEnum.PUBLIC)
+                .repositories(Collections.singletonMap(repoName, new RepositoryEntry()
+                        .url(gitUrl)
+                        .branch("master"))));
 
         // ---
 
         String username = "user_" + randomString();
 
         UsersApi usersApi = new UsersApi(getApiClient());
-        CreateUserResponse cur = usersApi.createOrUpdate(new CreateUserRequest()
-                .setUsername(username)
-                .setType(CreateUserRequest.TypeEnum.LOCAL));
+        CreateUserResponse cur = usersApi.createOrUpdateUser(new CreateUserRequest()
+                .username(username)
+                .type(CreateUserRequest.TypeEnum.LOCAL));
 
         ApiKeysApi apiKeyResource = new ApiKeysApi(getApiClient());
-        CreateApiKeyResponse apiKeyResponse = apiKeyResource.create(new CreateApiKeyRequest().setUsername(username));
+        CreateApiKeyResponse apiKeyResponse = apiKeyResource.createUserApiKey(new CreateApiKeyRequest().username(username));
 
-        SecretClient secretsApi = new SecretClient(getApiClient());
+        com.walmartlabs.concord.client2.SecretClient secretsApi = new com.walmartlabs.concord.client2.SecretClient(getApiClient());
         CreateSecretRequest secret = CreateSecretRequest.builder()
                 .org(orgName)
-                .project(projectName)
+                .addProjectNames(projectName)
                 .name("test-run-as")
                 .data(apiKeyResponse.getKey().getBytes(StandardCharsets.UTF_8))
                 .build();
@@ -163,12 +164,16 @@ public class CronIT extends AbstractServerIT {
 
         // ---
 
-        ProcessApi processApi = new ProcessApi(getApiClient());
+        ProcessV2Api processApi = new ProcessV2Api(getApiClient());
+        ProcessListFilter filter = ProcessListFilter.builder()
+                .orgName(orgName)
+                .projectName(projectName)
+                .build();
 
         while (true) {
             Thread.sleep(1000);
 
-            List<ProcessEntry> processes = processApi.list(orgName, projectName, null, null, null, null, null, null, null, null, null);
+            List<ProcessEntry> processes = processApi.listProcesses(filter);
             if (processes.size() != 1) {
                 continue;
             }
@@ -182,7 +187,7 @@ public class CronIT extends AbstractServerIT {
 
         // ---
 
-        projectsApi.delete(orgName, projectName);
+        projectsApi.deleteProject(orgName, projectName);
     }
 
     private static String initRepo(String initResource) throws Exception {
@@ -191,23 +196,31 @@ public class CronIT extends AbstractServerIT {
         File src = new File(TriggersRefreshIT.class.getResource(initResource).toURI());
         IOUtils.copy(src.toPath(), tmpDir);
 
-        Git repo = Git.init().setInitialBranch("master").setDirectory(tmpDir.toFile()).call();
-        repo.add().addFilepattern(".").call();
-        repo.commit().setMessage("import").call();
-        return tmpDir.toAbsolutePath().toString();
+        try (Git repo = Git.init().setInitialBranch("master").setDirectory(tmpDir.toFile()).call()) {
+            repo.add().addFilepattern(".").call();
+            repo.commit().setMessage("import").call();
+            return tmpDir.toAbsolutePath().toString();
+        }
     }
 
     private List<ProcessEntry> listCronProcesses(String o, String p, String r, String tag) throws ApiException {
         ProcessV2Api processV2Api = new ProcessV2Api(getApiClient());
 
-        return processV2Api.list(null, o, null, p, null, r, null, null,
-                Collections.singletonList(tag), null, "cron", null, null, null, null);
+        ProcessListFilter filter = ProcessListFilter.builder()
+                .orgName(o)
+                .projectName(p)
+                .repoName(r)
+                .initiator("cron")
+                .tags(Collections.singleton(tag))
+                .build();
+
+        return processV2Api.listProcesses(filter);
     }
 
     private List<TriggerEntry> waitForTriggers(String orgName, String projectName, String repoName, int expectedCount) throws Exception {
         TriggersApi triggerResource = new TriggersApi(getApiClient());
         while (true) {
-            List<TriggerEntry> l = triggerResource.list(orgName, projectName, repoName);
+            List<TriggerEntry> l = triggerResource.listTriggers(orgName, projectName, repoName);
             if (l != null && l.size() == expectedCount) {
                 return l;
             }
@@ -217,7 +230,7 @@ public class CronIT extends AbstractServerIT {
     }
 
     private boolean hasLogEntry(ProcessEntry e, String pattern) throws Exception {
-        byte[] ab = getLog(e.getLogFileName());
+        byte[] ab = getLog(e.getInstanceId());
         List<String> l = grep(pattern, ab);
         return !l.isEmpty();
     }

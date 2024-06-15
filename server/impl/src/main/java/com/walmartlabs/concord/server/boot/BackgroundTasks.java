@@ -23,12 +23,8 @@ package com.walmartlabs.concord.server.boot;
 import com.walmartlabs.concord.server.sdk.BackgroundTask;
 
 import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
 import java.util.Set;
 
-@Named
-@Singleton
 public class BackgroundTasks {
 
     private final Set<BackgroundTask> tasks;
@@ -38,11 +34,19 @@ public class BackgroundTasks {
         this.tasks = tasks;
     }
 
-    public synchronized void start() {
-        tasks.forEach(BackgroundTask::start);
+    public void start() {
+        synchronized (tasks) {
+            tasks.forEach(BackgroundTask::start);
+        }
     }
 
-    public synchronized void stop() {
-        tasks.forEach(BackgroundTask::stop);
+    public void stop() {
+        synchronized (tasks) {
+            tasks.forEach(BackgroundTask::stop);
+        }
+    }
+
+    public int count() {
+        return tasks.size();
     }
 }

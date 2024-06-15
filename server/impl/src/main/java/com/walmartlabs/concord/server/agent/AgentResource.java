@@ -22,15 +22,12 @@ package com.walmartlabs.concord.server.agent;
 
 import com.walmartlabs.concord.server.AgentWorkerUtils;
 import com.walmartlabs.concord.server.sdk.metrics.WithTimer;
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
-import io.swagger.annotations.Authorization;
-import org.sonatype.siesta.Resource;
-import org.sonatype.siesta.ValidationErrorsException;
+import com.walmartlabs.concord.server.sdk.rest.Resource;
+import com.walmartlabs.concord.server.sdk.validation.ValidationErrorsException;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 
 import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
@@ -41,10 +38,8 @@ import java.util.Collections;
 import java.util.Map;
 import java.util.stream.Stream;
 
-@Named
-@Singleton
-@Api(value = "Agents", authorizations = {@Authorization("api_key"), @Authorization("session_key"), @Authorization("ldap")})
 @Path("/api/v1/agent")
+@Tag(name = "Agents")
 public class AgentResource implements Resource {
 
     private final AgentManager agentManager;
@@ -55,18 +50,18 @@ public class AgentResource implements Resource {
     }
 
     @GET
-    @ApiOperation(value = "List currently available agent workers", responseContainer = "list", response = AgentWorkerEntry.class)
     @Path("/all/workers")
     @Produces(MediaType.APPLICATION_JSON)
     @WithTimer
+    @Operation(description = "List currently available agent workers")
     public Collection<AgentWorkerEntry> listWorkers() {
         return agentManager.getAvailableAgents();
     }
 
     @GET
-    @ApiOperation(value = "Counts the currently connected workers based on the specified capabilities property")
     @Path("/all/workersCount")
     @Produces(MediaType.APPLICATION_JSON)
+    @Operation(description = "Counts the currently connected workers based on the specified capabilities property")
     public Map<Object, Long> aggregate(@QueryParam("capabilities") String capabilities) {
         if (capabilities == null || capabilities.isEmpty()) {
             throw new ValidationErrorsException("'capabilities' filter is required");

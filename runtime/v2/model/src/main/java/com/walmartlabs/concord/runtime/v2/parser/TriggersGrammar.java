@@ -27,10 +27,7 @@ import com.walmartlabs.concord.runtime.v2.model.*;
 import io.takari.parc.Parser;
 import io.takari.parc.Seq;
 
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.function.Supplier;
 
 import static com.walmartlabs.concord.runtime.v2.parser.ConfigurationGrammar.exclusiveVal;
@@ -45,7 +42,7 @@ public final class TriggersGrammar {
 
     private static final Parser<Atom, Map<String, Object>> githubTriggerRepositoryInfoItem =
             betweenTokens(JsonToken.START_OBJECT, JsonToken.END_OBJECT,
-                    with((Supplier<HashMap<String, Object>>) HashMap::new,
+                    with((Supplier<HashMap<String, Object>>) LinkedHashMap::new,
                             o -> options(
                                     optional("repositoryId", regexpVal.map(v -> o.put("repositoryId", v))),
                                     optional("repository", regexpVal.map(v -> o.put("repository", v))),
@@ -64,7 +61,7 @@ public final class TriggersGrammar {
             orError(githubTriggerRepositoryInfo, YamlValueType.ARRAY_OF_GITHUB_REPOSITORY_INFO);
 
     private static GithubTriggerExclusiveMode validateGithubExclusiveMode(GithubTriggerExclusiveMode e) {
-        if (e.groupBy() == null && e.group() == null) {
+        if (e.groupByProperty() == null && e.group() == null) {
             throw new OneOfMandatoryFieldsNotFoundException("group", "groupBy");
         }
         return e;
@@ -75,7 +72,7 @@ public final class TriggersGrammar {
                     with(ImmutableGithubTriggerExclusiveMode::builder,
                             o -> options(
                                     optional("group", stringVal.map(o::group)),
-                                    optional("groupBy", enumVal(GithubTriggerExclusiveMode.GroupBy.class).map(o::groupBy)),
+                                    optional("groupBy", stringVal.map(o::groupByProperty)),
                                     optional("mode", enumVal(ExclusiveMode.Mode.class).map(o::mode))))
                             .map(ImmutableGithubTriggerExclusiveMode.Builder::build)
                             .map(TriggersGrammar::validateGithubExclusiveMode));
@@ -85,7 +82,7 @@ public final class TriggersGrammar {
 
     private static final Parser<Atom, Map<String, Object>> githubTriggerFilesVal =
             betweenTokens(JsonToken.START_OBJECT, JsonToken.END_OBJECT,
-                with((Supplier<HashMap<String, Object>>) HashMap::new,
+                with((Supplier<HashMap<String, Object>>) LinkedHashMap::new,
                         o -> options(
                             optional("added", regexpOrArrayVal.map(v -> o.put("added", v))),
                             optional("removed", regexpOrArrayVal.map(v -> o.put("removed", v))),
@@ -95,7 +92,7 @@ public final class TriggersGrammar {
 
     private static final Parser<Atom, Map<String, Object>> githubTriggerConditionsV2 =
             betweenTokens(JsonToken.START_OBJECT, JsonToken.END_OBJECT,
-                    with((Supplier<HashMap<String, Object>>) HashMap::new,
+                    with((Supplier<HashMap<String, Object>>) LinkedHashMap::new,
                             o -> options(
                                 mandatory("type", stringVal.map(v -> o.put("type", v))),
                                 optional("githubOrg", regexpOrArrayVal.map(v -> o.put("githubOrg", v))),
@@ -141,7 +138,7 @@ public final class TriggersGrammar {
 
     private static final Parser<Atom, Map<String, Object>> runAs =
             betweenTokens(JsonToken.START_OBJECT, JsonToken.END_OBJECT,
-                    with((Supplier<HashMap<String, Object>>) HashMap::new,
+                    with((Supplier<HashMap<String, Object>>) LinkedHashMap::new,
                             o -> options(
                                     mandatory("withSecret", stringNotEmptyVal.map(v -> o.put("withSecret", v)))))
                             .map(Collections::unmodifiableMap));

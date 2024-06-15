@@ -74,15 +74,15 @@ public class EntityPolicy {
     }
 
     private boolean matchRule(EntityRule r, String entity, String action, Map<String, Object> attrs) {
-        if (r.getEntity() != null && !matches(r.getEntity(), entity)) {
+        if (r.entity() != null && !matches(r.entity(), entity)) {
             return false;
         }
 
-        if (r.getAction() != null && !matches(r.getAction(), action)) {
+        if (r.action() != null && !matches(r.action(), action)) {
             return false;
         }
 
-        if (r.getConditions() != null && !matches(r.getConditions(), attrs)) {
+        if (r.conditions() != null && !matches(r.conditions(), attrs)) {
             return false;
         }
 

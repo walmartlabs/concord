@@ -20,7 +20,7 @@ package com.walmartlabs.concord.it.server;
  * =====
  */
 
-import com.walmartlabs.concord.client.*;
+import com.walmartlabs.concord.client2.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -46,13 +46,13 @@ public class AnsiblePolicyVerboseLimitIT extends AbstractServerIT {
 
         orgName = "org_" + randomString();
         OrganizationsApi organizationsApi = new OrganizationsApi(getApiClient());
-        organizationsApi.createOrUpdate(new OrganizationEntry().setName(orgName));
+        organizationsApi.createOrUpdateOrg(new OrganizationEntry().name(orgName));
 
         projectName = "project_" + randomString();
         ProjectsApi projectsApi = new ProjectsApi(getApiClient());
-        projectsApi.createOrUpdate(orgName, new ProjectEntry()
-                .setName(projectName)
-                .setRawPayloadMode(ProjectEntry.RawPayloadModeEnum.EVERYONE));
+        projectsApi.createOrUpdateProject(orgName, new ProjectEntry()
+                .name(projectName)
+                .rawPayloadMode(ProjectEntry.RawPayloadModeEnum.EVERYONE));
 
         Map<String, Object> ansibleVerboseLimits = new HashMap<>();
         ansibleVerboseLimits.put("maxHosts", 1);
@@ -60,16 +60,16 @@ public class AnsiblePolicyVerboseLimitIT extends AbstractServerIT {
 
         String policyName = "policy_" + randomString();
         PolicyApi policyApi = new PolicyApi(getApiClient());
-        policyApi.createOrUpdate(new PolicyEntry()
-                .setName(policyName)
-                .setRules(singletonMap("processCfg",
+        policyApi.createOrUpdatePolicy(new PolicyEntry()
+                .name(policyName)
+                .rules(singletonMap("processCfg",
                         singletonMap("arguments",
                                 singletonMap("ansibleVerboseLimits",
                                         ansibleVerboseLimits)))));
 
-        policyApi.link(policyName, new PolicyLinkEntry()
-                .setOrgName(orgName)
-                .setProjectName(projectName));
+        policyApi.linkPolicy(policyName, new PolicyLinkEntry()
+                .orgName(orgName)
+                .projectName(projectName));
     }
 
     @Test
@@ -92,13 +92,12 @@ public class AnsiblePolicyVerboseLimitIT extends AbstractServerIT {
 
         // ---
 
-        ProcessApi processApi = new ProcessApi(getApiClient());
-        ProcessEntry pir = waitForCompletion(processApi, spr.getInstanceId());
+        ProcessEntry pir = waitForCompletion(getApiClient(), spr.getInstanceId());
         assertEquals(ProcessEntry.StatusEnum.FINISHED, pir.getStatus(), "Large inventory limited to small group must FINISH");
 
         // ---
 
-        byte[] ab = getLog(pir.getLogFileName());
+        byte[] ab = getLog(pir.getInstanceId());
         assertLog(".*ansible completed successfully.*", ab);
     }
 
@@ -121,14 +120,13 @@ public class AnsiblePolicyVerboseLimitIT extends AbstractServerIT {
 
         // ---
 
-        ProcessApi processApi = new ProcessApi(getApiClient());
-        ProcessEntry pir = waitForCompletion(processApi, spr.getInstanceId());
+        ProcessEntry pir = waitForCompletion(getApiClient(), spr.getInstanceId());
         assertEquals(ProcessEntry.StatusEnum.FINISHED, pir.getStatus(),
                 "Imported tasks exceeding max work must FINISH");
 
         // ---
 
-        byte[] ab = getLog(pir.getLogFileName());
+        byte[] ab = getLog(pir.getInstanceId());
         assertLog(".*Disabling verbose output. Too much work.*", ab);
     }
 
@@ -151,14 +149,13 @@ public class AnsiblePolicyVerboseLimitIT extends AbstractServerIT {
 
         // ---
 
-        ProcessApi processApi = new ProcessApi(getApiClient());
-        ProcessEntry pir = waitForCompletion(processApi, spr.getInstanceId());
+        ProcessEntry pir = waitForCompletion(getApiClient(), spr.getInstanceId());
         assertEquals(ProcessEntry.StatusEnum.FINISHED, pir.getStatus(),
                 "Large inventory with verbose logging must FINISH");
 
         // ---
 
-        byte[] ab = getLog(pir.getLogFileName());
+        byte[] ab = getLog(pir.getInstanceId());
         assertLog(".*Disabling verbose output. Too many hosts.*", ab);
     }
 
@@ -181,14 +178,13 @@ public class AnsiblePolicyVerboseLimitIT extends AbstractServerIT {
 
         // ---
 
-        ProcessApi processApi = new ProcessApi(getApiClient());
-        ProcessEntry pir = waitForCompletion(processApi, spr.getInstanceId());
+        ProcessEntry pir = waitForCompletion(getApiClient(), spr.getInstanceId());
         assertEquals(ProcessEntry.StatusEnum.FINISHED, pir.getStatus(),
                 "Small inventory with many calls and verbose logging must FINISH");
 
         // ---
 
-        byte[] ab = getLog(pir.getLogFileName());
+        byte[] ab = getLog(pir.getInstanceId());
         assertLog(".*Disabling verbose output. Too much work.*", ab);
     }
 
@@ -211,14 +207,13 @@ public class AnsiblePolicyVerboseLimitIT extends AbstractServerIT {
 
         // ---
 
-        ProcessApi processApi = new ProcessApi(getApiClient());
-        ProcessEntry pir = waitForCompletion(processApi, spr.getInstanceId());
+        ProcessEntry pir = waitForCompletion(getApiClient(), spr.getInstanceId());
         assertEquals(ProcessEntry.StatusEnum.FINISHED, pir.getStatus(),
                 "Large inventory with standard logging must FINISH");
 
         // ---
 
-        byte[] ab = getLog(pir.getLogFileName());
+        byte[] ab = getLog(pir.getInstanceId());
         assertLog(".*ansible completed successfully.*", ab);
     }
 
@@ -242,13 +237,13 @@ public class AnsiblePolicyVerboseLimitIT extends AbstractServerIT {
         // ---
 
         ProcessApi processApi = new ProcessApi(getApiClient());
-        ProcessEntry pir = waitForCompletion(processApi, spr.getInstanceId());
+        ProcessEntry pir = waitForCompletion(getApiClient(), spr.getInstanceId());
         assertEquals(ProcessEntry.StatusEnum.FINISHED, pir.getStatus(),
                 "Small inventory with verbose logging must FINISH");
 
         // ---
 
-        byte[] ab = getLog(pir.getLogFileName());
+        byte[] ab = getLog(pir.getInstanceId());
         // only shows with verbose logging enabled
         // TODO may be flaky? no guarantee it'll *always* be in every ansible version
         assertLog(".*Using .* as config file.*", ab);

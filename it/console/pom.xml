@@ -6,17 +6,17 @@
     <parent>
         <groupId>com.walmartlabs.concord.it</groupId>
         <artifactId>parent</artifactId>
-        <version>1.94.1-SNAPSHOT</version>
+        <version>2.12.1-SNAPSHOT</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
 
     <artifactId>concord-console-it</artifactId>
-    <packaging>takari-jar</packaging>
+    <packaging>jar</packaging>
 
     <properties>
         <!-- pin down the version of DB and Selenium images -->
         <db.image>library/postgres:10.4-alpine</db.image>
-        <selenium.image>selenium/standalone-chrome:3.141.59</selenium.image>
+        <selenium.image>seleniarm/standalone-chromium:110.0</selenium.image>
 
         <!-- use the latest locally built Concord images -->
         <server.image>walmartlabs/concord-server</server.image>
@@ -38,7 +38,7 @@
         </dependency>
         <dependency>
             <groupId>com.walmartlabs.concord</groupId>
-            <artifactId>concord-client</artifactId>
+            <artifactId>concord-client2</artifactId>
             <scope>test</scope>
         </dependency>
         <dependency>
@@ -73,6 +73,11 @@
         </dependency>
         <dependency>
             <groupId>org.seleniumhq.selenium</groupId>
+            <artifactId>selenium-chromium-driver</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.seleniumhq.selenium</groupId>
             <artifactId>selenium-support</artifactId>
             <scope>test</scope>
         </dependency>
@@ -91,24 +96,10 @@
             <artifactId>org.eclipse.jgit</artifactId>
             <scope>test</scope>
         </dependency>
-        <dependency>
-            <groupId>com.google.code.gson</groupId>
-            <artifactId>gson</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>com.squareup.okhttp</groupId>
-            <artifactId>okhttp</artifactId>
-            <scope>test</scope>
-        </dependency>
     </dependencies>
 
     <build>
         <plugins>
-            <plugin>
-                <groupId>io.takari.maven.plugins</groupId>
-                <artifactId>takari-lifecycle-plugin</artifactId>
-            </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-failsafe-plugin</artifactId>
@@ -181,6 +172,7 @@
                                         </network>
                                         <env>
                                             <POSTGRES_PASSWORD>it</POSTGRES_PASSWORD>
+                                            <POSTGRES_INITDB_ARGS>--no-sync</POSTGRES_INITDB_ARGS>
                                         </env>
                                         <wait>
                                             <log>(?s).*ready for start up.*ready to accept connections.*</log>
@@ -262,7 +254,7 @@
                                 </image>
                                 <image>
                                     <name>${selenium.image}</name>
-                                    <alias>selenium-chrome</alias>
+                                    <alias>selenium-chromium</alias>
                                     <run>
                                         <ports>
                                             <port>it.selenium.port:4444</port>
@@ -278,7 +270,7 @@
                                             </bind>
                                         </volumes>
                                         <wait>
-                                            <log>(?s).*Selenium Server is up and running.*</log>
+                                            <log>(?s).*Started Selenium Standalone.*</log>
                                             <time>60000</time>
                                         </wait>
                                     </run>

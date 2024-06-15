@@ -34,7 +34,7 @@ import java.util.Map;
 public interface FormOptions extends Serializable {
 
     @Value.Default
-    default boolean yield() {
+    default boolean isYield() {
         return false;
     }
 

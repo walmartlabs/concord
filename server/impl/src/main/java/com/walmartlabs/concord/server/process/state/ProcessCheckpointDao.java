@@ -25,12 +25,11 @@ import com.walmartlabs.concord.db.MainDB;
 import com.walmartlabs.concord.server.process.ImmutableProcessCheckpointEntry;
 import com.walmartlabs.concord.server.process.ProcessEntry.ProcessCheckpointEntry;
 import com.walmartlabs.concord.server.sdk.ProcessKey;
+import com.walmartlabs.concord.server.sdk.validation.ValidationErrorsException;
 import org.jooq.Configuration;
 import org.jooq.Record;
-import org.sonatype.siesta.ValidationErrorsException;
 
 import javax.inject.Inject;
-import javax.inject.Named;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -44,7 +43,6 @@ import java.util.UUID;
 
 import static com.walmartlabs.concord.server.jooq.tables.ProcessCheckpoints.PROCESS_CHECKPOINTS;
 
-@Named
 public class ProcessCheckpointDao extends AbstractDao {
 
     @Inject

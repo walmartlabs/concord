@@ -20,12 +20,12 @@ package com.walmartlabs.concord.it.server;
  * =====
  */
 
-import com.walmartlabs.concord.client.*;
+import com.walmartlabs.concord.client2.*;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.File;
+import java.io.InputStream;
 import java.util.*;
 
 import static com.walmartlabs.concord.it.common.ITUtils.archive;
@@ -44,50 +44,50 @@ public class AttachmentRbacIT extends AbstractServerIT {
         String orgName = "org_" + randomString();
 
         OrganizationsApi orgApi = new OrganizationsApi(getApiClient());
-        orgApi.createOrUpdate(new OrganizationEntry().setName(orgName));
+        orgApi.createOrUpdateOrg(new OrganizationEntry().name(orgName));
 
         // add the users A, B and C
 
         UsersApi usersApi = new UsersApi(getApiClient());
         String userAName = "userA_" + randomString();
-        usersApi.createOrUpdate(new CreateUserRequest().
-                setUsername(userAName).setType(CreateUserRequest.TypeEnum.LOCAL));
+        usersApi.createOrUpdateUser(new CreateUserRequest().
+                username(userAName).type(CreateUserRequest.TypeEnum.LOCAL));
 
         ApiKeysApi apiKeyResource = new ApiKeysApi(getApiClient());
-        CreateApiKeyResponse apiKeyA = apiKeyResource.create(new CreateApiKeyRequest().setUsername(userAName));
+        CreateApiKeyResponse apiKeyA = apiKeyResource.createUserApiKey(new CreateApiKeyRequest().username(userAName));
 
         String userBName = "userB_" + randomString();
-        usersApi.createOrUpdate(new CreateUserRequest()
-                .setUsername(userBName)
-                .setType(CreateUserRequest.TypeEnum.LOCAL));
+        usersApi.createOrUpdateUser(new CreateUserRequest()
+                .username(userBName)
+                .type(CreateUserRequest.TypeEnum.LOCAL));
 
-        CreateApiKeyResponse apiKeyB = apiKeyResource.create(new CreateApiKeyRequest().setUsername(userBName));
+        CreateApiKeyResponse apiKeyB = apiKeyResource.createUserApiKey(new CreateApiKeyRequest().username(userBName));
 
         String userCName = "userC_" + randomString();
-        usersApi.createOrUpdate(new CreateUserRequest()
-                .setUsername(userCName)
-                .setType(CreateUserRequest.TypeEnum.LOCAL));
+        usersApi.createOrUpdateUser(new CreateUserRequest()
+                .username(userCName)
+                .type(CreateUserRequest.TypeEnum.LOCAL));
         UUID userCUUID = usersApi.findByUsername(userCName).getId();
-        CreateApiKeyResponse apiKeyC = apiKeyResource.create(new CreateApiKeyRequest().setUsername(userCName));
+        CreateApiKeyResponse apiKeyC = apiKeyResource.createUserApiKey(new CreateApiKeyRequest().username(userCName));
 
         // create the user A's team
 
         String teamName = "team_" + randomString();
 
         TeamsApi teamsApi = new TeamsApi(getApiClient());
-        CreateTeamResponse ctr = teamsApi.createOrUpdate(orgName, new TeamEntry().setName(teamName));
+        CreateTeamResponse ctr = teamsApi.createOrUpdateTeam(orgName, new TeamEntry().name(teamName));
 
-        teamsApi.addUsers(orgName, teamName, false, Collections.singletonList(new TeamUserEntry()
-                .setUsername(userAName)
-                .setRole(TeamUserEntry.RoleEnum.MEMBER)));
+        teamsApi.addUsersToTeam(orgName, teamName, false, Collections.singletonList(new TeamUserEntry()
+                .username(userAName)
+                .role(TeamUserEntry.RoleEnum.MEMBER)));
 
-        teamsApi.addUsers(orgName, teamName, false, Collections.singletonList(new TeamUserEntry()
-                .setUsername(userCName)
-                .setRole(TeamUserEntry.RoleEnum.OWNER)));
+        teamsApi.addUsersToTeam(orgName, teamName, false, Collections.singletonList(new TeamUserEntry()
+                .username(userCName)
+                .role(TeamUserEntry.RoleEnum.OWNER)));
 
-        teamsApi.addUsers(orgName, teamName, false, Collections.singletonList(new TeamUserEntry()
-                .setUsername(userBName)
-                .setRole(TeamUserEntry.RoleEnum.MEMBER)));
+        teamsApi.addUsersToTeam(orgName, teamName, false, Collections.singletonList(new TeamUserEntry()
+                .username(userBName)
+                .role(TeamUserEntry.RoleEnum.MEMBER)));
 
         // switch to the user A and create a new private project
 
@@ -96,17 +96,17 @@ public class AttachmentRbacIT extends AbstractServerIT {
         String projectName = "project_" + randomString();
 
         ProjectsApi projectsApi = new ProjectsApi(getApiClient());
-        projectsApi.createOrUpdate(orgName, new ProjectEntry()
-                .setName(projectName)
-                .setVisibility(ProjectEntry.VisibilityEnum.PUBLIC)
-                .setRawPayloadMode(ProjectEntry.RawPayloadModeEnum.EVERYONE));
+        projectsApi.createOrUpdateProject(orgName, new ProjectEntry()
+                .name(projectName)
+                .visibility(ProjectEntry.VisibilityEnum.PUBLIC)
+                .rawPayloadMode(ProjectEntry.RawPayloadModeEnum.EVERYONE));
 
         // grant the team access to the project
-        projectsApi.updateAccessLevel(orgName, projectName, new ResourceAccessEntry()
-                .setTeamId(ctr.getId())
-                .setOrgName(orgName)
-                .setTeamName(teamName)
-                .setLevel(ResourceAccessEntry.LevelEnum.READER));
+        projectsApi.updateProjectAccessLevel(orgName, projectName, new ResourceAccessEntry()
+                .teamId(ctr.getId())
+                .orgName(orgName)
+                .teamName(teamName)
+                .level(ResourceAccessEntry.LevelEnum.READER));
 
         // start a new process using the project as the user A
 
@@ -119,34 +119,35 @@ public class AttachmentRbacIT extends AbstractServerIT {
 
         StartProcessResponse spr = start(input);
         ProcessApi processApi = new ProcessApi(getApiClient());
-        waitForStatus(processApi, spr.getInstanceId(), ProcessEntry.StatusEnum.FINISHED);
+        waitForStatus(getApiClient(), spr.getInstanceId(), ProcessEntry.StatusEnum.FINISHED);
 
         log.info("The initiator shall be able to list attachments");
         List<String> attachments = processApi.listAttachments(spr.getInstanceId());
         assertNotNull(attachments, "Attachments shall not be null for initiator");
-        assertSame(1, attachments.size(), "Attachment size shall be 1 for initiator");
+        assertSame(2, attachments.size(), "Attachment size shall be 2 for initiator");
 
-        File file = processApi.downloadAttachment(spr.getInstanceId(), attachments.get(0));
-        assertNotNull(file, "File object shall not be null for initiator");
+        try (InputStream is = processApi.downloadAttachment(spr.getInstanceId(), attachments.get(0))) {
+            assertNotNull(is, "File object shall not be null for initiator");
+        }
 
         // switch to admin and add the user B
 
         setApiKey(apiKeyA.getKey());
 
-        ProjectEntry projectEntry = projectsApi.get(orgName, projectName);
+        ProjectEntry projectEntry = projectsApi.getProject(orgName, projectName);
 
         // Update userC as owner
         EntityOwner projectOwner = projectEntry.getOwner();
 
-        EntityOwner entityOwner = new EntityOwner();
-        entityOwner.setId(userCUUID)
-                .setUsername(projectOwner.getUsername())
-                .setUserDomain(projectOwner.getUserDomain())
-                .setUserType(projectOwner.getUserType())
-                .setDisplayName(projectOwner.getDisplayName());
+        EntityOwner entityOwner = new EntityOwner()
+                .id(userCUUID)
+                .username(projectOwner.getUsername())
+                .userDomain(projectOwner.getUserDomain())
+                .userType(projectOwner.getUserType())
+                .displayName(projectOwner.getDisplayName());
 
         projectEntry.setOwner(entityOwner);
-        projectsApi.createOrUpdate(orgName, projectEntry);
+        projectsApi.createOrUpdateProject(orgName, projectEntry);
 
         log.info("The admin shall be able to list attachments");
         // Admin shall be also able to list the attachments
@@ -154,10 +155,11 @@ public class AttachmentRbacIT extends AbstractServerIT {
         resetApiKey();
         attachments = processApi.listAttachments(spr.getInstanceId());
         assertNotNull(attachments, "Attachments shall not be null for admin");
-        assertSame(1, attachments.size(), "Attachment size shall be 1 for admin");
+        assertSame(2, attachments.size(), "Attachment size shall be 2 for admin");
 
-        file = processApi.downloadAttachment(spr.getInstanceId(), attachments.get(0));
-        assertNotNull(file, "File object shall not be null for admin");
+        try (InputStream is = processApi.downloadAttachment(spr.getInstanceId(), attachments.get(0))) {
+            assertNotNull(is, "File object shall not be null for admin");
+        }
 
         // switch to the user B (non admin) and try to list and download the attachments
 
@@ -173,8 +175,7 @@ public class AttachmentRbacIT extends AbstractServerIT {
         }
 
         // Non-admin who is only a member shall not able to download the attachments
-        try {
-            processApi.downloadAttachment(spr.getInstanceId(), attachments.get(0));
+        try (InputStream is = processApi.downloadAttachment(spr.getInstanceId(), attachments.get(0))) {
             fail("Should fail when downloading attachments for non-admin");
         } catch (Exception e) {
             assertNotNull(e, "Exception shall not be null");
@@ -187,10 +188,11 @@ public class AttachmentRbacIT extends AbstractServerIT {
 
         attachments = processApi.listAttachments(spr.getInstanceId());
         assertNotNull(attachments, "Attachments shall not be null for non-admin who is a owner");
-        assertSame(1, attachments.size(),
-                "Attachment size shall be 1 for non-admin who is a owner");
+        assertSame(2, attachments.size(),
+                "Attachment size shall be 2 for non-admin who is a owner");
 
-        file = processApi.downloadAttachment(spr.getInstanceId(), attachments.get(0));
-        assertNotNull(file, "File object shall not be null for non-admin who is a owner");
+        try (InputStream is = processApi.downloadAttachment(spr.getInstanceId(), attachments.get(0))) {
+            assertNotNull(is, "File object shall not be null for non-admin who is a owner");
+        }
     }
 }

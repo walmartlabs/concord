@@ -18,7 +18,7 @@
  * =====
  */
 import { queryParams } from '../common';
-import { SearchFilter, AnsibleStatus } from '../process/ansible';
+import { AnsibleStatus, SearchFilter, SortField, SortOrder } from '../process/ansible';
 
 test('queryParams accepts an object of key value pairs.  e.g. { key: value, ... }', () => {
     const actual = queryParams({ param1: '123', param2: 'abc' });
@@ -56,10 +56,12 @@ test('queryParams handles SearchFilter type', () => {
         hostGroup: 'host-group',
         limit: 1,
         offset: 10,
-        status: AnsibleStatus.CHANGED
+        status: AnsibleStatus.CHANGED,
+        sortField: SortField.DURATION,
+        sortBy: SortOrder.DESC
     };
 
     const actual = queryParams({ ...filters });
-    const expected = 'host=host&hostGroup=host-group&limit=1&offset=10&status=CHANGED';
+    const expected = 'host=host&hostGroup=host-group&limit=1&offset=10&status=CHANGED&sortField=DURATION&sortBy=DESC';
     expect(actual).toEqual(expected);
 });

@@ -27,17 +27,13 @@ import com.walmartlabs.concord.server.process.ProcessEntry;
 import com.walmartlabs.concord.server.process.ProcessManager;
 import com.walmartlabs.concord.server.sdk.ProcessKey;
 import com.walmartlabs.concord.server.security.Roles;
+import com.walmartlabs.concord.server.security.UnauthorizedException;
 import com.walmartlabs.concord.server.security.UserPrincipal;
 import com.walmartlabs.concord.server.security.sessionkey.SessionKeyPrincipal;
-import org.apache.shiro.authz.UnauthorizedException;
 
 import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
 import java.util.UUID;
 
-@Named
-@Singleton
 public class ProcessLogAccessManager {
 
     private final ProjectAccessManager projectAccessManager;

@@ -20,6 +20,7 @@ package com.walmartlabs.concord.policyengine;
  * =====
  */
 
+import java.util.Objects;
 import java.util.concurrent.Callable;
 
 public class JsonStorePolicy {
@@ -31,34 +32,38 @@ public class JsonStorePolicy {
     }
 
     public CheckResult<JsonStoreRule.StoreRule, Integer> checkStorage(Callable<Integer> storageCount) throws Exception {
-        if (rule == null || rule.getStore() == null) {
+        if (rule == null || rule.store() == null) {
             return CheckResult.success();
         }
 
+        JsonStoreRule.StoreRule store = Objects.requireNonNull(rule.store());
+
         int currentCount = storageCount.call();
-        if (currentCount >= rule.getStore().getMaxNumberPerOrg()) {
-            return CheckResult.error(new CheckResult.Item<>(rule.getStore(), currentCount));
+        if (currentCount >= store.maxNumberPerOrg()) {
+            return CheckResult.error(new CheckResult.Item<>(store, currentCount));
         }
         return CheckResult.success();
     }
 
     public CheckResult<JsonStoreRule.StoreDataRule, Long> checkStorageData(Callable<Long> currentStorageSize) throws Exception {
-        if (rule == null || rule.getData() == null) {
+        if (rule == null || rule.data() == null) {
             return CheckResult.success();
         }
 
+        JsonStoreRule.StoreDataRule data = Objects.requireNonNull(rule.data());
+
         long current = currentStorageSize.call();
-        if (current >= rule.getData().getMaxSizeInBytes()) {
-            return CheckResult.error(new CheckResult.Item<>(rule.getData(), current));
+        if (current >= data.maxSizeInBytes()) {
+            return CheckResult.error(new CheckResult.Item<>(data, current));
         }
         return CheckResult.success();
     }
 
     public Long getMaxSize() {
-        if (rule == null || rule.getData() == null) {
+        if (rule == null || rule.data() == null) {
             return null;
         }
 
-        return rule.getData().getMaxSizeInBytes();
+        return Objects.requireNonNull(rule.data()).maxSizeInBytes();
     }
 }

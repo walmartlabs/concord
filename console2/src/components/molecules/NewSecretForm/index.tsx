@@ -23,6 +23,7 @@ import * as React from 'react';
 import { Button, Divider, Form, Segment } from 'semantic-ui-react';
 
 import { ConcordKey } from '../../../api/common';
+import { ProjectEntry } from '../../../api/org/project';
 import {
     NewSecretEntry,
     SecretStoreType,
@@ -54,7 +55,7 @@ interface FormValues {
     storePasswordType?: StorePasswordType;
     storePassword?: string;
     storeType?: SecretStoreType;
-    projectName?: ConcordKey;
+    projects?: ProjectEntry[];
 }
 
 export type NewSecretFormValues = FormValues;
@@ -182,8 +183,8 @@ class NewSecretForm extends React.Component<InjectedFormikProps<Props, FormValue
 
                 <ProjectSearchFormField
                     orgName={orgName}
-                    fieldName={'projectName'}
-                    label="Project"
+                    fieldName={'projects'}
+                    label="Projects"
                     placeholder="any"
                 />
 

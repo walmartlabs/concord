@@ -23,8 +23,7 @@ package com.walmartlabs.concord.it.runtime.v2;
 import ca.ibodrov.concord.testcontainers.ConcordProcess;
 import ca.ibodrov.concord.testcontainers.Payload;
 import ca.ibodrov.concord.testcontainers.junit5.ConcordRule;
-import com.walmartlabs.concord.ApiClient;
-import com.walmartlabs.concord.client.*;
+import com.walmartlabs.concord.client2.*;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
@@ -48,13 +47,13 @@ public class JsonStoreIT extends AbstractTest {
 
         String orgName = "org_" + randomString();
         OrganizationsApi orgApi = new OrganizationsApi(apiClient);
-        orgApi.createOrUpdate(new OrganizationEntry().setName(orgName));
+        orgApi.createOrUpdateOrg(new OrganizationEntry().name(orgName));
 
         String projectName = "project_" + randomString();
         ProjectsApi projectsApi = new ProjectsApi(apiClient);
-        projectsApi.createOrUpdate(orgName, new ProjectEntry()
-                .setName(projectName)
-                .setRawPayloadMode(ProjectEntry.RawPayloadModeEnum.OWNERS));
+        projectsApi.createOrUpdateProject(orgName, new ProjectEntry()
+                .name(projectName)
+                .rawPayloadMode(ProjectEntry.RawPayloadModeEnum.OWNERS));
 
         String storeName = "store_" + randomString();
 
@@ -82,7 +81,7 @@ public class JsonStoreIT extends AbstractTest {
         // ---
 
         JsonStoreDataApi jsonStoreDataApi = new JsonStoreDataApi(apiClient);
-        Object test = jsonStoreDataApi.get(orgName, storeName, "test2");
+        Object test = jsonStoreDataApi.getJsonStoreData(orgName, storeName, "test2");
         assertNotNull(test);
         assertTrue(test instanceof Map);
 

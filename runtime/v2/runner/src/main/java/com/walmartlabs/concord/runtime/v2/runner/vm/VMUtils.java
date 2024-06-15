@@ -21,8 +21,8 @@ package com.walmartlabs.concord.runtime.v2.runner.vm;
  */
 
 import com.walmartlabs.concord.common.ConfigurationUtils;
-import com.walmartlabs.concord.runtime.v2.runner.el.EvalContextFactory;
-import com.walmartlabs.concord.runtime.v2.runner.el.ExpressionEvaluator;
+import com.walmartlabs.concord.runtime.v2.sdk.EvalContextFactory;
+import com.walmartlabs.concord.runtime.v2.sdk.ExpressionEvaluator;
 import com.walmartlabs.concord.runtime.v2.sdk.Context;
 import com.walmartlabs.concord.svm.Frame;
 import com.walmartlabs.concord.svm.FrameType;
@@ -39,7 +39,8 @@ public final class VMUtils {
     /**
      * Evaluates a step's {@code in} section using all currently available variables.
      */
-    public static Map<String, Object> prepareInput(ExpressionEvaluator ee,
+    public static Map<String, Object> prepareInput(EvalContextFactory ecf,
+                                                   ExpressionEvaluator ee,
                                                    Context ctx,
                                                    Map<String, Serializable> input,
                                                    String inputExpression) {
@@ -51,13 +52,13 @@ public final class VMUtils {
             value = input;
         }
 
-        Map<String, Object> stepInput = ee.evalAsMap(EvalContextFactory.global(ctx), value);
+        Map<String, Object> stepInput = ee.evalAsMap(ecf.global(ctx), value);
         if (stepInput == null) {
             stepInput = Collections.emptyMap();
         }
 
         Map<String, Object> overrides = getLocal(ctx.execution().state(), ctx.execution().currentThreadId(), FRAME_INPUT_OVERRIDES_KEY);
-        overrides = ee.evalAsMap(EvalContextFactory.global(ctx), overrides);
+        overrides = ee.evalAsMap(ecf.global(ctx), overrides);
         if (overrides == null) {
             overrides = Collections.emptyMap();
         }

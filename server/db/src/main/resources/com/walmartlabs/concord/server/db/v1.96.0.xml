@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.3.xsd">
+
+    <changeSet id="1960000" author="amith.k.b@walmart.com">
+        <createTable tableName="ROLE_LDAP_GROUPS">
+            <column name="ROLE_ID" type="uuid">
+                <constraints nullable="false"/>
+            </column>
+            <column name="LDAP_GROUP" type="varchar(1024)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <addUniqueConstraint tableName="ROLE_LDAP_GROUPS" columnNames="ROLE_ID, LDAP_GROUP"/>
+    </changeSet>
+
+    <changeSet id="1960010" author="amith.k.b@walmart.com">
+        <createView viewName="V_USER_ROLES" replaceIfExists="true">
+            select USER_ID, ROLE_ID
+            from USER_ROLES
+            union
+            select distinct ulg.USER_ID, rlg.ROLE_ID
+            from ROLE_LDAP_GROUPS rlg, USER_LDAP_GROUPS ulg
+            where
+            ulg.LDAP_GROUP = rlg.LDAP_GROUP
+            and not exists(select 1 from USER_ROLES ur where ur.USER_ID = ulg.USER_ID and ur.ROLE_ID = rlg.ROLE_ID)
+        </createView>
+    </changeSet>
+</databaseChangeLog>

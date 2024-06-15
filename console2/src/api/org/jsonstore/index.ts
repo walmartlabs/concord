@@ -130,7 +130,8 @@ export const list = async (
 export const createOrUpdate = (
     orgName: ConcordKey,
     storeName: ConcordKey,
-    visibility: StorageVisibility
+    visibility?: StorageVisibility,
+    newOrgName?: ConcordKey
 ): Promise<StorageOperationResult> => {
     const opts = {
         method: 'POST',
@@ -139,6 +140,7 @@ export const createOrUpdate = (
         },
         body: JSON.stringify({
             name: storeName,
+            orgName: newOrgName,
             visibility
         })
     };

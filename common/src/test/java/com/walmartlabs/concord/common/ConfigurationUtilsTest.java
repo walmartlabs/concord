@@ -37,8 +37,8 @@ public class ConfigurationUtilsTest {
         m1.put("b", "b-value1");
 
         Map<String, Object> m2 = new HashMap<>();
-        m1.put("a", "a-value2");
-        m1.put("c", "b-value2");
+        m2.put("a", "a-value2");
+        m2.put("c", "b-value2");
 
         Map<String, Object> result = ConfigurationUtils.deepMerge(m1, m2);
         assertEquals("a-value2", result.get("a"));

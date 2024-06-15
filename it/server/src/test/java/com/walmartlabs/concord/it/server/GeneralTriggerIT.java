@@ -20,7 +20,7 @@ package com.walmartlabs.concord.it.server;
  * =====
  */
 
-import com.walmartlabs.concord.client.*;
+import com.walmartlabs.concord.client2.*;
 import com.walmartlabs.concord.common.IOUtils;
 import org.eclipse.jgit.api.Git;
 import org.junit.jupiter.api.Test;
@@ -40,9 +40,10 @@ public class GeneralTriggerIT extends AbstractGeneralTriggerIT {
         File src = new File(TriggersRefreshIT.class.getResource("generalExclusiveTrigger").toURI());
         IOUtils.copy(src.toPath(), tmpDir);
 
-        Git repo = Git.init().setInitialBranch("master").setDirectory(tmpDir.toFile()).call();
-        repo.add().addFilepattern(".").call();
-        repo.commit().setMessage("import").call();
+        try (Git repo = Git.init().setInitialBranch("master").setDirectory(tmpDir.toFile()).call()) {
+            repo.add().addFilepattern(".").call();
+            repo.commit().setMessage("import").call();
+        }
 
         String gitUrl = tmpDir.toAbsolutePath().toString();
 
@@ -53,15 +54,15 @@ public class GeneralTriggerIT extends AbstractGeneralTriggerIT {
         String repoName = "repo_" + randomString();
 
         OrganizationsApi orgApi = new OrganizationsApi(getApiClient());
-        orgApi.createOrUpdate(new OrganizationEntry().setName(orgName));
+        orgApi.createOrUpdateOrg(new OrganizationEntry().name(orgName));
 
         ProjectsApi projectsApi = new ProjectsApi(getApiClient());
-        projectsApi.createOrUpdate(orgName, new ProjectEntry()
-                .setName(projectName)
-                .setVisibility(ProjectEntry.VisibilityEnum.PUBLIC)
-                .setRepositories(Collections.singletonMap(repoName, new RepositoryEntry()
-                        .setUrl(gitUrl)
-                        .setBranch("master"))));
+        projectsApi.createOrUpdateProject(orgName, new ProjectEntry()
+                .name(projectName)
+                .visibility(ProjectEntry.VisibilityEnum.PUBLIC)
+                .repositories(Collections.singletonMap(repoName, new RepositoryEntry()
+                        .url(gitUrl)
+                        .branch("master"))));
 
         // ---
 
@@ -74,17 +75,17 @@ public class GeneralTriggerIT extends AbstractGeneralTriggerIT {
         eventParam.put("key1", "value1");
 
         // first process
-        eea.event("testTrigger", eventParam);
+        eea.externalEvent("testTrigger", eventParam);
 
         // second process
-        eea.event("testTrigger", eventParam);
+        eea.externalEvent("testTrigger", eventParam);
 
         Map<ProcessEntry.StatusEnum, ProcessEntry> ps = waitProcesses(orgName, projectName, ProcessEntry.StatusEnum.FINISHED, ProcessEntry.StatusEnum.CANCELLED);
         assertProcessLog(ps.get(ProcessEntry.StatusEnum.FINISHED), ".*Hello from exclusive trigger.*");
         assertProcessLog(ps.get(ProcessEntry.StatusEnum.CANCELLED), ".*Process\\(es\\) with exclusive group 'RED' is already in the queue. Current process has been cancelled.*");
 
         // ---
-        orgApi.delete(orgName, "yes");
+        orgApi.deleteOrg(orgName, "yes");
     }
 
     @Test
@@ -94,9 +95,10 @@ public class GeneralTriggerIT extends AbstractGeneralTriggerIT {
         File src = new File(TriggersRefreshIT.class.getResource("generalTriggerWithExclusiveCfg").toURI());
         IOUtils.copy(src.toPath(), tmpDir);
 
-        Git repo = Git.init().setInitialBranch("master").setDirectory(tmpDir.toFile()).call();
-        repo.add().addFilepattern(".").call();
-        repo.commit().setMessage("import").call();
+        try (Git repo = Git.init().setInitialBranch("master").setDirectory(tmpDir.toFile()).call()) {
+            repo.add().addFilepattern(".").call();
+            repo.commit().setMessage("import").call();
+        }
 
         String gitUrl = tmpDir.toAbsolutePath().toString();
 
@@ -107,15 +109,15 @@ public class GeneralTriggerIT extends AbstractGeneralTriggerIT {
         String repoName = "repo_" + randomString();
 
         OrganizationsApi orgApi = new OrganizationsApi(getApiClient());
-        orgApi.createOrUpdate(new OrganizationEntry().setName(orgName));
+        orgApi.createOrUpdateOrg(new OrganizationEntry().name(orgName));
 
         ProjectsApi projectsApi = new ProjectsApi(getApiClient());
-        projectsApi.createOrUpdate(orgName, new ProjectEntry()
-                .setName(projectName)
-                .setVisibility(ProjectEntry.VisibilityEnum.PUBLIC)
-                .setRepositories(Collections.singletonMap(repoName, new RepositoryEntry()
-                        .setUrl(gitUrl)
-                        .setBranch("master"))));
+        projectsApi.createOrUpdateProject(orgName, new ProjectEntry()
+                .name(projectName)
+                .visibility(ProjectEntry.VisibilityEnum.PUBLIC)
+                .repositories(Collections.singletonMap(repoName, new RepositoryEntry()
+                        .url(gitUrl)
+                        .branch("master"))));
 
         // ---
 
@@ -128,18 +130,18 @@ public class GeneralTriggerIT extends AbstractGeneralTriggerIT {
         eventParam.put("key1", "value1");
 
         // first process
-        eea.event("testTrigger", eventParam);
+        eea.externalEvent("testTrigger", eventParam);
 
         // second process
         // we assume that the first process is in the RUNNING status when the second process is created
-        eea.event("testTrigger", eventParam);
+        eea.externalEvent("testTrigger", eventParam);
 
         Map<ProcessEntry.StatusEnum, ProcessEntry> ps = waitProcesses(orgName, projectName, ProcessEntry.StatusEnum.FINISHED, ProcessEntry.StatusEnum.CANCELLED);
         assertProcessLog(ps.get(ProcessEntry.StatusEnum.FINISHED), ".*Hello from exclusive trigger.*");
         assertProcessLog(ps.get(ProcessEntry.StatusEnum.CANCELLED), ".*Process\\(es\\) with exclusive group 'RED' is already in the queue. Current process has been cancelled.*");
 
         // ---
-        orgApi.delete(orgName, "yes");
+        orgApi.deleteOrg(orgName, "yes");
     }
 
     @Test
@@ -149,9 +151,10 @@ public class GeneralTriggerIT extends AbstractGeneralTriggerIT {
         File src = new File(TriggersRefreshIT.class.getResource("generalTriggerWithExclusiveOverride").toURI());
         IOUtils.copy(src.toPath(), tmpDir);
 
-        Git repo = Git.init().setInitialBranch("master").setDirectory(tmpDir.toFile()).call();
-        repo.add().addFilepattern(".").call();
-        repo.commit().setMessage("import").call();
+        try (Git repo = Git.init().setInitialBranch("master").setDirectory(tmpDir.toFile()).call()) {
+            repo.add().addFilepattern(".").call();
+            repo.commit().setMessage("import").call();
+        }
 
         String gitUrl = tmpDir.toAbsolutePath().toString();
 
@@ -162,15 +165,15 @@ public class GeneralTriggerIT extends AbstractGeneralTriggerIT {
         String repoName = "repo_" + randomString();
 
         OrganizationsApi orgApi = new OrganizationsApi(getApiClient());
-        orgApi.createOrUpdate(new OrganizationEntry().setName(orgName));
+        orgApi.createOrUpdateOrg(new OrganizationEntry().name(orgName));
 
         ProjectsApi projectsApi = new ProjectsApi(getApiClient());
-        projectsApi.createOrUpdate(orgName, new ProjectEntry()
-                .setName(projectName)
-                .setVisibility(ProjectEntry.VisibilityEnum.PUBLIC)
-                .setRepositories(Collections.singletonMap(repoName, new RepositoryEntry()
-                        .setUrl(gitUrl)
-                        .setBranch("master"))));
+        projectsApi.createOrUpdateProject(orgName, new ProjectEntry()
+                .name(projectName)
+                .visibility(ProjectEntry.VisibilityEnum.PUBLIC)
+                .repositories(Collections.singletonMap(repoName, new RepositoryEntry()
+                        .url(gitUrl)
+                        .branch("master"))));
 
         // ---
 
@@ -183,16 +186,16 @@ public class GeneralTriggerIT extends AbstractGeneralTriggerIT {
         eventParam.put("key1", "value1");
 
         // first process
-        eea.event("testTrigger", eventParam);
+        eea.externalEvent("testTrigger", eventParam);
 
         // second process
-        eea.event("testTrigger", eventParam);
+        eea.externalEvent("testTrigger", eventParam);
 
         Map<ProcessEntry.StatusEnum, ProcessEntry> ps = waitProcesses(orgName, projectName, ProcessEntry.StatusEnum.FINISHED, ProcessEntry.StatusEnum.CANCELLED);
         assertProcessLog(ps.get(ProcessEntry.StatusEnum.FINISHED), ".*Hello from exclusive trigger.*");
         assertProcessLog(ps.get(ProcessEntry.StatusEnum.CANCELLED), ".*Process\\(es\\) with exclusive group 'TRIGGER' is already in the queue. Current process has been cancelled.*");
 
         // ---
-        orgApi.delete(orgName, "yes");
+        orgApi.deleteOrg(orgName, "yes");
     }
 }

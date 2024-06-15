@@ -1,0 +1,20 @@
+main:
+  - task: testTask
+    in:
+      num: 1
+    out:
+      result: ${TestTaskWithResumeResult}
+
+  - task: myLogger
+    in:
+      message: "${result}"
+
+  - task: testTask
+    in:
+      num: 2
+    out:
+      result: ${TestTaskWithResumeResult}
+
+  - task: myLogger
+    in:
+      message: "${result}"

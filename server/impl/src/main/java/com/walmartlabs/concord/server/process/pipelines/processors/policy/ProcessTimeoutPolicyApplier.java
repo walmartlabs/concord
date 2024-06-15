@@ -32,11 +32,9 @@ import com.walmartlabs.concord.server.sdk.ProcessKey;
 import com.walmartlabs.concord.server.sdk.metrics.InjectCounter;
 
 import javax.inject.Inject;
-import javax.inject.Named;
 import java.text.MessageFormat;
 import java.util.Map;
 
-@Named
 public class ProcessTimeoutPolicyApplier implements PolicyApplier {
 
     private static final String DEFAULT_PROCESS_TIMEOUT_MSG = "Maximum 'processTimeout' value exceeded: current {0}, limit {1}";
@@ -71,9 +69,9 @@ public class ProcessTimeoutPolicyApplier implements PolicyApplier {
         result.getDeny().forEach(i -> {
             policyDeny.inc();
 
-            String msg = i.getRule().getMsg() != null ? i.getRule().getMsg() : DEFAULT_PROCESS_TIMEOUT_MSG;
+            String msg = i.getRule().msg() != null ? i.getRule().msg() : DEFAULT_PROCESS_TIMEOUT_MSG;
             Object actualTimeout = i.getEntity();
-            String limit = i.getRule().getMax();
+            String limit = i.getRule().max();
             logManager.error(processKey, MessageFormat.format(msg, actualTimeout, limit));
         });
 

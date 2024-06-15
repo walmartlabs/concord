@@ -4,7 +4,7 @@ package com.walmartlabs.concord.server.org.triggers;
  * *****
  * Concord
  * -----
- * Copyright (C) 2017 - 2019 Walmart Inc.
+ * Copyright (C) 2017 - 2023 Walmart Inc.
  * -----
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -40,14 +40,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
-import javax.inject.Named;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
-@Named
 public class TriggerManager extends AbstractDao {
 
     private static final Logger log = LoggerFactory.getLogger(TriggerManager.class);
@@ -81,47 +79,49 @@ public class TriggerManager extends AbstractDao {
     }
 
     public void refresh(UUID projectId, UUID repoId, ProcessDefinition pd) {
+        tx(tx -> refresh(projectId, repoId, pd));
+    }
+
+    public void refresh(DSLContext tx, UUID projectId, UUID repoId, ProcessDefinition pd) {
         UUID orgId = projectDao.getOrgId(projectId);
         for (Trigger t : pd.triggers()) {
             policyManager.checkEntity(orgId, projectId, EntityType.TRIGGER, EntityAction.CREATE, null, PolicyUtils.triggerToMap(orgId, projectId, t));
         }
 
-        tx(tx -> {
-            List<TriggerEntry> currentTriggers = triggersDao.list(tx, projectId, repoId);
-            ListMultimap<String, TriggerEntry> triggerIds = toTriggerIds(currentTriggers);
+        List<TriggerEntry> currentTriggers = triggersDao.list(tx, projectId, repoId);
+        ListMultimap<String, TriggerEntry> triggerIds = toTriggerIds(currentTriggers);
 
-            pd.triggers().forEach(t -> {
-                t = enrichTriggerDefinition(tx, repoId, t);
+        pd.triggers().forEach(t -> {
+            t = enrichTriggerDefinition(tx, repoId, t);
 
-                String internalId = TriggerInternalIdCalculator.getId(t.name(), t.activeProfiles(), t.arguments(), t.conditions(), t.configuration());
-                List<TriggerEntry> triggers = triggerIds.get(internalId);
-                if (!triggers.isEmpty()) {
-                    triggers.remove(0);
-                    return;
-                }
-
-                UUID triggerId = triggersDao.insert(tx,
-                        projectId,
-                        repoId,
-                        t.name(),
-                        t.activeProfiles(),
-                        t.arguments(),
-                        t.conditions(),
-                        t.configuration());
-
-                postProcessTrigger(tx, triggerId, t);
-            });
-
-            if (!triggerIds.isEmpty()) {
-                triggersDao.delete(tx, triggerIds.values().stream().map(TriggerEntry::getId).collect(Collectors.toList()));
+            String internalId = TriggerInternalIdCalculator.getId(t.name(), t.activeProfiles(), t.arguments(), t.conditions(), t.configuration());
+            List<TriggerEntry> triggers = triggerIds.get(internalId);
+            if (!triggers.isEmpty()) {
+                triggers.remove(0);
+                return;
             }
+
+            UUID triggerId = triggersDao.insert(tx,
+                    projectId,
+                    repoId,
+                    t.name(),
+                    t.activeProfiles(),
+                    t.arguments(),
+                    t.conditions(),
+                    t.configuration());
+
+            postProcessTrigger(tx, triggerId, t);
         });
+
+        if (!triggerIds.isEmpty()) {
+            triggersDao.delete(tx, triggerIds.values().stream().map(TriggerEntry::getId).collect(Collectors.toList()));
+        }
 
         log.info("refresh ['{}', '{}'] -> done, triggers count: {}", projectId, repoId, pd.triggers().size());
     }
 
-    public void clearTriggers(UUID projectId, UUID repoId) {
-        tx(tx -> triggersDao.delete(tx, projectId, repoId));
+    public void clearTriggers(DSLContext tx, UUID projectId, UUID repoId) {
+        triggersDao.delete(tx, projectId, repoId);
     }
 
     private Trigger enrichTriggerDefinition(DSLContext tx, UUID repoId, Trigger t) {

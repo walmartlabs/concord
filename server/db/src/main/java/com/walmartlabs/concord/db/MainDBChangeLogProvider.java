@@ -20,9 +20,6 @@ package com.walmartlabs.concord.db;
  * =====
  */
 
-import javax.inject.Named;
-
-@Named
 @MainDB
 public class MainDBChangeLogProvider implements DatabaseChangeLogProvider {
 

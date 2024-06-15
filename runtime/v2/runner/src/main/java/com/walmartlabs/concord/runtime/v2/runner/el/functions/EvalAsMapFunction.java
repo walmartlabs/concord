@@ -20,10 +20,11 @@ package com.walmartlabs.concord.runtime.v2.runner.el.functions;
  * =====
  */
 
-import com.walmartlabs.concord.runtime.v2.runner.el.EvalContextFactory;
-import com.walmartlabs.concord.runtime.v2.runner.el.ExpressionEvaluator;
+import com.walmartlabs.concord.runtime.v2.sdk.EvalContextFactory;
+import com.walmartlabs.concord.runtime.v2.sdk.ExpressionEvaluator;
 import com.walmartlabs.concord.runtime.v2.runner.el.ThreadLocalEvalContext;
 import com.walmartlabs.concord.runtime.v2.sdk.Context;
+import com.walmartlabs.concord.svm.Runtime;
 
 import java.lang.reflect.Method;
 import java.util.HashMap;
@@ -48,8 +49,10 @@ public final class EvalAsMapFunction {
             return null;
         }
 
-        ExpressionEvaluator ee = ctx.execution().runtime().getService(ExpressionEvaluator.class);
-        Map<String, Object> evalValue = ee.evalAsMap(EvalContextFactory.scope(ctx), value);
+        Runtime runtime = ctx.execution().runtime();
+        EvalContextFactory ecf = runtime.getService(EvalContextFactory.class);
+        ExpressionEvaluator ee = runtime.getService(ExpressionEvaluator.class);
+        Map<String, Object> evalValue = ee.evalAsMap(ecf.scope(ctx), value);
 
         Map<String, Object> result = new HashMap<>();
         evalValue.forEach((k, v) -> {

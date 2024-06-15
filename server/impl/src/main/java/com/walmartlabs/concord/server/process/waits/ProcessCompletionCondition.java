@@ -31,6 +31,7 @@ import java.util.Set;
 import java.util.UUID;
 
 @Value.Immutable
+@Value.Modifiable
 @JsonSerialize(as = ImmutableProcessCompletionCondition.class)
 @JsonDeserialize(as = ImmutableProcessCompletionCondition.class)
 public abstract class ProcessCompletionCondition extends AbstractWaitCondition {
@@ -61,6 +62,12 @@ public abstract class ProcessCompletionCondition extends AbstractWaitCondition {
     @Override
     public WaitType type() {
         return WaitType.PROCESS_COMPLETION;
+    }
+
+    @Value.Default
+    @Override
+    public boolean exclusive() {
+        return false;
     }
 
     public static ImmutableProcessCompletionCondition.Builder builder() {

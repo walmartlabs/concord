@@ -44,6 +44,11 @@ public abstract class ProcessSleepCondition extends AbstractWaitCondition {
         return WaitType.PROCESS_SLEEP;
     }
 
+    @Override
+    public boolean exclusive() {
+        return false;
+    }
+
     public static ImmutableProcessSleepCondition.Builder builder() {
         return ImmutableProcessSleepCondition.builder();
     }

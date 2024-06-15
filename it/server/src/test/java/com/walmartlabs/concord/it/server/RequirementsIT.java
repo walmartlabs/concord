@@ -20,10 +20,11 @@ package com.walmartlabs.concord.it.server;
  * =====
  */
 
-import com.walmartlabs.concord.client.*;
+import com.walmartlabs.concord.client2.*;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -46,15 +47,15 @@ public class RequirementsIT extends AbstractServerIT {
         String orgName = "org_" + randomString();
 
         OrganizationsApi orgApi = new OrganizationsApi(getApiClient());
-        orgApi.createOrUpdate(new OrganizationEntry().setName(orgName));
+        orgApi.createOrUpdateOrg(new OrganizationEntry().name(orgName));
 
         String projectName = "project_" + randomString();
 
         ProjectsApi projectsApi = new ProjectsApi(getApiClient());
-        projectsApi.createOrUpdate(orgName, new ProjectEntry()
-                .setName(projectName)
-                .setVisibility(ProjectEntry.VisibilityEnum.PUBLIC)
-                .setRawPayloadMode(ProjectEntry.RawPayloadModeEnum.EVERYONE));
+        projectsApi.createOrUpdateProject(orgName, new ProjectEntry()
+                .name(projectName)
+                .visibility(ProjectEntry.VisibilityEnum.PUBLIC)
+                .rawPayloadMode(ProjectEntry.RawPayloadModeEnum.EVERYONE));
 
         byte[] payload = archive(ProcessRbacIT.class.getResource("concordTaskForkWithRequirements").toURI());
         Map<String, Object> input = new HashMap<>();
@@ -64,21 +65,21 @@ public class RequirementsIT extends AbstractServerIT {
 
         StartProcessResponse parentSpr = start(input);
 
-        ProcessApi processApi = new ProcessApi(getApiClient());
-        ProcessEntry pe = waitForCompletion(processApi, parentSpr.getInstanceId());
+        ProcessEntry pe = waitForCompletion(getApiClient(), parentSpr.getInstanceId());
         assertNotNull(pe.getRequirements());
         assertFalse(pe.getRequirements().isEmpty());
 
-        ProcessEntry processEntry = processApi.get(parentSpr.getInstanceId());
+        ProcessV2Api processApi = new ProcessV2Api(getApiClient());
+        ProcessEntry processEntry = processApi.getProcess(parentSpr.getInstanceId(), Collections.singleton("childrenIds"));
         assertEquals(1, processEntry.getChildrenIds().size());
 
-        ProcessEntry child = processApi.get(processEntry.getChildrenIds().get(0));
+        ProcessEntry child = processApi.getProcess(processEntry.getChildrenIds().iterator().next(), Collections.emptySet());
         assertNotNull(child);
         assertEquals(ProcessEntry.StatusEnum.FINISHED, child.getStatus());
 
         // ---
 
-        byte[] ab = getLog(child.getLogFileName());
+        byte[] ab = getLog(child.getInstanceId());
         assertLog(".*Hello from a subprocess.*", ab);
 
         // ---

@@ -1,0 +1,18 @@
+flows:
+  default:
+    - call: flowA
+    - log: "end"
+
+  flowA:
+    - log: "in flowA"
+
+    - call: "flowB"
+
+  flowB:
+    - log: "in flowB"
+    - call: flowC
+    - throw: "boom"
+    - log: "end flow C"
+
+  flowC:
+    - log: "in flowC"

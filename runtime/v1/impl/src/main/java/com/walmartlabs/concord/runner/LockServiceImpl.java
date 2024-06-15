@@ -20,11 +20,7 @@ package com.walmartlabs.concord.runner;
  * =====
  */
 
-import com.walmartlabs.concord.ApiException;
-import com.walmartlabs.concord.client.ApiClientFactory;
-import com.walmartlabs.concord.client.ClientUtils;
-import com.walmartlabs.concord.client.LockResult;
-import com.walmartlabs.concord.client.ProcessLocksApi;
+import com.walmartlabs.concord.client2.*;
 import com.walmartlabs.concord.sdk.Context;
 import com.walmartlabs.concord.sdk.ContextUtils;
 import com.walmartlabs.concord.sdk.LockService;
@@ -58,13 +54,15 @@ public class LockServiceImpl implements LockService {
 
     @Override
     public void projectLock(Context ctx, String lockName) throws Exception {
-        UUID instanceId = ContextUtils.getTxId(ctx);
-        ProcessLocksApi api = new ProcessLocksApi(apiClientFactory.create(ctx));
+        ProcessLocksApi api = new ProcessLocksApi(apiClientFactory.create(ApiClientConfiguration.builder()
+                .sessionToken(ContextUtils.getSessionToken(ctx))
+                .build()));
 
         // TODO: timeout
+        UUID instanceId = ContextUtils.getTxId(ctx);
         while (!Thread.currentThread().isInterrupted()) {
             LockResult lock = withRetry(() -> api.tryLock(instanceId, lockName, LockScope.PROJECT.name()));
-            if (lock.isAcquired()) {
+            if (lock.getAcquired()) {
                 log.info("successfully acquired lock '{}' in '{}' scope...", lockName, LockScope.PROJECT);
                 return;
             }
@@ -76,8 +74,11 @@ public class LockServiceImpl implements LockService {
 
     @Override
     public void projectUnlock(Context ctx, String lockName) throws Exception {
+        ProcessLocksApi api = new ProcessLocksApi(apiClientFactory.create(ApiClientConfiguration.builder()
+                .sessionToken(ContextUtils.getSessionToken(ctx))
+                .build()));
+
         UUID instanceId = ContextUtils.getTxId(ctx);
-        ProcessLocksApi api = new ProcessLocksApi(apiClientFactory.create(ctx));
         withRetry(() -> {
             api.unlock(instanceId, lockName, LockScope.PROJECT.name());
             return null;

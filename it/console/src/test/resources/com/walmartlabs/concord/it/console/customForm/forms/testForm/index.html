@@ -7,9 +7,35 @@
 </head>
 <body>
 <div id="testValue"></div>
+<form id="theForm" method="post" enctype="multipart/form-data">
+    <input name="x" id="x" type="text"/>
+    <input name="f" id="f" type="file"/>
+    <button name="submit" id="submitButton" type="submit">Submit</button>
+</form>
 
 <script type="text/javascript">
     document.getElementById('testValue').innerHTML = data.values.testValue;
+
+    const populate = () => {
+      document.getElementById('theForm').action = data.submitUrl;
+      document.getElementById('x').value = "value_2";
+
+      // set file value
+      let contents = [JSON.stringify({ "hello":"world" })];
+      let contentsBlob = new Blob(contents, { type: 'application/octet-stream' });
+      let file = new File([contentsBlob],
+        'upload.json',
+        {
+          type:"application/octet-stream",
+          lastModified: new Date().getTime()
+        },
+        'utf-8');
+      let container = new DataTransfer();
+      container.items.add(file);
+      document.getElementById('f').files = container.files;
+    };
+
+    populate();
 </script>
 </body>
 </html>

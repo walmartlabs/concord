@@ -20,7 +20,7 @@ package com.walmartlabs.concord.it.server;
  * =====
  */
 
-import com.walmartlabs.concord.client.*;
+import com.walmartlabs.concord.client2.*;
 import com.walmartlabs.concord.common.IOUtils;
 import com.walmartlabs.concord.sdk.Constants;
 import org.eclipse.jgit.api.Git;
@@ -46,9 +46,10 @@ public class TriggersRefreshIT extends AbstractServerIT {
         File src = new File(TriggersRefreshIT.class.getResource("triggerRepo").toURI());
         IOUtils.copy(src.toPath(), tmpDir);
 
-        Git repo = Git.init().setInitialBranch("master").setDirectory(tmpDir.toFile()).call();
-        repo.add().addFilepattern(".").call();
-        repo.commit().setMessage("import").call();
+        try (Git repo = Git.init().setInitialBranch("master").setDirectory(tmpDir.toFile()).call()) {
+            repo.add().addFilepattern(".").call();
+            repo.commit().setMessage("import").call();
+        }
 
         String gitUrl = tmpDir.toAbsolutePath().toString();
 
@@ -62,34 +63,34 @@ public class TriggersRefreshIT extends AbstractServerIT {
         // ---
 
         UsersApi usersApi = new UsersApi(getApiClient());
-        usersApi.createOrUpdate(new CreateUserRequest()
-                .setUsername(username)
-                .setType(CreateUserRequest.TypeEnum.LOCAL));
+        usersApi.createOrUpdateUser(new CreateUserRequest()
+                .username(username)
+                .type(CreateUserRequest.TypeEnum.LOCAL));
 
         ApiKeysApi apiKeysApi = new ApiKeysApi(getApiClient());
-        CreateApiKeyResponse cakr = apiKeysApi.create(new CreateApiKeyRequest()
-                .setUsername(username));
+        CreateApiKeyResponse cakr = apiKeysApi.createUserApiKey(new CreateApiKeyRequest()
+                .username(username));
 
         // ---
 
         OrganizationsApi orgApi = new OrganizationsApi(getApiClient());
-        if (orgApi.get(orgName) == null) {
-            orgApi.createOrUpdate(new OrganizationEntry().setName(orgName));
+        if (orgApi.getOrg(orgName) == null) {
+            orgApi.createOrUpdateOrg(new OrganizationEntry().name(orgName));
         }
 
         TeamsApi teamsApi = new TeamsApi(getApiClient());
-        teamsApi.addUsers(orgName, "default", false, Collections.singletonList(new TeamUserEntry()
-                .setUsername(username)
-                .setRole(TeamUserEntry.RoleEnum.MEMBER)
-                .setUserType(TeamUserEntry.UserTypeEnum.LOCAL)));
+        teamsApi.addUsersToTeam(orgName, "default", false, Collections.singletonList(new TeamUserEntry()
+                .username(username)
+                .role(TeamUserEntry.RoleEnum.MEMBER)
+                .userType(TeamUserEntry.UserTypeEnum.LOCAL)));
 
         ProjectsApi projectsApi = new ProjectsApi(getApiClient());
-        projectsApi.createOrUpdate(orgName, new ProjectEntry()
-                .setName(projectName)
-                .setVisibility(ProjectEntry.VisibilityEnum.PUBLIC)
-                .setRepositories(Collections.singletonMap(repoName, new RepositoryEntry()
-                        .setUrl(gitUrl)
-                        .setBranch("master"))));
+        projectsApi.createOrUpdateProject(orgName, new ProjectEntry()
+                .name(projectName)
+                .visibility(ProjectEntry.VisibilityEnum.PUBLIC)
+                .repositories(Collections.singletonMap(repoName, new RepositoryEntry()
+                        .url(gitUrl)
+                        .branch("master"))));
 
         // ---
 
@@ -99,8 +100,11 @@ public class TriggersRefreshIT extends AbstractServerIT {
         // ---
 
         Files.copy(tmpDir.resolve("new_concord.yml"), tmpDir.resolve("concord.yml"), StandardCopyOption.REPLACE_EXISTING);
-        repo.add().addFilepattern(".").call();
-        repo.commit().setMessage("update").call();
+
+        try (Git repo = Git.open(tmpDir.toFile())) {
+            repo.add().addFilepattern(".").call();
+            repo.commit().setMessage("update").call();
+        }
 
         // ---
 
@@ -123,7 +127,7 @@ public class TriggersRefreshIT extends AbstractServerIT {
     private List<TriggerEntry> waitForTriggers(String orgName, String projectName, String repoName, int expectedCount) throws Exception {
         TriggersApi triggerResource = new TriggersApi(getApiClient());
         while (true) {
-            List<TriggerEntry> l = triggerResource.list(orgName, projectName, repoName);
+            List<TriggerEntry> l = triggerResource.listTriggers(orgName, projectName, repoName);
             if (l != null && l.size() == expectedCount) {
                 return l;
             }

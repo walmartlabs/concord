@@ -36,6 +36,7 @@ import StoreVisibilityActivity from './StoreVisibilityActivity';
 import { formatFileSize } from '../../../utils';
 import { LoadingDispatch } from '../../../App';
 import EntityId from '../../molecules/EntityId';
+import StoreOrganizationChangeActivity from "./StoreOrganizationChangeActivity";
 
 export interface ExternalProps {
     orgName: ConcordKey;
@@ -104,6 +105,13 @@ const StoreSettings = ({ orgName, storeName, forceRefresh }: ExternalProps) => {
                     orgName={orgName}
                     storeName={storeName}
                     initialOwnerId={data?.owner?.id}
+                    disabled={disabled}
+                />
+
+                <Header as="h4">Organization</Header>
+                <StoreOrganizationChangeActivity
+                    orgName={orgName}
+                    storeName={storeName}
                     disabled={disabled}
                 />
 

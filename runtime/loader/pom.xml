@@ -6,13 +6,13 @@
     <parent>
         <groupId>com.walmartlabs.concord</groupId>
         <artifactId>parent</artifactId>
-        <version>1.94.1-SNAPSHOT</version>
+        <version>2.12.1-SNAPSHOT</version>
         <relativePath>../../pom.xml</relativePath>
     </parent>
 
     <groupId>com.walmartlabs.concord.runtime</groupId>
     <artifactId>concord-process-loader</artifactId>
-    <packaging>takari-jar</packaging>
+    <packaging>jar</packaging>
 
     <dependencies>
         <dependency>
@@ -98,16 +98,4 @@
             <artifactId>slf4j-api</artifactId>
         </dependency>
     </dependencies>
-
-    <build>
-        <plugins>
-            <plugin>
-                <groupId>io.takari.maven.plugins</groupId>
-                <artifactId>takari-lifecycle-plugin</artifactId>
-                <configuration>
-                    <proc>proc</proc>
-                </configuration>
-            </plugin>
-        </plugins>
-    </build>
 </project>

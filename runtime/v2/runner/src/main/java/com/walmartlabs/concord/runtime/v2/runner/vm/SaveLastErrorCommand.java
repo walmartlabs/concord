@@ -4,7 +4,7 @@ package com.walmartlabs.concord.runtime.v2.runner.vm;
  * *****
  * Concord
  * -----
- * Copyright (C) 2017 - 2020 Walmart Inc.
+ * Copyright (C) 2017 - 2023 Walmart Inc.
  * -----
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -46,6 +46,11 @@ public class SaveLastErrorCommand implements Command {
 
     private static final TypeReference<Map<String, Object>> MAP_TYPE = new TypeReference<Map<String, Object>>() {
     };
+
+    @Override
+    public Command copy() {
+        return new SaveLastErrorCommand();
+    }
 
     @Override
     public void eval(Runtime runtime, State state, ThreadId threadId) throws Exception {

@@ -1,0 +1,16 @@
+{
+  "defaultProcessCfg": {
+    "defaultTaskVariables": {
+      "jira": {
+        "apiUrl": "https://jira.walmart.com/rest/api/2/",
+        "readTimeout": 30,
+        "writeTimeout": 30,
+        "connectTimeout": 30
+      },
+      "slack": {
+        "proxyPort": 9080,
+        "proxyAddress": "proxy.com"
+      }
+    }
+  }
+}

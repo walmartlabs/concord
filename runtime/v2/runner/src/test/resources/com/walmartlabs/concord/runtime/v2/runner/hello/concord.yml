@@ -2,3 +2,5 @@ flows:
   default:
     - log: "Hello, ${name}!"
     - task: testDefaults
+    - logYaml:
+        k: "value"

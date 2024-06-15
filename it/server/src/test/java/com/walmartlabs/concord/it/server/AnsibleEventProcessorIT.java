@@ -20,7 +20,7 @@ package com.walmartlabs.concord.it.server;
  * =====
  */
 
-import com.walmartlabs.concord.client.*;
+import com.walmartlabs.concord.client2.*;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
@@ -31,23 +31,22 @@ import java.util.concurrent.Callable;
 
 import static com.walmartlabs.concord.it.common.ITUtils.archive;
 import static com.walmartlabs.concord.it.common.ServerClient.waitForCompletion;
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class AnsibleEventProcessorIT extends AbstractServerIT {
 
     @Test
     public void test() throws Exception {
-        URI uri = ProcessIT.class.getResource("ansibleEventProcessor").toURI();
+        URI uri = AnsibleEventProcessorIT.class.getResource("ansibleEventProcessor").toURI();
         byte[] payload = archive(uri, ITConstants.DEPENDENCIES_DIR);
 
         // ---
 
-        ProcessApi processApi = new ProcessApi(getApiClient());
         StartProcessResponse spr = start(payload);
 
         // ---
 
-        ProcessEntry pir = waitForCompletion(processApi, spr.getInstanceId());
+        ProcessEntry pir = waitForCompletion(getApiClient(), spr.getInstanceId());
         Assertions.assertEquals(ProcessEntry.StatusEnum.FINISHED, pir.getStatus());
 
         // ---
@@ -64,22 +63,60 @@ public class AnsibleEventProcessorIT extends AbstractServerIT {
         assertEquals(2L, play.getTaskCount().longValue());
     }
 
-    private static PlaybookEntry assertPlaybook(AnsibleProcessApi ansibleApi, UUID instanceId)  throws Exception {
+    @Test
+    public void testLongNames() throws Exception {
+        URI uri = AnsibleEventProcessorIT.class.getResource("ansibleEventProcessor").toURI();
+        byte[] payload = archive(uri, ITConstants.DEPENDENCIES_DIR);
+
+        // ---
+
+        StartProcessResponse spr = start("emitLongNames", payload);
+
+        // ---
+
+        ProcessEntry pir = waitForCompletion(getApiClient(), spr.getInstanceId());
+        Assertions.assertEquals(ProcessEntry.StatusEnum.FINISHED, pir.getStatus());
+
+        // ---
+
+        AnsibleProcessApi ansibleApi = new AnsibleProcessApi(getApiClient());
+
+        PlaybookEntry playbook = assertPlaybook(ansibleApi, pir.getInstanceId());
+        assertEquals("playbook/large_play_and_task_names.yml", playbook.getName());
+        assertEquals(50L, playbook.getHostsCount().longValue());
+        assertEquals(1, playbook.getPlaysCount().intValue());
+
+        PlayInfo play = assertPlay(ansibleApi, pir.getInstanceId(), playbook.getId());
+        TaskInfo task = assertTask(ansibleApi, pir.getInstanceId(), play.getPlayId());
+        assertTrue(play.getPlayName().matches("\\['my-inventory-host-001', 'my-inventory-host-002'.*\\.\\.\\.$"));
+        assertFalse(play.getPlayName().contains("my-inventory-host-048"));
+        assertEquals(1L, play.getTaskCount().longValue());
+        assertEquals(1024, play.getPlayName().length());
+        assertEquals(1024, task.getTaskName().length());
+    }
+
+    private static PlaybookEntry assertPlaybook(AnsibleProcessApi ansibleApi, UUID instanceId) throws Exception {
         List<PlaybookEntry> playbooks = poll(() -> ansibleApi.listPlaybooks(instanceId));
         assertEquals(1, playbooks.size());
         return playbooks.get(0);
     }
 
-    private static PlayInfo assertPlay(AnsibleProcessApi ansibleApi, UUID instanceId, UUID playbookId)  throws Exception {
+    private static PlayInfo assertPlay(AnsibleProcessApi ansibleApi, UUID instanceId, UUID playbookId) throws Exception {
         List<PlayInfo> plays = poll(() -> ansibleApi.listPlays(instanceId, playbookId));
         assertEquals(1, plays.size());
         return plays.get(0);
     }
 
+    private static TaskInfo assertTask(AnsibleProcessApi ansibleApi, UUID instanceId, UUID playId) throws Exception {
+        List<TaskInfo> tasks = poll(() -> ansibleApi.listTasks(instanceId, playId));
+        assertFalse(tasks.isEmpty());
+        return tasks.get(0);
+    }
+
     private static <T> List<T> poll(Callable<List<T>> call) throws Exception {
         while (true) {
             List<T> result = call.call();
-            if(result != null && !result.isEmpty()) {
+            if (result != null && !result.isEmpty()) {
                 return result;
             }
 

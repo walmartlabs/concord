@@ -22,8 +22,7 @@ package com.walmartlabs.concord.runtime.v2.runner.vm;
 
 import com.walmartlabs.concord.runtime.v2.model.ReturnStep;
 import com.walmartlabs.concord.svm.Runtime;
-import com.walmartlabs.concord.svm.State;
-import com.walmartlabs.concord.svm.ThreadId;
+import com.walmartlabs.concord.svm.*;
 
 public class ReturnCommand extends StepCommand<ReturnStep> {
 
@@ -34,7 +33,14 @@ public class ReturnCommand extends StepCommand<ReturnStep> {
     }
 
     @Override
+    public Command copy() {
+        return new ReturnCommand(getStep());
+    }
+
+    @Override
     protected void execute(Runtime runtime, State state, ThreadId threadId) {
-        state.popFrame(threadId);
+        Frame frame = state.peekFrame(threadId);
+        frame.pop();
+        frame.push(new PopFrameCommand());
     }
 }

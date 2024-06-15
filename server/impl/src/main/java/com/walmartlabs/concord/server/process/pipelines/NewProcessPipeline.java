@@ -41,6 +41,7 @@ public class NewProcessPipeline extends Pipeline {
                 LoggingMDCProcessor.class,
                 AuthorizationProcessor.class,
                 AssertWorkspaceArchiveProcessor.class,
+                RawPayloadPolicyProcessor.class,
                 AssertOutVariablesProcessor.class,
                 RequestParametersProcessor.class,
                 PayloadStoreProcessor.class,

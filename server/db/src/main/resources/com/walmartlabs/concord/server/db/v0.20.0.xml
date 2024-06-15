@@ -5,6 +5,8 @@
         xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.3.xsd">
 
     <changeSet id="20000" author="ibodrov@gmail.com">
+        <validCheckSum>7:6319e50c991241cbd35987dd32834a4e</validCheckSum>
+        <validCheckSum>7:b3d65d57ff394117447433f1912ce0ec</validCheckSum>
         <createTable tableName="PROCESS_STATE">
             <column name="INSTANCE_ID" type="varchar(36)">
                 <constraints primaryKey="true" nullable="false"/>
@@ -12,7 +14,7 @@
             <column name="ITEM_PATH" type="varchar(2048)">
                 <constraints primaryKey="true" nullable="false"/>
             </column>
-            <column name="ITEM_DATA" type="blob">
+            <column name="ITEM_DATA" type="longblob">
                 <constraints nullable="false"/>
             </column>
         </createTable>

@@ -3,42 +3,61 @@
 
     <modelVersion>4.0.0</modelVersion>
 
-    <parent>
-        <artifactId>takari</artifactId>
-        <groupId>io.takari</groupId>
-        <version>27</version>
-        <relativePath />
-    </parent>
-
     <groupId>com.walmartlabs.concord</groupId>
     <artifactId>concord-targetplatform</artifactId>
-    <version>1.94.1-SNAPSHOT</version>
+    <version>2.12.1-SNAPSHOT</version>
 
     <packaging>pom</packaging>
 
+    <name>${project.groupId}:${project.artifactId}</name>
+    <description>Concord: Orchestrate More. Live Better.</description>
+    <url>https://concord.walmartlabs.com/</url>
+
+    <licenses>
+        <license>
+            <name>Apache License, Version 2.0</name>
+            <url>https://www.apache.org/licenses/LICENSE-2.0.txt</url>
+            <distribution>repo</distribution>
+        </license>
+    </licenses>
+
+    <developers>
+        <developer>
+            <id>team</id>
+            <name>Concord Development Team</name>
+            <roles>
+                <role>Project Lead</role>
+            </roles>
+            <timezone>-5</timezone>
+        </developer>
+    </developers>
+
     <properties>
+        <scm.connection>scm:git:https://github.com/walmartlabs/concord.git</scm.connection>
+
+        <activation.api.version>1.2.2</activation.api.version>
         <aopalliance.version>1.0</aopalliance.version>
         <aws.version>1.11.475</aws.version>
         <bouncycastle.version>1.70</bouncycastle.version>
-        <bpm.version>1.0.1</bpm.version>
+        <bpm.version>1.0.2</bpm.version>
+        <bytebuddy.version>1.14.9</bytebuddy.version>
         <commons.beanutils.version>1.9.4</commons.beanutils.version>
+        <commons.codec.version>1.15</commons.codec.version>
         <commons.collections.version>3.2.2</commons.collections.version>
-        <commons.compress.version>1.21</commons.compress.version>
+        <commons.compress.version>1.24.0</commons.compress.version>
         <commons.email.version>1.5</commons.email.version>
-        <commons.io.version>2.11.0</commons.io.version> <!-- necessary for resteasy -->
-        <commons.lang.version>3.12.0</commons.lang.version>
+        <commons.io.version>2.16.0</commons.io.version>
+        <commons.lang.version>3.13.0</commons.lang.version>
         <commons.text.version>1.9</commons.text.version>
         <commons.validator.version>1.7</commons.validator.version>
         <config.version>1.4.2</config.version>
-        <cronutils.version>9.1.6</cronutils.version>
-        <errorproneannotations.version>2.11.0</errorproneannotations.version>
+        <cronutils.version>9.2.0</cronutils.version>
+        <errorproneannotations.version>2.26.1</errorproneannotations.version>
         <glassfish.el.version>3.0.1-b12</glassfish.el.version>
         <graalvm.version>22.0.0.2</graalvm.version>
         <greenmail.version>1.6.5</greenmail.version>
-        <groovy.version>2.5.15</groovy.version>
-        <gson.fire.version>1.8.3</gson.fire.version>
-        <gson.version>2.8.8</gson.version>
-        <guava.version>31.0.1-jre</guava.version>
+        <groovy.version>2.5.17</groovy.version>
+        <guava.version>33.1.0-jre</guava.version>
         <guice.version>5.1.0</guice.version>
         <hibernate.validator.version>6.1.5.Final</hibernate.validator.version>
         <hikaricp.version>3.4.2</hikaricp.version>
@@ -46,81 +65,84 @@
         <httpclient.version>4.5.13</httpclient.version>
         <httpcore.version>4.4.13</httpcore.version>
         <httpmime.version>4.5.11</httpmime.version>
-        <immutables.version>2.9.0</immutables.version>
+        <immutables.version>2.9.3</immutables.version>
         <ini4j.version>0.5.4</ini4j.version>
-        <jackson.databind.version>2.13.2.1</jackson.databind.version>
+        <jackson.databind.version>2.17.0</jackson.databind.version>
         <jackson.jsonschema.version>1.0.39</jackson.jsonschema.version>
-        <jackson.version>2.13.2</jackson.version>
+        <jackson.version>2.17.0</jackson.version>
         <javax.activation.version>1.2.0</javax.activation.version>
         <javax.annotations.api.version>1.3.2</javax.annotations.api.version>
         <javax.inject.version>1</javax.inject.version>
         <javax.mail.version>1.6.2</javax.mail.version>
         <javax.validation.version>2.0.1.Final</javax.validation.version>
-        <javax.ws.rs.version>1.0.1.Final</javax.ws.rs.version>
+        <javax.ws.rs.version>2.0.1.Final</javax.ws.rs.version>
         <javers.version>6.6.2</javers.version>
-        <jboss.logging>3.3.2.Final</jboss.logging>
+        <jboss.logging>3.4.2.Final</jboss.logging>
         <jcl-over-slf4j.version>1.7.35</jcl-over-slf4j.version>
         <jetbrain.annotations.version>23.0.0</jetbrain.annotations.version>
-        <jetty.version>9.4.44.v20210927</jetty.version>
+        <jetty.version>12.0.7</jetty.version>
         <jgit.version>5.13.0.202109080827-r</jgit.version>
-        <jna.version>5.10.0</jna.version>
+        <jna.version>5.13.0</jna.version>
         <jooq.version>3.14.0</jooq.version>
         <jsch.version>0.1.55</jsch.version>
-        <json.schema.validator.version>1.0.66</json.schema.validator.version>
-        <json.smart.version>2.4.7</json.smart.version>
+        <json.schema.validator.version>1.4.0</json.schema.validator.version>
+        <json.smart.version>2.5.0</json.smart.version>
         <jsr305.version>3.0.2</jsr305.version>
-        <junit.version>5.8.2</junit.version>
+        <junit.version>5.9.1</junit.version>
         <kafka.client.version>2.4.0</kafka.client.version>
         <kerby.version>2.0.1</kerby.version>
-        <kubernetes.client.version>4.8.0</kubernetes.client.version>
+        <kubernetes.client.version>5.7.0</kubernetes.client.version>
         <launcher.version>0.128</launcher.version>
-        <liquibase.version>3.5.1</liquibase.version> <!-- the newer versions (up to 3.5.3) have incorrect mappings for PG's blob/bytea -->
-        <logback.version>1.2.10</logback.version>
+        <liquibase.version>4.8.0</liquibase.version>
+        <logback.version>1.4.14</logback.version>
         <maven.annotation.version>3.5</maven.annotation.version>
         <maven.api.version>3.0.5</maven.api.version>
         <maven.artifact.version>3.8.4</maven.artifact.version>
         <maven.prj.version>2.2.1</maven.prj.version>
         <maven.resolver.provider.version>3.8.4</maven.resolver.provider.version>
         <maven.model.builder.version>3.8.4</maven.model.builder.version>
-        <maven.resolver.version>1.7.3</maven.resolver.version>
+        <maven.resolver.version>1.9.20</maven.resolver.version>
         <maven.resolver.version.concord>0.0.4</maven.resolver.version.concord>
-        <metrics.version>4.2.8</metrics.version>
-        <mockito.version>4.3.1</mockito.version>
+        <metrics.version>4.2.25</metrics.version>
+        <mockito.version>4.9.0</mockito.version>
         <mustache.version>0.9.10</mustache.version>
         <nimbus.jwt.version>8.8</nimbus.jwt.version>
-        <node.version>10.11.0</node.version>
-        <okhttp.version>2.7.5</okhttp.version>
-        <okhttp3.version>3.14.1</okhttp3.version>
-        <okio.version>1.17.2</okio.version>
         <ollie.version>0.0.37</ollie.version>
         <pac4j.version>4.0.0-RC3</pac4j.version>
         <parc.version>0.1.2</parc.version>
-        <picocli.version>4.6.2</picocli.version>
-        <postgres.version>42.3.3</postgres.version>
-        <prometheus.simpleclient.version>0.15.0</prometheus.simpleclient.version>
-        <resteasy.version>3.1.4.Final</resteasy.version>
-        <selenium.version>3.141.59</selenium.version>
+        <picocli.version>4.7.0</picocli.version>
+        <postgres.version>42.7.3</postgres.version>
+        <prometheus.simpleclient.version>0.16.0</prometheus.simpleclient.version>
+        <reactive.streams.version>1.0.3</reactive.streams.version>
+        <reflections.version>0.9.11</reflections.version>
+        <resteasy.version>4.7.9.Final</resteasy.version>
+        <selenium.version>4.8.1</selenium.version>
         <servlet.version>4.0.1</servlet.version>
-        <shiro.version>1.8.0</shiro.version>
+        <shiro.version>1.13.0</shiro.version>
         <siesta.version>2.3.2</siesta.version>
-        <sisu.version>0.3.5</sisu.version>
-        <slf4j.version>1.7.35</slf4j.version>
-        <snakeyaml.version>1.30</snakeyaml.version>
+        <sisu.version>0.9.0.M2</sisu.version>
+        <slf4j.version>2.0.11</slf4j.version>
+        <snakeyaml.version>2.2</snakeyaml.version>
         <sshd.version>2.8.0</sshd.version>
-        <swagger.version>1.5.20</swagger.version>
         <sysoutslf4j.version>1.0.2</sysoutslf4j.version>
-        <testcontainers.concord.version>0.0.40</testcontainers.concord.version>
-        <testcontainers.version>1.16.3</testcontainers.version>
+        <testcontainers.concord.version>2.0.1</testcontainers.concord.version>
+        <testcontainers.version>1.19.8</testcontainers.version>
         <threetenbp.version>1.3.5</threetenbp.version>
-        <wiremock.jre8.version>2.32.0</wiremock.jre8.version>
+        <wiremock.version>3.5.2</wiremock.version>
     </properties>
 
     <dependencyManagement>
         <dependencies>
             <!-- Concord -->
+            <!-- deprecated -->
             <dependency>
                 <groupId>com.walmartlabs.concord</groupId>
                 <artifactId>concord-client</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.walmartlabs.concord</groupId>
+                <artifactId>concord-client2</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
@@ -318,9 +340,15 @@
                 <artifactId>concord-oneops-plugin</artifactId>
                 <version>${project.version}</version>
             </dependency>
+            <!-- deprecated -->
             <dependency>
                 <groupId>com.walmartlabs.concord.server.plugins.ansible</groupId>
                 <artifactId>concord-ansible-plugin-client</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.walmartlabs.concord.server.plugins.ansible</groupId>
+                <artifactId>concord-ansible-plugin-client2</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
@@ -346,6 +374,11 @@
             <dependency>
                 <groupId>com.walmartlabs.concord.server.plugins.noderoster</groupId>
                 <artifactId>concord-noderoster-plugin-client</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.walmartlabs.concord.server.plugins.noderoster</groupId>
+                <artifactId>concord-noderoster-plugin-client2</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
@@ -425,7 +458,7 @@
             </dependency>
             <dependency>
                 <groupId>io.dropwizard.metrics</groupId>
-                <artifactId>metrics-jetty9</artifactId>
+                <artifactId>metrics-jetty12</artifactId>
                 <version>${metrics.version}</version>
             </dependency>
             <dependency>
@@ -447,16 +480,6 @@
                 <groupId>io.prometheus</groupId>
                 <artifactId>simpleclient_hotspot</artifactId>
                 <version>${prometheus.simpleclient.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.google.code.gson</groupId>
-                <artifactId>gson</artifactId>
-                <version>${gson.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>io.gsonfire</groupId>
-                <artifactId>gson-fire</artifactId>
-                <version>${gson.fire.version}</version>
             </dependency>
             <dependency>
                 <groupId>ch.qos.logback</groupId>
@@ -494,13 +517,29 @@
                 <version>${jackson.version}</version>
             </dependency>
             <dependency>
-                <groupId>com.github.tomakehurst</groupId>
-                <artifactId>wiremock-jre8</artifactId>
-                <version>${wiremock.jre8.version}</version>
+                <groupId>org.wiremock</groupId>
+                <artifactId>wiremock-jetty12</artifactId>
+                <version>${wiremock.version}</version>
                 <exclusions>
                     <exclusion>
                         <groupId>commons-codec</groupId>
                         <artifactId>commons-codec</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>org.ow2.asm</groupId>
+                        <artifactId>asm</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>org.eclipse.jetty</groupId>
+                        <artifactId>jetty-webapp</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>org.eclipse.jetty</groupId>
+                        <artifactId>jetty-alpn-client</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>org.slf4j</groupId>
+                        <artifactId>slf4j-api</artifactId>
                     </exclusion>
                 </exclusions>
             </dependency>
@@ -555,11 +594,6 @@
                 <version>${metrics.version}</version>
             </dependency>
             <dependency>
-                <groupId>io.swagger</groupId>
-                <artifactId>swagger-annotations</artifactId>
-                <version>${swagger.version}</version>
-            </dependency>
-            <dependency>
                 <groupId>io.takari.bpm</groupId>
                 <artifactId>activiti-compat</artifactId>
                 <version>${bpm.version}</version>
@@ -578,52 +612,6 @@
                 <groupId>io.takari.bpm</groupId>
                 <artifactId>testkit</artifactId>
                 <version>${bpm.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>io.takari.siesta</groupId>
-                <artifactId>siesta-api</artifactId>
-                <version>${siesta.version}</version>
-                <exclusions>
-                    <exclusion>
-                        <groupId>javax.ws.rs</groupId>
-                        <artifactId>javax.ws.rs-api</artifactId>
-                    </exclusion>
-                </exclusions>
-            </dependency>
-            <dependency>
-                <groupId>io.takari.siesta</groupId>
-                <artifactId>siesta-jackson2</artifactId>
-                <version>${siesta.version}</version>
-                <exclusions>
-                    <!-- TODO remove once siesta is updated with the latest jackson -->
-                    <exclusion>
-                        <groupId>org.jboss.resteasy</groupId>
-                        <artifactId>resteasy-jackson2-provider</artifactId>
-                    </exclusion>
-                </exclusions>
-            </dependency>
-            <dependency>
-                <groupId>io.takari.siesta</groupId>
-                <artifactId>siesta-server</artifactId>
-                <version>${siesta.version}</version>
-                <exclusions>
-                    <exclusion>
-                        <groupId>org.sonatype.sisu</groupId>
-                        <artifactId>sisu-guice</artifactId>
-                    </exclusion>
-                    <exclusion>
-                        <groupId>org.sonatype.sisu.inject</groupId>
-                        <artifactId>guice-servlet</artifactId>
-                    </exclusion>
-                    <exclusion>
-                        <groupId>org.glassfish.web</groupId>
-                        <artifactId>javax.el</artifactId>
-                    </exclusion>
-                    <exclusion>
-                        <groupId>org.jboss.resteasy</groupId>
-                        <artifactId>resteasy-jaxrs</artifactId>
-                    </exclusion>
-                </exclusions>
             </dependency>
             <dependency>
                 <groupId>javax.inject</groupId>
@@ -751,13 +739,13 @@
                 <version>${jetty.version}</version>
             </dependency>
             <dependency>
-                <groupId>org.eclipse.jetty</groupId>
-                <artifactId>jetty-servlet</artifactId>
+                <groupId>org.eclipse.jetty.ee8</groupId>
+                <artifactId>jetty-ee8-servlet</artifactId>
                 <version>${jetty.version}</version>
             </dependency>
             <dependency>
-                <groupId>org.eclipse.jetty</groupId>
-                <artifactId>jetty-servlets</artifactId>
+                <groupId>org.eclipse.jetty.ee8</groupId>
+                <artifactId>jetty-ee8-servlets</artifactId>
                 <version>${jetty.version}</version>
             </dependency>
             <dependency>
@@ -771,8 +759,8 @@
                 <version>${jetty.version}</version>
             </dependency>
             <dependency>
-                <groupId>org.eclipse.jetty</groupId>
-                <artifactId>jetty-webapp</artifactId>
+                <groupId>org.eclipse.jetty.ee8</groupId>
+                <artifactId>jetty-ee8-webapp</artifactId>
                 <version>${jetty.version}</version>
             </dependency>
             <dependency>
@@ -797,27 +785,42 @@
             </dependency>
             <dependency>
                 <groupId>org.eclipse.jetty.websocket</groupId>
-                <artifactId>websocket-server</artifactId>
+                <artifactId>jetty-websocket-jetty-api</artifactId>
+                <version>${jetty.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.eclipse.jetty.ee8.websocket</groupId>
+                <artifactId>jetty-ee8-websocket-javax-server</artifactId>
+                <version>${jetty.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.eclipse.jetty.ee8.websocket</groupId>
+                <artifactId>jetty-ee8-websocket-jetty-server</artifactId>
+                <version>${jetty.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.eclipse.jetty.ee8.websocket</groupId>
+                <artifactId>jetty-ee8-websocket-servlet</artifactId>
                 <version>${jetty.version}</version>
             </dependency>
             <dependency>
                 <groupId>org.eclipse.jetty.websocket</groupId>
-                <artifactId>websocket-client</artifactId>
+                <artifactId>jetty-websocket-jetty-common</artifactId>
                 <version>${jetty.version}</version>
             </dependency>
             <dependency>
                 <groupId>org.eclipse.jetty.websocket</groupId>
-                <artifactId>websocket-servlet</artifactId>
+                <artifactId>jetty-websocket-jetty-server</artifactId>
                 <version>${jetty.version}</version>
             </dependency>
             <dependency>
                 <groupId>org.eclipse.jetty.websocket</groupId>
-                <artifactId>websocket-common</artifactId>
+                <artifactId>jetty-websocket-jetty-client</artifactId>
                 <version>${jetty.version}</version>
             </dependency>
             <dependency>
-                <groupId>org.eclipse.jetty.websocket</groupId>
-                <artifactId>websocket-api</artifactId>
+                <groupId>org.eclipse.jetty.ee8.websocket</groupId>
+                <artifactId>jetty-ee8-websocket-jetty-client</artifactId>
                 <version>${jetty.version}</version>
             </dependency>
             <dependency>
@@ -839,23 +842,11 @@
                 <groupId>org.jboss.resteasy</groupId>
                 <artifactId>resteasy-jackson2-provider</artifactId>
                 <version>${resteasy.version}</version>
-                <exclusions>
-                    <exclusion>
-                        <groupId>jakarta.activation</groupId>
-                        <artifactId>jakarta.activation-api</artifactId>
-                    </exclusion>
-                </exclusions>
             </dependency>
             <dependency>
                 <groupId>org.jboss.resteasy</groupId>
-                <artifactId>resteasy-jaxrs</artifactId>
+                <artifactId>resteasy-core</artifactId>
                 <version>${resteasy.version}</version>
-                <exclusions>
-                    <exclusion>
-                        <groupId>javax.activation</groupId>
-                        <artifactId>activation</artifactId>
-                    </exclusion>
-                </exclusions>
             </dependency>
             <dependency>
                 <groupId>org.jboss.resteasy</groupId>
@@ -869,7 +860,7 @@
             </dependency>
             <dependency>
                 <groupId>org.jboss.spec.javax.ws.rs</groupId>
-                <artifactId>jboss-jaxrs-api_2.0_spec</artifactId>
+                <artifactId>jboss-jaxrs-api_2.1_spec</artifactId>
                 <version>${javax.ws.rs.version}</version>
             </dependency>
             <dependency>
@@ -979,26 +970,6 @@
                 <version>${config.version}</version>
             </dependency>
             <dependency>
-                <groupId>com.squareup.okio</groupId>
-                <artifactId>okio</artifactId>
-                <version>${okio.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.squareup.okhttp</groupId>
-                <artifactId>okhttp</artifactId>
-                <version>${okhttp.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.squareup.okhttp</groupId>
-                <artifactId>logging-interceptor</artifactId>
-                <version>${okhttp.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.squareup.okhttp3</groupId>
-                <artifactId>okhttp</artifactId>
-                <version>${okhttp3.version}</version>
-            </dependency>
-            <dependency>
                 <groupId>org.ini4j</groupId>
                 <artifactId>ini4j</artifactId>
                 <version>${ini4j.version}</version>
@@ -1026,6 +997,11 @@
             <dependency>
                 <groupId>org.immutables</groupId>
                 <artifactId>value</artifactId>
+                <version>${immutables.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.immutables</groupId>
+                <artifactId>builder</artifactId>
                 <version>${immutables.version}</version>
             </dependency>
             <dependency>
@@ -1067,6 +1043,12 @@
                 <groupId>net.minidev</groupId>
                 <artifactId>json-smart</artifactId>
                 <version>${json.smart.version}</version>
+                <exclusions>
+                    <exclusion>
+                        <groupId>org.ow2.asm</groupId>
+                        <artifactId>asm</artifactId>
+                    </exclusion>
+                </exclusions>
             </dependency>
             <dependency>
                 <groupId>org.seleniumhq.selenium</groupId>
@@ -1090,13 +1072,13 @@
             </dependency>
             <dependency>
                 <groupId>org.seleniumhq.selenium</groupId>
-                <artifactId>selenium-support</artifactId>
+                <artifactId>selenium-chromium-driver</artifactId>
                 <version>${selenium.version}</version>
             </dependency>
             <dependency>
-                <groupId>com.googlecode.junit-toolbox</groupId>
-                <artifactId>junit-toolbox</artifactId>
-                <version>2.4</version>
+                <groupId>org.seleniumhq.selenium</groupId>
+                <artifactId>selenium-support</artifactId>
+                <version>${selenium.version}</version>
             </dependency>
             <!-- k8s stuff -->
             <dependency>
@@ -1105,6 +1087,22 @@
                 <version>${kubernetes.client.version}</version>
             </dependency>
             <dependency>
+                <groupId>io.fabric8</groupId>
+                <artifactId>crd-generator-api</artifactId>
+                <version>${kubernetes.client.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.fabric8</groupId>
+                <artifactId>kubernetes-model-core</artifactId>
+                <version>${kubernetes.client.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.fabric8</groupId>
+                <artifactId>kubernetes-model-apiextensions</artifactId>
+                <version>${kubernetes.client.version}</version>
+            </dependency>
+
+            <dependency>
                 <groupId>commons-collections</groupId>
                 <artifactId>commons-collections</artifactId>
                 <version>${commons.collections.version}</version>
@@ -1112,6 +1110,16 @@
             <dependency>
                 <groupId>io.fabric8</groupId>
                 <artifactId>kubernetes-model</artifactId>
+                <version>${kubernetes.client.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.fabric8</groupId>
+                <artifactId>kubernetes-model-common</artifactId>
+                <version>${kubernetes.client.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.fabric8</groupId>
+                <artifactId>crd-generator-apt</artifactId>
                 <version>${kubernetes.client.version}</version>
             </dependency>
             <dependency>
@@ -1138,6 +1146,12 @@
                 <groupId>ca.ibodrov.concord</groupId>
                 <artifactId>testcontainers-concord-core</artifactId>
                 <version>${testcontainers.concord.version}</version>
+                <exclusions>
+                    <exclusion>
+                        <groupId>com.google.code.gson</groupId>
+                        <artifactId>gson</artifactId>
+                    </exclusion>
+                </exclusions>
             </dependency>
             <dependency>
                 <groupId>ca.ibodrov.concord</groupId>
@@ -1147,6 +1161,11 @@
             <dependency>
                 <groupId>org.testcontainers</groupId>
                 <artifactId>testcontainers</artifactId>
+                <version>${testcontainers.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.testcontainers</groupId>
+                <artifactId>postgresql</artifactId>
                 <version>${testcontainers.version}</version>
             </dependency>
             <dependency>
@@ -1235,10 +1254,97 @@
                 <artifactId>jboss-logging</artifactId>
                 <version>${jboss.logging}</version>
             </dependency>
+            <dependency>
+                <groupId>net.bytebuddy</groupId>
+                <artifactId>byte-buddy</artifactId>
+                <version>${bytebuddy.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.reflections</groupId>
+                <artifactId>reflections</artifactId>
+                <version>${reflections.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>commons-codec</groupId>
+                <artifactId>commons-codec</artifactId>
+                <version>${commons.codec.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.reactivestreams</groupId>
+                <artifactId>reactive-streams</artifactId>
+                <version>${reactive.streams.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>jakarta.activation</groupId>
+                <artifactId>jakarta.activation-api</artifactId>
+                <version>${activation.api.version}</version>
+            </dependency>
         </dependencies>
     </dependencyManagement>
 
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-gpg-plugin</artifactId>
+                <version>3.1.0</version>
+                <executions>
+                    <execution>
+                        <id>sign-artifacts</id>
+                        <phase>verify</phase>
+                        <goals>
+                            <goal>sign</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <configuration>
+                    <skip>true</skip>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-enforcer-plugin</artifactId>
+                <version>3.3.0</version>
+                <configuration>
+                    <skip>true</skip>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+
+    <scm>
+        <url>${scm.connection}</url>
+        <developerConnection>${scm.connection}</developerConnection>
+        <tag>HEAD</tag>
+    </scm>
+
+    <distributionManagement>
+        <repository>
+            <id>sonatype.releases</id>
+            <name>Sonatype Releases</name>
+            <url>https://oss.sonatype.org/service/local/staging/deploy/maven2</url>
+        </repository>
+        <snapshotRepository>
+            <id>sonatype.snapshots</id>
+            <name>Sonatype Snapshots</name>
+            <url>https://oss.sonatype.org/content/repositories/snapshots</url>
+        </snapshotRepository>
+    </distributionManagement>
+
     <profiles>
+        <profile>
+            <id>concord-release</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <artifactId>maven-gpg-plugin</artifactId>
+                        <configuration>
+                            <skip>false</skip>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
         <profile>
             <id>looper</id>
 

@@ -4,7 +4,7 @@ package com.walmartlabs.concord.plugins.ansible;
  * *****
  * Concord
  * -----
- * Copyright (C) 2017 - 2019 Walmart Inc.
+ * Copyright (C) 2017 - 2023 Walmart Inc.
  * -----
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -41,6 +41,7 @@ public interface AnsibleContext {
 
     Path tmpDir();
 
+    @Value.Default
     default boolean debug() {
         return getBoolean(argsWithDefaults(), TaskParams.DEBUG_KEY.getKey(), false);
     }

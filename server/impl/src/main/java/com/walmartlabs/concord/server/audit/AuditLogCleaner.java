@@ -4,7 +4,7 @@ package com.walmartlabs.concord.server.audit;
  * *****
  * Concord
  * -----
- * Copyright (C) 2017 - 2018 Walmart Inc.
+ * Copyright (C) 2017 - 2023 Walmart Inc.
  * -----
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -31,15 +31,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
 import java.time.Duration;
 import java.time.OffsetDateTime;
 
 import static com.walmartlabs.concord.server.jooq.tables.AuditLog.AUDIT_LOG;
 
-@Named("audit-log-cleaner")
-@Singleton
 public class AuditLogCleaner implements ScheduledTask {
 
     private static final Logger log = LoggerFactory.getLogger(AuditLogCleaner.class);
@@ -54,6 +50,11 @@ public class AuditLogCleaner implements ScheduledTask {
     }
 
     @Override
+    public String getId() {
+        return "audit-log-cleaner";
+    }
+
+    @Override
     public long getIntervalInSec() {
         return cfg.getPeriod().getSeconds();
     }
@@ -63,7 +64,6 @@ public class AuditLogCleaner implements ScheduledTask {
         cleanerDao.deleteOldLogs(cfg.getMaxLogAge());
     }
 
-    @Named
     private static class CleanerDao extends AbstractDao {
 
         @Inject

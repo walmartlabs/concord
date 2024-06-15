@@ -20,11 +20,7 @@ package com.walmartlabs.concord.it.server;
  * =====
  */
 
-import com.walmartlabs.concord.ApiException;
-import com.walmartlabs.concord.client.CreateUserRequest;
-import com.walmartlabs.concord.client.ProjectEntry;
-import com.walmartlabs.concord.client.ProjectsApi;
-import com.walmartlabs.concord.client.UsersApi;
+import com.walmartlabs.concord.client2.*;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -37,15 +33,15 @@ public class ValidationIT extends AbstractServerIT {
         ProjectsApi projectsApi = new ProjectsApi(getApiClient());
 
         try {
-            ProjectEntry req = new ProjectEntry().setName("@123_123");
-            projectsApi.createOrUpdate("Default", req);
+            ProjectEntry req = new ProjectEntry().name("@123_123");
+            projectsApi.createOrUpdateProject("Default", req);
             fail("Should fail with a validation error");
         } catch (ApiException e) {
             assertInvalidRequest(e);
         }
 
-        ProjectEntry req = new ProjectEntry().setName("aProperName@" + System.currentTimeMillis());
-        projectsApi.createOrUpdate("Default", req);
+        ProjectEntry req = new ProjectEntry().name("aProperName@" + System.currentTimeMillis());
+        projectsApi.createOrUpdateProject("Default", req);
     }
 
     @Test
@@ -84,8 +80,8 @@ public class ValidationIT extends AbstractServerIT {
         }
 
         try {
-            usersApi.createOrUpdate(new CreateUserRequest().setUsername(longUsername)
-                    .setType(CreateUserRequest.TypeEnum.LOCAL));
+            usersApi.createOrUpdateUser(new CreateUserRequest().username(longUsername)
+                    .type(CreateUserRequest.TypeEnum.LOCAL));
             fail("Should fail with a validation error");
         } catch (ApiException e) {
             assertInvalidRequest(e);

@@ -5,5 +5,7 @@ configuration:
 
 flows:
   default:
-  - loadTasks: "tasks"
+  - task: loadTasks
+    in:
+      path: "tasks"
   - ${myTask.hey("world")}

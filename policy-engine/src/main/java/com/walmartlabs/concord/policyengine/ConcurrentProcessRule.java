@@ -21,63 +21,34 @@ package com.walmartlabs.concord.policyengine;
  */
 
 import com.fasterxml.jackson.annotation.JsonAlias;
-import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import org.immutables.value.Value;
 
+import javax.annotation.Nullable;
 import java.io.Serializable;
-import java.util.Objects;
 
-public class ConcurrentProcessRule implements Serializable {
+@Value.Immutable
+@JsonInclude(JsonInclude.Include.NON_EMPTY)
+@JsonSerialize(as = ImmutableConcurrentProcessRule.class)
+@JsonDeserialize(as = ImmutableConcurrentProcessRule.class)
+public interface ConcurrentProcessRule extends Serializable {
 
-    private static final long serialVersionUID = 1L;
+    long serialVersionUID = 1L;
 
-    private final String msg;
-    private final Integer maxPerOrg;
-    private final Integer maxPerProject;
+    @Nullable
+    String msg();
 
-    @JsonCreator
-    public ConcurrentProcessRule(@JsonProperty("msg") String msg,
-                                 @JsonProperty("maxPerOrg") Integer maxPerOrg,
-                                 @JsonProperty("maxPerProject") @JsonAlias("max") Integer maxPerProject) { // "max" for backward compatibility with existing policies
+    @Nullable
+    Integer maxPerOrg();
 
-        this.msg = msg;
-        this.maxPerOrg = maxPerOrg;
-        this.maxPerProject = maxPerProject;
-    }
+    @Nullable
+    @JsonProperty("maxPerProject") @JsonAlias("max")
+    Integer maxPerProject();
 
-    public String getMsg() {
-        return msg;
-    }
-
-    public Integer getMaxPerOrg() {
-        return maxPerOrg;
-    }
-
-    public Integer getMaxPerProject() {
-        return maxPerProject;
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        ConcurrentProcessRule that = (ConcurrentProcessRule) o;
-        return Objects.equals(msg, that.msg) &&
-                Objects.equals(maxPerOrg, that.maxPerOrg) &&
-                Objects.equals(maxPerProject, that.maxPerProject);
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(msg, maxPerOrg, maxPerProject);
-    }
-
-    @Override
-    public String toString() {
-        return "ConcurrentProcessRule{" +
-                "msg='" + msg + '\'' +
-                ", maxPerOrg=" + maxPerOrg +
-                ", maxPerProject=" + maxPerProject +
-                '}';
+    static ImmutableConcurrentProcessRule.Builder builder() {
+        return ImmutableConcurrentProcessRule.builder();
     }
 }

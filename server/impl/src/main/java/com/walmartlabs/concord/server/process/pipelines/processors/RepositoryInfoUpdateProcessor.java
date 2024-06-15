@@ -34,8 +34,6 @@ import static com.walmartlabs.concord.server.process.pipelines.processors.Reposi
 @Named
 public class RepositoryInfoUpdateProcessor implements PayloadProcessor {
 
-    private static final int MAX_COMMIT_ID_LENGTH = 128;
-
     private final ProcessQueueDao queueDao;
 
     @Inject
@@ -52,19 +50,14 @@ public class RepositoryInfoUpdateProcessor implements PayloadProcessor {
 
         String commitId = null;
         String commitBranch = null;
-        String commitMsg = null;
 
         RepositoryProcessor.CommitInfo ci = i.getCommitInfo();
         if (ci != null) {
             commitId = ci.getId();
-            commitMsg = ci.getMessage();
             commitBranch = ci.getBranch();
-            if (commitMsg != null && commitMsg.length() > MAX_COMMIT_ID_LENGTH) {
-                commitMsg = commitMsg.substring(0, MAX_COMMIT_ID_LENGTH);
-            }
         }
 
-        queueDao.updateRepositoryDetails(payload.getProcessKey(), i.getId(), i.getUrl(), i.getPath(), commitId, commitMsg, commitBranch);
+        queueDao.updateRepositoryDetails(payload.getProcessKey(), i.getId(), i.getUrl(), i.getPath(), commitId, commitBranch);
 
         return chain.process(payload);
     }

@@ -54,10 +54,11 @@ public class FailProcessor implements ExceptionProcessor {
             return;
         }
 
-        logManager.error(processKey, "Process failed: {}", e.getMessage());
-
         if (!(e instanceof InvalidProcessStateException)) {
+            logManager.error(processKey, "Process failed: {}", e.getMessage());
             queueManager.updateStatus(processKey, ProcessStatus.FAILED);
+        } else {
+            logManager.warn(processKey, "Invalid process state: {}", e.getMessage());
         }
     }
 }

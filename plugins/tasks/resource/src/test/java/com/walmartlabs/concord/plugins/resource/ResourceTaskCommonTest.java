@@ -26,7 +26,6 @@ import com.walmartlabs.concord.sdk.Constants;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
-import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.file.Files;
@@ -37,10 +36,10 @@ import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-public class ResourceTaskCommonTest {
+class ResourceTaskCommonTest {
 
     @Test
-    public void testPrettyPrintYaml() throws Exception {
+    void testPrettyPrintYaml() throws Exception {
         Map<String, Object> m = new HashMap<>();
         m.put("x", 123);
         m.put("y", Collections.singletonMap("a", false));
@@ -52,15 +51,34 @@ public class ResourceTaskCommonTest {
     }
 
     @Test
-    public void testPrettyPrintJson() {
+    void testPrintJson() throws IOException {
         Map<String, Object> m = new HashMap<>();
         m.put("x", 123);
-        m.put("y", OffsetDateTime.now());
+        m.put("y", "hello");
+
+        String result = ResourceTaskCommon.printJson(m);
+
+        assertFalse(result.contains("\n"));
+        assertTrue(result.contains("\"x\":123"));
+        assertTrue(result.contains("\"y\":\"hello"));
+    }
+
+    @Test
+    void testPrettyPrintJson() throws IOException {
+        Map<String, Object> m = new HashMap<>();
+        m.put("x", 123);
+        m.put("y", "hello");
+
+        String result = ResourceTaskCommon.prettyPrintJson(m);
+
+        assertTrue(result.contains("\n"));
+        assertTrue(result.contains("\"x\" : 123"));
+        assertTrue(result.contains("\"y\" : \"hello\""));
     }
 
     @Test
     @SuppressWarnings("rawtypes")
-    public void testFromJsonString() throws Exception {
+    void testFromJsonString() throws Exception {
         String jsonString = "{ \"stringKey\": \"stringValue\", \"listKey\": [1,2,3]}";
         Path workDir = Paths.get(System.getProperty("user.dir"));
 
@@ -76,7 +94,7 @@ public class ResourceTaskCommonTest {
     }
 
     @Test
-    public void testAsProperties() throws Exception {
+    void testAsProperties() throws Exception {
         Path workDir = Paths.get(System.getProperty("user.dir"));
 
         ResourceTaskCommon rsc = new ResourceTaskCommon(workDir,

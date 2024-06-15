@@ -4,7 +4,7 @@ package com.walmartlabs.concord.server.org.triggers;
  * *****
  * Concord
  * -----
- * Copyright (C) 2017 - 2018 Walmart Inc.
+ * Copyright (C) 2017 - 2023 Walmart Inc.
  * -----
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,7 +21,11 @@ package com.walmartlabs.concord.server.org.triggers;
  */
 
 import com.walmartlabs.concord.common.DateTimeUtils;
+import com.walmartlabs.concord.policyengine.CheckResult;
+import com.walmartlabs.concord.policyengine.CronTriggerRule;
+import com.walmartlabs.concord.policyengine.PolicyEngine;
 import com.walmartlabs.concord.sdk.Constants;
+import com.walmartlabs.concord.sdk.MapUtils;
 import com.walmartlabs.concord.server.audit.ActionSource;
 import com.walmartlabs.concord.server.audit.AuditAction;
 import com.walmartlabs.concord.server.audit.AuditLog;
@@ -29,6 +33,7 @@ import com.walmartlabs.concord.server.audit.AuditObject;
 import com.walmartlabs.concord.server.cfg.TriggersConfiguration;
 import com.walmartlabs.concord.server.org.project.RepositoryDao;
 import com.walmartlabs.concord.server.org.secret.SecretManager;
+import com.walmartlabs.concord.server.policy.PolicyManager;
 import com.walmartlabs.concord.server.process.*;
 import com.walmartlabs.concord.server.sdk.PartialProcessKey;
 import com.walmartlabs.concord.server.sdk.ScheduledTask;
@@ -40,17 +45,17 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import java.text.MessageFormat;
+import java.time.Duration;
 import java.time.OffsetDateTime;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 
-@Named("trigger-scheduler")
-@Singleton
 public class TriggerScheduler implements ScheduledTask {
 
     private static final Logger log = LoggerFactory.getLogger(TriggerScheduler.class);
+
+    private static final String DEFAULT_POLICY_MESSAGE = "process start interval can''t be less then {2}";
 
     private static final Initiator CRON = Initiator.of(UUID.fromString("1f9ae527-e7ab-42c0-b0e5-0092f9285f22"), "cron");
 
@@ -65,6 +70,7 @@ public class TriggerScheduler implements ScheduledTask {
     private final SecretManager secretManager;
     private final UserManager userManager;
     private final AuditLog auditLog;
+    private final PolicyManager policyManager;
 
     @Inject
     public TriggerScheduler(TriggerScheduleDao scheduleDao,
@@ -74,10 +80,12 @@ public class TriggerScheduler implements ScheduledTask {
                             TriggersConfiguration triggerCfg,
                             SecretManager secretManager,
                             UserManager userManager,
-                            AuditLog auditLog) {
+                            AuditLog auditLog,
+                            PolicyManager policyManager) {
         this.secretManager = secretManager;
         this.userManager = userManager;
         this.auditLog = auditLog;
+        this.policyManager = policyManager;
 
         this.startedAt = OffsetDateTime.now();
         this.scheduleDao = scheduleDao;
@@ -85,6 +93,11 @@ public class TriggerScheduler implements ScheduledTask {
         this.processManager = processManager;
         this.processSecurityContext = processSecurityContext;
         this.triggerCfg = triggerCfg;
+    }
+
+    @Override
+    public String getId() {
+        return "trigger-scheduler";
     }
 
     @Override
@@ -99,20 +112,30 @@ public class TriggerScheduler implements ScheduledTask {
             if (e == null) {
                 break;
             }
-            if (e.getFireAt().isAfter(startedAt)) {
+            if (e.fireAt().isAfter(startedAt)) {
                 startProcess(e);
             }
         }
     }
 
-    private void startProcess(TriggerSchedulerEntry t) {
+    private void startProcess(TriggerSchedulerEntry triggerSchedulerEntry) {
         if (isDisabled(EVENT_SOURCE)) {
-            log.warn("startProcess ['{}'] -> disabled, skipping", t);
+            log.warn("startProcess ['{}'] -> disabled, skipping", triggerSchedulerEntry);
             return;
         }
 
-        if (isRepositoryDisabled(t)) {
-            log.warn("startProcess ['{}'] -> repository is disabled, skipping", t);
+        TriggerEntry t = triggerSchedulerEntry.trigger();
+        if (isRepositoryDisabled(t.getRepositoryId())) {
+            log.warn("startProcess ['{}'] -> repository is disabled, skipping", triggerSchedulerEntry);
+            scheduleDao.remove(t.getId());
+            return;
+        }
+
+        List<CheckResult.Item<CronTriggerRule, Duration>> deny = checkPolicy(triggerSchedulerEntry);
+        if (!deny.isEmpty()) {
+            log.warn("startProcess ['{}'] -> policy violated", triggerSchedulerEntry);
+            logFailedToStart(t, buildErrorMessage(deny));
+            scheduleDao.remove(t.getId());
             return;
         }
 
@@ -122,17 +145,17 @@ public class TriggerScheduler implements ScheduledTask {
         if (t.getArguments() != null) {
             args.putAll(t.getArguments());
         }
-        args.put("event", makeEvent(t));
+        args.put("event", makeEvent(triggerSchedulerEntry.fireAt(), t));
 
-        Map<String, Object> cfg = t.getCfg();
+        Map<String, Object> cfg = new HashMap<>(t.getCfg());
         cfg.put(Constants.Request.ARGUMENTS_KEY, args);
 
         PartialProcessKey processKey = PartialProcessKey.create();
-        UUID triggerId = t.getTriggerId();
+        UUID triggerId = t.getId();
         UUID orgId = t.getOrgId();
         UUID projectId = t.getProjectId();
         UUID repoId = t.getRepositoryId();
-        String entryPoint = t.getEntryPoint();
+        String entryPoint = TriggerUtils.getEntryPoint(t);
         Collection<String> activeProfiles = t.getActiveProfiles();
 
         Initiator initiator;
@@ -141,7 +164,7 @@ public class TriggerScheduler implements ScheduledTask {
         } catch (Exception e) {
             log.error("startProcess ['{}', '{}', '{}', '{}', '{}', {}] -> error getting initiator: {}",
                     triggerId, orgId, projectId, repoId, entryPoint, activeProfiles, e.getMessage());
-            logFailedToStart(t, e);
+            logFailedToStart(t, e.getMessage());
             return;
         }
 
@@ -160,7 +183,7 @@ public class TriggerScheduler implements ScheduledTask {
         } catch (Exception e) {
             log.error("startProcess ['{}', '{}', '{}', '{}', '{}', {}] -> error creating a payload",
                     triggerId, orgId, projectId, repoId, entryPoint, activeProfiles, e);
-            logFailedToStart(t, e);
+            logFailedToStart(t, e.getMessage());
             return;
         }
 
@@ -169,7 +192,7 @@ public class TriggerScheduler implements ScheduledTask {
         } catch (Exception e) {
             log.error("startProcess ['{}', '{}', '{}', '{}', '{}'] -> error starting process",
                     triggerId, orgId, projectId, repoId, entryPoint, e);
-            logFailedToStart(t, e);
+            logFailedToStart(t, e.getMessage());
             return;
         }
 
@@ -177,24 +200,34 @@ public class TriggerScheduler implements ScheduledTask {
                 triggerId, orgId, projectId, repoId, entryPoint, processKey);
     }
 
-    private void logFailedToStart(TriggerSchedulerEntry t, Exception err) {
+    private List<CheckResult.Item<CronTriggerRule, Duration>> checkPolicy(TriggerSchedulerEntry entry) {
+        PolicyEngine policy = policyManager.get(entry.trigger().getOrgId(), entry.trigger().getProjectId(), null);
+        if (policy == null) {
+            return Collections.emptyList();
+        }
+
+        CheckResult<CronTriggerRule, Duration> result = policy.getCronTriggerPolicy().check(entry.fireAt(), entry.nextExecutionAt());
+        return result.getDeny();
+    }
+
+    private void logFailedToStart(TriggerEntry t, String msg) {
         try {
             processSecurityContext.runAs(CRON.id(), () -> {
                 AuditLog.withActionSource(ActionSource.SYSTEM, Collections.emptyMap(), () -> auditLog.add(AuditObject.PROCESS, AuditAction.CREATE)
                         .field("orgId", t.getOrgId())
                         .field("projectId", t.getProjectId())
                         .field("status", "FAILED")
-                        .field("reason", err.getMessage())
+                        .field("reason", msg)
                         .log());
                 return null;
             });
         } catch (Exception e) {
-            log.error("logFailedToStart ['{}'] -> error", t.getTriggerId(), e);
+            log.error("logFailedToStart ['{}'] -> error", t.getId(), e);
         }
     }
 
-    private Initiator getInitiator(TriggerSchedulerEntry t) throws Exception {
-        TriggerRunAs runAs = t.runAs();
+    private Initiator getInitiator(TriggerEntry t) throws Exception {
+        TriggerRunAs runAs = getRunAs(t);
         if (runAs == null) {
             return CRON;
         }
@@ -210,20 +243,39 @@ public class TriggerScheduler implements ScheduledTask {
         return Initiator.of(u.getId(), u.getName());
     }
 
-    private boolean isRepositoryDisabled(TriggerSchedulerEntry t) {
-        return repositoryDao.get(t.getRepositoryId()).isDisabled();
+    private boolean isRepositoryDisabled(UUID repositoryId) {
+        return repositoryDao.get(repositoryId).isDisabled();
     }
 
     private boolean isDisabled(String eventName) {
         return triggerCfg.isDisableAll() || triggerCfg.getDisabled().contains(eventName);
     }
 
-    private static Map<String, Object> makeEvent(TriggerSchedulerEntry t) {
+    private static TriggerRunAs getRunAs(TriggerEntry t) {
+        return TriggerRunAs.from(MapUtils.getMap(t.getCfg(), "runAs", Collections.emptyMap()));
+    }
+
+    private static Map<String, Object> makeEvent(OffsetDateTime fireAt, TriggerEntry t) {
         Map<String, Object> m = new HashMap<>();
         m.put(Constants.Trigger.CRON_SPEC, t.getConditions().get(Constants.Trigger.CRON_SPEC));
         m.put(Constants.Trigger.CRON_TIMEZONE, t.getConditions().get(Constants.Trigger.CRON_TIMEZONE));
-        m.put(Constants.Trigger.CRON_EVENT_FIREAT, DateTimeUtils.toIsoString(t.getFireAt()));
+        m.put(Constants.Trigger.CRON_EVENT_FIREAT, DateTimeUtils.toIsoString(fireAt));
         return m;
+    }
+
+
+    private static String buildErrorMessage(List<CheckResult.Item<CronTriggerRule, Duration>> errors) {
+        StringBuilder sb = new StringBuilder();
+        for (CheckResult.Item<CronTriggerRule, Duration> e : errors) {
+            CronTriggerRule r = e.getRule();
+
+            String msg = r.msg() != null ? r.msg() : DEFAULT_POLICY_MESSAGE;
+            Duration actual = e.getEntity();
+            long min = r.minInterval();
+
+            sb.append(MessageFormat.format(Objects.requireNonNull(msg), actual, min, Duration.ofSeconds(min))).append(';');
+        }
+        return sb.toString();
     }
 
     @Value.Immutable

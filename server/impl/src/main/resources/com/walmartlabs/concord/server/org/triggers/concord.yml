@@ -3,15 +3,12 @@ configuration:
 
 flows:
   onChange:
-  - log: "Refreshing repository... ${event}"
-  - name: "Filter to enabled repositories"
-    expr: ${event.repositoryInfo.stream().filter(r -> r.enabled).toList()}
-    out: repoIdsToRefresh
-  - if: ${repoIdsToRefresh.size() > 0}
-    then:
-      - task: repositoryRefresh
-        in:
-          repositoryInfo: ${repoIdsToRefresh}
+  - name: "Repository Refresh"
+    task: repositoryRefresh
+    in:
+      # TODO remove after agent version catch up with server
+      repositoryInfo: "${event.repositoryInfo.stream().filter(r -> r.enabled).toList()}"
+      event: "${event}"
 
 triggers:
   - concord:
@@ -27,6 +24,8 @@ triggers:
         type: "push"
         githubOrg: ".*"
         githubRepo: ".*"
+        payload:
+          deleted: false # don't start for deleted refs
         branch: ".*"
         repositoryInfo:
           # trigger only for registered enabled repos (i.e. added to Concord)

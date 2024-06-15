@@ -59,6 +59,8 @@ public class Lint implements Callable<Integer> {
 
     @Override
     public Integer call() throws Exception {
+        targetDir = targetDir.normalize().toAbsolutePath();
+
         if (!Files.isDirectory(targetDir)) {
             throw new IllegalArgumentException("Not a directory: " + targetDir);
         }

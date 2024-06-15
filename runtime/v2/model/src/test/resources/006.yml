@@ -13,6 +13,13 @@ flows:
       values:
         myField: "a different value"
 
+    - form: myForm
+      fields:
+        - firstName: {type: "string"}
+        - lastName: {type: "string"}
+      runAs: "${{ 'username': [ 'userA', 'userB' ] }}"
+      values: "${{ 'fieldA': 'valueA' }}"
+
 forms:
   myForm:
     - fullName: { label: "Name", type: "string", pattern: ".* .*", readonly: true, placeholder: "Place name here" }

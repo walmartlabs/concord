@@ -1,0 +1,3 @@
+flows:
+  extraFlow:
+    - log: "extra"

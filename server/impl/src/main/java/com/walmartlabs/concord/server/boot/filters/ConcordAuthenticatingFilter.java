@@ -24,21 +24,19 @@ import com.codahale.metrics.Meter;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.walmartlabs.concord.server.RequestUtils;
 import com.walmartlabs.concord.server.sdk.metrics.InjectMeter;
+import com.walmartlabs.concord.server.security.SecurityUtils;
 import com.walmartlabs.concord.server.security.apikey.ApiKey;
-import org.apache.shiro.SecurityUtils;
 import org.apache.shiro.authc.AuthenticationException;
 import org.apache.shiro.authc.AuthenticationToken;
 import org.apache.shiro.authc.UsernamePasswordToken;
 import org.apache.shiro.subject.PrincipalCollection;
 import org.apache.shiro.subject.Subject;
+import org.apache.shiro.util.ThreadContext;
 import org.apache.shiro.web.filter.authc.AuthenticatingFilter;
-import org.apache.shiro.web.util.WebUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
@@ -50,8 +48,6 @@ import java.util.Collections;
 import java.util.Map;
 import java.util.Set;
 
-@Named
-@Singleton
 public class ConcordAuthenticatingFilter extends AuthenticatingFilter {
 
     private static final Logger log = LoggerFactory.getLogger(ConcordAuthenticatingFilter.class);
@@ -119,7 +115,7 @@ public class ConcordAuthenticatingFilter extends AuthenticatingFilter {
                 }
 
                 if (!processed) {
-                    HttpServletResponse resp = WebUtils.toHttp(response);
+                    HttpServletResponse resp = (HttpServletResponse) response;
                     resp.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
 
                     reportAuthSchemes(request, response);
@@ -128,7 +124,7 @@ public class ConcordAuthenticatingFilter extends AuthenticatingFilter {
 
             return loggedIn;
         } catch (Exception e) {
-            HttpServletResponse resp = WebUtils.toHttp(response);
+            HttpServletResponse resp = (HttpServletResponse) response;
             sendUnauthorized(resp, e);
             return false;
         }
@@ -142,11 +138,11 @@ public class ConcordAuthenticatingFilter extends AuthenticatingFilter {
 
     @Override
     protected boolean onLoginFailure(AuthenticationToken token, AuthenticationException e, ServletRequest request, ServletResponse response) {
-        log.warn("onLoginFailure ['{}'] -> login failed ({}): {}", token, request.getRemoteAddr(), e.getMessage());
+        log.debug("onLoginFailure ['{}'] -> login failed ({}): {}", token, request.getRemoteAddr(), e.getMessage());
         failedAuths.mark();
 
-        Subject s = SecurityUtils.getSubject();
-        if (s.isRemembered()) {
+        Subject s = ThreadContext.getSubject();
+        if (s != null && (s.isRemembered() || s.isAuthenticated())) {
             s.logout();
         }
 
@@ -176,7 +172,7 @@ public class ConcordAuthenticatingFilter extends AuthenticatingFilter {
     }
 
     private static void reportAuthSchemes(ServletRequest request, ServletResponse response) {
-        HttpServletRequest req = WebUtils.toHttp(request);
+        HttpServletRequest req = (HttpServletRequest) request;
         String p = req.getRequestURI();
         for (String s : DO_NOT_FORCE_BASIC_AUTH_URLS) {
             if (p.matches(s)) {
@@ -191,7 +187,7 @@ public class ConcordAuthenticatingFilter extends AuthenticatingFilter {
             return;
         }
 
-        HttpServletResponse resp = WebUtils.toHttp(response);
+        HttpServletResponse resp = (HttpServletResponse) response;
 
         String authHeader = req.getHeader(HttpHeaders.AUTHORIZATION);
         if (authHeader == null || authHeader.contains("Basic")) {

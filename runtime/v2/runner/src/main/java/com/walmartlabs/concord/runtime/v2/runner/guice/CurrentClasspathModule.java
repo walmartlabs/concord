@@ -30,6 +30,7 @@ public class CurrentClasspathModule extends AbstractModule {
     @Override
     protected void configure() {
         ClassLoader cl = this.getClass().getClassLoader();
+        // use sisu impl when this one released: https://github.com/eclipse/sisu.inject/commit/4790d3e28987ee4c2472d576e544c07028a85f42
         install(new SpaceModule(new URLClassSpace(cl), BeanScanning.GLOBAL_INDEX));
     }
 }

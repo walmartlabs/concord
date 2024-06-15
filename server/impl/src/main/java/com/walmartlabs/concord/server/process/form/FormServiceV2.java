@@ -35,14 +35,10 @@ import com.walmartlabs.concord.server.user.UserInfoProvider.UserInfo;
 import com.walmartlabs.concord.server.user.UserManager;
 
 import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.*;
 
-@Named
-@Singleton
 public class FormServiceV2 {
 
     public static final String FORMS_RESOURCES_PATH = "forms";
@@ -90,6 +86,15 @@ public class FormServiceV2 {
         return form;
     }
 
+    private Form assertForm(ProcessKey processKey, String formName) {
+        Form form = get(processKey, formName);
+        if (form == null) {
+            throw new ProcessException(processKey, "Form not found: " + formName);
+        }
+
+        return form;
+    }
+
     public List<FormListEntry> list(PartialProcessKey partialProcessKey) {
         ProcessKey processKey = processKeyCache.assertKey(partialProcessKey.getInstanceId());
         return list(processKey);
@@ -105,25 +110,29 @@ public class FormServiceV2 {
             boolean branding = stateManager.exists(processKey, s);
             Map runAs = f.options().runAs();
 
-            result.add(new FormListEntry(name, branding, f.options().yield(), runAs));
+            result.add(new FormListEntry(name, branding, f.options().isYield(), runAs));
         }
         return result;
     }
 
+    public Map<String, Object> convertData(ProcessKey processKey, String formName, Map<String, Object> data) throws FormUtils.ValidationException {
+        Form form = assertForm(processKey, formName);
+        FormValidatorLocale locale = new ExternalFileFormValidatorLocaleV2(processKey, formName, stateManager);
+
+        return new LinkedHashMap<>(FormUtils.convert(locale, form, data));
+    }
+
     public FormSubmitResult submit(PartialProcessKey partialProcessKey, String formName, Map<String, Object> data) throws FormUtils.ValidationException {
         ProcessKey processKey = processKeyCache.assertKey(partialProcessKey.getInstanceId());
+
+        data = convertData(processKey, formName, data);
+
         return submit(processKey, formName, data);
     }
 
     public FormSubmitResult submit(ProcessKey processKey, String formName, Map<String, Object> data) throws FormUtils.ValidationException {
-        Form form = get(processKey, formName);
-        if (form == null) {
-            throw new ProcessException(processKey, "Form not found: " + formName);
-        }
-
+        Form form = assertForm(processKey, formName);
         FormValidatorLocale locale = new ExternalFileFormValidatorLocaleV2(processKey, formName, stateManager);
-
-        data = new LinkedHashMap<>(FormUtils.convert(locale, form, data));
 
         // optionally save the user who submitted the form
         boolean saveSubmittedBy = form.options().saveSubmittedBy();

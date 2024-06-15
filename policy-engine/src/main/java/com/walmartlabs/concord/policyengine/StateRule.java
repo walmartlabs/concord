@@ -20,76 +20,39 @@ package com.walmartlabs.concord.policyengine;
  * =====
  */
 
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import org.immutables.value.Value;
 
+import javax.annotation.Nullable;
 import java.io.Serializable;
 import java.util.Collections;
 import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
 
-public class StateRule implements Serializable {
+@Value.Immutable
+@JsonInclude(JsonInclude.Include.NON_EMPTY)
+@JsonSerialize(as = ImmutableStateRule.class)
+@JsonDeserialize(as = ImmutableStateRule.class)
+public interface StateRule extends Serializable {
 
-    private static final long serialVersionUID = 1L;
+    long serialVersionUID = 1L;
 
-    private final String msg;
-    private final Long maxSizeInBytes;
-    private final Integer maxFilesCount;
-    private final List<String> patterns;
+    @Nullable
+    String msg();
 
-    @JsonCreator
-    public StateRule(
-            @JsonProperty("msg") String msg,
-            @JsonProperty("maxSizeInBytes") Long maxSizeInBytes,
-            @JsonProperty("maxFilesCount") Integer maxFilesCount,
-            @JsonProperty("patterns") List<String> patterns) {
+    @Nullable
+    Long maxSizeInBytes();
 
-        this.msg = msg;
-        this.maxSizeInBytes = maxSizeInBytes;
-        this.maxFilesCount = maxFilesCount;
-        this.patterns = Optional.ofNullable(patterns).orElse(Collections.emptyList());
+    @Nullable
+    Integer maxFilesCount();
+
+    @Value.Default
+    default List<String> patterns() {
+        return Collections.emptyList();
     }
 
-    public String getMsg() {
-        return msg;
-    }
-
-    public Long getMaxSizeInBytes() {
-        return maxSizeInBytes;
-    }
-
-    public Integer getMaxFilesCount() {
-        return maxFilesCount;
-    }
-
-    public List<String> getPatterns() {
-        return patterns;
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        StateRule stateRule = (StateRule) o;
-        return Objects.equals(msg, stateRule.msg) &&
-                Objects.equals(maxSizeInBytes, stateRule.maxSizeInBytes) &&
-                Objects.equals(maxFilesCount, stateRule.maxFilesCount) &&
-                Objects.equals(patterns, stateRule.patterns);
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(msg, maxSizeInBytes, maxFilesCount, patterns);
-    }
-
-    @Override
-    public String toString() {
-        return "StateRule{" +
-                "msg='" + msg + '\'' +
-                ", maxSizeInBytes=" + maxSizeInBytes +
-                ", maxFilesCount=" + maxFilesCount +
-                ", patterns=" + patterns +
-                '}';
+    static ImmutableStateRule.Builder builder() {
+        return ImmutableStateRule.builder();
     }
 }

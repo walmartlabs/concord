@@ -23,12 +23,13 @@ package com.walmartlabs.concord.server.queueclient;
 import com.google.common.util.concurrent.SettableFuture;
 import com.walmartlabs.concord.server.queueclient.message.Message;
 import com.walmartlabs.concord.server.queueclient.message.MessageType;
+import org.eclipse.jetty.client.HttpClient;
+import org.eclipse.jetty.ee8.websocket.api.Session;
+import org.eclipse.jetty.ee8.websocket.api.WebSocketListener;
+import org.eclipse.jetty.ee8.websocket.api.WebSocketPingPongListener;
+import org.eclipse.jetty.ee8.websocket.client.ClientUpgradeRequest;
+import org.eclipse.jetty.ee8.websocket.client.WebSocketClient;
 import org.eclipse.jetty.util.ssl.SslContextFactory;
-import org.eclipse.jetty.websocket.api.Session;
-import org.eclipse.jetty.websocket.api.WebSocketListener;
-import org.eclipse.jetty.websocket.api.WebSocketPingPongListener;
-import org.eclipse.jetty.websocket.client.ClientUpgradeRequest;
-import org.eclipse.jetty.websocket.client.WebSocketClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -115,9 +116,6 @@ public class QueueClient {
             DISCONNECTING
         }
 
-        private static final long PROCESS_REQUEST_DELAY = 1000;
-        private static final long RECONNECT_DELAY = 10000;
-
         private final AtomicLong requestIdGenerator = new AtomicLong();
 
         private final String agentId;
@@ -129,6 +127,9 @@ public class QueueClient {
         private final long pingInterval;
         private final long maxNoActivityPeriod;
         private final long connectTimeout;
+
+        private final long processRequestDelay;
+        private final long reconnectDelay;
 
         private WebSocketClient client;
         private long lastRequestTimestamp;
@@ -147,6 +148,9 @@ public class QueueClient {
             this.pingInterval = cfg.getPingInterval();
             this.maxNoActivityPeriod = cfg.getMaxNoActivityPeriod();
             this.connectTimeout = cfg.getConnectTimeout();
+
+            this.processRequestDelay = cfg.getProcessRequestDelay();
+            this.reconnectDelay = cfg.getReconnectDelay();
 
             this.state = new AtomicReference<>(State.CONNECTING);
         }
@@ -169,14 +173,14 @@ public class QueueClient {
                         case CONNECTED: {
                             processRequests(session);
                             processPing(session);
-                            sleep(PROCESS_REQUEST_DELAY);
+                            sleep(processRequestDelay);
                             break;
                         }
                         case DISCONNECTING: {
                             close(session);
                             session = null;
                             state.set(State.CONNECTING);
-                            sleep(RECONNECT_DELAY);
+                            sleep(reconnectDelay);
                             break;
                         }
                     }
@@ -401,12 +405,15 @@ public class QueueClient {
     }
 
     private static WebSocketClient createWebSocketClient(long connectTimeout) {
-        SslContextFactory scf = new SslContextFactory();
+        SslContextFactory.Client scf = new SslContextFactory.Client();
         scf.setValidateCerts(false);
         scf.setValidatePeerCerts(false);
         scf.setTrustAll(true);
 
-        WebSocketClient c = new WebSocketClient(scf);
+        HttpClient httpClient = new HttpClient();
+        httpClient.setSslContextFactory(scf);
+
+        WebSocketClient c = new WebSocketClient(httpClient);
         c.setStopAtShutdown(false);
         c.setConnectTimeout(connectTimeout);
         return c;

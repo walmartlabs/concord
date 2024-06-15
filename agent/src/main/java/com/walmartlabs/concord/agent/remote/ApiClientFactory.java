@@ -9,9 +9,9 @@ package com.walmartlabs.concord.agent.remote;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -20,94 +20,50 @@ package com.walmartlabs.concord.agent.remote;
  * =====
  */
 
-import com.squareup.okhttp.Interceptor;
-import com.squareup.okhttp.OkHttpClient;
-import com.squareup.okhttp.Request;
-import com.squareup.okhttp.Response;
-import com.walmartlabs.concord.ApiClient;
+import com.walmartlabs.concord.client2.*;
 import com.walmartlabs.concord.agent.cfg.ServerConfiguration;
-import com.walmartlabs.concord.client.ConcordApiClient;
-import com.walmartlabs.concord.common.IOUtils;
 
 import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
 import java.io.IOException;
-import java.nio.file.Path;
+import java.time.Duration;
+import java.time.temporal.ChronoUnit;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.TimeUnit;
 
-@Named
-@Singleton
 public class ApiClientFactory {
 
     private static final String SESSION_COOKIE_NAME = "JSESSIONID";
 
     private final ServerConfiguration cfg;
-    private final Path tmpPath;
+
+    private final DefaultApiClientFactory clientFactory;
 
     @Inject
-    public ApiClientFactory(ServerConfiguration cfg) throws IOException {
+    public ApiClientFactory(ServerConfiguration cfg) throws Exception {
         this.cfg = cfg;
-        this.tmpPath = IOUtils.createTempDir("agent-client");
+        this.clientFactory = new DefaultApiClientFactory(cfg.getApiBaseUrl(), Duration.of(cfg.getConnectTimeout(), ChronoUnit.MILLIS), cfg.isVerifySsl());
     }
 
     public ApiClient create(String sessionToken) throws IOException {
-        OkHttpClient ok = new OkHttpClient();
-        ok.setReadTimeout(cfg.getReadTimeout(), TimeUnit.MILLISECONDS);
-        ok.setConnectTimeout(cfg.getConnectTimeout(), TimeUnit.MILLISECONDS);
+        ImmutableApiClientConfiguration.Builder clientCfgBuilder = ApiClientConfiguration.builder()
+                .baseUrl(cfg.getApiBaseUrl());
+
+        if (sessionToken != null) {
+            clientCfgBuilder.sessionToken(sessionToken);
+        } else {
+            clientCfgBuilder.apiKey(cfg.getApiKey());
+        }
+
+        ApiClient client = clientFactory.create(clientCfgBuilder.build())
+                .setReadTimeout(Duration.of(cfg.getReadTimeout(), ChronoUnit.MILLIS))
+                .setUserAgent(cfg.getUserAgent());
 
         Map<String, String> cookieJar = new HashMap<>();
-        ok.interceptors().add(new AddCookiesInterceptor(cookieJar));
-        ok.interceptors().add(new ReceivedCookiesInterceptor(cookieJar));
-
-        ConcordApiClient client = new ConcordApiClient(cfg.getApiBaseUrl(), ok);
-        client.setTempFolderPath(tmpPath.toString());
-        if (sessionToken != null) {
-            client.setSessionToken(sessionToken);
-        } else {
-            client.setApiKey(cfg.getApiKey());
-        }
-        client.setUserAgent(cfg.getUserAgent());
-        client.setVerifyingSsl(cfg.isVerifySsl());
-        return client;
-    }
-
-    private static class AddCookiesInterceptor implements Interceptor {
-
-        private final Map<String, String> cookieJar;
-
-        private AddCookiesInterceptor(Map<String, String> cookieJar) {
-            this.cookieJar = cookieJar;
-        }
-
-        @Override
-        public Response intercept(Chain chain) throws IOException {
-            Request.Builder builder = chain.request().newBuilder();
-            for (Map.Entry<String, String> cookie : cookieJar.entrySet()) {
-                builder.addHeader("Cookie", cookie.getValue());
-            }
-            return chain.proceed(builder.build());
-        }
-    }
-
-    private static class ReceivedCookiesInterceptor implements Interceptor {
-
-        private final Map<String, String> cookieJar;
-
-        private ReceivedCookiesInterceptor(Map<String, String> cookieJar) {
-            this.cookieJar = cookieJar;
-        }
-
-        @Override
-        public Response intercept(Chain chain) throws IOException {
-            Response resp = chain.proceed(chain.request());
-
-            List<String> cookies = resp.headers("Set-Cookie");
+        client.setResponseInterceptor(response -> {
+            List<String> cookies = response.headers().allValues("Set-Cookie");
             if (cookies.isEmpty()) {
-                return resp;
+                return;
             }
 
             for (String cookie : cookies) {
@@ -115,8 +71,14 @@ public class ApiClientFactory {
                     cookieJar.put(SESSION_COOKIE_NAME, cookie);
                 }
             }
+        });
 
-            return resp;
-        }
+        client.setRequestInterceptor(builder -> {
+            for (Map.Entry<String, String> cookie : cookieJar.entrySet()) {
+                builder.header("Cookie", cookie.getValue());
+            }
+        });
+
+        return client;
     }
 }

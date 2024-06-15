@@ -25,19 +25,15 @@ import com.walmartlabs.concord.server.task.SchedulerDao;
 import io.prometheus.client.Collector;
 import io.prometheus.client.CollectorRegistry;
 import io.prometheus.client.GaugeMetricFamily;
-import org.eclipse.sisu.EagerSingleton;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
-import javax.inject.Named;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
-@Named
-@EagerSingleton
 public class FailedTaskMetrics implements BackgroundTask {
 
     private static final Logger log = LoggerFactory.getLogger(FailedTaskMetrics.class);

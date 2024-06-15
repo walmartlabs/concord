@@ -1,2 +1,0 @@
-com.walmartlabs.concord.agentoperator.crd.AgentPoolMappingProvider
-io.fabric8.kubernetes.internal.InternalResourceMappingProvider

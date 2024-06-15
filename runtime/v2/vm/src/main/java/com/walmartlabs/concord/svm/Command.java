@@ -25,4 +25,17 @@ import java.io.Serializable;
 public interface Command extends Serializable {
 
     void eval(Runtime runtime, State state, ThreadId threadId) throws Exception;
+
+    default void onException(Runtime runtime, Exception e, State state, ThreadId threadId) {
+    }
+
+    /**
+     * Should return a new instance of the current command.
+     * Running both the original and the copy should produce the same results
+     * (given the same input).
+     * @implNote Currently, this method is used to create copies of the commands in
+     * parallel loops. If all Command implementations are immutable, this method
+     * can be removed.
+     */
+    Command copy();
 }

@@ -31,8 +31,6 @@ import com.walmartlabs.concord.server.sdk.metrics.InjectCounter;
 import org.jooq.DSLContext;
 
 import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
 import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.UUID;
@@ -40,8 +38,6 @@ import java.util.UUID;
 import static com.walmartlabs.concord.common.LogUtils.LogLevel;
 import static com.walmartlabs.concord.server.process.logs.ProcessLogsDao.ProcessLog;
 
-@Named
-@Singleton
 public class ProcessLogManager {
 
     private static final long SYSTEM_SEGMENT_ID = 0;

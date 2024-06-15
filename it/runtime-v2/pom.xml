@@ -6,26 +6,26 @@
     <parent>
         <groupId>com.walmartlabs.concord.it</groupId>
         <artifactId>parent</artifactId>
-        <version>1.94.1-SNAPSHOT</version>
+        <version>2.12.1-SNAPSHOT</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
 
     <artifactId>concord-runtime-v2-it</artifactId>
-    <packaging>takari-jar</packaging>
+    <packaging>jar</packaging>
 
     <properties>
         <it.local.mode>false</it.local.mode>
         <db.image>library/postgres:10</db.image>
         <server.image>walmartlabs/concord-server</server.image>
         <agent.image>walmartlabs/concord-agent</agent.image>
-        <ryuk.image>quay.io/testcontainers/ryuk:0.2.3</ryuk.image>
-        <sshd.image>quay.io/testcontainers/sshd:latest</sshd.image>
+        <ryuk.image>testcontainers/ryuk:0.6.0</ryuk.image>
+        <sshd.image>testcontainers/sshd:1.2.0</sshd.image>
     </properties>
 
     <dependencies>
         <dependency>
             <groupId>com.walmartlabs.concord</groupId>
-            <artifactId>concord-client</artifactId>
+            <artifactId>concord-client2</artifactId>
             <scope>test</scope>
         </dependency>
         <dependency>
@@ -96,8 +96,8 @@
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>com.github.tomakehurst</groupId>
-            <artifactId>wiremock-jre8</artifactId>
+            <groupId>org.wiremock</groupId>
+            <artifactId>wiremock-jetty12</artifactId>
             <scope>test</scope>
         </dependency>
         <dependency>
@@ -117,7 +117,7 @@
         <!-- Node Roster stuff -->
         <dependency>
             <groupId>com.walmartlabs.concord.server.plugins.noderoster</groupId>
-            <artifactId>concord-noderoster-plugin-client</artifactId>
+            <artifactId>concord-noderoster-plugin-client2</artifactId>
             <scope>test</scope>
         </dependency>
     </dependencies>
@@ -140,14 +140,6 @@
             </resource>
         </resources>
         <plugins>
-            <plugin>
-                <groupId>io.takari.maven.plugins</groupId>
-                <artifactId>takari-lifecycle-plugin</artifactId>
-                <extensions>true</extensions>
-                <configuration>
-                    <proc>proc</proc>
-                </configuration>
-            </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-failsafe-plugin</artifactId>

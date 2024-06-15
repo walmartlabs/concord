@@ -23,12 +23,14 @@ import { ConcordKey } from '../../../api/common';
 import { RedirectButton, RequestErrorActivity } from '../index';
 import { LoadingDispatch } from '../../../App';
 import { useApi } from '../../../hooks/useApi';
-import { useCallback, useState } from 'react';
-import { get as apiGet } from '../../../api/org/project';
-import { Menu } from 'semantic-ui-react';
-import { RepositoryList } from '../../molecules';
-import { comparators } from '../../../utils';
-import { RepositoryEntry } from '../../../api/org/project/repository';
+import { useCallback, useRef, useState } from 'react';
+import {
+    list as apiRepositoryList,
+    PaginatedRepositoryEntries,
+} from '../../../api/org/project/repository';
+import { Input, Menu } from 'semantic-ui-react';
+import { PaginationToolBar, RepositoryList } from '../../molecules';
+import { usePagination } from '../../molecules/PaginationToolBar/usePagination';
 
 interface ExternalProps {
     orgName: ConcordKey;
@@ -40,26 +42,48 @@ const ProjectRepositories = ({ orgName, projectName, forceRefresh }: ExternalPro
     const dispatch = React.useContext(LoadingDispatch);
     const [refresh, toggleRefresh] = useState<boolean>(false);
 
+    const {
+        paginationFilter,
+        handleLimitChange,
+        handleNext,
+        handlePrev,
+        handleFirst,
+        resetOffset,
+    } = usePagination();
+    const oldFilter = useRef<string>();
+
+    const [filter, setFilter] = useState<string>();
+
     const refreshHandler = useCallback(() => {
         toggleRefresh((prevState) => !prevState);
     }, []);
 
-    const fetchData: () => Promise<RepositoryEntry[]> = useCallback(async () => {
-        const project = await apiGet(orgName, projectName);
-        if (project.repositories === undefined) {
-            return [];
+    const fetchData = useCallback(() => {
+        if (filter && oldFilter.current !== filter) {
+            oldFilter.current = filter;
+            resetOffset(0);
         }
 
-        const repositories = project.repositories;
-        return Object.keys(repositories)
-            .map((k) => repositories[k])
-            .sort(comparators.byName);
-    }, [orgName, projectName]);
+        return apiRepositoryList(
+            orgName,
+            projectName,
+            paginationFilter.offset,
+            paginationFilter.limit,
+            filter
+        );
+    }, [
+        orgName,
+        projectName,
+        filter,
+        paginationFilter.offset,
+        paginationFilter.limit,
+        resetOffset,
+    ]);
 
-    const { data, error, isLoading } = useApi<RepositoryEntry[]>(fetchData, {
+    const { data, isLoading, error } = useApi<PaginatedRepositoryEntries>(fetchData, {
         fetchOnMount: true,
         forceRequest: (forceRefresh ? 1 : 0) + (refresh ? 10 : 0),
-        dispatch: dispatch
+        dispatch: dispatch,
     });
 
     if (error) {
@@ -69,21 +93,44 @@ const ProjectRepositories = ({ orgName, projectName, forceRefresh }: ExternalPro
     return (
         <>
             <Menu secondary={true}>
-                <Menu.Item position={'right'}>
-                    <RedirectButton
-                        icon="plus"
-                        positive={true}
-                        labelPosition="left"
-                        content="Add repository"
-                        location={`/org/${orgName}/project/${projectName}/repository/_new`}
+                <Menu.Item>
+                    <Input
+                        icon="search"
+                        placeholder="Filter..."
+                        onChange={(ev, data) => setFilter(data.value)}
                     />
                 </Menu.Item>
+
+                <Menu.Menu position={'right'}>
+                    <Menu.Item>
+                        <RedirectButton
+                            icon="plus"
+                            positive={true}
+                            labelPosition="left"
+                            content="Add repository"
+                            location={`/org/${orgName}/project/${projectName}/repository/_new`}
+                        />
+                    </Menu.Item>
+
+                    <Menu.Item style={{ padding: 0 }}>
+                        <PaginationToolBar
+                            limit={paginationFilter.limit}
+                            handleLimitChange={(limit) => handleLimitChange(limit)}
+                            handleNext={handleNext}
+                            handlePrev={handlePrev}
+                            handleFirst={handleFirst}
+                            disablePrevious={paginationFilter.offset <= 0}
+                            disableNext={!data?.next}
+                            disableFirst={paginationFilter.offset <= 0}
+                        />
+                    </Menu.Item>
+                </Menu.Menu>
             </Menu>
 
             <RepositoryList
                 orgName={orgName}
                 projectName={projectName}
-                data={data}
+                data={data?.items}
                 loading={isLoading}
                 refresh={refreshHandler}
             />

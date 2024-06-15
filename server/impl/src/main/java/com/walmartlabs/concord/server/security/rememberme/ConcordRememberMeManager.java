@@ -21,7 +21,7 @@ package com.walmartlabs.concord.server.security.rememberme;
  */
 
 import com.walmartlabs.concord.server.cfg.RememberMeConfiguration;
-import com.walmartlabs.concord.server.security.PrincipalUtils;
+import com.walmartlabs.concord.server.security.SecurityUtils;
 import com.walmartlabs.concord.server.security.apikey.ApiKey;
 import org.apache.shiro.authc.UsernamePasswordToken;
 import org.apache.shiro.io.SerializationException;
@@ -30,10 +30,13 @@ import org.apache.shiro.subject.PrincipalCollection;
 import org.apache.shiro.subject.SimplePrincipalCollection;
 import org.apache.shiro.subject.Subject;
 import org.apache.shiro.web.mgt.CookieRememberMeManager;
+import org.apache.shiro.web.util.WebUtils;
 
 import javax.inject.Inject;
 import javax.inject.Named;
+import javax.servlet.http.HttpServletRequest;
 import java.util.Collection;
+import java.util.stream.Stream;
 
 /**
  * Implementation of {@link org.apache.shiro.mgt.RememberMeManager}. Uses the DB to store session data.
@@ -51,7 +54,7 @@ public class ConcordRememberMeManager extends CookieRememberMeManager {
             setCipherKey(cipherKey);
         }
 
-        int maxAge = (int)cfg.getRememberMeMaxAge().getSeconds();
+        int maxAge = (int) cfg.getRememberMeMaxAge().getSeconds();
         getCookie().setMaxAge(maxAge);
 
         setSerializer(new PrincipalCollectionSerializer());
@@ -74,15 +77,30 @@ public class ConcordRememberMeManager extends CookieRememberMeManager {
         super.rememberIdentity(subject, dst);
     }
 
+    @Override
+    protected void forgetIdentity(Subject subject) {
+        if (!WebUtils.isHttp(subject)) {
+            return;
+        }
+
+        // delete the "remember me" cookie only if it is present
+        HttpServletRequest request = WebUtils.getHttpRequest(subject);
+        var rememberMeCookieName = getCookie().getName();
+        if (Stream.of(request.getCookies())
+                .anyMatch(cookie -> cookie.getName().equals(rememberMeCookieName))) {
+            super.forgetIdentity(subject);
+        }
+    }
+
     private static class PrincipalCollectionSerializer implements Serializer<PrincipalCollection> {
         @Override
         public byte[] serialize(PrincipalCollection principalCollection) throws SerializationException {
-            return PrincipalUtils.serialize(principalCollection);
+            return SecurityUtils.serialize(principalCollection);
         }
 
         @Override
         public PrincipalCollection deserialize(byte[] bytes) throws SerializationException {
-            return PrincipalUtils.deserialize(bytes).orElse(null);
+            return SecurityUtils.deserialize(bytes).orElse(null);
         }
     }
 }

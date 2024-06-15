@@ -20,21 +20,17 @@ package com.walmartlabs.concord.server.plugins.oidc;
  * =====
  */
 
-import org.apache.shiro.web.util.WebUtils;
 import org.pac4j.core.config.Config;
 import org.pac4j.core.context.JEEContext;
 import org.pac4j.core.engine.LogoutLogic;
 
 import javax.inject.Inject;
 import javax.inject.Named;
-import javax.inject.Singleton;
 import javax.servlet.*;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 
-@Named
-@Singleton
 public class OidcLogoutFilter implements Filter {
 
     public static final String URL = "/api/service/oidc/logout";
@@ -53,8 +49,8 @@ public class OidcLogoutFilter implements Filter {
     @Override
     @SuppressWarnings("unchecked")
     public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) throws IOException, ServletException {
-        HttpServletRequest req = WebUtils.toHttp(request);
-        HttpServletResponse resp = WebUtils.toHttp(response);
+        HttpServletRequest req = (HttpServletRequest) request;
+        HttpServletResponse resp = (HttpServletResponse) response;
 
         JEEContext context = new JEEContext(req, resp, pac4jConfig.getSessionStore());
 

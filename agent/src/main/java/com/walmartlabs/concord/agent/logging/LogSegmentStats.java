@@ -23,7 +23,7 @@ package com.walmartlabs.concord.agent.logging;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
-import com.walmartlabs.concord.client.LogSegmentUpdateRequest;
+import com.walmartlabs.concord.runtime.common.logger.LogSegmentStatus;
 import org.immutables.value.Value;
 
 import javax.annotation.Nullable;
@@ -36,7 +36,7 @@ import javax.annotation.Nullable;
 public interface LogSegmentStats {
 
     @Nullable
-    LogSegmentUpdateRequest.StatusEnum status();
+    LogSegmentStatus status();
 
     @Nullable
     Integer errors();

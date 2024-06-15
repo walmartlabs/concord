@@ -6,12 +6,12 @@
     <parent>
         <groupId>com.walmartlabs.concord</groupId>
         <artifactId>parent</artifactId>
-        <version>1.94.1-SNAPSHOT</version>
+        <version>2.12.1-SNAPSHOT</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
 
     <artifactId>concord-forms</artifactId>
-    <packaging>takari-jar</packaging>
+    <packaging>jar</packaging>
 
     <dependencies>
         <dependency>
@@ -45,17 +45,4 @@
             <artifactId>commons-validator</artifactId>
         </dependency>
     </dependencies>
-
-    <build>
-        <plugins>
-            <plugin>
-                <groupId>io.takari.maven.plugins</groupId>
-                <artifactId>takari-lifecycle-plugin</artifactId>
-                <extensions>true</extensions>
-                <configuration>
-                    <proc>proc</proc>
-                </configuration>
-            </plugin>
-        </plugins>
-    </build>
 </project>

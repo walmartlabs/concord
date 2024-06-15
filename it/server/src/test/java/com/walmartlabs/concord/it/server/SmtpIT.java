@@ -22,7 +22,7 @@ package com.walmartlabs.concord.it.server;
 
 import com.icegreen.greenmail.junit5.GreenMailExtension;
 import com.icegreen.greenmail.util.ServerSetup;
-import com.walmartlabs.concord.client.*;
+import com.walmartlabs.concord.client2.*;
 import com.walmartlabs.concord.sdk.Constants;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -63,14 +63,13 @@ public class SmtpIT extends AbstractServerIT {
         cfg.put(Constants.Request.ARGUMENTS_KEY, args);
 
         ProjectsApi projectsApi = new ProjectsApi(getApiClient());
-        projectsApi.createOrUpdate(orgName, new ProjectEntry()
-                .setName(projectName)
-                .setCfg(cfg)
-                .setRawPayloadMode(ProjectEntry.RawPayloadModeEnum.EVERYONE));
+        projectsApi.createOrUpdateProject(orgName, new ProjectEntry()
+                .name(projectName)
+                .cfg(cfg)
+                .rawPayloadMode(ProjectEntry.RawPayloadModeEnum.EVERYONE));
 
         // --
 
-        ProcessApi processApi = new ProcessApi(getApiClient());
         Map<String, Object> input = new HashMap<>();
         input.put("org", orgName);
         input.put("project", projectName);
@@ -79,7 +78,7 @@ public class SmtpIT extends AbstractServerIT {
 
         // ---
 
-        ProcessEntry pir = waitForCompletion(processApi, spr.getInstanceId());
+        ProcessEntry pir = waitForCompletion(getApiClient(), spr.getInstanceId());
         assertEquals(ProcessEntry.StatusEnum.FINISHED, pir.getStatus());
 
         // ---

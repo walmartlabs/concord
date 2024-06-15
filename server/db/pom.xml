@@ -6,12 +6,12 @@
     <parent>
         <groupId>com.walmartlabs.concord.server</groupId>
         <artifactId>parent</artifactId>
-        <version>1.94.1-SNAPSHOT</version>
+        <version>2.12.1-SNAPSHOT</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
 
     <artifactId>concord-server-db</artifactId>
-    <packaging>takari-jar</packaging>
+    <packaging>jar</packaging>
 
     <properties>
         <db.image>library/postgres:10.4-alpine</db.image>
@@ -78,14 +78,18 @@
             <artifactId>junit-jupiter-engine</artifactId>
             <scope>test</scope>
         </dependency>
+        <dependency>
+            <groupId>com.walmartlabs.ollie</groupId>
+            <artifactId>ollie-config</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.walmartlabs.concord</groupId>
+            <artifactId>concord-common</artifactId>
+        </dependency>
     </dependencies>
 
     <build>
         <plugins>
-            <plugin>
-                <groupId>io.takari.maven.plugins</groupId>
-                <artifactId>takari-lifecycle-plugin</artifactId>
-            </plugin>
             <plugin>
                 <groupId>org.eclipse.sisu</groupId>
                 <artifactId>sisu-maven-plugin</artifactId>
@@ -139,6 +143,7 @@
                                 </ports>
                                 <env>
                                     <POSTGRES_PASSWORD>${db.password}</POSTGRES_PASSWORD>
+                                    <POSTGRES_INITDB_ARGS>--no-sync</POSTGRES_INITDB_ARGS>
                                 </env>
                                 <wait>
                                     <log>(?s).*ready for start up.*ready to accept connections.*</log>

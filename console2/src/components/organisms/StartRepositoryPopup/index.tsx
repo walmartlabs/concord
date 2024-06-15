@@ -95,7 +95,7 @@ const getEntryPoints = (meta?: RepositoryMeta): string[] => {
     if (!meta) {
         return [];
     }
-    return meta.entryPoints || [];
+    return meta.entryPoints?.sort() || [];
 };
 
 interface SimpleDropdownProps {

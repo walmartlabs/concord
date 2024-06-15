@@ -9,9 +9,9 @@ package com.walmartlabs.concord.it.server;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -20,29 +20,23 @@ package com.walmartlabs.concord.it.server;
  * =====
  */
 
-import com.walmartlabs.concord.ApiClient;
-import com.walmartlabs.concord.ApiException;
-import com.walmartlabs.concord.client.SecretOperationResponse;
-import com.walmartlabs.concord.client.StartProcessResponse;
+import com.walmartlabs.concord.client2.*;
+import com.walmartlabs.concord.common.IOUtils;
 import com.walmartlabs.concord.it.common.ITUtils;
+import com.walmartlabs.concord.it.common.JGitUtils;
 import com.walmartlabs.concord.it.common.ServerClient;
-import org.eclipse.jgit.lib.Config;
-import org.eclipse.jgit.storage.file.FileBasedConfig;
-import org.eclipse.jgit.util.FS;
-import org.eclipse.jgit.util.SystemReader;
+import org.eclipse.jgit.api.Git;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Timeout;
 
-import java.io.*;
-import java.net.InetAddress;
-import java.net.UnknownHostException;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.attribute.PosixFilePermissions;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 
 import static com.walmartlabs.concord.it.server.AbstractServerIT.DEFAULT_TEST_TIMEOUT;
@@ -50,13 +44,13 @@ import static com.walmartlabs.concord.it.server.AbstractServerIT.DEFAULT_TEST_TI
 @Timeout(value = DEFAULT_TEST_TIMEOUT, unit = TimeUnit.MILLISECONDS)
 public abstract class AbstractServerIT {
 
-    public static final long DEFAULT_TEST_TIMEOUT = 120000;
+    public static final long DEFAULT_TEST_TIMEOUT = 180000;
 
     private ServerClient serverClient;
 
     @BeforeAll
     public static void _initJGit() {
-        SystemReader.setInstance(new JGitSystemReader());
+        JGitUtils.applyWorkarounds();
     }
 
     @BeforeEach
@@ -114,7 +108,11 @@ public abstract class AbstractServerIT {
     }
 
     protected SecretOperationResponse addPlainSecret(String orgName, String name, boolean generatePassword, String storePassword, byte[] secret) throws ApiException {
-        return serverClient.addPlainSecret(orgName, name, generatePassword, storePassword, secret);
+        return serverClient.addPlainSecret(orgName, name, null, generatePassword, storePassword, secret);
+    }
+
+    protected SecretOperationResponse addPlainSecretWithProjectNames(String orgName, String name, Set<String> projectNames, boolean generatePassword, String storePassword, byte[] secret) throws ApiException {
+        return serverClient.addPlainSecret(orgName, name, projectNames, null, generatePassword, storePassword, secret);
     }
 
     protected SecretOperationResponse addUsernamePassword(String orgName, String name, boolean generatePassword, String storePassword, String username, String password) throws ApiException {
@@ -133,8 +131,16 @@ public abstract class AbstractServerIT {
         return serverClient.generateKeyPair(orgName, projectName, name, generatePassword, storePassword);
     }
 
-    protected byte[] getLog(String logFileName) throws ApiException {
-        return serverClient.getLog(logFileName);
+    protected SecretOperationResponse generateKeyPairWithProjectNames(String orgName, Set<String> projectNames, String name, boolean generatePassword, String storePassword) throws ApiException {
+        return serverClient.generateKeyPair(orgName, projectNames, null, name, generatePassword, storePassword);
+    }
+
+    protected SecretOperationResponse generateKeyPairWithProjectIds(String orgName, Set<UUID> projectIds, String name, boolean generatePassword, String storePassword) throws ApiException {
+        return serverClient.generateKeyPair(orgName, null, projectIds, name, generatePassword, storePassword);
+    }
+
+    protected byte[] getLog(UUID instanceId) throws ApiException {
+        return serverClient.getLog(instanceId);
     }
 
     protected void resetApiKey() {
@@ -149,12 +155,8 @@ public abstract class AbstractServerIT {
         serverClient.setGithubKey(key);
     }
 
-    protected void waitForLog(String logFileName, String pattern) throws IOException, InterruptedException, ApiException {
-        serverClient.waitForLog(logFileName, pattern);
-    }
-
-    protected <T> T request(String uri, Map<String, Object> input, Class<T> entityType) throws ApiException {
-        return serverClient.request(uri, input, entityType);
+    protected void waitForLog(UUID instanceId, String pattern) throws IOException, InterruptedException, ApiException {
+        serverClient.waitForLog(instanceId, pattern);
     }
 
     protected static String randomString() {
@@ -177,9 +179,34 @@ public abstract class AbstractServerIT {
 
     @SuppressWarnings("unchecked")
     protected Map<String, Object> fromJson(File f) throws IOException {
-        try (Reader r = new FileReader(f)) {
-            return getApiClient().getJSON().getGson().fromJson(r, Map.class);
+        return fromJson(f, Map.class);
+    }
+
+    @SuppressWarnings("unchecked")
+    protected Map<String, Object> fromJson(InputStream is) throws IOException {
+        return getApiClient().getObjectMapper().readValue(is, Map.class);
+    }
+
+    protected <T> T fromJson(File f, Class<T> classOfT) throws IOException {
+        return getApiClient().getObjectMapper().readValue(f, classOfT);
+    }
+
+    protected <T> T fromJson(InputStream is, Class<T> classOfT) throws IOException {
+        return getApiClient().getObjectMapper().readValue(is, classOfT);
+    }
+
+    protected String createRepo(String resource) throws Exception {
+        Path tmpDir = createTempDir();
+
+        File src = new File(AbstractServerIT.class.getResource(resource).toURI());
+        IOUtils.copy(src.toPath(), tmpDir);
+
+        try (Git repo = Git.init().setInitialBranch("master").setDirectory(tmpDir.toFile()).call()) {
+            repo.add().addFilepattern(".").call();
+            repo.commit().setMessage("import").call();
         }
+
+        return tmpDir.toAbsolutePath().toString();
     }
 
     protected static String env(String k, String def) {
@@ -190,74 +217,32 @@ public abstract class AbstractServerIT {
         return v;
     }
 
-    private static class JGitSystemReader extends SystemReader {
-
-        private static class EmptyFileBasedConfig extends FileBasedConfig {
-
-            public EmptyFileBasedConfig(Config parent, FS fs) {
-                super(parent, null, fs);
-            }
-
-            @Override
-            public void load() {
-                // empty, do not load
-            }
-
-            @Override
-            public boolean isOutdated() {
-                return false;
-            }
+    protected void withOrg(Consumer<String> consumer) throws Exception {
+        String orgName = "org_" + randomString();
+        OrganizationsApi orgApi = new OrganizationsApi(getApiClient());
+        try {
+            orgApi.createOrUpdateOrg(new OrganizationEntry().name(orgName));
+            consumer.accept(orgName);
+        } finally {
+            orgApi.deleteOrg(orgName, "yes");
         }
+    }
 
-        private volatile String hostname;
-
-        @Override
-        public String getenv(String variable) {
-            return System.getenv(variable);
+    protected void withProject(String orgName, Consumer<String> consumer) throws Exception {
+        String projectName = "project_" + randomString();
+        ProjectsApi projectsApi = new ProjectsApi(getApiClient());
+        try {
+            projectsApi.createOrUpdateProject(orgName, new ProjectEntry()
+                    .name(projectName)
+                    .rawPayloadMode(ProjectEntry.RawPayloadModeEnum.EVERYONE));
+            consumer.accept(projectName);
+        } finally {
+            projectsApi.deleteProject(orgName, projectName);
         }
+    }
 
-        @Override
-        public String getProperty(String key) {
-            return System.getProperty(key);
-        }
-
-        @Override
-        public FileBasedConfig openSystemConfig(Config parent, FS fs) {
-            return new EmptyFileBasedConfig(parent, fs);
-        }
-
-        @Override
-        public FileBasedConfig openUserConfig(Config parent, FS fs) {
-            return new EmptyFileBasedConfig(parent, fs);
-        }
-
-        @Override
-        public FileBasedConfig openJGitConfig(Config parent, FS fs) {
-            return new EmptyFileBasedConfig(parent, fs);
-        }
-
-        @Override
-        public String getHostname() {
-            if (hostname == null) {
-                try {
-                    InetAddress localMachine = InetAddress.getLocalHost();
-                    hostname = localMachine.getCanonicalHostName();
-                } catch (UnknownHostException e) {
-                    hostname = "localhost";
-                }
-                assert hostname != null;
-            }
-            return hostname;
-        }
-
-        @Override
-        public long getCurrentTime() {
-            return System.currentTimeMillis();
-        }
-
-        @Override
-        public int getTimezone(long when) {
-            return getTimeZone().getOffset(when) / (60 * 1000);
-        }
+    @FunctionalInterface
+    public interface Consumer<T> {
+        void accept(T t) throws Exception;
     }
 }

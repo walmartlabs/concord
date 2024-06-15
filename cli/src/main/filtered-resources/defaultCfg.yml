@@ -1,0 +1,5 @@
+configuration:
+  dependencies:
+    - "mvn://com.walmartlabs.concord.plugins.basic:http-tasks:${project.version}"
+    - "mvn://com.walmartlabs.concord.plugins.basic:slack-tasks:${project.version}"
+    - "mvn://com.walmartlabs.concord.plugins.basic:concord-tasks:${project.version}"

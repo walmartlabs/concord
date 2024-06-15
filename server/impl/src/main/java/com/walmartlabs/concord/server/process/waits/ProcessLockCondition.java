@@ -50,6 +50,11 @@ public abstract class ProcessLockCondition extends AbstractWaitCondition {
         return WaitType.PROCESS_LOCK;
     }
 
+    @Override
+    public boolean exclusive() {
+        return false;
+    }
+
     public static ImmutableProcessLockCondition.Builder builder() {
         return ImmutableProcessLockCondition.builder();
     }

@@ -21,9 +21,8 @@ package com.walmartlabs.concord.it.server;
  */
 
 import com.google.common.collect.ImmutableMap;
-import com.walmartlabs.concord.ApiClient;
-import com.walmartlabs.concord.client.*;
-import com.walmartlabs.concord.client.ProcessEntry.StatusEnum;
+import com.walmartlabs.concord.client2.*;
+import com.walmartlabs.concord.client2.ProcessEntry.StatusEnum;
 import com.walmartlabs.concord.common.IOUtils;
 import com.walmartlabs.concord.it.common.GitHubUtils;
 import com.walmartlabs.concord.it.common.GitUtils;
@@ -36,16 +35,13 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
 import java.time.OffsetDateTime;
-import java.time.format.DateTimeFormatter;
+import java.util.Collections;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public abstract class AbstractGitHubTriggersIT extends AbstractServerIT {
-
-    private static final DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSSX", Locale.US);
 
     protected static String toRepoName(Path p) {
         return p.getParent().getFileName() + "/" + p.getFileName();
@@ -65,13 +61,13 @@ public abstract class AbstractGitHubTriggersIT extends AbstractServerIT {
         ProjectsApi projectsApi = new ProjectsApi(getApiClient());
 
         RepositoryEntry repo = new RepositoryEntry()
-                .setBranch(repoBranch != null ? repoBranch : "master")
-                .setUrl(bareRepo.toAbsolutePath().toString());
+                .branch(repoBranch != null ? repoBranch : "master")
+                .url(bareRepo.toAbsolutePath().toString());
 
-        projectsApi.createOrUpdate(orgName, new ProjectEntry()
-                .setName(projectName)
-                .setRawPayloadMode(ProjectEntry.RawPayloadModeEnum.EVERYONE)
-                .setRepositories(ImmutableMap.of(repoName, repo)));
+        projectsApi.createOrUpdateProject(orgName, new ProjectEntry()
+                .name(projectName)
+                .rawPayloadMode(ProjectEntry.RawPayloadModeEnum.EVERYONE)
+                .repositories(ImmutableMap.of(repoName, repo)));
 
         return bareRepo;
     }
@@ -113,11 +109,16 @@ public abstract class AbstractGitHubTriggersIT extends AbstractServerIT {
         repoApi.refreshRepository(orgName, projectName, repoName, true);
     }
 
-    protected ProcessEntry waitForAProcess(String orgName, String projectName, String initiator, ProcessEntry after) throws Exception {
+    protected ProcessEntry waitForAProcess(String orgName, String projectName, String initiator) throws Exception {
         ProcessV2Api processApi = new ProcessV2Api(getApiClient());
+        ProcessListFilter filter = ProcessListFilter.builder()
+                .orgName(orgName)
+                .projectName(projectName)
+                .initiator(initiator)
+                .build();
+
         while (!Thread.currentThread().isInterrupted()) {
-            String afterCreatedAt = after != null ? after.getCreatedAt().format(DATE_TIME_FORMATTER) : null;
-            List<ProcessEntry> l = processApi.list(null, orgName, null, projectName, null, null, afterCreatedAt, null, null, null, initiator, null, null, null, null);
+            List<ProcessEntry> l = processApi.listProcesses(filter);
             if (l.size() == 1 && isFinished(l.get(0).getStatus())) {
                 return l.get(0);
             }
@@ -131,7 +132,7 @@ public abstract class AbstractGitHubTriggersIT extends AbstractServerIT {
     protected int waitForProcessesToFinish() throws Exception {
         ProcessV2Api processApi = new ProcessV2Api(getApiClient());
         while (true) {
-            List<ProcessEntry> l = processApi.list(null, null, null, null, null, null, null, null, null, null, null, null, null, null, null);
+            List<ProcessEntry> l = processApi.listProcesses(ProcessListFilter.builder().build());
 
             boolean allDone = true;
             for (ProcessEntry e : l) {
@@ -156,12 +157,22 @@ public abstract class AbstractGitHubTriggersIT extends AbstractServerIT {
 
     protected void expectNoProceses(String orgName, String projectName, OffsetDateTime afterCreatedAt) throws Exception {
         ProcessV2Api processApi = new ProcessV2Api(getApiClient());
-        String afterCreatedAtStr = afterCreatedAt != null ? afterCreatedAt.format(DATE_TIME_FORMATTER) : null;
-        List<ProcessEntry> l = processApi.list(null, orgName, null, projectName, null, null, afterCreatedAtStr, null, null, null, null, null, null, null, null);
+        ProcessListFilter filter = ProcessListFilter.builder()
+                .orgName(orgName)
+                .projectName(projectName)
+                .afterCreatedAt(afterCreatedAt)
+                .build();
+
+        List<ProcessEntry> l = processApi.listProcesses(filter);
         assertEquals(0, l.size());
     }
 
-    protected void sendEvent(String resource, String event, String... params) throws Exception {
+    protected String sendEvent(String resource, String event, String... params) throws Exception {
+        return sendEvent(resource, event, Collections.emptyMap(), params);
+    }
+
+    @SuppressWarnings("unchecked")
+    protected String sendEvent(String resource, String event, Map<String, String> queryParams, String... params) throws Exception {
         String payload = resourceToString(resource);
         if (params != null) {
             for (int i = 0; i < params.length; i += 2) {
@@ -172,25 +183,36 @@ public abstract class AbstractGitHubTriggersIT extends AbstractServerIT {
         }
 
         ApiClient client = getApiClient();
+        Map<String, Object> payloadMap = client.getObjectMapper().readValue(payload, Map.class);
+        payload = client.getObjectMapper().writeValueAsString(payloadMap);
+
         client.addDefaultHeader("X-Hub-Signature", "sha1=" + GitHubUtils.sign(payload));
 
         GitHubEventsApi eventsApi = new GitHubEventsApi(client);
-        eventsApi.onEvent(payload, "abc", event);
+        if (queryParams.isEmpty()) {
+            return eventsApi.onEvent(Collections.emptyMap(), "abc", event, payloadMap);
+        } else {
+            return sendWithQueryParams(eventsApi, payloadMap, event, queryParams);
+        }
+    }
+
+    private String sendWithQueryParams(GitHubEventsApi eventsApi, Map<String, Object> payload, String event, Map<String, String> queryParams) throws ApiException {
+        GitHubEventsApi api = new GitHubEventsApi(getApiClient());
+        return api.onEvent(queryParams, "abc", event, payload);
     }
 
     protected void assertLog(ProcessEntry entry, String pattern) throws Exception {
-        byte[] ab = getLog(entry.getLogFileName());
+        byte[] ab = getLog(entry.getInstanceId());
         ServerClient.assertLog(pattern, ab);
     }
 
     protected void waitForCompletion(ProcessEntry entry) throws Exception {
-        ProcessApi processApi = new ProcessApi(getApiClient());
-        ServerClient.waitForCompletion(processApi, entry.getInstanceId());
+        ServerClient.waitForCompletion(getApiClient(), entry.getInstanceId());
     }
 
     protected void deleteOrg(String orgName) throws Exception {
         OrganizationsApi orgApi = new OrganizationsApi(getApiClient());
-        orgApi.delete(orgName, "yes");
+        orgApi.deleteOrg(orgName, "yes");
     }
 
     protected static String resourceToString(String resource) throws Exception {

@@ -31,8 +31,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
 import java.time.OffsetDateTime;
 import java.util.UUID;
 
@@ -42,8 +40,6 @@ import static com.walmartlabs.concord.server.jooq.tables.ProcessEvents.PROCESS_E
 import static com.walmartlabs.concord.server.jooq.tables.ProcessQueue.PROCESS_QUEUE;
 import static com.walmartlabs.concord.server.jooq.tables.ProcessState.PROCESS_STATE;
 
-@Named("process-cleaner")
-@Singleton
 public class ProcessCleaner implements ScheduledTask {
 
     private static final Logger log = LoggerFactory.getLogger(ProcessCleaner.class);
@@ -58,9 +54,14 @@ public class ProcessCleaner implements ScheduledTask {
     private final CleanerDao cleanerDao;
 
     @Inject
-    public ProcessCleaner(ProcessConfiguration cfg, CleanerDao cleanerDao) {
+    public ProcessCleaner(ProcessConfiguration cfg, @MainDB Configuration dbCfg) {
         this.cfg = cfg;
-        this.cleanerDao = cleanerDao;
+        this.cleanerDao = new CleanerDao(dbCfg);
+    }
+
+    @Override
+    public String getId() {
+        return "process-cleaner";
     }
 
     @Override
@@ -74,11 +75,9 @@ public class ProcessCleaner implements ScheduledTask {
         cleanerDao.deleteOrphans(cfg);
     }
 
-    @Named
     private static class CleanerDao extends AbstractDao {
 
-        @Inject
-        protected CleanerDao(@MainDB Configuration cfg) {
+        private CleanerDao(@MainDB Configuration cfg) {
             super(cfg);
         }
 
@@ -93,21 +92,15 @@ public class ProcessCleaner implements ScheduledTask {
                         .where(PROCESS_QUEUE.LAST_UPDATED_AT.lessThan(cutoff)
                                 .and(PROCESS_QUEUE.CURRENT_STATUS.notIn(EXCLUDE_STATUSES)));
 
-                int queueEntries = 0;
-                if (jobCfg.isQueueCleanup()) {
-                    queueEntries = tx.deleteFrom(PROCESS_QUEUE)
-                            .where(PROCESS_QUEUE.INSTANCE_ID.in(ids))
-                            .execute();
-
-                    tx.deleteFrom(PROCESS_WAIT_CONDITIONS)
-                            .where(PROCESS_WAIT_CONDITIONS.INSTANCE_ID.in(ids))
-                            .execute();
-                }
-
                 int stateRecords = 0;
+                int initialStateRecords = 0;
                 if (jobCfg.isStateCleanup()) {
                     stateRecords = tx.deleteFrom(PROCESS_STATE)
                             .where(PROCESS_STATE.INSTANCE_ID.in(ids))
+                            .execute();
+
+                    initialStateRecords = tx.deleteFrom(PROCESS_INITIAL_STATE)
+                            .where(PROCESS_INITIAL_STATE.INSTANCE_ID.in(ids))
                             .execute();
                 }
 
@@ -137,8 +130,19 @@ public class ProcessCleaner implements ScheduledTask {
                             .execute();
                 }
 
-                log.info("deleteOldState -> removed older than {}: {} queue entries, {} log data entries, {} log segments, {} state item(s), {} event(s), {} checkpoint(s)",
-                        jobCfg.getMaxStateAge(), queueEntries, logDataEntries, logSegmentEntries, stateRecords, events, checkpoints);
+                int queueEntries = 0;
+                if (jobCfg.isQueueCleanup()) {
+                    tx.deleteFrom(PROCESS_WAIT_CONDITIONS)
+                            .where(PROCESS_WAIT_CONDITIONS.INSTANCE_ID.in(ids))
+                            .execute();
+
+                    queueEntries = tx.deleteFrom(PROCESS_QUEUE)
+                            .where(PROCESS_QUEUE.INSTANCE_ID.in(ids))
+                            .execute();
+                }
+
+                log.info("deleteOldState -> removed older than {}: {} queue entries, {} log data entries, {} log segments, {} state item(s), {} initial state item(s), {} event(s), {} checkpoint(s)",
+                        jobCfg.getMaxStateAge(), queueEntries, logDataEntries, logSegmentEntries, stateRecords, initialStateRecords, events, checkpoints);
             });
 
             long t2 = System.currentTimeMillis();
@@ -172,8 +176,20 @@ public class ProcessCleaner implements ScheduledTask {
                             .execute();
                 }
 
-                log.info("deleteOrphans -> removed orphan data: {} state item(s), {} event(s), {} checkpoint(s)",
-                        stateRecords, events, checkpoints);
+                int logDataEntries = 0;
+                int logSegmentEntries = 0;
+                if (jobCfg.isLogsCleanup()) {
+                    logDataEntries = tx.deleteFrom(PROCESS_LOG_DATA)
+                            .where(PROCESS_LOG_DATA.INSTANCE_ID.notIn(alive))
+                            .execute();
+
+                    logSegmentEntries = tx.deleteFrom(PROCESS_LOG_SEGMENTS)
+                            .where(PROCESS_LOG_SEGMENTS.INSTANCE_ID.notIn(alive))
+                            .execute();
+                }
+
+                log.info("deleteOrphans -> removed orphan data: {} log data entries, {} log segments, {} state item(s), {} event(s), {} checkpoint(s)",
+                        logDataEntries, logSegmentEntries, stateRecords, events, checkpoints);
             });
 
             long t2 = System.currentTimeMillis();

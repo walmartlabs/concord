@@ -9,9 +9,9 @@ package com.walmartlabs.concord.it.server;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -20,8 +20,7 @@ package com.walmartlabs.concord.it.server;
  * =====
  */
 
-import com.walmartlabs.concord.ApiException;
-import com.walmartlabs.concord.client.*;
+import com.walmartlabs.concord.client2.*;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -56,25 +55,25 @@ public class EntityOwnerPolicyIT extends AbstractServerIT {
     @AfterEach
     public void cleanup() throws Exception {
         PolicyApi policyApi = new PolicyApi(getApiClient());
-        policyApi.delete(policyName);
+        policyApi.deletePolicy(policyName);
     }
 
     @Test
     public void testOrgCreation() throws Exception {
         // --- user
         UsersApi usersApi = new UsersApi(getApiClient());
-        usersApi.createOrUpdate(new CreateUserRequest()
-                .setUsername(userOwner)
-                .setEmail("owner@mail.com")
-                .setDisplayName("Test Owner")
-                .setType(CreateUserRequest.TypeEnum.LOCAL));
+        usersApi.createOrUpdateUser(new CreateUserRequest()
+                .username(userOwner)
+                .email("owner@mail.com")
+                .displayName("Test Owner")
+                .type(CreateUserRequest.TypeEnum.LOCAL));
 
         ApiKeysApi apiKeyResource = new ApiKeysApi(getApiClient());
-        CreateApiKeyResponse cakr = apiKeyResource.create(new CreateApiKeyRequest().setUsername(userOwner));
-        assertTrue(cakr.isOk());
+        CreateApiKeyResponse cakr = apiKeyResource.createUserApiKey(new CreateApiKeyRequest().username(userOwner));
+        assertTrue(cakr.getOk());
 
         usersApi.updateUserRoles(userOwner, new UpdateUserRolesRequest()
-                .setRoles(Collections.singletonList("concordAdmin")));
+                .roles(Collections.singleton("concordAdmin")));
 
         // ---
 
@@ -86,7 +85,7 @@ public class EntityOwnerPolicyIT extends AbstractServerIT {
         owner.setUsername(userOwner);
 
         try {
-            orgApi.createOrUpdate(new OrganizationEntry().setOwner(owner).setName(orgName));
+            orgApi.createOrUpdateOrg(new OrganizationEntry().owner(owner).name(orgName));
             fail("exception expected");
         } catch (ApiException e) {
             assertTrue(e.getResponseBody().contains("Action forbidden: test-rule"));
@@ -104,13 +103,13 @@ public class EntityOwnerPolicyIT extends AbstractServerIT {
 
     private String createPolicy(String orgName, String projectName, Map<String, Object> rules) throws ApiException {
         PolicyApi policyApi = new PolicyApi(getApiClient());
-        policyApi.createOrUpdate(new PolicyEntry()
-                .setName(policyName)
-                .setRules(rules));
+        policyApi.createOrUpdatePolicy(new PolicyEntry()
+                .name(policyName)
+                .rules(rules));
 
-        policyApi.link(policyName, new PolicyLinkEntry()
-                .setOrgName(orgName)
-                .setProjectName(projectName));
+        policyApi.linkPolicy(policyName, new PolicyLinkEntry()
+                .orgName(orgName)
+                .projectName(projectName));
 
         return policyName;
     }

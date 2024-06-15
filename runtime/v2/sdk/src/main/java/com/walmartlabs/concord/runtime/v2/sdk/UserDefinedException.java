@@ -20,6 +20,9 @@ package com.walmartlabs.concord.runtime.v2.sdk;
  * =====
  */
 
+import java.io.PrintStream;
+import java.io.PrintWriter;
+
 /**
  * Doesn't produce a stack trace in process logs.
  */
@@ -30,5 +33,15 @@ public class UserDefinedException extends RuntimeException {
 
     public UserDefinedException(String message) {
         super(message);
+    }
+
+    @Override
+    public void printStackTrace(PrintStream s) {
+        s.println(getMessage());
+    }
+
+    @Override
+    public void printStackTrace(PrintWriter s) {
+        s.println(getMessage());
     }
 }

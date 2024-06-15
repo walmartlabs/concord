@@ -20,7 +20,7 @@ package com.walmartlabs.concord.it.server;
  * =====
  */
 
-import com.walmartlabs.concord.client.*;
+import com.walmartlabs.concord.client2.*;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -50,17 +50,17 @@ public class DefaultProcessVariablesIT extends AbstractServerIT {
         policy.setRules(Collections.singletonMap("defaultProcessCfg", Collections.singletonMap("defaultTaskVariables",
                 Collections.singletonMap("testDefaultVars", defVars))));
 
-        policyApi.createOrUpdate(policy);
+        policyApi.createOrUpdatePolicy(policy);
         PolicyLinkEntry link = new PolicyLinkEntry();
-        policyApi.link(POLICY_NAME, link);
-        policyApi.refresh();
+        policyApi.linkPolicy(POLICY_NAME, link);
+        policyApi.refreshPolicy();
     }
 
     @AfterEach
     public void cleanup() {
         PolicyApi policyApi = new PolicyApi(getApiClient());
         try {
-            policyApi.delete(POLICY_NAME);
+            policyApi.deletePolicy(POLICY_NAME);
         } catch (Exception e) {
             // ignore
         }
@@ -70,17 +70,16 @@ public class DefaultProcessVariablesIT extends AbstractServerIT {
     public void testDefaultVarsAccess() throws Exception {
         // prepare the payload
 
-        byte[] payload = archive(ProcessIT.class.getResource("defaultVars").toURI());
+        byte[] payload = archive(DefaultProcessVariablesIT.class.getResource("defaultVars").toURI());
 
         // start the process
 
-        ProcessApi processApi = new ProcessApi(getApiClient());
         StartProcessResponse spr = start(payload);
         assertNotNull(spr.getInstanceId());
 
         // wait for completion
 
-        ProcessEntry pir = waitForCompletion(processApi, spr.getInstanceId());
+        ProcessEntry pir = waitForCompletion(getApiClient(), spr.getInstanceId());
 
         // get the name of the agent's log file
 
@@ -88,7 +87,7 @@ public class DefaultProcessVariablesIT extends AbstractServerIT {
 
         // check the logs
 
-        byte[] ab = getLog(pir.getLogFileName());
+        byte[] ab = getLog(pir.getInstanceId());
 
         assertLog(".*Default vars: value1.*", ab);
     }

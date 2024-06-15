@@ -87,23 +87,23 @@ public class DependencyPolicy {
     }
 
     private static boolean matchRule(DependencyRule r, DependencyEntity.Artifact a) {
-        if (r.getScheme() != null && !matches(r.getScheme(), "mvn")) {
+        if (r.scheme() != null && !matches(r.scheme(), "mvn")) {
             return false;
         }
 
-        if (r.getGroupId() != null && !matches(r.getGroupId(), a.getGroupId())) {
+        if (r.groupId() != null && !matches(r.groupId(), a.getGroupId())) {
             return false;
         }
 
-        if (r.getArtifactId() != null && !matches(r.getArtifactId(), a.getArtifactId())) {
+        if (r.artifactId() != null && !matches(r.artifactId(), a.getArtifactId())) {
             return false;
         }
 
-        if (r.getFromVersion() != null && compareVersions(r.getFromVersion(), a.getVersion()) > 0) {
+        if (r.fromVersion() != null && compareVersions(r.fromVersion(), a.getVersion()) > 0) {
             return false;
         }
 
-        if (r.getToVersion() != null && compareVersions(r.getToVersion(), a.getVersion()) < 0) {
+        if (r.toVersion() != null && compareVersions(r.toVersion(), a.getVersion()) < 0) {
             return false;
         }
 
@@ -111,7 +111,7 @@ public class DependencyPolicy {
     }
 
     private static boolean matchRule(DependencyRule r, URI directLink) {
-        if (r.getScheme() != null && matches(r.getScheme(), directLink.getScheme())) {
+        if (r.scheme() != null && matches(r.scheme(), directLink.getScheme())) {
             return true;
         }
 

@@ -23,12 +23,8 @@ package com.walmartlabs.concord.server.plugins.oneops;
 import com.walmartlabs.ollie.config.Config;
 
 import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
 import java.io.Serializable;
 
-@Named
-@Singleton
 public class OneOpsConfiguration implements Serializable {
 
     private static final long serialVersionUID = 1L;

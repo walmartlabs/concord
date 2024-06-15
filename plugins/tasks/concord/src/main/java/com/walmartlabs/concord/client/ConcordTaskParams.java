@@ -4,7 +4,7 @@ package com.walmartlabs.concord.client;
  * *****
  * Concord
  * -----
- * Copyright (C) 2017 - 2020 Walmart Inc.
+ * Copyright (C) 2017 - 2023 Walmart Inc.
  * -----
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -213,8 +213,8 @@ public class ConcordTaskParams {
             return variables.getBoolean(SYNC_KEY, false);
         }
 
-        public boolean debug() {
-            return variables.getBoolean(DEBUG_KEY, false);
+        public boolean debug(boolean defaultValue) {
+            return variables.getBoolean(DEBUG_KEY, defaultValue);
         }
 
         public String org() {

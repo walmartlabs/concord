@@ -20,194 +20,100 @@ package com.walmartlabs.concord.policyengine;
  * =====
  */
 
-import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonAlias;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.walmartlabs.concord.common.AllowNulls;
+import org.immutables.value.Value;
 
+import javax.annotation.Nullable;
 import java.io.Serializable;
 import java.util.Collections;
 import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
 
-public class TaskRule implements Serializable {
+@Value.Immutable
+@JsonInclude(JsonInclude.Include.NON_EMPTY)
+@JsonSerialize(as = ImmutableTaskRule.class)
+@JsonDeserialize(as = ImmutableTaskRule.class)
+public interface TaskRule extends Serializable {
 
-    private static final long serialVersionUID = 1L;
+    long serialVersionUID = 1L;
 
-    private final String msg;
-    private final String taskName;
-    private final String method;
-    private final List<Param> params;
-    private final List<TaskResult> taskResults;
+    @Nullable
+    String msg();
 
-    @JsonCreator
-    public TaskRule(
-            @JsonProperty("msg") String msg,
-            @JsonProperty("name") String taskName,
-            @JsonProperty("method") String method,
-            @JsonProperty("params") List<Param> params,
-            @JsonProperty("taskResults") List<TaskResult> taskResults) {
-
-        this.msg = msg;
-        this.taskName = taskName;
-        this.method = method;
-        this.params = Optional.ofNullable(params).orElse(Collections.emptyList());
-        this.taskResults = Optional.ofNullable(taskResults).orElse(Collections.emptyList());
-    }
-
-    public String getMsg() {
-        return msg;
-    }
-
+    @Nullable
     @JsonProperty("name")
-    public String getTaskName() {
-        return taskName;
+    @JsonAlias("taskName")
+    String taskName();
+
+    @Nullable
+    String method();
+
+    @Value.Default
+    default List<Param> params() {
+        return Collections.emptyList();
     }
 
-    public String getMethod() {
-        return method;
+    @Value.Default
+    default List<TaskResult> taskResults() {
+        return Collections.emptyList();
     }
 
-    public List<Param> getParams() {
-        return params;
+    static ImmutableTaskRule.Builder builder() {
+        return ImmutableTaskRule.builder();
     }
 
-    public List<TaskResult> getTaskResults() {
-        return taskResults;
-    }
+    @Value.Immutable
+    @JsonInclude(JsonInclude.Include.NON_EMPTY)
+    @JsonSerialize(as = ImmutableParam.class)
+    @JsonDeserialize(as = ImmutableParam.class)
+    interface Param extends Serializable {
 
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        TaskRule taskRule = (TaskRule) o;
-        return Objects.equals(msg, taskRule.msg) &&
-                Objects.equals(taskName, taskRule.taskName) &&
-                Objects.equals(method, taskRule.method) &&
-                Objects.equals(params, taskRule.params);
-    }
+        long serialVersionUID = 1L;
 
-    @Override
-    public int hashCode() {
-        return Objects.hash(msg, taskName, method, params);
-    }
+        int index();
 
-    @Override
-    public String toString() {
-        return "TaskRule{" +
-                "msg='" + msg + '\'' +
-                ", taskName='" + taskName + '\'' +
-                ", method='" + method + '\'' +
-                ", params=" + params +
-                ", taskResults=" + taskResults +
-                '}';
-    }
+        @Nullable
+        String name();
 
-    public static class Param implements Serializable {
+        @JsonProperty("protected")
+        boolean protectedVariable();
 
-        private static final long serialVersionUID = 1L;
-
-        private final int index;
-
-        private final String name;
-
-        private final boolean protectedVariable;
-
-        private final List<Object> values;
-
-        @JsonCreator
-        public Param(
-                @JsonProperty("index") int index,
-                @JsonProperty("name") String name,
-                @JsonProperty("protected") boolean protectedVariable,
-                @JsonProperty("values") List<Object> values) {
-            this.index = index;
-            this.name = name;
-            this.protectedVariable = protectedVariable;
-            this.values = Optional.ofNullable(values).orElse(Collections.emptyList());
+        @Value.Default
+        @AllowNulls
+        default List<Object> values() {
+            return Collections.emptyList();
         }
 
-        public int getIndex() {
-            return index;
-        }
-
-        public String getName() {
-            return name;
-        }
-
-        public boolean isProtected() {
-            return protectedVariable;
-        }
-
-        public List<Object> getValues() {
-            return values;
-        }
-
-        @Override
-        public boolean equals(Object o) {
-            if (this == o) return true;
-            if (o == null || getClass() != o.getClass()) return false;
-            Param param = (Param) o;
-            return index == param.index &&
-                    protectedVariable == param.protectedVariable &&
-                    Objects.equals(name, param.name) &&
-                    Objects.equals(values, param.values);
-        }
-
-        @Override
-        public int hashCode() {
-            return Objects.hash(index, name, protectedVariable, values);
-        }
-
-        @Override
-        public String toString() {
-            return "Param{" +
-                    "index=" + index +
-                    ", name='" + name + '\'' +
-                    ", protectedVariable=" + protectedVariable +
-                    ", values=" + values +
-                    '}';
+        static ImmutableParam.Builder builder() {
+            return ImmutableParam.builder();
         }
     }
 
-    static class TaskResult {
+    @Value.Immutable
+    @JsonInclude(JsonInclude.Include.NON_EMPTY)
+    @JsonSerialize(as = ImmutableTaskResult.class)
+    @JsonDeserialize(as = ImmutableTaskResult.class)
+    interface TaskResult extends Serializable {
 
-        private final String task;
-        private final String result;
-        private final List<Object> values;
+        long serialVersionUID = 1L;
 
-        public TaskResult(@JsonProperty("task") String task,
-                          @JsonProperty("result") String result,
-                          @JsonProperty("values") List<Object> values) {
-            this.task = task;
-            this.result = result;
-            this.values = Optional.ofNullable(values).orElse(Collections.emptyList());
+        String task();
+
+        @Nullable
+        String result();
+
+        @Value.Default
+        @AllowNulls
+        default List<Object> values() {
+            return Collections.emptyList();
         }
 
-        public String getTask() {
-            return task;
-        }
-
-        public String getResult() {
-            return result;
-        }
-
-        public List<Object> getValues() {
-            return values;
-        }
-
-        @Override
-        public boolean equals(Object o) {
-            if (this == o) return true;
-            if (o == null || getClass() != o.getClass()) return false;
-            TaskResult that = (TaskResult) o;
-            return Objects.equals(task, that.task) &&
-                    Objects.equals(result, that.result) &&
-                    Objects.equals(values, that.values);
-        }
-
-        @Override
-        public int hashCode() {
-            return Objects.hash(task, result, values);
+        static ImmutableTaskResult.Builder builder() {
+            return ImmutableTaskResult.builder();
         }
     }
 }

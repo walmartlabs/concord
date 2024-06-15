@@ -23,15 +23,15 @@ package com.walmartlabs.concord.server.process.waits;
 import com.walmartlabs.concord.server.sdk.ProcessKey;
 import com.walmartlabs.concord.server.sdk.metrics.WithTimer;
 
-import javax.inject.Named;
 import javax.inject.Singleton;
 import java.util.Date;
+import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * Handles the processes that are waiting for some timeout. Resumes a suspended process
  * if the timeout exceeded.
  */
-@Named
 @Singleton
 public class WaitProcessSleepHandler implements ProcessWaitHandler<ProcessSleepCondition> {
 
@@ -41,12 +41,18 @@ public class WaitProcessSleepHandler implements ProcessWaitHandler<ProcessSleepC
     }
 
     @Override
+    public List<Result<ProcessSleepCondition>> processBatch(List<WaitConditionItem<ProcessSleepCondition>> waits) {
+        return waits.stream()
+                .map(w -> process(w.processKey(), w.waitConditionId(), w.waitCondition()))
+                .collect(Collectors.toList());
+    }
+
     @WithTimer
-    public Result<ProcessSleepCondition> process(ProcessKey key, ProcessSleepCondition wait) {
+    public Result<ProcessSleepCondition> process(ProcessKey key, int waitConditionId, ProcessSleepCondition wait) {
         if (wait.until().before(new Date())) {
-            return Result.resume(wait.resumeEvent());
+            return Result.resume(key, waitConditionId, wait.resumeEvent());
         }
 
-        return Result.of(wait);
+        return Result.of(key, waitConditionId, wait);
     }
 }

@@ -4,7 +4,7 @@ package com.walmartlabs.concord.client;
  * *****
  * Concord
  * -----
- * Copyright (C) 2017 - 2018 Walmart Inc.
+ * Copyright (C) 2017 - 2023 Walmart Inc.
  * -----
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,8 +21,7 @@ package com.walmartlabs.concord.client;
  */
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.walmartlabs.concord.ApiClient;
-import com.walmartlabs.concord.ApiException;
+import com.walmartlabs.concord.client2.*;
 import com.walmartlabs.concord.common.IOUtils;
 import com.walmartlabs.concord.runtime.v2.sdk.TaskResult;
 import com.walmartlabs.concord.sdk.Constants;
@@ -32,8 +31,8 @@ import org.apache.commons.compress.archivers.zip.ZipArchiveOutputStream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -69,13 +68,15 @@ public class ConcordTaskCommon {
     private final UUID currentProcessId;
     private final String currentOrgName;
     private final Path workDir;
+    private final boolean globalDebug;
 
-    public ConcordTaskCommon(String sessionToken, ApiClientFactory apiClientFactory, UUID currentProcessId, String currentOrgName, Path workDir) {
+    public ConcordTaskCommon(String sessionToken, ApiClientFactory apiClientFactory, UUID currentProcessId, String currentOrgName, Path workDir, boolean globalDebug) {
         this.sessionToken = sessionToken;
         this.apiClientFactory = apiClientFactory;
         this.currentProcessId = currentProcessId;
         this.currentOrgName = currentOrgName;
         this.workDir = workDir;
+        this.globalDebug = globalDebug;
     }
 
     public TaskResult execute(ConcordTaskParams in) throws Exception {
@@ -106,8 +107,7 @@ public class ConcordTaskCommon {
         return withClient(client -> {
             ProcessApi api = new ProcessApi(client);
 
-            List<String> tl = tags != null ? new ArrayList<>(tags) : null;
-            return api.listSubprocesses(instanceId, tl);
+            return api.listSubprocesses(instanceId, tags);
         });
     }
 
@@ -131,7 +131,7 @@ public class ConcordTaskCommon {
                     ProcessEntry e = ClientUtils.withRetry(3, 1000,
                             () -> withClient(client -> {
                                 ProcessV2Api api = new ProcessV2Api(client);
-                                return api.get(id, Collections.emptyList());
+                                return api.getProcess(id, Collections.emptySet());
                             }));
 
                     ProcessEntry.StatusEnum s = e.getStatus();
@@ -240,7 +240,7 @@ public class ConcordTaskCommon {
         addIfNotNull(input, "parentInstanceId", parentInstanceId);
 
         boolean sync = in.sync();
-        boolean debug = in.debug();
+        boolean debug = in.debug(globalDebug);
         if (parentInstanceId != null) {
             if (debug) {
                 log.info("Starting a child process (org={}, project={}, repository={}, archive={}, sync={}, req={})",
@@ -259,7 +259,7 @@ public class ConcordTaskCommon {
         }
 
         StartProcessResponse resp = withClient(in.baseUrl(), in.apiKey(),
-                client -> RequestUtils.request(client, "/api/v1/process", "POST", input, StartProcessResponse.class));
+                client -> new ProcessApi(client).startProcess(input));
 
         UUID processId = resp.getInstanceId();
 
@@ -338,7 +338,7 @@ public class ConcordTaskCommon {
         ProcessEntry e = ClientUtils.withRetry(3, 1000,
                 () -> withClient(baseUrl, apiKey, client -> {
                     ProcessV2Api api = new ProcessV2Api(client);
-                    return api.get(processId, Collections.emptyList());
+                    return api.getProcess(processId, Collections.emptySet());
                 }));
 
         ProcessEntry.StatusEnum s = e.getStatus();
@@ -365,6 +365,10 @@ public class ConcordTaskCommon {
     }
 
     private TaskResult suspend(ResumePayload payload, boolean resumeFromSameStep) throws ApiException {
+        if (payload.jobs().isEmpty()) {
+            throw new RuntimeException("Jobs is empty");
+        }
+
         String eventName = UUID.randomUUID().toString();
 
         Map<String, Object> condition = new HashMap<>();
@@ -430,19 +434,15 @@ public class ConcordTaskCommon {
         return withClient(baseUrl, apiKey, client -> {
             ProcessApi api = new ProcessApi(client);
 
-            File f = null;
-            try {
-                f = api.downloadAttachment(processId, "out.json");
+            try (InputStream is = api.downloadAttachment(processId, "out.json")) {
                 ObjectMapper om = new ObjectMapper();
-                return om.readValue(f, Map.class);
+                return om.readValue(is, Map.class);
             } catch (ApiException e) {
                 if (e.getCode() == 404) {
                     return Collections.emptyMap();
                 }
                 log.error("Error while reading the out variables", e);
                 throw e;
-            } finally {
-                IOUtils.delete(f);
             }
         });
     }
@@ -496,13 +496,13 @@ public class ConcordTaskCommon {
 
         Map<String, Object> req = createRequest(in);
 
-        if (in.debug()) {
+        if (in.debug(globalDebug)) {
             log.info("Forking the current instance (sync={}, req={})...", in.sync(), req);
         }
 
         return executor.submit(() -> withClient(in.apiKey(), client -> {
             ProcessApi api = new ProcessApi(client);
-            StartProcessResponse resp = api.fork(currentProcessId, req, false, null);
+            StartProcessResponse resp = api.fork(currentProcessId, false, null, req);
             log.info("Forked a child process: {}", LogTags.instanceId(resp.getInstanceId()));
             return resp.getInstanceId();
         }));

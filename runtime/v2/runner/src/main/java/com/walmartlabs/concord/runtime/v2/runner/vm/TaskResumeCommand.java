@@ -26,10 +26,8 @@ import com.walmartlabs.concord.runtime.v2.runner.tasks.TaskCallInterceptor;
 import com.walmartlabs.concord.runtime.v2.runner.tasks.TaskException;
 import com.walmartlabs.concord.runtime.v2.runner.tasks.TaskProviders;
 import com.walmartlabs.concord.runtime.v2.sdk.*;
-import com.walmartlabs.concord.svm.Frame;
 import com.walmartlabs.concord.svm.Runtime;
-import com.walmartlabs.concord.svm.State;
-import com.walmartlabs.concord.svm.ThreadId;
+import com.walmartlabs.concord.svm.*;
 
 import java.util.Collections;
 import java.util.UUID;
@@ -38,14 +36,17 @@ public class TaskResumeCommand extends StepCommand<TaskCall> {
 
     private static final long serialVersionUID = 1L;
 
-    private final LogContext logContext;
     private final ResumeEvent event;
 
     protected TaskResumeCommand(UUID correlationId, LogContext logContext, TaskCall step, ResumeEvent event) {
-        super(correlationId, step);
+        super(correlationId, step, logContext);
 
-        this.logContext = logContext;
         this.event = event;
+    }
+
+    @Override
+    public Command copy() {
+        return new TaskResumeCommand(null, null, getStep(), event);
     }
 
     @Override
@@ -63,13 +64,13 @@ public class TaskResumeCommand extends StepCommand<TaskCall> {
             throw new IllegalStateException("Task not found: " + taskName);
         }
 
-        if (!(task instanceof ReentrantTask)) {
+        if (!(task instanceof ReentrantTask rt)) {
             throw new IllegalStateException("The task doesn't implement the " + ReentrantTask.class.getSimpleName() +
                     " interface and cannot be used as a \"reentrant\" task: " + taskName);
         }
 
-        ReentrantTask rt = (ReentrantTask) task;
         TaskCallInterceptor.CallContext callContext = TaskCallInterceptor.CallContext.builder()
+                .threadId(threadId)
                 .taskName(taskName)
                 .correlationId(ctx.execution().correlationId())
                 .currentStep(getStep())
@@ -91,10 +92,5 @@ public class TaskResumeCommand extends StepCommand<TaskCall> {
         }
 
         TaskCallUtils.processTaskResult(runtime, ctx, taskName, getStep().getOptions(), result);
-    }
-
-    @Override
-    protected LogContext getLogContext(Runtime runtime, Context ctx, UUID correlationId) {
-        return logContext;
     }
 }

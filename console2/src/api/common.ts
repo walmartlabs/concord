@@ -86,7 +86,7 @@ export const parseTextError = async (resp: Response) => {
 
 export const makeError = async (resp: Response): Promise<RequestError> => {
     const contentType = resp.headers.get('Content-Type') || '';
-    if (contentType.indexOf('siesta') >= 0) {
+    if (contentType.indexOf('vnd.concord-validation-errors-v1+json') >= 0) {
         return parseSiestaError(resp);
     } else if (contentType.indexOf('json') >= 0) {
         return parseJsonError(resp);

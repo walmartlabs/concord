@@ -6,12 +6,12 @@
     <parent>
         <groupId>com.walmartlabs.concord.server</groupId>
         <artifactId>parent</artifactId>
-        <version>1.94.1-SNAPSHOT</version>
+        <version>2.12.1-SNAPSHOT</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
 
     <artifactId>liquibase-ext</artifactId>
-    <packaging>takari-jar</packaging>
+    <packaging>jar</packaging>
 
     <dependencies>
         <dependency>
@@ -22,14 +22,9 @@
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-api</artifactId>
         </dependency>
+        <dependency>
+            <groupId>com.walmartlabs.concord</groupId>
+            <artifactId>concord-common</artifactId>
+        </dependency>
     </dependencies>
-
-    <build>
-        <plugins>
-            <plugin>
-                <groupId>io.takari.maven.plugins</groupId>
-                <artifactId>takari-lifecycle-plugin</artifactId>
-            </plugin>
-        </plugins>
-    </build>
 </project>

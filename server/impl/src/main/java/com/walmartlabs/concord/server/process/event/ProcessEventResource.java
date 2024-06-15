@@ -30,18 +30,14 @@ import com.walmartlabs.concord.server.sdk.ConcordApplicationException;
 import com.walmartlabs.concord.server.sdk.PartialProcessKey;
 import com.walmartlabs.concord.server.sdk.ProcessKey;
 import com.walmartlabs.concord.server.sdk.metrics.WithTimer;
+import com.walmartlabs.concord.server.sdk.rest.Resource;
 import com.walmartlabs.concord.server.security.Roles;
+import com.walmartlabs.concord.server.security.UnauthorizedException;
 import com.walmartlabs.concord.server.security.UserPrincipal;
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
-import io.swagger.annotations.ApiParam;
-import io.swagger.annotations.Authorization;
-import org.apache.shiro.authz.UnauthorizedException;
-import org.sonatype.siesta.Resource;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 
 import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
@@ -50,10 +46,8 @@ import java.util.stream.Collectors;
 
 import static com.walmartlabs.concord.server.Utils.unwrap;
 
-@Named
-@Singleton
-@Api(value = "Process Events", authorizations = {@Authorization("api_key"), @Authorization("session_key"), @Authorization("ldap")})
 @Path("/api/v1/process")
+@Tag(name = "Process Events")
 public class ProcessEventResource implements Resource {
 
     // TODO this should be a common constant (in SDK maybe)
@@ -80,12 +74,12 @@ public class ProcessEventResource implements Resource {
      * Register a process event.
      */
     @POST
-    @ApiOperation(value = "Register a process event", authorizations = {@Authorization("session_key"), @Authorization("api_key")})
     @Path("/{processInstanceId}/event")
     @Consumes(MediaType.APPLICATION_JSON)
     @WithTimer
-    public void event(@ApiParam @PathParam("processInstanceId") UUID processInstanceId,
-                      @ApiParam ProcessEventRequest req) {
+    @Operation(description = "Register a process event")
+    public void event(@PathParam("processInstanceId") UUID processInstanceId,
+                      ProcessEventRequest req) {
 
         ProcessKey processKey = assertProcessKey(processInstanceId);
         NewProcessEvent e = NewProcessEvent.builder()
@@ -101,12 +95,12 @@ public class ProcessEventResource implements Resource {
      * Register multiple events for the specified process.
      */
     @POST
-    @ApiOperation(value = "Register multiple events for the specified process", authorizations = {@Authorization("session_key"), @Authorization("api_key")})
     @Path("/{processInstanceId}/eventBatch")
     @Consumes(MediaType.APPLICATION_JSON)
     @WithTimer
-    public void batchEvent(@ApiParam @PathParam("processInstanceId") UUID processInstanceId,
-                           @ApiParam List<ProcessEventRequest> data) {
+    @Operation(description = "Register multiple events for the specified process")
+    public void batchEvent(@PathParam("processInstanceId") UUID processInstanceId,
+                           List<ProcessEventRequest> data) {
 
         ProcessKey processKey = assertProcessKey(processInstanceId);
 
@@ -126,18 +120,18 @@ public class ProcessEventResource implements Resource {
      * List process events.
      */
     @GET
-    @ApiOperation(value = "List process events", responseContainer = "list", response = ProcessEventEntry.class)
     @Path("/{processInstanceId}/event")
     @Produces(MediaType.APPLICATION_JSON)
     @WithTimer
-    public List<ProcessEventEntry> list(@ApiParam @PathParam("processInstanceId") UUID processInstanceId,
-                                        @ApiParam @QueryParam("type") String eventType,
-                                        @ApiParam @QueryParam("after") OffsetDateTimeParam after,
-                                        @ApiParam @QueryParam("fromId") Long fromId,
-                                        @ApiParam @QueryParam("eventCorrelationId") UUID eventCorrelationId,
-                                        @ApiParam @QueryParam("eventPhase") EventPhase eventPhase,
-                                        @ApiParam @QueryParam("includeAll") @DefaultValue("false") boolean includeAll,
-                                        @ApiParam @QueryParam("limit") @DefaultValue("-1") int limit) {
+    @Operation(description = "List process events", operationId = "listProcessEvents")
+    public List<ProcessEventEntry> list(@PathParam("processInstanceId") UUID processInstanceId,
+                                        @QueryParam("type") String eventType,
+                                        @QueryParam("after") OffsetDateTimeParam after,
+                                        @QueryParam("fromId") Long fromId,
+                                        @QueryParam("eventCorrelationId") UUID eventCorrelationId,
+                                        @QueryParam("eventPhase") EventPhase eventPhase,
+                                        @QueryParam("includeAll") @DefaultValue("false") boolean includeAll,
+                                        @QueryParam("limit") @DefaultValue("-1") int limit) {
 
         ProcessKey processKey = assertProcessKey(processInstanceId);
 

@@ -21,16 +21,19 @@
 import * as React from 'react';
 import { Dropdown, DropdownItemProps, Grid, Input, Modal, Table } from 'semantic-ui-react';
 
-import { AnsibleHost, AnsibleStatus, SearchFilter } from '../../../../api/process/ansible';
+import { AnsibleHost, AnsibleStatus, SearchFilter, SortField, SortOrder } from '../../../../api/process/ansible';
 import { HumanizedDuration, PaginationToolBar } from '../../../molecules';
 import { ConcordId } from '../../../../api/common';
 import { AnsibleTaskListActivity } from '../../../organisms';
+import ColumnSort from "../../../atoms/ColumnSort";
 
 interface State {
     hostFilter?: string;
     prevHostFilter?: string;
     hostGroupFilter?: string;
     hostStatusFilter?: AnsibleStatus;
+    hostSortFieldFilter?: SortField;
+    hostSortByFilter?: SortOrder;
 }
 
 interface Props {
@@ -141,6 +144,7 @@ class AnsibleHostList extends React.Component<Props, State> {
         this.handleHostChange = this.handleHostChange.bind(this);
         this.handleHostGroupChange = this.handleHostGroupChange.bind(this);
         this.handleHostStatusChange = this.handleHostStatusChange.bind(this);
+        this.handleOrderByChange = this.handleOrderByChange.bind(this);
     }
 
     handleNext() {
@@ -156,24 +160,29 @@ class AnsibleHostList extends React.Component<Props, State> {
     }
 
     handleNavigation(offset?: number) {
-        const { hostFilter, hostGroupFilter } = this.state;
+        const { hostFilter, hostGroupFilter, hostStatusFilter, hostSortFieldFilter, hostSortByFilter } = this.state;
         const { refresh } = this.props;
 
         refresh({
             offset,
             host: hostFilter,
-            hostGroup: hostGroupFilter
+            hostGroup: hostGroupFilter,
+            status: hostStatusFilter,
+            sortField: hostSortFieldFilter,
+            sortBy: hostSortByFilter
         });
     }
 
     handleHostOnBlur() {
-        const { hostFilter, prevHostFilter, hostGroupFilter, hostStatusFilter } = this.state;
+        const { hostFilter, prevHostFilter, hostGroupFilter, hostStatusFilter, hostSortFieldFilter, hostSortByFilter } = this.state;
         if (hostFilter !== prevHostFilter) {
             this.setState({ prevHostFilter: hostFilter });
             this.props.refresh({
                 host: hostFilter,
                 hostGroup: hostGroupFilter,
-                status: hostStatusFilter
+                status: hostStatusFilter,
+                sortField: hostSortFieldFilter,
+                sortBy: hostSortByFilter
             });
         }
     }
@@ -188,25 +197,37 @@ class AnsibleHostList extends React.Component<Props, State> {
     }
 
     handleHostGroupChange(s?: string) {
-        const { hostFilter, hostGroupFilter, hostStatusFilter } = this.state;
+        const { hostFilter, hostGroupFilter, hostStatusFilter, hostSortFieldFilter, hostSortByFilter } = this.state;
         const hostGroup = s && s.length > 0 ? s : undefined;
 
         if (hostGroupFilter !== hostGroup) {
             this.setState({ hostGroupFilter: hostGroup });
-            this.props.refresh({ host: hostFilter, hostGroup, status: hostStatusFilter });
+            this.props.refresh({ host: hostFilter, hostGroup, status: hostStatusFilter, sortField: hostSortFieldFilter, sortBy: hostSortByFilter });
         }
     }
 
     handleHostStatusChange(s?: AnsibleStatus) {
-        const { hostFilter, hostGroupFilter, hostStatusFilter } = this.state;
+        const { hostFilter, hostGroupFilter, hostStatusFilter, hostSortFieldFilter, hostSortByFilter } = this.state;
         const status = s && s.length > 0 ? s : undefined;
 
         if (status !== hostStatusFilter) {
             this.setState({ hostStatusFilter: status });
-            this.props.refresh({ host: hostFilter, hostGroup: hostGroupFilter, status });
+            this.props.refresh({ host: hostFilter, hostGroup: hostGroupFilter, status, sortField: hostSortFieldFilter, sortBy: hostSortByFilter });
         }
     }
-
+    
+    handleOrderByChange(sf: SortField, sb: SortOrder) {
+        const { hostFilter, hostGroupFilter, hostStatusFilter, hostSortFieldFilter, hostSortByFilter } = this.state;
+        const sortField = sf && sf.length > 0 ? sf : undefined;
+        const sortBy = sb && sb.length > 0 ? sb : undefined;
+        
+        if (hostSortFieldFilter !== sortField || hostSortByFilter !== sortBy) {
+            this.setState({ hostSortFieldFilter: sortField });
+            this.setState({hostSortByFilter: sortBy});
+            this.props.refresh({ host: hostFilter, hostGroup: hostGroupFilter, status: hostStatusFilter, sortField, sortBy });
+        }
+    }
+    
     render() {
         const {
             instanceId,
@@ -284,10 +305,34 @@ class AnsibleHostList extends React.Component<Props, State> {
                     className={hosts ? '' : 'loading'}>
                     <Table.Header>
                         <Table.Row>
-                            <Table.HeaderCell singleLine={true}>Host</Table.HeaderCell>
-                            <Table.HeaderCell singleLine={true}>Host Group</Table.HeaderCell>
-                            <Table.HeaderCell singleLine={true}>Host Status</Table.HeaderCell>
-                            <Table.HeaderCell singleLine={true}>Duration</Table.HeaderCell>
+                            <Table.HeaderCell singleLine={true}>
+                                <div style={{ height:'0px', lineHeight:'36px' }}>Host</div>
+                                <ColumnSort 
+                                    ascSort={() => this.handleOrderByChange(SortField.HOST, SortOrder.ASC)} 
+                                    descSort={() => this.handleOrderByChange(SortField.HOST, SortOrder.DESC)} 
+                                />
+                            </Table.HeaderCell>
+                            <Table.HeaderCell singleLine={true}>
+                                <div style={{ height:'0px', lineHeight:'36px' }}>Host Group</div>
+                                <ColumnSort
+                                    ascSort={() => this.handleOrderByChange(SortField.HOST_GROUP, SortOrder.ASC)}
+                                    descSort={() => this.handleOrderByChange(SortField.HOST_GROUP, SortOrder.DESC)}
+                                />
+                            </Table.HeaderCell>
+                            <Table.HeaderCell singleLine={true}>
+                                <div style={{ height:'0px', lineHeight:'36px' }}>Host Status</div>
+                                <ColumnSort
+                                    ascSort={() => this.handleOrderByChange(SortField.STATUS, SortOrder.ASC)}
+                                    descSort={() => this.handleOrderByChange(SortField.STATUS, SortOrder.DESC)}
+                                />
+                            </Table.HeaderCell>
+                            <Table.HeaderCell singleLine={true}>
+                                <div style={{ height:'0px', lineHeight:'36px' }}>Duration</div>
+                                <ColumnSort
+                                    ascSort={() => this.handleOrderByChange(SortField.DURATION, SortOrder.ASC)}
+                                    descSort={() => this.handleOrderByChange(SortField.DURATION, SortOrder.DESC)}
+                                />
+                            </Table.HeaderCell>
                         </Table.Row>
                     </Table.Header>
 

@@ -30,16 +30,12 @@ import com.walmartlabs.concord.server.sdk.ProcessKey;
 import org.jooq.DSLContext;
 
 import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-@Named
-@Singleton
 public class ProcessWaitManager {
 
     private final ProcessWaitDao processWaitDao;
@@ -55,6 +51,10 @@ public class ProcessWaitManager {
 
     public void tx(AbstractDao.Tx t) {
         processWaitDao.tx(t);
+    }
+
+    public <T> T txResult(AbstractDao.TxResult<T> t) {
+        return processWaitDao.txResult(t);
     }
 
     public ProcessWaitEntry getWait(ProcessKey processKey) {

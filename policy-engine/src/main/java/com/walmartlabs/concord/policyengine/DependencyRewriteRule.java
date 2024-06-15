@@ -20,87 +20,42 @@ package com.walmartlabs.concord.policyengine;
  * =====
  */
 
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import org.immutables.value.Value;
 
+import javax.annotation.Nullable;
 import java.io.Serializable;
 import java.net.URI;
-import java.util.Objects;
 
-public class DependencyRewriteRule implements Serializable {
+@Value.Immutable
+@JsonInclude(JsonInclude.Include.NON_EMPTY)
+@JsonSerialize(as = ImmutableDependencyRewriteRule.class)
+@JsonDeserialize(as = ImmutableDependencyRewriteRule.class)
+public interface DependencyRewriteRule extends Serializable {
 
-    private static final long serialVersionUID = 1L;
+    long serialVersionUID = 1L;
 
-    private final String msg;
-    private final String groupId;
-    private final String artifactId;
-    private final String fromVersion;
-    private final String toVersion;
-    private final URI value;
+    @Nullable
+    String msg();
 
-    @JsonCreator
-    public DependencyRewriteRule(
-            @JsonProperty("msg") String msg,
-            @JsonProperty("groupId") String groupId,
-            @JsonProperty("artifactId") String artifactId,
-            @JsonProperty("fromVersion") String fromVersion,
-            @JsonProperty("toVersion") String toVersion,
-            @JsonProperty("value") URI value) {
+    @Nullable
+    String groupId();
 
-        this.msg = msg;
-        this.groupId = groupId;
-        this.artifactId = artifactId;
-        this.fromVersion = fromVersion;
-        this.toVersion = toVersion;
-        this.value = value;
-    }
+    @Nullable
+    String artifactId();
 
-    public String getMsg() {
-        return msg;
-    }
+    @Nullable
+    String fromVersion();
 
-    public String getGroupId() {
-        return groupId;
-    }
+    @Nullable
+    String toVersion();
 
-    public String getArtifactId() {
-        return artifactId;
-    }
+    @Nullable
+    URI value();
 
-    public String getFromVersion() {
-        return fromVersion;
-    }
-
-    public String getToVersion() {
-        return toVersion;
-    }
-
-    public URI getValue() {
-        return value;
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        DependencyRewriteRule that = (DependencyRewriteRule) o;
-        return Objects.equals(msg, that.msg) && Objects.equals(groupId, that.groupId) && Objects.equals(artifactId, that.artifactId) && Objects.equals(fromVersion, that.fromVersion) && Objects.equals(toVersion, that.toVersion) && Objects.equals(value, that.value);
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(msg, groupId, artifactId, fromVersion, toVersion, value);
-    }
-
-    @Override
-    public String toString() {
-        return "DependencyRewriteRule{" +
-                "msg='" + msg + '\'' +
-                ", groupId='" + groupId + '\'' +
-                ", artifactId='" + artifactId + '\'' +
-                ", fromVersion='" + fromVersion + '\'' +
-                ", toVersion='" + toVersion + '\'' +
-                ", value=" + value +
-                '}';
+    static ImmutableDependencyRewriteRule.Builder builder() {
+        return ImmutableDependencyRewriteRule.builder();
     }
 }

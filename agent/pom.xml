@@ -6,12 +6,12 @@
     <parent>
         <groupId>com.walmartlabs.concord</groupId>
         <artifactId>parent</artifactId>
-        <version>1.94.1-SNAPSHOT</version>
+        <version>2.12.1-SNAPSHOT</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
 
     <artifactId>concord-agent</artifactId>
-    <packaging>takari-jar</packaging>
+    <packaging>jar</packaging>
 
     <properties>
         <runnerV1.path>
@@ -29,7 +29,7 @@
         </dependency>
         <dependency>
             <groupId>com.walmartlabs.concord</groupId>
-            <artifactId>concord-client</artifactId>
+            <artifactId>concord-client2</artifactId>
         </dependency>
         <dependency>
             <groupId>com.walmartlabs.concord</groupId>
@@ -82,6 +82,14 @@
             <artifactId>jackson-databind</artifactId>
         </dependency>
         <dependency>
+            <groupId>com.fasterxml.jackson.datatype</groupId>
+            <artifactId>jackson-datatype-jdk8</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.fasterxml.jackson.datatype</groupId>
+            <artifactId>jackson-datatype-jsr310</artifactId>
+        </dependency>
+        <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>
             <artifactId>jackson-annotations</artifactId>
         </dependency>
@@ -98,12 +106,8 @@
             <artifactId>commons-compress</artifactId>
         </dependency>
         <dependency>
-            <groupId>com.squareup.okhttp</groupId>
-            <artifactId>okhttp</artifactId>
-        </dependency>
-        <dependency>
             <groupId>org.jboss.spec.javax.ws.rs</groupId>
-            <artifactId>jboss-jaxrs-api_2.0_spec</artifactId>
+            <artifactId>jboss-jaxrs-api_2.1_spec</artifactId>
         </dependency>
         <dependency>
             <groupId>com.typesafe</groupId>
@@ -123,10 +127,6 @@
         <dependency>
             <groupId>com.fasterxml.jackson.datatype</groupId>
             <artifactId>jackson-datatype-guava</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.fasterxml.jackson.datatype</groupId>
-            <artifactId>jackson-datatype-jdk8</artifactId>
         </dependency>
         <dependency>
             <groupId>com.google.code.findbugs</groupId>
@@ -203,13 +203,6 @@
         </resources>
 
         <plugins>
-            <plugin>
-                <groupId>io.takari.maven.plugins</groupId>
-                <artifactId>takari-lifecycle-plugin</artifactId>
-                <configuration>
-                    <proc>proc</proc>
-                </configuration>
-            </plugin>
             <plugin>
                 <groupId>org.eclipse.sisu</groupId>
                 <artifactId>sisu-maven-plugin</artifactId>

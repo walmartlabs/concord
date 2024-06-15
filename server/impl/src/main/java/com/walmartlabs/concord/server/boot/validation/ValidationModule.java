@@ -9,9 +9,9 @@ package com.walmartlabs.concord.server.boot.validation;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -20,14 +20,15 @@ package com.walmartlabs.concord.server.boot.validation;
  * =====
  */
 
-import com.google.inject.AbstractModule;
+import com.google.inject.Binder;
+import com.google.inject.Module;
 import com.google.inject.Provides;
 import com.google.inject.matcher.Matchers;
+import com.walmartlabs.concord.server.sdk.validation.Validate;
 import org.aopalliance.intercept.MethodInterceptor;
 import org.hibernate.validator.HibernateValidator;
 import org.hibernate.validator.spi.properties.ConstrainableExecutable;
 import org.hibernate.validator.spi.properties.GetterPropertySelectionStrategy;
-import org.sonatype.siesta.Validate;
 
 import javax.inject.Singleton;
 import javax.validation.Validation;
@@ -38,13 +39,18 @@ import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
 
-public class ValidationModule extends AbstractModule {
+import static com.walmartlabs.concord.server.Utils.bindExceptionMapper;
+
+public class ValidationModule implements Module {
 
     @Override
-    protected void configure() {
-        final MethodInterceptor interceptor = new ValidationInterceptor();
-        bindInterceptor(Matchers.any(), Matchers.annotatedWith(Validate.class), interceptor);
-        requestInjection(interceptor);
+    public void configure(Binder binder) {
+        MethodInterceptor interceptor = new ValidationInterceptor();
+        binder.bindInterceptor(Matchers.any(), Matchers.annotatedWith(Validate.class), interceptor);
+        binder.requestInjection(interceptor);
+
+        bindExceptionMapper(binder, ConstraintViolationExceptionMapper.class);
+        bindExceptionMapper(binder, ValidationErrorsExceptionMapper.class);
     }
 
     @Provides

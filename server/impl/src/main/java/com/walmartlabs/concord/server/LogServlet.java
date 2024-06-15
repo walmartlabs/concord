@@ -20,7 +20,6 @@ package com.walmartlabs.concord.server;
  * =====
  */
 
-import javax.inject.Named;
 import javax.servlet.RequestDispatcher;
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
@@ -34,7 +33,6 @@ import java.util.UUID;
  * @deprecated left for backward compatibility. Redirects all requests to
  * {@link com.walmartlabs.concord.server.process.ProcessResource#getLog(UUID, String)}
  */
-@Named
 @WebServlet("/logs/*")
 public class LogServlet extends HttpServlet {
 

@@ -77,6 +77,7 @@
     -->
 
     <changeSet id="79200" author="ibodrov@gmail.com">
+        <validCheckSum>ANY</validCheckSum>
         <addColumn tableName="PROCESS_QUEUE">
             <column name="REPO_ID" type="uuid">
                 <constraints nullable="true"/>
@@ -90,9 +91,11 @@
             <column name="COMMIT_ID" type="varchar(64)">
                 <constraints nullable="true"/>
             </column>
+            <!-- removed in 1.98.0+
             <column name="COMMIT_MSG" type="varchar(128)">
                 <constraints nullable="true"/>
             </column>
+            -->
         </addColumn>
 
         <addForeignKeyConstraint baseTableName="PROCESS_QUEUE"

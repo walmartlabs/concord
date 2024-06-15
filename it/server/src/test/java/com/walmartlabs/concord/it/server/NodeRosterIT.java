@@ -21,8 +21,7 @@ package com.walmartlabs.concord.it.server;
  */
 
 import com.github.tomakehurst.wiremock.junit5.WireMockExtension;
-import com.walmartlabs.concord.ApiException;
-import com.walmartlabs.concord.client.*;
+import com.walmartlabs.concord.client2.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -37,7 +36,8 @@ import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMoc
 import static com.walmartlabs.concord.it.common.ITUtils.archive;
 import static com.walmartlabs.concord.it.common.ServerClient.assertLog;
 import static com.walmartlabs.concord.it.common.ServerClient.waitForCompletion;
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 public class NodeRosterIT extends AbstractServerIT {
 
@@ -62,7 +62,7 @@ public class NodeRosterIT extends AbstractServerIT {
 
         // run an Ansible playbook to get some events
 
-        byte[] payload = archive(ProcessIT.class.getResource("nodeRoster").toURI(), ITConstants.DEPENDENCIES_DIR);
+        byte[] payload = archive(NodeRosterIT.class.getResource("nodeRoster").toURI(), ITConstants.DEPENDENCIES_DIR);
 
         String artifactUrl = "http://" + env("IT_DOCKER_HOST_ADDR", "localhost") + ":" + rule.getPort() + "/test.txt";
 
@@ -73,11 +73,10 @@ public class NodeRosterIT extends AbstractServerIT {
         input.put("arguments.hostB", hostB);
         StartProcessResponse spr = start(input);
 
-        ProcessApi processApi = new ProcessApi(getApiClient());
-        ProcessEntry pir = waitForCompletion(processApi, spr.getInstanceId());
+        ProcessEntry pir = waitForCompletion(getApiClient(), spr.getInstanceId());
         assertEquals(ProcessEntry.StatusEnum.FINISHED, pir.getStatus());
 
-        byte[] ab = getLog(pir.getLogFileName());
+        byte[] ab = getLog(pir.getInstanceId());
         assertLog(".*" + hostA + ".*failed=0.*", ab);
         assertLog(".*" + hostB + ".*failed=0.*", ab);
 
@@ -92,7 +91,7 @@ public class NodeRosterIT extends AbstractServerIT {
 
         NodeRosterArtifactsApi artifactsApi = new NodeRosterArtifactsApi(getApiClient());
         while (true) {
-            List<ArtifactEntry> artifactHostsA = artifactsApi.list(hostAId, null, artifactUrl, 1000, 0); // TODO might require paging
+            List<ArtifactEntry> artifactHostsA = artifactsApi.listHostArtifacts(hostAId, null, artifactUrl, 1000, 0); // TODO might require paging
             if (artifactHostsA != null && artifactHostsA.size() == 1) {
                 break;
             }
@@ -100,13 +99,10 @@ public class NodeRosterIT extends AbstractServerIT {
 
         // check if we know who deployed to our hosts
 
-        NodeRosterProcessesApi nrProcessApi = new NodeRosterProcessesApi(getApiClient());
-        List<ProcessEntry> hostAProcesses = nrProcessApi.list(hostAId, null, 1000, 0);
-        assertFalse(hostAProcesses.isEmpty());
+        List<ProcessEntry> hostAProcesses = listHostProcesses(hostAId);
         assertEquals("admin", hostAProcesses.get(0).getInitiator());
 
-        List<ProcessEntry> hostBProcesses = nrProcessApi.list(hostBId, null, 1000, 0);
-        assertFalse(hostBProcesses.isEmpty());
+        List<com.walmartlabs.concord.client2.ProcessEntry> hostBProcesses = listHostProcesses(hostBId);
         assertEquals("admin", hostBProcesses.get(0).getInitiator());
 
         // check the host facts
@@ -123,10 +119,10 @@ public class NodeRosterIT extends AbstractServerIT {
         input.put("arguments.artifactUrl", artifactUrl);
         spr = start(input);
 
-        pir = waitForCompletion(processApi, spr.getInstanceId());
+        pir = waitForCompletion(getApiClient(), spr.getInstanceId());
         assertEquals(ProcessEntry.StatusEnum.FINISHED, pir.getStatus());
 
-        ab = getLog(pir.getLogFileName());
+        ab = getLog(pir.getInstanceId());
         assertLog(".*ok=true.*", ab);
         assertLog(".*name: " + hostA.toLowerCase() + ".*", ab);
         assertLog(".*name: " + hostB.toLowerCase() + ".*", ab);
@@ -143,11 +139,10 @@ public class NodeRosterIT extends AbstractServerIT {
         input.put("arguments.host", host);
         StartProcessResponse spr = start(input);
 
-        ProcessApi processApi = new ProcessApi(getApiClient());
-        ProcessEntry pir = waitForCompletion(processApi, spr.getInstanceId());
+        ProcessEntry pir = waitForCompletion(getApiClient(), spr.getInstanceId());
         assertEquals(ProcessEntry.StatusEnum.FINISHED, pir.getStatus());
 
-        byte[] ab = getLog(pir.getLogFileName());
+        byte[] ab = getLog(pir.getInstanceId());
         assertLog(".*" + host + ".*failed=0.*", ab);
 
         // ---
@@ -155,20 +150,42 @@ public class NodeRosterIT extends AbstractServerIT {
         NodeRosterHostsApi hostsApi = new NodeRosterHostsApi(getApiClient());
 
         UUID hostId = findHost(host, hostsApi);
-
-        NodeRosterFactsApi factsApi = new NodeRosterFactsApi(getApiClient());
-        assertNotNull(factsApi.getFacts(hostId, null));
+        assertNotNull(getFacts(hostId));
     }
 
     private static UUID findHost(String host, NodeRosterHostsApi hostsApi) throws InterruptedException, ApiException {
         while (true) {
-            List<HostEntry> l = hostsApi.list(host, null, null, null, 10, 0);
+            List<HostEntry> l = hostsApi.listKnownHosts(host, null, null, null, 10, 0);
             HostEntry e = l.stream().filter(h -> h.getName().equalsIgnoreCase(host)).findFirst().orElse(null);
 
             if (e != null) {
                 return e.getId();
             }
 
+            Thread.sleep(1000);
+        }
+    }
+
+    private List<com.walmartlabs.concord.client2.ProcessEntry> listHostProcesses(UUID hostAId) throws Exception {
+        NodeRosterProcessesApi nrProcessApi = new NodeRosterProcessesApi(getApiClient());
+        while (true) {
+            List<com.walmartlabs.concord.client2.ProcessEntry> result = nrProcessApi.listHosts(hostAId, null, 1000, 0);
+            if (!result.isEmpty()) {
+                return result;
+            }
+
+            Thread.sleep(1000);
+        }
+    }
+
+    private Object getFacts(UUID hostId) throws Exception {
+        NodeRosterFactsApi factsApi = new NodeRosterFactsApi(getApiClient());
+        while (true) {
+            Object facts = factsApi.getFacts(hostId, null);
+            if (facts != null) {
+                return facts;
+            }
+            
             Thread.sleep(1000);
         }
     }

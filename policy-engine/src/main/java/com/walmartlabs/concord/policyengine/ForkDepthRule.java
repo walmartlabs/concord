@@ -20,53 +20,30 @@ package com.walmartlabs.concord.policyengine;
  * =====
  */
 
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import org.immutables.value.Value;
 
+import javax.annotation.Nullable;
 import java.io.Serializable;
-import java.util.Objects;
 
-public class ForkDepthRule implements Serializable {
+@Value.Immutable
+@JsonInclude(JsonInclude.Include.NON_EMPTY)
+@JsonSerialize(as = ImmutableForkDepthRule.class)
+@JsonDeserialize(as = ImmutableForkDepthRule.class)
+public interface ForkDepthRule extends Serializable {
 
-    private static final long serialVersionUID = 1L;
+    long serialVersionUID = 1L;
 
-    private final String msg;
-    private final int max;
+    @Nullable
+    @Value.Parameter
+    String msg();
 
-    @JsonCreator
-    public ForkDepthRule(@JsonProperty("msg") String msg,
-                         @JsonProperty("max") int max) {
-        this.msg = msg;
-        this.max = max;
-    }
+    @Value.Parameter
+    int max();
 
-    public String getMsg() {
-        return msg;
-    }
-
-    public int getMax() {
-        return max;
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        ForkDepthRule that = (ForkDepthRule) o;
-        return max == that.max &&
-                Objects.equals(msg, that.msg);
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(msg, max);
-    }
-
-    @Override
-    public String toString() {
-        return "ForkDepthRule{" +
-                "msg='" + msg + '\'' +
-                ", max=" + max +
-                '}';
+    static ForkDepthRule of(String msg, int max) {
+        return ImmutableForkDepthRule.of(msg, max);
     }
 }

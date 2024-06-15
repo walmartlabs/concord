@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.3.xsd">
+
+    <changeSet id="1981000" author="ybrigo@gmail.com">
+        <createTable tableName="PROCESS_META">
+            <column name="INSTANCE_ID" type="uuid" remarks="Unique process ID">
+                <constraints nullable="false"/>
+            </column>
+            <column name="INSTANCE_CREATED_AT" type="timestamptz" remarks="Timestamp of process creation">
+                <constraints nullable="false"/>
+            </column>
+            <column name="META" type="jsonb">
+                <constraints nullable="true"/>
+            </column>
+        </createTable>
+
+        <addPrimaryKey tableName="PROCESS_META" columnNames="INSTANCE_ID, INSTANCE_CREATED_AT"/>
+    </changeSet>
+
+    <changeSet id="1981010" author="ybrigo@gmail.com">
+        <createTable tableName="PROCESS_TRIGGER_INFO">
+            <column name="INSTANCE_ID" type="uuid" remarks="Unique process ID">
+                <constraints nullable="false"/>
+            </column>
+            <column name="INSTANCE_CREATED_AT" type="timestamptz" remarks="Timestamp of process creation">
+                <constraints nullable="false"/>
+            </column>
+            <column name="TRIGGERED_BY" type="jsonb">
+                <constraints nullable="true"/>
+            </column>
+        </createTable>
+
+        <addPrimaryKey tableName="PROCESS_TRIGGER_INFO" columnNames="INSTANCE_ID, INSTANCE_CREATED_AT"/>
+    </changeSet>
+
+    <changeSet id="1981020" author="ybrigo@gmail.com" runInTransaction="false">
+        <sql>
+            create index concurrently IDX_PROC_META_META on PROCESS_META using gin (META jsonb_path_ops)
+        </sql>
+    </changeSet>
+
+    <changeSet id="1981030" author="g0h04k0@walmart.com">
+        <validCheckSum>7:bc92a99fabceb83a0e43e3fb6190c30d</validCheckSum>
+        <validCheckSum>7:7a5abc67e92f25cb85f8e73fcd63a780</validCheckSum>
+        <addColumn tableName="SECRETS">
+            <column name="LAST_UPDATED_AT" type="timestamptz">
+                <constraints nullable="true"/>
+            </column>
+        </addColumn>
+        <addColumn tableName="SECRETS">
+            <column name="SECRET_SALT" type="longblob">
+                <constraints nullable="true"/>
+            </column>
+        </addColumn>
+        <addColumn tableName="SECRETS">
+            <column name="hash_algorithm" type="varchar(32)" defaultValue="md5">
+                <constraints nullable="true"/>
+            </column>
+
+        </addColumn>
+    </changeSet>
+
+    <changeSet id="1981031" author="ybrigo@gmail.com" context="!codegen">
+        <validCheckSum>ANY</validCheckSum>
+        <addDefaultValue tableName="SECRETS" columnName="SECRET_SALT" defaultValueComputed="decode('${secretStoreSalt}', 'base64')"/>
+    </changeSet>
+
+    <changeSet id="1981032" author="ybrigo@gmail.com" context="!codegen">
+        <validCheckSum>ANY</validCheckSum>
+        <update tableName="SECRETS">
+            <column name="SECRET_SALT" valueComputed="decode('${secretStoreSalt}', 'base64')"/>
+            <where>SECRET_SALT is NULL</where>
+        </update>
+    </changeSet>
+
+    <changeSet id="1981033" author="ybrigo@gmail.com">
+        <addNotNullConstraint tableName="SECRETS" columnName="SECRET_SALT"/>
+    </changeSet>
+
+    <changeSet id="1981034" author="ginni.hema.sundara.rao@walmart.com" context="!codegen">
+        <validCheckSum>ANY</validCheckSum>
+        <customChange class="com.walmartlabs.concord.server.liquibase.ext.migration.SecretsHashMigrationTask">
+            <param name="serverPassword" value="${serverPassword}"/>
+        </customChange>
+    </changeSet>
+
+</databaseChangeLog>

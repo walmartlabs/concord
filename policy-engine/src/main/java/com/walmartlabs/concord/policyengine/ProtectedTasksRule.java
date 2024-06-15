@@ -20,45 +20,26 @@ package com.walmartlabs.concord.policyengine;
  * =====
  */
 
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import org.immutables.value.Value;
 
 import java.io.Serializable;
-import java.util.Objects;
 import java.util.Set;
 
-public class ProtectedTasksRule implements Serializable {
+@Value.Immutable
+@JsonInclude(JsonInclude.Include.NON_EMPTY)
+@JsonSerialize(as = ImmutableProtectedTasksRule.class)
+@JsonDeserialize(as = ImmutableProtectedTasksRule.class)
+public interface ProtectedTasksRule extends Serializable {
 
-    private static final long serialVersionUID = 1L;
+    long serialVersionUID = 1L;
 
-    private final Set<String> names;
+    @Value.Parameter
+    Set<String> names();
 
-    @JsonCreator
-    public ProtectedTasksRule(@JsonProperty("names") Set<String> names) {
-        this.names = names;
-    }
-
-    public Set<String> getNames() {
-        return names;
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        ProtectedTasksRule that = (ProtectedTasksRule) o;
-        return Objects.equals(names, that.names);
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(names);
-    }
-
-    @Override
-    public String toString() {
-        return "ProtectedTasksRule{" +
-                "names=" + names +
-                '}';
+    static ProtectedTasksRule of(Set<String> names) {
+        return ImmutableProtectedTasksRule.of(names);
     }
 }

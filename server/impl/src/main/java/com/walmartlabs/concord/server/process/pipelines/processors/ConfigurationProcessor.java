@@ -42,10 +42,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 
 /**
  * Responsible for preparing the process' {@code configuration} object.
@@ -89,6 +86,10 @@ public class ConfigurationProcessor implements PayloadProcessor {
         // determine the active profile names
         List<String> activeProfiles = ProcessConfigurationUtils.getActiveProfiles(payloadCfg, attachedCfg, workspaceCfg, projectCfg, orgCfg);
         payload = payload.putHeader(Payload.ACTIVE_PROFILES, activeProfiles);
+
+        // consolidate out variables
+        Set<String> outVars = new HashSet<>(ProcessConfigurationUtils.getOutVars(payloadCfg, attachedCfg, workspaceCfg));
+        payload = payload.putHeader(Payload.OUT_EXPRESSIONS, outVars);
 
         // merged profile data
         Map<String, Object> profileCfg = getProfileCfg(payload, activeProfiles);
@@ -190,7 +191,7 @@ public class ConfigurationProcessor implements PayloadProcessor {
             return Collections.emptyMap();
         }
 
-        Map<String, Object> m = ProcessDefinitionUtils.getVariables(pd, activeProfiles);
+        Map<String, Object> m = ProcessDefinitionUtils.getProfilesOverlayCfg(pd, activeProfiles);
         return m != null ? m : Collections.emptyMap();
     }
 

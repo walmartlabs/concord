@@ -18,15 +18,15 @@
  * =====
  */
 import * as React from 'react';
-import { connect } from 'react-redux';
-import { AnyAction, Dispatch } from 'redux';
 
-import { ConcordKey, RequestError } from '../../../api/common';
-import { actions, State } from '../../../state/data/projects';
+import {ConcordKey} from '../../../api/common';
 import { SingleOperationPopup } from '../../molecules';
 
 import './styles.css';
 import { SemanticCOLORS, SemanticICONS } from 'semantic-ui-react';
+import {useCallback} from "react";
+import {RepositoryValidationResponse, validateRepository as apiValidateRepo} from "../../../api/org/project/repository";
+import {useApi} from "../../../hooks/useApi";
 
 interface ExternalProps {
     orgName: ConcordKey;
@@ -35,130 +35,101 @@ interface ExternalProps {
     trigger: (onClick: () => void) => React.ReactNode;
 }
 
-interface DispatchProps {
-    reset: () => void;
-    onConfirm: () => void;
-}
+const ValidateRepositoryPopup = (props: ExternalProps) => {
+    const {orgName, projectName, repoName, trigger} = props;
 
-interface StateProps {
-    validating: boolean;
-    success: boolean;
-    error: RequestError;
-    validationErrors: string[];
-    validationWarnings: string[];
-}
+    const validateRepoRequest = useCallback(() => {
+        return apiValidateRepo(orgName, projectName, repoName);
+    }, [orgName, projectName, repoName]);
 
-type Props = DispatchProps & ExternalProps & StateProps;
+    const { data, isLoading, error, clearState, fetch } = useApi<RepositoryValidationResponse>(
+        validateRepoRequest,
+        { fetchOnMount: false, requestByFetch: true }
+    );
 
-class ValidateRepositoryPopup extends React.Component<Props> {
-    render() {
-        const {
-            trigger,
-            validating,
-            success,
-            error,
-            validationErrors,
-            validationWarnings,
-            reset,
-            onConfirm,
-            repoName
-        } = this.props;
+    const resetHandler = useCallback(() => {
+        clearState();
+    }, [clearState]);
 
-        let title = 'Validate repository?';
 
-        if (error) {
-            title = 'Validation error';
-        }
+    let title = 'Validate repository?';
 
-        let icon: SemanticICONS | undefined;
-        let iconColor: SemanticCOLORS | undefined;
-        let msg;
+    let icon: SemanticICONS | undefined;
+    let iconColor: SemanticCOLORS | undefined;
+    let msg;
 
-        if (success) {
-            title = 'Validation complete';
-            icon = 'check circle';
-            iconColor = 'green';
-            msg = <p>Repository validated successfully.</p>;
-        }
+    if (error) {
+        icon = 'exclamation circle';
+        iconColor = 'red';
+        title = 'Validation error';
+    }
 
-        let warningDetails;
-        if (validationWarnings.length > 0) {
-            icon = 'warning circle';
-            iconColor = 'yellow';
-            warningDetails = (
-                <>
-                    <p>Warnings:</p>
-                    <ul>
-                        {validationWarnings.map((e) => (
-                            <li>{e}</li>
-                        ))}
-                    </ul>
-                </>
-            );
-        }
+    if (data?.ok) {
+        title = 'Validation complete';
+        icon = 'check circle';
+        iconColor = 'green';
+        msg = <p>Repository validated successfully.</p>;
+    }
 
-        let errorDetails;
-        if (validationErrors.length > 0) {
-            icon = 'exclamation circle';
-            iconColor = 'red';
-            errorDetails = (
-                <>
-                    <p>Errors:</p>
-                    <ul>
-                        {validationErrors.map((e) => (
-                            <li>{e}</li>
-                        ))}
-                    </ul>
-                </>
-            );
-        }
-
-        return (
-            <SingleOperationPopup
-                trigger={trigger}
-                title={title}
-                icon={icon}
-                iconColor={iconColor}
-                introMsg={
-                    <p>
-                        Run syntax validation for <b>{repoName}</b> repository?
-                    </p>
-                }
-                running={validating}
-                success={success}
-                successMsg={
-                    <>
-                        {msg}
-                        {warningDetails}
-                        {errorDetails}
-                    </>
-                }
-                error={error}
-                reset={reset}
-                onConfirm={onConfirm}
-            />
+    const warnings = data?.warnings;
+    let warningDetails;
+    if (warnings !== undefined && warnings.length > 0) {
+        icon = 'warning circle';
+        iconColor = 'yellow';
+        warningDetails = (
+            <>
+                <p>Warnings:</p>
+                <ul>
+                    {warnings.map((e) => (
+                        <li>{e}</li>
+                    ))}
+                </ul>
+            </>
         );
     }
-}
 
-const mapStateToProps = ({ projects }: { projects: State }): StateProps => ({
-    validating: projects.validateRepository.running,
-    success: !!projects.validateRepository.response && projects.validateRepository.response.ok,
-    error: projects.validateRepository.error,
-    validationErrors: projects.validateRepository.response
-        ? projects.validateRepository.response.errors || []
-        : [],
-    validationWarnings: projects.validateRepository.response
-        ? projects.validateRepository.response.warnings || []
-        : []
-});
+    const errors = data?.errors;
+    let errorDetails;
+    if (errors !== undefined && errors.length > 0) {
+        icon = 'exclamation circle';
+        iconColor = 'red';
+        errorDetails = (
+            <>
+                <p>Errors:</p>
+                <ul>
+                    {errors.map((e) => (
+                        <li>{e}</li>
+                    ))}
+                </ul>
+            </>
+        );
+    }
 
-const mapDispatchToProps = (
-    dispatch: Dispatch<AnyAction>,
-    { orgName, projectName, repoName }: ExternalProps
-): DispatchProps => ({
-    reset: () => dispatch(actions.resetRepository()),
-    onConfirm: () => dispatch(actions.validateRepository(orgName, projectName, repoName))
-});
+    return (
+        <SingleOperationPopup
+            trigger={trigger}
+            title={title}
+            icon={icon}
+            iconColor={iconColor}
+            introMsg={
+                <p>
+                    Run syntax validation for <b>{repoName}</b> repository?
+                </p>
+            }
+            running={isLoading}
+            success={data?.ok || false}
+            successMsg={
+                <>
+                    {msg}
+                    {warningDetails}
+                    {errorDetails}
+                </>
+            }
+            error={error}
+            reset={resetHandler}
+            onConfirm={fetch}
+        />
+    );
+};
 
-export default connect(mapStateToProps, mapDispatchToProps)(ValidateRepositoryPopup);
+export default ValidateRepositoryPopup;

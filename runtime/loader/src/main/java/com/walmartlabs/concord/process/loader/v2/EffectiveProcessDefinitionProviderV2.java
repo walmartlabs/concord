@@ -61,6 +61,7 @@ public class EffectiveProcessDefinitionProviderV2 implements EffectiveProcessDef
 
         ProcessDefinition pd = ProcessDefinition.builder().from(delegate)
                 .configuration(ProcessDefinitionConfiguration.builder().from(delegate.configuration())
+                        .entryPoint(options.entryPoint())
                         .arguments(arguments)
                         .build())
                 .flows(flows)

@@ -79,6 +79,10 @@ public class ResourceTask implements Task {
         return delegate(null).writeAsYaml(content);
     }
 
+    public String printJson(Object value) throws IOException {
+        return ResourceTaskCommon.printJson(value);
+    }
+
     public String prettyPrintJson(Object value) throws IOException {
         return ResourceTaskCommon.prettyPrintJson(value);
     }

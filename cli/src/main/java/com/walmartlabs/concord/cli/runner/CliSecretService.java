@@ -101,13 +101,13 @@ public class CliSecretService implements SecretService {
             Map<String, String> up = om.readValue(secretPath.toFile(), Map.class);
             return UsernamePassword.of(up.get("username"), up.get("password"));
         } catch (IOException e) {
-            throw new RuntimeException("Invalid secret '" + orgName + "/" + secretName + "' ('" + secretPath + "') format: " +e.getMessage());
+            throw new RuntimeException("Invalid secret '" + orgName + "/" + secretName + "' ('" + secretPath + "') format: " + e.getMessage());
         }
     }
 
     @Override
     public String encryptString(String orgName, String projectName, String value) {
-        throw new UnsupportedOperationException("Not supported yet");
+        throw new UnsupportedOperationException("Encrypting secrets is not supported by concord-cli yet");
     }
 
     @Override

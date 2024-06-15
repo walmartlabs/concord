@@ -20,7 +20,7 @@ package com.walmartlabs.concord.it.server;
  * =====
  */
 
-import com.walmartlabs.concord.client.*;
+import com.walmartlabs.concord.client2.*;
 import org.junit.jupiter.api.Test;
 
 import java.util.HashMap;
@@ -36,26 +36,26 @@ public class InventoryIT extends AbstractServerIT {
     public void testQuery() throws Exception {
         String orgName = "org_" + randomString();
         OrganizationsApi orgApi = new OrganizationsApi(getApiClient());
-        orgApi.createOrUpdate(new OrganizationEntry().setName(orgName));
+        orgApi.createOrUpdateOrg(new OrganizationEntry().name(orgName));
 
         String projectName = "project_" + randomString();
         ProjectsApi projectsApi = new ProjectsApi(getApiClient());
-        projectsApi.createOrUpdate(orgName, new ProjectEntry()
-                .setName(projectName)
-                .setRawPayloadMode(ProjectEntry.RawPayloadModeEnum.EVERYONE));
+        projectsApi.createOrUpdateProject(orgName, new ProjectEntry()
+                .name(projectName)
+                .rawPayloadMode(ProjectEntry.RawPayloadModeEnum.EVERYONE));
 
         String inventoryName = "inventory_" + randomString();
         InventoriesApi inventoriesApi = new InventoriesApi(getApiClient());
-        inventoriesApi.createOrUpdate(orgName, new InventoryEntry().setName(inventoryName)
-                .setOrgName(orgName)
-                .setVisibility(InventoryEntry.VisibilityEnum.PUBLIC));
+        inventoriesApi.createOrUpdateInventory(orgName, new InventoryEntry().name(inventoryName)
+                .orgName(orgName)
+                .visibility(InventoryEntry.VisibilityEnum.PUBLIC));
 
         String queryName = "query_" + randomString();
         InventoryQueriesApi queriesApi = new InventoryQueriesApi(getApiClient());
-        queriesApi.createOrUpdate(orgName, inventoryName, queryName, "select cast(to_json(item_data) as varchar) from inventory_data where item_path like '%/testPath'");
+        queriesApi.createOrUpdateInventoryQuery(orgName, inventoryName, queryName, "select cast(to_json(item_data) as varchar) from inventory_data where item_path like '%/testPath'");
 
         InventoryDataApi dataApi = new InventoryDataApi(getApiClient());
-        dataApi.data(orgName, inventoryName, "/testPath", "{\"data\": \"testData\"}");
+        dataApi.updateInventoryData(orgName, inventoryName, "/testPath", "{\"data\": \"testData\"}");
 
         // ---
 
@@ -70,12 +70,11 @@ public class InventoryIT extends AbstractServerIT {
 
         StartProcessResponse spr = start(input);
 
-        ProcessApi processApi = new ProcessApi(getApiClient());
-        ProcessEntry pir = waitForCompletion(processApi, spr.getInstanceId());
+        ProcessEntry pir = waitForCompletion(getApiClient(), spr.getInstanceId());
 
         // ---
 
-        byte[] ab = getLog(pir.getLogFileName());
+        byte[] ab = getLog(pir.getInstanceId());
         assertLog(".*Inventory Item_data: testData.*", ab);
     }
 }

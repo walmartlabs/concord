@@ -25,11 +25,23 @@ import { formatDuration } from '../../../utils';
 interface Props {
     value?: number;
     hint?: string;
+    children?: React.ReactNode;
+}
+
+function HintFormat({ value, hint }: Props) {
+    if (hint) {
+        return <>
+            {value}ms
+            <div>({hint})</div>
+        </>
+    }
+
+    return <>{value}ms</>;
 }
 
 export default class extends React.PureComponent<Props> {
     render() {
-        const { value, hint } = this.props;
+        const {value, hint, children} = this.props;
 
         const s = formatDuration(value);
         if (!s) {
@@ -37,10 +49,9 @@ export default class extends React.PureComponent<Props> {
         }
 
         return (
-            <Popup trigger={<span>{s}</span>}>
+            <Popup trigger={<span>{s}</span>} hoverable={true}>
                 <Popup.Content>
-                    {value}ms
-                    {hint && <div>({hint})</div>}
+                    {children ? children : <HintFormat value={value} hint={hint}/>}
                 </Popup.Content>
             </Popup>
         );

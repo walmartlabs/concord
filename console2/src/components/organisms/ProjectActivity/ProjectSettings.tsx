@@ -34,8 +34,8 @@ import {
 import { LoadingDispatch } from '../../../App';
 import { useApi } from '../../../hooks/useApi';
 import { useCallback } from 'react';
-import { get as apiGet, ProjectEntry } from '../../../api/org/project';
-import { Divider, Header, Segment } from 'semantic-ui-react';
+import {get as apiGet, getCapacity as apiGetCapacity, KVCapacity, ProjectEntry} from '../../../api/org/project';
+import {Divider, Header, Icon, Progress, Segment} from 'semantic-ui-react';
 import EntityId from '../../molecules/EntityId';
 
 interface ExternalProps {
@@ -47,11 +47,13 @@ interface ExternalProps {
 const ProjectSettings = ({ orgName, projectName, forceRefresh }: ExternalProps) => {
     const dispatch = React.useContext(LoadingDispatch);
 
-    const fetchData = useCallback(() => {
-        return apiGet(orgName, projectName);
+    const fetchData = useCallback(async () => {
+        const project = await apiGet(orgName, projectName);
+        const capacity = await apiGetCapacity(orgName, projectName);
+        return { ...project, ...capacity };
     }, [orgName, projectName]);
 
-    const { data, error, isLoading } = useApi<ProjectEntry>(fetchData, {
+    const { data, error, isLoading } = useApi<ProjectEntry & KVCapacity>(fetchData, {
         fetchOnMount: true,
         forceRequest: forceRefresh,
         dispatch: dispatch
@@ -66,6 +68,11 @@ const ProjectSettings = ({ orgName, projectName, forceRefresh }: ExternalProps) 
             <Header as="h5" disabled={true}>
                 <EntityId id={data?.id} />
             </Header>
+
+            <Segment disabled={isLoading}>
+                <Header as="h4">KV capacity</Header>
+                <Capacity org={data?.orgName} project={data?.name} current={data?.size} max={data?.maxSize} />
+            </Segment>
 
             <Segment disabled={isLoading}>
                 <Header as="h4">Allow payload archives</Header>
@@ -131,6 +138,47 @@ const ProjectSettings = ({ orgName, projectName, forceRefresh }: ExternalProps) 
                     disabled={isLoading}
                 />
             </Segment>
+        </>
+    );
+};
+
+interface CapacityProps {
+    org?: ConcordKey;
+    project?: ConcordKey;
+    current?: number;
+    max?: number;
+}
+
+const Capacity = ({ org, project, current, max }: CapacityProps) => {
+    if (org === undefined || project === undefined) {
+        return (
+            <div>
+                <em>Loading</em>
+            </div>
+        );
+    }
+
+    return (
+        <>
+            {(current !== undefined && max !== undefined) &&
+            <div>
+                <Progress
+                    percent={(current / max) * 100}
+                    size={'tiny'}
+                    color={'red'}
+                    style={{ width: '30%' }}
+                />
+            </div>
+            }
+            <Header size="tiny" style={{ marginTop: '0px', color: 'rgba(0, 0, 0, 0.5)' }}>
+                <a
+                    href={`/api/v1/org/${org}/project/${project}/kv`}
+                    rel="noopener noreferrer"
+                    target="_blank">
+                    <Icon name={'database'} color={'blue'} link={true}/>
+                    Used {current} of {max || 'Unlimited'}
+                </a>
+            </Header>
         </>
     );
 };

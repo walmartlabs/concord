@@ -20,12 +20,11 @@ package com.walmartlabs.concord.it.server;
  * =====
  */
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.walmartlabs.concord.client.ProcessApi;
-import com.walmartlabs.concord.client.StartProcessResponse;
+import com.walmartlabs.concord.client2.ProcessApi;
+import com.walmartlabs.concord.client2.StartProcessResponse;
 import org.junit.jupiter.api.Test;
 
-import java.io.File;
+import java.io.InputStream;
 import java.util.*;
 
 import static com.walmartlabs.concord.it.common.ITUtils.archive;
@@ -35,8 +34,8 @@ import static org.junit.jupiter.api.Assertions.*;
 public class OutVariablesIT extends AbstractServerIT {
 
     @Test
-    public void test() throws Exception {
-        byte[] payload = archive(ProcessIT.class.getResource("out").toURI());
+    public void testRequestParamAndPredefined() throws Exception {
+        byte[] payload = archive(OutVariablesIT.class.getResource("out").toURI());
         String[] out = {"x", "y.some.boolean", "z"};
 
         Map<String, Object> input = new HashMap<>();
@@ -54,7 +53,7 @@ public class OutVariablesIT extends AbstractServerIT {
 
     @Test
     public void testPredefined() throws Exception {
-        byte[] payload = archive(ProcessIT.class.getResource("out").toURI());
+        byte[] payload = archive(OutVariablesIT.class.getResource("out").toURI());
 
         Map<String, Object> input = new HashMap<>();
         input.put("archive", payload);
@@ -68,16 +67,15 @@ public class OutVariablesIT extends AbstractServerIT {
         assertEquals(123, data.get("x"));
     }
 
-
     @SuppressWarnings("unchecked")
     private Map<String, Object> getOutVars(UUID instanceId) throws Exception {
-        ProcessApi processApi = new ProcessApi(getApiClient());
-        waitForCompletion(processApi, instanceId);
+        waitForCompletion(getApiClient(), instanceId);
 
         // ---
 
-        File outJson = processApi.downloadAttachment(instanceId, "out.json");
-
-        return new ObjectMapper().readValue(outJson, Map.class);
+        ProcessApi processApi = new ProcessApi(getApiClient());
+        try (InputStream outJson = processApi.downloadAttachment(instanceId, "out.json")) {
+            return getApiClient().getObjectMapper().readValue(outJson, Map.class);
+        }
     }
 }

@@ -23,15 +23,11 @@ package com.walmartlabs.concord.server.cfg;
 import com.walmartlabs.ollie.config.Config;
 
 import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-@Named
-@Singleton
 public class ImportConfiguration {
 
     @Inject

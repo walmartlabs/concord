@@ -116,10 +116,6 @@ public class AnsibleConfig {
     private static Map<String, Object> makeDefaults() {
         Map<String, Object> m = new HashMap<>();
 
-        // disable puppet / chef fact gathering, significant speed/performance increase - usually unneeded
-        // may eventually need !hardware for AIX/HPUX or set at runtime, Ansible 2.4 fixes many broken facts
-        m.put("gather_subset", "!facter,!ohai");
-
         // disable ssl host key checking by default
         m.put("host_key_checking", false);
 

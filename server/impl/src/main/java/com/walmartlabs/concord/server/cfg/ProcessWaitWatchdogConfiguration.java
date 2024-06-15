@@ -23,13 +23,9 @@ package com.walmartlabs.concord.server.cfg;
 import com.walmartlabs.ollie.config.Config;
 
 import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
 import java.io.Serializable;
 import java.time.Duration;
 
-@Named
-@Singleton
 public class ProcessWaitWatchdogConfiguration implements Serializable {
 
     private static final long serialVersionUID = 1L;
@@ -42,11 +38,19 @@ public class ProcessWaitWatchdogConfiguration implements Serializable {
     @Config("process.waitCheckPollLimit")
     private int pollLimit;
 
+    @Inject
+    @Config("process.waitProcessLimitForStatusQuery")
+    private int processLimitForStatusQuery;
+
     public Duration getPeriod() {
         return period;
     }
 
     public int getPollLimit() {
         return pollLimit;
+    }
+
+    public int getProcessLimitForStatusQuery() {
+        return processLimitForStatusQuery;
     }
 }

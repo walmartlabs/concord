@@ -35,6 +35,8 @@ public interface Options {
     @Nullable
     UUID parentInstanceId();
 
+    String entryPoint();
+
     @Value.Default
     @AllowNulls
     default Map<String, Object> configuration() {

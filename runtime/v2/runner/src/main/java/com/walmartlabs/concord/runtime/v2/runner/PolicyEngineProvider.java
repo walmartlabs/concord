@@ -60,7 +60,7 @@ public class PolicyEngineProvider implements Provider<PolicyEngine> {
     private PolicyEngineRules readPolicyRules(Path ws) {
         Path policyFile = ws.resolve(Constants.Files.CONCORD_SYSTEM_DIR_NAME).resolve(Constants.Files.POLICY_FILE_NAME);
         if (!Files.exists(policyFile)) {
-            return new PolicyEngineRules(null, null, null, null, null, null, null, null, null, null, null, null, null, null, null);
+            return PolicyEngineRules.builder().build();
         }
 
         try {

@@ -20,21 +20,19 @@ package com.walmartlabs.concord.server.security;
  * =====
  */
 
-import org.apache.shiro.authz.UnauthorizedException;
-import org.sonatype.siesta.ExceptionMapperSupport;
+import com.walmartlabs.concord.server.boot.resteasy.ExceptionMapperSupport;
 
-import javax.inject.Named;
-import javax.inject.Singleton;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
+import javax.ws.rs.ext.Provider;
 
-@Named
-@Singleton
+@Provider
 public class UnauthorizedExceptionMapper extends ExceptionMapperSupport<UnauthorizedException> {
+
     @Override
-    protected Response convert(UnauthorizedException exception, String id) {
+    protected Response convert(UnauthorizedException exception) {
         return Response.status(Status.FORBIDDEN)
                 .header(HttpHeaders.CONTENT_TYPE, MediaType.TEXT_PLAIN_TYPE)
                 .entity(exception.getMessage())

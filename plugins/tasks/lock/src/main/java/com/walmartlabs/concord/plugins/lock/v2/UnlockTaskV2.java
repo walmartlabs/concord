@@ -20,7 +20,7 @@ package com.walmartlabs.concord.plugins.lock.v2;
  * =====
  */
 
-import com.walmartlabs.concord.ApiClient;
+import com.walmartlabs.concord.client2.ApiClient;
 import com.walmartlabs.concord.plugins.lock.LockTaskCommon;
 import com.walmartlabs.concord.plugins.lock.TaskParams;
 import com.walmartlabs.concord.runtime.v2.sdk.Context;

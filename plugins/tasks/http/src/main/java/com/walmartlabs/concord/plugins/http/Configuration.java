@@ -4,7 +4,7 @@ package com.walmartlabs.concord.plugins.http;
  * *****
  * Concord
  * -----
- * Copyright (C) 2017 - 2018 Walmart Inc.
+ * Copyright (C) 2017 - 2023 Walmart Inc.
  * -----
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -27,9 +27,7 @@ import com.walmartlabs.concord.sdk.Context;
 import com.walmartlabs.concord.sdk.MapUtils;
 import org.apache.http.client.utils.URIBuilder;
 
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 import static com.walmartlabs.concord.plugins.http.HttpTask.HttpTaskConstant.*;
 import static com.walmartlabs.concord.plugins.http.HttpTask.RequestMethodType;
@@ -55,8 +53,10 @@ public class Configuration {
     private final int requestTimeout;
     private final boolean ignoreErrors;
     private final String proxy;
+    private final String proxyUser;
+    private final char[] proxyPassword;
     private final boolean debug;
-    private boolean followRedirects;
+    private final boolean followRedirects;
     private final String keyStorePath;
     private final String keyStorePassword;
     private final boolean strictSsl;
@@ -77,6 +77,8 @@ public class Configuration {
                           int requestTimeout,
                           boolean ignoreErrors,
                           String proxy,
+                          String proxyUser,
+                          char[] proxyPassword,
                           boolean debug,
                           boolean followRedirects,
                           String keyStorePath,
@@ -98,6 +100,8 @@ public class Configuration {
         this.requestTimeout = requestTimeout;
         this.ignoreErrors = ignoreErrors;
         this.proxy = proxy;
+        this.proxyUser = proxyUser;
+        this.proxyPassword = proxyPassword;
         this.debug = debug;
         this.followRedirects = followRedirects;
         this.keyStorePath = keyStorePath;
@@ -204,6 +208,14 @@ public class Configuration {
         return proxy;
     }
 
+    public String getProxyUser() {
+        return proxyUser;
+    }
+
+    public char[] getProxyPassword() {
+        return proxyPassword;
+    }
+
     public boolean isDebug() {
         return debug;
     }
@@ -247,6 +259,8 @@ public class Configuration {
         private Integer requestTimeout = 0;
         private boolean ignoreErrors;
         private String proxy;
+        private String proxyUser;
+        private char[] proxyPassword;
         private boolean debug;
         private boolean followRedirects = true;
         private String keyStorePath;
@@ -437,7 +451,8 @@ public class Configuration {
             }
 
             return new Configuration(methodType, url, encodedAuthToken, requestType, responseType, workDir,
-                    requestHeaders, body, connectTimeout, socketTimeout, requestTimeout, ignoreErrors, proxy, debug, followRedirects,
+                    requestHeaders, body, connectTimeout, socketTimeout, requestTimeout, ignoreErrors,
+                    proxy, proxyUser, proxyPassword, debug, followRedirects,
                     keyStorePath, keyStorePassword, strictSsl, trustStorePath, trustStorePassword);
         }
 
@@ -459,11 +474,11 @@ public class Configuration {
                 }
             }
 
-            return build(workDir, input);
+            return build(workDir, input, false);
         }
 
         @SuppressWarnings("unchecked")
-        public Configuration build(String workDir, Map<String, Object> input) throws Exception {
+        public Configuration build(String workDir, Map<String, Object> input, boolean globalDebug) throws Exception {
             validateMandatory(input);
 
             this.url = MapUtils.getString(input, URL_KEY);
@@ -536,8 +551,13 @@ public class Configuration {
             this.requestTimeout = MapUtils.getInt(input, REQUEST_TIMEOUT_KEY, 0);
 
             this.proxy = MapUtils.getString(input, PROXY_KEY);
+            Map<String, Object> proxyAuth = MapUtils.getMap(input, PROXY_AUTH_KEY, Collections.emptyMap());
+            this.proxyUser = MapUtils.getString(proxyAuth, PROXY_USER_KEY);
+            this.proxyPassword = Optional.ofNullable(MapUtils.getString(proxyAuth, PROXY_PASSWORD_KEY))
+                    .map(String::toCharArray)
+                    .orElse(null);
 
-            this.debug = MapUtils.getBoolean(input, DEBUG_KEY, false);
+            this.debug = MapUtils.getBoolean(input, DEBUG_KEY, globalDebug);
 
             this.followRedirects = MapUtils.getBoolean(input, FOLLOW_REDIRECTS_KEY, true);
 
@@ -550,7 +570,8 @@ public class Configuration {
             this.trustStorePassword = MapUtils.getString(input, TRUSTSTORE_PASSWD);
 
             return new Configuration(methodType, url, encodedAuthToken, requestType, responseType, workDir,
-                    requestHeaders, body, connectTimeout, socketTimeout, requestTimeout, ignoreErrors, proxy, debug, followRedirects,
+                    requestHeaders, body, connectTimeout, socketTimeout, requestTimeout, ignoreErrors,
+                    proxy, proxyUser, proxyPassword, debug, followRedirects,
                     keyStorePath, keyStorePassword, strictSsl, trustStorePath, trustStorePassword);
         }
 

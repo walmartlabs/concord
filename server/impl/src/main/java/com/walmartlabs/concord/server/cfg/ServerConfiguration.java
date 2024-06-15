@@ -25,13 +25,9 @@ import org.eclipse.jetty.server.CustomRequestLog;
 
 import javax.annotation.Nullable;
 import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
 import java.io.Serializable;
 import java.time.Duration;
 
-@Named
-@Singleton
 public class ServerConfiguration implements Serializable {
 
     private static final long serialVersionUID = 1L;
@@ -113,8 +109,6 @@ public class ServerConfiguration implements Serializable {
         return corsConfiguration;
     }
 
-    @Named
-    @Singleton
     public static class CORSConfiguration implements Serializable {
 
         private static final long serialVersionUID = 1L;
@@ -128,4 +122,3 @@ public class ServerConfiguration implements Serializable {
         }
     }
 }
-

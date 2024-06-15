@@ -23,6 +23,7 @@ package com.walmartlabs.concord.runtime.v2.runner.el;
 import com.walmartlabs.concord.common.ConfigurationUtils;
 import com.walmartlabs.concord.runtime.v2.runner.el.functions.HasVariableFunction;
 import com.walmartlabs.concord.runtime.v2.sdk.Context;
+import com.walmartlabs.concord.runtime.v2.sdk.EvalContext;
 import com.walmartlabs.concord.runtime.v2.sdk.MapBackedVariables;
 import com.walmartlabs.concord.runtime.v2.sdk.Variables;
 import org.junit.jupiter.api.Test;

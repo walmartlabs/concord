@@ -38,9 +38,9 @@ public final class Constants {
     public static final String SENDER_KEY = "sender";
     public static final String STATUS_KEY = "status";
     public static final String TYPE_KEY = "type";
-    public static final String UNKNOWN_REPO_KEY = "unknownRepo";
     public static final String VERSION_KEY = "version";
     public static final String FILES_KEY = "files";
+    public static final String QUERY_PARAMS_KEY = "queryParams";
 
     public static final String GITHUB_ORG_KEY = "githubOrg";
     public static final String GITHUB_REPO_KEY = "githubRepo";
